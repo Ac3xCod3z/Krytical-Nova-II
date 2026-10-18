@@ -2,7 +2,7 @@
 %TAG !u! tag:unity3d.com,2011:
 --- !u!114 &1
 MonoBehaviour:
-  m_ObjectHideFlags: 0
+  m_ObjectHideFlags: 61
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
@@ -58,6 +58,18 @@ MonoBehaviour:
     - id: DuplicateLayersDetector
       group: 0
       enabled: 1
+    - id: DeletedBuildSceneDetector
+      group: 0
+      enabled: 1
+    - id: InvalidRendererBatchingDetector
+      group: 0
+      enabled: 1
+    - id: InvalidRendererMaterialsDetector
+      group: 0
+      enabled: 1
+    - id: InvalidSortingLayerDetector
+      group: 0
+      enabled: 1
     missingReferences: 0
     shadersWithErrors: 0
     missingComponents: 0
@@ -81,14 +93,169 @@ MonoBehaviour:
       kind: 3
       value: .preset
       exactMatch: 0
-    pathIncludesFilters: []
+    - enabled: 1
+      ignoreCase: 1
+      kind: 0
+      value: Assets/_Game/
+      exactMatch: 0
+    - enabled: 1
+      ignoreCase: 1
+      kind: 0
+      value: Assets/Synty/SidekickCharacters/
+      exactMatch: 0
+    - enabled: 1
+      ignoreCase: 1
+      kind: 0
+      value: Assets/Synty/InterfaceCore/Prefabs/
+      exactMatch: 0
+    - enabled: 1
+      ignoreCase: 1
+      kind: 0
+      value: Assets/Synty/InterfaceCore/Sprites/
+      exactMatch: 0
+    - enabled: 1
+      ignoreCase: 1
+      kind: 0
+      value: Assets/Synty/InterfaceCore/Fonts/
+      exactMatch: 0
+    - enabled: 1
+      ignoreCase: 1
+      kind: 0
+      value: Assets/Synty/InterfaceDarkFantasyHUD/Prefabs/
+      exactMatch: 0
+    - enabled: 1
+      ignoreCase: 1
+      kind: 0
+      value: Assets/Synty/InterfaceDarkFantasyHUD/Sprites/
+      exactMatch: 0
+    - enabled: 1
+      ignoreCase: 1
+      kind: 0
+      value: Assets/Synty/InterfaceDarkFantasyHUD/Fonts/
+      exactMatch: 0
+    - enabled: 1
+      ignoreCase: 1
+      kind: 0
+      value: Assets/Synty/InterfaceDarkFantasyMenus/Prefabs/
+      exactMatch: 0
+    - enabled: 1
+      ignoreCase: 1
+      kind: 0
+      value: Assets/Synty/InterfaceDarkFantasyMenus/Sprites/
+      exactMatch: 0
+    - enabled: 1
+      ignoreCase: 1
+      kind: 0
+      value: Assets/Synty/InterfaceDarkFantasyMenus/Fonts/
+      exactMatch: 0
+    - enabled: 1
+      ignoreCase: 1
+      kind: 0
+      value: Assets/Synty/InterfaceFantasyMenus/Prefabs/
+      exactMatch: 0
+    - enabled: 1
+      ignoreCase: 1
+      kind: 0
+      value: Assets/Synty/InterfaceFantasyMenus/Sprites/
+      exactMatch: 0
+    - enabled: 1
+      ignoreCase: 1
+      kind: 0
+      value: Assets/Synty/InterfaceFantasyMenus/Fonts/
+      exactMatch: 0
+    - enabled: 1
+      ignoreCase: 1
+      kind: 0
+      value: Assets/Synty/InterfaceFantasyScreens/Prefabs/
+      exactMatch: 0
+    - enabled: 1
+      ignoreCase: 1
+      kind: 0
+      value: Assets/Synty/InterfaceFantasyScreens/Sprites/
+      exactMatch: 0
+    - enabled: 1
+      ignoreCase: 1
+      kind: 0
+      value: Assets/Synty/InterfaceFantasyScreens/Fonts/
+      exactMatch: 0
+    - enabled: 1
+      ignoreCase: 1
+      kind: 0
+      value: Assets/Synty/InterfaceFantasyWarriorHUD/Prefabs/
+      exactMatch: 0
+    - enabled: 1
+      ignoreCase: 1
+      kind: 0
+      value: Assets/Synty/InterfaceFantasyWarriorHUD/Sprites/
+      exactMatch: 0
+    - enabled: 1
+      ignoreCase: 1
+      kind: 0
+      value: Assets/Synty/InterfaceFantasyWarriorHUD/Fonts/
+      exactMatch: 0
+    - enabled: 1
+      ignoreCase: 1
+      kind: 0
+      value: Assets/Synty/InterfaceSciFiMenus/Prefabs/
+      exactMatch: 0
+    - enabled: 1
+      ignoreCase: 1
+      kind: 0
+      value: Assets/Synty/InterfaceSciFiMenus/Sprites/
+      exactMatch: 0
+    - enabled: 1
+      ignoreCase: 1
+      kind: 0
+      value: Assets/Synty/InterfaceSciFiMenus/Fonts/
+      exactMatch: 0
+    - enabled: 1
+      ignoreCase: 1
+      kind: 0
+      value: Assets/Synty/InterfaceSciFiSoldierHUD/Prefabs/
+      exactMatch: 0
+    - enabled: 1
+      ignoreCase: 1
+      kind: 0
+      value: Assets/Synty/InterfaceSciFiSoldierHUD/Sprites/
+      exactMatch: 0
+    - enabled: 1
+      ignoreCase: 1
+      kind: 0
+      value: Assets/Synty/InterfaceSciFiSoldierHUD/Fonts/
+      exactMatch: 0
+    pathIncludesFilters:
+    - enabled: 1
+      ignoreCase: 1
+      kind: 0
+      value: Assets/Synty/
+      exactMatch: 0
+    - enabled: 1
+      ignoreCase: 1
+      kind: 0
+      value: Assets/_ThirdParty/
+      exactMatch: 0
+    - enabled: 1
+      ignoreCase: 1
+      kind: 0
+      value: Assets/_Recovery/
+      exactMatch: 0
+    - enabled: 1
+      ignoreCase: 1
+      kind: 0
+      value: Assets/QuickDestruction/Demo/
+      exactMatch: 0
+    - enabled: 1
+      ignoreCase: 1
+      kind: 0
+      value: Assets/TextMesh Pro/Examples & Extras/
+      exactMatch: 0
     sceneIgnoresFilters: []
     ignoreScenesInBuild: 1
     ignoreOnlyEnabledScenesInBuild: 1
     scenesSelection: 10
     findUnreferencedAssets: 1
     findUnreferencedScripts: 0
-    findEmptyFolders: 1
+    findEmptyFolders: 0
     findEmptyFoldersAutomatically: 0
     useTrashBin: 1
     rescanAfterContextIgnore: 1

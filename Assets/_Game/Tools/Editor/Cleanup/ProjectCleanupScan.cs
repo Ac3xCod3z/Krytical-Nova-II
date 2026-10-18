@@ -48,7 +48,7 @@ namespace KryticalNova.EditorTools.Cleanup
         /// <summary>Code, shaders and assembly files: they go only with a whole package, never one by one.</summary>
         private static readonly HashSet<string> CodeKinds = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
         {
-            ".cs", ".dll", ".asmdef", ".asmref", ".rsp", ".shader", ".shadergraph", ".shadersubgraph", ".hlsl", ".cginc", ".compute", ".so", ".bundle", ".jslib", ".uss", ".uxml", ".tss",
+            ".cs", ".dll", ".asmdef", ".asmref", ".rsp", ".shader", ".shadergraph", ".shadersubgraph", ".hlsl", ".cginc", ".cg", ".glslinc", ".compute", ".raytrace", ".cfxrshader", ".so", ".bundle", ".jslib", ".uss", ".uxml", ".tss",
         };
 
         private static readonly Regex VendorLiteral = new Regex(@"""(Assets/(?:Synty|_ThirdParty|QuickDestruction)/[^""]+)""", RegexOptions.Compiled);
@@ -238,9 +238,18 @@ namespace KryticalNova.EditorTools.Cleanup
         {
             if (AssetRestoreService.Index == null) { Debug.LogWarning("[Cleanup] Build the package index first: nothing goes without a way back."); return 0; }
             if (rescan || !ScanIsFresh()) { if (Scan() <= 0) return 0; }
+            else
+            {
+                // A reused scan: the written-reference check runs again (about a minute, outside Unity), so files a keep
+                // rule added since the scan bring what they point at with them (18 Oct 2026: the Prop Bone Tool's
+                // settings kept after the scan, and the five rigs they point at removed, then restored by the after-check).
+                if (!UsageGuard.Wait(UsageGuard.StartWrittenCheck("scan"), "Project cleanup: written references")) return 0;
+            }
+            var stillUsed = UsageGuard.ReadWrittenUsed();
             // The keep rules are applied again, so a rule added since the scan still holds.
             var scan = File.ReadAllLines(ScanTable).Skip(1).Select(l => l.Split('\t'))
-                .Where(c => c.Length >= 6 && c[5].Length > 0 && IsCandidate(c[0]) && !CodeKinds.Contains(Path.GetExtension(c[0])) && File.Exists(c[0])).ToList();
+                .Where(c => c.Length >= 6 && c[5].Length > 0 && IsCandidate(c[0]) && !CodeKinds.Contains(Path.GetExtension(c[0]))
+                            && !stillUsed.Contains(c[0]) && File.Exists(c[0])).ToList();
             var batches = scan.GroupBy(c => BatchName(c[0])).OrderBy(g => g.Key).ToList();
             int total = scan.Count;
             long bytes = scan.Sum(r => long.Parse(r[2], CultureInfo.InvariantCulture));
@@ -265,17 +274,16 @@ namespace KryticalNova.EditorTools.Cleanup
                         rows.Select(r => new RemovalLog.Removal { Path = r[0], Guid = r[1], Bytes = long.Parse(r[2], CultureInfo.InvariantCulture) }).ToList(),
                         AssetRestoreService.Index, commit);
 
-                    const int chunk = 400;
-                    for (int i = 0; i < rows.Count; i += chunk)
-                    {
-                        if (EditorUtility.DisplayCancelableProgressBar("Removing " + batch.Key, $"{removed:N0} / {total:N0}", (float)removed / total))
-                            throw new OperationCanceledException();
-                        var part = rows.Skip(i).Take(chunk).ToList();
-                        var failed = new List<string>();
-                        AssetDatabase.MoveAssetsToTrash(part.Select(r => r[0]).ToArray(), failed);
-                        foreach (var r in part) if (!failed.Contains(r[0])) removed++;
-                        foreach (string f in failed) Debug.LogWarning("[Cleanup] Could not remove " + f);
-                    }
+                    // One pack at a time with importing paused, so a variant is never re-imported in the moment between
+                    // its parent going and itself going (the first run logged 1,429 such passing errors).
+                    if (EditorUtility.DisplayCancelableProgressBar("Removing " + batch.Key, $"{removed:N0} / {total:N0}", (float)removed / total))
+                        throw new OperationCanceledException();
+                    var failed = new List<string>();
+                    AssetDatabase.StartAssetEditing();
+                    try { AssetDatabase.MoveAssetsToTrash(rows.Select(r => r[0]).ToArray(), failed); }
+                    finally { AssetDatabase.StopAssetEditing(); }
+                    removed += rows.Count - failed.Count;
+                    foreach (string f in failed) Debug.LogWarning("[Cleanup] Could not remove " + f);
                     RemoveEmptyFolders(BatchFolder(rows[0][0]));
                 }
             }

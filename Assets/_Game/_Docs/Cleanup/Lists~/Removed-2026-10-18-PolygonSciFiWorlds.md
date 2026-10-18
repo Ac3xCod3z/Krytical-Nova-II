@@ -1,0 +1,2605 @@
+# Removed 2026-10-18: PolygonSciFiWorlds
+
+Vendor files nothing uses: not the build scenes, not any scene, zone or asset in `Assets/_Game`, not Resources, settings or plugins. Three checks agreed (Maintainer, Unity's dependencies, written references) and none is loaded by path or name.
+
+2,471 files, 171.5 MB. Last commit that still has them: `ff91e25aa8c2`.
+
+To bring one back: Unity ▸ **Krytical Nova ▸ Project ▸ Restore Assets**, *Removed* tab, search its name, **Restore** (it comes back with the materials, textures and meshes it needs, under its old path and GUID). Without the tool: `git checkout ff91e25aa8c2 -- "<path>" "<path>.meta"`.
+
+## PolygonSciFiWorlds (2,471 files, 171.5 MB)
+
+Get it back from: POLYGON_SciFi_Worlds.unitypackage
+
+**Assets/Synty/PolygonSciFiWorlds/Materials/Alts/**
+
+- PolygonScifiWorlds_04_B.mat · Material · 3 KB
+- PolygonScifiWorlds_04_C.mat · Material · 3 KB
+
+**Assets/Synty/PolygonSciFiWorlds/Materials/Alts/Skin_Alts/**
+
+- PolygonScifiWorlds_01_A_Alt.mat · Material · 3 KB
+- PolygonScifiWorlds_01_B_Alt.mat · Material · 3 KB
+- PolygonScifiWorlds_01_C_Alt.mat · Material · 3 KB
+- PolygonScifiWorlds_02_A_Alt.mat · Material · 3 KB
+- PolygonScifiWorlds_02_B_Alt.mat · Material · 3 KB
+- PolygonScifiWorlds_02_C_Alt.mat · Material · 3 KB
+- PolygonScifiWorlds_03_A_Alt.mat · Material · 3 KB
+- PolygonScifiWorlds_03_B_Alt.mat · Material · 3 KB
+- PolygonScifiWorlds_03_C_Alt.mat · Material · 3 KB
+- PolygonScifiWorlds_04_A_Alt.mat · Material · 3 KB
+- PolygonScifiWorlds_04_B_Alt.mat · Material · 3 KB
+- PolygonScifiWorlds_04_C_Alt.mat · Material · 3 KB
+
+**Assets/Synty/PolygonSciFiWorlds/Materials/Environment/**
+
+- PolygonSciFiWorlds_Env_Triplanar_Core_01.mat · Material · 5 KB
+- PolygonSciFiWorlds_Env_Triplanar_Grass_01.mat · Material · 5 KB
+- PolygonScifiWorlds_Mat_01_A_Triplanar_01.mat · Material · 3 KB
+
+**Assets/Synty/PolygonSciFiWorlds/Materials/FX/**
+
+- Beam_01.mat · Material · 3 KB
+- FX_Additive_01_Bright.mat · Material · 1 KB
+- FX_Circle_01_Dark.mat · Material · 3 KB
+- FX_Empty_01.mat · Material · 1 KB
+- FX_Green_Glow_01.mat · Material · 3 KB
+- FX_Hologram_Sign_01.mat · Material · 3 KB
+- FX_Sprite_01.mat · Material · 1 KB
+- Portal_Reflective_01.mat · Material · 3 KB
+- Scrap_Transparent_01.mat · Material · 3 KB
+
+**Assets/Synty/PolygonSciFiWorlds/Materials/Misc/**
+
+- Blank_Grey_01.mat · Material · 3 KB
+- Glass_02.mat · Material · 3 KB
+- Graffiti_01.mat · Material · 3 KB
+- Metal_Greeble_01.mat · Material · 3 KB
+- PolygonScifiWorlds_Glow_02.mat · Material · 3 KB
+- PolygonScifiWorlds_Sky_01.mat · Material · 758 B
+- PolygonScifiWorlds_Texture_A_01_Normal.mat · Material · 3 KB
+- PolygonScifiWorlds_Texture_A_01_PODTEST.mat · Material · 3 KB
+- SkyBoxSpace_01.mat · Material · 2 KB
+- Water_01.mat · Material · 3 KB
+
+**Assets/Synty/PolygonSciFiWorlds/Materials/Plants/**
+
+- Plants_Animated_01.mat · Material · 3 KB
+- Plants_Basic_Blue_01.mat · Material · 3 KB
+- Plants_Basic_Blue_02.mat · Material · 3 KB
+- Plants_Basic_Green_01.mat · Material · 3 KB
+- Plants_Basic_Green_02.mat · Material · 3 KB
+- Plants_Basic_Red_01.mat · Material · 3 KB
+
+**Assets/Synty/PolygonSciFiWorlds/Materials/Signs/**
+
+- Sign_01.mat · Material · 3 KB
+- Sign_02.mat · Material · 3 KB
+- Sign_03.mat · Material · 3 KB
+- Sign_05.mat · Material · 3 KB
+- Sign_06.mat · Material · 3 KB
+- Sign_07.mat · Material · 3 KB
+- Sign_08.mat · Material · 3 KB
+- Sign_09.mat · Material · 3 KB
+- Sign_10.mat · Material · 3 KB
+- Sign_11.mat · Material · 3 KB
+- Sign_12.mat · Material · 3 KB
+- Sign_13.mat · Material · 3 KB
+- Sign_14.mat · Material · 3 KB
+- Sign_15.mat · Material · 3 KB
+- Sign_16.mat · Material · 3 KB
+- Sign_Syntanium_01.mat · Material · 3 KB
+
+**Assets/Synty/PolygonSciFiWorlds/Materials/Sky/**
+
+- Cloud_01.mat · Material · 3 KB
+- Planet_01.mat · Material · 5 KB
+- Planet_01_Alt_01.mat · Material · 4 KB
+- Planet_01_Alt_02.mat · Material · 4 KB
+- Planet_02.mat · Material · 4 KB
+- Planet_02_Alt_01.mat · Material · 3 KB
+- Planet_02_Alt_02.mat · Material · 3 KB
+- Planet_03.mat · Material · 5 KB
+- Skybox_Base_01.mat · Material · 2 KB
+- Skybox_Base_01_UV.mat · Material · 2 KB
+- Skybox_Corp_01.mat · Material · 2 KB
+- Skybox_Exp_01.mat · Material · 2 KB
+- Skybox_Outpost_01.mat · Material · 2 KB
+- Skybox_Scav_01.mat · Material · 3 KB
+- Sun_01.mat · Material · 3 KB
+- Sun_02.mat · Material · 3 KB
+
+**Assets/Synty/PolygonSciFiWorlds/Models/**
+
+- FX_Cube_Spawn.fbx · Model · 20 KB
+- SM_Bld_Billboard_07.fbx · Model · 67 KB
+- SM_Bld_Billboard_08.fbx · Model · 67 KB
+- SM_Bld_Billboard_09.fbx · Model · 176 KB
+- SM_Bld_Billboard_10.fbx · Model · 173 KB
+- SM_Bld_Billboard_11.fbx · Model · 40 KB
+- SM_Bld_Bridge_01.fbx · Model · 29 KB
+- SM_Bld_Bridge_End_01.fbx · Model · 29 KB
+- SM_Bld_Bridge_Platform_01.fbx · Model · 215 KB
+- SM_Bld_Bridge_Rail_01.fbx · Model · 29 KB
+- SM_Bld_Bridge_Rail_End_01.fbx · Model · 28 KB
+- SM_Bld_Bridge_Rail_Half_01.fbx · Model · 29 KB
+- SM_Bld_Bridge_Rail_Pillar_01.fbx · Model · 36 KB
+- SM_Bld_Bridge_Strut_01.fbx · Model · 28 KB
+- SM_Bld_Column_01.fbx · Model · 50 KB
+- SM_Bld_Column_02.fbx · Model · 38 KB
+- SM_Bld_Core_Antenna_Greeble_01.fbx · Model · 40 KB
+- SM_Bld_Core_Antenna_Greeble_02.fbx · Model · 36 KB
+- SM_Bld_Core_Observation_Greeble_01.fbx · Model · 45 KB
+- SM_Bld_Core_Observation_Greeble_02.fbx · Model · 39 KB
+- SM_Bld_Core_Observation_Greeble_Pipe_01.fbx · Model · 33 KB
+- SM_Bld_Core_Observation_Greeble_Pipe_Base_01.fbx · Model · 32 KB
+- SM_Bld_Corp_Comms_01.fbx · Model · 502 KB
+- SM_Bld_Corp_Containment_01.fbx · Model · 95 KB
+- SM_Bld_Corp_Containment_02.fbx · Model · 108 KB
+- SM_Bld_Corp_Radar_01.fbx · Model · 208 KB
+- SM_Bld_Door_Double_01.fbx · Model · 134 KB
+- SM_Bld_Door_Double_02.fbx · Model · 166 KB
+- SM_Bld_Door_Double_03.fbx · Model · 185 KB
+- SM_Bld_Door_Double_04.fbx · Model · 193 KB
+- SM_Bld_Door_Double_05.fbx · Model · 129 KB
+- SM_Bld_Door_Double_To_Single_01.fbx · Model · 55 KB
+- SM_Bld_Door_Single_01.fbx · Model · 116 KB
+- SM_Bld_Door_Single_02.fbx · Model · 105 KB
+- SM_Bld_Door_Single_03.fbx · Model · 104 KB
+- SM_Bld_Door_Single_04.fbx · Model · 148 KB
+- SM_Bld_Door_Single_05.fbx · Model · 127 KB
+- SM_Bld_Elevator_Double_01.fbx · Model · 37 KB
+- SM_Bld_Elevator_Hover_Double_01.fbx · Model · 67 KB
+- SM_Bld_Elevator_Hover_Double_02.fbx · Model · 152 KB
+- SM_Bld_Elevator_Hover_Single_01.fbx · Model · 57 KB
+- SM_Bld_Elevator_Single_01.fbx · Model · 36 KB
+- SM_Bld_Greeble_01.fbx · Model · 32 KB
+- SM_Bld_Greeble_02.fbx · Model · 49 KB
+- SM_Bld_Greeble_03.fbx · Model · 34 KB
+- SM_Bld_Greeble_04.fbx · Model · 34 KB
+- SM_Bld_Greeble_05.fbx · Model · 34 KB
+- SM_Bld_Greeble_06.fbx · Model · 39 KB
+- SM_Bld_Greeble_07.fbx · Model · 41 KB
+- SM_Bld_Greeble_08.fbx · Model · 35 KB
+- SM_Bld_Greeble_09.fbx · Model · 40 KB
+- SM_Bld_Greeble_10.fbx · Model · 52 KB
+- SM_Bld_Greeble_11.fbx · Model · 32 KB
+- SM_Bld_Greeble_12.fbx · Model · 37 KB
+- SM_Bld_Greeble_13.fbx · Model · 49 KB
+- SM_Bld_Greeble_14.fbx · Model · 34 KB
+- SM_Bld_Greeble_15.fbx · Model · 36 KB
+- SM_Bld_Greeble_16.fbx · Model · 34 KB
+- SM_Bld_Greeble_17.fbx · Model · 66 KB
+- SM_Bld_Greeble_18.fbx · Model · 43 KB
+- SM_Bld_Greeble_19.fbx · Model · 36 KB
+- SM_Bld_Greeble_20.fbx · Model · 44 KB
+- SM_Bld_Greeble_21.fbx · Model · 39 KB
+- SM_Bld_Greeble_22.fbx · Model · 58 KB
+- SM_Bld_Greeble_23.fbx · Model · 40 KB
+- SM_Bld_Greeble_24.fbx · Model · 51 KB
+- SM_Bld_Greeble_25.fbx · Model · 47 KB
+- SM_Bld_Greeble_26.fbx · Model · 106 KB
+- SM_Bld_Greeble_27.fbx · Model · 73 KB
+- SM_Bld_Greeble_28.fbx · Model · 66 KB
+- SM_Bld_LaunchPad_01.fbx · Model · 425 KB
+- SM_Bld_LaunchPad_02.fbx · Model · 1.0 MB
+- SM_Bld_Light_01.fbx · Model · 39 KB
+- SM_Bld_Light_02.fbx · Model · 46 KB
+- SM_Bld_Light_03.fbx · Model · 43 KB
+- SM_Bld_Light_04.fbx · Model · 37 KB
+- SM_Bld_Light_05.fbx · Model · 44 KB
+- SM_Bld_Light_06.fbx · Model · 54 KB
+- SM_Bld_Light_07.fbx · Model · 43 KB
+- SM_Bld_Light_08.fbx · Model · 55 KB
+- SM_Bld_Light_09.fbx · Model · 42 KB
+- SM_Bld_Light_10.fbx · Model · 43 KB
+- SM_Bld_Light_11.fbx · Model · 78 KB
+- SM_Bld_Light_12.fbx · Model · 65 KB
+- SM_Bld_Light_13.fbx · Model · 104 KB
+- SM_Bld_Pillar_01.fbx · Model · 44 KB
+- SM_Bld_Pillar_02.fbx · Model · 46 KB
+- SM_Bld_Pillar_03.fbx · Model · 62 KB
+- SM_Bld_Platform_Barrier_Long_01.fbx · Model · 32 KB
+- SM_Bld_Platform_Barrier_Long_02.fbx · Model · 30 KB
+- SM_Bld_Platform_Barrier_Pillar_01.fbx · Model · 28 KB
+- SM_Bld_Platform_Barrier_Pillar_InnerCorner_01.fbx · Model · 30 KB
+- SM_Bld_Platform_Barrier_Pillar_Middle_01.fbx · Model · 29 KB
+- SM_Bld_Platform_Barrier_Short_01.fbx · Model · 29 KB
+- SM_Bld_Platform_Base_Large_01.fbx · Model · 31 KB
+- SM_Bld_Platform_Base_Large_02.fbx · Model · 54 KB
+- SM_Bld_Platform_Base_Large_Corner_01.fbx · Model · 28 KB
+- SM_Bld_Platform_Base_Small_01.fbx · Model · 29 KB
+- SM_Bld_Platform_Base_Small_02.fbx · Model · 35 KB
+- SM_Bld_Platform_Base_Small_02_Single_01.fbx · Model · 28 KB
+- SM_Bld_Platform_Base_Small_Corner_01.fbx · Model · 28 KB
+- SM_Bld_Platform_Large_01.fbx · Model · 26 KB
+- SM_Bld_Platform_Large_02.fbx · Model · 27 KB
+- SM_Bld_Platform_Large_03.fbx · Model · 27 KB
+- SM_Bld_Platform_Large_04.fbx · Model · 27 KB
+- SM_Bld_Platform_Large_05.fbx · Model · 27 KB
+- SM_Bld_Platform_Large_06.fbx · Model · 27 KB
+- SM_Bld_Platform_Large_07.fbx · Model · 26 KB
+- SM_Bld_Platform_Large_08.fbx · Model · 26 KB
+- SM_Bld_Platform_Large_09.fbx · Model · 26 KB
+- SM_Bld_Platform_Large_10.fbx · Model · 27 KB
+- SM_Bld_Platform_Large_11.fbx · Model · 27 KB
+- SM_Bld_Platform_Large_12.fbx · Model · 35 KB
+- SM_Bld_Platform_Large_Corner_01.fbx · Model · 27 KB
+- SM_Bld_Platform_Large_Corner_02.fbx · Model · 27 KB
+- SM_Bld_Platform_Large_Corner_03.fbx · Model · 27 KB
+- SM_Bld_Platform_Small_01.fbx · Model · 26 KB
+- SM_Bld_Platform_Small_02.fbx · Model · 26 KB
+- SM_Bld_Platform_Small_03.fbx · Model · 26 KB
+- SM_Bld_Platform_Small_04.fbx · Model · 26 KB
+- SM_Bld_Platform_Small_05.fbx · Model · 26 KB
+- SM_Bld_Platform_Small_06.fbx · Model · 26 KB
+- SM_Bld_Platform_Small_07.fbx · Model · 26 KB
+- SM_Bld_Platform_Small_08.fbx · Model · 26 KB
+- SM_Bld_Platform_Small_09.fbx · Model · 26 KB
+- SM_Bld_Platform_Small_Corner_01.fbx · Model · 26 KB
+- SM_Bld_Platform_Small_Corner_02.fbx · Model · 26 KB
+- SM_Bld_Platform_Small_Corner_03.fbx · Model · 26 KB
+- SM_Bld_Platform_Stairs_01.fbx · Model · 35 KB
+- SM_Bld_Pod_Air_Lock_01.fbx · Model · 53 KB
+- SM_Bld_Pod_Air_Lock_02.fbx · Model · 44 KB
+- SM_Bld_Pod_Base_01.fbx · Model · 38 KB
+- SM_Bld_Pod_Base_02.fbx · Model · 42 KB
+- SM_Bld_Pod_Base_03.fbx · Model · 47 KB
+- SM_Bld_Pod_Base_04.fbx · Model · 68 KB
+- SM_Bld_Pod_Corridor_Round_01.fbx · Model · 163 KB
+- SM_Bld_Pod_Corridor_Round_02.fbx · Model · 156 KB
+- SM_Bld_Pod_Corridor_Round_03.fbx · Model · 409 KB
+- SM_Bld_Pod_Corridor_Round_04.fbx · Model · 270 KB
+- SM_Bld_Pod_Corridor_Round_05.fbx · Model · 236 KB
+- SM_Bld_Pod_Corridor_Round_Connector_01.fbx · Model · 45 KB
+- SM_Bld_Pod_Corridor_Round_Door_Single_01.fbx · Model · 34 KB
+- SM_Bld_Pod_Corridor_Round_End_01.fbx · Model · 95 KB
+- SM_Bld_Pod_Corridor_Round_End_02.fbx · Model · 59 KB
+- SM_Bld_Pod_Corridor_Round_Ramp_01.fbx · Model · 61 KB
+- SM_Bld_Pod_Corridor_Round_Support_01.fbx · Model · 127 KB
+- SM_Bld_Pod_Corridor_Square_01.fbx · Model · 120 KB
+- SM_Bld_Pod_Corridor_Square_02.fbx · Model · 125 KB
+- SM_Bld_Pod_Corridor_Square_03.fbx · Model · 219 KB
+- SM_Bld_Pod_Corridor_Square_04.fbx · Model · 296 KB
+- SM_Bld_Pod_Corridor_Square_05.fbx · Model · 283 KB
+- SM_Bld_Pod_Corridor_Square_Connector_01.fbx · Model · 36 KB
+- SM_Bld_Pod_Corridor_Square_Door_Double_01.fbx · Model · 32 KB
+- SM_Bld_Pod_Corridor_Square_Door_Single_01.fbx · Model · 32 KB
+- SM_Bld_Pod_Corridor_Square_End_01.fbx · Model · 84 KB
+- SM_Bld_Pod_Corridor_Square_End_02.fbx · Model · 61 KB
+- SM_Bld_Pod_Corridor_Square_Ramp_01.fbx · Model · 60 KB
+- SM_Bld_Pod_Corridor_Switch_Connector_01.fbx · Model · 57 KB
+- SM_Bld_Pod_Hub_01.fbx · Model · 138 KB
+- SM_Bld_Pod_Hub_02.fbx · Model · 180 KB
+- SM_Bld_Pod_Hub_03.fbx · Model · 120 KB
+- SM_Bld_Pod_Pad_01.fbx · Model · 186 KB
+- SM_Bld_Pod_Ramp_01.fbx · Model · 35 KB
+- SM_Bld_Pod_Ramp_02.fbx · Model · 59 KB
+- SM_Bld_Pod_Support_01.fbx · Model · 69 KB
+- SM_Bld_Pod_Support_02.fbx · Model · 57 KB
+- SM_Bld_Pod_Support_03.fbx · Model · 39 KB
+- SM_Bld_Portal_01.fbx · Model · 173 KB
+- SM_Bld_Portal_Ramp_01.fbx · Model · 33 KB
+- SM_Bld_Railing_01.fbx · Model · 34 KB
+- SM_Bld_Railing_Pillar_01.fbx · Model · 35 KB
+- SM_Bld_Scav_Scrap_01.fbx · Model · 149 KB
+- SM_Bld_Scav_Scrap_02.fbx · Model · 167 KB
+- SM_Bld_Scav_Scrap_03.fbx · Model · 107 KB
+- SM_Bld_Scav_Scrap_04.fbx · Model · 150 KB
+- SM_Bld_Scav_Wreckage_03.fbx · Model · 321 KB
+- SM_Bld_Tower_Monitors_01.fbx · Model · 87 KB
+- SM_Bld_WindMill_01.fbx · Model · 80 KB
+- SM_Bld_Window_01.fbx · Model · 58 KB
+- SM_Bld_Window_02.fbx · Model · 54 KB
+- SM_Bld_Window_03.fbx · Model · 92 KB
+- SM_Bld_Window_04.fbx · Model · 58 KB
+- SM_Bld_Window_05.fbx · Model · 74 KB
+- SM_Bld_Window_06.fbx · Model · 61 KB
+- SM_Bld_Window_07.fbx · Model · 61 KB
+- SM_Bld_Window_08.fbx · Model · 54 KB
+- SM_Bld_Window_09.fbx · Model · 62 KB
+- SM_Bld_Window_10.fbx · Model · 62 KB
+- SM_Bld_Window_11.fbx · Model · 98 KB
+- SM_Bld_Window_12.fbx · Model · 67 KB
+- SM_Bld_Window_13.fbx · Model · 75 KB
+- SM_Bld_Window_14.fbx · Model · 62 KB
+- SM_Bld_Window_15.fbx · Model · 53 KB
+- SM_Decal_Graffiti_01.fbx · Model · 25 KB
+- SM_Decal_Graffiti_02.fbx · Model · 25 KB
+- SM_Decal_Graffiti_03.fbx · Model · 25 KB
+- SM_Decal_Graffiti_04.fbx · Model · 25 KB
+- SM_Decal_Graffiti_05.fbx · Model · 25 KB
+- SM_Decal_Graffiti_06.fbx · Model · 25 KB
+- SM_Decal_Graffiti_07.fbx · Model · 25 KB
+- SM_Env_Artifact_AlienRuin_12.fbx · Model · 233 KB
+- SM_Env_Asteroid_01.fbx · Model · 30 KB
+- SM_Env_Asteroid_02.fbx · Model · 28 KB
+- SM_Env_Cliff_Curved_01.fbx · Model · 35 KB
+- SM_Env_Cliff_Curved_02.fbx · Model · 37 KB
+- SM_Env_Core_01_Engine_01.fbx · Model · 209 KB
+- SM_Env_Detail_Bridge_01.fbx · Model · 82 KB
+- SM_Env_Detail_Platform_01.fbx · Model · 45 KB
+- SM_Env_Detail_Platform_02.fbx · Model · 40 KB
+- SM_Env_Detail_Platform_03.fbx · Model · 38 KB
+- SM_Env_Detail_Round_01.fbx · Model · 40 KB
+- SM_Env_Detail_Round_02.fbx · Model · 40 KB
+- SM_Env_Detail_Round_03.fbx · Model · 40 KB
+- SM_Env_Detail_Round_Group_01.fbx · Model · 110 KB
+- SM_Env_Detail_Spikey_01.fbx · Model · 32 KB
+- SM_Env_Detail_Spikey_Group_01.fbx · Model · 49 KB
+- SM_Env_Detail_Spikey_Group_02.fbx · Model · 43 KB
+- SM_Env_Floating_Crystal_01.fbx · Model · 37 KB
+- SM_Env_Floating_Crystal_02.fbx · Model · 35 KB
+- SM_Env_Floating_Rocks_Single_01.fbx · Model · 31 KB
+- SM_Env_Floating_Rocks_Single_02.fbx · Model · 29 KB
+- SM_Env_Floating_Rocks_Single_03.fbx · Model · 30 KB
+- SM_Env_Floating_Rocks_Single_04.fbx · Model · 31 KB
+- SM_Env_Floating_Rocks_Single_05.fbx · Model · 31 KB
+- SM_Env_Floating_Rocks_Single_06.fbx · Model · 31 KB
+- SM_Env_Floating_Rocks_Single_07.fbx · Model · 31 KB
+- SM_Env_Floating_Rocks_Single_08.fbx · Model · 29 KB
+- SM_Env_Grass_01.fbx · Model · 34 KB
+- SM_Env_Grass_02.fbx · Model · 38 KB
+- SM_Env_Grass_03.fbx · Model · 43 KB
+- SM_Env_Grass_04.fbx · Model · 31 KB
+- SM_Env_Grass_05.fbx · Model · 49 KB
+- SM_Env_Ground_01.fbx · Model · 33 KB
+- SM_Env_Ground_02.fbx · Model · 33 KB
+- SM_Env_Ground_03.fbx · Model · 30 KB
+- SM_Env_Ground_04.fbx · Model · 30 KB
+- SM_Env_Ground_05.fbx · Model · 32 KB
+- SM_Env_Ground_Greeble_01.fbx · Model · 39 KB
+- SM_Env_Ground_Greeble_02.fbx · Model · 32 KB
+- SM_Env_Ground_Greeble_03.fbx · Model · 32 KB
+- SM_Env_Ground_Greeble_04.fbx · Model · 33 KB
+- SM_Env_Ground_Slope_01.fbx · Model · 31 KB
+- SM_Env_Ground_Slope_02.fbx · Model · 30 KB
+- SM_Env_LakeEdge_Corner_01.fbx · Model · 35 KB
+- SM_Env_LakeEdge_Corner_02.fbx · Model · 41 KB
+- SM_Env_LakeEdge_Corner_03.fbx · Model · 35 KB
+- SM_Env_LakeEdge_Corner_04.fbx · Model · 37 KB
+- SM_Env_LakeEdge_Corner_05.fbx · Model · 33 KB
+- SM_Env_Plant_Balloon_01.fbx · Model · 27 KB
+- SM_Env_Plant_Balloon_02.fbx · Model · 27 KB
+- SM_Env_Plant_Balloon_03.fbx · Model · 26 KB
+- SM_Env_Plant_Balloon_04.fbx · Model · 25 KB
+- SM_Env_Plant_Balloon_Group_01.fbx · Model · 39 KB
+- SM_Env_Plant_Balloon_Group_02.fbx · Model · 43 KB
+- SM_Env_Plant_Balloon_Group_03.fbx · Model · 30 KB
+- SM_Env_Plant_Balloon_Tall_01.fbx · Model · 39 KB
+- SM_Env_Plant_Balloon_Tall_02.fbx · Model · 40 KB
+- SM_Env_Plant_Bulb_01.fbx · Model · 48 KB
+- SM_Env_Plant_Bulb_02.fbx · Model · 47 KB
+- SM_Env_Plant_Cactus_01.fbx · Model · 38 KB
+- SM_Env_Plant_Cactus_02.fbx · Model · 33 KB
+- SM_Env_Plant_Cactus_03.fbx · Model · 30 KB
+- SM_Env_Plant_Coral_01.fbx · Model · 65 KB
+- SM_Env_Plant_Coral_02.fbx · Model · 44 KB
+- SM_Env_Plant_Coral_03.fbx · Model · 38 KB
+- SM_Env_Plant_Fern_02.fbx · Model · 39 KB
+- SM_Env_Plant_Fester_01.fbx · Model · 55 KB
+- SM_Env_Plant_Fester_02.fbx · Model · 47 KB
+- SM_Env_Plant_Fester_03.fbx · Model · 43 KB
+- SM_Env_Plant_Fester_04.fbx · Model · 35 KB
+- SM_Env_Plant_Flower_01.fbx · Model · 46 KB
+- SM_Env_Plant_Flower_03.fbx · Model · 44 KB
+- SM_Env_Plant_Flower_Large_01.fbx · Model · 62 KB
+- SM_Env_Plant_Flower_Large_02.fbx · Model · 106 KB
+- SM_Env_Plant_Flower_Large_03.fbx · Model · 159 KB
+- SM_Env_Plant_Flower_Large_Pod_01.fbx · Model · 41 KB
+- SM_Env_Plant_Flower_Large_Pod_02.fbx · Model · 62 KB
+- SM_Env_Plant_Grass_Flower_01.fbx · Model · 53 KB
+- SM_Env_Plant_Grass_Flower_02.fbx · Model · 40 KB
+- SM_Env_Plant_Grass_Flower_03.fbx · Model · 30 KB
+- SM_Env_Plant_Hallowed_01.fbx · Model · 113 KB
+- SM_Env_Plant_Hallowed_02.fbx · Model · 82 KB
+- SM_Env_Plant_Hallowed_03.fbx · Model · 54 KB
+- SM_Env_Plant_Kelp_01.fbx · Model · 31 KB
+- SM_Env_Plant_Kelp_02.fbx · Model · 40 KB
+- SM_Env_Plant_Kelp_03.fbx · Model · 35 KB
+- SM_Env_Plant_Kelp_04.fbx · Model · 44 KB
+- SM_Env_Plant_Kelp_05.fbx · Model · 53 KB
+- SM_Env_Plant_Kelp_06.fbx · Model · 35 KB
+- SM_Env_Plant_Large_Spiral_01.fbx · Model · 37 KB
+- SM_Env_Plant_Large_Spiral_02.fbx · Model · 35 KB
+- SM_Env_Plant_Large_Spiral_03.fbx · Model · 34 KB
+- SM_Env_Plant_Large_Spiral_04.fbx · Model · 32 KB
+- SM_Env_Plant_Large_Spiral_Preset_01.fbx · Model · 63 KB
+- SM_Env_Plant_Large_Spiral_Preset_02.fbx · Model · 59 KB
+- SM_Env_Plant_Large_Spiral_Preset_03.fbx · Model · 70 KB
+- SM_Env_Plant_Large_Spiral_Preset_04.fbx · Model · 44 KB
+- SM_Env_Plant_Mushroom_01.fbx · Model · 46 KB
+- SM_Env_Plant_Mushroom_02.fbx · Model · 38 KB
+- SM_Env_Plant_Mushroom_03.fbx · Model · 32 KB
+- SM_Env_Plant_Palm_01.fbx · Model · 60 KB
+- SM_Env_Plant_Palm_02.fbx · Model · 57 KB
+- SM_Env_Plant_Pinecone_01.fbx · Model · 45 KB
+- SM_Env_Plant_Pinecone_02.fbx · Model · 44 KB
+- SM_Env_Plant_Pinecone_03.fbx · Model · 43 KB
+- SM_Env_Plant_Shrub_01.fbx · Model · 35 KB
+- SM_Env_Plant_Shrub_02.fbx · Model · 32 KB
+- SM_Env_Plant_Small_01.fbx · Model · 34 KB
+- SM_Env_Plant_Small_02.fbx · Model · 38 KB
+- SM_Env_Plant_Small_03.fbx · Model · 38 KB
+- SM_Env_Plant_Spikey_01.fbx · Model · 82 KB
+- SM_Env_Plant_Spikey_02.fbx · Model · 67 KB
+- SM_Env_Plant_Spikey_03.fbx · Model · 60 KB
+- SM_Env_Plant_Succulent_Large_01.fbx · Model · 86 KB
+- SM_Env_Plant_Succulent_Large_02.fbx · Model · 86 KB
+- SM_Env_Plant_Tall_01.fbx · Model · 39 KB
+- SM_Env_Plant_Tall_02.fbx · Model · 43 KB
+- SM_Env_Plant_Tall_03.fbx · Model · 55 KB
+- SM_Env_Plant_Tall_04.fbx · Model · 40 KB
+- SM_Env_Skeleton_Preset_01.fbx · Model · 596 KB
+- SM_Env_Skeleton_Preset_02.fbx · Model · 264 KB
+- SM_Env_Skeleton_Preset_03.fbx · Model · 545 KB
+- SM_Env_Skeleton_Preset_04.fbx · Model · 183 KB
+- SM_Env_Skeleton_Preset_05.fbx · Model · 130 KB
+- SM_Env_Skeleton_Preset_Flesh_01.fbx · Model · 717 KB
+- SM_Env_Skeleton_Preset_Flesh_02.fbx · Model · 317 KB
+- SM_Env_Skeleton_Preset_Flesh_03.fbx · Model · 652 KB
+- SM_Env_Skeleton_Preset_Flesh_04.fbx · Model · 222 KB
+- SM_Env_Skeleton_Preset_Flesh_05.fbx · Model · 150 KB
+- SM_Env_Snow_Pile_01.fbx · Model · 32 KB
+- SM_Env_Snow_Pile_02.fbx · Model · 32 KB
+- SM_Env_Snow_Pile_03.fbx · Model · 30 KB
+- SM_Env_Snow_Pile_04.fbx · Model · 30 KB
+- SM_Env_Snow_Pile_05.fbx · Model · 30 KB
+- SM_FX_Skydome_01.fbx · Model · 32 KB
+- SM_FX_Skydome_Planet_01.fbx · Model · 20 KB
+- SM_FX_Skydone_Sun_01.fbx · Model · 31 KB
+- SM_Generic_CloudRing_01.fbx · Model · 730 KB
+- SM_Generic_CloudRing_02.fbx · Model · 553 KB
+- SM_Generic_CloudRing_03.fbx · Model · 657 KB
+- SM_Generic_Cloud_01.fbx · Model · 36 KB
+- SM_Generic_Cloud_02.fbx · Model · 35 KB
+- SM_Generic_Cloud_03.fbx · Model · 44 KB
+- SM_Generic_Cloud_04.fbx · Model · 32 KB
+- SM_Generic_Cloud_05.fbx · Model · 36 KB
+- SM_Generic_Ground_01.fbx · Model · 32 KB
+- SM_Generic_Ground_02.fbx · Model · 42 KB
+- SM_Generic_Ground_03.fbx · Model · 55 KB
+- SM_Generic_Ground_Flat_01.fbx · Model · 48 KB
+- SM_Generic_Ground_Tile_01.fbx · Model · 28 KB
+- SM_Generic_Ground_Tile_2.fbx · Model · 29 KB
+- SM_Generic_SkyDome_01.fbx · Model · 29 KB
+- SM_Generic_SkyDome_02.fbx · Model · 30 KB
+- SM_Generic_Small_Rocks_01.fbx · Model · 33 KB
+- SM_Generic_Small_Rocks_02.fbx · Model · 33 KB
+- SM_Generic_Small_Rocks_03.fbx · Model · 28 KB
+- SM_Generic_Small_Rocks_04.fbx · Model · 29 KB
+- SM_Generic_Small_Rocks_05.fbx · Model · 27 KB
+- SM_Generic_TreeDead_01.fbx · Model · 37 KB
+- SM_Generic_TreeStump_01.fbx · Model · 33 KB
+- SM_Generic_Tree_01.fbx · Model · 48 KB
+- SM_Generic_Tree_02.fbx · Model · 34 KB
+- SM_Generic_Tree_03.fbx · Model · 35 KB
+- SM_Generic_Tree_04.fbx · Model · 37 KB
+- SM_Gerneric_Grass_Patch_01.fbx · Model · 48 KB
+- SM_Gerneric_Grass_Patch_02.fbx · Model · 48 KB
+- SM_Gerneric_Grass_Patch_03.fbx · Model · 34 KB
+- SM_PropBillboard_10.fbx · Model · 94 KB
+- SM_Prop_Alien_Letter_01.fbx · Model · 36 KB
+- SM_Prop_Alien_Letter_02.fbx · Model · 34 KB
+- SM_Prop_Alien_Letter_03.fbx · Model · 34 KB
+- SM_Prop_Alien_Letter_04.fbx · Model · 34 KB
+- SM_Prop_Alien_Letter_05.fbx · Model · 36 KB
+- SM_Prop_Alien_Letter_06.fbx · Model · 36 KB
+- SM_Prop_Alien_Letter_07.fbx · Model · 35 KB
+- SM_Prop_Alien_Letter_08.fbx · Model · 34 KB
+- SM_Prop_Alien_Letter_09.fbx · Model · 34 KB
+- SM_Prop_Alien_Letter_10.fbx · Model · 36 KB
+- SM_Prop_Alien_Letter_11.fbx · Model · 35 KB
+- SM_Prop_Alien_Letter_12.fbx · Model · 35 KB
+- SM_Prop_Alien_Letter_13.fbx · Model · 34 KB
+- SM_Prop_Alien_Letter_14.fbx · Model · 34 KB
+- SM_Prop_Alien_Letter_15.fbx · Model · 34 KB
+- SM_Prop_Alien_Letter_16.fbx · Model · 36 KB
+- SM_Prop_Alien_Letter_17.fbx · Model · 37 KB
+- SM_Prop_Alien_Letter_18.fbx · Model · 34 KB
+- SM_Prop_Alien_Letter_19.fbx · Model · 36 KB
+- SM_Prop_Alien_Letter_20.fbx · Model · 35 KB
+- SM_Prop_Alien_Letter_21.fbx · Model · 34 KB
+- SM_Prop_Alien_Letter_22.fbx · Model · 35 KB
+- SM_Prop_Alien_Letter_23.fbx · Model · 35 KB
+- SM_Prop_Alien_Letter_24.fbx · Model · 34 KB
+- SM_Prop_Alien_Letter_25.fbx · Model · 35 KB
+- SM_Prop_Alien_Letter_26.fbx · Model · 36 KB
+- SM_Prop_Alien_Letter_27.fbx · Model · 35 KB
+- SM_Prop_Alien_Letter_28.fbx · Model · 35 KB
+- SM_Prop_Alien_Letter_29.fbx · Model · 36 KB
+- SM_Prop_Alien_Letter_30.fbx · Model · 34 KB
+- SM_Prop_Alien_Letter_31.fbx · Model · 34 KB
+- SM_Prop_Alien_Letter_32.fbx · Model · 35 KB
+- SM_Prop_Alien_Letter_33.fbx · Model · 35 KB
+- SM_Prop_Alien_Letter_34.fbx · Model · 35 KB
+- SM_Prop_Alien_Letter_35.fbx · Model · 34 KB
+- SM_Prop_Alien_Letter_36.fbx · Model · 35 KB
+- SM_Prop_BackbackSatellite_01.fbx · Model · 93 KB
+- SM_Prop_BatteryPack_01.fbx · Model · 52 KB
+- SM_Prop_BatteryPack_02.fbx · Model · 69 KB
+- SM_Prop_BatteryPack_03.fbx · Model · 106 KB
+- SM_Prop_Bed_Single_01.fbx · Model · 109 KB
+- SM_Prop_Bench_Seat_02.fbx · Model · 80 KB
+- SM_Prop_Bike_Hitch_01.fbx · Model · 37 KB
+- SM_Prop_Bike_Hitch_02.fbx · Model · 57 KB
+- SM_Prop_Billboard_01.fbx · Model · 95 KB
+- SM_Prop_Billboard_02.fbx · Model · 95 KB
+- SM_Prop_Billboard_03.fbx · Model · 38 KB
+- SM_Prop_Billboard_04.fbx · Model · 37 KB
+- SM_Prop_Billboard_05.fbx · Model · 383 KB
+- SM_Prop_Billboard_06.fbx · Model · 386 KB
+- SM_Prop_Billboard_07.fbx · Model · 46 KB
+- SM_Prop_Billboard_08.fbx · Model · 46 KB
+- SM_Prop_Billboard_09.fbx · Model · 95 KB
+- SM_Prop_Billboard_10.fbx · Model · 94 KB
+- SM_Prop_Billboard_11.fbx · Model · 36 KB
+- SM_Prop_Billboard_Large_01.fbx · Model · 53 KB
+- SM_Prop_Billboard_Large_02.fbx · Model · 44 KB
+- SM_Prop_Buoy_01.fbx · Model · 32 KB
+- SM_Prop_Cardboard_Box_01.fbx · Model · 37 KB
+- SM_Prop_Cardboard_Box_02.fbx · Model · 39 KB
+- SM_Prop_Cardboard_Box_03.fbx · Model · 37 KB
+- SM_Prop_Cardboard_Box_04.fbx · Model · 38 KB
+- SM_Prop_Cardboard_Box_05.fbx · Model · 44 KB
+- SM_Prop_CardReader_01.fbx · Model · 36 KB
+- SM_Prop_Cash_Register_01.fbx · Model · 64 KB
+- SM_Prop_Chair_03.fbx · Model · 54 KB
+- SM_Prop_Chair_04.fbx · Model · 55 KB
+- SM_Prop_Container_01.fbx · Model · 180 KB
+- SM_Prop_Drone_03.fbx · Model · 78 KB
+- SM_Prop_Drone_04.fbx · Model · 48 KB
+- SM_Prop_Fuel_Cell_01.fbx · Model · 64 KB
+- SM_Prop_Holosign_SynKyng_01.fbx · Model · 38 KB
+- SM_Prop_Holosign_SynKyng_01_Bottles_01.fbx · Model · 123 KB
+- SM_Prop_Holosign_SynKyng_01_Head_01.fbx · Model · 70 KB
+- SM_Prop_Holosign_SynKyng_01_Stars_01.fbx · Model · 37 KB
+- SM_Prop_HoverPad_01.fbx · Model · 48 KB
+- SM_Prop_Hydroponic_Planter_01.fbx · Model · 37 KB
+- SM_Prop_Hydroponic_Planter_02.fbx · Model · 70 KB
+- SM_Prop_Hydroponic_Planter_02_Insert_01.fbx · Model · 390 KB
+- SM_Prop_Hydroponic_Plant_01.fbx · Model · 45 KB
+- SM_Prop_Hydroponic_Plant_02.fbx · Model · 57 KB
+- SM_Prop_Hydroponic_Plant_03.fbx · Model · 33 KB
+- SM_Prop_Junky_Female_01.fbx · Model · 129 KB
+- SM_Prop_Junky_Female_02.fbx · Model · 130 KB
+- SM_Prop_Junky_Female_03.fbx · Model · 119 KB
+- SM_Prop_Junky_Female_04.fbx · Model · 119 KB
+- SM_Prop_Junky_Female_05.fbx · Model · 118 KB
+- SM_Prop_Junky_Male_01.fbx · Model · 133 KB
+- SM_Prop_Junky_Male_02.fbx · Model · 132 KB
+- SM_Prop_Junky_Male_03.fbx · Model · 136 KB
+- SM_Prop_Junky_Male_04.fbx · Model · 133 KB
+- SM_Prop_Junky_Male_05.fbx · Model · 122 KB
+- SM_Prop_Junk_Cardboard_01.fbx · Model · 42 KB
+- SM_Prop_Junk_Cardboard_02.fbx · Model · 33 KB
+- SM_Prop_Junk_Cardboard_03.fbx · Model · 31 KB
+- SM_Prop_Junk_Cardboard_04.fbx · Model · 32 KB
+- SM_Prop_Junk_Cardboard_05.fbx · Model · 32 KB
+- SM_Prop_Junk_Cardboard_06.fbx · Model · 43 KB
+- SM_Prop_Junk_Cardboard_07.fbx · Model · 41 KB
+- SM_Prop_Junk_Cardboard_08.fbx · Model · 55 KB
+- SM_Prop_Junk_Paper_01.fbx · Model · 27 KB
+- SM_Prop_Junk_Paper_02.fbx · Model · 26 KB
+- SM_Prop_Junk_Paper_03.fbx · Model · 25 KB
+- SM_Prop_Junk_Paper_04.fbx · Model · 28 KB
+- SM_Prop_Keyboard_01.fbx · Model · 34 KB
+- SM_Prop_Monitor_02.fbx · Model · 181 KB
+- SM_Prop_Monitor_03.fbx · Model · 143 KB
+- SM_Prop_Monitor_05.fbx · Model · 89 KB
+- SM_Prop_Monitor_07.fbx · Model · 56 KB
+- SM_Prop_Monitor_08.fbx · Model · 117 KB
+- SM_Prop_Monitor_09.fbx · Model · 78 KB
+- SM_Prop_Monitor_10.fbx · Model · 36 KB
+- SM_Prop_Monitor_11.fbx · Model · 39 KB
+- SM_Prop_Monitor_12.fbx · Model · 39 KB
+- SM_Prop_Monitor_13.fbx · Model · 39 KB
+- SM_Prop_Monitor_14.fbx · Model · 35 KB
+- SM_Prop_Monitor_15.fbx · Model · 37 KB
+- SM_Prop_PDA_01.fbx · Model · 51 KB
+- SM_Prop_Poster_02.fbx · Model · 32 KB
+- SM_Prop_Poster_03.fbx · Model · 32 KB
+- SM_Prop_Poster_04.fbx · Model · 32 KB
+- SM_Prop_Poster_05.fbx · Model · 32 KB
+- SM_Prop_Poster_06.fbx · Model · 32 KB
+- SM_Prop_Poster_07.fbx · Model · 32 KB
+- SM_Prop_PowerCellCharger_01.fbx · Model · 44 KB
+- SM_Prop_PowerCellCharger_02.fbx · Model · 45 KB
+- SM_Prop_PowerCellCharger_03.fbx · Model · 41 KB
+- SM_Prop_PowerCellCharger_04.fbx · Model · 35 KB
+- SM_Prop_PowerCell_01.fbx · Model · 42 KB
+- SM_Prop_PowerCell_02.fbx · Model · 37 KB
+- SM_Prop_PowerCell_03.fbx · Model · 43 KB
+- SM_Prop_PowerCell_04.fbx · Model · 38 KB
+- SM_Prop_PowerGenerator_01.fbx · Model · 622 KB
+- SM_Prop_PowerGenerator_02.fbx · Model · 253 KB
+- SM_Prop_PowerGenerator_03.fbx · Model · 87 KB
+- SM_Prop_Satellite_01.fbx · Model · 189 KB
+- SM_Prop_Satellite_02.fbx · Model · 261 KB
+- SM_Prop_Satellite_03.fbx · Model · 186 KB
+- SM_Prop_Satellite_04.fbx · Model · 206 KB
+- SM_Prop_Satellite_05.fbx · Model · 77 KB
+- SM_Prop_Satellite_06.fbx · Model · 119 KB
+- SM_Prop_Satellite_07.fbx · Model · 146 KB
+- SM_Prop_Satellite_08.fbx · Model · 108 KB
+- SM_Prop_Scanner_01.fbx · Model · 34 KB
+- SM_Prop_Scav_Barrel_01.fbx · Model · 42 KB
+- SM_Prop_Scav_Scrap_01.fbx · Model · 81 KB
+- SM_Prop_Scav_Scrap_02.fbx · Model · 80 KB
+- SM_Prop_Scav_Scrap_03.fbx · Model · 114 KB
+- SM_Prop_Scav_Scrap_04.fbx · Model · 108 KB
+- SM_Prop_Scav_Scrap_06.fbx · Model · 61 KB
+- SM_Prop_Scav_Scrap_08.fbx · Model · 69 KB
+- SM_Prop_Scav_Scrap_09.fbx · Model · 45 KB
+- SM_Prop_Scav_Scrap_10.fbx · Model · 55 KB
+- SM_Prop_Scav_Scrap_11.fbx · Model · 126 KB
+- SM_Prop_Scav_Scrap_12.fbx · Model · 34 KB
+- SM_Prop_Scav_Scrap_13.fbx · Model · 35 KB
+- SM_Prop_Scav_Scrap_16.fbx · Model · 33 KB
+- SM_Prop_Scav_Scrap_17.fbx · Model · 54 KB
+- SM_Prop_Scav_Scrap_18.fbx · Model · 37 KB
+- SM_Prop_Scav_Scrap_19.fbx · Model · 50 KB
+- SM_Prop_Scav_Scrap_20.fbx · Model · 51 KB
+- SM_Prop_Scav_Scrap_21.fbx · Model · 34 KB
+- SM_Prop_Scav_Scrap_22.fbx · Model · 39 KB
+- SM_Prop_Scav_Scrap_23.fbx · Model · 52 KB
+- SM_Prop_Scav_Scrap_24.fbx · Model · 43 KB
+- SM_Prop_Scav_Scrap_25.fbx · Model · 32 KB
+- SM_Prop_Scav_Scrap_26.fbx · Model · 55 KB
+- SM_Prop_Scav_Scrap_27.fbx · Model · 67 KB
+- SM_Prop_Scav_Scrap_28.fbx · Model · 101 KB
+- SM_Prop_Scav_Scrap_29.fbx · Model · 157 KB
+- SM_Prop_Scav_Scrap_30.fbx · Model · 60 KB
+- SM_Prop_Scav_Scrap_31.fbx · Model · 38 KB
+- SM_Prop_Scav_Scrap_32.fbx · Model · 36 KB
+- SM_Prop_Scav_Scrap_33.fbx · Model · 33 KB
+- SM_Prop_Scav_Scrap_34.fbx · Model · 46 KB
+- SM_Prop_Scav_Scrap_35.fbx · Model · 162 KB
+- SM_Prop_Scav_Scrap_36.fbx · Model · 48 KB
+- SM_Prop_Scav_Scrap_37.fbx · Model · 96 KB
+- SM_Prop_Scav_Scrap_38.fbx · Model · 113 KB
+- SM_Prop_Scav_Scrap_39.fbx · Model · 53 KB
+- SM_Prop_Scav_Scrap_40.fbx · Model · 69 KB
+- SM_Prop_Scav_Scrap_41.fbx · Model · 66 KB
+- SM_Prop_Scav_Scrap_42.fbx · Model · 43 KB
+- SM_Prop_Scav_Scrap_43.fbx · Model · 62 KB
+- SM_Prop_Scav_Scrap_44.fbx · Model · 94 KB
+- SM_Prop_Scav_Scrap_45.fbx · Model · 91 KB
+- SM_Prop_Scav_Scrap_46.fbx · Model · 50 KB
+- SM_Prop_Scav_Scrap_47.fbx · Model · 79 KB
+- SM_Prop_Scav_Scrap_48.fbx · Model · 40 KB
+- SM_Prop_Scav_Scrap_49.fbx · Model · 70 KB
+- SM_Prop_Scav_Scrap_50.fbx · Model · 160 KB
+- SM_Prop_Scav_Scrap_51.fbx · Model · 143 KB
+- SM_Prop_Scav_Scrap_52.fbx · Model · 85 KB
+- SM_Prop_Scav_Scrap_53.fbx · Model · 115 KB
+- SM_Prop_Scav_Scrap_54.fbx · Model · 160 KB
+- SM_Prop_Scav_Scrap_55.fbx · Model · 49 KB
+- SM_Prop_Scav_Scrap_56.fbx · Model · 93 KB
+- SM_Prop_Sign_01.fbx · Model · 85 KB
+- SM_Prop_Sign_02.fbx · Model · 145 KB
+- SM_Prop_Suit_Hanging_01.fbx · Model · 214 KB
+- SM_Prop_SwipeCard_01.fbx · Model · 36 KB
+- SM_Prop_SwipeCard_02.fbx · Model · 37 KB
+- SM_Prop_Symbol_01.fbx · Model · 40 KB
+- SM_Prop_Symbol_02.fbx · Model · 32 KB
+- SM_Prop_Symbol_03.fbx · Model · 33 KB
+- SM_Prop_Symbol_04.fbx · Model · 35 KB
+- SM_Prop_Symbol_05.fbx · Model · 35 KB
+- SM_Prop_Symbol_06.fbx · Model · 36 KB
+- SM_Prop_Symbol_07.fbx · Model · 38 KB
+- SM_Prop_Symbol_08.fbx · Model · 34 KB
+- SM_Prop_Symbol_09.fbx · Model · 35 KB
+- SM_Prop_Symbol_10.fbx · Model · 37 KB
+- SM_Prop_Symbol_11.fbx · Model · 38 KB
+- SM_Prop_Symbol_12.fbx · Model · 41 KB
+- SM_Prop_Symbol_13.fbx · Model · 37 KB
+- SM_Prop_Symbol_14.fbx · Model · 40 KB
+- SM_Prop_Symbol_15.fbx · Model · 41 KB
+- SM_Prop_Symbol_16.fbx · Model · 38 KB
+- SM_Prop_Symbol_17.fbx · Model · 34 KB
+- SM_Prop_Symbol_18.fbx · Model · 34 KB
+- SM_Prop_Symbol_19.fbx · Model · 34 KB
+- SM_Prop_Symbol_20.fbx · Model · 35 KB
+- SM_Prop_Symbol_21.fbx · Model · 36 KB
+- SM_Prop_Symbol_22.fbx · Model · 34 KB
+- SM_Prop_Syncola_Can_01.fbx · Model · 27 KB
+- SM_Prop_Syncola_Can_02.fbx · Model · 28 KB
+- SM_Prop_Syncola_Can_Stack_01.fbx · Model · 28 KB
+- SM_Prop_Syncola_Can_Stack_02.fbx · Model · 32 KB
+- SM_Prop_Syncola_Can_Stack_03.fbx · Model · 31 KB
+- SM_Prop_Table_Medium_01.fbx · Model · 90 KB
+- SM_Prop_Tether_Pole_01.fbx · Model · 35 KB
+- SM_Prop_Tether_Pole_Tall_01.fbx · Model · 35 KB
+- SM_Prop_Tether_Pole_Tall_02.fbx · Model · 35 KB
+- SM_Prop_TrashBin_01.fbx · Model · 85 KB
+- SM_Prop_Turbine_01.fbx · Model · 129 KB
+- SM_Prop_Turret_Large_01.fbx · Model · 286 KB
+- SM_Prop_Turret_Large_02.fbx · Model · 387 KB
+- SM_Prop_Turret_Large_03.fbx · Model · 169 KB
+- SM_Prop_Turret_Medium_01.fbx · Model · 225 KB
+- SM_Prop_Vendor_Arm_01.fbx · Model · 102 KB
+- SM_Prop_Vendor_Block_01.fbx · Model · 29 KB
+- SM_Prop_Vendor_Bug_01.fbx · Model · 76 KB
+- SM_Prop_Vendor_Bug_02.fbx · Model · 81 KB
+- SM_Prop_Vendor_Bug_03.fbx · Model · 62 KB
+- SM_Prop_Vendor_Bug_04.fbx · Model · 60 KB
+- SM_Prop_Vendor_Cooker_01.fbx · Model · 68 KB
+- SM_Prop_Vendor_Cooker_02.fbx · Model · 21 KB
+- SM_Prop_Vendor_Fork_01.fbx · Model · 34 KB
+- SM_Prop_Vendor_Ham_01.fbx · Model · 31 KB
+- SM_Prop_Vendor_Knife_01.fbx · Model · 35 KB
+- SM_Prop_Vendor_Knives_Hanging_01.fbx · Model · 58 KB
+- SM_Prop_Vendor_Pans_Hanging_01.fbx · Model · 32 KB
+- SM_Prop_Vendor_Pans_Hanging_02.fbx · Model · 37 KB
+- SM_Prop_Vendor_Pans_Hanging_03.fbx · Model · 41 KB
+- SM_Prop_Vendor_Pan_01.fbx · Model · 28 KB
+- SM_Prop_Vendor_Pan_02.fbx · Model · 28 KB
+- SM_Prop_Vendor_Pan_03.fbx · Model · 30 KB
+- SM_Prop_Vendor_Pan_04.fbx · Model · 27 KB
+- SM_Prop_Vendor_Pan_05.fbx · Model · 27 KB
+- SM_Prop_Vendor_Pan_06.fbx · Model · 29 KB
+- SM_Prop_Vendor_Pan_07.fbx · Model · 28 KB
+- SM_Prop_Vendor_Pan_08.fbx · Model · 29 KB
+- SM_Prop_Vendor_Pan_Bowls_01.fbx · Model · 33 KB
+- SM_Prop_Vendor_Pan_Bowl_01.fbx · Model · 28 KB
+- SM_Prop_Vendor_Pan_Insert_01.fbx · Model · 38 KB
+- SM_Prop_Vendor_Pan_Insert_02.fbx · Model · 31 KB
+- SM_Prop_Vendor_Plate_01.fbx · Model · 36 KB
+- SM_Prop_Vendor_Plate_02.fbx · Model · 36 KB
+- SM_Prop_Vendor_Product_01.fbx · Model · 59 KB
+- SM_Prop_Vendor_Product_02.fbx · Model · 94 KB
+- SM_Prop_Vendor_Product_03.fbx · Model · 54 KB
+- SM_Prop_Vendor_Product_04.fbx · Model · 92 KB
+- SM_Prop_Vendor_Product_05.fbx · Model · 52 KB
+- SM_Prop_Vendor_Product_06.fbx · Model · 41 KB
+- SM_Prop_Vendor_Product_07.fbx · Model · 44 KB
+- SM_Prop_Vendor_Product_08.fbx · Model · 39 KB
+- SM_Prop_Vendor_Product_09.fbx · Model · 70 KB
+- SM_Prop_Vendor_Product_10.fbx · Model · 42 KB
+- SM_Prop_Vendor_Product_11.fbx · Model · 41 KB
+- SM_Prop_Vendor_Product_12.fbx · Model · 131 KB
+- SM_Prop_Vendor_Product_13.fbx · Model · 100 KB
+- SM_Prop_Vendor_Product_14.fbx · Model · 106 KB
+- SM_Prop_Vendor_Rib_01.fbx · Model · 33 KB
+- SM_Prop_Vendor_Spatch_01.fbx · Model · 35 KB
+- SM_Prop_Vendor_Tentacle_01.fbx · Model · 52 KB
+- SM_Prop_Vendor_Tentacle_02.fbx · Model · 51 KB
+- SM_Prop_Vendor_Tool_01.fbx · Model · 77 KB
+- SM_Prop_Vendor_Tool_02.fbx · Model · 74 KB
+- SM_Prop_Vendor_TV_01.fbx · Model · 73 KB
+- SM_Prop_Wall_Unit_01.fbx · Model · 93 KB
+- SM_Ship_Block_01.fbx · Model · 43 KB
+- SM_Ship_Block_02.fbx · Model · 41 KB
+- SM_Ship_Block_03.fbx · Model · 39 KB
+- SM_Ship_Block_04.fbx · Model · 40 KB
+- SM_Veh_Apc_01.fbx · Model · 1.2 MB
+- SM_Veh_Apc_02.fbx · Model · 1.1 MB
+- SM_Veh_Barge_01.fbx · Model · 980 KB
+- SM_Veh_Buggy_01.fbx · Model · 967 KB
+- SM_Veh_HoverCraft_01.fbx · Model · 889 KB
+- SM_Veh_Hover_Bike_02.fbx · Model · 430 KB
+- SM_Veh_Hover_Bike_02_Attach_Cargo_01.fbx · Model · 123 KB
+- SM_Veh_Hover_Bike_02_Attach_Cargo_02.fbx · Model · 81 KB
+- SM_Veh_Hover_Bike_02_Attach_Dome_01.fbx · Model · 46 KB
+- SM_Veh_Hover_Bike_Attach_Bag_01.fbx · Model · 45 KB
+- SM_Veh_Hover_Bike_Attach_Bag_02.fbx · Model · 44 KB
+- SM_Veh_Hover_Bike_Attach_Bag_03.fbx · Model · 37 KB
+- SM_Veh_Hover_Bike_Attach_Bedroll_01.fbx · Model · 63 KB
+- SM_Veh_Rocket_01.fbx · Model · 207 KB
+- SM_Veh_Turret_Large_01.fbx · Model · 95 KB
+- SM_Veh_Turret_Large_02.fbx · Model · 139 KB
+- SM_Veh_Turret_Large_03.fbx · Model · 137 KB
+- SM_Veh_Turret_Medium_01.fbx · Model · 91 KB
+- SM_Veh_Vendor_01.fbx · Model · 580 KB
+- SM_Veh_Vendor_Tug_01.fbx · Model · 181 KB
+- SM_Veh_Vendor_Tug_01_Attach_Barrels_01.fbx · Model · 83 KB
+- SM_Veh_Vendor_Tug_01_Attach_Bow_01.fbx · Model · 31 KB
+- SM_Veh_Vendor_Tug_01_Attach_Fin_01.fbx · Model · 34 KB
+- SM_Veh_Vendor_Tug_01_Attach_Fin_02.fbx · Model · 37 KB
+- SM_Veh_Vendor_Tug_01_Attach_Fin_03.fbx · Model · 30 KB
+- SM_Veh_Vendor_Tug_01_Attach_Fin_04.fbx · Model · 35 KB
+- SM_Veh_Vendor_Tug_01_Attach_Front_Fin_01.fbx · Model · 29 KB
+- SM_Veh_Vendor_Tug_01_Attach_Port_01.fbx · Model · 29 KB
+- SM_Veh_Vendor_Tug_01_Attach_Roof_02.fbx · Model · 41 KB
+- SM_Veh_Vendor_Tug_01_Attach_Sail_01.fbx · Model · 31 KB
+- SM_Veh_Vendor_Tug_01_Attach_Shelves_01.fbx · Model · 33 KB
+- SM_Veh_Vendor_Tug_01_Attach_Sign_01.fbx · Model · 40 KB
+- SM_Veh_Vendor_Tug_01_Attach_Sign_02.fbx · Model · 50 KB
+- SM_Veh_Vendor_Tug_01_Attach_Sign_03.fbx · Model · 47 KB
+- SM_Veh_Vendor_Tug_01_Attach_Tech_01.fbx · Model · 41 KB
+- SM_Wep_Alien_02.fbx · Model · 69 KB
+- SM_Wep_Alien_04.fbx · Model · 65 KB
+- SM_Wep_Assault_02.fbx · Model · 103 KB
+- SM_Wep_BigAxe_01.fbx · Model · 47 KB
+- SM_Wep_BigAxe_02.fbx · Model · 44 KB
+- SM_Wep_BigAxe_03.fbx · Model · 48 KB
+- SM_Wep_BigAxe_04.fbx · Model · 44 KB
+- SM_Wep_BigAxe_05.fbx · Model · 53 KB
+- SM_Wep_BigAxe_06.fbx · Model · 53 KB
+- SM_Wep_BigAxe_07.fbx · Model · 57 KB
+- SM_Wep_Dagger_01.fbx · Model · 37 KB
+- SM_Wep_Dagger_02.fbx · Model · 34 KB
+- SM_Wep_Dagger_04.fbx · Model · 37 KB
+- SM_Wep_Dagger_05.fbx · Model · 36 KB
+- SM_Wep_Dagger_06.fbx · Model · 40 KB
+- SM_Wep_Dagger_07.fbx · Model · 34 KB
+- SM_Wep_Hammer_01.fbx · Model · 81 KB
+- SM_Wep_Hammer_02.fbx · Model · 53 KB
+- SM_Wep_Hammer_03.fbx · Model · 70 KB
+- SM_Wep_Heavy_01.fbx · Model · 76 KB
+- SM_Wep_Heavy_02.fbx · Model · 126 KB
+- SM_Wep_Heavy_03.fbx · Model · 79 KB
+- SM_Wep_Launcher_02.fbx · Model · 95 KB
+- SM_Wep_Launcher_03.fbx · Model · 92 KB
+- SM_Wep_Missile_01.fbx · Model · 47 KB
+- SM_Wep_Pistol_02.fbx · Model · 73 KB
+- SM_Wep_Pistol_03.fbx · Model · 58 KB
+- SM_Wep_Pistol_04.fbx · Model · 66 KB
+- SM_Wep_Pistol_05.fbx · Model · 67 KB
+- SM_Wep_Pistol_06.fbx · Model · 56 KB
+- SM_Wep_Scope_Alien_01.fbx · Model · 34 KB
+- SM_Wep_Scope_Small_01.fbx · Model · 32 KB
+- SM_Wep_Scope_Small_02.fbx · Model · 35 KB
+- SM_Wep_Scope_Small_03.fbx · Model · 34 KB
+- SM_Wep_Scope_Sniper_01.fbx · Model · 37 KB
+- SM_Wep_Scope_Sniper_02.fbx · Model · 35 KB
+- SM_Wep_Scope_Sniper_03.fbx · Model · 37 KB
+- SM_Wep_Scope_Unique_01.fbx · Model · 33 KB
+- SM_Wep_Shield_01.fbx · Model · 38 KB
+- SM_Wep_Shield_02.fbx · Model · 51 KB
+- SM_Wep_Shield_03.fbx · Model · 43 KB
+- SM_Wep_Shield_04.fbx · Model · 45 KB
+- SM_Wep_Shield_05.fbx · Model · 37 KB
+- SM_Wep_Shotgun_01.fbx · Model · 81 KB
+- SM_Wep_Shotgun_01_Shell_01.fbx · Model · 38 KB
+- SM_Wep_Shotgun_02.fbx · Model · 83 KB
+- SM_Wep_Shotgun_03.fbx · Model · 75 KB
+- SM_Wep_SmallAxe_01.fbx · Model · 39 KB
+- SM_Wep_SmallAxe_02.fbx · Model · 45 KB
+- SM_Wep_SmallAxe_03.fbx · Model · 41 KB
+- SM_Wep_SmallAxe_04.fbx · Model · 44 KB
+- SM_Wep_SmallAxe_05.fbx · Model · 43 KB
+- SM_Wep_SMG_01.fbx · Model · 97 KB
+- SM_Wep_SMG_02.fbx · Model · 74 KB
+- SM_Wep_SMG_03.fbx · Model · 85 KB
+- SM_Wep_Sniper_02.fbx · Model · 76 KB
+- SM_Wep_Sniper_03.fbx · Model · 150 KB
+- SM_Wep_Sword_01a.fbx · Model · 38 KB
+- SM_Wep_Sword_02.fbx · Model · 38 KB
+- SM_Wep_Sword_03.fbx · Model · 39 KB
+- SM_Wep_Sword_05.fbx · Model · 37 KB
+- SM_Wep_Sword_06.fbx · Model · 42 KB
+- SM_Wep_Sword_07.fbx · Model · 39 KB
+- SM_Wep_Sword_08.fbx · Model · 39 KB
+- TempEngine.fbx · Model · 38 KB
+- Temp_Antenna.fbx · Model · 39 KB
+- Temp_Building_Rock.fbx · Model · 47 KB
+- temp_door_Big.fbx · Model · 30 KB
+- temp_pipe.fbx · Model · 50 KB
+
+**Assets/Synty/PolygonSciFiWorlds/Models/Collision/**
+
+- SM_Bld_Bridge_Platform_01_Collision.fbx · Model · 24 KB
+- SM_Bld_Corp_Comms_01_Collision.fbx · Model · 48 KB
+- SM_Bld_Corp_Loading_Bay_01_Collision.fbx · Model · 32 KB
+- SM_Bld_Corp_Radar_01_Arm_01_Collision.fbx · Model · 27 KB
+- SM_Bld_Corp_Radar_01_Collision.fbx · Model · 52 KB
+- SM_Bld_Corp_Radar_01_Top_01_Collision.fbx · Model · 26 KB
+- SM_Bld_Corp_Wall_02_Collision.fbx · Model · 21 KB
+- SM_Bld_Corp_Wall_03_Collision.fbx · Model · 22 KB
+- SM_Bld_Door_Double_01_Collision.fbx · Model · 24 KB
+- SM_Bld_Door_Double_02_Collision.fbx · Model · 23 KB
+- SM_Bld_Door_Double_03_Collision.fbx · Model · 23 KB
+- SM_Bld_Door_Double_04_Collision.fbx · Model · 23 KB
+- SM_Bld_Door_Double_05_Collision.fbx · Model · 23 KB
+- SM_Bld_Door_Double_To_Single_01_Collision.fbx · Model · 22 KB
+- SM_Bld_Door_Single_01_Collision.fbx · Model · 23 KB
+- SM_Bld_Door_Single_02_Collision.fbx · Model · 23 KB
+- SM_Bld_Door_Single_03_Collision.fbx · Model · 23 KB
+- SM_Bld_Door_Single_04_Collision.fbx · Model · 23 KB
+- SM_Bld_Door_Single_05_Collision.fbx · Model · 23 KB
+- SM_Bld_Elevator_Double_01_Collision.fbx · Model · 22 KB
+- SM_Bld_Elevator_Hover_Double_02_Collision.fbx · Model · 22 KB
+- SM_Bld_Elevator_Single_01_Collision.fbx · Model · 23 KB
+- SM_Bld_LaunchPad_01_Collision.fbx · Model · 76 KB
+- SM_Bld_LaunchPad_02_Collision.fbx · Model · 42 KB
+- SM_Bld_Overhang_01_Collision.fbx · Model · 24 KB
+- SM_Bld_Pod_Air_Lock_01_Collision.fbx · Model · 23 KB
+- SM_Bld_Pod_Air_Lock_02_Collision.fbx · Model · 22 KB
+- SM_Bld_Pod_Base_01_Collision.fbx · Model · 21 KB
+- SM_Bld_Pod_Base_02_Collision.fbx · Model · 21 KB
+- SM_Bld_Pod_Base_03_Collision.fbx · Model · 22 KB
+- SM_Bld_Pod_Base_04_Collision.fbx · Model · 23 KB
+- SM_Bld_Pod_Corridor_Round_01_Collision.fbx · Model · 28 KB
+- SM_Bld_Pod_Corridor_Round_02_Collision.fbx · Model · 23 KB
+- SM_Bld_Pod_Corridor_Round_03_Collision.fbx · Model · 30 KB
+- SM_Bld_Pod_Corridor_Round_04_Collision.fbx · Model · 23 KB
+- SM_Bld_Pod_Corridor_Round_04_Platform_01_Collision.fbx · Model · 22 KB
+- SM_Bld_Pod_Corridor_Round_05_Collision.fbx · Model · 24 KB
+- SM_Bld_Pod_Corridor_Round_Connector_01_Collision.fbx · Model · 24 KB
+- SM_Bld_Pod_Corridor_Round_Door_Single_01_Collision.fbx · Model · 22 KB
+- SM_Bld_Pod_Corridor_Round_End_01_Collision_01.fbx · Model · 23 KB
+- SM_Bld_Pod_Corridor_Round_End_02_Collision.fbx · Model · 23 KB
+- SM_Bld_Pod_Corridor_Round_Ramp_01_Collision.fbx · Model · 23 KB
+- SM_Bld_Pod_Corridor_Round_Support_01_Collision.fbx · Model · 23 KB
+- SM_Bld_Pod_Corridor_Square_01_Collision.fbx · Model · 23 KB
+- SM_Bld_Pod_Corridor_Square_02_Collision.fbx · Model · 24 KB
+- SM_Bld_Pod_Corridor_Square_03_Collision.fbx · Model · 23 KB
+- SM_Bld_Pod_Corridor_Square_04_Base_01_Collision.fbx · Model · 21 KB
+- SM_Bld_Pod_Corridor_Square_04_Collision.fbx · Model · 25 KB
+- SM_Bld_Pod_Corridor_Square_05_Collision.fbx · Model · 23 KB
+- SM_Bld_Pod_Corridor_Square_Connector_01_Collision.fbx · Model · 23 KB
+- SM_Bld_Pod_Corridor_Square_Door_Double_01_Collision.fbx · Model · 22 KB
+- SM_Bld_Pod_Corridor_Square_Door_Single_01_Collision.fbx · Model · 22 KB
+- SM_Bld_Pod_Corridor_Square_End_01_Collision.fbx · Model · 23 KB
+- SM_Bld_Pod_Corridor_Square_End_02_Collision.fbx · Model · 23 KB
+- SM_Bld_Pod_Corridor_Square_Ramp_01_Collision.fbx · Model · 23 KB
+- SM_Bld_Pod_Corridor_Switch_Connector_01_Collision.fbx · Model · 24 KB
+- SM_Bld_Pod_Hub_01_Collision.fbx · Model · 24 KB
+- SM_Bld_Pod_Hub_02_Collision.fbx · Model · 28 KB
+- SM_Bld_Pod_Hub_03_Collision.fbx · Model · 26 KB
+- SM_Bld_Pod_Pad_01_Collision.fbx · Model · 23 KB
+- SM_Bld_Pod_Ramp_02_Collision.fbx · Model · 22 KB
+- SM_Bld_Pod_Silo_01_Collision.fbx · Model · 23 KB
+- SM_Bld_Pod_Silo_02_Base_01_Collision.fbx · Model · 22 KB
+- SM_Bld_Pod_Silo_03_Collision.fbx · Model · 26 KB
+- SM_Bld_Pod_Silo_04_Collision.fbx · Model · 26 KB
+- SM_Bld_Pod_Silo_08_Collision.fbx · Model · 23 KB
+- SM_Bld_Portal_01_Collision.fbx · Model · 22 KB
+- SM_Bld_Portal_01_Ring_01_Collision.fbx · Model · 23 KB
+- SM_Bld_Tower_Monitors_01_Collision.fbx · Model · 24 KB
+- SM_Bld_Vendor_02_Collision.fbx · Model · 23 KB
+- SM_Veh_Barge_01_Collision.fbx · Model · 23 KB
+- SM_Veh_Barge_01_ControlRoom_01_Collision.fbx · Model · 23 KB
+- SM_Veh_Vendor_Tug_01_Collision.fbx · Model · 33 KB
+
+**Assets/Synty/PolygonSciFiWorlds/Models/Collision/Convex/**
+
+- SM_Bld_Bridge_End_01_Convex.asset · Asset · 3 KB
+- SM_Bld_Bridge_Rail_01_Convex.asset · Asset · 3 KB
+- SM_Bld_Bridge_Rail_End_01_Convex.asset · Asset · 3 KB
+- SM_Bld_Bridge_Rail_Half_01_Convex.asset · Asset · 3 KB
+- SM_Bld_Bridge_Rail_Pillar_01_Convex.asset · Asset · 3 KB
+- SM_Bld_Bridge_Strut_01_Convex.asset · Asset · 3 KB
+- SM_Bld_Column_01_Convex.asset · Asset · 3 KB
+- SM_Bld_Column_02_Convex.asset · Asset · 3 KB
+- SM_Bld_Core_Antenna_Greeble_01_Convex 1.asset · Asset · 6 KB
+- SM_Bld_Core_Antenna_Greeble_01_Convex.asset · Asset · 3 KB
+- SM_Bld_Core_Antenna_Greeble_02_Convex 1.asset · Asset · 6 KB
+- SM_Bld_Core_Antenna_Greeble_02_Convex.asset · Asset · 3 KB
+- SM_Bld_Core_Observation_Greeble_01_Convex.asset · Asset · 3 KB
+- SM_Bld_Core_Observation_Greeble_02_Convex.asset · Asset · 3 KB
+- SM_Bld_Core_Observation_Greeble_Pipe_01_Convex.asset · Asset · 3 KB
+- SM_Bld_Core_Observation_Greeble_Pipe_Base_01_Convex 1.asset · Asset · 3 KB
+- SM_Bld_Core_Observation_Greeble_Pipe_Base_01_Convex.asset · Asset · 3 KB
+- SM_Bld_Corp_Containment_01_Convex 1.asset · Asset · 9 KB
+- SM_Bld_Corp_Containment_01_Convex.asset · Asset · 3 KB
+- SM_Bld_Corp_Containment_02_Convex 1.asset · Asset · 12 KB
+- SM_Bld_Corp_Containment_02_Convex.asset · Asset · 3 KB
+- SM_Bld_Corp_Generator_01_Convex 1.asset · Asset · 3 KB
+- SM_Bld_Corp_LandingPad_03_Convex 1.asset · Asset · 3 KB
+- SM_Bld_Corp_LandingPad_03_Convex.asset · Asset · 3 KB
+- SM_Bld_Corp_Wall_02_Convex.asset · Asset · 3 KB
+- SM_Bld_Door_Double_01_Convex 1.asset · Asset · 2 KB
+- SM_Bld_Door_Double_01_Convex 2.asset · Asset · 2 KB
+- SM_Bld_Door_Double_01_Convex.asset · Asset · 3 KB
+- SM_Bld_Door_Double_02_Convex 1.asset · Asset · 3 KB
+- SM_Bld_Door_Double_02_Convex 2.asset · Asset · 3 KB
+- SM_Bld_Door_Double_02_Convex 3.asset · Asset · 3 KB
+- SM_Bld_Door_Double_02_Convex.asset · Asset · 3 KB
+- SM_Bld_Door_Double_03_Convex 1.asset · Asset · 2 KB
+- SM_Bld_Door_Double_03_Convex.asset · Asset · 2 KB
+- SM_Bld_Door_Double_04_Convex 1.asset · Asset · 3 KB
+- SM_Bld_Door_Double_04_Convex.asset · Asset · 3 KB
+- SM_Bld_Door_Double_05_Convex 1.asset · Asset · 3 KB
+- SM_Bld_Door_Double_05_Convex.asset · Asset · 3 KB
+- SM_Bld_Door_Single_01_Convex.asset · Asset · 3 KB
+- SM_Bld_Door_Single_02_Convex 1.asset · Asset · 2 KB
+- SM_Bld_Door_Single_02_Convex.asset · Asset · 3 KB
+- SM_Bld_Door_Single_03_Convex 1.asset · Asset · 2 KB
+- SM_Bld_Door_Single_03_Convex.asset · Asset · 3 KB
+- SM_Bld_Door_Single_04_Convex 1.asset · Asset · 3 KB
+- SM_Bld_Door_Single_04_Convex 2.asset · Asset · 3 KB
+- SM_Bld_Door_Single_04_Convex.asset · Asset · 3 KB
+- SM_Bld_Door_Single_05_Convex.asset · Asset · 3 KB
+- SM_Bld_Elevator_Hover_Double_01_Convex.asset · Asset · 3 KB
+- SM_Bld_Elevator_Hover_Single_01_Convex.asset · Asset · 3 KB
+- SM_Bld_Greeble_01_Convex.asset · Asset · 3 KB
+- SM_Bld_Greeble_02_Convex.asset · Asset · 3 KB
+- SM_Bld_Greeble_03_Convex.asset · Asset · 3 KB
+- SM_Bld_Greeble_04_Convex.asset · Asset · 3 KB
+- SM_Bld_Greeble_05_Convex.asset · Asset · 3 KB
+- SM_Bld_Greeble_06_Convex.asset · Asset · 3 KB
+- SM_Bld_Greeble_07_Convex.asset · Asset · 3 KB
+- SM_Bld_Greeble_08_Convex.asset · Asset · 3 KB
+- SM_Bld_Greeble_09_Convex.asset · Asset · 3 KB
+- SM_Bld_Greeble_10_Convex.asset · Asset · 3 KB
+- SM_Bld_Greeble_11_Convex.asset · Asset · 3 KB
+- SM_Bld_Greeble_12_Convex.asset · Asset · 3 KB
+- SM_Bld_Greeble_13_Convex.asset · Asset · 3 KB
+- SM_Bld_Greeble_14_Convex.asset · Asset · 3 KB
+- SM_Bld_Greeble_15_Convex.asset · Asset · 3 KB
+- SM_Bld_Greeble_16_Convex.asset · Asset · 3 KB
+- SM_Bld_Greeble_17_Convex.asset · Asset · 3 KB
+- SM_Bld_Greeble_18_Convex.asset · Asset · 3 KB
+- SM_Bld_Greeble_19_Convex.asset · Asset · 3 KB
+- SM_Bld_Greeble_20_Convex.asset · Asset · 3 KB
+- SM_Bld_Greeble_21_Convex.asset · Asset · 3 KB
+- SM_Bld_Greeble_22_Convex.asset · Asset · 3 KB
+- SM_Bld_Greeble_23_Convex.asset · Asset · 3 KB
+- SM_Bld_Greeble_24_Convex.asset · Asset · 3 KB
+- SM_Bld_Greeble_25_Convex.asset · Asset · 3 KB
+- SM_Bld_Greeble_26_Convex.asset · Asset · 3 KB
+- SM_Bld_Greeble_27_Convex.asset · Asset · 3 KB
+- SM_Bld_Light_01_Convex.asset · Asset · 3 KB
+- SM_Bld_Light_02_Convex.asset · Asset · 3 KB
+- SM_Bld_Light_03_Convex.asset · Asset · 3 KB
+- SM_Bld_Light_04_Convex.asset · Asset · 3 KB
+- SM_Bld_Light_05_Convex.asset · Asset · 3 KB
+- SM_Bld_Light_06_Convex.asset · Asset · 3 KB
+- SM_Bld_Light_07_Convex.asset · Asset · 3 KB
+- SM_Bld_Light_08_Convex.asset · Asset · 3 KB
+- SM_Bld_Light_09_Convex.asset · Asset · 3 KB
+- SM_Bld_Light_10_Convex.asset · Asset · 3 KB
+- SM_Bld_Light_11_Convex.asset · Asset · 3 KB
+- SM_Bld_Light_12_Convex.asset · Asset · 3 KB
+- SM_Bld_Light_13_Convex 1.asset · Asset · 3 KB
+- SM_Bld_Light_13_Convex.asset · Asset · 3 KB
+- SM_Bld_Overhang_01_Convex 1.asset · Asset · 12 KB
+- SM_Bld_Overhang_01_Convex 2.asset · Asset · 15 KB
+- SM_Bld_Overhang_01_Convex.asset · Asset · 3 KB
+- SM_Bld_Pillar_01_Convex.asset · Asset · 3 KB
+- SM_Bld_Pillar_02_Convex.asset · Asset · 3 KB
+- SM_Bld_Pillar_03_Convex.asset · Asset · 3 KB
+- SM_Bld_Planetary_Cannon_01_Convex 1.asset · Asset · 9 KB
+- SM_Bld_Planetary_Cannon_01_Convex 2.asset · Asset · 3 KB
+- SM_Bld_Planetary_Cannon_01_Convex 3.asset · Asset · 3 KB
+- SM_Bld_Planetary_Cannon_01_Convex 4.asset · Asset · 15 KB
+- SM_Bld_Planetary_Cannon_01_Convex 5.asset · Asset · 25 KB
+- SM_Bld_Planetary_Cannon_01_Convex.asset · Asset · 3 KB
+- SM_Bld_Platform_Barrier_Long_01_Convex.asset · Asset · 3 KB
+- SM_Bld_Platform_Barrier_Long_02_Convex.asset · Asset · 3 KB
+- SM_Bld_Platform_Barrier_Pillar_01_Convex.asset · Asset · 3 KB
+- SM_Bld_Platform_Barrier_Pillar_InnerCorner_01_Convex.asset · Asset · 3 KB
+- SM_Bld_Platform_Barrier_Pillar_Middle_01_Convex.asset · Asset · 3 KB
+- SM_Bld_Platform_Barrier_Short_01_Convex.asset · Asset · 3 KB
+- SM_Bld_Platform_Base_Large_Corner_01_Convex.asset · Asset · 3 KB
+- SM_Bld_Platform_Base_Small_02_Single_01_Convex.asset · Asset · 3 KB
+- SM_Bld_Platform_Base_Small_Corner_01_Convex.asset · Asset · 3 KB
+- SM_Bld_Platform_Large_Corner_02_Convex.asset · Asset · 2 KB
+- SM_Bld_Platform_Large_Corner_03_Convex.asset · Asset · 2 KB
+- SM_Bld_Platform_Small_Corner_03_Convex.asset · Asset · 2 KB
+- SM_Bld_Platform_Stairs_01_Convex.asset · Asset · 3 KB
+- SM_Bld_Pod_Base_03_Convex.asset · Asset · 3 KB
+- SM_Bld_Pod_Base_04_Convex.asset · Asset · 3 KB
+- SM_Bld_Pod_Corridor_Round_Support_01_Convex 1.asset · Asset · 3 KB
+- SM_Bld_Pod_Corridor_Round_Support_01_Convex.asset · Asset · 3 KB
+- SM_Bld_Pod_Hab_Large_02_Convex 1.asset · Asset · 3 KB
+- SM_Bld_Pod_Hab_Large_02_Convex.asset · Asset · 3 KB
+- SM_Bld_Pod_Research_05_Convex 1.asset · Asset · 3 KB
+- SM_Bld_Pod_Research_05_Convex 2.asset · Asset · 3 KB
+- SM_Bld_Pod_Research_05_Convex 3.asset · Asset · 3 KB
+- SM_Bld_Pod_Research_05_Convex 4.asset · Asset · 3 KB
+- SM_Bld_Pod_Research_05_Convex 5.asset · Asset · 3 KB
+- SM_Bld_Pod_Research_05_Convex 6.asset · Asset · 3 KB
+- SM_Bld_Pod_Research_05_Convex 7.asset · Asset · 3 KB
+- SM_Bld_Pod_Research_05_Convex.asset · Asset · 3 KB
+- SM_Bld_Pod_Research_07_Convex.asset · Asset · 3 KB
+- SM_Bld_Pod_Support_01_Convex 1.asset · Asset · 3 KB
+- SM_Bld_Pod_Support_01_Convex.asset · Asset · 3 KB
+- SM_Bld_Pod_Support_02_Convex 1.asset · Asset · 3 KB
+- SM_Bld_Pod_Support_02_Convex.asset · Asset · 3 KB
+- SM_Bld_Pod_Support_03_Convex 1.asset · Asset · 3 KB
+- SM_Bld_Pod_Support_03_Convex.asset · Asset · 3 KB
+- SM_Bld_Portal_01_Convex 1.asset · Asset · 9 KB
+- SM_Bld_Portal_01_Convex.asset · Asset · 3 KB
+- SM_Bld_Scav_Dish_01_Convex.asset · Asset · 3 KB
+- SM_Bld_Scav_Dish_Background_01_Convex 1.asset · Asset · 3 KB
+- SM_Bld_Scav_Dish_Background_01_Convex.asset · Asset · 3 KB
+- SM_Bld_Scav_Refinery_Silo_04_Convex.asset · Asset · 3 KB
+- SM_Bld_Vendor_02_Convex.asset · Asset · 3 KB
+- SM_Bld_WindMill_01_Convex 1.asset · Asset · 9 KB
+- SM_Bld_WindMill_01_Convex 2.asset · Asset · 3 KB
+- SM_Bld_WindMill_01_Convex.asset · Asset · 3 KB
+- SM_Bld_Window_01_Convex.asset · Asset · 3 KB
+- SM_Bld_Window_02_Convex.asset · Asset · 3 KB
+- SM_Bld_Window_03_Convex.asset · Asset · 3 KB
+- SM_Bld_Window_04_Convex.asset · Asset · 3 KB
+- SM_Bld_Window_05_Convex.asset · Asset · 3 KB
+- SM_Bld_Window_06_Convex.asset · Asset · 3 KB
+- SM_Bld_Window_07_Convex.asset · Asset · 3 KB
+- SM_Bld_Window_08_Convex.asset · Asset · 3 KB
+- SM_Bld_Window_09_Convex.asset · Asset · 3 KB
+- SM_Bld_Window_10_Convex.asset · Asset · 3 KB
+- SM_Bld_Window_11_Convex.asset · Asset · 3 KB
+- SM_Bld_Window_12_Convex.asset · Asset · 3 KB
+- SM_Bld_Window_13_Convex.asset · Asset · 3 KB
+- SM_Bld_Window_14_Convex.asset · Asset · 3 KB
+- SM_Bld_Window_15_Convex.asset · Asset · 3 KB
+- SM_Env_Artifact_AlienRuin_01_Convex.asset · Asset · 3 KB
+- SM_Env_Artifact_AlienRuin_02_Convex.asset · Asset · 3 KB
+- SM_Env_Artifact_AlienRuin_03_Convex.asset · Asset · 3 KB
+- SM_Env_Artifact_AlienRuin_04_Convex.asset · Asset · 3 KB
+- SM_Env_Artifact_AlienRuin_05_Convex.asset · Asset · 3 KB
+- SM_Env_Artifact_AlienRuin_06_Convex.asset · Asset · 3 KB
+- SM_Env_Artifact_AlienRuin_07_Convex.asset · Asset · 3 KB
+- SM_Env_Artifact_AlienRuin_08_Convex.asset · Asset · 3 KB
+- SM_Env_Artifact_AlienRuin_09_Convex.asset · Asset · 3 KB
+- SM_Env_Artifact_AlienRuin_10_Convex 1.asset · Asset · 3 KB
+- SM_Env_Artifact_AlienRuin_10_Convex.asset · Asset · 3 KB
+- SM_Env_Artifact_AlienRuin_11_Convex.asset · Asset · 3 KB
+- SM_Env_Artifact_Arm_01_Convex.asset · Asset · 3 KB
+- SM_Env_Artifact_Head_01_Convex.asset · Asset · 3 KB
+- SM_Env_Artifact_Head_02_Convex.asset · Asset · 3 KB
+- SM_Env_Artifact_Head_03_Convex.asset · Asset · 3 KB
+- SM_Env_Core_Strut_01_Convex 1.asset · Asset · 31 KB
+- SM_Env_Core_Strut_01_Convex.asset · Asset · 3 KB
+- SM_Env_Core_Strut_02_Convex 1.asset · Asset · 31 KB
+- SM_Env_Core_Strut_02_Convex.asset · Asset · 3 KB
+- SM_Env_Plant_Balloon_01_Convex.asset · Asset · 3 KB
+- SM_Env_Plant_Balloon_02_Convex.asset · Asset · 3 KB
+- SM_Env_Plant_Balloon_03_Convex.asset · Asset · 3 KB
+- SM_Env_Plant_Balloon_04_Convex.asset · Asset · 3 KB
+- SM_Env_Plant_Balloon_Group_01_Convex.asset · Asset · 3 KB
+- SM_Env_Plant_Balloon_Group_02_Convex.asset · Asset · 3 KB
+- SM_Env_Plant_Balloon_Group_03_Convex.asset · Asset · 3 KB
+- SM_Env_Plant_Balloon_Tall_01_Convex.asset · Asset · 3 KB
+- SM_Env_Plant_Balloon_Tall_02_Convex.asset · Asset · 3 KB
+- SM_Env_Plant_Bulb_01_Convex.asset · Asset · 3 KB
+- SM_Env_Plant_Bulb_02_Convex.asset · Asset · 3 KB
+- SM_Env_Plant_Cactus_01_Convex.asset · Asset · 3 KB
+- SM_Env_Plant_Cactus_02_Convex.asset · Asset · 3 KB
+- SM_Env_Plant_Cactus_03_Convex.asset · Asset · 3 KB
+- SM_Env_Plant_Coral_01_Convex.asset · Asset · 3 KB
+- SM_Env_Plant_Coral_02_Convex.asset · Asset · 3 KB
+- SM_Env_Plant_Coral_03_Convex.asset · Asset · 3 KB
+- SM_Env_Plant_Fester_01_Convex 1.asset · Asset · 9 KB
+- SM_Env_Plant_Fester_01_Convex.asset · Asset · 3 KB
+- SM_Env_Plant_Fester_02_Convex 1.asset · Asset · 9 KB
+- SM_Env_Plant_Fester_02_Convex.asset · Asset · 3 KB
+- SM_Env_Plant_Fester_03_Convex 1.asset · Asset · 9 KB
+- SM_Env_Plant_Fester_03_Convex.asset · Asset · 3 KB
+- SM_Env_Plant_Fester_04_Convex 1.asset · Asset · 6 KB
+- SM_Env_Plant_Fester_04_Convex.asset · Asset · 3 KB
+- SM_Env_Plant_Flower_01_Convex.asset · Asset · 3 KB
+- SM_Env_Plant_Flower_03_Convex.asset · Asset · 3 KB
+- SM_Env_Plant_Flower_Large_01_Convex 1.asset · Asset · 9 KB
+- SM_Env_Plant_Flower_Large_01_Convex.asset · Asset · 3 KB
+- SM_Env_Plant_Flower_Large_02_Convex 1.asset · Asset · 9 KB
+- SM_Env_Plant_Flower_Large_02_Convex.asset · Asset · 3 KB
+- SM_Env_Plant_Flower_Large_03_Convex 1.asset · Asset · 9 KB
+- SM_Env_Plant_Flower_Large_03_Convex.asset · Asset · 3 KB
+- SM_Env_Plant_Flower_Large_Pod_01_Convex.asset · Asset · 3 KB
+- SM_Env_Plant_Flower_Large_Pod_02_Convex.asset · Asset · 3 KB
+- SM_Env_Plant_Hallowed_01_Convex 1.asset · Asset · 9 KB
+- SM_Env_Plant_Hallowed_01_Convex.asset · Asset · 3 KB
+- SM_Env_Plant_Hallowed_02_Convex 1.asset · Asset · 9 KB
+- SM_Env_Plant_Hallowed_02_Convex.asset · Asset · 3 KB
+- SM_Env_Plant_Hallowed_03_Convex 1.asset · Asset · 9 KB
+- SM_Env_Plant_Hallowed_03_Convex.asset · Asset · 3 KB
+- SM_Env_Plant_Kelp_04_Convex.asset · Asset · 3 KB
+- SM_Env_Plant_Kelp_05_Convex.asset · Asset · 3 KB
+- SM_Env_Plant_Kelp_06_Convex.asset · Asset · 3 KB
+- SM_Env_Plant_Large_Spiral_01_Convex 1.asset · Asset · 3 KB
+- SM_Env_Plant_Large_Spiral_01_Convex.asset · Asset · 3 KB
+- SM_Env_Plant_Large_Spiral_02_Convex 1.asset · Asset · 6 KB
+- SM_Env_Plant_Large_Spiral_02_Convex.asset · Asset · 3 KB
+- SM_Env_Plant_Large_Spiral_03_Convex 1.asset · Asset · 6 KB
+- SM_Env_Plant_Large_Spiral_03_Convex.asset · Asset · 3 KB
+- SM_Env_Plant_Large_Spiral_04_Convex 1.asset · Asset · 6 KB
+- SM_Env_Plant_Large_Spiral_04_Convex.asset · Asset · 3 KB
+- SM_Env_Plant_Large_Spiral_Preset_01_Convex 1.asset · Asset · 15 KB
+- SM_Env_Plant_Large_Spiral_Preset_01_Convex.asset · Asset · 3 KB
+- SM_Env_Plant_Large_Spiral_Preset_02_Convex 1.asset · Asset · 15 KB
+- SM_Env_Plant_Large_Spiral_Preset_02_Convex.asset · Asset · 3 KB
+- SM_Env_Plant_Large_Spiral_Preset_03_Convex 1.asset · Asset · 15 KB
+- SM_Env_Plant_Large_Spiral_Preset_03_Convex.asset · Asset · 3 KB
+- SM_Env_Plant_Large_Spiral_Preset_04_Convex 1.asset · Asset · 15 KB
+- SM_Env_Plant_Large_Spiral_Preset_04_Convex.asset · Asset · 3 KB
+- SM_Env_Plant_Palm_01_Convex 1.asset · Asset · 6 KB
+- SM_Env_Plant_Palm_01_Convex.asset · Asset · 3 KB
+- SM_Env_Plant_Palm_02_Convex 1.asset · Asset · 6 KB
+- SM_Env_Plant_Palm_02_Convex.asset · Asset · 3 KB
+- SM_Env_Plant_Palm_03_Convex.asset · Asset · 3 KB
+- SM_Env_Plant_Pinecone_01_Convex.asset · Asset · 3 KB
+- SM_Env_Plant_Pinecone_02_Convex.asset · Asset · 3 KB
+- SM_Env_Plant_Pinecone_03_Convex.asset · Asset · 3 KB
+- SM_Env_Plant_Spikey_01_Convex 1.asset · Asset · 6 KB
+- SM_Env_Plant_Spikey_01_Convex.asset · Asset · 3 KB
+- SM_Env_Plant_Spikey_02_Convex 1.asset · Asset · 6 KB
+- SM_Env_Plant_Spikey_02_Convex.asset · Asset · 3 KB
+- SM_Env_Plant_Spikey_03_Convex 1.asset · Asset · 6 KB
+- SM_Env_Plant_Spikey_03_Convex.asset · Asset · 3 KB
+- SM_Env_Plant_Succulent_Large_01_Convex.asset · Asset · 3 KB
+- SM_Generic_TreeDead_01_Convex 1.asset · Asset · 6 KB
+- SM_Generic_TreeDead_01_Convex.asset · Asset · 3 KB
+- SM_Generic_TreeStump_01_Convex.asset · Asset · 3 KB
+- SM_Generic_Tree_01_Convex 1.asset · Asset · 6 KB
+- SM_Generic_Tree_01_Convex.asset · Asset · 3 KB
+- SM_Generic_Tree_02_Convex.asset · Asset · 3 KB
+- SM_Generic_Tree_03_Convex 1.asset · Asset · 6 KB
+- SM_Generic_Tree_03_Convex.asset · Asset · 3 KB
+- SM_Generic_Tree_04_Convex 1.asset · Asset · 6 KB
+- SM_Generic_Tree_04_Convex.asset · Asset · 3 KB
+- SM_Prop_Antenna_02_Convex.asset · Asset · 3 KB
+- SM_Prop_Antenna_05_Convex.asset · Asset · 3 KB
+- SM_Prop_Antenna_06_Convex.asset · Asset · 3 KB
+- SM_Prop_Antenna_08_Convex.asset · Asset · 3 KB
+- SM_Prop_BackbackSatellite_01_Convex.asset · Asset · 3 KB
+- SM_Prop_BatteryPack_01_Convex.asset · Asset · 3 KB
+- SM_Prop_BatteryPack_02_Convex.asset · Asset · 3 KB
+- SM_Prop_BatteryPack_03_Convex.asset · Asset · 3 KB
+- SM_Prop_Bed_Single_01_Convex.asset · Asset · 3 KB
+- SM_Prop_Bench_Seat_02_Convex.asset · Asset · 3 KB
+- SM_Prop_Bike_Hitch_01_Convex.asset · Asset · 3 KB
+- SM_Prop_Bike_Hitch_02_Convex.asset · Asset · 3 KB
+- SM_Prop_Billboard_01_Convex.asset · Asset · 3 KB
+- SM_Prop_Billboard_02_Convex.asset · Asset · 3 KB
+- SM_Prop_Billboard_03_Convex.asset · Asset · 3 KB
+- SM_Prop_Billboard_04_Convex.asset · Asset · 3 KB
+- SM_Prop_Billboard_05_Convex.asset · Asset · 3 KB
+- SM_Prop_Billboard_06_Convex.asset · Asset · 3 KB
+- SM_Prop_Billboard_07_Convex.asset · Asset · 3 KB
+- SM_Prop_Billboard_08_Convex.asset · Asset · 3 KB
+- SM_Prop_Billboard_11_Convex.asset · Asset · 3 KB
+- SM_Prop_Billboard_Large_01_Convex 1.asset · Asset · 6 KB
+- SM_Prop_Billboard_Large_01_Convex.asset · Asset · 3 KB
+- SM_Prop_Billboard_Large_02_Convex 1.asset · Asset · 6 KB
+- SM_Prop_Billboard_Large_02_Convex.asset · Asset · 3 KB
+- SM_Prop_Buoy_01_Convex.asset · Asset · 3 KB
+- SM_Prop_Cable_01_Convex.asset · Asset · 3 KB
+- SM_Prop_Cable_02_Convex.asset · Asset · 3 KB
+- SM_Prop_Cable_03_Convex.asset · Asset · 3 KB
+- SM_Prop_Cable_04_Convex.asset · Asset · 3 KB
+- SM_Prop_Cable_05_Convex.asset · Asset · 3 KB
+- SM_Prop_Cable_06_Convex.asset · Asset · 3 KB
+- SM_Prop_Canopy_01_Convex.asset · Asset · 3 KB
+- SM_Prop_Canopy_02_Convex.asset · Asset · 3 KB
+- SM_Prop_Canopy_03_Convex.asset · Asset · 3 KB
+- SM_Prop_Canopy_Preset_01_Convex.asset · Asset · 3 KB
+- SM_Prop_Canopy_Preset_02_Convex.asset · Asset · 3 KB
+- SM_Prop_Canopy_Preset_03_Convex.asset · Asset · 3 KB
+- SM_Prop_Cardboard_Box_01_Convex.asset · Asset · 3 KB
+- SM_Prop_Cardboard_Box_02_Convex.asset · Asset · 3 KB
+- SM_Prop_Cardboard_Box_03_Convex.asset · Asset · 3 KB
+- SM_Prop_Cardboard_Box_04_Convex.asset · Asset · 3 KB
+- SM_Prop_Cardboard_Box_05_Convex.asset · Asset · 3 KB
+- SM_Prop_CardReader_01_Convex.asset · Asset · 3 KB
+- SM_Prop_Cash_Register_01_Convex.asset · Asset · 3 KB
+- SM_Prop_Chair_03_Convex.asset · Asset · 3 KB
+- SM_Prop_Chair_04_Convex.asset · Asset · 3 KB
+- SM_Prop_Container_01_Convex 1.asset · Asset · 3 KB
+- SM_Prop_Container_01_Convex.asset · Asset · 3 KB
+- SM_Prop_Drone_03_Convex.asset · Asset · 3 KB
+- SM_Prop_Drone_04_Convex.asset · Asset · 3 KB
+- SM_Prop_Fuel_Cell_01_Convex.asset · Asset · 3 KB
+- SM_Prop_HoverPad_01_Convex.asset · Asset · 3 KB
+- SM_Prop_Hydroponic_Planter_01_Convex.asset · Asset · 3 KB
+- SM_Prop_Hydroponic_Planter_02_Convex.asset · Asset · 3 KB
+- SM_Prop_Hydroponic_Planter_02_Insert_01_Convex.asset · Asset · 3 KB
+- SM_Prop_Hydroponic_Plant_03_Convex.asset · Asset · 3 KB
+- SM_Prop_Junky_Female_01_Convex 1.asset · Asset · 6 KB
+- SM_Prop_Junky_Female_01_Convex.asset · Asset · 3 KB
+- SM_Prop_Junky_Female_02_Convex 1.asset · Asset · 6 KB
+- SM_Prop_Junky_Female_02_Convex.asset · Asset · 3 KB
+- SM_Prop_Junky_Female_03_Convex 1.asset · Asset · 6 KB
+- SM_Prop_Junky_Female_03_Convex.asset · Asset · 3 KB
+- SM_Prop_Junky_Female_04_Convex 1.asset · Asset · 6 KB
+- SM_Prop_Junky_Female_04_Convex.asset · Asset · 3 KB
+- SM_Prop_Junky_Female_05_Convex 1.asset · Asset · 6 KB
+- SM_Prop_Junky_Female_05_Convex.asset · Asset · 3 KB
+- SM_Prop_Junky_Male_01_Convex 1.asset · Asset · 6 KB
+- SM_Prop_Junky_Male_01_Convex.asset · Asset · 3 KB
+- SM_Prop_Junky_Male_02_Convex 1.asset · Asset · 6 KB
+- SM_Prop_Junky_Male_02_Convex.asset · Asset · 3 KB
+- SM_Prop_Junky_Male_03_Convex 1.asset · Asset · 6 KB
+- SM_Prop_Junky_Male_03_Convex.asset · Asset · 3 KB
+- SM_Prop_Junky_Male_04_Convex 1.asset · Asset · 6 KB
+- SM_Prop_Junky_Male_04_Convex.asset · Asset · 3 KB
+- SM_Prop_Junky_Male_05_Convex 1.asset · Asset · 6 KB
+- SM_Prop_Junky_Male_05_Convex.asset · Asset · 3 KB
+- SM_Prop_Keyboard_01_Convex.asset · Asset · 3 KB
+- SM_Prop_Monitor_02_Convex 1.asset · Asset · 3 KB
+- SM_Prop_Monitor_02_Convex 2.asset · Asset · 3 KB
+- SM_Prop_Monitor_02_Convex 3.asset · Asset · 3 KB
+- SM_Prop_Monitor_02_Convex.asset · Asset · 3 KB
+- SM_Prop_Monitor_03_Convex.asset · Asset · 3 KB
+- SM_Prop_Monitor_05_Convex.asset · Asset · 3 KB
+- SM_Prop_Monitor_07_Convex.asset · Asset · 3 KB
+- SM_Prop_Monitor_08_Convex.asset · Asset · 3 KB
+- SM_Prop_Monitor_09_Convex.asset · Asset · 3 KB
+- SM_Prop_Monitor_10_Convex.asset · Asset · 3 KB
+- SM_Prop_Monitor_11_Convex.asset · Asset · 2 KB
+- SM_Prop_Monitor_12_Convex.asset · Asset · 3 KB
+- SM_Prop_Monitor_13_Convex.asset · Asset · 3 KB
+- SM_Prop_Monitor_14_Convex.asset · Asset · 3 KB
+- SM_Prop_PDA_01_Convex.asset · Asset · 3 KB
+- SM_Prop_PowerCellCharger_01_Convex.asset · Asset · 3 KB
+- SM_Prop_PowerCellCharger_02_Convex.asset · Asset · 3 KB
+- SM_Prop_PowerCellCharger_03_Convex.asset · Asset · 3 KB
+- SM_Prop_PowerCellCharger_04_Convex.asset · Asset · 3 KB
+- SM_Prop_PowerCell_01_Convex.asset · Asset · 3 KB
+- SM_Prop_PowerCell_02_Convex.asset · Asset · 3 KB
+- SM_Prop_PowerCell_03_Convex.asset · Asset · 3 KB
+- SM_Prop_PowerCell_04_Convex.asset · Asset · 3 KB
+- SM_Prop_PowerGenerator_01_Convex 1.asset · Asset · 25 KB
+- SM_Prop_PowerGenerator_01_Convex 2.asset · Asset · 50 KB
+- SM_Prop_PowerGenerator_01_Convex.asset · Asset · 3 KB
+- SM_Prop_PowerGenerator_02_Convex 1.asset · Asset · 6 KB
+- SM_Prop_PowerGenerator_02_Convex 2.asset · Asset · 3 KB
+- SM_Prop_PowerGenerator_02_Convex.asset · Asset · 3 KB
+- SM_Prop_PowerGenerator_03_Convex.asset · Asset · 3 KB
+- SM_Prop_Powerline_01_Convex.asset · Asset · 3 KB
+- SM_Prop_Satellite_01_Convex 1.asset · Asset · 3 KB
+- SM_Prop_Satellite_01_Convex 2.asset · Asset · 3 KB
+- SM_Prop_Satellite_01_Convex.asset · Asset · 3 KB
+- SM_Prop_Satellite_02_Convex 1.asset · Asset · 3 KB
+- SM_Prop_Satellite_02_Convex 2.asset · Asset · 3 KB
+- SM_Prop_Satellite_02_Convex 3.asset · Asset · 3 KB
+- SM_Prop_Satellite_02_Convex 4.asset · Asset · 3 KB
+- SM_Prop_Satellite_02_Convex.asset · Asset · 3 KB
+- SM_Prop_Satellite_03_Convex 1.asset · Asset · 3 KB
+- SM_Prop_Satellite_03_Convex.asset · Asset · 3 KB
+- SM_Prop_Satellite_04_Convex 1.asset · Asset · 3 KB
+- SM_Prop_Satellite_04_Convex 2.asset · Asset · 3 KB
+- SM_Prop_Satellite_04_Convex 3.asset · Asset · 3 KB
+- SM_Prop_Satellite_04_Convex.asset · Asset · 3 KB
+- SM_Prop_Satellite_05_Convex 1.asset · Asset · 3 KB
+- SM_Prop_Satellite_05_Convex.asset · Asset · 3 KB
+- SM_Prop_Satellite_06_Convex.asset · Asset · 3 KB
+- SM_Prop_Satellite_07_Convex.asset · Asset · 3 KB
+- SM_Prop_Satellite_08_Convex.asset · Asset · 3 KB
+- SM_Prop_Scanner_01_Convex.asset · Asset · 3 KB
+- SM_Prop_Scav_Barrel_01_Convex.asset · Asset · 3 KB
+- SM_Prop_Scav_Scrap_01_Convex.asset · Asset · 3 KB
+- SM_Prop_Scav_Scrap_02_Convex.asset · Asset · 3 KB
+- SM_Prop_Scav_Scrap_03_Convex.asset · Asset · 3 KB
+- SM_Prop_Scav_Scrap_04_Convex.asset · Asset · 3 KB
+- SM_Prop_Scav_Scrap_05_Convex.asset · Asset · 3 KB
+- SM_Prop_Scav_Scrap_06_Convex.asset · Asset · 3 KB
+- SM_Prop_Scav_Scrap_07_Convex.asset · Asset · 3 KB
+- SM_Prop_Scav_Scrap_08_Convex.asset · Asset · 3 KB
+- SM_Prop_Scav_Scrap_09_Convex.asset · Asset · 3 KB
+- SM_Prop_Scav_Scrap_10_Convex.asset · Asset · 3 KB
+- SM_Prop_Scav_Scrap_11_Convex.asset · Asset · 3 KB
+- SM_Prop_Scav_Scrap_12_Convex.asset · Asset · 3 KB
+- SM_Prop_Scav_Scrap_13_Convex.asset · Asset · 3 KB
+- SM_Prop_Scav_Scrap_14_Convex.asset · Asset · 3 KB
+- SM_Prop_Scav_Scrap_15_Convex.asset · Asset · 3 KB
+- SM_Prop_Scav_Scrap_16_Convex.asset · Asset · 3 KB
+- SM_Prop_Scav_Scrap_17_Convex.asset · Asset · 3 KB
+- SM_Prop_Scav_Scrap_18_Convex.asset · Asset · 3 KB
+- SM_Prop_Scav_Scrap_19_Convex.asset · Asset · 3 KB
+- SM_Prop_Scav_Scrap_20_Convex.asset · Asset · 3 KB
+- SM_Prop_Scav_Scrap_21_Convex.asset · Asset · 3 KB
+- SM_Prop_Scav_Scrap_22_Convex.asset · Asset · 3 KB
+- SM_Prop_Scav_Scrap_23_Convex.asset · Asset · 3 KB
+- SM_Prop_Scav_Scrap_24_Convex.asset · Asset · 3 KB
+- SM_Prop_Scav_Scrap_25_Convex.asset · Asset · 3 KB
+- SM_Prop_Scav_Scrap_26_Convex.asset · Asset · 3 KB
+- SM_Prop_Scav_Scrap_27_Convex.asset · Asset · 3 KB
+- SM_Prop_Scav_Scrap_28_Convex.asset · Asset · 3 KB
+- SM_Prop_Scav_Scrap_29_Convex.asset · Asset · 3 KB
+- SM_Prop_Scav_Scrap_30_Convex 1.asset · Asset · 15 KB
+- SM_Prop_Scav_Scrap_30_Convex.asset · Asset · 3 KB
+- SM_Prop_Scav_Scrap_31_Convex.asset · Asset · 3 KB
+- SM_Prop_Scav_Scrap_32_Convex.asset · Asset · 3 KB
+- SM_Prop_Scav_Scrap_33_Convex.asset · Asset · 3 KB
+- SM_Prop_Scav_Scrap_34_Convex.asset · Asset · 3 KB
+- SM_Prop_Scav_Scrap_35_Convex 1.asset · Asset · 25 KB
+- SM_Prop_Scav_Scrap_35_Convex.asset · Asset · 3 KB
+- SM_Prop_Scav_Scrap_36_Convex.asset · Asset · 3 KB
+- SM_Prop_Scav_Scrap_37_Convex.asset · Asset · 3 KB
+- SM_Prop_Scav_Scrap_38_Convex.asset · Asset · 3 KB
+- SM_Prop_Scav_Scrap_39_Convex.asset · Asset · 3 KB
+- SM_Prop_Scav_Scrap_40_Convex.asset · Asset · 3 KB
+- SM_Prop_Scav_Scrap_41_Convex.asset · Asset · 3 KB
+- SM_Prop_Scav_Scrap_42_Convex.asset · Asset · 3 KB
+- SM_Prop_Scav_Scrap_43_Convex.asset · Asset · 3 KB
+- SM_Prop_Scav_Scrap_44_Convex.asset · Asset · 3 KB
+- SM_Prop_Scav_Scrap_45_Convex.asset · Asset · 3 KB
+- SM_Prop_Scav_Scrap_46_Convex.asset · Asset · 3 KB
+- SM_Prop_Scav_Scrap_47_Convex.asset · Asset · 3 KB
+- SM_Prop_Scav_Scrap_48_Convex.asset · Asset · 3 KB
+- SM_Prop_Scav_Scrap_49_Convex.asset · Asset · 3 KB
+- SM_Prop_Scav_Scrap_50_Convex.asset · Asset · 3 KB
+- SM_Prop_Scav_Scrap_51_Convex.asset · Asset · 3 KB
+- SM_Prop_Scav_Scrap_52_Convex.asset · Asset · 3 KB
+- SM_Prop_Scav_Scrap_53_Convex 1.asset · Asset · 31 KB
+- SM_Prop_Scav_Scrap_53_Convex.asset · Asset · 3 KB
+- SM_Prop_Scav_Scrap_54_Convex.asset · Asset · 3 KB
+- SM_Prop_Scav_Scrap_55_Convex.asset · Asset · 3 KB
+- SM_Prop_Scav_Scrap_56_Convex.asset · Asset · 3 KB
+- SM_Prop_Scav_Scrap_Pile_01_Convex 1.asset · Asset · 31 KB
+- SM_Prop_Scav_Scrap_Pile_01_Convex.asset · Asset · 3 KB
+- SM_Prop_Scav_Scrap_Pile_02_Convex 1.asset · Asset · 31 KB
+- SM_Prop_Scav_Scrap_Pile_02_Convex.asset · Asset · 3 KB
+- SM_Prop_Scav_Scrap_Pile_03_Convex 1.asset · Asset · 31 KB
+- SM_Prop_Scav_Scrap_Pile_03_Convex.asset · Asset · 3 KB
+- SM_Prop_Scav_Scrap_Pile_04_Convex 1.asset · Asset · 31 KB
+- SM_Prop_Scav_Scrap_Pile_04_Convex.asset · Asset · 3 KB
+- SM_Prop_Sign_01_Convex.asset · Asset · 3 KB
+- SM_Prop_Sign_02_Convex.asset · Asset · 3 KB
+- SM_Prop_SolarPanel_04_Convex 2.asset · Asset · 3 KB
+- SM_Prop_Suit_Hanging_01_Convex.asset · Asset · 3 KB
+- SM_Prop_SwipeCard_01_Convex.asset · Asset · 3 KB
+- SM_Prop_SwipeCard_02_Convex.asset · Asset · 3 KB
+- SM_Prop_Syncola_Can_01_Convex.asset · Asset · 3 KB
+- SM_Prop_Syncola_Can_02_Convex.asset · Asset · 3 KB
+- SM_Prop_Syncola_Can_Stack_01_Convex.asset · Asset · 3 KB
+- SM_Prop_Syncola_Can_Stack_02_Convex.asset · Asset · 3 KB
+- SM_Prop_Syncola_Can_Stack_03_Convex.asset · Asset · 3 KB
+- SM_Prop_Table_Medium_01_Convex.asset · Asset · 3 KB
+- SM_Prop_Tether_Pole_01_Convex 1.asset · Asset · 9 KB
+- SM_Prop_Tether_Pole_01_Convex.asset · Asset · 3 KB
+- SM_Prop_Tether_Pole_Tall_01_Convex 1.asset · Asset · 9 KB
+- SM_Prop_Tether_Pole_Tall_01_Convex.asset · Asset · 3 KB
+- SM_Prop_TrashBin_01_Convex.asset · Asset · 3 KB
+- SM_Prop_Turbine_01_Convex.asset · Asset · 3 KB
+- SM_Prop_Turret_Large_01_Convex 1.asset · Asset · 3 KB
+- SM_Prop_Turret_Large_01_Convex 2.asset · Asset · 3 KB
+- SM_Prop_Turret_Large_01_Convex 3.asset · Asset · 3 KB
+- SM_Prop_Turret_Large_01_Convex 4.asset · Asset · 3 KB
+- SM_Prop_Turret_Large_01_Convex.asset · Asset · 3 KB
+- SM_Prop_Turret_Large_02_Convex 1.asset · Asset · 3 KB
+- SM_Prop_Turret_Large_02_Convex 2.asset · Asset · 3 KB
+- SM_Prop_Turret_Large_02_Convex 3.asset · Asset · 3 KB
+- SM_Prop_Turret_Large_02_Convex 4.asset · Asset · 3 KB
+- SM_Prop_Turret_Large_02_Convex 5.asset · Asset · 3 KB
+- SM_Prop_Turret_Large_02_Convex 6.asset · Asset · 3 KB
+- SM_Prop_Turret_Large_02_Convex.asset · Asset · 3 KB
+- SM_Prop_Turret_Large_03_Convex 1.asset · Asset · 3 KB
+- SM_Prop_Turret_Large_03_Convex 2.asset · Asset · 3 KB
+- SM_Prop_Turret_Large_03_Convex.asset · Asset · 3 KB
+- SM_Prop_Turret_Medium_01_Convex 1.asset · Asset · 3 KB
+- SM_Prop_Turret_Medium_01_Convex 2.asset · Asset · 3 KB
+- SM_Prop_Turret_Medium_01_Convex 3.asset · Asset · 3 KB
+- SM_Prop_Turret_Medium_01_Convex.asset · Asset · 3 KB
+- SM_Prop_Vendor_Arm_01_Convex.asset · Asset · 3 KB
+- SM_Prop_Vendor_Block_01_Convex.asset · Asset · 2 KB
+- SM_Prop_Vendor_Bug_01_Convex.asset · Asset · 3 KB
+- SM_Prop_Vendor_Bug_02_Convex.asset · Asset · 3 KB
+- SM_Prop_Vendor_Bug_03_Convex.asset · Asset · 3 KB
+- SM_Prop_Vendor_Bug_04_Convex.asset · Asset · 3 KB
+- SM_Prop_Vendor_Cooker_01_Convex.asset · Asset · 3 KB
+- SM_Prop_Vendor_Cooker_02_Convex.asset · Asset · 3 KB
+- SM_Prop_Vendor_Fork_01_Convex.asset · Asset · 3 KB
+- SM_Prop_Vendor_Ham_01_Convex.asset · Asset · 3 KB
+- SM_Prop_Vendor_Knife_01_Convex.asset · Asset · 3 KB
+- SM_Prop_Vendor_Knives_Hanging_01_Convex.asset · Asset · 3 KB
+- SM_Prop_Vendor_Pans_Hanging_01_Convex.asset · Asset · 3 KB
+- SM_Prop_Vendor_Pans_Hanging_02_Convex.asset · Asset · 3 KB
+- SM_Prop_Vendor_Pans_Hanging_03_Convex.asset · Asset · 3 KB
+- SM_Prop_Vendor_Pan_01_Convex.asset · Asset · 3 KB
+- SM_Prop_Vendor_Pan_02_Convex.asset · Asset · 3 KB
+- SM_Prop_Vendor_Pan_03_Convex.asset · Asset · 3 KB
+- SM_Prop_Vendor_Pan_04_Convex.asset · Asset · 3 KB
+- SM_Prop_Vendor_Pan_05_Convex.asset · Asset · 3 KB
+- SM_Prop_Vendor_Pan_06_Convex.asset · Asset · 3 KB
+- SM_Prop_Vendor_Pan_07_Convex.asset · Asset · 3 KB
+- SM_Prop_Vendor_Pan_08_Convex.asset · Asset · 3 KB
+- SM_Prop_Vendor_Pan_Bowls_01_Convex.asset · Asset · 3 KB
+- SM_Prop_Vendor_Pan_Bowl_01_Convex.asset · Asset · 3 KB
+- SM_Prop_Vendor_Pan_Insert_01_Convex.asset · Asset · 3 KB
+- SM_Prop_Vendor_Pan_Insert_02_Convex.asset · Asset · 3 KB
+- SM_Prop_Vendor_Plate_01_Convex.asset · Asset · 3 KB
+- SM_Prop_Vendor_Plate_02_Convex.asset · Asset · 3 KB
+- SM_Prop_Vendor_Product_01_Convex.asset · Asset · 3 KB
+- SM_Prop_Vendor_Product_02_Convex.asset · Asset · 3 KB
+- SM_Prop_Vendor_Product_03_Convex.asset · Asset · 3 KB
+- SM_Prop_Vendor_Product_04_Convex.asset · Asset · 3 KB
+- SM_Prop_Vendor_Product_05_Convex.asset · Asset · 3 KB
+- SM_Prop_Vendor_Product_06_Convex.asset · Asset · 3 KB
+- SM_Prop_Vendor_Product_07_Convex.asset · Asset · 3 KB
+- SM_Prop_Vendor_Product_08_Convex.asset · Asset · 3 KB
+- SM_Prop_Vendor_Product_09_Convex.asset · Asset · 3 KB
+- SM_Prop_Vendor_Product_10_Convex.asset · Asset · 3 KB
+- SM_Prop_Vendor_Product_11_Convex.asset · Asset · 3 KB
+- SM_Prop_Vendor_Product_12_Convex.asset · Asset · 3 KB
+- SM_Prop_Vendor_Product_13_Convex.asset · Asset · 3 KB
+- SM_Prop_Vendor_Product_14_Convex.asset · Asset · 3 KB
+- SM_Prop_Vendor_Rib_01_Convex.asset · Asset · 3 KB
+- SM_Prop_Vendor_Spatch_01_Convex.asset · Asset · 3 KB
+- SM_Prop_Vendor_Tentacle_01_Convex.asset · Asset · 3 KB
+- SM_Prop_Vendor_Tentacle_02_Convex.asset · Asset · 3 KB
+- SM_Prop_Vendor_Tool_01_Convex.asset · Asset · 3 KB
+- SM_Prop_Vendor_Tool_02_Convex.asset · Asset · 3 KB
+- SM_Prop_Vendor_TV_01_Convex.asset · Asset · 3 KB
+- SM_Prop_Wall_Unit_01_Convex.asset · Asset · 3 KB
+- SM_Veh_Apc_01_Convex 1.asset · Asset · 3 KB
+- SM_Veh_Apc_01_Convex 2.asset · Asset · 15 KB
+- SM_Veh_Apc_01_Convex.asset · Asset · 3 KB
+- SM_Veh_Apc_02_Convex.asset · Asset · 3 KB
+- SM_Veh_Buggy_01_Convex 1.asset · Asset · 3 KB
+- SM_Veh_Buggy_01_Convex 2.asset · Asset · 3 KB
+- SM_Veh_Buggy_01_Convex 3.asset · Asset · 3 KB
+- SM_Veh_Buggy_01_Convex 4.asset · Asset · 3 KB
+- SM_Veh_Buggy_01_Convex.asset · Asset · 3 KB
+- SM_Veh_DropShip_01_Convex 2.asset · Asset · 3 KB
+- SM_Veh_HoverCraft_01_Convex 1.asset · Asset · 3 KB
+- SM_Veh_HoverCraft_01_Convex 2.asset · Asset · 3 KB
+- SM_Veh_HoverCraft_01_Convex 3.asset · Asset · 9 KB
+- SM_Veh_HoverCraft_01_Convex 4.asset · Asset · 9 KB
+- SM_Veh_HoverCraft_01_Convex.asset · Asset · 3 KB
+- SM_Veh_HoverTank_01_Convex 1.asset · Asset · 3 KB
+- SM_Veh_HoverTank_03_Convex 4.asset · Asset · 6 KB
+- SM_Veh_HoverTank_03_Convex 5.asset · Asset · 6 KB
+- SM_Veh_HoverTank_03_Convex.asset · Asset · 3 KB
+- SM_Veh_Hover_Bike_01_Convex.asset · Asset · 3 KB
+- SM_Veh_Hover_Bike_02_Attach_Cargo_01_Convex.asset · Asset · 3 KB
+- SM_Veh_Hover_Bike_02_Attach_Cargo_02_Convex.asset · Asset · 3 KB
+- SM_Veh_Hover_Bike_02_Attach_Dome_01_Convex.asset · Asset · 3 KB
+- SM_Veh_Hover_Bike_02_Convex 1.asset · Asset · 3 KB
+- SM_Veh_Hover_Bike_02_Convex 2.asset · Asset · 6 KB
+- SM_Veh_Hover_Bike_02_Convex.asset · Asset · 3 KB
+- SM_Veh_Hover_Bike_Attach_Bag_01_Convex.asset · Asset · 3 KB
+- SM_Veh_Hover_Bike_Attach_Bag_02_Convex.asset · Asset · 3 KB
+- SM_Veh_Hover_Bike_Attach_Bag_03_Convex.asset · Asset · 3 KB
+- SM_Veh_Hover_Bike_Attach_Bedroll_01_Convex.asset · Asset · 3 KB
+- SM_Veh_Rocket_01_Convex 1.asset · Asset · 18 KB
+- SM_Veh_Rocket_01_Convex.asset · Asset · 3 KB
+- SM_Veh_Scav_Lifter_01_Convex 1.asset · Asset · 15 KB
+- SM_Veh_Scav_Lifter_01_Convex.asset · Asset · 3 KB
+- SM_Veh_Scav_Lifter_02_Convex.asset · Asset · 3 KB
+- SM_Veh_Turret_Large_01_Convex.asset · Asset · 3 KB
+- SM_Veh_Turret_Large_02_Convex.asset · Asset · 3 KB
+- SM_Veh_Turret_Medium_01_Convex 1.asset · Asset · 3 KB
+- SM_Veh_Turret_Medium_01_Convex.asset · Asset · 3 KB
+- SM_Veh_Vendor_01_Convex 1.asset · Asset · 9 KB
+- SM_Veh_Vendor_01_Convex 2.asset · Asset · 12 KB
+- SM_Veh_Vendor_01_Convex.asset · Asset · 3 KB
+- SM_Veh_Vendor_Tug_01_Attach_Barrels_01_Convex 1.asset · Asset · 6 KB
+- SM_Veh_Vendor_Tug_01_Attach_Barrels_01_Convex.asset · Asset · 3 KB
+- SM_Veh_Vendor_Tug_01_Attach_Bow_01_Convex.asset · Asset · 3 KB
+- SM_Veh_Vendor_Tug_01_Attach_Fin_01_Convex.asset · Asset · 3 KB
+- SM_Veh_Vendor_Tug_01_Attach_Fin_02_Convex 1.asset · Asset · 3 KB
+- SM_Veh_Vendor_Tug_01_Attach_Fin_02_Convex.asset · Asset · 3 KB
+- SM_Veh_Vendor_Tug_01_Attach_Fin_03_Convex.asset · Asset · 3 KB
+- SM_Veh_Vendor_Tug_01_Attach_Fin_04_Convex.asset · Asset · 3 KB
+- SM_Veh_Vendor_Tug_01_Attach_Front_Fin_01_Convex.asset · Asset · 3 KB
+- SM_Veh_Vendor_Tug_01_Attach_Port_01_Convex.asset · Asset · 3 KB
+- SM_Veh_Vendor_Tug_01_Attach_Roof_02_Convex.asset · Asset · 3 KB
+- SM_Veh_Vendor_Tug_01_Attach_Sail_01_Convex.asset · Asset · 3 KB
+- SM_Veh_Vendor_Tug_01_Attach_Shelves_01_Convex.asset · Asset · 3 KB
+- SM_Veh_Vendor_Tug_01_Attach_Sign_01_Convex.asset · Asset · 3 KB
+- SM_Veh_Vendor_Tug_01_Attach_Sign_02_Convex.asset · Asset · 3 KB
+- SM_Veh_Vendor_Tug_01_Attach_Sign_03_Convex.asset · Asset · 3 KB
+- SM_Veh_Vendor_Tug_01_Attach_Tech_01_Convex.asset · Asset · 3 KB
+- SM_Wep_Alien_02_Convex.asset · Asset · 3 KB
+- SM_Wep_Alien_04_Convex.asset · Asset · 3 KB
+- SM_Wep_Assault_02_Convex.asset · Asset · 3 KB
+- SM_Wep_BigAxe_01_Convex.asset · Asset · 3 KB
+- SM_Wep_BigAxe_02_Convex.asset · Asset · 3 KB
+- SM_Wep_BigAxe_03_Convex.asset · Asset · 3 KB
+- SM_Wep_BigAxe_04_Convex.asset · Asset · 3 KB
+- SM_Wep_BigAxe_05_Convex.asset · Asset · 3 KB
+- SM_Wep_BigAxe_06_Convex.asset · Asset · 3 KB
+- SM_Wep_BigAxe_07_Convex.asset · Asset · 3 KB
+- SM_Wep_Dagger_01_Convex.asset · Asset · 3 KB
+- SM_Wep_Dagger_02_Convex.asset · Asset · 3 KB
+- SM_Wep_Dagger_04_Convex.asset · Asset · 3 KB
+- SM_Wep_Dagger_05_Convex.asset · Asset · 3 KB
+- SM_Wep_Dagger_06_Convex.asset · Asset · 3 KB
+- SM_Wep_Dagger_07_Convex.asset · Asset · 3 KB
+- SM_Wep_Hammer_01_Convex.asset · Asset · 3 KB
+- SM_Wep_Hammer_02_Convex.asset · Asset · 3 KB
+- SM_Wep_Hammer_03_Convex.asset · Asset · 3 KB
+- SM_Wep_Heavy_01_Convex.asset · Asset · 3 KB
+- SM_Wep_Heavy_02_Convex.asset · Asset · 3 KB
+- SM_Wep_Heavy_03_Convex.asset · Asset · 3 KB
+- SM_Wep_Launcher_02_Convex.asset · Asset · 3 KB
+- SM_Wep_Launcher_03_Convex.asset · Asset · 3 KB
+- SM_Wep_Missile_01_Convex.asset · Asset · 3 KB
+- SM_Wep_Pistol_02_Convex.asset · Asset · 3 KB
+- SM_Wep_Pistol_03_Convex.asset · Asset · 3 KB
+- SM_Wep_Pistol_04_Convex.asset · Asset · 3 KB
+- SM_Wep_Pistol_05_Convex.asset · Asset · 3 KB
+- SM_Wep_Pistol_06_Convex.asset · Asset · 3 KB
+- SM_Wep_Scope_Alien_01_Convex.asset · Asset · 3 KB
+- SM_Wep_Scope_Small_01_Convex.asset · Asset · 3 KB
+- SM_Wep_Scope_Small_02_Convex.asset · Asset · 3 KB
+- SM_Wep_Scope_Small_03_Convex.asset · Asset · 3 KB
+- SM_Wep_Scope_Sniper_01_Convex.asset · Asset · 3 KB
+- SM_Wep_Scope_Sniper_02_Convex.asset · Asset · 3 KB
+- SM_Wep_Scope_Sniper_03_Convex.asset · Asset · 3 KB
+- SM_Wep_Scope_Unique_01_Convex.asset · Asset · 3 KB
+- SM_Wep_Shield_01_Convex 1.asset · Asset · 3 KB
+- SM_Wep_Shield_01_Convex.asset · Asset · 3 KB
+- SM_Wep_Shield_02_Convex 1.asset · Asset · 3 KB
+- SM_Wep_Shield_02_Convex.asset · Asset · 3 KB
+- SM_Wep_Shield_03_Convex 1.asset · Asset · 3 KB
+- SM_Wep_Shield_03_Convex.asset · Asset · 3 KB
+- SM_Wep_Shield_04_Convex 1.asset · Asset · 3 KB
+- SM_Wep_Shield_04_Convex.asset · Asset · 3 KB
+- SM_Wep_Shield_05_Convex 1.asset · Asset · 3 KB
+- SM_Wep_Shield_05_Convex.asset · Asset · 3 KB
+- SM_Wep_Shotgun_01_Convex.asset · Asset · 3 KB
+- SM_Wep_Shotgun_01_Shell_01_Convex.asset · Asset · 3 KB
+- SM_Wep_Shotgun_02_Convex.asset · Asset · 3 KB
+- SM_Wep_Shotgun_03_Convex.asset · Asset · 3 KB
+- SM_Wep_SmallAxe_01_Convex.asset · Asset · 3 KB
+- SM_Wep_SmallAxe_02_Convex.asset · Asset · 3 KB
+- SM_Wep_SmallAxe_03_Convex.asset · Asset · 3 KB
+- SM_Wep_SmallAxe_04_Convex.asset · Asset · 3 KB
+- SM_Wep_SmallAxe_05_Convex.asset · Asset · 3 KB
+- SM_Wep_SMG_01_Convex.asset · Asset · 3 KB
+- SM_Wep_SMG_02_Convex.asset · Asset · 3 KB
+- SM_Wep_SMG_03_Convex.asset · Asset · 3 KB
+- SM_Wep_Sniper_02_Convex.asset · Asset · 3 KB
+- SM_Wep_Sniper_03_Convex.asset · Asset · 3 KB
+- SM_Wep_Sword_01a_Convex.asset · Asset · 3 KB
+- SM_Wep_Sword_02_Convex.asset · Asset · 3 KB
+- SM_Wep_Sword_03_Convex.asset · Asset · 3 KB
+- SM_Wep_Sword_05_Convex.asset · Asset · 3 KB
+- SM_Wep_Sword_06_Convex.asset · Asset · 3 KB
+- SM_Wep_Sword_07_Convex.asset · Asset · 3 KB
+- SM_Wep_Sword_08_Convex.asset · Asset · 3 KB
+
+**Assets/Synty/PolygonSciFiWorlds/Models/Materials/**
+
+- lambert1.mat · Material · 3 KB
+- PolygonConstruction_Texture_01_Atemp.mat · Material · 3 KB
+
+**Assets/Synty/PolygonSciFiWorlds/Prefabs/Buildings/**
+
+- SM_Bld_Bridge_01.prefab · Prefab · 2 KB
+- SM_Bld_Bridge_End_01.prefab · Prefab · 2 KB
+- SM_Bld_Bridge_Platform_01.prefab · Prefab · 2 KB
+- SM_Bld_Bridge_Rail_01.prefab · Prefab · 2 KB
+- SM_Bld_Bridge_Rail_End_01.prefab · Prefab · 2 KB
+- SM_Bld_Bridge_Rail_Half_01.prefab · Prefab · 2 KB
+- SM_Bld_Bridge_Rail_Pillar_01.prefab · Prefab · 2 KB
+- SM_Bld_Bridge_Strut_01.prefab · Prefab · 2 KB
+- SM_Bld_Column_01.prefab · Prefab · 2 KB
+- SM_Bld_Column_02.prefab · Prefab · 2 KB
+- SM_Bld_Core_Antenna_Greeble_01.prefab · Prefab · 2 KB
+- SM_Bld_Core_Antenna_Greeble_02.prefab · Prefab · 2 KB
+- SM_Bld_Core_Observation_Greeble_01.prefab · Prefab · 2 KB
+- SM_Bld_Core_Observation_Greeble_02.prefab · Prefab · 2 KB
+- SM_Bld_Core_Observation_Greeble_Pipe_01.prefab · Prefab · 2 KB
+- SM_Bld_Core_Observation_Greeble_Pipe_Base_01.prefab · Prefab · 2 KB
+- SM_Bld_Corp_Comms_01.prefab · Prefab · 7 KB
+- SM_Bld_Corp_Containment_01.prefab · Prefab · 8 KB
+- SM_Bld_Corp_Containment_02.prefab · Prefab · 8 KB
+- SM_Bld_Corp_Radar_01.prefab · Prefab · 10 KB
+- SM_Bld_Door_Double_01.prefab · Prefab · 11 KB
+- SM_Bld_Door_Double_02.prefab · Prefab · 16 KB
+- SM_Bld_Door_Double_03.prefab · Prefab · 10 KB
+- SM_Bld_Door_Double_04.prefab · Prefab · 8 KB
+- SM_Bld_Door_Double_05.prefab · Prefab · 8 KB
+- SM_Bld_Door_Double_To_Single_01.prefab · Prefab · 2 KB
+- SM_Bld_Door_Single_01.prefab · Prefab · 5 KB
+- SM_Bld_Door_Single_02.prefab · Prefab · 8 KB
+- SM_Bld_Door_Single_03.prefab · Prefab · 10 KB
+- SM_Bld_Door_Single_04.prefab · Prefab · 13 KB
+- SM_Bld_Door_Single_05.prefab · Prefab · 7 KB
+- SM_Bld_Elevator_Double_01.prefab · Prefab · 2 KB
+- SM_Bld_Elevator_Hover_Double_01.prefab · Prefab · 2 KB
+- SM_Bld_Elevator_Hover_Double_02.prefab · Prefab · 7 KB
+- SM_Bld_Elevator_Hover_Single_01.prefab · Prefab · 2 KB
+- SM_Bld_Elevator_Single_01.prefab · Prefab · 2 KB
+- SM_Bld_Greeble_01.prefab · Prefab · 2 KB
+- SM_Bld_Greeble_02.prefab · Prefab · 2 KB
+- SM_Bld_Greeble_03.prefab · Prefab · 2 KB
+- SM_Bld_Greeble_04.prefab · Prefab · 2 KB
+- SM_Bld_Greeble_05.prefab · Prefab · 2 KB
+- SM_Bld_Greeble_06.prefab · Prefab · 2 KB
+- SM_Bld_Greeble_07.prefab · Prefab · 2 KB
+- SM_Bld_Greeble_08.prefab · Prefab · 2 KB
+- SM_Bld_Greeble_09.prefab · Prefab · 2 KB
+- SM_Bld_Greeble_10.prefab · Prefab · 2 KB
+- SM_Bld_Greeble_11.prefab · Prefab · 2 KB
+- SM_Bld_Greeble_12.prefab · Prefab · 2 KB
+- SM_Bld_Greeble_13.prefab · Prefab · 2 KB
+- SM_Bld_Greeble_14.prefab · Prefab · 2 KB
+- SM_Bld_Greeble_15.prefab · Prefab · 2 KB
+- SM_Bld_Greeble_16.prefab · Prefab · 2 KB
+- SM_Bld_Greeble_17.prefab · Prefab · 2 KB
+- SM_Bld_Greeble_18.prefab · Prefab · 2 KB
+- SM_Bld_Greeble_19.prefab · Prefab · 2 KB
+- SM_Bld_Greeble_20.prefab · Prefab · 2 KB
+- SM_Bld_Greeble_21.prefab · Prefab · 2 KB
+- SM_Bld_Greeble_22.prefab · Prefab · 5 KB
+- SM_Bld_Greeble_23.prefab · Prefab · 2 KB
+- SM_Bld_Greeble_24.prefab · Prefab · 2 KB
+- SM_Bld_Greeble_25.prefab · Prefab · 2 KB
+- SM_Bld_Greeble_26.prefab · Prefab · 7 KB
+- SM_Bld_Greeble_27.prefab · Prefab · 5 KB
+- SM_Bld_Greeble_28.prefab · Prefab · 4 KB
+- SM_Bld_LaunchPad_01.prefab · Prefab · 5 KB
+- SM_Bld_LaunchPad_02.prefab · Prefab · 5 KB
+- SM_Bld_Light_01.prefab · Prefab · 2 KB
+- SM_Bld_Light_02.prefab · Prefab · 2 KB
+- SM_Bld_Light_03.prefab · Prefab · 2 KB
+- SM_Bld_Light_04.prefab · Prefab · 2 KB
+- SM_Bld_Light_05.prefab · Prefab · 2 KB
+- SM_Bld_Light_06.prefab · Prefab · 2 KB
+- SM_Bld_Light_07.prefab · Prefab · 2 KB
+- SM_Bld_Light_08.prefab · Prefab · 2 KB
+- SM_Bld_Light_09.prefab · Prefab · 2 KB
+- SM_Bld_Light_10.prefab · Prefab · 2 KB
+- SM_Bld_Light_11.prefab · Prefab · 2 KB
+- SM_Bld_Light_12.prefab · Prefab · 2 KB
+- SM_Bld_Light_13.prefab · Prefab · 12 KB
+- SM_Bld_Pillar_01.prefab · Prefab · 2 KB
+- SM_Bld_Pillar_02.prefab · Prefab · 2 KB
+- SM_Bld_Pillar_03.prefab · Prefab · 2 KB
+- SM_Bld_Platform_Barrier_Long_01.prefab · Prefab · 2 KB
+- SM_Bld_Platform_Barrier_Long_02.prefab · Prefab · 3 KB
+- SM_Bld_Platform_Barrier_Pillar_01.prefab · Prefab · 2 KB
+- SM_Bld_Platform_Barrier_Pillar_InnerCorner_01.prefab · Prefab · 2 KB
+- SM_Bld_Platform_Barrier_Pillar_Middle_01.prefab · Prefab · 2 KB
+- SM_Bld_Platform_Barrier_Short_01.prefab · Prefab · 2 KB
+- SM_Bld_Platform_Base_Large_01.prefab · Prefab · 2 KB
+- SM_Bld_Platform_Base_Large_02.prefab · Prefab · 2 KB
+- SM_Bld_Platform_Base_Large_Corner_01.prefab · Prefab · 2 KB
+- SM_Bld_Platform_Base_Small_01.prefab · Prefab · 2 KB
+- SM_Bld_Platform_Base_Small_02.prefab · Prefab · 2 KB
+- SM_Bld_Platform_Base_Small_02_Single_01.prefab · Prefab · 2 KB
+- SM_Bld_Platform_Base_Small_Corner_01.prefab · Prefab · 2 KB
+- SM_Bld_Platform_Large_01.prefab · Prefab · 2 KB
+- SM_Bld_Platform_Large_02.prefab · Prefab · 2 KB
+- SM_Bld_Platform_Large_03.prefab · Prefab · 2 KB
+- SM_Bld_Platform_Large_04.prefab · Prefab · 2 KB
+- SM_Bld_Platform_Large_05.prefab · Prefab · 2 KB
+- SM_Bld_Platform_Large_06.prefab · Prefab · 2 KB
+- SM_Bld_Platform_Large_07.prefab · Prefab · 2 KB
+- SM_Bld_Platform_Large_08.prefab · Prefab · 2 KB
+- SM_Bld_Platform_Large_09.prefab · Prefab · 2 KB
+- SM_Bld_Platform_Large_10.prefab · Prefab · 2 KB
+- SM_Bld_Platform_Large_11.prefab · Prefab · 2 KB
+- SM_Bld_Platform_Large_12.prefab · Prefab · 2 KB
+- SM_Bld_Platform_Large_Corner_01.prefab · Prefab · 2 KB
+- SM_Bld_Platform_Large_Corner_02.prefab · Prefab · 2 KB
+- SM_Bld_Platform_Large_Corner_03.prefab · Prefab · 2 KB
+- SM_Bld_Platform_Small_01.prefab · Prefab · 2 KB
+- SM_Bld_Platform_Small_02.prefab · Prefab · 2 KB
+- SM_Bld_Platform_Small_03.prefab · Prefab · 2 KB
+- SM_Bld_Platform_Small_04.prefab · Prefab · 2 KB
+- SM_Bld_Platform_Small_05.prefab · Prefab · 2 KB
+- SM_Bld_Platform_Small_06.prefab · Prefab · 2 KB
+- SM_Bld_Platform_Small_07.prefab · Prefab · 2 KB
+- SM_Bld_Platform_Small_08.prefab · Prefab · 2 KB
+- SM_Bld_Platform_Small_09.prefab · Prefab · 2 KB
+- SM_Bld_Platform_Small_Corner_01.prefab · Prefab · 2 KB
+- SM_Bld_Platform_Small_Corner_02.prefab · Prefab · 2 KB
+- SM_Bld_Platform_Small_Corner_03.prefab · Prefab · 2 KB
+- SM_Bld_Platform_Stairs_01.prefab · Prefab · 2 KB
+- SM_Bld_Pod_Air_Lock_01.prefab · Prefab · 2 KB
+- SM_Bld_Pod_Air_Lock_02.prefab · Prefab · 2 KB
+- SM_Bld_Pod_Base_01.prefab · Prefab · 2 KB
+- SM_Bld_Pod_Base_02.prefab · Prefab · 2 KB
+- SM_Bld_Pod_Base_03.prefab · Prefab · 2 KB
+- SM_Bld_Pod_Base_04.prefab · Prefab · 2 KB
+- SM_Bld_Pod_Corridor_Round_01.prefab · Prefab · 2 KB
+- SM_Bld_Pod_Corridor_Round_02.prefab · Prefab · 5 KB
+- SM_Bld_Pod_Corridor_Round_03.prefab · Prefab · 5 KB
+- SM_Bld_Pod_Corridor_Round_04.prefab · Prefab · 5 KB
+- SM_Bld_Pod_Corridor_Round_05.prefab · Prefab · 5 KB
+- SM_Bld_Pod_Corridor_Round_Connector_01.prefab · Prefab · 2 KB
+- SM_Bld_Pod_Corridor_Round_Door_Single_01.prefab · Prefab · 2 KB
+- SM_Bld_Pod_Corridor_Round_End_01.prefab · Prefab · 5 KB
+- SM_Bld_Pod_Corridor_Round_End_02.prefab · Prefab · 2 KB
+- SM_Bld_Pod_Corridor_Round_Ramp_01.prefab · Prefab · 2 KB
+- SM_Bld_Pod_Corridor_Round_Support_01.prefab · Prefab · 8 KB
+- SM_Bld_Pod_Corridor_Square_01.prefab · Prefab · 2 KB
+- SM_Bld_Pod_Corridor_Square_02.prefab · Prefab · 5 KB
+- SM_Bld_Pod_Corridor_Square_03.prefab · Prefab · 2 KB
+- SM_Bld_Pod_Corridor_Square_04.prefab · Prefab · 7 KB
+- SM_Bld_Pod_Corridor_Square_05.prefab · Prefab · 5 KB
+- SM_Bld_Pod_Corridor_Square_Connector_01.prefab · Prefab · 2 KB
+- SM_Bld_Pod_Corridor_Square_Door_Double_01.prefab · Prefab · 2 KB
+- SM_Bld_Pod_Corridor_Square_Door_Single_01.prefab · Prefab · 2 KB
+- SM_Bld_Pod_Corridor_Square_End_01.prefab · Prefab · 5 KB
+- SM_Bld_Pod_Corridor_Square_End_02.prefab · Prefab · 2 KB
+- SM_Bld_Pod_Corridor_Square_Ramp_01.prefab · Prefab · 2 KB
+- SM_Bld_Pod_Corridor_Switch_Connector_01.prefab · Prefab · 2 KB
+- SM_Bld_Pod_Hub_01.prefab · Prefab · 5 KB
+- SM_Bld_Pod_Hub_02.prefab · Prefab · 2 KB
+- SM_Bld_Pod_Hub_03.prefab · Prefab · 2 KB
+- SM_Bld_Pod_Pad_01.prefab · Prefab · 2 KB
+- SM_Bld_Pod_Ramp_01.prefab · Prefab · 2 KB
+- SM_Bld_Pod_Ramp_02.prefab · Prefab · 2 KB
+- SM_Bld_Pod_Support_01.prefab · Prefab · 5 KB
+- SM_Bld_Pod_Support_02.prefab · Prefab · 5 KB
+- SM_Bld_Pod_Support_03.prefab · Prefab · 5 KB
+- SM_Bld_Portal_01.prefab · Prefab · 6 KB
+- SM_Bld_Portal_Ramp_01.prefab · Prefab · 2 KB
+- SM_Bld_Railing_01.prefab · Prefab · 2 KB
+- SM_Bld_Railing_Pillar_01.prefab · Prefab · 2 KB
+- SM_Bld_Tower_Monitors_01.prefab · Prefab · 2 KB
+- SM_Bld_WindMill_01.prefab · Prefab · 8 KB
+- SM_Bld_Window_01.prefab · Prefab · 5 KB
+- SM_Bld_Window_02.prefab · Prefab · 5 KB
+- SM_Bld_Window_03.prefab · Prefab · 5 KB
+- SM_Bld_Window_04.prefab · Prefab · 5 KB
+- SM_Bld_Window_05.prefab · Prefab · 5 KB
+- SM_Bld_Window_06.prefab · Prefab · 5 KB
+- SM_Bld_Window_07.prefab · Prefab · 5 KB
+- SM_Bld_Window_08.prefab · Prefab · 5 KB
+- SM_Bld_Window_09.prefab · Prefab · 5 KB
+- SM_Bld_Window_10.prefab · Prefab · 5 KB
+- SM_Bld_Window_11.prefab · Prefab · 5 KB
+- SM_Bld_Window_12.prefab · Prefab · 7 KB
+- SM_Bld_Window_13.prefab · Prefab · 5 KB
+- SM_Bld_Window_14.prefab · Prefab · 5 KB
+- SM_Bld_Window_15.prefab · Prefab · 5 KB
+
+**Assets/Synty/PolygonSciFiWorlds/Prefabs/Decal/**
+
+- SM_Decal_Graffiti_01.prefab · Prefab · 2 KB
+- SM_Decal_Graffiti_02.prefab · Prefab · 2 KB
+- SM_Decal_Graffiti_03.prefab · Prefab · 2 KB
+- SM_Decal_Graffiti_04.prefab · Prefab · 2 KB
+- SM_Decal_Graffiti_05.prefab · Prefab · 2 KB
+- SM_Decal_Graffiti_06.prefab · Prefab · 2 KB
+- SM_Decal_Graffiti_07.prefab · Prefab · 2 KB
+
+**Assets/Synty/PolygonSciFiWorlds/Prefabs/Environments/**
+
+- SM_Env_Asteroid_01.prefab · Prefab · 2 KB
+- SM_Env_Asteroid_02.prefab · Prefab · 2 KB
+- SM_Env_Cliff_Curved_01.prefab · Prefab · 2 KB
+- SM_Env_Cliff_Curved_02.prefab · Prefab · 2 KB
+- SM_Env_Detail_Bridge_01.prefab · Prefab · 2 KB
+- SM_Env_Detail_Platform_01.prefab · Prefab · 2 KB
+- SM_Env_Detail_Platform_02.prefab · Prefab · 2 KB
+- SM_Env_Detail_Platform_03.prefab · Prefab · 2 KB
+- SM_Env_Detail_Round_01.prefab · Prefab · 2 KB
+- SM_Env_Detail_Round_02.prefab · Prefab · 2 KB
+- SM_Env_Detail_Round_03.prefab · Prefab · 2 KB
+- SM_Env_Detail_Soft_Group_01.prefab · Prefab · 2 KB
+- SM_Env_Detail_Spikey_01.prefab · Prefab · 2 KB
+- SM_Env_Detail_Spikey_Group_01.prefab · Prefab · 2 KB
+- SM_Env_Detail_Spikey_Group_02.prefab · Prefab · 2 KB
+- SM_Env_Floating_Crystal_01.prefab · Prefab · 2 KB
+- SM_Env_Floating_Crystal_02.prefab · Prefab · 2 KB
+- SM_Env_Grass_01.prefab · Prefab · 2 KB
+- SM_Env_Grass_02.prefab · Prefab · 2 KB
+- SM_Env_Grass_03.prefab · Prefab · 2 KB
+- SM_Env_Grass_04.prefab · Prefab · 2 KB
+- SM_Env_Grass_05.prefab · Prefab · 2 KB
+- SM_Env_Ground_01.prefab · Prefab · 2 KB
+- SM_Env_Ground_02.prefab · Prefab · 2 KB
+- SM_Env_Ground_03.prefab · Prefab · 2 KB
+- SM_Env_Ground_04.prefab · Prefab · 2 KB
+- SM_Env_Ground_05.prefab · Prefab · 2 KB
+- SM_Env_Ground_Greeble_01.prefab · Prefab · 5 KB
+- SM_Env_Ground_Greeble_02.prefab · Prefab · 5 KB
+- SM_Env_Ground_Greeble_03.prefab · Prefab · 5 KB
+- SM_Env_Ground_Greeble_04.prefab · Prefab · 5 KB
+- SM_Env_Ground_Slope_01.prefab · Prefab · 2 KB
+- SM_Env_Ground_Slope_02.prefab · Prefab · 2 KB
+- SM_Env_LakeEdge_Corner_01.prefab · Prefab · 2 KB
+- SM_Env_LakeEdge_Corner_02.prefab · Prefab · 2 KB
+- SM_Env_LakeEdge_Corner_03.prefab · Prefab · 2 KB
+- SM_Env_LakeEdge_Corner_04.prefab · Prefab · 2 KB
+- SM_Env_LakeEdge_Corner_05.prefab · Prefab · 2 KB
+- SM_Env_Plant_Balloon_01.prefab · Prefab · 2 KB
+- SM_Env_Plant_Balloon_02.prefab · Prefab · 2 KB
+- SM_Env_Plant_Balloon_03.prefab · Prefab · 2 KB
+- SM_Env_Plant_Balloon_04.prefab · Prefab · 2 KB
+- SM_Env_Plant_Balloon_Group_01.prefab · Prefab · 2 KB
+- SM_Env_Plant_Balloon_Group_02.prefab · Prefab · 2 KB
+- SM_Env_Plant_Balloon_Group_03.prefab · Prefab · 2 KB
+- SM_Env_Plant_Balloon_Tall_01.prefab · Prefab · 2 KB
+- SM_Env_Plant_Balloon_Tall_02.prefab · Prefab · 2 KB
+- SM_Env_Plant_Bulb_01.prefab · Prefab · 2 KB
+- SM_Env_Plant_Bulb_02.prefab · Prefab · 2 KB
+- SM_Env_Plant_Cactus_01.prefab · Prefab · 2 KB
+- SM_Env_Plant_Cactus_02.prefab · Prefab · 2 KB
+- SM_Env_Plant_Cactus_03.prefab · Prefab · 2 KB
+- SM_Env_Plant_Coral_01.prefab · Prefab · 2 KB
+- SM_Env_Plant_Coral_02.prefab · Prefab · 2 KB
+- SM_Env_Plant_Coral_03.prefab · Prefab · 2 KB
+- SM_Env_Plant_Fern_02.prefab · Prefab · 2 KB
+- SM_Env_Plant_Fester_01.prefab · Prefab · 3 KB
+- SM_Env_Plant_Fester_02.prefab · Prefab · 3 KB
+- SM_Env_Plant_Fester_03.prefab · Prefab · 3 KB
+- SM_Env_Plant_Fester_04.prefab · Prefab · 3 KB
+- SM_Env_Plant_Flower_01.prefab · Prefab · 2 KB
+- SM_Env_Plant_Flower_03.prefab · Prefab · 2 KB
+- SM_Env_Plant_Flower_Large_01.prefab · Prefab · 3 KB
+- SM_Env_Plant_Flower_Large_02.prefab · Prefab · 3 KB
+- SM_Env_Plant_Flower_Large_03.prefab · Prefab · 3 KB
+- SM_Env_Plant_Flower_Large_Pod_01.prefab · Prefab · 2 KB
+- SM_Env_Plant_Flower_Large_Pod_02.prefab · Prefab · 2 KB
+- SM_Env_Plant_Grass_Flower_01.prefab · Prefab · 2 KB
+- SM_Env_Plant_Grass_Flower_02.prefab · Prefab · 2 KB
+- SM_Env_Plant_Grass_Flower_03.prefab · Prefab · 2 KB
+- SM_Env_Plant_Hallowed_01.prefab · Prefab · 3 KB
+- SM_Env_Plant_Hallowed_02.prefab · Prefab · 3 KB
+- SM_Env_Plant_Hallowed_03.prefab · Prefab · 3 KB
+- SM_Env_Plant_Kelp_01.prefab · Prefab · 2 KB
+- SM_Env_Plant_Kelp_02.prefab · Prefab · 2 KB
+- SM_Env_Plant_Kelp_03.prefab · Prefab · 2 KB
+- SM_Env_Plant_Kelp_04.prefab · Prefab · 2 KB
+- SM_Env_Plant_Kelp_05.prefab · Prefab · 2 KB
+- SM_Env_Plant_Kelp_06.prefab · Prefab · 2 KB
+- SM_Env_Plant_Large_Spiral_01.prefab · Prefab · 2 KB
+- SM_Env_Plant_Large_Spiral_02.prefab · Prefab · 3 KB
+- SM_Env_Plant_Large_Spiral_03.prefab · Prefab · 3 KB
+- SM_Env_Plant_Large_Spiral_04.prefab · Prefab · 3 KB
+- SM_Env_Plant_Large_Spiral_Preset_01.prefab · Prefab · 4 KB
+- SM_Env_Plant_Large_Spiral_Preset_02.prefab · Prefab · 4 KB
+- SM_Env_Plant_Large_Spiral_Preset_03.prefab · Prefab · 4 KB
+- SM_Env_Plant_Large_Spiral_Preset_04.prefab · Prefab · 4 KB
+- SM_Env_Plant_Mushroom_01.prefab · Prefab · 2 KB
+- SM_Env_Plant_Mushroom_02.prefab · Prefab · 2 KB
+- SM_Env_Plant_Mushroom_03.prefab · Prefab · 2 KB
+- SM_Env_Plant_Palm_01.prefab · Prefab · 3 KB
+- SM_Env_Plant_Palm_02.prefab · Prefab · 3 KB
+- SM_Env_Plant_Pinecone_01.prefab · Prefab · 2 KB
+- SM_Env_Plant_Pinecone_02.prefab · Prefab · 2 KB
+- SM_Env_Plant_Pinecone_03.prefab · Prefab · 2 KB
+- SM_Env_Plant_Shrub_01.prefab · Prefab · 2 KB
+- SM_Env_Plant_Shrub_02.prefab · Prefab · 2 KB
+- SM_Env_Plant_Small_01.prefab · Prefab · 2 KB
+- SM_Env_Plant_Small_02.prefab · Prefab · 2 KB
+- SM_Env_Plant_Small_03.prefab · Prefab · 2 KB
+- SM_Env_Plant_Spikey_01.prefab · Prefab · 3 KB
+- SM_Env_Plant_Spikey_02.prefab · Prefab · 3 KB
+- SM_Env_Plant_Spikey_03.prefab · Prefab · 3 KB
+- SM_Env_Plant_Succulent_Large_01.prefab · Prefab · 2 KB
+- SM_Env_Plant_Tall_01.prefab · Prefab · 2 KB
+- SM_Env_Plant_Tall_02.prefab · Prefab · 2 KB
+- SM_Env_Plant_Tall_03.prefab · Prefab · 2 KB
+- SM_Env_Plant_Tall_04.prefab · Prefab · 2 KB
+- SM_Env_Skeleton_Preset_01.prefab · Prefab · 2 KB
+- SM_Env_Skeleton_Preset_02.prefab · Prefab · 2 KB
+- SM_Env_Skeleton_Preset_03.prefab · Prefab · 2 KB
+- SM_Env_Skeleton_Preset_04.prefab · Prefab · 2 KB
+- SM_Env_Skeleton_Preset_05.prefab · Prefab · 2 KB
+- SM_Env_Skeleton_Preset_Flesh_01.prefab · Prefab · 2 KB
+- SM_Env_Skeleton_Preset_Flesh_02.prefab · Prefab · 2 KB
+- SM_Env_Skeleton_Preset_Flesh_03.prefab · Prefab · 2 KB
+- SM_Env_Skeleton_Preset_Flesh_04.prefab · Prefab · 2 KB
+- SM_Env_Skeleton_Preset_Flesh_05.prefab · Prefab · 2 KB
+- SM_Env_Snow_Pile_01.prefab · Prefab · 2 KB
+- SM_Env_Snow_Pile_02.prefab · Prefab · 2 KB
+- SM_Env_Snow_Pile_03.prefab · Prefab · 2 KB
+- SM_Env_Snow_Pile_04.prefab · Prefab · 2 KB
+- SM_Env_Snow_Pile_05.prefab · Prefab · 2 KB
+
+**Assets/Synty/PolygonSciFiWorlds/Prefabs/FX/**
+
+- FX_Alien_Insects_01.prefab · Prefab · 114 KB
+- FX_Alien_Insects_02.prefab · Prefab · 114 KB
+- FX_Crystal_Floating_01.prefab · Prefab · 227 KB
+- FX_Dust_Large_01.prefab · Prefab · 111 KB
+- FX_Flame_Booster_Round_01.prefab · Prefab · 111 KB
+- FX_Flame_Booster_Square.prefab · Prefab · 111 KB
+- FX_Fog_Flat_01.prefab · Prefab · 110 KB
+- FX_Laser_Blast_01.prefab · Prefab · 459 KB
+- FX_Laser_Blast_Large_01.prefab · Prefab · 459 KB
+- FX_Laser_Blast_Small_01.prefab · Prefab · 459 KB
+- FX_Radioactive_Bubbles_01.prefab · Prefab · 229 KB
+- FX_Radioactive_Fog_01.prefab · Prefab · 110 KB
+- FX_Scrap_Floating_Card_Full_01.prefab · Prefab · 116 KB
+- FX_Ships_Flying_01.prefab · Prefab · 114 KB
+- FX_Ships_Flying_02.prefab · Prefab · 114 KB
+- FX_Ship_Hover_Dust_01.prefab · Prefab · 342 KB
+- FX_Smoke_Small_01.prefab · Prefab · 112 KB
+- FX_Snow_Blizzard_01.prefab · Prefab · 224 KB
+- FX_Snow_Heavy_01.prefab · Prefab · 112 KB
+- FX_WarpTunnel_01.prefab · Prefab · 224 KB
+- SkyDome.prefab · Prefab · 26 KB
+- SM_Prop_Holosign_SynKyng_01_Preset.prefab · Prefab · 12 KB
+
+**Assets/Synty/PolygonSciFiWorlds/Prefabs/FX/Animations/**
+
+- Anim_Rotation_Slow.anim · Animation · 1 KB
+- Controller_SlowRotate.controller · Animator · 1 KB
+- Rotate_Anim_X.anim · Animation · 496 KB
+- Rotate_Anim_X_Reverse.anim · Animation · 498 KB
+- Rotate_Anim_Y.anim · Animation · 496 KB
+- Rotate_Anim_Y_Fast.anim · Animation · 493 KB
+- Rotate_Anim_Y_Reverse.anim · Animation · 496 KB
+- Rotate_Anim_Z.anim · Animation · 496 KB
+- Rotate_Anim_Z_Reverse.anim · Animation · 498 KB
+- SM_Prop_Holosign_SynKyng_01_Bottles_01.controller · Animator · 1 KB
+
+**Assets/Synty/PolygonSciFiWorlds/Prefabs/FX/Drone_Flight/**
+
+- Drone_Flight_Preset_01.controller · Animator · 1 KB
+- Drone_Flight_Preset_01.prefab · Prefab · 9 KB
+- Drone_Flight_Preset_02.controller · Animator · 1 KB
+- Drone_Flight_Preset_02.prefab · Prefab · 119 KB
+- Drone_Preset_01.anim · Animation · 13 KB
+- Drone_Preset_02.anim · Animation · 15 KB
+- SM_Env_Ground_04.controller · Animator · 1 KB
+
+**Assets/Synty/PolygonSciFiWorlds/Prefabs/FX/FloatingRocks/**
+
+- FX_Floating_Rocks_Spiral_01.prefab · Prefab · 114 KB
+- FX_Floating_Rocks_Spiral_02.prefab · Prefab · 114 KB
+- FX_Floating_Rocks_Straight_01.prefab · Prefab · 114 KB
+- FX_Floating_Rocks_Straight_02.prefab · Prefab · 114 KB
+- FX_Floating_Rocks_Straight_Large_01.prefab · Prefab · 114 KB
+
+**Assets/Synty/PolygonSciFiWorlds/Prefabs/FX/Models/**
+
+- FX_Bubble_Half_01.fbx · Model · 28 KB
+- FX_Sphere_01.fbx · Model · 30 KB
+- FX_Sphere_03.fbx · Model · 27 KB
+- SM_Flame_Mesh_New.fbx · Model · 22 KB
+- SM_Flame_Mesh_Square.fbx · Model · 23 KB
+- SM_Tunnel_Mesh.fbx · Model · 23 KB
+
+**Assets/Synty/PolygonSciFiWorlds/Prefabs/FX/Models/Materials/**
+
+- Dungeons_2_Texture_01_A.mat · Material · 3 KB
+- Gradient_Boost.mat · Material · 3 KB
+- lambert2.mat · Material · 3 KB
+- lambert3.mat · Material · 3 KB
+- PolygonApocalypse_Texture_01_Cleaned.mat · Material · 3 KB
+
+**Assets/Synty/PolygonSciFiWorlds/Prefabs/Generic/**
+
+- SM_Generic_CloudRing_01.prefab · Prefab · 2 KB
+- SM_Generic_Cloud_01.prefab · Prefab · 2 KB
+- SM_Generic_Cloud_02.prefab · Prefab · 2 KB
+- SM_Generic_Cloud_03.prefab · Prefab · 2 KB
+- SM_Generic_Cloud_04.prefab · Prefab · 2 KB
+- SM_Generic_Cloud_05.prefab · Prefab · 2 KB
+- SM_Generic_Grass_Patch_01.prefab · Prefab · 2 KB
+- SM_Generic_Grass_Patch_02.prefab · Prefab · 2 KB
+- SM_Generic_Grass_Patch_03.prefab · Prefab · 2 KB
+- SM_Generic_Ground_01.prefab · Prefab · 2 KB
+- SM_Generic_Ground_02.prefab · Prefab · 2 KB
+- SM_Generic_Ground_03.prefab · Prefab · 2 KB
+- SM_Generic_Ground_Flat_01.prefab · Prefab · 2 KB
+- SM_Generic_Ground_Tile_01.prefab · Prefab · 2 KB
+- SM_Generic_Ground_Tile_2.prefab · Prefab · 2 KB
+- SM_Generic_SkyDome_01.prefab · Prefab · 2 KB
+- SM_Generic_SkyDome_02.prefab · Prefab · 2 KB
+- SM_Generic_Small_Rocks_01.prefab · Prefab · 2 KB
+- SM_Generic_Small_Rocks_02.prefab · Prefab · 2 KB
+- SM_Generic_Small_Rocks_03.prefab · Prefab · 2 KB
+- SM_Generic_Small_Rocks_04.prefab · Prefab · 2 KB
+- SM_Generic_Small_Rocks_05.prefab · Prefab · 2 KB
+- SM_Generic_TreeDead_01.prefab · Prefab · 3 KB
+- SM_Generic_TreeStump_01.prefab · Prefab · 2 KB
+- SM_Generic_Tree_01.prefab · Prefab · 3 KB
+- SM_Generic_Tree_02.prefab · Prefab · 2 KB
+- SM_Generic_Tree_03.prefab · Prefab · 3 KB
+- SM_Generic_Tree_04.prefab · Prefab · 3 KB
+
+**Assets/Synty/PolygonSciFiWorlds/Prefabs/Props/**
+
+- SM_Prop_BackbackSatellite_01.prefab · Prefab · 14 KB
+- SM_Prop_BatteryPack_01.prefab · Prefab · 2 KB
+- SM_Prop_BatteryPack_02.prefab · Prefab · 2 KB
+- SM_Prop_BatteryPack_03.prefab · Prefab · 2 KB
+- SM_Prop_Bed_Single_01.prefab · Prefab · 2 KB
+- SM_Prop_Bench_Seat_02.prefab · Prefab · 2 KB
+- SM_Prop_Bike_Hitch_01.prefab · Prefab · 2 KB
+- SM_Prop_Bike_Hitch_02.prefab · Prefab · 2 KB
+- SM_Prop_Buoy_01.prefab · Prefab · 2 KB
+- SM_Prop_Cardboard_Box_01.prefab · Prefab · 2 KB
+- SM_Prop_Cardboard_Box_02.prefab · Prefab · 2 KB
+- SM_Prop_Cardboard_Box_03.prefab · Prefab · 2 KB
+- SM_Prop_Cardboard_Box_04.prefab · Prefab · 2 KB
+- SM_Prop_Cardboard_Box_05.prefab · Prefab · 2 KB
+- SM_Prop_CardReader_01.prefab · Prefab · 2 KB
+- SM_Prop_Cash_Register_01.prefab · Prefab · 2 KB
+- SM_Prop_Chair_03.prefab · Prefab · 2 KB
+- SM_Prop_Chair_04.prefab · Prefab · 5 KB
+- SM_Prop_Container_01.prefab · Prefab · 8 KB
+- SM_Prop_Drone_03.prefab · Prefab · 2 KB
+- SM_Prop_Drone_04.prefab · Prefab · 2 KB
+- SM_Prop_Fuel_Cell_01.prefab · Prefab · 5 KB
+- SM_Prop_HoverPad_01.prefab · Prefab · 2 KB
+- SM_Prop_Hydroponic_Planter_01.prefab · Prefab · 2 KB
+- SM_Prop_Hydroponic_Planter_02.prefab · Prefab · 2 KB
+- SM_Prop_Hydroponic_Planter_02_Insert_01.prefab · Prefab · 2 KB
+- SM_Prop_Hydroponic_Plant_01.prefab · Prefab · 2 KB
+- SM_Prop_Hydroponic_Plant_02.prefab · Prefab · 2 KB
+- SM_Prop_Hydroponic_Plant_03.prefab · Prefab · 2 KB
+- SM_Prop_Junk_Cardboard_01.prefab · Prefab · 2 KB
+- SM_Prop_Junk_Cardboard_02.prefab · Prefab · 2 KB
+- SM_Prop_Junk_Cardboard_03.prefab · Prefab · 2 KB
+- SM_Prop_Junk_Cardboard_04.prefab · Prefab · 2 KB
+- SM_Prop_Junk_Cardboard_05.prefab · Prefab · 2 KB
+- SM_Prop_Junk_Cardboard_06.prefab · Prefab · 2 KB
+- SM_Prop_Junk_Cardboard_07.prefab · Prefab · 2 KB
+- SM_Prop_Junk_Cardboard_08.prefab · Prefab · 2 KB
+- SM_Prop_Junk_Paper_01.prefab · Prefab · 2 KB
+- SM_Prop_Junk_Paper_02.prefab · Prefab · 2 KB
+- SM_Prop_Junk_Paper_03.prefab · Prefab · 2 KB
+- SM_Prop_Junk_Paper_04.prefab · Prefab · 2 KB
+- SM_Prop_Keyboard_01.prefab · Prefab · 2 KB
+- SM_Prop_Monitor_02.prefab · Prefab · 16 KB
+- SM_Prop_Monitor_03.prefab · Prefab · 5 KB
+- SM_Prop_Monitor_05.prefab · Prefab · 5 KB
+- SM_Prop_Monitor_07.prefab · Prefab · 2 KB
+- SM_Prop_Monitor_08.prefab · Prefab · 7 KB
+- SM_Prop_Monitor_09.prefab · Prefab · 5 KB
+- SM_Prop_Monitor_10.prefab · Prefab · 2 KB
+- SM_Prop_Monitor_11.prefab · Prefab · 2 KB
+- SM_Prop_Monitor_12.prefab · Prefab · 2 KB
+- SM_Prop_Monitor_13.prefab · Prefab · 2 KB
+- SM_Prop_Monitor_14.prefab · Prefab · 2 KB
+- SM_Prop_PDA_01.prefab · Prefab · 2 KB
+- SM_Prop_PowerCellCharger_01.prefab · Prefab · 2 KB
+- SM_Prop_PowerCellCharger_02.prefab · Prefab · 2 KB
+- SM_Prop_PowerCellCharger_03.prefab · Prefab · 2 KB
+- SM_Prop_PowerCellCharger_04.prefab · Prefab · 2 KB
+- SM_Prop_PowerCell_01.prefab · Prefab · 2 KB
+- SM_Prop_PowerCell_02.prefab · Prefab · 2 KB
+- SM_Prop_PowerCell_03.prefab · Prefab · 2 KB
+- SM_Prop_PowerCell_04.prefab · Prefab · 2 KB
+- SM_Prop_PowerGenerator_01.prefab · Prefab · 14 KB
+- SM_Prop_PowerGenerator_02.prefab · Prefab · 8 KB
+- SM_Prop_PowerGenerator_03.prefab · Prefab · 5 KB
+- SM_Prop_Satellite_01.prefab · Prefab · 8 KB
+- SM_Prop_Satellite_02.prefab · Prefab · 16 KB
+- SM_Prop_Satellite_03.prefab · Prefab · 7 KB
+- SM_Prop_Satellite_04.prefab · Prefab · 11 KB
+- SM_Prop_Satellite_05.prefab · Prefab · 5 KB
+- SM_Prop_Satellite_06.prefab · Prefab · 9 KB
+- SM_Prop_Satellite_07.prefab · Prefab · 26 KB
+- SM_Prop_Satellite_08.prefab · Prefab · 19 KB
+- SM_Prop_Scanner_01.prefab · Prefab · 2 KB
+- SM_Prop_Scav_Barrel_01.prefab · Prefab · 2 KB
+- SM_Prop_Suit_Hanging_01.prefab · Prefab · 2 KB
+- SM_Prop_SwipeCard_01.prefab · Prefab · 2 KB
+- SM_Prop_SwipeCard_02.prefab · Prefab · 2 KB
+- SM_Prop_Syncola_Can_01.prefab · Prefab · 2 KB
+- SM_Prop_Syncola_Can_02.prefab · Prefab · 2 KB
+- SM_Prop_Syncola_Can_Stack_01.prefab · Prefab · 2 KB
+- SM_Prop_Syncola_Can_Stack_02.prefab · Prefab · 2 KB
+- SM_Prop_Syncola_Can_Stack_03.prefab · Prefab · 2 KB
+- SM_Prop_Table_Medium_01.prefab · Prefab · 2 KB
+- SM_Prop_Tether_Pole_01.prefab · Prefab · 3 KB
+- SM_Prop_Tether_Pole_Tall_01.prefab · Prefab · 3 KB
+- SM_Prop_Tether_Pole_Tall_02.prefab · Prefab · 3 KB
+- SM_Prop_TrashBin_01.prefab · Prefab · 5 KB
+- SM_Prop_Turbine_01.prefab · Prefab · 2 KB
+- SM_Prop_Turret_Large_01.prefab · Prefab · 17 KB
+- SM_Prop_Turret_Large_02.prefab · Prefab · 22 KB
+- SM_Prop_Turret_Large_03.prefab · Prefab · 13 KB
+- SM_Prop_Turret_Medium_01.prefab · Prefab · 11 KB
+- SM_Prop_Vendor_Arm_01.prefab · Prefab · 2 KB
+- SM_Prop_Vendor_Block_01.prefab · Prefab · 2 KB
+- SM_Prop_Vendor_Bug_01.prefab · Prefab · 2 KB
+- SM_Prop_Vendor_Bug_02.prefab · Prefab · 2 KB
+- SM_Prop_Vendor_Bug_03.prefab · Prefab · 2 KB
+- SM_Prop_Vendor_Bug_04.prefab · Prefab · 2 KB
+- SM_Prop_Vendor_Cooker_01.prefab · Prefab · 2 KB
+- SM_Prop_Vendor_Cooker_02.prefab · Prefab · 2 KB
+- SM_Prop_Vendor_Fork_01.prefab · Prefab · 2 KB
+- SM_Prop_Vendor_Ham_01.prefab · Prefab · 2 KB
+- SM_Prop_Vendor_Knife_01.prefab · Prefab · 2 KB
+- SM_Prop_Vendor_Knives_Hanging_01.prefab · Prefab · 2 KB
+- SM_Prop_Vendor_Pans_Hanging_01.prefab · Prefab · 2 KB
+- SM_Prop_Vendor_Pans_Hanging_02.prefab · Prefab · 2 KB
+- SM_Prop_Vendor_Pans_Hanging_03.prefab · Prefab · 2 KB
+- SM_Prop_Vendor_Pan_01.prefab · Prefab · 2 KB
+- SM_Prop_Vendor_Pan_02.prefab · Prefab · 2 KB
+- SM_Prop_Vendor_Pan_03.prefab · Prefab · 2 KB
+- SM_Prop_Vendor_Pan_04.prefab · Prefab · 2 KB
+- SM_Prop_Vendor_Pan_05.prefab · Prefab · 2 KB
+- SM_Prop_Vendor_Pan_06.prefab · Prefab · 2 KB
+- SM_Prop_Vendor_Pan_07.prefab · Prefab · 2 KB
+- SM_Prop_Vendor_Pan_08.prefab · Prefab · 2 KB
+- SM_Prop_Vendor_Pan_Bowls_01.prefab · Prefab · 2 KB
+- SM_Prop_Vendor_Pan_Bowl_01.prefab · Prefab · 2 KB
+- SM_Prop_Vendor_Pan_Insert_01.prefab · Prefab · 2 KB
+- SM_Prop_Vendor_Pan_Insert_02.prefab · Prefab · 2 KB
+- SM_Prop_Vendor_Plate_01.prefab · Prefab · 2 KB
+- SM_Prop_Vendor_Plate_02.prefab · Prefab · 2 KB
+- SM_Prop_Vendor_Product_01.prefab · Prefab · 2 KB
+- SM_Prop_Vendor_Product_02.prefab · Prefab · 2 KB
+- SM_Prop_Vendor_Product_03.prefab · Prefab · 2 KB
+- SM_Prop_Vendor_Product_04.prefab · Prefab · 2 KB
+- SM_Prop_Vendor_Product_05.prefab · Prefab · 2 KB
+- SM_Prop_Vendor_Product_06.prefab · Prefab · 2 KB
+- SM_Prop_Vendor_Product_07.prefab · Prefab · 2 KB
+- SM_Prop_Vendor_Product_08.prefab · Prefab · 2 KB
+- SM_Prop_Vendor_Product_09.prefab · Prefab · 2 KB
+- SM_Prop_Vendor_Product_10.prefab · Prefab · 2 KB
+- SM_Prop_Vendor_Product_11.prefab · Prefab · 2 KB
+- SM_Prop_Vendor_Product_12.prefab · Prefab · 2 KB
+- SM_Prop_Vendor_Product_13.prefab · Prefab · 2 KB
+- SM_Prop_Vendor_Product_14.prefab · Prefab · 7 KB
+- SM_Prop_Vendor_Rib_01.prefab · Prefab · 2 KB
+- SM_Prop_Vendor_Spatch_01.prefab · Prefab · 2 KB
+- SM_Prop_Vendor_Tentacle_01.prefab · Prefab · 2 KB
+- SM_Prop_Vendor_Tentacle_02.prefab · Prefab · 2 KB
+- SM_Prop_Vendor_Tool_01.prefab · Prefab · 5 KB
+- SM_Prop_Vendor_Tool_02.prefab · Prefab · 5 KB
+- SM_Prop_Vendor_TV_01.prefab · Prefab · 2 KB
+- SM_Prop_Wall_Unit_01.prefab · Prefab · 5 KB
+
+**Assets/Synty/PolygonSciFiWorlds/Prefabs/Props/Junkies/**
+
+- SM_Prop_Junky_Female_01.prefab · Prefab · 3 KB
+- SM_Prop_Junky_Female_02.prefab · Prefab · 3 KB
+- SM_Prop_Junky_Female_03.prefab · Prefab · 3 KB
+- SM_Prop_Junky_Female_04.prefab · Prefab · 3 KB
+- SM_Prop_Junky_Female_05.prefab · Prefab · 3 KB
+- SM_Prop_Junky_Male_01.prefab · Prefab · 3 KB
+- SM_Prop_Junky_Male_02.prefab · Prefab · 3 KB
+- SM_Prop_Junky_Male_03.prefab · Prefab · 3 KB
+- SM_Prop_Junky_Male_04.prefab · Prefab · 3 KB
+- SM_Prop_Junky_Male_05.prefab · Prefab · 3 KB
+
+**Assets/Synty/PolygonSciFiWorlds/Prefabs/Props/Scrap/**
+
+- SM_Prop_Scav_Scrap_01.prefab · Prefab · 2 KB
+- SM_Prop_Scav_Scrap_02.prefab · Prefab · 2 KB
+- SM_Prop_Scav_Scrap_03.prefab · Prefab · 2 KB
+- SM_Prop_Scav_Scrap_04.prefab · Prefab · 2 KB
+- SM_Prop_Scav_Scrap_05.prefab · Prefab · 2 KB
+- SM_Prop_Scav_Scrap_06.prefab · Prefab · 2 KB
+- SM_Prop_Scav_Scrap_07.prefab · Prefab · 2 KB
+- SM_Prop_Scav_Scrap_08.prefab · Prefab · 2 KB
+- SM_Prop_Scav_Scrap_09.prefab · Prefab · 2 KB
+- SM_Prop_Scav_Scrap_10.prefab · Prefab · 2 KB
+- SM_Prop_Scav_Scrap_11.prefab · Prefab · 2 KB
+- SM_Prop_Scav_Scrap_12.prefab · Prefab · 2 KB
+- SM_Prop_Scav_Scrap_13.prefab · Prefab · 2 KB
+- SM_Prop_Scav_Scrap_14.prefab · Prefab · 2 KB
+- SM_Prop_Scav_Scrap_15.prefab · Prefab · 2 KB
+- SM_Prop_Scav_Scrap_16.prefab · Prefab · 2 KB
+- SM_Prop_Scav_Scrap_17.prefab · Prefab · 2 KB
+- SM_Prop_Scav_Scrap_18.prefab · Prefab · 2 KB
+- SM_Prop_Scav_Scrap_19.prefab · Prefab · 2 KB
+- SM_Prop_Scav_Scrap_20.prefab · Prefab · 2 KB
+- SM_Prop_Scav_Scrap_21.prefab · Prefab · 2 KB
+- SM_Prop_Scav_Scrap_22.prefab · Prefab · 2 KB
+- SM_Prop_Scav_Scrap_23.prefab · Prefab · 2 KB
+- SM_Prop_Scav_Scrap_24.prefab · Prefab · 2 KB
+- SM_Prop_Scav_Scrap_25.prefab · Prefab · 2 KB
+- SM_Prop_Scav_Scrap_26.prefab · Prefab · 2 KB
+- SM_Prop_Scav_Scrap_27.prefab · Prefab · 2 KB
+- SM_Prop_Scav_Scrap_28.prefab · Prefab · 2 KB
+- SM_Prop_Scav_Scrap_29.prefab · Prefab · 2 KB
+- SM_Prop_Scav_Scrap_30.prefab · Prefab · 4 KB
+- SM_Prop_Scav_Scrap_31.prefab · Prefab · 2 KB
+- SM_Prop_Scav_Scrap_32.prefab · Prefab · 2 KB
+- SM_Prop_Scav_Scrap_33.prefab · Prefab · 2 KB
+- SM_Prop_Scav_Scrap_34.prefab · Prefab · 2 KB
+- SM_Prop_Scav_Scrap_35.prefab · Prefab · 2 KB
+- SM_Prop_Scav_Scrap_36.prefab · Prefab · 2 KB
+- SM_Prop_Scav_Scrap_37.prefab · Prefab · 2 KB
+- SM_Prop_Scav_Scrap_38.prefab · Prefab · 2 KB
+- SM_Prop_Scav_Scrap_39.prefab · Prefab · 2 KB
+- SM_Prop_Scav_Scrap_40.prefab · Prefab · 2 KB
+- SM_Prop_Scav_Scrap_41.prefab · Prefab · 2 KB
+- SM_Prop_Scav_Scrap_42.prefab · Prefab · 2 KB
+- SM_Prop_Scav_Scrap_43.prefab · Prefab · 2 KB
+- SM_Prop_Scav_Scrap_44.prefab · Prefab · 2 KB
+- SM_Prop_Scav_Scrap_45.prefab · Prefab · 2 KB
+- SM_Prop_Scav_Scrap_46.prefab · Prefab · 2 KB
+- SM_Prop_Scav_Scrap_47.prefab · Prefab · 2 KB
+- SM_Prop_Scav_Scrap_48.prefab · Prefab · 2 KB
+- SM_Prop_Scav_Scrap_49.prefab · Prefab · 2 KB
+- SM_Prop_Scav_Scrap_50.prefab · Prefab · 2 KB
+- SM_Prop_Scav_Scrap_51.prefab · Prefab · 2 KB
+- SM_Prop_Scav_Scrap_52.prefab · Prefab · 2 KB
+- SM_Prop_Scav_Scrap_53.prefab · Prefab · 6 KB
+- SM_Prop_Scav_Scrap_54.prefab · Prefab · 2 KB
+- SM_Prop_Scav_Scrap_55.prefab · Prefab · 2 KB
+- SM_Prop_Scav_Scrap_56.prefab · Prefab · 2 KB
+
+**Assets/Synty/PolygonSciFiWorlds/Prefabs/Props/Signs/**
+
+- SM_Prop_Alien_Letter_01.prefab · Prefab · 2 KB
+- SM_Prop_Alien_Letter_02.prefab · Prefab · 2 KB
+- SM_Prop_Alien_Letter_03.prefab · Prefab · 2 KB
+- SM_Prop_Alien_Letter_04.prefab · Prefab · 2 KB
+- SM_Prop_Alien_Letter_05.prefab · Prefab · 2 KB
+- SM_Prop_Alien_Letter_06.prefab · Prefab · 2 KB
+- SM_Prop_Alien_Letter_07.prefab · Prefab · 2 KB
+- SM_Prop_Alien_Letter_08.prefab · Prefab · 2 KB
+- SM_Prop_Alien_Letter_09.prefab · Prefab · 2 KB
+- SM_Prop_Alien_Letter_10.prefab · Prefab · 2 KB
+- SM_Prop_Alien_Letter_11.prefab · Prefab · 2 KB
+- SM_Prop_Alien_Letter_12.prefab · Prefab · 2 KB
+- SM_Prop_Alien_Letter_13.prefab · Prefab · 2 KB
+- SM_Prop_Alien_Letter_14.prefab · Prefab · 2 KB
+- SM_Prop_Alien_Letter_15.prefab · Prefab · 2 KB
+- SM_Prop_Alien_Letter_16.prefab · Prefab · 2 KB
+- SM_Prop_Alien_Letter_17.prefab · Prefab · 2 KB
+- SM_Prop_Alien_Letter_18.prefab · Prefab · 2 KB
+- SM_Prop_Alien_Letter_19.prefab · Prefab · 2 KB
+- SM_Prop_Alien_Letter_20.prefab · Prefab · 2 KB
+- SM_Prop_Alien_Letter_21.prefab · Prefab · 2 KB
+- SM_Prop_Alien_Letter_22.prefab · Prefab · 2 KB
+- SM_Prop_Alien_Letter_23.prefab · Prefab · 2 KB
+- SM_Prop_Alien_Letter_24.prefab · Prefab · 2 KB
+- SM_Prop_Alien_Letter_25.prefab · Prefab · 2 KB
+- SM_Prop_Alien_Letter_26.prefab · Prefab · 2 KB
+- SM_Prop_Alien_Letter_27.prefab · Prefab · 2 KB
+- SM_Prop_Alien_Letter_28.prefab · Prefab · 2 KB
+- SM_Prop_Alien_Letter_29.prefab · Prefab · 2 KB
+- SM_Prop_Alien_Letter_30.prefab · Prefab · 2 KB
+- SM_Prop_Alien_Letter_31.prefab · Prefab · 2 KB
+- SM_Prop_Alien_Letter_32.prefab · Prefab · 2 KB
+- SM_Prop_Alien_Letter_33.prefab · Prefab · 2 KB
+- SM_Prop_Alien_Letter_34.prefab · Prefab · 2 KB
+- SM_Prop_Alien_Letter_35.prefab · Prefab · 2 KB
+- SM_Prop_Alien_Letter_36.prefab · Prefab · 2 KB
+- SM_Prop_Billboard_01.prefab · Prefab · 5 KB
+- SM_Prop_Billboard_02.prefab · Prefab · 5 KB
+- SM_Prop_Billboard_03.prefab · Prefab · 2 KB
+- SM_Prop_Billboard_04.prefab · Prefab · 2 KB
+- SM_Prop_Billboard_05.prefab · Prefab · 12 KB
+- SM_Prop_Billboard_06.prefab · Prefab · 12 KB
+- SM_Prop_Billboard_07.prefab · Prefab · 5 KB
+- SM_Prop_Billboard_08.prefab · Prefab · 5 KB
+- SM_Prop_Billboard_09.prefab · Prefab · 8 KB
+- SM_Prop_Billboard_10.prefab · Prefab · 8 KB
+- SM_Prop_Billboard_11.prefab · Prefab · 5 KB
+- SM_Prop_Billboard_Large_01.prefab · Prefab · 3 KB
+- SM_Prop_Billboard_Large_02.prefab · Prefab · 3 KB
+- SM_Prop_Poster_02.prefab · Prefab · 2 KB
+- SM_Prop_Poster_03.prefab · Prefab · 2 KB
+- SM_Prop_Poster_04.prefab · Prefab · 2 KB
+- SM_Prop_Poster_05.prefab · Prefab · 2 KB
+- SM_Prop_Poster_06.prefab · Prefab · 2 KB
+- SM_Prop_Poster_07.prefab · Prefab · 2 KB
+- SM_Prop_Sign_01.prefab · Prefab · 2 KB
+- SM_Prop_Sign_02.prefab · Prefab · 2 KB
+- SM_Prop_Symbol_01.prefab · Prefab · 2 KB
+- SM_Prop_Symbol_02.prefab · Prefab · 2 KB
+- SM_Prop_Symbol_03.prefab · Prefab · 2 KB
+- SM_Prop_Symbol_04.prefab · Prefab · 2 KB
+- SM_Prop_Symbol_05.prefab · Prefab · 2 KB
+- SM_Prop_Symbol_06.prefab · Prefab · 2 KB
+- SM_Prop_Symbol_07.prefab · Prefab · 2 KB
+- SM_Prop_Symbol_08.prefab · Prefab · 2 KB
+- SM_Prop_Symbol_09.prefab · Prefab · 2 KB
+- SM_Prop_Symbol_10.prefab · Prefab · 2 KB
+- SM_Prop_Symbol_11.prefab · Prefab · 2 KB
+- SM_Prop_Symbol_12.prefab · Prefab · 2 KB
+- SM_Prop_Symbol_13.prefab · Prefab · 2 KB
+- SM_Prop_Symbol_14.prefab · Prefab · 2 KB
+- SM_Prop_Symbol_15.prefab · Prefab · 2 KB
+- SM_Prop_Symbol_16.prefab · Prefab · 2 KB
+- SM_Prop_Symbol_17.prefab · Prefab · 2 KB
+- SM_Prop_Symbol_18.prefab · Prefab · 2 KB
+- SM_Prop_Symbol_19.prefab · Prefab · 2 KB
+- SM_Prop_Symbol_20.prefab · Prefab · 2 KB
+- SM_Prop_Symbol_21.prefab · Prefab · 2 KB
+- SM_Prop_Symbol_22.prefab · Prefab · 2 KB
+
+**Assets/Synty/PolygonSciFiWorlds/Prefabs/Props/Vehicles/**
+
+- SM_Veh_Apc_01.prefab · Prefab · 52 KB
+- SM_Veh_Apc_02.prefab · Prefab · 24 KB
+- SM_Veh_Barge_01.prefab · Prefab · 29 KB
+- SM_Veh_Buggy_01.prefab · Prefab · 37 KB
+- SM_Veh_HoverCraft_01.prefab · Prefab · 21 KB
+- SM_Veh_Hover_Bike_02.prefab · Prefab · 13 KB
+- SM_Veh_Hover_Bike_02_Attach_Cargo_01.prefab · Prefab · 7 KB
+- SM_Veh_Hover_Bike_02_Attach_Cargo_02.prefab · Prefab · 2 KB
+- SM_Veh_Hover_Bike_02_Attach_Dome_01.prefab · Prefab · 2 KB
+- SM_Veh_Hover_Bike_Attach_Bag_01.prefab · Prefab · 2 KB
+- SM_Veh_Hover_Bike_Attach_Bag_02.prefab · Prefab · 2 KB
+- SM_Veh_Hover_Bike_Attach_Bag_03.prefab · Prefab · 2 KB
+- SM_Veh_Hover_Bike_Attach_Bedroll_01.prefab · Prefab · 2 KB
+- SM_Veh_Rocket_01.prefab · Prefab · 14 KB
+- SM_Veh_Turret_Large_01.prefab · Prefab · 14 KB
+- SM_Veh_Turret_Large_02.prefab · Prefab · 19 KB
+- SM_Veh_Turret_Large_03.prefab · Prefab · 10 KB
+- SM_Veh_Turret_Medium_01.prefab · Prefab · 8 KB
+- SM_Veh_Vendor_01.prefab · Prefab · 13 KB
+- SM_Veh_Vendor_Tug_01.prefab · Prefab · 9 KB
+- SM_Veh_Vendor_Tug_01_Attach_Barrels_01.prefab · Prefab · 3 KB
+- SM_Veh_Vendor_Tug_01_Attach_Bow_01.prefab · Prefab · 2 KB
+- SM_Veh_Vendor_Tug_01_Attach_Fin_01.prefab · Prefab · 2 KB
+- SM_Veh_Vendor_Tug_01_Attach_Fin_02.prefab · Prefab · 5 KB
+- SM_Veh_Vendor_Tug_01_Attach_Fin_03.prefab · Prefab · 2 KB
+- SM_Veh_Vendor_Tug_01_Attach_Fin_04.prefab · Prefab · 2 KB
+- SM_Veh_Vendor_Tug_01_Attach_Front_Fin_01.prefab · Prefab · 2 KB
+- SM_Veh_Vendor_Tug_01_Attach_Port_01.prefab · Prefab · 2 KB
+- SM_Veh_Vendor_Tug_01_Attach_Roof_02.prefab · Prefab · 2 KB
+- SM_Veh_Vendor_Tug_01_Attach_Sail_01.prefab · Prefab · 2 KB
+- SM_Veh_Vendor_Tug_01_Attach_Shelves_01.prefab · Prefab · 2 KB
+- SM_Veh_Vendor_Tug_01_Attach_Sign_01.prefab · Prefab · 2 KB
+- SM_Veh_Vendor_Tug_01_Attach_Sign_02.prefab · Prefab · 2 KB
+- SM_Veh_Vendor_Tug_01_Attach_Sign_03.prefab · Prefab · 2 KB
+- SM_Veh_Vendor_Tug_01_Attach_Tech_01.prefab · Prefab · 2 KB
+- SM_Veh_Vendor_Tug_Preset_01.prefab · Prefab · 17 KB
+- SM_Veh_Vendor_Tug_Preset_02.prefab · Prefab · 43 KB
+- SM_Veh_Vendor_Tug_Preset_03.prefab · Prefab · 31 KB
+- SM_Veh_Vendor_Tug_Preset_04.prefab · Prefab · 31 KB
+
+**Assets/Synty/PolygonSciFiWorlds/Prefabs/Weapons/**
+
+- SM_Wep_Alien_02.prefab · Prefab · 5 KB
+- SM_Wep_Alien_04.prefab · Prefab · 7 KB
+- SM_Wep_Assault_02.prefab · Prefab · 12 KB
+- SM_Wep_Heavy_01.prefab · Prefab · 7 KB
+- SM_Wep_Heavy_02.prefab · Prefab · 21 KB
+- SM_Wep_Heavy_03.prefab · Prefab · 7 KB
+- SM_Wep_Launcher_02.prefab · Prefab · 7 KB
+- SM_Wep_Launcher_03.prefab · Prefab · 7 KB
+- SM_Wep_Missile_01.prefab · Prefab · 2 KB
+- SM_Wep_Pistol_02.prefab · Prefab · 9 KB
+- SM_Wep_Pistol_03.prefab · Prefab · 5 KB
+- SM_Wep_Pistol_04.prefab · Prefab · 7 KB
+- SM_Wep_Pistol_05.prefab · Prefab · 7 KB
+- SM_Wep_Pistol_06.prefab · Prefab · 5 KB
+- SM_Wep_Shotgun_01.prefab · Prefab · 7 KB
+- SM_Wep_Shotgun_01_Shell_01.prefab · Prefab · 2 KB
+- SM_Wep_Shotgun_02.prefab · Prefab · 7 KB
+- SM_Wep_Shotgun_03.prefab · Prefab · 12 KB
+- SM_Wep_SMG_01.prefab · Prefab · 12 KB
+- SM_Wep_SMG_02.prefab · Prefab · 4 KB
+- SM_Wep_SMG_03.prefab · Prefab · 7 KB
+- SM_Wep_Sniper_02.prefab · Prefab · 9 KB
+- SM_Wep_Sniper_03.prefab · Prefab · 9 KB
+
+**Assets/Synty/PolygonSciFiWorlds/Prefabs/Weapons/Melee/**
+
+- SM_Wep_BigAxe_01.prefab · Prefab · 2 KB
+- SM_Wep_BigAxe_02.prefab · Prefab · 2 KB
+- SM_Wep_BigAxe_03.prefab · Prefab · 2 KB
+- SM_Wep_BigAxe_04.prefab · Prefab · 2 KB
+- SM_Wep_BigAxe_05.prefab · Prefab · 2 KB
+- SM_Wep_BigAxe_06.prefab · Prefab · 2 KB
+- SM_Wep_BigAxe_07.prefab · Prefab · 2 KB
+- SM_Wep_Dagger_01.prefab · Prefab · 2 KB
+- SM_Wep_Dagger_02.prefab · Prefab · 2 KB
+- SM_Wep_Dagger_04.prefab · Prefab · 2 KB
+- SM_Wep_Dagger_05.prefab · Prefab · 2 KB
+- SM_Wep_Dagger_06.prefab · Prefab · 2 KB
+- SM_Wep_Dagger_07.prefab · Prefab · 2 KB
+- SM_Wep_Hammer_01.prefab · Prefab · 2 KB
+- SM_Wep_Hammer_02.prefab · Prefab · 2 KB
+- SM_Wep_Hammer_03.prefab · Prefab · 2 KB
+- SM_Wep_Shield_01.prefab · Prefab · 5 KB
+- SM_Wep_Shield_02.prefab · Prefab · 5 KB
+- SM_Wep_Shield_03.prefab · Prefab · 5 KB
+- SM_Wep_Shield_04.prefab · Prefab · 5 KB
+- SM_Wep_Shield_05.prefab · Prefab · 5 KB
+- SM_Wep_SmallAxe_01.prefab · Prefab · 2 KB
+- SM_Wep_SmallAxe_02.prefab · Prefab · 2 KB
+- SM_Wep_SmallAxe_03.prefab · Prefab · 2 KB
+- SM_Wep_SmallAxe_04.prefab · Prefab · 2 KB
+- SM_Wep_SmallAxe_05.prefab · Prefab · 2 KB
+- SM_Wep_Sword_01a.prefab · Prefab · 2 KB
+- SM_Wep_Sword_02.prefab · Prefab · 2 KB
+- SM_Wep_Sword_03.prefab · Prefab · 2 KB
+- SM_Wep_Sword_05.prefab · Prefab · 2 KB
+- SM_Wep_Sword_06.prefab · Prefab · 2 KB
+- SM_Wep_Sword_07.prefab · Prefab · 2 KB
+- SM_Wep_Sword_08.prefab · Prefab · 2 KB
+
+**Assets/Synty/PolygonSciFiWorlds/Prefabs/Weapons/Scopes/**
+
+- SM_Wep_Scope_Alien_01.prefab · Prefab · 2 KB
+- SM_Wep_Scope_Small_01.prefab · Prefab · 2 KB
+- SM_Wep_Scope_Small_02.prefab · Prefab · 2 KB
+- SM_Wep_Scope_Small_03.prefab · Prefab · 2 KB
+- SM_Wep_Scope_Sniper_01.prefab · Prefab · 2 KB
+- SM_Wep_Scope_Sniper_02.prefab · Prefab · 2 KB
+- SM_Wep_Scope_Sniper_03.prefab · Prefab · 2 KB
+- SM_Wep_Scope_Unique_01.prefab · Prefab · 2 KB
+
+**Assets/Synty/PolygonSciFiWorlds/Scenes/**
+
+- Demo_BlackMarket_01.unity · Scene · 4.0 MB
+- Demo_BlackMarket_01Settings.lighting · Other · 1 KB
+- Demo_Corporation_01.unity · Scene · 7.4 MB
+- Demo_Corporation_01Settings.lighting · Other · 1 KB
+- Demo_Explorer_01.unity · Scene · 6.6 MB
+- Demo_Explorer_01Settings.lighting · Other · 1 KB
+- Demo_Scavenger_01.unity · Scene · 6.2 MB
+- Demo_Scavenger_01Settings.lighting · Other · 1 KB
+- Overview.unity · Scene · 3.3 MB
+
+**Assets/Synty/PolygonSciFiWorlds/Scenes/Demo_BlackMarket_01/**
+
+- SciFiWorlds_BlackMarket.asset · Asset · 3 KB
+- SciFiWorlds_Corp.asset · Asset · 3 KB
+- SciFiWorlds_Explorer.asset · Asset · 3 KB
+- SciFiWorlds_Overview.asset · Asset · 2 KB
+- SciFiWorlds_Scavenger.asset · Asset · 3 KB
+
+**Assets/Synty/PolygonSciFiWorlds/Shaders/Masks/**
+
+- Black.png · Texture · 1 KB
+- Noise_Big.tga · Texture · 1.0 MB
+- Noise_Hard.png · Texture · 312 KB
+- Noise_Hard_03.png · Texture · 86 KB
+- Plant_Mask.png · Texture · 156 KB
+- Plant_Mask_Colour.png · Texture · 129 KB
+- Rocks_Masked_baseTexBaked.png · Texture · 128 KB
+- Rocks_Masked_normals.png · Texture · 241 KB
+- Rockwall_Normal.png · Texture · 1.3 MB
+
+**Assets/Synty/PolygonSciFiWorlds/Textures/Alts/**
+
+- PolygonScifiWorlds_04_B.png · Texture · 3.2 MB
+- PolygonScifiWorlds_04_C.png · Texture · 3.2 MB
+
+**Assets/Synty/PolygonSciFiWorlds/Textures/Alts/Skin_Alt/**
+
+- PolygonScifiWorlds_01_A.png · Texture · 3.2 MB
+- PolygonScifiWorlds_01_B.png · Texture · 3.2 MB
+- PolygonScifiWorlds_01_C.png · Texture · 3.2 MB
+- PolygonScifiWorlds_02_A.png · Texture · 3.2 MB
+- PolygonScifiWorlds_02_B.png · Texture · 3.2 MB
+- PolygonScifiWorlds_02_C.png · Texture · 3.2 MB
+- PolygonScifiWorlds_03_A.png · Texture · 2.8 MB
+- PolygonScifiWorlds_03_B.png · Texture · 2.8 MB
+- PolygonScifiWorlds_03_C.png · Texture · 2.8 MB
+- PolygonScifiWorlds_04_A.png · Texture · 3.2 MB
+- PolygonScifiWorlds_04_B.png · Texture · 3.2 MB
+- PolygonScifiWorlds_04_C.png · Texture · 3.2 MB
+
+**Assets/Synty/PolygonSciFiWorlds/Textures/FX/**
+
+- Circle_01_Dark.png · Texture · 4 KB
+- HoloLines_01.png · Texture · 2 KB
+- HoloLines_02.png · Texture · 4 KB
+- HoloLines_03.png · Texture · 2 KB
+- HoloLines_04.png · Texture · 3 KB
+- NeonSigns_01.psd · Texture · 517 KB
+- Plain_Black_01.png · Texture · 1 KB
+
+**Assets/Synty/PolygonSciFiWorlds/Textures/Misc/**
+
+- FX_Light_Sprite_01.png · Texture · 127 KB
+- Metal_Greeble_01.png · Texture · 27 KB
+- Pebbles_01_Normals.png · Texture · 381 KB
+- Pebbles_Sand_01.png · Texture · 653 KB
+- Planet_01.png · Texture · 2.3 MB
+- Planet_01_Emissive.png · Texture · 555 KB
+- Planet_01_Emissive_Rim.png · Texture · 224 KB
+- Planet_02.png · Texture · 256 KB
+- Planet_02_Rim.png · Texture · 145 KB
+- Planet_03.png · Texture · 186 KB
+- Planet_03_Rim.png · Texture · 97 KB
+- Planet_04.png · Texture · 681 KB
+- Planet_04_Glow.png · Texture · 447 KB
+- Planet_04_Rim.png · Texture · 183 KB
+- SciFi_Graffiti_01.png · Texture · 527 KB
+- Scrap_Transparent_01.png · Texture · 42 KB
+- SimpleSky_01.png · Texture · 20 KB
+- Snow_01.png · Texture · 212 KB
+- Swatch_01_Normals.png · Texture · 1 KB
+
+**Assets/Synty/PolygonSciFiWorlds/Textures/Misc/CatScreen/**
+
+- CatScreen_02.png · Texture · 18 KB
+- CatScreen_03.png · Texture · 25 KB
+- CatScreen_04.png · Texture · 19 KB
+- CatScreen_05.png · Texture · 19 KB
+
+**Assets/Synty/PolygonSciFiWorlds/Textures/Misc/Cubemap/**
+
+- PortalCubemap_01.exr · Texture · 2.9 MB
+
+**Assets/Synty/PolygonSciFiWorlds/Textures/Misc/Skybox/**
+
+- PolygonSciFiWorlds_Skybox_01_Back.png · Texture · 713 KB
+- PolygonSciFiWorlds_Skybox_01_Down.png · Texture · 866 KB
+- PolygonSciFiWorlds_Skybox_01_Front.png · Texture · 802 KB
+- PolygonSciFiWorlds_Skybox_01_Left.png · Texture · 953 KB
+- PolygonSciFiWorlds_Skybox_01_Right.png · Texture · 803 KB
+- PolygonSciFiWorlds_Skybox_01_Up.png · Texture · 1.1 MB
+
+**Assets/Synty/PolygonSciFiWorlds/Textures/Signs/**
+
+- Amputations_01.png · Texture · 129 KB
+- ATV_01.png · Texture · 913 KB
+- Brain_Worms_01.png · Texture · 174 KB
+- Bullet_01.png · Texture · 337 KB
+- Cyber_Fetus_01.png · Texture · 149 KB
+- Drone_01.png · Texture · 1.0 MB
+- Expendable_Goods_01.png · Texture · 112 KB
+- Low_Grav_01.png · Texture · 271 KB
+- Mech_Repair_01.png · Texture · 105 KB
+- Orange_Text_01.png · Texture · 360 KB
+- Pill_Dude_01.png · Texture · 450 KB
+- Pistol_01.png · Texture · 550 KB
+- Portal_Movers_01.png · Texture · 164 KB
+- Syntanium_Sign_01.png · Texture · 774 KB
+- Used_Nano_Chunks_01.png · Texture · 53 KB
+- Wanted_Poster_01.png · Texture · 465 KB
