@@ -6,13 +6,15 @@ using UnityEngine;
 
 namespace KryticalNova.Economy
 {
-    /// <summary>One thing on a vendor's shelf: the item and what one of it costs.</summary>
+    /// <summary>One thing on a vendor's shelf: the item, what one of it costs, and how many one player may buy a week.</summary>
     [Serializable]
     public struct VendorListing
     {
         public ItemDefinition item;
         [Tooltip("Creds for one.")]
         [Min(0)] public long price;
+        [Tooltip("How many of it one character may buy from this vendor each in-game week (EconomySettings.vendorWeekDays). 0 = no limit.")]
+        [Min(0)] public int weeklyLimit;
     }
 
     /// <summary>
@@ -55,6 +57,18 @@ namespace KryticalNova.Economy
             if (rotation == null || rotation.Count == 0) return false;
             listing = rotation[(int)(((day % rotation.Count) + rotation.Count) % rotation.Count)];
             return listing.item != null && listing.price > 0;
+        }
+
+        /// <summary>How many of an item one character may buy here each in-game week. 0 = no limit (and for gear sold by rule).</summary>
+        public int WeeklyLimitOf(ItemDefinition item)
+        {
+            if (item == null) return 0;
+            foreach (VendorListing listing in listings)
+                if (listing.item == item) return listing.weeklyLimit;
+            if (rotation != null)
+                foreach (VendorListing listing in rotation)
+                    if (listing.item == item) return listing.weeklyLimit;
+            return 0;
         }
 
         /// <summary>The listed price of an item, or false when it is not listed.</summary>

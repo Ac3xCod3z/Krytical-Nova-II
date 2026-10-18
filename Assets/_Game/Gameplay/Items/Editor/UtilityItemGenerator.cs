@@ -94,11 +94,12 @@ namespace KryticalNova.EditorTools
             new Row { Id = LootRules.CredsItemId, Asset = "Creds_Drop", Name = "Creds", Glyph = "CREDS", Rarity = ItemRarity.Common,
                 Description = "Creds. Picked up, they go straight into your wallet.", Stack = LootRules.MaxCredsPerDrop },
 
-            // Autopilot (_Docs/Plans/hostiles-plan.md, section 8): each chip adds Autopilot time. Only GM tools
-            // give it out for now.
-            new Row { Id = AutopilotChipId, Asset = "Chip_Autopilot", Name = "Autopilot Chip", Glyph = "AUTO", Rarity = ItemRarity.Uncommon,
-                Description = "Adds 5 hours of Autopilot: your character hunts by itself inside a Hostile Zone. The time only runs while Autopilot is on.",
-                Stack = 99, Effect = ItemUseEffect.AutopilotTime },
+            // Autopilot (_Docs/Plans/hostiles-plan.md, section 8; owner 15 Oct 2026): a licence by the clock, like the
+            // Autobuff's. The 3-day Pass was the Autopilot Chip (same id, asset renamed); it drops from Hostiles, and
+            // all three are Nova Store stock.
+            AutopilotPass(AutopilotPass3Id, "Pass_Autopilot3", 3, ItemRarity.Uncommon, null, "Dropped now and then by Hostiles of level 10 and up, and sold in the Nova Store."),
+            AutopilotPass(AutopilotPass14Id, "Pass_Autopilot14", 14, ItemRarity.Rare, "Pass_Autopilot3", "Sold in the Nova Store."),
+            AutopilotPass(AutopilotPass30Id, "Pass_Autopilot30", 30, ItemRarity.Epic, "Pass_Autopilot3", "Sold in the Nova Store."),
 
             // The Autobuff (owner, 15 Oct 2026): a licence by the clock, like a Kiosk's, that casts up to eight slotted
             // buffs from one Hotbar key. The 3-day Pass drops from Hostiles; all three are Nova Store stock.
@@ -211,6 +212,11 @@ namespace KryticalNova.EditorTools
                 Effect = ItemUseEffect.AutobuffTime, IconOf = iconOf,
                 Description = $"Adds {days} days of Autobuff: every buff skill you slot in the Autopilot window is cast with one Hotbar key, and Autopilot keeps them up. The days count by the clock, as a Kiosk Permit's do; another Pass adds to the end. {source}" };
 
+        private static Row AutopilotPass(ushort id, string asset, int days, ItemRarity rarity, string iconOf, string source) =>
+            new Row { Id = id, Asset = asset, Name = $"Autopilot Pass ({days} Days)", Glyph = $"AP {days}D", Rarity = rarity, Stack = 99,
+                Effect = ItemUseEffect.AutopilotTime, IconOf = iconOf,
+                Description = $"Adds {days} days of Autopilot: your character hunts by itself inside a Hostile Zone and picks up what Magnet is set to take. The days count by the clock, as a Kiosk Permit's do, whether Autopilot is on or not; another Pass adds to the end. {source}" };
+
         private static Row Stim(ushort id, string asset, string name, string glyph, ItemRarity rarity, float health, float flux) =>
             new Row { Id = id, Asset = asset, Name = name, Glyph = glyph, Rarity = rarity, Stack = StimStack, Health = health, Flux = flux, Hotbar = true,
                 Description = health > 0f && flux > 0f ? $"Restores {health:0} HP and {flux:0} Flux." : health > 0f ? $"Restores {health:0} HP." : $"Restores {flux:0} Flux." };
@@ -287,7 +293,7 @@ namespace KryticalNova.EditorTools
         public const ushort FluxFlaskId = 9012;
         public const ushort KioskPermit14Id = 9020;
         public const ushort KioskPermit30Id = 9021;
-        public const ushort AutopilotChipId = 9030;
+        public const ushort AutopilotPass3Id = 9030, AutopilotPass14Id = 9034, AutopilotPass30Id = 9035;
         public const ushort AutobuffPass3Id = 9031, AutobuffPass14Id = 9032, AutobuffPass30Id = 9033;
 
         [MenuItem("Krytical Nova/Items/5. Generate Utility Items (Stims, Permits, Rations, Forge Materials, Serums)")]
@@ -328,24 +334,24 @@ namespace KryticalNova.EditorTools
             var items = catalog.Items.Where(i => i != null).Concat(made).Distinct().OrderBy(i => i.itemId).ToList();
             catalog.SetContents(items, catalog.StarterEquipped.ToList(), bag);
             EditorUtility.SetDirty(catalog);
-            int drops = AddAutobuffDrop(byAsset);
+            int drops = AddPassDrop(byAsset, "Pass_Autobuff3") + AddPassDrop(byAsset, "Pass_Autopilot3");
             AssetDatabase.SaveAssets();
             Debug.Log($"[Items] {made.Count} utility items registered in {CatalogPath}; {drops} drop row(s) added.");
         }
 
         private const string HostileSettingsPath = "Assets/_Game/Gameplay/Hostiles/Data/Assets/HostileSettings.asset";
-        private const float AutobuffPassDropChance = 0.3f; // placeholder, percent before the level gap and the server drop rate
-        private const int AutobuffPassDropLevel = 10;
+        private const float PassDropChance = 0.3f; // placeholder, percent before the level gap and the server drop rate
+        private const int PassDropLevel = 10;
 
-        /// <summary>The 3-day Autobuff Pass joins the Hostile drop table (its chance may have been tuned since: a row that is there is left).</summary>
-        private static int AddAutobuffDrop(Dictionary<string, ItemDefinition> byAsset)
+        /// <summary>A 3-day Pass (Autobuff, Autopilot) joins the Hostile drop table (its chance may have been tuned since: a row that is there is left).</summary>
+        private static int AddPassDrop(Dictionary<string, ItemDefinition> byAsset, string asset)
         {
-            if (!byAsset.TryGetValue("Pass_Autobuff3", out ItemDefinition pass) || pass == null) return 0;
+            if (!byAsset.TryGetValue(asset, out ItemDefinition pass) || pass == null) return 0;
             var hostiles = AssetDatabase.LoadAssetAtPath<KryticalNova.Hostiles.HostileSettings>(HostileSettingsPath);
-            if (hostiles == null) { Debug.LogWarning($"[Items] No Hostile settings at {HostileSettingsPath}: the Autobuff Pass drop was not added."); return 0; }
+            if (hostiles == null) { Debug.LogWarning($"[Items] No Hostile settings at {HostileSettingsPath}: the {asset} drop was not added."); return 0; }
             var rows = new List<KryticalNova.Hostiles.MaterialDrop>(hostiles.materialDrops ?? System.Array.Empty<KryticalNova.Hostiles.MaterialDrop>());
             if (rows.Exists(row => row.item == pass)) return 0;
-            rows.Add(new KryticalNova.Hostiles.MaterialDrop { item = pass, chancePercent = AutobuffPassDropChance, minLevel = AutobuffPassDropLevel });
+            rows.Add(new KryticalNova.Hostiles.MaterialDrop { item = pass, chancePercent = PassDropChance, minLevel = PassDropLevel });
             hostiles.materialDrops = rows.ToArray();
             EditorUtility.SetDirty(hostiles);
             return 1;

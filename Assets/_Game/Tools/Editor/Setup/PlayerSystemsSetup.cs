@@ -114,6 +114,8 @@ namespace KryticalNova.EditorTools
             new Row("KryticalNova.Player.PlayerRecall", ("settings", RecallSettingsPath)),
             // The Flux Flask: a drink of Flux over time, and the refill at an Apothecary.
             new Row("KryticalNova.Items.PlayerFlask", ("settings", FlaskSettingsPath)),
+            // Equipment loadouts: ten saved sets of worn gear, put on again from the Pack in one go.
+            new Row("KryticalNova.Items.PlayerLoadouts"),
             // XP boosters: the clocks of the Field, Companion and Tandem Boosters.
             new Row("KryticalNova.Progression.PlayerExperienceBoosts", ("settings", EconomySettingsPath)),
             // Autopilot and Magnet: the server's flag and time, and the two helpers that run on the player's own game.

@@ -132,13 +132,14 @@ namespace KryticalNova.UI
             if (Time.unscaledTime < nextRefresh) return;
             nextRefresh = Time.unscaledTime + 0.25f;
 
-            string time = PlayerAutopilot.FormatTime(autopilot.SecondsLeft);
+            string time = autopilot.Free ? "GM free mode" : Economy.KioskRules.TimeLeft(DateTime.UtcNow.Ticks, autopilot.ExpiresUtc);
             string key = KeyBindings.Label(KeyBindings.Autopilot);
             if (on) noticeText.text = $"AUTOPILOT  ·  {time}  ·  {key} to stop";
             if (!IsOpen) return;
+            // The days run whether Autopilot is on or not, like a Kiosk Permit's.
             status.text = on ? $"Running. Time left: {time}."
-                : autopilot.SecondsLeft > 0f ? $"Off. Time left: {time}."
-                : "Off. No Autopilot time left: use an Autopilot Chip.";
+                : autopilot.HasTime ? $"Off. Time left: {time} (the days count by the clock)."
+                : "Off. No Autopilot time left: use an Autopilot Pass.";
             switchButton.text = on ? $"STOP  [{key}]" : $"START  [{key}]";
             if (!filled) Fill();
             RefreshAutobuff();

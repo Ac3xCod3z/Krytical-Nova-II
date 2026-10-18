@@ -13,9 +13,13 @@ namespace KryticalNova.Items.Visuals
     /// its idle far below the world, beside that page's stage, and one small camera draws it into a texture with a
     /// clear background, so the HUD's own portrait frame shows behind it.
     /// <para>It is a still picture (owner, 11 Oct 2026): taken when the player arrives, and again only when the
-    /// armor piece changes (the piece, its dye or its Holoweave look) or the character's look is changed at the
-    /// Stylist or the Reshaper. Gloves, boots, cape and weapon do not retake it: from this angle they are not what
-    /// the picture shows. Between pictures the doll is switched off, so nothing is animated and no camera draws.</para>
+    /// armor or the cape changes (the piece, its dye or its Holoweave look) or the character's look is changed at
+    /// the Stylist or the Reshaper. Gloves, boots and weapon do not retake it: from this angle they are not what the
+    /// picture shows. Between pictures the doll is switched off, so nothing is animated and no camera draws.</para>
+    /// <para>The doll takes the player's pieces and dyes again before every picture, so the picture shows the set
+    /// colours, the dye and the Holoweave look the player wears now (owner, 17 Oct 2026: it kept the colours of
+    /// the first picture). The picture is kept as one small compressed texture (64 KB at 256 px); the target the
+    /// camera draws into is let go once it has been read.</para>
     /// </summary>
     public sealed class CharacterPortraitStage : MonoBehaviour
     {
@@ -46,8 +50,12 @@ namespace KryticalNova.Items.Visuals
         private WeaponVisualMount dollWeapon;
         private CharacterAppearance sourceAppearance;
         private CharacterLook sourceLook;
-        private ItemDefinition picturedArmor;
-        private Color32[] picturedDye;
+        // What the picture shows of the gear: the armor's and the cape's piece as seen (a Holoweave look) and dye.
+        private static readonly EquipSlot[] PicturedSlots = { EquipSlot.Armor, EquipSlot.Cape };
+        private readonly ItemDefinition[] picturedPiece = new ItemDefinition[PicturedSlots.Length];
+        private readonly Color32[][] picturedDye = new Color32[PicturedSlots.Length][];
+        private Texture2D picture;
+        private bool readingBack;
         private Transform head;
         private AnimationClip idleClip;
         private MaterialPropertyBlock studioAmbient;
@@ -59,7 +67,7 @@ namespace KryticalNova.Items.Visuals
         private float secondPictureAt;
 
         /// <summary>The picture. Its background is clear. Null until someone is drawn.</summary>
-        public Texture Texture => texture;
+        public Texture Texture => picture != null ? picture : texture;
         /// <summary>True once there is a player's model to draw.</summary>
         public bool HasSitter => doll != null;
 
@@ -139,18 +147,25 @@ namespace KryticalNova.Items.Visuals
             if (shown && doll != null && !hasPicture) TakePicture();
         }
 
-        // Only the armor piece is in the picture: a change of gloves, boots, cape or weapon is not a reason for a new one.
+        // Only the armor and the cape are in the picture: a change of gloves, boots or weapon is not a reason for a new one.
         private void OnWornChanged()
         {
             if (sourceAppearance == null) return;
-            if (sourceAppearance.GetWorn(EquipSlot.Armor) == picturedArmor && ReferenceEquals(sourceAppearance.GetDye(EquipSlot.Armor), picturedDye)) return;
-            TakePicture();
+            for (int i = 0; i < PicturedSlots.Length; i++)
+                if (sourceAppearance.GetWorn(PicturedSlots[i]) != picturedPiece[i] || !ReferenceEquals(sourceAppearance.GetDye(PicturedSlots[i]), picturedDye[i]))
+                {
+                    TakePicture();
+                    return;
+                }
         }
 
         private void Remember()
         {
-            picturedArmor = sourceAppearance.GetWorn(EquipSlot.Armor);
-            picturedDye = sourceAppearance.GetDye(EquipSlot.Armor);
+            for (int i = 0; i < PicturedSlots.Length; i++)
+            {
+                picturedPiece[i] = sourceAppearance.GetWorn(PicturedSlots[i]);
+                picturedDye[i] = sourceAppearance.GetDye(PicturedSlots[i]);
+            }
         }
 
         private void Unwatch()
@@ -172,9 +187,13 @@ namespace KryticalNova.Items.Visuals
                 texture.Create();
                 portraitCamera.targetTexture = texture;
             }
+            else if (!texture.IsCreated()) texture.Create();
             var main = Camera.main;
             if (main != null) main.cullingMask &= ~(1 << previewLayer);
             if (!doll.activeSelf) doll.SetActive(true);
+            // The doll was off since the last picture and heard nothing: it takes the player's pieces and dyes again,
+            // and its colour map follows them before the camera draws (framesToSettle).
+            dollAppearance.ShareFrom(sourceAppearance);
             if (idleClip != null && doll.TryGetComponent<AnimancerComponent>(out var animancer) && !animancer.IsPlaying(idleClip)) animancer.Play(idleClip);
             sitting = true;
             drawing = firstTaken = false;
@@ -192,8 +211,9 @@ namespace KryticalNova.Items.Visuals
         private void LateUpdate()
         {
             if (doll == null) return;
-            // The picture is gone with the graphics device (a change of screen mode can do it): take it again.
-            if (hasPicture && !sitting && texture != null && !texture.IsCreated()) TakePicture();
+            // The picture is gone with the graphics device (a change of screen mode can do it): take it again. A
+            // picture kept as a texture of its own does not go.
+            if (hasPicture && !sitting && picture == null && !readingBack && texture != null && !texture.IsCreated()) TakePicture();
 
             // An open equipment page lights every doll on the preview layer: two sets of lights would burn this one out.
             bool ownLights = sitting && CharacterPreviewStage.OpenCount == 0;
@@ -206,6 +226,7 @@ namespace KryticalNova.Items.Visuals
                 drawing = false;
                 portraitCamera.enabled = false;
                 hasPicture = true;
+                Keep();
                 if (firstTaken || secondPictureAfter <= 0f) Rise();
                 else
                 {
@@ -243,6 +264,37 @@ namespace KryticalNova.Items.Visuals
 
         private void Dress() => CharacterPreviewStage.ApplyPreviewLayers(doll, previewLayer, studioAmbient);
 
+        // The camera has drawn: the picture is read back and kept compressed, and the target it was drawn into is let
+        // go until the next one. Where the graphics card cannot read back, the target itself stays the picture.
+        private void Keep()
+        {
+            if (texture == null || !SystemInfo.supportsAsyncGPUReadback) return;
+            readingBack = true;
+            AsyncGPUReadback.Request(texture, 0, TextureFormat.RGBA32, OnReadBack);
+        }
+
+        private void OnReadBack(AsyncGPUReadbackRequest request)
+        {
+            readingBack = false;
+            if (this == null || texture == null) return;
+            if (request.hasError)
+            {
+                Debug.LogWarning("[Portrait] The picture could not be read back; the HUD shows the target it was drawn into.");
+                if (picture != null) { Destroy(picture); picture = null; } // an older picture would be the wrong one
+                return;
+            }
+            // A newer picture is being taken: this one is not worth keeping.
+            if (sitting && !firstTaken) return;
+            var kept = new Texture2D(request.width, request.height, TextureFormat.RGBA32, false) { name = "CharacterPortrait", wrapMode = TextureWrapMode.Clamp };
+            kept.SetPixelData(request.GetData<byte>(), 0);
+            kept.Compress(false);          // DXT5 (the clear background keeps its alpha): a quarter of the size
+            kept.Apply(false, true);       // no copy kept in memory once it is on the graphics card
+            Texture2D old = picture;
+            picture = kept;
+            if (old != null) Destroy(old);
+            if (!sitting) texture.Release(); // drawn into again only for the next picture
+        }
+
         private void BuildCamera()
         {
             var go = new GameObject("Portrait Camera");
@@ -272,6 +324,7 @@ namespace KryticalNova.Items.Visuals
         {
             Unwatch();
             if (texture != null) { texture.Release(); Destroy(texture); }
+            if (picture != null) Destroy(picture);
         }
     }
 }

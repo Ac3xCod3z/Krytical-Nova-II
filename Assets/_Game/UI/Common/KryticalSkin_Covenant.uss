@@ -196,11 +196,15 @@
 .kn-faction-covenant #menu Button {
     font-size: 13.44px;
 }
-.kn-faction-covenant .step-option {
+.kn-faction-covenant .step-split > .step-caret {
     font-size: 12.32px;
     -unity-background-image-tint-color: rgb(54, 44, 32);
 }
-.kn-faction-covenant .step-option.active-step {
+.kn-faction-covenant .step-popup-option {
+    font-size: 13.44px;
+    -unity-background-image-tint-color: rgb(54, 44, 32);
+}
+.kn-faction-covenant .step-popup-option.active-step {
     -unity-background-image-tint-color: rgb(112, 73, 0);
 }
 .kn-faction-covenant .stat-row .stat-value {
@@ -934,6 +938,42 @@
     text-shadow: 1px 1px 0 rgb(16, 13, 9);
 }
 
+/* ---- Loadouts.uss ---- */
+.kn-faction-covenant .loadout-name {
+    font-size: 14.56px;
+}
+.kn-faction-covenant .loadout-empty-text {
+    font-size: 12.32px;
+}
+.kn-faction-covenant .loadout-wear {
+    font-size: 13.44px;
+}
+.kn-faction-covenant .loadout-more {
+    font-size: 14.56px;
+}
+.kn-faction-covenant .loadout-menu Button {
+    font-size: 12.32px;
+}
+.kn-faction-covenant .loadout-dialog-title {
+    font-size: 16.8px;
+}
+.kn-faction-covenant .loadout-name-field > .unity-text-field__input, .kn-faction-covenant .loadout-name-field .unity-base-text-field__input {
+    font-size: 17.92px;
+}
+.kn-faction-covenant .loadout-slot {
+    font-size: 12.32px;
+    -unity-background-image-tint-color: rgb(54, 44, 32);
+}
+.kn-faction-covenant .loadout-slot.used {
+    color: rgb(140, 236, 172);
+}
+.kn-faction-covenant .loadout-slot.chosen {
+    -unity-background-image-tint-color: rgb(112, 73, 0);
+}
+.kn-faction-covenant .loadout-error {
+    font-size: 13.44px;
+}
+
 /* ---- Herald.uss ---- */
 .kn-faction-covenant .herald-purse {
     font-size: 13.44px;
@@ -1498,6 +1538,12 @@
 }
 .kn-faction-covenant .kiosk-price {
     font-size: 11.2px;
+    background-color: rgba(18, 14, 10, 0.78);
+    -unity-font-definition: url("/Assets/Synty/InterfaceFantasyWarriorHUD/Fonts/Grenze/Grenze-SemiBold.ttf");
+}
+.kn-faction-covenant .vendor-left {
+    font-size: 10.08px;
+    color: rgb(230, 184, 100);
     background-color: rgba(18, 14, 10, 0.78);
     -unity-font-definition: url("/Assets/Synty/InterfaceFantasyWarriorHUD/Fonts/Grenze/Grenze-SemiBold.ttf");
 }

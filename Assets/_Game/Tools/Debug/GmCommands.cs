@@ -139,7 +139,7 @@ namespace KryticalNova.DevTools
                 "GAME SPEED   gm.slowmo [x]   (0.25 = quarter speed, 1 = normal; no value toggles quarter speed)",
                 "CREDS        gm.creds [n] · gm.creds.set <n> · gm.creds.report   (the only way Creds enter the game for now)",
                 "STORAGE      gm.vault [deep|off]   (opens it here; storage then works with no NPC near) · gm.drop <item> [n]",
-                "TRADE        gm.trade.reset   (daily Creds limit) · gm.kiosk · gm.kiosk.expire",
+                "TRADE        gm.trade.reset   (daily Creds limit) · gm.shop.week [reset]   (weekly vendor limits) · gm.kiosk · gm.kiosk.expire",
                 "SOCIAL       gm.guild [name|none] · gm.guild.list   (a Crew takes its own faction only, GM or not)",
                 "SPONSOR      gm.sponsor [clientIdA clientIdB]   (links two players, the higher sponsors; no ids prints the links) · gm.sponsor.end · gm.sponsor.points [n] · gm.sponsor.window",
                 "APPEARANCE   gm.weave [off]   (opens the Holoweaver here; Weaves and dyes then work with no NPC near) · gm.dye · gm.weave.unlock <all|item> · gm.weave.clear · gm.weave.list · gm.restyle <stylist|reshaper|coach|off> · gm.passes [n]   (Chroma Cells, Prism Cells, Restyle and Training Passes)",
@@ -151,7 +151,7 @@ namespace KryticalNova.DevTools
                 "HOSTILES     gm.hostile.list · gm.hostile.spawn <id|name> [count] [level] [health|inf] · gm.hostile.clear [radius] · gm.hostile.kill [radius] · gm.hostile.info · gm.hostile.hp <n|n%> · gm.hostile.freeze [on|off] · gm.hostile.ignore [on|off] · gm.hostile.ttk <id|name> [level] · gm.hostile.stats · gm.hostile.loot <id|name> [kills]",
                 "LEVEL GAP    gm.gap <hostile level> · gm.gap.table · gm.xprate <x> · gm.droprate <x> · gm.deathpenalty [on|off]",
                 "CREW HALLS   gm.home   (to the Hall sandbox: a Lot with a Hall, far from town) · gm.home.inside · gm.home.floor up|ground|basement · gm.home.outside · gm.home.leave · gm.furnish.kit [n] [all]   (n of every furnishing in the player's faction's style, or of every style, into the Furnishing Crate, with Facades and Finishes) · gm.furnish.clear · gm.home.reset   (everything back into the Crate) · gm.home.fill [n]   (a load test)",
-                "AUTOPILOT    gm.autopilot [on|off] · gm.autopilot.time <minutes> · gm.autopilot.log [on|off] · gm.magnet.test · gm.autobuff.days <days> · item.give \"Autopilot Chip\" [n] · item.give \"Autobuff Pass (3 Days)\" [n]",
+                "AUTOPILOT    gm.autopilot [on|off] · gm.autopilot.time <days> · gm.autopilot.log [on|off] · gm.magnet.test · gm.autobuff.days <days> · item.give \"Autopilot Pass (3 Days)\" [n] · item.give \"Autobuff Pass (3 Days)\" [n]",
                 "ZONES        gm.zone.list · gm.zone.fill <id> · gm.zone.clear <id> [seconds] · gm.zone.respawn <seconds|default> · gm.zone.sleep <id> [on|off|auto] · gm.zone.bruiser <id>   (Hostile Zones; gm.tp <id> goes to one)",
                 "TELEPORT     gm.poi · gm.tp <name> · gm.tpxyz <x> <y> <z> · gm.tpcursor",
                 "TIME         time.set <h> · time.pause · time.resume · time.scale <x> · time.dawn · time.noon · time.dusk · time.midnight · time.daylength <s>",
@@ -315,17 +315,12 @@ namespace KryticalNova.DevTools
                 return $"Unknown side '{from}'. Use front, back, left or right.";
             if (amount <= 0f) amount = res.MaxHealth * 0.1f;
 
-            float before = res.Health;
-            res.ApplyDamage(amount);
-            float lost = before - res.Health;
+            res.ApplyDamage(amount); // raises the hurt effect itself
             melee.PreviewImpact(player.transform, comboStep, critical);
             // This bypasses TakeDamage, so the hit animation is asked for here, the way a real blow asks for it.
             player.GetComponent<KryticalNova.Player.PlayerAnimancerMotor>()?.ShowHitReaction(towardAttacker, comboStep >= 3);
             ClientPresentationRegistry.Feedback?.ShowCombatFeedback(player.transform.position,
                 new DamageResult { DamageDealt = amount, IsCritical = critical });
-            // The networked path raises this from the replicated health; offline nothing else does.
-            if (!res.IsSpawned && lost > 0f)
-                ClientPresentationRegistry.Feel?.LocalPlayerDamaged(lost / Mathf.Max(1f, res.MaxHealth));
             return $"Hit for {amount:0} ({style}, from the {from}) · HP {res.Health:0}/{res.MaxHealth:0}{(GodModeOn(res) ? " (god mode on: no HP lost)" : "")}";
         }
 

@@ -108,6 +108,8 @@ namespace KryticalNova.Economy
         [Range(0f, 100f)] public float vendorSellBackPercent = 70f;
         [Tooltip("Selling an item of this rarity or better to a vendor must be confirmed first. So must a pet and any worked gear, whatever this says.")]
         public ItemRarity vendorConfirmFromRarity = ItemRarity.Rare;
+        [Tooltip("In-game days in a vendor's week: what a listing's weekly limit counts over (owner, 17 Oct 2026). One in-game day is one real hour today, so 7 is seven real hours.")]
+        [Min(1)] public int vendorWeekDays = 7;
 
         [Header("Appearance services")]
         [Tooltip("Holoweaver: Creds for putting a collected look (a Weave) over the piece in one slot. Placeholder of 11 Oct 2026.")]

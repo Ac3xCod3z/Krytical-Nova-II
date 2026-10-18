@@ -417,6 +417,23 @@ namespace KryticalNova.Items
             return worn;
         }
 
+        /// <summary>
+        /// Server or offline: puts a saved loadout on in one change (<see cref="LoadoutRules.WearSet"/>): each piece
+        /// comes out of its Pack cell and what was worn goes into that cell. <paramref name="result"/> says what went
+        /// on and what could not. False when nothing may change here.
+        /// </summary>
+        public bool ServerWearSet(IReadOnlyList<ItemStack> pieces, WearSetResult result)
+        {
+            if (!CanMutate() || catalog == null || result == null) return false;
+            Mutate((ItemStack[] b, ref EquippedItems l, out string r) =>
+            {
+                r = null;
+                LoadoutRules.WearSet(b, ref l, catalog, pieces, equipGate, result);
+                return result.Worn > 0;
+            });
+            return true;
+        }
+
         private void ServerQuickUnequip(EquipSlot slot) =>
             Mutate((ItemStack[] b, ref EquippedItems l, out string r) => InventoryRules.TryQuickUnequip(b, ref l, catalog, slot, out r));
 

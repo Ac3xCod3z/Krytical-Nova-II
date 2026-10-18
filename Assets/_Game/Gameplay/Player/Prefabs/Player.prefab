@@ -117,6 +117,7 @@ GameObject:
   - component: {fileID: 2739452034050256493}
   - component: {fileID: 6085953057518992820}
   - component: {fileID: 6994377297614759536}
+  - component: {fileID: 6034640740294713704}
   - component: {fileID: 8433688748516569418}
   m_Layer: 2
   m_Name: Player
@@ -4169,6 +4170,19 @@ MonoBehaviour:
   m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Rendering.CharacterLod
   settings: {fileID: 11400000, guid: a5dff6f4337ad764dbd705f88aba1c78, type: 2}
   alwaysWhole: 0
+--- !u!114 &6034640740294713704
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3071671160467358554}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bfce63bed95d9f1498e95f6f8aa3d89d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Items.PlayerLoadouts
+  ShowTopMostFoldoutHeaderGroup: 1
 --- !u!114 &8433688748516569418
 MonoBehaviour:
   m_ObjectHideFlags: 0

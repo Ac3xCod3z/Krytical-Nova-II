@@ -386,6 +386,10 @@ MonoBehaviour:
     chancePercent: 0.02
     minLevel: 113
     maxLevel: 0
+  - item: {fileID: 11400000, guid: 0687bc5dadcf26e47b1cd8197de91412, type: 2}
+    chancePercent: 0.3
+    minLevel: 10
+    maxLevel: 0
   maxActiveHostiles: 300
   zoneTickSeconds: 0.5
   leashMetres: 15

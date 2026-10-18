@@ -90,7 +90,7 @@ namespace KryticalNova.Autopilot
         {
             var sb = new StringBuilder();
             float reach = loot != null ? loot.PickupKeyRange : 3.5f;
-            string time = autopilot.Free ? "GM free mode" : autopilot.SecondsLeft > 0f ? PlayerAutopilot.FormatTime(autopilot.SecondsLeft) + " of Autopilot time" : "no Autopilot time (Magnet waits)";
+            string time = autopilot.Free ? "GM free mode" : autopilot.HasTime ? autopilot.TimeLeftLine : "no Autopilot time (Magnet waits)";
             sb.AppendLine($"Magnet {(autopilot.Preferences.magnetOn ? "on" : "off")}, {time}, reach {reach:0.#} m, Pack {(PackFull ? "full" : "has room")}:");
             int listed = 0;
             foreach (WorldDrop drop in WorldDrop.Active)
