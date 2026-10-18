@@ -14,7 +14,12 @@ A vendor file is removed only when **three independent checks** all say nothing 
 2. **Unity's own dependencies** (`AssetDatabase.GetDependencies`) from every file outside the vendor folders, the build
    scenes, and what `ProjectSettings` and the embedded packages point at.
 3. **Written references**: every GUID written in those files' YAML, JSON and `.meta`, followed file by file
-   (a prefab to its material, the material to its texture), without asking Unity.
+   (a prefab to its material, the material to its texture), without asking Unity. This one runs outside the Editor
+   (`Tools/Editor/Cleanup/Scripts~/written_refs.py`, Python, about 80 seconds) while Maintainer works.
+
+Check 2 asks Unity for each file's own dependencies once and walks them itself. Asking for whole subtrees of
+thousands of files at once kept the Editor busy for over an hour on the first try, 18 Oct 2026. Both long steps have a
+**Cancel** button.
 
 Also kept, whatever the checks say:
 

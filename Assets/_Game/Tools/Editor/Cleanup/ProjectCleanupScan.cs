@@ -70,9 +70,13 @@ namespace KryticalNova.EditorTools.Cleanup
         /// <summary>Runs the scan and writes the report. Returns the number of removable files, or -1 if cancelled.</summary>
         public static int Scan()
         {
+            // The written-reference check reads files in its own process while Maintainer works.
+            var written = UsageGuard.StartWrittenCheck("scan");
+            if (written == null) return -1;
+
             ApplyMaintainerFilters();
             var records = ProjectCleaner.StartSearch(false);
-            if (records == null) return -1;
+            if (records == null) { TryKill(written); return -1; }
 
             var listed = records.OfType<CodeStage.Maintainer.Cleaner.AssetRecord>()
                 .Where(r => r.Type == RecordType.UnreferencedAsset)
@@ -81,14 +85,17 @@ namespace KryticalNova.EditorTools.Cleanup
                 .Distinct().ToList();
 
             HashSet<string> keep;
-            UsageGuard.Result guard;
             try
             {
                 EditorUtility.DisplayProgressBar("Project cleanup", "Keeping what our builders load by path or name…", 0.05f);
                 keep = PathLoadedKeepSet(listed);
-                guard = UsageGuard.Run(IsCandidate, keep, (label, p) => EditorUtility.DisplayProgressBar("Project cleanup: second and third checks", label, p));
             }
             finally { EditorUtility.ClearProgressBar(); }
+
+            var unityUsed = UsageGuard.UnityClosure(IsCandidate, keep, out int rootCount);
+            if (unityUsed == null) { TryKill(written); Debug.LogWarning("[Cleanup] Scan cancelled."); return -1; }
+            if (!UsageGuard.Wait(written, "Project cleanup: written references")) { Debug.LogWarning("[Cleanup] Scan stopped: the written-reference check did not finish."); return -1; }
+            var writtenUsed = UsageGuard.ReadWrittenUsed();
 
             var index = AssetRestoreService.Index;
             var rows = new List<string[]>();
@@ -97,8 +104,8 @@ namespace KryticalNova.EditorTools.Cleanup
             {
                 if (keep.Contains(path)) { why["loaded by path or name"]++; continue; }
                 if (CodeKinds.Contains(Path.GetExtension(path))) { why["code or shader"]++; continue; }
-                if (guard.UnityClosure.Contains(path)) { why["Unity dependency"]++; continue; }
-                if (guard.WrittenClosure.Contains(path)) { why["written reference"]++; continue; }
+                if (unityUsed.Contains(path)) { why["Unity dependency"]++; continue; }
+                if (writtenUsed.Contains(path)) { why["written reference"]++; continue; }
                 string guid = AssetDatabase.AssetPathToGUID(path);
                 string source = AssetCatalog.SourceOf(index, guid);
                 if (source.Length == 0) { why["no restore source"]++; continue; }
@@ -114,10 +121,15 @@ namespace KryticalNova.EditorTools.Cleanup
                 w.WriteLine("path\tguid\tbytes\tpack\tkind\tsource");
                 foreach (var r in rows.OrderBy(r => r[0], StringComparer.OrdinalIgnoreCase)) w.WriteLine(string.Join("\t", r));
             }
-            WriteSummary(rows, listed.Count, why, guard.Roots, index != null);
+            WriteSummary(rows, listed.Count, why, rootCount, index != null);
             Debug.Log($"[Cleanup] Scan: Maintainer listed {listed.Count:N0}; {rows.Count:N0} pass all three checks " +
                       $"({RemovalLog.Size(rows.Sum(r => long.Parse(r[2], CultureInfo.InvariantCulture)))}); {kept:N0} kept. Report: {ScanSummary}");
             return rows.Count;
+        }
+
+        private static void TryKill(System.Diagnostics.Process process)
+        {
+            try { if (process != null && !process.HasExited) process.Kill(); } catch (Exception) { }
         }
 
         /// <summary>A file the cleanup may touch: under a candidate folder and not in a kept one.</summary>
@@ -235,7 +247,6 @@ namespace KryticalNova.EditorTools.Cleanup
 
             string root = AssetRestoreService.ProjectRoot;
             string commit = RemovalLog.HeadCommit(root);
-            var removedGuids = new HashSet<string>();
             int removed = 0;
             try
             {
@@ -256,7 +267,7 @@ namespace KryticalNova.EditorTools.Cleanup
                         var part = rows.Skip(i).Take(chunk).ToList();
                         var failed = new List<string>();
                         AssetDatabase.MoveAssetsToTrash(part.Select(r => r[0]).ToArray(), failed);
-                        foreach (var r in part) if (!failed.Contains(r[0])) { removedGuids.Add(r[1]); removed++; }
+                        foreach (var r in part) if (!failed.Contains(r[0])) removed++;
                         foreach (string f in failed) Debug.LogWarning("[Cleanup] Could not remove " + f);
                     }
                     RemoveEmptyFolders(BatchFolder(rows[0][0]));
@@ -267,18 +278,20 @@ namespace KryticalNova.EditorTools.Cleanup
             AssetDatabase.Refresh();
             Debug.Log($"[Cleanup] Removed {removed:N0} files. Log: {AssetRestorePaths.RemovalLog}");
 
-            RestoreAnythingStillReferenced(removedGuids);
+            RestoreAnythingStillReferenced();
             return removed;
         }
 
         /// <summary>The safety net: anything a file still in the project points at that was removed comes straight back.</summary>
-        public static int RestoreAnythingStillReferenced(ISet<string> removedGuids = null)
+        public static int RestoreAnythingStillReferenced()
         {
-            if (removedGuids == null) removedGuids = new HashSet<string>(RemovalLog.LoadTable(AssetRestoreService.ProjectRoot).Select(e => e.Guid));
-            EditorUtility.DisplayProgressBar("Project cleanup", "Checking nothing left points at a removed file…", 0.5f);
-            HashSet<string> broken;
-            try { broken = UsageGuard.StillReferenced(IsCandidate, removedGuids); }
-            finally { EditorUtility.ClearProgressBar(); }
+            // The script reads the whole Removal Log, so earlier batches are checked again too.
+            if (!UsageGuard.Wait(UsageGuard.StartWrittenCheck("after"), "Project cleanup: after-check"))
+            {
+                Debug.LogError("[Cleanup] The after-check did not finish; run Krytical Nova ▸ Project ▸ Cleanup ▸ Check Nothing Points At A Removed File.");
+                return -1;
+            }
+            var broken = UsageGuard.ReadStillReferenced();
             if (broken.Count == 0) { Debug.Log("[Cleanup] After-check: nothing in the project points at a removed file."); return 0; }
             Debug.LogWarning($"[Cleanup] After-check: {broken.Count} removed file(s) are still referenced; restoring them now.");
             AssetRestoreService.Restore(broken, false);
