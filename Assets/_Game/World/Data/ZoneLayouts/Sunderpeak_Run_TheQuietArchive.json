@@ -1,0 +1,273 @@
+{
+ "scene": "Sunderpeak_Run_TheQuietArchive",
+ "sizeX": 400,
+ "sizeZ": 400,
+ "height": 100,
+ "depth": 30,
+ "seed": 99,
+ "heightRes": 513,
+ "alphaRes": 512,
+ "layers": [
+  "Assets/Synty/PolygonNatureBiomes/PNB_Alpine_Mountain/Terrain/layer_snow_albedosnow_normalb05780438ad4031.terrainlayer",
+  "Assets/Synty/PolygonSamuraiEmpire/Materials/Env/Terrain_Layers/Terrain_Cobblestone_01.terrainlayer"
+ ],
+ "slopeLayer": -1,
+ "bands": [],
+ "stamps": [
+  {
+   "type": "rim",
+   "w": 60,
+   "h": 60,
+   "gaps": []
+  }
+ ],
+ "paint": [
+  {
+   "shape": "rect",
+   "layer": 1,
+   "falloff": 1,
+   "x": 0,
+   "z": -60,
+   "w": 60,
+   "d": 30
+  },
+  {
+   "shape": "rect",
+   "layer": 1,
+   "falloff": 1,
+   "x": 0,
+   "z": 10,
+   "w": 30,
+   "d": 30
+  },
+  {
+   "shape": "rect",
+   "layer": 1,
+   "falloff": 1,
+   "x": 0,
+   "z": 70,
+   "w": 20,
+   "d": 20
+  }
+ ],
+ "roads": [],
+ "trees": [],
+ "scatter": [
+  {
+   "prefabs": [
+    "SM_Prop_Cabinet_*",
+    "SM_Prop_BookHolder_*",
+    "SM_Env_Ice_Sheet_*"
+   ],
+   "count": 15,
+   "shape": "rect",
+   "group": "Room: The Stacks",
+   "minDist": 4,
+   "scaleMin": 0.9,
+   "scaleMax": 1.1,
+   "maxSlope": 35,
+   "collide": true,
+   "align": false,
+   "faceCenter": false,
+   "dy": 0,
+   "keepOffRoads": false,
+   "minY": -9999,
+   "maxY": 9999,
+   "x": 0,
+   "z": -60,
+   "w": 52,
+   "d": 22
+  },
+  {
+   "prefabs": [
+    "SM_Prop_Cabinet_*",
+    "SM_Prop_BookHolder_*",
+    "SM_Env_Ice_Sheet_*"
+   ],
+   "count": 7,
+   "shape": "rect",
+   "group": "Room: The Map Room",
+   "minDist": 4,
+   "scaleMin": 0.9,
+   "scaleMax": 1.1,
+   "maxSlope": 35,
+   "collide": true,
+   "align": false,
+   "faceCenter": false,
+   "dy": 0,
+   "keepOffRoads": false,
+   "minY": -9999,
+   "maxY": 9999,
+   "x": 0,
+   "z": 10,
+   "w": 22,
+   "d": 22
+  },
+  {
+   "prefabs": [
+    "SM_Prop_Cabinet_*",
+    "SM_Prop_BookHolder_*",
+    "SM_Env_Ice_Sheet_*"
+   ],
+   "count": 6,
+   "shape": "rect",
+   "group": "Room: Vault of Erasure",
+   "minDist": 4,
+   "scaleMin": 0.9,
+   "scaleMax": 1.1,
+   "maxSlope": 35,
+   "collide": true,
+   "align": false,
+   "faceCenter": false,
+   "dy": 0,
+   "keepOffRoads": false,
+   "minY": -9999,
+   "maxY": 9999,
+   "x": 0,
+   "z": 70,
+   "w": 12,
+   "d": 12
+  }
+ ],
+ "objects": [],
+ "rings": [],
+ "lines": [
+  {
+   "prefabs": [
+    "SM_Bld_Wall_*"
+   ],
+   "pts": [
+    -30.0,
+    -75.0,
+    30.0,
+    -75.0,
+    30.0,
+    -45.0,
+    -30.0,
+    -45.0,
+    -30.0,
+    -75.0
+   ],
+   "spacing": 0,
+   "fitHeight": 0,
+   "group": "Room: The Stacks",
+   "offset": 0,
+   "rotOffset": 0,
+   "dy": 0,
+   "scale": 1,
+   "jitter": 0,
+   "align": true,
+   "collide": true
+  },
+  {
+   "prefabs": [
+    "SM_Bld_Wall_*"
+   ],
+   "pts": [
+    -15.0,
+    -5.0,
+    15.0,
+    -5.0,
+    15.0,
+    25.0,
+    -15.0,
+    25.0,
+    -15.0,
+    -5.0
+   ],
+   "spacing": 0,
+   "fitHeight": 0,
+   "group": "Room: The Map Room",
+   "offset": 0,
+   "rotOffset": 0,
+   "dy": 0,
+   "scale": 1,
+   "jitter": 0,
+   "align": true,
+   "collide": true
+  },
+  {
+   "prefabs": [
+    "SM_Bld_Wall_*"
+   ],
+   "pts": [
+    -10.0,
+    60.0,
+    10.0,
+    60.0,
+    10.0,
+    80.0,
+    -10.0,
+    80.0,
+    -10.0,
+    60.0
+   ],
+   "spacing": 0,
+   "fitHeight": 0,
+   "group": "Room: Vault of Erasure",
+   "offset": 0,
+   "rotOffset": 0,
+   "dy": 0,
+   "scale": 1,
+   "jitter": 0,
+   "align": true,
+   "collide": true
+  }
+ ],
+ "markers": [
+  {
+   "name": "Room: The Stacks",
+   "x": 0,
+   "z": -60,
+   "dy": 0
+  },
+  {
+   "name": "Room: The Map Room",
+   "x": 0,
+   "z": 10,
+   "dy": 0
+  },
+  {
+   "name": "Room: Vault of Erasure",
+   "x": 0,
+   "z": 70,
+   "dy": 0
+  },
+  {
+   "name": "Entrance",
+   "x": 0,
+   "z": -71.0,
+   "dy": 0
+  },
+  {
+   "name": "Boss",
+   "x": 0,
+   "z": 75.0,
+   "dy": 0
+  }
+ ],
+ "shots": [
+  {
+   "name": "Vista",
+   "x": 0,
+   "y": 6,
+   "z": -69.0,
+   "tx": 0,
+   "ty": 3,
+   "tz": 70,
+   "fov": 60,
+   "ortho": 0
+  },
+  {
+   "name": "Layout",
+   "x": 0,
+   "y": 600,
+   "z": 0,
+   "tx": 0,
+   "ty": 0,
+   "tz": 0.01,
+   "fov": 40,
+   "ortho": 400
+  }
+ ]
+}

@@ -1,0 +1,803 @@
+{
+ "scene": "EldersReach_Aldhavn",
+ "sizeX": 1600,
+ "sizeZ": 1600,
+ "height": 300,
+ "depth": 60,
+ "seed": 41,
+ "heightRes": 1025,
+ "alphaRes": 1024,
+ "layers": [
+  "Assets/Synty/PolygonNatureBiomes/PNB_Meadow_Forest/Terrain/Terrain_Meadow_Grass_01.terrainlayer",
+  "Assets/Synty/PolygonNatureBiomes/PNB_Meadow_Forest/Terrain/Terrain_Meadow_Cobblestone_01.terrainlayer",
+  "Assets/Synty/PolygonNatureBiomes/PNB_Meadow_Forest/Terrain/Terrain_Meadow_Rock_Moss_01.terrainlayer",
+  "Assets/Synty/PolygonNatureBiomes/PNB_Alpine_Mountain/Terrain/RiverRocks_01.terrainlayer",
+  "Assets/Synty/PolygonNatureBiomes/PNB_Meadow_Forest/Terrain/Terrain_Meadow_Dirt_01.terrainlayer",
+  "Assets/Synty/PolygonNatureBiomes/PNB_Meadow_Forest/Terrain/Terrain_Meadow_Grass_Flowers_01.terrainlayer"
+ ],
+ "slopeLayer": 2,
+ "bands": [],
+ "stamps": [
+  {
+   "type": "noise",
+   "amp": 8,
+   "scale": 0.005,
+   "r": 0,
+   "r2": 0
+  },
+  {
+   "type": "floor",
+   "h": -0.5
+  },
+  {
+   "type": "rim",
+   "w": 200,
+   "h": 160,
+   "gaps": [
+    800,
+    50,
+    200
+   ]
+  },
+  {
+   "type": "line",
+   "pts": [
+    -800,
+    0,
+    -400,
+    -20,
+    -120,
+    0,
+    60,
+    0
+   ],
+   "w": 260,
+   "h": -25,
+   "falloff": 60,
+   "mode": "carve"
+  },
+  {
+   "type": "rect",
+   "x": 0,
+   "z": 120,
+   "w": 700,
+   "d": 180,
+   "h": 0,
+   "falloff": 30,
+   "rot": 0
+  },
+  {
+   "type": "plateau",
+   "x": 0,
+   "z": 280,
+   "r": 230,
+   "h": 60,
+   "falloff": 50
+  },
+  {
+   "type": "rect",
+   "x": 100,
+   "z": 420,
+   "w": 600,
+   "d": 160,
+   "h": 115,
+   "falloff": 40,
+   "rot": 0
+  },
+  {
+   "type": "plateau",
+   "x": 150,
+   "z": 520,
+   "r": 90,
+   "h": 160,
+   "falloff": 50
+  },
+  {
+   "type": "rect",
+   "x": 330,
+   "z": 60,
+   "w": 260,
+   "d": 400,
+   "h": 8,
+   "falloff": 60,
+   "rot": 0
+  }
+ ],
+ "paint": [
+  {
+   "shape": "line",
+   "layer": 3,
+   "falloff": 20,
+   "pts": [
+    -800,
+    0,
+    -120,
+    0,
+    60,
+    0
+   ],
+   "w": 300
+  },
+  {
+   "shape": "rect",
+   "layer": 1,
+   "falloff": 5,
+   "x": 0,
+   "z": 60,
+   "w": 320,
+   "d": 90
+  },
+  {
+   "shape": "line",
+   "layer": 1,
+   "falloff": 4,
+   "pts": [
+    0,
+    60,
+    0,
+    280,
+    100,
+    420,
+    150,
+    520
+   ],
+   "w": 10
+  },
+  {
+   "shape": "rect",
+   "layer": 5,
+   "falloff": 20,
+   "x": 100,
+   "z": 420,
+   "w": 560,
+   "d": 140
+  }
+ ],
+ "roads": [
+  {
+   "pts": [
+    0,
+    60,
+    200,
+    120,
+    330,
+    60,
+    800,
+    50
+   ],
+   "w": 10,
+   "layer": 4,
+   "flatten": true,
+   "shoulder": 8
+  }
+ ],
+ "trees": [
+  {
+   "prefabs": [
+    "SM_Env_Tree_Glowing_*"
+   ],
+   "count": 18,
+   "shape": "ring",
+   "minDist": 14,
+   "scaleMin": 0.85,
+   "scaleMax": 1.15,
+   "maxSlope": 30,
+   "minY": -9999,
+   "maxY": 9999,
+   "x": 150,
+   "z": 520,
+   "r": 45,
+   "r2": 85
+  },
+  {
+   "prefabs": [
+    "SM_Env_Tree_Pine_*"
+   ],
+   "count": 400,
+   "shape": "all",
+   "minDist": 14,
+   "scaleMin": 0.85,
+   "scaleMax": 1.15,
+   "maxSlope": 30,
+   "minY": 10,
+   "maxY": 9999
+  },
+  {
+   "prefabs": [
+    "SM_Env_Tree_Birch_*"
+   ],
+   "count": 160,
+   "shape": "rect",
+   "minDist": 14,
+   "scaleMin": 0.85,
+   "scaleMax": 1.15,
+   "maxSlope": 30,
+   "minY": 5,
+   "maxY": 9999,
+   "x": 300,
+   "z": 300,
+   "w": 800,
+   "d": 800
+  }
+ ],
+ "scatter": [
+  {
+   "prefabs": [
+    "SM_Bld_Stall_Cover_*",
+    "SM_Prop_Fish_Rack_*",
+    "SM_Prop_Barrel_*",
+    "SM_Prop_Awning_*"
+   ],
+   "count": 40,
+   "shape": "rect",
+   "group": "Harbor Market",
+   "minDist": 6,
+   "scaleMin": 0.9,
+   "scaleMax": 1.1,
+   "maxSlope": 35,
+   "collide": true,
+   "align": false,
+   "faceCenter": false,
+   "dy": 0,
+   "keepOffRoads": false,
+   "minY": -9999,
+   "maxY": 9999,
+   "x": 0,
+   "z": 50,
+   "w": 300,
+   "d": 70
+  },
+  {
+   "prefabs": [
+    "SM_Prop_Furnace_*",
+    "SM_Prop_Anvil_*",
+    "SM_Prop_Grindstone_*",
+    "SM_Prop_Weapon_Rack_*"
+   ],
+   "count": 10,
+   "shape": "circle",
+   "group": "The Rune Forge",
+   "minDist": 5,
+   "scaleMin": 0.9,
+   "scaleMax": 1.1,
+   "maxSlope": 35,
+   "collide": true,
+   "align": false,
+   "faceCenter": false,
+   "dy": 0,
+   "keepOffRoads": false,
+   "minY": -9999,
+   "maxY": 9999,
+   "x": 260,
+   "z": 180,
+   "r": 25
+  },
+  {
+   "prefabs": [
+    "SM_Bld_Wall_Curved_*",
+    "SM_Bld_Roof_Convex_Tower_*",
+    "SM_Bld_Gazebo_*"
+   ],
+   "count": 30,
+   "shape": "rect",
+   "group": "Elven Terraces",
+   "minDist": 30,
+   "scaleMin": 0.9,
+   "scaleMax": 1.1,
+   "maxSlope": 35,
+   "collide": true,
+   "align": false,
+   "faceCenter": false,
+   "dy": 0,
+   "keepOffRoads": true,
+   "minY": -9999,
+   "maxY": 9999,
+   "x": 100,
+   "z": 420,
+   "w": 560,
+   "d": 120
+  },
+  {
+   "prefabs": [
+    "SM_Env_Flowers_Line_*",
+    "SM_Env_Flowers_Clump_*",
+    "SM_Env_Hedge_Bush_*"
+   ],
+   "count": 160,
+   "shape": "rect",
+   "group": "Elven Terraces",
+   "minDist": 4,
+   "scaleMin": 0.9,
+   "scaleMax": 1.1,
+   "maxSlope": 35,
+   "collide": false,
+   "align": false,
+   "faceCenter": false,
+   "dy": 0,
+   "keepOffRoads": true,
+   "minY": -9999,
+   "maxY": 9999,
+   "x": 100,
+   "z": 420,
+   "w": 560,
+   "d": 130
+  },
+  {
+   "prefabs": [
+    "SM_Env_Rock_Cliff_*"
+   ],
+   "count": 40,
+   "shape": "all",
+   "group": "Cliffs",
+   "minDist": 60,
+   "scaleMin": 0.9,
+   "scaleMax": 1.1,
+   "maxSlope": 60,
+   "collide": true,
+   "align": false,
+   "faceCenter": false,
+   "dy": 0,
+   "keepOffRoads": true,
+   "minY": -9999,
+   "maxY": 9999
+  }
+ ],
+ "objects": [
+  {
+   "prefab": "SM_Veh_Boat_Large_*",
+   "x": -110,
+   "z": -40,
+   "rot": 0,
+   "group": "Harbor Market",
+   "fitHeight": 0,
+   "scale": 1,
+   "dy": 0,
+   "tilt": 0,
+   "roll": 0,
+   "collide": true,
+   "y": -1.8
+  },
+  {
+   "prefab": "SM_Veh_Boat_Large_*",
+   "x": -40,
+   "z": -40,
+   "rot": 0,
+   "group": "Harbor Market",
+   "fitHeight": 0,
+   "scale": 1,
+   "dy": 0,
+   "tilt": 0,
+   "roll": 0,
+   "collide": true,
+   "y": -1.8
+  },
+  {
+   "prefab": "SM_Veh_Boat_Large_*",
+   "x": 40,
+   "z": -40,
+   "rot": 0,
+   "group": "Harbor Market",
+   "fitHeight": 0,
+   "scale": 1,
+   "dy": 0,
+   "tilt": 0,
+   "roll": 0,
+   "collide": true,
+   "y": -1.8
+  },
+  {
+   "prefab": "SM_Veh_Boat_Large_*",
+   "x": 110,
+   "z": -40,
+   "rot": 0,
+   "group": "Harbor Market",
+   "fitHeight": 0,
+   "scale": 1,
+   "dy": 0,
+   "tilt": 0,
+   "roll": 0,
+   "collide": true,
+   "y": -1.8
+  },
+  {
+   "prefab": "SM_Bld_Wharf_*",
+   "x": -160,
+   "z": 30,
+   "rot": 90,
+   "group": "Harbor Market",
+   "fitHeight": 0,
+   "scale": 1,
+   "dy": 0,
+   "tilt": 0,
+   "roll": 0,
+   "collide": true
+  },
+  {
+   "prefab": "SM_Bld_Hall_Roof_*",
+   "x": 0,
+   "z": 280,
+   "rot": 0,
+   "group": "The Pact Hall",
+   "fitHeight": 0,
+   "scale": 1.6,
+   "dy": 0,
+   "tilt": 0,
+   "roll": 0,
+   "collide": true,
+   "name": "The Pact Hall"
+  },
+  {
+   "prefab": "SM_Prop_Throne_*",
+   "x": 0,
+   "z": 300,
+   "rot": 180,
+   "group": "The Pact Hall",
+   "fitHeight": 0,
+   "scale": 1,
+   "dy": 0,
+   "tilt": 0,
+   "roll": 0,
+   "collide": true
+  },
+  {
+   "prefab": "SM_Prop_Fire_Pit_*",
+   "x": 0,
+   "z": 280,
+   "rot": 0,
+   "group": "The Pact Hall",
+   "fitHeight": 0,
+   "scale": 1,
+   "dy": 0,
+   "tilt": 0,
+   "roll": 0,
+   "collide": true
+  },
+  {
+   "prefab": "SM_Env_Water_Plane_Waterfall_*",
+   "x": -200,
+   "z": 330,
+   "rot": 180,
+   "group": "The Falls of Aldhavn",
+   "fitHeight": 55,
+   "scale": 1,
+   "dy": 0,
+   "tilt": 0,
+   "roll": 0,
+   "collide": false
+  },
+  {
+   "prefab": "SM_Env_Tree_Giant_*",
+   "x": 150,
+   "z": 520,
+   "rot": 0,
+   "group": "The Ancestor Grove",
+   "fitHeight": 60,
+   "scale": 1,
+   "dy": 0,
+   "tilt": 0,
+   "roll": 0,
+   "collide": true,
+   "name": "The Ancestor Tree"
+  },
+  {
+   "prefab": "SM_Bld_Castle_Wall_Gate_*",
+   "x": 450,
+   "z": 50,
+   "rot": 90,
+   "group": "Landward Wall",
+   "fitHeight": 16,
+   "scale": 1,
+   "dy": 0,
+   "tilt": 0,
+   "roll": 0,
+   "collide": true,
+   "name": "The Landward Gate"
+  }
+ ],
+ "rings": [
+  {
+   "prefabs": [
+    "SM_Bld_Hall_Roof_*"
+   ],
+   "x": 0,
+   "z": 280,
+   "r": 150,
+   "count": 8,
+   "fitHeight": 0,
+   "group": "Hall Ring",
+   "startAngle": 0,
+   "endAngle": 360,
+   "faceOut": false,
+   "rotOffset": 90,
+   "dy": 0,
+   "scale": 1,
+   "collide": true
+  },
+  {
+   "prefabs": [
+    "SM_Bld_Head_*"
+   ],
+   "x": 0,
+   "z": 280,
+   "r": 40,
+   "count": 4,
+   "fitHeight": 4,
+   "group": "The Pact Hall",
+   "startAngle": 0,
+   "endAngle": 360,
+   "faceOut": true,
+   "rotOffset": 0,
+   "dy": 12,
+   "scale": 1,
+   "collide": true
+  },
+  {
+   "prefabs": [
+    "SM_Prop_RuneStone_*"
+   ],
+   "x": 150,
+   "z": 520,
+   "r": 35,
+   "count": 12,
+   "fitHeight": 0,
+   "group": "The Ancestor Grove",
+   "startAngle": 0,
+   "endAngle": 360,
+   "faceOut": false,
+   "rotOffset": 0,
+   "dy": 0,
+   "scale": 1,
+   "collide": true
+  }
+ ],
+ "lines": [
+  {
+   "prefabs": [
+    "SM_Bld_Dock_Wood_Straight_*"
+   ],
+   "pts": [
+    -150,
+    -5,
+    150,
+    -5
+   ],
+   "spacing": 0,
+   "fitHeight": 0,
+   "group": "Harbor Market",
+   "offset": 0,
+   "rotOffset": 0,
+   "dy": 0.5,
+   "scale": 1,
+   "jitter": 0,
+   "align": true,
+   "collide": true
+  },
+  {
+   "prefabs": [
+    "SM_Bld_Dock_Pillar_*"
+   ],
+   "pts": [
+    -150,
+    -12,
+    150,
+    -12
+   ],
+   "spacing": 8,
+   "fitHeight": 0,
+   "group": "Harbor Market",
+   "offset": 0,
+   "rotOffset": 0,
+   "dy": 0,
+   "scale": 1,
+   "jitter": 0,
+   "align": true,
+   "collide": true
+  },
+  {
+   "prefabs": [
+    "SM_Prop_Fountain_*"
+   ],
+   "pts": [
+    -50,
+    420,
+    250,
+    420
+   ],
+   "spacing": 100,
+   "fitHeight": 0,
+   "group": "Elven Terraces",
+   "offset": 0,
+   "rotOffset": 0,
+   "dy": 0,
+   "scale": 1,
+   "jitter": 0,
+   "align": true,
+   "collide": true
+  },
+  {
+   "prefabs": [
+    "SM_Bld_Castle_Wall_*"
+   ],
+   "pts": [
+    450,
+    -250,
+    450,
+    20
+   ],
+   "spacing": 0,
+   "fitHeight": 14,
+   "group": "Landward Wall",
+   "offset": 0,
+   "rotOffset": 0,
+   "dy": 0,
+   "scale": 1,
+   "jitter": 0,
+   "align": true,
+   "collide": true
+  },
+  {
+   "prefabs": [
+    "SM_Bld_Castle_Wall_*"
+   ],
+   "pts": [
+    450,
+    80,
+    450,
+    600
+   ],
+   "spacing": 0,
+   "fitHeight": 14,
+   "group": "Landward Wall",
+   "offset": 0,
+   "rotOffset": 0,
+   "dy": 0,
+   "scale": 1,
+   "jitter": 0,
+   "align": true,
+   "collide": true
+  },
+  {
+   "prefabs": [
+    "SM_Bld_Castle_Tower_Round_*"
+   ],
+   "pts": [
+    450,
+    -250,
+    450,
+    600
+   ],
+   "spacing": 170,
+   "fitHeight": 22,
+   "group": "Landward Wall",
+   "offset": 0,
+   "rotOffset": 0,
+   "dy": 0,
+   "scale": 1,
+   "jitter": 0,
+   "align": true,
+   "collide": true
+  },
+  {
+   "prefabs": [
+    "SM_Prop_Brazier_*",
+    "SM_Prop_Torch_*"
+   ],
+   "pts": [
+    -100,
+    60,
+    100,
+    60,
+    0,
+    280,
+    100,
+    420
+   ],
+   "spacing": 16,
+   "fitHeight": 0,
+   "group": "Lights",
+   "offset": 0,
+   "rotOffset": 0,
+   "dy": 0,
+   "scale": 1,
+   "jitter": 0,
+   "align": true,
+   "collide": false
+  }
+ ],
+ "markers": [
+  {
+   "name": "Broker and Kiosks (Harbor Market)",
+   "x": 0,
+   "z": 50,
+   "dy": 0
+  },
+  {
+   "name": "Skald's Rest (mead hall)",
+   "x": -140,
+   "z": 70,
+   "dy": 0
+  },
+  {
+   "name": "Chancellor and Herald (the Pact Hall)",
+   "x": 0,
+   "z": 280,
+   "dy": 0
+  },
+  {
+   "name": "Armorer and Fixer (the Rune Forge)",
+   "x": 260,
+   "z": 180,
+   "dy": 0
+  },
+  {
+   "name": "Arrival",
+   "x": 400,
+   "z": 50,
+   "dy": 0
+  },
+  {
+   "name": "Exit to Birchlight Vale (landward gate)",
+   "x": 470,
+   "z": 50,
+   "dy": 0
+  }
+ ],
+ "shots": [
+  {
+   "name": "Vista",
+   "x": -600,
+   "y": 90,
+   "z": -200,
+   "tx": 80,
+   "ty": 120,
+   "tz": 300,
+   "fov": 50,
+   "ortho": 0
+  },
+  {
+   "name": "The Pact Hall",
+   "x": 1.3471114790620885e-14,
+   "y": 18,
+   "z": 170.0,
+   "tx": 0,
+   "ty": 10,
+   "tz": 280,
+   "fov": 45,
+   "ortho": 0
+  },
+  {
+   "name": "Harbor Market",
+   "x": -45.00000000000001,
+   "y": 12,
+   "z": -47.94228634059948,
+   "tx": 0,
+   "ty": 4.199999999999999,
+   "tz": 30,
+   "fov": 45,
+   "ortho": 0
+  },
+  {
+   "name": "The Ancestor Grove",
+   "x": 129.16221867996833,
+   "y": 150,
+   "z": 401.823069638535,
+   "tx": 150,
+   "ty": 180,
+   "tz": 520,
+   "fov": 45,
+   "ortho": 0
+  },
+  {
+   "name": "Layout",
+   "x": 0,
+   "y": 1500,
+   "z": 0,
+   "tx": 0,
+   "ty": 0,
+   "tz": 0.01,
+   "fov": 40,
+   "ortho": 1600
+  }
+ ],
+ "waterLevel": -2
+}

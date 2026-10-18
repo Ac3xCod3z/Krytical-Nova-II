@@ -1,0 +1,631 @@
+{
+ "scene": "EldersReach_Z1_BirchlightVale",
+ "sizeX": 2000,
+ "sizeZ": 2000,
+ "height": 300,
+ "depth": 60,
+ "seed": 42,
+ "heightRes": 1025,
+ "alphaRes": 1024,
+ "layers": [
+  "Assets/Synty/PolygonNatureBiomes/PNB_Meadow_Forest/Terrain/Terrain_Meadow_Grass_02.terrainlayer",
+  "Assets/Synty/PolygonNatureBiomes/PNB_Meadow_Forest/Terrain/Terrain_Meadow_Grass_Flowers_01.terrainlayer",
+  "Assets/Synty/PolygonNatureBiomes/PNB_Meadow_Forest/Terrain/Terrain_Meadow_Dirt_01.terrainlayer",
+  "Assets/Synty/PolygonNatureBiomes/PNB_Meadow_Forest/Terrain/Terrain_Meadow_Rock_Moss_01.terrainlayer",
+  "Assets/Synty/PolygonNatureBiomes/PNB_Meadow_Forest/Terrain/Terrain_Meadow_Gravel_01.terrainlayer",
+  "Assets/Synty/PolygonMapsSciFiOutpost/Materials/Terrain/Terrain_Charred_Dirt_01.terrainlayer"
+ ],
+ "slopeLayer": 3,
+ "bands": [],
+ "stamps": [
+  {
+   "type": "noise",
+   "amp": 14,
+   "scale": 0.003,
+   "r": 0,
+   "r2": 0
+  },
+  {
+   "type": "noise",
+   "amp": 4.8999999999999995,
+   "scale": 0.015,
+   "r": 0,
+   "r2": 0
+  },
+  {
+   "type": "floor",
+   "h": -0.5
+  },
+  {
+   "type": "rim",
+   "w": 170,
+   "h": 120,
+   "gaps": [
+    0,
+    -960,
+    160,
+    0,
+    940,
+    160
+   ]
+  },
+  {
+   "type": "plateau",
+   "x": 0,
+   "z": -900,
+   "r": 45,
+   "h": 0,
+   "falloff": 40
+  },
+  {
+   "type": "line",
+   "pts": [
+    -50,
+    -1000,
+    -80,
+    -400,
+    -20,
+    100,
+    40,
+    500,
+    0,
+    1000
+   ],
+   "w": 26,
+   "h": -4,
+   "falloff": 25,
+   "mode": "carve"
+  },
+  {
+   "type": "line",
+   "pts": [
+    -120,
+    800,
+    -60,
+    900
+   ],
+   "w": 40,
+   "h": 120,
+   "falloff": 60,
+   "mode": "add"
+  },
+  {
+   "type": "line",
+   "pts": [
+    120,
+    800,
+    60,
+    900
+   ],
+   "w": 40,
+   "h": 120,
+   "falloff": 60,
+   "mode": "add"
+  },
+  {
+   "type": "plateau",
+   "x": 350,
+   "z": -150,
+   "r": 110,
+   "h": 2,
+   "falloff": 40
+  }
+ ],
+ "paint": [
+  {
+   "shape": "all",
+   "layer": 0,
+   "falloff": 0
+  },
+  {
+   "shape": "circle",
+   "layer": 1,
+   "falloff": 120,
+   "x": 150,
+   "z": 200,
+   "r": 350
+  },
+  {
+   "shape": "circle",
+   "layer": 5,
+   "falloff": 30,
+   "x": 350,
+   "z": -150,
+   "r": 100
+  }
+ ],
+ "roads": [
+  {
+   "pts": [
+    0,
+    -900,
+    -50,
+    -300,
+    150,
+    350,
+    0,
+    850
+   ],
+   "w": 6,
+   "layer": 2,
+   "flatten": true,
+   "shoulder": 8
+  }
+ ],
+ "trees": [
+  {
+   "prefabs": [
+    "SM_Env_Tree_Birch_*",
+    "SM_Tree_Birch_*"
+   ],
+   "count": 700,
+   "shape": "rect",
+   "minDist": 9,
+   "scaleMin": 0.85,
+   "scaleMax": 1.15,
+   "maxSlope": 30,
+   "minY": -9999,
+   "maxY": 9999,
+   "x": -650,
+   "z": 0,
+   "w": 600,
+   "d": 1700
+  },
+  {
+   "prefabs": [
+    "SM_Env_Tree_Birch_*"
+   ],
+   "count": 500,
+   "shape": "rect",
+   "minDist": 9,
+   "scaleMin": 0.85,
+   "scaleMax": 1.15,
+   "maxSlope": 30,
+   "minY": -9999,
+   "maxY": 9999,
+   "x": 700,
+   "z": 200,
+   "w": 500,
+   "d": 1300
+  },
+  {
+   "prefabs": [
+    "SM_Env_Tree_Pine_*"
+   ],
+   "count": 160,
+   "shape": "rect",
+   "minDist": 14,
+   "scaleMin": 0.85,
+   "scaleMax": 1.15,
+   "maxSlope": 30,
+   "minY": -9999,
+   "maxY": 9999,
+   "x": 0,
+   "z": 750,
+   "w": 900,
+   "d": 350
+  }
+ ],
+ "scatter": [
+  {
+   "prefabs": [
+    "SM_Bld_Roof_Thatch_Preset_*"
+   ],
+   "count": 14,
+   "shape": "circle",
+   "group": "Lofthollow ruins",
+   "minDist": 24,
+   "scaleMin": 0.9,
+   "scaleMax": 1.1,
+   "maxSlope": 35,
+   "collide": true,
+   "align": false,
+   "faceCenter": true,
+   "dy": 0,
+   "keepOffRoads": true,
+   "minY": -9999,
+   "maxY": 9999,
+   "x": 350,
+   "z": -150,
+   "r": 90
+  },
+  {
+   "prefabs": [
+    "SM_Bld_Castle_DestroyedWall_RubblePile_*",
+    "SM_Prop_Wood_Pile_*"
+   ],
+   "count": 20,
+   "shape": "circle",
+   "group": "Lofthollow ruins",
+   "minDist": 10,
+   "scaleMin": 0.9,
+   "scaleMax": 1.1,
+   "maxSlope": 35,
+   "collide": true,
+   "align": false,
+   "faceCenter": false,
+   "dy": 0,
+   "keepOffRoads": true,
+   "minY": -9999,
+   "maxY": 9999,
+   "x": 350,
+   "z": -150,
+   "r": 90
+  },
+  {
+   "prefabs": [
+    "FX_Smoke_*"
+   ],
+   "count": 6,
+   "shape": "circle",
+   "group": "Lofthollow ruins",
+   "minDist": 20,
+   "scaleMin": 0.9,
+   "scaleMax": 1.1,
+   "maxSlope": 35,
+   "collide": false,
+   "align": false,
+   "faceCenter": false,
+   "dy": 0,
+   "keepOffRoads": true,
+   "minY": -9999,
+   "maxY": 9999,
+   "x": 350,
+   "z": -150,
+   "r": 80
+  },
+  {
+   "prefabs": [
+    "SM_Env_Wildflowers_Patch_*",
+    "SM_Env_Grass_Med_Clump_*",
+    "SM_Env_Bush_Berries_*"
+   ],
+   "count": 900,
+   "shape": "all",
+   "group": "Meadow",
+   "minDist": 4,
+   "scaleMin": 0.9,
+   "scaleMax": 1.1,
+   "maxSlope": 35,
+   "collide": false,
+   "align": false,
+   "faceCenter": false,
+   "dy": 0,
+   "keepOffRoads": true,
+   "minY": -9999,
+   "maxY": 9999
+  },
+  {
+   "prefabs": [
+    "SM_Env_Stone_*"
+   ],
+   "count": 50,
+   "shape": "all",
+   "group": "Boulders",
+   "minDist": 40,
+   "scaleMin": 0.9,
+   "scaleMax": 1.1,
+   "maxSlope": 35,
+   "collide": true,
+   "align": false,
+   "faceCenter": false,
+   "dy": 0,
+   "keepOffRoads": true,
+   "minY": -9999,
+   "maxY": 9999
+  }
+ ],
+ "objects": [
+  {
+   "prefab": "SM_Bld_Well_*",
+   "x": 350,
+   "z": -150,
+   "rot": 0,
+   "group": "Lofthollow ruins",
+   "fitHeight": 0,
+   "scale": 1,
+   "dy": 0,
+   "tilt": 0,
+   "roll": 0,
+   "collide": true
+  },
+  {
+   "prefab": "SM_Prop_Drill_*",
+   "x": 370,
+   "z": -130,
+   "rot": 40,
+   "group": "Lofthollow ruins",
+   "fitHeight": 0,
+   "scale": 1,
+   "dy": 0,
+   "tilt": 0,
+   "roll": 0,
+   "collide": true,
+   "name": "The Raid Rig"
+  },
+  {
+   "prefab": "SM_Prop_StoneArch_*",
+   "x": 150,
+   "z": 350,
+   "rot": 0,
+   "group": "The Stone Ring",
+   "fitHeight": 0,
+   "scale": 1,
+   "dy": 0,
+   "tilt": 0,
+   "roll": 0,
+   "collide": true
+  },
+  {
+   "prefab": "SM_Env_Snow_Hill_*",
+   "x": 210,
+   "z": 380,
+   "rot": 0,
+   "group": "Hearthbarrow Mound",
+   "fitHeight": 6,
+   "scale": 1,
+   "dy": 0,
+   "tilt": 0,
+   "roll": 0,
+   "collide": true,
+   "name": "Hearthbarrow Mound"
+  },
+  {
+   "prefab": "SM_Bld_Windmill_*",
+   "x": -300,
+   "z": 50,
+   "rot": 90,
+   "group": "The Old Mill",
+   "fitHeight": 0,
+   "scale": 1,
+   "dy": 0,
+   "tilt": 0,
+   "roll": 0,
+   "collide": true,
+   "name": "The Old Mill"
+  },
+  {
+   "prefab": "SM_Prop_Bridge_*",
+   "x": -40,
+   "z": 60,
+   "rot": 90,
+   "group": "The Old Mill",
+   "fitHeight": 0,
+   "scale": 1,
+   "dy": 0,
+   "tilt": 0,
+   "roll": 0,
+   "collide": true
+  },
+  {
+   "prefab": "SM_Prop_Cairn_*",
+   "x": 0,
+   "z": 820,
+   "rot": 0,
+   "group": "Elk Pass",
+   "fitHeight": 0,
+   "scale": 1,
+   "dy": 0,
+   "tilt": 0,
+   "roll": 0,
+   "collide": true
+  }
+ ],
+ "rings": [
+  {
+   "prefabs": [
+    "SM_Prop_RuneStone_*",
+    "SM_Prop_StoneRunes_*"
+   ],
+   "x": 150,
+   "z": 350,
+   "r": 25,
+   "count": 11,
+   "fitHeight": 0,
+   "group": "The Stone Ring",
+   "startAngle": 0,
+   "endAngle": 360,
+   "faceOut": false,
+   "rotOffset": 0,
+   "dy": 0,
+   "scale": 1,
+   "collide": true
+  }
+ ],
+ "lines": [
+  {
+   "prefabs": [
+    "SM_Env_Stone_*"
+   ],
+   "pts": [
+    -70,
+    -250,
+    -30,
+    -250
+   ],
+   "spacing": 4,
+   "fitHeight": 0,
+   "group": "Ferry Stones",
+   "offset": 0,
+   "rotOffset": 0,
+   "dy": -0.5,
+   "scale": 1,
+   "jitter": 0,
+   "align": true,
+   "collide": true
+  },
+  {
+   "prefabs": [
+    "SM_Prop_Stonewall_*"
+   ],
+   "pts": [
+    -700,
+    -600,
+    -300,
+    -400,
+    100,
+    -500
+   ],
+   "spacing": 0,
+   "fitHeight": 0,
+   "group": "Field Walls",
+   "offset": 0,
+   "rotOffset": 0,
+   "dy": 0,
+   "scale": 1,
+   "jitter": 0,
+   "align": true,
+   "collide": true
+  }
+ ],
+ "markers": [
+  {
+   "name": "Arrival",
+   "x": 0,
+   "z": -880,
+   "dy": 0
+  },
+  {
+   "name": "Portal onward",
+   "x": 0,
+   "z": 880,
+   "dy": 0
+  },
+  {
+   "name": "Hostile ground Lv 1",
+   "x": 80,
+   "z": -780,
+   "dy": 0
+  },
+  {
+   "name": "Hostile ground Lv 4",
+   "x": -118,
+   "z": -570,
+   "dy": 0
+  },
+  {
+   "name": "Hostile ground Lv 7",
+   "x": 43,
+   "z": -331,
+   "dy": 0
+  },
+  {
+   "name": "Hostile ground Lv 10",
+   "x": -81,
+   "z": -95,
+   "dy": 0
+  },
+  {
+   "name": "Hostile ground Lv 13",
+   "x": 157,
+   "z": 68,
+   "dy": 0
+  },
+  {
+   "name": "Hostile ground Lv 16",
+   "x": 52,
+   "z": 284,
+   "dy": 0
+  },
+  {
+   "name": "Hostile ground Lv 19",
+   "x": 183,
+   "z": 552,
+   "dy": 0
+  },
+  {
+   "name": "Hostile ground Lv 22",
+   "x": -54,
+   "z": 716,
+   "dy": 0
+  },
+  {
+   "name": "First Contracts (Lofthollow)",
+   "x": 350,
+   "z": -150,
+   "dy": 0
+  },
+  {
+   "name": "Run entrance: Hearthbarrow",
+   "x": 210,
+   "z": 370,
+   "dy": 0
+  },
+  {
+   "name": "Wayfinder (the Old Mill)",
+   "x": -300,
+   "z": 50,
+   "dy": 0
+  },
+  {
+   "name": "Bruiser lair Lv 21 (Elk Pass)",
+   "x": 0,
+   "z": 780,
+   "dy": 0
+  },
+  {
+   "name": "Bruiser lair Lv 12 (Birch woods)",
+   "x": -600,
+   "z": -100,
+   "dy": 0
+  }
+ ],
+ "shots": [
+  {
+   "name": "Lofthollow ruins",
+   "x": 260.0097346438845,
+   "y": 14,
+   "z": -257.24622203665695,
+   "tx": 350,
+   "ty": 4.8999999999999995,
+   "tz": -150,
+   "fov": 45,
+   "ortho": 0
+  },
+  {
+   "name": "The Stone Ring",
+   "x": 126.05858996720319,
+   "y": 5,
+   "z": 284.2215165449864,
+   "tx": 150,
+   "ty": 3,
+   "tz": 350,
+   "fov": 45,
+   "ortho": 0
+  },
+  {
+   "name": "The Old Mill",
+   "x": -222.05771365940052,
+   "y": 8,
+   "z": 5.000000000000021,
+   "tx": -300,
+   "ty": 10,
+   "tz": 50,
+   "fov": 45,
+   "ortho": 0
+  },
+  {
+   "name": "Vista",
+   "x": 100,
+   "y": 40,
+   "z": -880,
+   "tx": 100,
+   "ty": 10,
+   "tz": 300,
+   "fov": 50,
+   "ortho": 0
+  },
+  {
+   "name": "Layout",
+   "x": 0,
+   "y": 1500,
+   "z": 0,
+   "tx": 0,
+   "ty": 0,
+   "tz": 0.01,
+   "fov": 40,
+   "ortho": 2000
+  }
+ ],
+ "waterLevel": -2
+}

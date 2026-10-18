@@ -1,0 +1,799 @@
+{
+ "scene": "Cessation_Z1_ThePalefields",
+ "sizeX": 2000,
+ "sizeZ": 2000,
+ "height": 300,
+ "depth": 60,
+ "seed": 62,
+ "heightRes": 1025,
+ "alphaRes": 1024,
+ "layers": [
+  "Assets/Synty/PolygonNatureBiomes/PNB_Meadow_Forest/Terrain/Terrain_Meadow_Gravel_01.terrainlayer",
+  "Assets/Synty/PolygonNatureBiomes/PNB_Alpine_Mountain/Terrain/RiverRocks_01.terrainlayer",
+  "Assets/Synty/PolygonNatureBiomes/PNB_Arid_Desert/Terrain/LavaRock.terrainlayer",
+  "Assets/Synty/PolygonNatureBiomes/PNB_Arid_Desert/Terrain/SaltCracks_Purple.terrainlayer",
+  "Assets/Synty/PolygonNatureBiomes/PNB_Arid_Desert/Terrain/Sulphur.terrainlayer"
+ ],
+ "slopeLayer": 2,
+ "bands": [],
+ "stamps": [
+  {
+   "type": "noise",
+   "amp": 5,
+   "scale": 0.004,
+   "r": 0,
+   "r2": 0
+  },
+  {
+   "type": "noise",
+   "amp": 1.75,
+   "scale": 0.02,
+   "r": 0,
+   "r2": 0
+  },
+  {
+   "type": "rim",
+   "w": 170,
+   "h": 120,
+   "gaps": [
+    0,
+    -960,
+    160,
+    350,
+    940,
+    160
+   ]
+  },
+  {
+   "type": "plateau",
+   "x": 0,
+   "z": -900,
+   "r": 45,
+   "h": 0,
+   "falloff": 40
+  },
+  {
+   "type": "crater",
+   "x": -62.88749171446352,
+   "z": -202.70090976793279,
+   "r": 26.92697062572276,
+   "h": 6.73174265643069,
+   "rim": 1.6156182375433654
+  },
+  {
+   "type": "crater",
+   "x": 623.1551449767803,
+   "z": -789.7039134702027,
+   "r": 45.13910400261042,
+   "h": 11.284776000652606,
+   "rim": 2.7083462401566254
+  },
+  {
+   "type": "crater",
+   "x": 677.1065490542949,
+   "z": -670.6965645071983,
+   "r": 47.7135234089143,
+   "h": 11.928380852228575,
+   "rim": 2.862811404534858
+  },
+  {
+   "type": "crater",
+   "x": 198.30507256215128,
+   "z": -734.5667752243015,
+   "r": 38.950980219771786,
+   "h": 9.737745054942947,
+   "rim": 2.337058813186307
+  },
+  {
+   "type": "crater",
+   "x": 345.91666689937006,
+   "z": -76.76652727995884,
+   "r": 56.25326842911045,
+   "h": 14.063317107277612,
+   "rim": 3.375196105746627
+  },
+  {
+   "type": "crater",
+   "x": -582.8328252857361,
+   "z": -419.1804760535476,
+   "r": 25.54737639890073,
+   "h": 6.386844099725183,
+   "rim": 1.5328425839340438
+  },
+  {
+   "type": "crater",
+   "x": 10.65738783726988,
+   "z": 678.1276582596729,
+   "r": 49.521422856795624,
+   "h": 12.380355714198906,
+   "rim": 2.9712853714077374
+  },
+  {
+   "type": "crater",
+   "x": 466.15609430036875,
+   "z": -186.13624823576288,
+   "r": 57.30476084622143,
+   "h": 14.326190211555357,
+   "rim": 3.4382856507732855
+  },
+  {
+   "type": "crater",
+   "x": -677.1619561148866,
+   "z": -334.1150736217486,
+   "r": 53.71180006276856,
+   "h": 13.42795001569214,
+   "rim": 3.2227080037661135
+  },
+  {
+   "type": "crater",
+   "x": 383.7007988102182,
+   "z": -125.191367988872,
+   "r": 24.385619153298528,
+   "h": 6.096404788324632,
+   "rim": 1.4631371491979117
+  },
+  {
+   "type": "crater",
+   "x": -396.5529289145412,
+   "z": -464.17579178162924,
+   "r": 34.05922075422844,
+   "h": 8.51480518855711,
+   "rim": 2.0435532452537064
+  },
+  {
+   "type": "crater",
+   "x": 526.1681912349984,
+   "z": -480.82684625624756,
+   "r": 64.31998655396387,
+   "h": 16.079996638490968,
+   "rim": 3.8591991932378322
+  },
+  {
+   "type": "crater",
+   "x": 644.9344202803006,
+   "z": -712.3370302222645,
+   "r": 38.94082011498752,
+   "h": 9.73520502874688,
+   "rim": 2.336449206899251
+  },
+  {
+   "type": "crater",
+   "x": -14.090047504434096,
+   "z": -762.4269457252824,
+   "r": 41.236267587629555,
+   "h": 10.309066896907389,
+   "rim": 2.4741760552577734
+  },
+  {
+   "type": "crater",
+   "x": 690.89806412342,
+   "z": -620.7259659288818,
+   "r": 49.842282088054205,
+   "h": 12.460570522013551,
+   "rim": 2.9905369252832523
+  },
+  {
+   "type": "crater",
+   "x": -643.9048506362934,
+   "z": 125.9204768856805,
+   "r": 64.76517247117921,
+   "h": 16.191293117794803,
+   "rim": 3.8859103482707527
+  },
+  {
+   "type": "crater",
+   "x": -504.809570600328,
+   "z": -786.7959035339926,
+   "r": 24.175179873847732,
+   "h": 6.043794968461933,
+   "rim": 1.4505107924308638
+  },
+  {
+   "type": "crater",
+   "x": 67.60804846895996,
+   "z": -772.0562517547204,
+   "r": 24.241828088826736,
+   "h": 6.060457022206684,
+   "rim": 1.454509685329604
+  },
+  {
+   "type": "crater",
+   "x": -5.539196626104626,
+   "z": 673.4821104785854,
+   "r": 41.00537123859681,
+   "h": 10.251342809649202,
+   "rim": 2.4603222743158084
+  },
+  {
+   "type": "crater",
+   "x": -173.17080328852228,
+   "z": 221.94806057092796,
+   "r": 24.670889936703315,
+   "h": 6.167722484175829,
+   "rim": 1.4802533962021989
+  },
+  {
+   "type": "crater",
+   "x": 135.6602590315582,
+   "z": -523.9116914306228,
+   "r": 50.444417416913524,
+   "h": 12.611104354228381,
+   "rim": 3.0266650450148114
+  },
+  {
+   "type": "crater",
+   "x": 779.1540434214483,
+   "z": -713.3228746653259,
+   "r": 47.753035978684196,
+   "h": 11.938258994671049,
+   "rim": 2.8651821587210518
+  },
+  {
+   "type": "crater",
+   "x": -450,
+   "z": 350,
+   "r": 100,
+   "h": 30,
+   "rim": 6
+  }
+ ],
+ "paint": [
+  {
+   "shape": "all",
+   "layer": 0,
+   "falloff": 0
+  },
+  {
+   "shape": "rect",
+   "layer": 1,
+   "falloff": 200,
+   "x": 0,
+   "z": -800,
+   "w": 2000,
+   "d": 300
+  },
+  {
+   "shape": "circle",
+   "layer": 3,
+   "falloff": 60,
+   "x": 450,
+   "z": -150,
+   "r": 220
+  }
+ ],
+ "roads": [],
+ "trees": [],
+ "scatter": [
+  {
+   "prefabs": [
+    "SM_Env_Crystals_Cluster_Large_*"
+   ],
+   "count": 5,
+   "shape": "circle",
+   "group": "The Eye",
+   "minDist": 3,
+   "scaleMin": 0.9,
+   "scaleMax": 1.1,
+   "maxSlope": 35,
+   "collide": false,
+   "align": false,
+   "faceCenter": false,
+   "dy": 0,
+   "keepOffRoads": true,
+   "minY": -9999,
+   "maxY": 9999,
+   "x": 250,
+   "z": 400,
+   "r": 12
+  },
+  {
+   "prefabs": [
+    "SM_Env_Blob_*",
+    "SM_Env_Ground_Blob_*",
+    "SM_Env_Sulphur_Blob_*"
+   ],
+   "count": 120,
+   "shape": "circle",
+   "group": "The Blob Fields",
+   "minDist": 8,
+   "scaleMin": 0.9,
+   "scaleMax": 1.1,
+   "maxSlope": 35,
+   "collide": true,
+   "align": false,
+   "faceCenter": false,
+   "dy": 0,
+   "keepOffRoads": true,
+   "minY": -9999,
+   "maxY": 9999,
+   "x": 450,
+   "z": -150,
+   "r": 220
+  },
+  {
+   "prefabs": [
+    "SM_Env_Rocks_Spikes_*",
+    "SM_Env_Detail_Crater_Spike_*",
+    "SM_Env_Rock_Pebbles_*"
+   ],
+   "count": 260,
+   "shape": "all",
+   "group": "Spikes",
+   "minDist": 12,
+   "scaleMin": 0.9,
+   "scaleMax": 1.1,
+   "maxSlope": 35,
+   "collide": true,
+   "align": false,
+   "faceCenter": false,
+   "dy": 0,
+   "keepOffRoads": true,
+   "minY": -9999,
+   "maxY": 9999
+  },
+  {
+   "prefabs": [
+    "SM_Prop_Tumbleweed_*"
+   ],
+   "count": 80,
+   "shape": "all",
+   "group": "Tumbleweed",
+   "minDist": 20,
+   "scaleMin": 0.9,
+   "scaleMax": 1.1,
+   "maxSlope": 35,
+   "collide": false,
+   "align": false,
+   "faceCenter": false,
+   "dy": 0,
+   "keepOffRoads": true,
+   "minY": -9999,
+   "maxY": 9999
+  },
+  {
+   "prefabs": [
+    "SM_Env_Tree_Dead_*"
+   ],
+   "count": 60,
+   "shape": "all",
+   "group": "Dead Trees",
+   "minDist": 50,
+   "scaleMin": 0.9,
+   "scaleMax": 1.1,
+   "maxSlope": 35,
+   "collide": false,
+   "align": false,
+   "faceCenter": false,
+   "dy": 0,
+   "keepOffRoads": true,
+   "minY": -9999,
+   "maxY": 9999
+  }
+ ],
+ "objects": [
+  {
+   "prefab": "SM_Env_Artifact_Arm_*",
+   "x": 0,
+   "z": 150,
+   "rot": 120,
+   "group": "The Colossus Arm",
+   "fitHeight": 25,
+   "scale": 1,
+   "dy": 0,
+   "tilt": 0,
+   "roll": 0,
+   "collide": true,
+   "name": "The Colossus Arm"
+  },
+  {
+   "prefab": "SM_Env_Artifact_Head_*",
+   "x": 250,
+   "z": 400,
+   "rot": 200,
+   "group": "The Colossus Arm",
+   "fitHeight": 22,
+   "scale": 1,
+   "dy": -8,
+   "tilt": 0,
+   "roll": 0,
+   "collide": true,
+   "name": "The Colossus Head"
+  },
+  {
+   "prefab": "SM_Prop_Powerline_*",
+   "x": 500,
+   "z": 750,
+   "rot": 30,
+   "group": "The First Pylon",
+   "fitHeight": 35,
+   "scale": 1,
+   "dy": 0,
+   "tilt": 30,
+   "roll": 0,
+   "collide": true,
+   "name": "The First Pylon"
+  },
+  {
+   "prefab": "SM_Prop_Banner_*",
+   "x": 515,
+   "z": 740,
+   "rot": 0,
+   "group": "The First Pylon",
+   "fitHeight": 0,
+   "scale": 1,
+   "dy": 0,
+   "tilt": 0,
+   "roll": 0,
+   "collide": true
+  },
+  {
+   "prefab": "SM_Bld_Door_Garage_*",
+   "x": -100,
+   "z": -200,
+   "rot": 0,
+   "group": "The Idle Door",
+   "fitHeight": 0,
+   "scale": 1,
+   "dy": 0,
+   "tilt": -80,
+   "roll": 0,
+   "collide": true,
+   "name": "The Idle Door"
+  }
+ ],
+ "rings": [
+  {
+   "prefabs": [
+    "SM_Bld_Wall_L_*"
+   ],
+   "x": 500,
+   "z": 750,
+   "r": 20,
+   "count": 0,
+   "fitHeight": 6,
+   "group": "The First Pylon",
+   "startAngle": 0,
+   "endAngle": 360,
+   "faceOut": false,
+   "rotOffset": 0,
+   "dy": 0,
+   "scale": 1,
+   "collide": true
+  }
+ ],
+ "lines": [
+  {
+   "prefabs": [
+    "SM_Env_Bone_Rib_*",
+    "SM_Env_BonePile_*",
+    "SM_Prop_Bones_*"
+   ],
+   "pts": [
+    -520,
+    -380,
+    -280,
+    -380
+   ],
+   "spacing": 12,
+   "fitHeight": 0,
+   "group": "Bone Rows",
+   "offset": 0,
+   "rotOffset": 0,
+   "dy": 0,
+   "scale": 1,
+   "jitter": 0,
+   "align": true,
+   "collide": true
+  },
+  {
+   "prefabs": [
+    "SM_Env_Bone_Rib_*",
+    "SM_Env_BonePile_*",
+    "SM_Prop_Bones_*"
+   ],
+   "pts": [
+    -520,
+    -358,
+    -280,
+    -358
+   ],
+   "spacing": 12,
+   "fitHeight": 0,
+   "group": "Bone Rows",
+   "offset": 0,
+   "rotOffset": 0,
+   "dy": 0,
+   "scale": 1,
+   "jitter": 0,
+   "align": true,
+   "collide": true
+  },
+  {
+   "prefabs": [
+    "SM_Env_Bone_Rib_*",
+    "SM_Env_BonePile_*",
+    "SM_Prop_Bones_*"
+   ],
+   "pts": [
+    -520,
+    -336,
+    -280,
+    -336
+   ],
+   "spacing": 12,
+   "fitHeight": 0,
+   "group": "Bone Rows",
+   "offset": 0,
+   "rotOffset": 0,
+   "dy": 0,
+   "scale": 1,
+   "jitter": 0,
+   "align": true,
+   "collide": true
+  },
+  {
+   "prefabs": [
+    "SM_Env_Bone_Rib_*",
+    "SM_Env_BonePile_*",
+    "SM_Prop_Bones_*"
+   ],
+   "pts": [
+    -520,
+    -314,
+    -280,
+    -314
+   ],
+   "spacing": 12,
+   "fitHeight": 0,
+   "group": "Bone Rows",
+   "offset": 0,
+   "rotOffset": 0,
+   "dy": 0,
+   "scale": 1,
+   "jitter": 0,
+   "align": true,
+   "collide": true
+  },
+  {
+   "prefabs": [
+    "SM_Env_Bone_Rib_*",
+    "SM_Env_BonePile_*",
+    "SM_Prop_Bones_*"
+   ],
+   "pts": [
+    -520,
+    -292,
+    -280,
+    -292
+   ],
+   "spacing": 12,
+   "fitHeight": 0,
+   "group": "Bone Rows",
+   "offset": 0,
+   "rotOffset": 0,
+   "dy": 0,
+   "scale": 1,
+   "jitter": 0,
+   "align": true,
+   "collide": true
+  },
+  {
+   "prefabs": [
+    "SM_Env_Bone_Rib_*",
+    "SM_Env_BonePile_*",
+    "SM_Prop_Bones_*"
+   ],
+   "pts": [
+    -520,
+    -270,
+    -280,
+    -270
+   ],
+   "spacing": 12,
+   "fitHeight": 0,
+   "group": "Bone Rows",
+   "offset": 0,
+   "rotOffset": 0,
+   "dy": 0,
+   "scale": 1,
+   "jitter": 0,
+   "align": true,
+   "collide": true
+  },
+  {
+   "prefabs": [
+    "SM_Env_Bone_Rib_*",
+    "SM_Env_BonePile_*",
+    "SM_Prop_Bones_*"
+   ],
+   "pts": [
+    -520,
+    -248,
+    -280,
+    -248
+   ],
+   "spacing": 12,
+   "fitHeight": 0,
+   "group": "Bone Rows",
+   "offset": 0,
+   "rotOffset": 0,
+   "dy": 0,
+   "scale": 1,
+   "jitter": 0,
+   "align": true,
+   "collide": true
+  },
+  {
+   "prefabs": [
+    "SM_Env_Bone_Rib_*",
+    "SM_Env_BonePile_*",
+    "SM_Prop_Bones_*"
+   ],
+   "pts": [
+    -520,
+    -226,
+    -280,
+    -226
+   ],
+   "spacing": 12,
+   "fitHeight": 0,
+   "group": "Bone Rows",
+   "offset": 0,
+   "rotOffset": 0,
+   "dy": 0,
+   "scale": 1,
+   "jitter": 0,
+   "align": true,
+   "collide": true
+  }
+ ],
+ "markers": [
+  {
+   "name": "Arrival",
+   "x": 0,
+   "z": -880,
+   "dy": 0
+  },
+  {
+   "name": "Portal onward",
+   "x": 350,
+   "z": 880,
+   "dy": 0
+  },
+  {
+   "name": "Hostile ground Lv 1",
+   "x": 57,
+   "z": -758,
+   "dy": 0
+  },
+  {
+   "name": "Hostile ground Lv 4",
+   "x": -177,
+   "z": -562,
+   "dy": 0
+  },
+  {
+   "name": "Hostile ground Lv 7",
+   "x": -65,
+   "z": -328,
+   "dy": 0
+  },
+  {
+   "name": "Hostile ground Lv 10",
+   "x": -157,
+   "z": -37,
+   "dy": 0
+  },
+  {
+   "name": "Hostile ground Lv 13",
+   "x": 99,
+   "z": 137,
+   "dy": 0
+  },
+  {
+   "name": "Hostile ground Lv 16",
+   "x": 111,
+   "z": 410,
+   "dy": 0
+  },
+  {
+   "name": "Hostile ground Lv 19",
+   "x": 431,
+   "z": 551,
+   "dy": 0
+  },
+  {
+   "name": "Hostile ground Lv 22",
+   "x": 283,
+   "z": 742,
+   "dy": 0
+  },
+  {
+   "name": "Dense Hostile ground (the Blob Fields)",
+   "x": 450,
+   "z": -150,
+   "dy": 0
+  },
+  {
+   "name": "Bruiser lair Lv 21 (Dust Crater)",
+   "x": -450,
+   "z": 350,
+   "dy": 0
+  },
+  {
+   "name": "Bruiser lair Lv 12 (Bone Rows)",
+   "x": -400,
+   "z": -300,
+   "dy": 0
+  },
+  {
+   "name": "Wayfinder (the First Pylon)",
+   "x": 500,
+   "z": 735,
+   "dy": 0
+  },
+  {
+   "name": "Run entrance: The Idle Works",
+   "x": -100,
+   "z": -200,
+   "dy": 0
+  }
+ ],
+ "shots": [
+  {
+   "name": "The Colossus Arm",
+   "x": -44.46261863233693,
+   "y": 10,
+   "z": 27.83995929783191,
+   "tx": 0,
+   "ty": 15,
+   "tz": 150,
+   "fov": 55,
+   "ortho": 0
+  },
+  {
+   "name": "The Blob Fields",
+   "x": 320.0961894323342,
+   "y": 12,
+   "z": -225.00000000000006,
+   "tx": 450,
+   "ty": 4.199999999999999,
+   "tz": -150,
+   "fov": 45,
+   "ortho": 0
+  },
+  {
+   "name": "The First Pylon",
+   "x": 469.2181871006898,
+   "y": 8,
+   "z": 665.4276641292682,
+   "tx": 500,
+   "ty": 18,
+   "tz": 750,
+   "fov": 45,
+   "ortho": 0
+  },
+  {
+   "name": "Vista",
+   "x": -300,
+   "y": 30,
+   "z": -880,
+   "tx": 0,
+   "ty": 15,
+   "tz": 150,
+   "fov": 50,
+   "ortho": 0
+  },
+  {
+   "name": "Layout",
+   "x": 0,
+   "y": 1500,
+   "z": 0,
+   "tx": 0,
+   "ty": 0,
+   "tz": 0.01,
+   "fov": 40,
+   "ortho": 2000
+  }
+ ]
+}

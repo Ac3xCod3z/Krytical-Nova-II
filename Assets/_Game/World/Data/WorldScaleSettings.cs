@@ -31,6 +31,8 @@ namespace KryticalNova.World
         public float min, max;
         [Tooltip("Where the real measurement comes from.")]
         public string root;
+        [Tooltip("The most a model of this kind may be multiplied by; 0 = the settings' limit. The packs draw some trees at a third of their real height, so a field tree may need more than the furniture limit.")]
+        public float maxFactor;
     }
 
     /// <summary>
@@ -97,7 +99,7 @@ namespace KryticalNova.World
             if (measured <= 0.0001f) return 1f;
             float factor = measured < kind.min ? kind.min / measured : measured > kind.max ? kind.max / measured : 1f;
             if (Mathf.Abs(factor - 1f) <= leaveAlone) return 1f;
-            return Mathf.Clamp(factor, factorLimits.x, factorLimits.y);
+            return Mathf.Clamp(factor, factorLimits.x, kind.maxFactor > 0f ? kind.maxFactor : factorLimits.y);
         }
     }
 }

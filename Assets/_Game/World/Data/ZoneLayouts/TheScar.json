@@ -1,0 +1,574 @@
+{
+ "scene": "TheScar",
+ "sizeX": 3000,
+ "sizeZ": 1500,
+ "height": 500,
+ "depth": 60,
+ "seed": 81,
+ "heightRes": 1025,
+ "alphaRes": 1024,
+ "layers": [
+  "Assets/Synty/PolygonNatureBiomes/PNB_Arid_Desert/Terrain/LavaRock.terrainlayer",
+  "Assets/Synty/PolygonMapsSciFiOutpost/Materials/Terrain/Terrain_Charred_Dirt_01.terrainlayer",
+  "Assets/Synty/PolygonNatureBiomes/PNB_Arid_Desert/Terrain/SaltCracks_Purple.terrainlayer",
+  "Assets/Synty/PolygonNatureBiomes/PNB_Arid_Desert/Terrain/Lavarock_Hot_Terrain.terrainlayer",
+  "Assets/Synty/PolygonNatureBiomes/PNB_Arid_Desert/Terrain/Lava.terrainlayer",
+  "Assets/Synty/PolygonNatureBiomes/PNB_Arid_Desert/Terrain/SaltCracks.terrainlayer"
+ ],
+ "slopeLayer": 0,
+ "bands": [],
+ "stamps": [
+  {
+   "type": "noise",
+   "amp": 8,
+   "scale": 0.004,
+   "r": 0,
+   "r2": 0
+  },
+  {
+   "type": "line",
+   "pts": [
+    -1500,
+    720,
+    1500,
+    720
+   ],
+   "w": 200,
+   "h": 380,
+   "falloff": 260,
+   "mode": "add"
+  },
+  {
+   "type": "line",
+   "pts": [
+    -1500,
+    -720,
+    1500,
+    -720
+   ],
+   "w": 200,
+   "h": 300,
+   "falloff": 240,
+   "mode": "add"
+  },
+  {
+   "type": "plateau",
+   "x": 0,
+   "z": -700,
+   "r": 60,
+   "h": 0,
+   "falloff": 80
+  },
+  {
+   "type": "line",
+   "pts": [
+    -1400,
+    -60,
+    -500,
+    30,
+    0,
+    -40,
+    600,
+    60,
+    1400,
+    -30
+   ],
+   "w": 30,
+   "h": -3,
+   "falloff": 12,
+   "mode": "carve"
+  },
+  {
+   "type": "hill",
+   "x": -900,
+   "z": -300,
+   "r": 80,
+   "h": 22
+  },
+  {
+   "type": "hill",
+   "x": 0,
+   "z": 450,
+   "r": 80,
+   "h": 22
+  },
+  {
+   "type": "hill",
+   "x": 900,
+   "z": -300,
+   "r": 80,
+   "h": 22
+  }
+ ],
+ "paint": [
+  {
+   "shape": "rect",
+   "layer": 1,
+   "falloff": 120,
+   "x": 0,
+   "z": 0,
+   "w": 2800,
+   "d": 700
+  },
+  {
+   "shape": "line",
+   "layer": 3,
+   "falloff": 6,
+   "pts": [
+    -1400,
+    -60,
+    -500,
+    30,
+    0,
+    -40,
+    600,
+    60,
+    1400,
+    -30
+   ],
+   "w": 36
+  }
+ ],
+ "roads": [],
+ "trees": [],
+ "scatter": [
+  {
+   "prefabs": [
+    "SM_Env_Cliff_Curved_Large_*",
+    "SM_Env_Cliff_Basalt_*",
+    "SM_Env_Landslide_*"
+   ],
+   "count": 80,
+   "shape": "rect",
+   "group": "The Glass Cliffs",
+   "minDist": 50,
+   "scaleMin": 0.9,
+   "scaleMax": 1.1,
+   "maxSlope": 70,
+   "collide": true,
+   "align": false,
+   "faceCenter": false,
+   "dy": 0,
+   "keepOffRoads": true,
+   "minY": -9999,
+   "maxY": 9999,
+   "x": 0,
+   "z": 420,
+   "w": 2800,
+   "d": 250
+  },
+  {
+   "prefabs": [
+    "SM_Env_SandDunes_*",
+    "SM_Env_Cracked_Edge_*",
+    "SM_Env_Crater_Edge_*"
+   ],
+   "count": 220,
+   "shape": "rect",
+   "group": "Ash Flats",
+   "minDist": 25,
+   "scaleMin": 0.9,
+   "scaleMax": 1.1,
+   "maxSlope": 35,
+   "collide": false,
+   "align": false,
+   "faceCenter": false,
+   "dy": 0,
+   "keepOffRoads": true,
+   "minY": -9999,
+   "maxY": 9999,
+   "x": 0,
+   "z": -150,
+   "w": 2800,
+   "d": 700
+  }
+ ],
+ "objects": [
+  {
+   "prefab": "SM_Env_GiantGolem_Chest_*",
+   "x": 0,
+   "z": 0,
+   "rot": 0,
+   "group": "The Severed Titan",
+   "fitHeight": 60,
+   "scale": 1,
+   "dy": 0,
+   "tilt": 8,
+   "roll": 0,
+   "collide": true,
+   "name": "Chest of the Titan"
+  },
+  {
+   "prefab": "SM_Env_GiantGolem_Head_*",
+   "x": 240,
+   "z": 40,
+   "rot": 20,
+   "group": "The Severed Titan",
+   "fitHeight": 40,
+   "scale": 1,
+   "dy": 0,
+   "tilt": 8,
+   "roll": 0,
+   "collide": true,
+   "name": "Head of the Titan"
+  },
+  {
+   "prefab": "SM_Env_GiantGolem_Arm_R_Upper_*",
+   "x": -80,
+   "z": -220,
+   "rot": 70,
+   "group": "The Severed Titan",
+   "fitHeight": 40,
+   "scale": 1,
+   "dy": 0,
+   "tilt": 8,
+   "roll": 0,
+   "collide": true,
+   "name": "Arm of the Titan"
+  },
+  {
+   "prefab": "SM_Env_GiantGolem_Arm_R_Lower_*",
+   "x": -100,
+   "z": -420,
+   "rot": 80,
+   "group": "The Severed Titan",
+   "fitHeight": 40,
+   "scale": 1,
+   "dy": 0,
+   "tilt": 8,
+   "roll": 0,
+   "collide": true,
+   "name": "Arm of the Titan"
+  },
+  {
+   "prefab": "SM_Env_GiantGolem_Leg_L_Upper_*",
+   "x": -280,
+   "z": 60,
+   "rot": 100,
+   "group": "The Severed Titan",
+   "fitHeight": 45,
+   "scale": 1,
+   "dy": 0,
+   "tilt": 8,
+   "roll": 0,
+   "collide": true,
+   "name": "Leg of the Titan"
+  },
+  {
+   "prefab": "SM_Env_GiantGolem_Leg_L_Lower_*",
+   "x": -480,
+   "z": 80,
+   "rot": 95,
+   "group": "The Severed Titan",
+   "fitHeight": 45,
+   "scale": 1,
+   "dy": 0,
+   "tilt": 8,
+   "roll": 0,
+   "collide": true,
+   "name": "Leg of the Titan"
+  },
+  {
+   "prefab": "SM_Env_GiantGolem_Arm_L_Upper_*",
+   "x": 60,
+   "z": 230,
+   "rot": -60,
+   "group": "The Severed Titan",
+   "fitHeight": 40,
+   "scale": 1,
+   "dy": 0,
+   "tilt": 8,
+   "roll": 0,
+   "collide": true,
+   "name": "Arm of the Titan"
+  },
+  {
+   "prefab": "SM_Bld_Corp_Comms_Tower_*",
+   "x": -900,
+   "z": -300,
+   "rot": 0,
+   "group": "Beacon West",
+   "fitHeight": 45,
+   "scale": 1,
+   "dy": 0,
+   "tilt": 0,
+   "roll": 0,
+   "collide": true,
+   "name": "Beacon West"
+  },
+  {
+   "prefab": "SM_Bld_Corp_Comms_Tower_*",
+   "x": 0,
+   "z": 450,
+   "rot": 0,
+   "group": "Beacon North",
+   "fitHeight": 45,
+   "scale": 1,
+   "dy": 0,
+   "tilt": 0,
+   "roll": 0,
+   "collide": true,
+   "name": "Beacon North"
+  },
+  {
+   "prefab": "SM_Bld_Corp_Comms_Tower_*",
+   "x": 900,
+   "z": -300,
+   "rot": 0,
+   "group": "Beacon East",
+   "fitHeight": 45,
+   "scale": 1,
+   "dy": 0,
+   "tilt": 0,
+   "roll": 0,
+   "collide": true,
+   "name": "Beacon East"
+  },
+  {
+   "prefab": "SM_Bld_Corp_Wall_Gate_*",
+   "x": -1440,
+   "z": 0,
+   "rot": 270,
+   "group": "Gates",
+   "fitHeight": 30,
+   "scale": 1,
+   "dy": 0,
+   "tilt": 0,
+   "roll": 0,
+   "collide": true,
+   "name": "Hegemony gate"
+  },
+  {
+   "prefab": "SM_Bld_Arch_*",
+   "x": 1440,
+   "z": 0,
+   "rot": 90,
+   "group": "Gates",
+   "fitHeight": 25,
+   "scale": 1,
+   "dy": 0,
+   "tilt": 0,
+   "roll": 0,
+   "collide": true,
+   "name": "Covenant gate"
+  },
+  {
+   "prefab": "SM_Bld_Wall_L_Gate_*",
+   "x": 0,
+   "z": -700,
+   "rot": 180,
+   "group": "Gates",
+   "fitHeight": 24,
+   "scale": 1,
+   "dy": 0,
+   "tilt": 0,
+   "roll": 0,
+   "collide": true,
+   "name": "Null gate"
+  }
+ ],
+ "rings": [
+  {
+   "prefabs": [
+    "SM_Prop_Barricade_*",
+    "SM_Bld_Wall_L_Damaged_*"
+   ],
+   "x": -900,
+   "z": -300,
+   "r": 55,
+   "count": 14,
+   "fitHeight": 0,
+   "group": "Beacon West",
+   "startAngle": 0,
+   "endAngle": 360,
+   "faceOut": true,
+   "rotOffset": 0,
+   "dy": 0,
+   "scale": 1,
+   "collide": true
+  },
+  {
+   "prefabs": [
+    "SM_Prop_Barricade_*",
+    "SM_Bld_Wall_L_Damaged_*"
+   ],
+   "x": 0,
+   "z": 450,
+   "r": 55,
+   "count": 14,
+   "fitHeight": 0,
+   "group": "Beacon North",
+   "startAngle": 0,
+   "endAngle": 360,
+   "faceOut": true,
+   "rotOffset": 0,
+   "dy": 0,
+   "scale": 1,
+   "collide": true
+  },
+  {
+   "prefabs": [
+    "SM_Prop_Barricade_*",
+    "SM_Bld_Wall_L_Damaged_*"
+   ],
+   "x": 900,
+   "z": -300,
+   "r": 55,
+   "count": 14,
+   "fitHeight": 0,
+   "group": "Beacon East",
+   "startAngle": 0,
+   "endAngle": 360,
+   "faceOut": true,
+   "rotOffset": 0,
+   "dy": 0,
+   "scale": 1,
+   "collide": true
+  }
+ ],
+ "lines": [],
+ "markers": [
+  {
+   "name": "The Ruptureworks portals (under the chest)",
+   "x": 0,
+   "z": -60,
+   "dy": 0
+  },
+  {
+   "name": "The Titan's Hand (vista)",
+   "x": -100,
+   "z": -420,
+   "dy": 0
+  },
+  {
+   "name": "Beacon West",
+   "x": -900,
+   "z": -300,
+   "dy": 0
+  },
+  {
+   "name": "Beacon North",
+   "x": 0,
+   "z": 450,
+   "dy": 0
+  },
+  {
+   "name": "Beacon East",
+   "x": 900,
+   "z": -300,
+   "dy": 0
+  },
+  {
+   "name": "Hegemony gate",
+   "x": -1420,
+   "z": 0,
+   "dy": 0
+  },
+  {
+   "name": "Covenant gate",
+   "x": 1420,
+   "z": 0,
+   "dy": 0
+  },
+  {
+   "name": "Null gate",
+   "x": 0,
+   "z": -680,
+   "dy": 0
+  },
+  {
+   "name": "Hidden descent (north wall, not shown)",
+   "x": 300,
+   "z": 680,
+   "dy": 0
+  },
+  {
+   "name": "Bruiser roams Lv 98 (the crossing)",
+   "x": -200,
+   "z": 0,
+   "dy": 0
+  },
+  {
+   "name": "Bruiser roams Lv 105 (the crossing)",
+   "x": 200,
+   "z": 0,
+   "dy": 0
+  },
+  {
+   "name": "Hostile ground Lv 91",
+   "x": -1100,
+   "z": 300,
+   "dy": 0
+  },
+  {
+   "name": "Hostile ground Lv 94",
+   "x": -550,
+   "z": -350,
+   "dy": 0
+  },
+  {
+   "name": "Hostile ground Lv 97",
+   "x": 0,
+   "z": 300,
+   "dy": 0
+  },
+  {
+   "name": "Hostile ground Lv 100",
+   "x": 550,
+   "z": -350,
+   "dy": 0
+  },
+  {
+   "name": "Hostile ground Lv 103",
+   "x": 1100,
+   "z": 300,
+   "dy": 0
+  }
+ ],
+ "shots": [
+  {
+   "name": "Vista",
+   "x": -1250,
+   "y": 260,
+   "z": 0,
+   "tx": 250,
+   "ty": 40,
+   "tz": 0,
+   "fov": 55,
+   "ortho": 0
+  },
+  {
+   "name": "The Severed Titan",
+   "x": -143.64846019678083,
+   "y": 60,
+   "z": -394.67090073008154,
+   "tx": 0,
+   "ty": 30,
+   "tz": 0,
+   "fov": 55,
+   "ortho": 0
+  },
+  {
+   "name": "Beacon North",
+   "x": 1.9594348786357652e-14,
+   "y": 30,
+   "z": 290.0,
+   "tx": 0,
+   "ty": 30,
+   "tz": 450,
+   "fov": 45,
+   "ortho": 0
+  },
+  {
+   "name": "Layout",
+   "x": 0,
+   "y": 1500,
+   "z": 0,
+   "tx": 0,
+   "ty": 0,
+   "tz": 0.01,
+   "fov": 40,
+   "ortho": 3000
+  }
+ ]
+}

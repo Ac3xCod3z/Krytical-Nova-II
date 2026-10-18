@@ -1,0 +1,296 @@
+{
+ "scene": "MeridianSprawl_Run_TheCoreworks",
+ "sizeX": 400,
+ "sizeZ": 400,
+ "height": 100,
+ "depth": 30,
+ "seed": 34,
+ "heightRes": 513,
+ "alphaRes": 512,
+ "layers": [
+  "Assets/Synty/PolygonMapsSciFiOutpost/Materials/Terrain/Terrain_Charred_Dirt_01.terrainlayer",
+  "Assets/Synty/PolygonSamuraiEmpire/Materials/Env/Terrain_Layers/Terrain_Rock_01.terrainlayer"
+ ],
+ "slopeLayer": -1,
+ "bands": [],
+ "stamps": [
+  {
+   "type": "rim",
+   "w": 60,
+   "h": 60,
+   "gaps": []
+  },
+  {
+   "type": "crater",
+   "x": 0,
+   "z": 10,
+   "r": 15,
+   "h": 20,
+   "rim": 0
+  }
+ ],
+ "paint": [
+  {
+   "shape": "rect",
+   "layer": 1,
+   "falloff": 1,
+   "x": 0,
+   "z": -60,
+   "w": 70,
+   "d": 50
+  },
+  {
+   "shape": "rect",
+   "layer": 1,
+   "falloff": 1,
+   "x": 0,
+   "z": 10,
+   "w": 30,
+   "d": 30
+  },
+  {
+   "shape": "rect",
+   "layer": 1,
+   "falloff": 1,
+   "x": 0,
+   "z": 80,
+   "w": 50,
+   "d": 50
+  }
+ ],
+ "roads": [],
+ "trees": [],
+ "scatter": [
+  {
+   "prefabs": [
+    "SM_Env_Core_Strut_*",
+    "SM_Bld_Core_Vent_*",
+    "SM_Prop_Detail_Pipe_*"
+   ],
+   "count": 29,
+   "shape": "rect",
+   "group": "Room: Processing Deck",
+   "minDist": 4,
+   "scaleMin": 0.9,
+   "scaleMax": 1.1,
+   "maxSlope": 35,
+   "collide": true,
+   "align": false,
+   "faceCenter": false,
+   "dy": 0,
+   "keepOffRoads": false,
+   "minY": -9999,
+   "maxY": 9999,
+   "x": 0,
+   "z": -60,
+   "w": 62,
+   "d": 42
+  },
+  {
+   "prefabs": [
+    "SM_Env_Core_Strut_*",
+    "SM_Bld_Core_Vent_*",
+    "SM_Prop_Detail_Pipe_*"
+   ],
+   "count": 7,
+   "shape": "rect",
+   "group": "Room: Bore Shaft",
+   "minDist": 4,
+   "scaleMin": 0.9,
+   "scaleMax": 1.1,
+   "maxSlope": 35,
+   "collide": true,
+   "align": false,
+   "faceCenter": false,
+   "dy": 0,
+   "keepOffRoads": false,
+   "minY": -9999,
+   "maxY": 9999,
+   "x": 0,
+   "z": 10,
+   "w": 22,
+   "d": 22
+  },
+  {
+   "prefabs": [
+    "SM_Env_Core_Strut_*",
+    "SM_Bld_Core_Vent_*",
+    "SM_Prop_Detail_Pipe_*"
+   ],
+   "count": 20,
+   "shape": "rect",
+   "group": "Room: Core Chamber",
+   "minDist": 4,
+   "scaleMin": 0.9,
+   "scaleMax": 1.1,
+   "maxSlope": 35,
+   "collide": true,
+   "align": false,
+   "faceCenter": false,
+   "dy": 0,
+   "keepOffRoads": false,
+   "minY": -9999,
+   "maxY": 9999,
+   "x": 0,
+   "z": 80,
+   "w": 42,
+   "d": 42
+  }
+ ],
+ "objects": [
+  {
+   "prefab": "SM_Env_Core_*",
+   "x": 0,
+   "z": 80,
+   "rot": 0,
+   "group": "Core Chamber",
+   "fitHeight": 18,
+   "scale": 1,
+   "dy": 0,
+   "tilt": 0,
+   "roll": 0,
+   "collide": true,
+   "name": "The Core"
+  }
+ ],
+ "rings": [],
+ "lines": [
+  {
+   "prefabs": [
+    "SM_Bld_Wall_Mechanical_*"
+   ],
+   "pts": [
+    -35.0,
+    -85.0,
+    35.0,
+    -85.0,
+    35.0,
+    -35.0,
+    -35.0,
+    -35.0,
+    -35.0,
+    -85.0
+   ],
+   "spacing": 0,
+   "fitHeight": 0,
+   "group": "Room: Processing Deck",
+   "offset": 0,
+   "rotOffset": 0,
+   "dy": 0,
+   "scale": 1,
+   "jitter": 0,
+   "align": true,
+   "collide": true
+  },
+  {
+   "prefabs": [
+    "SM_Bld_Wall_Mechanical_*"
+   ],
+   "pts": [
+    -15.0,
+    -5.0,
+    15.0,
+    -5.0,
+    15.0,
+    25.0,
+    -15.0,
+    25.0,
+    -15.0,
+    -5.0
+   ],
+   "spacing": 0,
+   "fitHeight": 0,
+   "group": "Room: Bore Shaft",
+   "offset": 0,
+   "rotOffset": 0,
+   "dy": 0,
+   "scale": 1,
+   "jitter": 0,
+   "align": true,
+   "collide": true
+  },
+  {
+   "prefabs": [
+    "SM_Bld_Wall_Mechanical_*"
+   ],
+   "pts": [
+    -25.0,
+    55.0,
+    25.0,
+    55.0,
+    25.0,
+    105.0,
+    -25.0,
+    105.0,
+    -25.0,
+    55.0
+   ],
+   "spacing": 0,
+   "fitHeight": 0,
+   "group": "Room: Core Chamber",
+   "offset": 0,
+   "rotOffset": 0,
+   "dy": 0,
+   "scale": 1,
+   "jitter": 0,
+   "align": true,
+   "collide": true
+  }
+ ],
+ "markers": [
+  {
+   "name": "Room: Processing Deck",
+   "x": 0,
+   "z": -60,
+   "dy": 0
+  },
+  {
+   "name": "Room: Bore Shaft",
+   "x": 0,
+   "z": 10,
+   "dy": 0
+  },
+  {
+   "name": "Room: Core Chamber",
+   "x": 0,
+   "z": 80,
+   "dy": 0
+  },
+  {
+   "name": "Entrance",
+   "x": 0,
+   "z": -81.0,
+   "dy": 0
+  },
+  {
+   "name": "Boss",
+   "x": 0,
+   "z": 92.5,
+   "dy": 0
+  }
+ ],
+ "shots": [
+  {
+   "name": "Vista",
+   "x": 0,
+   "y": 6,
+   "z": -79.0,
+   "tx": 0,
+   "ty": 3,
+   "tz": 80,
+   "fov": 60,
+   "ortho": 0
+  },
+  {
+   "name": "Layout",
+   "x": 0,
+   "y": 600,
+   "z": 0,
+   "tx": 0,
+   "ty": 0,
+   "tz": 0.01,
+   "fov": 40,
+   "ortho": 400
+  }
+ ]
+}

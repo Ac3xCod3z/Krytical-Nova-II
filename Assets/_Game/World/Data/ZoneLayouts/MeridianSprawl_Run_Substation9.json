@@ -1,0 +1,163 @@
+{
+ "scene": "MeridianSprawl_Run_Substation9",
+ "sizeX": 400,
+ "sizeZ": 400,
+ "height": 100,
+ "depth": 30,
+ "seed": 31,
+ "heightRes": 513,
+ "alphaRes": 512,
+ "layers": [
+  "Assets/Synty/PolygonMapsSciFiOutpost/Materials/Terrain/Terrain_Charred_Dirt_01.terrainlayer",
+  "Assets/Synty/PolygonSamuraiEmpire/Materials/Env/Terrain_Layers/Terrain_Rock_01.terrainlayer"
+ ],
+ "slopeLayer": -1,
+ "bands": [],
+ "stamps": [
+  {
+   "type": "rim",
+   "w": 60,
+   "h": 60,
+   "gaps": []
+  }
+ ],
+ "paint": [
+  {
+   "shape": "rect",
+   "layer": 1,
+   "falloff": 1,
+   "x": 0,
+   "z": 0,
+   "w": 60,
+   "d": 40
+  }
+ ],
+ "roads": [],
+ "trees": [],
+ "scatter": [
+  {
+   "prefabs": [
+    "SM_Bld_Power_*",
+    "SM_Prop_Detail_Pipe_*",
+    "SM_Prop_Drone_*",
+    "SM_Bld_Pipe_Large_*"
+   ],
+   "count": 20,
+   "shape": "rect",
+   "group": "Room: Transformer Hall",
+   "minDist": 4,
+   "scaleMin": 0.9,
+   "scaleMax": 1.1,
+   "maxSlope": 35,
+   "collide": true,
+   "align": false,
+   "faceCenter": false,
+   "dy": 0,
+   "keepOffRoads": false,
+   "minY": -9999,
+   "maxY": 9999,
+   "x": 0,
+   "z": 0,
+   "w": 52,
+   "d": 32
+  },
+  {
+   "prefabs": [
+    "SM_Prop_LightBar_*"
+   ],
+   "count": 8,
+   "shape": "rect",
+   "group": "Room: Transformer Hall",
+   "minDist": 8,
+   "scaleMin": 0.9,
+   "scaleMax": 1.1,
+   "maxSlope": 35,
+   "collide": false,
+   "align": false,
+   "faceCenter": false,
+   "dy": 0,
+   "keepOffRoads": false,
+   "minY": -9999,
+   "maxY": 9999,
+   "x": 0,
+   "z": 0,
+   "w": 56,
+   "d": 36
+  }
+ ],
+ "objects": [],
+ "rings": [],
+ "lines": [
+  {
+   "prefabs": [
+    "SM_Bld_Wall_Mechanical_*"
+   ],
+   "pts": [
+    -30.0,
+    -20.0,
+    30.0,
+    -20.0,
+    30.0,
+    20.0,
+    -30.0,
+    20.0,
+    -30.0,
+    -20.0
+   ],
+   "spacing": 0,
+   "fitHeight": 0,
+   "group": "Room: Transformer Hall",
+   "offset": 0,
+   "rotOffset": 0,
+   "dy": 0,
+   "scale": 1,
+   "jitter": 0,
+   "align": true,
+   "collide": true
+  }
+ ],
+ "markers": [
+  {
+   "name": "Room: Transformer Hall",
+   "x": 0,
+   "z": 0,
+   "dy": 0
+  },
+  {
+   "name": "Entrance",
+   "x": 0,
+   "z": -16.0,
+   "dy": 0
+  },
+  {
+   "name": "Boss",
+   "x": 0,
+   "z": 10.0,
+   "dy": 0
+  }
+ ],
+ "shots": [
+  {
+   "name": "Vista",
+   "x": 0,
+   "y": 6,
+   "z": -14.0,
+   "tx": 0,
+   "ty": 3,
+   "tz": 0,
+   "fov": 60,
+   "ortho": 0
+  },
+  {
+   "name": "Layout",
+   "x": 0,
+   "y": 600,
+   "z": 0,
+   "tx": 0,
+   "ty": 0,
+   "tz": 0.01,
+   "fov": 40,
+   "ortho": 400
+  }
+ ]
+}

@@ -1,0 +1,208 @@
+{
+ "scene": "EldersReach_Run_TheRootvault",
+ "sizeX": 400,
+ "sizeZ": 400,
+ "height": 100,
+ "depth": 30,
+ "seed": 53,
+ "heightRes": 513,
+ "alphaRes": 512,
+ "layers": [
+  "Assets/Synty/PolygonNatureBiomes/PNB_Enchanted_Forest/Terrain/Dirt_01.terrainlayer",
+  "Assets/Synty/PolygonNatureBiomes/PNB_Enchanted_Forest/Terrain/Moss_01.terrainlayer"
+ ],
+ "slopeLayer": -1,
+ "bands": [],
+ "stamps": [
+  {
+   "type": "rim",
+   "w": 60,
+   "h": 60,
+   "gaps": []
+  }
+ ],
+ "paint": [
+  {
+   "shape": "rect",
+   "layer": 1,
+   "falloff": 1,
+   "x": 0,
+   "z": -30,
+   "w": 60,
+   "d": 24
+  },
+  {
+   "shape": "rect",
+   "layer": 1,
+   "falloff": 1,
+   "x": 0,
+   "z": 40,
+   "w": 40,
+   "d": 40
+  }
+ ],
+ "roads": [],
+ "trees": [],
+ "scatter": [
+  {
+   "prefabs": [
+    "SM_Env_Roots_*",
+    "SM_Env_BonePile_*",
+    "SM_Env_Rune_Rounded_*",
+    "SM_Prop_Candle_Stand_*"
+   ],
+   "count": 12,
+   "shape": "rect",
+   "group": "Room: Root Hall",
+   "minDist": 4,
+   "scaleMin": 0.9,
+   "scaleMax": 1.1,
+   "maxSlope": 35,
+   "collide": true,
+   "align": false,
+   "faceCenter": false,
+   "dy": 0,
+   "keepOffRoads": false,
+   "minY": -9999,
+   "maxY": 9999,
+   "x": 0,
+   "z": -30,
+   "w": 52,
+   "d": 16
+  },
+  {
+   "prefabs": [
+    "SM_Env_Roots_*",
+    "SM_Env_BonePile_*",
+    "SM_Env_Rune_Rounded_*",
+    "SM_Prop_Candle_Stand_*"
+   ],
+   "count": 13,
+   "shape": "rect",
+   "group": "Room: Ossuary Hollow",
+   "minDist": 4,
+   "scaleMin": 0.9,
+   "scaleMax": 1.1,
+   "maxSlope": 35,
+   "collide": true,
+   "align": false,
+   "faceCenter": false,
+   "dy": 0,
+   "keepOffRoads": false,
+   "minY": -9999,
+   "maxY": 9999,
+   "x": 0,
+   "z": 40,
+   "w": 32,
+   "d": 32
+  }
+ ],
+ "objects": [],
+ "rings": [],
+ "lines": [
+  {
+   "prefabs": [
+    "SM_Env_Cave_Curved_*"
+   ],
+   "pts": [
+    -30.0,
+    -42.0,
+    30.0,
+    -42.0,
+    30.0,
+    -18.0,
+    -30.0,
+    -18.0,
+    -30.0,
+    -42.0
+   ],
+   "spacing": 0,
+   "fitHeight": 0,
+   "group": "Room: Root Hall",
+   "offset": 0,
+   "rotOffset": 0,
+   "dy": 0,
+   "scale": 1,
+   "jitter": 0,
+   "align": true,
+   "collide": true
+  },
+  {
+   "prefabs": [
+    "SM_Env_Cave_Curved_*"
+   ],
+   "pts": [
+    -20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    60.0,
+    -20.0,
+    60.0,
+    -20.0,
+    20.0
+   ],
+   "spacing": 0,
+   "fitHeight": 0,
+   "group": "Room: Ossuary Hollow",
+   "offset": 0,
+   "rotOffset": 0,
+   "dy": 0,
+   "scale": 1,
+   "jitter": 0,
+   "align": true,
+   "collide": true
+  }
+ ],
+ "markers": [
+  {
+   "name": "Room: Root Hall",
+   "x": 0,
+   "z": -30,
+   "dy": 0
+  },
+  {
+   "name": "Room: Ossuary Hollow",
+   "x": 0,
+   "z": 40,
+   "dy": 0
+  },
+  {
+   "name": "Entrance",
+   "x": 0,
+   "z": -38.0,
+   "dy": 0
+  },
+  {
+   "name": "Boss",
+   "x": 0,
+   "z": 50.0,
+   "dy": 0
+  }
+ ],
+ "shots": [
+  {
+   "name": "Vista",
+   "x": 0,
+   "y": 6,
+   "z": -36.0,
+   "tx": 0,
+   "ty": 3,
+   "tz": 40,
+   "fov": 60,
+   "ortho": 0
+  },
+  {
+   "name": "Layout",
+   "x": 0,
+   "y": 600,
+   "z": 0,
+   "tx": 0,
+   "ty": 0,
+   "tz": 0.01,
+   "fov": 40,
+   "ortho": 400
+  }
+ ]
+}

@@ -1,0 +1,524 @@
+{
+ "scene": "Cessation_Z3_TheNeedlegarden",
+ "sizeX": 2000,
+ "sizeZ": 2000,
+ "height": 500,
+ "depth": 60,
+ "seed": 64,
+ "heightRes": 1025,
+ "alphaRes": 1024,
+ "layers": [
+  "Assets/Synty/PolygonNatureBiomes/PNB_Arid_Desert/Terrain/LavaRock.terrainlayer",
+  "Assets/Synty/PolygonNatureBiomes/PNB_Meadow_Forest/Terrain/Terrain_Meadow_Gravel_01.terrainlayer",
+  "Assets/Synty/PolygonNatureBiomes/PNB_Arid_Desert/Terrain/SaltCracks_Purple.terrainlayer",
+  "Assets/Synty/PolygonNatureBiomes/PNB_Alpine_Mountain/Terrain/RiverRocks_01.terrainlayer",
+  "Assets/Synty/PolygonMapsSciFiOutpost/Materials/Terrain/Terrain_Charred_Dirt_01.terrainlayer"
+ ],
+ "slopeLayer": 0,
+ "bands": [],
+ "stamps": [
+  {
+   "type": "noise",
+   "amp": 10,
+   "scale": 0.004,
+   "r": 0,
+   "r2": 0
+  },
+  {
+   "type": "noise",
+   "amp": 3.5,
+   "scale": 0.02,
+   "r": 0,
+   "r2": 0
+  },
+  {
+   "type": "rim",
+   "w": 170,
+   "h": 120,
+   "gaps": [
+    0,
+    -960,
+    160,
+    0,
+    940,
+    160
+   ]
+  },
+  {
+   "type": "plateau",
+   "x": 0,
+   "z": -900,
+   "r": 45,
+   "h": 0,
+   "falloff": 40
+  }
+ ],
+ "paint": [
+  {
+   "shape": "all",
+   "layer": 1,
+   "falloff": 0
+  },
+  {
+   "shape": "circle",
+   "layer": 2,
+   "falloff": 100,
+   "x": -550,
+   "z": -200,
+   "r": 180
+  }
+ ],
+ "roads": [
+  {
+   "pts": [
+    0,
+    -900,
+    300,
+    -150,
+    0,
+    100,
+    -300,
+    300,
+    0,
+    880
+   ],
+   "w": 6,
+   "layer": 3,
+   "flatten": false,
+   "shoulder": 8
+  }
+ ],
+ "trees": [],
+ "scatter": [
+  {
+   "prefabs": [
+    "SM_Env_Detail_Spire_*",
+    "SM_Env_Detail_Spire_Group_*",
+    "SM_Env_Rock_Peak_*"
+   ],
+   "count": 220,
+   "shape": "all",
+   "group": "Needle Forest",
+   "minDist": 45,
+   "scaleMin": 0.9,
+   "scaleMax": 1.1,
+   "maxSlope": 35,
+   "collide": true,
+   "align": false,
+   "faceCenter": false,
+   "dy": 0,
+   "keepOffRoads": true,
+   "minY": -9999,
+   "maxY": 9999,
+   "fitMin": 40,
+   "fitMax": 120
+  },
+  {
+   "prefabs": [
+    "SM_Env_Basalt_*"
+   ],
+   "count": 80,
+   "shape": "all",
+   "group": "Needle Forest",
+   "minDist": 60,
+   "scaleMin": 0.9,
+   "scaleMax": 1.1,
+   "maxSlope": 35,
+   "collide": true,
+   "align": false,
+   "faceCenter": false,
+   "dy": 0,
+   "keepOffRoads": true,
+   "minY": -9999,
+   "maxY": 9999
+  },
+  {
+   "prefabs": [
+    "SM_Env_Crystals_Cluster_Large_*",
+    "SM_Env_Gem_Large_*",
+    "SM_Prop_Geode_*"
+   ],
+   "count": 40,
+   "shape": "circle",
+   "group": "Crystal Grotto",
+   "minDist": 10,
+   "scaleMin": 0.9,
+   "scaleMax": 1.1,
+   "maxSlope": 35,
+   "collide": true,
+   "align": false,
+   "faceCenter": false,
+   "dy": 0,
+   "keepOffRoads": true,
+   "minY": -9999,
+   "maxY": 9999,
+   "x": -550,
+   "z": -200,
+   "r": 140
+  },
+  {
+   "prefabs": [
+    "SM_Env_Tree_Dead_*"
+   ],
+   "count": 80,
+   "shape": "all",
+   "group": "Dead Trees",
+   "minDist": 40,
+   "scaleMin": 0.9,
+   "scaleMax": 1.1,
+   "maxSlope": 35,
+   "collide": false,
+   "align": false,
+   "faceCenter": false,
+   "dy": 0,
+   "keepOffRoads": true,
+   "minY": -9999,
+   "maxY": 9999
+  }
+ ],
+ "objects": [
+  {
+   "prefab": "SM_Env_Rock_Peak_*",
+   "x": 0,
+   "z": 100,
+   "rot": 0,
+   "group": "The Cathedral Spire",
+   "fitHeight": 160,
+   "scale": 1,
+   "dy": 0,
+   "tilt": 0,
+   "roll": 0,
+   "collide": true,
+   "name": "The Cathedral Spire"
+  },
+  {
+   "prefab": "SM_Bld_Wall_Window_Huge_*",
+   "x": 0,
+   "z": 70,
+   "rot": 180,
+   "group": "The Cathedral Spire",
+   "fitHeight": 30,
+   "scale": 1,
+   "dy": 0,
+   "tilt": 0,
+   "roll": 0,
+   "collide": true
+  },
+  {
+   "prefab": "SM_Bld_Wall_Archway_*",
+   "x": 0,
+   "z": 68,
+   "rot": 180,
+   "group": "The Cathedral Spire",
+   "fitHeight": 14,
+   "scale": 1,
+   "dy": 0,
+   "tilt": 0,
+   "roll": 0,
+   "collide": true
+  },
+  {
+   "prefab": "SM_Prop_Cage_Hanging_*",
+   "x": -300.0,
+   "z": 370.0,
+   "rot": 0,
+   "group": "The Hanging Ossuaries",
+   "fitHeight": 0,
+   "scale": 1,
+   "dy": 25,
+   "tilt": 0,
+   "roll": 0,
+   "collide": false
+  },
+  {
+   "prefab": "SM_Prop_Cage_Hanging_*",
+   "x": -239.3782217350893,
+   "z": 335.0,
+   "rot": 0,
+   "group": "The Hanging Ossuaries",
+   "fitHeight": 0,
+   "scale": 1,
+   "dy": 28,
+   "tilt": 0,
+   "roll": 0,
+   "collide": false
+  },
+  {
+   "prefab": "SM_Prop_Cage_Hanging_*",
+   "x": -239.37822173508928,
+   "z": 265.0,
+   "rot": 0,
+   "group": "The Hanging Ossuaries",
+   "fitHeight": 0,
+   "scale": 1,
+   "dy": 31,
+   "tilt": 0,
+   "roll": 0,
+   "collide": false
+  },
+  {
+   "prefab": "SM_Prop_Cage_Hanging_*",
+   "x": -300.0,
+   "z": 230.0,
+   "rot": 0,
+   "group": "The Hanging Ossuaries",
+   "fitHeight": 0,
+   "scale": 1,
+   "dy": 34,
+   "tilt": 0,
+   "roll": 0,
+   "collide": false
+  },
+  {
+   "prefab": "SM_Prop_Cage_Hanging_*",
+   "x": -360.6217782649107,
+   "z": 265.0,
+   "rot": 0,
+   "group": "The Hanging Ossuaries",
+   "fitHeight": 0,
+   "scale": 1,
+   "dy": 37,
+   "tilt": 0,
+   "roll": 0,
+   "collide": false
+  },
+  {
+   "prefab": "SM_Prop_Cage_Hanging_*",
+   "x": -360.6217782649107,
+   "z": 335.0,
+   "rot": 0,
+   "group": "The Hanging Ossuaries",
+   "fitHeight": 0,
+   "scale": 1,
+   "dy": 40,
+   "tilt": 0,
+   "roll": 0,
+   "collide": false
+  },
+  {
+   "prefab": "SM_Env_Hell_Chains_*",
+   "x": -300,
+   "z": 300,
+   "rot": 0,
+   "group": "The Hanging Ossuaries",
+   "fitHeight": 20,
+   "scale": 1,
+   "dy": 30,
+   "tilt": 0,
+   "roll": 0,
+   "collide": false
+  },
+  {
+   "prefab": "SM_Env_Artifact_AlienRuin_*",
+   "x": 600,
+   "z": 500,
+   "rot": 0,
+   "group": "Alien Ruin",
+   "fitHeight": 30,
+   "scale": 1,
+   "dy": 0,
+   "tilt": 0,
+   "roll": 0,
+   "collide": true,
+   "name": "Alien Ruin"
+  }
+ ],
+ "rings": [
+  {
+   "prefabs": [
+    "SM_Env_Obelisk_Glow_*"
+   ],
+   "x": 600,
+   "z": 500,
+   "r": 50,
+   "count": 6,
+   "fitHeight": 0,
+   "group": "Alien Ruin",
+   "startAngle": 0,
+   "endAngle": 360,
+   "faceOut": true,
+   "rotOffset": 0,
+   "dy": 0,
+   "scale": 1,
+   "collide": true
+  },
+  {
+   "prefabs": [
+    "SM_Prop_Statue_People_*"
+   ],
+   "x": -200,
+   "z": -500,
+   "r": 20,
+   "count": 10,
+   "fitHeight": 0,
+   "group": "The Silent Choir",
+   "startAngle": 0,
+   "endAngle": 360,
+   "faceOut": false,
+   "rotOffset": 0,
+   "dy": 0,
+   "scale": 1,
+   "collide": true
+  }
+ ],
+ "lines": [
+  {
+   "prefabs": [
+    "SM_Env_Dwarf_Bridge_*"
+   ],
+   "pts": [
+    300,
+    -150,
+    300,
+    150
+   ],
+   "spacing": 0,
+   "fitHeight": 0,
+   "group": "The Chain Walk",
+   "offset": 0,
+   "rotOffset": 0,
+   "dy": 60,
+   "scale": 1,
+   "jitter": 0,
+   "align": true,
+   "collide": true
+  }
+ ],
+ "markers": [
+  {
+   "name": "Arrival",
+   "x": 0,
+   "z": -880,
+   "dy": 0
+  },
+  {
+   "name": "Portal onward",
+   "x": 0,
+   "z": 880,
+   "dy": 0
+  },
+  {
+   "name": "Hostile ground Lv 49",
+   "x": 142,
+   "z": -787,
+   "dy": 0
+  },
+  {
+   "name": "Hostile ground Lv 52",
+   "x": 92,
+   "z": -427,
+   "dy": 0
+  },
+  {
+   "name": "Hostile ground Lv 55",
+   "x": 351,
+   "z": -97,
+   "dy": 0
+  },
+  {
+   "name": "Hostile ground Lv 58",
+   "x": 13,
+   "z": -28,
+   "dy": 0
+  },
+  {
+   "name": "Hostile ground Lv 61",
+   "x": -136,
+   "z": 299,
+   "dy": 0
+  },
+  {
+   "name": "Hostile ground Lv 64",
+   "x": -298,
+   "z": 500,
+   "dy": 0
+  },
+  {
+   "name": "Hostile ground Lv 67",
+   "x": 7,
+   "z": 698,
+   "dy": 0
+  },
+  {
+   "name": "Run entrance: Ossuary Sigma",
+   "x": 0,
+   "z": 60,
+   "dy": 0
+  },
+  {
+   "name": "Bruiser lair Lv 57 (Crystal Grotto)",
+   "x": -550,
+   "z": -200,
+   "dy": 0
+  },
+  {
+   "name": "Bruiser lair Lv 67 (the Alien Ruin)",
+   "x": 600,
+   "z": 500,
+   "dy": 0
+  },
+  {
+   "name": "Wayfinder (the Chain Walk)",
+   "x": 300,
+   "z": 0,
+   "dy": 60
+  }
+ ],
+ "shots": [
+  {
+   "name": "The Cathedral Spire",
+   "x": -34.729635533386094,
+   "y": 25,
+   "z": -96.9615506024416,
+   "tx": 0,
+   "ty": 70,
+   "tz": 100,
+   "fov": 55,
+   "ortho": 0
+  },
+  {
+   "name": "Crystal Grotto",
+   "x": -587.6222157658235,
+   "y": 10,
+   "z": -303.3661882864499,
+   "tx": -550,
+   "ty": 3.5,
+   "tz": -200,
+   "fov": 45,
+   "ortho": 0
+  },
+  {
+   "name": "Alien Ruin",
+   "x": 522.8654868376153,
+   "y": 20,
+   "z": 408.07466682572266,
+   "tx": 600,
+   "ty": 7.0,
+   "tz": 500,
+   "fov": 45,
+   "ortho": 0
+  },
+  {
+   "name": "Vista",
+   "x": 100,
+   "y": 90,
+   "z": -880,
+   "tx": 0,
+   "ty": 60,
+   "tz": 100,
+   "fov": 50,
+   "ortho": 0
+  },
+  {
+   "name": "Layout",
+   "x": 0,
+   "y": 1500,
+   "z": 0,
+   "tx": 0,
+   "ty": 0,
+   "tz": 0.01,
+   "fov": 40,
+   "ortho": 2000
+  }
+ ]
+}
