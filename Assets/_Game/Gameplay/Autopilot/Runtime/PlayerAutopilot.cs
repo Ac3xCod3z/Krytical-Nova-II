@@ -1,3 +1,4 @@
+using KryticalNova.Networking;
 using System;
 using KryticalNova.Core;
 using KryticalNova.Hostiles;
@@ -103,7 +104,11 @@ namespace KryticalNova.Autopilot
         }
 
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
-        private void SetOnServerRpc(bool value) => ServerSetOn(value, value ? null : "Autopilot off.");
+        private void SetOnServerRpc(bool value)
+        {
+            if (!RpcBudget.Allow(this, CallKind.Account, nameof(SetOnServerRpc))) return;
+            ServerSetOn(value, value ? null : "Autopilot off.");
+        }
 
         /// <summary>Owner: keep these choices. They are saved with the character.</summary>
         public void SavePreferences(AutopilotPreferences changed)
@@ -118,6 +123,8 @@ namespace KryticalNova.Autopilot
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
         private void SetPreferencesServerRpc(string json)
         {
+            if (!RpcBudget.Allow(this, CallKind.Account, nameof(SetPreferencesServerRpc))) return;
+            if (!RpcBudget.TextFits(this, nameof(SetPreferencesServerRpc), json, MaxPreferencesLength)) return;
             if (json == null || json.Length > MaxPreferencesLength) return;
             preferences = AutopilotPreferences.FromJson(json, settings);
         }

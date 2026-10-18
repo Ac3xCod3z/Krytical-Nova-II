@@ -1,3 +1,4 @@
+using KryticalNova.Networking;
 using System;
 using System.Collections.Generic;
 using KryticalNova.Core;
@@ -88,7 +89,11 @@ namespace KryticalNova.Crafting
         }
 
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
-        private void CraftRpc(ushort recipeId, ushort times) => ServerCraft(recipeId, times);
+        private void CraftRpc(ushort recipeId, ushort times)
+        {
+            if (!RpcBudget.Allow(this, CallKind.Money, nameof(CraftRpc))) return;
+            ServerCraft(recipeId, times);
+        }
 
         // ------------------------------------------------------------------ server
 

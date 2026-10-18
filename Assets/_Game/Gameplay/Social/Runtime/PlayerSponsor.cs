@@ -1,3 +1,4 @@
+using KryticalNova.Networking;
 using System;
 using System.Collections.Generic;
 using KryticalNova.Core;
@@ -143,6 +144,7 @@ namespace KryticalNova.Social
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
         private void RequestRpc(NetworkObjectReference targetReference)
         {
+            if (!RpcBudget.Allow(this, CallKind.Social, nameof(RequestRpc))) return;
             PlayerSponsor target = targetReference.TryGet(out NetworkObject targetObject) ? targetObject.GetComponent<PlayerSponsor>() : null;
             ServerRequest(target);
         }
@@ -150,6 +152,8 @@ namespace KryticalNova.Social
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
         private void RequestByNameRpc(string characterName)
         {
+            if (!RpcBudget.Allow(this, CallKind.Social, nameof(RequestByNameRpc))) return;
+            if (!RpcBudget.TextFits(this, nameof(RequestByNameRpc), characterName)) return;
             PlayerSponsor target = null;
             foreach (NetworkClient client in NetworkManager.ConnectedClientsList)
             {
@@ -173,6 +177,7 @@ namespace KryticalNova.Social
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
         private void RespondRpc(bool accept)
         {
+            if (!RpcBudget.Allow(this, CallKind.Social, nameof(RespondRpc))) return;
             PlayerSponsor from = pendingFrom;
             bool open = HasPendingRequest && from != null && from.IsSpawned;
             bool fromSponsors = pendingFromSponsors;
@@ -193,6 +198,8 @@ namespace KryticalNova.Social
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
         private void EndRpc(string characterId)
         {
+            if (!RpcBudget.Allow(this, CallKind.Social, nameof(EndRpc))) return;
+            if (!RpcBudget.TextFits(this, nameof(EndRpc), characterId)) return;
             string refusal = SponsorService.ServerEnd(this, characterId);
             if (refusal != null) Notify(refusal);
         }

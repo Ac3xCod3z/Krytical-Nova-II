@@ -167,7 +167,10 @@ namespace KryticalNova.Networking
                     int level = player.TryGetComponent(out PlayerCharacterProgression progression) ? progression.CurrentLevel : 0;
                     players.Add("{\"id\":" + client.ClientId + ",\"name\":" + ControlPageRules.Json(name) + ",\"level\":" + level +
                                 ",\"faction\":" + ControlPageRules.Json(faction) + ",\"map\":" + ControlPageRules.Json(player.scene.name) +
-                                ",\"gm\":" + ControlPageRules.Json(GmRoster.NameOf(client.ClientId) ?? string.Empty) + "}");
+                                ",\"gm\":" + ControlPageRules.Json(GmRoster.NameOf(client.ClientId) ?? string.Empty) +
+                                ",\"ping\":" + NetworkHealth.PingMs(client.ClientId) +
+                                ",\"lateHits\":" + NetworkHealth.Count(client.ClientId, LagEvent.LateHit) +
+                                ",\"goneTargets\":" + NetworkHealth.Count(client.ClientId, LagEvent.GoneTarget) + "}");
                 }
             // The Game Masters by name and whether they are signed in now; their passwords never leave the settings file.
             var masters = new List<string>();
@@ -271,6 +274,10 @@ namespace KryticalNova.Networking
                     case "/api/log":
                         long.TryParse(QueryValue(request.Query, "after"), out long after);
                         SendJson(stream, 200, LogAfter(after));
+                        return;
+                    case "/api/flags":
+                        long.TryParse(QueryValue(request.Query, "after"), out long afterFlag);
+                        SendJson(stream, 200, SecurityFlags.JsonAfter(afterFlag));
                         return;
                 }
                 SendJson(stream, 404, "{\"error\":\"No such call.\"}");

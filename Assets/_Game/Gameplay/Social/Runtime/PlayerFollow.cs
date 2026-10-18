@@ -1,3 +1,4 @@
+using KryticalNova.Networking;
 using System;
 using KryticalNova.Combat;
 using KryticalNova.Items;
@@ -105,12 +106,17 @@ namespace KryticalNova.Social
         }
 
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
-        private void FollowRpc(NetworkObjectReference targetReference) =>
+        private void FollowRpc(NetworkObjectReference targetReference)
+        {
+            if (!RpcBudget.Allow(this, CallKind.Move, nameof(FollowRpc))) return;
             ServerFollow(targetReference.TryGet(out NetworkObject targetObject) ? targetObject.GetComponent<PlayerParty>() : null, null);
+        }
 
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
         private void FollowByNameRpc(string memberName)
         {
+            if (!RpcBudget.Allow(this, CallKind.Move, nameof(FollowByNameRpc))) return;
+            if (!RpcBudget.TextFits(this, nameof(FollowByNameRpc), memberName)) return;
             PlayerParty found = null;
             foreach (var client in NetworkManager.ConnectedClientsList)
             {

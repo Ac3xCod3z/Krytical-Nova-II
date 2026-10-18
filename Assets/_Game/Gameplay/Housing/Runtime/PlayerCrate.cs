@@ -1,3 +1,4 @@
+using KryticalNova.Networking;
 using System;
 using System.Collections.Generic;
 using KryticalNova.Core;
@@ -90,10 +91,18 @@ namespace KryticalNova.Housing
         }
 
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
-        private void StoreRpc(ushort packCell, ushort count) => Answer(ServerStore(packCell, count));
+        private void StoreRpc(ushort packCell, ushort count)
+        {
+            if (!RpcBudget.Allow(this, CallKind.Money, nameof(StoreRpc))) return;
+            Answer(ServerStore(packCell, count));
+        }
 
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
-        private void WithdrawRpc(ushort itemId, ushort count) => Answer(ServerWithdraw(itemId, count));
+        private void WithdrawRpc(ushort itemId, ushort count)
+        {
+            if (!RpcBudget.Allow(this, CallKind.Money, nameof(WithdrawRpc))) return;
+            Answer(ServerWithdraw(itemId, count));
+        }
 
         private void Answer(string refusal)
         {

@@ -26,9 +26,12 @@ namespace KryticalNova.Release
         private static readonly Color Ink = Color.FromArgb(0x05, 0x07, 0x0d);
         private static readonly Color Paper = Color.FromArgb(0xf4, 0xee, 0xda);
         private static readonly Color Muted = Color.FromArgb(0xa9, 0xad, 0xc2);
-        private static readonly Color Pop = Color.FromArgb(0xff, 0xc9, 0x28);
-        private static readonly Color Rose = Color.FromArgb(0xff, 0x5c, 0x8f);
-        private static readonly Color Cyan = Color.FromArgb(0x3f, 0xd2, 0xe2);
+        // The name logo's colours (owner, 18 Oct 2026): its cyan for what to press, its red for warnings; no yellow or pink.
+        private static readonly Color Pop = Color.FromArgb(0x3e, 0xd4, 0xdf);
+        private static readonly Color Rose = Color.FromArgb(0xde, 0x0d, 0x22);
+        private static readonly Color RoseText = Color.FromArgb(0xff, 0x4a, 0x5c); // the red, lifted to read on the dark panel
+        private static readonly Color Cyan = Color.FromArgb(0x3e, 0xd4, 0xdf);
+        private static readonly Image Logo = LoadLogo();
 
         private static PrivateFontCollection fonts;
         private readonly FontFamily display;
@@ -231,17 +234,11 @@ namespace KryticalNova.Release
             g.TextRenderingHint = TextRenderingHint.AntiAliasGridFit;
             g.FillRectangle(dots, ClientRectangle);
 
-            // The title: yellow letters with an ink outline and a hard shadow, as on the control page.
-            using (var path = new GraphicsPath())
+            // The title: the game's name logo (owner, 18 Oct 2026), as on the control page.
+            if (Logo != null)
             {
-                path.AddString("KRYTICAL NOVA", display, 0, 66f, new Point(26, 18), StringFormat.GenericDefault);
-                using (var shadow = (GraphicsPath)path.Clone())
-                {
-                    shadow.Transform(new Matrix(1, 0, 0, 1, 5, 5));
-                    using (var ink = new SolidBrush(Ink)) g.FillPath(ink, shadow);
-                }
-                using (var outline = new Pen(Ink, 6f) { LineJoin = LineJoin.Round }) g.DrawPath(outline, path);
-                using (var fill = new SolidBrush(Pop)) g.FillPath(fill, path);
+                g.InterpolationMode = InterpolationMode.HighQualityBicubic;
+                g.DrawImage(Logo, new Rectangle(22, 8, 172, 86));
             }
             DrawTag(g, "LAUNCHER", new Point(30, 96), Rose);
             if (config.channel != "live") DrawTag(g, config.channel.ToUpperInvariant() + " LINE", new Point(640, 32), Cyan);
@@ -251,7 +248,7 @@ namespace KryticalNova.Release
             ComicBox(g, panel, Panel);
             if (stage == Stage.UpdateReady) DrawTag(g, "NEW", new Point(panel.Right - 78, panel.Top + 18), Rose);
             using (var title = new Font(display, 30f))
-            using (var brush = new SolidBrush(stage == Stage.Failed ? Rose : Pop))
+            using (var brush = new SolidBrush(stage == Stage.Failed ? RoseText : Pop))
                 g.DrawString(headline, title, brush, panel.Left + 20, panel.Top + 14);
             using (var text = new Font("Segoe UI Semibold", 11.5f))
             using (var brush = new SolidBrush(Paper))
@@ -287,7 +284,7 @@ namespace KryticalNova.Release
                 g.TranslateTransform(box.X, box.Y);
                 g.MultiplyTransform(new Matrix(1, 0, -0.14f, 1, 0, 0));
                 using (var brush = new SolidBrush(fill)) g.FillRectangle(brush, 0, 0, box.Width, box.Height);
-                using (var ink = new SolidBrush(Ink)) g.DrawString(text, font, ink, 5, 2);
+                using (var ink = new SolidBrush(fill == Rose ? Paper : Ink)) g.DrawString(text, font, ink, 5, 2);
                 g.Restore(state);
             }
         }
@@ -312,6 +309,36 @@ namespace KryticalNova.Release
             }
             return tile;
         }
+
+        private static Image LoadLogo()
+        {
+            try
+            {
+                using (Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("Logo.png"))
+                    return stream != null ? new Bitmap(Image.FromStream(stream)) : null;
+            }
+            catch (Exception) { return null; }
+        }
+
+        // Windows draws the top bar: dark, in the launcher's own navy where Windows 11 allows it (owner, 18 Oct 2026).
+        [DllImport("dwmapi.dll")]
+        private static extern int DwmSetWindowAttribute(IntPtr window, int attribute, ref int value, int size);
+        private const int DarkMode = 20, CaptionColour = 35, CaptionTextColour = 36;
+
+        protected override void OnHandleCreated(EventArgs e)
+        {
+            base.OnHandleCreated(e);
+            try
+            {
+                int on = 1, caption = ColorRef(Page), text = ColorRef(Paper);
+                DwmSetWindowAttribute(Handle, DarkMode, ref on, sizeof(int));
+                DwmSetWindowAttribute(Handle, CaptionColour, ref caption, sizeof(int));
+                DwmSetWindowAttribute(Handle, CaptionTextColour, ref text, sizeof(int));
+            }
+            catch (Exception) { /* an older Windows keeps its own bar */ }
+        }
+
+        private static int ColorRef(Color c) => c.R | (c.G << 8) | (c.B << 16);
 
         // Bangers, the game's comic font, travels inside the launcher.
         private static FontFamily LoadDisplayFont()

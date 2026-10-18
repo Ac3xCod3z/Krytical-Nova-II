@@ -1,3 +1,4 @@
+using KryticalNova.Networking;
 using KryticalNova.Core;
 using KryticalNova.Economy;
 using KryticalNova.NPC;
@@ -87,7 +88,11 @@ namespace KryticalNova.Items
         }
 
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
-        private void RefillRpc() => Tell(ServerRefill());
+        private void RefillRpc()
+        {
+            if (!RpcBudget.Allow(this, CallKind.Items, nameof(RefillRpc))) return;
+            Tell(ServerRefill());
+        }
 
         /// <summary>Server: refills every Flask in the Pack for Creds. Returns what the player is told.</summary>
         public string ServerRefill()

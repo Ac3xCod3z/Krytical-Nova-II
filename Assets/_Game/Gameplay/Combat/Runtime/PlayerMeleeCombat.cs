@@ -463,6 +463,7 @@ namespace KryticalNova.Combat
             if (!serverSwingOpen || comboStep != serverSwingStep)
             {
                 Debug.Log($"[{nameof(PlayerMeleeCombat)}:{name}] Hit ignored: no open swing for combo step {comboStep}.", this);
+                if (IsSpawned && IsServer) NetworkHealth.Record(OwnerClientId, LagEvent.LateHit);
                 return false;
             }
 
@@ -471,6 +472,7 @@ namespace KryticalNova.Combat
             if (sinceSwing > maxWindow)
             {
                 Debug.Log($"[{nameof(PlayerMeleeCombat)}:{name}] Hit ignored: step {comboStep} arrived after its window ({sinceSwing:0.00}s > {maxWindow:0.00}s).", this);
+                if (IsSpawned && IsServer) NetworkHealth.Record(OwnerClientId, LagEvent.LateHit);
                 return false;
             }
 
@@ -651,14 +653,42 @@ namespace KryticalNova.Combat
             ExecuteAuthoritativeStrike(target, comboStep);
         }
 
-        [ServerRpc]
+        [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
         private void RequestMeleeStrikeDamageServerRpc(ulong targetNetworkObjectId, int comboStep)
         {
-            if (!NetworkManager.Singleton.SpawnManager.SpawnedObjects.TryGetValue(targetNetworkObjectId, out var targetNetObj))
+            const string call = nameof(RequestMeleeStrikeDamageServerRpc);
+            if (!RpcBudget.Allow(this, CallKind.Combat, call)) return;
+            if (comboStep < 1 || comboStep > 3)
+            {
+                RpcBudget.Refuse(this, call, $"Reported a hit with combo step {comboStep}", "There is no such step (1 to 3)");
                 return;
+            }
+            // Gone already (it died or left a moment ago): normal with any delay, so not flagged, only counted as lag.
+            if (!NetworkManager.Singleton.SpawnManager.SpawnedObjects.TryGetValue(targetNetworkObjectId, out var targetNetObj))
+            {
+                NetworkHealth.Record(OwnerClientId, LagEvent.GoneTarget);
+                return;
+            }
 
             var damageable = targetNetObj.GetComponent<IDamageable>();
-            if (damageable == null) return;
+            if (damageable == null)
+            {
+                RpcBudget.Refuse(this, call, $"Reported hitting {targetNetObj.name}", "That cannot be hit");
+                return;
+            }
+            // The claims a real game never makes: hitting a friend, or from beyond reach (online phase 2: tighter checks,
+            // refusals logged). A swing that closed a moment before the report is normal with delay and only ignored.
+            if (damageable.IsAlive && !CombatHostility.IsHostile(transform, damageable))
+            {
+                RpcBudget.Refuse(this, call, $"Reported hitting {damageable.EntityName}", "Not an enemy");
+                return;
+            }
+            float reach = Vector3.Distance(transform.position, damageable.Transform.position);
+            if (reach > serverMaxValidationRange)
+            {
+                RpcBudget.Refuse(this, call, $"Reported hitting {damageable.EntityName} {reach:0.0} m away", $"Beyond melee reach ({serverMaxValidationRange:0.0} m)");
+                return;
+            }
 
             ExecuteAuthoritativeStrike(damageable, comboStep);
         }

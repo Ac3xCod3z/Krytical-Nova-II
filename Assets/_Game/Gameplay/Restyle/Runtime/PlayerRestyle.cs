@@ -1,3 +1,4 @@
+using KryticalNova.Networking;
 using System;
 using KryticalNova.CharacterCreation;
 using KryticalNova.Core;
@@ -88,7 +89,11 @@ namespace KryticalNova.Restyle
         }
 
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
-        private void RestyleRpc(byte service, CharacterNetState proposed) => ServerRestyle((RestyleService)service, proposed.ToRecipe());
+        private void RestyleRpc(byte service, CharacterNetState proposed)
+        {
+            if (!RpcBudget.Allow(this, CallKind.Money, nameof(RestyleRpc))) return;
+            ServerRestyle((RestyleService)service, proposed.ToRecipe());
+        }
 
         // ------------------------------------------------------------------ server
 

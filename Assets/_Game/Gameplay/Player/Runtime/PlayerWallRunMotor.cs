@@ -1,3 +1,4 @@
+using KryticalNova.Networking;
 using System;
 using System.Collections.Generic;
 using KryticalNova.Core;
@@ -230,16 +231,23 @@ namespace KryticalNova.Player
                 // Checked here first, so a bad click is refused at once.
                 bool jump = movementSkills != null && movementSkills.IsJumpSelected;
                 if (!Decide(point, normal, surface, Feet, fromJump: jump, out _, out string early)) { Message?.Invoke(early); return true; }
-                RequestClimbServerRpc(point, normal, obstacleLayers, modelForwardOffset);
+                RequestClimbServerRpc(point, normal);
                 return true;
             }
             if (!ServerClimbClicked(point, normal, surface, obstacleLayers, modelForwardOffset, out string reason)) Message?.Invoke(reason);
             return true;
         }
 
-        [ServerRpc]
-        private void RequestClimbServerRpc(Vector3 point, Vector3 normal, int obstacleLayers, float modelForwardOffset)
+        [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
+        private void RequestClimbServerRpc(Vector3 point, Vector3 normal)
         {
+            if (!RpcBudget.Allow(this, CallKind.Move, nameof(RequestClimbServerRpc))) return;
+            if (!RpcBudget.PointFits(this, nameof(RequestClimbServerRpc), point) || !RpcBudget.PointFits(this, nameof(RequestClimbServerRpc), normal)) return;
+            // The layers and the model's turn are the server's own: a game may only say where it clicked (online phase 2).
+            var player = GetComponent<PointAndClickPlayer>();
+            if (player == null) return;
+            int obstacleLayers = player.RaycastLayers.value;
+            float modelForwardOffset = player.ModelForwardOffset;
             // The click is found again here: the server trusts the point, never a collider the client named.
             Collider surface = FindSurface(point, normal);
             string reason = "That cannot be climbed.";
@@ -350,9 +358,11 @@ namespace KryticalNova.Player
             return ServerDropTo(point, out reason);
         }
 
-        [ServerRpc]
+        [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
         private void RequestDropServerRpc(Vector3 point)
         {
+            if (!RpcBudget.Allow(this, CallKind.Move, nameof(RequestDropServerRpc))) return;
+            if (!RpcBudget.PointFits(this, nameof(RequestDropServerRpc), point)) return;
             if (!ServerDropTo(point, out string reason)) ClimbRefusedRpc(reason);
         }
 

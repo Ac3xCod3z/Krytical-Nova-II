@@ -172,6 +172,11 @@ function showPlayers(players) {
     cell(row, String(p.level));
     cell(row, p.faction, "hide-phone");
     cell(row, p.map, "hide-phone");
+    // Lag, not cheating: ping, and hits too late to count (or on a target already gone) in the last 5 minutes.
+    const late = (p.lateHits || 0) + (p.goneTargets || 0);
+    const lag = cell(row, (p.ping >= 0 ? p.ping + " ms" : "-") + (late ? " · " + late + " late" : ""));
+    lag.title = (p.lateHits || 0) + " hits after their swing closed, " + (p.goneTargets || 0) + " on a target already gone (last 5 minutes)";
+    if (p.ping > 250 || late >= 20) lag.className = "lagging";
     const td = cell(row, "");
     const kick = document.createElement("button");
     kick.className = "small red";
@@ -314,10 +319,58 @@ async function refresh() {
     showReach(s);
     showList(s.serverList || [], s.listPublished || "-", s.statusPort || 0, s.publicAddress || "");
     await refreshLog();
+    await refreshFlags();
   } catch (e) {
     if (check) { $("pill").textContent = "NO ANSWER"; $("pill").className = "pill down"; }
   }
 }
+
+// ---- Flags (online phase 2, milestone 3): foul play, live. A repeat comes back with a new id and a higher count, and
+// replaces its card (keyed by player, request, reason and action), moving it to the top.
+let lastFlag = 0;
+const flagCards = new Map();
+let flagTotal = 0;
+
+async function refreshFlags() {
+  const data = await call("/api/flags?after=" + lastFlag);
+  if (!data.flags.length) return;
+  lastFlag = data.last;
+  const list = $("flags");
+  $("flagsEmpty").hidden = true;
+  for (const f of data.flags) {
+    const key = [f.connection, f.call, f.why, f.action].join("|");
+    let card = flagCards.get(key);
+    if (!card) { card = document.createElement("div"); flagCards.set(key, card); flagTotal++; }
+    card.className = "flag fresh" + (f.action === "Disconnected" ? " kick" : "");
+    card.dataset.search = (f.character + " " + f.account + " " + f.map + " " + f.call).toLowerCase();
+    card.replaceChildren();
+    const when = document.createElement("span"); when.className = "when"; when.textContent = f.time;
+    const who = document.createElement("span"); who.className = "who"; who.textContent = f.character + " ";
+    const acct = document.createElement("small"); acct.textContent = "account " + f.account + " · connection " + f.connection; who.appendChild(acct);
+    const act = document.createElement("span"); act.className = "act"; act.textContent = f.action;
+    if (f.count > 1) { const n = document.createElement("span"); n.className = "count"; n.textContent = "x" + f.count; who.appendChild(n); }
+    const detail = document.createElement("span"); detail.className = "detail"; detail.textContent = f.what + " — " + f.why + ".";
+    const where = document.createElement("span"); where.className = "where"; where.textContent = f.map + " at (" + f.where + ") · request " + f.call;
+    card.append(when, who, act, detail, where);
+    list.insertBefore(card, $("flagsEmpty").nextSibling);
+    setTimeout(() => card.classList.remove("fresh"), 1300);
+  }
+  while (flagCards.size > 300) { const [k, c] = flagCards.entries().next().value; c.remove(); flagCards.delete(k); }
+  $("flagCount").textContent = flagTotal + (flagTotal === 1 ? " flag" : " flags");
+  $("flagCount").className = "chip warn";
+  filterFlags();
+}
+
+function filterFlags() {
+  const q = $("flagFilter").value.trim().toLowerCase();
+  for (const card of flagCards.values()) card.hidden = !!q && !card.dataset.search.includes(q);
+}
+$("flagFilter").addEventListener("input", filterFlags);
+$("flagClear").addEventListener("click", () => {
+  for (const card of flagCards.values()) card.remove();
+  flagCards.clear(); flagTotal = 0;
+  $("flagsEmpty").hidden = false; $("flagCount").textContent = "none yet"; $("flagCount").className = "chip";
+});
 
 async function refreshLog() {
   const data = await call("/api/log?after=" + lastLog);

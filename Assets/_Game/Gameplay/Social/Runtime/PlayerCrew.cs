@@ -1,3 +1,4 @@
+using KryticalNova.Networking;
 using System;
 using System.Collections.Generic;
 using KryticalNova.Core;
@@ -190,18 +191,32 @@ namespace KryticalNova.Social
         }
 
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
-        private void FoundRpc(string crewName, byte symbol, byte colour) => CrewService.ServerFound(this, crewName, symbol, colour);
+        private void FoundRpc(string crewName, byte symbol, byte colour)
+        {
+            if (!RpcBudget.Allow(this, CallKind.Social, nameof(FoundRpc))) return;
+            if (!RpcBudget.TextFits(this, nameof(FoundRpc), crewName)) return;
+            CrewService.ServerFound(this, crewName, symbol, colour);
+        }
 
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
-        private void InviteRpc(NetworkObjectReference targetReference) =>
+        private void InviteRpc(NetworkObjectReference targetReference)
+        {
+            if (!RpcBudget.Allow(this, CallKind.Social, nameof(InviteRpc))) return;
             CrewService.ServerInvite(this, targetReference.TryGet(out NetworkObject targetObject) ? targetObject.GetComponent<PlayerCrew>() : null);
+        }
 
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
-        private void InviteByNameRpc(string playerName) => CrewService.ServerInviteByName(this, playerName);
+        private void InviteByNameRpc(string playerName)
+        {
+            if (!RpcBudget.Allow(this, CallKind.Social, nameof(InviteByNameRpc))) return;
+            if (!RpcBudget.TextFits(this, nameof(InviteByNameRpc), playerName)) return;
+            CrewService.ServerInviteByName(this, playerName);
+        }
 
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
         private void RespondRpc(bool accept)
         {
+            if (!RpcBudget.Allow(this, CallKind.Social, nameof(RespondRpc))) return;
             string crewId = invitedToCrew, inviter = invitedBy;
             bool live = !string.IsNullOrEmpty(crewId) && Time.time <= inviteExpires;
             invitedToCrew = null;
@@ -212,28 +227,66 @@ namespace KryticalNova.Social
         }
 
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
-        private void LeaveRpc() => CrewService.ServerLeave(this);
+        private void LeaveRpc()
+        {
+            if (!RpcBudget.Allow(this, CallKind.Social, nameof(LeaveRpc))) return;
+            CrewService.ServerLeave(this);
+        }
 
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
-        private void ExpelRpc(string memberId) => CrewService.ServerExpel(this, memberId);
+        private void ExpelRpc(string memberId)
+        {
+            if (!RpcBudget.Allow(this, CallKind.Social, nameof(ExpelRpc))) return;
+            if (!RpcBudget.TextFits(this, nameof(ExpelRpc), memberId)) return;
+            CrewService.ServerExpel(this, memberId);
+        }
 
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
-        private void OfficerRpc(string memberId, bool officer) => CrewService.ServerSetOfficer(this, memberId, officer);
+        private void OfficerRpc(string memberId, bool officer)
+        {
+            if (!RpcBudget.Allow(this, CallKind.Social, nameof(OfficerRpc))) return;
+            if (!RpcBudget.TextFits(this, nameof(OfficerRpc), memberId)) return;
+            CrewService.ServerSetOfficer(this, memberId, officer);
+        }
 
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
-        private void HandOverRpc(string memberId) => CrewService.ServerHandOver(this, memberId);
+        private void HandOverRpc(string memberId)
+        {
+            if (!RpcBudget.Allow(this, CallKind.Social, nameof(HandOverRpc))) return;
+            if (!RpcBudget.TextFits(this, nameof(HandOverRpc), memberId)) return;
+            CrewService.ServerHandOver(this, memberId);
+        }
 
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
-        private void TitleRpc(string memberId, string title) => CrewService.ServerSetTitle(this, memberId, title);
+        private void TitleRpc(string memberId, string title)
+        {
+            if (!RpcBudget.Allow(this, CallKind.Social, nameof(TitleRpc))) return;
+            if (!RpcBudget.TextFits(this, nameof(TitleRpc), memberId)) return;
+            if (!RpcBudget.TextFits(this, nameof(TitleRpc), title)) return;
+            CrewService.ServerSetTitle(this, memberId, title);
+        }
 
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
-        private void AnnouncementRpc(string text) => CrewService.ServerSetAnnouncement(this, text);
+        private void AnnouncementRpc(string text)
+        {
+            if (!RpcBudget.Allow(this, CallKind.Social, nameof(AnnouncementRpc))) return;
+            if (!RpcBudget.TextFits(this, nameof(AnnouncementRpc), text)) return;
+            CrewService.ServerSetAnnouncement(this, text);
+        }
 
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
-        private void SymbolRpc(byte symbol, byte colour) => CrewService.ServerSetSymbol(this, symbol, colour);
+        private void SymbolRpc(byte symbol, byte colour)
+        {
+            if (!RpcBudget.Allow(this, CallKind.Social, nameof(SymbolRpc))) return;
+            CrewService.ServerSetSymbol(this, symbol, colour);
+        }
 
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
-        private void DisbandRpc() => CrewService.ServerDisband(this);
+        private void DisbandRpc()
+        {
+            if (!RpcBudget.Allow(this, CallKind.Social, nameof(DisbandRpc))) return;
+            CrewService.ServerDisband(this);
+        }
 
         // ------------------------------------------------------------------ server -> owner (used by CrewService)
 

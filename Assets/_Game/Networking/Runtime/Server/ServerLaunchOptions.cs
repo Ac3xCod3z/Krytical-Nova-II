@@ -57,6 +57,8 @@ namespace KryticalNova.Networking
         public string certificateFile = "";
         [Tooltip("The secret key that goes with the certificate. Empty: certificates/server.key beside the server's folder. Never shared.")]
         public string privateKeyFile = "";
+        [Tooltip("Online phase 2: the speed limit on each kind of request a game sends (burst at once, then per second), how many ignored requests disconnect a game, and the longest text taken. Restart the server after a change.")]
+        public CallLimits callLimits = new CallLimits();
 
         /// <summary>The status port in use.</summary>
         public int StatusPort => statusPort > 0 ? statusPort : port + 1;
@@ -118,9 +120,16 @@ namespace KryticalNova.Networking
             {
                 if (File.Exists(file))
                 {
-                    JsonUtility.FromJsonOverwrite(File.ReadAllText(file), options);
+                    string text = File.ReadAllText(file);
+                    JsonUtility.FromJsonOverwrite(text, options);
                     options.ServerFolder = serverFolder;
                     notes.Add("settings from " + file);
+                    // A file from before the speed limits gains them, at their defaults, for the owner to tune.
+                    if (!text.Contains("\"callLimits\""))
+                    {
+                        File.WriteAllText(file, JsonUtility.ToJson(options, true));
+                        notes.Add("added the request speed limits (callLimits) to the settings file");
+                    }
                 }
                 else
                 {

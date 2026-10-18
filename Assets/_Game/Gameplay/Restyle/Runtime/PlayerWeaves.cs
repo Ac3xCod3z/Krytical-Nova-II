@@ -1,3 +1,4 @@
+using KryticalNova.Networking;
 using System;
 using KryticalNova.Core;
 using KryticalNova.Economy;
@@ -150,19 +151,39 @@ namespace KryticalNova.Restyle
         }
 
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
-        private void WeaveRpc(byte slot, ushort lineId) => ServerWeave((EquipSlot)slot, lineId);
+        private void WeaveRpc(byte slot, ushort lineId)
+        {
+            if (!RpcBudget.Allow(this, CallKind.Money, nameof(WeaveRpc))) return;
+            ServerWeave((EquipSlot)slot, lineId);
+        }
 
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
-        private void ClearWeaveRpc(byte slot) => ServerClearWeave((EquipSlot)slot);
+        private void ClearWeaveRpc(byte slot)
+        {
+            if (!RpcBudget.Allow(this, CallKind.Money, nameof(ClearWeaveRpc))) return;
+            ServerClearWeave((EquipSlot)slot);
+        }
 
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
-        private void DyeRpc(byte slot, ushort colourway) => ServerDye((EquipSlot)slot, colourway);
+        private void DyeRpc(byte slot, ushort colourway)
+        {
+            if (!RpcBudget.Allow(this, CallKind.Money, nameof(DyeRpc))) return;
+            ServerDye((EquipSlot)slot, colourway);
+        }
 
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
-        private void MorphRpc(ushort petItemId, byte stage) => ServerMorph(petItemId, stage);
+        private void MorphRpc(ushort petItemId, byte stage)
+        {
+            if (!RpcBudget.Allow(this, CallKind.Money, nameof(MorphRpc))) return;
+            ServerMorph(petItemId, stage);
+        }
 
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
-        private void ClearMorphRpc() => ServerClearMorph();
+        private void ClearMorphRpc()
+        {
+            if (!RpcBudget.Allow(this, CallKind.Money, nameof(ClearMorphRpc))) return;
+            ServerClearMorph();
+        }
 
         // ------------------------------------------------------------------ server
 

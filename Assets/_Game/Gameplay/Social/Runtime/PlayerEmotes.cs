@@ -1,3 +1,4 @@
+using KryticalNova.Networking;
 using System;
 using KryticalNova.CharacterCreation;
 using KryticalNova.Core;
@@ -144,7 +145,11 @@ namespace KryticalNova.Social
         }
 
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
-        private void PlayRpc(FixedString64Bytes key) => ServerPlay(key.ToString());
+        private void PlayRpc(FixedString64Bytes key)
+        {
+            if (!RpcBudget.Allow(this, CallKind.Cosmetic, nameof(PlayRpc))) return;
+            ServerPlay(key.ToString());
+        }
 
         // ------------------------------------------------------------------ deciding (server)
 

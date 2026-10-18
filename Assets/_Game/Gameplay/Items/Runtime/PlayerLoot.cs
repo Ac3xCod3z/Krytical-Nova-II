@@ -1,3 +1,4 @@
+using KryticalNova.Networking;
 using KryticalNova.Core;
 using KryticalNova.Factions;
 using KryticalNova.Progression;
@@ -92,13 +93,18 @@ namespace KryticalNova.Items
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
         private void PickupRpc(NetworkObjectReference dropReference)
         {
+            if (!RpcBudget.Allow(this, CallKind.Items, nameof(PickupRpc))) return;
             WorldDrop drop = dropReference.TryGet(out NetworkObject dropObject) ? dropObject.GetComponent<WorldDrop>() : null;
             if (drop == null) { Tell(LootRules.ReasonGone); return; }
             ServerPickup(drop);
         }
 
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
-        private void DropRpc(ItemLocation at) => ServerDrop(at);
+        private void DropRpc(ItemLocation at)
+        {
+            if (!RpcBudget.Allow(this, CallKind.Items, nameof(DropRpc))) return;
+            ServerDrop(at);
+        }
 
         // ------------------------------------------------------------------ server
 

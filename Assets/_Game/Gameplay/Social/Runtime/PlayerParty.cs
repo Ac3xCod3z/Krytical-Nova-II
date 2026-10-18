@@ -1,3 +1,4 @@
+using KryticalNova.Networking;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -144,6 +145,8 @@ namespace KryticalNova.Social
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
         private void InviteByNameRpc(string playerName)
         {
+            if (!RpcBudget.Allow(this, CallKind.Social, nameof(InviteByNameRpc))) return;
+            if (!RpcBudget.TextFits(this, nameof(InviteByNameRpc), playerName)) return;
             Online.Clear();
             OnlineParty.Clear();
             foreach (var client in NetworkManager.ConnectedClientsList)
@@ -170,12 +173,16 @@ namespace KryticalNova.Social
         }
 
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
-        private void InviteRpc(NetworkObjectReference targetReference) =>
+        private void InviteRpc(NetworkObjectReference targetReference)
+        {
+            if (!RpcBudget.Allow(this, CallKind.Social, nameof(InviteRpc))) return;
             ServerInvite(targetReference.TryGet(out NetworkObject targetObject) ? targetObject.GetComponent<PlayerParty>() : null);
+        }
 
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
         private void RespondRpc(bool accept)
         {
+            if (!RpcBudget.Allow(this, CallKind.Social, nameof(RespondRpc))) return;
             PlayerParty from = invitedBy;
             bool live = from != null && from.IsSpawned && !from.leaving && Time.time <= inviteExpires;
             invitedBy = null;
@@ -214,6 +221,7 @@ namespace KryticalNova.Social
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
         private void LeaveRpc()
         {
+            if (!RpcBudget.Allow(this, CallKind.Social, nameof(LeaveRpc))) return;
             if (group == null) { Tell("You are not in a squad."); return; }
             Remove(this, $"{MemberName} left the squad.", "You left the squad.");
         }
@@ -221,6 +229,8 @@ namespace KryticalNova.Social
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
         private void KickRpc(string playerName)
         {
+            if (!RpcBudget.Allow(this, CallKind.Social, nameof(KickRpc))) return;
+            if (!RpcBudget.TextFits(this, nameof(KickRpc), playerName)) return;
             if (!TryLeadMember(playerName, out PlayerParty member)) return;
             Remove(member, $"{member.MemberName} was removed from the squad.", "You were removed from the squad.");
         }
@@ -228,6 +238,8 @@ namespace KryticalNova.Social
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
         private void PromoteRpc(string playerName)
         {
+            if (!RpcBudget.Allow(this, CallKind.Social, nameof(PromoteRpc))) return;
+            if (!RpcBudget.TextFits(this, nameof(PromoteRpc), playerName)) return;
             if (!TryLeadMember(playerName, out PlayerParty member)) return;
             group.Members.Remove(member);
             group.Members.Insert(0, member);

@@ -1,3 +1,4 @@
+using KryticalNova.Networking;
 using System;
 using DG.Tweening;
 using Kinemation.MotionWarping.Runtime.Core;
@@ -128,7 +129,7 @@ namespace KryticalNova.Player
 
             if (!HasAuthority)
             {
-                RequestJumpServerRpc(clickedPoint, obstacleLayers.value, modelForwardOffset);
+                RequestJumpServerRpc(clickedPoint);
                 BeginOwnJump();
                 return true;
             }
@@ -137,10 +138,15 @@ namespace KryticalNova.Player
             return true;
         }
 
-        [ServerRpc]
-        private void RequestJumpServerRpc(Vector3 clickedPoint, int obstacleLayersValue, float modelForwardOffset)
+        [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
+        private void RequestJumpServerRpc(Vector3 clickedPoint)
         {
-            if (TryPlanJump(clickedPoint, obstacleLayersValue, modelForwardOffset, out string reason)) BeginJump();
+            if (!RpcBudget.Allow(this, CallKind.Move, nameof(RequestJumpServerRpc))) return;
+            if (!RpcBudget.PointFits(this, nameof(RequestJumpServerRpc), clickedPoint)) return;
+            // The layers and the model's turn are the server's own: a game may only say where it clicked (online phase 2).
+            var player = GetComponent<PointAndClickPlayer>();
+            if (player == null) return;
+            if (TryPlanJump(clickedPoint, player.RaycastLayers.value, player.ModelForwardOffset, out string reason)) BeginJump();
             else JumpRejectedRpc(reason);
         }
 

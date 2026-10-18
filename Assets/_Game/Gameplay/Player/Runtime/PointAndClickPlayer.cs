@@ -1,3 +1,4 @@
+using KryticalNova.Networking;
 using System;
 using System.Collections.Generic;
 using KryticalNova.Core;
@@ -56,10 +57,14 @@ namespace KryticalNova.Player
         [SerializeField] private LayerMask groundLayers;
         [Tooltip("Include walls as well as ground so clicks cannot pass through obstacles. Exclude the player.")]
         [SerializeField] private LayerMask raycastLayers = Physics.DefaultRaycastLayers;
+        /// <summary>What clicks, jumps and climbs test against. The server uses its own copy, never a game's (online phase 2).</summary>
+        public LayerMask RaycastLayers => raycastLayers;
         [SerializeField, Min(MinimumPositiveValue)] private float maximumRayDistance = DefaultRayDistance;
         [SerializeField, Min(MinimumPositiveValue)] private float destinationSampleRadius = DefaultSampleRadius;
         [Tooltip("Use 180 for a model facing local -Z; use 0 for a model facing local +Z.")]
         [SerializeField] private float modelForwardOffset;
+        /// <summary>The model's turn from the root's forward, in degrees. The server uses its own copy, never a game's.</summary>
+        public float ModelForwardOffset => modelForwardOffset;
 
         [Header("Right-Button Orbit")]
         [Tooltip("Degrees per mouse pixel; mouse delta is already frame-integrated.")]
@@ -819,9 +824,10 @@ namespace KryticalNova.Player
             EndTravel(false);
         }
 
-        [ServerRpc]
+        [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
         private void RequestStopMoveServerRpc()
         {
+            if (!RpcBudget.Allow(this, CallKind.Move, nameof(RequestStopMoveServerRpc))) return;
             MoveOrdered?.Invoke();
             StopMoving();
         }
@@ -1050,9 +1056,11 @@ namespace KryticalNova.Player
             return true;
         }
 
-        [ServerRpc]
+        [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
         private void RequestMoveDestinationServerRpc(Vector3 destinationPoint)
         {
+            if (!RpcBudget.Allow(this, CallKind.Move, nameof(RequestMoveDestinationServerRpc))) return;
+            if (!RpcBudget.PointFits(this, nameof(RequestMoveDestinationServerRpc), destinationPoint)) return;
             MoveOrdered?.Invoke();
             if (ServerMoveTo(destinationPoint)) MoveOrderShownClientRpc();
             else MoveRefusedRpc();
@@ -1490,17 +1498,19 @@ namespace KryticalNova.Player
             if (wasAttacking && IsSpawned && !IsServer) RequestCancelAttackServerRpc();
         }
 
-        [ServerRpc]
+        [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
         private void RequestCancelAttackServerRpc()
         {
+            if (!RpcBudget.Allow(this, CallKind.Combat, nameof(RequestCancelAttackServerRpc))) return;
             if (meleeCombat == null || !meleeCombat.IsAttacking) return;
             meleeCombat.CancelAttack();
             StopMoving(); // it may have been walking in; a new order, if any, arrives right behind this
         }
 
-        [ServerRpc]
+        [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
         private void RequestAttackEntityServerRpc(ulong targetNetworkObjectId)
         {
+            if (!RpcBudget.Allow(this, CallKind.Combat, nameof(RequestAttackEntityServerRpc))) return;
             if (NetworkManager.Singleton == null || !NetworkManager.Singleton.SpawnManager.SpawnedObjects.TryGetValue(targetNetworkObjectId, out var targetNetObj))
                 return;
 

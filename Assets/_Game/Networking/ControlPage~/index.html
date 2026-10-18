@@ -12,7 +12,7 @@
 <div id="login" class="login" hidden>
   <form class="panel" id="loginForm" autocomplete="on">
     <span class="tag">Home network · control page</span>
-    <h1>Krytical Nova Server</h1>
+    <h1><img class="logo" src="logo.png" alt="Krytical Nova"></h1>
     <label class="note" for="password">Password (pagePassword in server-settings.json)</label>
     <input id="password" type="password" autocomplete="current-password" required>
     <button type="submit">Open</button>
@@ -22,7 +22,8 @@
 
 <div id="main" class="wrap" hidden>
   <header class="head">
-    <div class="name"><span class="tag">Home network · control page</span><h1 id="serverName">Krytical Nova Server</h1></div>
+    <div class="name"><h1><img class="logo" src="logo.png" alt="Krytical Nova"></h1>
+      <div class="row"><span class="tag">Home network · control page</span><span class="servername" id="serverName">Krytical Nova Server</span></div></div>
     <span class="pill" id="pill">ONLINE</span>
     <div class="stat">
       <span class="chip" id="chipPlayers">0 / 0 players</span>
@@ -47,7 +48,7 @@
   <section class="panel players">
     <h2>Players on</h2>
     <table>
-      <thead><tr><th>Name</th><th>Lv</th><th class="hide-phone">Faction</th><th class="hide-phone">Map</th><th></th></tr></thead>
+      <thead><tr><th>Name</th><th>Lv</th><th class="hide-phone">Faction</th><th class="hide-phone">Map</th><th title="Round trip to the server, and hits that came too late to count in the last 5 minutes (a bad connection, or the server struggling when everyone has them)">Ping · late</th><th></th></tr></thead>
       <tbody id="playerRows"></tbody>
     </table>
     <p class="note" id="noPlayers">Nobody is on.</p>
@@ -109,6 +110,18 @@
     <div class="row gap-top"><button class="cyan" id="publishList" type="button">Publish list</button>
       <span class="note" id="listPublished">Last published: -</span></div>
     <p class="note" id="statusPortNote"></p>
+  </section>
+
+  <section class="panel flags">
+    <div class="row between">
+      <div class="row"><h2>Flags</h2><span class="chip" id="flagCount">none yet</span></div>
+      <div class="row"><input id="flagFilter" placeholder="Filter: a name, account or map" maxlength="40" spellcheck="false">
+        <button class="small ghost" id="flagClear" type="button">Clear view</button></div>
+    </div>
+    <p class="note">Things a real game would never do: too many requests, junk data, impossible claims (a hit from too far
+      away). Who, where, what and why, live. The same thing again from the same player counts up on one line. Every flag is
+      also kept in <b>flags.log</b> beside the saves. Speed limits: <b>callLimits</b> in server-settings.json.</p>
+    <div id="flags" class="flaglist"><p class="note" id="flagsEmpty">Nothing flagged. Good.</p></div>
   </section>
 
   <section class="panel log">
