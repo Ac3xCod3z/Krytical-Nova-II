@@ -217,6 +217,7 @@ Builds/Server/Windows/
 │   ├── Start Server.bat             double-click to start
 │   ├── server-settings.json         your settings (kept across builds)
 │   └── ControlPage/                 the control page's files and fonts
+├── certificates/                    server.crt and server.key: encrypt direct joins (keep server.key private)
 ├── KryticalNovaServer-Save/         the saves
 │   ├── accounts/<id>.json           one per account, with its characters
 │   └── world/                       crews, kiosks, contacts, sponsors
@@ -224,7 +225,25 @@ Builds/Server/Windows/
     └── save_2026-10-16_14-05-09_start.zip   ... the newest 10
 ```
 
-To move the server to another PC, copy all three folders together.
+To move the server to another PC, copy all four folders together.
+
+### Encryption (phase 2)
+
+Everything a game and your server say to each other is encrypted, so nobody on the way can read it or pretend to be
+your server. Relay joins always were; since 18 Oct 2026 Direct joins are too. Nothing to do day to day.
+
+- **The server** proves who it is with a certificate and a secret key, in the `certificates` folder beside the server's
+  folder (above). A rebuild never touches that folder. If they are missing, the server's window and the control page's
+  log say "Direct connections cannot be encrypted": games can then only join through Relay until they are back.
+- **The master key** signs those certificates. It is in your **Documents\KryticalNova-Secrets** folder (never in the
+  project or on GitHub). **Copy that folder to a USB stick or your password manager** as a backup. It is needed again only
+  to set up a new server PC (the move to the old PC) or a rented server.
+- **A certificate for a new server PC:** in Git Bash, from the project folder:
+  `bash Assets/_Game/Networking/Tools~/certificates.sh server "<that server's folder>/../certificates"`. It is made
+  from the master key and copied there.
+- **If the master key is ever lost or leaks:** make a new one (`certificates.sh ca` after moving the old folder away),
+  put its certificate into the game (`Networking/Runtime/ServerEncryption.cs`), publish a new build and make new server
+  certificates. Every older build then cannot join until it updates.
 
 ## 6. Join the server
 
@@ -544,4 +563,6 @@ Things learned the hard way:
   logs a browser that hung up before the answer, and no longer answers the spare connections a browser opens ahead
   and closes unused (answering them filled the log with "Control page request failed: Unable to write data to the
   transport connection", about once a second while the page was open).
+- 18 Oct 2026: phase 2 milestone 2: Direct joins are encrypted (the `certificates` folder beside the server, the
+  master key in Documents\KryticalNova-Secrets); games from before this cannot join a server built after it.
 - 18 Oct 2026: phase 2 milestone 1: the game signs in to Unity by itself and the server checks it; saves are kept under the proven account; old characters are carried over once; GMs are bound to accounts on the control page (no GM password in the game) and F2 opens only for GMs.

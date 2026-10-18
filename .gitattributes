@@ -176,3 +176,6 @@ LightingData.asset     binary
 NavMesh*.asset          binary
 # Adaptive Probe Volume bake data (tens of MB per zone, binary).
 APV_*.bytes             lfs
+
+# Shell scripts run in Git Bash: always LF, or bash stops on the carriage returns
+*.sh                    text eol=lf

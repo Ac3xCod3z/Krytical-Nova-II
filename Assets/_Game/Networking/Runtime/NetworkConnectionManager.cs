@@ -161,7 +161,9 @@ namespace KryticalNova.Networking
                 NetworkManager nm = NetworkManager.Singleton;
                 if (nm == null) return $"Could not start joining {server.name}.";
                 PrepareConnections();
-                nm.GetComponent<UnityTransport>().SetRelayServerData(Unity.Services.Relay.Models.AllocationUtils.ToRelayServerData(place, "dtls"));
+                var relayTransport = nm.GetComponent<UnityTransport>();
+                ServerEncryption.Off(relayTransport); // Relay encrypts by itself
+                relayTransport.SetRelayServerData(Unity.Services.Relay.Models.AllocationUtils.ToRelayServerData(place, "dtls"));
                 return null;
             }
             catch (Unity.Services.Relay.RelayServiceException e)
@@ -262,7 +264,8 @@ namespace KryticalNova.Networking
                         StartLocalHost();
                         yield break;
                     }
-                    StartLocalClient();
+                    // A dedicated test server (the test session's join=1) encrypts; an Editor hosting its own test does not.
+                    StartLocalClient("", 0, EditorTestSession.JoinOnly);
                 }
                 yield return retry;
             }
@@ -356,7 +359,9 @@ namespace KryticalNova.Networking
         }
 
         /// <summary>Connects as a client to a local or direct IP/port server.</summary>
-        public bool StartLocalClient(string ip = "", ushort port = 0)
+        /// <param name="encrypted">The server is a dedicated server (it encrypts direct connections); false for an
+        /// Editor hosting its own test session.</param>
+        public bool StartLocalClient(string ip = "", ushort port = 0, bool encrypted = true)
         {
             PrepareConnections();
             if (NetworkManager.Singleton == null)
@@ -369,6 +374,12 @@ namespace KryticalNova.Networking
             ushort targetPort = ResolvePort(port);
 
             ConfigureTransport(address, targetPort);
+            var clientTransport = NetworkManager.Singleton.GetComponent<UnityTransport>();
+            if (clientTransport != null)
+            {
+                if (encrypted) ServerEncryption.UseOnClient(clientTransport);
+                else ServerEncryption.Off(clientTransport);
+            }
             OfflinePlayerHandoff.ReleaseOfflineAvatar();
             bool success = NetworkManager.Singleton.StartClient();
             if (success)
@@ -661,12 +672,27 @@ namespace KryticalNova.Networking
             UnityKeys.EnsureAsync();
             KryticalNova.Persistence.ServerSave.CarryOverEnabled = options.carryOverOldSaves;
             ServerReach.Begin(options);
+            var transport = nm.GetComponent<UnityTransport>();
             if (options.UsesRelay)
             {
+                ServerEncryption.Off(transport); // Relay encrypts by itself
                 // Relay drops a server it no longer hears (the internet went down): it restarts, saving first, for a new place.
                 nm.OnTransportFailure += () => StartCoroutine(RestartAfterRelayLoss());
                 StartRelayServer(options, nm);
                 return;
+            }
+            // Direct connections are encrypted (online phase 2): every game insists on it, so without the certificate
+            // nobody can join directly (Relay still works).
+            if (ServerEncryption.TryLoadServerSecrets(options, out string certificate, out string privateKey, out string certificateProblem))
+            {
+                ServerEncryption.UseOnServer(transport, certificate, privateKey);
+                Debug.Log("[Server] Direct connections are encrypted.");
+            }
+            else
+            {
+                ServerEncryption.Off(transport);
+                ReportError($"[Server] Direct connections cannot be encrypted: {certificateProblem}. Games cannot join directly until the " +
+                            "certificate is there (Server Guide, \"Encryption\"); they can still join through Relay.");
             }
             if (nm.StartServer())
             {
@@ -812,6 +838,8 @@ namespace KryticalNova.Networking
                     // Forced: with Unity's Dedicated Server package the transport otherwise takes the package's port
                     // (7777 when none is given) over this one. A server's -port still wins, through ServerLaunchOptions.
                     transport.SetConnectionData(true, address, port, "0.0.0.0");
+                    // Unencrypted unless a dedicated server's own path, or a game joining one, switches it on after this.
+                    ServerEncryption.Off(transport);
                 }
             }
         }

@@ -1,7 +1,7 @@
 # Online phase 2: lock the door
 
 Part of `online-roadmap.md`; the rules are in `online-security-model.md`. Written 11 Oct 2026.
-**Milestone 1 built 18 Oct 2026** (see "As built" below); the rest is not built. Order (owner, 18 Oct 2026): milestone 1,
+**Milestones 1 and 2 built 18 Oct 2026** (see "As built" below); the rest is not built. Order (owner, 18 Oct 2026): milestone 1,
 then **Phase 3** (client-side prediction), then milestones 2 to 5 of this phase.
 
 ## Goal
@@ -46,6 +46,22 @@ tighter checks (that part is milestone 3).
   through its own Unity sign-in, the server carried the account (1 character) over to the proven one, Tolan stood in
   the world; Bind on the page made him GM at once with the tag. EditMode tests 911 / 911 (`AccountProofTests`: forged,
   changed, expired, foreign-project tokens refused; the keys read; the carry-over once only; `GmRosterTests`).
+
+**Milestone 2, encrypted direct connections (18 Oct 2026).** Owner's pick: the master key lives in Documents with a
+backup, never in the project.
+- *Certificates* (`Networking/Tools~/certificates.sh`, openssl in Git Bash): a certificate authority made once
+  (`ca.key` secret, `ca.crt` public) in `Documents/KryticalNova-Secrets`; a server key and certificate for the name
+  `krytical-nova-server`, signed by it and copied into a `certificates` folder beside the server's folder (a rebuild
+  never touches it; the settings may name other files: `certificateFile`, `privateKeyFile`).
+- *Server* (`ServerEncryption`, `NetworkConnectionManager.StartDedicatedServer`): in Direct mode it encrypts with its
+  certificate and key (`UnityTransport.SetServerSecrets`); without them it says so and games can join only through
+  Relay. Relay keeps its own encryption.
+- *Game*: every join of a dedicated server (the server list, the F1 panel, the Editor's join to a test server) encrypts
+  and accepts only a server our authority signed (`SetClientSecrets`, the authority's public certificate in
+  `ServerEncryption.AuthorityCertificate`); an Editor hosting its own test session stays unencrypted. Games from before
+  this cannot join a server built after it.
+- *Tried:* the measure server (port 7790) logged "Direct connections are encrypted"; the Editor joined it directly with
+  encryption on and stood in town (109 fps, 37 ms). EditMode tests 911 / 911.
 
 ## Work items
 
