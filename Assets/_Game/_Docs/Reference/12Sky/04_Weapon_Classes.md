@@ -238,6 +238,28 @@ Viking + Elven.
   Stance's Move Speed took the receiver from 5 to 6 m/s. Quirk: once a member has refreshed it, the caster's own badge
   says "from Squadmate".
 
+## Equal strike timings (as built, 17 Oct 2026)
+
+Owner, 17 Oct 2026: no class may have an edge from its animations. Every class's attack of the same level and kind
+(single hit, two-hit, three-hit, area) lands its hits at the same moments and locks the caster for the same time;
+cooldowns were already equal. **Krytical Nova ▸ Progression ▸ Equalize Strike Timings** (`StrikeTimingEqualizer`) gives
+each group the whole timing of the class in its middle and fits every other clip to it: speed between 0.7x and 1.5x
+from its first and last impact frames, then a trimmed wind-up for a clip too slow (`castClipTrim`) or a short hold in the
+ready pose for one too quick (`castClipDelay`) (owner's pick: trim + speed); the hits are placed on the shared moments
+and the lock is a number of seconds (`castLockSeconds`). Run it again after Build Class Skills or Build Two-Hit Skills; a
+second run changes nothing.
+
+| Level | Single hit | Two-hit | Three-hit | Area |
+| --- | --- | --- | --- | --- |
+| 1 | 0.40 s, lock 0.90 | 0.35 / 0.70 s, lock 0.92 | 0.42 / 0.83 / 1.25 s, lock 1.58 | 0.44 s, lock 0.83 |
+| 30 | 0.36 s, lock 0.80 | 0.53 / 1.06 s, lock 1.39 | 0.24 / 0.48 / 0.73 s, lock 0.92 | |
+| 60 | 0.67 s, lock 1.50 | 0.49 / 0.98 s, lock 1.28 | 0.30 / 0.61 / 0.91 s, lock 1.15 | |
+| 80 | 0.50 s, lock 1.35 | 0.64 / 1.27 s, lock 1.67 | 0.25 / 0.82 / 0.97 s, lock 1.81 | 1.13 s, lock 2.06 |
+
+Reviewed by the owner as GIFs (one per group, one-handed, great weapons and Warbow side by side) and kept for now; the
+timings are to be set again when every class has its own animations. Middle hits of multi-hit skills may sit a little
+off their impact frames.
+
 ## A skill asked for too early walks in and casts (as built, 10 Oct 2026)
 
 An attack skill pressed when it cannot be cast yet is kept, one at a time, and cast the moment it can be (owner, 10 Oct 2026). Single-hit and multi-hit skills alike; the basic attack already walked in by itself.

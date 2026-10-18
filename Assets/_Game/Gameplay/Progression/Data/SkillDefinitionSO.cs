@@ -240,6 +240,16 @@ namespace KryticalNova.Progression
         [Tooltip("Fraction of the cast clip after which an attack (a skill or the basic combo) may cut the rest of it " +
                  "short. 1 = never: the cast lock runs its course.")]
         [Range(0f, 1f)] public float attackCancelNormalized = 1f;
+        [Header("Equal timings (owner, 17 Oct 2026: every class hits at the same moments for its level and kind)")]
+        [Tooltip("Seconds of the cast clip skipped at its start (a wind-up trimmed so the hits land on the shared timing). " +
+                 "Set by Krytical Nova ▸ Progression ▸ Equalize Strike Timings.")]
+        [Min(0f)] public float castClipTrim;
+        [Tooltip("Seconds the ready pose holds before the cast clip runs (a quick clip waits so its hits land on the shared " +
+                 "timing). Set by Krytical Nova ▸ Progression ▸ Equalize Strike Timings.")]
+        [Min(0f)] public float castClipDelay;
+        [Tooltip("Seconds after cast start during which the caster cannot begin another skill; 0 = Cast Lock Normalized of " +
+                 "the cast. Set by Krytical Nova ▸ Progression ▸ Equalize Strike Timings, the same for a level and kind.")]
+        [Min(0f)] public float castLockSeconds;
         [Tooltip("Metres the body is raised (or lowered) over the cast clip's own time in seconds. The player's animator " +
                  "discards a clip's root motion, so without this a leap stays on the ground with the legs tucked up. " +
                  "Baked from the clip by Krytical Nova ▸ Progression ▸ Build Blade Skills.")]
@@ -283,18 +293,22 @@ namespace KryticalNova.Progression
             float normalized = hitTimesNormalized != null && hitIndex < hitTimesNormalized.Length
                 ? hitTimesNormalized[hitIndex]
                 : (hitIndex + 1f) / (Mathf.Max(1, hitCount) + 1f);
-            return Mathf.Clamp01(normalized) * CastDuration;
+            if (castClip == null) return Mathf.Clamp01(normalized) * CastDuration;
+            // The hit's moment in the clip, after the trimmed wind-up, at the clip's speed, after the hold.
+            float inClip = Mathf.Clamp01(normalized) * castClip.length;
+            return castClipDelay + Mathf.Max(0f, inClip - castClipTrim) / Mathf.Max(0.1f, castClipSpeed);
         }
 
         /// <summary>
         /// Length of the cast animation at its playback speed. Without a clip, attacks use a short default so their
         /// hits are still timed, and buffs are instant.
         /// </summary>
-        public float CastDuration =>
-            (castClip != null ? castClip.length : IsAttack ? DefaultCastSeconds : 0f) / Mathf.Max(0.1f, castClipSpeed);
+        public float CastDuration => castClip != null
+            ? castClipDelay + Mathf.Max(0f, castClip.length - castClipTrim) / Mathf.Max(0.1f, castClipSpeed)
+            : (IsAttack ? DefaultCastSeconds : 0f) / Mathf.Max(0.1f, castClipSpeed);
 
         /// <summary>Seconds after cast start during which the caster cannot begin another skill.</summary>
-        public float CastLockDuration => CastDuration * castLockNormalized;
+        public float CastLockDuration => castLockSeconds > 0f ? castLockSeconds : CastDuration * castLockNormalized;
 
         /// <summary>Seconds after cast start from which an attack may cut the cast short; the whole lock when it may not.</summary>
         public float AttackCancelDelay => Mathf.Min(CastDuration * attackCancelNormalized, CastLockDuration);

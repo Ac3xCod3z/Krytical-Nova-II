@@ -64,6 +64,7 @@ namespace KryticalNova.Player
         public void Anticipate()
         {
             if (!IsReady) return;
+            ClientPresentationRegistry.Feel?.JumpCharge(transform, IsLocalPlayer());
             if (animancerMotor != null)
             {
                 // Humanoid jump starts on takeoff
@@ -129,10 +130,17 @@ namespace KryticalNova.Player
         public void BeginWarpedJump()
         {
             if (SupportsWarpedJump) animancerMotor.PlayWarpedJump();
+            ClientPresentationRegistry.Feel?.JumpCharge(transform, IsLocalPlayer());
         }
 
         /// <summary>The feet leave the ground.</summary>
         public void WarpedTakeOff() => ReportTakeoff();
+
+        /// <summary>Holds the warped jump at the bottom of its crouch, or lets it run on (the player's own jump, online phase 3).</summary>
+        public void HoldWarpedJump(bool hold)
+        {
+            if (animancerMotor != null) animancerMotor.HoldWarpedJump(hold);
+        }
 
         /// <summary>The feet touch down; the landing clip's crouch and recovery play out in place.</summary>
         public void WarpedLand()

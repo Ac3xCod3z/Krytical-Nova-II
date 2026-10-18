@@ -105,6 +105,15 @@ namespace KryticalNova.GameFeel
             StartFlash(heavy);
         }
 
+        /// <summary>
+        /// Puts the body's scale at <paramref name="scale"/> (1 = as built) and lets the same spring that carries a hit's
+        /// squash bring it back, with <paramref name="velocity"/> as its kick: a jump's crouch and take-off (MMF_ActorSquash).
+        /// </summary>
+        public void Pose(Vector3 scale, Vector3 velocity)
+        {
+            scaleSpring.Reset(scale, velocity);
+        }
+
         private void Lean(Vector3 towardAttacker, bool heavy)
         {
             // Tip away from the attacker: rotate about the axis perpendicular to the blow.
