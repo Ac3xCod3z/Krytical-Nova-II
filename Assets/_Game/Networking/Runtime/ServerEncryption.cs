@@ -49,6 +49,7 @@ namespace KryticalNova.Networking
             return Path.Combine(parent, "certificates");
         }
 
+#if UNITY_SERVER || UNITY_EDITOR // the server's settings exist only there: a game build has none
         /// <summary>Server: reads its certificate and key (settings, or the default folder). False with the reason when it cannot.</summary>
         public static bool TryLoadServerSecrets(ServerLaunchOptions options, out string certificate, out string privateKey, out string problem)
         {
@@ -74,6 +75,7 @@ namespace KryticalNova.Networking
                 return false;
             }
         }
+#endif
 
         /// <summary>A dedicated server: its direct connections are encrypted with its certificate and key.</summary>
         public static void UseOnServer(UnityTransport transport, string certificate, string privateKey)

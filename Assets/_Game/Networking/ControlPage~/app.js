@@ -33,13 +33,26 @@ function toast(text, bad) {
 
 // The page's own question box (a browser's confirm/prompt is ugly and unreliable on phones). Resolves to the text
 // typed (empty when asked for none) or null when cancelled.
-function ask(title, text, wantsReason) {
+// With wantsLength, it also asks how long (a ban): the choice is read from $("dialogLength").value afterwards.
+const BAN_LENGTHS = [["1h", "1 hour"], ["12h", "12 hours"], ["1d", "1 day"], ["3d", "3 days"], ["1w", "1 week"], ["2w", "2 weeks"], ["30d", "30 days"], ["forever", "for good"]];
+function fillLengths(select) {
+  select.textContent = "";
+  for (const [value, label] of BAN_LENGTHS) { const o = document.createElement("option"); o.value = value; o.textContent = label; select.appendChild(o); }
+  select.value = "3d";
+}
+fillLengths($("dialogLength"));
+fillLengths($("banLength"));
+
+function ask(title, text, wantsReason, wantsLength) {
   return new Promise((resolve) => {
     $("dialogTitle").textContent = title;
     $("dialogText").textContent = text;
     $("dialogInput").value = "";
     $("dialogInput").hidden = !wantsReason;
     $("dialogLabel").hidden = !wantsReason;
+    $("dialogLength").hidden = !wantsLength;
+    $("dialogLengthLabel").hidden = !wantsLength;
+    $("dialogLength").value = "3d";
     $("dialog").hidden = false;
     (wantsReason ? $("dialogInput") : $("dialogYes")).focus();
     const done = (value) => {
@@ -188,9 +201,65 @@ function showPlayers(players) {
       act(kick, "/api/kick", { id: String(p.id), reason: reason });
     });
     td.appendChild(kick);
+    // GMs are not banned (unbind them first); the server says so too.
+    if (!p.gm) {
+      const ban = document.createElement("button");
+      ban.className = "small red";
+      ban.type = "button";
+      ban.textContent = "Ban";
+      ban.addEventListener("click", async () => {
+        const reason = await ask("Ban " + p.name + "?", p.name + "'s account is kept off this server and they are sent away now. They read the reason.", true, true);
+        if (reason === null) return;
+        act(ban, "/api/ban", { id: String(p.id), text: $("dialogLength").value, reason: reason });
+      });
+      td.appendChild(ban);
+    }
     rows.appendChild(row);
   }
 }
+
+// ---- Bans (online phase 2, milestone 4).
+let shownBans = "";
+function showBans(bans) {
+  const key = JSON.stringify(bans);
+  if (key === shownBans) return;
+  shownBans = key;
+  const rows = $("banRows");
+  rows.textContent = "";
+  $("noBans").hidden = bans.length > 0;
+  for (const b of bans) {
+    const row = document.createElement("tr");
+    cell(row, b.character || "(no character)");
+    const account = cell(row, b.account.substring(0, 8) + "…", "hide-phone");
+    account.title = b.account;
+    cell(row, b.left);
+    cell(row, b.by + (b.reason ? " · " + b.reason : "") + " · " + b.since, "hide-phone");
+    const td = cell(row, "");
+    const unban = document.createElement("button");
+    unban.className = "small ghost";
+    unban.type = "button";
+    unban.textContent = "Unban";
+    unban.addEventListener("click", async () => {
+      const who = b.character || b.account;
+      if (await ask("Unban " + who + "?", who + " may join again at once.", false) === null) return;
+      act(unban, "/api/unban", { id: b.account });
+    });
+    td.appendChild(unban);
+    rows.appendChild(row);
+  }
+}
+
+$("banForm").addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const who = $("banWho").value.trim();
+  if (!who) return toast("Type the character name or account id.", true);
+  const length = $("banLength").value;
+  const label = $("banLength").options[$("banLength").selectedIndex].textContent;
+  const reason = await ask("Ban " + who + " (" + label + ")?", who + "'s account is kept off this server, and sent away if they are on.", true);
+  if (reason === null) return;
+  const data = await act(event.submitter, "/api/ban", { id: who, text: length, reason: reason });
+  if (data && /banned/.test(data.answer || "")) $("banWho").value = "";
+});
 
 // The table is rebuilt only when it changed, so a player list picked from is not reset under the pointer every 2 seconds.
 let shownGms = "";
@@ -316,6 +385,7 @@ async function refresh() {
     showAddresses(s.addresses, s.port);
     showPlayers(s.players);
     showGms(s.gms || [], s.maxGms || 3, s.players || []);
+    showBans(s.bans || []);
     showReach(s);
     showList(s.serverList || [], s.listPublished || "-", s.statusPort || 0, s.publicAddress || "");
     await refreshLog();

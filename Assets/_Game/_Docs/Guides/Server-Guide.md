@@ -135,9 +135,10 @@ What is on the page:
 | --- | --- |
 | Top | The game's name logo, the server's own name under it, ONLINE (or STOP IN … / RESTART IN … during a countdown), players on, how long it has run, the map, the next backup. **Log out**. |
 | How to connect | The address and port players type in **F1**, with a **Copy** button. |
-| Players on | Everyone on: name (a **GM** tag before a GM who is signed in), level, faction, map, and **Ping · late**: their round trip to the server and how many of their hits came too late to count in the last 5 minutes (shown in red past 250 ms or 20 late). That is lag, not cheating: one player with many has a bad connection; everyone at once means the server is struggling. **Kick** asks for a reason they will read, then sends them away (they can join again). |
+| Players on | Everyone on: name (a **GM** tag before a GM who is signed in), level, faction, map, and **Ping · late**: their round trip to the server and how many of their hits came too late to count in the last 5 minutes (shown in red past 250 ms or 20 late). That is lag, not cheating: one player with many has a bad connection; everyone at once means the server is struggling. **Kick** asks for a reason they will read, then sends them away (they can join again). **Ban** (not beside a GM) asks for a reason and how long (1 hour to 30 days, or for good), then keeps their account off the server and sends them away. |
 | Run the server | **Save now** (everyone saved at once), **Backup now**, **Announce** (a line every player reads), and **Restart** / **Stop** after the number of seconds you set, with the players told as it counts down. **Cancel** calls a countdown off. Each asks first. |
 | Game Masters | Who may be GM (three at most), whether each is in the game now (**in the game**), **Remove**, and **Add GM** with a name and their own GM password. Saved into `server-settings.json` at once. |
+| Bans | Every ban in force: the character, the account (hover for all of it), the time left, who banned them and why, and **Unban**. Below it, ban someone who is not on by their character name or account id. |
 | GM command | Any GM command, as in the server's window (`gm.help` lists them all). The answer shows below. |
 | Flags | Live: anything a real game would never do. Who (character, account, connection), where (map and position), what they sent, why it was refused, and what the server did (**Ignored**, or **Disconnected** in red). The same thing again from the same player counts up on one line (x10, x40). **Filter** by a name, account or map; **Clear view** empties the list on this page only. Every flag is also kept in `flags.log` beside the saves. |
 | Live log | What the server says, newest at the bottom. Unity's start-up noise is hidden; tick **every line** to see it all. |
@@ -173,6 +174,32 @@ and restart the server. Also flagged: a position that is not a real place, a mel
 with a step that does not exist, a Kiosk with more stacks than it holds. A hit that only came too late (normal lag) is
 never flagged: it shows in the players' **late** count instead, and in the performance log (`late_hits`,
 `gone_targets`, `worst_ping_ms`).
+
+### Bans and the server's records (phase 2)
+
+**A ban is on the player's account** (the one Unity's sign-in proves), so a new character or reinstalling the game does
+not get round it. Ban from the control page (**Ban** beside a player, or the form under **Bans**), with `gm.ban` in the
+server's window, or from F2 as a GM. A ban lasts `30m`, `12h`, `3d`, `2w` (a number alone is days) or `forever`. A
+player who is on is sent away at once; one who is not is turned away when they try to join. Either way they read:
+
+> This account is banned from this server for 2 days 4 hours more (until 20 Oct 2026, 14:00 server time): spamming.
+
+GMs cannot be banned (unbind or remove the GM first), nor the host. `gm.bans` lists the bans, `gm.unban` (or
+**Unban** on the page) ends one early. Bans are kept in the save folder (`world/bans.json`), so they outlive a restart
+and go with the saves when the server moves.
+
+**The server's records** sit beside the saves, one line each with the date, time, character, the whole account id and
+the connection number:
+
+| File | What is in it |
+| --- | --- |
+| `gm.log` | Every GM command, from the server's window, the control page (with the address it came from), F2 or the GM Tools window; every button press on the control page; every kick, ban and unban. |
+| `economy.log` | Every trade (both sides, item by item, and the Creds), shop purchase and sale, Kiosk sale and till collected, Creds put into or taken from the Vault, and every Temper, Fusion, Tuning and Reforge with the piece before and after and what it cost. |
+| `access.log` | Every join and every player who left, and every game turned away with the reason (wrong build, full, no sign-in, banned). |
+| `flags.log` | Things a real game would never do (see above). |
+
+Open them with Notepad; search for a character's name or account id to see everything they did. The same lines show
+in the control page's live log as they happen.
 
 ## 4. The settings file
 
@@ -246,7 +273,8 @@ Builds/Server/Windows/
 ├── certificates/                    server.crt and server.key: encrypt direct joins (keep server.key private)
 ├── KryticalNovaServer-Save/         the saves
 │   ├── accounts/<id>.json           one per account, with its characters
-│   └── world/                       crews, kiosks, contacts, sponsors
+│   ├── world/                       crews, kiosks, contacts, sponsors, bans
+│   └── gm.log, economy.log, access.log, flags.log    the server's records (phase 2)
 └── KryticalNovaServer-Save-Backups/
     └── save_2026-10-16_14-05-09_start.zip   ... the newest 10
 ```
@@ -382,15 +410,18 @@ and `gm.backup` belong to the server only).
 | `gm.help` | Lists every GM command. | `gm.help` |
 | `gm.players` | Who is on: connection number, name, level, where they stand. | `gm.players` |
 | `gm.say "text"` | Every player of every faction reads it on the GM channel. | `gm.say "Server restart at 9 pm"` |
-| `gm.kick <who> "reason"` | Sends a player away. `<who>` is the connection number or the character's name. They can join again (no bans yet). | `gm.kick Tolan "Take a break"` |
+| `gm.kick <who> "reason"` | Sends a player away. `<who>` is the connection number or the character's name. They can join again. | `gm.kick Tolan "Take a break"` |
+| `gm.ban <who> <length> "reason"` | Keeps a player's account off the server. `<who>` is the connection number or the character's name when they are on, the character's name or account id when they are not. `<length>`: `30m`, `12h`, `3d`, `2w`, a number of days, or `forever`. They are sent away and read the reason and the time left. | `gm.ban Tolan 3d "Spamming the chat"` |
+| `gm.unban <who>` | Ends a ban early: the character's name or the account id. | `gm.unban Tolan` |
+| `gm.bans` | Lists the bans: character, account, time left, who and why. | `gm.bans` |
 | `gm.restart <seconds> "reason"` | Counts down, telling the players, then saves, backs up, stops and starts again. 60 seconds if you give no number. | `gm.restart 120 "Update"` |
 | `gm.shutdown <seconds> "reason"` | Counts down, telling the players, then saves, backs up and stops. 60 seconds if you give no number. | `gm.shutdown 300 "Done for tonight"` |
 | `gm.shutdown cancel` | Calls off a countdown (shutdown or restart). | `gm.shutdown cancel` |
 | `gm.backup` | Saves everyone and backs up now. Do it before an update. | `gm.backup` |
 | `gm.target <connection>` | Points the other GM commands (give items, levels, teleport) at that player. | `gm.target 1` |
 
-In the Editor's **GM Tools** window the Social tab has the same under **Server**: Kick Player, Shutdown Server, Restart
-Server, Cancel Shutdown, Back Up Saves Now.
+In the Editor's **GM Tools** window the Social tab has the same under **Server**: Kick Player, Ban Player, Unban Player,
+List Bans, Shutdown Server, Restart Server, Cancel Shutdown, Back Up Saves Now.
 
 ## 7b. Game Masters (GMs)
 
@@ -553,8 +584,10 @@ server is on the old PC and the bots run here (owner, 17 Oct 2026).
 | `ServerReach` | `Networking/Runtime/Server` | Step 5: this PC's internet address (looked up at start and every 10 minutes), the Relay code, the list published by itself when either changed (also PUBLISH LIST). Server build only. |
 | `NetworkConnectionManager.StartRelayServer`, `PrepareRelayJoin` | `Networking/Runtime` | Relay mode: the server's place on Unity Relay (retries every 30 s, restarts when the link drops); a game joining with the code. |
 | `MenuServers`, `JoinFlowScreens` | `UI/Runtime/Menus` | The Servers window (in the menus' Settings document, so it wears the skin), the loading hold and the way back on failure. |
-| `GmConsoleGate` | `Tools/Debug` | F2: the host runs commands itself; a joined player gets the password prompt, then their lines go to the server. |
-| `ServerCommands` | `Tools/Debug` | `gm.kick`, `gm.restart`, `gm.shutdown`, `gm.backup`. |
+| `GmConsoleGate` | `Tools/Debug` | F2: the host runs commands itself (and they go in `gm.log`); for a joined GM the lines go to the server. |
+| `ServerCommands` | `Tools/Debug` | `gm.kick`, `gm.ban`, `gm.unban`, `gm.bans`, `gm.restart`, `gm.shutdown`, `gm.backup`. |
+| `ServerBans` | `Networking/Runtime/Safety` | The bans (`world/bans`): lengths, the check when a game joins (`NetworkConnectionManager.Banned`), what a banned player reads, ban and unban by name, connection or account (tested in `ServerBansTests`). |
+| `ServerRecords` | `Networking/Runtime/Safety` | `gm.log`, `economy.log`, `access.log`: one line each with the time, character and account; only where the game is decided, while a session runs. `GmCommandRelay.RunningFor` says who a command ran for. |
 | `NetworkConnectionManager.StartDedicatedServer` | `Networking/Runtime` | Listens on the settings' port and turns away players past the limit. |
 | `DedicatedServerBoot`, `DedicatedServerOptimizer` | `Networking/Runtime` | Skip the menus and open the map; 30 ticks a second; parts that only draw switched off. |
 | `EditorTestSession` | `Networking/Runtime` | The Editor's test port, scratch save and `join=1`. |
@@ -589,6 +622,9 @@ Things learned the hard way:
   logs a browser that hung up before the answer, and no longer answers the spare connections a browser opens ahead
   and closes unused (answering them filled the log with "Control page request failed: Unable to write data to the
   transport connection", about once a second while the page was open).
+- 18 Oct 2026: phase 2 milestone 4: bans (`gm.ban`, `gm.unban`, `gm.bans`, **Ban** and the **Bans** section on the
+  control page, Ban Player in the GM Tools window), and the server's records `gm.log`, `economy.log` and `access.log`
+  beside the saves.
 - 18 Oct 2026: phase 2 milestone 3: speed limits on every request (`callLimits`, added to an older settings file by
   itself), the **Flags** section and `flags.log`, the **Ping · late** column and the lag columns in the performance
   log; the page in the name logo's colours with the logo in place of the written name (owner).

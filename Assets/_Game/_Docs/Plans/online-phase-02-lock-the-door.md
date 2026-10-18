@@ -1,7 +1,7 @@
 # Online phase 2: lock the door
 
 Part of `online-roadmap.md`; the rules are in `online-security-model.md`. Written 11 Oct 2026.
-**Milestones 1, 2 and 3 built 18 Oct 2026** (see "As built" below); the rest is not built. Order (owner, 18 Oct 2026): milestone 1,
+**Milestones 1 to 4 built 18 Oct 2026** (see "As built" below); milestone 5 (attack tests, client hardening) is not built. Order (owner, 18 Oct 2026): milestone 1,
 then **Phase 3** (client-side prediction), then milestones 2 to 5 of this phase.
 
 ## Goal
@@ -85,6 +85,30 @@ refusals logged; the flags live on the control page too, with who and where; lag
 - *Tried:* on the measure server, 20 emotes at once: 8 through, the rest flagged as one line counted x10 with the
   character, account, map and position, in `flags.log` too; 70 more: "Flooding the server", the game disconnected and
   told why. EditMode tests 911 / 911.
+
+**Milestone 4, bans and the server's records (18 Oct 2026).** Work items 7 and 8.
+- *Bans* (`ServerBans`, the `world/bans` save document): on the proven account, for `30m`, `12h`, `3d`, `2w` (a number
+  alone is days) or for good; by connection or character name when the player is on, by character name (every saved
+  account is searched, `ServerSave.AccountsWithCharacter`) or account id when not. A player who is on is sent away; a
+  banned account asking to join is turned away by the approval (`NetworkConnectionManager.Banned`, also on an Editor host
+  test without sign-in, by the game's own id) and reads the reason and the time left. GMs and the host cannot be banned.
+  `gm.ban`, `gm.unban`, `gm.bans`; on the control page **Ban** beside a player (reason and length asked), the **Bans**
+  section with **Unban** and a form for someone not on; Ban Player, Unban Player and List Bans in the GM Tools window.
+- *The records* (`ServerRecords`, item 8): a server log line and a line in a file beside the saves, each with the time,
+  character, whole account id and connection. `gm.log`: every GM command, from a joined GM (with their GM name), the
+  server window, the control page's command box (with its address), the host's F2 and the GM Tools window, every
+  control page button press, every kick, ban and unban (`GmCommandRelay.RunningFor` says who a command ran for).
+  `economy.log`: trades item by item with the Creds, shop purchases and sales, Kiosk sales and tills collected, Vault
+  Creds in and out, Temper, Fusion, Tuning and Reforge with the piece before and after and the cost. `access.log`: joins,
+  leaves and every game turned away with the reason. Only where the game is decided, while a session runs.
+- *Also:* a game build (not a server) failed to compile since milestone 2 (`ServerEncryption.TryLoadServerSecrets` named
+  the server's settings, which exist only in a server build or the Editor); fixed, and the bot client built again.
+- *Tried:* on the measure server, from its control page: a GM's account refused, an unknown name and a wrong length
+  refused, two absent accounts banned (12 hours, for good), listed in `gm.bans` and the page's status, unbanned. A bot
+  in the game banned with **Ban** (3 days) was sent away and read "This account is banned from this server for 3 days
+  more (until 21 Oct 2026, 00:54 server time): Testing bans"; started again it was turned away with the same words, and
+  `access.log` said why; `gm.unban Botkaka` and it joined again. `gm.log` has one line per command or button with its
+  answer and the account. EditMode tests 941 / 941 (`ServerBansTests`).
 
 ## Work items
 

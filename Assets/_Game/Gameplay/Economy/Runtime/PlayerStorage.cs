@@ -276,6 +276,7 @@ namespace KryticalNova.Economy
             if (!wallet.ServerSpend(amount, CredsSink.VaultDeposit)) return;
             creds += amount;
             CommitCreds();
+            ServerRecords.Write(RecordKind.Economy, $"Vault: {ServerRecords.Who(this)} put {amount} Creds into the {DisplayName} (it holds {creds}).");
         }
 
         private void ServerWithdrawCreds(long amount)
@@ -286,6 +287,7 @@ namespace KryticalNova.Economy
             creds -= amount;
             wallet.ServerEarn(amount, CredsSource.VaultWithdraw);
             CommitCreds();
+            ServerRecords.Write(RecordKind.Economy, $"Vault: {ServerRecords.Who(this)} took {amount} Creds from the {DisplayName} (it holds {creds}).");
         }
 
         /// <summary>Keeps what the rules did to the scratch copy.</summary>

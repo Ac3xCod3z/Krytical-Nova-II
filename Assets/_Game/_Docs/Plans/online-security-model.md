@@ -89,6 +89,14 @@ One server log line, with the account id and the time, for each of: a refused co
 call and why; every GM command; every trade, Kiosk sale, shop sale, Vault move of Creds, Temper, Fusion
 and Reforge; every kick and ban. Logs are kept off the game machine (Phase 8).
 
+**As built (18 Oct 2026, phase 2 milestones 3 and 4):** `ServerRecords` writes each line to the server log (the control
+page's live log) and to a file beside the dedicated server's saves: `access.log` (joins, leaves, every game turned
+away and why), `gm.log` (every GM command from the server window, the control page with its address, F2 and the GM
+Tools window; every control page button; every kick, ban and unban), `economy.log` (trades item by item with the
+Creds, shop purchases and sales, Kiosk sales and tills collected, Vault Creds, Temper, Fusion, Tuning and Reforge with
+the piece before and after and the cost). Refused calls are `flags.log` (`SecurityFlags`). Each line names the
+character, the whole account id and the connection. Keeping them off the game machine is still Phase 8.
+
 ## The audit: every client-to-server call
 
 This is the working list for Phase 2. **Taken again from the code on 18 Oct 2026 (milestone 3): 111 calls**, every one

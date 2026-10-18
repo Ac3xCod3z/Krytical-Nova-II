@@ -1,4 +1,5 @@
 using System;
+using KryticalNova.Networking;
 using KryticalNova.Player;
 using QFSW.QC;
 using Unity.Netcode;
@@ -7,14 +8,14 @@ using UnityEngine;
 namespace KryticalNova.DevTools
 {
     /// <summary>
-    /// GM commands for running a server: send a player away, stop the server with a countdown, back up the saves.
+    /// GM commands for running a server: send a player away, ban an account, stop the server with a countdown, back up the saves.
     /// They need no player of the GM's own, so they work in a dedicated server's console window (typed there, see
     /// <c>ServerConsoleInput</c>) as well as on a host. Shutdown and backup belong to a dedicated server.
     /// </summary>
     public static class ServerCommands
     {
         [Command("gm.kick", "Send a player away from the server: gm.kick <client id or character name> \"reason\". " +
-                            "They can join again (there is no ban yet). gm.players lists who is here.")]
+                            "They can join again (gm.ban keeps them out). gm.players lists who is here.")]
         private static string Kick(string who, string reason = "")
         {
             if (!GmTarget.HasAuthority(out string error)) return error;
@@ -23,9 +24,33 @@ namespace KryticalNova.DevTools
             if (!TryFind(who, out ulong clientId, out string name)) return $"No connected player called \"{who}\". Try gm.players.";
             if (clientId == NetworkManager.ServerClientId) return "That is the host's own player: the host cannot be sent away.";
             string told = string.IsNullOrWhiteSpace(reason) ? "A GM removed you from the server." : "A GM removed you from the server: " + reason.Trim();
+            string removed = ServerRecords.Who(clientId);
             network.DisconnectClient(clientId, told);
-            Debug.Log($"[Server] {name} (connection {clientId}) was removed. {told}");
-            return $"{name} (connection {clientId}) removed.";
+            return $"Removed {removed}.";
+        }
+
+        [Command("gm.ban", "Keep a player's account off this server: gm.ban <character name, connection id or account id> <length> " +
+                           "\"reason\". Length: 30m, 12h, 3d, 2w (a number alone is days) or forever. A player who is on is sent " +
+                           "away; one who is not is turned away when they try to join, and reads the reason and how long is left. " +
+                           "GMs cannot be banned. gm.bans lists the bans, gm.unban ends one.")]
+        private static string Ban(string who, string length = "forever", string reason = "")
+        {
+            if (!GmTarget.HasAuthority(out string error)) return error;
+            return ServerBans.BanPlayer(who, length, reason, GmCommandRelay.RunningFor);
+        }
+
+        [Command("gm.unban", "End a ban early: gm.unban <character name or account id> (gm.bans lists them).")]
+        private static string Unban(string who)
+        {
+            if (!GmTarget.HasAuthority(out string error)) return error;
+            return ServerBans.UnbanPlayer(who);
+        }
+
+        [Command("gm.bans", "List the bans in force: the character, the account, the time left, who banned them and why.")]
+        private static string Bans()
+        {
+            if (!GmTarget.HasAuthority(out string error)) return error;
+            return ServerBans.Listing(DateTime.UtcNow);
         }
 
         [Command("gm.shutdown", "Stop the dedicated server after a countdown the players are told about, saving everyone and backing " +
