@@ -1,3 +1,4 @@
+using KryticalNova.Networking;
 using System;
 using System.Collections.Generic;
 using KryticalNova.Core;
@@ -118,10 +119,18 @@ namespace KryticalNova.Economy
         }
 
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
-        private void BuyRpc(FixedString64Bytes vendor, ushort itemId, ushort count) => Answer(ServerBuy(vendor.ToString(), itemId, count));
+        private void BuyRpc(FixedString64Bytes vendor, ushort itemId, ushort count)
+        {
+            if (!RpcBudget.Allow(this, CallKind.Money, nameof(BuyRpc))) return;
+            Answer(ServerBuy(vendor.ToString(), itemId, count));
+        }
 
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
-        private void SellRpc(ushort cell, ushort count, ItemStack expected, bool confirmed) => Answer(ServerSell(cell, count, expected, confirmed));
+        private void SellRpc(ushort cell, ushort count, ItemStack expected, bool confirmed)
+        {
+            if (!RpcBudget.Allow(this, CallKind.Money, nameof(SellRpc))) return;
+            Answer(ServerSell(cell, count, expected, confirmed));
+        }
 
         // ------------------------------------------------------------------ the server decides
 

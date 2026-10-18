@@ -3,16 +3,17 @@
 @font-face { font-family: RobotoB; src: url(fonts/Roboto-Bold.ttf); }
 
 :root { --ink: #05070d; --page: #141a2b; --panel: #1d2540; --edge: #2b3560; --text: #f4eeda; --muted: #a9adc2;
-        --pop: #ffc928; --cyan: #3fd2e2; --rose: #ff5c8f; --green: #7be07b; --field: #2a3357; --log: #0d1222; }
+        /* The name logo's colours (owner, 18 Oct 2026): its cyan for highlights, its red for warnings; no yellow or pink. */
+        --pop: #3ed4df; --cyan: #3ed4df; --rose: #de0d22; --green: #7be07b; --field: #2a3357; --log: #0d1222; }
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
 body { margin: 0; min-height: 100vh; background: var(--page); background-image: radial-gradient(rgba(244,238,218,.07) 1.5px, transparent 1.6px);
        background-size: 14px 14px; color: var(--text); font: 15px RobotoB, system-ui, sans-serif; }
 
 .wrap { max-width: 1240px; margin: 0 auto; padding: 18px; display: grid; gap: 16px; grid-template-columns: 1.15fr 1fr;
-        grid-template-areas: "head head" "connect actions" "players actions" "gms gm" "list list" "log log"; }
+        grid-template-areas: "head head" "connect actions" "players actions" "gms gm" "list list" "flags flags" "log log"; }
 .head { grid-area: head; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
-.connect { grid-area: connect; } .players { grid-area: players; } .actions { grid-area: actions; } .gm { grid-area: gm; } .gms { grid-area: gms; } .list { grid-area: list; } .log { grid-area: log; }
+.connect { grid-area: connect; } .players { grid-area: players; } .actions { grid-area: actions; } .gm { grid-area: gm; } .gms { grid-area: gms; } .list { grid-area: list; } .flags { grid-area: flags; } .log { grid-area: log; }
 .head .name { flex: 1 1 260px; }
 .stat { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
 
@@ -56,7 +57,7 @@ td { border-bottom: 2px solid var(--edge); overflow-wrap: anywhere; }
 
 pre { font: 13px Consolas, "Cascadia Mono", monospace; margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
 #log { height: 300px; overflow-y: auto; color: #d6e7ff; background: var(--log); border: 2px solid var(--ink); padding: 10px; }
-#log .err { color: var(--rose); } #log .srv { color: var(--pop); }
+#log .err { color: #ff4a5c; } #log .srv { color: var(--pop); }
 .answer { margin-top: 10px; max-height: 180px; overflow-y: auto; color: #d6e7ff; background: var(--log); border: 2px solid var(--ink); padding: 8px; }
 
 .login { display: grid; place-items: center; min-height: 100vh; padding: 16px; }
@@ -75,3 +76,27 @@ pre { font: 13px Consolas, "Cascadia Mono", monospace; margin: 0; white-space: p
   h1 { font-size: 40px; }
   #log { height: 220px; }
 }
+
+/* Flags (online phase 2, milestone 3): one card per thing a game should never do, newest first. */
+.flags h2 { background: var(--rose); }
+.flaglist { display: grid; gap: 8px; max-height: 420px; overflow-y: auto; margin-top: 8px; }
+.flag { background: var(--log); border: 2px solid var(--ink); border-left: 8px solid var(--pop); border-radius: 5px; padding: 8px 10px;
+        display: grid; grid-template-columns: auto 1fr auto; gap: 2px 12px; align-items: baseline; }
+.flag.kick { border-left-color: var(--rose); }
+.flag .when { color: var(--muted); font: 13px Consolas, monospace; }
+.flag .who { font-size: 16px; } .flag .who small { color: var(--muted); font-weight: 400; }
+.flag .act { font: 400 18px Bangers; letter-spacing: .05em; color: #10131a; background: var(--pop); border: 2px solid var(--ink); padding: 0 6px; }
+.flag.kick .act { background: var(--rose); }
+.flag .detail { grid-column: 2 / 4; } .flag .where { grid-column: 2 / 4; color: var(--cyan); font-size: 13px; }
+.flag .count { font: 400 18px Bangers; color: var(--pop); margin-left: 6px; }
+.flag.fresh { animation: flagIn 1.2s ease-out 1; }
+@keyframes flagIn { from { box-shadow: 0 0 0 3px var(--rose); } to { box-shadow: none; } }
+@media (max-width: 760px) { .flag { grid-template-columns: 1fr; } .flag .detail, .flag .where { grid-column: auto; } }
+.lagging { color: #ff4a5c; } /* the logo's red, lifted to read on the dark panels */
+
+/* The name logo in place of the written name (owner, 18 Oct 2026). Red is too dark for black lettering: light text on it. */
+h1 .logo { display: block; height: 84px; width: auto; max-width: 100%; filter: drop-shadow(4px 4px 0 var(--ink)); }
+.login h1 .logo { height: 120px; margin: 0 auto; }
+.servername { font: 400 24px Bangers; letter-spacing: .05em; color: var(--text); margin-left: 8px; }
+.tag, button.red, .pill.down, .toast.bad, .flags h2, .flag.kick .act { color: var(--text); }
+th { color: var(--cyan); }

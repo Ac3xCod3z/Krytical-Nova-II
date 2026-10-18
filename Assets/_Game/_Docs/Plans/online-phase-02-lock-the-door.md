@@ -1,7 +1,7 @@
 # Online phase 2: lock the door
 
 Part of `online-roadmap.md`; the rules are in `online-security-model.md`. Written 11 Oct 2026.
-**Milestones 1 and 2 built 18 Oct 2026** (see "As built" below); the rest is not built. Order (owner, 18 Oct 2026): milestone 1,
+**Milestones 1, 2 and 3 built 18 Oct 2026** (see "As built" below); the rest is not built. Order (owner, 18 Oct 2026): milestone 1,
 then **Phase 3** (client-side prediction), then milestones 2 to 5 of this phase.
 
 ## Goal
@@ -62,6 +62,29 @@ backup, never in the project.
   this cannot join a server built after it.
 - *Tried:* the measure server (port 7790) logged "Direct connections are encrypted"; the Editor joined it directly with
   encryption on and stood in town (109 fps, 37 ms). EditMode tests 911 / 911.
+
+**Milestone 3, speed limits, the audit and tighter hit checks (18 Oct 2026).** Owner's picks: tighter checks with
+refusals logged; the flags live on the control page too, with who and where; lag tracked apart from cheating.
+- *Speed limits* (`RpcBudget`, `CallLimits` in `server-settings.json`, added to an older file by itself): every one of
+  the 111 client-to-server calls starts with `RpcBudget.Allow` (a burst and a refill per second, by kind: move, combat,
+  items, money, social, chat, cosmetic, account); over it the call is ignored and flagged; 50 ignored in 10 s disconnects
+  the game ("Too many requests"). Texts are capped (`TextFits`, 500 characters; settings text 4096), positions must be
+  real places (`PointFits`).
+- *Flags* (`SecurityFlags`): character, account, connection, map, position, the call, what it asked, why it was refused
+  and what the server did; repeats count up on one line; a server log line, `flags.log` beside the saves, and the
+  control page's **Flags** section, live (`/api/flags`).
+- *The audit* (`online-security-model.md`): the 16 old `[ServerRpc]` calls moved to owner-only `[Rpc]`; the jump and the
+  climb no longer take the obstacle layers and the model's turn from the game; melee hit reports flag a step outside
+  1-3, a friend and a hit beyond 2.7 m; a Kiosk with more stacks than it holds is flagged before it is read; the table
+  is taken again from the code (111 rows) with what each call checks.
+- *Lag* (`NetworkHealth`, owner): late hits and hits on a target already gone are never flagged; they are counted per
+  player (the control page's **Ping · late** column, last 5 minutes) and per minute in the performance log
+  (`late_hits`, `gone_targets`, `worst_ping_ms`).
+- *Also (owner):* the control page and the launcher in the name logo's colours (its cyan and red; no yellow or pink),
+  the logo in place of the written name, and the launcher's top bar dark in its own navy.
+- *Tried:* on the measure server, 20 emotes at once: 8 through, the rest flagged as one line counted x10 with the
+  character, account, map and position, in `flags.log` too; 70 more: "Flooding the server", the game disconnected and
+  told why. EditMode tests 911 / 911.
 
 ## Work items
 

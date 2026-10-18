@@ -1,3 +1,4 @@
+using KryticalNova.Networking;
 using System;
 using System.Collections.Generic;
 using KryticalNova.Core;
@@ -163,11 +164,17 @@ namespace KryticalNova.Social
         }
 
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
-        private void AddByNameRpc(string characterName) => ContactsService.ServerRequestByName(this, characterName);
+        private void AddByNameRpc(string characterName)
+        {
+            if (!RpcBudget.Allow(this, CallKind.Social, nameof(AddByNameRpc))) return;
+            if (!RpcBudget.TextFits(this, nameof(AddByNameRpc), characterName)) return;
+            ContactsService.ServerRequestByName(this, characterName);
+        }
 
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
         private void AddRpc(NetworkObjectReference targetReference)
         {
+            if (!RpcBudget.Allow(this, CallKind.Social, nameof(AddRpc))) return;
             PlayerContacts target = targetReference.TryGet(out NetworkObject targetObject) ? targetObject.GetComponent<PlayerContacts>() : null;
             ContactBook book = target != null ? ContactsService.Book(target.CharacterId) : null;
             if (book == null) Notify("That player has no saved character to add.");
@@ -177,36 +184,84 @@ namespace KryticalNova.Social
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
         private void RespondRpc(string characterId, bool accept)
         {
+            if (!RpcBudget.Allow(this, CallKind.Social, nameof(RespondRpc))) return;
+            if (!RpcBudget.TextFits(this, nameof(RespondRpc), characterId)) return;
             ClosePromptRpc(characterId);
             ContactsService.ServerRespond(this, characterId, accept);
         }
 
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
-        private void CancelRpc(string characterId) => ContactsService.ServerCancel(this, characterId);
+        private void CancelRpc(string characterId)
+        {
+            if (!RpcBudget.Allow(this, CallKind.Social, nameof(CancelRpc))) return;
+            if (!RpcBudget.TextFits(this, nameof(CancelRpc), characterId)) return;
+            ContactsService.ServerCancel(this, characterId);
+        }
 
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
-        private void RemoveRpc(string characterId) => ContactsService.ServerRemove(this, characterId);
+        private void RemoveRpc(string characterId)
+        {
+            if (!RpcBudget.Allow(this, CallKind.Social, nameof(RemoveRpc))) return;
+            if (!RpcBudget.TextFits(this, nameof(RemoveRpc), characterId)) return;
+            ContactsService.ServerRemove(this, characterId);
+        }
 
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
-        private void RemoveByNameRpc(string characterName) => ContactsService.ServerRemoveByName(this, characterName);
+        private void RemoveByNameRpc(string characterName)
+        {
+            if (!RpcBudget.Allow(this, CallKind.Social, nameof(RemoveByNameRpc))) return;
+            if (!RpcBudget.TextFits(this, nameof(RemoveByNameRpc), characterName)) return;
+            ContactsService.ServerRemoveByName(this, characterName);
+        }
 
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
-        private void BlockRpc(string characterId) => ContactsService.ServerBlock(this, characterId);
+        private void BlockRpc(string characterId)
+        {
+            if (!RpcBudget.Allow(this, CallKind.Social, nameof(BlockRpc))) return;
+            if (!RpcBudget.TextFits(this, nameof(BlockRpc), characterId)) return;
+            ContactsService.ServerBlock(this, characterId);
+        }
 
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
-        private void BlockByNameRpc(string characterName) => ContactsService.ServerBlockByName(this, characterName);
+        private void BlockByNameRpc(string characterName)
+        {
+            if (!RpcBudget.Allow(this, CallKind.Social, nameof(BlockByNameRpc))) return;
+            if (!RpcBudget.TextFits(this, nameof(BlockByNameRpc), characterName)) return;
+            ContactsService.ServerBlockByName(this, characterName);
+        }
 
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
-        private void UnblockRpc(string characterId) => ContactsService.ServerUnblock(this, characterId);
+        private void UnblockRpc(string characterId)
+        {
+            if (!RpcBudget.Allow(this, CallKind.Social, nameof(UnblockRpc))) return;
+            if (!RpcBudget.TextFits(this, nameof(UnblockRpc), characterId)) return;
+            ContactsService.ServerUnblock(this, characterId);
+        }
 
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
-        private void UnblockByNameRpc(string characterName) => ContactsService.ServerUnblockByName(this, characterName);
+        private void UnblockByNameRpc(string characterName)
+        {
+            if (!RpcBudget.Allow(this, CallKind.Social, nameof(UnblockByNameRpc))) return;
+            if (!RpcBudget.TextFits(this, nameof(UnblockByNameRpc), characterName)) return;
+            ContactsService.ServerUnblockByName(this, characterName);
+        }
 
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
-        private void FavouriteRpc(string characterId, bool favourite) => ContactsService.ServerSetFavourite(this, characterId, favourite);
+        private void FavouriteRpc(string characterId, bool favourite)
+        {
+            if (!RpcBudget.Allow(this, CallKind.Social, nameof(FavouriteRpc))) return;
+            if (!RpcBudget.TextFits(this, nameof(FavouriteRpc), characterId)) return;
+            ContactsService.ServerSetFavourite(this, characterId, favourite);
+        }
 
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
-        private void NoteRpc(string characterId, string note) => ContactsService.ServerSetNote(this, characterId, note);
+        private void NoteRpc(string characterId, string note)
+        {
+            if (!RpcBudget.Allow(this, CallKind.Social, nameof(NoteRpc))) return;
+            if (!RpcBudget.TextFits(this, nameof(NoteRpc), characterId)) return;
+            if (!RpcBudget.TextFits(this, nameof(NoteRpc), note)) return;
+            ContactsService.ServerSetNote(this, characterId, note);
+        }
 
         // ------------------------------------------------------------------ server -> owner (used by ContactsService)
 

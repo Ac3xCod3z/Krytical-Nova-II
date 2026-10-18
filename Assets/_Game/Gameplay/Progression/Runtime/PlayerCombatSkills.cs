@@ -1,3 +1,4 @@
+using KryticalNova.Networking;
 using System;
 using KryticalNova.Core;
 using System.Collections.Generic;
@@ -525,9 +526,11 @@ namespace KryticalNova.Progression
             return count;
         }
 
-        [ServerRpc]
+        [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
         private void UpgradeServerRpc(string skillId, int count)
         {
+            if (!RpcBudget.Allow(this, CallKind.Money, nameof(UpgradeServerRpc))) return;
+            if (!RpcBudget.TextFits(this, nameof(UpgradeServerRpc), skillId)) return;
             var skill = GetSkill(skillId);
             if (skill != null) TryUpgradeMultiple(skill, count);
         }
@@ -667,9 +670,11 @@ namespace KryticalNova.Progression
         private static Transform FromReference(NetworkObjectReference reference) =>
             reference.TryGet(out NetworkObject netObj) ? netObj.transform : null;
 
-        [ServerRpc]
+        [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
         private void RequestCastSkillServerRpc(string skillId, NetworkObjectReference targetReference)
         {
+            if (!RpcBudget.Allow(this, CallKind.Combat, nameof(RequestCastSkillServerRpc))) return;
+            if (!RpcBudget.TextFits(this, nameof(RequestCastSkillServerRpc), skillId)) return;
             var skill = GetSkill(skillId);
             if (skill == null) return;
 

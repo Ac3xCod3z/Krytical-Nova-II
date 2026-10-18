@@ -1,3 +1,4 @@
+using KryticalNova.Networking;
 using System;
 using System.Collections.Generic;
 using KryticalNova.Combat;
@@ -199,6 +200,7 @@ namespace KryticalNova.Pets
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
         private void ShareTrickRpc(int nameHash)
         {
+            if (!RpcBudget.Allow(this, CallKind.Cosmetic, nameof(ShareTrickRpc))) return;
             // Only a show, so only the pace is held: a game sending faster than a pet takes turns is ignored.
             if (Time.unscaledTime < nextSharedTrick) return;
             nextSharedTrick = Time.unscaledTime + SharedTrickSeconds;

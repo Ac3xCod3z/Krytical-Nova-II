@@ -663,9 +663,14 @@ namespace KryticalNova.Networking
             maxPlayersNow = options.maxPlayers;
             PrepareConnections();
             nm.OnClientConnectedCallback += id => Debug.Log($"[Server] Player joined (connection {id}). Online: {nm.ConnectedClientsIds.Count}.");
+            // Every request a game sends is held to a speed limit, and foul play is flagged (online phase 2, milestone 3).
+            RpcBudget.Configure(options.callLimits);
+            SecurityFlags.LogFolder = options.SaveFolderPath;
             nm.OnClientDisconnectCallback += id =>
             {
                 ServerAccounts.Forget(id);
+                RpcBudget.Forget(id);
+                NetworkHealth.Forget(id);
                 Debug.Log($"[Server] Player left (connection {id}). Online: {OnlineWithout(nm, id)}.");
             };
             // Unity's sign-in keys, fetched now so the first player is not kept waiting (online phase 2).

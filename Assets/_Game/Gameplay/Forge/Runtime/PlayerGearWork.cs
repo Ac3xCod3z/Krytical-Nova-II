@@ -1,3 +1,4 @@
+using KryticalNova.Networking;
 using System;
 using System.Collections.Generic;
 using KryticalNova.Core;
@@ -124,19 +125,39 @@ namespace KryticalNova.Forge
         }
 
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
-        private void TemperRpc(short cell, ushort alloyItemId, ushort protectionItemId) => ServerTemper(cell, alloyItemId, protectionItemId);
+        private void TemperRpc(short cell, ushort alloyItemId, ushort protectionItemId)
+        {
+            if (!RpcBudget.Allow(this, CallKind.Money, nameof(TemperRpc))) return;
+            ServerTemper(cell, alloyItemId, protectionItemId);
+        }
 
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
-        private void FuseRpc(short targetCell, short materialCell) => ServerFuse(targetCell, materialCell);
+        private void FuseRpc(short targetCell, short materialCell)
+        {
+            if (!RpcBudget.Allow(this, CallKind.Money, nameof(FuseRpc))) return;
+            ServerFuse(targetCell, materialCell);
+        }
 
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
-        private void TuneRpc(short cell) => ServerTune(cell);
+        private void TuneRpc(short cell)
+        {
+            if (!RpcBudget.Allow(this, CallKind.Money, nameof(TuneRpc))) return;
+            ServerTune(cell);
+        }
 
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
-        private void ResetTuningRpc(short cell) => ServerResetTuning(cell);
+        private void ResetTuningRpc(short cell)
+        {
+            if (!RpcBudget.Allow(this, CallKind.Money, nameof(ResetTuningRpc))) return;
+            ServerResetTuning(cell);
+        }
 
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
-        private void ReforgeRpc(short cell) => ServerReforge(cell);
+        private void ReforgeRpc(short cell)
+        {
+            if (!RpcBudget.Allow(this, CallKind.Money, nameof(ReforgeRpc))) return;
+            ServerReforge(cell);
+        }
 
         // ------------------------------------------------------------------ server
 

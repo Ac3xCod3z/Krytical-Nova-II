@@ -1,3 +1,4 @@
+using KryticalNova.Networking;
 using System;
 using System.Collections;
 using KryticalNova.Core;
@@ -124,6 +125,7 @@ namespace KryticalNova.Combat
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
         private void RequestRpc(NetworkObjectReference targetReference)
         {
+            if (!RpcBudget.Allow(this, CallKind.Social, nameof(RequestRpc))) return;
             PlayerDuel target = targetReference.TryGet(out NetworkObject targetObject) ? targetObject.GetComponent<PlayerDuel>() : null;
             if (target == null || target == this) { Tell("Select another player to call out."); return; }
             if (!Alive) { Tell("You cannot ask for a callout while defeated."); return; }
@@ -148,6 +150,7 @@ namespace KryticalNova.Combat
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
         private void RespondRpc(bool accept)
         {
+            if (!RpcBudget.Allow(this, CallKind.Social, nameof(RespondRpc))) return;
             PlayerDuel from = challenger;
             bool live = from != null && from.IsSpawned && Time.time <= challengeExpires;
             challenger = null;
@@ -175,6 +178,7 @@ namespace KryticalNova.Combat
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
         private void ForfeitRpc()
         {
+            if (!RpcBudget.Allow(this, CallKind.Social, nameof(ForfeitRpc))) return;
             if (opponent == null) { Tell("You are not in a callout."); return; }
             Finish(opponent, this, $"{DuelistName} forfeited.");
         }

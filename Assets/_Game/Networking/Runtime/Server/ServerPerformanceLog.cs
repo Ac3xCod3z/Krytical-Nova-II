@@ -103,6 +103,8 @@ namespace KryticalNova.Networking
             int players = network != null && network.IsServer ? network.ConnectedClientsIds.Count : 0;
             long memory = GC.GetTotalMemory(false) / (1024 * 1024);
             long reserved = UnityEngine.Profiling.Profiler.GetTotalReservedMemoryLong() / (1024 * 1024);
+            // Lag beside the load (owner, 18 Oct 2026): late hits from everyone at once point at the server, from one player at their line.
+            NetworkHealth.TakeTotals(out int lateHits, out int goneTargets, out int worstPing);
 
             LastAverageMs = average;
             LastWorstMs = worst;
@@ -118,7 +120,9 @@ namespace KryticalNova.Networking
                     fps.ToString("0.0", CultureInfo.InvariantCulture), average.ToString("0.00", CultureInfo.InvariantCulture),
                     p95.ToString("0.00", CultureInfo.InvariantCulture), worst.ToString("0.00", CultureInfo.InvariantCulture),
                     slow.ToString(CultureInfo.InvariantCulture), Busy.Count.ToString(CultureInfo.InvariantCulture),
-                    memory.ToString(CultureInfo.InvariantCulture), reserved.ToString(CultureInfo.InvariantCulture)));
+                    memory.ToString(CultureInfo.InvariantCulture), reserved.ToString(CultureInfo.InvariantCulture),
+                    lateHits.ToString(CultureInfo.InvariantCulture), goneTargets.ToString(CultureInfo.InvariantCulture),
+                    worstPing.ToString(CultureInfo.InvariantCulture)));
                 file?.Flush();
             }
             catch (Exception e)
@@ -135,7 +139,7 @@ namespace KryticalNova.Networking
             Directory.CreateDirectory(folder);
             string path = Path.Combine(folder, $"server_{DateTime.Now:yyyyMMdd_HHmmss}.csv");
             file = new StreamWriter(path, false);
-            file.WriteLine("time,players,fps,busy_avg_ms,busy_p95_ms,busy_worst_ms,slow_frames,frames,managed_mb,reserved_mb");
+            file.WriteLine("time,players,fps,busy_avg_ms,busy_p95_ms,busy_worst_ms,slow_frames,frames,managed_mb,reserved_mb,late_hits,gone_targets,worst_ping_ms");
             Debug.Log("[Server] Performance log: " + path);
         }
 

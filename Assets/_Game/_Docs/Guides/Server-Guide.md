@@ -133,12 +133,13 @@ What is on the page:
 
 | Part | What it does |
 | --- | --- |
-| Top | The server's name, ONLINE (or STOP IN … / RESTART IN … during a countdown), players on, how long it has run, the map, the next backup. **Log out**. |
+| Top | The game's name logo, the server's own name under it, ONLINE (or STOP IN … / RESTART IN … during a countdown), players on, how long it has run, the map, the next backup. **Log out**. |
 | How to connect | The address and port players type in **F1**, with a **Copy** button. |
-| Players on | Everyone on: name (a yellow **GM** before a GM who is signed in), level, faction, map. **Kick** asks for a reason they will read, then sends them away (they can join again). |
+| Players on | Everyone on: name (a **GM** tag before a GM who is signed in), level, faction, map, and **Ping · late**: their round trip to the server and how many of their hits came too late to count in the last 5 minutes (shown in red past 250 ms or 20 late). That is lag, not cheating: one player with many has a bad connection; everyone at once means the server is struggling. **Kick** asks for a reason they will read, then sends them away (they can join again). |
 | Run the server | **Save now** (everyone saved at once), **Backup now**, **Announce** (a line every player reads), and **Restart** / **Stop** after the number of seconds you set, with the players told as it counts down. **Cancel** calls a countdown off. Each asks first. |
 | Game Masters | Who may be GM (three at most), whether each is in the game now (**in the game**), **Remove**, and **Add GM** with a name and their own GM password. Saved into `server-settings.json` at once. |
 | GM command | Any GM command, as in the server's window (`gm.help` lists them all). The answer shows below. |
+| Flags | Live: anything a real game would never do. Who (character, account, connection), where (map and position), what they sent, why it was refused, and what the server did (**Ignored**, or **Disconnected** in red). The same thing again from the same player counts up on one line (x10, x40). **Filter** by a name, account or map; **Clear view** empties the list on this page only. Every flag is also kept in `flags.log` beside the saves. |
 | Live log | What the server says, newest at the bottom. Unity's start-up noise is hidden; tick **every line** to see it all. |
 
 **Safety:** the page answers the home network only, never the internet (and must never be forwarded on the router).
@@ -147,6 +148,31 @@ another web site cannot press it for you. The page is plain `http` on your home 
 public Wi-Fi.
 
 **No page:** set `pagePort` to `0` in the settings and restart.
+
+### Speed limits and flags (phase 2)
+
+Every request a game sends (a click, a skill, an item move, a trade, a chat line) has a **speed limit**, so a hacked
+game cannot flood the server or rush through things faster than anyone could play. Real play never meets them. They
+are in `server-settings.json` under `callLimits`, one pair per kind: `burst` (how many at once) and `perSecond` (how
+many more each second):
+
+| Kind | Covers | Burst | Per second |
+| --- | --- | --- | --- |
+| `move` | clicks, jumps, travel | 30 | 20 |
+| `combat` | skills, attacks, hit reports | 25 | 15 |
+| `items` | Pack, gear and Vault moves | 40 | 15 |
+| `money` | trade, Kiosk, shop, forge, upgrades | 10 | 5 |
+| `social` | invites, Crew, Contacts, Squad | 8 | 3 |
+| `chat` | messages | 5 | 1 |
+| `cosmetic` | emotes, pet tricks | 8 | 4 |
+| `account` | sign-in, settings, GM lines | 5 | 2 |
+
+A request over its limit is ignored and **flagged**. A game with `floodDrops` (50) ignored within `floodSeconds` (10) is
+**disconnected** ("Too many requests"). Text longer than `longestText` (500 characters) is refused too. Change a number
+and restart the server. Also flagged: a position that is not a real place, a melee hit on a friend, from beyond reach or
+with a step that does not exist, a Kiosk with more stacks than it holds. A hit that only came too late (normal lag) is
+never flagged: it shows in the players' **late** count instead, and in the performance log (`late_hits`,
+`gone_targets`, `worst_ping_ms`).
 
 ## 4. The settings file
 
@@ -563,6 +589,9 @@ Things learned the hard way:
   logs a browser that hung up before the answer, and no longer answers the spare connections a browser opens ahead
   and closes unused (answering them filled the log with "Control page request failed: Unable to write data to the
   transport connection", about once a second while the page was open).
+- 18 Oct 2026: phase 2 milestone 3: speed limits on every request (`callLimits`, added to an older settings file by
+  itself), the **Flags** section and `flags.log`, the **Ping · late** column and the lag columns in the performance
+  log; the page in the name logo's colours with the logo in place of the written name (owner).
 - 18 Oct 2026: phase 2 milestone 2: Direct joins are encrypted (the `certificates` folder beside the server, the
   master key in Documents\KryticalNova-Secrets); games from before this cannot join a server built after it.
 - 18 Oct 2026: phase 2 milestone 1: the game signs in to Unity by itself and the server checks it; saves are kept under the proven account; old characters are carried over once; GMs are bound to accounts on the control page (no GM password in the game) and F2 opens only for GMs.

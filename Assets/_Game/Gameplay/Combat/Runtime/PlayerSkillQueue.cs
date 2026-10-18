@@ -1,3 +1,4 @@
+using KryticalNova.Networking;
 using System;
 using System.Collections;
 using KryticalNova.Player;
@@ -148,17 +149,23 @@ namespace KryticalNova.Combat
 
         // ------------------------------------------------------------------ the server walks in and casts
 
-        [ServerRpc]
+        [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
         private void QueueServerRpc(string skillId, NetworkObjectReference targetReference)
         {
+            if (!RpcBudget.Allow(this, CallKind.Combat, nameof(QueueServerRpc))) return;
+            if (!RpcBudget.TextFits(this, nameof(QueueServerRpc), skillId)) return;
             SkillDefinitionSO skill = skills.GetSkill(skillId);
             Transform target = targetReference.TryGet(out NetworkObject targetObject) ? targetObject.transform : null;
             if (skill == null || !skill.IsAttack || skill.IsCharged) { EndedRpc(string.Empty); return; }
             ServerBegin(skill, target);
         }
 
-        [ServerRpc]
-        private void ClearServerRpc() => ServerStop(halt: true);
+        [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
+        private void ClearServerRpc()
+        {
+            if (!RpcBudget.Allow(this, CallKind.Combat, nameof(ClearServerRpc))) return;
+            ServerStop(halt: true);
+        }
 
         // The player's own move order (a click on the ground, a stop): the queue gives way to it.
         private void OnMoveOrdered()

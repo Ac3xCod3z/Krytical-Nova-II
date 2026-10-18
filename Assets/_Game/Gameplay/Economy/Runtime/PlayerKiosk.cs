@@ -1,3 +1,4 @@
+using KryticalNova.Networking;
 using System;
 using System.Collections.Generic;
 using KryticalNova.CharacterCreation;
@@ -155,17 +156,37 @@ namespace KryticalNova.Economy
         }
 
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
-        private void OpenRpc(string shopName, KioskOffer[] offers, byte tier) => Answer(KioskService.ServerOpen(this, shopName, offers, tier));
+        private void OpenRpc(string shopName, KioskOffer[] offers, byte tier)
+        {
+            if (!RpcBudget.Allow(this, CallKind.Money, nameof(OpenRpc))) return;
+            if (!RpcBudget.TextFits(this, nameof(OpenRpc), shopName)) return;
+            // The Kiosk window never offers more stacks than a Kiosk holds.
+            if (offers != null && Settings != null && offers.Length > Settings.kioskSlots)
+            {
+                RpcBudget.Refuse(this, nameof(OpenRpc), $"Listed {offers.Length} stacks in a Kiosk", $"A Kiosk holds {Settings.kioskSlots}");
+                return;
+            }
+            Answer(KioskService.ServerOpen(this, shopName, offers, tier));
+        }
 
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
-        private void CloseRpc() => Answer(KioskService.ServerClose(this));
+        private void CloseRpc()
+        {
+            if (!RpcBudget.Allow(this, CallKind.Money, nameof(CloseRpc))) return;
+            Answer(KioskService.ServerClose(this));
+        }
 
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
-        private void CollectRpc() => Answer(KioskService.ServerCollect(this));
+        private void CollectRpc()
+        {
+            if (!RpcBudget.Allow(this, CallKind.Money, nameof(CollectRpc))) return;
+            Answer(KioskService.ServerCollect(this));
+        }
 
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
         private void BuyRpc(NetworkObjectReference standReference, byte index, KioskListing expected, ushort count)
         {
+            if (!RpcBudget.Allow(this, CallKind.Money, nameof(BuyRpc))) return;
             KioskStand stand = standReference.TryGet(out NetworkObject standObject) ? standObject.GetComponent<KioskStand>() : null;
             Answer(stand != null ? KioskService.ServerBuy(this, stand, index, expected, count) : "That Kiosk has closed.");
         }
