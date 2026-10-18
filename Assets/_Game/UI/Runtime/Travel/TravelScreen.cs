@@ -8,12 +8,13 @@ using UnityEngine.UI;
 namespace KryticalNova.UI.Travel
 {
     /// <summary>
-    /// The screen shown while travelling between maps, drawn like a comic page: the destination region's concept
-    /// painting in an ink panel, a black title strip ("NOW ENTERING ...") above it, a red strip with the level band
-    /// and PvP rule below, a sound-effect burst, and in the bottom-right corner a yellow caption box with the lore.
-    /// Clicking the caption flips the page to the next painting and its lore (once every <see cref="flipCooldown"/>
-    /// seconds, so it cannot be spammed): the map's own region first, then the other regions
-    /// (<see cref="ZoneCatalog.BuildDeck"/>). Every map scene carries one; the first lives on across loads and the
+    /// The screen shown while travelling between maps, drawn like a comic page: a painting in an ink panel, a black
+    /// title strip ("NOW ENTERING ...") above it, a red strip with the level band and PvP rule below, a sound-effect
+    /// burst, and in the bottom-right corner a yellow caption box with the lore. Clicking the caption flips the page to
+    /// the next lore (once every <see cref="flipCooldown"/> seconds, so it cannot be spammed): the map's own first,
+    /// then its region's, then the other regions' (<see cref="ZoneCatalog.BuildDeck"/>). The paintings are drawn at
+    /// random from every picture in the catalog (<see cref="ZoneCatalog.Pictures"/>), a new one on every page and
+    /// never the one the last trip ended on; the panel takes each picture's own shape, so none is cropped or squashed. Every map scene carries one; the first lives on across loads and the
     /// others remove themselves, so the screen stays up while the old map unloads and the new one starts.
     /// </summary>
     [DisallowMultipleComponent]
@@ -37,6 +38,9 @@ namespace KryticalNova.UI.Travel
         [SerializeField, Min(1f)] private float maximumLinger = 15f;
 
         private static TravelScreen living;
+        // The picture on screen when the last trip ended: the next trip does not open on it.
+        private static Texture2D lastPicture;
+        private static readonly System.Random Dice = new System.Random();
 
         private TMP_FontAsset titleAsset, bodyAsset;
         private CanvasGroup group;
@@ -46,14 +50,20 @@ namespace KryticalNova.UI.Travel
         private Image captionFill;
 
         private readonly List<TravelPage> deck = new List<TravelPage>();
-        private int page;
+        private readonly List<Texture2D> pictures = new List<Texture2D>();
+        private int page, picture;
+        private Vector2 frameFrom, frameTo;
         private float shownAt, lastFlip = -99f, arrivedAt = -1f;
         private float flipT = -1f, fadeT, artBlend = 1f;
         private bool visible, swapped;
 
         // Enter Play Mode runs without a domain reload, so statics must be reset by hand.
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        private static void ResetStatics() => living = null;
+        private static void ResetStatics()
+        {
+            living = null;
+            lastPicture = null;
+        }
 
         private void Awake()
         {
@@ -85,6 +95,9 @@ namespace KryticalNova.UI.Travel
         {
             deck.Clear();
             if (catalog != null) deck.AddRange(catalog.BuildDeck(zone));
+            pictures.Clear();
+            if (catalog != null) pictures.AddRange(ZoneCatalog.Shuffled(catalog.Pictures(), lastPicture, Dice));
+            picture = 0;
             ZoneRegion home = catalog != null ? catalog.Region(zone.region) : null;
 
             title.text = zone.displayName.ToUpperInvariant();
@@ -127,12 +140,13 @@ namespace KryticalNova.UI.Travel
             artFrame.localScale = Vector3.one * (1.0f + 0.012f * Mathf.Sin((now - shownAt) * 0.35f));
             burst.localScale = Vector3.one * (1f + 0.04f * Mathf.Sin(now * 5f));
 
-            // Painting crossfade.
+            // Painting crossfade, the panel easing into the new picture's shape as it goes.
             if (artBlend < 1f)
             {
                 artBlend = Mathf.MoveTowards(artBlend, 1f, dt / 0.35f);
                 artFront.color = new Color(1f, 1f, 1f, artBlend);
                 if (artBlend >= 1f) artBack.texture = artFront.texture;
+                SizeFrame(Vector2.Lerp(frameFrom, frameTo, Mathf.SmoothStep(0f, 1f, artBlend)));
             }
 
             // Caption flip: squeeze, swap, spring back.
@@ -168,6 +182,7 @@ namespace KryticalNova.UI.Travel
             if (!visible || deck.Count < 2 || now - lastFlip < flipCooldown || flipT >= 0f) return;
             lastFlip = now;
             page = (page + 1) % deck.Count;
+            picture++;
             flipT = 0f;
             swapped = false;
         }
@@ -180,31 +195,60 @@ namespace KryticalNova.UI.Travel
             captionLore.text = p.Lore ?? string.Empty;
             captionPage.text = $"PAGE {page + 1} / {deck.Count}";
             captionHint.text = deck.Count > 1 ? "CLICK TO FLIP »" : string.Empty;
-            FitArt(p.Art);
+            Texture2D art = pictures.Count > 0 ? pictures[picture % pictures.Count] : p.Art;
+            lastPicture = art;
+            frameFrom = artFrame.sizeDelta;
+            frameTo = FitArt(art);
             if (immediate || artBack.texture == null)
             {
-                artBack.texture = p.Art;
-                artFront.texture = p.Art;
+                artBack.texture = art;
+                artFront.texture = art;
                 artFront.color = Color.white;
                 artBlend = 1f;
+                SizeFrame(frameTo);
             }
             else
             {
-                artFront.texture = p.Art;
+                artFront.texture = art;
                 artFront.color = new Color(1f, 1f, 1f, 0f);
                 artBlend = 0f;
             }
             caption.localRotation = Quaternion.Euler(0f, 0f, page % 2 == 0 ? -1.6f : 1.2f);
         }
 
-        /// <summary>The panel takes the painting's shape inside the space between the strips.</summary>
-        private void FitArt(Texture art)
+        // The ink frame and paper border round the picture: 6 + 8 on each side.
+        private const float FrameBorder = 28f;
+
+        /// <summary>The panel size that gives the painting its own shape inside the space between the strips.</summary>
+        private static Vector2 FitArt(Texture art)
         {
             const float maxW = 1780f, maxH = 700f;
             float aspect = art != null && art.height > 0 ? (float)art.width / art.height : maxW / maxH;
             float w = maxW, h = maxW / aspect;
             if (h > maxH) { h = maxH; w = maxH * aspect; }
-            artFrame.sizeDelta = new Vector2(w + 28f, h + 28f);
+            return new Vector2(w + FrameBorder, h + FrameBorder);
+        }
+
+        /// <summary>
+        /// Sizes the panel. While it is between two shapes each painting fills the window and its overflow is cut
+        /// evenly from both sides, so neither is ever squashed; at rest the panel is the painting's shape and nothing is cut.
+        /// </summary>
+        private void SizeFrame(Vector2 size)
+        {
+            artFrame.sizeDelta = size;
+            var window = new Vector2(size.x - FrameBorder, size.y - FrameBorder);
+            Cover(artBack, window);
+            Cover(artFront, window);
+        }
+
+        private static void Cover(RawImage image, Vector2 window)
+        {
+            Texture art = image.texture;
+            if (art == null || art.height <= 0 || window.x <= 0f || window.y <= 0f) { image.uvRect = new Rect(0f, 0f, 1f, 1f); return; }
+            float aspect = (float)art.width / art.height, shape = window.x / window.y;
+            image.uvRect = aspect > shape
+                ? new Rect((1f - shape / aspect) * 0.5f, 0f, shape / aspect, 1f)
+                : new Rect(0f, (1f - aspect / shape) * 0.5f, 1f, aspect / shape);
         }
 
         private void SetVisible(bool show)
