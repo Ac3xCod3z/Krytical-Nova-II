@@ -26,7 +26,7 @@ namespace KryticalNova.Items
         private readonly WearSetResult result = new WearSetResult();
         private NetworkList<LoadoutEntry> netEntries;
         private PlayerInventory inventory;
-        private PlayerSaveAgent saveAgent;
+        private ISaveScheduler saveAgent;
 
         /// <summary>Raised on the owner (and where the game is decided) when a slot changes.</summary>
         public event Action Changed;
@@ -40,7 +40,7 @@ namespace KryticalNova.Items
         private void Awake()
         {
             inventory = GetComponent<PlayerInventory>();
-            saveAgent = GetComponent<PlayerSaveAgent>();
+            saveAgent = GetComponent<ISaveScheduler>();
             netEntries = new NetworkList<LoadoutEntry>(null, NetworkVariableReadPermission.Owner, NetworkVariableWritePermission.Server);
         }
 

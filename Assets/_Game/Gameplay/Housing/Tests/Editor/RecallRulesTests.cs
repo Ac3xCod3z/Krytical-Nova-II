@@ -1,6 +1,7 @@
 using KryticalNova.Player;
 using NUnit.Framework;
 using UnityEngine;
+using KryticalNova.Housing;
 
 namespace KryticalNova.Tests
 {

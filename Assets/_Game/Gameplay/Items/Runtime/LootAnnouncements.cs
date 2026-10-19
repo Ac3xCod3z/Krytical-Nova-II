@@ -25,9 +25,8 @@ namespace KryticalNova.Items
         public static void ServerFound(GameObject finder, ItemDefinition item, bool enabled, ItemRarity from)
         {
             if (finder == null || item == null || !IsAnnounced(enabled, from, item.rarity)) return;
-            string player = finder.TryGetComponent(out PlayerChat chat) ? chat.SpeakerName : finder.name;
-            PlayerChat.ServerAnnounce(AnnouncementKind.Drop, ChatChannel.System, string.Empty,
-                Text(player, item.displayName), player + "|" + item.displayName, (byte)item.rarity);
+            string player = ServerChat.NameOf(finder);
+            ServerChat.Announce?.Invoke(AnnouncementKind.Drop, Text(player, item.displayName), player + "|" + item.displayName, (byte)item.rarity);
         }
     }
 }

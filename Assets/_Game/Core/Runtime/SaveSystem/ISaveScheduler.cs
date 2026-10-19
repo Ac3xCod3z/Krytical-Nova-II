@@ -1,7 +1,7 @@
 namespace KryticalNova.Core
 {
     /// <summary>
-    /// "Save this character soon": what a player system asks of the save agent on its own object after a change that
+    /// "Save this character (soon)": what a player system asks of the save agent on its own object after a change that
     /// must not be lost but may come in bursts. In Core so that systems below Persistence (Progression's Nova and
     /// Serums) can ask without naming the agent; <c>PlayerSaveAgent</c> is the one there is.
     /// </summary>
@@ -9,5 +9,11 @@ namespace KryticalNova.Core
     {
         /// <summary>Server (or offline): saves within a moment instead of at the next autosave.</summary>
         void SaveSoon(float withinSeconds = 2f);
+
+        /// <summary>Server (or offline): writes this player now, if anything changed. For what must not be lost.</summary>
+        void Save();
+
+        /// <summary>Adds items to this player's ledger tally of <paramref name="kind"/> (from <c>LedgerKinds</c>).</summary>
+        void TallyItems(string kind, int itemId, int count, string itemName);
     }
 }

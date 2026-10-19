@@ -5,6 +5,7 @@ using KryticalNova.Items.Visuals;
 using KryticalNova.Player;
 using UnityEngine;
 using UnityEngine.UIElements;
+using KryticalNova.CharacterCreation;
 
 namespace KryticalNova.UI.Hud
 {

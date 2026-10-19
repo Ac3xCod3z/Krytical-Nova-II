@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace KryticalNova.Player
+namespace KryticalNova.Housing
 {
     /// <summary>
     /// The rules of a Recall Tag, kept apart from the component so they can be tested: when one may be used, and

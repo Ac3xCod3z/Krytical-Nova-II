@@ -430,6 +430,9 @@ for fi, f in enumerate(files):
         segs = [s.strip() for s in m.group(1).split(".")]
         if segs[0] in KEYWORDS:
             continue
+        # a bare name called like a method ("ServerSave(index)") is a method, unless it is constructed ("new X(")
+        if len(segs) == 1 and t[m.end():m.end() + 1] == "(" and not re.search(r"\bnew\s*$", t[max(0, m.start() - 8):m.start()]):
+            continue
         tid, nxt = resolve_chain(segs, f, vis, aliases)
         if tid is None or tid == owner:
             continue

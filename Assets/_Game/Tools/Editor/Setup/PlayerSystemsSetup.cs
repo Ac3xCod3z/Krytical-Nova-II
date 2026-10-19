@@ -39,7 +39,7 @@ namespace KryticalNova.EditorTools
         public const string SquadSettingsPath = "Assets/_Game/Gameplay/Social/Data/Assets/SquadSettings.asset";
         public const string SponsorSettingsPath = "Assets/_Game/Gameplay/Social/Data/Assets/SponsorSettings.asset";
         public const string HousingSettingsPath = "Assets/_Game/Gameplay/Housing/Data/Assets/HousingSettings.asset";
-        public const string RecallSettingsPath = "Assets/_Game/Gameplay/Player/Data/Assets/RecallSettings.asset";
+        public const string RecallSettingsPath = "Assets/_Game/Gameplay/Housing/Data/Assets/RecallSettings.asset";
         public const string WallstrideSettingsPath = "Assets/_Game/Gameplay/Player/Data/Assets/WallstrideSettings.asset";
         // Wallstride's stand-in clips until a climbing set exists: a vault's plant and its go-over, the vault pack's run
         // loop (the body is moved by the motor, never by the clip), and the Base Locomotion crouch and fall.
@@ -111,7 +111,7 @@ namespace KryticalNova.EditorTools
                 ("perchClip", BaseLocomotion + "Idles/A_MOD_BL_Idle_Crouching_Masc.fbx"),
                 ("dropClip", BaseLocomotion + "InAir/A_MOD_BL_InAir_FallLarge_Masc.fbx")),
             // The Recall Tag: a channel, then back to the map's spawn points.
-            new Row("KryticalNova.Player.PlayerRecall", ("settings", RecallSettingsPath)),
+            new Row("KryticalNova.Housing.PlayerRecall", ("settings", RecallSettingsPath)),
             // The Flux Flask: a drink of Flux over time, and the refill at an Apothecary.
             new Row("KryticalNova.Items.PlayerFlask", ("settings", FlaskSettingsPath)),
             // Equipment loadouts: ten saved sets of worn gear, put on again from the Pack in one go.

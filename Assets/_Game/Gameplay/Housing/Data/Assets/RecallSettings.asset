@@ -11,7 +11,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: ae71b381e966f0541b3b8e53f34ac78a, type: 3}
   m_Name: RecallSettings
-  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Player.RecallSettings
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Housing.RecallSettings
   channelSeconds: 5
   moveTolerance: 0.5
   refundWhenStopped: 1
