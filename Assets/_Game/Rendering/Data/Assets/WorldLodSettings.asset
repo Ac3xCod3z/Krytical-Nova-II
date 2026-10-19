@@ -33,18 +33,22 @@ MonoBehaviour:
     lodBias: 0.7
     meshLodThreshold: 3
     smallMeshCullPercent: 0.6
+    noShadowBelowSize: 2
   - preset: Medium
     lodBias: 1.2
     meshLodThreshold: 2
     smallMeshCullPercent: 0.35
+    noShadowBelowSize: 1
   - preset: High
     lodBias: 2
     meshLodThreshold: 1.2
     smallMeshCullPercent: 0.15
+    noShadowBelowSize: 0
   - preset: Ultra
     lodBias: 3
     meshLodThreshold: 0.8
     smallMeshCullPercent: 0
+    noShadowBelowSize: 0
   maxMeshLods: -1
   characterMidDistance: 25
   characterFarDistance: 60

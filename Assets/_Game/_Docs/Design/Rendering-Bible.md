@@ -1042,6 +1042,67 @@ accepts. Its GPU occlusion culling is off: the camera looks down, so little hide
 - **Not done:** impostors for far trees, LOD for characters' own meshes (they are assembled from parts at run time),
   and a check that flags a placed mesh without its LODGroup.
 
+### Batching (18 Oct 2026)
+
+"Batching" is drawing many things with one call instead of one call each. What the game already batches:
+
+| Method | State |
+|---|---|
+| SRP Batcher | on (`PC_RPAsset`) |
+| GPU Resident Drawer: every compatible MeshRenderer drawn instanced from the GPU | on; its occlusion culling off |
+| Batched GPU skinning (all characters skinned in one compute pass) | on (`meshDeformation: 2`) |
+| Character parts merged into one skinned mesh | on (`CharacterAppearance`) |
+| Grass: one indirect instanced draw per grass type | on (`GrassRenderer`) |
+| Static batching | **off**: it merges meshes into one with no LODs, so Mesh LOD did nothing (section "Level of detail") |
+| Dynamic batching | off (it only helps without the SRP Batcher) |
+
+- **The Batching Report** (Krytical Nova ▸ Rendering ▸ Batching Report (Open Scene), `gm.batching`, World tab of GM
+  Tools; `BatchingReport`) lists every renderer the Resident Drawer does not draw and why (skinned, particles, a
+  MaterialPropertyBlock set, a shader without DOTS instancing, a script with `OnRenderObject` / `OnWillRenderObject`,
+  part of a static batch), the shaders by variant count, and the shadow casters by kind. One pass, 0.1 s over Zone01.
+  It writes `Library/KryticalNova.Batching.txt` (Editor) or a `batching_` file beside the performance logs (build).
+- **Zone01, 18 Oct 2026:** 8,677 renderers, **8,439 (97 %) drawn by the Resident Drawer**. Not: 186 particle systems
+  (162 of them the 81 hover cars' exhaust and booster; they are culled off screen already, their cost is simulation,
+  not draws), 18 skinned characters, 34 signs and holograms on TextMeshPro and `Unlit/Texture` shaders. The whole
+  world is **89 materials in 17 shader variants**, so merging materials buys nothing: set-pass calls come from the
+  passes (depth, shadows per cascade, motion vectors), not from variety. 7,487 meshes cast shadows (4,622 props).
+- **What breaks it:** a `MaterialPropertyBlock` on a renderer (use a material property on a per-object material only
+  while it animates, as `OccluderFader` fades), a shader whose properties are not all in `UnityPerMaterial` or that
+  lacks `DOTS.hlsl` (a material with a property outside the buffer draws magenta under the Resident Drawer), a
+  per-object render callback, static batching. Run the report after adding a kind of prop or a shader.
+- **Shadow bands** (`ShadowBands`, `WorldLodSettings.tiers[].noShadowBelowSize`): world meshes smaller than 2 m (Low)
+  or 1 m (Medium) cast no shadow; High and Ultra keep every shadow. Zone01: 1,508 (Low) and 488 (Medium) of 7,186
+  world casters. What each cast before is put back when the band lifts and when the session ends.
+  `gm.batching shadows false` turns them off to measure.
+- **Resident Drawer occlusion culling:** `gm.batching occlusion true` for a test in the streets; the asset's value
+  comes back when the session ends.
+- **DX12:** Windows lists D3D11 first, so the project's Split Graphics Jobs (already set) only run on DX12. A build
+  compares both with `-force-d3d11` / `-force-d3d12`; the performance log's machine line names the API and the
+  threading mode. Measuring builds: Krytical Nova ▸ Build ▸ Measuring Build (Background, IL2CPP), in the build
+  checkout through the Accelerator, nothing uploaded, into `Builds/Windows/KryticalNovaII_Measure`.
+- **Measured 18 Oct 2026** (measuring build, IL2CPP, owner's PC: RTX 5070 Ti, Ryzen 7 9700X, 2560 x 1440 windowed,
+  cap 144; `gm.bench`, means over each stretch, ms per frame). Every run held the 144 cap on average.
+
+  | Run | Main thread | Render thread | GPU | Set-pass | Triangles | Worst frame |
+  |---|---|---|---|---|---|---|
+  | DX11, owner's settings (Custom = Ultra values) | 3.6-3.9 | 0.7 | 2.8 | 175-191 | 367-397 k | 102.9 (a script hitch in the run) |
+  | DX12 + Split Graphics Jobs, same settings | 3.9-4.1 | 0.9-1.0 | 2.6-2.8 | 174-187 | 367-391 k | 128.5 (waiting on the screen) |
+  | DX12, occlusion culling on | 3.9-4.6 | 1.1-1.3 | 2.7-2.8 | 187-190 | 283-346 k | 22.2 |
+  | DX12, Low, shadow bands on (1,512 casters lifted) | 3.6-3.9 | 0.8 | 1.2-1.3 | 158-162 | 97-102 k | 171.5 (waiting on the screen) |
+  | DX12, Low, shadow bands off | 3.6-3.9 | 0.8 | 1.2-1.3 | 164-167 | 97-103 k | 10.7 |
+
+  **What it says.** DX12 buys nothing here: the render thread is under 1 ms because the Resident Drawer already
+  batches the world, so Split Graphics Jobs has nothing to split, and DX12 frames stalled up to 170 ms waiting on the
+  screen (`WaitForLastPresentation`) where DX11's did not. **DX11 stays first**; the Editor and builds were checked on
+  DX12 (Zone01, Terminus, the four menu scenes, 0 errors) and D3D12 stays in the list as the fallback.
+  Occlusion culling cut 7 to 28 % of the triangles but cost up to 0.6 ms of main thread with no GPU gain: **left off**.
+  The shadow bands took 6 set-pass calls off Low with no GPU change on this card (Low's GPU frame is 1.2 ms): **kept**
+  for weaker cards, unproven on one. The worst frames are not drawing: script hitches (`Update` 68-94 ms during the
+  run) and, on DX12, presentation stalls. A frame's main thread of about 4 ms is game code, the next place to look.
+- **Starting presets:** a first launch picks Low (integrated graphics, Steam Deck, four threads or fewer; with a
+  60 fps cap and an upscaler), Medium (GTX, Radeon RX 400 / 500 / 5000, under 6 GB) or High
+  (`GraphicsPreferences.PresetForHardware`). The Player 2 clone always starts on Low.
+
 ### Fog, cones and shadows per preset (16 Oct 2026)
 
 Editor, Zone01 at 23:00 in fog weather, the camera over the player under two lamp cones (the cones' worst case), 10 s
@@ -1096,6 +1157,12 @@ nothing baked, and they are generated (`FrontEndBuilder`), so tune the numbers t
   uGUI draw with a loop of at most eight panels a pixel, for about 1.25 s; not measured against a budget yet).
 
 ## Changelog
+
+- **2026-10-18 (branch `perf/batching-pass`)**: the batching pass (section 7, "Batching"): the Batching Report and
+  `gm.batching`, shadow bands on Low and Medium, switches to measure them and the Resident Drawer's occlusion culling,
+  a background measuring build for DX11 against DX12, the starting preset picked from the hardware, the Player 2
+  clone on Low. The log's new batches and draw-call columns may read 0 while the Resident Drawer is on (as the
+  readout's do); set-pass calls stay the measure.
 
 - **2026-10-17 (branch `claude/modest-cray-vcpw2b`)**: level of detail for every mesh drawn at a distance and for every
   character, per preset; static batching off on Windows (section 7, "Level of detail").
