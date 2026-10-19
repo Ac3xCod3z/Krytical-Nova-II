@@ -302,8 +302,8 @@ your server. Relay joins always were; since 18 Oct 2026 Direct joins are too. No
 ### The save database and save service (phase 4, being built)
 
 The server can save into a real database instead of files: needed before there is more than one server, and so a crash
-in the middle of a trade can never duplicate or lose anything. **Your real server still saves to files** until you
-switch it (below).
+in the middle of a trade can never duplicate or lose anything. **Your real server saves to the database since
+18 Oct 2026** (its old save files stay in `KryticalNovaServer-Save` as a fallback and are no longer written).
 
 **What runs, and where:**
 
