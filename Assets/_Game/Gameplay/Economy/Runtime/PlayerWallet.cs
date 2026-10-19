@@ -3,6 +3,7 @@ using KryticalNova.Core;
 using KryticalNova.Items;
 using Unity.Netcode;
 using UnityEngine;
+using KryticalNova.Wallet;
 
 namespace KryticalNova.Economy
 {
@@ -13,7 +14,7 @@ namespace KryticalNova.Economy
     /// local copy decides.
     /// </summary>
     [DisallowMultipleComponent]
-    public sealed class PlayerWallet : NetworkBehaviour, ISaveParticipant, KryticalNova.Items.ICurrencyReceiver
+    public sealed class PlayerWallet : NetworkBehaviour, ISaveParticipant, KryticalNova.Items.ICurrencyReceiver, IWallet
     {
         [SerializeField] private EconomySettings settings;
 

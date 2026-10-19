@@ -4,9 +4,6 @@
  "twoway": [
   "Gameplay/CharacterCreation <-> Gameplay/Items",
   "Gameplay/Combat <-> Gameplay/Player",
-  "Gameplay/Economy <-> Gameplay/Items",
-  "Gameplay/Economy <-> Gameplay/Progression",
-  "Gameplay/Economy <-> Gameplay/Social",
   "Gameplay/Hostiles <-> Gameplay/Pets",
   "Gameplay/Housing <-> Gameplay/Player",
   "Gameplay/Items <-> Gameplay/Persistence",
@@ -65,7 +62,6 @@
   "3fce5bc6a638e0e4a9cf5a3ad115c80b": "Assets/_Game/Gameplay/Economy/Runtime/PlayerTrade.cs",
   "90ccbdbe6a2d24f40b5d4e3902ef3985": "Assets/_Game/Gameplay/Economy/Runtime/PlayerVault.cs",
   "c7fc7fb9bf8e1704abc510f446862ab1": "Assets/_Game/Gameplay/Economy/Runtime/PlayerWallet.cs",
-  "ba3b96fb9db20214db25e1b737287660": "Assets/_Game/Gameplay/Economy/Runtime/TradeZone.cs",
   "edebfc3e067d34046b5fb9bf1e1c5339": "Assets/_Game/Gameplay/Factions/Data/FactionCatalog.cs",
   "67398180852df2a4988ebb41a1ec6541": "Assets/_Game/Gameplay/Factions/Data/FactionDefinition.cs",
   "c87eba294347db04e8fe0b880106f0b4": "Assets/_Game/Gameplay/Forge/Runtime/PlayerGearWork.cs",
@@ -286,6 +282,7 @@
   "b04cd77f308cded48a26d98a1453db77": "Assets/_Game/World/Runtime/Presentation/VolumetricAtmosphereDriver.cs",
   "baffaa999cb05ef4aa66bdb4750cf0f0": "Assets/_Game/World/Runtime/Presentation/WeatherAmbience.cs",
   "3d4a1de1380d33848befc4e22bf48a86": "Assets/_Game/World/Runtime/Presentation/WindLeavesController.cs",
+  "ba3b96fb9db20214db25e1b737287660": "Assets/_Game/World/Runtime/TradeZone.cs",
   "86b35223612c0a84ba495bea1b5ee59a": "Assets/_Game/World/Runtime/Travel/ZoneRules.cs",
   "6e33ede4dfb777143bcf0553bb0fdeb2": "Assets/_Game/World/Runtime/WorldEnvironmentNetwork.cs"
  }

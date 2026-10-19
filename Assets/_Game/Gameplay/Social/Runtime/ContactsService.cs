@@ -190,8 +190,8 @@ namespace KryticalNova.Social
             // Members of different factions add each other face to face on neutral ground, nowhere else: so the
             // other one has to be in the world, and both have to be standing on it.
             PlayerContacts met = Online(to.characterId);
-            bool neutralGround = met != null && KryticalNova.Economy.TradeZone.CrossFactionAt(from.transform.position)
-                                 && KryticalNova.Economy.TradeZone.CrossFactionAt(met.transform.position);
+            bool neutralGround = met != null && KryticalNova.World.TradeZone.CrossFactionAt(from.transform.position)
+                                 && KryticalNova.World.TradeZone.CrossFactionAt(met.transform.position);
             if (!ContactRules.TryRequest(mine, to, Now, neutralGround, out string reason, out bool becameContacts))
             {
                 from.Notify(reason);

@@ -8,6 +8,7 @@ using KryticalNova.NPC;
 using KryticalNova.Persistence;
 using Unity.Netcode;
 using UnityEngine;
+using KryticalNova.Wallet;
 
 namespace KryticalNova.Progression
 {
@@ -59,7 +60,7 @@ namespace KryticalNova.Progression
         private readonly NetworkVariable<NovaState> netState = new NetworkVariable<NovaState>(default,
             NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
 
-        private PlayerWallet wallet;
+        private IWallet wallet;
         private PlayerCharacterProgression progression;
         private CharacterCombatStats stats;
         private PlayerResources resources;
@@ -130,7 +131,7 @@ namespace KryticalNova.Progression
 
         private void Awake()
         {
-            wallet = GetComponent<PlayerWallet>();
+            wallet = GetComponent<IWallet>();
             progression = GetComponent<PlayerCharacterProgression>();
             stats = GetComponent<CharacterCombatStats>();
             resources = GetComponent<PlayerResources>();

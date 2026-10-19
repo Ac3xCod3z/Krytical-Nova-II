@@ -9,6 +9,7 @@ using KryticalNova.Pets;
 using KryticalNova.Progression;
 using Unity.Netcode;
 using UnityEngine;
+using KryticalNova.Wallet;
 
 namespace KryticalNova.Restyle
 {

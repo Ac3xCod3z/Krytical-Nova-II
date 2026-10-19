@@ -3,6 +3,7 @@ using KryticalNova.Economy;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UIElements;
+using KryticalNova.Wallet;
 
 namespace KryticalNova.UI
 {

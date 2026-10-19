@@ -327,7 +327,7 @@ namespace KryticalNova.EditorTools
         private static bool EnsureZone(string objectName, string zoneName, Vector2 size, bool kiosks, bool neutral)
         {
             if (GameObject.Find(objectName) != null) return false;
-            var zone = new GameObject(objectName).AddComponent<KryticalNova.Economy.TradeZone>();
+            var zone = new GameObject(objectName).AddComponent<KryticalNova.World.TradeZone>();
             var so = new SerializedObject(zone);
             so.FindProperty("zoneName").stringValue = zoneName;
             so.FindProperty("size").vector2Value = size;

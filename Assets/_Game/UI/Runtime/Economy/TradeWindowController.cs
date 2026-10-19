@@ -7,6 +7,7 @@ using KryticalNova.Player;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UIElements;
+using KryticalNova.Wallet;
 
 namespace KryticalNova.UI
 {

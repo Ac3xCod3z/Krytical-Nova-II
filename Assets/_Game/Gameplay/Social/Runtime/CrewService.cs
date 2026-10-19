@@ -6,6 +6,7 @@ using KryticalNova.NPC;
 using KryticalNova.Persistence;
 using Unity.Collections;
 using UnityEngine;
+using KryticalNova.Wallet;
 
 namespace KryticalNova.Social
 {
@@ -127,7 +128,7 @@ namespace KryticalNova.Social
             if (!gm && !NpcInteractable.IsOffered(NpcOffer.CrewRegistry, player.transform.position, RegistryPadding))
             { player.Notify("Crews are registered with a Vaultkeeper."); return; }
 
-            PlayerWallet wallet = player.Wallet;
+            IWallet wallet = player.Wallet;
             long cost = gm ? 0 : settings.foundingCost;
             string blocked = CrewRules.FoundBlockedReason(Of(id) != null, gm ? int.MaxValue : player.Level, settings.founderLevel, wallet != null ? wallet.Creds : 0, cost);
             if (blocked != null) { player.Notify(blocked); return; }
@@ -144,7 +145,7 @@ namespace KryticalNova.Social
             World.crews.Add(crew);
             ByMember[id] = crew;
             // The Creds paid and the new Crew: one change (online phase 4, milestone 3). The Creds are in the wallet's tally.
-            EconomyLedger.Keep(EconomyLedger.Line(player, LedgerKinds.CrewFound, null, "founded " + crew.name));
+            LedgerNote.Keep(player, LedgerKinds.CrewFound, "founded " + crew.name);
             player.ServerSaveWith(WorldName);
             Publish(crew);
             player.Tell(cost > 0

@@ -8,6 +8,8 @@ using KryticalNova.Persistence;
 using KryticalNova.Pets;
 using Unity.Netcode;
 using UnityEngine;
+using KryticalNova.Wallet;
+using KryticalNova.World;
 
 namespace KryticalNova.Economy
 {

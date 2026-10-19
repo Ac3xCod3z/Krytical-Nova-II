@@ -1,5 +1,6 @@
 using KryticalNova.Economy;
 using QFSW.QC;
+using KryticalNova.Wallet;
 
 namespace KryticalNova.DevTools
 {
