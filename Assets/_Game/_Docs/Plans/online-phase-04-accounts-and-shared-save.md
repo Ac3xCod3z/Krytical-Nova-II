@@ -77,6 +77,18 @@ All of that stays. What changes is underneath.
 7. **Real accounts.** Unity Player Accounts on the launcher build, the end of anonymous accounts outside local tests,
    Steam linking ready for the Steam build, and the proof that the Nova Store's web sign-in is the same account.
 
+### Keeping the disk in check (owner, 18 Oct 2026: "kick the oldest so old data does not fill my disk")
+
+- A save **replaces** the one before it (the version goes up; no history of saves is kept), so the database grows with
+  the number of characters, not with how often they save. Postgres's own autovacuum (on by default) takes back the
+  space each replaced row leaves.
+- **Backups** (milestone 6): nightly, the newest 14 kept, older ones deleted by themselves.
+- **The ledger** (milestone 3): kept for a set number of days (`ledgerDays`, 90 to start) in the server's settings;
+  older lines leave the database after that night's backup holds them.
+- **The record files** beside the server (`gm.log`, `economy.log`, `access.log`, `flags.log`): a new file each month,
+  the last 6 kept (done with milestone 3).
+- The control page's Saves chip shows the database's size.
+
 ### As built
 
 **Milestone 1 (18 Oct 2026): Postgres, the save service, the game's side.**

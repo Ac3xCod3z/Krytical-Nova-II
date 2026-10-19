@@ -232,6 +232,18 @@ namespace KryticalNova.Persistence
                 character.level = level;
                 changed = true;
             }
+            // Where the character is (online phase 4): the map and the spot, kept for when there is more than one map.
+            // Only a real move counts as a change, so standing still writes nothing.
+            Vector3 at = transform.position;
+            string map = gameObject.scene.name;
+            if (character.map != map || (new Vector3(character.x, character.y, character.z) - at).sqrMagnitude > 1f)
+            {
+                character.map = map;
+                character.x = Mathf.Round(at.x * 10f) / 10f;
+                character.y = Mathf.Round(at.y * 10f) / 10f;
+                character.z = Mathf.Round(at.z * 10f) / 10f;
+                changed = true;
+            }
             if (!changed) return;
 
             character.savedUtc = DateTime.UtcNow.Ticks;

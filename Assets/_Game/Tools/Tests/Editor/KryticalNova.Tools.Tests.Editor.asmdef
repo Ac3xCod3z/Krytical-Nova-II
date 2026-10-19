@@ -3,6 +3,7 @@
     "rootNamespace": "KryticalNova.Tests",
     "references": [
         "KryticalNova.Editor",
+        "KryticalNova.Runtime",
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner"
     ],

@@ -87,6 +87,70 @@ RETURNING version");
             return new WriteResult(false, now?.Version ?? 0);
         }
 
+        /// <summary>
+        /// Several writes and deletes together (online phase 4, milestone 2): all of them happen, or none. A write whose
+        /// expected version no longer holds turns the whole batch away, naming that document and its version now.
+        /// </summary>
+        public async Task<BatchResult> BatchAsync(IReadOnlyList<WriteRequest> writes, IReadOnlyList<string> deletes)
+        {
+            await using NpgsqlConnection connection = await data.OpenConnectionAsync();
+            await using NpgsqlTransaction transaction = await connection.BeginTransactionAsync();
+            var versions = new List<KeyVersion>(writes.Count);
+            foreach (WriteRequest write in writes)
+            {
+                long? version = await WriteOneAsync(connection, transaction, write.Key, write.Body ?? "", write.Expected);
+                if (version == null)
+                {
+                    await transaction.RollbackAsync();
+                    Document? now = await ReadAsync(write.Key);
+                    return new BatchResult(false, write.Key, now?.Version ?? 0, new List<KeyVersion>());
+                }
+                versions.Add(new KeyVersion(write.Key, version.Value));
+            }
+            foreach (string key in deletes)
+            {
+                await using var delete = new NpgsqlCommand("DELETE FROM documents WHERE key = $1", connection, transaction);
+                delete.Parameters.AddWithValue(key);
+                await delete.ExecuteNonQueryAsync();
+            }
+            await transaction.CommitAsync();
+            return new BatchResult(true, null, 0, versions);
+        }
+
+        private static async Task<long?> WriteOneAsync(NpgsqlConnection connection, NpgsqlTransaction transaction, string key, string body, long? expected)
+        {
+            string sql = expected == null
+                ? @"INSERT INTO documents (key, body, version) VALUES ($1, $2, 1)
+ON CONFLICT (key) DO UPDATE SET body = EXCLUDED.body, version = documents.version + 1, updated = now() RETURNING version"
+                : expected == 0
+                    ? "INSERT INTO documents (key, body, version) VALUES ($1, $2, 1) ON CONFLICT (key) DO NOTHING RETURNING version"
+                    : "UPDATE documents SET body = $2, version = version + 1, updated = now() WHERE key = $1 AND version = $3 RETURNING version";
+            await using var write = new NpgsqlCommand(sql, connection, transaction);
+            write.Parameters.AddWithValue(key);
+            write.Parameters.AddWithValue(body);
+            if (expected is > 0) write.Parameters.AddWithValue(expected.Value);
+            object? version = await write.ExecuteScalarAsync();
+            return version == null ? null : (long)version;
+        }
+
+        /// <summary>Many documents in one trip (a character's parts when it loads). Missing ones are left out.</summary>
+        public async Task<List<Document>> ReadManyAsync(IReadOnlyList<string> keys)
+        {
+            await using NpgsqlCommand read = data.CreateCommand("SELECT key, body, version FROM documents WHERE key = ANY($1)");
+            read.Parameters.AddWithValue(keys.ToArray());
+            var found = new List<Document>();
+            await using NpgsqlDataReader row = await read.ExecuteReaderAsync();
+            while (await row.ReadAsync()) found.Add(new Document(row.GetString(0), row.GetString(1), row.GetInt64(2)));
+            return found;
+        }
+
+        /// <summary>The database's size on disk, in bytes (the control page's Saves chip).</summary>
+        public async Task<long> SizeAsync()
+        {
+            await using NpgsqlCommand size = data.CreateCommand("SELECT pg_database_size(current_database())");
+            return (long)(await size.ExecuteScalarAsync() ?? 0L);
+        }
+
         public async Task DeleteAsync(string key)
         {
             await using NpgsqlCommand delete = data.CreateCommand("DELETE FROM documents WHERE key = $1");
@@ -140,6 +204,10 @@ RETURNING holder, until");
     public sealed record LockResult(bool Granted, string Holder, DateTime Until);
     public sealed record WriteRequest(string Key, string? Body, long? Expected);
     public sealed record LockRequest(string? Owner, string? Holder, int Seconds);
+    public sealed record KeyVersion(string Key, long Version);
+    public sealed record BatchRequest(List<WriteRequest>? Writes, List<string>? Deletes);
+    public sealed record BatchResult(bool Written, string? Conflict, long ConflictVersion, List<KeyVersion> Versions);
+    public sealed record ReadRequest(List<string>? Keys);
 
     public sealed record DatabaseSettings(
         [property: JsonPropertyName("host")] string Host,

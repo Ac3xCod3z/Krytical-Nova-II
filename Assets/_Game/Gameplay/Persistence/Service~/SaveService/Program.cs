@@ -59,7 +59,7 @@ app.Use(async (context, next) =>
     await next();
 });
 
-app.MapGet("/health", async () => Results.Ok(new { ok = true, documents = await store.CountAsync() }));
+app.MapGet("/health", async () => Results.Ok(new { ok = true, documents = await store.CountAsync(), bytes = await store.SizeAsync() }));
 
 app.MapGet("/doc", async (string key) =>
 {
@@ -73,6 +73,30 @@ app.MapPut("/doc", async (WriteRequest request) =>
     if (!SaveKeyRules.IsValid(request.Key)) return Results.BadRequest(new { error = "not a save key" });
     WriteResult result = await store.WriteAsync(request.Key, request.Body ?? "", request.Expected);
     return result.Written ? Results.Ok(result) : Results.Conflict(result);
+});
+
+// Several writes and deletes, all or none (a player's save: only the parts that changed, and the header).
+app.MapPost("/batch", async (BatchRequest request) =>
+{
+    List<WriteRequest> writes = request.Writes ?? new List<WriteRequest>();
+    List<string> deletes = request.Deletes ?? new List<string>();
+    if (writes.Count + deletes.Count > 500) return Results.BadRequest(new { error = "too many in one batch" });
+    foreach (WriteRequest write in writes)
+        if (!SaveKeyRules.IsValid(write.Key)) return Results.BadRequest(new { error = "not a save key: " + write.Key });
+    foreach (string key in deletes)
+        if (!SaveKeyRules.IsValid(key)) return Results.BadRequest(new { error = "not a save key: " + key });
+    BatchResult result = await store.BatchAsync(writes, deletes);
+    return result.Written ? Results.Ok(result) : Results.Conflict(result);
+});
+
+// Many documents in one trip.
+app.MapPost("/read", async (ReadRequest request) =>
+{
+    List<string> keys = request.Keys ?? new List<string>();
+    if (keys.Count > 500) return Results.BadRequest(new { error = "too many keys" });
+    foreach (string key in keys)
+        if (!SaveKeyRules.IsValid(key)) return Results.BadRequest(new { error = "not a save key: " + key });
+    return Results.Ok(await store.ReadManyAsync(keys));
 });
 
 app.MapDelete("/doc", async (string key) =>

@@ -39,6 +39,7 @@ namespace KryticalNova.Persistence
             Agents.Clear();
             WorldDocuments.Clear();
             LastWritten.Clear();
+            PartKeysOf.Clear();
             if (!quitHooked)
             {
                 quitHooked = true;
@@ -117,22 +118,88 @@ namespace KryticalNova.Persistence
         // ------------------------------------------------------------------ accounts
 
         /// <summary>The account's document, or a new empty one. Never null.</summary>
+        // ---- How an account is kept (online phase 4, milestone 2): byte-sized saves.
+        // accounts/<id>                      the header: version 2, its account-wide part names, each character's name,
+        //                                    faction, level, map and place, and part names. No game state.
+        // accounts/<id>/parts/<part>         one account-wide part (the Deep Vault, the trade allowance, ...)
+        // characters/<character>/parts/<part> one part of one character (the Pack, the wallet, the skills, ...)
+        // A save writes only the parts whose text changed, and the header, as one change where the store can (the save
+        // service); a part a system no longer saves is deleted. An account saved before this (version 1, one document
+        // holding everything) is read as it is, kept once as accounts/<id>-v1, and written in the new layout by its next
+        // save.
+        public const string CharactersPrefix = "characters/";
+        private const string PartsFolder = "/parts/";
+        private const string OldCopySuffix = "-v1";
+
+        // The part keys each loaded account has in the store now, to know which ones a save must delete.
+        private static readonly Dictionary<string, HashSet<string>> PartKeysOf = new Dictionary<string, HashSet<string>>(StringComparer.Ordinal);
+
+        [Serializable] private sealed class VersionOnly { public int version; }
+
+        [Serializable]
+        private sealed class AccountHeader
+        {
+            public int version = AccountSave.CurrentVersion;
+            public string accountId;
+            public List<string> partKeys = new List<string>();
+            public List<CharacterHeader> characters = new List<CharacterHeader>();
+        }
+
+        [Serializable]
+        private sealed class CharacterHeader
+        {
+            public string characterId;
+            public string name;
+            public int faction;
+            public int level = 1;
+            public long savedUtc;
+            public string map;
+            public float x, y, z;
+            public List<string> partKeys = new List<string>();
+        }
+
+        /// <summary>Where one account-wide part is kept.</summary>
+        public static string AccountPartKey(string accountId, string part) => AccountsPrefix + accountId + PartsFolder + PartName(part);
+
+        /// <summary>Where one part of one character is kept.</summary>
+        public static string CharacterPartKey(string characterId, string part) => CharactersPrefix + characterId + PartsFolder + PartName(part);
+
+        // A part's name as a save key allows it (lower case: "vendorWeek" is kept as "vendorweek").
+        private static string PartName(string part) => (part ?? string.Empty).ToLowerInvariant();
+
+        /// <summary>The account's document, or a new empty one. Never null.</summary>
         public static AccountSave LoadAccount(string accountId)
+        {
+            PartKeysOf[accountId] = new HashSet<string>(StringComparer.Ordinal);
+            return ReadAccount(Store, accountId, live: true);
+        }
+
+        /// <summary>
+        /// An account as kept in <paramref name="from"/>, in either layout, changing nothing there (the copy tool reads
+        /// another server's saves this way). Null when the store has none.
+        /// </summary>
+        public static AccountSave ReadAccountFrom(ISaveStore from, string accountId) =>
+            from != null && from.TryRead(AccountsPrefix + accountId, out _) ? ReadAccount(from, accountId, live: false) : null;
+
+        // live: this server's own store (remember what was read, keep an old one-piece account once beside it).
+        private static AccountSave ReadAccount(ISaveStore from, string accountId, bool live)
         {
             string key = AccountsPrefix + accountId;
             AccountSave account = null;
-            if (Store.TryRead(key, out string json))
+            if (from.TryRead(key, out string json))
             {
                 try
                 {
-                    account = JsonUtility.FromJson<AccountSave>(json);
-                    LastWritten[key] = json;
+                    int version = JsonUtility.FromJson<VersionOnly>(json)?.version ?? 1;
+                    account = version >= 2 ? ReadSplit(from, accountId, json, live) : ReadWhole(from, accountId, json, live);
                 }
                 catch (Exception e)
                 {
+                    if (!live) throw;
                     // Keep the unreadable file: a later save would otherwise replace it with an empty account.
                     Debug.LogError($"[Save] Account {accountId} could not be read and was set aside: {e.Message}");
-                    Store.Write(key + "-unreadable-" + DateTime.UtcNow.Ticks, json);
+                    from.Write(key + "-unreadable-" + DateTime.UtcNow.Ticks, json);
+                    account = null;
                 }
             }
             account ??= new AccountSave();
@@ -142,11 +209,145 @@ namespace KryticalNova.Persistence
             return account;
         }
 
-        /// <summary>Writes the account if it differs from what is on disk. Returns true when it wrote.</summary>
+        // An account saved before the split (version 1): one document with everything. It is kept once, as it was, beside
+        // the new layout; the next save writes the new layout (nothing of it is in LastWritten, so every part goes).
+        private static AccountSave ReadWhole(ISaveStore from, string accountId, string json, bool live)
+        {
+            AccountSave account = JsonUtility.FromJson<AccountSave>(json);
+            string copy = AccountsPrefix + accountId + OldCopySuffix;
+            if (live && !from.TryRead(copy, out _))
+            {
+                from.Write(copy, json);
+                Debug.Log($"[Save] Account {accountId} is in the old one-piece layout: kept as {copy}; it is saved in parts from now on.");
+            }
+            return account;
+        }
+
+        // The header, then every part it names, in one trip where the store can.
+        private static AccountSave ReadSplit(ISaveStore from, string accountId, string headerJson, bool live)
+        {
+            AccountHeader header = JsonUtility.FromJson<AccountHeader>(headerJson);
+            var account = new AccountSave { version = AccountSave.CurrentVersion, accountId = accountId };
+            var wanted = new List<string>();
+            foreach (string part in header.partKeys ?? new List<string>()) wanted.Add(AccountPartKey(accountId, part));
+            foreach (CharacterHeader c in header.characters ?? new List<CharacterHeader>())
+                foreach (string part in c.partKeys ?? new List<string>()) wanted.Add(CharacterPartKey(c.characterId, part));
+
+            var found = new Dictionary<string, string>(StringComparer.Ordinal);
+            if (from is IBatchSaveStore batch) batch.TryReadMany(wanted, found);
+            else
+                foreach (string key in wanted)
+                    if (from.TryRead(key, out string text)) found[key] = text;
+
+            HashSet<string> present = live ? PartKeysOf[accountId] : new HashSet<string>(StringComparer.Ordinal);
+            foreach (string part in header.partKeys ?? new List<string>())
+                if (found.TryGetValue(AccountPartKey(accountId, part), out string text)) { account.parts.Add(new SavePart { key = part, json = text }); Remember(AccountPartKey(accountId, part), text, present); }
+            foreach (CharacterHeader c in header.characters ?? new List<CharacterHeader>())
+            {
+                var character = new CharacterSave
+                {
+                    characterId = c.characterId, name = c.name, faction = c.faction, level = c.level, savedUtc = c.savedUtc,
+                    map = c.map, x = c.x, y = c.y, z = c.z,
+                };
+                foreach (string part in c.partKeys ?? new List<string>())
+                    if (found.TryGetValue(CharacterPartKey(c.characterId, part), out string text)) { character.parts.Add(new SavePart { key = part, json = text }); Remember(CharacterPartKey(c.characterId, part), text, present); }
+                account.characters.Add(character);
+            }
+            int missing = wanted.Count - found.Count;
+            if (missing > 0) Debug.LogWarning($"[Save] Account {accountId}: {missing} of its {wanted.Count} part(s) were not found; those systems start empty.");
+            if (live)
+            {
+                LastWritten[AccountsPrefix + accountId] = headerJson;
+                foreach (string key in present) LastWritten[key] = found[key];
+            }
+            return account;
+        }
+
+        private static void Remember(string key, string text, HashSet<string> present) => present.Add(key);
+
+        /// <summary>
+        /// Every document of an account in the parts layout (each part, then the header), whatever was written before: for
+        /// copying an account into another store (the copy tool).
+        /// </summary>
+        public static List<KeyValuePair<string, string>> SplitDocuments(AccountSave account)
+        {
+            var all = new List<KeyValuePair<string, string>>();
+            string header = BuildSplit(account, (key, json) => all.Add(new KeyValuePair<string, string>(key, json)), new HashSet<string>(StringComparer.Ordinal));
+            all.Add(new KeyValuePair<string, string>(AccountsPrefix + account.accountId, header));
+            return all;
+        }
+
+        /// <summary>
+        /// Writes the parts of the account that changed since they were last written, and its header, as one change where
+        /// the store can. Returns true when anything was written.
+        /// </summary>
         public static bool WriteAccount(AccountSave account)
         {
             if (account == null || !SaveKeys.IsId(account.accountId)) return false;
-            return WriteIfChanged(AccountsPrefix + account.accountId, JsonUtility.ToJson(account));
+            string id = account.accountId;
+            var writes = new List<KeyValuePair<string, string>>();
+            var keep = new HashSet<string>(StringComparer.Ordinal);
+            string headerJson = BuildSplit(account, (key, json) => Changed(key, json, writes, null), keep);
+
+            // Parts the account no longer has: deleted with the same change.
+            if (!PartKeysOf.TryGetValue(id, out HashSet<string> present)) PartKeysOf[id] = present = new HashSet<string>(StringComparer.Ordinal);
+            var deletes = new List<string>();
+            foreach (string key in present)
+                if (!keep.Contains(key)) deletes.Add(key);
+
+            Changed(AccountsPrefix + id, headerJson, writes, null); // the header last: files read it last
+            if (writes.Count == 0 && deletes.Count == 0) return false;
+
+            if (Store is IBatchSaveStore batch) batch.WriteBatch(writes, deletes);
+            else
+            {
+                foreach (KeyValuePair<string, string> write in writes) Store.Write(write.Key, write.Value);
+                foreach (string key in deletes) Store.Delete(key);
+            }
+            foreach (KeyValuePair<string, string> write in writes) LastWritten[write.Key] = write.Value;
+            foreach (string key in deletes) LastWritten.Remove(key);
+            PartKeysOf[id] = keep;
+            return true;
+        }
+
+        // Hands every part's key and text to part, puts each part key in keys, and returns the header's text.
+        private static string BuildSplit(AccountSave account, Action<string, string> part, HashSet<string> keys)
+        {
+            string id = account.accountId;
+            var header = new AccountHeader { accountId = id };
+            foreach (SavePart p in account.parts ?? new List<SavePart>())
+            {
+                if (p == null || string.IsNullOrEmpty(p.json)) continue;
+                header.partKeys.Add(p.key);
+                keys.Add(AccountPartKey(id, p.key));
+                part(AccountPartKey(id, p.key), p.json);
+            }
+            foreach (CharacterSave character in account.characters ?? new List<CharacterSave>())
+            {
+                if (character == null || !SaveKeys.IsId(character.characterId)) continue;
+                var entry = new CharacterHeader
+                {
+                    characterId = character.characterId, name = character.name, faction = character.faction, level = character.level,
+                    savedUtc = character.savedUtc, map = character.map, x = character.x, y = character.y, z = character.z,
+                };
+                foreach (SavePart p in character.parts ?? new List<SavePart>())
+                {
+                    if (p == null || string.IsNullOrEmpty(p.json)) continue;
+                    entry.partKeys.Add(p.key);
+                    keys.Add(CharacterPartKey(character.characterId, p.key));
+                    part(CharacterPartKey(character.characterId, p.key), p.json);
+                }
+                header.characters.Add(entry);
+            }
+            return JsonUtility.ToJson(header);
+        }
+
+        // Adds the key to the writes when its text differs from what was last written.
+        private static void Changed(string key, string json, List<KeyValuePair<string, string>> writes, HashSet<string> keep)
+        {
+            keep?.Add(key);
+            if (LastWritten.TryGetValue(key, out string last) && last == json) return;
+            writes.Add(new KeyValuePair<string, string>(key, json));
         }
 
         /// <summary>
@@ -163,6 +364,18 @@ namespace KryticalNova.Persistence
         }
 
         public static bool IsAccountOnline(string accountId) => !string.IsNullOrEmpty(accountId) && BoundAccounts.ContainsKey(accountId);
+
+        /// <summary>The ids of every saved account (not their parts or kept copies).</summary>
+        public static List<string> AccountIds()
+        {
+            var ids = new List<string>();
+            foreach (string key in Store.Keys(AccountsPrefix))
+            {
+                string id = key.Substring(AccountsPrefix.Length);
+                if (SaveKeys.IsId(id)) ids.Add(id);
+            }
+            return ids;
+        }
 
         /// <summary>
         /// The saved accounts holding a character of that name (whole name, any case), for a GM naming a player who is not
@@ -301,6 +514,7 @@ namespace KryticalNova.Persistence
             }
             WorldDocuments.Clear();
             LastWritten.Clear();
+            PartKeysOf.Clear();
             return deleted;
         }
 
