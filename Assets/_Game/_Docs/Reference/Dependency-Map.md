@@ -20,7 +20,7 @@ script, which is then published to the link above. `--baseline` saves today's up
 ## Today
 
 <!-- map:summary -->
-Generated 19 Oct 2026, 13:03: 641 runtime scripts (119,394 lines) declaring 909 types (165 MonoBehaviours, 61 NetworkBehaviours, 87 ScriptableObject classes); 111 test scripts; 4025 prefabs, 46 scenes and 2579 assets read. 196 system-to-system links, of which 0 run uphill, 0 pairs of systems use each other both ways, and 0 links would have to go for the systems to form a clean stack. The largest tangle, classes that all reach each other through some chain of uses, holds 7 classes from 1 systems (Gameplay/Player 7, ...).
+Generated 19 Oct 2026, 13:04: 641 runtime scripts (119,394 lines) declaring 909 types (165 MonoBehaviours, 61 NetworkBehaviours, 87 ScriptableObject classes); 111 test scripts; 4025 prefabs, 46 scenes and 2579 assets read. 196 system-to-system links, of which 0 run uphill, 0 pairs of systems use each other both ways, and 0 links would have to go for the systems to form a clean stack. The largest tangle, classes that all reach each other through some chain of uses, holds 7 classes from 1 systems (Gameplay/Player 7, ...).
 <!-- /map:summary -->
 
 ## How to read it
@@ -342,6 +342,22 @@ first. The page lists the file and line behind each.
 | 39 | God class | GearWorkWindowController (947 lines) | UI | 3 | 1 | large |
 | 40 | God class | GmCommands (904 lines) | Tools | 3 | 1 | large |
 <!-- /map:problems -->
+
+## After the plan (19 Oct 2026, stages 0 to 7)
+
+| | Before | After |
+|---|---|---|
+| Links running uphill | 8 | 0 |
+| Pairs of systems that use each other | 21 | 0 |
+| Links to cut for a clean stack | 31 | 0 |
+| The largest tangle | 57 classes across 10 systems | 7 classes inside one system (Player's motors and `PointAndClickPlayer`, which call each other; harmless across systems) |
+| Assemblies the runtime compiles into | 1 (`KryticalNova.Runtime`) | 23 (Core + one per system) |
+| Classes no test touches but 25+ files use | 8 | 6 (`ClientPresentationRegistry` and `RpcBudget` now tested) |
+| EditMode tests | 1014 | 1023 |
+
+Every system now uses only the systems below it, and the compiler refuses a reference that would close a loop. How
+each loop was cut, stage by stage, is `Plans/architecture-decoupling-plan.md`. The findings below are kept as they
+were on the morning of 19 Oct 2026; the tables above them are regenerated on every run.
 
 ## What it found (19 Oct 2026)
 
