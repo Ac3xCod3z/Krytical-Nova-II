@@ -167,7 +167,7 @@ namespace KryticalNova.World
         // Custom simulation space for rain/snow: identity in XZ, lifted by the local player's jump height.
         private Transform jumpSpace;
         private Transform player;
-        private KryticalNova.Player.PlayerJumpMotor playerJump;
+        private KryticalNova.Core.IPlayerBody playerBody;
         private float playerRestHeight = float.NaN;
 
         private void Awake()
@@ -258,7 +258,7 @@ namespace KryticalNova.World
             if (player == null || !player.gameObject.activeInHierarchy)
             {
                 player = KryticalNova.Core.LocalPlayer.Object != null ? KryticalNova.Core.LocalPlayer.Object.transform : null;
-                playerJump = player != null ? player.GetComponent<KryticalNova.Player.PlayerJumpMotor>() : null;
+                playerBody = player != null ? player.GetComponent<KryticalNova.Core.IPlayerBody>() : null;
                 playerRestHeight = float.NaN;
             }
 
@@ -266,7 +266,7 @@ namespace KryticalNova.World
             if (player != null)
             {
                 float aboveGround = player.position.y - SampleGround(player.position);
-                if (playerJump == null || !playerJump.IsBusy) playerRestHeight = aboveGround;
+                if (playerBody == null || !playerBody.IsJumping) playerRestHeight = aboveGround;
                 else if (!float.IsNaN(playerRestHeight)) lift = Mathf.Max(0f, aboveGround - playerRestHeight);
             }
             jumpSpace.SetPositionAndRotation(new Vector3(0f, lift, 0f), Quaternion.identity);

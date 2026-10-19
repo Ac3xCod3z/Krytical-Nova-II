@@ -183,11 +183,11 @@ namespace KryticalNova.Items
         // from one player to another over the ground can be followed. Creds picked up are in the wallet's own tally.
         private void Ledger(string kind, ushort itemId, int count, ItemDefinition item)
         {
-            if (saveAgent == null) saveAgent = GetComponent<KryticalNova.Persistence.PlayerSaveAgent>();
+            if (saveAgent == null) saveAgent = GetComponent<ISaveScheduler>();
             if (saveAgent != null) saveAgent.TallyItems(kind, itemId, count, item != null ? item.displayName : null);
         }
 
-        private KryticalNova.Persistence.PlayerSaveAgent saveAgent;
+        private ISaveScheduler saveAgent;
 
         private float FlatSqrDistance(Vector3 point)
         {

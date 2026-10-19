@@ -47,7 +47,7 @@ namespace KryticalNova.Player
         // Which saved character this is. Known where the game is decided and to the owner; never replicated to others.
         private string accountId = string.Empty;
         private string characterId = string.Empty;
-        private PlayerDuel duel;
+        private IDuelState duel;
         private LineageDefinition lineage;
         private CharacterLook look;
         private CombatEntity combatEntity;
@@ -98,7 +98,7 @@ namespace KryticalNova.Player
             look = GetComponentInChildren<CharacterLook>(true);
             combatEntity = GetComponent<CombatEntity>();
             inventory = GetComponent<PlayerInventory>();
-            duel = GetComponent<PlayerDuel>();
+            duel = GetComponent<IDuelState>();
             if (database != null && database.Factions != null) FactionRules.Configure(database.Factions.crossFactionPvp);
         }
 

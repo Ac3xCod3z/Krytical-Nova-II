@@ -17,7 +17,7 @@ namespace KryticalNova.Hostiles
     /// </summary>
     [DisallowMultipleComponent]
     [RequireComponent(typeof(CombatEntity))]
-    public sealed class HostileNet : NetworkBehaviour, IHitChanceModifier
+    public sealed class HostileNet : NetworkBehaviour, IHitChanceModifier, IHostile
     {
         // The parameters of the Animator Controller every Hostile is built with.
         private static readonly int SpeedParam = Animator.StringToHash("Speed");

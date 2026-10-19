@@ -26,7 +26,7 @@ namespace KryticalNova.Items
         private PlayerInventory inventory;
         private PlayerResources resources;
         private IWallet wallet;
-        private PlayerSaveAgent saveAgent;
+        private ISaveScheduler saveAgent;
 
         private float flowLeft;      // Flux still to come from the drink taken
         private float flowPerSecond;
@@ -43,7 +43,7 @@ namespace KryticalNova.Items
             inventory = GetComponent<PlayerInventory>();
             resources = GetComponent<PlayerResources>();
             wallet = GetComponent<IWallet>();
-            saveAgent = GetComponent<PlayerSaveAgent>();
+            saveAgent = GetComponent<ISaveScheduler>();
         }
 
         // ------------------------------------------------------------------ a drink (server)

@@ -16,7 +16,7 @@ namespace KryticalNova.Player
     /// <summary>
     /// Says what a surface is for Wallstride where its shape alone would not (<see cref="WallRunRules"/>): a tree, or a
     /// surface that must never be climbed. A still, solid, steep surface on the wall layers is a wall without one.
-    /// Tree colliders near players carry one of their own (<see cref="KryticalNova.World.TreeProxyField"/>).
+    /// Tree colliders near players carry one of their own (<see cref="KryticalNova.Player.TreeProxyField"/>).
     /// </summary>
     [DisallowMultipleComponent]
     public sealed class ClimbableSurface : MonoBehaviour

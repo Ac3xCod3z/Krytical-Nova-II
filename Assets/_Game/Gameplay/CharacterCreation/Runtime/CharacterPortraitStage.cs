@@ -1,11 +1,12 @@
 using Animancer;
-using KryticalNova.CharacterCreation;
+using KryticalNova.Items;
+using KryticalNova.Items.Visuals;
 using UnityEngine;
 using UnityEngine.Experimental.Rendering;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
 
-namespace KryticalNova.Items.Visuals
+namespace KryticalNova.CharacterCreation
 {
     /// <summary>
     /// The HUD's picture of the local player: head and shoulders, in the armor they wear. A stripped clone of the

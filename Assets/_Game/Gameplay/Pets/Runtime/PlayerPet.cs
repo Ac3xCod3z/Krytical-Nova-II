@@ -463,7 +463,7 @@ namespace KryticalNova.Pets
             // Hostiles only: another player is never worth pet XP here (wars pay through ServerAwardEventXp).
             if (victim.GetComponent<PlayerIdentity>() != null) return;
             // A Hostile's kill belongs to whoever landed the first hit, not the last: ServerCreditHostileKill.
-            if (victim.GetComponent<KryticalNova.Hostiles.HostileNet>() != null) return;
+            if (victim.GetComponent<IHostile>() != null) return;
             AddXpUnits(Tuning.KillXp);
         }
 

@@ -11,7 +11,7 @@ namespace KryticalNova.Combat
     /// </summary>
     [DisallowMultipleComponent]
     [RequireComponent(typeof(BoxCollider))]
-    public sealed class WeaponHitbox : MonoBehaviour
+    public sealed class WeaponHitbox : MonoBehaviour, KryticalNova.Items.Visuals.IWeaponReach
     {
         [Header("Hitbox Configuration")]
         [SerializeField] private BoxCollider hitboxCollider;

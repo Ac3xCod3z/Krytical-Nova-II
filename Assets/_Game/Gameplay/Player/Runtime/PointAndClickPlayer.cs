@@ -15,7 +15,7 @@ namespace KryticalNova.Player
     /// <summary>Moves to clicked ground, orbits during right-button drags, and zooms with the mouse wheel.</summary>
     [DisallowMultipleComponent]
     [RequireComponent(typeof(NavMeshAgent), typeof(PlayerInput))]
-    public sealed class PointAndClickPlayer : NetworkBehaviour
+    public sealed class PointAndClickPlayer : NetworkBehaviour, IPlayerBody
     {
         private const string ActionMapName = "PointAndClick";
         private const string PointerActionName = "PointerPosition";
@@ -111,7 +111,7 @@ namespace KryticalNova.Player
         private CharacterBuffManager buffManager;
         private PlayerAnimancerMotor animancerMotor;
         private PlayerMoveAnticipation moveAnticipation;
-        private KryticalNova.Combat.PlayerMeleeCombat meleeCombat;
+        private IMeleeAttacker meleeCombat;
         private MovementSkillId previousMovementMode;
         public event Action<string> CommandMessage;
         /// <summary>Raised on the owner when the player clicks on the world to move, attack or interact.</summary>
@@ -212,7 +212,7 @@ namespace KryticalNova.Player
             buffManager = GetComponent<CharacterBuffManager>();
             animancerMotor = GetComponent<PlayerAnimancerMotor>();
             moveAnticipation = GetComponent<PlayerMoveAnticipation>();
-            meleeCombat = GetComponent<KryticalNova.Combat.PlayerMeleeCombat>();
+            meleeCombat = GetComponent<IMeleeAttacker>();
             hotbar = GetComponent<PlayerSkillHotbar>();
             deathMotor = GetComponent<PlayerDeathMotor>();
             if (meleeCombat != null)
@@ -602,7 +602,7 @@ namespace KryticalNova.Player
             var targetEntity = hit.collider.GetComponentInParent<IDamageable>();
             if (targetEntity != null && targetEntity.Transform != transform)
             {
-                bool hostile = KryticalNova.Combat.CombatHostility.IsHostile(transform, targetEntity);
+                bool hostile = HostilityCheck.IsHostile(transform, targetEntity);
 
                 // Shift+click on another player: select them and open the player menu (whisper, invite, trade...).
                 var keyboard = Keyboard.current;
@@ -905,7 +905,7 @@ namespace KryticalNova.Player
         public bool CommandAttack(IDamageable targetEntity)
         {
             if (IsSpawned && !IsOwner) return false;
-            if (targetEntity == null || !targetEntity.IsAlive || !KryticalNova.Combat.CombatHostility.IsHostile(transform, targetEntity)) return false;
+            if (targetEntity == null || !targetEntity.IsAlive || !HostilityCheck.IsHostile(transform, targetEntity)) return false;
             if (resources != null && !resources.IsAlive) return false;
 
             Select(targetEntity.Transform, WorldTargetKind.Hostile);
@@ -945,7 +945,7 @@ namespace KryticalNova.Player
             nextSelectionRefresh = Time.unscaledTime + SelectionRefreshInterval;
             var entity = selectedTarget.GetComponentInParent<IDamageable>();
             if (entity == null) return;
-            WorldTargetKind kind = KryticalNova.Combat.CombatHostility.IsHostile(transform, entity) ? WorldTargetKind.Hostile : WorldTargetKind.Friendly;
+            WorldTargetKind kind = HostilityCheck.IsHostile(transform, entity) ? WorldTargetKind.Hostile : WorldTargetKind.Friendly;
             if (kind == selectedKind) return;
             selectedKind = kind;
             ClientPresentationRegistry.Markers?.SetTarget(selectedTarget, kind);
@@ -1538,7 +1538,7 @@ namespace KryticalNova.Player
 
             var targetEntity = targetNetObj.GetComponent<IDamageable>();
             if (targetEntity == null || !targetEntity.IsAlive) return;
-            if (!KryticalNova.Combat.CombatHostility.IsHostile(transform, targetEntity)) return;
+            if (!HostilityCheck.IsHostile(transform, targetEntity)) return;
 
             if (meleeCombat != null)
             {
@@ -1987,9 +1987,15 @@ namespace KryticalNova.Player
         /// <summary>Yaw (degrees) the character actually faces: the root yaw minus the model's forward offset.</summary>
         public float FacingYaw => transform.eulerAngles.y - modelForwardOffset;
 
+        // A player's body as the world sees it (IPlayerBody, Core): World's portals, travel and rain use these.
+        Transform IPlayerBody.Transform => transform;
+        bool IPlayerBody.IsLocal => IsSpawned && IsOwner;
+        bool IPlayerBody.IsJumping => jumpMotor != null && jumpMotor.IsBusy;
+
         private void OnEnable()
         {
             ActivePlayers.Add(this);
+            PlayerBodies.Use(ActivePlayers);
             // Re-enabled offline avatar (e.g. after leaving a network session): reclaim the camera.
             if (didStart && !IsSpawned)
                 SetupLocalCamera();

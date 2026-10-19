@@ -4064,7 +4064,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: c3366412fcd0ee54ea56122517b54c59, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Player.PlayerRecall
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Housing.PlayerRecall
   ShowTopMostFoldoutHeaderGroup: 1
   settings: {fileID: 11400000, guid: e1e23d40baf63594bb33aa067880bb35, type: 2}
 --- !u!114 &8844105511440399059

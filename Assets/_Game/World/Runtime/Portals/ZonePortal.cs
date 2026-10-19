@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using KryticalNova.Core;
-using KryticalNova.Player;
 using Unity.Netcode;
 using UnityEngine;
 
@@ -59,10 +58,10 @@ namespace KryticalNova.World.Portals
             bool networked = manager != null && manager.IsListening;
             if (networked && !manager.IsServer) return;
 
-            var player = other.GetComponentInParent<PointAndClickPlayer>();
+            IPlayerBody player = other.GetComponentInParent<IPlayerBody>();
             if (player == null) return;
 
-            Vector3 offset = player.transform.position - transform.position;
+            Vector3 offset = player.Transform.position - transform.position;
             offset.y = 0f;
             if (offset.magnitude > activationRadius + RadiusTolerance) return;
 
@@ -72,7 +71,7 @@ namespace KryticalNova.World.Portals
             nextUseTime[clientId] = now + cooldownSeconds;
 
             ZoneTransferResult result = TransferHandler != null
-                ? TransferHandler.TryTransfer(this, player.gameObject)
+                ? TransferHandler.TryTransfer(this, player.Transform.gameObject)
                 : new ZoneTransferResult(false, sealedMessage);
             if (string.IsNullOrEmpty(result.Message)) return;
 

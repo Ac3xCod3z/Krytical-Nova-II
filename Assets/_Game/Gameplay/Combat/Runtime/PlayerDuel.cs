@@ -18,7 +18,7 @@ namespace KryticalNova.Combat
     /// The server decides all of it; the opponent is replicated so every machine colours targets the same way.
     /// </summary>
     [DisallowMultipleComponent]
-    public sealed class PlayerDuel : NetworkBehaviour
+    public sealed class PlayerDuel : NetworkBehaviour, IDuelState
     {
         private const ulong NoOpponent = ulong.MaxValue;
 

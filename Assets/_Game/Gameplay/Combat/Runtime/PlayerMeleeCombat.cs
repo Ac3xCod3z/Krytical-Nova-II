@@ -18,7 +18,7 @@ namespace KryticalNova.Combat
     /// </summary>
     [DisallowMultipleComponent]
     [RequireComponent(typeof(NavMeshAgent))]
-    public sealed class PlayerMeleeCombat : NetworkBehaviour
+    public sealed class PlayerMeleeCombat : NetworkBehaviour, IMeleeAttacker
     {
         [Header("Animation & Hitbox")]
         [SerializeField] private AnimancerComponent animancer;

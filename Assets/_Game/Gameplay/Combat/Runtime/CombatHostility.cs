@@ -20,6 +20,13 @@ namespace KryticalNova.Combat
     {
         public static bool IsPlayer(Transform t) => t != null && t.GetComponentInParent<PlayerResources>() != null;
 
+        // The player's body asks this through HostilityCheck (Player), which sits below Combat.
+#if UNITY_EDITOR
+        [UnityEditor.InitializeOnLoadMethod]
+#endif
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void FillHostilityCheck() => KryticalNova.Player.HostilityCheck.Rule = IsHostile;
+
         public static bool IsHostile(Transform attacker, IDamageable target)
         {
             if (target == null || target.Transform == null || target.Transform == attacker) return false;

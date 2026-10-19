@@ -28,7 +28,8 @@ namespace KryticalNova.Items.Visuals
     {
         [Tooltip("Renderer baked into the mount itself (the original katana). Hidden once item visuals take over.")]
         [SerializeField] private Renderer builtInRenderer;
-        [SerializeField] private WeaponHitbox hitbox;
+        [Tooltip("The hitbox the mount sizes to the weapon held (a WeaponHitbox).")]
+        [SerializeField] private MonoBehaviour hitbox;
 
         [Header("Sockets (filled by Krytical Nova > Setup > Player Prefab)")]
         [Tooltip("The right-hand socket: the weapon is drawn while the mount sits under it.")]
@@ -77,7 +78,7 @@ namespace KryticalNova.Items.Visuals
         private void Awake()
         {
             if (builtInRenderer == null) builtInRenderer = GetComponent<Renderer>();
-            if (hitbox == null) hitbox = GetComponent<WeaponHitbox>();
+            if (hitbox == null) hitbox = GetComponent<IWeaponReach>() as MonoBehaviour;
             drawn = handSocket != null && transform.parent == handSocket;
         }
 
@@ -160,7 +161,7 @@ namespace KryticalNova.Items.Visuals
         private void ConfigureHitbox(ItemDefinition strikes)
         {
             strikesAs = strikes;
-            if (hitbox != null && strikes != null) hitbox.Configure(strikes.hitboxCenter, strikes.hitboxSize);
+            if (hitbox is IWeaponReach reach && strikes != null) reach.Configure(strikes.hitboxCenter, strikes.hitboxSize);
         }
 
         private GameObject Spawn(ItemDefinition item)

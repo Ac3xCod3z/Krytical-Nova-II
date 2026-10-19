@@ -8,7 +8,7 @@ using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.AI;
 
-namespace KryticalNova.Player
+namespace KryticalNova.Housing
 {
     /// <summary>
     /// The Recall Tag (Twelve Sky 2: Scroll of Return): a quick trip back to town. Used from the Pack or the Hotbar,

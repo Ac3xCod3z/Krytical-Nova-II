@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace KryticalNova.Player
+namespace KryticalNova.Housing
 {
     /// <summary>
     /// The Recall Tag (Twelve Sky 2: Scroll of Return): how long the trip back to town takes to start and what
