@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using KryticalNova.Progression;
 using UnityEngine;
+using KryticalNova.Core;
 
 namespace KryticalNova.Items
 {

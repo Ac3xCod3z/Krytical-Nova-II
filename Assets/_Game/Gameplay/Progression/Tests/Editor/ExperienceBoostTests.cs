@@ -4,6 +4,7 @@ using KryticalNova.Items;
 using KryticalNova.Progression;
 using NUnit.Framework;
 using UnityEditor;
+using KryticalNova.Core;
 
 namespace KryticalNova.Tests
 {

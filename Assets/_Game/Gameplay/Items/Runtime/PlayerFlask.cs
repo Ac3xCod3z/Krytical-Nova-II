@@ -50,14 +50,14 @@ namespace KryticalNova.Items
         public ItemUseEffect Effect => ItemUseEffect.FluxFlask;
 
         /// <summary>Why a drink would be wasted now. An empty Flask is refused by the inventory, which sees its data.</summary>
-        public string UseBlockedReason(ItemDefinition item)
+        public string UseBlockedReason(UsedItem item)
         {
             if (flowLeft > 0f) return FlaskRules.ReasonFlowing;
             if (resources != null && resources.Chi >= resources.MaxChi) return FlaskRules.ReasonFull;
             return null;
         }
 
-        public void ServerUse(ItemDefinition item)
+        public void ServerUse(UsedItem item)
         {
             if (!Decides || resources == null) return;
             float share = settings != null ? settings.fluxShare : 0.45f, seconds = settings != null ? settings.seconds : 8f;

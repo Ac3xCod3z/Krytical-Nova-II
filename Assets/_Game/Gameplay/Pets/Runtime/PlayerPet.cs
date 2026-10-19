@@ -574,13 +574,13 @@ namespace KryticalNova.Pets
 
         public ItemUseEffect Effect => ItemUseEffect.FeedPet;
 
-        public string UseBlockedReason(ItemDefinition item)
+        public string UseBlockedReason(UsedItem item)
         {
             if (pet == null) return ReasonNoPet;
             return state.HungerDeficit == 0 ? ReasonNotHungry : null;
         }
 
-        public void ServerUse(ItemDefinition item) => ServerFeed();
+        public void ServerUse(UsedItem item) => ServerFeed();
 
         /// <summary>Server only: hunger back to 100 %.</summary>
         public void ServerFeed()

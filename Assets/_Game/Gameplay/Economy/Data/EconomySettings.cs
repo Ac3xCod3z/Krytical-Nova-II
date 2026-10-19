@@ -1,5 +1,6 @@
 using System;
 using KryticalNova.Items;
+using KryticalNova.Progression;
 using UnityEngine;
 
 namespace KryticalNova.Economy
@@ -34,20 +35,6 @@ namespace KryticalNova.Economy
         public bool IsFree => permitItemId == 0;
     }
 
-    /// <summary>One XP booster: the item, what it adds while it runs, and how long one of it lasts.</summary>
-    [Serializable]
-    public struct ExperienceBooster
-    {
-        [Tooltip("The item that is used up (a utility item, 9500 and up).")]
-        public ushort itemId;
-        [Tooltip("Added to the XP of the character's Hostile kills while it runs, in percent (50 = x1.5).")]
-        [Range(0, 500)] public int characterPercent;
-        [Tooltip("Added to the XP of the pet's Hostile kills while it runs, in percent (100 = x2).")]
-        [Range(0, 500)] public int petPercent;
-        [Tooltip("Minutes one of it runs for. Using another adds as many.")]
-        [Min(1)] public int minutes;
-    }
-
     /// <summary>
     /// Every number of the economy in one place: how much a wallet holds, how much may change hands, what things may
     /// cost, and how much a player is meant to earn. They belong together because they only make sense together: a
@@ -55,7 +42,7 @@ namespace KryticalNova.Economy
     /// Every value here is a proposal to be tuned; nothing in code may hard-code one.
     /// </summary>
     [CreateAssetMenu(menuName = "Krytical Nova/Economy/Economy Settings")]
-    public sealed class EconomySettings : ScriptableObject
+    public sealed class EconomySettings : ScriptableObject, IExperienceBoosterTable
     {
         private const int RarityCount = 5;
 
@@ -139,6 +126,10 @@ namespace KryticalNova.Economy
         [Min(1)] public int boosterMaxHours = 24;
         [Tooltip("On: a booster's clock runs only while the character is in the game. Off: it runs on while the character is away.")]
         public bool boosterTimeRunsOnlyOnline = true;
+
+        ExperienceBooster[] IExperienceBoosterTable.Boosters => boosters;
+        int IExperienceBoosterTable.MaxHours => boosterMaxHours;
+        bool IExperienceBoosterTable.TimeRunsOnlyOnline => boosterTimeRunsOnlyOnline;
 
         [Header("Income target (what the faucets are tuned to pay)")]
         [Tooltip("Creds a player is meant to earn per hour of hunting at a level. Hostile drops, Contracts and shops are " +

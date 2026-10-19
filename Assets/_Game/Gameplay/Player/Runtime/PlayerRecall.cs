@@ -75,21 +75,21 @@ namespace KryticalNova.Player
 
         public ItemUseEffect Effect => ItemUseEffect.Recall;
 
-        public string UseBlockedReason(ItemDefinition item) =>
+        public string UseBlockedReason(UsedItem item) =>
             RecallRules.BlockedReason(channelling,
                 combat != null && combat.InCombat,
                 duel != null && duel.IsDuelling,
                 housing != null && (housing.InHome || housing.Travelling),
                 PlayerSpawnPoint.Active.Count > 0);
 
-        public void ServerUse(ItemDefinition item)
+        public void ServerUse(UsedItem item)
         {
             if (!Decides || channelling) return;
             float seconds = settings != null ? settings.channelSeconds : 5f;
             if (agent != null && agent.isActiveAndEnabled && agent.isOnNavMesh) agent.ResetPath(); // stand still for it
             channelling = true;
             hitDuringChannel = false;
-            tagItemId = item != null ? item.itemId : (ushort)0;
+            tagItemId = !item.IsNone ? item.Id : (ushort)0;
             start = transform.position;
             endsAt = Time.time + seconds;
             if (seconds <= 0f) { Arrive(); return; }

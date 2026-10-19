@@ -64,7 +64,7 @@ namespace KryticalNova.Progression
         private CharacterCombatStats stats;
         private PlayerResources resources;
         private IFactionMember member;
-        private PlayerSaveAgent saveAgent;
+        private ISaveScheduler saveAgent;
         private NovaHalo halo;
         private Transform head;
         private NovaState state;
@@ -135,7 +135,7 @@ namespace KryticalNova.Progression
             stats = GetComponent<CharacterCombatStats>();
             resources = GetComponent<PlayerResources>();
             member = GetComponent<IFactionMember>();
-            saveAgent = GetComponent<PlayerSaveAgent>();
+            saveAgent = GetComponent<ISaveScheduler>();
         }
 
         private void OnEnable()

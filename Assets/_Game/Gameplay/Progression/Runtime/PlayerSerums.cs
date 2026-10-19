@@ -24,7 +24,7 @@ namespace KryticalNova.Progression
             NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
 
         private CharacterCombatStats stats;
-        private PlayerSaveAgent saveAgent;
+        private ISaveScheduler saveAgent;
         private SerumState state;
 
         // One stable source object so every kind's bonus can be replaced in one step.
@@ -45,7 +45,7 @@ namespace KryticalNova.Progression
         private void Awake()
         {
             stats = GetComponent<CharacterCombatStats>();
-            saveAgent = GetComponent<PlayerSaveAgent>();
+            saveAgent = GetComponent<ISaveScheduler>();
         }
 
         private void OnEnable()
@@ -100,13 +100,13 @@ namespace KryticalNova.Progression
 
         public ItemUseEffect Effect => ItemUseEffect.Serum;
 
-        public string UseBlockedReason(ItemDefinition item) =>
-            item == null ? SerumRules.ReasonNoSettings : SerumRules.UseBlockedReason(settings, SerumRules.KindOf(settings, item.itemId), state);
+        public string UseBlockedReason(UsedItem item) =>
+            item.IsNone ? SerumRules.ReasonNoSettings : SerumRules.UseBlockedReason(settings, SerumRules.KindOf(settings, item.Id), state);
 
-        public void ServerUse(ItemDefinition item)
+        public void ServerUse(UsedItem item)
         {
-            if (!HasAuthority || settings == null || item == null) return;
-            int kind = SerumRules.KindOf(settings, item.itemId);
+            if (!HasAuthority || settings == null || item.IsNone) return;
+            int kind = SerumRules.KindOf(settings, item.Id);
             SerumState next = SerumRules.Take(settings, kind, state);
             if (next.Equals(state)) return;
             Commit(next);
