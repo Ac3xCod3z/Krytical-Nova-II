@@ -1,0 +1,102 @@
+{
+  "items": [
+    {
+      "title": "Walk the Walls",
+      "body": "Zone01's buildings and cliffs are ground now. Run straight up a wall onto the roof, leap from wall to wall, and hold on with Grip (it spends Flux while you cling). Fights follow you up there: strike round corners, chase along a face, and leave ground-bound creatures snapping below."
+    },
+    {
+      "title": "Two-Hit Attacks",
+      "body": "Every class has a two-hit attack on Hotbar T, with 18 new two-hit Skill Chips to collect. Redline lands harder on the beat, Stances are shared with your Squad, and Wallstride carries you up and over anything 2.2 m tall."
+    },
+    {
+      "title": "Instant Response Online",
+      "body": "On a server your character now moves, jumps and casts the moment you press, instead of waiting for the server to answer. Jumps wind up with a crackle of sparks, vaults flow straight into your run, and your pet does the same tricks on every screen."
+    },
+    {
+      "title": "Autopilot Passes & Loadouts",
+      "body": "Autopilot comes as a 3, 14 or 30-day Pass. Save whole gear sets as Loadouts and swap in one click. A step picker sits beside every + for quick counts, the Armorer stocks one of each forge material a week, and your portrait shows the colours you wear."
+    }
+  ],
+  "history": [
+    {
+      "label": "16 Oct 2026 · Krytical Nova goes online",
+      "items": [
+        {
+          "title": "Real Servers",
+          "body": "Krytical Nova runs on its own dedicated server. Pick one in the Servers window, or press Enter on the title to join the last one you played on. Your characters and everything they own are saved on the server, and friends outside your house can join too."
+        },
+        {
+          "title": "This Launcher",
+          "body": "One small launcher keeps the game up to date. It downloads only the files that changed, checks every file against a signed list so nothing can be slipped in, and repairs a broken install with one click."
+        },
+        {
+          "title": "Game Masters",
+          "body": "Each server has up to three Game Masters, marked [GM] in chat and over their heads, with a GM chat channel and a GM console of their own to help players and run events."
+        },
+        {
+          "title": "A New Opening",
+          "body": "The game opens with the studio crest and the Krytical Nova logo with a glitch, and the cover painting is now the title screen in every faction's skin."
+        }
+      ]
+    },
+    {
+      "label": "15 Oct 2026 · Flasks, Stims & Recall",
+      "items": [
+        {
+          "title": "The Flask",
+          "body": "A refillable Flux reservoir on your potion bar. Buy one from the Apothecary or find one on Hostiles, and top up your Flux in the middle of a fight."
+        },
+        {
+          "title": "Stims in Three Sizes",
+          "body": "Every Stim now comes in Small, Medium and Large, so you choose how much to heal for how much it costs. All three are on the Apothecary's shelf."
+        },
+        {
+          "title": "The Recall Tag",
+          "body": "Use a Recall Tag from your Pack or Hotbar, hold still for five seconds, and you are back in town wherever you were. Sold by the Apothecary."
+        }
+      ]
+    },
+    {
+      "label": "10 to 12 Oct 2026 · Style, pets & Crew Halls",
+      "items": [
+        {
+          "title": "Holoweave",
+          "body": "Wear any look you have unlocked over the gear you have on, shared by every character on your account, and dye each piece in your own colours. Weapons take dye on every part, and Morphweave changes your pet's look."
+        },
+        {
+          "title": "Pets That Grow",
+          "body": "Four pets with models of their own follow you and play little tricks. The Tidecaller hatches from an egg and grows at 25, 50, 75 and 100 %, and the Emberwing takes to the air beside you."
+        },
+        {
+          "title": "Crew Halls",
+          "body": "Every Crew has a hall of its own: a private three-floor home to fit out with Facades and Finishes, built from solid pieces."
+        },
+        {
+          "title": "The Apothecary & Armorer",
+          "body": "The first shops are open. The Apothecary sells Stims and Pet Rations; the Armorer sells Common gear and forge materials and runs the forge. Both buy what you sell, and ask first before taking anything Rare or better."
+        }
+      ]
+    },
+    {
+      "label": "4 to 9 Oct 2026 · The foundations",
+      "items": [
+        {
+          "title": "Three Factions",
+          "body": "Choose the Hegemony, the Null or the Covenant, shape your character in the creator, and play with a HUD in your faction's own skin. Other factions are fair game; your own only in a duel."
+        },
+        {
+          "title": "The Forge",
+          "body": "Temper, Fuse, Tune and Reforge your gear at the forge. Luck tips the odds, and as a piece climbs it lights up with a glow round its edge, up to Epic flame and lightning."
+        },
+        {
+          "title": "Creds, Trade & Kiosks",
+          "body": "Earn Creds, keep them safe in your Vault, trade face to face with other players, and set up a Kiosk that keeps selling while you are away."
+        },
+        {
+          "title": "Squads, Crews & Duels",
+          "body": "Form a Squad of up to five, keep your friends in Contacts, found a Crew, and settle a score with a duel to the death."
+        }
+      ]
+    }
+  ]
+}

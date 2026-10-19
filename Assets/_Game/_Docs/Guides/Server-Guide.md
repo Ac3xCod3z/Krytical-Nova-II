@@ -651,6 +651,9 @@ Things learned the hard way:
   logs a browser that hung up before the answer, and no longer answers the spare connections a browser opens ahead
   and closes unused (answering them filled the log with "Control page request failed: Unable to write data to the
   transport connection", about once a second while the page was open).
+- 18 Oct 2026: the control page's live log shows the `[GM log]`, `[Access]`, `[Economy]` and `[Flag]` lines (they were
+  hidden as noise); a save that another program holds open for a moment (antivirus scanning it) is tried again instead
+  of failing with "Unable to remove the file to be replaced".
 - 18 Oct 2026: phase 2 milestone 4: bans (`gm.ban`, `gm.unban`, `gm.bans`, **Ban** and the **Bans** section on the
   control page, Ban Player in the GM Tools window), and the server's records `gm.log`, `economy.log` and `access.log`
   beside the saves.

@@ -125,6 +125,27 @@ It takes about a minute. On 18 Oct 2026 Unity crashed while quitting after it (t
 Windows minutes a month on small machines, the project is very large, and the signing key and the CCD login live in
 your Windows account.
 
+## 1b. The launcher's news (before a build meant for LIVE)
+
+The launcher's paper panel shows **WHAT'S NEW!**: up to **four** headlines, each opening to a few lines on what changed
+when clicked, with the build and its date under the title. **PAST NEWS** at the bottom lists the news of earlier
+releases, newest first, each with its dates. The news travels inside the signed update list, so nobody else can put
+news on a player's launcher.
+
+It is written in `Assets/_Game/Release/Tools~/launcher-news.json` before a build that is meant to go LIVE:
+
+1. Look at everything that changed since the last LIVE release (the build list's Change log since that date, the pull
+   requests merged since) and pick the **four most exciting things for a player**. Plain words, what it does for them.
+2. Move the news that is there now to the top of `history`, with a label that says when it went out
+   (`"18 Oct 2026 · ..."`). Keep at most 24 entries.
+3. Write the new four into `items`: a `title` of at most 32 characters and a `body` of at most 300.
+4. Commit it (a publish builds a commit). The Publish box lists the headlines it will carry; the release tool refuses
+   news that breaks the limits, before anything is uploaded.
+
+To see it as players will before publishing: run the launcher with
+`--updated --preview-news "<path to launcher-news.json>"` (from `Builds/Release/Tools/Launcher` after a publish built
+it). A launcher from before 19 Oct 2026 shows no news; it gets the news panel when it updates itself.
+
 ## 2. Check it, then Promote to LIVE
 
 1. **Krytical Nova ▸ Release ▸ Make My Test Launcher** makes `Builds/Release/My Test Launcher` (a launcher with a
@@ -153,6 +174,7 @@ Never again: a new launcher travels with a build like any other file, and the ol
 | No internet, or CCD down | CAN'T REACH THE UPDATES; **PLAY** still starts the build they have |
 | The game is still running | CLOSE THE GAME FIRST |
 | Something is damaged | **REPAIR** checks every file and fetches what is wrong |
+| Always | the slideshow of the game's paintings (a new one every minute, arrows to turn them), and the news (section 1b) |
 
 Files a player has in the Game folder that the launcher never installed (performance logs, for instance) are left
 alone. What the launcher did is in `launcher.log` beside it: ask a player for it when something goes wrong.
@@ -209,6 +231,15 @@ signature inside it (`manifest.signed`): a list and a signature never come from 
 | Publish says "There is no build checkout" | It was deleted, or this is a new PC | Make it again (section 1a). |
 | The Console says "Background publish FAILED" | The build, the upload or the Accelerator check failed | `Builds/Release/release-log.txt`, then `Builds/Release/background-publish.log`. |
 
+### The launcher does not open after it updated itself (Smart App Control)
+
+Windows 11's **Smart App Control** runs only programs that are signed or that Microsoft already knows. Our launcher is
+not signed yet, so on a PC where it is **On**, every new launcher is blocked the moment it replaces the old one: the
+desktop icon goes blank and `launcher.log` says "An Application Control policy has blocked this file". The game itself
+(Unity's signed exe) still runs: start `Game\KryticalNovaII.exe` directly. The lasting fix is code signing (planned);
+until then the player can switch Smart App Control off (Windows Security > App & browser control), which Windows may
+not let them turn back on without a reset. Seen on the owner's PC on 18 Oct 2026.
+
 ## For developers
 
 | Piece | Where | What it does |
@@ -218,7 +249,8 @@ signature inside it (`manifest.signed`): a list and a signature never come from 
 | `TestBuildBuilder.Output` | `Tools/Editor/Build` | Lets the release build share the test build's code with its own folder and packing (no LZ4HC single file). |
 | `UpdateManifest`, `UpdateCrypto` | `Release/Tools~/Shared` | The update list, SHA-256, ECDSA P-256 signature check, safe paths. |
 | ReleaseTool | `Release/Tools~/ReleaseTool` | `keygen`, `export-key`, `import-key`, `stage`, `verify`. .NET Framework 4.7.2, key kept with DPAPI. |
-| Launcher | `Release/Tools~/Launcher` | Windows Forms, .NET Framework 4.7.2 (in every Windows 10 and 11). `UpdateKey.pub` and `UpdateSource.txt` are built in; `launcher.json` beside it overrides channel and source; `--headless` checks and updates without a window (exit 0 done, 3 replaced itself, 1 failed). |
+| Launcher | `Release/Tools~/Launcher` | Windows Forms, .NET Framework 4.7.2 (in every Windows 10 and 11). `UpdateKey.pub` and `UpdateSource.txt` are built in; `launcher.json` beside it overrides channel and source; `--headless` checks and updates without a window (exit 0 done, 3 replaced itself, 1 failed); `--preview-news <file>` shows a news file. The window is the owner's design B (a comic page: the `ArtShow` slideshow of `Launcher/Art/*.jpg`, the news panel, the status strip; speed lines round PLAY on hover). |
+| `LauncherNews`, `NewsItem`, `NewsRelease` | `Release/Tools~/Shared` | The news file and its limits (4 items, 32-character titles, 300-character text, 24 past releases); `UpdateManifest.news` and `newsHistory` carry it, signed. |
 
 How a file travels: every file is stored once on CCD as `files/<sha256>.gz`. The launcher compares sizes and
 fingerprints (it remembers what it installed in `Game\.launcher\installed.json`, so it only re-reads a file that was
@@ -235,6 +267,9 @@ good again.
 - 16 Oct 2026: written. The launcher, the release tool, the signing key and the Release menus built and tested locally.
 - 16 Oct 2026: Cloud Content Delivery set up (bucket, service account, ugs); the signature moved inside the update list
   (`manifest.signed`) after the content network served a list and a signature from different builds.
+- 18 Oct 2026: the launcher's news (section 1b) and its new look, the owner's design B: a comic page with a slideshow of
+  the game's paintings and manga pages, a paper news panel with past news, and speed lines round PLAY. On a PC where
+  Windows' Smart App Control is on, a new unsigned launcher is blocked (section 7); code signing is the lasting fix.
 - 18 Oct 2026: the Unity Accelerator installed and every Editor pointed at it; the build checkout made; Publish to
   Test now builds there in the background and refuses to start without the Accelerator; the old way kept as Publish to
   Test (in This Editor). Measured: a fresh import 25 min 32 s, 10 min 55 s with the import results in the Accelerator.

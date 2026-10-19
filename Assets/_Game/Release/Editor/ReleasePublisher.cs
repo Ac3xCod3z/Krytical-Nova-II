@@ -30,6 +30,11 @@ namespace KryticalNova.EditorTools
         public const string LogPath = Root + "/release-log.txt";
         public const string SourceFolder = "Assets/_Game/Release/Tools~";
         public const string SettingsPath = SourceFolder + "/release-settings.json";
+        /// <summary>
+        /// The launcher's news for the next release (owner, 18 Oct 2026): up to four headlines with what changed, written
+        /// before a release meant for LIVE from everything since the last LIVE one, and committed (a publish builds a commit).
+        /// </summary>
+        public const string NewsPath = SourceFolder + "/launcher-news.json";
         public const string LauncherName = "Krytical Nova Launcher.exe";
 
         private const string Menu = "Krytical Nova/Release/";
@@ -70,7 +75,7 @@ namespace KryticalNova.EditorTools
             Settings settings = Settings.Load();
             string where = settings.HasBucket ? "uploaded to Cloud Content Delivery as a new release on the TEST line" : "staged in Builds/Release/Store only (Cloud Content Delivery is not set up yet)";
             if (!EditorUtility.DisplayDialog("Publish to Test",
-                    $"Builds the game for release (IL2CPP, about 10 minutes), packs what changed, signs the update list, and has it {where}.\n\nPlayers on LIVE see nothing until you Promote.",
+                    $"Builds the game for release (IL2CPP, about 10 minutes), packs what changed, signs the update list, and has it {where}.\n\nPlayers on LIVE see nothing until you Promote.{NewsSummary()}",
                     "Publish", "Cancel")) return;
             Publish();
         }
@@ -173,7 +178,8 @@ namespace KryticalNova.EditorTools
             if (!Directory.Exists(GameFolder)) return Fail("there is no release build in " + GameFolder);
 
             string launcher = Path.GetFullPath(ToolsFolder + "/Launcher/" + LauncherName);
-            if (!RunTool($"stage --game \"{Path.GetFullPath(GameFolder)}\" --launcher \"{launcher}\" --out \"{Path.GetFullPath(StoreFolder)}\" --version \"v{BaseVersion()}\" --build {build}", out string staged))
+            string news = File.Exists(NewsPath) ? $" --news \"{Path.GetFullPath(NewsPath)}\"" : "";
+            if (!RunTool($"stage --game \"{Path.GetFullPath(GameFolder)}\" --launcher \"{launcher}\" --out \"{Path.GetFullPath(StoreFolder)}\" --version \"v{BaseVersion()}\" --build {build}{news}", out string staged))
                 return Fail("staging failed");
             Log(staged.Trim());
             if (!settings.HasBucket)
@@ -202,6 +208,17 @@ namespace KryticalNova.EditorTools
                 return;
             }
             Log(ServerBuildBuilder.Build(ServerBuildBuilder.Os.Windows) ? "Server rebuilt for build " + LastReleaseBuild() + "." : "The server did not build: see Builds/Server/BuildReport-Windows.txt.");
+        }
+
+        /// <summary>The news headlines the next release carries, for the publish dialogs (the committed file is the one built).</summary>
+        public static string NewsSummary()
+        {
+            if (!File.Exists(NewsPath)) return "\n\nNo launcher news: " + NewsPath + " is missing.";
+            MatchCollection titles = Regex.Matches(File.ReadAllText(NewsPath), "\"title\"\\s*:\\s*\"((?:[^\"\\\\]|\\\\.)*)\"");
+            if (titles.Count == 0) return "\n\nNo launcher news (" + NewsPath + " has no items).";
+            var text = new StringBuilder("\n\nLauncher news:");
+            foreach (Match title in titles) text.Append("\n  • ").Append(Regex.Unescape(title.Groups[1].Value));
+            return text.ToString();
         }
 
         /// <summary>Moves the live badge to the release the test badge is on.</summary>

@@ -21,6 +21,7 @@ namespace KryticalNova.Core
         private const string Extension = ".json";
         private const string TempExtension = ".tmp";
         private const int IdleMilliseconds = 2000;
+        private const int ReplaceAttempts = 6;
 
         private readonly string root;
         private readonly bool background;
@@ -102,12 +103,36 @@ namespace KryticalNova.Core
                 Directory.CreateDirectory(Path.GetDirectoryName(path));
                 string temp = path + TempExtension;
                 File.WriteAllText(temp, json ?? string.Empty, Encoding.UTF8);
-                if (File.Exists(path)) File.Replace(temp, path, null);
-                else File.Move(temp, path);
+                PutInPlace(temp, path);
             }
             catch (Exception e)
             {
                 Debug.LogError($"[Save] Could not write '{key}': {e.Message}");
+            }
+        }
+
+        // The new file takes the old one's place in one step. Another program may hold the old file open for a moment
+        // (antivirus scanning a file just written, the search indexer): Windows then refuses ("Unable to remove the file
+        // to be replaced", seen on the server 18 Oct 2026), so it is tried again a few times, a little later each time
+        // (under a second in all), before the failure is reported.
+        private static void PutInPlace(string temp, string path)
+        {
+            for (int attempt = 1; ; attempt++)
+            {
+                try
+                {
+                    if (File.Exists(path)) File.Replace(temp, path, null);
+                    else File.Move(temp, path);
+                    return;
+                }
+                catch (IOException) when (attempt < ReplaceAttempts)
+                {
+                    Thread.Sleep(50 * attempt);
+                }
+                catch (UnauthorizedAccessException) when (attempt < ReplaceAttempts)
+                {
+                    Thread.Sleep(50 * attempt);
+                }
             }
         }
 
