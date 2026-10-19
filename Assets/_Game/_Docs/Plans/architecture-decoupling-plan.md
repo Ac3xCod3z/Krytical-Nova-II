@@ -1,7 +1,7 @@
 # Architecture decoupling plan
 
-**Status: agreed 19 Oct 2026 (owner's decisions at the end). Stage 0 comes first, as a PR of its own. Nothing here
-has been done yet.**
+**Status: agreed 19 Oct 2026 (owner's decisions at the end); the owner then handed the stages over to be done in
+order without asking. Stage 0 is built; the rest follow, one PR each.**
 
 The aim: changing one system should not force changes in a dozen others. The game must keep working after every step,
 and ScriptableObjects must stay the way designers tune the game. The evidence for every step is in
@@ -37,22 +37,30 @@ and line.
 6. **Ratchet.** After each stage the map's baseline is saved again (`--baseline`), so a cut link cannot quietly come
    back.
 
-## Stage 0: the safety net (before any code moves)
+## Stage 0: the safety net (built 19 Oct 2026)
 
-- **Run the EditMode tests from the command line.** Unity's `-runTests` in batch mode, against a copy that is not the
-  open Editor, with the results written to a file. Today no script does this.
-- **The ratchet.** Save the map's baseline now. `dependency_map.py --check` then fails when a new uphill link or
-  two-way pair appears.
-- **Tests for the widest-ripple classes nobody tests,** written only around what the coming stages move:
-  - `PlayerInventory`: add, remove, the hotbar source;
-  - `CombatEntity` / `CombatCalculator`: damage in, death out;
-  - `PlayerIdentity`'s pure rules;
-  - `ClientPresentationRegistry`: register, replace, clear;
-  - `RpcBudget`.
+- **Compile a checkout without the open Editor.** `Tools/Editor/Architecture/Scripts~/compile_check.py` builds all
+  33 first-party assemblies of a worktree with `dotnet` in about a minute. `--server` builds the runtime ones with
+  the dedicated server's defines. It borrows the project files Unity keeps in the main folder and uses the
+  worktree's own scripts, so a refactor is checked before any Editor sees it.
+- **Run the EditMode tests from the command line.** `run_editmode_tests.py` runs them in a batch Unity on a worktree
+  (below normal priority, through the Accelerator) and reads out every failure. The open Editor is never touched.
+- **The ratchet.** `dependency_map.py --check` fails when any of these happens:
+  - a new uphill link or two-way pair appears;
+  - a script that prefabs, scenes or data assets hold loses its `.meta` GUID, or its class stops matching the file
+    name (274 such scripts are in the baseline);
+  - a class named by `[SerializeReference]` entries changes namespace or assembly without `[MovedFrom]`.
 
-  Small EditMode tests in the systems' existing test assemblies.
-- **Mark the 169 feel entries' classes with `[MovedFrom]` now.** It costs nothing while nothing has moved, and it
-  protects `PFX_GameFeel` and `PFX_MenuFeel` from every later stage.
+  This last check replaces marking the 169 feel entries in advance. `[MovedFrom]` only means something once a class
+  has moved, and the check now stops any move that forgets it.
+- **Tests for the hubs nobody tested:**
+  - `ClientPresentationRegistry`: a registered sink is the one gameplay reaches; an old sink going away leaves its
+    replacement plugged in; pointer blocks.
+  - `RpcBudget` / `CallLimits`: no limit without a server; a limit for every kind of request; the defaults come back.
+    These live in the new `KryticalNova.Networking.Tests.Editor`.
+  - `CombatCalculator` was already covered by the Hostile stat-curve tests.
+  - `PlayerInventory` and `PlayerIdentity` get their tests with the stages that move them (3 and 5), where the
+    behaviour being kept is clear.
 
 ## Stage 1: the uphill links (8 links, about 14 files)
 

@@ -28,6 +28,21 @@ link as `url`, so the page keeps its address.
 - `--check` compares with the baseline and exits with 1 when a new one has appeared. Run it after any change that
   crosses systems.
 
+## Checking a refactor without the open Editor
+
+Two more scripts here let a refactor be checked in a worktree while the owner's Editor stays open on the main folder:
+
+- `compile_check.py` compiles every first-party assembly of a checkout with `dotnet` (about a minute). It borrows the
+  project files Unity wrote in the main folder and swaps in the checkout's own scripts, worked out from its
+  `.asmdef` / `.asmref` files, so moved and new scripts count. `--server` compiles the runtime assemblies the way the
+  dedicated server does.
+- `run_editmode_tests.py` runs the EditMode tests in a batch Unity, below normal priority and through the
+  Accelerator, and reads out the results. The first run in a worktree imports the project; later runs are quick.
+
+`dependency_map.py --check` also guards the assets:
+- a script that prefabs, scenes or data assets hold must keep its `.meta` GUID and a class named like its file;
+- a class that `[SerializeReference]` entries name must keep its namespace and assembly, or carry `[MovedFrom]`.
+
 ## What it reads
 
 - **Assemblies:** every `.asmdef` / `.asmref` under `Assets/_Game`.
@@ -44,4 +59,6 @@ link as `url`, so the page keeps its address.
 
 - `dependency_map.py`: reads the project and builds everything. Python's standard library only.
 - `template.html`: the page, in the Encyclopedia's comic look. The data goes in at `/*__DATA__*/null`.
-- `baseline.json`: the ratchet, written by `--baseline`.
+- `baseline.json`: the ratchet, written by `--baseline`: the uphill links, the two-way pairs and the scripts that
+  assets hold.
+- `compile_check.py`, `run_editmode_tests.py`: see above.

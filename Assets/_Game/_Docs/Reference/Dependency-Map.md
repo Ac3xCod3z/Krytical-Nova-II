@@ -20,7 +20,7 @@ script, which is then published to the link above. `--baseline` saves today's up
 ## Today
 
 <!-- map:summary -->
-Generated 19 Oct 2026, 09:41: 621 runtime scripts (118,656 lines) declaring 885 types (165 MonoBehaviours, 61 NetworkBehaviours, 87 ScriptableObject classes); 104 test scripts; 4025 prefabs, 46 scenes and 2580 assets read. 209 system-to-system links, of which 8 run uphill, 21 pairs of systems use each other both ways, and 31 links would have to go for the systems to form a clean stack. The largest tangle, classes that all reach each other through some chain of uses, holds 57 classes from 10 systems (Gameplay/Progression 14, Gameplay/Player 11, Networking 9, World 4, Gameplay/Combat 4, Gameplay/Social 4, ...).
+Generated 19 Oct 2026, 10:20: 621 runtime scripts (118,656 lines) declaring 885 types (165 MonoBehaviours, 61 NetworkBehaviours, 87 ScriptableObject classes); 106 test scripts; 4025 prefabs, 46 scenes and 2579 assets read. 209 system-to-system links, of which 8 run uphill, 21 pairs of systems use each other both ways, and 31 links would have to go for the systems to form a clean stack. The largest tangle, classes that all reach each other through some chain of uses, holds 57 classes from 10 systems (Gameplay/Progression 14, Gameplay/Player 11, Networking 9, World 4, Gameplay/Combat 4, Gameplay/Social 4, ...).
 <!-- /map:summary -->
 
 ## How to read it
@@ -55,8 +55,8 @@ Generated 19 Oct 2026, 09:41: 621 runtime scripts (118,656 lines) declaring 885 
 <!-- map:systems -->
 | System | Layer | Scripts | Lines | Uses (types) | Used by (types) | Instability | Tests | Types touched by a test |
 |---|---|---|---|---|---|---|---|---|
-| Core | Foundation | 32 | 2,856 | 1 | 125 | 0.01 | 2 | 9 of 23 |
-| Networking | Infrastructure | 36 | 6,696 | 11 | 64 | 0.15 | 0 | 20 of 47 |
+| Core | Foundation | 32 | 2,856 | 1 | 125 | 0.01 | 3 | 10 of 23 |
+| Networking | Infrastructure | 36 | 6,696 | 11 | 64 | 0.15 | 1 | 23 of 47 |
 | Rendering | Infrastructure | 14 | 2,809 | 1 | 26 | 0.04 | 0 | 1 of 18 |
 | Environment | Simulation | 6 | 834 | 0 | 2 | 0.0 | 0 | 0 of 6 |
 | Gameplay/Autopilot | Simulation | 11 | 1,448 | 39 | 12 | 0.76 | 3 | 6 of 12 |
@@ -136,13 +136,13 @@ Each row is the cheaper side of a loop: cut these references and the two systems
 | Type | System | Kind | Files using it | Systems | Types reached through others | Tests | Prefabs / scenes holding it |
 |---|---|---|---|---|---|---|---|
 | PlayerInventory | Gameplay/Items | net | 81 | 19 | 258 | 0 | 1 |
-| ClientPresentationRegistry | Core | plain | 80 | 18 | 262 | 0 | 0 |
+| ClientPresentationRegistry | Core | plain | 80 | 18 | 262 | 1 | 0 |
 | FactionId | Gameplay/Factions | enum | 75 | 15 | 340 | 24 | 0 |
 | ItemDefinition | Gameplay/Items | so | 72 | 14 | 298 | 20 | 0 |
 | ItemStack | Gameplay/Items | plain | 48 | 10 | 288 | 12 | 0 |
 | EquipSlot | Gameplay/Items | enum | 39 | 10 | 321 | 15 | 0 |
-| CallKind | Networking | enum | 39 | 13 | 268 | 0 | 0 |
-| RpcBudget | Networking | plain | 39 | 13 | 258 | 0 | 0 |
+| CallKind | Networking | enum | 39 | 13 | 268 | 1 | 0 |
+| RpcBudget | Networking | plain | 39 | 13 | 258 | 1 | 0 |
 | PlayerIdentity | Gameplay/Player | net | 37 | 13 | 258 | 0 | 1 |
 | PlayerResources | Gameplay/Progression | net | 35 | 13 | 258 | 0 | 41 |
 | PointAndClickPlayer | Gameplay/Player | net | 31 | 9 | 258 | 0 | 41 |
@@ -370,8 +370,8 @@ first. The page lists the file and line behind each.
 | 36 | Cycle | Gameplay/Player uses Gameplay/Items against the order | Gameplay/Player, Gameplay/Items | 3 | 2 | small |
 | 37 | Hub | JoinFlow.Failed (event) | Networking, Tools, UI | 3 | 2 | small |
 | 38 | Hub | KeyBindings.Changed (event) | Gameplay/Player, Gameplay/Progression, UI | 3 | 2 | small |
-| 39 | Untested | ClientPresentationRegistry has no test | Core | 3 | 1 | small |
-| 40 | Cycle | Gameplay/Combat uses Gameplay/Economy against the order | Gameplay/Combat, Gameplay/Economy | 3 | 1 | small |
+| 39 | Cycle | Gameplay/Combat uses Gameplay/Economy against the order | Gameplay/Combat, Gameplay/Economy | 3 | 1 | small |
+| 40 | Cycle | Gameplay/Hostiles uses Gameplay/Economy against the order | Gameplay/Hostiles, Gameplay/Economy | 3 | 1 | small |
 <!-- /map:problems -->
 
 ## What it found (19 Oct 2026)

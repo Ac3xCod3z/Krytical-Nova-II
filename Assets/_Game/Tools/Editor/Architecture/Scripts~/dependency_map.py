@@ -882,11 +882,40 @@ for i, p in enumerate(problems):
 # --- baseline / check --------------------------------------------------------------------------------------------------
 today_uphill = sorted(f"{a} -> {b}" for (a, b), v in sys_edges.items() if v["uphill"])
 today_twoway = sorted(f"{a} <-> {b}" for (a, b), v in sys_edges.items() if v["twoway"] and a < b)
+# scripts that prefabs, scenes or data assets hold, by the GUID in their .meta: a move that loses the .meta (or a class
+# renamed away from its file name) leaves every holder with a missing script
+held_guids = {f["guid"]: f["p"] for f in files if f["guid"] and f["kind"] == "rt"
+              and (script_guid.get(f["guid"]) in held_by or script_guid.get(f["guid"]) in so_assets)}
+
+
+def managed_problems():
+    """[SerializeReference] entries whose class, namespace or assembly no longer matches, with no [MovedFrom]."""
+    out = []
+    seen = set()
+    for a in assets:
+        for (cls, ns, asm) in a["managed"]:
+            key = (cls, ns, asm)
+            if key in seen or not asm.startswith("KryticalNova"):   # vendor and Unity classes are not ours to guard
+                continue
+            seen.add(key)
+            full = (ns + "." if ns else "") + cls.split("`")[0]
+            tid = type_by_full.get(full)
+            if tid is not None and types[tid]["asm"] == asm:
+                continue
+            moved = any("MovedFrom" in files[fi]["raw"] for t in simple_index.get(cls.split("`")[0], []) for fi in types[t]["files"])
+            if not moved:
+                where = f"now {types[tid]['asm']}" if tid is not None else "no class by that name and namespace"
+                out.append(f"{full} ({asm}; {where}) in {a['p']}")
+    return out
+
+
 status = 0
 if "--baseline" in ARGS:
     with open(BASELINE, "w", encoding="utf-8") as fh:
-        json.dump({"date": datetime.date.today().isoformat(), "uphill": today_uphill, "twoway": today_twoway}, fh, indent=1)
-    print(f"baseline saved: {len(today_uphill)} uphill system links, {len(today_twoway)} two-way pairs")
+        json.dump({"date": datetime.date.today().isoformat(), "uphill": today_uphill, "twoway": today_twoway,
+                   "heldScripts": dict(sorted(held_guids.items(), key=lambda x: x[1]))}, fh, indent=1)
+    print(f"baseline saved: {len(today_uphill)} uphill system links, {len(today_twoway)} two-way pairs, "
+          f"{len(held_guids)} scripts held by assets")
 if "--check" in ARGS:
     if not os.path.exists(BASELINE):
         print("no baseline.json yet: run with --baseline first")
@@ -902,7 +931,13 @@ if "--check" in ARGS:
             print("NEW two-way pair:", x)
         for x in gone:
             print("fixed since the baseline:", x)
-        status = 1 if (new_up or new_tw) else 0
+        lost = [p for g, p in base.get("heldScripts", {}).items() if g not in script_guid]
+        for p in lost:
+            print("LOST script that assets hold (its .meta GUID is gone, or the class no longer matches the file name):", p)
+        broken = managed_problems()
+        for x in broken:
+            print("ASSET ENTRY WOULD EMPTY ([SerializeReference] class moved without [MovedFrom]):", x)
+        status = 1 if (new_up or new_tw or lost or broken) else 0
         print("check:", "FAILED" if status else "clean")
 
 # --- output data -------------------------------------------------------------------------------------------------------
