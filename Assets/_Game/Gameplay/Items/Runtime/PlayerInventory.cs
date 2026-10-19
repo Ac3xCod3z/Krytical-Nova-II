@@ -15,7 +15,7 @@ namespace KryticalNova.Items
     /// </summary>
     [DisallowMultipleComponent]
     [RequireComponent(typeof(PlayerEquipment))]
-    public sealed class PlayerInventory : NetworkBehaviour, IHotbarItemSource, ISaveParticipant
+    public sealed class PlayerInventory : NetworkBehaviour, IHotbarItemSource, ISaveParticipant, IItemNames
     {
         public const int PageSize = 48;
         public const int PageCount = 3;
@@ -212,6 +212,13 @@ namespace KryticalNova.Items
             int count = 0;
             foreach (var cell in cells) if (cell.itemId == itemId) count += cell.count;
             return count;
+        }
+
+        /// <summary>The item's display name, or null when there is no such item (<see cref="IItemNames"/>).</summary>
+        public string NameOf(ushort itemId)
+        {
+            ItemDefinition def = catalog != null ? catalog.Get(itemId) : null;
+            return def != null ? def.displayName : null;
         }
 
         public string GetItemLabel(ushort itemId)
@@ -472,7 +479,7 @@ namespace KryticalNova.Items
             nextUseTime = Time.time + used.useCooldown;
             if (used.restoreHealth > 0f) resources.Heal(used.restoreHealth);
             if (used.restoreChi > 0f) resources.RestoreChi(used.restoreChi);
-            if (used.useEffect != ItemUseEffect.None) HandlerFor(used.useEffect)?.ServerUse(used);
+            if (used.useEffect != ItemUseEffect.None) HandlerFor(used.useEffect)?.ServerUse(new UsedItem(used.itemId, used.displayName));
 
             if (used.restoreHealth <= 0f && used.restoreChi <= 0f) return; // the effect's own system presents it
             if (IsSpawned) ItemUsedRpc(used.restoreHealth > 0f, used.restoreChi > 0f);
@@ -501,7 +508,7 @@ namespace KryticalNova.Items
             if (def.useEffect != ItemUseEffect.None)
             {
                 IItemUseHandler handler = HandlerFor(def.useEffect);
-                return handler == null ? InventoryRules.ReasonNotUsable : handler.UseBlockedReason(def);
+                return handler == null ? InventoryRules.ReasonNotUsable : handler.UseBlockedReason(new UsedItem(def.itemId, def.displayName));
             }
             bool healthUseful = def.restoreHealth > 0f && resources.Health < resources.MaxHealth;
             bool chiUseful = def.restoreChi > 0f && resources.Chi < resources.MaxChi;

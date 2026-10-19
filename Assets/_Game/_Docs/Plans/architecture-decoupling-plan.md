@@ -75,17 +75,19 @@ the few hooks that replaced a reach upward:
 | Networking → Player / Progression / Factions / Social / Persistence (security flags, records, bans, the control page, the safe stop, the start) | One file of hooks Networking owns, `ServerHooks`: who a player is (`DescribePlayer`, filled by Player's `ServerPlayerFacts`), announcing (`Announce`, filled by Social's `ServerAnnouncer`) and the saves (`IServerSaves`, filled by Persistence's `ServerSaveHooks`, each call going straight to `ServerSave` / `ServerBackups` as before). They are filled at load (and in the Editor, for EditMode tests); `ServerHooksTests` checks that. Moving the server's administration up into a system of its own was looked at and dropped: the connection manager starts all of it, so every move only made a new uphill link. |
 | Combat → Audio (`PlayerCadence` read `MusicConductor`, `CombatBeat`, `BeatMath`, `MusicTrack`) | Combat owns a small `IBeatClock` (`Gameplay/Combat/Runtime/IBeatClock.cs`); `MusicConductor` implements it and registers where it sets its own `Instance`. A Cadence press keeps its track as a plain asset reference. |
 
-## Stage 2: split Progression into its two halves (breaks 3 loops)
+## Stage 2: Progression stops reaching into Items, Economy's data and Persistence (built 19 Oct 2026)
 
-- **Lower half: the combat model.** `CombatEntity`, `IDamageable`, `CombatCalculator`, `CharacterBuffManager`,
-  `CharacterCombatStats`, `StatType`, `WeaponClassId`, `KillingBlow`, `IHitChanceModifier`, and the stat and movement
-  data. Move it into a system that sits at the bottom of the gameplay layer, `Gameplay/Stats`.
-  Items, Hostiles, Combat and Player then use Stats, not Progression.
-- **Upper half: player features.** `PlayerNova`, `PlayerSerums`, `PlayerExperienceBoosts`, `PlayerCombatSkills`,
-  the skill hotbar, Ascension and Standings. These stay in Progression, which then sits above Items, Economy and
-  Persistence, where it already reaches.
-- `PlayerNova` and `PlayerSerums` call `PlayerSaveAgent.SaveSoon()`. They get the same call through a one-method
-  `ISaveScheduler` in Core that `PlayerSaveAgent` implements. This cuts Progression → Persistence.
+The map showed that almost all of Progression is the low-level combat model everyone needs. So instead of moving
+that model out, the few features in Progression that reached upward were turned around:
+
+| Link | What was done |
+|---|---|
+| Progression → Persistence (Nova and Serums asked the save agent to save soon) | A one-method `ISaveScheduler` in Core, which `PlayerSaveAgent` implements; they find it on their own object. |
+| Progression → Items (Skill Chips, Serums and XP boosters are items) | The item-use contract moved to Core: `IItemUseHandler`, `ItemUseEffect` (its stored values unchanged) and `UsedItem` (an item's id and name, all a handler reads). The inventory hands each handler the item it uses. |
+| Progression → Items (a booster's name) | A one-method `IItemNames` in Core, which `PlayerInventory` implements. The boosts' tooltip line takes the item's id. |
+| Progression → Economy (the booster table lives in `EconomySettings`) | The `ExperienceBooster` struct moved to Progression with an `IExperienceBoosterTable`, which `EconomySettings` implements; the boosters stay in the same asset. The boosts' `settings` field (same name, same reference on the player prefab) takes the asset through that; dropping any other asset there is refused with a warning. Moving the boosts into Economy was tried first and dropped: Kiosks sell pets, so Economy sits above Pets, while Pets reads the boosts. |
+
+Left for later stages: `PlayerSerums.Local` (stage 3) and Nova paying with the wallet (stage 4).
 
 ## Stage 3: one way to find the local player
 

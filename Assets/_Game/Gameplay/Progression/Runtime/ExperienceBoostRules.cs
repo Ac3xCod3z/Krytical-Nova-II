@@ -1,4 +1,3 @@
-using KryticalNova.Economy;
 
 namespace KryticalNova.Progression
 {

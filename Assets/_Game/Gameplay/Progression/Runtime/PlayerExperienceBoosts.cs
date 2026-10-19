@@ -1,7 +1,5 @@
 using System;
 using KryticalNova.Core;
-using KryticalNova.Economy;
-using KryticalNova.Items;
 using Unity.Netcode;
 using UnityEngine;
 
@@ -20,7 +18,8 @@ namespace KryticalNova.Progression
         private const float TickSeconds = 1f;
         private const float SendSeconds = 15f;
 
-        [SerializeField] private EconomySettings settings;
+        [Tooltip("The list of XP boosters: the economy settings asset (it holds the Nova Store's boosters).")]
+        [SerializeField] private ScriptableObject settings;
 
         // One clock a booster, in the order of the settings' list. The owner's copy is exact when a booster is used
         // or runs out, and at most SendSeconds behind in between: the HUD shows minutes.
@@ -31,9 +30,19 @@ namespace KryticalNova.Progression
         /// <summary>Raised when a clock changes by more than its own running (a booster used, run out, restored).</summary>
         public event Action Changed;
 
-        public EconomySettings Settings => settings;
+        public IExperienceBoosterTable Settings => settings as IExperienceBoosterTable;
+
+#if UNITY_EDITOR
+        // The field takes any asset so that Progression need not know the economy; only a booster list is kept.
+        private void OnValidate()
+        {
+            if (settings == null || settings is IExperienceBoosterTable) return;
+            Debug.LogWarning($"[XP boosts] {settings.name} lists no XP boosters: use the economy settings asset.", this);
+            settings = null;
+        }
+#endif
         private bool Decides => !IsSpawned || IsServer;
-        private ExperienceBooster[] Boosters => settings != null && settings.boosters != null ? settings.boosters : Array.Empty<ExperienceBooster>();
+        private ExperienceBooster[] Boosters => Settings?.Boosters ?? Array.Empty<ExperienceBooster>();
 
         /// <summary>How many boosters there are (running or not).</summary>
         public int Count => Boosters.Length;
@@ -123,16 +132,16 @@ namespace KryticalNova.Progression
 
         private string NameOf(int index)
         {
-            ItemDefinition item = TryGetComponent(out PlayerInventory inventory) && inventory.Catalog != null ? inventory.Catalog.Get(Boosters[index].itemId) : null;
-            return item != null ? item.displayName : "An XP booster";
+            string name = TryGetComponent(out IItemNames names) ? names.NameOf(Boosters[index].itemId) : null;
+            return name ?? "An XP booster";
         }
 
-        private int IndexOf(ItemDefinition item)
+        private int IndexOf(UsedItem item)
         {
-            if (item == null) return -1;
+            if (item.IsNone) return -1;
             ExperienceBooster[] boosters = Boosters;
             for (int i = 0; i < boosters.Length; i++)
-                if (boosters[i].itemId == item.itemId) return i;
+                if (boosters[i].itemId == item.Id) return i;
             return -1;
         }
 
@@ -149,26 +158,26 @@ namespace KryticalNova.Progression
 
         public ItemUseEffect Effect => ItemUseEffect.ExperienceBoost;
 
-        public string UseBlockedReason(ItemDefinition item)
+        public string UseBlockedReason(UsedItem item)
         {
             int index = IndexOf(item);
             if (index < 0) return "It does nothing here.";
             Fit();
             ExperienceBooster booster = Boosters[index];
-            return ExperienceBoostRules.WouldWaste(seconds[index], booster.minutes, settings.boosterMaxHours)
-                ? $"You cannot hold more than {settings.boosterMaxHours} hours of it." : null;
+            return ExperienceBoostRules.WouldWaste(seconds[index], booster.minutes, Settings.MaxHours)
+                ? $"You cannot hold more than {Settings.MaxHours} hours of it." : null;
         }
 
-        public void ServerUse(ItemDefinition item)
+        public void ServerUse(UsedItem item)
         {
             int index = IndexOf(item);
             if (!Decides || index < 0) return;
             Fit();
             ExperienceBooster booster = Boosters[index];
-            seconds[index] = ExperienceBoostRules.AfterUse(seconds[index], booster.minutes, settings.boosterMaxHours);
+            seconds[index] = ExperienceBoostRules.AfterUse(seconds[index], booster.minutes, Settings.MaxHours);
             Send();
             Changed?.Invoke();
-            Tell($"{item.displayName}: {Describe(booster)} for {FormatTime(seconds[index])}.");
+            Tell($"{item.Name}: {Describe(booster)} for {FormatTime(seconds[index])}.");
         }
 
         /// <summary>Server (GM): every clock back to nothing.</summary>
@@ -184,9 +193,9 @@ namespace KryticalNova.Progression
         /// What an item's tooltip says of it when it is a booster: what one adds and for how long, and the time this
         /// character has of it running. Null for any other item.
         /// </summary>
-        public string TooltipLine(ItemDefinition item)
+        public string TooltipLine(ushort itemId)
         {
-            int index = IndexOf(item);
+            int index = IndexOf(new UsedItem(itemId, null));
             if (index < 0) return null;
             ExperienceBooster booster = Boosters[index];
             float left = SecondsLeft(index);
@@ -250,16 +259,16 @@ namespace KryticalNova.Progression
             Fit();
             for (int i = 0; i < seconds.Length; i++) seconds[i] = 0f;
             BoostSave save = string.IsNullOrEmpty(json) ? null : JsonUtility.FromJson<BoostSave>(json);
-            if (save != null && save.clocks != null && settings != null)
+            if (save != null && save.clocks != null && Settings != null)
             {
                 // Clocks are kept by item, so a list in another order (or shorter) loses nothing it still has.
-                float away = settings.boosterTimeRunsOnlyOnline ? 0f
+                float away = Settings.TimeRunsOnlyOnline ? 0f
                     : (float)Math.Max(0.0, new TimeSpan(DateTime.UtcNow.Ticks - save.savedAt).TotalSeconds);
                 ExperienceBooster[] boosters = Boosters;
                 foreach (BoostClock clock in save.clocks)
                     for (int i = 0; i < boosters.Length; i++)
                         if (boosters[i].itemId == clock.itemId)
-                            seconds[i] = Mathf.Clamp(clock.seconds - away, 0f, settings.boosterMaxHours * 3600f);
+                            seconds[i] = Mathf.Clamp(clock.seconds - away, 0f, Settings.MaxHours * 3600f);
             }
             lastTick = Time.time;
             Send();

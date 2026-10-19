@@ -20,6 +20,7 @@ using Unity.Cinemachine;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
+using KryticalNova.Core;
 
 namespace KryticalNova.EditorTools
 {

@@ -13,7 +13,6 @@
   "Gameplay/Items <-> Gameplay/Persistence",
   "Gameplay/Items <-> Gameplay/Progression",
   "Gameplay/Items <-> Gameplay/Social",
-  "Gameplay/Persistence <-> Gameplay/Progression",
   "Gameplay/Player <-> World"
  ],
  "heldScripts": {

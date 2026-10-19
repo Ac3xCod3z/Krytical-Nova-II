@@ -4,6 +4,7 @@ using KryticalNova.Crafting;
 using KryticalNova.Items;
 using UnityEditor;
 using UnityEngine;
+using KryticalNova.Core;
 
 namespace KryticalNova.EditorTools
 {

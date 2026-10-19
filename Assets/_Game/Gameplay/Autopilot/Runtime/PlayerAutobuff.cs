@@ -119,18 +119,18 @@ namespace KryticalNova.Autopilot
 
         public ItemUseEffect Effect => ItemUseEffect.AutobuffTime;
 
-        public string UseBlockedReason(ItemDefinition item)
+        public string UseBlockedReason(UsedItem item)
         {
             if (settings == null) return "Autobuff is not set up.";
-            PassTier? tier = settings.AutobuffTierFor(item != null ? item.itemId : (ushort)0);
+            PassTier? tier = settings.AutobuffTierFor(!item.IsNone ? item.Id : (ushort)0);
             if (tier == null) return "It does nothing here.";
             return AutobuffRules.WouldExceed(DateTime.UtcNow.Ticks, expiresUtc, tier.Value.days, settings.autobuffMaxDays)
                 ? $"You cannot hold more than {settings.autobuffMaxDays} days of Autobuff." : null;
         }
 
-        public void ServerUse(ItemDefinition item)
+        public void ServerUse(UsedItem item)
         {
-            PassTier? tier = settings != null ? settings.AutobuffTierFor(item.itemId) : null;
+            PassTier? tier = settings != null ? settings.AutobuffTierFor(item.Id) : null;
             if (tier == null) return;
             expiresUtc = AutobuffRules.Extend(DateTime.UtcNow.Ticks, expiresUtc, tier.Value.days);
             Push();

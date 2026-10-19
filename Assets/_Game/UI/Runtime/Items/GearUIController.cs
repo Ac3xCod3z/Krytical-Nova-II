@@ -995,7 +995,7 @@ namespace KryticalNova.UI
             if (def.useEffect == ItemUseEffect.ExperienceBoost && inventory != null
                 && inventory.TryGetComponent(out KryticalNova.Progression.PlayerExperienceBoosts boosts))
             {
-                string line = boosts.TooltipLine(def);
+                string line = boosts.TooltipLine(def.itemId);
                 if (line != null) tipDesc.text = def.description + "\n" + line;
             }
             // A Flask says how many drinks it has left: they travel with the bottle.

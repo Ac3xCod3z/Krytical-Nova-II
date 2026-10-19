@@ -18,7 +18,7 @@ namespace KryticalNova.Persistence
     /// A player without a saved character behind it (a test avatar) is simply never saved.
     /// </summary>
     [DisallowMultipleComponent]
-    public sealed class PlayerSaveAgent : NetworkBehaviour
+    public sealed class PlayerSaveAgent : NetworkBehaviour, ISaveScheduler
     {
         [Tooltip("Seconds between automatic saves of this player.")]
         [SerializeField, Min(10f)] private float autosaveSeconds = 60f;
