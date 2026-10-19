@@ -115,7 +115,7 @@ All of that stays. What changes is underneath.
 **Milestone 2 (18 Oct 2026): accounts kept in parts, and the copy tool.**
 - An account is a small header (`accounts/<id>`: version 2, the account-wide part names, each character's name,
   faction, level, map, place and part names; no game state) and one document per part
-  (`accounts/<id>/parts/<part>`, `characters/<character>/parts/<part>`; a part name is kept in lower case). A save
+  (`accounts/<id>/parts/<part>`, `accounts/<id>/<character>/<part>`: a character's parts live inside its account, since a character id comes from the player's game; a part name is kept in lower case). A save
   writes only the parts whose text changed and the header if it changed, as one all-or-nothing batch on the save
   service (`IBatchSaveStore`; files are written one by one); a part a system no longer saves is deleted. A character
   loads in one trip (`/read`).
@@ -131,6 +131,13 @@ All of that stays. What changes is underneath.
   server: Tolan, saved in milestone 1 as one 3 KB document, joined; the server kept that document as `-v1` and wrote a
   471-byte header and 17 parts (11 to 492 bytes). After a few steps the autosave wrote 617 bytes (the header, for the
   new place, and the XP boost timers) and nothing else; on leaving it saved once more and let the lock go.
+
+- *Found while copying the real saves (18 Oct 2026):* the account carried over to Unity sign-in and the old account
+  kept as its backup hold the same character id, so with character parts filed by character id alone the two shared
+  them; worse, a character id comes from the player's game, so a forged one could have reached another account's
+  character. Character parts were moved inside their account (`accounts/<id>/<character>/<part>`) before any server
+  used the layout (`SplitSaveTests.TwoAccountsWithTheSameCharacterIdKeepTheirOwnParts`). The real saves were copied
+  again: 6 accounts, 110 parts and 6 world documents, every one identical to the files.
 
 ## Decisions to make at the start of this phase (as written 11 Oct 2026)
 
