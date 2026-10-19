@@ -191,7 +191,8 @@ the same.
   by `JoinRules` (same build; the Editor any; full turned away before it is in). The build number "0.1.0 build N" is
   stamped into the game by Publish to Test and into the server by the server build (`ReleasePublisher.WithVersion`),
   and Publish to Test rebuilds the matching server.
-- *START MY SERVER (owner, after the chunk):* on the owner's PC only (`LocalServer`: the project's `Builds` in the
+- *START MY SERVER (owner, after the chunk; taken out again 18 Oct 2026 by the owner, the Krytical Nova Server app starts
+  the server instead):* on the owner's PC only (`LocalServer`: the project's `Builds` in the
   Editor, `my-server.txt` beside an installed game), the Servers window offers to start the server when it is off;
   `Start Server.bat --close` opens minimized, the game waits and joins, and for now the server stops with the game
   through its control page (`StopWithGame`, to be false after chunk 6).

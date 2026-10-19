@@ -67,15 +67,11 @@ namespace KryticalNova.ServerApp
         private DateTime nextStatus = DateTime.MinValue;
 
         private readonly string selfTest;
-        private readonly bool closeWhenStopped;
 
-        /// <param name="closeWhenStopped">Started by the owner's game (START MY SERVER): the app goes when the server stops.</param>
-        public MainWindow(string root, string selfTest = null, bool closeWhenStopped = false, bool minimized = false)
+        public MainWindow(string root, string selfTest = null)
         {
             this.root = root;
             this.selfTest = selfTest;
-            this.closeWhenStopped = closeWhenStopped;
-            if (minimized) WindowState = FormWindowState.Minimized;
             display = Fonts.Display();
             logo = LoadImage("Logo.png");
             serverFolder = FindServerFolder(root);
@@ -379,7 +375,7 @@ namespace KryticalNova.ServerApp
             serverState = "STOPPED";
             if (code == AnotherCopyExitCode) server.Note("Another copy of this server is already running on this PC (a Start Server.bat window?). Close it, then press START.");
             Invalidate();
-            if (closingAfterStop || closeWhenStopped) FinishClosing();
+            if (closingAfterStop) FinishClosing();
         }
 
         private void OnClosing(object sender, FormClosingEventArgs e)

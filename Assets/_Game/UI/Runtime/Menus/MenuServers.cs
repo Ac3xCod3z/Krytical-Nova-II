@@ -19,10 +19,7 @@ namespace KryticalNova.UI.Menus
     {
         private VisualElement root, window, shade, list;
         private Label message, empty;
-        private Button join, start;
-        private float startingUntil = -1f, nextPoll;
-        private string startingKey;
-        private const float StartWaitSeconds = 90f;
+        private Button join;
         private MenuSettings settings;
         private readonly List<ServerEntry> shown = new List<ServerEntry>();
         private int selected;
@@ -60,8 +57,6 @@ namespace KryticalNova.UI.Menus
             message = root.Q<Label>("servers-message");
             empty = root.Q<Label>("servers-empty");
             join = root.Q<Button>("servers-join");
-            start = root.Q<Button>("servers-start");
-            if (start != null) start.clicked += StartMyServer;
             Button close = root.Q<Button>("close-servers");
             if (close != null) close.clicked += Close;
             if (join != null) join.clicked += JoinSelected;
@@ -101,7 +96,6 @@ namespace KryticalNova.UI.Menus
         public void Close()
         {
             if (!IsOpen) return;
-            startingUntil = -1f;
             Show(false);
             onJoin = null;
             MenuMoments.Raise(MenuMoment.Back);
@@ -110,7 +104,6 @@ namespace KryticalNova.UI.Menus
         private void Update()
         {
             if (!IsOpen) return;
-            WaitForMyServer();
             Keyboard keyboard = Keyboard.current;
             if (keyboard == null) return;
             if (keyboard.escapeKey.wasPressedThisFrame) Close();
@@ -232,52 +225,6 @@ namespace KryticalNova.UI.Menus
             selected = Mathf.Clamp(index, 0, shown.Count - 1);
             for (int i = 0; i < list.childCount; i++) list[i].EnableInClassList("selected", i == selected);
             if (join != null) join.SetEnabled(shown[selected].CanJoin);
-            ServerEntry chosen = shown[selected];
-            bool startable = startingUntil < 0f && chosen.Status == ServerEntry.State.Off && LocalServer.CanStart(chosen.Listing);
-            if (start != null) start.EnableInClassList("shown", startable);
-            if (startable) SetMessage("Your server is off. START MY SERVER starts it here (for now it stops again when you quit the game).");
-        }
-
-        // ------------------------------------------------------------------ the owner's own server
-
-        private void StartMyServer()
-        {
-            ServerEntry chosen = selected >= 0 && selected < shown.Count ? shown[selected] : null;
-            if (chosen == null || !LocalServer.CanStart(chosen.Listing)) return;
-            if (!LocalServer.Start(out string error))
-            {
-                SetMessage(error);
-                return;
-            }
-            startingKey = chosen.Key;
-            startingUntil = Time.unscaledTime + StartWaitSeconds;
-            nextPoll = Time.unscaledTime + 4f;
-            if (start != null) start.EnableInClassList("shown", false);
-            SetMessage("Starting your server (its window waits in the taskbar). This takes about half a minute; the game joins by itself.");
-        }
-
-        // Asks again every few seconds until the server answers, then joins it.
-        private void WaitForMyServer()
-        {
-            if (startingUntil < 0f) return;
-            foreach (ServerEntry entry in ServerDirectory.Entries)
-                if (entry.Key == startingKey && entry.Status == ServerEntry.State.Online)
-                {
-                    startingUntil = -1f;
-                    for (int i = 0; i < shown.Count; i++) if (shown[i].Key == startingKey) Select(i);
-                    JoinSelected();
-                    return;
-                }
-            if (Time.unscaledTime > startingUntil)
-            {
-                startingUntil = -1f;
-                SetMessage("Your server did not answer in time. Look at its window for what it says, then press REFRESH.");
-                Fill();
-                return;
-            }
-            if (Time.unscaledTime < nextPoll) return;
-            nextPoll = Time.unscaledTime + 3f;
-            ServerDirectory.Refresh();
         }
 
         private void JoinSelected()

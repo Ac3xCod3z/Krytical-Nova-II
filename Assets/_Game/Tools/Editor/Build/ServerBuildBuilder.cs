@@ -330,7 +330,7 @@ namespace KryticalNova.EditorTools
                     // NoDefaultCurrentDirectoryInExePath is set.
                     "\"%~dp0" + ExeName + ".exe\" -logFile -\r\n" +
                     $"if %errorlevel%=={RestartExitCode} goto start\r\n" +
-                    // Started by the owner's game (LocalServer): the window closes with the server.
+                    // Started by a tool (the measure server, MeasureTools): the window closes with the server.
                     "if /i \"%~1\"==\"--close\" exit /b\r\n" +
                     "echo.\r\n" +
                     "echo The server has stopped. Press a key to close this window.\r\n" +

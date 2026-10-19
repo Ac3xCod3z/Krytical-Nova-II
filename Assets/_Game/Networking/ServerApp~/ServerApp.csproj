@@ -14,7 +14,8 @@
     <Company>Ascension Studios</Company>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
     <DebugType>none</DebugType>
-    <ApplicationIcon>..\..\Release\Tools~\Launcher\Launcher.ico</ApplicationIcon>
+    <!-- Its own icon (owner pick B, 18 Oct 2026): the K and N of the name logo on a navy badge, not the game's. -->
+    <ApplicationIcon>ServerApp.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>

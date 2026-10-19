@@ -400,24 +400,14 @@ cannot add or remove servers: the list is yours (next section). The Editor and t
 If a join fails (another build, full, no answer) the game goes back to character select and the Servers window says
 why.
 
-**START MY SERVER (your PC only).** When Enter World finds *your* server off, the Servers window offers **START MY
-SERVER**. It opens the **Krytical Nova Server** app **minimized** (`Start Server.bat` where the app is missing): it waits
-in the taskbar and never covers the game or the Editor, waits until the server answers (about half a minute), and joins by itself. It only shows when the game
-knows where your server is and the server is on this PC:
+**Starting your server is done with the app, not from the game.** The game's START MY SERVER button was taken out on
+18 Oct 2026 (owner): once the server moves to the old PC it could not start it anyway. When Enter World finds your
+server off, the Servers window just says so; open **Krytical Nova Server** (section 2) and join once it is ONLINE.
 
-| Where | How it finds your server |
-| --- | --- |
-| The Editor | The project's `Builds/Server/Windows/KryticalNovaServer` |
-| Your installed game | A file `my-server.txt` beside the game (in the launcher's `Game` folder), one line: the server's folder |
-
-A brother's game has no `my-server.txt` and never offers it. **For now the server stops with the game that started
-it** (quitting, or leaving Play in the Editor, runs its safe stop: everyone saved, a backup, then the app closes, the
-save service with it). A server you start yourself (the app or `Start Server.bat`) is never stopped by the game. When the server moves to the old PC
-(step 6) this changes: the server keeps running on its own there, and START MY SERVER is no longer offered on your PC
-(it only starts a server on the PC it runs on). From your PC you then run it through its **control page** (who is on,
-commands, Save, Backup, Restart, Stop), which every PC in the house can open. Only starting it again after a Stop needs
-the old PC itself: the app there (or Chrome Remote Desktop to it), or simply restarting that PC, since the move plan
-starts the server before anyone logs in.
+**After the move to the old PC (step 6)** the server keeps running on its own there, and starts with that PC before
+anyone logs in. From your PC you run it through its **control page** (who is on, commands, Save, Backup, Restart,
+Stop), which every PC in the house can open; a Restart brings it back by itself. Only starting it again after a
+**Stop** needs the old PC itself: the app there (or Chrome Remote Desktop to it), or simply restarting that PC.
 
 **Only the same build joins.** A release game and its server carry their build number ("0.1.0 build 5"); a game of
 another build is refused before it is in: *"This server runs build 5 and your game is build 4. Open the Krytical Nova
@@ -686,6 +676,7 @@ Server"; tell the two apart by the port the window prints. Every test goes like 
 | `ServerControlPage` | `Networking/Runtime/Server` | The control page: a small web server on a plain socket (no administrator rights), sessions, the calls. Server build only. |
 | `ControlPageRules` | `Networking/Runtime/Server` | Home network only, request reading, the lockout, same-origin and Host checks, which failed requests are a browser hanging up (not logged), a spare connection closed unused (no answer) (tested in `ControlPageTests`). |
 | `ServerSingleCopy` | `Networking/Runtime/Server` | Before anything else, checks the game port (UDP, Direct mode) and the page port (TCP); when another copy holds them it says so and quits with exit code 4, which `Start Server.bat` does not restart on (tested in `ServerSingleCopyTests`). Server build only. |
+| Krytical Nova Server app | `Networking/ServerApp~` (.NET, outside Unity) | The owner's window for the server: `Hosted` runs the save service and the server hidden with their output and input, `MainWindow` the three tabs, the safe stop and the restart on exit code 3; its own icon `ServerApp.ico`. `--selftest <folder>` pictures each tab, runs `gm.players`, backs up and stops (run it only beside the measure server). Built by `ServerBuildBuilder.BuildServerApp`. |
 | `ControlPage~` | `Networking` | The page's own files: `index.html`, `style.css`, `app.js` (copied beside the server by the build). |
 | `ServerBackups` | `Gameplay/Persistence/Runtime` | Zips the save folder and prunes old backups. |
 | `ServerConsoleInput` | `Tools/Debug` | Runs lines typed into the server's window, and the page's GM command box. Server build only. |
@@ -696,7 +687,6 @@ Server"; tell the two apart by the port the window prints. Every test goes like 
 | `ServerDirectory`, `ServerListFile`, `ServerStatusProtocol` | `Networking/Runtime` | The published list (from CCD, kept on the PC), "This PC" and "Play here" in development, each server's status, the last choice. |
 | `JoinFlow` | `Networking/Runtime` | Enter's server; the world joins it under the loading screen (`NetworkConnectionManager.JoinChosenServer`) and says how it went. |
 | `ServerStatusResponder` | `Networking/Runtime/Server` | Answers on the status port (never more bytes than asked, four a second per address). Server build only. |
-| `LocalServer` | `Networking/Runtime` | START MY SERVER: finds your server's folder (the project's Builds, or `my-server.txt`), starts it minimized, and for now stops it with the game through its control page (`StopWithGame`). |
 | `ServerReach` | `Networking/Runtime/Server` | Step 5: this PC's internet address (looked up at start and every 10 minutes), the Relay code, the list published by itself when either changed (also PUBLISH LIST). Server build only. |
 | `NetworkConnectionManager.StartRelayServer`, `PrepareRelayJoin` | `Networking/Runtime` | Relay mode: the server's place on Unity Relay (retries every 30 s, restarts when the link drops); a game joining with the code. |
 | `MenuServers`, `JoinFlowScreens` | `UI/Runtime/Menus` | The Servers window (in the menus' Settings document, so it wears the skin), the loading hold and the way back on failure. |
@@ -759,6 +749,9 @@ Things learned the hard way:
 - 18 Oct 2026: how every test is run (section 11, "A second server for tests"): tests always on their own ports (the real server keeps 7777, 7778 and page 8090), the test server rebuilt from the commit under test and started through Explorer, straight into a zone with Play from Title off, and a **TestGM** bound to the test character on the test page only (Ascension and Craven stay the real server's). Run that day after the project cleanup: Zone01 on the test server, Tolan as GM, Hostiles, NPCs and every place checked, no errors.
 - 18 Oct 2026: the **Krytical Nova Server** app (owner): one window with the KN logo that starts the save service and
   the server hidden inside it, with SERVER, SAVE SERVICE and DATABASE tabs; built beside the server with shortcuts on
-  the desktop and in the Start menu; START MY SERVER opens it minimized; `Start Server.bat` stays as the old way. The
+  the desktop and in the Start menu; `Start Server.bat` stays as the old way. The
   control page no longer logs "did not properly respond after a period of time" for a spare connection the browser
   kept open without sending anything.
+- 18 Oct 2026: START MY SERVER taken out of the game (owner: after the move it could not start the server anyway);
+  the server is started with the app. The app has its own icon (owner pick B): the K and N of the name logo on a navy
+  badge.

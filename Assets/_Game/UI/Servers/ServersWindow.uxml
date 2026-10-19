@@ -11,7 +11,6 @@
             </ui:VisualElement>
             <ui:Label name="servers-message" class="servers-message" />
             <!-- Only for the owner's own server on this PC, when it is off (LocalServer). -->
-            <ui:Button name="servers-start" text="START MY SERVER" class="settings-footer-button kn-button-primary servers-start" />
             <ui:Label text="Enter on character select joins the server marked LAST PLAYED." class="help servers-lede" />
             <ui:VisualElement name="servers-list" />
             <ui:Label name="servers-empty" text="Looking for servers..." class="help" />
