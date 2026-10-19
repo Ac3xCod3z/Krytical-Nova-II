@@ -48,9 +48,22 @@ namespace KryticalNova.Social
 
     /// <summary>Every Crew on the server: the world document "crews".</summary>
     [Serializable]
-    public sealed class CrewsWorld
+    public sealed class CrewsWorld : KryticalNova.Core.IWorldEntries
     {
         public List<Crew> crews = new List<Crew>();
+
+        // Online phase 4, milestone 4: kept one entry at a time (ServerSave), keyed by id.
+        public void CollectEntries(List<KeyValuePair<string, string>> into)
+        {
+            foreach (Crew entry in crews)
+                if (entry != null) into.Add(new KeyValuePair<string, string>(entry.id, UnityEngine.JsonUtility.ToJson(entry)));
+        }
+
+        public void RestoreEntries(IReadOnlyList<string> texts)
+        {
+            crews = new List<Crew>(texts.Count);
+            foreach (string text in texts) crews.Add(UnityEngine.JsonUtility.FromJson<Crew>(text));
+        }
     }
 
     /// <summary>What everyone can see of a player's Crew: its name and symbol, and the player's rank and title in it.</summary>

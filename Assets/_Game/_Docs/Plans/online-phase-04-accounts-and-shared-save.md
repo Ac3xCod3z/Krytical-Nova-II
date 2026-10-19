@@ -169,6 +169,28 @@ All of that stays. What changes is underneath.
   Not tried with two players: a trade and a Kiosk purchase between two clients (their saving is `SaveTogether`, tested
   above; the trade and Kiosk rules themselves did not change).
 
+**Milestone 4 (19 Oct 2026): world records, one entry at a time.**
+- Crews, Contacts, Kiosks and Sponsor links are each a list of entries (`IWorldEntries` in Core: each world class lists
+  its entries with a key and puts them back). `ServerSave` keeps such a document as a small header (`world/<name>`:
+  version 2 and the entries' keys, in order; no game state) and one document per entry (`world/crews/<crew id>`,
+  `world/contacts/<character id>`, `world/kiosks/<owner character id>`, `world/sponsors/<recruit>-<sponsor>`). A save
+  writes only the entries whose text changed, deletes the ones that went and rewrites the header only when the list
+  changed, as one all-or-nothing batch (with players too, through `SaveTogether`). So a change to one Crew writes that
+  Crew alone, and two servers changing two different Crews never write over each other; a server holding an older copy
+  of an entry another server changed is refused by the entry's version.
+- A document saved whole before this is read as it is, kept once as `world/<name>-v1` and saved in entries from its
+  next save: the real server's records change over by themselves. Bans and the carried-accounts list stay whole (one
+  short document each). The services did not change: they still call `Save()` after each change.
+- *Tried:* `WorldEntriesTests` (5: one entry written alone; restart reads them back in order; a whole document kept once
+  and split; keys made safe and never shared; a player and an entry in one change), EditMode 997 of 997, the dependency
+  check (0 uphill, 0 two-way). On the test server (built from this branch, test database): the Crews, Contacts, Kiosks
+  and Sponsors copied from the test saves (plus sample Crews, a Kiosk and a Sponsor link) were split on the first stop
+  with Tolan online, every `-v1` kept, nothing lost (Crews gained only the game's default fields; Tolan's Contact book
+  only its last-seen time); on the next round exactly one document was written, Tolan's Contact book (193 bytes).
+- *Found:* a game built before the decoupling (19 Oct) cannot play on a server built after it, even with the same build
+  number (the assemblies were renamed, so the network message ids changed; a build-8 bot from 19 Oct 01:33 failed its
+  messages on a server from today). The next real server rebuild goes with a new release (Publish to Test).
+
 - *Found while copying the real saves (18 Oct 2026):* the account carried over to Unity sign-in and the old account
   kept as its backup hold the same character id, so with character parts filed by character id alone the two shared
   them; worse, a character id comes from the player's game, so a forged one could have reached another account's

@@ -16,6 +16,25 @@ Read `Assets/_Game/_Docs/ProjectOrganization.md` before creating, moving, or gen
 - Move assets through Unity (`AssetDatabase.MoveAsset`) or together with their `.meta`; then grep for old path literals.
 - Validate with menu **Krytical Nova ▸ Project ▸ Validate Project Organization**.
 
+## Dependencies between systems (mandatory, owner 19 Oct 2026: before writing any code)
+
+Every system is its own assembly (`KryticalNova.<System>`; Core stays `KryticalNova.Runtime`), stacked in layers. Read
+`_Docs/Reference/Dependency-Map.md` ("How to read it") and the rules in `_Docs/Plans/architecture-decoupling-plan.md`
+before writing code that crosses systems.
+
+- **Layers, from the bottom:** Foundation (Core) → Infrastructure (Networking, Rendering) → Simulation (every Gameplay
+  system, World, Environment) → Presentation (UI, GameFeel, Audio, Icons) → Tooling (Tools). A system may use its own
+  layer and the ones below, never a higher one, and two systems never use each other both ways.
+- **When a lower system needs something from a higher one:** first move the type to the layer it belongs to; otherwise
+  put one small interface in the lower system or in Core and let the higher one implement or fill it (as `IWorldEntries`,
+  `ISaveParticipant`, `LedgerNote`, the `Core/I*Sink` interfaces and `ClientPresentationRegistry` do). Add an `.asmdef`
+  reference only to a lower system.
+- **No new machinery:** no event-bus assets, service containers, dependency-injection packages or wrapper layers.
+  ScriptableObjects stay the design data; numbers go in the settings assets that exist.
+- **Check before every commit that touches more than one system:**
+  `python "Assets/_Game/Tools/Editor/Architecture/Scripts~/dependency_map.py" --check` must pass (0 uphill links,
+  0 two-way pairs), and `compile_check.py` (and `--server`) in the same folder must compile every assembly.
+
 ## Names and systems (mandatory)
 
 Read `Assets/_Game/_Docs/Reference/12Sky/README.md` before naming anything a player sees or building a system.

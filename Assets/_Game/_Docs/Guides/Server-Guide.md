@@ -386,6 +386,17 @@ was lost, the server sends it again and the save service recognises it, so it is
 test (`Persistence/Service~/KillTest/kill_test.py`, the test database only): thousands of trades while the save service
 was killed over a hundred times, and nothing was made or lost.
 
+**Crews, Contacts, Kiosks and Sponsors, one entry at a time (milestone 4, 19 Oct 2026).** Each Crew, each character's
+Contacts, each Kiosk and each Sponsor link is its own small save in the database, beside a short list of them. A change
+to one Crew saves that Crew alone (before, the whole list of every Crew was written again), so later, when more than one
+server runs, two servers changing two Crews never write over each other. Your server's old lists are changed over by
+themselves the first time it saves them (the old list is kept once beside, named `-v1`). Nothing to do.
+
+**Rebuild the server together with a new game release from now on (19 Oct 2026).** The decoupling of 19 Oct renamed the
+game's code assemblies, which changes the ids of the messages game and server send each other. A game built before it
+cannot play on a server built after it, **even with the same build number**. So the next time you rebuild your real
+server, publish a new release too (Publish to Test, then LIVE), and from then on keep the two together as before.
+
 **The ledger** is the database's record of everything of value that moved, one line per account each time:
 
 - **Every Cred**, by where it came from or went to (a trade, a Kiosk, a shop, a Hostile, the Vault, a GM...), added up
@@ -786,3 +797,6 @@ Things learned the hard way:
   journal for the save folder, a database transaction for the save service, a change sent twice is saved once); the
   kept ledger (`gm.ledger`, `ledgerDays`, `ledger.jsonl` in backups); the record files start anew each month and keep
   `recordMonths`; the kill test.
+- 19 Oct 2026: phase 4 milestone 4: Crews, Contacts, Kiosks and Sponsors saved one entry at a time (old lists changed
+  over by themselves, kept once as `-v1`). Found: since the decoupling, rebuild the server together with a new game
+  release (a game built before it cannot play on a server built after it, even with the same build number).

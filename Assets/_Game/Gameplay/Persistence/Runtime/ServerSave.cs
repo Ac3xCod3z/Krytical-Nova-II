@@ -41,6 +41,7 @@ namespace KryticalNova.Persistence
             LastWritten.Clear();
             PartKeysOf.Clear();
             PendingLedger.Clear();
+            WorldEntryKeys.Clear();
             if (!quitHooked)
             {
                 quitHooked = true;
@@ -60,6 +61,7 @@ namespace KryticalNova.Persistence
                 store = value;
                 WorldDocuments.Clear();
                 LastWritten.Clear();
+                WorldEntryKeys.Clear();
             }
         }
 
@@ -447,12 +449,8 @@ namespace KryticalNova.Persistence
                 }
             foreach (string name in worlds ?? Array.Empty<string>())
             {
-                string key = WorldPrefix + name;
-                if (!WorldDocuments.TryGetValue(key, out object document)) continue;
-                string json = JsonUtility.ToJson(document);
-                if (LastWritten.TryGetValue(key, out string last) && last == json) continue;
-                batch.Write(key, json);
-                written.Add(() => LastWritten[key] = json);
+                Action done = CollectWorld(name, batch);
+                if (done != null) written.Add(done);
             }
             if (batch.IsEmpty) return false;
             Send(batch);
@@ -621,6 +619,28 @@ namespace KryticalNova.Persistence
 
         // ------------------------------------------------------------------ world documents
 
+        // ---- How a world document of entries is kept (online phase 4, milestone 4): one entry at a time.
+        // world/<name>          the header: version 2 and the entries' keys, in order. No game state.
+        // world/<name>/<entry>  one entry (a Crew, a character's Contacts, a Kiosk, a Sponsor link).
+        // A save writes only the entries whose text changed, deletes the ones that went, and rewrites the header only when
+        // the list of entries changed, as one change. So a change to one Crew writes that Crew alone, and two servers
+        // changing two different Crews never write over each other. A document that is not a list of entries
+        // (IWorldEntries) is kept whole as before (the bans, the carried accounts). One saved whole before this is read
+        // as it is, kept once as world/<name>-v1, and written in entries by its next save.
+
+        [Serializable]
+        private sealed class WorldHeader
+        {
+            public int version = 2;
+            public List<string> keys = new List<string>();
+        }
+
+        // The entry keys each world document of entries has in the store now, to know which ones a save must delete.
+        private static readonly Dictionary<string, HashSet<string>> WorldEntryKeys = new Dictionary<string, HashSet<string>>(StringComparer.Ordinal);
+
+        /// <summary>Where one entry of a world document of entries is kept.</summary>
+        public static string WorldEntryKey(string name, string entry) => WorldPrefix + name + "/" + entry;
+
         /// <summary>A world-wide document ("crews", "kiosks"), loaded once and kept. Never null.</summary>
         public static T World<T>(string name) where T : class, new()
         {
@@ -632,7 +652,10 @@ namespace KryticalNova.Persistence
             {
                 try
                 {
-                    document = JsonUtility.FromJson<T>(json);
+                    int version = JsonUtility.FromJson<VersionOnly>(json)?.version ?? 1;
+                    document = version >= 2 && typeof(IWorldEntries).IsAssignableFrom(typeof(T))
+                        ? ReadWorldEntries<T>(name, json)
+                        : JsonUtility.FromJson<T>(json);
                     LastWritten[key] = json;
                 }
                 catch (Exception e)
@@ -646,11 +669,114 @@ namespace KryticalNova.Persistence
             return document;
         }
 
-        /// <summary>Writes a world document now, if it changed.</summary>
+        // The header, then every entry it names, many in one trip where the store can.
+        private static T ReadWorldEntries<T>(string name, string headerJson) where T : class, new()
+        {
+            WorldHeader header = JsonUtility.FromJson<WorldHeader>(headerJson);
+            var wanted = new List<string>();
+            foreach (string entry in header.keys ?? new List<string>()) wanted.Add(WorldEntryKey(name, entry));
+            var found = new Dictionary<string, string>(StringComparer.Ordinal);
+            for (int start = 0; start < wanted.Count; start += 400)
+            {
+                List<string> chunk = wanted.GetRange(start, Math.Min(400, wanted.Count - start));
+                if (Store is IBatchSaveStore batch) batch.TryReadMany(chunk, found);
+                else
+                    foreach (string key in chunk)
+                        if (Store.TryRead(key, out string text)) found[key] = text;
+            }
+            var texts = new List<string>(wanted.Count);
+            var present = new HashSet<string>(StringComparer.Ordinal);
+            foreach (string key in wanted)
+            {
+                if (!found.TryGetValue(key, out string text)) continue;
+                texts.Add(text);
+                present.Add(key);
+                LastWritten[key] = text;
+            }
+            if (texts.Count < wanted.Count)
+                Debug.LogWarning($"[Save] World document '{name}': {wanted.Count - texts.Count} of its {wanted.Count} entries were not found.");
+            var document = new T();
+            ((IWorldEntries)document).RestoreEntries(texts);
+            WorldEntryKeys[WorldPrefix + name] = present;
+            return document;
+        }
+
+        /// <summary>Writes a world document now, if it changed: only the entries that changed, as one change.</summary>
         public static void SaveWorld(string name)
         {
+            if (!HasAuthority) return;
+            var batch = new SaveBatch();
+            Action written = CollectWorld(name, batch);
+            if (written == null || batch.IsEmpty) return;
+            Send(batch);
+            written();
+        }
+
+        // Puts what changed in a world document into the batch; returns what to remember once the batch is handed to the
+        // store, or null when the document is not loaded.
+        private static Action CollectWorld(string name, SaveBatch batch)
+        {
             string key = WorldPrefix + name;
-            if (HasAuthority && WorldDocuments.TryGetValue(key, out object document)) WriteIfChanged(key, JsonUtility.ToJson(document));
+            if (!WorldDocuments.TryGetValue(key, out object document)) return null;
+            if (!(document is IWorldEntries entries))
+            {
+                string json = JsonUtility.ToJson(document);
+                if (LastWritten.TryGetValue(key, out string last) && last == json) return () => { };
+                batch.Write(key, json);
+                return () => LastWritten[key] = json;
+            }
+
+            var listed = new List<KeyValuePair<string, string>>();
+            entries.CollectEntries(listed);
+            var header = new WorldHeader();
+            var keep = new HashSet<string>(StringComparer.Ordinal);
+            var writes = new List<KeyValuePair<string, string>>();
+            foreach (KeyValuePair<string, string> entry in listed)
+            {
+                string entryName = EntryName(entry.Key, keep, name);
+                header.keys.Add(entryName);
+                string entryKey = WorldEntryKey(name, entryName);
+                keep.Add(entryKey);
+                if (LastWritten.TryGetValue(entryKey, out string last) && last == entry.Value) continue;
+                writes.Add(new KeyValuePair<string, string>(entryKey, entry.Value ?? string.Empty));
+            }
+            if (!WorldEntryKeys.TryGetValue(key, out HashSet<string> present)) present = new HashSet<string>(StringComparer.Ordinal);
+            var deletes = new List<string>();
+            foreach (string old in present)
+                if (!keep.Contains(old)) deletes.Add(old);
+
+            string headerJson = JsonUtility.ToJson(header);
+            LastWritten.TryGetValue(key, out string lastHeader);
+            // Saved whole before (milestone 3 and earlier): kept once, as it was, beside the entries.
+            if (lastHeader != null && (JsonUtility.FromJson<VersionOnly>(lastHeader)?.version ?? 1) < 2 && !Store.TryRead(key + OldCopySuffix, out _))
+            {
+                batch.Write(key + OldCopySuffix, lastHeader);
+                Debug.Log($"[Save] World document '{name}' was kept whole: kept as {key + OldCopySuffix}; it is saved one entry at a time from now on.");
+            }
+            batch.Writes.AddRange(writes);
+            batch.Deletes.AddRange(deletes);
+            bool headerChanged = lastHeader != headerJson;
+            if (headerChanged) batch.Write(key, headerJson); // the header last: files read it last
+            return () =>
+            {
+                foreach (KeyValuePair<string, string> write in writes) LastWritten[write.Key] = write.Value;
+                foreach (string gone in deletes) LastWritten.Remove(gone);
+                if (headerChanged) LastWritten[key] = headerJson;
+                WorldEntryKeys[key] = keep;
+            };
+        }
+
+        // An entry's key as a save key allows it, and never the same as another entry's of the document.
+        private static string EntryName(string raw, HashSet<string> taken, string world)
+        {
+            var sb = new System.Text.StringBuilder();
+            foreach (char c in (raw ?? string.Empty).ToLowerInvariant())
+                sb.Append((c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == '-' || c == '_' ? c : '_');
+            string name = sb.Length > 0 ? sb.ToString() : "entry";
+            if (name.Length > 60) name = name.Substring(0, 60);
+            string candidate = name;
+            for (int n = 2; taken.Contains(WorldEntryKey(world, candidate)); n++) candidate = name + "-" + n;
+            return candidate;
         }
 
         // ------------------------------------------------------------------ everything
@@ -662,7 +788,18 @@ namespace KryticalNova.Persistence
             using var timed = KryticalNova.Diagnostics.PerformanceLog.Time("save.all");
             for (int i = Agents.Count - 1; i >= 0; i--)
                 if (Agents[i] != null) Agents[i].Save();
-            foreach (var pair in WorldDocuments) WriteIfChanged(pair.Key, JsonUtility.ToJson(pair.Value));
+            var worlds = new SaveBatch();
+            var worldsWritten = new List<Action>();
+            foreach (string key in new List<string>(WorldDocuments.Keys))
+            {
+                Action done = CollectWorld(key.Substring(WorldPrefix.Length), worlds);
+                if (done != null) worldsWritten.Add(done);
+            }
+            if (!worlds.IsEmpty)
+            {
+                Send(worlds);
+                foreach (Action done in worldsWritten) done();
+            }
             // Ledger lines of accounts no longer in the world (one that left before its line's save): kept, never dropped.
             if (PendingLedger.Count > 0)
             {
@@ -697,15 +834,8 @@ namespace KryticalNova.Persistence
             LastWritten.Clear();
             PartKeysOf.Clear();
             PendingLedger.Clear();
+            WorldEntryKeys.Clear();
             return deleted;
-        }
-
-        private static bool WriteIfChanged(string key, string json)
-        {
-            if (LastWritten.TryGetValue(key, out string last) && last == json) return false;
-            Store.Write(key, json);
-            LastWritten[key] = json;
-            return true;
         }
 
         // ------------------------------------------------------------------ who is loaded
