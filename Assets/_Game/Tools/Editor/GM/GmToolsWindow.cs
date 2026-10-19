@@ -1620,6 +1620,12 @@ namespace KryticalNova.EditorTools.GM
         [InfoBox("Every item id. A slot narrows it: Weapon, Armor, Gloves, Boots, Ring, Amulet, Cape, Pet. Empty lists all.")]
         private void ListItems(string slot = "") => Run(string.IsNullOrWhiteSpace(slot) ? "item.list" : $"item.list {slot.Trim()}");
 
+        [TabGroup(Tabs, EconomyTab), Title("Ledger"), Button(ButtonStyle.CompactBox, Expanded = true), EnableIf(nameof(IsReady)), PropertyOrder(631)]
+        [InfoBox("What an account gained and gave up, newest first: trades, Kiosk sales, shops, Deep Vault moves, loot, the forge, " +
+                 "GM commands, and every Cred by where it came from. A character name, an account id, or all.")]
+        private void ReadLedger(string who = "all", [MinValue(1)] int days = 7, [MinValue(1)] int lines = 20) =>
+            Run($"gm.ledger {Quote(string.IsNullOrWhiteSpace(who) ? "all" : who.Trim())} {days} {lines}");
+
         [TabGroup(Tabs, EconomyTab), Title("Danger"), Button("Wipe Every Save..."), GUIColor(1f, 0.5f, 0.5f), EnableIf(nameof(IsReady)), PropertyOrder(632)]
         [InfoBox("Deletes all accounts and characters, Crews, Kiosks and Contacts. Asks first.", InfoMessageType.Warning)]
         private void WipeAllSaves()

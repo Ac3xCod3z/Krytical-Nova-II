@@ -37,10 +37,17 @@ namespace KryticalNova.Networking
         /// <summary>Where the files are written (the dedicated server's save folder); null: log lines only.</summary>
         public static string LogFolder { get; set; }
 
+        /// <summary>
+        /// Months of each record kept (the server's <c>recordMonths</c>, online phase 4: "kick the oldest so old data does
+        /// not fill my disk"). Each month starts a new file; the month before is kept as gm-2026-10.log and so on.
+        /// </summary>
+        public static int MonthsKept { get; set; } = 6;
+
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void ResetStatics()
         {
             LogFolder = null;
+            MonthsKept = 6;
             InGame.Clear();
         }
 
@@ -96,15 +103,41 @@ namespace KryticalNova.Networking
             try
             {
                 lock (Gate)
-                {
-                    Directory.CreateDirectory(folder);
-                    File.AppendAllText(Path.Combine(folder, FileName(kind)),
+                    File.AppendAllText(CurrentFile(folder, FileName(kind), time, MonthsKept),
                         time.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture) + "  " + OneLine(line) + Environment.NewLine);
-                }
             }
             catch (Exception e)
             {
                 Debug.LogWarning($"[Server] {FileName(kind)} could not be written: {e.Message}");
+            }
+        }
+
+        /// <summary>
+        /// The file a record line goes in now (<paramref name="name"/>, "gm.log", in <paramref name="folder"/>). When the
+        /// file was last written in an earlier month it is first kept as "gm-2026-09.log", and only the newest
+        /// <paramref name="monthsKept"/> months stay (this one counts): the oldest go.
+        /// </summary>
+        public static string CurrentFile(string folder, string name, DateTime now, int monthsKept)
+        {
+            lock (Gate)
+            {
+                Directory.CreateDirectory(folder);
+                string path = Path.Combine(folder, name);
+                if (!File.Exists(path)) return path;
+                DateTime last = File.GetLastWriteTime(path);
+                if (last.Year == now.Year && last.Month == now.Month) return path;
+                string stem = Path.GetFileNameWithoutExtension(name), extension = Path.GetExtension(name);
+                string kept = Path.Combine(folder, $"{stem}-{last:yyyy-MM}{extension}");
+                if (File.Exists(kept))
+                {
+                    File.AppendAllText(kept, File.ReadAllText(path));
+                    File.Delete(path);
+                }
+                else File.Move(path, kept);
+                var months = new List<string>(Directory.GetFiles(folder, stem + "-????-??" + extension));
+                months.Sort(StringComparer.Ordinal);
+                for (int i = 0; i < months.Count - Math.Max(0, monthsKept - 1); i++) File.Delete(months[i]);
+                return path;
             }
         }
 

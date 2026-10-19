@@ -9,8 +9,12 @@ namespace KryticalNova.SaveService
     public sealed class DocumentStore
     {
         // The tables, made on the first start. "schema" says which version of this layout the database has, so a later
-        // milestone can step it up (milestone 2 splits accounts into characters and parts).
-        private const int SchemaVersion = 1;
+        // milestone can step it up. 2 (milestone 3): the kept ledger and the batches already applied.
+        // The ledger is kept as text with only what it is looked up by (account, kind, time): the economy's rules are
+        // never in the database, so reworking the economy needs no change here (owner, 18 Oct 2026).
+        private const int SchemaVersion = 2;
+        /// <summary>How long a batch's id is remembered, so a batch sent again after a lost answer is not refused.</summary>
+        private const int AppliedBatchHours = 24;
 
         private readonly NpgsqlDataSource data;
 
@@ -30,6 +34,21 @@ CREATE TABLE IF NOT EXISTS locks (
   owner    text PRIMARY KEY,
   holder   text NOT NULL,
   until    timestamptz NOT NULL
+);
+CREATE TABLE IF NOT EXISTS ledger (
+  seq      bigserial PRIMARY KEY,
+  id       text NOT NULL UNIQUE,
+  utc      bigint NOT NULL,
+  account  text NOT NULL,
+  kind     text NOT NULL,
+  body     text NOT NULL
+);
+CREATE INDEX IF NOT EXISTS ledger_account_utc ON ledger (account, utc DESC);
+CREATE INDEX IF NOT EXISTS ledger_utc ON ledger (utc);
+CREATE TABLE IF NOT EXISTS applied_batches (
+  id       text PRIMARY KEY,
+  at       timestamptz NOT NULL DEFAULT now(),
+  versions text NOT NULL
 );");
             await make.ExecuteNonQueryAsync();
             await using NpgsqlCommand read = data.CreateCommand("SELECT version FROM schema LIMIT 1");
@@ -42,6 +61,14 @@ CREATE TABLE IF NOT EXISTS locks (
             }
             else if ((int)have > SchemaVersion)
                 throw new InvalidOperationException($"The database is at layout {have}, newer than this service ({SchemaVersion}): use the newer service.");
+            else if ((int)have < SchemaVersion)
+            {
+                // The tables above are made by CREATE ... IF NOT EXISTS: stepping up is only the number.
+                await using NpgsqlCommand step = data.CreateCommand("UPDATE schema SET version = $1");
+                step.Parameters.AddWithValue(SchemaVersion);
+                await step.ExecuteNonQueryAsync();
+                Console.WriteLine($"The save database's layout was stepped up from {have} to {SchemaVersion}.");
+            }
         }
 
         public async Task<long> CountAsync()
@@ -91,10 +118,28 @@ RETURNING version");
         /// Several writes and deletes together (online phase 4, milestone 2): all of them happen, or none. A write whose
         /// expected version no longer holds turns the whole batch away, naming that document and its version now.
         /// </summary>
-        public async Task<BatchResult> BatchAsync(IReadOnlyList<WriteRequest> writes, IReadOnlyList<string> deletes)
+        public async Task<BatchResult> BatchAsync(IReadOnlyList<WriteRequest> writes, IReadOnlyList<string> deletes) =>
+            await BatchAsync(null, writes, deletes, Array.Empty<JsonElement>());
+
+        /// <summary>
+        /// The same, with the ledger lines that say what moved (milestone 3: a trade, a sale), in the same transaction. With
+        /// <paramref name="id"/>, a batch that was applied before (its answer was lost, so the server sent it again) is not
+        /// applied twice: the first answer is given again.
+        /// </summary>
+        public async Task<BatchResult> BatchAsync(string? id, IReadOnlyList<WriteRequest> writes, IReadOnlyList<string> deletes, IReadOnlyList<JsonElement> ledger)
         {
             await using NpgsqlConnection connection = await data.OpenConnectionAsync();
             await using NpgsqlTransaction transaction = await connection.BeginTransactionAsync();
+            if (!string.IsNullOrEmpty(id))
+            {
+                await using var seen = new NpgsqlCommand("SELECT versions FROM applied_batches WHERE id = $1", connection, transaction);
+                seen.Parameters.AddWithValue(id);
+                if (await seen.ExecuteScalarAsync() is string before)
+                {
+                    await transaction.RollbackAsync();
+                    return new BatchResult(true, null, 0, JsonSerializer.Deserialize<List<KeyVersion>>(before, Json.Options) ?? new List<KeyVersion>());
+                }
+            }
             var versions = new List<KeyVersion>(writes.Count);
             foreach (WriteRequest write in writes)
             {
@@ -113,8 +158,56 @@ RETURNING version");
                 delete.Parameters.AddWithValue(key);
                 await delete.ExecuteNonQueryAsync();
             }
+            foreach (JsonElement line in ledger)
+            {
+                await using var add = new NpgsqlCommand(
+                    "INSERT INTO ledger (id, utc, account, kind, body) VALUES ($1, $2, $3, $4, $5) ON CONFLICT (id) DO NOTHING", connection, transaction);
+                add.Parameters.AddWithValue(Text(line, "id") ?? Guid.NewGuid().ToString("N"));
+                add.Parameters.AddWithValue(line.ValueKind == JsonValueKind.Object && line.TryGetProperty("utc", out JsonElement utc) && utc.TryGetInt64(out long ticks) ? ticks : DateTime.UtcNow.Ticks);
+                add.Parameters.AddWithValue(Text(line, "account") ?? "");
+                add.Parameters.AddWithValue(Text(line, "kind") ?? "");
+                add.Parameters.AddWithValue(line.GetRawText());
+                await add.ExecuteNonQueryAsync();
+            }
+            if (!string.IsNullOrEmpty(id))
+            {
+                await using var remember = new NpgsqlCommand("INSERT INTO applied_batches (id, versions) VALUES ($1, $2) ON CONFLICT (id) DO NOTHING", connection, transaction);
+                remember.Parameters.AddWithValue(id);
+                remember.Parameters.AddWithValue(JsonSerializer.Serialize(versions, Json.Options));
+                await remember.ExecuteNonQueryAsync();
+            }
             await transaction.CommitAsync();
             return new BatchResult(true, null, 0, versions);
+        }
+
+        private static string? Text(JsonElement line, string name) =>
+            line.ValueKind == JsonValueKind.Object && line.TryGetProperty(name, out JsonElement value) && value.ValueKind == JsonValueKind.String ? value.GetString() : null;
+
+        /// <summary>The ledger, newest first: of one account (empty: all), from <paramref name="sinceUtc"/> on, at most <paramref name="limit"/> lines.</summary>
+        public async Task<List<string>> ReadLedgerAsync(string account, long sinceUtc, int limit)
+        {
+            await using NpgsqlCommand read = string.IsNullOrEmpty(account)
+                ? data.CreateCommand("SELECT body FROM ledger WHERE utc >= $1 ORDER BY utc DESC, seq DESC LIMIT $2")
+                : data.CreateCommand("SELECT body FROM ledger WHERE utc >= $1 AND account = $3 ORDER BY utc DESC, seq DESC LIMIT $2");
+            read.Parameters.AddWithValue(sinceUtc);
+            read.Parameters.AddWithValue(limit);
+            if (!string.IsNullOrEmpty(account)) read.Parameters.AddWithValue(account);
+            var lines = new List<string>();
+            await using NpgsqlDataReader row = await read.ExecuteReaderAsync();
+            while (await row.ReadAsync()) lines.Add(row.GetString(0));
+            return lines;
+        }
+
+        /// <summary>Drops ledger lines older than <paramref name="beforeUtc"/>, and batch ids older than a day. Returns the ledger lines dropped.</summary>
+        public async Task<int> PruneLedgerAsync(long beforeUtc)
+        {
+            await using NpgsqlCommand drop = data.CreateCommand("DELETE FROM ledger WHERE utc < $1");
+            drop.Parameters.AddWithValue(beforeUtc);
+            int dropped = await drop.ExecuteNonQueryAsync();
+            await using NpgsqlCommand forget = data.CreateCommand("DELETE FROM applied_batches WHERE at < now() - make_interval(hours => $1)");
+            forget.Parameters.AddWithValue(AppliedBatchHours);
+            await forget.ExecuteNonQueryAsync();
+            return dropped;
         }
 
         private static async Task<long?> WriteOneAsync(NpgsqlConnection connection, NpgsqlTransaction transaction, string key, string body, long? expected)
@@ -205,7 +298,8 @@ RETURNING holder, until");
     public sealed record WriteRequest(string Key, string? Body, long? Expected);
     public sealed record LockRequest(string? Owner, string? Holder, int Seconds);
     public sealed record KeyVersion(string Key, long Version);
-    public sealed record BatchRequest(List<WriteRequest>? Writes, List<string>? Deletes);
+    public sealed record BatchRequest(string? Id, List<WriteRequest>? Writes, List<string>? Deletes, List<JsonElement>? Ledger);
+    public sealed record PruneRequest(long Before);
     public sealed record BatchResult(bool Written, string? Conflict, long ConflictVersion, List<KeyVersion> Versions);
     public sealed record ReadRequest(List<string>? Keys);
 

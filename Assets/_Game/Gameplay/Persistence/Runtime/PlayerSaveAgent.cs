@@ -198,13 +198,27 @@ namespace KryticalNova.Persistence
 
         // ------------------------------------------------------------------ save
 
-        /// <summary>Server (or offline): writes this player now, if anything changed. Call after anything that must not be lost.</summary>
+        /// <summary>
+        /// Server (or offline): writes this player now, if anything changed (and the ledger lines waiting for its account).
+        /// Call after anything that must not be lost. A change that touches another player or a world document as well
+        /// saves with <see cref="ServerSave.SaveTogether"/> instead, so both are written as one.
+        /// </summary>
         public void Save()
         {
             if (character == null || !HasAuthority) return;
-            nextSave = Time.unscaledTime + autosaveSeconds;
             // All of it happens on this frame: every system's state gathered, turned to text and written.
             using var timed = KryticalNova.Diagnostics.PerformanceLog.Time("save.player");
+            if (CaptureForSave() || ServerSave.HasPendingLedger(accountId)) ServerSave.WriteAccount(account);
+        }
+
+        /// <summary>
+        /// Gathers every system's state into the account document without writing it; true when anything changed.
+        /// <see cref="ServerSave.SaveTogether"/> writes it with the other side of a trade or a sale.
+        /// </summary>
+        internal bool CaptureForSave()
+        {
+            if (character == null || !HasAuthority) return false;
+            nextSave = Time.unscaledTime + autosaveSeconds;
 
             bool changed = false;
             foreach (ISaveParticipant participant in participants)
@@ -247,12 +261,32 @@ namespace KryticalNova.Persistence
                 changed = true;
             }
             if (placeDue) nextPlace = Time.unscaledTime + PlaceSeconds;
-            if (!changed) return;
+            if (!changed) return false;
 
             // The "last saved" time moves with the place, not with every change: otherwise every pickup would rewrite the
             // header too (byte-sized saves).
             if (placeDue || character.savedUtc == 0) character.savedUtc = DateTime.UtcNow.Ticks;
-            ServerSave.WriteAccount(account);
+            return true;
+        }
+
+        // ------------------------------------------------------------------ the ledger (online phase 4, milestone 3)
+
+        /// <summary>A new ledger line for this player's account and character, or null while nothing is loaded.</summary>
+        public LedgerEntry NewLedgerLine(string kind) =>
+            character != null && HasAuthority ? LedgerEntry.For(kind, accountId, character.characterId, identity != null ? identity.CharacterName : character.name) : null;
+
+        /// <summary>Adds Creds to this player's tally line of <paramref name="kind"/>, saved with its next save (the wallet does, for every Cred).</summary>
+        public void TallyCreds(string kind, long creds)
+        {
+            if (character == null || !HasAuthority || creds == 0) return;
+            ServerSave.Tally(NewLedgerLine(kind), creds, 0, 0, null);
+        }
+
+        /// <summary>Adds items to this player's tally line of <paramref name="kind"/> (what was picked up since the last save).</summary>
+        public void TallyItems(string kind, int itemId, int count, string itemName)
+        {
+            if (character == null || !HasAuthority || itemId == 0 || count == 0) return;
+            ServerSave.Tally(NewLedgerLine(kind), 0, itemId, count, itemName);
         }
 
         /// <summary>

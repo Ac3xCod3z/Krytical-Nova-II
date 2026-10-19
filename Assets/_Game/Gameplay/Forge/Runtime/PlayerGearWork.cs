@@ -356,6 +356,11 @@ namespace KryticalNova.Forge
             var result = new GearWorkResult { kind = kind, outcome = outcome, before = before, after = after };
             ServerRecords.Write(RecordKind.Economy, $"Forge: {ServerRecords.Who(this)} {kind} {outcome}: {Recorded(before)} -> " +
                                                     $"{(after.IsEmpty ? "broken" : Recorded(after))}, {creds} Creds.");
+            // The kept ledger: what was worked and how it came out; a piece that broke is gone. The Creds are in the wallet's tally.
+            LedgerEntry line = KryticalNova.Economy.EconomyLedger.Line(this, LedgerKinds.Forge, null,
+                $"{kind} {outcome}: {Recorded(before)} -> {(after.IsEmpty ? "broken" : Recorded(after))}");
+            if (after.IsEmpty && line != null) line.With(before.itemId, -before.count, NameOf(before.itemId));
+            KryticalNova.Economy.EconomyLedger.Keep(line);
             if (IsSpawned)
             {
                 FinishedRpc(result);

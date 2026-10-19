@@ -295,6 +295,8 @@ namespace KryticalNova.Economy
                 Tell($"Bought {LootRules.Label(item, given)} from the {stock.Title} for {WalletRules.FormatCreds(total)}.");
                 ServerRecords.Write(RecordKind.Economy, $"Shop: {ServerRecords.Who(this)} bought {given}x {item.displayName} (item {item.itemId}) " +
                                                         $"from the {stock.Title} for {total} Creds.");
+                EconomyLedger.Keep(EconomyLedger.Line(this, LedgerKinds.ShopBuy, null, $"{stock.Title}, {total} Creds")
+                    .Item(inventory.Catalog, new ItemStack(item.itemId, (ushort)given), 1));
             }
             ServerSaveNow();
             return given > 0 ? null : InventoryRules.ReasonBagFull;
@@ -321,6 +323,7 @@ namespace KryticalNova.Economy
             wallet.ServerEarn(total, CredsSource.VendorSale);
             Tell($"Sold {LootRules.Label(item, taken.count)} for {WalletRules.FormatCreds(total)}.");
             ServerRecords.Write(RecordKind.Economy, $"Shop: {ServerRecords.Who(this)} sold {taken.count}x {item.displayName} (item {item.itemId}) for {total} Creds.");
+            EconomyLedger.Keep(EconomyLedger.Line(this, LedgerKinds.ShopSell, null, $"{total} Creds").Item(inventory.Catalog, taken, -1));
             ServerSaveNow();
             return null;
         }

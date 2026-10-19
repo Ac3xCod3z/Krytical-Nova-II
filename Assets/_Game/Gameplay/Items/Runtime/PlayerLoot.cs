@@ -138,6 +138,7 @@ namespace KryticalNova.Items
             }
             int taken = inventory.ServerGive(stack, drop.Earned); // tells the player when the Pack is full
             if (taken <= 0) return;
+            Ledger(LedgerKinds.Loot, stack.itemId, taken, item);
             Vector3 lay = drop.Position;
             drop.ServerTake(taken, transform);
             gestures?.ShowPickUp(lay);
@@ -152,6 +153,7 @@ namespace KryticalNova.Items
             if (dropPrefab == null) { Tell("Items can't be dropped here."); return; }
             if (resources != null && !resources.IsAlive) { Tell("You can't drop items while defeated."); return; }
             if (!inventory.ServerTake(at, out ItemStack taken)) return;
+            Ledger(LedgerKinds.Drop, taken.itemId, -taken.count, inventory.Catalog != null ? inventory.Catalog.Get(taken.itemId) : null);
             FactionId openTo = dropsOpenToEveryone || wearer == null ? FactionId.None : wearer.Faction;
             // The HUD counts the hold down for the dropper (LootHudController): no message is needed here.
             ServerPlace(taken, NetworkObject, dropReserveSeconds, openTo);
@@ -176,6 +178,16 @@ namespace KryticalNova.Items
             return WorldDrop.ServerSpawn(dropPrefab, stack, position, heldFor != null && heldFor.IsSpawned ? heldFor : null, dropReserveSeconds,
                 earned: true);
         }
+
+        // The kept ledger (online phase 4, milestone 3): what was picked up or dropped, tallied per save, so an item passed
+        // from one player to another over the ground can be followed. Creds picked up are in the wallet's own tally.
+        private void Ledger(string kind, ushort itemId, int count, ItemDefinition item)
+        {
+            if (saveAgent == null) saveAgent = GetComponent<KryticalNova.Persistence.PlayerSaveAgent>();
+            if (saveAgent != null) saveAgent.TallyItems(kind, itemId, count, item != null ? item.displayName : null);
+        }
+
+        private KryticalNova.Persistence.PlayerSaveAgent saveAgent;
 
         private float FlatSqrDistance(Vector3 point)
         {

@@ -217,8 +217,12 @@ namespace KryticalNova.Economy
             };
             World.kiosks.Add(record);
             SpawnStand(owner.StandPrefab, record);
-            ServerSave.SaveWorld(WorldName);
-            owner.ServerSaveNow();
+            // The listed items leave the Pack for the Kiosk (and a Permit is used up): the owner and the Kiosks, one change.
+            LedgerEntry line = EconomyLedger.Line(owner, LedgerKinds.KioskOpen, null, record.shopName);
+            foreach (KioskListing listing in listings) line.Item(catalog, listing.stack, -1);
+            if (!tier.IsFree) line.Item(catalog, new ItemStack(tier.permitItemId, 1), -1);
+            EconomyLedger.Keep(line);
+            owner.ServerSaveWith(WorldName);
             owner.ServerPushView();
             owner.Tell($"{record.shopName} is open for {tier.label}. It sells while you are away; collect your earnings from the Kiosk window [J].");
             return null;
@@ -287,8 +291,17 @@ namespace KryticalNova.Economy
             }
             else stand.Publish();
 
-            ServerSave.SaveWorld(WorldName);
-            buyer.ServerSaveNow();
+            // The buyer (Creds out, item in) and the Kiosk (item off the shelf, Creds in the till): one change.
+            LedgerEntry line = EconomyLedger.Line(buyer, LedgerKinds.KioskBuy, null, $"from \"{record.shopName}\" for {total} Creds, {net} after tax to the till");
+            if (line != null)
+            {
+                line.otherAccount = record.ownerAccountId;
+                line.otherCharacter = record.ownerCharacterId;
+                line.otherName = record.ownerName;
+                line.Item(inventory.Catalog, bought, 1);
+            }
+            EconomyLedger.Keep(line);
+            buyer.ServerSaveWith(WorldName);
             if (owner != null) owner.ServerPushView();
             return null;
         }
@@ -337,12 +350,14 @@ namespace KryticalNova.Economy
                     $"Kiosk: {KryticalNova.Networking.ServerRecords.Who(owner)} collected {paid} Creds from the till of \"{record.shopName}\".");
 
             int returned = 0, left = 0;
+            LedgerEntry line = EconomyLedger.Line(owner, LedgerKinds.KioskCollect, null, record.shopName + (paid > 0 ? $", {paid} Creds from the till" : string.Empty));
             if (!record.open)
             {
                 for (int i = record.listings.Count - 1; i >= 0; i--)
                 {
                     KioskListing listing = record.listings[i];
                     int fitted = owner.Inventory.ServerGive(listing.stack);
+                    if (fitted > 0) line.Item(owner.Inventory.Catalog, listing.stack.WithCount(fitted), 1);
                     returned += fitted;
                     listing.stack = listing.stack.WithCount(listing.stack.count - fitted);
                     if (listing.stack.IsEmpty) record.listings.RemoveAt(i);
@@ -352,8 +367,8 @@ namespace KryticalNova.Economy
             record.unseenSales.Clear();
             bool done = !record.open && record.listings.Count == 0 && record.till == 0;
             if (done) World.kiosks.Remove(record);
-            ServerSave.SaveWorld(WorldName);
-            owner.ServerSaveNow();
+            if (paid > 0 || returned > 0) EconomyLedger.Keep(line);
+            owner.ServerSaveWith(WorldName);
             owner.ServerPushView();
 
             var parts = new List<string>(3);

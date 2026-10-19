@@ -21,6 +21,7 @@ namespace KryticalNova.Economy
             NetworkVariableReadPermission.Owner, NetworkVariableWritePermission.Server);
 
         private long creds;
+        private KryticalNova.Persistence.PlayerSaveAgent saveAgent;
 
         /// <summary>Raised where the balance is known (server, offline, owner) when it changes.</summary>
         public event Action Changed;
@@ -80,6 +81,7 @@ namespace KryticalNova.Economy
             long added = WalletRules.Add(ref creds, amount, Cap);
             if (added <= 0) return 0;
             CredsLedger.RecordEarned(source, added);
+            Ledger(LedgerKinds.CredsPrefix + source.ToString().ToLowerInvariant(), added);
             Commit();
             return added;
         }
@@ -93,6 +95,7 @@ namespace KryticalNova.Economy
             if (!HasAuthority || amount < 0 || !WalletRules.TrySpend(ref creds, amount)) return false;
             if (amount == 0) return true;
             CredsLedger.RecordSpent(sink, amount);
+            Ledger(LedgerKinds.CredsPrefix + sink.ToString().ToLowerInvariant(), -amount);
             Commit();
             return true;
         }
@@ -104,8 +107,19 @@ namespace KryticalNova.Economy
             long next = Math.Min(Cap, Math.Max(0, amount));
             if (next > creds) CredsLedger.RecordEarned(CredsSource.Gm, next - creds);
             else if (next < creds) CredsLedger.RecordSpent(CredsSink.Gm, creds - next);
+            Ledger(LedgerKinds.CredsPrefix + "gm", next - creds);
             creds = next;
             Commit();
+        }
+
+        // Every Cred that moves is tallied in the kept ledger (online phase 4, milestone 3), by where it came from or went
+        // to, and saved with the wallet itself: whatever system moves Creds (also after an economy rework), the ledger of
+        // an account adds up to its wallet.
+        private void Ledger(string kind, long change)
+        {
+            if (change == 0) return;
+            if (saveAgent == null) saveAgent = GetComponent<KryticalNova.Persistence.PlayerSaveAgent>();
+            if (saveAgent != null) saveAgent.TallyCreds(kind, change);
         }
 
         // ------------------------------------------------------------------ saving

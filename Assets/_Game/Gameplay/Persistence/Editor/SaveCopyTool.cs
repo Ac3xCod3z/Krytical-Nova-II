@@ -57,7 +57,9 @@ namespace KryticalNova.EditorTools
                     AccountSave account = ServerSave.ReadAccountFrom(files, id);
                     if (account == null) continue;
                     account.accountId = id;
-                    service.WriteBatch(ServerSave.SplitDocuments(account), Array.Empty<string>());
+                    var batch = new SaveBatch();
+                    batch.Writes.AddRange(ServerSave.SplitDocuments(account));
+                    service.WriteBatch(batch);
                     accounts++;
                     characters += account.characters.Count;
                 }

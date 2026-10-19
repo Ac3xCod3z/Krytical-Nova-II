@@ -216,6 +216,12 @@ namespace KryticalNova.Economy
             if (saveAgent != null) saveAgent.Save();
         }
 
+        /// <summary>
+        /// Server: writes this character and the world document <paramref name="world"/> (the Kiosks) as one change (online
+        /// phase 4, milestone 3): a sale is in both or in neither.
+        /// </summary>
+        public void ServerSaveWith(string world) => ServerSave.SaveTogether(saveAgent, world);
+
         /// <summary>Server: sends the owner the state of their own Kiosk.</summary>
         public void ServerPushView()
         {

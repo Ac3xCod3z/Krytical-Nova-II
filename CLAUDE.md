@@ -41,6 +41,14 @@ Read `Assets/_Game/_Docs/Reference/12Sky/README.md` before naming anything a pla
 - Secrets live in `Documents\KryticalNova-Secrets` (`postgres-admin.txt`, `save-service.json`, `save-service-key.txt`):
   never read them aloud, print them, copy them into the repo or chat. `Setup Database.bat` (beside the service) makes the
   databases and the service's login; the owner runs it.
+- **All-or-nothing changes and the kept ledger (milestone 3; owner, 18 Oct 2026: the economy will be reworked, and every
+  rework must keep these):** anything that changes more than one player or world document (a trade, a Kiosk sale, a Crew
+  founding, and whatever the economy becomes) saves through `ServerSave.SaveTogether` in one change, never with separate
+  saves. Every Cred is tallied by `PlayerWallet` itself (a new source or sink is a new `CredsSource` / `CredsSink`, never
+  a side door); every item movement of an economy action writes its line through `EconomyLedger` (kinds in
+  `LedgerKinds`). The save service stores ledger lines as text with only account, kind and time: it must never learn the
+  economy's rules, so a rework needs no database change. Test with `TransactionLedgerTests` and the kill test
+  (`Persistence/Service~/KillTest/kill_test.py`, test database only).
 - The owner runs the server with the **Krytical Nova Server app** (`Assets/_Game/Networking/ServerApp~`, built beside the
   server by `ServerBuildBuilder`): it starts the save service and the server hidden inside one window. Stopping the
   server never stops the save service or the database; closing the app stops the save service it started. Test the app

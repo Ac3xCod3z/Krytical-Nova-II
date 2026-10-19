@@ -143,8 +143,9 @@ namespace KryticalNova.Social
             crew.symbolColour = ColourIndex(settings, colour);
             World.crews.Add(crew);
             ByMember[id] = crew;
-            Save();
-            player.ServerSaveNow();
+            // The Creds paid and the new Crew: one change (online phase 4, milestone 3). The Creds are in the wallet's tally.
+            EconomyLedger.Keep(EconomyLedger.Line(player, LedgerKinds.CrewFound, null, "founded " + crew.name));
+            player.ServerSaveWith(WorldName);
             Publish(crew);
             player.Tell(cost > 0
                 ? $"You founded the Crew {crew.name} for {WalletRules.FormatCreds(cost)}. Invite players from the player menu; the Crew window is [G]."

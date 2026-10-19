@@ -227,6 +227,10 @@ the connection number:
 Open them with Notepad; search for a character's name or account id to see everything they did. The same lines show
 in the control page's live log as they happen.
 
+**A new file each month (phase 4, 19 Oct 2026):** when a month ends, its lines are kept as `gm-2026-10.log` (and
+`economy-…`, `access-…`, `flags-…`) and the month starts a fresh `gm.log`. Only the newest `recordMonths` (6) months of
+each are kept; older ones are deleted by themselves, so the records never fill the disk.
+
 ## 4. The settings file
 
 `server-settings.json` sits beside `KryticalNovaServer.exe`. The first start writes it with every setting at its
@@ -268,6 +272,9 @@ default (and makes the page password). Close the server, edit it with Notepad, s
 | `serverList` | none | The servers players see. Set them on the control page and press PUBLISH LIST. |
 | `listBucket`, `cloudProjectId`, `cloudEnvironment` | krytical-nova-servers, this project, production | Where PUBLISH LIST uploads the list. Leave them. |
 | `ugsPath` | empty (`%LOCALAPPDATA%\KryticalNova\tools\ugs.exe`) | Unity's command-line tool on this PC, for PUBLISH LIST. |
+| `saveService` | empty | The save service this server saves through (`http://127.0.0.1:7801` for your real saves). Empty: the save folder. |
+| `ledgerDays` | 90 | Days the ledger (below) is kept; older lines are dropped once a day. Added to an older file by itself. |
+| `recordMonths` | 6 | Months of `gm.log`, `economy.log`, `access.log` and `flags.log` kept. |
 
 A mistake is forgiven: a port that is not a port becomes 7777, a player limit of 0 becomes 1, and a file Notepad
 broke is left as it is while the server uses the defaults (the window says so).
@@ -371,6 +378,26 @@ to files on its own, because saving to two places is how characters get split.
 **How a save looks now (milestone 2):** each account is a small header plus one small entry per part (Pack, wallet,
 skills, ...). A save sends only the parts that changed: a usual 60-second autosave is a few hundred bytes. A save from
 before is kept once as `accounts/<id>-v1` and saved in parts from then on.
+
+**Every change is whole (milestone 3, 19 Oct 2026).** A save, a trade, a Kiosk sale or a Crew founding reaches the
+database as one change: all of it is saved, or (if the server or the save service stops at that very moment) none of
+it. An item can never end up on both sides of a trade, or on neither. If a change reached the database but its answer
+was lost, the server sends it again and the save service recognises it, so it is never saved twice. Tried with the kill
+test (`Persistence/Service~/KillTest/kill_test.py`, the test database only): thousands of trades while the save service
+was killed over a hundred times, and nothing was made or lost.
+
+**The ledger** is the database's record of everything of value that moved, one line per account each time:
+
+- **Every Cred**, by where it came from or went to (a trade, a Kiosk, a shop, a Hostile, the Vault, a GM...), added up
+  per save, so an account's lines add up to what its wallet holds.
+- **Items** in trades (with the partner), Kiosks (with the owner), shops, Deep Vault moves, the forge (a broken piece
+  counts as lost), loot picked up and items dropped, and every GM command that changed someone's Pack (with the command).
+
+Read it with `gm.ledger <who> [days] [lines]` (who: a character's name, an account id, or `all`), from the server's
+window, F2 as a GM, the app's command box, or the GM Tools window (Economy tab, Ledger). For example `gm.ledger Tolan
+7 20` lists Tolan's last 20 lines of the past week, newest first. Lines older than `ledgerDays` (90) are dropped once a
+day; each backup holds the lines written since the backup before it (`ledger.jsonl` in the zip). The ledger is saved in
+the same change as what it describes, so it always agrees with the saves.
 
 **Switching your real server over** (when you say):
 1. Stop the real server (Stop on the control page).
@@ -755,3 +782,7 @@ Things learned the hard way:
 - 18 Oct 2026: START MY SERVER taken out of the game (owner: after the move it could not start the server anyway);
   the server is started with the app. The app has its own icon (owner pick B): the K and N of the name logo on a navy
   badge.
+- 19 Oct 2026: phase 4 milestone 3: every save, trade, Kiosk sale and Crew founding is one all-or-nothing change (a
+  journal for the save folder, a database transaction for the save service, a change sent twice is saved once); the
+  kept ledger (`gm.ledger`, `ledgerDays`, `ledger.jsonl` in backups); the record files start anew each month and keep
+  `recordMonths`; the kill test.

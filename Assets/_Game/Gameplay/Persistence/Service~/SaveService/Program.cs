@@ -7,6 +7,8 @@
 //   server that lost track can never overwrite newer data.
 // - A lock per account: one game server at a time may hold a player's account; a lock runs out on its own when the
 //   server holding it stops renewing (it crashed), so the player can join elsewhere.
+// - A batch (a player's save, a trade: several documents and ledger lines) is one transaction, all or none; a batch sent
+//   again after its answer was lost is recognised by its id and not applied twice (milestone 3).
 // - It listens on this PC only (http://127.0.0.1:7801) until the save service moves beside the servers on a private
 //   network. With --test it serves the tests' own database (krytical_nova_test) on port 7802 instead.
 
@@ -80,14 +82,24 @@ app.MapPost("/batch", async (BatchRequest request) =>
 {
     List<WriteRequest> writes = request.Writes ?? new List<WriteRequest>();
     List<string> deletes = request.Deletes ?? new List<string>();
-    if (writes.Count + deletes.Count > 500) return Results.BadRequest(new { error = "too many in one batch" });
+    List<JsonElement> ledger = request.Ledger ?? new List<JsonElement>();
+    if (writes.Count + deletes.Count + ledger.Count > 500) return Results.BadRequest(new { error = "too many in one batch" });
     foreach (WriteRequest write in writes)
         if (!SaveKeyRules.IsValid(write.Key)) return Results.BadRequest(new { error = "not a save key: " + write.Key });
     foreach (string key in deletes)
         if (!SaveKeyRules.IsValid(key)) return Results.BadRequest(new { error = "not a save key: " + key });
-    BatchResult result = await store.BatchAsync(writes, deletes);
+    BatchResult result = await store.BatchAsync(request.Id, writes, deletes, ledger);
     return result.Written ? Results.Ok(result) : Results.Conflict(result);
 });
+
+// The kept ledger (milestone 3): read for a GM, newest first; trimmed after the days the server keeps it.
+app.MapGet("/ledger", async (string? account, long? since, int? limit) =>
+{
+    List<string> lines = await store.ReadLedgerAsync(account ?? "", since ?? 0, Math.Clamp(limit ?? 50, 1, 50000));
+    return Results.Text("[" + string.Join(",", lines) + "]", "application/json");
+});
+
+app.MapPost("/ledger/prune", async (PruneRequest request) => Results.Ok(new { dropped = await store.PruneLedgerAsync(request.Before) }));
 
 // Many documents in one trip.
 app.MapPost("/read", async (ReadRequest request) =>

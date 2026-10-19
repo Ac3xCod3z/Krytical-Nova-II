@@ -40,6 +40,7 @@ namespace KryticalNova.Persistence
             WorldDocuments.Clear();
             LastWritten.Clear();
             PartKeysOf.Clear();
+            PendingLedger.Clear();
             if (!quitHooked)
             {
                 quitHooked = true;
@@ -280,12 +281,24 @@ namespace KryticalNova.Persistence
         }
 
         /// <summary>
-        /// Writes the parts of the account that changed since they were last written, and its header, as one change where
-        /// the store can. Returns true when anything was written.
+        /// Writes the parts of the account that changed since they were last written, its header, and the ledger lines
+        /// waiting for it, as one change. Returns true when anything was written.
         /// </summary>
         public static bool WriteAccount(AccountSave account)
         {
-            if (account == null || !SaveKeys.IsId(account.accountId)) return false;
+            var batch = new SaveBatch();
+            Action written = Collect(account, batch);
+            if (written == null || batch.IsEmpty) return false;
+            Send(batch);
+            written();
+            return true;
+        }
+
+        // Puts what changed in the account (and its waiting ledger lines) into the batch; returns what to remember once the
+        // batch is handed to the store, or null for an account that cannot be saved.
+        private static Action Collect(AccountSave account, SaveBatch batch)
+        {
+            if (account == null || !SaveKeys.IsId(account.accountId)) return null;
             string id = account.accountId;
             var writes = new List<KeyValuePair<string, string>>();
             var keep = new HashSet<string>(StringComparer.Ordinal);
@@ -298,19 +311,177 @@ namespace KryticalNova.Persistence
                 if (!keep.Contains(key)) deletes.Add(key);
 
             Changed(AccountsPrefix + id, headerJson, writes, null); // the header last: files read it last
-            if (writes.Count == 0 && deletes.Count == 0) return false;
-
-            if (Store is IBatchSaveStore batch) batch.WriteBatch(writes, deletes);
-            else
+            batch.Writes.AddRange(writes);
+            batch.Deletes.AddRange(deletes);
+            if (PendingLedger.TryGetValue(id, out List<LedgerEntry> lines))
             {
-                foreach (KeyValuePair<string, string> write in writes) Store.Write(write.Key, write.Value);
-                foreach (string key in deletes) Store.Delete(key);
+                batch.Ledger.AddRange(lines);
+                PendingLedger.Remove(id);
             }
-            foreach (KeyValuePair<string, string> write in writes) LastWritten[write.Key] = write.Value;
-            foreach (string key in deletes) LastWritten.Remove(key);
-            PartKeysOf[id] = keep;
+            return () =>
+            {
+                foreach (KeyValuePair<string, string> write in writes) LastWritten[write.Key] = write.Value;
+                foreach (string key in deletes) LastWritten.Remove(key);
+                PartKeysOf[id] = keep;
+            };
+        }
+
+        // One change to the store: whole where it can (the save service, files through their journal).
+        private static void Send(SaveBatch batch)
+        {
+            if (Store is IBatchSaveStore whole)
+            {
+                whole.WriteBatch(batch);
+                return;
+            }
+            foreach (KeyValuePair<string, string> write in batch.Writes) Store.Write(write.Key, write.Value);
+            foreach (string key in batch.Deletes) Store.Delete(key);
+            if (batch.Ledger.Count > 0) Debug.LogWarning($"[Save] This store keeps no ledger: {batch.Ledger.Count} line(s) were not kept.");
+        }
+
+        // ------------------------------------------------------------------ changes saved together, and the ledger (online phase 4, milestone 3)
+
+        // Ledger lines waiting for the next save of their account: they are saved with the change they describe, never
+        // apart from it, so a crash loses both or neither and the ledger always agrees with the saves.
+        private static readonly Dictionary<string, List<LedgerEntry>> PendingLedger = new Dictionary<string, List<LedgerEntry>>(StringComparer.Ordinal);
+
+        /// <summary>
+        /// Records a ledger line (what an account gained or lost). It is saved with the next save of its account: call
+        /// <see cref="PlayerSaveAgent.Save"/> or <see cref="SaveTogether"/> after the change it describes. A line for an
+        /// account that is not loaded here is saved at once.
+        /// </summary>
+        public static void Ledger(LedgerEntry line)
+        {
+            if (!HasAuthority || line == null || !SaveKeys.IsId(line.account)) return;
+            if (!BoundAccounts.ContainsKey(line.account) && !PartKeysOf.ContainsKey(line.account))
+            {
+                var batch = new SaveBatch();
+                batch.Ledger.Add(line);
+                Send(batch);
+                return;
+            }
+            if (!PendingLedger.TryGetValue(line.account, out List<LedgerEntry> lines)) PendingLedger[line.account] = lines = new List<LedgerEntry>();
+            lines.Add(line);
+        }
+
+        /// <summary>
+        /// Adds to the waiting line of the same kind and character, or starts one: many small movements (every Cred a
+        /// wallet earns, every pickup) become one line per save, not one each.
+        /// </summary>
+        public static void Tally(LedgerEntry line, long creds, int itemId, int count, string itemName)
+        {
+            if (!HasAuthority || line == null || !SaveKeys.IsId(line.account)) return;
+            if (PendingLedger.TryGetValue(line.account, out List<LedgerEntry> lines))
+                foreach (LedgerEntry waiting in lines)
+                {
+                    if (waiting.kind != line.kind || waiting.character != line.character || waiting.note != TallyNote) continue;
+                    waiting.creds += creds;
+                    waiting.utc = line.utc;
+                    AddItem(waiting, itemId, count, itemName);
+                    return;
+                }
+            line.creds = creds;
+            line.note = TallyNote;
+            AddItem(line, itemId, count, itemName);
+            Ledger(line);
+        }
+
+        // A tally line says so, so a GM reading it knows it sums a while (up to a save) rather than one moment.
+        private const string TallyNote = "since the last save";
+
+        private static void AddItem(LedgerEntry line, int itemId, int count, string itemName)
+        {
+            if (itemId == 0 || count == 0) return;
+            for (int i = 0; i < line.items.Count; i++)
+                if (line.items[i].item == itemId)
+                {
+                    LedgerItem item = line.items[i];
+                    item.count += count;
+                    line.items[i] = item;
+                    return;
+                }
+            line.items.Add(new LedgerItem { item = itemId, count = count, name = itemName });
+        }
+
+        /// <summary>True when ledger lines wait for the account's next save.</summary>
+        public static bool HasPendingLedger(string accountId) => !string.IsNullOrEmpty(accountId) && PendingLedger.ContainsKey(accountId);
+
+        /// <summary>
+        /// Saves several players and world documents as one change (online phase 4, milestone 3): a trade (both players), a
+        /// Kiosk sale (the buyer and the Kiosks), a Crew founding (the founder and the Crews). On the save service it is
+        /// one transaction; in files, one journaled change. A crash loses all of it or none: an item can never be on both
+        /// sides of a trade, nor on neither. Their waiting ledger lines go in the same change.
+        /// <para>Any economy action that changes more than one player or world document saves this way (owner, 18 Oct 2026:
+        /// the economy will be reworked; the rework keeps this).</para>
+        /// </summary>
+        public static void SaveTogether(IReadOnlyList<PlayerSaveAgent> players, params string[] worlds)
+        {
+            if (!HasAuthority) return;
+            var accounts = new List<AccountSave>();
+            if (players != null)
+                foreach (PlayerSaveAgent agent in players)
+                {
+                    if (agent == null || !agent.IsLoaded) continue;
+                    agent.CaptureForSave();
+                    accounts.Add(agent.Account);
+                }
+            WriteTogether(accounts, worlds);
+        }
+
+        /// <summary>
+        /// The accounts' changes, their waiting ledger lines and the world documents that changed, as one change: what
+        /// <see cref="SaveTogether"/> writes once the players' state is gathered. True when anything was written.
+        /// </summary>
+        public static bool WriteTogether(IReadOnlyList<AccountSave> accountsToWrite, params string[] worlds)
+        {
+            if (!HasAuthority) return false;
+            var batch = new SaveBatch();
+            var written = new List<Action>();
+            var accounts = new HashSet<string>(StringComparer.Ordinal);
+            if (accountsToWrite != null)
+                foreach (AccountSave account in accountsToWrite)
+                {
+                    if (account == null || !accounts.Add(account.accountId)) continue;
+                    Action done = Collect(account, batch);
+                    if (done != null) written.Add(done);
+                }
+            foreach (string name in worlds ?? Array.Empty<string>())
+            {
+                string key = WorldPrefix + name;
+                if (!WorldDocuments.TryGetValue(key, out object document)) continue;
+                string json = JsonUtility.ToJson(document);
+                if (LastWritten.TryGetValue(key, out string last) && last == json) continue;
+                batch.Write(key, json);
+                written.Add(() => LastWritten[key] = json);
+            }
+            if (batch.IsEmpty) return false;
+            Send(batch);
+            foreach (Action done in written) done();
             return true;
         }
+
+        /// <summary>The same for one player and world documents (a Kiosk sale: the buyer and the Kiosks).</summary>
+        public static void SaveTogether(PlayerSaveAgent player, params string[] worlds) =>
+            SaveTogether(player != null ? new[] { player } : Array.Empty<PlayerSaveAgent>(), worlds);
+
+        /// <summary>The ledger lines of an account (null: every account) since <paramref name="sinceUtc"/>, newest first.</summary>
+        public static List<LedgerEntry> ReadLedger(string accountId, long sinceUtc, int limit)
+        {
+            // Lines still waiting for their account's save are not in the store yet; they are shown too.
+            var lines = new List<LedgerEntry>();
+            foreach (KeyValuePair<string, List<LedgerEntry>> waiting in PendingLedger)
+                if (accountId == null || waiting.Key == accountId)
+                    foreach (LedgerEntry line in waiting.Value)
+                        if (line.utc >= sinceUtc) lines.Add(line);
+            if (Store is ILedgerStore ledger) lines.AddRange(ledger.ReadLedger(accountId, sinceUtc, limit));
+            lines.Sort((x, y) => y.utc.CompareTo(x.utc));
+            if (lines.Count > limit) lines.RemoveRange(limit, lines.Count - limit);
+            return lines;
+        }
+
+        /// <summary>Drops ledger lines older than <paramref name="days"/> days. Returns how many went (-1: the store could not be asked).</summary>
+        public static int PruneLedger(int days) =>
+            Store is ILedgerStore ledger ? ledger.PruneLedger(DateTime.UtcNow.AddDays(-Math.Max(1, days)).Ticks) : 0;
 
         // Hands every part's key and text to part, puts each part key in keys, and returns the header's text.
         private static string BuildSplit(AccountSave account, Action<string, string> part, HashSet<string> keys)
@@ -492,6 +663,14 @@ namespace KryticalNova.Persistence
             for (int i = Agents.Count - 1; i >= 0; i--)
                 if (Agents[i] != null) Agents[i].Save();
             foreach (var pair in WorldDocuments) WriteIfChanged(pair.Key, JsonUtility.ToJson(pair.Value));
+            // Ledger lines of accounts no longer in the world (one that left before its line's save): kept, never dropped.
+            if (PendingLedger.Count > 0)
+            {
+                var left = new SaveBatch();
+                foreach (List<LedgerEntry> lines in PendingLedger.Values) left.Ledger.AddRange(lines);
+                PendingLedger.Clear();
+                Send(left);
+            }
             WaitForDisk();
         }
 
@@ -517,6 +696,7 @@ namespace KryticalNova.Persistence
             WorldDocuments.Clear();
             LastWritten.Clear();
             PartKeysOf.Clear();
+            PendingLedger.Clear();
             return deleted;
         }
 

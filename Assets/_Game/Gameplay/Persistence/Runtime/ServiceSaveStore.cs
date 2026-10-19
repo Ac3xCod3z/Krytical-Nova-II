@@ -19,10 +19,12 @@ namespace KryticalNova.Persistence
     /// <para>Writes go as batches (milestone 2): a player's save is the parts that changed and its header, written
     /// together or not at all (<see cref="WriteBatch"/>); batches are sent in the order they were handed over. Many
     /// documents are read in one trip (<see cref="TryReadMany"/>).</para>
+    /// <para>Milestone 3: a batch carries ledger lines too (a trade's, a sale's), in the same transaction, and an id, so a
+    /// batch sent again after its answer was lost is not applied twice nor refused as stale.</para>
     /// <para>Accounts are locked (<see cref="TryLock"/>): one server at a time holds a player's account, and renews the hold
     /// every minute; a server that stops (crashes) lets it run out, so the player can join elsewhere.</para>
     /// </summary>
-    public sealed class ServiceSaveStore : IBatchSaveStore, IDisposable
+    public sealed class ServiceSaveStore : IBatchSaveStore, ILedgerStore, IDisposable
     {
         public const int LockSeconds = 180;
         private const int RenewMilliseconds = 60000;
@@ -30,8 +32,10 @@ namespace KryticalNova.Persistence
 
         private sealed class Batch
         {
+            public readonly string Id = Guid.NewGuid().ToString("N");
             public readonly List<KeyValuePair<string, string>> Writes = new List<KeyValuePair<string, string>>();
             public readonly List<string> Deletes = new List<string>();
+            public readonly List<string> Ledger = new List<string>();
         }
 
         private readonly HttpClient http;
@@ -145,19 +149,31 @@ namespace KryticalNova.Persistence
 
         // ------------------------------------------------------------------ writing
 
-        public void Write(string key, string json) =>
-            WriteBatch(new[] { new KeyValuePair<string, string>(key, json ?? string.Empty) }, Array.Empty<string>());
-
-        public void Delete(string key) => WriteBatch(Array.Empty<KeyValuePair<string, string>>(), new[] { key });
-
-        public void WriteBatch(IReadOnlyList<KeyValuePair<string, string>> writes, IReadOnlyList<string> deletes)
+        public void Write(string key, string json)
         {
+            var one = new SaveBatch();
+            one.Write(key, json);
+            WriteBatch(one);
+        }
+
+        public void Delete(string key)
+        {
+            var one = new SaveBatch();
+            one.Deletes.Add(key);
+            WriteBatch(one);
+        }
+
+        public void WriteBatch(SaveBatch change)
+        {
+            if (change == null) return;
             var batch = new Batch();
-            foreach (KeyValuePair<string, string> write in writes)
+            foreach (KeyValuePair<string, string> write in change.Writes)
                 if (SaveKeys.IsValid(write.Key)) batch.Writes.Add(new KeyValuePair<string, string>(write.Key, write.Value ?? string.Empty));
-            foreach (string key in deletes)
+            foreach (string key in change.Deletes)
                 if (SaveKeys.IsValid(key)) batch.Deletes.Add(key);
-            if (batch.Writes.Count == 0 && batch.Deletes.Count == 0) return;
+            foreach (LedgerEntry line in change.Ledger)
+                if (line != null) batch.Ledger.Add(JsonUtility.ToJson(line));
+            if (batch.Writes.Count == 0 && batch.Deletes.Count == 0 && batch.Ledger.Count == 0) return;
 
             lock (gate)
             {
@@ -229,7 +245,7 @@ namespace KryticalNova.Persistence
                 if (batches.Count == 0) return;
                 batch = batches.Peek();
                 sending = true;
-                var text = new StringBuilder(256).Append("{\"writes\":[");
+                var text = new StringBuilder(256).Append("{\"id\":").Append(Quote(batch.Id)).Append(",\"writes\":[");
                 for (int i = 0; i < batch.Writes.Count; i++)
                 {
                     string key = batch.Writes[i].Key;
@@ -239,6 +255,8 @@ namespace KryticalNova.Persistence
                 }
                 text.Append("],\"deletes\":[");
                 for (int i = 0; i < batch.Deletes.Count; i++) text.Append(i > 0 ? "," : "").Append(Quote(batch.Deletes[i]));
+                text.Append("],\"ledger\":[");
+                for (int i = 0; i < batch.Ledger.Count; i++) text.Append(i > 0 ? "," : "").Append(batch.Ledger[i]);
                 body = text.Append("]}").ToString();
             }
             try
@@ -292,6 +310,40 @@ namespace KryticalNova.Persistence
                 if (writer == null && batches.Count > 0) SendWaiting();
                 while ((batches.Count > 0 || sending) && DateTime.UtcNow < until)
                     Monitor.Wait(gate, 100);
+            }
+        }
+
+        // ------------------------------------------------------------------ the ledger
+
+        public List<LedgerEntry> ReadLedger(string account, long sinceUtc, int limit)
+        {
+            Flush(); // lines still waiting are not on the service yet
+            try
+            {
+                string path = "ledger?since=" + sinceUtc + "&limit=" + limit + (string.IsNullOrEmpty(account) ? "" : "&account=" + Uri.EscapeDataString(account));
+                using HttpResponseMessage response = Send(HttpMethod.Get, path, null);
+                response.EnsureSuccessStatusCode();
+                return JsonUtility.FromJson<LedgerList>("{\"lines\":" + Text(response) + "}").lines ?? new List<LedgerEntry>();
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"[Save] Could not read the ledger from the save service: {e.GetBaseException().Message}");
+                return new List<LedgerEntry>();
+            }
+        }
+
+        public int PruneLedger(long beforeUtc)
+        {
+            try
+            {
+                using HttpResponseMessage response = Send(HttpMethod.Post, "ledger/prune", "{\"before\":" + beforeUtc + "}");
+                response.EnsureSuccessStatusCode();
+                return JsonUtility.FromJson<PruneAnswer>(Text(response)).dropped;
+            }
+            catch (Exception e)
+            {
+                Debug.LogWarning($"[Save] Could not trim the ledger on the save service: {e.GetBaseException().Message}");
+                return -1;
             }
         }
 
@@ -464,5 +516,7 @@ namespace KryticalNova.Persistence
         [Serializable] private sealed class LockAnswer { public bool granted; public string holder; }
         [Serializable] private sealed class KeyList { public List<string> keys; }
         [Serializable] private sealed class HealthAnswer { public bool ok; public long documents; public long bytes; }
+        [Serializable] private sealed class LedgerList { public List<LedgerEntry> lines; }
+        [Serializable] private sealed class PruneAnswer { public int dropped; }
     }
 }

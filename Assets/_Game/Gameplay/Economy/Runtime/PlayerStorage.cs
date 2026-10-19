@@ -230,9 +230,10 @@ namespace KryticalNova.Economy
             { Tell(ItemFactionRules.ReasonNotDeepVault); return; }
             Array.Copy(cells, scratch, cells.Length);
             string why = null;
+            ItemStack before = inventory.Get(packCell);
             bool moved = inventory.ServerChangePack(pack => StorageRules.TryTransfer(pack, packCell, scratch, toCell, count,
                 inventory.Catalog, $"The {DisplayName} is full.", out why));
-            if (moved) Commit();
+            if (moved) { TallyMove(LedgerKinds.DeepVault + ".in", before, inventory.Get(packCell)); Commit(); }
             else Tell(why);
         }
 
@@ -241,10 +242,24 @@ namespace KryticalNova.Economy
             if (!Ready()) return;
             Array.Copy(cells, scratch, cells.Length);
             string why = null;
+            ItemStack before = cell >= 0 && cell < cells.Length ? cells[cell] : default;
             bool moved = inventory.ServerChangePack(pack => StorageRules.TryTransfer(scratch, cell, pack, packCell, count,
                 inventory.Catalog, InventoryRules.ReasonBagFull, out why));
-            if (moved) Commit();
+            if (moved) { TallyMove(LedgerKinds.DeepVault + ".out", before, scratch[cell]); Commit(); }
             else Tell(why);
+        }
+
+        // The kept ledger (online phase 4, milestone 3): what moved into or out of the Deep Vault, tallied per save, so an
+        // item can be followed from one character of an account to another. The items stay the account's: these lines
+        // say where they went, not what was gained. The per-character Vault keeps no lines (its Creds are in the wallet's).
+        private void TallyMove(string kind, ItemStack before, ItemStack after)
+        {
+            if (SaveScope != SaveScope.Account || saveAgent == null || before.IsEmpty) return;
+            int left = after.itemId == before.itemId ? after.count : 0;
+            int moved = before.count - left;
+            if (moved <= 0) return;
+            ItemDefinition item = inventory.Catalog != null ? inventory.Catalog.Get(before.itemId) : null;
+            saveAgent.TallyItems(kind, before.itemId, moved, item != null ? item.displayName : null);
         }
 
         private void ServerMove(int from, int to)
