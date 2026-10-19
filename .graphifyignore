@@ -1,0 +1,66 @@
+# graphify: map only Krytical Nova's own code and docs (Assets/_Game).
+# Vendor packs are ~2,900 of the project's ~3,800 C# files; leaving them in buries our systems.
+# Guide: Assets/_Game/_Docs/Guides/Graphify-Guide.md
+
+# Vendor and pinned-root folders (see ProjectOrganization.md)
+Assets/_ThirdParty/
+Assets/Synty/
+Assets/DownloadCache/
+Assets/QuickDestruction/
+Assets/FastScriptReload/
+Assets/Plugins/
+Assets/_Plugins/
+Assets/Resources/
+Assets/TextMesh Pro/
+Assets/Human-Custom/
+Assets/Unity Cloud/
+Assets/_ArtSource/
+Assets/_Recovery/
+
+# Unity and IDE output
+Library/
+Logs/
+Temp/
+UserSettings/
+Packages/
+ProjectSettings/
+Builds/
+Recordings/
+*.csproj
+*.slnx
+*.sln
+
+# Agent tooling, not game code
+.agents/
+.claude/
+.Aura/
+.vscode/
+AGENTS.md
+graphify-out/
+
+# Unity serialized data and binary art: no code in them, and images/audio/video
+# would go through the paid semantic pass
+*.meta
+*.unity
+*.prefab
+*.asset
+*.mat
+*.anim
+*.controller
+*.fbx
+*.FBX
+*.blend
+*.png
+*.jpg
+*.jpeg
+*.tga
+*.psd
+*.exr
+*.hdr
+*.wav
+*.ogg
+*.mp3
+*.mp4
+*.webm
+*.gif
+*.pdf
