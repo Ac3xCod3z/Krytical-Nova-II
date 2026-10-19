@@ -57,9 +57,9 @@ namespace KryticalNova.Tests
             StringAssert.DoesNotContain("creds", header, "no game state in the header");
             Assert.IsTrue(memory.TryRead("accounts/" + Account + "/parts/deepvault", out string vault));
             Assert.AreEqual("{\"cells\":[1,2,3]}", vault);
-            Assert.IsTrue(memory.TryRead("characters/" + Hero + "/parts/inventory", out _));
-            Assert.IsTrue(memory.TryRead("characters/" + Hero + "/parts/vendorweek", out _), "a part name is kept in lower case");
-            Assert.IsTrue(memory.TryRead("characters/" + Alt + "/parts/wallet", out string altWallet));
+            Assert.IsTrue(memory.TryRead("accounts/" + Account + "/" + Hero + "/inventory", out _));
+            Assert.IsTrue(memory.TryRead("accounts/" + Account + "/" + Hero + "/vendorweek", out _), "a part name is kept in lower case");
+            Assert.IsTrue(memory.TryRead("accounts/" + Account + "/" + Alt + "/wallet", out string altWallet));
             Assert.AreEqual("{\"creds\":7}", altWallet);
         }
 
@@ -105,8 +105,8 @@ namespace KryticalNova.Tests
             ServerSave.WriteAccount(account);
             account.Find(Hero).Set("vendorWeek", null);
             ServerSave.WriteAccount(account);
-            Assert.IsFalse(memory.TryRead("characters/" + Hero + "/parts/vendorweek", out _));
-            Assert.IsTrue(memory.TryRead("characters/" + Hero + "/parts/wallet", out _), "the rest stays");
+            Assert.IsFalse(memory.TryRead("accounts/" + Account + "/" + Hero + "/vendorweek", out _));
+            Assert.IsTrue(memory.TryRead("accounts/" + Account + "/" + Hero + "/wallet", out _), "the rest stays");
         }
 
         [Test]
@@ -125,12 +125,28 @@ namespace KryticalNova.Tests
             Assert.IsTrue(ServerSave.WriteAccount(loaded), "the next save writes the new layout");
             Assert.IsTrue(memory.TryRead("accounts/" + Account, out string header));
             StringAssert.Contains("\"version\":2", header);
-            Assert.IsTrue(memory.TryRead("characters/" + Hero + "/parts/inventory", out _));
+            Assert.IsTrue(memory.TryRead("accounts/" + Account + "/" + Hero + "/inventory", out _));
             Assert.IsTrue(memory.TryRead("accounts/" + Account + "-v1", out string stillKept));
             Assert.AreEqual(oneDocument, stillKept, "the kept copy is never touched again");
 
             ServerSave.Store = memory;
             Assert.AreEqual("{\"creds\":500}", ServerSave.LoadAccount(Account).Find(Hero).Get("wallet"), "and it loads from the parts");
+        }
+
+        [Test]
+        public void TwoAccountsWithTheSameCharacterIdKeepTheirOwnParts()
+        {
+            // A character id comes from the player's game (and a carried-over account keeps its ids): parts are the account's own.
+            const string other = "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
+            ServerSave.WriteAccount(TwoCharacters());
+            var forged = new AccountSave { accountId = other };
+            var copy = new CharacterSave { characterId = Hero, name = "Imposter" };
+            copy.Set("wallet", "{\"creds\":999999}");
+            forged.characters.Add(copy);
+            ServerSave.WriteAccount(forged);
+            ServerSave.Store = memory;
+            Assert.AreEqual("{\"creds\":500}", ServerSave.LoadAccount(Account).Find(Hero).Get("wallet"), "the first account's character is untouched");
+            Assert.AreEqual("{\"creds\":999999}", ServerSave.LoadAccount(other).Find(Hero).Get("wallet"));
         }
 
         [Test]

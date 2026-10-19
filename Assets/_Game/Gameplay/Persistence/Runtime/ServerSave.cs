@@ -122,12 +122,13 @@ namespace KryticalNova.Persistence
         // accounts/<id>                      the header: version 2, its account-wide part names, each character's name,
         //                                    faction, level, map and place, and part names. No game state.
         // accounts/<id>/parts/<part>         one account-wide part (the Deep Vault, the trade allowance, ...)
-        // characters/<character>/parts/<part> one part of one character (the Pack, the wallet, the skills, ...)
+        // accounts/<id>/<character>/<part>   one part of one of its characters (the Pack, the wallet, the skills, ...)
+        // A character's parts live inside its account: a character id comes from the player's game, so a part reached
+        // by character id alone could be another account's (and an account carried over keeps its characters' ids).
         // A save writes only the parts whose text changed, and the header, as one change where the store can (the save
         // service); a part a system no longer saves is deleted. An account saved before this (version 1, one document
         // holding everything) is read as it is, kept once as accounts/<id>-v1, and written in the new layout by its next
         // save.
-        public const string CharactersPrefix = "characters/";
         private const string PartsFolder = "/parts/";
         private const string OldCopySuffix = "-v1";
 
@@ -161,8 +162,9 @@ namespace KryticalNova.Persistence
         /// <summary>Where one account-wide part is kept.</summary>
         public static string AccountPartKey(string accountId, string part) => AccountsPrefix + accountId + PartsFolder + PartName(part);
 
-        /// <summary>Where one part of one character is kept.</summary>
-        public static string CharacterPartKey(string characterId, string part) => CharactersPrefix + characterId + PartsFolder + PartName(part);
+        /// <summary>Where one part of one character of an account is kept.</summary>
+        public static string CharacterPartKey(string accountId, string characterId, string part) =>
+            AccountsPrefix + accountId + "/" + characterId + "/" + PartName(part);
 
         // A part's name as a save key allows it (lower case: "vendorWeek" is kept as "vendorweek").
         private static string PartName(string part) => (part ?? string.Empty).ToLowerInvariant();
@@ -231,7 +233,7 @@ namespace KryticalNova.Persistence
             var wanted = new List<string>();
             foreach (string part in header.partKeys ?? new List<string>()) wanted.Add(AccountPartKey(accountId, part));
             foreach (CharacterHeader c in header.characters ?? new List<CharacterHeader>())
-                foreach (string part in c.partKeys ?? new List<string>()) wanted.Add(CharacterPartKey(c.characterId, part));
+                foreach (string part in c.partKeys ?? new List<string>()) wanted.Add(CharacterPartKey(accountId, c.characterId, part));
 
             var found = new Dictionary<string, string>(StringComparer.Ordinal);
             if (from is IBatchSaveStore batch) batch.TryReadMany(wanted, found);
@@ -250,7 +252,7 @@ namespace KryticalNova.Persistence
                     map = c.map, x = c.x, y = c.y, z = c.z,
                 };
                 foreach (string part in c.partKeys ?? new List<string>())
-                    if (found.TryGetValue(CharacterPartKey(c.characterId, part), out string text)) { character.parts.Add(new SavePart { key = part, json = text }); Remember(CharacterPartKey(c.characterId, part), text, present); }
+                    if (found.TryGetValue(CharacterPartKey(accountId, c.characterId, part), out string text)) { character.parts.Add(new SavePart { key = part, json = text }); Remember(CharacterPartKey(accountId, c.characterId, part), text, present); }
                 account.characters.Add(character);
             }
             int missing = wanted.Count - found.Count;
@@ -334,8 +336,8 @@ namespace KryticalNova.Persistence
                 {
                     if (p == null || string.IsNullOrEmpty(p.json)) continue;
                     entry.partKeys.Add(p.key);
-                    keys.Add(CharacterPartKey(character.characterId, p.key));
-                    part(CharacterPartKey(character.characterId, p.key), p.json);
+                    keys.Add(CharacterPartKey(id, character.characterId, p.key));
+                    part(CharacterPartKey(id, character.characterId, p.key), p.json);
                 }
                 header.characters.Add(entry);
             }

@@ -47,8 +47,8 @@ namespace KryticalNova.Tests
             {
                 service.Delete("accounts/" + account);
                 service.Delete("accounts/" + account + "/parts/deepvault");
-                service.Delete("characters/" + hero + "/parts/inventory");
-                service.Delete("characters/" + hero + "/parts/vendorweek");
+                service.Delete("accounts/" + account + "/" + hero + "/inventory");
+                service.Delete("accounts/" + account + "/" + hero + "/vendorweek");
                 service.Flush();
                 service.Dispose();
             }
@@ -65,7 +65,7 @@ namespace KryticalNova.Tests
             Assert.AreEqual(before, File.ReadAllText(Path.Combine(folder, "accounts", account + ".json")), "the source is only read");
             Assert.IsFalse(File.Exists(Path.Combine(folder, "accounts", account + "-v1.json")), "and nothing is added to it");
 
-            Assert.IsTrue(service.TryRead("characters/" + hero + "/parts/inventory", out string pack));
+            Assert.IsTrue(service.TryRead("accounts/" + account + "/" + hero + "/inventory", out string pack));
             Assert.AreEqual("{\"pack\":[1,2,3]}", pack);
 
             StringAssert.Contains("Left alone", SaveCopyTool.CopyIn(folder, TestUrl, "TEST"), "a second copy overwrites nothing");
