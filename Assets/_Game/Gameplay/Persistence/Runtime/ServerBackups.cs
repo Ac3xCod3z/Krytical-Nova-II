@@ -11,6 +11,9 @@ namespace KryticalNova.Persistence
     /// (<c>gm.backup</c>, before an update). Every save is on disk first. A backup is written under a temporary name and
     /// renamed when whole, so a stop in the middle never leaves a broken one; the oldest beyond the number kept go.
     /// Named by time, newest last when sorted: <c>save_2026-10-16_14-05-00_start.zip</c>.
+    /// <para>A server that saves through the save service (online phase 4) also puts every document of the database into
+    /// the zip, under <c>database/</c>, in the same layout as a save folder: unzipped, the copy tool (Krytical Nova ▸
+    /// Online ▸ Saves) puts it back into a database.</para>
     /// </summary>
     public static class ServerBackups
     {
@@ -23,13 +26,25 @@ namespace KryticalNova.Persistence
             try
             {
                 ServerSave.FlushAll();
-                if (!Directory.Exists(saveFolder) || Directory.GetFileSystemEntries(saveFolder).Length == 0)
+                var service = ServerSave.Store as ServiceSaveStore;
+                if (service == null && (!Directory.Exists(saveFolder) || Directory.GetFileSystemEntries(saveFolder).Length == 0))
                     return "[Backup] Nothing to back up yet (" + saveFolder + " is empty).";
+                Directory.CreateDirectory(saveFolder);
                 Directory.CreateDirectory(backupFolder);
                 string path = Path.Combine(backupFolder, FileNameFor(DateTime.Now, reason));
                 string partial = path + ".partial";
                 if (File.Exists(partial)) File.Delete(partial);
                 ZipFile.CreateFromDirectory(saveFolder, partial, System.IO.Compression.CompressionLevel.Fastest, false);
+                int fromDatabase = 0;
+                if (service != null)
+                {
+                    fromDatabase = AddDatabase(service, partial, out string problem);
+                    if (problem != null)
+                    {
+                        File.Delete(partial);
+                        return "[Backup] Failed: the save database could not be read (" + problem + "). The last good backup is kept.";
+                    }
+                }
                 if (File.Exists(path)) File.Delete(path);
                 File.Move(partial, path);
                 int removed = 0;
@@ -38,12 +53,38 @@ namespace KryticalNova.Persistence
                     File.Delete(old);
                     removed++;
                 }
-                return $"[Backup] {Path.GetFileName(path)} ({new FileInfo(path).Length / 1024} KB)" + (removed > 0 ? $", {removed} old one(s) removed." : ".");
+                return $"[Backup] {Path.GetFileName(path)} ({new FileInfo(path).Length / 1024} KB" + (service != null ? $", {fromDatabase} saves from the database" : "") +
+                       ")" + (removed > 0 ? $", {removed} old one(s) removed." : ".");
             }
             catch (Exception e)
             {
                 return "[Backup] Failed: " + e.Message;
             }
+        }
+
+        // Every document of the save database into the zip, as database/<key>.json, read many at a time.
+        private static int AddDatabase(ServiceSaveStore service, string zipPath, out string problem)
+        {
+            problem = null;
+            IReadOnlyList<string> keys = service.Keys(string.Empty);
+            int written = 0;
+            using (ZipArchive zip = ZipFile.Open(zipPath, ZipArchiveMode.Update))
+            {
+                for (int start = 0; start < keys.Count; start += 400)
+                {
+                    var chunk = new List<string>();
+                    for (int i = start; i < Math.Min(keys.Count, start + 400); i++) chunk.Add(keys[i]);
+                    var found = new Dictionary<string, string>(StringComparer.Ordinal);
+                    if (!service.TryReadMany(chunk, found)) { problem = "the save service did not answer"; return written; }
+                    foreach (KeyValuePair<string, string> document in found)
+                    {
+                        ZipArchiveEntry entry = zip.CreateEntry("database/" + document.Key + ".json", System.IO.Compression.CompressionLevel.Fastest);
+                        using (var writer = new StreamWriter(entry.Open(), new System.Text.UTF8Encoding(false))) writer.Write(document.Value);
+                        written++;
+                    }
+                }
+            }
+            return written;
         }
 
         /// <summary>The file name of a backup made at <paramref name="when"/> for <paramref name="reason"/> (letters and digits only).</summary>

@@ -385,7 +385,9 @@ namespace KryticalNova.Social
         public string SaveKey => SponsorSaveKey;
         public SaveScope SaveScope => SaveScope.Character;
 
-        public string CaptureSave() => JsonUtility.ToJson(new SponsorSave { points = points, nearSeconds = Mathf.Floor(nearSeconds) });
+        // The points only: the seconds towards the next point (under a minute) are not kept, so standing near a sponsee does
+        // not rewrite this part every minute (online phase 4: byte-sized saves). An older save's seconds are still read.
+        public string CaptureSave() => JsonUtility.ToJson(new SponsorSave { points = points });
 
         public void RestoreSave(string json)
         {

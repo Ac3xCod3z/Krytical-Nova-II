@@ -231,9 +231,17 @@ namespace KryticalNova.Progression
         public string CaptureSave()
         {
             ExperienceBooster[] boosters = Boosters;
-            var save = new BoostSave { clocks = new BoostClock[boosters.Length], savedAt = DateTime.UtcNow.Ticks };
+            // Whole seconds, and the time of saving only while a clock runs: with no boost running the text stays the same
+            // from save to save, so a save writes nothing for it (online phase 4: byte-sized saves).
+            var save = new BoostSave { clocks = new BoostClock[boosters.Length] };
+            bool running = false;
             for (int i = 0; i < boosters.Length; i++)
-                save.clocks[i] = new BoostClock { itemId = boosters[i].itemId, seconds = i < seconds.Length ? seconds[i] : 0f };
+            {
+                float left = i < seconds.Length ? Mathf.Max(0f, Mathf.Round(seconds[i])) : 0f;
+                running |= left > 0f;
+                save.clocks[i] = new BoostClock { itemId = boosters[i].itemId, seconds = left };
+            }
+            if (running) save.savedAt = DateTime.UtcNow.Ticks;
             return JsonUtility.ToJson(save);
         }
 
