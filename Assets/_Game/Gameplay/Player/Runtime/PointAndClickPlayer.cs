@@ -39,14 +39,17 @@ namespace KryticalNova.Player
         private const float MinimumPositiveValue = 0.01f;
         private const float PausedTimeScale = 0f;
         private const int InitialUiHitCapacity = 8;
-        private const float PendingInteractTimeout = 20f;
-        // Stop beside a thing that is picked up, not on top of it: an arm's length away.
-        private const float InstantInteractStandOff = 0.9f;
-        private const float TravelSampleRadius = 6f;     // a map point is far coarser than a click on the ground
-        private const float TravelArrivalDistance = 1.5f;
-        private const float TravelStallSeconds = 2.5f;   // standing still this long mid-journey ends it (a cast, a blocked way)
-        private const float TravelStallSpeed = 0.2f;
-        private const float FriendlyApproachDistance = 1.5f;
+
+        // The click-to-travel numbers are design data in MovementSettings (architecture stage 7), read through the
+        // movement skills that hold it; the setting's own starting value stands in only while nothing is wired.
+        private MovementSettings Movement => movementSkills != null ? movementSkills.MovementSettings : null;
+        private float PendingInteractTimeout => Movement != null ? Movement.pendingInteractTimeout : MovementSettings.DefaultPendingInteractTimeout;
+        private float InstantInteractStandOff => Movement != null ? Movement.interactStandOff : MovementSettings.DefaultInteractStandOff;
+        private float TravelSampleRadius => Movement != null ? Movement.travelSampleRadius : MovementSettings.DefaultTravelSampleRadius;
+        private float TravelArrivalDistance => Movement != null ? Movement.travelArrivalDistance : MovementSettings.DefaultTravelArrivalDistance;
+        private float TravelStallSeconds => Movement != null ? Movement.travelStallSeconds : MovementSettings.DefaultTravelStallSeconds;
+        private float TravelStallSpeed => Movement != null ? Movement.travelStallSpeed : MovementSettings.DefaultTravelStallSpeed;
+        private float FriendlyApproachDistance => Movement != null ? Movement.friendlyApproachDistance : MovementSettings.DefaultFriendlyApproachDistance;
 
         [Header("Scene References")]
         [SerializeField] private Camera gameplayCamera;

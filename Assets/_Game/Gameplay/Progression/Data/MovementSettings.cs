@@ -53,6 +53,31 @@ namespace KryticalNova.Progression
                  "Without it the character takes no order again.")]
         [Min(0.1f)] public float agentRecoverySeconds = 1.5f;
 
+        // The starting values of the click-to-travel numbers below; the asset holds the ones in use.
+        public const float DefaultTravelSampleRadius = 6f;
+        public const float DefaultTravelArrivalDistance = 1.5f;
+        public const float DefaultTravelStallSeconds = 2.5f;
+        public const float DefaultTravelStallSpeed = 0.2f;
+        public const float DefaultFriendlyApproachDistance = 1.5f;
+        public const float DefaultInteractStandOff = 0.9f;
+        public const float DefaultPendingInteractTimeout = 20f;
+
+        [Header("Click to travel (a map point, a thing to pick up, a friend)")]
+        [Tooltip("How far round a map point a place to walk to is looked for (a map point is far coarser than a click on the ground).")]
+        [Min(0.1f)] public float travelSampleRadius = DefaultTravelSampleRadius;
+        [Tooltip("How near a far destination the journey ends.")]
+        [Min(0.1f)] public float travelArrivalDistance = DefaultTravelArrivalDistance;
+        [Tooltip("Standing still this long in the middle of a journey ends it (a cast, a blocked way).")]
+        [Min(0.1f)] public float travelStallSeconds = DefaultTravelStallSeconds;
+        [Tooltip("Slower than this (metres a second) counts as standing still on a journey.")]
+        [Min(0f)] public float travelStallSpeed = DefaultTravelStallSpeed;
+        [Tooltip("How near a friendly player the character walks before stopping.")]
+        [Min(0.1f)] public float friendlyApproachDistance = DefaultFriendlyApproachDistance;
+        [Tooltip("Where the character stops beside a thing it picks up: an arm's length away, not on top of it.")]
+        [Min(0f)] public float interactStandOff = DefaultInteractStandOff;
+        [Tooltip("Seconds a walk to something to use (an NPC, a pick-up) is kept before it is given up.")]
+        [Min(1f)] public float pendingInteractTimeout = DefaultPendingInteractTimeout;
+
         /// <summary>What a Move Speed stat of <paramref name="percent"/> (100 = normal) multiplies speed by, within the limits.</summary>
         public float StatSpeedMultiplier(float percent) =>
             Mathf.Clamp(percent / 100f, minStatSpeedMultiplier, Mathf.Max(minStatSpeedMultiplier, maxStatSpeedMultiplier));

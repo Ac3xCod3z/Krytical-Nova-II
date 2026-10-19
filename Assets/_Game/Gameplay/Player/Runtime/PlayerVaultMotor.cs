@@ -35,20 +35,18 @@ namespace KryticalNova.Player
     [RequireComponent(typeof(NavMeshAgent), typeof(PlayerMovementSkills), typeof(PlayerResources))]
     public sealed class PlayerVaultMotor : NetworkBehaviour
     {
+        // How far from where a vault may start and land is design data in TraversalSettings (architecture stage 7);
+        // the setting's own starting value stands in only while nothing is wired.
+        private float MaximumRunUp => traversal != null ? traversal.maximumRunUp : TraversalSettings.DefaultMaximumRunUp;
+        private float LandingSearch => traversal != null ? traversal.landingSearch : TraversalSettings.DefaultLandingSearch;
+        private float StandingStartAside => traversal != null ? traversal.standingStartAside : TraversalSettings.DefaultStandingStartAside;
+        private float StepHeight => traversal != null ? traversal.stepHeight : TraversalSettings.DefaultStepHeight;
         private const float TopSampleStep = 0.15f;
         /// <summary>How far past the NavMesh edge the obstacle may stand (a flower bed in front of a hedge is not walkable).</summary>
         private const float FaceProbeLength = 3.2f;
-        /// <summary>Farthest a vault may start from the obstacle when the ground in front of it cannot be walked on.</summary>
-        private const float MaximumRunUp = 3f;
-        /// <summary>How far past the usual landing distance the landing may move to find walkable ground.</summary>
-        private const float LandingSearch = 2.4f;
         private const float LandingSearchStep = 0.3f;
-        /// <summary>How far to the side of the crossing point the character may stand and still vault from where it is.</summary>
-        private const float StandingStartAside = 0.5f;
         /// <summary>A surface this close to the ground level is ground again: the obstacle has ended.</summary>
         private const float GroundTolerance = 0.12f;
-        /// <summary>Tallest thing the body may come down over between the obstacle and the landing.</summary>
-        private const float StepHeight = 0.3f;
         private const float MinimumRaise = 0.05f;
         private const float EdgeLead = 0.25f;
         private const float TriggerRadius = 0.3f;
