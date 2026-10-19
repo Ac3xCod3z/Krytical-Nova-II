@@ -312,6 +312,9 @@ namespace KryticalNova.Social
             if (saveAgent != null) saveAgent.Save();
         }
 
+        /// <summary>Server: writes this character and the world document <paramref name="world"/> (the Crews) as one change.</summary>
+        public void ServerSaveWith(string world) => ServerSave.SaveTogether(saveAgent, world);
+
         /// <summary>
         /// Server: this player's Crew as it stands (null for none): the tag everyone reads, the Crew chat channel,
         /// and the roster for the owner.

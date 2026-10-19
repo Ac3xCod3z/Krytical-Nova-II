@@ -139,8 +139,7 @@ namespace KryticalNova.Networking
             if (string.IsNullOrEmpty(LogFolder)) return;
             try
             {
-                Directory.CreateDirectory(LogFolder);
-                File.AppendAllText(Path.Combine(LogFolder, "flags.log"),
+                File.AppendAllText(ServerRecords.CurrentFile(LogFolder, "flags.log", DateTime.Now, ServerRecords.MonthsKept),
                     DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture) + "  " + line + Environment.NewLine);
             }
             catch (Exception e)

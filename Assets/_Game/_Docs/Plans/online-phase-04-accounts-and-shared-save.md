@@ -132,6 +132,43 @@ All of that stays. What changes is underneath.
   471-byte header and 17 parts (11 to 492 bytes). After a few steps the autosave wrote 617 bytes (the header, for the
   new place, and the XP boost timers) and nothing else; on leaving it saved once more and let the lock go.
 
+**Milestone 3 (19 Oct 2026): all-or-nothing changes and the kept ledger.**
+- **One change, whole or not at all.** A save is a `SaveBatch` (documents written and deleted, and ledger lines). The save
+  service applies a batch in one database transaction; the save folder through a journal (`FileSaveStore` writes the
+  change whole to `_journal/` first, puts it in place, deletes the journal; a journal a stop left is finished when the
+  store opens again, its ledger lines never twice). `ServerSave.SaveTogether` (players and world documents) and
+  `WriteTogether` (accounts) put several into one batch: a **trade** (both players), a **Kiosk** opening, purchase and
+  collection (the player and `world/kiosks`), a **Crew founding** (the founder and `world/crews`). A Deep Vault move is
+  inside one account, so one batch already.
+- **A batch sent twice is saved once.** Each batch has an id; the service remembers applied ids for a day and answers a
+  batch sent again (its first answer was lost) with the first answer. Before this, a lost answer made the resend look
+  stale, and every later save of that player was refused (found while building the kill test).
+- **The kept ledger** (`LedgerEntry`; database layout 2: tables `ledger` and `applied_batches`, stepped up by itself).
+  A line waits for the next save of its account and goes in the same batch as the change it describes, so a crash
+  loses both or neither. **Creds** are tallied at the one door they all pass, `PlayerWallet` (`creds.<source or sink>`,
+  one line per kind per save): an account's lines add up to its wallet, whatever system moves Creds, now or after a
+  rework. **Items** through `EconomyLedger` at each action: trade (with the partner), Kiosk open / buy / collect (with
+  the owner), shop buy / sell, Deep Vault in / out, Crew founding, forge (a broken piece counts as lost), loot and drops
+  (tallied per save, not per pickup: about a line a minute per player while hunting), and GM commands (the Pack compared
+  before and after every command, so any GM command is covered; `GmCommandRelay`). `gm.ledger` and the GM Tools window
+  read it. The database keeps lines as text with only account, kind and time (owner, 18 Oct 2026: the economy will be
+  reworked; the database must not know its rules).
+- **Disk:** ledger lines older than `ledgerDays` (90) dropped at start and once a day (`ServerLifetime`); each backup holds
+  the lines since the backup before it (`ledger.jsonl`); the record files start a new file each month and keep
+  `recordMonths` (6) (`ServerRecords.CurrentFile`).
+- *Tried:* `TransactionLedgerTests` (6: two players, a world document and their lines as one batch; tallies; the file
+  journal finished after a stop and not counted twice; order in the background; ledger by day and trimmed),
+  `ServiceSaveStoreTests` (a batch's lines kept with it; a batch sent twice applied once), EditMode 842 of 842. **Kill
+  test** (`Service~/KillTest/kill_test.py`, test database): 4,000 trades between 6 accounts while the save service was
+  killed 103 times (85 batches sent again after no answer, 15 dropped by a simulated game-server crash): no Creds or
+  items made or lost, every wallet and Pack equal to its start plus its ledger lines, no line twice. **With the game
+  itself:** the measure server rebuilt with this milestone, bots (rebuilt as build 8) joined, each was given 500 Creds and
+  two items by GM command and hunted, and the server was killed (taskkill /F) at a random moment, four rounds (20 bot
+  characters, 74 ledger lines, Creds from GM commands and from Hostiles): every saved wallet equalled its start plus its
+  ledger lines; a change the kill caught before its save was lost together with its lines, never one without the other.
+  Not tried with two players: a trade and a Kiosk purchase between two clients (their saving is `SaveTogether`, tested
+  above; the trade and Kiosk rules themselves did not change).
+
 - *Found while copying the real saves (18 Oct 2026):* the account carried over to Unity sign-in and the old account
   kept as its backup hold the same character id, so with character parts filed by character id alone the two shared
   them; worse, a character id comes from the player's game, so a forged one could have reached another account's

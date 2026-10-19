@@ -63,6 +63,10 @@ namespace KryticalNova.Networking
         public string saveService = "";
         [Tooltip("The save service's key. Empty: Documents/KryticalNova-Secrets/save-service-key.txt of the Windows user running the server. Never shared.")]
         public string saveServiceKeyFile = "";
+        [Tooltip("Online phase 4: days the ledger (every trade, sale, shop deal, Vault move and loot, one line each) is kept; older lines are dropped once a day.")]
+        public int ledgerDays = 90;
+        [Tooltip("Months of the record files (gm.log, economy.log, access.log, flags.log) kept: a new file each month, the oldest dropped.")]
+        public int recordMonths = 6;
 
         /// <summary>True when this server saves through the save service (online phase 4) rather than files.</summary>
         public bool UsesSaveService => !string.IsNullOrWhiteSpace(saveService);
@@ -141,6 +145,12 @@ namespace KryticalNova.Networking
                         File.WriteAllText(file, JsonUtility.ToJson(options, true));
                         notes.Add("added the request speed limits (callLimits) to the settings file");
                     }
+                    // And a file from before the kept ledger gains ledgerDays and recordMonths the same way.
+                    else if (!text.Contains("\"ledgerDays\""))
+                    {
+                        File.WriteAllText(file, JsonUtility.ToJson(options, true));
+                        notes.Add("added ledgerDays and recordMonths to the settings file");
+                    }
                 }
                 else
                 {
@@ -194,6 +204,8 @@ namespace KryticalNova.Networking
             maxPlayers = Mathf.Clamp(maxPlayers, 1, 1000);
             if (backupHours < 0f) backupHours = 0f;
             backupsKept = Mathf.Max(1, backupsKept);
+            ledgerDays = Mathf.Clamp(ledgerDays, 1, 3650);
+            recordMonths = Mathf.Clamp(recordMonths, 1, 120);
             if (string.IsNullOrWhiteSpace(serverName)) serverName = "Krytical Nova Server";
             if (string.IsNullOrWhiteSpace(map)) map = "Zone01_StarterTown";
             connectionMode = string.IsNullOrWhiteSpace(connectionMode) ? "direct" : connectionMode.Trim().ToLowerInvariant();

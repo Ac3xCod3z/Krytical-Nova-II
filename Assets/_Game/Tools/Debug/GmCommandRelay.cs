@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using KryticalNova.Core;
+using KryticalNova.Items;
 using KryticalNova.Networking;
 using QFSW.QC;
 using UnityEngine;
@@ -74,6 +76,8 @@ namespace KryticalNova.DevTools
                 if (!QuantumConsoleProcessor.TableIsGenerating) QuantumConsoleProcessor.GenerateCommandTable();
                 if (!QuantumConsoleProcessor.TableGenerated) return "The commands are still being loaded: try again in a moment.";
             }
+            GameObject target = GmTarget.TryGetPlayer(out GameObject aimed, out _) ? aimed : null;
+            Dictionary<int, int> before = PackCounts(target);
             try
             {
                 object result = QuantumConsoleProcessor.InvokeCommand(line);
@@ -83,6 +87,47 @@ namespace KryticalNova.DevTools
             {
                 return (e.InnerException ?? e).Message;
             }
+            finally
+            {
+                KeepLedger(target, line, before);
+            }
         }
+
+        // The kept ledger (online phase 4, milestone 3): a GM command that changed what a player carries is one line on
+        // that player's account, with every item it added or took and the command itself. Found by comparing the Pack
+        // before and after, so every GM command is covered, also ones added later. Creds a GM gives are in the wallet's
+        // tally (creds.gm).
+        private static Dictionary<int, int> PackCounts(GameObject player)
+        {
+            if (player == null || !player.TryGetComponent(out PlayerInventory inventory)) return null;
+            var pack = new ItemStack[PlayerInventory.Capacity];
+            inventory.CopyPack(pack);
+            var counts = new Dictionary<int, int>();
+            foreach (ItemStack stack in pack)
+                if (!stack.IsEmpty) counts[stack.itemId] = (counts.TryGetValue(stack.itemId, out int n) ? n : 0) + stack.count;
+            return counts;
+        }
+
+        private static void KeepLedger(GameObject target, string line, Dictionary<int, int> before)
+        {
+            if (before == null || target == null || !GmTarget.TryGetPlayer(out GameObject now, out _) || now != target) return;
+            Dictionary<int, int> after = PackCounts(target);
+            if (after == null) return;
+            LedgerEntry entry = KryticalNova.Economy.EconomyLedger.Line(target.transform, LedgerKinds.Gm, null, RunningFor + ": " + line.Trim());
+            if (entry == null) return;
+            ItemCatalog catalog = target.TryGetComponent(out PlayerInventory inventory) ? inventory.Catalog : null;
+            var ids = new HashSet<int>(before.Keys);
+            ids.UnionWith(after.Keys);
+            foreach (int id in ids)
+            {
+                int change = (after.TryGetValue(id, out int a) ? a : 0) - (before.TryGetValue(id, out int b) ? b : 0);
+                if (change == 0) continue;
+                ItemDefinition item = catalog != null ? catalog.Get((ushort)id) : null;
+                entry.With(id, change, item != null ? item.displayName : null);
+            }
+            if (entry.items.Count > 0) ServerSaveLedger(entry);
+        }
+
+        private static void ServerSaveLedger(LedgerEntry entry) => KryticalNova.Persistence.ServerSave.Ledger(entry);
     }
 }

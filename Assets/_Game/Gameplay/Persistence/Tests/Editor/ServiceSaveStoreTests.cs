@@ -4,6 +4,7 @@ using System.Threading;
 using KryticalNova.Core;
 using KryticalNova.Persistence;
 using NUnit.Framework;
+using UnityEngine;
 
 namespace KryticalNova.Tests
 {
@@ -136,6 +137,50 @@ namespace KryticalNova.Tests
                 b.Delete(key);
                 b.Flush();
             }
+        }
+
+        [Test]
+        public void LedgerLinesAreKeptWithTheirBatch()
+        {
+            // Milestone 3: the lines go in the same transaction as the saves they describe.
+            string account = "test-ledger-" + key.Substring(key.Length - 8);
+            var batch = new SaveBatch();
+            batch.Write(key, "{\"sold\":1}");
+            batch.Ledger.Add(LedgerEntry.For(LedgerKinds.KioskBuy, account, "c", "Tester").With(1203, 1, "Arc Blade"));
+            batch.Ledger.Add(LedgerEntry.For(LedgerKinds.CredsPrefix + "kioskpurchase", account, "c", "Tester"));
+            batch.Ledger[1].creds = -250;
+            a.WriteBatch(batch);
+            a.Flush();
+            Assert.IsTrue(b.TryRead(key, out _));
+            var lines = b.ReadLedger(account, DateTime.UtcNow.AddMinutes(-5).Ticks, 10);
+            Assert.AreEqual(2, lines.Count);
+            Assert.IsTrue(lines.Exists(l => l.kind == LedgerKinds.KioskBuy && l.items.Count == 1 && l.items[0].item == 1203));
+            Assert.IsTrue(lines.Exists(l => l.creds == -250));
+            Assert.AreEqual(0, b.ReadLedger(account + "-nobody", 0, 10).Count);
+        }
+
+        [Test]
+        public void ABatchSentAgainAfterALostAnswerIsAppliedOnce()
+        {
+            // The answer to a batch was lost (a timeout): the server sends the same batch again. It must be taken as done,
+            // neither applied twice nor refused as stale (which would turn away every later save of that player).
+            string secret = File.ReadAllText(KeyFile).Trim();
+            string id = Guid.NewGuid().ToString("N");
+            string body = "{\"id\":\"" + id + "\",\"writes\":[{\"key\":\"" + key + "\",\"body\":\"{}\",\"expected\":0}],\"deletes\":[]," +
+                          "\"ledger\":[" + JsonUtility.ToJson(LedgerEntry.For(LedgerKinds.Trade, "test-resend-" + id.Substring(0, 8), "c", "Tester")) + "]}";
+            using (var http = new System.Net.Http.HttpClient { BaseAddress = new Uri(Url + "/") })
+            {
+                http.DefaultRequestHeaders.Add("X-KN-Key", secret);
+                for (int i = 0; i < 2; i++)
+                {
+                    var content = new System.Net.Http.StringContent(body, System.Text.Encoding.UTF8, "application/json");
+                    using (var answer = http.PostAsync("batch", content).GetAwaiter().GetResult())
+                        Assert.AreEqual(System.Net.HttpStatusCode.OK, answer.StatusCode, $"send {i + 1} is done");
+                }
+                using (var doc = http.GetAsync("doc?key=" + Uri.EscapeDataString(key)).GetAwaiter().GetResult())
+                    StringAssert.Contains("\"version\":1", doc.Content.ReadAsStringAsync().GetAwaiter().GetResult(), "written once");
+            }
+            Assert.AreEqual(1, b.ReadLedger("test-resend-" + id.Substring(0, 8), 0, 10).Count, "its ledger line once");
         }
 
         [Test]

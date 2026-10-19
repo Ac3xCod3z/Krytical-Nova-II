@@ -687,6 +687,7 @@ namespace KryticalNova.Networking
             PrepareConnections();
             // Who joined and left, with the account, is kept in access.log beside the saves (online phase 2, milestone 4).
             ServerRecords.LogFolder = options.SaveFolderPath;
+            ServerRecords.MonthsKept = options.recordMonths;
             nm.OnClientConnectedCallback += id =>
             {
                 Debug.Log($"[Server] Player joined (connection {id}). Online: {nm.ConnectedClientsIds.Count}.");

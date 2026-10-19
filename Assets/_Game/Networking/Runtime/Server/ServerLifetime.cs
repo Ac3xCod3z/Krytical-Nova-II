@@ -30,6 +30,7 @@ namespace KryticalNova.Networking
 
         private ServerLaunchOptions options;
         private float nextBackupAt = float.PositiveInfinity;
+        private float nextLedgerTrimAt = float.PositiveInfinity;
         private float shutdownAt = -1f;
         private string shutdownReason;
         private bool shutdownRestarts;
@@ -68,6 +69,22 @@ namespace KryticalNova.Networking
             startedAt = Time.realtimeSinceStartup;
             Backup("start");
             if (options.backupHours > 0f) nextBackupAt = Time.realtimeSinceStartup + options.backupHours * 3600f;
+            TrimLedger();
+        }
+
+        // Online phase 4, milestone 3: ledger lines older than ledgerDays are dropped at start and once a day after, off the
+        // game's thread (owner: "kick the oldest so old data does not fill my disk").
+        private void TrimLedger()
+        {
+            nextLedgerTrimAt = Time.realtimeSinceStartup + 24f * 3600f;
+            if (!(ServerSave.Store is KryticalNova.Core.ILedgerStore ledger)) return;
+            int days = options.ledgerDays;
+            long before = System.DateTime.UtcNow.AddDays(-days).Ticks;
+            System.Threading.Tasks.Task.Run(() =>
+            {
+                int dropped = ledger.PruneLedger(before);
+                if (dropped > 0) Debug.Log($"[Save] Ledger: {dropped} line(s) older than {days} days were dropped.");
+            });
         }
 
         private void Update()
@@ -83,6 +100,7 @@ namespace KryticalNova.Networking
                 Backup("timed");
                 nextBackupAt = Time.realtimeSinceStartup + options.backupHours * 3600f;
             }
+            if (Time.realtimeSinceStartup >= nextLedgerTrimAt) TrimLedger();
             if (shutdownAt >= 0f) TickShutdown();
         }
 

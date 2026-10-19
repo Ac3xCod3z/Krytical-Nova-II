@@ -527,13 +527,29 @@ namespace KryticalNova.Economy
 
             string gaveA = Describe(a), gaveB = Describe(b);
             ServerRecords.Write(RecordKind.Economy, $"Trade: {ServerRecords.Who(a)} gave {Recorded(a)}; {ServerRecords.Who(b)} gave {Recorded(b)}.");
+            KeepLedger(a, b);
             a.Tell($"Trade with {b.TraderName} complete. You gave {gaveA} and received {gaveB}.");
             b.Tell($"Trade with {a.TraderName} complete. You gave {gaveB} and received {gaveA}.");
             EndSession(s, null, null);
-            // A finished trade is never lost to a crash.
-            if (a.saveAgent != null) a.saveAgent.Save();
-            if (b.saveAgent != null) b.saveAgent.Save();
+            // Both players, and the ledger lines of both, in one change (online phase 4, milestone 3): a crash keeps the
+            // trade whole or not at all, never an item on both sides or on neither.
+            ServerSave.SaveTogether(new[] { a.saveAgent, b.saveAgent });
         }
+
+        // Each side's line: what it gave up and what it received (its Creds are tallied by the wallets).
+        private static void KeepLedger(PlayerTrade a, PlayerTrade b)
+        {
+            ItemCatalog catalog = a.inventory != null ? a.inventory.Catalog : null;
+            LedgerEntry lineA = EconomyLedger.Line(a, LedgerKinds.Trade, b, CredsNote(a.offeredCreds, b.offeredCreds));
+            LedgerEntry lineB = EconomyLedger.Line(b, LedgerKinds.Trade, a, CredsNote(b.offeredCreds, a.offeredCreds));
+            foreach (TradeLine line in a.lines) { lineA.Item(catalog, line.stack, -1); lineB.Item(catalog, line.stack, 1); }
+            foreach (TradeLine line in b.lines) { lineB.Item(catalog, line.stack, -1); lineA.Item(catalog, line.stack, 1); }
+            EconomyLedger.Keep(lineA);
+            EconomyLedger.Keep(lineB);
+        }
+
+        private static string CredsNote(long gave, long got) =>
+            gave == 0 && got == 0 ? null : $"gave {gave} Creds, received {got} Creds";
 
         private static void Move(PlayerTrade from, PlayerTrade to, long creds)
         {

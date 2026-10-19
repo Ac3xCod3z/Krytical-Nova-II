@@ -14,6 +14,8 @@ namespace KryticalNova.Persistence
     /// <para>A server that saves through the save service (online phase 4) also puts every document of the database into
     /// the zip, under <c>database/</c>, in the same layout as a save folder: unzipped, the copy tool (Krytical Nova ▸
     /// Online ▸ Saves) puts it back into a database.</para>
+    /// <para>Milestone 3: it also holds the ledger lines written since the backup before it (<c>ledger.jsonl</c>, one line
+    /// each), so the backups together keep the whole ledger even after the database trims it after <c>ledgerDays</c>.</para>
     /// </summary>
     public static class ServerBackups
     {
@@ -35,7 +37,7 @@ namespace KryticalNova.Persistence
                 string partial = path + ".partial";
                 if (File.Exists(partial)) File.Delete(partial);
                 ZipFile.CreateFromDirectory(saveFolder, partial, System.IO.Compression.CompressionLevel.Fastest, false);
-                int fromDatabase = 0;
+                int fromDatabase = 0, ledgerLines = 0;
                 if (service != null)
                 {
                     fromDatabase = AddDatabase(service, partial, out string problem);
@@ -44,6 +46,7 @@ namespace KryticalNova.Persistence
                         File.Delete(partial);
                         return "[Backup] Failed: the save database could not be read (" + problem + "). The last good backup is kept.";
                     }
+                    ledgerLines = AddLedger(service, partial, LastBackupUtc(backupFolder));
                 }
                 if (File.Exists(path)) File.Delete(path);
                 File.Move(partial, path);
@@ -53,7 +56,7 @@ namespace KryticalNova.Persistence
                     File.Delete(old);
                     removed++;
                 }
-                return $"[Backup] {Path.GetFileName(path)} ({new FileInfo(path).Length / 1024} KB" + (service != null ? $", {fromDatabase} saves from the database" : "") +
+                return $"[Backup] {Path.GetFileName(path)} ({new FileInfo(path).Length / 1024} KB" + (service != null ? $", {fromDatabase} saves from the database, {ledgerLines} ledger line(s)" : "") +
                        ")" + (removed > 0 ? $", {removed} old one(s) removed." : ".");
             }
             catch (Exception e)
@@ -61,6 +64,33 @@ namespace KryticalNova.Persistence
                 return "[Backup] Failed: " + e.Message;
             }
         }
+
+        // When the newest backup there was made (UTC ticks), less an hour so nothing falls between two; 0 when there is none.
+        private static long LastBackupUtc(string backupFolder)
+        {
+            long newest = 0;
+            foreach (string file in Directory.GetFiles(backupFolder, Prefix + "*" + Extension))
+                newest = Math.Max(newest, File.GetLastWriteTimeUtc(file).Ticks);
+            return newest == 0 ? 0 : newest - TimeSpan.TicksPerHour;
+        }
+
+        // The ledger lines since sinceUtc into the zip as ledger.jsonl, oldest first.
+        private static int AddLedger(ServiceSaveStore service, string zipPath, long sinceUtc)
+        {
+            List<KryticalNova.Core.LedgerEntry> lines = service.ReadLedger(null, sinceUtc, LedgerLinesPerBackup);
+            if (lines.Count == 0) return 0;
+            lines.Reverse();
+            using (ZipArchive zip = ZipFile.Open(zipPath, ZipArchiveMode.Update))
+            {
+                ZipArchiveEntry entry = zip.CreateEntry("ledger.jsonl", System.IO.Compression.CompressionLevel.Fastest);
+                using (var writer = new StreamWriter(entry.Open(), new System.Text.UTF8Encoding(false)))
+                    foreach (KryticalNova.Core.LedgerEntry line in lines) writer.Write(JsonUtility.ToJson(line) + "\n");
+            }
+            return lines.Count;
+        }
+
+        /// <summary>The most ledger lines one backup holds (the save service's own limit for one read).</summary>
+        public const int LedgerLinesPerBackup = 50000;
 
         // Every document of the save database into the zip, as database/<key>.json, read many at a time.
         private static int AddDatabase(ServiceSaveStore service, string zipPath, out string problem)
