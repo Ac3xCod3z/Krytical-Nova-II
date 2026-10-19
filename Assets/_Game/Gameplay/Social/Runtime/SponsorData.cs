@@ -20,9 +20,22 @@ namespace KryticalNova.Social
 
     /// <summary>Every Sponsor link on the server: a world document, so a link outlives both of them logging out.</summary>
     [Serializable]
-    public sealed class SponsorsWorld
+    public sealed class SponsorsWorld : KryticalNova.Core.IWorldEntries
     {
         public List<SponsorLink> links = new List<SponsorLink>();
+
+        // Online phase 4, milestone 4: kept one entry at a time (ServerSave), keyed by recruit and sponsor.
+        public void CollectEntries(List<KeyValuePair<string, string>> into)
+        {
+            foreach (SponsorLink entry in links)
+                if (entry != null) into.Add(new KeyValuePair<string, string>(entry.recruitId + "-" + entry.sponsorId, UnityEngine.JsonUtility.ToJson(entry)));
+        }
+
+        public void RestoreEntries(IReadOnlyList<string> texts)
+        {
+            links = new List<SponsorLink>(texts.Count);
+            foreach (string text in texts) links.Add(UnityEngine.JsonUtility.FromJson<SponsorLink>(text));
+        }
     }
 
     /// <summary>One line of a player's own Sponsor window: the character at the other end of a link.</summary>

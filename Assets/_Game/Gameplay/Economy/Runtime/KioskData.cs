@@ -91,8 +91,21 @@ namespace KryticalNova.Economy
 
     /// <summary>Every Kiosk on the server: the world document "kiosks".</summary>
     [Serializable]
-    public sealed class KioskWorld
+    public sealed class KioskWorld : KryticalNova.Core.IWorldEntries
     {
         public List<KioskRecord> kiosks = new List<KioskRecord>();
+
+        // Online phase 4, milestone 4: kept one entry at a time (ServerSave), keyed by ownerCharacterId.
+        public void CollectEntries(List<KeyValuePair<string, string>> into)
+        {
+            foreach (KioskRecord entry in kiosks)
+                if (entry != null) into.Add(new KeyValuePair<string, string>(entry.ownerCharacterId, UnityEngine.JsonUtility.ToJson(entry)));
+        }
+
+        public void RestoreEntries(IReadOnlyList<string> texts)
+        {
+            kiosks = new List<KioskRecord>(texts.Count);
+            foreach (string text in texts) kiosks.Add(UnityEngine.JsonUtility.FromJson<KioskRecord>(text));
+        }
     }
 }

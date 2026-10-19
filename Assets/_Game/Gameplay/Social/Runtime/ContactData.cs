@@ -41,9 +41,22 @@ namespace KryticalNova.Social
 
     /// <summary>Every character's book: the world document "contacts".</summary>
     [Serializable]
-    public sealed class ContactsWorld
+    public sealed class ContactsWorld : KryticalNova.Core.IWorldEntries
     {
         public List<ContactBook> books = new List<ContactBook>();
+
+        // Online phase 4, milestone 4: kept one entry at a time (ServerSave), keyed by characterId.
+        public void CollectEntries(List<KeyValuePair<string, string>> into)
+        {
+            foreach (ContactBook entry in books)
+                if (entry != null) into.Add(new KeyValuePair<string, string>(entry.characterId, UnityEngine.JsonUtility.ToJson(entry)));
+        }
+
+        public void RestoreEntries(IReadOnlyList<string> texts)
+        {
+            books = new List<ContactBook>(texts.Count);
+            foreach (string text in texts) books.Add(UnityEngine.JsonUtility.FromJson<ContactBook>(text));
+        }
     }
 
     public enum ContactKind : byte
