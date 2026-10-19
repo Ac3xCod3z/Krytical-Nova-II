@@ -12,6 +12,8 @@ using KryticalNova.Social;
 using Unity.Collections;
 using Unity.Netcode;
 using UnityEngine;
+using KryticalNova.Wallet;
+using KryticalNova.World;
 
 namespace KryticalNova.Economy
 {

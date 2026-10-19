@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace KryticalNova.Economy
+namespace KryticalNova.World
 {
     /// <summary>
     /// A marked-out part of a zone where dealings between players have their own rules. Two things can be switched

@@ -1225,7 +1225,7 @@ namespace KryticalNova.EditorTools.GM
                  "other's Kiosks and add each other as contacts, and fight each other only in a Callout, whatever Cross-Faction PvP " +
                  "says. A Squad and a Crew are one faction everywhere.")]
         private string NeutralGround => LocalPlayer == null ? "(enter Play Mode)"
-            : KryticalNova.Economy.TradeZone.CrossFactionAt(LocalPlayer.transform.position) ? "neutral ground" : "faction ground";
+            : KryticalNova.World.TradeZone.CrossFactionAt(LocalPlayer.transform.position) ? "neutral ground" : "faction ground";
 
         // ================================================================ PETS
 

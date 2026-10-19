@@ -347,7 +347,7 @@ namespace KryticalNova.EditorTools
             string[] dropRoots = { "--- Town ---", "--- Outskirts ---", "--- Traffic ---" };
             foreach (GameObject root in scene.GetRootGameObjects())
             {
-                if (System.Array.IndexOf(dropRoots, root.name) >= 0 || root.GetComponent<KryticalNova.Economy.TradeZone>() != null)
+                if (System.Array.IndexOf(dropRoots, root.name) >= 0 || root.GetComponent<KryticalNova.World.TradeZone>() != null)
                 {
                     Object.DestroyImmediate(root);
                     continue;

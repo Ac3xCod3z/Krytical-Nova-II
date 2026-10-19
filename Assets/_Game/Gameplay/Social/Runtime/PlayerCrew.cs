@@ -11,6 +11,7 @@ using KryticalNova.Progression;
 using Unity.Collections;
 using Unity.Netcode;
 using UnityEngine;
+using KryticalNova.Wallet;
 
 namespace KryticalNova.Social
 {
@@ -33,7 +34,7 @@ namespace KryticalNova.Social
         private PlayerCharacterProgression progression;
         private PlayerWeaponClass weaponClass;
         private PlayerChat chat;
-        private PlayerWallet wallet;
+        private IWallet wallet;
         private PlayerSaveAgent saveAgent;
         private bool arrived;
 
@@ -55,7 +56,7 @@ namespace KryticalNova.Social
         public static PlayerCrew Local => LocalPlayer.Get<PlayerCrew>();
 
         public CrewSettings Settings => settings;
-        public PlayerWallet Wallet => wallet;
+        public IWallet Wallet => wallet;
         public string CharacterId => identity != null ? identity.CharacterId : string.Empty;
         public string MemberName => identity != null ? identity.CharacterName : name;
         public FactionId Faction => identity != null ? identity.Faction : FactionId.None;
@@ -89,7 +90,7 @@ namespace KryticalNova.Social
             progression = GetComponent<PlayerCharacterProgression>();
             weaponClass = GetComponent<PlayerWeaponClass>();
             chat = GetComponent<PlayerChat>();
-            wallet = GetComponent<PlayerWallet>();
+            wallet = GetComponent<IWallet>();
             saveAgent = GetComponent<PlayerSaveAgent>();
         }
 

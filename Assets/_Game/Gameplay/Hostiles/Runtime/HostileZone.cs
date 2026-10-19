@@ -6,6 +6,7 @@ using KryticalNova.Progression;
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.AI;
+using KryticalNova.World;
 
 namespace KryticalNova.Hostiles
 {

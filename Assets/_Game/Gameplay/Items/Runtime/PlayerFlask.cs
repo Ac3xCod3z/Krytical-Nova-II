@@ -6,6 +6,7 @@ using KryticalNova.Persistence;
 using KryticalNova.Progression;
 using Unity.Netcode;
 using UnityEngine;
+using KryticalNova.Wallet;
 
 namespace KryticalNova.Items
 {
@@ -24,7 +25,7 @@ namespace KryticalNova.Items
 
         private PlayerInventory inventory;
         private PlayerResources resources;
-        private PlayerWallet wallet;
+        private IWallet wallet;
         private PlayerSaveAgent saveAgent;
 
         private float flowLeft;      // Flux still to come from the drink taken
@@ -41,7 +42,7 @@ namespace KryticalNova.Items
         {
             inventory = GetComponent<PlayerInventory>();
             resources = GetComponent<PlayerResources>();
-            wallet = GetComponent<PlayerWallet>();
+            wallet = GetComponent<IWallet>();
             saveAgent = GetComponent<PlayerSaveAgent>();
         }
 

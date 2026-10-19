@@ -98,13 +98,22 @@ component once and keeps it, in place of a component search through the inventor
 not change, so none of their callers did. The fight music and the rain find the local player there too, without
 knowing Items. `LocalPlayerTests` checks the keeping, a new player starting afresh and a player that is gone.
 
-## Stage 4: the money types and the map markers
+## Stage 4: the money types and the map markers (built 19 Oct 2026)
 
-- **Wallet and ledger down.** `PlayerWallet`, `CredsSource`, `CredsSink` and `EconomyLedger` (`LedgerKinds` is already in
-  Core) are the rules every economy rework must keep (CLAUDE.md, milestone 3). Move them into a small **Wallet** sub-folder of
-  Economy that sits below Items, Progression and Social; Kiosks, trade and vendors stay above. This also prepares the
-  economy rework: the wallet and ledger stay fixed while the rules on top change.
-- **`TradeZone` into World.** It is a place on the map, and Combat, Hostiles and Social only ask "am I in one".
+- **The Wallet system** (`Gameplay/Wallet`, owner's name) holds what everything that pays needs, and nothing else:
+  - `CredsSource` and `CredsSink`, with their values unchanged, plus `WalletRules` (moved whole: it uses nothing);
+  - `IWallet`: Creds, can afford, spend;
+  - `LedgerNote`: a ledger line from a system below Economy.
+
+  `PlayerWallet` stays in Economy, implements `IWallet`, and still tallies every Cred. Nova, the Flask and Crews pay
+  through `IWallet`. A Crew founding writes its line through `LedgerNote`, which `EconomyLedger` fills at load and
+  writes as every other line. With it empty, the line is reported as an error, never dropped silently.
+  `LedgerNoteTests` checks it is filled. The save service and the database are untouched: the economy rework keeps
+  `SaveTogether` and the ledger as the owner asked.
+- **`TradeZone` moved to World** (with its `.meta`; the starter town's two markers keep working): it is a place on the
+  map, and Combat, Hostiles and Social only ask whether a point is neutral ground.
+
+Economy no longer has a loop with Items, Progression or Social; seven two-way pairs remain.
 
 ## Stage 5: the remaining loops (one or two files each)
 

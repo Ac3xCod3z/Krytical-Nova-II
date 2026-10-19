@@ -1,6 +1,6 @@
 using System;
 
-namespace KryticalNova.Economy
+namespace KryticalNova.Wallet
 {
     /// <summary>Where Creds come into a wallet from. Append only: the ledger is keyed on these.</summary>
     public enum CredsSource : byte

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using KryticalNova.Items;
+using KryticalNova.Wallet;
 
 namespace KryticalNova.Economy
 {

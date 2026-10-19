@@ -3,6 +3,7 @@ using KryticalNova.Items;
 using KryticalNova.Persistence;
 using KryticalNova.Player;
 using UnityEngine;
+using KryticalNova.Wallet;
 
 namespace KryticalNova.Economy
 {
@@ -16,6 +17,13 @@ namespace KryticalNova.Economy
     /// </summary>
     public static class EconomyLedger
     {
+        // Systems below Economy (a Crew founding) write their lines through LedgerNote, which lands here.
+#if UNITY_EDITOR
+        [UnityEditor.InitializeOnLoadMethod]
+#endif
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void FillLedgerNote() => LedgerNote.Writer = (player, kind, note) => Keep(Line(player, kind, null, note));
+
         /// <summary>A line for <paramref name="player"/>, naming <paramref name="other"/> when there is one; null while nothing is loaded.</summary>
         public static LedgerEntry Line(Component player, string kind, Component other = null, string note = null)
         {

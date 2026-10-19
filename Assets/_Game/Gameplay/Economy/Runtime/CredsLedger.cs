@@ -1,6 +1,7 @@
 using System;
 using System.Text;
 using UnityEngine;
+using KryticalNova.Wallet;
 
 namespace KryticalNova.Economy
 {

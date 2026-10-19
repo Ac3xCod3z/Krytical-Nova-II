@@ -8,6 +8,7 @@ using KryticalNova.Social;
 using KryticalNova.UI.Hud;
 using UnityEngine;
 using UnityEngine.UIElements;
+using KryticalNova.World;
 
 namespace KryticalNova.UI
 {

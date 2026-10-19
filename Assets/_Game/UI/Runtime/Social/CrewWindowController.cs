@@ -12,6 +12,7 @@ using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UIElements;
+using KryticalNova.Wallet;
 
 namespace KryticalNova.UI
 {

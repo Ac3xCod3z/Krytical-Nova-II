@@ -501297,7 +501297,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: ba3b96fb9db20214db25e1b737287660, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Economy.TradeZone
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.World.TradeZone
   zoneName: Starter Town
   size: {x: 220, y: 220}
   allowKiosks: 0
@@ -881251,7 +881251,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: ba3b96fb9db20214db25e1b737287660, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Economy.TradeZone
+  m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.World.TradeZone
   zoneName: Central Plaza
   size: {x: 60, y: 60}
   allowKiosks: 1

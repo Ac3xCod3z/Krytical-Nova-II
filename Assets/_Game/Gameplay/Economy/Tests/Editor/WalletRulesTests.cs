@@ -2,6 +2,7 @@ using KryticalNova.Economy;
 using KryticalNova.Items;
 using NUnit.Framework;
 using UnityEngine;
+using KryticalNova.Wallet;
 
 namespace KryticalNova.Tests
 {

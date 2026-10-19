@@ -8,6 +8,7 @@ using KryticalNova.NPC;
 using KryticalNova.Progression;
 using Unity.Netcode;
 using UnityEngine;
+using KryticalNova.Wallet;
 
 namespace KryticalNova.Forge
 {

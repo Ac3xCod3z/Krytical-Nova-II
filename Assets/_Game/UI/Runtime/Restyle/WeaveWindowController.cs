@@ -9,6 +9,7 @@ using KryticalNova.Restyle;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UIElements;
+using KryticalNova.Wallet;
 
 namespace KryticalNova.UI
 {
