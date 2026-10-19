@@ -77,6 +77,29 @@ All of that stays. What changes is underneath.
 7. **Real accounts.** Unity Player Accounts on the launcher build, the end of anonymous accounts outside local tests,
    Steam linking ready for the Steam build, and the proof that the Nova Store's web sign-in is the same account.
 
+### As built
+
+**Milestone 1 (18 Oct 2026): Postgres, the save service, the game's side.**
+- Postgres 18.6 on the owner's PC, a Windows service that starts with Windows, listening on this PC only. Two
+  databases: `krytical_nova` (the real saves) and `krytical_nova_test` (tests and the measure server only); one login,
+  `krytical_save`, made by `Persistence/Service~/Setup Database.bat` (secrets in `Documents\KryticalNova-Secrets`).
+- The save service (`Persistence/Service~/SaveService`, .NET 10, published as one exe beside the server by a server
+  build): save documents with a version each (a write naming an older version is refused), a lock per account that one
+  server holds at a time and that runs out three minutes after the server stops renewing it, a key on every request,
+  `/health`. Real on port 7801; `--test` on 7802.
+- The game's side, `ServiceSaveStore` behind `ISaveStore`: writes on a thread of its own (no frame waits), the version
+  sent with each write, the account locked when a player's character loads and let go only after their last save
+  reached the service, a health check every 10 seconds (the control page's **Saves** chip). `ServerSave` uses it when
+  `server-settings.json` names `saveService`; a server set to use it does not open without it. `Start Server.bat`
+  starts the save service the settings name (7801 real, 7802 test). New measure servers use the test saves.
+- Not yet: the account is still one document (milestone 2 splits it into characters and parts, for byte-sized
+  autosaves); the real server still saves to files (it switches once milestone 2 carries its saves across).
+- *Tried:* the service's own check (14 of 14: no key or a wrong key refused, a stale write refused, the lock taken,
+  refused to another server, renewed and let go); `ServiceSaveStoreTests` 6 of 6 against the test service; EditMode
+  1000 of 1000. End to end on the measure server with the test saves: the Editor joined as Tolan, the account was in
+  `krytical_nova_test` (17 parts, 3 KB, saved on joining and by the autosave), its lock held by the server; on leaving
+  it was saved once more and the lock let go at once.
+
 ## Decisions to make at the start of this phase (as written 11 Oct 2026)
 
 1. **Database.** Recommended: our own **Postgres**, because a trade, a Kiosk sale and a unique name each
