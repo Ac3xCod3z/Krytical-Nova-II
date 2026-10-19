@@ -70,7 +70,7 @@ namespace KryticalNova.Networking
 #else
             bool testing = Application.isEditor && (EditorCloneProfile() != null || EditorTestSession.JoinOnly);
             // Playing on this PC alone keeps the made-up account; joining a server sets the proven one (JoinChosenServer).
-            KryticalNova.CharacterCreation.CharacterSession.VerifiedAccountId = null;
+            KryticalNova.Core.LocalAccount.VerifiedId = null;
             if (JoinFlow.Target != null && !testing)
                 StartCoroutine(JoinChosenServer(JoinFlow.Target));
             else if (autoStartInEditor && Application.isEditor && !Application.isBatchMode)
@@ -101,7 +101,7 @@ namespace KryticalNova.Networking
             if (signIn.IsFaulted || !signIn.Result)
                 relayProblem = "Could not sign in to Unity, which the server needs to know who you are. Check your internet connection and try again.";
             else // the server keeps this player's saves under the same id: the game's own copy follows it
-                KryticalNova.CharacterCreation.CharacterSession.VerifiedAccountId = AccountIds.FromUnityPlayer(AuthenticationService.Instance.PlayerId);
+                KryticalNova.Core.LocalAccount.VerifiedId = AccountIds.FromUnityPlayer(AuthenticationService.Instance.PlayerId);
             if (relayProblem != null) started = false;
             else if (server.ViaRelay)
             {
@@ -237,7 +237,7 @@ namespace KryticalNova.Networking
                 float giveUp = Time.realtimeSinceStartup + 15f;
                 while (!signIn.IsCompleted && Time.realtimeSinceStartup < giveUp) yield return null;
                 if (signIn.IsCompleted && !signIn.IsFaulted && signIn.Result)
-                    KryticalNova.CharacterCreation.CharacterSession.VerifiedAccountId = AccountIds.FromUnityPlayer(AuthenticationService.Instance.PlayerId);
+                    KryticalNova.Core.LocalAccount.VerifiedId = AccountIds.FromUnityPlayer(AuthenticationService.Instance.PlayerId);
             }
             var retry = new WaitForSecondsRealtime(AutoJoinRetrySeconds);
             while (true)
@@ -522,7 +522,7 @@ namespace KryticalNova.Networking
             string token = UnityServices.State == ServicesInitializationState.Initialized && AuthenticationService.Instance.IsSignedIn
                 ? AuthenticationService.Instance.AccessToken : string.Empty;
             nm.NetworkConfig.ConnectionData = JoinRules.Payload(GameBuild.Version, Application.isEditor, token,
-                KryticalNova.CharacterCreation.CharacterSession.MadeUpAccountId);
+                KryticalNova.Core.LocalAccount.MadeUpId);
             nm.ConnectionApprovalCallback = Approve;
             if (maxPlayersNow <= 0) maxPlayersNow = defaultMaxPlayers;
         }
@@ -670,8 +670,7 @@ namespace KryticalNova.Networking
             ServerLaunchOptions options = ServerLaunchOptions.LoadForThisServer();
             // Saves through the save service (online phase 4): without it the server does not open, rather than quietly
             // saving somewhere else (Start Server.bat starts the service first).
-            if (options.UsesSaveService && KryticalNova.Persistence.ServerSave.Store is KryticalNova.Persistence.ServiceSaveStore service &&
-                !service.Reachable(out string savesProblem))
+            if (options.UsesSaveService && ServerHooks.Saves != null && !ServerHooks.Saves.ServiceReachable(out string savesProblem))
             {
                 ReportError($"[Server] The saves cannot be reached: {savesProblem}. Start the save service (Start Server.bat starts it " +
                             $"from the SaveService folder beside the server's), then start the server again. Nobody can join until then.");
@@ -706,7 +705,7 @@ namespace KryticalNova.Networking
             };
             // Unity's sign-in keys, fetched now so the first player is not kept waiting (online phase 2).
             UnityKeys.EnsureAsync();
-            KryticalNova.Persistence.ServerSave.CarryOverEnabled = options.carryOverOldSaves;
+            if (ServerHooks.Saves != null) ServerHooks.Saves.CarryOverEnabled = options.carryOverOldSaves;
             ServerReach.Begin(options);
             var transport = nm.GetComponent<UnityTransport>();
             if (options.UsesRelay)
@@ -797,62 +796,11 @@ namespace KryticalNova.Networking
         }
 #endif
 
-        private const string ProfileArgument = "-profile";
-        private const int MaxProfileLength = 30;
+        /// <summary>The name that keeps this running copy of the game apart from others on the same machine (<see cref="KryticalNova.Core.LocalProfile.Name"/>).</summary>
+        public static string LocalProfile() => KryticalNova.Core.LocalProfile.Name();
 
-        /// <summary>
-        /// The name that keeps this running copy of the game apart from others on the same machine: its sign-in,
-        /// its saved characters and its interface settings. A build started with "-profile &lt;name&gt;" uses that
-        /// name; a Multiplayer Play Mode clone uses its own (<see cref="EditorCloneProfile"/>). Null otherwise,
-        /// which is the machine's default save.
-        /// </summary>
-        public static string LocalProfile()
-        {
-            string[] args = Environment.GetCommandLineArgs();
-            for (int i = 0; i < args.Length - 1; i++)
-            {
-                if (!string.Equals(args[i], ProfileArgument, StringComparison.OrdinalIgnoreCase)) continue;
-                string named = CleanProfile(args[i + 1]);
-                if (named != null) return named;
-            }
-            return EditorCloneProfile();
-        }
-
-        /// <summary>
-        /// Editor instances cloned for multiplayer testing (Multiplayer Play Mode virtual players) share this
-        /// machine's sign-in cache. Each gets its own authentication profile, so they are different players.
-        /// Also used to keep each clone's saved characters apart. Null in the main Editor and in builds.
-        /// </summary>
-        public static string EditorCloneProfile()
-        {
-#if UNITY_EDITOR
-            const string cloneFolder = "/Library/VP/";
-            string path = Application.dataPath.Replace('\\', '/');
-            int at = path.IndexOf(cloneFolder, StringComparison.OrdinalIgnoreCase);
-            if (at < 0) return null;
-
-            string id = path.Substring(at + cloneFolder.Length);
-            int end = id.IndexOf('/');
-            if (end >= 0) id = id.Substring(0, end);
-
-            return CleanProfile(id);
-#else
-            return null;
-#endif
-        }
-
-        // Authentication profiles accept letters, digits, '-' and '_', up to 30 characters.
-        private static string CleanProfile(string raw)
-        {
-            if (string.IsNullOrEmpty(raw)) return null;
-            var profile = new System.Text.StringBuilder(MaxProfileLength);
-            foreach (char c in raw)
-            {
-                if (profile.Length == MaxProfileLength) break;
-                if (char.IsLetterOrDigit(c) || c == '-' || c == '_') profile.Append(c);
-            }
-            return profile.Length > 0 ? profile.ToString() : null;
-        }
+        /// <summary>A Multiplayer Play Mode clone's own profile, null elsewhere (<see cref="KryticalNova.Core.LocalProfile.EditorClone"/>).</summary>
+        public static string EditorCloneProfile() => KryticalNova.Core.LocalProfile.EditorClone();
 
         /// <summary>
         /// The port a local session really uses: the one asked for, else the default. An Editor test session

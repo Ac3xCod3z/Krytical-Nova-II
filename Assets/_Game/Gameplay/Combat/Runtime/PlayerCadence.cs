@@ -1,6 +1,5 @@
 using KryticalNova.Networking;
 using System;
-using KryticalNova.Audio;
 using KryticalNova.Core;
 using KryticalNova.Progression;
 using Unity.Netcode;
@@ -33,7 +32,7 @@ namespace KryticalNova.Combat
         public CadenceFate Fate;
         /// <summary>Where in <see cref="Track"/> the press fell, in beats since the track's first.</summary>
         public double Beats;
-        public MusicTrack Track;
+        public ScriptableObject Track;
         /// <summary>Game time (<see cref="Time.time"/>) the server heard of it.</summary>
         public float At;
     }
@@ -172,12 +171,12 @@ namespace KryticalNova.Combat
         {
             if (!IsMine || settings == null || !settings.enabled) return;
             if (skill == null || !skill.IsAttack || skill.IsCharged) return;
-            MusicConductor conductor = MusicConductor.Instance;
+            IBeatClock clock = BeatClock.Current;
             // No beat for this player (out of a fight, between two tracks, a zone with no fight music): nothing to say.
-            if (conductor == null || !CombatBeat.HasBeat || CombatBeat.Live01 < HeardFrom) return;
+            if (clock == null || !clock.HasBeat || clock.Live01 < HeardFrom) return;
 
             // The moment of the press on the shared clock, as this player heard the beat.
-            double pressedAt = conductor.Now - CombatBeat.ClockLagSeconds;
+            double pressedAt = clock.Now - clock.ClockLagSeconds;
             if (Decides) ServerNotePress(skill.skillId, pressedAt);
             else PressRpc(skill.skillId, pressedAt);
         }
@@ -199,17 +198,11 @@ namespace KryticalNova.Combat
             SkillDefinitionSO skill = skills != null ? skills.GetSkill(skillId) : null;
             if (skill == null || !skill.IsAttack || skill.IsCharged) return;
 
-            MusicConductor conductor = MusicConductor.Instance;
-            double now = conductor != null ? conductor.Now : 0.0;
-            double error = 0.0, beats = 0.0, position = 0.0;
-            MusicTrack track = null;
-            bool hasBeat = conductor != null && conductor.TryLocate(pressedAt, out track, out _, out position);
-            if (hasBeat)
-            {
-                double first = conductor.FirstBeatOf(track);
-                error = BeatMath.ErrorSeconds(position, first, track.BeatSeconds);
-                beats = BeatMath.Beats(position, first, track.BeatSeconds);
-            }
+            IBeatClock clock = BeatClock.Current;
+            double now = clock != null ? clock.Now : 0.0;
+            double error = 0.0, beats = 0.0;
+            ScriptableObject track = null;
+            bool hasBeat = clock != null && clock.TryBeatAt(pressedAt, out track, out error, out beats);
             CadenceVerdict verdict = CadenceRules.Judge(settings, combat != null && combat.InCombat, hasBeat, now, pressedAt, error);
 
             var press = new CadencePress

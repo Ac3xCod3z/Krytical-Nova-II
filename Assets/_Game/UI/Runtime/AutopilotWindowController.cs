@@ -6,6 +6,7 @@ using KryticalNova.Player;
 using KryticalNova.Progression;
 using UnityEngine;
 using UnityEngine.UIElements;
+using KryticalNova.Core;
 
 namespace KryticalNova.UI
 {

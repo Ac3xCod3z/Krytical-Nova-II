@@ -62,17 +62,18 @@ and line.
   - `PlayerInventory` and `PlayerIdentity` get their tests with the stages that move them (3 and 5), where the
     behaviour being kept is clear.
 
-## Stage 1: the uphill links (8 links, about 14 files)
+## Stage 1: the uphill links (built 19 Oct 2026)
 
-| Link | Fix |
+All 8 are cut: no system uses a system above it any more, and the two-way pairs fell from 21 to 13. What moved, and
+the few hooks that replaced a reach upward:
+
+| Link | What was done |
 |---|---|
-| Core → Progression (`ICombatFeedbackSink` uses `DamageResult`) | Move `DamageResult` into Core. It is a plain result struct. |
-| Networking → Player / Progression / Factions / Social / Persistence (`ServerControlPage`, `ServerBans`, `ServerRecords`, `SecurityFlags`, `ServerLifetime`) | These are server administration, not networking. Move `Networking/Runtime/Server/` and `Networking/Runtime/Safety/` into a **Server** system that sits above gameplay (it reads players, saves and chat by design). |
-| Networking → Persistence / CharacterCreation (`NetworkConnectionManager` uses `ServerSave`, `CharacterSession`) | Networking raises events it owns (a client joined, the server is stopping). Persistence and CharacterCreation subscribe at start-up. |
-| Networking → Player (`NetworkDebugHUD` uses `KeyBindings`) | `KeyBindings` is input settings: move it into Core (Progression's `PlayerSkillHotbar` uses it too). |
-| Combat → Audio (`PlayerCadence` uses `MusicConductor`, `BeatMath`, `CombatBeat`, `MusicTrack`) | The beat arithmetic is game rules the server also checks: move `BeatMath`, `CombatBeat` and the `MusicTrack` data down into Combat. `MusicConductor` stays in Audio and plugs in through one small `IBeatClock` interface that Combat owns. |
-
-Result: Core knows no gameplay, and Networking is transport, sessions and `RpcBudget` only.
+| Core → Progression (`ICombatFeedbackSink` used `DamageResult`) | `DamageResult` moved to `Core/Runtime/DamageResult.cs` (namespace `KryticalNova.Core`). |
+| Networking → Player (`NetworkDebugHUD` used `KeyBindings`) and Progression → Player (the hotbar) | `KeyBindings` moved to Core with its `.meta`. What it needed from Networking, the machine profile's name, moved to Core too (`LocalProfile`); `NetworkConnectionManager.LocalProfile()` / `EditorCloneProfile()` still answer. |
+| Networking → CharacterCreation (the signed-in account id) | The account id (proven by sign-in, else made up per profile) moved to Core as `LocalAccount`; `CharacterSession.AccountId` / `VerifiedAccountId` / `MadeUpAccountId` still answer. |
+| Networking → Player / Progression / Factions / Social / Persistence (security flags, records, bans, the control page, the safe stop, the start) | One file of hooks Networking owns, `ServerHooks`: who a player is (`DescribePlayer`, filled by Player's `ServerPlayerFacts`), announcing (`Announce`, filled by Social's `ServerAnnouncer`) and the saves (`IServerSaves`, filled by Persistence's `ServerSaveHooks`, each call going straight to `ServerSave` / `ServerBackups` as before). They are filled at load (and in the Editor, for EditMode tests); `ServerHooksTests` checks that. Moving the server's administration up into a system of its own was looked at and dropped: the connection manager starts all of it, so every move only made a new uphill link. |
+| Combat → Audio (`PlayerCadence` read `MusicConductor`, `CombatBeat`, `BeatMath`, `MusicTrack`) | Combat owns a small `IBeatClock` (`Gameplay/Combat/Runtime/IBeatClock.cs`); `MusicConductor` implements it and registers where it sets its own `Instance`. A Cadence press keeps its track as a plain asset reference. |
 
 ## Stage 2: split Progression into its two halves (breaks 3 loops)
 

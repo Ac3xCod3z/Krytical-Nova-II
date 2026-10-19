@@ -1,4 +1,5 @@
 using System;
+using KryticalNova.Combat;
 using Unity.Netcode;
 using UnityEngine;
 
@@ -33,7 +34,7 @@ namespace KryticalNova.Audio
     /// </summary>
     [DisallowMultipleComponent]
     [DefaultExecutionOrder(-45)]
-    public sealed class MusicConductor : NetworkBehaviour
+    public sealed class MusicConductor : NetworkBehaviour, IBeatClock
     {
         public static MusicConductor Instance { get; private set; }
 
@@ -63,16 +64,19 @@ namespace KryticalNova.Audio
         {
             if (Instance != null && Instance != this) return;
             Instance = this;
+            BeatClock.Register(this);
         }
 
         private void OnEnable()
         {
             if (Instance == null) Instance = this;
+            if (Instance == this) BeatClock.Register(this);
         }
 
         public override void OnDestroy()
         {
             if (Instance == this) Instance = null;
+            BeatClock.Unregister(this);
             base.OnDestroy();
         }
 
@@ -126,6 +130,23 @@ namespace KryticalNova.Audio
 
         /// <summary>The time in a track of the beat every other is counted from, with the GM's nudge.</summary>
         public double FirstBeatOf(MusicTrack track) => track != null ? track.firstBeatSeconds + state.Nudge : 0.0;
+
+        // Cadence reads the beat through IBeatClock (Combat), so the fight's rules do not depend on Audio.
+        bool IBeatClock.HasBeat => CombatBeat.HasBeat;
+        float IBeatClock.Live01 => CombatBeat.Live01;
+        double IBeatClock.ClockLagSeconds => CombatBeat.ClockLagSeconds;
+
+        bool IBeatClock.TryBeatAt(double at, out ScriptableObject track, out double errorSeconds, out double beats)
+        {
+            errorSeconds = beats = 0.0;
+            bool located = TryLocate(at, out MusicTrack found, out _, out double position);
+            track = found;
+            if (!located) return false;
+            double first = FirstBeatOf(found);
+            errorSeconds = BeatMath.ErrorSeconds(position, first, found.BeatSeconds);
+            beats = BeatMath.Beats(position, first, found.BeatSeconds);
+            return true;
+        }
 
         /// <summary>
         /// Seconds between clock time <paramref name="at"/> and the nearest beat of what is playing then: negative

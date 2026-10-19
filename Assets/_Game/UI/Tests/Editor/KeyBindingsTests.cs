@@ -3,6 +3,7 @@ using NUnit.Framework;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using KryticalNova.Core;
 
 namespace KryticalNova.Tests
 {

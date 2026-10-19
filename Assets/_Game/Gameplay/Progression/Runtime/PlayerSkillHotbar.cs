@@ -97,7 +97,7 @@ namespace KryticalNova.Progression
 
         private void Start()
         {
-            KryticalNova.Player.KeyBindings.ApplyTo(playerInput.actions); // the keys this player chose in Settings
+            KryticalNova.Core.KeyBindings.ApplyTo(playerInput.actions); // the keys this player chose in Settings
             commandMap = playerInput.actions.FindActionMap(CommandMapName, true);
             gameplayMap = playerInput.actions.FindActionMap(GameplayMapName, true);
             for (int index = 0; index < SlotCount; index++)
@@ -117,7 +117,7 @@ namespace KryticalNova.Progression
             keyLabelsRead = true;
             for (int index = 0; index < SlotCount; index++)
             {
-                string label = slotActions[index] != null ? KryticalNova.Player.KeyBindings.Label(slotActions[index]) : string.Empty;
+                string label = slotActions[index] != null ? KryticalNova.Core.KeyBindings.Label(slotActions[index]) : string.Empty;
                 SlotKeyLabels[index] = string.IsNullOrEmpty(label) ? DefaultKeyLabels[index] : label;
             }
             Changed?.Invoke();
@@ -127,7 +127,7 @@ namespace KryticalNova.Progression
         {
             commandMap?.Enable();
             if (combatSkills != null) combatSkills.ActiveClassChanged += OnActiveClassChanged;
-            KryticalNova.Player.KeyBindings.Changed += OnKeyBindingsChanged;
+            KryticalNova.Core.KeyBindings.Changed += OnKeyBindingsChanged;
         }
 
         private void OnDisable()
@@ -135,7 +135,7 @@ namespace KryticalNova.Progression
             EndCharge(false);
             commandMap?.Disable();
             if (combatSkills != null) combatSkills.ActiveClassChanged -= OnActiveClassChanged;
-            KryticalNova.Player.KeyBindings.Changed -= OnKeyBindingsChanged;
+            KryticalNova.Core.KeyBindings.Changed -= OnKeyBindingsChanged;
         }
 
         private void OnKeyBindingsChanged()

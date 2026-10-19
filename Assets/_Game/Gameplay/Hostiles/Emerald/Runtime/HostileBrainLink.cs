@@ -2,6 +2,7 @@ using EmeraldAI;
 using KryticalNova.Progression;
 using UnityEngine;
 using UnityEngine.AI;
+using KryticalNova.Core;
 
 namespace KryticalNova.Hostiles.Emerald
 {

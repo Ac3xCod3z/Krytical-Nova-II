@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Text;
-using KryticalNova.Player;
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -121,8 +120,8 @@ namespace KryticalNova.Networking
                 Transform body = client.PlayerObject.transform;
                 flag.Position = body.position;
                 flag.Map = body.gameObject.scene.name;
-                if (body.TryGetComponent(out PlayerIdentity identity) && !string.IsNullOrEmpty(identity.CharacterName))
-                    flag.Character = identity.CharacterName;
+                string character = ServerHooks.Describe(body.gameObject).Character;
+                if (!string.IsNullOrEmpty(character)) flag.Character = character;
             }
         }
 

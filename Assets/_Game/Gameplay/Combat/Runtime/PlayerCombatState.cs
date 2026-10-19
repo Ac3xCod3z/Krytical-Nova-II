@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using KryticalNova.Progression;
 using Unity.Netcode;
 using UnityEngine;
+using KryticalNova.Core;
 
 namespace KryticalNova.Combat
 {
