@@ -20,7 +20,7 @@ script, which is then published to the link above. `--baseline` saves today's up
 ## Today
 
 <!-- map:summary -->
-Generated 19 Oct 2026, 12:03: 641 runtime scripts (119,348 lines) declaring 909 types (165 MonoBehaviours, 61 NetworkBehaviours, 87 ScriptableObject classes); 110 test scripts; 4025 prefabs, 46 scenes and 2579 assets read. 196 system-to-system links, of which 0 run uphill, 0 pairs of systems use each other both ways, and 0 links would have to go for the systems to form a clean stack. The largest tangle, classes that all reach each other through some chain of uses, holds 7 classes from 1 systems (Gameplay/Player 7, ...).
+Generated 19 Oct 2026, 12:42: 641 runtime scripts (119,332 lines) declaring 909 types (165 MonoBehaviours, 61 NetworkBehaviours, 87 ScriptableObject classes); 110 test scripts; 4025 prefabs, 46 scenes and 2579 assets read. 196 system-to-system links, of which 0 run uphill, 0 pairs of systems use each other both ways, and 0 links would have to go for the systems to form a clean stack. The largest tangle, classes that all reach each other through some chain of uses, holds 7 classes from 1 systems (Gameplay/Player 7, ...).
 <!-- /map:summary -->
 
 ## How to read it
@@ -55,26 +55,26 @@ Generated 19 Oct 2026, 12:03: 641 runtime scripts (119,348 lines) declaring 909 
 <!-- map:systems -->
 | System | Layer | Scripts | Lines | Uses (types) | Used by (types) | Instability | Tests | Types touched by a test |
 |---|---|---|---|---|---|---|---|---|
-| Core | Foundation | 44 | 3,604 | 0 | 183 | 0.0 | 4 | 13 of 31 |
+| Core | Foundation | 44 | 3,603 | 0 | 183 | 0.0 | 4 | 13 of 31 |
 | Networking | Infrastructure | 37 | 6,713 | 5 | 68 | 0.07 | 2 | 24 of 48 |
 | Rendering | Infrastructure | 14 | 2,809 | 1 | 26 | 0.04 | 0 | 1 of 18 |
 | Environment | Simulation | 6 | 834 | 0 | 2 | 0.0 | 0 | 0 of 6 |
 | Gameplay/Autopilot | Simulation | 11 | 1,448 | 41 | 12 | 0.77 | 3 | 6 of 12 |
 | Gameplay/Crafting | Simulation | 3 | 401 | 19 | 9 | 0.68 | 1 | 4 of 6 |
 | Gameplay/Forge | Simulation | 1 | 412 | 39 | 4 | 0.91 | 0 | 0 of 2 |
-| Gameplay/Hostiles | Simulation | 23 | 2,871 | 41 | 27 | 0.6 | 4 | 10 of 23 |
+| Gameplay/Hostiles | Simulation | 23 | 2,870 | 41 | 27 | 0.6 | 4 | 10 of 23 |
 | Gameplay/Housing | Simulation | 20 | 3,611 | 30 | 37 | 0.45 | 3 | 15 of 28 |
 | Gameplay/Restyle | Simulation | 3 | 823 | 40 | 5 | 0.89 | 0 | 0 of 3 |
 | Gameplay/Economy | Simulation | 23 | 4,085 | 56 | 46 | 0.55 | 9 | 14 of 37 |
 | Gameplay/Pets | Simulation | 12 | 1,445 | 33 | 32 | 0.51 | 4 | 13 of 19 |
-| Gameplay/Social | Simulation | 39 | 5,633 | 46 | 48 | 0.49 | 9 | 23 of 52 |
-| Gameplay/Combat | Simulation | 12 | 3,023 | 43 | 24 | 0.64 | 4 | 4 of 13 |
+| Gameplay/Social | Simulation | 39 | 5,631 | 46 | 48 | 0.49 | 9 | 23 of 52 |
+| Gameplay/Combat | Simulation | 12 | 3,022 | 43 | 24 | 0.64 | 4 | 4 of 13 |
 | Gameplay/Persistence | Simulation | 8 | 2,155 | 34 | 11 | 0.76 | 11 | 5 of 11 |
-| Gameplay/Player | Simulation | 22 | 9,524 | 56 | 37 | 0.6 | 2 | 9 of 24 |
+| Gameplay/Player | Simulation | 22 | 9,522 | 56 | 37 | 0.6 | 2 | 9 of 24 |
 | Gameplay/CharacterCreation | Simulation | 25 | 2,819 | 27 | 54 | 0.33 | 8 | 20 of 25 |
-| Gameplay/Items | Simulation | 58 | 10,405 | 45 | 176 | 0.2 | 12 | 38 of 80 |
+| Gameplay/Items | Simulation | 58 | 10,400 | 45 | 176 | 0.2 | 12 | 38 of 80 |
 | World | Simulation | 33 | 5,693 | 9 | 35 | 0.2 | 1 | 7 of 39 |
-| Gameplay/Progression | Simulation | 46 | 7,907 | 23 | 197 | 0.1 | 6 | 27 of 58 |
+| Gameplay/Progression | Simulation | 46 | 7,903 | 23 | 197 | 0.1 | 6 | 27 of 58 |
 | Gameplay/Wallet | Simulation | 3 | 132 | 0 | 18 | 0.0 | 0 | 2 of 2 |
 | Gameplay/NPC | Simulation | 2 | 227 | 5 | 17 | 0.23 | 0 | 0 of 2 |
 | Gameplay/Factions | Simulation | 6 | 169 | 0 | 25 | 0.0 | 0 | 1 of 3 |

@@ -1,5 +1,4 @@
 using KryticalNova.Core;
-using KryticalNova.Social;
 using UnityEngine;
 
 namespace KryticalNova.Items

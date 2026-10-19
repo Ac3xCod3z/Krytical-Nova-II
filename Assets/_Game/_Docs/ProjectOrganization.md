@@ -258,7 +258,8 @@ Every script in `_Game` must belong to an assembly (`.asmdef` or `.asmref`). Not
 
 | Assembly                          | Defined in                                     | Covers (via .asmref)                                                     |
 |-----------------------------------|------------------------------------------------|---------------------------------------------------------------------------|
-| `KryticalNova.Runtime`            | `Core/Runtime/`                                | Gameplay/{Combat,Items,NPC,Player,Progression,Factions,CharacterCreation,Social,Economy,Persistence,Pets,Forge,Crafting,Restyle,Housing}/Runtime, {Combat,Progression,Factions,CharacterCreation,Social,Economy,Pets,Items,Crafting,Housing}/Data, Networking/Runtime, Rendering/Runtime, World/Runtime, World/Data, Audio/Runtime, Audio/Data |
+| `KryticalNova.Runtime`            | `Core/Runtime/`                                | **Core only** since architecture stage 6 (19 Oct 2026): the contracts every system may use (sinks, `ClientPresentationRegistry`, `LocalPlayer`, `PlayerBodies`, `ServerChat`, the item-use and save contracts, `DamageResult`, `KeyBindings`, `LocalProfile`, `LocalAccount`). The name stayed so the assemblies above did not have to change it |
+| `KryticalNova.<System>` (22)      | `<System>/Runtime/`                            | One per system: Audio, Networking, Rendering, World, and Gameplay/{Autopilot, CharacterCreation, Combat, Crafting, Economy, Factions, Forge, Hostiles, Housing, Items, NPC, Persistence, Pets, Player, Progression, Restyle, Social, Wallet}. The system's `Data/` folder joins it with an asmref. Each references Core and only the systems below it (the Dependency Map's order); the compiler refuses a loop |
 | `KryticalNova.Vegetation.Grass`   | `Environment/Vegetation/Grass/Runtime/`        | Grass/Data. **No dependencies.** The model for future system assemblies |
 | `KryticalNova.UI`                 | `UI/Runtime/`                                  | Depends on Runtime and Vegetation.Grass (the graphics settings set grass density). Excluded from dedicated server (`!UNITY_SERVER`) |
 | `KryticalNova.GameFeel`           | `GameFeel/Runtime/`                            | GameFeel/Data. FEEL-driven juice behind `Core/IGameFeelSink`. Depends on Runtime, UI, FEEL. `!UNITY_SERVER` |
@@ -292,9 +293,13 @@ Every script in `_Game` must belong to an assembly (`.asmdef` or `.asmref`). Not
 | `KryticalNova.Icons.Tests.Editor` | `Icons/Tests/Editor/`                          | EditMode tests (the comic icon treatment, the icon library's rules, and that every skill and item shows an icon of its own). Depends on Runtime and Editor |
 | `KryticalNova.GameFeel.Tests.Editor` | `GameFeel/Tests/Editor/`                    | EditMode tests (the motion smear's rules against the walk and run speeds, the slow motion of a critical kill, the smear feedbacks on the game feel prefab; how hits look: the rules, a look of its own for every weapon class, no comic effect shared between two moments, the lettering layer and its pass, the pool's timing; the feel of the menus: a player for every menu moment, held by every menu scene and by the world, and a movement that leaves a thing where its animator put it). Depends on Runtime, GameFeel, UI. `!UNITY_SERVER` |
 
-**Adding code to an existing system:** drop the file in the right folder; the folder's asmref already covers it.
-**New system folder with code:** add an `.asmref` to `KryticalNova.Runtime` (runtime) or `KryticalNova.Editor`
-(editor), or, if it has no dependencies on the monolith, give it its own `.asmdef` like Grass.
+**Adding code to an existing system:** drop the file in the right folder; the folder's asmdef or asmref already covers it.
+**Using another system:** add its assembly to the system's `.asmdef` references, but only a system below it: if the compiler or
+`dependency_map.py --check` says it loops, the type belongs lower (Core, or the lower system), or the lower system owns an
+interface the higher one implements (`IWallet`, `IMeleeAttacker`, `IPlayerBody`...).
+**New system folder with code:** give its `Runtime/` an `.asmdef` named `KryticalNova.<System>` (copy a sibling's), referencing Core and
+the systems it uses; add it to the references of UI, GameFeel, DevTools, the Editor assemblies and the tests that use it. Editor code
+goes in `KryticalNova.Editor` through an asmref as before.
 
 ### Dependency direction (arrows point at what you may depend on)
 
@@ -316,20 +321,11 @@ Gameplay     World       Environment     Characters│
 - Audio and VFX react to gameplay events. No `FindObjectOfType<AudioManager>()` in gameplay code.
 - No circular references. Assembly boundaries make cycles a compile error, which is the point.
 
-### Assembly roadmap: splitting `KryticalNova.Runtime`
+### How the split was made
 
-The monolith can't be split yet because systems inside it use each other in loops. The **Dependency Map**
-(`Reference/Dependency-Map.md`, and its page) measures them: on 19 Oct 2026, 8 links ran uphill and 31 links had to go
-for the systems to form a clean stack. The staged plan to cut them is `Plans/architecture-decoupling-plan.md`. Re-run
-the map after any change that crosses systems; `--check` fails when a new uphill link or two-way pair appears. The
-first two cuts, from the original roadmap:
-
-1. **Core → Progression**: `Core/ICombatFeedbackSink` uses `Progression.DamageResult`. Move `DamageResult`
-   (or a slim struct) into Core, or move the sink interface into Progression.
-2. **Player ↔ Combat**: `PointAndClickPlayer` references `PlayerMeleeCombat` / `CombatHostility`, and Combat
-   references Player. Introduce an interface in the lower layer (e.g. `IMeleeAttacker` in Combat or Core).
-3. Then split: `KryticalNova.Core` → `.Networking` → `.Progression` → `.Combat` → `.Player` → `.Items`
-   → `.World` → `.Rendering`, verifying compile after each step.
+The monolith was split on 19 Oct 2026 (`Plans/architecture-decoupling-plan.md`, stages 0 to 6): first the loops between systems were
+cut until the Dependency Map (`Reference/Dependency-Map.md`) found none, then each system got its own assembly. Re-run the map after any
+change that crosses systems; `--check` fails when a new uphill link or two-way pair appears, or when a move breaks what an asset holds.
 
 ---
 

@@ -18,7 +18,7 @@ namespace KryticalNova.Items.Visuals
     {
         public const string PreviewLayerName = "UIPreview";
         internal const int PreviewRenderingLayer = 7;
-        internal const string DefaultRendererName = "UIPreview_Renderer";
+        public const string DefaultRendererName = "UIPreview_Renderer";
 
         /// <summary>
         /// How many of these stages are lit right now. Their lights are directional, so they reach every doll on the
@@ -116,7 +116,7 @@ namespace KryticalNova.Items.Visuals
         /// </summary>
         private void BuildStudioAmbient() => studioAmbient = StudioAmbient(ambientSky, ambientGround);
 
-        internal static MaterialPropertyBlock StudioAmbient(Color sky, Color ground)
+        public static MaterialPropertyBlock StudioAmbient(Color sky, Color ground)
         {
             var sh = new SphericalHarmonicsL2();
             Color mid = Color.Lerp(sky, ground, 0.5f);
@@ -392,7 +392,7 @@ namespace KryticalNova.Items.Visuals
             data.SetRenderer(RendererIndex(previewRendererName));
         }
 
-        internal static int RendererIndex(string previewRendererName)
+        public static int RendererIndex(string previewRendererName)
         {
             if (GraphicsSettings.currentRenderPipeline is UniversalRenderPipelineAsset urp)
             {
@@ -406,7 +406,7 @@ namespace KryticalNova.Items.Visuals
         private void BuildLights() => lightRig = StudioLights(transform, previewLayer);
 
         /// <summary>The three studio lights every preview doll is lit by. They light the preview layer only.</summary>
-        internal static GameObject StudioLights(Transform parent, int previewLayer)
+        public static GameObject StudioLights(Transform parent, int previewLayer)
         {
             var rig = new GameObject("Preview Lights");
             rig.transform.SetParent(parent, false);
@@ -444,7 +444,7 @@ namespace KryticalNova.Items.Visuals
         /// A stripped clone of a player's model under <paramref name="parent"/>: its look and animation only, no
         /// physics, IK, hitbox or networking.
         /// </summary>
-        internal static GameObject CloneDoll(CharacterAppearance sourceAppearance, Transform parent, out CharacterAppearance dollAppearance, out WeaponVisualMount dollWeapon)
+        public static GameObject CloneDoll(CharacterAppearance sourceAppearance, Transform parent, out CharacterAppearance dollAppearance, out WeaponVisualMount dollWeapon)
         {
             // Clone under an inactive holder so no Awake runs before the gameplay components are stripped.
             var holder = new GameObject("Doll Holder");
@@ -477,7 +477,7 @@ namespace KryticalNova.Items.Visuals
 
         private void ApplyPreviewLayers(GameObject root) => ApplyPreviewLayers(root, previewLayer, studioAmbient);
 
-        internal static void ApplyPreviewLayers(GameObject root, int previewLayer, MaterialPropertyBlock studioAmbient)
+        public static void ApplyPreviewLayers(GameObject root, int previewLayer, MaterialPropertyBlock studioAmbient)
         {
             if (root == null) return;
             foreach (var t in root.GetComponentsInChildren<Transform>(true)) t.gameObject.layer = previewLayer;

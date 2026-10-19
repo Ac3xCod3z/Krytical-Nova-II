@@ -1,6 +1,5 @@
 using System.Collections;
 using System.Collections.Generic;
-using KryticalNova.Combat;
 using KryticalNova.Core;
 using KryticalNova.Rendering;
 using UnityEngine;

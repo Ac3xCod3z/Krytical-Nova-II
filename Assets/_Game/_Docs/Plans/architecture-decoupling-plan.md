@@ -1,7 +1,7 @@
 # Architecture decoupling plan
 
 **Status: agreed 19 Oct 2026 (owner's decisions at the end); the owner then handed the stages over to be done in
-order without asking. Stage 0 is built; the rest follow, one PR each.**
+order without asking. Stages 0 to 6 are built, one PR each; 7 and 8 follow.**
 
 The aim: changing one system should not force changes in a dozen others. The game must keep working after every step,
 and ScriptableObjects must stay the way designers tune the game. The evidence for every step is in
@@ -132,14 +132,29 @@ Every two-way pair is gone and the map finds **no link left to cut**: each syste
 
 The map also stopped taking a method named like a class (`ServerSave(index)` in the loadouts) for that class.
 
-## Stage 6: one assembly per system
+## Stage 6: one assembly per system (built 19 Oct 2026)
 
-Once the map shows no loop left between two systems, each system's `.asmref` becomes its own `.asmdef`. The order
-follows the map's layers, bottom first: Core, Networking, Stats, Wallet, Items, Player, Combat, World, Progression, the
-rest. After each one: compile, run the tests, run `--check`.
+`KryticalNova.Runtime` is now Core alone (its name kept, so nothing above had to rename it). The 22 systems it held
+are assemblies of their own, `KryticalNova.<System>`:
+- Audio, Networking, Rendering and World;
+- Autopilot, CharacterCreation, Combat, Crafting, Economy, Factions, Forge, Hostiles, Housing, Items, NPC, Persistence,
+  Pets, Player, Progression, Restyle, Social and Wallet.
 
-From then on the compiler, not this document, refuses a loop. Edit-time recompiles also get faster, because a change
-in UI or Economy no longer recompiles the whole 75k-line runtime assembly.
+How it was done:
+- Each system's `Runtime` asmref became its asmdef (history kept); its `Data` asmref joins it.
+- Each one references Core and the systems below it that it uses, so **the compiler now refuses a loop**.
+- UI, GameFeel, DevTools, the Editor assemblies and the tests reference all of them.
+
+Changes the split itself needed:
+- Leftover `using` lines for namespaces an assembly no longer sees were dropped, and six helpers of
+  `CharacterPreviewStage` became public (the portrait stage, now in CharacterCreation, shares them).
+- `PlayerSystemsSetup` finds a row's type through Unity's `TypeCache` instead of in `KryticalNova.Runtime` alone.
+- `compile_check.py` now hands each assembly only the assemblies it names, as Unity does, so it catches what Unity
+  would refuse.
+
+What this buys:
+- A change in one system recompiles that system and the ones above it, not 75k lines.
+- A reference that would make a loop is a compile error the moment it is written.
 
 ## Stage 7: design data back in the Inspector
 
