@@ -38,7 +38,7 @@ namespace KryticalNova.Social
         public event Action Changed;
 
         /// <summary>This machine's own player, or null.</summary>
-        public static PlayerContacts Local => PlayerInventory.Local != null ? PlayerInventory.Local.GetComponent<PlayerContacts>() : null;
+        public static PlayerContacts Local => LocalPlayer.Get<PlayerContacts>();
 
         public string CharacterId => identity != null ? identity.CharacterId : string.Empty;
         public string ContactName => identity != null ? identity.CharacterName : name;

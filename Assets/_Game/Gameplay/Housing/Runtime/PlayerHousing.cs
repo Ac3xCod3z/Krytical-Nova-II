@@ -63,7 +63,7 @@ namespace KryticalNova.Housing
 
         /// <summary>This machine's own player, or null.</summary>
         public static PlayerHousing Local =>
-            KryticalNova.Items.PlayerInventory.Local != null ? KryticalNova.Items.PlayerInventory.Local.GetComponent<PlayerHousing>() : null;
+            LocalPlayer.Get<PlayerHousing>();
 
         public HousingSettings Settings => settings;
         public FurnishingCatalog Catalog => catalog;

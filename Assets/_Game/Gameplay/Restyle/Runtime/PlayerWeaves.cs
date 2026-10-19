@@ -55,7 +55,7 @@ namespace KryticalNova.Restyle
         private static void ResetStatics() => GmAnywhere = false;
 
         /// <summary>The Weaves of the player this machine controls.</summary>
-        public static PlayerWeaves Local => PlayerInventory.Local != null ? PlayerInventory.Local.GetComponent<PlayerWeaves>() : null;
+        public static PlayerWeaves Local => LocalPlayer.Get<PlayerWeaves>();
 
         public EconomySettings Settings => settings;
         public PlayerEquipment Equipment => equipment;

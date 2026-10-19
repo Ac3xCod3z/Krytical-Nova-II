@@ -52,7 +52,7 @@ namespace KryticalNova.Social
         public event Action TagChanged;
 
         /// <summary>This machine's own player, or null.</summary>
-        public static PlayerCrew Local => PlayerInventory.Local != null ? PlayerInventory.Local.GetComponent<PlayerCrew>() : null;
+        public static PlayerCrew Local => LocalPlayer.Get<PlayerCrew>();
 
         public CrewSettings Settings => settings;
         public PlayerWallet Wallet => wallet;

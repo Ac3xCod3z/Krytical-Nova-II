@@ -3,7 +3,6 @@
  "uphill": [],
  "twoway": [
   "Gameplay/CharacterCreation <-> Gameplay/Items",
-  "Gameplay/Combat <-> Gameplay/Items",
   "Gameplay/Combat <-> Gameplay/Player",
   "Gameplay/Economy <-> Gameplay/Items",
   "Gameplay/Economy <-> Gameplay/Progression",
@@ -11,7 +10,6 @@
   "Gameplay/Hostiles <-> Gameplay/Pets",
   "Gameplay/Housing <-> Gameplay/Player",
   "Gameplay/Items <-> Gameplay/Persistence",
-  "Gameplay/Items <-> Gameplay/Progression",
   "Gameplay/Items <-> Gameplay/Social",
   "Gameplay/Player <-> World"
  ],

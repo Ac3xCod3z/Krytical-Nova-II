@@ -27,7 +27,7 @@ namespace KryticalNova.Economy
         public event Action Changed;
 
         /// <summary>This machine's own player, or null.</summary>
-        public static PlayerWallet Local => PlayerInventory.Local != null ? PlayerInventory.Local.GetComponent<PlayerWallet>() : null;
+        public static PlayerWallet Local => LocalPlayer.Get<PlayerWallet>();
 
         public EconomySettings Settings => settings;
         /// <summary>The balance. Known to the owner and where the game is decided; 0 on every other machine.</summary>

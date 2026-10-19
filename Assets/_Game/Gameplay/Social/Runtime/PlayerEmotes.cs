@@ -62,7 +62,7 @@ namespace KryticalNova.Social
         private float nextStanceCheck;
 
         /// <summary>The emotes of the player this machine controls.</summary>
-        public static PlayerEmotes Local => PlayerInventory.Local != null ? PlayerInventory.Local.GetComponent<PlayerEmotes>() : null;
+        public static PlayerEmotes Local => LocalPlayer.Get<PlayerEmotes>();
 
         public EmoteWheelSettings Settings => settings;
         /// <summary>The body the character was made with: it only performs motions made for that body.</summary>

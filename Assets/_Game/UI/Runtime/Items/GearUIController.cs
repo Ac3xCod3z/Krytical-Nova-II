@@ -1076,7 +1076,7 @@ namespace KryticalNova.UI
         /// </summary>
         private static string TaughtSkillLines(ItemDefinition def)
         {
-            PlayerCombatSkills skills = PlayerInventory.Local != null ? PlayerInventory.Local.GetComponent<PlayerCombatSkills>() : null;
+            PlayerCombatSkills skills = LocalPlayer.Get<PlayerCombatSkills>();
             SkillDefinitionSO skill = skills != null ? skills.SkillTaughtBy(def.itemId) : null;
             if (skill == null) return string.Empty;
             return $"<color={PrimaryColor}>{SkillKinds.KindLine(skill, 1)}</color>\n{SkillKinds.Describe(skill, 1)}";

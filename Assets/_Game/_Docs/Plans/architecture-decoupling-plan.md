@@ -89,15 +89,14 @@ that model out, the few features in Progression that reached upward were turned 
 
 Left for later stages: `PlayerSerums.Local` (stage 3) and Nova paying with the wallet (stage 4).
 
-## Stage 3: one way to find the local player
+## Stage 3: one way to find the local player (built 19 Oct 2026)
 
-Replace the 27 `static X Local => PlayerInventory.Local?.GetComponent<X>()` accessors with **one** `LocalPlayer`
-class in the Player system:
-- it is set when the local player spawns and cleared when it despawns;
-- it caches each component once.
-
-The accessors keep their names, so the 63 calling files do not change in this stage. Only their source moves off
-`PlayerInventory`. This is a runtime saving too: a search per call becomes a field read.
+`Core/Runtime/LocalPlayer.cs` holds the player this machine controls. `PlayerInventory` still decides who that is, as
+it always has, and sets it there; `LocalPlayer.Changed` fires just before `PlayerInventory.LocalChanged`. All 28
+`X.Local` accessors (wallet, trade, pet, chat, Crew, Serums, Nova...) now read `LocalPlayer.Get<X>()`, which finds a
+component once and keeps it, in place of a component search through the inventory on every call. Their names did
+not change, so none of their callers did. The fight music and the rain find the local player there too, without
+knowing Items. `LocalPlayerTests` checks the keeping, a new player starting afresh and a player that is gone.
 
 ## Stage 4: the money types and the map markers
 

@@ -35,7 +35,7 @@ namespace KryticalNova.Items
         private IBodyGestures gestures;
 
         /// <summary>This machine's own player, or null.</summary>
-        public static PlayerLoot Local => PlayerInventory.Local != null ? PlayerInventory.Local.GetComponent<PlayerLoot>() : null;
+        public static PlayerLoot Local => LocalPlayer.Get<PlayerLoot>();
 
         public float PickupKeyRange => pickupKeyRange;
         /// <summary>Seconds an item this player drops stays theirs alone.</summary>

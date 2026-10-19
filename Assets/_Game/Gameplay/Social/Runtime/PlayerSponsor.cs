@@ -58,7 +58,7 @@ namespace KryticalNova.Social
         public event Action Changed;
 
         /// <summary>This machine's own player, or null.</summary>
-        public static PlayerSponsor Local => PlayerInventory.Local != null ? PlayerInventory.Local.GetComponent<PlayerSponsor>() : null;
+        public static PlayerSponsor Local => LocalPlayer.Get<PlayerSponsor>();
 
         public SponsorSettings Settings => settings;
         public string CharacterId => identity != null ? identity.CharacterId : string.Empty;

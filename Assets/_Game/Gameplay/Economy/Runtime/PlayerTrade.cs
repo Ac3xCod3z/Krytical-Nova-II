@@ -99,7 +99,7 @@ namespace KryticalNova.Economy
         public event Action Changed;
 
         /// <summary>This machine's own player, or null.</summary>
-        public static PlayerTrade Local => PlayerInventory.Local != null ? PlayerInventory.Local.GetComponent<PlayerTrade>() : null;
+        public static PlayerTrade Local => LocalPlayer.Get<PlayerTrade>();
 
         public string TraderName => identity != null ? identity.CharacterName : name;
         public bool IsTrading => view.active;

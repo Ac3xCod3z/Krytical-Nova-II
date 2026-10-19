@@ -43,7 +43,7 @@ namespace KryticalNova.Crafting
         private static void ResetStatics() => GmAnywhere = false;
 
         /// <summary>The crafting of the player this machine controls.</summary>
-        public static PlayerCrafting Local => PlayerInventory.Local != null ? PlayerInventory.Local.GetComponent<PlayerCrafting>() : null;
+        public static PlayerCrafting Local => LocalPlayer.Get<PlayerCrafting>();
 
         public CraftingSettings Settings => settings;
         public PlayerInventory Inventory => inventory;

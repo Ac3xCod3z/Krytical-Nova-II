@@ -54,7 +54,7 @@ namespace KryticalNova.Social
         public event Action Changed;
 
         /// <summary>This machine's own player, or null.</summary>
-        public static PlayerFollow Local => PlayerInventory.Local != null ? PlayerInventory.Local.GetComponent<PlayerFollow>() : null;
+        public static PlayerFollow Local => LocalPlayer.Get<PlayerFollow>();
 
         /// <summary>Owner's view: the name of the member being followed, or empty.</summary>
         public string Following => shownTarget;
