@@ -59,6 +59,17 @@ namespace KryticalNova.Networking
         public string privateKeyFile = "";
         [Tooltip("Online phase 2: the speed limit on each kind of request a game sends (burst at once, then per second), how many ignored requests disconnect a game, and the longest text taken. Restart the server after a change.")]
         public CallLimits callLimits = new CallLimits();
+        [Tooltip("Online phase 4: the save service this server saves through (for example http://127.0.0.1:7801). Empty: the save folder, as before. The server will not start if the service does not answer.")]
+        public string saveService = "";
+        [Tooltip("The save service's key. Empty: Documents/KryticalNova-Secrets/save-service-key.txt of the Windows user running the server. Never shared.")]
+        public string saveServiceKeyFile = "";
+
+        /// <summary>True when this server saves through the save service (online phase 4) rather than files.</summary>
+        public bool UsesSaveService => !string.IsNullOrWhiteSpace(saveService);
+
+        /// <summary>The save service's key file in use.</summary>
+        public string SaveServiceKeyFile => !string.IsNullOrWhiteSpace(saveServiceKeyFile) ? saveServiceKeyFile
+            : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "KryticalNova-Secrets", "save-service-key.txt");
 
         /// <summary>The status port in use.</summary>
         public int StatusPort => statusPort > 0 ? statusPort : port + 1;

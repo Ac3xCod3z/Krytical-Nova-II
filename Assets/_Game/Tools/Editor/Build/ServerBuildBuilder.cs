@@ -186,12 +186,42 @@ namespace KryticalNova.EditorTools
             TestBuildBuilder.WriteSizeReport(report, scenes, $"Dedicated server ({os})", "Scripting backend: Mono, Dedicated Server target", ReportPath(os));
             bool ok = report.summary.result == BuildResult.Succeeded;
             if (ok) AddBesideTheServer(os, folder);
+            if (ok && os == Os.Windows) BuildSaveService(folder);
             if (ok) Debug.Log($"[Build] Dedicated server ({os}) written to {folder} ({TestBuildBuilder.Megabytes(report.summary.totalSize)}). Sizes: {ReportPath(os)}");
             else Debug.LogError($"[Build] Dedicated server ({os}) {report.summary.result}: {report.summary.totalErrors} errors. See {ReportPath(os)}");
             return ok;
         }
     
         /// <summary>The control page's files and fonts, and the start script.</summary>
+        private const string SaveServiceProject = "Assets/_Game/Gameplay/Persistence/Service~/SaveService/SaveService.csproj";
+
+        /// <summary>
+        /// Online phase 4: the save service, published as one exe into a SaveService folder beside the server's own (so a
+        /// new server build never replaces it while it runs), where Start Server.bat starts it. Kept as it was when it is
+        /// running or .NET is missing; the server still builds.
+        /// </summary>
+        private static void BuildSaveService(string serverFolder)
+        {
+            string output = Path.GetFullPath(Path.Combine(serverFolder, "..", "SaveService"));
+            try
+            {
+                var start = new System.Diagnostics.ProcessStartInfo("dotnet",
+                    $"publish \"{Path.GetFullPath(SaveServiceProject)}\" -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -o \"{output}\" --nologo")
+                { UseShellExecute = false, RedirectStandardOutput = true, RedirectStandardError = true, CreateNoWindow = true };
+                using (var process = System.Diagnostics.Process.Start(start))
+                {
+                    string said = process.StandardOutput.ReadToEnd() + process.StandardError.ReadToEnd();
+                    process.WaitForExit();
+                    if (process.ExitCode == 0) Debug.Log("[Build] Save service published to " + output + ".");
+                    else Debug.LogWarning("[Build] The save service was not published (is it running? stop it first): " + said.Trim());
+                }
+            }
+            catch (Exception e)
+            {
+                Debug.LogWarning("[Build] The save service was not published (.NET SDK missing?): " + e.Message);
+            }
+        }
+
         private static void AddBesideTheServer(Os os, string folder)
         {
             string page = Path.Combine(folder, "ControlPage");
@@ -209,6 +239,17 @@ namespace KryticalNova.EditorTools
                     "rem Closing this window stops the server safely: everyone is saved first.\r\n" +
                     "title Krytical Nova Server\r\n" +
                     "cd /d \"%~dp0\"\r\n" +
+                    // Online phase 4: the save service this server is set to use starts first: the real one (port 7801) or
+                    // the tests' (7802, --test). A second copy finds its port taken and closes. None when it saves to files.
+                    "set SAVES=%~dp0..\\SaveService\\SaveService.exe\r\n" +
+                    "if exist \"%SAVES%\" findstr /c:\"127.0.0.1:7801\" server-settings.json > nul 2>&1 && (\r\n" +
+                    "  start \"Krytical Nova Save Service\" /min \"%SAVES%\"\r\n" +
+                    "  timeout /t 3 /nobreak > nul\r\n" +
+                    ")\r\n" +
+                    "if exist \"%SAVES%\" findstr /c:\"127.0.0.1:7802\" server-settings.json > nul 2>&1 && (\r\n" +
+                    "  start \"Krytical Nova Save Service (TEST saves)\" /min \"%SAVES%\" --test\r\n" +
+                    "  timeout /t 3 /nobreak > nul\r\n" +
+                    ")\r\n" +
                     ":start\r\n" +
                     // By its full path: a bare name is not looked for in the current folder where
                     // NoDefaultCurrentDirectoryInExePath is set.

@@ -205,8 +205,22 @@ namespace KryticalNova.Networking
               .Append(",\"autoNote\":").Append(ControlPageRules.Json(ServerReach.AutoNote))
               .Append(",\"load\":").Append(ControlPageRules.Json(ServerPerformanceLog.Summary))
               .Append(",\"loadSlow\":").Append(ServerPerformanceLog.LastSlowFrames)
-              .Append(",\"maxGms\":").Append(GmRoster.MaxGameMasters).Append('}');
+              .Append(",\"maxGms\":").Append(GmRoster.MaxGameMasters)
+              .Append(",\"saves\":").Append(ControlPageRules.Json(SavesText(out bool savesOk)))
+              .Append(",\"savesOk\":").Append(savesOk ? "true" : "false").Append('}');
             return sb.ToString();
+        }
+
+        // Where the saves go (online phase 4): files, or the save service and its database with whether both answer.
+        private static string SavesText(out bool ok)
+        {
+            if (ServerSave.Store is ServiceSaveStore service)
+            {
+                ok = service.Healthy;
+                return ok ? "saves: service ✓ database ✓ (" + service.Health.Replace("ok, ", "") + ")" : "saves: " + service.Health;
+            }
+            ok = true;
+            return "saves: files";
         }
 
         // Bans in force (online phase 2, milestone 4): the account id is needed to end one from the page.

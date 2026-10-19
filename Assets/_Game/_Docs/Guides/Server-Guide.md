@@ -299,6 +299,50 @@ your server. Relay joins always were; since 18 Oct 2026 Direct joins are too. No
   put its certificate into the game (`Networking/Runtime/ServerEncryption.cs`), publish a new build and make new server
   certificates. Every older build then cannot join until it updates.
 
+### The save database and save service (phase 4, being built)
+
+The server can save into a real database instead of files: needed before there is more than one server, and so a crash
+in the middle of a trade can never duplicate or lose anything. **Your real server still saves to files** until you
+switch it (below).
+
+**What runs, and where:**
+
+| Piece | What it is | Starts | Stops |
+| --- | --- | --- | --- |
+| **Postgres 18** | The database itself, installed 18 Oct 2026 (`C:\Program Files\PostgreSQL\18`) | By itself with Windows (a Windows service), before anyone logs in | Never needs to; uses almost nothing when idle |
+| **Save service** | A small program in front of the database: the only thing that knows its password; game servers ask it to load and save | `Start Server.bat` starts it first, in its own minimized window ("Krytical Nova Save Service"); a second copy closes itself | Close its window. Stopping a game server does **not** stop it (more than one server will use it later) |
+
+**Two separate databases, never mixed:**
+
+| | Database | Save service | Used by |
+| --- | --- | --- | --- |
+| **Real** | `krytical_nova` | port 7801 | your real server, once switched |
+| **Test** | `krytical_nova_test` | `SaveService.exe --test`, port 7802 | the Editor's tests, the measure server |
+
+**The secrets** (all in `Documents\KryticalNova-Secrets`, beside the server certificates; never share them, back the
+folder up):
+
+| File | What it is |
+| --- | --- |
+| `postgres-admin.txt` | The database's admin password you chose in the installer. Only used by the setup script. |
+| `save-service.json` | The save service's own login to the database (a random password the setup script made). Only your Windows user can read it. |
+| `save-service-key.txt` | The key game servers must show the save service. Made by the service the first time it starts. |
+
+**Setup (done 18 Oct 2026; run again only if asked):** `Setup Database.bat` in
+`Assets\_Game\Gameplay\Persistence\Service~` makes both databases and the service's login, and sets Postgres to
+listen on this PC only. Running it again renews the service's login: close any save service window afterwards, and
+`Start Server.bat` starts it again.
+
+**Is it working?** The control page's top row has a **Saves** chip: `saves: files`, or `saves: service ✓ database ✓
+(N saves)`, or in red `saves: service DOWN` / `saves: database DOWN` (checked every 10 seconds).
+
+**If the server is set to use the save service and cannot reach it**, it does not start: its window says "The saves
+cannot be reached" and why. Start the save service (or `Start Server.bat`), then the server again. It never falls back
+to files on its own, because saving to two places is how characters get split.
+
+**Switching your real server over** (not yet: after milestone 2 carries your current saves across): in
+`server-settings.json`, `"saveService": "http://127.0.0.1:7801"`.
+
 ## 6. Join the server
 
 **From the game (step 4):** on character select, **Enter World** joins the server played last, while the loading
@@ -651,6 +695,9 @@ Things learned the hard way:
   logs a browser that hung up before the answer, and no longer answers the spare connections a browser opens ahead
   and closes unused (answering them filled the log with "Control page request failed: Unable to write data to the
   transport connection", about once a second while the page was open).
+- 18 Oct 2026: phase 4 milestone 1 started: Postgres 18 installed, the real and test save databases, the save service
+  (7801 real, 7802 test), `Start Server.bat` starts it, the Saves chip on the control page; the real server still saves to
+  files.
 - 18 Oct 2026: the control page's live log shows the `[GM log]`, `[Access]`, `[Economy]` and `[Flag]` lines (they were
   hidden as noise); a save that another program holds open for a moment (antivirus scanning it) is tried again instead
   of failing with "Unable to remove the file to be replaced".

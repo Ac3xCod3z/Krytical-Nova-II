@@ -247,7 +247,7 @@ Six rules hold from Phase 1. If they are kept, moving is: copy the build, set th
 | "Open to absolutely everyone" for Beacon Wars is "for now": revisit once a war map has been measured | Phase 7 |
 | GM on a dedicated server before accounts exist: the plan uses an account list given to the server at start | Phase 1 |
 | Should the server test melee hits itself instead of checking the client's report? | Phase 2 |
-| Sign-in for the website build: Unity Player Accounts or our own email accounts (the Steam build uses Steam sign-in) | Phase 4 |
+| ~~Sign-in for the website build~~ Decided 18 Oct 2026: Unity Player Accounts (the Steam build uses Steam sign-in, linked), the same account signing in to the Nova Store | Phase 4 |
 | Database: our own Postgres (my recommendation, for trades as one transaction) or Unity Cloud Save | Phase 4 |
 | Line sizes, and the size of a war map | Phase 6 / 7 |
 | The host | Phase 8 |
