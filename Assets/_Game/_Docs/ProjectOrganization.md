@@ -265,11 +265,17 @@ Every script in `_Game` must belong to an assembly (`.asmdef` or `.asmref`). Not
 | `KryticalNova.Hostiles.Emerald`   | `Gameplay/Hostiles/Emerald/Runtime/`           | The Emerald AI side of a Hostile. Depends on Runtime, `EmeraldAI` and Netcode; nothing in Runtime depends on it. Compiles for the dedicated server |
 | `EmeraldAI`, `EmeraldAI.Editor`   | `_ThirdParty/Emerald AI/Scripts/` (ours, in a vendor folder: see `_ThirdParty/README.md`) | Emerald AI's own scripts, so that game assemblies can reference them |
 | `KryticalNova.DevTools`           | `Tools/Debug/`                                 | Quantum Console commands                                                  |
-| `KryticalNova.Editor`             | `Tools/Editor/`                                | Every `<System>/Editor/` folder (Items, Progression, Factions, CharacterCreation, Player, Economy, Pets, UI, World, Rendering, Vegetation, Grass, Ruins, GameFeel, Icons, Housing). References UI (the skin assets) and GameFeel |
+| `KryticalNova.Editor`             | `Tools/Editor/`                                | Most `<System>/Editor/` folders (19 asmrefs: Items, Progression, Factions, CharacterCreation, Player, Economy, World, Rendering, Vegetation, Grass, Ruins, Icons, Housing…). Does not reference UI or GameFeel; editor code that needs them goes in `Editor.Presentation` |
+| `KryticalNova.Editor.Presentation` | `UI/Editor/`                                  | The editor code that builds or checks presentation: UI/Editor, GameFeel/Editor and Pets/Editor (asmrefs). Depends on Editor, Editor.Skin, Runtime, UI, GameFeel. `!UNITY_SERVER` |
+| `KryticalNova.Editor.Skin`        | `Tools/Editor/Skin/`                           | The Editor's own comic skin (inspectors, skin scope). No dependencies     |
 | `KryticalNova.Editor.GM`          | `Tools/Editor/GM/`                             | GM tools window                                                           |
 | `KryticalNova.Editor.Cleanup`     | `Tools/Editor/Cleanup/`                        | The project cleanup scan and its two extra checks, on top of Code Stage Maintainer. Depends on Editor and `CodeStage.Maintainer.Editor` (the restore tool itself is in `KryticalNova.Editor`, `Tools/Editor/AssetRestore/`) |
 | `KryticalNova.Tools.Tests.Editor` | `Tools/Tests/Editor/`                          | EditMode tests (the restore tool: reading a package, the dependency walk, restoring without overwriting, the Removal Log and the Asset Catalog) |
 | `KryticalNova.Editor.Menus`       | `UI/Editor/Menus/`                             | Front-end scene builder. Depends on Editor, UI, Runtime, uGUI, TextMesh Pro. `!UNITY_SERVER` |
+| `KryticalNova.Core.Tests.Editor`  | `Core/Tests/Editor/`                           | EditMode tests                                                            |
+| `KryticalNova.Crafting.Tests.Editor` | `Gameplay/Crafting/Tests/Editor/`           | EditMode tests                                                            |
+| `KryticalNova.Player.Tests.Editor` | `Gameplay/Player/Tests/Editor/`               | EditMode tests                                                            |
+| `KryticalNova.World.Tests.Editor` | `World/Tests/Editor/`                          | EditMode tests                                                            |
 | `KryticalNova.Items.Tests.Editor` | `Gameplay/Items/Tests/Editor/`                 | EditMode tests                                                            |
 | `KryticalNova.CharacterCreation.Tests.Editor` | `Gameplay/CharacterCreation/Tests/Editor/` | EditMode tests (names, roster, recipes, creator edits, gear rules) |
 | `KryticalNova.Social.Tests.Editor` | `Gameplay/Social/Tests/Editor/`               | EditMode tests (chat channel rules, typed chat lines, party rules, Contacts, Crews, namecards, the emote wheel) |
@@ -312,8 +318,11 @@ Gameplay     World       Environment     Characters│
 
 ### Assembly roadmap: splitting `KryticalNova.Runtime`
 
-The monolith can't be split yet because of two cycles. Break them first, then replace each system's `.asmref`
-with its own `.asmdef`:
+The monolith can't be split yet because systems inside it use each other in loops. The **Dependency Map**
+(`Reference/Dependency-Map.md`, and its page) measures them: on 19 Oct 2026, 8 links ran uphill and 31 links had to go
+for the systems to form a clean stack. The staged plan to cut them is `Plans/architecture-decoupling-plan.md`. Re-run
+the map after any change that crosses systems; `--check` fails when a new uphill link or two-way pair appears. The
+first two cuts, from the original roadmap:
 
 1. **Core → Progression**: `Core/ICombatFeedbackSink` uses `Progression.DamageResult`. Move `DamageResult`
    (or a slim struct) into Core, or move the sink interface into Progression.
