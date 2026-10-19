@@ -340,8 +340,19 @@ listen on this PC only. Running it again renews the service's login: close any s
 cannot be reached" and why. Start the save service (or `Start Server.bat`), then the server again. It never falls back
 to files on its own, because saving to two places is how characters get split.
 
-**Switching your real server over** (not yet: after milestone 2 carries your current saves across): in
-`server-settings.json`, `"saveService": "http://127.0.0.1:7801"`.
+**How a save looks now (milestone 2):** each account is a small header plus one small entry per part (Pack, wallet,
+skills, ...). A save sends only the parts that changed: a usual 60-second autosave is a few hundred bytes. A save from
+before is kept once as `accounts/<id>-v1` and saved in parts from then on.
+
+**Switching your real server over** (when you say):
+1. Stop the real server (Stop on the control page).
+2. Start the real save service (`SaveService\SaveService.exe`, or `Start Server.bat` once the setting below is in).
+3. In Unity: **Krytical Nova ▸ Online ▸ Saves ▸ Copy Save Files into the Save Database...**, pick
+   `KryticalNovaServer-Save`, then **Real database**. Your save files are only read and stay as they are (a fallback).
+4. In `server-settings.json`: `"saveService": "http://127.0.0.1:7801"`.
+5. Start the server with `Start Server.bat`; the control page's Saves chip should say `service ✓ database ✓`.
+
+To look at or go back from the database: **Copy the Save Database into Files...** writes it into an empty folder.
 
 ## 6. Join the server
 
