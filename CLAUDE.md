@@ -41,5 +41,8 @@ Read `Assets/_Game/_Docs/Reference/12Sky/README.md` before naming anything a pla
 - Secrets live in `Documents\KryticalNova-Secrets` (`postgres-admin.txt`, `save-service.json`, `save-service-key.txt`):
   never read them aloud, print them, copy them into the repo or chat. `Setup Database.bat` (beside the service) makes the
   databases and the service's login; the owner runs it.
-- Shutting a game server down never stops the save service or the database. Details: `_Docs/Guides/Server-Guide.md`,
+- The owner runs the server with the **Krytical Nova Server app** (`Assets/_Game/Networking/ServerApp~`, built beside the
+  server by `ServerBuildBuilder`): it starts the save service and the server hidden inside one window. Stopping the
+  server never stops the save service or the database; closing the app stops the save service it started. Test the app
+  only beside the measure server (`Builds/Bots`, `--selftest <folder>` pictures its tabs), never on the real server. Details: `_Docs/Guides/Server-Guide.md`,
   "The save database and save service"; the plan is `_Docs/Plans/online-phase-04-accounts-and-shared-save.md`.

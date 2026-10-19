@@ -120,6 +120,29 @@ namespace KryticalNova.Tests
         }
 
         [Test]
+        public void ASpareConnectionThatTimesOutSilentlyIsEmptyButAStalledRequestIsNot()
+        {
+            // 18 Oct 2026: a browser kept a connection open without sending, and the read timeout was logged as a failure.
+            ControlPageRules.Read(new TimingOut(new byte[0]), out bool empty);
+            Assert.IsTrue(empty, "nothing was ever sent: nobody to answer, nothing to log");
+            Assert.Throws<IOException>(() => ControlPageRules.Read(new TimingOut(Encoding.ASCII.GetBytes("GET / HT")), out _),
+                "a request that stops halfway is still a failure worth logging");
+        }
+
+        /// <summary>A stream that gives its bytes and then times out, as a socket's read does.</summary>
+        private sealed class TimingOut : MemoryStream
+        {
+            public TimingOut(byte[] bytes) : base(bytes) { }
+
+            public override int ReadByte()
+            {
+                int b = base.ReadByte();
+                if (b < 0) throw new IOException("Unable to read data from the transport connection.", new SocketException((int)SocketError.TimedOut));
+                return b;
+            }
+        }
+
+        [Test]
         public void SecretsAndTokens()
         {
             Assert.IsTrue(ControlPageRules.SecretEquals("abc-def", "abc-def"));
