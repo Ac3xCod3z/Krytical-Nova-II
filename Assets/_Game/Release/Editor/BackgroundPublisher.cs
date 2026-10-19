@@ -72,7 +72,7 @@ namespace KryticalNova.EditorTools
             string where = settings.HasBucket ? "uploads it to the TEST line" : "stages it in Builds/Release/Store";
             if (!EditorUtility.DisplayDialog("Publish to Test",
                     $"Builds commit {head.Substring(0, 9)} ({branch.Trim()}) in the build checkout, in the background, then {where} and " +
-                    $"rebuilds the server. This Editor stays free; the console says when it is done.{warning}\n\nPlayers on LIVE see nothing until you Promote.",
+                    $"rebuilds the server. This Editor stays free; the console says when it is done.{warning}\n\nPlayers on LIVE see nothing until you Promote.{ReleasePublisher.NewsSummary()}",
                     "Publish", "Cancel")) return;
             string started = Start(head);
             if (started != null) EditorUtility.DisplayDialog("Publish to Test", started, "OK");

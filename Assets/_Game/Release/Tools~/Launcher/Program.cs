@@ -18,8 +18,20 @@ namespace KryticalNova.Release
             if (Array.IndexOf(args, "--headless") >= 0) return Headless(updated, Array.IndexOf(args, "--repair") >= 0);
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new MainForm(updated));
+            Application.Run(new MainForm(updated, PreviewNews(args)));
             return 0;
+        }
+
+        /// <summary>
+        /// <c>--preview-news &lt;file&gt;</c>: shows a news file as it will look, before it goes out with a release (with
+        /// <c>--updated</c>, so a launcher run from the build folder does not replace itself). Null when not asked.
+        /// </summary>
+        private static LauncherNews PreviewNews(string[] args)
+        {
+            int i = Array.IndexOf(args, "--preview-news");
+            if (i < 0 || i + 1 >= args.Length || !File.Exists(args[i + 1])) return null;
+            try { return LauncherNews.FromFile(args[i + 1]); }
+            catch (Exception) { return null; }
         }
 
         /// <summary>
