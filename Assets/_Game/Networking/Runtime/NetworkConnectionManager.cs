@@ -668,6 +668,17 @@ namespace KryticalNova.Networking
             }
 
             ServerLaunchOptions options = ServerLaunchOptions.LoadForThisServer();
+            // Saves through the save service (online phase 4): without it the server does not open, rather than quietly
+            // saving somewhere else (Start Server.bat starts the service first).
+            if (options.UsesSaveService && KryticalNova.Persistence.ServerSave.Store is KryticalNova.Persistence.ServiceSaveStore service &&
+                !service.Reachable(out string savesProblem))
+            {
+                ReportError($"[Server] The saves cannot be reached: {savesProblem}. Start the save service (Start Server.bat starts it " +
+                            $"from the SaveService folder beside the server's), then start the server again. Nobody can join until then.");
+                Application.Quit(1);
+                return;
+            }
+            if (options.UsesSaveService) Debug.Log($"[Server] Saves go to the save service at {options.saveService}.");
             ushort port = (ushort)options.port;
             ConfigureTransport(defaultListenAddress, port);
             OfflinePlayerHandoff.ReleaseOfflineAvatar();

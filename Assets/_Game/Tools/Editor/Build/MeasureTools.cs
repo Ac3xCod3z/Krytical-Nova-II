@@ -81,6 +81,8 @@ namespace KryticalNova.EditorTools
                     pagePassword = NewPassword(),
                     backupHours = 0f,
                     backupsKept = 2,
+                    // Online phase 4: the tests' save service and database, never the real saves.
+                    saveService = "http://127.0.0.1:7802",
                 };
                 File.WriteAllText(settingsFile, JsonUtility.ToJson(settings, true));
             }

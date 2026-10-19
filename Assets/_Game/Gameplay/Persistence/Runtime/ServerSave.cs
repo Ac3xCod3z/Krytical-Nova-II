@@ -51,7 +51,7 @@ namespace KryticalNova.Persistence
         public static ISaveStore Store
         {
             // The files are written by a thread of the store's own, so a save takes none of a frame's time for the disk.
-            get => store ??= new FileSaveStore(DefaultRoot(), background: true);
+            get => store ??= MakeStore();
             set
             {
                 if (!ReferenceEquals(store, value)) (store as IDisposable)?.Dispose();
@@ -59,6 +59,20 @@ namespace KryticalNova.Persistence
                 WorldDocuments.Clear();
                 LastWritten.Clear();
             }
+        }
+
+        // Files under the save folder; on a dedicated server whose settings name a save service, the service (online phase 4).
+        private static ISaveStore MakeStore()
+        {
+#if UNITY_SERVER
+            KryticalNova.Networking.ServerLaunchOptions options = KryticalNova.Networking.ServerLaunchOptions.LoadForThisServer();
+            if (options.UsesSaveService)
+            {
+                string key = File.Exists(options.SaveServiceKeyFile) ? File.ReadAllText(options.SaveServiceKeyFile).Trim() : string.Empty;
+                return new ServiceSaveStore(options.saveService, key, Environment.MachineName + ":" + options.port);
+            }
+#endif
+            return new FileSaveStore(DefaultRoot(), background: true);
         }
 
         /// <summary>
@@ -267,7 +281,11 @@ namespace KryticalNova.Persistence
         }
 
         /// <summary>Waits until every save handed to the store is on disk. The game does on quitting; a test may at any time.</summary>
-        public static void WaitForDisk() => (store as FileSaveStore)?.Flush();
+        public static void WaitForDisk()
+        {
+            (store as FileSaveStore)?.Flush();
+            (store as ServiceSaveStore)?.Flush();
+        }
 
         /// <summary>GM: deletes every save in the store. Characters in the world are released first and keep playing unsaved.</summary>
         public static int WipeAll()
@@ -312,6 +330,13 @@ namespace KryticalNova.Persistence
                 }
                 holder.SaveAndRelease();
             }
+            // With the save service, one server at a time holds an account (online phase 4): another server's player is refused.
+            if (store is ServiceSaveStore service && !BoundAccounts.ContainsKey(accountId) && !service.TryLock(AccountsPrefix + accountId, out string heldBy))
+            {
+                refusal = "This account is in the world on another server.";
+                Debug.Log($"[Save] Account {accountId} is held by {heldBy}: the character was not loaded here.");
+                return false;
+            }
             BoundAccounts[accountId] = agent;
             if (!Agents.Contains(agent)) Agents.Add(agent);
             return true;
@@ -321,7 +346,10 @@ namespace KryticalNova.Persistence
         {
             Agents.Remove(agent);
             if (!string.IsNullOrEmpty(accountId) && BoundAccounts.TryGetValue(accountId, out PlayerSaveAgent holder) && holder == agent)
+            {
                 BoundAccounts.Remove(accountId);
+                (store as ServiceSaveStore)?.Unlock(AccountsPrefix + accountId);
+            }
         }
     }
 }

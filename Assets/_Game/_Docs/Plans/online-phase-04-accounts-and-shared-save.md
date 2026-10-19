@@ -1,6 +1,7 @@
 # Online phase 4: accounts and shared save
 
-Part of `online-roadmap.md`. Written 11 Oct 2026. **Not built.** Needs Phase 2.
+Part of `online-roadmap.md`. Written 11 Oct 2026. **Started 18 Oct 2026** with the owner's picks below; nothing
+built yet. Needs Phase 2 (milestones 1 to 4 built; 5 parked).
 
 ## Goal
 
@@ -37,7 +38,46 @@ All of that stays. What changes is underneath.
 | Map and position are not saved | Needed once there is more than one map |
 | `version = 1` is written, never read | Old saves meet new code |
 
-## Decisions to make at the start of this phase
+## The owner's picks (18 Oct 2026)
+
+1. **Postgres**, our own, after the pros and cons: more setup now, much less trouble as the game grows (a trade, a
+   Kiosk sale or a Crew founding changes together or not at all; Crews, Kiosks and unique names fit; a change of save
+   format is one tested migration run on the server; free; moves to a managed host later without touching the game).
+   Unity Cloud Save was turned down: one blob per player, no all-or-nothing changes, a capped free tier.
+2. **A small save service** in C# beside the servers, the only holder of the database password; game servers ask it
+   over the private network through a new `ISaveStore`. It is the first piece of Phase 5's world service.
+3. **Unity Player Accounts** for our own download (the launcher build): a Unity sign-in page in the browser the first
+   time (email, Google or Apple), automatic after that as today; Steam sign-in on the Steam build, linked to the same
+   account through Unity Authentication.
+4. **The same account opens the Nova Store** (owner): from the game, the Store Clerk's one-time link ("this account,
+   this character", once, a few minutes; Phase 10) signs the player in to the store; opening the store's page directly
+   in a browser offers "Sign in" with the same Unity Player Account, which must come out as the same Krytical Nova
+   account, so a purchase always lands on the right account. **To prove in milestone 7 before it is built on:** that
+   Unity's web sign-in gives the same player as the game's.
+
+### Milestones (each stops for the owner's check)
+
+1. **Postgres and the service's first slice.** Postgres on the owner's PC (local only, its password in
+   `Documents\KryticalNova-Secrets`, never in the repo); the save service with load, save and the per-character lock;
+   `ServiceSaveStore` behind `ISaveStore` with an asynchronous path; the measure server pointed at it; the file store
+   still used for the Editor and tests. **Small saves (owner, 18 Oct 2026: the 60-second saves must be byte-sized and
+   usable on their own):** each part a system saves (`ISaveParticipant`: Pack, wallet, Vault, skills, pets, ...) is its
+   own row (character, part, version, its JSON); an autosave sends only the parts whose text changed since the last
+   one, in one all-or-nothing call, so a usual 60-second save is a few hundred bytes, not the whole account, and any
+   part can be read, fixed or carried on its own.
+2. **Records.** One record per character, the account record holding only what is shared; map and position saved;
+   versions read and stepped up by tested migrations; the tool that carries a file-store folder into the database and
+   back (test characters survive).
+3. **All-or-nothing changes and the ledger.** Trade, Kiosk sale, Deep Vault move and Crew founding as one call each; the
+   kept ledger; the kill tests (a server stopped mid-change, many times: nothing duplicated or lost).
+4. **World records.** Crews, Contacts, Kiosks and Sponsors changed one entry at a time through the service.
+5. **The roster on the server.** Create, list and delete characters through the service, names unique across the game,
+   the look checked there.
+6. **Backups.** Nightly, kept 14 days, off the machine; a restore drill; the runbook and the Server Guide.
+7. **Real accounts.** Unity Player Accounts on the launcher build, the end of anonymous accounts outside local tests,
+   Steam linking ready for the Steam build, and the proof that the Nova Store's web sign-in is the same account.
+
+## Decisions to make at the start of this phase (as written 11 Oct 2026)
 
 1. **Database.** Recommended: our own **Postgres**, because a trade, a Kiosk sale and a unique name each
    need several records to change together or not at all. Unity Cloud Save has a free tier and suits one
