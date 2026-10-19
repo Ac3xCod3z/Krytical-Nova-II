@@ -54,7 +54,7 @@ namespace KryticalNova.Combat
         public event Action<string> Announcement;
 
         /// <summary>This machine's own player, or null.</summary>
-        public static PlayerDuel Local => PlayerInventory.Local != null ? PlayerInventory.Local.GetComponent<PlayerDuel>() : null;
+        public static PlayerDuel Local => LocalPlayer.Get<PlayerDuel>();
 
         public string DuelistName => identity != null ? identity.CharacterName : name;
         public bool IsDuelling => IsSpawned && netOpponent.Value != NoOpponent;

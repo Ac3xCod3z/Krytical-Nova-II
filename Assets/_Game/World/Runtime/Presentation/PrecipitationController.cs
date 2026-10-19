@@ -257,8 +257,7 @@ namespace KryticalNova.World
             if (jumpSpace == null) return;
             if (player == null || !player.gameObject.activeInHierarchy)
             {
-                var inventory = KryticalNova.Items.PlayerInventory.Local;
-                player = inventory != null ? inventory.transform : null;
+                player = KryticalNova.Core.LocalPlayer.Object != null ? KryticalNova.Core.LocalPlayer.Object.transform : null;
                 playerJump = player != null ? player.GetComponent<KryticalNova.Player.PlayerJumpMotor>() : null;
                 playerRestHeight = float.NaN;
             }

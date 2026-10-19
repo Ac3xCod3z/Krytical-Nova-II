@@ -32,7 +32,7 @@ namespace KryticalNova.Progression
         private readonly List<StatModifier> modifiers = new List<StatModifier>(SerumSettings.MaxKinds * 2);
 
         /// <summary>The Serums of the player this machine controls.</summary>
-        public static PlayerSerums Local => PlayerInventory.Local != null ? PlayerInventory.Local.GetComponent<PlayerSerums>() : null;
+        public static PlayerSerums Local => LocalPlayer.Get<PlayerSerums>();
 
         /// <summary>Raised on every machine when a count changes.</summary>
         public event Action Changed;

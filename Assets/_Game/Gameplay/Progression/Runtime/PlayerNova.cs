@@ -83,7 +83,7 @@ namespace KryticalNova.Progression
         private static void ResetStatics() => GmAnywhere = false;
 
         /// <summary>The ladders of the player this machine controls.</summary>
-        public static PlayerNova Local => PlayerWallet.Local != null ? PlayerWallet.Local.GetComponent<PlayerNova>() : null;
+        public static PlayerNova Local => LocalPlayer.Get<PlayerNova>();
 
         /// <summary>Raised on every machine when either ladder, or the Standing worn, changes.</summary>
         public event Action Changed;

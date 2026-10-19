@@ -67,7 +67,7 @@ namespace KryticalNova.Forge
         private static void ResetStatics() => GmAnywhere = false;
 
         /// <summary>The forge of the player this machine controls.</summary>
-        public static PlayerGearWork Local => PlayerInventory.Local != null ? PlayerInventory.Local.GetComponent<PlayerGearWork>() : null;
+        public static PlayerGearWork Local => LocalPlayer.Get<PlayerGearWork>();
 
         public GearProgressionSettings Settings => settings;
         public PlayerInventory Inventory => inventory;

@@ -55,7 +55,7 @@ namespace KryticalNova.Social
         private string offlineGuild = string.Empty;
 
         /// <summary>This machine's own player, or null (dedicated server, no player yet).</summary>
-        public static PlayerChat Local => PlayerInventory.Local != null ? PlayerInventory.Local.GetComponent<PlayerChat>() : null;
+        public static PlayerChat Local => LocalPlayer.Get<PlayerChat>();
 
         public string Guild => IsSpawned ? netGuild.Value.ToString() : offlineGuild;
         public string SpeakerName => identity != null ? identity.CharacterName : name;

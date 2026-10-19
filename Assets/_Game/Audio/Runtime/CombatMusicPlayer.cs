@@ -1,6 +1,6 @@
 using KryticalNova.Combat;
-using KryticalNova.Items;
 using UnityEngine;
+using KryticalNova.Core;
 
 namespace KryticalNova.Audio
 {
@@ -30,8 +30,6 @@ namespace KryticalNova.Audio
         [Tooltip("Plays the GM's click on every beat (gm.music.click). Not heard in normal play.")]
         [SerializeField] private AudioSource clickSource;
 
-        private PlayerCombatState local;
-        private PlayerInventory localOwner;
         private float live;
         private MusicTrack playing;
         private double dspStart;
@@ -121,12 +119,7 @@ namespace KryticalNova.Audio
 
         private bool LocalPlayerFights()
         {
-            PlayerInventory owner = PlayerInventory.Local;
-            if (owner != localOwner)
-            {
-                localOwner = owner;
-                local = owner != null ? owner.GetComponent<PlayerCombatState>() : null;
-            }
+            PlayerCombatState local = LocalPlayer.Get<PlayerCombatState>();
             return local != null && local.InCombat;
         }
 

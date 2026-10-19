@@ -30,7 +30,7 @@ namespace KryticalNova.Items
         private float flowLeft;      // Flux still to come from the drink taken
         private float flowPerSecond;
 
-        public static PlayerFlask Local => PlayerInventory.Local != null ? PlayerInventory.Local.GetComponent<PlayerFlask>() : null;
+        public static PlayerFlask Local => LocalPlayer.Get<PlayerFlask>();
 
         public FlaskSettings Settings => settings;
         /// <summary>Drinks a full Flask holds.</summary>

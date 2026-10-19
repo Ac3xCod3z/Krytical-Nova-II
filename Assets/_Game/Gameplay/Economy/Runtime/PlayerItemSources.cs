@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using KryticalNova.Items;
 using UnityEngine;
+using KryticalNova.Core;
 
 namespace KryticalNova.Economy
 {
@@ -23,7 +24,7 @@ namespace KryticalNova.Economy
         private readonly List<ItemStack[]> spendFrom = new List<ItemStack[]>(3);
 
         /// <summary>The sources of the player this machine controls.</summary>
-        public static PlayerItemSources Local => PlayerInventory.Local != null ? PlayerInventory.Local.GetComponent<PlayerItemSources>() : null;
+        public static PlayerItemSources Local => LocalPlayer.Get<PlayerItemSources>();
 
         /// <summary>Raised where the contents are known (server, offline, owner) when any of the three changes.</summary>
         public event Action Changed;

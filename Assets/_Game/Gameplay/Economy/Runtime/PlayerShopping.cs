@@ -53,7 +53,7 @@ namespace KryticalNova.Economy
         public event Action WeeklyChanged;
 
         /// <summary>This machine's own player, or null.</summary>
-        public static PlayerShopping Local => PlayerInventory.Local != null ? PlayerInventory.Local.GetComponent<PlayerShopping>() : null;
+        public static PlayerShopping Local => LocalPlayer.Get<PlayerShopping>();
 
         public EconomySettings Settings => settings;
         public VendorCatalog Vendors => vendors;

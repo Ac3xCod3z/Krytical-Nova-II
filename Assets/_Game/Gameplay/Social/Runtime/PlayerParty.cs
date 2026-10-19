@@ -64,7 +64,7 @@ namespace KryticalNova.Social
         public event Action Changed;
 
         /// <summary>This machine's own player, or null.</summary>
-        public static PlayerParty Local => PlayerInventory.Local != null ? PlayerInventory.Local.GetComponent<PlayerParty>() : null;
+        public static PlayerParty Local => LocalPlayer.Get<PlayerParty>();
 
         public string MemberName => identity != null ? identity.CharacterName : name;
         public int Level => progression != null ? progression.CurrentLevel : 1;

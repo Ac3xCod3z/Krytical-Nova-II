@@ -93,7 +93,7 @@ namespace KryticalNova.Pets
         public event Action<PetDefinition, int> StageReached;
 
         /// <summary>This machine's own player, or null.</summary>
-        public static PlayerPet Local => PlayerInventory.Local != null ? PlayerInventory.Local.GetComponent<PlayerPet>() : null;
+        public static PlayerPet Local => LocalPlayer.Get<PlayerPet>();
 
         public PetCatalog Catalog => catalog;
         /// <summary>The pet that is out, or null.</summary>

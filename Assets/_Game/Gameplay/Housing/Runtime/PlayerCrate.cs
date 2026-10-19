@@ -37,7 +37,7 @@ namespace KryticalNova.Housing
         public event Action Changed;
 
         /// <summary>This machine's own player, or null.</summary>
-        public static PlayerCrate Local => PlayerInventory.Local != null ? PlayerInventory.Local.GetComponent<PlayerCrate>() : null;
+        public static PlayerCrate Local => LocalPlayer.Get<PlayerCrate>();
 
         public HousingSettings Settings => settings;
         public FurnishingCatalog Catalog => catalog;

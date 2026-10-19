@@ -43,7 +43,7 @@ namespace KryticalNova.Restyle
         private static void ResetStatics() => GmAnywhere = false;
 
         /// <summary>The restyle of the player this machine controls.</summary>
-        public static PlayerRestyle Local => PlayerInventory.Local != null ? PlayerInventory.Local.GetComponent<PlayerRestyle>() : null;
+        public static PlayerRestyle Local => LocalPlayer.Get<PlayerRestyle>();
 
         public PlayerIdentity Identity => identity;
         /// <summary>Raised on the owner when the server has given the character a new look.</summary>

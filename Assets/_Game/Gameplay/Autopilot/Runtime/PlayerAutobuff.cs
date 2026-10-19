@@ -30,7 +30,7 @@ namespace KryticalNova.Autopilot
         /// <summary>Raised on the owner and the server when the licence or the cells change.</summary>
         public event Action Changed;
 
-        public static PlayerAutobuff Local => PlayerInventory.Local != null ? PlayerInventory.Local.GetComponent<PlayerAutobuff>() : null;
+        public static PlayerAutobuff Local => LocalPlayer.Get<PlayerAutobuff>();
 
         public AutopilotSettings Settings => settings;
         /// <summary>When the licence ends, UTC ticks. On a client it is the server's word.</summary>

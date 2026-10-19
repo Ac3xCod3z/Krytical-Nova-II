@@ -38,7 +38,7 @@ namespace KryticalNova.Restyle
         private bool settled;
 
         /// <summary>The library of the player this machine controls.</summary>
-        public static PlayerWeaveLibrary Local => PlayerInventory.Local != null ? PlayerInventory.Local.GetComponent<PlayerWeaveLibrary>() : null;
+        public static PlayerWeaveLibrary Local => LocalPlayer.Get<PlayerWeaveLibrary>();
 
         /// <summary>Raised where the library is known (server, offline, owner) when a look is added or it is replaced.</summary>
         public event Action Changed;

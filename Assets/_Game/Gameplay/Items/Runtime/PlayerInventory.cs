@@ -163,6 +163,7 @@ namespace KryticalNova.Items
         {
             if (Local == inventory) return;
             Local = inventory;
+            LocalPlayer.Set(inventory != null ? inventory.gameObject : null);
             LocalChanged?.Invoke();
         }
 

@@ -31,7 +31,7 @@ namespace KryticalNova.Items
         /// <summary>Raised on the owner (and where the game is decided) when a slot changes.</summary>
         public event Action Changed;
 
-        public static PlayerLoadouts Local => PlayerInventory.Local != null ? PlayerInventory.Local.GetComponent<PlayerLoadouts>() : null;
+        public static PlayerLoadouts Local => LocalPlayer.Get<PlayerLoadouts>();
 
         public PlayerInventory Inventory => inventory;
 

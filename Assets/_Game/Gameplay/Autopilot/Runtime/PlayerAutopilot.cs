@@ -46,7 +46,7 @@ namespace KryticalNova.Autopilot
         /// <summary>Raised on every peer when Autopilot goes on or off, or the time or the choices change.</summary>
         public event Action Changed;
 
-        public static PlayerAutopilot Local => PlayerInventory.Local != null ? PlayerInventory.Local.GetComponent<PlayerAutopilot>() : null;
+        public static PlayerAutopilot Local => LocalPlayer.Get<PlayerAutopilot>();
 
         public AutopilotSettings Settings => settings;
         public bool IsOn => IsSpawned ? netOn.Value : on;

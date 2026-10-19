@@ -68,7 +68,7 @@ namespace KryticalNova.Economy
         public event Action Changed;
 
         /// <summary>This machine's own player, or null.</summary>
-        public static PlayerKiosk Local => PlayerInventory.Local != null ? PlayerInventory.Local.GetComponent<PlayerKiosk>() : null;
+        public static PlayerKiosk Local => LocalPlayer.Get<PlayerKiosk>();
 
         public EconomySettings Settings => settings;
         public KioskStand StandPrefab => standPrefab;
