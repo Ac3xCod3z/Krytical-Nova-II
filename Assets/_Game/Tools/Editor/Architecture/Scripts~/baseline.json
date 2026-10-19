@@ -1,0 +1,36 @@
+{
+ "date": "2026-10-19",
+ "uphill": [
+  "Core -> Gameplay/Progression",
+  "Gameplay/Combat -> Audio",
+  "Networking -> Gameplay/CharacterCreation",
+  "Networking -> Gameplay/Factions",
+  "Networking -> Gameplay/Persistence",
+  "Networking -> Gameplay/Player",
+  "Networking -> Gameplay/Progression",
+  "Networking -> Gameplay/Social"
+ ],
+ "twoway": [
+  "Audio <-> Gameplay/Combat",
+  "Core <-> Gameplay/Progression",
+  "Gameplay/CharacterCreation <-> Gameplay/Items",
+  "Gameplay/CharacterCreation <-> Networking",
+  "Gameplay/Combat <-> Gameplay/Items",
+  "Gameplay/Combat <-> Gameplay/Player",
+  "Gameplay/Economy <-> Gameplay/Items",
+  "Gameplay/Economy <-> Gameplay/Progression",
+  "Gameplay/Economy <-> Gameplay/Social",
+  "Gameplay/Hostiles <-> Gameplay/Pets",
+  "Gameplay/Housing <-> Gameplay/Player",
+  "Gameplay/Items <-> Gameplay/Persistence",
+  "Gameplay/Items <-> Gameplay/Progression",
+  "Gameplay/Items <-> Gameplay/Social",
+  "Gameplay/Persistence <-> Gameplay/Progression",
+  "Gameplay/Persistence <-> Networking",
+  "Gameplay/Player <-> Gameplay/Progression",
+  "Gameplay/Player <-> Networking",
+  "Gameplay/Player <-> World",
+  "Gameplay/Progression <-> Networking",
+  "Gameplay/Social <-> Networking"
+ ]
+}

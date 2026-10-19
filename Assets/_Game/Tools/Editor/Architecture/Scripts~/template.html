@@ -1,0 +1,641 @@
+<meta charset="utf-8">
+<title>Nova Dependency Map</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bangers&family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+  /* Layout: the same comic book as the Encyclopedia of Nova. A score strip of the headline numbers, a sticky bar with
+     search and the six views, and a reader that opens any system or class as its own page. The map stacks the systems
+     in layers, users on top, foundations at the bottom, so a line that climbs is a reference running the wrong way. */
+  :root {
+    --paper: #f6efd9;
+    --panel: #fffaf0;
+    --ink: #14161c;
+    --muted: #5b5a52;
+    --line: #b9b19a;
+    --dots: rgba(20, 22, 28, 0.10);
+    --pop: #ffc928;
+    --pop-ink: #14161c;
+    --cyan: #138fa0;
+    --cyan-soft: #bfe9ee;
+    --magenta: #d42a5f;
+    --magenta-soft: #ffd3df;
+    --ok: #2f8f4e;
+    --code: #ece3c6;
+    --shadow: #14161c;
+    --display: "Bangers", "Impact", sans-serif;
+    --head: "Barlow Condensed", "Arial Narrow", sans-serif;
+    --body: "Barlow", "Segoe UI", system-ui, sans-serif;
+    --mono: "JetBrains Mono", ui-monospace, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #141a2b; --panel: #1d2540; --ink: #f4eeda; --muted: #a9adc2; --line: #46507a; --dots: rgba(244, 238, 218, 0.07);
+      --pop: #ffc928; --pop-ink: #14161c; --cyan: #3fd2e2; --cyan-soft: #17465a; --magenta: #ff5c8f; --magenta-soft: #4f1d33;
+      --ok: #5fd08a; --code: #2a3357; --shadow: #05070d;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #141a2b; --panel: #1d2540; --ink: #f4eeda; --muted: #a9adc2; --line: #46507a; --dots: rgba(244, 238, 218, 0.07);
+    --pop: #ffc928; --pop-ink: #14161c; --cyan: #3fd2e2; --cyan-soft: #17465a; --magenta: #ff5c8f; --magenta-soft: #4f1d33;
+    --ok: #5fd08a; --code: #2a3357; --shadow: #05070d;
+    color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+  body { background: var(--paper); background-image: radial-gradient(var(--dots) 1.5px, transparent 1.6px); background-size: 14px 14px;
+         color: var(--ink); font-family: var(--body); font-size: 15px; line-height: 1.45; }
+  p, ul, ol, h1, h2, h3, h4 { margin: 0; }
+  .page { max-width: 1240px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px));
+          padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 22px 70px; display: flex; flex-direction: column; gap: 18px; }
+  code, .path { font-family: var(--mono); font-size: 0.84em; background: var(--code); border-radius: 3px; padding: 0 4px; overflow-wrap: anywhere; }
+  a { color: inherit; }
+  button { font: inherit; color: inherit; }
+  :focus-visible { outline: 3px solid var(--magenta); outline-offset: 2px; }
+  .muted { color: var(--muted); }
+  .num { font-variant-numeric: tabular-nums; }
+
+  header { display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
+  .tag { font-family: var(--head); font-weight: 700; font-size: 13px; letter-spacing: 0.14em; text-transform: uppercase;
+         background: var(--ink); color: var(--paper); padding: 2px 10px; transform: skewX(-8deg); }
+  h1 { font-family: var(--display); font-weight: 400; font-size: clamp(38px, 7vw, 62px); line-height: 0.95; letter-spacing: 0.03em;
+       color: var(--pop); -webkit-text-stroke: 2px var(--shadow); paint-order: stroke fill; text-shadow: 4px 4px 0 var(--shadow); text-wrap: balance; }
+  .lede { margin-top: 4px; max-width: 74ch; }
+
+  .score { align-self: stretch; display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); margin-top: 8px; border: 3px solid var(--ink);
+           border-radius: 6px; box-shadow: 5px 5px 0 var(--shadow); overflow: hidden; background: var(--ink); gap: 3px; }
+  .seg { display: flex; flex-direction: column; gap: 2px; padding: 7px 12px 8px; background: var(--panel); color: var(--ink); text-decoration: none; min-width: 0; }
+  .seg b { font: 400 32px/1 var(--display); letter-spacing: 0.03em; font-variant-numeric: tabular-nums; }
+  .seg span { font: 700 13px var(--head); letter-spacing: 0.08em; text-transform: uppercase; }
+  .seg.bad { background: var(--magenta-soft); }
+  .seg.warn { background: var(--pop); color: var(--pop-ink); }
+  a.seg:hover { filter: brightness(1.05); }
+
+  .bar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; padding-block: 8px; background: var(--paper);
+         background-image: radial-gradient(var(--dots) 1.5px, transparent 1.6px); background-size: 14px 14px; display: flex; flex-direction: column; gap: 8px; }
+  .tabs { display: flex; flex-wrap: wrap; gap: 6px; }
+  .tab { font: 700 15px var(--head); letter-spacing: 0.06em; text-transform: uppercase; text-decoration: none; color: var(--ink); background: var(--panel);
+         border: 2px solid var(--ink); border-radius: 5px; padding: 4px 11px; cursor: pointer; box-shadow: 3px 3px 0 var(--shadow); }
+  .tab:hover { background: var(--cyan-soft); }
+  .tab[aria-current="page"] { background: var(--pop); color: var(--pop-ink); }
+  .searchwrap { position: relative; }
+  .searchwrap input { width: 100%; font: 500 16px var(--body); padding: 9px 14px; color: var(--ink); background: var(--panel);
+                      border: 3px solid var(--ink); border-radius: 6px; box-shadow: 4px 4px 0 var(--shadow); }
+  .results { position: absolute; left: 0; right: 0; top: calc(100% + 6px); background: var(--panel); border: 3px solid var(--ink); border-radius: 6px;
+             box-shadow: 5px 5px 0 var(--shadow); max-height: 60vh; overflow: auto; z-index: 30; }
+  .results button { display: flex; width: 100%; gap: 10px; align-items: baseline; text-align: left; background: none; border: 0; border-bottom: 1px solid var(--line);
+                    padding: 7px 12px; cursor: pointer; }
+  .results button:hover, .results button:focus-visible { background: var(--cyan-soft); }
+  .results .kind { font: 700 12px var(--head); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); min-width: 52px; }
+
+  .panel { background: var(--panel); border: 3px solid var(--ink); border-radius: 6px; box-shadow: 5px 5px 0 var(--shadow); padding: 16px 18px; min-width: 0; }
+  h2 { font: 400 30px/1 var(--display); letter-spacing: 0.04em; text-wrap: balance; }
+  h3 { font: 700 18px var(--head); letter-spacing: 0.05em; text-transform: uppercase; }
+  h4 { font: 700 15px var(--head); letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+  .stack { display: flex; flex-direction: column; gap: 14px; }
+  .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
+  .prose { max-width: 76ch; display: flex; flex-direction: column; gap: 8px; }
+
+  .chip { display: inline-flex; align-items: center; gap: 4px; font: 600 12.5px var(--head); letter-spacing: 0.05em; text-transform: uppercase;
+          border: 1.5px solid var(--ink); border-radius: 4px; padding: 0 6px; background: var(--panel); white-space: nowrap; }
+  button.chip { cursor: pointer; }
+  button.chip:hover { background: var(--cyan-soft); }
+  .chip.on { background: var(--ink); color: var(--paper); }
+  .chip.bad { background: var(--magenta); color: #fff; border-color: var(--magenta); }
+  .chip.warn { background: var(--pop); color: var(--pop-ink); }
+  .chip.good { background: var(--ok); color: #fff; border-color: var(--ok); }
+  .chip.soft { border-color: var(--line); color: var(--muted); }
+  .link { background: none; border: 0; padding: 0; cursor: pointer; font-weight: 600; text-decoration: underline; text-decoration-color: var(--cyan);
+          text-decoration-thickness: 2px; text-underline-offset: 2px; text-align: left; }
+  .link:hover { color: var(--cyan); }
+
+  /* the map */
+  .mapgrid { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 16px; align-items: start; }
+  .mapwrap { overflow-x: auto; padding: 8px; }
+  .mapwrap svg { display: block; min-width: 860px; width: 100%; height: auto; }
+  .lvl-label { font: 600 11px var(--head); letter-spacing: 0.1em; text-transform: uppercase; fill: var(--muted); }
+  .band { fill: var(--dots); }
+  .node rect.box { fill: var(--panel); stroke: var(--ink); stroke-width: 2; }
+  .node rect.size { fill: var(--cyan-soft); }
+  .node text { font: 700 13px var(--head); letter-spacing: 0.02em; fill: var(--ink); pointer-events: none; }
+  .node text.sub { font: 500 10.5px var(--mono); fill: var(--muted); }
+  .node { cursor: pointer; }
+  .node:hover rect.box, .node.sel rect.box { stroke: var(--magenta); stroke-width: 3; }
+  .node.dim { opacity: 0.35; }
+  .edge { fill: none; stroke: var(--line); }
+  .edge.back { stroke: var(--magenta); }
+  .edge.up { stroke: var(--magenta); stroke-dasharray: 6 4; }
+  .edge.outsel { stroke: var(--cyan); }
+  .edge.insel { stroke: #c98f00; }
+  .edge-hit { fill: none; stroke: transparent; stroke-width: 12; cursor: pointer; }
+  .legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: 13px; }
+  .legend i { display: inline-block; width: 26px; height: 0; border-top: 3px solid var(--line); vertical-align: middle; margin-right: 6px; }
+  .legend i.back { border-color: var(--magenta); }
+  .legend i.up { border-top: 3px dashed var(--magenta); }
+  .legend i.out { border-color: var(--cyan); }
+  .legend i.in { border-color: #c98f00; }
+  .side { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 112px); max-height: calc(100vh - 130px); overflow: auto; }
+
+  /* lists and tables */
+  .tablewrap { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; font-size: 14px; }
+  th { font: 700 13px var(--head); letter-spacing: 0.07em; text-transform: uppercase; text-align: left; border-bottom: 2px solid var(--ink); padding: 6px 8px;
+       white-space: nowrap; cursor: default; }
+  th[data-sort] { cursor: pointer; }
+  th[data-sort]:hover { color: var(--cyan); }
+  td { border-bottom: 1px solid var(--line); padding: 5px 8px; vertical-align: top; }
+  td.n, th.n { text-align: right; font-variant-numeric: tabular-nums; }
+  .ev { display: flex; flex-direction: column; gap: 3px; font-size: 13.5px; }
+  .ev div { display: flex; gap: 8px; flex-wrap: wrap; align-items: baseline; }
+  details > summary { cursor: pointer; font: 700 14px var(--head); letter-spacing: 0.06em; text-transform: uppercase; }
+  details[open] > summary { margin-bottom: 8px; }
+
+  .prob { display: grid; grid-template-columns: 54px minmax(0, 1fr); gap: 12px; border-top: 2px solid var(--line); padding-top: 12px; }
+  .prob:first-child { border-top: 0; padding-top: 0; }
+  .prob .id { font: 400 30px/1 var(--display); text-align: center; background: var(--ink); color: var(--paper); border-radius: 5px; padding: 6px 0 4px; height: fit-content; }
+  .prob h3 { text-transform: none; letter-spacing: 0.01em; font-size: 19px; }
+  .pips { display: inline-flex; gap: 2px; vertical-align: middle; }
+  .pips span { width: 9px; height: 12px; border: 1.5px solid var(--ink); border-radius: 2px; transform: skewX(-12deg); }
+  .pips span.f { background: var(--magenta); border-color: var(--magenta); }
+
+  .meter { position: relative; height: 16px; background: var(--code); border: 1.5px solid var(--ink); border-radius: 3px; overflow: hidden; min-width: 120px; }
+  .meter > span { position: absolute; inset: 0 auto 0 0; background: var(--cyan); }
+  .meter.low > span { background: var(--magenta); }
+  .meter.mid > span { background: var(--pop); }
+
+  .big { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; }
+  .big div { border: 2px solid var(--ink); border-radius: 5px; padding: 6px 10px; background: var(--paper); }
+  .big b { display: block; font: 400 30px/1 var(--display); letter-spacing: 0.03em; font-variant-numeric: tabular-nums; }
+  .big span { font: 600 12.5px var(--head); letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+
+  .back { align-self: flex-start; }
+  footer { font-size: 13px; color: var(--muted); }
+
+  @media (max-width: 900px) {
+    .mapgrid { grid-template-columns: minmax(0, 1fr); }
+    .side { position: static; max-height: none; }
+  }
+  @media (max-width: 520px) {
+    .prob { grid-template-columns: minmax(0, 1fr); }
+    .prob .id { width: 54px; }
+    .panel { padding: 12px; }
+  }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="page">
+  <header>
+    <span class="tag">Krytical Nova II · Architecture</span>
+    <h1>Nova Dependency Map</h1>
+    <p class="lede" id="lede"></p>
+    <div class="score" id="score"></div>
+  </header>
+
+  <div class="bar">
+    <nav class="tabs" id="tabs" aria-label="Views"></nav>
+    <div class="searchwrap">
+      <input id="q" type="search" placeholder="Find a class, a system or a file (PlayerInventory, Gameplay/Items, ServerSave.cs)" autocomplete="off" aria-label="Search">
+      <div class="results" id="results" hidden></div>
+    </div>
+  </div>
+
+  <main id="view"></main>
+  <footer id="foot"></footer>
+</div>
+
+<script>
+const D = /*__DATA__*/null;
+const $ = (s, el = document) => el.querySelector(s);
+const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const short = p => p.replace(/^Assets\/_Game\//, "");
+const KIND = [[1, "inherits"], [2, "serialized field"], [4, "GetComponent"], [8, "static"], [16, "FindObject"], [32, "uses"]];
+const kindChips = k => KIND.filter(([b]) => k & b).map(([, n]) => `<span class="chip ${n === "static" || n === "FindObject" ? "warn" : "soft"}">${n}</span>`).join(" ");
+const ROLE = { mono: "MonoBehaviour", net: "NetworkBehaviour", so: "ScriptableObject", plain: "class", enum: "enum", interface: "interface", editor: "editor" };
+const EFFORT = { 1: "small fix", 2: "medium fix", 3: "large fix" };
+const sysById = Object.fromEntries(D.systems.map(s => [s.id, s]));
+const T = D.types, F = D.files, A = D.assets;
+
+// reverse index: who uses each type, and each type's runtime index
+const usedBy = T.map(() => []);
+T.forEach((t, i) => t.out.forEach(([b, k]) => usedBy[b].push([i, k])));
+const typesOfSys = {};
+T.forEach((t, i) => { if (t.k === "rt") (typesOfSys[t.sys] = typesOfSys[t.sys] || []).push(i); });
+
+// --- header ---------------------------------------------------------------------------------------------------------
+const M = D.meta;
+$("#lede").innerHTML = `Every runtime script of the game, what it uses and who uses it, the prefabs, scenes and data assets that hold it, and the tests that touch it. ` +
+  `<b>${M.files}</b> scripts (${M.lines.toLocaleString()} lines) are read as text; Editor tools are left out. A system may use the systems below it; ` +
+  `a <b style="color:var(--magenta)">pink</b> line is a reference that runs the other way, and each one is a place where changing one system forces a change in another.`;
+const scoreSegs = [
+  [M.files, "runtime scripts", "", "systems"], [M.types, "classes & types", "", "systems"], [M.so, "ScriptableObject classes", "", "data"],
+  [M.uphill, "links running uphill", "bad", "problems"], [M.twoway, "pairs that use each other", "bad", "problems"],
+  [M.back, "links to cut for a clean stack", "warn", "map"], [M.tangle, "classes in one tangle", "bad", "read"], [D.problems.length, "problems ranked", "warn", "problems"]];
+$("#score").innerHTML = scoreSegs.map(([n, l, c, to]) => `<a class="seg ${c}" href="#${to}"><b>${n}</b><span>${l}</span></a>`).join("");
+$("#foot").textContent = `Generated ${M.generated} by Tools/Editor/Architecture/Scripts~/dependency_map.py. Read the "How to read" view for what the map can and cannot see.`;
+
+// --- views ----------------------------------------------------------------------------------------------------------
+const VIEWS = [["map", "Map"], ["problems", "Problems"], ["systems", "Systems"], ["hubs", "Hubs"], ["data", "Design data"], ["tests", "Tests"], ["read", "How to read"]];
+$("#tabs").innerHTML = VIEWS.map(([id, n]) => `<a class="tab" href="#${id}" data-v="${id}">${n}</a>`).join("");
+let trail = [];
+function show(view, arg, push = true) {
+  if (push && current) trail.push(current);
+  current = { view, arg };
+  document.querySelectorAll(".tab").forEach(t => t.setAttribute("aria-current", t.dataset.v === view ? "page" : "false"));
+  const v = $("#view");
+  v.innerHTML = "";
+  ({ map: viewMap, problems: viewProblems, systems: viewSystems, hubs: viewHubs, data: viewData, tests: viewTests, read: viewRead,
+     sys: viewSystem, type: viewType, edge: viewEdge })[view](v, arg);
+  if (push) window.scrollTo({ top: Math.min(window.scrollY, $(".bar").offsetTop), behavior: "auto" });
+}
+let current = null;
+const backBtn = () => trail.length ? `<button class="tab back" data-act="back">← Back</button>` : "";
+document.addEventListener("click", e => {
+  const el = e.target.closest("[data-act]");
+  if (!el) return;
+  const a = el.dataset.act;
+  if (a === "back") { const h = trail.pop(); if (h) show(h.view, h.arg, false); }
+  else if (a === "sys") show("sys", el.dataset.id);
+  else if (a === "type") show("type", +el.dataset.id);
+  else if (a === "edge") show("edge", el.dataset.id);
+});
+window.addEventListener("hashchange", () => route());
+function route() {
+  const h = (location.hash || "#map").slice(1);
+  if (VIEWS.some(([id]) => id === h)) { trail = []; show(h, null, false); }
+}
+
+const sysLink = id => `<button class="link" data-act="sys" data-id="${esc(id)}">${esc(id)}</button>`;
+const typeLink = i => `<button class="link" data-act="type" data-id="${i}">${esc(T[i].n)}</button>`;
+const fileRef = (fi, ln, note) => `<div><span class="path">${esc(short(F[fi].p))}${ln ? ":" + ln : ""}</span>${note ? `<span>${esc(note)}</span>` : ""}</div>`;
+const pips = n => `<span class="pips" title="impact ${n} of 5">${[1, 2, 3, 4, 5].map(i => `<span class="${i <= n ? "f" : ""}"></span>`).join("")}</span>`;
+function meter(frac) { const c = frac < 0.25 ? "low" : frac < 0.5 ? "mid" : ""; return `<div class="meter ${c}"><span style="width:${Math.round(frac * 100)}%"></span></div>`; }
+function sortable(table) {
+  table.querySelectorAll("th[data-sort]").forEach((th, col) => th.addEventListener("click", () => {
+    const idx = [...th.parentNode.children].indexOf(th), body = table.tBodies[0], num = th.classList.contains("n");
+    const dir = th.dataset.dir === "asc" ? "desc" : "asc"; th.dataset.dir = dir;
+    [...body.rows].sort((a, b) => {
+      const x = a.cells[idx].dataset.v ?? a.cells[idx].textContent, y = b.cells[idx].dataset.v ?? b.cells[idx].textContent;
+      const r = num ? (+x - +y) : x.localeCompare(y);
+      return dir === "asc" ? r : -r;
+    }).forEach(r => body.appendChild(r));
+  }));
+}
+
+// --- Map ------------------------------------------------------------------------------------------------------------
+let mapMode = "problem", mapSel = null;
+function viewMap(v) {
+  v.innerHTML = `<div class="stack">
+    <div class="mapgrid">
+      <section class="panel stack" style="padding:10px">
+        <div class="row" style="justify-content:space-between;padding:4px 6px 0">
+          <div class="row" role="group" aria-label="Which links">
+            <button class="chip ${mapMode === "problem" ? "on" : ""}" data-mode="problem">Problem links</button>
+            <button class="chip ${mapMode === "all" ? "on" : ""}" data-mode="all">All links</button>
+          </div>
+          <div class="legend"><span><i></i>uses (downhill, fine)</span><span><i class="back"></i>loop to cut</span><span><i class="up"></i>runs uphill</span>
+            <span><i class="out"></i>selected uses</span><span><i class="in"></i>used by selected</span></div>
+        </div>
+        <div class="mapwrap" id="mapwrap"></div>
+      </section>
+      <aside class="panel side stack" id="side"></aside>
+    </div>
+  </div>`;
+  v.querySelectorAll("[data-mode]").forEach(b => b.onclick = () => { mapMode = b.dataset.mode; viewMap(v); });
+  drawMap();
+  sideInfo();
+}
+function layout() {
+  const levels = {};
+  D.systems.forEach(s => (levels[s.level] = levels[s.level] || []).push(s));
+  const maxL = Math.max(...D.systems.map(s => s.level));
+  const W = 1000, rowH = 74, top = 20, nodeW = 150, nodeH = 44, pos = {};
+  Object.entries(levels).forEach(([l, list]) => {
+    list.sort((a, b) => a.order - b.order);
+    const gap = Math.min(40, (W - 90 - list.length * nodeW) / Math.max(1, list.length - 1));
+    const total = list.length * nodeW + (list.length - 1) * gap;
+    let x = 90 + (W - 90 - total) / 2;
+    list.forEach(s => { pos[s.id] = { x, y: top + (maxL - l) * rowH, w: nodeW, h: nodeH }; x += nodeW + gap; });
+  });
+  return { pos, W, H: top + (maxL + 1) * rowH, maxL, rowH, top };
+}
+function drawMap() {
+  const { pos, W, H, maxL, rowH, top } = layout();
+  const maxLines = Math.max(...D.systems.map(s => s.lines));
+  let bands = "", edges = "", hits = "", nodes = "";
+  const rankAt = {};
+  D.systems.forEach(s => { rankAt[s.level] = rankAt[s.level] || s.layer; });
+  for (let l = maxL; l >= 0; l--) {
+    const y = top + (maxL - l) * rowH;
+    if ((maxL - l) % 2 === 0) bands += `<rect class="band" x="0" y="${y - 14}" width="${W}" height="${rowH}"></rect>`;
+    bands += `<text class="lvl-label" x="6" y="${y + 26}">step ${l}</text>`;
+  }
+  const maxF = Math.max(...D.sysEdges.map(e => e.files));
+  D.sysEdges.forEach((e, i) => {
+    const a = pos[e.a], b = pos[e.b];
+    if (!a || !b) return;
+    const problem = e.back || e.uphill;
+    const touches = mapSel && (e.a === mapSel || e.b === mapSel);
+    if (mapMode === "problem" && !problem && !touches) return;
+    let cls = "edge" + (e.uphill ? " up" : e.back ? " back" : "");
+    if (touches && !problem) cls += e.a === mapSel ? " outsel" : " insel";
+    const w = 1 + 4 * Math.sqrt(e.files / maxF);
+    let op = problem ? 0.95 : touches ? 0.85 : mapSel ? 0.06 : 0.22;
+    if (mapSel && problem && !touches) op = 0.25;
+    const ax = a.x + a.w / 2, bx = b.x + b.w / 2;
+    let d;
+    if (a.y < b.y) d = `M${ax},${a.y + a.h} C${ax},${a.y + a.h + 40} ${bx},${b.y - 40} ${bx},${b.y}`;
+    else if (a.y > b.y) d = `M${ax + 10},${a.y} C${ax + 70},${a.y - 50} ${bx + 70},${b.y + b.h + 50} ${bx + 10},${b.y + b.h}`;
+    else { const yy = a.y + a.h, mid = (ax + bx) / 2; d = `M${ax},${yy} Q${mid},${yy + 36} ${bx},${yy}`; }
+    edges += `<path class="${cls}" d="${d}" stroke-width="${w.toFixed(1)}" opacity="${op}"></path>`;
+    hits += `<path class="edge-hit" d="${d}" data-edge="${i}"><title>${esc(e.a)} uses ${esc(e.b)}: ${e.files} file(s), ${e.types} type(s)</title></path>`;
+  });
+  D.systems.forEach(s => {
+    const p = pos[s.id];
+    const related = !mapSel || s.id === mapSel || D.sysEdges.some(e => (e.a === mapSel && e.b === s.id) || (e.b === mapSel && e.a === s.id));
+    const bw = Math.max(3, (p.w - 4) * Math.sqrt(s.lines / maxLines));
+    const name = s.id.replace("Gameplay/", "");
+    nodes += `<g class="node ${s.id === mapSel ? "sel" : ""} ${related ? "" : "dim"}" data-node="${esc(s.id)}" tabindex="0" role="button" aria-label="${esc(s.id)}">
+      <rect class="box" x="${p.x}" y="${p.y}" width="${p.w}" height="${p.h}" rx="5"></rect>
+      <rect class="size" x="${p.x + 2}" y="${p.y + p.h - 9}" width="${bw.toFixed(1)}" height="7" rx="1"></rect>
+      <text x="${p.x + 8}" y="${p.y + 17}">${esc(name)}</text>
+      <text class="sub" x="${p.x + 8}" y="${p.y + 31}">${s.files} files · ${(s.lines / 1000).toFixed(1)}k</text></g>`;
+  });
+  $("#mapwrap").innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Systems stacked by layer, with the links between them">${bands}${edges}${hits}${nodes}</svg>`;
+  $("#mapwrap").querySelectorAll("[data-node]").forEach(g => {
+    const pick = () => { mapSel = mapSel === g.dataset.node ? null : g.dataset.node; drawMap(); sideInfo(); };
+    g.addEventListener("click", pick);
+    g.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); pick(); } });
+  });
+  $("#mapwrap").querySelectorAll("[data-edge]").forEach(p => p.addEventListener("click", () => show("edge", p.dataset.edge)));
+}
+function sideInfo() {
+  const side = $("#side");
+  if (!mapSel) {
+    const cuts = D.sysEdges.map((e, i) => [e, i]).filter(([e]) => e.back || e.uphill).sort((x, y) => (y[0].uphill - x[0].uphill) || (x[0].files - y[0].files));
+    side.innerHTML = `<h3>Links to cut</h3>
+      <p class="muted">Remove these ${cuts.length} links and the systems form a clean stack, every reference pointing down. Most are one to five files. Click one for the exact lines; click a system on the map to see everything it touches.</p>
+      <div class="ev">${cuts.map(([e, i]) => `<div><button class="link" data-act="edge" data-id="${i}">${esc(e.a.replace("Gameplay/", ""))} → ${esc(e.b.replace("Gameplay/", ""))}</button>
+        <span class="chip ${e.uphill ? "bad" : "warn"}">${e.uphill ? "uphill" : e.twoway ? "two-way" : "loop"}</span><span class="muted num">${e.files} file${e.files > 1 ? "s" : ""}</span></div>`).join("")}</div>`;
+    return;
+  }
+  const s = sysById[mapSel];
+  const outs = D.sysEdges.map((e, i) => [e, i]).filter(([e]) => e.a === mapSel).sort((x, y) => y[0].files - x[0].files);
+  const ins = D.sysEdges.map((e, i) => [e, i]).filter(([e]) => e.b === mapSel).sort((x, y) => y[0].files - x[0].files);
+  const line = ([e, i], other) => `<div><button class="link" data-act="edge" data-id="${i}">${esc(other)}</button><span class="muted num">${e.files} file${e.files > 1 ? "s" : ""}, ${e.types} type${e.types > 1 ? "s" : ""}</span>${e.uphill ? '<span class="chip bad">uphill</span>' : e.back ? '<span class="chip warn">loop</span>' : ""}</div>`;
+  side.innerHTML = `<div class="row" style="justify-content:space-between"><h3>${esc(s.id)}</h3><button class="chip" data-act="sys" data-id="${esc(s.id)}">Open page</button></div>
+    <p class="muted">${esc(s.layer)} · ${s.files} files · ${s.lines.toLocaleString()} lines · ${esc(s.asm.join(", "))}</p>
+    <h4>Uses (${outs.length})</h4><div class="ev">${outs.map(x => line(x, x[0].b)).join("") || '<span class="muted">nothing outside itself</span>'}</div>
+    <h4>Used by (${ins.length})</h4><div class="ev">${ins.map(x => line(x, x[0].a)).join("") || '<span class="muted">nothing</span>'}</div>`;
+}
+
+// --- one link between two systems -----------------------------------------------------------------------------------
+function viewEdge(v, idx) {
+  const e = D.sysEdges[idx];
+  const back = D.sysEdges.findIndex(x => x.a === e.b && x.b === e.a);
+  const byFile = {};
+  e.pairs.forEach(([fi, t, k, ln]) => (byFile[fi] = byFile[fi] || []).push([t, k, ln]));
+  v.innerHTML = `<div class="stack">${backBtn()}
+    <section class="panel stack">
+      <div class="row">${e.uphill ? '<span class="chip bad">runs uphill</span>' : e.back ? '<span class="chip warn">loop to cut</span>' : '<span class="chip good">downhill, fine</span>'}
+        ${e.twoway ? '<span class="chip warn">both ways</span>' : ""}</div>
+      <h2>${sysLink(e.a)} uses ${sysLink(e.b)}</h2>
+      <p>${e.files} file(s) in ${esc(e.a)} use ${e.types} type(s) of ${esc(e.b)}.
+        ${back >= 0 ? `The other way, ${esc(e.b)} uses ${esc(e.a)} in ${D.sysEdges[back].files} file(s): <button class="link" data-act="edge" data-id="${back}">see that side</button>.` : ""}
+        ${e.uphill ? `${esc(e.a)} sits in a lower layer (${esc(sysById[e.a].layer)}) than ${esc(e.b)} (${esc(sysById[e.b].layer)}). The usual fix is to move the shared type down, or have ${esc(e.b)} register itself through an interface that ${esc(e.a)} owns.` :
+          e.back ? `${esc(e.b)} sits above ${esc(e.a)} in the order this map found, so this side of the loop is the cheaper one to cut.` : ""}</p>
+      <div class="tablewrap"><table><thead><tr><th>File</th><th>Uses</th><th>How</th></tr></thead><tbody>
+        ${Object.entries(byFile).map(([fi, list]) => list.map(([t, k, ln], j) => `<tr>${j === 0 ? `<td rowspan="${list.length}"><span class="path">${esc(short(F[fi].p))}</span></td>` : ""}
+          <td>${typeLink(t)} <span class="muted num">line ${ln}</span></td><td>${kindChips(k)}</td></tr>`).join("")).join("")}
+      </tbody></table></div>
+    </section></div>`;
+}
+
+// --- Problems -------------------------------------------------------------------------------------------------------
+let probCat = "All";
+function viewProblems(v) {
+  const cats = ["All", ...new Set(D.problems.map(p => p.cat))];
+  const list = D.problems.filter(p => probCat === "All" || p.cat === probCat);
+  v.innerHTML = `<div class="stack">
+    <section class="panel stack">
+      <div class="prose"><h2>The problems, ranked</h2>
+        <p>Ranked by <b>impact</b> (how much the problem gets in the way of changing the game later, 1 to 5) and, among equals, the cheaper fix first.
+        <b>Files a fix touches</b> counts the files that would have to change today. Uphill links come first: they are the few lines that stop a lower system from being changed or split out on its own.</p></div>
+      <div class="row">${cats.map(c => `<button class="chip ${c === probCat ? "on" : ""}" data-cat="${esc(c)}">${esc(c)} <span class="num">${c === "All" ? D.problems.length : D.problems.filter(p => p.cat === c).length}</span></button>`).join("")}</div>
+    </section>
+    <section class="panel stack">${list.map(p => `<article class="prob">
+        <div class="id num">${p.id}</div>
+        <div class="stack" style="gap:6px;min-width:0">
+          <div class="row"><span class="chip ${p.cat === "Uphill" || p.cat === "Cycle" ? "bad" : p.cat === "Hub" || p.cat === "God class" ? "warn" : ""}">${esc(p.cat)}</span>
+            ${pips(p.impact)}<span class="chip soft">${EFFORT[p.effort]}</span><span class="muted num">${p.touch} file${p.touch === 1 ? "" : "s"} to touch</span></div>
+          <h3>${esc(p.title)}</h3>
+          <p>${esc(p.detail)}</p>
+          <div class="row">${p.sys.slice(0, 10).map(s => sysById[s] ? `<button class="chip" data-act="sys" data-id="${esc(s)}">${esc(s.replace("Gameplay/", ""))}</button>` : "").join("")}</div>
+          <details><summary>Where (${p.ev.length}${p.ev.length === 40 ? "+" : ""})</summary><div class="ev">${p.ev.map(x => fileRef(x.f, x.l, x.n)).join("")}</div></details>
+        </div></article>`).join("")}</section></div>`;
+  v.querySelectorAll("[data-cat]").forEach(b => b.onclick = () => { probCat = b.dataset.cat; viewProblems(v); });
+}
+
+// --- Systems --------------------------------------------------------------------------------------------------------
+function viewSystems(v) {
+  const rows = [...D.systems].sort((a, b) => a.rank - b.rank || b.level - a.level || a.order - b.order);
+  v.innerHTML = `<section class="panel stack">
+    <div class="prose"><h2>Systems</h2><p>One row per system folder. <b>Uses</b> and <b>used by</b> count the types crossing the border. <b>Instability</b> is uses ÷ (uses + used by):
+    near 0 means many systems lean on it and it should change rarely; near 1 means it leans on others and is free to change. A foundation with high instability, or a top system with low, is upside down.</p></div>
+    <div class="tablewrap"><table id="systab"><thead><tr><th data-sort>System</th><th data-sort>Layer</th><th data-sort class="n">Files</th><th data-sort class="n">Lines</th>
+      <th data-sort class="n">Uses</th><th data-sort class="n">Used by</th><th data-sort class="n">Instability</th><th data-sort class="n">SO classes</th><th data-sort class="n">Net</th><th>Touched by tests</th></tr></thead>
+    <tbody>${rows.map(s => `<tr><td>${sysLink(s.id)}</td><td>${esc(s.layer)}</td><td class="n">${s.files}</td><td class="n" data-v="${s.lines}">${s.lines.toLocaleString()}</td>
+      <td class="n">${s.fanOut}</td><td class="n">${s.fanIn}</td><td class="n">${s.inst}</td><td class="n">${s.so}</td><td class="n">${s.net}</td>
+      <td data-v="${s.testable ? s.tested / s.testable : 0}"><div class="row" style="flex-wrap:nowrap">${meter(s.testable ? s.tested / s.testable : 0)}<span class="num muted">${s.tested}/${s.testable}</span></div></td></tr>`).join("")}</tbody></table></div>
+    <h3>Assemblies today</h3>
+    <p class="prose">What the compiler enforces. Everything in <code>KryticalNova.Runtime</code> can use everything else in it, which is why loops between gameplay systems compile. Only the borders below are walls.</p>
+    <div class="ev">${Object.entries(D.assemblies).map(([a, r]) => `<div><code>${esc(a)}</code><span class="muted">→ ${r.length ? r.map(esc).join(", ") : "nothing of ours"}</span>${M.asmrefs[a] ? `<span class="chip soft">${M.asmrefs[a]} folders joined by asmref</span>` : ""}</div>`).join("")}</div>
+  </section>`;
+  sortable($("#systab"));
+}
+function viewSystem(v, id) {
+  const s = sysById[id];
+  const ids = (typesOfSys[id] || []).slice().sort((a, b) => (T[b].rip?.[0] || 0) - (T[a].rip?.[0] || 0));
+  const outs = D.sysEdges.map((e, i) => [e, i]).filter(([e]) => e.a === id).sort((x, y) => y[0].files - x[0].files);
+  const ins = D.sysEdges.map((e, i) => [e, i]).filter(([e]) => e.b === id).sort((x, y) => y[0].files - x[0].files);
+  const probs = D.problems.filter(p => p.sys.includes(id));
+  const tfiles = F.map((f, i) => [f, i]).filter(([f]) => f.k === "test" && f.s === id);
+  v.innerHTML = `<div class="stack">${backBtn()}
+    <section class="panel stack">
+      <span class="tag" style="align-self:flex-start">${esc(s.layer)} · step ${s.level}</span>
+      <h2>${esc(id)}</h2>
+      <div class="big"><div><b>${s.files}</b><span>scripts</span></div><div><b>${s.lines.toLocaleString()}</b><span>lines</span></div>
+        <div><b>${s.fanOut}</b><span>types it uses outside</span></div><div><b>${s.fanIn}</b><span>uses of it from outside</span></div>
+        <div><b>${s.tested}/${s.testable}</b><span>classes touched by tests</span></div><div><b>${probs.length}</b><span>problems</span></div></div>
+      <p class="muted">Compiles into ${s.asm.map(a => `<code>${esc(a)}</code>`).join(", ")}.</p>
+    </section>
+    <div class="grid2">
+      <section class="panel stack"><h3>Uses</h3><div class="ev">${outs.map(([e, i]) => `<div><button class="link" data-act="edge" data-id="${i}">${esc(e.b)}</button><span class="muted num">${e.files} files · ${e.types} types</span>${e.uphill ? '<span class="chip bad">uphill</span>' : e.back ? '<span class="chip warn">loop</span>' : ""}</div>`).join("") || '<span class="muted">Nothing outside itself.</span>'}</div></section>
+      <section class="panel stack"><h3>Used by</h3><div class="ev">${ins.map(([e, i]) => `<div><button class="link" data-act="edge" data-id="${i}">${esc(e.a)}</button><span class="muted num">${e.files} files · ${e.types} types</span>${e.uphill ? '<span class="chip bad">uphill</span>' : e.back ? '<span class="chip warn">loop</span>' : ""}</div>`).join("") || '<span class="muted">No other system.</span>'}</div></section>
+    </div>
+    <section class="panel stack"><h3>Classes and types (${ids.length})</h3>
+      <div class="tablewrap"><table id="systypes"><thead><tr><th data-sort>Name</th><th data-sort>Kind</th><th data-sort class="n">Lines</th><th data-sort class="n">Files using it</th>
+        <th data-sort class="n">Reached through others</th><th data-sort class="n">Tests</th><th data-sort class="n">Prefabs / scenes</th><th data-sort class="n">Data assets</th></tr></thead>
+      <tbody>${ids.map(i => { const t = T[i]; const held = t.held ? (t.held.prefab || 0) + (t.held.scene || 0) : 0;
+        return `<tr><td>${typeLink(i)}</td><td>${ROLE[t.role] || t.role}</td><td class="n">${t.lines}</td><td class="n">${t.rip[0]}</td><td class="n">${t.rip[2]}</td>
+        <td class="n">${t.tests.length}</td><td class="n">${held}</td><td class="n">${t.soAssets || 0}</td></tr>`; }).join("")}</tbody></table></div></section>
+    ${probs.length ? `<section class="panel stack"><h3>Problems involving it</h3><div class="ev">${probs.map(p => `<div><span class="chip">${p.id}</span>${pips(p.impact)}<span>${esc(p.title)}</span></div>`).join("")}</div>
+      <a class="link" href="#problems">All problems</a></section>` : ""}
+    <section class="panel stack"><h3>Tests (${tfiles.length} files)</h3><div class="ev">${tfiles.map(([f, i]) => fileRef(i)).join("") || '<span class="muted">No test files for this system.</span>'}</div></section>
+  </div>`;
+  sortable($("#systypes"));
+}
+
+// --- one class ------------------------------------------------------------------------------------------------------
+function groupBySys(list) {
+  const g = {};
+  list.forEach(([i, k]) => (g[T[i].sys] = g[T[i].sys] || []).push([i, k]));
+  return Object.entries(g).sort((a, b) => b[1].length - a[1].length);
+}
+function viewType(v, i) {
+  const t = T[i];
+  const uses = groupBySys(t.out.filter(([b]) => T[b].k === "rt"));
+  const users = groupBySys(usedBy[i].filter(([a]) => T[a].k === "rt"));
+  const kindsIn = usedBy[i].reduce((m, [, k]) => m | k, 0);
+  const list = groups => groups.map(([s, items]) => `<div class="stack" style="gap:4px"><h4>${s === t.sys ? "Same system" : sysLink(s)} <span class="num">${items.length}</span></h4>
+    <div class="ev">${items.sort((a, b) => T[a[0]].n.localeCompare(T[b[0]].n)).map(([j, k]) => `<div>${typeLink(j)} ${kindChips(k)}</div>`).join("")}</div></div>`).join("");
+  const assetList = ids => ids.map(a => `<div><span class="path">${esc(short(A[a].p))}</span></div>`).join("");
+  const statics = t.statics ? Object.entries(t.statics) : [];
+  const hubs = D.hubs.filter(h => h.t === i);
+  v.innerHTML = `<div class="stack">${backBtn()}
+    <section class="panel stack">
+      <div class="row"><span class="chip">${ROLE[t.role] || t.role}</span>${t.tg ? '<span class="chip warn" title="It reaches, and is reached by, every other class in the largest tangle">in the tangle</span>' : ""}${t.feel ? '<span class="chip soft">feel entry</span>' : ""}<span class="chip soft">${esc(t.asm)}</span>
+        ${t.k === "rt" && !t.tests.length ? '<span class="chip bad">no test touches it</span>' : t.k === "rt" ? `<span class="chip good">${t.tests.length} test file${t.tests.length > 1 ? "s" : ""}</span>` : ""}</div>
+      <h2>${esc(t.n)}</h2>
+      <p class="muted"><code>${esc(t.ns ? t.ns + "." + t.n : t.n)}</code> in ${sysLink(t.sys)}${t.nested ? ` · holds ${t.nested.map(esc).join(", ")}` : ""}</p>
+      ${t.rip ? `<div class="big"><div><b>${t.rip[0]}</b><span>files use it directly</span></div><div><b>${t.rip[1]}</b><span>systems they sit in</span></div>
+        <div><b>${t.rip[2]}</b><span>types reach it through others</span></div><div><b>${t.lines}</b><span>lines</span></div>
+        <div><b>${t.held ? (t.held.prefab || 0) + (t.held.scene || 0) : 0}</b><span>prefabs / scenes hold or wire it</span></div>
+        ${t.soAssets ? `<div><b>${t.soAssets}</b><span>data assets of this class</span></div>` : ""}</div>` : ""}
+      <p>${t.rip ? `Change its public shape and up to <b>${t.rip[0]}</b> files may need to follow. ` : ""}${kindsIn & 2 ? "It is wired in the Inspector (serialized fields point at it), so renaming or moving its fields loses those links unless they keep <code>[FormerlySerializedAs]</code>. " : ""}${t.held ? "Prefabs or scenes hold it by its script's .meta GUID: move the file together with its .meta and they keep working. " : ""}${t.managed ? `<b>${t.managed[0]}</b> entries in ${t.managed[1]} asset(s) store it by name and assembly (<code>${esc(t.managed[2])}</code>): renaming it or moving it to another assembly needs <code>[MovedFrom]</code>. ` : ""}</p>
+      <div class="ev">${t.f.map(fi => fileRef(fi, 0, F[fi].l + " lines")).join("")}</div>
+    </section>
+    <div class="grid2">
+      <section class="panel stack"><h3>It uses</h3>${list(uses) || '<span class="muted">No first-party types.</span>'}</section>
+      <section class="panel stack"><h3>Used by</h3>${list(users) || '<span class="muted">Nothing in the runtime uses it by name.</span>'}</section>
+    </div>
+    ${statics.length || hubs.length ? `<section class="panel stack"><h3>Global state and events</h3><div class="ev">${statics.map(([m, k]) => `<div><code>${esc(t.n)}.${esc(m)}</code><span class="chip ${k === "event" ? "warn" : "bad"}">${k === "state" ? "static state" : "static event"}</span></div>`).join("")}
+      ${hubs.map(h => `<div><code>${esc(t.n)}.${esc(h.m)}</code><span class="chip warn">${esc(h.k)}</span><span class="muted">${h.f.length} files in ${h.s.length} other systems</span></div>`).join("")}</div></section>` : ""}
+    ${t.soAssets ? `<section class="panel stack"><h3>Its data assets (${t.soAssets})</h3><p class="muted">Wired from ${Object.entries(t.dataRefCount || {}).map(([k, n]) => `${n} ${k}${n > 1 ? "s" : ""}`).join(", ") || "nothing (loaded another way)"}.</p>
+      <details><summary>Some of the assets</summary><div class="ev">${assetList(t.soSample || [])}</div></details>
+      ${Object.entries(t.dataRefs || {}).map(([k, ids]) => `<details><summary>${esc(k)}s that point at them</summary><div class="ev">${assetList(ids)}</div></details>`).join("")}</section>` : ""}
+    ${t.heldList?.length || t.heldAssets?.length ? `<section class="panel stack"><h3>Held by</h3><div class="ev">${assetList(t.heldList || [])}${assetList(t.heldAssets || [])}</div></section>` : ""}
+    ${t.tests?.length ? `<section class="panel stack"><h3>Tests that touch it</h3><div class="ev">${t.tests.map(fi => fileRef(fi)).join("")}</div></section>` : ""}
+  </div>`;
+}
+
+// --- Hubs -----------------------------------------------------------------------------------------------------------
+function viewHubs(v) {
+  v.innerHTML = `<div class="stack">
+    <section class="panel stack"><div class="prose"><h2>Hubs</h2>
+      <p>Static members reached from other systems: singletons (<code>.Instance</code>), locators (<code>.Local</code>, <code>.Current</code>, <code>.Active</code>), static events and static lists.
+      Every caller is tied to the one class and to the moment it gets set, and none of them can be tested without it. Marked ones are the risky kind; the rest are constants and pure helpers, which are fine.</p></div>
+      <div class="tablewrap"><table id="hubtab"><thead><tr><th data-sort>Member</th><th data-sort>Kind</th><th data-sort>Lives in</th><th data-sort class="n">Runtime files</th><th>Other systems</th></tr></thead>
+      <tbody>${D.hubs.map(h => `<tr><td>${typeLink(h.t)}<code>.${esc(h.m)}</code></td><td><span class="chip ${h.risk ? "warn" : "soft"}">${esc(h.k)}</span></td><td>${esc(T[h.t].sys)}</td>
+        <td class="n">${h.f.length}</td><td>${h.s.map(s => esc(s.replace("Gameplay/", ""))).join(", ")}</td></tr>`).join("")}</tbody></table></div></section>
+    <section class="panel stack"><div class="prose"><h3>Static state and events, class by class</h3>
+      <p>Static fields that change at run time and static events. Each is global state that survives scene loads (and, with domain reload off, Play sessions), so a refactor has to find them all.</p></div>
+      <div class="ev">${D.state.map(g => `<div>${typeLink(g.t)}<span class="muted">${esc(T[g.t].sys)}</span>${g.state.map(s => `<span class="chip bad">${esc(s)}</span>`).join("")}${g.events.map(s => `<span class="chip warn">${esc(s)}</span>`).join("")}</div>`).join("")}</div></section>
+  </div>`;
+  sortable($("#hubtab"));
+}
+
+// --- Design data ----------------------------------------------------------------------------------------------------
+function viewData(v) {
+  const so = T.map((t, i) => [t, i]).filter(([t]) => t.k === "rt" && t.role === "so").sort((a, b) => (b[0].soAssets || 0) - (a[0].soAssets || 0));
+  const S = D.smells;
+  const lines = arr => arr.map(([fi, n, s]) => `<div><span class="path">${esc(short(F[fi].p))}:${n}</span><code>${esc(s)}</code></div>`).join("");
+  v.innerHTML = `<div class="stack">
+    <section class="panel stack"><div class="prose"><h2>Design data</h2>
+      <p>The game is meant to be tuned in the Editor through ScriptableObjects. This view shows how true that is: each ScriptableObject class, how many assets of it exist, how much runtime code reads it, and how the assets are wired in.
+      Below it, the places where tuning still lives in code instead.</p></div>
+      <div class="tablewrap"><table id="sotab"><thead><tr><th data-sort>Class</th><th data-sort>System</th><th data-sort class="n">Assets</th><th data-sort class="n">Runtime files reading it</th>
+        <th data-sort class="n">Wired from prefabs</th><th data-sort class="n">from scenes</th><th data-sort class="n">from other assets</th></tr></thead>
+      <tbody>${so.map(([t, i]) => `<tr><td>${typeLink(i)}</td><td>${esc(t.sys)}</td><td class="n">${t.soAssets || 0}</td><td class="n">${t.rip[0]}</td>
+        <td class="n">${t.dataRefCount?.prefab || 0}</td><td class="n">${t.dataRefCount?.scene || 0}</td><td class="n">${t.dataRefCount?.asset || 0}</td></tr>`).join("")}</tbody></table></div></section>
+    <section class="panel stack"><h3>Gameplay numbers fixed in code (${S.hardcoded.reduce((n, h) => n + h.items.length, 0)})</h3>
+      <p class="prose muted">Named constants in Gameplay runtime code. Ids, masks, sizes, <code>Default*</code> seeds for settings fields and 0/1 are left out. Some are engineering limits that belong in code; the rest a designer cannot change without a programmer.</p>
+      ${S.hardcoded.map(h => `<details><summary>${esc(short(F[h.f].p))} <span class="num">(${h.items.length})</span></summary><div class="ev">${h.items.map(([n, k, val]) => `<div><span class="path">line ${n}</span><code>${esc(k)} = ${esc(val)}</code></div>`).join("")}</div></details>`).join("")}</section>
+    <section class="panel stack"><h3>Settings fallbacks (${S.fallbacks.length})</h3><p class="prose muted">When the settings asset is missing the game silently runs on a second copy of the number kept in code. A wiring mistake hides, and the two copies drift.</p>
+      <details><summary>All of them</summary><div class="ev">${lines(S.fallbacks)}</div></details></section>
+    <section class="panel stack"><h3>Runtime writes to shared assets (${S.soWrites.length})</h3><p class="prose muted">A write to a ScriptableObject or to the render pipeline asset during Play changes the asset itself in the Editor. Fine when it is put back on exit (the graphics settings do that); a leak when it is not.</p>
+      <details><summary>All of them</summary><div class="ev">${lines(S.soWrites)}</div></details></section>
+    <section class="panel stack"><h3>Lookups by name (${S.strings.length})</h3><p class="prose muted">The compiler cannot see these; renaming or moving the target breaks them only at run time.</p><div class="ev">${lines(S.strings)}</div></section>
+    <section class="panel stack"><h3>Static accessors that search on every call (${S.localGetComponent.length})</h3><div class="ev">${lines(S.localGetComponent)}</div></section>
+    <section class="panel stack"><h3>FindObject calls in runtime code (${S.finds.length})</h3><details><summary>All of them</summary><div class="ev">${lines(S.finds)}</div></details></section>
+  </div>`;
+  sortable($("#sotab"));
+}
+
+// --- Tests ----------------------------------------------------------------------------------------------------------
+function viewTests(v) {
+  const rows = [...D.systems].sort((a, b) => (a.testable ? a.tested / a.testable : 0) - (b.testable ? b.tested / b.testable : 0));
+  const untested = T.map((t, i) => [t, i]).filter(([t]) => t.k === "rt" && t.role !== "enum" && !t.tests.length).sort((a, b) => b[0].rip[0] - a[0].rip[0]).slice(0, 40);
+  v.innerHTML = `<div class="stack">
+    <section class="panel stack"><div class="prose"><h2>Tests</h2>
+      <p>A class counts as touched when a test file names it. That says a test exists nearby, not that every path is covered. ${M.testFiles} test scripts in ${new Set(F.filter(f => f.k === "test").map(f => f.a)).size} test assemblies, all EditMode.
+      Before a refactor moves a class, it should be touched by a test, so the move can be checked without opening the game.</p></div>
+      <div class="tablewrap"><table><thead><tr><th>System</th><th>Classes touched by a test</th><th class="n">Test files</th></tr></thead>
+      <tbody>${rows.map(s => `<tr><td>${sysLink(s.id)}</td><td><div class="row" style="flex-wrap:nowrap">${meter(s.testable ? s.tested / s.testable : 0)}<span class="num muted">${s.tested} of ${s.testable}</span></div></td><td class="n">${s.testFiles}</td></tr>`).join("")}</tbody></table></div></section>
+    <section class="panel stack"><h3>Most-used classes no test touches</h3>
+      <div class="tablewrap"><table><thead><tr><th>Class</th><th>System</th><th class="n">Files using it</th><th class="n">Reached through others</th></tr></thead>
+      <tbody>${untested.map(([t, i]) => `<tr><td>${typeLink(i)}</td><td>${esc(t.sys)}</td><td class="n">${t.rip[0]}</td><td class="n">${t.rip[2]}</td></tr>`).join("")}</tbody></table></div></section>
+  </div>`;
+}
+
+// --- How to read ----------------------------------------------------------------------------------------------------
+function viewRead(v) {
+  v.innerHTML = `<section class="panel stack"><div class="prose">
+    <h2>How to read the map</h2>
+    <h3>Layers</h3>
+    <p>${D.meta.ranks.map(r => `<b>${esc(r.name)}</b>: ${r.members.map(esc).join(", ")}`).join(". ")}. A system may use its own layer and the ones below.
+      This follows the rules in <code>_Docs/ProjectOrganization.md</code> section 4: Core knows nothing of gameplay, gameplay never knows its presentation, presentation observes gameplay.</p>
+    <h3>Steps</h3>
+    <p>Inside a layer the systems are ordered so that as few links as possible point backwards. The map draws them as steps, step 0 at the bottom. A grey line goes down a step: fine.
+      A pink line goes up: either it runs <b>uphill</b> into a higher layer (dashed), or it closes a <b>loop</b> between systems of the same layer (solid). The loops are the reason the big
+      <code>KryticalNova.Runtime</code> assembly cannot be split per system yet; cutting the pink links is the work that makes it possible.</p>
+    <h3>Ripple</h3>
+    <p>For each class: the files that use it directly, the systems they sit in, and the types that reach it through others. A class with a large ripple is expensive to change and needs tests before it moves.</p>
+    <h3>The tangle</h3>
+    <p><b>${M.tangle}</b> classes all reach each other through some chain of uses: ${Object.entries(M.tangleSys).map(([s, n]) => `${esc(s.replace("Gameplay/", ""))} ${n}`).join(", ")}.
+      That is why so many classes show about the same number of types reaching them through others: inside the tangle, a change can in principle travel to every member.
+      Cutting the pink links shrinks it, and each system that falls out of it can get an assembly of its own. A class page marks its members "in the tangle".</p>
+    <h3>How a link is found</h3>
+    <p>The script reads every runtime and test <code>.cs</code> file as text, strips comments and strings, and resolves every name against the classes the project declares, through each file's namespace and <code>using</code> lines.
+      It marks how a class is used: inherits, serialized field (designer wiring), GetComponent, static access, FindObject, or plain use. Assets are read as Unity text YAML: <code>m_Script</code> GUIDs say which script a prefab, scene or data asset holds;
+      other GUIDs say which data assets they point at; <code>[SerializeReference]</code> entries name a class and assembly as text.</p>
+    <h3>What it cannot see</h3>
+    <p>It is not the compiler. It misses links made through reflection or strings (listed under Design data), UnityEvents wired in the Inspector, links in Editor code (left out on purpose) and references that only go through an interface or a base class.
+      A simple name that two namespaces both declare is skipped rather than guessed. Counts can be off by a little; every link it does show names the file and line, so it can be checked.</p>
+    <h3>Re-run it</h3>
+    <p>From the project folder: <code>python "Assets/_Game/Tools/Editor/Architecture/Scripts~/dependency_map.py"</code> (a few seconds, Unity can stay closed).
+      <code>--baseline</code> saves today's uphill links and two-way pairs; <code>--check</code> fails when a new one appears, so a refactor cannot quietly add one back.
+      The written report is <code>_Docs/Reference/Dependency-Map.md</code> and the plan to fix it is <code>_Docs/Plans/architecture-decoupling-plan.md</code>.</p>
+  </div></section>`;
+}
+
+// --- search ---------------------------------------------------------------------------------------------------------
+const q = $("#q"), results = $("#results");
+q.addEventListener("input", () => {
+  const s = q.value.trim().toLowerCase();
+  if (s.length < 2) { results.hidden = true; return; }
+  const hits = [];
+  D.systems.forEach(x => { if (x.id.toLowerCase().includes(s)) hits.push([0, "system", x.id, () => show("sys", x.id)]); });
+  T.forEach((t, i) => { if (t.k === "rt" && t.n.toLowerCase().includes(s)) hits.push([t.n.toLowerCase() === s ? -1 : t.n.toLowerCase().startsWith(s) ? 1 : 2, ROLE[t.role] === "class" ? "class" : t.role === "so" ? "data" : t.role, t.n + "  ·  " + t.sys, () => show("type", i)]); });
+  F.forEach((f, fi) => { if (f.k === "rt" && f.p.toLowerCase().includes(s)) { const t = T.findIndex(t => t.f.includes(fi)); if (t >= 0) hits.push([3, "file", short(f.p), () => show("type", t)]); } });
+  hits.sort((a, b) => a[0] - b[0]);
+  const top = hits.slice(0, 14);
+  results.innerHTML = top.length ? top.map((h, j) => `<button data-hit="${j}"><span class="kind">${esc(h[1])}</span><span>${esc(h[2])}</span></button>`).join("") : `<div style="padding:8px 12px" class="muted">Nothing matches "${esc(q.value)}".</div>`;
+  results.hidden = false;
+  results.querySelectorAll("[data-hit]").forEach(b => b.onclick = () => { results.hidden = true; q.value = ""; top[+b.dataset.hit][3](); });
+});
+q.addEventListener("keydown", e => { if (e.key === "Enter") { const b = results.querySelector("[data-hit]"); if (b) b.click(); } if (e.key === "Escape") results.hidden = true; });
+document.addEventListener("click", e => { if (!e.target.closest(".searchwrap")) results.hidden = true; });
+
+route();
+</script>
