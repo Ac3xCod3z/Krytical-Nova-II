@@ -22,6 +22,7 @@ DOCS_ROOT = os.path.normpath(os.path.join(HERE, ".."))
 SOURCE_ID = "Reference/12Sky/01_Systems_Build_List"
 TRANSCRIPTION_ID = "Reference/12Sky/03_Full_Transcription"
 GEAR_SPEC_ID = "Reference/12Sky/02_Gear_System_Spec"
+START_ID = "Guides/Start-Here"   # the new developer's guide: the button under the title, first among the guides
 OUT = sys.argv[1] if len(sys.argv) > 1 else os.path.join(HERE, "out", "encyclopedia.html")
 
 
@@ -386,7 +387,7 @@ CATS = [("Guides", "Guides: how to run and use what is built, in plain words, up
         ("Project", "Project: how the repo is organised")]
 library_html, nav_lib = [], 0
 for cat, label in CATS:
-    ids = [d for d in DOCS if DOCS[d]["cat"] == cat and d != SOURCE_ID]
+    ids = sorted((d for d in DOCS if DOCS[d]["cat"] == cat and d != SOURCE_ID), key=lambda d: (d != START_ID, d))
     if not ids:
         continue
     cards = []
@@ -461,7 +462,10 @@ fill = {
     "{{LIB_COUNT}}": str(nav_lib),
     # The guides get a link of their own in the rail, opening them in the reader.
     "{{NAV_GUIDES}}": "".join('<a href="%s">%s</a>' % (doc_href(d), html.escape(DOCS[d]["title"].split(":")[0]))
-                              for d in sorted(DOCS) if DOCS[d]["cat"] == "Guides"),
+                              for d in sorted(DOCS, key=lambda d: (d != START_ID, d)) if DOCS[d]["cat"] == "Guides"),
+    # A new developer's way in, first under the title.
+    "{{START}}": ('<a class="start" href="%s"><b>New here? Start here</b><span>The developer\'s guide: what the game is, how to run it, '
+                  'how the code is laid out, and what to read next.</span></a>' % doc_href(START_ID)) if START_ID in DOCS else "",
     "{{WORLD}}": world_html or "<p>No World Atlas yet.</p>",
     "{{WORLD_COUNT}}": str(world_count),
     "{{LIBRARY}}": "\n".join(library_html),
