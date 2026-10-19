@@ -11,7 +11,8 @@ namespace KryticalNova.Networking
 {
     /// <summary>
     /// The owner's own server, started from the game (owner, 16 Oct 2026). When Enter World finds the server off and it
-    /// is this PC's, the Servers window offers START MY SERVER: its Start Server.bat opens in its own window, minimized, the game
+    /// is this PC's, the Servers window offers START MY SERVER: the Krytical Nova Server app (or, where it is missing, Start
+    /// Server.bat) opens minimized, the game
     /// waits until it answers and joins. Only where the server's folder is known: the Editor (the project's
     /// Builds/Server), or the owner's installed game through a <c>my-server.txt</c> beside it naming the folder; a
     /// brother's game has neither and never offers it. For now (until the server moves to the other PC) the server
@@ -21,6 +22,8 @@ namespace KryticalNova.Networking
     {
         public const string PointerFile = "my-server.txt";
         private const string StartScript = "Start Server.bat";
+        /// <summary>The Krytical Nova Server app (Networking/ServerApp~), built beside the server's folder.</summary>
+        public const string AppName = "Krytical Nova Server.exe";
 
         /// <summary>For now the server stops with the game that started it (owner); false once it lives on its own PC.</summary>
         public static bool StopWithGame = true;
@@ -109,6 +112,19 @@ namespace KryticalNova.Networking
             if (folder == null) { error = "This PC does not know where your server is."; return false; }
             try
             {
+                // The Krytical Nova Server app beside the server's folder (18 Oct 2026): one window, minimized, that goes
+                // when the server stops (the game stops it when it quits).
+                string app = Path.GetFullPath(Path.Combine(folder, "..", AppName));
+                if (File.Exists(app))
+                {
+                    started = Process.Start(new ProcessStartInfo(app, "--minimized --close-when-stopped")
+                    {
+                        WorkingDirectory = Path.GetDirectoryName(app),
+                        UseShellExecute = true,
+                    });
+                    Debug.Log($"[Network] Started your server with {AppName} ({folder}).");
+                    return true;
+                }
                 // --close: the window goes with the server instead of waiting for a key (the bat checks it).
                 started = Process.Start(new ProcessStartInfo("cmd.exe", "/c \"\"" + StartScript + "\" --close\"")
                 {

@@ -187,6 +187,7 @@ namespace KryticalNova.EditorTools
             bool ok = report.summary.result == BuildResult.Succeeded;
             if (ok) AddBesideTheServer(os, folder);
             if (ok && os == Os.Windows) BuildSaveService(folder);
+            if (ok && os == Os.Windows) BuildServerApp(folder, shortcuts: intoFolder == null);
             if (ok) Debug.Log($"[Build] Dedicated server ({os}) written to {folder} ({TestBuildBuilder.Megabytes(report.summary.totalSize)}). Sizes: {ReportPath(os)}");
             else Debug.LogError($"[Build] Dedicated server ({os}) {report.summary.result}: {report.summary.totalErrors} errors. See {ReportPath(os)}");
             return ok;
@@ -219,6 +220,80 @@ namespace KryticalNova.EditorTools
             catch (Exception e)
             {
                 Debug.LogWarning("[Build] The save service was not published (.NET SDK missing?): " + e.Message);
+            }
+        }
+
+        /// <summary>Only the app (and its shortcuts), for a server already built: no server build needed.</summary>
+        [MenuItem("Krytical Nova/Build/Krytical Nova Server App Only", priority = 54)]
+        public static void BuildServerAppOnly()
+        {
+            string folder = OutputFolder(Os.Windows);
+            if (!File.Exists(Path.Combine(folder, ExeName + ".exe"))) { Debug.LogError("[Build] Build the Windows dedicated server first: " + folder); return; }
+            BuildServerApp(folder, shortcuts: true);
+        }
+
+        private const string ServerAppProject = "Assets/_Game/Networking/ServerApp~/ServerApp.csproj";
+        public const string ServerAppName = "Krytical Nova Server";
+
+        /// <summary>
+        /// The Krytical Nova Server app (owner, 18 Oct 2026), beside the server's folder and the save service's: opening it
+        /// starts both hidden inside one window with SERVER, SAVE SERVICE and DATABASE tabs. For the owner's server it also
+        /// gets a shortcut on the desktop and in the Start menu, with the KN logo. Kept as it was while it is open.
+        /// </summary>
+        private static void BuildServerApp(string serverFolder, bool shortcuts)
+        {
+            string beside = Path.GetFullPath(Path.Combine(serverFolder, ".."));
+            string scratch = Path.Combine(Path.GetFullPath("Temp"), "ServerAppBuild");
+            try
+            {
+                var start = new System.Diagnostics.ProcessStartInfo("dotnet",
+                    $"build \"{Path.GetFullPath(ServerAppProject)}\" -c Release -o \"{scratch}\" --nologo")
+                { UseShellExecute = false, RedirectStandardOutput = true, RedirectStandardError = true, CreateNoWindow = true };
+                using (var process = System.Diagnostics.Process.Start(start))
+                {
+                    string said = process.StandardOutput.ReadToEnd() + process.StandardError.ReadToEnd();
+                    process.WaitForExit();
+                    if (process.ExitCode != 0)
+                    {
+                        Debug.LogWarning("[Build] The Krytical Nova Server app was not built: " + said.Trim());
+                        return;
+                    }
+                }
+                foreach (string name in new[] { ServerAppName + ".exe", ServerAppName + ".exe.config" })
+                    File.Copy(Path.Combine(scratch, name), Path.Combine(beside, name), true);
+                Debug.Log($"[Build] {ServerAppName} app written to {beside}.");
+            }
+            catch (IOException e)
+            {
+                Debug.LogWarning($"[Build] {ServerAppName} was not replaced (is it open? close it and build again): " + e.Message);
+                return;
+            }
+            catch (Exception e)
+            {
+                Debug.LogWarning($"[Build] {ServerAppName} was not built (.NET SDK missing?): " + e.Message);
+                return;
+            }
+            if (!shortcuts) return;
+            string exe = Path.Combine(beside, ServerAppName + ".exe");
+            foreach (Environment.SpecialFolder place in new[] { Environment.SpecialFolder.DesktopDirectory, Environment.SpecialFolder.Programs })
+                MakeShortcut(Path.Combine(Environment.GetFolderPath(place), ServerAppName + ".lnk"), exe);
+        }
+
+        private static void MakeShortcut(string link, string exe)
+        {
+            try
+            {
+                string Quote(string text) => "'" + text.Replace("'", "''") + "'";
+                string script = $"$s = (New-Object -ComObject WScript.Shell).CreateShortcut({Quote(link)}); $s.TargetPath = {Quote(exe)}; " +
+                                $"$s.WorkingDirectory = {Quote(Path.GetDirectoryName(exe))}; $s.IconLocation = {Quote(exe + ",0")}; " +
+                                "$s.Description = 'Runs the Krytical Nova server and its save service'; $s.Save()";
+                var start = new System.Diagnostics.ProcessStartInfo("powershell.exe", "-NoProfile -NonInteractive -Command \"" + script.Replace("\"", "\\\"") + "\"")
+                { UseShellExecute = false, CreateNoWindow = true };
+                using (var process = System.Diagnostics.Process.Start(start)) process.WaitForExit(20000);
+            }
+            catch (Exception e)
+            {
+                Debug.LogWarning("[Build] No shortcut at " + link + ": " + e.Message);
             }
         }
 

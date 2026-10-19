@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Krytical Nova Server (owner, 18 Oct 2026): one window, one taskbar icon, that runs the save service and the game
+       server hidden inside it, with a tab each for the server, the save service and the database. Windows Forms on
+       .NET Framework 4.7.2 (in every Windows 10 and 11), like the launcher. Built beside the server by a server build. -->
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net472</TargetFramework>
+    <LangVersion>9.0</LangVersion>
+    <AssemblyName>Krytical Nova Server</AssemblyName>
+    <RootNamespace>KryticalNova.ServerApp</RootNamespace>
+    <Deterministic>true</Deterministic>
+    <Product>Krytical Nova Server</Product>
+    <Company>Ascension Studios</Company>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <DebugType>none</DebugType>
+    <ApplicationIcon>..\..\Release\Tools~\Launcher\Launcher.ico</ApplicationIcon>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.ServiceProcess" />
+    <Reference Include="System.Runtime.Serialization" />
+    <EmbeddedResource Include="..\..\UI\Travel\Fonts\Bangers.ttf" LogicalName="Bangers.ttf" />
+    <EmbeddedResource Include="..\..\Release\Tools~\Launcher\Logo.png" LogicalName="Logo.png" />
+  </ItemGroup>
+
+</Project>

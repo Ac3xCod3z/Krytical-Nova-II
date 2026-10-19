@@ -73,6 +73,13 @@ namespace KryticalNova.Networking
             return false;
         }
 
+        private static bool IsTimeout(Exception e)
+        {
+            for (Exception at = e; at != null; at = at.InnerException)
+                if (at is SocketException socket) return socket.SocketErrorCode == SocketError.TimedOut;
+            return false;
+        }
+
         /// <summary>One request as read from the socket.</summary>
         public sealed class Request
         {
@@ -110,7 +117,15 @@ namespace KryticalNova.Networking
             int matched = 0;
             while (head.Length < MaxHeaderBytes)
             {
-                int b = stream.ReadByte();
+                int b;
+                try { b = stream.ReadByte(); }
+                catch (IOException e) when (head.Length == 0 && IsTimeout(e))
+                {
+                    // A spare connection the browser kept open without ever sending (18 Oct 2026: "did not properly
+                    // respond after a period of time" in the log): the same as one closed unused.
+                    empty = true;
+                    return null;
+                }
                 if (b < 0)
                 {
                     empty = head.Length == 0;

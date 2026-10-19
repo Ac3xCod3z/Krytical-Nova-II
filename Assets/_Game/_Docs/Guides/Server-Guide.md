@@ -11,8 +11,10 @@ every server step (online phase 1, `Plans/online-phase-01-dedicated-server.md`).
   holds the world, decides everything (fights, drops, trades, saves) and players join it.
 - You **build** it from the Unity Editor with one menu. You get a folder with `KryticalNovaServer.exe` and
   `Start Server.bat` in it.
-- You **start** it by double-clicking `Start Server.bat`. A black window shows what it is doing, and you can **type
-  commands** into it.
+- You **start** it by opening the **Krytical Nova Server** app (the KN logo on your desktop and in the Start menu).
+  One window starts the save service and the server **inside itself** (no black windows) and has three tabs: **SERVER**
+  (its log, a box to **type commands**, Start / Restart / Stop, the control page), **SAVE SERVICE** and **DATABASE**
+  (the saves and the backups). `Start Server.bat` still works the old way.
 - You **run** it from its **control page**, a web page you open on any PC or phone in the house: who is on, the log,
   Save, Backup, Announce, Kick, Restart, Stop, and a box for GM commands. It has a password.
 - It reads its **settings** from `server-settings.json`, a small text file beside it that you edit with Notepad.
@@ -56,7 +58,10 @@ every server step (online phase 1, `Plans/online-phase-01-dedicated-server.md`).
 1. In the Unity Editor: **Krytical Nova ▸ Build ▸ Dedicated Server (Windows)**. (**(Linux)** builds one for a rented
    Linux machine later.)
 2. It takes about 5 minutes. The server lands in `Builds/Server/Windows/KryticalNovaServer` (about 550 MB), with the
-   control page's files (`ControlPage`) and `Start Server.bat` beside the exe.
+   control page's files (`ControlPage`) and `Start Server.bat` beside the exe. Beside that folder it also builds the save
+   service (`SaveService`) and the **Krytical Nova Server** app (`Krytical Nova Server.exe`), and puts a shortcut to the
+   app on your desktop and in the Start menu. **Krytical Nova ▸ Build ▸ Krytical Nova Server App Only** builds just the
+   app and its shortcuts, for a server already built.
 3. A size report is written to `Builds/Server/BuildReport-Windows.txt`. Its "116 errors" are shader messages from
    the GI pack: a server draws nothing, so they do no harm.
 
@@ -66,8 +71,29 @@ says so and changes nothing.
 
 ## 2. Start the server
 
-Double-click **`Start Server.bat`** in the server's folder. A window titled "Krytical Nova Server" opens and fills
-with Unity's start-up lines. The ones that matter start with **`[Server]`** and **`[Backup]`**:
+Open **Krytical Nova Server** (the desktop shortcut, the Start menu, or `Krytical Nova Server.exe` in
+`Builds/Server/Windows`). It does what `Start Server.bat` did, in one window and one taskbar icon:
+
+1. it starts the save service the server's settings name (the real one on 7801, or the tests' with `--test` on 7802;
+   none when the server saves to files), hidden, and waits until it answers. One that is already running (an old
+   window) is used as it is;
+2. then it starts the server, hidden, and shows its log on the **SERVER** tab.
+
+| Tab | What it shows | Buttons |
+| --- | --- | --- |
+| **SERVER** | Online / players / minutes up / port, the control page's address, the live log (the start-up noise left out); a box at the bottom for commands (`gm.help`) | **START**, **RESTART** (everyone saved, players told to join again in a minute), **STOP** (everyone saved), **CONTROL PAGE** (opens it in the browser) |
+| **SAVE SERVICE** | Answering or not, real or TEST database, how many saves and how big; its log | **START**, **STOP** (only while the server is stopped: the server saves through it) |
+| **DATABASE** | Postgres (the Windows service) running or not, the saves' count and size, the backups newest first | **BACK UP NOW** (`gm.backup`), **BACKUPS FOLDER**, **REFRESH** |
+
+The three pills at the top right (SERVER, SAVES, DATABASE) are green when all is well and red when not.
+
+**Closing the app** asks first, then stops the server safely (everyone saved, a backup) and the save service with it.
+Shutting Windows down does the same without asking. A **Restart** starts the server again inside the app. If the app
+is ended from Task Manager or crashes, the server and save service end with it (nothing keeps running hidden; the
+autosave of the last minute is what is lost). Opening the app a second time only says it is already open.
+
+**The old way, `Start Server.bat`:** double-click it in the server's folder. A window titled "Krytical Nova Server"
+opens and fills with Unity's start-up lines (the app's SERVER tab shows the same lines). The ones that matter start with **`[Server]`** and **`[Backup]`**:
 
 ```
 [Server] Krytical Nova Server: port 7777, up to 100 players, map Zone01_StarterTown, ...
@@ -271,6 +297,8 @@ Builds/Server/Windows/
 │   ├── server-settings.json         your settings (kept across builds)
 │   └── ControlPage/                 the control page's files and fonts
 ├── certificates/                    server.crt and server.key: encrypt direct joins (keep server.key private)
+├── SaveService/                     the save service (SaveService.exe)
+├── Krytical Nova Server.exe         the app: open it to start everything
 ├── KryticalNovaServer-Save/         the saves
 │   ├── accounts/<id>.json           one per account, with its characters
 │   ├── world/                       crews, kiosks, contacts, sponsors, bans
@@ -279,7 +307,7 @@ Builds/Server/Windows/
     └── save_2026-10-16_14-05-09_start.zip   ... the newest 10
 ```
 
-To move the server to another PC, copy all four folders together.
+To move the server to another PC, copy all these folders and the app together.
 
 ### Encryption (phase 2)
 
@@ -310,7 +338,7 @@ in the middle of a trade can never duplicate or lose anything. **Your real serve
 | Piece | What it is | Starts | Stops |
 | --- | --- | --- | --- |
 | **Postgres 18** | The database itself, installed 18 Oct 2026 (`C:\Program Files\PostgreSQL\18`) | By itself with Windows (a Windows service), before anyone logs in | Never needs to; uses almost nothing when idle |
-| **Save service** | A small program in front of the database: the only thing that knows its password; game servers ask it to load and save | `Start Server.bat` starts it first, in its own minimized window ("Krytical Nova Save Service"); a second copy closes itself | Close its window. Stopping a game server does **not** stop it (more than one server will use it later) |
+| **Save service** | A small program in front of the database: the only thing that knows its password; game servers ask it to load and save | The **Krytical Nova Server** app starts it first, hidden (its log is on the SAVE SERVICE tab); `Start Server.bat` starts it in its own minimized window ("Krytical Nova Save Service"); a second copy closes itself | Closing the app, or **STOP** on its SAVE SERVICE tab; with the .bat, close its window. Stopping a game server does **not** stop it (more than one server will use it later) |
 
 **Two separate databases, never mixed:**
 
@@ -373,8 +401,8 @@ If a join fails (another build, full, no answer) the game goes back to character
 why.
 
 **START MY SERVER (your PC only).** When Enter World finds *your* server off, the Servers window offers **START MY
-SERVER**. It opens `Start Server.bat` **minimized** (the server's window waits in the taskbar and never covers the game
-or the Editor), waits until the server answers (about half a minute), and joins by itself. It only shows when the game
+SERVER**. It opens the **Krytical Nova Server** app **minimized** (`Start Server.bat` where the app is missing): it waits
+in the taskbar and never covers the game or the Editor, waits until the server answers (about half a minute), and joins by itself. It only shows when the game
 knows where your server is and the server is on this PC:
 
 | Where | How it finds your server |
@@ -383,9 +411,13 @@ knows where your server is and the server is on this PC:
 | Your installed game | A file `my-server.txt` beside the game (in the launcher's `Game` folder), one line: the server's folder |
 
 A brother's game has no `my-server.txt` and never offers it. **For now the server stops with the game that started
-it** (quitting, or leaving Play in the Editor, runs its safe stop: everyone saved, a backup, then its window closes).
-A server you start yourself with `Start Server.bat` is never stopped by the game. When the server moves to the old PC
-(step 6) this changes: the server keeps running on its own.
+it** (quitting, or leaving Play in the Editor, runs its safe stop: everyone saved, a backup, then the app closes, the
+save service with it). A server you start yourself (the app or `Start Server.bat`) is never stopped by the game. When the server moves to the old PC
+(step 6) this changes: the server keeps running on its own there, and START MY SERVER is no longer offered on your PC
+(it only starts a server on the PC it runs on). From your PC you then run it through its **control page** (who is on,
+commands, Save, Backup, Restart, Stop), which every PC in the house can open. Only starting it again after a Stop needs
+the old PC itself: the app there (or Chrome Remote Desktop to it), or simply restarting that PC, since the move plan
+starts the server before anyone logs in.
 
 **Only the same build joins.** A release game and its server carry their build number ("0.1.0 build 5"); a game of
 another build is refused before it is in: *"This server runs build 5 and your game is build 4. Open the Krytical Nova
@@ -527,7 +559,7 @@ settings; switch it off before anyone else plays, so nobody can claim old saves)
 
 ## 8. Stop or restart safely
 
-Any of these is safe: the window's **close button**, **Ctrl+C** in the window, logging off, shutting Windows down,
+Any of these is safe: **STOP** in the app, closing the app, the .bat window's **close button**, **Ctrl+C** in it, logging off, shutting Windows down,
 **Stop** on the control page, or `gm.shutdown`. The server then:
 
 1. saves every player and the world,
@@ -535,7 +567,7 @@ Any of these is safe: the window's **close button**, **Ctrl+C** in the window, l
 3. tells every player why ("The server was closed.", or your reason),
 4. stops.
 
-**Restart** (on the page, or `gm.restart`) does the same, and `Start Server.bat` starts it again by itself.
+**Restart** (in the app, on the page, or `gm.restart`) does the same, and the app (or `Start Server.bat`) starts it again by itself.
 
 Countdowns tell the players at 5 minutes, 2 minutes, 1 minute, 30 and 10 seconds, then each of the last 5.
 
@@ -725,3 +757,8 @@ Things learned the hard way:
   sign-in key line now says why it failed; a server started from a tool's terminal could not reach Unity's sign-in
   (started by double-click it could).
 - 18 Oct 2026: how every test is run (section 11, "A second server for tests"): tests always on their own ports (the real server keeps 7777, 7778 and page 8090), the test server rebuilt from the commit under test and started through Explorer, straight into a zone with Play from Title off, and a **TestGM** bound to the test character on the test page only (Ascension and Craven stay the real server's). Run that day after the project cleanup: Zone01 on the test server, Tolan as GM, Hostiles, NPCs and every place checked, no errors.
+- 18 Oct 2026: the **Krytical Nova Server** app (owner): one window with the KN logo that starts the save service and
+  the server hidden inside it, with SERVER, SAVE SERVICE and DATABASE tabs; built beside the server with shortcuts on
+  the desktop and in the Start menu; START MY SERVER opens it minimized; `Start Server.bat` stays as the old way. The
+  control page no longer logs "did not properly respond after a period of time" for a spare connection the browser
+  kept open without sending anything.
