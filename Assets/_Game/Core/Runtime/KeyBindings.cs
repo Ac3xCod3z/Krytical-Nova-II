@@ -1,10 +1,9 @@
 using System;
 using System.Collections.Generic;
-using KryticalNova.Networking;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-namespace KryticalNova.Player
+namespace KryticalNova.Core
 {
     /// <summary>
     /// The keys a player may change, and where their choices are kept. Every one is an action of the project's input
@@ -91,7 +90,7 @@ namespace KryticalNova.Player
 
         private static string BuildPrefix()
         {
-            string profile = NetworkConnectionManager.LocalProfile();
+            string profile = LocalProfile.Name();
             return string.IsNullOrEmpty(profile) ? "kn.input." : "kn.input." + profile + ".";
         }
 

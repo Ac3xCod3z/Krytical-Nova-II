@@ -161,10 +161,10 @@ failed, errors = [], []
 for p in built:
     r = subprocess.run(["dotnet", "build", p, "-nologo", "-v", "q", "-clp:ErrorsOnly;NoSummary", "-p:WarningLevel=0"],
                        capture_output=True, text=True)
-    errs = sorted(set(l.strip() for l in (r.stdout + r.stderr).splitlines() if ": error " in l))
+    errs = sorted(set(re.sub(r"\s*\[[^\]]*\]$", "", l.strip()) for l in (r.stdout + r.stderr).splitlines() if ": error " in l))
     if r.returncode != 0:
         failed.append(os.path.basename(p)[:-7])
-        errors += errs or [f"{os.path.basename(p)}: build failed ({r.returncode})"]
+        errors += [e for e in errs if e not in errors] or [f"{os.path.basename(p)}: build failed ({r.returncode})"]
 for e in errors[:60]:
     print(e.replace(CHECKOUT + os.sep, ""))
 if len(errors) > 60:

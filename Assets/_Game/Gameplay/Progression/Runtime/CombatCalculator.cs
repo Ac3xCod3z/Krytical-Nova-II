@@ -1,22 +1,8 @@
+using KryticalNova.Core;
 using UnityEngine;
 
 namespace KryticalNova.Progression
 {
-    public struct DamageResult
-    {
-        public float DamageDealt;
-        public bool IsCritical;
-        public bool IsEvaded;
-        public bool IsReflected;
-        public float ReflectedDamage;
-        public bool ShieldShattered;
-        public float RawPhysicalDamage;
-        public float MitigatedPhysicalDamage;
-        public float NetElementalDamage;
-        public float HitChance;
-        public bool BypassesShield;
-    }
-
     /// <summary>Deterministic combat resolution pipeline using designer ScriptableObject tuning.</summary>
     public static class CombatCalculator
     {

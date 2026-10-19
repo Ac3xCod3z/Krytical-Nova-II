@@ -7,10 +7,6 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
-using KryticalNova.Factions;
-using KryticalNova.Persistence;
-using KryticalNova.Player;
-using KryticalNova.Progression;
 using Unity.Netcode;
 using UnityEngine;
 
@@ -162,9 +158,10 @@ namespace KryticalNova.Networking
                 {
                     if (client.PlayerObject == null) continue;
                     GameObject player = client.PlayerObject.gameObject;
-                    string name = player.TryGetComponent(out PlayerIdentity identity) ? identity.CharacterName : player.name;
-                    string faction = identity != null && identity.Faction != FactionId.None ? identity.Faction.ToString() : "-";
-                    int level = player.TryGetComponent(out PlayerCharacterProgression progression) ? progression.CurrentLevel : 0;
+                    ServerHooks.PlayerFacts facts = ServerHooks.Describe(player);
+                    string name = facts.Found ? facts.Character : player.name;
+                    string faction = facts.Faction;
+                    int level = facts.Level;
                     players.Add("{\"id\":" + client.ClientId + ",\"name\":" + ControlPageRules.Json(name) + ",\"level\":" + level +
                                 ",\"faction\":" + ControlPageRules.Json(faction) + ",\"map\":" + ControlPageRules.Json(player.scene.name) +
                                 ",\"gm\":" + ControlPageRules.Json(GmRoster.NameOf(client.ClientId) ?? string.Empty) +
@@ -214,13 +211,9 @@ namespace KryticalNova.Networking
         // Where the saves go (online phase 4): files, or the save service and its database with whether both answer.
         private static string SavesText(out bool ok)
         {
-            if (ServerSave.Store is ServiceSaveStore service)
-            {
-                ok = service.Healthy;
-                return ok ? "saves: service ✓ database ✓ (" + service.Health.Replace("ok, ", "") + ")" : "saves: " + service.Health;
-            }
-            ok = true;
-            return "saves: files";
+            if (ServerHooks.Saves != null) return ServerHooks.Saves.Status(out ok);
+            ok = false;
+            return "saves: not loaded";
         }
 
         // Bans in force (online phase 2, milestone 4): the account id is needed to end one from the page.
@@ -327,14 +320,14 @@ namespace KryticalNova.Networking
                     SendJson(stream, 200, "{\"answer\":\"Logged out.\"}", "Set-Cookie: " + CookieName + "=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0");
                     return;
                 case "/api/save":
-                    answer = OnMain(() => { ServerSave.FlushAll(); return "Everyone is saved."; });
+                    answer = OnMain(() => { ServerHooks.Saves?.FlushAll(); return "Everyone is saved."; });
                     break;
                 case "/api/backup":
                     answer = OnMain(() => ServerLifetime.Backup("page").Replace("[Backup] ", "Backup: "));
                     break;
                 case "/api/announce":
                     if (string.IsNullOrWhiteSpace(body.text)) { answer = "Type the announcement first."; break; }
-                    answer = OnMain(() => $"Announced to {KryticalNova.Social.PlayerChat.ServerBroadcastGm(body.text.Trim(), "Server")} player(s).");
+                    answer = OnMain(() => $"Announced to {(ServerHooks.Announce != null ? ServerHooks.Announce(body.text.Trim(), "Server") : 0)} player(s).");
                     break;
                 case "/api/kick":
                     answer = OnMain(() => Kick(body.id, body.reason));
@@ -590,7 +583,7 @@ namespace KryticalNova.Networking
         {
             NetworkManager network = NetworkManager.Singleton;
             if (network != null && network.ConnectedClients.TryGetValue(client, out NetworkClient c) && c.PlayerObject != null
-                && c.PlayerObject.TryGetComponent(out PlayerIdentity identity)) return identity.CharacterName;
+                && ServerHooks.Describe(c.PlayerObject.gameObject) is { Found: true } facts) return facts.Character;
             return "connection " + client;
         }
 

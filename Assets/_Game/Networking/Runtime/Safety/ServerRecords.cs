@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
-using KryticalNova.Player;
 using Unity.Netcode;
 using UnityEngine;
 
@@ -145,9 +144,9 @@ namespace KryticalNova.Networking
         public static string Who(Component player)
         {
             if (player == null) return "(nobody)";
-            string character = player.TryGetComponent(out PlayerIdentity identity) && !string.IsNullOrEmpty(identity.CharacterName)
-                ? identity.CharacterName : NoCharacter;
-            string account = identity != null && !string.IsNullOrEmpty(identity.AccountId) ? identity.AccountId : "(none)";
+            ServerHooks.PlayerFacts facts = ServerHooks.Describe(player.gameObject);
+            string character = !string.IsNullOrEmpty(facts.Character) ? facts.Character : NoCharacter;
+            string account = !string.IsNullOrEmpty(facts.Account) ? facts.Account : "(none)";
             ulong connection = player.TryGetComponent(out NetworkObject networkObject) && networkObject.IsSpawned ? networkObject.OwnerClientId : 0;
             return $"{character} (account {account}, connection {connection})";
         }

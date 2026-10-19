@@ -4,6 +4,7 @@ using KryticalNova.Items;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UIElements;
+using KryticalNova.Core;
 
 namespace KryticalNova.UI
 {

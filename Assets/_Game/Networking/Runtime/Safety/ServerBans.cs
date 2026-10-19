@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using KryticalNova.Core;
-using KryticalNova.Persistence;
 using UnityEngine;
 
 namespace KryticalNova.Networking
@@ -44,7 +43,7 @@ namespace KryticalNova.Networking
             public List<BanEntry> bans = new List<BanEntry>();
         }
 
-        private static BanList List => ServerSave.World<BanList>(Document);
+        private static BanList List => ServerHooks.Saves.World<BanList>(Document);
 
         /// <summary>The bans in force now, oldest first (bans that ran out are dropped here).</summary>
         public static IReadOnlyList<BanEntry> All(DateTime utcNow)
@@ -86,7 +85,7 @@ namespace KryticalNova.Networking
                 untilUtc = length.HasValue ? (utcNow + length.Value).Ticks : 0,
             };
             List.bans.Add(ban);
-            ServerSave.SaveWorld(Document);
+            ServerHooks.Saves.SaveWorld(Document);
             return ban;
         }
 
@@ -107,7 +106,7 @@ namespace KryticalNova.Networking
                 }
             if (ended == null) return false;
             List.bans.Remove(ended);
-            ServerSave.SaveWorld(Document);
+            ServerHooks.Saves.SaveWorld(Document);
             return true;
         }
 
@@ -207,7 +206,7 @@ namespace KryticalNova.Networking
                 }
                 else
                 {
-                    List<string> accounts = ServerSave.AccountsWithCharacter(who);
+                    List<string> accounts = ServerHooks.Saves.AccountsWithCharacter(who);
                     if (accounts.Count == 0) return $"Nobody on or saved here is called \"{who}\". gm.players lists who is on.";
                     if (accounts.Count > 1) return $"{accounts.Count} accounts have a character called \"{who}\": ban by account id ({string.Join(", ", accounts)}).";
                     account = accounts[0];
@@ -233,7 +232,7 @@ namespace KryticalNova.Networking
         /// <summary>Ends a ban, named by account id or by the character it was put on. Returns the answer, with the account.</summary>
         public static string UnbanPlayer(string who)
         {
-            if (!ServerSave.HasAuthority) return "Bans are kept by the server.";
+            if (ServerHooks.Saves == null || !ServerHooks.Saves.HasAuthority) return "Bans are kept by the server.";
             if (string.IsNullOrWhiteSpace(who)) return "Name the ban: the character name or the account id (gm.bans lists them).";
             if (!Unban(who, DateTime.UtcNow, out BanEntry ended)) return $"No ban for \"{who.Trim()}\". gm.bans lists them.";
             string name = string.IsNullOrEmpty(ended.character) ? "Account " + ended.account : $"{ended.character} (account {ended.account})";
@@ -250,14 +249,14 @@ namespace KryticalNova.Networking
             foreach (Unity.Netcode.NetworkClient client in network.ConnectedClientsList)
             {
                 if (client.PlayerObject == null) continue;
-                KryticalNova.Player.PlayerIdentity identity = client.PlayerObject.GetComponent<KryticalNova.Player.PlayerIdentity>();
-                string name = identity != null ? identity.CharacterName : client.PlayerObject.name;
+                ServerHooks.PlayerFacts facts = ServerHooks.Describe(client.PlayerObject.gameObject);
+                string name = facts.Found ? facts.Character : client.PlayerObject.name;
                 if (who != client.ClientId.ToString(CultureInfo.InvariantCulture) && !string.Equals(who, name, StringComparison.OrdinalIgnoreCase)) continue;
                 clientId = client.ClientId;
                 character = name;
                 // The proven account; on an Editor host test without sign-in, the one the save is kept under.
                 account = ServerAccounts.TryGet(clientId, out ServerAccounts.Entry proven) ? proven.Account
-                    : identity != null ? identity.AccountId : string.Empty;
+                    : facts.Found ? facts.Account : string.Empty;
                 return true;
             }
             return false;
@@ -265,7 +264,7 @@ namespace KryticalNova.Networking
 
         private static void DropOver(DateTime utcNow)
         {
-            if (List.bans.RemoveAll(b => b == null || b.IsOver(utcNow)) > 0) ServerSave.SaveWorld(Document);
+            if (List.bans.RemoveAll(b => b == null || b.IsOver(utcNow)) > 0) ServerHooks.Saves.SaveWorld(Document);
         }
 
         private static string Plural(int n, string word) => n == 1 ? "1 " + word : n + " " + word + "s";

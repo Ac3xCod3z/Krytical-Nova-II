@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using KryticalNova.Progression;
 using NUnit.Framework;
 using UnityEngine;
+using KryticalNova.Core;
 
 namespace KryticalNova.Hostiles.Tests
 {

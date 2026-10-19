@@ -6,6 +6,7 @@ using KryticalNova.Player;
 using KryticalNova.Progression;
 using Unity.Netcode;
 using UnityEngine;
+using KryticalNova.Core;
 
 namespace KryticalNova.Social
 {

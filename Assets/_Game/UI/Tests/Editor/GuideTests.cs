@@ -140,7 +140,7 @@ namespace KryticalNova.Tests
         public void TheGuide_IsAPageOfSettings_WithItsOwnKey()
         {
             CollectionAssert.Contains(SettingsPages.Pages, SettingsPages.GuidePageName);
-            Assert.IsTrue(GuideText.IsKnownKey(KryticalNova.Player.KeyBindings.Guide), "the Guide's key is not on the Controls list");
+            Assert.IsTrue(GuideText.IsKnownKey(KryticalNova.Core.KeyBindings.Guide), "the Guide's key is not on the Controls list");
         }
     }
 }

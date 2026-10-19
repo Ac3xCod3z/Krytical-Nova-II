@@ -1,6 +1,5 @@
 using System;
 using KryticalNova.Core;
-using KryticalNova.Networking;
 using UnityEngine;
 
 namespace KryticalNova.CharacterCreation
@@ -16,9 +15,6 @@ namespace KryticalNova.CharacterCreation
         private static CharacterProfile active;
         private static int activeSlot = -1;
         private static bool resolved;
-        private static string accountId;
-
-        private const string AccountKey = "kn.account.v1";
 
         // Enter Play Mode runs without a domain reload, so statics must be reset by hand.
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
@@ -28,44 +24,22 @@ namespace KryticalNova.CharacterCreation
             active = null;
             activeSlot = -1;
             resolved = false;
-            accountId = null;
-            VerifiedAccountId = null;
+            LocalAccount.ForgetMadeUp();
+            LocalAccount.VerifiedId = null;
         }
 
-        /// <summary>
-        /// The id of this player's account: what its characters, and the things they share (the Deep Vault), are
-        /// saved under. On a server it is the account Unity's sign-in proves (<see cref="VerifiedAccountId"/>, online
-        /// phase 2); playing on this PC alone, the id the game made up (<see cref="MadeUpAccountId"/>).
-        /// </summary>
-        public static string AccountId => !string.IsNullOrEmpty(VerifiedAccountId) ? VerifiedAccountId : MadeUpAccountId;
+        /// <summary>The id of this player's account (<see cref="LocalAccount.Id"/>).</summary>
+        public static string AccountId => LocalAccount.Id;
 
-        /// <summary>
-        /// The account Unity's sign-in proves, set while joining a server (the server keeps saves under the same id); empty
-        /// when playing on this PC alone.
-        /// </summary>
-        public static string VerifiedAccountId { get; set; }
-
-        /// <summary>
-        /// The id the game made up once per machine profile, kept in PlayerPrefs beside the roster: the account of play on
-        /// this PC alone, and, sent once to a server, how its characters from before sign-in are carried over.
-        /// </summary>
-        public static string MadeUpAccountId
+        /// <summary>The account Unity's sign-in proves, set while joining a server (<see cref="LocalAccount.VerifiedId"/>).</summary>
+        public static string VerifiedAccountId
         {
-            get
-            {
-                if (accountId != null) return accountId;
-                string profile = NetworkConnectionManager.LocalProfile();
-                string key = string.IsNullOrEmpty(profile) ? AccountKey : AccountKey + "." + profile;
-                accountId = PlayerPrefs.GetString(key, string.Empty);
-                if (!SaveKeys.IsId(accountId))
-                {
-                    accountId = Guid.NewGuid().ToString("N");
-                    PlayerPrefs.SetString(key, accountId);
-                    PlayerPrefs.Save();
-                }
-                return accountId;
-            }
+            get => LocalAccount.VerifiedId;
+            set => LocalAccount.VerifiedId = value;
         }
+
+        /// <summary>The id the game made up once per machine profile (<see cref="LocalAccount.MadeUpId"/>).</summary>
+        public static string MadeUpAccountId => LocalAccount.MadeUpId;
 
         /// <summary>The character being played, or null.</summary>
         public static CharacterProfile Active => TryGetActive(out var profile) ? profile : null;
@@ -134,7 +108,7 @@ namespace KryticalNova.CharacterCreation
         {
             get
             {
-                if (store == null) store = new PlayerPrefsCharacterStore(NetworkConnectionManager.LocalProfile());
+                if (store == null) store = new PlayerPrefsCharacterStore(LocalProfile.Name());
                 return store;
             }
             set => store = value;

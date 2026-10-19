@@ -1,7 +1,6 @@
 #if UNITY_SERVER
 using System.Runtime.InteropServices;
 using System.Threading;
-using KryticalNova.Persistence;
 using Unity.Netcode;
 using UnityEngine;
 
@@ -77,7 +76,7 @@ namespace KryticalNova.Networking
         private void TrimLedger()
         {
             nextLedgerTrimAt = Time.realtimeSinceStartup + 24f * 3600f;
-            if (!(ServerSave.Store is KryticalNova.Core.ILedgerStore ledger)) return;
+            if (!(ServerHooks.Saves?.Ledger is KryticalNova.Core.ILedgerStore ledger)) return;
             int days = options.ledgerDays;
             long before = System.DateTime.UtcNow.AddDays(-days).Ticks;
             System.Threading.Tasks.Task.Run(() =>
@@ -108,7 +107,8 @@ namespace KryticalNova.Networking
         public static string Backup(string reason)
         {
             ServerLaunchOptions o = ServerLaunchOptions.LoadForThisServer();
-            string line = ServerBackups.MakeNow(ServerSave.DefaultRoot(), o.BackupFolderPath, o.backupsKept, reason);
+            string line = ServerHooks.Saves != null ? ServerHooks.Saves.Backup(o.BackupFolderPath, o.backupsKept, reason)
+                : "[Backup] Nothing to back up: the saves are not loaded.";
             Debug.Log(line);
             if (!line.StartsWith("[Backup] Nothing", System.StringComparison.Ordinal)) LastBackup = line.Replace("[Backup] ", string.Empty);
             return line;
@@ -168,7 +168,7 @@ namespace KryticalNova.Networking
             instance.stopping = true;
             instance.restarting = restart;
             Debug.Log("[Server] Stopping: " + reason + " Saving every player and the world...");
-            ServerSave.FlushAll();
+            ServerHooks.Saves?.FlushAll();
             Backup("stop");
             NetworkManager network = NetworkManager.Singleton;
             if (network != null && network.IsServer)
@@ -189,7 +189,7 @@ namespace KryticalNova.Networking
         private static void PlayerAnnouncement(string text)
         {
             Debug.Log("[Server] " + text);
-            KryticalNova.Social.PlayerChat.ServerBroadcastGm(text, "Server");
+            ServerHooks.Announce?.Invoke(text, "Server");
         }
 
         private static string Describe(float seconds)

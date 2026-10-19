@@ -1,20 +1,8 @@
 {
  "date": "2026-10-19",
- "uphill": [
-  "Core -> Gameplay/Progression",
-  "Gameplay/Combat -> Audio",
-  "Networking -> Gameplay/CharacterCreation",
-  "Networking -> Gameplay/Factions",
-  "Networking -> Gameplay/Persistence",
-  "Networking -> Gameplay/Player",
-  "Networking -> Gameplay/Progression",
-  "Networking -> Gameplay/Social"
- ],
+ "uphill": [],
  "twoway": [
-  "Audio <-> Gameplay/Combat",
-  "Core <-> Gameplay/Progression",
   "Gameplay/CharacterCreation <-> Gameplay/Items",
-  "Gameplay/CharacterCreation <-> Networking",
   "Gameplay/Combat <-> Gameplay/Items",
   "Gameplay/Combat <-> Gameplay/Player",
   "Gameplay/Economy <-> Gameplay/Items",
@@ -26,12 +14,7 @@
   "Gameplay/Items <-> Gameplay/Progression",
   "Gameplay/Items <-> Gameplay/Social",
   "Gameplay/Persistence <-> Gameplay/Progression",
-  "Gameplay/Persistence <-> Networking",
-  "Gameplay/Player <-> Gameplay/Progression",
-  "Gameplay/Player <-> Networking",
-  "Gameplay/Player <-> World",
-  "Gameplay/Progression <-> Networking",
-  "Gameplay/Social <-> Networking"
+  "Gameplay/Player <-> World"
  ],
  "heldScripts": {
   "ff41107f5d70dfe41ab7e12cc5d74db7": "Assets/_Game/Audio/Data/MusicTrack.cs",

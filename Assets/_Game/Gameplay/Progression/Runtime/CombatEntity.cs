@@ -1,6 +1,7 @@
 using System;
 using Unity.Netcode;
 using UnityEngine;
+using KryticalNova.Core;
 
 namespace KryticalNova.Progression
 {

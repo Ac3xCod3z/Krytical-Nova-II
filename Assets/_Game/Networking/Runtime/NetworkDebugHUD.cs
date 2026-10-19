@@ -43,7 +43,7 @@ namespace KryticalNova.Networking
         private void Update()
         {
             var keyboard = Keyboard.current;
-            if (keyboard != null && KryticalNova.Player.KeyBindings.Pressed(KryticalNova.Player.KeyBindings.NetworkPanel))
+            if (keyboard != null && KryticalNova.Core.KeyBindings.Pressed(KryticalNova.Core.KeyBindings.NetworkPanel))
             {
                 showHUD = !showHUD;
             }
