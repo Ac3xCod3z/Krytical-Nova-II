@@ -21,7 +21,7 @@ Its map is the scene `Assets/_Game/Scenes/World/...` of the same name.
 - All 38 maps are laid out from their layout files (`Assets/_Game/World/Data/ZoneLayouts/`) and have concept shots in their `Concept/` folder. **New Meridian** is the pilot, checked against the owner's mockups.
 
 **Not yet.**
-- **Six packs this doc names are not in the project yet:** Apocalypse Wasteland, Fantasy Village, Dungeon, Dungeon Realms, Mech and Kaiju. Their pieces are left out of the kits and maps until they are imported. After importing, run **Build Zone Kits** and lay the maps out again.
+- ~~Six packs not in the project yet~~: done 19 Oct 2026 with the **Zone Pack Importer**. **Krytical Nova ▸ World ▸ Zone Pack Importer** brings in only the prefabs the kits and layouts use from Apocalypse Wasteland, Fantasy Village, Dungeon, Dungeon Realms and Mech, with the meshes, materials and textures they need, one pack at a time: 1,594 files (about 200 MB) instead of the whole packs (1.75 GB). Nothing in Kaiju is used, so none of it came in. The kits were built again (684 more pieces, none missing) and every map was laid out again. One Mech shin-pad keeps an empty second material slot: Synty ships it that way.
 - **Every map needs a hand pass.** The layouts give each map its ground, routes, districts and landmarks, not its finish.
 - **The Runs** are rooms on open ground: no roofs, no darkness yet.
 - **Gameplay** (Hostile grounds, Wayfinders, Run entrances, portals) is only named markers.
@@ -775,7 +775,7 @@ The Rupture's tie to the original catastrophe stays undecided (Lore Bible sectio
 
 ## The owner's mockups and the first-pass shots
 
-The owner's five finished-look mockups from the Figma World Atlas, then a shot of every built map. The shots are taken in the maps themselves through the game's comic look: what can be built, because it is what was built. They are a first pass, before the hand dressing and without the six packs still to import. Every place's folder holds more shots: one per point of interest, and a top-down Layout.
+The owner's five finished-look mockups from the Figma World Atlas, then a shot of every built map. The shots are taken in the maps themselves through the game's comic look: what can be built, because it is what was built. They are a first pass, before the hand dressing (taken again 19 Oct 2026 with the imported packs' pieces in place). Every place's folder holds more shots: one per point of interest, and a top-down Layout.
 
 ![Mockup: New Meridian, isometric](art/mockups/mockup-new-meridian-isometric.jpg)
 
