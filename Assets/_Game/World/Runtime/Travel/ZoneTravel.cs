@@ -1,11 +1,11 @@
 using System;
 using System.Collections;
 using KryticalNova.Networking;
-using KryticalNova.Player;
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.AI;
 using UnityEngine.SceneManagement;
+using KryticalNova.Core;
 
 namespace KryticalNova.World
 {
@@ -144,8 +144,8 @@ namespace KryticalNova.World
         /// <summary>This machine's networked player: camera, occluder fade and NavMesh of the new map.</summary>
         private static void RebindLocalPlayer()
         {
-            foreach (PointAndClickPlayer player in PointAndClickPlayer.Active)
-                if (player != null && player.IsSpawned && player.IsOwner) player.RebindToScene();
+            foreach (IPlayerBody player in PlayerBodies.All)
+                if (player != null && player.IsLocal) player.RebindToScene();
         }
 
         private static Runner EnsureRunner()

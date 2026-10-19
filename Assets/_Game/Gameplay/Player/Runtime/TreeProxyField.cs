@@ -1,9 +1,8 @@
 using System.Collections.Generic;
-using KryticalNova.Player;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-namespace KryticalNova.World
+namespace KryticalNova.Player
 {
     /// <summary>
     /// Trees are solid only near players (Wallstride, owner 16 Oct 2026). A map's terrain holds hundreds of trees;

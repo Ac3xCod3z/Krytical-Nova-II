@@ -114,7 +114,7 @@ namespace KryticalNova.Player
         private PlayerJumpMotor jumpMotor;
         private PlayerVaultMotor vaultMotor;
         private PlayerWallRunMotor wallRunMotor;
-        private PlayerMeleeCombat meleeCombat;
+        private IMeleeAttacker meleeCombat;
         private PlayerResources resources;
         private CombatEntity combatEntity;
         private CharacterBuffManager buffManager;
@@ -153,7 +153,7 @@ namespace KryticalNova.Player
             jumpMotor = GetComponent<PlayerJumpMotor>();
             vaultMotor = GetComponent<PlayerVaultMotor>();
             wallRunMotor = GetComponent<PlayerWallRunMotor>();
-            meleeCombat = GetComponent<PlayerMeleeCombat>();
+            meleeCombat = GetComponent<IMeleeAttacker>();
             resources = GetComponent<PlayerResources>();
             combatEntity = GetComponent<CombatEntity>();
             buffManager = GetComponent<CharacterBuffManager>();

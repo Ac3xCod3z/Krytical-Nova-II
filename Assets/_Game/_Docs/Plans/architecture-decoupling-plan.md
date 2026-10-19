@@ -115,16 +115,22 @@ knowing Items. `LocalPlayerTests` checks the keeping, a new player starting afre
 
 Economy no longer has a loop with Items, Progression or Social; seven two-way pairs remain.
 
-## Stage 5: the remaining loops (one or two files each)
+## Stage 5: the remaining loops (built 19 Oct 2026)
 
-| Loop | Fix |
+Every two-way pair is gone and the map finds **no link left to cut**: each system now uses only systems below it.
+
+| Loop | What was done |
 |---|---|
-| Player → Combat | `PointAndClickPlayer`'s click-to-attack calls an `IAttackCommand` that Player owns and `PlayerMeleeCombat` implements. Death and recall raise events, or read one `IsInFight` query, instead of reaching into `PlayerMeleeCombat`, `PlayerDuel` and `PlayerCombatState`. |
-| World → Player | Travel stays in World (owner, 19 Oct 2026). Travel, portals, trees and rain use a small `ILocalBody` in Core (position, airborne, move to a point) that Player registers for the local player. |
-| Persistence → Items / Player / CharacterCreation | `PlayerSaveAgent` stops building the select-screen loadout itself. That becomes an `ISaveParticipant` owned by CharacterCreation. `PlayerHotbarMemory` moves to the hotbar's own system. |
-| Social chat used by Items, Pets, Hostiles, Server | One `IChatBroadcast` in Core that `PlayerChat` registers, for "say this line to these players". |
-| Hostiles → Social (party share, Sponsor bonus in `HostileKillRewards`) | Social listens to the kill event that already exists and adds the party and Sponsor part. |
-| One-file loops | `CharacterPortraitStage` moves to CharacterCreation. Combat finds `WeaponHitbox` itself, so `WeaponVisualMount` no longer needs it. `PlayerPet` targets through `IDamageable` instead of `HostileNet`. `PlayerRecall` asks Housing for its destination through the recall item's own handler. |
+| Pets → Hostiles (a pet's kill XP) | `IHostile`, an empty marker in Core that `HostileNet` carries. |
+| Items → Persistence (Flask, loadouts, loot) | `ISaveScheduler` gained `Save()` and `TallyItems()`; `PlayerSaveAgent` implements them as before. |
+| Items → Social (drop announcements) | `ServerChat` in Core, filled by Social at load; `PlayerChat.ServerAnnounce` does the work as before. |
+| Items → CharacterCreation | `CharacterPortraitStage` moved to CharacterCreation: it shows a character. |
+| Player → Housing (Recall) | Recall (`PlayerRecall`, `RecallRules`, `RecallSettings` and its asset, its tests) moved to Housing: it takes you home. |
+| Player → Combat (click to attack, death, the duel rule) | Player owns `IMeleeAttacker`, `IDuelState` and `HostilityCheck` (`CombatContracts.cs`). `PlayerMeleeCombat` and `PlayerDuel` implement them, and Combat fills `HostilityCheck` with its own rule (`HostilityCheckTests`). The fight sits above the body. |
+| World → Player (portals, travel, rain, trees) | As the owner decided, travel stays in World. `IPlayerBody` / `PlayerBodies` in Core is a player's body as the world sees it; `PointAndClickPlayer` implements it and `PlayerBodies.All` reads its own player list. `TreeProxyField` moved to Player: it exists for Wallstride. |
+| Items → Combat (the weapon's hitbox) | `IWeaponReach` (Items), which `WeaponHitbox` implements. The mount's `hitbox` field keeps its name and its reference on the prefab. |
+
+The map also stopped taking a method named like a class (`ServerSave(index)` in the loadouts) for that class.
 
 ## Stage 6: one assembly per system
 

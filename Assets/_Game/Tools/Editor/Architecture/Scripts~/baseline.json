@@ -1,10 +1,7 @@
 {
  "date": "2026-10-19",
  "uphill": [],
- "twoway": [
-  "Gameplay/Combat <-> Gameplay/Player",
-  "Gameplay/Player <-> World"
- ],
+ "twoway": [],
  "heldScripts": {
   "ff41107f5d70dfe41ab7e12cc5d74db7": "Assets/_Game/Audio/Data/MusicTrack.cs",
   "f9f7e041a3e1e2e40b46f8896c04f52f": "Assets/_Game/Audio/Data/ZoneMusic.cs",
