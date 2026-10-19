@@ -1,4 +1,3 @@
-using KryticalNova.Economy;
 using KryticalNova.Factions;
 using KryticalNova.Progression;
 using KryticalNova.World;

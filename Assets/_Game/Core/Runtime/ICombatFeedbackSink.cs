@@ -1,4 +1,3 @@
-using KryticalNova.Progression;
 using UnityEngine;
 
 namespace KryticalNova.Core

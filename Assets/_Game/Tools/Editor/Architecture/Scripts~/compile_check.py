@@ -114,6 +114,8 @@ def make(asm):
     # drop the Editor's file list; the checkout's comes below
     text = re.sub(r"<(Compile|None|Content|AdditionalFiles|EmbeddedResource) Include=\"[^\"]*\"\s*/>\s*", "", text)
     text = re.sub(r"<AssemblyName>[^<]*</AssemblyName>", lambda m: f"<AssemblyName>{asm}</AssemblyName>", text)
+    # Unity hands an assembly only the assemblies it names, not theirs in turn: so must this check
+    text = text.replace("</AssemblyName>", "</AssemblyName>\n    <DisableTransitiveProjectReferences>true</DisableTransitiveProjectReferences>", 1)
     obj = os.path.join(OUT, "obj", asm) + os.sep
     text = re.sub(r"<BaseIntermediateOutputPath>[^<]*</BaseIntermediateOutputPath>", lambda m: f"<BaseIntermediateOutputPath>{obj}</BaseIntermediateOutputPath>", text)
     bin_dir = os.path.join(OUT, "bin") + os.sep

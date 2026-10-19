@@ -1,6 +1,5 @@
 using System;
 using KryticalNova.CharacterCreation;
-using KryticalNova.Combat;
 using KryticalNova.Core;
 using KryticalNova.Factions;
 using KryticalNova.Items;

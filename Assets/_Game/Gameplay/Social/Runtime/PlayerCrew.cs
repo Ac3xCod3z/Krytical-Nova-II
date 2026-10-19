@@ -2,7 +2,6 @@ using KryticalNova.Networking;
 using System;
 using System.Collections.Generic;
 using KryticalNova.Core;
-using KryticalNova.Economy;
 using KryticalNova.Factions;
 using KryticalNova.Items;
 using KryticalNova.Persistence;

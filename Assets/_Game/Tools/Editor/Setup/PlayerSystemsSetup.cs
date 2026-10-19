@@ -25,7 +25,15 @@ namespace KryticalNova.EditorTools
             public Row(string type, params (string, string)[] assets) { Type = type; Assets = assets; }
         }
 
-        private const string Runtime = ", KryticalNova.Runtime";
+        // Each system compiles into an assembly of its own (architecture stage 6), so a row names its type by its full name
+        // and the type is looked for in every loaded assembly; a row may still name an assembly after a comma.
+        private static Type FindType(string name)
+        {
+            if (name.Contains(",")) return Type.GetType(name);
+            foreach (Type type in TypeCache.GetTypesDerivedFrom<Component>())
+                if (type.FullName == name) return type;
+            return null;
+        }
         public const string CadenceSettingsPath = "Assets/_Game/Gameplay/Combat/Data/Assets/CadenceSettings.asset";
         public const string EconomySettingsPath = "Assets/_Game/Gameplay/Economy/Data/Assets/EconomySettings.asset";
         public const string GearProgressionPath = "Assets/_Game/Gameplay/Items/Data/Assets/GearProgressionSettings.asset";
@@ -146,7 +154,7 @@ namespace KryticalNova.EditorTools
                 int added = 0;
                 foreach (Row row in Rows)
                 {
-                    Type type = Type.GetType(row.Type.Contains(",") ? row.Type : row.Type + Runtime);
+                    Type type = FindType(row.Type);
                     if (type == null) { Debug.LogWarning($"[Setup] Player component {row.Type} not found; skipped."); continue; }
                     Component component = root.GetComponent(type);
                     if (component == null) { component = root.AddComponent(type); added++; }

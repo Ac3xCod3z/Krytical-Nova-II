@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using KryticalNova.Core;
 using KryticalNova.Networking;
-using KryticalNova.Persistence;
 using Unity.Collections;
 using Unity.Netcode;
 using UnityEngine;

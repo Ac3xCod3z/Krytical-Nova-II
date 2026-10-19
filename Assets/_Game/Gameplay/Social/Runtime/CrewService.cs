@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using KryticalNova.Core;
-using KryticalNova.Economy;
 using KryticalNova.NPC;
 using KryticalNova.Persistence;
 using Unity.Collections;

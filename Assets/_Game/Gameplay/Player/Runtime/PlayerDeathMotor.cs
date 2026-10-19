@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using Kinemation.MotionWarping.Runtime.Core;
 using Kinemation.MotionWarping.Runtime.Utility;
-using KryticalNova.Combat;
 using KryticalNova.Core;
 using KryticalNova.Networking;
 using KryticalNova.Progression;

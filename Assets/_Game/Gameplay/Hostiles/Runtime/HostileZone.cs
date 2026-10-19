@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using KryticalNova.Core;
-using KryticalNova.Economy;
 using KryticalNova.Items;
 using KryticalNova.Progression;
 using Unity.Netcode;
