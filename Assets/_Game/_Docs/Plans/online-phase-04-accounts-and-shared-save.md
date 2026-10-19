@@ -77,6 +77,18 @@ All of that stays. What changes is underneath.
 7. **Real accounts.** Unity Player Accounts on the launcher build, the end of anonymous accounts outside local tests,
    Steam linking ready for the Steam build, and the proof that the Nova Store's web sign-in is the same account.
 
+### Keeping the disk in check (owner, 18 Oct 2026: "kick the oldest so old data does not fill my disk")
+
+- A save **replaces** the one before it (the version goes up; no history of saves is kept), so the database grows with
+  the number of characters, not with how often they save. Postgres's own autovacuum (on by default) takes back the
+  space each replaced row leaves.
+- **Backups** (milestone 6): nightly, the newest 14 kept, older ones deleted by themselves.
+- **The ledger** (milestone 3): kept for a set number of days (`ledgerDays`, 90 to start) in the server's settings;
+  older lines leave the database after that night's backup holds them.
+- **The record files** beside the server (`gm.log`, `economy.log`, `access.log`, `flags.log`): a new file each month,
+  the last 6 kept (done with milestone 3).
+- The control page's Saves chip shows the database's size.
+
 ### As built
 
 **Milestone 1 (18 Oct 2026): Postgres, the save service, the game's side.**
@@ -99,6 +111,26 @@ All of that stays. What changes is underneath.
   1000 of 1000. End to end on the measure server with the test saves: the Editor joined as Tolan, the account was in
   `krytical_nova_test` (17 parts, 3 KB, saved on joining and by the autosave), its lock held by the server; on leaving
   it was saved once more and the lock let go at once.
+
+**Milestone 2 (18 Oct 2026): accounts kept in parts, and the copy tool.**
+- An account is a small header (`accounts/<id>`: version 2, the account-wide part names, each character's name,
+  faction, level, map, place and part names; no game state) and one document per part
+  (`accounts/<id>/parts/<part>`, `characters/<character>/parts/<part>`; a part name is kept in lower case). A save
+  writes only the parts whose text changed and the header if it changed, as one all-or-nothing batch on the save
+  service (`IBatchSaveStore`; files are written one by one); a part a system no longer saves is deleted. A character
+  loads in one trip (`/read`).
+- An account in the old one-piece layout is read as it is, kept once as `accounts/<id>-v1` and saved in parts from its
+  next save. The header's version says which layout an account is in; `ServerSave.ReadAccountFrom` reads either.
+- Map and position are saved in each character's header (a move of more than a metre counts as a change); they are used
+  once there is more than one map.
+- The save service: `/batch` (one stale write turns the whole save away), `/read`, the database size in `/health` and
+  on the Saves chip.
+- **Copy tool** (Krytical Nova ▸ Online ▸ Saves): a save folder into the real or the test database, in parts, and a
+  database back into an empty folder. The source is only read; an account the target has is left alone and named.
+- *Tried:* `SplitSaveTests` (6), `SaveCopyToolTests` (test database), EditMode 1007 of 1007. End to end on the test
+  server: Tolan, saved in milestone 1 as one 3 KB document, joined; the server kept that document as `-v1` and wrote a
+  471-byte header and 17 parts (11 to 492 bytes). After a few steps the autosave wrote 617 bytes (the header, for the
+  new place, and the XP boost timers) and nothing else; on leaving it saved once more and let the lock go.
 
 ## Decisions to make at the start of this phase (as written 11 Oct 2026)
 

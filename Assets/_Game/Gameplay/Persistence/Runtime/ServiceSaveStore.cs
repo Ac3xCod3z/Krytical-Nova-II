@@ -11,31 +11,44 @@ using UnityEngine;
 namespace KryticalNova.Persistence
 {
     /// <summary>
-    /// Saves through the save service (online phase 4, milestone 1) instead of files: the service alone talks to the
-    /// database. Works like <see cref="FileSaveStore"/> with <c>background</c> on: a write returns at once and is sent by a
-    /// thread of the store's own (what is waiting is the truth meanwhile); <see cref="Flush"/> waits until the service has
-    /// everything.
+    /// Saves through the save service (online phase 4) instead of files: the service alone talks to the database. Works
+    /// like <see cref="FileSaveStore"/> with <c>background</c> on: a write returns at once and is sent by a thread of the
+    /// store's own (what is waiting is the truth meanwhile); <see cref="Flush"/> waits until the service has everything.
     /// <para>Every document has a version. A write names the version this store last read or wrote, so it can never
     /// overwrite a newer one written by another server: such a write is refused and reported loudly.</para>
+    /// <para>Writes go as batches (milestone 2): a player's save is the parts that changed and its header, written
+    /// together or not at all (<see cref="WriteBatch"/>); batches are sent in the order they were handed over. Many
+    /// documents are read in one trip (<see cref="TryReadMany"/>).</para>
     /// <para>Accounts are locked (<see cref="TryLock"/>): one server at a time holds a player's account, and renews the hold
     /// every minute; a server that stops (crashes) lets it run out, so the player can join elsewhere.</para>
     /// </summary>
-    public sealed class ServiceSaveStore : ISaveStore, IDisposable
+    public sealed class ServiceSaveStore : IBatchSaveStore, IDisposable
     {
         public const int LockSeconds = 180;
         private const int RenewMilliseconds = 60000;
         private const int IdleMilliseconds = 2000;
 
+        private sealed class Batch
+        {
+            public readonly List<KeyValuePair<string, string>> Writes = new List<KeyValuePair<string, string>>();
+            public readonly List<string> Deletes = new List<string>();
+        }
+
         private readonly HttpClient http;
         private readonly string holder;
         private readonly Dictionary<string, long> versions = new Dictionary<string, long>(StringComparer.Ordinal);
+        // What is handed over and not on the service yet: the newest text of each key (null: a delete), and how many
+        // batches still carry it, so a read gives back what will be there.
         private readonly Dictionary<string, string> waiting = new Dictionary<string, string>(StringComparer.Ordinal);
+        private readonly Dictionary<string, int> carried = new Dictionary<string, int>(StringComparer.Ordinal);
+        private readonly Queue<Batch> batches = new Queue<Batch>();
         private readonly HashSet<string> held = new HashSet<string>(StringComparer.Ordinal);
         private readonly object gate = new object();
-        private Thread writer;
-        private string writingKey;
-        private bool closed;
         private readonly Timer renew;
+        private readonly Timer health;
+        private Thread writer;
+        private bool sending;
+        private bool closed;
 
         /// <param name="baseUrl">The service, for example http://127.0.0.1:7801.</param>
         /// <param name="key">The service key (save-service-key.txt).</param>
@@ -49,9 +62,7 @@ namespace KryticalNova.Persistence
             health = new Timer(_ => CheckHealth(), null, 0, 10000);
         }
 
-        private readonly Timer health;
-
-        // ------------------------------------------------------------------ ISaveStore
+        // ------------------------------------------------------------------ reading
 
         public bool TryRead(string key, out string json)
         {
@@ -80,32 +91,40 @@ namespace KryticalNova.Persistence
             }
         }
 
-        public void Write(string key, string json)
+        public bool TryReadMany(IReadOnlyList<string> keys, IDictionary<string, string> found)
         {
-            if (!SaveKeys.IsValid(key)) return;
+            var ask = new List<string>(keys.Count);
             lock (gate)
-            {
-                waiting[key] = json ?? string.Empty;
-                if (closed) { WriteNow(key); return; }
-                if (writer == null)
+                foreach (string key in keys)
                 {
-                    writer = new Thread(WriteWaiting) { IsBackground = true, Name = "Save Service Writer" };
-                    writer.Start();
+                    if (!SaveKeys.IsValid(key)) continue;
+                    if (waiting.TryGetValue(key, out string pending)) { if (!string.IsNullOrEmpty(pending)) found[key] = pending; }
+                    else ask.Add(key);
                 }
-                Monitor.PulseAll(gate);
-            }
-        }
-
-        public void Delete(string key)
-        {
-            if (!SaveKeys.IsValid(key)) return;
-            lock (gate)
+            if (ask.Count == 0) return true;
+            try
             {
-                waiting.Remove(key);
-                versions.Remove(key);
+                var body = new StringBuilder("{\"keys\":[");
+                for (int i = 0; i < ask.Count; i++) body.Append(i > 0 ? "," : "").Append(Quote(ask[i]));
+                using HttpResponseMessage response = Send(HttpMethod.Post, "read", body.Append("]}").ToString());
+                response.EnsureSuccessStatusCode();
+                DocList list = JsonUtility.FromJson<DocList>("{\"docs\":" + Text(response) + "}");
+                lock (gate)
+                {
+                    foreach (string key in ask) versions[key] = 0; // missing unless found below
+                    foreach (Doc doc in list.docs ?? new List<Doc>())
+                    {
+                        versions[doc.key] = doc.version;
+                        if (!string.IsNullOrEmpty(doc.body)) found[doc.key] = doc.body;
+                    }
+                }
+                return true;
             }
-            try { Send(HttpMethod.Delete, "doc?key=" + Uri.EscapeDataString(key), null).Dispose(); }
-            catch (Exception e) { Debug.LogError($"[Save] Could not delete '{key}' on the save service: {e.GetBaseException().Message}"); }
+            catch (Exception e)
+            {
+                Debug.LogError($"[Save] Could not read {ask.Count} save(s) from the save service: {e.GetBaseException().Message}");
+                return false;
+            }
         }
 
         public IReadOnlyList<string> Keys(string prefix)
@@ -126,65 +145,140 @@ namespace KryticalNova.Persistence
 
         // ------------------------------------------------------------------ writing
 
-        // The store's own thread: sends what is waiting, one key at a time, and stops when idle for a while.
+        public void Write(string key, string json) =>
+            WriteBatch(new[] { new KeyValuePair<string, string>(key, json ?? string.Empty) }, Array.Empty<string>());
+
+        public void Delete(string key) => WriteBatch(Array.Empty<KeyValuePair<string, string>>(), new[] { key });
+
+        public void WriteBatch(IReadOnlyList<KeyValuePair<string, string>> writes, IReadOnlyList<string> deletes)
+        {
+            var batch = new Batch();
+            foreach (KeyValuePair<string, string> write in writes)
+                if (SaveKeys.IsValid(write.Key)) batch.Writes.Add(new KeyValuePair<string, string>(write.Key, write.Value ?? string.Empty));
+            foreach (string key in deletes)
+                if (SaveKeys.IsValid(key)) batch.Deletes.Add(key);
+            if (batch.Writes.Count == 0 && batch.Deletes.Count == 0) return;
+
+            lock (gate)
+            {
+                foreach (KeyValuePair<string, string> write in batch.Writes) Hold(write.Key, write.Value);
+                foreach (string key in batch.Deletes) Hold(key, null);
+                batches.Enqueue(batch);
+                if (closed) { SendWaiting(); return; }
+                if (writer == null)
+                {
+                    writer = new Thread(WriteWaiting) { IsBackground = true, Name = "Save Service Writer" };
+                    writer.Start();
+                }
+                Monitor.PulseAll(gate);
+            }
+        }
+
+        private void Hold(string key, string text)
+        {
+            waiting[key] = text;
+            carried[key] = carried.TryGetValue(key, out int n) ? n + 1 : 1;
+        }
+
+        private void Let(string key)
+        {
+            if (!carried.TryGetValue(key, out int n)) return;
+            if (n > 1) carried[key] = n - 1;
+            else
+            {
+                carried.Remove(key);
+                waiting.Remove(key);
+            }
+        }
+
+        // The store's own thread: sends the batches in order, and stops when idle for a while.
         private void WriteWaiting()
         {
             while (true)
             {
-                string key;
                 lock (gate)
                 {
-                    while (waiting.Count == 0)
+                    while (batches.Count == 0)
                     {
-                        if (!Monitor.Wait(gate, IdleMilliseconds) && waiting.Count == 0)
+                        if (!Monitor.Wait(gate, IdleMilliseconds) && batches.Count == 0)
                         {
                             writer = null;
                             Monitor.PulseAll(gate);
                             return;
                         }
                     }
-                    key = null;
-                    foreach (string first in waiting.Keys) { key = first; break; }
-                    writingKey = key;
                 }
-                WriteNow(key);
-                lock (gate)
-                {
-                    writingKey = null;
-                    Monitor.PulseAll(gate);
-                }
+                SendNext();
             }
         }
 
-        // Sends the newest text of one key, at the version this store knows (0: it must be new).
-        private void WriteNow(string key)
+        // Sends what is left on the calling thread (the store is closing).
+        private void SendWaiting()
         {
-            string json;
-            long expected;
+            DateTime until = DateTime.UtcNow.AddSeconds(15);
+            while (batches.Count > 0 && DateTime.UtcNow < until) SendNext();
+        }
+
+        // Sends the oldest batch with the versions this store knows (0: the document must be new).
+        private void SendNext()
+        {
+            Batch batch;
+            string body;
             lock (gate)
             {
-                if (!waiting.TryGetValue(key, out json)) return;
-                waiting.Remove(key);
-                expected = versions.TryGetValue(key, out long known) ? known : 0;
+                if (batches.Count == 0) return;
+                batch = batches.Peek();
+                sending = true;
+                var text = new StringBuilder(256).Append("{\"writes\":[");
+                for (int i = 0; i < batch.Writes.Count; i++)
+                {
+                    string key = batch.Writes[i].Key;
+                    long expected = versions.TryGetValue(key, out long known) ? known : 0;
+                    text.Append(i > 0 ? "," : "").Append("{\"key\":").Append(Quote(key)).Append(",\"body\":").Append(Quote(batch.Writes[i].Value))
+                        .Append(",\"expected\":").Append(expected).Append('}');
+                }
+                text.Append("],\"deletes\":[");
+                for (int i = 0; i < batch.Deletes.Count; i++) text.Append(i > 0 ? "," : "").Append(Quote(batch.Deletes[i]));
+                body = text.Append("]}").ToString();
             }
             try
             {
-                string body = "{\"key\":\"" + key + "\",\"body\":" + Quote(json) + ",\"expected\":" + expected + "}";
-                using HttpResponseMessage response = Send(HttpMethod.Put, "doc", body);
-                Written result = JsonUtility.FromJson<Written>(Text(response));
+                using HttpResponseMessage response = Send(HttpMethod.Post, "batch", body);
+                string answer = Text(response);
                 if (response.StatusCode == HttpStatusCode.Conflict)
                 {
-                    Debug.LogError($"[Save] '{key}' was changed elsewhere (version {result.version}, this server had {expected}): this save was not written, so the newer one stays.");
-                    return;
+                    BatchAnswer refused = JsonUtility.FromJson<BatchAnswer>(answer);
+                    Debug.LogError($"[Save] '{refused.conflict}' was changed elsewhere (it is at version {refused.conflictVersion}): this save of " +
+                                   $"{batch.Writes.Count + batch.Deletes.Count} document(s) was not written, so the newer one stays.");
                 }
-                response.EnsureSuccessStatusCode();
-                lock (gate) versions[key] = result.version;
+                else
+                {
+                    response.EnsureSuccessStatusCode();
+                    BatchAnswer done = JsonUtility.FromJson<BatchAnswer>(answer);
+                    lock (gate)
+                    {
+                        foreach (KeyVersion written in done.versions ?? new List<KeyVersion>()) versions[written.key] = written.version;
+                        foreach (string key in batch.Deletes) versions.Remove(key);
+                    }
+                }
+                lock (gate)
+                {
+                    batches.Dequeue();
+                    foreach (KeyValuePair<string, string> write in batch.Writes) Let(write.Key);
+                    foreach (string key in batch.Deletes) Let(key);
+                    sending = false;
+                    Monitor.PulseAll(gate);
+                }
             }
             catch (Exception e)
             {
-                // The service did not answer: keep the text waiting so the next attempt sends it, unless newer text came.
-                lock (gate) if (!waiting.ContainsKey(key)) waiting[key] = json;
-                Debug.LogError($"[Save] Could not save '{key}' to the save service: {e.GetBaseException().Message}. It is kept and sent again.");
+                // The service did not answer: the batch stays first in line and is sent again.
+                lock (gate)
+                {
+                    sending = false;
+                    Monitor.PulseAll(gate);
+                }
+                Debug.LogError($"[Save] Could not save to the save service: {e.GetBaseException().Message}. It is kept and sent again.");
                 Thread.Sleep(1000);
             }
         }
@@ -195,10 +289,8 @@ namespace KryticalNova.Persistence
             DateTime until = DateTime.UtcNow.AddSeconds(seconds);
             lock (gate)
             {
-                // No writer thread (closing): send what is left here, as long as there is time.
-                while (writer == null && waiting.Count > 0 && DateTime.UtcNow < until)
-                    foreach (string key in new List<string>(waiting.Keys)) WriteNow(key);
-                while ((waiting.Count > 0 || writingKey != null) && DateTime.UtcNow < until)
+                if (writer == null && batches.Count > 0) SendWaiting();
+                while ((batches.Count > 0 || sending) && DateTime.UtcNow < until)
                     Monitor.Wait(gate, 100);
             }
         }
@@ -302,7 +394,7 @@ namespace KryticalNova.Persistence
 
         /// <summary>
         /// Whether the save service and its database answer, checked every 10 seconds off the game's thread: "ok" with
-        /// the number of saves, or what is down. For the control page's Saves chip.
+        /// the number of saves and the database's size, or what is down. For the control page's Saves chip.
         /// </summary>
         public string Health { get; private set; } = "checking";
 
@@ -318,7 +410,7 @@ namespace KryticalNova.Persistence
                 if (!response.IsSuccessStatusCode) { Healthy = false; Health = "database DOWN"; return; }
                 HealthAnswer answer = JsonUtility.FromJson<HealthAnswer>(Text(response));
                 Healthy = true;
-                Health = "ok, " + answer.documents + " saves";
+                Health = $"ok, {answer.documents} saves, {answer.bytes / (1024 * 1024.0):0.#} MB";
             }
             catch (Exception)
             {
@@ -326,8 +418,6 @@ namespace KryticalNova.Persistence
                 Health = "service DOWN";
             }
         }
-
-        [Serializable] private sealed class HealthAnswer { public bool ok; public long documents; }
 
         // ------------------------------------------------------------------ the wire
 
@@ -368,8 +458,11 @@ namespace KryticalNova.Persistence
         }
 
         [Serializable] private sealed class Doc { public string key; public string body; public long version; }
-        [Serializable] private sealed class Written { public bool written; public long version; }
+        [Serializable] private sealed class DocList { public List<Doc> docs; }
+        [Serializable] private sealed class KeyVersion { public string key; public long version; }
+        [Serializable] private sealed class BatchAnswer { public bool written; public string conflict; public long conflictVersion; public List<KeyVersion> versions; }
         [Serializable] private sealed class LockAnswer { public bool granted; public string holder; }
         [Serializable] private sealed class KeyList { public List<string> keys; }
+        [Serializable] private sealed class HealthAnswer { public bool ok; public long documents; public long bytes; }
     }
 }

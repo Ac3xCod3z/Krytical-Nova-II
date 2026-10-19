@@ -232,9 +232,26 @@ namespace KryticalNova.Persistence
                 character.level = level;
                 changed = true;
             }
+            // Where the character is (online phase 4): the map and the spot, kept for when there is more than one map. Written
+            // when the player leaves, changes map, or every few minutes, not with every autosave (byte-sized saves: walking
+            // about alone writes nothing).
+            Vector3 at = transform.position;
+            string map = gameObject.scene.name;
+            bool placeDue = leaving || character.map != map || Time.unscaledTime >= nextPlace;
+            if (placeDue && (character.map != map || (new Vector3(character.x, character.y, character.z) - at).sqrMagnitude > 1f))
+            {
+                character.map = map;
+                character.x = Mathf.Round(at.x * 10f) / 10f;
+                character.y = Mathf.Round(at.y * 10f) / 10f;
+                character.z = Mathf.Round(at.z * 10f) / 10f;
+                changed = true;
+            }
+            if (placeDue) nextPlace = Time.unscaledTime + PlaceSeconds;
             if (!changed) return;
 
-            character.savedUtc = DateTime.UtcNow.Ticks;
+            // The "last saved" time moves with the place, not with every change: otherwise every pickup would rewrite the
+            // header too (byte-sized saves).
+            if (placeDue || character.savedUtc == 0) character.savedUtc = DateTime.UtcNow.Ticks;
             ServerSave.WriteAccount(account);
         }
 
@@ -252,9 +269,16 @@ namespace KryticalNova.Persistence
         internal void SaveAndRelease()
         {
             if (character == null) return;
+            leaving = true;
             Save();
+            leaving = false;
             ReleaseWithoutSaving();
         }
+
+        // The place is written at most this often while playing (and always on leaving).
+        private const float PlaceSeconds = 300f;
+        private float nextPlace;
+        private bool leaving;
 
         internal void ReleaseWithoutSaving()
         {

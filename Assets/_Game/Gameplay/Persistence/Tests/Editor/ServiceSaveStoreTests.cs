@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Threading;
+using KryticalNova.Core;
 using KryticalNova.Persistence;
 using NUnit.Framework;
 
@@ -105,6 +106,36 @@ namespace KryticalNova.Tests
             for (int i = 0; i < 30 && a.Health == "checking"; i++) Thread.Sleep(100);
             Assert.IsTrue(a.Healthy, a.Health);
             StringAssert.StartsWith("ok, ", a.Health);
+        }
+
+        [Test]
+        public void ABackupHoldsTheDatabasesSaves()
+        {
+            a.Write(key, "{\"backed\":\"up\"}");
+            a.Flush();
+            string root = Path.Combine(Path.GetTempPath(), "kn-backup-" + Guid.NewGuid().ToString("N").Substring(0, 8));
+            ISaveStore was = ServerSave.Store;
+            try
+            {
+                ServerSave.Store = a;
+                string line = ServerBackups.MakeNow(Path.Combine(root, "save"), Path.Combine(root, "backups"), 2, "test");
+                StringAssert.Contains("saves from the database", line);
+                string zip = Directory.GetFiles(Path.Combine(root, "backups"), "*.zip")[0];
+                using (var archive = System.IO.Compression.ZipFile.OpenRead(zip))
+                {
+                    var entry = archive.GetEntry("database/" + key + ".json");
+                    Assert.IsNotNull(entry, "the save is in the zip, in a save folder's layout");
+                    using (var reader = new StreamReader(entry.Open())) Assert.AreEqual("{\"backed\":\"up\"}", reader.ReadToEnd());
+                }
+            }
+            finally
+            {
+                ServerSave.Store = was; // a is disposed by the swap; TearDown makes nothing of it
+                a = null;
+                if (Directory.Exists(root)) Directory.Delete(root, true);
+                b.Delete(key);
+                b.Flush();
+            }
         }
 
         [Test]

@@ -18,7 +18,8 @@ namespace KryticalNova.Persistence
     [Serializable]
     public sealed class AccountSave
     {
-        public const int CurrentVersion = 1;
+        /// <summary>2: kept in parts (online phase 4, milestone 2: <see cref="ServerSave.WriteAccount"/>); 1: one document.</summary>
+        public const int CurrentVersion = 2;
 
         public int version = CurrentVersion;
         public string accountId;
@@ -49,6 +50,9 @@ namespace KryticalNova.Persistence
         public int level = 1;
         /// <summary>UTC ticks of the last change that was written.</summary>
         public long savedUtc;
+        /// <summary>The map the character was on and where it stood when last saved (online phase 4; used once there is more than one map).</summary>
+        public string map;
+        public float x, y, z;
         public List<SavePart> parts = new List<SavePart>();
 
         public string Get(string key) => SaveParts.Get(parts, key);

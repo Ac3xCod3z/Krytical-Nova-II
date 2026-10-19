@@ -26,7 +26,7 @@ namespace KryticalNova.DevTools
         {
             if (!ServerSave.HasAuthority) return NoAuthority;
             string place = ServerSave.Store is FileSaveStore files ? files.Root : ServerSave.Store.GetType().Name;
-            return $"Saves: {place} ({ServerSave.Store.Keys(ServerSave.AccountsPrefix).Count} account(s), {ServerSave.Online.Count} loaded).";
+            return $"Saves: {place} ({ServerSave.AccountIds().Count} account(s), {ServerSave.Online.Count} loaded).";
         }
 
         [Command("gm.save.wipe", "Delete EVERY save: all accounts and characters, Crews, Kiosks and Contacts. Players in the world keep " +
