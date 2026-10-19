@@ -15,6 +15,13 @@ version already changed: it finishes what is missing and fixes what changed.
   moved in and scaled to fit), the six piece slots kept, **three weapon slots** added.
 - Order down each column: **Rare → Epic faction cape → Epic → Legendary → Legendary
   faction cape**.
+- Regular-level boxes sit above the M-level ones (owner, 18 Oct 2026), levels from
+  `02_Gear_System_Spec.md` §2: **Rare • Lv 45–75** (45, 55, 65, 75) and **Rare • Lv 85–110**
+  (85, 95, 105, 110) at the top of Rare, **Epic • Lv 100–112** (100, 103 … 112, the TS2 Elite
+  tier) at the top of Epic. Each is a clone of its section's first M-level box, emptied. Look
+  counts, the rarity key and the board inventory are counted from the board.
+- Images lying loose on the board (not in an image area) keep their place over the box or
+  cape band under them when the columns grow.
 - The tier once called Elite is **Epic**. The God-level tier is **Legendary**: three sets,
   **G1–G4, G5–G8, G9–G12**, each a full look box.
 - Each **faction cape band** spans both lineages of its faction and holds **one**

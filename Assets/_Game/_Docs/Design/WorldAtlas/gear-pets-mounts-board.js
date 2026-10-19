@@ -5,6 +5,8 @@
 // GEAR board, every lineage column of all three factions:
 //   • Rare and Epic look boxes: a 1920 × 1080 concept-sheet area, the six piece slots kept,
 //     three weapon slots added
+//   • regular-level boxes on top of the M-level ones: Rare Lv 45–75 and Lv 85–110, Epic Lv 100–112
+//     (the TS2 Elite tier), cloned from the first M-level box of their section
 //   • Rare → EPIC FACTION CAPE band → Epic → Legendary (God levels G1–G4, G5–G8, G9–G12)
 //     → LEGENDARY FACTION CAPE band. Each cape band spans both lineages of the faction and
 //     holds one 1920 × 1080 image: one cape per faction per tier.
@@ -84,7 +86,14 @@ async function main() {
   await figma.setCurrentPageAsync(page);
   const factions = page.children.find((n) => n.name === 'Factions' && n.type === 'FRAME');
   if (!factions) throw new Error('Frame "Factions" not found on the page');
-  const report = { factions: [], gearBoxes: 0, sheetsMoved: 0, weaponRows: 0, legendarySections: 0, capeBands: 0, petImagesCarried: 0 };
+  // every font already on the board, so any of its texts can be rewritten
+  const used = new Map();
+  for (const t of factions.findAll((n) => n.type === 'TEXT')) {
+    const names = t.fontName !== figma.mixed ? [t.fontName] : t.getRangeAllFontNames(0, t.characters.length);
+    for (const f of names) used.set(f.family + '/' + f.style, f);
+  }
+  for (const f of used.values()) await figma.loadFontAsync(f);
+  const report = { factions: [], levelBoxes: 0, gearBoxes: 0, sheetsMoved: 0, weaponRows: 0, legendarySections: 0, capeBands: 0, petImagesCarried: 0 };
 
   let proto = factions.findOne((n) => n.type === 'FRAME' && n.name === 'Armor' && n.parent && n.parent.name === 'Piece art row');
   if (!proto) throw new Error('No dashed "Armor" frame found to use as a template');
@@ -96,6 +105,10 @@ async function main() {
   for (const f of factionFrames) if (f.parent !== factions) { const ax = f.absoluteTransform[0][2], ay = f.absoluteTransform[1][2]; factions.appendChild(f); f.x = ax - factions.absoluteTransform[0][2]; f.y = ay - factions.absoluteTransform[1][2]; }
   const order = ['HEGEMONY', 'NULL', 'COVENANT'];
   factionFrames.sort((a, b) => order.indexOf(factionName(a).toUpperCase()) - order.indexOf(factionName(b).toUpperCase()) || a.x - b.x);
+  // images parked next to their image area go in first, so every box is measured at its final height
+  const snappedEarly = snapAll(page);
+  const pins = pinLooseArt(factions, factionFrames);
+  const stats = { lineages: 0, looks: 0, capes: 0, perLineage: {} };
 
   for (const faction of factionFrames) {
     const fname = factionName(faction);
@@ -105,6 +118,7 @@ async function main() {
 
     for (const lineage of lineages) {
       renameEliteToEpic(lineage);
+      ensureLevelBoxes(lineage, report);
       for (const box of lineage.findAll((n) => n.type === 'FRAME' && /^(Rare|Epic) • /.test(n.name))) convertLookBox(box, proto, report);
 
       lineage.resize(LIN_W, lineage.height); lineage.layoutSizingVertical = 'HUG';
@@ -122,7 +136,10 @@ async function main() {
       ensureLegendary(lineage, report);
       ensureSpacer(lineage, 'Epic cape space', 'before', 'Epic');
       ensureSpacer(lineage, 'Legendary cape space', 'after', 'Legendary');
+      for (const sec of ['Rare', 'Epic']) { const s = lineage.children.find((c) => c.name === sec); if (s) stats.perLineage[sec] = updateSectionCount(s); }
     }
+    const factionLooks = lineages.reduce((k, l) => k + lookBoxCount(l), 0);
+    stats.lineages += lineages.length; stats.looks += factionLooks; stats.capes += 2;
 
     // lineage columns side by side
     lineages.forEach((l, i) => { l.x = 32 + i * (LIN_W + 32); l.y = 232; });
@@ -156,7 +173,11 @@ async function main() {
       const accent = identity.children.find((c) => c.name === 'Faceted header accent');
       if (accent) accent.x = identity.width - accent.width + 95;
       const lookCount = identity.findOne((n) => n.type === 'TEXT' && n.name === 'Look count');
-      if (lookCount) lookCount.characters = lineages.length + ' LINEAGES / ' + lineages.length * 10 + ' LOOKS / 2 CAPES';
+      if (lookCount) {
+        lookCount.characters = lineages.length + ' LINEAGES / ' + factionLooks + ' LOOKS / 2 CAPES';
+        lookCount.textAutoResize = 'WIDTH_AND_HEIGHT'; // one line, still flush right
+        if (lookCount.parent.layoutMode === 'NONE') lookCount.x = lookCount.parent.width - lookCount.width;
+      }
     }
     const refs = faction.children.find((c) => c.name === 'Faction weapon references');
     if (refs) { refs.y = maxBottom + 32; refs.resize(FACTION_W - 64, refs.height); for (const c of refs.children) c.layoutSizingHorizontal = 'FILL'; maxBottom = refs.y + refs.height; }
@@ -173,12 +194,14 @@ async function main() {
     const scope = notes.children.find((c) => c.name === 'Scope'); if (scope) scope.x = notes.width - scope.width;
     const art = notes.children.find((c) => c.name === 'Art language'); if (art) art.x = Math.round((notes.width - art.width) / 2);
   }
-  updateBoardGuide(factions, boardW);
+  updateBoardGuide(factions, boardW, stats);
   const oldBottom = factions.y + factions.height;
   factions.resize(boardW, (notes ? notes.y + notes.height : factionBottom) + 64);
   const newBottom = factions.y + factions.height;
   const loose = page.children.filter((n) => n !== factions && n.type === 'RECTANGLE' && n.y > factions.y + 1000 && n.y < newBottom && n.x + n.width > factions.x && n.x < factions.x + boardW);
   if (loose.length) { const minY = Math.min(...loose.map((n) => n.y)); const shift = newBottom + 400 - minY; if (shift > 0) for (const n of loose) n.y += shift; }
+  restorePins(pins);
+  report.looseArtKept = pins.length;
 
   // ================= PETS & MOUNTS (rebuilt, art carried over) ==============================
   const accentProto = factionFrames[0] && factionFrames[0].findOne((n) => n.name === 'Faceted header accent');
@@ -209,7 +232,7 @@ async function main() {
   }
 
   proto.remove();
-  report.imagesSnapped = snapAll(page);
+  report.imagesSnapped = snappedEarly + snapAll(page);
   report.gearBoard = { w: Math.round(factions.width), h: Math.round(factions.height) };
   report.petsBoard = { w: Math.round(board.width), h: Math.round(board.height) };
   return report;
@@ -266,6 +289,89 @@ function convertLookBox(box, proto, report) {
   }
   const rim = box.children.find((c) => c.name === 'Rarity rim');
   if (rim) rim.resize(8, box.height);
+}
+
+// ---- regular-level look boxes at the top of Rare and Epic (gear spec §2: Rare I, Rare II, Epic) ----
+// [section, range, levels, interval text]; the TS2 "Elite" tier is the board's Epic.
+const LEVEL_BOXES = [
+  ['Rare', 'Lv 45–75', [45, 55, 65, 75], '+10 level steps / shared look'],
+  ['Rare', 'Lv 85–110', [85, 95, 105, 110], '+10 level steps, then 110 / shared look'],
+  ['Epic', 'Lv 100–112', [100, 103, 106, 109, 112], '+3 level steps / shared look'],
+];
+function ensureLevelBoxes(lineage, report) {
+  for (const sec of ['Rare', 'Epic']) {
+    const section = lineage.children.find((c) => c.name === sec);
+    const schemes = section && section.children.find((c) => c.name === 'Leveling schemes');
+    if (!schemes) continue;
+    LEVEL_BOXES.filter((b) => b[0] === sec).forEach(([rarity, range, levels, interval], i) => {
+      const name = rarity + ' • ' + range;
+      if (schemes.children.some((c) => c.name === name)) return;
+      // the first M-level box is the template: same rim, concept-sheet area, piece and weapon slots
+      const src = schemes.children.find((c) => c.type === 'FRAME' && new RegExp('^' + rarity + ' • M').test(c.name));
+      if (!src) return;
+      const box = src.clone();
+      insertBox(schemes, box, i);
+      for (const img of box.findAll(isImage)) img.remove();
+      for (const s of box.findAll((n) => n.type === 'TEXT' && (n.name === 'Section status' || n.name === 'Art status'))) s.characters = 'Awaiting art';
+      for (let w = 1; w <= 3; w++) { const slot = box.findOne((n) => n.type === 'FRAME' && n.name === 'Weapon ' + w); if (slot) setLabel(slot, 'Weapon ' + w + ' • class'); }
+      box.name = name;
+      const scheme = box.findOne((n) => n.type === 'TEXT' && n.name === 'Scheme name'); if (scheme) scheme.characters = name;
+      const chips = box.findOne((n) => n.type === 'FRAME' && n.name === 'Level chips');
+      if (chips && chips.children.length) {
+        const tpl = chips.children[0].clone();
+        for (const c of [...chips.children]) c.remove();
+        for (const lvl of levels) { const ch = tpl.clone(); chips.appendChild(ch); const t = ch.findOne((n) => n.type === 'TEXT'); if (t) t.characters = 'Lv ' + lvl; }
+        tpl.remove();
+      }
+      const iv = box.findOne((n) => n.type === 'TEXT' && n.name === 'Level interval'); if (iv) iv.characters = interval;
+      report.levelBoxes++;
+    });
+  }
+}
+// at `index` in the stack: auto layout places it, a plain frame is restacked by hand
+function insertBox(schemes, box, index) {
+  if (schemes.layoutMode !== 'NONE') { schemes.insertChild(index, box); return; }
+  const stack = schemes.children.filter((c) => c.type === 'FRAME').sort((a, b) => a.y - b.y);
+  schemes.appendChild(box); stack.splice(index, 0, box);
+  let y = 0; for (const b of stack) { b.x = 0; b.y = y; y += b.height + 24; }
+  schemes.resize(schemes.width, y - 24);
+}
+// "<boxes> SHARED LOOKS / <chips> LEVEL LABELS", counted from the section
+function updateSectionCount(section) {
+  const boxes = section.findAll((n) => n.type === 'FRAME' && /^(Rare|Epic) • /.test(n.name));
+  let chips = 0;
+  for (const b of boxes) { const c = b.findOne((n) => n.type === 'FRAME' && n.name === 'Level chips'); if (c) chips += c.children.length; }
+  const count = section.findOne((n) => n.type === 'TEXT' && n.name === 'Art set count');
+  if (count) count.characters = boxes.length + ' SHARED LOOKS / ' + chips + ' LEVEL LABELS';
+  return boxes.length;
+}
+function lookBoxCount(lineage) { return lineage.findAll((n) => n.type === 'FRAME' && /^(Rare|Epic|Legendary) • /.test(n.name)).length; }
+
+// ---- art placed loose on the board keeps its spot over the box below it -----------------------------
+function absXY(n) { return { x: n.absoluteTransform[0][2], y: n.absoluteTransform[1][2] }; }
+function pinLooseArt(factions, factionFrames) {
+  const loose = [factions, ...factionFrames].flatMap((p) => p.children.filter(isImage));
+  if (!loose.length) return [];
+  const anchors = factions.findAll((n) => n.type === 'FRAME' && (/^Image area /.test(n.name) || /^(Rare|Epic|Legendary) • /.test(n.name) || / faction cape$/.test(n.name)));
+  const pins = [];
+  for (const img of loose) {
+    const p = absXY(img), cx = p.x + img.width / 2, cy = p.y + img.height / 2;
+    let best = null;
+    for (const a of anchors) {
+      const q = absXY(a);
+      if (cx < q.x || cy < q.y || cx > q.x + a.width || cy > q.y + a.height) continue;
+      if (!best || a.width * a.height < best.width * best.height) best = a;
+    }
+    if (best) { const q = absXY(best); pins.push({ img, anchor: best, dx: p.x - q.x, dy: p.y - q.y }); }
+  }
+  return pins;
+}
+function restorePins(pins) {
+  for (const { img, anchor, dx, dy } of pins) {
+    if (img.removed || anchor.removed || !img.parent) continue;
+    const q = absXY(anchor), par = absXY(img.parent);
+    img.x = q.x + dx - par.x; img.y = q.y + dy - par.y;
+  }
 }
 
 // ---- Legendary (God levels) section after Epic ----------------------------------------------------
@@ -342,7 +448,7 @@ function ensureCapeBand(faction, name, title, rarityLabel, rimHex, chipHex, note
 }
 
 // ---- gear board guide, key and inventory ------------------------------------------------------------
-function updateBoardGuide(factions, boardW) {
+function updateBoardGuide(factions, boardW, stats) {
   const titleRow = factions.children.find((c) => c.name === 'Atlas title and board guide');
   if (!titleRow) return;
   titleRow.resize(boardW - 2 * 261, titleRow.height); titleRow.layoutSizingVertical = 'HUG';
@@ -357,7 +463,9 @@ function updateBoardGuide(factions, boardW) {
     const key = guide.children.find((c) => c.name === 'Rarity key');
     if (key) {
       const eliteDef = key.children.find((c) => c.name === 'Elite definition' || c.name === 'Epic definition');
-      if (eliteDef) { eliteDef.name = 'Epic definition'; eliteDef.characters = 'EPIC / 3 looks per lineage + faction cape'; }
+      if (eliteDef) { eliteDef.name = 'Epic definition'; eliteDef.characters = 'EPIC / ' + (stats.perLineage.Epic || 4) + ' looks per lineage + faction cape'; }
+      const rareDef = key.children.find((c) => c.name === 'Rare definition');
+      if (rareDef) rareDef.characters = 'RARE / ' + (stats.perLineage.Rare || 6) + ' looks per lineage';
       const eliteKey = key.children.find((c) => c.name === 'Elite key'); if (eliteKey) eliteKey.name = 'Epic key';
       let legKey = key.children.find((c) => c.name === 'God key' || c.name === 'Legendary key');
       let legDef = key.children.find((c) => c.name === 'God definition' || c.name === 'Legendary definition');
@@ -373,9 +481,9 @@ function updateBoardGuide(factions, boardW) {
     }
   }
   const placement = titleRow.findOne((n) => n.type === 'TEXT' && n.name === 'Level and placement guide');
-  if (placement) placement.characters = 'Level chips share one look within their group; only the listed M-levels and G-levels apply. Put the 1920 × 1080 concept sheet in the big dashed frame, the pieces in the six piece slots and the set’s three weapons in the weapon slots. Each faction’s cape goes in the band that spans both lineages.';
+  if (placement) placement.characters = 'Level chips share one look within their group; only the listed levels, M-levels and G-levels apply. Put the 1920 × 1080 concept sheet in the big dashed frame, the pieces in the six piece slots and the set’s three weapons in the weapon slots. Each faction’s cape goes in the band that spans both lineages.';
   const inv = titleRow.findOne((n) => n.type === 'TEXT' && n.name === 'Inventory');
-  if (inv) inv.characters = '3 factions / 6 lineages / 60 shared looks / 6 faction capes';
+  if (inv) inv.characters = stats.lineages / 2 + ' factions / ' + stats.lineages + ' lineages / ' + stats.looks + ' shared looks / ' + stats.capes + ' faction capes';
   const title = titleRow.findOne((n) => n.type === 'TEXT' && n.name === 'Title');
   if (title) title.textAutoResize = 'WIDTH_AND_HEIGHT';
 }
@@ -613,7 +721,7 @@ async function snapMode() {
   }
 }
 
-const done = (r) => 'World Atlas updated: ' + r.factions.join(', ') + ' • ' + r.imagesSnapped + ' images centred';
+const done = (r) => 'World Atlas updated: ' + r.factions.join(', ') + (r.levelBoxes ? ' • +' + r.levelBoxes + ' level boxes' : '') + ' • ' + r.imagesSnapped + ' images centred';
 if (figma.command === 'snap') {
   snapMode().catch((e) => figma.closePlugin('Image snap failed: ' + e.message));
 } else if (figma.command === 'build') {
