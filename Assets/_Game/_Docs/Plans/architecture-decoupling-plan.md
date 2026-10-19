@@ -1,7 +1,7 @@
 # Architecture decoupling plan
 
 **Status: agreed 19 Oct 2026 (owner's decisions at the end); the owner then handed the stages over to be done in
-order without asking. Stages 0 to 6 are built, one PR each; 7 and 8 follow.**
+order without asking. Stages 0 to 7 are built, one PR each; stage 8 was found not to be needed (below).**
 
 The aim: changing one system should not force changes in a dozen others. The game must keep working after every step,
 and ScriptableObjects must stay the way designers tune the game. The evidence for every step is in
@@ -156,32 +156,44 @@ What this buys:
 - A change in one system recompiles that system and the ones above it, not 75k lines.
 - A reference that would make a loop is a compile error the moment it is written.
 
-## Stage 7: design data back in the Inspector
+## Stage 7: design data back in the Inspector (built 19 Oct 2026, in part)
 
-- **Tunables into existing settings.** Move the gameplay numbers fixed in code into the settings asset of their
-  system, where a designer would look for them:
-  - traversal geometry and timing into `TraversalSettings` / `WallstrideSettings`;
-  - `PointAndClickPlayer`'s camera numbers into a new `CameraSettings` asset, and its click-travel numbers into
-    `MovementSettings` (owner, 19 Oct 2026);
-  - party limits into `SquadSettings`;
-  - storage pages into `EconomySettings`.
+Done:
+- **Click-to-travel numbers into `MovementSettings`.** These are the arrival distance, stall time and speed, map-point
+  search radius, friendly approach, pick-up stand-off and how long a walk to something is kept.
+  `PointAndClickPlayer` reads them through the movement skills that hold the asset. Each starting value is written once,
+  in `MovementSettings`, and the existing asset loads with today's values.
+- **The vault's reach into `TraversalSettings`.** This covers the farthest run-up, how far the landing may move, how
+  far to the side a vault may start and the tallest step down after it. The motor's probe steps, tolerances and
+  network timings are engineering limits and stay in code, as do the jump's.
+- **The camera numbers turned out to be Inspector fields already** on the player prefab: zoom range, orbit speed,
+  zoom speed and ray distance. The `Default...` constants only seed them. So a separate `CameraSettings` asset (the
+  owner's pick) would only move numbers a designer can already tune; it was not made. Say so if it is still wanted.
+- **`WorldLodSettings` puts the pipeline's small-mesh cull back when Play stops** (Editor only). Before, each Play
+  left it changed in `PC_RPAsset.asset`, which then showed as a changed file.
+- **`PlayerSettingsWiringTests`** fails when any settings or tuning asset on the player prefab is not wired. That is
+  the real risk behind the code's fallback numbers.
 
-  Engineering limits (probe steps, epsilons) stay in code.
-- **Missing settings fail loudly.** Replace the 93 `settings != null ? settings.x : N` fallbacks with one check at
-  start-up that names the missing asset. Add a rule to Validate Project Organization that flags a new fallback.
-- **Builders seed once.** `HostileAssetBuilder`, `BladeSkillBuilder` and the `GameFeelBuilder` tables fill only
-  what is missing, as the pet and vendor builders already do. A designer's Inspector edit then survives a rebuild.
-  Item IDs stay where they are; they are identities, not tunables.
-- **`WorldLodSettings`** puts the pipeline value it changes back when Play stops.
+Decided and left as they are (19 Oct 2026; the owner handed these calls to Claude):
+- **The 93 `settings != null ? settings.x : N` fallbacks stay.** Each fallback number is the asset's own starting
+  value, so a scene without the asset plays as before. Making them fail loudly would change what a half-set-up scene
+  does, for no gain the wiring test does not already give: `PlayerSettingsWiringTests` fails when the player prefab
+  is missing one. Other prefabs can get the same test when one of them is changed.
+- **The builders keep rewriting numbers on every run** (`HostileAssetBuilder`, `BladeSkillBuilder`, `GameFeelBuilder`).
+  Their tables are where those numbers are tuned today; filling only what is missing would stop a table edit from
+  reaching the assets. A number that should be tuned by hand in the Inspector moves out of its builder's table when
+  that is wanted, one at a time.
+- **No `CameraSettings` asset**, for the reason above.
 
-## Stage 8: big classes, only where it cuts coupling
+## Stage 8: big classes (not needed for coupling)
 
-`PointAndClickPlayer` (1,989 lines, five systems) and `GearUIController` (1,464 lines, the UI's window manager used
-by 20 windows) are split only along lines the earlier stages expose:
-- `PointAndClickPlayer`: camera, click travel, targeting, and the auto-attack maths that belongs to Combat;
-- `GearUIController`: tooltips, the drag ghost and world-input blocking.
+Stage 8 was "only where it cuts coupling", and stages 1 to 6 already cut it:
+- `PointAndClickPlayer` reaches Combat only through `IMeleeAttacker` and `HostilityCheck`;
+- the motors no longer touch World;
+- `GearUIController` is the UI's own window manager inside the UI assembly.
 
-`ProgressionHUD` and the motors are big but mostly self-contained; they are left alone unless a change needs them.
+Splitting these files for size alone, without Play testing every path, risks more than it gains, so they are left as
+they are. A split remains worthwhile when a change has to be made in one of them anyway.
 
 ## Order and size
 
@@ -193,9 +205,41 @@ time, beside the economy rework, because they move no system borders.
 
 1. **Names:** the new systems are **Server** (administration), **Stats** (the combat model) and **Wallet** (money and
    the kept ledger).
-2. **Travel stays in World.** Zone travel and portals move the player through a small `ILocalBody` handle in Core
-   (where the local player stands, whether it is in the air, and moving it to a point). Player registers it when the
-   local player spawns. World then uses Core, not Player. Trees and rain read the same handle.
-3. **Camera numbers get a new `CameraSettings` asset.** It holds the click-to-move camera's zoom range, orbit speed
-   and the like. The click-travel numbers (arrival distance, stall limits) go into `MovementSettings`.
+2. **Travel stays in World.** Zone travel and portals reach the player through a small `IPlayerBody` handle in Core
+   (`PlayerBodies`: where a player stands, whose it is, whether it is in the air, and binding it to a new map's
+   camera). Player fills it. World then uses Core, not Player. The rain reads the same handle; the tree proxies moved
+   into Player, which owns Wallstride.
+3. **Camera numbers get a new `CameraSettings` asset.** Not made: they are Inspector fields on the player prefab
+   already (stage 7). The click-travel numbers (arrival distance, stall limits) went into `MovementSettings`.
+
+## Play check (19 Oct 2026)
+
+Every stage together, in the Editor as host on a test port with a scratch save. Each feature whose code a stage
+touched was driven through the game's own calls:
+
+| Feature | Result |
+|---|---|
+| All 44 `PlayerSystemsSetup` rows find their component across the new assemblies | 44 of 44 |
+| Local player: every `X.Local`, the server hooks, the player's facts on the control page (`ServerHooks.Describe`) | all found, facts right |
+| Items through `IItemUseHandler`: Serum, Dossier, XP booster (tooltip), Recall Tag, Flux Flask drink, Pet Ration, Autopilot and Autobuff Passes | each used; refusals (item cooldown, level 80, no Apothecary near) were the game's rules |
+| Click-travel (`MovementSettings`): walks to the Apothecary, Herald and Vaultkeeper, stand-off at each | arrived |
+| Flask refill at the Apothecary, Nova Ascension at the Herald, Crew founding at the Vaultkeeper, through `IWallet` | Creds paid; ledger lines `creds.vendor`, `creds.herald`, `creds.crewfounding`, `crew.found` |
+| Hostile fight through `IMeleeAttacker` and `HostilityCheck`; kill rewards; pet XP | killed; +174 XP at an even level, none at a 59-level gap (the level-gap rule); pet +0.04 a kill |
+| Death in the middle of an attack, then respawn | attack ends, respawn works |
+| Weapon change through `IWeaponReach`: Odachi, Naginata, Carbine | the hitbox takes each weapon's own size |
+| Jump (`IPlayerBody.IsJumping`, read by the rain) | on in the air, off on landing |
+| Vault (`TraversalSettings`) at a spot the vault motor picked | vaulted and arrived |
+| Trade zones in World: Central Plaza (Kiosks), Starter Town (neutral ground) | both read right |
+| Portal through `IPlayerBody`; travel to Crestfall and back through `PlayerBodies` | trigger fires; camera and NavMesh bound on both maps |
+| Rare-drop announcement through `ServerChat` | reaches chat |
+| Tree proxies near the player (Wallstride) | 2 to 5 live at each tree visited |
+| Cadence through `IBeatClock` in `Test_Cadence` | beat live in a fight |
+| `PC_RPAsset` after Play stops | unchanged |
+| Console over the whole session | no errors from game code |
+| A dedicated server built from the branch, on test port 7796 / page 8096 | builds; starts, loads the town, encrypts, opens its control page and listens; its log has no error from game code |
+
+Not yet checked: a game joining that server, and the two-player features (a Callout, a trade). Norton suspended the
+new unsigned server within a minute, as it does any new server outside the folders the owner has excluded, so no game
+got in. The server's control page and hooks are covered by the EditMode tests and the Editor run above; the join and
+the two-player checks are the owner's to run, or mine once that folder is excluded.
 4. **The first PR is stage 0, the safety net, alone.** No class moves in it.

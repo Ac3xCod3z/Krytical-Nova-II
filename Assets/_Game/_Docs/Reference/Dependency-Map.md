@@ -20,7 +20,7 @@ script, which is then published to the link above. `--baseline` saves today's up
 ## Today
 
 <!-- map:summary -->
-Generated 19 Oct 2026, 12:42: 641 runtime scripts (119,332 lines) declaring 909 types (165 MonoBehaviours, 61 NetworkBehaviours, 87 ScriptableObject classes); 110 test scripts; 4025 prefabs, 46 scenes and 2579 assets read. 196 system-to-system links, of which 0 run uphill, 0 pairs of systems use each other both ways, and 0 links would have to go for the systems to form a clean stack. The largest tangle, classes that all reach each other through some chain of uses, holds 7 classes from 1 systems (Gameplay/Player 7, ...).
+Generated 19 Oct 2026, 14:12: 641 runtime scripts (119,394 lines) declaring 909 types (165 MonoBehaviours, 61 NetworkBehaviours, 87 ScriptableObject classes); 111 test scripts; 4025 prefabs, 46 scenes and 2579 assets read. 196 system-to-system links, of which 0 run uphill, 0 pairs of systems use each other both ways, and 0 links would have to go for the systems to form a clean stack. The largest tangle, classes that all reach each other through some chain of uses, holds 7 classes from 1 systems (Gameplay/Player 7, ...).
 <!-- /map:summary -->
 
 ## How to read it
@@ -57,7 +57,7 @@ Generated 19 Oct 2026, 12:42: 641 runtime scripts (119,332 lines) declaring 909 
 |---|---|---|---|---|---|---|---|---|
 | Core | Foundation | 44 | 3,603 | 0 | 183 | 0.0 | 4 | 13 of 31 |
 | Networking | Infrastructure | 37 | 6,713 | 5 | 68 | 0.07 | 2 | 24 of 48 |
-| Rendering | Infrastructure | 14 | 2,809 | 1 | 26 | 0.04 | 0 | 1 of 18 |
+| Rendering | Infrastructure | 14 | 2,829 | 1 | 26 | 0.04 | 0 | 1 of 18 |
 | Environment | Simulation | 6 | 834 | 0 | 2 | 0.0 | 0 | 0 of 6 |
 | Gameplay/Autopilot | Simulation | 11 | 1,448 | 41 | 12 | 0.77 | 3 | 6 of 12 |
 | Gameplay/Crafting | Simulation | 3 | 401 | 19 | 9 | 0.68 | 1 | 4 of 6 |
@@ -70,11 +70,11 @@ Generated 19 Oct 2026, 12:42: 641 runtime scripts (119,332 lines) declaring 909 
 | Gameplay/Social | Simulation | 39 | 5,631 | 46 | 48 | 0.49 | 9 | 23 of 52 |
 | Gameplay/Combat | Simulation | 12 | 3,022 | 43 | 24 | 0.64 | 4 | 4 of 13 |
 | Gameplay/Persistence | Simulation | 8 | 2,155 | 34 | 11 | 0.76 | 11 | 5 of 11 |
-| Gameplay/Player | Simulation | 22 | 9,522 | 56 | 37 | 0.6 | 2 | 9 of 24 |
+| Gameplay/Player | Simulation | 22 | 9,539 | 56 | 37 | 0.6 | 3 | 9 of 24 |
 | Gameplay/CharacterCreation | Simulation | 25 | 2,819 | 27 | 54 | 0.33 | 8 | 20 of 25 |
 | Gameplay/Items | Simulation | 58 | 10,400 | 45 | 176 | 0.2 | 12 | 38 of 80 |
 | World | Simulation | 33 | 5,693 | 9 | 35 | 0.2 | 1 | 7 of 39 |
-| Gameplay/Progression | Simulation | 46 | 7,903 | 23 | 197 | 0.1 | 6 | 27 of 58 |
+| Gameplay/Progression | Simulation | 46 | 7,928 | 23 | 197 | 0.1 | 6 | 27 of 58 |
 | Gameplay/Wallet | Simulation | 3 | 132 | 0 | 18 | 0.0 | 0 | 2 of 2 |
 | Gameplay/NPC | Simulation | 2 | 227 | 5 | 17 | 0.23 | 0 | 0 of 2 |
 | Gameplay/Factions | Simulation | 6 | 169 | 0 | 25 | 0.0 | 0 | 1 of 3 |
@@ -165,7 +165,7 @@ Classes over 700 lines. Several of them also reach into three or more other syst
 | Class | System | Lines | Other systems it uses | Files using it |
 |---|---|---|---|---|
 | ProgressionHUD | UI | 2090 | Core, Gameplay/Items, Gameplay/Player, Gameplay/Progression | 4 |
-| PointAndClickPlayer | Gameplay/Player | 1995 | Core, Gameplay/Progression, Networking, Rendering | 29 |
+| PointAndClickPlayer | Gameplay/Player | 1998 | Core, Gameplay/Progression, Networking, Rendering | 29 |
 | PlayerWallRunMotor | Gameplay/Player | 1715 | Core, Gameplay/Progression, Networking, World | 6 |
 | ArrangeController | UI | 1663 | Core, Gameplay/Housing, Gameplay/Items, Gameplay/Player, Gameplay/Progression | 0 |
 | GearUIController | UI | 1464 | Core, Gameplay/Economy, Gameplay/Items, Gameplay/Pets, Gameplay/Player, Gameplay/Progression, Gameplay/Wallet | 20 |
@@ -182,7 +182,7 @@ Classes over 700 lines. Several of them also reach into three or more other syst
 | PlayerInventory | Gameplay/Items | 788 | Core, Gameplay/Factions, Gameplay/Progression, Networking | 65 |
 | CharacterCreatorController | UI | 767 | Gameplay/CharacterCreation, Gameplay/Factions, Gameplay/Items, Gameplay/Progression | 0 |
 | ServerSave | Gameplay/Persistence | 735 | Core, Networking | 15 |
-| PlayerVaultMotor | Gameplay/Player | 710 | Core, Gameplay/CharacterCreation, Gameplay/Factions, Gameplay/Progression | 2 |
+| PlayerVaultMotor | Gameplay/Player | 708 | Core, Gameplay/CharacterCreation, Gameplay/Factions, Gameplay/Progression | 2 |
 <!-- /map:gods -->
 
 ## Design data
@@ -284,9 +284,9 @@ Each ScriptableObject class, how many assets of it exist, and where they are wir
 Where tuning still lives in code, and other links the compiler cannot see:
 
 <!-- map:smells -->
-- **Gameplay numbers fixed in code:** 326 in 98 files. Most: `Gameplay/Crafting/Data/CraftingSettings.cs` (28), `Gameplay/Player/Runtime/PlayerVaultMotor.cs` (19), `Gameplay/Player/Runtime/PointAndClickPlayer.cs` (17), `Gameplay/Player/Runtime/PlayerWallRunMotor.cs` (16), `Gameplay/Items/Data/GearProgressionSettings.cs` (13), `Gameplay/Items/Runtime/WeaponPaintRules.cs` (11), `Gameplay/Player/Runtime/PlayerJumpMotor.cs` (10), `Gameplay/Player/Runtime/PlayerWallRunMotor.WallWalk.cs` (10).
+- **Gameplay numbers fixed in code:** 315 in 98 files. Most: `Gameplay/Crafting/Data/CraftingSettings.cs` (28), `Gameplay/Player/Runtime/PlayerWallRunMotor.cs` (16), `Gameplay/Player/Runtime/PlayerVaultMotor.cs` (15), `Gameplay/Items/Data/GearProgressionSettings.cs` (13), `Gameplay/Items/Runtime/WeaponPaintRules.cs` (11), `Gameplay/Player/Runtime/PlayerJumpMotor.cs` (10), `Gameplay/Player/Runtime/PlayerWallRunMotor.WallWalk.cs` (10), `Gameplay/Player/Runtime/PointAndClickPlayer.cs` (10).
 - **Settings fallbacks** (`settings != null ? settings.x : 8`): 93.
-- **Runtime writes to shared assets** (ScriptableObject or pipeline fields): 24 — `Rendering/Data/WorldLodSettings.cs:125`, `Rendering/Runtime/ResidentDrawerOcclusion.cs:24`, `Rendering/Runtime/ResidentDrawerOcclusion.cs:32`, `UI/Runtime/Settings/GraphicsSettingsApplier.cs:142`, `UI/Runtime/Settings/GraphicsSettingsApplier.cs:143`, `UI/Runtime/Settings/GraphicsSettingsApplier.cs:144`, `UI/Runtime/Settings/GraphicsSettingsApplier.cs:145`, `UI/Runtime/Settings/GraphicsSettingsApplier.cs:146`.
+- **Runtime writes to shared assets** (ScriptableObject or pipeline fields): 25 — `Rendering/Data/WorldLodSettings.cs:129`, `Rendering/Data/WorldLodSettings.cs:144`, `Rendering/Runtime/ResidentDrawerOcclusion.cs:24`, `Rendering/Runtime/ResidentDrawerOcclusion.cs:32`, `UI/Runtime/Settings/GraphicsSettingsApplier.cs:142`, `UI/Runtime/Settings/GraphicsSettingsApplier.cs:143`, `UI/Runtime/Settings/GraphicsSettingsApplier.cs:144`, `UI/Runtime/Settings/GraphicsSettingsApplier.cs:145`.
 - **Lookups by name** (Type.GetType, Find("..."), Resources.Load, SendMessage): 9.
 - **Asset entries that store a class by name and assembly** ([SerializeReference]): 169 in 2 assets.
 - **Static accessors that call GetComponent on every use:** 0.
@@ -313,10 +313,10 @@ first. The page lists the file and line behind each.
 | 10 | Hub | KeyBindings.Changed (event) | Core, Gameplay/Progression, UI | 3 | 2 | small |
 | 11 | Hub | MusicConductor.Instance (locator) | Audio, Tools, UI | 3 | 2 | small |
 | 12 | Hub | ServerChat.Announce (state) | Core, Gameplay/Items, Gameplay/Social | 3 | 2 | small |
-| 13 | Design data | 326 gameplay numbers fixed in code | Gameplay/Autopilot, Gameplay/CharacterCreation, Gameplay/Combat, Gameplay/Crafting, Gameplay/Economy ... | 3 | 98 | large |
+| 13 | Design data | 315 gameplay numbers fixed in code | Gameplay/Autopilot, Gameplay/CharacterCreation, Gameplay/Combat, Gameplay/Crafting, Gameplay/Economy ... | 3 | 98 | large |
 | 14 | Hub | WorldEnvironmentNetwork.Instance (locator) | World, Tools | 3 | 10 | medium |
 | 15 | Hub | NpcInteractable.Active (locator) | Gameplay/NPC, Gameplay/Economy, UI | 3 | 6 | medium |
-| 16 | God class | PointAndClickPlayer (1995 lines) | Gameplay/Player | 3 | 30 | large |
+| 16 | God class | PointAndClickPlayer (1998 lines) | Gameplay/Player | 3 | 30 | large |
 | 17 | Hub | HostileNet.Active (locator) | Gameplay/Hostiles, Gameplay/Autopilot, Tools, UI | 3 | 5 | medium |
 | 18 | Hub | NetworkCombatVFXPool.Instance (locator) | Networking, GameFeel, Gameplay/Combat | 3 | 5 | medium |
 | 19 | Hub | WorldDrop.Active (locator) | Gameplay/Items, GameFeel, Gameplay/Autopilot, UI | 3 | 4 | medium |
@@ -336,12 +336,31 @@ first. The page lists the file and line behind each.
 | 33 | God class | PlayerWallRunMotor (1715 lines) | Gameplay/Player | 3 | 8 | large |
 | 34 | God class | ProgressionHUD (2090 lines) | UI | 3 | 5 | large |
 | 35 | God class | ArrangeController (1663 lines) | UI | 3 | 3 | large |
-| 36 | God class | PlayerVaultMotor (710 lines) | Gameplay/Player | 3 | 3 | large |
+| 36 | God class | PlayerVaultMotor (708 lines) | Gameplay/Player | 3 | 3 | large |
 | 37 | God class | GameFeelPresenter (1181 lines) | GameFeel | 3 | 2 | large |
 | 38 | God class | CharacterCreatorController (767 lines) | UI | 3 | 1 | large |
 | 39 | God class | GearWorkWindowController (947 lines) | UI | 3 | 1 | large |
 | 40 | God class | GmCommands (904 lines) | Tools | 3 | 1 | large |
 <!-- /map:problems -->
+
+## After the plan (19 Oct 2026, stages 0 to 7)
+
+| | Before | After |
+|---|---|---|
+| Links running uphill | 8 | 0 |
+| Pairs of systems that use each other | 21 | 0 |
+| Links to cut for a clean stack | 31 | 0 |
+| The largest tangle | 57 classes across 10 systems | 7 classes inside one system (Player's motors and `PointAndClickPlayer`, which call each other; harmless across systems) |
+| Assemblies the runtime compiles into | 1 (`KryticalNova.Runtime`) | 23 (Core + one per system) |
+| Classes no test touches but 25+ files use | 8 | 6 (`ClientPresentationRegistry` and `RpcBudget` now tested) |
+| EditMode tests | 1014 | 1023 |
+
+Every system now uses only the systems below it, and the compiler refuses a reference that would close a loop. How
+each loop was cut, stage by stage, is `Plans/architecture-decoupling-plan.md`, with the Play check of every feature
+the stages touched. Of the design-data findings below, the click-travel and vault numbers moved into their settings
+assets and the pipeline asset is put back after Play; the fallback numbers and the rewriting builders were kept on
+purpose (the plan says why). The findings below are kept as they were on the morning of 19 Oct 2026; the tables above
+them are regenerated on every run.
 
 ## What it found (19 Oct 2026)
 
