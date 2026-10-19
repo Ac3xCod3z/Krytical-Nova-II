@@ -20,7 +20,7 @@ script, which is then published to the link above. `--baseline` saves today's up
 ## Today
 
 <!-- map:summary -->
-Generated 19 Oct 2026, 13:04: 641 runtime scripts (119,394 lines) declaring 909 types (165 MonoBehaviours, 61 NetworkBehaviours, 87 ScriptableObject classes); 111 test scripts; 4025 prefabs, 46 scenes and 2579 assets read. 196 system-to-system links, of which 0 run uphill, 0 pairs of systems use each other both ways, and 0 links would have to go for the systems to form a clean stack. The largest tangle, classes that all reach each other through some chain of uses, holds 7 classes from 1 systems (Gameplay/Player 7, ...).
+Generated 19 Oct 2026, 14:12: 641 runtime scripts (119,394 lines) declaring 909 types (165 MonoBehaviours, 61 NetworkBehaviours, 87 ScriptableObject classes); 111 test scripts; 4025 prefabs, 46 scenes and 2579 assets read. 196 system-to-system links, of which 0 run uphill, 0 pairs of systems use each other both ways, and 0 links would have to go for the systems to form a clean stack. The largest tangle, classes that all reach each other through some chain of uses, holds 7 classes from 1 systems (Gameplay/Player 7, ...).
 <!-- /map:summary -->
 
 ## How to read it
@@ -356,8 +356,11 @@ first. The page lists the file and line behind each.
 | EditMode tests | 1014 | 1023 |
 
 Every system now uses only the systems below it, and the compiler refuses a reference that would close a loop. How
-each loop was cut, stage by stage, is `Plans/architecture-decoupling-plan.md`. The findings below are kept as they
-were on the morning of 19 Oct 2026; the tables above them are regenerated on every run.
+each loop was cut, stage by stage, is `Plans/architecture-decoupling-plan.md`, with the Play check of every feature
+the stages touched. Of the design-data findings below, the click-travel and vault numbers moved into their settings
+assets and the pipeline asset is put back after Play; the fallback numbers and the rewriting builders were kept on
+purpose (the plan says why). The findings below are kept as they were on the morning of 19 Oct 2026; the tables above
+them are regenerated on every run.
 
 ## What it found (19 Oct 2026)
 
