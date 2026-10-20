@@ -96,6 +96,8 @@ namespace KryticalNova.Core
         /// <summary>Items a player dropped on the ground, tallied per save.</summary>
         public const string Drop = "drop";
         public const string Gm = "gm";
+        /// <summary>A character was deleted, with everything it carried (online phase 4, milestone 5: the roster on the server).</summary>
+        public const string CharacterDeleted = "character.deleted";
         /// <summary>Every Cred a wallet earns or pays, tallied per save by where it came from or went to: "creds.trade", "creds.vendor".</summary>
         public const string CredsPrefix = "creds.";
     }

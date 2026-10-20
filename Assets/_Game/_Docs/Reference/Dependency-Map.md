@@ -20,7 +20,7 @@ script, which is then published to the link above. `--baseline` saves today's up
 ## Today
 
 <!-- map:summary -->
-Generated 19 Oct 2026, 14:12: 641 runtime scripts (119,394 lines) declaring 909 types (165 MonoBehaviours, 61 NetworkBehaviours, 87 ScriptableObject classes); 111 test scripts; 4025 prefabs, 46 scenes and 2579 assets read. 196 system-to-system links, of which 0 run uphill, 0 pairs of systems use each other both ways, and 0 links would have to go for the systems to form a clean stack. The largest tangle, classes that all reach each other through some chain of uses, holds 7 classes from 1 systems (Gameplay/Player 7, ...).
+Generated 19 Oct 2026, 20:55: 646 runtime scripts (120,944 lines) declaring 920 types (165 MonoBehaviours, 61 NetworkBehaviours, 87 ScriptableObject classes); 112 test scripts; 4709 prefabs, 46 scenes and 2580 assets read. 196 system-to-system links, of which 0 run uphill, 0 pairs of systems use each other both ways, and 0 links would have to go for the systems to form a clean stack. The largest tangle, classes that all reach each other through some chain of uses, holds 7 classes from 1 systems (Gameplay/Player 7, ...).
 <!-- /map:summary -->
 
 ## How to read it
@@ -55,8 +55,8 @@ Generated 19 Oct 2026, 14:12: 641 runtime scripts (119,394 lines) declaring 909 
 <!-- map:systems -->
 | System | Layer | Scripts | Lines | Uses (types) | Used by (types) | Instability | Tests | Types touched by a test |
 |---|---|---|---|---|---|---|---|---|
-| Core | Foundation | 44 | 3,603 | 0 | 183 | 0.0 | 4 | 13 of 31 |
-| Networking | Infrastructure | 37 | 6,713 | 5 | 68 | 0.07 | 2 | 24 of 48 |
+| Core | Foundation | 45 | 3,628 | 0 | 188 | 0.0 | 4 | 13 of 31 |
+| Networking | Infrastructure | 38 | 7,044 | 5 | 75 | 0.06 | 2 | 24 of 50 |
 | Rendering | Infrastructure | 14 | 2,829 | 1 | 26 | 0.04 | 0 | 1 of 18 |
 | Environment | Simulation | 6 | 834 | 0 | 2 | 0.0 | 0 | 0 of 6 |
 | Gameplay/Autopilot | Simulation | 11 | 1,448 | 41 | 12 | 0.77 | 3 | 6 of 12 |
@@ -65,13 +65,13 @@ Generated 19 Oct 2026, 14:12: 641 runtime scripts (119,394 lines) declaring 909 
 | Gameplay/Hostiles | Simulation | 23 | 2,870 | 41 | 27 | 0.6 | 4 | 10 of 23 |
 | Gameplay/Housing | Simulation | 20 | 3,611 | 30 | 37 | 0.45 | 3 | 15 of 28 |
 | Gameplay/Restyle | Simulation | 3 | 823 | 40 | 5 | 0.89 | 0 | 0 of 3 |
-| Gameplay/Economy | Simulation | 23 | 4,085 | 56 | 46 | 0.55 | 9 | 14 of 37 |
+| Gameplay/Economy | Simulation | 23 | 4,098 | 57 | 46 | 0.55 | 9 | 14 of 37 |
 | Gameplay/Pets | Simulation | 12 | 1,445 | 33 | 32 | 0.51 | 4 | 13 of 19 |
-| Gameplay/Social | Simulation | 39 | 5,631 | 46 | 48 | 0.49 | 9 | 23 of 52 |
+| Gameplay/Social | Simulation | 39 | 5,670 | 47 | 48 | 0.49 | 9 | 23 of 52 |
 | Gameplay/Combat | Simulation | 12 | 3,022 | 43 | 24 | 0.64 | 4 | 4 of 13 |
-| Gameplay/Persistence | Simulation | 8 | 2,155 | 34 | 11 | 0.76 | 11 | 5 of 11 |
-| Gameplay/Player | Simulation | 22 | 9,539 | 56 | 37 | 0.6 | 3 | 9 of 24 |
-| Gameplay/CharacterCreation | Simulation | 25 | 2,819 | 27 | 54 | 0.33 | 8 | 20 of 25 |
+| Gameplay/Persistence | Simulation | 9 | 2,764 | 49 | 11 | 0.82 | 12 | 5 of 13 |
+| Gameplay/Player | Simulation | 22 | 9,560 | 56 | 37 | 0.6 | 3 | 9 of 24 |
+| Gameplay/CharacterCreation | Simulation | 26 | 2,929 | 27 | 69 | 0.28 | 8 | 20 of 29 |
 | Gameplay/Items | Simulation | 58 | 10,400 | 45 | 176 | 0.2 | 12 | 38 of 80 |
 | World | Simulation | 33 | 5,693 | 9 | 35 | 0.2 | 1 | 7 of 39 |
 | Gameplay/Progression | Simulation | 46 | 7,928 | 23 | 197 | 0.1 | 6 | 27 of 58 |
@@ -79,7 +79,7 @@ Generated 19 Oct 2026, 14:12: 641 runtime scripts (119,394 lines) declaring 909 
 | Gameplay/NPC | Simulation | 2 | 227 | 5 | 17 | 0.23 | 0 | 0 of 2 |
 | Gameplay/Factions | Simulation | 6 | 169 | 0 | 25 | 0.0 | 0 | 1 of 3 |
 | GameFeel | Presentation | 26 | 4,476 | 41 | 2 | 0.95 | 4 | 17 of 34 |
-| UI | Presentation | 129 | 32,504 | 292 | 4 | 0.99 | 17 | 32 of 134 |
+| UI | Presentation | 130 | 32,906 | 302 | 4 | 0.99 | 17 | 32 of 135 |
 | Audio | Presentation | 6 | 645 | 4 | 8 | 0.33 | 1 | 1 of 7 |
 | Tools | Tooling | 29 | 4,980 | 177 | 0 | 1.0 | 2 | 0 of 31 |
 <!-- /map:systems -->
@@ -105,31 +105,31 @@ Each row is the cheaper side of a loop: cut these references and the two systems
 <!-- map:ripple -->
 | Type | System | Kind | Files using it | Systems | Types reached through others | Tests | Prefabs / scenes holding it |
 |---|---|---|---|---|---|---|---|
-| ClientPresentationRegistry | Core | plain | 80 | 18 | 223 | 1 | 0 |
-| FactionId | Gameplay/Factions | enum | 75 | 14 | 284 | 24 | 0 |
-| ItemDefinition | Gameplay/Items | so | 65 | 12 | 239 | 20 | 0 |
-| PlayerInventory | Gameplay/Items | net | 65 | 14 | 178 | 0 | 1 |
-| ItemStack | Gameplay/Items | plain | 48 | 10 | 219 | 12 | 0 |
-| EquipSlot | Gameplay/Items | enum | 39 | 10 | 262 | 15 | 0 |
-| CallKind | Networking | enum | 39 | 13 | 247 | 1 | 0 |
-| RpcBudget | Networking | plain | 39 | 13 | 234 | 1 | 0 |
-| PlayerResources | Gameplay/Progression | net | 35 | 14 | 194 | 0 | 41 |
-| PlayerIdentity | Gameplay/Player | net | 34 | 12 | 167 | 0 | 1 |
-| LocalPlayer | Core | plain | 32 | 14 | 187 | 1 | 0 |
-| CharacterCombatStats | Gameplay/Progression | mono | 29 | 12 | 213 | 1 | 51 |
+| ClientPresentationRegistry | Core | plain | 80 | 18 | 224 | 1 | 0 |
+| FactionId | Gameplay/Factions | enum | 75 | 14 | 290 | 24 | 0 |
+| ItemDefinition | Gameplay/Items | so | 65 | 12 | 241 | 20 | 0 |
+| PlayerInventory | Gameplay/Items | net | 65 | 14 | 179 | 0 | 1 |
+| ItemStack | Gameplay/Items | plain | 48 | 10 | 221 | 12 | 0 |
+| EquipSlot | Gameplay/Items | enum | 39 | 10 | 264 | 15 | 0 |
+| CallKind | Networking | enum | 39 | 13 | 250 | 1 | 0 |
+| RpcBudget | Networking | plain | 39 | 13 | 237 | 1 | 0 |
+| PlayerResources | Gameplay/Progression | net | 35 | 14 | 195 | 0 | 41 |
+| PlayerIdentity | Gameplay/Player | net | 35 | 12 | 168 | 0 | 1 |
+| LocalPlayer | Core | plain | 32 | 14 | 188 | 1 | 0 |
+| CharacterCombatStats | Gameplay/Progression | mono | 29 | 12 | 214 | 1 | 51 |
 | PointAndClickPlayer | Gameplay/Player | net | 29 | 8 | 144 | 0 | 41 |
-| PlayerCharacterProgression | Gameplay/Progression | net | 27 | 12 | 214 | 0 | 41 |
-| WeaponClassId | Gameplay/Progression | enum | 26 | 8 | 275 | 8 | 0 |
-| CombatEntity | Gameplay/Progression | net | 26 | 10 | 171 | 0 | 13 |
-| StatType | Gameplay/Progression | enum | 24 | 7 | 298 | 7 | 0 |
-| NpcOffer | Gameplay/NPC | enum | 24 | 9 | 186 | 1 | 0 |
-| SaveScope | Core | enum | 22 | 9 | 218 | 0 | 0 |
-| SkillDefinitionSO | Gameplay/Progression | so | 22 | 8 | 188 | 7 | 0 |
-| PerformanceLog | Core | plain | 20 | 9 | 230 | 1 | 0 |
-| ISaveParticipant | Core | interface | 20 | 9 | 217 | 0 | 0 |
-| CharacterRecipe | Gameplay/CharacterCreation | plain | 20 | 6 | 191 | 4 | 0 |
-| ItemCatalog | Gameplay/Items | so | 20 | 8 | 191 | 7 | 0 |
-| KeyBindings | Core | plain | 20 | 4 | 152 | 2 | 0 |
+| PlayerCharacterProgression | Gameplay/Progression | net | 27 | 12 | 215 | 0 | 41 |
+| WeaponClassId | Gameplay/Progression | enum | 26 | 8 | 281 | 8 | 0 |
+| CombatEntity | Gameplay/Progression | net | 26 | 10 | 172 | 0 | 13 |
+| StatType | Gameplay/Progression | enum | 24 | 7 | 300 | 7 | 0 |
+| NpcOffer | Gameplay/NPC | enum | 24 | 9 | 187 | 1 | 0 |
+| CharacterRecipe | Gameplay/CharacterCreation | plain | 23 | 7 | 197 | 4 | 0 |
+| SaveScope | Core | enum | 22 | 9 | 219 | 0 | 0 |
+| SkillDefinitionSO | Gameplay/Progression | so | 22 | 8 | 189 | 7 | 0 |
+| PerformanceLog | Core | plain | 20 | 9 | 231 | 1 | 0 |
+| ISaveParticipant | Core | interface | 20 | 9 | 218 | 0 | 0 |
+| ItemCatalog | Gameplay/Items | so | 20 | 8 | 193 | 7 | 0 |
+| KeyBindings | Core | plain | 20 | 4 | 154 | 2 | 0 |
 <!-- /map:ripple -->
 
 ## Hubs (static members reached from other systems)
@@ -175,13 +175,13 @@ Classes over 700 lines. Several of them also reach into three or more other syst
 | PlayerMeleeCombat | Gameplay/Combat | 977 | Core, Gameplay/Player, Gameplay/Progression, Networking | 9 |
 | HudLayoutEditor | UI | 964 | - | 12 |
 | GearWorkWindowController | UI | 947 | Core, Gameplay/Economy, Gameplay/Forge, Gameplay/Items, Gameplay/NPC, Gameplay/Progression | 0 |
+| ServerSave | Gameplay/Persistence | 922 | Core, Networking | 16 |
+| NetworkConnectionManager | Networking | 920 | Core | 13 |
 | GmCommands | Tools | 904 | Core, Gameplay/Combat, Gameplay/Factions, Gameplay/Items, Gameplay/Player, Gameplay/Progression, Gameplay/Social, Networking, World | 0 |
 | PlayerCombatSkills | Gameplay/Progression | 869 | Core, Networking | 18 |
-| NetworkConnectionManager | Networking | 826 | Core | 11 |
+| CharacterCreatorController | UI | 809 | Gameplay/CharacterCreation, Gameplay/Factions, Gameplay/Items, Gameplay/Progression | 0 |
 | PlayerJumpMotor | Gameplay/Player | 807 | Gameplay/Progression, Networking | 6 |
 | PlayerInventory | Gameplay/Items | 788 | Core, Gameplay/Factions, Gameplay/Progression, Networking | 65 |
-| CharacterCreatorController | UI | 767 | Gameplay/CharacterCreation, Gameplay/Factions, Gameplay/Items, Gameplay/Progression | 0 |
-| ServerSave | Gameplay/Persistence | 735 | Core, Networking | 15 |
 | PlayerVaultMotor | Gameplay/Player | 708 | Core, Gameplay/CharacterCreation, Gameplay/Factions, Gameplay/Progression | 2 |
 <!-- /map:gods -->
 
@@ -221,7 +221,7 @@ Each ScriptableObject class, how many assets of it exist, and where they are wir
 | SmearSettings | GameFeel | 1 | 2 | 1 / 0 / 0 |
 | SpiritSettings | GameFeel | 1 | 1 | 1 / 0 / 0 |
 | AutopilotSettings | Gameplay/Autopilot | 1 | 5 | 1 / 0 / 1 |
-| CharacterCreationDatabase | Gameplay/CharacterCreation | 1 | 17 | 2 / 4 / 0 |
+| CharacterCreationDatabase | Gameplay/CharacterCreation | 1 | 18 | 2 / 4 / 0 |
 | CharacterExpressionLibrary | Gameplay/CharacterCreation | 1 | 7 | 0 / 3 / 1 |
 | CharacterPaletteLibrary | Gameplay/CharacterCreation | 1 | 2 | 0 / 0 / 1 |
 | CadenceSettings | Gameplay/Combat | 1 | 4 | 1 / 0 / 0 |
@@ -338,7 +338,7 @@ first. The page lists the file and line behind each.
 | 35 | God class | ArrangeController (1663 lines) | UI | 3 | 3 | large |
 | 36 | God class | PlayerVaultMotor (708 lines) | Gameplay/Player | 3 | 3 | large |
 | 37 | God class | GameFeelPresenter (1181 lines) | GameFeel | 3 | 2 | large |
-| 38 | God class | CharacterCreatorController (767 lines) | UI | 3 | 1 | large |
+| 38 | God class | CharacterCreatorController (809 lines) | UI | 3 | 1 | large |
 | 39 | God class | GearWorkWindowController (947 lines) | UI | 3 | 1 | large |
 | 40 | God class | GmCommands (904 lines) | Tools | 3 | 1 | large |
 <!-- /map:problems -->

@@ -392,6 +392,15 @@ to one Crew saves that Crew alone (before, the whole list of every Crew was writ
 server runs, two servers changing two Crews never write over each other. Your server's old lists are changed over by
 themselves the first time it saves them (the old list is kept once beside, named `-v1`). Nothing to do.
 
+**Characters are kept by the server (milestone 5, 19 Oct 2026).** Which characters a player has is now your server's
+word, not their PC's. Character select asks the server for the list (the header says "Asking ... for your
+characters"), and Create, Delete and the new-name box ask it too. Names are unique across the whole game, capitals
+ignored. The first time a game asks, the server gathers every name in your saves once; where two characters shared a
+name, a GM's character keeps it (your test GM Tolan stays Tolan), then the higher level. The others show **NEW NAME
+NEEDED** and choose a new name before they play again. A character the server does not have cannot join it. The
+server's `access.log` has a line for every character made, deleted or renamed, and the ledger a line for every
+character deleted. Nothing to set up. "Play here" in the Editor keeps its own characters as before.
+
 **Rebuild the server together with a new game release from now on (19 Oct 2026).** The decoupling of 19 Oct renamed the
 game's code assemblies, which changes the ids of the messages game and server send each other. A game built before it
 cannot play on a server built after it, **even with the same build number**. So the next time you rebuild your real
@@ -800,3 +809,5 @@ Things learned the hard way:
 - 19 Oct 2026: phase 4 milestone 4: Crews, Contacts, Kiosks and Sponsors saved one entry at a time (old lists changed
   over by themselves, kept once as `-v1`). Found: since the decoupling, rebuild the server together with a new game
   release (a game built before it cannot play on a server built after it, even with the same build number).
+- 19 Oct 2026: phase 4 milestone 5: the roster on the server (characters listed, made, deleted and renamed by asking
+  the server; names unique across the game; a GM keeps a shared name; NEW NAME NEEDED for the others).

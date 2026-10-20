@@ -254,6 +254,27 @@ namespace KryticalNova.Player
             public CharacterRecipe recipe;
         }
 
+        /// <summary>The saved look's text for <paramref name="recipe"/>: what a new character made on the server starts with.</summary>
+        public static string LookJson(in CharacterRecipe recipe) => JsonUtility.ToJson(new LookSave { recipe = recipe });
+
+        /// <summary>The look in a saved look's text; false when there is none.</summary>
+        public static bool TryReadLook(string json, out CharacterRecipe recipe)
+        {
+            recipe = default;
+            if (string.IsNullOrEmpty(json)) return false;
+            try
+            {
+                LookSave save = JsonUtility.FromJson<LookSave>(json);
+                if (save == null || save.recipe.IsEmpty) return false;
+                recipe = save.recipe;
+                return true;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
+
         public string SaveKey => LookSaveKey;
         public SaveScope SaveScope => SaveScope.Character;
 

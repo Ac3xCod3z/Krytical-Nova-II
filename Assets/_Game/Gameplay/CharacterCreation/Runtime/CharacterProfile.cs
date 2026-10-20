@@ -3,8 +3,9 @@ using System;
 namespace KryticalNova.CharacterCreation
 {
     /// <summary>
-    /// One saved character: who it is, how it looks and what it was last seen wearing. The hidden <see cref="id"/> is what identifies it, so two
-    /// characters may share a name; a server save can show it as Name#1234 where a unique handle is needed.
+    /// One saved character: who it is, how it looks and what it was last seen wearing. The hidden <see cref="id"/> is what
+    /// identifies it. On a server the roster is the server's and names are unique across the game (online phase 4,
+    /// milestone 5); this PC keeps a copy of it for each server (<see cref="CharacterSession.UseStore"/>).
     /// </summary>
     [Serializable]
     public sealed class CharacterProfile
@@ -22,6 +23,8 @@ namespace KryticalNova.CharacterCreation
         /// the server's save is what the character really has. Empty for a character not played since this was kept.
         /// </summary>
         public WornPiece[] worn = Array.Empty<WornPiece>();
+        /// <summary>The server asks for a new name before this character plays again (another took its name first).</summary>
+        public bool mustRename;
 
         public bool IsUsed => !string.IsNullOrEmpty(id);
 

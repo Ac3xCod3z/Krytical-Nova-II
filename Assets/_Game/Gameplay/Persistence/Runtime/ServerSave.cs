@@ -159,6 +159,9 @@ namespace KryticalNova.Persistence
             public long savedUtc;
             public string map;
             public float x, y, z;
+            public int slot = -1;
+            public long created;
+            public bool rename;
             public List<string> partKeys = new List<string>();
         }
 
@@ -252,7 +255,7 @@ namespace KryticalNova.Persistence
                 var character = new CharacterSave
                 {
                     characterId = c.characterId, name = c.name, faction = c.faction, level = c.level, savedUtc = c.savedUtc,
-                    map = c.map, x = c.x, y = c.y, z = c.z,
+                    map = c.map, x = c.x, y = c.y, z = c.z, slot = c.slot, created = c.created, rename = c.rename,
                 };
                 foreach (string part in c.partKeys ?? new List<string>())
                     if (found.TryGetValue(CharacterPartKey(accountId, c.characterId, part), out string text)) { character.parts.Add(new SavePart { key = part, json = text }); Remember(CharacterPartKey(accountId, c.characterId, part), text, present); }
@@ -500,6 +503,7 @@ namespace KryticalNova.Persistence
                 {
                     characterId = character.characterId, name = character.name, faction = character.faction, level = character.level,
                     savedUtc = character.savedUtc, map = character.map, x = character.x, y = character.y, z = character.z,
+                    slot = character.slot, created = character.created, rename = character.rename,
                 };
                 foreach (SavePart p in character.parts ?? new List<SavePart>())
                 {
@@ -535,6 +539,59 @@ namespace KryticalNova.Persistence
         }
 
         public static bool IsAccountOnline(string accountId) => !string.IsNullOrEmpty(accountId) && BoundAccounts.ContainsKey(accountId);
+
+        /// <summary>The account document of a player in the world here, or null.</summary>
+        internal static AccountSave LiveAccount(string accountId) =>
+            !string.IsNullOrEmpty(accountId) && BoundAccounts.TryGetValue(accountId, out PlayerSaveAgent agent) && agent != null ? agent.Account : null;
+
+        /// <summary>
+        /// Every saved account's header as it is kept (each character's name, level, slot and when it was saved; no
+        /// parts), leaving out accounts carried over to a signed-in one. Reads every account: for rare work only.
+        /// </summary>
+        internal static List<AccountSave> AccountHeaders()
+        {
+            var headers = new List<AccountSave>();
+            List<string> carried = World<CarriedAccounts>(CarriedDocument).old;
+            foreach (string id in AccountIds())
+            {
+                if (carried.Contains(id) || !Store.TryRead(AccountsPrefix + id, out string json)) continue;
+                AccountSave header;
+                try { header = JsonUtility.FromJson<AccountSave>(json); }
+                catch (Exception) { continue; }
+                if (header == null) continue;
+                header.accountId = id;
+                header.characters ??= new List<CharacterSave>();
+                headers.Add(header);
+            }
+            return headers;
+        }
+
+        /// <summary>
+        /// Holds an account that is not in the world for a change made from the menus (the roster): with the save service,
+        /// no other server may hold it meanwhile. False, with the reason the player reads, when it cannot be held.
+        /// </summary>
+        internal static bool TryHoldOffline(string accountId, out string refusal)
+        {
+            refusal = null;
+            if (BoundAccounts.ContainsKey(accountId))
+            {
+                refusal = "This account has a character in the world right now. Leave the world first.";
+                return false;
+            }
+            if (store is ServiceSaveStore service && !service.TryLock(AccountsPrefix + accountId, out string heldBy))
+            {
+                refusal = "This account is in the world on another server. Leave the world there first.";
+                Debug.Log($"[Save] Account {accountId} is held by {heldBy}: its roster was not changed here.");
+                return false;
+            }
+            return true;
+        }
+
+        /// <summary>Lets go of an account held with <see cref="TryHoldOffline"/> once its change is handed to the store.</summary>
+        internal static void ReleaseOffline(string accountId)
+        {
+            if (!BoundAccounts.ContainsKey(accountId)) (store as ServiceSaveStore)?.Unlock(AccountsPrefix + accountId);
+        }
 
         /// <summary>The ids of every saved account (not their parts or kept copies).</summary>
         public static List<string> AccountIds()

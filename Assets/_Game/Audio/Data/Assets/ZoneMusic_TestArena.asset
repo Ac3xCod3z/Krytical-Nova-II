@@ -28,3 +28,4 @@ MonoBehaviour:
   gapSeconds: 2
   fadeInSeconds: 0.6
   fadeOutSeconds: 2.5
+  calloutsOnly: 0

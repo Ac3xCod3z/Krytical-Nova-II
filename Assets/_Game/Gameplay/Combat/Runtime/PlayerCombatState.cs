@@ -56,6 +56,15 @@ namespace KryticalNova.Combat
         /// <summary>True while this player is in a fight. The same on every machine.</summary>
         public bool InCombat => IsSpawned ? netInCombat.Value : offlineInCombat;
 
+        /// <summary>True while this player stands in a Callout. The same on every machine.</summary>
+        public bool InCallout => duel != null && duel.IsDuelling;
+
+        /// <summary>
+        /// In a fight that counts for the fight music and Cadence: any fight, or where the zone keeps them for Callouts
+        /// (<paramref name="calloutsOnly"/>), only a Callout.
+        /// </summary>
+        public bool InFightFor(bool calloutsOnly) => InCombat && (!calloutsOnly || InCallout);
+
         /// <summary>Why, where the fight is decided (server or offline). None on a client, which is only told that.</summary>
         public CombatReasons Reasons { get; private set; }
 

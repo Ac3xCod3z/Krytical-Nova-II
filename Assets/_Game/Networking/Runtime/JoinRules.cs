@@ -46,30 +46,42 @@ namespace KryticalNova.Networking
         // KN2 (online phase 2): the Unity sign-in token that proves who the player is, and the account id the game made up
         // before sign-in existed (its characters are carried over once to the proven account).
         private const string Tag = "KN2";
-        /// <summary>Longest join request read: a sign-in token is one to two thousand characters.</summary>
-        public const int MaxPayloadBytes = 4096;
+        /// <summary>Longest join request read: a sign-in token is one to two thousand characters, a packed roster request
+        /// at most <see cref="RosterWire.MaxRequestChars"/>.</summary>
+        public const int MaxPayloadBytes = 5000;
 
-        /// <summary>What a joining game sends: its build, whether it is the Editor, its sign-in token and its old account id.</summary>
-        public static byte[] Payload(string build, bool editor, string token = "", string oldAccount = "") =>
-            Encoding.UTF8.GetBytes(Tag + "|" + Clean(build) + "|" + (editor ? "1" : "0") + "|" + Clean(token) + "|" + Clean(oldAccount));
+        /// <summary>
+        /// What a joining game sends: its build, whether it is the Editor, its sign-in token and its old account id. A
+        /// game that only asks about its characters (<see cref="RosterLink"/>, online phase 4) adds its request as a sixth
+        /// part, packed (<see cref="RosterWire"/>); the server answers it and never lets that connection in.
+        /// </summary>
+        public static byte[] Payload(string build, bool editor, string token = "", string oldAccount = "", string request = "") =>
+            Encoding.UTF8.GetBytes(Tag + "|" + Clean(build) + "|" + (editor ? "1" : "0") + "|" + Clean(token) + "|" + Clean(oldAccount)
+                                   + (string.IsNullOrEmpty(request) ? string.Empty : "|" + Clean(request)));
 
         private static string Clean(string part) => (part ?? string.Empty).Replace("|", string.Empty);
 
         public static bool TryRead(byte[] payload, out string build, out bool editor) => TryRead(payload, out build, out editor, out _, out _);
 
-        public static bool TryRead(byte[] payload, out string build, out bool editor, out string token, out string oldAccount)
+        public static bool TryRead(byte[] payload, out string build, out bool editor, out string token, out string oldAccount) =>
+            TryRead(payload, out build, out editor, out token, out oldAccount, out _);
+
+        /// <summary>The same, and the roster request of a game that only asks about its characters (empty for a join).</summary>
+        public static bool TryRead(byte[] payload, out string build, out bool editor, out string token, out string oldAccount, out string request)
         {
+            request = string.Empty;
             build = null;
             editor = false;
             token = string.Empty;
             oldAccount = string.Empty;
             if (payload == null || payload.Length == 0 || payload.Length > MaxPayloadBytes) return false;
             string[] parts = Encoding.UTF8.GetString(payload).Split('|');
-            if (parts.Length != 5 || parts[0] != Tag) return false;
+            if ((parts.Length != 5 && parts.Length != 6) || parts[0] != Tag) return false;
             build = parts[1];
             editor = parts[2] == "1";
             token = parts[3];
             oldAccount = parts[4];
+            if (parts.Length == 6) request = parts[5];
             return true;
         }
 

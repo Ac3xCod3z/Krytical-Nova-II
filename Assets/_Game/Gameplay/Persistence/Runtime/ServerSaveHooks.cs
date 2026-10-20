@@ -16,7 +16,11 @@ namespace KryticalNova.Persistence
         [UnityEditor.InitializeOnLoadMethod]   // EditMode tests of bans see the saves too
 #endif
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        private static void Register() => ServerHooks.Saves = new ServerSaveHooks();
+        private static void Register()
+        {
+            ServerHooks.Saves = new ServerSaveHooks();
+            ServerHooks.Roster = new ServerRoster();
+        }
 
         public bool HasAuthority => ServerSave.HasAuthority;
         public T World<T>(string name) where T : class, new() => ServerSave.World<T>(name);
