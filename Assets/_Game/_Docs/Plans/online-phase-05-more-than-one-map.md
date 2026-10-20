@@ -45,6 +45,17 @@ character, Squad, Crew, Contacts and chat intact, and never sees more than the o
 The order was changed on 20 Oct 2026: the second server first, because a Bootstrap scene is only needed once a player
 moves from one server to another; it is built as the start of travelling.
 
+**Milestone 1 as built (20 Oct 2026):** `mapServers` in `server-settings.json` (Transit Row, port 7779, page 8092 by
+default; an older file gains it by itself) and `-role map` (`ServerLaunchOptions.IsMapServer`, `RecordFolderPath`,
+`MapServerProblem`). A map server skips `ServerReach` (no list), is forced Direct, makes no backups and trims no ledger
+(`ServerLifetime`), writes its records in `MapServers/<map>` inside the save folder and its performance log with the
+map in the name, stops at once without the save service or with a map the build lacks (`DedicatedServerBoot`), and its
+control page says map server and refuses the list and mode calls. The Server app (`ServerApp~/MainWindow.cs`) has a tab
+per game server and stops them all on close. Checked beside the measure server (Concord 7790, Transit Row 7792/8093,
+test save service): both online, commands on each tab, the safe stop of both. Not checked: a player on Transit Row's
+server (that is travelling, milestone 3). Until milestone 5, world documents (Crews, Kiosks, Contacts, Sponsors) are
+only changed on Concord's server; a map server holds what it read at start.
+
 ## What exists today
 
 | Piece | Where | State |

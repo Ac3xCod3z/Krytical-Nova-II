@@ -20,7 +20,7 @@ script, which is then published to the link above. `--baseline` saves today's up
 ## Today
 
 <!-- map:summary -->
-Generated 20 Oct 2026, 08:14: 647 runtime scripts (121,119 lines) declaring 922 types (165 MonoBehaviours, 61 NetworkBehaviours, 87 ScriptableObject classes); 116 test scripts; 4709 prefabs, 46 scenes and 2581 assets read. 196 system-to-system links, of which 0 run uphill, 0 pairs of systems use each other both ways, and 0 links would have to go for the systems to form a clean stack. The largest tangle, classes that all reach each other through some chain of uses, holds 7 classes from 1 systems (Gameplay/Player 7, ...).
+Generated 20 Oct 2026, 09:10: 647 runtime scripts (121,214 lines) declaring 923 types (165 MonoBehaviours, 61 NetworkBehaviours, 87 ScriptableObject classes); 116 test scripts; 4709 prefabs, 46 scenes and 2581 assets read. 196 system-to-system links, of which 0 run uphill, 0 pairs of systems use each other both ways, and 0 links would have to go for the systems to form a clean stack. The largest tangle, classes that all reach each other through some chain of uses, holds 7 classes from 1 systems (Gameplay/Player 7, ...).
 <!-- /map:summary -->
 
 ## How to read it
@@ -56,7 +56,7 @@ Generated 20 Oct 2026, 08:14: 647 runtime scripts (121,119 lines) declaring 922 
 | System | Layer | Scripts | Lines | Uses (types) | Used by (types) | Instability | Tests | Types touched by a test |
 |---|---|---|---|---|---|---|---|---|
 | Core | Foundation | 46 | 3,716 | 0 | 190 | 0.0 | 4 | 14 of 32 |
-| Networking | Infrastructure | 38 | 7,055 | 5 | 75 | 0.06 | 3 | 25 of 50 |
+| Networking | Infrastructure | 38 | 7,150 | 5 | 75 | 0.06 | 3 | 25 of 51 |
 | Rendering | Infrastructure | 14 | 2,829 | 1 | 26 | 0.04 | 0 | 1 of 18 |
 | Environment | Simulation | 6 | 834 | 0 | 2 | 0.0 | 0 | 0 of 6 |
 | Gameplay/Autopilot | Simulation | 11 | 1,448 | 41 | 12 | 0.77 | 3 | 6 of 12 |
@@ -175,8 +175,8 @@ Classes over 700 lines. Several of them also reach into three or more other syst
 | PlayerMeleeCombat | Gameplay/Combat | 977 | Core, Gameplay/Player, Gameplay/Progression, Networking | 9 |
 | HudLayoutEditor | UI | 964 | - | 12 |
 | GearWorkWindowController | UI | 947 | Core, Gameplay/Economy, Gameplay/Forge, Gameplay/Items, Gameplay/NPC, Gameplay/Progression | 0 |
+| NetworkConnectionManager | Networking | 929 | Core | 13 |
 | ServerSave | Gameplay/Persistence | 928 | Core, Networking | 16 |
-| NetworkConnectionManager | Networking | 920 | Core | 13 |
 | GmCommands | Tools | 904 | Core, Gameplay/Combat, Gameplay/Factions, Gameplay/Items, Gameplay/Player, Gameplay/Progression, Gameplay/Social, Networking, World | 0 |
 | PlayerCombatSkills | Gameplay/Progression | 869 | Core, Networking | 18 |
 | CharacterCreatorController | UI | 809 | Gameplay/CharacterCreation, Gameplay/Factions, Gameplay/Items, Gameplay/Progression | 0 |
