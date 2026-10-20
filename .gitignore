@@ -89,6 +89,9 @@ mono_crash.*
 # Crashlytics generated file
 crashlytics-build.properties
 
+# graphify knowledge graph (rebuilt locally; see _Docs/Guides/Graphify-Guide.md)
+/graphify-out/
+
 # TestRunner generated files
 InitTestScene*.unity*
 

@@ -73,3 +73,18 @@ Read `Assets/_Game/_Docs/Reference/12Sky/README.md` before naming anything a pla
   server never stops the save service or the database; closing the app stops the save service it started. Test the app
   only beside the measure server (`Builds/Bots`, `--selftest <folder>` pictures its tabs), never on the real server. Details: `_Docs/Guides/Server-Guide.md`,
   "The save database and save service"; the plan is `_Docs/Plans/online-phase-04-accounts-and-shared-save.md`.
+
+## graphify
+
+`graphify-out/graph.json` (owner, 19 Oct 2026) maps the code of `Assets/_Game` and the outline (headings) of its docs;
+vendor packs and Unity data stay out (`.graphifyignore`). It is built on this PC, never committed. Guide:
+`_Docs/Guides/Graphify-Guide.md`.
+
+- Before the first grep or source read for a code question, ask the graph and read only the lines it points to. Name
+  real symbols: `graphify explain "<Type or .Method()>"` (callers, callees, file:line), `graphify affected "<Type>"`
+  (what a change reaches), `graphify path "<A>" "<B>"`. `graphify query "<question>"` works with real type names in it;
+  plain-English questions come back noisy. Put this rule in every subagent prompt that explores code.
+- The graph holds the docs' headings, not their meaning: the mandatory docs above are still read in full.
+- After changing code: `graphify update .` (local, no AI, about a minute). If `graphify-out/` is missing:
+  `graphify extract . --code-only`, then `graphify update .`.
+- `graphify-out/GRAPH_REPORT.md` only for broad architecture review.
