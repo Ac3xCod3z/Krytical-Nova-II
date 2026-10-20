@@ -24,22 +24,37 @@ character, Squad, Crew, Contacts and chat intact, and never sees more than the o
 
 ## Milestones (each stops for the owner's check)
 
-1. **The Bootstrap scene** (the client side of travelling, below): the network and the always-on parts move out of
-   Zone01 into a small Bootstrap scene loaded once after the menus; maps are scenes swapped under the loading page with
-   memory freed between them. Checked with the Editor hosting and with the test server.
-2. **A second map server behind one name.** Transit Row built as a server (`-map`), the Server app running Concord's and
-   Transit Row's servers in two tabs, the published list keeping one entry (Nova, which is Concord's server) while the map
-   servers are known to the world service only. Each map server's control page and records say which map it is.
-3. **The world service** (in the save service): presence (which map server holds which character) and signed, use-once
+1. **A second map server behind one name.** Transit Row runs as a server of its own (`-map`, its own port) beside
+   Concord's, both started from the Server app (a SERVER tab each). Only Concord's server publishes the server list, so
+   players see one entry, Nova; a map server never publishes, refuses to run without the save service, makes no backups
+   of its own (the save service's nightly copy covers the database) and keeps its records in a folder of its own. Its
+   control page and records say which map it is.
+2. **The world service** (in the save service): presence (which map server holds which character) and signed, use-once
    travel tickets.
-4. **Travelling**: the portal (`WorldTransferHandler`), save and release, the ticket, the loading page, the new server
-   checks the ticket and places the player; a failure returns the player where they were; the log lines. The rewritten
-   `ZoneSessionManager` never starts a local host.
-5. **Chat across map servers**: Faction, Crew, Squad and Whisper through the world service; General stays local; `gm.say`
+3. **Travelling**: the client side first (the network and the always-on parts out of Zone01 into a small Bootstrap
+   scene loaded once after the menus, maps swapped under the loading page with memory freed between them), then the
+   portal (`WorldTransferHandler`), save and release, the ticket, the loading page, the new server checks the ticket and
+   places the player; a failure returns the player where they were; the log lines. The rewritten `ZoneSessionManager`
+   never starts a local host.
+4. **Chat across map servers**: Faction, Crew, Squad and Whisper through the world service; General stays local; `gm.say`
    reaches every server.
-6. **Squad, Crew, Contacts and Sponsor across map servers**; the world map knows a friend is elsewhere; GM `gm.tp` and
+5. **Squad, Crew, Contacts and Sponsor across map servers**; the world map knows a friend is elsewhere; GM `gm.tp` and
    `gm.target` find a player on any map.
-7. **Two players do all of it** (the done-when list), on the test servers, then the real ones.
+6. **Two players do all of it** (the done-when list), on the test servers, then the real ones.
+
+The order was changed on 20 Oct 2026: the second server first, because a Bootstrap scene is only needed once a player
+moves from one server to another; it is built as the start of travelling.
+
+**Milestone 1 as built (20 Oct 2026):** `mapServers` in `server-settings.json` (Transit Row, port 7779, page 8092 by
+default; an older file gains it by itself) and `-role map` (`ServerLaunchOptions.IsMapServer`, `RecordFolderPath`,
+`MapServerProblem`). A map server skips `ServerReach` (no list), is forced Direct, makes no backups and trims no ledger
+(`ServerLifetime`), writes its records in `MapServers/<map>` inside the save folder and its performance log with the
+map in the name, stops at once without the save service or with a map the build lacks (`DedicatedServerBoot`), and its
+control page says map server and refuses the list and mode calls. The Server app (`ServerApp~/MainWindow.cs`) has a tab
+per game server and stops them all on close. Checked beside the measure server (Concord 7790, Transit Row 7792/8093,
+test save service): both online, commands on each tab, the safe stop of both. Not checked: a player on Transit Row's
+server (that is travelling, milestone 3). Until milestone 5, world documents (Crews, Kiosks, Contacts, Sponsors) are
+only changed on Concord's server; a map server holds what it read at start.
 
 ## What exists today
 
@@ -82,7 +97,7 @@ characters are here.
 
 `ZoneSessionManager` is rewritten around this. Its fallback of starting a local host is removed.
 
-## The client side of travelling (added 15 Oct 2026; milestone 1)
+## The client side of travelling (added 15 Oct 2026; milestone 3)
 
 What the game itself needs before a second map can be loaded at all:
 

@@ -66,6 +66,13 @@ namespace KryticalNova.Networking
         private void Start()
         {
             startedAt = Time.realtimeSinceStartup;
+            // A map server (online phase 5) makes no backups and leaves the ledger to the listed server: the save service
+            // copies the database every night, and one server trimming is enough.
+            if (options.IsMapServer)
+            {
+                LastBackup = "none: a map server makes no backups (the save service copies the database every night)";
+                return;
+            }
             Backup("start");
             if (options.backupHours > 0f) nextBackupAt = Time.realtimeSinceStartup + options.backupHours * 3600f;
             TrimLedger();
@@ -107,6 +114,13 @@ namespace KryticalNova.Networking
         public static string Backup(string reason)
         {
             ServerLaunchOptions o = ServerLaunchOptions.LoadForThisServer();
+            if (o.IsMapServer)
+            {
+                ServerHooks.Saves?.FlushAll();
+                const string mapLine = "[Backup] Everyone here is saved. A map server makes no backups: the save service copies the database every night, and the listed server backs up the rest.";
+                Debug.Log(mapLine);
+                return mapLine;
+            }
             string line = ServerHooks.Saves != null ? ServerHooks.Saves.Backup(o.BackupFolderPath, o.backupsKept, reason)
                 : "[Backup] Nothing to back up: the saves are not loaded.";
             Debug.Log(line);
@@ -169,7 +183,7 @@ namespace KryticalNova.Networking
             instance.restarting = restart;
             Debug.Log("[Server] Stopping: " + reason + " Saving every player and the world...");
             ServerHooks.Saves?.FlushAll();
-            Backup("stop");
+            if (!instance.options.IsMapServer) Backup("stop");
             NetworkManager network = NetworkManager.Singleton;
             if (network != null && network.IsServer)
                 foreach (ulong client in new System.Collections.Generic.List<ulong>(network.ConnectedClientsIds))

@@ -67,6 +67,31 @@ namespace KryticalNova.Networking
         public int ledgerDays = 90;
         [Tooltip("Months of the record files (gm.log, economy.log, access.log, flags.log) kept: a new file each month, the oldest dropped.")]
         public int recordMonths = 6;
+        [Tooltip("Online phase 5: the servers of the other maps, which the Server app starts beside this one: each a map, its own game port (its status port is the next one) and control page port. They save through the save service and are never in the server list: players see one server, the one this list belongs to.")]
+        public MapServerEntry[] mapServers = { new MapServerEntry { name = "Transit Row", map = "MeridianSprawl_Z1_TransitRow", port = 7779, pagePort = 8092 } };
+
+        /// <summary>
+        /// What this copy is (online phase 5; -role on the command line, never in the file, which every server of the PC
+        /// shares): the listed server (main), or a map server (map), which the Server app starts for one of
+        /// <see cref="mapServers"/>.
+        /// </summary>
+        [NonSerialized] public string role = MainRole;
+        public const string MainRole = "main", MapRole = "map";
+
+        /// <summary>
+        /// True for a map server: it is never in the server list (players see one server), makes no backups (the save
+        /// service copies the database every night), keeps its records in a folder of its own and runs only on the save
+        /// service, since two servers cannot share a save folder.
+        /// </summary>
+        public bool IsMapServer => role == MapRole;
+
+        /// <summary>Where this server's record files go: the save folder, or for a map server a folder of its own in it.</summary>
+        public string RecordFolderPath => IsMapServer ? Path.Combine(SaveFolderPath, "MapServers", map) : SaveFolderPath;
+
+        /// <summary>Why this copy cannot run as a map server, or null when it can (or is not one).</summary>
+        public string MapServerProblem() => IsMapServer && !UsesSaveService
+            ? "a map server saves through the save service only (saveService in server-settings.json): two servers cannot share a save folder"
+            : null;
 
         /// <summary>True when this server saves through the save service (online phase 4) rather than files.</summary>
         public bool UsesSaveService => !string.IsNullOrWhiteSpace(saveService);
@@ -151,6 +176,12 @@ namespace KryticalNova.Networking
                         File.WriteAllText(file, JsonUtility.ToJson(options, true));
                         notes.Add("added ledgerDays and recordMonths to the settings file");
                     }
+                    // And one from before the map servers gains mapServers (Transit Row's).
+                    else if (!text.Contains("\"mapServers\""))
+                    {
+                        File.WriteAllText(file, JsonUtility.ToJson(options, true));
+                        notes.Add("added mapServers (the other maps' servers the Server app starts) to the settings file");
+                    }
                 }
                 else
                 {
@@ -165,13 +196,13 @@ namespace KryticalNova.Networking
             }
             options.ApplyArguments(args, notes);
             options.Clamp(notes);
-            report = $"[Server] {options.serverName}: port {options.port}, up to {options.maxPlayers} players, map {options.map}, " +
+            report = $"[Server] {options.serverName}{(options.IsMapServer ? " (map server, never in the server list)" : string.Empty)}: port {options.port}, up to {options.maxPlayers} players, map {options.map}, " +
                      $"{options.connectionMode} connections, saves in {options.SaveFolderPath}, backups every {options.backupHours:0.##} h " +
                      $"(last {options.backupsKept} kept) in {options.BackupFolderPath}. " + string.Join("; ", notes) + ".";
             return options;
         }
 
-        /// <summary>Command-line overrides: -name, -port, -maxPlayers, -saveFolder, -map, -mode, -pagePort, -backupHours, -backupsKept.</summary>
+        /// <summary>Command-line overrides: -name, -port, -maxPlayers, -saveFolder, -map, -mode, -pagePort, -backupHours, -backupsKept, -role.</summary>
         public void ApplyArguments(string[] args, List<string> notes)
         {
             if (args == null) return;
@@ -192,6 +223,7 @@ namespace KryticalNova.Networking
                         else notes.Add($"{key} \"{value}\" is not a number");
                         break;
                     case "-backupskept": backupsKept = Int(value, backupsKept, key, notes); break;
+                    case "-role": role = string.Equals(value.Trim(), MapRole, StringComparison.OrdinalIgnoreCase) ? MapRole : MainRole; break;
                     default: continue;
                 }
                 notes.Add($"{key} from the command line");
@@ -210,6 +242,9 @@ namespace KryticalNova.Networking
             if (string.IsNullOrWhiteSpace(map)) map = "Zone01_StarterTown";
             connectionMode = string.IsNullOrWhiteSpace(connectionMode) ? "direct" : connectionMode.Trim().ToLowerInvariant();
             if (connectionMode != Direct && connectionMode != Relay) { notes.Add($"connection mode \"{connectionMode}\" is not one of direct, relay: direct"); connectionMode = Direct; }
+            // A map server is reached by its address and port, which the game is given when it travels (online phase 5).
+            if (IsMapServer && connectionMode != Direct) { notes.Add("a map server takes players directly: direct"); connectionMode = Direct; }
+            mapServers ??= new MapServerEntry[0];
         }
 
         public const string Direct = "direct";
@@ -300,6 +335,20 @@ namespace KryticalNova.Networking
         /// <summary>Tests only: forget the options read.</summary>
         public static void ResetForTests() => Current = null;
 #endif
+    }
+
+    /// <summary>One map's server, started by the Server app beside the listed one (online phase 5).</summary>
+    [Serializable]
+    public sealed class MapServerEntry
+    {
+        [Tooltip("The name on the Server app's tab.")]
+        public string name = "";
+        [Tooltip("The map it runs (a scene in the build).")]
+        public string map = "";
+        [Tooltip("Its game port (UDP); its status port is the next one. Forward both for players outside the house.")]
+        public int port;
+        [Tooltip("Its control page's port, on the home network only.")]
+        public int pagePort;
     }
 }
 #endif

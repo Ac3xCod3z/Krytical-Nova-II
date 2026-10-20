@@ -772,6 +772,12 @@ namespace KryticalNova.Networking
                 return;
             }
             if (options.UsesSaveService) Debug.Log($"[Server] Saves go to the save service at {options.saveService}.");
+            if (options.MapServerProblem() is string mapProblem)
+            {
+                ReportError($"[Server] This map server cannot start: {mapProblem}.");
+                Application.Quit(1);
+                return;
+            }
             ushort port = (ushort)options.port;
             ConfigureTransport(defaultListenAddress, port);
             OfflinePlayerHandoff.ReleaseOfflineAvatar();
@@ -779,7 +785,7 @@ namespace KryticalNova.Networking
             maxPlayersNow = options.maxPlayers;
             PrepareConnections();
             // Who joined and left, with the account, is kept in access.log beside the saves (online phase 2, milestone 4).
-            ServerRecords.LogFolder = options.SaveFolderPath;
+            ServerRecords.LogFolder = options.RecordFolderPath;
             ServerRecords.MonthsKept = options.recordMonths;
             nm.OnClientConnectedCallback += id =>
             {
@@ -788,7 +794,7 @@ namespace KryticalNova.Networking
             };
             // Every request a game sends is held to a speed limit, and foul play is flagged (online phase 2, milestone 3).
             RpcBudget.Configure(options.callLimits);
-            SecurityFlags.LogFolder = options.SaveFolderPath;
+            SecurityFlags.LogFolder = options.RecordFolderPath;
             nm.OnClientDisconnectCallback += id =>
             {
                 ServerRecords.Left(id);
@@ -800,7 +806,10 @@ namespace KryticalNova.Networking
             // Unity's sign-in keys, fetched now so the first player is not kept waiting (online phase 2).
             UnityKeys.EnsureAsync();
             if (ServerHooks.Saves != null) ServerHooks.Saves.CarryOverEnabled = options.carryOverOldSaves;
-            ServerReach.Begin(options);
+            // Players see one server (owner, 20 Oct 2026: "Nova is the one they see"): only the listed server publishes the
+            // list; a map server is reached by travelling (online phase 5).
+            if (options.IsMapServer) Debug.Log($"[Server] Map server for {options.map}: never in the server list; its records are in {options.RecordFolderPath}.");
+            else ServerReach.Begin(options);
             var transport = nm.GetComponent<UnityTransport>();
             if (options.UsesRelay)
             {

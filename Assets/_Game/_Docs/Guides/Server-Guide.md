@@ -3,7 +3,7 @@
 A running guide to the game's own server, in plain words. It says what works **today**, and it is updated after
 every server step (online phase 1, `Plans/online-phase-01-dedicated-server.md`).
 
-**Last updated:** 19 Oct 2026, characters kept by the server and names unique across the game (phase 4, milestone 5).
+**Last updated:** 20 Oct 2026, a server per map behind one name: Transit Row's server beside Concord's (phase 5, milestone 1).
 
 ## In one minute
 
@@ -12,9 +12,13 @@ every server step (online phase 1, `Plans/online-phase-01-dedicated-server.md`).
 - You **build** it from the Unity Editor with one menu. You get a folder with `KryticalNovaServer.exe` and
   `Start Server.bat` in it.
 - You **start** it by opening the **Krytical Nova Server** app (the KN logo on your desktop and in the Start menu).
-  One window starts the save service and the server **inside itself** (no black windows) and has three tabs: **SERVER**
-  (its log, a box to **type commands**, Start / Restart / Stop, the control page), **SAVE SERVICE** and **DATABASE**
-  (the saves and the backups). `Start Server.bat` still works the old way.
+  One window starts the save service and the servers **inside itself** (no black windows) and has a tab for each
+  server, **CONCORD** and **TRANSIT ROW** (each with its log, a box to **type commands**, Start / Restart / Stop, its
+  control page), then **SAVE SERVICE** and **DATABASE** (the saves and the backups). `Start Server.bat` still works the
+  old way, for Concord's server only.
+- **Each map has a server of its own** (phase 5): Concord's is the one players see in the server list, as **Nova**;
+  Transit Row's runs beside it and is never listed. Players will be passed from one to the other by walking through the
+  portal (phase 5, milestone 3); until then nobody can reach Transit Row's server but you, for tests.
 - You **run** it from its **control page**, a web page you open on any PC or phone in the house: who is on, the log,
   Save, Backup, Announce, Kick, Restart, Stop, and a box for GM commands. It has a password.
 - It reads its **settings** from `server-settings.json`, a small text file beside it that you edit with Notepad.
@@ -37,6 +41,7 @@ every server step (online phase 1, `Plans/online-phase-01-dedicated-server.md`).
 | 5. Joining from outside your house | Direct (port forwarding) or Unity Relay, switched on the control page; the list keeps itself current | Built 16 Oct 2026 |
 | The saves copied every night | The whole save database copied at 4 AM, kept 14 days on this PC and in Google Drive; a practice restore and a last-resort restore beside the save service | Built 20 Oct 2026; Google Drive for desktop and the first drill still to do |
 | Characters kept by the server | Character select shows your server's own list of each player's characters; making, deleting and renaming one asks the server; no two characters in the game share a name | Built 19 Oct 2026 |
+| A server per map, one name | Transit Row's server runs beside Concord's in the app (a tab each); players still see one server, Nova (section 2b) | Built 20 Oct 2026; travelling between them is phase 5, milestone 3; the router's two new ports still to do |
 | 6. The move to the old PC | A zip, an install step and a step-by-step guide | Not yet |
 | 7. Measuring | How many players and Hostiles one PC carries | Not yet |
 
@@ -144,6 +149,42 @@ a rule once: Norton 360 ▸ **Settings** ▸ **Firewall** ▸ **Program Rules** 
 from outside the house (and other PCs) may not reach the game or the control page. If players cannot get in after a
 server rebuild, check this rule first: Norton may ask again about a program whose file changed. On a PC without Norton
 (the old PC, perhaps), **Windows Firewall** asks the first time the server starts: allow it on **private** networks.
+
+## 2b. A server per map (phase 5)
+
+Every map runs on a server of its own (owner, 20 Oct 2026), started by the app beside the others. Players never see
+more than one: the server list shows **Nova** (Concord's server), and the game will pass a player from one map's server
+to the next when they walk through a portal (phase 5, milestone 3, not built yet).
+
+| Server | Map | Game port (UDP) | Status port (UDP) | Control page | In the server list |
+| --- | --- | --- | --- | --- | --- |
+| **Concord's** (the listed one) | `Zone01_StarterTown` (`map`) | 7777 (`port`) | 7778 | `http://<this PC>:8090` | Yes, as Nova |
+| **Transit Row's** (a map server) | `MeridianSprawl_Z1_TransitRow` | 7779 | 7780 | `http://<this PC>:8092` | Never |
+
+The map servers are listed in `server-settings.json` under `mapServers` (section 4); the app starts one for each, with
+`-role map` and its own map and ports. A map server is the same `KryticalNovaServer.exe` with these differences:
+
+- it is **never in the server list** and never publishes it; its control page hides the list and the way in (they are
+  changed on Concord's page) and says **map server** beside its name;
+- it is always **Direct** (players come to its own ports, never through Relay);
+- it **saves through the save service only**: without `saveService` in the settings it does not start (two servers
+  cannot share one save folder), and the app says so on its tab;
+- it **makes no backups**: the save service copies the whole database every night (section 9b), and Concord's server
+  backs up the rest. Its control page and `gm.backup` save everyone on it instead;
+- its **records** (`gm.log`, `access.log`, `flags.log`, ...) go in a folder of its own: `MapServers\<map>` inside the
+  save folder;
+- a map the build does not have stops it at once (it never opens Concord instead: that would split the town in two).
+
+Each tab's **STOP** and **RESTART** work on that server alone; closing the app stops them all safely. The pill at the
+top right reads **SERVERS 2/2 ONLINE** when every server is up.
+
+**For players outside the house**, Transit Row's server needs two more ports forwarded, the same way as 7777 and 7778
+(section 6, "The router"): **UDP 7779** ("Transit Row") and **UDP 7780** ("Transit Row status"), both to this PC.
+Never forward 8092 (its control page). Until then it works on the home network only, which is all milestone 1 needs.
+
+**Not yet (later milestones of phase 5):** walking through the portal onto Transit Row's server (milestone 3), chat
+across servers (4), Squads, Crews, Contacts and Sponsors across servers (5). Until those land, a Crew or Kiosk change
+is made on Concord's server; Transit Row's server knows only what it read when it started.
 
 ## 3. The control page
 
@@ -277,6 +318,7 @@ default (and makes the page password). Close the server, edit it with Notepad, s
 | `saveService` | empty | The save service this server saves through (`http://127.0.0.1:7801` for your real saves). Empty: the save folder. |
 | `ledgerDays` | 90 | Days the ledger (below) is kept; older lines are dropped once a day. Added to an older file by itself. |
 | `recordMonths` | 6 | Months of `gm.log`, `economy.log`, `access.log` and `flags.log` kept. |
+| `mapServers` | Transit Row on 7779, page 8092 | The other maps' servers the app starts beside this one (section 2b): each a `name` (its tab), a `map`, a `port` (its status port is the next one) and a `pagePort`. Added to an older file by itself. |
 
 A mistake is forgiven: a port that is not a port becomes 7777, a player limit of 0 becomes 1, and a file Notepad
 broke is left as it is while the server uses the defaults (the window says so).
@@ -293,6 +335,7 @@ broke is left as it is while the server uses the defaults (the window says so).
 | `-pagePort <number>` | `-pagePort 8091` |
 | `-backupHours <hours>` | `-backupHours 1` |
 | `-backupsKept <number>` | `-backupsKept 20` |
+| `-role map` | the app adds it for each map server (section 2b); never needed by hand |
 
 The page password is never taken from the command line: it would show in the list of running programs.
 
@@ -502,7 +545,8 @@ either mode.
 **The router (Spectrum, done 16 Oct 2026).** In the **My Spectrum** app: **Services** ▸ your router ▸ **Advanced
 Settings** ▸ **Port Forwarding**; pick this PC (it shows as **Windows**, 192.168.1.73), switch on **Reserve IP
 Address**, then **Add Port Assignment** twice: UDP 7777 to 7777 ("the game") and UDP 7778 to 7778 ("the servers window
-status"). Turning the reservation off deletes the assignments. UPnP stays off: it is not needed, and it made the
+status"). Turning the reservation off deletes the assignments. **Phase 5:** add UDP 7779 to 7779 ("Transit Row") and
+UDP 7780 to 7780 ("Transit Row status") the same way for Transit Row's server (section 2b). UPnP stays off: it is not needed, and it made the
 internet unstable here. Never forward the control page's port (8090).
 
 **From the F1 panel (testing):** press **F1** for the network panel, type the server's address in **IP** and its port
@@ -756,12 +800,12 @@ Server"; tell the two apart by the port the window prints. Every test goes like 
 | `ServerBuildBuilder` | `Tools/Editor/Build` | The build menus; adds the control page's files and fonts and the start script; keeps the settings file across a rebuild. |
 | `ServerSceneStripper` | `Tools/Editor/Build` | Switches off parts that only draw in the server's copy of each scene. |
 | `KryticalNova.Editor.Presentation` | `UI/Editor` (asmdef) | The HUD, menu, game feel and pet builders, left out under the server target; the rest of the Editor reaches them by name (`PresentationTools`). |
-| `ServerLaunchOptions` | `Networking/Runtime/Server` | Reads the settings file and the command line; makes the page password. Server build only. |
+| `ServerLaunchOptions` | `Networking/Runtime/Server` | Reads the settings file and the command line; makes the page password. `mapServers` and `-role map` (`IsMapServer`, `RecordFolderPath`, `MapServerProblem`): a map server is never listed, always direct, makes no backups, runs only on the save service (tested in `ServerSettingsTests`). Server build only. |
 | `ServerLifetime` | `Networking/Runtime/Server` | Backups on a timer, countdowns, the safe stop (the console close handler), restart (exit code 3). Server build only. |
 | `ServerControlPage` | `Networking/Runtime/Server` | The control page: a small web server on a plain socket (no administrator rights), sessions, the calls. Server build only. |
 | `ControlPageRules` | `Networking/Runtime/Server` | Home network only, request reading, the lockout, same-origin and Host checks, which failed requests are a browser hanging up (not logged), a spare connection closed unused (no answer) (tested in `ControlPageTests`). |
 | `ServerSingleCopy` | `Networking/Runtime/Server` | Before anything else, checks the game port (UDP, Direct mode) and the page port (TCP); when another copy holds them it says so and quits with exit code 4, which `Start Server.bat` does not restart on (tested in `ServerSingleCopyTests`). Server build only. |
-| Krytical Nova Server app | `Networking/ServerApp~` (.NET, outside Unity) | The owner's window for the server: `Hosted` runs the save service and the server hidden with their output and input, `MainWindow` the three tabs, the safe stop and the restart on exit code 3; its own icon `ServerApp.ico`. `--selftest <folder>` pictures each tab, runs `gm.players`, backs up and stops (run it only beside the measure server). Built by `ServerBuildBuilder.BuildServerApp`. |
+| Krytical Nova Server app | `Networking/ServerApp~` (.NET, outside Unity) | The owner's window for the server: `Hosted` runs the save service and the servers hidden with their output and input, `MainWindow` a tab per game server (the listed one and each of `mapServers`) and the save service and database tabs, the safe stop and the restart on exit code 3; its own icon `ServerApp.ico`. `--selftest <folder>` pictures each tab, runs `gm.players`, backs up and stops (run it only beside the measure server). Built by `ServerBuildBuilder.BuildServerApp`. |
 | `ControlPage~` | `Networking` | The page's own files: `index.html`, `style.css`, `app.js` (copied beside the server by the build). |
 | `ServerBackups` | `Gameplay/Persistence/Runtime` | Zips the save folder and prunes old backups. |
 | `ServerConsoleInput` | `Tools/Debug` | Runs lines typed into the server's window, and the page's GM command box. Server build only. |
@@ -851,3 +895,6 @@ Things learned the hard way:
   the server; names unique across the game; a GM keeps a shared name; NEW NAME NEEDED for the others).
 - 20 Oct 2026: phase 4 milestone 6: the save database copied every night at 4 AM by the save service (14 days kept, on
   this PC and in Google Drive), Back Up Now, the restore drill and Restore Saves (section 9b).
+- 20 Oct 2026: phase 5 milestone 1: a server per map behind one name (section 2b). Transit Row's server runs beside
+  Concord's in the app, a tab each; it is never in the server list, always direct, saves only through the save service,
+  makes no backups and keeps its records in `MapServers\<map>`. Ports 7779 and 7780 to forward for it.
