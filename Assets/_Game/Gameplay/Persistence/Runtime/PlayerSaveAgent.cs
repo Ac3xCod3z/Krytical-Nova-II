@@ -166,9 +166,22 @@ namespace KryticalNova.Persistence
                 return;
             }
 
+            AccountSave loaded = ServerSave.LoadAccount(wantedAccount);
+            CharacterSave found = loaded.Find(wantedCharacter);
+            // Online phase 4, milestone 5: on a dedicated server the roster is the server's. Only a character it made, under
+            // its own name and not waiting for a new one, plays; the select screen lists exactly those.
+            string notOnRoster = RosterKeptByServer ? NotOnRoster(found, identity.CharacterName) : null;
+            if (notOnRoster != null)
+            {
+                Debug.LogWarning($"[Save] {identity.CharacterName} ({wantedCharacter}) of account {wantedAccount}: {notOnRoster}", this);
+                ServerSave.Release(this, wantedAccount);
+                NetworkManager.DisconnectClient(OwnerClientId, notOnRoster);
+                return;
+            }
+
             accountId = wantedAccount;
-            account = ServerSave.LoadAccount(accountId);
-            character = account.Find(wantedCharacter);
+            account = loaded;
+            character = found;
             bool isNew = character == null;
             if (isNew)
             {
@@ -194,6 +207,20 @@ namespace KryticalNova.Persistence
 
             Save();
             Loaded?.Invoke();
+        }
+
+        // A player of a dedicated server (not the host's own): the server keeps the roster (ServerRoster).
+        private bool RosterKeptByServer => IsSpawned && OwnerClientId != NetworkManager.ServerClientId
+                                           && KryticalNova.Networking.NetworkConnectionManager.RequireProof;
+
+        /// <summary>Why a character may not play on a server that keeps the roster, in the words the player reads; null when it may.</summary>
+        public static string NotOnRoster(CharacterSave saved, string nameSent)
+        {
+            if (saved == null) return "That character is not on this server. Go back to character select and choose again.";
+            if (saved.rename) return CharacterNameRules.ReasonMustRename;
+            if (!string.Equals(saved.name, nameSent, StringComparison.Ordinal))
+                return "That character's name is not the one the server has. Go back to character select and choose again.";
+            return null;
         }
 
         // ------------------------------------------------------------------ save

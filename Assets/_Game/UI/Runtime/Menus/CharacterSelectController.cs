@@ -14,6 +14,9 @@ namespace KryticalNova.UI.Menus
     /// Delete (type the name to confirm). Opens on the character that was played last. Built on Synty's
     /// "Load Game" screen: each save row is a character slot. Enter World joins the server played last (online step 4);
     /// SERVERS opens the Servers window (<see cref="MenuServers"/>) to choose another.
+    /// On a server the characters are the server's (online phase 4, milestone 5; <see cref="MenuRoster"/>): the list is
+    /// asked for when the screen opens or another server is chosen, and Delete and Rename go to the server. A character
+    /// that lost its name when names became unique asks for a new one before it enters.
     /// </summary>
     [DisallowMultipleComponent]
     public sealed class CharacterSelectController : MonoBehaviour
@@ -26,6 +29,8 @@ namespace KryticalNova.UI.Menus
         [SerializeField] private GameObject deletePopup;
         [SerializeField] private CharacterShowroom showroom;
         [SerializeField] private MenuHotkeys hotkeys;
+        [Tooltip("The worlds' NetworkManager prefab: questions about characters go to a server through a copy of it.")]
+        [SerializeField] private GameObject networkManagerPrefab;
 
         private readonly MenuRow[] rows = new MenuRow[CharacterRoster.SlotCount];
         private CharacterRoster roster;
@@ -33,13 +38,21 @@ namespace KryticalNova.UI.Menus
         private Transform enterPrompt, deletePrompt, serversPrompt;
         private TMP_InputField deleteInput;
         private Transform deleteConfirmPrompt;
+        // The popup asks either for the name to delete or for a new name (a character that must be renamed).
+        private bool renaming;
+        private bool asking;
+        // The server whose list could not be had: it is asked again only when the player asks (Enter, or choosing it).
+        private string failedKey;
+        private const string Header = "Choose Your Character";
 
         private void Start()
         {
             // The chosen character does not stand like a statue: it shifts, looks about and greets by itself.
             if (showroom != null) showroom.Ambient = true;
+            if (networkManagerPrefab != null) RosterLink.NetworkPrefab = networkManagerPrefab;
+            MenuRoster.Use(ServerDirectory.LastKeyChosen);
             roster = CharacterSession.Store.Load();
-            MenuUi.SetText(screen, "Screen_Header", "Choose Your Character");
+            MenuUi.SetText(screen, "Screen_Header", Header);
             var details = MenuUi.Find(screen, "Save_Details");
             if (details != null) details.gameObject.SetActive(false); // the live character stands there instead
 
@@ -57,6 +70,40 @@ namespace KryticalNova.UI.Menus
             string failure = JoinFlow.LastFailure;
             JoinFlow.LastFailure = null;
             if (!string.IsNullOrEmpty(failure)) StartCoroutine(OpenServersNextFrame(failure));
+            else FetchRosterWhenListed();
+        }
+
+        // ---------------- The server's roster (online phase 4, milestone 5) ----------------
+
+        // Asks the chosen server for its list once it is in the server list (this PC's copy shows meanwhile).
+        private void FetchRosterWhenListed()
+        {
+            if (asking || !MenuRoster.OnServer || MenuRoster.Fetched || MenuRoster.Listing == null || failedKey == MenuRoster.Key) return;
+            StartCoroutine(FetchRoster());
+        }
+
+        private IEnumerator FetchRoster()
+        {
+            asking = true;
+            MenuUi.SetText(screen, "Screen_Header", $"Asking {MenuRoster.ServerName} for your characters...");
+            string problem = null, note = null;
+            yield return MenuRoster.Fetch((why, said) => { problem = why; note = said; });
+            asking = false;
+            failedKey = problem != null ? MenuRoster.Key : null;
+            MenuUi.SetText(screen, "Screen_Header", Header);
+            ReloadRoster();
+            if (problem != null) OpenServers($"Could not get your characters from {MenuRoster.ServerName}: {problem}");
+            else if (note != null) OpenServers(note);
+        }
+
+        // The roster as the store has it now (after an answer, or another server chosen).
+        private void ReloadRoster()
+        {
+            roster = CharacterSession.Store.Load();
+            for (int i = 0; i < rows.Length; i++) RefreshRow(i);
+            int keep = roster.IsUsed(selected) ? selected : roster.PreferredSlot;
+            selected = -1;
+            Select(Mathf.Max(keep, 0));
         }
 
         private void OnDestroy() => ServerDirectory.Changed -= ShowServer;
@@ -66,7 +113,7 @@ namespace KryticalNova.UI.Menus
             // While the popup is open it owns Enter and Escape (the screen's hotkeys are suspended).
             if (deletePopup == null || !deletePopup.activeSelf || Keyboard.current == null) return;
             if (Keyboard.current.escapeKey.wasPressedThisFrame) ClosePopup();
-            else if (Keyboard.current.enterKey.wasPressedThisFrame || Keyboard.current.numpadEnterKey.wasPressedThisFrame) ConfirmDelete();
+            else if (Keyboard.current.enterKey.wasPressedThisFrame || Keyboard.current.numpadEnterKey.wasPressedThisFrame) ConfirmPopup();
         }
 
         // ---------------- Rows ----------------
@@ -119,7 +166,8 @@ namespace KryticalNova.UI.Menus
             MenuUi.SetLine(row, "Label_Save_Time", $"Level {profile.level}");
             // A new character is stamped "played" when it is made; it has really been played once that moves on.
             bool played = profile.lastPlayed > profile.created;
-            MenuUi.SetLine(row, "Label_Game_Type", played ? $"Played {MenuUi.TimeAgo(profile.lastPlayed)}" : "Not played yet");
+            MenuUi.SetLine(row, "Label_Game_Type", profile.mustRename ? "NEW NAME NEEDED"
+                : played ? $"Played {MenuUi.TimeAgo(profile.lastPlayed)}" : "Not played yet");
             MenuUi.SetLine(row, "Label_Game_Time", null);
             if (crest != null)
             {
@@ -204,6 +252,7 @@ namespace KryticalNova.UI.Menus
             if (serversPrompt == null) return;
             ServerEntry last = ServerDirectory.Last;
             MenuUi.SetText(serversPrompt, "Label_Action", last != null ? "Server: " + last.Name : "Servers");
+            FetchRosterWhenListed();
         }
 
         private IEnumerator OpenServersNextFrame(string note)
@@ -222,8 +271,18 @@ namespace KryticalNova.UI.Menus
 
         private void EnterWith(ServerEntry entry)
         {
+            // Another server keeps other characters: show its roster and let the player choose there.
+            failedKey = null; // chosen again: asked again
+            if (entry.Key != MenuRoster.Key && (MenuRoster.OnServer || MenuRoster.IsServerKey(entry.Key)))
+            {
+                MenuRoster.Use(entry.Key);
+                ReloadRoster();
+                ShowServer();
+                return;
+            }
             ShowServer();
             if (!roster.IsUsed(selected)) return; // chosen from an empty slot: remembered for the next Enter
+            if (!CanEnter()) return;
             JoinFlow.Begin(entry.PlayHere ? null : entry.Listing);
             CharacterSession.Enter(roster, selected);
             FrontEnd.Go(FrontEnd.LoadingScene);
@@ -250,7 +309,15 @@ namespace KryticalNova.UI.Menus
         private void Confirm()
         {
             if (deletePopup != null && deletePopup.activeSelf) return;
+            if (asking) return; // the server's answer is on its way
             MenuMoments.Raise(MenuMoment.Confirm, rows[selected] != null ? rows[selected].transform : null);
+            // A release game that never chose a server: characters live on one, so it is chosen first.
+            if (string.IsNullOrEmpty(MenuRoster.Key))
+            {
+                OpenServers("Choose a server first: your characters are kept there.");
+                return;
+            }
+            if (roster.IsUsed(selected) && !CanEnter()) return;
             if (roster.IsUsed(selected))
             {
                 // Enter joins the server played last; with none yet, or one that cannot be joined now, the list opens.
@@ -264,6 +331,25 @@ namespace KryticalNova.UI.Menus
                 FrontEnd.PendingSlot = selected;
                 FrontEnd.Go(FrontEnd.FactionSelectScene);
             }
+        }
+
+        // On a server: its list has come, and the character keeps its name. False after saying what to do.
+        private bool CanEnter()
+        {
+            if (!MenuRoster.OnServer) return true;
+            if (!MenuRoster.Fetched)
+            {
+                failedKey = null; // the player asks again
+                FetchRosterWhenListed();
+                return false;
+            }
+            var profile = roster.Get(selected);
+            if (profile != null && profile.mustRename)
+            {
+                AskRename();
+                return false;
+            }
+            return true;
         }
 
         private void Back()
@@ -294,7 +380,7 @@ namespace KryticalNova.UI.Menus
             {
                 if (hotkeys != null) hotkeys.ShowKey(deleteConfirmPrompt, Key.Enter);
                 MenuUi.SetText(deleteConfirmPrompt, "Label_Action", "Delete");
-                MenuUi.MakeClickable(deleteConfirmPrompt.gameObject, ConfirmDelete);
+                MenuUi.MakeClickable(deleteConfirmPrompt.gameObject, ConfirmPopup);
             }
             var cancel = MenuUi.Find(popup, "Hotkey_Cancel");
             if (cancel != null)
@@ -313,8 +399,10 @@ namespace KryticalNova.UI.Menus
         private void AskDelete()
         {
             var profile = roster.Get(selected);
-            if (profile == null || deletePopup == null) return;
+            if (profile == null || deletePopup == null || asking) return;
+            renaming = false;
             var popup = deletePopup.transform;
+            if (deleteConfirmPrompt != null) MenuUi.SetText(deleteConfirmPrompt, "Label_Action", "Delete");
             MenuUi.SetText(popup, "Label_Header", "Delete Character");
             MenuUi.SetText(popup, "Label_Save_Type", $"This cannot be undone. Type {profile.name} to delete this character.");
             MenuUi.SetText(popup, "Label_TypeMessageHere", profile.name);
@@ -341,7 +429,15 @@ namespace KryticalNova.UI.Menus
         {
             if (deleteConfirmPrompt == null) return;
             if (!deleteConfirmPrompt.TryGetComponent<CanvasGroup>(out var group)) group = deleteConfirmPrompt.gameObject.AddComponent<CanvasGroup>();
-            group.alpha = DeleteNameMatches() ? 1f : 0.35f;
+            bool ready = renaming ? NewNameValid(out _, out _) : DeleteNameMatches();
+            group.alpha = ready && !asking ? 1f : 0.35f;
+        }
+
+        private void ConfirmPopup()
+        {
+            if (asking) return;
+            if (renaming) ConfirmRename();
+            else ConfirmDelete();
         }
 
         private void ConfirmDelete()
@@ -353,6 +449,12 @@ namespace KryticalNova.UI.Menus
                 return;
             }
             MenuMoments.Raise(MenuMoment.Confirm);
+            var profile = roster.Get(selected);
+            if (MenuRoster.OnServer && profile != null)
+            {
+                StartCoroutine(AskServer(MenuRoster.Delete(profile.id, (reply, problem) => Answered(problem)), "Deleting"));
+                return;
+            }
             if (CharacterSession.ActiveSlot == selected) CharacterSession.Clear();
             roster.Clear(selected);
             CharacterSession.Store.Save(roster);
@@ -361,8 +463,82 @@ namespace KryticalNova.UI.Menus
             Select(selected);
         }
 
+        // ---------------- Rename (a character whose name another took first) ----------------
+
+        private void AskRename()
+        {
+            var profile = roster.Get(selected);
+            if (profile == null || deletePopup == null || asking) return;
+            renaming = true;
+            var popup = deletePopup.transform;
+            MenuUi.SetText(popup, "Label_Header", "Choose a New Name");
+            MenuUi.SetText(popup, "Label_Save_Type", $"{CharacterNameRules.ReasonMustRename} ({profile.name})");
+            MenuUi.SetText(popup, "Label_TypeMessageHere", "New name");
+            if (deleteConfirmPrompt != null) MenuUi.SetText(deleteConfirmPrompt, "Label_Action", "Rename");
+            if (hotkeys != null) hotkeys.Suspended = true;
+            deletePopup.SetActive(true);
+            MenuMoments.Raise(MenuMoment.Open, popup);
+            if (deleteInput != null)
+            {
+                deleteInput.text = string.Empty;
+                deleteInput.Select();
+                deleteInput.ActivateInputField();
+            }
+            RefreshDeleteConfirm();
+        }
+
+        private bool NewNameValid(out string name, out string reason)
+        {
+            name = null;
+            reason = CharacterNameRules.ReasonEmpty;
+            return deleteInput != null && CharacterNameRules.Validate(deleteInput.text, out name, out reason);
+        }
+
+        private void ConfirmRename()
+        {
+            var profile = roster.Get(selected);
+            if (profile == null) { ClosePopup(); return; }
+            if (!NewNameValid(out string name, out string reason))
+            {
+                MenuUi.SetText(deletePopup.transform, "Label_Save_Type", reason);
+                MenuMoments.Raise(MenuMoment.Error, deleteInput != null ? deleteInput.transform : null);
+                return;
+            }
+            MenuMoments.Raise(MenuMoment.Confirm);
+            StartCoroutine(AskServer(MenuRoster.Rename(profile.id, name, (reply, problem) => Answered(problem)), "Renaming"));
+        }
+
+        // ---------------- Asking the server from the popup ----------------
+
+        private string answerProblem;
+
+        private void Answered(string problem) => answerProblem = problem;
+
+        // Runs a request while the popup shows that it waits; a refusal is said in the popup, a success closes it.
+        private IEnumerator AskServer(IEnumerator request, string doing)
+        {
+            asking = true;
+            answerProblem = null;
+            var popup = deletePopup.transform;
+            MenuUi.SetText(popup, "Label_Save_Type", $"{doing}: asking {MenuRoster.ServerName}...");
+            RefreshDeleteConfirm();
+            yield return request;
+            asking = false;
+            if (answerProblem != null)
+            {
+                MenuUi.SetText(popup, "Label_Save_Type", answerProblem);
+                MenuMoments.Raise(MenuMoment.Error, deleteInput != null ? deleteInput.transform : null);
+                RefreshDeleteConfirm();
+                yield break;
+            }
+            if (CharacterSession.ActiveSlot == selected) CharacterSession.Clear();
+            ClosePopup();
+            ReloadRoster();
+        }
+
         private void ClosePopup()
         {
+            if (asking) return; // the server's answer decides
             if (deletePopup != null) deletePopup.SetActive(false);
             if (hotkeys != null) StartCoroutine(ResumeHotkeys());
         }

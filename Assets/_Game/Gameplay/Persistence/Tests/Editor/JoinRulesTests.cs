@@ -9,6 +9,29 @@ namespace KryticalNova.Tests
         private const string Release5 = "0.1.0 build 5";
 
         [Test]
+        public void AQuestionAboutCharactersRidesInTheJoinMessage()
+        {
+            string packed = RosterWire.Pack("{\"op\":\"list\"}");
+            byte[] asking = JoinRules.Payload("0.1.0 build 9", false, "token", "old", packed);
+            Assert.IsTrue(JoinRules.TryRead(asking, out string build, out _, out string token, out string old, out string request));
+            Assert.AreEqual("0.1.0 build 9", build);
+            Assert.AreEqual("token", token);
+            Assert.AreEqual("old", old);
+            Assert.AreEqual("{\"op\":\"list\"}", RosterWire.Unpack(request));
+            Assert.IsNull(JoinRules.Refusal("0.1.0 build 9", false, asking, 10, 0), "a question never takes a place, so a full server answers it");
+            Assert.IsNotNull(JoinRules.Refusal("0.1.0 build 8", false, asking, 0, 10), "another build is told to update, as for a join");
+
+            byte[] joining = JoinRules.Payload("0.1.0 build 9", false, "token", "old");
+            Assert.IsTrue(JoinRules.TryRead(joining, out _, out _, out _, out _, out string none));
+            Assert.AreEqual(string.Empty, none, "a join carries no question");
+
+            Assert.IsTrue(RosterWire.TryReadReply(RosterWire.Reply("answer"), out string answer));
+            Assert.AreEqual("answer", answer);
+            Assert.IsFalse(RosterWire.TryReadReply("The server is full. Try again in a little while.", out _), "a refusal is not an answer");
+            Assert.IsNull(RosterWire.Unpack("not packed"));
+        }
+
+        [Test]
         public void TheSameBuildJoins()
         {
             Assert.IsNull(JoinRules.Refusal(Release5, false, JoinRules.Payload(Release5, false), 3, 100));

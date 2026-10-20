@@ -72,7 +72,7 @@ All of that stays. What changes is underneath.
    kept ledger; the kill tests (a server stopped mid-change, many times: nothing duplicated or lost).
 4. **World records.** Crews, Contacts, Kiosks and Sponsors changed one entry at a time through the service.
 5. **The roster on the server.** Create, list and delete characters through the service, names unique across the game,
-   the look checked there.
+   the look checked there. *Built 19 Oct 2026 (see As built).*
 6. **Backups.** Nightly, kept 14 days, off the machine; a restore drill; the runbook and the Server Guide.
 7. **Real accounts.** Unity Player Accounts on the launcher build, the end of anonymous accounts outside local tests,
    Steam linking ready for the Steam build, and the proof that the Nova Store's web sign-in is the same account.
@@ -190,6 +190,39 @@ All of that stays. What changes is underneath.
 - *Found:* a game built before the decoupling (19 Oct) cannot play on a server built after it, even with the same build
   number (the assemblies were renamed, so the network message ids changed; a build-8 bot from 19 Oct 01:33 failed its
   messages on a server from today). The next real server rebuild goes with a new release (Publish to Test).
+
+**Milestone 5 (19 Oct 2026): the roster on the server.** Owner's picks: connect first (Title, then character select
+shows the chosen server's own list); names stay letters only, 3 to 16 (`CharacterNameRules`), and are unique across
+the whole game with capitals ignored; where two characters already shared a name, a GM's account keeps it ("the GM
+Tolan, the one we always test with, stays"), then the higher level, then the one played least recently.
+- **How a question reaches the server.** The menus ask by opening a short connection of their own (`RosterLink`, from the
+  worlds' NetworkManager prefab without the session manager): the request rides in the join message as a sixth part
+  (`JoinRules`, packed by `RosterWire`: gzip and base64), the server proves the Unity sign-in token as for a join, answers
+  through the roster (`ServerHooks.Roster`, filled by Persistence's `ServerRoster`) and turns the connection away with the
+  answer as its reason. No new port, page or service; it works directly (encrypted) and through Relay, and a full server
+  still answers. A ban turns the question away as it turns a join away.
+- **What the server keeps.** Each `CharacterSave` has its `slot` (one of the select screen's three), `created`, and
+  `rename` (another character took its name first). A new character is made by the server: the name and the look are
+  checked (`CharacterNameRules`, `CharacterRecipeValidator`), it gets its id, slot and saved look, and the names in use
+  (`world/names`, one entry a name, `NameIndex`) take its name in the same all-or-nothing change. Delete removes the
+  character with everything it carried, frees its name and writes a `character.deleted` ledger line in the same change.
+  Rename is only for a character marked `rename`. An account in the world (here or, with the save service, on another
+  server) is never changed from the menus.
+- **The names in use are gathered once,** the first time a question comes, from every saved account; the characters that
+  lose a shared name are marked and must choose a new one before they play again (the select screen asks, `NEW NAME
+  NEEDED`).
+- **Joining.** On a dedicated server a character plays only if the server has it, under the name it has, and not waiting
+  for a new name (`PlayerSaveAgent.NotOnRoster`); anything else is sent back with the reason. The Editor hosting a test
+  and "Play here" keep this PC's own characters as before.
+- **The game's side.** `MenuRoster` keeps one copy of each server's roster on this PC (what each character last wore is
+  only kept here, for the doll) and switches `CharacterSession`'s store to it; character select asks for the list when it
+  opens or when another server is chosen, Delete and the rename box ask the server, and the creator's Create Character
+  asks the server to make the character and says why not (a name taken). A look this PC kept of a character made before
+  the server kept looks is sent with the list and taken for a character the server has none for, checked as a new one.
+- *Tried:* `ServerRosterTests` (8: made, listed with its look and slot; a name once in the game whatever its capitals;
+  name rules and three slots; delete frees the name with a ledger line; shared names: the GM's keeps it, then the higher
+  level, the rename; the names gathered once and kept one an entry; a kept look taken only where none; an answer of three
+  characters fits its message), `JoinRulesTests` (the question in the join message), EditMode 1037 of 1047 (10 skipped).
 
 - *Found while copying the real saves (18 Oct 2026):* the account carried over to Unity sign-in and the old account
   kept as its backup hold the same character id, so with character parts filed by character id alone the two shared

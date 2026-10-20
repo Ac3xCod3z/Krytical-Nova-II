@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using KryticalNova.CharacterCreation;
 using KryticalNova.Factions;
@@ -652,10 +653,52 @@ namespace KryticalNova.UI.Menus
             }
 
             MenuMoments.Raise(MenuMoment.Confirm);
+            // On a server the server makes the character (online phase 4, milestone 5): it checks the name against every
+            // character in the game and the look, and says why not.
+            if (MenuRoster.OnServer)
+            {
+                StartCoroutine(CreateOnServer());
+                return;
+            }
             roster.Set(slot, CharacterProfile.Create(pendingName, recipe));
             CharacterSession.Store.Save(roster);
+            Done(slot);
+        }
+
+        private IEnumerator CreateOnServer()
+        {
+            leaving = true; // no second press while the server decides
+            if (finaliseButton != null) finaliseButton.interactable = false;
+            if (nameMessage != null)
+            {
+                nameMessage.text = $"Asking {MenuRoster.ServerName} to make {pendingName}...";
+                nameMessage.color = nameOkColor;
+            }
+            RosterReply answer = null;
+            string problem = null;
+            yield return MenuRoster.Create(pendingName, recipe, slot, (reply, why) => { answer = reply; problem = why; });
+            if (problem != null || answer == null)
+            {
+                leaving = false;
+                if (nameMessage != null)
+                {
+                    nameMessage.text = problem ?? "The server did not make the character. Try again.";
+                    nameMessage.color = nameProblemColor;
+                }
+                if (finaliseButton != null) finaliseButton.interactable = true;
+                MenuMoments.Raise(MenuMoment.Error, nameMessage != null ? nameMessage.transform : null);
+                yield break;
+            }
+            int made = slot;
+            foreach (RosterCharacter character in answer.characters)
+                if (character != null && character.id == answer.characterId) made = character.slot;
+            Done(made);
+        }
+
+        private void Done(int madeSlot)
+        {
             leaving = true;
-            FrontEnd.HighlightSlot = slot;
+            FrontEnd.HighlightSlot = madeSlot;
             FrontEnd.PendingSlot = -1;
             FrontEnd.PendingFaction = FactionId.None;
             FrontEnd.Go(FrontEnd.CharacterSelectScene);

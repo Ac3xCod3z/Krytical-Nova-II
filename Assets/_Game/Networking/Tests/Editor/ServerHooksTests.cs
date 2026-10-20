@@ -17,6 +17,7 @@ namespace KryticalNova.Networking.Tests
             Assert.IsNotNull(ServerHooks.DescribePlayer, "the Player system tells the server who a player is");
             Assert.IsNotNull(ServerHooks.Announce, "Social lets the server announce");
             Assert.IsNotNull(ServerHooks.Saves, "Persistence gives the server the saves");
+            Assert.IsNotNull(ServerHooks.Roster, "Persistence answers the menus' questions about characters");
         }
 
         [Test]

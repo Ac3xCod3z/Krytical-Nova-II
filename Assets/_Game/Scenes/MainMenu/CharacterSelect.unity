@@ -257,6 +257,7 @@ MonoBehaviour:
   deletePopup: {fileID: 1099766271}
   showroom: {fileID: 1558361442}
   hotkeys: {fileID: 67453289}
+  networkManagerPrefab: {fileID: 8116682471423442828, guid: e84dbd4512b7cf24097ea29798272bba, type: 3}
 --- !u!114 &67453289
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -333,6 +334,7 @@ MonoBehaviour:
   deletePopup: {fileID: 477573824}
   showroom: {fileID: 1558361442}
   hotkeys: {fileID: 90410767}
+  networkManagerPrefab: {fileID: 8116682471423442828, guid: e84dbd4512b7cf24097ea29798272bba, type: 3}
 --- !u!114 &90410767
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2173,6 +2175,7 @@ MonoBehaviour:
   deletePopup: {fileID: 1965375408}
   showroom: {fileID: 1558361442}
   hotkeys: {fileID: 670625092}
+  networkManagerPrefab: {fileID: 8116682471423442828, guid: e84dbd4512b7cf24097ea29798272bba, type: 3}
 --- !u!114 &670625092
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -114,6 +114,19 @@ namespace KryticalNova.CharacterCreation
             set => store = value;
         }
 
+        /// <summary>
+        /// Shows and plays from another store: this PC's own characters, or this PC's copy of a server's roster (online
+        /// phase 4, milestone 5). The character chosen before is forgotten.
+        /// </summary>
+        public static void UseStore(ICharacterStore next)
+        {
+            if (next == null || ReferenceEquals(store, next)) return;
+            store = next;
+            active = null;
+            activeSlot = -1;
+            resolved = false;
+        }
+
         public static int ActiveSlot => activeSlot;
 
         /// <summary>Choose the character to enter the world with, stamp it as played and save that.</summary>

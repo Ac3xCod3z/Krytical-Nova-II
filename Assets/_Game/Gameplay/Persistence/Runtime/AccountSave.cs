@@ -53,6 +53,12 @@ namespace KryticalNova.Persistence
         /// <summary>The map the character was on and where it stood when last saved (online phase 4; used once there is more than one map).</summary>
         public string map;
         public float x, y, z;
+        /// <summary>Which of the select screen's slots it stands in (online phase 4, milestone 5); -1 before the server kept the roster.</summary>
+        public int slot = -1;
+        /// <summary>UTC ticks of when the server made it; 0 for a character made before the server kept the roster.</summary>
+        public long created;
+        /// <summary>Another character took this name first when names became unique: it is renamed before it plays again.</summary>
+        public bool rename;
         public List<SavePart> parts = new List<SavePart>();
 
         public string Get(string key) => SaveParts.Get(parts, key);

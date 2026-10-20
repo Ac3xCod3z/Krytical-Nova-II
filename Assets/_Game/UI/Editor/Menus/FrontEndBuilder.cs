@@ -27,6 +27,9 @@ namespace KryticalNova.EditorTools
     /// </summary>
     public static partial class FrontEndBuilder
     {
+        /// <summary>The worlds' NetworkManager (the same path as GameplayPrefabsSetup's).</summary>
+        public const string NetworkManagerPrefabPath = "Assets/_Game/Networking/Prefabs/NetworkManager.prefab";
+
         public const string SceneFolder = BuildSceneOrder.MenuSceneFolder;
         public const string MaterialFolder = "Assets/_Game/UI/Menus/Materials";
         public const string GlyphSetPath = "Assets/_Game/UI/Menus/KeyGlyphs.asset";
@@ -313,6 +316,8 @@ namespace KryticalNova.EditorTools
                 SetRef(select, "deletePopup", popup.gameObject);
                 SetRef(select, "showroom", showroom);
                 SetRef(select, "hotkeys", hotkeys);
+                // Questions about characters go to a server through a copy of the worlds' NetworkManager (online phase 4).
+                SetRef(select, "networkManagerPrefab", AssetDatabase.LoadAssetAtPath<GameObject>(NetworkManagerPrefabPath));
                 EndSkin(groups);
             }
             AddSkinSwitch(canvas, groups);

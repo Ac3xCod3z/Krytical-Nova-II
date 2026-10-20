@@ -271,6 +271,32 @@ namespace KryticalNova.Networking
             }
         }
 
+        /// <summary>
+        /// Signs this game in to Unity the way joining does, without a session manager: the menus' questions about
+        /// characters (<see cref="RosterLink"/>) need the same proof. False when it could not.
+        /// </summary>
+        public static async Task<bool> SignInAsync()
+        {
+            if (Instance != null) return await Instance.EnsureServicesInitializedAsync();
+            try
+            {
+                if (UnityServices.State != ServicesInitializationState.Initialized)
+                {
+                    var options = new InitializationOptions();
+                    string profile = LocalProfile();
+                    if (profile != null) options.SetProfile(profile);
+                    await UnityServices.InitializeAsync(options);
+                }
+                if (!AuthenticationService.Instance.IsSignedIn) await AuthenticationService.Instance.SignInAnonymouslyAsync();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Debug.LogWarning($"[Network] Unity sign-in failed: {ex.Message}");
+                return false;
+            }
+        }
+
         /// <summary>Initializes cloud gaming services and anonymous authentication if not already active.</summary>
         public async Task<bool> EnsureServicesInitializedAsync()
         {
@@ -539,14 +565,21 @@ namespace KryticalNova.Networking
                 response.Approved = true; // the host's own player
                 return;
             }
+            JoinRules.TryRead(request.Payload, out _, out _, out string token, out string oldAccount, out string roster);
             int online = nm != null ? nm.ConnectedClientsIds.Count : 0;
-            string refusal = JoinRules.Refusal(GameBuild.Version, Application.isEditor, request.Payload, online, maxPlayersNow);
+            // A question about characters is answered on a full server too: it never takes a place.
+            string refusal = JoinRules.Refusal(GameBuild.Version, Application.isEditor, request.Payload, online,
+                string.IsNullOrEmpty(roster) ? maxPlayersNow : 0);
             if (refusal != null)
             {
                 Refuse(request.ClientNetworkId, response, refusal);
                 return;
             }
-            JoinRules.TryRead(request.Payload, out _, out _, out string token, out string oldAccount);
+            if (!string.IsNullOrEmpty(roster))
+            {
+                AnswerRoster(request.ClientNetworkId, response, token, oldAccount, roster);
+                return;
+            }
             if (Prove(request.ClientNetworkId, token, oldAccount, out string why))
             {
                 if (!Banned(request.ClientNetworkId, response)) response.Approved = true;
@@ -574,6 +607,67 @@ namespace KryticalNova.Networking
                 else Refuse(client, response, NoProof, $"no proof of who they are ({late ?? "Unity's keys could not be fetched"})");
                 response.Pending = false;
             }, TaskScheduler.FromCurrentSynchronizationContext());
+        }
+
+        /// <summary>
+        /// A game asking about its characters (online phase 4, milestone 5; <see cref="RosterLink"/>): proven like a join,
+        /// answered by the roster (<see cref="ServerHooks.Roster"/>) for the proven account, and never let in: the answer
+        /// is the reason the connection is closed with. Without proof (the Editor hosting a test) the game's own account
+        /// is used, as for a join.
+        /// </summary>
+        private static void AnswerRoster(ulong client, NetworkManager.ConnectionApprovalResponse response, string token, string oldAccount, string packed)
+        {
+            response.CreatePlayerObject = false;
+            if (Prove(client, token, oldAccount, out string why)) { AnswerRosterFor(client, response, oldAccount, packed); return; }
+            if (!RequireProof) { AnswerRosterFor(client, response, oldAccount, packed, oldAccount); return; }
+            if (why != null)
+            {
+                Refuse(client, response, NoProof, $"no proof of who they are ({why}), asking about characters");
+                return;
+            }
+            response.Pending = true; // Unity's keys are not here yet: wait for them, as for a join
+            UnityKeys.EnsureAsync(UnityKeys.KeyIdOf(token)).ContinueWith(_ =>
+            {
+                if (Prove(client, token, oldAccount, out string late)) AnswerRosterFor(client, response, oldAccount, packed);
+                else Refuse(client, response, NoProof, $"no proof of who they are ({late ?? "Unity's keys could not be fetched"}), asking about characters");
+                response.Pending = false;
+            }, TaskScheduler.FromCurrentSynchronizationContext());
+        }
+
+        private static void AnswerRosterFor(ulong client, NetworkManager.ConnectionApprovalResponse response, string oldAccount, string packed, string unproven = null)
+        {
+            string account = ServerAccounts.TryGet(client, out ServerAccounts.Entry proven) ? proven.Account : unproven;
+            ServerAccounts.Forget(client); // this connection never plays
+            DateTime now = DateTime.UtcNow;
+            if (ServerBans.IsBanned(account, now, out BanEntry ban))
+            {
+                Refuse(client, response, ServerBans.Refusal(ban, now), $"banned account {account}, asking about characters");
+                return;
+            }
+            response.Approved = false;
+            string request = RosterWire.Unpack(packed);
+            if (ServerHooks.Roster == null || request == null || string.IsNullOrEmpty(account))
+            {
+                response.Reason = ServerHooks.Roster == null ? "This server does not keep characters." : "The server could not read that request.";
+                return;
+            }
+            string answer;
+            try
+            {
+                answer = ServerHooks.Roster.Answer(account, oldAccount, request);
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"[Roster] A request from {account} failed: {e}");
+                answer = null;
+            }
+            string reply = answer != null ? RosterWire.Reply(answer) : null;
+            if (reply != null && reply.Length > RosterWire.MaxReplyChars)
+            {
+                Debug.LogWarning($"[Roster] The answer for {account} is too long to send ({reply.Length} characters).");
+                reply = null;
+            }
+            response.Reason = reply ?? "The server could not answer that. Try again.";
         }
 
         /// <summary>

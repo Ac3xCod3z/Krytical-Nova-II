@@ -37,6 +37,9 @@ namespace KryticalNova.Networking
         /// <summary>The saves. Filled by Persistence.</summary>
         public static IServerSaves Saves;
 
+        /// <summary>Which characters each account has (online phase 4, milestone 5). Filled by Persistence.</summary>
+        public static IServerRoster Roster;
+
         /// <summary>The facts of the player on <paramref name="player"/>, or empty facts when there is none or nothing fills the slot.</summary>
         public static PlayerFacts Describe(GameObject player) =>
             player != null && DescribePlayer != null ? DescribePlayer(player) : new PlayerFacts { Faction = "-" };
@@ -74,5 +77,19 @@ namespace KryticalNova.Networking
 
         /// <summary>Saves everyone and backs the saves up into <paramref name="backupFolder"/>, keeping <paramref name="kept"/>. Returns the log line.</summary>
         string Backup(string backupFolder, int kept, string reason);
+    }
+
+    /// <summary>
+    /// The roster on the server (online phase 4, milestone 5): a game's question about its characters (list, create,
+    /// delete, rename), answered for the account its sign-in proved. Request and answer are JSON text the game's
+    /// character code reads; Networking only carries them.
+    /// </summary>
+    public interface IServerRoster
+    {
+        /// <summary>
+        /// The answer to <paramref name="request"/> from <paramref name="account"/>. <paramref name="oldAccount"/> is the
+        /// account the game made up before sign-in (its characters are carried over once, as on joining).
+        /// </summary>
+        string Answer(string account, string oldAccount, string request);
     }
 }

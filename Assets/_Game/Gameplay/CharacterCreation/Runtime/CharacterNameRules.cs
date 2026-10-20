@@ -3,9 +3,10 @@ using System;
 namespace KryticalNova.CharacterCreation
 {
     /// <summary>
-    /// What a character name may be. One name of 3 to 16 letters, capitalised for the player. Names do not have to be
-    /// unique in the world (each character has a hidden ID); the only duplicate check is against the player's own
-    /// slots, which the caller does with <see cref="CharacterRoster.IsNameTaken"/>. The server runs the same check.
+    /// What a character name may be. One name of 3 to 16 letters, capitalised for the player. On a server names are
+    /// unique across the whole game, capitals ignored (online phase 4, milestone 5): the server checks every new name
+    /// against all of them (<see cref="RosterRequest"/>). Playing on this PC alone, the only duplicate check is against
+    /// the player's own slots (<see cref="CharacterRoster.IsNameTaken"/>).
     /// </summary>
     public static class CharacterNameRules
     {
@@ -20,6 +21,8 @@ namespace KryticalNova.CharacterCreation
         public const string ReasonReserved = "That name is reserved.";
         public const string ReasonNotAllowed = "That name is not allowed.";
         public const string ReasonTaken = "You already have a character with that name.";
+        public const string ReasonTakenInGame = "Someone already has a character with that name. Try another.";
+        public const string ReasonMustRename = "Another character took this name first. Choose a new name to play it again.";
 
         private static readonly string[] Reserved =
         {
