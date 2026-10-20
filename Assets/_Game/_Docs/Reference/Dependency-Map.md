@@ -20,7 +20,7 @@ script, which is then published to the link above. `--baseline` saves today's up
 ## Today
 
 <!-- map:summary -->
-Generated 20 Oct 2026, 07:37: 646 runtime scripts (120,997 lines) declaring 920 types (165 MonoBehaviours, 61 NetworkBehaviours, 87 ScriptableObject classes); 114 test scripts; 4709 prefabs, 46 scenes and 2581 assets read. 196 system-to-system links, of which 0 run uphill, 0 pairs of systems use each other both ways, and 0 links would have to go for the systems to form a clean stack. The largest tangle, classes that all reach each other through some chain of uses, holds 7 classes from 1 systems (Gameplay/Player 7, ...).
+Generated 20 Oct 2026, 08:14: 647 runtime scripts (121,119 lines) declaring 922 types (165 MonoBehaviours, 61 NetworkBehaviours, 87 ScriptableObject classes); 116 test scripts; 4709 prefabs, 46 scenes and 2581 assets read. 196 system-to-system links, of which 0 run uphill, 0 pairs of systems use each other both ways, and 0 links would have to go for the systems to form a clean stack. The largest tangle, classes that all reach each other through some chain of uses, holds 7 classes from 1 systems (Gameplay/Player 7, ...).
 <!-- /map:summary -->
 
 ## How to read it
@@ -55,7 +55,7 @@ Generated 20 Oct 2026, 07:37: 646 runtime scripts (120,997 lines) declaring 920 
 <!-- map:systems -->
 | System | Layer | Scripts | Lines | Uses (types) | Used by (types) | Instability | Tests | Types touched by a test |
 |---|---|---|---|---|---|---|---|---|
-| Core | Foundation | 45 | 3,628 | 0 | 188 | 0.0 | 4 | 13 of 31 |
+| Core | Foundation | 46 | 3,716 | 0 | 190 | 0.0 | 4 | 14 of 32 |
 | Networking | Infrastructure | 38 | 7,055 | 5 | 75 | 0.06 | 3 | 25 of 50 |
 | Rendering | Infrastructure | 14 | 2,829 | 1 | 26 | 0.04 | 0 | 1 of 18 |
 | Environment | Simulation | 6 | 834 | 0 | 2 | 0.0 | 0 | 0 of 6 |
@@ -69,7 +69,7 @@ Generated 20 Oct 2026, 07:37: 646 runtime scripts (120,997 lines) declaring 920 
 | Gameplay/Pets | Simulation | 12 | 1,445 | 33 | 32 | 0.51 | 4 | 13 of 19 |
 | Gameplay/Social | Simulation | 39 | 5,670 | 47 | 48 | 0.49 | 9 | 23 of 52 |
 | Gameplay/Combat | Simulation | 12 | 3,035 | 43 | 24 | 0.64 | 4 | 4 of 13 |
-| Gameplay/Persistence | Simulation | 9 | 2,783 | 49 | 11 | 0.82 | 13 | 7 of 13 |
+| Gameplay/Persistence | Simulation | 9 | 2,817 | 51 | 11 | 0.82 | 14 | 7 of 13 |
 | Gameplay/Player | Simulation | 22 | 9,560 | 56 | 37 | 0.6 | 3 | 10 of 24 |
 | Gameplay/CharacterCreation | Simulation | 26 | 2,929 | 27 | 69 | 0.28 | 8 | 24 of 29 |
 | Gameplay/Items | Simulation | 58 | 10,400 | 45 | 176 | 0.2 | 12 | 38 of 80 |
@@ -81,7 +81,7 @@ Generated 20 Oct 2026, 07:37: 646 runtime scripts (120,997 lines) declaring 920 
 | GameFeel | Presentation | 26 | 4,476 | 41 | 2 | 0.95 | 4 | 17 of 34 |
 | UI | Presentation | 130 | 32,911 | 302 | 4 | 0.99 | 17 | 32 of 135 |
 | Audio | Presentation | 6 | 650 | 4 | 8 | 0.33 | 1 | 1 of 7 |
-| Tools | Tooling | 29 | 4,980 | 177 | 0 | 1.0 | 2 | 0 of 31 |
+| Tools | Tooling | 29 | 4,980 | 177 | 0 | 1.0 | 3 | 0 of 31 |
 <!-- /map:systems -->
 
 ## Links running uphill
@@ -175,7 +175,7 @@ Classes over 700 lines. Several of them also reach into three or more other syst
 | PlayerMeleeCombat | Gameplay/Combat | 977 | Core, Gameplay/Player, Gameplay/Progression, Networking | 9 |
 | HudLayoutEditor | UI | 964 | - | 12 |
 | GearWorkWindowController | UI | 947 | Core, Gameplay/Economy, Gameplay/Forge, Gameplay/Items, Gameplay/NPC, Gameplay/Progression | 0 |
-| ServerSave | Gameplay/Persistence | 922 | Core, Networking | 16 |
+| ServerSave | Gameplay/Persistence | 928 | Core, Networking | 16 |
 | NetworkConnectionManager | Networking | 920 | Core | 13 |
 | GmCommands | Tools | 904 | Core, Gameplay/Combat, Gameplay/Factions, Gameplay/Items, Gameplay/Player, Gameplay/Progression, Gameplay/Social, Networking, World | 0 |
 | PlayerCombatSkills | Gameplay/Progression | 869 | Core, Networking | 18 |
