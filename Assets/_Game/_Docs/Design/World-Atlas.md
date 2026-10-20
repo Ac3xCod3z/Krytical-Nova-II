@@ -2,7 +2,8 @@
 
 The owner's world map, copied from the Figma file **Krytical Nova — World Atlas** (https://www.figma.com/design/JhbgViYlKpJEsj8IKTLz5k) on 15 Oct 2026, so the regions, Home Cities, field zones and Runs can be read and linked beside the rest of the docs. The Figma file stays the source for the layout and the art; this file is its text. Story canon is the Lore Bible (`Lore-Bible.md`); level bands follow the Hostiles plan (`../Plans/hostiles-plan.md`).
 
-**Nothing here is built** except the starter town (Zone01, `Central Plaza`), which stands in for a Home City today.
+**Nothing here is built** except the starter town, **Concord** (owner, 20 Oct 2026: the neutral town of all factions; Zone01,
+its square the `Central Plaza`), which stands in for a Home City today.
 
 ## How the world fits together
 

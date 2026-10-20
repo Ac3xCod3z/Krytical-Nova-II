@@ -48,7 +48,7 @@ namespace KryticalNova.UI.Menus
             foreach (string header in HeaderNames)
             {
                 if (MenuUi.Find(screen, header) == null) continue;
-                MenuUi.SetLine(screen, header, who != null ? $"{who} enters Starter Town" : "Entering Starter Town");
+                MenuUi.SetLine(screen, header, who != null ? $"{who} enters Concord" : "Entering Concord");
                 break;
             }
             MenuUi.SetText(screen, TipName, PickTip(profile));

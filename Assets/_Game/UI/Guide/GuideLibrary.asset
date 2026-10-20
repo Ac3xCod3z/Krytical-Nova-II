@@ -203,7 +203,7 @@ MonoBehaviour:
         - Blocking a player in Contacts stops their whispers.
     - id: town-and-map
       title: The town, its NPCs and the map
-      summary: 'The starter town is neutral ground: safe from other factions, and where every service is. The map shows where each one stands.'
+      summary: 'Concord, the free town, is neutral ground: safe from other factions, and where every service is. The map shows where each one stands.'
       clip: {fileID: 32900000, guid: 9a2a20f4648d0a542bac74626f177b1c, type: 3}
       still: {fileID: 0}
       focus:
@@ -1170,7 +1170,7 @@ MonoBehaviour:
       - kind: 5
         heading: 
         lines:
-        - With a player of your own faction, anywhere. With a player of another faction, only on neutral ground such as the starter town. Stand within {fact:trade.range} m of each other.
+        - With a player of your own faction, anywhere. With a player of another faction, only on neutral ground such as Concord. Stand within {fact:trade.range} m of each other.
       - kind: 1
         heading: Making a trade
         lines:

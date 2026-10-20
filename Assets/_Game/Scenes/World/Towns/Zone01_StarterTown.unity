@@ -501314,7 +501314,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ba3b96fb9db20214db25e1b737287660, type: 3}
   m_Name: 
   m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.World.TradeZone
-  zoneName: Starter Town
+  zoneName: Concord
   size: {x: 220, y: 220}
   allowKiosks: 0
   crossFaction: 1
