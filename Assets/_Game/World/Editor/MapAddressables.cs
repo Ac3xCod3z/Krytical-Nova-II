@@ -23,6 +23,9 @@ namespace KryticalNova.EditorTools
         /// <summary>The Addressables settings and groups: project-level config for a package (ProjectOrganization section 1).</summary>
         public const string SettingsFolder = "Assets/_Game/Settings/Addressables";
         public const string GroupPrefix = "World_";
+        /// <summary>What two or more maps share, in one bundle (ProjectOrganization section 10's planned World_Common).</summary>
+        public const string CommonGroup = "World_Common";
+        private const string IsolationGroup = "Duplicate Asset Isolation"; // the name the package's own fix gives its group
 
         [MenuItem("Krytical Nova/World/Make Maps Addressable")]
         public static void MakeAll() => Debug.Log(Apply());
@@ -70,6 +73,44 @@ namespace KryticalNova.EditorTools
                                            $"each in its {GroupPrefix}<scene> group, built with the game.");
             if (lighting) report.Append(" Probe lighting (APV) is now stored with the scenes, not in Streaming Assets.");
             return report.ToString();
+        }
+
+        /// <summary>
+        /// Before a game build: every asset that two or more maps use (the player, the network prefabs, characters, shaders)
+        /// is moved into <see cref="CommonGroup"/>, one bundle, so no map's bundle carries a copy of its own. Without it the
+        /// first build was 16 GB, each of the 29 maps about 550 MB, blank ones too. The package's own rule finds them
+        /// (Analyze, "Check Duplicate Bundle Dependencies"); what an earlier build moved stays, so the group only grows.
+        /// </summary>
+        public static string IsolateShared()
+        {
+            AddressableAssetSettings settings = EnsureSettings();
+            var rule = new UnityEditor.AddressableAssets.Build.AnalyzeRules.CheckBundleDupeDependencies();
+            rule.FixIssues(settings);
+            AddressableAssetGroup found = settings.FindGroup(IsolationGroup);
+            AddressableAssetGroup common = settings.FindGroup(CommonGroup);
+            int moved = 0;
+            if (found != null)
+            {
+                if (common == null)
+                {
+                    found.Name = CommonGroup;
+                    moved = found.entries.Count;
+                    common = found;
+                }
+                else
+                {
+                    foreach (AddressableAssetEntry entry in new List<AddressableAssetEntry>(found.entries))
+                    {
+                        settings.MoveEntry(entry, common, false, false);
+                        moved++;
+                    }
+                    settings.RemoveGroup(found);
+                }
+                settings.SetDirty(AddressableAssetSettings.ModificationEvent.BatchModification, null, true, true);
+                AssetDatabase.SaveAssets();
+            }
+            int total = common != null ? common.entries.Count : 0;
+            return $"[Maps] {moved} more asset(s) shared by two or more maps moved into {CommonGroup} ({total} in all): no map bundle carries its own copy.";
         }
 
         private static AddressableAssetSettings EnsureSettings()
