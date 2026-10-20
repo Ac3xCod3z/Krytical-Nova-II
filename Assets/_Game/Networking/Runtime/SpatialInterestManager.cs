@@ -18,6 +18,8 @@ namespace KryticalNova.Networking
         [Header("Interest Settings")]
         [Tooltip("Entities beyond this distance are completely culled from client network replication.")]
         [SerializeField] private float interestRadius = 75f;
+        [Tooltip("Other players are seen from farther than Hostiles and objects (owner, 20 Oct 2026, pick B): players pop in where nobody notices, and there are far fewer of them.")]
+        [SerializeField] private float playerInterestRadius = 150f;
         [Tooltip("How frequently in seconds the spatial interest grid updates visibility.")]
         [SerializeField] private float updateInterval = 0.5f;
 
@@ -103,6 +105,7 @@ namespace KryticalNova.Networking
         private void UpdateAllVisibility(NetworkManager nm)
         {
             float sqrRadius = interestRadius * interestRadius;
+            float sqrPlayerRadius = playerInterestRadius * playerInterestRadius;
 
             // Prune despawned/destroyed entities once per tick
             for (int i = registeredEntities.Count - 1; i >= 0; i--)
@@ -143,7 +146,7 @@ namespace KryticalNova.Networking
                     }
 
                     float sqrDist = (entity.transform.position - observerPos).sqrMagnitude;
-                    bool inRange = sqrDist <= sqrRadius;
+                    bool inRange = sqrDist <= (entity.IsPlayerObject ? sqrPlayerRadius : sqrRadius);
                     bool isCurrentlyVisible = entity.IsNetworkVisibleTo(clientId);
 
                     if (inRange && !isCurrentlyVisible)
@@ -172,7 +175,8 @@ namespace KryticalNova.Networking
             }
 
             float sqrDist = (targetEntity.transform.position - client.PlayerObject.transform.position).sqrMagnitude;
-            return sqrDist <= (interestRadius * interestRadius);
+            float radius = targetEntity.IsPlayerObject ? playerInterestRadius : interestRadius;
+            return sqrDist <= radius * radius;
         }
     }
 }

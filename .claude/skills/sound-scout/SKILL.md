@@ -1,6 +1,6 @@
 ---
 name: sound-scout
-description: Find, judge and bake sound effects for Krytical Nova II from the sound library in Downloads/SFx without being able to hear - search the whole library by description with a local audio model, read sounds as spectrogram pictures and measurements, build an audition page for the user to choose by ear, then bake the picks levelled into Assets/_Game/Audio. Use this whenever the user asks for a sound, sound effect, SFX, audio for a slot, a variation of a sound, "find me a sound like", weather or ambience loops, to change or replace a sound, or says a sound is wrong, too loud, too long or repetitive - even if they do not name the skill.
+description: Find, judge and bake sound effects for Krytical Nova II from the sound library in Google Drive (My Drive/KryticalNova/Audio/SFx) without being able to hear - search the whole library by description with a local audio model, read sounds as spectrogram pictures and measurements, build an audition page for the user to choose by ear, then bake the picks levelled into Assets/_Game/Audio. Use this whenever the user asks for a sound, sound effect, SFX, audio for a slot, a variation of a sound, "find me a sound like", weather or ambience loops, to change or replace a sound, or says a sound is wrong, too loud, too long or repetitive - even if they do not name the skill.
 ---
 
 # Sound Scout
@@ -19,7 +19,7 @@ they should listen.
 
 | What | Where |
 |---|---|
-| The library (never copied whole into the project) | `~/Downloads/SFx` (override with env `KN_SOUND_LIBRARY`) |
+| The library (never copied whole into the project) | `G:\My Drive\KryticalNova\Audio\SFx` in Google Drive (streamed; moved from `~/Downloads/SFx` 20 Oct 2026; override with env `KN_SOUND_LIBRARY`) |
 | Tools | `.claude/skills/sound-scout/scripts/` |
 | The slots: what each is for, how it is searched, volume and pitch range | `slots.json` |
 | Where every baked file came from | `sources.json` |
@@ -69,7 +69,7 @@ The model runs on the CPU on purpose: the graphics card's memory belongs to the 
   (`AudioSetup.Sounds()`), which sets import settings, fills the feel prefabs' sound slots and the weather.
 
 - `tempo.py` is for music a mechanic is timed to (Cadence, `Assets/_Game/_Docs/Design/17_music_and_cadence.md`), not
-  for sound effects. The music library is `~/Downloads/Music` (env `KN_MUSIC_LIBRARY`), only read.
+  for sound effects. The music library is `G:\My Drive\KryticalNova\Audio\Music` in Google Drive (was `~/Downloads/Music`; env `KN_MUSIC_LIBRARY`), only read.
   `tempo.py scan` measures every track (beats a minute, the time of the first beat, a guess at the first beat of
   the bar, how far the beat drifts from an even grid, how much of the track has a clear beat) into
   `Library/KryticalNova.SoundIndex/music/tempo.jsonl`; `tempo.py list` prints the steady ones; `tempo.py show <file>`
