@@ -35,6 +35,7 @@ every server step (online phase 1, `Plans/online-phase-01-dedicated-server.md`).
 | Game Masters | Three GMs by password, set on the control page; GM commands, GM chat and a [GM] tag for them only | Built 16 Oct 2026 |
 | 4. A server list in the game | Enter joins your server; a Servers window; only the same build may join | Built 16 Oct 2026 |
 | 5. Joining from outside your house | Direct (port forwarding) or Unity Relay, switched on the control page; the list keeps itself current | Built 16 Oct 2026 |
+| The saves copied every night | The whole save database copied at 4 AM, kept 14 days on this PC and in Google Drive; a practice restore and a last-resort restore beside the save service | Built 20 Oct 2026; Google Drive for desktop and the first drill still to do |
 | Characters kept by the server | Character select shows your server's own list of each player's characters; making, deleting and renaming one asks the server; no two characters in the game share a name | Built 19 Oct 2026 |
 | 6. The move to the old PC | A zip, an install step and a step-by-step guide | Not yet |
 | 7. Measuring | How many players and Hostiles one PC carries | Not yet |
@@ -624,6 +625,42 @@ is also saved once a minute while they play, and as they leave.
 **To go back to a backup:** stop the server, rename `KryticalNovaServer-Save` (to keep it, for instance
 `KryticalNovaServer-Save-old`), make a new empty `KryticalNovaServer-Save`, unzip the backup into it, start the server.
 
+### 9b. The save database's nightly copy (phase 4, milestone 6)
+
+Your saves live in the save database. Every night at **4 AM** the save service copies the whole database (every save
+and the ledger), and **as soon as it starts** when the last copy is more than a day old. It runs while the Krytical Nova
+Server app is open (owner, 20 Oct 2026).
+
+| What | Where |
+| --- | --- |
+| The copies on this PC | `Documents\KryticalNova-Backups\database`: one `.dump` a night (`krytical_nova_2026-10-20_04-00.dump`, a few KB to MB) and a small `.json` beside it saying how many saves it holds |
+| The copies off this PC | `My Drive\KryticalNova-Backups` in **Google Drive** (owner's pick), which uploads them by itself |
+| How long | **14 days** in both places; older ones are deleted, the newest never |
+| How it looks | Server app ▸ DATABASE: "Nightly copy: last 20 Oct 04:00 (3 h ago) · 14 kept · in Google Drive". The control page's Saves chip: "nightly copy 3 h ago (in Google Drive)", or what is wrong |
+
+**Set up Google Drive once (you, at the PC):** install **Google Drive for desktop** (free, from google.com/drive/download),
+sign in with your Google account, and let it **start with Windows** (its settings ▸ Preferences). It adds a drive, usually
+**G:**, with your **My Drive** in it; the save service finds it by itself. Until then the copies stay on this PC only and
+the Server app and the control page say so.
+
+**Beside the save service** (`Builds\Server\Windows\SaveService`) are three files to double-click:
+
+| File | What it does |
+| --- | --- |
+| **Back Up Now.bat** | One copy now, as the nightly one (also the Server app's BACK UP NOW). |
+| **Restore Drill.bat** | The practice: puts the newest copy into an empty practice database and checks every save and ledger line came back exactly. Run it now and then; it never touches your saves. Needs **Make Drill Database.bat** once first (beside Setup Database.bat in `Assets\_Game\Gameplay\Persistence\Service~`). |
+| **Restore Saves.bat** | The last resort, below. |
+
+**If the saves are ever lost or broken (the runbook):**
+1. Close the Krytical Nova Server app (it stops the server and the save service). Restore Saves refuses while the save service runs.
+2. Pick the copy: the newest is used unless you give another (drag a `.dump` from Documents or Google Drive onto
+   Restore Saves.bat). If this PC's drive died, get the copy from Google Drive on the new PC first.
+3. Double-click **Restore Saves.bat**, read what it will do, and type **RESTORE**. It first makes a safety copy of the
+   saves as they are now, then puts the copy back and checks every save matches it ("The saves are back.").
+4. Open the Server app again. Players have their characters as they were when the copy was made.
+On a new PC, first install Postgres and run Setup Database.bat (`_Docs/Guides/Server-Guide.md`, "The save database and save
+service"), then do the steps above.
+
 ## 10. What players see
 
 | When | The player reads |
@@ -812,3 +849,5 @@ Things learned the hard way:
   release (a game built before it cannot play on a server built after it, even with the same build number).
 - 19 Oct 2026: phase 4 milestone 5: the roster on the server (characters listed, made, deleted and renamed by asking
   the server; names unique across the game; a GM keeps a shared name; NEW NAME NEEDED for the others).
+- 20 Oct 2026: phase 4 milestone 6: the save database copied every night at 4 AM by the save service (14 days kept, on
+  this PC and in Google Drive), Back Up Now, the restore drill and Restore Saves (section 9b).

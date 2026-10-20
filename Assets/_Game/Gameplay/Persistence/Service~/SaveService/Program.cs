@@ -11,6 +11,10 @@
 //   again after its answer was lost is recognised by its id and not applied twice (milestone 3).
 // - It listens on this PC only (http://127.0.0.1:7801) until the save service moves beside the servers on a private
 //   network. With --test it serves the tests' own database (krytical_nova_test) on port 7802 instead.
+// - Milestone 6: it backs the database up every night at 4 AM into Documents\KryticalNova-Backups\database and Google Drive,
+//   keeping 14 days (NightlyBackup). --backup-now makes one copy and stops; --restore-drill [file] puts the newest copy
+//   (or that one) into the practice database and checks it, then stops; --restore-real [file] puts it back into
+//   the real save database (the runbook's last resort: only with the service stopped, after a safety copy and a typed RESTORE).
 
 using System.Security.Cryptography;
 using System.Text;
@@ -34,6 +38,35 @@ bool test = args.Contains("--test");
 if (test) database = database with { Database = database.Database + "_test" };
 string urls = test ? "http://127.0.0.1:7802" : "http://127.0.0.1:7801";
 string serviceKey = ServiceKey.LoadOrMake(keyFile);
+
+// The nightly copies (milestone 6). The tests' database is copied only when asked (--backup-now, --restore-drill) and only
+// into folders a backup-settings.json beside the service names, never the real copies' places; it has no nightly copy.
+BackupSettings backupSettings = BackupSettings.Load(Path.Combine(AppContext.BaseDirectory, "backup-settings.json"));
+var backup = new NightlyBackup(backupSettings, database);
+bool testCopiesNamed = !string.IsNullOrWhiteSpace(backupSettings.Folder) && !string.IsNullOrWhiteSpace(backupSettings.Offsite);
+if (args.Contains("--restore-drill"))
+{
+    if (test && !testCopiesNamed) { Console.Error.WriteLine("With --test, backup-settings.json must name the folder and offsite of the tests' copies."); return 1; }
+    int at = Array.IndexOf(args, "--restore-drill");
+    string? file = at + 1 < args.Length && !args[at + 1].StartsWith("--") ? args[at + 1] : null;
+    return await backup.DrillAsync(file);
+}
+if (args.Contains("--restore-real"))
+{
+    if (test) { Console.Error.WriteLine("The real restore is for the real saves; run it without --test."); return 1; }
+    int at = Array.IndexOf(args, "--restore-real");
+    string? file = at + 1 < args.Length && !args[at + 1].StartsWith("--") ? args[at + 1] : null;
+    bool running;
+    try { using var probe = new System.Net.Sockets.TcpClient(); probe.Connect("127.0.0.1", 7801); running = true; }
+    catch (System.Net.Sockets.SocketException) { running = false; }
+    return await backup.RestoreRealAsync(file, running);
+}
+if (args.Contains("--backup-now"))
+{
+    if (test && !testCopiesNamed) { Console.Error.WriteLine("With --test, backup-settings.json must name the folder and offsite of the tests' copies."); return 1; }
+    string made = await backup.MakeAsync("asked for");
+    return made.Contains("FAILED") ? 1 : 0;
+}
 
 var connection = new NpgsqlConnectionStringBuilder
 {
@@ -61,7 +94,18 @@ app.Use(async (context, next) =>
     await next();
 });
 
-app.MapGet("/health", async () => Results.Ok(new { ok = true, documents = await store.CountAsync(), bytes = await store.SizeAsync() }));
+app.MapGet("/health", async () => Results.Ok(new
+{
+    ok = true, documents = await store.CountAsync(), bytes = await store.SizeAsync(), backup = test ? null : backup.Status(),
+}));
+
+// A copy now (the Server app's BACK UP NOW), as the nightly one.
+app.MapPost("/backup", async () =>
+{
+    if (test) return Results.BadRequest(new { error = "the tests' database is not backed up" });
+    string line = await backup.MakeAsync("asked for");
+    return Results.Ok(new { line, backup = backup.Status() });
+});
 
 app.MapGet("/doc", async (string key) =>
 {
@@ -135,5 +179,6 @@ app.MapPost("/unlock", async (LockRequest request) =>
 
 Console.WriteLine($"Krytical Nova save service: database {database.Database} on {database.Host}:{database.Port}, " +
                   $"listening on {builder.Configuration["urls"] ?? urls}{(test ? " (TEST saves)" : "")}.");
+if (!test) _ = backup.RunAsync(app.Lifetime.ApplicationStopping);
 await app.RunAsync();
 return 0;
