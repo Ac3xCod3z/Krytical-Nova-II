@@ -37,7 +37,8 @@ character, Squad, Crew, Contacts and chat intact, and never sees more than the o
    places the player; a failure returns the player where they were; the log lines. The rewritten `ZoneSessionManager`
    never starts a local host.
    - [x] Every map an Addressable, loaded through `MapScenes`; scene syncing off; `SceneObjectKeeper` (20 Oct 2026, owner pick B)
-   - [ ] A built game loads its map from the bundle and joins a server (bot test)
+   - [x] A built game loads its map from the bundle and joins a server (bot test, 20 Oct 2026: Concord from its bundle, no lost scene objects)
+   - [x] What the maps share in one bundle, `World_Common` (map bundles 15 GB to 1.2 GB)
    - [ ] The portal, the ticket, the arrival and the way back on failure
 - [ ] 4. **Chat across map servers**: Faction, Crew, Squad and Whisper through the world service; General stays local; `gm.say`
    reaches every server.
