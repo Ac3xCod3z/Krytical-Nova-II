@@ -184,6 +184,7 @@ namespace KryticalNova.Networking
             NetworkManager nm = NetworkManager.Singleton;
             if (nm == null) return false;
             OfflinePlayerHandoff.ReleaseOfflineAvatar();
+            SceneObjectKeeper.KeepPlacedObjects(nm); // the map's own networked objects survive the join (scene syncing is off)
             bool success = nm.StartClient();
             if (success)
             {
@@ -407,6 +408,7 @@ namespace KryticalNova.Networking
                 else ServerEncryption.Off(clientTransport);
             }
             OfflinePlayerHandoff.ReleaseOfflineAvatar();
+            SceneObjectKeeper.KeepPlacedObjects(NetworkManager.Singleton); // the map's own networked objects survive the join (scene syncing is off)
             bool success = NetworkManager.Singleton.StartClient();
             if (success)
             {

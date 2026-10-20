@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: World_MeridianSprawl_Z1_TransitRow
+  m_EditorClassIdentifier: Unity.Addressables.Editor::UnityEditor.AddressableAssets.Settings.AddressableAssetGroup
+  m_GroupName: World_MeridianSprawl_Z1_TransitRow
+  m_GUID: 162d5176cf2325746b0565d1e2d7c09d
+  m_SerializeEntries:
+  - m_GUID: d17f96a91d0dbbe4aaabc5f4f17981eb
+    m_Address: MeridianSprawl_Z1_TransitRow
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: 79ae2b2a58867794b8effc90c24b1fdf, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: fe28a3e4b03c61e489354f391abe6a65, type: 2}
+    - {fileID: 11400000, guid: 9a6201eb782a0d145982256968e49264, type: 2}

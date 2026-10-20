@@ -167,6 +167,8 @@ namespace KryticalNova.EditorTools
                 target = BuildTarget.StandaloneWindows64,
                 options = output.Options
             };
+            // The maps' bundles are built with the game: what the maps share goes in one bundle first, never a copy in each.
+            Debug.Log(MapAddressables.IsolateShared());
             BuildReport report = BuildPipeline.BuildPlayer(options);
             WriteSizeReport(report, scenes, output.Title, "Scripting backend: " + BackendName(backend), output.ReportPath);
 

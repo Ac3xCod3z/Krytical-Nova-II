@@ -22,6 +22,14 @@ namespace KryticalNova.Networking.Tests
             "TickRate", "ConnectionApproval", "ForceSamePrefabs", "EnableSceneManagement", "EnsureNetworkVariableLengthSafety", "RpcHashSize",
         };
 
+        // Owner, 20 Oct 2026: the maps are Addressables, which Netcode's scene syncing cannot load (it knows only the build
+        // list). Each map server runs one map, and the game loads it before it joins (MapScenes), so the syncing is off.
+        [Test]
+        public void SceneSyncingIsOffBecauseTheMapsAreAddressables()
+        {
+            StringAssert.IsMatch(@"\n\s+EnableSceneManagement: 0\s*\n", File.ReadAllText(PrefabPath));
+        }
+
         [Test]
         public void NoSceneChangesASettingTheServerCompares()
         {

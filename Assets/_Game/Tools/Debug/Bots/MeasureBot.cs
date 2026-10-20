@@ -89,7 +89,7 @@ namespace KryticalNova.DevTools
         {
             if (scene.name != BuildSceneNames.World)
             {
-                if (scene.name == BuildSceneNames.Title) SceneManager.LoadScene(BuildSceneNames.World);
+                if (scene.name == BuildSceneNames.Title) KryticalNova.World.MapScenes.Begin(BuildSceneNames.World); // an Addressable map
                 return;
             }
             // Before the world's Start: the character must be chosen before the player is asked for.

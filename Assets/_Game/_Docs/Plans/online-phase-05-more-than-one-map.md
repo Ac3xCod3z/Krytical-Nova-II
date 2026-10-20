@@ -24,23 +24,27 @@ character, Squad, Crew, Contacts and chat intact, and never sees more than the o
 
 ## Milestones (each stops for the owner's check)
 
-1. **A second map server behind one name.** Transit Row runs as a server of its own (`-map`, its own port) beside
+- [x] 1. **A second map server behind one name.** *(built 20 Oct 2026, PR 117, waiting for the owner's check)* Transit Row runs as a server of its own (`-map`, its own port) beside
    Concord's, both started from the Server app (a SERVER tab each). Only Concord's server publishes the server list, so
    players see one entry, Nova; a map server never publishes, refuses to run without the save service, makes no backups
    of its own (the save service's nightly copy covers the database) and keeps its records in a folder of its own. Its
    control page and records say which map it is.
-2. **The world service** (in the save service): presence (which map server holds which character) and signed, use-once
+- [ ] 2. **The world service** (in the save service): presence (which map server holds which character) and signed, use-once
    travel tickets.
-3. **Travelling**: the client side first (the network and the always-on parts out of Zone01 into a small Bootstrap
+- [ ] 3. **Travelling**: the client side first (the network and the always-on parts out of Zone01 into a small Bootstrap
    scene loaded once after the menus, maps swapped under the loading page with memory freed between them), then the
    portal (`WorldTransferHandler`), save and release, the ticket, the loading page, the new server checks the ticket and
    places the player; a failure returns the player where they were; the log lines. The rewritten `ZoneSessionManager`
    never starts a local host.
-4. **Chat across map servers**: Faction, Crew, Squad and Whisper through the world service; General stays local; `gm.say`
+   - [x] Every map an Addressable, loaded through `MapScenes`; scene syncing off; `SceneObjectKeeper` (20 Oct 2026, owner pick B)
+   - [x] A built game loads its map from the bundle and joins a server (bot test, 20 Oct 2026: Concord from its bundle, no lost scene objects)
+   - [x] What the maps share in one bundle, `World_Common` (map bundles 15 GB to 1.2 GB)
+   - [ ] The portal, the ticket, the arrival and the way back on failure
+- [ ] 4. **Chat across map servers**: Faction, Crew, Squad and Whisper through the world service; General stays local; `gm.say`
    reaches every server.
-5. **Squad, Crew, Contacts and Sponsor across map servers**; the world map knows a friend is elsewhere; GM `gm.tp` and
+- [ ] 5. **Squad, Crew, Contacts and Sponsor across map servers**; the world map knows a friend is elsewhere; GM `gm.tp` and
    `gm.target` find a player on any map.
-6. **Two players do all of it** (the done-when list), on the test servers, then the real ones.
+- [ ] 6. **Two players do all of it** (the done-when list), on the test servers, then the real ones.
 
 The order was changed on 20 Oct 2026: the second server first, because a Bootstrap scene is only needed once a player
 moves from one server to another; it is built as the start of travelling.
@@ -114,8 +118,21 @@ What the game itself needs before a second map can be loaded at all:
   takes over the moment it loads; the day-cycle blend keeps working (`EnvironmentPresenter.BlendLightingScenarios`).
 - **No hand-made packet queue.** The client disconnects from one map server and connects to the next; NGO's scene
   sync on the new server delivers the world only once the scene is ready.
-- **Addressables are optional here**: one map is one scene in the build. They matter for build size and the phone
-  port (`ProjectOrganization.md` section 10, `mobile-port-readiness.md`).
+- **Every map is an Addressable (owner, 20 Oct 2026: "make sure with the newer maps they use addressables").** The
+  owner picked **B** of three: the map scenes themselves are Addressables (a group per map, `World_<scene>`, packed into
+  the game, no download server), the game loads a map through `MapScenes` under the loading page and the map before it
+  is let go, and the game joins a map's server only once its map is loaded. Netcode's scene syncing is **off**
+  (`EnableSceneManagement` 0): it knows only the build list, so it cannot load an Addressable scene, and one map per
+  server makes it unneeded. Without it Netcode destroys every networked object a scene placed as a game joins and
+  rebuilds each from its prefab, which would lose the placed ones that are no prefab (each map's World Environment,
+  Concord's Combat Dummy and Zone Portal) and their scene settings: `SceneObjectKeeper` (Networking) gives each of them
+  a prefab-instance handler under its own id before the game joins, so Netcode keeps it and brings that very object to
+  life when the server spawns it. The game's build lists only the front end; a dedicated server lists the maps after it and loads its
+  own from there (`BuildSceneOrder.ShippedForServer`), with no bundles. APV is stored with the scenes (Probe Volume
+  Disable Streaming Assets), as Addressable scenes need. In a session in the Editor, `gm.travel` now closes the host's
+  session, loads the map and opens it again there (joined games are asked to join again) until travelling between map
+  servers lands. The Sidekick parts in `Resources` (469 MB) move to Addressables later, as a step of their own (owner).
+  Built 20 Oct 2026 as the first part of milestone 3 (`MapScenes`, `MapAddressables`).
 - Phones join the same map servers; nothing on the server side differs.
 
 ## What crosses servers and what does not

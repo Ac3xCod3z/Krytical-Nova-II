@@ -119,3 +119,7 @@ InitTestScene*.unity*
 
 # Python caches
 __pycache__/
+
+# Addressables writes this on every content build; it is only for remote content updates (maps are local-packed).
+/Assets/_Game/Settings/Addressables/Windows/
+/Assets/_Game/Settings/Addressables/Windows.meta

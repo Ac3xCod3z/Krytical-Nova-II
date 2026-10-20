@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: World_MeridianSprawl_Z4_GantryRidge
+  m_EditorClassIdentifier: Unity.Addressables.Editor::UnityEditor.AddressableAssets.Settings.AddressableAssetGroup
+  m_GroupName: World_MeridianSprawl_Z4_GantryRidge
+  m_GUID: a303f44d3fed402498925ed845557fd0
+  m_SerializeEntries:
+  - m_GUID: b2fcd8980b39a0b42b2a4050a4edff2d
+    m_Address: MeridianSprawl_Z4_GantryRidge
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: 79ae2b2a58867794b8effc90c24b1fdf, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: 608d88b4c7f11ab438e3e53a760302ff, type: 2}
+    - {fileID: 11400000, guid: 3a90b2ef26700df40a15d687eb0f55ea, type: 2}
