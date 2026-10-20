@@ -613,6 +613,18 @@ namespace KryticalNova.EditorTools
             skin.headerLabel = Part(skin.headerLabel, $"_CommonComponents/Label_{token}_Header");
             skin.startButton = Part(skin.startButton, $"Buttons/Button_{token}_Start_01");
             skin.footer = Part(skin.footer, $"Buttons/Input_{token}_Footer_01");
+            if (skin.menuIcon == null)
+            {
+                // The owner's picks of 20 Oct 2026: only the Sci-Fi pack draws a menu icon; the others' banner and scroll.
+                string icon = skin.faction switch
+                {
+                    FactionId.Hegemony => "SPR_SciFiMenus_Icon_Menu_01",
+                    FactionId.Null => "SPR_DarkFantasyMenus_Icon_Scroll_01",
+                    _ => "SPR_FantasyMenus_Icon_Scroll_02",
+                };
+                skin.menuIcon = Load<Sprite>($"{pack}Sprites/Icons_{token}/{icon}.png");
+                changed |= skin.menuIcon != null;
+            }
             if (skin.faction == FactionId.Null && skin.textFieldFill.a <= 0f)
             {
                 skin.textFieldFill = new Color32(0x3A, 0x0E, 0x0C, 0xF8); // owner, 9 Oct 2026: red, not the pack's teal

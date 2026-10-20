@@ -34,6 +34,20 @@ namespace KryticalNova.Tests
         }
 
         [Test]
+        public void EverySkin_HasAMenuPictureOfItsOwnPack()
+        {
+            var seen = new HashSet<Sprite>();
+            foreach (FactionId faction in Factions)
+            {
+                UiSkin skin = FactionSkinBuilder.LoadSkin(faction);
+                Assert.IsNotNull(skin.menuIcon, faction + " has no menu picture for the footer's menu button");
+                Assert.IsTrue(seen.Add(skin.menuIcon), faction + " shares its menu picture with another skin");
+                StringAssert.Contains(skin.menuIcon.name.Split('_')[1], AssetDatabase.GetAssetPath(skin.iconButton),
+                    faction + "'s menu picture is not from the pack of its icon button");
+            }
+        }
+
+        [Test]
         public void OnRotate_TheMenusWearTheRunsPick()
         {
             foreach (FactionId rolled in Factions)

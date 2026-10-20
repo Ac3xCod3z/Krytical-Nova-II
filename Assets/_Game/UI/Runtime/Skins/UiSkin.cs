@@ -175,6 +175,8 @@ namespace KryticalNova.UI
         public GameObject bodyLabel;
         [Tooltip("The colour of the comic dots and bands laid over the menus, and the second colour of the showroom's light.")]
         public Color menuAccent = Color.white;
+        [Tooltip("The picture on the menu button that folds a footer's prompts away and springs them out again (owner's picks of 20 Oct 2026: the Sci-Fi pack's menu icon, the Dark Fantasy banner, the Fantasy scroll). Drawn in the pack's icon button with nothing behind it.")]
+        public Sprite menuIcon;
 
         [Header("Menus: the character creator")]
         [Tooltip("The pack's own character creator screen. None: the creator is assembled from the parts below, to the same sections.")]

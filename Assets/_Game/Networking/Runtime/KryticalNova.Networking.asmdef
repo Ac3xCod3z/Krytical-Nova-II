@@ -8,6 +8,7 @@
         "Unity.Collections",
         "Unity.Services.Core",
         "Unity.Services.Authentication",
+        "Unity.Services.Authentication.PlayerAccounts",
         "Unity.Services.Multiplayer",
         "Unity.Services.Multiplayer.Server",
         "Unity.AI.Navigation",
