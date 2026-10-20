@@ -189,9 +189,36 @@ namespace KryticalNova.Persistence
                 account.characters.Add(character);
             }
 
-            foreach (ISaveParticipant participant in participants)
+            // Save migrations (online phase 4): every part is stepped up to this build's version before its system reads it.
+            // A step that fails (or a part saved by a newer build) stops the load: the save stays exactly as it is, never
+            // replaced by a fresh start, and the player is told.
+            var upgraded = new string[participants.Length];
+            for (int i = 0; i < participants.Length; i++)
             {
-                string json = participant.SaveScope == SaveScope.Account ? account.Get(participant.SaveKey) : character.Get(participant.SaveKey);
+                ISaveParticipant participant = participants[i];
+                string stored = participant.SaveScope == SaveScope.Account ? account.Get(participant.SaveKey) : character.Get(participant.SaveKey);
+                try
+                {
+                    upgraded[i] = participant is IMigratingSave migrating ? SaveVersions.Upgrade(stored, migrating) : stored;
+                }
+                catch (Exception e)
+                {
+                    Debug.LogError($"[Save] {identity.CharacterName} ({accountId}): '{participant.SaveKey}' could not be brought up to this build ({e.Message}). " +
+                                   "The character was not loaded and its save is kept as it is.", this);
+                    string said = "Your save could not be read by this version of the game. It is kept safe; tell the server's owner.";
+                    account = null;
+                    character = null;
+                    ServerSave.Release(this, wantedAccount);
+                    accountId = string.Empty;
+                    if (IsSpawned && OwnerClientId != NetworkManager.ServerClientId) NetworkManager.DisconnectClient(OwnerClientId, said);
+                    return;
+                }
+            }
+
+            for (int i = 0; i < participants.Length; i++)
+            {
+                ISaveParticipant participant = participants[i];
+                string json = upgraded[i];
                 try
                 {
                     participant.RestoreSave(json);
@@ -253,7 +280,8 @@ namespace KryticalNova.Persistence
                 string json;
                 try
                 {
-                    json = participant.CaptureSave();
+                    // Stamped with the part's version when it has one (save migrations).
+                    json = SaveVersions.Stamped(participant.CaptureSave(), participant);
                 }
                 catch (Exception e)
                 {
