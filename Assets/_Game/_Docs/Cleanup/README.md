@@ -52,7 +52,7 @@ their folders), each with its original `.meta`, so it has its old GUID and every
 It never imports the whole pack and never overwrites a file already in the project (the project's upgraded shared
 materials stay as they are). Tick several rows to restore them together.
 
-The packages come from `Documents/SyntyPolygonForKN` (the Synty library) and Unity's Asset Store cache
+The packages come from the Synty library (in Google Drive since 20 Oct 2026: `G:\My Drive\KryticalNova\SyntyPacks`, streamed; before that `Documents/SyntyPolygonForKN`) and Unity's Asset Store cache
 (`%AppData%/Unity/Asset Store-5.x`). **Build Package Index** reads them once (a few minutes) and again only for packages
 that changed. The index lives in `Library/KryticalNova.AssetRestore`.
 
