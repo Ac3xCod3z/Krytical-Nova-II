@@ -182,6 +182,16 @@ top right reads **SERVERS 2/2 ONLINE** when every server is up.
 (section 6, "The router"): **UDP 7779** ("Transit Row") and **UDP 7780** ("Transit Row status"), both to this PC.
 Never forward 8092 (its control page). Until then it works on the home network only, which is all milestone 1 needs.
 
+**The world service (phase 5, milestone 2).** The save service is also the *world service*: every server that saves through
+it tells it every 10 seconds which map it runs, its port and who is on it, and says goodbye when it stops (a server silent
+for 30 seconds counts as gone). The control page's **How players reach it** panel shows the line **Map servers up:
+Concord (2 players, port 7777), Transit Row (0 players, port 7779)**, or why it cannot say. The world service also hands
+out **travel tickets**: the server a player is on asks for one to another map; the ticket names that player, is good for
+30 seconds and for one use, and only the destination map's server can redeem it. Nothing in the game uses tickets until
+walking through the portal lands (milestone 3). Nothing of this is saved in the database: after a restart of the save
+service the servers' next reports fill it in again. Tested with `Persistence/Service~/WorldTest/world_test.py` (test
+database only, like the kill test).
+
 **Not yet (later milestones of phase 5):** walking through the portal onto Transit Row's server (milestone 3), chat
 across servers (4), Squads, Crews, Contacts and Sponsors across servers (5). Until those land, a Crew or Kiosk change
 is made on Concord's server; Transit Row's server knows only what it read when it started.
@@ -895,6 +905,8 @@ Things learned the hard way:
   the server; names unique across the game; a GM keeps a shared name; NEW NAME NEEDED for the others).
 - 20 Oct 2026: phase 4 milestone 6: the save database copied every night at 4 AM by the save service (14 days kept, on
   this PC and in Google Drive), Back Up Now, the restore drill and Restore Saves (section 9b).
+- 20 Oct 2026: phase 5 milestone 2: the world service in the save service (section 2b): which map servers are up and
+  who is on each, shown on the control page; use-once travel tickets for milestone 3.
 - 20 Oct 2026: phase 5 milestone 1: a server per map behind one name (section 2b). Transit Row's server runs beside
   Concord's in the app, a tab each; it is never in the server list, always direct, saves only through the save service,
   makes no backups and keeps its records in `MapServers\<map>`. Ports 7779 and 7780 to forward for it.

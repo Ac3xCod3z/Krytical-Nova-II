@@ -336,6 +336,11 @@ function showReach(s) {
   $("reachNote").textContent = relay
     ? (s.relayNote || "Asking Unity Relay for a place...") + " No router work needed."
     : where + " Players come to it on UDP ports " + s.port + " and " + s.statusPort + ", which the router forwards to this PC.";
+  // Online phase 5: the map servers alive now, from the world service.
+  const world = (s.world || []).map((w) => w.name + " (" + w.players + (w.players === 1 ? " player" : " players") + ", port " + w.port + ")");
+  $("worldNote").textContent = s.worldProblem
+    ? "Map servers: " + s.worldProblem + "."
+    : "Map servers up: " + (world.length ? world.join(", ") : "none yet") + ".";
   $("autoNote").textContent = s.mapServer
     ? "A map server: players never see it in the server list (they see one server) and arrive here by travelling. The list and the way in are on the listed server's control page."
     : s.autoNote || "";

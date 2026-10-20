@@ -29,8 +29,11 @@ character, Squad, Crew, Contacts and chat intact, and never sees more than the o
    players see one entry, Nova; a map server never publishes, refuses to run without the save service, makes no backups
    of its own (the save service's nightly copy covers the database) and keeps its records in a folder of its own. Its
    control page and records say which map it is.
-- [ ] 2. **The world service** (in the save service): presence (which map server holds which character) and signed, use-once
-   travel tickets.
+- [x] 2. **The world service** (in the save service): presence (which map server holds which character) and signed, use-once
+   travel tickets. *(built 20 Oct 2026: `WorldDirectory` in the save service, `/world/presence`, `/world/servers`,
+   `/world/where`, `/world/ticket`, `/world/redeem`, `/world/gone`; every server reports through `WorldLink` every 10 s;
+   the control page lists the map servers up; `WorldTest/world_test.py` passes 18 checks. A ticket is a random 256-bit
+   name the service keeps, so it cannot be forged; it is good 30 s and once, only for the destination's server.)*
 - [ ] 3. **Travelling**: the client side first (the network and the always-on parts out of Zone01 into a small Bootstrap
    scene loaded once after the menus, maps swapped under the loading page with memory freed between them), then the
    portal (`WorldTransferHandler`), save and release, the ticket, the loading page, the new server checks the ticket and

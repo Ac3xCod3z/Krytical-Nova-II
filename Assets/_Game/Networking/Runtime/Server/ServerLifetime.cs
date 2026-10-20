@@ -184,6 +184,7 @@ namespace KryticalNova.Networking
             Debug.Log("[Server] Stopping: " + reason + " Saving every player and the world...");
             ServerHooks.Saves?.FlushAll();
             if (!instance.options.IsMapServer) Backup("stop");
+            WorldLink.Leave();
             NetworkManager network = NetworkManager.Singleton;
             if (network != null && network.IsServer)
                 foreach (ulong client in new System.Collections.Generic.List<ulong>(network.ConnectedClientsIds))

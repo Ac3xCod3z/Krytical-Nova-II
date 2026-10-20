@@ -15,6 +15,8 @@
 //   keeping 14 days (NightlyBackup). --backup-now makes one copy and stops; --restore-drill [file] puts the newest copy
 //   (or that one) into the practice database and checks it, then stops; --restore-real [file] puts it back into
 //   the real save database (the runbook's last resort: only with the service stopped, after a safety copy and a typed RESTORE).
+// - Online phase 5, milestone 2: it is also the world service (WorldDirectory): which map server is alive and who is on it,
+//   and use-once travel tickets from one map server to another (/world/...).
 
 using System.Security.Cryptography;
 using System.Text;
@@ -176,6 +178,27 @@ app.MapPost("/unlock", async (LockRequest request) =>
     await store.UnlockAsync(request.Owner ?? "", request.Holder ?? "");
     return Results.Ok();
 });
+
+// The world service (online phase 5, milestone 2): presence and travel tickets, kept in memory.
+var world = new WorldDirectory();
+app.MapPost("/world/presence", (PresenceReport report) =>
+{
+    string? problem = world.Report(report);
+    return problem == null ? Results.Ok(new { servers = world.Servers() }) : Results.BadRequest(new { error = problem });
+});
+app.MapPost("/world/gone", (GoneRequest request) =>
+{
+    world.Gone(request.Server ?? "");
+    return Results.Ok();
+});
+app.MapGet("/world/servers", () => Results.Ok(world.Servers()));
+app.MapGet("/world/where", (string account) =>
+{
+    WhereAnswer? found = world.Where(account);
+    return found == null ? Results.NotFound() : Results.Ok(found);
+});
+app.MapPost("/world/ticket", (TicketRequest request) => Results.Ok(world.Issue(request)));
+app.MapPost("/world/redeem", (RedeemRequest request) => Results.Ok(world.Redeem(request)));
 
 Console.WriteLine($"Krytical Nova save service: database {database.Database} on {database.Host}:{database.Port}, " +
                   $"listening on {builder.Configuration["urls"] ?? urls}{(test ? " (TEST saves)" : "")}.");

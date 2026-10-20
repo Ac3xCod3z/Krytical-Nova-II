@@ -29,6 +29,16 @@ namespace KryticalNova.Networking
         private const string FolderName = "ControlPage";
         private const int LogKept = 500;
         private const int MainThreadWaitMs = 10000;
+        // The map servers alive now, as the world service last said (online phase 5, milestone 2).
+        private static string WorldJson()
+        {
+            var parts = new List<string>();
+            foreach (WorldLink.MapServer server in WorldLink.Known)
+                parts.Add("{\"name\":" + ControlPageRules.Json(server.name) + ",\"map\":" + ControlPageRules.Json(server.map) +
+                          ",\"port\":" + server.port + ",\"players\":" + server.players + "}");
+            return string.Join(",", parts);
+        }
+
         private const string MapServerAnswer = "This is a map server: players never see it in the list, and it is always reached directly. " +
                                                "The list and the way in are changed on the listed server's control page.";
         private static readonly Dictionary<string, string> Types = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
@@ -182,6 +192,8 @@ namespace KryticalNova.Networking
               .Append(",\"maxPlayers\":").Append(options.maxPlayers)
               .Append(",\"map\":").Append(ControlPageRules.Json(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name))
               .Append(",\"mapServer\":").Append(options.IsMapServer ? "true" : "false")
+              .Append(",\"world\":[").Append(WorldJson())
+              .Append("],\"worldProblem\":").Append(ControlPageRules.Json(options.UsesSaveService ? WorldLink.Problem ?? string.Empty : "this server saves to files: it has no world service"))
               .Append(",\"uptime\":").Append(Mathf.RoundToInt(ServerLifetime.UptimeSeconds))
               .Append(",\"nextBackup\":").Append(Mathf.RoundToInt(ServerLifetime.NextBackupSeconds))
               .Append(",\"lastBackup\":").Append(ControlPageRules.Json(ServerLifetime.LastBackup))

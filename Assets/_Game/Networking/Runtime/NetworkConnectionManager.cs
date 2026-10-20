@@ -812,6 +812,8 @@ namespace KryticalNova.Networking
             // list; a map server is reached by travelling (online phase 5).
             if (options.IsMapServer) Debug.Log($"[Server] Map server for {options.map}: never in the server list; its records are in {options.RecordFolderPath}.");
             else ServerReach.Begin(options);
+            // Online phase 5, milestone 2: every server tells the world service which map it runs and who is on it.
+            WorldLink.Begin(options);
             var transport = nm.GetComponent<UnityTransport>();
             if (options.UsesRelay)
             {

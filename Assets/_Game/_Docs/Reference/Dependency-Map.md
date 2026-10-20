@@ -20,7 +20,7 @@ script, which is then published to the link above. `--baseline` saves today's up
 ## Today
 
 <!-- map:summary -->
-Generated 20 Oct 2026, 09:49: 648 runtime scripts (121,329 lines) declaring 924 types (165 MonoBehaviours, 61 NetworkBehaviours, 87 ScriptableObject classes); 116 test scripts; 4709 prefabs, 46 scenes and 2677 assets read. 196 system-to-system links, of which 0 run uphill, 0 pairs of systems use each other both ways, and 0 links would have to go for the systems to form a clean stack. The largest tangle, classes that all reach each other through some chain of uses, holds 7 classes from 1 systems (Gameplay/Player 7, ...).
+Generated 20 Oct 2026, 12:57: 650 runtime scripts (121,582 lines) declaring 926 types (166 MonoBehaviours, 61 NetworkBehaviours, 87 ScriptableObject classes); 116 test scripts; 4709 prefabs, 46 scenes and 2680 assets read. 196 system-to-system links, of which 0 run uphill, 0 pairs of systems use each other both ways, and 0 links would have to go for the systems to form a clean stack. The largest tangle, classes that all reach each other through some chain of uses, holds 7 classes from 1 systems (Gameplay/Player 7, ...).
 <!-- /map:summary -->
 
 ## How to read it
@@ -56,7 +56,7 @@ Generated 20 Oct 2026, 09:49: 648 runtime scripts (121,329 lines) declaring 924 
 | System | Layer | Scripts | Lines | Uses (types) | Used by (types) | Instability | Tests | Types touched by a test |
 |---|---|---|---|---|---|---|---|---|
 | Core | Foundation | 46 | 3,716 | 0 | 190 | 0.0 | 4 | 14 of 32 |
-| Networking | Infrastructure | 38 | 7,150 | 5 | 77 | 0.06 | 3 | 25 of 51 |
+| Networking | Infrastructure | 40 | 7,403 | 5 | 77 | 0.06 | 3 | 25 of 53 |
 | Rendering | Infrastructure | 14 | 2,829 | 1 | 26 | 0.04 | 0 | 1 of 18 |
 | Environment | Simulation | 6 | 834 | 0 | 2 | 0.0 | 0 | 0 of 6 |
 | Gameplay/Autopilot | Simulation | 11 | 1,448 | 41 | 12 | 0.77 | 3 | 6 of 12 |
@@ -111,7 +111,7 @@ Each row is the cheaper side of a loop: cut these references and the two systems
 | PlayerInventory | Gameplay/Items | net | 65 | 14 | 179 | 0 | 1 |
 | ItemStack | Gameplay/Items | plain | 48 | 10 | 221 | 12 | 0 |
 | EquipSlot | Gameplay/Items | enum | 39 | 10 | 264 | 15 | 0 |
-| CallKind | Networking | enum | 39 | 13 | 250 | 1 | 0 |
+| CallKind | Networking | enum | 39 | 13 | 251 | 1 | 0 |
 | RpcBudget | Networking | plain | 39 | 13 | 237 | 1 | 0 |
 | PlayerResources | Gameplay/Progression | net | 35 | 14 | 195 | 0 | 41 |
 | PlayerIdentity | Gameplay/Player | net | 35 | 12 | 168 | 1 | 1 |
@@ -177,7 +177,7 @@ Classes over 700 lines. Several of them also reach into three or more other syst
 | PlayerMeleeCombat | Gameplay/Combat | 977 | Core, Gameplay/Player, Gameplay/Progression, Networking | 9 |
 | HudLayoutEditor | UI | 964 | - | 12 |
 | GearWorkWindowController | UI | 947 | Core, Gameplay/Economy, Gameplay/Forge, Gameplay/Items, Gameplay/NPC, Gameplay/Progression | 0 |
-| NetworkConnectionManager | Networking | 929 | Core | 14 |
+| NetworkConnectionManager | Networking | 933 | Core | 14 |
 | ServerSave | Gameplay/Persistence | 928 | Core, Networking | 16 |
 | GmCommands | Tools | 904 | Core, Gameplay/Combat, Gameplay/Factions, Gameplay/Items, Gameplay/Player, Gameplay/Progression, Gameplay/Social, Networking, World | 0 |
 | PlayerCombatSkills | Gameplay/Progression | 869 | Core, Networking | 18 |
@@ -292,7 +292,7 @@ Where tuning still lives in code, and other links the compiler cannot see:
 - **Lookups by name** (Type.GetType, Find("..."), Resources.Load, SendMessage): 9.
 - **Asset entries that store a class by name and assembly** ([SerializeReference]): 169 in 2 assets.
 - **Static accessors that call GetComponent on every use:** 0.
-- **FindObject calls in runtime code:** 27.
+- **FindObject calls in runtime code:** 28.
 <!-- /map:smells -->
 
 ## The problems, ranked
