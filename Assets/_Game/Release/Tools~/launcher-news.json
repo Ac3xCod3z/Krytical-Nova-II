@@ -1,23 +1,44 @@
 {
   "items": [
     {
-      "title": "Walk the Walls",
-      "body": "Zone01's buildings and cliffs are ground now. Run straight up a wall onto the roof, leap from wall to wall, and hold on with Grip (it spends Flux while you cling). Fights follow you up there: strike round corners, chase along a face, and leave ground-bound creatures snapping below."
+      "title": "Your Characters, Kept Safe",
+      "body": "Your characters now live on the server, not on your PC: sign in on any computer and they are there. Every name is one of a kind across the whole game. If someone took your name first, character select asks you to pick a new one before you play."
     },
     {
-      "title": "Two-Hit Attacks",
-      "body": "Every class has a two-hit attack on Hotbar T, with 18 new two-hit Skill Chips to collect. Redline lands harder on the beat, Stances are shared with your Squad, and Wallstride carries you up and over anything 2.2 m tall."
+      "title": "Callouts Have a Beat",
+      "body": "Step into a Callout in town and the fight music kicks in. Press an attack skill right on the beat and that hit lands 6 % harder. Find the rhythm and out-hit your rival."
     },
     {
-      "title": "Instant Response Online",
-      "body": "On a server your character now moves, jumps and casts the moment you press, instead of waiting for the server to answer. Jumps wind up with a crackle of sparks, vaults flow straight into your run, and your pet does the same tricks on every screen."
+      "title": "Saves You Can Trust",
+      "body": "Every trade, Kiosk sale and Crew founding now saves in one go: if anything goes wrong, nothing is left half-done and nothing is lost. Your progress is kept by the server's own database, backed up regularly."
     },
     {
-      "title": "Autopilot Passes & Loadouts",
-      "body": "Autopilot comes as a 3, 14 or 30-day Pass. Save whole gear sets as Loadouts and swap in one click. A step picker sits beside every + for quick counts, the Armorer stocks one of each forge material a week, and your portrait shows the colours you wear."
+      "title": "A Launcher With an Edge",
+      "body": "The launcher has a new angular comic frame, cleaner panels and a sharper PLAY button. The painting slideshow, this news and the past news are right where they were."
     }
   ],
   "history": [
+    {
+      "label": "19 Oct 2026 · Walls, two-hit attacks & Autopilot",
+      "items": [
+        {
+          "title": "Walk the Walls",
+          "body": "Zone01's buildings and cliffs are ground now. Run straight up a wall onto the roof, leap from wall to wall, and hold on with Grip (it spends Flux while you cling). Fights follow you up there: strike round corners, chase along a face, and leave ground-bound creatures snapping below."
+        },
+        {
+          "title": "Two-Hit Attacks",
+          "body": "Every class has a two-hit attack on Hotbar T, with 18 new two-hit Skill Chips to collect. Redline lands harder on the beat, Stances are shared with your Squad, and Wallstride carries you up and over anything 2.2 m tall."
+        },
+        {
+          "title": "Instant Response Online",
+          "body": "On a server your character now moves, jumps and casts the moment you press, instead of waiting for the server to answer. Jumps wind up with a crackle of sparks, vaults flow straight into your run, and your pet does the same tricks on every screen."
+        },
+        {
+          "title": "Autopilot Passes & Loadouts",
+          "body": "Autopilot comes as a 3, 14 or 30-day Pass. Save whole gear sets as Loadouts and swap in one click. A step picker sits beside every + for quick counts, the Armorer stocks one of each forge material a week, and your portrait shows the colours you wear."
+        }
+      ]
+    },
     {
       "label": "16 Oct 2026 · Krytical Nova goes online",
       "items": [

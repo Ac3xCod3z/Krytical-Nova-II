@@ -16,6 +16,8 @@ namespace KryticalNova.Release
             Updater.RemoveOldLauncher();
             bool updated = Array.IndexOf(args, "--updated") >= 0;
             if (Array.IndexOf(args, "--headless") >= 0) return Headless(updated, Array.IndexOf(args, "--repair") >= 0);
+            int picture = Array.IndexOf(args, "--picture");
+            if (picture >= 0 && picture + 1 < args.Length) MainForm.PictureFile = args[picture + 1];
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
             Application.Run(new MainForm(updated, PreviewNews(args)));

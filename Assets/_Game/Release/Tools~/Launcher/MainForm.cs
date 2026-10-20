@@ -25,26 +25,52 @@ namespace KryticalNova.Release
         private enum Stage { Checking, Ready, UpdateReady, NotInstalled, Working, Failed }
         private enum NewsView { Current, PastList, PastRelease }
 
-        private static readonly Color Page = Color.FromArgb(0x14, 0x1a, 0x2b);
-        private static readonly Color Panel = Color.FromArgb(0x1d, 0x25, 0x40);
-        private static readonly Color Edge = Color.FromArgb(0x2b, 0x35, 0x60);
-        private static readonly Color Ink = Color.FromArgb(0x05, 0x07, 0x0d);
-        private static readonly Color Paper = Color.FromArgb(0xf4, 0xee, 0xda);
+        private static readonly Color Page = ComicFrame.Night;
+        private static readonly Color Panel = ComicFrame.PanelFill;
+        private static readonly Color Edge = Color.FromArgb(0x2b, 0x31, 0x5c);
+        private static readonly Color Ink = ComicFrame.Ink;
+        private static readonly Color Paper = ComicFrame.Paper;
         private static readonly Color Muted = Color.FromArgb(0xa9, 0xad, 0xc2);
         // The name logo's colours (owner, 18 Oct 2026): its cyan for what to press, its red for warnings; no yellow or pink.
-        private static readonly Color Pop = Color.FromArgb(0x3e, 0xd4, 0xdf);
-        private static readonly Color Rose = Color.FromArgb(0xde, 0x0d, 0x22);
+        private static readonly Color Pop = ComicFrame.Cyan;
+        private static readonly Color Rose = ComicFrame.Red;
         private static readonly Color RoseText = Color.FromArgb(0xff, 0x4a, 0x5c); // the red, lifted to read on the dark panel
-        private static readonly Color Cyan = Color.FromArgb(0x3e, 0xd4, 0xdf);
+        private static readonly Color Cyan = ComicFrame.Cyan;
         private static readonly Color DeepCyan = Color.FromArgb(0x0b, 0x8f, 0x9a); // the cyan, darkened to read on paper
         private static readonly Image Logo = LoadLogo();
 
-        // The page's panels (the window is 1120 x 640).
-        private static readonly Rectangle ArtBox = new Rectangle(18, 18, 700, 440);
+        // The page's panels (owner, 19 Oct 2026): the panels as before, inside a 38 px border where the frame, the dots and the
+        // ink slashes show, under the launcher's own title bar. The window is the page's angular shape (ComicFrame.Silhouette).
+        private const int Pad = ComicFrame.Pad;
+        private const int PageMargin = Pad + 38;
+        private const int PageTop = Pad + 58;
+        private static readonly Size PageSize = new Size(1160 + Pad * 2, PageTop + 604 + PageMargin);
+        private static readonly Rectangle ArtBox = new Rectangle(PageMargin, PageTop, 700, 440);
         private const int ArtSlant = 42;
-        private static readonly Rectangle NewsBox = new Rectangle(736, 18, 366, 604);
+        private static readonly Rectangle NewsBox = new Rectangle(PageMargin + 718, PageTop, 366, 604);
         private const int NewsSlant = 11;
-        private static readonly Rectangle StripBox = new Rectangle(18, 476, 704, 146);
+        private const int NewsFold = 26;
+        private static readonly Rectangle StripBox = new Rectangle(PageMargin, PageTop + 458, 704, 146);
+
+        // The panels' fixed shapes: the strip's cut corners, the painting's frame, the news sheet and its folded corner.
+        private static readonly Point[] StripShape = ComicFrame.ClippedRect(StripBox, ComicFrame.Clip, 20, ComicFrame.Clip, 0);
+        private static readonly PointF[] NewsPaper =
+        {
+            new PointF(NewsBox.Left + NewsSlant, NewsBox.Top), new PointF(NewsBox.Right - NewsFold, NewsBox.Top),
+            new PointF(NewsBox.Right, NewsBox.Top + NewsFold), new PointF(NewsBox.Right, NewsBox.Bottom), new PointF(NewsBox.Left, NewsBox.Bottom),
+        };
+        // The navy frame the painting sits in.
+        private static readonly Point[] ArtFrame =
+        {
+            new Point(ArtBox.Left - 10, ArtBox.Top - 10), new Point(ArtBox.Right + 11, ArtBox.Top - 10),
+            new Point(ArtBox.Right - ArtSlant + 11, ArtBox.Bottom + 10), new Point(ArtBox.Left - 10, ArtBox.Bottom + 10),
+        };
+        // The folded-over corner of the news sheet.
+        private static readonly PointF[] NewsFoldShape =
+        {
+            new PointF(NewsBox.Right - NewsFold, NewsBox.Top), new PointF(NewsBox.Right - NewsFold + 2, NewsBox.Top + NewsFold - 2),
+            new PointF(NewsBox.Right, NewsBox.Top + NewsFold),
+        };
 
         private static PrivateFontCollection fonts;
         private readonly FontFamily display;
@@ -53,7 +79,7 @@ namespace KryticalNova.Release
         private readonly bool justUpdated;
         private readonly CancellationTokenSource closing = new CancellationTokenSource();
         private readonly ComicButton main, repair, folder;
-        private readonly TextureBrush dots;
+        private readonly Bitmap page;
         private readonly ArtShow art;
         private readonly System.Windows.Forms.Timer frame = new System.Windows.Forms.Timer { Interval = 33 };
 
@@ -86,18 +112,20 @@ namespace KryticalNova.Release
             art = new ArtShow(new Size(ArtBox.Width, ArtBox.Height));
 
             base.Text = "Krytical Nova";
-            ClientSize = new Size(1120, 640);
-            FormBorderStyle = FormBorderStyle.FixedSingle;
+            // No Windows border: the window is the comic page's own angular shape, with its own title bar (owner, 19 Oct 2026).
+            FormBorderStyle = FormBorderStyle.None;
+            ClientSize = PageSize;
             MaximizeBox = false;
+            using (GraphicsPath outline = ComicFrame.Silhouette(PageSize)) Region = new Region(outline);
             StartPosition = FormStartPosition.CenterScreen;
             BackColor = Page;
             DoubleBuffered = true;
             Icon = Icon.ExtractAssociatedIcon(Updater.LauncherExe);
-            dots = new TextureBrush(DotTile());
+            page = ComicFrame.Page(ClientSize);
 
-            main = new ComicButton(display, 30f) { Bounds = new Rectangle(StripBox.Right - 236, StripBox.Top + 30, 214, 86), Fill = Pop, Label = "PLAY" };
-            repair = new ComicButton(display, 17f) { Bounds = new Rectangle(StripBox.Left + 20, StripBox.Bottom - 50, 120, 40), Fill = Edge, Ink = Paper, Label = "REPAIR" };
-            folder = new ComicButton(display, 17f) { Bounds = new Rectangle(StripBox.Left + 152, StripBox.Bottom - 50, 160, 40), Fill = Edge, Ink = Paper, Label = "GAME FOLDER" };
+            main = new ComicButton(display, 30f) { Bounds = new Rectangle(StripBox.Right - 238, StripBox.Top + 28, 220, 92), Fill = Pop, Label = "PLAY", Cut = 16, Outline = 4f, Lift = true, Dots = 70 };
+            repair = new ComicButton(display, 17f) { Bounds = new Rectangle(StripBox.Left + 20, StripBox.Bottom - 50, 120, 40), Fill = Edge, Ink = Paper, Label = "REPAIR", Cut = 8, Dots = 30 };
+            folder = new ComicButton(display, 17f) { Bounds = new Rectangle(StripBox.Left + 152, StripBox.Bottom - 50, 160, 40), Fill = Edge, Ink = Paper, Label = "GAME FOLDER", Cut = 8, Dots = 30 };
             main.Click += (s, e) => { pressedAt = DateTime.UtcNow; OnMain(); };
             main.HotChanged += (s, e) => Invalidate(Grow(main.Bounds, 60));
             repair.Click += (s, e) => { applyAfterCheck = true; Check(true); };
@@ -107,9 +135,30 @@ namespace KryticalNova.Release
             frame.Tick += (s, e) => Tick();
             frame.Start();
             Shown += (s, e) => Check(false);
+            if (PictureFile != null) Shown += (s, e) => TakePicture();
             FormClosing += (s, e) => { closing.Cancel(); frame.Stop(); };
             if (preview != null) ShowNews(preview.items, preview.history, "PREVIEW");
             SetStage(Stage.Checking);
+        }
+
+        /// <summary>Set by <c>--picture &lt;file&gt;</c>: the window saves a picture of itself there a moment after it opens, and closes.</summary>
+        public static string PictureFile;
+
+        private async void TakePicture()
+        {
+            await System.Threading.Tasks.Task.Delay(4000);
+            using (var picture = new Bitmap(Width, Height))
+            {
+                DrawToBitmap(picture, new Rectangle(Point.Empty, Size));
+                using (Graphics g = Graphics.FromImage(picture))
+                using (var outside = new Region(new Rectangle(Point.Empty, Size)))
+                {
+                    using (GraphicsPath shape = ComicFrame.Silhouette(PageSize)) outside.Exclude(shape);
+                    using (var grey = new SolidBrush(Color.FromArgb(0x60, 0x63, 0x6b))) g.FillRegion(grey, outside);
+                }
+                picture.Save(PictureFile, ImageFormat.Png);
+            }
+            Close();
         }
 
         // ------------------------------------------------------------------ flow
@@ -291,6 +340,7 @@ namespace KryticalNova.Release
         protected override void OnMouseMove(MouseEventArgs e)
         {
             base.OnMouseMove(e);
+            TrackTitle(e.Location);
             bool over = false;
             foreach (var (area, _) in clickable)
                 if (area.Contains(e.Location)) { over = true; break; }
@@ -303,7 +353,77 @@ namespace KryticalNova.Release
             if (e.Button != MouseButtons.Left) return;
             foreach (var (area, click) in clickable.ToArray())
                 if (area.Contains(e.Location)) { click(); return; }
+            // The title bar moves the window, as Windows' own would.
+            if (e.Y < PageTop - 4)
+            {
+                ReleaseCapture();
+                SendMessage(Handle, WmNcLeftButtonDown, (IntPtr)HtCaption, IntPtr.Zero);
+            }
         }
+
+        // ------------------------------------------------------------------ the launcher's own title bar
+
+        private static readonly Rectangle TitleBand = new Rectangle(Pad + 12, Pad + 12, PageSize.Width - Pad * 2 - 24, PageTop - Pad - 18);
+        private string titleHot = "";
+
+        private Rectangle TitleButton(int fromRight) => new Rectangle(PageSize.Width - Pad - 30 - 46 * (fromRight + 1), Pad + 14, 44, 30);
+
+        // The icon and the name on the left; minimise, maximise (greyed: the window keeps its size) and close on the right.
+        private void DrawTitleBar(Graphics g)
+        {
+            if (Icon != null) g.DrawIcon(Icon, new Rectangle(Pad + 46, Pad + 19, 20, 20));
+            using (var font = new Font("Segoe UI Semibold", 10.5f))
+            using (var brush = new SolidBrush(Paper))
+                g.DrawString("Krytical Nova", font, brush, Pad + 74, Pad + 19);
+            Point mouse = PointToClient(MousePosition);
+            string hot = "";
+            void Button(int fromRight, string name, bool enabled, Action click, Action<Rectangle, Pen> glyph)
+            {
+                Rectangle box = TitleButton(fromRight);
+                bool over = enabled && box.Contains(mouse);
+                if (over)
+                {
+                    hot = name;
+                    using (var fill = new SolidBrush(name == "close" ? Rose : Edge)) g.FillRectangle(fill, box);
+                }
+                using (var pen = new Pen(enabled ? Paper : Color.FromArgb(0x5a, 0x5e, 0x80), 1.6f)) glyph(box, pen);
+                if (enabled) clickable.Add((box, click));
+            }
+            Button(0, "close", true, Close, (b, p) =>
+            {
+                int cx = b.X + b.Width / 2, cy = b.Y + b.Height / 2;
+                g.DrawLine(p, cx - 6, cy - 6, cx + 6, cy + 6);
+                g.DrawLine(p, cx + 6, cy - 6, cx - 6, cy + 6);
+            });
+            Button(1, "max", false, null, (b, p) => g.DrawRectangle(p, b.X + b.Width / 2 - 6, b.Y + b.Height / 2 - 6, 12, 12));
+            Button(2, "min", true, () => WindowState = FormWindowState.Minimized,
+                (b, p) => g.DrawLine(p, b.X + b.Width / 2 - 6, b.Y + b.Height / 2, b.X + b.Width / 2 + 6, b.Y + b.Height / 2));
+            titleHot = hot;
+        }
+
+        // Keeps the title buttons' hover current.
+        private void TrackTitle(Point at)
+        {
+            string over = "";
+            if (TitleButton(0).Contains(at)) over = "close";
+            else if (TitleButton(2).Contains(at)) over = "min";
+            if (over != titleHot) Invalidate(TitleBand);
+        }
+
+        // A window without Windows' border still minimises and comes back from the taskbar, and keeps Alt+F4.
+        protected override CreateParams CreateParams
+        {
+            get
+            {
+                CreateParams cp = base.CreateParams;
+                cp.Style |= 0x00020000 | 0x00080000; // WS_MINIMIZEBOX | WS_SYSMENU
+                return cp;
+            }
+        }
+
+        [DllImport("user32.dll")] private static extern bool ReleaseCapture();
+        [DllImport("user32.dll")] private static extern IntPtr SendMessage(IntPtr window, int message, IntPtr wParam, IntPtr lParam);
+        private const int WmNcLeftButtonDown = 0xA1, HtCaption = 2;
 
         // ------------------------------------------------------------------ drawing
 
@@ -312,8 +432,9 @@ namespace KryticalNova.Release
             Graphics g = e.Graphics;
             g.SmoothingMode = SmoothingMode.AntiAlias;
             g.TextRenderingHint = TextRenderingHint.AntiAliasGridFit;
-            g.FillRectangle(dots, ClientRectangle);
+            g.DrawImageUnscaled(page, 0, 0);
             clickable.Clear();
+            DrawTitleBar(g);
 
             DrawArt(g);
             DrawStrip(g);
@@ -329,7 +450,10 @@ namespace KryticalNova.Release
                 new Point(ArtBox.Left, ArtBox.Top), new Point(ArtBox.Right, ArtBox.Top),
                 new Point(ArtBox.Right - ArtSlant, ArtBox.Bottom), new Point(ArtBox.Left, ArtBox.Bottom),
             };
-            using (var shadow = new SolidBrush(Ink)) g.FillPolygon(shadow, Offset(shape, 7, 7));
+            using (var shadow = new SolidBrush(Ink)) g.FillPolygon(shadow, Offset(ArtFrame, ComicFrame.ShadowOffset, ComicFrame.ShadowOffset));
+            using (var plate = new SolidBrush(ComicFrame.Plate)) g.FillPolygon(plate, ArtFrame);
+            using (var edge = new Pen(ComicFrame.InnerEdge, 2f) { LineJoin = LineJoin.Miter }) g.DrawPolygon(edge, Inset(ArtFrame, 4));
+            using (var pen = new Pen(Ink, ComicFrame.InkWidth) { LineJoin = LineJoin.Miter }) g.DrawPolygon(pen, ArtFrame);
             using (var path = new GraphicsPath())
             {
                 path.AddPolygon(shape);
@@ -338,7 +462,7 @@ namespace KryticalNova.Release
                 art.Draw(g, ArtBox.Location);
                 g.Restore(state);
             }
-            using (var pen = new Pen(Ink, 4f) { LineJoin = LineJoin.Miter }) g.DrawPolygon(pen, shape);
+            using (var pen = new Pen(Ink, 3f) { LineJoin = LineJoin.Miter }) g.DrawPolygon(pen, shape);
 
             if (Logo != null)
             {
@@ -382,15 +506,11 @@ namespace KryticalNova.Release
         // The strip: what is going on, the progress, REPAIR, GAME FOLDER and the main button.
         private void DrawStrip(Graphics g)
         {
-            Point[] shape =
-            {
-                new Point(StripBox.Left, StripBox.Top), new Point(StripBox.Right - 8, StripBox.Top),
-                new Point(StripBox.Right, StripBox.Bottom), new Point(StripBox.Left, StripBox.Bottom),
-            };
-            using (var shadow = new SolidBrush(Ink)) g.FillPolygon(shadow, Offset(shape, 7, 7));
+            Point[] shape = StripShape;
+            using (var shadow = new SolidBrush(Ink)) g.FillPolygon(shadow, Offset(shape, ComicFrame.ShadowOffset, ComicFrame.ShadowOffset));
             using (var fill = new SolidBrush(Panel)) g.FillPolygon(fill, shape);
-            using (var edge = new Pen(Edge, 2f)) g.DrawPolygon(edge, Offset(Inset(shape, 5), 0, 0));
-            using (var pen = new Pen(Ink, 4f) { LineJoin = LineJoin.Miter }) g.DrawPolygon(pen, shape);
+            using (var edge = new Pen(Edge, 2f)) g.DrawPolygon(edge, Inset(shape, 6));
+            using (var pen = new Pen(Ink, ComicFrame.InkWidth) { LineJoin = LineJoin.Miter }) g.DrawPolygon(pen, shape);
 
             int left = StripBox.Left + 20, width = main.Left - left - 24;
             if (stage == Stage.UpdateReady) DrawTag(g, "NEW", new Point(main.Left - 70, StripBox.Top + 14), Rose, 15f);
@@ -468,14 +588,18 @@ namespace KryticalNova.Release
         // The paper panel: this release's news, the list of earlier releases, or one earlier release's news.
         private void DrawNews(Graphics g)
         {
-            Point[] shape =
+            using (var shadow = new SolidBrush(Ink)) g.FillPolygon(shadow, ComicFrame.Offset(NewsPaper, ComicFrame.ShadowOffset, ComicFrame.ShadowOffset));
+            using (var paper = new SolidBrush(Paper)) g.FillPolygon(paper, NewsPaper);
+            using (var clip = new GraphicsPath())
             {
-                new Point(NewsBox.Left + NewsSlant, NewsBox.Top), new Point(NewsBox.Right, NewsBox.Top),
-                new Point(NewsBox.Right, NewsBox.Bottom), new Point(NewsBox.Left, NewsBox.Bottom),
-            };
-            using (var shadow = new SolidBrush(Ink)) g.FillPolygon(shadow, Offset(shape, 7, 7));
-            using (var paper = new SolidBrush(Paper)) g.FillPolygon(paper, shape);
-            using (var pen = new Pen(Ink, 4f) { LineJoin = LineJoin.Miter }) g.DrawPolygon(pen, shape);
+                clip.AddPolygon(NewsPaper);
+                // Faint print dots along the top right and the lower right, gone before the text.
+                ComicFrame.CornerDots(g, clip, new PointF(NewsBox.Right, NewsBox.Top), 150, 7f, 2.6f, Color.FromArgb(46, Page));
+                ComicFrame.CornerDots(g, clip, new PointF(NewsBox.Right, NewsBox.Bottom - 40), 170, 7f, 2.8f, Color.FromArgb(40, Page));
+            }
+            using (var pen = new Pen(Ink, ComicFrame.InkWidth) { LineJoin = LineJoin.Miter }) g.DrawPolygon(pen, NewsPaper);
+            using (var fold = new SolidBrush(Color.FromArgb(0xd9, 0xd0, 0xb8))) g.FillPolygon(fold, NewsFoldShape);
+            using (var pen = new Pen(Ink, 3f) { LineJoin = LineJoin.Miter }) g.DrawPolygon(pen, NewsFoldShape);
 
             int left = NewsBox.Left + 24, right = NewsBox.Right - 18, y = NewsBox.Top + 16;
             using (var big = new Font(display, 30f))
@@ -633,18 +757,6 @@ namespace KryticalNova.Release
 
         private static Rectangle Grow(Rectangle r, int by) => new Rectangle(r.X - by, r.Y - by, r.Width + by * 2, r.Height + by * 2);
 
-        private static Bitmap DotTile()
-        {
-            var tile = new Bitmap(14, 14);
-            using (Graphics g = Graphics.FromImage(tile))
-            using (var dot = new SolidBrush(Color.FromArgb(18, 244, 238, 218)))
-            {
-                g.Clear(Page);
-                g.SmoothingMode = SmoothingMode.AntiAlias;
-                g.FillEllipse(dot, 5.5f, 5.5f, 3f, 3f);
-            }
-            return tile;
-        }
 
         private static Image LoadLogo()
         {
@@ -844,6 +956,13 @@ namespace KryticalNova.Release
 
         public Color Fill = Color.Gold;
         public Color Ink = Color.FromArgb(0x10, 0x13, 0x1a);
+        /// <summary>How much of the top-left and bottom-right corners is cut off, in pixels.</summary>
+        public int Cut;
+        public float Outline = 3f;
+        /// <summary>On hover the button rises a little and its shadow grows (the main button).</summary>
+        public bool Lift;
+        /// <summary>How dark the halftone in the face is at its left, fading to nothing at the right (0: none).</summary>
+        public int Dots;
         public string Label { get => label; set { label = value; Invalidate(); } }
 
         /// <summary>True while the pointer is on the button.</summary>
@@ -866,17 +985,46 @@ namespace KryticalNova.Release
         protected override void OnMouseUp(MouseEventArgs e) { pressed = false; Invalidate(); base.OnMouseUp(e); }
         protected override void OnEnabledChanged(EventArgs e) { Invalidate(); base.OnEnabledChanged(e); }
 
+        // A printed comic's dots in the face: largest at the left edge, gone by the middle.
+        private void Halftone(Graphics g, Point[] face, Rectangle box)
+        {
+            GraphicsState state = g.Save();
+            using (var clip = new GraphicsPath())
+            {
+                clip.AddPolygon(face);
+                g.SetClip(clip, CombineMode.Intersect);
+                using (var dot = new SolidBrush(Color.FromArgb(Dots, 0x05, 0x06, 0x0d)))
+                {
+                    const float spacing = 6f;
+                    int row = 0;
+                    for (float y = box.Top; y <= box.Bottom; y += spacing * 0.866f, row++)
+                        for (float x = box.Left + (row % 2) * spacing / 2; x <= box.Left + box.Width * 0.6f; x += spacing)
+                        {
+                            float r = 2.1f * (1 - (x - box.Left) / (box.Width * 0.6f));
+                            if (r > 0.4f) g.FillEllipse(dot, x - r, y - r, r * 2, r * 2);
+                        }
+                }
+            }
+            g.Restore(state);
+        }
+
         protected override void OnPaint(PaintEventArgs e)
         {
             Graphics g = e.Graphics;
             g.SmoothingMode = SmoothingMode.AntiAlias;
             g.TextRenderingHint = TextRenderingHint.AntiAliasGridFit;
-            int shift = pressed ? 3 : 0;
-            var box = new Rectangle(shift, shift, Width - 6, Height - 6);
-            if (!pressed) using (var shadow = new SolidBrush(Color.FromArgb(0x05, 0x07, 0x0d))) g.FillRectangle(shadow, 5, 5, Width - 6, Height - 6);
+            // At rest the face sits 2 px in with its shadow 6 px below it; lifted on hover it moves up to the corner and the
+            // shadow falls 8 px; pressed it drops onto its shadow.
+            int room = Lift ? 10 : 6, shadowAt = Lift ? 8 : 5;
+            int shift = pressed ? (Lift ? 7 : 3) : Lift && hot && Enabled ? 0 : Lift ? 2 : 0;
+            var box = new Rectangle(shift, shift, Width - room, Height - room);
+            Point[] face = ComicFrame.ClippedRect(new Rectangle(box.X + 1, box.Y + 1, box.Width - 2, box.Height - 2), Cut, 0, Cut, 0);
+            Point[] under = ComicFrame.ClippedRect(new Rectangle(shadowAt + 1, shadowAt + 1, box.Width - 2, box.Height - 2), Cut, 0, Cut, 0);
+            if (!pressed) using (var shadow = new SolidBrush(Color.FromArgb(0x05, 0x06, 0x0d))) g.FillPolygon(shadow, under);
             Color fill = !Enabled ? Color.FromArgb(0x3a, 0x40, 0x58) : hot ? ControlPaint.Light(Fill, 0.15f) : Fill;
-            using (var brush = new SolidBrush(fill)) g.FillRectangle(brush, box);
-            using (var pen = new Pen(Color.FromArgb(0x05, 0x07, 0x0d), 3f)) g.DrawRectangle(pen, box.X + 1, box.Y + 1, box.Width - 2, box.Height - 2);
+            using (var brush = new SolidBrush(fill)) g.FillPolygon(brush, face);
+            if (Dots > 0 && Enabled) Halftone(g, face, box);
+            using (var pen = new Pen(Color.FromArgb(0x05, 0x06, 0x0d), Outline) { LineJoin = LineJoin.Miter }) g.DrawPolygon(pen, face);
             using (var ink = new SolidBrush(Enabled ? Ink : Color.FromArgb(0x8a, 0x8e, 0xa3)))
             {
                 var format = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center };

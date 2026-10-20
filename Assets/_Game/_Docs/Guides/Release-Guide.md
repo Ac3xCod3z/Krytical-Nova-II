@@ -273,3 +273,8 @@ good again.
 - 18 Oct 2026: the Unity Accelerator installed and every Editor pointed at it; the build checkout made; Publish to
   Test now builds there in the background and refuses to start without the Accelerator; the old way kept as Publish to
   Test (in This Editor). Measured: a fresh import 25 min 32 s, 10 min 55 s with the import results in the Accelerator.
+- 19 Oct 2026: the launcher's comic frame (owner, from the owner's reference): the window itself is angular (no Windows
+  border; its own title bar to drag it, minimise and close; cyan fins round the top left, red round the bottom right), the
+  page night indigo with dot clusters in the corners, the painting in a navy frame, the news a cream sheet with a folded
+  corner, PLAY with cut corners, a halftone and a lift on hover (the speed lines kept). The window is 1204 x 744.
+  `--picture <file>` saves a picture of the launcher and closes it, for checking its look.
