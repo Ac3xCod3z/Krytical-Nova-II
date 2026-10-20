@@ -18,5 +18,8 @@ namespace KryticalNova.Audio
         [Min(0.05f)] public float fadeInSeconds = 0.6f;
         [Tooltip("Seconds for the music to go out when the fight is over.")]
         [Min(0.05f)] public float fadeOutSeconds = 2.5f;
+        [Tooltip("On: the fight music, and Cadence with it, only while the player stands in a Callout (owner, 19 Oct 2026: " +
+                 "the town tries it in Callouts first). Off: in every fight (the test arena).")]
+        public bool calloutsOnly;
     }
 }

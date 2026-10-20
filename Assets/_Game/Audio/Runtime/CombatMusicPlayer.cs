@@ -120,7 +120,8 @@ namespace KryticalNova.Audio
         private bool LocalPlayerFights()
         {
             PlayerCombatState local = LocalPlayer.Get<PlayerCombatState>();
-            return local != null && local.InCombat;
+            ZoneMusic music = conductor != null ? conductor.Music : null;
+            return local != null && local.InFightFor(music != null && music.calloutsOnly);
         }
 
         /// <summary>Books the track on the audio clock so that it sounds, to the sample, where the shared clock has it.</summary>

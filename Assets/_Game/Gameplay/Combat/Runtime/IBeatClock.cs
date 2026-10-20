@@ -20,6 +20,9 @@ namespace KryticalNova.Combat
         /// <summary>How far this player's ears are behind the shared clock, in seconds.</summary>
         double ClockLagSeconds { get; }
 
+        /// <summary>True where the fight music, and Cadence, are only for players in a Callout (<see cref="PlayerCombatState.InFightFor"/>).</summary>
+        bool CalloutsOnly { get; }
+
         /// <summary>
         /// The beat at shared-clock time <paramref name="at"/>: the track playing then, how far the moment is from that
         /// track's nearest beat (negative is early) and how many beats it is since the track's first. False between two

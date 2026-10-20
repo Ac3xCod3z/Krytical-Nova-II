@@ -204,6 +204,13 @@ Each ends in a commit on `music/cadence` and stops for the owner's check. Tested
 | M6 | The world moves | Three examples in the arena, chosen from a review sheet. |
 | M7 | Into the game, and the merge | Starter town wired; 60 frames a second held; records updated; the owner says merge. |
 
+**The town, Callouts only (owner, 19 Oct 2026: "make Callouts use the cadence music so I can test it in our next live
+game").** Zone01 has the conductor and the fight music player (`MusicSetup.EnsureInScene`) with its own
+`ZoneMusic_Zone01_StarterTown`: the arena's twelve tracks (not the test beat), and **Callouts only** (`ZoneMusic.calloutsOnly`):
+the music, and Cadence with it, only while the player stands in a Callout (`PlayerCombatState.InFightFor`,
+`IBeatClock.CalloutsOnly`). A fight with a Hostile in the town stays silent and earns no Cadence. The arena keeps every
+fight.
+
 ## 8. Candidates (not built, not asked for)
 
 The owner's other three ideas, each under the rule of section 1.
