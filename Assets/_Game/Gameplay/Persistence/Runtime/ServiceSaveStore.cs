@@ -460,15 +460,32 @@ namespace KryticalNova.Persistence
                 using HttpResponseMessage response = Send(HttpMethod.Get, "health", null);
                 if (response.StatusCode == HttpStatusCode.Unauthorized) { Healthy = false; Health = "the service refused this server's key"; return; }
                 if (!response.IsSuccessStatusCode) { Healthy = false; Health = "database DOWN"; return; }
-                HealthAnswer answer = JsonUtility.FromJson<HealthAnswer>(Text(response));
+                string text = Text(response);
+                HealthAnswer answer = JsonUtility.FromJson<HealthAnswer>(text);
                 Healthy = true;
-                Health = $"ok, {answer.documents} saves, {answer.bytes / (1024 * 1024.0):0.#} MB";
+                // Unity's reader makes an empty object of "backup": null (the tests' service keeps no copies).
+                bool keepsCopies = !System.Text.RegularExpressions.Regex.IsMatch(text, @"""backup""\s*:\s*null");
+                Health = $"ok, {answer.documents} saves, {answer.bytes / (1024 * 1024.0):0.#} MB" + (keepsCopies ? NightlyCopy(answer.backup) : string.Empty);
             }
             catch (Exception)
             {
                 Healthy = false;
                 Health = "service DOWN";
             }
+        }
+
+        /// <summary>
+        /// The database's nightly copy (online phase 4, milestone 6), for the control page's Saves chip: how old the last one
+        /// is, or what is wrong. Empty for a service that keeps none (the tests').
+        /// </summary>
+        public static string NightlyCopy(BackupAnswer backup)
+        {
+            if (backup == null) return string.Empty;
+            if (!string.IsNullOrEmpty(backup.problem)) return ", backup PROBLEM: " + backup.problem;
+            if (string.IsNullOrEmpty(backup.last) || !DateTime.TryParse(backup.last, out DateTime made)) return ", no nightly copy yet";
+            double hours = (DateTime.Now - made).TotalHours;
+            string age = hours < 1 ? "under an hour" : $"{hours:0} h";
+            return hours > 26 ? $", nightly copy {age} OLD" : $", nightly copy {age} ago" + (backup.offsite ? " (in Google Drive)" : " (NOT off this PC)");
         }
 
         // ------------------------------------------------------------------ the wire
@@ -515,7 +532,9 @@ namespace KryticalNova.Persistence
         [Serializable] private sealed class BatchAnswer { public bool written; public string conflict; public long conflictVersion; public List<KeyVersion> versions; }
         [Serializable] private sealed class LockAnswer { public bool granted; public string holder; }
         [Serializable] private sealed class KeyList { public List<string> keys; }
-        [Serializable] private sealed class HealthAnswer { public bool ok; public long documents; public long bytes; }
+        [Serializable] private sealed class HealthAnswer { public bool ok; public long documents; public long bytes; public BackupAnswer backup; }
+        /// <summary>The save service's word on its nightly copies (null fields when it keeps none).</summary>
+        [Serializable] public sealed class BackupAnswer { public string last; public long bytes; public bool offsite; public int kept; public string problem; }
         [Serializable] private sealed class LedgerList { public List<LedgerEntry> lines; }
         [Serializable] private sealed class PruneAnswer { public int dropped; }
     }

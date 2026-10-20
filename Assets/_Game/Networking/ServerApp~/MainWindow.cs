@@ -415,10 +415,51 @@ namespace KryticalNova.ServerApp
             command.Clear();
         }
 
+        // The server's own zip of its saves (when it runs) and, on the real database, a copy of the whole database as the
+        // nightly one (online phase 4, milestone 6) made by the save service.
         private void BackUpNow()
         {
+            bool database = settings.UsesSaves && !settings.TestSaves && saves.Running;
             if (server.Running) { server.Send("gm.backup"); server.Note("> gm.backup"); Task.Delay(4000).ContinueWith(_ => BeginInvoke((Action)RefreshBackups)); }
-            else MessageBox.Show(this, "Backups are made by the running server: start it first.", "Back up", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            if (database) Task.Run(DatabaseCopyNow);
+            if (!server.Running && !database)
+                MessageBox.Show(this, "Backups are made by the running server and the save service: press START first.", "Back up", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        }
+
+        private async Task DatabaseCopyNow()
+        {
+            try
+            {
+                var request = new HttpRequestMessage(HttpMethod.Post, settings.SaveService.TrimEnd('/') + "/backup");
+                request.Headers.Add("X-KN-Key", ServiceKey());
+                using (HttpResponseMessage response = await http.SendAsync(request))
+                {
+                    string said = await response.Content.ReadAsStringAsync();
+                    Match line = Regex.Match(said, @"""line""\s*:\s*""((?:[^""\\]|\\.)*)""");
+                    BeginInvoke((Action)(() => saves.Note(line.Success ? Regex.Unescape(line.Groups[1].Value) : "[Backup] The save service answered " + (int)response.StatusCode + ".")));
+                }
+            }
+            catch (Exception e)
+            {
+                BeginInvoke((Action)(() => saves.Note("[Backup] The save service did not answer: " + e.Message)));
+            }
+        }
+
+        // The nightly copies of the database, from the save service's health check: when the last was made, whether it is
+        // in Google Drive, and anything wrong.
+        private static string NightlyLine(string health)
+        {
+            if (string.IsNullOrEmpty(health)) return "";
+            if (Regex.IsMatch(health, @"""backup""\s*:\s*null")) return "Nightly copies: none for the TEST database.";
+            Match last = Regex.Match(health, @"""last""\s*:\s*""([^""]+)""");
+            Match problem = Regex.Match(health, @"""problem""\s*:\s*""((?:[^""\\]|\\.)*)""");
+            string trouble = problem.Success ? "  ·  PROBLEM: " + Regex.Unescape(problem.Groups[1].Value) : "";
+            if (!last.Success || !DateTime.TryParse(last.Groups[1].Value, out DateTime made))
+                return "Nightly copies: none yet (the first is made a few minutes after the save service starts, then every night at 4 AM)." + trouble;
+            bool offsite = Regex.IsMatch(health, @"""offsite""\s*:\s*true");
+            double hours = (DateTime.Now - made).TotalHours;
+            return $"Nightly copy: last {made:d MMM HH:mm} ({(hours < 1 ? "under an hour" : $"{hours:0} h")} ago)  ·  {Number(health, "kept")} kept (14 days)  ·  " +
+                   (offsite ? "in Google Drive" : "NOT copied off this PC") + trouble;
         }
 
         // ------------------------------------------------------------------ the regular look at everything
@@ -524,7 +565,8 @@ namespace KryticalNova.ServerApp
                 : $"{savesState}  ·  {settings.SaveService}  ·  {(settings.TestSaves ? "TEST database (krytical_nova_test)" : "REAL database (krytical_nova)")}\n" +
                   (savesState == "OK" ? $"{documents} saves  ·  {bytes / 1048576.0:0.0} MB" : saves.Running ? "Starting..." : "Not running: press START.");
             databaseInfo.Text = $"Postgres: {databaseState} (a Windows service; it starts with Windows by itself)\n" +
-                                (savesState == "OK" ? $"{documents} saves in it  ·  {bytes / 1048576.0:0.0} MB on disk" : "The save service is not answering, so the database cannot be read from here.");
+                                (savesState == "OK" ? $"{documents} saves in it  ·  {bytes / 1048576.0:0.0} MB on disk\n" + NightlyLine(lastHealth)
+                                    : "The save service is not answering, so the database cannot be read from here.");
         }
 
         private void RefreshBackups()

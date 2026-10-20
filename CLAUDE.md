@@ -68,6 +68,9 @@ Read `Assets/_Game/_Docs/Reference/12Sky/README.md` before naming anything a pla
   `LedgerKinds`). The save service stores ledger lines as text with only account, kind and time: it must never learn the
   economy's rules, so a rework needs no database change. Test with `TransactionLedgerTests` and the kill test
   (`Persistence/Service~/KillTest/kill_test.py`, test database only).
+- **Nightly copies (milestone 6):** the save service copies the real database at 4 AM into
+  `Documents\KryticalNova-Backups\database` and Google Drive (`My Drive\KryticalNova-Backups`), 14 days kept. The restore
+  drill uses `krytical_nova_drill` only; `SaveService --restore-real` is the owner's last resort, never run by a session.
 - The owner runs the server with the **Krytical Nova Server app** (`Assets/_Game/Networking/ServerApp~`, built beside the
   server by `ServerBuildBuilder`): it starts the save service and the server hidden inside one window. Stopping the
   server never stops the save service or the database; closing the app stops the save service it started. Test the app

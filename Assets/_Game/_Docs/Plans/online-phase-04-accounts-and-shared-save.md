@@ -73,7 +73,8 @@ All of that stays. What changes is underneath.
 4. **World records.** Crews, Contacts, Kiosks and Sponsors changed one entry at a time through the service.
 5. **The roster on the server.** Create, list and delete characters through the service, names unique across the game,
    the look checked there. *Built 19 Oct 2026 (see As built).*
-6. **Backups.** Nightly, kept 14 days, off the machine; a restore drill; the runbook and the Server Guide.
+6. **Backups.** Nightly, kept 14 days, off the machine; a restore drill; the runbook and the Server Guide. *Built 20 Oct
+   2026 (see As built).*
 7. **Real accounts.** Unity Player Accounts on the launcher build, the end of anonymous accounts outside local tests,
    Steam linking ready for the Steam build, and the proof that the Nova Store's web sign-in is the same account.
 
@@ -190,6 +191,28 @@ All of that stays. What changes is underneath.
 - *Found:* a game built before the decoupling (19 Oct) cannot play on a server built after it, even with the same build
   number (the assemblies were renamed, so the network message ids changed; a build-8 bot from 19 Oct 01:33 failed its
   messages on a server from today). The next real server rebuild goes with a new release (Publish to Test).
+
+**Milestone 6 (20 Oct 2026): backups.** Owner's picks: the copy off the PC goes to **Google Drive** (first OneDrive, then
+"can we use my Google cloud instead": Google Drive for desktop, not Cloud Storage); the **save service** makes it (no
+Windows task).
+- The save service (`NightlyBackup`) copies the whole database with `pg_dump` at 4 AM, and on starting when the last copy
+  is over a day old: the copy and its manifest (counts of saves and ledger lines, and an md5 fingerprint of all of them)
+  come from one exported snapshot, so they agree exactly. A copy is written under a temporary name, read back
+  (`pg_restore --list`) and only then named; then copied into `My Drive\KryticalNova-Backups` (Google Drive for desktop
+  uploads it). 14 days kept in both places, never the newest. The password reaches `pg_dump` only through its
+  environment.
+- Its health check carries the copies' state (last, size, kept, in Google Drive, problem); the Server app's DATABASE tab
+  and the control page's Saves chip show it, including "Google Drive for desktop is not set up / not running".
+- `SaveService --backup-now`, `--restore-drill [file]` (into `krytical_nova_drill`, made once by Make Drill
+  Database.bat, then checked against the manifest) and `--restore-real [file]` (only with the service stopped, after a
+  safety copy and a typed RESTORE); Back Up Now.bat, Restore Drill.bat and Restore Saves.bat beside the real server's save
+  service only (`ServerBuildBuilder.WriteBackupScripts`). The tests' service makes copies only into folders a
+  backup-settings.json names.
+- *Tried:* on the test database: a copy of 591 saves and 8,878 ledger lines (577 KB), read back, copied to a named off-PC
+  folder; the drill's refusal without a practice database. On the real database (read only): the first copy, 139 saves,
+  13 KB, 20 Oct 07:37; OneDrive was found not running (so "not uploaded" is now reported), then Google Drive chosen.
+- *Still:* the owner installs Google Drive for desktop and runs Make Drill Database.bat; then the first restore drill on a
+  real copy (the "practised once" of Done when).
 
 **Milestone 5 (19 Oct 2026): the roster on the server.** Owner's picks: connect first (Title, then character select
 shows the chosen server's own list); names stay letters only, 3 to 16 (`CharacterNameRules`), and are unique across

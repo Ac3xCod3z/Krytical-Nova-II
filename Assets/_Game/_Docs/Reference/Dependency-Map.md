@@ -20,7 +20,7 @@ script, which is then published to the link above. `--baseline` saves today's up
 ## Today
 
 <!-- map:summary -->
-Generated 19 Oct 2026, 20:55: 646 runtime scripts (120,944 lines) declaring 920 types (165 MonoBehaviours, 61 NetworkBehaviours, 87 ScriptableObject classes); 112 test scripts; 4709 prefabs, 46 scenes and 2580 assets read. 196 system-to-system links, of which 0 run uphill, 0 pairs of systems use each other both ways, and 0 links would have to go for the systems to form a clean stack. The largest tangle, classes that all reach each other through some chain of uses, holds 7 classes from 1 systems (Gameplay/Player 7, ...).
+Generated 20 Oct 2026, 07:37: 646 runtime scripts (120,997 lines) declaring 920 types (165 MonoBehaviours, 61 NetworkBehaviours, 87 ScriptableObject classes); 114 test scripts; 4709 prefabs, 46 scenes and 2581 assets read. 196 system-to-system links, of which 0 run uphill, 0 pairs of systems use each other both ways, and 0 links would have to go for the systems to form a clean stack. The largest tangle, classes that all reach each other through some chain of uses, holds 7 classes from 1 systems (Gameplay/Player 7, ...).
 <!-- /map:summary -->
 
 ## How to read it
@@ -56,7 +56,7 @@ Generated 19 Oct 2026, 20:55: 646 runtime scripts (120,944 lines) declaring 920 
 | System | Layer | Scripts | Lines | Uses (types) | Used by (types) | Instability | Tests | Types touched by a test |
 |---|---|---|---|---|---|---|---|---|
 | Core | Foundation | 45 | 3,628 | 0 | 188 | 0.0 | 4 | 13 of 31 |
-| Networking | Infrastructure | 38 | 7,044 | 5 | 75 | 0.06 | 2 | 24 of 50 |
+| Networking | Infrastructure | 38 | 7,055 | 5 | 75 | 0.06 | 3 | 25 of 50 |
 | Rendering | Infrastructure | 14 | 2,829 | 1 | 26 | 0.04 | 0 | 1 of 18 |
 | Environment | Simulation | 6 | 834 | 0 | 2 | 0.0 | 0 | 0 of 6 |
 | Gameplay/Autopilot | Simulation | 11 | 1,448 | 41 | 12 | 0.77 | 3 | 6 of 12 |
@@ -68,10 +68,10 @@ Generated 19 Oct 2026, 20:55: 646 runtime scripts (120,944 lines) declaring 920 
 | Gameplay/Economy | Simulation | 23 | 4,098 | 57 | 46 | 0.55 | 9 | 14 of 37 |
 | Gameplay/Pets | Simulation | 12 | 1,445 | 33 | 32 | 0.51 | 4 | 13 of 19 |
 | Gameplay/Social | Simulation | 39 | 5,670 | 47 | 48 | 0.49 | 9 | 23 of 52 |
-| Gameplay/Combat | Simulation | 12 | 3,022 | 43 | 24 | 0.64 | 4 | 4 of 13 |
-| Gameplay/Persistence | Simulation | 9 | 2,764 | 49 | 11 | 0.82 | 12 | 5 of 13 |
-| Gameplay/Player | Simulation | 22 | 9,560 | 56 | 37 | 0.6 | 3 | 9 of 24 |
-| Gameplay/CharacterCreation | Simulation | 26 | 2,929 | 27 | 69 | 0.28 | 8 | 20 of 29 |
+| Gameplay/Combat | Simulation | 12 | 3,035 | 43 | 24 | 0.64 | 4 | 4 of 13 |
+| Gameplay/Persistence | Simulation | 9 | 2,783 | 49 | 11 | 0.82 | 13 | 7 of 13 |
+| Gameplay/Player | Simulation | 22 | 9,560 | 56 | 37 | 0.6 | 3 | 10 of 24 |
+| Gameplay/CharacterCreation | Simulation | 26 | 2,929 | 27 | 69 | 0.28 | 8 | 24 of 29 |
 | Gameplay/Items | Simulation | 58 | 10,400 | 45 | 176 | 0.2 | 12 | 38 of 80 |
 | World | Simulation | 33 | 5,693 | 9 | 35 | 0.2 | 1 | 7 of 39 |
 | Gameplay/Progression | Simulation | 46 | 7,928 | 23 | 197 | 0.1 | 6 | 27 of 58 |
@@ -79,8 +79,8 @@ Generated 19 Oct 2026, 20:55: 646 runtime scripts (120,944 lines) declaring 920 
 | Gameplay/NPC | Simulation | 2 | 227 | 5 | 17 | 0.23 | 0 | 0 of 2 |
 | Gameplay/Factions | Simulation | 6 | 169 | 0 | 25 | 0.0 | 0 | 1 of 3 |
 | GameFeel | Presentation | 26 | 4,476 | 41 | 2 | 0.95 | 4 | 17 of 34 |
-| UI | Presentation | 130 | 32,906 | 302 | 4 | 0.99 | 17 | 32 of 135 |
-| Audio | Presentation | 6 | 645 | 4 | 8 | 0.33 | 1 | 1 of 7 |
+| UI | Presentation | 130 | 32,911 | 302 | 4 | 0.99 | 17 | 32 of 135 |
+| Audio | Presentation | 6 | 650 | 4 | 8 | 0.33 | 1 | 1 of 7 |
 | Tools | Tooling | 29 | 4,980 | 177 | 0 | 1.0 | 2 | 0 of 31 |
 <!-- /map:systems -->
 
@@ -106,7 +106,7 @@ Each row is the cheaper side of a loop: cut these references and the two systems
 | Type | System | Kind | Files using it | Systems | Types reached through others | Tests | Prefabs / scenes holding it |
 |---|---|---|---|---|---|---|---|
 | ClientPresentationRegistry | Core | plain | 80 | 18 | 224 | 1 | 0 |
-| FactionId | Gameplay/Factions | enum | 75 | 14 | 290 | 24 | 0 |
+| FactionId | Gameplay/Factions | enum | 75 | 14 | 290 | 25 | 0 |
 | ItemDefinition | Gameplay/Items | so | 65 | 12 | 241 | 20 | 0 |
 | PlayerInventory | Gameplay/Items | net | 65 | 14 | 179 | 0 | 1 |
 | ItemStack | Gameplay/Items | plain | 48 | 10 | 221 | 12 | 0 |
@@ -114,7 +114,7 @@ Each row is the cheaper side of a loop: cut these references and the two systems
 | CallKind | Networking | enum | 39 | 13 | 250 | 1 | 0 |
 | RpcBudget | Networking | plain | 39 | 13 | 237 | 1 | 0 |
 | PlayerResources | Gameplay/Progression | net | 35 | 14 | 195 | 0 | 41 |
-| PlayerIdentity | Gameplay/Player | net | 35 | 12 | 168 | 0 | 1 |
+| PlayerIdentity | Gameplay/Player | net | 35 | 12 | 168 | 1 | 1 |
 | LocalPlayer | Core | plain | 32 | 14 | 188 | 1 | 0 |
 | CharacterCombatStats | Gameplay/Progression | mono | 29 | 12 | 214 | 1 | 51 |
 | PointAndClickPlayer | Gameplay/Player | net | 29 | 8 | 144 | 0 | 41 |
@@ -123,7 +123,7 @@ Each row is the cheaper side of a loop: cut these references and the two systems
 | CombatEntity | Gameplay/Progression | net | 26 | 10 | 172 | 0 | 13 |
 | StatType | Gameplay/Progression | enum | 24 | 7 | 300 | 7 | 0 |
 | NpcOffer | Gameplay/NPC | enum | 24 | 9 | 187 | 1 | 0 |
-| CharacterRecipe | Gameplay/CharacterCreation | plain | 23 | 7 | 197 | 4 | 0 |
+| CharacterRecipe | Gameplay/CharacterCreation | plain | 23 | 7 | 197 | 5 | 0 |
 | SaveScope | Core | enum | 22 | 9 | 219 | 0 | 0 |
 | SkillDefinitionSO | Gameplay/Progression | so | 22 | 8 | 189 | 7 | 0 |
 | PerformanceLog | Core | plain | 20 | 9 | 231 | 1 | 0 |
@@ -199,7 +199,7 @@ Each ScriptableObject class, how many assets of it exist, and where they are wir
 | ZoneMinimapData | World | 39 | 3 | 0 / 40 / 0 |
 | StatDefinitionData | Gameplay/Progression | 19 | 0 | 0 / 0 / 0 |
 | NpcDefinition | Gameplay/NPC | 17 | 3 | 17 / 0 / 3 |
-| MusicTrack | Audio | 13 | 6 | 0 / 0 / 1 |
+| MusicTrack | Audio | 13 | 6 | 0 / 0 / 2 |
 | WeatherProfile | World | 11 | 4 | 0 / 40 / 12 |
 | HostileDefinition | Gameplay/Hostiles | 10 | 8 | 10 / 0 / 8 |
 | HostileZoneDefinition | Gameplay/Hostiles | 8 | 2 | 0 / 2 / 0 |
@@ -212,10 +212,10 @@ Each ScriptableObject class, how many assets of it exist, and where they are wir
 | FactionDefinition | Gameplay/Factions | 3 | 6 | 0 / 0 / 1 |
 | FactionHudKit | UI | 3 | 2 | 0 / 40 / 0 |
 | UiSkin | UI | 3 | 1 | 1 / 0 / 0 |
+| ZoneMusic | Audio | 2 | 2 | 0 / 2 / 0 |
 | GrassBiome | Environment | 2 | 2 | 0 / 0 / 1 |
 | CharacterClassData | Gameplay/Progression | 2 | 2 | 1 / 2 / 0 |
 | MovementSkillData | Gameplay/Progression | 2 | 2 | 1 / 0 / 0 |
-| ZoneMusic | Audio | 1 | 2 | 0 / 1 / 0 |
 | GrassRuleSet | Environment | 1 | 1 | 0 / 40 / 0 |
 | HitLookSettings | GameFeel | 1 | 1 | 1 / 0 / 0 |
 | SmearSettings | GameFeel | 1 | 2 | 1 / 0 / 0 |
@@ -323,24 +323,24 @@ first. The page lists the file and line behind each.
 | 20 | Hub | ZonePortal.Active (locator) | World, Tools, UI | 3 | 4 | medium |
 | 21 | Untested | CombatEntity has no test | Gameplay/Progression | 3 | 1 | medium |
 | 22 | Untested | PlayerCharacterProgression has no test | Gameplay/Progression | 3 | 1 | medium |
-| 23 | Untested | PlayerIdentity has no test | Gameplay/Player | 3 | 1 | medium |
-| 24 | Untested | PlayerInventory has no test | Gameplay/Items | 3 | 1 | medium |
-| 25 | Untested | PlayerResources has no test | Gameplay/Progression | 3 | 1 | medium |
-| 26 | Untested | PointAndClickPlayer has no test | Gameplay/Player | 3 | 1 | medium |
-| 27 | God class | GearUIController (1464 lines) | UI | 3 | 21 | large |
-| 28 | Hub | GearUIController.Instance (locator) | UI | 3 | 20 | large |
-| 29 | Hub | PlayerInventory.LocalChanged (event) | Gameplay/Items, Gameplay/Persistence, UI | 3 | 20 | large |
-| 30 | Duplicated state | 18 classes keep their own static player / object lists | Environment, Gameplay/Economy, Gameplay/Items, Gameplay/NPC, Gameplay/Player ... | 3 | 18 | large |
-| 31 | God class | PlayerAnimancerMotor (1420 lines) | Gameplay/Player | 3 | 14 | large |
-| 32 | God class | PlayerMeleeCombat (977 lines) | Gameplay/Combat | 3 | 10 | large |
-| 33 | God class | PlayerWallRunMotor (1715 lines) | Gameplay/Player | 3 | 8 | large |
-| 34 | God class | ProgressionHUD (2090 lines) | UI | 3 | 5 | large |
-| 35 | God class | ArrangeController (1663 lines) | UI | 3 | 3 | large |
-| 36 | God class | PlayerVaultMotor (708 lines) | Gameplay/Player | 3 | 3 | large |
-| 37 | God class | GameFeelPresenter (1181 lines) | GameFeel | 3 | 2 | large |
-| 38 | God class | CharacterCreatorController (809 lines) | UI | 3 | 1 | large |
-| 39 | God class | GearWorkWindowController (947 lines) | UI | 3 | 1 | large |
-| 40 | God class | GmCommands (904 lines) | Tools | 3 | 1 | large |
+| 23 | Untested | PlayerInventory has no test | Gameplay/Items | 3 | 1 | medium |
+| 24 | Untested | PlayerResources has no test | Gameplay/Progression | 3 | 1 | medium |
+| 25 | Untested | PointAndClickPlayer has no test | Gameplay/Player | 3 | 1 | medium |
+| 26 | God class | GearUIController (1464 lines) | UI | 3 | 21 | large |
+| 27 | Hub | GearUIController.Instance (locator) | UI | 3 | 20 | large |
+| 28 | Hub | PlayerInventory.LocalChanged (event) | Gameplay/Items, Gameplay/Persistence, UI | 3 | 20 | large |
+| 29 | Duplicated state | 18 classes keep their own static player / object lists | Environment, Gameplay/Economy, Gameplay/Items, Gameplay/NPC, Gameplay/Player ... | 3 | 18 | large |
+| 30 | God class | PlayerAnimancerMotor (1420 lines) | Gameplay/Player | 3 | 14 | large |
+| 31 | God class | PlayerMeleeCombat (977 lines) | Gameplay/Combat | 3 | 10 | large |
+| 32 | God class | PlayerWallRunMotor (1715 lines) | Gameplay/Player | 3 | 8 | large |
+| 33 | God class | ProgressionHUD (2090 lines) | UI | 3 | 5 | large |
+| 34 | God class | ArrangeController (1663 lines) | UI | 3 | 3 | large |
+| 35 | God class | PlayerVaultMotor (708 lines) | Gameplay/Player | 3 | 3 | large |
+| 36 | God class | GameFeelPresenter (1181 lines) | GameFeel | 3 | 2 | large |
+| 37 | God class | CharacterCreatorController (809 lines) | UI | 3 | 1 | large |
+| 38 | God class | GearWorkWindowController (947 lines) | UI | 3 | 1 | large |
+| 39 | God class | GmCommands (904 lines) | Tools | 3 | 1 | large |
+| 40 | Design data | 93 settings fallbacks repeat the asset's numbers in code | Gameplay/Autopilot, Gameplay/Combat, Gameplay/Economy, Gameplay/Hostiles, Gameplay/Housing ... | 2 | 32 | medium |
 <!-- /map:problems -->
 
 ## After the plan (19 Oct 2026, stages 0 to 7)

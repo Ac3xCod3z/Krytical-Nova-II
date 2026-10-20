@@ -213,7 +213,15 @@ namespace KryticalNova.EditorTools
                 {
                     string said = process.StandardOutput.ReadToEnd() + process.StandardError.ReadToEnd();
                     process.WaitForExit();
-                    if (process.ExitCode == 0) Debug.Log("[Build] Save service published to " + output + ".");
+                    if (process.ExitCode == 0)
+                    {
+                        Debug.Log("[Build] Save service published to " + output + ".");
+                        // The backup's double-click files (online phase 4, milestone 6), beside the real server's save service
+                        // only: a test server's copy of the service must never be pointed at the real saves by a click.
+                        if (string.Equals(Path.GetFullPath(serverFolder).TrimEnd('\\', '/'), Path.GetFullPath(OutputFolder(Os.Windows)).TrimEnd('\\', '/'),
+                                StringComparison.OrdinalIgnoreCase))
+                            WriteBackupScripts(output);
+                    }
                     else Debug.LogWarning("[Build] The save service was not published (is it running? stop it first): " + said.Trim());
                 }
             }
@@ -221,6 +229,20 @@ namespace KryticalNova.EditorTools
             {
                 Debug.LogWarning("[Build] The save service was not published (.NET SDK missing?): " + e.Message);
             }
+        }
+
+        /// <summary>
+        /// Back Up Now, Restore Drill and Restore Saves beside the save service (online phase 4, milestone 6; the Server Guide
+        /// says when to use each). Each runs the service's own command and waits for a key, so its last words stay on screen.
+        /// </summary>
+        private static void WriteBackupScripts(string serviceFolder)
+        {
+            void Script(string name, string about, string arguments) => File.WriteAllText(Path.Combine(serviceFolder, name + ".bat"),
+                "@echo off\r\nrem " + about + " (online phase 4, milestone 6; Server Guide, \"Nightly backups\").\r\n" +
+                "\"%~dp0SaveService.exe\" " + arguments + "\r\necho.\r\npause\r\n");
+            Script("Back Up Now", "A copy of the save database now, as the nightly one (into Documents and Google Drive)", "--backup-now");
+            Script("Restore Drill", "Puts the newest copy into the practice database and checks every save came back", "--restore-drill");
+            Script("Restore Saves", "Last resort: puts the newest copy back into the real saves (close the Server app first)", "--restore-real");
         }
 
         /// <summary>Only the app (and its shortcuts), for a server already built: no server build needed.</summary>
