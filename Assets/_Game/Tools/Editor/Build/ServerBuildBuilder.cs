@@ -121,8 +121,9 @@ namespace KryticalNova.EditorTools
                 return false;
             }
 
-            // The development scenes (the Cadence arena) never ship, on a server either.
-            string[] scenes = BuildSceneOrder.Shipped();
+            // The development scenes (the Cadence arena) never ship, on a server either. The maps are in its build list:
+            // a server runs one and never changes it, so it has no use for the game's Addressable bundles.
+            string[] scenes = BuildSceneOrder.ShippedForServer();
             if (scenes.Length == 0)
             {
                 Debug.LogError("[Build] There are no scenes to build.");
@@ -151,6 +152,10 @@ namespace KryticalNova.EditorTools
             StandaloneBuildSubtarget subtargetWas = EditorUserBuildSettings.standaloneBuildSubtarget;
 
             BuildReport report;
+            // The game builds its map bundles with itself; a server loads its maps from its build list and needs none.
+            var addressables = UnityEditor.AddressableAssets.AddressableAssetSettingsDefaultObject.Settings;
+            var bundlesWere = addressables != null ? addressables.BuildAddressablesWithPlayerBuild : default;
+            if (addressables != null) addressables.BuildAddressablesWithPlayerBuild = UnityEditor.AddressableAssets.Settings.AddressableAssetSettings.PlayerBuildOption.DoNotBuildWithPlayer;
             try
             {
                 IsBuilding = true;
@@ -168,6 +173,7 @@ namespace KryticalNova.EditorTools
             finally
             {
                 IsBuilding = false;
+                if (addressables != null) addressables.BuildAddressablesWithPlayerBuild = bundlesWere;
                 // Put back after the build, and even when it failed: the settings are the owner's, never the build's.
                 if (File.Exists(keptSettings))
                 {

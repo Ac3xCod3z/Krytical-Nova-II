@@ -7,26 +7,26 @@ using UnityEditor;
 namespace KryticalNova.EditorTools
 {
     /// <summary>
-    /// The scenes that go into a build, decided in one place: the front end first (Title is the boot scene), then the
-    /// world: Zone01, then the World Atlas maps. Nothing else ships: development scenes are in the Editor's list only
-    /// where a second Editor has to follow the host into one, and are left out of every build. Scenes that do not exist yet are skipped,
-    /// so the scene builders can call this in any order. A dedicated server boots the same list and skips to the
-    /// world (DedicatedServerBoot).
+    /// The scenes that go into a build, decided in one place. The game ships the front end only (Title is the boot
+    /// scene): every map is an Addressable of its own (owner, 20 Oct 2026; <see cref="MapAddressables"/>, which this
+    /// keeps current) and is loaded through <c>MapScenes</c>. A dedicated server runs one map and never changes it, so
+    /// its build lists the maps after the front end (<see cref="ShippedForServer"/>) and boots straight into its own
+    /// (DedicatedServerBoot). Development scenes are in the Editor's list only and never ship. Scenes that do not exist
+    /// yet are skipped, so the scene builders can call this in any order.
     /// </summary>
     public static class BuildSceneOrder
     {
         public const string MenuSceneFolder = "Assets/_Game/Scenes/MainMenu";
         public const string WorldScenePath = "Assets/_Game/Scenes/World/Towns/Zone01_StarterTown.unity";
 
-        // Scene names match KryticalNova.UI.Menus.FrontEnd.
+        // Scene names match KryticalNova.UI.Menus.FrontEnd. The maps are not here: they are Addressables.
         private static readonly string[] Scenes =
         {
             MenuSceneFolder + "/Title.unity",
             MenuSceneFolder + "/FactionSelect.unity",
             MenuSceneFolder + "/CharacterCreator.unity",
             MenuSceneFolder + "/CharacterSelect.unity",
-            MenuSceneFolder + "/Loading.unity",
-            WorldScenePath
+            MenuSceneFolder + "/Loading.unity"
         };
 
         // Scenes the Editor must know so that a second Editor can follow the host into them, and that never ship:
@@ -36,7 +36,7 @@ namespace KryticalNova.EditorTools
             "Assets/_Game/Scenes/Development/Test_Cadence.unity"
         };
 
-        /// <summary>The scenes a build is made of, in order: the Editor's list without the development scenes.</summary>
+        /// <summary>The scenes the game's build is made of, in order: the Editor's list without the development scenes.</summary>
         public static string[] Shipped()
         {
             Apply();
@@ -46,13 +46,21 @@ namespace KryticalNova.EditorTools
             return shipped.ToArray();
         }
 
+        /// <summary>A dedicated server's scenes: the game's, then every map (Concord first), which it loads from its build list.</summary>
+        public static string[] ShippedForServer()
+        {
+            var scenes = new List<string>(Shipped());
+            foreach (string map in MapAddressables.MapScenePaths())
+                if (!scenes.Contains(map)) scenes.Add(map);
+            return scenes.ToArray();
+        }
+
         public static void Apply()
         {
             var current = EditorBuildSettings.scenes;
             var scenes = new List<EditorBuildSettingsScene>();
-            // The front end and Zone01, then the World Atlas maps (WorldScenesBuilder), then the development scenes.
+            // The front end, then the development scenes. The maps are Addressables, kept current here.
             var paths = new List<string>(Scenes);
-            paths.AddRange(WorldScenesBuilder.ScenePaths());
             paths.AddRange(DevelopmentScenes);
             foreach (string path in paths)
             {
@@ -61,6 +69,7 @@ namespace KryticalNova.EditorTools
                 scenes.Add(existing ?? new EditorBuildSettingsScene(path, true));
             }
             EditorBuildSettings.scenes = scenes.ToArray();
+            MapAddressables.Apply();
         }
     }
 }

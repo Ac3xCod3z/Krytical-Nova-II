@@ -114,8 +114,18 @@ What the game itself needs before a second map can be loaded at all:
   takes over the moment it loads; the day-cycle blend keeps working (`EnvironmentPresenter.BlendLightingScenarios`).
 - **No hand-made packet queue.** The client disconnects from one map server and connects to the next; NGO's scene
   sync on the new server delivers the world only once the scene is ready.
-- **Addressables are optional here**: one map is one scene in the build. They matter for build size and the phone
-  port (`ProjectOrganization.md` section 10, `mobile-port-readiness.md`).
+- **Every map is an Addressable (owner, 20 Oct 2026: "make sure with the newer maps they use addressables").** The
+  owner picked **B** of three: the map scenes themselves are Addressables (a group per map, `World_<scene>`, packed into
+  the game, no download server), the game loads a map through `MapScenes` under the loading page and the map before it
+  is let go, and the game joins a map's server only once its map is loaded. Netcode's scene syncing is **off**
+  (`EnableSceneManagement` 0): it knows only the build list, so it cannot load an Addressable scene, and one map per
+  server makes it unneeded; Netcode still matches the objects placed in a scene when the game has the scene loaded
+  before it joins. The game's build lists only the front end; a dedicated server lists the maps after it and loads its
+  own from there (`BuildSceneOrder.ShippedForServer`), with no bundles. APV is stored with the scenes (Probe Volume
+  Disable Streaming Assets), as Addressable scenes need. In a session in the Editor, `gm.travel` now closes the host's
+  session, loads the map and opens it again there (joined games are asked to join again) until travelling between map
+  servers lands. The Sidekick parts in `Resources` (469 MB) move to Addressables later, as a step of their own (owner).
+  Built 20 Oct 2026 as the first part of milestone 3 (`MapScenes`, `MapAddressables`).
 - Phones join the same map servers; nothing on the server side differs.
 
 ## What crosses servers and what does not

@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: World_MeridianSprawl_Run_TheCoreworks
+  m_EditorClassIdentifier: Unity.Addressables.Editor::UnityEditor.AddressableAssets.Settings.AddressableAssetGroup
+  m_GroupName: World_MeridianSprawl_Run_TheCoreworks
+  m_GUID: 7d0445633153c2644b47d5e315958a29
+  m_SerializeEntries:
+  - m_GUID: af55576edb7ad444eb64cb07247fbf3b
+    m_Address: MeridianSprawl_Run_TheCoreworks
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: 79ae2b2a58867794b8effc90c24b1fdf, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: 8dce324a5f669bd4f985ece5d1bdadd0, type: 2}
+    - {fileID: 11400000, guid: 888ab9b553920644591b457b6807252c, type: 2}

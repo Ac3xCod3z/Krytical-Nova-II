@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using KryticalNova.CharacterCreation;
 using KryticalNova.Core;
+using KryticalNova.World;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -60,13 +61,13 @@ namespace KryticalNova.UI.Menus
             var arriving = MenuTransition.Current;
             while (arriving != null && (arriving.IsBusy || arriving.IsTurning)) yield return null;
 
-            var load = SceneManager.LoadSceneAsync(FrontEnd.WorldScene);
-            if (load == null)
+            // The map is an Addressable of its own (MapScenes); it loads now and waits, loaded, to be shown.
+            MapScenes.Load load = MapScenes.Begin(FrontEnd.WorldScene, show: false);
+            if (load.Error != null)
             {
-                Debug.LogError($"[Menus] Scene '{FrontEnd.WorldScene}' is not in the build settings.", this);
+                Debug.LogError($"[Menus] {load.Error}", this);
                 yield break;
             }
-            load.allowSceneActivation = false;
             yield return null; // draw the screen once before doing any work on the main thread
             WarmCharacter(profile);
             // The scripts are compiled ahead of their first use (ScriptWarmUp). Most of it was done in the menus;
@@ -81,8 +82,12 @@ namespace KryticalNova.UI.Menus
             {
                 // A long frame counts as a short one: the minimum is time the screen was seen moving, not time lost to a hitch.
                 elapsed += Mathf.Min(Time.unscaledDeltaTime, MaxStep);
-                // Unity reports 0.9 when the scene is loaded and only waiting to be activated.
-                float sceneProgress = Mathf.Clamp01(load.progress / 0.9f);
+                float sceneProgress = load.Ready ? 1f : load.Progress;
+                if (load.Error != null)
+                {
+                    Debug.LogError($"[Menus] {load.Error}", this);
+                    yield break;
+                }
                 string waitingFor = LoadingGate.FirstPending();
                 if (waitingFor != null && elapsed > minimumSeconds + taskTimeoutSeconds)
                 {
@@ -108,8 +113,8 @@ namespace KryticalNova.UI.Menus
             // once the world has stopped starting up under its picture: that is when the world is the player's.
             LoadingGate.WhenTheDoorOpens(WorldIsThePlayers);
             var transition = MenuTransition.Current;
-            if (transition != null) transition.Close(() => load.allowSceneActivation = true, carryIntoNextScene: true);
-            else load.allowSceneActivation = true;
+            if (transition != null) transition.Close(load.Show, carryIntoNextScene: true);
+            else load.Show();
         }
 
         // The last thing done under the picture that covers the world's first frames: the memory the menus and the

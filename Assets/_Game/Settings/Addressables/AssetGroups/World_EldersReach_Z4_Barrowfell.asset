@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: World_EldersReach_Z4_Barrowfell
+  m_EditorClassIdentifier: Unity.Addressables.Editor::UnityEditor.AddressableAssets.Settings.AddressableAssetGroup
+  m_GroupName: World_EldersReach_Z4_Barrowfell
+  m_GUID: 1043de6e0e393b3408cb7cec7d6ddd68
+  m_SerializeEntries:
+  - m_GUID: 2ff515a129b907b40a3f6891d01d8345
+    m_Address: EldersReach_Z4_Barrowfell
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: 79ae2b2a58867794b8effc90c24b1fdf, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: 832d13bd7e994a341b3d6ad7cbb0f261, type: 2}
+    - {fileID: 11400000, guid: 9a30bb75d3be7df4483c37ea4b1e935b, type: 2}

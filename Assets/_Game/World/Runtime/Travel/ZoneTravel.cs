@@ -10,11 +10,13 @@ using KryticalNova.Core;
 namespace KryticalNova.World
 {
     /// <summary>
-    /// Moves the game from one map to another. In a session the host moves everyone at once (Netcode's scene
-    /// manager loads the map on every client; the players come along and the server puts them on its spawn points);
-    /// offline the map is simply loaded and its own avatar picks up the save. Every machine raises
-    /// <see cref="Departing"/> when a trip starts (the travel screen shows) and <see cref="Ended"/> when the new
-    /// map's <see cref="ZoneRules"/> has started. Only the host or offline player starts a trip (gm.travel).
+    /// Moves the game from one map to another (gm.travel), through <see cref="MapScenes"/>: the maps are Addressables
+    /// and load alone (owner, 20 Oct 2026). Offline the map is simply loaded and its own avatar picks up the save. A
+    /// host saves everyone, closes its session, loads the map and opens the session again there; games that had joined
+    /// it are told to join again (Netcode's scene syncing is off: one map per server, online phase 5, and travelling
+    /// between map servers is milestone 3). A dedicated server runs one map and never travels. <see cref="Departing"/>
+    /// is raised when a trip starts (the travel screen shows) and <see cref="Ended"/> when the new map's
+    /// <see cref="ZoneRules"/> has started.
     /// </summary>
     public static class ZoneTravel
     {
@@ -56,21 +58,25 @@ namespace KryticalNova.World
                 message = $"Already in {zone.displayName}.";
                 return false;
             }
-            if (!Application.CanStreamedLevelBeLoaded(zone.sceneName))
+            if (!MapScenes.Exists(zone.sceneName))
             {
-                message = $"{zone.sceneName} is not in the build list (Krytical Nova ▸ World ▸ Build World Scenes adds it).";
+                message = $"{zone.sceneName} is not a map of this game (Krytical Nova ▸ World ▸ Make Maps Addressable adds it).";
                 return false;
             }
 
             var nm = NetworkManager.Singleton;
             bool online = nm != null && nm.IsListening;
             if (online && !nm.IsServer) { message = "Only the host can move the session to another map."; return false; }
-            if (online && nm.SceneManager == null) { message = "Scene management is off on the NetworkManager."; return false; }
+#if UNITY_SERVER
+            message = "A dedicated server runs one map (its -map); players reach another map on that map's server.";
+            return false;
+#else
 
             Begin(zone, catalog);
             EnsureRunner().StartCoroutine(Load(zone, online));
-            message = online ? $"Taking everyone to {zone.displayName}." : $"Travelling to {zone.displayName}.";
+            message = online ? $"Moving the session to {zone.displayName}: joined players are asked to join again." : $"Travelling to {zone.displayName}.";
             return true;
+#endif
         }
 
         /// <summary>Called by the new map's <see cref="ZoneRules"/> once its objects have started.</summary>
@@ -109,15 +115,30 @@ namespace KryticalNova.World
         {
             yield return new WaitForSecondsRealtime(LeadSeconds);
             var nm = NetworkManager.Singleton;
+            bool hosting = false, serving = false;
             if (online)
             {
-                if (nm == null || !nm.IsListening || nm.SceneManager == null) { Fail("The session ended before the trip."); yield break; }
-                SceneEventProgressStatus status = nm.SceneManager.LoadScene(zone.sceneName, LoadSceneMode.Single);
-                if (status != SceneEventProgressStatus.Started) Fail($"Netcode refused to load {zone.sceneName}: {status}.");
-                yield break;
+                if (nm == null || !nm.IsListening || !nm.IsServer) { Fail("The session ended before the trip."); yield break; }
+                // Everyone saved, the joined games told, then the session closes: the map it opens on next is loaded alone.
+                hosting = nm.IsHost;
+                serving = !hosting;
+                ServerHooks.Saves?.FlushAll();
+                foreach (ulong client in new System.Collections.Generic.List<ulong>(nm.ConnectedClientsIds))
+                    if (client != NetworkManager.ServerClientId)
+                        nm.DisconnectClient(client, $"The host moved the session to {zone.displayName}. Join again to follow.");
+                nm.Shutdown();
+                while (nm != null && nm.ShutdownInProgress) yield return null;
             }
-            if (SceneManager.LoadSceneAsync(zone.sceneName, LoadSceneMode.Single) == null)
-                Fail($"{zone.sceneName} could not be loaded.");
+            MapScenes.Load load = MapScenes.Begin(zone.sceneName);
+            while (!load.Ready) yield return null;
+            if (load.Error != null) { Fail(load.Error); yield break; }
+            if (!hosting && !serving) yield break;
+            // The new map has started (its objects placed, its offline avatar there): the session opens again on it.
+            while (SceneManager.GetActiveScene().name != zone.sceneName) yield return null;
+            yield return null;
+            var session = KryticalNova.Networking.NetworkConnectionManager.Instance;
+            bool started = session != null && (hosting ? session.StartLocalHost() : session.StartLocalServer());
+            if (!started) Debug.LogError($"[ZoneTravel] The session could not open again on {zone.displayName}.");
         }
 
         /// <summary>Server: every player onto the new map's spawn points, and onto its NavMesh.</summary>
@@ -157,35 +178,12 @@ namespace KryticalNova.World
             return runner;
         }
 
-        /// <summary>Runs the trips' coroutines across scene loads and hears the host start one (on clients).</summary>
+        /// <summary>Runs the trips' coroutines across scene loads.</summary>
         private sealed class Runner : MonoBehaviour
         {
-            private NetworkSceneManager watched;
-
-            private void Update()
-            {
-                var nm = NetworkManager.Singleton;
-                NetworkSceneManager current = nm != null && nm.IsListening ? nm.SceneManager : null;
-                if (current == watched) return;
-                if (watched != null) watched.OnSceneEvent -= OnSceneEvent;
-                watched = current;
-                if (watched != null) watched.OnSceneEvent += OnSceneEvent;
-            }
-
             private void OnDestroy()
             {
-                if (watched != null) watched.OnSceneEvent -= OnSceneEvent;
                 if (runner == this) runner = null;
-            }
-
-            private static void OnSceneEvent(SceneEvent e)
-            {
-                // The host started this trip itself; clients learn of it here.
-                var nm = NetworkManager.Singleton;
-                if (IsTraveling || nm == null || e.SceneEventType != SceneEventType.Load || e.ClientId != nm.LocalClientId) return;
-                ZoneCatalog catalog = ZoneRules.Current != null ? ZoneRules.Current.Catalog : null;
-                ZoneEntry zone = catalog != null ? catalog.Find(e.SceneName) : null;
-                if (zone != null) Begin(zone, catalog);
             }
         }
     }

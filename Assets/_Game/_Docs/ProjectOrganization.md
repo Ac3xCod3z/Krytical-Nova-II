@@ -507,7 +507,7 @@ Code: `_Game/Tools/Editor/Organization/` (`ProjectOrganizationRules`, `ThirdPart
 
 ---
 
-## 10. Addressables (when adopted)
+## 10. Addressables
 
 The folder structure answers "who owns this?"; Addressables groups answer "what loads together?". They are different
 on purpose. Planned groups: `Bootstrap`, `MainMenu`, `World_Common`, `World_<Zone>`, `Characters_Common`,
@@ -518,7 +518,15 @@ only first-party runtime `Resources.Load` is `PartLibrary` (character parts). Bu
 folder ships in every build, used or not**, and `Assets/Synty/SidekickCharacters/Resources` is about **469 MB**: the
 biggest single lever on build size, and the first thing a phone build has to solve.
 
-**When to adopt:** before a second map scene exists or the phone port starts, whichever is first. Then:
+**Adopted for the maps, 20 Oct 2026 (owner: "make sure with the newer maps they use addressables").** Addressables
+2.11.2; its settings and groups in `Assets/_Game/Settings/Addressables`. Every map scene is an Addressable in a group of
+its own, `World_<scene>`, addressed by its scene name, local-packed and built with the game; the game's build list holds
+the front end only, and a map is loaded through `World/Runtime/Travel/MapScenes` (a dedicated server keeps its maps in
+its own build list). **A new map needs nothing by hand**: `MapAddressables` (World/Editor, menu Krytical Nova ▸ World ▸
+Make Maps Addressable) runs whenever the build's scene list is set (`BuildSceneOrder.Apply`). Netcode's scene syncing is
+off for it (Phase 5 plan). The Sidekick parts follow later as their own step (owner).
+
+**The plan it follows (written 15 Oct 2026):**
 - start **local-packed** (bundles shipped inside the build; no download server, no hosting cost);
 - move the Sidekick parts out of `Resources` into a group loaded by `PartLibrary` through Addressables;
 - one group per map (`World_<Zone>`), released when the map is left; shared look and VFX in their common groups;
