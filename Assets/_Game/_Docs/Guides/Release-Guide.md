@@ -49,6 +49,11 @@ release step.
    test launcher sees it (section 6). The full story of each step is in `Builds/Release/release-log.txt`, and the
    background Unity's own log in `Builds/Release/background-publish.log`.
 
+**When a system's save changed shape in this release** (it has a new save version: `IMigratingSave`), check the real
+saves against it first: copy the save database into files (Krytical Nova ▸ Online ▸ Saves ▸ Copy the Save Database into
+Files, the real database) and run **Krytical Nova ▸ Online ▸ Saves ▸ Check Saves Against This Build** on that folder. It
+must say "every one loads in this build" before you publish.
+
 **Only committed work is published.** The background build uses the commit your folder is on, not files you changed
 and did not commit; the Publish box says how many there are. To publish everything as it is on your screen, use
 **Publish to Test (in This Editor)**: the old way, which locks the Editor until it is done.
@@ -278,3 +283,5 @@ good again.
   page night indigo with dot clusters in the corners, the painting in a navy frame, the news a cream sheet with a folded
   corner, PLAY with cut corners, a halftone and a lift on hover (the speed lines kept). The window is 1204 x 744.
   `--picture <file>` saves a picture of the launcher and closes it, for checking its look.
+- 20 Oct 2026: save migrations: when a system's save changed shape, run Check Saves Against This Build on a copy of the real
+  saves before publishing (section 1).

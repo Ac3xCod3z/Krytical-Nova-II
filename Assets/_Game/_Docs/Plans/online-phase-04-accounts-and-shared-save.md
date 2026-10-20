@@ -192,6 +192,24 @@ All of that stays. What changes is underneath.
   number (the assemblies were renamed, so the network message ids changed; a build-8 bot from 19 Oct 01:33 failed its
   messages on a server from today). The next real server rebuild goes with a new release (Publish to Test).
 
+**Save migrations (20 Oct 2026; work item 10, owner: "save migrations" before phase 5).**
+- Most changes need nothing: Unity's JSON reader fills in a field a save lacks and skips one it does not know. A
+  system whose saved text changes *meaning* (a field renamed, split, or given another unit, as the economy rework may
+  do) implements `IMigratingSave` (Core) beside `ISaveParticipant`: `SaveVersion` and one pure step `Migrate(json,
+  from)` per version, each with a test.
+- The version rides in the text itself as a first field `"_v"` (`SaveVersions`; none for version 1, so every save made
+  before this is version 1 and nothing in the database changed). The save service never reads it: it stays rule-free.
+- On load (`PlayerSaveAgent.TryLoad`) every part is stepped up before its system reads it. A step that fails, or a part
+  saved by a newer build, stops that character's load: nothing is restored or saved, the save stays exactly as it was,
+  and the player is told "Your save could not be read by this version of the game. It is kept safe". World records
+  (`ServerSave.World`) step their whole text or each entry the same way, and are written back stamped.
+- Before a release: **Krytical Nova ▸ Online ▸ Saves ▸ Check Saves Against This Build** runs a copy of saves (a save
+  folder: a server's, an unzipped backup, or the copy tool's "Copy the Save Database into Files") through every step of
+  the systems on the Player prefab and names what would not load, and the parts no system saves any more.
+- *Tried:* `SaveMigrationTests` (the stamp, stepping up from 1 to 3, a newer save and a failing step refused, world
+  entries stepped up and stamped) and `SaveMigrationCheckTests`. No system has a version yet: the first will be the
+  economy rework's.
+
 **Milestone 6 (20 Oct 2026): backups.** Owner's picks: the copy off the PC goes to **Google Drive** (first OneDrive, then
 "can we use my Google cloud instead": Google Drive for desktop, not Cloud Storage); the **save service** makes it (no
 Windows task).
@@ -293,7 +311,8 @@ Tolan, the one we always test with, stays"), then the higher level, then the one
    is fixed at creation (changing it is the Ronin rule, later).
 9. **Map and position** saved with the character.
 10. **Migrations.** Each record's version is read on load and stepped up to the current one by a tested
-    function. A copy of real saves is run through every migration before it ships.
+    function. A copy of real saves is run through every migration before it ships. *Built 20 Oct 2026 (see As
+    built, "Save migrations").*
 11. **Backups.** A full copy every night, kept 14 days, stored off the machine. A restore is practised
     once before the phase is called done, and the steps written into the runbook.
 12. **Carrying saves across.** A tool that reads a `FileSaveStore` folder and loads it into the database,

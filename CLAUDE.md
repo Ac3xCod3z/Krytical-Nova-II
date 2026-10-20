@@ -68,6 +68,10 @@ Read `Assets/_Game/_Docs/Reference/12Sky/README.md` before naming anything a pla
   `LedgerKinds`). The save service stores ledger lines as text with only account, kind and time: it must never learn the
   economy's rules, so a rework needs no database change. Test with `TransactionLedgerTests` and the kill test
   (`Persistence/Service~/KillTest/kill_test.py`, test database only).
+- **Save migrations:** a change to what a system saves that changes its *meaning* (a rename, a split, another unit)
+  implements `IMigratingSave` (a version and one tested pure step per version); adding or removing a field needs none.
+  Never let a load reset a save it cannot read. Before a release with a new save version, run Krytical Nova ▸ Online ▸
+  Saves ▸ Check Saves Against This Build on a copy of the real saves (Release Guide, section 1).
 - **Nightly copies (milestone 6):** the save service copies the real database at 4 AM into
   `Documents\KryticalNova-Backups\database` and Google Drive (`My Drive\KryticalNova-Backups`), 14 days kept. The restore
   drill uses `krytical_nova_drill` only; `SaveService --restore-real` is the owner's last resort, never run by a session.

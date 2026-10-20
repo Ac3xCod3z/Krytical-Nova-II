@@ -710,9 +710,11 @@ namespace KryticalNova.Persistence
                 try
                 {
                     int version = JsonUtility.FromJson<VersionOnly>(json)?.version ?? 1;
+                    // Save migrations: a document type with a version steps its text (or each entry's) up first.
+                    var migrator = new T() as IMigratingSave;
                     document = version >= 2 && typeof(IWorldEntries).IsAssignableFrom(typeof(T))
-                        ? ReadWorldEntries<T>(name, json)
-                        : JsonUtility.FromJson<T>(json);
+                        ? ReadWorldEntries<T>(name, json, migrator)
+                        : JsonUtility.FromJson<T>(SaveVersions.Upgrade(json, migrator));
                     LastWritten[key] = json;
                 }
                 catch (Exception e)
@@ -727,7 +729,7 @@ namespace KryticalNova.Persistence
         }
 
         // The header, then every entry it names, many in one trip where the store can.
-        private static T ReadWorldEntries<T>(string name, string headerJson) where T : class, new()
+        private static T ReadWorldEntries<T>(string name, string headerJson, IMigratingSave migrator) where T : class, new()
         {
             WorldHeader header = JsonUtility.FromJson<WorldHeader>(headerJson);
             var wanted = new List<string>();
@@ -752,6 +754,8 @@ namespace KryticalNova.Persistence
             }
             if (texts.Count < wanted.Count)
                 Debug.LogWarning($"[Save] World document '{name}': {wanted.Count - texts.Count} of its {wanted.Count} entries were not found.");
+            if (migrator != null)
+                for (int i = 0; i < texts.Count; i++) texts[i] = SaveVersions.Upgrade(texts[i], migrator);
             var document = new T();
             ((IWorldEntries)document).RestoreEntries(texts);
             WorldEntryKeys[WorldPrefix + name] = present;
@@ -777,7 +781,7 @@ namespace KryticalNova.Persistence
             if (!WorldDocuments.TryGetValue(key, out object document)) return null;
             if (!(document is IWorldEntries entries))
             {
-                string json = JsonUtility.ToJson(document);
+                string json = SaveVersions.Stamped(JsonUtility.ToJson(document), document);
                 if (LastWritten.TryGetValue(key, out string last) && last == json) return () => { };
                 batch.Write(key, json);
                 return () => LastWritten[key] = json;
@@ -785,6 +789,8 @@ namespace KryticalNova.Persistence
 
             var listed = new List<KeyValuePair<string, string>>();
             entries.CollectEntries(listed);
+            for (int i = 0; i < listed.Count; i++)
+                listed[i] = new KeyValuePair<string, string>(listed[i].Key, SaveVersions.Stamped(listed[i].Value, document));
             var header = new WorldHeader();
             var keep = new HashSet<string>(StringComparer.Ordinal);
             var writes = new List<KeyValuePair<string, string>>();
