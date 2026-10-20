@@ -9,7 +9,19 @@ import numpy as np
 
 PROJECT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "..", ".."))
 CACHE = os.path.join(PROJECT, "Library", "KryticalNova.SoundIndex")
-LIBRARY = os.environ.get("KN_SOUND_LIBRARY", os.path.join(os.path.expanduser("~"), "Downloads", "SFx"))
+def in_drive_or_downloads(env, drive_parts, downloads_name):
+    """A library: the env override, else Google Drive's My Drive/KryticalNova/... (moved there 20 Oct 2026, streamed),
+    else the old ~/Downloads/<name>."""
+    if os.environ.get(env):
+        return os.environ[env]
+    for letter in "DEFGHIJKLMNOPQRSTUVWXYZ":
+        candidate = os.path.join(letter + ":\\", "My Drive", "KryticalNova", *drive_parts)
+        if os.path.isdir(candidate):
+            return candidate
+    return os.path.join(os.path.expanduser("~"), "Downloads", downloads_name)
+
+
+LIBRARY = in_drive_or_downloads("KN_SOUND_LIBRARY", ("Audio", "SFx"), "SFx")
 CATALOG = os.path.join(CACHE, "catalog.jsonl")
 EMBEDDINGS = os.path.join(CACHE, "embeddings.npy")
 RATE = 48000

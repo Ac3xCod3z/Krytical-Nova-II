@@ -10,7 +10,7 @@ What is measured, per track: beats a minute; the time of the first beat; which b
 change shows here); and how much of the track has a clear beat at all. A mechanic needs a track with small
 drift: the game keeps time by arithmetic, not by listening.
 
-The music library is ~/Downloads/Music (env KN_MUSIC_LIBRARY); it is only read. Results go to
+The music library is My Drive/KryticalNova/Audio/Music in Google Drive (before 20 Oct 2026 ~/Downloads/Music; env KN_MUSIC_LIBRARY); it is only read. Results go to
 Library/KryticalNova.SoundIndex/music/tempo.jsonl. Claude cannot hear: the owner checks a measured beat by ear,
 with a click on every beat (the music audition page, and gm.music.click in the game).
 """
@@ -24,7 +24,7 @@ import numpy as np
 
 import common
 
-MUSIC = os.environ.get("KN_MUSIC_LIBRARY", os.path.join(os.path.expanduser("~"), "Downloads", "Music"))
+MUSIC = common.in_drive_or_downloads("KN_MUSIC_LIBRARY", ("Audio", "Music"), "Music")
 OUT = os.path.join(common.CACHE, "music")
 TEMPO = os.path.join(OUT, "tempo.jsonl")
 
