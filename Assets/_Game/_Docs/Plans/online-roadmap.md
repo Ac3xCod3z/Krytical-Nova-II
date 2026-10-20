@@ -190,7 +190,7 @@ GameObjects has nothing for it and it would be a large system of our own.
 | 2 | Lock the door | Verified sign-in at connect, encryption, every client call audited and rate-limited | 1 | `online-phase-02-lock-the-door.md` |
 | 3 | Responsive input | Your character moves and casts at once; the server corrects | 1 | `online-phase-03-responsive-input.md` |
 | 4 | Accounts and shared save | A database, real accounts, safe trades, backups | 2 | `online-phase-04-accounts-and-shared-save.md` |
-| 5 | More than one map | Walking through a portal onto another server | 4, and a second map | `online-phase-05-more-than-one-map.md` |
+| 5 | More than one map | Walking through a portal onto another map, all maps on one server (owner, 20 Oct 2026; a server per map waits for Phase 8) | 4, and a second map | `online-phase-05-more-than-one-map.md` |
 | 6 | Lines, fronts and Mercs | Extra copies of a map where the rules make them; even wars; Mercs | 5; sized by 7 | `online-phase-06-lines.md` |
 | 7 | Scale and soak | Proof of how many players a map holds | 5 | `online-phase-07-scale-and-soak.md` |
 | 8 | Real servers | The same build running on rented machines | 7 | `online-phase-08-real-servers.md` |

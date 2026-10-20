@@ -332,4 +332,9 @@ Each founding faction holds a region: a Home City (neutral ground, no Hostiles, 
 
 **Ronin — expansion spoiler.** The Ronin homeland is **Sunderpeak**, frozen outer peaks hiding steam-warmed valleys; its hidden capital is **Kagero** ("heat-haze: seen and not seen"). Its field zones, outward: The Ember Terraces (Steamhollow) · The Cane Sea (The Listening House) · Blackfall Gorge (The Lantern Gallery) · The Veilpass (The Quiet Archive), whose descent opens high on The Scar's north wall. Kagero and the Sunderpeak stay hidden through the base game, as section 7 requires: nothing before the expansion may prove they are real.
 
+**Concord** (owner, 20 Oct 2026): the free town where all three founding factions meet under a truce: they trade,
+talk, open Kiosks and settle quarrels in a Callout there, and outside its walls the war goes on. Its square is the
+**Central Plaza** (Twelve Sky 2's Saigo Temple). In the game today it is the starter town (Zone01). Where it lies among
+the regions, who keeps its truce and why every faction honours it remain open.
+
 **Still open (from the Atlas):** whether The Scar's rent is the original extraction site (do not canonize it), the names of the Beacon sites, the Ronin crest and colours.

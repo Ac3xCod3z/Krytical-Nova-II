@@ -31,13 +31,13 @@ MonoBehaviour:
     lore: Ash, glass and aurora. Every gate meets here; nobody owns it for long. Siege Nights and Beacon Wars are fought on this ground.
   zones:
   - sceneName: Zone01_StarterTown
-    displayName: Central Plaza
+    displayName: Concord
     region: 
     kind: 0
     minLevel: 0
     maxLevel: 0
     pvp: 0
-    lore: 'The starter town, and for now the only neutral ground: every faction trades, talks and settles its quarrels in a Callout here. Outside the walls the war goes on.'
+    lore: 'Concord, the free town, and for now the only neutral ground: every faction trades, talks and settles its quarrels in a Callout here. Outside the walls the war goes on.'
     surfaceGraph: {fileID: 11400000, guid: f2c4a2f13e8a2b14080c8529a1552b0b, type: 2}
   - sceneName: MeridianSprawl_NewMeridian
     displayName: New Meridian

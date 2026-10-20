@@ -320,7 +320,7 @@ namespace KryticalNova.EditorTools
             // The plaza: 30 m either side of the beacon. The town: out to the wall.
             bool added = EnsureZone(TradeZoneName, "Central Plaza", new Vector2(60f, 60f), kiosks: true, neutral: false);
             float town = StarterTownBuilder.WallHalf * 2f;
-            added |= EnsureZone(NeutralZoneName, "Starter Town", new Vector2(town, town), kiosks: false, neutral: true);
+            added |= EnsureZone(NeutralZoneName, "Concord", new Vector2(town, town), kiosks: false, neutral: true);
             return added;
         }
 

@@ -206,7 +206,7 @@ namespace KryticalNova.EditorTools
             catalog.zones.Clear();
             catalog.zones.Add(new ZoneEntry
             {
-                sceneName = "Zone01_StarterTown", displayName = "Central Plaza", region = string.Empty, kind = ZoneKind.StarterTown,
+                sceneName = "Zone01_StarterTown", displayName = "Concord", region = string.Empty, kind = ZoneKind.StarterTown,
                 pvp = ZonePvpRule.Neutral,
                 lore = "The starter town, and for now the only neutral ground: every faction trades, talks and settles its quarrels in a Callout here. Outside the walls the war goes on.",
             });
