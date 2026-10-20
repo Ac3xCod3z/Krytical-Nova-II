@@ -29,6 +29,8 @@ namespace KryticalNova.Networking
         private const string FolderName = "ControlPage";
         private const int LogKept = 500;
         private const int MainThreadWaitMs = 10000;
+        private const string MapServerAnswer = "This is a map server: players never see it in the list, and it is always reached directly. " +
+                                               "The list and the way in are changed on the listed server's control page.";
         private static readonly Dictionary<string, string> Types = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
         {
             { ".html", "text/html; charset=utf-8" }, { ".css", "text/css; charset=utf-8" }, { ".js", "text/javascript; charset=utf-8" },
@@ -179,6 +181,7 @@ namespace KryticalNova.Networking
               .Append(",\"port\":").Append(options.port)
               .Append(",\"maxPlayers\":").Append(options.maxPlayers)
               .Append(",\"map\":").Append(ControlPageRules.Json(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name))
+              .Append(",\"mapServer\":").Append(options.IsMapServer ? "true" : "false")
               .Append(",\"uptime\":").Append(Mathf.RoundToInt(ServerLifetime.UptimeSeconds))
               .Append(",\"nextBackup\":").Append(Mathf.RoundToInt(ServerLifetime.NextBackupSeconds))
               .Append(",\"lastBackup\":").Append(ControlPageRules.Json(ServerLifetime.LastBackup))
@@ -348,6 +351,13 @@ namespace KryticalNova.Networking
                     if (string.IsNullOrWhiteSpace(body.line)) { answer = "Type a command first."; break; }
                     if (CommandRunner == null) { answer = "Commands are not ready yet."; break; }
                     answer = OnMain(() => CommandRunner(body.line.Trim(), $"Control page ({from})"));
+                    break;
+                // The list and the way in belong to the listed server: a map server is never in the list and always direct.
+                case "/api/list/add" when options.IsMapServer:
+                case "/api/list/remove" when options.IsMapServer:
+                case "/api/list/publish" when options.IsMapServer:
+                case "/api/mode" when options.IsMapServer:
+                    answer = MapServerAnswer;
                     break;
                 case "/api/list/add":
                     answer = OnMain(() => AddListing(body.name, body.address, body.port));

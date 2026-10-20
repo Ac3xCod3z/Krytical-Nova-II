@@ -329,11 +329,16 @@ function showReach(s) {
   $("modeTag").textContent = relay ? "RELAY" : "DIRECT";
   $("modeTag").classList.toggle("relay", relay);
   $("switchMode").textContent = relay ? "Switch to Direct" : "Switch to Relay";
+  // A map server (online phase 5) is always direct and never in the list: those are changed on the listed server.
+  $("switchMode").hidden = !!s.mapServer;
+  document.querySelector(".panel.list").hidden = !!s.mapServer;
   const where = s.publicAddress ? "This PC's internet address: " + s.publicAddress + "." : "This PC's internet address: not looked up yet.";
   $("reachNote").textContent = relay
     ? (s.relayNote || "Asking Unity Relay for a place...") + " No router work needed."
     : where + " Players come to it on UDP ports " + s.port + " and " + s.statusPort + ", which the router forwards to this PC.";
-  $("autoNote").textContent = s.autoNote || "";
+  $("autoNote").textContent = s.mapServer
+    ? "A map server: players never see it in the server list (they see one server) and arrive here by travelling. The list and the way in are on the listed server's control page."
+    : s.autoNote || "";
 }
 
 function showList(list, published, statusPort, publicAddress) {
@@ -365,8 +370,8 @@ function showList(list, published, statusPort, publicAddress) {
 async function refresh() {
   try {
     const s = await call("/api/status");
-    $("serverName").textContent = s.name;
-    document.title = s.name;
+    $("serverName").textContent = s.mapServer ? s.name + " · map server" : s.name;
+    document.title = s.mapServer ? s.map + " · map server" : s.name;
     $("chipPlayers").textContent = s.players.length + " / " + s.maxPlayers + " players";
     $("chipUptime").textContent = "up " + minutes(s.uptime);
     $("chipMap").textContent = s.map;

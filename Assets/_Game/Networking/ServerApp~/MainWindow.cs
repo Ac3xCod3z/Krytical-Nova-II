@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Drawing2D;
@@ -20,16 +21,18 @@ namespace KryticalNova.ServerApp
 {
     /// <summary>
     /// Krytical Nova Server (owner, 18 Oct 2026): opening it starts the save service (when the server's settings name one)
-    /// and then the game server, both hidden inside this window, as Start Server.bat did with two console windows. Three
-    /// tabs: SERVER (status, log, commands, start / restart / stop, the control page), SAVE SERVICE (status, log, start /
-    /// stop) and DATABASE (Postgres, the saves' count and size, the backups). A restart the server asks for (exit code 3)
-    /// starts it again; closing the window stops the server safely (everyone saved) after asking.
+    /// and then the game servers, all hidden inside this window, as Start Server.bat did with console windows. A tab per
+    /// game server (online phase 5: the listed server, CONCORD, and each map's server from mapServers, such as TRANSIT
+    /// ROW: status, log, commands, start / restart / stop, the control page), then SAVE SERVICE (status, log, start / stop)
+    /// and DATABASE (Postgres, the saves' count and size, the backups). A restart a server asks for (exit code 3) starts it
+    /// again; closing the window stops every server safely (everyone saved) after asking.
     /// </summary>
     public sealed class MainWindow : Form
     {
         private const int RestartExitCode = 3;
         private const int AnotherCopyExitCode = 4;
         private const string PostgresService = "postgresql-x64-18";
+        private const string ConcordMap = "Zone01_StarterTown";
 
         private static readonly Color Page = Color.FromArgb(0x14, 0x1a, 0x2b);
         private static readonly Color Panel = Color.FromArgb(0x1d, 0x25, 0x40);
@@ -42,31 +45,50 @@ namespace KryticalNova.ServerApp
         private static readonly Color RedText = Color.FromArgb(0xff, 0x4a, 0x5c);
         private static readonly Color Green = Color.FromArgb(0x7b, 0xe0, 0x7b);
 
+        /// <summary>One game server the app runs: the listed one, or a map's (online phase 5), each with its own tab.</summary>
+        private sealed class GameServer
+        {
+            public string Title, Map;
+            public int Port, PagePort;
+            public bool IsMap;
+            public Hosted Process;
+            public readonly RichTextBox Log = MainWindow.Log();
+            public readonly Label Info = MainWindow.Info();
+            public readonly TextBox Command = new TextBox();
+            public long Seen;
+            public int Online;
+            public string State = "STOPPED";
+            public bool Stopping;
+        }
+
         private readonly FontFamily display;
         private readonly Image logo;
         private readonly string root;
         private readonly string serverFolder;
         private readonly Settings settings;
-        private readonly Hosted server;
+        private readonly List<GameServer> servers = new List<GameServer>();
         private readonly Hosted saves;
         private readonly HttpClient http = new HttpClient { Timeout = TimeSpan.FromSeconds(3) };
         private readonly Timer tick = new Timer { Interval = 400 };
 
-        private readonly Comic[] tabs = new Comic[3];
-        private readonly Control[] pages = new Control[3];
+        private readonly Comic[] tabs;
+        private readonly Control[] pages;
         private int shown;
 
-        private readonly Label serverInfo = Info(), savesInfo = Info(), databaseInfo = Info();
-        private readonly RichTextBox serverLog = Log(), savesLog = Log();
-        private readonly TextBox command = new TextBox();
+        private readonly Label savesInfo = Info(), databaseInfo = Info();
+        private readonly RichTextBox savesLog = Log();
         private readonly ListView backups = new ListView();
-        private long serverSeen, savesSeen;
-        private bool stopping, closingAfterStop;
-        private int online;
-        private string serverState = "STOPPED", savesState = "-", databaseState = "-", lastHealth = "";
+        private long savesSeen;
+        private bool closingAfterStop, finishing;
+        private string savesState = "-", databaseState = "-", lastHealth = "";
         private DateTime nextStatus = DateTime.MinValue;
 
         private readonly string selfTest;
+
+        /// <summary>The listed server (the one players see, Nova): it publishes the list and makes the backups.</summary>
+        private GameServer Listed => servers[0];
+        private int SavesTab => servers.Count;
+        private int DatabaseTab => servers.Count + 1;
 
         public MainWindow(string root, string selfTest = null)
         {
@@ -86,13 +108,31 @@ namespace KryticalNova.ServerApp
             DoubleBuffered = true;
 
             string serverExe = serverFolder != null ? Path.Combine(serverFolder, "KryticalNovaServer.exe") : "";
-            server = new Hosted("Server", serverExe, "-logFile -", serverFolder ?? root);
+            string folder = serverFolder ?? root;
+            string listedMap = string.IsNullOrWhiteSpace(settings.Map) ? ConcordMap : settings.Map;
+            AddServer(new GameServer
+            {
+                Title = listedMap == ConcordMap ? "CONCORD" : "SERVER", Map = listedMap, Port = settings.Port, PagePort = settings.PagePort,
+                Process = new Hosted("Server", serverExe, "-logFile -", folder),
+            });
+            // Each map's server: the same server, its own map and ports, never in the server list (online phase 5).
+            foreach (Settings.MapServer map in settings.MapServers ?? new List<Settings.MapServer>())
+            {
+                if (map == null || string.IsNullOrWhiteSpace(map.Map) || map.Port <= 0) continue;
+                string title = string.IsNullOrWhiteSpace(map.Name) ? map.Map : map.Name;
+                AddServer(new GameServer
+                {
+                    Title = title.ToUpperInvariant(), Map = map.Map, Port = map.Port, PagePort = map.PagePort, IsMap = true,
+                    Process = new Hosted(title, serverExe, $"-logFile - -role map -map \"{map.Map}\" -port {map.Port} -pageport {map.PagePort}", folder),
+                });
+            }
             string savesExe = Path.Combine(root, "SaveService", "SaveService.exe");
             saves = new Hosted("Save service", savesExe, settings.TestSaves ? "--test" : "", Path.Combine(root, "SaveService"));
-            server.Exited += code => BeginInvoke((Action)(() => ServerEnded(code)));
+            tabs = new Comic[servers.Count + 2];
+            pages = new Control[servers.Count + 2];
 
             BuildTabs();
-            BuildServerPage();
+            for (int i = 0; i < servers.Count; i++) BuildServerPage(i);
             BuildSavesPage();
             BuildDatabasePage();
             Show(0);
@@ -105,12 +145,21 @@ namespace KryticalNova.ServerApp
             Layout2();
         }
 
+        private void AddServer(GameServer server)
+        {
+            servers.Add(server);
+            server.Process.Exited += code => BeginInvoke((Action)(() => ServerEnded(server, code)));
+        }
+
         // ------------------------------------------------------------------ layout
 
         private void BuildTabs()
         {
-            string[] names = { "SERVER", "SAVE SERVICE", "DATABASE" };
-            for (int i = 0; i < 3; i++)
+            var names = new List<string>();
+            foreach (GameServer server in servers) names.Add(server.Title);
+            names.Add("SAVE SERVICE");
+            names.Add("DATABASE");
+            for (int i = 0; i < tabs.Length; i++)
             {
                 int index = i;
                 tabs[i] = new Comic(display, 18f) { Label = names[i] };
@@ -122,20 +171,21 @@ namespace KryticalNova.ServerApp
         private void Show(int index)
         {
             shown = index;
-            for (int i = 0; i < 3; i++)
+            for (int i = 0; i < tabs.Length; i++)
             {
                 tabs[i].Fill = i == index ? Cyan : Edge;
                 tabs[i].InkColor = i == index ? Ink : Paper;
                 tabs[i].Invalidate();
                 if (pages[i] != null) pages[i].Visible = i == index;
             }
-            if (index == 2) RefreshBackups();
+            if (index == DatabaseTab) RefreshBackups();
         }
 
         private void Layout2()
         {
             int top = 112, left = 24, width = ClientSize.Width - 48;
-            for (int i = 0; i < 3; i++) tabs[i].Bounds = new Rectangle(left + i * 196, top, 186, 44);
+            int tabWidth = Math.Min(186, (width - (tabs.Length - 1) * 10) / tabs.Length);
+            for (int i = 0; i < tabs.Length; i++) tabs[i].Bounds = new Rectangle(left + i * (tabWidth + 10), top, tabWidth, 44);
             var area = new Rectangle(left, top + 58, width, ClientSize.Height - top - 58 - 20);
             foreach (Control page in pages) if (page != null) page.Bounds = area;
             Invalidate();
@@ -149,38 +199,40 @@ namespace KryticalNova.ServerApp
             return page;
         }
 
-        private void BuildServerPage()
+        private void BuildServerPage(int index)
         {
-            Panel page = NewPage(0);
+            GameServer server = servers[index];
+            Panel page = NewPage(index);
             var buttons = Row(
-                Button("START", Cyan, () => StartServer()),
-                Button("RESTART", Edge, () => Restart()),
-                Button("STOP", Red, () => StopServer(false)),
-                Button("CONTROL PAGE", Edge, () => OpenUrl($"http://localhost:{settings.PagePort}")));
+                Button("START", Cyan, () => StartServer(server)),
+                Button("RESTART", Edge, () => Restart(server)),
+                Button("STOP", Red, () => StopServer(server, false)),
+                Button("CONTROL PAGE", Edge, () => OpenUrl($"http://localhost:{server.PagePort}")));
             var commandRow = new Panel { Dock = DockStyle.Bottom, Height = 42, BackColor = Panel };
+            TextBox command = server.Command;
             command.Font = new Font("Consolas", 11f);
             command.BackColor = Page;
             command.ForeColor = Paper;
             command.BorderStyle = BorderStyle.FixedSingle;
             command.Dock = DockStyle.Fill;
-            command.KeyDown += (s, e) => { if (e.KeyCode == Keys.Enter) { e.SuppressKeyPress = true; RunCommand(); } };
-            var run = Button("RUN", Cyan, RunCommand);
+            command.KeyDown += (s, e) => { if (e.KeyCode == Keys.Enter) { e.SuppressKeyPress = true; RunCommand(server); } };
+            var run = Button("RUN", Cyan, () => RunCommand(server));
             run.Dock = DockStyle.Right;
             run.Width = 90;
             commandRow.Controls.Add(command);
             commandRow.Controls.Add(run);
             var hint = new Label { Dock = DockStyle.Bottom, Height = 22, ForeColor = Muted, Font = new Font("Segoe UI", 9f), Text = "Type a GM command and press Enter (gm.help lists them)." };
-            serverLog.Dock = DockStyle.Fill;
-            page.Controls.Add(serverLog);
+            server.Log.Dock = DockStyle.Fill;
+            page.Controls.Add(server.Log);
             page.Controls.Add(hint);
             page.Controls.Add(commandRow);
             page.Controls.Add(buttons);
-            page.Controls.Add(serverInfo);
+            page.Controls.Add(server.Info);
         }
 
         private void BuildSavesPage()
         {
-            Panel page = NewPage(1);
+            Panel page = NewPage(SavesTab);
             var buttons = Row(Button("START", Cyan, () => StartSaves()), Button("STOP", Red, () => StopSaves()));
             savesLog.Dock = DockStyle.Fill;
             page.Controls.Add(savesLog);
@@ -190,7 +242,7 @@ namespace KryticalNova.ServerApp
 
         private void BuildDatabasePage()
         {
-            Panel page = NewPage(2);
+            Panel page = NewPage(DatabaseTab);
             var buttons = Row(
                 Button("BACK UP NOW", Cyan, BackUpNow),
                 Button("BACKUPS FOLDER", Edge, () => OpenFolder(settings.BackupFolder(serverFolder))),
@@ -256,11 +308,12 @@ namespace KryticalNova.ServerApp
                         g.FillEllipse(dot, x, y, 3f, 3f);
             if (logo != null) g.DrawImage(logo, new Rectangle(20, 6, 190, 95));
             Banner(g, "SERVER", new Point(222, 60), Red);
-            // The three at a glance, top right.
+            // The three at a glance, top right; with map servers, how many of the servers are on.
             int x0 = ClientSize.Width - 24;
             x0 = Pill(g, "DATABASE " + databaseState, x0, databaseState == "RUNNING");
             x0 = Pill(g, "SAVES " + savesState, x0, savesState == "OK" || savesState == "FILES");
-            Pill(g, "SERVER " + serverState, x0, serverState == "ONLINE");
+            int on = servers.Count(s => s.State == "ONLINE");
+            Pill(g, servers.Count == 1 ? "SERVER " + Listed.State : $"SERVERS {on}/{servers.Count} ONLINE", x0, on == servers.Count);
         }
 
         private int Pill(Graphics g, string text, int right, bool good)
@@ -296,10 +349,10 @@ namespace KryticalNova.ServerApp
         {
             if (serverFolder == null)
             {
-                serverInfo.Text = "No server found beside this app (a folder holding KryticalNovaServer.exe). Build the server first.";
+                Listed.Info.Text = "No server found beside this app (a folder holding KryticalNovaServer.exe). Build the server first.";
                 return;
             }
-            if (!settings.UsesSaves) { savesState = "FILES"; StartServer(); return; }
+            if (!settings.UsesSaves) { savesState = "FILES"; StartServers(); return; }
             Task.Run(async () =>
             {
                 bool already = await Answers();
@@ -308,10 +361,15 @@ namespace KryticalNova.ServerApp
                     if (already) saves.Note("A save service is already answering on " + settings.SaveService + " (started outside this app): using it.");
                     else StartSaves();
                 }));
-                // The save service needs a moment to open its port before the server asks it anything.
+                // The save service needs a moment to open its port before the servers ask it anything.
                 for (int i = 0; i < 20 && !already && !await Answers(); i++) await Task.Delay(500);
-                BeginInvoke((Action)(() => StartServer()));
+                BeginInvoke((Action)StartServers);
             });
+        }
+
+        private void StartServers()
+        {
+            foreach (GameServer server in servers) StartServer(server);
         }
 
         private void StartSaves()
@@ -323,77 +381,95 @@ namespace KryticalNova.ServerApp
 
         private void StopSaves()
         {
-            if (server.Running && settings.UsesSaves)
+            if (settings.UsesSaves && servers.Any(s => s.Process.Running))
             {
-                MessageBox.Show(this, "The server is saving through the save service. Stop the server first.", "Save service", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                MessageBox.Show(this, "The servers are saving through the save service. Stop them first.", "Save service", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return;
             }
             saves.Kill();
         }
 
-        private void StartServer()
+        private void StartServer(GameServer server)
         {
-            if (server.Running) return;
-            stopping = false;
-            online = 0;
-            serverState = "STARTING";
-            if (!server.Start(out string problem)) { server.Note("Could not start the server: " + problem); serverState = "STOPPED"; }
-            Invalidate();
-        }
-
-        private void Restart()
-        {
-            if (!server.Running) { StartServer(); return; }
-            if (!Ask("Restart the server? Everyone is saved first, and players are told to join again in a minute.")) return;
-            server.Send("gm.restart 0 \"The server is restarting. Join again in a minute.\"");
-            serverState = "RESTARTING";
-            Invalidate();
-        }
-
-        /// <summary>Stops the server safely: the GM shutdown saves everyone and backs up, then the server ends by itself.</summary>
-        private void StopServer(bool forClosing)
-        {
-            if (!server.Running) { if (forClosing) FinishClosing(); return; }
-            if (!forClosing && !Ask("Stop the server? Everyone is saved first.")) return;
-            stopping = true;
-            serverState = "STOPPING";
-            server.Send("gm.shutdown 0 \"The server is closing.\"");
-            Invalidate();
-            Task.Run(() => server.StopWithin(90000));
-        }
-
-        private void ServerEnded(int code)
-        {
-            online = 0;
-            if (code == RestartExitCode && !stopping)
+            if (server.Process.Running) return;
+            // A map server saves only through the save service (two servers cannot share a save folder): it would stop at once.
+            if (server.IsMap && !settings.UsesSaves)
             {
-                serverState = "RESTARTING";
-                server.Note("--- restarting ---");
-                Task.Delay(1500).ContinueWith(_ => BeginInvoke((Action)(() => StartServer())));
+                server.Process.Note("Map servers save through the save service only: put \"saveService\" in server-settings.json (the Server Guide says how), then press START.");
                 return;
             }
-            serverState = "STOPPED";
-            if (code == AnotherCopyExitCode) server.Note("Another copy of this server is already running on this PC (a Start Server.bat window?). Close it, then press START.");
+            server.Stopping = false;
+            server.Online = 0;
+            server.State = "STARTING";
+            if (!server.Process.Start(out string problem)) { server.Process.Note("Could not start the server: " + problem); server.State = "STOPPED"; }
             Invalidate();
-            if (closingAfterStop) FinishClosing();
+        }
+
+        private void Restart(GameServer server)
+        {
+            if (!server.Process.Running) { StartServer(server); return; }
+            if (!Ask($"Restart {Called(server)}? Everyone on it is saved first, and they are told to join again in a minute.")) return;
+            server.Process.Send("gm.restart 0 \"The server is restarting. Join again in a minute.\"");
+            server.State = "RESTARTING";
+            Invalidate();
+        }
+
+        /// <summary>Stops a server safely: the GM shutdown saves everyone (and backs up), then the server ends by itself.</summary>
+        private void StopServer(GameServer server, bool forClosing)
+        {
+            if (!server.Process.Running) { if (forClosing) ClosedOne(); return; }
+            if (!forClosing && !Ask($"Stop {Called(server)}? Everyone on it is saved first.")) return;
+            server.Stopping = true;
+            server.State = "STOPPING";
+            server.Process.Send("gm.shutdown 0 \"The server is closing.\"");
+            Invalidate();
+            Task.Run(() => server.Process.StopWithin(90000));
+        }
+
+        private static string Called(GameServer server) => server.IsMap ? $"the {server.Title} server" : "the server";
+
+        private void ServerEnded(GameServer server, int code)
+        {
+            server.Online = 0;
+            if (code == RestartExitCode && !server.Stopping && !closingAfterStop)
+            {
+                server.State = "RESTARTING";
+                server.Process.Note("--- restarting ---");
+                Task.Delay(1500).ContinueWith(_ => BeginInvoke((Action)(() => StartServer(server))));
+                return;
+            }
+            server.State = "STOPPED";
+            if (code == AnotherCopyExitCode) server.Process.Note("Another copy of this server is already running on this PC (a Start Server.bat window?). Close it, then press START.");
+            Invalidate();
+            if (closingAfterStop) ClosedOne();
+        }
+
+        // While closing: once every server has stopped, the save service goes and the window closes.
+        private void ClosedOne()
+        {
+            if (servers.Any(s => s.Process.Running)) return;
+            FinishClosing();
         }
 
         private void OnClosing(object sender, FormClosingEventArgs e)
         {
-            if (closingAfterStop && !server.Running) return;
+            bool running = servers.Any(s => s.Process.Running);
+            if (closingAfterStop && !running) return;
             if (e.CloseReason == CloseReason.WindowsShutDown)
             {
-                if (server.Running) { server.Send("gm.shutdown 0 \"The server PC is shutting down.\""); server.StopWithin(20000); }
+                foreach (GameServer server in servers)
+                    if (server.Process.Running) server.Process.Send("gm.shutdown 0 \"The server PC is shutting down.\"");
+                foreach (GameServer server in servers) server.Process.StopWithin(20000);
                 saves.Kill();
                 return;
             }
-            if (server.Running)
+            if (running)
             {
                 e.Cancel = true;
                 if (closingAfterStop) return; // already on its way
-                if (!Ask("Close Krytical Nova Server? The server stops safely first (everyone is saved), and the save service with it.")) return;
+                if (!Ask("Close Krytical Nova Server? Every server stops safely first (everyone is saved), and the save service with them.")) return;
                 closingAfterStop = true;
-                StopServer(true);
+                foreach (GameServer server in servers) StopServer(server, true);
                 return;
             }
             saves.Kill();
@@ -401,25 +477,28 @@ namespace KryticalNova.ServerApp
 
         private void FinishClosing()
         {
+            if (finishing) return;
+            finishing = true;
             saves.Kill();
             closingAfterStop = true;
             BeginInvoke((Action)Close);
         }
 
-        private void RunCommand()
+        private void RunCommand(GameServer server)
         {
-            string line = command.Text.Trim();
+            string line = server.Command.Text.Trim();
             if (line.Length == 0) return;
-            if (!server.Send(line)) server.Note("The server is not running.");
-            else server.Note("> " + line);
-            command.Clear();
+            if (!server.Process.Send(line)) server.Process.Note("The server is not running.");
+            else server.Process.Note("> " + line);
+            server.Command.Clear();
         }
 
-        // The server's own zip of its saves (when it runs) and, on the real database, a copy of the whole database as the
-        // nightly one (online phase 4, milestone 6) made by the save service.
+        // The listed server's own zip of its saves (when it runs; map servers make none) and, on the real database, a copy
+        // of the whole database as the nightly one (online phase 4, milestone 6) made by the save service.
         private void BackUpNow()
         {
             bool database = settings.UsesSaves && !settings.TestSaves && saves.Running;
+            Hosted server = Listed.Process;
             if (server.Running) { server.Send("gm.backup"); server.Note("> gm.backup"); Task.Delay(4000).ContinueWith(_ => BeginInvoke((Action)RefreshBackups)); }
             if (database) Task.Run(DatabaseCopyNow);
             if (!server.Running && !database)
@@ -466,15 +545,20 @@ namespace KryticalNova.ServerApp
 
         private void Tick()
         {
-            Pour(server, serverLog, ref serverSeen, true);
-            Pour(saves, savesLog, ref savesSeen, false);
+            foreach (GameServer server in servers)
+            {
+                long seen = server.Seen;
+                Pour(server.Process, server.Log, ref seen, server);
+                server.Seen = seen;
+            }
+            Pour(saves, savesLog, ref savesSeen, null);
             if (DateTime.Now < nextStatus) return;
             nextStatus = DateTime.Now.AddSeconds(3);
             Task.Run(Check);
         }
 
-        // New lines into the tab's log; the server's join and leave lines keep the player count.
-        private void Pour(Hosted from, RichTextBox into, ref long seen, bool countPlayers)
+        // New lines into the tab's log; a server's join and leave lines keep its player count.
+        private void Pour(Hosted from, RichTextBox into, ref long seen, GameServer counted)
         {
             var fresh = from.LinesSince(seen, out seen);
             if (fresh.Count == 0) return;
@@ -484,11 +568,11 @@ namespace KryticalNova.ServerApp
             {
                 if (Noise(line)) continue;
                 sb.AppendLine(line);
-                if (countPlayers)
+                if (counted != null)
                 {
                     Match m = Regex.Match(line, @"Online: (\d+)");
-                    if (m.Success) online = int.Parse(m.Groups[1].Value);
-                    if (line.Contains("is listening on port") && server.Running) serverState = "ONLINE";
+                    if (m.Success) counted.Online = int.Parse(m.Groups[1].Value);
+                    if (line.Contains("is listening on port") && counted.Process.Running) counted.State = "ONLINE";
                 }
             }
             if (sb.Length == 0) return;
@@ -547,8 +631,11 @@ namespace KryticalNova.ServerApp
                 savesState = savesNow;
                 databaseState = databaseNow;
                 lastHealth = health;
-                if (server.Running && serverState == "STOPPED") serverState = "STARTING";
-                if (!server.Running && serverState != "RESTARTING" && serverState != "STARTING") serverState = "STOPPED";
+                foreach (GameServer server in servers)
+                {
+                    if (server.Process.Running && server.State == "STOPPED") server.State = "STARTING";
+                    if (!server.Process.Running && server.State != "RESTARTING" && server.State != "STARTING") server.State = "STOPPED";
+                }
                 UpdateInfo();
                 Invalidate(new Rectangle(0, 0, ClientSize.Width, 105));
             }));
@@ -556,9 +643,15 @@ namespace KryticalNova.ServerApp
 
         private void UpdateInfo()
         {
-            string up = server.Running ? $"up {(int)(DateTime.Now - server.StartedAt).TotalMinutes} min" : "not running";
-            serverInfo.Text = $"{serverState}  ·  {online} player(s) on  ·  {up}  ·  port {settings.Port}\n" +
-                              $"Control page: http://localhost:{settings.PagePort}  ·  saves: {(settings.UsesSaves ? "the save database" : "files")}  ·  {serverFolder}";
+            foreach (GameServer server in servers)
+            {
+                string up = server.Process.Running ? $"up {(int)(DateTime.Now - server.Process.StartedAt).TotalMinutes} min" : "not running";
+                string what = server.IsMap
+                    ? $"map server of {server.Map}: never in the server list (players see one server)"
+                    : $"the listed server{(servers.Count > 1 ? " (the one players see)" : "")}  ·  saves: {(settings.UsesSaves ? "the save database" : "files")}";
+                server.Info.Text = $"{server.State}  ·  {server.Online} player(s) on  ·  {up}  ·  port {server.Port}\n" +
+                                   $"Control page: http://localhost:{server.PagePort}  ·  {what}  ·  {serverFolder}";
+            }
             long documents = Number(lastHealth, "documents"), bytes = Number(lastHealth, "bytes");
             savesInfo.Text = !settings.UsesSaves
                 ? "This server saves to files beside it, so it needs no save service.\nTo use the database: \"saveService\" in server-settings.json (the Server Guide says how)."
@@ -581,8 +674,9 @@ namespace KryticalNova.ServerApp
         // ------------------------------------------------------------------ self-test (for building the app, not for the owner)
 
         /// <summary>
-        /// --selftest &lt;folder&gt;: waits for the server, pictures each tab, runs gm.players through the command box, makes a
-        /// backup, then closes the safe way, writing both logs into the folder. Lets the app be checked without a screen.
+        /// --selftest &lt;folder&gt;: waits for every server, pictures each tab, runs gm.players through each server's command
+        /// box, makes a backup, then closes the safe way, writing the logs into the folder. Lets the app be checked without a
+        /// screen.
         /// </summary>
         private async void RunSelfTest()
         {
@@ -590,17 +684,21 @@ namespace KryticalNova.ServerApp
             var report = new StringBuilder();
             void Say(string line) { report.AppendLine(DateTime.Now.ToString("HH:mm:ss ") + line); File.WriteAllText(Path.Combine(selfTest, "report.txt"), report.ToString()); }
             void Picture(string name) { using (var bitmap = new Bitmap(ClientSize.Width, ClientSize.Height)) { DrawToBitmap(bitmap, new Rectangle(Point.Empty, ClientSize)); bitmap.Save(Path.Combine(selfTest, name + ".png")); } }
-            Say("started; server folder " + serverFolder + "; saves " + (settings.UsesSaves ? settings.SaveService : "files"));
-            for (int i = 0; i < 240 && serverState != "ONLINE"; i++) await Task.Delay(500);
-            Say("server state " + serverState + ", saves " + savesState + ", database " + databaseState);
+            Say("started; server folder " + serverFolder + "; saves " + (settings.UsesSaves ? settings.SaveService : "files") + "; " + servers.Count + " server(s): " +
+                string.Join(", ", servers.Select(s => $"{s.Title} {s.Map} port {s.Port} page {s.PagePort}")));
+            for (int i = 0; i < 240 && servers.Any(s => s.State != "ONLINE"); i++) await Task.Delay(500);
+            Say("servers " + string.Join(", ", servers.Select(s => s.Title + " " + s.State)) + ", saves " + savesState + ", database " + databaseState);
             await Task.Delay(3500);
-            Picture("1-server");
-            command.Text = "gm.players";
-            RunCommand();
-            await Task.Delay(3000);
-            Picture("2-server-command");
-            Show(1); await Task.Delay(3500); Picture("3-save-service");
-            Show(2); await Task.Delay(500); Picture("4-database");
+            for (int i = 0; i < servers.Count; i++)
+            {
+                Show(i);
+                servers[i].Command.Text = "gm.players";
+                RunCommand(servers[i]);
+                await Task.Delay(3000);
+                Picture($"1-server-{i}-{servers[i].Title.ToLowerInvariant().Replace(' ', '-')}");
+            }
+            Show(SavesTab); await Task.Delay(3500); Picture("3-save-service");
+            Show(DatabaseTab); await Task.Delay(500); Picture("4-database");
             int before = backups.Items.Count;
             BackUpNow();
             await Task.Delay(7000);
@@ -609,15 +707,20 @@ namespace KryticalNova.ServerApp
             Picture("5-database-after-backup");
             Show(0);
             Say("closing the safe way");
-            File.WriteAllText(Path.Combine(selfTest, "server-log.txt"), serverLog.Text);
+            for (int i = 0; i < servers.Count; i++)
+            {
+                GameServer server = servers[i];
+                string log = Path.Combine(selfTest, $"server-log-{i}.txt");
+                File.WriteAllText(log, server.Log.Text);
+                server.Process.Exited += code =>
+                {
+                    Say(server.Title + " exit code " + code);
+                    File.WriteAllText(log, string.Join(Environment.NewLine, server.Process.LinesSince(0, out _)));
+                };
+            }
             File.WriteAllText(Path.Combine(selfTest, "saves-log.txt"), savesLog.Text);
             closingAfterStop = true;
-            server.Exited += code =>
-            {
-                Say("server exit code " + code);
-                File.WriteAllText(Path.Combine(selfTest, "server-log.txt"), string.Join(Environment.NewLine, server.LinesSince(0, out _)));
-            };
-            StopServer(true);
+            foreach (GameServer server in servers) StopServer(server, true);
         }
 
         // ------------------------------------------------------------------ helpers
@@ -692,6 +795,18 @@ namespace KryticalNova.ServerApp
         [DataMember(Name = "pagePort")] public int PagePort = 8090;
         [DataMember(Name = "saveFolder")] public string SaveFolder = "";
         [DataMember(Name = "saveService")] public string SaveService = "";
+        [DataMember(Name = "map")] public string Map = "";
+        [DataMember(Name = "mapServers")] public List<MapServer> MapServers = new List<MapServer>();
+
+        /// <summary>One map's server (online phase 5): started beside the listed one, never in the server list.</summary>
+        [DataContract]
+        public sealed class MapServer
+        {
+            [DataMember(Name = "name")] public string Name = "";
+            [DataMember(Name = "map")] public string Map = "";
+            [DataMember(Name = "port")] public int Port;
+            [DataMember(Name = "pagePort")] public int PagePort;
+        }
 
         public bool UsesSaves => !string.IsNullOrWhiteSpace(SaveService);
         public bool TestSaves => UsesSaves && SaveService.Contains(":7802");

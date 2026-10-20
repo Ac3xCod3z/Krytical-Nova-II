@@ -105,5 +105,49 @@ namespace KryticalNova.Tests
             Assert.AreEqual(1, left.Length, "only the newest is kept");
             StringAssert.EndsWith("_test.zip", left[0]);
         }
+
+        // ------------------------------------------------------------------ map servers (online phase 5)
+
+        [Test]
+        public void TheListedServerKnowsTransitRowsServerAndAnOlderFileGainsIt()
+        {
+            string file = Path.Combine(serverFolder, ServerLaunchOptions.FileName);
+            File.WriteAllText(file, "{ \"serverName\": \"Nova\", \"callLimits\": {}, \"ledgerDays\": 90 }");
+            ServerLaunchOptions options = ServerLaunchOptions.Load(serverFolder, new string[0], out _);
+            Assert.IsFalse(options.IsMapServer, "without -role the server is the listed one");
+            Assert.AreEqual(1, options.mapServers.Length);
+            Assert.AreEqual("MeridianSprawl_Z1_TransitRow", options.mapServers[0].map);
+            Assert.AreEqual(7779, options.mapServers[0].port, "the owner forwards 7779 and 7780 for it");
+            Assert.AreEqual(8092, options.mapServers[0].pagePort);
+            StringAssert.Contains("\"mapServers\"", File.ReadAllText(file), "the owner sees the map servers in the file");
+            StringAssert.Contains("\"Nova\"", File.ReadAllText(file), "and keeps what was there");
+        }
+
+        [Test]
+        public void AMapServerIsNamedOnTheCommandLineAlwaysDirectAndKeepsItsOwnRecords()
+        {
+            File.WriteAllText(Path.Combine(serverFolder, ServerLaunchOptions.FileName),
+                "{ \"connectionMode\": \"relay\", \"saveService\": \"http://127.0.0.1:7802\" }");
+            ServerLaunchOptions options = ServerLaunchOptions.Load(serverFolder,
+                new[] { "Server.exe", "-role", "map", "-map", "MeridianSprawl_Z1_TransitRow", "-port", "7792", "-pageport", "8093" }, out string report);
+            Assert.IsTrue(options.IsMapServer);
+            Assert.AreEqual(ServerLaunchOptions.Direct, options.connectionMode, "a map server is reached directly, never through the list's Relay code");
+            Assert.AreEqual(7793, options.StatusPort);
+            Assert.AreEqual(Path.Combine(options.SaveFolderPath, "MapServers", "MeridianSprawl_Z1_TransitRow"), options.RecordFolderPath);
+            Assert.IsNull(options.MapServerProblem());
+            StringAssert.Contains("map server", report);
+            StringAssert.Contains("\"relay\"", File.ReadAllText(Path.Combine(serverFolder, ServerLaunchOptions.FileName)),
+                "the shared file keeps the listed server's way in");
+        }
+
+        [Test]
+        public void AMapServerWithoutTheSaveServiceDoesNotRun()
+        {
+            ServerLaunchOptions options = ServerLaunchOptions.Load(serverFolder, new[] { "Server.exe", "-role", "map" }, out _);
+            StringAssert.Contains("save service", options.MapServerProblem(), "two servers cannot share a save folder");
+            ServerLaunchOptions listed = ServerLaunchOptions.Load(serverFolder, new string[0], out _);
+            Assert.IsNull(listed.MapServerProblem(), "the listed server may still save to files");
+            Assert.AreEqual(listed.SaveFolderPath, listed.RecordFolderPath);
+        }
     }
 }

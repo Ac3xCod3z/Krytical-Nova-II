@@ -137,7 +137,9 @@ namespace KryticalNova.Networking
             ServerLaunchOptions options = ServerLaunchOptions.LoadForThisServer();
             string folder = Path.Combine(options.ServerFolder, FolderName);
             Directory.CreateDirectory(folder);
-            string path = Path.Combine(folder, $"server_{DateTime.Now:yyyyMMdd_HHmmss}.csv");
+            // Map servers share the folder (online phase 5): each file says its map.
+            string map = options.IsMapServer ? "_" + options.map : string.Empty;
+            string path = Path.Combine(folder, $"server_{DateTime.Now:yyyyMMdd_HHmmss}{map}.csv");
             file = new StreamWriter(path, false);
             file.WriteLine("time,players,fps,busy_avg_ms,busy_p95_ms,busy_worst_ms,slow_frames,frames,managed_mb,reserved_mb,late_hits,gone_targets,worst_ping_ms");
             Debug.Log("[Server] Performance log: " + path);
