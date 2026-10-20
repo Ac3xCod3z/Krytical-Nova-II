@@ -3,7 +3,7 @@
 A running guide to the game's own server, in plain words. It says what works **today**, and it is updated after
 every server step (online phase 1, `Plans/online-phase-01-dedicated-server.md`).
 
-**Last updated:** 18 Oct 2026, how every test is run (section 11).
+**Last updated:** 19 Oct 2026, characters kept by the server and names unique across the game (phase 4, milestone 5).
 
 ## In one minute
 
@@ -35,6 +35,7 @@ every server step (online phase 1, `Plans/online-phase-01-dedicated-server.md`).
 | Game Masters | Three GMs by password, set on the control page; GM commands, GM chat and a [GM] tag for them only | Built 16 Oct 2026 |
 | 4. A server list in the game | Enter joins your server; a Servers window; only the same build may join | Built 16 Oct 2026 |
 | 5. Joining from outside your house | Direct (port forwarding) or Unity Relay, switched on the control page; the list keeps itself current | Built 16 Oct 2026 |
+| Characters kept by the server | Character select shows your server's own list of each player's characters; making, deleting and renaming one asks the server; no two characters in the game share a name | Built 19 Oct 2026 |
 | 6. The move to the old PC | A zip, an install step and a step-by-step guide | Not yet |
 | 7. Measuring | How many players and Hostiles one PC carries | Not yet |
 
