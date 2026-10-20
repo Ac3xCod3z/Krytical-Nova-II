@@ -7,9 +7,26 @@ namespace KryticalNova.EditorTools.AssetRestore
     /// <summary>Where the restore tool reads packages from and writes its catalog, log and caches.</summary>
     public static class AssetRestorePaths
     {
-        /// <summary>The owner's whole Synty library as .unitypackage files.</summary>
-        public static readonly string SyntyLibrary =
-            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "SyntyPolygonForKN").Replace('\\', '/');
+        /// <summary>
+        /// The owner's whole Synty library as .unitypackage files: in Google Drive since 20 Oct 2026 (My Drive\KryticalNova\
+        /// SyntyPacks, streamed, so a pack is downloaded when it is read), or in Documents where it was before.
+        /// </summary>
+        public static readonly string SyntyLibrary = FindSyntyLibrary();
+
+        private static string FindSyntyLibrary()
+        {
+            foreach (DriveInfo drive in DriveInfo.GetDrives())
+            {
+                try
+                {
+                    if (!drive.IsReady) continue;
+                    string inDrive = Path.Combine(drive.RootDirectory.FullName, "My Drive", "KryticalNova", "SyntyPacks");
+                    if (Directory.Exists(inDrive)) return inDrive.Replace('\\', '/');
+                }
+                catch (Exception) { /* a drive that cannot be read is skipped */ }
+            }
+            return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "SyntyPolygonForKN").Replace('\\', '/');
+        }
 
         /// <summary>Unity's Asset Store download cache: every package bought and downloaded, by publisher.</summary>
         public static readonly string AssetStoreCache =

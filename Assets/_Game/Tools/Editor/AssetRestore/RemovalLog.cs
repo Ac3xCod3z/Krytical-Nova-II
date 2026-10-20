@@ -154,7 +154,7 @@ namespace KryticalNova.EditorTools.AssetRestore
             "Everything the project cleanup took out of the project, newest at the bottom: what went, why, and where to get it back. " +
             "The cleanup keeps whatever the build scenes or anything in `Assets/_Game` uses; it removes only vendor files nothing uses (see `README.md`).\n\n" +
             "**Bring one thing back:** Unity ▸ **Krytical Nova ▸ Project ▸ Restore Assets**. The *Removed* tab lists every file below; " +
-            "search a name and press **Restore**. It comes back from the pack on this PC (`Documents/SyntyPolygonForKN`, or Unity's Asset Store cache) " +
+            "search a name and press **Restore**. It comes back from the pack on this PC (the Synty library in Google Drive, `My Drive/KryticalNova/SyntyPacks`, or Unity's Asset Store cache) " +
             "with the materials, textures and meshes it needs, at its old path and with its old GUID, so anything that pointed at it finds it again. " +
             "Only that asset and what it needs are copied in, never the whole pack. Every batch also names the last commit that still has its files.\n";
 
