@@ -307,6 +307,7 @@ namespace KryticalNova.EditorTools
                 ShowroomBackground(screen);
                 InkBands(screen);
                 AddSettingsPrompt(screen);
+                AddMenuButton(screen, skin);
                 var popup = AddScreen(canvas, skin.confirmPopup, "Popup_DeleteCharacter");
 
                 var controller = SkinObject("Character Select Controller");
@@ -335,6 +336,61 @@ namespace KryticalNova.EditorTools
             go.name = CharacterSelectController.SettingsPromptName;
             go.transform.SetSiblingIndex(back.GetSiblingIndex()); // before Back, which stays last
         }
+
+        /// <summary>
+        /// The menu button of the footer row, after its first prompt (owner, 20 Oct 2026): the pack's icon button with the
+        /// skin's menu picture and nothing behind it (no backing, glow or glass: the owner's word), which folds the other
+        /// prompts away and springs them out again (<see cref="MenuDrawer"/>, wired by the screen's controller).
+        /// </summary>
+        private static void AddMenuButton(Transform screen, UiSkin with)
+        {
+            var first = MenuUi.Find(screen, "Hotkey_Select");
+            if (first == null || with == null || with.iconButton == null) return;
+            if (MenuUi.Find(screen, CharacterSelectController.MenuButtonName) != null) return; // already there
+            RectTransform button = Part(with.iconButton, first.parent, CharacterSelectController.MenuButtonName);
+            button.SetSiblingIndex(first.GetSiblingIndex() + 1);
+            foreach (Image image in button.GetComponentsInChildren<Image>(true))
+            {
+                if (image.transform == button) continue;
+                if (image.name == "ICON") { image.sprite = with.menuIcon; image.preserveAspect = true; image.color = Color.white; }
+                else if (image.name != "SPR_Frame") image.enabled = false; // not the object: the pack's hover animation switches those on
+            }
+            foreach (ParticleSystem sparkle in button.GetComponentsInChildren<ParticleSystem>(true)) sparkle.gameObject.SetActive(false);
+            var layout = button.gameObject.AddComponent<LayoutElement>();
+            layout.minWidth = layout.preferredWidth = MenuButtonSize;
+            layout.minHeight = layout.preferredHeight = MenuButtonSize;
+            if (with.menuIcon == null) Debug.LogError($"[FrontEnd] The {with.name} skin has no menu icon: run the skin builder.");
+        }
+
+        /// <summary>
+        /// Puts the menu button into the Character Select scene as it is, nothing else rebuilt (owner, 20 Oct 2026): each
+        /// skin's screen that has none yet gets one. A full build of the front-end scenes adds it too.
+        /// </summary>
+        [MenuItem("Krytical Nova/Front End/Add Menu Button to Character Select")]
+        public static void AddMenuButtonsInPlace()
+        {
+            if (EditorApplication.isPlayingOrWillChangePlaymode) { Debug.LogWarning("[FrontEnd] Leave Play mode first."); return; }
+            string path = ScenePath(FrontEnd.CharacterSelectScene);
+            Scene open = SceneManager.GetSceneByPath(path);
+            bool wasOpen = open.IsValid() && open.isLoaded;
+            Scene scene = wasOpen ? open : EditorSceneManager.OpenScene(path, OpenSceneMode.Additive);
+            int added = 0;
+            foreach (UiSkin each in Skins())
+                foreach (GameObject root in scene.GetRootGameObjects())
+                {
+                    Transform group = MenuUi.Find(root.transform, "Skin_" + each.faction);
+                    Transform screen = group != null ? MenuUi.Find(group, "Screen_CharacterSelect") : null;
+                    if (screen == null || MenuUi.Find(screen, CharacterSelectController.MenuButtonName) != null) continue;
+                    AddMenuButton(screen, each);
+                    added++;
+                }
+            EditorSceneManager.MarkSceneDirty(scene);
+            EditorSceneManager.SaveScene(scene);
+            if (!wasOpen) EditorSceneManager.CloseScene(scene, true);
+            Debug.Log($"[FrontEnd] Menu button added to {added} Character Select screen(s).");
+        }
+
+        private const float MenuButtonSize = 80f; // the height of the footer's prompts
 
         /// <summary>
         /// The game's Settings window for a menu scene: a UI Toolkit document of its own over the scene's canvas

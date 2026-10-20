@@ -120,6 +120,7 @@ MonoBehaviour:
   optionRow: {fileID: 7476782851927854031, guid: 3fd886c35a2add14ab83dbb716222bfb, type: 3}
   bodyLabel: {fileID: 378538600947842191, guid: b69886e01265efe4b94fec2d3d7949a3, type: 3}
   menuAccent: {r: 0.9098039, g: 0.6901961, b: 0.2901961, a: 1}
+  menuIcon: {fileID: 21300000, guid: 6177e2ec69216e6499e72349b738391e, type: 3}
   creatorScreen: {fileID: 4332127775584103397, guid: 67b9fc4d6d5f63d4598b4aff77bcd396, type: 3}
   tabStrip: {fileID: 2837186173911059739, guid: d8b2fd8c9012bec449c8fd649b70c8ac, type: 3}
   framedPanel: {fileID: 3500758331952116744, guid: 4ed3251a9ae30c648bd9442ecf578266, type: 3}

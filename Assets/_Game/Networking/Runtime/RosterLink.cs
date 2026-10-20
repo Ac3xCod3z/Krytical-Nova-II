@@ -105,9 +105,13 @@ namespace KryticalNova.Networking
         /// Asks <paramref name="server"/> and calls <paramref name="done"/> on the game's thread with the answer's text, or
         /// with null and what went wrong, in the words the player reads. Run it as a coroutine.
         /// </summary>
+        /// <summary>The answer when the signed-in player changed while asking: the caller asks again.</summary>
+        public const string AccountChanged = "Your account changed while the server was asked: asking again.";
+
         public static IEnumerator Ask(ServerListing server, string request, Action<string, string> done)
         {
             if (Busy) { done(null, "Still waiting for the server's last answer."); yield break; }
+            if (UnityAccount.Changing) { done(null, AccountChanged); yield break; }
             if (server == null) { done(null, "Choose a server first."); yield break; }
             if (NetworkPrefab == null) { done(null, "This screen cannot reach servers (its network setup is missing)."); yield break; }
             if (NetworkManager.Singleton != null) { done(null, "A game session is still closing. Try again in a moment."); yield break; }
@@ -125,6 +129,8 @@ namespace KryticalNova.Networking
                 yield break;
             }
 
+            // Who asks: an answer for another player than the one signed in when it comes is not used.
+            string asker = UnityAccount.PlayerNow;
             GameObject link = Make();
             NetworkManager nm = link.GetComponent<NetworkManager>();
             UnityTransport transport = link.GetComponent<UnityTransport>();
@@ -163,6 +169,12 @@ namespace KryticalNova.Networking
             UnityEngine.Object.Destroy(link);
             yield return null; // gone before the next question makes another
             Busy = false;
+            if (answer != null && UnityAccount.PlayerNow != asker)
+            {
+                Debug.Log($"[Roster] {server.name} answered for player {asker}, but {UnityAccount.PlayerNow} is signed in now: asking again.");
+                answer = null;
+                problem = AccountChanged;
+            }
             if (answer != null) done(answer, null);
             else
             {

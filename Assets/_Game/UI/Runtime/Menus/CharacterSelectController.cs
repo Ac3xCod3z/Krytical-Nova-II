@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Threading.Tasks;
 using KryticalNova.CharacterCreation;
 using KryticalNova.Networking;
 using TMPro;
@@ -17,6 +18,10 @@ namespace KryticalNova.UI.Menus
     /// On a server the characters are the server's (online phase 4, milestone 5; <see cref="MenuRoster"/>): the list is
     /// asked for when the screen opens or another server is chosen, and Delete and Rename go to the server. A character
     /// that lost its name when names became unique asks for a new one before it enters.
+    /// Before the server's list is asked for, a player not yet signed in to an account is asked to sign in (online phase 4,
+    /// milestone 7; <see cref="UnityAccount"/>): Unity's page opens in the browser, and the account is linked to the player
+    /// the game already is, so every character stays. A release game waits for it; the Editor and development builds may
+    /// go on without ("Not now").
     /// </summary>
     [DisallowMultipleComponent]
     public sealed class CharacterSelectController : MonoBehaviour
@@ -35,11 +40,22 @@ namespace KryticalNova.UI.Menus
         private readonly MenuRow[] rows = new MenuRow[CharacterRoster.SlotCount];
         private CharacterRoster roster;
         private int selected = -1;
-        private Transform enterPrompt, deletePrompt, serversPrompt;
+        private Transform enterPrompt, deletePrompt, serversPrompt, backPrompt;
         private TMP_InputField deleteInput;
         private Transform deleteConfirmPrompt;
         // The popup asks either for the name to delete or for a new name (a character that must be renamed).
         private bool renaming;
+        // ... or for signing in to an account (milestone 7), or for signing out of it.
+        private bool signingIn, signingOut;
+        private Transform accountPrompt;
+        // "Not now" in the Editor or a development build: not asked again until the game restarts.
+        private static bool signInSkipped;
+        private bool accountChecked;
+        // Making a character waits for a sign-in (or the account check, or the server's list): this slot is made once
+        // it has come, unless the account brought a character of its own there (owner, 20 Oct 2026).
+        private int resumeSlot = -1;
+        // "Not now" to the sign-in asked for by making a character (Editor and test builds): it goes on without, once.
+        private bool createWithoutAccount;
         private bool asking;
         // The server whose list could not be had: it is asked again only when the player asks (Enter, or choosing it).
         private string failedKey;
@@ -73,12 +89,107 @@ namespace KryticalNova.UI.Menus
             else FetchRosterWhenListed();
         }
 
+        // ---------------- Signing in to an account (online phase 4, milestone 7) ----------------
+
+        // Whether the player is linked to an account yet: asked once, before the first list from a server.
+        private IEnumerator CheckAccount()
+        {
+            asking = true;
+            MenuUi.SetText(screen, "Screen_Header", "Checking your account...");
+            Task<bool> check = UnityAccount.IsLinkedAsync();
+            while (!check.IsCompleted) yield return null;
+            asking = false;
+            accountChecked = true;
+            MenuUi.SetText(screen, "Screen_Header", Header);
+            ShowAccount();
+            if (resumeSlot >= 0) { Resume(); yield break; }
+            if (!UnityAccount.KnownLinked && !signInSkipped) AskSignIn();
+            else FetchRosterWhenListed();
+        }
+
+        // Making a character in the remembered slot goes on, now that what it waited for has come.
+        private void Resume()
+        {
+            int slot = resumeSlot;
+            resumeSlot = -1;
+            if (slot < 0 || roster.IsUsed(slot)) return; // the account's own character is there: its list is shown
+            Select(slot);
+            Confirm();
+        }
+
+        private bool NeedsSignIn => !UnityAccount.KnownLinked && (UnityAccount.Required || !signInSkipped);
+
+        private void AskSignIn(string why = null)
+        {
+            if (deletePopup == null || asking) return;
+            signingIn = true;
+            signingOut = false;
+            renaming = false;
+            var popup = deletePopup.transform;
+            MenuUi.SetText(popup, "Label_Header", "Sign In");
+            MenuUi.SetText(popup, "Label_Save_Type", why ?? "Sign in to keep your characters safe and play them on any PC: with an email and a password, " +
+                                                   "Google or Apple. Your browser opens Unity's sign-in page; come back here when it says you are done.");
+            if (deleteInput != null) deleteInput.gameObject.SetActive(false);
+            if (deleteConfirmPrompt != null) MenuUi.SetText(deleteConfirmPrompt, "Label_Action", "Sign In");
+            SetCancelLabel(UnityAccount.Required ? "Back" : "Not now");
+            if (hotkeys != null) hotkeys.Suspended = true;
+            deletePopup.SetActive(true);
+            MenuMoments.Raise(MenuMoment.Open, popup);
+            RefreshDeleteConfirm();
+        }
+
+        private IEnumerator DoSignIn()
+        {
+            asking = true;
+            var popup = deletePopup.transform;
+            MenuUi.SetText(popup, "Label_Save_Type", "Waiting for the sign-in page in your browser...");
+            RefreshDeleteConfirm();
+            Task<string> signIn = UnityAccount.SignInWithBrowserAsync();
+            while (!signIn.IsCompleted) yield return null;
+            asking = false;
+            string problem = signIn.IsFaulted ? signIn.Exception?.GetBaseException().Message : signIn.Result;
+            if (problem != null)
+            {
+                MenuUi.SetText(popup, "Label_Save_Type", problem);
+                MenuMoments.Raise(MenuMoment.Error, popup);
+                RefreshDeleteConfirm();
+                yield break;
+            }
+            MenuMoments.Raise(MenuMoment.Confirm);
+            GameWindow.BringToFront(); // back in front of the browser's "DONE!" page
+            ClosePopup();
+            ShowAccount();
+            // Always the signed-in account's own list, asked for fresh.
+            failedKey = null;
+            MenuRoster.Forget();
+            ReloadRoster();
+            FetchRosterWhenListed();
+        }
+
+        // Cancel in the sign-in popup: a release game goes back to the title; the Editor or a test build goes on without.
+        private void CancelSignIn()
+        {
+            ClosePopup();
+            if (UnityAccount.Required) { resumeSlot = -1; FrontEnd.Go(FrontEnd.TitleScene); return; }
+            signInSkipped = true;
+            if (resumeSlot >= 0) { createWithoutAccount = true; Resume(); return; }
+            FetchRosterWhenListed();
+        }
+
+        private void SetCancelLabel(string label)
+        {
+            var cancel = deletePopup != null ? MenuUi.Find(deletePopup.transform, "Hotkey_Cancel") : null;
+            if (cancel != null) MenuUi.SetText(cancel, "Label_Action", label);
+        }
+
         // ---------------- The server's roster (online phase 4, milestone 5) ----------------
 
         // Asks the chosen server for its list once it is in the server list (this PC's copy shows meanwhile).
         private void FetchRosterWhenListed()
         {
-            if (asking || !MenuRoster.OnServer || MenuRoster.Fetched || MenuRoster.Listing == null || failedKey == MenuRoster.Key) return;
+            if (asking || UnityAccount.Changing || !MenuRoster.OnServer || MenuRoster.Fetched || MenuRoster.Listing == null || failedKey == MenuRoster.Key) return;
+            if (!accountChecked) { StartCoroutine(CheckAccount()); return; }
+            if (NeedsSignIn) { AskSignIn(); return; }
             StartCoroutine(FetchRoster());
         }
 
@@ -87,13 +198,32 @@ namespace KryticalNova.UI.Menus
             asking = true;
             MenuUi.SetText(screen, "Screen_Header", $"Asking {MenuRoster.ServerName} for your characters...");
             string problem = null, note = null;
+            string player = UnityAccount.PlayerNow;
             yield return MenuRoster.Fetch((why, said) => { problem = why; note = said; });
             asking = false;
+            if (problem == RosterLink.AccountChanged)
+            {
+                // Asked again for the player signed in now (never a list kept for another account).
+                MenuUi.SetText(screen, "Screen_Header", Header);
+                StartCoroutine(RetryFetchNextFrame());
+                yield break;
+            }
+            Debug.Log(problem == null
+                ? $"[Roster] {MenuRoster.ServerName} listed {CharacterSession.Store.Load().Count} character(s) for player {player}."
+                : $"[Roster] {MenuRoster.ServerName} did not list the characters of player {player}: {problem}");
             failedKey = problem != null ? MenuRoster.Key : null;
             MenuUi.SetText(screen, "Screen_Header", Header);
             ReloadRoster();
+            if (problem != null) resumeSlot = -1;
             if (problem != null) OpenServers($"Could not get your characters from {MenuRoster.ServerName}: {problem}");
             else if (note != null) OpenServers(note);
+            else if (resumeSlot >= 0) Resume();
+        }
+
+        private IEnumerator RetryFetchNextFrame()
+        {
+            yield return null;
+            FetchRosterWhenListed();
         }
 
         // The roster as the store has it now (after an answer, or another server chosen).
@@ -112,7 +242,7 @@ namespace KryticalNova.UI.Menus
         {
             // While the popup is open it owns Enter and Escape (the screen's hotkeys are suspended).
             if (deletePopup == null || !deletePopup.activeSelf || Keyboard.current == null) return;
-            if (Keyboard.current.escapeKey.wasPressedThisFrame) ClosePopup();
+            if (Keyboard.current.escapeKey.wasPressedThisFrame) CancelPopup();
             else if (Keyboard.current.enterKey.wasPressedThisFrame || Keyboard.current.numpadEnterKey.wasPressedThisFrame) ConfirmPopup();
         }
 
@@ -197,7 +327,8 @@ namespace KryticalNova.UI.Menus
                 else showroom.Hide();
             }
             if (enterPrompt != null) MenuUi.SetText(enterPrompt, "Label_Action", profile != null ? "Enter World" : "Create Character");
-            if (deletePrompt != null) deletePrompt.gameObject.SetActive(profile != null);
+            if (drawer != null) drawer.Want(deletePrompt, profile != null);
+            else if (deletePrompt != null) deletePrompt.gameObject.SetActive(profile != null);
         }
 
         // ---------------- Actions ----------------
@@ -206,7 +337,7 @@ namespace KryticalNova.UI.Menus
         {
             enterPrompt = Prompt("Hotkey_Select", Key.Enter, "Enter World", Confirm);
             deletePrompt = Prompt("Hotkey_Delete_Save", Key.Delete, "Delete Character", AskDelete);
-            Prompt("Hotkey_Back", Key.Escape, "Back", Back);
+            backPrompt = Prompt("Hotkey_Back", Key.Escape, "Back", Back);
             // The game's Settings, from here: the same window and the same values as in the world.
             var settingsPrompt = MenuUi.Find(screen, SettingsPromptName);
             if (settingsPrompt != null)
@@ -216,6 +347,10 @@ namespace KryticalNova.UI.Menus
                 if (hotkeys != null) hotkeys.Bind(Key.O, OpenSettings, settingsPrompt);
             }
             BindServersPrompt(settingsPrompt);
+            BindAccountPrompt(settingsPrompt);
+            // The menu button never stops the screen from starting: without it every prompt simply stays in the row.
+            try { BindMenuButton(settingsPrompt); }
+            catch (Exception e) { Debug.LogException(e, this); }
             if (hotkeys == null) return;
             hotkeys.Bind(Key.NumpadEnter, Confirm);
             hotkeys.Bind(Key.UpArrow, () => Select(Mathf.Max(selected - 1, 0)));
@@ -227,6 +362,130 @@ namespace KryticalNova.UI.Menus
 
         /// <summary>The footer prompt for the Servers window: a copy of the Settings prompt, made here.</summary>
         public const string ServersPromptName = "Hotkey_Servers";
+
+        /// <summary>The footer's menu button the scene builder adds: the skin's icon in the pack's icon button.</summary>
+        public const string MenuButtonName = "Button_Menu";
+
+        /// <summary>The footer prompt that holds the menu button and shows its key: a copy of the Settings prompt.</summary>
+        public const string MenuPromptName = "Hotkey_Menu";
+
+        private MenuDrawer drawer;
+
+        // The whole footer folds into one prompt, the menu icon with its key (Tab): pressing the key or clicking it
+        // springs every prompt out (Enter World, Delete, Server, Account, Settings, Back), and again folds them away
+        // (owner, 20 Oct 2026). Every prompt's own key works either way.
+        private void BindMenuButton(Transform settingsPrompt)
+        {
+            var button = MenuUi.Find(screen, MenuButtonName);
+            if (button == null || settingsPrompt == null) return;
+            var prompt = MenuUi.Find(screen, MenuPromptName);
+            if (prompt == null)
+            {
+                var copy = Instantiate(settingsPrompt.gameObject, settingsPrompt.parent);
+                copy.name = MenuPromptName;
+                prompt = copy.transform;
+            }
+            prompt.SetAsLastSibling(); // at the right end of the row, where Back was: the prompts spring out to its left
+            // The row keeps the button where it is while the prompts grow out of it.
+            if (prompt.parent.TryGetComponent(out HorizontalLayoutGroup row)) row.childAlignment = TextAnchor.MiddleRight;
+            var label = MenuUi.Find(prompt, "Label_Action");
+            if (label != null) label.gameObject.SetActive(false); // the icon says it
+            button.SetParent(prompt, false);
+            button.SetAsLastSibling(); // after the key cap
+            var menu = prompt.TryGetComponent(out MenuDrawer had) ? had : prompt.gameObject.AddComponent<MenuDrawer>();
+            // The packs' icon button is a switch (a Toggle): it is on while the prompts are out.
+            var toggle = button.GetComponent<Toggle>();
+            Action flip = () =>
+            {
+                menu.Toggle();
+                if (toggle != null) toggle.SetIsOnWithoutNotify(menu.IsOpen);
+            };
+            if (toggle != null)
+            {
+                toggle.group = null;
+                toggle.SetIsOnWithoutNotify(false);
+                toggle.onValueChanged.RemoveAllListeners();
+                toggle.onValueChanged.AddListener(_ => flip());
+            }
+            else MenuUi.MakeClickable(button.gameObject, () => flip());
+            MenuUi.MakeClickable(prompt.gameObject, () => flip()); // the key cap too
+            bool canDelete = deletePrompt != null && deletePrompt.gameObject.activeSelf;
+            menu.Hold(new[] { backPrompt, settingsPrompt, accountPrompt, serversPrompt, deletePrompt, enterPrompt }); // nearest first
+            menu.Want(deletePrompt, canDelete);
+            menu.Changed += () => { if (toggle != null) toggle.SetIsOnWithoutNotify(menu.IsOpen); };
+            if (hotkeys != null) hotkeys.Bind(Key.Tab, flip, prompt);
+            drawer = menu;
+        }
+
+        /// <summary>The footer prompt for the account (sign in, or sign out to use another): a copy of the Settings prompt.</summary>
+        public const string AccountPromptName = "Hotkey_Account";
+
+        private void BindAccountPrompt(Transform settingsPrompt)
+        {
+            if (settingsPrompt == null) return;
+            accountPrompt = MenuUi.Find(screen, AccountPromptName);
+            if (accountPrompt == null)
+            {
+                var copy = Instantiate(settingsPrompt.gameObject, settingsPrompt.parent);
+                copy.name = AccountPromptName;
+                copy.transform.SetSiblingIndex(settingsPrompt.GetSiblingIndex()); // before Settings
+                accountPrompt = copy.transform;
+            }
+            MenuUi.MakeClickable(accountPrompt.gameObject, AskAccount);
+            if (hotkeys != null) hotkeys.Bind(Key.A, AskAccount, accountPrompt);
+            ShowAccount();
+        }
+
+        // The prompt says what it does now: sign in, or the account to sign out of.
+        private void ShowAccount()
+        {
+            if (accountPrompt != null) MenuUi.SetText(accountPrompt, "Label_Action", UnityAccount.KnownLinked ? "Account" : "Sign In");
+        }
+
+        private void AskAccount()
+        {
+            if (deletePopup != null && deletePopup.activeSelf) return;
+            if (asking) return;
+            if (!UnityAccount.KnownLinked) { signInSkipped = false; AskSignIn(); return; }
+            signingOut = true;
+            signingIn = false;
+            renaming = false;
+            var popup = deletePopup.transform;
+            MenuUi.SetText(popup, "Label_Header", "Account");
+            MenuUi.SetText(popup, "Label_Save_Type", "You are signed in. Sign out to play with another email, Google or Apple account on this PC; " +
+                                                   "your characters stay with this account and come back when you sign in to it again.");
+            if (deleteInput != null) deleteInput.gameObject.SetActive(false);
+            if (deleteConfirmPrompt != null) MenuUi.SetText(deleteConfirmPrompt, "Label_Action", "Sign Out");
+            SetCancelLabel("Cancel");
+            if (hotkeys != null) hotkeys.Suspended = true;
+            deletePopup.SetActive(true);
+            MenuMoments.Raise(MenuMoment.Open, popup);
+            RefreshDeleteConfirm();
+        }
+
+        private void ConfirmSignOut()
+        {
+            UnityAccount.SignOut();
+            signingOut = false;
+            signInSkipped = false;
+            MenuRoster.Forget(); // the next account's characters are asked for once it is signed in
+            if (CharacterSession.ActiveSlot >= 0) CharacterSession.Clear();
+            // The list of the account signed out is not shown to whoever signs in next: it comes back with its account.
+            if (MenuRoster.OnServer) CharacterSession.Store.Save(new CharacterRoster());
+            ReloadRoster();
+            MenuMoments.Raise(MenuMoment.Confirm);
+            ClosePopup();
+            ShowAccount();
+            StartCoroutine(SignInNextFrame());
+        }
+
+        // The popup has closed: it opens again, now asking for the next account.
+        private IEnumerator SignInNextFrame()
+        {
+            yield return null;
+            yield return null;
+            AskSignIn();
+        }
 
         // ---------------- Servers (online step 4) ----------------
 
@@ -310,6 +569,31 @@ namespace KryticalNova.UI.Menus
         {
             if (deletePopup != null && deletePopup.activeSelf) return;
             if (asking) return; // the server's answer is on its way
+            // Characters live on the server under the account: a player not signed in signs in first, and making a
+            // character always asks (owner, 20 Oct 2026); once signed in, the creator opens for the slot chosen.
+            bool creating = !roster.IsUsed(selected);
+            if (MenuRoster.OnServer && !UnityAccount.KnownLinked)
+            {
+                bool goOn = creating && createWithoutAccount;
+                createWithoutAccount = false;
+                if (!accountChecked) { resumeSlot = creating ? selected : -1; StartCoroutine(CheckAccount()); return; }
+                if (NeedsSignIn || (creating && !goOn))
+                {
+                    resumeSlot = creating ? selected : -1;
+                    AskSignIn(creating ? "Sign in to make a character: it is kept with your account on the server, safe and " +
+                                         "ready on any PC. With an email and a password, Google or Apple; your browser opens " +
+                                         "Unity's sign-in page. Come back here when it says you are done." : null);
+                    return;
+                }
+            }
+            // A new character on a server waits for the server's list: the slot may hold one already.
+            if (creating && MenuRoster.OnServer && !MenuRoster.Fetched && !string.IsNullOrEmpty(MenuRoster.Key))
+            {
+                resumeSlot = selected;
+                failedKey = null;
+                FetchRosterWhenListed();
+                return;
+            }
             MenuMoments.Raise(MenuMoment.Confirm, rows[selected] != null ? rows[selected].transform : null);
             // A release game that never chose a server: characters live on one, so it is chosen first.
             if (string.IsNullOrEmpty(MenuRoster.Key))
@@ -355,7 +639,7 @@ namespace KryticalNova.UI.Menus
         private void Back()
         {
             MenuMoments.Raise(MenuMoment.Back);
-            if (deletePopup != null && deletePopup.activeSelf) { ClosePopup(); return; }
+            if (deletePopup != null && deletePopup.activeSelf) { CancelPopup(); return; }
             FrontEnd.Go(FrontEnd.TitleScene);
         }
 
@@ -390,7 +674,7 @@ namespace KryticalNova.UI.Menus
                 MenuUi.MakeClickable(cancel.gameObject, () =>
                 {
                     MenuMoments.Raise(MenuMoment.Back);
-                    ClosePopup();
+                    CancelPopup();
                 });
             }
             deletePopup.SetActive(false);
@@ -401,6 +685,8 @@ namespace KryticalNova.UI.Menus
             var profile = roster.Get(selected);
             if (profile == null || deletePopup == null || asking) return;
             renaming = false;
+            signingIn = signingOut = false;
+            ShowFieldAndCancel();
             var popup = deletePopup.transform;
             if (deleteConfirmPrompt != null) MenuUi.SetText(deleteConfirmPrompt, "Label_Action", "Delete");
             MenuUi.SetText(popup, "Label_Header", "Delete Character");
@@ -429,15 +715,31 @@ namespace KryticalNova.UI.Menus
         {
             if (deleteConfirmPrompt == null) return;
             if (!deleteConfirmPrompt.TryGetComponent<CanvasGroup>(out var group)) group = deleteConfirmPrompt.gameObject.AddComponent<CanvasGroup>();
-            bool ready = renaming ? NewNameValid(out _, out _) : DeleteNameMatches();
+            bool ready = signingIn || signingOut || (renaming ? NewNameValid(out _, out _) : DeleteNameMatches());
             group.alpha = ready && !asking ? 1f : 0.35f;
         }
 
         private void ConfirmPopup()
         {
             if (asking) return;
-            if (renaming) ConfirmRename();
+            if (signingIn) StartCoroutine(DoSignIn());
+            else if (signingOut) ConfirmSignOut();
+            else if (renaming) ConfirmRename();
             else ConfirmDelete();
+        }
+
+        private void CancelPopup()
+        {
+            if (asking) return;
+            if (signingIn) CancelSignIn();
+            else { signingOut = false; ClosePopup(); }
+        }
+
+        // The delete and rename popups type a name and can always be cancelled.
+        private void ShowFieldAndCancel()
+        {
+            if (deleteInput != null) deleteInput.gameObject.SetActive(true);
+            SetCancelLabel("Cancel");
         }
 
         private void ConfirmDelete()
@@ -470,6 +772,8 @@ namespace KryticalNova.UI.Menus
             var profile = roster.Get(selected);
             if (profile == null || deletePopup == null || asking) return;
             renaming = true;
+            signingIn = signingOut = false;
+            ShowFieldAndCancel();
             var popup = deletePopup.transform;
             MenuUi.SetText(popup, "Label_Header", "Choose a New Name");
             MenuUi.SetText(popup, "Label_Save_Type", $"{CharacterNameRules.ReasonMustRename} ({profile.name})");

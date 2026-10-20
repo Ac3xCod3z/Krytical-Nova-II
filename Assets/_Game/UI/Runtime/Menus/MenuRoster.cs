@@ -32,6 +32,9 @@ namespace KryticalNova.UI.Menus
         /// <summary>This PC's own characters (Play here, the Editor).</summary>
         public static ICharacterStore Local => local ??= new PlayerPrefsCharacterStore(KryticalNova.Core.LocalProfile.Name());
 
+        /// <summary>Another account signed in: the server's list is asked for again.</summary>
+        public static void Forget() => Fetched = false;
+
         /// <summary>Shows the roster of <paramref name="key"/> (a server's, or this PC's own) and plays from it.</summary>
         public static void Use(string key)
         {

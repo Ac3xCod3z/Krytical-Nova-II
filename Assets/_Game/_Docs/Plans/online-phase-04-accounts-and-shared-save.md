@@ -77,6 +77,8 @@ All of that stays. What changes is underneath.
    2026 (see As built).*
 7. **Real accounts.** Unity Player Accounts on the launcher build, the end of anonymous accounts outside local tests,
    Steam linking ready for the Steam build, and the proof that the Nova Store's web sign-in is the same account.
+   *The game's sign-in built 20 Oct 2026 (see As built); Steam linking and the Store proof are still to do, and the live
+   game gets it with the next publish and server rebuild.*
 
 ### Keeping the disk in check (owner, 18 Oct 2026: "kick the oldest so old data does not fill my disk")
 
@@ -271,6 +273,35 @@ Tolan, the one we always test with, stays"), then the higher level, then the one
   character. Character parts were moved inside their account (`accounts/<id>/<character>/<part>`) before any server
   used the layout (`SplitSaveTests.TwoAccountsWithTheSameCharacterIdKeepTheirOwnParts`). The real saves were copied
   again: 6 accounts, 110 parts and 6 world documents, every one identical to the files.
+
+**Milestone 7, first part (20 Oct 2026): signing in with a Unity Player Account.** Owner's picks: email and password,
+Google and Apple all on Unity's own page (the dashboard's Player Accounts set up by the owner; its client id in
+`Assets/Resources/UnityPlayerAccountSettings.asset`); the game comes back in front after the browser's "DONE!" page
+(Windows; the page itself cannot be closed by the game); a player may sign out and sign in with another account on the
+same PC; no smaller sign-in window ("don't do this one").
+
+- **`UnityAccount`** (Networking). `IsLinkedAsync` reads whether this PC's player has the "unity" sign-in;
+  `SignInWithBrowserAsync` opens Unity's page and links the account to the player the game already is, so its id and
+  every character the servers keep stay the same; an account already linked to another player (signed in on another PC
+  first) makes the game that player instead. `SignOut` ends both sign-ins on this PC. `Required` is true in a release
+  game only: the Editor and development builds may go on without ("Not now").
+- **Character select.** Before the first list from a server, a player not linked is asked to sign in; the footer's
+  Account prompt (A) signs in, or signs out to use another account. **Making a character always asks first** (owner,
+  20 Oct 2026): Enter on an empty slot while not linked asks "Sign in to make a character"; once signed in, the account's
+  own list is asked for and the creator opens for that slot, unless the account already has a character there.
+- **No list for the wrong player** (owner, 20 Oct 2026: after signing out and in, Tolan was missing once). This PC keeps
+  one copy of a server's list, shared by the accounts that sign in here, and a list answered for the brief anonymous
+  player of an account switch was kept and marked fetched, so the account's own list was never asked for. Now: nothing
+  asks a server while the account changes (`UnityAccount.Changing`); an answer for another player than the one signed
+  in when it comes is thrown away and asked again (`RosterLink.AccountChanged`); signing out empties this PC's copy;
+  every sign-in asks for the list afresh; the log says whose list each was (`[Roster] ... for player ...`).
+- *Tried:* in the Editor against the measure server and the test save service, with Google: linking (the first
+  sign-in), the account already linked becoming its own player, and after the fix a sign-out and sign-in that listed the
+  account's character for its own player. *Not yet tried:* the "sign in to make a character" path, an email-and-password
+  sign-in, and many sign-outs in a row.
+- *Still to do:* the owner's main account is linked in the installed game first, so the live characters stay with it
+  (a test account is used in the Editor); a Privacy Policy link in the Player Accounts settings before a public launch;
+  Steam linking; the Nova Store proof.
 
 ## Decisions to make at the start of this phase (as written 11 Oct 2026)
 
