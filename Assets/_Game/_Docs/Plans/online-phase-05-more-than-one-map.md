@@ -1,65 +1,45 @@
 # Online phase 5: more than one map
 
-Part of `online-roadmap.md`. Written 11 Oct 2026; **changed 20 Oct 2026 (owner): one server runs every map.** Not built.
+Part of `online-roadmap.md`. Written 11 Oct 2026; **owner's decisions of 20 Oct 2026 below.** Not built.
 
-## The owner's decision (20 Oct 2026): one server, every map
+## The owner's decisions (20 Oct 2026)
 
-Asked whether separate servers per map are worth it for now, the owner picked **one server process that runs every
-map**. Each player's game loads only the map that player is on; the server keeps all of them. Travel moves a character
-from one map to another inside the same server, under the loading screen. Chat, Squads, Crews, Contacts and Sponsors keep
-working as they do, because everyone is still in one program.
-
-Why: the owner and two brothers play on one home PC. One server carries a few dozen players easily, while a server per
-map would cost about 1 to 1.5 GB of memory for each map that runs and would mean rebuilding four social systems to work
-across servers. The ceiling of one server (one main thread doing every map's work, very roughly 100 to 200 players in
-all) and "one crash takes everyone down" are accepted for now. A server per map comes back in **Phase 8** (rented
-machines, many players): travel is kept as one clean step so a busy map can move onto a server of its own then, and the
-sections below marked *(Phase 8)* keep that design.
+- **A server per map, now, behind one name.** After weighing one server for every map against a server per map, the
+  owner chose map servers now, with one condition: "I don't want players seeing different server names on the select
+  screen confusing them, as Nova is the one they see now." The server list and character select show **one entry,
+  Nova**; the map servers behind it are never listed, and the game passes players from one to another by itself when
+  they travel. (An interim pick that morning, one server running every map, was reversed the same day.)
+- **The world service grows out of the save service** (one program, already started by the Server app).
+- **The Server app runs every map server**, a tab each.
+- **The second map is Transit Row** (Meridian Sprawl's first field zone), reached by Concord's portal.
+- **Players outside the house** reach the second map server through two more forwarded ports, UDP 7779 and 7780
+  (walked through with the owner, as 7777/7778 were).
+- **Zone01 is Concord** (owner): Twelve Sky 2's Saigo Temple, the neutral town of all factions; its square stays the
+  Central Plaza.
 
 ## Goal
 
-A player walks through a portal (or uses Transit) and arrives on another map, with their character, Squad, Crew,
-Contacts and chat intact, while players on other maps carry on undisturbed and never receive what happens elsewhere.
+A player walks through a portal and arrives on another map that is run by another server process, with their
+character, Squad, Crew, Contacts and chat intact, and never sees more than the one server name, Nova.
 
 ## Milestones (each stops for the owner's check)
 
-1. **The Bootstrap scene.** The NetworkManager, the session manager and the other always-on parts (settings applier,
-   performance log, warm-up) move out of Zone01 into a small Bootstrap scene loaded once after the menus. Maps are
-   scenes swapped under the loading page: the old map unloaded, unused assets and one garbage collection while the page
-   covers the screen, then the new map. Checked with the Editor hosting and with the test server.
-2. **Two maps in one server.** The server loads its maps side by side, each placed far from the others so their ground,
-   physics and pathfinding never touch (a fixed offset per map, the same on server and players' games). A player's game
-   loads only its own map (Netcode's scene check refuses the others) and is shown only that map's players, Hostiles,
-   drops and pets (Netcode object visibility by map). The per-map parts become per map: weather and the day cycle, the
-   fight music's conductor, spawn points, Hostile Zones, trade zones. The second map: the owner's pick (a field zone, for
-   instance Transit Row). The world map knows which map a player is on.
-3. **Travelling.** The portal checks its rules (level, faction, not in a fight), saves the character, shows the loading
-   page with the destination's travel screen, moves the player's object to the other map at its arrival point and makes
-   it visible there only; Transit at the Wayfinder does the same. If the arrival fails, the player stays where they were.
-   The log line: who, from, to.
-4. **Everything that assumed one map.** Chat's General is a local shout (same map), the rest is unchanged; Trade,
-   Callout, Follow and the Sponsor's nearby bonus need both players on the same map; Squad frames show the map; GM
-   `gm.tp`, `gm.target` and `gm.travel` work across maps; the control page lists each player's map; the save keeps the
-   map (already saved since phase 4) and a player rejoins on the map they left.
-5. **Two players do all of it**, on the test server, then the real one: one travels, the other stays, both see only
-   their own map and still chat, Squad and trade where the rules allow.
-
-## Done when
-
-- One server runs two maps. A player walks through the portal and arrives on the other map with gear, Creds, pet and
-  Hotbar as they were; a player who stays sees them leave and nothing of the other map.
-- A Squad of two on different maps sees each other's frame with the map name and talks in Squad chat; Faction and Crew
-  chat arrive on both.
-- A player who quits on the second map rejoins on it.
-- A second client does all of the above, not only the owner.
-
-## Risks
-
-- Unity's NavMesh, physics and lighting are one world: maps must never overlap (the offset), and anything that searches
-  "all objects" or "all players" (the dependency map lists them) must be made per map. Each is moved with its tests.
-- Netcode syncs every scene the server has to every player by default: the scene check and object visibility must hold
-  for every new spawned object, or a player would receive another map's objects.
-- Floating-point precision far from the origin: offsets stay within a few kilometres.
+1. **The Bootstrap scene** (the client side of travelling, below): the network and the always-on parts move out of
+   Zone01 into a small Bootstrap scene loaded once after the menus; maps are scenes swapped under the loading page with
+   memory freed between them. Checked with the Editor hosting and with the test server.
+2. **A second map server behind one name.** Transit Row built as a server (`-map`), the Server app running Concord's and
+   Transit Row's servers in two tabs, the published list keeping one entry (Nova, which is Concord's server) while the map
+   servers are known to the world service only. Each map server's control page and records say which map it is.
+3. **The world service** (in the save service): presence (which map server holds which character) and signed, use-once
+   travel tickets.
+4. **Travelling**: the portal (`WorldTransferHandler`), save and release, the ticket, the loading page, the new server
+   checks the ticket and places the player; a failure returns the player where they were; the log lines. The rewritten
+   `ZoneSessionManager` never starts a local host.
+5. **Chat across map servers**: Faction, Crew, Squad and Whisper through the world service; General stays local; `gm.say`
+   reaches every server.
+6. **Squad, Crew, Contacts and Sponsor across map servers**; the world map knows a friend is elsewhere; GM `gm.tp` and
+   `gm.target` find a player on any map.
+7. **Two players do all of it** (the done-when list), on the test servers, then the real ones.
 
 ## What exists today
 
@@ -72,7 +52,7 @@ Contacts and chat intact, while players on other maps carry on undisturbed and n
 | Kiosks | `KioskService` | Records already carry the scene name |
 | Maps | One: `Zone01_StarterTown` | The portal on the North Island leads nowhere |
 
-## *(Phase 8)* The world service
+## The world service
 
 A small always-on program (the save service of Phase 4, grown). It has two faces:
 
@@ -85,7 +65,7 @@ A small always-on program (the save service of Phase 4, grown). It has two faces
 Every map server keeps one open connection to it and reports: I am map X, this many players, these
 characters are here.
 
-## *(Phase 8)* Travelling between servers
+## Travelling between servers
 
 1. The player touches a portal. The map server checks the portal's own rules (level, faction, not in a
    fight) through a new `WorldTransferHandler` in place of `SealedPortalHandler`.
@@ -123,7 +103,7 @@ What the game itself needs before a second map can be loaded at all:
   port (`ProjectOrganization.md` section 10, `mobile-port-readiness.md`).
 - Phones join the same map servers; nothing on the server side differs.
 
-## *(Phase 8)* What crosses servers and what does not
+## What crosses servers and what does not
 
 | System | Across maps |
 | --- | --- |
@@ -136,7 +116,7 @@ What the game itself needs before a second map can be loaded at all:
 | Hostiles, world drops, weather | Per map server |
 | GM | `gm.say` reaches every server; `gm.tp` and `gm.target` find a player on any map |
 
-## *(Phase 8)* Work items for a server per map
+## Work items
 
 1. The world service's private face: presence, tickets, the chat relay.
 2. `WorldTransferHandler`, the client's travel flow, the rewritten `ZoneSessionManager`.
@@ -150,9 +130,26 @@ What the game itself needs before a second map can be loaded at all:
    `ServerLaunchOptions` (`-map`).
 7. The log lines for travel: who, from, to, ticket accepted or refused.
 
-## *(Phase 8)* Tunables, done when and risks of a server per map
+## Tunables
 
 Ticket lifetime (30 s), the presence report interval, how long a server may be silent before the world service treats
-it as gone. Done when two map servers and the world service run, a forged or reused ticket is refused and logged, and
-killing the destination server mid-travel returns the player safely. Risk: four social systems lean on "everything is in
-one process"; the world service becomes the one thing everything depends on.
+it as gone.
+
+## Done when
+
+- Two map servers (Concord and Transit Row) and the world service run on the owner's PC, started by the Server app; the
+  server list shows one entry, Nova. A player walks through the portal and arrives on Transit Row with gear, Creds, pet
+  and Hotbar as they were.
+- A Squad of two on different maps sees each other's frame and talks in Squad chat; Faction and Crew chat arrive on both.
+- A forged or reused ticket is refused and logged.
+- Killing the destination server mid-travel returns the player safely.
+- A second client does all of the above, not only the owner.
+
+## Risks
+
+- This is where "everything is in one process" stops being true, and four social systems lean on that. Each is moved one
+  at a time with its tests.
+- The world service becomes the one thing everything depends on. It must restart cleanly, and map servers must keep their
+  players playing (without cross-server chat) while it is away.
+- Memory: each map server is a full Unity program (about 1 to 1.5 GB). Only maps someone can reach run; the owner's PC
+  has 31 GB shared with the Editor.
