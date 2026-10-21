@@ -105,11 +105,13 @@ one time in three; at 150 about one in two. Either that is fine (fights feel gen
 tempo so it stays about a third of a beat, which would be a new number in `CadenceSettings`. Nothing changes until the
 owner picks.
 
-**One key family per place,** so a bed, its fight tracks and its stingers can cross without clashing. All *(my picks)*:
+**One key family per place,** so a bed, its stingers and its faction coats can cross without clashing. The front end and
+Concord are as made (Volumes 1 to 3); the rest are *(my picks)*:
 
 | Region | Home key | Places |
 | --- | --- | --- |
-| Concord | A minor | The truce key: a fourth below the Hegemony's E, a fifth above the Covenant's D, and the Null's C major shares its notes. The title and menus are in it too. |
+| Front end | D minor | As made: `TitleTheme` and `TitleOutro` at 96, `SelectBed` and the three coats (`CoatHegemony`, `CoatNull`, `CoatCovenant`) at 100. Everything in the menus can cross into everything else. |
+| Concord | F major | As made: `ConcordIdle` ("Heroes Gathering Plaza", 110), the relative major of the front end's D minor, so the title's world carries into the town, brighter. The fight tracks do not have to share it: the town's music ducks under the fight music rather than crossing into it (section 8). The first Callout tracks were E minor; the later ones are in various keys. |
 | Meridian Sprawl (Hegemony) | E | New Meridian E major (mixolydian gloss); Transit Row E Dorian; Crestfall E minor; Alder County B minor; Gantry Ridge E Phrygian. Brighter inside the wall, darker block by block outward, as the Atlas palette runs from cyan to rust. |
 | Elders-Reach (Covenant) | D | Aldhavn D mixolydian; Birchlight Vale D Dorian; Skeldfjord A minor; The Sylwood G Dorian; Barrowfell D minor. Drone-friendly keys for the hurdy-gurdy and the fiddle's open strings. |
 | Cessation (Null) | C | Terminus C minor; The Palefields C Phrygian; The Scrapline C minor; The Needlegarden F♯ minor (the tritone away, for its silence); Noct Caldera C Phrygian. Drop-C guitars sit at home here. |
@@ -199,27 +201,32 @@ The twelve fight tracks the owner picked for Cadence stay as they are until KN-O
 
 ## 4. Cue list by place
 
-Every cue is instrumental. Each gets one line in `cues.json` (section 7) under the name used here.
+Every cue is instrumental. The **cue id** is the name its takes carry in the volume's `cues.json` (section 7) and in
+their file names (`TitleTheme_t3`, `CalloutFight_flow7`). Ids in the tables below are the ones already used; a cue not
+made yet gets a new id in the same style (place or menu, then role, in CamelCase) when its first take is made.
 
 ### The front end
 
-| Cue | What it is |
-| --- | --- |
-| **Title theme** | The Broken Return stated in full Soul-Engine Rock, A minor, about 96 beats a minute half-time. |
-| **Logo-glitch sting** | Under the opening's logo glitch: a stutter, a tape stop, the motif's fourth note cut. |
-| **Title outro: to the game** | The theme's tail fading as the player goes on from the title into selection. |
-| **Title outro: to quiet** | A shorter fade to silence, for leaving the game or a long wait on the title. |
-| **Selection theme** | Fades in after the title. One groove; in faction select each faction's coat **swells on hover** (its instruments come up, the others thin), so moving the cursor plays the three factions over one beat. |
-| **Creator and character select** | A lighter bed in the chosen faction's coat, room to think. |
-| **Travel page-flip sting** | One per region, on the comic travel screen: a page flip and the motif in that region's coat (Meridian Sprawl, Elders-Reach, Cessation, The Scar). |
+| Cue | Id | What it is |
+| --- | --- | --- |
+| **Title theme** | `TitleTheme` | The Broken Return stated in full Soul-Engine Rock, D minor, 96 beats a minute, half-time. Made and in the game (Vol 1, take 3). |
+| **Logo-glitch sting** | not made | Under the opening's logo glitch: a stutter, a tape stop, the motif's fourth note cut. |
+| **Title outro** | `TitleOutro` | Plays as the player leaves the title: one huge drum hit and a D minor power chord that rings out, about 10 s, while the theme fades. Made and in the game (Vol 1, take 1). |
+| **Title outro: to quiet** | not made | A shorter fade to silence, for leaving the game or a long wait on the title. |
+| **Faction coats** | `CoatHegemony`, `CoatNull`, `CoatCovenant` | In faction select, the highlighted faction's coat plays, D minor at 100. As made, each coat is its own track and a new highlight crossfades (section 8). The first plan, one groove whose coats swell on hover, waits for stems. |
+| **Selection theme** | `SelectBed` | Character select and the creator: one track per menu skin, D minor at 100 ("Character Select: Djent Trap", "Faction Select: Epic Chugs", "Character Select III (Variation)"). Which faction gets which is still open. |
+| **Travel page-flip sting** | not made | One per region, on the comic travel screen: a page flip and the motif in that region's coat (Meridian Sprawl, Elders-Reach, Cessation, The Scar). |
 
 ### Concord (the starter town, Zone01)
 
-| Cue | What it is |
-| --- | --- |
-| **Concord day** | A, about 100: the truce sound. All three coats in the room but none leading; market energy around the Central Plaza. |
-| **Concord night** | The same groove stripped down: bass, brushed drums, one faction voice at a time drifting through. |
-| **Callout fight** | 150 to 160. The duel track: tight, one riff, a countdown stinger built in for the three seconds before a Callout begins. |
+| Cue | Id | What it is |
+| --- | --- | --- |
+| **Concord, out of a fight** | `ConcordIdle` | "Heroes Gathering Plaza", F major at 110: upbeat and fun, in the same heavy world as the title, never jazz. Made and in the game, day and night alike (Vol 2). |
+| **Concord night** | not made | A lower, darker take on the same tune for night, if the owner wants one; same rules, no jazz. |
+| **Callout fight** | `CalloutFight` | 150 to 155. The duel tracks: tight, one riff. 14 are kept, 10 of them in Cadence (section 8). A countdown stinger for the three seconds before a Callout begins is not made. |
+
+Concord's ambience has ids of its own in Volume 4: `ConcordDay`, `ConcordNight`, `ConcordFountain`; Transit Row's are
+`TransitBed` and `TransitBuzz`.
 
 ### Each region
 
@@ -230,7 +237,7 @@ shared by its zones, a **Run bed** (the region's Runs share one flavour, as the 
 | --- | --- | --- | --- |
 | Home City | **New Meridian**: glossy, confident, the Pylon Garden's hum in the low end; nobody looks doubtful. | **Aldhavn**: longhall warmth, fiddle and drum at the harbour, flute up on the elven terraces. | **Terminus**: a drone and a conveyor's beat, in perfect order; the quietest city theme. |
 | Field beds | Transit Row (dead traffic, holo-ad jingles gone sour) · Crestfall (the silence that gets you; muzak from a husk mall) · Alder County (harvesters' rhythm, pylon hum) · Gantry Ridge (drill and floodlight, the war front) | Birchlight Vale (sunlit, still smoking) · Skeldfjord (surf and wind, a lone nyckelharpa) · The Sylwood (harp and flute, lantern light) · Barrowfell (wind, ice, the hurdy-gurdy's drone) | The Palefields (wide and empty, a colossus breathing) · The Scrapline (magnetic storms as rhythm) · The Needlegarden (near silence, chains swaying) · Noct Caldera (a sub-bass tremor from beneath; what stirs stays unnamed) |
-| Fight tracks (two) | Funk-rock and electro, 140 to 150 | Folk-metal, war drums, 140 to 150 | Industrial, drop C, 140 to 150 |
+| Fight tracks (two) | Cyber-djent, 140 to 150 | Folk-metal, war drums, 140 to 150 | Industrial, drop C, 140 to 150 |
 | Run bed | Sterile tech gone wrong: emergency-light pulses, coolant hiss, the PA's polite muzak (Substation 9, The Galleria, Silo 12, The Coreworks) | Torchlit earth, roots and runes, sorrowful never gross (Hearthbarrow, Wrecktide Grotto, The Rootvault, Howlstone Crypts) | Precise, humming, funereal (The Idle Works, The Disassembly, Ossuary Sigma, The Stirring Well) |
 | Run boss | One track, its Peak saved for the last phase | One track, its Peak saved for the last phase | One track, its Peak saved for the last phase |
 
@@ -321,9 +328,21 @@ A place gets its music when its map is built, never before. The stages run in th
    to sit on the beat for the whole track before a fight track is trusted.
 5. **Into the game** only after the owner approves the baked version.
 
-**Every file gets a provenance line in `cues.json`:** the cue, the tool and model, the prompt, the seed, the date, the
-take picked, who approved it and when, the tool's terms as read on the day, and the path in KN-Originals. All of it in
-`G:\My Drive\KryticalNova\Audio\Music\KN-Originals`; the repo holds only what is baked.
+**Where the files are.** Every take lives in `G:\My Drive\KryticalNova\Audio\Music\KN-Originals`, one folder per
+batch, named `Vol<N>_<Kind>_<date>`: so far `Vol1_Sketches_2026-10-20`, `Vol2_Flow_2026-10-20`, `Vol3_Flow_2026-10-21`
+and `Vol4_Ambience_2026-10-21`. Each folder holds:
+
+| File | What it holds |
+| --- | --- |
+| the takes | `<CueId>_t<n>` (ACE-Step sketches, FLAC and MP3) or `<CueId>_flow<n>` (Flow finals, WAV); for ambience `<CueId>_<what>` |
+| `cues.json` | **The provenance of every take in the batch**, one entry each: `take`, `cue`, `slot`, `tool`, `model`, `title`, `plan` (the subscription and its terms, e.g. commercial use), `credits`, `seed`, `tags` (the prompt), `bpm`, `key`, `seconds`, `made`, `files` |
+| `picks.json` | The owner's picks and notes from the audition page, with a one-line `KN-MUSIC-PICKS` summary: this is the approval |
+| `audition.html` | The audition page the owner picked from |
+| `sheet.json` | The batch's plan: its note, and every slot with where it plays (the scene, when it starts, how it ends, loop or sting, fades) |
+| `check.json` | The measurements of every take: length, loudness and peak, silence at the head and tail, the loop seam, a voice check (instrumental only), and for music the tempo, first beat, beat drift and how clear the beat is |
+
+A take the owner keeps is copied into the next volume, so each volume's page shows what it is competing with. The repo
+holds only what is baked.
 
 ## 8. As built
 
