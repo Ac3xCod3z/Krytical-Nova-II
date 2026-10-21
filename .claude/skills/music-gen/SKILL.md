@@ -77,6 +77,18 @@ gives 3,000 a month).
 sound-scout's `music_bake.py <picks> --zone <Zone>` makes `Assets/_Game/Audio/Music/MUS_<Name>.ogg` + `music.json`, then
 **Krytical Nova ▸ Setup ▸ Music**. Fight music needs a measured steady beat (`tempo.py show`).
 
+## Zone ambience (beds and 3D sounds)
+1. Find recordings in the sound library with the sound-scout skill (`find.py`, file names, `sheet.py` pictures: a
+   bed must look even from left to right; a bright stripe repeats every loop, so start the stretch after it).
+2. Audition: a sheet with `takes` that name a library file, start and length; `excerpts.py <sheet>` cuts them into
+   a Drive batch; slots carry `preview_lufs` (about 12 dB under the music) and `layer_gain` 1 with `over` = the
+   music or bed to hear them under. `check.py` and `audition.py` as for music.
+3. Into the game: a plan like `sheets/ambience_2026-10-21.json` (per zone: beds with `when` always / day / night,
+   points with an anchor rule: `anchorNames`, `anchorParent` + `anchorPrefix`, or `anchorContains`), then
+   `ambience_bake.py <plan>` makes seamless loops (level and limit first, loop second, encode with no filter: a
+   filter after the loop shifts the join and it clicks) into `Assets/_Game/Audio/Ambience/Zones/AMB_*.ogg` and the
+   sound-scout skill's `ambience.json`; then **Krytical Nova > Setup > Ambience** (`AmbienceSetup.BuildAll`).
+
 ## Batches
 - `Vol1_Sketches_2026-10-20`: Title theme, Title outro, Selection theme, the three faction coats, Concord idle,
   Callout fight: 20 ACE-Step takes + `CalloutFight_flow1` ("Battle Rhythm", Flow, Lyria 3.5). Drive folder
@@ -86,3 +98,7 @@ sound-scout's `music_bake.py <picks> --zone <Zone>` makes `Assets/_Game/Audio/Mu
 - `Vol2_Flow_2026-10-20` (sheet `sheets/vol2_flow.json`): after Vol 1 and the owner's inspiration (RJ Pasin, Dante
   Swan: djent over trap, no jazz), all new takes from Flow: SelectBed, CoatHegemony, ConcordIdle and CalloutFight,
   two each (Flow makes two songs per prompt), beside copies of the Vol 1 keepers. Same audition URL (version 3).
+- `Vol3_Flow_2026-10-21`: one Selection theme per faction skin, 12 more Cadence fight tracks (owner kept all but
+  the Shieldwall Variation); baked into the game 21 Oct (`sheets/bake_2026-10-21.json`).
+- `Vol4_Ambience_2026-10-21`: Concord and Transit Row ambience from the sound library; the owner kept all of it,
+  in the game 21 Oct (`sheets/ambience_2026-10-21.json`).

@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c37afd0c44dacd94296c6351dfc01d7d, type: 3}
+  m_Name: ZoneAmbience_MeridianSprawl_Z1_TransitRow
+  m_EditorClassIdentifier: KryticalNova.Audio::KryticalNova.Audio.ZoneAmbience
+  beds:
+  - clip: {fileID: 8300000, guid: 3e87ac65637743b4990f98e916845602, type: 3}
+    volume: 0.6
+    when: 0
+  - clip: {fileID: 8300000, guid: 50a7496f9c887624c92d8ad917295279, type: 3}
+    volume: 0.6
+    when: 1
+  - clip: {fileID: 8300000, guid: ff89bc949df03d545a9328e299501e95, type: 3}
+    volume: 0.65
+    when: 2
+  dawnHeight: 0
+  twilight: 0.15
+  fadeInSeconds: 4

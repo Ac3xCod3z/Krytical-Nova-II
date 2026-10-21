@@ -1,0 +1,39 @@
+{
+ "note": "Owner, 21 Oct 2026: all of the Volume 4 ambience into the game, each where it belongs, day and night by the world clock, seamless loops.",
+ "zones": [
+  {"name": "Zone01_StarterTown", "scene": "Assets/_Game/Scenes/World/Towns/Zone01_StarterTown.unity",
+   "pieces": [
+    {"name": "Concord_TownSquare", "kind": "bed", "when": "day", "volume": 0.7, "lufs": -26, "start": 0, "seconds": 180,
+     "lib": "dolbyatmosvol1_audiohero/Dolby Atmos Vol 1/AMBUrbn_Town Square Road Birds_DLBATM078.wav"},
+    {"name": "Concord_Crowd", "kind": "bed", "when": "day", "volume": 0.55, "lufs": -26, "start": 0,
+     "lib": "transportationandmotion_audiohero/Transportation & Motion/AmbienceTrainStationFrench.wav"},
+    {"name": "Concord_Park", "kind": "bed", "when": "day", "volume": 0.45, "lufs": -26, "start": 0, "seconds": 180,
+     "lib": "dolbyatmosvol2_audiohero/Dolby Atmos Vol 2/AMBPark_Central Park Morning_DLBATM015.wav"},
+    {"name": "Concord_NightGarden", "kind": "bed", "when": "night", "volume": 0.7, "lufs": -28, "start": 0, "seconds": 180,
+     "lib": "dolbyatmosvol1_audiohero/Dolby Atmos Vol 1/AMBSubn_Public Garden Suburb Evening_DLBATM044.wav"},
+    {"name": "Concord_NightCicadas", "kind": "bed", "when": "night", "volume": 0.55, "lufs": -28, "start": 40, "seconds": 130,
+     "lib": "dolbyatmosvol2_audiohero/Dolby Atmos Vol 2/AMBMisc_Sunset Cicadas Birds Activity_DLBATM012.wav"},
+    {"name": "Concord_RiverWater", "kind": "point", "volume": 0.8, "lufs": -22, "start": 5, "crossfade": 2.0,
+     "anchorParent": "Water Mist", "anchorPrefix": "River", "minDistance": 6, "maxDistance": 45,
+     "lib": "water_audiohero/Water/WaterStream_DIGIC05-30.wav"}
+   ]},
+  {"name": "MeridianSprawl_Z1_TransitRow", "scene": "Assets/_Game/Scenes/World/Overworld/MeridianSprawl/MeridianSprawl_Z1_TransitRow.unity",
+   "pieces": [
+    {"name": "TransitRow_SubwayWind", "kind": "bed", "when": "always", "volume": 0.6, "lufs": -24, "start": 0,
+     "lib": "transportationandmotion_audiohero/Transportation & Motion/AmbienceWindSubwayTerminal.wav"},
+    {"name": "TransitRow_Avenue", "kind": "bed", "when": "day", "volume": 0.6, "lufs": -24, "start": 15,
+     "lib": "dolbyatmosvol1_audiohero/Dolby Atmos Vol 1/AMBTraf_Avenue After Rain_DLBATM061.wav"},
+    {"name": "TransitRow_MoaningWind", "kind": "bed", "when": "night", "volume": 0.65, "lufs": -24, "start": 0,
+     "lib": "weatherwounds_audiohero/Weather Wounds/WindMoaningAmbRu SDT2046301.mp3"},
+    {"name": "TransitRow_RailYard", "kind": "point", "volume": 0.9, "lufs": -20, "start": 0,
+     "anchorNames": ["The Fallen Overpass ramp", "SM_Bld_Train_Rail_Straight_01"], "minDistance": 15, "maxDistance": 120,
+     "lib": "dolbyatmosvol2_audiohero/Dolby Atmos Vol 2/AMBTran_Freight Train Movement Sorting Station_DLBATM068.wav"},
+    {"name": "TransitRow_HoloHum", "kind": "point", "volume": 0.6, "lufs": -24, "start": 3, "crossfade": 2.0,
+     "anchorContains": "Billboard_Large", "minDistance": 2, "maxDistance": 18,
+     "lib": "ventsandresonance_audiohero/Vents & Resonance/Room-Tone-Electric-Medium_GEN-HD2-31302.wav"},
+    {"name": "TransitRow_HoloBuzz", "kind": "point", "volume": 0.6, "lufs": -24, "start": 1, "crossfade": 2.0,
+     "anchorContains": "Billboard_Broken", "minDistance": 2, "maxDistance": 18,
+     "lib": "industrialandmechanical_audiohero/Industrial & Mechanical/FACTORY-AMBIENCE-DRIP-BUZZ_6EXT8-10824.wav"}
+   ]}
+ ]
+}

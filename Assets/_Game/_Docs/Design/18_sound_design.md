@@ -343,3 +343,21 @@ bake plan `.claude/skills/music-gen/sheets/bake_2026-10-21.json`).
 Kept by the owner but **not in Cadence yet**: Clans of the North: Shieldwall, Hyperdrive (Variation), Titan's Wrath
 (Variation) and Cyber Battle (Variation, whose beat still wanders after the cut). Their beat holds for only 25 to 36 s at a time; they need a beat map with
 more than one stretch, or a remake. The old library tracks are still in `Audio/Music` but no zone plays them.
+
+**21 Oct 2026: zone ambience in the game** (the owner kept every Volume 4 recording; plan
+`.claude/skills/music-gen/sheets/ambience_2026-10-21.json`, baked by `ambience_bake.py` into
+`Assets/_Game/Audio/Ambience/Zones/AMB_*.ogg`, placed by **Krytical Nova ▸ Setup ▸ Ambience**). Each loop is made
+seamless: levelled and limited first, then its last 2 to 3 s laid over its first (equal power), then encoded with no
+filter, so the join has no click (measured: the step at every join is within the loop's own sample steps).
+
+| Zone | Always | Day | Night | On things in the zone (3D) |
+| --- | --- | --- | --- | --- |
+| Concord | | Town square, station crowd, city park | Public garden, sunset cicadas | Running water on the 15 river points (`Water Mist/River *`) |
+| Transit Row | Subway-terminal wind | Empty avenue after rain | Moaning wind in ruins | Electric hum on the 7 intact billboards, factory buzz on the 2 broken ones, the freight rail yard at the Fallen Overpass ramp and the rail line |
+
+`ZoneAmbiencePlayer` (Audio, on the zone's "Zone Ambience" object) plays the beds on the **Ambience** slider and
+crossfades day and night with the sun's height from `WorldClock.SunDirection` (`ZoneAmbience.dawnHeight`,
+`twilight`), so dawn and dusk blend; each bed starts at a random place in its loop and the zone's sound comes in over
+4 s. `AmbienceEmitter` starts each 3D loop at a random place, so a row of them never plays in step. The weather loops
+(`WeatherAmbience`) play on top, as before.
+
