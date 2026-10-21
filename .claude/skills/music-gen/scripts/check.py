@@ -71,7 +71,7 @@ def main():
     kinds = {s["slot"]: s["kind"] for s in sheet["slots"]}
     out = {}
     for row in book:
-        f = row["files"].get("flac") or row["files"].get("wav") or row["files"].get("mp3")
+        f = row["files"].get("flac") or row["files"].get("wav") or next(iter(row["files"].values()))
         path = os.path.join(folder, f)
         audio = common.decode(path, rate=common.RATE)
         lufs, peak = loudness(path)

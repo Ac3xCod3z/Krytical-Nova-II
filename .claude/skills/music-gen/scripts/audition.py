@@ -30,13 +30,13 @@ def main():
     os.makedirs(audio_dir, exist_ok=True)
     takes = []
     for row in book:
-        src = os.path.join(a.batch, row["files"].get("flac") or row["files"].get("wav") or row["files"]["mp3"])
+        src = os.path.join(a.batch, row["files"].get("flac") or row["files"].get("wav") or next(iter(row["files"].values())))
         dst = os.path.join(audio_dir, row["take"] + ".mp3")
         if not os.path.exists(dst) or os.path.getmtime(dst) < os.path.getmtime(src):
             subprocess.run([common.ffmpeg(), "-nostdin", "-v", "error", "-y", "-i", src, "-ac", "2", "-ar", "44100",
                             "-af", "loudnorm=I=-14:TP=-1.5:LRA=11", "-b:a", "192k", dst], check=True)
         takes.append({**{k: row[k] for k in ("take", "cue", "slot", "tool", "seed", "bpm", "key", "seconds", "made")},
-                      "src": "audio/" + row["take"] + ".mp3", "check": checks.get(row["take"], {})})
+                      "src": "audio/" + row["take"] + ".mp3", "title": row.get("title", ""), "check": checks.get(row["take"], {})})
 
     cues = [{k: c[k] for k in ("id", "slot", "bpm", "key", "seconds", "tags")} for c in sheet["cues"]]
     data = {"batch": sheet["batch"], "title": sheet.get("title", sheet["batch"]), "note": sheet.get("note", ""),

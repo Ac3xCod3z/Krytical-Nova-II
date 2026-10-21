@@ -203,7 +203,7 @@ function renderPickState(cueId) {
 // ---------- build ----------
 function buildTake(t, slot) {
   const card = make("article", "take"); card.id = "take-" + t.take;
-  const top = make("div", "top"); top.append(make("span", "name", t.take.replace(t.cue + "_", "Take ").replace("Take t", "Take ")));
+  const top = make("div", "top"); top.append(make("span", "name", t.title || t.take.replace(t.cue + "_", "Take ").replace("Take t", "Take ")));
   const time = make("span", "mono label", fmt(t.check.seconds || t.seconds)); top.append(time); card.append(top);
   const cv = make("canvas", "wave"); cv.setAttribute("aria-label", "Waveform of " + t.take + ". Click to play from that point."); canvases[t.take] = cv; card.append(cv);
   cv.addEventListener("click", async ev => { const r = cv.getBoundingClientRect(); const buf = await load(t); const off = ((ev.clientX - r.left) / r.width) * buf.duration;
@@ -211,7 +211,7 @@ function buildTake(t, slot) {
   const ch = t.check || {};
   const stats = make("div", "stats mono");
   [["BPM", ch.bpm ? (Math.round(ch.bpm * 10) / 10) + " (asked " + t.bpm + ")" : t.bpm], ["Key", t.key], ["LUFS", ch.lufs != null ? ch.lufs : "-"],
-   ["Drift", ch.drift_ms != null ? ch.drift_ms + " ms" : "-"], ["Seed", t.seed]].forEach(([k, v]) => stats.append(make("span", null, k + " " + v)));
+   ["Drift", ch.drift_ms != null ? ch.drift_ms + " ms" : "-"], ["File", t.take]].forEach(([k, v]) => stats.append(make("span", null, k + " " + v)));
   card.append(stats);
   const flags = make("div", "flags");
   if (!ch.flags) flags.append(make("span", "empty", "Not measured yet"));
