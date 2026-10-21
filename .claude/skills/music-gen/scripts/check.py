@@ -89,7 +89,7 @@ def main():
         # with a fade, and the loop point is cut at bake time.
         if head > 1.0:
             flags.append(f"{head:.1f}s silent head")
-        if abs(m["seconds"] - float(row["seconds"])) > 2.0:
+        if m["seconds"] < float(row["seconds"]) - 2.0:      # longer is fine: it is trimmed at bake time
             flags.append(f"length {m['seconds']}s vs {row['seconds']}s")
         if m.get("bpm") and not bpm_ok(m["bpm"], float(row["bpm"])):     # the game uses the measured BPM; 3 % is fine
             flags.append(f"BPM {m['bpm']} vs {row['bpm']}")

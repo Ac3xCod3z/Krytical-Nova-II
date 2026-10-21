@@ -64,7 +64,9 @@ takes, under the 64 MB a publish may carry). Publish it as an artifact with the 
 `capabilities: {db: {}}`; the page groups takes by game place, plays a loop seam, a click on every beat, the
 transitions in the sheet's `previews` and a faction coat swelling over the Selection theme. Picks land in the page's
 `picks/<Cue>` documents (`pick`, `maybes`, `none`, `note`): read them with ArtifactData `list` on collection `picks`.
-The page also builds a `KN-MUSIC-PICKS` line for the chat. Check the page by reading it back, never in the browser pane.
+The page also builds a `KN-MUSIC-PICKS` line for the chat. The store keeps one document per cue across batches:
+before publishing a new batch to the same page, save the old picks as `picks.json` in the old batch folder, then
+seed the new batch's keepers (`batch` = the new batch) and delete the rest. Check the page by reading it back, never in the browser pane.
 
 ## Finals on Flow Music
 `flow.md`: the steps in the owner's Chrome. Remake the picked direction on Flow, split stems, download into the same
@@ -79,4 +81,8 @@ sound-scout's `music_bake.py <picks> --zone <Zone>` makes `Assets/_Game/Audio/Mu
 - `Vol1_Sketches_2026-10-20`: Title theme, Title outro, Selection theme, the three faction coats, Concord idle,
   Callout fight: 20 ACE-Step takes + `CalloutFight_flow1` ("Battle Rhythm", Flow, Lyria 3.5). Drive folder
   https://drive.google.com/drive/folders/1lhE93243p1pSmOB40TZ5b2wbPGcPN3TC ; audition page
-  https://claude.ai/artifact/SfGK6fR1mzAcTq1boXC2GW (republish that file path / URL for the next pass).
+  https://claude.ai/artifact/SfGK6fR1mzAcTq1boXC2GW (republish that file path / URL for the next pass). Owner's
+  picks archived in that folder's `picks.json`.
+- `Vol2_Flow_2026-10-20` (sheet `sheets/vol2_flow.json`): after Vol 1 and the owner's inspiration (RJ Pasin, Dante
+  Swan: djent over trap, no jazz), all new takes from Flow: SelectBed, CoatHegemony, ConcordIdle and CalloutFight,
+  two each (Flow makes two songs per prompt), beside copies of the Vol 1 keepers. Same audition URL (version 3).

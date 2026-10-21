@@ -13,6 +13,10 @@ music of Cadence, the mixer, the weather loops). Numbers marked *(my pick)* have
   bowed metal and organ-like pads, not singing. Spoken lines and crowd murmur are ambience or NPC voices, never part of
   a music cue.
 - **The lean is Hi-Fi Rush:** guitar-driven rhythm rock over big-beat electronics, and a world that moves on the beat.
+- **The main inspiration for all the music is RJ Pasin and Dante Swan** (owner, 20 Oct 2026): instrumental guitar
+  producers who fuse metal guitar with trap production. Section 1, "The sound we aim at".
+- **No jazz** (owner, 20 Oct 2026, from the Volume 1 picks): no swing, brushed drums, Rhodes, lounge chords or
+  "toonish city" lo-fi anywhere. Quiet cues stay in the same heavy, epic world as the title, just lower.
 - **How it is made:** sketches with ACE-Step 1.5 XL on this PC, finals with Google Flow Music (driven through Claude in
   Chrome). Section 7.
 - **Where it lives:** every music file in `G:\My Drive\KryticalNova\Audio\Music\KN-Originals`.
@@ -27,6 +31,29 @@ it, each in its own instruments, because every faction lives in the world that f
 As in Hi-Fi Rush, you fight *to* the music. That is not decoration: Cadence judges a skill press within 90 ms of the
 beat (`17_music_and_cadence.md`, section 4), so every fight track needs a **clear kick and snare** a player can lock to
 without thinking. Busy fills, swung grooves and tempo drift are out of fight music; they are welcome in a Home City.
+
+### The sound we aim at: RJ Pasin and Dante Swan
+
+The owner's main inspiration for all the music (20 Oct 2026). Both are instrumental guitarist-producers:
+
+- **RJ Pasin:** virtuoso guitar fusing metalcore and deathcore with hyperpop and trap; anime and video-game minded
+  titles ("Isekai", "Final Battle", "Heroes 2.0"); heavy, saturated sound design.
+- **Dante Swan:** djent fused with trap and electronics ("Eyeless", "Arcane", "Soul Snatcher"); has played with RJ Pasin.
+
+What Krytical Nova takes from them, and what every prompt asks for:
+
+- **Extended-range guitar** (7 and 8 string): tight, palm-muted djent chugs locked to the kick, then soaring tapped or
+  legato leads for the hook. The riff is the identity, as in Doom: recognisable in one bar.
+- **Trap production under the metal:** 808 sub-bass that follows the riff, rolling hi-hats, hard claps and snares on
+  the backbeat, half-time drops. This is what makes it feel modern rather than plain metal.
+- **Electronic sound design:** glitch stutters, risers, reversed swells, saturated synth layers between guitar phrases.
+- **Epic, anime-boss energy:** big, heroic and fun, never gloomy or lounge-like.
+- **Kept from Hi-Fi Rush:** a steady, clear beat (Cadence), a punchy rock drive, a world that moves on it.
+- **Left out:** their vocals (instrumental only) and Dante Swan's nu-jazz side (no jazz).
+
+Volume 1's picks (20 Oct 2026) confirm the direction: the Flow fight track "Battle Rhythm" (punk rock over big beat) is
+the vibe for fights; the industrial Null coat and the war-drum Covenant coat were kept; the funk-jazz Selection theme,
+the funk Hegemony coat and the lo-fi Concord bed were dropped as "toonish", "city-scape" and "jazz".
 
 ### The Broken Return motif
 
@@ -49,7 +76,7 @@ selection screen swell from one coat to another without a cut, and what makes Th
 
 | Coat | Sounds like | Out of a fight |
 | --- | --- | --- |
-| **Hegemony** | Glossy funk-rock and electro: slap bass, chopped clean guitars, synth brass, four-on-the-floor kick with a tight snare. Clinical, polished, confident. | PA muzak in quiet places (the Galleria's looping mall music, lift lobbies, the empty halls of a Run). |
+| **Hegemony** | Glossy cyber-djent (changed 20 Oct 2026: the owner dropped the funk version): crystal-clean tapped guitar leads over tight djent chugs, glassy synth arpeggios, 808 sub, a gated snare. Clinical, polished, confident. | PA muzak in quiet places (the Galleria's looping mall music, lift lobbies, the empty halls of a Run). |
 | **Null** | Industrial rock: drop-tuned riffs, gear and anvil percussion, servo whine, bitcrush. No warm reverb: dry, cold and exact, every hit on the grid. | Funereal drones: long, low, unmoving. Nobody raises their voice, and neither does the music. |
 | **Covenant** | Folk-rock and folk-metal: war drums, hardanger fiddle, hurdy-gurdy, nyckelharpa, low brass. Communal and weathered. | Harp and flute in The Sylwood; the hurdy-gurdy's drone alone on the moors. |
 | **Ronin** *(held until the expansion)* | Shakuhachi, koto, shamisen, taiko, and silence used as an instrument. | Silence, steam, one plucked string. |
