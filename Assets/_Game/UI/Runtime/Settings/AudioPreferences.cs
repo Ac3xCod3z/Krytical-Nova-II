@@ -22,6 +22,14 @@ namespace KryticalNova.UI
         private const float Silent = -80f;
         /// <summary>The furthest the beat can be moved either way, in milliseconds.</summary>
         public const float BeatOffsetLimit = 150f;
+        /// <summary>
+        /// Where every volume slider starts (owner, 21 Oct 2026): half, so nobody's first minute in the game is too
+        /// loud. The player moves them from there and the game keeps what they choose.
+        /// </summary>
+        public const float DefaultVolume = 0.5f;
+        // Bumped when the starting volumes change for players who already have some saved: on the first start after
+        // it, their saved volumes are put back to the new start once (1 = everything at half, 21 Oct 2026).
+        private const int VolumeDefaultsVersion = 1;
 
         private static readonly string Prefix = BuildPrefix();
         private static AudioMixer mixer;
@@ -38,13 +46,27 @@ namespace KryticalNova.UI
         private static void ResetStatics()
         {
             mixer = null;
+            UpgradeSavedVolumes();
             Application.focusChanged -= OnFocusChanged;
             Application.focusChanged += OnFocusChanged;
             AudioListener.volume = 1f;
             CombatBeat.OutputDelaySeconds = BeatOffset / 1000.0;
         }
 
-        public static float Get(AudioChannel channel) => Mathf.Clamp01(PlayerPrefs.GetFloat(Prefix + Keys[(int)channel], 1f));
+        public static float Get(AudioChannel channel) => Mathf.Clamp01(PlayerPrefs.GetFloat(Prefix + Keys[(int)channel], DefaultVolume));
+
+        /// <summary>
+        /// Volumes saved before the starting volumes last changed go back to the new start, once per profile; after
+        /// that the player's own choice is kept. Runs before anything reads a volume.
+        /// </summary>
+        private static void UpgradeSavedVolumes()
+        {
+            string key = Prefix + "volumeDefaults";
+            if (PlayerPrefs.GetInt(key, 0) >= VolumeDefaultsVersion) return;
+            foreach (string channel in Keys) PlayerPrefs.DeleteKey(Prefix + channel);
+            PlayerPrefs.SetInt(key, VolumeDefaultsVersion);
+            PlayerPrefs.Save();
+        }
 
         public static void Set(AudioChannel channel, float value01)
         {
@@ -74,7 +96,8 @@ namespace KryticalNova.UI
             }
         }
 
-        /// <summary>Every volume back to full, the beat where the game plays it, and silence in the background on.</summary>
+        /// <summary>Every volume back to its start (<see cref="DefaultVolume"/>), the beat where the game plays it, and
+        /// silence in the background on.</summary>
         public static void ResetToDefaults()
         {
             foreach (string key in Keys) PlayerPrefs.DeleteKey(Prefix + key);
@@ -106,6 +129,9 @@ namespace KryticalNova.UI
             mixer = target;
             Apply();
         }
+
+        /// <summary>True once a mixer is bound, so the saved volumes are applied.</summary>
+        public static bool IsBound => mixer != null;
 
         /// <summary>True when the bound mixer has a group for the channel.</summary>
         public static bool Has(AudioChannel channel) => mixer != null && mixer.GetFloat(Parameters[(int)channel], out _);

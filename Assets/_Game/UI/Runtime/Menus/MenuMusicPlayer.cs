@@ -67,6 +67,13 @@ namespace KryticalNova.UI.Menus
             sting.loop = false;
         }
 
+        private void Start()
+        {
+            // The player's volumes apply from the very first sound of the title page, not only once a Settings
+            // window has been built (character select and the world). Not in Awake: a mixer ignores SetFloat then.
+            if (output != null && output.audioMixer != null && !AudioPreferences.IsBound) AudioPreferences.Bind(output.audioMixer);
+        }
+
         private void OnDestroy()
         {
             if (instance == this) instance = null;
