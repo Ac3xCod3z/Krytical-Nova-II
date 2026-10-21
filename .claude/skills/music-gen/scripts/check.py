@@ -69,6 +69,7 @@ def main():
     book = json.load(open(os.path.join(folder, "cues.json"), encoding="utf-8"))
     sheet = json.load(open(os.path.join(folder, "sheet.json"), encoding="utf-8"))
     kinds = {s["slot"]: s["kind"] for s in sheet["slots"]}
+    ambience = {s["slot"] for s in sheet["slots"] if "preview_lufs" in s}
     out = {}
     for row in book:
         f = row["files"].get("flac") or row["files"].get("wav") or next(iter(row["files"].values()))
@@ -83,15 +84,15 @@ def main():
             m.update({k: beat.get(k) for k in ("bpm", "first_beat", "drift_ms", "clear")})
         kind = kinds.get(row["slot"], "loop")
         flags = []
-        if m["voice"] >= 0.25:
+        if m["voice"] >= 0.25 and row["slot"] not in ambience:
             flags.append(f"VOICE? {int(m['voice'] * 100)}% of windows")
         # Peak and loudness are only reported: bake.py sets the level. The seam is only reported too: a sketch ends
         # with a fade, and the loop point is cut at bake time.
-        if head > 1.0:
+        if head > 1.0 and row["slot"] not in ambience:     # a quiet recording sits under the fixed line
             flags.append(f"{head:.1f}s silent head")
         if m["seconds"] < float(row["seconds"]) - 2.0:      # longer is fine: it is trimmed at bake time
             flags.append(f"length {m['seconds']}s vs {row['seconds']}s")
-        if m.get("bpm") and not bpm_ok(m["bpm"], float(row["bpm"])):     # the game uses the measured BPM; 3 % is fine
+        if m.get("bpm") and row.get("bpm") and not bpm_ok(m["bpm"], float(row["bpm"])):     # the game uses the measured BPM; 3 % is fine
             flags.append(f"BPM {m['bpm']} vs {row['bpm']}")
         if kind == "fight" and (m.get("drift_ms") is None or m["drift_ms"] > tempo.STEADY_MS):
             flags.append(f"beat drifts {m.get('drift_ms')} ms (Cadence needs <= {tempo.STEADY_MS})")

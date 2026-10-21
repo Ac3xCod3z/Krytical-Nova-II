@@ -28,13 +28,14 @@ def main():
 
     audio_dir = os.path.join(a.stage, "audio")
     os.makedirs(audio_dir, exist_ok=True)
+    lufs_of = {s["slot"]: s.get("preview_lufs", -14) for s in sheet["slots"]}
     takes = []
     for row in book:
         src = os.path.join(a.batch, row["files"].get("flac") or row["files"].get("wav") or next(iter(row["files"].values())))
         dst = os.path.join(audio_dir, row["take"] + ".mp3")
         if not os.path.exists(dst) or os.path.getmtime(dst) < os.path.getmtime(src):
             subprocess.run([common.ffmpeg(), "-nostdin", "-v", "error", "-y", "-i", src, "-ac", "2", "-ar", "44100",
-                            "-af", "loudnorm=I=-14:TP=-1.5:LRA=11", "-b:a", "192k", dst], check=True)
+                            "-af", f"loudnorm=I={lufs_of.get(row['slot'], -14)}:TP=-1.5:LRA=11", "-b:a", "192k", dst], check=True)
         takes.append({**{k: row[k] for k in ("take", "cue", "slot", "tool", "seed", "bpm", "key", "seconds", "made")},
                       "src": "audio/" + row["take"] + ".mp3", "title": row.get("title", ""), "check": checks.get(row["take"], {})})
 

@@ -227,15 +227,16 @@ function buildTake(t, slot) {
   if (slot.kind !== "sting") { const seam = make("button", "seam", "Seam"); seam.type = "button"; seam.onclick = async () => { await playSeam(t); seam.classList.add("on"); }; btns.append(seam); }
   if (slot.click || slot.kind === "fight") { clk.classList.add("on"); clk.setAttribute("aria-pressed", "true"); btns.append(clk); }
   if (slot.kind === "layer" && slot.over) {
-    const over = make("button", "over", "Over the bed"); over.type = "button";
+    const under = slot.layer_gain != null;   // ambience: heard under its bed at its own level, nothing to hold
+    const over = make("button", "over", under ? "Play with " + (slot.over === "concord_idle" ? "the music" : "the bed") : "Over the bed"); over.type = "button";
     const hold = make("button", "hold", "Hold to hover"); hold.type = "button"; hold.title = "Hold while the coat plays over the Selection theme";
     over.onclick = async () => { if (over.classList.contains("on")) { stopAll(); return; } stopAll(); const bed = chosen(slot.over); const [bb, cb] = await Promise.all([load(bed), load(t)]);
-      const c = ac(), at = c.currentTime + 0.05; const B = source(bb), C = source(cb, 0.12); B.s.start(at); C.s.start(at);
+      const c = ac(), at = c.currentTime + 0.05; const base = slot.layer_gain != null ? slot.layer_gain : 0.12; const B = source(bb), C = source(cb, base); B.s.start(at); C.s.start(at);
       const p = { take: t.take, preview: true, coat: C.g, stop() { try { B.s.stop(); C.s.stop(); } catch (e) {} } }; C.s.onended = () => { if (playing === p) stopAll(); }; playing = p; over.classList.add("on"); };
-    const swell = up => { if (!playing || !playing.coat) return; const c = ac(); playing.coat.gain.cancelScheduledValues(c.currentTime); playing.coat.gain.setTargetAtTime(up ? 1 : 0.12, c.currentTime, up ? 0.15 : 0.35); hold.classList.toggle("on", up); };
+    const swell = up => { if (!playing || !playing.coat) return; const c = ac(); playing.coat.gain.cancelScheduledValues(c.currentTime); const rest = slot.layer_gain != null ? slot.layer_gain : 0.12; playing.coat.gain.setTargetAtTime(up ? 1 : rest, c.currentTime, up ? 0.15 : 0.35); hold.classList.toggle("on", up); };
     hold.addEventListener("pointerdown", () => swell(true)); hold.addEventListener("pointerup", () => swell(false)); hold.addEventListener("pointerleave", () => swell(false));
     hold.addEventListener("keydown", e => { if (e.key === " " || e.key === "Enter") { e.preventDefault(); swell(true); } }); hold.addEventListener("keyup", () => swell(false));
-    btns.append(over, hold);
+    btns.append(over); if (!under) btns.append(hold);
   }
   const keep = make("button", "keep", "Keep"); keep.type = "button";
   keep.onclick = () => { const p = picks[t.cue] = picks[t.cue] || {}; p.pick = p.pick === t.take ? "" : t.take; if (p.pick) p.none = false; save(t.cue); };

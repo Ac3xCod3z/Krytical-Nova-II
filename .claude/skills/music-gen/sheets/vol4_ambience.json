@@ -1,0 +1,229 @@
+{
+ "batch": "Vol4_Ambience_2026-10-21",
+ "title": "Krytical Nova - Volume 4 (ambience)",
+ "note": "Ambience beds for Concord and Transit Row (owner, 21 Oct 2026): the sound of the place under the music, from the sound library in Drive (real recordings, found with the sound-scout skill). They play here at about the level the game would give them under the music, so they are quiet on purpose. Over the bed plays one under Concord's walking music or the Transit Row bed you marked. The game version gets a seamless loop when it is baked.",
+ "slots": [
+  {
+   "slot": "concord_idle",
+   "order": 1,
+   "place": "Concord walking music (kept, for listening under)",
+   "scene": "Scenes/World/Towns/Zone01_StarterTown.unity",
+   "when": "Heroes Gathering Plaza, already in the game. Here so the ambience can be heard under it.",
+   "ends": "Ducks when a fight starts.",
+   "kind": "loop"
+  },
+  {
+   "slot": "concord_day",
+   "order": 2,
+   "place": "Concord ambience, day",
+   "scene": "Zone01_StarterTown: the Ambience group",
+   "when": "Always on in Concord in daylight, under the walking music: the market round the Central Plaza. Pick one, or Maybe several to blend.",
+   "ends": "Crossfades to the night bed at dusk (day/night is built: row 41).",
+   "kind": "layer",
+   "over": "concord_idle",
+   "layer_gain": 1.0,
+   "preview_lufs": -26
+  },
+  {
+   "slot": "concord_night",
+   "order": 3,
+   "place": "Concord ambience, night",
+   "scene": "Zone01_StarterTown: the Ambience group",
+   "when": "Concord after dark: quieter, insects, a far-off town.",
+   "ends": "Crossfades back to the day bed at dawn.",
+   "kind": "layer",
+   "over": "concord_idle",
+   "layer_gain": 1.0,
+   "preview_lufs": -28
+  },
+  {
+   "slot": "concord_fountain",
+   "order": 4,
+   "place": "Concord fountain (a 3D sound at the plaza fountain)",
+   "scene": "Zone01_StarterTown: Central Plaza",
+   "when": "Heard near the fountain only, louder as the player walks up to it. Optional: say none if the plaza has no fountain you want heard.",
+   "ends": "Fades with distance.",
+   "kind": "layer",
+   "over": "concord_idle",
+   "layer_gain": 1.0,
+   "preview_lufs": -30
+  },
+  {
+   "slot": "transit_bed",
+   "order": 5,
+   "place": "Transit Row ambience",
+   "scene": "MeridianSprawl_Z1_TransitRow: the Ambience group",
+   "when": "Always on in Transit Row: wind through dead traffic, the fallen rail, a city that stopped. Pick one, or Maybe several to blend.",
+   "ends": "The map has no music yet; this is its whole sound out of a fight for now.",
+   "kind": "loop",
+   "preview_lufs": -24
+  },
+  {
+   "slot": "transit_buzz",
+   "order": 6,
+   "place": "Transit Row: dead holo-ad buzz (a layer)",
+   "scene": "MeridianSprawl_Z1_TransitRow: near the holo-ads",
+   "when": "The electrical buzz of the flickering holo-ads, under the bed (or a 3D sound on the signs). Over the bed plays it under the Transit Row bed you marked Keep.",
+   "ends": "Fades with distance when it is a 3D sound.",
+   "kind": "layer",
+   "over": "transit_bed",
+   "layer_gain": 1.0,
+   "preview_lufs": -32
+  }
+ ],
+ "previews": [],
+ "cues": [
+  {
+   "id": "ConcordIdle",
+   "slot": "concord_idle",
+   "bpm": 110,
+   "key": "F major",
+   "seconds": 120,
+   "tags": "Kept (Vol 2, Heroes Gathering Plaza)."
+  },
+  {
+   "id": "ConcordDay",
+   "slot": "concord_day",
+   "bpm": 0,
+   "key": "-",
+   "seconds": 90,
+   "tags": "Market murmur round the Central Plaza, footsteps, birds; a crowd with no words you can pick out."
+  },
+  {
+   "id": "ConcordNight",
+   "slot": "concord_night",
+   "bpm": 0,
+   "key": "-",
+   "seconds": 90,
+   "tags": "The same town after dark: insects, distant life, quiet."
+  },
+  {
+   "id": "ConcordFountain",
+   "slot": "concord_fountain",
+   "bpm": 0,
+   "key": "-",
+   "seconds": 60,
+   "tags": "Running water for the plaza fountain."
+  },
+  {
+   "id": "TransitBed",
+   "slot": "transit_bed",
+   "bpm": 0,
+   "key": "-",
+   "seconds": 90,
+   "tags": "Wind through dead traffic, the fallen elevated rail creaking, a city that stopped."
+  },
+  {
+   "id": "TransitBuzz",
+   "slot": "transit_buzz",
+   "bpm": 0,
+   "key": "-",
+   "seconds": 60,
+   "tags": "Electrical buzz of broken, flickering holo-ads."
+  }
+ ],
+ "takes": [
+  {
+   "take": "ConcordIdle_flow2",
+   "cue": "ConcordIdle",
+   "title": "Heroes Gathering Plaza (kept)",
+   "from": "Vol3_Flow_2026-10-21/ConcordIdle_flow2.wav"
+  },
+  {
+   "take": "ConcordDay_townsquare",
+   "cue": "ConcordDay",
+   "title": "Town square, road and birds",
+   "start": 0,
+   "seconds": 90,
+   "lib": "dolbyatmosvol1_audiohero/Dolby Atmos Vol 1/AMBUrbn_Town Square Road Birds_DLBATM078.wav"
+  },
+  {
+   "take": "ConcordDay_crowd",
+   "cue": "ConcordDay",
+   "title": "Busy station crowd (walla)",
+   "start": 0,
+   "seconds": 60,
+   "lib": "transportationandmotion_audiohero/Transportation & Motion/AmbienceTrainStationFrench.wav"
+  },
+  {
+   "take": "ConcordDay_park",
+   "cue": "ConcordDay",
+   "title": "City park, morning",
+   "start": 0,
+   "seconds": 90,
+   "lib": "dolbyatmosvol2_audiohero/Dolby Atmos Vol 2/AMBPark_Central Park Morning_DLBATM015.wav"
+  },
+  {
+   "take": "ConcordNight_garden",
+   "cue": "ConcordNight",
+   "title": "Public garden, evening",
+   "start": 0,
+   "seconds": 90,
+   "lib": "dolbyatmosvol1_audiohero/Dolby Atmos Vol 1/AMBSubn_Public Garden Suburb Evening_DLBATM044.wav"
+  },
+  {
+   "take": "ConcordNight_cicadas",
+   "cue": "ConcordNight",
+   "title": "Sunset cicadas and birds",
+   "start": 40,
+   "seconds": 90,
+   "lib": "dolbyatmosvol2_audiohero/Dolby Atmos Vol 2/AMBMisc_Sunset Cicadas Birds Activity_DLBATM012.wav"
+  },
+  {
+   "take": "ConcordFountain_stream",
+   "cue": "ConcordFountain",
+   "title": "Running water",
+   "start": 5,
+   "seconds": 55,
+   "lib": "water_audiohero/Water/WaterStream_DIGIC05-30.wav"
+  },
+  {
+   "take": "TransitBed_subwaywind",
+   "cue": "TransitBed",
+   "title": "Wind through a subway terminal",
+   "start": 0,
+   "seconds": 60,
+   "lib": "transportationandmotion_audiohero/Transportation & Motion/AmbienceWindSubwayTerminal.wav"
+  },
+  {
+   "take": "TransitBed_moaningwind",
+   "cue": "TransitBed",
+   "title": "Moaning wind in ruins",
+   "start": 0,
+   "seconds": 59,
+   "lib": "weatherwounds_audiohero/Weather Wounds/WindMoaningAmbRu SDT2046301.mp3"
+  },
+  {
+   "take": "TransitBed_avenue",
+   "cue": "TransitBed",
+   "title": "Empty avenue after rain",
+   "start": 15,
+   "seconds": 90,
+   "lib": "dolbyatmosvol1_audiohero/Dolby Atmos Vol 1/AMBTraf_Avenue After Rain_DLBATM061.wav"
+  },
+  {
+   "take": "TransitBed_railyard",
+   "cue": "TransitBed",
+   "title": "Freight rail yard, creaks and clanks",
+   "start": 0,
+   "seconds": 90,
+   "lib": "dolbyatmosvol2_audiohero/Dolby Atmos Vol 2/AMBTran_Freight Train Movement Sorting Station_DLBATM068.wav"
+  },
+  {
+   "take": "TransitBuzz_roomtone",
+   "cue": "TransitBuzz",
+   "title": "Electric hum",
+   "start": 3,
+   "seconds": 55,
+   "lib": "ventsandresonance_audiohero/Vents & Resonance/Room-Tone-Electric-Medium_GEN-HD2-31302.wav"
+  },
+  {
+   "take": "TransitBuzz_dripbuzz",
+   "cue": "TransitBuzz",
+   "title": "Factory buzz with drips",
+   "start": 1,
+   "seconds": 32,
+   "lib": "industrialandmechanical_audiohero/Industrial & Mechanical/FACTORY-AMBIENCE-DRIP-BUZZ_6EXT8-10824.wav"
+  }
+ ]
+}
