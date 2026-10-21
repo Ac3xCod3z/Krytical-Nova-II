@@ -4,8 +4,9 @@ Written 20 Oct 2026 from the music and sound plan the owner approved that day. R
 (`../Reference/12Sky/01_Systems_Build_List.md`). Cadence, the fight beat and the one music mechanic built so far, is its
 own page: `17_music_and_cadence.md`. Story canon is the `Lore-Bible.md`; place names come from `World-Atlas.md`.
 
-**Status: planned.** Nothing on this page is in the game yet, except what section 3 names as already built (the fight
-music of Cadence, the mixer, the weather loops). Numbers marked *(my pick)* have not been reviewed.
+**Status: partly built (21 Oct 2026).** In the game: the menu music, Concord's walking-about music and the new Cadence
+fight music (section 8, "As built"). The rest of this page is the plan. Numbers marked *(my pick)* have not been
+reviewed.
 
 **The owner's rules (20 Oct 2026):**
 
@@ -312,11 +313,33 @@ A place gets its music when its map is built, never before. The stages run in th
    heard.
 3. **Final** with Google Flow Music, driven through Claude in Chrome, from the picked sketch, **with stems** (drums,
    bass, harmony, lead) for every fight track.
-4. **Bake:** `music_bake.py` (the sound-scout skill) levels and cuts the files into the game, `tempo.py` measures the
-   tempo and first beat, and **Krytical Nova ▸ Setup ▸ Music** makes the `MusicTrack` and `ZoneMusic` assets. The click
-   check (the audition page, `gm.music.click`) has to sit on the beat for the whole loop before a fight track is used.
+4. **Bake:** the music-gen skill's `bake.py` (a plan in `sheets/bake_*.json`) levels every piece to -16 LUFS, keeps
+   the longest stretch of a fight track whose beat sits on one grid (cut on its edges with short fades), measures the
+   tempo and first beat again with `tempo.py`, writes `Assets/_Game/Audio/Music/MUS_<Name>.ogg` and the sound-scout
+   skill's `music.json`. Then **Krytical Nova ▸ Setup ▸ Music** makes the `MusicTrack`, `ZoneMusic` and `MenuMusic`
+   assets and **Setup ▸ Menu Music** puts the menu player in the menu scenes. The click check (`gm.music.click`) has
+   to sit on the beat for the whole track before a fight track is trusted.
 5. **Into the game** only after the owner approves the baked version.
 
 **Every file gets a provenance line in `cues.json`:** the cue, the tool and model, the prompt, the seed, the date, the
 take picked, who approved it and when, the tool's terms as read on the day, and the path in KN-Originals. All of it in
 `G:\My Drive\KryticalNova\Audio\Music\KN-Originals`; the repo holds only what is baked.
+
+## 8. As built
+
+**21 Oct 2026: the owner's Volume 1 to 3 picks went into the game** (picks in each Drive batch folder's `picks.json`,
+bake plan `.claude/skills/music-gen/sheets/bake_2026-10-21.json`).
+
+| Where | What plays | How it works |
+| --- | --- | --- |
+| Title page | Title Theme (Vol 1), looped | `MenuMusicPlayer` (UI, in every menu scene; the first alive keeps playing from scene to scene) with the `MenuMusic` asset. |
+| Leaving the title | Title Outro sting; the theme fades over 2 s; 2 s later the next theme fades in | Same player, on the scene change. |
+| Faction select | The highlighted faction's coat: Hegemony "Corporate Faction: Cyber City", Null and Covenant coats (Vol 1) | `FactionSelectController` tells the player which faction is highlighted; a new highlight crossfades. |
+| Character select and creator | One Selection theme per menu skin: Hegemony "Character Select: Djent Trap", Null "Faction Select: Epic Chugs", Covenant "Character Select III (Variation)" | Follows `MenuSkin.Current`; the owner said which faction gets which does not matter. |
+| Loading and the world | The menu music fades out over 3 s | It starts again on the title after logging out. |
+| Concord, out of a fight | "Heroes Gathering Plaza" | `ExploreMusicPlayer` on the zone's Combat Music object plays `ZoneMusic.explore`; it ducks in 0.4 s when the fight music comes in (`CombatMusicPlayer.Live`) and comes back over 3 s. |
+| Concord Callouts and the test arena (Cadence) | 10 Flow fight tracks, replacing the 12 library tracks: Iron March (Variation), Battle Rhythm, Hyperdrive, Duel: Anime Boss Energy, Cyber Battle, Titan's Wrath, Breakbeat Brawl, Final Duel, Iron March, Breakbeat Brawl (Variation) | `ZoneMusic.combat` as before; each kept to its steady stretch, beat drift 1 to 7 ms. |
+
+Kept by the owner but **not in Cadence yet**: Clans of the North: Shieldwall, Hyperdrive (Variation), Titan's Wrath
+(Variation) and Cyber Battle (Variation, whose beat still wanders after the cut). Their beat holds for only 25 to 36 s at a time; they need a beat map with
+more than one stretch, or a remake. The old library tracks are still in `Audio/Music` but no zone plays them.

@@ -191,42 +191,360 @@
    "measured_bpm": 103.008,
    "nudge_ms": 0,
    "note": ""
+  },
+  {
+   "name": "KN_TitleTheme",
+   "title": "Title Theme",
+   "file": "MUS_KN_TitleTheme.ogg",
+   "role": "menu",
+   "source": "Vol3_Flow_2026-10-21/TitleTheme_t3.flac",
+   "gain_db": -4.1,
+   "bpm": 96,
+   "first_beat": 0.0,
+   "bar_beat": 0,
+   "beats_per_bar": 4
+  },
+  {
+   "name": "KN_TitleOutro",
+   "title": "Title Outro",
+   "file": "MUS_KN_TitleOutro.ogg",
+   "role": "menu",
+   "source": "Vol3_Flow_2026-10-21/TitleOutro_t1.flac",
+   "gain_db": -7.9,
+   "bpm": 96,
+   "first_beat": 0.0,
+   "bar_beat": 0,
+   "beats_per_bar": 4
+  },
+  {
+   "name": "KN_SelectHegemony",
+   "title": "Character Select: Djent Trap",
+   "file": "MUS_KN_SelectHegemony.ogg",
+   "role": "menu",
+   "source": "Vol3_Flow_2026-10-21/SelectBed_flow1.wav",
+   "gain_db": -2.0,
+   "bpm": 102,
+   "first_beat": 0.0,
+   "bar_beat": 0,
+   "beats_per_bar": 4
+  },
+  {
+   "name": "KN_SelectNull",
+   "title": "Faction Select: Epic Chugs",
+   "file": "MUS_KN_SelectNull.ogg",
+   "role": "menu",
+   "source": "Vol3_Flow_2026-10-21/SelectBed_flow2.wav",
+   "gain_db": -1.3,
+   "bpm": 102,
+   "first_beat": 0.0,
+   "bar_beat": 0,
+   "beats_per_bar": 4
+  },
+  {
+   "name": "KN_SelectCovenant",
+   "title": "Character Select III (Variation)",
+   "file": "MUS_KN_SelectCovenant.ogg",
+   "role": "menu",
+   "source": "Vol3_Flow_2026-10-21/SelectBed_flow4.wav",
+   "gain_db": -1.2,
+   "bpm": 105,
+   "first_beat": 0.0,
+   "bar_beat": 0,
+   "beats_per_bar": 4
+  },
+  {
+   "name": "KN_CoatHegemony",
+   "title": "Corporate Faction: Cyber City",
+   "file": "MUS_KN_CoatHegemony.ogg",
+   "role": "menu",
+   "source": "Vol2_Flow_2026-10-20/CoatHegemony_flow2.wav",
+   "gain_db": -2.3,
+   "bpm": 105,
+   "first_beat": 0.0,
+   "bar_beat": 0,
+   "beats_per_bar": 4
+  },
+  {
+   "name": "KN_CoatNull",
+   "title": "Null Coat",
+   "file": "MUS_KN_CoatNull.ogg",
+   "role": "menu",
+   "source": "Vol1_Sketches_2026-10-20/CoatNull_t1.flac",
+   "gain_db": -4.9,
+   "bpm": 100,
+   "first_beat": 0.0,
+   "bar_beat": 0,
+   "beats_per_bar": 4
+  },
+  {
+   "name": "KN_CoatCovenant",
+   "title": "Covenant Coat",
+   "file": "MUS_KN_CoatCovenant.ogg",
+   "role": "menu",
+   "source": "Vol1_Sketches_2026-10-20/CoatCovenant_t2.flac",
+   "gain_db": -4.7,
+   "bpm": 100,
+   "first_beat": 0.0,
+   "bar_beat": 0,
+   "beats_per_bar": 4
+  },
+  {
+   "name": "KN_ConcordHeroesGathering",
+   "title": "Heroes Gathering Plaza",
+   "file": "MUS_KN_ConcordHeroesGathering.ogg",
+   "role": "explore",
+   "source": "Vol3_Flow_2026-10-21/ConcordIdle_flow2.wav",
+   "gain_db": -1.8,
+   "bpm": 110,
+   "first_beat": 0.0,
+   "bar_beat": 0,
+   "beats_per_bar": 4
+  },
+  {
+   "name": "KN_BattleRhythm",
+   "title": "Battle Rhythm",
+   "file": "MUS_KN_BattleRhythm.ogg",
+   "role": "fight",
+   "source": "Vol3_Flow_2026-10-21/CalloutFight_flow1.wav",
+   "gain_db": -2.3,
+   "bpm": 150.0,
+   "first_beat": 0.0376,
+   "bar_beat": 0,
+   "beats_per_bar": 4,
+   "seconds": 166.4,
+   "drift_ms": 2.2,
+   "kept": [
+    0.0,
+    166.4
+   ]
+  },
+  {
+   "name": "KN_DuelAnimeBossEnergy",
+   "title": "Duel: Anime Boss Energy",
+   "file": "MUS_KN_DuelAnimeBossEnergy.ogg",
+   "role": "fight",
+   "source": "Vol3_Flow_2026-10-21/CalloutFight_flow2.wav",
+   "gain_db": -2.6,
+   "bpm": 152.0,
+   "first_beat": 0.0683,
+   "bar_beat": 2,
+   "beats_per_bar": 4,
+   "seconds": 170.45,
+   "drift_ms": 3.5,
+   "kept": [
+    0.0,
+    170.45
+   ]
+  },
+  {
+   "name": "KN_FinalDuelBigBeatDjent",
+   "title": "Final Duel: Big Beat Djent",
+   "file": "MUS_KN_FinalDuelBigBeatDjent.ogg",
+   "role": "fight",
+   "source": "Vol3_Flow_2026-10-21/CalloutFight_flow3.wav",
+   "gain_db": -2.4,
+   "bpm": 150.0,
+   "first_beat": 0.0885,
+   "bar_beat": 2,
+   "beats_per_bar": 4,
+   "seconds": 96.0,
+   "drift_ms": 1.6,
+   "kept": [
+    70.4,
+    166.4
+   ]
+  },
+  {
+   "name": "KN_CyberBattle",
+   "title": "Cyber Battle: On The Beat",
+   "file": "MUS_KN_CyberBattle.ogg",
+   "role": "fight",
+   "source": "Vol3_Flow_2026-10-21/CalloutFight_flow4.wav",
+   "gain_db": -1.3,
+   "bpm": 150.0,
+   "first_beat": 0.0571,
+   "bar_beat": 2,
+   "beats_per_bar": 4,
+   "seconds": 57.6,
+   "drift_ms": 7.8,
+   "kept": [
+    83.2,
+    140.8
+   ]
+  },
+  {
+   "name": "KN_CyberBattleVariation",
+   "title": "Cyber Battle: On The Beat (Variation)",
+   "file": "MUS_KN_CyberBattleVariation.ogg",
+   "role": "fight",
+   "source": "Vol3_Flow_2026-10-21/CalloutFight_flow5.wav",
+   "gain_db": -0.9,
+   "bpm": 150.0,
+   "first_beat": 0.0189,
+   "bar_beat": 1,
+   "beats_per_bar": 4,
+   "seconds": 128.0,
+   "drift_ms": 2.0,
+   "kept": [
+    38.4,
+    166.4
+   ]
+  },
+  {
+   "name": "KN_IronMarch",
+   "title": "Iron March: Awakened Mechanics",
+   "file": "MUS_KN_IronMarch.ogg",
+   "role": "fight",
+   "source": "Vol3_Flow_2026-10-21/CalloutFight_flow6.wav",
+   "gain_db": -1.7,
+   "bpm": 144.0,
+   "first_beat": 0.0387,
+   "bar_beat": 0,
+   "beats_per_bar": 4,
+   "seconds": 159.94,
+   "drift_ms": 1.6,
+   "kept": [
+    0.0,
+    159.94
+   ]
+  },
+  {
+   "name": "KN_IronMarchVariation",
+   "title": "Iron March: Awakened Mechanics (Variation)",
+   "file": "MUS_KN_IronMarchVariation.ogg",
+   "role": "fight",
+   "source": "Vol3_Flow_2026-10-21/CalloutFight_flow7.wav",
+   "gain_db": -1.1,
+   "bpm": 140.0,
+   "first_beat": 0.0058,
+   "bar_beat": 0,
+   "beats_per_bar": 4,
+   "seconds": 82.3,
+   "drift_ms": 3.2,
+   "kept": [
+    34.29,
+    116.6
+   ]
+  },
+  {
+   "name": "KN_Hyperdrive",
+   "title": "Hyperdrive: Anime Rush",
+   "file": "MUS_KN_Hyperdrive.ogg",
+   "role": "fight",
+   "source": "Vol3_Flow_2026-10-21/CalloutFight_flow10.wav",
+   "gain_db": -1.6,
+   "bpm": 160.0,
+   "first_beat": 0.0425,
+   "bar_beat": 0,
+   "beats_per_bar": 4,
+   "seconds": 167.99,
+   "drift_ms": 1.2,
+   "kept": [
+    0.0,
+    167.99
+   ]
+  },
+  {
+   "name": "KN_TitansWrath",
+   "title": "Titan's Wrath: Boss Fight",
+   "file": "MUS_KN_TitansWrath.ogg",
+   "role": "fight",
+   "source": "Vol3_Flow_2026-10-21/CalloutFight_flow12.wav",
+   "gain_db": -1.9,
+   "bpm": 140.0,
+   "first_beat": 0.0334,
+   "bar_beat": 0,
+   "beats_per_bar": 4,
+   "seconds": 164.54,
+   "drift_ms": 1.4,
+   "kept": [
+    6.86,
+    171.4
+   ]
+  },
+  {
+   "name": "KN_BreakbeatBrawl",
+   "title": "Breakbeat Brawl: Comic Action",
+   "file": "MUS_KN_BreakbeatBrawl.ogg",
+   "role": "fight",
+   "source": "Vol3_Flow_2026-10-21/CalloutFight_flow14.wav",
+   "gain_db": -0.3,
+   "bpm": 150.0,
+   "first_beat": 0.0309,
+   "bar_beat": 1,
+   "beats_per_bar": 4,
+   "seconds": 140.8,
+   "drift_ms": 1.7,
+   "kept": [
+    25.6,
+    166.4
+   ]
+  },
+  {
+   "name": "KN_BreakbeatBrawlVariation",
+   "title": "Breakbeat Brawl: Comic Action (Variation)",
+   "file": "MUS_KN_BreakbeatBrawlVariation.ogg",
+   "role": "fight",
+   "source": "Vol3_Flow_2026-10-21/CalloutFight_flow15.wav",
+   "gain_db": -1.3,
+   "bpm": 150.0,
+   "first_beat": 0.1157,
+   "bar_beat": 0,
+   "beats_per_bar": 4,
+   "seconds": 172.8,
+   "drift_ms": 1.5,
+   "kept": [
+    0.0,
+    172.8
+   ]
   }
  ],
  "zones": [
   {
    "name": "TestArena",
    "tracks": [
-    "HoldAGrudge",
-    "SeeThroughMirror",
-    "TwistedVision",
-    "ExplosiveStory",
-    "IsolatedTerrorAttack",
-    "BingeWatcher",
-    "ThrillMe",
-    "SpinningALegendaryTale",
-    "BleakBeat",
-    "UpTheDownStaircase",
-    "PushUp",
-    "HoodCruising"
-   ]
+    "KN_IronMarchVariation",
+    "KN_BattleRhythm",
+    "KN_Hyperdrive",
+    "KN_DuelAnimeBossEnergy",
+    "KN_CyberBattle",
+    "KN_TitansWrath",
+    "KN_BreakbeatBrawl",
+    "KN_FinalDuelBigBeatDjent",
+    "KN_IronMarch",
+    "KN_CyberBattleVariation",
+    "KN_BreakbeatBrawlVariation"
+   ],
+   "explore": []
   },
   {
    "name": "Zone01_StarterTown",
    "tracks": [
-    "HoldAGrudge",
-    "SeeThroughMirror",
-    "TwistedVision",
-    "ExplosiveStory",
-    "IsolatedTerrorAttack",
-    "BingeWatcher",
-    "ThrillMe",
-    "SpinningALegendaryTale",
-    "BleakBeat",
-    "UpTheDownStaircase",
-    "PushUp",
-    "HoodCruising"
+    "KN_IronMarchVariation",
+    "KN_BattleRhythm",
+    "KN_Hyperdrive",
+    "KN_DuelAnimeBossEnergy",
+    "KN_CyberBattle",
+    "KN_TitansWrath",
+    "KN_BreakbeatBrawl",
+    "KN_FinalDuelBigBeatDjent",
+    "KN_IronMarch",
+    "KN_CyberBattleVariation",
+    "KN_BreakbeatBrawlVariation"
+   ],
+   "explore": [
+    "KN_ConcordHeroesGathering"
    ]
   }
- ]
+ ],
+ "menu": {
+  "title": "KN_TitleTheme",
+  "titleOutro": "KN_TitleOutro",
+  "selectHegemony": "KN_SelectHegemony",
+  "selectNull": "KN_SelectNull",
+  "selectCovenant": "KN_SelectCovenant",
+  "coatHegemony": "KN_CoatHegemony",
+  "coatNull": "KN_CoatNull",
+  "coatCovenant": "KN_CoatCovenant"
+ }
 }
