@@ -4,8 +4,11 @@ Written 12 Oct 2026 on branch `music/cadence`, from the owner's note of 10 Oct 2
 12 Oct. Row 63 of the build list (`../Reference/12Sky/01_Systems_Build_List.md`); rows 64 to 66 are the three
 candidates at the end of this page.
 
-**Status: design agreed, nothing built.** Built in milestones M0 to M7 (section 7), each one stopping for the
-owner's check, on the branch only, with one merge at the end. Numbers marked *(my pick)* have not been reviewed.
+**Status (20 Oct 2026): M0 to M4 built and merged into the main line on 17 Oct 2026** (in a fight or not, the
+measured music, the shared beat, Cadence and its readout). Since 19 Oct 2026 Concord (Zone01) plays the fight music and
+runs Cadence **in Callouts only** (section 7). Left: **M5** (the pet keeps time), **M6** (the world moves) and **M7**
+(into the rest of the game, 60 frames a second held, records updated). Music for the world out of a fight, and the
+game's own tracks, are the Sound Bible's (`18_sound_design.md`). Numbers marked *(my pick)* have not been reviewed.
 
 ## 1. The rule every music mechanic follows
 
