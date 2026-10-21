@@ -291,7 +291,7 @@ function buildPreview(pv) {
 }
 
 async function start() {
-  if (!DATA) return;
+  if (!DATA) { $("#status").textContent = "This is the empty template that audition.py fills in. The page with the tracks is the published audition artifact (its link is in the music-gen skill)."; return; }
   $("#batch").textContent = DATA.batch.replace(/_/g, " ") + " · " + DATA.takes.length + " takes";
   $("#note").textContent = DATA.note;
   const route = $("#route"); DATA.slots.forEach((s, i) => { if (i) route.append(make("span", null, "→")); const a = make("a", null, s.place.replace(/ -.*$/, "")); a.href = "#" + s.slot; route.append(a); });
