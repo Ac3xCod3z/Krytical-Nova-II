@@ -127,15 +127,23 @@ namespace KryticalNova.EditorTools
         {
             if (!AssetDatabase.IsValidFolder(AudioFolder)) return 0;
             int changed = 0;
+            var paths = new System.Collections.Generic.SortedSet<string>();
             foreach (string guid in AssetDatabase.FindAssets("t:AudioClip", new[] { AudioFolder }))
+                paths.Add(AssetDatabase.GUIDToAssetPath(guid));
+            // A music file whose import failed is no AudioClip to FindAssets: find it on disk as well.
+            foreach (string file in System.IO.Directory.GetFiles(AudioFolder, "MUS_*.ogg", System.IO.SearchOption.AllDirectories))
+                paths.Add(file.Replace('\\', '/'));
+            foreach (string path in paths)
             {
-                string path = AssetDatabase.GUIDToAssetPath(guid);
                 var importer = AssetImporter.GetAtPath(path) as AudioImporter;
                 var clip = AssetDatabase.LoadAssetAtPath<AudioClip>(path);
-                if (importer == null || clip == null) continue;
+                // Music is long by definition. A long music file imported with Unity's defaults (unpacked, quality
+                // 100 %) can fail in FMOD and leave no clip at all, so it is set up by its name, loaded or not.
+                bool music = System.IO.Path.GetFileName(path).StartsWith("MUS_");
+                if (importer == null || clip == null && !music) continue;
 
                 bool loop = System.IO.Path.GetFileName(path).StartsWith("AMB_");
-                bool brief = !loop && clip.length < ShortClipSeconds;
+                bool brief = !loop && !music && clip.length < ShortClipSeconds;
                 AudioImporterSampleSettings want = importer.defaultSampleSettings;
                 want.loadType = loop ? AudioClipLoadType.Streaming : brief ? AudioClipLoadType.DecompressOnLoad : AudioClipLoadType.CompressedInMemory;
                 want.compressionFormat = brief ? AudioCompressionFormat.ADPCM : AudioCompressionFormat.Vorbis;

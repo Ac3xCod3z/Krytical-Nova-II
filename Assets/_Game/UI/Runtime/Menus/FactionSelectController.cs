@@ -150,6 +150,7 @@ namespace KryticalNova.UI.Menus
             if (glow != null) glow.color = WithAlpha(factions[index].accentColor, glowAlpha);
             if (info != null && index < words.Count) info.text = words[index];
             if (showcase != null) showcase.Select(index);
+            MenuMusicPlayer.Focus(factions[index].id);
         }
 
         private void Confirm()

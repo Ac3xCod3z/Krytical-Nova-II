@@ -16,7 +16,8 @@ namespace KryticalNova.EditorTools
     /// bar) and which zone plays which into its music.json; this makes the <see cref="MusicTrack"/> and
     /// <see cref="ZoneMusic"/> assets from that, and puts the conductor and the player of a zone's fight music into
     /// the open scene. Safe to run again: the measured numbers are written each time, a volume or a fade tuned on
-    /// an asset is kept.
+    /// an asset is kept. The same manifest names the menus' music (<see cref="MenuMusic"/>) and each zone's
+    /// walking-about music (<see cref="ZoneMusic.explore"/>); the music-gen skill's bake.py writes those.
     /// </summary>
     public static class MusicSetup
     {
@@ -25,12 +26,23 @@ namespace KryticalNova.EditorTools
         private const string ManifestPath = ".claude/skills/sound-scout/music.json";
         private const string PlayerName = "Combat Music";
         private const string ClickName = "Beat Click (GM)";
+        private const string ExploreName = "Explore Music";
+        public static string MenuMusicPath => $"{DataFolder}/MenuMusic.asset";
 
         [Serializable]
         private sealed class Manifest
         {
             public List<TrackRow> tracks = new List<TrackRow>();
             public List<ZoneRow> zones = new List<ZoneRow>();
+            public MenuRow menu;
+        }
+
+        [Serializable]
+        private sealed class MenuRow
+        {
+            public string title, titleOutro;
+            public string selectHegemony, selectNull, selectCovenant;
+            public string coatHegemony, coatNull, coatCovenant;
         }
 
         [Serializable]
@@ -50,6 +62,7 @@ namespace KryticalNova.EditorTools
         {
             public string name;
             public List<string> tracks = new List<string>();
+            public List<string> explore = new List<string>();
         }
 
         public static string TrackPath(string name) => $"{DataFolder}/MusicTrack_{name}.asset";
@@ -101,19 +114,54 @@ namespace KryticalNova.EditorTools
                     zone = ScriptableObject.CreateInstance<ZoneMusic>();
                     AssetDatabase.CreateAsset(zone, ZonePath(row.name));
                 }
-                var combat = new List<MusicTrack>();
-                foreach (string name in row.tracks)
-                {
-                    if (byName.TryGetValue(name, out MusicTrack track)) combat.Add(track);
-                    else Debug.LogWarning($"[Music] Zone {row.name} names a track the manifest does not have: {name}.");
-                }
-                zone.combat = combat.ToArray();
+                zone.combat = Tracks(byName, row.tracks, row.name);
+                zone.explore = Tracks(byName, row.explore, row.name);
                 EditorUtility.SetDirty(zone);
+            }
+
+            if (manifest.menu != null && !string.IsNullOrEmpty(manifest.menu.title))
+            {
+                var menu = AssetDatabase.LoadAssetAtPath<MenuMusic>(MenuMusicPath);
+                if (menu == null)
+                {
+                    menu = ScriptableObject.CreateInstance<MenuMusic>();
+                    AssetDatabase.CreateAsset(menu, MenuMusicPath);
+                }
+                MenuRow m = manifest.menu;
+                menu.title = Track(byName, m.title);
+                menu.titleOutro = Track(byName, m.titleOutro);
+                menu.selectHegemony = Track(byName, m.selectHegemony);
+                menu.selectNull = Track(byName, m.selectNull);
+                menu.selectCovenant = Track(byName, m.selectCovenant);
+                menu.coatHegemony = Track(byName, m.coatHegemony);
+                menu.coatNull = Track(byName, m.coatNull);
+                menu.coatCovenant = Track(byName, m.coatCovenant);
+                EditorUtility.SetDirty(menu);
             }
 
             AssetDatabase.SaveAssets();
             Debug.Log($"[Music] {ready} of {manifest.tracks.Count} track(s) have their clip; {manifest.zones.Count} zone(s).");
             return ready;
+        }
+
+        private static MusicTrack[] Tracks(Dictionary<string, MusicTrack> byName, List<string> names, string zone)
+        {
+            var list = new List<MusicTrack>();
+            if (names == null) return list.ToArray();
+            foreach (string name in names)
+            {
+                if (byName.TryGetValue(name, out MusicTrack track)) list.Add(track);
+                else Debug.LogWarning($"[Music] Zone {zone} names a track the manifest does not have: {name}.");
+            }
+            return list.ToArray();
+        }
+
+        private static MusicTrack Track(Dictionary<string, MusicTrack> byName, string name)
+        {
+            if (string.IsNullOrEmpty(name)) return null;
+            if (byName.TryGetValue(name, out MusicTrack track)) return track;
+            Debug.LogWarning($"[Music] The menu names a track the manifest does not have: {name}.");
+            return null;
         }
 
         /// <summary>
@@ -162,6 +210,20 @@ namespace KryticalNova.EditorTools
             playerSo.FindProperty("source").objectReferenceValue = source;
             playerSo.FindProperty("clickSource").objectReferenceValue = click;
             playerSo.ApplyModifiedPropertiesWithoutUndo();
+
+            // The walking-about music beside it; it plays nothing in a zone that has none.
+            Transform exploreAt = playerAt.Find(ExploreName);
+            if (exploreAt == null)
+            {
+                exploreAt = new GameObject(ExploreName).transform;
+                exploreAt.SetParent(playerAt, false);
+            }
+            AudioSource exploreSource = Flat(exploreAt.gameObject, group, 0f);
+            if (!exploreAt.TryGetComponent(out ExploreMusicPlayer explore)) explore = exploreAt.gameObject.AddComponent<ExploreMusicPlayer>();
+            var exploreSo = new SerializedObject(explore);
+            exploreSo.FindProperty("conductor").objectReferenceValue = conductor;
+            exploreSo.FindProperty("source").objectReferenceValue = exploreSource;
+            exploreSo.ApplyModifiedPropertiesWithoutUndo();
 
             EditorSceneManager.MarkSceneDirty(host.scene);
             return true;

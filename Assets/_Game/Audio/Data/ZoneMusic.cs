@@ -3,9 +3,10 @@ using UnityEngine;
 namespace KryticalNova.Audio
 {
     /// <summary>
-    /// The music of one zone. For now that is the fight's: the tracks a player hears, and keeps time to, while in
-    /// combat there (Cadence, design 17). They run one after another in a round whether or not anyone is fighting,
-    /// so that everyone in the zone who is fighting hears the same beat.
+    /// The music of one zone. The fight's: the tracks a player hears, and keeps time to, while in combat there
+    /// (Cadence, design 17). They run one after another in a round whether or not anyone is fighting, so that
+    /// everyone in the zone who is fighting hears the same beat. And the walking-about music (<see cref="explore"/>),
+    /// which each player hears on their own, out of a fight, and which steps aside while the fight music plays.
     /// </summary>
     [CreateAssetMenu(menuName = "Krytical Nova/Audio/Zone Music")]
     public sealed class ZoneMusic : ScriptableObject
@@ -21,5 +22,14 @@ namespace KryticalNova.Audio
         [Tooltip("On: the fight music, and Cadence with it, only while the player stands in a Callout (owner, 19 Oct 2026: " +
                  "the town tries it in Callouts first). Off: in every fight (the test arena).")]
         public bool calloutsOnly;
+
+        [Header("Out of a fight")]
+        [Tooltip("Played out of a fight, round and round, on each player's own game (no shared clock, no beat). " +
+                 "Empty: the zone is quiet out of a fight.")]
+        public MusicTrack[] explore = new MusicTrack[0];
+        [Tooltip("The walking-about music's loudness against the fight music's (each track's own volume times this).")]
+        [Range(0f, 1f)] public float exploreVolume = 0.8f;
+        [Tooltip("Seconds for the walking-about music to come back after a fight, and to start when the zone loads.")]
+        [Min(0.05f)] public float exploreFadeSeconds = 3f;
     }
 }

@@ -48,12 +48,17 @@ namespace KryticalNova.Audio
         /// <summary>GM: what the sound is doing, in one line.</summary>
         public static string Report { get; private set; } = "No fight music in this scene.";
 
+        /// <summary>How far in the fight music is on this machine, 0 (out of a fight) to 1. The walking-about music
+        /// (<see cref="ExploreMusicPlayer"/>) steps aside by as much.</summary>
+        public static float Live { get; private set; }
+
         // Enter Play Mode runs without a domain reload, so statics must be reset by hand.
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void ResetStatics()
         {
             Click = false;
             Report = "No fight music in this scene.";
+            Live = 0f;
         }
 
         private void Awake()
@@ -66,6 +71,7 @@ namespace KryticalNova.Audio
         {
             Silence();
             live = 0f;
+            Live = 0f;
             CombatBeat.Rest(0f);
         }
 
@@ -74,6 +80,7 @@ namespace KryticalNova.Audio
             ZoneMusic music = conductor != null ? conductor.Music : null;
             if (music == null || source == null)
             {
+                Live = 0f;
                 CombatBeat.Rest(0f);
                 return;
             }
@@ -81,6 +88,7 @@ namespace KryticalNova.Audio
             bool fighting = LocalPlayerFights();
             float seconds = fighting ? music.fadeInSeconds : music.fadeOutSeconds;
             live = Mathf.MoveTowards(live, fighting ? 1f : 0f, Time.unscaledDeltaTime / Mathf.Max(0.05f, seconds));
+            Live = live;
             if (live <= 0f)
             {
                 Silence();

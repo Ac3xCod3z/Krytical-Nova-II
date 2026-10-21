@@ -13,19 +13,22 @@ MonoBehaviour:
   m_Name: ZoneMusic_Zone01_StarterTown
   m_EditorClassIdentifier: KryticalNova.Audio::KryticalNova.Audio.ZoneMusic
   combat:
-  - {fileID: 11400000, guid: 12b5219f30ecbf34daf05b7e93a58cea, type: 2}
-  - {fileID: 11400000, guid: a6bb1075312d9dd4c89ae94063867f34, type: 2}
-  - {fileID: 11400000, guid: 0d93a8c38cc93244e9a6015a288b7cce, type: 2}
-  - {fileID: 11400000, guid: 959d5494a9e515c41a1f0ac1d095817f, type: 2}
-  - {fileID: 11400000, guid: cd1f3ac421534714d95499e284423924, type: 2}
-  - {fileID: 11400000, guid: d29dc5811457ce84ea95d7d03ce05fa4, type: 2}
-  - {fileID: 11400000, guid: 47a7c8d8b046daa4db3855f6fd191b24, type: 2}
-  - {fileID: 11400000, guid: 4aac1d090111ec84a8981424942ee4ff, type: 2}
-  - {fileID: 11400000, guid: 683ff8b395a9c14468eda51951c01bae, type: 2}
-  - {fileID: 11400000, guid: 94aa595c0240d09489673353b68e75cc, type: 2}
-  - {fileID: 11400000, guid: c9f59998eba2b4047923ee7951ad928f, type: 2}
-  - {fileID: 11400000, guid: 8baf61ce03c1990449be725c067b5aed, type: 2}
+  - {fileID: 11400000, guid: 2461d24d1363b8d40aef1c9aba83178f, type: 2}
+  - {fileID: 11400000, guid: 646c3cffc0ead2d49b69c0bcf23fbb05, type: 2}
+  - {fileID: 11400000, guid: 88671ef333706094194ec0c98a38e552, type: 2}
+  - {fileID: 11400000, guid: 87c7b385899810044b91f1893b886869, type: 2}
+  - {fileID: 11400000, guid: 4410f392bb105c044b99d56fc14d8b4c, type: 2}
+  - {fileID: 11400000, guid: c3acd3eacd66bdf4a91dc55560f2803a, type: 2}
+  - {fileID: 11400000, guid: 94aa7737cacfdc044aa46977df99c630, type: 2}
+  - {fileID: 11400000, guid: e07b958763e39944a92dd5168206e0d7, type: 2}
+  - {fileID: 11400000, guid: dbd55ddf0d64c804bb21eb051c86dc6c, type: 2}
+  - {fileID: 11400000, guid: d87ca13b8fb76d2418ffb0f2fda9960a, type: 2}
+  - {fileID: 11400000, guid: 264d481d1ef0c694f9425aef8068747b, type: 2}
   gapSeconds: 2
   fadeInSeconds: 0.6
   fadeOutSeconds: 2.5
   calloutsOnly: 1
+  explore:
+  - {fileID: 11400000, guid: f006d2456820d084591406f4e39ac7d3, type: 2}
+  exploreVolume: 0.8
+  exploreFadeSeconds: 3
