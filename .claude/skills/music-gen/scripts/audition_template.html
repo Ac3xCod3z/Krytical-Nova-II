@@ -1,81 +1,74 @@
 <title>Nova Soundtrack Audition</title>
 <meta name="claude:viewport-fit-sides" content="cover">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bungee&family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@500;600&family=JetBrains+Mono:wght@400;500&display=swap">
 <style>
-/* Layout: one comic page per game place, in the order a player meets them; takes sit side by side as panels. */
+/* Layout: the same dark audition page as the sound and voice auditions; one block per game place, in the order a player
+   meets them, takes side by side. Single dark look on purpose (the owner's audition pages are all dark). */
 :root {
-  --paper: #f3f1ec; --panel: #ffffff; --ink: #15161a; --muted: #5d6170; --line: #d9d6cf;
-  --cyan: #0a8f9c; --red: #c42a33; --gold: #a8740f; --ok: #2f7d4f; --warn: #b5561b;
-  --wave: #9aa1b0; --wave-on: #15161a;
-  --display: "Bungee", "Impact", "Arial Black", sans-serif;
-  --body: "Barlow", "Segoe UI", system-ui, sans-serif;
-  --label: "Barlow Condensed", "Arial Narrow", sans-serif;
-  --mono: "JetBrains Mono", ui-monospace, Consolas, monospace;
+  --bg: #14151a; --panel: #1c1e26; --panel-2: #20242f; --line: #2c2f3a; --fg: #e8e8ee; --muted: #9aa0b0;
+  --btn: #2b3040; --btn-line: #47506a; --btn-hover: #38405a; --main: #224455; --main-line: #55aadd; --on: #337755; --on-line: #55cc88;
+  --gold: #e8b04a; --red: #ff5a63; --cyan: #4fe3f0; --warn: #f0965a; --ok: #5fcf8a; --wave: #4a5060; --wave-on: #c9cdd8;
+  --body: system-ui, "Segoe UI", sans-serif; --mono: ui-monospace, Consolas, monospace;
+  color-scheme: dark;
 }
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
-  --paper: #101116; --panel: #191b22; --ink: #eceef3; --muted: #9aa0b0; --line: #2c2f3a;
-  --cyan: #4fe3f0; --red: #ff5a63; --gold: #e8b04a; --ok: #5fcf8a; --warn: #f0965a; --wave: #4a5060; --wave-on: #eceef3; color-scheme: dark } }
-:root[data-theme="dark"] {
-  --paper: #101116; --panel: #191b22; --ink: #eceef3; --muted: #9aa0b0; --line: #2c2f3a;
-  --cyan: #4fe3f0; --red: #ff5a63; --gold: #e8b04a; --ok: #5fcf8a; --warn: #f0965a; --wave: #4a5060; --wave-on: #eceef3; color-scheme: dark }
 * { box-sizing: border-box }
-body { background: var(--paper); color: var(--ink); font: 16px/1.5 var(--body); margin: 0 }
-.wrap { max-width: 1180px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 28px 64px; display: grid; gap: 34px }
-h1, h2 { font-family: var(--display); font-weight: 400; margin: 0; text-wrap: balance; letter-spacing: .01em }
-h1 { font-size: clamp(30px, 5vw, 52px); line-height: 1.02 }
-h1 .glitch { color: var(--red); text-shadow: 3px 0 0 var(--cyan) }
-h2 { font-size: clamp(20px, 2.6vw, 27px); line-height: 1.1 }
-.lede { max-width: 68ch; color: var(--muted); margin: 10px 0 0 }
-.label { font: 600 12.5px/1.2 var(--label); text-transform: uppercase; letter-spacing: .09em; color: var(--muted) }
+body { background: var(--bg); color: var(--fg); font: 15px/1.45 var(--body); margin: 0 }
+.wrap { max-width: 1180px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 0 120px; display: grid; gap: 22px }
+h1, h2 { margin: 0; text-wrap: balance; font-weight: 650 }
+h1 { font-size: 22px; letter-spacing: .01em }
+h1 .glitch { color: var(--red); text-shadow: 2px 0 0 var(--cyan) }
+h2 { font-size: 19px }
+.lede { max-width: 72ch; color: var(--muted); margin: 6px 0 0 }
+.label { font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted) }
 .mono { font-family: var(--mono); font-variant-numeric: tabular-nums }
-header { display: grid; gap: 14px }
-.howto { display: flex; flex-wrap: wrap; gap: 8px 22px; font-size: 14.5px; color: var(--muted) }
-.howto b { color: var(--ink); font-weight: 600 }
-.route { display: flex; flex-wrap: wrap; gap: 8px; align-items: center }
-.route a { font: 600 14px/1 var(--label); text-transform: uppercase; letter-spacing: .06em; color: var(--ink); text-decoration: none; border: 2px solid var(--ink); padding: 7px 10px; background: var(--panel) }
-.route a:hover, .route a:focus-visible { background: var(--ink); color: var(--paper); outline: none }
+header { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 2; background: var(--bg); border-bottom: 1px solid #333; padding-block: 12px; display: grid; gap: 8px }
+.howto { display: flex; flex-wrap: wrap; gap: 4px 18px; font-size: 13.5px; color: var(--muted) }
+.howto b { color: var(--fg); font-weight: 600 }
+.route { display: flex; flex-wrap: wrap; gap: 6px; align-items: center }
+.route a { font-size: 13px; color: var(--fg); text-decoration: none; background: var(--btn); border: 1px solid var(--btn-line); border-radius: 6px; padding: 3px 10px }
+.route a:hover, .route a:focus-visible { background: var(--btn-hover); outline: none }
 .route span { color: var(--muted) }
-section.place { display: grid; gap: 14px; border-top: 3px solid var(--ink); padding-top: 16px; scroll-margin-top: 12px }
-.placehead { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); gap: 10px 28px; align-items: start }
-.placehead .facts { display: grid; gap: 6px; font-size: 14.5px; min-width: 0 }
+section.place { display: grid; gap: 12px; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 14px; scroll-margin-top: 150px }
+.placehead { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); gap: 8px 24px; align-items: start }
+.placehead .facts { display: grid; gap: 4px; font-size: 14px; min-width: 0; color: var(--muted) }
+.placehead .facts b { color: var(--fg) }
 .placehead .facts p { margin: 0 }
-.scene { font-family: var(--mono); font-size: 12.5px; color: var(--muted); overflow-wrap: anywhere }
-.cue { display: grid; gap: 10px }
-.cuehead { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: baseline }
-.cuehead strong { font: 600 19px/1.1 var(--label); letter-spacing: .03em }
-details.prompt { font-size: 13.5px; color: var(--muted) }
+.scene { font-family: var(--mono); font-size: 12px; color: var(--muted); overflow-wrap: anywhere }
+.cue { display: grid; gap: 8px; border-top: 1px solid var(--line); padding-top: 10px }
+.cuehead { display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: baseline }
+.cuehead strong { font-size: 16px }
+details.prompt { font-size: 13px; color: var(--muted) }
 details.prompt summary { cursor: pointer; width: fit-content }
-.takes { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px }
-.take { background: var(--panel); border: 2px solid var(--ink); box-shadow: 4px 4px 0 var(--ink); padding: 12px; display: grid; gap: 9px; min-width: 0 }
-.take.picked { box-shadow: 4px 4px 0 var(--cyan); border-color: var(--cyan) }
+.takes { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 10px }
+.take { background: var(--panel-2); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; display: grid; gap: 8px; min-width: 0 }
+.take.picked { border-color: var(--on-line); box-shadow: 0 0 0 1px var(--on-line) inset }
 .take .top { display: flex; justify-content: space-between; gap: 8px; align-items: baseline }
-.take .name { font: 600 16px/1 var(--label); letter-spacing: .05em }
-canvas.wave { width: 100%; height: 54px; display: block; cursor: pointer; background: transparent }
-.stats { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 12px; color: var(--muted) }
-.flags { display: grid; gap: 3px; font-size: 12.5px }
+.take .name { font-weight: 600 }
+canvas.wave { width: 100%; height: 54px; display: block; cursor: pointer; background: transparent; border-radius: 4px }
+.stats { display: flex; flex-wrap: wrap; gap: 2px 12px; font-size: 12px; color: var(--muted) }
+.flags { display: grid; gap: 2px; font-size: 12.5px }
 .flag { color: var(--warn) } .clean { color: var(--ok) }
 .btns { display: flex; flex-wrap: wrap; gap: 6px }
-button { font: 600 13.5px/1 var(--label); letter-spacing: .05em; text-transform: uppercase; color: var(--ink); background: transparent; border: 2px solid var(--ink); padding: 7px 9px; cursor: pointer; border-radius: 0 }
-button:hover { background: var(--line) }
-button:focus-visible { outline: 3px solid var(--cyan); outline-offset: 1px }
-button.on { background: var(--ink); color: var(--paper) }
-button.keep.on { background: var(--cyan); border-color: var(--cyan); color: var(--paper) }
-button.maybe.on { background: var(--gold); border-color: var(--gold); color: var(--paper) }
-button.hold { border-color: var(--red); color: var(--red) }
-button.hold.on { background: var(--red); color: var(--paper) }
+button { background: var(--btn); color: var(--fg); border: 1px solid var(--btn-line); border-radius: 6px; padding: 5px 12px; cursor: pointer; font: inherit; font-size: 14px }
+button:hover { background: var(--btn-hover) }
+button:focus-visible { outline: 2px solid var(--main-line); outline-offset: 1px }
+button.play, button.prev { background: var(--main); border-color: var(--main-line) }
+button.on { background: var(--on); border-color: var(--on-line) }
+button.keep.on { background: var(--on); border-color: var(--on-line) }
+button.maybe.on { background: #5a4a1f; border-color: var(--gold) }
+button.hold { border-color: var(--red) }
+button.hold.on { background: #6a2a2e; border-color: var(--red) }
 .cuefoot { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center }
-.cuefoot textarea { flex: 1 1 280px; min-height: 40px; font: 14px/1.4 var(--body); color: var(--ink); background: var(--panel); border: 2px solid var(--line); padding: 7px 9px; resize: vertical }
+.cuefoot textarea { flex: 1 1 280px; min-height: 36px; font: 14px/1.4 var(--body); color: var(--fg); background: #111; border: 1px solid var(--btn-line); border-radius: 6px; padding: 5px 8px; resize: vertical }
 .saved { font-size: 13px; color: var(--muted) }
-.previews { display: grid; gap: 12px }
-.preview { background: var(--panel); border: 2px dashed var(--ink); padding: 12px 14px; display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center }
-.preview .what { flex: 1 1 320px; min-width: 0; font-size: 14.5px }
+.previews { display: grid; gap: 10px }
+.preview { background: var(--panel-2); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center }
+.preview .what { flex: 1 1 320px; min-width: 0; font-size: 14px }
 .preview .uses { font-family: var(--mono); font-size: 12px; color: var(--muted) }
 .picksline { display: grid; gap: 8px }
-.picksline code { display: block; font: 13px/1.5 var(--mono); background: var(--panel); border: 2px solid var(--line); padding: 10px; overflow-x: auto; white-space: pre }
-.status { font-size: 13.5px; color: var(--muted) }
+.picksline code { display: block; font: 13px/1.5 var(--mono); background: #111; border: 1px solid var(--btn-line); border-radius: 6px; padding: 8px 10px; overflow-x: auto; white-space: pre; color: var(--fg) }
+.status { font-size: 13px; color: var(--muted) }
 .empty { color: var(--muted); font-style: italic }
-@media (max-width: 760px) { .placehead { grid-template-columns: minmax(0, 1fr) } }
+@media (max-width: 760px) { .placehead { grid-template-columns: minmax(0, 1fr) } header { position: static } }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important } }
 </style>
 
@@ -108,6 +101,7 @@ button.hold.on { background: var(--red); color: var(--paper) }
 </div>
 
 <script>
+(() => {
 const DATA = /*__DATA__*/null;
 const $ = (s, el = document) => el.querySelector(s);
 const make = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
@@ -320,5 +314,6 @@ async function start() {
     $("#pickcode").textContent = pickLine(); document.querySelectorAll(".preview").forEach(b => b._upd && b._upd());
   }, () => { $("#status").textContent = "Could not read saved picks. New clicks still build the line at the bottom."; });
 }
-start();
+start().catch(e => { const st = document.getElementById("status"); if (st) st.textContent = "The page hit an error: " + (e && e.message || e); });
+})();
 </script>
