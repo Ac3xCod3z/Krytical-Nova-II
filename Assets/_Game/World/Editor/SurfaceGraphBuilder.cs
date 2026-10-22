@@ -128,7 +128,7 @@ namespace KryticalNova.EditorTools
             string note = $"Baked {System.DateTime.Now:yyyy-MM-dd HH:mm} from {scene}: region {region.center:0} size {region.size:0}; " +
                           $"spacing {o.Spacing} (terrain {o.TerrainSpacing}), stand-off {o.StandOff}, walls from {o.MinAngle}° to {o.MaxAngle}°, " +
                           $"outside the town {o.OuterSpacing}, colliders {o.MinColliderHeight} m tall and up.";
-            graph.Set(r.Points, r.Normals, r.EdgeStart, r.EdgeTo, r.EdgeKind, r.Joins, note);
+            graph.Set(r.Points, r.Normals, r.EdgeStart, r.EdgeTo, r.EdgeKind, r.Joins, note, r.Scales, r.Rule);
             byte[] bytes = graph.Encode();
             File.WriteAllBytes(dataPath, bytes);
             AssetDatabase.ImportAsset(dataPath);

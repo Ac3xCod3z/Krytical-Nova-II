@@ -510,5 +510,21 @@
  "SFX/Movement/SFX_LandThud_04.wav": {
   "slot": "Land Thud",
   "from": "bt25_ultimatesfxforgames_softwarebundle/Clothing, Fabric & Materials/FL_GFX_Clothing_Fabric_Material_Foley_Drop_Material_03.wav pitch +0.75 tilt -1.5"
+ },
+ "SFX/Movement/SFX_WaterStep_01.wav": {
+  "slot": "Water Step",
+  "from": "water_audiohero/Water/Feet-Water-Wade_B07-01082.wav"
+ },
+ "SFX/Movement/SFX_WaterStep_02.wav": {
+  "slot": "Water Step",
+  "from": "water_audiohero/Water/Feet-Water-Wade_B07-01082.wav"
+ },
+ "SFX/Movement/SFX_WaterStep_03.wav": {
+  "slot": "Water Step",
+  "from": "water_audiohero/Water/Feet-Water-Wade_B07-01082.wav pitch +1.5 tilt +1"
+ },
+ "SFX/Movement/SFX_WaterStep_04.wav": {
+  "slot": "Water Step",
+  "from": "water_audiohero/Water/Feet-Water-Wade_B07-01082.wav pitch -1.5 tilt -1"
  }
 }

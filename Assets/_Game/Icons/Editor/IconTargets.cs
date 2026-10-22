@@ -29,6 +29,7 @@ namespace KryticalNova.EditorTools
                     case MovementSkillData movement: return movement.icon;
                     case ItemDefinition item: return item.icon;
                     case KryticalNova.Player.WallstrideSettings wallstride: return wallstride.icon;
+                    case KryticalNova.Player.WaterstrideSettings waterstride: return waterstride.icon;
                     default: return null;
                 }
             }
@@ -40,6 +41,7 @@ namespace KryticalNova.EditorTools
                     case MovementSkillData movement: movement.icon = value; break;
                     case ItemDefinition item: item.icon = value; break;
                     case KryticalNova.Player.WallstrideSettings wallstride: wallstride.icon = value; break;
+                    case KryticalNova.Player.WaterstrideSettings waterstride: waterstride.icon = value; break;
                     default: return;
                 }
                 EditorUtility.SetDirty(asset);
@@ -93,6 +95,16 @@ namespace KryticalNova.EditorTools
                 {
                     kind = IconTargetKind.Passive, id = "Wallstride", name = "Wallstride", asset = wallstride, group = "Movement",
                     order = 20100, request = IconLibrary.RequestForPassive("Wallstride", "run up walls climb vertical scale tree high ground parkour"),
+                });
+            }
+            foreach (string guid in AssetDatabase.FindAssets("t:WaterstrideSettings", new[] { PassiveRoot }))
+            {
+                var waterstride = AssetDatabase.LoadAssetAtPath<KryticalNova.Player.WaterstrideSettings>(AssetDatabase.GUIDToAssetPath(guid));
+                if (waterstride == null) continue;
+                found.Add(new IconTarget
+                {
+                    kind = IconTargetKind.Passive, id = "Waterstride", name = "Waterstride", asset = waterstride, group = "Movement",
+                    order = 20101, request = IconLibrary.RequestForPassive("Waterstride", "run on water surface wave splash sprint across lake river"),
                 });
             }
             found.Sort((a, b) => a.order != b.order ? a.order.CompareTo(b.order) : string.CompareOrdinal(a.id, b.id));

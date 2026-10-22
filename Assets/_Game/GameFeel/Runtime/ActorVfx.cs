@@ -38,7 +38,7 @@ namespace KryticalNova.GameFeel
         private readonly List<Aura> charges = new List<Aura>(2);
         private float chargeStart, chargeSeconds;
         private float rootHeight;
-        private GameObject runLoop, airLoop, windLoop;
+        private GameObject runLoop, airLoop, windLoop, waterLoop;
         private GameObject windPrefab;
         private float windStrength;
         private ParticleSystem[] windSystems;
@@ -49,7 +49,17 @@ namespace KryticalNova.GameFeel
         private ParticleSystem[] runLoopSystems;
         private float nextDustCheck;
         private GameObject runPrefab;
-        private bool running, airborne, onWall;
+        private bool running, airborne, onWall, onWater;
+        // Footsteps on the water: each foot is seen to come down (or, with no humanoid feet, a step every so often).
+        private Transform[] waterFeet;
+        private readonly bool[] footLifted = new bool[2];
+        private float nextTimedStep;
+        private Vector3 lastStepRoot;
+        private const float FootPlanted = 0.13f;  // metres over the soles: the foot is down
+        private const float FootLifted = 0.2f;    // ...and up again, ready for the next step
+        private const float TimedStepSeconds = 0.3f;
+        /// <summary>A foot of <c>actor</c> struck the water at <c>point</c> (Waterstride): GameFeelPresenter splashes it.</summary>
+        public static event System.Action<Transform, Vector3> WaterStep;
         /// <summary>When this character last set off at a run or was ordered on while running (GameFeelPresenter.RunStarted).</summary>
         public float LastRunOrder { get; set; } = -100f;
         /// <summary>When a run's take-off last played on this character (<see cref="RunTakeOffRules"/>).</summary>
@@ -186,6 +196,17 @@ namespace KryticalNova.GameFeel
         /// Standing on a wall: the wall loop at the feet (a grip glow and puffs left by the distance covered), and no run
         /// dust (the wall loop has its own).
         /// </summary>
+        /// <summary>On the water (Waterstride): the wake at the feet, ripples and spray, instead of the run's dust.</summary>
+        public void SetOnWater(bool value, GameObject loopPrefab)
+        {
+            onWater = value;
+            waterFeet = null;
+            footLifted[0] = footLifted[1] = false;
+            lastStepRoot = transform.position;
+            SetLoop(ref waterLoop, value && loopPrefab != null, loopPrefab, Vector3.zero);
+            RefreshRunLoop();
+        }
+
         public void SetOnWall(bool value, GameObject loopPrefab)
         {
             onWall = value;
@@ -234,6 +255,37 @@ namespace KryticalNova.GameFeel
                 if (feet[0] != null) break;
             }
             return feet;
+        }
+
+        /// <summary>On the water: a footstep each time a foot comes down onto it (every machine shows its own).</summary>
+        private void WatchWaterSteps()
+        {
+            if (!onWater) return;
+            float soles = transform.position.y - rootHeight;
+            waterFeet ??= Feet();
+            if (waterFeet[0] == null)
+            {
+                // No feet to watch: a step every so often while the body travels.
+                Vector3 moved = transform.position - lastStepRoot;
+                moved.y = 0f;
+                if (Time.time < nextTimedStep || moved.sqrMagnitude < 0.04f) return;
+                nextTimedStep = Time.time + TimedStepSeconds;
+                lastStepRoot = transform.position;
+                WaterStep?.Invoke(transform, new Vector3(transform.position.x, soles, transform.position.z));
+                return;
+            }
+            for (int i = 0; i < waterFeet.Length; i++)
+            {
+                Transform foot = waterFeet[i];
+                if (foot == null) continue;
+                float height = foot.position.y - soles;
+                if (footLifted[i] && height < FootPlanted)
+                {
+                    footLifted[i] = false;
+                    WaterStep?.Invoke(transform, new Vector3(foot.position.x, soles, foot.position.z));
+                }
+                else if (!footLifted[i] && height > FootLifted) footLifted[i] = true;
+            }
         }
 
         public void SetAirborne(bool value, GameObject loopPrefab)
@@ -292,7 +344,7 @@ namespace KryticalNova.GameFeel
         {
             RefreshWind();
             bool had = runLoop != null;
-            SetLoop(ref runLoop, running && !airborne && !onWall, runPrefab, RunLoopHeight);
+            SetLoop(ref runLoop, running && !airborne && !onWall && !onWater, runPrefab, RunLoopHeight); // no dust off water
             if (runLoop == null) runLoopSystems = null;
             else if (!had)
             {
@@ -391,6 +443,7 @@ namespace KryticalNova.GameFeel
             if (trail != null && trail.emitting && Time.time >= trailUntil) trail.emitting = false;
             WatchStanding();
             TintRunDust();
+            WatchWaterSteps();
 
             if (charges.Count > 0)
             {
@@ -428,13 +481,14 @@ namespace KryticalNova.GameFeel
                 pool.ReleaseDeferred(runLoop);
                 pool.ReleaseDeferred(airLoop);
                 pool.ReleaseDeferred(windLoop);
+                pool.ReleaseDeferred(waterLoop);
                 foreach (GameObject loop in wallLoops) pool.ReleaseDeferred(loop);
             }
-            runLoop = airLoop = windLoop = null;
+            runLoop = airLoop = windLoop = waterLoop = null;
             windSystems = null;
             wallLoops[0] = wallLoops[1] = null;
             runLoopSystems = null;
-            running = airborne = onWall = false;
+            running = airborne = onWall = onWater = false;
             if (trail != null) trail.emitting = false;
         }
 

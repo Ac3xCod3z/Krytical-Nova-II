@@ -43,8 +43,25 @@ namespace KryticalNova.World
             public JoinKind kind;
         }
 
+        /// <summary>
+        /// The rule the baker joins two nodes by (before its physics checks): a step along a face is at most
+        /// <see cref="link"/> times the nodes' spacing scale and turns at most <see cref="maxTurn"/>; a corner turns more,
+        /// up to <see cref="cornerTurn"/>, and reaches <see cref="cornerFactor"/> times as far. A version 4 file keeps the
+        /// rule and works out the pairs it allows again when it is read, so only which of them were kept is stored.
+        /// </summary>
+        [Serializable]
+        public struct LinkRule
+        {
+            public float link, maxTurn, cornerTurn, cornerFactor;
+            public bool IsSet => link > 0f && cornerFactor > 0f;
+        }
+
         private const int Magic = 0x47534E4B; // "KNSG"
-        private const int Version = 3; // 2: edges as offsets from their node, packed with their kind; 3: points in centimetre steps
+        // 2: edges as offsets from their node, packed with their kind; 3: points in centimetre steps; 4: edges not stored,
+        // worked out again from the points, normals and spacing by the link rule, with one bit for each pair it allows
+        // (owner, 22 Oct 2026: the wall graphs are "really big"). A version 3 file still reads.
+        private const int Version3 = 3;
+        private const int Version = 4;
         private const float IndexCell = 2f;
 
         [Tooltip("The baked graph: nodes, edges and joins, compressed (written by the builder).")]
@@ -61,6 +78,9 @@ namespace KryticalNova.World
         [NonSerialized] public int[] edgeTo;
         [NonSerialized] public EdgeKind[] edgeKind;
         [NonSerialized] public Join[] joins;
+        /// <summary>Each node's sample spacing over the wall spacing (terrain and far walls are coarser); null in a version 3 file.</summary>
+        [NonSerialized] public float[] scales;
+        [NonSerialized] public LinkRule rule;
         [NonSerialized] private Dictionary<Vector3Int, List<int>> index;
         [NonSerialized] private Dictionary<Vector2Int, List<int>>[] joinIndex;
         [NonSerialized] private volatile bool loading;
@@ -145,8 +165,11 @@ namespace KryticalNova.World
         }
 
         /// <summary>Fills the graph from baked lists (the builder and tests use it).</summary>
-        public void Set(Vector3[] nodePoints, Vector3[] nodeNormals, int[] starts, int[] to, EdgeKind[] kinds, Join[] nodeJoins, string note)
+        public void Set(Vector3[] nodePoints, Vector3[] nodeNormals, int[] starts, int[] to, EdgeKind[] kinds, Join[] nodeJoins, string note,
+            float[] nodeScales = null, LinkRule linkRule = default)
         {
+            scales = nodeScales;
+            rule = linkRule;
             points = nodePoints;
             normals = nodeNormals;
             edgeStart = starts;
@@ -167,15 +190,18 @@ namespace KryticalNova.World
             nodeCount = nodes;
         }
 
-        /// <summary>The graph as compressed bytes, for its file.</summary>
-        public byte[] Encode()
+        /// <summary>The graph as compressed bytes, for its file: version 4 when the spacing and the link rule are known.</summary>
+        public byte[] Encode() => scales != null && rule.IsSet ? EncodeLinked() : EncodeEdges();
+
+        /// <summary>Version 3: every edge written out.</summary>
+        private byte[] EncodeEdges()
         {
             using var memory = new MemoryStream();
             using (var zip = new GZipStream(memory, System.IO.Compression.CompressionLevel.Optimal, true))
             using (var w = new BinaryWriter(zip))
             {
                 w.Write(Magic);
-                w.Write(Version);
+                w.Write(Version3);
                 w.Write(points.Length);
                 w.Write(edgeTo.Length);
                 w.Write(joins.Length);
@@ -218,7 +244,9 @@ namespace KryticalNova.World
             using var zip = new GZipStream(memory, CompressionMode.Decompress);
             using var r = new BinaryReader(zip);
             if (r.ReadInt32() != Magic) throw new InvalidDataException("not a surface graph");
-            if (r.ReadInt32() != Version) throw new InvalidDataException("another version");
+            int version = r.ReadInt32();
+            if (version == Version) { DecodeLinked(r); return; }
+            if (version != Version3) throw new InvalidDataException("another version");
             int n = r.ReadInt32(), e = r.ReadInt32(), jn = r.ReadInt32();
             var p = new Vector3[n];
             Vector3Int last = Vector3Int.zero;
@@ -257,6 +285,243 @@ namespace KryticalNova.World
             }
             Set(p, nn, s, t, k, j, bakeNote);
         }
+
+        /// <summary>
+        /// Version 4. The points, normals and spacing are written as they will be read; the pairs the link rule allows
+        /// between those read values are worked out (<see cref="LinkPairs"/>) and one bit each says whether it is an edge;
+        /// an edge the rule does not give again (rounding at its limits) is written out after them. Joins go in node order,
+        /// each as the step from the one before.
+        /// </summary>
+        private byte[] EncodeLinked()
+        {
+            int n = points.Length;
+            var qp = new Vector3[n];
+            var qn = new Vector3[n];
+            var qs = new float[n];
+            using var memory = new MemoryStream();
+            using (var zip = new GZipStream(memory, System.IO.Compression.CompressionLevel.Optimal, true))
+            using (var w = new BinaryWriter(zip))
+            {
+                w.Write(Magic);
+                w.Write(Version);
+                w.Write(n);
+                w.Write(joins.Length);
+                w.Write(rule.link); w.Write(rule.maxTurn); w.Write(rule.cornerTurn); w.Write(rule.cornerFactor);
+                Vector3Int last = Vector3Int.zero;
+                for (int i = 0; i < n; i++)
+                {
+                    Vector3 p = points[i];
+                    var q = new Vector3Int(Mathf.RoundToInt(p.x * 100f), Mathf.RoundToInt(p.y * 100f), Mathf.RoundToInt(p.z * 100f));
+                    WriteSigned(w, q.x - last.x); WriteSigned(w, q.y - last.y); WriteSigned(w, q.z - last.z);
+                    last = q;
+                    qp[i] = new Vector3(q.x, q.y, q.z) * 0.01f;
+                }
+                for (int i = 0; i < n; i++)
+                {
+                    Vector3 v = normals[i];
+                    sbyte x = (sbyte)Mathf.RoundToInt(v.x * 127f), y = (sbyte)Mathf.RoundToInt(v.y * 127f), z = (sbyte)Mathf.RoundToInt(v.z * 127f);
+                    w.Write(x); w.Write(y); w.Write(z);
+                    qn[i] = new Vector3(x, y, z).normalized;
+                }
+                for (int i = 0; i < n; i++)
+                {
+                    byte b = (byte)Mathf.Clamp(Mathf.RoundToInt(scales[i] * ScaleSteps), 1, 255);
+                    w.Write(b);
+                    qs[i] = b / ScaleSteps;
+                }
+
+                LinkPairs(qp, qn, qs, rule, out int[] pairStart, out int[] pairTo, out EdgeKind[] pairKind);
+                var bits = new byte[(pairTo.Length + 7) / 8];
+                var extra = new List<int>[n];
+                for (int i = 0; i < n; i++)
+                {
+                    for (int e = edgeStart[i]; e < edgeStart[i + 1]; e++)
+                    {
+                        int found = -1;
+                        for (int c = pairStart[i]; c < pairStart[i + 1]; c++)
+                            if (pairTo[c] == edgeTo[e] && pairKind[c] == edgeKind[e]) { found = c; break; }
+                        if (found >= 0) bits[found >> 3] |= (byte)(1 << (found & 7));
+                        else (extra[i] ??= new List<int>()).Add(e);
+                    }
+                }
+                w.Write(pairTo.Length);
+                w.Write(bits);
+                for (int i = 0; i < n; i++)
+                {
+                    List<int> list = extra[i];
+                    WriteVarint(w, (uint)(list?.Count ?? 0));
+                    if (list == null) continue;
+                    foreach (int e in list)
+                    {
+                        int delta = edgeTo[e] - i;
+                        uint zig = (uint)((delta << 1) ^ (delta >> 31));
+                        WriteVarint(w, (zig << 1) | (uint)edgeKind[e]);
+                    }
+                }
+
+                var order = new int[joins.Length];
+                for (int i = 0; i < order.Length; i++) order[i] = i;
+                Array.Sort(order, (a, b) => joins[a].node != joins[b].node ? joins[a].node.CompareTo(joins[b].node) : a.CompareTo(b));
+                int lastNode = 0;
+                foreach (int i in order)
+                {
+                    Join j = joins[i];
+                    WriteVarint(w, (uint)(j.node - lastNode));
+                    lastNode = j.node;
+                    Vector3 d = (j.navPoint - qp[j.node]) * 100f;
+                    WriteSigned(w, Mathf.RoundToInt(d.x)); WriteSigned(w, Mathf.RoundToInt(d.y)); WriteSigned(w, Mathf.RoundToInt(d.z));
+                    w.Write((byte)j.kind);
+                }
+            }
+            return memory.ToArray();
+        }
+
+        private void DecodeLinked(BinaryReader r)
+        {
+            int n = r.ReadInt32(), jn = r.ReadInt32();
+            var linkRule = new LinkRule { link = r.ReadSingle(), maxTurn = r.ReadSingle(), cornerTurn = r.ReadSingle(), cornerFactor = r.ReadSingle() };
+            var p = new Vector3[n];
+            Vector3Int last = Vector3Int.zero;
+            for (int i = 0; i < n; i++)
+            {
+                last += new Vector3Int(ReadSigned(r), ReadSigned(r), ReadSigned(r));
+                p[i] = new Vector3(last.x, last.y, last.z) * 0.01f;
+            }
+            var nn = new Vector3[n];
+            for (int i = 0; i < n; i++) nn[i] = new Vector3(r.ReadSByte(), r.ReadSByte(), r.ReadSByte()).normalized;
+            var sc = new float[n];
+            for (int i = 0; i < n; i++) sc[i] = r.ReadByte() / ScaleSteps;
+
+            LinkPairs(p, nn, sc, linkRule, out int[] pairStart, out int[] pairTo, out EdgeKind[] pairKind);
+            int pairCount = r.ReadInt32();
+            if (pairCount != pairTo.Length) throw new InvalidDataException($"the link rule gave {pairTo.Length} pairs, the file {pairCount}");
+            byte[] bits = r.ReadBytes((pairCount + 7) / 8);
+            var s = new int[n + 1];
+            var t = new List<int>(pairCount);
+            var k = new List<EdgeKind>(pairCount);
+            for (int i = 0; i < n; i++)
+            {
+                s[i] = t.Count;
+                for (int c = pairStart[i]; c < pairStart[i + 1]; c++)
+                {
+                    if ((bits[c >> 3] & (1 << (c & 7))) == 0) continue;
+                    t.Add(pairTo[c]);
+                    k.Add(pairKind[c]);
+                }
+                uint extras = ReadVarint(r);
+                for (uint x = 0; x < extras; x++)
+                {
+                    uint packed = ReadVarint(r);
+                    uint zig = packed >> 1;
+                    t.Add(i + ((int)(zig >> 1) ^ -(int)(zig & 1)));
+                    k.Add((EdgeKind)(packed & 1));
+                }
+            }
+            s[n] = t.Count;
+            var j = new Join[jn];
+            int node = 0;
+            for (int i = 0; i < jn; i++)
+            {
+                node += (int)ReadVarint(r);
+                var d = new Vector3(ReadSigned(r), ReadSigned(r), ReadSigned(r)) * 0.01f;
+                j[i] = new Join { node = node, navPoint = p[node] + d, kind = (JoinKind)r.ReadByte() };
+            }
+            Set(p, nn, s, t.ToArray(), k.ToArray(), j, bakeNote, sc, linkRule);
+        }
+
+        private const float ScaleSteps = 10f;
+
+        /// <summary>
+        /// Every ordered pair of nodes the link rule allows, before any physics check, for each node in the order of the
+        /// node it leads to: what the baker's edges are chosen from. Worked out the same way when a graph is written and
+        /// when it is read, from the same rounded values.
+        /// </summary>
+        public static void LinkPairs(Vector3[] p, Vector3[] nrm, float[] sc, LinkRule linkRule, out int[] start, out int[] to, out EdgeKind[] kind)
+        {
+            int n = p.Length;
+            if (n == 0) { start = new int[1]; to = Array.Empty<int>(); kind = Array.Empty<EdgeKind>(); return; }
+            float smallest = float.PositiveInfinity;
+            foreach (float s in sc) smallest = Mathf.Min(smallest, s);
+            float cell = Mathf.Max(0.05f, linkRule.link * linkRule.cornerFactor * smallest);
+            var sortedKeys = new long[n];
+            var order = new int[n];
+            for (int i = 0; i < n; i++) { sortedKeys[i] = CellKey(p[i], cell); order[i] = i; }
+            Array.Sort(sortedKeys, order); // within a cell the order does not matter: the pairs are sorted at the end
+            var cells = new Dictionary<long, (int from, int count)>(n / 4 + 1);
+            for (int a = 0; a < n;)
+            {
+                int b = a;
+                while (b < n && sortedKeys[b] == sortedKeys[a]) b++;
+                cells[sortedKeys[a]] = (a, b - a);
+                a = b;
+            }
+
+            var pairKeys = new List<long>(n * 10);
+            var pairKinds = new List<EdgeKind>(n * 10);
+            for (int i = 0; i < n; i++)
+            {
+                float reach = linkRule.link * linkRule.cornerFactor * sc[i];
+                int span = Mathf.CeilToInt(reach / cell);
+                Vector3Int c = CellOf(p[i], cell);
+                for (int x = -span; x <= span; x++)
+                for (int y = -span; y <= span; y++)
+                for (int z = -span; z <= span; z++)
+                {
+                    if (!cells.TryGetValue(PackCell(c.x + x, c.y + y, c.z + z), out var range)) continue;
+                    for (int o = range.from; o < range.from + range.count; o++)
+                    {
+                        int j = order[o];
+                        // Each pair is found from the side with the coarser spacing, whose reach covers it; equal sides
+                        // each find their own.
+                        if (j == i || sc[j] > sc[i]) continue;
+                        float d = Vector3.Distance(p[i], p[j]);
+                        if (d > reach) continue;
+                        float turn = Vector3.Angle(nrm[i], nrm[j]);
+                        EdgeKind k;
+                        if (turn <= linkRule.maxTurn && d <= linkRule.link * sc[i]) k = EdgeKind.Face;
+                        else if (turn > linkRule.maxTurn && turn <= linkRule.cornerTurn) k = EdgeKind.Corner;
+                        else continue;
+                        pairKeys.Add(((long)i << 32) | (uint)j);
+                        pairKinds.Add(k);
+                        if (sc[j] < sc[i])
+                        {
+                            pairKeys.Add(((long)j << 32) | (uint)i);
+                            pairKinds.Add(k);
+                        }
+                    }
+                }
+            }
+            long[] sortedPairs = pairKeys.ToArray();
+            EdgeKind[] kinds = pairKinds.ToArray();
+            Array.Sort(sortedPairs, kinds);
+            start = new int[n + 1];
+            to = new int[sortedPairs.Length];
+            kind = kinds;
+            int at = 0;
+            for (int i = 0; i < n; i++)
+            {
+                start[i] = at;
+                while (at < sortedPairs.Length && (int)(sortedPairs[at] >> 32) == i)
+                {
+                    to[at] = (int)(sortedPairs[at] & 0xFFFFFFFF);
+                    at++;
+                }
+            }
+            start[n] = at;
+        }
+
+        private static Vector3Int CellOf(Vector3 p, float cell) =>
+            new Vector3Int(Mathf.FloorToInt(p.x / cell), Mathf.FloorToInt(p.y / cell), Mathf.FloorToInt(p.z / cell));
+
+        private static long CellKey(Vector3 p, float cell)
+        {
+            Vector3Int c = CellOf(p, cell);
+            return PackCell(c.x, c.y, c.z);
+        }
+
+        private static long PackCell(int x, int y, int z) =>
+            ((long)(x + (1 << 20)) << 42) | ((long)(y + (1 << 20)) << 21) | (long)(z + (1 << 20));
+
 
         private static void WriteSigned(BinaryWriter w, int value) => WriteVarint(w, (uint)((value << 1) ^ (value >> 31)));
 

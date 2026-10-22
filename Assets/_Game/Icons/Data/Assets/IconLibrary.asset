@@ -4888,3 +4888,8 @@ MonoBehaviour:
     set: Fantasy/Thief Skill
     number: 27
     chosen: 1
+  - kind: 3
+    target: Waterstride
+    set: Fantasy/Pirate Skill 1
+    number: 32
+    chosen: 1

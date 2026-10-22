@@ -205,14 +205,15 @@ namespace KryticalNova.Tests
             var read = ScriptableObject.CreateInstance<SurfaceGraph>();
             try
             {
-                baked.Set(r.Points, r.Normals, r.EdgeStart, r.EdgeTo, r.EdgeKind, r.Joins, "test");
+                baked.Set(r.Points, r.Normals, r.EdgeStart, r.EdgeTo, r.EdgeKind, r.Joins, "test", r.Scales, r.Rule);
                 byte[] bytes = baked.Encode();
                 typeof(SurfaceGraph).GetMethod("Decode", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
                     .Invoke(read, new object[] { bytes });
                 Assert.AreEqual(baked.NodeCount, read.NodeCount);
-                CollectionAssert.AreEqual(baked.edgeStart, read.edgeStart);
-                CollectionAssert.AreEqual(baked.edgeTo, read.edgeTo);
-                CollectionAssert.AreEqual(baked.edgeKind, read.edgeKind);
+                // Version 4 keeps each node's edges, in the order of the node they lead to.
+                for (int i = 0; i < baked.NodeCount; i++)
+                    CollectionAssert.AreEquivalent(Edges(baked, i), Edges(read, i), $"node {i} keeps its edges");
+                Assert.AreEqual(baked.joins.Length, read.joins.Length);
                 for (int i = 0; i < baked.NodeCount; i++)
                 {
                     Assert.AreEqual(0f, Vector3.Distance(baked.points[i], read.points[i]), 0.01f, "points are kept to the centimetre");
@@ -224,6 +225,35 @@ namespace KryticalNova.Tests
                 Object.DestroyImmediate(baked);
                 Object.DestroyImmediate(read);
             }
+        }
+
+        [Test]
+        public void AVersion3File_StillReads()
+        {
+            SurfaceGraphBaker.Result r = Bake();
+            var baked = ScriptableObject.CreateInstance<SurfaceGraph>();
+            var read = ScriptableObject.CreateInstance<SurfaceGraph>();
+            try
+            {
+                baked.Set(r.Points, r.Normals, r.EdgeStart, r.EdgeTo, r.EdgeKind, r.Joins, "test"); // no spacing: version 3
+                byte[] bytes = baked.Encode();
+                typeof(SurfaceGraph).GetMethod("Decode", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
+                    .Invoke(read, new object[] { bytes });
+                CollectionAssert.AreEqual(baked.edgeTo, read.edgeTo);
+                CollectionAssert.AreEqual(baked.edgeKind, read.edgeKind);
+            }
+            finally
+            {
+                Object.DestroyImmediate(baked);
+                Object.DestroyImmediate(read);
+            }
+        }
+
+        private static string[] Edges(SurfaceGraph g, int i)
+        {
+            var list = new string[g.edgeStart[i + 1] - g.edgeStart[i]];
+            for (int e = g.edgeStart[i]; e < g.edgeStart[i + 1]; e++) list[e - g.edgeStart[i]] = g.edgeTo[e] + ":" + g.edgeKind[e];
+            return list;
         }
 
         private static int Face(Vector3 n) =>

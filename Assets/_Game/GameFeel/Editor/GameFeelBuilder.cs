@@ -1720,6 +1720,7 @@ namespace KryticalNova.EditorTools
                 so.FindProperty("runWorldFeel").objectReferenceValue = Smeared(World(world, RunStartPlayer, Dust("PFX_Dust_Run")), SmearKind.TakeOff);
                 so.FindProperty("jumpWorldFeel").objectReferenceValue = Smeared(World(world, "Jump", Dust("PFX_Dust_Jump"), Dust("PFX_Jump_Burst")), SmearKind.Jump);
                 so.FindProperty("landWorldFeel").objectReferenceValue = World(world, "Land", Dust("PFX_Dust_Land"), Dust("PFX_Land_Ring"));
+                AddWaterStepFeel(root, world, so);
                 AddJumpPunch(root, world, so);
                 so.FindProperty("attackCastWorldFeel").objectReferenceValue = World(world, "Attack Skill", Slash());
                 so.FindProperty("buffCastWorldFeel").objectReferenceValue = World(world, "Buff Skill", AtFeet("PFX_Cast_Buff"));
@@ -1746,6 +1747,8 @@ namespace KryticalNova.EditorTools
                 so.FindProperty("runLoopVfx").objectReferenceValue = Load(Vfx("PFX_Run_Loop"));
                 BuildRunWindPrefab();
                 so.FindProperty("runWindVfx").objectReferenceValue = Load(Vfx(RunWindName));
+                BuildWaterWakePrefab();
+                so.FindProperty("waterWakeVfx").objectReferenceValue = Load(Vfx(WaterWakeName));
                 so.FindProperty("airborneLoopVfx").objectReferenceValue = Load(Vfx("PFX_Air_Loop"));
                 so.FindProperty("bladeTrail").objectReferenceValue = Load(Vfx(BladeTrailName)).GetComponent<TrailRenderer>();
                 so.ApplyModifiedPropertiesWithoutUndo();

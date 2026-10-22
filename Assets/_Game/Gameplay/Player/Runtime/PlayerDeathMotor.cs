@@ -113,6 +113,7 @@ namespace KryticalNova.Player
         private PlayerJumpMotor jumpMotor;
         private PlayerVaultMotor vaultMotor;
         private PlayerWallRunMotor wallRunMotor;
+        private PlayerWaterstrideMotor waterMotor;
         private IMeleeAttacker meleeCombat;
         private PlayerResources resources;
         private CombatEntity combatEntity;
@@ -152,6 +153,7 @@ namespace KryticalNova.Player
             jumpMotor = GetComponent<PlayerJumpMotor>();
             vaultMotor = GetComponent<PlayerVaultMotor>();
             wallRunMotor = GetComponent<PlayerWallRunMotor>();
+            waterMotor = GetComponent<PlayerWaterstrideMotor>();
             meleeCombat = GetComponent<IMeleeAttacker>();
             resources = GetComponent<PlayerResources>();
             combatEntity = GetComponent<CombatEntity>();
@@ -215,6 +217,7 @@ namespace KryticalNova.Player
             if (vaultMotor != null) vaultMotor.ReleaseForDeath();
             // On a wall or in a tree: pushed out from it, so the body falls clear.
             if (wallRunMotor != null) wallRunMotor.ReleaseForDeath();
+            if (waterMotor != null) waterMotor.ReleaseForDeath(); // killed on the water: the body goes down where it was
             if (buffManager != null) buffManager.ClearAllBuffs();
             if (agent.isActiveAndEnabled && agent.isOnNavMesh)
             {
@@ -274,6 +277,7 @@ namespace KryticalNova.Player
             if (jumpMotor != null) jumpMotor.ReleaseForDeath();
             if (vaultMotor != null) vaultMotor.ReleaseForDeath();
             if (wallRunMotor != null) wallRunMotor.ReleaseForDeath(pushOff: false); // nothing falls: it stays where it was hit
+            if (waterMotor != null) waterMotor.ReleaseForDeath();
             if (buffManager != null) buffManager.ClearAllBuffs();
             if (motionWarping != null && motionWarping.IsActive()) motionWarping.Stop();
             if (agent.isActiveAndEnabled && agent.isOnNavMesh)

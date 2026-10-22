@@ -28,6 +28,7 @@ namespace KryticalNova.UI
         [SerializeField] private PlayerResources resources;
         [SerializeField] private PlayerJumpMotor jumpMotor;
         private PlayerWallRunMotor wallRunMotor;
+        private PlayerWaterstrideMotor waterMotor;
         [SerializeField] private CharacterCombatStats combatStats;
         [SerializeField] private PlayerCombatSkills combatSkills;
         [SerializeField] private CharacterBuffManager buffManager;
@@ -519,6 +520,7 @@ namespace KryticalNova.UI
             resources = player.GetComponent<PlayerResources>();
             jumpMotor = player.GetComponent<PlayerJumpMotor>();
             wallRunMotor = player.GetComponent<PlayerWallRunMotor>();
+            waterMotor = player.GetComponent<PlayerWaterstrideMotor>();
             combatStats = player.GetComponent<CharacterCombatStats>();
             combatSkills = player.GetComponent<PlayerCombatSkills>();
             buffManager = player.GetComponent<CharacterBuffManager>();
@@ -956,7 +958,7 @@ namespace KryticalNova.UI
         private readonly List<SkillTreeView.Group> treeGroups = new List<SkillTreeView.Group>(4);
         private readonly List<string> treeTiers = new List<string>(6);
         private readonly Dictionary<(int, int), int> treeLanes = new Dictionary<(int, int), int>(24);
-        private const string RunKey = "run", JumpKey = "jump", WallstrideKey = "wallstride";
+        private const string RunKey = "run", JumpKey = "jump", WallstrideKey = "wallstride", WaterstrideKey = "waterstride";
 
         // The tiers by the level that opens a skill: 1, 30, 60, 70, 80.
         private static readonly string[] LevelTiers = { "LV 1", "LV 30", "LV 60", "LV 70", "LV 80" };
@@ -1009,6 +1011,7 @@ namespace KryticalNova.UI
                     AddMovementNode(MovementSkillId.Run, RunKey, runTile, 0f);
                     AddMovementNode(MovementSkillId.Jump, JumpKey, jumpTile, 1f);
                     AddWallstrideNode(2f);
+                    AddWaterstrideNode(3f);
                     break;
                 case SkillTreeView.Tab.Wards:
                     heading = $"WARDS   ·   {className} AND SHARED";
@@ -1125,6 +1128,33 @@ namespace KryticalNova.UI
                 Key = WallstrideKey, Name = "Wallstride", Icon = s.icon, Column = column, Row = 0,
                 Rank = open ? "PASSIVE" : "LOCKED", Learned = open, Locked = !open, TooLow = level < s.requiredLevel,
                 Tooltip = $"Wallstride  ·  Run up walls and into trees, to get the high ground or get away. {needs}", Card = card,
+            });
+        }
+
+        /// <summary>
+        /// Waterstride, the passive beside Wallstride (running on water): locked until level 60 with Run and Jump at rank
+        /// 20, like Wallstride; its tile and its card in the details box (owner, 22 Oct 2026: "its own icon and tooltip
+        /// like Wallstride").
+        /// </summary>
+        private void AddWaterstrideNode(float column)
+        {
+            if (waterMotor == null || waterMotor.Settings == null || skills == null) return;
+            WaterstrideSettings s = waterMotor.Settings;
+            bool open = waterMotor.WaterstrideOpen;
+            int level = progression != null ? progression.CurrentLevel : 0;
+            string needs = open ? "Open: click water with Run selected."
+                : $"Opens at level {s.requiredLevel} ({level}), Run rank {s.requiredRunRank} ({skills.RunRank}) and Jump rank {s.requiredJumpRank} ({skills.JumpRank}).";
+            treeGroups.Add(new SkillTreeView.Group { Label = "WATERSTRIDE", Column = column, Width = 1f });
+            VisualElement card = PassiveCard(WaterstrideKey, "Waterstride");
+            FillPassiveCard(card, WaterstrideKey, s.icon, open,
+                "Run on water: across rivers and lakes, the short way over or away from a fight. Click water with Run selected and you run to the shore and out across it, and stand on the water where you stop. Click land to run ashore and on. Out of Flux, you are carried back to the nearest shore.",
+                $"{s.fluxPerSecond:0.#} Flux a second on the water, running or standing · at run speed · always on once open",
+                open ? "Open." : PassiveNeeds(s.requiredLevel, s.requiredRunRank, s.requiredJumpRank, level));
+            treeNodes.Add(new SkillTreeView.Node
+            {
+                Key = WaterstrideKey, Name = "Waterstride", Icon = s.icon, Column = column, Row = 0,
+                Rank = open ? "PASSIVE" : "LOCKED", Learned = open, Locked = !open, TooLow = level < s.requiredLevel,
+                Tooltip = $"Waterstride  ·  Run on water, across rivers and lakes. {needs}", Card = card,
             });
         }
 

@@ -100,6 +100,12 @@ namespace KryticalNova.GameFeel
         [Tooltip("Walls as a second ground: what shows at the feet while standing on a wall (a grip glow, and dust puffs " +
                  "left by the distance walked or run there). Built by Krytical Nova ▸ GameFeel ▸ Rebuild Wallstride Feel.")]
         [SerializeField] private GameObject wallLoopVfx;
+        [Tooltip("The wake at the feet of a player on the water (Waterstride): ripples and spray.")]
+        [SerializeField] private GameObject waterWakeVfx;
+        [Tooltip("A footstep on the water, on the stepper's own game: the splash sound.")]
+        [SerializeField] private MMF_Player waterStepFeel;
+        [Tooltip("A footstep on the water, on every game: a slight splash and a ripple where the foot went in.")]
+        [SerializeField] private MMF_Player waterStepWorldFeel;
         [Tooltip("A jump's crouch, on every client: sparks at the feet and a slight squash.")]
         [SerializeField] private MMF_Player jumpChargeWorldFeel;
         [SerializeField] private MMF_Player landWorldFeel;
@@ -236,6 +242,7 @@ namespace KryticalNova.GameFeel
             Instance = this;
             PvpCritOverride = null;
             ClientPresentationRegistry.RegisterFeel(this);
+            ActorVfx.WaterStep += OnWaterStep;
             cameraPlayers = new[] { swingFeel, hitFeel, heavyHitFeel, damagedFeel, clickFeel, selectFeel, runFeel, jumpFeel, landFeel,
                 attackCastFeel, buffCastFeel, chargeFeel, deathFeel, critDeathFeel, killConfirmFeel, bodyLandFeel, respawnFeel, petEvolveFeel,
                 forgeSuccessFeel, forgeFailFeel, forgeBreakFeel, forgeHeldFeel,
@@ -380,6 +387,7 @@ namespace KryticalNova.GameFeel
             pendingWords.Clear();
             if (Instance == this) Instance = null;
             ClientPresentationRegistry.UnregisterFeel(this);
+            ActorVfx.WaterStep -= OnWaterStep;
             HudPreferences.Changed -= ApplyScreenShakePreference;
             foreach (var kv in frozen)
                 if (kv.Key != null) kv.Key.Graph.Speed = 1f;
@@ -721,6 +729,21 @@ namespace KryticalNova.GameFeel
             if (actor == null) return;
             if (onWall) ActorVfx.For(actor).SetOnWall(true, wallLoopVfx);
             else ActorVfx.Find(actor)?.SetOnWall(false, wallLoopVfx);
+        }
+
+        public void WaterStriding(Transform actor, bool onWater)
+        {
+            if (actor == null) return;
+            if (onWater) ActorVfx.For(actor).SetOnWater(true, waterWakeVfx);
+            else ActorVfx.Find(actor)?.SetOnWater(false, waterWakeVfx);
+        }
+
+        /// <summary>A foot struck the water (Waterstride): the splash and ripple for all, the sound for the stepper's own game.</summary>
+        private void OnWaterStep(Transform actor, Vector3 foot)
+        {
+            if (actor == null) return;
+            PlayWorld(waterStepWorldFeel, foot, Facing(actor), actor, onlyIfReady: false);
+            if (LocalPlayer.Object != null && actor.IsChildOf(LocalPlayer.Object.transform)) Play(waterStepFeel, foot, 1f);
         }
 
         public void Airborne(Transform actor, bool airborne)

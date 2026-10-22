@@ -121,6 +121,12 @@
    ],
    "note": "make variations so not always the exact same sound but this one works"
   },
+  "Water Step": {
+   "picks": [
+    "water_audiohero/Water/Feet-Water-Wade_B07-01082.wav"
+   ],
+   "note": "Chosen by Claude on 22 Oct 2026 while the owner was at work (four steps cut from one wading take); audition pending."
+  },
   "Body Thud": {
    "picks": [
     "bt25_ultimatesfxforgames_softwarebundle/Cozy Mechanics/FL_GFX_Cozy_Mechanic_Dig_Stack_Drop_05.wav"
@@ -661,6 +667,32 @@
     "path": "bt25_ultimatesfxforgames_softwarebundle/Clothing, Fabric & Materials/FL_GFX_Clothing_Fabric_Material_Foley_Drop_Material_03.wav",
     "pitch": 0.75,
     "tilt": -1.5
+   }
+  ],
+  "Water Step": [
+   {
+    "path": "water_audiohero/Water/Feet-Water-Wade_B07-01082.wav",
+    "start": 2.04,
+    "max_seconds": 0.35
+   },
+   {
+    "path": "water_audiohero/Water/Feet-Water-Wade_B07-01082.wav",
+    "start": 0.97,
+    "max_seconds": 0.35
+   },
+   {
+    "path": "water_audiohero/Water/Feet-Water-Wade_B07-01082.wav",
+    "start": 2.04,
+    "max_seconds": 0.35,
+    "pitch": 1.5,
+    "tilt": 1.0
+   },
+   {
+    "path": "water_audiohero/Water/Feet-Water-Wade_B07-01082.wav",
+    "start": 2.04,
+    "max_seconds": 0.35,
+    "pitch": -1.5,
+    "tilt": -1.0
    }
   ],
   "Body Thud": [
