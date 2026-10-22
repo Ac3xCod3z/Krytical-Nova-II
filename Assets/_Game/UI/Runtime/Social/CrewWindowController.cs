@@ -42,6 +42,10 @@ namespace KryticalNova.UI
         private Edit editing;
         private string editingMember;
         private int chosenSymbol, chosenColour;
+        // The Crew tag's own colours, chosen when founding (owner, 22 Oct 2026); 0 is the plain look.
+        private int chosenTagColour, chosenTagBackground;
+        private VisualElement tagColourChoices, tagBackgroundChoices;
+        private Label tagPreview;
         private VisualElement colourChoices, colourEdit;
         private bool atRegistry;
         private bool pickingSymbol;
@@ -82,6 +86,7 @@ namespace KryticalNova.UI
             symbolButton = window.Q<Button>("crew-symbol-button");
             leaveButton = window.Q<Button>("crew-leave");
             HudTyping.Guard(nameField);
+            nameField.RegisterValueChangedCallback(_ => ShowTagChoice()); // the tag preview shows the name as it is typed
             HudTyping.Guard(editField);
             editField.RegisterCallback<KeyDownEvent>(evt =>
             {
@@ -152,6 +157,23 @@ namespace KryticalNova.UI
             // The Leader's changes are sent as they are made: the symbol and its colour are one choice.
             BuildSymbols(symbolEdit, index => crew?.SetSymbol(index, crew.Header.colour));
             colourChoices = BuildColours(symbolChoices, index => { chosenColour = index; Refresh(); });
+            CrewSettings tagSettings = crew != null ? crew.Settings : null;
+            tagColourChoices = BuildTagRow(colourChoices, "crew-tag-colours", "TAG LETTERS", tagSettings != null ? tagSettings.symbolColours : null,
+                index => { chosenTagColour = index; Refresh(); });
+            tagBackgroundChoices = BuildTagRow(tagColourChoices, "crew-tag-backgrounds", "TAG BACKGROUND", tagSettings != null ? tagSettings.tagBackgrounds : null,
+                index => { chosenTagBackground = index; Refresh(); });
+            tagPreview = tagBackgroundChoices.parent.Q<Label>("crew-tag-preview");
+            if (tagPreview == null)
+            {
+                tagPreview = new Label { name = "crew-tag-preview" };
+                tagPreview.AddToClassList("crew-chip");
+                tagPreview.style.alignSelf = Align.FlexStart;
+                tagPreview.style.marginTop = 4;
+                tagPreview.style.paddingLeft = 8;
+                tagPreview.style.paddingRight = 8;
+                tagPreview.style.unityFontStyleAndWeight = FontStyle.Bold;
+                tagBackgroundChoices.parent.Insert(tagBackgroundChoices.parent.IndexOf(tagBackgroundChoices) + 1, tagPreview);
+            }
             colourEdit = BuildColours(symbolEdit, index => crew?.SetSymbol(crew.Header.symbol, index));
         }
 
@@ -178,6 +200,56 @@ namespace KryticalNova.UI
                 row.Add(swatch);
             }
             return row;
+        }
+
+        // A row of swatches for the Crew tag: the first is the plain look (letters that read on the symbol's colour).
+        private VisualElement BuildTagRow(VisualElement after, string name, string caption, Color[] colours, Action<int> pick)
+        {
+            VisualElement row = after.parent.Q(name);
+            if (row == null)
+            {
+                row = new VisualElement { name = name };
+                row.AddToClassList("row");
+                row.AddToClassList("crew-colours");
+                after.parent.Insert(after.parent.IndexOf(after) + 1, row);
+            }
+            row.Clear();
+            var label = new Label(caption);
+            label.style.minWidth = 110;
+            label.style.unityTextAlign = TextAnchor.MiddleLeft;
+            row.Add(label);
+            var plain = new Label("AUTO");
+            plain.AddToClassList("crew-colour-choice");
+            plain.style.unityTextAlign = TextAnchor.MiddleCenter;
+            plain.style.fontSize = 8;
+            plain.RegisterCallback<ClickEvent>(_ => pick(0));
+            row.Add(plain);
+            for (int i = 0; colours != null && i < colours.Length; i++)
+            {
+                int index = i + 1;
+                var swatch = new VisualElement();
+                swatch.AddToClassList("crew-colour-choice");
+                swatch.style.backgroundColor = colours[i];
+                swatch.RegisterCallback<ClickEvent>(_ => pick(index));
+                row.Add(swatch);
+            }
+            return row;
+        }
+
+        // The swatch chosen in a tag row (its first child is the caption) and the tag as it will look.
+        private void ShowTagChoice()
+        {
+            for (int i = 1; tagColourChoices != null && i < tagColourChoices.childCount; i++)
+                tagColourChoices[i].EnableInClassList("selected", i - 1 == chosenTagColour);
+            for (int i = 1; tagBackgroundChoices != null && i < tagBackgroundChoices.childCount; i++)
+                tagBackgroundChoices[i].EnableInClassList("selected", i - 1 == chosenTagBackground);
+            CrewSettings settings = crew != null ? crew.Settings : null;
+            if (tagPreview == null || settings == null) return;
+            string name = nameField != null && !string.IsNullOrWhiteSpace(nameField.value) ? nameField.value.Trim().ToUpperInvariant() : "YOUR CREW";
+            Color plate = settings.TagPlate(chosenTagBackground, chosenColour);
+            tagPreview.text = name;
+            tagPreview.style.backgroundColor = new Color(plate.r, plate.g, plate.b, 0.88f);
+            tagPreview.style.color = settings.HasTagInk(chosenTagColour) ? settings.TagInk(chosenTagColour) : PlayerNamecardController.ChipInk(plate);
         }
 
         private void ShowChoice(VisualElement symbols, VisualElement colours, int symbol, int colour)
@@ -337,6 +409,7 @@ namespace KryticalNova.UI
                 foundButton.SetEnabled(ready);
                 foundButton.text = ready ? $"FOUND CREW  ·  {WalletRules.Format(cost)}" : "FOUND CREW";
                 ShowChoice(symbolChoices, colourChoices, chosenSymbol, chosenColour);
+                ShowTagChoice();
                 helpLabel.text = "A Crew belongs to your faction. You lead it: invite players from the player menu (Shift+click them).";
             }
             else
@@ -443,7 +516,7 @@ namespace KryticalNova.UI
         private void Found()
         {
             if (crew == null) return;
-            crew.Found(nameField.value, chosenSymbol, chosenColour);
+            crew.Found(nameField.value, chosenSymbol, chosenColour, chosenTagColour, chosenTagBackground);
             GearUIController.Instance?.SuppressWorldInput();
         }
 

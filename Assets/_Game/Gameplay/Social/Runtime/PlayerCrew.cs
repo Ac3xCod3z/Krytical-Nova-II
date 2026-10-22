@@ -128,9 +128,11 @@ namespace KryticalNova.Social
         // ------------------------------------------------------------------ owner -> server
 
         /// <summary>Found a Crew (at a Vaultkeeper). <paramref name="symbol"/> is the index of one of the preset symbols.</summary>
-        public void Found(string crewName, int symbol, int colour = 0)
+        public void Found(string crewName, int symbol, int colour = 0, int tagColour = 0, int tagBackground = 0)
         {
-            if (IsSpawned && IsOwner) FoundRpc(crewName ?? string.Empty, (byte)Mathf.Clamp(symbol, 0, 255), (byte)Mathf.Clamp(colour, 0, 255));
+            if (IsSpawned && IsOwner)
+                FoundRpc(crewName ?? string.Empty, (byte)Mathf.Clamp(symbol, 0, 255), (byte)Mathf.Clamp(colour, 0, 255),
+                    (byte)Mathf.Clamp(tagColour, 0, 255), (byte)Mathf.Clamp(tagBackground, 0, 255));
         }
 
         public void Invite(PlayerCrew target)
@@ -191,11 +193,11 @@ namespace KryticalNova.Social
         }
 
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
-        private void FoundRpc(string crewName, byte symbol, byte colour)
+        private void FoundRpc(string crewName, byte symbol, byte colour, byte tagColour, byte tagBackground)
         {
             if (!RpcBudget.Allow(this, CallKind.Social, nameof(FoundRpc))) return;
             if (!RpcBudget.TextFits(this, nameof(FoundRpc), crewName)) return;
-            CrewService.ServerFound(this, crewName, symbol, colour);
+            CrewService.ServerFound(this, crewName, symbol, colour, tagColour: tagColour, tagBackground: tagBackground);
         }
 
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
@@ -332,6 +334,8 @@ namespace KryticalNova.Social
                 tag.rank = me != null ? me.Rank : CrewRank.Member;
                 tag.symbol = (byte)Mathf.Clamp(crew.symbol, 0, 255);
                 tag.colour = (byte)Mathf.Clamp(crew.symbolColour, 0, 255);
+                tag.tagColour = (byte)Mathf.Clamp(crew.tagColour, 0, 255);
+                tag.tagBackground = (byte)Mathf.Clamp(crew.tagBackground, 0, 255);
                 head.exists = true;
                 head.name = tag.crew;
                 head.symbol = tag.symbol;

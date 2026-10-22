@@ -118,7 +118,7 @@ namespace KryticalNova.Social
 
         // ------------------------------------------------------------------ founding
 
-        public static void ServerFound(PlayerCrew player, string name, int symbol, int colour = 0, bool gm = false)
+        public static void ServerFound(PlayerCrew player, string name, int symbol, int colour = 0, bool gm = false, int tagColour = 0, int tagBackground = 0)
         {
             CrewSettings settings = player.Settings;
             string id = player.CharacterId;
@@ -141,6 +141,9 @@ namespace KryticalNova.Social
             Describe(founder, player);
             Crew crew = CrewRules.Found(Guid.NewGuid().ToString("N"), clean, (int)player.Faction, Mathf.Clamp(symbol, 0, Mathf.Max(0, settings.symbolCount - 1)), founder, Now);
             crew.symbolColour = ColourIndex(settings, colour);
+            // The tag's own colours (owner, 22 Oct 2026); a choice there is no colour for is the plain look (0).
+            crew.tagColour = settings.HasTagInk(tagColour) ? tagColour : 0;
+            crew.tagBackground = settings.tagBackgrounds != null && tagBackground >= 1 && tagBackground <= settings.tagBackgrounds.Length ? tagBackground : 0;
             World.crews.Add(crew);
             ByMember[id] = crew;
             // The Creds paid and the new Crew: one change (online phase 4, milestone 3). The Creds are in the wallet's tally.

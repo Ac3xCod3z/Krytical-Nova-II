@@ -287,7 +287,7 @@ namespace KryticalNova.UI
             if (card.CrewText == null || !tag.crew.Equals(card.CrewName) || CrewEmblem(tag) != card.CrewSymbol)
             {
                 card.CrewName = tag.crew;
-                view.Crew(card.CrewText = CrewChipText(tag), CrewPlate(card, tag));
+                view.Crew(card.CrewText = CrewChipText(tag), CrewPlate(card, tag), CrewInk(card, tag));
             }
             // A player in a Crew shows the Crew's symbol where the faction's emblem stands; without a Crew, the emblem.
             int symbol = CrewEmblem(tag);
@@ -315,19 +315,27 @@ namespace KryticalNova.UI
         /// </summary>
         private static string CrewChipText(in CrewTag tag) => tag.InCrew ? tag.crew.ToString().ToUpperInvariant() : string.Empty;
 
-        // The Crew's colour (the one its symbol is drawn in), or a plain slate when it has none.
+        // The plate the founder chose, else the Crew's colour (the one its symbol is drawn in), or a plain slate.
         private static Color CrewPlate(Card card, in CrewTag tag)
         {
             CrewSettings settings = tag.InCrew && card.PlayerCrew != null ? card.PlayerCrew.Settings : null;
-            return settings != null ? settings.SymbolColour(tag.colour) : new Color(0.32f, 0.38f, 0.46f);
+            return settings != null ? settings.TagPlate(tag.tagBackground, tag.colour) : new Color(0.32f, 0.38f, 0.46f);
+        }
+
+        // The letters the founder chose (owner, 22 Oct 2026), else ink that reads on the plate.
+        private static Color CrewInk(Card card, in CrewTag tag)
+        {
+            CrewSettings settings = tag.InCrew && card.PlayerCrew != null ? card.PlayerCrew.Settings : null;
+            return settings != null && settings.HasTagInk(tag.tagColour) ? settings.TagInk(tag.tagColour) : ChipInk(CrewPlate(card, tag));
         }
 
         /// <summary>Dark ink on a light plate, light ink on a dark one.</summary>
         public static Color ChipInk(Color plate) =>
             plate.r * 0.299f + plate.g * 0.587f + plate.b * 0.114f > 0.55f ? new Color(0.08f, 0.07f, 0.12f) : new Color(0.97f, 0.96f, 0.92f);
 
-        // The Crew's symbol and colour as one number, so a change of either is seen; -1 without a Crew.
-        private static int CrewEmblem(in CrewTag tag) => tag.InCrew ? tag.symbol | (tag.colour << 8) : -1;
+        // The Crew's symbol and its colours as one number, so a change of any is seen; -1 without a Crew.
+        private static int CrewEmblem(in CrewTag tag) =>
+            tag.InCrew ? tag.symbol | (tag.colour << 8) | (tag.tagColour << 16) | ((tag.tagBackground & 0x7f) << 24) : -1;
 
         /// <summary>What stands before the name: the Crew's symbol in the Crew's colour, or else the faction's emblem.</summary>
         private static Sprite Emblem(Card card, in CrewTag tag, FactionId faction, FactionDefinition definition, out Color tint)
@@ -368,7 +376,7 @@ namespace KryticalNova.UI
                 Color plate = CrewPlate(card, tag);
                 card.Crew.EnableInClassList("crew-chip", crew.Length > 0);
                 card.Crew.style.backgroundColor = new Color(plate.r, plate.g, plate.b, 0.88f);
-                card.Crew.style.color = ChipInk(plate);
+                card.Crew.style.color = CrewInk(card, tag);
             }
             int symbol = CrewEmblem(tag);
             bool emblemChanged = symbol != card.CrewSymbol;

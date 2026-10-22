@@ -40,6 +40,10 @@ namespace KryticalNova.Social
         public int symbol;
         /// <summary>Which of <see cref="CrewSettings.symbolColours"/> the symbol is drawn in. The Leader picks it.</summary>
         public int symbolColour;
+        /// <summary>The Crew tag's letters: 0 for the ones that read on the plate, else one of the symbol colours (+1). The founder picks it.</summary>
+        public int tagColour;
+        /// <summary>The Crew tag's plate: 0 for the symbol's colour, else one of <see cref="CrewSettings.tagBackgrounds"/> (+1).</summary>
+        public int tagBackground;
         public string announcement = string.Empty;
         public long foundedUtc;
         public int level = 1;
@@ -74,6 +78,8 @@ namespace KryticalNova.Social
         public CrewRank rank;
         public byte symbol;
         public byte colour;
+        public byte tagColour;
+        public byte tagBackground;
 
         public bool InCrew => crew.Length > 0;
 
@@ -84,10 +90,13 @@ namespace KryticalNova.Social
             serializer.SerializeValue(ref rank);
             serializer.SerializeValue(ref symbol);
             serializer.SerializeValue(ref colour);
+            serializer.SerializeValue(ref tagColour);
+            serializer.SerializeValue(ref tagBackground);
         }
 
         public bool Equals(CrewTag other) =>
-            crew.Equals(other.crew) && title.Equals(other.title) && rank == other.rank && symbol == other.symbol && colour == other.colour;
+            crew.Equals(other.crew) && title.Equals(other.title) && rank == other.rank && symbol == other.symbol && colour == other.colour
+            && tagColour == other.tagColour && tagBackground == other.tagBackground;
     }
 
     /// <summary>What a member is told about their Crew, beside the roster.</summary>
