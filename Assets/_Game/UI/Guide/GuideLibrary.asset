@@ -1450,6 +1450,7 @@ MonoBehaviour:
         lines:
         - Graphics | Resolution, window mode, a quality preset and the details under it
         - Audio | Volume of music, effects, ambience and the interface
+        - The Deck | {key:Deck} Your own music player: every track of the soundtrack, heard by you alone
         - Interface | HUD layout, names over heads, the minimap, chat, interface size
         - Gameplay | The camera, damage numbers, and requests to decline for you
         - Controls | Every key
