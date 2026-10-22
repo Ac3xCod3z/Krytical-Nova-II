@@ -1744,6 +1744,8 @@ namespace KryticalNova.EditorTools
                 so.FindProperty("defaultAuraVfx").objectReferenceValue = Load(Vfx("PFX_Aura_Default"));
                 so.FindProperty("defaultChargeVfx").objectReferenceValue = Load(Vfx("PFX_Charge_Default"));
                 so.FindProperty("runLoopVfx").objectReferenceValue = Load(Vfx("PFX_Run_Loop"));
+                BuildRunWindPrefab();
+                so.FindProperty("runWindVfx").objectReferenceValue = Load(Vfx(RunWindName));
                 so.FindProperty("airborneLoopVfx").objectReferenceValue = Load(Vfx("PFX_Air_Loop"));
                 so.FindProperty("bladeTrail").objectReferenceValue = Load(Vfx(BladeTrailName)).GetComponent<TrailRenderer>();
                 so.ApplyModifiedPropertiesWithoutUndo();

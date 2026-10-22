@@ -14536,6 +14536,7 @@ MonoBehaviour:
   defaultAuraVfx: {fileID: 209474232359278204, guid: a4bbdbae6a1a8ac4ba366f112a4b3675, type: 3}
   defaultChargeVfx: {fileID: 7565169768429559366, guid: 4577b6d342a6cfe4796aff906eebba8e, type: 3}
   runLoopVfx: {fileID: 6423134534051599964, guid: e2aa7c26372aa754f96b8a80dfc02110, type: 3}
+  runWindVfx: {fileID: 8142531130722558071, guid: edd442814c5417f409013d26f1a5a9a8, type: 3}
   airborneLoopVfx: {fileID: 3498379367027563030, guid: 7ec97adac9adec14ea39821bc0db7ed8, type: 3}
   critDeathTrailVfx: {fileID: 318497872969005663, guid: d03b3ef26633cd84091674010379aef5, type: 3}
   dustPalette:
