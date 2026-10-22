@@ -1431,11 +1431,32 @@ namespace KryticalNova.Player
             agent.velocity = direction.normalized * speed;
         }
 
+        // The end of the path being walked, until the body has been put on it; and how far past the stopping distance
+        // an agent that stopped by itself may stand and still be put on its point.
+        private Vector3? stopPoint;
+        private const float StopPointSlack = 0.15f;
+
         /// <summary>Stops dead on the destination instead of coasting (autoBraking is off; we ease out ourselves).</summary>
         private void UpdateArrival()
         {
             if (agent == null || !agent.isActiveAndEnabled || !agent.isOnNavMesh) return;
-            if (!agent.hasPath || agent.pathPending) return;
+            if (agent.pathPending) return;
+            if (!agent.hasPath)
+            {
+                // The agent stopped itself inside its stopping distance before the check below could put it on the
+                // point (its own step crossed into it between two of ours). Put it there now: the server and the
+                // player's own game must stand on the same spot, or the hand-over slides the body after it stopped
+                // (owner, 22 Oct 2026: "I seem to slip out of the spot I stop at"; measured 0.21 m on a test server).
+                if (stopPoint.HasValue)
+                {
+                    float off = FlatDistance(agent.nextPosition, stopPoint.Value);
+                    if (off > 0.01f && off <= agent.stoppingDistance + StopPointSlack) PlaceOn(stopPoint.Value);
+                    PlayerMoveAnticipation.Trace(this, $"path gone {off:0.00} m from its end{(IsServer ? " (server)" : "")}");
+                    stopPoint = null;
+                }
+                return;
+            }
+            stopPoint = agent.destination;
 
             // The agent takes its step for this frame after this runs, so the question is whether that step gets
             // it there. The fast Run ranks cover more than the stopping distance in a frame: without this they
@@ -1446,7 +1467,12 @@ namespace KryticalNova.Player
             bool arrives = settings != null
                 ? settings.ArrivesThisFrame(remaining, agent.velocity.magnitude, Time.deltaTime)
                 : remaining <= agent.stoppingDistance + step;
-            if (!arrives && !HasPassedDestination(remaining, step)) return;
+            // The agent stood itself still just outside the stopping distance (its own path distance is a hair under
+            // it, the flat distance a hair over): it will never step again, so this is the arrival. Measured 22 Oct
+            // 2026: 0.21 m short on every walk back to a spot, then slid there by the hand-over.
+            bool stoodShort = agent.velocity.sqrMagnitude < 0.0025f && remaining <= agent.stoppingDistance + StopPointSlack;
+            if (!arrives && !stoodShort && !HasPassedDestination(remaining, step)) return;
+            PlayerMoveAnticipation.Trace(this, $"arrives {remaining:0.00} m short (stood {stoodShort}){(IsServer ? " (server)" : "")}");
 
             Vector3 destination = agent.destination;
             // Less than a frame's travel away: the body ends on the point rather than short of it or past it. Placed
@@ -1454,6 +1480,7 @@ namespace KryticalNova.Player
             // point, never just "within the stopping distance": the server and the player's own game (online phase 3)
             // must stop on the same spot, or the hand-over eases the body a step after it has stopped.
             if (remaining > 0.01f) PlaceOn(destination);
+            stopPoint = null;
             agent.ResetPath();
             agent.velocity = Vector3.zero;
             FinishRoute(destination);
