@@ -15,7 +15,7 @@ namespace KryticalNova.World.Surfaces
         /// <summary>Taller than this (metres) is a building, not a stall.</summary>
         public const float TallestStall = 6.5f;
         /// <summary>How far round the structure (metres, along the ground) its vendor may stand.</summary>
-        public const float VendorReach = 1.5f;
+        public const float VendorReach = 3f;
 
         private static readonly Collider[] Near = new Collider[32];
 
