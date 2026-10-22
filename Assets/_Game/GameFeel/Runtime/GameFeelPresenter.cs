@@ -160,6 +160,9 @@ namespace KryticalNova.GameFeel
         [Tooltip("Build-up for charged skills the catalog has no entry for.")]
         [SerializeField] private GameObject defaultChargeVfx;
         [SerializeField] private GameObject runLoopVfx;
+        [Tooltip("The wind lines of a run: streaks and curls of air left behind the body, more of them and brighter the " +
+                 "higher the runner's Run rank (owner, 22 Oct 2026).")]
+        [SerializeField] private GameObject runWindVfx;
         [SerializeField] private GameObject airborneLoopVfx;
         [Tooltip("Rides on a body thrown by a critical kill until it lands.")]
         [SerializeField] private GameObject critDeathTrailVfx;
@@ -661,6 +664,7 @@ namespace KryticalNova.GameFeel
         {
             if (actor == null) return;
             ActorVfx vfx = ActorVfx.For(actor);
+            vfx.SetRunWind(runWindVfx, RunWindStrength(actor));
             vfx.SetRunning(true, runLoopVfx);
             float now = Time.time;
             bool takesOff = RunTakeOffRules.TakesOff(now, vfx.LastRunTakeOff, runTakeOffRepeatSeconds);
@@ -673,6 +677,16 @@ namespace KryticalNova.GameFeel
             if (!kicks) return;
             vfx.LastRunKick = now;
             Play(runFeel, actor.position, 1f);
+        }
+
+        // A little at Run rank 1 up to 1 at the highest rank: how much wind a run leaves. Everyone's own rank is replicated,
+        // so another player's run shows the same wind as it does on their own screen.
+        private static float RunWindStrength(Transform actor)
+        {
+            if (actor == null || !actor.TryGetComponent(out PlayerMovementSkills movement)) return 0f;
+            MovementSkillData run = movement.GetDefinition(MovementSkillId.Run);
+            int top = run != null ? run.MaxRank : 20;
+            return top <= 1 ? 1f : Mathf.Lerp(0.08f, 1f, Mathf.Clamp01((movement.RunRank - 1f) / (top - 1f))); // rank 1 barely stirs the air
         }
 
         public void RunStopped(Transform actor)

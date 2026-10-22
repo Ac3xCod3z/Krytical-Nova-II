@@ -38,7 +38,14 @@ namespace KryticalNova.GameFeel
         private readonly List<Aura> charges = new List<Aura>(2);
         private float chargeStart, chargeSeconds;
         private float rootHeight;
-        private GameObject runLoop, airLoop;
+        private GameObject runLoop, airLoop, windLoop;
+        private GameObject windPrefab;
+        private float windStrength;
+        private ParticleSystem[] windSystems;
+        private float[] windBaseRates;
+        private Color[] windBaseColours;
+        private float[] windBaseLives;
+        private static readonly Vector3 WindHeight = new Vector3(0f, 0.9f, 0f);
         private ParticleSystem[] runLoopSystems;
         private float nextDustCheck;
         private GameObject runPrefab;
@@ -236,8 +243,54 @@ namespace KryticalNova.GameFeel
             RefreshRunLoop(); // no dust while the feet are off the ground
         }
 
+        /// <summary>
+        /// The wind lines of a run (owner, 22 Oct 2026): streaks and curls of air left behind the body, as many and as
+        /// bright as <paramref name="strength"/> says (0 to 1, from the Run rank). Shown with the run, never on a wall.
+        /// </summary>
+        public void SetRunWind(GameObject prefab, float strength)
+        {
+            windPrefab = prefab;
+            windStrength = Mathf.Clamp01(strength);
+            RefreshRunLoop();
+        }
+
+        private void RefreshWind()
+        {
+            bool had = windLoop != null;
+            SetLoop(ref windLoop, running && !onWall && windPrefab != null && windStrength > 0.001f, windPrefab, WindHeight);
+            if (windLoop == null) { windSystems = null; return; }
+            if (!had || windSystems == null)
+            {
+                windSystems = windLoop.GetComponentsInChildren<ParticleSystem>(true);
+                // The fullest wind is the prefab's own (a pooled copy may still carry an earlier, thinner run's values).
+                ParticleSystem[] authored = windPrefab.GetComponentsInChildren<ParticleSystem>(true);
+                windBaseRates = new float[windSystems.Length];
+                windBaseColours = new Color[windSystems.Length];
+                windBaseLives = new float[windSystems.Length];
+                for (int i = 0; i < windSystems.Length; i++)
+                {
+                    ParticleSystem source = i < authored.Length ? authored[i] : windSystems[i];
+                    windBaseRates[i] = source.emission.rateOverTimeMultiplier;
+                    windBaseColours[i] = source.main.startColor.color;
+                    windBaseLives[i] = source.main.startLifetimeMultiplier;
+                }
+            }
+            // More streaks and brighter ones the higher the rank: a rank 1 run barely stirs the air, rank 20 tears it.
+            for (int i = 0; i < windSystems.Length; i++)
+            {
+                var emission = windSystems[i].emission;
+                emission.rateOverTimeMultiplier = windBaseRates[i] * Mathf.Lerp(0.15f, 1f, windStrength);
+                var main = windSystems[i].main;
+                Color colour = windBaseColours[i];
+                colour.a *= Mathf.Lerp(0.35f, 1f, windStrength);
+                main.startColor = colour;
+                main.startLifetimeMultiplier = windBaseLives[i] * Mathf.Lerp(0.55f, 1.25f, windStrength); // longer streaks
+            }
+        }
+
         private void RefreshRunLoop()
         {
+            RefreshWind();
             bool had = runLoop != null;
             SetLoop(ref runLoop, running && !airborne && !onWall, runPrefab, RunLoopHeight);
             if (runLoop == null) runLoopSystems = null;
@@ -374,9 +427,11 @@ namespace KryticalNova.GameFeel
             {
                 pool.ReleaseDeferred(runLoop);
                 pool.ReleaseDeferred(airLoop);
+                pool.ReleaseDeferred(windLoop);
                 foreach (GameObject loop in wallLoops) pool.ReleaseDeferred(loop);
             }
-            runLoop = airLoop = null;
+            runLoop = airLoop = windLoop = null;
+            windSystems = null;
             wallLoops[0] = wallLoops[1] = null;
             runLoopSystems = null;
             running = airborne = onWall = false;
