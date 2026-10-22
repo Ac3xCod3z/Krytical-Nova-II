@@ -85,6 +85,7 @@ namespace KryticalNova.Player
         private const float GroundProbe = 60f;
         private const float BodySkin = 0.05f;
         private const float ArmTrigger = 0.45f;
+        private const float FootReach = 1f; // how far off the NavMesh a climb's foot may be and still be walked to
         private const float RearmSeconds = 0.15f;
         private const float RemoteFade = 0.12f;
         private const float MinimumDuration = 0.05f;
@@ -150,6 +151,7 @@ namespace KryticalNova.Player
         private bool armed;
         private float armedAt;
         private Plan armedPlan;
+        private Vector3 armedGoal; // where the agent walks to: the foot of the climb, on the NavMesh
         private bool catchPending;
         private Plan catchPlan;
         private float resumeSpeed;
@@ -280,7 +282,9 @@ namespace KryticalNova.Player
                 return true;
             }
             if (!Decide(point, normal, surface, Feet, fromJump: false, out Plan climb, out reason)) return false;
-            return ArmOrBegin(climb);
+            if (ArmOrBegin(climb)) return true;
+            reason = "There is no way to the foot of that wall.";
+            return false;
         }
 
         /// <summary>
@@ -309,9 +313,10 @@ namespace KryticalNova.Player
             // The top must be where the move was going, near enough.
             if (Mathf.Abs(climb.TopFeet.y - destination.y) > 2f) return false;
             armedPlan = climb;
+            armedGoal = NavMesh.SamplePosition(climb.BaseFeet, out NavMeshHit near, FootReach, Filter()) ? near.position : climb.BaseFeet;
             armed = true;
             armedAt = Time.time;
-            goal = climb.BaseFeet;
+            goal = armedGoal;
             return true;
         }
 
@@ -398,8 +403,9 @@ namespace KryticalNova.Player
         {
             climb = default;
             // A click on a ledge, a sill or an awning of a wall is meant for the wall: its face straight ahead is used.
+            bool faceAround = false;
             if (settings != null && surface != null && WallRunRules.SurfaceAngle(normal) < settings.minSurfaceAngle
-                && FaceAhead(point, surface, fromFeet, out Vector3 facePoint, out Vector3 faceNormal))
+                && FaceAhead(point, surface, fromFeet, out Vector3 facePoint, out Vector3 faceNormal, out faceAround))
             {
                 point = facePoint;
                 normal = faceNormal;
@@ -417,7 +423,8 @@ namespace KryticalNova.Player
                 Eligible = eligible && (shaped || kind == ClimbableKind.Never),
                 Kind = kind,
                 Normal = shaped ? climb.Normal : normal,
-                Travel = (shaped ? climb.BaseFeet : point) - fromFeet,
+                // A face found round the side (an open front) is walked to first and met head-on from there.
+                Travel = faceAround ? -normal : (shaped ? climb.BaseFeet : point) - fromFeet,
                 Height = shaped ? climb.Height : 0f,
                 HasTop = shaped && climb.HasTop,
                 RoomAtTop = shaped && climb.Room,
@@ -432,8 +439,9 @@ namespace KryticalNova.Player
         /// The upright face of the same building as <paramref name="surface"/>, straight ahead of the player at chest
         /// height towards <paramref name="point"/>: what a click on one of its ledges is aimed at.
         /// </summary>
-        private bool FaceAhead(Vector3 point, Collider surface, Vector3 fromFeet, out Vector3 facePoint, out Vector3 faceNormal)
+        private bool FaceAhead(Vector3 point, Collider surface, Vector3 fromFeet, out Vector3 facePoint, out Vector3 faceNormal, out bool around)
         {
+            around = false;
             facePoint = point;
             faceNormal = Vector3.up;
             Vector3 flat = point - fromFeet;
@@ -442,13 +450,44 @@ namespace KryticalNova.Player
             if (distance < 0.1f) return false;
             Vector3 origin = fromFeet + Vector3.up * FaceProbeHeight;
             int count = Physics.RaycastNonAlloc(origin, flat / distance, Hits, distance + 2f, SurfaceMask(), QueryTriggerInteraction.Ignore);
-            if (!Nearest(count, out RaycastHit face)) return false;
+            if (!Nearest(count, out RaycastHit face))
+                return around = NearestFaceAround(surface, fromFeet, out facePoint, out faceNormal); // an open front: nothing straight ahead
             if (face.collider.transform.root != surface.transform.root) return false; // something else is in the way
             if (WallRunRules.SurfaceAngle(face.normal) < settings.minSurfaceAngle) return false;
             facePoint = face.point;
             faceNormal = face.normal;
             return true;
         }
+
+        /// <summary>
+        /// The upright face of <paramref name="surface"/> nearest the player, looked for from outside it all round at
+        /// chest height: what a click on the top of a shop with an open front, or a stall, is aimed at when nothing of
+        /// it stands straight ahead (owner, 22 Oct 2026: "wall stride should work on vendor locations").
+        /// </summary>
+        private bool NearestFaceAround(Collider surface, Vector3 fromFeet, out Vector3 facePoint, out Vector3 faceNormal)
+        {
+            facePoint = default;
+            faceNormal = Vector3.up;
+            Bounds bounds = surface.bounds;
+            Vector3 centre = bounds.center;
+            centre.y = Mathf.Clamp(fromFeet.y + FaceProbeHeight, bounds.min.y + 0.3f, bounds.max.y - 0.3f);
+            float reach = new Vector2(bounds.extents.x, bounds.extents.z).magnitude + 1f;
+            float best = float.PositiveInfinity;
+            for (int i = 0; i < FaceProbes; i++)
+            {
+                Vector3 way = Quaternion.Euler(0f, i * 360f / FaceProbes, 0f) * Vector3.forward;
+                if (!surface.Raycast(new Ray(centre + way * reach, -way), out RaycastHit face, reach)) continue;
+                if (WallRunRules.SurfaceAngle(face.normal) < settings.minSurfaceAngle) continue;
+                float near = Flat(fromFeet, face.point);
+                if (near >= best) continue;
+                best = near;
+                facePoint = face.point;
+                faceNormal = face.normal;
+            }
+            return best < float.PositiveInfinity;
+        }
+
+        private const int FaceProbes = 16;
 
         private const float FaceProbeHeight = 1.2f;
         private const float FaceGap = 2f; // metres a face may go missing (a window, a door) and still be the same face
@@ -566,13 +605,16 @@ namespace KryticalNova.Player
                 Begin(climb);
                 return true;
             }
-            // Run to its foot first, then up.
+            // Run to its foot first, then up. A stall or a booth cuts the NavMesh round itself, so its foot can lie just
+            // off it: the walk goes to the nearest point of the NavMesh there (owner, 22 Oct 2026: vendor stalls).
             if (agent == null || !agent.isActiveAndEnabled || !agent.isOnNavMesh) return false;
+            Vector3 foot = NavMesh.SamplePosition(climb.BaseFeet, out NavMeshHit near, FootReach, Filter()) ? near.position : climb.BaseFeet;
             var path = new NavMeshPath();
-            if (!agent.CalculatePath(climb.BaseFeet, path) || path.status != NavMeshPathStatus.PathComplete) return false;
+            if (!agent.CalculatePath(foot, path) || path.status != NavMeshPathStatus.PathComplete) return false;
             agent.SetPath(path);
             agent.isStopped = false;
             armedPlan = climb;
+            armedGoal = foot;
             armed = true;
             armedAt = Time.time;
             return true;
@@ -919,8 +961,8 @@ namespace KryticalNova.Player
         {
             if (agent == null || !agent.isActiveAndEnabled || !agent.isOnNavMesh) { armed = false; return; }
             // Another order took the route over.
-            if (Time.time - armedAt > RearmSeconds && Flat(agent.destination, armedPlan.BaseFeet) > 0.6f) { armed = false; return; }
-            if (Flat(Feet, armedPlan.BaseFeet) > ArmTrigger + agent.stoppingDistance + agent.velocity.magnitude * Time.deltaTime * 2f) return;
+            if (Time.time - armedAt > RearmSeconds && Flat(agent.destination, armedGoal) > 0.6f) { armed = false; return; }
+            if (Flat(Feet, armedGoal) > ArmTrigger + agent.stoppingDistance + agent.velocity.magnitude * Time.deltaTime * 2f) return;
             Begin(armedPlan);
         }
 

@@ -899,6 +899,8 @@ namespace KryticalNova.DevTools
         {
             if (!NavMesh.SamplePosition(position, out NavMeshHit hit, NavSampleRadius, NavMesh.AllAreas)) return false;
             position = hit.position;
+            // Off a wall or out of a tree first, or the player arrives still holding on to nothing.
+            if (player.TryGetComponent<KryticalNova.Player.PlayerWallRunMotor>(out var wall)) wall.Cancel();
             if (player.TryGetComponent<NavMeshAgent>(out var agent))
             {
                 position += Vector3.up * agent.baseOffset;

@@ -44,7 +44,7 @@ MonoBehaviour:
   kickOffDistance: 2.5
   kickOffLift: 0.8
   dropGravity: 14
-  maxDropDistance: 14
+  maxDropDistance: 25
   deathPushOff: 0.6
   treeProxyRadius: 35
   treeProxyRefresh: 0.25

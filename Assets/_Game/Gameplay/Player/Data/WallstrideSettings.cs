@@ -86,8 +86,8 @@ namespace KryticalNova.Player
         [Header("Coming down")]
         [Tooltip("Gravity of a drop from a tree or a kick off a wall (m/s²).")]
         [Min(1f)] public float dropGravity = 14f;
-        [Tooltip("Farthest a drop from a tree may land from it (metres along the ground).")]
-        [Min(1f)] public float maxDropDistance = 14f;
+        [Tooltip("Farthest a drop from a tree, or a jump off a wall, may land from it (metres along the ground). 25 since owner, 22 Oct 2026: a larger click distance out of trees.")]
+        [Min(1f)] public float maxDropDistance = 25f;
         [Tooltip("Killed on a surface: the body is pushed this far out from it before it falls.")]
         [Min(0f)] public float deathPushOff = 0.6f;
 
