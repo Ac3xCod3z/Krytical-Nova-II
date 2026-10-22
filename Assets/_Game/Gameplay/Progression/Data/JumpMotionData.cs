@@ -23,8 +23,6 @@ namespace KryticalNova.Progression
         [Min(0f)] public float apexHoldDuration = DefaultHold;
         [Min(0f)] public float anticipationDuration = DefaultAnticipation;
         [Min(0f)] public float landingCooldown = DefaultCooldown;
-        [Tooltip("Allowed drop = learned jump height multiplied by this value.")]
-        [Min(0f)] public float maximumDropMultiplier = 2f;
         [Header("Height by distance")]
         [Tooltip("Rise = rank height x (distance / rank distance)^exponent. 1 = linear; above 1 keeps short hops low and saves the full height for max-range jumps.")]
         [Range(0.5f, 3f)] public float heightByDistanceExponent = 1.5f;
@@ -60,7 +58,6 @@ namespace KryticalNova.Progression
             apexHoldDuration = Mathf.Max(0f, apexHoldDuration);
             anticipationDuration = Mathf.Max(0f, anticipationDuration);
             landingCooldown = Mathf.Max(0f, landingCooldown);
-            maximumDropMultiplier = Mathf.Max(0f, maximumDropMultiplier);
             minimumRise = Mathf.Max(0f, minimumRise);
             landingSampleRadius = Mathf.Max(MinimumPositive, landingSampleRadius);
             collisionSkin = Mathf.Clamp(collisionSkin, MinimumPositive, 0.1f);

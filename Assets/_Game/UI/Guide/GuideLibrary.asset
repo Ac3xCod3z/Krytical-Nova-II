@@ -51,6 +51,7 @@ MonoBehaviour:
         - 'Everyone starts out walking. <b>Run</b> and <b>Jump</b> are movement skills: learn them in the Skills window, opened with {key:SkillsWindow} , drag them onto the Hotbar, and press the slot to switch to one. Press it again to go back to walking.'
         - 'Running costs a little Flux each time you click a new place, not for every second you run. Without enough Flux the click is refused: press the slot again to walk.'
         - With Jump chosen, your next click picks where you land instead of where you walk.
+        - Up on a roof, click the street below to get down: you run to the edge and leap off, from any height, then carry on to where you clicked. Click another spot of the roof to walk there.
         - The line under your health bars says which of the three is on, and how fast you are moving.
       - kind: 2
         heading: What a click does

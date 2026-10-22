@@ -173,6 +173,14 @@ namespace KryticalNova.Player
         private bool hasOrder, orderReplanned;
         // Jumping a gap on the route (a NavMeshLink between roofs): the move carries on once the jump has landed.
         private bool crossingLink;
+        // A move off a roof with no walk down: the edge it walks to and where the drop from there lands.
+        private bool dropPending;
+        private Vector3 dropEdge;
+        private readonly List<Vector3> dropLandings = new List<Vector3>(); // farthest first: a leap clear of the wall below
+        private const float DropMinHeight = 1.5f;
+        private const float DropTrigger = 0.6f;
+        // Metres out past the edge, farthest first: a long fall straight down the wall brushes it and is called back.
+        private static readonly float[] DropReach = { 4.5f, 3f, 1.8f };
         private Vector3 orderedDestination, orderedPathEnd;
         private Vector3 stallFrom;
         private float stallWatched;
@@ -416,6 +424,7 @@ namespace KryticalNova.Player
                 RecoverLostAgent();
                 ApplyMovementSettings();
                 CrossLinks();
+                WatchDrop();
                 UpdateArrival();
                 WatchForStall();
                 TurnTowardsTravel();
@@ -693,9 +702,15 @@ namespace KryticalNova.Player
                 return;
             }
 
+            // A roof, a stall's top or a balcony is walked on like the ground where the NavMesh covers it (owner, 22 Oct
+            // 2026: "free movement on rooftops"); one the player can walk to from here is a walk, never a climb.
+            bool onGround = (groundLayers.value & (1 << hit.collider.gameObject.layer)) != 0;
+            bool walkableFromHere = false;
+            bool walkableTop = !onGround && IsWalkableTop(hit.point, hit.normal, out walkableFromHere);
+
             // Wallstride: a wall or a tree clicked with Run or Jump selected is run up, or jumped at and caught. A steep
             // slope of the ground itself (a mountain side) counts as a wall where the zone's surface graph covers it.
-            if (wallRunMotor != null && ((groundLayers.value & (1 << hit.collider.gameObject.layer)) == 0 || wallRunMotor.IsSteepWallClick(hit.point, hit.normal))
+            if (wallRunMotor != null && !walkableFromHere && (!onGround || wallRunMotor.IsSteepWallClick(hit.point, hit.normal))
                 && movementSkills != null
                 && (movementSkills.IsRunning || movementSkills.IsJumpSelected)
                 && wallRunMotor.TryClimbClicked(hit.point, hit.normal, hit.collider, raycastLayers.value, modelForwardOffset))
@@ -708,7 +723,7 @@ namespace KryticalNova.Player
             }
 
             // Not ground: nothing was ordered, so the attack, the selection and the move under way all stand.
-            if ((groundLayers.value & (1 << hit.collider.gameObject.layer)) == 0)
+            if (!onGround && !walkableTop)
             { CommandMessage?.Invoke("Choose a walkable ground or platform surface."); return; }
 
             // Clicking ground or platform stops an active attack and drops the selection (its ring fades out).
@@ -748,6 +763,29 @@ namespace KryticalNova.Player
             if (ExecuteLocalMove(hit.point, out Vector3 acceptedDestination))
                 ClientPresentationRegistry.Markers?.ShowMoveMarker(transform, acceptedDestination, hit.normal);
         }
+
+        /// <summary>
+        /// A click on something that is not the ground layer but is a top the NavMesh covers there (a roof, a stall's
+        /// canopy, a balcony): it is walked on like the ground. <paramref name="walkableFromHere"/> says a walk from where
+        /// the player stands gets there (on the same roof, or over the roof links).
+        /// </summary>
+        private bool IsWalkableTop(Vector3 point, Vector3 normal, out bool walkableFromHere)
+        {
+            walkableFromHere = false;
+            if (agent == null || Vector3.Angle(normal, Vector3.up) > WalkableTopAngle) return false;
+            var filter = new NavMeshQueryFilter { agentTypeID = agent.agentTypeID, areaMask = agent.areaMask };
+            if (!NavMesh.SamplePosition(point, out NavMeshHit top, destinationSampleRadius, filter) || Mathf.Abs(top.position.y - point.y) > WalkableTopRise) return false;
+            Vector3 feet = transform.position - Vector3.up * agent.baseOffset;
+            if (NavMesh.SamplePosition(feet, out NavMeshHit here, 1f, filter))
+            {
+                var path = new NavMeshPath();
+                walkableFromHere = NavMesh.CalculatePath(here.position, top.position, filter, path) && path.status == NavMeshPathStatus.PathComplete;
+            }
+            return true;
+        }
+
+        private const float WalkableTopAngle = 40f;
+        private const float WalkableTopRise = 0.6f;
 
         /// <summary>The unit this player has clicked (skills aim at it), or null.</summary>
         public Transform SelectedTarget => selectedTarget;
@@ -854,6 +892,7 @@ namespace KryticalNova.Player
             if (agent == null || !agent.isActiveAndEnabled || !agent.isOnNavMesh) return;
             if (vaultMotor != null) vaultMotor.Disarm();
             hasOrder = false;
+            dropPending = false;
             agent.ResetPath();
             agent.velocity = Vector3.zero;
         }
@@ -1350,6 +1389,65 @@ namespace KryticalNova.Player
             CommandMessage?.Invoke(string.IsNullOrEmpty(reason) ? "Jump is needed to cross that gap." : reason);
         }
 
+        /// <summary>
+        /// Where movement is decided: a move from a roof to a place below it with no walk down (owner, 22 Oct 2026: "jump
+        /// off buildings to the ground at any distance"). The way goes to the roof's edge nearest the place and the drop
+        /// lands on the ground straight past it, from any height; <see cref="WatchDrop"/> jumps it and the move walks on.
+        /// </summary>
+        private bool TryPlanDrop(Vector3 destination)
+        {
+            dropPending = false;
+            if (jumpMotor == null || agent == null || !agent.isActiveAndEnabled || !agent.isOnNavMesh) return false;
+            Vector3 feet = agent.nextPosition - Vector3.up * agent.baseOffset;
+            if (feet.y - destination.y < DropMinHeight) return false;
+            Vector3 flat = destination - feet;
+            flat.y = 0f;
+            if (flat.sqrMagnitude < 0.01f) return false;
+            Vector3 way = flat.normalized;
+            var filter = new NavMeshQueryFilter { agentTypeID = agent.agentTypeID, areaMask = agent.areaMask };
+            // The edge toward the place; with none on that line, the nearest edge of the roof.
+            if (!NavMesh.Raycast(feet, feet + way * (flat.magnitude + 1f), out NavMeshHit edgeHit, filter)
+                && !NavMesh.FindClosestEdge(feet, out edgeHit, filter)) return false;
+            Vector3 edge = edgeHit.position;
+            Vector3 outward = destination - edge;
+            outward.y = 0f;
+            outward = outward.sqrMagnitude > 0.01f ? outward.normalized : way;
+            int ground = raycastLayers.value & ~(1 << gameObject.layer);
+            dropLandings.Clear();
+            foreach (float reach in DropReach)
+            {
+                Vector3 over = edge + outward * reach + Vector3.up * 0.5f;
+                if (!Physics.Raycast(over, Vector3.down, out RaycastHit below, 500f, ground, QueryTriggerInteraction.Ignore)) continue;
+                if (edge.y - below.point.y < DropMinHeight) continue; // a ledge or the next roof, not the way down
+                if (!NavMesh.SamplePosition(below.point, out NavMeshHit landing, 1.5f, filter) || Mathf.Abs(landing.position.y - below.point.y) > 0.5f) continue;
+                dropLandings.Add(landing.position);
+            }
+            if (dropLandings.Count == 0) return false;
+            if (!agent.CalculatePath(edge, requestedPath) || requestedPath.status != NavMeshPathStatus.PathComplete) return false;
+            dropEdge = edge;
+            dropPending = true;
+            return true;
+        }
+
+        /// <summary>Where movement is decided: at the roof's edge, the planned drop is jumped; the move carries on after it.</summary>
+        private void WatchDrop()
+        {
+            if (!dropPending) return;
+            if (!hasOrder || agent == null || !agent.isActiveAndEnabled || !agent.isOnNavMesh) { dropPending = false; return; }
+            Vector3 feet = agent.nextPosition - Vector3.up * agent.baseOffset;
+            if (FlatDistance(feet, dropEdge) > DropTrigger + agent.velocity.magnitude * Time.deltaTime * 2f) return;
+            dropPending = false;
+            string reason = null;
+            foreach (Vector3 landing in dropLandings)
+            {
+                if (!jumpMotor.TryJump(landing, raycastLayers, modelForwardOffset, out reason)) continue;
+                crossingLink = true; // CrossLinks walks on to the place once the landing is done
+                return;
+            }
+            StopMoving();
+            CommandMessage?.Invoke(string.IsNullOrEmpty(reason) ? "There is no way down from here." : reason);
+        }
+
         /// <summary>Where movement is decided: stops this player where it stands.</summary>
         public void ServerStopMoving()
         {
@@ -1363,6 +1461,7 @@ namespace KryticalNova.Player
         /// </summary>
         private bool TryPlanRoute(Vector3 destination)
         {
+            dropPending = false;
             if (vaultMotor != null) vaultMotor.Disarm();
             bool walkable = agent.CalculatePath(destination, requestedPath) && requestedPath.status == NavMeshPathStatus.PathComplete;
             // Walls as a second ground: no walk there at all (a roof to the street), or a far longer one while running,
@@ -1380,6 +1479,8 @@ namespace KryticalNova.Player
                 wallRunMotor.Disarm();
                 walkable = agent.CalculatePath(destination, requestedPath) && requestedPath.status == NavMeshPathStatus.PathComplete;
             }
+            // Off a roof with no walk down: walk to its edge nearest the place and drop from there.
+            if (!walkable && TryPlanDrop(destination)) return true;
             // With no way round, a vault that gets there is the route.
             if (vaultMotor == null) return walkable;
             if (!vaultMotor.TryArm(destination, walkable ? requestedPath : null, raycastLayers, modelForwardOffset, out Vector3 takeoff))

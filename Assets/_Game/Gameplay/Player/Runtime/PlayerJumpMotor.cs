@@ -243,8 +243,9 @@ namespace KryticalNova.Player
             if (horizontalDistance > maxDist)
             { reason = $"Too far: Jump rank reaches {maxDist:0.0} m."; return false; }
             float jumpH = skills != null ? rank.jumpHeight : 5f;
-            if (displacement.y > jumpH || -displacement.y > jumpH * motionData.maximumDropMultiplier)
-            { reason = $"Landing height is outside this rank's limits (+{jumpH:0.0} m / -{jumpH * motionData.maximumDropMultiplier:0.0} m)."; return false; }
+            // Down has no limit (owner, 22 Oct 2026: "jump off buildings to the ground at any distance"); up is the rank's.
+            if (displacement.y > jumpH)
+            { reason = $"Too high: Jump rank reaches +{jumpH:0.0} m."; return false; }
             collisionLayers = obstacleLayersValue & ~(1 << gameObject.layer);
             facingOffset = modelForwardOffset;
             takeoffRootPosition = transform.position;
@@ -565,13 +566,17 @@ namespace KryticalNova.Player
         /// The feet as the in-flight collision sweep sees them. The warp follows the clip's own root height, which sits
         /// under the ground line in the take-off crouch and can undershoot just before touchdown on a low hop. Swept as
         /// is, the ground itself would count as an obstacle and send the jump back to its start. So the sweep never goes
-        /// below the straight line from take-off to landing; anything standing on that ground still blocks it.
+        /// below the straight line from take-off to landing; anything standing on that ground still blocks it. Before the
+        /// apex it never goes below the take-off either: on a jump down from a roof that line falls away at once, and the
+        /// crouch would put the feet into the roof they stand on (22 Oct 2026).
         /// </summary>
         private Vector3 SweepFeet()
         {
             Vector3 feet = transform.position - Vector3.up * agent.baseOffset;
             float travelled = Mathf.InverseLerp(warpTakeoffTime, warpLandTime, warpClock);
-            feet.y = Mathf.Max(feet.y, Mathf.Lerp(startFeet.y, landingFeet.y, travelled));
+            float floor = Mathf.Lerp(startFeet.y, landingFeet.y, travelled);
+            if (warpClock <= warpApexTime) floor = Mathf.Max(floor, startFeet.y);
+            feet.y = Mathf.Max(feet.y, floor);
             return feet;
         }
 
