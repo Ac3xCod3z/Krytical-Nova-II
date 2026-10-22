@@ -13,9 +13,10 @@ namespace KryticalNova.UI
     /// and how this machine's player is pressing against it. A lane shows the beats coming towards a "now" line,
     /// with the stretch round each beat that counts as on it, and each press where it fell; a second strip shows
     /// where the last presses fell round the beat; under them the last press, how many were on and off the beat,
-    /// how many casts hit harder, and the average timing. It is a test tool: it shows where the game is decided
-    /// (the host, or offline), for the local player, and like the performance readout it is drawn on a canvas of
-    /// its own made here in code, on the right edge half way down, and costs nothing while it is off.
+    /// how many casts hit harder, and the average timing. It is a test tool for the local player: where the game is
+    /// decided (the host, or offline) it reads the presses here; joined to a server it shows what the server sends
+    /// while a GM has it on (owner, 21 Oct 2026). Like the performance readout it is drawn on a canvas of its own made
+    /// here in code, on the right edge half way down, and costs nothing while it is off.
     /// </summary>
     [DisallowMultipleComponent]
     public sealed class CadenceReadout : MonoBehaviour
@@ -82,7 +83,7 @@ namespace KryticalNova.UI
         // The component is on only while the readout is: switched off, it has no Update and its canvas is not drawn.
         private void Apply()
         {
-            bool on = PlayerCadence.ReadoutShown;
+            bool on = PlayerCadence.ReadoutShown || PlayerCadence.ReadoutSentHere;
             if (enabled != on) enabled = on;
             if (on && canvas == null) BuildView();
             if (canvas != null) canvas.gameObject.SetActive(on);
@@ -92,10 +93,10 @@ namespace KryticalNova.UI
         private void Update()
         {
             FindPlayer();
-            // A GM tool: only where the game is decided, and only with a player to read.
+            // A GM tool, with a player to read: where the game is decided, or on a player's own game the server sends to.
             NetworkManager network = NetworkManager.Singleton;
             bool decidedHere = network == null || !network.IsListening || network.IsServer;
-            bool show = cadence != null && decidedHere;
+            bool show = cadence != null && (decidedHere ? PlayerCadence.ReadoutShown : PlayerCadence.ReadoutSentHere);
             if (plate.gameObject.activeSelf != show) plate.gameObject.SetActive(show);
             if (!show) return;
 

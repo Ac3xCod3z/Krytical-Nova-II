@@ -2011,7 +2011,7 @@ namespace KryticalNova.EditorTools.GM
         [TabGroup(Tabs, CadenceTab), ShowInInspector, ToggleLeft, EnableIf(nameof(IsReady)), LabelText("Readout on the game screen (beats coming, hits on and off the beat)"), PropertyOrder(1123)]
         private bool CadenceReadout
         {
-            get => KryticalNova.Combat.PlayerCadence.ReadoutShown;
+            get => KryticalNova.Combat.PlayerCadence.ReadoutShown || KryticalNova.Combat.PlayerCadence.ReadoutSentHere;
             set { if (value != CadenceReadout) Run($"gm.cadence window {(value ? "on" : "off")}"); }
         }
 

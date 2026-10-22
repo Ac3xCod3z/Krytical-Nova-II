@@ -60,7 +60,8 @@ namespace KryticalNova.DevTools
 
         [Command("gm.cadence", "Cadence for the targeted player: its numbers, and what became of their last skill key pressed in a fight " +
                                "(how far from the beat, on Cadence or not, whether it was spent on a cast). " +
-                               "gm.cadence window on|off shows a running readout on this screen: the beats coming, where each press fell, how many " +
+                               "gm.cadence window on|off shows a running readout on the targeted player's own screen (yours, or another's with " +
+                               "gm.target; on a server too): the beats coming, where each press fell, how many " +
                                "were on and off the beat, the average timing. gm.cadence reset starts its counts again. " +
                                "gm.cadence log on|off prints every press of every player to the log.")]
         private static string Cadence(string what = "", string state = "")
@@ -77,8 +78,14 @@ namespace KryticalNova.DevTools
             }
             if (what == "window" && (state == "on" || state == "off" || state.Length == 0))
             {
-                PlayerCadence.ReadoutShown = state.Length == 0 ? !PlayerCadence.ReadoutShown : state == "on";
-                return PlayerCadence.ReadoutShown ? "The Cadence readout is on the right of the screen (it follows your own player)." : "The Cadence readout is off.";
+                // Shown on the screen of the player it reads: here for the host's own or an offline player; on a server,
+                // on the targeted player's own game, which the server then sends every press it judges.
+                bool remote = cadence.IsSpawned && !cadence.IsOwnedByServer;
+                bool shown = remote ? cadence.ReadoutMirrored : PlayerCadence.ReadoutShown;
+                bool on = state.Length == 0 ? !shown : state == "on";
+                if (!cadence.ServerShowReadout(on)) return "The Cadence readout can only be switched where the game is decided.";
+                if (!remote) return on ? "The Cadence readout is on the right of the screen (it follows your own player)." : "The Cadence readout is off.";
+                return on ? $"The Cadence readout is on that player's own screen, on the right ({GmTarget.Describe()})." : $"The Cadence readout is off ({GmTarget.Describe()}).";
             }
             if (what == "reset" && state.Length == 0)
             {

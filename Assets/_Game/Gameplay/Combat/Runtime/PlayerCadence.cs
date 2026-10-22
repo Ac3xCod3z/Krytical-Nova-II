@@ -44,6 +44,9 @@ namespace KryticalNova.Combat
     /// next cast (which may be a moment later: a swing still playing, a walk into reach). Off the beat nothing is
     /// lost. A held key that repeats, Autopilot, buffs and charged skills never earn it: only the key going down.
     /// Offline (the unspawned scene avatar) the local copy does both halves.
+    /// On a dedicated server a GM may show a player's own readout on that player's screen (owner, 21 Oct 2026: to try
+    /// the beat on Strike Dummies and with another player once it is published): the server then sends that player's
+    /// game every press it judged, and nothing while the readout is off.
     /// </summary>
     [DisallowMultipleComponent]
     public sealed class PlayerCadence : NetworkBehaviour
@@ -67,6 +70,8 @@ namespace KryticalNova.Combat
         private readonly CadencePress[] history = new CadencePress[HistorySize];
         private int written;
         private double errorSum, errorSquares;
+        // Where the game is decided for another machine's player: whether its judged presses go to that player's readout.
+        private bool mirrored;
 
         public CadenceSettings Settings => settings;
 
@@ -109,6 +114,7 @@ namespace KryticalNova.Combat
             keptPress = -1;
             errorSum = errorSquares = 0.0;
             LastPress = "No skill key pressed in a fight yet.";
+            if (Decides) Mirror(-1);
         }
 
         /// <summary>GM: every press and what the server made of it goes to the log.</summary>
@@ -129,12 +135,22 @@ namespace KryticalNova.Combat
 
         public static event Action ReadoutChanged;
 
+        /// <summary>
+        /// On a player's own game joined to a server: a GM has their readout on, and the server sends what it judged.
+        /// For this session only.
+        /// </summary>
+        public static bool ReadoutSentHere { get; private set; }
+
+        /// <summary>Server: whether this player's judged presses are being sent to their own readout.</summary>
+        public bool ReadoutMirrored => mirrored;
+
         // Enter Play Mode runs without a domain reload, so statics must be reset by hand.
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void ResetStatics()
         {
             Logging = false;
             ReadoutChanged = null;
+            ReadoutSentHere = false;
         }
 
         private bool Decides => !IsSpawned || IsServer;
@@ -162,7 +178,14 @@ namespace KryticalNova.Combat
         {
             base.OnNetworkSpawn();
             keptSkill = null; // whatever the offline avatar had earned does not come along into a session
+            mirrored = false;
             ResetTally();
+        }
+
+        public override void OnNetworkDespawn()
+        {
+            if (IsOwner && !IsServer) ShowSentReadout(false);
+            base.OnNetworkDespawn();
         }
 
         // ------------------------------------------------------------------ the owner presses
@@ -194,7 +217,7 @@ namespace KryticalNova.Combat
         private void ServerNotePress(string skillId, double pressedAt)
         {
             // Every press is the latest word: one off the beat lets go of an earlier one that was on it.
-            LetGo();
+            Mirror(LetGo());
             SkillDefinitionSO skill = skills != null ? skills.GetSkill(skillId) : null;
             if (skill == null || !skill.IsAttack || skill.IsCharged) return;
 
@@ -235,14 +258,21 @@ namespace KryticalNova.Combat
                 ? $"{skill.displayName}: {error * 1000.0:+0;-0;0} ms from the beat, heard of {(now - pressedAt) * 1000.0:0} ms later: {Words(verdict)}."
                 : $"{skill.displayName}: {Words(verdict)}.";
             if (Logging) Debug.Log($"[Cadence] {name}: {LastPress}");
+            Mirror(slot);
         }
 
-        /// <summary>A kept press that was never spent is lost when another press takes its place.</summary>
-        private void LetGo()
+        /// <summary>A kept press that was never spent is lost when another press takes its place. The press it changed, or -1.</summary>
+        private int LetGo()
         {
-            if (keptSkill != null && keptPress >= 0 && history[keptPress].Fate == CadenceFate.Kept) history[keptPress].Fate = CadenceFate.Lost;
+            int changed = -1;
+            if (keptSkill != null && keptPress >= 0 && history[keptPress].Fate == CadenceFate.Kept)
+            {
+                history[keptPress].Fate = CadenceFate.Lost;
+                changed = keptPress;
+            }
             keptSkill = null;
             keptPress = -1;
+            return changed;
         }
 
         /// <summary>The verdict in the words a GM tool shows.</summary>
@@ -282,6 +312,7 @@ namespace KryticalNova.Combat
                 if (press >= 0) history[press].Fate = CadenceFate.Lost;
                 LastPress = $"{skill.displayName}: was on Cadence, but the cast came more than {settings.keepSeconds:0.#} s after the press.";
                 if (Logging) Debug.Log($"[Cadence] {name}: {LastPress}");
+                Mirror(press);
                 return 1f;
             }
 
@@ -290,6 +321,7 @@ namespace KryticalNova.Combat
             CastsOnCadence++;
             LastPress += $" Spent on this cast: +{settings.bonusPercent:0.#} % damage.";
             if (Logging) Debug.Log($"[Cadence] {name}: {skill.displayName} cast on Cadence, +{settings.bonusPercent:0.#} % damage.");
+            Mirror(press);
             if (IsSpawned && !IsOwnedByServer) EarnedRpc(skill.skillId);
             else ShowEarned(skill.skillId);
             return settings.Multiplier;
@@ -306,6 +338,80 @@ namespace KryticalNova.Combat
 
         [Rpc(SendTo.Owner)]
         private void EarnedRpc(string skillId) => ShowEarned(skillId);
+
+        // ------------------------------------------------------------------ the readout on the player's own screen
+
+        /// <summary>
+        /// Where the game is decided: shows or hides the Cadence readout for this player. The host's own or an offline
+        /// player sees it here as before; a player joined to a server has it shown on their own screen, and is sent
+        /// every press the server judges (and what is kept so far) while it is on.
+        /// </summary>
+        public bool ServerShowReadout(bool on)
+        {
+            if (!Decides) return false;
+            if (!IsSpawned || IsOwnedByServer)
+            {
+                ReadoutShown = on;
+                return true;
+            }
+            mirrored = on;
+            ReadoutRpc(on);
+            if (!on) return true;
+            Mirror(-1); // the counts as they stand, then the presses kept, oldest first
+            for (int back = HistoryCount - 1; back >= 0; back--) Mirror(((written - 1 - back) % HistorySize + HistorySize) % HistorySize);
+            return true;
+        }
+
+        [Rpc(SendTo.Owner)]
+        private void ReadoutRpc(bool on) => ShowSentReadout(on);
+
+        private static void ShowSentReadout(bool on)
+        {
+            if (ReadoutSentHere == on) return;
+            ReadoutSentHere = on;
+            ReadoutChanged?.Invoke();
+        }
+
+        // Sends one press of the history (or, for -1, only the counts) to the owner's readout, while it is on.
+        private void Mirror(int slot)
+        {
+            if (!mirrored || !IsSpawned || IsOwnedByServer || !IsServer) return;
+            CadencePress press = slot >= 0 ? history[slot] : default;
+            string track = press.Track != null ? press.Track.name : string.Empty;
+            MirrorRpc(slot, written, press.Skill ?? string.Empty, press.ErrorMs, press.HeardAfterMs, (byte)press.Verdict, (byte)press.Fate,
+                      press.Beats, track, slot >= 0 ? Time.time - press.At : 0f,
+                      PressesOn, PressesOff, PressesRefused, CastsOnCadence, errorSum, errorSquares, LastPress ?? string.Empty);
+        }
+
+        [Rpc(SendTo.Owner)]
+        private void MirrorRpc(int slot, int count, string skill, float errorMs, float heardAfterMs, byte verdict, byte fate, double beats,
+                               string track, float ageSeconds, int on, int off, int refused, int boosted, double sum, double squares,
+                               string last)
+        {
+            if (IsServer) return;
+            if (slot >= 0 && slot < HistorySize)
+                history[slot] = new CadencePress
+                {
+                    Skill = skill, ErrorMs = errorMs, HeardAfterMs = heardAfterMs, Verdict = (CadenceVerdict)verdict,
+                    Fate = (CadenceFate)fate, Beats = beats, Track = TrackNamed(track), At = Time.time - ageSeconds,
+                };
+            written = count;
+            PressesOn = on;
+            PressesOff = off;
+            PressesRefused = refused;
+            CastsOnCadence = boosted;
+            errorSum = sum;
+            errorSquares = squares;
+            LastPress = last;
+        }
+
+        // The track a press fell in, as this game knows it: the one its beat clock plays now, when the names agree.
+        private static ScriptableObject TrackNamed(string trackName)
+        {
+            IBeatClock clock = BeatClock.Current;
+            if (string.IsNullOrEmpty(trackName) || clock == null) return null;
+            return clock.TryBeatAt(clock.Now, out ScriptableObject now, out _, out _) && now != null && now.name == trackName ? now : null;
+        }
 
         // Only the player who earned it is shown it, as with damage numbers.
         private void ShowEarned(string skillId)
