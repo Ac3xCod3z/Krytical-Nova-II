@@ -52,14 +52,30 @@ namespace KryticalNova.Audio
         /// (<see cref="ExploreMusicPlayer"/>) steps aside by as much.</summary>
         public static float Live { get; private set; }
 
+        private static CombatMusicPlayer current;
+
+        /// <summary>
+        /// The fight music's spectrum on this machine, for what dances to it (the Beat Ring): fills <paramref name="into"/>
+        /// (a power of two, 64 to 8192 long) and is true while fight music sounds; false, with nothing written, out of one.
+        /// </summary>
+        public static bool TrySpectrum(float[] into)
+        {
+            if (current == null || current.source == null || !current.source.isPlaying || Live <= 0f || into == null) return false;
+            current.source.GetSpectrumData(into, 0, FFTWindow.BlackmanHarris);
+            return true;
+        }
+
         // Enter Play Mode runs without a domain reload, so statics must be reset by hand.
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void ResetStatics()
         {
+            current = null;
             Click = false;
             Report = "No fight music in this scene.";
             Live = 0f;
         }
+
+        private void OnEnable() => current = this;
 
         private void Awake()
         {
@@ -69,6 +85,7 @@ namespace KryticalNova.Audio
 
         private void OnDisable()
         {
+            if (current == this) current = null;
             Silence();
             live = 0f;
             Live = 0f;

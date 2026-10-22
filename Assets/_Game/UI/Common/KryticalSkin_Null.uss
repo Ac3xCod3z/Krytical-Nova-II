@@ -473,6 +473,22 @@
 .kn-faction-null .pet-bubble-text {
     font-size: 19.2px;
 }
+.kn-faction-null .showdown-bar {
+    background-color: rgb(8, 5, 9);
+}
+.kn-faction-null .kn-faction-covenant .showdown-bar--top, .kn-faction-null .kn-faction-covenant .showdown-bar--bottom {
+    border-color: rgb(255, 74, 83);
+}
+.kn-faction-null .showdown-count, .kn-faction-null .showdown-title {
+    text-shadow: 4px 4px 0 rgb(17, 10, 20);
+    -unity-text-outline-color: rgb(17, 10, 20);
+}
+.kn-faction-null .showdown-count {
+    font-size: 153.6px;
+}
+.kn-faction-null .showdown-title {
+    font-size: 110.08px;
+}
 
 /* ---- Settings.uss ---- */
 .kn-faction-null .settings-tab {

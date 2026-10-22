@@ -37,6 +37,8 @@ namespace KryticalNova.UI
         private Label resultDetail;
 
         private PlayerDuel shownTarget;
+        // The Showdown: the black bars of a Callout (see ShowdownLetterbox).
+        private Hud.ShowdownLetterbox letterbox;
         private float nextTargetRefresh;
         private float requestStarted;
         private float requestEnds;
@@ -71,13 +73,21 @@ namespace KryticalNova.UI
             SetVisible(targetStrip, false);
             SetVisible(request, false);
             SetVisible(result, false);
+            letterbox?.Dispose();
+            letterbox = new Hud.ShowdownLetterbox(root);
             ClientPresentationRegistry.RegisterDuel(this);
         }
 
-        private void OnDisable() => ClientPresentationRegistry.UnregisterDuel(this);
+        private void OnDisable()
+        {
+            ClientPresentationRegistry.UnregisterDuel(this);
+            letterbox?.Dispose();
+            letterbox = null;
+        }
 
         private void Update()
         {
+            letterbox?.Tick();
             if (request == null) return;
             float now = Time.unscaledTime;
 

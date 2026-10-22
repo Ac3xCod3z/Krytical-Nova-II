@@ -1323,8 +1323,8 @@ MonoBehaviour:
         heading: A Callout
         lines:
         - Select a player and press <b>CALLOUT</b> on the target strip, or type <b>/callout</b> and their name. They must be near.
-        - They accept. A short count runs, and their name turns red.
-        - Fight. Any weapon and any skill. It ends when one of you falls.
+        - They accept. Black bars close in on both your screens and a 3 · 2 · 1 counts down; their name turns red.
+        - Fight. Any weapon and any skill. The bars stay until it ends: when one of you falls.
         - Walking far from where it began, or leaving the game, forfeits.
       - kind: 2
         heading: Who can attack whom
@@ -1336,6 +1336,7 @@ MonoBehaviour:
         heading: 
         lines:
         - Losing a Callout costs no XP.
+        - In a fight, the ring of bars round your pet keeps the music's beat: when it flares, a skill pressed now is on Cadence. Settings, Audio can switch it off.
         - Settings can decline Callouts for you without showing them.
     - id: creds
       title: Creds
