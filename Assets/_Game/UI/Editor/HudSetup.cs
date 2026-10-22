@@ -57,10 +57,14 @@ namespace KryticalNova.EditorTools
             "KryticalNova.UI.EmoteWheelController, KryticalNova.UI",
             "KryticalNova.UI.GameMenuController, KryticalNova.UI",
             "KryticalNova.UI.ArrangeController, KryticalNova.UI",
+            DeckType,
             ToastType,
         };
 
         private const string ToastType = "KryticalNova.UI.ToastHudController, KryticalNova.UI";
+        private const string DeckType = "KryticalNova.UI.DeckWindowController, KryticalNova.UI";
+        public const string DeckLibraryPath = "Assets/_Game/Audio/Data/Assets/DeckLibrary.asset";
+        public const string DeckStylePath = "Assets/_Game/UI/HUD/Deck/Deck.uss";
         private const string ToastSettingsType = "KryticalNova.UI.ToastSettings, KryticalNova.UI";
         public const string ToastSettingsPath = "Assets/_Game/UI/HUD/Toast/ToastSettings.asset";
         /// <summary>What the Guide page of Settings says: one asset, read in the game and in the menus.</summary>
@@ -111,6 +115,7 @@ namespace KryticalNova.EditorTools
 
             AssignFactionHud(hudObject);
             AssignToastSettings(hudObject);
+            AssignDeck(hudObject);
 
             var markers = Object.FindAnyObjectByType(markersType, FindObjectsInactive.Include) as Component;
             if (markers == null)
@@ -169,6 +174,18 @@ namespace KryticalNova.EditorTools
             SerializedProperty property = so.FindProperty("settings");
             if (property == null || property.objectReferenceValue == settings) return;
             property.objectReferenceValue = settings;
+            so.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        /// <summary>Hands the Deck's window its library (the packs) and its three-look stylesheet.</summary>
+        private static void AssignDeck(GameObject hudObject)
+        {
+            var type = System.Type.GetType(DeckType);
+            Component deck = type != null ? hudObject.GetComponent(type) : null;
+            if (deck == null) return;
+            var so = new SerializedObject(deck);
+            so.FindProperty("library").objectReferenceValue = AssetDatabase.LoadAssetAtPath<Object>(DeckLibraryPath);
+            so.FindProperty("style").objectReferenceValue = AssetDatabase.LoadAssetAtPath<UnityEngine.UIElements.StyleSheet>(DeckStylePath);
             so.ApplyModifiedPropertiesWithoutUndo();
         }
 

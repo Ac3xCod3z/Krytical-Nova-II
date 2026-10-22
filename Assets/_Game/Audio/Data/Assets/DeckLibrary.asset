@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 23476846e7ec47699d7d06df93567b07, type: 3}
+  m_Name: DeckLibrary
+  m_EditorClassIdentifier: KryticalNova.Audio::KryticalNova.Audio.DeckLibrary
+  packs:
+  - {fileID: 11400000, guid: 15a70d9cc14544d283ddfe10b9fc85f9, type: 2}
+  - {fileID: 11400000, guid: 4900abb1010d499eafb4da9605a5cf1e, type: 2}
+  output: {fileID: -2273146209696275378, guid: f2f383f979424e24fa19eac36be7c901, type: 2}
+  defaultVolume: 0.7
+  duckSeconds: 0.4
+  returnSeconds: 2
+  bars: 24
+  barGain: 18
+  hegemonyEmote: S/Use Phone/One Hand
+  nullEmote: S/Use Phone/Two Hands Squinting
+  covenantEmote: S/Pray/Standing

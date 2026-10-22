@@ -44,6 +44,7 @@ namespace KryticalNova.Audio
 
             // Out of a fight the music comes up slowly; a fight pushes it down quickly.
             float want = 1f - CombatMusicPlayer.Live;
+            if (DeckPlayer.HoldsMusic) want = 0f; // the player's own Deck plays instead, on this machine only
             float seconds = want < level ? DuckSeconds : music.exploreFadeSeconds;
             level = Mathf.MoveTowards(level, want, Time.unscaledDeltaTime / Mathf.Max(0.05f, seconds));
 
