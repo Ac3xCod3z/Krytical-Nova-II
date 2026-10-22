@@ -23,7 +23,7 @@ namespace KryticalNova.Release
     public sealed class MainForm : Form
     {
         private enum Stage { Checking, Ready, UpdateReady, NotInstalled, Working, Failed }
-        private enum NewsView { Current, PastList, PastRelease }
+        private enum NewsView { Current, PastList, PastRelease, PatchNotes }
 
         private static readonly Color Page = ComicFrame.Night;
         private static readonly Color Panel = ComicFrame.PanelFill;
@@ -94,6 +94,14 @@ namespace KryticalNova.Release
         private List<NewsItem> news = new List<NewsItem>();
         private List<NewsRelease> pastNews = new List<NewsRelease>();
         private string newsLabel = "";
+        // The patch notes (owner, 22 Oct 2026): the whole breakdown of a release, beside its highlights. The ones shown,
+        // what they belong to, how far they are scrolled and the view to go back to.
+        private List<PatchNotesSection> patchNotes = new List<PatchNotesSection>();
+        private List<PatchNotesSection> notesShown = new List<PatchNotesSection>();
+        private string notesLabel = "";
+        private int notesScroll, notesHeight;
+        private NewsView notesBack = NewsView.Current;
+        private const int NotesScrollStep = 48;
         private NewsView newsView = NewsView.Current;
         private int openItem, pastIndex;
 
@@ -137,7 +145,7 @@ namespace KryticalNova.Release
             Shown += (s, e) => Check(false);
             if (PictureFile != null) Shown += (s, e) => TakePicture();
             FormClosing += (s, e) => { closing.Cancel(); frame.Stop(); };
-            if (preview != null) ShowNews(preview.items, preview.history, "PREVIEW");
+            if (preview != null) ShowNews(preview.items, preview.history, "PREVIEW", preview.patchNotes);
             SetStage(Stage.Checking);
         }
 
@@ -174,7 +182,7 @@ namespace KryticalNova.Release
             try
             {
                 plan = await updater.Check(repairing, closing.Token);
-                if (preview == null) ShowNews(plan.Manifest.news, plan.Manifest.newsHistory, NewsLabel(plan.Manifest));
+                if (preview == null) ShowNews(plan.Manifest.news, plan.Manifest.newsHistory, NewsLabel(plan.Manifest), plan.Manifest.patchNotes);
                 if (plan.LauncherOutdated && !justUpdated)
                 {
                     SetStage(Stage.Working, "UPDATING THE LAUNCHER", "A new launcher is ready. It replaces this one and opens by itself.");
@@ -311,12 +319,14 @@ namespace KryticalNova.Release
 
         // ------------------------------------------------------------------ news
 
-        private void ShowNews(List<NewsItem> items, List<NewsRelease> history, string label)
+        private void ShowNews(List<NewsItem> items, List<NewsRelease> history, string label, List<PatchNotesSection> notes)
         {
             news = items ?? new List<NewsItem>();
             pastNews = history ?? new List<NewsRelease>();
             newsLabel = label;
+            patchNotes = notes ?? new List<PatchNotesSection>();
             if (newsView == NewsView.PastRelease && pastIndex >= pastNews.Count) newsView = NewsView.Current;
+            if (newsView == NewsView.PatchNotes) newsView = NewsView.Current;
             openItem = Math.Min(openItem, Math.Max(0, news.Count - 1));
             Invalidate(Grow(NewsBox, 8));
         }
@@ -622,6 +632,11 @@ namespace KryticalNova.Release
                     }
                     else y = DrawItems(g, news, left, right, y);
                     if (pastNews.Count > 0) Link(g, "PAST NEWS  ▸", NewsBox.Bottom - 46, true, () => { newsView = NewsView.PastList; Invalidate(Grow(NewsBox, 8)); });
+                    if (patchNotes.Count > 0) Link(g, "PATCH NOTES", NewsBox.Bottom - 46, false, () => OpenNotes(patchNotes, newsLabel, NewsView.Current));
+                }
+                else if (newsView == NewsView.PatchNotes)
+                {
+                    DrawNotes(g, left, right, y, big, ink, small, muted);
                 }
                 else if (newsView == NewsView.PastList)
                 {
@@ -661,8 +676,75 @@ namespace KryticalNova.Release
                     y += (int)nameHeight + 40;
                     DrawItems(g, release.items, left, right, y);
                     Link(g, "◂  ALL PAST NEWS", NewsBox.Bottom - 46, false, () => { newsView = NewsView.PastList; Invalidate(Grow(NewsBox, 8)); });
+                    if (release.patchNotes != null && release.patchNotes.Count > 0)
+                        Link(g, "PATCH NOTES  ▸", NewsBox.Bottom - 46, true, () => OpenNotes(release.patchNotes, release.label, NewsView.PastRelease));
                 }
             }
+        }
+
+        private void OpenNotes(List<PatchNotesSection> notes, string label, NewsView back)
+        {
+            notesShown = notes ?? new List<PatchNotesSection>();
+            notesLabel = label ?? "";
+            notesBack = back;
+            notesScroll = 0;
+            newsView = NewsView.PatchNotes;
+            Invalidate(Grow(NewsBox, 8));
+        }
+
+        // The patch notes: every change of the release under its headings, scrolled with the wheel inside the sheet.
+        private void DrawNotes(Graphics g, int left, int right, int y, Font big, Brush ink, Font small, Brush muted)
+        {
+            g.DrawString("PATCH", big, ink, left, y);
+            float w = g.MeasureString("PATCH ", big).Width - 8;
+            using (var red = new SolidBrush(Rose)) g.DrawString("NOTES", big, red, left + w, y);
+            if (notesLabel.Length > 0) g.DrawString(notesLabel, small, muted, left + 2, y + 46);
+            int top = y + 72, bottom = NewsBox.Bottom - 58;
+            var view = new Rectangle(left - 6, top, right - left + 6, bottom - top);
+            var state = g.Save();
+            g.SetClip(view);
+            int at = top - notesScroll;
+            using (var heading = new Font(display, 18f))
+            using (var text = new Font("Segoe UI Semibold", 9.5f))
+            using (var rose = new SolidBrush(Rose))
+            {
+                int lineLeft = left + 14, lineWidth = right - lineLeft - 10;
+                foreach (PatchNotesSection section in notesShown)
+                {
+                    g.DrawString(section.heading.ToUpperInvariant(), heading, rose, left, at);
+                    at += 30;
+                    foreach (string line in section.lines)
+                    {
+                        g.DrawString("•", text, ink, left + 2, at);
+                        SizeF size = g.MeasureString(line, text, lineWidth);
+                        g.DrawString(line, text, ink, new RectangleF(lineLeft, at, lineWidth, size.Height + 2));
+                        at += (int)size.Height + 6;
+                    }
+                    at += 10;
+                }
+            }
+            g.Restore(state);
+            notesHeight = at + notesScroll - top;
+            int most = Math.Max(0, notesHeight - view.Height);
+            if (notesScroll > most) { notesScroll = most; Invalidate(Grow(NewsBox, 8)); }
+            if (most > 0)
+            {
+                // Where in the notes the view is: a thin bar down the sheet's right edge.
+                float share = view.Height / (float)notesHeight;
+                float barTop = top + (view.Height - view.Height * share) * (notesScroll / (float)most);
+                using (var track = new SolidBrush(Color.FromArgb(40, Ink))) g.FillRectangle(track, right + 4, top, 4, view.Height);
+                using (var bar = new SolidBrush(DeepCyan)) g.FillRectangle(bar, right + 4, barTop, 4, view.Height * share);
+            }
+            Link(g, notesBack == NewsView.PastRelease ? "◂  BACK" : "◂  BACK TO WHAT'S NEW", NewsBox.Bottom - 46, false,
+                () => { newsView = notesBack; Invalidate(Grow(NewsBox, 8)); });
+        }
+
+        protected override void OnMouseWheel(MouseEventArgs e)
+        {
+            base.OnMouseWheel(e);
+            if (newsView != NewsView.PatchNotes || !NewsBox.Contains(e.Location)) return;
+            notesScroll = Math.Max(0, notesScroll - Math.Sign(e.Delta) * NotesScrollStep);
+            Invalidate(Grow(NewsBox, 8));
         }
 
         // "16 Oct 2026 · Krytical Nova goes online": the date, and the name of what came out then.

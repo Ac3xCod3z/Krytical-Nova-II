@@ -38,6 +38,11 @@ namespace KryticalNova.Release
         [DataMember(Order = 8, EmitDefaultValue = false)] public List<NewsItem> news;
         /// <summary>The news of earlier releases, newest first, for the launcher's PAST NEWS (owner, 18 Oct 2026).</summary>
         [DataMember(Order = 9, EmitDefaultValue = false)] public List<NewsRelease> newsHistory;
+        /// <summary>
+        /// The whole breakdown of the release (owner, 22 Oct 2026): every change, in plain words, under a few headings,
+        /// where the news keeps to the highlights. Signed with the rest; a launcher from before it skips the field.
+        /// </summary>
+        [DataMember(Order = 10, EmitDefaultValue = false)] public List<PatchNotesSection> patchNotes;
 
         /// <summary>Where a file's compressed copy is kept, by its hash.</summary>
         public static string PackedPath(string sha256) => "files/" + sha256 + ".gz";
@@ -112,6 +117,16 @@ namespace KryticalNova.Release
     {
         [DataMember(Order = 1)] public string label = "";
         [DataMember(Order = 2)] public List<NewsItem> items = new List<NewsItem>();
+        /// <summary>Its patch notes, when it had them.</summary>
+        [DataMember(Order = 3, EmitDefaultValue = false)] public List<PatchNotesSection> patchNotes;
+    }
+
+    /// <summary>One heading of the patch notes ("New", "Changed", "Fixed"...) and its lines, one change each.</summary>
+    [DataContract]
+    public sealed class PatchNotesSection
+    {
+        [DataMember(Order = 1)] public string heading = "";
+        [DataMember(Order = 2)] public List<string> lines = new List<string>();
     }
 
     /// <summary>
@@ -127,9 +142,15 @@ namespace KryticalNova.Release
         public const int LongestTitle = 32;
         public const int LongestBody = 300;
         public const int MostReleasesKept = 24;
+        public const int MostSections = 16;
+        public const int MostLines = 200;
+        public const int LongestHeading = 40;
+        public const int LongestLine = 400;
 
         [DataMember(Order = 1)] public List<NewsItem> items = new List<NewsItem>();
         [DataMember(Order = 2)] public List<NewsRelease> history = new List<NewsRelease>();
+        /// <summary>This release's patch notes: the whole breakdown, where <see cref="items"/> are the highlights.</summary>
+        [DataMember(Order = 3, EmitDefaultValue = false)] public List<PatchNotesSection> patchNotes;
 
         public static LauncherNews FromFile(string file)
         {
@@ -139,6 +160,7 @@ namespace KryticalNova.Release
                 var news = (LauncherNews)serializer.ReadObject(stream);
                 if (news.items == null) news.items = new List<NewsItem>();
                 if (news.history == null) news.history = new List<NewsRelease>();
+                if (news.patchNotes == null) news.patchNotes = new List<PatchNotesSection>();
                 return news;
             }
         }
@@ -148,12 +170,16 @@ namespace KryticalNova.Release
         {
             string problem = Problem(items, "News");
             if (problem != null) return problem;
+            problem = Problem(patchNotes, "The patch notes");
+            if (problem != null) return problem;
             if (history.Count > MostReleasesKept) return $"The news history keeps {MostReleasesKept} releases at most; drop the oldest.";
             for (int i = 0; i < history.Count; i++)
             {
                 NewsRelease release = history[i];
                 if (release == null || string.IsNullOrWhiteSpace(release.label)) return $"Past news {i + 1} has no label.";
                 problem = Problem(release.items ?? new List<NewsItem>(), "Past news \"" + release.label + "\"");
+                if (problem != null) return problem;
+                problem = Problem(release.patchNotes, "The patch notes of \"" + release.label + "\"");
                 if (problem != null) return problem;
             }
             return null;
@@ -171,6 +197,37 @@ namespace KryticalNova.Release
                 if (item.body.Trim().Length > LongestBody) return $"{what}, item {i + 1}'s text is longer than {LongestBody} characters.";
             }
             return null;
+        }
+
+        private static string Problem(List<PatchNotesSection> sections, string what)
+        {
+            if (sections == null || sections.Count == 0) return null;
+            if (sections.Count > MostSections) return $"{what} have {sections.Count} headings; {MostSections} at most.";
+            int lines = 0;
+            for (int i = 0; i < sections.Count; i++)
+            {
+                PatchNotesSection section = sections[i];
+                if (section == null || string.IsNullOrWhiteSpace(section.heading)) return $"{what}, heading {i + 1} is empty.";
+                if (section.heading.Trim().Length > LongestHeading) return $"{what}, heading {i + 1} is longer than {LongestHeading} characters.";
+                if (section.lines == null || section.lines.Count == 0) return $"{what}, \"{section.heading.Trim()}\" has no lines.";
+                foreach (string line in section.lines)
+                {
+                    if (string.IsNullOrWhiteSpace(line)) return $"{what}, \"{section.heading.Trim()}\" has an empty line.";
+                    if (line.Trim().Length > LongestLine) return $"{what}, a line under \"{section.heading.Trim()}\" is longer than {LongestLine} characters.";
+                }
+                lines += section.lines.Count;
+            }
+            return lines > MostLines ? $"{what} have {lines} lines; {MostLines} at most." : null;
+        }
+
+        /// <summary>The patch notes, trimmed, for the signed list; null when there are none.</summary>
+        public static List<PatchNotesSection> Clean(List<PatchNotesSection> sections)
+        {
+            if (sections == null || sections.Count == 0) return null;
+            var clean = new List<PatchNotesSection>();
+            foreach (PatchNotesSection section in sections)
+                clean.Add(new PatchNotesSection { heading = section.heading.Trim(), lines = section.lines.ConvertAll(l => l.Trim()) });
+            return clean;
         }
 
         /// <summary>The same items, trimmed, for the signed list.</summary>
