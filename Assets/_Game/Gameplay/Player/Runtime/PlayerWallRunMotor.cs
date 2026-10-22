@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using KryticalNova.Core;
 using KryticalNova.Progression;
+using KryticalNova.World.Surfaces;
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.AI;
@@ -235,6 +236,8 @@ namespace KryticalNova.Player
         /// <returns>True when the click was on something climbable and has been dealt with (started or refused, with the reason told).</returns>
         public bool TryClimbClicked(Vector3 point, Vector3 normal, Collider surface, int obstacleLayers, float modelForwardOffset)
         {
+            // A vendor's stall is never climbed (owner, 22 Oct 2026); the click is answered, not passed on as a walk.
+            if (surface != null && VendorStall.Is(surface)) { Message?.Invoke("Vendor stalls can't be climbed."); return true; }
             if (surface != null && WantsWallWalk(point, normal)) return TryWallWalkClicked(point, normal); // walls as a second ground
             if (surface == null || !IsClimbableObject(surface, out _)) return false;
             if (!HasAuthority)
@@ -497,6 +500,7 @@ namespace KryticalNova.Player
         {
             marker = surface != null ? surface.GetComponentInParent<ClimbableSurface>() : null;
             if (surface == null || surface.isTrigger || surface.transform.IsChildOf(transform)) return false;
+            if (VendorStall.Is(surface)) return false; // a vendor's stall, whatever it is marked
             if (marker != null) return marker.kind != ClimbableKind.Never;
             if (settings == null || (settings.wallLayers.value & (1 << surface.gameObject.layer)) == 0) return false;
             Rigidbody body = surface.attachedRigidbody;

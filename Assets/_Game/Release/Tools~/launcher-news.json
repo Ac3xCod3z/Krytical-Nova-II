@@ -2,7 +2,7 @@
   "items": [
     {
       "title": "Run on Water, Climb Anything",
-      "body": "Waterstride lets you sprint across rivers and lakes, splashing at every step. Wallstride now climbs vendor stalls and shops, you can walk freely on rooftops, and one click on the street leaps you off any roof, from any height."
+      "body": "Waterstride lets you sprint across rivers and lakes, splashing at every step. You can walk freely on rooftops, and one click on the street leaps you off any roof, from any height. Climbs reach a building's wall even from an awkward spot."
     },
     {
       "title": "The Deck: Your Own Music",
@@ -160,7 +160,7 @@
     {
       "heading": "Movement",
       "lines": [
-        "Wallstride climbs vendor stalls, booths and shops like any building: click the top of a stall to run up onto it. Clicking the vendor still talks to them.",
+        "Vendor stalls, booths and kiosks can't be climbed: Wallstride leaves them alone, and clicking one tells you so.",
         "Rooftops: click another spot of the roof you are on and you walk there.",
         "Jumping down has no height limit any more; only how high you can jump up depends on your Jump rank.",
         "A drop from a tree reaches up to 25 m away (was 14 m).",
@@ -208,7 +208,7 @@
     {
       "heading": "Fixes",
       "lines": [
-        "Climbing a stall or a booth whose foot was hard to reach did nothing and said nothing; it now walks there and climbs, or tells you why not.",
+        "A climb whose foot was hard to reach did nothing and said nothing; it now walks there and climbs, or tells you why not.",
         "A jump down from a roof was sometimes called back for no reason; it now lands.",
         "The Kitsune's tail trail no longer streaks down the road behind you when you run."
       ]

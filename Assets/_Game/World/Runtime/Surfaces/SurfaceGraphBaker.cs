@@ -259,6 +259,7 @@ namespace KryticalNova.World.Surfaces
             if (body != null && !body.isKinematic) return false;
             if (collider.GetComponentInParent<KryticalNova.Progression.IDamageable>() != null) return false;
             if (collider.GetComponentInParent<Animator>() != null) return false; // characters, creatures
+            if (VendorStall.Is(collider)) return false; // a vendor's stall is never a wall (owner, 22 Oct 2026)
             return true;
         }
 
