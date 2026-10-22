@@ -48,6 +48,7 @@ namespace KryticalNova.UI
 
         private readonly List<VisualElement> npcMarkers = new List<VisualElement>();
         private readonly List<VisualElement> allyMarkers = new List<VisualElement>();
+        private readonly List<VisualElement> gmSeenMarkers = new List<VisualElement>();
         private readonly List<VisualElement> portalMarkers = new List<VisualElement>();
         private readonly List<VisualElement> waypointMarkers = new List<VisualElement>();
         private readonly List<VisualElement> hostileMarkers = new List<VisualElement>();
@@ -319,6 +320,20 @@ namespace KryticalNova.UI
             }
             Hide(allyMarkers, allyCount);
 
+            // A GM sees every player on the map (PlayerGmSight), each with a gold rim; nobody else is shown this.
+            int gmSeenCount = 0;
+            if (PlayerGmSight.Active)
+            {
+                ulong self = player.TryGetComponent(out PointAndClickPlayer own2) ? own2.OwnerClientId : ulong.MaxValue;
+                IReadOnlyList<GmSeenPlayer> everyone = PlayerGmSight.Seen;
+                for (int i = 0; i < everyone.Count; i++)
+                {
+                    if (everyone[i].ClientId == self) continue;
+                    Place(Pooled(gmSeenMarkers, gmSeenCount++, "gm-seen"), MapPixel(LivePosition(everyone[i])), GmSeenIconSize);
+                }
+            }
+            Hide(gmSeenMarkers, gmSeenCount);
+
             int portalCount = 0;
             IReadOnlyList<ZonePortal> portals = ZonePortal.Active;
             for (int i = 0; i < portals.Count; i++)
@@ -404,6 +419,17 @@ namespace KryticalNova.UI
             float maxDist = maskHalf - EdgeInset;
             return offset.magnitude > maxDist ? playerPx + offset.normalized * maxDist : px;
         }
+
+        /// <summary>Where a player the GM is told of stands: their body when this game has it, else the place last sent.</summary>
+        internal static Vector3 LivePosition(GmSeenPlayer seen)
+        {
+            IReadOnlyList<PointAndClickPlayer> players = PointAndClickPlayer.Active;
+            for (int i = 0; i < players.Count; i++)
+                if (players[i] != null && players[i].IsSpawned && players[i].OwnerClientId == seen.ClientId) return players[i].transform.position;
+            return seen.Position;
+        }
+
+        private const float GmSeenIconSize = 9f;
 
         private VisualElement Pooled(List<VisualElement> pool, int index, string kind)
         {

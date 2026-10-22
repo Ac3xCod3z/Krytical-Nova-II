@@ -569,6 +569,13 @@ namespace KryticalNova.EditorTools.GM
             set { if (value != GodMode) Run($"gm.god {(value ? "true" : "false")}"); }
         }
 
+        [TabGroup(Tabs, CheatsTab), ShowInInspector, ToggleLeft, EnableIf(nameof(IsReady)), LabelText("See every player on the map"), PropertyOrder(200.5f)]
+        private bool SeeAll
+        {
+            get => LocalPlayer != null && LocalPlayer.TryGetComponent(out KryticalNova.Player.PlayerGmSight sight) && sight.SeeAll;
+            set { if (value != SeeAll) Run($"gm.seeall {(value ? "true" : "false")}"); }
+        }
+
         [TabGroup(Tabs, CheatsTab), ShowInInspector, ToggleLeft, EnableIf(nameof(IsReady)), LabelText("Infinite Flux"), PropertyOrder(201)]
         private bool InfiniteChi
         {

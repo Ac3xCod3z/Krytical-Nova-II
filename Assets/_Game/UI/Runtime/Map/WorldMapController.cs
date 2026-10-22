@@ -56,6 +56,7 @@ namespace KryticalNova.UI
         private readonly List<VisualElement> poiMarkers = new List<VisualElement>();
         private readonly List<VisualElement> npcMarkers = new List<VisualElement>();
         private readonly List<VisualElement> allyMarkers = new List<VisualElement>();
+        private readonly List<VisualElement> gmSeenMarkers = new List<VisualElement>();
         private readonly List<VisualElement> portalMarkers = new List<VisualElement>();
         private readonly List<VisualElement> waypointMarkers = new List<VisualElement>();
 
@@ -402,6 +403,20 @@ namespace KryticalNova.UI
             }
             Hide(allyMarkers, allyCount);
 
+            // A GM sees everyone on the map (PlayerGmSight): the players this game does not have yet, named, gold-rimmed.
+            int gmSeenCount = 0;
+            if (PlayerGmSight.Active)
+            {
+                foreach (GmSeenPlayer seen in PlayerGmSight.Seen)
+                {
+                    if (Known(seen.ClientId)) continue; // already drawn above, where they really are
+                    var marker = Pooled(gmSeenMarkers, gmSeenCount++, "gm-seen", withLabel: true);
+                    marker.Q<Label>().text = seen.Name.ToString();
+                    Place(marker, MapPixel(seen.Position, contentSize), 12f);
+                }
+            }
+            Hide(gmSeenMarkers, gmSeenCount);
+
             int portalCount = 0;
             foreach (var portal in ZonePortal.Active)
                 if (portal != null) Place(Pooled(portalMarkers, portalCount++, "portal"), MapPixel(portal.transform.position, contentSize), 24f);
@@ -413,6 +428,13 @@ namespace KryticalNova.UI
             Hide(waypointMarkers, waypointCount);
 
             playerIcon.BringToFront();
+        }
+
+        private static bool Known(ulong clientId)
+        {
+            foreach (var p in PointAndClickPlayer.Active)
+                if (p != null && p.IsSpawned && p.OwnerClientId == clientId) return true;
+            return false;
         }
 
         private VisualElement Pooled(List<VisualElement> pool, int index, string kind, bool withLabel = false)
