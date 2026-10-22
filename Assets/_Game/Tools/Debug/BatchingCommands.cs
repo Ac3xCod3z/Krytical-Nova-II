@@ -39,7 +39,8 @@ namespace KryticalNova.DevTools
                 case "occlusion":
                     ResidentDrawerOcclusion.On = on;
                     Note("occlusion", on);
-                    return on ? "GPU Resident Drawer occlusion culling on." : "GPU Resident Drawer occlusion culling off.";
+                    return (on ? "GPU Resident Drawer occlusion culling on." : "GPU Resident Drawer occlusion culling off.")
+                           + (PipelineRebuilds.Waiting ? " It changes the pipeline, so it takes effect at the next menu (a map's light probes do not survive it)." : string.Empty);
                 default:
                     return "Unknown change '" + change + "': shadows or occlusion.";
             }

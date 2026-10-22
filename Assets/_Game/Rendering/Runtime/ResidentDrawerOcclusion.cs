@@ -21,15 +21,14 @@ namespace KryticalNova.Rendering
             {
                 if (!(GraphicsSettings.currentRenderPipeline is UniversalRenderPipelineAsset urp)) return;
                 if (authored == null) authored = urp.gpuResidentDrawerEnableOcclusionCullingInCameras;
-                urp.gpuResidentDrawerEnableOcclusionCullingInCameras = value;
+                PipelineRebuilds.SetOcclusion(value); // a rebuild: waits for a menu when a map is loaded
             }
         }
 
         /// <summary>The asset's own value back. The session's end calls it.</summary>
         public static void Restore()
         {
-            if (authored != null && GraphicsSettings.currentRenderPipeline is UniversalRenderPipelineAsset urp)
-                urp.gpuResidentDrawerEnableOcclusionCullingInCameras = authored.Value;
+            if (authored != null) PipelineRebuilds.SetOcclusion(authored.Value);
             authored = null;
         }
 
