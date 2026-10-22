@@ -901,6 +901,7 @@ namespace KryticalNova.DevTools
             position = hit.position;
             // Off a wall or out of a tree first, or the player arrives still holding on to nothing.
             if (player.TryGetComponent<KryticalNova.Player.PlayerWallRunMotor>(out var wall)) wall.Cancel();
+            if (player.TryGetComponent<KryticalNova.Player.PlayerWaterstrideMotor>(out var water)) water.Cancel();
             if (player.TryGetComponent<NavMeshAgent>(out var agent))
             {
                 position += Vector3.up * agent.baseOffset;

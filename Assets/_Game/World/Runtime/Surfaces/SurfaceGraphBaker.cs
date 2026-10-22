@@ -70,6 +70,9 @@ namespace KryticalNova.World.Surfaces
             public int[] EdgeStart, EdgeTo;
             public SurfaceGraph.EdgeKind[] EdgeKind;
             public SurfaceGraph.Join[] Joins;
+            /// <summary>Each node's spacing over the wall spacing, and the rule its edges were chosen by (for the file).</summary>
+            public float[] Scales;
+            public SurfaceGraph.LinkRule Rule;
             /// <summary>Samples taken of steep surfaces, and why some gave no node.</summary>
             public int Samples, Colliders, Terrains, RejectedBody, RejectedSolid, RejectedInside, Unreachable;
         }
@@ -172,7 +175,9 @@ namespace KryticalNova.World.Surfaces
             starts[points.Count] = to.Count;
 
             SurfaceGraph.Join[] joins = FindJoins(points.ToArray(), normals.ToArray(), o);
-            if (o.DropUnreachable) return Reachable(points, normals, starts, to, kinds, joins, result);
+            result.Rule = new SurfaceGraph.LinkRule { link = o.LinkDistance, maxTurn = o.MaxTurn, cornerTurn = o.CornerTurn, cornerFactor = CornerLinkFactor };
+            if (o.DropUnreachable) return Reachable(points, normals, scales, starts, to, kinds, joins, result);
+            result.Scales = scales.ToArray();
             result.Points = points.ToArray();
             result.Normals = normals.ToArray();
             result.EdgeStart = starts;
@@ -186,7 +191,7 @@ namespace KryticalNova.World.Surfaces
         /// Keeps only the patches of surface a player can get onto: those joined to the ground or a top somewhere. A face
         /// no join reaches (the back of the skyline, scenery out of bounds) is dropped, with its nodes and edges.
         /// </summary>
-        private static Result Reachable(List<Vector3> points, List<Vector3> normals, int[] starts, List<int> to,
+        private static Result Reachable(List<Vector3> points, List<Vector3> normals, List<float> scales, int[] starts, List<int> to,
             List<SurfaceGraph.EdgeKind> kinds, SurfaceGraph.Join[] joins, Result result)
         {
             int n = points.Count;
@@ -208,12 +213,14 @@ namespace KryticalNova.World.Surfaces
             var remap = new int[n];
             var p = new List<Vector3>(n);
             var nn = new List<Vector3>(n);
+            var ss = new List<float>(n);
             for (int i = 0; i < n; i++)
             {
                 remap[i] = keep[i] ? p.Count : -1;
                 if (!keep[i]) continue;
                 p.Add(points[i]);
                 nn.Add(normals[i]);
+                ss.Add(scales[i]);
             }
             var s = new int[p.Count + 1];
             var t = new List<int>(to.Count);
@@ -234,6 +241,7 @@ namespace KryticalNova.World.Surfaces
             foreach (SurfaceGraph.Join join in joins)
                 if (keep[join.node]) j2.Add(new SurfaceGraph.Join { node = remap[join.node], navPoint = join.navPoint, kind = join.kind });
             result.Unreachable = n - p.Count;
+            result.Scales = ss.ToArray();
             result.Points = p.ToArray();
             result.Normals = nn.ToArray();
             result.EdgeStart = s;

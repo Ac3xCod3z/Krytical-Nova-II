@@ -110,6 +110,7 @@ namespace KryticalNova.Player
         private PlayerJumpMotor jumpMotor;
         private PlayerVaultMotor vaultMotor;
         private PlayerWallRunMotor wallRunMotor;
+        private PlayerWaterstrideMotor waterMotor;
         private CharacterCombatStats combatStats;
         private CharacterBuffManager buffManager;
         private PlayerAnimancerMotor animancerMotor;
@@ -219,6 +220,8 @@ namespace KryticalNova.Player
             if (vaultMotor != null) vaultMotor.Landed += ResumeMoveAfterVault;
             wallRunMotor = GetComponent<PlayerWallRunMotor>();
             if (wallRunMotor != null) wallRunMotor.Message += message => CommandMessage?.Invoke(message);
+            waterMotor = GetComponent<PlayerWaterstrideMotor>();
+            if (waterMotor != null) waterMotor.Message += message => CommandMessage?.Invoke(message);
             combatStats = GetComponent<CharacterCombatStats>();
             buffManager = GetComponent<CharacterBuffManager>();
             animancerMotor = GetComponent<PlayerAnimancerMotor>();
@@ -405,7 +408,7 @@ namespace KryticalNova.Player
             bool lost = agent != null && !agent.enabled && didStart
                 && (resources == null || resources.IsAlive) && (deathMotor == null || !deathMotor.IsDead)
                 && !(jumpMotor != null && jumpMotor.IsBusy) && !(vaultMotor != null && vaultMotor.IsBusy)
-                && !(wallRunMotor != null && wallRunMotor.IsBusy);
+                && !(wallRunMotor != null && wallRunMotor.IsBusy) && !(waterMotor != null && waterMotor.IsOnWater);
             if (!lost) { agentOffFor = 0f; return; }
             agentOffFor += Time.deltaTime;
             MovementSettings settings = movementSkills != null ? movementSkills.MovementSettings : null;
@@ -702,6 +705,18 @@ namespace KryticalNova.Player
                 return;
             }
 
+            // Waterstride: a click on water with Run selected runs out across it; on the water, any click is the way on
+            // (over the water, or ashore and on).
+            if (waterMotor != null && waterMotor.TryClick(ray, hit))
+            {
+                CancelAttack();
+                if (selectedTarget != null) ClearSelection();
+                pendingInteract = null;
+                EndTravel(false);
+                ClientPresentationRegistry.Markers?.ShowMoveMarker(transform, waterMotor.LastClickPoint, Vector3.up);
+                return;
+            }
+
             // A roof, a stall's top or a balcony is walked on like the ground where the NavMesh covers it (owner, 22 Oct
             // 2026: "free movement on rooftops"); one the player can walk to from here is a walk, never a climb.
             bool onGround = (groundLayers.value & (1 << hit.collider.gameObject.layer)) != 0;
@@ -810,6 +825,7 @@ namespace KryticalNova.Player
             if (jumpMotor != null && jumpMotor.IsBusy) { CommandMessage?.Invoke("Finish this jump before choosing another destination."); return false; }
             if (vaultMotor != null && vaultMotor.IsBusy) return false;
             if (wallRunMotor != null && wallRunMotor.IsBusy) { CommandMessage?.Invoke("Come down first."); return false; }
+            if (waterMotor != null && waterMotor.IsOnWater) return false;
             if (agent == null) return false;
 
             var filter = new NavMeshQueryFilter { agentTypeID = agent.agentTypeID, areaMask = agent.areaMask };
@@ -929,7 +945,7 @@ namespace KryticalNova.Player
             moved.y = 0f;
             travelLastPosition = transform.position;
             bool airborne = (jumpMotor != null && jumpMotor.IsBusy) || (vaultMotor != null && vaultMotor.IsBusy)
-                || (wallRunMotor != null && wallRunMotor.IsBusy);
+                || (wallRunMotor != null && wallRunMotor.IsBusy) || (waterMotor != null && waterMotor.IsOnWater);
             travelStalledFor = moved.magnitude / delta > TravelStallSpeed || airborne ? 0f : travelStalledFor + delta;
             if (travelStalledFor >= TravelStallSeconds)
             {
@@ -1144,7 +1160,7 @@ namespace KryticalNova.Player
             if (resources != null && !resources.IsAlive) return;
             if (deathMotor != null && deathMotor.IsDead) return;
             if ((jumpMotor != null && jumpMotor.IsBusy) || (vaultMotor != null && vaultMotor.IsBusy)
-                || (wallRunMotor != null && wallRunMotor.IsBusy)) return;
+                || (wallRunMotor != null && wallRunMotor.IsBusy) || (waterMotor != null && waterMotor.IsBusy)) return;
             // Without the Flux for a run the server refuses it: walking off here would only be pulled back.
             if (!carriesOn && movementSkills != null && movementSkills.IsRunning && !movementSkills.CanPayForCommand(MovementSkillId.Run, out _))
             { PlayerMoveAnticipation.Trace(this, "not started: no Flux for Run"); moveAnticipation.StopLeading(); return; }
@@ -1189,7 +1205,7 @@ namespace KryticalNova.Player
             if (moveAnticipation == null || !moveAnticipation.Leading) return;
             bool held = (resources != null && !resources.IsAlive) || (deathMotor != null && deathMotor.IsDead)
                 || (jumpMotor != null && jumpMotor.IsBusy) || (vaultMotor != null && vaultMotor.IsBusy)
-                || (wallRunMotor != null && wallRunMotor.IsBusy);
+                || (wallRunMotor != null && wallRunMotor.IsBusy) || (waterMotor != null && waterMotor.IsOnWater);
             // A jump, a vault or a death is the server's to show: its positions take over.
             if (held || agent == null || !agent.isActiveAndEnabled || !agent.isOnNavMesh) { moveAnticipation.StopLeading(); return; }
             ApplyMovementSettings();
@@ -1237,6 +1253,7 @@ namespace KryticalNova.Player
             if (jumpMotor != null && jumpMotor.IsBusy) return false;
             if (vaultMotor != null && vaultMotor.IsBusy) return false;
             if (wallRunMotor != null && wallRunMotor.IsBusy) return false;
+            if (waterMotor != null && waterMotor.IsOnWater) return false;
             if (agent == null || !agent.isActiveAndEnabled || !agent.isOnNavMesh) return false;
             // The owner ended its own copy of a channel when it clicked; the authoritative one ends here.
             if (buffManager != null && buffManager.IsChanneling) buffManager.InterruptChanneled();
@@ -1331,6 +1348,7 @@ namespace KryticalNova.Player
                 && agent.hasPath && !agent.pathPending && !agent.isStopped && agent.speed > 0.05f
                 && !(jumpMotor != null && jumpMotor.IsBusy) && !(vaultMotor != null && vaultMotor.IsBusy)
                 && !(wallRunMotor != null && (wallRunMotor.IsBusy || wallRunMotor.IsArmed))
+                && !(waterMotor != null && waterMotor.IsBusy)
                 && FlatDistance(agent.destination, orderedPathEnd) <= SameRouteDistance;
             if (!underWay)
             {
@@ -1811,6 +1829,7 @@ namespace KryticalNova.Player
             if (jumpMotor != null && jumpMotor.IsBusy) return;
             if (vaultMotor != null && vaultMotor.IsBusy) return;
             if (wallRunMotor != null && wallRunMotor.IsBusy) return;
+            if (waterMotor != null && waterMotor.IsOnWater) return;
             MovementSkillId currentMode = movementSkills.SelectedSkill;
             if (currentMode != previousMovementMode)
             {

@@ -79,6 +79,7 @@ namespace KryticalNova.EditorTools
             ["Footstep Burst"] = Movement(0.25f, -2f, 2f, 2),
             ["Jump"] = Movement(0.35f, 0f, 3f, 2),
             ["Land Thud"] = Movement(0.45f, -2f, 1f, 2),
+            ["Water Step"] = Movement(0.30f, -3f, 2f, 3), // Waterstride: every footstep on the water
             ["Body Thud"] = Movement(0.50f, -4f, -1f, 2),
 
             // ---- the player's own moments: rare, one clip each, close to the pitch they were made at

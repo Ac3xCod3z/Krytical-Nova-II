@@ -79,6 +79,8 @@ namespace KryticalNova.Core
         void JumpTakeoff(Transform actor, bool isLocalPlayer);
         /// <summary>The actor stands on a wall (walls as a second ground) or has left it: what shows at the feet there.</summary>
         void WallStanding(Transform actor, bool onWall);
+        /// <summary>The actor runs or stands on water (Waterstride), or has left it: the wake at the feet.</summary>
+        void WaterStriding(Transform actor, bool onWater);
         void Landed(Transform actor, bool isLocalPlayer);
         /// <summary>The actor left the ground (true) or is back on it, including after an aborted jump (false).</summary>
         void Airborne(Transform actor, bool airborne);

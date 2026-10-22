@@ -119,6 +119,7 @@ GameObject:
   - component: {fileID: 6994377297614759536}
   - component: {fileID: 6034640740294713704}
   - component: {fileID: 8433688748516569418}
+  - component: {fileID: 405693714767347966}
   m_Layer: 2
   m_Name: Player
   m_TagString: Player
@@ -339,6 +340,9 @@ MonoBehaviour:
   maximumSkyLookHeight: 40
   skyLookPerDegree: 0.8
   occluderDitherShader: {fileID: 4800000, guid: 6a9231234ae1c9842a5ce7af8c7fdcc5, type: 3}
+  wallCameraPitch: 12
+  wallCameraSeconds: 0.8
+  wallCameraFollowTurn: 30
 --- !u!114 &6374771762735267548
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4201,6 +4205,20 @@ MonoBehaviour:
   restSeconds: 0.15
   settleSeconds: 1.5
   interpolationSeconds: 0.15
+--- !u!114 &405693714767347966
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3071671160467358554}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 63a41802ad45e9d46b31cf4ad44fbc3a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: KryticalNova.Player::KryticalNova.Player.PlayerWaterstrideMotor
+  ShowTopMostFoldoutHeaderGroup: 1
+  settings: {fileID: 11400000, guid: f48618f2607b90845b28b0a06d0f3a1c, type: 2}
 --- !u!1 &3107468420846213464
 GameObject:
   m_ObjectHideFlags: 0

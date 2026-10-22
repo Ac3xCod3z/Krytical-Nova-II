@@ -52,6 +52,7 @@ MonoBehaviour:
         - 'Running costs a little Flux each time you click a new place, not for every second you run. Without enough Flux the click is refused: press the slot again to walk.'
         - With Jump chosen, your next click picks where you land instead of where you walk.
         - Up on a roof, click the street below to get down: you run to the edge and leap off, from any height, then carry on to where you clicked. Click another spot of the roof to walk there.
+        - 'Waterstride (level 60, Run and Jump at rank 20): with Run chosen, click water to run out across it, and stand on it where you stop. It costs a little Flux every second on the water; click land to run ashore.'
         - The line under your health bars says which of the three is on, and how fast you are moving.
       - kind: 2
         heading: What a click does
