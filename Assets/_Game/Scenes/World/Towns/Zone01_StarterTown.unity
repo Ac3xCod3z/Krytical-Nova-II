@@ -222887,6 +222887,8 @@ GameObject:
   - component: {fileID: 546974376}
   - component: {fileID: 546974379}
   - component: {fileID: 546974380}
+  - component: {fileID: 546974382}
+  - component: {fileID: 546974381}
   m_Layer: 0
   m_Name: Progression UI
   m_TagString: Untagged
@@ -223394,6 +223396,32 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: acead557300a98647a2f0d4493ccc380, type: 3}
   m_Name: 
   m_EditorClassIdentifier: KryticalNova.UI::KryticalNova.UI.ArrangeController
+--- !u!114 &546974381
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 546974342}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2d7de685cc234b45a15a6e3f9740b859, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: KryticalNova.UI::KryticalNova.UI.DeckWindowController
+  library: {fileID: 11400000, guid: 4de81e0a72c548d89a87652098d3dd42, type: 2}
+  style: {fileID: 7433441132597879392, guid: 7485062052cc4bd68005ca13cb4e287f, type: 3}
+--- !u!114 &546974382
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 546974342}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d48f845bb190d37448a71a8972e396c8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: KryticalNova.UI::KryticalNova.UI.LoadoutWindowController
 --- !u!1001 &547846542
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -513431,7 +513459,7 @@ Transform:
   m_GameObject: {fileID: 1197532474}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -6.9622498, y: 18.133123, z: -2.7930603}
+  m_LocalPosition: {x: -6.9622498, y: 18.133127, z: -2.7930603}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -513452,7 +513480,7 @@ MonoBehaviour:
   version: 2
   globalVolume: 0
   mode: 0
-  size: {x: 902.12354, y: 53.76915, z: 909.9071}
+  size: {x: 902.12354, y: 53.769157, z: 909.9071}
   overrideRendererFilters: 0
   minRendererVolumeSize: 0.1
   objectLayerMask:
