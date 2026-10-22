@@ -190,6 +190,12 @@ namespace KryticalNova.Combat
 
         // ------------------------------------------------------------------ the owner presses
 
+        /// <summary>
+        /// Raised on this machine when its own player presses a skill key that Cadence judges: seconds from the beat
+        /// (negative before it) and whether that is on Cadence. For presentation only (the Beat Ring).
+        /// </summary>
+        public static event Action<double, bool> LocalPress;
+
         private void OnSkillKey(SkillDefinitionSO skill)
         {
             if (!IsMine || settings == null || !settings.enabled) return;
@@ -200,6 +206,10 @@ namespace KryticalNova.Combat
 
             // The moment of the press on the shared clock, as this player heard the beat.
             double pressedAt = clock.Now - clock.ClockLagSeconds;
+            // What the player is shown at once (the Beat Ring around the pet): the same rule the server judges by, on
+            // this machine's own hearing of the beat. The server's verdict is still the one that pays.
+            if (LocalPress != null && clock.TryBeatAt(pressedAt, out _, out double error, out _))
+                LocalPress(error, CadenceRules.OnBeat(error, settings.WindowSeconds));
             if (Decides) ServerNotePress(skill.skillId, pressedAt);
             else PressRpc(skill.skillId, pressedAt);
         }

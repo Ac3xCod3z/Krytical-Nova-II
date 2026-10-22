@@ -185,6 +185,8 @@ host's.
 
 All of it only while the local player is in a fight.
 
+**Built 22 Oct 2026 (owner: "we have no way to communicate the beat to the player"): the Beat Ring.** A small equaliser of segmented bars in a ring round the player's own pet (at the player's feet with no pet out), seen only by that player and only in a fight. The bars dance to the fight music's spectrum on that machine; every bar jumps on the beat and higher on the first beat of a bar; a comet runs round the ring once a beat and is at the front, toward the camera, on the beat; the whole ring flares white-gold in the Cadence window; a skill pressed on the beat bursts it in the faction's colour and one off the beat greys it (the press is judged on the player's own machine for this, the server's verdict still pays). Every number is in `BeatRingSettings`; Settings ▸ Audio can switch it off. The ideas below (the pet as metronome, the world, the Hotbar marker) are not built.
+
 - **The pet** is the metronome: a small scale pop and an emission pulse on each beat, stronger on the first of
   the bar. Pets that bob (Drone Core, the Tidecaller egg, Emberwing) dip on the beat; pets that stand (Kitsune
   Spirit) do not bob. A player sees it on their own pet and on the pets of others who are fighting. Sizes start

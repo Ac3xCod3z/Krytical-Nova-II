@@ -109,6 +109,19 @@ namespace KryticalNova.UI
             Changed?.Invoke();
         }
 
+        /// <summary>The Beat Ring round the pet in a fight, which shows the fight music's beat (on unless switched off).</summary>
+        public static bool BeatRing
+        {
+            get => PlayerPrefs.GetInt(Prefix + "beatRing", 1) != 0;
+            set
+            {
+                if (BeatRing == value) return;
+                PlayerPrefs.SetInt(Prefix + "beatRing", value ? 1 : 0);
+                PlayerPrefs.Save();
+                Changed?.Invoke();
+            }
+        }
+
         /// <summary>No sound while the game window is not the one in front.</summary>
         public static bool MuteInBackground
         {

@@ -1637,6 +1637,7 @@ namespace KryticalNova.EditorTools
             {
                 var presenter = root.AddComponent<GameFeelPresenter>();
                 var catalog = root.AddComponent<SkillFeelCatalog>();
+                AttachBeatRing(root);
                 var so = new SerializedObject(presenter);
 
                 // ---- camera / screen / sound: the local player's own moments only

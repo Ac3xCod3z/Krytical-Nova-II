@@ -173,6 +173,9 @@ namespace KryticalNova.Combat
             startingWith = from;
             from.startingWith = this;
             from.countdown = from.StartCoroutine(from.CountdownRoutine(this));
+            // Both duelists' screens count down with it (the Showdown letterbox, owner 22 Oct 2026).
+            if (IsSpawned) CountdownRpc(countdownSeconds, from.DuelistName);
+            if (from.IsSpawned) from.CountdownRpc(countdownSeconds, DuelistName);
         }
 
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
@@ -209,11 +212,13 @@ namespace KryticalNova.Combat
             countdown = null;
             startingWith = null;
             Tell(reason);
+            if (IsSpawned) CountdownCancelledRpc();
             if (other == null) return;
             if (other.countdown != null) other.StopCoroutine(other.countdown);
             other.countdown = null;
             other.startingWith = null;
             other.Tell(reason);
+            if (other.IsSpawned) other.CountdownCancelledRpc();
         }
 
         private void Begin(PlayerDuel other)
@@ -309,5 +314,20 @@ namespace KryticalNova.Combat
 
         [Rpc(SendTo.Owner, InvokePermission = RpcInvokePermission.Server)]
         private void ResultRpc(bool won, string opponentName) => ClientPresentationRegistry.Duel?.ShowResult(won, opponentName);
+
+        /// <summary>
+        /// Raised on this machine when a callout its own player is in starts counting down: the seconds to go and who
+        /// against. The bout itself is <see cref="IsDuelling"/>, which ends however the callout ends.
+        /// </summary>
+        public static event Action<int, string> LocalCountdownStarted;
+
+        /// <summary>Raised on this machine when its own player's countdown is called off before the bout began.</summary>
+        public static event Action LocalCountdownCancelled;
+
+        [Rpc(SendTo.Owner, InvokePermission = RpcInvokePermission.Server)]
+        private void CountdownRpc(int seconds, string opponentName) => LocalCountdownStarted?.Invoke(seconds, opponentName);
+
+        [Rpc(SendTo.Owner, InvokePermission = RpcInvokePermission.Server)]
+        private void CountdownCancelledRpc() => LocalCountdownCancelled?.Invoke();
     }
 }
