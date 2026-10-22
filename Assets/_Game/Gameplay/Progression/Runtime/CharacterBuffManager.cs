@@ -312,7 +312,7 @@ namespace KryticalNova.Progression
             }
             if (dispelled)
             {
-                BuffMessage?.Invoke("Stance buffs dispelled by Shatterpoint!");
+                BuffMessage?.Invoke("Stance wards dispelled by Shatterpoint!");
                 BuffsChanged?.Invoke();
             }
         }

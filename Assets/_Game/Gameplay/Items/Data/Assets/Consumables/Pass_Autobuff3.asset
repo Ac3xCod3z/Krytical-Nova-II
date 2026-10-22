@@ -13,8 +13,8 @@ MonoBehaviour:
   m_Name: Pass_Autobuff3
   m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Items.ItemDefinition
   itemId: 9031
-  displayName: Autobuff Pass (3 Days)
-  description: 'Adds 3 days of Autobuff: every buff skill you slot in the Autopilot window is cast with one Hotbar key, and Autopilot keeps them up. The days count by the clock, as a Kiosk Permit''s do; another Pass adds to the end. Dropped now and then by Hostiles of level 10 and up, and sold in the Nova Store.'
+  displayName: Autoward Pass (3 Days)
+  description: 'Adds 3 days of Autoward: every ward skill you slot in the Autopilot window is cast with one Hotbar key, and Autopilot keeps them up. The days count by the clock, as a Kiosk Permit''s do; another Pass adds to the end. Dropped now and then by Hostiles of level 10 and up, and sold in the Nova Store.'
   icon: {fileID: 21300000, guid: 1eb03f189f39d4941801c8d724b212af, type: 3}
   sharesIconOf: {fileID: 0}
   rarity: 1

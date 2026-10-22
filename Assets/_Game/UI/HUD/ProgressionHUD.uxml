@@ -279,7 +279,7 @@
             <!-- Shatterpoint -->
             <ui:VisualElement class="skill-card kn-card rare-skill-card">
                 <ui:VisualElement name="heavenly-destruction-drag" class="skill-token rare-token"><ui:Label text="SHATTERPOINT" class="skill-icon" /><ui:Label name="heavenly-destruction-rank" text="LOCKED (SKILL CHIP)" class="skill-rank" /></ui:VisualElement>
-                <ui:Label name="heavenly-destruction-description" text="Every attack has a chance to shatter the enemy Aegis and strip one of their buffs." class="help" />
+                <ui:Label name="heavenly-destruction-description" text="Every attack has a chance to shatter the enemy Aegis and strip one of their wards." class="help" />
                 <ui:Label name="heavenly-destruction-values" text="10% Shield Shatter · 50% Dispel · 180s duration · 1s CD · 25 Flux · Self" class="section" />
                 <ui:Label name="heavenly-destruction-requirement" text="Requires a Skill Chip (locked until acquired)" class="drop-book-note" />
                 <ui:Button name="upgrade-heavenly-destruction" text="REQUIRES SKILL CHIP" />

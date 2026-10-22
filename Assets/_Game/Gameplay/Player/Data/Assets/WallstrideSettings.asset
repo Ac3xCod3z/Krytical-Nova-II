@@ -12,6 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 75268aaa0b0b42c9ab4ddceeb15f1f7b, type: 3}
   m_Name: WallstrideSettings
   m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Player.WallstrideSettings
+  icon: {fileID: 21300000, guid: dcd5733006c30044690dee8ec94e1cb4, type: 3}
   requiredLevel: 60
   requiredRunRank: 20
   requiredJumpRank: 20
@@ -50,3 +51,20 @@ MonoBehaviour:
   treeProxyCap: 512
   minTreeHeight: 3
   perchHeightShare: 0.6
+  graphSpacing: 0.5
+  graphTerrainSpacing: 1
+  graphOuterSpacing: 1
+  graphMinSurfaceAngle: 45
+  graphBodyRadius: 0.28
+  graphLinkDistance: 0.8
+  graphMaxTurn: 50
+  graphCornerTurn: 110
+  graphJoinReach: 1.4
+  wallClickReach: 1.2
+  gripFluxPerSecond: 15
+  wallSpeedShare: 1
+  wallTurnRate: 10
+  wallFootLift: 0.03
+  wallPlantSeconds: 0.32
+  pushOffLift: 1.2
+  pushOffDistance: 3

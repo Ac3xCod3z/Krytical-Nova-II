@@ -58,8 +58,8 @@ namespace KryticalNova.Autopilot.Tests
         [Test]
         public void TheTimeLeftLineSaysWhatToDoWhenItHasRunOut()
         {
-            StringAssert.Contains("Autobuff Pass", AutobuffRules.TimeLeftLine(Now, Now - 1));
-            StringAssert.StartsWith("Autobuff: 2d", AutobuffRules.TimeLeftLine(Now, Now + Days(2.5)));
+            StringAssert.Contains("Autoward Pass", AutobuffRules.TimeLeftLine(Now, Now - 1));
+            StringAssert.StartsWith("Autoward: 2d", AutobuffRules.TimeLeftLine(Now, Now + Days(2.5)));
         }
 
         [Test]

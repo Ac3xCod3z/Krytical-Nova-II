@@ -121,11 +121,11 @@ namespace KryticalNova.Autopilot
 
         public string UseBlockedReason(UsedItem item)
         {
-            if (settings == null) return "Autobuff is not set up.";
+            if (settings == null) return "Autoward is not set up.";
             PassTier? tier = settings.AutobuffTierFor(!item.IsNone ? item.Id : (ushort)0);
             if (tier == null) return "It does nothing here.";
             return AutobuffRules.WouldExceed(DateTime.UtcNow.Ticks, expiresUtc, tier.Value.days, settings.autobuffMaxDays)
-                ? $"You cannot hold more than {settings.autobuffMaxDays} days of Autobuff." : null;
+                ? $"You cannot hold more than {settings.autobuffMaxDays} days of Autoward." : null;
         }
 
         public void ServerUse(UsedItem item)
@@ -134,7 +134,7 @@ namespace KryticalNova.Autopilot
             if (tier == null) return;
             expiresUtc = AutobuffRules.Extend(DateTime.UtcNow.Ticks, expiresUtc, tier.Value.days);
             Push();
-            Tell($"+{tier.Value.days} days of Autobuff. {TimeLeftLine}");
+            Tell($"+{tier.Value.days} days of Autoward. {TimeLeftLine}");
         }
 
         // ------------------------------------------------------------------ saving

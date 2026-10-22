@@ -63,7 +63,7 @@ namespace KryticalNova.UI
         private readonly List<Group> groups = new List<Group>();
         private readonly Button[] tabButtons = new Button[TabNames.Length];
         private string[] tiers = Array.Empty<string>();
-        private VisualElement canvas, lines;
+        private VisualElement canvas, lines, cardsBox;
         private Label title;
         private string signature;
 
@@ -115,6 +115,15 @@ namespace KryticalNova.UI
             side.Add(scroll);
             layout.Add(side);
             layout.Add(cards);
+            // Beside the tree is one details box (owner, 22 Oct 2026): the chosen skill's card and nothing else, so it
+            // never scrolls. Every other card in it stays hidden whatever shows it (see ApplySelection).
+            cards.AddToClassList("skill-details");
+            if (cards is ScrollView box)
+            {
+                box.verticalScrollerVisibility = ScrollerVisibility.Hidden;
+                box.mode = ScrollViewMode.Vertical;
+            }
+            cardsBox = cards.contentContainer;
             ApplyTab();
         }
 
@@ -278,14 +287,27 @@ namespace KryticalNova.UI
             ApplySelection();
         }
 
-        /// <summary>Only the chosen tile's card is read beside the tree. Run again after anything else shows or hides cards.</summary>
+        /// <summary>
+        /// Only the chosen tile's card is read beside the tree, in the details box: every other card and every heading
+        /// in the box is hidden, the cards of the other tabs and classes included. Run again after anything else shows
+        /// or hides cards.
+        /// </summary>
         public void ApplySelection()
         {
+            VisualElement chosenCard = null;
             foreach (Node node in shown)
             {
                 bool chosen = node.Key == Selected;
                 if (parts.TryGetValue(node.Key, out Parts made)) made.Root.EnableInClassList("selected", chosen);
-                if (node.Card != null) node.Card.style.display = chosen ? DisplayStyle.Flex : DisplayStyle.None;
+                if (chosen) chosenCard = node.Card;
+            }
+            if (cardsBox == null) return;
+            foreach (VisualElement child in cardsBox.Children())
+            {
+                bool card = child.ClassListContains("skill-card");
+                bool heading = child.ClassListContains("category-header") || child.ClassListContains("drop-book-note");
+                if (card) child.style.display = child == chosenCard ? DisplayStyle.Flex : DisplayStyle.None;
+                else if (heading) child.style.display = DisplayStyle.None;
             }
         }
 

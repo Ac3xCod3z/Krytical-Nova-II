@@ -20,35 +20,35 @@ MonoBehaviour:
   stages:
   - name: One Tail
     model: {fileID: 0}
-    icon: {fileID: 0}
+    icon: {fileID: 21300000, guid: cbaecb8e1065ab54796d41594f4956b9, type: 3}
     scale: 1
     glow: {r: 1, g: 0.5411765, b: 0.23921569, a: 1}
     glowStrength: 0
     footEffect: {fileID: 0}
   - name: Three Tails
     model: {fileID: 7273318040934756614, guid: 0f97c9d21b8d4014bf6f48541ce359c5, type: 3}
-    icon: {fileID: 0}
+    icon: {fileID: 21300000, guid: ceee97899707a20448939aa39cff97ca, type: 3}
     scale: 1.0909091
     glow: {r: 1, g: 0.5411765, b: 0.23921569, a: 1}
     glowStrength: 0.3
     footEffect: {fileID: 0}
   - name: Five Tails
     model: {fileID: 8683272349235272071, guid: 9737b364cc5c428180230202edcad978, type: 3}
-    icon: {fileID: 0}
+    icon: {fileID: 21300000, guid: 0c7edde673ed9bd4a95d85b446b32645, type: 3}
     scale: 1.4
     glow: {r: 1, g: 0.5411765, b: 0.23921569, a: 1}
     glowStrength: 0.5
     footEffect: {fileID: 0}
   - name: Seven Tails
     model: {fileID: 3866516584454416215, guid: e59db151f7d543379349a078ed580bd8, type: 3}
-    icon: {fileID: 0}
+    icon: {fileID: 21300000, guid: 429ea5343cafbe546a15c937888bc451, type: 3}
     scale: 1.4545455
     glow: {r: 1, g: 0.5411765, b: 0.23921569, a: 1}
     glowStrength: 0.75
     footEffect: {fileID: 2965738704842738394, guid: 2344c1fd1fca3f4439438a4f3934cf42, type: 3}
   - name: Nine Tails
     model: {fileID: 281834179834464942, guid: 36f043866d904d08b623b61a7fc92795, type: 3}
-    icon: {fileID: 0}
+    icon: {fileID: 21300000, guid: 35bbfc6eb8d9b584b8a8319dd25ebc57, type: 3}
     scale: 1.8181818
     glow: {r: 1, g: 0.8235294, b: 0.24705882, a: 1}
     glowStrength: 1

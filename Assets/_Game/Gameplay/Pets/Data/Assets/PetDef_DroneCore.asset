@@ -20,35 +20,35 @@ MonoBehaviour:
   stages:
   - name: 
     model: {fileID: 0}
-    icon: {fileID: 0}
+    icon: {fileID: 21300000, guid: 17d8f94625587264abb76c596330aaf0, type: 3}
     scale: 1
     glow: {r: 0.30980393, g: 0.81960785, b: 1, a: 1}
     glowStrength: 0
     footEffect: {fileID: 0}
   - name: 
     model: {fileID: 2833523302994752292, guid: 59cb63c5d4dc47649a751b3c3a0a0164, type: 3}
-    icon: {fileID: 0}
+    icon: {fileID: 21300000, guid: 3c73554d584d1504d997da852bad440e, type: 3}
     scale: 1.1313131
     glow: {r: 0.30980393, g: 0.81960785, b: 1, a: 1}
     glowStrength: 0.3
     footEffect: {fileID: 0}
   - name: 
     model: {fileID: 4965629365694552753, guid: 447149d9f0d445abbb7846bde4403af4, type: 3}
-    icon: {fileID: 0}
+    icon: {fileID: 21300000, guid: e1efdcf9edb11e04f8b3f58c14210883, type: 3}
     scale: 1.8989899
     glow: {r: 0.9490196, g: 0.7607843, b: 0.1882353, a: 1}
     glowStrength: 0.5
     footEffect: {fileID: 0}
   - name: 
     model: {fileID: 1956028097219735418, guid: 1d7bcc14782742f48fc6971f409c1f87, type: 3}
-    icon: {fileID: 0}
+    icon: {fileID: 21300000, guid: 9466a093283d66d49a9115c68020efe9, type: 3}
     scale: 2.141414
     glow: {r: 0.30980393, g: 0.81960785, b: 1, a: 1}
     glowStrength: 0.75
     footEffect: {fileID: 0}
   - name: Gunship
     model: {fileID: 8843660432523149750, guid: a42f0e7964df4e68ae869a0795378127, type: 3}
-    icon: {fileID: 0}
+    icon: {fileID: 21300000, guid: a0be30a7f279a42468d01ebcf549d6bc, type: 3}
     scale: 2.5454545
     glow: {r: 0.30980393, g: 0.81960785, b: 1, a: 1}
     glowStrength: 1

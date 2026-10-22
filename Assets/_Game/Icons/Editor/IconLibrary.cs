@@ -25,6 +25,8 @@ namespace KryticalNova.EditorTools
         Skill = 0,
         MovementSkill = 1,
         Item = 2,
+        /// <summary>A passive of the Arsenal that is not a skill asset (Wallstride, Waterstride): its settings hold the icon.</summary>
+        Passive = 3,
     }
 
     /// <summary>The factions an icon suits.</summary>
@@ -345,6 +347,15 @@ namespace KryticalNova.EditorTools
             var request = new IconRequest { use = IconUse.Movement, faction = IconFactions.All, keywords = new List<string>() };
             AddWords(request.keywords, skill.displayName);
             AddWords(request.keywords, skill.description);
+            return request;
+        }
+
+        /// <summary>A passive of the Strides tab (Wallstride, Waterstride): a movement icon found by its words.</summary>
+        public static IconRequest RequestForPassive(string displayName, string words)
+        {
+            var request = new IconRequest { use = IconUse.Movement, faction = IconFactions.All, keywords = new List<string>() };
+            AddWords(request.keywords, displayName);
+            AddWords(request.keywords, words);
             return request;
         }
 

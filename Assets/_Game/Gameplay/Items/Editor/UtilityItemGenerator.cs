@@ -209,9 +209,9 @@ namespace KryticalNova.EditorTools
                 Stack = 99, Effect = ItemUseEffect.Serum, Cooldown = SerumCooldown };
 
         private static Row AutobuffPass(ushort id, string asset, int days, ItemRarity rarity, string iconOf, string source) =>
-            new Row { Id = id, Asset = asset, Name = $"Autobuff Pass ({days} Days)", Glyph = $"AB {days}D", Rarity = rarity, Stack = 99,
+            new Row { Id = id, Asset = asset, Name = $"Autoward Pass ({days} Days)", Glyph = $"AW {days}D", Rarity = rarity, Stack = 99,
                 Effect = ItemUseEffect.AutobuffTime, IconOf = iconOf,
-                Description = $"Adds {days} days of Autobuff: every buff skill you slot in the Autopilot window is cast with one Hotbar key, and Autopilot keeps them up. The days count by the clock, as a Kiosk Permit's do; another Pass adds to the end. {source}" };
+                Description = $"Adds {days} days of Autoward: every ward skill you slot in the Autopilot window is cast with one Hotbar key, and Autopilot keeps them up. The days count by the clock, as a Kiosk Permit's do; another Pass adds to the end. {source}" };
 
         private static Row AutopilotPass(ushort id, string asset, int days, ItemRarity rarity, string iconOf, string source) =>
             new Row { Id = id, Asset = asset, Name = $"Autopilot Pass ({days} Days)", Glyph = $"AP {days}D", Rarity = rarity, Stack = 99,
@@ -257,9 +257,9 @@ namespace KryticalNova.EditorTools
                         prime ? "Found only in the Prime grounds." : "Dropped by Hostiles of level 60 and up.", asset == AttackChipIcon ? null : AttackChipIcon);
                 }
             }
-            yield return SkillChip(CraftItemIds.AegisChip, BuffChipIcon, "Aegis", "a buff of level 60 every class can learn", ItemRarity.Rare, "Dropped by Hostiles of level 60 and up.", null);
-            yield return SkillChip(CraftItemIds.KillerInstinctChip, "Chip_KillerInstinct", "Killer Instinct", "a buff of level 60 every class can learn", ItemRarity.Rare, "Dropped by Hostiles of level 60 and up.", BuffChipIcon);
-            yield return SkillChip(CraftItemIds.HotStreakChip, "Chip_HotStreak", "Hot Streak", "a buff of level 70 every class can learn", ItemRarity.Rare, "Dropped by Hostiles of level 70 and up.", BuffChipIcon);
+            yield return SkillChip(CraftItemIds.AegisChip, BuffChipIcon, "Aegis", "a ward of level 60 every class can learn", ItemRarity.Rare, "Dropped by Hostiles of level 60 and up.", null);
+            yield return SkillChip(CraftItemIds.KillerInstinctChip, "Chip_KillerInstinct", "Killer Instinct", "a ward of level 60 every class can learn", ItemRarity.Rare, "Dropped by Hostiles of level 60 and up.", BuffChipIcon);
+            yield return SkillChip(CraftItemIds.HotStreakChip, "Chip_HotStreak", "Hot Streak", "a ward of level 70 every class can learn", ItemRarity.Rare, "Dropped by Hostiles of level 70 and up.", BuffChipIcon);
         }
 
         /// <summary>

@@ -237,6 +237,17 @@ namespace KryticalNova.EditorTools
         {
             var animator = model.GetComponentInChildren<Animator>(true);
             if (animator == null || animator.runtimeAnimatorController == null) return;
+            // The state the controller rests in, when it has one: its clip, or the model's own rest pose when that
+            // state plays nothing (a drone whose other clips fling its blocks apart rests whole).
+            if (animator.runtimeAnimatorController is UnityEditor.Animations.AnimatorController controller && controller.layers.Length > 0)
+            {
+                UnityEditor.Animations.AnimatorState rest = controller.layers[0].stateMachine.defaultState;
+                if (rest != null)
+                {
+                    if (rest.motion is AnimationClip restClip) restClip.SampleAnimation(animator.gameObject, 0f);
+                    return;
+                }
+            }
             AnimationClip pose = null;
             foreach (AnimationClip clip in animator.runtimeAnimatorController.animationClips)
             {
@@ -245,6 +256,48 @@ namespace KryticalNova.EditorTools
                 if (clip.name.ToLowerInvariant().Contains("idle")) { pose = clip; break; }
             }
             if (pose != null) pose.SampleAnimation(animator.gameObject, 0f);
+        }
+
+        /// <summary>
+        /// The bounds of what is drawn as it stands now: a skinned mesh is measured in the pose it was sampled into,
+        /// not at its bind pose (a bird modelled with its wings out but resting with them folded is framed folded).
+        /// </summary>
+        private static Bounds PosedBounds(Transform root)
+        {
+            bool any = false;
+            var b = new Bounds();
+            var baked = new Mesh();
+            try
+            {
+                foreach (var r in root.GetComponentsInChildren<Renderer>(true))
+                {
+                    Vector3[] points;
+                    Matrix4x4 m;
+                    if (r is SkinnedMeshRenderer skinned && skinned.sharedMesh != null)
+                    {
+                        skinned.BakeMesh(baked, true);
+                        points = baked.vertices;
+                        m = root.worldToLocalMatrix * Matrix4x4.TRS(r.transform.position, r.transform.rotation, Vector3.one);
+                    }
+                    else
+                    {
+                        Mesh mesh = r.TryGetComponent(out MeshFilter filter) ? filter.sharedMesh : null;
+                        if (mesh == null || r is ParticleSystemRenderer || r is TrailRenderer || r is LineRenderer) continue;
+                        Bounds mb = mesh.bounds;
+                        points = new Vector3[8];
+                        for (int i = 0; i < 8; i++)
+                            points[i] = mb.center + Vector3.Scale(mb.extents, new Vector3((i & 1) == 0 ? -1 : 1, (i & 2) == 0 ? -1 : 1, (i & 4) == 0 ? -1 : 1));
+                        m = root.worldToLocalMatrix * r.transform.localToWorldMatrix;
+                    }
+                    foreach (Vector3 point in points)
+                    {
+                        Vector3 p = m.MultiplyPoint3x4(point);
+                        if (!any) { b = new Bounds(p, Vector3.zero); any = true; } else b.Encapsulate(p);
+                    }
+                }
+            }
+            finally { Object.DestroyImmediate(baked); }
+            return any ? b : SidekickGearGenerator.LocalBounds(root);
         }
 
         private static Camera CreateRig(Scene scene)
@@ -409,7 +462,7 @@ namespace KryticalNova.EditorTools
 
         private static void RenderToPng(Camera cam, RenderTexture rt, Transform subject, Vector3 viewDir, string assetPath)
         {
-            var bounds = SidekickGearGenerator.LocalBounds(subject); // subject sits at the origin, identity
+            var bounds = PosedBounds(subject); // subject sits at the origin, identity
             Vector3 center = bounds.center;
             float radius = Mathf.Max(bounds.extents.magnitude, 0.01f);
             cam.transform.position = center + viewDir * (radius * 3f + 1f);

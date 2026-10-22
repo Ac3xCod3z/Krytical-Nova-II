@@ -42,7 +42,7 @@ namespace KryticalNova.Autopilot
         // ------------------------------------------------------------------ IHotbarAutobuff
 
         public bool IsAvailable => autobuff != null && autobuff.IsActive;
-        public string Label => "AUTOBUFF";
+        public string Label => "AUTOWARD";
         public int SlottedCount => autobuff != null ? AutobuffRules.Count(autobuff.SkillIds) : 0;
         public bool IsRunning => running;
 
@@ -61,8 +61,8 @@ namespace KryticalNova.Autopilot
         public bool Press()
         {
             if (!IsLocal || autobuff == null || skills == null) return false;
-            if (!autobuff.IsActive) { skills.Announce("Autobuff has expired. Use an Autobuff Pass."); return false; }
-            if (SlottedCount == 0) { skills.Announce("Put buff skills into Autobuff in the Autopilot window."); return false; }
+            if (!autobuff.IsActive) { skills.Announce("Autoward has expired. Use an Autoward Pass."); return false; }
+            if (SlottedCount == 0) { skills.Announce("Put ward skills into Autoward in the Autopilot window."); return false; }
             if (running) return true; // a second press while it runs changes nothing
             running = true;
             nextAction = Time.time;
@@ -73,8 +73,8 @@ namespace KryticalNova.Autopilot
         public string Describe(string key)
         {
             if (autobuff == null) return string.Empty;
-            string line = autobuff.IsActive ? $"{autobuff.TimeLeftLine}\nClick or press {key}: every buff below that is down is cast in turn."
-                : "Autobuff has expired. Use an Autobuff Pass.";
+            string line = autobuff.IsActive ? $"{autobuff.TimeLeftLine}\nClick or press {key}: every ward below that is down is cast in turn."
+                : "Autoward has expired. Use an Autoward Pass.";
             string[] ids = autobuff.SkillIds;
             var names = new System.Text.StringBuilder();
             for (int i = 0; i < ids.Length; i++)
@@ -84,7 +84,7 @@ namespace KryticalNova.Autopilot
                 names.Append('\n').Append(skill != null ? skill.displayName : ids[i]);
                 if (skill != null && buffs != null && buffs.HasBuff(skill.skillId)) names.Append("  ·  up");
             }
-            if (names.Length == 0) names.Append("\nNo buffs slotted yet.");
+            if (names.Length == 0) names.Append("\nNo wards slotted yet.");
             return line + names + "\nRight-click to clear";
         }
 

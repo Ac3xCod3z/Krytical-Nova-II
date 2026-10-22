@@ -1262,10 +1262,14 @@ namespace KryticalNova.EditorTools.GM
                  "and rests in between; playing one here shows it to everyone at once.")]
         [SerializeField] private string petAnimation = "";
 
-        private static IEnumerable<string> PetAnimationChoices()
+        // Shown as "3  SpinChase", the number gm.pet.anim takes; the value stays the name.
+        private static ValueDropdownList<string> PetAnimationChoices()
         {
+            var choices = new ValueDropdownList<string>();
             var pet = LocalPlayer != null ? LocalPlayer.GetComponent<KryticalNova.Pets.PlayerPet>() : null;
-            return pet != null ? pet.AnimationNames : System.Array.Empty<string>();
+            if (pet != null)
+                for (int i = 0; i < pet.AnimationNames.Count; i++) choices.Add($"{i + 1}  {pet.AnimationNames[i]}", pet.AnimationNames[i]);
+            return choices;
         }
 
         [ButtonGroup(Tabs + "/" + PetsTab + "/Animation"), EnableIf(nameof(IsReady)), LabelText("Play"), PropertyOrder(831)]
@@ -1902,11 +1906,17 @@ namespace KryticalNova.EditorTools.GM
         [TabGroup(Tabs, HostilesTab), Button(ButtonStyle.CompactBox, Expanded = true), EnableIf(nameof(IsReady)), PropertyOrder(1066)]
         private void GiveAutopilotPasses([MinValue(1)] int count = 1) => Run($"item.give \"Autopilot Pass (3 Days)\" {count}");
 
-        [TabGroup(Tabs, HostilesTab), Button(ButtonStyle.CompactBox, Expanded = true), EnableIf(nameof(IsReady)), PropertyOrder(1067)]
+        [TabGroup(Tabs, HostilesTab), Button(ButtonStyle.CompactBox, Expanded = true), EnableIf(nameof(IsReady)), LabelText("Set Autoward Days"), PropertyOrder(1067)]
         private void SetAutobuffDays([MinValue(0)] int days = 3) => Run($"gm.autobuff.days {days}");
 
-        [TabGroup(Tabs, HostilesTab), Button(ButtonStyle.CompactBox, Expanded = true), EnableIf(nameof(IsReady)), PropertyOrder(1068)]
-        private void GiveAutobuffPasses([MinValue(1)] int count = 1) => Run($"item.give \"Autobuff Pass (3 Days)\" {count}");
+        [TabGroup(Tabs, HostilesTab), Button(ButtonStyle.CompactBox, Expanded = true), EnableIf(nameof(IsReady)), LabelText("Give Autoward Passes (3 Days)"), PropertyOrder(1068)]
+        private void GiveAutobuffPasses([MinValue(1)] int count = 1) => Run($"item.give 9031 {count}");
+
+        [ButtonGroup(Tabs + "/" + HostilesTab + "/Autoward"), EnableIf(nameof(IsReady)), LabelText("Autoward Kit (3 Passes + 30 Days)"), PropertyOrder(1069)]
+        private void AutowardKit() => Run("gm.kit autoward");
+
+        [ButtonGroup(Tabs + "/" + HostilesTab + "/Autoward"), EnableIf(nameof(IsReady)), LabelText("One of Each Autoward Pass"), PropertyOrder(1069)]
+        private void AutowardPasses() => Run("gm.autoward");
 
         // ================================================================ CADENCE (design 17): the fight, its music, the beat
 

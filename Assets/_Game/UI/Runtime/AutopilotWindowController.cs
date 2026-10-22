@@ -293,13 +293,13 @@ namespace KryticalNova.UI
         /// </summary>
         private void BuildAutobuff(VisualElement page)
         {
-            SettingsRows.Header(page, "AUTOBUFF");
+            SettingsRows.Header(page, "AUTOWARD");
             autobuffStatus = SettingsRows.Help(page, string.Empty);
-            SettingsRows.Help(page, "Drag learned buff skills from the Arsenal or the Hotbar into the cells. Drag the AUTOBUFF tile to a Hotbar key: one press casts every buff that is down, in turn, and Autopilot keeps them up. Right-click a cell to clear it.");
+            SettingsRows.Help(page, "Drag learned ward skills from the Arsenal or the Hotbar into the cells. Drag the AUTOWARD tile to a Hotbar key: one press casts every ward that is down, in turn, and Autopilot keeps them up. Right-click a cell to clear it.");
 
             var row = new VisualElement();
             row.AddToClassList("autobuff-row");
-            autobuffTile = MakeCell("autobuff-tile", "AUTOBUFF");
+            autobuffTile = MakeCell("autobuff-tile", "AUTOWARD");
             autobuffTile.AddToClassList("autobuff-tile");
             row.Add(autobuffTile);
             var grid = new VisualElement();
@@ -381,7 +381,7 @@ namespace KryticalNova.UI
             if (autobuffStatus == null || !IsOpen) return;
             if (autobuff == null)
             {
-                autobuffStatus.text = "Autobuff is not set up on this character.";
+                autobuffStatus.text = "Autoward is not set up on this character.";
                 return;
             }
             bool active = autobuff.IsActive;
@@ -419,7 +419,7 @@ namespace KryticalNova.UI
                     autobuffCellRanks[i].text = skill == null ? string.Empty : !learned ? "UNLEARNED" : buffs != null && buffs.HasBuff(skill.skillId) ? "UP" : $"R{combatSkills.GetRank(skill)}";
                 cell.EnableInClassList("on-cooldown", skill != null && !learned);
                 cell.EnableInClassList("selected", skill != null && learned && buffs != null && buffs.HasBuff(skill.skillId));
-                cell.tooltip = skill != null ? $"{skill.displayName}. Right-click to clear." : "Drop a learned buff skill here.";
+                cell.tooltip = skill != null ? $"{skill.displayName}. Right-click to clear." : "Drop a learned ward skill here.";
             }
         }
 

@@ -157,6 +157,22 @@ namespace KryticalNova.EditorTools
             foreach (IconLibrary.Assignment assignment in library.assignments)
                 if (assignment != null && !known.Contains((assignment.kind, assignment.target)))
                     problems.Add($"The library has an icon for '{assignment.target}', but there is no such {assignment.kind} in the project.");
+            // Every evolution of every pet has an icon of its own (owner, 22 Oct 2026); they are baked from the pets'
+            // models, not given by the library (Items > Bake Pet Stage Icons).
+            var stageIcons = new Dictionary<Sprite, string>();
+            foreach (string guid in AssetDatabase.FindAssets("t:PetDefinition", new[] { "Assets/_Game/Gameplay/Pets/Data/Assets" }))
+            {
+                var pet = AssetDatabase.LoadAssetAtPath<KryticalNova.Pets.PetDefinition>(AssetDatabase.GUIDToAssetPath(guid));
+                if (pet == null || pet.stages == null) continue;
+                for (int stage = 0; stage < pet.stages.Length; stage++)
+                {
+                    Sprite icon = pet.stages[stage].icon;
+                    string label = $"{pet.displayName} stage {stage + 1} ({pet.stages[stage].name})";
+                    if (icon == null) { problems.Add($"{label} has no icon. Run Items > Bake Pet Stage Icons."); continue; }
+                    if (stageIcons.TryGetValue(icon, out string other)) problems.Add($"{label} and {other} show the same icon.");
+                    else stageIcons[icon] = label;
+                }
+            }
             return problems;
         }
 

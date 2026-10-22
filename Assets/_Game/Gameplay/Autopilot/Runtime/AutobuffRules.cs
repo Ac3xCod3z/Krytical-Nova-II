@@ -22,8 +22,8 @@ namespace KryticalNova.Autopilot
 
         public static bool IsActive(long nowTicks, long expiresTicks) => PassClock.IsActive(nowTicks, expiresTicks);
 
-        /// <summary>"Autobuff: 2d 13h left." or "No Autobuff time: use an Autobuff Pass."</summary>
-        public static string TimeLeftLine(long nowTicks, long expiresTicks) => PassClock.TimeLeftLine("Autobuff", nowTicks, expiresTicks);
+        /// <summary>"Autoward: 2d 13h left." or "No Autoward time: use an Autoward Pass."</summary>
+        public static string TimeLeftLine(long nowTicks, long expiresTicks) => PassClock.TimeLeftLine("Autoward", nowTicks, expiresTicks);
 
         /// <summary>
         /// The eight cells as they are kept: exactly eight, each a skill id or empty, none too long, and no skill twice
