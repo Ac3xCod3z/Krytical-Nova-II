@@ -56,7 +56,7 @@ namespace KryticalNova.Tests
                 Assert.IsFalse(shown.TryGetValue(icon, out string other), $"{skill.name} and {other} show the same icon");
                 shown[icon] = skill.name;
             }
-            Assert.AreEqual(WeaponClasses.Count * WeaponClasses.SlotCount + 10, shown.Count, "every class skill, eight shared, Run and Jump");
+            Assert.AreEqual(WeaponClasses.Count * WeaponClasses.SlotCount + 11, shown.Count, "every class skill, eight shared, Run, Jump and Wallstride");
         }
 
         [Test]

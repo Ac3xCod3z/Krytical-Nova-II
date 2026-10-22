@@ -1115,12 +1115,66 @@ namespace KryticalNova.UI
             string needs = open ? "Open: click a wall or a tree with Run or Jump selected, or run or jump into one."
                 : $"Opens at level {s.requiredLevel} ({level}), Run rank {s.requiredRunRank} ({skills.RunRank}) and Jump rank {s.requiredJumpRank} ({skills.JumpRank}).";
             treeGroups.Add(new SkillTreeView.Group { Label = "WALLSTRIDE", Column = column, Width = 1f });
+            VisualElement card = PassiveCard(WallstrideKey, "Wallstride");
+            FillPassiveCard(card, WallstrideKey, s.icon, open,
+                "Run up walls, buildings, cliffs and into trees, to take the high ground or get away. Click a wall or a tree with Run or Jump selected, or run or jump into one. Leave by choice: run down, over the top, or leap off to any point you click.",
+                $"Grip: {s.gripFluxPerSecond:0.#} Flux a second on a wall · walls {s.minWallHeight:0.#} m and higher · always on once open",
+                open ? "Open." : PassiveNeeds(s.requiredLevel, s.requiredRunRank, s.requiredJumpRank, level));
             treeNodes.Add(new SkillTreeView.Node
             {
-                Key = WallstrideKey, Name = "Wallstride", Column = column, Row = 0,
+                Key = WallstrideKey, Name = "Wallstride", Icon = s.icon, Column = column, Row = 0,
                 Rank = open ? "PASSIVE" : "LOCKED", Learned = open, Locked = !open, TooLow = level < s.requiredLevel,
-                Tooltip = $"Wallstride  ·  Run up walls and into trees, to get the high ground or get away. {needs}",
+                Tooltip = $"Wallstride  ·  Run up walls and into trees, to get the high ground or get away. {needs}", Card = card,
             });
+        }
+
+        /// <summary>"Needs level 60 (52 now) · Run rank 20 (20, met) · Jump rank 20 (14 now)": what a locked passive still waits for.</summary>
+        private string PassiveNeeds(int requiredLevel, int requiredRun, int requiredJump, int level)
+        {
+            string Part(string what, int needed, int now) => $"{what} {needed} ({now}{(now >= needed ? ", met" : " now")})";
+            return $"Needs {Part("level", requiredLevel, level)} · {Part("Run rank", requiredRun, skills.RunRank)} · {Part("Jump rank", requiredJump, skills.JumpRank)}";
+        }
+
+        /// <summary>
+        /// The card of a passive of the Strides tab (Wallstride, Waterstride), built once into the details box beside
+        /// the tree like the generated skill cards: its tile with the icon, what it does, its numbers and what it
+        /// still needs. A passive is never learned or dragged, so it has no button.
+        /// </summary>
+        private VisualElement PassiveCard(string id, string title)
+        {
+            VisualElement body = root.Q("skills-body");
+            if (body == null) return null;
+            VisualElement card = body.Q($"{id}-card");
+            if (card != null) return card;
+            card = new VisualElement { name = $"{id}-card" };
+            card.AddToClassList("skill-card");
+            card.AddToClassList("kn-card");
+            card.AddToClassList("passive-skill-card");
+            var token = new VisualElement { name = $"{id}-drag" };
+            token.AddToClassList("skill-token");
+            var name = new Label(title.ToUpperInvariant());
+            name.AddToClassList("skill-icon");
+            token.Add(name);
+            var rank = new Label { name = $"{id}-rank" };
+            rank.AddToClassList("skill-rank");
+            token.Add(rank);
+            card.Add(token);
+            card.Add(CardLabel($"{id}-description", "help"));
+            card.Add(CardLabel($"{id}-values", "section"));
+            card.Add(CardLabel($"{id}-requirement", "muted"));
+            card.style.display = DisplayStyle.None;
+            body.Add(card);
+            return card;
+        }
+
+        private static void FillPassiveCard(VisualElement card, string id, Sprite icon, bool open, string description, string values, string requirement)
+        {
+            if (card == null) return;
+            SetTokenArt(card.Q($"{id}-drag"), icon);
+            card.Q<Label>($"{id}-rank").text = open ? "PASSIVE · ALWAYS ON" : "LOCKED";
+            card.Q<Label>($"{id}-description").text = description;
+            card.Q<Label>($"{id}-values").text = values;
+            card.Q<Label>($"{id}-requirement").text = requirement;
         }
 
         private void AddCombatNode(SkillDefinitionSO skill, float column, int row, VisualElement card)
@@ -1234,7 +1288,7 @@ namespace KryticalNova.UI
                     SetSlotLine(index, SlotLineKind.Count, now.Number);
                     slot.EnableInClassList("selected", now.Selected);
                     slot.EnableInClassList("on-cooldown", now.Item == 0);
-                    slot.tooltip = now.Item == 0 ? "Autobuff has expired." : $"Autobuff: casts every buff you slotted. Click or press {key}. Right-click to clear.";
+                    slot.tooltip = now.Item == 0 ? "Autoward has expired." : $"Autoward: casts every ward you slotted. Click or press {key}. Right-click to clear.";
                 }
                 else
                 {
@@ -1415,7 +1469,7 @@ namespace KryticalNova.UI
                 else
                 {
                     int nextCost = skill.GetSkillPointCostForRank(rank);
-                    reqLabel.text = $"Requires Level {skill.requiredCharacterLevel} · Upgrade Cost: {nextCost} skill point(s)";
+                    reqLabel.text = $"Requires Level {skill.requiredCharacterLevel} · Enhance: {nextCost} skill point(s)";
                 }
             }
 
@@ -1431,10 +1485,10 @@ namespace KryticalNova.UI
                 else
                 {
                     bool canUpgrade = combatSkills.CanUpgrade(skill, out string reason);
-                    string action = rank == 0 ? "LEARN" : "UPGRADE";
+                    string action = rank == 0 ? "LEARN" : "ENHANCE";
                     string stepSuffix = skillStep > 1 ? $" (+{skillStep})" : "";
                     upgrade.text = rank >= skill.maxRank ? "MAXIMUM RANK" : $"{action} {skill.displayName.ToUpperInvariant()}{stepSuffix}";
-                    upgrade.tooltip = canUpgrade ? "Spend skill points to purchase this rank. Press and hold to upgrade continuously." : reason;
+                    upgrade.tooltip = canUpgrade ? "Spend skill points on the next rank. Press and hold to keep enhancing." : reason;
                     upgrade.SetEnabled(canUpgrade);
                 }
             }
@@ -1684,13 +1738,13 @@ namespace KryticalNova.UI
             bool hasNext = definition.TryGetRank(rank + 1, out var next);
             root.Q<Label>($"{prefix}-values").text = hasNext ? $"{currentValue}\nNext: {DescribeRank(skill, next)}" : currentValue;
             root.Q<Label>($"{prefix}-requirement").text = hasNext
-                ? $"Requires level {next.requiredCharacterLevel} · Upgrade: {next.skillPointCost} skill point(s)" : "Maximum rank reached";
+                ? $"Requires level {next.requiredCharacterLevel} · Enhance: {next.skillPointCost} skill point(s)" : "Maximum rank reached";
             Button upgrade = root.Q<Button>($"upgrade-{prefix}");
             bool canUpgrade = skills.CanUpgrade(skill, out string reason);
-            string action = rank == 0 ? "LEARN" : "UPGRADE";
+            string action = rank == 0 ? "LEARN" : "ENHANCE";
             string stepSuffix = skillStep > 1 ? $" (+{skillStep})" : "";
             upgrade.text = !hasNext ? "MAXIMUM RANK" : $"{action} {definition.displayName.ToUpperInvariant()}{stepSuffix}";
-            upgrade.tooltip = canUpgrade ? "Spend skill points to purchase this rank. Press and hold to upgrade continuously." : reason;
+            upgrade.tooltip = canUpgrade ? "Spend skill points on the next rank. Press and hold to keep enhancing." : reason;
             upgrade.SetEnabled(canUpgrade);
             root.Q<Label>($"{prefix}-drag-hint").text = rank == 0 ? $"Learn {definition.displayName}, then drag its tile to a hotbar slot."
                 : "Drag to a slot. Select with 1–0, then left-click a destination. Select again to walk.";
@@ -1745,7 +1799,7 @@ namespace KryticalNova.UI
             }
             if (entry.itemType == HotbarItemType.Autobuff && hotbar.Autobuff != null)
             {
-                HudTextTooltip.ShowFor(slot, "Autobuff", hotbar.Autobuff.Describe(key), above: true);
+                HudTextTooltip.ShowFor(slot, "Autoward", hotbar.Autobuff.Describe(key), above: true);
             }
         }
 
@@ -1796,7 +1850,7 @@ namespace KryticalNova.UI
             dragMoved = false;
             hotbar.InputSuppressed = true;
             source.CapturePointer(evt.pointerId);
-            if (sourceSlot == NoSlot) Feedback("Drag AUTOBUFF to a hotbar slot, then release the left mouse button.");
+            if (sourceSlot == NoSlot) Feedback("Drag AUTOWARD to a hotbar slot, then release the left mouse button.");
             evt.StopPropagation();
         }
 
@@ -1867,7 +1921,7 @@ namespace KryticalNova.UI
 
             MovementSkillData draggedMovement = draggedCombatSkill == null && !draggedAutobuff ? skills.GetDefinition(draggedMovementSkill) : null;
             Sprite ghostIcon = draggedAutobuff ? hotbar.Autobuff?.Icon : draggedCombatSkill != null ? draggedCombatSkill.icon : draggedMovement?.icon;
-            string ghostText = draggedAutobuff ? "AUTOBUFF" : draggedCombatSkill != null
+            string ghostText = draggedAutobuff ? "AUTOWARD" : draggedCombatSkill != null
                 ? draggedCombatSkill.displayName.ToUpperInvariant()
                 : draggedMovement != null ? draggedMovement.displayName.ToUpperInvariant() : string.Empty;
             // The icon itself follows the cursor; skills without one keep the text chip.
@@ -1913,7 +1967,7 @@ namespace KryticalNova.UI
             if (landed.Element != null)
             {
                 landed.Dropped?.Invoke(comSkill);
-                Feedback($"{comSkill.displayName} slotted into Autobuff.");
+                Feedback($"{comSkill.displayName} slotted into Autoward.");
             }
             else if (wasDrag && targetSlot != NoSlot)
             {

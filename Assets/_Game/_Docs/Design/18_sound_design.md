@@ -184,8 +184,8 @@ What other games do, and what we take. From memory, not checked against sources 
   Callout; *why* (`PlayerCombatState.Reasons`) is known only where the fight is decided. To tell Alert from Fight and a
   Skirmish from a War, the reasons need to reach the player's game: one small replicated value in Combat, read by
   Audio.
-- **Concord keeps its rule.** The town's `ZoneMusic` is `calloutsOnly`: a Hostile fight there stays silent. Skirmish
-  music in Concord's Hostile Zones waits for the owner to lift that.
+- **Concord's rule was lifted (owner, 21 Oct 2026).** The town's `ZoneMusic` is no longer `calloutsOnly`: a fight with
+  a Hostile or a Strike Dummy there plays the fight music and earns Cadence, as in the arena.
 
 **The hooks that already exist** (`Audio/Runtime`, `Audio/Data`, `Gameplay/Combat/Runtime`):
 

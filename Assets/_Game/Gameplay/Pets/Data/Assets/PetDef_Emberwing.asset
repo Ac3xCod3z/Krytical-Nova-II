@@ -20,35 +20,35 @@ MonoBehaviour:
   stages:
   - name: 
     model: {fileID: 0}
-    icon: {fileID: 0}
+    icon: {fileID: 21300000, guid: 867a03dc1816cd14abcb9da6d674ef96, type: 3}
     scale: 1
     glow: {r: 0.83137256, g: 0.6862745, b: 0.21568628, a: 1}
     glowStrength: 0
     footEffect: {fileID: 0}
   - name: 
     model: {fileID: 0}
-    icon: {fileID: 0}
+    icon: {fileID: 21300000, guid: 4937ef44b73efc74eac64883225a2910, type: 3}
     scale: 1.08
     glow: {r: 0.83137256, g: 0.6862745, b: 0.21568628, a: 1}
     glowStrength: 0.3
     footEffect: {fileID: 0}
   - name: 
     model: {fileID: 0}
-    icon: {fileID: 0}
+    icon: {fileID: 21300000, guid: 9507217a3b7e14b4590464137ac99b81, type: 3}
     scale: 1.16
     glow: {r: 0.83137256, g: 0.6862745, b: 0.21568628, a: 1}
     glowStrength: 0.5
     footEffect: {fileID: 0}
   - name: 
     model: {fileID: 0}
-    icon: {fileID: 0}
+    icon: {fileID: 21300000, guid: 93071ac58b47a114db85694cf35d75a7, type: 3}
     scale: 1.24
     glow: {r: 0.83137256, g: 0.6862745, b: 0.21568628, a: 1}
     glowStrength: 0.75
     footEffect: {fileID: 0}
   - name: Ascendant
     model: {fileID: 0}
-    icon: {fileID: 0}
+    icon: {fileID: 21300000, guid: 08af10e7361986943b793c0ac63f8198, type: 3}
     scale: 1.35
     glow: {r: 0.18039216, g: 0.5254902, b: 0.67058825, a: 1}
     glowStrength: 1

@@ -12,6 +12,7 @@ namespace KryticalNova.DevTools
     public static class AutopilotCommands
     {
         private const string NoAutopilot = "That player has no Autopilot (run Krytical Nova/Setup/Player Prefab).";
+        private const string NoAutoward = "That player has no Autoward (run Krytical Nova/Setup/Player Prefab).";
 
         private static bool TryGet(out PlayerAutopilot autopilot, out string error)
         {
@@ -66,14 +67,36 @@ namespace KryticalNova.DevTools
             return AutopilotController.Logging ? "Autopilot's turns are printed to the log." : "Autopilot's turns are no longer printed.";
         }
 
-        [Command("gm.autobuff.days", "Set the targeted player's Autobuff licence to run this many days from now (0 ends it): gm.autobuff.days <days>.")]
+        [Command("gm.autobuff.days", "Set the targeted player's Autoward licence to run this many days from now (0 ends it): gm.autobuff.days <days>.")]
         private static string AutobuffDays(int days)
         {
             if (!GmTarget.TryGetPlayer(out GameObject player, out string error)) return error;
             var autobuff = player.GetComponent<PlayerAutobuff>();
-            if (autobuff == null) return "That player has no Autobuff (run Krytical Nova/Setup/Player Prefab).";
+            if (autobuff == null) return NoAutoward;
             autobuff.ServerSetDays(days);
             return autobuff.TimeLeftLine;
+        }
+
+        [Command("gm.autoward", "Autoward for the targeted player. gm.autoward: one of each Autoward Pass (3, 14 and 30 days) into the Pack, to use as a player would. gm.autoward <days>: the licence runs that many days from now (0 ends it).")]
+        private static string Autoward(string days = "")
+        {
+            if (!GmTarget.TryGetPlayer(out GameObject player, out string error)) return error;
+            if (!player.TryGetComponent(out PlayerAutobuff autobuff)) return NoAutoward;
+            if (string.IsNullOrWhiteSpace(days)) return GiveAutowardPasses(player, autobuff);
+            if (!int.TryParse(days.Trim(), out int count) || count < 0) return "Give a number of days, 0 or more.";
+            autobuff.ServerSetDays(count);
+            return autobuff.TimeLeftLine;
+        }
+
+        /// <summary>One of each Autoward Pass the settings list, into the player's Pack (gm.autoward and gm.kit autoward).</summary>
+        internal static string GiveAutowardPasses(GameObject player, PlayerAutobuff autobuff)
+        {
+            if (autobuff.Settings == null || autobuff.Settings.autobuffTiers == null) return "Autoward is not set up.";
+            if (!player.TryGetComponent(out KryticalNova.Items.PlayerInventory inventory)) return "That player has no Pack.";
+            int given = 0, lost = 0;
+            foreach (PassTier tier in autobuff.Settings.autobuffTiers)
+                if (inventory.ServerGive(tier.passItemId, 1, earned: true) > 0) given++; else lost++;
+            return $"{given} Autoward Passes into the Pack (use one from the Pack to add its days)." + (lost > 0 ? $" {lost} did not fit." : string.Empty) + $" {autobuff.TimeLeftLine}";
         }
 
         [Command("gm.magnet.test", "List every drop in the targeted player's pickup reach and whether Magnet would take it.")]

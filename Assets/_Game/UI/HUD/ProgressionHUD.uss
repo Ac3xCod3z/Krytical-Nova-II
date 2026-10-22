@@ -260,6 +260,8 @@
     width: 50px; height: 50px;
     -unity-background-scale-mode: scale-to-fit;
 }
+/* An Autoward cell is smaller than a Hotbar slot and has no key label: its ward sits in the middle (54×62 cell). */
+.autobuff-cell .slot-icon { left: 4px; top: 8px; width: 46px; height: 46px; }
 .hotbar-slot.has-icon .slot-name { visibility: hidden; }
 .hotbar-slot.has-icon .slot-key, .hotbar-slot.has-icon .slot-rank { text-shadow: 1px 1px 0 rgb(20, 18, 43); }
 /* Ink sweep over the icon: full height at the start of a cooldown, draining to nothing (height set in code). */

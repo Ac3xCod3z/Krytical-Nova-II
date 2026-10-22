@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Items.ItemDefinition
   itemId: 9481
   displayName: 'Skill Chip: Killer Instinct'
-  description: Unlocks Killer Instinct, a buff of level 60 every class can learn, which is then learned with skill points. Used up when it is read. Dropped by Hostiles of level 60 and up.
+  description: Unlocks Killer Instinct, a ward of level 60 every class can learn, which is then learned with skill points. Used up when it is read. Dropped by Hostiles of level 60 and up.
   icon: {fileID: 21300000, guid: e9c6adfc6b4fff24c973b1759856486b, type: 3}
   sharesIconOf: {fileID: 11400000, guid: f8bc42967c9e3fc48aae095965a4ee5f, type: 2}
   rarity: 2

@@ -81,23 +81,28 @@ namespace KryticalNova.DevTools
             var names = pet.AnimationNames;
             return names.Count == 0
                 ? $"{pet.Pet.displayName} has no animations."
-                : $"{pet.Pet.displayName} has {names.Count}: {string.Join(", ", names)}. Play one with gm.pet.anim <name>. It rests (Idle) in between.";
+                : $"{pet.Pet.displayName} has {names.Count} (play one with gm.pet.anim <number>; it rests in between):\n{GmPick.Numbered(names)}";
         }
 
-        [Command("gm.pet.anim", "Make the pet the targeted player has out play one of its animations now, for everyone who can see it: gm.pet.anim SpinChase. " +
-                                "gm.pet.anims lists them.")]
-        private static string Animation(string name = "")
+        [Command("gm.pet.anim", "Make the pet the targeted player has out play one of its animations now, for everyone who can see it, by its number " +
+                                "in gm.pet.anims: gm.pet.anim 3 (its name works too). With nothing, lists them.")]
+        private static string Animation(string which = "")
         {
             if (!TryGetPet(out var pet, out var error)) return error;
-            if (string.IsNullOrWhiteSpace(name)) return Animations();
-            return pet.ServerPlayAnimation(name) ? $"{pet.Pet.displayName} plays {name}." : $"No animation called '{name}'. {Animations()}";
+            if (string.IsNullOrWhiteSpace(which)) return Animations();
+            var names = pet.AnimationNames;
+            string name = GmPick.TryNumber(which, names.Count, out int index) ? names[index] : which.Trim();
+            return pet.ServerPlayAnimation(name) ? $"{pet.Pet.displayName} plays {name}." : $"No animation '{which}'. {Animations()}";
         }
 
-        [Command("gm.pet.say", "Make your own pet react as if a moment had just happened to you: gm.pet.say <died|drop|level|bruiser|crit|lowhp|idle>. " +
+        private static readonly string[] Moments = { "died", "drop", "level", "bruiser", "crit", "lowhp", "idle" };
+
+        [Command("gm.pet.say", "Make your own pet react as if a moment had just happened to you: gm.pet.say <1-7|died|drop|level|bruiser|crit|lowhp|idle> (1 died ... 7 idle). " +
                                "It still waits out its quiet (Pet Chatter Settings) and stays silent with Pet chatter off in Settings.")]
         private static string Say(string moment = "crit")
         {
             PetChatterTrigger trigger;
+            if (GmPick.TryNumber(moment, Moments.Length, out int number)) moment = Moments[number];
             switch (moment.ToLowerInvariant())
             {
                 case "died": case "death": trigger = PetChatterTrigger.OwnerDied; break;
@@ -107,7 +112,7 @@ namespace KryticalNova.DevTools
                 case "crit": trigger = PetChatterTrigger.CriticalHit; break;
                 case "lowhp": case "low": trigger = PetChatterTrigger.LowHealth; break;
                 case "idle": trigger = PetChatterTrigger.LongIdle; break;
-                default: return "Use: gm.pet.say <died|drop|level|bruiser|crit|lowhp|idle>";
+                default: return "Use: gm.pet.say <number or moment>\n" + GmPick.Numbered(Moments);
             }
             PetChatterMoments.Raise(trigger);
             return $"Told your pet: {trigger}.";

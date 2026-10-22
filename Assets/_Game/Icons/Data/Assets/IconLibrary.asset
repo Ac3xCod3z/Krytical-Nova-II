@@ -4883,3 +4883,8 @@ MonoBehaviour:
     set: Fantasy/Archer Skill
     number: 6
     chosen: 0
+  - kind: 3
+    target: Wallstride
+    set: Fantasy/Thief Skill
+    number: 27
+    chosen: 1

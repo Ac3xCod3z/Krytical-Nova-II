@@ -5,8 +5,9 @@ Written 12 Oct 2026 on branch `music/cadence`, from the owner's note of 10 Oct 2
 candidates at the end of this page.
 
 **Status (20 Oct 2026): M0 to M4 built and merged into the main line on 17 Oct 2026** (in a fight or not, the
-measured music, the shared beat, Cadence and its readout). Since 19 Oct 2026 Concord (Zone01) plays the fight music and
-runs Cadence **in Callouts only** (section 7). Left: **M5** (the pet keeps time), **M6** (the world moves) and **M7**
+measured music, the shared beat, Cadence and its readout). Concord (Zone01) played the fight music and ran Cadence
+**in Callouts only** from 19 Oct 2026; since 21 Oct 2026 it does in **every fight** there, as the arena does (section 7).
+Since 21 Oct 2026 a GM can show the readout on a player's own screen on a dedicated server too. Left: **M5** (the pet keeps time), **M6** (the world moves) and **M7**
 (into the rest of the game, 60 frames a second held, records updated). Music for the world out of a fight, and the
 game's own tracks, are the Sound Bible's (`18_sound_design.md`). Numbers marked *(my pick)* have not been reviewed.
 
@@ -130,7 +131,11 @@ sound, a mark on the damage number.
   prints every press.
 - **The Cadence readout** (`gm.cadence window on|off`, `CadenceReadout` in `UI/Runtime/Diagnostics`; owner,
   12 Oct 2026: "a running tool window like the performance window"). On the right edge of the screen, for
-  the local player, where the game is decided: the fight and why, the track and its tempo, the sound's distance
+  the local player. Where the game is decided (the host, offline) it reads the presses there. **On a dedicated server**
+  (owner, 21 Oct 2026: to try the beat on Strike Dummies and with another player once it is published) a GM's
+  `gm.cadence window on` shows it on the targeted player's own screen (their own, or another's after `gm.target`): the
+  server then sends that player's game every press it judges and what became of it, the counts and the last press
+  (`PlayerCadence.ServerShowReadout`, `MirrorRpc`), and nothing while it is off. It shows: the fight and why, the track and its tempo, the sound's distance
   from the shared clock; a lane with the beats coming towards a "now" line (gold for the first of a bar, a
   green stretch for what counts as on the beat) and each press where it fell; a strip of where the last sixteen
   presses fell round the beat; the last key (how many ms early or late, ON BEAT or OFF BEAT, whether its bonus
@@ -207,8 +212,9 @@ Each ends in a commit on `music/cadence` and stops for the owner's check. Tested
 | M6 | The world moves | Three examples in the arena, chosen from a review sheet. |
 | M7 | Into the game, and the merge | Starter town wired; 60 frames a second held; records updated; the owner says merge. |
 
-**The town, Callouts only (owner, 19 Oct 2026: "make Callouts use the cadence music so I can test it in our next live
-game").** Zone01 has the conductor and the fight music player (`MusicSetup.EnsureInScene`) with its own
+**The town (owner, 19 Oct 2026: "make Callouts use the cadence music so I can test it in our next live game"; every
+fight since 21 Oct 2026).** *21 Oct 2026, owner: Callouts only was switched off for Concord, so a fight with a Hostile
+or a Strike Dummy there plays the fight music and earns Cadence, as in the arena. As first built:* Zone01 has the conductor and the fight music player (`MusicSetup.EnsureInScene`) with its own
 `ZoneMusic_Zone01_StarterTown`: the arena's twelve tracks (not the test beat), and **Callouts only** (`ZoneMusic.calloutsOnly`):
 the music, and Cadence with it, only while the player stands in a Callout (`PlayerCombatState.InFightFor`,
 `IBeatClock.CalloutsOnly`). A fight with a Hostile in the town stays silent and earns no Cadence. The arena keeps every

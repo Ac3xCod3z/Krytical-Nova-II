@@ -379,7 +379,7 @@ MonoBehaviour:
         - Skill ranks are shared by slot across your faction's three classes. Rank a skill up once and its match in the other two classes is ranked too.
     - id: skills
       title: Skills and ranks
-      summary: Every class has ten attacks and two buffs. Skill points make them stronger.
+      summary: Every class has ten attacks and two wards. Skill points make them stronger.
       clip: {fileID: 32900000, guid: 513aa87d01c20b842a3b572d27e03d35, type: 3}
       still: {fileID: 0}
       focus:
@@ -401,8 +401,8 @@ MonoBehaviour:
         - Sixth and seventh | A hard hit and a hard flurry, from level 60. Each opens with its own Skill Chip
         - Eighth and ninth | Harder still, from level 80. Their Skill Chips drop only in the hardest hunting grounds
         - Tenth | The class's Zenith technique, a leaping strike on an area, from level 80. Its Zenith Dossier opens it
-        - Stance | A lasting buff that fits your class's role
-        - Guard | A lasting buff to Elemental Defense
+        - Stance | A lasting ward that fits your class's role
+        - Guard | A lasting ward to Elemental Defense
       - kind: 0
         heading: Skill Chips
         lines:
@@ -410,7 +410,7 @@ MonoBehaviour:
       - kind: 1
         heading: Ranking up
         lines:
-        - 'Open the Skills window, the Arsenal. It has three tabs: STRIKES (attacks, grouped as area, single hit, two-hit and three-hit), WARDS (buffs, stances and guards) and STRIDES (Run and Jump), each on tiers by the level that opens it.'
+        - 'Open the Skills window, the Arsenal. It has three tabs: STRIKES (attacks, grouped as area, single hit, two-hit and three-hit), WARDS (stances, guards and every other ward) and STRIDES (Run and Jump), each on tiers by the level that opens it.'
         - Click a skill to read it beside the tree. Skill points left are shown at the top.
         - Press <b>+1</b>, <b>+5</b> or <b>+10</b> on its card to put ranks into it.
         - Drag the skill from the tree onto the Hotbar if it is not there yet.
@@ -923,7 +923,7 @@ MonoBehaviour:
         heading: Setting it up
         lines:
         - Stand in a Hostile Zone. Autopilot will not start anywhere else.
-        - 'Open the window and choose: the whole zone or a circle round you, which Hostiles to skip, which Hotbar slots to attack with, and when to use a Stim. The buffs it keeps up are the Autobuff''s.'
+        - 'Open the window and choose: the whole zone or a circle round you, which Hostiles to skip, which Hotbar slots to attack with, and when to use a Stim. The wards it keeps up are the Autoward''s.'
         - Press {key:Autopilot} . An AUTO tag shows on your namecard while it runs.
       - kind: 2
         heading: It stops when
@@ -937,9 +937,9 @@ MonoBehaviour:
         lines:
         - 'Magnet takes what you tick: Common, Uncommon, Rare and Epic gear each have a box, and so do Stims and other items. Creds are always taken. It works while you hunt by hand, but only while you have Autopilot time left.'
       - kind: 0
-        heading: Autobuff
+        heading: Autoward
         lines:
-        - 'An Autobuff Pass (3, 14 or 30 days; the 3-day one drops from Hostiles) buys days of Autobuff, by the clock. In this window, drag up to eight learned buff skills into its cells, and drag the AUTOBUFF tile to a Hotbar key: one press casts every buff that is down, in turn, and Autopilot keeps them up for you.'
+        - 'An Autoward Pass (3, 14 or 30 days; the 3-day one drops from Hostiles) buys days of Autoward, by the clock. In this window, drag up to eight learned ward skills into its cells, and drag the AUTOWARD tile to a Hotbar key: one press casts every ward that is down, in turn, and Autopilot keeps them up for you.'
       - kind: 3
         heading: 
         lines:

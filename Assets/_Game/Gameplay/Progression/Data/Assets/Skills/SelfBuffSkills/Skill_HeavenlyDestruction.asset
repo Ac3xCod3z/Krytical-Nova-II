@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::KryticalNova.Progression.SkillDefinitionSO
   skillId: HeavenlyDestruction
   displayName: Shatterpoint
-  description: While active, every attack has a 1% - 20% chance to shatter the enemy's Aegis and strip one of their buffs.
+  description: While active, every attack has a 1% - 20% chance to shatter the enemy's Aegis and strip one of their wards.
   category: 1
   weaponClass: 0
   classSlot: 0

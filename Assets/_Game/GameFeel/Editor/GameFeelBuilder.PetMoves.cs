@@ -125,8 +125,10 @@ namespace KryticalNova.EditorTools
                 m.SetFloat("_EndFade", 0f);
             });
 
-            // A ribbon left behind by whatever it is worn on (a tail tip): what it lets go stays in the world, and the
-            // ribbon runs through it, so it draws the path the tip has just taken. For as long as it plays.
+            // A ribbon left behind by whatever it is worn on (a tail tip), drawn in the pet's own space (owner, 22 Oct
+            // 2026: no streak down the road behind a running fox, the way Tidecaller's water never trails): the ribbon
+            // follows the tip's swish around the body, and the pet carries it along as it runs. The pet is set as its
+            // space when it is worn (PetFollower); with none it would fall back to the world. For as long as it plays.
             var trailRoot = new GameObject("PFX_Pet_SpiritTrail");
             try
             {
@@ -135,12 +137,12 @@ namespace KryticalNova.EditorTools
                 main.playOnAwake = true;
                 main.loop = true;
                 main.duration = 1f;
-                main.startLifetime = 0.42f;
+                main.startLifetime = 0.32f;
                 main.startSpeed = 0f;
                 main.startSize = 1f;
                 main.startColor = Color.white;
                 main.gravityModifier = 0f;
-                main.simulationSpace = ParticleSystemSimulationSpace.World;
+                main.simulationSpace = ParticleSystemSimulationSpace.Custom;
                 main.scalingMode = ParticleSystemScalingMode.Hierarchy;
                 main.maxParticles = 40;
                 var emission = system.emission;

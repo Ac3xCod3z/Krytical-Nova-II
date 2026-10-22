@@ -27,7 +27,7 @@ MonoBehaviour:
   gapSeconds: 2
   fadeInSeconds: 0.6
   fadeOutSeconds: 2.5
-  calloutsOnly: 1
+  calloutsOnly: 0
   explore:
   - {fileID: 11400000, guid: f006d2456820d084591406f4e39ac7d3, type: 2}
   exploreVolume: 0.8

@@ -128,8 +128,8 @@ namespace KryticalNova.DevTools
                 "PROGRESSION  gm.level <n> · gm.maxlevel · gm.xp <n> · gm.statpoints <n> · gm.skillpoints <n> · gm.attr <str|vit|agi|spi> <n> · gm.resetstats",
                 "STATS        gm.stats · gm.setstat <StatType> <value> · gm.clearstats",
                 "VITALS       gm.heal · gm.fillchi · gm.damage <n> · gm.hitme [n] [normal|heavy|crit] [front|back|left|right] · gm.spendchi <n> · gm.kill",
-                "SKILLS       gm.skillpoints <n> · gm.skills.max · gm.skills · gm.dropskills <true|false> · gm.unlockskill <id> · gm.lockskill <id>",
-                "BUFFS        gm.buffs · gm.buff.remove <id|name> · gm.buff.clear   (take down active skills)",
+                "SKILLS       gm.skillpoints <n> · gm.skills.max · gm.skills · gm.dropskills <true|false> · gm.unlockskill <#|id> · gm.lockskill <#|id>   (# = its number in gm.skills)",
+                "WARDS        gm.wards · gm.ward.remove <#|id|name> · gm.ward.clear   (take down active skills; gm.buffs, gm.buff.remove and gm.buff.clear still work)",
                 "COMBAT       gm.dummy.hit [times] · gm.dummy.reset · gm.dummy.hp <n> · gm.dummy.maxhp <n> (0 = base) · gm.dummy.inf [on|off]",
                 "IN A FIGHT   gm.combat   (is the player in a fight, and why) · gm.combat hold [on|off]   (kept in one, as a war will) · gm.combat watch [on|off]",
                 "FIGHT MUSIC  gm.music   (the tracks, what is on) · gm.music.track <n|name|round> · gm.music.click [on|off]   (a click on every beat) · gm.music.nudge <ms>",
@@ -145,23 +145,23 @@ namespace KryticalNova.DevTools
                 "APPEARANCE   gm.weave [off]   (opens the Holoweaver here; Weaves and dyes then work with no NPC near) · gm.dye · gm.weave.unlock <all|item> · gm.weave.clear · gm.weave.list · gm.restyle <stylist|reshaper|coach|off> · gm.passes [n]   (Chroma Cells, Prism Cells, Restyle and Training Passes)",
                 "CRAFTING     gm.craft [off]   (opens the Fabricator here; crafting then works with no NPC near) · gm.craftkit [times]   (the materials of every recipe) · gm.dossier   (the three Dossiers) · gm.zenith [all]   (the Zenith Dossiers of the player's faction, or all nine)",
                 "XP BOOSTERS  gm.boosters [n]   (n of each: Field, Companion, Tandem) · gm.boost   (what is running) · gm.boost.clear",
-                "PETS         gm.pet · gm.pet.growth <0-100> · gm.pet.hunger <0-100> · gm.pet.feed · gm.pet.xp <n> · gm.pet.event <win|loss> · gm.pet.say <died|drop|level|bruiser|crit|lowhp|idle>",
+                "PETS         gm.pet · gm.pet.growth <0-100> · gm.pet.hunger <0-100> · gm.pet.feed · gm.pet.xp <n> · gm.pet.event <win|loss> · gm.pet.say <1-7|moment> · gm.pet.anims · gm.pet.anim <#>   (# = its number in gm.pet.anims)",
                 "EFFECTS      gm.fx.hit [normal|elemental|crit|shatter|backlash] [light|heavy] · gm.fx.pvpcrit [splash|frame|faction|default]   (shown on this screen; nothing is hit)",
                 "SAVING       gm.save · gm.save.where · gm.save.wipe confirm",
                 "HOSTILES     gm.hostile.list · gm.hostile.spawn <id|name> [count] [level] [health|inf] · gm.hostile.clear [radius] · gm.hostile.kill [radius] · gm.hostile.info · gm.hostile.hp <n|n%> · gm.hostile.freeze [on|off] · gm.hostile.ignore [on|off] · gm.hostile.ttk <id|name> [level] · gm.hostile.stats · gm.hostile.loot <id|name> [kills]",
                 "LEVEL GAP    gm.gap <hostile level> · gm.gap.table · gm.xprate <x> · gm.droprate <x> · gm.deathpenalty [on|off]",
                 "CREW HALLS   gm.home   (to the Hall sandbox: a Lot with a Hall, far from town) · gm.home.inside · gm.home.floor up|ground|basement · gm.home.outside · gm.home.leave · gm.furnish.kit [n] [all]   (n of every furnishing in the player's faction's style, or of every style, into the Furnishing Crate, with Facades and Finishes) · gm.furnish.clear · gm.home.reset   (everything back into the Crate) · gm.home.fill [n]   (a load test)",
-                "AUTOPILOT    gm.autopilot [on|off] · gm.autopilot.time <days> · gm.autopilot.log [on|off] · gm.magnet.test · gm.autobuff.days <days> · item.give \"Autopilot Pass (3 Days)\" [n] · item.give \"Autobuff Pass (3 Days)\" [n]",
-                "ZONES        gm.zone.list · gm.zone.fill <id> · gm.zone.clear <id> [seconds] · gm.zone.respawn <seconds|default> · gm.zone.sleep <id> [on|off|auto] · gm.zone.bruiser <id>   (Hostile Zones; gm.tp <id> goes to one)",
-                "TELEPORT     gm.poi · gm.tp <name> · gm.tpxyz <x> <y> <z> · gm.tpcursor",
+                "AUTOPILOT    gm.autopilot [on|off] · gm.autopilot.time <days> · gm.autopilot.log [on|off] · gm.magnet.test · gm.autoward [days]   (no days: one of each Autoward Pass; days: the licence) · gm.autobuff.days <days> · item.give \"Autopilot Pass (3 Days)\" [n] · item.give 9031 [n]   (Autoward Pass, 3 days; 9032 = 14, 9033 = 30)",
+                "ZONES        gm.zone.list · gm.zone.fill <#|id> · gm.zone.clear <#|id> [seconds] · gm.zone.respawn <seconds|default> · gm.zone.sleep <#|id> [on|off|auto] · gm.zone.bruiser <#|id>   (Hostile Zones, # = number in gm.zone.list; gm.tp <id> goes to one)",
+                "TELEPORT     gm.poi · gm.tp <#|name>   (# = number in gm.poi) · gm.tpxyz <x> <y> <z> · gm.tpcursor · gm.zones · gm.travel <#|name>   (# = number in gm.zones)",
                 "TIME         time.set <h> · time.pause · time.resume · time.scale <x> · time.dawn · time.noon · time.dusk · time.midnight · time.daylength <s>",
                 "WEATHER      weather.set <name> [secs] · weather.clear · weather.lock <bool> · weather.list",
                 "SKY          sky.rainbow [0-1|off] · sky.moonphase <new|first|full|last|0-1|off> · sky.moon.next · sky.halo [sun|moon|both|off] · sky.shimmer <x|off> · sky.flare <x|off> · sky.lightning · sky.status · sky.reset",
                 "ITEMS        item.give <id|name> [n] · item.list [slot] · item.clear   (stims: Pill_Vitality, Pill_Chi, Pill_DualHarmony)",
                 "GEAR         gm.gear <slot> <level> <rarity> [class] · gm.loadout [class]   (e.g. gm.gear weapon 45 rare carbine) · gm.gearset [level] [rarity] [temper] [wear]   (one whole set, e.g. gm.gearset 112 epic 60 wear)",
-                "KITS         gm.kit gear [level] [rarity] · gm.kit temper [n] · gm.kit pets · gm.kit all   (gear: every piece that fits, 112 Epic unless told)",
+                "KITS         gm.kit gear [level] [rarity] · gm.kit temper [n] · gm.kit pets · gm.kit autoward · gm.kit all   (gear: every piece that fits, 112 Epic unless told)",
                 "FORGE        gm.forge [off]   (opens it here; the forge then works with no Armorer near) · gm.forgekit [n] · gm.temper <%> [slot] · gm.temper.all <%> [worn|pack|all] · gm.fuse <0-12> [slot] · gm.tune <0-25> [slot]",
-                "RENOWN       gm.renown [n] · gm.renown.set <n>   (the only way Renown enters the game for now) · gm.ascension [0-96] · gm.standing <vanguard|bulwark|ironblood|mindwell|all> <0-12> · gm.standing.wear <track|none> · gm.herald [off]",
+                "RENOWN       gm.renown [n] · gm.renown.set <n>   (the only way Renown enters the game for now) · gm.ascension [0-96] · gm.standing <1-4|track|all> <0-12> · gm.standing.wear <1-4|track|none>   (1 vanguard, 2 bulwark, 3 ironblood, 4 mindwell) · gm.herald [off]",
             });
         }
         #endregion
@@ -665,7 +665,7 @@ namespace KryticalNova.DevTools
             return unlock ? "All drop-book skills unlocked." : "All drop-book skills locked.";
         }
 
-        [Command("gm.unlockskill", "Unlock one drop-book skill (level-60 / Zenith) by skill id or name. It still costs skill points to learn.")]
+        [Command("gm.unlockskill", "Unlock one drop-book skill (level-60 / Zenith) by its number in gm.skills, skill id or name. It still costs skill points to learn.")]
         private static string UnlockSkill(string skill)
         {
             if (!TryGet<PlayerCombatSkills>(out var skills, out var error)) return error;
@@ -676,7 +676,7 @@ namespace KryticalNova.DevTools
             return $"{def.displayName} unlocked.";
         }
 
-        [Command("gm.lockskill", "Lock one drop-book skill again by skill id or name.")]
+        [Command("gm.lockskill", "Lock one drop-book skill again by its number in gm.skills, skill id or name.")]
         private static string LockSkill(string skill)
         {
             if (!TryGet<PlayerCombatSkills>(out var skills, out var error)) return error;
@@ -696,25 +696,35 @@ namespace KryticalNova.DevTools
             return "Every skill unlocked at max rank.";
         }
 
-        [Command("gm.buffs", "List the skills (buffs) active on you, with the time each has left.")]
+        [Command("gm.wards", "List the skills (wards) active on you, numbered, with the time each has left.")]
+        [Command("gm.buffs", "List the skills (wards) active on you, numbered, with the time each has left.")]
         private static string ListBuffs()
         {
             if (!TryGet<CharacterBuffManager>(out var buffs, out var error)) return error;
             if (buffs.ActiveBuffs.Count == 0) return "No active skills.";
             var sb = new StringBuilder();
+            int number = 0;
             foreach (var buff in buffs.ActiveBuffs)
-                if (buff?.Skill != null) sb.AppendLine($"{buff.Skill.skillId}  ({buff.Skill.displayName})  {buff.RemainingDuration:0.0}s left");
+                if (buff?.Skill != null) sb.AppendLine($"{++number,3}  {buff.Skill.skillId}  ({buff.Skill.displayName})  {buff.RemainingDuration:0.0}s left");
             return sb.ToString().TrimEnd();
         }
 
-        [Command("gm.buff.remove", "Take down one active skill (buff) by skill id or name: its stats, aura and buff-bar entry go.")]
+        [Command("gm.ward.remove", "Take down one active skill (ward) by its number in gm.wards, skill id or name: its stats, aura and ward-bar entry go.")]
+        [Command("gm.buff.remove", "Take down one active skill (ward) by its number in gm.wards, skill id or name: its stats, aura and ward-bar entry go.")]
         private static string RemoveBuff(string skill)
         {
             if (!TryGet<CharacterBuffManager>(out var buffs, out var error)) return error;
             string query = (skill ?? string.Empty).Replace(" ", string.Empty);
+            int number = 0;
+            int.TryParse(query, out int wantedNumber);
             foreach (var buff in buffs.ActiveBuffs)
             {
                 if (buff?.Skill == null) continue;
+                if (++number == wantedNumber)
+                {
+                    string numbered = buff.Skill.displayName;
+                    return buffs.RemoveBuff(buff.Skill.skillId) ? $"{numbered} removed." : $"{numbered} could not be removed.";
+                }
                 // By id, or by the start of the name without spaces ("killerinst" finds "Killer Instinct").
                 bool match = string.Equals(buff.Skill.skillId, query, StringComparison.OrdinalIgnoreCase)
                     || (query.Length > 0 && (buff.Skill.displayName ?? string.Empty).Replace(" ", string.Empty)
@@ -723,10 +733,11 @@ namespace KryticalNova.DevTools
                 string name = buff.Skill.displayName;
                 return buffs.RemoveBuff(buff.Skill.skillId) ? $"{name} removed." : $"{name} could not be removed.";
             }
-            return $"'{skill}' is not active. Use gm.buffs to list active skills.";
+            return $"'{skill}' is not active. Use gm.wards to list active skills.";
         }
 
-        [Command("gm.buff.clear", "Take down every active skill (buff) on you.")]
+        [Command("gm.ward.clear", "Take down every active skill (ward) on you.")]
+        [Command("gm.buff.clear", "Take down every active skill (ward) on you.")]
         private static string ClearBuffs()
         {
             if (!TryGet<CharacterBuffManager>(out var buffs, out var error)) return error;
@@ -740,9 +751,11 @@ namespace KryticalNova.DevTools
         {
             if (!TryGet<PlayerCombatSkills>(out var skills, out var error)) return error;
             var lines = new System.Text.StringBuilder();
+            int number = 0;
             foreach (var def in skills.AvailableSkills)
             {
                 if (def == null) continue;
+                lines.Append((++number).ToString().PadLeft(3)).Append("  ");
                 string book = !def.requiresSkillBook ? "trainer" : skills.IsLocked(def) ? "BOOK LOCKED" : "book unlocked";
                 lines.AppendLine($"{def.skillId,-20} lvl {def.requiredCharacterLevel,-3} rank {skills.GetRank(def)}/{def.maxRank}  {book}");
             }
@@ -752,6 +765,14 @@ namespace KryticalNova.DevTools
         private static SkillDefinitionSO FindSkill(PlayerCombatSkills skills, string query)
         {
             if (string.IsNullOrWhiteSpace(query)) return null;
+            // By its number in gm.skills (skills with a definition, in that order) ...
+            if (int.TryParse(query.Trim(), out int wantedNumber))
+            {
+                int number = 0;
+                foreach (var def in skills.AvailableSkills)
+                    if (def != null && ++number == wantedNumber) return def;
+            }
+            // ... or by id or name.
             string wanted = query.Replace(" ", string.Empty);
             foreach (var def in skills.AvailableSkills)
             {
@@ -802,22 +823,25 @@ namespace KryticalNova.DevTools
             var targets = CollectTargets();
             if (targets.Count == 0) return "No teleport targets in this scene.";
             var sb = new StringBuilder();
+            int number = 0;
             foreach (var t in targets)
             {
                 Vector3 p = TargetPosition(t.Transform);
-                sb.Append(t.Name.PadRight(26)).Append(t.Kind.PadRight(10)).AppendLine($"({p.x:0}, {p.y:0}, {p.z:0})");
+                sb.Append((++number).ToString().PadLeft(3)).Append("  ").Append(t.Name.PadRight(26)).Append(t.Kind.PadRight(10)).AppendLine($"({p.x:0}, {p.y:0}, {p.z:0})");
             }
             return sb.ToString();
         }
 
-        [Command("gm.tp", "Teleport to a POI / portal / spawnN / landmark, or any scene object by name. Partial names work.")]
+        [Command("gm.tp", "Teleport to a POI / portal / spawnN / landmark by its number in gm.poi (gm.tp 4), or any of them or any scene object by name. Partial names work.")]
         private static string Teleport(string target)
         {
             if (!TryGetPlayer(out var player, out var error)) return error;
             var targets = CollectTargets();
             TeleportTarget? match = null;
-            foreach (var t in targets)
-                if (string.Equals(t.Name, target, StringComparison.OrdinalIgnoreCase)) { match = t; break; }
+            if (GmPick.TryNumber(target, targets.Count, out int numbered)) match = targets[numbered];
+            if (match == null)
+                foreach (var t in targets)
+                    if (string.Equals(t.Name, target, StringComparison.OrdinalIgnoreCase)) { match = t; break; }
             if (match == null)
                 foreach (var t in targets)
                     if (t.Name.IndexOf(target, StringComparison.OrdinalIgnoreCase) >= 0) { match = t; break; }

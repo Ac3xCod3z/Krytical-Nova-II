@@ -92,7 +92,7 @@ Walking more than 8 m apart, dying or leaving cancels. The trade window shows th
 | 14 days | one **Kiosk Permit (14 Days)**, item 9020, Nova Store $1.99 |
 | 30 days | one **Kiosk Permit (30 Days)**, item 9021, Nova Store $3.99 |
 
-The Autobuff's Passes (3 / 14 / 30 days, items 9031 to 9033) and the Autopilot Passes (items 9030, 9034, 9035) run on the same clock: see "Autobuff" and "Autopilot Passes" below.
+The Autoward's Passes (3 / 14 / 30 days, items 9031 to 9033) and the Autopilot Passes (items 9030, 9034, 9035) run on the same clock: see "Autoward" and "Autopilot Passes" below.
 
   The Nova Store does not sell yet; `item.give Permit_Kiosk14` hands one out. A duration without its permit shows locked with its store price.
 - **The stand-in** is a doll of the owner as they looked when they opened it, with the shop's name over it. The items leave the Pack and the owner is free to go: it sells while they play or are offline, and survives a server restart.
@@ -333,23 +333,23 @@ Hold **B** (rebindable): a ring of eight categories; a click turns it into that 
 - **Jumps are copied (15 Oct 2026).** When the member jumps, the server tells the follower where they took off and landed (`PlayerJumpMotor.JumpStarted`). The follower walks to the take-off and, within 0.8 m of it, jumps to the landing with its own Jump (`PointAndClickPlayer.ServerJumpTo`: the follower's rank, Flux and arc, the same layers a click uses), so two cross a river together. Up to 4 jumps are remembered, each for 15 s; one the follower is already past is forgotten. A copied jump is not a move order of the follower's own, so following goes on; a jump the follower cannot make (Jump not learned, no Flux, too far for its rank) ends following with the reason. While a jump waits to be copied the member may be far across the water: the distance limit is not applied until it is done.
 - **Numbers** (`SquadSettings.asset`): stand 3.5 m behind (owner, 15 Oct 2026: three to four), set off again once the member is 5 m away, lost beyond 60 m, a look every 0.4 s; a jump is copied within 0.8 m of the take-off, 4 remembered, 15 s each.
 
-## Autobuff (row 9; built 15 Oct 2026)
+## Autoward (row 9; built 15 Oct 2026 as the Autobuff, renamed 22 Oct 2026)
 
 A licence by the clock, like a Kiosk's, that buffs for the player: up to eight buff skills are slotted in the Autopilot window (two rows of four cells; a learned buff is dragged in from the Arsenal, the Hotbar or another cell; right-click clears), and the **AUTOBUFF** tile dragged to a Hotbar key casts every slotted buff that is down, one per action tick at Autopilot's own pace (0.3 to 0.5 s), through the ordinary cast path: its rank, its Flux, its cooldown, nothing a hand press would not do. Autopilot keeps the buffs up through it, in place of the two buff rows it had. It works with or without Autopilot time; with no running licence the tile is greyed and says so.
 
-| Autobuff Pass (item) | Adds | Rarity | Where from | Nova Store |
+| Autoward Pass (item) | Adds | Rarity | Where from | Nova Store |
 | --- | --- | --- | --- | --- |
-| Autobuff Pass (3 Days), 9031 | 3 days | Uncommon | Hostiles of level 10 and up, 0.3 % (placeholder); the store | $0.99 (placeholder) |
-| Autobuff Pass (14 Days), 9032 | 14 days | Rare | the store | $2.99 (placeholder) |
-| Autobuff Pass (30 Days), 9033 | 30 days | Epic | the store | $4.99 (placeholder) |
+| Autoward Pass (3 Days), 9031 | 3 days | Uncommon | Hostiles of level 10 and up, 0.3 % (placeholder); the store | $0.99 (placeholder) |
+| Autoward Pass (14 Days), 9032 | 14 days | Rare | the store | $2.99 (placeholder) |
+| Autoward Pass (30 Days), 9033 | 30 days | Epic | the store | $4.99 (placeholder) |
 
 - The days count by the wall clock whether the character plays or not (`AutobuffRules.Extend`: a running licence is lengthened from its end, one that ran out starts from now). At most **90 days** may be held: a Pass past that is refused, not wasted. Numbers in `AutopilotSettings` (`autobuffTiers`, `autobuffMaxDays`).
-- The server keeps the expiry and the eight cells, saved with the character (`PlayerAutobuff`, key `autobuff`); the owner's game presses the buffs (`AutobuffCaster`). The 14 and 30-day Passes share the 3-day one's picture until they are given their own in the Icon Library.
-- GM: `gm.autobuff.days <days>` (0 ends it), `item.give "Autobuff Pass (3 Days)" [n]`, and buttons in the GM window.
+- The server keeps the expiry and the eight cells, saved with the character (`PlayerAutobuff`, key `autobuff`); the owner's game presses the wards (`AutobuffCaster`). The 14 and 30-day Passes share the 3-day one's picture until they are given their own in the Icon Library.
+- GM: `gm.autoward` (one of each Pass into the Pack), `gm.autoward <days>` or `gm.autobuff.days <days>` (the licence; 0 ends it), `gm.kit autoward` (the three Passes and 30 days), `item.give 9031` [n], and buttons in the GM window.
 
 ## Autopilot Passes (row 9; built 17 Oct 2026)
 
-Autopilot time, on the same clock as the Autobuff (owner, 15 Oct 2026; built 17 Oct 2026). It replaced the Autopilot Chip, which added 5 hours that ran only while Autopilot was on; a chip's hours were not carried over (no players yet), and the chip's item became the 3-day Pass.
+Autopilot time, on the same clock as the Autoward (owner, 15 Oct 2026; built 17 Oct 2026). It replaced the Autopilot Chip, which added 5 hours that ran only while Autopilot was on; a chip's hours were not carried over (no players yet), and the chip's item became the 3-day Pass.
 
 | Autopilot Pass (item) | Adds | Rarity | Where from | Nova Store |
 | --- | --- | --- | --- | --- |
@@ -357,7 +357,7 @@ Autopilot time, on the same clock as the Autobuff (owner, 15 Oct 2026; built 17 
 | Autopilot Pass (14 Days), 9034 | 14 days | Rare | the store | $2.99 (placeholder) |
 | Autopilot Pass (30 Days), 9035 | 30 days | Epic | the store | $4.99 (placeholder) |
 
-- The days count by the wall clock whether Autopilot is on or off and whether the character plays or not (`PassClock.Extend`, shared with the Autobuff). At most **90 days** may be held: a Pass past that is refused, not wasted. Numbers in `AutopilotSettings` (`autopilotTiers`, `autopilotMaxDays`).
+- The days count by the wall clock whether Autopilot is on or off and whether the character plays or not (`PassClock.Extend`, shared with the Autoward). At most **90 days** may be held: a Pass past that is refused, not wasted. Numbers in `AutopilotSettings` (`autopilotTiers`, `autopilotMaxDays`).
 - Magnet needs Autopilot time too (see "Item pickup"). The server keeps the expiry, saved with the character (`PlayerAutopilot`, key `autopilot`: the expiry and the player's choices) and told to its owner only. The 14 and 30-day Passes show the 3-day one's picture.
 - GM: `gm.autopilot.time <days>` (0 ends it), `item.give "Autopilot Pass (3 Days)" [n]` (14, 30), and buttons in the GM window.
 

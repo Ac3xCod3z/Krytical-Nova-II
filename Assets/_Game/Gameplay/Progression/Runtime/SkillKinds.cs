@@ -43,7 +43,7 @@ namespace KryticalNova.Progression
 
         /// <summary>
         /// The kind in a sentence for an item card: "Area attack: 3 hits on every enemy within 6 m" or
-        /// "Ward: a buff, 60 s".
+        /// "Ward: a ward, 60 s".
         /// </summary>
         public static string KindLine(SkillDefinitionSO skill, int rank)
         {
@@ -60,7 +60,7 @@ namespace KryticalNova.Progression
                 default:
                     float duration = skill.GetDuration(rank);
                     string what = skill.isAbsorptionShield ? "a shield" : skill.executionType == SkillExecutionType.Channeled ? "a channel"
-                        : skill.category == SkillCategory.WeaponStance ? "a stance" : "a buff";
+                        : skill.category == SkillCategory.WeaponStance ? "a stance" : "a ward";
                     return duration > 0f ? $"Ward: {what}, {duration:0} s" : $"Ward: {what}";
             }
         }

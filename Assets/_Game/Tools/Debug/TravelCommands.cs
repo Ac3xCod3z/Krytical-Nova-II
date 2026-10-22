@@ -18,21 +18,30 @@ namespace KryticalNova.DevTools
             if (catalog == null) return "This scene has no zone catalog (no ZoneRules).";
             string here = ZoneRules.Current.gameObject.scene.name;
             var sb = new StringBuilder();
+            int number = 0;
             foreach (ZoneEntry zone in catalog.zones)
             {
                 if (zone == null) continue;
-                sb.Append(zone.sceneName == here ? "> " : "  ")
+                sb.Append((++number).ToString().PadLeft(2)).Append(' ')
+                  .Append(zone.sceneName == here ? "> " : "  ")
                   .Append(zone.sceneName.PadRight(36))
                   .Append(zone.displayName.PadRight(22))
                   .Append(zone.LevelBand.PadRight(14))
                   .AppendLine(Rule(zone.pvp));
             }
-            return sb.Append("gm.travel <scene or name> goes there (partial names work).").ToString();
+            return sb.Append("gm.travel <number, scene or name> goes there (partial names work).").ToString();
         }
 
-        [Command("gm.travel", "Travel to another map: gm.travel <scene or name>, e.g. gm.travel crestfall. In a session the host takes everyone.")]
+        [Command("gm.travel", "Travel to another map: gm.travel <number in gm.zones, scene or name>, e.g. gm.travel 3 or gm.travel crestfall. In a session the host takes everyone.")]
         private static string Travel(string zone)
         {
+            ZoneCatalog catalog = ZoneRules.Current != null ? ZoneRules.Current.Catalog : null;
+            if (catalog != null)
+            {
+                var listed = new System.Collections.Generic.List<ZoneEntry>();
+                foreach (ZoneEntry entry in catalog.zones) if (entry != null) listed.Add(entry);
+                if (GmPick.TryNumber(zone, listed.Count, out int index)) zone = listed[index].sceneName;
+            }
             ZoneTravel.TryTravel(zone, out string message);
             return message;
         }

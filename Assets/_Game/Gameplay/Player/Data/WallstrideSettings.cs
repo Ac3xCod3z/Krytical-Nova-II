@@ -10,6 +10,10 @@ namespace KryticalNova.Player
     [CreateAssetMenu(menuName = "Krytical Nova/Player/Wallstride Settings", fileName = "WallstrideSettings")]
     public sealed class WallstrideSettings : ScriptableObject
     {
+        [Header("Arsenal")]
+        [Tooltip("Its tile and card in the Arsenal. Given by the icon library (Krytical Nova ▸ Icons ▸ Icon Library), like every skill's: do not set it by hand.")]
+        public Sprite icon;
+
         [Header("When it opens (all three)")]
         [Min(1)] public int requiredLevel = 60;
         [Tooltip("Run at this rank (its highest is 20).")]

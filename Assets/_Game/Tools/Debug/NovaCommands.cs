@@ -41,10 +41,15 @@ namespace KryticalNova.DevTools
             return Describe(nova) + ".";
         }
 
-        [Command("gm.standing", "Set a Nova Standing of the targeted player: gm.standing <vanguard|bulwark|ironblood|mindwell|all> <0-12>.")]
+        // "1" to "4" are the tracks in order (1 vanguard, 2 bulwark, 3 ironblood, 4 mindwell); anything else is kept as typed.
+        private static string TrackByNumber(string track) =>
+            GmPick.TryNumber(track, NovaRules.TrackCount, out int index) ? ((StandingTrack)index).ToString().ToLowerInvariant() : (track ?? string.Empty).Trim().ToLowerInvariant();
+
+        [Command("gm.standing", "Set a Nova Standing of the targeted player: gm.standing <1-4|vanguard|bulwark|ironblood|mindwell|all> <0-12> (1 vanguard, 2 bulwark, 3 ironblood, 4 mindwell).")]
         private static string Standing(string track, int level)
         {
             if (!TryGetNova(out var nova, out var error)) return error;
+            track = TrackByNumber(track);
             if (track == "all")
             {
                 for (int i = 0; i < NovaRules.TrackCount; i++) nova.ServerSetStanding((StandingTrack)i, level);
@@ -55,11 +60,12 @@ namespace KryticalNova.DevTools
             return nova.ServerSetStanding(which, level) ? Describe(nova) + "." : "Could not change that Standing.";
         }
 
-        [Command("gm.standing.wear", "Choose the Nova Standing the targeted player wears: gm.standing.wear <vanguard|bulwark|ironblood|mindwell|none>. " +
+        [Command("gm.standing.wear", "Choose the Nova Standing the targeted player wears: gm.standing.wear <1-4|vanguard|bulwark|ironblood|mindwell|none>. " +
                                      "The player must hold a rank on that track.")]
         private static string StandingWear(string track)
         {
             if (!TryGetNova(out var nova, out var error)) return error;
+            track = TrackByNumber(track);
             if (track == "none") return nova.ServerSetWorn(default, false) ? Describe(nova) + "." : "Could not change what that player wears.";
             if (!System.Enum.TryParse(track, true, out StandingTrack which) || !System.Enum.IsDefined(typeof(StandingTrack), which))
                 return $"Unknown track '{track}'. Use vanguard, bulwark, ironblood, mindwell or none.";

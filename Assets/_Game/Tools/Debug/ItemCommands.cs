@@ -152,11 +152,11 @@ namespace KryticalNova.DevTools
 
         private const int KitLevel = 112;
         private const int KitTemperCount = 20;
-        private const string KitUsage = "Use gm.kit gear [level] [rarity], gm.kit temper [count], gm.kit pets or gm.kit all.";
+        private const string KitUsage = "Use gm.kit gear [level] [rarity], gm.kit temper [count], gm.kit pets, gm.kit autoward or gm.kit all.";
 
         [Command("gm.kit", "Give the targeted player a whole kit at once. gm.kit gear [level] [rarity]: every piece that character can " +
                            "wear at that tier (112 Epic unless told), the weapon of every class of its faction included. gm.kit temper " +
-                           "[count]: every Temper item that has a use (20 of each). gm.kit pets: one of each pet. gm.kit all: the three together.")]
+                           "[count]: every Temper item that has a use (20 of each). gm.kit pets: one of each pet. gm.kit autoward: the three Autoward Passes and 30 days of licence. gm.kit all: gear, temper and pets together.")]
         private static string Kit(string kit, string first = "", string second = "")
         {
             if (!TryGetInventory(out var inv, out var error)) return error;
@@ -166,6 +166,7 @@ namespace KryticalNova.DevTools
                 case "gear": return KitGear(inv, first, second);
                 case "temper": return KitTemper(inv, first);
                 case "pets": return KitPets(inv);
+                case "autoward": return KitAutoward(inv);
                 case "all": return KitGear(inv, string.Empty, string.Empty) + "\n" + KitTemper(inv, string.Empty) + "\n" + KitPets(inv);
                 default: return $"Unknown kit '{kit}'. {KitUsage}";
             }
@@ -245,6 +246,15 @@ namespace KryticalNova.DevTools
                 if (inv.ServerGive(id, count, earned: true) > 0) kinds++; else lost++;
             }
             return $"Temper kit: {count} each of {kinds} materials." + Unfitted(lost);
+        }
+
+        /// <summary>One of each Autoward Pass, and a licence running 30 days, so the Autoward can be used at once.</summary>
+        private static string KitAutoward(PlayerInventory inv)
+        {
+            if (!inv.TryGetComponent(out KryticalNova.Autopilot.PlayerAutobuff autobuff)) return "That player has no Autoward.";
+            string passes = AutopilotCommands.GiveAutowardPasses(inv.gameObject, autobuff);
+            autobuff.ServerSetDays(30);
+            return $"Autoward kit: {passes} Licence set to 30 days.";
         }
 
         /// <summary>One of each pet in the catalog.</summary>

@@ -366,6 +366,10 @@ namespace KryticalNova.DevTools
 
         private static HostileZone FindZone(string id)
         {
+            // By its number in gm.zone.list (zones with a definition, in that order), then by id.
+            int number = 0;
+            foreach (HostileZone zone in HostileZone.All)
+                if (zone.Definition != null && int.TryParse((id ?? string.Empty).Trim(), out int wanted) && ++number == wanted) return zone;
             id = (id ?? string.Empty).Trim().ToLowerInvariant();
             foreach (HostileZone zone in HostileZone.All)
                 if (zone.Definition != null && zone.Definition.id.ToLowerInvariant() == id) return zone;
@@ -374,7 +378,7 @@ namespace KryticalNova.DevTools
             return null;
         }
 
-        private const string NoZone = "No Hostile Zone with that id. gm.zone.list shows them.";
+        private const string NoZone = "No Hostile Zone with that number or id. gm.zone.list shows them, numbered.";
 
         [Command("gm.zone.list", "Every Hostile Zone: id, level, species, alive / max, awake or asleep, seconds to the next respawn.")]
         private static string ZoneList()
@@ -382,10 +386,12 @@ namespace KryticalNova.DevTools
             if (!TryGetPlayer(out _, out var error)) return error;
             if (HostileZone.All.Count == 0) return "This map has no Hostile Zones.";
             var sb = new StringBuilder();
+            int number = 0;
             foreach (HostileZone zone in HostileZone.All)
             {
                 HostileZoneDefinition d = zone.Definition;
                 if (d == null) continue;
+                sb.Append((++number).ToString().PadLeft(2)).Append("  ");
                 string species = d.hostile != null ? $"Lv {d.hostile.level,3} {d.hostile.displayName,-16}" : "no species";
                 float next = zone.SecondsToNextRespawn;
                 string bruiser = !zone.HasBruiser ? "" : zone.BruiserAlive ? " · Bruiser alive" : zone.SecondsToBruiser >= 0f ? $" · Bruiser in {zone.SecondsToBruiser:0} s" : "";

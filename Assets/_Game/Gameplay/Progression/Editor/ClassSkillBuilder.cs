@@ -263,7 +263,7 @@ namespace KryticalNova.EditorTools
                     "1% - 10% chance to throw a physical hit back at the attacker in full and take none of it " +
                     "(no effect on Elemental damage; the returned damage ignores Aegis)."),
                 ["HeavenlyDestruction"] = ("Shatterpoint",
-                    "While active, every attack has a 1% - 20% chance to shatter the enemy's Aegis and strip one of their buffs."),
+                    "While active, every attack has a 1% - 20% chance to shatter the enemy's Aegis and strip one of their wards."),
                 ["ReverseFlow"] = ("Iron Nerve",
                     "Steels you against being locked down: Lockup resistance is raised by 1% - 20%."),
             };

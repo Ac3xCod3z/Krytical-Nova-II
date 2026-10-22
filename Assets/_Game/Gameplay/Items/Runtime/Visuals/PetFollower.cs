@@ -667,6 +667,14 @@ namespace KryticalNova.Items.Visuals
                 During = look.During,
                 Systems = effect.GetComponentsInChildren<ParticleSystem>(true),
             };
+            // An effect drawn in the pet's own space (a tail's ribbon) moves with the pet: it shows the tail's swish
+            // round the body, never a streak along the path the pet ran.
+            foreach (ParticleSystem particles in copy.Systems)
+            {
+                var main = particles.main;
+                if (main.simulationSpace == ParticleSystemSimulationSpace.Custom && main.customSimulationSpace == null)
+                    main.customSimulationSpace = pet.transform;
+            }
             // One that belongs to an animation waits for it: nothing of it shows until then.
             if (copy.State != 0)
                 foreach (ParticleSystem particles in copy.Systems) particles.Stop(false, ParticleSystemStopBehavior.StopEmittingAndClear);

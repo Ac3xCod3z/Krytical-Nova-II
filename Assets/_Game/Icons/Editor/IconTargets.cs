@@ -28,6 +28,7 @@ namespace KryticalNova.EditorTools
                     case SkillDefinitionSO skill: return skill.icon;
                     case MovementSkillData movement: return movement.icon;
                     case ItemDefinition item: return item.icon;
+                    case KryticalNova.Player.WallstrideSettings wallstride: return wallstride.icon;
                     default: return null;
                 }
             }
@@ -38,6 +39,7 @@ namespace KryticalNova.EditorTools
                     case SkillDefinitionSO skill: skill.icon = value; break;
                     case MovementSkillData movement: movement.icon = value; break;
                     case ItemDefinition item: item.icon = value; break;
+                    case KryticalNova.Player.WallstrideSettings wallstride: wallstride.icon = value; break;
                     default: return;
                 }
                 EditorUtility.SetDirty(asset);
@@ -54,6 +56,8 @@ namespace KryticalNova.EditorTools
     {
         public const string SkillRoot = "Assets/_Game/Gameplay/Progression/Data/Assets/Skills";
         public const string ItemRoot = "Assets/_Game/Gameplay/Items/Data/Assets";
+        /// <summary>Where the settings of the Arsenal's passives (Wallstride, Waterstride) live.</summary>
+        public const string PassiveRoot = "Assets/_Game/Gameplay/Player/Data/Assets";
 
         public static List<IconTarget> Skills()
         {
@@ -78,6 +82,17 @@ namespace KryticalNova.EditorTools
                 {
                     kind = IconTargetKind.MovementSkill, id = skill.skillId.ToString(), name = skill.displayName, asset = skill,
                     group = "Movement", order = 20000 + (int)skill.skillId, request = IconLibrary.RequestFor(skill),
+                });
+            }
+            // The passives of the Strides tab, which are settings rather than skills.
+            foreach (string guid in AssetDatabase.FindAssets("t:WallstrideSettings", new[] { PassiveRoot }))
+            {
+                var wallstride = AssetDatabase.LoadAssetAtPath<KryticalNova.Player.WallstrideSettings>(AssetDatabase.GUIDToAssetPath(guid));
+                if (wallstride == null) continue;
+                found.Add(new IconTarget
+                {
+                    kind = IconTargetKind.Passive, id = "Wallstride", name = "Wallstride", asset = wallstride, group = "Movement",
+                    order = 20100, request = IconLibrary.RequestForPassive("Wallstride", "run up walls climb vertical scale tree high ground parkour"),
                 });
             }
             found.Sort((a, b) => a.order != b.order ? a.order.CompareTo(b.order) : string.CompareOrdinal(a.id, b.id));
