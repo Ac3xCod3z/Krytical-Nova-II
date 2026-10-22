@@ -20,6 +20,10 @@ namespace KryticalNova.UI
         private TextField field;
         private long min, max;
         private Action<long> confirm;
+        // Text mode (a Name Change Pass): the same dialog asks for words; the amount buttons hide.
+        private Func<string, string> textCheck;
+        private Action<string> textConfirm;
+        private bool textMode;
         private int openedFrame = -1;
 
         /// <summary>The dialog of this HUD, or null.</summary>
@@ -66,8 +70,38 @@ namespace KryticalNova.UI
             if (Instance != null) Instance.Open(heading, explanation, minimum, maximum, initial, onConfirm);
         }
 
+        /// <summary>
+        /// Asks for a word (a new name): <paramref name="check"/> says what is wrong with it, or null; <paramref name="problem"/>
+        /// is shown at once (the server refused the last one).
+        /// </summary>
+        public static void AskText(string heading, string explanation, string initial, Func<string, string> check, Action<string> onConfirm,
+            string problem = null)
+        {
+            if (Instance == null) return;
+            Instance.Open(heading, explanation, 0, 0, 0, null);
+            Instance.textMode = true;
+            Instance.textCheck = check;
+            Instance.textConfirm = onConfirm;
+            Instance.ShowAmountButtons(false);
+            Instance.field.SetValueWithoutNotify(initial ?? string.Empty);
+            Instance.error.text = problem ?? string.Empty;
+        }
+
+        private void ShowAmountButtons(bool shown)
+        {
+            foreach (string name in new[] { "amount-min", "amount-half", "amount-max" })
+            {
+                Button button = dialog.Q<Button>(name);
+                if (button != null) button.style.display = shown ? DisplayStyle.Flex : DisplayStyle.None;
+            }
+        }
+
         private void Open(string heading, string explanation, long minimum, long maximum, long initial, Action<long> onConfirm)
         {
+            textMode = false;
+            textCheck = null;
+            textConfirm = null;
+            ShowAmountButtons(true);
             min = Math.Max(0, minimum);
             max = Math.Max(min, maximum);
             confirm = onConfirm;
@@ -94,6 +128,20 @@ namespace KryticalNova.UI
 
         private void Confirm()
         {
+            if (textMode)
+            {
+                string words = (field.value ?? string.Empty).Trim();
+                string wrong = textCheck?.Invoke(words);
+                if (wrong != null)
+                {
+                    error.text = wrong;
+                    return;
+                }
+                Action<string> said = textConfirm;
+                Close();
+                said?.Invoke(words);
+                return;
+            }
             string typed = (field.value ?? string.Empty).Replace(",", string.Empty).Replace(" ", string.Empty);
             if (!long.TryParse(typed, out long value))
             {
@@ -113,6 +161,8 @@ namespace KryticalNova.UI
         private void Close()
         {
             confirm = null;
+            textConfirm = null;
+            textCheck = null;
             if (dialog == null) return;
             dialog.style.display = DisplayStyle.None;
             field.Blur();

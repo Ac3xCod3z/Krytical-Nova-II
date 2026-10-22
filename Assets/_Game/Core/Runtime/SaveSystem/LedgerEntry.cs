@@ -82,6 +82,8 @@ namespace KryticalNova.Core
     public static class LedgerKinds
     {
         public const string Trade = "trade";
+        /// <summary>A Name Change Pass used: the line names the old and the new name.</summary>
+        public const string NameChanged = "name.change";
         public const string KioskOpen = "kiosk.open";
         public const string KioskBuy = "kiosk.buy";
         public const string KioskCollect = "kiosk.collect";
