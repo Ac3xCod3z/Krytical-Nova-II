@@ -71,6 +71,8 @@
 /* ---------------------------------------------------------------- Hegemony: a phone */
 .kn-faction-hegemony .deck { background-color: rgba(12, 18, 32, 0.96); border-color: rgb(150, 170, 200); border-radius: 28px; border-width: 3px; }
 .kn-faction-hegemony .deck-art { background-color: rgb(30, 110, 210); }
+/* The HUD skin's own button look would otherwise win over .deck-play here (Null and Covenant set theirs too). */
+.kn-faction-hegemony .deck-play { background-color: rgb(80, 200, 255); color: rgb(10, 16, 28); border-width: 0; border-radius: 28px; }
 
 /* ---------------------------------------------------------------- Null: black glass, a bone frame, violet and green */
 .kn-faction-null .deck {
