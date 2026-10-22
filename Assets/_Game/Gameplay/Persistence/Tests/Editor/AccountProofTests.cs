@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Security.Cryptography;
 using System.Text;
+using KryticalNova.CharacterCreation;
 using KryticalNova.Core;
 using KryticalNova.Networking;
 using KryticalNova.Persistence;
@@ -161,6 +162,93 @@ namespace KryticalNova.Tests
             Assert.IsFalse(ServerSave.CarryOverOnce(old, proven), "the proven account has saves of its own");
             ServerSave.CarryOverEnabled = false;
             Assert.IsFalse(ServerSave.CarryOverOnce(old, AccountIds.FromUnityPlayer("player-3")));
+        }
+
+
+        // ------------------------------------------------------------------ moving characters between accounts (22 Oct 2026)
+
+        private static string SaveOldAccount(string id, string name)
+        {
+            AccountSave before = ServerSave.LoadAccount(id);
+            before.characters.Add(new CharacterSave { characterId = "fedcba9876543210fedcba9876543210", name = name, level = 80 });
+            before.Set("deep-vault", "{\"items\":[1,2,3]}");
+            ServerSave.WriteAccount(before);
+            return id;
+        }
+
+        [Test]
+        public void AMoveTakesTheCharactersTheirNamesAndTheVaultOnce()
+        {
+            string old = SaveOldAccount("0123456789abcdef0123456789abcdef", "Ascension");
+            string signedIn = AccountIds.FromUnityPlayer("player-gmail");
+            Assert.AreEqual(old, ServerRoster.Names().Holder("ascension").account);
+
+            Assert.IsNull(ServerRoster.MoveCharacters(old, signedIn));
+            AccountSave moved = ServerSave.LoadAccount(signedIn);
+            Assert.AreEqual(1, moved.characters.Count);
+            Assert.AreEqual("Ascension", moved.characters[0].name);
+            Assert.AreEqual("{\"items\":[1,2,3]}", moved.Get("deep-vault"), "the Deep Vault comes along");
+            Assert.AreEqual(signedIn, ServerRoster.Names().Holder("Ascension").account, "the name follows its character");
+            Assert.AreEqual(1, ServerSave.LoadAccount(old).characters.Count, "the old account stays as a backup");
+            StringAssert.Contains("moved before", ServerRoster.MoveCharacters(old, AccountIds.FromUnityPlayer("player-3")));
+        }
+
+        [Test]
+        public void OntoAnAccountWithCharactersTheyJoinWhileSlotsAllowAndSharedThingsAreKeptAside()
+        {
+            string old = SaveOldAccount("0123456789abcdef0123456789abcdef", "Ascension");
+            string other = AccountIds.FromUnityPlayer("player-gmail");
+            AccountSave own = ServerSave.LoadAccount(other);
+            own.characters.Add(new CharacterSave { characterId = "00000000000000000000000000000001", name = "Acension", slot = 0 });
+            own.Set("deep-vault", "{\"items\":[]}");
+            ServerSave.WriteAccount(own);
+
+            Assert.IsNull(ServerRoster.MoveCharacters(old, other));
+            AccountSave merged = ServerSave.LoadAccount(other);
+            Assert.AreEqual(2, merged.characters.Count);
+            Assert.AreNotEqual(merged.characters[0].slot, merged.characters[1].slot, "the moved character takes a free slot");
+            Assert.AreEqual("{\"items\":[1,2,3]}", merged.Get("deep-vault"), "the old account's vault is kept by default");
+            Assert.AreEqual(1, ServerSave.Store.Keys("accounts-set-aside/" + other).Count, "the new account's vault is kept as a copy");
+            Assert.AreEqual(other, ServerRoster.Names().Holder("Ascension").account);
+        }
+
+        [Test]
+        public void NothingIsMovedWhenTheSlotsAreFull()
+        {
+            string old = SaveOldAccount("0123456789abcdef0123456789abcdef", "Ascension");
+            string other = AccountIds.FromUnityPlayer("player-gmail");
+            AccountSave own = ServerSave.LoadAccount(other);
+            for (int i = 0; i < 3; i++)
+                own.characters.Add(new CharacterSave { characterId = "0000000000000000000000000000000" + (i + 1), name = "Full" + i, slot = i });
+            ServerSave.WriteAccount(own);
+            StringAssert.Contains("slots", ServerRoster.MoveCharacters(old, other));
+            Assert.AreEqual(3, ServerSave.LoadAccount(other).characters.Count);
+            Assert.AreEqual(old, ServerRoster.Names().Holder("Ascension").account);
+        }
+
+        [Test]
+        public void ASignInLeftBehindBringsItsCharactersAlongWithTheList()
+        {
+            string old = SaveOldAccount(AccountIds.FromUnityPlayer("player-this-pc"), "Ascension");
+            string signedIn = AccountIds.FromUnityPlayer("player-gmail");
+            System.Func<string, string> prove = ServerRoster.ProvePlayer;
+            ServerRoster.ProvePlayer = token => token == "left-behind" ? "player-this-pc" : null;
+            try
+            {
+                RosterReply forged = ServerRoster.Handle(signedIn, null, new RosterRequest { op = RosterRequest.List, carry = "made-up" });
+                Assert.AreEqual(0, forged.characters.Count, "a sign-in that proves nothing carries nothing");
+
+                RosterReply reply = ServerRoster.Handle(signedIn, null, new RosterRequest { op = RosterRequest.List, carry = "left-behind" });
+                Assert.IsTrue(reply.ok);
+                Assert.AreEqual(1, reply.characters.Count);
+                StringAssert.Contains("from this PC", reply.message);
+                Assert.AreEqual(signedIn, ServerRoster.Names().Holder("Ascension").account);
+                Assert.AreEqual(old, AccountIds.FromUnityPlayer("player-this-pc"));
+            }
+            finally
+            {
+                ServerRoster.ProvePlayer = prove;
+            }
         }
     }
 }

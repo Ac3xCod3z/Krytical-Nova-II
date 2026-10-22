@@ -85,14 +85,25 @@ namespace KryticalNova.UI.Menus
         /// </summary>
         public static IEnumerator Fetch(Action<string, string> done)
         {
-            var request = new RosterRequest { op = RosterRequest.List };
+            // A sign-in that opened another player sends the one it left behind, once: its characters come along.
+            var request = new RosterRequest { op = RosterRequest.List, carry = UnityAccount.LeftBehind };
             // The looks this PC keeps of its own characters, for ones made before the server kept looks; as many as fit.
             AddLooks(Local.Load(), request.looks);
             while (request.looks.Count > 0 && RosterWire.Pack(request.ToJson()).Length > RosterWire.MaxRequestChars)
                 request.looks.RemoveAt(request.looks.Count - 1);
+            if (request.carry != null && RosterWire.Pack(request.ToJson()).Length > RosterWire.MaxRequestChars)
+            {
+                UnityEngine.Debug.LogWarning("[Roster] The sign-in left behind is too long to send along: its characters stay where they are.");
+                request.carry = null;
+                UnityAccount.ForgetLeftBehind();
+            }
             yield return Ask(request, (reply, problem) =>
             {
-                if (reply != null && reply.ok) Fetched = true;
+                if (reply != null && reply.ok)
+                {
+                    Fetched = true;
+                    if (request.carry != null) UnityAccount.ForgetLeftBehind();
+                }
                 done?.Invoke(problem, reply != null && reply.ok && !string.IsNullOrEmpty(reply.message) ? reply.message : null);
             });
         }

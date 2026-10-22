@@ -674,6 +674,69 @@ namespace KryticalNova.Persistence
             return true;
         }
 
+        /// <summary>
+        /// Moves every character of account <paramref name="fromId"/> (and its Deep Vault and other account-wide documents)
+        /// to account <paramref name="toId"/>, as one change (owner, 22 Oct 2026: a player whose sign-in opened another
+        /// player than the one their characters were on must be able to get them back), only while neither account is in
+        /// the world. Onto an account with characters of its own, <paramref name="merge"/> decides (null: refused): it puts
+        /// the old account's characters and documents into the new one, or says why not. The old account stays as it was,
+        /// as a backup, and counts as carried over (lists and look-ups skip it, and it is never moved again).
+        /// <paramref name="alsoChange"/> runs once every check has passed, for world documents that name the account; their
+        /// names go in <paramref name="worlds"/> and are saved in the same change. Null when it moved; otherwise why not.
+        /// </summary>
+        public static string MoveAccount(string fromId, string toId, Func<AccountSave, AccountSave, string> merge = null, Action alsoChange = null,
+            params string[] worlds)
+        {
+            if (!HasAuthority) return "This game does not keep saves.";
+            if (!SaveKeys.IsId(fromId) || !SaveKeys.IsId(toId)) return "Those are not account ids.";
+            if (fromId == toId) return "That is the same account.";
+            CarriedAccounts carried = World<CarriedAccounts>(CarriedDocument);
+            if (carried.old.Contains(fromId)) return $"Account {fromId} was moved before: its characters are on another account now.";
+            if (!Store.TryRead(AccountsPrefix + fromId, out _)) return $"There is no saved account {fromId}.";
+            if (!TryHoldOffline(fromId, out string refusal)) return "The old account: " + refusal;
+            try
+            {
+                if (!TryHoldOffline(toId, out refusal)) return "The new account: " + refusal;
+                try
+                {
+                    AccountSave from = LoadAccount(fromId);
+                    if (from.characters == null || from.characters.Count == 0) return $"Account {fromId} has no characters to move.";
+                    AccountSave to = LoadAccount(toId);
+                    AccountSave result;
+                    int moving = from.characters.Count;
+                    if (to.characters != null && to.characters.Count > 0)
+                    {
+                        if (merge == null)
+                            return $"Account {toId} has {to.characters.Count} character(s) of its own: characters are only moved onto an account with none.";
+                        string refused = merge(from, to);
+                        if (refused != null) return refused;
+                        result = to;
+                    }
+                    else
+                    {
+                        from.accountId = toId;
+                        result = from;
+                    }
+                    carried.old.Add(fromId);
+                    alsoChange?.Invoke();
+                    var names = new List<string> { CarriedDocument };
+                    if (worlds != null) names.AddRange(worlds);
+                    WriteTogether(new[] { result }, names.ToArray());
+                    Debug.Log($"[Save] Moved account {fromId} to {toId} ({moving} character(s); it has {result.characters.Count} now).");
+                    AccountCarried?.Invoke(fromId, toId);
+                    return null;
+                }
+                finally
+                {
+                    ReleaseOffline(toId);
+                }
+            }
+            finally
+            {
+                ReleaseOffline(fromId);
+            }
+        }
+
         // ------------------------------------------------------------------ world documents
 
         // ---- How a world document of entries is kept (online phase 4, milestone 4): one entry at a time.

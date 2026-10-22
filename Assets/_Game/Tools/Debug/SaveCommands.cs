@@ -29,6 +29,44 @@ namespace KryticalNova.DevTools
             return $"Saves: {place} ({ServerSave.AccountIds().Count} account(s), {ServerSave.Online.Count} loaded).";
         }
 
+        [Command("gm.account.move", "Move every character of one account (and its Deep Vault) to another, for a player whose " +
+                                    "sign-in opened another player than the one their characters are on: gm.account.move <from> <to>. " +
+                                    "<from>: a character's name or an account id; <to>: an account id or a Unity player id (the " +
+                                    "player's game log says \"Signed in as ... (player id)\"). Onto an account with characters they join " +
+                                    "them while its 3 slots allow; [keep] old (default) or new says whose Deep Vault, Holoweave looks and " +
+                                    "trade allowance are kept when both have them (the other is kept as a backup copy). Both players off " +
+                                    "the server; the old account is kept as a backup. Server window and control page only.")]
+        private static string MoveAccount(string from, string to, string keep = "old")
+        {
+            if (!ServerSave.HasAuthority) return NoAuthority;
+            if (GmCommandRelay.RunningFor.StartsWith("GM ", System.StringComparison.Ordinal))
+                return "Only the server window or the control page can move characters between accounts.";
+            string fromId = AccountOf(from, byName: true), toId = AccountOf(to, byName: false);
+            if (fromId == null) return $"No account found for \"{from}\": give a character's name or a 32-character account id.";
+            if (toId == null) return $"\"{to}\" is not an account id or a Unity player id.";
+            string side = (keep ?? "old").Trim().ToLowerInvariant();
+            if (side != "old" && side != "new") return "keep is old or new: whose Deep Vault and Holoweave looks are kept when both have them.";
+            string why = ServerRoster.MoveCharacters(fromId, toId, side == "old");
+            if (why != null) return "Nothing moved: " + why;
+            return $"Moved the characters of account {fromId} to account {toId}. A GM among them is bound to the old account: bind them again on the control page.";
+        }
+
+        // An account id as given, the account of a character's name (whole, any case), or a Unity player's account.
+        private static string AccountOf(string who, bool byName)
+        {
+            if (string.IsNullOrWhiteSpace(who)) return null;
+            who = who.Trim();
+            if (SaveKeys.IsId(who)) return who;
+            if (byName)
+            {
+                NameIndex.Entry holder = ServerRoster.Names().Holder(who);
+                if (holder != null) return holder.account;
+            }
+            bool playerId = who.Length >= 20 && who.Length <= 40;
+            foreach (char c in who) if (!char.IsLetterOrDigit(c)) playerId = false;
+            return playerId ? KryticalNova.Networking.AccountIds.FromUnityPlayer(who) : null;
+        }
+
         [Command("gm.ledger", "Read the kept ledger: what an account gained and gave up (trades, Kiosk sales, shops, Vault, loot, " +
                               "forge, GM commands; every Cred by where it came from), newest first. gm.ledger <character name | " +
                               "account id | all> [days, 7] [lines, 20].")]

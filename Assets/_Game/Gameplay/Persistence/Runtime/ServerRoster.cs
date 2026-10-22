@@ -46,7 +46,7 @@ namespace KryticalNova.Persistence
 
             switch (request.op)
             {
-                case RosterRequest.List: return List(account, request);
+                case RosterRequest.List: return List(account, request, CarryLeftBehind(account, request.carry));
                 case RosterRequest.Create: return Create(account, request);
                 case RosterRequest.Delete: return Delete(account, request);
                 case RosterRequest.Rename: return Rename(account, request);
@@ -56,11 +56,88 @@ namespace KryticalNova.Persistence
 
         // ------------------------------------------------------------------ the requests
 
-        private static RosterReply List(string account, RosterRequest request)
+        private static RosterReply List(string account, RosterRequest request, string note)
         {
             AccountSave saved = ServerSave.LiveAccount(account) ?? ServerSave.ReadAccountFrom(ServerSave.Store, account);
             if (saved != null && request.looks != null && request.looks.Count > 0) saved = TakeMissingLooks(account, saved, request.looks) ?? saved;
-            return Listing(saved, true);
+            return Listing(saved, true, note);
+        }
+
+        // ------------------------------------------------------------------ moving characters between accounts
+
+        /// <summary>
+        /// Who a sign-in proves (its Unity player id), or null. A dedicated server checks it against Unity's keys; tests set
+        /// their own.
+        /// </summary>
+        public static Func<string, string> ProvePlayer = token =>
+            UnityKeys.Ready && UnityToken.Verify(token, UnityKeys.Current, Application.cloudProjectId, DateTime.UtcNow, out string player, out _) ? player : null;
+
+        /// <summary>
+        /// Every character of one account to another, with the names they hold, as one change (see
+        /// <see cref="ServerSave.MoveAccount"/>). Onto an account with characters of its own they join them while the
+        /// slots allow; of the documents both accounts share (the Deep Vault, the Holoweave looks, the trade allowance),
+        /// <paramref name="keepOld"/> says whose are kept, and the ones put aside are kept as backup copies. Null when they
+        /// moved; otherwise why not.
+        /// </summary>
+        public static string MoveCharacters(string fromAccount, string toAccount, bool keepOld = true)
+        {
+            NameIndex names = Names();
+            string why = ServerSave.MoveAccount(fromAccount, toAccount, (from, to) => Merge(from, to, keepOld),
+                () => names.Reassign(fromAccount, toAccount), NamesDocument);
+            if (why == null) ServerRecords.Write(RecordKind.Access, $"Characters of account {fromAccount} moved to account {toAccount}");
+            return why;
+        }
+
+        /// <summary>Where a shared document put aside by a move is kept.</summary>
+        public static string SetAsideKey(string account, string part, long ticks)
+        {
+            var clean = new System.Text.StringBuilder();
+            foreach (char c in (part ?? string.Empty).ToLowerInvariant())
+                if ((c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == '-' || c == '_') clean.Append(c);
+            return "accounts-set-aside/" + account + "/" + clean + "-" + ticks;
+        }
+
+        private static string Merge(AccountSave from, AccountSave to, bool keepOld)
+        {
+            int total = to.characters.Count + from.characters.Count;
+            if (total > CharacterRoster.SlotCount)
+                return $"Account {to.accountId} has {to.characters.Count} character(s); {from.characters.Count} more would not fit in its " +
+                       $"{CharacterRoster.SlotCount} slots. Delete one there first.";
+            to.characters.AddRange(from.characters); // theirs keep their slots; the moved ones take the free ones
+            AssignSlots(to);
+            long now = DateTime.UtcNow.Ticks;
+            foreach (SavePart part in from.parts ?? new List<SavePart>())
+            {
+                if (part == null || string.IsNullOrEmpty(part.key)) continue;
+                string theirs = to.Get(part.key);
+                if (theirs == null) { to.Set(part.key, part.json); continue; }
+                if (theirs == part.json) continue;
+                string setAside = keepOld ? theirs : part.json;
+                ServerSave.Store.Write(SetAsideKey(to.accountId, part.key, now), setAside);
+                if (keepOld) to.Set(part.key, part.json);
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// A game whose sign-in opened a player other than the one this PC played (the account was linked to another player
+        /// first) sends the old player's sign-in along once: its characters come to the account it plays now, when that
+        /// account has none (owner, 22 Oct 2026: "so that we can fix this issue for others"). What to tell the player, or null.
+        /// </summary>
+        private static string CarryLeftBehind(string account, string token)
+        {
+            if (string.IsNullOrEmpty(token)) return null;
+            string player = ProvePlayer(token);
+            if (string.IsNullOrEmpty(player)) return null; // an old or foreign sign-in: nothing to carry
+            string old = AccountIds.FromUnityPlayer(player);
+            if (old == account || !ServerSave.Store.TryRead(ServerSave.AccountsPrefix + old, out _)) return null;
+            AccountSave before = ServerSave.ReadAccountFrom(ServerSave.Store, old);
+            int count = before?.characters?.Count ?? 0;
+            if (count == 0) return null;
+            string why = MoveCharacters(old, account);
+            if (why == null) return count == 1 ? "Your character from this PC is on your account now." : $"Your {count} characters from this PC are on your account now.";
+            ServerRecords.Write(RecordKind.Access, $"Characters of account {old} were not moved to account {account}: {why}");
+            return "The characters this PC played before you signed in could not be brought to this account (its character slots are full, or one is in the world). A GM can move them for you.";
         }
 
         private static RosterReply Create(string account, RosterRequest request)
@@ -353,6 +430,19 @@ namespace KryticalNova.Persistence
 
         public void Put(string name, string account, string character) =>
             byKey[KeyOf(name)] = new Entry { name = name, account = account, character = character };
+
+        /// <summary>Every name an account holds goes to another account (its characters moved there). How many.</summary>
+        public int Reassign(string fromAccount, string toAccount)
+        {
+            int moved = 0;
+            foreach (Entry entry in byKey.Values)
+            {
+                if (entry.account != fromAccount) continue;
+                entry.account = toAccount;
+                moved++;
+            }
+            return moved;
+        }
 
         /// <summary>Frees the name when this character holds it.</summary>
         public void Drop(string name, string account, string character)
