@@ -697,6 +697,15 @@
                     "initialStateCheck": false
                 },
                 {
+                    "name": "Deck",
+                    "type": "Button",
+                    "id": "772bd0a0-88a1-4bfe-9388-0130000000de",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
                     "name": "Guide",
                     "type": "Button",
                     "id": "772bd0a0-88a1-4bfe-9388-01300000000e",
@@ -856,6 +865,17 @@
                     "processors": "",
                     "groups": "Keyboard&Mouse",
                     "action": "AutopilotSettings",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "282bd0a0-88a1-4bfe-9388-0130000000de",
+                    "path": "<Keyboard>/p",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Keyboard&Mouse",
+                    "action": "Deck",
                     "isComposite": false,
                     "isPartOfComposite": false
                 },

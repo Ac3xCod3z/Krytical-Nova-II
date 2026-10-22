@@ -1,0 +1,113 @@
+/* The Deck (DeckWindowController): one window, three looks, chosen by the faction class every UI panel wears.
+   Hegemony: a real phone's media screen (glass, clean type, an album card, cyan bars).
+   Null: a cracked dark-magic device (black glass, a bone frame, violet and green flickering bars).
+   Covenant: a carved rune tablet (stone and wood, amber runes for bars, carved track lines). */
+
+.deck {
+    position: absolute;
+    flex-direction: column;
+    padding: 14px 16px 12px 16px;
+    background-color: rgb(14, 18, 30);
+    border-width: 2px;
+    border-color: rgb(80, 96, 130);
+    border-radius: 18px;
+    color: rgb(230, 236, 248);
+}
+.deck-header { flex-direction: row; align-items: center; margin-bottom: 10px; }
+.deck-device { flex-grow: 1; font-size: 15px; -unity-font-style: bold; letter-spacing: 2px; }
+.deck-key { font-size: 11px; opacity: 0.6; margin-right: 6px; }
+.deck-close {
+    width: 24px; height: 24px; padding: 0; margin: 0;
+    font-size: 16px; -unity-text-align: middle-center;
+    background-color: rgba(255, 255, 255, 0.08); border-width: 0; border-radius: 12px; color: rgb(230, 236, 248);
+}
+
+.deck-now { flex-direction: row; align-items: center; margin-bottom: 10px; }
+.deck-art {
+    width: 64px; height: 64px; margin-right: 12px;
+    border-radius: 10px; background-color: rgb(40, 120, 200);
+    align-items: center; justify-content: center;
+}
+.deck-art-letter { font-size: 34px; -unity-font-style: bold; color: rgb(255, 255, 255); }
+.deck-names { flex-grow: 1; flex-shrink: 1; }
+.deck-title { font-size: 15px; -unity-font-style: bold; white-space: normal; }
+.deck-pack { font-size: 11px; opacity: 0.7; margin-top: 2px; }
+
+.deck-visualiser {
+    flex-direction: row; align-items: flex-end; justify-content: space-between;
+    height: 54px; margin-bottom: 8px; padding: 0 2px;
+}
+.deck-bar { width: 9px; height: 6%; border-radius: 3px 3px 1px 1px; background-color: rgb(80, 200, 255); }
+.deck-bar--alt { background-color: rgb(130, 220, 255); }
+
+.deck-progress { height: 6px; border-radius: 3px; background-color: rgba(255, 255, 255, 0.15); overflow: hidden; }
+.deck-progress-fill { height: 100%; width: 0; background-color: rgb(80, 200, 255); border-radius: 3px; }
+.deck-times { flex-direction: row; justify-content: space-between; margin-top: 3px; margin-bottom: 8px; }
+.deck-time { font-size: 10px; opacity: 0.7; }
+
+.deck-buttons { flex-direction: row; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.deck-button {
+    margin: 0; padding: 0; border-width: 0;
+    background-color: rgba(255, 255, 255, 0.07); color: rgb(230, 236, 248);
+    -unity-text-align: middle-center;
+}
+.deck-small { width: 66px; height: 26px; border-radius: 13px; font-size: 10px; letter-spacing: 1px; }
+.deck-skip { width: 46px; height: 36px; border-radius: 18px; font-size: 14px; }
+.deck-play { width: 56px; height: 56px; border-radius: 28px; font-size: 20px; background-color: rgb(80, 200, 255); color: rgb(10, 16, 28); }
+.deck-on { background-color: rgba(80, 200, 255, 0.35); }
+
+.deck-volume { margin: 0 0 8px 0; }
+.deck-volume > Label { font-size: 10px; min-width: 60px; color: rgb(230, 236, 248); }
+
+.deck-list { max-height: 190px; border-top-width: 1px; border-color: rgba(255, 255, 255, 0.12); padding-top: 4px; }
+.deck-row { flex-direction: row; align-items: center; padding: 4px 6px; border-radius: 6px; }
+.deck-row:hover { background-color: rgba(255, 255, 255, 0.06); }
+.deck-row--now { background-color: rgba(80, 200, 255, 0.18); }
+.deck-row-number { width: 26px; font-size: 10px; opacity: 0.55; }
+.deck-row-title { flex-grow: 1; font-size: 12px; }
+.deck-row-pack { font-size: 9px; opacity: 0.5; }
+.deck-foot { font-size: 9px; opacity: 0.55; margin-top: 6px; white-space: normal; }
+
+/* ---------------------------------------------------------------- Hegemony: a phone */
+.kn-faction-hegemony .deck { background-color: rgba(12, 18, 32, 0.96); border-color: rgb(150, 170, 200); border-radius: 28px; border-width: 3px; }
+.kn-faction-hegemony .deck-art { background-color: rgb(30, 110, 210); }
+
+/* ---------------------------------------------------------------- Null: black glass, a bone frame, violet and green */
+.kn-faction-null .deck {
+    background-color: rgba(8, 4, 12, 0.97);
+    border-radius: 4px;
+    border-width: 2px 6px 2px 6px;
+    border-left-color: rgb(214, 204, 176); border-right-color: rgb(214, 204, 176);
+    border-top-color: rgb(150, 60, 220); border-bottom-color: rgb(80, 220, 140);
+    color: rgb(214, 230, 214);
+}
+.kn-faction-null .deck-device { color: rgb(120, 240, 160); letter-spacing: 4px; }
+.kn-faction-null .deck-art { background-color: rgb(60, 14, 90); border-radius: 2px; border-width: 1px; border-color: rgb(120, 240, 160); }
+.kn-faction-null .deck-art-letter { color: rgb(120, 240, 160); }
+.kn-faction-null .deck-bar { background-color: rgb(160, 70, 240); border-radius: 0; width: 7px; }
+.kn-faction-null .deck-bar--alt { background-color: rgb(90, 230, 150); }
+.kn-faction-null .deck-progress-fill { background-color: rgb(160, 70, 240); }
+.kn-faction-null .deck-play { background-color: rgb(90, 230, 150); color: rgb(8, 4, 12); border-radius: 4px; }
+.kn-faction-null .deck-button { border-radius: 2px; }
+.kn-faction-null .deck-on { background-color: rgba(160, 70, 240, 0.4); }
+.kn-faction-null .deck-row--now { background-color: rgba(90, 230, 150, 0.16); border-radius: 0; }
+
+/* ---------------------------------------------------------------- Covenant: a carved rune tablet */
+.kn-faction-covenant .deck {
+    background-color: rgba(52, 44, 36, 0.97);
+    border-width: 6px; border-radius: 10px;
+    border-color: rgb(96, 64, 38);
+    color: rgb(236, 220, 186);
+}
+.kn-faction-covenant .deck-device { color: rgb(255, 190, 80); letter-spacing: 6px; }
+.kn-faction-covenant .deck-art { background-color: rgb(84, 70, 56); border-width: 2px; border-color: rgb(255, 190, 80); border-radius: 32px; }
+.kn-faction-covenant .deck-art-letter { color: rgb(255, 200, 100); }
+.kn-faction-covenant .deck-bar { background-color: rgb(255, 180, 60); width: 5px; border-radius: 1px; }
+.kn-faction-covenant .deck-bar--alt { background-color: rgb(255, 220, 140); }
+.kn-faction-covenant .deck-progress { background-color: rgba(0, 0, 0, 0.35); }
+.kn-faction-covenant .deck-progress-fill { background-color: rgb(255, 180, 60); }
+.kn-faction-covenant .deck-play { background-color: rgb(255, 180, 60); color: rgb(52, 36, 20); }
+.kn-faction-covenant .deck-button { background-color: rgba(0, 0, 0, 0.25); color: rgb(236, 220, 186); }
+.kn-faction-covenant .deck-on { background-color: rgba(255, 180, 60, 0.35); }
+.kn-faction-covenant .deck-row { border-bottom-width: 1px; border-color: rgba(0, 0, 0, 0.35); border-radius: 0; }
+.kn-faction-covenant .deck-row--now { background-color: rgba(255, 180, 60, 0.18); }

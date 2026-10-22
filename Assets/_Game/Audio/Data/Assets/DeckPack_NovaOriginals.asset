@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c6ca43a3e9f243fdb401a31a4654fad5, type: 3}
+  m_Name: DeckPack_NovaOriginals
+  m_EditorClassIdentifier: KryticalNova.Audio::KryticalNova.Audio.DeckPack
+  packName: Nova Originals
+  description: The game's own music, made for Krytical Nova.
+  tracks:
+  - {fileID: 11400000, guid: 117f1258b279e2842b2627263d45f8cd, type: 2}
+  - {fileID: 11400000, guid: f006d2456820d084591406f4e39ac7d3, type: 2}
+  - {fileID: 11400000, guid: c0e206bde6f36964d950234c372582fb, type: 2}
+  - {fileID: 11400000, guid: ff776995c714b7347af0d52727f8dc8b, type: 2}
+  - {fileID: 11400000, guid: 49ab66e76b9a8f5428cd7694cd1e6263, type: 2}
+  - {fileID: 11400000, guid: facbba2ba714cdf45a3a1f3d1d824c78, type: 2}
+  - {fileID: 11400000, guid: 6983aebe65dd7fa46aa8ff20aa2c04e7, type: 2}
+  - {fileID: 11400000, guid: 9c98cf836b1960a48848d0700da077e4, type: 2}
