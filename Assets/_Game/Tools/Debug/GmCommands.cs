@@ -136,6 +136,7 @@ namespace KryticalNova.DevTools
                 "CADENCE      gm.cadence   (its numbers, and how the last skill key pressed in a fight fell against the beat) · gm.cadence window [on|off]   (a running readout: beats coming, hits on and off the beat) · gm.cadence reset · gm.cadence log [on|off]",
                 "PVP          gm.pvp [on|off]   (factions fight each other, for everyone) · gm.duel <clientIdA> <clientIdB>   (a Callout between two players, no request) · gm.duel.end",
                 "GOD MODE     gm.god [on|off] · gm.infchi · gm.nocd · gm.oneshot · gm.speed <mult> · gm.reset",
+                "SEE ALL      gm.seeall [on|off]   (every player on the map, on your minimap and world map; on by default)",
                 "GAME SPEED   gm.slowmo [x]   (0.25 = quarter speed, 1 = normal; no value toggles quarter speed)",
                 "CREDS        gm.creds [n] · gm.creds.set <n> · gm.creds.report   (the only way Creds enter the game for now)",
                 "STORAGE      gm.vault [deep|off]   (opens it here; storage then works with no NPC near) · gm.drop <item> [n]",
@@ -496,6 +497,21 @@ namespace KryticalNova.DevTools
             if (!TryGet<PlayerGmState>(out var gm, out var error)) return error;
             gm.SetGodMode(on);
             return $"God mode {(on ? "ON" : "OFF")}.";
+        }
+
+        [Command("gm.seeall", "Toggle (or set) seeing every player on the map on your minimap and world map, wherever they are (on by default for a GM).")]
+        private static string SeeAll()
+        {
+            if (!TryGet<PlayerGmSight>(out var sight, out var error)) return error;
+            return SeeAll(!sight.SeeAll);
+        }
+
+        [Command("gm.seeall")]
+        private static string SeeAll(bool on)
+        {
+            if (!TryGet<PlayerGmSight>(out var sight, out var error)) return error;
+            sight.SeeAll = on;
+            return on ? "You see every player on the map (minimap and world map)." : "You see only the players near you again.";
         }
 
         [Command("gm.infchi", "Toggle infinite Flux (skills never fail or drain Flux).")]

@@ -123,6 +123,14 @@
     background-image: url("/Assets/Synty/InterfaceSciFiSoldierHUD/Sprites/Icons_Map/ICON_SciFiSoldier_Map_Player_01_Clean.png");
     -unity-background-image-tint-color: rgb(120, 190, 255);
 }
+/* A GM's view of a player this game does not have yet (gm.seeall): a gold-rimmed dot with the name. */
+.world-map-marker.gm-seen {
+    width: 12px; height: 12px;
+    border-radius: 50%;
+    background-color: rgb(236, 236, 244);
+    border-width: 2px;
+    border-color: rgb(255, 196, 60);
+}
 .world-map-marker.portal {
     width: 24px; height: 24px;
     background-image: url("/Assets/Synty/InterfaceSciFiSoldierHUD/Sprites/Icons_Map/ICON_SciFiSoldier_Map_Objective_01_Clean.png");
