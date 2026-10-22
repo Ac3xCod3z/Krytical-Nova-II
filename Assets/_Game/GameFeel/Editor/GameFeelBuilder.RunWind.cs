@@ -81,6 +81,9 @@ namespace KryticalNova.EditorTools
                 velocity.enabled = true;
                 velocity.space = ParticleSystemSimulationSpace.Local;
                 velocity.z = new ParticleSystem.MinMaxCurve(-3f, -5f);
+                // Every axis in the same mode (two constants), or Unity refuses the curves every frame.
+                velocity.x = new ParticleSystem.MinMaxCurve(0f, 0f);
+                velocity.y = new ParticleSystem.MinMaxCurve(0f, 0f);
                 var noise = curls.noise;
                 noise.enabled = true;
                 noise.strength = 1.6f;

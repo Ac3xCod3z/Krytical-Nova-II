@@ -104,7 +104,9 @@ namespace KryticalNova.Combat
 
         public Transform ResolveTarget(SkillDefinitionSO skill)
         {
-            if (skill == null || skill.IsAreaAttack) return null;
+            if (skill == null) return null;
+            // An area attack hits whatever is round the caster, but with something selected it is still struck facing
+            // that (owner, 22 Oct 2026: every strike faces its target); it never needs one to be cast.
             if (player != null && player.SelectedTarget != null) return player.SelectedTarget;
             return melee.CurrentTarget != null ? melee.CurrentTarget.Transform : null;
         }
@@ -139,6 +141,9 @@ namespace KryticalNova.Combat
 
         public void Execute(SkillDefinitionSO skill, int rank, Transform target)
         {
+            // Where the cast is decided the body turns to its target too (owner, 22 Oct 2026: every strike faces its
+            // target). A dedicated server never runs Present, and its facing is the one every player is shown.
+            if (target != null) melee.FaceTowards(target.position);
             if (executeRoutine != null) StopCoroutine(executeRoutine);
             executeRoutine = StartCoroutine(ExecuteRoutine(skill, rank, target));
         }
@@ -408,8 +413,14 @@ namespace KryticalNova.Combat
         // The hotbar raises these on the machine holding the key; everyone else is told by RPC.
         private void OnChargeStarted(SkillDefinitionSO skill)
         {
-            PresentChargeStarted(skill);
-            if (IsSpawned) ChargeStartedRpc(skill.skillId);
+            // A charged skill turns the body to the target it is aimed at as it starts (owner, 22 Oct 2026: "always turn
+            // to face whoever or whatever you strike"), here and, through the call, on the server, whose facing everyone sees.
+            Transform target = TryGetComponent(out PointAndClickPlayer click) ? click.SelectedTarget : null;
+            PresentChargeStarted(skill, target != null ? target.position : (Vector3?)null);
+            if (!IsSpawned) return;
+            NetworkObject aimed = target != null ? target.GetComponentInParent<NetworkObject>() : null;
+            if (aimed != null && aimed.IsSpawned) ChargeStartedRpc(skill.skillId, aimed, true);
+            else ChargeStartedRpc(skill.skillId, default, false);
         }
 
         private void OnChargeEnded(SkillDefinitionSO skill, bool completed)
@@ -419,10 +430,12 @@ namespace KryticalNova.Combat
         }
 
         [Rpc(SendTo.NotOwner, InvokePermission = RpcInvokePermission.Owner)]
-        private void ChargeStartedRpc(string skillId)
+        private void ChargeStartedRpc(string skillId, NetworkObjectReference aimedAt, bool aimed)
         {
             var skill = GetComponent<PlayerCombatSkills>().GetSkill(skillId);
-            if (skill != null) PresentChargeStarted(skill);
+            if (skill == null) return;
+            Vector3? face = aimed && aimedAt.TryGet(out NetworkObject target) ? target.transform.position : (Vector3?)null;
+            PresentChargeStarted(skill, face);
         }
 
         [Rpc(SendTo.NotOwner, InvokePermission = RpcInvokePermission.Owner)]
@@ -432,9 +445,9 @@ namespace KryticalNova.Combat
             if (skill != null) PresentChargeEnded(skill, completed);
         }
 
-        private void PresentChargeStarted(SkillDefinitionSO skill)
+        private void PresentChargeStarted(SkillDefinitionSO skill, Vector3? facePoint = null)
         {
-            melee.HoldForSkill(skill.chargeTime);
+            melee.HoldForSkill(skill.chargeTime, facePoint);
             SpawnAtCaster(skill.chargeVfxPrefab, skill.vfxOffset, skill.chargeTime);
             ClientPresentationRegistry.Feel?.ChargeStarted(transform, skill.PresentationId, skill.chargeTime, IsLocalPlayerPresentation);
             if (skill.chargeLoopClip == null || animancer == null) return;

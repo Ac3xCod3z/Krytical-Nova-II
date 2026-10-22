@@ -670,6 +670,9 @@ namespace KryticalNova.Combat
             agent.velocity = Vector3.zero;
         }
 
+        /// <summary>Turns the body to face a point at once (round a wall's normal when on one): a skill cast at a target.</summary>
+        public void FaceTowards(Vector3 point) => FaceTarget(point);
+
         private void FaceTarget(Vector3 targetPos)
         {
             // On a wall the body turns round the face's normal, never upright.
@@ -680,6 +683,8 @@ namespace KryticalNova.Combat
             {
                 transform.rotation = Quaternion.LookRotation(dir, Vector3.up) *
                                      Quaternion.AngleAxis(modelForwardOffset, Vector3.up);
+                // On the player's own game while it leads its walk, the walk's facing is what is drawn: it turns too.
+                if (TryGetComponent(out KryticalNova.Player.PlayerMoveAnticipation lead) && lead.Leading) lead.LeadRotation = transform.rotation;
             }
         }
 

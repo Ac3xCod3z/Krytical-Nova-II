@@ -34,6 +34,9 @@ namespace KryticalNova.Player
         // when this close.
         private const float StillDistance = 0.04f;
         private const float TogetherDistance = 0.3f;
+        // Seconds the server's walk starts after the order reaches it (its tick and the agent's first step), on top of
+        // the round trip and the interpolation.
+        private const float ServerStepSlack = 0.15f;
 
         private NavMeshAgent agent;
         private Quaternion leadRotation;
@@ -173,9 +176,13 @@ namespace KryticalNova.Player
             if (walking) walkEndedAt = -1f;
             else if (walkEndedAt < 0f) walkEndedAt = Time.time;
 
-            // Further apart than the server's delay explains: the server's route is another one.
-            float behind = agent.speed * ((float)RoundTripSeconds() + interpolationSeconds);
-            bool apart = (mine - serverShown).magnitude > snapDistance + behind;
+            // Further apart than the server's delay explains: the server's route is another one. Once this game's own
+            // walk has arrived, the server is only late, not elsewhere: at the top Run ranks (29 m/s) it is still metres
+            // behind when this walk ends, and handing over then eased the body back onto it and forward again (owner,
+            // 22 Oct 2026: "I seem to slip out of the spot I stop at"; measured 7.2 m). It is waited for instead, up to
+            // the settle time, which is how a refused move still ends.
+            float behind = agent.speed * ((float)RoundTripSeconds() + interpolationSeconds + ServerStepSlack);
+            bool apart = walkEndedAt < 0f && (mine - serverShown).magnitude > snapDistance + behind;
             // Both have stopped where the other is: the server's word is taken (eased) and the walk is over.
             bool together = (mine - serverShown).magnitude <= TogetherDistance;
             bool settled = walkEndedAt >= 0f
