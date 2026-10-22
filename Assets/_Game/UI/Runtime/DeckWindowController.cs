@@ -35,6 +35,7 @@ namespace KryticalNova.UI
         private float[] barLevel;
         private int shownIndex = -2;
         private bool shownPlaying, shownFight;
+        private string heldEmote; // the stance the Deck's opening played, let go of when it closes
 
         public bool IsOpen => window != null && window.style.display != DisplayStyle.None;
 
@@ -68,7 +69,15 @@ namespace KryticalNova.UI
             if (window == null) return;
             bool was = IsOpen;
             window.style.display = open ? DisplayStyle.Flex : DisplayStyle.None;
-            if (!open || was) return;
+            if (!open)
+            {
+                // Closing puts the device away (owner, 22 Oct 2026: "after a player closes the deck panel the animation
+                // shouldn't hold").
+                if (was && heldEmote != null) PlayerEmotes.Local?.RequestStop(heldEmote);
+                heldEmote = null;
+                return;
+            }
+            if (was) return;
             window.BringToFront();
             Look();
             shownIndex = -2;
@@ -76,7 +85,11 @@ namespace KryticalNova.UI
             string emote = FactionSkin.Current == FactionId.Null ? library.nullEmote
                 : FactionSkin.Current == FactionId.Covenant ? library.covenantEmote : library.hegemonyEmote;
             PlayerEmotes emotes = PlayerEmotes.Local;
-            if (emotes != null && !string.IsNullOrEmpty(emote) && emotes.Blocked() == null) emotes.RequestPlay(emote);
+            if (emotes != null && !string.IsNullOrEmpty(emote) && emotes.Blocked() == null)
+            {
+                emotes.RequestPlay(emote);
+                heldEmote = emote;
+            }
         }
 
         // ------------------------------------------------------------------ building

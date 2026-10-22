@@ -144,6 +144,12 @@ It is written in `Assets/_Game/Release/Tools~/launcher-news.json` before a build
 2. Move the news that is there now to the top of `history`, with a label that says when it went out
    (`"18 Oct 2026 · ..."`). Keep at most 24 entries.
 3. Write the new four into `items`: a `title` of at most 32 characters and a `body` of at most 300.
+3b. Write the **patch notes** into `patchNotes` (owner, 22 Oct 2026: the news stays the highlights, the patch notes are
+   the whole breakdown): everything a player gets in this release, in plain words with no technical terms, one change a
+   line, under a few headings (New, Movement, Combat, Chat and friends, Gear and looks, Sound and music, Game Masters,
+   Fixes). At most 16 headings, 200 lines and 400 characters a line. The launcher shows them under **PATCH NOTES** on
+   the news sheet, scrolled with the wheel; when the release moves to `history`, its `patchNotes` go with it and stay
+   readable from its past news page.
 4. Commit it (a publish builds a commit). The Publish box lists the headlines it will carry; the release tool refuses
    news that breaks the limits, before anything is uploaded.
 

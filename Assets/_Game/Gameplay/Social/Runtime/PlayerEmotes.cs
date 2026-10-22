@@ -151,6 +151,24 @@ namespace KryticalNova.Social
             ServerPlay(key.ToString());
         }
 
+        /// <summary>
+        /// Ends a held stance, but only while it is still <paramref name="key"/>: a window that played its own stance
+        /// (the Deck) lets go of it on closing, never of another emote the player has started since.
+        /// </summary>
+        public void RequestStop(string key)
+        {
+            if (string.IsNullOrEmpty(key)) return;
+            if (IsSpawned) StopRpc(new FixedString64Bytes(key));
+            else ServerStop(key);
+        }
+
+        [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
+        private void StopRpc(FixedString64Bytes key)
+        {
+            if (!RpcBudget.Allow(this, CallKind.Cosmetic, nameof(StopRpc))) return;
+            ServerStop(key.ToString());
+        }
+
         // ------------------------------------------------------------------ deciding (server)
 
         private void ServerPlay(string key)
@@ -163,6 +181,14 @@ namespace KryticalNova.Social
             nextAllowed = Time.time + settings.cooldownSeconds;
             EmoteNetState current = IsSpawned ? netState.Value : offlineState;
             Publish(new EmoteNetState { key = new FixedString64Bytes(key), serial = (byte)(current.serial + 1), stance = stance });
+        }
+
+        private void ServerStop(string key)
+        {
+            if (!HasAuthority) return;
+            EmoteNetState current = IsSpawned ? netState.Value : offlineState;
+            if (current.key.Length == 0 || current.key.ToString() != key) return;
+            Publish(new EmoteNetState { serial = (byte)(current.serial + 1) });
         }
 
         private void Publish(EmoteNetState next)

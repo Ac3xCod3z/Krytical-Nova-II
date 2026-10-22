@@ -191,7 +191,8 @@ namespace KryticalNova.Release
             manifest.launcher = Pack(launcherExe, Path.GetFileName(launcherExe), outDir, ref added, ref addedBytes);
             if (news != null && news.items.Count > 0) manifest.news = LauncherNews.Clean(news.items);
             if (news != null && news.history.Count > 0)
-                manifest.newsHistory = news.history.Select(r => new NewsRelease { label = r.label.Trim(), items = LauncherNews.Clean(r.items) }).ToList();
+                manifest.newsHistory = news.history.Select(r => new NewsRelease { label = r.label.Trim(), items = LauncherNews.Clean(r.items), patchNotes = LauncherNews.Clean(r.patchNotes) }).ToList();
+            if (news != null) manifest.patchNotes = LauncherNews.Clean(news.patchNotes);
 
             byte[] bytes = manifest.ToBytes();
             string signature;
@@ -208,7 +209,7 @@ namespace KryticalNova.Release
                 if (!named.Contains(Path.GetFileName(packed))) File.Delete(packed);
 
             long total = manifest.files.Sum(f => f.packedSize);
-            Console.WriteLine($"STAGED build={manifest.build} files={manifest.files.Count} new={added} newBytes={addedBytes} downloadBytes={total} exe={manifest.gameExe} news={manifest.news?.Count ?? 0}");
+            Console.WriteLine($"STAGED build={manifest.build} files={manifest.files.Count} new={added} newBytes={addedBytes} downloadBytes={total} exe={manifest.gameExe} news={manifest.news?.Count ?? 0} patchNotes={manifest.patchNotes?.Sum(s => s.lines.Count) ?? 0}");
             return 0;
         }
 
