@@ -114,12 +114,25 @@ namespace KryticalNova.Social
         // ------------------------------------------------------------------ sending (owner)
 
         /// <summary>Say something. Call on the machine that owns this player; the server decides who hears it.</summary>
-        public void Send(ChatChannel channel, string text, string whisperTarget = null)
+        public void Send(ChatChannel channel, string text, string whisperTarget = null) => Send(channel, text, whisperTarget, null);
+
+        /// <summary>
+        /// Say something with items linked in it: link <c>i</c> is <see cref="ChatLinks.Marker"/>(i) in the text and
+        /// <paramref name="links"/>[i] says where the item is (this player's Pack or worn gear). The server reads each
+        /// item from there, so only an item the player really has can be linked.
+        /// </summary>
+        public void Send(ChatChannel channel, string text, string whisperTarget, ItemLocation[] links)
         {
             text = ChatRouting.Clean(text);
             if (text.Length == 0) return;
-            if (!IsSpawned) ServerSend(channel, text, whisperTarget);
-            else if (IsOwner) SendRpc(channel, text, whisperTarget ?? string.Empty);
+            int count = links == null ? 0 : Mathf.Min(links.Length, ChatLinks.Max);
+            if (!IsSpawned) { ServerSend(channel, text, whisperTarget, links); return; }
+            if (!IsOwner) return;
+            if (count == 0) { SendRpc(channel, ChatLinks.Strip(text), whisperTarget ?? string.Empty); return; }
+            var containers = new byte[count];
+            var cells = new byte[count];
+            for (int i = 0; i < count; i++) { containers[i] = (byte)links[i].container; cells[i] = links[i].index; }
+            SendLinkedRpc(channel, text, whisperTarget ?? string.Empty, containers, cells);
         }
 
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
@@ -128,15 +141,69 @@ namespace KryticalNova.Social
             if (!RpcBudget.Allow(this, CallKind.Chat, nameof(SendRpc))) return;
             if (!RpcBudget.TextFits(this, nameof(SendRpc), text)) return;
             if (!RpcBudget.TextFits(this, nameof(SendRpc), whisperTarget)) return;
-            ServerSend(channel, text, whisperTarget);
+            ServerSend(channel, text, whisperTarget, null);
+        }
+
+        [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
+        private void SendLinkedRpc(ChatChannel channel, string text, string whisperTarget, byte[] containers, byte[] cells)
+        {
+            if (!RpcBudget.Allow(this, CallKind.Chat, nameof(SendLinkedRpc))) return;
+            if (!RpcBudget.TextFits(this, nameof(SendLinkedRpc), text)) return;
+            if (!RpcBudget.TextFits(this, nameof(SendLinkedRpc), whisperTarget)) return;
+            if (containers == null || cells == null || containers.Length != cells.Length || containers.Length > ChatLinks.Max) return;
+            var links = new ItemLocation[containers.Length];
+            for (int i = 0; i < links.Length; i++) links[i] = new ItemLocation { container = (ItemContainer)containers[i], index = cells[i] };
+            ServerSend(channel, text, whisperTarget, links);
         }
 
         // ------------------------------------------------------------------ routing (server / offline)
 
-        private void ServerSend(ChatChannel channel, string text, string whisperTarget)
+        // Reads each linked item from this player's own Pack or worn gear. A link to nothing is dropped with its marker;
+        // a marker that has no link is dropped too, so a line can never point at an item the server did not check.
+        private string ServerResolveLinks(string text, ItemLocation[] links, out ushort[] items, out ulong[] data)
+        {
+            items = null;
+            data = null;
+            int asked = links == null ? 0 : Mathf.Min(links.Length, ChatLinks.Max);
+            if (asked == 0 || !TryGetComponent(out PlayerInventory inventory)) return ChatLinks.Strip(text);
+            var foundItems = new List<ushort>(asked);
+            var foundData = new List<ulong>(asked);
+            var map = new int[ChatLinks.Max];
+            for (int i = 0; i < ChatLinks.Max; i++) map[i] = -1;
+            for (int i = 0; i < asked; i++)
+            {
+                ItemLocation at = links[i];
+                if (at.container != ItemContainer.Bag && at.container != ItemContainer.Equipment) continue;
+                ItemStack stack = inventory.GetStack(at);
+                if (stack.IsEmpty) continue;
+                map[i] = foundItems.Count;
+                foundItems.Add(stack.itemId);
+                foundData.Add(stack.data);
+            }
+            var kept = new StringBuilder(text.Length);
+            var used = new bool[ChatLinks.Max];
+            foreach (char c in text)
+            {
+                int link = ChatLinks.IndexOf(c);
+                if (link < 0) { kept.Append(c); continue; }
+                int to = map[link];
+                if (to < 0 || used[link]) continue; // no item there, or the same link twice
+                used[link] = true;
+                kept.Append(ChatLinks.Marker(to));
+            }
+            if (foundItems.Count > 0)
+            {
+                items = foundItems.ToArray();
+                data = foundData.ToArray();
+            }
+            return kept.ToString().Trim();
+        }
+
+        private void ServerSend(ChatChannel channel, string text, string whisperTarget, ItemLocation[] links)
         {
             if (!HasAuthority) return;
             text = ChatRouting.Clean(text); // never trust the length or content a client sent
+            text = ServerResolveLinks(text, links, out ushort[] linkItems, out ulong[] linkData);
             if (text.Length == 0) return;
             if (!WithinRateLimit())
             {
@@ -153,19 +220,20 @@ namespace KryticalNova.Social
                     {
                         string refusal = SocialGate.Refusal(this, EveryoneChat[Picked[0]]);
                         if (refusal != null) { ServerSystem(refusal); break; }
-                        EveryoneChat[Picked[0]].Deliver(ChatChannel.Whisper, me.Name, text, false);
-                        Deliver(ChatChannel.Whisper, Everyone[Picked[0]].Name, text, true);
+                        EveryoneChat[Picked[0]].Deliver(ChatChannel.Whisper, me.Name, text, false, linkItems, linkData);
+                        Deliver(ChatChannel.Whisper, Everyone[Picked[0]].Name, text, true, linkItems, linkData);
                     }
                     else if (channel == ChatChannel.Gm)
                     {
                         // The GM's own "/gm": the same announcement as gm.say, toast included. The channel says GM already.
-                        for (int i = 0; i < Picked.Count; i++) EveryoneChat[Picked[i]].DeliverAnnounced(AnnouncementKind.Gm, channel, me.Name, text, me.Name);
+                        string announced = ChatLinks.Strip(text); // the ticker shows no links
+                        for (int i = 0; i < Picked.Count; i++) EveryoneChat[Picked[i]].DeliverAnnounced(AnnouncementKind.Gm, channel, me.Name, announced, me.Name);
                     }
                     else
                     {
                         // The [GM] tag goes on the other channels' lines: a whisper's sender is the name /r answers to.
                         string label = PlayerGm.Label(this, me.Name);
-                        for (int i = 0; i < Picked.Count; i++) EveryoneChat[Picked[i]].Deliver(channel, label, text, false);
+                        for (int i = 0; i < Picked.Count; i++) EveryoneChat[Picked[i]].Deliver(channel, label, text, false, linkItems, linkData);
                     }
                     break;
                 case ChatRoute.NotInGuild:
@@ -310,11 +378,17 @@ namespace KryticalNova.Social
 
         // ------------------------------------------------------------------ receiving (this player's owner)
 
-        private void Deliver(ChatChannel channel, string sender, string text, bool outgoing)
+        private void Deliver(ChatChannel channel, string sender, string text, bool outgoing, ushort[] linkItems = null, ulong[] linkData = null)
         {
-            if (!IsSpawned) Show(channel, sender, text, outgoing);
+            bool linked = linkItems != null && linkItems.Length > 0 && linkData != null && linkData.Length == linkItems.Length;
+            if (!IsSpawned) Show(channel, sender, text, outgoing, linked ? linkItems : null, linked ? linkData : null);
+            else if (linked) ReceiveLinkedRpc(channel, sender ?? string.Empty, text, outgoing, linkItems, linkData);
             else ReceiveRpc(channel, sender ?? string.Empty, text, outgoing);
         }
+
+        [Rpc(SendTo.Owner, InvokePermission = RpcInvokePermission.Server)]
+        private void ReceiveLinkedRpc(ChatChannel channel, string sender, string text, bool outgoing, ushort[] linkItems, ulong[] linkData) =>
+            Show(channel, sender, text, outgoing, linkItems, linkData);
 
         // Only the server may put a line in a player's window: nobody can forge a GM or system message.
         [Rpc(SendTo.Owner, InvokePermission = RpcInvokePermission.Server)]
@@ -340,9 +414,9 @@ namespace KryticalNova.Social
         /// <summary>Raised on this machine for every line its player is shown (the Contacts window notes who whispered).</summary>
         public static event System.Action<ChatLine> LineShown;
 
-        private static void Show(ChatChannel channel, string sender, string text, bool outgoing)
+        private static void Show(ChatChannel channel, string sender, string text, bool outgoing, ushort[] linkItems = null, ulong[] linkData = null)
         {
-            var line = new ChatLine { Channel = channel, Sender = sender, Text = text, Outgoing = outgoing };
+            var line = new ChatLine { Channel = channel, Sender = sender, Text = text, Outgoing = outgoing, LinkItems = linkItems, LinkData = linkData };
             ClientPresentationRegistry.Chat?.Add(line);
             LineShown?.Invoke(line);
         }

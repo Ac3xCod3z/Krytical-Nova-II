@@ -2027,7 +2027,8 @@ namespace KryticalNova.UI
             VisualElement source = dragSource;
             dragSource = null;
             draggedAutobuff = false;
-            if (hotbar != null) hotbar.InputSuppressed = false;
+            // The Hotbar listens again, unless the cursor is in a text field (chat): typing must not cast.
+            if (hotbar != null) hotbar.InputSuppressed = HudTyping.IsTyping(root);
             suppressWorldInputFrame = Time.frameCount;
             if (source != null && source.HasPointerCapture(dragPointerId)) source.ReleasePointer(dragPointerId);
             SetVisible(dragGhost, false);

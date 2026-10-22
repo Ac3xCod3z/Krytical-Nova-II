@@ -150,5 +150,17 @@ namespace KryticalNova.Tests
             Assert.AreEqual(ChatInputKind.Notice, ChatCommands.Parse("/nonsense", ChatChannel.General, null, null).Kind);
             Assert.AreEqual(ChatInputKind.Nothing, ChatCommands.Parse("   ", ChatChannel.General, null, null).Kind);
         }
+
+        [Test]
+        public void ItemLinkMarkers_SurviveCleaning_AndCanBeStripped()
+        {
+            string line = "look " + ChatLinks.Marker(0) + " and " + ChatLinks.Marker(2);
+            Assert.AreEqual(0, ChatLinks.IndexOf(ChatLinks.Marker(0)));
+            Assert.AreEqual(2, ChatLinks.IndexOf(ChatLinks.Marker(2)));
+            Assert.AreEqual(-1, ChatLinks.IndexOf('a'));
+            Assert.AreEqual(-1, ChatLinks.IndexOf(ChatLinks.Marker(ChatLinks.Max)), "only Max links in a line");
+            Assert.AreEqual(line, ChatRouting.Clean(line), "the markers are not control characters: cleaning keeps them for the server to check");
+            Assert.AreEqual("look  and ", ChatLinks.Strip(line));
+        }
     }
 }

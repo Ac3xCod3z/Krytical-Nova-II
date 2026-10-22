@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using KryticalNova.CharacterCreation;
 using KryticalNova.Core;
 using KryticalNova.Economy;
 using KryticalNova.Items;
@@ -644,10 +645,20 @@ namespace KryticalNova.UI
             HideMenu();
             if (DefinitionAt(loc) == null) return;
             if (loc.IsBag && IsLocked(loc.index)) return; // promised to a trade or a Kiosk: hands off until that ends
+            // The Outfitter or the Holoweaver is open: a click on a worn piece picks it there, and never takes it off.
+            if (!loc.IsBag && PickWornPiece != null && (evt.button == LeftButton || evt.button == RightButton))
+            {
+                HideTooltip();
+                suppressWorldInputFrame = Time.frameCount;
+                PickWornPiece(loc.Slot);
+                return;
+            }
 
             if (evt.button == RightButton)
             {
                 HideTooltip();
+                // Shift + right-click shares the item into chat as a link (owner, 22 Oct 2026); a plain right-click uses it.
+                if (evt.shiftKey) { ShareInChat(loc); return; }
                 lastActionElement = element;
                 QuickAction(loc);
                 return;
@@ -865,6 +876,7 @@ namespace KryticalNova.UI
             {
                 actions.Add(new MenuAction("Unequip", () => inventory.RequestQuickUnequip(loc.Slot)));
             }
+            actions.Add(new MenuAction("Share in chat", () => ShareInChat(loc)));
             actions.Add(new MenuAction("Drop", () => ShowConfirm(loc)));
             actions.Add(new MenuAction("Destroy", () => ShowConfirm(loc, destroy: true), danger: true));
             return actions;
@@ -938,6 +950,7 @@ namespace KryticalNova.UI
 
             IPackTarget target = loc.IsBag ? OpenPackTarget() : null;
             string hint = target != null && !string.IsNullOrEmpty(target.QuickHint) ? $"Right-click: {target.QuickHint}   ·   Drag to move"
+                : !loc.IsBag && PickWornPiece != null ? "Click: pick this piece"
                 : !loc.IsBag ? "Right-click: unequip   ·   Left-click: options"
                 : IsUsable(def) ? (def.IsHotbarUsable ? "Right-click: use   ·   Drag to the hotbar to bind a key" : "Right-click: use   ·   Left-click: options")
                 : def.IsEquippable ? "Right-click: equip   ·   Left-click: options"
@@ -1383,6 +1396,87 @@ namespace KryticalNova.UI
 
         /// <summary>The doll wears what the character shows again.</summary>
         public void ClearPreview() => ClearTryOn();
+
+        // ------------------------------------------------------------------ picking a worn piece
+
+        /// <summary>
+        /// Set while a window picks the piece it works on from what is worn (the Outfitter's dyes and the Holoweaver's
+        /// Weaves and Morphs, owner, 22 Oct 2026): a click on a worn slot then picks it for that window instead of
+        /// opening the slot's menu or taking the piece off. Null when no window picks.
+        /// </summary>
+        public Action<EquipSlot> PickWornPiece { get; set; }
+
+        /// <summary>Lights the worn slot that is picked (none with null).</summary>
+        public void MarkPickedSlot(EquipSlot? picked)
+        {
+            foreach (KeyValuePair<EquipSlot, VisualElement> pair in slots)
+                pair.Value.EnableInClassList("worn-picked", picked.HasValue && pair.Key == picked.Value);
+        }
+
+        // ------------------------------------------------------------------ item links in chat
+
+        private ChatWindowController chat;
+
+        /// <summary>Shift + right-click, or "Share in chat": the item goes into the line being typed in chat, as a link.</summary>
+        private void ShareInChat(ItemLocation loc)
+        {
+            ItemDefinition def = DefinitionAt(loc);
+            if (def == null) return;
+            if (chat == null && !TryGetComponent(out chat)) chat = FindAnyObjectByType<ChatWindowController>();
+            if (chat != null) chat.InsertItemLink(loc, def);
+        }
+
+        /// <summary>
+        /// A piece someone linked in chat, on a doll (owner, 22 Oct 2026): gear this character could wear is tried on
+        /// its own doll; gear of another faction or body goes on a stand-in, a body of a lineage that wears it, so the
+        /// look can still be seen. The piece is shown in its own dye. False for an item there is nothing to wear of
+        /// (the chat holds its card instead).
+        /// </summary>
+        public bool PreviewLinkedPiece(ItemDefinition def, in ItemStack stack)
+        {
+            if (!initialized || def == null || !CanTryOn(def) || inventory == null) return false;
+            ushort dye = def.IsLadderGear ? GearItemState.Of(stack).Dye : (ushort)0;
+            Color32[] cells = dye != 0 && inventory.Catalog != null && inventory.Catalog.Themes != null
+                && inventory.Catalog.Themes.TryGet(dye, out GearThemeLibrary.Theme theme) ? theme.cells : null;
+            ushort colourway = def.equipSlot == EquipSlot.Weapon ? dye : (ushort)0;
+            string label = $"Linked: {def.displayName}";
+            inventory.CanEquip(def, out string reason);
+            bool notForMe = reason == GearDictionary.ReasonWrongFaction || reason == GearDictionary.ReasonWrongBody;
+            if (!notForMe || !TryStandIn(def, out CharacterRecipe recipe, out CharacterCreationDatabase database, out string lineage))
+            {
+                PreviewPiece(def, cells, label, colourway: colourway);
+                return true;
+            }
+            bool wasOpen = IsOpen(equipmentWindow) && stage != null && stage.IsOpen;
+            SetEquipmentOpen(true);
+            viewport.schedule.Execute(() =>
+            {
+                GameObject doll = stage != null ? stage.BeginOwnLook() : null;
+                if (doll == null) return;
+                if (doll.TryGetComponent(out CharacterLook look)) look.Apply(recipe, database);
+                if (!stage.TryOn(def, cells, false, colourway)) return;
+                tryOnLabel.text = $"{label}, on a {lineage} stand-in";
+                SetDisplay(tryOnChip, true);
+            }).StartingIn(wasOpen ? 0 : 30);
+            return true;
+        }
+
+        // The first lineage that may wear the piece, in its plain look: the body a piece of another faction is shown on.
+        private bool TryStandIn(ItemDefinition def, out CharacterRecipe recipe, out CharacterCreationDatabase database, out string lineage)
+        {
+            recipe = default;
+            lineage = null;
+            database = inventory.TryGetComponent(out PlayerIdentity identity) ? identity.Database : null;
+            if (database == null || inventory.Gear == null) return false;
+            foreach (LineageDefinition each in database.Lineages)
+            {
+                if (each == null || !inventory.Gear.CanUse(def.itemId, each.faction, each.body, out _)) continue;
+                recipe = RecipeEdit.Default(each, BodyType.Masculine);
+                lineage = each.displayName;
+                return true;
+            }
+            return false;
+        }
 
         private void ClearTryOn()
         {
