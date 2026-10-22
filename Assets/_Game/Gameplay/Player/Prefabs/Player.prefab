@@ -121,6 +121,7 @@ GameObject:
   - component: {fileID: 8433688748516569418}
   - component: {fileID: 405693714767347966}
   - component: {fileID: 4931137393825480415}
+  - component: {fileID: 5104465639737783720}
   m_Layer: 2
   m_Name: Player
   m_TagString: Player
@@ -4232,6 +4233,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1e09fc297811463ebdc4ed68d39be47c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: KryticalNova.Player::KryticalNova.Player.PlayerGmSight
+  ShowTopMostFoldoutHeaderGroup: 1
+--- !u!114 &5104465639737783720
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3071671160467358554}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5c5197e5a8063194abf44ab0d24acbbc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: KryticalNova.Persistence::KryticalNova.Persistence.PlayerRename
   ShowTopMostFoldoutHeaderGroup: 1
 --- !u!1 &3107468420846213464
 GameObject:

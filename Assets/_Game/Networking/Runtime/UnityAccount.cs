@@ -26,6 +26,16 @@ namespace KryticalNova.Networking
         private static bool? linked;
 
         /// <summary>
+        /// The sign-in of the player this PC played until its Unity account opened another player (owner, 22 Oct 2026: a
+        /// sign-in left the characters behind). Sent with the next character list, once, so the server can bring them
+        /// over; kept in memory only.
+        /// </summary>
+        public static string LeftBehind { get; private set; }
+
+        /// <summary>The server has had <see cref="LeftBehind"/>.</summary>
+        public static void ForgetLeftBehind() => LeftBehind = null;
+
+        /// <summary>
         /// True while the signed-in player may change (a sign-in through the browser, a sign-out): nothing may ask a server
         /// for characters meanwhile, or the brief anonymous player of the switch would be answered (owner, 20 Oct 2026:
         /// "after signing out and signing back in Tolan isn't there").
@@ -37,6 +47,7 @@ namespace KryticalNova.Networking
         {
             linked = null;
             Changing = false;
+            LeftBehind = null;
         }
 
         /// <summary>The Unity player signed in now, for the logs.</summary>
@@ -127,11 +138,15 @@ namespace KryticalNova.Networking
             catch (AuthenticationException e) when (e.ErrorCode == AuthenticationErrorCodes.AccountAlreadyLinked)
             {
                 // The account belongs to a player already (signed in on another PC first): this game becomes that player.
+                // The player it was is proven to the server once more, so its characters can come along.
+                string before = AuthenticationService.Instance.PlayerId;
+                string proof = AuthenticationService.Instance.AccessToken;
                 try
                 {
                     AuthenticationService.Instance.SignOut(true);
                     await AuthenticationService.Instance.SignInWithUnityAsync(token);
-                    Debug.Log($"[Account] Signed in as the account's own player ({AuthenticationService.Instance.PlayerId}).");
+                    Debug.Log($"[Account] Signed in as the account's own player ({AuthenticationService.Instance.PlayerId}); this PC's player ({before}) is asked to bring its characters along.");
+                    if (!string.IsNullOrEmpty(proof) && before != AuthenticationService.Instance.PlayerId) LeftBehind = proof;
                 }
                 catch (Exception inner)
                 {

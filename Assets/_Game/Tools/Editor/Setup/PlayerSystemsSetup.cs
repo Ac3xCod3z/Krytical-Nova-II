@@ -121,6 +121,7 @@ namespace KryticalNova.EditorTools
                 ("dropClip", BaseLocomotion + "InAir/A_MOD_BL_InAir_FallLarge_Masc.fbx")),
             // A GM sees every player on the map (gm.seeall): the server sends a GM's own game where everyone is.
             new Row("KryticalNova.Player.PlayerGmSight"),
+            new Row("KryticalNova.Persistence.PlayerRename"), // the Name Change Pass (owner, 22 Oct 2026)
             // Waterstride: running on water (level 60, Run and Jump at rank 20), over the zone's water map.
             new Row("KryticalNova.Player.PlayerWaterstrideMotor", ("settings", WaterstrideSettingsPath)),
             // The Recall Tag: a channel, then back to the map's spawn points.

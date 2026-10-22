@@ -33,7 +33,7 @@ MonoBehaviour:
   useEffect: 8
   useCooldown: 1
   usableFromHotbar: 0
-  placeholderGlyph: AB 3D
+  placeholderGlyph: AW 3D
   appearancePartIds: 
   partCatalog: {fileID: 0}
   appearanceParts: []

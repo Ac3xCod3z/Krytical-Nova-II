@@ -48,7 +48,7 @@ namespace KryticalNova.Networking
         private const string Tag = "KN2";
         /// <summary>Longest join request read: a sign-in token is one to two thousand characters, a packed roster request
         /// at most <see cref="RosterWire.MaxRequestChars"/>.</summary>
-        public const int MaxPayloadBytes = 5000;
+        public const int MaxPayloadBytes = 5800; // under the transport's 6144 (NetworkManager prefab)
 
         /// <summary>
         /// What a joining game sends: its build, whether it is the Editor, its sign-in token and its old account id. A

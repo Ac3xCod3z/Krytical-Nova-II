@@ -1,23 +1,117 @@
 {
   "items": [
     {
-      "title": "Run on Water, Roam the Roofs",
-      "body": "Waterstride lets you sprint across rivers and lakes, splashing at every step. You can walk freely on rooftops, and one click on the street leaps you off any roof, from any height. Climbs reach a building's wall even from an awkward spot."
+      "title": "Back Into the World",
+      "body": "Entering Concord no longer leaves a black screen with the music playing: the game no longer rebuilds its lighting at the moment you arrive. Every map loads and shows as it should."
     },
     {
-      "title": "The Deck: Your Own Music",
-      "body": "Press P for the Deck, a music player only you hear. Every track of the soundtrack, shuffle and repeat, a live visualiser, and a look for your faction: a phone, a hex deck or a rune tablet. It steps aside in a fight and comes back after."
+      "title": "Name Change Pass",
+      "body": "A new item gives your character a new name. Use it, type the name, and once the server takes it you return to character select after a 5 second count, so the server knows you by it. Coming to the Nova Store."
     },
     {
-      "title": "Callouts Go Cinematic",
-      "body": "A Callout now opens with black bars and a big 3, 2, 1, and the bars stay for the whole bout. In a fight, a ring of bars round your pet dances to the music and flashes when a skill pressed now lands on the beat."
+      "title": "Numbers in Names",
+      "body": "Character names may hold digits now, after the first letter: Ace007 and Rook9 are fine. Names are still one word of 3 to 16 characters, unique in the whole game."
     },
     {
-      "title": "Show Off Your Gear",
-      "body": "Shift + right-click any item to drop it into chat in its rarity colour. Others can hover it to read it, or right-click to try it on. Chat text can be copied, Crew tags got a new look, and Dye and Weave pick the piece you wear."
+      "title": "Crew Tag Colours",
+      "body": "When you found a Crew you choose the colour of its tag's letters and of the plate behind them, with a live preview. Crews founded before keep their look."
     }
   ],
   "history": [
+    {
+      "label": "22 Oct 2026 · Waterstride, the Deck & patch notes",
+      "items": [
+        {
+          "title": "Run on Water, Roam the Roofs",
+          "body": "Waterstride lets you sprint across rivers and lakes, splashing at every step. You can walk freely on rooftops, and one click on the street leaps you off any roof, from any height. Climbs reach a building's wall even from an awkward spot."
+        },
+        {
+          "title": "The Deck: Your Own Music",
+          "body": "Press P for the Deck, a music player only you hear. Every track of the soundtrack, shuffle and repeat, a live visualiser, and a look for your faction: a phone, a hex deck or a rune tablet. It steps aside in a fight and comes back after."
+        },
+        {
+          "title": "Callouts Go Cinematic",
+          "body": "A Callout now opens with black bars and a big 3, 2, 1, and the bars stay for the whole bout. In a fight, a ring of bars round your pet dances to the music and flashes when a skill pressed now lands on the beat."
+        },
+        {
+          "title": "Show Off Your Gear",
+          "body": "Shift + right-click any item to drop it into chat in its rarity colour. Others can hover it to read it, or right-click to try it on. Chat text can be copied, Crew tags got a new look, and Dye and Weave pick the piece you wear."
+        }
+      ],
+      "patchNotes": [
+        {
+          "heading": "New",
+          "lines": [
+            "Waterstride: from level 60 with Run and Jump at rank 20, click water with Run selected to run out across it. You run to the shore, then over the water by the shortest way, and stand on the water where you stop. Click land to run ashore. It costs a little Flux every second; run out and you are carried back to the nearest shore.",
+            "Each footstep on the water makes a small splash, a ripple and a splash sound, and a wake follows you.",
+            "The Deck (key P): your own music player. It holds every track of the soundtrack except the fight music, in packs. Play, pause, skip, shuffle, repeat, seek, volume and a list of every track. Only you hear it; the town's music goes quiet for you while it plays.",
+            "The Deck looks different for each faction: a phone for the Hegemony, a cracked hex deck for the Null, a carved rune tablet for the Covenant. Opening it makes your character pull it out (the Hegemony take out their phone) for everyone to see.",
+            "The Roof drop: up on a roof, click the street below and you run to the edge and leap off, from any height, then carry on to where you clicked.",
+            "Item links: Shift + right-click an item (or choose Share in chat) to put it in your message, in its rarity colour. Hover a link to read the item; right-click it to try it on your character, or on a stand-in if it is another faction's gear.",
+            "Callouts open like a film: black bars slide in with a big 3, 2, 1, CALLOUT! slams in, and the bars stay until the bout ends, however it ends.",
+            "The Beat Ring: in a fight, a small ring of bars round your pet dances to the fight music. It flashes when a skill pressed now is on the beat, bursts in your faction's colour when you hit the beat and greys when you miss it. Settings, Audio can switch it off.",
+            "Run wind: streaks and curls of air trail behind you when you run, more of them the higher your Run rank.",
+            "Every pet's evolution stage has its own icon."
+          ]
+        },
+        {
+          "heading": "Movement",
+          "lines": [
+            "Vendor stalls, booths and kiosks can't be climbed: Wallstride leaves them alone, and clicking one tells you so.",
+            "Rooftops: click another spot of the roof you are on and you walk there.",
+            "Jumping down has no height limit any more; only how high you can jump up depends on your Jump rank.",
+            "A drop from a tree reaches up to 25 m away (was 14 m).",
+            "No more slipping a step after you stop: you stand exactly where you stopped, on your screen and everyone else's."
+          ]
+        },
+        {
+          "heading": "Combat",
+          "lines": [
+            "Every attack turns you to face your target: plain strikes, skills, charged skills and area attacks alike.",
+            "The Arsenal (Skills window) is cleaner: the skill tree and one box beside it for the skill you pick, with what it does and an Enhance button.",
+            "Wallstride and Waterstride each have a tile and a card in the Strides tab with their own icon, what they need and what they cost."
+          ]
+        },
+        {
+          "heading": "Chat and friends",
+          "lines": [
+            "Chat lines can be highlighted and copied, and pasted into the chat box.",
+            "Crew tags no longer show in angle brackets: your Crew shows as a small coloured plate beside your name.",
+            "On a laptop, using skills after clicking in the Skills window no longer types the keys into chat."
+          ]
+        },
+        {
+          "heading": "Gear and looks",
+          "lines": [
+            "Dye and Weave: pick the piece you want to change by clicking it on your character in the Equipment window, instead of choosing a tab.",
+            "\"Buff\" is now \"ward\" everywhere: the Autobuff is the Autoward, with Autoward Passes, and the wards sit centred in its boxes."
+          ]
+        },
+        {
+          "heading": "Sound and music",
+          "lines": [
+            "Leaving the title screen sounds better: the sting is quieter and fades as the next screen appears, and the next theme comes in smoothly instead of stacking on top.",
+            "A new splash sound for every step on the water."
+          ]
+        },
+        {
+          "heading": "Game Masters",
+          "lines": [
+            "A GM sees every player on the map, on the minimap and the world map, wherever they are (gm.seeall to switch it off).",
+            "GM commands take numbers from their lists: gm.pet.anim 3, gm.travel 2 and others.",
+            "gm.autoward and gm.kit autoward hand out the Autoward; a GM teleport always takes a player off a wall first."
+          ]
+        },
+        {
+          "heading": "Fixes",
+          "lines": [
+            "A climb whose foot was hard to reach did nothing and said nothing; it now walks there and climbs, or tells you why not.",
+            "A jump down from a roof was sometimes called back for no reason; it now lands.",
+            "The Kitsune's tail trail no longer streaks down the road behind you when you run."
+          ]
+        }
+      ]
+    },
     {
       "label": "19 Oct 2026 · Characters on the server & Callout music",
       "items": [
@@ -145,72 +239,23 @@
     {
       "heading": "New",
       "lines": [
-        "Waterstride: from level 60 with Run and Jump at rank 20, click water with Run selected to run out across it. You run to the shore, then over the water by the shortest way, and stand on the water where you stop. Click land to run ashore. It costs a little Flux every second; run out and you are carried back to the nearest shore.",
-        "Each footstep on the water makes a small splash, a ripple and a splash sound, and a wake follows you.",
-        "The Deck (key P): your own music player. It holds every track of the soundtrack except the fight music, in packs. Play, pause, skip, shuffle, repeat, seek, volume and a list of every track. Only you hear it; the town's music goes quiet for you while it plays.",
-        "The Deck looks different for each faction: a phone for the Hegemony, a cracked hex deck for the Null, a carved rune tablet for the Covenant. Opening it makes your character pull it out (the Hegemony take out their phone) for everyone to see.",
-        "The Roof drop: up on a roof, click the street below and you run to the edge and leap off, from any height, then carry on to where you clicked.",
-        "Item links: Shift + right-click an item (or choose Share in chat) to put it in your message, in its rarity colour. Hover a link to read the item; right-click it to try it on your character, or on a stand-in if it is another faction's gear.",
-        "Callouts open like a film: black bars slide in with a big 3, 2, 1, CALLOUT! slams in, and the bars stay until the bout ends, however it ends.",
-        "The Beat Ring: in a fight, a small ring of bars round your pet dances to the fight music. It flashes when a skill pressed now is on the beat, bursts in your faction's colour when you hit the beat and greys when you miss it. Settings, Audio can switch it off.",
-        "Run wind: streaks and curls of air trail behind you when you run, more of them the higher your Run rank.",
-        "Every pet's evolution stage has its own icon."
+        "Name Change Pass: use it from your Pack, type your new name, and once the server accepts it you go back to character select after a 5 second count, under your new name. The pass is only used when the name is accepted. It will be sold in the Nova Store.",
+        "Character names may contain numbers, as long as they start with a letter.",
+        "Founding a Crew: pick the colour of the tag's letters and of its background, and see the tag as it will look before you found it."
       ]
     },
     {
-      "heading": "Movement",
+      "heading": "Accounts",
       "lines": [
-        "Vendor stalls, booths and kiosks can't be climbed: Wallstride leaves them alone, and clicking one tells you so.",
-        "Rooftops: click another spot of the roof you are on and you walk there.",
-        "Jumping down has no height limit any more; only how high you can jump up depends on your Jump rank.",
-        "A drop from a tree reaches up to 25 m away (was 14 m).",
-        "No more slipping a step after you stop: you stand exactly where you stopped, on your screen and everyone else's."
-      ]
-    },
-    {
-      "heading": "Combat",
-      "lines": [
-        "Every attack turns you to face your target: plain strikes, skills, charged skills and area attacks alike.",
-        "The Arsenal (Skills window) is cleaner: the skill tree and one box beside it for the skill you pick, with what it does and an Enhance button.",
-        "Wallstride and Waterstride each have a tile and a card in the Strides tab with their own icon, what they need and what they cost."
-      ]
-    },
-    {
-      "heading": "Chat and friends",
-      "lines": [
-        "Chat lines can be highlighted and copied, and pasted into the chat box.",
-        "Crew tags no longer show in angle brackets: your Crew shows as a small coloured plate beside your name.",
-        "On a laptop, using skills after clicking in the Skills window no longer types the keys into chat."
-      ]
-    },
-    {
-      "heading": "Gear and looks",
-      "lines": [
-        "Dye and Weave: pick the piece you want to change by clicking it on your character in the Equipment window, instead of choosing a tab.",
-        "\"Buff\" is now \"ward\" everywhere: the Autobuff is the Autoward, with Autoward Passes, and the wards sit centred in its boxes."
-      ]
-    },
-    {
-      "heading": "Sound and music",
-      "lines": [
-        "Leaving the title screen sounds better: the sting is quieter and fades as the next screen appears, and the next theme comes in smoothly instead of stacking on top.",
-        "A new splash sound for every step on the water."
-      ]
-    },
-    {
-      "heading": "Game Masters",
-      "lines": [
-        "A GM sees every player on the map, on the minimap and the world map, wherever they are (gm.seeall to switch it off).",
-        "GM commands take numbers from their lists: gm.pet.anim 3, gm.travel 2 and others.",
-        "gm.autoward and gm.kit autoward hand out the Autoward; a GM teleport always takes a player off a wall first."
+        "If you sign in with an account that already belongs to another player, the characters you played on this PC now come with you instead of being left behind.",
+        "Game Masters can move a player's characters from one account to another when a sign-in went wrong."
       ]
     },
     {
       "heading": "Fixes",
       "lines": [
-        "A climb whose foot was hard to reach did nothing and said nothing; it now walks there and climbs, or tells you why not.",
-        "A jump down from a roof was sometimes called back for no reason; it now lands.",
-        "The Kitsune's tail trail no longer streaks down the road behind you when you run."
+        "Entering the world no longer turns the screen black while the music plays.",
+        "Closing the Deck puts your phone, orb or rune stone away, and the Hegemony Deck's play button is easy to read again."
       ]
     }
   ]

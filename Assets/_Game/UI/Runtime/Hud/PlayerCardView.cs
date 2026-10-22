@@ -69,13 +69,13 @@ namespace KryticalNova.UI.Hud
         /// The Crew chip: the Crew's name on a plate of its colour (a TMP mark), in ink that reads on it. A Crew name is
         /// letters, digits, spaces, ' and - only (CrewRules), so it can never open a tag.
         /// </summary>
-        public void Crew(string crew, Color plate)
+        public void Crew(string crew, Color plate, Color? ink = null)
         {
             bool any = crewLabel != null && !string.IsNullOrEmpty(crew);
             if (any)
             {
                 crewLabel.richText = true;
-                crewLabel.color = PlayerNamecardController.ChipInk(plate);
+                crewLabel.color = ink ?? PlayerNamecardController.ChipInk(plate);
                 crew = $"<b><cspace=0.08em>{crew}</cspace></b>";
                 EnsureCrewPlate();
                 crewPlate.color = new Color(plate.r, plate.g, plate.b, 0.88f);

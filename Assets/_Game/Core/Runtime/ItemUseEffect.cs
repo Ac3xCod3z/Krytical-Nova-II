@@ -23,6 +23,8 @@ namespace KryticalNova.Core
         FluxFlask = 7,
         /// <summary>Adds days of Autobuff to the character, by the clock (an Autobuff Pass).</summary>
         AutobuffTime = 8,
+        /// <summary>Gives the character a new name, chosen as it is used (a Name Change Pass; owner, 22 Oct 2026).</summary>
+        NameChange = 9,
     }
 
     /// <summary>

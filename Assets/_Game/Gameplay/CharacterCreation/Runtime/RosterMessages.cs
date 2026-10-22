@@ -32,6 +32,11 @@ namespace KryticalNova.CharacterCreation
         /// has no look for (one made before looks were saved), checked like a new one.
         /// </summary>
         public List<RosterLook> looks = new List<RosterLook>();
+        /// <summary>
+        /// List, once: the sign-in of the player this PC played before its Unity account opened another player (the account
+        /// was linked to that one first). The server moves that player's characters to this account when it has none.
+        /// </summary>
+        public string carry;
 
         public string ToJson() => JsonUtility.ToJson(this);
 

@@ -1294,7 +1294,7 @@ MonoBehaviour:
         heading: Founding one
         lines:
         - You need | Level {fact:crew.level} and {fact:crew.cost} Creds
-        - You choose | A name of 3 to 16 letters that no other Crew has, and a symbol
+        - You choose | A name of 3 to 16 letters that no other Crew has, a symbol, and the colours of its tag's letters and plate
       - kind: 2
         heading: Who may do what
         lines:

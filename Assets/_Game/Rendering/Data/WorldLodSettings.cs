@@ -121,30 +121,11 @@ namespace KryticalNova.Rendering
             Tier tier = tiers[Mathf.Clamp(wantedTier, 0, tiers.Length - 1)];
             QualitySettings.lodBias = tier.lodBias;
             QualitySettings.meshLodThreshold = tier.meshLodThreshold;
-            if (UnityEngine.Rendering.GraphicsSettings.currentRenderPipeline is UnityEngine.Rendering.Universal.UniversalRenderPipelineAsset urp)
-            {
-#if UNITY_EDITOR
-                if (authoredSmallMesh == null) authoredSmallMesh = urp.smallMeshScreenPercentage;
-#endif
-                urp.smallMeshScreenPercentage = tier.smallMeshCullPercent;
-            }
+            // Changing the cut-off rebuilds the pipeline, which a map's baked probes do not survive in a built game: it
+            // waits for a menu when a map is loaded (PipelineRebuilds; owner, 22 Oct 2026, the black screen of build 10).
+            PipelineRebuilds.SetSmallMeshCull(tier.smallMeshCullPercent);
             ShadowBands.SetBelowSize(tier.noShadowBelowSize);
         }
-
-#if UNITY_EDITOR
-        // The pipeline is an asset: in the Editor a change made in Play would stay in it (and show as a changed file).
-        // The value it had before the first change is put back when Play stops.
-        private static float? authoredSmallMesh;
-
-        [UnityEditor.InitializeOnLoadMethod]
-        private static void PutBackWhenPlayStops() => UnityEditor.EditorApplication.playModeStateChanged += state =>
-        {
-            if (state != UnityEditor.PlayModeStateChange.ExitingPlayMode || authoredSmallMesh == null) return;
-            if (UnityEngine.Rendering.GraphicsSettings.currentRenderPipeline is UnityEngine.Rendering.Universal.UniversalRenderPipelineAsset urp)
-                urp.smallMeshScreenPercentage = authoredSmallMesh.Value;
-            authoredSmallMesh = null;
-        };
-#endif
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void ResetStatics()

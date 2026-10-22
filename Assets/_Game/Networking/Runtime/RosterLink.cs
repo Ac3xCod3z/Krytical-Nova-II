@@ -23,7 +23,7 @@ namespace KryticalNova.Networking
         /// <summary>The start of a reason that is a roster answer, not a refusal.</summary>
         public const string ReplyTag = "KNR:";
         /// <summary>Longest request a server reads, packed (the join message holds the sign-in token too).</summary>
-        public const int MaxRequestChars = 1800;
+        public const int MaxRequestChars = 3000; // room for a sign-in carried along (RosterRequest.carry) beside the join's own
         /// <summary>Longest answer a server sends, packed: a reason is sent as two bytes a letter and must fit one message.</summary>
         public const int MaxReplyChars = 2600;
 

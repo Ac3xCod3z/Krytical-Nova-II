@@ -3,7 +3,8 @@ using System;
 namespace KryticalNova.CharacterCreation
 {
     /// <summary>
-    /// What a character name may be. One name of 3 to 16 letters, capitalised for the player. On a server names are
+    /// What a character name may be. One word of 3 to 16 letters and digits that starts with a letter (owner, 22 Oct 2026:
+    /// "players can use numbers in their name"), capitalised for the player. On a server names are
     /// unique across the whole game, capitals ignored (online phase 4, milestone 5): the server checks every new name
     /// against all of them (<see cref="RosterRequest"/>). Playing on this PC alone, the only duplicate check is against
     /// the player's own slots (<see cref="CharacterRoster.IsNameTaken"/>).
@@ -14,10 +15,11 @@ namespace KryticalNova.CharacterCreation
         public const int MaxLength = 16;
 
         public const string ReasonEmpty = "Enter a name.";
-        public const string ReasonTooShort = "Names need at least 3 letters.";
-        public const string ReasonTooLong = "Names can have at most 16 letters.";
-        public const string ReasonLettersOnly = "Use letters only: no spaces, digits or symbols.";
-        public const string ReasonRepeats = "Too many repeated letters.";
+        public const string ReasonTooShort = "Names need at least 3 characters.";
+        public const string ReasonTooLong = "Names can have at most 16 characters.";
+        public const string ReasonLettersOnly = "Use letters and digits only: no spaces or symbols.";
+        public const string ReasonLetterFirst = "Start the name with a letter.";
+        public const string ReasonRepeats = "Too many repeated letters or digits.";
         public const string ReasonReserved = "That name is reserved.";
         public const string ReasonNotAllowed = "That name is not allowed.";
         public const string ReasonTaken = "You already have a character with that name.";
@@ -51,7 +53,8 @@ namespace KryticalNova.CharacterCreation
             reason = null;
             if (normalized.Length == 0) { reason = ReasonEmpty; return false; }
             foreach (char c in normalized)
-                if (!((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z'))) { reason = ReasonLettersOnly; return false; }
+                if (!((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9'))) { reason = ReasonLettersOnly; return false; }
+            if (!(normalized[0] >= 'A' && normalized[0] <= 'Z')) { reason = ReasonLetterFirst; return false; }
             if (normalized.Length < MinLength) { reason = ReasonTooShort; return false; }
             if (normalized.Length > MaxLength) { reason = ReasonTooLong; return false; }
 

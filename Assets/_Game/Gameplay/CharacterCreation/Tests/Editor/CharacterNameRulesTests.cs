@@ -7,6 +7,14 @@ namespace KryticalNova.Tests
     public sealed class CharacterNameRulesTests
     {
         [Test]
+        public void DigitsAreAllowedAfterTheFirstLetter()
+        {
+            Assert.IsTrue(CharacterNameRules.Validate("bj0rn", out string name, out string reason), reason);
+            Assert.AreEqual("Bj0rn", name);
+            Assert.IsTrue(CharacterNameRules.Validate("Ace007", out name, out reason), reason);
+        }
+
+        [Test]
         public void ValidNameIsCapitalised()
         {
             Assert.IsTrue(CharacterNameRules.Validate("  aSTRID ", out string name, out string reason), reason);
@@ -17,7 +25,8 @@ namespace KryticalNova.Tests
         [TestCase("Al", CharacterNameRules.ReasonTooShort)]
         [TestCase("Abcdefghijklmnopq", CharacterNameRules.ReasonTooLong)]
         [TestCase("Kex 7", CharacterNameRules.ReasonLettersOnly)]
-        [TestCase("Bj0rn", CharacterNameRules.ReasonLettersOnly)]
+        [TestCase("7kex", CharacterNameRules.ReasonLetterFirst)]
+        [TestCase("Ace000", CharacterNameRules.ReasonRepeats)]
         [TestCase("Baaad", CharacterNameRules.ReasonRepeats)]
         [TestCase("ADMIN", CharacterNameRules.ReasonReserved)]
         [TestCase("Null", CharacterNameRules.ReasonReserved)]

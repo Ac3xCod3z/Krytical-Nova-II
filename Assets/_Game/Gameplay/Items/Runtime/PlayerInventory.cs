@@ -194,9 +194,20 @@ namespace KryticalNova.Items
             if (IsSpawned) SortRpc(); else ServerSort();
         }
 
+        /// <summary>
+        /// A Name Change Pass was used from the Pack or the Hotbar (its bag cell): the game asks for the new name first, and
+        /// the pass is spent only when the server takes it (<c>PlayerRename</c>).
+        /// </summary>
+        public static event Action<int> NameChangeAsked;
+
         /// <summary>Uses one consumable (pill) from a bag cell.</summary>
         public void RequestUse(int bagIndex)
         {
+            if (catalog != null && catalog.Get(Get(bagIndex).itemId) is ItemDefinition asked && asked.useEffect == ItemUseEffect.NameChange)
+            {
+                NameChangeAsked?.Invoke(bagIndex);
+                return;
+            }
             if (IsSpawned) UseRpc((byte)bagIndex); else ServerUse((byte)bagIndex);
         }
 

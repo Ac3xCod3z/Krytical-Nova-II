@@ -80,6 +80,11 @@ namespace KryticalNova.EditorTools
                 Description = "Takes you back to town after a few seconds standing still. Moving, being hit or a fight stops it, and the Tag comes back to your Pack. Not in a fight, a Callout or a Crew Hall.",
                 Stack = StimStack, Hotbar = true, Effect = ItemUseEffect.Recall },
 
+            // A new name (owner, 22 Oct 2026): Nova Store stock later, a GM item now (item.give 9036, gm.passes).
+            new Row { Id = NameChangePassId, Asset = "Pass_NameChange", Name = "Name Change Pass", Glyph = "NAME", Rarity = ItemRarity.Rare,
+                Description = "Gives your character a new name, unique in the whole game. Use it and type the name: once the server takes it, the pass is used and you go back to character select, so the server knows you by your new name when you come back in.",
+                Stack = 99, Effect = ItemUseEffect.NameChange },
+
             // Pets (design: _Docs/Design/12_pet_evolution_system.md).
             new Row { Id = PetRationId, Asset = "Pet_Ration", Name = "Pet Ration", Glyph = "FOOD", Rarity = ItemRarity.Common,
                 Description = "Feeds the pet you have out: its hunger goes back to 100%. A starving pet gives no bonus and earns no XP.",
@@ -291,6 +296,7 @@ namespace KryticalNova.EditorTools
         // Ids other systems name. 9000–9999 belongs to this table.
         public const ushort PetRationId = 9010;
         public const ushort RecallTagId = 9011;
+        public const ushort NameChangePassId = 9036;
         public const ushort FluxFlaskId = 9012;
         public const ushort KioskPermit14Id = 9020;
         public const ushort KioskPermit30Id = 9021;

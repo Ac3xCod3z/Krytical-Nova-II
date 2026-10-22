@@ -288,8 +288,38 @@ namespace KryticalNova.UI
 
         // ------------------------------------------------------------------ leaving
 
+        private bool leavingForced; // a count that cannot be called off (a new name)
+
+        /// <summary>
+        /// A renamed character goes back to character select after a count the player cannot call off, so the server
+        /// knows them by the new name when they come back in (owner, 22 Oct 2026).
+        /// </summary>
+        public static void LeaveAfterRename(string newName, float seconds)
+        {
+            GameMenuController menu = FindAnyObjectByType<GameMenuController>();
+            if (menu != null) menu.BeginForcedLeave("NEW NAME", newName,
+                $"You are {newName} now. For the server to know you by your new name you go back to character select, saved first.", seconds);
+        }
+
+        private void BeginForcedLeave(string heading, string who, string note, float seconds)
+        {
+            if (view == View.Working) return;
+            exiting = false;
+            leavingForced = true;
+            countdownEnds = Time.unscaledTime + Mathf.Max(0f, seconds);
+            shownCount = -1;
+            leavingTitle.text = heading;
+            leavingWho.text = who ?? string.Empty;
+            leavingNote.text = note ?? string.Empty;
+            cancel.SetEnabled(false);
+            cancel.style.display = DisplayStyle.None;
+            Show(View.Leaving);
+            TickCountdown();
+        }
+
         private void BeginLeaving(bool exit)
         {
+            leavingForced = false;
             exiting = exit;
             countdownEnds = Time.unscaledTime + leaveSeconds;
             shownCount = -1;
@@ -319,7 +349,7 @@ namespace KryticalNova.UI
 
         private void CancelLeaving()
         {
-            if (view != View.Leaving) return;
+            if (view != View.Leaving || leavingForced) return;
             Show(View.Menu);
         }
 

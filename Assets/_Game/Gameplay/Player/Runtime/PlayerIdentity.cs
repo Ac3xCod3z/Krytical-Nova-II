@@ -228,6 +228,21 @@ namespace KryticalNova.Player
             Apply(next);
         }
 
+        /// <summary>
+        /// Server: the character's new name (a Name Change Pass, already checked against the rules and every other name).
+        /// Every game sees it, and the next save writes it.
+        /// </summary>
+        public void ServerRename(string cleanName)
+        {
+            if ((IsSpawned && !IsServer) || !HasIdentity || string.IsNullOrEmpty(cleanName)) return;
+            CharacterNetState state = current;
+            state.name = default;
+            state.name.CopyFromTruncated(cleanName);
+            current = state; // here only the name changes: the look and the kit stay as they are
+            if (combatEntity != null) combatEntity.SetEntityName(cleanName);
+            if (IsSpawned) netState.Value = state; // the other games apply it
+        }
+
         private void Apply(CharacterNetState state)
         {
             current = state;

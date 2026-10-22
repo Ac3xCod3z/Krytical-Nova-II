@@ -4893,3 +4893,8 @@ MonoBehaviour:
     set: Fantasy/Pirate Skill 1
     number: 32
     chosen: 1
+  - kind: 2
+    target: Pass_NameChange
+    set: Cyberpunk/Gadget
+    number: 5
+    chosen: 1
