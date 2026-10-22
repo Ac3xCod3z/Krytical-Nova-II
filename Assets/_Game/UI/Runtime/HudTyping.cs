@@ -18,6 +18,32 @@ namespace KryticalNova.UI
             field.RegisterCallback<FocusOutEvent>(_ => SetSuppressed(false));
         }
 
+        /// <summary>
+        /// Keyboard navigation never puts the cursor in a text field of this panel (owner's laptop report, 22 Oct 2026:
+        /// skill keys typed into chat with the Skills window open). The UI's Navigate action reads W A S D and the
+        /// arrows, and W is a Hotbar key: after a click on a window's button, W walked the focus into the chat line,
+        /// and every key after it was typed there. A field is still entered by a click on it or by the game
+        /// (Enter for chat, a rename box): only a focus that came by navigation is let go at once.
+        /// </summary>
+        public static void NoKeyboardFocus(VisualElement root)
+        {
+            if (root == null) return;
+            root.UnregisterCallback<FocusInEvent>(LetGoOfNavigatedField, TrickleDown.TrickleDown);
+            root.RegisterCallback<FocusInEvent>(LetGoOfNavigatedField, TrickleDown.TrickleDown);
+        }
+
+        private static void LetGoOfNavigatedField(FocusInEvent evt)
+        {
+            if (evt.direction == FocusChangeDirection.unspecified || evt.direction == FocusChangeDirection.none) return;
+            for (VisualElement element = evt.target as VisualElement; element != null; element = element.parent)
+            {
+                if (!(element is TextField field)) continue;
+                evt.StopImmediatePropagation();
+                field.Blur();
+                return;
+            }
+        }
+
         /// <summary>True while the cursor is in any text field of this panel: window hotkeys should wait.</summary>
         public static bool IsTyping(VisualElement root)
         {

@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using KryticalNova.Core;
+using KryticalNova.Items;
 using KryticalNova.Player;
 using KryticalNova.Progression;
 using KryticalNova.Social;
@@ -90,6 +91,11 @@ namespace KryticalNova.UI
         private int focusedFrame = -1;
         private int leftFrame = -1;
 
+        // Items the player is linking in the line being typed (Shift + right-click on an item): where each one is and
+        // the "[Name]" that stands for it in the input until the line is sent.
+        private readonly List<(ItemLocation at, string tag)> pendingLinks = new List<(ItemLocation, string)>(ChatLinks.Max);
+        private GearUIController gear;
+
         private int resizePointer = -1;
         private Vector2 resizeStartPointer;
         private Vector2 resizeStartSize;
@@ -117,6 +123,10 @@ namespace KryticalNova.UI
             hint = window.Q<Label>("chat-hint");
             resizeGrip = window.Q("chat-resize");
             hud = GetComponent<ProgressionHUD>();
+            TryGetComponent(out gear);
+            // Keyboard navigation (W A S D, the arrows) never walks into the chat line or any other field of the HUD.
+            HudTyping.NoKeyboardFocus(root);
+            if (input != null) input.tabIndex = -1;
             if (tabRow == null || log == null || input == null)
             {
                 Debug.LogError("ChatWindowController needs 'chat-tabs', 'chat-log' and 'chat-input' in its UXML.", this);
@@ -213,12 +223,159 @@ namespace KryticalNova.UI
 
             ChatLine line = stored.Line;
             string text = shownTimestamps ? $"[{stored.At:HH:mm}] {Format(line)}" : Format(line);
-            var label = new Label(text) { enableRichText = false, pickingMode = PickingMode.Ignore };
-            label.AddToClassList(LineClass);
-            label.AddToClassList(LineClasses[(int)line.Channel]);
+            // Every line can be highlighted with the mouse and copied (Ctrl+C). A line with items linked in it is the
+            // one drawn with rich text, and only its link names are markup: what the player typed is never read as tags.
+            VisualElement shown = line.HasLinks ? LinkedLine(text, line) : PlainLine(ChatLinks.Strip(text));
+            shown.AddToClassList(LineClass);
+            shown.AddToClassList(LineClasses[(int)line.Channel]);
             float size = LineSize();
-            if (size > 0f) label.style.fontSize = size;
-            log.Add(label);
+            if (size > 0f) shown.style.fontSize = size;
+            log.Add(shown);
+        }
+
+        // A line as the player wrote it: one label, never read as markup, that can be highlighted and copied (Ctrl+C).
+        private static Label PlainLine(string text)
+        {
+            var label = new Label(text) { enableRichText = false, pickingMode = PickingMode.Position };
+            label.selection.isSelectable = true;
+            return label;
+        }
+
+        // ------------------------------------------------------------------ item links
+
+        private ItemCatalog Catalog => PlayerInventory.Local != null ? PlayerInventory.Local.Catalog : null;
+
+        /// <summary>
+        /// A line with items linked in it, as a row of words that wraps like a line of text, with each item a word of
+        /// its own: its name in brackets in its rarity's colour, its card while the pointer is over it, and on a
+        /// right-click the piece on a doll. Every word can still be highlighted and copied.
+        /// </summary>
+        private VisualElement LinkedLine(string text, ChatLine line)
+        {
+            var row = new VisualElement { pickingMode = PickingMode.Ignore };
+            row.AddToClassList("chat-line--linked");
+            // Only the items are coloured, except on a whisper, which keeps its own colour (owner, 22 Oct 2026).
+            if (line.Channel != ChatChannel.Whisper) row.AddToClassList("chat-line--plain");
+            var word = new System.Text.StringBuilder();
+            void EndWord()
+            {
+                if (word.Length == 0) return;
+                var part = new Label(word.ToString()) { enableRichText = false, pickingMode = PickingMode.Position };
+                part.selection.isSelectable = true;
+                part.AddToClassList("chat-word");
+                row.Add(part);
+                word.Clear();
+            }
+            foreach (char c in text)
+            {
+                int link = ChatLinks.IndexOf(c);
+                if (link >= 0)
+                {
+                    EndWord();
+                    if (link < line.LinkItems.Length) row.Add(LinkWord(line, link));
+                    continue;
+                }
+                word.Append(c);
+                if (c == ' ') EndWord();
+            }
+            EndWord();
+            return row;
+        }
+
+        private Label LinkWord(ChatLine line, int link)
+        {
+            ItemDefinition def = Catalog != null ? Catalog.Get(line.LinkItems[link]) : null;
+            var label = new Label($"[{(def != null ? def.displayName : "an unknown item")}] ") { enableRichText = false, pickingMode = PickingMode.Position };
+            label.AddToClassList("chat-word");
+            label.AddToClassList("chat-link");
+            label.style.color = RarityColour(def != null ? def.rarity : ItemRarity.Common);
+            label.RegisterCallback<PointerEnterEvent>(_ => ShowLinkCard(label, line, link));
+            label.RegisterCallback<PointerLeaveEvent>(_ => { if (gear != null) gear.HideItemTooltip(); });
+            label.RegisterCallback<PointerDownEvent>(evt =>
+            {
+                if (evt.button != 1) return;
+                evt.StopPropagation();
+                OpenLink(label, line, link);
+            });
+            return label;
+        }
+
+        // The same colours as an item's name on its card (Items.uss, rarity-text-0 to 4).
+        private static Color RarityColour(ItemRarity rarity)
+        {
+            switch (rarity)
+            {
+                case ItemRarity.Uncommon: return new Color32(110, 170, 255, 255);
+                case ItemRarity.Rare: return new Color32(255, 218, 96, 255);
+                case ItemRarity.Epic: return new Color32(200, 128, 255, 255);
+                case ItemRarity.Legendary: return new Color32(255, 150, 64, 255);
+                default: return new Color32(240, 243, 246, 255);
+            }
+        }
+
+        private bool TryLinked(in ChatLine line, int link, out ItemDefinition def, out ItemStack stack)
+        {
+            def = null;
+            stack = ItemStack.Empty;
+            if (!line.HasLinks || link < 0 || link >= line.LinkItems.Length || Catalog == null) return false;
+            def = Catalog.Get(line.LinkItems[link]);
+            if (def == null) return false;
+            ulong data = line.LinkData != null && link < line.LinkData.Length ? line.LinkData[link] : 0UL;
+            stack = new ItemStack(line.LinkItems[link], 1, data);
+            return true;
+        }
+
+        private void ShowLinkCard(VisualElement near, in ChatLine line, int link)
+        {
+            if (gear == null || !TryLinked(line, link, out ItemDefinition def, out ItemStack stack)) return;
+            string hint = def.IsEquippable ? "Right-click: see it on a doll" : "Right-click: keep this card open";
+            gear.ShowItemTooltip(near, def, stack, hint, above: true);
+        }
+
+        private void OpenLink(VisualElement near, in ChatLine line, int link)
+        {
+            if (gear == null || !TryLinked(line, link, out ItemDefinition def, out ItemStack stack)) return;
+            if (!gear.PreviewLinkedPiece(def, stack)) ShowLinkCard(near, line, link);
+        }
+
+        /// <summary>
+        /// Puts an item into the line being typed (Shift + right-click on it, or "Share in chat"): its name in
+        /// brackets goes into the input, and the item goes with the line when it is sent, as a link anyone can read.
+        /// </summary>
+        public void InsertItemLink(ItemLocation at, ItemDefinition def)
+        {
+            if (window == null || def == null || !input.enabledSelf) return;
+            if (pendingLinks.Count >= ChatLinks.Max)
+            {
+                Notice($"A line can hold {ChatLinks.Max} items at most.");
+                return;
+            }
+            string tag = $"[{def.displayName}]";
+            pendingLinks.Add((at, tag));
+            string now = input.value ?? string.Empty;
+            string joined = now.Length == 0 || now.EndsWith(" ") ? now + tag + " " : now + " " + tag + " ";
+            input.SetValueWithoutNotify(joined);
+            focusedFrame = Time.frameCount;
+            input.Focus();
+            input.schedule.Execute(() => input.SelectRange(input.value.Length, input.value.Length));
+        }
+
+        // The typed line with each item still in it turned into its link marker, and the items in the same order.
+        private string TakeLinks(string text, out ItemLocation[] links)
+        {
+            links = null;
+            if (pendingLinks.Count == 0 || string.IsNullOrEmpty(text)) { pendingLinks.Clear(); return text; }
+            var found = new List<ItemLocation>(pendingLinks.Count);
+            foreach ((ItemLocation at, string tag) in pendingLinks)
+            {
+                int where = text.IndexOf(tag, System.StringComparison.Ordinal);
+                if (where < 0) continue; // the player took it out again
+                text = text.Substring(0, where) + ChatLinks.Marker(found.Count) + text.Substring(where + tag.Length);
+                found.Add(at);
+            }
+            pendingLinks.Clear();
+            if (found.Count > 0) links = found.ToArray();
+            return text;
         }
 
         // ------------------------------------------------------------------ the player's chat options
@@ -402,6 +559,7 @@ namespace KryticalNova.UI
             {
                 evt.StopPropagation();
                 input.SetValueWithoutNotify(string.Empty);
+                pendingLinks.Clear();
                 Leave();
             }
         }
@@ -430,10 +588,12 @@ namespace KryticalNova.UI
                     }
                     Talk(typed.Channel, typed.Target);
                     var chat = PlayerChat.Local;
+                    string said = TakeLinks(typed.Text, out ItemLocation[] links);
                     if (chat == null) Notice("Chat is not available right now.");
-                    else chat.Send(typed.Channel, typed.Text, typed.Target);
+                    else chat.Send(typed.Channel, said, typed.Target, links);
                     break;
             }
+            pendingLinks.Clear();
         }
 
         private void Notice(string text) => Add(new ChatLine { Channel = ChatChannel.System, Text = text });

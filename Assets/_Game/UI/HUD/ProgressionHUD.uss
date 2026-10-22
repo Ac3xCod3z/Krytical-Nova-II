@@ -500,6 +500,22 @@
     padding: 0;
     margin: 0;
 }
+/* The Crew chip (owner, 22 Oct 2026: no more <Crew>): the name in capitals on a plate of the Crew's colour (set in code
+   with ink that reads on it). Each faction cuts the plate its own way: Hegemony a clean bevel, Null hard and square
+   with a dark rule, Covenant a rounded rune-stone. */
+.namecard-crew.crew-chip {
+    -unity-font-style: bold;
+    letter-spacing: 1.5px;
+    text-shadow: none;
+    padding: 0 8px 1px 8px;
+    margin-top: 2px;
+    align-self: center;
+    border-radius: 3px;
+    border-width: 1px;
+    border-color: rgba(255, 255, 255, 0.55);
+}
+.kn-faction-null .namecard-crew.crew-chip { border-radius: 0; border-color: rgba(20, 8, 30, 0.9); border-left-width: 3px; border-right-width: 3px; }
+.kn-faction-covenant .namecard-crew.crew-chip { border-radius: 9px; border-color: rgba(250, 236, 200, 0.7); }
 
 /* A pet's speech bubble (PetBubbleController, ComicBubble). The bubble is drawn in code from the --bubble values
    below: Colour Bible ink and paper, shadow indigo dots. It sits in the world layer, under every window. */

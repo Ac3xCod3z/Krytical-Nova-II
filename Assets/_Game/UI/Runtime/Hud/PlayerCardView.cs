@@ -65,10 +65,43 @@ namespace KryticalNova.UI.Hud
             stale = true;
         }
 
-        public void Crew(string crew)
+        /// <summary>
+        /// The Crew chip: the Crew's name on a plate of its colour (a TMP mark), in ink that reads on it. A Crew name is
+        /// letters, digits, spaces, ' and - only (CrewRules), so it can never open a tag.
+        /// </summary>
+        public void Crew(string crew, Color plate)
         {
+            bool any = crewLabel != null && !string.IsNullOrEmpty(crew);
+            if (any)
+            {
+                crewLabel.richText = true;
+                crewLabel.color = PlayerNamecardController.ChipInk(plate);
+                crew = $"<b><cspace=0.08em>{crew}</cspace></b>";
+                EnsureCrewPlate();
+                crewPlate.color = new Color(plate.r, plate.g, plate.b, 0.88f);
+            }
+            if (crewPlate != null && crewPlate.gameObject.activeSelf != any) crewPlate.gameObject.SetActive(any);
             Line(crewLabel, crew);
             stale = true;
+        }
+
+        // The plate of the Crew chip: a panel of the Crew's colour just behind the Crew's name (TMP's own mark is drawn
+        // over the letters, so the plate is a picture of its own), made the first time a Crew is shown.
+        private Image crewPlate;
+
+        private void EnsureCrewPlate()
+        {
+            if (crewPlate != null || crewLabel == null) return;
+            var go = new GameObject("CrewPlate", typeof(RectTransform), typeof(Image));
+            var plateRect = (RectTransform)go.transform;
+            plateRect.SetParent(crewLabel.transform.parent, false);
+            plateRect.SetSiblingIndex(crewLabel.transform.GetSiblingIndex()); // drawn first: under the name
+            RectTransform label = crewLabel.rectTransform;
+            plateRect.anchorMin = label.anchorMin;
+            plateRect.anchorMax = label.anchorMax;
+            plateRect.pivot = label.pivot;
+            crewPlate = go.GetComponent<Image>();
+            crewPlate.raycastTarget = false;
         }
 
         private static void Line(TMP_Text label, string text)
@@ -187,6 +220,14 @@ namespace KryticalNova.UI.Hud
                 if (symbol)
                     crewSymbol.rectTransform.anchoredPosition = new Vector2(-pair * 0.5f + symbolWidth * 0.5f, crewRect.anchoredPosition.y - crewLabel.fontSize * 0.62f);
                 halfWidth = Mathf.Max(halfWidth, pair * 0.5f);
+                if (crewPlate != null)
+                {
+                    // Round the name, a little wider and taller than the letters.
+                    float padX = crewLabel.fontSize * 0.45f, padY = crewLabel.fontSize * 0.12f;
+                    var plateRect = crewPlate.rectTransform;
+                    plateRect.sizeDelta = new Vector2(crewWidth + padX * 2f, crewLabel.preferredHeight + padY * 2f);
+                    plateRect.anchoredPosition = crewRect.anchoredPosition + new Vector2(0f, padY);
+                }
             }
             back.sizeDelta = new Vector2(halfWidth * 2f + backPadding.x * 2f, top - bottom + backPadding.y * 2f);
             back.anchoredPosition = new Vector2(0f, (top + bottom) * 0.5f - half);

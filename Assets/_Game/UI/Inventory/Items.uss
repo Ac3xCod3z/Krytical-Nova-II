@@ -170,6 +170,9 @@
 /* Drag feedback */
 .drag-source { opacity: 0.35; }
 .drop-valid > .item-frame { -unity-background-image-tint-color: rgb(140, 255, 220); }
+/* The worn piece the Outfitter or the Holoweaver works on (picked by a click on it, owner, 22 Oct 2026). */
+.equip-slot.worn-picked > .item-frame { -unity-background-image-tint-color: rgb(255, 214, 92); }
+.equip-slot.worn-picked { scale: 1.06 1.06; }
 .drop-valid { -unity-background-image-tint-color: rgba(30, 112, 98, 0.95); }
 .drop-invalid { opacity: 0.35; }
 .drop-hover { scale: 1.1 1.1; }

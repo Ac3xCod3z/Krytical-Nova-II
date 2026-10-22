@@ -101,6 +101,16 @@
 .chat-line--system { color: rgb(244, 244, 150); }
 .chat-line--combat { color: rgb(255, 162, 132); }
 
+/* A line with items linked in it (owner, 22 Oct 2026): a row of words that wraps like text, each item a word of its own
+   in its rarity's colour (set in code), with its card on hover and the piece on a doll on a right-click. */
+.chat-line--linked { flex-direction: row; flex-wrap: wrap; align-items: flex-end; }
+/* Only the items are coloured on such a line (owner, 22 Oct 2026): the rest reads as plain text. A whisper keeps its own
+   colour (the owner's word the same day): those lines are not marked plain. */
+.chat-line--plain .chat-word { color: rgb(226, 236, 242); }
+.chat-word { margin: 0; padding: 0; white-space: pre; }
+.chat-link { -unity-font-style: bold; }
+.chat-link:hover { background-color: rgba(255, 255, 255, 0.12); border-radius: 2px; }
+
 /* ------------------------------------------------------------------ input */
 
 .chat-input-row {

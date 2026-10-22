@@ -196,6 +196,11 @@ MonoBehaviour:
         heading: Tabs
         lines:
         - 'The tabs along the top filter what you read: All, one tab a channel, and <b>Combat</b>, which lists every hit, kill, drop and XP gain. A tab lights up when something new arrives in it.'
+      - kind: 0
+        heading: Sharing items and copying lines
+        lines:
+        - '<b>Shift + right-click</b> an item in your Pack or on your equipment page (or pick <b>Share in chat</b> in its menu) and it goes into your line as [its name]. Everyone who reads it sees the name in its rarity''s colour: rest the pointer on it for its card, right-click it to see it on your doll. Gear of another faction is shown on a stand-in body.'
+        - Drag over any line to highlight it, then {cap:CTRL} + {cap:C} to copy it; paste into the chat line with {cap:CTRL} + {cap:V}.
       - kind: 3
         heading: 
         lines:
@@ -801,7 +806,7 @@ MonoBehaviour:
       - kind: 1
         heading: Putting on a Weave
         lines:
-        - 'At the Holoweaver, pick a slot: Weapon, Armor, Gloves, Boots or Cape.'
+        - 'At the Holoweaver, click the piece you wear on the equipment page that opens beside it: Weapon, Armor, Gloves, Boots or Cape. It lights up while it is the one picked.'
         - Pick a look. It must be one your faction and body can wear, and for a weapon one of the class you hold.
         - Press <b>WEAVE</b>. It costs Creds. The Weave stays on the slot when you change the piece under it.
         - The tooltip of a piece you wear names the Weave over it, after its dye.
@@ -812,11 +817,12 @@ MonoBehaviour:
         - How you earn one | Your pet evolves into that stage while it is out, or you put a pet out at that stage
         - A pet you bought grown | Gives the look it has now and the ones it grows into with you, never the earlier ones
         - What it goes over | Any pet that has grown at least as far as the Morph's stage
-        - Where | The Holoweaver's MORPHWEAVE tab, for the same Creds as a Weave
+        - Where | The Holoweaver: click your pet on the equipment page, for the same Creds as a Weave
         - What stays your pet's | Its bonus, growth and hunger
       - kind: 2
         heading: Dye
         lines:
+        - Which piece | At the Outfitter, click the piece you wear on the equipment page
         - An outfit piece | One Chroma Cell, in any of 24 colourways
         - A weapon | One Prism Cell. The colourway reaches its metals, trim, lights and dark grips, where the weapon has them
         - 'Where it lives | On the piece itself: it goes with it into a Trade, a Kiosk or the Vault, and a new piece needs a new Cell'

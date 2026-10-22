@@ -102,6 +102,9 @@ namespace KryticalNova.UI
             petTabRow = window.Q("weave-tabs-pet");
             petTab = window.Q<Button>("weave-tab-pet");
             if (petTab != null) petTab.clicked += () => ShowSlot(EquipSlot.Pet);
+            // The piece is picked on the equipment page, from what is worn (owner, 22 Oct 2026): no tabs.
+            if (tabs[0] != null && tabs[0].parent != null) tabs[0].parent.style.display = DisplayStyle.None;
+            if (petTabRow != null) petTabRow.style.display = DisplayStyle.None;
             SetOpen(false);
 
             NpcServices.Register(ServiceIds.Holoweave, NpcOffer.Holoweave, "HOLOWEAVE", () => Open(Mode.Weave));
@@ -203,6 +206,8 @@ namespace KryticalNova.UI
                 gear.SetEquipmentOpen(true);
                 if (!packWasOpen) gear.SetInventoryOpen(false); // the page brings the Pack with it; it is not needed here
                 gear.SuppressWorldInput();
+                gear.PickWornPiece = PickFromWorn;
+                gear.MarkPickedSlot(slot);
             }
             placement.Open(window, root.Q(EquipmentWindowName));
             Refresh();
@@ -219,6 +224,8 @@ namespace KryticalNova.UI
             {
                 gear.ClearPreview();
                 gear.HideItemTooltip();
+                if (gear.PickWornPiece == (System.Action<EquipSlot>)PickFromWorn) gear.PickWornPiece = null;
+                gear.MarkPickedSlot(null);
                 if (openedEquipment) gear.SetEquipmentOpen(false);
                 gear.SuppressWorldInput();
             }
@@ -264,8 +271,22 @@ namespace KryticalNova.UI
 
         // ------------------------------------------------------------------ what can be picked
 
+        /// <summary>A worn piece clicked on the equipment page while the window is open: it is the one worked on now.</summary>
+        private void PickFromWorn(EquipSlot picked)
+        {
+            if (!open) return;
+            if (picked == EquipSlot.Pet && mode == Mode.Dye) { Notify("A pet takes no dye. Pick a piece of gear."); return; }
+            if (picked != EquipSlot.Pet && System.Array.IndexOf(WeaveRules.WeaveSlots, picked) < 0)
+            {
+                Notify(mode == Mode.Dye ? "Only a weapon, armour, gloves, boots or a cape can be dyed." : "Only a weapon, armour, gloves, boots, a cape or the pet can be woven.");
+                return;
+            }
+            ShowSlot(picked);
+        }
+
         private void ShowSlot(EquipSlot target)
         {
+            GearUIController.Instance?.MarkPickedSlot(target);
             if (slot == target) return;
             slot = target;
             chosen = -1;
@@ -279,10 +300,9 @@ namespace KryticalNova.UI
             if (weaves == null || equipment == null || (!open && !previewing)) return;
             for (int i = 0; i < tabs.Length; i++) tabs[i].EnableInClassList(ActiveTabClass, WeaveRules.WeaveSlots[i] == slot);
             if (petTab != null) petTab.EnableInClassList(ActiveTabClass, slot == EquipSlot.Pet);
-            if (petTabRow != null) petTabRow.style.display = mode == Mode.Weave ? DisplayStyle.Flex : DisplayStyle.None;
-            helpLabel.text = OnPet ? "A Morph shows another pet's look over the pet you have out  ·  Its bonus, growth and hunger stay your own pet's"
+            helpLabel.text = "Click a worn piece on the equipment page to pick it  ·  " + (OnPet ? "A Morph shows another pet's look over the pet you have out  ·  Its bonus, growth and hunger stay your own pet's"
                 : mode == Mode.Weave ? "A Weave shows another look over what you wear  ·  Its stats, reach and glow stay your own gear's"
-                : "One Chroma Cell dyes one outfit piece, one Prism Cell a weapon  ·  The dye stays on the piece, wherever it goes";
+                : "One Chroma Cell dyes one outfit piece, one Prism Cell a weapon  ·  The dye stays on the piece, wherever it goes");
 
             ItemDefinition worn = equipment.GetDefinition(slot);
             ItemDefinition shown = equipment.GetShownDefinition(slot);

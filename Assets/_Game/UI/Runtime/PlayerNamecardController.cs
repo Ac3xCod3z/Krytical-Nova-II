@@ -255,7 +255,7 @@ namespace KryticalNova.UI
 
         private static Label Line(string className, VisualElement parent)
         {
-            // A Crew is shown as <Name>: the text is never read as markup.
+            // A line is never read as markup (a Crew name is shown as a chip; see CrewChipText).
             var label = new Label { pickingMode = PickingMode.Ignore, enableRichText = false };
             label.AddToClassList(className);
             parent.Add(label);
@@ -284,10 +284,10 @@ namespace KryticalNova.UI
             if (standing != card.StandingText) view.Standing(card.StandingText = standing);
 
             CrewTag tag = card.PlayerCrew != null ? card.PlayerCrew.Tag : default;
-            if (card.CrewText == null || !tag.crew.Equals(card.CrewName))
+            if (card.CrewText == null || !tag.crew.Equals(card.CrewName) || CrewEmblem(tag) != card.CrewSymbol)
             {
                 card.CrewName = tag.crew;
-                view.Crew(card.CrewText = tag.InCrew ? "<" + tag.crew + ">" : string.Empty);
+                view.Crew(card.CrewText = CrewChipText(tag), CrewPlate(card, tag));
             }
             // A player in a Crew shows the Crew's symbol where the faction's emblem stands; without a Crew, the emblem.
             int symbol = CrewEmblem(tag);
@@ -308,6 +308,23 @@ namespace KryticalNova.UI
             view.Crest(emblem, tint);
             view.CrewSymbol(null);
         }
+
+        /// <summary>
+        /// The Crew line (owner, 22 Oct 2026: no more &lt;Crew&gt;): the Crew's name in capitals, shown as a chip, a
+        /// plate in the Crew's own colour beside the Crew's symbol, in place of the brackets.
+        /// </summary>
+        private static string CrewChipText(in CrewTag tag) => tag.InCrew ? tag.crew.ToString().ToUpperInvariant() : string.Empty;
+
+        // The Crew's colour (the one its symbol is drawn in), or a plain slate when it has none.
+        private static Color CrewPlate(Card card, in CrewTag tag)
+        {
+            CrewSettings settings = tag.InCrew && card.PlayerCrew != null ? card.PlayerCrew.Settings : null;
+            return settings != null ? settings.SymbolColour(tag.colour) : new Color(0.32f, 0.38f, 0.46f);
+        }
+
+        /// <summary>Dark ink on a light plate, light ink on a dark one.</summary>
+        public static Color ChipInk(Color plate) =>
+            plate.r * 0.299f + plate.g * 0.587f + plate.b * 0.114f > 0.55f ? new Color(0.08f, 0.07f, 0.12f) : new Color(0.97f, 0.96f, 0.92f);
 
         // The Crew's symbol and colour as one number, so a change of either is seen; -1 without a Crew.
         private static int CrewEmblem(in CrewTag tag) => tag.InCrew ? tag.symbol | (tag.colour << 8) : -1;
@@ -342,11 +359,16 @@ namespace KryticalNova.UI
             }
 
             CrewTag tag = card.PlayerCrew != null ? card.PlayerCrew.Tag : default;
-            string crew = tag.InCrew ? "<" + tag.crew + ">" : string.Empty;
-            if (crew != card.CrewText)
+            string crew = CrewChipText(tag);
+            if (crew != card.CrewText || CrewEmblem(tag) != card.CrewSymbol)
             {
                 card.Crew.text = card.CrewText = crew;
                 card.Crew.style.display = crew.Length > 0 ? DisplayStyle.Flex : DisplayStyle.None;
+                // The Crew chip: the name on a plate of the Crew's own colour, in ink that reads on it.
+                Color plate = CrewPlate(card, tag);
+                card.Crew.EnableInClassList("crew-chip", crew.Length > 0);
+                card.Crew.style.backgroundColor = new Color(plate.r, plate.g, plate.b, 0.88f);
+                card.Crew.style.color = ChipInk(plate);
             }
             int symbol = CrewEmblem(tag);
             bool emblemChanged = symbol != card.CrewSymbol;
