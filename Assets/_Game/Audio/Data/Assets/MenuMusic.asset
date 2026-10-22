@@ -22,7 +22,10 @@ MonoBehaviour:
   coatCovenant: {fileID: 11400000, guid: 9c98cf836b1960a48848d0700da077e4, type: 2}
   fadeInSeconds: 1.5
   fadeOutSeconds: 1.2
-  titleFadeOutSeconds: 2
-  afterTitleSeconds: 2
+  titleFadeOutSeconds: 1.2
+  afterTitleSeconds: 1.8
+  afterTitleFadeInSeconds: 2
+  outroHoldSeconds: 2.2
+  outroFadeSeconds: 1.4
   loadingFadeSeconds: 3
   volume: 0.8

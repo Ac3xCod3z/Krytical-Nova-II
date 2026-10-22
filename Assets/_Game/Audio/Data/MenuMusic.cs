@@ -33,6 +33,13 @@ namespace KryticalNova.Audio
         [Min(0.05f)] public float titleFadeOutSeconds = 2f;
         [Tooltip("Seconds after the key press before the Selection theme starts (under the outro's tail).")]
         [Min(0f)] public float afterTitleSeconds = 2f;
+        [Tooltip("Seconds the Selection theme takes to come in after the title: a slow crossfade with the outro's tail.")]
+        [Min(0.05f)] public float afterTitleFadeInSeconds = 2f;
+        [Tooltip("Seconds the title's outro plays at full volume before it fades (the page turn and the reveal take about " +
+                 "this long; owner, 22 Oct 2026: the outro was too long for the quick change of screen).")]
+        [Min(0.1f)] public float outroHoldSeconds = 2.2f;
+        [Tooltip("Seconds the outro then takes to fade away.")]
+        [Min(0.05f)] public float outroFadeSeconds = 1.4f;
         [Tooltip("Seconds for the menu music to go out when the world starts loading.")]
         [Min(0.05f)] public float loadingFadeSeconds = 3f;
         [Range(0f, 1f)] public float volume = 0.8f;

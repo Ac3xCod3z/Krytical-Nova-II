@@ -31,6 +31,7 @@ namespace KryticalNova.UI.Menus
         private float[] speed;
         private float[] trackVolume;
         private AudioSource sting;
+        private float stingVolume, stingStarted = -1f, pendingFadeIn;
         private int current = -1;
         private MusicTrack wanted;
         private MusicTrack pending;
@@ -111,9 +112,11 @@ namespace KryticalNova.UI.Menus
                 MusicTrack now = Wanted(scene);
                 if (now == null) now = pending;
                 pending = null;
-                StartTrack(now);
+                StartTrack(now, pendingFadeIn);
+                pendingFadeIn = 0f;
             }
 
+            FadeSting();
             for (int i = 0; i < voices.Length; i++)
             {
                 level[i] = Mathf.MoveTowards(level[i], target[i], Time.unscaledDeltaTime * speed[i]);
@@ -166,13 +169,33 @@ namespace KryticalNova.UI.Menus
             if (music.titleOutro != null && music.titleOutro.clip != null)
             {
                 sting.clip = music.titleOutro.clip;
-                sting.volume = music.volume * music.titleOutro.volume;
+                stingVolume = music.volume * music.titleOutro.volume;
+                sting.volume = stingVolume;
                 sting.Play();
+                stingStarted = Time.unscaledTime;
             }
             Change(null, music.titleFadeOutSeconds);
             pending = Wanted(SceneManager.GetActiveScene().name);
             pendingAt = Time.unscaledTime + music.afterTitleSeconds;
+            pendingFadeIn = music.afterTitleFadeInSeconds;
             if (pending == null) pendingAt = 0f;
+        }
+
+        // The outro plays as long as the change of screen takes, then fades: a long sting must not run on under the
+        // next screen's theme (owner, 22 Oct 2026).
+        private void FadeSting()
+        {
+            if (sting == null || !sting.isPlaying || stingStarted < 0f) return;
+            float past = Time.unscaledTime - stingStarted - music.outroHoldSeconds;
+            if (past <= 0f) return;
+            float left = 1f - past / Mathf.Max(0.05f, music.outroFadeSeconds);
+            if (left <= 0f)
+            {
+                sting.Stop();
+                stingStarted = -1f;
+                return;
+            }
+            sting.volume = stingVolume * left * left; // eased: it falls away rather than stepping down
         }
 
         /// <summary>Fades out what plays now over <paramref name="outSeconds"/> and, unless <paramref name="next"/> is
@@ -185,7 +208,10 @@ namespace KryticalNova.UI.Menus
             if (next != null) StartTrack(next);
         }
 
-        private void StartTrack(MusicTrack track)
+        private void StartTrack(MusicTrack track) => StartTrack(track, 0f);
+
+        /// <param name="fadeIn">Seconds to come in; 0 = the usual <see cref="MenuMusic.fadeInSeconds"/>.</param>
+        private void StartTrack(MusicTrack track, float fadeIn)
         {
             wanted = track;
             if (track == null || track.clip == null) return;
@@ -197,7 +223,7 @@ namespace KryticalNova.UI.Menus
             trackVolume[i] = track.volume;
             voices[i].clip = track.clip;
             voices[i].Play();
-            FadeTo(i, 1f, music.fadeInSeconds);
+            FadeTo(i, 1f, fadeIn > 0f ? fadeIn : music.fadeInSeconds);
             current = i;
         }
 
