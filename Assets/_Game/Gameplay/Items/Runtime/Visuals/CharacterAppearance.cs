@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using KryticalNova.Rendering;
 using UnityEngine;
 
 namespace KryticalNova.Items.Visuals
@@ -233,6 +234,7 @@ namespace KryticalNova.Items.Visuals
             if (merger == null || !IsConfigured) return;
             ResolveParts();
             if (mergeParts) RebuildMerged(); else RebuildSeparate();
+            BindDangleBones();
             Rebuilt?.Invoke();
         }
 
@@ -302,7 +304,15 @@ namespace KryticalNova.Items.Visuals
             boneNames.Clear();
             boneNames.AddRange(names);
             ApplyToRenderer(targetRenderer, sharedSource.CurrentMesh, bones);
+            BindDangleBones();
             Rebuilt?.Invoke();
+        }
+
+        // Capes, sashes, long hair and beards swing on their dangle bones (presentation only, never on a server).
+        private void BindDangleBones()
+        {
+            if (mergeParts || debugRenderers.Count == 0) DangleBones.Bind(gameObject, new[] { targetRenderer });
+            else DangleBones.Bind(gameObject, debugRenderers);
         }
 
         private void StopSharing()
