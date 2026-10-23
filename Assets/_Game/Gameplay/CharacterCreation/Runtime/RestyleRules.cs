@@ -12,7 +12,7 @@ namespace KryticalNova.CharacterCreation
         Stylist = 0,
         /// <summary>The face: head, eyes, ears, nose, teeth, skin tone, eye colour, marks.</summary>
         Reshaper = 1,
-        /// <summary>Build and muscle.</summary>
+        /// <summary>The body: build, muscle, the body sliders (bust, butt, definition) and height.</summary>
         Coach = 2
     }
 
@@ -65,7 +65,7 @@ namespace KryticalNova.CharacterCreation
         /// <summary>Skin tone and the marks on the skin (scars, eyeliner, grime).</summary>
         public static bool OwnsSkin(RestyleService service) => service == RestyleService.Reshaper;
 
-        /// <summary>Build and muscle.</summary>
+        /// <summary>The body: build, muscle, bust, butt, definition and height.</summary>
         public static bool OwnsBody(RestyleService service) => service == RestyleService.Coach;
 
         /// <summary>
@@ -100,6 +100,11 @@ namespace KryticalNova.CharacterCreation
             }
             if (OwnsBody(service))
             {
+                // The body sliders as the creator sets them (22 Oct 2026): bust and butt on a feminine body only,
+                // definition on a masculine one, height on every one. The body type is the saved one, never the
+                // client's; a look saved before the sliders is brought up to date first, which keeps how it looks.
+                result.Upgrade();
+                result.CopyBodyFrom(proposed);
                 result.build = (sbyte)Math.Max(-BodyLimit, Math.Min(BodyLimit, (int)proposed.build));
                 result.muscle = (sbyte)Math.Max(-BodyLimit, Math.Min(BodyLimit, (int)proposed.muscle));
             }
