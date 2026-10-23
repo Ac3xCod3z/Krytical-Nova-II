@@ -1922,8 +1922,10 @@ namespace KryticalNova.EditorTools.GM
         [TabGroup(Tabs, HostilesTab), Button(ButtonStyle.CompactBox, Expanded = true), EnableIf(nameof(IsReady)), LabelText("Set Autoward Days"), PropertyOrder(1067)]
         private void SetAutobuffDays([MinValue(0)] int days = 3) => Run($"gm.autobuff.days {days}");
 
-        [TabGroup(Tabs, HostilesTab), Button(ButtonStyle.CompactBox, Expanded = true), EnableIf(nameof(IsReady)), LabelText("Give Autoward Passes (3 Days)"), PropertyOrder(1068)]
-        private void GiveAutobuffPasses([MinValue(1)] int count = 1) => Run($"item.give 9031 {count}");
+        [TabGroup(Tabs, HostilesTab), Button(ButtonStyle.CompactBox, Expanded = true), EnableIf(nameof(IsReady)), LabelText("Give Autoward Passes"), PropertyOrder(1068)]
+        private void GiveAutobuffPasses([ValueDropdown(nameof(AutowardLengths))] int days = 30, [MinValue(1)] int count = 1) => Run($"gm.autoward {days} {count}");
+
+        private static readonly int[] AutowardLengths = { 3, 14, 30 };
 
         [ButtonGroup(Tabs + "/" + HostilesTab + "/Autoward"), EnableIf(nameof(IsReady)), LabelText("Autoward Kit (3 Passes + 30 Days)"), PropertyOrder(1069)]
         private void AutowardKit() => Run("gm.kit autoward");

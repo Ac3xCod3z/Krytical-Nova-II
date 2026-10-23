@@ -658,6 +658,102 @@ namespace KryticalNova.Progression
             return ServerCast(skill, target, out reason);
         }
 
+        // ------------------------------------------------------------------ a volley of wards (Autoward)
+
+        /// <summary>
+        /// Autoward (owner, 23 Oct 2026: "use all buffs in the loadout at once, not need to be hit multiple times"):
+        /// every ward of <paramref name="wards"/> that is down and can be cast now is cast in one go, each paying its
+        /// own Flux and starting its own cooldown; the cast is shown once and the others take hold with it. The number
+        /// asked for; 0 with the reason when none can be.
+        /// </summary>
+        public int TryCastWardsAtOnce(IReadOnlyList<SkillDefinitionSO> wards, out string reason)
+        {
+            EnsureComponents();
+            reason = string.Empty;
+            var ready = new List<SkillDefinitionSO>();
+            if (wards != null)
+                foreach (SkillDefinitionSO ward in wards)
+                {
+                    if (ward == null || ward.IsAttack || (buffManager != null && buffManager.HasBuff(ward.skillId))) continue;
+                    if (WardReady(ward, out string why)) ready.Add(ward);
+                    else if (string.IsNullOrEmpty(reason)) reason = why;
+                }
+            if (ready.Count == 0) return 0;
+            if (IsSpawned && !IsServer)
+            {
+                var ids = new string[ready.Count];
+                for (int i = 0; i < ready.Count; i++) ids[i] = ready[i].skillId;
+                castRequestPendingUntil = Time.time + CastRequestTimeout;
+                CastWardsServerRpc(string.Join(WardSeparator, ids));
+                return ready.Count;
+            }
+            return ServerCastWards(ready);
+        }
+
+        private const string WardSeparator = "|";
+
+        // The cast checks of a ward, without the wait for a cast still playing: a volley does not wait for itself.
+        private bool WardReady(SkillDefinitionSO ward, out string reason)
+        {
+            reason = string.Empty;
+            if (!IsLearned(ward)) { reason = $"Learn {ward.displayName} first."; return false; }
+            if (!IsInActiveKit(ward)) { reason = $"{ward.displayName} needs a {WeaponClasses.DisplayName(ward.weaponClass)} in hand."; return false; }
+            if (resources == null || !resources.IsAlive) { reason = "Cannot cast while defeated."; return false; }
+            if (IsOnCooldown(ward)) { reason = $"{ward.displayName} on cooldown ({GetRemainingCooldown(ward):0.0}s remaining)."; return false; }
+            if (!resources.CanSpendChi(ward.GetChiCost(GetRank(ward)))) { reason = $"Not enough Flux for {ward.displayName}."; return false; }
+            return true;
+        }
+
+        [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
+        private void CastWardsServerRpc(string skillIds)
+        {
+            if (!RpcBudget.Allow(this, CallKind.Combat, nameof(CastWardsServerRpc))) return;
+            if (!RpcBudget.TextFits(this, nameof(CastWardsServerRpc), skillIds)) return;
+            var wards = new List<SkillDefinitionSO>();
+            foreach (string id in (skillIds ?? string.Empty).Split(WardSeparator[0]))
+            {
+                SkillDefinitionSO ward = GetSkill(id);
+                if (ward != null && !ward.IsAttack && !wards.Contains(ward) && wards.Count < 16) wards.Add(ward);
+            }
+            if (ServerCastWards(wards) == 0) NotifyCastFailedClientRpc("No ward could be cast now.");
+        }
+
+        // Where combat is decided: each ward that is still down and ready is cast; only the first is shown as a cast.
+        private int ServerCastWards(List<SkillDefinitionSO> wards)
+        {
+            int cast = 0;
+            foreach (SkillDefinitionSO ward in wards)
+            {
+                if (buffManager != null && buffManager.HasBuff(ward.skillId)) continue;
+                if (!WardReady(ward, out _) || !ExecuteCastInternal(ward, null, out _)) continue;
+                int rank = GetRank(ward);
+                if (IsSpawned) WardCastClientRpc(ward.skillId, rank, cast == 0);
+                else
+                {
+                    if (cast == 0) PresentCast(ward, rank, null);
+                    Changed?.Invoke();
+                }
+                cast++;
+            }
+            return cast;
+        }
+
+        [ClientRpc]
+        private void WardCastClientRpc(string skillId, int rank, bool shown)
+        {
+            var skill = GetSkill(skillId);
+            if (skill == null) return;
+            if (!IsServer)
+            {
+                castRequestPendingUntil = 0f;
+                cooldownEndTimes[skill.RankKey] = Time.time + skill.cooldown;
+                if (buffManager != null) buffManager.ApplyBuff(skill, rank);
+                SkillCast?.Invoke(skill);
+                Changed?.Invoke();
+            }
+            if (shown) PresentCast(skill, rank, null);
+        }
+
         private Transform ResolveTarget(SkillDefinitionSO skill) =>
             skill != null && skill.IsAttack && attackExecutor != null ? attackExecutor.ResolveTarget(skill) : null;
 

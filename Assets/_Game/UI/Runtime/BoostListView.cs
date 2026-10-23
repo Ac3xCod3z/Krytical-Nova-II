@@ -7,7 +7,7 @@ namespace KryticalNova.UI
 {
     /// <summary>
     /// The running list at the side of the screen of what the player has switched on with an item and how long each
-    /// has left: the XP Boosters today, and whatever is timed the same way later (time in a premium zone). One line
+    /// has left: the XP Boosters, and since 23 Oct 2026 the Autopilot and Autoward time and the player's Kiosk. One line
     /// each, "[Field Booster] 0:59:12"; nothing is drawn while nothing runs. It is text, not badges, on purpose
     /// (owner, 11 Oct 2026): these last for hours and are read at a glance, unlike a buff's seconds.
     /// Whoever has something timed adds a source; the list asks every source a few times a second.
@@ -68,11 +68,12 @@ namespace KryticalNova.UI
             host.EnableInClassList("empty", lines.Count == 0);
         }
 
-        /// <summary>Time left as a clock: "1:05:09", or "5:09" under an hour.</summary>
+        /// <summary>Time left as a clock: "1:05:09", or "5:09" under an hour; a Pass of days reads "29d 23:05:09".</summary>
         public static string Clock(float seconds)
         {
-            int whole = Mathf.Max(0, Mathf.CeilToInt(seconds));
-            int hours = whole / 3600, minutes = whole / 60 % 60, rest = whole % 60;
+            long whole = Math.Max(0L, (long)Math.Ceiling(seconds));
+            long days = whole / 86400, hours = whole / 3600 % 24, minutes = whole / 60 % 60, rest = whole % 60;
+            if (days > 0) return $"{days}d {hours}:{minutes:00}:{rest:00}";
             return hours > 0 ? $"{hours}:{minutes:00}:{rest:00}" : $"{minutes}:{rest:00}";
         }
     }

@@ -108,6 +108,31 @@ namespace KryticalNova.UI.Menus
             });
         }
 
+        /// <summary>
+        /// A character was renamed in the world (a Name Change Pass): this PC's copies take the new name at once, and the
+        /// server's list is asked for again when character select opens (owner, 23 Oct 2026: the old name stayed there
+        /// until the game was restarted).
+        /// </summary>
+        public static void NoteRenamed(string characterId, string name)
+        {
+            if (!string.IsNullOrEmpty(characterId) && !string.IsNullOrEmpty(name))
+            {
+                if (IsServerKey(Key)) RenameIn(StoreFor(Key), characterId, name);
+                RenameIn(Local, characterId, name);
+            }
+            Forget();
+        }
+
+        private static void RenameIn(ICharacterStore store, string characterId, string name)
+        {
+            CharacterRoster roster = store.Load();
+            CharacterProfile profile = Find(roster, characterId);
+            if (profile == null) return;
+            profile.name = name;
+            profile.mustRename = false;
+            store.Save(roster);
+        }
+
         public static IEnumerator Create(string name, CharacterRecipe recipe, int slot, Action<RosterReply, string> done) =>
             Ask(new RosterRequest { op = RosterRequest.Create, name = name, recipe = recipe, slot = slot }, done);
 

@@ -77,15 +77,25 @@ namespace KryticalNova.DevTools
             return autobuff.TimeLeftLine;
         }
 
-        [Command("gm.autoward", "Autoward for the targeted player. gm.autoward: one of each Autoward Pass (3, 14 and 30 days) into the Pack, to use as a player would. gm.autoward <days>: the licence runs that many days from now (0 ends it).")]
-        private static string Autoward(string days = "")
+        // The item into the Pack, as the owner asked (23 Oct 2026: "I need to be able to give and add the item to my pack"):
+        // gm.autoward 30 is a 30-day Pass, not 30 days on the licence (that is gm.autobuff.days).
+        [Command("gm.autoward", "Autoward Passes into the targeted player's Pack, to use as a player would. gm.autoward: one of each (3, 14 and 30 days). " +
+                                "gm.autoward <3|14|30> [count]: that many Passes of that length. gm.autobuff.days sets the licence itself.")]
+        private static string Autoward(string days = "", int count = 1)
         {
             if (!GmTarget.TryGetPlayer(out GameObject player, out string error)) return error;
             if (!player.TryGetComponent(out PlayerAutobuff autobuff)) return NoAutoward;
             if (string.IsNullOrWhiteSpace(days)) return GiveAutowardPasses(player, autobuff);
-            if (!int.TryParse(days.Trim(), out int count) || count < 0) return "Give a number of days, 0 or more.";
-            autobuff.ServerSetDays(count);
-            return autobuff.TimeLeftLine;
+            if (!int.TryParse(days.Trim(), out int length) || length < 0) return "Give the Pass's days: 3, 14 or 30.";
+            if (autobuff.Settings == null || autobuff.Settings.autobuffTiers == null) return "Autoward is not set up.";
+            foreach (PassTier tier in autobuff.Settings.autobuffTiers)
+            {
+                if (tier.days != length) continue;
+                if (!player.TryGetComponent(out KryticalNova.Items.PlayerInventory inventory)) return "That player has no Pack.";
+                int given = inventory.ServerGive(tier.passItemId, Mathf.Clamp(count, 1, 999), earned: true);
+                return given > 0 ? $"{given} Autoward Pass{(given == 1 ? "" : "es")} ({length} days) into the Pack." : "The Pack is full.";
+            }
+            return $"There is no {length}-day Autoward Pass: 3, 14 or 30. gm.autobuff.days {length} sets the licence to {length} days instead.";
         }
 
         /// <summary>One of each Autoward Pass the settings list, into the player's Pack (gm.autoward and gm.kit autoward).</summary>

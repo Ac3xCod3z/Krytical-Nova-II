@@ -62,6 +62,9 @@ namespace KryticalNova.UI
         {
             bagIndex = -1;
             lastTyped = null;
+            PlayerInventory local = PlayerInventory.Local;
+            var identity = local != null ? local.GetComponent<KryticalNova.Player.PlayerIdentity>() : null;
+            Menus.MenuRoster.NoteRenamed(identity != null ? identity.CharacterId : null, name);
             GameMenuController.LeaveAfterRename(name, PlayerRename.BackToSelectSeconds);
         }
     }

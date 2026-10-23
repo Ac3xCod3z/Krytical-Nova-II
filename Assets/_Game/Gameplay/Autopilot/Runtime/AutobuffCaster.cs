@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using KryticalNova.Items;
 using KryticalNova.Progression;
 using UnityEngine;
@@ -6,26 +7,23 @@ using UnityEngine;
 namespace KryticalNova.Autopilot
 {
     /// <summary>
-    /// The Autobuff's hand on the player's own game: one press of its Hotbar key casts every slotted buff that is
-    /// down, one per action tick (at Autopilot's own pace), through the ordinary cast path, and stops when all are up
-    /// or nothing more can be cast now (on cooldown, not learned, no Flux). Autopilot presses it the same way to
-    /// keep the buffs up. Nothing happens without a running licence (<see cref="PlayerAutobuff"/>).
+    /// The Autobuff's hand on the player's own game: one press of its Hotbar key casts every slotted ward that is
+    /// down at once (owner, 23 Oct 2026: "use all buffs in the loadout at once, not need to be hit multiple times"),
+    /// each paying its own Flux and cooldown (<see cref="PlayerCombatSkills.TryCastWardsAtOnce"/>); one on cooldown, not
+    /// learned or short of Flux is left. Autopilot presses it the same way to keep the wards up. Nothing happens
+    /// without a running licence (<see cref="PlayerAutobuff"/>).
     /// </summary>
     [DisallowMultipleComponent]
     [RequireComponent(typeof(PlayerAutobuff))]
     public sealed class AutobuffCaster : MonoBehaviour, IHotbarAutobuff
     {
-        private const int MostTicks = AutobuffRules.Slots * 3; // a run of presses never goes on for ever
-
         private PlayerAutobuff autobuff;
         private PlayerAutopilot autopilot;
         private PlayerCombatSkills skills;
         private CharacterBuffManager buffs;
         private PlayerResources resources;
         private PlayerInventory inventory;
-        private bool running;
-        private float nextAction;
-        private int ticksLeft;
+        private readonly bool running = false; // the wards go at once: nothing runs on
 
         private void Awake()
         {
@@ -63,17 +61,15 @@ namespace KryticalNova.Autopilot
             if (!IsLocal || autobuff == null || skills == null) return false;
             if (!autobuff.IsActive) { skills.Announce("Autoward has expired. Use an Autoward Pass."); return false; }
             if (SlottedCount == 0) { skills.Announce("Put ward skills into Autoward in the Autopilot window."); return false; }
-            if (running) return true; // a second press while it runs changes nothing
-            running = true;
-            nextAction = Time.time;
-            ticksLeft = MostTicks;
+            if (!AnyDown()) { skills.Announce("Every ward in Autoward is up."); return true; }
+            if (CastAllDown(out string reason) == 0 && !string.IsNullOrEmpty(reason)) skills.Announce(reason);
             return true;
         }
 
         public string Describe(string key)
         {
             if (autobuff == null) return string.Empty;
-            string line = autobuff.IsActive ? $"{autobuff.TimeLeftLine}\nClick or press {key}: every ward below that is down is cast in turn."
+            string line = autobuff.IsActive ? $"{autobuff.TimeLeftLine}\nClick or press {key}: every ward below that is down is cast at once."
                 : "Autoward has expired. Use an Autoward Pass.";
             string[] ids = autobuff.SkillIds;
             var names = new System.Text.StringBuilder();
@@ -99,44 +95,23 @@ namespace KryticalNova.Autopilot
             return false;
         }
 
-        /// <summary>
-        /// Casts the next slotted buff that is down and can be cast now, one. True when one was asked for. Used by a
-        /// press of the key (tick by tick) and by Autopilot's turn.
-        /// </summary>
-        public bool CastNext()
-        {
-            if (!IsLocal || autobuff == null || skills == null || !autobuff.IsActive) return false;
-            if (resources != null && !resources.IsAlive) return false;
-            string[] ids = autobuff.SkillIds;
-            int cell = AutobuffRules.NextToCast(ids, id => buffs != null && buffs.HasBuff(id), id =>
-            {
-                SkillDefinitionSO skill = skills.GetSkill(id);
-                return skill != null && skills.IsLearned(skill) && skills.CanCast(skill, out _);
-            });
-            if (cell < 0) return false;
-            SkillDefinitionSO next = skills.GetSkill(ids[cell]);
-            return next != null && skills.TryCastSkill(next, out _, quiet: true);
-        }
+        /// <summary>Casts every slotted ward that is down and can be cast now, at once. True when any was asked for. Autopilot's turn.</summary>
+        public bool CastNext() => CastAllDown(out _) > 0;
 
-        private void Update()
-        {
-            if (!running) return;
-            if (!IsLocal || autobuff == null || !autobuff.IsActive || (resources != null && !resources.IsAlive)) { running = false; return; }
-            if (Time.time < nextAction) return;
-            Vector2 delay = autopilot != null && autopilot.Settings != null ? autopilot.Settings.actionDelaySeconds : new Vector2(0.3f, 0.5f);
-            nextAction = Time.time + UnityEngine.Random.Range(Mathf.Min(delay.x, delay.y), Mathf.Max(delay.x, delay.y));
-            // The run is over once nothing is left to cast now, or it has gone on long enough.
-            if (!CastNext() || --ticksLeft <= 0) running = AnyDown() && ticksLeft > 0 && CanCastAny();
-        }
+        private readonly List<SkillDefinitionSO> slotted = new List<SkillDefinitionSO>();
 
-        private bool CanCastAny()
+        private int CastAllDown(out string reason)
         {
-            if (autobuff == null || skills == null) return false;
-            return AutobuffRules.NextToCast(autobuff.SkillIds, id => buffs != null && buffs.HasBuff(id), id =>
+            reason = string.Empty;
+            if (!IsLocal || autobuff == null || skills == null || !autobuff.IsActive) return 0;
+            if (resources != null && !resources.IsAlive) return 0;
+            slotted.Clear();
+            foreach (string id in autobuff.SkillIds)
             {
-                SkillDefinitionSO skill = skills.GetSkill(id);
-                return skill != null && skills.IsLearned(skill) && skills.CanCast(skill, out _);
-            }) >= 0;
+                SkillDefinitionSO skill = string.IsNullOrEmpty(id) ? null : skills.GetSkill(id);
+                if (skill != null) slotted.Add(skill);
+            }
+            return skills.TryCastWardsAtOnce(slotted, out reason);
         }
     }
 }
