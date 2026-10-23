@@ -1347,6 +1347,12 @@ namespace KryticalNova.EditorTools.GM
             Run($"gm.ascension {(Mathf.Max(1, novaTier) - 1) * perTier + 1}");
         }
 
+        [ButtonGroup(Tabs + "/" + RenownTab + "/Weave"), EnableIf(nameof(IsReady)), LabelText("Weave That Nova (Free)"), PropertyOrder(917)]
+        private void WeaveNovaTier() => Run($"gm.nova.weave {novaTier}");
+
+        [ButtonGroup(Tabs + "/" + RenownTab + "/Weave"), EnableIf(nameof(IsReady)), LabelText("Own Nova Again"), PropertyOrder(918)]
+        private void UnweaveNova() => Run("gm.nova.weave 0");
+
         private static int AscensionCap => TargetNova != null && TargetNova.Settings != null ? TargetNova.Settings.ascension.maxLevel : 96;
         private static int NovaTierCount => TargetNova != null && TargetNova.Settings != null ? NovaRules.TierCount(TargetNova.Settings.ascension) : 12;
 

@@ -61,6 +61,10 @@ namespace KryticalNova.UI
         private Label purse, intro, level, tier, nextTier, gain, odds, cost, reason, result, worn, standingResult;
         private Label bannerEyebrow, bannerTitle, bannerDetail;
         private Button ascend;
+        // The Nova Weave (owner, 22 Oct 2026): show a lower Nova tier this character has reached, for Creds.
+        private Label weaveShown, weaveCost;
+        private Button weavePrev, weaveNext, weaveApply, weaveOwn;
+        private int weaveChoice, weaveShownBefore = -1;
         private readonly Button[] tabButtons = new Button[TabNames.Length];
         private TrackCard[] cards = new TrackCard[0];
         private Tab tab = Tab.Ascension;
@@ -128,6 +132,7 @@ namespace KryticalNova.UI
             levelPips = new VisualElement();
             levelPips.AddToClassList("herald-pips");
             tierPips.parent.Insert(tierPips.parent.IndexOf(tierPips) + 1, levelPips);
+            BuildWeave();
             SetOpen(false);
 
             NpcServices.Register(ServiceIds.Herald, NpcOffer.Herald, "SPEND RENOWN", Open);
@@ -408,7 +413,67 @@ namespace KryticalNova.UI
 
             string blocked = NovaRules.AscendBlocked(rules, now, nova.Renown, nova.Creds);
             reason.text = blocked ?? string.Empty;
+            RefreshWeave(nowTier);
             ascend.SetEnabled(blocked == null && chargeEnds < 0f);
+        }
+
+        // The Nova Weave row, at the foot of the Nova card: < Nova III >, its cost, WEAVE and OWN NOVA.
+        private void BuildWeave()
+        {
+            if (novaCard == null) return;
+            var eyebrow = new Label("NOVA WEAVE");
+            eyebrow.AddToClassList("eyebrow");
+            eyebrow.AddToClassList("section");
+            var row = new VisualElement();
+            row.AddToClassList("herald-weave-row");
+            weavePrev = new Button(() => StepWeave(-1)) { text = "<" };
+            weaveShown = new Label();
+            weaveShown.AddToClassList("herald-weave-shown");
+            weaveNext = new Button(() => StepWeave(1)) { text = ">" };
+            row.Add(weavePrev);
+            row.Add(weaveShown);
+            row.Add(weaveNext);
+            weaveCost = new Label();
+            weaveCost.AddToClassList("herald-line");
+            var buttons = new VisualElement();
+            buttons.AddToClassList("herald-weave-row");
+            weaveApply = new Button(() => { if (nova != null) nova.RequestWeaveNova(weaveChoice); }) { text = "WEAVE" };
+            weaveApply.AddToClassList("kn-button-primary");
+            weaveOwn = new Button(() => { if (nova != null) nova.RequestWeaveNova(0); }) { text = "OWN NOVA" };
+            buttons.Add(weaveApply);
+            buttons.Add(weaveOwn);
+            novaCard.Add(eyebrow);
+            novaCard.Add(row);
+            novaCard.Add(weaveCost);
+            novaCard.Add(buttons);
+        }
+
+        private void StepWeave(int by)
+        {
+            if (nova == null) return;
+            int own = nova.Tier;
+            if (own <= 1) return;
+            weaveChoice = Mathf.Clamp((weaveChoice <= 0 ? nova.ShownTier : weaveChoice) + by, 1, own);
+            Refresh();
+        }
+
+        private void RefreshWeave(int ownTier)
+        {
+            if (weaveShown == null) return;
+            // The picker starts on what is shown, and goes back to it whenever that changes (a weave done, or undone).
+            if (weaveChoice <= 0 || weaveChoice > ownTier || nova.ShownTier != weaveShownBefore) weaveChoice = nova.ShownTier;
+            weaveShownBefore = nova.ShownTier;
+            bool any = ownTier > 1;
+            weaveShown.text = ownTier <= 0 ? "NO NOVA YET" : "NOVA " + NovaRules.Numeral(Mathf.Max(1, weaveChoice));
+            weavePrev.SetEnabled(any && weaveChoice > 1);
+            weaveNext.SetEnabled(any && weaveChoice < ownTier);
+            long fee = nova.Settings.ascension.weaveCredsCost;
+            bool shownNow = weaveChoice == nova.ShownTier;
+            weaveCost.text = !any ? "Reach Nova II to show an earlier Nova instead."
+                : $"Show a Nova you have reached instead of your own: {fee:N0} Creds. Your own again is free." +
+                  (nova.ShownTier != ownTier ? $"\nShowing Nova {NovaRules.Numeral(nova.ShownTier)} now." : string.Empty);
+            weaveApply.SetEnabled(any && !shownNow && weaveChoice < ownTier && nova.Creds >= fee);
+            weaveOwn.SetEnabled(nova.ShownTier != ownTier);
         }
 
         private void RefreshStandings()

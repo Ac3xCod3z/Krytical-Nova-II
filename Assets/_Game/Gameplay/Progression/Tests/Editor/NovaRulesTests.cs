@@ -43,6 +43,16 @@ namespace KryticalNova.Tests
         }
 
         [Test]
+        public void NovaWeave_ShowsALowerTierReached_NeverAHigherOne()
+        {
+            Assert.AreEqual(5, NovaRules.ShownTier(5, 0), "no weave: its own");
+            Assert.AreEqual(2, NovaRules.ShownTier(5, 2));
+            Assert.AreEqual(5, NovaRules.ShownTier(5, 5), "its own tier woven is its own");
+            Assert.AreEqual(5, NovaRules.ShownTier(5, 9), "never above its own");
+            Assert.AreEqual(0, NovaRules.ShownTier(0, 3), "no Nova yet: nothing to show");
+        }
+
+        [Test]
         public void TheOddsAre55_35_10ToPlus24_Then45_40_15()
         {
             foreach (int level in new[] { 0, 12, 24 })

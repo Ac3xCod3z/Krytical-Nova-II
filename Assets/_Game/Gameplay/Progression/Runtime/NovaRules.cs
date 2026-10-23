@@ -30,6 +30,8 @@ namespace KryticalNova.Progression
         public byte vanguard, bulwark, ironblood, mindwell;
         /// <summary>0 = no Standing worn; otherwise the track's number plus one.</summary>
         public byte worn;
+        /// <summary>The Nova Weave: 0 shows the character's own Nova tier; otherwise the tier shown (never above its own).</summary>
+        public byte woven;
 
         public int Standing(StandingTrack track)
         {
@@ -75,12 +77,13 @@ namespace KryticalNova.Progression
             serializer.SerializeValue(ref ironblood);
             serializer.SerializeValue(ref mindwell);
             serializer.SerializeValue(ref worn);
+            serializer.SerializeValue(ref woven);
         }
 
         public bool Equals(NovaState other) => ascension == other.ascension && vanguard == other.vanguard && bulwark == other.bulwark
-            && ironblood == other.ironblood && mindwell == other.mindwell && worn == other.worn;
+            && ironblood == other.ironblood && mindwell == other.mindwell && worn == other.worn && woven == other.woven;
         public override bool Equals(object obj) => obj is NovaState other && Equals(other);
-        public override int GetHashCode() => ascension | (vanguard << 8) | (bulwark << 12) | (ironblood << 16) | (mindwell << 20) | (worn << 24);
+        public override int GetHashCode() => ascension | (vanguard << 8) | (bulwark << 12) | (ironblood << 16) | (mindwell << 20) | (worn << 24) | (woven << 28);
     }
 
     /// <summary>
@@ -98,6 +101,13 @@ namespace KryticalNova.Progression
         public const string ReasonNoRenown = "You don't have enough Renown.";
         public const string ReasonNoCreds = "You don't have enough Creds.";
         public const string ReasonNotHeld = "You hold no Standing on that track yet.";
+        public const string ReasonNotReached = "Only a Nova you have reached can be woven.";
+
+        /// <summary>
+        /// The Nova tier a character shows: its own, or the one it has woven at the Herald (the Nova Weave), which is
+        /// never above its own; a weave of its own tier or of none is its own.
+        /// </summary>
+        public static int ShownTier(int ownTier, int woven) => woven > 0 && woven < ownTier ? woven : ownTier;
 
         private static readonly string[] Numerals = { "", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII" };
 
