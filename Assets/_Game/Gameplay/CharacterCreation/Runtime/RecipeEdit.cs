@@ -22,15 +22,14 @@ namespace KryticalNova.CharacterCreation
             return recipe;
         }
 
-        /// <summary>A ready-made face of the lineage, keeping the body shape of <paramref name="current"/>.</summary>
+        /// <summary>A ready-made face of the lineage, keeping the body shape and sliders of <paramref name="current"/>.</summary>
         public static CharacterRecipe FromPreset(LineageDefinition lineage, BodyType bodyType, int preset, in CharacterRecipe current)
         {
             var setup = lineage.SetupFor(bodyType);
             if (preset < 0 || preset >= setup.presets.Count) return current.Clone();
             var recipe = setup.presets[preset].recipe.Clone();
             Stamp(ref recipe, lineage, bodyType);
-            recipe.build = current.build;
-            recipe.muscle = current.muscle;
+            recipe.CopyBodyFrom(current);
             return recipe;
         }
 
@@ -236,7 +235,7 @@ namespace KryticalNova.CharacterCreation
 
         private static void Stamp(ref CharacterRecipe recipe, LineageDefinition lineage, BodyType bodyType)
         {
-            recipe.version = CharacterRecipe.CurrentVersion;
+            recipe.Upgrade();
             recipe.faction = lineage.faction;
             recipe.lineage = lineage.id;
             recipe.bodyType = bodyType;

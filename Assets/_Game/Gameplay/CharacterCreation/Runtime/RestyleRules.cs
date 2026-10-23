@@ -111,7 +111,7 @@ namespace KryticalNova.CharacterCreation
         {
             if (a.faction != b.faction || a.lineage != b.lineage || a.bodyType != b.bodyType || a.build != b.build || a.muscle != b.muscle
                 || a.palette != b.palette || a.skinTone != b.skinTone || a.scars != b.scars || a.eyeliner != b.eyeliner || a.grime != b.grime
-                || a.weaponClass != b.weaponClass || a.PartCount != b.PartCount || a.ColorCount != b.ColorCount)
+                || a.weaponClass != b.weaponClass || !a.ToShape().Equals(b.ToShape()) || a.Height != b.Height || a.PartCount != b.PartCount || a.ColorCount != b.ColorCount)
                 return false;
             for (int i = 0; i < a.PartCount; i++)
                 if (Array.IndexOf(b.parts, a.parts[i]) < 0) return false;

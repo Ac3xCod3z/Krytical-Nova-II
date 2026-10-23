@@ -21,8 +21,54 @@ namespace KryticalNova.EditorTools
 
         private const int OriginTileCount = 4;  // two lineages, each masculine and feminine
         private const int OptionRowCount = 9;   // the Head tab of a human: look, head, hair, brows, ears, facial hair, nose, teeth + one spare
-        private const int SliderRowCount = 2;   // body size and musculature
+        private const int SliderRowCount = 5;   // body size, musculature, then bust, butt, height (feminine) or definition, height (masculine)
         private const int SwatchesPerGroup = 16; // the largest palette on offer (hair, elf skin)
+
+        /// <summary>
+        /// Gives the creator scene as it is the slider rows the body sliders need (22 Oct 2026), nothing else rebuilt
+        /// (owner, 20 Oct 2026): each creator whose pool is short gets copies of its own last slider row. A full build
+        /// of the front-end scenes makes them too.
+        /// </summary>
+        [MenuItem("Krytical Nova/Front End/Add Body Slider Rows to Character Creator")]
+        public static void AddBodySliderRowsInPlace()
+        {
+            if (EditorApplication.isPlayingOrWillChangePlaymode) { Debug.LogWarning("[FrontEnd] Leave Play mode first."); return; }
+            string path = ScenePath(FrontEnd.CharacterCreatorScene);
+            UnityEngine.SceneManagement.Scene open = UnityEngine.SceneManagement.SceneManager.GetSceneByPath(path);
+            bool wasOpen = open.IsValid() && open.isLoaded;
+            var scene = wasOpen ? open : UnityEditor.SceneManagement.EditorSceneManager.OpenScene(path, UnityEditor.SceneManagement.OpenSceneMode.Additive);
+            int added = 0;
+            foreach (GameObject root in scene.GetRootGameObjects())
+                foreach (CharacterCreatorController creator in root.GetComponentsInChildren<CharacterCreatorController>(true))
+                {
+                    var serialized = new SerializedObject(creator);
+                    SerializedProperty rows = serialized.FindProperty("sliderRows");
+                    if (rows == null || rows.arraySize == 0 || rows.arraySize >= SliderRowCount) continue;
+                    var last = rows.GetArrayElementAtIndex(rows.arraySize - 1).objectReferenceValue as MenuSliderRow;
+                    if (last == null) continue;
+                    while (rows.arraySize < SliderRowCount)
+                    {
+                        int index = rows.arraySize;
+                        // Duplicated as Ctrl+D does, so a row that is a vendor prefab's instance stays one.
+                        Selection.activeGameObject = last.gameObject;
+                        Unsupported.DuplicateGameObjectsUsingPasteboard();
+                        GameObject copy = Selection.activeGameObject;
+                        if (copy == null || copy == last.gameObject) copy = Object.Instantiate(last.gameObject, last.transform.parent);
+                        copy.name = $"Row_Slider_{index:00}";
+                        copy.transform.SetSiblingIndex(last.transform.GetSiblingIndex() + 1);
+                        rows.arraySize = index + 1;
+                        rows.GetArrayElementAtIndex(index).objectReferenceValue = copy.GetComponent<MenuSliderRow>();
+                        last = copy.GetComponent<MenuSliderRow>();
+                        added++;
+                    }
+                    serialized.ApplyModifiedPropertiesWithoutUndo();
+                }
+            Selection.activeGameObject = null;
+            UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(scene);
+            UnityEditor.SceneManagement.EditorSceneManager.SaveScene(scene);
+            if (!wasOpen) UnityEditor.SceneManagement.EditorSceneManager.CloseScene(scene, true);
+            Debug.Log($"[FrontEnd] {added} body slider row(s) added to the character creator.");
+        }
 
         // ---------------------------------------------------------------- faction select
 

@@ -5,7 +5,10 @@ using UnityEngine.Rendering;
 
 namespace KryticalNova.Items.Visuals
 {
-    /// <summary>Sidekick body-shape blendshape weights (0-100), baked into vertices at merge time.</summary>
+    /// <summary>
+    /// Body-shape blendshape weights (0-100), baked into vertices at merge time: Sidekick's four, and the three body
+    /// sliders the Blender session added to the bare body (kn_bust, kn_butt, kn_defined; 22 Oct 2026).
+    /// </summary>
     [Serializable]
     public struct BodyShapeWeights
     {
@@ -13,6 +16,9 @@ namespace KryticalNova.Items.Visuals
         [Range(0, 100)] public float skinny;
         [Range(0, 100)] public float heavy;
         [Range(0, 100)] public float buff;
+        [Range(0, 100)] public float bust;
+        [Range(0, 100)] public float butt;
+        [Range(0, 100)] public float defined;
 
         public float WeightFor(string blendShapeName)
         {
@@ -21,6 +27,9 @@ namespace KryticalNova.Items.Visuals
             if (blendShapeName.Contains("defaultSkinny")) return skinny;
             if (blendShapeName.Contains("defaultHeavy")) return heavy;
             if (blendShapeName.Contains("defaultBuff")) return buff;
+            if (blendShapeName.Contains("kn_bust")) return bust;
+            if (blendShapeName.Contains("kn_butt")) return butt;
+            if (blendShapeName.Contains("kn_defined")) return defined;
             return 0f; // facial expressions are handled by FaceShapeWeight / live shapes
         }
     }
@@ -108,6 +117,7 @@ namespace KryticalNova.Items.Visuals
         private readonly List<string> liveNames = new List<string>();
         private IReadOnlyList<FaceShapeWeight> currentFace;
         private IReadOnlyList<string> currentLiveShapes;
+        private BodyKeyTransfer.Source currentBody;
 
         public SkinnedMeshMerger(Transform skeletonRoot, Transform[] referenceBones, Matrix4x4[] referenceBindposes)
         {
@@ -141,10 +151,15 @@ namespace KryticalNova.Items.Visuals
             }
         }
 
-        /// <summary>Builds a new mesh from <paramref name="parts"/>. Bones come back in <paramref name="outBones"/> (index-aligned with bindposes).</summary>
+        /// <summary>
+        /// Builds a new mesh from <paramref name="parts"/>. Bones come back in <paramref name="outBones"/> (index-aligned
+        /// with bindposes). <paramref name="bareBody"/> (the character's bare body and head) lends its body keys to worn
+        /// parts that lack them (<see cref="BodyKeyTransfer"/>).
+        /// </summary>
         public Mesh Merge(IReadOnlyList<SidekickPartRef> parts, BodyShapeWeights shape, List<Transform> outBones, string meshName,
-            IReadOnlyList<FaceShapeWeight> face = null, IReadOnlyList<string> liveShapes = null)
+            IReadOnlyList<FaceShapeWeight> face = null, IReadOnlyList<string> liveShapes = null, IReadOnlyList<SidekickPartRef> bareBody = null)
         {
+            currentBody = BodyKeyTransfer.SourceFor(bareBody);
             currentFace = face;
             currentLiveShapes = liveShapes;
             liveChunks.Clear();
@@ -211,7 +226,8 @@ namespace KryticalNova.Items.Visuals
             if (partNormals.Count != vc) { partNormals.Clear(); for (int i = 0; i < vc; i++) partNormals.Add(Vector3.up); }
             if (partTangents.Count != vc) { partTangents.Clear(); for (int i = 0; i < vc; i++) partTangents.Add(new Vector4(1, 0, 0, 1)); }
             CaptureLiveShapes(m, vc, baseIndex);
-            BakeBlendShapes(m, shape, vc);
+            BakeBlendShapes(part, shape, vc);
+            BodyKeyTransfer.Apply(currentBody, part, shape, partVerts);
 
             positions.AddRange(partVerts);
             normals.AddRange(partNormals);
@@ -310,15 +326,19 @@ namespace KryticalNova.Items.Visuals
             return false;
         }
 
-        private void BakeBlendShapes(Mesh m, BodyShapeWeights shape, int vc)
+        private void BakeBlendShapes(in SidekickPartRef part, BodyShapeWeights shape, int vc)
         {
+            var m = part.mesh;
             int count = m.blendShapeCount;
             if (count == 0) return;
             EnsureCapacity(vc);
             for (int s = 0; s < count; s++)
             {
                 string shapeName = m.GetBlendShapeName(s);
-                float weight = shape.WeightFor(shapeName) + FaceShapeWeight.WeightFor(currentFace, FaceShapeWeight.Suffix(shapeName));
+                float body = shape.WeightFor(shapeName);
+                // An empty body key the part takes from the body instead is left out here (BodyKeyTransfer.Apply).
+                if (body > 0f && !BodyKeyTransfer.KeepsOwnKey(currentBody, part, shapeName)) body = 0f;
+                float weight = body + FaceShapeWeight.WeightFor(currentFace, FaceShapeWeight.Suffix(shapeName));
                 if (weight <= 0f) continue;
                 int frames = m.GetBlendShapeFrameCount(s);
                 if (frames == 0) continue;
