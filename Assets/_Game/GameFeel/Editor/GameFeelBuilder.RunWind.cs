@@ -7,6 +7,7 @@ namespace KryticalNova.EditorTools
     {
         private const string RunWindName = "PFX_Run_Wind";
         private const string RunWindMaterialPath = MaterialFolder + "/M_RunWind.mat";
+        private const string RunWindTexturePath = "Assets/_Game/VFX/GameFeel/T_RunWindSoft.png";
 
         /// <summary>
         /// The wind lines of a run (owner, 22 Oct 2026: "lines or wind leaving behind the player to really sell the
@@ -38,11 +39,12 @@ namespace KryticalNova.EditorTools
             var root = new GameObject(RunWindName);
             try
             {
-                // Streaks: short, thin, stretched along the way they fly (back from the runner), left in the world.
+                // Streaks: short, thin, stretched along the way they fly (back from the runner), left in the world. Thin
+                // and long, with soft edges (owner, 23 Oct 2026: the lines were too thick).
                 ParticleSystem streaks = WindSystem(root, "Streaks", material);
                 var main = streaks.main;
                 main.startLifetime = new ParticleSystem.MinMaxCurve(0.22f, 0.38f);
-                main.startSize = new ParticleSystem.MinMaxCurve(0.04f, 0.075f);
+                main.startSize = new ParticleSystem.MinMaxCurve(0.016f, 0.03f);
                 main.startColor = new Color(0.88f, 0.96f, 1f, 0.75f);
                 main.maxParticles = 160;
                 var emission = streaks.emission;
@@ -61,13 +63,13 @@ namespace KryticalNova.EditorTools
                 var renderer = streaks.GetComponent<ParticleSystemRenderer>();
                 renderer.renderMode = ParticleSystemRenderMode.Stretch;
                 renderer.velocityScale = 0.12f;
-                renderer.lengthScale = 3f;
+                renderer.lengthScale = 7f;
 
                 // Curls: a few ribbons of wind off the shoulders that bend as they trail.
                 ParticleSystem curls = WindSystem(root, "Curls", material);
                 main = curls.main;
                 main.startLifetime = new ParticleSystem.MinMaxCurve(0.45f, 0.7f);
-                main.startSize = 0.07f;
+                main.startSize = 0.032f;
                 main.startColor = new Color(0.9f, 0.97f, 1f, 0.6f);
                 main.maxParticles = 24;
                 emission = curls.emission;
@@ -146,6 +148,32 @@ namespace KryticalNova.EditorTools
             });
         }
 
+        // A soft dot: a streak stretched from it is a line that fades at its edges and ends instead of a hard rectangle.
+        private static Texture2D RunWindTexture()
+        {
+            var texture = AssetDatabase.LoadAssetAtPath<Texture2D>(RunWindTexturePath);
+            if (texture != null) return texture;
+            const int size = 64;
+            var made = new Texture2D(size, size, TextureFormat.RGBA32, false);
+            for (int y = 0; y < size; y++)
+            for (int x = 0; x < size; x++)
+            {
+                float u = (x + 0.5f) / size * 2f - 1f, v = (y + 0.5f) / size * 2f - 1f;
+                float a = Mathf.Clamp01(1f - (u * u + v * v));
+                made.SetPixel(x, y, new Color(1f, 1f, 1f, a * a));
+            }
+            made.Apply();
+            System.IO.File.WriteAllBytes(RunWindTexturePath, made.EncodeToPNG());
+            Object.DestroyImmediate(made);
+            AssetDatabase.ImportAsset(RunWindTexturePath, ImportAssetOptions.ForceSynchronousImport);
+            var importer = (TextureImporter)AssetImporter.GetAtPath(RunWindTexturePath);
+            importer.alphaIsTransparency = true;
+            importer.wrapMode = TextureWrapMode.Clamp;
+            importer.mipmapEnabled = false;
+            importer.SaveAndReimport();
+            return AssetDatabase.LoadAssetAtPath<Texture2D>(RunWindTexturePath);
+        }
+
         // Unlit and alpha-blended, reading the particles' colour: white air that shows on bright and dark ground alike.
         private static Material RunWindMaterial()
         {
@@ -166,6 +194,7 @@ namespace KryticalNova.EditorTools
             material.DisableKeyword("_BLENDMODE_ADD");
             material.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Transparent;
             material.SetColor("_BaseColor", Color.white);
+            material.SetTexture("_BaseMap", RunWindTexture());
             EditorUtility.SetDirty(material);
             return material;
         }
