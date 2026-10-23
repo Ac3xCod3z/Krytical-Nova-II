@@ -1,0 +1,718 @@
+{
+ "before": {
+  "CivilianM": [
+   {
+    "state": "heavy",
+    "part": "SK_HUMN_BASE_04_02HAIR_HU01",
+    "kind": "hair",
+    "verts": 7,
+    "of": 727,
+    "max_cm": 3.77
+   },
+   {
+    "state": "heavy",
+    "part": "SK_SCFI_CIVL_01_10TORS_HU01",
+    "kind": "gear",
+    "verts": 2,
+    "of": 1258,
+    "max_cm": 0.52
+   },
+   {
+    "state": "heavy",
+    "part": "SK_SCFI_CIVL_01_12AUPR_HU01",
+    "kind": "gear",
+    "verts": 1,
+    "of": 114,
+    "max_cm": 0.52
+   },
+   {
+    "state": "heavy",
+    "part": "SK_SCFI_CIVL_01_17HIPS_HU01",
+    "kind": "gear",
+    "verts": 2,
+    "of": 917,
+    "max_cm": 0.61
+   },
+   {
+    "state": "muscular",
+    "part": "SK_HUMN_BASE_04_02HAIR_HU01",
+    "kind": "hair",
+    "verts": 1,
+    "of": 727,
+    "max_cm": 3.95
+   },
+   {
+    "state": "muscular",
+    "part": "SK_SCFI_CIVL_01_10TORS_HU01",
+    "kind": "gear",
+    "verts": 3,
+    "of": 1258,
+    "max_cm": 1.34
+   },
+   {
+    "state": "muscular",
+    "part": "SK_SCFI_CIVL_01_12AUPR_HU01",
+    "kind": "gear",
+    "verts": 1,
+    "of": 114,
+    "max_cm": 0.61
+   },
+   {
+    "state": "lean",
+    "part": "SK_SCFI_CIVL_01_17HIPS_HU01",
+    "kind": "gear",
+    "verts": 1,
+    "of": 917,
+    "max_cm": 1.13
+   },
+   {
+    "state": "skinny",
+    "part": "SK_SCFI_CIVL_01_17HIPS_HU01",
+    "kind": "gear",
+    "verts": 3,
+    "of": 917,
+    "max_cm": 0.08
+   },
+   {
+    "state": "defined",
+    "part": "SK_SCFI_CIVL_01_10TORS_HU01",
+    "kind": "gear",
+    "verts": 12,
+    "of": 1258,
+    "max_cm": 0.51
+   },
+   {
+    "state": "defined",
+    "part": "SK_SCFI_CIVL_01_11AUPL_HU01",
+    "kind": "gear",
+    "verts": 4,
+    "of": 114,
+    "max_cm": 0.14
+   },
+   {
+    "state": "defined",
+    "part": "SK_SCFI_CIVL_01_12AUPR_HU01",
+    "kind": "gear",
+    "verts": 3,
+    "of": 114,
+    "max_cm": 0.14
+   },
+   {
+    "state": "defined",
+    "part": "SK_SCFI_CIVL_01_13ALWL_HU01",
+    "kind": "gear",
+    "verts": 2,
+    "of": 265,
+    "max_cm": 0.14
+   },
+   {
+    "state": "defined",
+    "part": "SK_SCFI_CIVL_01_14ALWR_HU01",
+    "kind": "gear",
+    "verts": 3,
+    "of": 265,
+    "max_cm": 0.14
+   },
+   {
+    "state": "defined",
+    "part": "SK_SCFI_CIVL_01_17HIPS_HU01",
+    "kind": "gear",
+    "verts": 5,
+    "of": 917,
+    "max_cm": 0.37
+   },
+   {
+    "state": "muscular+defined",
+    "part": "SK_HUMN_BASE_04_02HAIR_HU01",
+    "kind": "hair",
+    "verts": 1,
+    "of": 727,
+    "max_cm": 3.95
+   },
+   {
+    "state": "muscular+defined",
+    "part": "SK_SCFI_CIVL_01_10TORS_HU01",
+    "kind": "gear",
+    "verts": 12,
+    "of": 1258,
+    "max_cm": 0.63
+   },
+   {
+    "state": "muscular+defined",
+    "part": "SK_SCFI_CIVL_01_11AUPL_HU01",
+    "kind": "gear",
+    "verts": 4,
+    "of": 114,
+    "max_cm": 0.14
+   },
+   {
+    "state": "muscular+defined",
+    "part": "SK_SCFI_CIVL_01_12AUPR_HU01",
+    "kind": "gear",
+    "verts": 3,
+    "of": 114,
+    "max_cm": 0.14
+   },
+   {
+    "state": "muscular+defined",
+    "part": "SK_SCFI_CIVL_01_13ALWL_HU01",
+    "kind": "gear",
+    "verts": 2,
+    "of": 265,
+    "max_cm": 0.14
+   },
+   {
+    "state": "muscular+defined",
+    "part": "SK_SCFI_CIVL_01_14ALWR_HU01",
+    "kind": "gear",
+    "verts": 3,
+    "of": 265,
+    "max_cm": 0.14
+   },
+   {
+    "state": "muscular+defined",
+    "part": "SK_SCFI_CIVL_01_17HIPS_HU01",
+    "kind": "gear",
+    "verts": 9,
+    "of": 917,
+    "max_cm": 1.31
+   },
+   {
+    "state": "muscular+defined",
+    "part": "SK_SCFI_CIVL_01_19LEGR_HU01",
+    "kind": "gear",
+    "verts": 1,
+    "of": 250,
+    "max_cm": 0.52
+   },
+   {
+    "state": "heavy+defined",
+    "part": "SK_HUMN_BASE_04_02HAIR_HU01",
+    "kind": "hair",
+    "verts": 7,
+    "of": 727,
+    "max_cm": 3.77
+   },
+   {
+    "state": "heavy+defined",
+    "part": "SK_SCFI_CIVL_01_10TORS_HU01",
+    "kind": "gear",
+    "verts": 16,
+    "of": 1258,
+    "max_cm": 0.77
+   },
+   {
+    "state": "heavy+defined",
+    "part": "SK_SCFI_CIVL_01_11AUPL_HU01",
+    "kind": "gear",
+    "verts": 5,
+    "of": 114,
+    "max_cm": 0.25
+   },
+   {
+    "state": "heavy+defined",
+    "part": "SK_SCFI_CIVL_01_12AUPR_HU01",
+    "kind": "gear",
+    "verts": 4,
+    "of": 114,
+    "max_cm": 0.28
+   },
+   {
+    "state": "heavy+defined",
+    "part": "SK_SCFI_CIVL_01_13ALWL_HU01",
+    "kind": "gear",
+    "verts": 2,
+    "of": 265,
+    "max_cm": 0.14
+   },
+   {
+    "state": "heavy+defined",
+    "part": "SK_SCFI_CIVL_01_14ALWR_HU01",
+    "kind": "gear",
+    "verts": 3,
+    "of": 265,
+    "max_cm": 0.14
+   },
+   {
+    "state": "heavy+defined",
+    "part": "SK_SCFI_CIVL_01_17HIPS_HU01",
+    "kind": "gear",
+    "verts": 16,
+    "of": 917,
+    "max_cm": 2.03
+   }
+  ],
+  "CivilianF": [
+   {
+    "state": "heavy",
+    "part": "SK_SCFI_CIVL_01_10TORS_HU01",
+    "kind": "gear",
+    "verts": 3,
+    "of": 1258,
+    "max_cm": 2.19
+   },
+   {
+    "state": "heavy",
+    "part": "SK_SCFI_CIVL_01_12AUPR_HU01",
+    "kind": "gear",
+    "verts": 1,
+    "of": 114,
+    "max_cm": 0.74
+   },
+   {
+    "state": "heavy",
+    "part": "SK_SCFI_CIVL_01_17HIPS_HU01",
+    "kind": "gear",
+    "verts": 4,
+    "of": 917,
+    "max_cm": 0.93
+   },
+   {
+    "state": "heavy",
+    "part": "SK_SCFI_CIVL_03_02HAIR_HU01",
+    "kind": "hair",
+    "verts": 10,
+    "of": 677,
+    "max_cm": 1.83
+   },
+   {
+    "state": "muscular",
+    "part": "SK_SCFI_CIVL_01_10TORS_HU01",
+    "kind": "gear",
+    "verts": 13,
+    "of": 1258,
+    "max_cm": 1.97
+   },
+   {
+    "state": "muscular",
+    "part": "SK_SCFI_CIVL_01_11AUPL_HU01",
+    "kind": "gear",
+    "verts": 1,
+    "of": 114,
+    "max_cm": 0.88
+   },
+   {
+    "state": "muscular",
+    "part": "SK_SCFI_CIVL_01_12AUPR_HU01",
+    "kind": "gear",
+    "verts": 1,
+    "of": 114,
+    "max_cm": 0.66
+   },
+   {
+    "state": "muscular",
+    "part": "SK_SCFI_CIVL_03_02HAIR_HU01",
+    "kind": "hair",
+    "verts": 1,
+    "of": 677,
+    "max_cm": 0.09
+   },
+   {
+    "state": "lean",
+    "part": "SK_SCFI_CIVL_01_10TORS_HU01",
+    "kind": "gear",
+    "verts": 1,
+    "of": 1258,
+    "max_cm": 0.09
+   },
+   {
+    "state": "lean",
+    "part": "SK_SCFI_CIVL_01_17HIPS_HU01",
+    "kind": "gear",
+    "verts": 1,
+    "of": 917,
+    "max_cm": 1.16
+   },
+   {
+    "state": "skinny",
+    "part": "SK_SCFI_CIVL_01_10TORS_HU01",
+    "kind": "gear",
+    "verts": 4,
+    "of": 1258,
+    "max_cm": 0.5
+   },
+   {
+    "state": "skinny",
+    "part": "SK_SCFI_CIVL_01_17HIPS_HU01",
+    "kind": "gear",
+    "verts": 1,
+    "of": 917,
+    "max_cm": 1.19
+   },
+   {
+    "state": "bust",
+    "part": "SK_SCFI_CIVL_01_10TORS_HU01",
+    "kind": "gear",
+    "verts": 33,
+    "of": 1258,
+    "max_cm": 1.24
+   },
+   {
+    "state": "butt",
+    "part": "SK_SCFI_CIVL_01_10TORS_HU01",
+    "kind": "gear",
+    "verts": 3,
+    "of": 1258,
+    "max_cm": 0.11
+   },
+   {
+    "state": "butt",
+    "part": "SK_SCFI_CIVL_01_17HIPS_HU01",
+    "kind": "gear",
+    "verts": 5,
+    "of": 917,
+    "max_cm": 0.11
+   },
+   {
+    "state": "heavy+bust+butt",
+    "part": "SK_SCFI_CIVL_01_10TORS_HU01",
+    "kind": "gear",
+    "verts": 27,
+    "of": 1258,
+    "max_cm": 1.31
+   },
+   {
+    "state": "heavy+bust+butt",
+    "part": "SK_SCFI_CIVL_01_12AUPR_HU01",
+    "kind": "gear",
+    "verts": 1,
+    "of": 114,
+    "max_cm": 0.74
+   },
+   {
+    "state": "heavy+bust+butt",
+    "part": "SK_SCFI_CIVL_01_17HIPS_HU01",
+    "kind": "gear",
+    "verts": 7,
+    "of": 917,
+    "max_cm": 0.63
+   },
+   {
+    "state": "heavy+bust+butt",
+    "part": "SK_SCFI_CIVL_03_02HAIR_HU01",
+    "kind": "hair",
+    "verts": 10,
+    "of": 677,
+    "max_cm": 1.83
+   },
+   {
+    "state": "muscular+bust",
+    "part": "SK_SCFI_CIVL_01_10TORS_HU01",
+    "kind": "gear",
+    "verts": 39,
+    "of": 1258,
+    "max_cm": 1.38
+   },
+   {
+    "state": "muscular+bust",
+    "part": "SK_SCFI_CIVL_01_11AUPL_HU01",
+    "kind": "gear",
+    "verts": 1,
+    "of": 114,
+    "max_cm": 0.88
+   },
+   {
+    "state": "muscular+bust",
+    "part": "SK_SCFI_CIVL_01_12AUPR_HU01",
+    "kind": "gear",
+    "verts": 1,
+    "of": 114,
+    "max_cm": 0.88
+   },
+   {
+    "state": "muscular+bust",
+    "part": "SK_SCFI_CIVL_03_02HAIR_HU01",
+    "kind": "hair",
+    "verts": 1,
+    "of": 677,
+    "max_cm": 0.09
+   }
+  ],
+  "SoldierM": [
+   {
+    "state": "heavy",
+    "part": "SK_SCFI_SOLD_02_09FCHR_HU01",
+    "kind": "beard",
+    "verts": 4,
+    "of": 537,
+    "max_cm": 0.31
+   },
+   {
+    "state": "heavy",
+    "part": "SK_SCFI_SOLD_03_02HAIR_HU01",
+    "kind": "hair",
+    "verts": 44,
+    "of": 587,
+    "max_cm": 2.74
+   },
+   {
+    "state": "muscular",
+    "part": "SK_SCFI_SOLD_02_09FCHR_HU01",
+    "kind": "beard",
+    "verts": 2,
+    "of": 537,
+    "max_cm": 0.22
+   },
+   {
+    "state": "muscular",
+    "part": "SK_SCFI_SOLD_03_02HAIR_HU01",
+    "kind": "hair",
+    "verts": 17,
+    "of": 587,
+    "max_cm": 1.64
+   },
+   {
+    "state": "defined",
+    "part": "SK_SCFI_SOLD_03_02HAIR_HU01",
+    "kind": "hair",
+    "verts": 6,
+    "of": 587,
+    "max_cm": 0.95
+   },
+   {
+    "state": "muscular+defined",
+    "part": "SK_SCFI_SOLD_02_09FCHR_HU01",
+    "kind": "beard",
+    "verts": 2,
+    "of": 537,
+    "max_cm": 0.22
+   },
+   {
+    "state": "muscular+defined",
+    "part": "SK_SCFI_SOLD_03_02HAIR_HU01",
+    "kind": "hair",
+    "verts": 24,
+    "of": 587,
+    "max_cm": 2.23
+   },
+   {
+    "state": "heavy+defined",
+    "part": "SK_SCFI_SOLD_02_09FCHR_HU01",
+    "kind": "beard",
+    "verts": 4,
+    "of": 537,
+    "max_cm": 0.31
+   },
+   {
+    "state": "heavy+defined",
+    "part": "SK_SCFI_SOLD_03_02HAIR_HU01",
+    "kind": "hair",
+    "verts": 36,
+    "of": 587,
+    "max_cm": 3.31
+   }
+  ],
+  "SoldierF": [
+   {
+    "state": "heavy",
+    "part": "SK_SCFI_SOLD_04_02HAIR_HU01",
+    "kind": "hair",
+    "verts": 8,
+    "of": 579,
+    "max_cm": 1.95
+   },
+   {
+    "state": "heavy+bust+butt",
+    "part": "SK_SCFI_SOLD_04_02HAIR_HU01",
+    "kind": "hair",
+    "verts": 8,
+    "of": 579,
+    "max_cm": 1.95
+   }
+  ],
+  "VikingM": [
+   {
+    "state": "heavy",
+    "part": "SK_HUMN_BASE_04_02HAIR_HU01",
+    "kind": "hair",
+    "verts": 7,
+    "of": 727,
+    "max_cm": 3.77
+   },
+   {
+    "state": "heavy",
+    "part": "SK_VIKG_WARR_08_09FCHR_HU01",
+    "kind": "beard",
+    "verts": 71,
+    "of": 951,
+    "max_cm": 1.55
+   },
+   {
+    "state": "muscular",
+    "part": "SK_HUMN_BASE_04_02HAIR_HU01",
+    "kind": "hair",
+    "verts": 1,
+    "of": 727,
+    "max_cm": 3.95
+   },
+   {
+    "state": "muscular",
+    "part": "SK_VIKG_WARR_08_09FCHR_HU01",
+    "kind": "beard",
+    "verts": 8,
+    "of": 951,
+    "max_cm": 1.25
+   },
+   {
+    "state": "muscular+defined",
+    "part": "SK_HUMN_BASE_04_02HAIR_HU01",
+    "kind": "hair",
+    "verts": 1,
+    "of": 727,
+    "max_cm": 3.95
+   },
+   {
+    "state": "muscular+defined",
+    "part": "SK_VIKG_WARR_08_09FCHR_HU01",
+    "kind": "beard",
+    "verts": 14,
+    "of": 951,
+    "max_cm": 1.54
+   },
+   {
+    "state": "heavy+defined",
+    "part": "SK_HUMN_BASE_04_02HAIR_HU01",
+    "kind": "hair",
+    "verts": 7,
+    "of": 727,
+    "max_cm": 3.77
+   },
+   {
+    "state": "heavy+defined",
+    "part": "SK_VIKG_WARR_08_09FCHR_HU01",
+    "kind": "beard",
+    "verts": 75,
+    "of": 951,
+    "max_cm": 1.83
+   }
+  ],
+  "VikingF": [
+   {
+    "state": "heavy",
+    "part": "SK_HUMN_BASE_07_02HAIR_HU01",
+    "kind": "hair",
+    "verts": 15,
+    "of": 560,
+    "max_cm": 0.64
+   },
+   {
+    "state": "heavy+bust+butt",
+    "part": "SK_HUMN_BASE_07_02HAIR_HU01",
+    "kind": "hair",
+    "verts": 15,
+    "of": 560,
+    "max_cm": 0.64
+   }
+  ],
+  "ElfM": [
+   {
+    "state": "heavy",
+    "part": "SK_ELVN_WARR_02_02HAIR_HU01",
+    "kind": "hair",
+    "verts": 103,
+    "of": 730,
+    "max_cm": 3.94
+   },
+   {
+    "state": "muscular",
+    "part": "SK_ELVN_WARR_02_02HAIR_HU01",
+    "kind": "hair",
+    "verts": 34,
+    "of": 730,
+    "max_cm": 2.48
+   },
+   {
+    "state": "defined",
+    "part": "SK_ELVN_WARR_02_02HAIR_HU01",
+    "kind": "hair",
+    "verts": 12,
+    "of": 730,
+    "max_cm": 0.92
+   },
+   {
+    "state": "muscular+defined",
+    "part": "SK_ELVN_WARR_02_02HAIR_HU01",
+    "kind": "hair",
+    "verts": 48,
+    "of": 730,
+    "max_cm": 3.27
+   },
+   {
+    "state": "heavy+defined",
+    "part": "SK_ELVN_WARR_02_02HAIR_HU01",
+    "kind": "hair",
+    "verts": 107,
+    "of": 730,
+    "max_cm": 3.97
+   }
+  ],
+  "ElfF": [
+   {
+    "state": "heavy",
+    "part": "SK_ELVN_WARR_01_02HAIR_HU01",
+    "kind": "hair",
+    "verts": 197,
+    "of": 1588,
+    "max_cm": 4.0
+   },
+   {
+    "state": "muscular",
+    "part": "SK_ELVN_WARR_01_02HAIR_HU01",
+    "kind": "hair",
+    "verts": 102,
+    "of": 1588,
+    "max_cm": 3.79
+   },
+   {
+    "state": "lean",
+    "part": "SK_ELVN_WARR_01_02HAIR_HU01",
+    "kind": "hair",
+    "verts": 21,
+    "of": 1588,
+    "max_cm": 0.44
+   },
+   {
+    "state": "skinny",
+    "part": "SK_ELVN_WARR_01_02HAIR_HU01",
+    "kind": "hair",
+    "verts": 21,
+    "of": 1588,
+    "max_cm": 0.53
+   },
+   {
+    "state": "bust",
+    "part": "SK_ELVN_WARR_01_02HAIR_HU01",
+    "kind": "hair",
+    "verts": 23,
+    "of": 1588,
+    "max_cm": 3.26
+   },
+   {
+    "state": "butt",
+    "part": "SK_ELVN_WARR_01_02HAIR_HU01",
+    "kind": "hair",
+    "verts": 2,
+    "of": 1588,
+    "max_cm": 0.91
+   },
+   {
+    "state": "heavy+bust+butt",
+    "part": "SK_ELVN_WARR_01_02HAIR_HU01",
+    "kind": "hair",
+    "verts": 205,
+    "of": 1588,
+    "max_cm": 4.0
+   },
+   {
+    "state": "muscular+bust",
+    "part": "SK_ELVN_WARR_01_02HAIR_HU01",
+    "kind": "hair",
+    "verts": 130,
+    "of": 1588,
+    "max_cm": 3.79
+   }
+  ]
+ },
+ "fixed": {},
+ "after": {}
+}

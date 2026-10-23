@@ -193,3 +193,89 @@ Be straight with the user about this, because a clean export can look like "done
   that poses a rig: with controls at zero, every deforming bone must sit where the mesh was bound.
 - A live Blender keeps Python modules loaded. Every tool reloads `kn_common` for that reason; keep that
   line when adding a tool, or a live run will use the helpers as they were when the session started.
+
+## Job: the mannequin scene (every lineage, bare, side by side)
+
+`Assets/_ArtSource/Blender~/Sidekick/SyntyMannequinModeling.blend` holds the twelve bare bodies the game shows with no
+gear on (six lineages, male and female, from `CharacterDataBaker.Specs` and the Lineage assets), each on its own copy
+of the Sidekick rig in T-pose, every Synty shape key kept, plus the Krytical Nova sliders `kn_bust`, `kn_butt`,
+`kn_defined` (shape keys) and `kn_height` (rig property driving the root bone's scale). New gear parts are fitted here.
+
+- Rebuild from the Synty files (fast, deterministic; the numbers are `AMPLITUDES` in the tool):
+  `run_blender.py mannequin_build.py --out ".../SyntyMannequinModeling.blend"`
+- Dress one mannequin to test gear against the sliders (keys copied from the body by nearest surface point):
+  `run_blender.py --blend FILE mannequin_gear.py --tag CivilianF --pack SCFI_CIVL` (`--remove` takes it off)
+- Pictures and MP4s (nothing is saved to the .blend):
+  `mannequin_render.py --lineup out.png`, `--tag CivilianF --columns "bare|;bust|kn_bust=1" --views front,right,back --out sheet.png`,
+  `--tag CivilianF --sweep kn_bust,kn_height --video out.mp4`, `--turntable out.mp4`; `--gear on|off|both` for dressed figures.
+- The hand-off for putting the sliders into the game is `BODY_SLIDERS_HANDOFF.md` beside the scene.
+- **Clipping (brief section 3).** `mannequin_clip.py` counts hair, facial hair and gear vertices that go inside the
+  body at every slider extreme and combination, against the rest shape (Synty's hairline already dips into the
+  scalp on purpose). `--fix` gives hair and beards the body's motion (Synty ships their body keys empty: the cause)
+  and pushes out what is left; it saves the .blend. Order after a rebuild: `mannequin_build.py`, then
+  `mannequin_gear.py` for any dressed mannequin, then `mannequin_clip.py --fix`. Every new part is checked with it
+  before it is shown, and the report (`--out`) goes in the part's Sheets folder.
+- **Export the bare bodies** (only on the owner's go-ahead; given 22 Oct 2026): `mannequin_export.py` writes 26
+  Synty-named copies into `Assets/_Game/Characters/Shared/SidekickParts/Resources/Meshes/BareBody/`, each from a
+  fresh import of Synty's original plus the kn_* keys, checked bone for bone against that original. Some Synty
+  originals differ from SK_BaseModel on a few bones (thighs, upper arms, props); compare a copy with its own original.
+- **Every creator option** (`creator_clip_audit.py --parts creator_parts.json`): measures every head, hair and
+  facial hair the Lineage assets offer, on every body, as Synty ships it, with the transfer alone (what the game
+  does at merge time) and with the full fix.
+
+## Job: gear from the owner's Drive (owner, 22 Oct 2026)
+
+The owner makes gear in Tripo, textured, and drops **one piece at a time** into
+`G:\My Drive\Krytical Nova Armors\<tier>\<Lineage>\<Piece Name>\` (an FBX plus its `.fbm` texture folder; the
+lineage folders are Civilian, Soldier, Viking, Elf, Robot, Skeleton; concept pictures sit beside them). The game's
+gear slots that become models are Armor (torso, arms, hips and legs in one piece), Gloves, Boots and Cape.
+Helmets are vanity, shown with a toggle on the equipment page, but they still get this pass. Ring, Amulet and the
+weapons are not Sidekick body parts and do not go through this job.
+
+**First pass, every piece as it arrives:** `gear_first_pass.py --fbx "<piece>.fbx" --sheet <Sheets/Gear/...png>`
+(`--dry-run` first).
+- Opens the holes a body passes through: the neck, sleeve ends and leg ends of an armor piece, each glove's cuff,
+  each boot's top, and the head opening of a helmet. Tripo often seals these with a flat cap. An opening counts
+  as already open when an open loop sits there, judged by its position alone: which way a rim's faces run says
+  nothing. A sealed one is a flat, roughly round patch whose whole edge folds sharply into the walls. A sash end
+  or a plate never qualifies, because it is long and thin or its edge runs on smoothly.
+- **Robots keep their caps.** Synty's robot parts are the chassis itself, every part closed, its ends hidden in
+  the next part. **Skeleton pieces are opened like human ones**, because Synty's skeleton outfits carry the bones of
+  their body area inside them (the torso piece holds the ribcage). The second pass adds those bones.
+- Sizes the piece uniformly by height against the lineage's bare body (armor: collar to ankle = neck to ankle).
+  Then, armor only, it widens at the chest and hips, never narrowing, until the body is covered with a few per
+  cent to spare. Each direction is measured from the body's centre: front, back, left and right separately,
+  because Tripo's figures carry their depth differently from Synty's chunkier bodies. The pose stays as modelled,
+  usually arms down. Skin showing at the shoulders is that pose, not the size, and the second pass fixes it.
+- Writes `<Piece_Name>_Revised.fbx` beside the original, named after the piece's **folder** (Tripo names files
+  generically, e.g. `3d_model_robot_armor`). It holds one mesh of that name with the texture embedded. The owner
+  asked for this file, so writing it needs no further go-ahead. Nothing goes into the Unity project.
+
+**Second pass, once a whole set is in (not built yet; the plan):**
+1. Pose each piece into the rig's T-pose: arms up to the rig's arm line, with a temporary armature fitted to
+   the piece.
+2. Conform to the lineage body as an offset shell (the body's surface plus a set thickness). Hard plates stay
+   rigid and are moved whole. Make the female breastplate or the male counterpart as the character brief says.
+3. Split into Synty's slots (torso, upper and lower arms, hips, legs, attachments) with correct part names.
+   Weights from the body with `sidekick_fit.py`; Synty's four body keys plus kn_bust, kn_butt and kn_defined.
+4. **Loose cloth (sashes, tabards, capes) moves the Synty way:** chains of dangle bones inside the part, named
+   `<slot>_dyn_01_01_l` and parented to the rig bone it hangs from (`tors_dyn_…` under `spine_03`,
+   `abac_dyn_…` under `backAttach`), weighted along the chain. The game creates missing dyn bones on demand
+   (`SidekickPartRefs`) but nothing moves them yet. Making them swing in play needs a spring-bone or cloth system
+   in the game; that is game work, so tell the owner, don't build it here. To preview the swing in Blender a free
+   add-on may be installed (owner's leave, 22 Oct 2026): look on extensions.blender.org first (a spring-bone
+   add-on such as Wiggle 2). Blender's own cloth sim only bakes motion, it does not export as game physics.
+5. **Clip test at rest and in motion.** `mannequin_clip.py` covers every slider. Then play the game's real motion
+   on the fitted piece: Synty's Sidekick clips load straight onto the rig (Emotes and Taunts 140, Idles 330, Base
+   Locomotion 171, under `Assets/Synty/Animation*/Animations/Sidekick`). The melee packs (Grruzam and others)
+   are humanoid in Unity and are retargeted to the rig first. Measure body-through-gear frame by frame and send
+   MP4s. Synty's gear holds in emotes and combat because it is skin-tight with the body's own weights; ours must
+   pass the same test before export.
+6. Export the Unity files into the game's export folder
+   (`Assets/_Game/Characters/Shared/SidekickParts/Resources/Meshes/<Set>/`) on the owner's go-ahead. The parts
+   session brings them into Unity. The textures are 8192 px from Tripo: size them down for the game (2048 is
+   plenty for a part this size) unless the owner says otherwise.
+- **Export the hair fixes** (go-ahead given 22 Oct 2026): `hair_export.py` on `SyntyHairFixes.blend` writes the
+  67 copies to `.../Resources/Meshes/HairFixed/`. Two traps: a fixed mesh whose name was already taken in the
+  source scene gets a `.001` ending (match by base name), and some Synty part files hide their mesh object, which
+  Blender then leaves out of the export (unhide it first).
