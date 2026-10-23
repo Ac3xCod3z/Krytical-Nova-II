@@ -247,6 +247,7 @@ namespace KryticalNova.Items.Visuals
             }
 
             // Remap this part's bone indices onto the merged skeleton.
+            ConformExtraBones(part.extraBones);
             m.GetBindposes(partBindposes);
             var names = part.boneNames;
             if (remap.Length < names.Length) remap = new int[names.Length];
@@ -303,6 +304,24 @@ namespace KryticalNova.Items.Visuals
                         }
                         break;
                 }
+            }
+        }
+
+        /// <summary>
+        /// A dangle bone the skeleton grew for an earlier part keeps its name but not its place: two parts may name a
+        /// chain alike (Synty's skirts and sashes share hips_dyn_01..04; two sets of ours may share theirs). The part
+        /// being merged is the one worn now, so its bones go back under its parent at its rest pose before skinning.
+        /// </summary>
+        private void ConformExtraBones(ExtraBone[] extras)
+        {
+            if (extras == null) return;
+            for (int i = 0; i < extras.Length; i++)
+            {
+                var def = extras[i];
+                if (!skeleton.TryGetValue(def.name, out var bone) || !skeleton.TryGetValue(def.parent, out var parent)) continue;
+                if (bone.parent != parent) bone.SetParent(parent, false);
+                bone.SetLocalPositionAndRotation(def.localPosition, def.localRotation);
+                bone.localScale = def.localScale == Vector3.zero ? Vector3.one : def.localScale;
             }
         }
 

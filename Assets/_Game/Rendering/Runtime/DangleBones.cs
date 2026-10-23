@@ -172,6 +172,18 @@ namespace KryticalNova.Rendering
                 }
             }
 
+            // A bone kept from an earlier piece may now be worn by another one that rests it elsewhere (two pieces that
+            // name a chain alike): where the worn mesh's bind poses put it away from the rest kept for it, theirs win.
+            foreach (var t in dyn)
+            {
+                if (t.parent == null || !bind.TryGetValue(t, out var self) || !bind.TryGetValue(t.parent, out var up)) continue;
+                var local = up.inverse * self;
+                Vector3 p = local.GetColumn(3);
+                if (rest.TryGetValue(t, out var kept) && (kept.p - p).sqrMagnitude <= 0.0001f) continue;
+                rest[t] = (p, local.rotation);
+                t.SetLocalPositionAndRotation(p, local.rotation);
+            }
+
             // Order parents first; collect children among the swung bones.
             var order = new List<Transform>();
             var index = new Dictionary<Transform, int>();
