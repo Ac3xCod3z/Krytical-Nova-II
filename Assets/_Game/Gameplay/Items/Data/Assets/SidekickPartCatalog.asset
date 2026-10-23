@@ -7615,7 +7615,7 @@ MonoBehaviour:
     usesWrap: 0
   - id: 951
     name: SK_ELVN_BASE_01_10TORS_EV01
-    resourcePath: Meshes/Species/Elves/SK_ELVN_BASE_01_10TORS_EV01
+    resourcePath: Meshes/BareBody/SK_ELVN_BASE_01_10TORS_EV01
     region: 10
     pack: ELVN_BASE
     variant: 1
@@ -7623,7 +7623,7 @@ MonoBehaviour:
     usesWrap: 1
   - id: 952
     name: SK_ELVN_BASE_01_11AUPL_EV01
-    resourcePath: Meshes/Species/Elves/SK_ELVN_BASE_01_11AUPL_EV01
+    resourcePath: Meshes/BareBody/SK_ELVN_BASE_01_11AUPL_EV01
     region: 11
     pack: ELVN_BASE
     variant: 1
@@ -7631,7 +7631,7 @@ MonoBehaviour:
     usesWrap: 0
   - id: 953
     name: SK_ELVN_BASE_01_12AUPR_EV01
-    resourcePath: Meshes/Species/Elves/SK_ELVN_BASE_01_12AUPR_EV01
+    resourcePath: Meshes/BareBody/SK_ELVN_BASE_01_12AUPR_EV01
     region: 12
     pack: ELVN_BASE
     variant: 1
@@ -7639,7 +7639,7 @@ MonoBehaviour:
     usesWrap: 0
   - id: 954
     name: SK_ELVN_BASE_01_13ALWL_EV01
-    resourcePath: Meshes/Species/Elves/SK_ELVN_BASE_01_13ALWL_EV01
+    resourcePath: Meshes/BareBody/SK_ELVN_BASE_01_13ALWL_EV01
     region: 13
     pack: ELVN_BASE
     variant: 1
@@ -7647,7 +7647,7 @@ MonoBehaviour:
     usesWrap: 0
   - id: 955
     name: SK_ELVN_BASE_01_14ALWR_EV01
-    resourcePath: Meshes/Species/Elves/SK_ELVN_BASE_01_14ALWR_EV01
+    resourcePath: Meshes/BareBody/SK_ELVN_BASE_01_14ALWR_EV01
     region: 14
     pack: ELVN_BASE
     variant: 1
@@ -7655,7 +7655,7 @@ MonoBehaviour:
     usesWrap: 0
   - id: 956
     name: SK_ELVN_BASE_01_15HNDL_EV01
-    resourcePath: Meshes/Species/Elves/SK_ELVN_BASE_01_15HNDL_EV01
+    resourcePath: Meshes/BareBody/SK_ELVN_BASE_01_15HNDL_EV01
     region: 15
     pack: ELVN_BASE
     variant: 1
@@ -7663,7 +7663,7 @@ MonoBehaviour:
     usesWrap: 0
   - id: 957
     name: SK_ELVN_BASE_01_16HNDR_EV01
-    resourcePath: Meshes/Species/Elves/SK_ELVN_BASE_01_16HNDR_EV01
+    resourcePath: Meshes/BareBody/SK_ELVN_BASE_01_16HNDR_EV01
     region: 16
     pack: ELVN_BASE
     variant: 1
@@ -7671,7 +7671,7 @@ MonoBehaviour:
     usesWrap: 0
   - id: 958
     name: SK_ELVN_BASE_01_17HIPS_EV01
-    resourcePath: Meshes/Species/Elves/SK_ELVN_BASE_01_17HIPS_EV01
+    resourcePath: Meshes/BareBody/SK_ELVN_BASE_01_17HIPS_EV01
     region: 17
     pack: ELVN_BASE
     variant: 1
@@ -7679,7 +7679,7 @@ MonoBehaviour:
     usesWrap: 0
   - id: 959
     name: SK_ELVN_BASE_01_18LEGL_EV01
-    resourcePath: Meshes/Species/Elves/SK_ELVN_BASE_01_18LEGL_EV01
+    resourcePath: Meshes/BareBody/SK_ELVN_BASE_01_18LEGL_EV01
     region: 18
     pack: ELVN_BASE
     variant: 1
@@ -7687,7 +7687,7 @@ MonoBehaviour:
     usesWrap: 0
   - id: 960
     name: SK_ELVN_BASE_01_19LEGR_EV01
-    resourcePath: Meshes/Species/Elves/SK_ELVN_BASE_01_19LEGR_EV01
+    resourcePath: Meshes/BareBody/SK_ELVN_BASE_01_19LEGR_EV01
     region: 19
     pack: ELVN_BASE
     variant: 1
@@ -7695,7 +7695,7 @@ MonoBehaviour:
     usesWrap: 0
   - id: 961
     name: SK_ELVN_BASE_01_20FOTL_EV01
-    resourcePath: Meshes/Species/Elves/SK_ELVN_BASE_01_20FOTL_EV01
+    resourcePath: Meshes/BareBody/SK_ELVN_BASE_01_20FOTL_EV01
     region: 20
     pack: ELVN_BASE
     variant: 1
@@ -7703,7 +7703,7 @@ MonoBehaviour:
     usesWrap: 0
   - id: 962
     name: SK_ELVN_BASE_01_21FOTR_EV01
-    resourcePath: Meshes/Species/Elves/SK_ELVN_BASE_01_21FOTR_EV01
+    resourcePath: Meshes/BareBody/SK_ELVN_BASE_01_21FOTR_EV01
     region: 21
     pack: ELVN_BASE
     variant: 1
@@ -7735,7 +7735,7 @@ MonoBehaviour:
     usesWrap: 0
   - id: 966
     name: SK_ELVN_BASE_01_38WRAP_EV01
-    resourcePath: Meshes/Species/Elves/SK_ELVN_BASE_01_38WRAP_EV01
+    resourcePath: Meshes/BareBody/SK_ELVN_BASE_01_38WRAP_EV01
     region: 38
     pack: ELVN_BASE
     variant: 1
@@ -7991,7 +7991,7 @@ MonoBehaviour:
     usesWrap: 0
   - id: 998
     name: SK_HUMN_BASE_01_10TORS_HU01
-    resourcePath: Meshes/Species/Humans/SK_HUMN_BASE_01_10TORS_HU01
+    resourcePath: Meshes/BareBody/SK_HUMN_BASE_01_10TORS_HU01
     region: 10
     pack: HUMN_BASE
     variant: 1
@@ -7999,7 +7999,7 @@ MonoBehaviour:
     usesWrap: 1
   - id: 999
     name: SK_HUMN_BASE_01_11AUPL_HU01
-    resourcePath: Meshes/Species/Humans/SK_HUMN_BASE_01_11AUPL_HU01
+    resourcePath: Meshes/BareBody/SK_HUMN_BASE_01_11AUPL_HU01
     region: 11
     pack: HUMN_BASE
     variant: 1
@@ -8007,7 +8007,7 @@ MonoBehaviour:
     usesWrap: 0
   - id: 1000
     name: SK_HUMN_BASE_01_12AUPR_HU01
-    resourcePath: Meshes/Species/Humans/SK_HUMN_BASE_01_12AUPR_HU01
+    resourcePath: Meshes/BareBody/SK_HUMN_BASE_01_12AUPR_HU01
     region: 12
     pack: HUMN_BASE
     variant: 1
@@ -8015,7 +8015,7 @@ MonoBehaviour:
     usesWrap: 0
   - id: 1001
     name: SK_HUMN_BASE_01_13ALWL_HU01
-    resourcePath: Meshes/Species/Humans/SK_HUMN_BASE_01_13ALWL_HU01
+    resourcePath: Meshes/BareBody/SK_HUMN_BASE_01_13ALWL_HU01
     region: 13
     pack: HUMN_BASE
     variant: 1
@@ -8023,7 +8023,7 @@ MonoBehaviour:
     usesWrap: 0
   - id: 1002
     name: SK_HUMN_BASE_01_14ALWR_HU01
-    resourcePath: Meshes/Species/Humans/SK_HUMN_BASE_01_14ALWR_HU01
+    resourcePath: Meshes/BareBody/SK_HUMN_BASE_01_14ALWR_HU01
     region: 14
     pack: HUMN_BASE
     variant: 1
@@ -8031,7 +8031,7 @@ MonoBehaviour:
     usesWrap: 0
   - id: 1003
     name: SK_HUMN_BASE_01_15HNDL_HU01
-    resourcePath: Meshes/Species/Humans/SK_HUMN_BASE_01_15HNDL_HU01
+    resourcePath: Meshes/BareBody/SK_HUMN_BASE_01_15HNDL_HU01
     region: 15
     pack: HUMN_BASE
     variant: 1
@@ -8039,7 +8039,7 @@ MonoBehaviour:
     usesWrap: 0
   - id: 1004
     name: SK_HUMN_BASE_01_16HNDR_HU01
-    resourcePath: Meshes/Species/Humans/SK_HUMN_BASE_01_16HNDR_HU01
+    resourcePath: Meshes/BareBody/SK_HUMN_BASE_01_16HNDR_HU01
     region: 16
     pack: HUMN_BASE
     variant: 1
@@ -8047,7 +8047,7 @@ MonoBehaviour:
     usesWrap: 0
   - id: 1005
     name: SK_HUMN_BASE_01_17HIPS_HU01
-    resourcePath: Meshes/Species/Humans/SK_HUMN_BASE_01_17HIPS_HU01
+    resourcePath: Meshes/BareBody/SK_HUMN_BASE_01_17HIPS_HU01
     region: 17
     pack: HUMN_BASE
     variant: 1
@@ -8055,7 +8055,7 @@ MonoBehaviour:
     usesWrap: 0
   - id: 1006
     name: SK_HUMN_BASE_01_18LEGL_HU01
-    resourcePath: Meshes/Species/Humans/SK_HUMN_BASE_01_18LEGL_HU01
+    resourcePath: Meshes/BareBody/SK_HUMN_BASE_01_18LEGL_HU01
     region: 18
     pack: HUMN_BASE
     variant: 1
@@ -8063,7 +8063,7 @@ MonoBehaviour:
     usesWrap: 0
   - id: 1007
     name: SK_HUMN_BASE_01_19LEGR_HU01
-    resourcePath: Meshes/Species/Humans/SK_HUMN_BASE_01_19LEGR_HU01
+    resourcePath: Meshes/BareBody/SK_HUMN_BASE_01_19LEGR_HU01
     region: 19
     pack: HUMN_BASE
     variant: 1
@@ -8071,7 +8071,7 @@ MonoBehaviour:
     usesWrap: 0
   - id: 1008
     name: SK_HUMN_BASE_01_20FOTL_HU01
-    resourcePath: Meshes/Species/Humans/SK_HUMN_BASE_01_20FOTL_HU01
+    resourcePath: Meshes/BareBody/SK_HUMN_BASE_01_20FOTL_HU01
     region: 20
     pack: HUMN_BASE
     variant: 1
@@ -8079,7 +8079,7 @@ MonoBehaviour:
     usesWrap: 0
   - id: 1009
     name: SK_HUMN_BASE_01_21FOTR_HU01
-    resourcePath: Meshes/Species/Humans/SK_HUMN_BASE_01_21FOTR_HU01
+    resourcePath: Meshes/BareBody/SK_HUMN_BASE_01_21FOTR_HU01
     region: 21
     pack: HUMN_BASE
     variant: 1
@@ -8111,7 +8111,7 @@ MonoBehaviour:
     usesWrap: 0
   - id: 1013
     name: SK_HUMN_BASE_01_38WRAP_HU01
-    resourcePath: Meshes/Species/Humans/SK_HUMN_BASE_01_38WRAP_HU01
+    resourcePath: Meshes/BareBody/SK_HUMN_BASE_01_38WRAP_HU01
     region: 38
     pack: HUMN_BASE
     variant: 1

@@ -18,6 +18,12 @@ namespace KryticalNova.EditorTools
     {
         public const string CatalogPath = SidekickGearGenerator.ItemsRoot + "/SidekickPartCatalog.asset";
         public const string MeshRoot = "Assets/Synty/SidekickCharacters/Resources/Meshes";
+        /// <summary>
+        /// Our copies of Synty parts (same names, with our extra body keys, e.g. the bare bodies with kn_bust).
+        /// Scanned after <see cref="MeshRoot"/>, so a copy takes over its original's entry and keeps the id.
+        /// </summary>
+        public const string OwnPartsRoot = "Assets/_Game/Characters/Shared/SidekickParts/Resources/Meshes";
+        private static readonly string[] PartRoots = { MeshRoot, OwnPartsRoot };
         private const string ResourcesMarker = "/Resources/";
 
         // SK_<PACK>_<VV>_<NN><CODE>_<SSnn>, e.g. SK_SCFI_SOLD_01_10TORS_HU01
@@ -42,9 +48,12 @@ namespace KryticalNova.EditorTools
 
             var wrapTorsos = ReadWrapTorsos();
             int before = catalog.Parts.Count;
-            var paths = Directory.GetFiles(MeshRoot, "SK_*.fbx", SearchOption.AllDirectories)
-                .Select(p => p.Replace('\\', '/')).OrderBy(p => p, StringComparer.Ordinal);
-            int seen = 0;
+            // Root by root, in order: a later root's part replaces the earlier one of the same name.
+            var paths = PartRoots.Where(Directory.Exists).SelectMany(root =>
+                Directory.GetFiles(root, "SK_*.fbx", SearchOption.AllDirectories)
+                    .Select(p => p.Replace('\\', '/')).OrderBy(p => p, StringComparer.Ordinal));
+            int seen = 0, replaced = 0;
+            var names = new HashSet<string>(StringComparer.Ordinal);
             foreach (var path in paths)
             {
                 string partName = Path.GetFileNameWithoutExtension(path);
@@ -65,13 +74,15 @@ namespace KryticalNova.EditorTools
                     species = m.Groups["sp"].Value,
                     usesWrap = wrapTorsos.Contains(partName)
                 });
-                seen++;
+                if (names.Add(partName)) seen++;
+                else replaced++;
             }
 
             EditorUtility.SetDirty(catalog);
             AssetDatabase.SaveAssets();
             PartLibrary.Clear();
-            Debug.Log($"[Characters] Part catalog: {seen} parts on disk, {catalog.Parts.Count - before} new, {catalog.Parts.Count} total. " +
+            Debug.Log($"[Characters] Part catalog: {seen} parts on disk ({replaced} by our own copies), " +
+                      $"{catalog.Parts.Count - before} new, {catalog.Parts.Count} total. " +
                       "Next: Krytical Nova/Items/1. Generate Test Gear From Synty.");
             return catalog;
         }
