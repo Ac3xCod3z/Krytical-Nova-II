@@ -1593,7 +1593,6 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 75e5fed731a095c4b84c424b95b255de, type: 2}
   - {fileID: 11400000, guid: fc85abd506d83f8429f9b6241e4534eb, type: 2}
   - {fileID: 11400000, guid: 2ced52136aecacb42ac15f06225d10a3, type: 2}
-  - {fileID: 11400000, guid: 35dbd5f65e30ed7458e498eef6fdd2ee, type: 2}
   starterEquipped: []
   starterBag:
   - item: {fileID: 11400000, guid: 3229e03cb43202e428110eae3d2da85b, type: 2}
