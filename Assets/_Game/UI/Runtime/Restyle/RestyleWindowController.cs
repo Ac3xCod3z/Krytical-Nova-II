@@ -14,7 +14,7 @@ namespace KryticalNova.UI
 {
     /// <summary>
     /// The Stylist's, the Reshaper's and the Coach's window: one window, three services. It lists what that service
-    /// may change about the character (the regions, colours and sliders its lineage offers), each with a step to
+    /// may change about the character (the regions, colours and body sliders its lineage offers), each with a step to
     /// either side, and shows every change on the equipment page's doll, which opens beside it. The button uses up
     /// a pass and sends the look to <see cref="PlayerRestyle"/>; the server keeps only what the service owns out
     /// of it. Built on the creator's own editing rules (<see cref="RecipeEdit"/>). Closed when the player walks away.
@@ -26,7 +26,7 @@ namespace KryticalNova.UI
         private const float RangeCheckSeconds = 0.25f;
         private const string WindowName = "restyle-window";
         private const string EquipmentWindowName = "equipment-window";
-        private const int MarkStep = 10, BodyStep = 10;
+        private const int MarkStep = 10, BodyStep = 10, SliderStep = 10;
 
         private VisualElement root, window, rowsHost;
         private Label title, reasonLabel, helpLabel;
@@ -67,7 +67,7 @@ namespace KryticalNova.UI
 
             NpcServices.Register(ServiceIds.Stylist, NpcOffer.Stylist, "CHANGE HAIR", () => Open(RestyleService.Stylist));
             NpcServices.Register(ServiceIds.Reshaper, NpcOffer.Reshaper, "CHANGE FACE", () => Open(RestyleService.Reshaper));
-            NpcServices.Register(ServiceIds.Coach, NpcOffer.Coach, "CHANGE BUILD", () => Open(RestyleService.Coach));
+            NpcServices.Register(ServiceIds.Coach, NpcOffer.Coach, "CHANGE BODY", () => Open(RestyleService.Coach));
             PlayerInventory.LocalChanged += Close;
             HudLayoutEditor.RegisterPreview(WindowName, Preview);
             initialized = true;
@@ -89,16 +89,27 @@ namespace KryticalNova.UI
 
         private void Bind(PlayerRestyle next)
         {
-            if (restyle != null) restyle.Restyled -= OnRestyled;
+            if (restyle != null)
+            {
+                restyle.Restyled -= OnRestyled;
+                restyle.Identity.Changed -= OnRestyled;
+            }
             restyle = next;
-            if (restyle != null) restyle.Restyled += OnRestyled;
+            if (restyle != null)
+            {
+                restyle.Restyled += OnRestyled;
+                restyle.Identity.Changed += OnRestyled;
+            }
         }
 
-        // The new look is on: the window starts again from it.
+        // The new look is on: the window starts again from it. The server's word that it is done can arrive before
+        // the look itself does, so the window also starts again when the look arrives, which it then reads.
         private void OnRestyled()
         {
             if (!open || restyle == null) return;
-            current = restyle.Identity.State.ToRecipe();
+            CharacterRecipe saved = SavedLook();
+            if (RestyleRules.Same(saved, current)) return;
+            current = saved;
             ResetDraft();
         }
 
@@ -122,7 +133,7 @@ namespace KryticalNova.UI
             helpLabel.text = service == RestyleService.Coach
                 ? "One Training Pass covers every change made at once"
                 : "One Restyle Pass covers every change made at once";
-            current = restyle.Identity.State.ToRecipe();
+            current = SavedLook();
             draft = current.Clone();
 
             SetOpen(true);
@@ -175,7 +186,7 @@ namespace KryticalNova.UI
             Bind(PlayerRestyle.Local);
             if (restyle == null || !restyle.Identity.HasIdentity || restyle.Identity.Database == null) return;
             service = RestyleService.Stylist;
-            current = restyle.Identity.State.ToRecipe();
+            current = SavedLook();
             draft = current.Clone();
             BuildRows();
         }
@@ -257,6 +268,16 @@ namespace KryticalNova.UI
             {
                 Stepper("Build", () => Signed(draft.build, "slim", "heavy"), by => draft.build = Body(draft.build, by));
                 Stepper("Muscle", () => Signed(draft.muscle, "lean", "muscular"), by => draft.muscle = Body(draft.muscle, by));
+                // The creator's body sliders (22 Oct 2026): bust and butt on a feminine body, definition on a masculine
+                // one, height on every one. A lineage whose bare body has no such key (robot, skeleton) gets height only.
+                if (draft.bodyType == BodyType.Feminine)
+                {
+                    if (BodyHas(lineage, database, "kn_bust")) Stepper("Bust", () => draft.bust + "%", by => draft.bust = Slider(draft.bust, by));
+                    if (BodyHas(lineage, database, "kn_butt")) Stepper("Butt", () => draft.butt + "%", by => draft.butt = Slider(draft.butt, by));
+                }
+                else if (BodyHas(lineage, database, "kn_defined"))
+                    Stepper("Definition", () => draft.defined + "%", by => draft.defined = Slider(draft.defined, by));
+                Stepper("Height", () => Mathf.RoundToInt(draft.HeightScale * 100f) + "%", by => draft.height = Slider(draft.Height, by));
             }
 
             if (rowsHost.childCount == 0)
@@ -268,6 +289,24 @@ namespace KryticalNova.UI
             ShowAction();
         }
 
+        private readonly Dictionary<(byte, string), bool> bodyKeys = new Dictionary<(byte, string), bool>();
+
+        private bool BodyHas(LineageDefinition lineage, CharacterCreationDatabase database, string key)
+        {
+            if (!bodyKeys.TryGetValue((lineage.id, key), out bool has))
+                bodyKeys[(lineage.id, key)] = has = RecipeResolver.BodyHasKey(lineage, database, key);
+            return has;
+        }
+
+        /// <summary>The character's look as saved, brought up to the current recipe version so the sliders edit it (how it looks is kept).</summary>
+        private CharacterRecipe SavedLook()
+        {
+            CharacterRecipe look = restyle.Identity.State.ToRecipe();
+            look.Upgrade();
+            return look;
+        }
+
+        private static byte Slider(byte value, int by) => (byte)Mathf.Clamp(value + by * SliderStep, 0, 100);
         private static byte Mark(byte value, int by) => (byte)Mathf.Clamp(value + by * MarkStep, 0, RestyleRules.MarkLimit);
         private static sbyte Body(sbyte value, int by) => (sbyte)Mathf.Clamp(value + by * BodyStep, -RestyleRules.BodyLimit, RestyleRules.BodyLimit);
         private static string Signed(int value, string low, string high) => value == 0 ? "Even" : value < 0 ? $"{-value}% {low}" : $"{value}% {high}";

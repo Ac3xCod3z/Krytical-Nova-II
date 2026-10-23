@@ -106,10 +106,10 @@ namespace KryticalNova.EditorTools
                 Greeting = "A new face is an hour's work. Who you are under it is your business.",
                 Services = "Changes your face: head, eyes, ears, nose, teeth, skin tone, eye colour, scars, eyeliner and grime. One Restyle Pass covers every change made at once." },
             new NpcSeed { Id = "Coach", Role = NpcRole.Coach, Model = "SM_Chr_Cyber_Male_01",
-                Name = "Coach", Title = "Build · Muscle",
+                Name = "Coach", Title = "Body · Height",
                 Offers = NpcOffer.Coach,
                 Greeting = "Heavier, leaner, bigger: tell me what you want to carry and we'll get you there.",
-                Services = "Changes your build and muscle. One Training Pass covers both." },
+                Services = "Changes your body: build, muscle, bust and butt (a feminine body), definition (a masculine body) and height. One Training Pass covers every change made at once." },
             // The Fabricator stands where the Elder hall's slot was kept: crafting now, stat resets and castle entry later.
             new NpcSeed { Id = "Fabricator", Role = NpcRole.Fabricator, Model = "SM_Chr_Robot_01",
                 Name = "Fabricator", Title = "Crafting",

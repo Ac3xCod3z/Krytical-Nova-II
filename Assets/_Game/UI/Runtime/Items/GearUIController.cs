@@ -197,6 +197,7 @@ namespace KryticalNova.UI
             if (inventory != null)
             {
                 inventory.Changed -= RefreshBag;
+                inventory.Changed -= RefreshEquipment;
                 inventory.RequestFailed -= OnRequestFailed;
                 if (progression != null)
                 {
@@ -222,6 +223,9 @@ namespace KryticalNova.UI
             if (inventory != null)
             {
                 inventory.Changed += RefreshBag;
+                // A worn piece's Temper travels apart from the loadout and may reach a client after it: the slots redraw
+                // when it arrives too, so a piece put back on keeps its glow-band rim and its +% (owner, 23 Oct 2026).
+                inventory.Changed += RefreshEquipment;
                 inventory.RequestFailed += OnRequestFailed;
                 if (equipment != null) equipment.SlotChanged += OnSlotChanged;
                 BuildSilhouettes();

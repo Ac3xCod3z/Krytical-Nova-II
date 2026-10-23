@@ -70,7 +70,7 @@ namespace KryticalNova.Tests
         }
 
         [Test]
-        public void TheCoach_ChangesBuildAndMuscleOnly()
+        public void TheCoach_ChangesTheBodyOnly()
         {
             CharacterRecipe result = Merge(RestyleService.Coach);
             Assert.AreEqual(-60, result.build);
@@ -92,6 +92,96 @@ namespace KryticalNova.Tests
                 Assert.AreEqual(3, result.palette, service.ToString());
                 CollectionAssert.AreEquivalent(new ushort[] { 101, 102 }, result.parts, service.ToString());
             }
+        }
+
+        private static CharacterRecipe Sliders(BodyType bodyType, byte bust, byte butt, byte defined, byte height)
+        {
+            CharacterRecipe look = Look();
+            look.bodyType = bodyType;
+            look.bust = bust;
+            look.butt = butt;
+            look.defined = defined;
+            look.height = height;
+            return look;
+        }
+
+        [Test]
+        public void TheCoach_ChangesBustButtAndHeight_OnAFeminineBody()
+        {
+            CharacterRecipe saved = Sliders(BodyType.Feminine, 0, 0, 0, 50);
+            CharacterRecipe result = RestyleRules.Merge(saved, Sliders(BodyType.Feminine, 70, 40, 90, 80), RestyleService.Coach, null);
+            Assert.AreEqual(70, result.bust);
+            Assert.AreEqual(40, result.butt);
+            Assert.AreEqual(0, result.defined, "definition is worn by a masculine body only");
+            Assert.AreEqual(80, result.Height);
+        }
+
+        [Test]
+        public void TheCoach_ChangesDefinitionAndHeight_OnAMasculineBody()
+        {
+            CharacterRecipe saved = Sliders(BodyType.Masculine, 0, 0, 0, 50);
+            CharacterRecipe result = RestyleRules.Merge(saved, Sliders(BodyType.Masculine, 70, 40, 90, 20), RestyleService.Coach, null);
+            Assert.AreEqual(0, result.bust, "bust is worn by a feminine body only");
+            Assert.AreEqual(0, result.butt);
+            Assert.AreEqual(90, result.defined);
+            Assert.AreEqual(20, result.Height);
+        }
+
+        [Test]
+        public void TheCoach_GoesByTheSavedBodyType_NotTheClients()
+        {
+            CharacterRecipe saved = Sliders(BodyType.Masculine, 0, 0, 0, 50);
+            CharacterRecipe result = RestyleRules.Merge(saved, Sliders(BodyType.Feminine, 70, 40, 0, 50), RestyleService.Coach, null);
+            Assert.AreEqual(BodyType.Masculine, result.bodyType);
+            Assert.AreEqual(0, result.bust);
+            Assert.AreEqual(0, result.butt);
+        }
+
+        [Test]
+        public void TheBodySliders_StayWithinTheirLimits()
+        {
+            CharacterRecipe result = RestyleRules.Merge(Sliders(BodyType.Feminine, 0, 0, 0, 50), Sliders(BodyType.Feminine, 255, 200, 0, 255), RestyleService.Coach, null);
+            Assert.AreEqual(100, result.bust);
+            Assert.AreEqual(100, result.butt);
+            Assert.AreEqual(100, result.Height);
+            Assert.LessOrEqual(result.height, 100, "the validator rejects a stored value over 100");
+        }
+
+        [Test]
+        public void OnlyTheCoach_ChangesTheBodySliders()
+        {
+            CharacterRecipe saved = Sliders(BodyType.Feminine, 10, 20, 0, 50), wanted = Sliders(BodyType.Feminine, 90, 90, 0, 90);
+            foreach (RestyleService service in new[] { RestyleService.Stylist, RestyleService.Reshaper })
+            {
+                CharacterRecipe result = RestyleRules.Merge(saved, wanted, service, null);
+                Assert.AreEqual(10, result.bust, service.ToString());
+                Assert.AreEqual(20, result.butt, service.ToString());
+                Assert.AreEqual(50, result.Height, service.ToString());
+            }
+        }
+
+        [Test]
+        public void ALookSavedBeforeTheSliders_StandsAtTheMiddleHeight_AndOnlyAChangeCounts()
+        {
+            CharacterRecipe old = Look();
+            old.version = 1;
+            old.bodyType = BodyType.Feminine;
+            old.height = 0; // a version 1 save never wrote it
+
+            CharacterRecipe same = old.Clone();
+            same.Upgrade();
+            CharacterRecipe merged = RestyleRules.Merge(old, same, RestyleService.Coach, null);
+            Assert.AreEqual(CharacterRecipe.CurrentVersion, merged.version);
+            Assert.AreEqual(CharacterRecipe.DefaultHeight, merged.Height);
+            Assert.IsTrue(RestyleRules.Same(old, merged), "bringing an old look up to date is no change and costs no pass");
+
+            CharacterRecipe taller = same.Clone();
+            taller.height = 70;
+            taller.bust = 30;
+            merged = RestyleRules.Merge(old, taller, RestyleService.Coach, null);
+            Assert.AreEqual(70, merged.Height);
+            Assert.AreEqual(30, merged.bust);
+            Assert.IsFalse(RestyleRules.Same(old, merged));
         }
 
         [Test]

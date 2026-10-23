@@ -66,6 +66,9 @@ namespace KryticalNova.Combat
         private string keptSkill;
         private float keptAt = float.NegativeInfinity;
         private int keptPress = -1;
+        // Where the game is decided: the step of the combo and when it is broken if no next step comes.
+        private int comboStep;
+        private float comboUntil = float.NegativeInfinity;
         // The last presses, newest last written, and what they add up to.
         private readonly CadencePress[] history = new CadencePress[HistorySize];
         private int written;
@@ -178,6 +181,7 @@ namespace KryticalNova.Combat
         {
             base.OnNetworkSpawn();
             keptSkill = null; // whatever the offline avatar had earned does not come along into a session
+            comboStep = 0;
             mirrored = false;
             ResetTally();
         }
@@ -335,6 +339,41 @@ namespace KryticalNova.Combat
             if (IsSpawned && !IsOwnedByServer) EarnedRpc(skill.skillId);
             else ShowEarned(skill.skillId);
             return settings.Multiplier;
+        }
+
+        // ------------------------------------------------------------------ the combo
+
+        /// <summary>
+        /// Server or offline, after <see cref="ServerTake(SkillDefinitionSO, out bool)"/> for an attack's cast: moves the
+        /// Cadence combo (<see cref="CadenceCombo"/>) on and returns its step after this cast, 0 for none. The player's
+        /// own game is told, with whether a charged Redline is now waiting for (or spent on) the last step.
+        /// </summary>
+        public int ServerCombo(SkillKind kind, bool onCadence, bool redlineCharged)
+        {
+            if (!Decides || settings == null || !settings.enabled) return 0;
+            int was = comboStep;
+            comboStep = CadenceCombo.Next(comboStep, CadenceCombo.Alive(Time.time, comboUntil), kind, onCadence);
+            comboUntil = comboStep > 0 ? Time.time + settings.comboSeconds : float.NegativeInfinity;
+            if (Logging && (comboStep > 0 || was > 0)) Debug.Log($"[Cadence] {name}: combo {was} -> {comboStep}.");
+            bool redline = redlineCharged && comboStep > 0;
+            if (IsSpawned && !IsOwnedByServer) ComboRpc((byte)comboStep, redline);
+            else ShowCombo(comboStep, redline);
+            return comboStep;
+        }
+
+        /// <summary>
+        /// Raised on this machine when its own player's combo moves: the step (1-3, 0 when broken), the seconds left for
+        /// the next, and whether Redline rides on it. For presentation only (the COMBO word, the Beat Ring).
+        /// </summary>
+        public static event Action<int, float, bool> LocalCombo;
+
+        [Rpc(SendTo.Owner)]
+        private void ComboRpc(byte step, bool redline) => ShowCombo(step, redline);
+
+        private void ShowCombo(int step, bool redline)
+        {
+            if (!IsMine) return;
+            LocalCombo?.Invoke(step, settings != null ? settings.comboSeconds : 2f, redline);
         }
 
         /// <summary>Whether a cast on Cadence hits this victim harder (other players only when the settings say so).</summary>

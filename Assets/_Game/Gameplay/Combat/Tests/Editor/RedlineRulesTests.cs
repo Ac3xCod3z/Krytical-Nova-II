@@ -42,6 +42,40 @@ namespace KryticalNova.Combat.Tests
         }
 
         [Test]
+        public void TheCombo_OneTwoThreeOnTheBeat_ClimbsToTheTop()
+        {
+            int step = CadenceCombo.Next(0, false, SkillKind.SingleHit, true);
+            Assert.AreEqual(1, step);
+            step = CadenceCombo.Next(step, true, SkillKind.TwoHit, true);
+            Assert.AreEqual(2, step);
+            step = CadenceCombo.Next(step, true, SkillKind.ThreeHit, true);
+            Assert.AreEqual(3, step);
+            Assert.AreEqual(1, CadenceCombo.Next(step, true, SkillKind.SingleHit, true), "after the top a new chain starts");
+        }
+
+        [Test]
+        public void TheCombo_OffTheBeat_OutOfOrder_OrTooLate_IsBroken()
+        {
+            Assert.AreEqual(0, CadenceCombo.Next(1, true, SkillKind.TwoHit, false), "off the beat");
+            Assert.AreEqual(0, CadenceCombo.Next(1, true, SkillKind.ThreeHit, true), "skipped a step");
+            Assert.AreEqual(0, CadenceCombo.Next(1, true, SkillKind.Area, true), "an area skill has no place in it");
+            Assert.AreEqual(0, CadenceCombo.Next(1, false, SkillKind.TwoHit, true), "the window ran out");
+            Assert.AreEqual(1, CadenceCombo.Next(2, true, SkillKind.SingleHit, true), "a one-hit skill starts again");
+            Assert.AreEqual(0, CadenceCombo.Next(0, false, SkillKind.ThreeHit, true), "a chain starts with a one-hit skill");
+            Assert.IsTrue(CadenceCombo.Alive(1.9f, 2f));
+            Assert.IsFalse(CadenceCombo.Alive(2.1f, 2f));
+        }
+
+        [Test]
+        public void Redline_WaitsThroughStepsOneAndTwo_NotThree()
+        {
+            Assert.IsFalse(RedlineRules.SavedForTheChain(0), "no chain: spent as before");
+            Assert.IsTrue(RedlineRules.SavedForTheChain(1));
+            Assert.IsTrue(RedlineRules.SavedForTheChain(2));
+            Assert.IsFalse(RedlineRules.SavedForTheChain(3), "step 3 holds it for every hit and spends it");
+        }
+
+        [Test]
         public void OtherAttacks_AsBefore_SpentOnTheFirstHitThatLands()
         {
             foreach (SkillKind kind in new[] { SkillKind.SingleHit, SkillKind.TwoHit, SkillKind.Area })

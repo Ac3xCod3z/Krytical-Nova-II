@@ -27,10 +27,14 @@ namespace KryticalNova.Combat
     /// critical with the charge's power, and it is spent with the third. The press decides: pressed off the beat, the
     /// charge goes on the first hit. A hit of a three-hit attack that the target evades spends the charge there and
     /// then, and the hits after it are plain; on a cast on Cadence, so does a hit that cannot be made (the target gone
-    /// or out of reach).
+    /// or out of reach). In the Cadence combo (<see cref="CadenceCombo"/>, owner 22 Oct 2026) the charge is not touched by
+    /// steps 1 and 2: it waits for step 3, the three-hit skill on the beat, and is held for all its hits.
     /// </summary>
     public static class RedlineRules
     {
+        /// <summary>True when a cast that leaves the Cadence combo on this step keeps its hands off the charge.</summary>
+        public static bool SavedForTheChain(int comboStep) => comboStep > 0 && comboStep < CadenceCombo.Top;
+
         /// <summary>True when this cast keeps the charge for all its hits, which then land as criticals.</summary>
         public static bool HoldsForEveryHit(SkillKind kind, bool charged, bool onCadence) =>
             charged && onCadence && kind == SkillKind.ThreeHit;

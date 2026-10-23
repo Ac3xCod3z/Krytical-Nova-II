@@ -65,7 +65,7 @@ namespace KryticalNova.DevTools
             if (console.IsActive && !Allowed) console.Deactivate(); // left the world, or GM rights ended, with it open
 
             InputAction key = KeyBindings.Window(KeyBindings.GmConsole);
-            if (key != null && key.WasPressedThisFrame() && !KeyBindings.Listening && Allowed)
+            if (key != null && key.WasPressedThisFrame() && !KeyBindings.Listening && !KeyBindings.CtrlHeld && Allowed)
             {
                 if (console.IsActive) console.Deactivate();
                 else console.Activate();

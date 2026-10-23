@@ -1,0 +1,773 @@
+{
+ "before": {
+  "CivilianM": [
+   {
+    "state": "heavy",
+    "part": "SK_SCFI_CIVL_01_10TORS_HU01",
+    "kind": "gear",
+    "verts": 2,
+    "of": 1258,
+    "max_cm": 0.52
+   },
+   {
+    "state": "heavy",
+    "part": "SK_SCFI_CIVL_01_12AUPR_HU01",
+    "kind": "gear",
+    "verts": 1,
+    "of": 114,
+    "max_cm": 0.52
+   },
+   {
+    "state": "heavy",
+    "part": "SK_SCFI_CIVL_01_17HIPS_HU01",
+    "kind": "gear",
+    "verts": 2,
+    "of": 917,
+    "max_cm": 0.61
+   },
+   {
+    "state": "muscular",
+    "part": "SK_SCFI_CIVL_01_10TORS_HU01",
+    "kind": "gear",
+    "verts": 3,
+    "of": 1258,
+    "max_cm": 1.34
+   },
+   {
+    "state": "muscular",
+    "part": "SK_SCFI_CIVL_01_12AUPR_HU01",
+    "kind": "gear",
+    "verts": 1,
+    "of": 114,
+    "max_cm": 0.61
+   },
+   {
+    "state": "lean",
+    "part": "SK_SCFI_CIVL_01_17HIPS_HU01",
+    "kind": "gear",
+    "verts": 1,
+    "of": 917,
+    "max_cm": 1.13
+   },
+   {
+    "state": "skinny",
+    "part": "SK_SCFI_CIVL_01_17HIPS_HU01",
+    "kind": "gear",
+    "verts": 3,
+    "of": 917,
+    "max_cm": 0.08
+   },
+   {
+    "state": "defined",
+    "part": "SK_SCFI_CIVL_01_10TORS_HU01",
+    "kind": "gear",
+    "verts": 12,
+    "of": 1258,
+    "max_cm": 0.51
+   },
+   {
+    "state": "defined",
+    "part": "SK_SCFI_CIVL_01_11AUPL_HU01",
+    "kind": "gear",
+    "verts": 4,
+    "of": 114,
+    "max_cm": 0.14
+   },
+   {
+    "state": "defined",
+    "part": "SK_SCFI_CIVL_01_12AUPR_HU01",
+    "kind": "gear",
+    "verts": 3,
+    "of": 114,
+    "max_cm": 0.14
+   },
+   {
+    "state": "defined",
+    "part": "SK_SCFI_CIVL_01_13ALWL_HU01",
+    "kind": "gear",
+    "verts": 2,
+    "of": 265,
+    "max_cm": 0.14
+   },
+   {
+    "state": "defined",
+    "part": "SK_SCFI_CIVL_01_14ALWR_HU01",
+    "kind": "gear",
+    "verts": 3,
+    "of": 265,
+    "max_cm": 0.14
+   },
+   {
+    "state": "defined",
+    "part": "SK_SCFI_CIVL_01_17HIPS_HU01",
+    "kind": "gear",
+    "verts": 5,
+    "of": 917,
+    "max_cm": 0.37
+   },
+   {
+    "state": "muscular+defined",
+    "part": "SK_SCFI_CIVL_01_10TORS_HU01",
+    "kind": "gear",
+    "verts": 12,
+    "of": 1258,
+    "max_cm": 0.63
+   },
+   {
+    "state": "muscular+defined",
+    "part": "SK_SCFI_CIVL_01_11AUPL_HU01",
+    "kind": "gear",
+    "verts": 4,
+    "of": 114,
+    "max_cm": 0.14
+   },
+   {
+    "state": "muscular+defined",
+    "part": "SK_SCFI_CIVL_01_12AUPR_HU01",
+    "kind": "gear",
+    "verts": 3,
+    "of": 114,
+    "max_cm": 0.14
+   },
+   {
+    "state": "muscular+defined",
+    "part": "SK_SCFI_CIVL_01_13ALWL_HU01",
+    "kind": "gear",
+    "verts": 2,
+    "of": 265,
+    "max_cm": 0.14
+   },
+   {
+    "state": "muscular+defined",
+    "part": "SK_SCFI_CIVL_01_14ALWR_HU01",
+    "kind": "gear",
+    "verts": 3,
+    "of": 265,
+    "max_cm": 0.14
+   },
+   {
+    "state": "muscular+defined",
+    "part": "SK_SCFI_CIVL_01_17HIPS_HU01",
+    "kind": "gear",
+    "verts": 9,
+    "of": 917,
+    "max_cm": 1.31
+   },
+   {
+    "state": "muscular+defined",
+    "part": "SK_SCFI_CIVL_01_19LEGR_HU01",
+    "kind": "gear",
+    "verts": 1,
+    "of": 250,
+    "max_cm": 0.52
+   },
+   {
+    "state": "heavy+defined",
+    "part": "SK_SCFI_CIVL_01_10TORS_HU01",
+    "kind": "gear",
+    "verts": 16,
+    "of": 1258,
+    "max_cm": 0.77
+   },
+   {
+    "state": "heavy+defined",
+    "part": "SK_SCFI_CIVL_01_11AUPL_HU01",
+    "kind": "gear",
+    "verts": 5,
+    "of": 114,
+    "max_cm": 0.25
+   },
+   {
+    "state": "heavy+defined",
+    "part": "SK_SCFI_CIVL_01_12AUPR_HU01",
+    "kind": "gear",
+    "verts": 4,
+    "of": 114,
+    "max_cm": 0.28
+   },
+   {
+    "state": "heavy+defined",
+    "part": "SK_SCFI_CIVL_01_13ALWL_HU01",
+    "kind": "gear",
+    "verts": 2,
+    "of": 265,
+    "max_cm": 0.14
+   },
+   {
+    "state": "heavy+defined",
+    "part": "SK_SCFI_CIVL_01_14ALWR_HU01",
+    "kind": "gear",
+    "verts": 3,
+    "of": 265,
+    "max_cm": 0.14
+   },
+   {
+    "state": "heavy+defined",
+    "part": "SK_SCFI_CIVL_01_17HIPS_HU01",
+    "kind": "gear",
+    "verts": 16,
+    "of": 917,
+    "max_cm": 2.03
+   }
+  ],
+  "CivilianF": [
+   {
+    "state": "heavy",
+    "part": "SK_SCFI_CIVL_01_10TORS_HU01",
+    "kind": "gear",
+    "verts": 3,
+    "of": 1258,
+    "max_cm": 2.19
+   },
+   {
+    "state": "heavy",
+    "part": "SK_SCFI_CIVL_01_12AUPR_HU01",
+    "kind": "gear",
+    "verts": 1,
+    "of": 114,
+    "max_cm": 0.74
+   },
+   {
+    "state": "heavy",
+    "part": "SK_SCFI_CIVL_01_17HIPS_HU01",
+    "kind": "gear",
+    "verts": 4,
+    "of": 917,
+    "max_cm": 0.93
+   },
+   {
+    "state": "muscular",
+    "part": "SK_SCFI_CIVL_01_10TORS_HU01",
+    "kind": "gear",
+    "verts": 13,
+    "of": 1258,
+    "max_cm": 1.97
+   },
+   {
+    "state": "muscular",
+    "part": "SK_SCFI_CIVL_01_11AUPL_HU01",
+    "kind": "gear",
+    "verts": 1,
+    "of": 114,
+    "max_cm": 0.88
+   },
+   {
+    "state": "muscular",
+    "part": "SK_SCFI_CIVL_01_12AUPR_HU01",
+    "kind": "gear",
+    "verts": 1,
+    "of": 114,
+    "max_cm": 0.66
+   },
+   {
+    "state": "lean",
+    "part": "SK_SCFI_CIVL_01_10TORS_HU01",
+    "kind": "gear",
+    "verts": 1,
+    "of": 1258,
+    "max_cm": 0.09
+   },
+   {
+    "state": "lean",
+    "part": "SK_SCFI_CIVL_01_17HIPS_HU01",
+    "kind": "gear",
+    "verts": 1,
+    "of": 917,
+    "max_cm": 1.16
+   },
+   {
+    "state": "skinny",
+    "part": "SK_SCFI_CIVL_01_10TORS_HU01",
+    "kind": "gear",
+    "verts": 4,
+    "of": 1258,
+    "max_cm": 0.5
+   },
+   {
+    "state": "skinny",
+    "part": "SK_SCFI_CIVL_01_17HIPS_HU01",
+    "kind": "gear",
+    "verts": 1,
+    "of": 917,
+    "max_cm": 1.19
+   },
+   {
+    "state": "bust",
+    "part": "SK_SCFI_CIVL_01_10TORS_HU01",
+    "kind": "gear",
+    "verts": 33,
+    "of": 1258,
+    "max_cm": 1.24
+   },
+   {
+    "state": "butt",
+    "part": "SK_SCFI_CIVL_01_10TORS_HU01",
+    "kind": "gear",
+    "verts": 3,
+    "of": 1258,
+    "max_cm": 0.11
+   },
+   {
+    "state": "butt",
+    "part": "SK_SCFI_CIVL_01_17HIPS_HU01",
+    "kind": "gear",
+    "verts": 5,
+    "of": 917,
+    "max_cm": 0.11
+   },
+   {
+    "state": "heavy+bust+butt",
+    "part": "SK_SCFI_CIVL_01_10TORS_HU01",
+    "kind": "gear",
+    "verts": 27,
+    "of": 1258,
+    "max_cm": 1.31
+   },
+   {
+    "state": "heavy+bust+butt",
+    "part": "SK_SCFI_CIVL_01_12AUPR_HU01",
+    "kind": "gear",
+    "verts": 1,
+    "of": 114,
+    "max_cm": 0.74
+   },
+   {
+    "state": "heavy+bust+butt",
+    "part": "SK_SCFI_CIVL_01_17HIPS_HU01",
+    "kind": "gear",
+    "verts": 7,
+    "of": 917,
+    "max_cm": 0.63
+   },
+   {
+    "state": "muscular+bust",
+    "part": "SK_SCFI_CIVL_01_10TORS_HU01",
+    "kind": "gear",
+    "verts": 39,
+    "of": 1258,
+    "max_cm": 1.38
+   },
+   {
+    "state": "muscular+bust",
+    "part": "SK_SCFI_CIVL_01_11AUPL_HU01",
+    "kind": "gear",
+    "verts": 1,
+    "of": 114,
+    "max_cm": 0.88
+   },
+   {
+    "state": "muscular+bust",
+    "part": "SK_SCFI_CIVL_01_12AUPR_HU01",
+    "kind": "gear",
+    "verts": 1,
+    "of": 114,
+    "max_cm": 0.88
+   }
+  ],
+  "SoldierM": [
+   {
+    "state": "heavy+defined",
+    "part": "SK_SCFI_SOLD_03_02HAIR_HU01",
+    "kind": "hair",
+    "verts": 2,
+    "of": 587,
+    "max_cm": 0.83
+   }
+  ],
+  "SoldierF": [],
+  "VikingM": [],
+  "VikingF": [],
+  "ElfM": [],
+  "ElfF": [
+   {
+    "state": "lean",
+    "part": "SK_ELVN_WARR_01_02HAIR_HU01",
+    "kind": "hair",
+    "verts": 5,
+    "of": 1588,
+    "max_cm": 0.36
+   },
+   {
+    "state": "bust",
+    "part": "SK_ELVN_WARR_01_02HAIR_HU01",
+    "kind": "hair",
+    "verts": 4,
+    "of": 1588,
+    "max_cm": 0.34
+   },
+   {
+    "state": "heavy+bust+butt",
+    "part": "SK_ELVN_WARR_01_02HAIR_HU01",
+    "kind": "hair",
+    "verts": 10,
+    "of": 1588,
+    "max_cm": 0.66
+   },
+   {
+    "state": "muscular+bust",
+    "part": "SK_ELVN_WARR_01_02HAIR_HU01",
+    "kind": "hair",
+    "verts": 8,
+    "of": 1588,
+    "max_cm": 0.33
+   }
+  ]
+ },
+ "fixed": {
+  "CivilianM": {
+   "SK_HUMN_BASE_04_02HAIR_HU01": {
+    "keys_given": [
+     "kn_bust",
+     "kn_butt"
+    ],
+    "pushed": {}
+   },
+   "SK_SCFI_CIVL_01_10TORS_HU01": {
+    "keys_given": [],
+    "pushed": {
+     "defaultBuff=1": 3,
+     "defaultHeavy=1": 1,
+     "kn_defined=1": 12,
+     "combo muscular+defined": 1,
+     "combo heavy+defined": 3
+    }
+   },
+   "SK_SCFI_CIVL_01_11AUPL_HU01": {
+    "keys_given": [],
+    "pushed": {
+     "kn_defined=1": 4,
+     "combo muscular+defined": 1,
+     "combo heavy+defined": 1
+    }
+   },
+   "SK_SCFI_CIVL_01_12AUPR_HU01": {
+    "keys_given": [],
+    "pushed": {
+     "defaultBuff=1": 1,
+     "kn_defined=1": 3,
+     "combo heavy+defined": 1
+    }
+   },
+   "SK_SCFI_CIVL_01_13ALWL_HU01": {
+    "keys_given": [],
+    "pushed": {
+     "kn_defined=1": 2
+    }
+   },
+   "SK_SCFI_CIVL_01_14ALWR_HU01": {
+    "keys_given": [],
+    "pushed": {
+     "kn_defined=1": 3
+    }
+   },
+   "SK_SCFI_CIVL_01_15HNDL_HU01": {
+    "keys_given": [],
+    "pushed": {}
+   },
+   "SK_SCFI_CIVL_01_16HNDR_HU01": {
+    "keys_given": [],
+    "pushed": {}
+   },
+   "SK_SCFI_CIVL_01_17HIPS_HU01": {
+    "keys_given": [],
+    "pushed": {
+     "defaultBuff=0": 1,
+     "defaultHeavy=1": 2,
+     "defaultSkinny=1": 3,
+     "kn_defined=1": 5,
+     "combo muscular+defined": 5,
+     "combo heavy+defined": 1
+    }
+   },
+   "SK_SCFI_CIVL_01_18LEGL_HU01": {
+    "keys_given": [],
+    "pushed": {}
+   },
+   "SK_SCFI_CIVL_01_19LEGR_HU01": {
+    "keys_given": [],
+    "pushed": {
+     "combo muscular+defined": 1
+    }
+   },
+   "SK_SCFI_CIVL_01_20FOTL_HU01": {
+    "keys_given": [],
+    "pushed": {}
+   },
+   "SK_SCFI_CIVL_01_21FOTR_HU01": {
+    "keys_given": [],
+    "pushed": {}
+   }
+  },
+  "CivilianF": {
+   "SK_SCFI_CIVL_01_10TORS_HU01": {
+    "keys_given": [],
+    "pushed": {
+     "defaultBuff=0": 1,
+     "defaultBuff=1": 13,
+     "defaultHeavy=1": 3,
+     "defaultSkinny=1": 3,
+     "kn_bust=1": 33,
+     "kn_butt=1": 4,
+     "kn_defined=1": 1,
+     "combo heavy+bust+butt": 3,
+     "combo muscular+bust": 3
+    }
+   },
+   "SK_SCFI_CIVL_01_11AUPL_HU01": {
+    "keys_given": [],
+    "pushed": {
+     "defaultBuff=1": 1,
+     "combo muscular+bust": 1
+    }
+   },
+   "SK_SCFI_CIVL_01_12AUPR_HU01": {
+    "keys_given": [],
+    "pushed": {
+     "defaultBuff=1": 1,
+     "defaultHeavy=1": 1,
+     "combo muscular+bust": 1
+    }
+   },
+   "SK_SCFI_CIVL_01_13ALWL_HU01": {
+    "keys_given": [],
+    "pushed": {}
+   },
+   "SK_SCFI_CIVL_01_14ALWR_HU01": {
+    "keys_given": [],
+    "pushed": {}
+   },
+   "SK_SCFI_CIVL_01_15HNDL_HU01": {
+    "keys_given": [],
+    "pushed": {}
+   },
+   "SK_SCFI_CIVL_01_16HNDR_HU01": {
+    "keys_given": [],
+    "pushed": {}
+   },
+   "SK_SCFI_CIVL_01_17HIPS_HU01": {
+    "keys_given": [],
+    "pushed": {
+     "defaultBuff=0": 1,
+     "defaultHeavy=1": 4,
+     "kn_butt=1": 5,
+     "combo heavy+bust+butt": 1
+    }
+   },
+   "SK_SCFI_CIVL_01_18LEGL_HU01": {
+    "keys_given": [],
+    "pushed": {}
+   },
+   "SK_SCFI_CIVL_01_19LEGR_HU01": {
+    "keys_given": [],
+    "pushed": {}
+   },
+   "SK_SCFI_CIVL_01_20FOTL_HU01": {
+    "keys_given": [],
+    "pushed": {}
+   },
+   "SK_SCFI_CIVL_01_21FOTR_HU01": {
+    "keys_given": [],
+    "pushed": {}
+   },
+   "SK_SCFI_CIVL_03_02HAIR_HU01": {
+    "keys_given": [
+     "kn_bust",
+     "kn_butt",
+     "kn_defined"
+    ],
+    "pushed": {}
+   }
+  },
+  "SoldierM": {
+   "SK_SCFI_SOLD_02_09FCHR_HU01": {
+    "keys_given": [
+     "kn_bust",
+     "kn_butt"
+    ],
+    "pushed": {}
+   },
+   "SK_SCFI_SOLD_03_02HAIR_HU01": {
+    "keys_given": [
+     "kn_bust",
+     "kn_butt"
+    ],
+    "pushed": {
+     "combo heavy+defined": 2
+    }
+   }
+  },
+  "SoldierF": {
+   "SK_SCFI_SOLD_04_02HAIR_HU01": {
+    "keys_given": [
+     "kn_bust",
+     "kn_butt",
+     "kn_defined"
+    ],
+    "pushed": {}
+   }
+  },
+  "VikingM": {
+   "SK_HUMN_BASE_04_02HAIR_HU01": {
+    "keys_given": [
+     "kn_bust",
+     "kn_butt"
+    ],
+    "pushed": {}
+   },
+   "SK_VIKG_WARR_08_09FCHR_HU01": {
+    "keys_given": [
+     "kn_bust",
+     "kn_butt"
+    ],
+    "pushed": {}
+   }
+  },
+  "VikingF": {
+   "SK_HUMN_BASE_07_02HAIR_HU01": {
+    "keys_given": [
+     "kn_bust",
+     "kn_butt",
+     "kn_defined"
+    ],
+    "pushed": {}
+   }
+  },
+  "ElfM": {
+   "SK_ELVN_WARR_02_02HAIR_HU01": {
+    "keys_given": [
+     "kn_bust",
+     "kn_butt"
+    ],
+    "pushed": {}
+   }
+  },
+  "ElfF": {
+   "SK_ELVN_WARR_01_02HAIR_HU01": {
+    "keys_given": [],
+    "pushed": {
+     "defaultBuff=0": 5,
+     "kn_bust=1": 3,
+     "combo heavy+bust+butt": 1,
+     "combo muscular+bust": 1
+    }
+   }
+  }
+ },
+ "after": {
+  "CivilianM": [
+   {
+    "state": "heavy+defined",
+    "part": "SK_SCFI_CIVL_01_10TORS_HU01",
+    "kind": "gear",
+    "verts": 1,
+    "of": 1258,
+    "max_cm": 0.15
+   },
+   {
+    "state": "heavy+defined",
+    "part": "SK_SCFI_CIVL_01_11AUPL_HU01",
+    "kind": "gear",
+    "verts": 1,
+    "of": 114,
+    "max_cm": 0.15
+   }
+  ],
+  "CivilianF": [
+   {
+    "state": "lean",
+    "part": "SK_SCFI_CIVL_01_10TORS_HU01",
+    "kind": "gear",
+    "verts": 1,
+    "of": 1258,
+    "max_cm": 0.09
+   },
+   {
+    "state": "lean",
+    "part": "SK_SCFI_CIVL_01_17HIPS_HU01",
+    "kind": "gear",
+    "verts": 1,
+    "of": 917,
+    "max_cm": 1.16
+   },
+   {
+    "state": "bust",
+    "part": "SK_SCFI_CIVL_01_10TORS_HU01",
+    "kind": "gear",
+    "verts": 3,
+    "of": 1258,
+    "max_cm": 0.73
+   },
+   {
+    "state": "heavy+bust+butt",
+    "part": "SK_SCFI_CIVL_01_10TORS_HU01",
+    "kind": "gear",
+    "verts": 3,
+    "of": 1258,
+    "max_cm": 1.01
+   },
+   {
+    "state": "muscular+bust",
+    "part": "SK_SCFI_CIVL_01_10TORS_HU01",
+    "kind": "gear",
+    "verts": 3,
+    "of": 1258,
+    "max_cm": 0.71
+   }
+  ],
+  "SoldierM": [],
+  "SoldierF": [],
+  "VikingM": [],
+  "VikingF": [],
+  "ElfM": [],
+  "ElfF": [
+   {
+    "state": "heavy",
+    "part": "SK_ELVN_WARR_01_02HAIR_HU01",
+    "kind": "hair",
+    "verts": 1,
+    "of": 1588,
+    "max_cm": 0.08
+   },
+   {
+    "state": "muscular",
+    "part": "SK_ELVN_WARR_01_02HAIR_HU01",
+    "kind": "hair",
+    "verts": 1,
+    "of": 1588,
+    "max_cm": 0.18
+   },
+   {
+    "state": "lean",
+    "part": "SK_ELVN_WARR_01_02HAIR_HU01",
+    "kind": "hair",
+    "verts": 5,
+    "of": 1588,
+    "max_cm": 0.36
+   },
+   {
+    "state": "skinny",
+    "part": "SK_ELVN_WARR_01_02HAIR_HU01",
+    "kind": "hair",
+    "verts": 1,
+    "of": 1588,
+    "max_cm": 0.1
+   },
+   {
+    "state": "bust",
+    "part": "SK_ELVN_WARR_01_02HAIR_HU01",
+    "kind": "hair",
+    "verts": 1,
+    "of": 1588,
+    "max_cm": 0.13
+   },
+   {
+    "state": "heavy+bust+butt",
+    "part": "SK_ELVN_WARR_01_02HAIR_HU01",
+    "kind": "hair",
+    "verts": 1,
+    "of": 1588,
+    "max_cm": 0.13
+   }
+  ]
+ }
+}

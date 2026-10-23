@@ -14,8 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.NPC.NpcDefinition
   role: 14
   displayName: Coach
-  title: "Build \xB7 Muscle"
+  title: "Body \xB7 Height"
   greeting: 'Heavier, leaner, bigger: tell me what you want to carry and we''ll get you there.'
-  services: Changes your build and muscle. One Training Pass covers both.
+  services: "Changes your body: build, muscle, bust and butt (a feminine body), definition
+    (a masculine body) and height. One Training Pass covers every change made at once."
   offers: 1024
   interactRange: 3

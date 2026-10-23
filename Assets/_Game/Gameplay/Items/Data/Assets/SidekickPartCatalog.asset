@@ -15,7 +15,7 @@ MonoBehaviour:
   parts:
   - id: 1
     name: SK_ELVN_WARR_01_02HAIR_HU01
-    resourcePath: Meshes/Outfits/ElvenWarriors/SK_ELVN_WARR_01_02HAIR_HU01
+    resourcePath: Meshes/HairFixed/SK_ELVN_WARR_01_02HAIR_HU01
     region: 2
     pack: ELVN_WARR
     variant: 1
@@ -255,7 +255,7 @@ MonoBehaviour:
     usesWrap: 0
   - id: 31
     name: SK_ELVN_WARR_02_02HAIR_HU01
-    resourcePath: Meshes/Outfits/ElvenWarriors/SK_ELVN_WARR_02_02HAIR_HU01
+    resourcePath: Meshes/HairFixed/SK_ELVN_WARR_02_02HAIR_HU01
     region: 2
     pack: ELVN_WARR
     variant: 2
@@ -495,7 +495,7 @@ MonoBehaviour:
     usesWrap: 0
   - id: 61
     name: SK_ELVN_WARR_03_02HAIR_HU01
-    resourcePath: Meshes/Outfits/ElvenWarriors/SK_ELVN_WARR_03_02HAIR_HU01
+    resourcePath: Meshes/HairFixed/SK_ELVN_WARR_03_02HAIR_HU01
     region: 2
     pack: ELVN_WARR
     variant: 3
@@ -719,7 +719,7 @@ MonoBehaviour:
     usesWrap: 0
   - id: 89
     name: SK_ELVN_WARR_04_02HAIR_HU01
-    resourcePath: Meshes/Outfits/ElvenWarriors/SK_ELVN_WARR_04_02HAIR_HU01
+    resourcePath: Meshes/HairFixed/SK_ELVN_WARR_04_02HAIR_HU01
     region: 2
     pack: ELVN_WARR
     variant: 4
@@ -783,7 +783,7 @@ MonoBehaviour:
     usesWrap: 0
   - id: 97
     name: SK_ELVN_WARR_05_02HAIR_HU01
-    resourcePath: Meshes/Outfits/ElvenWarriors/SK_ELVN_WARR_05_02HAIR_HU01
+    resourcePath: Meshes/HairFixed/SK_ELVN_WARR_05_02HAIR_HU01
     region: 2
     pack: ELVN_WARR
     variant: 5
@@ -831,7 +831,7 @@ MonoBehaviour:
     usesWrap: 0
   - id: 103
     name: SK_ELVN_WARR_06_02HAIR_HU01
-    resourcePath: Meshes/Outfits/ElvenWarriors/SK_ELVN_WARR_06_02HAIR_HU01
+    resourcePath: Meshes/HairFixed/SK_ELVN_WARR_06_02HAIR_HU01
     region: 2
     pack: ELVN_WARR
     variant: 6
@@ -1703,7 +1703,7 @@ MonoBehaviour:
     usesWrap: 0
   - id: 212
     name: SK_SCFI_CIVL_01_02HAIR_HU01
-    resourcePath: Meshes/Outfits/ScifiCivilians/SK_SCFI_CIVL_01_02HAIR_HU01
+    resourcePath: Meshes/HairFixed/SK_SCFI_CIVL_01_02HAIR_HU01
     region: 2
     pack: SCFI_CIVL
     variant: 1
@@ -1711,7 +1711,7 @@ MonoBehaviour:
     usesWrap: 0
   - id: 213
     name: SK_SCFI_CIVL_01_09FCHR_HU01
-    resourcePath: Meshes/Outfits/ScifiCivilians/SK_SCFI_CIVL_01_09FCHR_HU01
+    resourcePath: Meshes/HairFixed/SK_SCFI_CIVL_01_09FCHR_HU01
     region: 9
     pack: SCFI_CIVL
     variant: 1
@@ -1903,7 +1903,7 @@ MonoBehaviour:
     usesWrap: 0
   - id: 237
     name: SK_SCFI_CIVL_02_02HAIR_HU01
-    resourcePath: Meshes/Outfits/ScifiCivilians/SK_SCFI_CIVL_02_02HAIR_HU01
+    resourcePath: Meshes/HairFixed/SK_SCFI_CIVL_02_02HAIR_HU01
     region: 2
     pack: SCFI_CIVL
     variant: 2
@@ -1911,7 +1911,7 @@ MonoBehaviour:
     usesWrap: 0
   - id: 238
     name: SK_SCFI_CIVL_02_09FCHR_HU01
-    resourcePath: Meshes/Outfits/ScifiCivilians/SK_SCFI_CIVL_02_09FCHR_HU01
+    resourcePath: Meshes/HairFixed/SK_SCFI_CIVL_02_09FCHR_HU01
     region: 9
     pack: SCFI_CIVL
     variant: 2
@@ -2103,7 +2103,7 @@ MonoBehaviour:
     usesWrap: 0
   - id: 262
     name: SK_SCFI_CIVL_03_02HAIR_HU01
-    resourcePath: Meshes/Outfits/ScifiCivilians/SK_SCFI_CIVL_03_02HAIR_HU01
+    resourcePath: Meshes/HairFixed/SK_SCFI_CIVL_03_02HAIR_HU01
     region: 2
     pack: SCFI_CIVL
     variant: 3
@@ -2111,7 +2111,7 @@ MonoBehaviour:
     usesWrap: 0
   - id: 263
     name: SK_SCFI_CIVL_03_09FCHR_HU01
-    resourcePath: Meshes/Outfits/ScifiCivilians/SK_SCFI_CIVL_03_09FCHR_HU01
+    resourcePath: Meshes/HairFixed/SK_SCFI_CIVL_03_09FCHR_HU01
     region: 9
     pack: SCFI_CIVL
     variant: 3
@@ -3519,7 +3519,7 @@ MonoBehaviour:
     usesWrap: 0
   - id: 439
     name: SK_SCFI_SOLD_01_02HAIR_HU01
-    resourcePath: Meshes/Outfits/ScifiSoldiers/SK_SCFI_SOLD_01_02HAIR_HU01
+    resourcePath: Meshes/HairFixed/SK_SCFI_SOLD_01_02HAIR_HU01
     region: 2
     pack: SCFI_SOLD
     variant: 1
@@ -3559,7 +3559,7 @@ MonoBehaviour:
     usesWrap: 0
   - id: 444
     name: SK_SCFI_SOLD_01_09FCHR_HU01
-    resourcePath: Meshes/Outfits/ScifiSoldiers/SK_SCFI_SOLD_01_09FCHR_HU01
+    resourcePath: Meshes/HairFixed/SK_SCFI_SOLD_01_09FCHR_HU01
     region: 9
     pack: SCFI_SOLD
     variant: 1
@@ -3783,7 +3783,7 @@ MonoBehaviour:
     usesWrap: 0
   - id: 472
     name: SK_SCFI_SOLD_02_02HAIR_HU01
-    resourcePath: Meshes/Outfits/ScifiSoldiers/SK_SCFI_SOLD_02_02HAIR_HU01
+    resourcePath: Meshes/HairFixed/SK_SCFI_SOLD_02_02HAIR_HU01
     region: 2
     pack: SCFI_SOLD
     variant: 2
@@ -3823,7 +3823,7 @@ MonoBehaviour:
     usesWrap: 0
   - id: 477
     name: SK_SCFI_SOLD_02_09FCHR_HU01
-    resourcePath: Meshes/Outfits/ScifiSoldiers/SK_SCFI_SOLD_02_09FCHR_HU01
+    resourcePath: Meshes/HairFixed/SK_SCFI_SOLD_02_09FCHR_HU01
     region: 9
     pack: SCFI_SOLD
     variant: 2
@@ -4047,7 +4047,7 @@ MonoBehaviour:
     usesWrap: 0
   - id: 505
     name: SK_SCFI_SOLD_03_02HAIR_HU01
-    resourcePath: Meshes/Outfits/ScifiSoldiers/SK_SCFI_SOLD_03_02HAIR_HU01
+    resourcePath: Meshes/HairFixed/SK_SCFI_SOLD_03_02HAIR_HU01
     region: 2
     pack: SCFI_SOLD
     variant: 3
@@ -4087,7 +4087,7 @@ MonoBehaviour:
     usesWrap: 0
   - id: 510
     name: SK_SCFI_SOLD_03_09FCHR_HU01
-    resourcePath: Meshes/Outfits/ScifiSoldiers/SK_SCFI_SOLD_03_09FCHR_HU01
+    resourcePath: Meshes/HairFixed/SK_SCFI_SOLD_03_09FCHR_HU01
     region: 9
     pack: SCFI_SOLD
     variant: 3
@@ -4311,7 +4311,7 @@ MonoBehaviour:
     usesWrap: 0
   - id: 538
     name: SK_SCFI_SOLD_04_02HAIR_HU01
-    resourcePath: Meshes/Outfits/ScifiSoldiers/SK_SCFI_SOLD_04_02HAIR_HU01
+    resourcePath: Meshes/HairFixed/SK_SCFI_SOLD_04_02HAIR_HU01
     region: 2
     pack: SCFI_SOLD
     variant: 4
@@ -4351,7 +4351,7 @@ MonoBehaviour:
     usesWrap: 0
   - id: 543
     name: SK_SCFI_SOLD_04_09FCHR_HU01
-    resourcePath: Meshes/Outfits/ScifiSoldiers/SK_SCFI_SOLD_04_09FCHR_HU01
+    resourcePath: Meshes/HairFixed/SK_SCFI_SOLD_04_09FCHR_HU01
     region: 9
     pack: SCFI_SOLD
     variant: 4
@@ -4575,7 +4575,7 @@ MonoBehaviour:
     usesWrap: 0
   - id: 571
     name: SK_SCFI_SOLD_05_02HAIR_HU01
-    resourcePath: Meshes/Outfits/ScifiSoldiers/SK_SCFI_SOLD_05_02HAIR_HU01
+    resourcePath: Meshes/HairFixed/SK_SCFI_SOLD_05_02HAIR_HU01
     region: 2
     pack: SCFI_SOLD
     variant: 5
@@ -4615,7 +4615,7 @@ MonoBehaviour:
     usesWrap: 0
   - id: 576
     name: SK_SCFI_SOLD_05_09FCHR_HU01
-    resourcePath: Meshes/Outfits/ScifiSoldiers/SK_SCFI_SOLD_05_09FCHR_HU01
+    resourcePath: Meshes/HairFixed/SK_SCFI_SOLD_05_09FCHR_HU01
     region: 9
     pack: SCFI_SOLD
     variant: 5
@@ -4839,7 +4839,7 @@ MonoBehaviour:
     usesWrap: 0
   - id: 604
     name: SK_SCFI_SOLD_06_02HAIR_HU01
-    resourcePath: Meshes/Outfits/ScifiSoldiers/SK_SCFI_SOLD_06_02HAIR_HU01
+    resourcePath: Meshes/HairFixed/SK_SCFI_SOLD_06_02HAIR_HU01
     region: 2
     pack: SCFI_SOLD
     variant: 6
@@ -4879,7 +4879,7 @@ MonoBehaviour:
     usesWrap: 0
   - id: 609
     name: SK_SCFI_SOLD_06_09FCHR_HU01
-    resourcePath: Meshes/Outfits/ScifiSoldiers/SK_SCFI_SOLD_06_09FCHR_HU01
+    resourcePath: Meshes/HairFixed/SK_SCFI_SOLD_06_09FCHR_HU01
     region: 9
     pack: SCFI_SOLD
     variant: 6
@@ -5103,7 +5103,7 @@ MonoBehaviour:
     usesWrap: 0
   - id: 637
     name: SK_SCFI_SOLD_07_02HAIR_HU01
-    resourcePath: Meshes/Outfits/ScifiSoldiers/SK_SCFI_SOLD_07_02HAIR_HU01
+    resourcePath: Meshes/HairFixed/SK_SCFI_SOLD_07_02HAIR_HU01
     region: 2
     pack: SCFI_SOLD
     variant: 7
@@ -5143,7 +5143,7 @@ MonoBehaviour:
     usesWrap: 0
   - id: 642
     name: SK_SCFI_SOLD_07_09FCHR_HU01
-    resourcePath: Meshes/Outfits/ScifiSoldiers/SK_SCFI_SOLD_07_09FCHR_HU01
+    resourcePath: Meshes/HairFixed/SK_SCFI_SOLD_07_09FCHR_HU01
     region: 9
     pack: SCFI_SOLD
     variant: 7
@@ -5367,7 +5367,7 @@ MonoBehaviour:
     usesWrap: 0
   - id: 670
     name: SK_SCFI_SOLD_08_02HAIR_HU01
-    resourcePath: Meshes/Outfits/ScifiSoldiers/SK_SCFI_SOLD_08_02HAIR_HU01
+    resourcePath: Meshes/HairFixed/SK_SCFI_SOLD_08_02HAIR_HU01
     region: 2
     pack: SCFI_SOLD
     variant: 8
@@ -5407,7 +5407,7 @@ MonoBehaviour:
     usesWrap: 0
   - id: 675
     name: SK_SCFI_SOLD_08_09FCHR_HU01
-    resourcePath: Meshes/Outfits/ScifiSoldiers/SK_SCFI_SOLD_08_09FCHR_HU01
+    resourcePath: Meshes/HairFixed/SK_SCFI_SOLD_08_09FCHR_HU01
     region: 9
     pack: SCFI_SOLD
     variant: 8
@@ -5631,7 +5631,7 @@ MonoBehaviour:
     usesWrap: 0
   - id: 703
     name: SK_SCFI_SOLD_09_02HAIR_HU01
-    resourcePath: Meshes/Outfits/ScifiSoldiers/SK_SCFI_SOLD_09_02HAIR_HU01
+    resourcePath: Meshes/HairFixed/SK_SCFI_SOLD_09_02HAIR_HU01
     region: 2
     pack: SCFI_SOLD
     variant: 9
@@ -5671,7 +5671,7 @@ MonoBehaviour:
     usesWrap: 0
   - id: 708
     name: SK_SCFI_SOLD_09_09FCHR_HU01
-    resourcePath: Meshes/Outfits/ScifiSoldiers/SK_SCFI_SOLD_09_09FCHR_HU01
+    resourcePath: Meshes/HairFixed/SK_SCFI_SOLD_09_09FCHR_HU01
     region: 9
     pack: SCFI_SOLD
     variant: 9
@@ -5895,7 +5895,7 @@ MonoBehaviour:
     usesWrap: 0
   - id: 736
     name: SK_SCFI_SOLD_10_02HAIR_HU01
-    resourcePath: Meshes/Outfits/ScifiSoldiers/SK_SCFI_SOLD_10_02HAIR_HU01
+    resourcePath: Meshes/HairFixed/SK_SCFI_SOLD_10_02HAIR_HU01
     region: 2
     pack: SCFI_SOLD
     variant: 10
@@ -5935,7 +5935,7 @@ MonoBehaviour:
     usesWrap: 0
   - id: 741
     name: SK_SCFI_SOLD_10_09FCHR_HU01
-    resourcePath: Meshes/Outfits/ScifiSoldiers/SK_SCFI_SOLD_10_09FCHR_HU01
+    resourcePath: Meshes/HairFixed/SK_SCFI_SOLD_10_09FCHR_HU01
     region: 9
     pack: SCFI_SOLD
     variant: 10
@@ -6159,7 +6159,7 @@ MonoBehaviour:
     usesWrap: 0
   - id: 769
     name: SK_VIKG_WARR_01_02HAIR_HU01
-    resourcePath: Meshes/Outfits/VikingWarriors/SK_VIKG_WARR_01_02HAIR_HU01
+    resourcePath: Meshes/HairFixed/SK_VIKG_WARR_01_02HAIR_HU01
     region: 2
     pack: VIKG_WARR
     variant: 1
@@ -6167,7 +6167,7 @@ MonoBehaviour:
     usesWrap: 0
   - id: 770
     name: SK_VIKG_WARR_01_09FCHR_HU01
-    resourcePath: Meshes/Outfits/VikingWarriors/SK_VIKG_WARR_01_09FCHR_HU01
+    resourcePath: Meshes/HairFixed/SK_VIKG_WARR_01_09FCHR_HU01
     region: 9
     pack: VIKG_WARR
     variant: 1
@@ -6375,7 +6375,7 @@ MonoBehaviour:
     usesWrap: 0
   - id: 796
     name: SK_VIKG_WARR_02_02HAIR_HU01
-    resourcePath: Meshes/Outfits/VikingWarriors/SK_VIKG_WARR_02_02HAIR_HU01
+    resourcePath: Meshes/HairFixed/SK_VIKG_WARR_02_02HAIR_HU01
     region: 2
     pack: VIKG_WARR
     variant: 2
@@ -6383,7 +6383,7 @@ MonoBehaviour:
     usesWrap: 0
   - id: 797
     name: SK_VIKG_WARR_02_09FCHR_HU01
-    resourcePath: Meshes/Outfits/VikingWarriors/SK_VIKG_WARR_02_09FCHR_HU01
+    resourcePath: Meshes/HairFixed/SK_VIKG_WARR_02_09FCHR_HU01
     region: 9
     pack: VIKG_WARR
     variant: 2
@@ -6591,7 +6591,7 @@ MonoBehaviour:
     usesWrap: 0
   - id: 823
     name: SK_VIKG_WARR_03_02HAIR_HU01
-    resourcePath: Meshes/Outfits/VikingWarriors/SK_VIKG_WARR_03_02HAIR_HU01
+    resourcePath: Meshes/HairFixed/SK_VIKG_WARR_03_02HAIR_HU01
     region: 2
     pack: VIKG_WARR
     variant: 3
@@ -6599,7 +6599,7 @@ MonoBehaviour:
     usesWrap: 0
   - id: 824
     name: SK_VIKG_WARR_03_09FCHR_HU01
-    resourcePath: Meshes/Outfits/VikingWarriors/SK_VIKG_WARR_03_09FCHR_HU01
+    resourcePath: Meshes/HairFixed/SK_VIKG_WARR_03_09FCHR_HU01
     region: 9
     pack: VIKG_WARR
     variant: 3
@@ -6807,7 +6807,7 @@ MonoBehaviour:
     usesWrap: 0
   - id: 850
     name: SK_VIKG_WARR_04_02HAIR_HU01
-    resourcePath: Meshes/Outfits/VikingWarriors/SK_VIKG_WARR_04_02HAIR_HU01
+    resourcePath: Meshes/HairFixed/SK_VIKG_WARR_04_02HAIR_HU01
     region: 2
     pack: VIKG_WARR
     variant: 4
@@ -6815,7 +6815,7 @@ MonoBehaviour:
     usesWrap: 0
   - id: 851
     name: SK_VIKG_WARR_04_09FCHR_HU01
-    resourcePath: Meshes/Outfits/VikingWarriors/SK_VIKG_WARR_04_09FCHR_HU01
+    resourcePath: Meshes/HairFixed/SK_VIKG_WARR_04_09FCHR_HU01
     region: 9
     pack: VIKG_WARR
     variant: 4
@@ -7023,7 +7023,7 @@ MonoBehaviour:
     usesWrap: 0
   - id: 877
     name: SK_VIKG_WARR_05_02HAIR_HU01
-    resourcePath: Meshes/Outfits/VikingWarriors/SK_VIKG_WARR_05_02HAIR_HU01
+    resourcePath: Meshes/HairFixed/SK_VIKG_WARR_05_02HAIR_HU01
     region: 2
     pack: VIKG_WARR
     variant: 5
@@ -7031,7 +7031,7 @@ MonoBehaviour:
     usesWrap: 0
   - id: 878
     name: SK_VIKG_WARR_05_09FCHR_HU01
-    resourcePath: Meshes/Outfits/VikingWarriors/SK_VIKG_WARR_05_09FCHR_HU01
+    resourcePath: Meshes/HairFixed/SK_VIKG_WARR_05_09FCHR_HU01
     region: 9
     pack: VIKG_WARR
     variant: 5
@@ -7231,7 +7231,7 @@ MonoBehaviour:
     usesWrap: 0
   - id: 903
     name: SK_VIKG_WARR_06_02HAIR_HU01
-    resourcePath: Meshes/Outfits/VikingWarriors/SK_VIKG_WARR_06_02HAIR_HU01
+    resourcePath: Meshes/HairFixed/SK_VIKG_WARR_06_02HAIR_HU01
     region: 2
     pack: VIKG_WARR
     variant: 6
@@ -7239,7 +7239,7 @@ MonoBehaviour:
     usesWrap: 0
   - id: 904
     name: SK_VIKG_WARR_06_09FCHR_HU01
-    resourcePath: Meshes/Outfits/VikingWarriors/SK_VIKG_WARR_06_09FCHR_HU01
+    resourcePath: Meshes/HairFixed/SK_VIKG_WARR_06_09FCHR_HU01
     region: 9
     pack: VIKG_WARR
     variant: 6
@@ -7439,7 +7439,7 @@ MonoBehaviour:
     usesWrap: 0
   - id: 929
     name: SK_VIKG_WARR_07_09FCHR_HU01
-    resourcePath: Meshes/Outfits/VikingWarriors/SK_VIKG_WARR_07_09FCHR_HU01
+    resourcePath: Meshes/HairFixed/SK_VIKG_WARR_07_09FCHR_HU01
     region: 9
     pack: VIKG_WARR
     variant: 7
@@ -7487,7 +7487,7 @@ MonoBehaviour:
     usesWrap: 0
   - id: 935
     name: SK_VIKG_WARR_08_09FCHR_HU01
-    resourcePath: Meshes/Outfits/VikingWarriors/SK_VIKG_WARR_08_09FCHR_HU01
+    resourcePath: Meshes/HairFixed/SK_VIKG_WARR_08_09FCHR_HU01
     region: 9
     pack: VIKG_WARR
     variant: 8
@@ -7519,7 +7519,7 @@ MonoBehaviour:
     usesWrap: 0
   - id: 939
     name: SK_VIKG_WARR_09_09FCHR_HU01
-    resourcePath: Meshes/Outfits/VikingWarriors/SK_VIKG_WARR_09_09FCHR_HU01
+    resourcePath: Meshes/HairFixed/SK_VIKG_WARR_09_09FCHR_HU01
     region: 9
     pack: VIKG_WARR
     variant: 9
@@ -7927,7 +7927,7 @@ MonoBehaviour:
     usesWrap: 0
   - id: 990
     name: SK_HUMN_BASE_01_02HAIR_HU01
-    resourcePath: Meshes/Species/Humans/SK_HUMN_BASE_01_02HAIR_HU01
+    resourcePath: Meshes/HairFixed/SK_HUMN_BASE_01_02HAIR_HU01
     region: 2
     pack: HUMN_BASE
     variant: 1
@@ -7983,7 +7983,7 @@ MonoBehaviour:
     usesWrap: 0
   - id: 997
     name: SK_HUMN_BASE_01_09FCHR_HU01
-    resourcePath: Meshes/Species/Humans/SK_HUMN_BASE_01_09FCHR_HU01
+    resourcePath: Meshes/HairFixed/SK_HUMN_BASE_01_09FCHR_HU01
     region: 9
     pack: HUMN_BASE
     variant: 1
@@ -8127,7 +8127,7 @@ MonoBehaviour:
     usesWrap: 0
   - id: 1015
     name: SK_HUMN_BASE_02_02HAIR_HU01
-    resourcePath: Meshes/Species/Humans/SK_HUMN_BASE_02_02HAIR_HU01
+    resourcePath: Meshes/HairFixed/SK_HUMN_BASE_02_02HAIR_HU01
     region: 2
     pack: HUMN_BASE
     variant: 2
@@ -8167,7 +8167,7 @@ MonoBehaviour:
     usesWrap: 0
   - id: 1020
     name: SK_HUMN_BASE_02_09FCHR_HU01
-    resourcePath: Meshes/Species/Humans/SK_HUMN_BASE_02_09FCHR_HU01
+    resourcePath: Meshes/HairFixed/SK_HUMN_BASE_02_09FCHR_HU01
     region: 9
     pack: HUMN_BASE
     variant: 2
@@ -8191,7 +8191,7 @@ MonoBehaviour:
     usesWrap: 0
   - id: 1023
     name: SK_HUMN_BASE_03_02HAIR_HU01
-    resourcePath: Meshes/Species/Humans/SK_HUMN_BASE_03_02HAIR_HU01
+    resourcePath: Meshes/HairFixed/SK_HUMN_BASE_03_02HAIR_HU01
     region: 2
     pack: HUMN_BASE
     variant: 3
@@ -8231,7 +8231,7 @@ MonoBehaviour:
     usesWrap: 0
   - id: 1028
     name: SK_HUMN_BASE_03_09FCHR_HU01
-    resourcePath: Meshes/Species/Humans/SK_HUMN_BASE_03_09FCHR_HU01
+    resourcePath: Meshes/HairFixed/SK_HUMN_BASE_03_09FCHR_HU01
     region: 9
     pack: HUMN_BASE
     variant: 3
@@ -8255,7 +8255,7 @@ MonoBehaviour:
     usesWrap: 0
   - id: 1031
     name: SK_HUMN_BASE_04_02HAIR_HU01
-    resourcePath: Meshes/Species/Humans/SK_HUMN_BASE_04_02HAIR_HU01
+    resourcePath: Meshes/HairFixed/SK_HUMN_BASE_04_02HAIR_HU01
     region: 2
     pack: HUMN_BASE
     variant: 4
@@ -8295,7 +8295,7 @@ MonoBehaviour:
     usesWrap: 0
   - id: 1036
     name: SK_HUMN_BASE_04_09FCHR_HU01
-    resourcePath: Meshes/Species/Humans/SK_HUMN_BASE_04_09FCHR_HU01
+    resourcePath: Meshes/HairFixed/SK_HUMN_BASE_04_09FCHR_HU01
     region: 9
     pack: HUMN_BASE
     variant: 4
@@ -8319,7 +8319,7 @@ MonoBehaviour:
     usesWrap: 0
   - id: 1039
     name: SK_HUMN_BASE_05_02HAIR_HU01
-    resourcePath: Meshes/Species/Humans/SK_HUMN_BASE_05_02HAIR_HU01
+    resourcePath: Meshes/HairFixed/SK_HUMN_BASE_05_02HAIR_HU01
     region: 2
     pack: HUMN_BASE
     variant: 5
@@ -8359,7 +8359,7 @@ MonoBehaviour:
     usesWrap: 0
   - id: 1044
     name: SK_HUMN_BASE_05_09FCHR_HU01
-    resourcePath: Meshes/Species/Humans/SK_HUMN_BASE_05_09FCHR_HU01
+    resourcePath: Meshes/HairFixed/SK_HUMN_BASE_05_09FCHR_HU01
     region: 9
     pack: HUMN_BASE
     variant: 5
@@ -8383,7 +8383,7 @@ MonoBehaviour:
     usesWrap: 0
   - id: 1047
     name: SK_HUMN_BASE_06_02HAIR_HU01
-    resourcePath: Meshes/Species/Humans/SK_HUMN_BASE_06_02HAIR_HU01
+    resourcePath: Meshes/HairFixed/SK_HUMN_BASE_06_02HAIR_HU01
     region: 2
     pack: HUMN_BASE
     variant: 6
@@ -8423,7 +8423,7 @@ MonoBehaviour:
     usesWrap: 0
   - id: 1052
     name: SK_HUMN_BASE_06_09FCHR_HU01
-    resourcePath: Meshes/Species/Humans/SK_HUMN_BASE_06_09FCHR_HU01
+    resourcePath: Meshes/HairFixed/SK_HUMN_BASE_06_09FCHR_HU01
     region: 9
     pack: HUMN_BASE
     variant: 6
@@ -8447,7 +8447,7 @@ MonoBehaviour:
     usesWrap: 0
   - id: 1055
     name: SK_HUMN_BASE_07_02HAIR_HU01
-    resourcePath: Meshes/Species/Humans/SK_HUMN_BASE_07_02HAIR_HU01
+    resourcePath: Meshes/HairFixed/SK_HUMN_BASE_07_02HAIR_HU01
     region: 2
     pack: HUMN_BASE
     variant: 7
@@ -8487,7 +8487,7 @@ MonoBehaviour:
     usesWrap: 0
   - id: 1060
     name: SK_HUMN_BASE_07_09FCHR_HU01
-    resourcePath: Meshes/Species/Humans/SK_HUMN_BASE_07_09FCHR_HU01
+    resourcePath: Meshes/HairFixed/SK_HUMN_BASE_07_09FCHR_HU01
     region: 9
     pack: HUMN_BASE
     variant: 7
@@ -8511,7 +8511,7 @@ MonoBehaviour:
     usesWrap: 0
   - id: 1063
     name: SK_HUMN_BASE_08_02HAIR_HU01
-    resourcePath: Meshes/Species/Humans/SK_HUMN_BASE_08_02HAIR_HU01
+    resourcePath: Meshes/HairFixed/SK_HUMN_BASE_08_02HAIR_HU01
     region: 2
     pack: HUMN_BASE
     variant: 8
@@ -8551,7 +8551,7 @@ MonoBehaviour:
     usesWrap: 0
   - id: 1068
     name: SK_HUMN_BASE_08_09FCHR_HU01
-    resourcePath: Meshes/Species/Humans/SK_HUMN_BASE_08_09FCHR_HU01
+    resourcePath: Meshes/HairFixed/SK_HUMN_BASE_08_09FCHR_HU01
     region: 9
     pack: HUMN_BASE
     variant: 8
@@ -8575,7 +8575,7 @@ MonoBehaviour:
     usesWrap: 0
   - id: 1071
     name: SK_HUMN_BASE_09_02HAIR_HU01
-    resourcePath: Meshes/Species/Humans/SK_HUMN_BASE_09_02HAIR_HU01
+    resourcePath: Meshes/HairFixed/SK_HUMN_BASE_09_02HAIR_HU01
     region: 2
     pack: HUMN_BASE
     variant: 9
@@ -8615,7 +8615,7 @@ MonoBehaviour:
     usesWrap: 0
   - id: 1076
     name: SK_HUMN_BASE_09_09FCHR_HU01
-    resourcePath: Meshes/Species/Humans/SK_HUMN_BASE_09_09FCHR_HU01
+    resourcePath: Meshes/HairFixed/SK_HUMN_BASE_09_09FCHR_HU01
     region: 9
     pack: HUMN_BASE
     variant: 9
@@ -8639,7 +8639,7 @@ MonoBehaviour:
     usesWrap: 0
   - id: 1079
     name: SK_HUMN_BASE_10_02HAIR_HU01
-    resourcePath: Meshes/Species/Humans/SK_HUMN_BASE_10_02HAIR_HU01
+    resourcePath: Meshes/HairFixed/SK_HUMN_BASE_10_02HAIR_HU01
     region: 2
     pack: HUMN_BASE
     variant: 10
@@ -8679,7 +8679,7 @@ MonoBehaviour:
     usesWrap: 0
   - id: 1084
     name: SK_HUMN_BASE_10_09FCHR_HU01
-    resourcePath: Meshes/Species/Humans/SK_HUMN_BASE_10_09FCHR_HU01
+    resourcePath: Meshes/HairFixed/SK_HUMN_BASE_10_09FCHR_HU01
     region: 9
     pack: HUMN_BASE
     variant: 10

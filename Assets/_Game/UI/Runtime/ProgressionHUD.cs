@@ -33,6 +33,7 @@ namespace KryticalNova.UI
         [SerializeField] private PlayerCombatSkills combatSkills;
         [SerializeField] private CharacterBuffManager buffManager;
         private VisualElement root;
+        private Hud.ComboMeter comboMeter; // the Cadence combo's COMBO word
         private VisualElement characterWindow;
         private PlayerNova boundNova;
         private PlayerSerums boundSerums;
@@ -227,6 +228,8 @@ namespace KryticalNova.UI
             }
             root.pickingMode = PickingMode.Ignore;
             SyntySkin.Decorate(root);
+            comboMeter?.Dispose();
+            comboMeter = new Hud.ComboMeter(root);
             characterWindow = root.Q("character-window");
             skillsWindow = root.Q("skills-window");
             levelLabel = root.Q<Label>("level-label");
@@ -639,6 +642,7 @@ namespace KryticalNova.UI
 
         private void Update()
         {
+            comboMeter?.Tick();
             if ((statSteps.IsOpen || skillSteps.IsOpen) && UnityEngine.InputSystem.Keyboard.current != null
                 && UnityEngine.InputSystem.Keyboard.current.escapeKey.wasPressedThisFrame)
             {
@@ -656,6 +660,8 @@ namespace KryticalNova.UI
         private void OnDisable()
         {
             ClientPresentationRegistry.UnregisterPointerBlock(this);
+            comboMeter?.Dispose();
+            comboMeter = null;
             if (!uiReady) return;
             HudLayoutEditor.UnregisterPreview("character-window");
             HudLayoutEditor.UnregisterPreview("skills-window");

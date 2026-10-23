@@ -246,8 +246,9 @@ namespace KryticalNova.EditorTools
             {
                 ["SpiritualRage"] = ("Redline",
                     "Hold to push past the redline. Your next hit deals greatly increased damage with a higher Critical rate " +
-                    "(the first hit of a multi-hit skill). A three-hit skill pressed on the beat keeps the charge for all " +
-                    "three hits, each a Critical, until one misses. The charge fades if unused."),
+                    "(the first hit of a multi-hit skill). In a combo on the beat (a one-hit, then a two-hit, then a three-hit " +
+                    "skill) it waits for the three-hit skill and makes all three hits Criticals, until one misses; a broken " +
+                    "combo spends it. The charge fades if unused."),
                 ["HeavenlySerenity"] = ("Second Wind",
                     "Take a knee and catch your breath, restoring HP and Flux every second for 20s. Higher ranks restore more " +
                     "each second. Interrupted by taking damage or moving."),
