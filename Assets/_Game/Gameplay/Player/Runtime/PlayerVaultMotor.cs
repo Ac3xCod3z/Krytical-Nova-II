@@ -41,6 +41,8 @@ namespace KryticalNova.Player
         private float LandingSearch => traversal != null ? traversal.landingSearch : TraversalSettings.DefaultLandingSearch;
         private float StandingStartAside => traversal != null ? traversal.standingStartAside : TraversalSettings.DefaultStandingStartAside;
         private float StepHeight => traversal != null ? traversal.stepHeight : TraversalSettings.DefaultStepHeight;
+        private float LeadSeconds => traversal != null ? traversal.leadSeconds : TraversalSettings.DefaultLeadSeconds;
+        private float LeadMaximum => traversal != null ? traversal.leadMaximum : TraversalSettings.DefaultLeadMaximum;
         private const float TopSampleStep = 0.15f;
         /// <summary>How far past the NavMesh edge the obstacle may stand (a flower bed in front of a hedge is not walkable).</summary>
         private const float FaceProbeLength = 3.2f;
@@ -478,6 +480,8 @@ namespace KryticalNova.Player
             return Vector3.Distance(a, b);
         }
 
+        private static Vector3 Flat3(Vector3 v) => new Vector3(v.x, 0f, v.z);
+
         private static float Length(NavMeshPath path)
         {
             Vector3[] corners = path.corners;
@@ -492,9 +496,15 @@ namespace KryticalNova.Player
         {
             if (remotePending)
             {
-                // The body shown here (NetworkTransform's, under this player's own walk) has reached the take-off point.
-                Vector3 shown = moveAnticipation != null ? moveAnticipation.ServerShown : transform.position;
-                bool there = Flat(shown, remoteTakeoffRoot) <= RemoteTakeoffTolerance;
+                // The body shown here has reached the take-off point. On the player's own game that is its own body,
+                // which walked there ahead of the server and may already be waiting: it goes at once (owner, 22 Oct
+                // 2026: the vault waited for the thing to be reached and felt stiff). Elsewhere it is NetworkTransform's.
+                Vector3 shown = IsOwner || moveAnticipation == null ? transform.position : moveAnticipation.ServerShown;
+                float within = RemoteTakeoffTolerance + remoteSpeed * Mathf.Max(Time.deltaTime, 1f / 60f) * 2f;
+                bool there = Flat(shown, remoteTakeoffRoot) <= within;
+                // The server may start a little short of the take-off point: a body already past where it started,
+                // on the way over, is there too.
+                if (!there && IsOwner) there = Vector3.Dot(Flat3(shown - remoteTakeoffRoot), Flat3(remotePlan.Landing - remoteTakeoffRoot)) > 0f;
                 if (!there && Time.time - remotePendingSince < RemoteTakeoffWaitMax) return;
                 remotePending = false;
                 if (IsOwner) PlayerMoveAnticipation.Trace(this, $"vault starts here ({(there ? "body at the take-off" : "waited the most")}, {Time.time - remotePendingSince:0.00} s after the server's)");
@@ -520,13 +530,26 @@ namespace KryticalNova.Player
             if (Time.time - armedAt > RearmSeconds && Flat(agent.destination, plan.Takeoff) > 0.6f) { Disarm(); return; }
 
             Vector3 feet = transform.position - Vector3.up * agent.baseOffset;
-            float reach = TriggerRadius + agent.stoppingDistance + agent.velocity.magnitude * Time.deltaTime * 2f;
+            // Started a little before the take-off point, so the run flows into the vault: a share of a second of
+            // running (two frames at the least, whatever the frame rate), and on a server half the player's round trip
+            // too, since their own game is that far ahead (TraversalSettings.leadSeconds / leadMaximum). The speed is
+            // the run's own, not the agent's, which can read 0 on the frame a path is set.
+            float speed = movementSkills != null ? movementSkills.CurrentSpeed : agent.speed;
+            float ahead = Mathf.Max(LeadSeconds, Time.deltaTime * 2f) + OwnerHalfRoundTrip();
+            float reach = TriggerRadius + agent.stoppingDistance + Mathf.Min(speed * ahead, LeadMaximum);
             if (Flat(feet, plan.Takeoff) > reach) return;
 
             armed = false;
-            float speed = movementSkills != null ? movementSkills.CurrentSpeed : agent.speed;
             Begin(plan, speed);
             if (IsSpawned) VaultClientRpc(takeoffRoot, plan.Landing, plan.NearEdge, plan.FarEdge, plan.Top, plan.FacingOffset, plan.Destination, speed);
+        }
+
+        // Half the owning player's round trip in seconds, on a server for another machine's player; 0 otherwise.
+        private float OwnerHalfRoundTrip()
+        {
+            if (!IsSpawned || !IsServer || IsOwnedByServer) return 0f;
+            int ping = KryticalNova.Networking.NetworkHealth.PingMs(OwnerClientId);
+            return ping > 0 ? Mathf.Min(ping, 300) / 2000f : 0f;
         }
 
         [ClientRpc]
