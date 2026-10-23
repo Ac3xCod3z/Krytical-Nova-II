@@ -51,6 +51,13 @@ namespace KryticalNova.Player
         private CharacterLook look;
         private CombatEntity combatEntity;
         private PlayerInventory inventory;
+        // The body's size at height 1.00, so the height slider can fit the collider and the camera's pivot to it.
+        private CapsuleCollider capsule;
+        private float restCapsuleHeight;
+        private Vector3 restCapsuleCenter;
+        private Transform cameraTarget;
+        private Vector3 restCameraTarget;
+        private float feetHeight;
 
         /// <summary>Raised on every peer when the identity is applied (name, faction and look are then current).</summary>
         public event Action Changed;
@@ -98,6 +105,17 @@ namespace KryticalNova.Player
             combatEntity = GetComponent<CombatEntity>();
             inventory = GetComponent<PlayerInventory>();
             duel = GetComponent<IDuelState>();
+            capsule = GetComponent<CapsuleCollider>();
+            if (capsule != null)
+            {
+                restCapsuleHeight = capsule.height;
+                restCapsuleCenter = capsule.center;
+            }
+            cameraTarget = transform.Find("Camera Target");
+            if (cameraTarget != null) restCameraTarget = cameraTarget.localPosition;
+            // The model stands on the ground with its pivot at its feet: the height slider scales from there.
+            feetHeight = look != null ? transform.InverseTransformPoint(look.transform.position).y
+                : capsule != null ? restCapsuleCenter.y - restCapsuleHeight * 0.5f : 0f;
             if (database != null && database.Factions != null) FactionRules.Configure(database.Factions.crossFactionPvp);
         }
 
@@ -251,6 +269,7 @@ namespace KryticalNova.Player
 
             if (look != null && !look.Apply(state.ToRecipe(), database))
                 Debug.LogWarning($"[PlayerIdentity] Could not build the look of '{CharacterName}'.", this);
+            FitBodyToHeight(state.ToRecipe().HeightScale);
             if (combatEntity != null) combatEntity.SetEntityName(CharacterName);
             // A new character starts in the level-1 outfit of its own pack, holding its Discipline's weapon.
             if (inventory != null && (!IsSpawned || IsServer)) inventory.ServerGrantStarterKit(GearPack, Faction, Body, Discipline);
@@ -259,6 +278,22 @@ namespace KryticalNova.Player
                 CharacterSession.RememberRecipe(state.ToRecipe());
             WearerChanged?.Invoke();
             Changed?.Invoke();
+        }
+
+        /// <summary>
+        /// The height slider on every peer: the collider grows or shrinks from the feet with the body, and the camera's
+        /// pivot keeps its place on the body. The name card already rides the head (the Nova's crown).
+        /// </summary>
+        private void FitBodyToHeight(float scale)
+        {
+            if (capsule != null)
+            {
+                float bottom = restCapsuleCenter.y - restCapsuleHeight * 0.5f;
+                capsule.height = restCapsuleHeight * scale;
+                capsule.center = new Vector3(restCapsuleCenter.x, bottom + capsule.height * 0.5f, restCapsuleCenter.z);
+            }
+            if (cameraTarget != null)
+                cameraTarget.localPosition = new Vector3(restCameraTarget.x, feetHeight + (restCameraTarget.y - feetHeight) * scale, restCameraTarget.z);
         }
 
         // ---------------- saving ----------------

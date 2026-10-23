@@ -31,6 +31,9 @@ namespace KryticalNova.CharacterCreation
         private CharacterCreationDatabase database;
         private CharacterLook mirrored;
         private bool gearColorsStale;
+        // The height scale this transform carries now. Serialized so a copy made with Instantiate (the equipment
+        // preview doll) knows its scale already holds it and does not apply it twice.
+        [SerializeField, HideInInspector] private float appliedHeight = 1f;
 
         public CharacterRecipe Current { get; private set; }
         /// <summary>
@@ -42,6 +45,8 @@ namespace KryticalNova.CharacterCreation
         public bool HasLook { get; private set; }
         /// <summary>Raised after a recipe is applied (the merged mesh follows in the same frame's LateUpdate).</summary>
         public event Action Applied;
+        /// <summary>The height slider's scale this model stands at, from its feet (1 until a look is applied).</summary>
+        public float HeightScale => appliedHeight;
 
         public CharacterAppearance Appearance
         {
@@ -58,10 +63,11 @@ namespace KryticalNova.CharacterCreation
             if (database == null || Appearance == null) return false;
             if (!RecipeResolver.Resolve(recipe, database, resolved, Dressed)) return false;
 
-            appearance.ApplyBase(resolved.fixedParts, resolved.defaultParts, resolved.shape, resolved.wrap);
+            appearance.ApplyBase(resolved.fixedParts, resolved.defaultParts, resolved.shape, resolved.wrap, resolved.bareBody);
             this.database = database;
             ApplyColors(recipe, database);
             ApplyJoints(recipe, database);
+            ApplyHeight(recipe.HeightScale);
 
             Current = recipe;
             HasLook = true;
@@ -108,6 +114,19 @@ namespace KryticalNova.CharacterCreation
             // The parts are not applied here: the doll shares the original's merged mesh until something is tried on.
             ApplyColors(Current, database);
             ApplyJoints(Current, database);
+            ApplyHeight(Current.HeightScale);
+        }
+
+        /// <summary>
+        /// The height slider: the whole model scaled uniformly from its feet (this object's pivot), so every part,
+        /// hair and piece of gear follows, and the animation with it.
+        /// </summary>
+        private void ApplyHeight(float scale)
+        {
+            if (scale <= 0f || Mathf.Approximately(scale, appliedHeight)) return;
+            float previous = appliedHeight > 0f ? appliedHeight : 1f;
+            transform.localScale = transform.localScale / previous * scale;
+            appliedHeight = scale;
         }
 
         private void ApplyColors(in CharacterRecipe recipe, CharacterCreationDatabase database)
