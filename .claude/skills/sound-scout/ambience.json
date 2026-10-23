@@ -15,19 +15,9 @@
      "when": "day"
     },
     {
-     "name": "Concord_Crowd",
-     "file": "AMB_Concord_Crowd.ogg",
-     "volume": 0.55,
-     "source": "transportationandmotion_audiohero/Transportation & Motion/AmbienceTrainStationFrench.wav",
-     "start": 0,
-     "seconds": 101.72,
-     "lufs": -26,
-     "when": "day"
-    },
-    {
      "name": "Concord_Park",
      "file": "AMB_Concord_Park.ogg",
-     "volume": 0.45,
+     "volume": 0.6,
      "source": "dolbyatmosvol2_audiohero/Dolby Atmos Vol 2/AMBPark_Central Park Morning_DLBATM015.wav",
      "start": 0,
      "seconds": 175.55,
