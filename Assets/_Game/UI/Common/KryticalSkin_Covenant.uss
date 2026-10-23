@@ -1118,6 +1118,10 @@
 .kn-faction-covenant .nova-banner-detail {
     font-size: 16.8px;
 }
+.kn-faction-covenant .herald-weave-shown {
+    font-size: 15.68px;
+    color: rgb(120, 255, 165);
+}
 
 /* ---- GameMenu.uss ---- */
 .kn-faction-covenant .game-menu-veil {

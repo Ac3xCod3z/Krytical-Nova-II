@@ -1118,6 +1118,10 @@
 .kn-faction-null .nova-banner-detail {
     font-size: 19.2px;
 }
+.kn-faction-null .herald-weave-shown {
+    font-size: 17.92px;
+    color: rgb(170, 120, 255);
+}
 
 /* ---- GameMenu.uss ---- */
 .kn-faction-null .game-menu-veil {
