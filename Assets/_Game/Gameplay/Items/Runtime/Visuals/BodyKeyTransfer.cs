@@ -13,8 +13,8 @@ namespace KryticalNova.Items.Visuals
     ///  - hair and facial hair take the body keys but masculineFeminine, Synty's heavy, skinny and buff included (Synty
     ///    ships them empty or weak; the hair is modelled for either head, so the feminine key stays its own, as in Blender);
     ///  - attachments keep riding their bones and take nothing.
-    /// A part keeps a key of its own only when it moves at least half as far as the body under it would move it.
-    /// Positions are compared at rest (no key applied, all parts share the
+    /// A part keeps a key of its own whenever it is not empty: our fixed copies of the hairs and beards bake every body
+    /// key in full, and the transfer must not undo them. Positions are compared at rest (no key applied, all parts share the
     /// Sidekick base model's space), so a result depends only on the two meshes and is worked out once and kept.
     /// </summary>
     public static class BodyKeyTransfer
@@ -29,8 +29,6 @@ namespace KryticalNova.Items.Visuals
 
         // A key whose largest move is under this share of the body's height counts as empty (about 2 mm on 1.75 m).
         private const float EmptyShare = 0.0012f;
-        // A part's own key is kept when it moves at least this share of what the body under it would move it.
-        private const float OwnKeyShare = 0.5f;
         private const int GridCells = 24;
         private const int MaxCached = 32;
 
@@ -305,9 +303,7 @@ namespace KryticalNova.Items.Visuals
         private static bool OwnsKey(Fit fit, Source source, Mesh mesh, string key)
         {
             if (fit.ownKey.TryGetValue(key, out bool owns)) return owns;
-            float transferred = MaxMove(Transferred(fit, source, key));
-            owns = TryFullDelta(mesh, key, out var delta)
-                && MaxMove(delta) >= Mathf.Max(source.emptyBelow, transferred * OwnKeyShare);
+            owns = TryFullDelta(mesh, key, out var delta) && MaxMove(delta) >= source.emptyBelow;
             fit.ownKey[key] = owns;
             return owns;
         }

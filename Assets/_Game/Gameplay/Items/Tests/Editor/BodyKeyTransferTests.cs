@@ -95,9 +95,9 @@ namespace KryticalNova.Items.Tests
             BodyKeyTransfer.Apply(source, ownHair, new BodyShapeWeights { heavy = 100f }, positions);
             Assert.That(positions[0].y, Is.EqualTo(0.5f).Within(1e-6f));
 
-            // A weak key of its own (under half the body's move) is replaced.
+            // Any real key of its own is kept, however small next to the body's (the fixed hair copies bake theirs).
             var weakHair = Worn(BodyRegion.Hair, new[] { Vector3.up * 0.01f, Vector3.up * 0.01f, Vector3.up * 0.01f });
-            Assert.That(BodyKeyTransfer.KeepsOwnKey(source, weakHair, "02HAIRBlends.defaultHeavy"), Is.False);
+            Assert.That(BodyKeyTransfer.KeepsOwnKey(source, weakHair, "02HAIRBlends.defaultHeavy"), Is.True);
 
             // Gear takes only the three sliders, not Synty's four.
             var gear = Worn(BodyRegion.Torso);
