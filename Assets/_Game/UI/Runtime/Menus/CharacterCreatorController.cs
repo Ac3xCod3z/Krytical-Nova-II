@@ -102,6 +102,8 @@ namespace KryticalNova.UI.Menus
         private int lastEditSource;
         // Preview tab: stances and emotes are browsed by group (one row picks the group, the next the motion in it).
         private int previewFace, stanceGroup, stanceInGroup, emoteGroup;
+        // Choosing teeth or a tongue opens the mouth, so the choice can be seen (owner, 22 Oct 2026).
+        private bool mouthShown;
         private int emoteInGroup = -1; // none played yet
         private readonly List<string> stanceGroups = new List<string>(), emoteGroups = new List<string>();
         private readonly List<List<int>> stanceMembers = new List<List<int>>(), emoteMembers = new List<List<int>>();
@@ -175,6 +177,7 @@ namespace KryticalNova.UI.Menus
         {
             // The preview is not saved with the character: leaving the tab puts the face and stance back.
             if (tab == Tab.Preview && next != Tab.Preview) ResetPreview();
+            if (tab == Tab.Head && next != Tab.Head) ShowMouth(false);
             tab = next;
             for (int i = 0; i < tabButtons.Length; i++)
                 if (tabButtons[i] != null) tabButtons[i].SetSelected(TabOfButton(i) == next);
@@ -480,7 +483,26 @@ namespace KryticalNova.UI.Menus
             Record(DiscreteEdit);
             RecipeEdit.Step(ref recipe, database.Parts, setup, options, direction);
             Preview();
+            ShowMouth(options.region == BodyRegion.Teeth || options.region == BodyRegion.Tongue);
             RefreshOptionRows(); // the Look row may now read "Custom"
+        }
+
+        // The face that bares the teeth while they are chosen (a wide smile, the jaw a little open), and the neutral one after.
+        private void ShowMouth(bool open)
+        {
+            if (open == mouthShown || showroom == null) return;
+            mouthShown = open;
+            showroom.SetFace(open ? MouthFace() : 0);
+        }
+
+        private int MouthFace()
+        {
+            var library = showroom.Expressions;
+            if (library == null) return 0;
+            foreach (string wanted in new[] { "Delighted", "Happy", "Surprised" })
+                for (int i = 0; i < library.Faces.Count; i++)
+                    if (library.Faces[i].name == wanted) return i;
+            return 0;
         }
 
         private static string RegionName(BodyRegion region)
