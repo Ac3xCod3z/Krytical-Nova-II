@@ -1039,6 +1039,9 @@ accepts. Its GPU occlusion culling is off: the camera looks down, so little hide
   appear): past 25 m (scaled by the LOD bias) two bones a vertex, past 60 m one bone, no shadow and animation only while
   on screen, past 150 m not drawn. The player this machine plays is always whole. A body the de-rez has hidden, and its
   pet, are held hidden through every refresh until the respawn (`CharacterLod.Hold`).
+- **Dangle bones** (22 Oct 2026, `DangleBones`): capes, sashes, long hair and beards swing on the `_dyn_` bones inside
+  Sidekick parts, kept off the body by capsules on the spine, pelvis, legs, upper arms and head. Only while on screen;
+  every frame below 25 m, every other frame to 60 m, resting in the bind pose beyond. Never on a dedicated server.
 - **Not done:** impostors for far trees, LOD for characters' own meshes (they are assembled from parts at run time),
   and a check that flags a placed mesh without its LODGroup.
 
