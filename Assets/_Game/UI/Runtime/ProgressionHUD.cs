@@ -253,6 +253,7 @@ namespace KryticalNova.UI
             activeBuffsBar = root.Q("active-buffs-bar");
             boostList = new BoostListView(root.Q("boost-list"));
             boostList.AddSource(AddBoosterLines);
+            boostList.AddSource(AddPassLines);
             // The Skills window is a tree: tiles on tiers, the chosen skill's card beside them.
             VisualElement skillCards = root.Q("skills-body");
             skillTree = null;
@@ -1623,6 +1624,29 @@ namespace KryticalNova.UI
                     Name = item != null ? item.displayName : "XP Booster", SecondsLeft = left, Detail = PlayerExperienceBoosts.Describe(booster)
                 });
             }
+        }
+
+        // What a Pass or a Permit keeps running for days goes in the same list (owner, 23 Oct 2026: "so that someone can see
+        // how much time they have left at a glance"): Autopilot, Autoward and the player's own Kiosk.
+        private static void AddPassLines(List<BoostListView.Line> lines)
+        {
+            long now = DateTime.UtcNow.Ticks;
+            var autopilot = KryticalNova.Autopilot.PlayerAutopilot.Local;
+            if (autopilot != null && !autopilot.Free && autopilot.HasTime)
+                lines.Add(new BoostListView.Line { Name = "Autopilot", SecondsLeft = autopilot.SecondsLeft, Detail = autopilot.TimeLeftLine });
+            var autoward = KryticalNova.Autopilot.PlayerAutobuff.Local;
+            if (autoward != null && autoward.IsActive)
+                lines.Add(new BoostListView.Line
+                {
+                    Name = "Autoward", SecondsLeft = (float)TimeSpan.FromTicks(autoward.ExpiresUtc - now).TotalSeconds, Detail = autoward.TimeLeftLine
+                });
+            var kiosk = KryticalNova.Economy.PlayerKiosk.Local;
+            if (kiosk != null && kiosk.View.exists && kiosk.View.expiresUtc > now)
+                lines.Add(new BoostListView.Line
+                {
+                    Name = "Kiosk", SecondsLeft = (float)TimeSpan.FromTicks(kiosk.View.expiresUtc - now).TotalSeconds,
+                    Detail = kiosk.View.open ? $"Your Kiosk \"{kiosk.ShopName}\" is open." : "Your Kiosk's Permit time.",
+                });
         }
 
         private void RefreshBoostList() => boostList?.Tick(true);
