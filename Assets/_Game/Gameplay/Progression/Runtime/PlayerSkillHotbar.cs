@@ -178,6 +178,13 @@ namespace KryticalNova.Progression
             if (!keyLabelsRead) RefreshKeyLabels();
             if (cancelAction.WasPressedThisFrame()) { EndCharge(false); CancelRequested?.Invoke(); return; }
             if (InputSuppressed) { EndCharge(false); return; }
+            // With Ctrl down the keys belong to the computer (Ctrl+C, Ctrl+V): no window opens and no skill is cast; a
+            // charge already filling keeps filling.
+            if (KryticalNova.Core.KeyBindings.CtrlHeld)
+            {
+                if (chargingSlot != NoSlot) UpdateCharge();
+                return;
+            }
             if (characterAction.WasPressedThisFrame()) CharacterWindowRequested?.Invoke();
             if (skillsAction.WasPressedThisFrame()) SkillsWindowRequested?.Invoke();
 

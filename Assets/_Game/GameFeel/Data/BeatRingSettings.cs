@@ -30,7 +30,7 @@ namespace KryticalNova.GameFeel
         [Range(0f, 1f)] public float standAt = 0.15f;
 
         [Header("Colour")]
-        [Tooltip("The bottom segments. The pet's own glow colour is used when it has one.")]
+        [Tooltip("The bottom segments. The ring keeps its own colours whatever the pet (owner, 23 Oct 2026).")]
         public Color low = new Color(0.25f, 0.85f, 1f);
         [Tooltip("The middle segments.")]
         public Color mid = new Color(1f, 0.72f, 0.18f);
@@ -49,10 +49,14 @@ namespace KryticalNova.GameFeel
         public Color burstCovenant = new Color(0.45f, 1f, 0.6f);
 
         [Header("Motion")]
-        [Tooltip("How fast a bar rises to the music (per second, as a share of a full bar).")]
-        [Min(0.1f)] public float rise = 14f;
-        [Tooltip("How fast a bar falls back.")]
-        [Min(0.1f)] public float fall = 3.5f;
+        [Tooltip("Seconds a bar takes to rise most of the way to the music (an eased step, not a straight line).")]
+        [Range(0.005f, 0.3f)] public float attackSeconds = 0.035f;
+        [Tooltip("Seconds a bar takes to settle most of the way back down.")]
+        [Range(0.02f, 1f)] public float releaseSeconds = 0.16f;
+        [Tooltip("Each band is measured against its own loudest of late, so every bar moves whatever the mix: seconds that loudest takes to halve.")]
+        [Range(0.5f, 10f)] public float adaptHalfLife = 2.5f;
+        [Tooltip("A band quieter than this share of the music's loudest band stays down (the floor of the adaptive scale).")]
+        [Range(0f, 0.5f)] public float adaptFloor = 0.12f;
         [Tooltip("How long a peak cap waits before it falls, in seconds.")]
         [Min(0f)] public float peakHold = 0.25f;
         [Tooltip("How fast a peak cap falls (share of a full bar per second).")]
@@ -60,16 +64,37 @@ namespace KryticalNova.GameFeel
         [Tooltip("How loud the music must be for a full bar: the spectrum's power is multiplied by this.")]
         [Min(0.1f)] public float gain = 9f;
         [Tooltip("How much every bar jumps on each beat, and on the first beat of a bar.")]
-        [Range(0f, 1f)] public float beatKick = 0.18f;
-        [Range(0f, 1f)] public float barKick = 0.35f;
+        [Range(0f, 1f)] public float beatKick = 0.12f;
+        [Range(0f, 1f)] public float barKick = 0.25f;
+        [Tooltip("How far the whole ring pulses out on each beat, and on the first beat of a bar, as a share of its radius.")]
+        [Range(0f, 0.5f)] public float beatPulse = 0.07f;
+        [Range(0f, 0.5f)] public float barPulse = 0.13f;
         [Tooltip("Width of the comet that runs round the ring once a beat (radians).")]
         [Range(0.1f, 2f)] public float cometWidth = 0.45f;
         [Tooltip("How much brighter the comet makes the bars it passes.")]
         [Range(0f, 3f)] public float cometBoost = 1.1f;
-        [Tooltip("Seconds of the burst after a press on the beat, and of the grey flicker after one off it.")]
+        [Tooltip("Seconds of the burst after a press on the beat. A press off it shows nothing (owner, 23 Oct 2026: no need to make a miss feel bad).")]
         [Min(0.05f)] public float burstSeconds = 0.4f;
-        [Min(0.05f)] public float offBeatSeconds = 0.3f;
         [Tooltip("How far the ring swells in a burst, as a share of its radius.")]
         [Range(0f, 1f)] public float burstSwell = 0.35f;
+
+        [Header("A combo step on the beat")]
+        [Tooltip("Each step of the Cadence combo swells the ring this much more than the burst does (step 1, 2, 3).")]
+        public Vector3 stepSwell = new Vector3(0.35f, 0.55f, 0.85f);
+        [Tooltip("Seconds of the shock ring that runs out over the ground from the ring at a combo step.")]
+        [Min(0.05f)] public float shockSeconds = 0.45f;
+        [Tooltip("How far the shock ring runs, as a multiple of the ring's radius, at step 1 (more at steps 2 and 3).")]
+        [Min(1f)] public float shockReach = 2.4f;
+        [Tooltip("Width of the shock ring (metres).")]
+        [Min(0.01f)] public float shockWidth = 0.09f;
+        [Tooltip("Segments of the shock ring round its circle.")]
+        [Range(16, 96)] public int shockSegments = 48;
+        [Tooltip("A small camera kick at a combo step, larger with each step (the player's Screen Shake setting applies).")]
+        [Range(0f, 1f)] public float stepKick = 0.18f;
+        [Tooltip("The sound of a combo step; it rises in pitch with each step.")]
+        public AudioClip stepSound;
+        public UnityEngine.Audio.AudioMixerGroup stepSoundGroup;
+        [Range(0f, 1f)] public float stepSoundVolume = 0.7f;
+        [Range(0f, 0.5f)] public float stepPitchRise = 0.12f;
     }
 }

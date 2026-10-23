@@ -171,18 +171,28 @@ namespace KryticalNova.Core
         /// <summary>The window key was pressed this frame. Callers still check that the player is not typing.</summary>
         public static bool Pressed(string action)
         {
-            if (Listening || KeyboardTaken) return false;
-            // A key pressed with Ctrl is a command of the tool that is open (Ctrl+Z undoes in Arrange), not a window key.
-            Keyboard keyboard = Keyboard.current;
-            if (keyboard != null && keyboard.ctrlKey.isPressed) return false;
+            if (Listening || KeyboardTaken || CtrlHeld) return false;
             InputAction found = Window(action);
             return found != null && found.WasPressedThisFrame();
+        }
+
+        /// <summary>
+        /// Ctrl is down. A key pressed with Ctrl is a command of the tool that is open (Ctrl+Z undoes in Arrange) or of the
+        /// computer (Ctrl+C, Ctrl+V), never a game key (owner, 22 Oct 2026: copying must not open windows).
+        /// </summary>
+        public static bool CtrlHeld
+        {
+            get
+            {
+                Keyboard keyboard = Keyboard.current;
+                return keyboard != null && keyboard.ctrlKey.isPressed;
+            }
         }
 
         /// <summary>The window key is being held down. For keys that work while held (the emote wheel).</summary>
         public static bool Held(string action)
         {
-            if (Listening || KeyboardTaken) return false;
+            if (Listening || KeyboardTaken || CtrlHeld) return false;
             InputAction found = Window(action);
             return found != null && found.IsPressed();
         }

@@ -26,6 +26,10 @@ namespace KryticalNova.Combat
         [Tooltip("Whether a cast on Cadence also hits other players harder (a Callout, a war).")]
         public bool againstPlayers = true;
 
+        [Header("The combo")]
+        [Tooltip("Seconds the next step of the combo (one-hit, two-hit, three-hit skill, each on the beat) may come after the last before the chain is broken.")]
+        [Range(0.5f, 6f)] public float comboSeconds = 2f;
+
         public float WindowSeconds => windowMs / 1000f;
         public float Multiplier => 1f + bonusPercent / 100f;
     }
