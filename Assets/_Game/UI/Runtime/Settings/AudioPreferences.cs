@@ -122,6 +122,19 @@ namespace KryticalNova.UI
             }
         }
 
+        /// <summary>The COMBO word of the Cadence combo on the screen in a fight (on unless switched off).</summary>
+        public static bool ComboMeter
+        {
+            get => PlayerPrefs.GetInt(Prefix + "comboMeter", 1) != 0;
+            set
+            {
+                if (ComboMeter == value) return;
+                PlayerPrefs.SetInt(Prefix + "comboMeter", value ? 1 : 0);
+                PlayerPrefs.Save();
+                Changed?.Invoke();
+            }
+        }
+
         /// <summary>No sound while the game window is not the one in front.</summary>
         public static bool MuteInBackground
         {

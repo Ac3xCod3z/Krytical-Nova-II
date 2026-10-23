@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using KryticalNova.Rendering;
 using UnityEngine;
 
 namespace KryticalNova.Items.Visuals
@@ -49,6 +50,8 @@ namespace KryticalNova.Items.Visuals
         [SerializeField] private bool mergeParts = true;
         [Tooltip("The species' chest wrap, worn on a feminine body whenever the resolved torso needs one. Set by ApplyBase.")]
         [SerializeField] private SidekickPartRef wrapPart;
+        [Tooltip("The bare body and head under everything worn: gear, hair and beards without body keys of their own take theirs from it. Set by ApplyBase.")]
+        [SerializeField] private List<SidekickPartRef> bareBody = new List<SidekickPartRef>();
 
         private readonly Dictionary<EquipSlot, IReadOnlyList<SidekickPartRef>> slotParts = new Dictionary<EquipSlot, IReadOnlyList<SidekickPartRef>>();
         private readonly Dictionary<EquipSlot, ItemDefinition> worn = new Dictionary<EquipSlot, ItemDefinition>();
@@ -118,10 +121,13 @@ namespace KryticalNova.Items.Visuals
         /// <summary>
         /// Replace the character's own look at runtime (character creation, a replicated recipe): the always-worn
         /// parts, the parts shown while a slot is empty, the body shape and the chest wrap. Equipped gear is kept.
+        /// <paramref name="bare"/> is the bare body and head that worn parts take missing body keys from.
         /// </summary>
         public void ApplyBase(IReadOnlyList<SidekickPartRef> fixedList, IReadOnlyList<SidekickPartRef> defaults,
-            BodyShapeWeights shape, SidekickPartRef wrap = default)
+            BodyShapeWeights shape, SidekickPartRef wrap = default, IReadOnlyList<SidekickPartRef> bare = null)
         {
+            bareBody.Clear();
+            if (bare != null) bareBody.AddRange(bare);
             fixedParts.Clear();
             if (fixedList != null) fixedParts.AddRange(fixedList);
             defaultParts.Clear();
@@ -200,6 +206,8 @@ namespace KryticalNova.Items.Visuals
             defaultParts.AddRange(source.defaultParts);
             bodyShape = source.bodyShape;
             wrapPart = source.wrapPart;
+            bareBody.Clear();
+            bareBody.AddRange(source.bareBody);
             dirty = false;
             OnSourceRebuilt();
         }
@@ -226,6 +234,7 @@ namespace KryticalNova.Items.Visuals
             if (merger == null || !IsConfigured) return;
             ResolveParts();
             if (mergeParts) RebuildMerged(); else RebuildSeparate();
+            BindDangleBones();
             Rebuilt?.Invoke();
         }
 
@@ -264,7 +273,7 @@ namespace KryticalNova.Items.Visuals
         {
             ClearDebugRenderers();
             var mesh = merger.Merge(partList, bodyShape, boneBuffer, name + "_Merged", idleFace,
-                liveFaceShapes != null ? liveFaceShapes : blink ? (IReadOnlyList<string>)FaceBlinker.LiveShapes : null);
+                liveFaceShapes != null ? liveFaceShapes : blink ? (IReadOnlyList<string>)FaceBlinker.LiveShapes : null, bareBody);
             if (mesh == null) return;
             var old = ownedMesh;
             ownedMesh = mesh;
@@ -295,7 +304,15 @@ namespace KryticalNova.Items.Visuals
             boneNames.Clear();
             boneNames.AddRange(names);
             ApplyToRenderer(targetRenderer, sharedSource.CurrentMesh, bones);
+            BindDangleBones();
             Rebuilt?.Invoke();
+        }
+
+        // Capes, sashes, long hair and beards swing on their dangle bones (presentation only, never on a server).
+        private void BindDangleBones()
+        {
+            if (mergeParts || debugRenderers.Count == 0) DangleBones.Bind(gameObject, new[] { targetRenderer });
+            else DangleBones.Bind(gameObject, debugRenderers);
         }
 
         private void StopSharing()

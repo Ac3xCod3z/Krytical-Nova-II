@@ -489,6 +489,32 @@
 .kn-faction-null .showdown-title {
     font-size: 110.08px;
 }
+.kn-faction-null .combo-word, .kn-faction-null .combo-count, .kn-faction-null .combo-tag {
+    text-shadow: 4px 4px 0 rgb(17, 10, 20);
+    -unity-text-outline-color: rgb(17, 10, 20);
+}
+.kn-faction-null .combo-word {
+    font-size: 43.52px;
+}
+.kn-faction-null .combo-count {
+    font-size: 81.92px;
+}
+.kn-faction-null .combo-timer {
+    background-color: rgba(17, 10, 20, 0.85);
+    border-color: rgb(17, 10, 20);
+}
+.kn-faction-null .combo-tag {
+    font-size: 28.16px;
+}
+.kn-faction-null .combo--3 .combo-count {
+    font-size: 97.28px;
+}
+.kn-faction-null .combo--3.combo--redline .combo-tag {
+    font-size: 43.52px;
+}
+.kn-faction-null .kn-faction-covenant .combo-timer-fill {
+    background-color: rgb(255, 74, 83);
+}
 
 /* ---- Settings.uss ---- */
 .kn-faction-null .settings-tab {

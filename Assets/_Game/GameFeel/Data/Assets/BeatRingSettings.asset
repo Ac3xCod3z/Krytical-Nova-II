@@ -23,22 +23,35 @@ MonoBehaviour:
   low: {r: 0.25, g: 0.85, b: 1, a: 1}
   mid: {r: 1, g: 0.72, b: 0.18, a: 1}
   high: {r: 1, g: 0.22, b: 0.16, a: 1}
-  alpha: 0.5
+  alpha: 0.75
   ghost: 0.05
   windowFlare: {r: 1, g: 0.95, b: 0.7, a: 1}
   windowFlareStrength: 0.35
   burstHegemony: {r: 0.35, g: 0.9, b: 1, a: 1}
   burstNull: {r: 0.72, g: 0.45, b: 1, a: 1}
   burstCovenant: {r: 0.45, g: 1, b: 0.6, a: 1}
-  rise: 14
-  fall: 3.5
+  attackSeconds: 0.035
+  releaseSeconds: 0.16
+  adaptHalfLife: 2.5
+  adaptFloor: 0.12
   peakHold: 0.25
   peakFall: 1.2
   gain: 9
-  beatKick: 0.18
-  barKick: 0.35
+  beatKick: 0.12
+  barKick: 0.25
+  beatPulse: 0.07
+  barPulse: 0.13
   cometWidth: 0.45
   cometBoost: 1.1
   burstSeconds: 0.4
-  offBeatSeconds: 0.3
   burstSwell: 0.35
+  stepSwell: {x: 0.35, y: 0.55, z: 0.85}
+  shockSeconds: 0.45
+  shockReach: 2.4
+  shockWidth: 0.09
+  shockSegments: 48
+  stepKick: 0.18
+  stepSound: {fileID: 8300000, guid: 1f6f63de536b09f4597cb248ebf86017, type: 3}
+  stepSoundGroup: {fileID: -3165942800488051908, guid: f2f383f979424e24fa19eac36be7c901, type: 2}
+  stepSoundVolume: 0.7
+  stepPitchRise: 0.12

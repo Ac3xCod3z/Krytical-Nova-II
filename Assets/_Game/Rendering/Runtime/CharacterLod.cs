@@ -38,6 +38,9 @@ namespace KryticalNova.Rendering
         private float next, nextCollect;
         private static Camera eye;
 
+        /// <summary>The detail level in use: 0 whole, 1 lighter skinning, 2 no shadow, 3 not drawn (-1 before the first look).</summary>
+        public int Tier => tier;
+
         /// <summary>Whether this character is always drawn whole (set for the local player).</summary>
         public bool AlwaysWhole { get => alwaysWhole; set { alwaysWhole = value; next = 0f; } }
 

@@ -104,9 +104,9 @@ namespace KryticalNova.Combat
 
         public Transform ResolveTarget(SkillDefinitionSO skill)
         {
-            if (skill == null) return null;
-            // An area attack hits whatever is round the caster, but with something selected it is still struck facing
-            // that (owner, 22 Oct 2026: every strike faces its target); it never needs one to be cast.
+            // An area attack hits whatever is round the caster: it has no target and never turns the body to aim (owner,
+            // 23 Oct 2026, taking area skills back out of 22 Oct's "every strike faces its target").
+            if (skill == null || skill.IsAreaAttack) return null;
             if (player != null && player.SelectedTarget != null) return player.SelectedTarget;
             return melee.CurrentTarget != null ? melee.CurrentTarget.Transform : null;
         }
@@ -142,8 +142,9 @@ namespace KryticalNova.Combat
         public void Execute(SkillDefinitionSO skill, int rank, Transform target)
         {
             // Where the cast is decided the body turns to its target too (owner, 22 Oct 2026: every strike faces its
-            // target). A dedicated server never runs Present, and its facing is the one every player is shown.
-            if (target != null) melee.FaceTowards(target.position);
+            // target). A dedicated server never runs Present, and its facing is the one every player is shown. Area attacks
+            // do not aim (23 Oct 2026).
+            if (target != null && !skill.IsAreaAttack) melee.FaceTowards(target.position);
             if (executeRoutine != null) StopCoroutine(executeRoutine);
             executeRoutine = StartCoroutine(ExecuteRoutine(skill, rank, target));
         }
@@ -168,7 +169,7 @@ namespace KryticalNova.Combat
             // A cast an attack may cut short holds the basic combo only until that point, so a strike can take over.
             float cancelDelay = skill.IsAttack ? castLock : skill.AttackCancelDelay;
             castCancelFrom = cancelDelay < castLock ? Time.time + cancelDelay : float.PositiveInfinity;
-            melee.HoldForSkill(cancelDelay, target != null ? target.position : (Vector3?)null);
+            melee.HoldForSkill(cancelDelay, target != null && !skill.IsAreaAttack ? target.position : (Vector3?)null);
             if (skill.IsAttack && IsLocalPlayerPresentation && animancerMotor != null && !animancerMotor.IsWeaponDrawn)
                 animancerMotor.RequestSetWeaponDraw(true);
 
@@ -208,9 +209,12 @@ namespace KryticalNova.Combat
             bool pressedOnCadence = false;
             float onCadence = cadence != null ? cadence.ServerTake(skill, out pressedOnCadence) : 1f;
             // Redline (RedlineRules): spent on one hit, or held for all three of a three-hit attack pressed on the beat,
-            // each of which then lands as a critical. Only against a target Cadence counts for.
+            // each of which then lands as a critical. Only against a target Cadence counts for. In the Cadence combo
+            // (one-hit, two-hit, three-hit skill, each on the beat) steps 1 and 2 leave it alone: it waits for step 3.
             SkillKind kind = SkillKinds.Of(skill);
             bool charged = buffManager != null && buffManager.HasNextHitBuff;
+            int comboStep = cadence != null && skill.IsAttack ? cadence.ServerCombo(kind, pressedOnCadence, charged) : 0;
+            if (RedlineRules.SavedForTheChain(comboStep)) charged = false; // this cast does not touch it
             bool holding = RedlineRules.HoldsForEveryHit(kind, charged, pressedOnCadence && single != null && cadence.AppliesTo(single));
 
             for (int i = 0; i < hits; i++)
@@ -415,7 +419,8 @@ namespace KryticalNova.Combat
         {
             // A charged skill turns the body to the target it is aimed at as it starts (owner, 22 Oct 2026: "always turn
             // to face whoever or whatever you strike"), here and, through the call, on the server, whose facing everyone sees.
-            Transform target = TryGetComponent(out PointAndClickPlayer click) ? click.SelectedTarget : null;
+            // An area skill aims at nothing (23 Oct 2026).
+            Transform target = !skill.IsAreaAttack && TryGetComponent(out PointAndClickPlayer click) ? click.SelectedTarget : null;
             PresentChargeStarted(skill, target != null ? target.position : (Vector3?)null);
             if (!IsSpawned) return;
             NetworkObject aimed = target != null ? target.GetComponentInParent<NetworkObject>() : null;

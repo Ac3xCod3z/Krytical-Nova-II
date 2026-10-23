@@ -35,7 +35,7 @@ namespace KryticalNova.UI.Menus
         }
 
         // Edits that arrive as a stream (a slider drag) are one undo step; everything else is one step per click.
-        private const int DiscreteEdit = 0, BuildSlider = 1, MuscleSlider = 2;
+        private const int DiscreteEdit = 0, BuildSlider = 1, MuscleSlider = 2, BustSlider = 3, ButtSlider = 4, DefinedSlider = 5, HeightSlider = 6;
         private const int MaxHistory = 40;
 
         [Tooltip("The character creator screen instance (Screen_FantasyScreens_CharacterCreator_01).")]
@@ -239,8 +239,7 @@ namespace KryticalNova.UI.Menus
             if (origin.lineage == lineage && origin.bodyType == recipe.bodyType) return;
             Record(DiscreteEdit);
             var next = RecipeEdit.Default(origin.lineage, origin.bodyType);
-            next.build = recipe.build; // the body shape carries over to the new origin
-            next.muscle = recipe.muscle;
+            next.CopyBodyFrom(recipe); // the body shape carries over to the new origin (the sliders its body type has)
             Apply(next);
         }
 
@@ -364,7 +363,39 @@ namespace KryticalNova.UI.Menus
                 sliderRows[0].Show("Body Size", "Slim", "Heavy", -100f, 100f, recipe.build, v => ShapeChanged(BuildSlider, (sbyte)v, recipe.muscle));
             if (sliderRows.Length > 1)
                 sliderRows[1].Show("Musculature", "Lean", "Muscular", -100f, 100f, recipe.muscle, v => ShapeChanged(MuscleSlider, recipe.build, (sbyte)v));
-            for (int i = 2; i < sliderRows.Length; i++) sliderRows[i].Hide();
+            // The body sliders (22 Oct 2026): bust and butt on a feminine body, definition on a masculine one, height on every one.
+            // A lineage whose bare body has no such key (robot, skeleton) gets height only.
+            int slider = 2;
+            if (recipe.bodyType == BodyType.Feminine)
+            {
+                if (BodyHas("kn_bust")) ShowSlider(slider++, "Bust", "Natural", "Full", recipe.bust, BustSlider, v => recipe.bust = v);
+                if (BodyHas("kn_butt")) ShowSlider(slider++, "Butt", "Natural", "Full", recipe.butt, ButtSlider, v => recipe.butt = v);
+            }
+            else if (BodyHas("kn_defined"))
+                ShowSlider(slider++, "Definition", "Smooth", "Defined", recipe.defined, DefinedSlider, v => recipe.defined = v);
+            ShowSlider(slider++, "Height", "Short", "Tall", recipe.Height, HeightSlider, v => recipe.height = v);
+            for (int i = slider; i < sliderRows.Length; i++) sliderRows[i].Hide();
+        }
+
+        private readonly Dictionary<(byte, string), bool> bodyKeys = new Dictionary<(byte, string), bool>();
+
+        private bool BodyHas(string key)
+        {
+            if (lineage == null) return false;
+            if (!bodyKeys.TryGetValue((lineage.id, key), out bool has))
+                bodyKeys[(lineage.id, key)] = has = RecipeResolver.BodyHasKey(lineage, database, key);
+            return has;
+        }
+
+        private void ShowSlider(int index, string label, string low, string high, byte value, int source, Action<byte> set)
+        {
+            if (index >= sliderRows.Length || sliderRows[index] == null) return;
+            sliderRows[index].Show(label, low, high, 0f, 100f, value, v =>
+            {
+                Record(source);
+                set((byte)Mathf.Clamp(Mathf.RoundToInt(v), 0, 100));
+                Preview();
+            });
         }
 
         private int BuildIndex()
@@ -794,6 +825,7 @@ namespace KryticalNova.UI.Menus
         private void Apply(in CharacterRecipe next)
         {
             recipe = next;
+            recipe.Upgrade(); // the sliders edit a look of the current version
             // A look built from scratch (new origin, randomise) carries no Discipline; one from the undo history does.
             if (WeaponClassRules.BelongsTo(recipe.weaponClass, factionId)) discipline = recipe.weaponClass;
             else recipe.weaponClass = discipline;

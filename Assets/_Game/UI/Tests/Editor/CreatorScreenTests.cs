@@ -67,7 +67,7 @@ namespace KryticalNova.Tests
 
         private static readonly (string list, int count)[] Lists =
         {
-            ("tabButtons", FactionSkinBuilder.CreatorTabCount), ("originTiles", 4), ("originPortraits", 4), ("optionRows", 9), ("sliderRows", 2), ("swatchGroups", 3),
+            ("tabButtons", FactionSkinBuilder.CreatorTabCount), ("originTiles", 4), ("originPortraits", 4), ("optionRows", 9), ("sliderRows", 5), ("swatchGroups", 3),
         };
 
         [Test]

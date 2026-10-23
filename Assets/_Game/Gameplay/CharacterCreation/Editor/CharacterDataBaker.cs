@@ -375,6 +375,7 @@ namespace KryticalNova.EditorTools
                     // A ready-made face changes the head only; the body starts neutral and is the player's to shape.
                     build = 0,
                     muscle = 0,
+                    height = CharacterRecipe.DefaultHeight,
                     palette = lineage.defaultPalette,
                     skinTone = NearestSkinTone(skinTones, premade, propertyByName),
                     parts = HeadParts(setup, parts, premade, index),
@@ -389,7 +390,7 @@ namespace KryticalNova.EditorTools
                     recipe = new CharacterRecipe
                     {
                         version = CharacterRecipe.CurrentVersion, faction = spec.faction, lineage = spec.id, bodyType = bodyType,
-                        palette = lineage.defaultPalette, parts = HeadParts(setup, parts, null, 0), colors = Array.Empty<ColorOverride>()
+                        height = CharacterRecipe.DefaultHeight, palette = lineage.defaultPalette, parts = HeadParts(setup, parts, null, 0), colors = Array.Empty<ColorOverride>()
                     }
                 });
             return setup;

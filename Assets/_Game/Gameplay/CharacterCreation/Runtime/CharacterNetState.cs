@@ -24,6 +24,10 @@ namespace KryticalNova.CharacterCreation
         public byte eyeliner;
         public byte grime;
         public KryticalNova.Progression.WeaponClassId weaponClass;
+        public byte bust;
+        public byte butt;
+        public byte defined;
+        public byte height;
         public FixedList128Bytes<ushort> parts;       // room for 63, recipes cap at CharacterRecipe.MaxParts
         public FixedList128Bytes<ColorOverride> colors; // room for 15
 
@@ -45,7 +49,11 @@ namespace KryticalNova.CharacterCreation
                 scars = recipe.scars,
                 eyeliner = recipe.eyeliner,
                 grime = recipe.grime,
-                weaponClass = recipe.weaponClass
+                weaponClass = recipe.weaponClass,
+                bust = recipe.bust,
+                butt = recipe.butt,
+                defined = recipe.defined,
+                height = recipe.height
             };
             // Truncates instead of throwing if a name ever exceeds the buffer; rules cap names well below it.
             state.name.CopyFromTruncated(characterName ?? string.Empty);
@@ -72,6 +80,10 @@ namespace KryticalNova.CharacterCreation
                 eyeliner = eyeliner,
                 grime = grime,
                 weaponClass = weaponClass,
+                bust = bust,
+                butt = butt,
+                defined = defined,
+                height = height,
                 parts = new ushort[parts.Length],
                 colors = new ColorOverride[colors.Length]
             };
@@ -95,6 +107,10 @@ namespace KryticalNova.CharacterCreation
             serializer.SerializeValue(ref eyeliner);
             serializer.SerializeValue(ref grime);
             serializer.SerializeValue(ref weaponClass);
+            serializer.SerializeValue(ref bust);
+            serializer.SerializeValue(ref butt);
+            serializer.SerializeValue(ref defined);
+            serializer.SerializeValue(ref height);
 
             byte partCount = (byte)parts.Length;
             serializer.SerializeValue(ref partCount);
@@ -149,6 +165,7 @@ namespace KryticalNova.CharacterCreation
                 || bodyType != other.bodyType || build != other.build || muscle != other.muscle || palette != other.palette
                 || skinTone != other.skinTone || scars != other.scars || eyeliner != other.eyeliner || grime != other.grime
                 || weaponClass != other.weaponClass
+                || bust != other.bust || butt != other.butt || defined != other.defined || height != other.height
                 || parts.Length != other.parts.Length || colors.Length != other.colors.Length)
                 return false;
             for (int i = 0; i < parts.Length; i++)

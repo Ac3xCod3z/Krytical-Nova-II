@@ -578,3 +578,33 @@
 .showdown-count { font-size: 120px; }
 .showdown-title { font-size: 86px; letter-spacing: 6px; }
 .showdown-dim { opacity: 0.4; transition-property: opacity; transition-duration: 0.4s; }
+
+/* The Cadence combo (owner, 23 Oct 2026): "COMBO ×n" lettered like the comic words of a fight, at the right of the
+   screen, with the time left for the next step as a bar that runs down from right to left. Hotter with every step. */
+.combo { position: absolute; right: 6%; top: 13%; align-items: flex-end; rotate: -6deg; transform-origin: right center; }
+.combo-line { flex-direction: row; align-items: flex-end; }
+.combo-word, .combo-count, .combo-tag {
+    -unity-font-style: bold-and-italic;
+    color: rgb(255, 236, 170);
+    text-shadow: 4px 4px 0 rgb(10, 8, 20);
+    -unity-text-outline-width: 2px;
+    -unity-text-outline-color: rgb(10, 8, 20);
+    padding: 0; margin: 0;
+}
+.combo-word { font-size: 34px; letter-spacing: 3px; margin-bottom: 6px; }
+.combo-count { font-size: 64px; margin-left: 8px; transform-origin: left bottom; }
+.combo-timer {
+    width: 220px; height: 12px; margin-top: 2px;
+    background-color: rgba(10, 8, 20, 0.85);
+    border-width: 2px; border-color: rgb(10, 8, 20); border-radius: 3px;
+    rotate: -2deg;
+}
+.combo-timer-fill { position: absolute; left: 0; top: 0; bottom: 0; width: 100%; background-color: rgb(255, 214, 92); }
+.combo-timer-fill--low { background-color: rgb(255, 120, 60); }
+.combo-tag { font-size: 22px; letter-spacing: 2px; margin-top: 4px; color: rgb(255, 90, 70); }
+.combo--2 .combo-count { color: rgb(255, 176, 70); }
+.combo--3 .combo-count { color: rgb(255, 84, 60); font-size: 76px; }
+.combo--3.combo--redline .combo-tag { font-size: 34px; color: rgb(255, 60, 40); }
+.kn-faction-null .combo-timer-fill { background-color: rgb(176, 130, 255); }
+.kn-faction-covenant .combo-timer-fill { background-color: rgb(130, 255, 172); }
+.kn-faction-null .combo-timer-fill--low, .kn-faction-covenant .combo-timer-fill--low { background-color: rgb(255, 120, 60); }

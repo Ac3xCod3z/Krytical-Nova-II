@@ -14,8 +14,8 @@ using UnityEngine;
 namespace KryticalNova.Restyle
 {
     /// <summary>
-    /// Changing a character's look after it was made: hair at the Stylist, the face at the Reshaper, build and
-    /// muscle at the Coach. The owner sends the look it would like; the server keeps only what that service owns
+    /// Changing a character's look after it was made: hair at the Stylist, the face at the Reshaper, the body
+    /// (build, muscle, bust, butt, definition, height) at the Coach. The owner sends the look it would like; the server keeps only what that service owns
     /// out of it (<see cref="RestyleRules.Merge"/>), checks the result like a new character's, uses up the pass
     /// (a Restyle Pass, or a Training Pass at the Coach: from the Pack or from what is stored) and gives the
     /// character its new look, which everyone sees and the save keeps. The pass items are in <see cref="EconomySettings"/>.

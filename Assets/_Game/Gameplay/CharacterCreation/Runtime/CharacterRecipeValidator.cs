@@ -21,6 +21,7 @@ namespace KryticalNova.CharacterCreation
         public const string ReasonUnknownPalette = "Unknown colour palette.";
         public const string ReasonBadSkinTone = "Unknown skin tone.";
         public const string ReasonBadColor = "A colour is not available to this lineage.";
+        public const string ReasonBadBodySlider = "A body slider is out of range.";
 
         public static bool Validate(in CharacterRecipe recipe, CharacterCreationDatabase database, out string reason)
         {
@@ -36,6 +37,11 @@ namespace KryticalNova.CharacterCreation
                 return false;
             }
             if (recipe.PartCount > CharacterRecipe.MaxParts) { reason = ReasonTooManyParts; return false; }
+            if (recipe.bust > 100 || recipe.butt > 100 || recipe.defined > 100 || recipe.height > 100)
+            {
+                reason = ReasonBadBodySlider;
+                return false;
+            }
 
             var setup = lineage.SetupFor(recipe.bodyType);
             var seen = new HashSet<BodyRegion>();
