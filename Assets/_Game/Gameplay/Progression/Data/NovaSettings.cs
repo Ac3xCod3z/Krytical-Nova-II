@@ -38,6 +38,9 @@ namespace KryticalNova.Progression
         [Min(0)] public int renownCost = 100;
         [Tooltip("Twelve Sky 2 charges 1,000,000 Silver; this is half.")]
         [Min(0)] public long credsCost = 500000;
+        [Tooltip("Creds to weave a Nova: show a lower tier this character has reached instead of its own (owner, 22 Oct 2026: " +
+                 "Creds only for now). Going back to its own tier is free.")]
+        [Min(0)] public long weaveCredsCost = 25000;
         [Tooltip("Strength, Agility, Vitality and Spirit each gain this per Ascension level.")]
         [Min(0)] public int attributesPerLevel = 1;
         [Tooltip("On: a slip never takes the character out of a Nova tier it has reached (at +1, +9, +17 ... it is a plain fail).")]

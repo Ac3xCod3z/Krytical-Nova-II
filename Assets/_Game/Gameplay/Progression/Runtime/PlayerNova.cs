@@ -94,6 +94,8 @@ namespace KryticalNova.Progression
         public int Ascension => state.ascension;
         /// <summary>The Nova's tier: 0 with none.</summary>
         public int Tier => settings != null ? NovaRules.Tier(settings.ascension, state.ascension) : 0;
+        /// <summary>The Nova tier shown over the head: its own, or a lower one woven at the Herald (the Nova Weave).</summary>
+        public int ShownTier => NovaRules.ShownTier(Tier, state.woven);
         public FactionId Faction => member != null ? member.Faction : FactionId.None;
         /// <summary>The Standing this character wears ("Vanguard Thane"), or null.</summary>
         public string WornStanding
@@ -187,8 +189,8 @@ namespace KryticalNova.Progression
             {
                 // Every player is drawn after the scenery, Nova or none: that is what lets another's Nova hide them.
                 KryticalNova.Rendering.ActorDrawOrder.On(gameObject);
-                if (halo == null && Tier > 0) halo = NovaHalo.Create(transform);
-                if (halo != null) halo.Show(settings.look, Tier);
+                if (halo == null && ShownTier > 0) halo = NovaHalo.Create(transform);
+                if (halo != null) halo.Show(settings.look, ShownTier);
                 if (halo != null && Time.time < pendingUntil && halo.Tier == NovaRules.Tier(settings.ascension, pendingReaction.after))
                 {
                     pendingUntil = -1f;
@@ -226,6 +228,23 @@ namespace KryticalNova.Progression
         {
             if (IsSpawned) WearStandingRpc(default, false);
             else ServerWearStanding(default, false);
+        }
+
+        /// <summary>
+        /// The Nova Weave: shows a lower Nova tier this character has reached instead of its own, for Creds, at the
+        /// Herald. 0 (or its own tier) goes back to its own Nova, free and anywhere.
+        /// </summary>
+        public void RequestWeaveNova(int tier)
+        {
+            if (IsSpawned) WeaveNovaRpc((byte)Mathf.Clamp(tier, 0, byte.MaxValue));
+            else ServerWeaveNova(tier);
+        }
+
+        [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
+        private void WeaveNovaRpc(byte tier)
+        {
+            if (!RpcBudget.Allow(this, CallKind.Money, nameof(WeaveNovaRpc))) return;
+            ServerWeaveNova(tier);
         }
 
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
@@ -316,6 +335,43 @@ namespace KryticalNova.Progression
             if (state.Standing(track) <= 0) { Tell(NovaRules.ReasonNotHeld); return; }
             NovaState next = state.Wearing(track);
             if (!next.Equals(state)) Commit(next);
+        }
+
+        private void ServerWeaveNova(int tier)
+        {
+            if (!HasAuthority || settings == null) return;
+            int own = Tier;
+            // Back to its own Nova: free, and no Herald needed.
+            if (tier <= 0 || tier >= own)
+            {
+                if (state.woven != 0) Commit(WithWoven(0));
+                return;
+            }
+            if (tier == state.woven) return;
+            if (!Ready()) return;
+            long fee = settings.ascension.weaveCredsCost;
+            if (wallet.Creds < fee) { Tell(NovaRules.ReasonNoCreds); return; }
+            if (fee > 0 && !wallet.ServerSpend(fee, CredsSink.Appearance)) { Tell(NovaRules.ReasonNoCreds); return; }
+            Commit(WithWoven(tier));
+            Tell($"Your Nova now shows as Nova {NovaRules.Numeral(tier)}.");
+        }
+
+        private NovaState WithWoven(int tier)
+        {
+            NovaState next = state;
+            next.woven = (byte)Mathf.Clamp(tier, 0, byte.MaxValue);
+            return next;
+        }
+
+        /// <summary>GM: weaves a Nova tier the character has reached (0 = its own), free and anywhere. Server only.</summary>
+        public bool ServerSetWoven(int tier)
+        {
+            if (!HasAuthority || settings == null) return false;
+            int own = Tier;
+            if (tier > own) return false;
+            NovaState next = WithWoven(tier <= 0 || tier >= own ? 0 : tier);
+            if (!next.Equals(state)) Commit(next);
+            return true;
         }
 
         // ------------------------------------------------------------------ telling the owner
@@ -455,6 +511,7 @@ namespace KryticalNova.Progression
             public int ascension;
             public int[] standings = new int[NovaRules.TrackCount];
             public int worn;
+            public int woven;
         }
 
         public string SaveKey => "nova";
@@ -462,7 +519,7 @@ namespace KryticalNova.Progression
 
         public string CaptureSave()
         {
-            var save = new NovaSave { ascension = state.ascension, worn = state.worn };
+            var save = new NovaSave { ascension = state.ascension, worn = state.worn, woven = state.woven };
             for (int i = 0; i < NovaRules.TrackCount; i++) save.standings[i] = state.Standing((StandingTrack)i);
             return JsonUtility.ToJson(save);
         }
@@ -480,6 +537,8 @@ namespace KryticalNova.Progression
                 next = next.WithStanding((StandingTrack)i, Mathf.Clamp(save.standings[i], 0, maxStanding));
             next.worn = (byte)Mathf.Clamp(save.worn, 0, NovaRules.TrackCount);
             if (!next.TryGetWorn(out _)) next.worn = 0;
+            int ownTier = settings != null ? NovaRules.Tier(settings.ascension, next.ascension) : 0;
+            next.woven = (byte)(save.woven > 0 && save.woven < ownTier ? save.woven : 0);
 
             state = next;
             if (IsSpawned && IsServer) netState.Value = next;

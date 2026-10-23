@@ -72,6 +72,16 @@ namespace KryticalNova.DevTools
             return nova.ServerSetWorn(which, true) ? Describe(nova) + "." : $"That player holds no rank on {which} yet: give one with gm.standing first.";
         }
 
+        [Command("gm.nova.weave", "Nova Weave for the targeted player, free: gm.nova.weave <tier> shows that Nova tier (one it has reached) " +
+                                  "instead of its own; gm.nova.weave 0 shows its own again.")]
+        private static string NovaWeave(int tier)
+        {
+            if (!TryGetNova(out var nova, out var error)) return error;
+            if (!nova.ServerSetWoven(tier)) return $"That player has reached Nova {NovaRules.Numeral(System.Math.Max(0, nova.Tier))} at most.";
+            return nova.ShownTier == nova.Tier ? $"Shows its own Nova ({NovaRules.Numeral(nova.Tier)})."
+                : $"Shows Nova {NovaRules.Numeral(nova.ShownTier)} (its own is {NovaRules.Numeral(nova.Tier)}).";
+        }
+
         [Command("gm.herald", "Open the Herald's window here. It then works anywhere, with no Herald near, until the session ends; gm.herald off puts the rule back.")]
         private static string Herald(string which = "")
         {

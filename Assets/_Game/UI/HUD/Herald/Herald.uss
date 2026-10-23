@@ -129,3 +129,8 @@
 /* The one just earned lands bigger and settles. */
 .nova-banner-pips .herald-pip.new { scale: 1.7 1.7; transition-duration: 0s; }
 .nova-banner-detail { font-size: 15px; -unity-text-align: middle-center; color: rgb(226, 236, 242); }
+
+/* The Nova Weave row (owner, 22 Oct 2026): < NOVA III > and its WEAVE / OWN NOVA buttons, at the foot of the Nova card. */
+.herald-weave-row { flex-direction: row; align-items: center; margin-top: 4px; }
+.herald-weave-row > Button { margin-right: 6px; min-width: 28px; }
+.herald-weave-shown { min-width: 96px; -unity-text-align: middle-center; -unity-font-style: bold; font-size: 14px; color: rgb(255, 214, 120); }
