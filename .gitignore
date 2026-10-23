@@ -123,3 +123,8 @@ __pycache__/
 # Addressables writes this on every content build; it is only for remote content updates (maps are local-packed).
 /Assets/_Game/Settings/Addressables/Windows/
 /Assets/_Game/Settings/Addressables/Windows.meta
+
+# Blender working files live on Google Drive: G:\My Drive\KryticalNova\Art\Blender (CLAUDE.md, "Git LFS size and Google Drive")
+/Assets/_ArtSource/Blender~/Creatures/
+/Assets/_ArtSource/Blender~/Pets/
+/Assets/_ArtSource/Blender~/Sidekick/

@@ -81,6 +81,26 @@ Read `Assets/_Game/_Docs/Reference/12Sky/README.md` before naming anything a pla
   only beside the measure server (`Builds/Bots`, `--selftest <folder>` pictures its tabs), never on the real server. Details: `_Docs/Guides/Server-Guide.md`,
   "The save database and save service"; the plan is `_Docs/Plans/online-phase-04-accounts-and-shared-save.md`.
 
+## Git LFS size and Google Drive (mandatory, owner 23 Oct 2026)
+
+GitHub keeps every version of every LFS file ever pushed, and deleting a file later frees nothing. 10 GB is included and
+the repo already holds about 13 GB, so every extra GB is paid for every month from then on. Keep git for what the game
+needs to build; working files go to Google Drive (`G:\My Drive\KryticalNova\`: `Art`, `AI Outputs`, `Audio`, `Docs`,
+`SyntyPacks`). Writing there is allowed without asking.
+
+- **To Drive, not git:** Blender working files (`.blend`) and their review or contact sheets, renders, screenshots,
+  recordings and videos, Tripo / UltraTex / ComfyUI / Wan / ACE-Step / TTS outputs, audition files, reference
+  pictures, raw source audio. Only the final asset Unity uses (FBX, texture, clip, baked sound) goes into `Assets/`.
+  Blender work lives in `G:\My Drive\KryticalNova\Art\Blender\` (Creatures, Pets, Sidekick; moved out of git
+  23 Oct 2026; scripts use `kn.art_root()`); only `Assets/_ArtSource/Blender~/Swatch/` stays in the project.
+- **Regenerated binaries once, not per try:** minimap renders, APV / lighting bakes, icon bakes and baked audio are
+  committed only as the version to keep, after iterating, never one commit per attempt.
+- **Vendor packs:** import only the assets the game uses (the Zone Pack Importer way), never Demo, Samples,
+  Documentation or example-screenshot folders. Ask the owner before adding a pack or files over 200 MB.
+- **Before a push:** if the commits add more than 100 MB of LFS files, tell the owner how much and what.
+- GitHub's LFS budget stays above $0 (a $0 budget blocks LFS pushes and pulls past 10 GB). The weekly scheduled task
+  "Weekly Git LFS spend check" (`C:\Users\dlaco\.claude\tools\lfs_spend.py`) reports the projected cost every Monday.
+
 ## graphify
 
 `graphify-out/graph.json` (owner, 19 Oct 2026) maps the code of `Assets/_Game` and the outline (headings) of its docs;
