@@ -67,7 +67,7 @@ namespace KryticalNova.UI
 
             NpcServices.Register(ServiceIds.Stylist, NpcOffer.Stylist, "CHANGE HAIR", () => Open(RestyleService.Stylist));
             NpcServices.Register(ServiceIds.Reshaper, NpcOffer.Reshaper, "CHANGE FACE", () => Open(RestyleService.Reshaper));
-            NpcServices.Register(ServiceIds.Coach, NpcOffer.Coach, "CHANGE BUILD", () => Open(RestyleService.Coach));
+            NpcServices.Register(ServiceIds.Coach, NpcOffer.Coach, "CHANGE BODY", () => Open(RestyleService.Coach));
             PlayerInventory.LocalChanged += Close;
             HudLayoutEditor.RegisterPreview(WindowName, Preview);
             initialized = true;
@@ -89,16 +89,27 @@ namespace KryticalNova.UI
 
         private void Bind(PlayerRestyle next)
         {
-            if (restyle != null) restyle.Restyled -= OnRestyled;
+            if (restyle != null)
+            {
+                restyle.Restyled -= OnRestyled;
+                restyle.Identity.Changed -= OnRestyled;
+            }
             restyle = next;
-            if (restyle != null) restyle.Restyled += OnRestyled;
+            if (restyle != null)
+            {
+                restyle.Restyled += OnRestyled;
+                restyle.Identity.Changed += OnRestyled;
+            }
         }
 
-        // The new look is on: the window starts again from it.
+        // The new look is on: the window starts again from it. The server's word that it is done can arrive before
+        // the look itself does, so the window also starts again when the look arrives, which it then reads.
         private void OnRestyled()
         {
             if (!open || restyle == null) return;
-            current = SavedLook();
+            CharacterRecipe saved = SavedLook();
+            if (RestyleRules.Same(saved, current)) return;
+            current = saved;
             ResetDraft();
         }
 
