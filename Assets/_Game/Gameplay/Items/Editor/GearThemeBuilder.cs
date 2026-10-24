@@ -203,6 +203,8 @@ namespace KryticalNova.EditorTools
             for (int index = 0; index < library.Themes.Count; index++)
             {
                 var theme = library.Themes[index];
+                // A set made in Blender carries its own cell colours from its swatch (TripoGearSetBuilder): kept.
+                if (theme.name != null && theme.name.StartsWith(TripoGearSetBuilder.ThemePrefix, StringComparison.Ordinal)) continue;
                 var areas = new float[GearThemeLibrary.CellCount];
                 foreach (var line in lines)
                     if (IsThemed(line) && line.theme == theme.name) AddPaintedAreas(line.look, areas);

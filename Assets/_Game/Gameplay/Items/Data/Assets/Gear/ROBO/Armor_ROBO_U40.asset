@@ -16,9 +16,11 @@ MonoBehaviour:
   displayName: Welder Plating
   description: 'Worn on the body: torso, arms, hips and legs.'
   icon: {fileID: 21300000, guid: c100c2fccf77e2145bcfd22f76209ffc, type: 3}
+  sharesIconOf: {fileID: 0}
   rarity: 1
   equipSlot: 2
   maxStack: 1
+  boundFaction: 0
   itemLevel: 40
   lineId: 40
   weaponClass: 0

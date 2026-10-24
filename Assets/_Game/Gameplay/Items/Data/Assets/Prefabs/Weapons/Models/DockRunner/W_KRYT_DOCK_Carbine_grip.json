@@ -1,0 +1,37 @@
+{
+ "weapon": "W_KRYT_DOCK_Carbine",
+ "kind": "pistol",
+ "source": "G:/My Drive/Krytical Nova Armors/Rares lv.45-75/Civilian/DockRunner Carbine/DockRunner_Carbine.fbx",
+ "scale": 0.3688,
+ "frame": "Blender: grip at the origin, butt -> tip +Y, broad side +Z (a pistol's handle -Z)",
+ "length_m": 0.38,
+ "butt_y": -0.076,
+ "tip_y": 0.304,
+ "faces": 5664,
+ "palette_use": {
+  "#4B4546": 0.367,
+  "#43656A": 0.148,
+  "#B8935C": 0.147,
+  "#2B2D30": 0.12,
+  "#DB8040": 0.103,
+  "#BD6334": 0.066,
+  "#F3BF78": 0.017,
+  "#BE7D3C": 0.012,
+  "#6C442E": 0.009,
+  "#966140": 0.007,
+  "#F5AB4F": 0.002,
+  "#A8A78F": 0.002,
+  "#4A2819": 0.001,
+  "#211511": 0.0
+ },
+ "main_hand": {
+  "hand": "right",
+  "point": [
+   0,
+   0,
+   0
+  ]
+ },
+ "grip_along": 0.2,
+ "handle_side": "down"
+}

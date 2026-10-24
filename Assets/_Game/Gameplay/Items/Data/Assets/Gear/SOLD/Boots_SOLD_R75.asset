@@ -16,9 +16,11 @@ MonoBehaviour:
   displayName: Striker Boots
   description: Worn on the feet.
   icon: {fileID: 21300000, guid: 0f197ab54d527fa4baaa9dc6073282af, type: 3}
+  sharesIconOf: {fileID: 0}
   rarity: 2
   equipSlot: 4
   maxStack: 1
+  boundFaction: 0
   itemLevel: 75
   lineId: 13
   weaponClass: 0

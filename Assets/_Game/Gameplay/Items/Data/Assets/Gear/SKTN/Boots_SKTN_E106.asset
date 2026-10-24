@@ -16,9 +16,11 @@ MonoBehaviour:
   displayName: Revenant Greaves
   description: Worn on the feet.
   icon: {fileID: 21300000, guid: 4ec2a2d07e63e7842859820e433ead4c, type: 3}
+  sharesIconOf: {fileID: 0}
   rarity: 3
   equipSlot: 4
   maxStack: 1
+  boundFaction: 0
   itemLevel: 106
   lineId: 72
   weaponClass: 0

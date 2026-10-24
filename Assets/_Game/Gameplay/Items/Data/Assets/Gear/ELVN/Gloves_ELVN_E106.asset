@@ -16,9 +16,11 @@ MonoBehaviour:
   displayName: Sunlord Gloves
   description: Worn on the hands.
   icon: {fileID: 21300000, guid: 82ff8bcbf49c61744a72b8692590766c, type: 3}
+  sharesIconOf: {fileID: 0}
   rarity: 3
   equipSlot: 3
   maxStack: 1
+  boundFaction: 0
   itemLevel: 106
   lineId: 105
   weaponClass: 0

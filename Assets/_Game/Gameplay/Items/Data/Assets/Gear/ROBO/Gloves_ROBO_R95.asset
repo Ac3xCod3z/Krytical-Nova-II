@@ -16,9 +16,11 @@ MonoBehaviour:
   displayName: Overseer Servos
   description: Worn on the hands.
   icon: {fileID: 21300000, guid: 6a5e0b073aa893b44bc99ef008276a9b, type: 3}
+  sharesIconOf: {fileID: 0}
   rarity: 2
   equipSlot: 3
   maxStack: 1
+  boundFaction: 0
   itemLevel: 95
   lineId: 47
   weaponClass: 0

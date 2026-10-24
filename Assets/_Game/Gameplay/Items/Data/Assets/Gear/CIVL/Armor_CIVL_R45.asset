@@ -13,12 +13,14 @@ MonoBehaviour:
   m_Name: Armor_CIVL_R45
   m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Items.ItemDefinition
   itemId: 10336
-  displayName: Analyst Outfit
+  displayName: Dock Runner Outfit
   description: 'Worn on the body: torso, arms, hips and legs.'
-  icon: {fileID: 21300000, guid: d14f3552b56bb184e9c2268c0f7e36fb, type: 3}
+  icon: {fileID: 21300000, guid: 2200cb43a470c3648b874ec3981be61e, type: 3}
+  sharesIconOf: {fileID: 0}
   rarity: 2
   equipSlot: 2
   maxStack: 1
+  boundFaction: 0
   itemLevel: 45
   lineId: 22
   weaponClass: 0
@@ -44,12 +46,12 @@ MonoBehaviour:
   useCooldown: 1
   usableFromHotbar: 0
   placeholderGlyph: 
-  appearancePartIds: 1f01d700d800d900da002001210122012601270128012901t
+  appearancePartIds: 61046204630466046904t
   partCatalog: {fileID: 11400000, guid: 8679543dc9e4ba34898118a0249b9ac1, type: 2}
   appearanceParts: []
-  colorTheme: 6
+  colorTheme: 25
   colorThemes: {fileID: 11400000, guid: 19312dbf68325b34ea623ff93b84dd3d, type: 2}
-  colorCells: 59696a8890919298a0a1a2b7e0e1e2f0f1fey
+  colorCells: 6065707580859095a0a5b0b1b2c0c1c2d0d1d2e0e1e2f0f1f2y
   weaponPrefab: {fileID: 0}
   weaponLocalPosition: {x: 0, y: 0, z: 0}
   weaponLocalEuler: {x: 0, y: 0, z: 0}

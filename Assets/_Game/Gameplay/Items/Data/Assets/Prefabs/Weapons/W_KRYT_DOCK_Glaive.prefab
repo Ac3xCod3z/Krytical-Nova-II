@@ -1,0 +1,247 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &3532330291532299448
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2393445895261751490}
+  - component: {fileID: 4896107996348025650}
+  - component: {fileID: 2898966570268674273}
+  m_Layer: 0
+  m_Name: Model
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2393445895261751490
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3532330291532299448}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0.7071067, z: 0.7071068, w: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 6783528242121032049}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!33 &4896107996348025650
+MeshFilter:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3532330291532299448}
+  m_Mesh: {fileID: -9178684312896310244, guid: 9c9c140ed88862d409b9f18eb34694d6, type: 3}
+--- !u!23 &2898966570268674273
+MeshRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3532330291532299448}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_DynamicOccludee: 1
+  m_StaticShadowCaster: 0
+  m_MotionVectors: 1
+  m_LightProbeUsage: 1
+  m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
+  m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
+  m_RenderingLayerMask: 1
+  m_RendererPriority: 0
+  m_Materials:
+  - {fileID: 2100000, guid: c0bd265c2da95c14386ce25e619dcf39, type: 2}
+  m_StaticBatchInfo:
+    firstSubMesh: 0
+    subMeshCount: 0
+  m_StaticBatchRoot: {fileID: 0}
+  m_ProbeAnchor: {fileID: 0}
+  m_LightProbeVolumeOverride: {fileID: 0}
+  m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
+  m_PreserveUVs: 0
+  m_IgnoreNormalsForChartDetection: 0
+  m_ImportantGI: 0
+  m_StitchLightmapSeams: 1
+  m_SelectedEditorRenderState: 3
+  m_MinimumChartSize: 4
+  m_AutoUVMaxDistance: 0.5
+  m_AutoUVMaxAngle: 89
+  m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_MaskInteraction: 0
+  m_AdditionalVertexStreams: {fileID: 0}
+--- !u!1 &4380535870311978848
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 6783528242121032049}
+  - component: {fileID: 1771947264080720946}
+  - component: {fileID: 6883912937957002209}
+  - component: {fileID: 5404429316577491230}
+  - component: {fileID: 749887093056037925}
+  m_Layer: 0
+  m_Name: W_KRYT_DOCK_Glaive
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &6783528242121032049
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4380535870311978848}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 2393445895261751490}
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1771947264080720946
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4380535870311978848}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 27a0b2f383b20a04ead8add7cce65f0e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: KryticalNova.Items::KryticalNova.Items.Visuals.WeaponGrip
+  twoHanded: 1
+  offHandAt: {x: 0, y: 0, z: 0.6912}
+  offHandFrom: {x: 0, y: 0, z: 0.14}
+  offHandTo: {x: 0, y: 0, z: 1.034312}
+--- !u!114 &6883912937957002209
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4380535870311978848}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3ec9666289507b04d82338b034be8b99, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: KryticalNova.Items::KryticalNova.Items.Visuals.WeaponGlowZone
+  zone:
+    mode: 1
+    box:
+      m_Center: {x: -0.003526263, y: -0.08322537, z: 1.691756}
+      m_Extent: {x: 0.09833298, y: 0.1884023, z: 0.65175605}
+    dark:
+      m_Center: {x: 0, y: 0, z: 0}
+      m_Extent: {x: 0, y: 0, z: 0}
+  exclude: []
+  keepAsSet: 0
+--- !u!114 &5404429316577491230
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4380535870311978848}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbf1bd061d12ae346aa55bea77fb59b6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: KryticalNova.Items::KryticalNova.Items.Visuals.WeaponReach
+  points:
+  - {x: 0.0042652413, y: 0.08517692, z: 1.1205552}
+  - {x: -0.01210136, y: -0.057164464, z: 2.3235087}
+  - {x: 0.027945727, y: 0.047398012, z: -0.36312073}
+  - {x: -0.067376435, y: 0.015322259, z: -0.42876875}
+  - {x: 0.039087832, y: 0.042634647, z: -0.3627898}
+  - {x: -0.05476412, y: 0.015198223, z: -0.44429862}
+  - {x: 0.04740315, y: 0.0054917266, z: -0.44506538}
+  - {x: 0.04788415, y: 0.035123866, z: -0.36278856}
+  - {x: -0.01908715, y: 0.061104234, z: 1.5073127}
+  - {x: 0.06055896, y: -0.00027132698, z: -0.44407964}
+  - {x: -0.0667154, y: 0.010837965, z: -0.44267172}
+  - {x: 0.068869695, y: -0.0013408738, z: -0.43442655}
+  - {x: 0.052015446, y: -0.0018099009, z: -0.45029968}
+  - {x: -0.074352875, y: 0.0077346484, z: -0.43564498}
+  - {x: -0.052280083, y: 0.0075938045, z: -0.4518239}
+  - {x: -0.07605532, y: -0.011487967, z: -0.43630904}
+  - {x: -0.05822747, y: -0.012074058, z: -0.4518363}
+  - {x: -0.025643907, y: -0.11567553, z: 2.2222402}
+  - {x: 0.05958277, y: -0.023169762, z: -0.44588995}
+  - {x: -0.06760385, y: -0.011081999, z: -0.44660747}
+  - {x: 0.008229293, y: -0.13779438, z: 2.0457842}
+  - {x: 0.05025573, y: -0.021683756, z: -0.45178187}
+  - {x: 0.06789352, y: -0.024239248, z: -0.4362368}
+  - {x: -0.019735284, y: -0.17956968, z: 2.213709}
+  - {x: -0.013370179, y: -0.107275754, z: 2.291103}
+  - {x: -0.025975838, y: -0.25160566, z: 1.933685}
+  - {x: -0.024708167, y: -0.23636913, z: 2.0970728}
+  - {x: -0.021950245, y: -0.20480134, z: 2.1736279}
+  - {x: -0.01692868, y: -0.1476589, z: 2.253794}
+  - {x: -0.052751176, y: -0.021428114, z: -0.44611365}
+  - {x: -0.023588773, y: -0.22351736, z: 2.1350217}
+  - {x: -0.025438197, y: -0.24482267, z: 2.059617}
+  - {x: 0.056698963, y: -0.031948093, z: -0.4386996}
+  - {x: -0.06638773, y: -0.021044856, z: -0.4387614}
+  - {x: 0.043214723, y: -0.029928926, z: -0.4460655}
+  - {x: -0.001729101, y: -0.062110912, z: -0.3636789}
+--- !u!114 &749887093056037925
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4380535870311978848}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 49c780d2153aaad4196a180e3fe8d87d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: KryticalNova.Items::KryticalNova.Items.Visuals.WeaponPaint
+  bands:
+  - hue: 0.05955232
+    width: 0.06
+    role: 5
+    value: 0.51766413
+  - hue: 0.5426882
+    width: 0.06
+    role: 1
+    value: 0.28355175
+  shades:
+  - value: 0.29411766
+    width: 0.08
+    role: 0
+  - value: 0.6588235
+    width: 0.08
+    role: 2
+  paintMetal: 1
+  paintDark: 1
+  paintLights: 1
+  keepAsSet: 0

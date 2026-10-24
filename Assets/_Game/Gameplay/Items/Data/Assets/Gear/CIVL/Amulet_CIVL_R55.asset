@@ -13,12 +13,14 @@ MonoBehaviour:
   m_Name: Amulet_CIVL_R55
   m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Items.ItemDefinition
   itemId: 12785
-  displayName: Analyst Lanyard
+  displayName: Dock Runner Cargo Token
   description: Worn around the neck.
-  icon: {fileID: 21300000, guid: eb07c0cb7b0ba7649840528418a0d578, type: 3}
+  icon: {fileID: 21300000, guid: 6646e06d4b83aaf4cb14a88b79e51949, type: 3}
+  sharesIconOf: {fileID: 0}
   rarity: 2
   equipSlot: 6
   maxStack: 1
+  boundFaction: 0
   itemLevel: 55
   lineId: 175
   weaponClass: 0

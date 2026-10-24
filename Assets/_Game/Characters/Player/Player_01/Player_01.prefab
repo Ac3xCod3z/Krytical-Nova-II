@@ -1736,6 +1736,7 @@ GameObject:
   - component: {fileID: 5088627385439411535}
   - component: {fileID: 3207520345899935226}
   - component: {fileID: 5994372541494688676}
+  - component: {fileID: 8516995977590906475}
   m_Layer: 0
   m_Name: Player_01
   m_TagString: Untagged
@@ -3996,6 +3997,9 @@ MonoBehaviour:
     skinny: 0
     heavy: 10
     buff: 90
+    bust: 0
+    butt: 0
+    defined: 0
   idleFace:
   - shape: mouthSmileLeft
     weight: 22
@@ -5889,6 +5893,7 @@ MonoBehaviour:
     boneNames: []
     extraBones: []
     usesWrap: 0
+  bareBody: []
 --- !u!114 &3207520345899935226
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5920,6 +5925,22 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9b831e375bb0c534792a3b94b2be86db, type: 3}
   m_Name: 
   m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.CharacterCreation.CharacterLook
+  appliedHeight: 1
+--- !u!114 &8516995977590906475
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3933595338312819546}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f344a0d3204973f48a0ea6a035c95ee6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: KryticalNova.Items::KryticalNova.Items.Visuals.OffHandGripIK
+  mount: {fileID: 0}
+  blend: 0.12
+  reach: 0.35
 --- !u!1 &4149163464626883883
 GameObject:
   m_ObjectHideFlags: 0

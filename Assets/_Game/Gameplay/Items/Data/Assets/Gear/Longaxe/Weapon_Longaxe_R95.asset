@@ -16,9 +16,11 @@ MonoBehaviour:
   displayName: Jarl's Axe
   description: 'Longaxe: the offense weapon of the Covenant.'
   icon: {fileID: 21300000, guid: 13ff2574e34b964478d3133558786cd6, type: 3}
+  sharesIconOf: {fileID: 0}
   rarity: 2
   equipSlot: 1
   maxStack: 1
+  boundFaction: 0
   itemLevel: 95
   lineId: 148
   weaponClass: 7

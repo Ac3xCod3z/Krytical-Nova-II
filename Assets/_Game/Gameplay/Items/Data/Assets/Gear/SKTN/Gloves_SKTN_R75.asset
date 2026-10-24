@@ -16,9 +16,11 @@ MonoBehaviour:
   displayName: Deathsworn Gauntlets
   description: Worn on the hands.
   icon: {fileID: 21300000, guid: 746ca9f4d6c97584f9072d5203ed4e54, type: 3}
+  sharesIconOf: {fileID: 0}
   rarity: 2
   equipSlot: 3
   maxStack: 1
+  boundFaction: 0
   itemLevel: 75
   lineId: 65
   weaponClass: 0

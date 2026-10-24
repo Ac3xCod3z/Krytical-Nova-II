@@ -703,6 +703,12 @@ Two families, made to sit side by side in the HUD:
   Pack` for skills, `_ThirdParty/Cyberpunk RPG Icons Pack` for items. `ComicIconTreatment` (`Assets/_Game/Icons/Editor`)
   redraws each one. The packs' files are only read, never changed: the game shows treated copies, written to
   `Gameplay/Progression/Data/Assets/Icons` and `Gameplay/Items/Data/Assets/Icons`.
+- **Painted gear icons (Blender-made sets, owner 24 Oct 2026).** A set made from Tripo models (the Dock Runner first)
+  has painted icons: each piece is captured in the game in its set's own colours (never a dye), the captures go on one
+  sheet, Nano Banana 2 repaints the sheet in the Cyberpunk pack's style, and the sheet is cut into one picture per
+  piece (`Icons/Art/Generated/<Set>`). `IconBaker.BakePicture` gives each the same comic treatment as a pack's
+  cut-out icon, and `TripoGearSetBuilder` puts it on the piece's ladder line. Jewellery, which has no model, is
+  painted from the set's own art.
 
 **The treatment.** Every number is in `Icons/Data/Assets/IconTreatmentSettings.asset`; change one, then **Krytical
 Nova ▸ Icons ▸ Bake Every Assigned Icon**. Sizes are in pixels of the finished 256 px icon (drawn at twice the size

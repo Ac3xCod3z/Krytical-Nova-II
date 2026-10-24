@@ -16,9 +16,11 @@ MonoBehaviour:
   displayName: Graveworn Greaves
   description: Worn on the feet.
   icon: {fileID: 21300000, guid: fc2a887e4e100d148a10c9231cf630de, type: 3}
+  sharesIconOf: {fileID: 0}
   rarity: 0
   equipSlot: 4
   maxStack: 1
+  boundFaction: 0
   itemLevel: 19
   lineId: 68
   weaponClass: 0

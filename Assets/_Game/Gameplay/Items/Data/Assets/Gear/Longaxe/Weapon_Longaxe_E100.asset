@@ -16,9 +16,11 @@ MonoBehaviour:
   displayName: Northfall Greataxe
   description: 'Longaxe: the offense weapon of the Covenant.'
   icon: {fileID: 21300000, guid: c5585238db63e754db2f5541d7a3d853, type: 3}
+  sharesIconOf: {fileID: 0}
   rarity: 3
   equipSlot: 1
   maxStack: 1
+  boundFaction: 0
   itemLevel: 100
   lineId: 149
   weaponClass: 7

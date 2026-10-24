@@ -1,0 +1,35 @@
+{
+ "weapon": "W_KRYT_DOCK_Monoblade",
+ "kind": "sword",
+ "source": "G:/My Drive/Krytical Nova Armors/Rares lv.45-75/Civilian/DockRunner Monoblade/DockRunner_Monoblade.fbx",
+ "scale": 1.2736,
+ "frame": "Blender: grip at the origin, butt -> tip +Y, broad side +Z (a pistol's handle -Z)",
+ "length_m": 1.273,
+ "butt_y": -0.3437,
+ "tip_y": 0.9293,
+ "faces": 5698,
+ "palette_use": {
+  "#4B4546": 0.612,
+  "#2B2D30": 0.207,
+  "#BD6334": 0.076,
+  "#966140": 0.052,
+  "#6C442E": 0.031,
+  "#854021": 0.006,
+  "#0A090A": 0.006,
+  "#BE7D3C": 0.004,
+  "#A8A78F": 0.003,
+  "#DB8040": 0.002,
+  "#B8935C": 0.001,
+  "#4A2819": 0.0
+ },
+ "main_hand": {
+  "hand": "right",
+  "point": [
+   0,
+   0,
+   0
+  ]
+ },
+ "guard_along": 0.325,
+ "grip_along": 0.27
+}

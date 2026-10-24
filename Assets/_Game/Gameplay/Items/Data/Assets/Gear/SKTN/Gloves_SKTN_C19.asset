@@ -16,9 +16,11 @@ MonoBehaviour:
   displayName: Graveworn Gauntlets
   description: Worn on the hands.
   icon: {fileID: 21300000, guid: 2ccdb97fda28e0d429dbaf029740deb5, type: 3}
+  sharesIconOf: {fileID: 0}
   rarity: 0
   equipSlot: 3
   maxStack: 1
+  boundFaction: 0
   itemLevel: 19
   lineId: 63
   weaponClass: 0

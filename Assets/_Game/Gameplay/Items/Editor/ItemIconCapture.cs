@@ -367,13 +367,20 @@ namespace KryticalNova.EditorTools
         {
             string pack = PackOf(item);
             if (pack == null || characters == null || baseMaterial == null) return baseMaterial;
-            string key = $"{pack}:{item.colorTheme}";
+            // Per piece: each piece paints its own cells of the theme, so a map made for the armor leaves the
+            // gloves and boots of the same set in the lineage's colours.
+            string key = $"{pack}:{item.colorTheme}:{item.name}";
             if (cache.TryGetValue(key, out var cached)) return cached;
 
             var result = baseMaterial;
+            // Our own parts (SK_KRYT_*) belong to no lineage's pack: they are drawn on the first lineage's palette,
+            // their set's colours over it (the Dock Runner icons came out in the default green without this).
+            bool ownPack = false;
+            foreach (var lineage in characters.Lineages)
+                if (lineage != null && lineage.ownPack == pack) ownPack = true;
             foreach (var lineage in characters.Lineages)
             {
-                if (lineage == null || lineage.ownPack != pack) continue;
+                if (lineage == null || (ownPack && lineage.ownPack != pack)) continue;
                 var recipe = RecipeEdit.Default(lineage, BodyType.Masculine);
                 var pixels = new Color32[CharacterColorMap.PixelCount];
                 CharacterColorMap.Fill(recipe, characters, pixels);

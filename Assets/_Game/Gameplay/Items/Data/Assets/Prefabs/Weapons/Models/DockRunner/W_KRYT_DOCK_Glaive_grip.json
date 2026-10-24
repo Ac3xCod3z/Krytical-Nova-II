@@ -1,0 +1,43 @@
+{
+ "weapon": "W_KRYT_DOCK_Glaive",
+ "kind": "polearm",
+ "source": "G:/My Drive/Krytical Nova Armors/Rares lv.45-75/Civilian/DockRunner Glaive/DockRunner_Glaive.fbx",
+ "scale": 2.1446,
+ "frame": "Blender: grip at the origin, butt -> tip +Y, broad side +Z (a pistol's handle -Z)",
+ "length_m": 2.776,
+ "butt_y": -0.4525,
+ "tip_y": 2.3235,
+ "faces": 5750,
+ "palette_use": {
+  "#4B4546": 0.194,
+  "#293B42": 0.177,
+  "#6C442E": 0.164,
+  "#A8A78F": 0.153,
+  "#BD6334": 0.089,
+  "#966140": 0.077,
+  "#4A2819": 0.05,
+  "#43656A": 0.033,
+  "#DBB07D": 0.028,
+  "#27211F": 0.022,
+  "#854021": 0.012
+ },
+ "main_hand": {
+  "hand": "right",
+  "point": [
+   0,
+   0,
+   0
+  ]
+ },
+ "grip_along": 0.163,
+ "off_hand_along": 0.412,
+ "blade_starts_at": 0.55,
+ "off_hand": {
+  "hand": "left",
+  "point": [
+   0,
+   0.6912,
+   0
+  ]
+ }
+}

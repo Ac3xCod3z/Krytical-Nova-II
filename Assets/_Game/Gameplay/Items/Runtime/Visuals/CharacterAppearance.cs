@@ -65,6 +65,7 @@ namespace KryticalNova.Items.Visuals
         private Mesh ownedMesh;
         private CharacterAppearance sharedSource;
         private bool dirty;
+        private bool helmetShown = true;
 
         /// <summary>Raised after every rebuild, so mirrors (the equipment preview doll) can re-share the mesh.</summary>
         public event Action Rebuilt;
@@ -163,12 +164,25 @@ namespace KryticalNova.Items.Visuals
         }
 
         /// <summary>
+        /// Draw the helmet a worn piece carries in the head attachment, or not (the Equipment page's toggle; helmets are
+        /// vanity, not a slot). While one is drawn, the hair shows only what hangs below its rim.
+        /// </summary>
+        public void SetHelmetShown(bool shown)
+        {
+            if (helmetShown == shown) return;
+            helmetShown = shown;
+            StopSharing();
+            dirty = true;
+        }
+
+        /// <summary>
         /// Wear what another appearance shows (pieces and dyes) as this one's own, merged here: where a try-on
         /// starts from.
         /// </summary>
         public void WearLike(CharacterAppearance source)
         {
             if (source == null || source == this) return;
+            helmetShown = source.helmetShown;
             foreach (var slot in VisualSlots) SetSlot(slot, source.GetWorn(slot), source.GetDye(slot));
         }
 
@@ -206,6 +220,7 @@ namespace KryticalNova.Items.Visuals
             defaultParts.AddRange(source.defaultParts);
             bodyShape = source.bodyShape;
             wrapPart = source.wrapPart;
+            helmetShown = source.helmetShown;
             bareBody.Clear();
             bareBody.AddRange(source.bareBody);
             dirty = false;
@@ -261,12 +276,28 @@ namespace KryticalNova.Items.Visuals
                     if (!worn || (EquipSlots.IsBodyRegion(p.region) && !resolved.ContainsKey(p.region))) resolved[p.region] = p;
                 }
             }
+            // A helmet worn with a piece (head attachment): hidden by the toggle, or shown with the hair tucked under it.
+            if (resolved.TryGetValue(BodyRegion.AttachmentHead, out var helmet) && !IsFixed(helmet))
+            {
+                if (!helmetShown) resolved.Remove(BodyRegion.AttachmentHead);
+                else if (resolved.TryGetValue(BodyRegion.Hair, out var hair))
+                {
+                    if (PartLibrary.TryLoadUnderHelmet(hair, out var tucked)) resolved[BodyRegion.Hair] = tucked;
+                    else resolved.Remove(BodyRegion.Hair); // all of this hair sits under the helmet
+                }
+            }
             // A bare-chested torso needs the chest wrap on a feminine body (same rule as Sidekick's own tool).
             if (wrapPart.IsValid && bodyShape.masculineFeminine > 50f
                 && resolved.TryGetValue(BodyRegion.Torso, out var torso) && torso.usesWrap)
                 resolved[BodyRegion.Wrap] = wrapPart;
             partList.Clear();
             partList.AddRange(resolved.Values); // region order => deterministic bone order for sharing
+        }
+
+        private bool IsFixed(SidekickPartRef part)
+        {
+            foreach (var p in fixedParts) if (p.mesh == part.mesh) return true;
+            return false;
         }
 
         private void RebuildMerged()

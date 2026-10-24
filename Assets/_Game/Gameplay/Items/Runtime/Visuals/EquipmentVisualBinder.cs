@@ -85,6 +85,7 @@ namespace KryticalNova.Items.Visuals
                 case EquipSlot.Amulet:
                     break; // stats only
                 default:
+                    if (slot == EquipSlot.Armor && appearance != null) appearance.SetHelmetShown(equipment.HelmetShown);
                     if (appearance != null) appearance.SetSlot(slot, equipment.GetShownDefinition(slot), equipment.GetDyeCells(slot));
                     if (slot == EquipSlot.Cape && weaponMount != null) weaponMount.SetCapeWorn(worn != null);
                     break;

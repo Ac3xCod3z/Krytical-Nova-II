@@ -16,9 +16,11 @@ MonoBehaviour:
   displayName: Stormflight Bow
   description: 'Warbow: the ranged weapon of the Covenant.'
   icon: {fileID: 21300000, guid: 5f62f997259b3b94ba1120d0d7090443, type: 3}
+  sharesIconOf: {fileID: 0}
   rarity: 3
   equipSlot: 1
   maxStack: 1
+  boundFaction: 0
   itemLevel: 100
   lineId: 159
   weaponClass: 9

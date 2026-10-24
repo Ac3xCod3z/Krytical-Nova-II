@@ -16,9 +16,11 @@ MonoBehaviour:
   displayName: Sentinel Gauntlets
   description: Worn on the hands.
   icon: {fileID: 21300000, guid: 98a8dcd4b701a4b45924db1d63454709, type: 3}
+  sharesIconOf: {fileID: 0}
   rarity: 1
   equipSlot: 3
   maxStack: 1
+  boundFaction: 0
   itemLevel: 30
   lineId: 7
   weaponClass: 0

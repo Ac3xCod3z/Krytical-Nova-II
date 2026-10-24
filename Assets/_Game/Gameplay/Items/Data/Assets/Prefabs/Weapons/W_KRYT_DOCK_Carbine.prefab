@@ -1,0 +1,256 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &988505443254339994
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 553128209481531195}
+  - component: {fileID: 4279011396273450782}
+  - component: {fileID: 8584207611095846831}
+  m_Layer: 0
+  m_Name: Model
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &553128209481531195
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 988505443254339994}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0.7071067, z: 0.7071068, w: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 6753208966527660880}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!33 &4279011396273450782
+MeshFilter:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 988505443254339994}
+  m_Mesh: {fileID: 8193785843995147969, guid: 57cccd6a4dc5a6340ab70307048e533b, type: 3}
+--- !u!23 &8584207611095846831
+MeshRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 988505443254339994}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_DynamicOccludee: 1
+  m_StaticShadowCaster: 0
+  m_MotionVectors: 1
+  m_LightProbeUsage: 1
+  m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
+  m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
+  m_RenderingLayerMask: 1
+  m_RendererPriority: 0
+  m_Materials:
+  - {fileID: 2100000, guid: 0e13eba1823801b4c91143c659bf8004, type: 2}
+  m_StaticBatchInfo:
+    firstSubMesh: 0
+    subMeshCount: 0
+  m_StaticBatchRoot: {fileID: 0}
+  m_ProbeAnchor: {fileID: 0}
+  m_LightProbeVolumeOverride: {fileID: 0}
+  m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
+  m_PreserveUVs: 0
+  m_IgnoreNormalsForChartDetection: 0
+  m_ImportantGI: 0
+  m_StitchLightmapSeams: 1
+  m_SelectedEditorRenderState: 3
+  m_MinimumChartSize: 4
+  m_AutoUVMaxDistance: 0.5
+  m_AutoUVMaxAngle: 89
+  m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_MaskInteraction: 0
+  m_AdditionalVertexStreams: {fileID: 0}
+--- !u!1 &3204538745263447588
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 6753208966527660880}
+  - component: {fileID: 625546457638711462}
+  - component: {fileID: 5052822808741000675}
+  - component: {fileID: 3002585629156110596}
+  - component: {fileID: 987993870358524706}
+  m_Layer: 0
+  m_Name: W_KRYT_DOCK_Carbine
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &6753208966527660880
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3204538745263447588}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 553128209481531195}
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &625546457638711462
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3204538745263447588}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 27a0b2f383b20a04ead8add7cce65f0e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: KryticalNova.Items::KryticalNova.Items.Visuals.WeaponGrip
+  twoHanded: 0
+  offHandAt: {x: 0, y: 0, z: 0}
+  offHandFrom: {x: 0, y: 0, z: 0}
+  offHandTo: {x: 0, y: 0, z: 0}
+--- !u!114 &5052822808741000675
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3204538745263447588}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3ec9666289507b04d82338b034be8b99, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: KryticalNova.Items::KryticalNova.Items.Visuals.WeaponGlowZone
+  zone:
+    mode: 0
+    box:
+      m_Center: {x: 0, y: 0, z: 0}
+      m_Extent: {x: 0, y: 0, z: 0}
+    dark:
+      m_Center: {x: -0.0013466775, y: -0.05949787, z: -0.065000005}
+      m_Extent: {x: 0.086905316, y: 0.09449787, z: 0.085}
+  exclude: []
+  keepAsSet: 0
+--- !u!114 &3002585629156110596
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3204538745263447588}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbf1bd061d12ae346aa55bea77fb59b6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: KryticalNova.Items::KryticalNova.Items.Visuals.WeaponReach
+  points:
+  - {x: 0.005821934, y: 0.104359694, z: -0.0076755243}
+  - {x: -0.018814325, y: 0.079990216, z: 0.26364753}
+  - {x: 0.009563867, y: 0.07169589, z: 0.2971577}
+  - {x: -0.0051626908, y: 0.10438364, z: -0.0076938528}
+  - {x: -0.010244473, y: 0.071739055, z: 0.29712465}
+  - {x: 0.021338925, y: 0.07810826, z: 0.26356378}
+  - {x: 0.013028122, y: 0.08429375, z: -0.035731617}
+  - {x: 0.00024529814, y: 0.06619859, z: -0.0609485}
+  - {x: 0.023043651, y: 0.060883302, z: 0.2986236}
+  - {x: -0.021119688, y: 0.080308355, z: 0.24270749}
+  - {x: 0.018605605, y: 0.0749412, z: -0.045000367}
+  - {x: -0.017949786, y: 0.075020865, z: -0.045061372}
+  - {x: -0.023595987, y: 0.060984943, z: 0.29854575}
+  - {x: -0.03059916, y: 0.07207234, z: -0.022562899}
+  - {x: 0.031166844, y: 0.071937755, z: -0.022459812}
+  - {x: -0.009306403, y: 0.062451053, z: -0.061281003}
+  - {x: 0.00996171, y: 0.062409062, z: -0.061248846}
+  - {x: 0.024424274, y: -0.08493301, z: -0.07161161}
+  - {x: -0.02437481, y: -0.08410889, z: -0.07163276}
+  - {x: 0.020203134, y: -0.002593106, z: 0.2992495}
+  - {x: -0.067948386, y: -0.06039949, z: 0.17206961}
+  - {x: 0.008848677, y: -0.0064271446, z: 0.29999065}
+  - {x: 0.06512764, y: -0.060689468, z: 0.17229171}
+  - {x: -0.02103423, y: -0.002503237, z: 0.2991807}
+  - {x: 0.05677386, y: -0.0824244, z: 0.18599154}
+  - {x: -0.059735198, y: -0.08217053, z: 0.1857971}
+  - {x: 0.057918567, y: -0.09188899, z: 0.13514164}
+  - {x: -0.000065741595, y: -0.08665757, z: -0.074151084}
+  - {x: -0.054170616, y: -0.10481122, z: 0.16691867}
+  - {x: -0.009340876, y: -0.007613478, z: 0.2994959}
+  - {x: 0.051173735, y: -0.10504079, z: 0.16709447}
+  - {x: -0.050232876, y: -0.102647945, z: 0.18409452}
+  - {x: 0.028424405, y: -0.12040493, z: 0.18274853}
+  - {x: -0.021455193, y: -0.11040937, z: -0.021069076}
+  - {x: 0.021222776, y: -0.11050237, z: -0.020997848}
+  - {x: -0.021286769, y: -0.12532106, z: 0.18224348}
+  - {x: -0.046448216, y: -0.11505641, z: 0.16607232}
+  - {x: 0.008240543, y: -0.12789764, z: 0.18208173}
+  - {x: 0.026998205, y: -0.12723926, z: 0.16518493}
+  - {x: 0.018149836, y: -0.125407, z: 0.1823093}
+  - {x: -0.020188611, y: -0.13054588, z: 0.16481978}
+  - {x: -0.0016477533, y: -0.13399574, z: 0.16456431}
+--- !u!114 &987993870358524706
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3204538745263447588}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 49c780d2153aaad4196a180e3fe8d87d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: KryticalNova.Items::KryticalNova.Items.Visuals.WeaponPaint
+  bands:
+  - hue: 0.08071529
+    width: 0.06
+    role: 4
+    value: 0.76654667
+  - hue: 0.52136755
+    width: 0.06
+    role: 1
+    value: 0.41568628
+  shades:
+  - value: 0.29411766
+    width: 0.08
+    role: 0
+  - value: 0.1882353
+    width: 0.08
+    role: 2
+  - value: 0.65882355
+    width: 0.08
+    role: 0
+  paintMetal: 1
+  paintDark: 1
+  paintLights: 1
+  keepAsSet: 0

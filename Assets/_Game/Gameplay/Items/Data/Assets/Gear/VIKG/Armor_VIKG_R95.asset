@@ -16,9 +16,11 @@ MonoBehaviour:
   displayName: Jarl Armor
   description: 'Worn on the body: torso, arms, hips and legs.'
   icon: {fileID: 21300000, guid: e064b51d5b365ba40b1e08b6b7982851, type: 3}
+  sharesIconOf: {fileID: 0}
   rarity: 2
   equipSlot: 2
   maxStack: 1
+  boundFaction: 0
   itemLevel: 95
   lineId: 80
   weaponClass: 0

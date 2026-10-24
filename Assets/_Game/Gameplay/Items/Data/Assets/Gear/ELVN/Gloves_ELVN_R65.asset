@@ -16,9 +16,11 @@ MonoBehaviour:
   displayName: Bladesinger Gloves
   description: Worn on the hands.
   icon: {fileID: 21300000, guid: 4968659fae8b1334992521b1c104dd46, type: 3}
+  sharesIconOf: {fileID: 0}
   rarity: 2
   equipSlot: 3
   maxStack: 1
+  boundFaction: 0
   itemLevel: 65
   lineId: 103
   weaponClass: 0

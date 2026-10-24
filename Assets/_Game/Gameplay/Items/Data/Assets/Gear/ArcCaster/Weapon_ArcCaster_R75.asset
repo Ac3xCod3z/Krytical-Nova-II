@@ -16,9 +16,11 @@ MonoBehaviour:
   displayName: Plasma Caster
   description: 'Arc Caster: the ranged weapon of the Null.'
   icon: {fileID: 21300000, guid: be5867b47cc0694439c00dc4652bdfe5, type: 3}
+  sharesIconOf: {fileID: 0}
   rarity: 2
   equipSlot: 1
   maxStack: 1
+  boundFaction: 0
   itemLevel: 75
   lineId: 142
   weaponClass: 6

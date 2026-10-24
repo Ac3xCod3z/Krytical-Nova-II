@@ -16,9 +16,11 @@ MonoBehaviour:
   displayName: Berserker Cloak
   description: Worn across the back.
   icon: {fileID: 21300000, guid: 0c87ff39a10c2f44c9339c0a56af9f44, type: 3}
+  sharesIconOf: {fileID: 0}
   rarity: 2
   equipSlot: 7
   maxStack: 1
+  boundFaction: 0
   itemLevel: 75
   lineId: 93
   weaponClass: 0

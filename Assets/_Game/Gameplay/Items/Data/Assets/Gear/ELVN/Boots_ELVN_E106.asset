@@ -16,9 +16,11 @@ MonoBehaviour:
   displayName: Sunlord Boots
   description: Worn on the feet.
   icon: {fileID: 21300000, guid: 839d053264f91d041b6f96461ab93e71, type: 3}
+  sharesIconOf: {fileID: 0}
   rarity: 3
   equipSlot: 4
   maxStack: 1
+  boundFaction: 0
   itemLevel: 106
   lineId: 110
   weaponClass: 0

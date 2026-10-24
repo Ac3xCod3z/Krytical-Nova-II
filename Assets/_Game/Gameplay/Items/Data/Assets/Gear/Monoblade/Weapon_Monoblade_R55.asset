@@ -13,12 +13,14 @@ MonoBehaviour:
   m_Name: Weapon_Monoblade_R55
   m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Items.ItemDefinition
   itemId: 11857
-  displayName: Ninjato
+  displayName: Dock Runner Monoblade
   description: 'Monoblade: the offense weapon of the Hegemony.'
-  icon: {fileID: 21300000, guid: 2612f0443a7779941875223c4678f07d, type: 3}
+  icon: {fileID: 21300000, guid: abfb0dec7367e6249bfd4abfe0f1579d, type: 3}
+  sharesIconOf: {fileID: 0}
   rarity: 2
   equipSlot: 1
   maxStack: 1
+  boundFaction: 0
   itemLevel: 55
   lineId: 117
   weaponClass: 1
@@ -49,12 +51,12 @@ MonoBehaviour:
   colorTheme: 0
   colorThemes: {fileID: 0}
   colorCells: 
-  weaponPrefab: {fileID: 5273534217963160086, guid: f72cd7cda6d46a849b151e4cc785c65c, type: 3}
+  weaponPrefab: {fileID: 1183207388819953927, guid: 2ba87563c2bbc7e408226a67a566fb23, type: 3}
   weaponLocalPosition: {x: 0, y: 0, z: 0}
   weaponLocalEuler: {x: 0, y: 0, z: 0}
   weaponLocalScale: {x: 1, y: 1, z: 1}
-  hitboxCenter: {x: 0, y: -0.000000052154064, z: 0.5848538}
-  hitboxSize: {x: 0.18, y: 0.18, z: 1.0697076}
+  hitboxCenter: {x: 0, y: 0.010074943, z: 0.51463753}
+  hitboxSize: {x: 0.18, y: 0.2345525, z: 0.92927504}
   paired: 0
   offHandLocalPosition: {x: 0, y: 0, z: 0}
   offHandLocalEuler: {x: 0, y: 0, z: 0}

@@ -16,9 +16,11 @@ MonoBehaviour:
   displayName: Graveworn Armor
   description: 'Worn on the body: torso, arms, hips and legs.'
   icon: {fileID: 21300000, guid: 0dff171252d7884468fc936dbb1b0d71, type: 3}
+  sharesIconOf: {fileID: 0}
   rarity: 0
   equipSlot: 2
   maxStack: 1
+  boundFaction: 0
   itemLevel: 28
   lineId: 58
   weaponClass: 0

@@ -293,6 +293,9 @@
     padding: 0 8px; margin: 0;
     font-size: 10px;
 }
+.helmet-toggle {
+    top: 32px;
+}
 .try-on-chip {
     position: absolute;
     left: 6px; top: 6px;

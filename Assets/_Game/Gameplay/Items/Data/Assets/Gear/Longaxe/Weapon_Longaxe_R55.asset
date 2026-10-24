@@ -16,9 +16,11 @@ MonoBehaviour:
   displayName: Elven Axe
   description: 'Longaxe: the offense weapon of the Covenant.'
   icon: {fileID: 21300000, guid: e2614633e02a47e498a19e6b74658c8b, type: 3}
+  sharesIconOf: {fileID: 0}
   rarity: 2
   equipSlot: 1
   maxStack: 1
+  boundFaction: 0
   itemLevel: 55
   lineId: 147
   weaponClass: 7

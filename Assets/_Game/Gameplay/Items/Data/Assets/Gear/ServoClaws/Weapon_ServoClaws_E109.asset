@@ -16,9 +16,11 @@ MonoBehaviour:
   displayName: Apex Claw
   description: 'Servo Claws: the defense weapon of the Null.'
   icon: {fileID: 21300000, guid: f98b3c9d973ae104487545f2ad0a51c4, type: 3}
+  sharesIconOf: {fileID: 0}
   rarity: 3
   equipSlot: 1
   maxStack: 1
+  boundFaction: 0
   itemLevel: 109
   lineId: 139
   weaponClass: 5

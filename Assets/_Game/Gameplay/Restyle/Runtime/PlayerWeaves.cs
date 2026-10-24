@@ -151,6 +151,20 @@ namespace KryticalNova.Restyle
             else ServerDye(slot, colourway);
         }
 
+        /// <summary>Show or hide the helmet worn with the outfit (the Equipment page's toggle). Free, anywhere.</summary>
+        public void RequestHelmetShown(bool shown)
+        {
+            if (IsSpawned) HelmetRpc(shown);
+            else ServerHelmet(shown);
+        }
+
+        [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
+        private void HelmetRpc(bool shown)
+        {
+            if (!RpcBudget.Allow(this, CallKind.Items, nameof(HelmetRpc))) return;
+            ServerHelmet(shown);
+        }
+
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
         private void WeaveRpc(byte slot, ushort lineId)
         {
@@ -211,6 +225,15 @@ namespace KryticalNova.Restyle
         {
             equipment.ServerSetLooks(looks);
             if (saveAgent != null) saveAgent.SaveSoon();
+        }
+
+        private void ServerHelmet(bool shown)
+        {
+            if (!HasAuthority) return;
+            EquipmentLooks looks = equipment.Looks;
+            if (looks.helmetHidden == !shown) return;
+            looks.helmetHidden = !shown;
+            Commit(looks);
         }
 
         private void ServerWeave(EquipSlot slot, ushort lineId)

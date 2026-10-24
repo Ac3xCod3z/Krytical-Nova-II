@@ -16,9 +16,11 @@ MonoBehaviour:
   displayName: Scrap Sickle
   description: 'Harvester: the offense weapon of the Null.'
   icon: {fileID: 21300000, guid: a27770cf5d2e21a469bb730d022b5cef, type: 3}
+  sharesIconOf: {fileID: 0}
   rarity: 0
   equipSlot: 1
   maxStack: 1
+  boundFaction: 0
   itemLevel: 28
   lineId: 130
   weaponClass: 4

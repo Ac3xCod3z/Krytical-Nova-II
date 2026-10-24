@@ -159,6 +159,8 @@ namespace KryticalNova.UI
             BindButton("inventory-sort", () => inventory?.RequestSort());
             BindButton("try-on-clear", ClearTryOn);
             BindButton("preview-reset", () => stage?.ResetView());
+            helmetToggle = root.Q<Button>("helmet-toggle");
+            BindButton("helmet-toggle", ToggleHelmet);
             BindButton("item-confirm-yes", ConfirmDrop);
             BindButton("item-confirm-no", HideConfirm);
             BindButton("open-inventory", () => SetInventoryOpen(!IsOpen(inventoryWindow)));
@@ -204,7 +206,11 @@ namespace KryticalNova.UI
                     progression.Changed -= RefreshBag;
                     progression.Changed -= RefreshOwner;
                 }
-                if (equipment != null) equipment.SlotChanged -= OnSlotChanged;
+                if (equipment != null)
+                {
+                    equipment.SlotChanged -= OnSlotChanged;
+                    equipment.LookChanged -= OnLookChanged;
+                }
                 if (wallet != null) wallet.Changed -= RefreshCreds;
             }
             CancelDrag();
@@ -227,7 +233,11 @@ namespace KryticalNova.UI
                 // when it arrives too, so a piece put back on keeps its glow-band rim and its +% (owner, 23 Oct 2026).
                 inventory.Changed += RefreshEquipment;
                 inventory.RequestFailed += OnRequestFailed;
-                if (equipment != null) equipment.SlotChanged += OnSlotChanged;
+                if (equipment != null)
+                {
+                    equipment.SlotChanged += OnSlotChanged;
+                    equipment.LookChanged += OnLookChanged;
+                }
                 BuildSilhouettes();
             }
             if (stage != null && inventory != null) BindStage();
@@ -235,6 +245,35 @@ namespace KryticalNova.UI
             RefreshEquipment();
             RefreshCreds();
             RefreshOwner();
+            RefreshHelmet();
+        }
+
+        // ------------------------------------------------------------------ helmet (vanity toggle, not a slot)
+
+        private Button helmetToggle;
+
+        private void OnLookChanged(EquipSlot slot)
+        {
+            if (slot == EquipSlot.Armor) RefreshHelmet();
+        }
+
+        private void ToggleHelmet()
+        {
+            if (equipment == null || !equipment.TryGetComponent(out KryticalNova.Restyle.PlayerWeaves weaves)) return;
+            weaves.RequestHelmetShown(!equipment.HelmetShown);
+        }
+
+        /// <summary>The button shows only while the outfit worn carries a helmet; its text says whether it is drawn.</summary>
+        private void RefreshHelmet()
+        {
+            if (helmetToggle == null) return;
+            bool carries = false;
+            var outfit = equipment != null ? equipment.GetShownDefinition(EquipSlot.Armor) : null;
+            if (outfit != null)
+                foreach (var part in outfit.GetAppearanceParts())
+                    if (part.region == BodyRegion.AttachmentHead) { carries = true; break; }
+            helmetToggle.style.display = carries ? DisplayStyle.Flex : DisplayStyle.None;
+            helmetToggle.text = equipment != null && equipment.HelmetShown ? "HELMET: ON" : "HELMET: OFF";
         }
 
         // Whose equipment the page shows: the name, and under it the level and the lineage.
@@ -512,7 +551,11 @@ namespace KryticalNova.UI
             }
         }
 
-        private void OnSlotChanged(EquipSlot slot, ushort previous, ushort next) => RefreshEquipment();
+        private void OnSlotChanged(EquipSlot slot, ushort previous, ushort next)
+        {
+            RefreshEquipment();
+            if (slot == EquipSlot.Armor) RefreshHelmet();
+        }
 
         /// <summary>
         /// An item's picture where the item itself is at hand: a pet shows the icon of the evolution it has reached

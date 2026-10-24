@@ -16,9 +16,11 @@ MonoBehaviour:
   displayName: Scout Armor
   description: 'Worn on the body: torso, arms, hips and legs.'
   icon: {fileID: 21300000, guid: 74b42085b39939b44823bc286ae53359, type: 3}
+  sharesIconOf: {fileID: 0}
   rarity: 0
   equipSlot: 2
   maxStack: 1
+  boundFaction: 0
   itemLevel: 10
   lineId: 96
   weaponClass: 0

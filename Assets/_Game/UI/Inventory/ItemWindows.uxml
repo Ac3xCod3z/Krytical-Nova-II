@@ -57,6 +57,7 @@
                     <ui:Button name="try-on-clear" text="✕" class="try-on-clear" />
                 </ui:VisualElement>
                 <ui:Button name="preview-reset" text="RESET VIEW" class="preview-reset" />
+                <ui:Button name="helmet-toggle" text="HELMET: ON" class="preview-reset helmet-toggle" />
                 <ui:VisualElement class="prompt-row preview-hint" picking-mode="Ignore">
                     <ui:VisualElement class="key-mouse mouse-left" picking-mode="Ignore" /><ui:Label text="Rotate" class="prompt-text" picking-mode="Ignore" />
                     <ui:VisualElement class="key-mouse mouse-middle" picking-mode="Ignore" /><ui:Label text="Pan · Zoom" class="prompt-text" picking-mode="Ignore" />

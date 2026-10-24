@@ -16,9 +16,11 @@ MonoBehaviour:
   displayName: Prime Stabilizers
   description: Worn on the feet.
   icon: {fileID: 21300000, guid: e772b59796b26d743a8fbacdf258ed85, type: 3}
+  sharesIconOf: {fileID: 0}
   rarity: 3
   equipSlot: 4
   maxStack: 1
+  boundFaction: 0
   itemLevel: 100
   lineId: 53
   weaponClass: 0

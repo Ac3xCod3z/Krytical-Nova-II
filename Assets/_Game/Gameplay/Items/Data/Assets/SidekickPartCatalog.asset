@@ -8973,4 +8973,84 @@ MonoBehaviour:
     variant: 2
     species: SN
     usesWrap: 0
-  nextId: 1121
+  - id: 1121
+    name: SK_KRYT_DOCK_01_10TORS_HU01
+    resourcePath: Meshes/Gear/DockRunner/SK_KRYT_DOCK_01_10TORS_HU01
+    region: 10
+    pack: KRYT_DOCK
+    variant: 1
+    species: HU
+    usesWrap: 0
+  - id: 1122
+    name: SK_KRYT_DOCK_01_11AUPL_HU01
+    resourcePath: Meshes/Gear/DockRunner/SK_KRYT_DOCK_01_11AUPL_HU01
+    region: 11
+    pack: KRYT_DOCK
+    variant: 1
+    species: HU
+    usesWrap: 0
+  - id: 1123
+    name: SK_KRYT_DOCK_01_12AUPR_HU01
+    resourcePath: Meshes/Gear/DockRunner/SK_KRYT_DOCK_01_12AUPR_HU01
+    region: 12
+    pack: KRYT_DOCK
+    variant: 1
+    species: HU
+    usesWrap: 0
+  - id: 1124
+    name: SK_KRYT_DOCK_01_15HNDL_HU01
+    resourcePath: Meshes/Gear/DockRunner/SK_KRYT_DOCK_01_15HNDL_HU01
+    region: 15
+    pack: KRYT_DOCK
+    variant: 1
+    species: HU
+    usesWrap: 0
+  - id: 1125
+    name: SK_KRYT_DOCK_01_16HNDR_HU01
+    resourcePath: Meshes/Gear/DockRunner/SK_KRYT_DOCK_01_16HNDR_HU01
+    region: 16
+    pack: KRYT_DOCK
+    variant: 1
+    species: HU
+    usesWrap: 0
+  - id: 1126
+    name: SK_KRYT_DOCK_01_17HIPS_HU01
+    resourcePath: Meshes/Gear/DockRunner/SK_KRYT_DOCK_01_17HIPS_HU01
+    region: 17
+    pack: KRYT_DOCK
+    variant: 1
+    species: HU
+    usesWrap: 0
+  - id: 1127
+    name: SK_KRYT_DOCK_01_20FOTL_HU01
+    resourcePath: Meshes/Gear/DockRunner/SK_KRYT_DOCK_01_20FOTL_HU01
+    region: 20
+    pack: KRYT_DOCK
+    variant: 1
+    species: HU
+    usesWrap: 0
+  - id: 1128
+    name: SK_KRYT_DOCK_01_21FOTR_HU01
+    resourcePath: Meshes/Gear/DockRunner/SK_KRYT_DOCK_01_21FOTR_HU01
+    region: 21
+    pack: KRYT_DOCK
+    variant: 1
+    species: HU
+    usesWrap: 0
+  - id: 1129
+    name: SK_KRYT_DOCK_01_22AHED_HU01
+    resourcePath: Meshes/Gear/DockRunner/SK_KRYT_DOCK_01_22AHED_HU01
+    region: 22
+    pack: KRYT_DOCK
+    variant: 1
+    species: HU
+    usesWrap: 0
+  - id: 1130
+    name: SK_KRYT_DOCK_01_24ABAC_HU01
+    resourcePath: Meshes/Gear/DockRunner/SK_KRYT_DOCK_01_24ABAC_HU01
+    region: 24
+    pack: KRYT_DOCK
+    variant: 1
+    species: HU
+    usesWrap: 0
+  nextId: 1131

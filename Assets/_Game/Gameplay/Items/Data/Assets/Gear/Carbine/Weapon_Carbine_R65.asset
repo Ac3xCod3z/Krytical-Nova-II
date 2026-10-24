@@ -13,12 +13,14 @@ MonoBehaviour:
   m_Name: Weapon_Carbine_R65
   m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Items.ItemDefinition
   itemId: 12018
-  displayName: Assault Carbine
+  displayName: Dock Runner Carbine
   description: 'Carbine: the ranged weapon of the Hegemony.'
-  icon: {fileID: 21300000, guid: 0d6fd60af37ec9247bb2ccd9029262d5, type: 3}
+  icon: {fileID: 21300000, guid: a17c2c237ea8e204388b2138cffb61f3, type: 3}
+  sharesIconOf: {fileID: 0}
   rarity: 2
   equipSlot: 1
   maxStack: 1
+  boundFaction: 0
   itemLevel: 65
   lineId: 127
   weaponClass: 3
@@ -49,18 +51,18 @@ MonoBehaviour:
   colorTheme: 0
   colorThemes: {fileID: 0}
   colorCells: 
-  weaponPrefab: {fileID: 5021330530495522819, guid: a30f8576c529d5549b7ede19a5c73cad, type: 3}
+  weaponPrefab: {fileID: 3204538745263447588, guid: df6fb2ee4aa3599439a2cafca628f2c2, type: 3}
   weaponLocalPosition: {x: 0, y: 0, z: 0}
-  weaponLocalEuler: {x: 270, y: 0, z: 180}
+  weaponLocalEuler: {x: 0, y: 180, z: 180}
   weaponLocalScale: {x: 1, y: 1, z: 1}
-  hitboxCenter: {x: 0, y: 0.014846921, z: 0.3808626}
-  hitboxSize: {x: 0.18, y: 0.4152559, z: 0.66172516}
-  paired: 0
+  hitboxCenter: {x: 0, y: -0.014806062, z: 0.202}
+  hitboxSize: {x: 0.18, y: 0.23837942, z: 0.30400002}
+  paired: 1
   offHandLocalPosition: {x: 0, y: 0, z: 0}
   offHandLocalEuler: {x: 0, y: 0, z: 0}
   leftHanded: 0
-  carry: 0
-  carryLocalPosition: {x: 0, y: 0, z: 0.25}
+  carry: 1
+  carryLocalPosition: {x: 0, y: 0, z: 0}
   carryLocalEuler: {x: 0, y: 0, z: 0}
   petPrefab: {fileID: 0}
   petScale: 1

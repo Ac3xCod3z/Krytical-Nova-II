@@ -73,6 +73,8 @@ namespace KryticalNova.Items.Visuals
         public bool IsDrawn => drawn;
         /// <summary>The hand the weapon is held in. Whoever moves the mount there has drawn the weapon.</summary>
         public Transform HandSocket => handSocket;
+        /// <summary>Where the weapon in the main hand is held (a two-handed weapon's second hand), or null.</summary>
+        public WeaponGrip Grip { get; private set; }
 
         private void Awake()
         {
@@ -117,6 +119,7 @@ namespace KryticalNova.Items.Visuals
             if (item == null || item.weaponPrefab == null) return; // unarmed: mount stays, nothing visible
 
             spawned = Spawn(item);
+            Grip = spawned.GetComponentInChildren<WeaponGrip>(true);
             spawnedReach = ReachOf(spawned, out spawnedRadius);
             if (item.paired && offHandSocket != null)
             {
@@ -182,6 +185,7 @@ namespace KryticalNova.Items.Visuals
             if (spawnedOff != null) Destroy(spawnedOff);
             spawned = null;
             spawnedOff = null;
+            Grip = null;
             spawnedReach = null;
             spawnedOffReach = null;
         }

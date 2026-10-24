@@ -13,12 +13,14 @@ MonoBehaviour:
   m_Name: Weapon_Glaive_R45
   m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Items.ItemDefinition
   itemId: 11936
-  displayName: Naginata
+  displayName: Dock Runner Glaive
   description: 'Glaive: the defense weapon of the Hegemony.'
-  icon: {fileID: 21300000, guid: a25b61f74bba8344986cc8ec3956555c, type: 3}
+  icon: {fileID: 21300000, guid: c33e082fa97985b40b93f1f2cd43ac3d, type: 3}
+  sharesIconOf: {fileID: 0}
   rarity: 2
   equipSlot: 1
   maxStack: 1
+  boundFaction: 0
   itemLevel: 45
   lineId: 122
   weaponClass: 2
@@ -49,18 +51,18 @@ MonoBehaviour:
   colorTheme: 0
   colorThemes: {fileID: 0}
   colorCells: 
-  weaponPrefab: {fileID: 7346143864365163754, guid: b2cacf63f87f52f4ca170c72515eb8e1, type: 3}
+  weaponPrefab: {fileID: 4380535870311978848, guid: 0056f07ac8d2be846b395c16cfa3733a, type: 3}
   weaponLocalPosition: {x: 0, y: 0, z: 0}
   weaponLocalEuler: {x: 0, y: 0, z: 0}
   weaponLocalScale: {x: 1, y: 1, z: 1}
-  hitboxCenter: {x: 0, y: 0.030790187, z: 0.9308975}
-  hitboxSize: {x: 0.18, y: 0.22804557, z: 1.7617949}
+  hitboxCenter: {x: 0, y: -0.08322531, z: 1.2117559}
+  hitboxSize: {x: 0.18, y: 0.33680487, z: 2.3235118}
   paired: 0
   offHandLocalPosition: {x: 0, y: 0, z: 0}
   offHandLocalEuler: {x: 0, y: 0, z: 0}
   leftHanded: 0
   carry: 0
-  carryLocalPosition: {x: 0, y: 0, z: -0.46179497}
+  carryLocalPosition: {x: 0, y: 0, z: -1.0235119}
   carryLocalEuler: {x: 0, y: 0, z: 0}
   petPrefab: {fileID: 0}
   petScale: 1

@@ -16,9 +16,11 @@ MonoBehaviour:
   displayName: Striker Gauntlets
   description: Worn on the hands.
   icon: {fileID: 21300000, guid: 5403f03fc53253a40b21e96472467b2e, type: 3}
+  sharesIconOf: {fileID: 0}
   rarity: 2
   equipSlot: 3
   maxStack: 1
+  boundFaction: 0
   itemLevel: 45
   lineId: 8
   weaponClass: 0

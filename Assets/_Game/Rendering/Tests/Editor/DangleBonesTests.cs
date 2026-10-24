@@ -134,6 +134,28 @@ namespace KryticalNova.Rendering.Tests
         }
 
         [Test]
+        public void StoppingDeadTheCapeStaysBehindTheBody()
+        {
+            // Owner, 24 Oct 2026: stopping from a run threw the Dock Runner's cape forward through the body.
+            var rig = Build();
+            rig.dangle.Step(Dt);
+            for (int i = 0; i < 40; i++)
+            {
+                rig.root.transform.position += Vector3.forward * (9f * Dt);
+                rig.dangle.Step(Dt);
+            }
+            for (int i = 0; i < 90; i++) // a dead stop: the cape swings on forward
+            {
+                rig.dangle.Step(Dt);
+                for (int c = 1; c < rig.cape.Length; c++)
+                {
+                    float z = rig.cape[c].position.z - rig.root.transform.position.z;
+                    Assert.Less(z, 0f, $"{rig.cape[c].name} came through to the front on frame {i}");
+                }
+            }
+        }
+
+        [Test]
         public void LinksKeepTheirLength()
         {
             var rig = Build();

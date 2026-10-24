@@ -39,6 +39,30 @@ namespace KryticalNova.Items.Visuals
             return part.IsValid;
         }
 
+        // Hairs baked to sit under a helmet (synty-blender hair_under_helmet.py): what hangs below the rim, by the
+        // hair's own name plus "_UH". A hair with no such file is entirely under the helmet.
+        private const string UnderHelmetFolder = "Meshes/HairUnderHelmet/";
+        private static readonly Dictionary<Mesh, SidekickPartRef> UnderHelmet = new Dictionary<Mesh, SidekickPartRef>();
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetUnderHelmet() => UnderHelmet.Clear();
+
+        /// <summary>The under-helmet version of <paramref name="hair"/>; false when none of it shows below a helmet.</summary>
+        public static bool TryLoadUnderHelmet(SidekickPartRef hair, out SidekickPartRef part)
+        {
+            part = default;
+            if (hair.mesh == null) return false;
+            if (UnderHelmet.TryGetValue(hair.mesh, out part)) return part.IsValid;
+            string name = hair.mesh.name;
+            int lod = name.IndexOf(' ');
+            if (lod > 0) name = name.Substring(0, lod);
+            var model = Resources.Load<GameObject>(UnderHelmetFolder + name + "_UH");
+            var smr = model != null ? model.GetComponentInChildren<SkinnedMeshRenderer>(true) : null;
+            if (smr != null) part = SidekickPartRefs.FromRenderer(smr, hair.region);
+            UnderHelmet[hair.mesh] = part;
+            return part.IsValid;
+        }
+
         /// <summary>Loads several parts into <paramref name="results"/>, skipping any that fail.</summary>
         public static void LoadAll(SidekickPartCatalog catalog, IReadOnlyList<ushort> ids, List<SidekickPartRef> results)
         {

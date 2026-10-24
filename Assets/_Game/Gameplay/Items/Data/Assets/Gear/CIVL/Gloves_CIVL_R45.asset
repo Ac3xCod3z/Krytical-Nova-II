@@ -13,12 +13,14 @@ MonoBehaviour:
   m_Name: Gloves_CIVL_R45
   m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Items.ItemDefinition
   itemId: 10416
-  displayName: Analyst Gloves
+  displayName: Dock Runner Gloves
   description: Worn on the hands.
-  icon: {fileID: 21300000, guid: 8efbb4ee4293cd14b90fe472004e118f, type: 3}
+  icon: {fileID: 21300000, guid: ab099c2d3b8b75d49a8b8e4b1b4dc62c, type: 3}
+  sharesIconOf: {fileID: 0}
   rarity: 2
   equipSlot: 3
   maxStack: 1
+  boundFaction: 0
   itemLevel: 45
   lineId: 27
   weaponClass: 0
@@ -43,12 +45,12 @@ MonoBehaviour:
   useCooldown: 1
   usableFromHotbar: 0
   placeholderGlyph: 
-  appearancePartIds: f400f500t
+  appearancePartIds: 64046504t
   partCatalog: {fileID: 11400000, guid: 8679543dc9e4ba34898118a0249b9ac1, type: 2}
   appearanceParts: []
-  colorTheme: 6
+  colorTheme: 25
   colorThemes: {fileID: 11400000, guid: 19312dbf68325b34ea623ff93b84dd3d, type: 2}
-  colorCells: 8898a8d3y
+  colorCells: b3b4c3c4d3d4e3e4f3f4y
   weaponPrefab: {fileID: 0}
   weaponLocalPosition: {x: 0, y: 0, z: 0}
   weaponLocalEuler: {x: 0, y: 0, z: 0}

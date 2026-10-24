@@ -78,6 +78,13 @@ namespace KryticalNova.EditorTools
             size = 0;
             string path = FileOf(set, number);
             if (path == null || settings == null) return null;
+            return TreatFile(path, set.shape, settings.ToLook(set), out size);
+        }
+
+        /// <summary>The treated icon of one picture file (rows from the bottom up), or null when it cannot be read.</summary>
+        public static Color32[] TreatFile(string path, ComicIconShape shape, ComicIconLook look, out int size)
+        {
+            size = 0;
             // Read from the file itself: the pack's import settings are neither used nor touched.
             var source = new Texture2D(2, 2, TextureFormat.RGBA32, false);
             try
@@ -95,8 +102,7 @@ namespace KryticalNova.EditorTools
                         rows[to + x * 4] = c.r; rows[to + x * 4 + 1] = c.g; rows[to + x * 4 + 2] = c.b; rows[to + x * 4 + 3] = c.a;
                     }
                 }
-                ComicIconLook look = settings.ToLook(set);
-                byte[] treated = ComicIconTreatment.Treat(rows, width, height, set.shape, look);
+                byte[] treated = ComicIconTreatment.Treat(rows, width, height, shape, look);
                 size = look.size;
                 var result = new Color32[size * size];
                 for (int y = 0; y < size; y++)
@@ -147,6 +153,29 @@ namespace KryticalNova.EditorTools
             string full = Path.Combine(Directory.GetCurrentDirectory(), output);
             Directory.CreateDirectory(Path.GetDirectoryName(full));
             File.WriteAllBytes(full, texture.EncodeToPNG());
+            Object.DestroyImmediate(texture);
+            ImportAsSprite(output, size);
+            return AssetDatabase.LoadAssetAtPath<Sprite>(output);
+        }
+
+        /// <summary>
+        /// Bakes a picture of our own (an AI-painted icon of a gear piece, made from the piece's in-game capture) the
+        /// way a pack's cut-out item icon is baked, into the item icon folder as <paramref name="target"/>. It is not
+        /// in the library, so it is never handed to anything else. Returns the sprite, or null when it cannot be read.
+        /// </summary>
+        public static Sprite BakePicture(string sourcePng, string target, IconTreatmentSettings settings)
+        {
+            Color32[] pixels = TreatFile(sourcePng, ComicIconShape.CutOut, settings.ToLook(null), out int size);
+            if (pixels == null)
+            {
+                Debug.LogWarning($"[Icons] {target}: {sourcePng} could not be read.");
+                return null;
+            }
+            string output = OutputPath(IconTargetKind.Item, target);
+            var texture = new Texture2D(size, size, TextureFormat.RGBA32, false);
+            texture.SetPixels32(pixels);
+            texture.Apply();
+            File.WriteAllBytes(Path.Combine(Directory.GetCurrentDirectory(), output), texture.EncodeToPNG());
             Object.DestroyImmediate(texture);
             ImportAsSprite(output, size);
             return AssetDatabase.LoadAssetAtPath<Sprite>(output);

@@ -16,9 +16,11 @@ MonoBehaviour:
   displayName: Ranger Bow
   description: 'Warbow: the ranged weapon of the Covenant.'
   icon: {fileID: 21300000, guid: d3bf6f607926afa499d4819eb39c7171, type: 3}
+  sharesIconOf: {fileID: 0}
   rarity: 1
   equipSlot: 1
   maxStack: 1
+  boundFaction: 0
   itemLevel: 30
   lineId: 156
   weaponClass: 9

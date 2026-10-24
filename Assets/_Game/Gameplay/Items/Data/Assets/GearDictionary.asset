@@ -323,11 +323,11 @@ MonoBehaviour:
     factions: 1
     bodies: 1
     weaponClass: 0
-    look: {fileID: 11400000, guid: 84023e38551bb0640a67217f6b9fa227, type: 2}
-    set: Analyst
-    theme: CIVL_Analyst
-    icon: {fileID: 21300000, guid: d14f3552b56bb184e9c2268c0f7e36fb, type: 3}
-    displayName: Analyst Outfit
+    look: {fileID: 11400000, guid: 94bbeb2055077f04cae618ba6a235144, type: 2}
+    set: Dock Runner
+    theme: KRYT_Dock Runner
+    icon: {fileID: 21300000, guid: 2200cb43a470c3648b874ec3981be61e, type: 3}
+    displayName: Dock Runner Outfit
     description: 'Worn on the body: torso, arms, hips and legs.'
   - lineId: 23
     tag: CIVL
@@ -398,11 +398,11 @@ MonoBehaviour:
     factions: 1
     bodies: 1
     weaponClass: 0
-    look: {fileID: 11400000, guid: 2b0f6d3d341c97941a683e3a6f48d991, type: 2}
-    set: Analyst
-    theme: CIVL_Analyst
-    icon: {fileID: 21300000, guid: 8efbb4ee4293cd14b90fe472004e118f, type: 3}
-    displayName: Analyst Gloves
+    look: {fileID: 11400000, guid: 97ee33689640967429a879d29ea7ae5c, type: 2}
+    set: Dock Runner
+    theme: KRYT_Dock Runner
+    icon: {fileID: 21300000, guid: ab099c2d3b8b75d49a8b8e4b1b4dc62c, type: 3}
+    displayName: Dock Runner Gloves
     description: Worn on the hands.
   - lineId: 28
     tag: CIVL
@@ -473,11 +473,11 @@ MonoBehaviour:
     factions: 1
     bodies: 1
     weaponClass: 0
-    look: {fileID: 11400000, guid: 943786edb2a32a84888dc095206538cf, type: 2}
-    set: Analyst
-    theme: CIVL_Analyst
-    icon: {fileID: 21300000, guid: a13bf24b91bca0947861c4af42d3ee99, type: 3}
-    displayName: Analyst Shoes
+    look: {fileID: 11400000, guid: 5cbf547165e527248819d2e49e9dc8a6, type: 2}
+    set: Dock Runner
+    theme: KRYT_Dock Runner
+    icon: {fileID: 21300000, guid: 4b9cfd0a7dc82904395d99ff29dccb5a, type: 3}
+    displayName: Dock Runner Work Boots
     description: Worn on the feet.
   - lineId: 33
     tag: CIVL
@@ -518,11 +518,11 @@ MonoBehaviour:
     factions: 1
     bodies: 1
     weaponClass: 0
-    look: {fileID: 11400000, guid: 4c6bc6a650113954fa1acde0ea8c75a1, type: 2}
-    set: Analyst
-    theme: CIVL_Analyst
-    icon: {fileID: 21300000, guid: e9b69222792db724a8bca46d86e50be5, type: 3}
-    displayName: Analyst Pack
+    look: {fileID: 11400000, guid: 10c693de442c0ee4ea0fa7d745b1957f, type: 2}
+    set: Dock Runner
+    theme: KRYT_Dock Runner
+    icon: {fileID: 21300000, guid: e2c57b7bc83db9545b49071662a29e3b, type: 3}
+    displayName: Dock Runner Rain Cape
     description: Worn across the back.
   - lineId: 37
     tag: CIVL
@@ -1673,11 +1673,11 @@ MonoBehaviour:
     factions: 1
     bodies: 7
     weaponClass: 1
-    look: {fileID: 11400000, guid: fee2369791262a54ca50aa0b8b099d1b, type: 2}
-    set: 
+    look: {fileID: 11400000, guid: fd4116ed97006dc418a3a3f4fe8e67b5, type: 2}
+    set: Dock Runner
     theme: 
-    icon: {fileID: 0}
-    displayName: Ninjato
+    icon: {fileID: 21300000, guid: abfb0dec7367e6249bfd4abfe0f1579d, type: 3}
+    displayName: Dock Runner Monoblade
     description: 'Monoblade: the offense weapon of the Hegemony.'
   - lineId: 118
     tag: Monoblade
@@ -1748,11 +1748,11 @@ MonoBehaviour:
     factions: 1
     bodies: 7
     weaponClass: 2
-    look: {fileID: 11400000, guid: 6157e2fcf8bc89e44ac32195dd990a43, type: 2}
-    set: 
+    look: {fileID: 11400000, guid: 4da2fad61bc7a3845b0532c00b862b47, type: 2}
+    set: Dock Runner
     theme: 
-    icon: {fileID: 0}
-    displayName: Naginata
+    icon: {fileID: 21300000, guid: c33e082fa97985b40b93f1f2cd43ac3d, type: 3}
+    displayName: Dock Runner Glaive
     description: 'Glaive: the defense weapon of the Hegemony.'
   - lineId: 123
     tag: Glaive
@@ -1823,11 +1823,11 @@ MonoBehaviour:
     factions: 1
     bodies: 7
     weaponClass: 3
-    look: {fileID: 11400000, guid: 47b4adc1017a39f45923ff83e334561b, type: 2}
-    set: 
+    look: {fileID: 11400000, guid: d456029a8526a1d4dbab7d5e0bf3c1a7, type: 2}
+    set: Dock Runner
     theme: 
-    icon: {fileID: 0}
-    displayName: Assault Carbine
+    icon: {fileID: 21300000, guid: a17c2c237ea8e204388b2138cffb61f3, type: 3}
+    displayName: Dock Runner Carbine
     description: 'Carbine: the ranged weapon of the Hegemony.'
   - lineId: 128
     tag: Carbine
@@ -2529,10 +2529,10 @@ MonoBehaviour:
     bodies: 7
     weaponClass: 0
     look: {fileID: 11400000, guid: 7257173e08304ed449a5f3813fbb2108, type: 2}
-    set: Analyst
+    set: Dock Runner
     theme: 
-    icon: {fileID: 0}
-    displayName: Analyst Band
+    icon: {fileID: 21300000, guid: 825cd789792219c40a91df3b90b7cf27, type: 3}
+    displayName: Dock Runner Cargo Ring
     description: Worn on a finger.
   - lineId: 175
     tag: CIVL
@@ -2544,10 +2544,10 @@ MonoBehaviour:
     bodies: 7
     weaponClass: 0
     look: {fileID: 11400000, guid: b4d2abaa3e258274a9682ffe18e4b96b, type: 2}
-    set: Analyst
+    set: Dock Runner
     theme: 
-    icon: {fileID: 0}
-    displayName: Analyst Lanyard
+    icon: {fileID: 21300000, guid: 6646e06d4b83aaf4cb14a88b79e51949, type: 3}
+    displayName: Dock Runner Cargo Token
     description: Worn around the neck.
   - lineId: 176
     tag: CIVL
@@ -4555,50 +4555,50 @@ MonoBehaviour:
     lineId: 21
     weaponClass: 0
   - itemId: 10336
-    name: Analyst Outfit
+    name: Dock Runner Outfit
     slot: 2
     rarity: 2
     factions: 1
     bodies: 1
     pack: SCFI_CIVL
-    variant: 4
-    partIds: 1f01d700d800d900da002001210122012601270128012901t
+    variant: 1
+    partIds: 61046204630466046904t
     itemLevel: 45
     lineId: 22
     weaponClass: 0
   - itemId: 10337
-    name: Analyst Outfit
+    name: Dock Runner Outfit
     slot: 2
     rarity: 2
     factions: 1
     bodies: 1
     pack: SCFI_CIVL
-    variant: 4
-    partIds: 1f01d700d800d900da002001210122012601270128012901t
+    variant: 1
+    partIds: 61046204630466046904t
     itemLevel: 55
     lineId: 22
     weaponClass: 0
   - itemId: 10338
-    name: Analyst Outfit
+    name: Dock Runner Outfit
     slot: 2
     rarity: 2
     factions: 1
     bodies: 1
     pack: SCFI_CIVL
-    variant: 4
-    partIds: 1f01d700d800d900da002001210122012601270128012901t
+    variant: 1
+    partIds: 61046204630466046904t
     itemLevel: 65
     lineId: 22
     weaponClass: 0
   - itemId: 10339
-    name: Analyst Outfit
+    name: Dock Runner Outfit
     slot: 2
     rarity: 2
     factions: 1
     bodies: 1
     pack: SCFI_CIVL
-    variant: 4
-    partIds: 1f01d700d800d900da002001210122012601270128012901t
+    variant: 1
+    partIds: 61046204630466046904t
     itemLevel: 75
     lineId: 22
     weaponClass: 0
@@ -4891,50 +4891,50 @@ MonoBehaviour:
     lineId: 26
     weaponClass: 0
   - itemId: 10416
-    name: Analyst Gloves
+    name: Dock Runner Gloves
     slot: 3
     rarity: 2
     factions: 1
     bodies: 1
     pack: SCFI_CIVL
-    variant: 2
-    partIds: f400f500t
+    variant: 1
+    partIds: 64046504t
     itemLevel: 45
     lineId: 27
     weaponClass: 0
   - itemId: 10417
-    name: Analyst Gloves
+    name: Dock Runner Gloves
     slot: 3
     rarity: 2
     factions: 1
     bodies: 1
     pack: SCFI_CIVL
-    variant: 2
-    partIds: f400f500t
+    variant: 1
+    partIds: 64046504t
     itemLevel: 55
     lineId: 27
     weaponClass: 0
   - itemId: 10418
-    name: Analyst Gloves
+    name: Dock Runner Gloves
     slot: 3
     rarity: 2
     factions: 1
     bodies: 1
     pack: SCFI_CIVL
-    variant: 2
-    partIds: f400f500t
+    variant: 1
+    partIds: 64046504t
     itemLevel: 65
     lineId: 27
     weaponClass: 0
   - itemId: 10419
-    name: Analyst Gloves
+    name: Dock Runner Gloves
     slot: 3
     rarity: 2
     factions: 1
     bodies: 1
     pack: SCFI_CIVL
-    variant: 2
-    partIds: f400f500t
+    variant: 1
+    partIds: 64046504t
     itemLevel: 75
     lineId: 27
     weaponClass: 0
@@ -5227,50 +5227,50 @@ MonoBehaviour:
     lineId: 31
     weaponClass: 0
   - itemId: 10496
-    name: Analyst Shoes
+    name: Dock Runner Work Boots
     slot: 4
     rarity: 2
     factions: 1
     bodies: 1
     pack: SCFI_CIVL
-    variant: 2
-    partIds: f900fa00t
+    variant: 1
+    partIds: 67046804t
     itemLevel: 45
     lineId: 32
     weaponClass: 0
   - itemId: 10497
-    name: Analyst Shoes
+    name: Dock Runner Work Boots
     slot: 4
     rarity: 2
     factions: 1
     bodies: 1
     pack: SCFI_CIVL
-    variant: 2
-    partIds: f900fa00t
+    variant: 1
+    partIds: 67046804t
     itemLevel: 55
     lineId: 32
     weaponClass: 0
   - itemId: 10498
-    name: Analyst Shoes
+    name: Dock Runner Work Boots
     slot: 4
     rarity: 2
     factions: 1
     bodies: 1
     pack: SCFI_CIVL
-    variant: 2
-    partIds: f900fa00t
+    variant: 1
+    partIds: 67046804t
     itemLevel: 65
     lineId: 32
     weaponClass: 0
   - itemId: 10499
-    name: Analyst Shoes
+    name: Dock Runner Work Boots
     slot: 4
     rarity: 2
     factions: 1
     bodies: 1
     pack: SCFI_CIVL
-    variant: 2
-    partIds: f900fa00t
+    variant: 1
+    partIds: 67046804t
     itemLevel: 75
     lineId: 32
     weaponClass: 0
@@ -5383,50 +5383,50 @@ MonoBehaviour:
     lineId: 34
     weaponClass: 0
   - itemId: 10560
-    name: Analyst Pack
+    name: Dock Runner Rain Cape
     slot: 7
     rarity: 2
     factions: 1
     bodies: 1
     pack: SCFI_CIVL
-    variant: 4
-    partIds: 2501t
+    variant: 1
+    partIds: 6a04t
     itemLevel: 45
     lineId: 36
     weaponClass: 0
   - itemId: 10561
-    name: Analyst Pack
+    name: Dock Runner Rain Cape
     slot: 7
     rarity: 2
     factions: 1
     bodies: 1
     pack: SCFI_CIVL
-    variant: 4
-    partIds: 2501t
+    variant: 1
+    partIds: 6a04t
     itemLevel: 55
     lineId: 36
     weaponClass: 0
   - itemId: 10562
-    name: Analyst Pack
+    name: Dock Runner Rain Cape
     slot: 7
     rarity: 2
     factions: 1
     bodies: 1
     pack: SCFI_CIVL
-    variant: 4
-    partIds: 2501t
+    variant: 1
+    partIds: 6a04t
     itemLevel: 65
     lineId: 36
     weaponClass: 0
   - itemId: 10563
-    name: Analyst Pack
+    name: Dock Runner Rain Cape
     slot: 7
     rarity: 2
     factions: 1
     bodies: 1
     pack: SCFI_CIVL
-    variant: 4
-    partIds: 2501t
+    variant: 1
+    partIds: 6a04t
     itemLevel: 75
     lineId: 36
     weaponClass: 0
@@ -10375,7 +10375,7 @@ MonoBehaviour:
     lineId: 116
     weaponClass: 1
   - itemId: 11856
-    name: Ninjato
+    name: Dock Runner Monoblade
     slot: 1
     rarity: 2
     factions: 1
@@ -10387,7 +10387,7 @@ MonoBehaviour:
     lineId: 117
     weaponClass: 1
   - itemId: 11857
-    name: Ninjato
+    name: Dock Runner Monoblade
     slot: 1
     rarity: 2
     factions: 1
@@ -10399,7 +10399,7 @@ MonoBehaviour:
     lineId: 117
     weaponClass: 1
   - itemId: 11858
-    name: Ninjato
+    name: Dock Runner Monoblade
     slot: 1
     rarity: 2
     factions: 1
@@ -10411,7 +10411,7 @@ MonoBehaviour:
     lineId: 117
     weaponClass: 1
   - itemId: 11859
-    name: Ninjato
+    name: Dock Runner Monoblade
     slot: 1
     rarity: 2
     factions: 1
@@ -10711,7 +10711,7 @@ MonoBehaviour:
     lineId: 121
     weaponClass: 2
   - itemId: 11936
-    name: Naginata
+    name: Dock Runner Glaive
     slot: 1
     rarity: 2
     factions: 1
@@ -10723,7 +10723,7 @@ MonoBehaviour:
     lineId: 122
     weaponClass: 2
   - itemId: 11937
-    name: Naginata
+    name: Dock Runner Glaive
     slot: 1
     rarity: 2
     factions: 1
@@ -10735,7 +10735,7 @@ MonoBehaviour:
     lineId: 122
     weaponClass: 2
   - itemId: 11938
-    name: Naginata
+    name: Dock Runner Glaive
     slot: 1
     rarity: 2
     factions: 1
@@ -10747,7 +10747,7 @@ MonoBehaviour:
     lineId: 122
     weaponClass: 2
   - itemId: 11939
-    name: Naginata
+    name: Dock Runner Glaive
     slot: 1
     rarity: 2
     factions: 1
@@ -11047,7 +11047,7 @@ MonoBehaviour:
     lineId: 126
     weaponClass: 3
   - itemId: 12016
-    name: Assault Carbine
+    name: Dock Runner Carbine
     slot: 1
     rarity: 2
     factions: 1
@@ -11059,7 +11059,7 @@ MonoBehaviour:
     lineId: 127
     weaponClass: 3
   - itemId: 12017
-    name: Assault Carbine
+    name: Dock Runner Carbine
     slot: 1
     rarity: 2
     factions: 1
@@ -11071,7 +11071,7 @@ MonoBehaviour:
     lineId: 127
     weaponClass: 3
   - itemId: 12018
-    name: Assault Carbine
+    name: Dock Runner Carbine
     slot: 1
     rarity: 2
     factions: 1
@@ -11083,7 +11083,7 @@ MonoBehaviour:
     lineId: 127
     weaponClass: 3
   - itemId: 12019
-    name: Assault Carbine
+    name: Dock Runner Carbine
     slot: 1
     rarity: 2
     factions: 1
@@ -14251,7 +14251,7 @@ MonoBehaviour:
     lineId: 173
     weaponClass: 0
   - itemId: 12768
-    name: Analyst Band
+    name: Dock Runner Cargo Ring
     slot: 5
     rarity: 2
     factions: 1
@@ -14263,7 +14263,7 @@ MonoBehaviour:
     lineId: 174
     weaponClass: 0
   - itemId: 12769
-    name: Analyst Band
+    name: Dock Runner Cargo Ring
     slot: 5
     rarity: 2
     factions: 1
@@ -14275,7 +14275,7 @@ MonoBehaviour:
     lineId: 174
     weaponClass: 0
   - itemId: 12770
-    name: Analyst Band
+    name: Dock Runner Cargo Ring
     slot: 5
     rarity: 2
     factions: 1
@@ -14287,7 +14287,7 @@ MonoBehaviour:
     lineId: 174
     weaponClass: 0
   - itemId: 12771
-    name: Analyst Band
+    name: Dock Runner Cargo Ring
     slot: 5
     rarity: 2
     factions: 1
@@ -14299,7 +14299,7 @@ MonoBehaviour:
     lineId: 174
     weaponClass: 0
   - itemId: 12784
-    name: Analyst Lanyard
+    name: Dock Runner Cargo Token
     slot: 6
     rarity: 2
     factions: 1
@@ -14311,7 +14311,7 @@ MonoBehaviour:
     lineId: 175
     weaponClass: 0
   - itemId: 12785
-    name: Analyst Lanyard
+    name: Dock Runner Cargo Token
     slot: 6
     rarity: 2
     factions: 1
@@ -14323,7 +14323,7 @@ MonoBehaviour:
     lineId: 175
     weaponClass: 0
   - itemId: 12786
-    name: Analyst Lanyard
+    name: Dock Runner Cargo Token
     slot: 6
     rarity: 2
     factions: 1
@@ -14335,7 +14335,7 @@ MonoBehaviour:
     lineId: 175
     weaponClass: 0
   - itemId: 12787
-    name: Analyst Lanyard
+    name: Dock Runner Cargo Token
     slot: 6
     rarity: 2
     factions: 1

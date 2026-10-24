@@ -16,9 +16,11 @@ MonoBehaviour:
   displayName: Executive Odachi
   description: 'Monoblade: the offense weapon of the Hegemony.'
   icon: {fileID: 21300000, guid: f557ee8db2a45c5418a1d40ca5da6ca6, type: 3}
+  sharesIconOf: {fileID: 0}
   rarity: 3
   equipSlot: 1
   maxStack: 1
+  boundFaction: 0
   itemLevel: 112
   lineId: 119
   weaponClass: 1

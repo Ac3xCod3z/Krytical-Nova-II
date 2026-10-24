@@ -71,7 +71,9 @@ namespace KryticalNova.EditorTools
             /// <summary>Long axis along the forearm, the grip across the fist: guns, punch daggers, claws.</summary>
             Forward,
             /// <summary>In the left hand, upright: bows. The right hand draws the string.</summary>
-            Bow
+            Bow,
+            /// <summary>Grip in the fist, barrel ahead and upright: pistols.</summary>
+            Pistol
         }
 
         // A model's long axis is +Z and its top +Y. Turned so the top lies along the fist and the long axis points
@@ -80,6 +82,10 @@ namespace KryticalNova.EditorTools
         // A bow stands along the fist as a blade does, turned so its string is on the archer's side (checked at the
         // aim of Synty's shooting clip, which holds the bow in the left hand).
         private static readonly Vector3 BowHoldEuler = new Vector3(0f, 0f, 180f);
+        // A pistol held the Forward way lay with its top along the forearm, barrel off to the side (owner, 24 Oct
+        // 2026: "gun placement is way off"). Turned so the barrel points ahead, upright, through the Carbine strikes,
+        // which fire from the hip (measured in Play on the Sidearm and the Dock Runner Carbine).
+        internal static readonly Vector3 PistolHoldEuler = new Vector3(0f, 180f, 180f);
 
         private sealed class ClassWeapons
         {
@@ -115,7 +121,7 @@ namespace KryticalNova.EditorTools
             } },
             new ClassWeapons { id = WeaponClassId.Carbine, looks = new[]
             {
-                Gun("PolygonSciFiCity", "SM_Wep_Pistol_01", "Sidearm", paired: true),
+                Look("PolygonSciFiCity", "SM_Wep_Pistol_01", "Sidearm", paired: true, hold: Hold.Pistol),
                 Gun("PolygonSamuraiEmpire", "SM_Wep_Rifle_01", "Service Rifle", scale: 0.65f), // the pack models it over two metres long
                 Gun("PolygonSciFiWorlds", "SM_Wep_Assault_01", "Assault Carbine"),
                 Gun("PolygonSciFiWorlds", "SM_Wep_Sniper_01", "Marksman Rifle", scale: 0.85f),
@@ -465,7 +471,8 @@ namespace KryticalNova.EditorTools
                     def.weaponPrefab = prefab;
                     // The starting pose of a look. From here it is tuned on the template, in the hand and carried.
                     def.weaponLocalPosition = Vector3.zero;
-                    def.weaponLocalEuler = look.hold == Hold.Forward ? ForwardHoldEuler : look.hold == Hold.Bow ? BowHoldEuler : Vector3.zero;
+                    def.weaponLocalEuler = look.hold == Hold.Forward ? ForwardHoldEuler : look.hold == Hold.Bow ? BowHoldEuler
+                        : look.hold == Hold.Pistol ? PistolHoldEuler : Vector3.zero;
                     def.weaponLocalScale = Vector3.one * scale;
                     def.offHandLocalPosition = Vector3.zero;
                     def.offHandLocalEuler = Vector3.zero;
@@ -491,7 +498,7 @@ namespace KryticalNova.EditorTools
         /// it is slid until a short length shows above the shoulder, and a very long one further, until its foot is
         /// clear of the ground.
         /// </summary>
-        private static float BackCarryShift(float gripEnd, float farEnd)
+        internal static float BackCarryShift(float gripEnd, float farEnd)
         {
             const float above = 0.45f; // what may stand above the shoulder
             const float below = 1.3f;  // how far down the back a weapon reaches before it drags
@@ -700,7 +707,7 @@ namespace KryticalNova.EditorTools
         /// tuned on its look template afterwards (weaponLocalPosition / weaponLocalEuler); the baker copies that to
         /// every tier that wears the look.
         /// </summary>
-        private static GameObject BuildWeaponPrefab(string source, string prefabPath, out Bounds bounds)
+        internal static GameObject BuildWeaponPrefab(string source, string prefabPath, out Bounds bounds)
         {
             bounds = default;
             WeatherVfxBuilder.EnsureFolder(WeaponPrefabFolder);

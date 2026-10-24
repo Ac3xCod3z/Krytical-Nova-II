@@ -102,14 +102,20 @@ def main():
     ours = kn_fbx.read(out)
     ref_path = kn.base_model_path()
     checked, bad = kn_fbx.compare_bind(ours, kn_fbx.read(ref_path))
-    if checked == 0:
-        # Attach bones carry no mesh in the base model; compare with a Synty part of the same slot.
+    if checked == 0 or bad:
+        # Attach bones carry no mesh in the base model, and Synty's own parts differ from SK_BaseModel on the
+        # thighs, upper arms and prop bones (23 Oct 2026: every SK_HUMN and SK_SCFI part by the same 0.08 / 0.05 /
+        # 2.0): compare with a Synty part of the same slot.
         slot = name.split("_")[4]
+        best = None
         for cand in sorted((kn.sidekick_root() / "Resources" / "Meshes").glob(f"**/SK_*_{slot}_*.fbx")):
-            checked, bad = kn_fbx.compare_bind(ours, kn_fbx.read(cand))
-            if checked:
-                ref_path = cand
-                break
+            c, b = kn_fbx.compare_bind(ours, kn_fbx.read(cand))
+            if c and (best is None or len(b) < len(best[1])):
+                best = (c, b, cand)       # packs differ (attach bones): the closest same-slot part is the reference
+                if not b:
+                    break
+        if best:
+            checked, bad, ref_path = best
     if checked == 0:
         warnings.append("No bone of this part could be compared with a Synty file.")
     if bad:

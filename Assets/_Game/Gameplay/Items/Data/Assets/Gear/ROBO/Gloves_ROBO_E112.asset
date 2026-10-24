@@ -16,9 +16,11 @@ MonoBehaviour:
   displayName: Prime Servos
   description: Worn on the hands.
   icon: {fileID: 21300000, guid: 17614a646a84e1f4681bca22cf6a73e9, type: 3}
+  sharesIconOf: {fileID: 0}
   rarity: 3
   equipSlot: 3
   maxStack: 1
+  boundFaction: 0
   itemLevel: 112
   lineId: 48
   weaponClass: 0

@@ -56,6 +56,11 @@ namespace KryticalNova.Rendering
             public BodyCapsule(string a, string b, float radius, float extend = 0f) { this.a = a; this.b = b; this.radius = radius; this.extend = extend; }
         }
 
+        // A particle hanging within this many capsule radii of a trunk or leg capsule at rest is kept on its side of
+        // it. The arms are left out: they swing behind and in front of the cloth, which moves out of their way.
+        private const float SideReach = 3f;
+        private const int SideCapsules = 7; // the first seven below: pelvis, spine, head, thighs, calves
+
         // Sizes at the Sidekick body's own scale (metres); they scale with the character (the height slider).
         private static readonly BodyCapsule[] Capsules =
         {
@@ -68,6 +73,12 @@ namespace KryticalNova.Rendering
             new BodyCapsule("calf_r", "foot_r", 0.06f),
             new BodyCapsule("upperarm_l", "lowerarm_l", 0.055f),
             new BodyCapsule("upperarm_r", "lowerarm_r", 0.055f),
+            // Forearms and hands too: a poncho's side panels hang where the arms swing across the body (owner, 23 Oct
+            // 2026, Dock Runner cape: the cloth moves out of the arms' way rather than being cut shorter).
+            new BodyCapsule("lowerarm_l", "hand_l", 0.045f),
+            new BodyCapsule("lowerarm_r", "hand_r", 0.045f),
+            new BodyCapsule("hand_l", "lowerarm_l", 0.04f, 0.09f),
+            new BodyCapsule("hand_r", "lowerarm_r", 0.04f, 0.09f),
         };
 
         private const string DynTag = "_dyn_";
@@ -94,6 +105,10 @@ namespace KryticalNova.Rendering
         private Vector3[] pos = Array.Empty<Vector3>(), prev = Array.Empty<Vector3>(), target = Array.Empty<Vector3>();
         private int[] firstChild = Array.Empty<int>(), nextSibling = Array.Empty<int>();
         private float[] reach = Array.Empty<float>();          // [particle * capsules + capsule]: share of the radius kept free
+        // [particle * capsules + capsule]: the side of the capsule the particle hangs on at rest, in the capsule bone's
+        // space (zero when it hangs far from it). A cape on the back is kept on the back: swinging forward on a sudden
+        // stop it would cross the capsule's middle and be pushed out the front, through the body (owner, 24 Oct 2026).
+        private Vector3[] side = Array.Empty<Vector3>();
         private Transform[] capA = Array.Empty<Transform>(), capB = Array.Empty<Transform>();
         private float[] capRadius = Array.Empty<float>(), capExtend = Array.Empty<float>();
         private Vector3[] segA = Array.Empty<Vector3>(), segB = Array.Empty<Vector3>();
@@ -312,6 +327,7 @@ namespace KryticalNova.Rendering
             segA = new Vector3[capsuleCount]; segB = new Vector3[capsuleCount];
             reach = new float[count * capsuleCount];
             for (int i = 0; i < reach.Length; i++) reach[i] = 1f;
+            side = new Vector3[count * capsuleCount];
             if (capsuleCount == 0) return;
 
             // Bind space is the merged mesh's: measure its scale against the Sidekick body (pelvis to head).
@@ -346,8 +362,11 @@ namespace KryticalNova.Rendering
                 {
                     if (parent[i] < 0) continue;
                     float r = (capRadius[c] + profiles[profileOf[i]].radius) * bindScale;
-                    float d = Vector3.Distance(bindPos[i], ClosestOnSegment(p0, p1, bindPos[i]));
+                    Vector3 off = bindPos[i] - ClosestOnSegment(p0, p1, bindPos[i]);
+                    float d = off.magnitude;
                     reach[i * capsuleCount + c] = Mathf.Clamp01(d / r);
+                    if (ai[c] < SideCapsules && d > 1e-5f && d < r * SideReach)
+                        side[i * capsuleCount + c] = BindOf(capA[c]).inverse.MultiplyVector(off / d).normalized;
                 }
             }
         }
@@ -457,6 +476,20 @@ namespace KryticalNova.Rendering
                     if (r <= 0f) continue;
                     Vector3 q = ClosestOnSegment(segA[c], segB[c], p);
                     Vector3 d = p - q;
+                    Vector3 sideLocal = side[i * capsuleCount + c];
+                    if (sideLocal != Vector3.zero)
+                    {
+                        // Crossed the middle of the body towards the other side, and still in front of it rather than
+                        // round it: back to its own side, as far out as the capsule keeps it.
+                        Vector3 n = capA[c].TransformDirection(sideLocal);
+                        float along = Vector3.Dot(d, n);
+                        Vector3 across = d - n * along;
+                        if (along < r * 0.5f && across.sqrMagnitude < r * r * SideReach * SideReach)
+                        {
+                            p = q + across + n * r;
+                            continue;
+                        }
+                    }
                     float m = d.sqrMagnitude;
                     if (m >= r * r || m < 1e-10f) continue;
                     p = q + d * (r / Mathf.Sqrt(m));

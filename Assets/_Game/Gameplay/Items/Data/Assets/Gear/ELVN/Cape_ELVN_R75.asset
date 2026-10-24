@@ -16,9 +16,11 @@ MonoBehaviour:
   displayName: Bladesinger Cloak
   description: Worn across the back.
   icon: {fileID: 21300000, guid: 0a6579cad49bcd34c887939c2bd87671, type: 3}
+  sharesIconOf: {fileID: 0}
   rarity: 2
   equipSlot: 7
   maxStack: 1
+  boundFaction: 0
   itemLevel: 75
   lineId: 112
   weaponClass: 0

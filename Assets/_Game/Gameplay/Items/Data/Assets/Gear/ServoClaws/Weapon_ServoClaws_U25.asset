@@ -16,9 +16,11 @@ MonoBehaviour:
   displayName: Knuckle Blade
   description: 'Servo Claws: the defense weapon of the Null.'
   icon: {fileID: 21300000, guid: 8e2e376dd52274e4b81877d9254533d2, type: 3}
+  sharesIconOf: {fileID: 0}
   rarity: 1
   equipSlot: 1
   maxStack: 1
+  boundFaction: 0
   itemLevel: 25
   lineId: 136
   weaponClass: 5

@@ -16,9 +16,11 @@ MonoBehaviour:
   displayName: Berserker Armor
   description: 'Worn on the body: torso, arms, hips and legs.'
   icon: {fileID: 21300000, guid: c6972add31340fb45a0086acb6f06643, type: 3}
+  sharesIconOf: {fileID: 0}
   rarity: 2
   equipSlot: 2
   maxStack: 1
+  boundFaction: 0
   itemLevel: 45
   lineId: 79
   weaponClass: 0

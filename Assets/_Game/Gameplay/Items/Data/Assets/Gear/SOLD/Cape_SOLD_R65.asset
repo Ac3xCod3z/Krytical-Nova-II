@@ -16,9 +16,11 @@ MonoBehaviour:
   displayName: Striker Cape
   description: Worn across the back.
   icon: {fileID: 21300000, guid: 227c0c0a52b28c24e90054f6a03f0729, type: 3}
+  sharesIconOf: {fileID: 0}
   rarity: 2
   equipSlot: 7
   maxStack: 1
+  boundFaction: 0
   itemLevel: 65
   lineId: 17
   weaponClass: 0
