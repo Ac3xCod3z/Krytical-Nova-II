@@ -38,6 +38,9 @@ Shader "KryticalNova/NovaCore"
                 half _Prism;
             CBUFFER_END
 
+            // In a fight the Nova swells on the beat of the fight music (BeatGlow sets it for every material at once; 0 out of one).
+            half _KN_BeatPulse;
+
             struct Attributes
             {
                 float4 positionOS : POSITION;
@@ -91,7 +94,7 @@ Shader "KryticalNova/NovaCore"
                 half3 colour = lerp(_Inner.rgb, outer, saturate(limb * 1.25)) * plasma;
                 colour += _Inner.rgb * pow(facing, 4.0) * 0.5;      // the white-hot middle
                 colour += outer * pow(limb, 3.0) * 0.8;             // a bright edge, so it reads as a globe
-                return half4(colour * (_Brightness + _Flash), 1.0);
+                return half4(colour * (_Brightness + _Flash) * (1.0 + _KN_BeatPulse), 1.0);
             }
             ENDHLSL
         }
