@@ -102,3 +102,8 @@ sound-scout's `music_bake.py <picks> --zone <Zone>` makes `Assets/_Game/Audio/Mu
   the Shieldwall Variation); baked into the game 21 Oct (`sheets/bake_2026-10-21.json`).
 - `Vol4_Ambience_2026-10-21`: Concord and Transit Row ambience from the sound library; the owner kept all of it,
   in the game 21 Oct (`sheets/ambience_2026-10-21.json`).
+
+## Close ComfyUI when done (owner, 23 Oct 2026)
+ComfyUI must not sit open holding the graphics card and RAM. When the job is finished, stop it: the scripts call
+`stop_comfy()` from `ultratex/scripts/run.py` at the end (it waits for an empty queue) unless `--keep-open` is passed;
+use that only between back-to-back runs of one task, then stop it. This applies even if another session started it.

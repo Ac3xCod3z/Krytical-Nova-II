@@ -16,6 +16,17 @@ MonoBehaviour:
   displayName: Reshaper
   title: Face
   greeting: A new face is an hour's work. Who you are under it is your business.
+  lines:
+  - text: A new face is an hour's work. Who you are under it is your business.
+    clip: {fileID: 8300000, guid: f9616f0e272ac914bbfdcd2fae362833, type: 3}
+  - text: Hold still. Faces are delicate work.
+    clip: {fileID: 8300000, guid: d645bdfee2f26de48a5a23fd18c1b3ae, type: 3}
+  - text: New eyes, new scars, a new you. Nobody will ask.
+    clip: {fileID: 8300000, guid: b3fa1f9fb5b5899468855d2a9dfd7d80, type: 3}
+  - text: One Restyle Pass covers it all. Change as much as you dare.
+    clip: {fileID: 8300000, guid: d605645b89605e34a99d8c455912b7fe, type: 3}
+  - text: Look in the mirror when I'm done. Then decide who you are.
+    clip: {fileID: 8300000, guid: 8830f26475a51694f8b8aaab15077d18, type: 3}
   services: 'Changes your face: head, eyes, ears, nose, teeth, skin tone, eye colour, scars, eyeliner and grime. One Restyle Pass covers every change made at once.'
   offers: 512
   interactRange: 3

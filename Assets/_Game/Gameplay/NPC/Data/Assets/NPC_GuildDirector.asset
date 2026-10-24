@@ -16,6 +16,17 @@ MonoBehaviour:
   displayName: Vaultkeeper
   title: "Vault \xB7 Crew Registry"
   greeting: What you leave with me stays yours. What you sign here binds a Crew.
+  lines:
+  - text: What you leave with me stays yours. What you sign here binds a Crew.
+    clip: {fileID: 8300000, guid: c1cd620f562a8bd488fddd92af0014cc, type: 3}
+  - text: Hegemony, Null or Covenant, in my vault every Cred weighs the same.
+    clip: {fileID: 8300000, guid: ad838b280a8d5bf48b19c68cd73f2b1c, type: 3}
+  - text: Your things are exactly where you left them. They always are.
+    clip: {fileID: 8300000, guid: 06b26a39cf220974a9234c4d899f9e8e, type: 3}
+  - text: Founding a Crew? Sign here, and choose your companions well.
+    clip: {fileID: 8300000, guid: cb8aa24780f510c409ebdb4194dddd5f, type: 3}
+  - text: Leave what you can't carry. Nothing here goes missing.
+    clip: {fileID: 8300000, guid: 908272a236dbb6741a100cd106d591f8, type: 3}
   services: 'Keeps your Vault: storage for this character''s items and Creds. Registers new Crews.'
   offers: 5
   interactRange: 3

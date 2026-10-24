@@ -16,6 +16,17 @@ MonoBehaviour:
   displayName: Fabricator
   title: Crafting
   greeting: Bring the parts. I return the whole.
+  lines:
+  - text: Bring the parts. I return the whole.
+    clip: {fileID: 8300000, guid: 56f7825f25c4bb04b96514ecd3ad3cb2, type: 3}
+  - text: Four of one grade. One of the next. The ratio is fixed.
+    clip: {fileID: 8300000, guid: 3e7d490409a0d0b49bd68385e3d8d4aa, type: 3}
+  - text: Parts received. Processing. Please wait.
+    clip: {fileID: 8300000, guid: b66bfe1eb4ab4fd4199c8cc515e1aa43, type: 3}
+  - text: Four Pages, one Dossier. Nothing is wasted.
+    clip: {fileID: 8300000, guid: b9aea5390a7fc6a47b4adec4e6197410, type: 3}
+  - text: Input accepted. Output ready.
+    clip: {fileID: 8300000, guid: d8b9026cfab371245955dd797159cbd4, type: 3}
   services: 'Crafts from what you bring, carried or stored: four Alloys of one grade into one of the next, a Cyan, a Magenta, a Yellow and a Black Cell into a Chroma Cell, and the four Pages of a Dossier into the Dossier. Stat resets and castle entry come later.'
   offers: 2048
   interactRange: 3

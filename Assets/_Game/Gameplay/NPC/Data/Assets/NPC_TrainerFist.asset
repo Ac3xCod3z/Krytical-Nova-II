@@ -16,6 +16,17 @@ MonoBehaviour:
   displayName: Servo Claws Instructor
   title: "Combat Skills \xB7 Servo Claws"
   greeting: Before the weapon, there is the body. Show me your stance.
+  lines:
+  - text: Before the weapon, there is the body. Show me your stance.
+    clip: {fileID: 8300000, guid: 6870776a39d4e0146ad8e8b7b107c784, type: 3}
+  - text: Claws do not swing. They answer. Learn to answer fast.
+    clip: {fileID: 8300000, guid: 6317e09d568ad104399b973d491358af, type: 3}
+  - text: Closer. Your reach is short. Your speed must not be.
+    clip: {fileID: 8300000, guid: bb48bcd57628af34c8078ebdf03c0601, type: 3}
+  - text: Every motion you waste is an opening for someone else.
+    clip: {fileID: 8300000, guid: e3b07edf397698b4e98b00f168215211, type: 3}
+  - text: Again. Slower. Then faster than before.
+    clip: {fileID: 8300000, guid: 1dad477ab316b284f8cfc3a588186764, type: 3}
   services: Null Instructor for Servo Claws. Learn and upgrade your combat skills.
   offers: 0
   interactRange: 3

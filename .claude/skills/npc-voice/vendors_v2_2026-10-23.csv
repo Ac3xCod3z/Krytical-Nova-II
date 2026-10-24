@@ -1,0 +1,171 @@
+id,npc,voice,text
+Apothecary_A_1,Apothecary,A,"Stims for the body, Flux for the mind. Stock up before you leave the walls."
+Apothecary_A_2,Apothecary,A,"Out past the walls the wounds come fast. Keep a Stim in your hand, not at the bottom of your pack."
+Apothecary_A_3,Apothecary,A,Running low on Flux? Hand me your Flask and I'll fill it while you wait.
+Apothecary_A_4,Apothecary,A,A Recall Tag weighs nothing. Not carrying one can cost you everything.
+Apothecary_A_5,Apothecary,A,Back in one piece. Good. Let's keep it that way.
+Apothecary_B_1,Apothecary,B,"Stims for the body, Flux for the mind. Stock up before you leave the walls."
+Apothecary_B_2,Apothecary,B,"Out past the walls the wounds come fast. Keep a Stim in your hand, not at the bottom of your pack."
+Apothecary_B_3,Apothecary,B,Running low on Flux? Hand me your Flask and I'll fill it while you wait.
+Apothecary_B_4,Apothecary,B,A Recall Tag weighs nothing. Not carrying one can cost you everything.
+Apothecary_B_5,Apothecary,B,Back in one piece. Good. Let's keep it that way.
+Armorer_A_1,Armorer,A,"Bring me steel and coin, and I'll make you something worth swinging."
+Armorer_A_2,Armorer,A,Alumite first. Every great weapon begins with a humble foundation.
+Armorer_A_3,Armorer,A,"Temper it right and it holds. Rush it and it breaks. Your Creds, your call."
+Armorer_A_4,Armorer,A,Got a Rare nobody's touched yet? Let me show you what a Reforge can do.
+Armorer_A_5,Armorer,A,Good steel deserves better than the bottom of a pack. Let's make it worth wearing.
+Armorer_B_1,Armorer,B,"Bring me steel and coin, and I'll make you something worth swinging."
+Armorer_B_2,Armorer,B,Alumite first. Every great weapon begins with a humble foundation.
+Armorer_B_3,Armorer,B,"Temper it right and it holds. Rush it and it breaks. Your Creds, your call."
+Armorer_B_4,Armorer,B,Got a Rare nobody's touched yet? Let me show you what a Reforge can do.
+Armorer_B_5,Armorer,B,Good steel deserves better than the bottom of a pack. Let's make it worth wearing.
+MonobladeInstructor_A_1,MonobladeInstructor,A,A blade is only as sharp as the hand that guides it.
+MonobladeInstructor_A_2,MonobladeInstructor,A,Again. A cut you cannot repeat is only luck.
+MonobladeInstructor_A_3,MonobladeInstructor,A,Your footwork decides the fight before your blade does.
+MonobladeInstructor_A_4,MonobladeInstructor,A,Show me what you have learned since last time.
+MonobladeInstructor_A_5,MonobladeInstructor,A,Patience. The Monoblade rewards those who wait for the opening.
+MonobladeInstructor_B_1,MonobladeInstructor,B,A blade is only as sharp as the hand that guides it.
+MonobladeInstructor_B_2,MonobladeInstructor,B,Again. A cut you cannot repeat is only luck.
+MonobladeInstructor_B_3,MonobladeInstructor,B,Your footwork decides the fight before your blade does.
+MonobladeInstructor_B_4,MonobladeInstructor,B,Show me what you have learned since last time.
+MonobladeInstructor_B_5,MonobladeInstructor,B,Patience. The Monoblade rewards those who wait for the opening.
+ServoClawsInstructor_A_1,ServoClawsInstructor,A,"Before the weapon, there is the body. Show me your stance."
+ServoClawsInstructor_A_2,ServoClawsInstructor,A,Claws do not swing. They answer. Learn to answer fast.
+ServoClawsInstructor_A_3,ServoClawsInstructor,A,Closer. Your reach is short. Your speed must not be.
+ServoClawsInstructor_A_4,ServoClawsInstructor,A,Every motion you waste is an opening for someone else.
+ServoClawsInstructor_A_5,ServoClawsInstructor,A,Again. Slower. Then faster than before.
+ServoClawsInstructor_B_1,ServoClawsInstructor,B,"Before the weapon, there is the body. Show me your stance."
+ServoClawsInstructor_B_2,ServoClawsInstructor,B,Claws do not swing. They answer. Learn to answer fast.
+ServoClawsInstructor_B_3,ServoClawsInstructor,B,Closer. Your reach is short. Your speed must not be.
+ServoClawsInstructor_B_4,ServoClawsInstructor,B,Every motion you waste is an opening for someone else.
+ServoClawsInstructor_B_5,ServoClawsInstructor,B,Again. Slower. Then faster than before.
+Broker_A_1,Broker,A,Everything has a buyer. Everything.
+Broker_A_2,Broker,A,"Rare, tempered, untouched. Name your price, and I will find the one who pays it."
+Broker_A_3,Broker,A,"The market never sleeps, darling. Neither do I."
+Broker_A_4,Broker,A,"Buy low, sell high, and never tell anyone what you paid."
+Broker_A_5,Broker,A,"Looking or selling? Either way, I take my cut."
+Broker_B_1,Broker,B,Everything has a buyer. Everything.
+Broker_B_2,Broker,B,"Rare, tempered, untouched. Name your price, and I will find the one who pays it."
+Broker_B_3,Broker,B,"The market never sleeps, darling. Neither do I."
+Broker_B_4,Broker,B,"Buy low, sell high, and never tell anyone what you paid."
+Broker_B_5,Broker,B,"Looking or selling? Either way, I take my cut."
+StoreClerk_A_1,StoreClerk,A,"Premium goods, premium service. How may I assist?"
+StoreClerk_A_2,StoreClerk,A,Welcome back! New looks arrive all the time.
+StoreClerk_A_3,StoreClerk,A,"Everything here is for show. The power, you earn out there."
+StoreClerk_A_4,StoreClerk,A,Browse as long as you like. I never close.
+StoreClerk_A_5,StoreClerk,A,Thank you for shopping at the Nova Store.
+StoreClerk_B_1,StoreClerk,B,"Premium goods, premium service. How may I assist?"
+StoreClerk_B_2,StoreClerk,B,Welcome back! New looks arrive all the time.
+StoreClerk_B_3,StoreClerk,B,"Everything here is for show. The power, you earn out there."
+StoreClerk_B_4,StoreClerk,B,Browse as long as you like. I never close.
+StoreClerk_B_5,StoreClerk,B,Thank you for shopping at the Nova Store.
+Marshal_A_1,Marshal,A,Ready to earn your keep? The frontier won't defend itself.
+Marshal_A_2,Marshal,A,Contracts are posted. Pick one that won't get you killed.
+Marshal_A_3,Marshal,A,The frontier needs hands. Yours look idle.
+Marshal_A_4,Marshal,A,Come back with the job done and you get paid. That's the deal.
+Marshal_A_5,Marshal,A,"Keep your weapon down inside the walls. Out there, do what you have to."
+Marshal_B_1,Marshal,B,Ready to earn your keep? The frontier won't defend itself.
+Marshal_B_2,Marshal,B,Contracts are posted. Pick one that won't get you killed.
+Marshal_B_3,Marshal,B,The frontier needs hands. Yours look idle.
+Marshal_B_4,Marshal,B,Come back with the job done and you get paid. That's the deal.
+Marshal_B_5,Marshal,B,"Keep your weapon down inside the walls. Out there, do what you have to."
+Fixer_A_1,Fixer,A,"Slots, Cores, cutters. Paid in Renown."
+Fixer_A_2,Fixer,A,"Bring the Renown, I'll bring the Cutter. Nobody asks questions."
+Fixer_A_3,Fixer,A,Your gear has room for more. Want me to open it up?
+Fixer_A_4,Fixer,A,A cut slot is for good. Think before you cut.
+Fixer_A_5,Fixer,A,"No refunds, no small talk. What do you need?"
+Fixer_B_1,Fixer,B,"Slots, Cores, cutters. Paid in Renown."
+Fixer_B_2,Fixer,B,"Bring the Renown, I'll bring the Cutter. Nobody asks questions."
+Fixer_B_3,Fixer,B,Your gear has room for more. Want me to open it up?
+Fixer_B_4,Fixer,B,A cut slot is for good. Think before you cut.
+Fixer_B_5,Fixer,B,"No refunds, no small talk. What do you need?"
+Vaultkeeper_A_1,Vaultkeeper,A,What you leave with me stays yours. What you sign here binds a Crew.
+Vaultkeeper_A_2,Vaultkeeper,A,"Hegemony, Null or Covenant, in my vault every Cred weighs the same."
+Vaultkeeper_A_3,Vaultkeeper,A,Your things are exactly where you left them. They always are.
+Vaultkeeper_A_4,Vaultkeeper,A,"Founding a Crew? Sign here, and choose your companions well."
+Vaultkeeper_A_5,Vaultkeeper,A,Leave what you can't carry. Nothing here goes missing.
+Vaultkeeper_B_1,Vaultkeeper,B,What you leave with me stays yours. What you sign here binds a Crew.
+Vaultkeeper_B_2,Vaultkeeper,B,"Hegemony, Null or Covenant, in my vault every Cred weighs the same."
+Vaultkeeper_B_3,Vaultkeeper,B,Your things are exactly where you left them. They always are.
+Vaultkeeper_B_4,Vaultkeeper,B,"Founding a Crew? Sign here, and choose your companions well."
+Vaultkeeper_B_5,Vaultkeeper,B,Leave what you can't carry. Nothing here goes missing.
+Wayfinder_A_1,Wayfinder,A,Every road starts here. So does everything you want waiting at the end of one.
+Wayfinder_A_2,Wayfinder,A,Your Deep Vault is shared by every character you play.
+Wayfinder_A_3,Wayfinder,A,Roads run out from Concord in every direction. Mind where they lead.
+Wayfinder_A_4,Wayfinder,A,"Store it here once, and any of your characters can take it out."
+Wayfinder_A_5,Wayfinder,A,Your account remembers. So do I.
+Wayfinder_B_1,Wayfinder,B,Every road starts here. So does everything you want waiting at the end of one.
+Wayfinder_B_2,Wayfinder,B,Your Deep Vault is shared by every character you play.
+Wayfinder_B_3,Wayfinder,B,Roads run out from Concord in every direction. Mind where they lead.
+Wayfinder_B_4,Wayfinder,B,"Store it here once, and any of your characters can take it out."
+Wayfinder_B_5,Wayfinder,B,Your account remembers. So do I.
+Herald_A_1,Herald,A,Renown is only a number until someone speaks it aloud. Let me speak yours.
+Herald_A_2,Herald,A,"Say your name, and the whole town will know what you have earned."
+Herald_A_3,Herald,A,"Rise, and let Concord see it."
+Herald_A_4,Herald,A,Every rank you buy is yours forever. Wear one with pride.
+Herald_A_5,Herald,A,Ascension is a gamble. Fortune favours the bold.
+Herald_B_1,Herald,B,Renown is only a number until someone speaks it aloud. Let me speak yours.
+Herald_B_2,Herald,B,"Say your name, and the whole town will know what you have earned."
+Herald_B_3,Herald,B,"Rise, and let Concord see it."
+Herald_B_4,Herald,B,Every rank you buy is yours forever. Wear one with pride.
+Herald_B_5,Herald,B,Ascension is a gamble. Fortune favours the bold.
+Outfitter_A_1,Outfitter,A,"Same cut, new colours. Bring a Chroma Cell for every piece you want dyed."
+Outfitter_A_2,Outfitter,A,That colour? Brave. Let's make it work.
+Outfitter_A_3,Outfitter,A,A new Cell comes in every day. Today's is a good one.
+Outfitter_A_4,Outfitter,A,"The dye stays on the piece, so choose like you mean it."
+Outfitter_A_5,Outfitter,A,Armour can still look good. That's my whole job.
+Outfitter_B_1,Outfitter,B,"Same cut, new colours. Bring a Chroma Cell for every piece you want dyed."
+Outfitter_B_2,Outfitter,B,That colour? Brave. Let's make it work.
+Outfitter_B_3,Outfitter,B,A new Cell comes in every day. Today's is a good one.
+Outfitter_B_4,Outfitter,B,"The dye stays on the piece, so choose like you mean it."
+Outfitter_B_5,Outfitter,B,Armour can still look good. That's my whole job.
+Holoweaver_A_1,Holoweaver,A,Wear what protects you. Show what suits you. I keep every look you have ever earned.
+Holoweaver_A_2,Holoweaver,A,Every look you have earned is kept here. None is ever lost.
+Holoweaver_A_3,Holoweaver,A,Wear the steel you need. Show the face you choose.
+Holoweaver_A_4,Holoweaver,A,Your library is shared by every character you play.
+Holoweaver_A_5,Holoweaver,A,Light can wear any shape. Pick one.
+Holoweaver_B_1,Holoweaver,B,Wear what protects you. Show what suits you. I keep every look you have ever earned.
+Holoweaver_B_2,Holoweaver,B,Every look you have earned is kept here. None is ever lost.
+Holoweaver_B_3,Holoweaver,B,Wear the steel you need. Show the face you choose.
+Holoweaver_B_4,Holoweaver,B,Your library is shared by every character you play.
+Holoweaver_B_5,Holoweaver,B,Light can wear any shape. Pick one.
+Stylist_A_1,Stylist,A,"Sit. Whatever they did to your hair out there, I can fix it."
+Stylist_A_2,Stylist,A,"Sit down, sit down. Let's see what we're working with."
+Stylist_A_3,Stylist,A,"One Restyle Pass, as many changes as you like."
+Stylist_A_4,Stylist,A,Trust me. You'll walk out of here a new person.
+Stylist_A_5,Stylist,A,Helmet hair again? I see it every day.
+Stylist_B_1,Stylist,B,"Sit. Whatever they did to your hair out there, I can fix it."
+Stylist_B_2,Stylist,B,"Sit down, sit down. Let's see what we're working with."
+Stylist_B_3,Stylist,B,"One Restyle Pass, as many changes as you like."
+Stylist_B_4,Stylist,B,Trust me. You'll walk out of here a new person.
+Stylist_B_5,Stylist,B,Helmet hair again? I see it every day.
+Reshaper_A_1,Reshaper,A,A new face is an hour's work. Who you are under it is your business.
+Reshaper_A_2,Reshaper,A,Hold still. Faces are delicate work.
+Reshaper_A_3,Reshaper,A,"New eyes, new scars, a new you. Nobody will ask."
+Reshaper_A_4,Reshaper,A,One Restyle Pass covers it all. Change as much as you dare.
+Reshaper_A_5,Reshaper,A,Look in the mirror when I'm done. Then decide who you are.
+Reshaper_B_1,Reshaper,B,A new face is an hour's work. Who you are under it is your business.
+Reshaper_B_2,Reshaper,B,Hold still. Faces are delicate work.
+Reshaper_B_3,Reshaper,B,"New eyes, new scars, a new you. Nobody will ask."
+Reshaper_B_4,Reshaper,B,One Restyle Pass covers it all. Change as much as you dare.
+Reshaper_B_5,Reshaper,B,Look in the mirror when I'm done. Then decide who you are.
+Coach_A_1,Coach,A,"Heavier, leaner, bigger: tell me what you want to carry and we'll get you there."
+Coach_A_2,Coach,A,"Taller, broader, leaner. One Training Pass and we start today."
+Coach_A_3,Coach,A,Strong frame. Let's build on it.
+Coach_A_4,Coach,A,Stand up straight. Let's see what we're working with.
+Coach_A_5,Coach,A,"Whatever you carry out there, carry it well."
+Coach_B_1,Coach,B,"Heavier, leaner, bigger: tell me what you want to carry and we'll get you there."
+Coach_B_2,Coach,B,"Taller, broader, leaner. One Training Pass and we start today."
+Coach_B_3,Coach,B,Strong frame. Let's build on it.
+Coach_B_4,Coach,B,Stand up straight. Let's see what we're working with.
+Coach_B_5,Coach,B,"Whatever you carry out there, carry it well."
+Fabricator_A_1,Fabricator,A,Bring the parts. I return the whole.
+Fabricator_A_2,Fabricator,A,Four of one grade. One of the next. The ratio is fixed.
+Fabricator_A_3,Fabricator,A,Parts received. Processing. Please wait.
+Fabricator_A_4,Fabricator,A,"Four Pages, one Dossier. Nothing is wasted."
+Fabricator_A_5,Fabricator,A,Input accepted. Output ready.
+Fabricator_B_1,Fabricator,B,Bring the parts. I return the whole.
+Fabricator_B_2,Fabricator,B,Four of one grade. One of the next. The ratio is fixed.
+Fabricator_B_3,Fabricator,B,Parts received. Processing. Please wait.
+Fabricator_B_4,Fabricator,B,"Four Pages, one Dossier. Nothing is wasted."
+Fabricator_B_5,Fabricator,B,Input accepted. Output ready.

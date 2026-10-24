@@ -1,0 +1,45 @@
+{
+ "batch": "Vol2_Flow_2026-10-20",
+ "title": "Krytical Nova - Volume 2 (Flow)",
+ "note": "Volume 2, after the owner's Volume 1 picks. Main inspiration RJ Pasin and Dante Swan: djent and metal guitar over trap production (808s, hat rolls), epic and fun, no jazz. New takes are from Google Flow Music (Lyria 3.5); the Volume 1 takes you kept are here too (marked Kept), so the changes play with them.",
+ "slots": [
+  {"slot": "title", "order": 1, "place": "Title screen", "scene": "Scenes/MainMenu/Title.unity",
+   "when": "Starts on the logo glitch (red and cyan on the dark page) and loops under the owner's cover painting.",
+   "ends": "Pressing a key plays the Title outro; the theme fades out over 2 s.", "kind": "loop", "fade_out": 2.0},
+  {"slot": "title_out", "order": 2, "place": "Title outro sting", "scene": "Scenes/MainMenu/Title.unity",
+   "when": "The moment the player presses a key on the title page and the comic page turns.",
+   "ends": "Rings out; the Selection theme fades in under its tail.", "kind": "sting"},
+  {"slot": "select", "order": 3, "place": "Selection theme", "scene": "FactionSelect / CharacterSelect / CharacterCreator",
+   "when": "Fades in 1.5 s after the title theme is gone and plays through faction select, character select and the creator. Keeps the title's epic mood (owner, Vol 1).",
+   "ends": "Fades out over 3 s when the world starts loading.", "kind": "loop", "fade_in": 1.5, "follows": "title"},
+  {"slot": "faction_coat", "order": 4, "place": "Faction select: the faction's coat", "scene": "Scenes/MainMenu/FactionSelect.unity",
+   "when": "Same tempo and key as the Selection theme (100 BPM, D minor). Hovering a faction's banner swells its coat over the bed (Hegemony, Null, Covenant).",
+   "ends": "Sinks back under the bed when the pointer leaves; the chosen faction's coat stays a little louder in the creator.", "kind": "layer", "over": "select"},
+  {"slot": "concord_idle", "order": 5, "place": "Concord, out of a fight", "scene": "Scenes/World/Towns/Zone01_StarterTown.unity",
+   "when": "The free truce town around the Central Plaza, walking about. Upbeat and fun (owner, Vol 1), still lighter than a fight.",
+   "ends": "Drops out on the next bar when a Callout starts.", "kind": "loop"},
+  {"slot": "callout_fight", "order": 6, "place": "Concord Callout (duel) - Cadence fight music", "scene": "Scenes/World/Towns/Zone01_StarterTown.unity",
+   "when": "A Callout starts (PlayerCombatState.InCallout). The server's MusicConductor keeps the beat; a skill pressed within 90 ms of it hits 6 % harder.",
+   "ends": "Fades out over 2.5 s, 6 s after the last blow.", "kind": "fight", "click": true}
+ ],
+ "previews": [
+  {"id": "title_to_select", "label": "Title, press a key, Selection theme", "from": "title", "sting": "title_out", "to": "select",
+   "from_at": 24, "hold": 8, "fade_out": 2.0, "fade_in": 1.5},
+  {"id": "idle_to_callout", "label": "Walking in Concord, then a Callout starts", "from": "concord_idle", "to": "callout_fight",
+   "from_at": 16, "hold": 8, "fade_out": 1.0, "fade_in": 0.6, "on_bar": true}
+ ],
+ "cues": [
+  {"id": "TitleTheme", "slot": "title", "bpm": 96, "key": "D minor", "seconds": 120, "tags": "Kept from Volume 1 (TitleTheme_t3)."},
+  {"id": "TitleOutro", "slot": "title_out", "bpm": 96, "key": "D minor", "seconds": 10, "tags": "Kept from Volume 1 (TitleOutro_t1)."},
+  {"id": "SelectBed", "slot": "select", "bpm": 100, "key": "D minor", "seconds": 120,
+   "tags": "Instrumental only, no vocals, no lyrics, no voices of any kind. Video game faction and character select menu music that carries on from an epic title theme: cinematic djent meets trap, 100 BPM, D minor, 4/4. Mid intensity, heroic and confident, never jazz, never lo-fi, never cartoonish. Heavy palm-muted 7-string guitar chugs locked to the kick, deep 808 sub bass, crisp rolling trap hi-hats, hard snare on the backbeat, a wide cinematic synth pad, and a soaring clean tapped guitar melody on top. Steady and loopable with room for menus. About 2 minutes."},
+  {"id": "CoatHegemony", "slot": "faction_coat", "bpm": 100, "key": "D minor", "seconds": 90,
+   "tags": "Instrumental only, no vocals, no lyrics, no voices of any kind. Glossy cyber djent for a sleek futuristic corporate faction, 100 BPM, D minor, 4/4: crystal clean tapped guitar leads over tight djent chugs, glassy synth arpeggios, deep 808 sub bass, gated snare, trap hi-hats, polished neon city, cold, precise and confident. No funk, no jazz. About 90 seconds."},
+  {"id": "CoatNull", "slot": "faction_coat", "bpm": 100, "key": "D minor", "seconds": 60, "tags": "Kept from Volume 1 (CoatNull_t1)."},
+  {"id": "CoatCovenant", "slot": "faction_coat", "bpm": 100, "key": "D minor", "seconds": 60, "tags": "Kept from Volume 1 (CoatCovenant_t2)."},
+  {"id": "ConcordIdle", "slot": "concord_idle", "bpm": 110, "key": "F major", "seconds": 120,
+   "tags": "Instrumental only, no vocals, no lyrics, no voices of any kind. Upbeat, fun, bright video game hub town music for a sunny plaza where heroes gather between fights, 110 BPM, F major, 4/4. Energetic melodic metal and pop-punk guitars with catchy tapped guitar hooks, bouncy trap drums, 808 bass, sparkling synth arps, heroic and playful, feel-good adventure. Not jazz, not lo-fi, not a city at night. Lighter than battle music. Loopable, about 2 minutes."},
+  {"id": "CalloutFight", "slot": "callout_fight", "bpm": 150, "key": "E minor", "seconds": 120,
+   "tags": "Instrumental only, no vocals, no lyrics, no voices of any kind. Video game duel battle music, 150 BPM, E minor, 4/4: driving punk rock meets big beat electronica meets djent and trap. Drop-tuned 8-string guitar chugs locked to a four-on-the-floor kick, hard backbeat snare on every bar, 808 drops, rolling trap hi-hats, glitch stutters, and a soaring tapped guitar hook recognisable in one bar. Anime final-boss energy, fun and huge, very clear steady beat to fight to. About 2 minutes."}
+ ]
+}

@@ -16,6 +16,17 @@ MonoBehaviour:
   displayName: Holoweaver
   title: "Holoweave \xB7 Weave Library"
   greeting: Wear what protects you. Show what suits you. I keep every look you have ever earned.
+  lines:
+  - text: Wear what protects you. Show what suits you. I keep every look you have ever earned.
+    clip: {fileID: 8300000, guid: 79de7e5e808ff2c478a202272950ab9a, type: 3}
+  - text: Every look you have earned is kept here. None is ever lost.
+    clip: {fileID: 8300000, guid: ceca9bebb7188d04992e83b4e96550e3, type: 3}
+  - text: Wear the steel you need. Show the face you choose.
+    clip: {fileID: 8300000, guid: 425f9a8b36ee1d74398d95f540292845, type: 3}
+  - text: Your library is shared by every character you play.
+    clip: {fileID: 8300000, guid: 6ba4fa2bec016304bb2c90c55adaf48b, type: 3}
+  - text: Light can wear any shape. Pick one.
+    clip: {fileID: 8300000, guid: 0af3c202179e88a4692a1ba3a94bf7c6, type: 3}
   services: 'Holoweave: puts a look from your Weave Library over the piece you wear in a slot, for Creds. Its stats, reach and glow stay your own gear''s. The library is shared by every character of your account.'
   offers: 64
   interactRange: 3

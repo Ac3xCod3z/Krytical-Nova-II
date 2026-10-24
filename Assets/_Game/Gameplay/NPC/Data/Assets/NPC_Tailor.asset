@@ -16,6 +16,17 @@ MonoBehaviour:
   displayName: Outfitter
   title: "Dye \xB7 Colour Cells"
   greeting: Same cut, new colours. Bring a Chroma Cell for every piece you want dyed.
+  lines:
+  - text: Same cut, new colours. Bring a Chroma Cell for every piece you want dyed.
+    clip: {fileID: 8300000, guid: 60a6c93e29520b248bb76c8fc8a0993b, type: 3}
+  - text: That colour? Brave. Let's make it work.
+    clip: {fileID: 8300000, guid: f6f57d4677debd346bb28ee58f846a62, type: 3}
+  - text: A new Cell comes in every day. Today's is a good one.
+    clip: {fileID: 8300000, guid: 072f753d7fcda2c4e908dfc62cbd2d30, type: 3}
+  - text: The dye stays on the piece, so choose like you mean it.
+    clip: {fileID: 8300000, guid: a4c3cd7a5e5209d46b0b972ea3f56f6a, type: 3}
+  - text: Armour can still look good. That's my whole job.
+    clip: {fileID: 8300000, guid: 171aaefbc0d9cc447a503f3cf817a53e, type: 3}
   services: Dyes an outfit piece in another colourway for one Chroma Cell, or a weapon for one Prism Cell; the dye stays on the piece. Sells one of the four colour cells each day, a different one every day, and buys what you have to sell.
   offers: 160
   interactRange: 3

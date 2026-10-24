@@ -3,7 +3,7 @@
 For a model that arrives with a UV map and no texture (or a texture to be replaced), and reference
 pictures of how it should look. Worked out on the Drone Core 100 %, October 2026, over many rounds of
 the artist's mark-up. The working example is
-`Assets/_ArtSource/Blender~/Pets/DroneCore/paint_dronecore_100.py`: copy it for the next model and
+`G:/My Drive/KryticalNova/Art/Blender/Pets/DroneCore/paint_dronecore_100.py`: copy it for the next model and
 change the data at its top (names, colours, `STENCILS`); the painting code below the data is general.
 
 ## The method, in the order it is done

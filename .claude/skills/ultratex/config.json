@@ -1,0 +1,16 @@
+{
+  "comfy_root": "C:/AI/ComfyUI-Easy-Install/ComfyUI-Easy-Install",
+  "port": 8188,
+  "blender": "C:/Program Files/Blender Foundation/Blender 5.2/blender.exe",
+  "workflow": "PixelArtistry_UltraTex_03_LowVRAM_GGUF.json",
+  "workflow_fallback": "C:/AI/_downloads/PixelArtistry-UltraTex-main/workflows/UltraTex - 3 Low VRAM GGUF.json",
+  "unet":"flux-2-klein-base-9b-Q8_0.gguf",
+  "unet_fallback": "flux-2-klein-base-9b-Q4_0.gguf",
+  "clip": "qwen_3_8b_fp8mixed.safetensors",
+  "res_inputs": ["view_resolution", "normal_view_resolution"],
+  "bake_inputs": ["texture_size"],
+  "seed_inputs": ["seed"],
+  "uv_classes": ["UTXUnwrapMeshUVV25"],
+  "uv_mode_input": "uv_mode",
+  "extra_args": []
+}

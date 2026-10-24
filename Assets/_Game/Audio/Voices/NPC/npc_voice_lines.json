@@ -1,0 +1,477 @@
+{
+ "_about": "Made by .claude/skills/npc-voice/scripts/bake_game.py; read by Krytical Nova > Setup > NPC Voice Lines.",
+ "npcs": [
+  {
+   "npc": "Apothecary",
+   "asset": "NPC_HerbMaster",
+   "voice": "A",
+   "voiceDescription": "A man in his fifties, a careful field medic. Calm, warm, soft and measured, reassuring, with a slight rasp.",
+   "lines": [
+    {
+     "text": "Stims for the body, Flux for the mind. Stock up before you leave the walls.",
+     "clip": "Assets/_Game/Audio/Voices/NPC/Apothecary/VO_Apothecary_1.ogg"
+    },
+    {
+     "text": "Out past the walls the wounds come fast. Keep a Stim in your hand, not at the bottom of your pack.",
+     "clip": "Assets/_Game/Audio/Voices/NPC/Apothecary/VO_Apothecary_2.ogg"
+    },
+    {
+     "text": "Running low on Flux? Hand me your Flask and I'll fill it while you wait.",
+     "clip": "Assets/_Game/Audio/Voices/NPC/Apothecary/VO_Apothecary_3.ogg"
+    },
+    {
+     "text": "A Recall Tag weighs nothing. Not carrying one can cost you everything.",
+     "clip": "Assets/_Game/Audio/Voices/NPC/Apothecary/VO_Apothecary_4.ogg"
+    },
+    {
+     "text": "Back in one piece. Good. Let's keep it that way.",
+     "clip": "Assets/_Game/Audio/Voices/NPC/Apothecary/VO_Apothecary_5.ogg"
+    }
+   ]
+  },
+  {
+   "npc": "Armorer",
+   "asset": "NPC_Blacksmith",
+   "voice": "A",
+   "voiceDescription": "A big man, a blacksmith with a deep voice. Gravelly, slow and heavy, proud of his work, few words.",
+   "lines": [
+    {
+     "text": "Bring me steel and coin, and I'll make you something worth swinging.",
+     "clip": "Assets/_Game/Audio/Voices/NPC/Armorer/VO_Armorer_1.ogg"
+    },
+    {
+     "text": "Alumite first. Every great weapon begins with a humble foundation.",
+     "clip": "Assets/_Game/Audio/Voices/NPC/Armorer/VO_Armorer_2.ogg"
+    },
+    {
+     "text": "Temper it right and it holds. Rush it and it breaks. Your Creds, your call.",
+     "clip": "Assets/_Game/Audio/Voices/NPC/Armorer/VO_Armorer_3.ogg"
+    },
+    {
+     "text": "Got a Rare nobody's touched yet? Let me show you what a Reforge can do.",
+     "clip": "Assets/_Game/Audio/Voices/NPC/Armorer/VO_Armorer_4.ogg"
+    },
+    {
+     "text": "Good steel deserves better than the bottom of a pack. Let's make it worth wearing.",
+     "clip": "Assets/_Game/Audio/Voices/NPC/Armorer/VO_Armorer_5.ogg"
+    }
+   ]
+  },
+  {
+   "npc": "MonobladeInstructor",
+   "asset": "NPC_TrainerBlade",
+   "voice": "A",
+   "voiceDescription": "A man in his sixties, a disciplined sword master. Calm, low, steady and wise, every word deliberate.",
+   "lines": [
+    {
+     "text": "A blade is only as sharp as the hand that guides it.",
+     "clip": "Assets/_Game/Audio/Voices/NPC/MonobladeInstructor/VO_MonobladeInstructor_1.ogg"
+    },
+    {
+     "text": "Again. A cut you cannot repeat is only luck.",
+     "clip": "Assets/_Game/Audio/Voices/NPC/MonobladeInstructor/VO_MonobladeInstructor_2.ogg"
+    },
+    {
+     "text": "Your footwork decides the fight before your blade does.",
+     "clip": "Assets/_Game/Audio/Voices/NPC/MonobladeInstructor/VO_MonobladeInstructor_3.ogg"
+    },
+    {
+     "text": "Show me what you have learned since last time.",
+     "clip": "Assets/_Game/Audio/Voices/NPC/MonobladeInstructor/VO_MonobladeInstructor_4.ogg"
+    },
+    {
+     "text": "Patience. The Monoblade rewards those who wait for the opening.",
+     "clip": "Assets/_Game/Audio/Voices/NPC/MonobladeInstructor/VO_MonobladeInstructor_5.ogg"
+    }
+   ]
+  },
+  {
+   "npc": "ServoClawsInstructor",
+   "asset": "NPC_TrainerFist",
+   "voice": "A",
+   "voiceDescription": "A man with a cold voice with a faint metallic edge, precise like a machine. Quiet, flat and controlled.",
+   "lines": [
+    {
+     "text": "Before the weapon, there is the body. Show me your stance.",
+     "clip": "Assets/_Game/Audio/Voices/NPC/ServoClawsInstructor/VO_ServoClawsInstructor_1.ogg"
+    },
+    {
+     "text": "Claws do not swing. They answer. Learn to answer fast.",
+     "clip": "Assets/_Game/Audio/Voices/NPC/ServoClawsInstructor/VO_ServoClawsInstructor_2.ogg"
+    },
+    {
+     "text": "Closer. Your reach is short. Your speed must not be.",
+     "clip": "Assets/_Game/Audio/Voices/NPC/ServoClawsInstructor/VO_ServoClawsInstructor_3.ogg"
+    },
+    {
+     "text": "Every motion you waste is an opening for someone else.",
+     "clip": "Assets/_Game/Audio/Voices/NPC/ServoClawsInstructor/VO_ServoClawsInstructor_4.ogg"
+    },
+    {
+     "text": "Again. Slower. Then faster than before.",
+     "clip": "Assets/_Game/Audio/Voices/NPC/ServoClawsInstructor/VO_ServoClawsInstructor_5.ogg"
+    }
+   ]
+  },
+  {
+   "npc": "Broker",
+   "asset": "NPC_Trader",
+   "voice": "A",
+   "voiceDescription": "A woman, a wealthy dealer with a smooth, low, confident voice. Amused, unhurried and a little dangerous.",
+   "lines": [
+    {
+     "text": "Rare, tempered, untouched. Name your price, and I will find the one who pays it.",
+     "clip": "Assets/_Game/Audio/Voices/NPC/Broker/VO_Broker_2.ogg"
+    },
+    {
+     "text": "The market never sleeps, darling. Neither do I.",
+     "clip": "Assets/_Game/Audio/Voices/NPC/Broker/VO_Broker_3.ogg"
+    },
+    {
+     "text": "Buy low, sell high, and never tell anyone what you paid.",
+     "clip": "Assets/_Game/Audio/Voices/NPC/Broker/VO_Broker_4.ogg"
+    },
+    {
+     "text": "Looking or selling? Either way, I take my cut.",
+     "clip": "Assets/_Game/Audio/Voices/NPC/Broker/VO_Broker_5.ogg"
+    }
+   ]
+  },
+  {
+   "npc": "StoreClerk",
+   "asset": "NPC_MallManager",
+   "voice": "B",
+   "voiceDescription": "A woman in her fifties with a low, husky, warm voice. Slow, motherly and comforting.",
+   "lines": [
+    {
+     "text": "Premium goods, premium service. How may I assist?",
+     "clip": "Assets/_Game/Audio/Voices/NPC/StoreClerk/VO_StoreClerk_1.ogg"
+    },
+    {
+     "text": "Welcome back! New looks arrive all the time.",
+     "clip": "Assets/_Game/Audio/Voices/NPC/StoreClerk/VO_StoreClerk_2.ogg"
+    },
+    {
+     "text": "Everything here is for show. The power, you earn out there.",
+     "clip": "Assets/_Game/Audio/Voices/NPC/StoreClerk/VO_StoreClerk_3.ogg"
+    },
+    {
+     "text": "Browse as long as you like. I never close.",
+     "clip": "Assets/_Game/Audio/Voices/NPC/StoreClerk/VO_StoreClerk_4.ogg"
+    },
+    {
+     "text": "Thank you for shopping at the Nova Store.",
+     "clip": "Assets/_Game/Audio/Voices/NPC/StoreClerk/VO_StoreClerk_5.ogg"
+    }
+   ]
+  },
+  {
+   "npc": "Marshal",
+   "asset": "NPC_GuardCaptain",
+   "voice": "A",
+   "voiceDescription": "A man in his fifties, a seasoned lawman. Gruff, low, steady and no-nonsense.",
+   "lines": [
+    {
+     "text": "Ready to earn your keep? The frontier won't defend itself.",
+     "clip": "Assets/_Game/Audio/Voices/NPC/Marshal/VO_Marshal_1.ogg"
+    },
+    {
+     "text": "Contracts are posted. Pick one that won't get you killed.",
+     "clip": "Assets/_Game/Audio/Voices/NPC/Marshal/VO_Marshal_2.ogg"
+    },
+    {
+     "text": "The frontier needs hands. Yours look idle.",
+     "clip": "Assets/_Game/Audio/Voices/NPC/Marshal/VO_Marshal_3.ogg"
+    },
+    {
+     "text": "Come back with the job done and you get paid. That's the deal.",
+     "clip": "Assets/_Game/Audio/Voices/NPC/Marshal/VO_Marshal_4.ogg"
+    },
+    {
+     "text": "Keep your weapon down inside the walls. Out there, do what you have to.",
+     "clip": "Assets/_Game/Audio/Voices/NPC/Marshal/VO_Marshal_5.ogg"
+    }
+   ]
+  },
+  {
+   "npc": "Fixer",
+   "asset": "NPC_Agent",
+   "voice": "A",
+   "voiceDescription": "A young woman in her twenties, a hacker. Cool, sly, quick and clever, a little sarcastic.",
+   "lines": [
+    {
+     "text": "Slots, Cores, cutters. Paid in Renown.",
+     "clip": "Assets/_Game/Audio/Voices/NPC/Fixer/VO_Fixer_1.ogg"
+    },
+    {
+     "text": "Bring the Renown, I'll bring the Cutter. Nobody asks questions.",
+     "clip": "Assets/_Game/Audio/Voices/NPC/Fixer/VO_Fixer_2.ogg"
+    },
+    {
+     "text": "Your gear has room for more. Want me to open it up?",
+     "clip": "Assets/_Game/Audio/Voices/NPC/Fixer/VO_Fixer_3.ogg"
+    },
+    {
+     "text": "A cut slot is for good. Think before you cut.",
+     "clip": "Assets/_Game/Audio/Voices/NPC/Fixer/VO_Fixer_4.ogg"
+    },
+    {
+     "text": "No refunds, no small talk. What do you need?",
+     "clip": "Assets/_Game/Audio/Voices/NPC/Fixer/VO_Fixer_5.ogg"
+    }
+   ]
+  },
+  {
+   "npc": "Vaultkeeper",
+   "asset": "NPC_GuildDirector",
+   "voice": "A",
+   "voiceDescription": "An older man, a banker. Dignified and formal, slow, precise and trustworthy.",
+   "lines": [
+    {
+     "text": "What you leave with me stays yours. What you sign here binds a Crew.",
+     "clip": "Assets/_Game/Audio/Voices/NPC/Vaultkeeper/VO_Vaultkeeper_1.ogg"
+    },
+    {
+     "text": "Hegemony, Null or Covenant, in my vault every Cred weighs the same.",
+     "clip": "Assets/_Game/Audio/Voices/NPC/Vaultkeeper/VO_Vaultkeeper_2.ogg"
+    },
+    {
+     "text": "Your things are exactly where you left them. They always are.",
+     "clip": "Assets/_Game/Audio/Voices/NPC/Vaultkeeper/VO_Vaultkeeper_3.ogg"
+    },
+    {
+     "text": "Founding a Crew? Sign here, and choose your companions well.",
+     "clip": "Assets/_Game/Audio/Voices/NPC/Vaultkeeper/VO_Vaultkeeper_4.ogg"
+    },
+    {
+     "text": "Leave what you can't carry. Nothing here goes missing.",
+     "clip": "Assets/_Game/Audio/Voices/NPC/Vaultkeeper/VO_Vaultkeeper_5.ogg"
+    }
+   ]
+  },
+  {
+   "npc": "Wayfinder",
+   "asset": "NPC_GateMaster",
+   "voice": "A",
+   "voiceDescription": "A woman, an android. Serene, clear and melodic, calm, kind and gentle.",
+   "lines": [
+    {
+     "text": "Every road starts here. So does everything you want waiting at the end of one.",
+     "clip": "Assets/_Game/Audio/Voices/NPC/Wayfinder/VO_Wayfinder_1.ogg"
+    },
+    {
+     "text": "Your Deep Vault is shared by every character you play.",
+     "clip": "Assets/_Game/Audio/Voices/NPC/Wayfinder/VO_Wayfinder_2.ogg"
+    },
+    {
+     "text": "Roads run out from Concord in every direction. Mind where they lead.",
+     "clip": "Assets/_Game/Audio/Voices/NPC/Wayfinder/VO_Wayfinder_3.ogg"
+    },
+    {
+     "text": "Store it here once, and any of your characters can take it out.",
+     "clip": "Assets/_Game/Audio/Voices/NPC/Wayfinder/VO_Wayfinder_4.ogg"
+    },
+    {
+     "text": "Your account remembers. So do I.",
+     "clip": "Assets/_Game/Audio/Voices/NPC/Wayfinder/VO_Wayfinder_5.ogg"
+    }
+   ]
+  },
+  {
+   "npc": "Herald",
+   "asset": "NPC_Collector",
+   "voice": "B",
+   "voiceDescription": "An old man in his seventies with a thin, reedy, crackling voice, a fussy court scribe. Quick and precise.",
+   "lines": [
+    {
+     "text": "Renown is only a number until someone speaks it aloud. Let me speak yours.",
+     "clip": "Assets/_Game/Audio/Voices/NPC/Herald/VO_Herald_1.ogg"
+    },
+    {
+     "text": "Say your name, and the whole town will know what you have earned.",
+     "clip": "Assets/_Game/Audio/Voices/NPC/Herald/VO_Herald_2.ogg"
+    },
+    {
+     "text": "Rise, and let Concord see it.",
+     "clip": "Assets/_Game/Audio/Voices/NPC/Herald/VO_Herald_3.ogg"
+    },
+    {
+     "text": "Every rank you buy is yours forever. Wear one with pride.",
+     "clip": "Assets/_Game/Audio/Voices/NPC/Herald/VO_Herald_4.ogg"
+    },
+    {
+     "text": "Ascension is a gamble. Fortune favours the bold.",
+     "clip": "Assets/_Game/Audio/Voices/NPC/Herald/VO_Herald_5.ogg"
+    }
+   ]
+  },
+  {
+   "npc": "Outfitter",
+   "asset": "NPC_Tailor",
+   "voice": "A",
+   "voiceDescription": "A woman in her thirties, a fashion designer. Confident, trendy, upbeat and stylish.",
+   "lines": [
+    {
+     "text": "Same cut, new colours. Bring a Chroma Cell for every piece you want dyed.",
+     "clip": "Assets/_Game/Audio/Voices/NPC/Outfitter/VO_Outfitter_1.ogg"
+    },
+    {
+     "text": "That colour? Brave. Let's make it work.",
+     "clip": "Assets/_Game/Audio/Voices/NPC/Outfitter/VO_Outfitter_2.ogg"
+    },
+    {
+     "text": "A new Cell comes in every day. Today's is a good one.",
+     "clip": "Assets/_Game/Audio/Voices/NPC/Outfitter/VO_Outfitter_3.ogg"
+    },
+    {
+     "text": "The dye stays on the piece, so choose like you mean it.",
+     "clip": "Assets/_Game/Audio/Voices/NPC/Outfitter/VO_Outfitter_4.ogg"
+    },
+    {
+     "text": "Armour can still look good. That's my whole job.",
+     "clip": "Assets/_Game/Audio/Voices/NPC/Outfitter/VO_Outfitter_5.ogg"
+    }
+   ]
+  },
+  {
+   "npc": "Holoweaver",
+   "asset": "NPC_Holoweaver",
+   "voice": "B",
+   "voiceDescription": "A man, an alien with a soft, airy, whispering voice. Gentle and curious.",
+   "lines": [
+    {
+     "text": "Wear what protects you. Show what suits you. I keep every look you have ever earned.",
+     "clip": "Assets/_Game/Audio/Voices/NPC/Holoweaver/VO_Holoweaver_1.ogg"
+    },
+    {
+     "text": "Every look you have earned is kept here. None is ever lost.",
+     "clip": "Assets/_Game/Audio/Voices/NPC/Holoweaver/VO_Holoweaver_2.ogg"
+    },
+    {
+     "text": "Wear the steel you need. Show the face you choose.",
+     "clip": "Assets/_Game/Audio/Voices/NPC/Holoweaver/VO_Holoweaver_3.ogg"
+    },
+    {
+     "text": "Your library is shared by every character you play.",
+     "clip": "Assets/_Game/Audio/Voices/NPC/Holoweaver/VO_Holoweaver_4.ogg"
+    },
+    {
+     "text": "Light can wear any shape. Pick one.",
+     "clip": "Assets/_Game/Audio/Voices/NPC/Holoweaver/VO_Holoweaver_5.ogg"
+    }
+   ]
+  },
+  {
+   "npc": "Stylist",
+   "asset": "NPC_Stylist",
+   "voice": "A",
+   "voiceDescription": "A man in his thirties, a barber. Relaxed, charismatic, smooth and chatty.",
+   "lines": [
+    {
+     "text": "Sit. Whatever they did to your hair out there, I can fix it.",
+     "clip": "Assets/_Game/Audio/Voices/NPC/Stylist/VO_Stylist_1.ogg"
+    },
+    {
+     "text": "Sit down, sit down. Let's see what we're working with.",
+     "clip": "Assets/_Game/Audio/Voices/NPC/Stylist/VO_Stylist_2.ogg"
+    },
+    {
+     "text": "One Restyle Pass, as many changes as you like.",
+     "clip": "Assets/_Game/Audio/Voices/NPC/Stylist/VO_Stylist_3.ogg"
+    },
+    {
+     "text": "Trust me. You'll walk out of here a new person.",
+     "clip": "Assets/_Game/Audio/Voices/NPC/Stylist/VO_Stylist_4.ogg"
+    },
+    {
+     "text": "Helmet hair again? I see it every day.",
+     "clip": "Assets/_Game/Audio/Voices/NPC/Stylist/VO_Stylist_5.ogg"
+    }
+   ]
+  },
+  {
+   "npc": "Reshaper",
+   "asset": "NPC_Reshaper",
+   "voice": "A",
+   "voiceDescription": "A man, an alien surgeon. Calm, clinical, quiet, soft and precise.",
+   "lines": [
+    {
+     "text": "A new face is an hour's work. Who you are under it is your business.",
+     "clip": "Assets/_Game/Audio/Voices/NPC/Reshaper/VO_Reshaper_1.ogg"
+    },
+    {
+     "text": "Hold still. Faces are delicate work.",
+     "clip": "Assets/_Game/Audio/Voices/NPC/Reshaper/VO_Reshaper_2.ogg"
+    },
+    {
+     "text": "New eyes, new scars, a new you. Nobody will ask.",
+     "clip": "Assets/_Game/Audio/Voices/NPC/Reshaper/VO_Reshaper_3.ogg"
+    },
+    {
+     "text": "One Restyle Pass covers it all. Change as much as you dare.",
+     "clip": "Assets/_Game/Audio/Voices/NPC/Reshaper/VO_Reshaper_4.ogg"
+    },
+    {
+     "text": "Look in the mirror when I'm done. Then decide who you are.",
+     "clip": "Assets/_Game/Audio/Voices/NPC/Reshaper/VO_Reshaper_5.ogg"
+    }
+   ]
+  },
+  {
+   "npc": "Coach",
+   "asset": "NPC_Coach",
+   "voice": "B",
+   "voiceDescription": "A man, a drill coach with a tough, gravelly voice. Intense, short and demanding.",
+   "lines": [
+    {
+     "text": "Heavier, leaner, bigger: tell me what you want to carry and we'll get you there.",
+     "clip": "Assets/_Game/Audio/Voices/NPC/Coach/VO_Coach_1.ogg"
+    },
+    {
+     "text": "Taller, broader, leaner. One Training Pass and we start today.",
+     "clip": "Assets/_Game/Audio/Voices/NPC/Coach/VO_Coach_2.ogg"
+    },
+    {
+     "text": "Strong frame. Let's build on it.",
+     "clip": "Assets/_Game/Audio/Voices/NPC/Coach/VO_Coach_3.ogg"
+    },
+    {
+     "text": "Stand up straight. Let's see what we're working with.",
+     "clip": "Assets/_Game/Audio/Voices/NPC/Coach/VO_Coach_4.ogg"
+    },
+    {
+     "text": "Whatever you carry out there, carry it well.",
+     "clip": "Assets/_Game/Audio/Voices/NPC/Coach/VO_Coach_5.ogg"
+    }
+   ]
+  },
+  {
+   "npc": "Fabricator",
+   "asset": "NPC_Fabricator",
+   "voice": "A",
+   "voiceDescription": "A man's voice, a robot. Flat, monotone, mechanical, precise and steady.",
+   "lines": [
+    {
+     "text": "Bring the parts. I return the whole.",
+     "clip": "Assets/_Game/Audio/Voices/NPC/Fabricator/VO_Fabricator_1.ogg"
+    },
+    {
+     "text": "Four of one grade. One of the next. The ratio is fixed.",
+     "clip": "Assets/_Game/Audio/Voices/NPC/Fabricator/VO_Fabricator_2.ogg"
+    },
+    {
+     "text": "Parts received. Processing. Please wait.",
+     "clip": "Assets/_Game/Audio/Voices/NPC/Fabricator/VO_Fabricator_3.ogg"
+    },
+    {
+     "text": "Four Pages, one Dossier. Nothing is wasted.",
+     "clip": "Assets/_Game/Audio/Voices/NPC/Fabricator/VO_Fabricator_4.ogg"
+    },
+    {
+     "text": "Input accepted. Output ready.",
+     "clip": "Assets/_Game/Audio/Voices/NPC/Fabricator/VO_Fabricator_5.ogg"
+    }
+   ]
+  }
+ ]
+}

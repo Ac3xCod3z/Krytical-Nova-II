@@ -1,0 +1,3542 @@
+{
+ "_about": "Measured from the Synty Sidekick files in this project on 2026-10-08 (1,120 part FBX, SK_BaseModel, Side_Kick_Data.db). Regenerate if packs are added.",
+ "part_name_regex": "^SK_[A-Z]+_[A-Z]+_\\d{2}_\\d{2}[A-Z]{4}_[A-Z]{2}\\d{2}$",
+ "species_codes": {
+  "HU": "Human (also used by every outfit part)",
+  "EV": "Elf",
+  "RO": "Robot",
+  "SN": "Skeleton"
+ },
+ "armature": {
+  "object_scale": 0.01,
+  "object_rotation_x_deg": 90,
+  "units": "centimetres, Y up, in armature space",
+  "bone_count": 88
+ },
+ "body_shape_keys": {
+  "masculineFeminine": "basis = masculine, 100 = feminine; the creator's neutral is 50",
+  "defaultHeavy": "0..100",
+  "defaultBuff": "basis = lean, 100 = muscular; the creator's neutral is 50",
+  "defaultSkinny": "0..100"
+ },
+ "face_shape_keys": [
+  "browFrownLeft",
+  "browFrownRight",
+  "browInnerDownLeft",
+  "browInnerDownRight",
+  "browInnerUpLeft",
+  "browInnerUpRight",
+  "browOuterDownLeft",
+  "browOuterDownRight",
+  "browOuterUpLeft",
+  "browOuterUpRight",
+  "browRaiseLeft",
+  "browRaiseRight",
+  "cheekHollowLeft",
+  "cheekHollowRight",
+  "cheekPuffLeft",
+  "cheekPuffRight",
+  "cheekSquintLeft",
+  "cheekSquintRight",
+  "eyeBlinkLowerLeft",
+  "eyeBlinkLowerRight",
+  "eyeBlinkUpperLeft",
+  "eyeBlinkUpperRight",
+  "eyeLookDownLeft",
+  "eyeLookDownRight",
+  "eyeLookInLeft",
+  "eyeLookInRight",
+  "eyeLookOutLeft",
+  "eyeLookOutRight",
+  "eyeLookUpLeft",
+  "eyeLookUpRight",
+  "eyeSquintLeft",
+  "eyeSquintRight",
+  "eyeWideLowerLeft",
+  "eyeWideLowerRight",
+  "eyeWideUpperLeft",
+  "eyeWideUpperRight",
+  "jawBackward",
+  "jawForward",
+  "jawLeft",
+  "jawOpen",
+  "jawRight",
+  "mouthClose",
+  "mouthDimpleLeft",
+  "mouthDimpleRight",
+  "mouthFrownLeft",
+  "mouthFrownRight",
+  "mouthFunnel",
+  "mouthLeft",
+  "mouthLowerDownLeft",
+  "mouthLowerDownRight",
+  "mouthPressLeft",
+  "mouthPressRight",
+  "mouthPucker",
+  "mouthRight",
+  "mouthRollLower",
+  "mouthRollOutLower",
+  "mouthRollOutUpper",
+  "mouthRollUpper",
+  "mouthShrugLower",
+  "mouthShrugUpper",
+  "mouthSmileLeft",
+  "mouthSmileRight",
+  "mouthStretchLeft",
+  "mouthStretchRight",
+  "mouthUpperUpLeft",
+  "mouthUpperUpRight",
+  "noseSneerLeft",
+  "noseSneerRight"
+ ],
+ "uv": {
+  "swatch_layer": "map1",
+  "decal_layer": "decals",
+  "grid": 16,
+  "texture_px": 32,
+  "note": "cell (u,v) covers pixels [2u..2u+1] x [2v..2v+1], v counted from the bottom"
+ },
+ "shading": {
+  "all_faces_smooth": true,
+  "sharp_angle_deg": 40,
+  "sharp_on_colour_boundary": true
+ },
+ "max_bone_influences": 4,
+ "slots": {
+  "01HEAD": {
+   "type": 1,
+   "name": "Head",
+   "attach_bone": null,
+   "deforms_with_body": true,
+   "tris": {
+    "min": 178,
+    "median": 1477,
+    "p90": 2585,
+    "max": 3062
+   },
+   "typical_bones": [
+    "head",
+    "neck_01",
+    "spine_03",
+    "clavicle_l",
+    "clavicle_r",
+    "jaw",
+    "eye_r",
+    "eyeLight_l"
+   ],
+   "own_cells": [],
+   "common_cells": [
+    "Metal 02",
+    "Metal 04",
+    "Metal 03",
+    "Glow 01",
+    "Rubber 01",
+    "Metal 01",
+    "(15,15)",
+    "Rubber 02"
+   ],
+   "samples": 20
+  },
+  "02HAIR": {
+   "type": 2,
+   "name": "Hair",
+   "attach_bone": null,
+   "deforms_with_body": false,
+   "tris": {
+    "min": 272,
+    "median": 1288,
+    "p90": 2338,
+    "max": 3172
+   },
+   "typical_bones": [
+    "head",
+    "headAttach",
+    "neck_01",
+    "jaw"
+   ],
+   "own_cells": [
+    "Hair 01",
+    "Hair 02",
+    "Hair Accessory"
+   ],
+   "common_cells": [
+    "Hair 01",
+    "Hair Accessory",
+    "Strap 01",
+    "Metal 03",
+    "Metal 02",
+    "Metal 01",
+    "Hair 02",
+    "Glow 01"
+   ],
+   "samples": 35
+  },
+  "03EBRL": {
+   "type": 3,
+   "name": "EyebrowLeft",
+   "attach_bone": null,
+   "deforms_with_body": false,
+   "tris": {
+    "min": 52,
+    "median": 78,
+    "p90": 114,
+    "max": 131
+   },
+   "typical_bones": [
+    "head"
+   ],
+   "own_cells": [],
+   "common_cells": [
+    "Eyebrow Left",
+    "Glow 01",
+    "Metal 01",
+    "Metal 02",
+    "(15,14)"
+   ],
+   "samples": 22
+  },
+  "04EBRR": {
+   "type": 4,
+   "name": "EyebrowRight",
+   "attach_bone": null,
+   "deforms_with_body": false,
+   "tris": {
+    "min": 52,
+    "median": 82,
+    "p90": 114,
+    "max": 173
+   },
+   "typical_bones": [
+    "head",
+    "headAttach"
+   ],
+   "own_cells": [],
+   "common_cells": [
+    "Eyebrow Right",
+    "Metal 01",
+    "Glow 01",
+    "Metal 02",
+    "(15,14)"
+   ],
+   "samples": 22
+  },
+  "05EYEL": {
+   "type": 5,
+   "name": "EyeLeft",
+   "attach_bone": null,
+   "deforms_with_body": false,
+   "tris": {
+    "min": 60,
+    "median": 170,
+    "p90": 170,
+    "max": 170
+   },
+   "typical_bones": [
+    "eye_l",
+    "eyeLight_l",
+    "faceAttach",
+    "head"
+   ],
+   "own_cells": [],
+   "common_cells": [
+    "Eye Outer Left",
+    "Eye Color Left",
+    "Eye Inner Left",
+    "Eye Highlight Left",
+    "Eye Edge Left",
+    "Glow 01"
+   ],
+   "samples": 3
+  },
+  "06EYER": {
+   "type": 6,
+   "name": "EyeRight",
+   "attach_bone": null,
+   "deforms_with_body": false,
+   "tris": {
+    "min": 60,
+    "median": 170,
+    "p90": 170,
+    "max": 170
+   },
+   "typical_bones": [
+    "eye_r",
+    "eyeLight_r",
+    "faceAttach",
+    "head"
+   ],
+   "own_cells": [],
+   "common_cells": [
+    "Eye Outer Right",
+    "Eye Color Right",
+    "Eye Inner Right",
+    "Eye Highlight Right",
+    "Eye Edge Right",
+    "Glow 01"
+   ],
+   "samples": 3
+  },
+  "07EARL": {
+   "type": 7,
+   "name": "EarLeft",
+   "attach_bone": null,
+   "deforms_with_body": true,
+   "tris": {
+    "min": 72,
+    "median": 121,
+    "p90": 210,
+    "max": 252
+   },
+   "typical_bones": [
+    "head",
+    "headAttach",
+    "neck_01",
+    "jaw"
+   ],
+   "own_cells": [],
+   "common_cells": [
+    "Ear Left",
+    "Metal 01",
+    "Jewellery Metal 01",
+    "Metal 02",
+    "Glow 01",
+    "(15,8)",
+    "(15,14)",
+    "Jewellery Metal 02"
+   ],
+   "samples": 32
+  },
+  "08EARR": {
+   "type": 8,
+   "name": "EarRight",
+   "attach_bone": null,
+   "deforms_with_body": true,
+   "tris": {
+    "min": 72,
+    "median": 121,
+    "p90": 210,
+    "max": 252
+   },
+   "typical_bones": [
+    "head",
+    "headAttach"
+   ],
+   "own_cells": [],
+   "common_cells": [
+    "Ear Right",
+    "Metal 01",
+    "Jewellery Metal 01",
+    "Metal 02",
+    "Glow 01",
+    "Jewellery Metal 02",
+    "(15,8)",
+    "(15,14)"
+   ],
+   "samples": 32
+  },
+  "09FCHR": {
+   "type": 9,
+   "name": "FacialHair",
+   "attach_bone": null,
+   "deforms_with_body": true,
+   "tris": {
+    "min": 210,
+    "median": 1015,
+    "p90": 1290,
+    "max": 2138
+   },
+   "typical_bones": [
+    "jaw",
+    "head",
+    "neck_01",
+    "spine_03",
+    "eyeLight_r",
+    "eye_r",
+    "eye_l",
+    "eyeLight_l"
+   ],
+   "own_cells": [
+    "Facial Hair 01",
+    "Facial Hair 02",
+    "Facial Hair Accessory"
+   ],
+   "common_cells": [
+    "Facial Hair 01",
+    "Facial Hair Accessory",
+    "Metal 03",
+    "Glow 01",
+    "Metal 02",
+    "Facial Hair 02",
+    "Bandage 01"
+   ],
+   "samples": 32
+  },
+  "10TORS": {
+   "type": 10,
+   "name": "Torso",
+   "attach_bone": null,
+   "deforms_with_body": true,
+   "tris": {
+    "min": 580,
+    "median": 2370,
+    "p90": 3212,
+    "max": 3678
+   },
+   "typical_bones": [
+    "spine_02",
+    "spine_03",
+    "clavicle_r",
+    "clavicle_l",
+    "upperarm_r",
+    "neck_01",
+    "upperarm_l",
+    "spine_01"
+   ],
+   "own_cells": [
+    "Torso Outfit 01",
+    "Torso Outfit 02",
+    "Torso Outfit 03",
+    "Torso Outfit 04",
+    "Torso Outfit 05"
+   ],
+   "common_cells": [
+    "Metal 02",
+    "Torso Outfit 01",
+    "Torso Outfit 02",
+    "Metal 01",
+    "Metal 03",
+    "Torso Outfit 03",
+    "Glow 01",
+    "Skin 01"
+   ],
+   "samples": 49
+  },
+  "11AUPL": {
+   "type": 11,
+   "name": "ArmUpperLeft",
+   "attach_bone": null,
+   "deforms_with_body": true,
+   "tris": {
+    "min": 94,
+    "median": 349,
+    "p90": 532,
+    "max": 932
+   },
+   "typical_bones": [
+    "upperarm_twist_01_l",
+    "upperarm_l",
+    "lowerarm_l",
+    "clavicle_l",
+    "spine_03",
+    "lowerarm_twist_01_l"
+   ],
+   "own_cells": [
+    "Arm Left Outfit 01",
+    "Arm Left Outfit 02",
+    "Arm Left Outfit 03",
+    "Arm Left Outfit 04",
+    "Arm Left Outfit 05"
+   ],
+   "common_cells": [
+    "Arm Left Outfit 01",
+    "Arm Left Outfit 02",
+    "Metal 02",
+    "Skin 01",
+    "Arm Left Outfit 03",
+    "Metal 03",
+    "Metal 04",
+    "Bone 01"
+   ],
+   "samples": 40
+  },
+  "12AUPR": {
+   "type": 12,
+   "name": "ArmUpperRight",
+   "attach_bone": null,
+   "deforms_with_body": true,
+   "tris": {
+    "min": 94,
+    "median": 374,
+    "p90": 528,
+    "max": 932
+   },
+   "typical_bones": [
+    "upperarm_twist_01_r",
+    "upperarm_r",
+    "clavicle_r",
+    "spine_03",
+    "lowerarm_r",
+    "lowerarm_twist_01_r"
+   ],
+   "own_cells": [
+    "Arm Right Outfit 01",
+    "Arm Right Outfit 02",
+    "Arm Right Outfit 03",
+    "Arm Right Outfit 04",
+    "Arm Right Outfit 05"
+   ],
+   "common_cells": [
+    "Arm Right Outfit 01",
+    "Arm Right Outfit 02",
+    "Metal 02",
+    "Skin 01",
+    "Arm Right Outfit 03",
+    "Metal 03",
+    "Metal 04",
+    "Bone 01"
+   ],
+   "samples": 40
+  },
+  "13ALWL": {
+   "type": 13,
+   "name": "ArmLowerLeft",
+   "attach_bone": null,
+   "deforms_with_body": true,
+   "tris": {
+    "min": 96,
+    "median": 545,
+    "p90": 903,
+    "max": 1670
+   },
+   "typical_bones": [
+    "lowerarm_l",
+    "lowerarm_twist_01_l",
+    "hand_l",
+    "upperarm_twist_01_l",
+    "thumb_01_l",
+    "thumb_02_l",
+    "upperarm_l",
+    "pinky_01_l"
+   ],
+   "own_cells": [
+    "Arm Left Outfit 01",
+    "Arm Left Outfit 02",
+    "Arm Left Outfit 03",
+    "Arm Left Outfit 04",
+    "Arm Left Outfit 05"
+   ],
+   "common_cells": [
+    "Metal 02",
+    "Arm Left Outfit 02",
+    "Arm Left Outfit 01",
+    "Metal 03",
+    "Glow 01",
+    "Metal 01",
+    "Strap 01",
+    "Metal 04"
+   ],
+   "samples": 40
+  },
+  "14ALWR": {
+   "type": 14,
+   "name": "ArmLowerRight",
+   "attach_bone": null,
+   "deforms_with_body": true,
+   "tris": {
+    "min": 96,
+    "median": 546,
+    "p90": 903,
+    "max": 1670
+   },
+   "typical_bones": [
+    "lowerarm_r",
+    "lowerarm_twist_01_r",
+    "hand_r",
+    "thumb_01_r",
+    "upperarm_twist_01_r",
+    "upperarm_r",
+    "thumb_02_r"
+   ],
+   "own_cells": [
+    "Arm Right Outfit 01",
+    "Arm Right Outfit 02",
+    "Arm Right Outfit 03",
+    "Arm Right Outfit 04",
+    "Arm Right Outfit 05"
+   ],
+   "common_cells": [
+    "Metal 02",
+    "Arm Right Outfit 02",
+    "Arm Right Outfit 01",
+    "Metal 03",
+    "Glow 01",
+    "Metal 01",
+    "Strap 01",
+    "Metal 04"
+   ],
+   "samples": 40
+  },
+  "15HNDL": {
+   "type": 15,
+   "name": "HandLeft",
+   "attach_bone": null,
+   "deforms_with_body": true,
+   "tris": {
+    "min": 252,
+    "median": 424,
+    "p90": 538,
+    "max": 680
+   },
+   "typical_bones": [
+    "hand_l",
+    "thumb_01_l",
+    "thumb_02_l",
+    "index_01_l",
+    "thumb_03_l",
+    "index_02_l",
+    "index_03_l",
+    "ring_01_l"
+   ],
+   "own_cells": [
+    "Hand Left Outfit 01",
+    "Hand Left Outfit 02",
+    "Hand Left Outfit 03",
+    "Hand Left Outfit 04",
+    "Hand Left Outfit 05"
+   ],
+   "common_cells": [
+    "Hand Left Outfit 02",
+    "Skin 01",
+    "Fingernails Left",
+    "Metal 02",
+    "Hand Left Outfit 03",
+    "Metal 01",
+    "Metal 03",
+    "Metal 04"
+   ],
+   "samples": 33
+  },
+  "16HNDR": {
+   "type": 16,
+   "name": "HandRight",
+   "attach_bone": null,
+   "deforms_with_body": true,
+   "tris": {
+    "min": 252,
+    "median": 424,
+    "p90": 538,
+    "max": 680
+   },
+   "typical_bones": [
+    "hand_r",
+    "thumb_01_r",
+    "index_01_r",
+    "middle_01_r",
+    "thumb_02_r",
+    "pinky_01_r",
+    "pinky_02_r",
+    "thumb_03_r"
+   ],
+   "own_cells": [
+    "Hand Right Outfit 01",
+    "Hand Right Outfit 02",
+    "Hand Right Outfit 03",
+    "Hand Right Outfit 04",
+    "Hand Right Outfit 05"
+   ],
+   "common_cells": [
+    "Hand Right Outfit 02",
+    "Skin 01",
+    "Fingernails Right",
+    "Metal 02",
+    "Hand Right Outfit 03",
+    "Metal 01",
+    "Metal 04",
+    "Bone 01"
+   ],
+   "samples": 33
+  },
+  "17HIPS": {
+   "type": 17,
+   "name": "Hips",
+   "attach_bone": null,
+   "deforms_with_body": true,
+   "tris": {
+    "min": 618,
+    "median": 1786,
+    "p90": 2422,
+    "max": 3700
+   },
+   "typical_bones": [
+    "pelvis",
+    "thigh_r",
+    "thigh_l",
+    "spine_01",
+    "thigh_twist_01_l",
+    "thigh_twist_01_r",
+    "spine_02",
+    "calf_l"
+   ],
+   "own_cells": [
+    "Hips Outfit 01",
+    "Hips Outfit 02",
+    "Hips Outfit 03",
+    "Hips Outfit 04",
+    "Hips Outfit 05"
+   ],
+   "common_cells": [
+    "Hips Outfit 01",
+    "Hips Outfit 02",
+    "Metal 02",
+    "Strap 01",
+    "Metal 01",
+    "Metal 03",
+    "Hips Outfit 03",
+    "Metal 04"
+   ],
+   "samples": 43
+  },
+  "18LEGL": {
+   "type": 18,
+   "name": "LegLeft",
+   "attach_bone": null,
+   "deforms_with_body": true,
+   "tris": {
+    "min": 100,
+    "median": 498,
+    "p90": 602,
+    "max": 1028
+   },
+   "typical_bones": [
+    "calf_l",
+    "calf_twist_01_l",
+    "thigh_l",
+    "foot_l",
+    "thigh_twist_01_l",
+    "ball_l"
+   ],
+   "own_cells": [
+    "Leg Left Outfit 01",
+    "Leg Left Outfit 02",
+    "Leg Left Outfit 03",
+    "Leg Left Outfit 04",
+    "Leg Left Outfit 05"
+   ],
+   "common_cells": [
+    "Leg Left Outfit 02",
+    "Leg Left Outfit 01",
+    "Metal 02",
+    "Metal 03",
+    "Leg Left Outfit 03",
+    "Strap 01",
+    "Metal 01",
+    "Leg Left Outfit 04"
+   ],
+   "samples": 38
+  },
+  "19LEGR": {
+   "type": 19,
+   "name": "LegRight",
+   "attach_bone": null,
+   "deforms_with_body": true,
+   "tris": {
+    "min": 100,
+    "median": 496,
+    "p90": 600,
+    "max": 1028
+   },
+   "typical_bones": [
+    "calf_r",
+    "calf_twist_01_r",
+    "foot_r",
+    "thigh_r",
+    "thigh_twist_01_r",
+    "ball_r"
+   ],
+   "own_cells": [
+    "Leg Right Outfit 01",
+    "Leg Right Outfit 02",
+    "Leg Right Outfit 03",
+    "Leg Right Outfit 04",
+    "Leg Right Outfit 05"
+   ],
+   "common_cells": [
+    "Leg Right Outfit 02",
+    "Leg Right Outfit 01",
+    "Metal 02",
+    "Metal 03",
+    "Leg Right Outfit 03",
+    "Strap 01",
+    "Metal 01",
+    "Leg Right Outfit 04"
+   ],
+   "samples": 38
+  },
+  "20FOTL": {
+   "type": 20,
+   "name": "FootLeft",
+   "attach_bone": null,
+   "deforms_with_body": true,
+   "tris": {
+    "min": 138,
+    "median": 320,
+    "p90": 430,
+    "max": 562
+   },
+   "typical_bones": [
+    "foot_l",
+    "ball_l",
+    "calf_l",
+    "calf_twist_01_l"
+   ],
+   "own_cells": [
+    "Foot Left Outfit 01",
+    "Foot Left Outfit 02",
+    "Foot Left Outfit 03",
+    "Foot Left Outfit 04",
+    "Foot Left Outfit 05"
+   ],
+   "common_cells": [
+    "Foot Left Outfit 02",
+    "Foot Left Outfit 03",
+    "Metal 02",
+    "Metal 03",
+    "Foot Left Outfit 01",
+    "Metal 04",
+    "Foot Left Outfit 04",
+    "Bone 01"
+   ],
+   "samples": 33
+  },
+  "21FOTR": {
+   "type": 21,
+   "name": "FootRight",
+   "attach_bone": null,
+   "deforms_with_body": true,
+   "tris": {
+    "min": 138,
+    "median": 326,
+    "p90": 430,
+    "max": 560
+   },
+   "typical_bones": [
+    "foot_r",
+    "ball_r",
+    "calf_r",
+    "calf_twist_01_r"
+   ],
+   "own_cells": [
+    "Foot Right Outfit 01",
+    "Foot Right Outfit 02",
+    "Foot Right Outfit 03",
+    "Foot Right Outfit 04",
+    "Foot Right Outfit 05"
+   ],
+   "common_cells": [
+    "Foot Right Outfit 02",
+    "Foot Right Outfit 03",
+    "Metal 02",
+    "Metal 03",
+    "Foot Right Outfit 01",
+    "Metal 04",
+    "Foot Right Outfit 04",
+    "Bone 01"
+   ],
+   "samples": 33
+  },
+  "22AHED": {
+   "type": 22,
+   "name": "AttachmentHead",
+   "attach_bone": "headAttach",
+   "deforms_with_body": true,
+   "tris": {
+    "min": 638,
+    "median": 1240,
+    "p90": 1702,
+    "max": 2420
+   },
+   "typical_bones": [
+    "headAttach",
+    "jaw",
+    "neck_01",
+    "spine_03",
+    "head",
+    "clavicle_r",
+    "clavicle_l",
+    "faceAttach"
+   ],
+   "own_cells": [
+    "Head Attachment 01",
+    "Head Attachment 02",
+    "Head Attachment 03",
+    "Head Attachment 04",
+    "Head Attachment 05"
+   ],
+   "common_cells": [
+    "Metal 02",
+    "Metal 03",
+    "Head Attachment 01",
+    "Glow 01",
+    "Head Attachment 02",
+    "Metal 01",
+    "Rubber 02",
+    "Head Attachment 03"
+   ],
+   "samples": 41
+  },
+  "23AFAC": {
+   "type": 23,
+   "name": "AttachmentFace",
+   "attach_bone": "faceAttach",
+   "deforms_with_body": true,
+   "tris": {
+    "min": 246,
+    "median": 614,
+    "p90": 1070,
+    "max": 1350
+   },
+   "typical_bones": [
+    "faceAttach",
+    "jaw",
+    "head",
+    "neck_01"
+   ],
+   "own_cells": [
+    "Face Attachment 01",
+    "Face Attachment 02",
+    "Face Attachment 03",
+    "Face Attachment 04",
+    "Face Attachment 05"
+   ],
+   "common_cells": [
+    "Face Attachment 01",
+    "Metal 02",
+    "Glow 01",
+    "Wood 01",
+    "Rubber 02",
+    "Face Attachment 02",
+    "Metal 03",
+    "Metal 01"
+   ],
+   "samples": 29
+  },
+  "24ABAC": {
+   "type": 24,
+   "name": "AttachmentBack",
+   "attach_bone": "backAttach",
+   "deforms_with_body": false,
+   "tris": {
+    "min": 548,
+    "median": 1828,
+    "p90": 2871,
+    "max": 4748
+   },
+   "typical_bones": [
+    "backAttach",
+    "spine_03",
+    "neck_01",
+    "clavicle_l",
+    "clavicle_r",
+    "upperarm_l",
+    "upperarm_r"
+   ],
+   "own_cells": [
+    "Back Attachment 01",
+    "Back Attachment 02",
+    "Back Attachment 03",
+    "Back Attachment 04",
+    "Back Attachment 05"
+   ],
+   "common_cells": [
+    "Metal 03",
+    "Metal 02",
+    "Metal 01",
+    "Back Attachment 01",
+    "Glow 01",
+    "Back Attachment 02",
+    "Metal 04",
+    "(15,15)"
+   ],
+   "samples": 45
+  },
+  "25AHPF": {
+   "type": 25,
+   "name": "AttachmentHipsFront",
+   "attach_bone": "hipAttachFront",
+   "deforms_with_body": false,
+   "tris": {
+    "min": 132,
+    "median": 566,
+    "p90": 1054,
+    "max": 1250
+   },
+   "typical_bones": [
+    "hipAttachFront"
+   ],
+   "own_cells": [
+    "Hip Front Outfit 01",
+    "Hip Front Outfit 02",
+    "Hip Front Outfit 03",
+    "Hip Front Outfit 04",
+    "Hip Front Outfit 05"
+   ],
+   "common_cells": [
+    "Metal 02",
+    "Hip Front Outfit 01",
+    "Metal 03",
+    "Hip Front Outfit 02",
+    "Glow 01",
+    "Metal 01",
+    "Bone 01",
+    "(15,15)"
+   ],
+   "samples": 28
+  },
+  "26AHPB": {
+   "type": 26,
+   "name": "AttachmentHipsBack",
+   "attach_bone": "hipAttachBack",
+   "deforms_with_body": false,
+   "tris": {
+    "min": 196,
+    "median": 480,
+    "p90": 894,
+    "max": 1262
+   },
+   "typical_bones": [
+    "hipAttachBack"
+   ],
+   "own_cells": [
+    "Hip Back Outfit 01",
+    "Hip Back Outfit 02",
+    "Hip Back Outfit 03",
+    "Hip Back Outfit 04",
+    "Hip Back Outfit 05"
+   ],
+   "common_cells": [
+    "Metal 02",
+    "Hip Back Outfit 01",
+    "Metal 03",
+    "Hip Back Outfit 02",
+    "Glow 01",
+    "Strap 01",
+    "Metal 01",
+    "Rubber 01"
+   ],
+   "samples": 23
+  },
+  "27AHPL": {
+   "type": 27,
+   "name": "AttachmentHipsLeft",
+   "attach_bone": "hipAttach_l",
+   "deforms_with_body": false,
+   "tris": {
+    "min": 188,
+    "median": 473,
+    "p90": 698,
+    "max": 982
+   },
+   "typical_bones": [
+    "hipAttach_l"
+   ],
+   "own_cells": [
+    "Hip Left Outfit 01",
+    "Hip Left Outfit 02",
+    "Hip Left Outfit 03",
+    "Hip Left Outfit 04",
+    "Hip Left Outfit 05"
+   ],
+   "common_cells": [
+    "Metal 02",
+    "Hip Left Outfit 01",
+    "Metal 03",
+    "Hip Left Outfit 02",
+    "Metal 01",
+    "Glow 01",
+    "Strap 01",
+    "Rubber 02"
+   ],
+   "samples": 28
+  },
+  "28AHPR": {
+   "type": 28,
+   "name": "AttachmentHipsRight",
+   "attach_bone": "hipAttach_r",
+   "deforms_with_body": false,
+   "tris": {
+    "min": 188,
+    "median": 482,
+    "p90": 758,
+    "max": 1589
+   },
+   "typical_bones": [
+    "hipAttach_r"
+   ],
+   "own_cells": [
+    "Hip Right Outfit 01",
+    "Hip Right Outfit 02",
+    "Hip Right Outfit 03",
+    "Hip Right Outfit 04",
+    "Hip Right Outfit 05"
+   ],
+   "common_cells": [
+    "Metal 02",
+    "Hip Right Outfit 01",
+    "Metal 03",
+    "Hip Right Outfit 02",
+    "Glow 01",
+    "Metal 01",
+    "Wood 01",
+    "Rope 01"
+   ],
+   "samples": 28
+  },
+  "29ASHL": {
+   "type": 29,
+   "name": "AttachmentShoulderLeft",
+   "attach_bone": "shoulderAttach_l",
+   "deforms_with_body": false,
+   "tris": {
+    "min": 144,
+    "median": 476,
+    "p90": 904,
+    "max": 2340
+   },
+   "typical_bones": [
+    "shoulderAttach_l"
+   ],
+   "own_cells": [
+    "Shoulder Left Outfit 01",
+    "Shoulder Left Outfit 02",
+    "Shoulder Left Outfit 03",
+    "Shoulder Left Outfit 04",
+    "Shoulder Left Outfit 05"
+   ],
+   "common_cells": [
+    "Shoulder Left Outfit 01",
+    "Metal 03",
+    "Metal 02",
+    "Shoulder Left Outfit 02",
+    "Metal 01",
+    "Glow 01",
+    "(15,15)",
+    "Metal 04"
+   ],
+   "samples": 35
+  },
+  "30ASHR": {
+   "type": 30,
+   "name": "AttachmentShoulderRight",
+   "attach_bone": "shoulderAttach_r",
+   "deforms_with_body": false,
+   "tris": {
+    "min": 118,
+    "median": 476,
+    "p90": 1224,
+    "max": 2340
+   },
+   "typical_bones": [
+    "shoulderAttach_r"
+   ],
+   "own_cells": [
+    "Shoulder Right Outfit 01",
+    "Shoulder Right Outfit 02",
+    "Shoulder Right Outfit 03",
+    "Shoulder Right Outfit 04",
+    "Shoulder Right Outfit 05"
+   ],
+   "common_cells": [
+    "Shoulder Right Outfit 01",
+    "Metal 03",
+    "Metal 02",
+    "Metal 01",
+    "Shoulder Right Outfit 02",
+    "Glow 01",
+    "Metal 04",
+    "(15,15)"
+   ],
+   "samples": 35
+  },
+  "31AEBL": {
+   "type": 31,
+   "name": "AttachmentElbowLeft",
+   "attach_bone": "elbowAttach_l",
+   "deforms_with_body": false,
+   "tris": {
+    "min": 34,
+    "median": 152,
+    "p90": 416,
+    "max": 600
+   },
+   "typical_bones": [
+    "elbowAttach_l"
+   ],
+   "own_cells": [
+    "Elbow Left Outfit 01",
+    "Elbow Left Outfit 02",
+    "Elbow Left Outfit 03",
+    "Elbow Left Outfit 04",
+    "Elbow Left Outfit 05"
+   ],
+   "common_cells": [
+    "Metal 02",
+    "Metal 03",
+    "Elbow Left Outfit 01",
+    "Elbow Left Outfit 02",
+    "Metal 01",
+    "Wood 01",
+    "Fur 01",
+    "Knee Right Outfit 02"
+   ],
+   "samples": 25
+  },
+  "32AEBR": {
+   "type": 32,
+   "name": "AttachmentElbowRight",
+   "attach_bone": "elbowAttach_r",
+   "deforms_with_body": false,
+   "tris": {
+    "min": 34,
+    "median": 152,
+    "p90": 440,
+    "max": 600
+   },
+   "typical_bones": [
+    "elbowAttach_r"
+   ],
+   "own_cells": [
+    "Elbow Right Outfit 01",
+    "Elbow Right Outfit 02",
+    "Elbow Right Outfit 03",
+    "Elbow Right Outfit 04",
+    "Elbow Right Outfit 05"
+   ],
+   "common_cells": [
+    "Metal 02",
+    "Metal 03",
+    "Elbow Right Outfit 01",
+    "Elbow Right Outfit 02",
+    "Metal 01",
+    "Wood 01",
+    "Fur 01",
+    "Knee Right Outfit 02"
+   ],
+   "samples": 25
+  },
+  "33AKNL": {
+   "type": 33,
+   "name": "AttachmentKneeLeft",
+   "attach_bone": "kneeAttach_l",
+   "deforms_with_body": false,
+   "tris": {
+    "min": 56,
+    "median": 180,
+    "p90": 354,
+    "max": 604
+   },
+   "typical_bones": [
+    "kneeAttach_l",
+    "calf_l",
+    "calf_twist_01_l",
+    "thigh_l",
+    "thigh_twist_01_l"
+   ],
+   "own_cells": [
+    "Knee Left Outfit 01",
+    "Knee Left Outfit 02",
+    "Knee Left Outfit 03",
+    "Knee Left Outfit 04",
+    "Knee Left Outfit 05"
+   ],
+   "common_cells": [
+    "Metal 02",
+    "Metal 03",
+    "Knee Left Outfit 01",
+    "Metal 01",
+    "Knee Left Outfit 02",
+    "Wood 01",
+    "Fur 01",
+    "Knee Right Outfit 02"
+   ],
+   "samples": 31
+  },
+  "34AKNR": {
+   "type": 34,
+   "name": "AttachmentKneeRight",
+   "attach_bone": "kneeAttach_r",
+   "deforms_with_body": false,
+   "tris": {
+    "min": 56,
+    "median": 190,
+    "p90": 342,
+    "max": 602
+   },
+   "typical_bones": [
+    "kneeAttach_r",
+    "calf_r",
+    "calf_twist_01_r",
+    "thigh_r",
+    "thigh_twist_01_r"
+   ],
+   "own_cells": [
+    "Knee Right Outfit 01",
+    "Knee Right Outfit 02",
+    "Knee Right Outfit 03",
+    "Knee Right Outfit 04",
+    "Knee Right Outfit 05"
+   ],
+   "common_cells": [
+    "Metal 02",
+    "Metal 03",
+    "Knee Right Outfit 01",
+    "Knee Right Outfit 02",
+    "Metal 01",
+    "Wood 01",
+    "Fur 01",
+    "Glow 01"
+   ],
+   "samples": 31
+  },
+  "35NOSE": {
+   "type": 35,
+   "name": "Nose",
+   "attach_bone": null,
+   "deforms_with_body": true,
+   "tris": {
+    "min": 56,
+    "median": 106,
+    "p90": 152,
+    "max": 182
+   },
+   "typical_bones": [
+    "head"
+   ],
+   "own_cells": [],
+   "common_cells": [
+    "Nose",
+    "Metal 03",
+    "Metal 02",
+    "Glow 01",
+    "Metal 04",
+    "(0,0)",
+    "Rubber 01",
+    "Shoulder Left Outfit 04"
+   ],
+   "samples": 28
+  },
+  "36TETH": {
+   "type": 36,
+   "name": "Teeth",
+   "attach_bone": null,
+   "deforms_with_body": true,
+   "tris": {
+    "min": 88,
+    "median": 144,
+    "p90": 304,
+    "max": 484
+   },
+   "typical_bones": [
+    "head",
+    "jaw"
+   ],
+   "own_cells": [],
+   "common_cells": [
+    "Teeth 01",
+    "Metal 01",
+    "Glow 01",
+    "Teeth Accessory",
+    "Gums",
+    "Teeth 02",
+    "Metal 02",
+    "Metal 03"
+   ],
+   "samples": 23
+  },
+  "37TONG": {
+   "type": 37,
+   "name": "Tongue",
+   "attach_bone": null,
+   "deforms_with_body": false,
+   "tris": {
+    "min": 86,
+    "median": 86,
+    "p90": 86,
+    "max": 86
+   },
+   "typical_bones": [
+    "head",
+    "jaw",
+    "neck_01",
+    "spine_03"
+   ],
+   "own_cells": [],
+   "common_cells": [
+    "Tongue"
+   ],
+   "samples": 2
+  },
+  "38WRAP": {
+   "type": 38,
+   "name": "Wrap",
+   "attach_bone": null,
+   "deforms_with_body": true,
+   "tris": {
+    "min": 764,
+    "median": 918,
+    "p90": 764,
+    "max": 1072
+   },
+   "typical_bones": [
+    "spine_02",
+    "spine_03",
+    "clavicle_l",
+    "clavicle_r",
+    "neck_01",
+    "upperarm_r",
+    "spine_01",
+    "upperarm_l"
+   ],
+   "own_cells": [
+    "Torso Outfit 01",
+    "Torso Outfit 02",
+    "Torso Outfit 03",
+    "Torso Outfit 04",
+    "Torso Outfit 05"
+   ],
+   "common_cells": [
+    "Torso Outfit 02",
+    "Torso Outfit 01"
+   ],
+   "samples": 2
+  }
+ },
+ "colour_cells": [
+  {
+   "name": "Torso Outfit 01",
+   "group": "Outfit",
+   "u": 0,
+   "v": 15
+  },
+  {
+   "name": "Arm Left Outfit 01",
+   "group": "Outfit",
+   "u": 1,
+   "v": 15
+  },
+  {
+   "name": "Arm Right Outfit 01",
+   "group": "Outfit",
+   "u": 2,
+   "v": 15
+  },
+  {
+   "name": "Hand Left Outfit 01",
+   "group": "Outfit",
+   "u": 3,
+   "v": 15
+  },
+  {
+   "name": "Hand Right Outfit 01",
+   "group": "Outfit",
+   "u": 4,
+   "v": 15
+  },
+  {
+   "name": "Shoulder Left Outfit 01",
+   "group": "Attachment",
+   "u": 5,
+   "v": 15
+  },
+  {
+   "name": "Shoulder Right Outfit 01",
+   "group": "Attachment",
+   "u": 6,
+   "v": 15
+  },
+  {
+   "name": "Elbow Left Outfit 01",
+   "group": "Attachment",
+   "u": 7,
+   "v": 15
+  },
+  {
+   "name": "Elbow Right Outfit 01",
+   "group": "Attachment",
+   "u": 8,
+   "v": 15
+  },
+  {
+   "name": "Knee Left Outfit 01",
+   "group": "Attachment",
+   "u": 9,
+   "v": 15
+  },
+  {
+   "name": "Knee Right Outfit 01",
+   "group": "Attachment",
+   "u": 10,
+   "v": 15
+  },
+  {
+   "name": "Hip Front Outfit 01",
+   "group": "Attachment",
+   "u": 11,
+   "v": 15
+  },
+  {
+   "name": "Hip Left Outfit 01",
+   "group": "Attachment",
+   "u": 12,
+   "v": 15
+  },
+  {
+   "name": "Hip Right Outfit 01",
+   "group": "Attachment",
+   "u": 13,
+   "v": 15
+  },
+  {
+   "name": "Hip Back Outfit 01",
+   "group": "Attachment",
+   "u": 14,
+   "v": 15
+  },
+  {
+   "name": "Torso Outfit 02",
+   "group": "Outfit",
+   "u": 0,
+   "v": 14
+  },
+  {
+   "name": "Arm Left Outfit 02",
+   "group": "Outfit",
+   "u": 1,
+   "v": 14
+  },
+  {
+   "name": "Arm Right Outfit 02",
+   "group": "Outfit",
+   "u": 2,
+   "v": 14
+  },
+  {
+   "name": "Hand Left Outfit 02",
+   "group": "Outfit",
+   "u": 3,
+   "v": 14
+  },
+  {
+   "name": "Hand Right Outfit 02",
+   "group": "Outfit",
+   "u": 4,
+   "v": 14
+  },
+  {
+   "name": "Shoulder Left Outfit 02",
+   "group": "Attachment",
+   "u": 5,
+   "v": 14
+  },
+  {
+   "name": "Shoulder Right Outfit 02",
+   "group": "Attachment",
+   "u": 6,
+   "v": 14
+  },
+  {
+   "name": "Elbow Left Outfit 02",
+   "group": "Attachment",
+   "u": 7,
+   "v": 14
+  },
+  {
+   "name": "Elbow Right Outfit 02",
+   "group": "Attachment",
+   "u": 8,
+   "v": 14
+  },
+  {
+   "name": "Knee Left Outfit 02",
+   "group": "Attachment",
+   "u": 9,
+   "v": 14
+  },
+  {
+   "name": "Knee Right Outfit 02",
+   "group": "Attachment",
+   "u": 10,
+   "v": 14
+  },
+  {
+   "name": "Hip Front Outfit 02",
+   "group": "Attachment",
+   "u": 11,
+   "v": 14
+  },
+  {
+   "name": "Hip Left Outfit 02",
+   "group": "Attachment",
+   "u": 12,
+   "v": 14
+  },
+  {
+   "name": "Hip Right Outfit 02",
+   "group": "Attachment",
+   "u": 13,
+   "v": 14
+  },
+  {
+   "name": "Hip Back Outfit 02",
+   "group": "Attachment",
+   "u": 14,
+   "v": 14
+  },
+  {
+   "name": "Torso Outfit 03",
+   "group": "Outfit",
+   "u": 0,
+   "v": 13
+  },
+  {
+   "name": "Arm Left Outfit 03",
+   "group": "Outfit",
+   "u": 1,
+   "v": 13
+  },
+  {
+   "name": "Arm Right Outfit 03",
+   "group": "Outfit",
+   "u": 2,
+   "v": 13
+  },
+  {
+   "name": "Hand Left Outfit 03",
+   "group": "Outfit",
+   "u": 3,
+   "v": 13
+  },
+  {
+   "name": "Hand Right Outfit 03",
+   "group": "Outfit",
+   "u": 4,
+   "v": 13
+  },
+  {
+   "name": "Shoulder Left Outfit 03",
+   "group": "Attachment",
+   "u": 5,
+   "v": 13
+  },
+  {
+   "name": "Shoulder Right Outfit 03",
+   "group": "Attachment",
+   "u": 6,
+   "v": 13
+  },
+  {
+   "name": "Elbow Left Outfit 03",
+   "group": "Attachment",
+   "u": 7,
+   "v": 13
+  },
+  {
+   "name": "Elbow Right Outfit 03",
+   "group": "Attachment",
+   "u": 8,
+   "v": 13
+  },
+  {
+   "name": "Knee Left Outfit 03",
+   "group": "Attachment",
+   "u": 9,
+   "v": 13
+  },
+  {
+   "name": "Knee Right Outfit 03",
+   "group": "Attachment",
+   "u": 10,
+   "v": 13
+  },
+  {
+   "name": "Hip Front Outfit 03",
+   "group": "Attachment",
+   "u": 11,
+   "v": 13
+  },
+  {
+   "name": "Hip Left Outfit 03",
+   "group": "Attachment",
+   "u": 12,
+   "v": 13
+  },
+  {
+   "name": "Hip Right Outfit 03",
+   "group": "Attachment",
+   "u": 13,
+   "v": 13
+  },
+  {
+   "name": "Hip Back Outfit 03",
+   "group": "Attachment",
+   "u": 14,
+   "v": 13
+  },
+  {
+   "name": "Torso Outfit 04",
+   "group": "Outfit",
+   "u": 0,
+   "v": 12
+  },
+  {
+   "name": "Arm Left Outfit 04",
+   "group": "Outfit",
+   "u": 1,
+   "v": 12
+  },
+  {
+   "name": "Arm Right Outfit 04",
+   "group": "Outfit",
+   "u": 2,
+   "v": 12
+  },
+  {
+   "name": "Hand Left Outfit 04",
+   "group": "Outfit",
+   "u": 3,
+   "v": 12
+  },
+  {
+   "name": "Hand Right Outfit 04",
+   "group": "Outfit",
+   "u": 4,
+   "v": 12
+  },
+  {
+   "name": "Shoulder Left Outfit 04",
+   "group": "Attachment",
+   "u": 5,
+   "v": 12
+  },
+  {
+   "name": "Shoulder Right Outfit 04",
+   "group": "Attachment",
+   "u": 6,
+   "v": 12
+  },
+  {
+   "name": "Elbow Left Outfit 04",
+   "group": "Attachment",
+   "u": 7,
+   "v": 12
+  },
+  {
+   "name": "Elbow Right Outfit 04",
+   "group": "Attachment",
+   "u": 8,
+   "v": 12
+  },
+  {
+   "name": "Knee Left Outfit 04",
+   "group": "Attachment",
+   "u": 9,
+   "v": 12
+  },
+  {
+   "name": "Knee Right Outfit 04",
+   "group": "Attachment",
+   "u": 10,
+   "v": 12
+  },
+  {
+   "name": "Hip Front Outfit 04",
+   "group": "Attachment",
+   "u": 11,
+   "v": 12
+  },
+  {
+   "name": "Hip Left Outfit 04",
+   "group": "Attachment",
+   "u": 12,
+   "v": 12
+  },
+  {
+   "name": "Hip Right Outfit 04",
+   "group": "Attachment",
+   "u": 13,
+   "v": 12
+  },
+  {
+   "name": "Hip Back Outfit 04",
+   "group": "Attachment",
+   "u": 14,
+   "v": 12
+  },
+  {
+   "name": "Torso Outfit 05",
+   "group": "Outfit",
+   "u": 0,
+   "v": 11
+  },
+  {
+   "name": "Arm Left Outfit 05",
+   "group": "Outfit",
+   "u": 1,
+   "v": 11
+  },
+  {
+   "name": "Arm Right Outfit 05",
+   "group": "Outfit",
+   "u": 2,
+   "v": 11
+  },
+  {
+   "name": "Hand Left Outfit 05",
+   "group": "Outfit",
+   "u": 3,
+   "v": 11
+  },
+  {
+   "name": "Hand Right Outfit 05",
+   "group": "Outfit",
+   "u": 4,
+   "v": 11
+  },
+  {
+   "name": "Shoulder Left Outfit 05",
+   "group": "Attachment",
+   "u": 5,
+   "v": 11
+  },
+  {
+   "name": "Shoulder Right Outfit 05",
+   "group": "Attachment",
+   "u": 6,
+   "v": 11
+  },
+  {
+   "name": "Elbow Left Outfit 05",
+   "group": "Attachment",
+   "u": 7,
+   "v": 11
+  },
+  {
+   "name": "Elbow Right Outfit 05",
+   "group": "Attachment",
+   "u": 8,
+   "v": 11
+  },
+  {
+   "name": "Knee Left Outfit 05",
+   "group": "Attachment",
+   "u": 9,
+   "v": 11
+  },
+  {
+   "name": "Knee Right Outfit 05",
+   "group": "Attachment",
+   "u": 10,
+   "v": 11
+  },
+  {
+   "name": "Hip Front Outfit 05",
+   "group": "Attachment",
+   "u": 11,
+   "v": 11
+  },
+  {
+   "name": "Hip Left Outfit 05",
+   "group": "Attachment",
+   "u": 12,
+   "v": 11
+  },
+  {
+   "name": "Hip Right Outfit 05",
+   "group": "Attachment",
+   "u": 13,
+   "v": 11
+  },
+  {
+   "name": "Hip Back Outfit 05",
+   "group": "Attachment",
+   "u": 14,
+   "v": 11
+  },
+  {
+   "name": "Hips Outfit 01",
+   "group": "Outfit",
+   "u": 0,
+   "v": 10
+  },
+  {
+   "name": "Leg Left Outfit 01",
+   "group": "Outfit",
+   "u": 1,
+   "v": 10
+  },
+  {
+   "name": "Leg Right Outfit 01",
+   "group": "Outfit",
+   "u": 2,
+   "v": 10
+  },
+  {
+   "name": "Foot Left Outfit 01",
+   "group": "Outfit",
+   "u": 3,
+   "v": 10
+  },
+  {
+   "name": "Foot Right Outfit 01",
+   "group": "Outfit",
+   "u": 4,
+   "v": 10
+  },
+  {
+   "name": "Head Attachment 01",
+   "group": "Attachment",
+   "u": 5,
+   "v": 10
+  },
+  {
+   "name": "Face Attachment 01",
+   "group": "Attachment",
+   "u": 6,
+   "v": 10
+  },
+  {
+   "name": "Back Attachment 01",
+   "group": "Attachment",
+   "u": 7,
+   "v": 10
+  },
+  {
+   "name": "Metal 01",
+   "group": "Material",
+   "u": 8,
+   "v": 10
+  },
+  {
+   "name": "Transparency FX 01",
+   "group": "Material",
+   "u": 9,
+   "v": 10
+  },
+  {
+   "name": "Fur 01",
+   "group": "Material",
+   "u": 10,
+   "v": 10
+  },
+  {
+   "name": "Paper 01",
+   "group": "Material",
+   "u": 11,
+   "v": 10
+  },
+  {
+   "name": "Flesh 01",
+   "group": "Species",
+   "u": 12,
+   "v": 10
+  },
+  {
+   "name": "Fire 01",
+   "group": "Element",
+   "u": 14,
+   "v": 10
+  },
+  {
+   "name": "Hips Outfit 02",
+   "group": "Outfit",
+   "u": 0,
+   "v": 9
+  },
+  {
+   "name": "Leg Left Outfit 02",
+   "group": "Outfit",
+   "u": 1,
+   "v": 9
+  },
+  {
+   "name": "Leg Right Outfit 02",
+   "group": "Outfit",
+   "u": 2,
+   "v": 9
+  },
+  {
+   "name": "Foot Left Outfit 02",
+   "group": "Outfit",
+   "u": 3,
+   "v": 9
+  },
+  {
+   "name": "Foot Right Outfit 02",
+   "group": "Outfit",
+   "u": 4,
+   "v": 9
+  },
+  {
+   "name": "Head Attachment 02",
+   "group": "Attachment",
+   "u": 5,
+   "v": 9
+  },
+  {
+   "name": "Face Attachment 02",
+   "group": "Attachment",
+   "u": 6,
+   "v": 9
+  },
+  {
+   "name": "Back Attachment 02",
+   "group": "Attachment",
+   "u": 7,
+   "v": 9
+  },
+  {
+   "name": "Metal 02",
+   "group": "Material",
+   "u": 8,
+   "v": 9
+  },
+  {
+   "name": "Transparency FX 02",
+   "group": "Material",
+   "u": 9,
+   "v": 9
+  },
+  {
+   "name": "Fur 02",
+   "group": "Material",
+   "u": 10,
+   "v": 9
+  },
+  {
+   "name": "Paper 02",
+   "group": "Material",
+   "u": 11,
+   "v": 9
+  },
+  {
+   "name": "Flesh 02",
+   "group": "Species",
+   "u": 12,
+   "v": 9
+  },
+  {
+   "name": "Fire 02",
+   "group": "Element",
+   "u": 14,
+   "v": 9
+  },
+  {
+   "name": "Hips Outfit 03",
+   "group": "Outfit",
+   "u": 0,
+   "v": 8
+  },
+  {
+   "name": "Leg Left Outfit 03",
+   "group": "Outfit",
+   "u": 1,
+   "v": 8
+  },
+  {
+   "name": "Leg Right Outfit 03",
+   "group": "Outfit",
+   "u": 2,
+   "v": 8
+  },
+  {
+   "name": "Foot Left Outfit 03",
+   "group": "Outfit",
+   "u": 3,
+   "v": 8
+  },
+  {
+   "name": "Foot Right Outfit 03",
+   "group": "Outfit",
+   "u": 4,
+   "v": 8
+  },
+  {
+   "name": "Head Attachment 03",
+   "group": "Attachment",
+   "u": 5,
+   "v": 8
+  },
+  {
+   "name": "Face Attachment 03",
+   "group": "Attachment",
+   "u": 6,
+   "v": 8
+  },
+  {
+   "name": "Back Attachment 03",
+   "group": "Attachment",
+   "u": 7,
+   "v": 8
+  },
+  {
+   "name": "Metal 03",
+   "group": "Material",
+   "u": 8,
+   "v": 8
+  },
+  {
+   "name": "Digital Screen 01",
+   "group": "Material",
+   "u": 9,
+   "v": 8
+  },
+  {
+   "name": "Rope 01",
+   "group": "Material",
+   "u": 10,
+   "v": 8
+  },
+  {
+   "name": "Wood 01",
+   "group": "Material",
+   "u": 11,
+   "v": 8
+  },
+  {
+   "name": "Concrete 01",
+   "group": "Material",
+   "u": 12,
+   "v": 8
+  },
+  {
+   "name": "Lava 01",
+   "group": "Element",
+   "u": 14,
+   "v": 8
+  },
+  {
+   "name": "Hips Outfit 04",
+   "group": "Outfit",
+   "u": 0,
+   "v": 7
+  },
+  {
+   "name": "Leg Left Outfit 04",
+   "group": "Outfit",
+   "u": 1,
+   "v": 7
+  },
+  {
+   "name": "Leg Right Outfit 04",
+   "group": "Outfit",
+   "u": 2,
+   "v": 7
+  },
+  {
+   "name": "Foot Left Outfit 04",
+   "group": "Outfit",
+   "u": 3,
+   "v": 7
+  },
+  {
+   "name": "Foot Right Outfit 04",
+   "group": "Outfit",
+   "u": 4,
+   "v": 7
+  },
+  {
+   "name": "Head Attachment 04",
+   "group": "Attachment",
+   "u": 5,
+   "v": 7
+  },
+  {
+   "name": "Face Attachment 04",
+   "group": "Attachment",
+   "u": 6,
+   "v": 7
+  },
+  {
+   "name": "Back Attachment 04",
+   "group": "Attachment",
+   "u": 7,
+   "v": 7
+  },
+  {
+   "name": "Metal 04",
+   "group": "Material",
+   "u": 8,
+   "v": 7
+  },
+  {
+   "name": "Digital Screen 02",
+   "group": "Material",
+   "u": 9,
+   "v": 7
+  },
+  {
+   "name": "Rope 02",
+   "group": "Material",
+   "u": 10,
+   "v": 7
+  },
+  {
+   "name": "Wood 02",
+   "group": "Material",
+   "u": 11,
+   "v": 7
+  },
+  {
+   "name": "Concrete 02",
+   "group": "Material",
+   "u": 12,
+   "v": 7
+  },
+  {
+   "name": "Lava 02",
+   "group": "Element",
+   "u": 14,
+   "v": 7
+  },
+  {
+   "name": "Hips Outfit 05",
+   "group": "Outfit",
+   "u": 0,
+   "v": 6
+  },
+  {
+   "name": "Leg Left Outfit 05",
+   "group": "Outfit",
+   "u": 1,
+   "v": 6
+  },
+  {
+   "name": "Leg Right Outfit 05",
+   "group": "Outfit",
+   "u": 2,
+   "v": 6
+  },
+  {
+   "name": "Foot Left Outfit 05",
+   "group": "Outfit",
+   "u": 3,
+   "v": 6
+  },
+  {
+   "name": "Foot Right Outfit 05",
+   "group": "Outfit",
+   "u": 4,
+   "v": 6
+  },
+  {
+   "name": "Head Attachment 05",
+   "group": "Attachment",
+   "u": 5,
+   "v": 6
+  },
+  {
+   "name": "Face Attachment 05",
+   "group": "Attachment",
+   "u": 6,
+   "v": 6
+  },
+  {
+   "name": "Back Attachment 05",
+   "group": "Attachment",
+   "u": 7,
+   "v": 6
+  },
+  {
+   "name": "Jewellery Metal 01",
+   "group": "Material",
+   "u": 8,
+   "v": 6
+  },
+  {
+   "name": "Rubber 01",
+   "group": "Material",
+   "u": 9,
+   "v": 6
+  },
+  {
+   "name": "Strap 01",
+   "group": "Material",
+   "u": 10,
+   "v": 6
+  },
+  {
+   "name": "Horns 01",
+   "group": "Species",
+   "u": 11,
+   "v": 6
+  },
+  {
+   "name": "Vegetation 01",
+   "group": "Element",
+   "u": 14,
+   "v": 6
+  },
+  {
+   "name": "Skin 01",
+   "group": "Species",
+   "u": 0,
+   "v": 5
+  },
+  {
+   "name": "Ear Left",
+   "group": "Species",
+   "u": 1,
+   "v": 5
+  },
+  {
+   "name": "Ear Right",
+   "group": "Species",
+   "u": 2,
+   "v": 5
+  },
+  {
+   "name": "Teeth 01",
+   "group": "Species",
+   "u": 3,
+   "v": 5
+  },
+  {
+   "name": "Eye Outer Left",
+   "group": "Species",
+   "u": 4,
+   "v": 5
+  },
+  {
+   "name": "Eye Outer Right",
+   "group": "Species",
+   "u": 5,
+   "v": 5
+  },
+  {
+   "name": "Eyebrow Left",
+   "group": "Species",
+   "u": 6,
+   "v": 5
+  },
+  {
+   "name": "Eyebrow Right",
+   "group": "Species",
+   "u": 7,
+   "v": 5
+  },
+  {
+   "name": "Jewellery Metal 02",
+   "group": "Material",
+   "u": 8,
+   "v": 5
+  },
+  {
+   "name": "Rubber 02",
+   "group": "Material",
+   "u": 9,
+   "v": 5
+  },
+  {
+   "name": "Strap 02",
+   "group": "Material",
+   "u": 10,
+   "v": 5
+  },
+  {
+   "name": "Horns 02",
+   "group": "Species",
+   "u": 11,
+   "v": 5
+  },
+  {
+   "name": "Vegetation 02",
+   "group": "Element",
+   "u": 14,
+   "v": 5
+  },
+  {
+   "name": "Skin 02",
+   "group": "Species",
+   "u": 0,
+   "v": 4
+  },
+  {
+   "name": "Eyelids Left",
+   "group": "Species",
+   "u": 1,
+   "v": 4
+  },
+  {
+   "name": "Eyelids Right",
+   "group": "Species",
+   "u": 2,
+   "v": 4
+  },
+  {
+   "name": "Teeth 02",
+   "group": "Species",
+   "u": 3,
+   "v": 4
+  },
+  {
+   "name": "Eye Edge Left",
+   "group": "Species",
+   "u": 4,
+   "v": 4
+  },
+  {
+   "name": "Eye Edge Right",
+   "group": "Species",
+   "u": 5,
+   "v": 4
+  },
+  {
+   "name": "Hair 01",
+   "group": "Species",
+   "u": 6,
+   "v": 4
+  },
+  {
+   "name": "Facial Hair 01",
+   "group": "Species",
+   "u": 7,
+   "v": 4
+  },
+  {
+   "name": "Glass 01",
+   "group": "Material",
+   "u": 8,
+   "v": 4
+  },
+  {
+   "name": "Plastic 01",
+   "group": "Material",
+   "u": 9,
+   "v": 4
+  },
+  {
+   "name": "Stitch 01",
+   "group": "Material",
+   "u": 10,
+   "v": 4
+  },
+  {
+   "name": "Feathers 01",
+   "group": "Material",
+   "u": 11,
+   "v": 4
+  },
+  {
+   "name": "Water 01",
+   "group": "Element",
+   "u": 14,
+   "v": 4
+  },
+  {
+   "name": "Skin 03",
+   "group": "Species",
+   "u": 0,
+   "v": 3
+  },
+  {
+   "name": "Fingernails Left",
+   "group": "Species",
+   "u": 1,
+   "v": 3
+  },
+  {
+   "name": "Fingernails Right",
+   "group": "Species",
+   "u": 2,
+   "v": 3
+  },
+  {
+   "name": "Gums",
+   "group": "Species",
+   "u": 3,
+   "v": 3
+  },
+  {
+   "name": "Eye Inner Left",
+   "group": "Species",
+   "u": 4,
+   "v": 3
+  },
+  {
+   "name": "Eye Inner Right",
+   "group": "Species",
+   "u": 5,
+   "v": 3
+  },
+  {
+   "name": "Hair 02",
+   "group": "Species",
+   "u": 6,
+   "v": 3
+  },
+  {
+   "name": "Facial Hair 02",
+   "group": "Species",
+   "u": 7,
+   "v": 3
+  },
+  {
+   "name": "Glass 02",
+   "group": "Material",
+   "u": 8,
+   "v": 3
+  },
+  {
+   "name": "Plastic 02",
+   "group": "Material",
+   "u": 9,
+   "v": 3
+  },
+  {
+   "name": "Stitch 02",
+   "group": "Material",
+   "u": 10,
+   "v": 3
+  },
+  {
+   "name": "Feathers 02",
+   "group": "Material",
+   "u": 11,
+   "v": 3
+  },
+  {
+   "name": "Water 02",
+   "group": "Element",
+   "u": 14,
+   "v": 3
+  },
+  {
+   "name": "Scar",
+   "group": "Species",
+   "u": 0,
+   "v": 2
+  },
+  {
+   "name": "Toenails Left",
+   "group": "Species",
+   "u": 1,
+   "v": 2
+  },
+  {
+   "name": "Toenails Right",
+   "group": "Species",
+   "u": 2,
+   "v": 2
+  },
+  {
+   "name": "Teeth Accessory",
+   "group": "Outfit",
+   "u": 3,
+   "v": 2
+  },
+  {
+   "name": "Eye Color Left",
+   "group": "Species",
+   "u": 4,
+   "v": 2
+  },
+  {
+   "name": "Eye Color Right",
+   "group": "Species",
+   "u": 5,
+   "v": 2
+  },
+  {
+   "name": "Head Stubble",
+   "group": "Species",
+   "u": 6,
+   "v": 2
+  },
+  {
+   "name": "Facial Stubble",
+   "group": "Species",
+   "u": 7,
+   "v": 2
+  },
+  {
+   "name": "Glow 01",
+   "group": "Material",
+   "u": 8,
+   "v": 2
+  },
+  {
+   "name": "Bone 01",
+   "group": "Material",
+   "u": 9,
+   "v": 2
+  },
+  {
+   "name": "Bandage 01",
+   "group": "Material",
+   "u": 10,
+   "v": 2
+  },
+  {
+   "name": "Jewellery Gem 01",
+   "group": "Material",
+   "u": 11,
+   "v": 2
+  },
+  {
+   "name": "Ice 01",
+   "group": "Element",
+   "u": 14,
+   "v": 2
+  },
+  {
+   "name": "Lips",
+   "group": "Species",
+   "u": 0,
+   "v": 1
+  },
+  {
+   "name": "Nose",
+   "group": "Species",
+   "u": 1,
+   "v": 1
+  },
+  {
+   "name": "Mouth",
+   "group": "Species",
+   "u": 2,
+   "v": 1
+  },
+  {
+   "name": "Tongue",
+   "group": "Species",
+   "u": 3,
+   "v": 1
+  },
+  {
+   "name": "Eye Highlight Left",
+   "group": "Species",
+   "u": 4,
+   "v": 1
+  },
+  {
+   "name": "Eye Highlight Right",
+   "group": "Species",
+   "u": 5,
+   "v": 1
+  },
+  {
+   "name": "Hair Accessory",
+   "group": "Outfit",
+   "u": 6,
+   "v": 1
+  },
+  {
+   "name": "Facial Hair Accessory",
+   "group": "Outfit",
+   "u": 7,
+   "v": 1
+  },
+  {
+   "name": "Glow 02",
+   "group": "Material",
+   "u": 8,
+   "v": 1
+  },
+  {
+   "name": "Bone 02",
+   "group": "Material",
+   "u": 9,
+   "v": 1
+  },
+  {
+   "name": "Bandage 02",
+   "group": "Material",
+   "u": 10,
+   "v": 1
+  },
+  {
+   "name": "Jewellery Gem 02",
+   "group": "Material",
+   "u": 11,
+   "v": 1
+  },
+  {
+   "name": "Ice 02",
+   "group": "Element",
+   "u": 14,
+   "v": 1
+  }
+ ],
+ "bones": [
+  {
+   "name": "root",
+   "parent": null
+  },
+  {
+   "name": "pelvis",
+   "parent": "root"
+  },
+  {
+   "name": "hipAttachFront",
+   "parent": "pelvis"
+  },
+  {
+   "name": "hipAttach_l",
+   "parent": "pelvis"
+  },
+  {
+   "name": "hipAttachBack",
+   "parent": "pelvis"
+  },
+  {
+   "name": "hipAttach_r",
+   "parent": "pelvis"
+  },
+  {
+   "name": "thigh_l",
+   "parent": "pelvis"
+  },
+  {
+   "name": "thigh_twist_01_l",
+   "parent": "thigh_l"
+  },
+  {
+   "name": "calf_l",
+   "parent": "thigh_l"
+  },
+  {
+   "name": "calf_twist_01_l",
+   "parent": "calf_l"
+  },
+  {
+   "name": "foot_l",
+   "parent": "calf_l"
+  },
+  {
+   "name": "ball_l",
+   "parent": "foot_l"
+  },
+  {
+   "name": "kneeAttach_l",
+   "parent": "calf_l"
+  },
+  {
+   "name": "thigh_r",
+   "parent": "pelvis"
+  },
+  {
+   "name": "thigh_twist_01_r",
+   "parent": "thigh_r"
+  },
+  {
+   "name": "calf_r",
+   "parent": "thigh_r"
+  },
+  {
+   "name": "calf_twist_01_r",
+   "parent": "calf_r"
+  },
+  {
+   "name": "foot_r",
+   "parent": "calf_r"
+  },
+  {
+   "name": "ball_r",
+   "parent": "foot_r"
+  },
+  {
+   "name": "kneeAttach_r",
+   "parent": "calf_r"
+  },
+  {
+   "name": "spine_01",
+   "parent": "pelvis"
+  },
+  {
+   "name": "spine_02",
+   "parent": "spine_01"
+  },
+  {
+   "name": "spine_03",
+   "parent": "spine_02"
+  },
+  {
+   "name": "neck_01",
+   "parent": "spine_03"
+  },
+  {
+   "name": "head",
+   "parent": "neck_01"
+  },
+  {
+   "name": "headAttach",
+   "parent": "head"
+  },
+  {
+   "name": "jaw",
+   "parent": "head"
+  },
+  {
+   "name": "faceAttach",
+   "parent": "head"
+  },
+  {
+   "name": "eye_l",
+   "parent": "head"
+  },
+  {
+   "name": "eyeLight_l",
+   "parent": "head"
+  },
+  {
+   "name": "eye_r",
+   "parent": "head"
+  },
+  {
+   "name": "eyeLight_r",
+   "parent": "head"
+  },
+  {
+   "name": "clavicle_l",
+   "parent": "spine_03"
+  },
+  {
+   "name": "upperarm_l",
+   "parent": "clavicle_l"
+  },
+  {
+   "name": "upperarm_twist_01_l",
+   "parent": "upperarm_l"
+  },
+  {
+   "name": "lowerarm_l",
+   "parent": "upperarm_l"
+  },
+  {
+   "name": "lowerarm_twist_01_l",
+   "parent": "lowerarm_l"
+  },
+  {
+   "name": "hand_l",
+   "parent": "lowerarm_l"
+  },
+  {
+   "name": "index_01_l",
+   "parent": "hand_l"
+  },
+  {
+   "name": "index_02_l",
+   "parent": "index_01_l"
+  },
+  {
+   "name": "index_03_l",
+   "parent": "index_02_l"
+  },
+  {
+   "name": "middle_01_l",
+   "parent": "hand_l"
+  },
+  {
+   "name": "middle_02_l",
+   "parent": "middle_01_l"
+  },
+  {
+   "name": "middle_03_l",
+   "parent": "middle_02_l"
+  },
+  {
+   "name": "ring_01_l",
+   "parent": "hand_l"
+  },
+  {
+   "name": "ring_02_l",
+   "parent": "ring_01_l"
+  },
+  {
+   "name": "ring_03_l",
+   "parent": "ring_02_l"
+  },
+  {
+   "name": "pinky_01_l",
+   "parent": "hand_l"
+  },
+  {
+   "name": "pinky_02_l",
+   "parent": "pinky_01_l"
+  },
+  {
+   "name": "pinky_03_l",
+   "parent": "pinky_02_l"
+  },
+  {
+   "name": "thumb_01_l",
+   "parent": "hand_l"
+  },
+  {
+   "name": "thumb_02_l",
+   "parent": "thumb_01_l"
+  },
+  {
+   "name": "thumb_03_l",
+   "parent": "thumb_02_l"
+  },
+  {
+   "name": "prop_l",
+   "parent": "hand_l"
+  },
+  {
+   "name": "elbowAttach_l",
+   "parent": "lowerarm_l"
+  },
+  {
+   "name": "shoulderAttach_l",
+   "parent": "clavicle_l"
+  },
+  {
+   "name": "backAttach",
+   "parent": "spine_03"
+  },
+  {
+   "name": "clavicle_r",
+   "parent": "spine_03"
+  },
+  {
+   "name": "upperarm_r",
+   "parent": "clavicle_r"
+  },
+  {
+   "name": "upperarm_twist_01_r",
+   "parent": "upperarm_r"
+  },
+  {
+   "name": "lowerarm_r",
+   "parent": "upperarm_r"
+  },
+  {
+   "name": "lowerarm_twist_01_r",
+   "parent": "lowerarm_r"
+  },
+  {
+   "name": "hand_r",
+   "parent": "lowerarm_r"
+  },
+  {
+   "name": "index_01_r",
+   "parent": "hand_r"
+  },
+  {
+   "name": "index_02_r",
+   "parent": "index_01_r"
+  },
+  {
+   "name": "index_03_r",
+   "parent": "index_02_r"
+  },
+  {
+   "name": "middle_01_r",
+   "parent": "hand_r"
+  },
+  {
+   "name": "middle_02_r",
+   "parent": "middle_01_r"
+  },
+  {
+   "name": "middle_03_r",
+   "parent": "middle_02_r"
+  },
+  {
+   "name": "ring_01_r",
+   "parent": "hand_r"
+  },
+  {
+   "name": "ring_02_r",
+   "parent": "ring_01_r"
+  },
+  {
+   "name": "ring_03_r",
+   "parent": "ring_02_r"
+  },
+  {
+   "name": "pinky_01_r",
+   "parent": "hand_r"
+  },
+  {
+   "name": "pinky_02_r",
+   "parent": "pinky_01_r"
+  },
+  {
+   "name": "pinky_03_r",
+   "parent": "pinky_02_r"
+  },
+  {
+   "name": "thumb_01_r",
+   "parent": "hand_r"
+  },
+  {
+   "name": "thumb_02_r",
+   "parent": "thumb_01_r"
+  },
+  {
+   "name": "thumb_03_r",
+   "parent": "thumb_02_r"
+  },
+  {
+   "name": "prop_r",
+   "parent": "hand_r"
+  },
+  {
+   "name": "elbowAttach_r",
+   "parent": "lowerarm_r"
+  },
+  {
+   "name": "shoulderAttach_r",
+   "parent": "clavicle_r"
+  },
+  {
+   "name": "ik_hand_root",
+   "parent": "root"
+  },
+  {
+   "name": "ik_hand_gun",
+   "parent": "ik_hand_root"
+  },
+  {
+   "name": "ik_hand_l",
+   "parent": "ik_hand_gun"
+  },
+  {
+   "name": "ik_hand_r",
+   "parent": "ik_hand_gun"
+  },
+  {
+   "name": "ik_foot_root",
+   "parent": "root"
+  },
+  {
+   "name": "ik_foot_l",
+   "parent": "ik_foot_root"
+  },
+  {
+   "name": "ik_foot_r",
+   "parent": "ik_foot_root"
+  }
+ ],
+ "attach_bone_movement": {
+  "_about": "How far Sidekick moves each attach bone at 100 % of a body shape (sk_blend_shape_rig_movement): Unity local metres and Euler degrees in the bone's parent space. The game bakes the same table (CharacterDataBaker.BuildJointOffsets).",
+  "backAttach": {
+   "masculineFeminine": {
+    "offset_m": [
+     0.0,
+     -0.01,
+     0.0
+    ],
+    "rotation_deg": [
+     0.0,
+     0.0,
+     0.0
+    ]
+   },
+   "defaultHeavy": {
+    "offset_m": [
+     0.0,
+     0.08,
+     0.0
+    ],
+    "rotation_deg": [
+     8.0,
+     0.0,
+     0.0
+    ]
+   },
+   "defaultSkinny": {
+    "offset_m": [
+     0.0,
+     -0.01,
+     0.0
+    ],
+    "rotation_deg": [
+     0.0,
+     0.0,
+     0.0
+    ]
+   },
+   "defaultBuff": {
+    "offset_m": [
+     -0.04,
+     0.04,
+     0.0
+    ],
+    "rotation_deg": [
+     356.0,
+     0.0,
+     0.0
+    ]
+   }
+  },
+  "hipAttachFront": {
+   "masculineFeminine": {
+    "offset_m": [
+     0.0,
+     -0.005,
+     0.0
+    ],
+    "rotation_deg": [
+     0.0,
+     0.0,
+     0.0
+    ]
+   },
+   "defaultHeavy": {
+    "offset_m": [
+     0.06,
+     0.15,
+     0.0
+    ],
+    "rotation_deg": [
+     15.0,
+     0.0,
+     0.0
+    ]
+   },
+   "defaultSkinny": {
+    "offset_m": [
+     0.0,
+     -0.007,
+     0.0
+    ],
+    "rotation_deg": [
+     0.0,
+     0.0,
+     0.0
+    ]
+   },
+   "defaultBuff": {
+    "offset_m": [
+     0.0,
+     0.013,
+     0.0
+    ],
+    "rotation_deg": [
+     2.0,
+     0.0,
+     0.0
+    ]
+   }
+  },
+  "elbowAttach_l": {
+   "defaultHeavy": {
+    "offset_m": [
+     0.0,
+     0.025,
+     0.0
+    ],
+    "rotation_deg": [
+     0.0,
+     0.0,
+     0.0
+    ]
+   },
+   "masculineFeminine": {
+    "offset_m": [
+     0.0,
+     -0.01,
+     0.0
+    ],
+    "rotation_deg": [
+     0.0,
+     0.0,
+     0.0
+    ]
+   },
+   "defaultSkinny": {
+    "offset_m": [
+     0.0,
+     -0.015,
+     0.01
+    ],
+    "rotation_deg": [
+     0.0,
+     2.0,
+     0.0
+    ]
+   },
+   "defaultBuff": {
+    "offset_m": [
+     0.0,
+     0.06,
+     0.02
+    ],
+    "rotation_deg": [
+     13.0,
+     0.0,
+     0.0
+    ]
+   }
+  },
+  "elbowAttach_r": {
+   "defaultHeavy": {
+    "offset_m": [
+     0.0,
+     0.035,
+     0.0
+    ],
+    "rotation_deg": [
+     0.0,
+     0.0,
+     0.0
+    ]
+   },
+   "masculineFeminine": {
+    "offset_m": [
+     0.0,
+     -0.01,
+     0.0
+    ],
+    "rotation_deg": [
+     0.0,
+     0.0,
+     0.0
+    ]
+   },
+   "defaultSkinny": {
+    "offset_m": [
+     0.0,
+     -0.015,
+     0.01
+    ],
+    "rotation_deg": [
+     0.0,
+     358.0,
+     0.0
+    ]
+   },
+   "defaultBuff": {
+    "offset_m": [
+     0.0,
+     0.06,
+     0.02
+    ],
+    "rotation_deg": [
+     13.0,
+     0.0,
+     0.0
+    ]
+   }
+  },
+  "shoulderAttach_l": {
+   "defaultHeavy": {
+    "offset_m": [
+     -0.04,
+     0.01,
+     0.028
+    ],
+    "rotation_deg": [
+     0.0,
+     0.0,
+     0.0
+    ]
+   },
+   "masculineFeminine": {
+    "offset_m": [
+     0.01,
+     0.0,
+     -0.015
+    ],
+    "rotation_deg": [
+     0.0,
+     0.0,
+     0.0
+    ]
+   },
+   "defaultSkinny": {
+    "offset_m": [
+     0.015,
+     0.0,
+     -0.01
+    ],
+    "rotation_deg": [
+     0.0,
+     0.0,
+     0.0
+    ]
+   },
+   "defaultBuff": {
+    "offset_m": [
+     -0.03,
+     0.0,
+     0.05
+    ],
+    "rotation_deg": [
+     0.0,
+     0.0,
+     0.0
+    ]
+   }
+  },
+  "shoulderAttach_r": {
+   "defaultHeavy": {
+    "offset_m": [
+     -0.04,
+     -0.01,
+     0.028
+    ],
+    "rotation_deg": [
+     0.0,
+     0.0,
+     0.0
+    ]
+   },
+   "masculineFeminine": {
+    "offset_m": [
+     0.01,
+     0.0,
+     -0.015
+    ],
+    "rotation_deg": [
+     0.0,
+     0.0,
+     0.0
+    ]
+   },
+   "defaultSkinny": {
+    "offset_m": [
+     0.015,
+     0.0,
+     -0.01
+    ],
+    "rotation_deg": [
+     0.0,
+     0.0,
+     0.0
+    ]
+   },
+   "defaultBuff": {
+    "offset_m": [
+     -0.03,
+     0.0,
+     0.05
+    ],
+    "rotation_deg": [
+     0.0,
+     0.0,
+     0.0
+    ]
+   }
+  },
+  "hipAttachBack": {
+   "defaultBuff": {
+    "offset_m": [
+     -0.01,
+     -0.02,
+     0.0
+    ],
+    "rotation_deg": [
+     0.0,
+     0.0,
+     0.0
+    ]
+   },
+   "defaultHeavy": {
+    "offset_m": [
+     0.005,
+     -0.14,
+     0.0
+    ],
+    "rotation_deg": [
+     352.0,
+     0.0,
+     0.0
+    ]
+   },
+   "defaultSkinny": {
+    "offset_m": [
+     0.0,
+     0.005,
+     0.0
+    ],
+    "rotation_deg": [
+     0.0,
+     0.0,
+     0.0
+    ]
+   },
+   "masculineFeminine": {
+    "offset_m": [
+     0.0,
+     -0.015,
+     0.0
+    ],
+    "rotation_deg": [
+     3.0,
+     0.0,
+     0.0
+    ]
+   }
+  },
+  "hipAttach_l": {
+   "defaultHeavy": {
+    "offset_m": [
+     0.0,
+     0.0,
+     0.13
+    ],
+    "rotation_deg": [
+     0.0,
+     0.0,
+     0.0
+    ]
+   },
+   "defaultSkinny": {
+    "offset_m": [
+     0.0,
+     0.0,
+     -0.01
+    ],
+    "rotation_deg": [
+     0.0,
+     0.0,
+     0.0
+    ]
+   },
+   "defaultBuff": {
+    "offset_m": [
+     0.0,
+     0.0,
+     0.015
+    ],
+    "rotation_deg": [
+     0.0,
+     0.0,
+     0.0
+    ]
+   },
+   "masculineFeminine": {
+    "offset_m": [
+     0.0,
+     0.0,
+     0.005
+    ],
+    "rotation_deg": [
+     0.0,
+     0.0,
+     0.0
+    ]
+   }
+  },
+  "hipAttach_r": {
+   "defaultSkinny": {
+    "offset_m": [
+     0.0,
+     0.0,
+     0.008
+    ],
+    "rotation_deg": [
+     0.0,
+     0.0,
+     0.0
+    ]
+   },
+   "defaultBuff": {
+    "offset_m": [
+     0.0,
+     0.0,
+     -0.01
+    ],
+    "rotation_deg": [
+     0.0,
+     0.0,
+     0.0
+    ]
+   },
+   "masculineFeminine": {
+    "offset_m": [
+     0.0,
+     0.0,
+     -0.005
+    ],
+    "rotation_deg": [
+     0.0,
+     0.0,
+     0.0
+    ]
+   },
+   "defaultHeavy": {
+    "offset_m": [
+     0.0,
+     0.0,
+     -0.13
+    ],
+    "rotation_deg": [
+     0.0,
+     0.0,
+     0.0
+    ]
+   }
+  },
+  "kneeAttach_l": {
+   "defaultHeavy": {
+    "offset_m": [
+     0.0,
+     -0.015,
+     0.0
+    ],
+    "rotation_deg": [
+     0.0,
+     20.0,
+     0.0
+    ]
+   },
+   "defaultSkinny": {
+    "offset_m": [
+     0.0,
+     0.01,
+     0.0
+    ],
+    "rotation_deg": [
+     0.0,
+     0.0,
+     0.0
+    ]
+   },
+   "defaultBuff": {
+    "offset_m": [
+     0.0,
+     -0.002,
+     0.0
+    ],
+    "rotation_deg": [
+     0.0,
+     0.0,
+     0.0
+    ]
+   }
+  },
+  "kneeAttach_r": {
+   "defaultHeavy": {
+    "offset_m": [
+     0.0,
+     0.015,
+     0.0
+    ],
+    "rotation_deg": [
+     0.0,
+     0.0,
+     15.0
+    ]
+   },
+   "defaultSkinny": {
+    "offset_m": [
+     0.0,
+     -0.01,
+     0.0
+    ],
+    "rotation_deg": [
+     0.0,
+     0.0,
+     0.0
+    ]
+   },
+   "defaultBuff": {
+    "offset_m": [
+     0.0,
+     0.002,
+     0.0
+    ],
+    "rotation_deg": [
+     0.0,
+     0.0,
+     0.0
+    ]
+   }
+  }
+ }
+}

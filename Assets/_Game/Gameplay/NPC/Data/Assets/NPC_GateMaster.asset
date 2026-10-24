@@ -16,6 +16,17 @@ MonoBehaviour:
   displayName: Wayfinder
   title: "Deep Vault \xB7 Transit"
   greeting: Every road starts here. So does everything you want waiting at the end of one.
+  lines:
+  - text: Every road starts here. So does everything you want waiting at the end of one.
+    clip: {fileID: 8300000, guid: 87126c45013ac8b45a416d8f18e9fd57, type: 3}
+  - text: Your Deep Vault is shared by every character you play.
+    clip: {fileID: 8300000, guid: 14866bc3a5d6f03448bd31b0c03196e5, type: 3}
+  - text: Roads run out from Concord in every direction. Mind where they lead.
+    clip: {fileID: 8300000, guid: 447610f917e1b34428460bb576d07509, type: 3}
+  - text: Store it here once, and any of your characters can take it out.
+    clip: {fileID: 8300000, guid: 8d862b8fb10a2d740bc40984f87ac625, type: 3}
+  - text: Your account remembers. So do I.
+    clip: {fileID: 8300000, guid: 18c48e08226718d42a7ff76d57809bf1, type: 3}
   services: 'Opens your Deep Vault: storage shared by every character of your account. Transit to other zones comes later.'
   offers: 2
   interactRange: 3

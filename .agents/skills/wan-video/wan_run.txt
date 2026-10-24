@@ -1,0 +1,41 @@
+[01:09:34] KitsuneFox_Wan_v01: 1280x704, 121 frames (5.0 s at 24 fps), 20 steps
+[01:09:51] Starting ComfyUI in the background (log: .work/comfyui.log)...
+[01:10:18]   waiting for ComfyUI (27 s): [32m[INFO][0m [ComfyUI-Manager] default cache updated: https://raw.githubusercontent.com/ltdrdata/ComfyUI-Manager/main/extension-node-map.json
+[01:10:23] ComfyUI up: cuda:0 NVIDIA GeForce RTX 5070 Ti : cudaMallocAsync, VRAM 15.9 GB
+[01:10:23] Queued (prompt aeee661c). Reporting every 10 s.
+[01:10:33]   running 10 s: [32m[INFO][0m Using MixedPrecisionOps for text encoder
+[01:10:43]   running 20 s:   0%|          | 0/20 [00:00<?, ?it/s]
+[01:10:53]   running 30 s:   0%|          | 0/20 [00:00<?, ?it/s]
+[01:11:03]   running 40 s:  10%|█         | 2/20 [00:20<02:41,  8.98s/it]
+[01:11:13]   running 50 s:  10%|█         | 2/20 [00:20<02:41,  8.98s/it]
+[01:11:23]   running 60 s:  10%|█         | 2/20 [00:20<02:41,  8.98s/it]
+[01:11:33]   running 70 s:  20%|██        | 4/20 [00:47<02:57, 11.07s/it]
+[01:11:43]   running 80 s:  20%|██        | 4/20 [00:47<02:57, 11.07s/it]
+[01:11:53]   running 90 s:  25%|██▌       | 5/20 [01:00<02:58, 11.90s/it]
+[01:12:03]   running 100 s:  30%|███       | 6/20 [01:14<02:54, 12.43s/it]
+[01:12:13]   running 110 s:  35%|███▌      | 7/20 [01:27<02:45, 12.75s/it]
+[01:12:23]   running 120 s:  35%|███▌      | 7/20 [01:27<02:45, 12.75s/it]
+[01:12:33]   running 130 s:  40%|████      | 8/20 [01:41<02:35, 12.95s/it]
+[01:12:43]   running 140 s:  45%|████▌     | 9/20 [01:54<02:23, 13.09s/it]
+[01:12:53]   running 150 s:  50%|█████     | 10/20 [02:07<02:11, 13.17s/it]
+[01:13:03]   running 160 s: [32m[INFO][0m [ComfyUI-Manager] All startup tasks have been completed.
+[01:13:13]   running 170 s:  55%|█████▌    | 11/20 [02:21<01:59, 13.24s/it]
+[01:13:23]   running 180 s:  60%|██████    | 12/20 [02:34<01:46, 13.30s/it]
+[01:13:33]   running 190 s:  65%|██████▌   | 13/20 [02:48<01:33, 13.33s/it]
+[01:13:43]   running 200 s:  65%|██████▌   | 13/20 [02:48<01:33, 13.33s/it]
+[01:13:53]   running 210 s:  70%|███████   | 14/20 [03:01<01:20, 13.35s/it]
+[01:14:03]   running 220 s:  75%|███████▌  | 15/20 [03:14<01:06, 13.37s/it]
+[01:14:13]   running 230 s:  80%|████████  | 16/20 [03:28<00:53, 13.38s/it]
+[01:14:23]   running 240 s:  80%|████████  | 16/20 [03:28<00:53, 13.38s/it]
+[01:14:33]   running 250 s:  85%|████████▌ | 17/20 [03:41<00:40, 13.38s/it]
+[01:14:43]   running 260 s:  90%|█████████ | 18/20 [03:55<00:26, 13.40s/it]
+[01:14:53]   running 270 s:  95%|█████████▌| 19/20 [04:08<00:13, 13.39s/it]
+[01:15:03]   running 280 s:  95%|█████████▌| 19/20 [04:08<00:13, 13.39s/it]
+[01:15:13]   running 290 s:  95%|█████████▌| 19/20 [04:08<00:13, 13.39s/it]
+[01:15:23]   running 300 s: [32m[INFO][0m Model WanVAE prepared for dynamic VRAM loading. 1344MB Staged. 0 patches attached. Force pre-loaded 54 weights: 69 KB.
+[01:15:33]   running 310 s: [32m[INFO][0m Model WanVAE prepared for dynamic VRAM loading. 1344MB Staged. 0 patches attached. Force pre-loaded 54 weights: 69 KB.
+[01:15:43]   running 320 s: [32m[INFO][0m Model WanVAE prepared for dynamic VRAM loading. 1344MB Staged. 0 patches attached. Force pre-loaded 54 weights: 69 KB.
+[01:15:53]   running 330 s: [32m[INFO][0m Model WanVAE prepared for dynamic VRAM loading. 1344MB Staged. 0 patches attached. Force pre-loaded 54 weights: 69 KB.
+[01:16:03] Frames done in 340 s. Encoding the MP4...
+[01:16:05] Saved C:\Users\dlaco\Krytical Nova II\Assets\_ArtSource\Video~\WanTest_2026-10-20\KitsuneFox_Wan_v01.mp4 (121 frames)
+RESULT {"mp4": "C:\\Users\\dlaco\\Krytical Nova II\\Assets\\_ArtSource\\Video~\\WanTest_2026-10-20\\KitsuneFox_Wan_v01.mp4", "frames": 121, "size": [1280, 704], "seconds": 5.04}

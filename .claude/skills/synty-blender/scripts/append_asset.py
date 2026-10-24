@@ -1,6 +1,6 @@
 """Bring a finished asset from its own .blend into the open scene (a copy; the asset's file is not changed).
 
-  run_blender.py --live append_asset.py --from Assets/_ArtSource/Blender~/Pets/KitsuneSpirit/SM_Pet_KitsuneSpirit_S1.blend
+  run_blender.py --live append_asset.py --from "G:/My Drive/KryticalNova/Art/Blender/Pets/KitsuneSpirit/SM_Pet_KitsuneSpirit_S1.blend"
 
 Brings the meshes, the rig that drives them, the rig's control shapes (kept in a hidden collection) and its
 actions. Left behind: "<name>_source" originals (they carry the heavy scan texture) and metarigs.

@@ -1,0 +1,41 @@
+<h2>Code changes</h2>
+<p>What has to change so a vendor says a different line each time a player walks up, and speaks it. Traced through the code on 23 Oct 2026; nothing here is built yet. Today one greeting goes <code>NpcDefinition.greeting</code> → <code>NpcInteractable.Greeting</code> → <code>INpcDialogueSource</code> (Core) → <code>NpcInteractionUI.ShowDialogue</code>, which prints it. No NPC plays a sound.</p>
+
+<h3>1. The data: more than one line, each with its sound</h3>
+<ul>
+  <li><code>Gameplay/NPC/Runtime/NpcDefinition.cs</code>: add a small <code>NpcLine</code> (the text and its <code>AudioClip</code>) and a <code>NpcLine[] lines</code> list. Keep <code>greeting</code> as the fallback when the list is empty, so every NPC asset keeps working before its lines arrive.</li>
+  <li>This is design data in a ScriptableObject, not a player save, so no save migration is needed.</li>
+</ul>
+
+<h3>2. Picking a line each visit</h3>
+<ul>
+  <li><code>Gameplay/NPC/Runtime/NpcInteractable.cs</code>: in <code>Interact</code>, pick one line before opening the dialogue, at random but never the same one twice in a row (remember the last one picked). Put the picker in a small pure function so a test can check it.</li>
+  <li>Each player's own game picks its own line. The dialogue only happens on that player's screen, so nothing goes over the network and the server is not involved.</li>
+</ul>
+
+<h3>3. Passing the sound to the window</h3>
+<ul>
+  <li><code>Core/Runtime/INpcDialogueSink.cs</code>: <code>INpcDialogueSource.Greeting</code> returns the picked line's text; add <code>AudioClip GreetingClip</code> for its sound. Core already uses Unity types (Vector3, Transform), so this keeps the layer rules: the NPC system implements it, the UI reads it, and neither calls the other directly.</li>
+</ul>
+
+<h3>4. Playing it</h3>
+<ul>
+  <li><code>UI/Runtime/NpcInteractionUI.cs</code>, <code>ShowDialogue</code>: show the picked text (it already does) and play its clip on one AudioSource of its own. Stop the clip when the dialogue closes or another NPC is opened, so two vendors never talk over each other.</li>
+  <li><code>Audio/Mixers/KN_Main.mixer</code>: add a <b>Voice</b> group (it has Master, Music, Sfx, Ambience and UI today) with an exposed <code>VoiceVolume</code>, and send the dialogue's AudioSource to it.</li>
+  <li><code>UI/Runtime/Settings/AudioPreferences.cs</code>: add <code>Voice</code> at the end of <code>AudioChannel</code> (after Interface, so the saved volumes keep their places), <code>"voice"</code> to <code>Keys</code> and <code>"VoiceVolume"</code> to <code>Parameters</code>.</li>
+  <li><b>Voices starts at 50 %, like every other sound</b> (owner, 23 Oct 2026). Nothing extra is needed for that: <code>Get</code> already returns <code>DefaultVolume</code> (0.5) for a volume the player has never set, and <b>Reset to defaults</b> walks the same <code>Keys</code>. Leave <code>VolumeDefaultsVersion</code> alone: raising it would reset every player's other volumes too.</li>
+  <li><code>UI/Runtime/Settings/AudioSettingsTab.cs</code>: add <code>(AudioChannel.Voice, "Voices")</code> to its <code>Channels</code> list. The VOLUME section builds one slider per entry, so the Voices slider appears under Interface and the player can turn it up or down like the others.</li>
+</ul>
+
+<h3>5. Getting the picks into the project</h3>
+<ul>
+  <li>A new Editor tool, <code>Gameplay/NPC/Editor/NpcVoiceImporter.cs</code> (menu Krytical Nova ▸ NPC ▸ Import Voice Lines). It reads this page's picks, copies only the picked voice's kept lines from Drive into <code>Assets/_Game/Audio/Voices/NPC/&lt;Vendor&gt;/</code> as compressed clips, and fills each <code>NPC_*.asset</code>'s line list (text and clip). About 85 short clips, a few MB, committed once.</li>
+  <li><code>World/Editor/Zone01Setup.cs</code>: <code>NpcSeed.Greeting</code> becomes a list of lines, and <b>Refresh NPC Text From Seeds</b> writes the texts, so a rebuild of Concord keeps them.</li>
+</ul>
+
+<h3>6. Checks</h3>
+<ul>
+  <li>An EditMode test for the picker: it never repeats and reaches every line.</li>
+  <li><code>dependency_map.py --check</code> and <code>compile_check.py</code> (game and server) before the commit; the server build gets no sound clips it can't use.</li>
+  <li>Play: walk up to a vendor several times and hear a different line each time, with the Voices slider working. Check it with a second client as well.</li>
+</ul>

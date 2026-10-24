@@ -66,7 +66,10 @@ namespace KryticalNova.NPC
         public string displayName = "Villager";
         [Tooltip("Shown under the name on the nameplate and in the dialogue header.")]
         public string title = "";
+        [Tooltip("Shown when the NPC has no lines below.")]
         [TextArea(2, 4)] public string greeting = "";
+        [Tooltip("What the NPC says when a player walks up, spoken in its voice: one each time, never the same twice in a row.")]
+        public NpcLine[] lines = new NpcLine[0];
         [Tooltip("Placeholder description of what this NPC will offer once its systems exist.")]
         [TextArea(3, 8)] public string services = "";
         [Tooltip("Working services: each adds a button to this NPC's dialogue.")]

@@ -1,0 +1,35 @@
+{
+ "batch": "Vol3_Flow_2026-10-21",
+ "title": "Krytical Nova - Volume 3 (Flow)",
+ "note": "Volume 3 (owner, 21 Oct 2026): one Selection theme per faction skin (the two kept and two takes of a third), and a wide spread of Cadence fight music so fights always feel exciting: faction flavours, hyperpop rush, half-time boss weight and breakbeat brawls. All from Flow (Lyria 3.5). New takes play from Flow's preview files; the full-quality WAVs replace them before anything goes in the game.",
+ "slots": [
+  {"slot": "title", "order": 1, "place": "Title screen (kept)", "scene": "Scenes/MainMenu/Title.unity",
+   "when": "Starts on the logo glitch and loops under the owner's cover painting.",
+   "ends": "Pressing a key plays the Title outro; the theme fades out over 2 s.", "kind": "loop", "fade_out": 2.0},
+  {"slot": "title_out", "order": 2, "place": "Title outro sting (kept)", "scene": "Scenes/MainMenu/Title.unity",
+   "when": "The moment the player presses a key on the title page.", "ends": "Rings out under the Selection theme.", "kind": "sting"},
+  {"slot": "select", "order": 3, "place": "Selection theme: one per faction skin", "scene": "FactionSelect / CharacterSelect / CharacterCreator",
+   "when": "Each faction's skin (Hegemony, Null, Covenant) gets its own Selection track. Keep three: the two kept from Volume 2 are marked; pick the third from Character Select III and its variation, and write in the notes which faction each one belongs to.",
+   "ends": "Fades out over 3 s when the world starts loading.", "kind": "loop", "fade_in": 1.5, "follows": "title"},
+  {"slot": "concord_idle", "order": 4, "place": "Concord, out of a fight (kept)", "scene": "Scenes/World/Towns/Zone01_StarterTown.unity",
+   "when": "Walking about the truce town.", "ends": "Drops out on the next bar when a fight starts.", "kind": "loop"},
+  {"slot": "callout_fight", "order": 5, "place": "Cadence fight music: Callouts now, every fight later", "scene": "MusicConductor / CombatMusicPlayer (ZoneMusic list)",
+   "when": "Any fight: Callouts today, then Hostiles, wars, the Scar and Beacon Wars (owner, 21 Oct). The zone's list plays round and round, so the more good tracks, the less a fight repeats. Keep every one you like (Keep marks one; use Maybe for all the others you want).",
+   "ends": "Fades out over 2.5 s, 6 s after the last blow.", "kind": "fight", "click": true}
+ ],
+ "previews": [
+  {"id": "title_to_select", "label": "Title, press a key, Selection theme", "from": "title", "sting": "title_out", "to": "select",
+   "from_at": 24, "hold": 8, "fade_out": 2.0, "fade_in": 1.5},
+  {"id": "idle_to_callout", "label": "Walking in Concord, then a fight starts", "from": "concord_idle", "to": "callout_fight",
+   "from_at": 16, "hold": 8, "fade_out": 1.0, "fade_in": 0.6, "on_bar": true}
+ ],
+ "cues": [
+  {"id": "TitleTheme", "slot": "title", "bpm": 96, "key": "D minor", "seconds": 120, "tags": "Kept (Vol 1, TitleTheme_t3)."},
+  {"id": "TitleOutro", "slot": "title_out", "bpm": 96, "key": "D minor", "seconds": 10, "tags": "Kept (Vol 1, TitleOutro_t1)."},
+  {"id": "SelectBed", "slot": "select", "bpm": 100, "key": "D minor", "seconds": 120,
+   "tags": "Third theme: Instrumental only, no vocals, no lyrics, no voices of any kind. Video game character select menu music, third theme of a set, darker and heavier than the others: epic war-drum djent meets trap, 100 BPM, D minor, 4/4. Huge tribal war drums and deep toms under heavy palm-muted 7-string guitar chugs locked to the kick, deep 808 sub bass, rolling trap hi-hats, a soaring lead guitar melody with a bowed-string feel, wide cinematic pads, defiant and heroic, mid intensity. Never jazz, never lo-fi, never cartoonish."},
+  {"id": "ConcordIdle", "slot": "concord_idle", "bpm": 110, "key": "F major", "seconds": 120, "tags": "Kept (Vol 2, Heroes Gathering Plaza)."},
+  {"id": "CalloutFight", "slot": "callout_fight", "bpm": 150, "key": "various", "seconds": 120,
+   "tags": "Six flavours, two takes each, all with a steady unchanging beat for Cadence: Hegemony cyber-djent (150, E minor), Null industrial djent (145, C minor), Covenant folk-metal djent (155, D minor), hyperpop metal rush (160, F# minor), half-time trap metal boss (140, C# minor), big-beat breakbeat punk (155, A minor). Plus the three kept from Volumes 1 and 2."}
+ ]
+}

@@ -25,6 +25,10 @@ namespace KryticalNova.NPC
         [Tooltip("Optional animator to start at a random point so idles are not in sync.")]
         [SerializeField] private Animator animator;
 
+        // The line picked for this visit (-1: none, the greeting is shown). Each player's own game picks its own.
+        private int currentLine = -1;
+        private int lastLine = -1;
+
         private Quaternion homeRotation;
         private Quaternion targetRotation;
         private Vector3 interactPoint;
@@ -33,7 +37,17 @@ namespace KryticalNova.NPC
         public NpcDefinition Definition => definition;
         public string DisplayName => definition != null ? definition.displayName : name;
         public string Title => definition != null ? definition.title : string.Empty;
-        public string Greeting => definition != null ? definition.greeting : string.Empty;
+        public string Greeting => TryCurrentLine(out NpcLine line) && !string.IsNullOrEmpty(line.text)
+            ? line.text : definition != null ? definition.greeting : string.Empty;
+        public AudioClip GreetingClip => TryCurrentLine(out NpcLine line) ? line.clip : null;
+
+        private bool TryCurrentLine(out NpcLine line)
+        {
+            line = default;
+            if (definition == null || definition.lines == null || currentLine < 0 || currentLine >= definition.lines.Length) return false;
+            line = definition.lines[currentLine];
+            return true;
+        }
         public string Services => definition != null ? definition.services : string.Empty;
         public NpcOffer Offers => definition != null ? definition.offers : NpcOffer.None;
         public float InteractRange => definition != null ? definition.interactRange : 3f;
@@ -130,8 +144,17 @@ namespace KryticalNova.NPC
             if (toPlayer.sqrMagnitude > 0.01f)
                 targetRotation = Quaternion.LookRotation(toPlayer, Vector3.up);
 
+            PickLine();
             // TODO(server): shops/quests will go through a server-validated RequestInteractServerRpc.
             ClientPresentationRegistry.Dialogue?.ShowDialogue(this, player.transform);
+        }
+
+        /// <summary>A different line from last time, if this NPC has lines (presentation only: nothing is sent).</summary>
+        private void PickLine()
+        {
+            int count = definition != null && definition.lines != null ? definition.lines.Length : 0;
+            currentLine = NpcLinePicker.Next(count, lastLine, max => UnityEngine.Random.Range(0, max));
+            if (currentLine >= 0) lastLine = currentLine;
         }
 
         /// <summary>Called by the dialogue panel when it closes, so the NPC turns back to its post.</summary>
