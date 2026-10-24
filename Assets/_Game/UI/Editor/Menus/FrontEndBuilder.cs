@@ -864,6 +864,33 @@ namespace KryticalNova.EditorTools
             SetRef(showroom, "progression", AssetDatabase.LoadAssetAtPath<KryticalNova.Items.GearProgressionSettings>(PlayerSystemsSetup.GearProgressionPath));
         }
 
+        private const string HeightReferenceTreePath = "Assets/Synty/PolygonFantasyKingdom/Prefabs/Environments/SM_Env_Tree_Round_01.prefab";
+
+        /// <summary>The height ruler's tree and material (owner, 24 Oct 2026: a ruler with a tree for scale in the creator).</summary>
+        public static void WireHeightRuler(CharacterShowroom showroom)
+        {
+            SetRef(showroom, "heightReferenceTree", AssetDatabase.LoadAssetAtPath<GameObject>(HeightReferenceTreePath));
+            SetRef(showroom, "heightRulerMaterial", EnsureMaterial("M_Showroom_HeightRuler", "Universal Render Pipeline/Unlit",
+                m => m.SetColor("_BaseColor", Color.white)));
+        }
+
+        /// <summary>Wires the height ruler into the creator scene as it is, without building the scene again.</summary>
+        [MenuItem("Krytical Nova/Menus/Wire Creator Height Ruler")]
+        public static void WireCreatorHeightRuler()
+        {
+            string path = $"{SceneFolder}/{KryticalNova.UI.Menus.FrontEnd.CharacterCreatorScene}.unity";
+            var scene = UnityEditor.SceneManagement.EditorSceneManager.OpenScene(path, UnityEditor.SceneManagement.OpenSceneMode.Additive);
+            try
+            {
+                foreach (var root in scene.GetRootGameObjects())
+                foreach (var showroom in root.GetComponentsInChildren<CharacterShowroom>(true))
+                    WireHeightRuler(showroom);
+                UnityEditor.SceneManagement.EditorSceneManager.SaveScene(scene);
+                Debug.Log($"[FrontEnd] Height ruler wired into {path}.");
+            }
+            finally { UnityEditor.SceneManagement.EditorSceneManager.CloseScene(scene, true); }
+        }
+
         /// <summary>The lit stage the live character stands on, shared by the creator and character select.</summary>
         private static CharacterShowroom AddShowroom(Camera camera, CharacterCreationDatabase database, float screenShiftX)
         {
@@ -914,6 +941,7 @@ namespace KryticalNova.EditorTools
             SetRef(showroom, "viewCamera", camera);
             SetRef(showroom, "stage", stage);
             SetRef(showroom, "rimLight", rim);
+            WireHeightRuler(showroom);
             SetRef(showroom, "fillLight", fill);
             var so = new SerializedObject(showroom);
             so.FindProperty("screenShiftX").floatValue = screenShiftX;

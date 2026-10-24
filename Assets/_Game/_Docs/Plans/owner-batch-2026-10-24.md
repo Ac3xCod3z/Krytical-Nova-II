@@ -67,9 +67,14 @@ so you can correct me early.
       Concord's river: fell in at level 1 (-45 of 300 HP, out on the shore), stood on the water at level 60, jumped back
       to land. The splash sound is the water step over the landing thud for now; a heavy one can be picked with Sound
       Scout.
-- [ ] **Character creator, proportions page.** *Understood:* while on the page with height, bust and butt sliders the
+- [x] **Character creator, proportions page.** *Understood:* while on the page with height, bust and butt sliders the
       character wears the bare outfit so the change shows best. While adjusting height only, a height ruler stands
       beside them with something from the world for scale (a tree), and a note under it says it is there for reference.
+      *Owner, 24 Oct:* the outfit is a **toggle** on that page (bare or clothed, to help decide), and the camera may
+      zoom out slightly while the height changes. *Built:* an **Outfit: Bare / Clothed** row on the Body tab (starts
+      bare; every other tab shows the outfit); changing Height eases the camera back a little and shows a metre ruler
+      beside the character with the head height in gold, a 4 m tree behind, and the note under the ruler; it goes 2.5 s
+      after the last change. Played in the creator: 1.94 m tall, 1.64 m short.
 - [ ] **GM Tools window.** *Understood:* the World tab cannot change the time or anything else, and parts of the window
       are blacked out (boxes and text you cannot see), though most buttons still work. Fix the World tab and the drawing.
       *Owner, 24 Oct:* seen at least while in Play mode; check both in Play and out of it.

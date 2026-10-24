@@ -179,6 +179,18 @@ namespace KryticalNova.UI.Menus
             if (tab == Tab.Preview && next != Tab.Preview) ResetPreview();
             if (tab == Tab.Head && next != Tab.Head) ShowMouth(false);
             tab = next;
+            // The Body tab shows the body bare or clothed, as the player switches it (owner, 24 Oct 2026: a toggle, so they
+            // see themselves either way); every other tab shows the outfit. The ruler is the Body tab's.
+            if (showroom != null)
+            {
+                bool bare = next == Tab.Body && bodyBare;
+                if (!bare) showroom.HideHeightRuler();
+                if (showroom.Bare != bare)
+                {
+                    showroom.Bare = bare;
+                    Preview();
+                }
+            }
             for (int i = 0; i < tabButtons.Length; i++)
                 if (tabButtons[i] != null) tabButtons[i].SetSelected(TabOfButton(i) == next);
             SetActive(originSection, next == Tab.Origin || next == Tab.Discipline);
@@ -361,6 +373,17 @@ namespace KryticalNova.UI.Menus
             SetListTitle("Body");
             int row = 0;
             if (setup.builds.Count > 0 && row < optionRows.Length) optionRows[row++].Show("Build", BuildName, StepBuild);
+            // Bare or clothed while the proportions are set (owner, 24 Oct 2026); starts bare, the choice is kept.
+            if (row < optionRows.Length) optionRows[row++].Show("Outfit", () => bodyBare ? "Bare" : "Clothed", _ =>
+            {
+                bodyBare = !bodyBare;
+                if (showroom != null && tab == Tab.Body)
+                {
+                    showroom.Bare = bodyBare;
+                    Preview();
+                }
+                RefreshOptionRows();
+            });
             HideOptionRows(row);
             if (sliderRows.Length > 0)
                 sliderRows[0].Show("Body Size", "Slim", "Heavy", -100f, 100f, recipe.build, v => ShapeChanged(BuildSlider, (sbyte)v, recipe.muscle));
@@ -376,9 +399,17 @@ namespace KryticalNova.UI.Menus
             }
             else if (BodyHas("kn_defined"))
                 ShowSlider(slider++, "Definition", "Smooth", "Defined", recipe.defined, DefinedSlider, v => recipe.defined = v);
-            ShowSlider(slider++, "Height", "Short", "Tall", recipe.Height, HeightSlider, v => recipe.height = v);
+            // While the height changes, a ruler with a tree for scale stands beside the character (owner, 24 Oct 2026).
+            ShowSlider(slider++, "Height", "Short", "Tall", recipe.Height, HeightSlider, v =>
+            {
+                recipe.height = v;
+                if (showroom != null) showroom.ShowHeightRuler();
+            });
             for (int i = slider; i < sliderRows.Length; i++) sliderRows[i].Hide();
         }
+
+        // The Body tab's Outfit switch: the body shown bare (true) or in the basic outfit.
+        private bool bodyBare = true;
 
         private readonly Dictionary<(byte, string), bool> bodyKeys = new Dictionary<(byte, string), bool>();
 
