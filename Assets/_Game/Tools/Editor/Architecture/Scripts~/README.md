@@ -39,6 +39,17 @@ Two more scripts here let a refactor be checked in a worktree while the owner's 
 - `run_editmode_tests.py` runs the EditMode tests in a batch Unity, below normal priority and through the
   Accelerator, and reads out the results. The first run in a worktree imports the project; later runs are quick.
 
+Every run also checks the map against the compiler: each link it found in code must be allowed by the references the
+assemblies declare (a link none allows would not compile, so the map misread a name), and each declared reference
+between systems with no type named in code is listed. Those are either unused, and can go, or needed for a type reached
+through another assembly's member without its name being written (error CS0012 when removed): find out with
+`compile_check.py` after removing them. The page shows them dotted.
+
+The page's views: **Map** (Explore: hover or click a system for its links; Ripple: what a change to a system can reach,
+wave by wave, or what it needs; Path: the shortest chain of uses between two systems; layers can be hidden, Ctrl +
+wheel zooms), **Matrix** (who uses whom as a grid: a clean stack keeps every square above the diagonal), Problems,
+Systems, Hubs, Design data, Tests and How to read.
+
 `dependency_map.py --check` also guards the assets:
 - a script that prefabs, scenes or data assets hold must keep its `.meta` GUID and a class named like its file;
 - a class that `[SerializeReference]` entries name must keep its namespace and assembly, or carry `[MovedFrom]`.
