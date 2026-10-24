@@ -15,8 +15,8 @@ MonoBehaviour:
   sharpness: 5
   barLift: 1.4
   dip: 0.3
-  emissionBoost: 1.4
-  bloomBoost: 1.1
+  emissionBoost: 1
+  bloomBoost: 0.6
   lightBoost: 0.7
   lightRadius: 45
   lightRescanSeconds: 4

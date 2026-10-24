@@ -188,6 +188,8 @@ namespace KryticalNova.Progression
             else
             {
                 standaloneHealth = MaxHealth;
+                // A Strike Dummy (no player, no Hostile) never runs out (owner, 24 Oct 2026: permanently infinite).
+                if (IsStrikeDummy) infiniteHealth = true;
             }
 
             initialized = true;
@@ -383,10 +385,14 @@ namespace KryticalNova.Progression
             return true;
         }
 
+        /// <summary>A training dummy: neither a player nor a Hostile. Its health is always infinite.</summary>
+        public bool IsStrikeDummy => playerResources == null && !TryGetComponent(out IHostile _);
+
         public bool SetInfiniteHealth(bool value)
         {
             if (!initialized) InitializeEntity();
             if (!CanEditStandalone) return false;
+            if (IsStrikeDummy) value = true;
             infiniteHealth = value;
             if (IsSpawned) netInfiniteHealth.Value = value;
             if (value && standaloneHealth <= 0f) ResetHealth(); // revive a dummy that was already down

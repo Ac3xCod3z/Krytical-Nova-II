@@ -20,12 +20,12 @@ namespace KryticalNova.GameFeel
                  "instead of only flashing up: the swing is the dip plus the boost.")]
         [Range(0f, 0.8f)] public float dip = 0.3f;
         [Tooltip("Glowing surfaces themselves (signs, the orb, neon, windows: every emissive material in the map) on the beat, as a share of their own glow.")]
-        [Range(0f, 3f)] public float emissionBoost = 1.4f;
+        [Range(0f, 3f)] public float emissionBoost = 1f;
 
         [Header("What glows")]
         [Tooltip("The screen's bloom on the beat, as a share of the zone's own (0.5 = half again): every emissive thing (signs, " +
                  "the orb, pets' eyes, glows) brightens with it, for one shared cost.")]
-        [Range(0f, 2f)] public float bloomBoost = 1.1f;
+        [Range(0f, 2f)] public float bloomBoost = 0.6f;
         [Tooltip("Point and spot lights near the player on the beat, as a share of their own intensity.")]
         [Range(0f, 1f)] public float lightBoost = 0.7f;
         [Tooltip("Lights further than this from the player (metres) are left alone.")]
