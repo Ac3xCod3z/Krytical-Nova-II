@@ -1,0 +1,29 @@
+{
+  "_about": "The owner's picks from the Vendor Voice Audition page (db picks_v2, read 24 Oct 2026). voice = the picked voice, keep = line numbers to use. The only note: Apothecary line 4 says Re-Call (fixed with the spoken text in vendors_v2_2026-10-23.json).",
+  "asset_ids": {
+    "Apothecary": "HerbMaster", "Armorer": "Blacksmith", "MonobladeInstructor": "TrainerBlade",
+    "ServoClawsInstructor": "TrainerFist", "Broker": "Trader", "StoreClerk": "MallManager", "Marshal": "GuardCaptain",
+    "Fixer": "Agent", "Vaultkeeper": "GuildDirector", "Wayfinder": "GateMaster", "Herald": "Collector",
+    "Outfitter": "Tailor", "Holoweaver": "Holoweaver", "Stylist": "Stylist", "Reshaper": "Reshaper", "Coach": "Coach",
+    "Fabricator": "Fabricator"
+  },
+  "picks": {
+    "Apothecary": {"voice": "A", "keep": [1, 2, 3, 4, 5]},
+    "Armorer": {"voice": "A", "keep": [1, 2, 3, 4, 5]},
+    "MonobladeInstructor": {"voice": "A", "keep": [1, 2, 3, 4, 5]},
+    "ServoClawsInstructor": {"voice": "A", "keep": [1, 2, 3, 4, 5]},
+    "Broker": {"voice": "A", "keep": [1, 2, 3, 4, 5]},
+    "StoreClerk": {"voice": "B", "keep": [1, 2, 3, 4, 5]},
+    "Marshal": {"voice": "A", "keep": [1, 2, 3, 4, 5]},
+    "Fixer": {"voice": "A", "keep": [1, 2, 3, 4, 5]},
+    "Vaultkeeper": {"voice": "A", "keep": [1, 2, 3, 4, 5]},
+    "Wayfinder": {"voice": "A", "keep": [1, 2, 3, 4, 5]},
+    "Herald": {"voice": "B", "keep": [1, 2, 3, 4, 5]},
+    "Outfitter": {"voice": "A", "keep": [1, 2, 3, 4, 5]},
+    "Holoweaver": {"voice": "B", "keep": [1, 2, 3, 4, 5]},
+    "Stylist": {"voice": "A", "keep": [1, 2, 3, 4, 5]},
+    "Reshaper": {"voice": "A", "keep": [1, 2, 3, 4, 5]},
+    "Coach": {"voice": "B", "keep": [1, 2, 3, 4, 5]},
+    "Fabricator": {"voice": "A", "keep": [1, 2, 3, 4, 5]}
+  }
+}

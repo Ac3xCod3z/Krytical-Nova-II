@@ -1,0 +1,314 @@
+{
+ "_about": "Vendor voices v2, 23 Oct 2026 (the v1 batch was scrapped by the owner). Two voices per NPC, ONE gender per NPC. Each voice is designed once from its 'sample' line (VoiceDesign), then every line is CLONED from that sample (Qwen3-TTS 1.7B Base), so all of a voice's lines are the same person. Every line is checked with a speaker-verification model against its sample; a mismatch is remade, then scrapped. Line 1 = the greeting in Zone01Setup today. Voice B of the Apothecary, Servo Claws Instructor, Store Clerk, Wayfinder, Herald and Outfitter redesigned after the speaker check showed A and B were nearly the same person (0.92-0.97).",
+ "vendors": [
+  {
+   "npc": "Apothecary",
+   "title": "Stims · Flasks · Recall Tags",
+   "model": "SM_Chr_Medical_Male_01",
+   "gender": "man",
+   "sample": "Sit down and let me look at you. A little Flux, a clean dressing, and a Stim for the road. Out there, nobody patches you up but yourself.",
+   "voices": {
+    "A": "A man in his fifties, a careful field medic. Calm, warm, soft and measured, reassuring, with a slight rasp.",
+    "B": "A young man in his twenties, an eager apprentice medic. Light, quick and bright, a higher voice, a little nervous."
+   },
+   "lines": [
+    "Stims for the body, Flux for the mind. Stock up before you leave the walls.",
+    "Out past the walls the wounds come fast. Keep a Stim in your hand, not at the bottom of your pack.",
+    "Running low on Flux? Hand me your Flask and I'll fill it while you wait.",
+    "A Recall Tag weighs nothing. Not carrying one can cost you everything.",
+    "Back in one piece. Good. Let's keep it that way."
+   ],
+   "spoken": {
+    "4": "A Re-Call Tag weighs nothing. Not carrying one can cost you everything."
+   }
+  },
+  {
+   "npc": "Armorer",
+   "title": "Forge · Gear · Alloys",
+   "model": "SM_Chr_Muscle_Male_01",
+   "gender": "man",
+   "sample": "Hand it over. I've worked this forge longer than you've been swinging steel. Good metal remembers every strike, and so do I.",
+   "voices": {
+    "A": "A big man, a blacksmith with a deep voice. Gravelly, slow and heavy, proud of his work, few words.",
+    "B": "A big man, a cheerful craftsman with a loud, booming voice and a hearty laugh in it. Energetic and friendly."
+   },
+   "lines": [
+    "Bring me steel and coin, and I'll make you something worth swinging.",
+    "Alumite first. Every great weapon begins with a humble foundation.",
+    "Temper it right and it holds. Rush it and it breaks. Your Creds, your call.",
+    "Got a Rare nobody's touched yet? Let me show you what a Reforge can do.",
+    "Good steel deserves better than the bottom of a pack. Let's make it worth wearing."
+   ]
+  },
+  {
+   "npc": "MonobladeInstructor",
+   "title": "Combat Skills · Monoblade",
+   "model": "SM_Chr_Monk_Male_01",
+   "gender": "man",
+   "sample": "Stand with your weight low and your shoulders loose. The Monoblade is not swung, it is guided. Breathe, wait, and strike only once.",
+   "voices": {
+    "A": "A man in his sixties, a disciplined sword master. Calm, low, steady and wise, every word deliberate.",
+    "B": "A man in his forties, a strict drill master of the sword. Sharp, clipped, stern and demanding."
+   },
+   "lines": [
+    "A blade is only as sharp as the hand that guides it.",
+    "Again. A cut you cannot repeat is only luck.",
+    "Your footwork decides the fight before your blade does.",
+    "Show me what you have learned since last time.",
+    "Patience. The Monoblade rewards those who wait for the opening."
+   ]
+  },
+  {
+   "npc": "ServoClawsInstructor",
+   "title": "Combat Skills · Servo Claws",
+   "model": "SM_Chr_CyborgNinja_01",
+   "gender": "man",
+   "sample": "The claws are part of you now. Feel the servos answer before you think. Hesitate, and someone faster will make the choice for you.",
+   "voices": {
+    "A": "A man with a cold voice with a faint metallic edge, precise like a machine. Quiet, flat and controlled.",
+    "B": "A huge man, a cyborg warrior with a very deep, booming, resonant voice. Heavy, slow and powerful."
+   },
+   "lines": [
+    "Before the weapon, there is the body. Show me your stance.",
+    "Claws do not swing. They answer. Learn to answer fast.",
+    "Closer. Your reach is short. Your speed must not be.",
+    "Every motion you waste is an opening for someone else.",
+    "Again. Slower. Then faster than before."
+   ]
+  },
+  {
+   "npc": "Broker",
+   "title": "The Exchange",
+   "model": "SM_Chr_Rich_Female_01",
+   "gender": "woman",
+   "sample": "Prices rise, prices fall, and someone always profits. Tell me what you have and what you want, and I'll tell you what it's really worth.",
+   "voices": {
+    "A": "A woman, a wealthy dealer with a smooth, low, confident voice. Amused, unhurried and a little dangerous.",
+    "B": "A woman, a crisp businesswoman. Fast-talking, polished, cool and efficient, with a sharp edge."
+   },
+   "lines": [
+    "Everything has a buyer. Everything.",
+    "Rare, tempered, untouched. Name your price, and I will find the one who pays it.",
+    "The market never sleeps, darling. Neither do I.",
+    "Buy low, sell high, and never tell anyone what you paid.",
+    "Looking or selling? Either way, I take my cut."
+   ]
+  },
+  {
+   "npc": "StoreClerk",
+   "title": "Nova Store",
+   "model": "SM_Chr_Hologram_Female_01",
+   "gender": "woman",
+   "sample": "Welcome to the Nova Store. Take your time, everything you see can be tried on before you buy. If you need anything at all, just ask.",
+   "voices": {
+    "A": "A young woman, a hologram shop assistant. Bright and polished, a customer-service smile in her voice, a faint digital shimmer.",
+    "B": "A woman in her fifties with a low, husky, warm voice. Slow, motherly and comforting."
+   },
+   "lines": [
+    "Premium goods, premium service. How may I assist?",
+    "Welcome back! New looks arrive all the time.",
+    "Everything here is for show. The power, you earn out there.",
+    "Browse as long as you like. I never close.",
+    "Thank you for shopping at the Nova Store."
+   ]
+  },
+  {
+   "npc": "Marshal",
+   "title": "Contracts · Battle Transit",
+   "model": "SM_Chr_Cop_01",
+   "gender": "man",
+   "sample": "I've got more contracts than people willing to take them. The work is dangerous and the pay is fair. Come back alive and we'll talk about the next one.",
+   "voices": {
+    "A": "A man in his fifties, a seasoned lawman. Gruff, low, steady and no-nonsense.",
+    "B": "A man, a military officer. Commanding, crisp, loud and authoritative."
+   },
+   "lines": [
+    "Ready to earn your keep? The frontier won't defend itself.",
+    "Contracts are posted. Pick one that won't get you killed.",
+    "The frontier needs hands. Yours look idle.",
+    "Come back with the job done and you get paid. That's the deal.",
+    "Keep your weapon down inside the walls. Out there, do what you have to."
+   ]
+  },
+  {
+   "npc": "Fixer",
+   "title": "Slotting · Cores",
+   "model": "SM_Chr_Hacker_Female_01",
+   "gender": "woman",
+   "sample": "Don't stand there looking at my screens. Tell me what you want cut, show me the Renown, and I'll have your gear open before you can blink.",
+   "voices": {
+    "A": "A young woman in her twenties, a hacker. Cool, sly, quick and clever, a little sarcastic.",
+    "B": "A woman with a low, smoky, mysterious voice. Slow, confident and secretive."
+   },
+   "lines": [
+    "Slots, Cores, cutters. Paid in Renown.",
+    "Bring the Renown, I'll bring the Cutter. Nobody asks questions.",
+    "Your gear has room for more. Want me to open it up?",
+    "A cut slot is for good. Think before you cut.",
+    "No refunds, no small talk. What do you need?"
+   ]
+  },
+  {
+   "npc": "Vaultkeeper",
+   "title": "Vault · Crew Registry",
+   "model": "SM_Chr_Rich_Male_01",
+   "gender": "man",
+   "sample": "Every item in this vault is counted, recorded and locked away. I have never lost a single Cred, and I do not intend to start with yours.",
+   "voices": {
+    "A": "An older man, a banker. Dignified and formal, slow, precise and trustworthy.",
+    "B": "A man, a well-to-do gentleman. Smooth, friendly, warm and reassuring."
+   },
+   "lines": [
+    "What you leave with me stays yours. What you sign here binds a Crew.",
+    "Hegemony, Null or Covenant, in my vault every Cred weighs the same.",
+    "Your things are exactly where you left them. They always are.",
+    "Founding a Crew? Sign here, and choose your companions well.",
+    "Leave what you can't carry. Nothing here goes missing."
+   ]
+  },
+  {
+   "npc": "Wayfinder",
+   "title": "Deep Vault · Transit",
+   "model": "SM_Chr_Android_Female_01",
+   "gender": "woman",
+   "sample": "I keep track of every road out of Concord and everything you have stored with me. Ask, and I will tell you where it is and how to reach it.",
+   "voices": {
+    "A": "A woman, an android. Serene, clear and melodic, calm, kind and gentle.",
+    "B": "A woman, an old android with a deep, slow, low-pitched, grave voice, like a wise ship's computer."
+   },
+   "lines": [
+    "Every road starts here. So does everything you want waiting at the end of one.",
+    "Your Deep Vault is shared by every character you play.",
+    "Roads run out from Concord in every direction. Mind where they lead.",
+    "Store it here once, and any of your characters can take it out.",
+    "Your account remembers. So do I."
+   ]
+  },
+  {
+   "npc": "Herald",
+   "title": "Ascension · Nova Standings",
+   "model": "SM_Chr_Augmented_Male_01",
+   "gender": "man",
+   "sample": "Hear me, Concord! Another name rises today. Renown earned in battle deserves to be spoken aloud, and I will speak it for all to hear.",
+   "voices": {
+    "A": "A man, a ceremonial announcer. Resonant, grand, clear and proud, projecting across a plaza.",
+    "B": "An old man in his seventies with a thin, reedy, crackling voice, a fussy court scribe. Quick and precise."
+   },
+   "lines": [
+    "Renown is only a number until someone speaks it aloud. Let me speak yours.",
+    "Say your name, and the whole town will know what you have earned.",
+    "Rise, and let Concord see it.",
+    "Every rank you buy is yours forever. Wear one with pride.",
+    "Ascension is a gamble. Fortune favours the bold."
+   ]
+  },
+  {
+   "npc": "Outfitter",
+   "title": "Dye · Colour Cells",
+   "model": "SM_Chr_Cyber_Female_01",
+   "gender": "woman",
+   "sample": "Turn around, let me see the whole outfit. Good cut, tired colours. Give me a Chroma Cell and ten minutes, and nobody will recognise you.",
+   "voices": {
+    "A": "A woman in her thirties, a fashion designer. Confident, trendy, upbeat and stylish.",
+    "B": "A woman in her sixties, a veteran tailor with a deep, raspy, smoky voice. Slow, dry and wry."
+   },
+   "lines": [
+    "Same cut, new colours. Bring a Chroma Cell for every piece you want dyed.",
+    "That colour? Brave. Let's make it work.",
+    "A new Cell comes in every day. Today's is a good one.",
+    "The dye stays on the piece, so choose like you mean it.",
+    "Armour can still look good. That's my whole job."
+   ]
+  },
+  {
+   "npc": "Holoweaver",
+   "title": "Holoweave · Weave Library",
+   "model": "SM_Chr_Alien_Male_01",
+   "gender": "man",
+   "sample": "Every look you have ever worn is woven into my library. Choose one, and the light will hold its shape over your armour for as long as you wish.",
+   "voices": {
+    "A": "A man, an alien with a deep, slow, otherworldly voice. Calm, resonant and ancient-sounding.",
+    "B": "A man, an alien with a soft, airy, whispering voice. Gentle and curious."
+   },
+   "lines": [
+    "Wear what protects you. Show what suits you. I keep every look you have ever earned.",
+    "Every look you have earned is kept here. None is ever lost.",
+    "Wear the steel you need. Show the face you choose.",
+    "Your library is shared by every character you play.",
+    "Light can wear any shape. Pick one."
+   ]
+  },
+  {
+   "npc": "Stylist",
+   "title": "Hair",
+   "model": "SM_Chr_CyberPunk_Male_01",
+   "gender": "man",
+   "sample": "Take a seat, get comfortable. Tell me what you're after, short, long, wild colour, whatever. I've seen worse than this walk through my door.",
+   "voices": {
+    "A": "A man in his thirties, a barber. Relaxed, charismatic, smooth and chatty.",
+    "B": "A man, a flamboyant hairstylist. Dramatic, expressive and full of energy."
+   },
+   "lines": [
+    "Sit. Whatever they did to your hair out there, I can fix it.",
+    "Sit down, sit down. Let's see what we're working with.",
+    "One Restyle Pass, as many changes as you like.",
+    "Trust me. You'll walk out of here a new person.",
+    "Helmet hair again? I see it every day."
+   ]
+  },
+  {
+   "npc": "Reshaper",
+   "title": "Face",
+   "model": "SM_Chr_Alien_Male_02",
+   "gender": "man",
+   "sample": "Lie back and keep still. A new jaw, new eyes, a scar where you want one. When I am finished, even your oldest friends will walk right past you.",
+   "voices": {
+    "A": "A man, an alien surgeon. Calm, clinical, quiet, soft and precise.",
+    "B": "A man, an alien with a raspy, eerie, amused voice. Unsettling but friendly."
+   },
+   "lines": [
+    "A new face is an hour's work. Who you are under it is your business.",
+    "Hold still. Faces are delicate work.",
+    "New eyes, new scars, a new you. Nobody will ask.",
+    "One Restyle Pass covers it all. Change as much as you dare.",
+    "Look in the mirror when I'm done. Then decide who you are."
+   ]
+  },
+  {
+   "npc": "Coach",
+   "title": "Body · Height",
+   "model": "SM_Chr_Cyber_Male_01",
+   "gender": "man",
+   "sample": "Alright, let's see what you've got. Shoulders back, chin up. Tell me how you want to look out there, and we'll build that body together.",
+   "voices": {
+    "A": "A man, a personal trainer. Upbeat, energetic, loud, motivating and positive.",
+    "B": "A man, a drill coach with a tough, gravelly voice. Intense, short and demanding."
+   },
+   "lines": [
+    "Heavier, leaner, bigger: tell me what you want to carry and we'll get you there.",
+    "Taller, broader, leaner. One Training Pass and we start today.",
+    "Strong frame. Let's build on it.",
+    "Stand up straight. Let's see what we're working with.",
+    "Whatever you carry out there, carry it well."
+   ]
+  },
+  {
+   "npc": "Fabricator",
+   "title": "Crafting",
+   "model": "SM_Chr_Robot_01",
+   "gender": "man (robot; one gender for both)",
+   "sample": "Fabrication unit online. Place your materials in the tray. Alloys, Cells and Pages are accepted. I will return a finished item. Waste is not permitted.",
+   "voices": {
+    "A": "A man's voice, a robot. Flat, monotone, mechanical, precise and steady.",
+    "B": "A man's voice, a big industrial machine. Deep, slow, heavy and resonant."
+   },
+   "lines": [
+    "Bring the parts. I return the whole.",
+    "Four of one grade. One of the next. The ratio is fixed.",
+    "Parts received. Processing. Please wait.",
+    "Four Pages, one Dossier. Nothing is wasted.",
+    "Input accepted. Output ready."
+   ]
+  }
+ ]
+}

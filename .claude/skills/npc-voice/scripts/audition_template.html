@@ -1,0 +1,258 @@
+<title>Vendor Voice Audition</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bangers&family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&display=swap">
+<style>
+  /* Layout: a rail of vendors on the left, one comic panel per vendor, three voice columns, each line a row you can
+     play; the pick and the lines to keep stamped underneath. Same book as the Encyclopedia of Nova. */
+  :root {
+    --paper: #f6efd9; --panel: #fffaf0; --ink: #14161c; --muted: #5b5a52; --dots: rgba(20, 22, 28, 0.10);
+    --pop: #ffc928; --pop-ink: #14161c; --cyan: #19b6c9; --magenta: #e2336b; --code: #ece3c6; --shadow: #14161c;
+    --display: "Bangers", "Impact", sans-serif;
+    --head: "Barlow Condensed", "Arial Narrow", sans-serif;
+    --body: "Barlow", "Segoe UI", system-ui, sans-serif;
+    --mono: ui-monospace, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #141a2b; --panel: #1d2540; --ink: #f4eeda; --muted: #a9adc2; --dots: rgba(244, 238, 218, 0.07);
+      --pop: #ffc928; --pop-ink: #14161c; --cyan: #3fd2e2; --magenta: #ff5c8f; --code: #2a3357; --shadow: #05070d;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #141a2b; --panel: #1d2540; --ink: #f4eeda; --muted: #a9adc2; --dots: rgba(244, 238, 218, 0.07);
+    --pop: #ffc928; --pop-ink: #14161c; --cyan: #3fd2e2; --magenta: #ff5c8f; --code: #2a3357; --shadow: #05070d;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  body { background: var(--paper); background-image: radial-gradient(var(--dots) 1.5px, transparent 1.6px); background-size: 14px 14px;
+         color: var(--ink); font: 15px/1.45 var(--body); }
+  p, h1, h2, h3, ul { margin: 0; }
+  .page { max-width: 1240px; margin: 0 auto; padding-block: 22px 70px;
+          padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+          display: flex; flex-direction: column; gap: 18px; }
+  header { display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
+  .tag { font: 700 13px var(--head); letter-spacing: 0.14em; text-transform: uppercase; background: var(--ink); color: var(--paper); padding: 2px 10px; transform: skewX(-8deg); }
+  h1 { font: 400 clamp(36px, 7vw, 58px)/0.95 var(--display); letter-spacing: 0.03em; color: var(--pop);
+       -webkit-text-stroke: 2px var(--shadow); paint-order: stroke fill; text-shadow: 4px 4px 0 var(--shadow); text-wrap: balance; }
+  .lede { max-width: 72ch; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip { font: 700 14px var(--head); letter-spacing: 0.06em; text-transform: uppercase; font-variant-numeric: tabular-nums;
+          background: var(--panel); border: 2px solid var(--ink); border-radius: 5px; padding: 3px 10px; box-shadow: 3px 3px 0 var(--shadow); }
+  .note-off { font-size: 13.5px; color: var(--muted); }
+  .layout { display: grid; grid-template-columns: 200px minmax(0, 1fr); gap: 20px; align-items: start; }
+  nav { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 12px); display: flex; flex-direction: column; gap: 3px; }
+  nav a { font: 600 15px var(--head); letter-spacing: 0.03em; text-transform: uppercase; text-decoration: none; color: var(--ink);
+          padding: 3px 9px; border: 2px solid transparent; border-radius: 4px; display: flex; justify-content: space-between; gap: 6px; }
+  nav a:hover { background: var(--pop); color: var(--pop-ink); border-color: var(--ink); }
+  nav a .st { color: var(--muted); font-weight: 500; }
+  nav a.done .st { color: var(--cyan); }
+  main { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
+  .npc { background: var(--panel); border: 3px solid var(--ink); border-radius: 6px; box-shadow: 5px 5px 0 var(--shadow);
+         padding: 14px; display: flex; flex-direction: column; gap: 12px; scroll-margin-top: 12px; }
+  .npc.picked { box-shadow: 5px 5px 0 var(--cyan); }
+  .npchead { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 14px; }
+  .npchead h2 { font: 400 32px/1 var(--display); letter-spacing: 0.04em; }
+  .role { font: 600 14px var(--head); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+  .badge { font: 700 12px var(--head); letter-spacing: 0.1em; text-transform: uppercase; background: var(--pop); color: var(--pop-ink);
+           border: 2px solid var(--ink); border-radius: 4px; padding: 0 7px; }
+  .voices { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+  .voice { border: 2px solid var(--ink); border-radius: 5px; background: var(--paper); padding: 10px; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+  .voice.chosen { outline: 4px solid var(--cyan); outline-offset: 2px; }
+  .vtop { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+  .vname { font: 400 24px/1 var(--display); letter-spacing: 0.05em; }
+  .desc { font-size: 13.5px; color: var(--muted); }
+  ol.lines { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 5px; }
+  ol.lines li { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 8px; align-items: start; font-size: 14px; }
+  button { font: 700 13px var(--head); letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink); background: var(--panel);
+           border: 2px solid var(--ink); border-radius: 5px; padding: 3px 10px; cursor: pointer; box-shadow: 2px 2px 0 var(--shadow); }
+  button:hover:not(:disabled) { background: var(--pop); color: var(--pop-ink); }
+  button:disabled { opacity: 0.45; cursor: default; box-shadow: none; }
+  button:focus-visible, textarea:focus-visible, input:focus-visible { outline: 3px solid var(--magenta); outline-offset: 2px; }
+  button.playing { background: var(--magenta); color: #fff; }
+  button.on { background: var(--cyan); color: #10131a; }
+  .play { min-width: 34px; padding: 3px 7px; }
+  .pick { border-top: 3px dashed var(--ink); padding-top: 12px; display: flex; flex-direction: column; gap: 10px; }
+  .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .lbl { font: 700 14px var(--head); letter-spacing: 0.1em; text-transform: uppercase; margin-right: 4px; }
+  .keep { display: flex; flex-direction: column; gap: 4px; }
+  .keep label { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 8px; align-items: start; font-size: 14px; cursor: pointer; }
+  .keep input { width: 18px; height: 18px; margin-top: 1px; accent-color: var(--cyan); }
+  textarea { flex: 1 1 260px; min-width: 0; font: 15px var(--body); color: var(--ink); background: var(--panel); border: 2px solid var(--ink);
+             border-radius: 5px; padding: 6px 10px; min-height: 38px; resize: vertical; }
+  .saved { font-size: 13px; color: var(--muted); }
+  .code { background: var(--panel); border: 3px solid var(--ink); border-radius: 6px; box-shadow: 5px 5px 0 var(--shadow); padding: 14px 16px;
+          display: flex; flex-direction: column; gap: 10px; scroll-margin-top: 12px; }
+  .code h2 { font: 400 30px/1 var(--display); letter-spacing: 0.04em; }
+  .code h3 { font: 700 17px var(--head); letter-spacing: 0.04em; text-transform: uppercase; margin-top: 6px; }
+  .code p, .code li { max-width: 86ch; }
+  .code ul, .code ol { padding-left: 20px; display: flex; flex-direction: column; gap: 5px; }
+  .code code { font-family: var(--mono); font-size: 0.86em; background: var(--code); border-radius: 3px; padding: 0 4px; overflow-wrap: anywhere; }
+  footer { font-size: 13px; color: var(--muted); border-top: 3px solid var(--ink); padding-top: 12px; max-width: 86ch; }
+  @media (max-width: 980px) { .voices { grid-template-columns: minmax(0, 1fr); } }
+  @media (max-width: 760px) { .layout { grid-template-columns: minmax(0, 1fr); } nav { position: static; flex-direction: row; flex-wrap: wrap; }
+                              nav a { border-color: var(--ink); background: var(--panel); font-size: 13px; } }
+</style>
+
+<div class="page">
+  <header>
+    <span class="tag">Krytical Nova II · Concord vendors · voice lines</span>
+    <h1>Vendor Voice Audition</h1>
+    <p class="lede">Every NPC a player can talk to in Concord, with two voices each, both the gender of the NPC's model. Each voice was made once from a longer <b>voice sample</b>, and every one of its five lines was cloned from that sample, so all five are the same person. Line 1 is the greeting the game shows today; lines 2 to 5 are new, so a vendor can say something different each time a player walks up. For each vendor, <b>pick a voice</b>, <b>untick any line you don't want</b>, and write a better line or a note if you like. Picks save here and Claude reads them.</p>
+    <p class="lede"><b>Same-voice check:</b> a speaker-recognition model compared every line with its voice sample. The number beside a line is that match (1.00 would be identical; two different people of one NPC scored 0.89 to 0.94). Every line shown passed: at least 0.93, and clearly closer to its own voice than to the other one. Lines that kept failing were scrapped, not shown.</p>
+    <div class="chips"><span class="chip" id="tally">0 picked</span><span class="chip"><!--COUNT--></span><a class="chip" href="#code" style="text-decoration:none;color:inherit">Code changes ↓</a></div>
+    <p class="note-off" id="dbnote" hidden>Picks can't be saved in this view. Choose here, then tell Claude your picks in the chat.</p>
+  </header>
+  <div class="layout">
+    <nav id="nav" aria-label="Vendors"></nav>
+    <main id="list"></main>
+  </div>
+  <section class="code" id="code"><!--CODE--></section>
+  <footer>Voices made with Qwen3-TTS (Apache-2.0, free for commercial use) on the owner's PC: each voice designed once from its sample with the 1.7B VoiceDesign model, every line cloned from that sample with the 1.7B Base model, and every line checked against the sample with a speaker-recognition model (WavLM speaker verification). These are new voices: the 20 Oct picks and the first vendor batch were scrapped. Lossless copies sit beside these MP3s in Google Drive for the game. Nothing is in the game yet.</footer>
+</div>
+
+<script>
+const VENDORS = /*DATA*/null;
+const HAVE = new Set(/*HAVE*/[]);
+const SV = /*SV*/{};
+const SCRAPPED = new Set(/*SCRAPPED*/[]);
+const COLLECTION = "picks_v2";  // the scrapped first batch used "picks"
+const picks = {};
+let db = null, current = null;
+
+const el = (tag, attrs, ...kids) => {
+  const e = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs || {})) {
+    if (k === "class") e.className = v; else if (k === "text") e.textContent = v; else e.setAttribute(k, v);
+  }
+  for (const k of kids) if (k) e.append(k);
+  return e;
+};
+const label = n => n.replace(/([a-z])([A-Z])/g, "$1 $2");
+
+function stopCurrent() {
+  if (current) { current.audio.pause(); current.btn.classList.remove("playing"); current = null; }
+}
+function play(btn, files) {
+  const again = current && current.btn === btn;
+  stopCurrent();
+  if (again || !files.length) return;
+  let i = 0; const audio = new Audio();
+  current = { audio, btn }; btn.classList.add("playing");
+  const next = () => {
+    if (!current || current.audio !== audio) return;
+    if (i >= files.length) { stopCurrent(); return; }
+    audio.src = files[i++]; audio.play().catch(stopCurrent);
+  };
+  audio.addEventListener("ended", () => setTimeout(next, 400));
+  next();
+}
+
+function renderNav() {
+  const nav = document.getElementById("nav"); nav.replaceChildren();
+  for (const v of VENDORS) {
+    const p = picks[v.npc];
+    const a = el("a", { href: "#npc-" + v.npc, class: p && p.voice ? "done" : "" }, label(v.npc), el("span", { class: "st", text: p && p.voice ? (p.voice === "none" ? "—" : p.voice) : "" }));
+    nav.append(a);
+  }
+  nav.append(el("a", { href: "#code", text: "Code changes" }));
+  const n = VENDORS.filter(v => picks[v.npc] && picks[v.npc].voice).length;
+  document.getElementById("tally").textContent = `${n} of ${VENDORS.length} picked`;
+}
+
+function card(v) {
+  const p = picks[v.npc] || {};
+  const keep = new Set(p.keep || v.lines.map((_, i) => i + 1));
+  const sec = el("section", { class: "npc" + (p.voice ? " picked" : ""), id: "npc-" + v.npc });
+  const head = el("div", { class: "npchead" }, el("h2", { text: label(v.npc) }), el("span", { class: "role", text: v.title + " · " + v.gender }));
+  if (v.picked) head.append(el("span", { class: "badge", text: "Voice " + v.picked + " = your 20 Oct pick" }));
+  sec.append(head);
+  const voices = el("div", { class: "voices" });
+  for (const k of Object.keys(v.voices)) {
+    const box = el("div", { class: "voice" + (p.voice === k ? " chosen" : "") });
+    const ids = v.lines.map((_, i) => `${v.npc}_${k}_${i + 1}`);
+    const ready = ids.filter(id => HAVE.has(id));
+    const all = el("button", { type: "button", id: `all-${v.npc}-${k}`, text: ready.length ? "Play all" : "Still making" });
+    if (!ready.length) all.disabled = true;
+    all.addEventListener("click", () => play(all, ready.map(id => id + ".mp3")));
+    box.append(el("div", { class: "vtop" }, el("span", { class: "vname", text: "Voice " + k }), all), el("p", { class: "desc", text: v.voices[k] }));
+    const sid = `sample_${v.npc}_${k}`;
+    const sb = el("button", { type: "button", id: `sample-${v.npc}-${k}`, text: "Voice sample" });
+    if (!HAVE.has(sid)) sb.disabled = true;
+    sb.addEventListener("click", () => play(sb, [sid + ".mp3"]));
+    box.append(el("div", { class: "row" }, sb, el("span", { class: "desc", text: "“" + v.sample + "”" })));
+    const ol = el("ol", { class: "lines" });
+    v.lines.forEach((t, i) => {
+      const id = ids[i];
+      const b = el("button", { type: "button", class: "play", id: `play-${id}`, text: String(i + 1), "aria-label": `Play line ${i + 1}` });
+      const gone = SCRAPPED.has(id);
+      if (!HAVE.has(id) || gone) { b.disabled = true; b.title = gone ? "Scrapped: not the same voice" : "Still making"; }
+      b.addEventListener("click", () => play(b, [id + ".mp3"]));
+      const meta = gone ? " · scrapped (not the same voice)" : (SV[id] !== undefined ? ` · same voice ${SV[id].toFixed(2)}` : "");
+      ol.append(el("li", {}, b, el("span", {}, document.createTextNode(t), el("span", { class: "desc", text: meta }))));
+    });
+    box.append(ol); voices.append(box);
+  }
+  sec.append(voices);
+
+  const pk = el("div", { class: "pick" });
+  const row = el("div", { class: "row" }, el("span", { class: "lbl", text: "Voice" }));
+  for (const val of [...Object.keys(v.voices), "none"]) {
+    const b = el("button", { type: "button", id: `pick-${v.npc}-${val}`, class: p.voice === val ? "on" : "", "aria-pressed": String(p.voice === val), text: val === "none" ? "None fit" : "Voice " + val });
+    b.addEventListener("click", () => save(v.npc, { voice: val }));
+    row.append(b);
+  }
+  pk.append(row);
+  const kp = el("div", { class: "keep" }, el("span", { class: "lbl", text: "Lines to keep" }));
+  v.lines.forEach((t, i) => {
+    const cb = el("input", { type: "checkbox", id: `keep-${v.npc}-${i + 1}` });
+    cb.checked = keep.has(i + 1);
+    cb.addEventListener("change", () => {
+      const now = v.lines.map((_, j) => j + 1).filter(n => document.getElementById(`keep-${v.npc}-${n}`).checked);
+      save(v.npc, { keep: now });
+    });
+    kp.append(el("label", { for: `keep-${v.npc}-${i + 1}` }, cb, el("span", { text: `${i + 1}. ${t}` })));
+  });
+  pk.append(kp);
+  const nl = el("textarea", { id: `new-${v.npc}`, rows: "1", placeholder: "A line you'd like added (optional)", "aria-label": label(v.npc) + " new line" });
+  nl.value = p.newLine || ""; nl.addEventListener("change", () => save(v.npc, { newLine: nl.value }));
+  const note = el("textarea", { id: `note-${v.npc}`, rows: "1", placeholder: "Note: what to change in the voice (optional)", "aria-label": label(v.npc) + " note" });
+  note.value = p.note || ""; note.addEventListener("change", () => save(v.npc, { note: note.value }));
+  pk.append(el("div", { class: "row" }, nl), el("div", { class: "row" }, note, el("span", { class: "saved", id: "saved-" + v.npc, text: p.voice ? "Saved" : "" })));
+  sec.append(pk);
+  return sec;
+}
+
+function render() {
+  const list = document.getElementById("list"); list.replaceChildren();
+  for (const v of VENDORS) list.append(card(v));
+  renderNav();
+}
+
+async function save(npc, patch) {
+  const v = VENDORS.find(x => x.npc === npc);
+  const base = picks[npc] || { voice: "", keep: v.lines.map((_, i) => i + 1), note: "", newLine: "" };
+  picks[npc] = { ...base, ...patch };
+  const focusId = document.activeElement && document.activeElement.id;
+  render();
+  if (focusId && document.getElementById(focusId)) document.getElementById(focusId).focus();
+  const say = t => { const s = document.getElementById("saved-" + npc); if (s) s.textContent = t; };
+  if (!db) { say("Not saved: tell Claude in chat"); return; }
+  say("Saving…");
+  try {
+    await db.doc(COLLECTION + "/" + npc).set({ npc, ...picks[npc], at: new Date().toISOString() });
+    say("Saved");
+  } catch (e) { say("Couldn't save (" + ((e && e.code) || "error") + "). Tell Claude in chat."); }
+}
+
+render();
+(async () => {
+  try { db = await claude.use("db"); } catch (e) { db = null; }
+  if (!db) { document.getElementById("dbnote").hidden = false; return; }
+  db.collection(COLLECTION).onSnapshot(snap => {
+    for (const d of snap.docs) { const x = d.data(); if (x && x.npc) picks[x.npc] = { voice: x.voice || "", keep: x.keep, note: x.note || "", newLine: x.newLine || "" }; }
+    const typing = document.activeElement && document.activeElement.tagName === "TEXTAREA";
+    if (!typing) render();
+  }, () => {});
+})();
+</script>
