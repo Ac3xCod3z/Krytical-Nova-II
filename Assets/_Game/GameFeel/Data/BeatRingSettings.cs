@@ -96,5 +96,22 @@ namespace KryticalNova.GameFeel
         public UnityEngine.Audio.AudioMixerGroup stepSoundGroup;
         [Range(0f, 1f)] public float stepSoundVolume = 0.7f;
         [Range(0f, 0.5f)] public float stepPitchRise = 0.12f;
+
+        [Header("When to press (owner, 24 Oct 2026)")]
+        [Tooltip("The closing ring: shrinks onto the Beat Ring once a beat and meets it on the beat.")]
+        public bool approach = true;
+        [Tooltip("How far out the closing ring starts, as a multiple of the ring's radius beyond it.")]
+        [Range(0.2f, 3f)] public float approachReach = 1.1f;
+        [Tooltip("Width of the closing ring (metres).")]
+        [Range(0.01f, 0.3f)] public float approachWidth = 0.06f;
+        [Range(0f, 1f)] public float approachAlpha = 0.8f;
+        public Color approachColour = new Color(0.85f, 0.95f, 1f);
+        [Tooltip("The closing ring before the first beat of a bar (the count-in): wider and cyan. Never gold: gold is the window, press now.")]
+        public bool countIn = true;
+        public Color approachBar = new Color(0.45f, 0.9f, 1f);
+        [Tooltip("The ring in the Cadence window: press now.")]
+        public Color approachWindow = new Color(1f, 0.82f, 0.2f);
+        [Tooltip("Seconds the closing ring stays locked on the Beat Ring in gold after a press on the beat (the catch).")]
+        [Min(0.05f)] public float caughtSeconds = 0.3f;
     }
 }

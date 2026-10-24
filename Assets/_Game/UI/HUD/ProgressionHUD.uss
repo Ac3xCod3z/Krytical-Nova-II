@@ -608,3 +608,18 @@
 .kn-faction-null .combo-timer-fill { background-color: rgb(176, 130, 255); }
 .kn-faction-covenant .combo-timer-fill { background-color: rgb(130, 255, 172); }
 .kn-faction-null .combo-timer-fill--low, .kn-faction-covenant .combo-timer-fill--low { background-color: rgb(255, 120, 60); }
+
+/* The beat track (owner, 24 Oct 2026): a thin strip above the Hotbar, in a fight only. The coming beats slide in from both
+   sides and meet the centre on the beat; the centre lights gold in the Cadence window. Quiet on purpose. */
+.beat-track { position: absolute; left: 36%; right: 36%; bottom: 15.5%; height: 22px; }
+.beat-track-line { position: absolute; left: 2%; right: 2%; top: 10px; height: 2px; background-color: rgba(255, 255, 255, 0.16); border-radius: 1px; }
+.beat-track-mark { position: absolute; top: 5px; width: 3px; height: 12px; margin-left: -1.5px; background-color: rgb(225, 240, 255); border-radius: 1.5px; }
+.beat-track-mark--bar { top: 2px; width: 4px; height: 18px; margin-left: -2px; background-color: rgb(110, 215, 255); }
+.beat-track-centre { position: absolute; left: 50%; top: 0; width: 22px; height: 22px; margin-left: -11px;
+    border-width: 2px; border-color: rgba(255, 255, 255, 0.55); border-radius: 11px; }
+.beat-track-centre--window { border-color: rgb(255, 210, 60); background-color: rgba(255, 200, 50, 0.28); }
+.beat-track-catch { position: absolute; left: 50%; top: 0; width: 22px; height: 22px; margin-left: -11px;
+    border-width: 3px; border-color: rgb(255, 214, 80); border-radius: 11px; opacity: 0; }
+.beat-track-hint { position: absolute; left: 0; right: 0; top: 24px; -unity-text-align: upper-center; font-size: 13px;
+    letter-spacing: 2px; -unity-font-style: bold; color: rgba(225, 235, 245, 0.85); opacity: 0;
+    text-shadow: 1px 1px 0 rgba(10, 8, 20, 0.9); }

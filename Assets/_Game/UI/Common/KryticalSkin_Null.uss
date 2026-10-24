@@ -515,6 +515,17 @@
 .kn-faction-null .kn-faction-covenant .combo-timer-fill {
     background-color: rgb(255, 74, 83);
 }
+.kn-faction-null .beat-track-mark {
+    background-color: rgb(249, 230, 255);
+}
+.kn-faction-null .beat-track-mark--bar {
+    background-color: rgb(255, 45, 55);
+}
+.kn-faction-null .beat-track-hint {
+    font-size: 16.64px;
+    color: rgba(241, 228, 245, 0.85);
+    text-shadow: 1px 1px 0 rgba(17, 10, 20, 0.9);
+}
 
 /* ---- Settings.uss ---- */
 .kn-faction-null .settings-tab {
