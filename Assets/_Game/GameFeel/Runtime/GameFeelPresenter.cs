@@ -106,6 +106,10 @@ namespace KryticalNova.GameFeel
         [SerializeField] private MMF_Player waterStepFeel;
         [Tooltip("A footstep on the water, on every game: a slight splash and a ripple where the foot went in.")]
         [SerializeField] private MMF_Player waterStepWorldFeel;
+        [Tooltip("A jump off or onto the water, or a fall in, on the jumper's own game: a heavy splash sound.")]
+        [SerializeField] private MMF_Player waterSplashFeel;
+        [Tooltip("A jump off or onto the water, or a fall in, on every game: a big splash, a crown of drops and rings.")]
+        [SerializeField] private MMF_Player waterSplashWorldFeel;
         [Tooltip("A jump's crouch, on every client: sparks at the feet and a slight squash.")]
         [SerializeField] private MMF_Player jumpChargeWorldFeel;
         [SerializeField] private MMF_Player landWorldFeel;
@@ -736,6 +740,13 @@ namespace KryticalNova.GameFeel
             if (actor == null) return;
             if (onWater) ActorVfx.For(actor).SetOnWater(true, waterWakeVfx);
             else ActorVfx.Find(actor)?.SetOnWater(false, waterWakeVfx);
+        }
+
+        public void WaterSplash(Transform actor, Vector3 at, bool isLocalPlayer)
+        {
+            if (actor == null) return;
+            PlayWorld(waterSplashWorldFeel, at, Facing(actor), actor, onlyIfReady: false);
+            if (isLocalPlayer) Play(waterSplashFeel, at, 1f);
         }
 
         /// <summary>A foot struck the water (Waterstride): the splash and ripple for all, the sound for the stepper's own game.</summary>

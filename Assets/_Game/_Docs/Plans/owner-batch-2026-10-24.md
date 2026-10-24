@@ -58,15 +58,25 @@ so you can correct me early.
   - Hostiles: while any Hostile targets you or is still coming at you; it ends once all are dead or none approach.
     *Already so:* each Hostile that has you as its target keeps the fight going (a dead one stops).
   - Callouts: until the bout ends. Wars and PvP events: their own rule when they are built.
-- [ ] **Water.** *Understood:* you can jump on water (land on it as on ground) and fall into it; falling in puts you back
+- [x] **Water.** *Understood:* you can jump on water (land on it as on ground) and fall into it; falling in puts you back
       on the nearest shore, losing some HP. *Owner, 24 Oct:* the effects of a jump off and a landing on water must be
       more prominent than walking or running on it (bigger splash, spray ring and sound), to show the greater force.
+      *Built:* a jump lands on the water as on ground when Waterstride is open and there is Flux for it (then it is
+      Waterstride as usual); otherwise the player falls in and comes up on the nearest shore, losing 15 % of Max HP
+      (never the last). A jump off the water, a landing on it and a fall in throw a big splash for everyone. Played in
+      Concord's river: fell in at level 1 (-45 of 300 HP, out on the shore), stood on the water at level 60, jumped back
+      to land. The splash sound is the water step over the landing thud for now; a heavy one can be picked with Sound
+      Scout.
 - [ ] **Character creator, proportions page.** *Understood:* while on the page with height, bust and butt sliders the
       character wears the bare outfit so the change shows best. While adjusting height only, a height ruler stands
       beside them with something from the world for scale (a tree), and a note under it says it is there for reference.
 - [ ] **GM Tools window.** *Understood:* the World tab cannot change the time or anything else, and parts of the window
       are blacked out (boxes and text you cannot see), though most buttons still work. Fix the World tab and the drawing.
       *Owner, 24 Oct:* seen at least while in Play mode; check both in Play and out of it.
+
+- [ ] **Walking on the dedicated server.** *Understood (owner, 24 Oct):* on the dedicated server, with Run not
+      selected, the character plays a slow run instead of walking. With Run off it must walk properly (the walk
+      animation at walking speed), as it does when playing in the Editor.
 
 ## Housekeeping
 

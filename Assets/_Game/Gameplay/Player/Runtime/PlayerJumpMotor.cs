@@ -79,6 +79,9 @@ namespace KryticalNova.Player
         // Wallstride: this jump ends against a surface it catches, and the climb runs on from there.
         private PlayerWallRunMotor wallRun;
         private bool catchPlanned;
+        // Waterstride (owner, 24 Oct 2026): a jump may leave the water or come down on it, as on ground.
+        private PlayerWaterstrideMotor water;
+        private bool startsOnWater, landsOnWater;
 
         // A jump simulated elsewhere, shown here: only the clock and the clips run.
         private bool remoteJump;
@@ -110,6 +113,7 @@ namespace KryticalNova.Player
             skills = GetComponent<PlayerMovementSkills>();
             resources = GetComponent<PlayerResources>();
             wallRun = GetComponent<PlayerWallRunMotor>();
+            water = GetComponent<PlayerWaterstrideMotor>();
         }
 
         private void OnEnable()
@@ -178,6 +182,7 @@ namespace KryticalNova.Player
         /// <summary>Starts the planned jump where it is simulated and shows it on every other machine.</summary>
         private void BeginJump()
         {
+            if (startsOnWater && water != null) water.ServerLeaveForJump();
             JumpStarted?.Invoke(startFeet, landingFeet);
             if (planUsesWarp) BeginWarpedJump();
             else BeginParabolaJump();
@@ -231,11 +236,16 @@ namespace KryticalNova.Player
             
             float agentOffset = agent != null ? agent.baseOffset : 0f;
             var filter = new NavMeshQueryFilter { agentTypeID = agent != null ? agent.agentTypeID : 0, areaMask = agent != null ? agent.areaMask : -1 };
-            if (!NavMesh.SamplePosition(clickedPoint, out var landing, motionData.landingSampleRadius, filter)
+            // Water is landed on as on ground (owner, 24 Oct 2026): where it is decided, the landing stands on it or falls in.
+            startsOnWater = water != null && water.IsOnWater;
+            Vector3 surface = clickedPoint;
+            landsOnWater = water != null && water.TryWaterLanding(clickedPoint, out surface);
+            if (landsOnWater) landingFeet = surface;
+            else if (!NavMesh.SamplePosition(clickedPoint, out var landing, motionData.landingSampleRadius, filter)
                 || Mathf.Abs(landing.position.y - clickedPoint.y) > LandingHeightTolerance)
             { reason = "Choose a walkable landing surface."; return false; }
+            else landingFeet = landing.position;
             startFeet = transform.position - Vector3.up * agentOffset;
-            landingFeet = landing.position;
             Vector3 displacement = landingFeet - startFeet;
             float horizontalDistance = new Vector2(displacement.x, displacement.z).magnitude;
             if (horizontalDistance < MinimumTravelDistance) { reason = "Choose a landing point farther away."; return false; }
@@ -553,6 +563,7 @@ namespace KryticalNova.Player
                 warpAirborne = true;
                 lastSweepFeet = SweepFeet();
                 presentation.WarpedTakeOff();
+                if (startsOnWater && water != null) water.ServerSplash(startFeet);
                 return;
             }
 
@@ -628,6 +639,7 @@ namespace KryticalNova.Player
         {
             if (catchPlanned) { CatchSurface(); return; }
             StopWarp();
+            if (landsOnWater) { LandOnWater(warped: true); return; }
             if (!IsLandingClear() || !RestoreAgent(landingFeet + Vector3.up * agent.baseOffset))
             { AbortJump("Landing became unavailable. Returned to takeoff."); return; }
             IsBusy = false;
@@ -659,6 +671,7 @@ namespace KryticalNova.Player
             agent.enabled = false;
             inFlight = true;
             presentation.TakeOff();
+            if (startsOnWater && water != null) water.ServerSplash(startFeet);
         }
 
         private Vector3 EvaluateFeet(float time)
@@ -756,6 +769,7 @@ namespace KryticalNova.Player
             if (!IsBusy || !inFlight) return;
             if (catchPlanned) { CatchSurface(); return; }
             jumpSequence = null;
+            if (landsOnWater) { LandOnWater(warped: false); return; }
             if (!IsLandingClear() || !RestoreAgent(landingFeet + Vector3.up * agent.baseOffset))
             { AbortJump("Landing became unavailable. Returned to takeoff."); return; }
             IsBusy = false;
@@ -763,6 +777,17 @@ namespace KryticalNova.Player
             cooldownUntil = Time.time + motionData.landingCooldown;
             presentation.Land();
             Message?.Invoke(skills.IsJumpSelected ? "Landed. Jump stays selected; choose another landing point." : "Landed. Movement ready.");
+        }
+
+        /// <summary>Came down on the water: Waterstride decides whether the player stands on it or falls in.</summary>
+        private void LandOnWater(bool warped)
+        {
+            IsBusy = false;
+            inFlight = false;
+            cooldownUntil = Time.time + motionData.landingCooldown;
+            if (warped) presentation.WarpedLand();
+            else presentation.Land();
+            if (water != null) water.ServerLandedOnWater(landingFeet);
         }
 
         /// <summary>Cancels flight and restores the launch position when this controller is interrupted.</summary>
@@ -809,6 +834,13 @@ namespace KryticalNova.Player
                     agent.enabled = false;
                     transform.position = takeoffRootPosition;
                     restoreOnEnable = true;
+                }
+                else if (startsOnWater && water != null)
+                {
+                    // It left from the water: back onto it, not onto the nearest NavMesh (a shore).
+                    agent.enabled = false;
+                    transform.position = takeoffRootPosition;
+                    water.ServerLandedOnWater(startFeet, splash: false);
                 }
                 else if (!RestoreAgent(takeoffRootPosition))
                 {

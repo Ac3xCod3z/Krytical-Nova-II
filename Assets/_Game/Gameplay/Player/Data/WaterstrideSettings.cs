@@ -33,6 +33,13 @@ namespace KryticalNova.Player
         [Tooltip("Most water cells a route may search: a route round a whole lake is longer than this.")]
         [Min(1000)] public int maxRouteCells = 60000;
 
+        [Header("Jumping onto the water, and falling in (owner, 24 Oct 2026)")]
+        [Tooltip("A jump that lands on water stands on it when Waterstride is open and the player has Flux for it; otherwise " +
+                 "the player falls in and comes up on the nearest shore, losing this share of Max HP (never the last of it).")]
+        [Range(0f, 0.9f)] public float fallInHealthShare = 0.15f;
+        [Tooltip("Farthest the shore is looked for (metres) when the player falls in.")]
+        [Min(5f)] public float fallInShoreReach = 80f;
+
         [Header("The water map (Krytical Nova ▸ Zone ▸ Water Map)")]
         [Tooltip("Metres a cell of the map covers.")]
         [Min(0.25f)] public float mapCellSize = 1f;
