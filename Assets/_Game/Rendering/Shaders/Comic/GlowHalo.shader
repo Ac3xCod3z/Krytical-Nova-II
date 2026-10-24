@@ -45,6 +45,7 @@ Shader "Hidden/KryticalNova/GlowHalo"
         float4 _GlowAttr_TexelSize;
 
         float4 _GlowColor;          // Mask: rgb = colour x brightness, as it breathes
+        float _KN_BeatPulse;        // In a fight a glow swells on the beat of the fight music (BeatGlow sets it; 0 out of one)
         float4 _GlowWidth;          // Mask: x = width in metres, y = least width in pixels, z = most
         float4 _GlowFade;           // Mask: x = distance the halo starts to fade at, y = where it is gone
         float4 _GlowZone;           // Mask: x = 0 all of it glows, 1 only what is inside the zone, 2 none of it;
@@ -176,7 +177,7 @@ Shader "Hidden/KryticalNova/GlowHalo"
                 if (IsPerspectiveProjection()) pixelsPerMetre /= max(eye, 0.01);
 
                 MaskOutput output;
-                output.attr = half4(_GlowColor.rgb * fade, clamp(_GlowWidth.x * pixelsPerMetre, _GlowWidth.y, _GlowWidth.z));
+                output.attr = half4(_GlowColor.rgb * fade * (1.0 + _KN_BeatPulse), clamp(_GlowWidth.x * (1.0 + 0.5 * _KN_BeatPulse) * pixelsPerMetre, _GlowWidth.y, _GlowWidth.z));
                 output.depth = float2(eye, _GlowPin);
                 return output;
             }

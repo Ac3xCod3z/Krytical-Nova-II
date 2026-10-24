@@ -130,7 +130,7 @@ namespace KryticalNova.DevTools
                 "VITALS       gm.heal · gm.fillchi · gm.damage <n> · gm.hitme [n] [normal|heavy|crit] [front|back|left|right] · gm.spendchi <n> · gm.kill",
                 "SKILLS       gm.skillpoints <n> · gm.skills.max · gm.skills · gm.dropskills <true|false> · gm.unlockskill <#|id> · gm.lockskill <#|id>   (# = its number in gm.skills)",
                 "WARDS        gm.wards · gm.ward.remove <#|id|name> · gm.ward.clear   (take down active skills; gm.buffs, gm.buff.remove and gm.buff.clear still work)",
-                "COMBAT       gm.dummy.hit [times] · gm.dummy.reset · gm.dummy.hp <n> · gm.dummy.maxhp <n> (0 = base) · gm.dummy.inf [on|off]",
+                "COMBAT       gm.dummy.hit [times] · gm.dummy.reset   (Strike Dummies always have infinite health)",
                 "IN A FIGHT   gm.combat   (is the player in a fight, and why) · gm.combat hold [on|off]   (kept in one, as a war will) · gm.combat watch [on|off]",
                 "FIGHT MUSIC  gm.music   (the tracks, what is on) · gm.music.track <n|name|round> · gm.music.click [on|off]   (a click on every beat) · gm.music.nudge <ms>",
                 "CADENCE      gm.cadence   (its numbers, and how the last skill key pressed in a fight fell against the beat) · gm.cadence window [on|off]   (a running readout: beats coming, hits on and off the beat) · gm.cadence reset · gm.cadence log [on|off]",
@@ -633,44 +633,6 @@ namespace KryticalNova.DevTools
             target = NearestDummy(player);
             if (target == null) error = "No combat target found in the scene.";
             return target != null;
-        }
-
-        /// <summary>Read by the editor GM Tools window to show the toggle state.</summary>
-        public static bool DummyInfiniteHealthEnabled
-        {
-            get
-            {
-                var target = GmTarget.TryGetPlayer(out var player, out _) ? NearestDummy(player) : null;
-                return target != null && target.InfiniteHealth;
-            }
-        }
-
-        [Command("gm.dummy.hp", "Set the nearest combat dummy/NPC target's current health.")]
-        private static string SetDummyHealth(float value)
-        {
-            if (!TryGetDummy(out var target, out var error)) return error;
-            return target.SetHealth(value) ? DummyHealth(target) : NoAuthority;
-        }
-
-        [Command("gm.dummy.maxhp", "Set the nearest combat dummy/NPC target's max health and refill it (0 = back to its base value).")]
-        private static string SetDummyMaxHealth(float value)
-        {
-            if (!TryGetDummy(out var target, out var error)) return error;
-            return target.SetMaxHealthOverride(value) ? DummyHealth(target) : NoAuthority;
-        }
-
-        [Command("gm.dummy.inf", "Toggle (or set) infinite health on the nearest combat dummy/NPC target: it refills instead of dying.")]
-        private static string InfiniteDummyHealth()
-        {
-            if (!TryGetDummy(out var target, out var error)) return error;
-            return InfiniteDummyHealth(!target.InfiniteHealth);
-        }
-
-        [Command("gm.dummy.inf")]
-        private static string InfiniteDummyHealth(bool on)
-        {
-            if (!TryGetDummy(out var target, out var error)) return error;
-            return target.SetInfiniteHealth(on) ? $"Infinite health {(on ? "ON" : "OFF")} · {DummyHealth(target)}" : NoAuthority;
         }
 
         [Command("gm.dropskills", "Unlock (true) or lock (false) every rare drop-book combat skill.")]

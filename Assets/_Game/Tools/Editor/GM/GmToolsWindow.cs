@@ -422,25 +422,11 @@ namespace KryticalNova.EditorTools.GM
         // ================================================================ COMBAT (Cheats tab)
 
         [TabGroup(Tabs, CheatsTab), Title("Combat Testing"), Button(ButtonStyle.CompactBox, Expanded = true), EnableIf(nameof(IsReady)), PropertyOrder(250)]
-        [InfoBox("Targets the nearest combat dummy / NPC with a CombatEntity.")]
+        [InfoBox("Targets the nearest combat dummy / NPC with a CombatEntity. Strike Dummies always have infinite health.")]
         private void StrikeNearestDummy([MinValue(1), MaxValue(50)] int times = 1) => Run($"gm.dummy.hit {times}");
 
         [ButtonGroup(Tabs + "/" + CheatsTab + "/Combat"), EnableIf(nameof(IsReady)), PropertyOrder(251)]
         private void ResetDummy() => Run("gm.dummy.reset");
-
-        [TabGroup(Tabs, CheatsTab), Button(ButtonStyle.CompactBox, Expanded = true), EnableIf(nameof(IsReady)), PropertyOrder(252)]
-        private void SetDummyHP([MinValue(1)] float health = 2500f) => Run($"gm.dummy.hp {F(health)}");
-
-        [TabGroup(Tabs, CheatsTab), Button(ButtonStyle.CompactBox, Expanded = true), EnableIf(nameof(IsReady)), PropertyOrder(253)]
-        [InfoBox("Refills the dummy. 0 returns it to its base max HP.")]
-        private void SetDummyMaxHP([MinValue(0)] float maxHealth = 5000f) => Run($"gm.dummy.maxhp {F(maxHealth)}");
-
-        [TabGroup(Tabs, CheatsTab), ShowInInspector, ToggleLeft, EnableIf(nameof(IsReady)), LabelText("Infinite Dummy HP (refills instead of dying)"), PropertyOrder(254)]
-        private bool InfiniteDummyHP
-        {
-            get => GmCommands.DummyInfiniteHealthEnabled;
-            set { if (value != GmCommands.DummyInfiniteHealthEnabled) Run($"gm.dummy.inf {(value ? "true" : "false")}"); }
-        }
 
         // ================================================================ SKILLS
 
