@@ -190,6 +190,19 @@ namespace KryticalNova.UI
             }
         }
 
+        /// <summary>Lights, glows and the Nova pulse with the beat of the fight music, in a fight (on unless switched off).</summary>
+        public static bool BeatLights
+        {
+            get => PlayerPrefs.GetInt(Prefix + "beatLights", 1) != 0;
+            set
+            {
+                if (BeatLights == value) return;
+                PlayerPrefs.SetInt(Prefix + "beatLights", value ? 1 : 0);
+                PlayerPrefs.Save();
+                Changed?.Invoke();
+            }
+        }
+
         /// <summary>No sound while the game window is not the one in front.</summary>
         public static bool MuteInBackground
         {

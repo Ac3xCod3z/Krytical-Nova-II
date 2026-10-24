@@ -49,6 +49,9 @@ Shader "KryticalNova/NovaRing"
                 half _MinPixels;
             CBUFFER_END
 
+            // In a fight the Nova swells on the beat of the fight music (BeatGlow sets it for every material at once; 0 out of one).
+            half _KN_BeatPulse;
+
             struct Attributes
             {
                 float4 positionOS : POSITION;
@@ -135,7 +138,7 @@ Shader "KryticalNova/NovaRing"
 
                 half3 colour = _Color.rgb;
                 colour = lerp(colour, Spectrum(frac(along + _Time.y * 0.05)) * max(max(colour.r, colour.g), colour.b), _Prism);
-                float light = (band * pattern + comet) * (_Brightness + _Flash) * _Fade;
+                float light = (band * pattern + comet) * (_Brightness + _Flash) * (1.0 + _KN_BeatPulse) * _Fade;
                 return half4(colour * light, 1.0);
             }
             ENDHLSL

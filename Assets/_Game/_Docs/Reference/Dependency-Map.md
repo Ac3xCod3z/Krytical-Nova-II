@@ -20,7 +20,7 @@ script, which is then published to the link above. `--baseline` saves today's up
 ## Today
 
 <!-- map:summary -->
-Generated 24 Oct 2026, 11:17: 684 runtime scripts (129,878 lines) declaring 964 types (177 MonoBehaviours, 64 NetworkBehaviours, 94 ScriptableObject classes); 121 test scripts; 4715 prefabs, 46 scenes and 2717 assets read. 198 system-to-system links, of which 0 run uphill, 0 pairs of systems use each other both ways, and 0 links would have to go for the systems to form a clean stack. The largest tangle, classes that all reach each other through some chain of uses, holds 10 classes from 1 systems (UI 10, ...).
+Generated 24 Oct 2026, 11:37: 686 runtime scripts (130,090 lines) declaring 966 types (178 MonoBehaviours, 64 NetworkBehaviours, 95 ScriptableObject classes); 121 test scripts; 4715 prefabs, 46 scenes and 2718 assets read. 198 system-to-system links, of which 0 run uphill, 0 pairs of systems use each other both ways, and 0 links would have to go for the systems to form a clean stack. The largest tangle, classes that all reach each other through some chain of uses, holds 10 classes from 1 systems (UI 10, ...).
 <!-- /map:summary -->
 
 **Checked against the compiler.**
@@ -87,8 +87,8 @@ Checked against the 203 references the assemblies declare between systems: every
 | Gameplay/Wallet | Simulation | 3 | 132 | 0 | 18 | 0.0 | 0 | 2 of 2 |
 | Gameplay/NPC | Simulation | 3 | 290 | 5 | 17 | 0.23 | 1 | 1 of 4 |
 | Gameplay/Factions | Simulation | 6 | 169 | 0 | 25 | 0.0 | 0 | 1 of 3 |
-| GameFeel | Presentation | 28 | 5,188 | 52 | 2 | 0.96 | 4 | 17 of 36 |
-| UI | Presentation | 138 | 35,624 | 315 | 5 | 0.98 | 17 | 32 of 143 |
+| GameFeel | Presentation | 30 | 5,385 | 52 | 2 | 0.96 | 4 | 17 of 38 |
+| UI | Presentation | 138 | 35,639 | 315 | 5 | 0.98 | 17 | 32 of 143 |
 | Audio | Presentation | 14 | 1,222 | 5 | 16 | 0.24 | 1 | 1 of 15 |
 | Tools | Tooling | 30 | 5,187 | 186 | 0 | 1.0 | 3 | 0 of 32 |
 <!-- /map:systems -->
@@ -114,30 +114,30 @@ Each row is the cheaper side of a loop: cut these references and the two systems
 <!-- map:ripple -->
 | Type | System | Kind | Files using it | Systems | Types reached through others | Tests | Prefabs / scenes holding it |
 |---|---|---|---|---|---|---|---|
-| ClientPresentationRegistry | Core | plain | 81 | 18 | 239 | 1 | 0 |
-| FactionId | Gameplay/Factions | enum | 79 | 14 | 307 | 26 | 0 |
-| PlayerInventory | Gameplay/Items | net | 71 | 15 | 194 | 0 | 1 |
-| ItemDefinition | Gameplay/Items | so | 67 | 13 | 257 | 20 | 0 |
-| ItemStack | Gameplay/Items | plain | 51 | 12 | 236 | 12 | 0 |
-| CallKind | Networking | enum | 41 | 14 | 265 | 1 | 0 |
-| RpcBudget | Networking | plain | 41 | 14 | 251 | 1 | 0 |
-| EquipSlot | Gameplay/Items | enum | 39 | 10 | 282 | 15 | 0 |
-| PlayerIdentity | Gameplay/Player | net | 39 | 12 | 183 | 1 | 1 |
-| PlayerResources | Gameplay/Progression | net | 36 | 14 | 210 | 0 | 41 |
-| LocalPlayer | Core | plain | 35 | 15 | 203 | 1 | 0 |
-| PointAndClickPlayer | Gameplay/Player | net | 31 | 8 | 157 | 0 | 41 |
-| CharacterCombatStats | Gameplay/Progression | mono | 29 | 12 | 229 | 1 | 51 |
-| PlayerCharacterProgression | Gameplay/Progression | net | 28 | 12 | 230 | 0 | 41 |
-| WeaponClassId | Gameplay/Progression | enum | 26 | 8 | 297 | 8 | 0 |
-| CombatEntity | Gameplay/Progression | net | 26 | 10 | 187 | 0 | 13 |
-| StatType | Gameplay/Progression | enum | 24 | 7 | 316 | 7 | 0 |
-| CharacterRecipe | Gameplay/CharacterCreation | plain | 24 | 7 | 212 | 6 | 0 |
-| NpcOffer | Gameplay/NPC | enum | 24 | 9 | 202 | 1 | 0 |
+| ClientPresentationRegistry | Core | plain | 81 | 18 | 240 | 1 | 0 |
+| FactionId | Gameplay/Factions | enum | 79 | 14 | 308 | 26 | 0 |
+| PlayerInventory | Gameplay/Items | net | 72 | 15 | 195 | 0 | 1 |
+| ItemDefinition | Gameplay/Items | so | 67 | 13 | 258 | 20 | 0 |
+| ItemStack | Gameplay/Items | plain | 51 | 12 | 237 | 12 | 0 |
+| CallKind | Networking | enum | 41 | 14 | 266 | 1 | 0 |
+| RpcBudget | Networking | plain | 41 | 14 | 252 | 1 | 0 |
+| EquipSlot | Gameplay/Items | enum | 39 | 10 | 283 | 15 | 0 |
+| PlayerIdentity | Gameplay/Player | net | 39 | 12 | 184 | 1 | 1 |
+| PlayerResources | Gameplay/Progression | net | 36 | 14 | 211 | 0 | 41 |
+| LocalPlayer | Core | plain | 35 | 15 | 204 | 1 | 0 |
+| PointAndClickPlayer | Gameplay/Player | net | 31 | 8 | 158 | 0 | 41 |
+| CharacterCombatStats | Gameplay/Progression | mono | 29 | 12 | 230 | 1 | 51 |
+| PlayerCharacterProgression | Gameplay/Progression | net | 28 | 12 | 231 | 0 | 41 |
+| WeaponClassId | Gameplay/Progression | enum | 26 | 8 | 298 | 8 | 0 |
+| CombatEntity | Gameplay/Progression | net | 26 | 10 | 188 | 0 | 13 |
+| StatType | Gameplay/Progression | enum | 24 | 7 | 317 | 7 | 0 |
+| CharacterRecipe | Gameplay/CharacterCreation | plain | 24 | 7 | 213 | 6 | 0 |
+| NpcOffer | Gameplay/NPC | enum | 24 | 9 | 203 | 1 | 0 |
 | HudTyping | UI | plain | 23 | 1 | 31 | 0 | 0 |
-| SaveScope | Core | enum | 22 | 9 | 234 | 0 | 0 |
-| SkillDefinitionSO | Gameplay/Progression | so | 22 | 8 | 204 | 7 | 0 |
-| ItemCatalog | Gameplay/Items | so | 21 | 8 | 208 | 7 | 0 |
-| KeyBindings | Core | plain | 21 | 4 | 167 | 2 | 0 |
+| SaveScope | Core | enum | 22 | 9 | 235 | 0 | 0 |
+| SkillDefinitionSO | Gameplay/Progression | so | 22 | 8 | 205 | 7 | 0 |
+| ItemCatalog | Gameplay/Items | so | 21 | 8 | 209 | 7 | 0 |
+| KeyBindings | Core | plain | 21 | 4 | 168 | 2 | 0 |
 | HudPreferences | UI | plain | 21 | 2 | 71 | 0 | 0 |
 <!-- /map:ripple -->
 
@@ -146,7 +146,7 @@ Each row is the cheaper side of a loop: cut these references and the two systems
 <!-- map:hubs -->
 | Static member | Kind | Runtime files | Other systems |
 |---|---|---|---|
-| PlayerInventory.Local | locator | 37 | GameFeel, Gameplay/Autopilot, Gameplay/Economy, Gameplay/Hostiles, Gameplay/Persistence, Tools, UI |
+| PlayerInventory.Local | locator | 38 | GameFeel, Gameplay/Autopilot, Gameplay/Economy, Gameplay/Hostiles, Gameplay/Persistence, Tools, UI |
 | HostileNet.Active | locator | 5 | Gameplay/Autopilot, Tools, UI |
 | WorldDrop.Active | locator | 4 | GameFeel, Gameplay/Autopilot, UI |
 | PlayerInventory.LocalChanged | event | 20 | Gameplay/Persistence, UI |
@@ -196,7 +196,7 @@ Classes over 700 lines. Several of them also reach into three or more other syst
 | CharacterCreatorController | UI | 863 | Gameplay/CharacterCreation, Gameplay/Factions, Gameplay/Items, Gameplay/Progression | 0 |
 | CharacterSelectController | UI | 831 | Gameplay/CharacterCreation, Networking | 0 |
 | PlayerJumpMotor | Gameplay/Player | 812 | Gameplay/Progression, Networking | 7 |
-| PlayerInventory | Gameplay/Items | 799 | Core, Gameplay/Factions, Gameplay/Progression, Networking | 71 |
+| PlayerInventory | Gameplay/Items | 799 | Core, Gameplay/Factions, Gameplay/Progression, Networking | 72 |
 | PlayerVaultMotor | Gameplay/Player | 731 | Core, Gameplay/CharacterCreation, Gameplay/Factions, Gameplay/Progression, Networking | 3 |
 <!-- /map:gods -->
 
@@ -236,6 +236,7 @@ Each ScriptableObject class, how many assets of it exist, and where they are wir
 | DeckLibrary | Audio | 1 | 2 | 0 / 40 / 0 |
 | MenuMusic | Audio | 1 | 1 | 0 / 4 / 0 |
 | GrassRuleSet | Environment | 1 | 1 | 0 / 40 / 0 |
+| BeatGlowSettings | GameFeel | 1 | 1 | 1 / 0 / 0 |
 | BeatRingSettings | GameFeel | 1 | 1 | 1 / 0 / 0 |
 | HitLookSettings | GameFeel | 1 | 1 | 1 / 0 / 0 |
 | SmearSettings | GameFeel | 1 | 2 | 1 / 0 / 0 |
@@ -312,7 +313,7 @@ Where tuning still lives in code, and other links the compiler cannot see:
 - **Lookups by name** (Type.GetType, Find("..."), Resources.Load, SendMessage): 11.
 - **Asset entries that store a class by name and assembly** ([SerializeReference]): 171 in 2 assets.
 - **Static accessors that call GetComponent on every use:** 0.
-- **FindObject calls in runtime code:** 30.
+- **FindObject calls in runtime code:** 31.
 <!-- /map:smells -->
 
 ## The problems, ranked
@@ -324,8 +325,8 @@ first. The page lists the file and line behind each.
 | # | Kind | Problem | Systems | Impact (1-5) | Files a fix touches | Effort |
 |---|---|---|---|---|---|---|
 | 1 | Hidden link | 171 asset entries store a class by name and assembly | GameFeel | 4 | 6 | small |
-| 2 | God class | PlayerInventory (799 lines) | Gameplay/Items | 4 | 72 | large |
-| 3 | Hub | PlayerInventory.Local (locator) | Gameplay/Items, GameFeel, Gameplay/Autopilot, Gameplay/Economy, Gameplay/Hostiles ... | 4 | 37 | large |
+| 2 | God class | PlayerInventory (799 lines) | Gameplay/Items | 4 | 73 | large |
+| 3 | Hub | PlayerInventory.Local (locator) | Gameplay/Items, GameFeel, Gameplay/Autopilot, Gameplay/Economy, Gameplay/Hostiles ... | 4 | 38 | large |
 | 4 | Hub | PlayerSpawnPoint.Active (locator) | Networking, Gameplay/Housing, Tools | 3 | 3 | small |
 | 5 | Hub | PointOfInterest.Active (locator) | World, Tools, UI | 3 | 3 | small |
 | 6 | Hub | CombatEntity.AnyKilled (event) | Gameplay/Progression, Gameplay/Hostiles, Gameplay/Pets | 3 | 2 | small |

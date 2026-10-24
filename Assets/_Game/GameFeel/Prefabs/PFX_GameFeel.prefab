@@ -14379,6 +14379,7 @@ GameObject:
   - component: {fileID: 2430772476998623506}
   - component: {fileID: 1288751205682697107}
   - component: {fileID: 3085285442744529525}
+  - component: {fileID: 249504974722930670}
   m_Layer: 0
   m_Name: PFX_GameFeel
   m_TagString: Untagged
@@ -14744,6 +14745,19 @@ MonoBehaviour:
   m_EditorClassIdentifier: KryticalNova.GameFeel::KryticalNova.GameFeel.BeatRing
   settings: {fileID: 11400000, guid: 2934daf7a271dc44896c51bbab59c390, type: 2}
   material: {fileID: 2100000, guid: 3a2c2f401e3816945b8b445870f9640b, type: 2}
+--- !u!114 &249504974722930670
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3514794766457463837}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d6b072d71961b424c87ae6409f4b1abc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: KryticalNova.GameFeel::KryticalNova.GameFeel.BeatGlow
+  settings: {fileID: 11400000, guid: dcb5d23435c9eba4e8a00822dbf0730f, type: 2}
 --- !u!1 &3694003426351630226
 GameObject:
   m_ObjectHideFlags: 0
