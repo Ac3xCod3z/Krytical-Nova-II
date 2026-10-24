@@ -106,7 +106,7 @@ namespace KryticalNova.World
                     thunderSource.PlayOneShot(thunderClips[thunderClip % thunderClips.Length], thunderLoudness);
             }
 
-            Flash = Envelope((float)(now - flashStart)) * flashAmplitude;
+            Flash = Envelope((float)(now - flashStart)) * flashAmplitude * KryticalNova.Core.Accessibility.FlashScale; // Settings ▸ Accessibility
         }
 
         /// <summary>GM/testing: a visible, full-strength strike right now near the camera (local only).</summary>

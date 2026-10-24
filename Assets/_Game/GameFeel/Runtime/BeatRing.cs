@@ -96,6 +96,8 @@ namespace KryticalNova.GameFeel
             if (settings == null || material == null || Application.isBatchMode) return;
             float live = AudioPreferences.BeatRing ? CombatBeat.Live01 : 0f;
             float dt = Time.unscaledDeltaTime;
+            burst = Mathf.Min(burst, KryticalNova.Core.Accessibility.FlashScale); // Settings ▸ Accessibility
+            caught = Mathf.Min(caught, KryticalNova.Core.Accessibility.FlashScale);
             burst = Mathf.MoveTowards(burst, 0f, dt / settings.burstSeconds);
             shock = Mathf.MoveTowards(shock, 1f, dt / settings.shockSeconds);
             leap = Mathf.MoveTowards(leap, 0f, dt / 0.35f);
@@ -425,7 +427,7 @@ namespace KryticalNova.GameFeel
         private void Kick()
         {
             if (kick == null || settings.stepKick <= 0f || !HudPreferences.ScreenShake) return;
-            float force = settings.stepKick * (0.6f + 0.4f * step);
+            float force = settings.stepKick * (0.6f + 0.4f * step) * KryticalNova.Core.Accessibility.FlashScale;
             kick.GenerateImpulseWithVelocity(new Vector3(0f, -force, 0f));
         }
 

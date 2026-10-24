@@ -1,0 +1,23 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <!-- The first-time setup (FirstRunSetup; owner, 24 Oct 2026): the photosensitivity agreement, the HDR display step
+         and the colour-blind step, one at a time on one card. The steps' text and buttons are filled in code. It wears
+         the game's skins like every window: the character's faction in the game, the menus' skin before that. -->
+    <Style src="../../Common/KryticalTheme.uss" />
+    <Style src="../Settings.uss" />
+    <Style src="../FirstRun.uss" />
+    <!-- Faction skins: generated from the UiSkin assets; each only applies under its .kn-faction-* class. -->
+    <Style src="../../Common/KryticalSkin_Hegemony.uss" />
+    <Style src="../../Common/KryticalSkin_Null.uss" />
+    <Style src="../../Common/KryticalSkin_Covenant.uss" />
+    <ui:VisualElement name="first-run" class="kn-root first-run">
+        <ui:VisualElement name="first-run-card" class="panel window first-run-card">
+            <ui:VisualElement class="row kn-header">
+                <ui:Label name="first-run-title" text="PHOTOSENSITIVITY WARNING" class="heading" />
+                <ui:Label name="first-run-step" text="1 / 3" class="muted header-key" />
+            </ui:VisualElement>
+            <ui:Label name="first-run-body" class="first-run-body" />
+            <ui:VisualElement name="first-run-content" class="first-run-content" />
+            <ui:VisualElement name="first-run-buttons" class="first-run-buttons" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

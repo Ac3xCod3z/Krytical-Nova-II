@@ -53,7 +53,7 @@ namespace KryticalNova.GameFeel
             transform.localScale *= factor / lastFactor;
             lastFactor = factor;
 
-            float flash = (1f - t) * (1f - t);
+            float flash = (1f - t) * (1f - t) * KryticalNova.Core.Accessibility.FlashScale; // Settings ▸ Accessibility
             ApplyFlash(flash);
             if (t >= 1f) Restore();
         }

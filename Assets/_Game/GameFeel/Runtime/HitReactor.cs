@@ -138,6 +138,7 @@ namespace KryticalNova.GameFeel
                 flashT += Time.unscaledDeltaTime;
                 float k = 1f - Mathf.Clamp01(flashT / flashSeconds);
                 k *= k; // fast ease-out: a pop, not a strobe
+                k *= KryticalNova.Core.Accessibility.FlashScale; // Settings ▸ Accessibility
                 foreach (var (mat, emission, _) in flashMats)
                     if (mat != null) mat.SetColor(EmissionColorId, Color.Lerp(emission, flashColor * flashIntensity, k));
                 if (flashT >= flashSeconds) EndFlash();

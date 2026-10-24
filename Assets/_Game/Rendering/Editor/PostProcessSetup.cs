@@ -58,6 +58,7 @@ namespace KryticalNova.EditorTools
 
             ApplyBeautify(profile);
             EnsureGlowHalo();
+            EnsureColourBlind();
             EnsureComicLettering();
 
             EditorUtility.SetDirty(profile);
@@ -92,6 +93,25 @@ namespace KryticalNova.EditorTools
                 SerializedProperty shader = feature.FindProperty("shader");
                 if (shader.objectReferenceValue != null) return;
                 shader.objectReferenceValue = AssetDatabase.LoadAssetAtPath<Shader>(GlowHaloShaderPath);
+                feature.ApplyModifiedPropertiesWithoutUndo();
+            });
+        }
+
+        /// <summary>
+        /// The colour-blind correction of Settings ▸ Accessibility (owner, 24 Oct 2026): makes sure the PC renderer carries
+        /// the feature, with its shader referenced so a build keeps it. It does nothing while the setting is Off.
+        /// </summary>
+        [MenuItem("Krytical Nova/Rendering/Ensure Colour-Blind Correction")]
+        public static void EnsureColourBlind()
+        {
+            var renderer = AssetDatabase.LoadAssetAtPath<UniversalRendererData>(PcRendererPath);
+            if (renderer == null) { Debug.LogError($"[PostProcess] Missing {PcRendererPath}"); return; }
+            RendererFeatureUtil.Ensure<KryticalNova.Rendering.ColourBlindFeature>(renderer, "ColourBlind", f =>
+            {
+                var feature = new SerializedObject(f);
+                SerializedProperty shader = feature.FindProperty("shader");
+                if (shader.objectReferenceValue != null) return;
+                shader.objectReferenceValue = AssetDatabase.LoadAssetAtPath<Shader>(ColourBlindShaderPath);
                 feature.ApplyModifiedPropertiesWithoutUndo();
             });
         }
@@ -206,6 +226,7 @@ namespace KryticalNova.EditorTools
 
         private const string PcRendererPath = "Assets/_Game/Rendering/Settings/PC_Renderer.asset";
         private const string GlowHaloShaderPath = "Assets/_Game/Rendering/Shaders/Comic/GlowHalo.shader";
+        private const string ColourBlindShaderPath = "Assets/_Game/Rendering/Shaders/ColourBlindCorrection.shader";
 
         private static T Get<T>(VolumeProfile profile) where T : VolumeComponent
         {

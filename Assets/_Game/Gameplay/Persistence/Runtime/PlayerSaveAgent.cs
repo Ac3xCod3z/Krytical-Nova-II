@@ -92,6 +92,11 @@ namespace KryticalNova.Persistence
         {
             base.OnNetworkSpawn();
             TryLoad();
+            if (IsOwner)
+            {
+                Accessibility.Changed += SendAgreement;
+                SendAgreement();
+            }
         }
 
         public override void OnNetworkDespawn()
@@ -99,6 +104,7 @@ namespace KryticalNova.Persistence
             // Leaving the world: the select screen is next, and shows what was worn at this moment.
             if (wornDue >= 0f) RememberWorn();
             if (IsServer) SaveAndRelease();
+            Accessibility.Changed -= SendAgreement;
             base.OnNetworkDespawn();
         }
 
@@ -232,8 +238,58 @@ namespace KryticalNova.Persistence
             // Max HP and Flux come from the level and gear that were just put back.
             if (!isNew && resources != null && resources.IsAlive) resources.RestoreAll();
 
+            if (pendingAgreement != 0) RecordAgreement(pendingAgreement);
             Save();
             Loaded?.Invoke();
+        }
+
+        // ------------------------------------------------------------------ agreements (owner, 24 Oct 2026)
+
+        /// <summary>The account part that keeps what the player agreed to.</summary>
+        public const string AgreementsKey = "agreements";
+
+        [Serializable]
+        private sealed class AgreementRecord
+        {
+            /// <summary>The photosensitivity warning: first and latest time agreed to on the player's PC, and when the server first recorded it (UTC ticks).</summary>
+            public long photosensitivityFirstAgreed;
+            public long photosensitivityLastAgreed;
+            public long photosensitivityRecorded;
+        }
+
+        private long sentAgreement;
+        private long pendingAgreement;
+
+        // Owner: the warning agreed to on this PC goes on the account's record (once per new agreement).
+        private void SendAgreement()
+        {
+            long agreed = Accessibility.WarningAgreedUtc;
+            if (agreed == 0 || agreed == sentAgreement || !IsSpawned) return;
+            sentAgreement = agreed;
+            AgreementRpc(agreed);
+        }
+
+        [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
+        private void AgreementRpc(long agreedUtcTicks)
+        {
+            // A time from the future (or nonsense) is taken as "now"; the server's own time is kept beside it.
+            long now = DateTime.UtcNow.Ticks;
+            if (agreedUtcTicks <= 0 || agreedUtcTicks > now) agreedUtcTicks = now;
+            if (character == null) pendingAgreement = agreedUtcTicks; // recorded once the account is loaded
+            else RecordAgreement(agreedUtcTicks);
+        }
+
+        private void RecordAgreement(long agreedUtcTicks)
+        {
+            pendingAgreement = 0;
+            if (account == null || !HasAuthority) return;
+            string stored = account.Get(AgreementsKey);
+            AgreementRecord record = string.IsNullOrEmpty(stored) ? new AgreementRecord() : JsonUtility.FromJson<AgreementRecord>(stored) ?? new AgreementRecord();
+            if (record.photosensitivityLastAgreed == agreedUtcTicks) return;
+            if (record.photosensitivityFirstAgreed == 0) record.photosensitivityFirstAgreed = agreedUtcTicks;
+            if (record.photosensitivityRecorded == 0) record.photosensitivityRecorded = DateTime.UtcNow.Ticks;
+            record.photosensitivityLastAgreed = agreedUtcTicks;
+            if (account.Set(AgreementsKey, JsonUtility.ToJson(record))) ServerSave.WriteAccount(account);
         }
 
         // A player of a dedicated server (not the host's own): the server keeps the roster (ServerRoster).
