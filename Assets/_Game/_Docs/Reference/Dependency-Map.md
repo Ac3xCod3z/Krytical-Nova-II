@@ -20,7 +20,7 @@ script, which is then published to the link above. `--baseline` saves today's up
 ## Today
 
 <!-- map:summary -->
-Generated 24 Oct 2026, 11:37: 686 runtime scripts (130,090 lines) declaring 966 types (178 MonoBehaviours, 64 NetworkBehaviours, 95 ScriptableObject classes); 121 test scripts; 4715 prefabs, 46 scenes and 2718 assets read. 198 system-to-system links, of which 0 run uphill, 0 pairs of systems use each other both ways, and 0 links would have to go for the systems to form a clean stack. The largest tangle, classes that all reach each other through some chain of uses, holds 10 classes from 1 systems (UI 10, ...).
+Generated 24 Oct 2026, 12:02: 686 runtime scripts (130,209 lines) declaring 966 types (178 MonoBehaviours, 64 NetworkBehaviours, 95 ScriptableObject classes); 121 test scripts; 4715 prefabs, 46 scenes and 2718 assets read. 198 system-to-system links, of which 0 run uphill, 0 pairs of systems use each other both ways, and 0 links would have to go for the systems to form a clean stack. The largest tangle, classes that all reach each other through some chain of uses, holds 10 classes from 1 systems (UI 10, ...).
 <!-- /map:summary -->
 
 **Checked against the compiler.**
@@ -87,7 +87,7 @@ Checked against the 203 references the assemblies declare between systems: every
 | Gameplay/Wallet | Simulation | 3 | 132 | 0 | 18 | 0.0 | 0 | 2 of 2 |
 | Gameplay/NPC | Simulation | 3 | 290 | 5 | 17 | 0.23 | 1 | 1 of 4 |
 | Gameplay/Factions | Simulation | 6 | 169 | 0 | 25 | 0.0 | 0 | 1 of 3 |
-| GameFeel | Presentation | 30 | 5,385 | 52 | 2 | 0.96 | 4 | 17 of 38 |
+| GameFeel | Presentation | 30 | 5,504 | 52 | 2 | 0.96 | 4 | 17 of 38 |
 | UI | Presentation | 138 | 35,639 | 315 | 5 | 0.98 | 17 | 32 of 143 |
 | Audio | Presentation | 14 | 1,222 | 5 | 16 | 0.24 | 1 | 1 of 15 |
 | Tools | Tooling | 30 | 5,187 | 186 | 0 | 1.0 | 3 | 0 of 32 |
@@ -313,7 +313,7 @@ Where tuning still lives in code, and other links the compiler cannot see:
 - **Lookups by name** (Type.GetType, Find("..."), Resources.Load, SendMessage): 11.
 - **Asset entries that store a class by name and assembly** ([SerializeReference]): 171 in 2 assets.
 - **Static accessors that call GetComponent on every use:** 0.
-- **FindObject calls in runtime code:** 31.
+- **FindObject calls in runtime code:** 32.
 <!-- /map:smells -->
 
 ## The problems, ranked
