@@ -15,8 +15,10 @@ MonoBehaviour:
   role: 3
   displayName: Broker
   title: The Exchange
-  greeting: Everything has a buyer. Everything.
+  greeting: Everything has a buyer, darling. Everything. The trick is knowing who will pay, and how much.
   lines:
+  - text: Everything has a buyer, darling. Everything. The trick is knowing who will pay, and how much.
+    clip: {fileID: 8300000, guid: 46401dc56db8ecb409965b57c7838ce8, type: 3}
   - text: Rare, tempered, untouched. Name your price, and I will find the one who pays it.
     clip: {fileID: 8300000, guid: 6d2ec2f680fe27443aec1aa030668014, type: 3}
   - text: The market never sleeps, darling. Neither do I.

@@ -120,6 +120,10 @@
    "voiceDescription": "A woman, a wealthy dealer with a smooth, low, confident voice. Amused, unhurried and a little dangerous.",
    "lines": [
     {
+     "text": "Everything has a buyer, darling. Everything. The trick is knowing who will pay, and how much.",
+     "clip": "Assets/_Game/Audio/Voices/NPC/Broker/VO_Broker_1.ogg"
+    },
+    {
      "text": "Rare, tempered, untouched. Name your price, and I will find the one who pays it.",
      "clip": "Assets/_Game/Audio/Voices/NPC/Broker/VO_Broker_2.ogg"
     },
