@@ -20,7 +20,7 @@ script, which is then published to the link above. `--baseline` saves today's up
 ## Today
 
 <!-- map:summary -->
-Generated 24 Oct 2026, 10:46: 683 runtime scripts (129,602 lines) declaring 963 types (177 MonoBehaviours, 64 NetworkBehaviours, 94 ScriptableObject classes); 121 test scripts; 4715 prefabs, 46 scenes and 2717 assets read. 198 system-to-system links, of which 0 run uphill, 0 pairs of systems use each other both ways, and 0 links would have to go for the systems to form a clean stack. The largest tangle, classes that all reach each other through some chain of uses, holds 10 classes from 1 systems (UI 10, ...).
+Generated 24 Oct 2026, 10:51: 683 runtime scripts (129,602 lines) declaring 963 types (177 MonoBehaviours, 64 NetworkBehaviours, 94 ScriptableObject classes); 121 test scripts; 4715 prefabs, 46 scenes and 2717 assets read. 198 system-to-system links, of which 0 run uphill, 0 pairs of systems use each other both ways, and 0 links would have to go for the systems to form a clean stack. The largest tangle, classes that all reach each other through some chain of uses, holds 10 classes from 1 systems (UI 10, ...).
 <!-- /map:summary -->
 
 **Checked against the compiler.**
