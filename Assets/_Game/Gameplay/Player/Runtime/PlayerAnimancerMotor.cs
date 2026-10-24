@@ -436,6 +436,23 @@ namespace KryticalNova.Player
             return (position - speedPositions[speedOldest]).magnitude / span;
         }
 
+        /// <summary>
+        /// Whether the run clip plays (or the walk clip). From walking, the run clip comes at <paramref name="threshold"/>.
+        /// From running it holds a moment (<paramref name="delay"/>) and, while Run is selected, down to
+        /// <paramref name="threshold"/> - <paramref name="hysteresis"/>, so braking does not flash the walk clip. With Run
+        /// not selected anything under the threshold is a walk (owner, 24 Oct 2026: on the dedicated server a walk played as
+        /// a slow run: the walk is 5 m/s, the old floor was 5 too, and a correction's speed spike put the run clip in
+        /// for good).
+        /// </summary>
+        public static bool UsesRunClip(bool wasRunning, float gaitSpeed, bool runSelected, float threshold, float hysteresis,
+            float slowerSeconds, float delay)
+        {
+            if (gaitSpeed >= threshold) return true;
+            if (!wasRunning) return false;
+            if (slowerSeconds < delay) return true;
+            return runSelected && gaitSpeed > threshold - hysteresis;
+        }
+
         private void UpdateLocomotion()
         {
             if (animancer == null) return;
@@ -449,19 +466,12 @@ namespace KryticalNova.Player
             if (IsMoving())
             {
                 float gaitSpeed = GaitSpeed;
-                AnimationClip targetClip = gaitSpeed >= walkSpeedThreshold ? targetRun : targetWalk;
-
                 bool wasRunning = currentLocomotionClip == runClip || currentLocomotionClip == drawnRunClip;
-                if (wasRunning && targetClip == targetWalk)
-                {
-                    slowerGaitTimer += Time.deltaTime;
-                    if (gaitSpeed > walkSpeedThreshold - runToWalkHysteresis || slowerGaitTimer < gaitChangeDelay)
-                        targetClip = targetRun;
-                }
-                else
-                {
-                    slowerGaitTimer = 0f;
-                }
+                if (wasRunning && gaitSpeed < walkSpeedThreshold) slowerGaitTimer += Time.deltaTime;
+                else slowerGaitTimer = 0f;
+                bool runSelected = movementSkills != null && movementSkills.IsRunning;
+                AnimationClip targetClip = UsesRunClip(wasRunning, gaitSpeed, runSelected, walkSpeedThreshold,
+                    runToWalkHysteresis, slowerGaitTimer, gaitChangeDelay) ? targetRun : targetWalk;
 
                 stopState = null;
                 PlayLocomotionClip(targetClip, locomotionFadeDuration);

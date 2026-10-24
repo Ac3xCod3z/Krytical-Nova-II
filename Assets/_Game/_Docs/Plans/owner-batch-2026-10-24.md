@@ -74,9 +74,16 @@ so you can correct me early.
       are blacked out (boxes and text you cannot see), though most buttons still work. Fix the World tab and the drawing.
       *Owner, 24 Oct:* seen at least while in Play mode; check both in Play and out of it.
 
-- [ ] **Walking on the dedicated server.** *Understood (owner, 24 Oct):* on the dedicated server, with Run not
+- [x] **Walking on the dedicated server.** *Understood (owner, 24 Oct):* on the dedicated server, with Run not
       selected, the character plays a slow run instead of walking. With Run off it must walk properly (the walk
       animation at walking speed), as it does when playing in the Editor.
+      *Tested 24 Oct* as a client of the test server (built from main, port 7796, straight into Zone01 as Tolan):
+      with Run off the walk clip plays at normal speed at 5 m/s; Run on then off goes back to the walk clip. Not
+      reproduced from the Editor. *Seen (owner):* the installed game on the real server. *Cause:* the run clip, once
+      in, only went back to walk under 7 - 2 = 5 m/s, and the walk is exactly 5 m/s: a speed spike from a server
+      correction (real network) put the run clip in and a walk a hair over 5 kept it, played slowed down.
+      *Fixed:* with Run not selected anything under the run threshold is the walk clip (`UsesRunClip`, tested). To
+      check in the installed game once a new build is published.
 
 ## Housekeeping
 
