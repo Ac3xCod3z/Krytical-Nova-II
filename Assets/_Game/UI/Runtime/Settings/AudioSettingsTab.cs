@@ -44,6 +44,14 @@ namespace KryticalNova.UI
                 () => AudioPreferences.BeatRing, value => AudioPreferences.BeatRing = value);
             SettingsRows.Toggle(page, "COMBO counter when skills land on the beat",
                 () => AudioPreferences.ComboMeter, value => AudioPreferences.ComboMeter = value);
+            SettingsRows.Toggle(page, "Beat track above the Hotbar in a fight",
+                () => AudioPreferences.BeatTrack, value => AudioPreferences.BeatTrack = value);
+            SettingsRows.Toggle(page, "EARLY / LATE after a press just off the beat",
+                () => AudioPreferences.BeatHint, value => AudioPreferences.BeatHint = value);
+            SettingsRows.Toggle(page, "Bigger mark on the first beat of a bar",
+                () => AudioPreferences.BeatCountIn, value => AudioPreferences.BeatCountIn = value);
+            SettingsRows.Toggle(page, "Metronome tick on every beat",
+                () => AudioPreferences.Metronome, value => AudioPreferences.Metronome = value);
         }
     }
 }

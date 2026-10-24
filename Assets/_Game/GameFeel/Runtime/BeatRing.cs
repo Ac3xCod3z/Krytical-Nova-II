@@ -44,7 +44,11 @@ namespace KryticalNova.GameFeel
         private int builtColumns, builtSegments, builtShock;
         private Transform anchor;
         private float anchorRadius = 0.6f, anchorHeight = 0.6f, measuredAt = -10f;
-        private float burst, pulse, shock = 1f, leap;
+        // With no pet out the ring lies on the ground round the player's feet (owner, 24 Oct 2026: at the waist it is
+        // distracting): the root stands a metre up, so the ground under it is found.
+        private bool onPlayer;
+        private const float GroundLift = 0.04f, GroundProbe = 3f;
+        private float burst, pulse, shock = 1f, leap, caught;
         private int step;
         private long lastBeat = -1;
         private float beatKickNow;
@@ -72,7 +76,7 @@ namespace KryticalNova.GameFeel
 
         private void OnPress(double error, bool onBeat)
         {
-            if (onBeat) burst = 1f;
+            if (onBeat) { burst = 1f; caught = 1f; }
         }
 
         // A step of the combo landed on the beat: the bigger moment, bigger at each step.
@@ -95,6 +99,7 @@ namespace KryticalNova.GameFeel
             burst = Mathf.MoveTowards(burst, 0f, dt / settings.burstSeconds);
             shock = Mathf.MoveTowards(shock, 1f, dt / settings.shockSeconds);
             leap = Mathf.MoveTowards(leap, 0f, dt / 0.35f);
+            caught = Mathf.MoveTowards(caught, 0f, dt / settings.caughtSeconds);
             if (live <= 0.01f || !FindAnchor())
             {
                 if (ring != null && ring.activeSelf) ring.SetActive(false);
@@ -114,6 +119,7 @@ namespace KryticalNova.GameFeel
             Transform now = null;
             PlayerPet pet = PlayerPet.Local;
             if (pet != null && pet.Pet != null && pet.TryGetComponent(out PetFollower follower)) now = follower.PetTransform;
+            onPlayer = now == null;
             if (now == null && PlayerInventory.Local != null) now = PlayerInventory.Local.transform;
             if (now == null) return false;
             if (now != anchor || Time.unscaledTime - measuredAt > MeasureEvery)
@@ -231,7 +237,7 @@ namespace KryticalNova.GameFeel
             builtColumns = columns;
             builtSegments = segments;
             builtShock = shockQuads;
-            int quads = columns * segments + shockQuads;
+            int quads = columns * segments + shockQuads * 2; // the shock ring, then the closing ring
             vertices = new Vector3[quads * 4];
             colours = new Color[quads * 4];
             var triangles = new int[quads * 6];
@@ -255,7 +261,7 @@ namespace KryticalNova.GameFeel
         {
             int columns = settings.columns, segments = settings.segments;
             Camera view = Camera.main;
-            Vector3 centre = anchor.position + Vector3.up * (anchorHeight * settings.standAt);
+            Vector3 centre = onPlayer ? GroundUnder(anchor) : anchor.position + Vector3.up * (anchorHeight * settings.standAt);
             ring.transform.SetPositionAndRotation(Vector3.zero, Quaternion.identity);
             Vector3 toCamera = view != null ? view.transform.position - centre : -Vector3.forward;
             toCamera.y = 0f;
@@ -316,9 +322,72 @@ namespace KryticalNova.GameFeel
                 }
             }
             DrawShock(centre, burstColour, live, ref v);
+            DrawApproach(centre, live, inWindow, ref v);
             mesh.vertices = vertices;
             mesh.colors = colours;
             mesh.RecalculateBounds();
+        }
+
+        // The closing ring (owner, 24 Oct 2026: "I have no way to truly understand when to hit on beat"): a flat ring that
+        // shrinks onto the Beat Ring once a beat and meets it on the beat, as rhythm games show when to press. In the
+        // Cadence window it sits on the ring in gold; before the first beat of a bar it is wider and warmer (the count-in).
+        private void DrawApproach(Vector3 centre, float live, bool inWindow, ref int v)
+        {
+            int count = settings.shockSegments;
+            bool shown = settings.approach && CombatBeat.HasBeat && live > 0.01f;
+            MusicTrack track = CombatBeat.Track;
+            bool barNext = shown && settings.countIn && track != null && BeatMath.IsBarBeat(CombatBeat.Index + 1, track.barBeat, track.beatsPerBar);
+            float toBeat = 1f - CombatBeat.Phase01; // 1 just after a beat, 0 on the next
+            float reach = anchorRadius * (1f + settings.approachReach * (barNext ? 1.35f : 1f) * Smooth(toBeat));
+            float width = settings.approachWidth * (barNext ? 1.5f : 1f);
+            Color c;
+            if (caught > 0f)
+            {
+                // Caught on the beat: the closing ring locks onto the Beat Ring in bright gold and pulses out of it.
+                float pulseOut = Smooth(caught);
+                reach = anchorRadius * (1f + 0.1f * (1f - pulseOut));
+                width *= 1.8f + 1.4f * pulseOut;
+                c = settings.approachWindow * (1.6f + 1.2f * pulseOut);
+                c.a = live * Mathf.Clamp01(0.4f + pulseOut);
+            }
+            else if (inWindow)
+            {
+                reach = anchorRadius;
+                width *= 1.8f;
+                c = settings.approachWindow * 1.8f;
+                c.a = live;
+            }
+            else
+            {
+                c = barNext ? settings.approachBar : settings.approachColour;
+                // Faint as it sets out, brightest as it closes in.
+                c.a = live * settings.approachAlpha * Mathf.Lerp(0.15f, 1f, 1f - toBeat);
+            }
+            if (!shown && caught <= 0f) c.a = 0f;
+            Vector3 ground = centre + Vector3.up * 0.025f;
+            for (int i = 0; i < count; i++)
+            {
+                float a0 = i / (float)count * Mathf.PI * 2f, a1 = (i + 1) / (float)count * Mathf.PI * 2f;
+                Vector3 d0 = new Vector3(Mathf.Cos(a0), 0f, Mathf.Sin(a0)), d1 = new Vector3(Mathf.Cos(a1), 0f, Mathf.Sin(a1));
+                vertices[v] = ground + d0 * (reach - width * 0.5f);
+                vertices[v + 1] = ground + d0 * (reach + width * 0.5f);
+                vertices[v + 2] = ground + d1 * (reach + width * 0.5f);
+                vertices[v + 3] = ground + d1 * (reach - width * 0.5f);
+                colours[v] = colours[v + 1] = colours[v + 2] = colours[v + 3] = c;
+                v += 4;
+            }
+        }
+
+        // The ground under the player, a hair above it, so the ring lies at their feet; the root's own height less the
+        // agent's offset when nothing is hit (in the air over a drop).
+        private static Vector3 GroundUnder(Transform player)
+        {
+            Vector3 from = player.position + Vector3.up * 0.2f;
+            int mask = ~(1 << player.gameObject.layer);
+            if (Physics.Raycast(from, Vector3.down, out RaycastHit hit, GroundProbe, mask, QueryTriggerInteraction.Ignore))
+                return hit.point + Vector3.up * GroundLift;
+            float offset = player.TryGetComponent(out UnityEngine.AI.NavMeshAgent agent) ? agent.baseOffset : 1f;
+            return player.position + Vector3.up * (GroundLift - offset);
         }
 
         // The shock ring of a combo step: a flat band that runs out over the ground and fades, further at each step.
