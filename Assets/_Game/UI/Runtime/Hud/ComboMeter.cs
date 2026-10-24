@@ -103,7 +103,7 @@ namespace KryticalNova.UI.Hud
             float from = 1.5f + 0.35f * (step - 1);
             float scale = Mathf.LerpUnclamped(from, 1f, EaseOutBack(t));
             count.style.scale = new Scale(new Vector3(scale, scale, 1f));
-            float shake = (1f - t) * (2f + 3f * step);
+            float shake = (1f - t) * (2f + 3f * step) * KryticalNova.Core.Accessibility.FlashScale;
             float wobble = Mathf.Sin((now - punchAt) * 70f) * shake;
             layer.style.translate = new Translate(wobble, -wobble * 0.4f);
 

@@ -111,6 +111,25 @@ namespace KryticalNova.UI
         /// </summary>
         public static bool VSync { get => GetInt("vsync", 0) != 0; set => Set("vsync", value ? 1 : 0); }
 
+        // HDR (owner, 24 Oct 2026): set up the first time the game starts, adjusted later on the Graphics page.
+        public const float MinPaperWhite = 80f, MaxPaperWhite = 400f, DefaultPaperWhite = 200f;
+        public const float MinPeak = 400f, MaxPeak = 2000f, DefaultPeak = 1000f;
+
+        /// <summary>HDR output, on a display that has it.</summary>
+        public static bool HdrOutput { get => GetInt("hdr", 0) != 0; set => Set("hdr", value ? 1 : 0); }
+        /// <summary>How bright white paper is in HDR, in nits: the game's overall brightness.</summary>
+        public static float HdrPaperWhite
+        {
+            get => Mathf.Clamp(GetFloat("hdrPaperWhite", DefaultPaperWhite), MinPaperWhite, MaxPaperWhite);
+            set => SetFloat("hdrPaperWhite", Mathf.Clamp(value, MinPaperWhite, MaxPaperWhite));
+        }
+        /// <summary>The brightest the display shows in HDR, in nits: how far highlights (glows, the sun) may go.</summary>
+        public static float HdrPeak
+        {
+            get => Mathf.Clamp(GetFloat("hdrPeak", DefaultPeak), MinPeak, MaxPeak);
+            set => SetFloat("hdrPeak", Mathf.Clamp(value, MinPeak, MaxPeak));
+        }
+
         /// <summary>
         /// The upscaler. Not part of a preset: which one a player can use depends on their graphics card. While one
         /// is on it decides the render scale and does the anti-aliasing, so those two options wait.
@@ -273,6 +292,13 @@ namespace KryticalNova.UI
 
         private static int GetInt(string key, int fallback) => PlayerPrefs.GetInt(Prefix + key, fallback);
         private static float GetFloat(string key, float fallback) => PlayerPrefs.GetFloat(Prefix + key, fallback);
+
+        private static void SetFloat(string key, float value)
+        {
+            if (PlayerPrefs.HasKey(Prefix + key) && Mathf.Approximately(PlayerPrefs.GetFloat(Prefix + key), value)) return;
+            PlayerPrefs.SetFloat(Prefix + key, value);
+            Commit();
+        }
 
         private static void Set(string key, int value)
         {

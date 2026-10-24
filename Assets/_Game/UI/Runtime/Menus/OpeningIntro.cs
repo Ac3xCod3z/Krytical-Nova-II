@@ -68,12 +68,24 @@ namespace KryticalNova.UI.Menus
 
         private void Start()
         {
-            if (Playing && layer != null) StartCoroutine(Run());
+            if (Playing && layer != null) StartCoroutine(AfterFirstRun());
+        }
+
+        // The photosensitivity agreement comes before anything that flashes: the opening waits, hidden, until it is done.
+        private System.Collections.IEnumerator AfterFirstRun()
+        {
+            if (FirstRunSetup.IsOpen)
+            {
+                layer.SetActive(false);
+                while (FirstRunSetup.IsOpen) yield return null;
+                layer.SetActive(true);
+            }
+            yield return Run();
         }
 
         private void Update()
         {
-            if (!Playing || skip) return;
+            if (!Playing || skip || FirstRunSetup.IsOpen) return;
             Keyboard keyboard = Keyboard.current;
             Mouse mouse = Mouse.current;
             if ((keyboard != null && keyboard.anyKey.wasPressedThisFrame) ||

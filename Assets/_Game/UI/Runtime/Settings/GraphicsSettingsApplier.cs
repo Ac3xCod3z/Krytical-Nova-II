@@ -182,8 +182,41 @@ namespace KryticalNova.UI
 #endif
         }
 
+        // ------------------------------------------------------------------ HDR
+
+        private Volume hdrVolume;
+        private Tonemapping hdrTonemapping;
+
+        /// <summary>Whether this display can show HDR (and the build allows it).</summary>
+        public static bool HdrAvailable => HDROutputSettings.main != null && HDROutputSettings.main.available;
+
+        // HDR output on or off as the player chose, with their paper white and peak brightness laid over every zone's
+        // own tonemapping while it is on.
+        private void ApplyHdr()
+        {
+            HDROutputSettings display = HDROutputSettings.main;
+            bool want = GraphicsPreferences.HdrOutput && HdrAvailable;
+            if (display != null && display.available && display.active != want) display.RequestHDRModeChange(want);
+            if (hdrVolume == null)
+            {
+                var profile = ScriptableObject.CreateInstance<VolumeProfile>();
+                profile.name = "Player HDR";
+                hdrTonemapping = profile.Add<Tonemapping>(false);
+                hdrTonemapping.detectPaperWhite.Override(false);
+                hdrTonemapping.detectBrightnessLimits.Override(false);
+                hdrVolume = gameObject.AddComponent<Volume>();
+                hdrVolume.isGlobal = true;
+                hdrVolume.priority = 900f;
+                hdrVolume.sharedProfile = profile;
+            }
+            hdrTonemapping.paperWhite.Override(GraphicsPreferences.HdrPaperWhite);
+            hdrTonemapping.maxNits.Override(GraphicsPreferences.HdrPeak);
+            hdrVolume.weight = want ? 1f : 0f;
+        }
+
         private void Apply()
         {
+            ApplyHdr();
             if (pipeline != null)
             {
                 // An upscaler draws at the size its quality mode asks for: the render scale option is the pipeline's

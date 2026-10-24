@@ -43,7 +43,8 @@ namespace KryticalNova.UI.Menus
         {
             // The opening plays over the title first: the title's own short wait starts when it is gone, so the key
             // that skipped the opening does not also continue.
-            if (OpeningIntro.Playing) { readyAt = Time.unscaledTime + inputDelay; return; }
+            // The first-time setup (the photosensitivity agreement) comes first: its clicks never continue the title.
+            if (OpeningIntro.Playing || FirstRunSetup.IsOpen) { readyAt = Time.unscaledTime + inputDelay; return; }
             if (leaving || Time.unscaledTime < readyAt) return;
             var transition = MenuTransition.Current;
             if (transition != null && transition.IsBusy) return;

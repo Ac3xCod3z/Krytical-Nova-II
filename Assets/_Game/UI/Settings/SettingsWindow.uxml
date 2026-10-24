@@ -16,6 +16,7 @@
             <ui:Button name="settings-tab-interface" text="INTERFACE" class="settings-tab" />
             <ui:Button name="settings-tab-gameplay" text="GAMEPLAY" class="settings-tab" />
             <ui:Button name="settings-tab-controls" text="CONTROLS" class="settings-tab" />
+            <ui:Button name="settings-tab-accessibility" text="ACCESS" class="settings-tab" tooltip="Accessibility: flashing effects, colour-blind correction" />
             <ui:Button name="settings-tab-guide" text="GUIDE" class="settings-tab" />
         </ui:VisualElement>
         <ui:ScrollView name="settings-body" class="window-body" horizontal-scroller-visibility="Hidden">
@@ -42,6 +43,7 @@
             </ui:VisualElement>
             <ui:VisualElement name="settings-page-gameplay" class="settings-page" />
             <ui:VisualElement name="settings-page-controls" class="settings-page" />
+            <ui:VisualElement name="settings-page-accessibility" class="settings-page" />
             <ui:VisualElement name="settings-page-guide" class="settings-page" />
         </ui:ScrollView>
         <!-- A setting takes effect as it is changed. APPLY keeps the changes, REVERT puts back what was there when the

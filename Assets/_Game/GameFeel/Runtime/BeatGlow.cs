@@ -126,8 +126,10 @@ namespace KryticalNova.GameFeel
             if (!glowing) Begin();
             glowing = true;
             // 0 between beats, 1 on one (more on a bar's first), already faded in and out with the fight.
-            float pulse = CombatBeat.Pulse(settings.sharpness) * (CombatBeat.OnBar ? settings.barLift : 1f);
-            float dip = settings.dip * live;
+            // Settings ▸ Accessibility scales the whole swing (flashing effects), down to nothing.
+            float safe = KryticalNova.Core.Accessibility.FlashScale;
+            float pulse = CombatBeat.Pulse(settings.sharpness) * (CombatBeat.OnBar ? settings.barLift : 1f) * safe;
+            float dip = settings.dip * live * safe;
 
             Shader.SetGlobalFloat(PulseId, pulse * settings.shaderBoost);
             if (volume != null && bloom != null && bloomBase >= 0f)

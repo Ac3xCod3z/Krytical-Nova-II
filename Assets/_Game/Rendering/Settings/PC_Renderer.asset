@@ -128,7 +128,8 @@ MonoBehaviour:
   - {fileID: -3444538586689478259}
   - {fileID: 4601918301690530619}
   - {fileID: -4323589378594971989}
-  m_RendererFeatureMap: ad6b866f10d7b46ca50226fd55143914271a73ed58c31e86691a2da7b3952e59e192bcff6f271f128d613fc5678a32d03b0ba239504cdd3fabde31165e86ffc3l
+  - {fileID: 6218960072797517718}
+  m_RendererFeatureMap: ad6b866f10d7b46ca50226fd55143914271a73ed58c31e86691a2da7b3952e59e192bcff6f271f128d613fc5678a32d03b0ba239504cdd3fabde31165e86ffc396f76e9b3c2f4e56l
   xrSystemData: {fileID: 0}
   postProcessData: {fileID: 11400000, guid: 41439944d30ece34e96484bdb6645b55, type: 2}
   m_AssetVersion: 3
@@ -291,6 +292,20 @@ MonoBehaviour:
     emberHeat: 0.5
     emberDeep: 0.7
   shader: {fileID: 4800000, guid: 77d6a2ad6858a43478f60b452a511ab1, type: 3}
+--- !u!114 &6218960072797517718
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ccecd60bd2189454ea1191eda727cbfa, type: 3}
+  m_Name: ColourBlind
+  m_EditorClassIdentifier: KryticalNova.Rendering::KryticalNova.Rendering.ColourBlindFeature
+  m_Active: 1
+  shader: {fileID: 4800000, guid: e01384cff83859e4aa9537d152d1371a, type: 3}
 --- !u!114 &6426238317140712041
 MonoBehaviour:
   m_ObjectHideFlags: 1
