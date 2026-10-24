@@ -20,7 +20,7 @@ script, which is then published to the link above. `--baseline` saves today's up
 ## Today
 
 <!-- map:summary -->
-Generated 24 Oct 2026, 12:02: 686 runtime scripts (130,209 lines) declaring 966 types (178 MonoBehaviours, 64 NetworkBehaviours, 95 ScriptableObject classes); 121 test scripts; 4715 prefabs, 46 scenes and 2718 assets read. 198 system-to-system links, of which 0 run uphill, 0 pairs of systems use each other both ways, and 0 links would have to go for the systems to form a clean stack. The largest tangle, classes that all reach each other through some chain of uses, holds 10 classes from 1 systems (UI 10, ...).
+Generated 24 Oct 2026, 13:05: 686 runtime scripts (130,186 lines) declaring 966 types (178 MonoBehaviours, 64 NetworkBehaviours, 95 ScriptableObject classes); 121 test scripts; 4715 prefabs, 46 scenes and 2718 assets read. 198 system-to-system links, of which 0 run uphill, 0 pairs of systems use each other both ways, and 0 links would have to go for the systems to form a clean stack. The largest tangle, classes that all reach each other through some chain of uses, holds 10 classes from 1 systems (UI 10, ...).
 <!-- /map:summary -->
 
 **Checked against the compiler.**
@@ -64,8 +64,8 @@ Checked against the 203 references the assemblies declare between systems: every
 <!-- map:systems -->
 | System | Layer | Scripts | Lines | Uses (types) | Used by (types) | Instability | Tests | Types touched by a test |
 |---|---|---|---|---|---|---|---|---|
-| Core | Foundation | 46 | 3,771 | 0 | 196 | 0.0 | 4 | 15 of 33 |
-| Networking | Infrastructure | 41 | 7,603 | 5 | 87 | 0.05 | 3 | 25 of 54 |
+| Core | Foundation | 46 | 3,771 | 0 | 197 | 0.0 | 4 | 15 of 33 |
+| Networking | Infrastructure | 41 | 7,603 | 5 | 88 | 0.05 | 3 | 25 of 54 |
 | Rendering | Infrastructure | 16 | 3,486 | 1 | 28 | 0.03 | 1 | 2 of 20 |
 | Environment | Simulation | 6 | 834 | 0 | 2 | 0.0 | 0 | 0 of 6 |
 | Gameplay/Autopilot | Simulation | 11 | 1,423 | 41 | 13 | 0.76 | 3 | 6 of 12 |
@@ -83,14 +83,14 @@ Checked against the 203 references the assemblies declare between systems: every
 | Gameplay/CharacterCreation | Simulation | 26 | 3,072 | 27 | 69 | 0.28 | 9 | 24 of 29 |
 | Gameplay/Items | Simulation | 61 | 11,048 | 46 | 182 | 0.2 | 13 | 41 of 83 |
 | World | Simulation | 37 | 6,374 | 13 | 41 | 0.24 | 2 | 9 of 43 |
-| Gameplay/Progression | Simulation | 46 | 8,100 | 23 | 200 | 0.1 | 6 | 27 of 58 |
+| Gameplay/Progression | Simulation | 46 | 8,106 | 24 | 200 | 0.11 | 6 | 27 of 58 |
 | Gameplay/Wallet | Simulation | 3 | 132 | 0 | 18 | 0.0 | 0 | 2 of 2 |
 | Gameplay/NPC | Simulation | 3 | 290 | 5 | 17 | 0.23 | 1 | 1 of 4 |
 | Gameplay/Factions | Simulation | 6 | 169 | 0 | 25 | 0.0 | 0 | 1 of 3 |
 | GameFeel | Presentation | 30 | 5,504 | 52 | 2 | 0.96 | 4 | 17 of 38 |
-| UI | Presentation | 138 | 35,639 | 315 | 5 | 0.98 | 17 | 32 of 143 |
+| UI | Presentation | 138 | 35,648 | 316 | 5 | 0.98 | 17 | 32 of 143 |
 | Audio | Presentation | 14 | 1,222 | 5 | 16 | 0.24 | 1 | 1 of 15 |
-| Tools | Tooling | 30 | 5,187 | 186 | 0 | 1.0 | 3 | 0 of 32 |
+| Tools | Tooling | 30 | 5,149 | 186 | 0 | 1.0 | 3 | 0 of 32 |
 <!-- /map:systems -->
 
 ## Links running uphill
@@ -190,11 +190,11 @@ Classes over 700 lines. Several of them also reach into three or more other syst
 | PlayerMeleeCombat | Gameplay/Combat | 982 | Core, Gameplay/Player, Gameplay/Progression, Networking | 9 |
 | PlayerCombatSkills | Gameplay/Progression | 965 | Core, Networking | 18 |
 | HudLayoutEditor | UI | 964 | - | 12 |
-| GmCommands | Tools | 947 | Core, Gameplay/Combat, Gameplay/Factions, Gameplay/Items, Gameplay/Player, Gameplay/Progression, Gameplay/Social, Networking, World | 0 |
 | GearWorkWindowController | UI | 947 | Core, Gameplay/Economy, Gameplay/Forge, Gameplay/Items, Gameplay/NPC, Gameplay/Progression | 0 |
 | NetworkConnectionManager | Networking | 933 | Core | 15 |
+| GmCommands | Tools | 909 | Core, Gameplay/Combat, Gameplay/Factions, Gameplay/Items, Gameplay/Player, Gameplay/Progression, Gameplay/Social, Networking, World | 0 |
 | CharacterCreatorController | UI | 863 | Gameplay/CharacterCreation, Gameplay/Factions, Gameplay/Items, Gameplay/Progression | 0 |
-| CharacterSelectController | UI | 831 | Gameplay/CharacterCreation, Networking | 0 |
+| CharacterSelectController | UI | 840 | Gameplay/CharacterCreation, Networking | 0 |
 | PlayerJumpMotor | Gameplay/Player | 812 | Gameplay/Progression, Networking | 7 |
 | PlayerInventory | Gameplay/Items | 799 | Core, Gameplay/Factions, Gameplay/Progression, Networking | 72 |
 | PlayerVaultMotor | Gameplay/Player | 731 | Core, Gameplay/CharacterCreation, Gameplay/Factions, Gameplay/Progression, Networking | 3 |

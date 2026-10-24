@@ -61,12 +61,21 @@ namespace KryticalNova.UI.Menus
         private string failedKey;
         private const string Header = "Choose Your Character";
 
+        // The server whose characters show first: the one chosen last; in an Editor test session that joins a test
+        // server, that server (owner, 24 Oct 2026: a test session must not open on a server left over from another test).
+        private static string StartingServer()
+        {
+            if (EditorTestSession.JoinOnly && EditorTestSession.TryGetPort(out ushort port))
+                return "127.0.0.1:" + port;
+            return ServerDirectory.LastKeyChosen;
+        }
+
         private void Start()
         {
             // The chosen character does not stand like a statue: it shifts, looks about and greets by itself.
             if (showroom != null) showroom.Ambient = true;
             if (networkManagerPrefab != null) RosterLink.NetworkPrefab = networkManagerPrefab;
-            MenuRoster.Use(ServerDirectory.LastKeyChosen);
+            MenuRoster.Use(StartingServer());
             roster = CharacterSession.Store.Load();
             MenuUi.SetText(screen, "Screen_Header", Header);
             var details = MenuUi.Find(screen, "Save_Details");

@@ -130,9 +130,9 @@ namespace KryticalNova.EditorTools
             b.bloomAntiflicker.Override(true);
             var warm = ColorBible.Hex("FFF1E0");
             b.bloomTint.Override(new Color(warm.r, warm.g, warm.b, 0.35f));
-            b.anamorphicFlaresIntensity.Override(0.12f);
+            b.anamorphicFlaresIntensity.Override(0.06f); // owner, 24 Oct 2026: the streaks were jarring
             b.anamorphicFlaresThreshold.Override(0.9f);
-            b.anamorphicFlaresSpread.Override(1.2f);
+            b.anamorphicFlaresSpread.Override(0.7f);   // and spread too far sideways
             b.anamorphicFlaresTint.Override(new Color(1f, 0.82f, 0.6f, 0f));
             b.sunFlaresIntensity.Override(0f);    // EnvironmentPresenter's LensFlare owns the sun
             b.depthOfField.Override(false);
