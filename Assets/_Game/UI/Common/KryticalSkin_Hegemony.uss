@@ -318,6 +318,63 @@
     -unity-background-image-tint-color: rgba(0, 141, 167, 0.44);
     background-color: rgba(0, 0, 0, 0);
 }
+.kn-faction-hegemony .beat-track-line {
+    background-image: url("/Assets/Synty/InterfaceSciFiSoldierHUD/Sprites/HUD/SPR_HUD_SciFiSoldier_Compass_Bar_Cluster_01_Underlay.png#SPR_HUD_SciFiSoldier_Compass_Bar_Cluster_01_Underlay");
+    -unity-background-image-tint-color: rgba(200, 240, 255, 0.55);
+    background-color: rgba(0, 0, 0, 0);
+    height: 6px;
+    top: 8px;
+    border-radius: 0;
+    -unity-background-scale-mode: stretch-to-fill;
+}
+.kn-faction-hegemony .beat-track-mark {
+    background-image: url("/Assets/Synty/InterfaceSciFiSoldierHUD/Sprites/HUD/SPR_HUD_SciFiSoldier_Reticle_Arrow_02.png#SPR_HUD_SciFiSoldier_Reticle_Arrow_02");
+    -unity-background-image-tint-color: rgba(200, 240, 255, 1);
+    background-color: rgba(0, 0, 0, 0);
+    -unity-background-scale-mode: scale-to-fit;
+    width: 14px;
+    height: 18px;
+    top: 2px;
+    margin-left: -7px;
+    border-radius: 0;
+}
+.kn-faction-hegemony .beat-track-mark--bar {
+    background-image: url("/Assets/Synty/InterfaceSciFiSoldierHUD/Sprites/HUD/SPR_HUD_SciFiSoldier_Pip_Hexagon_01_Active.png#SPR_HUD_SciFiSoldier_Pip_Hexagon_01_Active");
+    -unity-background-image-tint-color: rgba(60, 220, 255, 1);
+    width: 20px;
+    height: 20px;
+    top: 1px;
+    margin-left: -10px;
+}
+.kn-faction-hegemony .beat-track-centre {
+    background-image: url("/Assets/Synty/InterfaceSciFiSoldierHUD/Sprites/HUD/SPR_HUD_SciFiSoldier_Ring_Hexagon_Large_01_Clean.png#SPR_HUD_SciFiSoldier_Ring_Hexagon_Large_01_Clean");
+    -unity-background-image-tint-color: rgba(255, 255, 255, 0.7);
+    background-color: rgba(0, 0, 0, 0);
+    border-width: 0;
+    -unity-background-scale-mode: scale-to-fit;
+    width: 28px;
+    height: 28px;
+    top: -3px;
+    margin-left: -14px;
+    border-radius: 0;
+}
+.kn-faction-hegemony .beat-track-centre--window {
+    -unity-background-image-tint-color: rgb(255, 210, 60);
+    background-color: rgba(0, 0, 0, 0);
+    scale: 1.15 1.15;
+}
+.kn-faction-hegemony .beat-track-catch {
+    background-image: url("/Assets/Synty/InterfaceSciFiSoldierHUD/Sprites/HUD/SPR_HUD_SciFiSoldier_Ring_Large_01.png#SPR_HUD_SciFiSoldier_Ring_Large_01");
+    -unity-background-image-tint-color: rgb(255, 214, 80);
+    background-color: rgba(0, 0, 0, 0);
+    border-width: 0;
+    -unity-background-scale-mode: scale-to-fit;
+    width: 28px;
+    height: 28px;
+    top: -3px;
+    margin-left: -14px;
+    border-radius: 0;
+}
 .kn-faction-hegemony .kn-card > .kn-card-frame {
     background-image: url("/Assets/Synty/InterfaceSciFiMenus/Sprites/SciFiMenus/SPR_SciFiMenus_Frame_Box_Small_05.png#SPR_SciFiMenus_Frame_Box_Small_05");
     -unity-background-image-tint-color: rgb(255, 255, 255);

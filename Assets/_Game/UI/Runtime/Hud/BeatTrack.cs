@@ -36,6 +36,8 @@ namespace KryticalNova.UI.Hud
             {
                 left[i] = Mark();
                 right[i] = Mark();
+                // The faction skins draw a mark as an arrow pointing at the centre: the right side's is its mirror.
+                right[i].AddToClassList("beat-track-mark--right");
             }
             centre = new VisualElement { pickingMode = PickingMode.Ignore };
             centre.AddToClassList("beat-track-centre");

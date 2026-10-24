@@ -614,6 +614,7 @@
 .beat-track { position: absolute; left: 36%; right: 36%; bottom: 15.5%; height: 22px; }
 .beat-track-line { position: absolute; left: 2%; right: 2%; top: 10px; height: 2px; background-color: rgba(255, 255, 255, 0.16); border-radius: 1px; }
 .beat-track-mark { position: absolute; top: 5px; width: 3px; height: 12px; margin-left: -1.5px; background-color: rgb(225, 240, 255); border-radius: 1.5px; }
+.beat-track-mark--right { scale: -1 1; }
 .beat-track-mark--bar { top: 2px; width: 4px; height: 18px; margin-left: -2px; background-color: rgb(110, 215, 255); }
 .beat-track-centre { position: absolute; left: 50%; top: 0; width: 22px; height: 22px; margin-left: -11px;
     border-width: 2px; border-color: rgba(255, 255, 255, 0.55); border-radius: 11px; }

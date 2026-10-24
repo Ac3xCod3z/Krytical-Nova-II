@@ -158,6 +158,17 @@ namespace KryticalNova.UI
         public Sprite rowHighlight;
         public Color rowHighlightTint = new Color(0f, 0.6f, 0.7f, 0.3f);
 
+        [Header("Beat track: the pack's own rail, marks and rings (owner, 24 Oct 2026)")]
+        [Tooltip("The line the beats run along above the Hotbar.")]
+        public Sprite beatRail;
+        [Tooltip("A beat coming in. Drawn as it is on the left, in a mirror on the right, so it points at the centre.")]
+        public Sprite beatMark;
+        [Tooltip("The first beat of a bar (the count-in).")]
+        public Sprite beatBarMark;
+        [Tooltip("The centre mark the beats meet on the beat, and the ring that flashes when a press lands on the beat.")]
+        public Sprite beatCentre, beatCatch;
+        public Color beatTint = Color.white, beatBarTint = new Color(0.43f, 0.84f, 1f);
+
         [Header("Menus (the title flow): the pack's own screens")]
         [Tooltip("The pack's title screen.")]
         public GameObject titleScreen;
