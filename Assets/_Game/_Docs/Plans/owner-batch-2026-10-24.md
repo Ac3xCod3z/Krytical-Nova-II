@@ -51,10 +51,12 @@ so you can correct me early.
 
 ## Next, in this order
 
-- [ ] **When Cadence stops.** *Understood:* the fight music and Cadence must not end just because a timer runs out. Each
+- [x] **When Cadence stops.** *Understood:* the fight music and Cadence must not end just because a timer runs out. Each
       kind of fight gets its own "is it over?" check:
-  - Strike Dummy: until you deselect the dummy **and** move at least 30 m from it.
+  - Strike Dummy: until you deselect the dummy **and** move at least 30 m from it. *Owner, 24 Oct:* only once it
+    has been **struck**; being within 30 m without hitting it starts nothing. *Built:* `CombatReasons.Dummy`.
   - Hostiles: while any Hostile targets you or is still coming at you; it ends once all are dead or none approach.
+    *Already so:* each Hostile that has you as its target keeps the fight going (a dead one stops).
   - Callouts: until the bout ends. Wars and PvP events: their own rule when they are built.
 - [ ] **Water.** *Understood:* you can jump on water (land on it as on ground) and fall into it; falling in puts you back
       on the nearest shore, losing some HP. *Owner, 24 Oct:* the effects of a jump off and a landing on water must be

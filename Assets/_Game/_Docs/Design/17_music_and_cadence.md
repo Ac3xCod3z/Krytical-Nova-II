@@ -57,7 +57,14 @@ M1 adds what is missing:
 several can hold at once; known where the fight is decided, a client is only told in or out),
 `ServerNoteThreat()` (called twice a second by `HostileNet` for the player its brain is after) and
 `ServerSetHeld(by, held)`. A fight still ends six seconds after the last blow or the last moment a Hostile was
-after the player; a Callout and a hold end at once. `gm.combat` prints the state, `gm.combat hold on|off` holds
+after the player; a Callout and a hold end at once.
+**When a fight ends, per kind of fight (owner, 24 Oct 2026: "just because the timer stops it doesn't mean Cadence
+turns off").** A **Strike Dummy** (`CombatReasons.Dummy`): from the first blow that lands on it (being near one, or
+selecting it, starts nothing), the fight holds while the dummy is still selected or the player is within 30 m of it
+(`PlayerCombatState.dummyLeaveMetres`), and ends only once it is deselected and 30 m away; the owner's game tells the
+server what is selected. **Hostiles**: the fight holds while any Hostile has the player as its target (a dead one
+stops), then six seconds. **Callouts**: until the bout ends. **Wars and PvP events**: their own rule (a hold) when
+they are built; an open-world fight with another player still ends six seconds after the last blow. `gm.combat` prints the state, `gm.combat hold on|off` holds
 it, `gm.combat watch on|off` prints every start and end to the log. The arena is
 `Scenes/Development/Test_Cadence.unity`, made from the town by **Krytical Nova ▸ Zone ▸ Build Cadence Test Arena**:
 the town, NPCs, traffic and portals taken out, one Hostile Zone (`north-gate`, Bonewalkers, which only fight
