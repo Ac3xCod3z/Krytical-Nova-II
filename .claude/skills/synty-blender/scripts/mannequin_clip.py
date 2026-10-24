@@ -40,7 +40,10 @@ STATES_F = [("heavy", {"defaultHeavy": 1}), ("muscular", {"defaultBuff": 1}), ("
 STATES_M = [("heavy", {"defaultHeavy": 1}), ("muscular", {"defaultBuff": 1}), ("lean", {"defaultBuff": 0}),
             ("skinny", {"defaultSkinny": 1}), ("defined", {"kn_defined": 1}),
             ("muscular+defined", {"defaultBuff": 1, "kn_defined": 1}),
-            ("heavy+defined", {"defaultHeavy": 1, "kn_defined": 1})]
+            ("heavy+defined", {"defaultHeavy": 1, "kn_defined": 1}),
+            # the creator shows Bust and Butt on any body that has the keys, male ones too (owner, 23 Oct 2026)
+            ("bust", {"kn_bust": 1}), ("butt", {"kn_butt": 1}),
+            ("heavy+bust+butt", {"defaultHeavy": 1, "kn_bust": 1, "kn_butt": 1})]
 NEAR = 4.0      # cm: a vertex further than this inside the surface is on the far side of a thin part, not inside
 REST_NEAR = 15.0  # cm: at rest, ends Synty tucks deep inside the body (long hair into the back) are hidden by design
 

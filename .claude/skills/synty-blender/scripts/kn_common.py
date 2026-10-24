@@ -30,6 +30,13 @@ def project_root():
     raise SystemExit("Project root not found. Set KN_PROJECT_ROOT to the folder that holds Assets/.")
 
 
+def art_root():
+    """Where the Blender working files live: Google Drive, not git (CLAUDE.md, "Git LFS size and Google Drive").
+    Creatures/, Pets/ and Sidekick/ are here; only Swatch/ stays in the project (swatch_dir)."""
+    env = os.environ.get("KN_ART_ROOT")
+    return Path(env) if env else Path(r"G:\My Drive\KryticalNova\Art\Blender")
+
+
 def sidekick_root():
     return project_root() / "Assets" / "Synty" / "SidekickCharacters"
 
@@ -64,9 +71,16 @@ def cell_names(spec):
     return {(c["u"], c["v"]): c["name"] for c in spec["colour_cells"]}
 
 
-def cell_uv(u, v, grid=16):
-    """UV of the middle of a swatch cell."""
-    return ((u + 0.5) / grid, (v + 0.5) / grid)
+def cell_uv(u, v, grid=16, inset=0.5):
+    """UV inside a swatch cell, `inset` of a cell from its low corner (0.5 is the middle)."""
+    return ((u + inset) / grid, (v + inset) / grid)
+
+
+# The game's Sidekick colour map and the shader's dark and skin masks are 32x32: two texels to a cell, so a cell's
+# middle is the border between two texels and each screen pixel rounds to one side or the other, grain that crawls
+# as the character moves (owner, 23 Oct 2026, on Autumn Thread). Sidekick parts sit on the centre of the cell's first
+# texel, (2c + 0.5) / 32, inside a texel as Synty's own parts are.
+SIDEKICK_INSET = 0.25
 
 
 def is_live():

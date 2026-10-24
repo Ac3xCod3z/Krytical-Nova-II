@@ -65,7 +65,7 @@ Read `references/sidekick-spec.md` for slot codes, swatch names and the limits.
 2. **Scene.** If the artist has not started, make the working file (add `--import-mesh model.fbx|.obj|.glb`
    if they already have a model):
    ```bash
-   python .../run_blender.py sidekick_new_part.py --slot 10TORS --name SK_KRYT_HEGE_01_10TORS_HU01 --out "Assets/_ArtSource/Blender~/Sidekick/SK_KRYT_HEGE_01_10TORS_HU01.blend"
+   python .../run_blender.py sidekick_new_part.py --slot 10TORS --name SK_KRYT_HEGE_01_10TORS_HU01 --out "G:/My Drive/KryticalNova/Art/Blender/Sidekick/SK_KRYT_HEGE_01_10TORS_HU01.blend"
    ```
    It holds Synty's base body and rig as a locked reference (`SK_Reference`) and one material per swatch
    the slot normally uses. In a live session the same command adds these to the open file.
@@ -149,7 +149,7 @@ add-on in the live window and keeps it on.
 
 | What | Where |
 |---|---|
-| .blend sources, review sheets | `Assets/_ArtSource/Blender~/` (Unity ignores folders ending in `~`) |
+| .blend sources, review sheets, build scripts | Google Drive `G:/My Drive/KryticalNova/Art/Blender/` (`kn.art_root()`: Creatures, Pets, Sidekick). Not in git (CLAUDE.md, "Git LFS size and Google Drive"); only `Assets/_ArtSource/Blender~/Swatch/` stays in the project |
 | Sidekick part FBX | never inside `Assets/Synty/`. Suggested `Assets/_Game/Characters/Shared/SidekickParts/Resources/Meshes/<Set>/` |
 | Pet FBX and textures | suggested `Assets/_Game/Characters/Pets/<Pet>/` |
 
@@ -196,7 +196,7 @@ Be straight with the user about this, because a clean export can look like "done
 
 ## Job: the mannequin scene (every lineage, bare, side by side)
 
-`Assets/_ArtSource/Blender~/Sidekick/SyntyMannequinModeling.blend` holds the twelve bare bodies the game shows with no
+`G:/My Drive/KryticalNova/Art/Blender/Sidekick/SyntyMannequinModeling.blend` holds the twelve bare bodies the game shows with no
 gear on (six lineages, male and female, from `CharacterDataBaker.Specs` and the Lineage assets), each on its own copy
 of the Sidekick rig in T-pose, every Synty shape key kept, plus the Krytical Nova sliders `kn_bust`, `kn_butt`,
 `kn_defined` (shape keys) and `kn_height` (rig property driving the root bone's scale). New gear parts are fitted here.
@@ -242,39 +242,179 @@ weapons are not Sidekick body parts and do not go through this job.
 - **Robots keep their caps.** Synty's robot parts are the chassis itself, every part closed, its ends hidden in
   the next part. **Skeleton pieces are opened like human ones**, because Synty's skeleton outfits carry the bones of
   their body area inside them (the torso piece holds the ribcage). The second pass adds those bones.
-- Sizes the piece uniformly by height against the lineage's bare body (armor: collar to ankle = neck to ankle).
-  Then, armor only, it widens at the chest and hips, never narrowing, until the body is covered with a few per
-  cent to spare. Each direction is measured from the body's centre: front, back, left and right separately,
-  because Tripo's figures carry their depth differently from Synty's chunkier bodies. The pose stays as modelled,
-  usually arms down. Skin showing at the shoulders is that pose, not the size, and the second pass fixes it.
+- **Mesh health first** (owner, 22 Oct 2026: no broken meshes that can mess up the model). It welds points split
+  apart along texture seams, which would tear open when the piece bends; the UVs stay, because they live on the
+  face corners. It removes faces with no area, doubled faces, loose points and edges, and floating crumbs of a few
+  millimetres; studs and rivets are bigger and stay. Whole islands facing inward are turned round. Edges shared by
+  three faces or more are reported, not changed.
+- Openings that look open but are sealed deeper inside, like a cup (a collar running down to a floor in the
+  chest) or a dome closing a leg, are found by **looking into the opening**. The first surface met, if it faces
+  back out, is the seal, and everything connected to it that also faces out goes. An open loop must be
+  opening-sized: a 2 cm strap loop near the collar is not the neck.
+- **Sized by the torso, collar to crotch**, against the lineage's bare body. Every armor has both, whether it
+  ends in shorts, trousers or a skirt: a collar-to-ankle rule stretched a pair of shorts down to the ankles (owner,
+  22 Oct 2026). The crotch is found by looking up the centre line from below; the Skeleton's bones have none, so it
+  falls back to collar to ankle. The piece stands with its crotch at the body's crotch, and its legs end where they
+  were modelled. It is centred on its **trunk** (front and back of the chest), not its overall box, so a back pack
+  or a front flap does not move it. Then, armor only, it widens at the chest and hips, never narrowing, until the
+  body is covered with a few per cent to spare, measured front, back, left and right from the body's centre. The
+  pose stays as modelled, usually arms down. Skin showing at the shoulders, or through gaps in a strapped or plated
+  design, is for the second pass's body-hugging fit.
 - Writes `<Piece_Name>_Revised.fbx` beside the original, named after the piece's **folder** (Tripo names files
   generically, e.g. `3d_model_robot_armor`). It holds one mesh of that name with the texture embedded. The owner
   asked for this file, so writing it needs no further go-ahead. Nothing goes into the Unity project.
 
-**Second pass, once a whole set is in (not built yet; the plan):**
-1. Pose each piece into the rig's T-pose: arms up to the rig's arm line, with a temporary armature fitted to
-   the piece.
-2. Conform to the lineage body as an offset shell (the body's surface plus a set thickness). Hard plates stay
-   rigid and are moved whole. Make the female breastplate or the male counterpart as the character brief says.
-3. Split into Synty's slots (torso, upper and lower arms, hips, legs, attachments) with correct part names.
-   Weights from the body with `sidekick_fit.py`; Synty's four body keys plus kn_bust, kn_butt and kn_defined.
-4. **Loose cloth (sashes, tabards, capes) moves the Synty way:** chains of dangle bones inside the part, named
+**Second pass** (built 23 Oct 2026; the owner models all new gear in T-pose, so the arms-down conversion below is
+for the first six Rare armors): `gear_second_pass.py --fbx "<piece>_Revised.fbx" --set ABCD --sheet <png>` writes a
+working scene `G:/My Drive/KryticalNova/Art/Blender/Sidekick/Gear/<Piece>.blend`, a shapes sheet and an upper-body close-up
+(`_closeup.png`: armpits and sleeve openings, where arms-down models go wrong). `--stage pose` stops after the T-pose.
+1. **Arms-down to T-pose.** Each sleeve's opening is the biggest open loop wholly on one side, above the crotch,
+   2-12 cm across (a hem crosses the middle; a pocket is smaller). Where Tripo sealed one cuff, the other side's
+   (further from its shoulder) is mirrored and the cuff opened. The body's arms are pointed through the sleeves
+   (shoulder to opening; imported FBX bones have made-up tails, so limbs are aimed joint to joint). Each vertex
+   follows the arm whose skin is nearest it, smoothed through the cloth so nothing tears; where an arm hangs
+   against the body (over 80 degrees down) cloth on the body's side of it is not sleeve. Everything else keeps the
+   body's trunk weights with no arm in them (Synty's torso carries some upper-arm weight round the armpit). The
+   piece is then unposed (p_rest = (sum w M)^-1 p) and the arms put back.
+   A separate hard piece (an island under 400 vertices: a plate, a guard, a bracer) moves whole or not at all. No
+   sleeve ends within 12 cm of the shoulder (that is a plate's hole). **Hard break** (`HARD_BREAK`: Robot, Viking):
+   robots keep their cuffs closed, so the arm is aimed at its furthest reach, and any plate round the posed arm out
+   to the wrist is arm even where the trunk is nearer. For both lineages each face moves wholly or stays, and the mesh
+   is cut where moving and staying faces meet, at edges and at single corners; any blend between them stretched into
+   claws (robot) or webs (the Viking's sleeves hang fused to the tunic). The Viking's cut-free sleeves are then set
+   onto the arm by their own long axis (`seat_sleeves`). Robots get no cuff tightening and every plate moves whole
+   when pushed clear.
+   Owner's review, 23 Oct 2026 (Elf and Skeleton were right; the rest are fixed by these):
+   - Dock Runner and the Soldier joined the hard break too (sleeves webbed or sagged under the arm); Dock Runner's shoulder yoke (inside 3 cm
+     past the joint) stays with the body piece, or the shoulders showed bare (on the Viking that rule bent the
+     sleeve's axis and on the Soldier it split the shoulder guards, so it is Dock Runner's only).
+   - Sleeve undersides that hang in a curtain under the T-pose arm are drawn up to 2.5 cm off the skin
+     (`LIFT_UNDERSIDE`: Civilian, Soldier, Viking).
+   - The Viking's sleeve ends at the wrist (`TRIM_PAST_CUFF`): flaps over the hand removed, cuffs squared off.
+   - Robots: hoses hanging in the open under the T-pose arm are removed (`drop_underarm_hoses`); no vertex-by-vertex
+     push for the body keys (it pulled spikes out of the plates); small plates move whole when pushed clear, the big
+     shell does not (moved by its one largest push, the torso slid off the head's centre).
+   - A part in a slot replaces the body part there, so a forearm slot needs 85 % of the forearm covered and a leg
+     slot 60 % (baggy trousers sit well off the shin); otherwise its faces go to the slot above
+     (`FOLD_INTO`), or the hands and feet floated with bare gaps.
+   - Waist cinch (`cinch_waist`, all but robots): rays out from the pelvis through 2 cm by 15 degree cells, first
+     body hit against first armor hit; every vertex of a cell moves in by the same amount until the cloth is 1.5 cm
+     off the skin (thickness kept), crotch to lower ribs, eased out. Nearest-vertex measures failed on a low-poly
+     body (most cells hold no body vertex).
+   - The fit loads our bare bodies (`Meshes/BareBody`, Synty's plus kn_bust/kn_butt/kn_defined) where they exist;
+     on Synty's own the armor's three new keys came out empty.
+   - The working scene is saved with every body key at 0 (the clip check leaves them at 1, which puffed the armor
+     out in the scene and in any FBX made from it).
+   - `gear_keys_vs_synty.py --synty SK_ELVN_WARR_01` (run Blender directly, nothing saved): per key, the armor's
+     motion against the skin under it (gain, spread) and vertices inside, ours beside a Synty outfit on the same
+     body. 23 Oct 2026: ours gain 1.00, spread 0-4 % (Synty 5-24 %); inside about Synty's or fewer, Dock Runner
+     a little more (1 %).
+   - After the clip check, a lone push on a key where the body under the vertex does not move on that key is
+     evened out with its neighbours (`calm_lone_pushes`): the heavy+bust+butt combination pushed two Elf knee
+     vertices 2.6 cm through the bust and butt keys, on one leg only. Calming every lone push let clipping back in;
+     only the ones where the body stays put are wrong.
+   - UVs sit on the centre of the cell's first texel, (2c + 0.5)/32 (`kn.cell_uv(..., inset=kn.SIDEKICK_INSET)`),
+     never the cell's middle: the game's colour map and dark/skin masks are 32x32, so a cell's middle is a texel
+     border and the cloth showed grain that crawled as the character moved (Autumn Thread in Play, 23 Oct 2026).
+   - Owner's review of the Unity videos, 23 Oct 2026: see-through armpits and robot thighs, bulky shoulders, no
+     taper into boots, skeleton shin guards beside the legs. So:
+     - every part carries the bare body of its own slot inside it (step 6 for all lineages, not only skeletons):
+       the game hides the body part a slot replaces, so any gap had nothing behind it;
+     - `fit_limbs` / `cinch_limb`: rays out from the limb line, the pull blended between cells (a pull constant per
+       cell sheared faces into spikes); only pieces that wrap the limb are pulled (cinching hanging cloth crumpled
+       it), small pieces near them follow; at the shoulder only cloth over the top of it (the chest and the sides
+       belong to the torso; pulled toward the arm they shredded Dock Runner's vest); lower legs 1.5 cm off at the
+       knee to 0.8 at the ankle, plus 2 cm round a skeleton's thin bones; a skeleton's lower leg moved as one piece
+       onto the bone first (sliced, the guard came apart); robot plates move by their middle need.
+   - Owner, 23 Oct 2026, second review: "make it uniform so that it still mimics the original model ... professionally
+     done". Every pull (limbs and waist) is one amount per height round the limb, the 30 % quantile of what the
+     directions need, smoothed along the limb (`uniform_pull`); per-cell pulls bent knee pads out of shape. Thighs are
+     pulled too (tubes only; never a skeleton's, whose loincloth reads as a tube from the thin bone); trouser and
+     short legs are centred on the leg by their inner face (`centre="rays"`; the legs sat off-centre in Dock Runner's
+     shorts); the shin pull runs past the ankle with the feet as skin, or the hems kept their flare.
+   - Armpit holes (owner, 23 Oct 2026, Dock Runner and Bastion Field): the sleeve cut left the inside of the upper
+     arm and the chest side bare. `close_armholes` draws the open edges round each shoulder onto the skin, 0.8 cm
+     off, easing over 4 rows; `underarm_gusset` copies every bare body face under the arm and over the shoulder
+     (no armor within 3 cm out along it) 6 mm off the skin, coloured like the nearest armor face, welded into one
+     sheet: a gusset as real shirts have. Not robots or skeletons. Check with a low front and low back view into
+     the armpit, not only front, side and back.
+   - Each piece is centred side to side under the head's neck ring (`centre_on_neck`); front to back a collar ring
+     is no guide (a V-neck's centre sits forward).
+   Dead ends, for the record: sleeve by colour (fails on camouflage and multi-coloured jackets), sleeve as a fixed
+   tube (misses puffy sleeves), turning sleeves about Synty's shoulder with no body pose (wrong pivot), giving the
+   sleeve the arm's full turn wherever its nearest skin is the arm (wings).
+2. **Armpit.** Cloth the T-pose stretched past 1.4x, and cloth below the shoulder out towards the arm, is laid onto
+   the trunk 6 mm off the skin and evened out on the skin (smoothing off the skin made a batwing); studs and buckles
+   (islands under 60 vertices) ride whole on the cloth under them. Robots skip this: plates are not cloth.
+3. **Fit.** Sleeve ends drawn in to 1.2 cm off the arm (owner); weights from the T-pose body; anything inside the body
+   pushed out (smoothed; small pieces move whole); split into Synty's slots by weight region (small loose pieces go
+   whole to one slot); all seven body keys from the body, pushed clear for both sexes; skeleton parts take in the
+   bare bones of their area. Robot chassis parts carry extra bones, so the body import keeps the rig with the most
+   bones (once left robot parts a hundred times too big).
+4. **Colour.** Faces sampled from the Tripo texture, snapped to the set's 24-colour palette picture, ranked per slot
+   onto its own Outfit 01-05 cells; the set's theme joins `Swatch/KN_GearSwatch.json` and `T_KN_GearSwatch.png`
+   (owner: one swatch of our own for gear and weapons, dyes designed from it). Parts are named
+   `SK_KRYT_<SET>_01_<slot>_<SP>01` (HU humans and elves, RO robots, SN skeletons).
+5. **Loose cloth (sashes, tabards, capes) moves the Synty way** (`gear_dangle.py --cells "10TORS:0,13" "17HIPS:0,8"` on
+   the working scene picks the cloth by its swatch cells and gives each tail hanging below the belt a chain, tails
+   grouped by the mesh's own edges since nearness split low-poly tails into crumbs; built 23 Oct 2026 on the Elf's
+   sash; our chains are numbered from 11, `hips_dyn_11_01_l`, because Synty's own parts use 01-04 and the game's
+   merge matches bones by name, so a shared name bound our sash to Synty's bones; cloth that never wraps the body,
+   a loincloth's panels, hangs from 6 cm below its own top; studs and rivets on swinging cloth copy the weights of
+   the cloth under them, or they floated off; scraps under 20 vertices get no chain of their own and ride the
+   cloth too, each vertex blending the weights of the cloth face under it, from up to 6 cm; the fit seats small
+   pieces left floating over 1.5 cm off the armor back onto it, `seat_floaters`): chains of dangle bones inside the part, named
    `<slot>_dyn_01_01_l` and parented to the rig bone it hangs from (`tors_dyn_…` under `spine_03`,
-   `abac_dyn_…` under `backAttach`), weighted along the chain. The game creates missing dyn bones on demand
-   (`SidekickPartRefs`) but nothing moves them yet. Making them swing in play needs a spring-bone or cloth system
-   in the game; that is game work, so tell the owner, don't build it here. To preview the swing in Blender a free
-   add-on may be installed (owner's leave, 22 Oct 2026): look on extensions.blender.org first (a spring-bone
-   add-on such as Wiggle 2). Blender's own cloth sim only bakes motion, it does not export as game physics.
-5. **Clip test at rest and in motion.** `mannequin_clip.py` covers every slider. Then play the game's real motion
-   on the fitted piece: Synty's Sidekick clips load straight onto the rig (Emotes and Taunts 140, Idles 330, Base
-   Locomotion 171, under `Assets/Synty/Animation*/Animations/Sidekick`). The melee packs (Grruzam and others)
-   are humanoid in Unity and are retargeted to the rig first. Measure body-through-gear frame by frame and send
-   MP4s. Synty's gear holds in emotes and combat because it is skin-tight with the body's own weights; ours must
-   pass the same test before export.
-6. Export the Unity files into the game's export folder
+   `abac_dyn_…` under `backAttach`), weighted along the chain. A spring-bone session moves `_dyn_` chains in the
+   game (PR 140). A free Blender add-on may be used to preview the swing (owner's leave): look on
+   extensions.blender.org first.
+6. **Motion test:** `gear_motion_test.py` on the working scene plays Synty's own Sidekick clips (Emotes and Taunts,
+   Idles, Base Locomotion under `Assets/Synty/Animation*/Animations/Sidekick`) and counts armor vertices sinking
+   into the body they cover, frame by frame, with an MP4 (`--female` for the feminine clips). Melee packs are
+   humanoid in Unity and must be retargeted first.
+7. **Export only when the owner's whole set is in** (owner, 23 Oct 2026: a set's full collection goes to Unity in one go) into the game's export folder
    (`Assets/_Game/Characters/Shared/SidekickParts/Resources/Meshes/<Set>/`) on the owner's go-ahead. The parts
    session brings them into Unity. The textures are 8192 px from Tripo: size them down for the game (2048 is
    plenty for a part this size) unless the owner says otherwise.
+
+**Tripo T-pose gear, the way it works now (Dock Runner, 23 Oct 2026).** Recipe for the pictures is in memory
+(`tripo-front-image-recipe`): Nano Banana 2 dresses our mannequin render (`MannequinViews/`), the mannequin stays in.
+- **Getting it into Blender:** Export (FBX, Blender, 8K) → zip in Downloads → unzip into the lineage folder on G:
+  (the DCC Bridge's Send stopped sending). Tripo shrinks a model to 1 m: scale back by height and arm span together,
+  feet on the floor, centred on the bare `_BASE_` body (the rig's `.gear` outfit is not the body). The mannequin goes
+  by its mid-grey texture (value 0.38-0.82; dark soles and straps stay) and by lying on the skin; keep a hidden
+  `_WithMannequin` copy. Name object, mesh and material `<Set>_<Piece>`.
+- **Several pieces at once:** Tripo's Image tab takes three pictures, so put the pieces on one labelled sheet. Split
+  them in Blender by where each loose piece sits. Tripo builds a piece's hidden back from the mannequin (a helmet came
+  with no back of its own): regenerate such a piece alone from a close-up render (`CivilianMale_HeadFront.png`).
+  Next time try HD Model's "Generate in Parts".
+- **Colour:** a cape or anything far off the palette is recoloured to its nearest palette colour (never Tripo's
+  bright yellow). Blender returns 8-bit pixels already sRGB: never convert them again (every set colour came out
+  washed). Tripo's Remove Lighting pales colours, so the match boosts saturation 1.5x; greys match only greys; an
+  exact palette match is kept; patches under 5 cm² that are not a loose piece take their border's colour.
+- **Clip checks:** `clear_faces` pushes faces that dip into the body between their corners (skin showed through
+  low-poly cloth with every vertex outside), on every body state including bust and butt (males get those sliders
+  too); small loose details (pouches) are left alone; afterwards the Basis is written back to the vertex positions
+  or the next bmesh round trip undoes the push. The sheet has male and female bust+butt columns;
+  `gear_motion_test.py --shape "kn_bust=1,kn_butt=1"`. The motion test's **show-through** measure (inner surface
+  seen through the outer piece) is the one that matters for gloves and boots: palm and sole points hidden inside
+  them made the old sinking measure report 3.6 and 4.6 cm that never show.
+- **Gloves, boots, cape, helmet:** each has its own path in both passes (`--slot`). A piece that already covers its
+  body part as modelled keeps its size and place. Gloves and boots are kept clear of the forearm and lower leg
+  only; cuff and shaft weights blend toward the limb. The cape takes trunk weights plus up to 60 % of the upper arm
+  over the shoulders, five chains under `backAttach` (`gear_dangle.py --sectors`), `--resize` to scale it about the
+  collar; its arms still pass through the side panels in some clips, which the game's spring bones handle with arm
+  colliders (owner's choice). A helmet rides `headAttach`, follows the head's keys, and is eased out where the head
+  comes through.
+- **Painting over Tripo is not a fix** (owner: "Can't just paint and expect that to be a complete fix"); a raised
+  strap built before the fit was shredded by it.
+- **Under-helmet hair:** `hair_under_helmet.py --rim <brow z,y,nape z,y> --shell <helmet shell json>` bakes every
+  `HairFixed` hair into what hangs below that helmet, cut 5 cm up inside the shell, hair pulled inside it on every
+  key, stumps and pieces hanging from nothing removed; hairs left with nothing are not drawn under the helmet.
+- **Weapons are not body gear:** they get their own passes (owner, 23 Oct 2026), sized to the game's weapon of the
+  same class and tier (Dock Runner, Rare: Monoblade 1.27 m, Glaive 2.78 m, the Carbine is a 0.38 m pistol;
+  `DockRunner_Weapon_Sizing.json`), grip points for the hands (`_grip.json`; the Glaive has a second hand), tested
+  with the game's strike animations only.
 - **Export the hair fixes** (go-ahead given 22 Oct 2026): `hair_export.py` on `SyntyHairFixes.blend` writes the
   67 copies to `.../Resources/Meshes/HairFixed/`. Two traps: a fixed mesh whose name was already taken in the
   source scene gets a `.001` ending (match by base name), and some Synty part files hide their mesh object, which

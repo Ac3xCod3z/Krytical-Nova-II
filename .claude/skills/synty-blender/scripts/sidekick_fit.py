@@ -238,7 +238,7 @@ def main():
             cell_of_poly[p.index] = cell
             key = names[cell]
             used[key] = used.get(key, 0) + 1
-            point = kn.cell_uv(*cell, grid=spec["uv"]["grid"])
+            point = kn.cell_uv(*cell, grid=spec["uv"]["grid"], inset=kn.SIDEKICK_INSET)
             for li in p.loop_indices:
                 uv.data[li].uv = point
         if unknown:
