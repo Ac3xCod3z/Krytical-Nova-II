@@ -46,8 +46,8 @@ MonoBehaviour:
   burstSeconds: 0.4
   burstSwell: 0.35
   stepSwell: {x: 0.35, y: 0.55, z: 0.85}
-  shockSeconds: 0.45
-  shockReach: 2.4
+  shockSeconds: 0.3
+  shockReach: 1.6
   shockWidth: 0.09
   shockSegments: 48
   stepKick: 0.18
@@ -55,3 +55,12 @@ MonoBehaviour:
   stepSoundGroup: {fileID: -3165942800488051908, guid: f2f383f979424e24fa19eac36be7c901, type: 2}
   stepSoundVolume: 0.7
   stepPitchRise: 0.12
+  approach: 1
+  approachReach: 1.1
+  approachWidth: 0.06
+  approachAlpha: 0.8
+  approachColour: {r: 0.85, g: 0.95, b: 1, a: 1}
+  countIn: 1
+  approachBar: {r: 0.45, g: 0.9, b: 1, a: 1}
+  approachWindow: {r: 1, g: 0.82, b: 0.2, a: 1}
+  caughtSeconds: 0.3

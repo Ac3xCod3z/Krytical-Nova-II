@@ -137,6 +137,59 @@ namespace KryticalNova.UI
             }
         }
 
+        /// <summary>The beat track above the Hotbar in a fight: the coming beats slide in and meet the centre on the beat (on unless switched off).</summary>
+        public static bool BeatTrack
+        {
+            get => PlayerPrefs.GetInt(Prefix + "beatTrack", 1) != 0;
+            set
+            {
+                if (BeatTrack == value) return;
+                PlayerPrefs.SetInt(Prefix + "beatTrack", value ? 1 : 0);
+                PlayerPrefs.Save();
+                Changed?.Invoke();
+            }
+        }
+
+        /// <summary>EARLY or LATE under the beat track after a press just off the beat (on unless switched off).</summary>
+        public static bool BeatHint
+        {
+            get => PlayerPrefs.GetInt(Prefix + "beatHint", 1) != 0;
+            set
+            {
+                if (BeatHint == value) return;
+                PlayerPrefs.SetInt(Prefix + "beatHint", value ? 1 : 0);
+                PlayerPrefs.Save();
+                Changed?.Invoke();
+            }
+        }
+
+        /// <summary>The first beat of each bar shown bigger and warmer on the beat track (on unless switched off).</summary>
+        public static bool BeatCountIn
+        {
+            get => PlayerPrefs.GetInt(Prefix + "beatCountIn", 1) != 0;
+            set
+            {
+                if (BeatCountIn == value) return;
+                PlayerPrefs.SetInt(Prefix + "beatCountIn", value ? 1 : 0);
+                PlayerPrefs.Save();
+                Changed?.Invoke();
+            }
+        }
+
+        /// <summary>A soft tick on every beat of the fight music, higher on the first of a bar (off unless switched on).</summary>
+        public static bool Metronome
+        {
+            get => PlayerPrefs.GetInt(Prefix + "metronome", 0) != 0;
+            set
+            {
+                if (Metronome == value) return;
+                PlayerPrefs.SetInt(Prefix + "metronome", value ? 1 : 0);
+                PlayerPrefs.Save();
+                CombatMusicPlayer.Click = value;
+                Changed?.Invoke();
+            }
+        }
+
         /// <summary>No sound while the game window is not the one in front.</summary>
         public static bool MuteInBackground
         {
