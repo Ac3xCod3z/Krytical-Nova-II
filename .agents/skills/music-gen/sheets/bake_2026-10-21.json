@@ -1,0 +1,48 @@
+{
+ "note": "Owner, 21 Oct 2026: the approved Volume 1-3 picks into the game. Fight music replaces the old Cadence tracks in Concord and the test arena; Selection tracks are one per menu skin (which faction gets which does not matter to the owner).",
+ "pieces": [
+  {"name": "KN_TitleTheme", "title": "Title Theme", "role": "menu", "bpm": 96, "source": "G:/My Drive/KryticalNova/Audio/Music/KN-Originals/Vol3_Flow_2026-10-21/TitleTheme_t3.flac"},
+  {"name": "KN_TitleOutro", "title": "Title Outro", "role": "menu", "bpm": 96, "source": "G:/My Drive/KryticalNova/Audio/Music/KN-Originals/Vol3_Flow_2026-10-21/TitleOutro_t1.flac"},
+  {"name": "KN_SelectHegemony", "title": "Character Select: Djent Trap", "role": "menu", "bpm": 102, "source": "G:/My Drive/KryticalNova/Audio/Music/KN-Originals/Vol3_Flow_2026-10-21/SelectBed_flow1.wav"},
+  {"name": "KN_SelectNull", "title": "Faction Select: Epic Chugs", "role": "menu", "bpm": 102, "source": "G:/My Drive/KryticalNova/Audio/Music/KN-Originals/Vol3_Flow_2026-10-21/SelectBed_flow2.wav"},
+  {"name": "KN_SelectCovenant", "title": "Character Select III (Variation)", "role": "menu", "bpm": 105, "source": "G:/My Drive/KryticalNova/Audio/Music/KN-Originals/Vol3_Flow_2026-10-21/SelectBed_flow4.wav"},
+  {"name": "KN_CoatHegemony", "title": "Corporate Faction: Cyber City", "role": "menu", "bpm": 105, "source": "G:/My Drive/KryticalNova/Audio/Music/KN-Originals/Vol2_Flow_2026-10-20/CoatHegemony_flow2.wav"},
+  {"name": "KN_CoatNull", "title": "Null Coat", "role": "menu", "bpm": 100, "source": "G:/My Drive/KryticalNova/Audio/Music/KN-Originals/Vol1_Sketches_2026-10-20/CoatNull_t1.flac"},
+  {"name": "KN_CoatCovenant", "title": "Covenant Coat", "role": "menu", "bpm": 100, "source": "G:/My Drive/KryticalNova/Audio/Music/KN-Originals/Vol1_Sketches_2026-10-20/CoatCovenant_t2.flac"},
+  {"name": "KN_ConcordHeroesGathering", "title": "Heroes Gathering Plaza", "role": "explore", "bpm": 110, "source": "G:/My Drive/KryticalNova/Audio/Music/KN-Originals/Vol3_Flow_2026-10-21/ConcordIdle_flow2.wav"},
+  {"name": "KN_BattleRhythm", "title": "Battle Rhythm", "role": "fight", "source": "G:/My Drive/KryticalNova/Audio/Music/KN-Originals/Vol3_Flow_2026-10-21/CalloutFight_flow1.wav"},
+  {"name": "KN_DuelAnimeBossEnergy", "title": "Duel: Anime Boss Energy", "role": "fight", "source": "G:/My Drive/KryticalNova/Audio/Music/KN-Originals/Vol3_Flow_2026-10-21/CalloutFight_flow2.wav"},
+  {"name": "KN_FinalDuelBigBeatDjent", "title": "Final Duel: Big Beat Djent", "role": "fight", "source": "G:/My Drive/KryticalNova/Audio/Music/KN-Originals/Vol3_Flow_2026-10-21/CalloutFight_flow3.wav"},
+  {"name": "KN_CyberBattle", "title": "Cyber Battle: On The Beat", "role": "fight", "source": "G:/My Drive/KryticalNova/Audio/Music/KN-Originals/Vol3_Flow_2026-10-21/CalloutFight_flow4.wav"},
+  {"name": "KN_CyberBattleVariation", "title": "Cyber Battle: On The Beat (Variation)", "role": "fight", "source": "G:/My Drive/KryticalNova/Audio/Music/KN-Originals/Vol3_Flow_2026-10-21/CalloutFight_flow5.wav"},
+  {"name": "KN_IronMarch", "title": "Iron March: Awakened Mechanics", "role": "fight", "source": "G:/My Drive/KryticalNova/Audio/Music/KN-Originals/Vol3_Flow_2026-10-21/CalloutFight_flow6.wav"},
+  {"name": "KN_IronMarchVariation", "title": "Iron March: Awakened Mechanics (Variation)", "role": "fight", "source": "G:/My Drive/KryticalNova/Audio/Music/KN-Originals/Vol3_Flow_2026-10-21/CalloutFight_flow7.wav"},
+  {"name": "KN_ClansOfTheNorth", "title": "Clans of the North: Shieldwall", "role": "fight", "source": "G:/My Drive/KryticalNova/Audio/Music/KN-Originals/Vol3_Flow_2026-10-21/CalloutFight_flow8.wav"},
+  {"name": "KN_Hyperdrive", "title": "Hyperdrive: Anime Rush", "role": "fight", "bpm": 160, "source": "G:/My Drive/KryticalNova/Audio/Music/KN-Originals/Vol3_Flow_2026-10-21/CalloutFight_flow10.wav"},
+  {"name": "KN_HyperdriveVariation", "title": "Hyperdrive: Anime Rush (Variation)", "role": "fight", "source": "G:/My Drive/KryticalNova/Audio/Music/KN-Originals/Vol3_Flow_2026-10-21/CalloutFight_flow11.wav"},
+  {"name": "KN_TitansWrath", "title": "Titan's Wrath: Boss Fight", "role": "fight", "source": "G:/My Drive/KryticalNova/Audio/Music/KN-Originals/Vol3_Flow_2026-10-21/CalloutFight_flow12.wav"},
+  {"name": "KN_TitansWrathVariation", "title": "Titan's Wrath: Boss Fight (Variation)", "role": "fight", "source": "G:/My Drive/KryticalNova/Audio/Music/KN-Originals/Vol3_Flow_2026-10-21/CalloutFight_flow13.wav"},
+  {"name": "KN_BreakbeatBrawl", "title": "Breakbeat Brawl: Comic Action", "role": "fight", "source": "G:/My Drive/KryticalNova/Audio/Music/KN-Originals/Vol3_Flow_2026-10-21/CalloutFight_flow14.wav"},
+  {"name": "KN_BreakbeatBrawlVariation", "title": "Breakbeat Brawl: Comic Action (Variation)", "role": "fight", "source": "G:/My Drive/KryticalNova/Audio/Music/KN-Originals/Vol3_Flow_2026-10-21/CalloutFight_flow15.wav"}
+ ],
+ "zones": {
+  "Zone01_StarterTown": {
+   "combat": ["KN_IronMarchVariation", "KN_BattleRhythm", "KN_Hyperdrive", "KN_ClansOfTheNorth", "KN_DuelAnimeBossEnergy", "KN_CyberBattle", "KN_TitansWrath", "KN_BreakbeatBrawl", "KN_FinalDuelBigBeatDjent", "KN_IronMarch", "KN_CyberBattleVariation", "KN_HyperdriveVariation", "KN_TitansWrathVariation", "KN_BreakbeatBrawlVariation"],
+   "explore": ["KN_ConcordHeroesGathering"]
+  },
+  "TestArena": {
+   "combat": ["KN_IronMarchVariation", "KN_BattleRhythm", "KN_Hyperdrive", "KN_ClansOfTheNorth", "KN_DuelAnimeBossEnergy", "KN_CyberBattle", "KN_TitansWrath", "KN_BreakbeatBrawl", "KN_FinalDuelBigBeatDjent", "KN_IronMarch", "KN_CyberBattleVariation", "KN_HyperdriveVariation", "KN_TitansWrathVariation", "KN_BreakbeatBrawlVariation"],
+   "explore": []
+  }
+ },
+ "menu": {
+  "title": "KN_TitleTheme",
+  "titleOutro": "KN_TitleOutro",
+  "selectHegemony": "KN_SelectHegemony",
+  "selectNull": "KN_SelectNull",
+  "selectCovenant": "KN_SelectCovenant",
+  "coatHegemony": "KN_CoatHegemony",
+  "coatNull": "KN_CoatNull",
+  "coatCovenant": "KN_CoatCovenant"
+ }
+}

@@ -1,0 +1,8 @@
+[mcp_servers.tripo-mcp]
+command = "uvx"
+args = [
+    "--system-certs",
+    "--with",
+    "mcp<2",
+    "tripo-mcp",
+]

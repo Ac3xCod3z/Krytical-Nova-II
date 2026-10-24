@@ -1,6 +1,6 @@
 """Build the Synty Mannequin Modeling scene: every lineage's bare body, male and female, side by side in T-pose.
 
-  run_blender.py mannequin_build.py --out "Assets/_ArtSource/Blender~/Sidekick/SyntyMannequinModeling.blend"
+  run_blender.py mannequin_build.py --out "G:/My Drive/KryticalNova/Art/Blender/Sidekick/SyntyMannequinModeling.blend"
         [--spacing 2.0]        metres between figures
         [--no-sliders]         leave out the Krytical Nova body sliders (kn_bust, kn_butt, kn_defined, kn_height)
 

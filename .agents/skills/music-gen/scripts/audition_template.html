@@ -1,0 +1,319 @@
+<title>Nova Soundtrack Audition</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* Layout: the same dark audition page as the sound and voice auditions; one block per game place, in the order a player
+   meets them, takes side by side. Single dark look on purpose (the owner's audition pages are all dark). */
+:root {
+  --bg: #14151a; --panel: #1c1e26; --panel-2: #20242f; --line: #2c2f3a; --fg: #e8e8ee; --muted: #9aa0b0;
+  --btn: #2b3040; --btn-line: #47506a; --btn-hover: #38405a; --main: #224455; --main-line: #55aadd; --on: #337755; --on-line: #55cc88;
+  --gold: #e8b04a; --red: #ff5a63; --cyan: #4fe3f0; --warn: #f0965a; --ok: #5fcf8a; --wave: #4a5060; --wave-on: #c9cdd8;
+  --body: system-ui, "Segoe UI", sans-serif; --mono: ui-monospace, Consolas, monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box }
+body { background: var(--bg); color: var(--fg); font: 15px/1.45 var(--body); margin: 0 }
+.wrap { max-width: 1180px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 0 120px; display: grid; gap: 22px }
+h1, h2 { margin: 0; text-wrap: balance; font-weight: 650 }
+h1 { font-size: 22px; letter-spacing: .01em }
+h1 .glitch { color: var(--red); text-shadow: 2px 0 0 var(--cyan) }
+h2 { font-size: 19px }
+.lede { max-width: 72ch; color: var(--muted); margin: 6px 0 0 }
+.label { font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted) }
+.mono { font-family: var(--mono); font-variant-numeric: tabular-nums }
+header { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 2; background: var(--bg); border-bottom: 1px solid #333; padding-block: 12px; display: grid; gap: 8px }
+.howto { display: flex; flex-wrap: wrap; gap: 4px 18px; font-size: 13.5px; color: var(--muted) }
+.howto b { color: var(--fg); font-weight: 600 }
+.route { display: flex; flex-wrap: wrap; gap: 6px; align-items: center }
+.route a { font-size: 13px; color: var(--fg); text-decoration: none; background: var(--btn); border: 1px solid var(--btn-line); border-radius: 6px; padding: 3px 10px }
+.route a:hover, .route a:focus-visible { background: var(--btn-hover); outline: none }
+.route span { color: var(--muted) }
+section.place { display: grid; gap: 12px; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 14px; scroll-margin-top: 150px }
+.placehead { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); gap: 8px 24px; align-items: start }
+.placehead .facts { display: grid; gap: 4px; font-size: 14px; min-width: 0; color: var(--muted) }
+.placehead .facts b { color: var(--fg) }
+.placehead .facts p { margin: 0 }
+.scene { font-family: var(--mono); font-size: 12px; color: var(--muted); overflow-wrap: anywhere }
+.cue { display: grid; gap: 8px; border-top: 1px solid var(--line); padding-top: 10px }
+.cuehead { display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: baseline }
+.cuehead strong { font-size: 16px }
+details.prompt { font-size: 13px; color: var(--muted) }
+details.prompt summary { cursor: pointer; width: fit-content }
+.takes { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 10px }
+.take { background: var(--panel-2); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; display: grid; gap: 8px; min-width: 0 }
+.take.picked { border-color: var(--on-line); box-shadow: 0 0 0 1px var(--on-line) inset }
+.take .top { display: flex; justify-content: space-between; gap: 8px; align-items: baseline }
+.take .name { font-weight: 600 }
+canvas.wave { width: 100%; height: 54px; display: block; cursor: pointer; background: transparent; border-radius: 4px }
+.stats { display: flex; flex-wrap: wrap; gap: 2px 12px; font-size: 12px; color: var(--muted) }
+.flags { display: grid; gap: 2px; font-size: 12.5px }
+.flag { color: var(--warn) } .clean { color: var(--ok) }
+.btns { display: flex; flex-wrap: wrap; gap: 6px }
+button { background: var(--btn); color: var(--fg); border: 1px solid var(--btn-line); border-radius: 6px; padding: 5px 12px; cursor: pointer; font: inherit; font-size: 14px }
+button:hover { background: var(--btn-hover) }
+button:focus-visible { outline: 2px solid var(--main-line); outline-offset: 1px }
+button.play, button.prev { background: var(--main); border-color: var(--main-line) }
+button.on { background: var(--on); border-color: var(--on-line) }
+button.keep.on { background: var(--on); border-color: var(--on-line) }
+button.maybe.on { background: #5a4a1f; border-color: var(--gold) }
+button.hold { border-color: var(--red) }
+button.hold.on { background: #6a2a2e; border-color: var(--red) }
+.cuefoot { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center }
+.cuefoot textarea { flex: 1 1 280px; min-height: 36px; font: 14px/1.4 var(--body); color: var(--fg); background: #111; border: 1px solid var(--btn-line); border-radius: 6px; padding: 5px 8px; resize: vertical }
+.saved { font-size: 13px; color: var(--muted) }
+.previews { display: grid; gap: 10px }
+.preview { background: var(--panel-2); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center }
+.preview .what { flex: 1 1 320px; min-width: 0; font-size: 14px }
+.preview .uses { font-family: var(--mono); font-size: 12px; color: var(--muted) }
+.picksline { display: grid; gap: 8px }
+.picksline code { display: block; font: 13px/1.5 var(--mono); background: #111; border: 1px solid var(--btn-line); border-radius: 6px; padding: 8px 10px; overflow-x: auto; white-space: pre; color: var(--fg) }
+.status { font-size: 13px; color: var(--muted) }
+.empty { color: var(--muted); font-style: italic }
+@media (max-width: 760px) { .placehead { grid-template-columns: minmax(0, 1fr) } header { position: static } }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important } }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="label" id="batch"></div>
+    <h1>Krytical Nova <span class="glitch">Soundtrack</span> Audition</h1>
+    <p class="lede" id="note"></p>
+    <div class="howto">
+      <span><b>Click a waveform</b> to play from there.</span>
+      <span><b>Keep</b> marks the take you want (one per cue). <b>Maybe</b> marks takes worth another pass.</span>
+      <span><b>Seam</b> plays the end into the start, as a loop would.</span>
+      <span><b>Click</b> adds a tick on every measured beat (the Cadence beat).</span>
+    </div>
+    <nav class="route" id="route" aria-label="Places in the order a player meets them"></nav>
+    <div class="status" id="status">Picks are saved to this page when you are signed in.</div>
+  </header>
+  <section class="place" id="transitions">
+    <h2>How the changes feel</h2>
+    <p class="lede">These play the takes you marked Keep (or the first take) the way the game would switch between them.</p>
+    <div class="previews" id="previews"></div>
+  </section>
+  <div id="places" style="display:grid;gap:34px"></div>
+  <section class="place picksline" id="picks">
+    <h2>Your picks</h2>
+    <p class="lede">Saved automatically. If saving is off, copy this line into the chat instead.</p>
+    <code id="pickcode">KN-MUSIC-PICKS</code>
+    <div class="btns"><button id="copy" type="button">Copy picks</button><span class="saved" id="copied"></span></div>
+  </section>
+</div>
+
+<script>
+(() => {
+const DATA = /*__DATA__*/null;
+const $ = (s, el = document) => el.querySelector(s);
+const make = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
+const fmt = s => { s = Math.max(0, s); return Math.floor(s / 60) + ":" + String(Math.floor(s % 60)).padStart(2, "0"); };
+const css = name => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+
+// ---------- audio ----------
+let ctx = null; const buffers = {}; const loading = {};
+function ac() { if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)(); if (ctx.state === "suspended") ctx.resume(); return ctx; }
+function load(take) {
+  if (buffers[take.take]) return Promise.resolve(buffers[take.take]);
+  if (!loading[take.take]) loading[take.take] = fetch(take.src).then(r => { if (!r.ok) throw new Error("missing " + take.src); return r.arrayBuffer(); })
+    .then(b => ac().decodeAudioData(b)).then(buf => (buffers[take.take] = buf));
+  return loading[take.take];
+}
+let playing = null;   // {stop(), take, t0, offset, raf}
+function stopAll() { if (playing) { playing.stop(); playing = null; } document.querySelectorAll("button.play.on,button.seam.on,button.prev.on,button.hold.on,button.over.on").forEach(b => b.classList.remove("on")); redrawAll(); }
+function source(buf, gainValue = 1) { const c = ac(); const s = c.createBufferSource(); s.buffer = buf; const g = c.createGain(); g.gain.value = gainValue; s.connect(g).connect(c.destination); return { s, g }; }
+function clicks(take, from, until, startAt) {
+  const c = ac(); const ch = take.check || {}; const bpm = ch.bpm || take.bpm; const first = ch.first_beat || 0; const per = 60 / bpm; const nodes = [];
+  let n = Math.ceil((from - first) / per); if (n < 0) n = 0;
+  for (let t = first + n * per; t < until; t += per, n++) {
+    const o = c.createOscillator(); const g = c.createGain(); o.frequency.value = n % 4 === 0 ? 1760 : 1180;
+    const at = startAt + (t - from); g.gain.setValueAtTime(0.0001, at); g.gain.exponentialRampToValueAtTime(0.35, at + 0.002); g.gain.exponentialRampToValueAtTime(0.0001, at + 0.05);
+    o.connect(g).connect(c.destination); o.start(at); o.stop(at + 0.06); nodes.push(o);
+  }
+  return nodes;
+}
+async function playTake(take, offset, opts = {}) {
+  stopAll(); const buf = await load(take); const c = ac(); const { s } = source(buf); const at = c.currentTime + 0.05;
+  s.start(at, offset); const extra = opts.click ? clicks(take, offset, buf.duration, at) : [];
+  const p = { take: take.take, t0: at, offset, stop() { try { s.stop(); } catch (e) {} extra.forEach(o => { try { o.stop(); } catch (e) {} }); cancelAnimationFrame(p.raf); } };
+  s.onended = () => { if (playing === p) stopAll(); };
+  playing = p; tick(); return p;
+}
+async function playSeam(take) {
+  stopAll(); const buf = await load(take); const c = ac(); const at = c.currentTime + 0.05; const tail = Math.min(4, buf.duration / 4);
+  const a = source(buf).s, b = source(buf).s; a.start(at, buf.duration - tail); b.start(at + tail, 0, 4);
+  const p = { take: take.take, seam: true, stop() { try { a.stop(); b.stop(); } catch (e) {} } };
+  b.onended = () => { if (playing === p) stopAll(); }; playing = p;
+}
+function tick() { if (!playing || playing.seam || playing.preview) return; redraw(playing.take); playing.raf = requestAnimationFrame(tick); }
+function position(takeId) { if (!playing || playing.take !== takeId || playing.seam || playing.preview) return null; return playing.offset + (ac().currentTime - playing.t0); }
+
+// ---------- waveforms ----------
+const peaks = {}; const canvases = {};
+function drawPeaks(take) {
+  const cv = canvases[take.take]; if (!cv) return; const w = cv.clientWidth || 300, h = cv.clientHeight || 54; const dpr = window.devicePixelRatio || 1;
+  cv.width = w * dpr; cv.height = h * dpr; const g = cv.getContext("2d"); g.scale(dpr, dpr); g.clearRect(0, 0, w, h);
+  const pk = peaks[take.take]; const pos = position(take.take); const dur = buffers[take.take] ? buffers[take.take].duration : take.seconds;
+  if (!pk) { g.fillStyle = css("--wave"); g.fillRect(0, h / 2 - 1, w, 2); return; }
+  const bars = pk.length, bw = w / bars;
+  for (let i = 0; i < bars; i++) { const x = i * bw; const v = Math.max(1, pk[i] * (h - 4)); const played = pos != null && (i / bars) * dur <= pos;
+    g.fillStyle = played ? css("--cyan") : css("--wave-on"); g.globalAlpha = played ? 1 : 0.55; g.fillRect(x, (h - v) / 2, Math.max(1, bw - 1), v); }
+  g.globalAlpha = 1;
+  const ch = take.check || {}; if (ch.bpm && take.slot === "callout_fight") { /* bar lines every 4 beats */
+    g.fillStyle = css("--red"); const per = 240 / ch.bpm; for (let t = ch.first_beat || 0; t < dur; t += per) g.fillRect((t / dur) * w, h - 4, 1, 4); }
+}
+function computePeaks(take) {
+  return load(take).then(buf => { const d = buf.getChannelData(0); const bars = 160; const step = Math.floor(d.length / bars); const out = new Float32Array(bars); let mx = 0;
+    for (let i = 0; i < bars; i++) { let m = 0; for (let j = i * step; j < (i + 1) * step; j += 32) { const v = Math.abs(d[j]); if (v > m) m = v; } out[i] = m; if (m > mx) mx = m; }
+    for (let i = 0; i < bars; i++) out[i] /= mx || 1; peaks[take.take] = out; drawPeaks(take); });
+}
+function redraw(id) { const t = DATA.takes.find(x => x.take === id); if (t) drawPeaks(t); }
+function redrawAll() { DATA.takes.forEach(drawPeaks); }
+
+// ---------- picks (db) ----------
+const picks = {};     // cue -> {pick, maybes:[], none, note}
+let db = null;
+function cueTakes(cueId) { return DATA.takes.filter(t => t.cue === cueId); }
+function chosen(slot) { // the take a preview uses for a slot: a Keep in that slot, else its first take
+  const ts = DATA.takes.filter(t => t.slot === slot); const k = ts.find(t => picks[t.cue] && picks[t.cue].pick === t.take); return k || ts[0]; }
+function pickLine() {
+  const parts = DATA.cues.map(c => { const p = picks[c.id] || {}; let s = c.id + "=" + (p.none ? "none" : (p.pick || "-"));
+    if (p.maybes && p.maybes.length) s += " maybe:" + p.maybes.join("+"); if (p.note) s += ' "' + p.note.replace(/"/g, "'") + '"'; return s; });
+  return "KN-MUSIC-PICKS " + DATA.batch + " | " + parts.join(" | ");
+}
+const timers = {};
+function save(cueId) {
+  $("#pickcode").textContent = pickLine(); renderPickState(cueId);
+  document.querySelectorAll(".preview").forEach(b => b._upd && b._upd());
+  if (!db) return; clearTimeout(timers[cueId]);
+  timers[cueId] = setTimeout(() => {
+    const p = picks[cueId] || {};
+    db.doc("picks/" + cueId).set({ cue: cueId, batch: DATA.batch, pick: p.pick || "", maybes: p.maybes || [], none: !!p.none, note: p.note || "", at: new Date().toISOString() })
+      .then(() => { const s = $("#saved-" + cueId); if (s) s.textContent = "Saved"; })
+      .catch(e => { const s = $("#saved-" + cueId); if (s) s.textContent = "Not saved (" + (e && e.code || "error") + "). Copy the picks line below instead."; });
+  }, 600);
+}
+function renderPickState(cueId) {
+  const p = picks[cueId] || {};
+  cueTakes(cueId).forEach(t => { const card = $("#take-" + t.take); if (!card) return;
+    card.classList.toggle("picked", p.pick === t.take); $(".keep", card).classList.toggle("on", p.pick === t.take);
+    $(".maybe", card).classList.toggle("on", (p.maybes || []).includes(t.take)); });
+  const none = $("#none-" + cueId); if (none) none.classList.toggle("on", !!p.none);
+  const note = $("#note-" + cueId); if (note && document.activeElement !== note) note.value = p.note || "";
+}
+
+// ---------- build ----------
+function buildTake(t, slot) {
+  const card = make("article", "take"); card.id = "take-" + t.take;
+  const top = make("div", "top"); top.append(make("span", "name", t.title || t.take.replace(t.cue + "_", "Take ").replace("Take t", "Take ")));
+  const time = make("span", "mono label", fmt(t.check.seconds || t.seconds)); top.append(time); card.append(top);
+  const cv = make("canvas", "wave"); cv.setAttribute("aria-label", "Waveform of " + t.take + ". Click to play from that point."); canvases[t.take] = cv; card.append(cv);
+  cv.addEventListener("click", async ev => { const r = cv.getBoundingClientRect(); const buf = await load(t); const off = ((ev.clientX - r.left) / r.width) * buf.duration;
+    await playTake(t, off, { click: $(".clk", card).classList.contains("on") }); $(".play", card).classList.add("on"); });
+  const ch = t.check || {};
+  const stats = make("div", "stats mono");
+  [["BPM", ch.bpm ? (Math.round(ch.bpm * 10) / 10) + " (asked " + t.bpm + ")" : t.bpm], ["Key", t.key], ["LUFS", ch.lufs != null ? ch.lufs : "-"],
+   ["Drift", ch.drift_ms != null ? ch.drift_ms + " ms" : "-"], ["File", t.take]].forEach(([k, v]) => stats.append(make("span", null, k + " " + v)));
+  card.append(stats);
+  const flags = make("div", "flags");
+  if (!ch.flags) flags.append(make("span", "empty", "Not measured yet"));
+  else if (!ch.flags.length) flags.append(make("span", "clean", "Measurements clean"));
+  else ch.flags.forEach(f => flags.append(make("span", "flag", f)));
+  card.append(flags);
+  const btns = make("div", "btns");
+  const play = make("button", "play", "Play"); play.type = "button";
+  play.onclick = async () => { if (play.classList.contains("on")) { stopAll(); return; } await playTake(t, 0, { click: clk.classList.contains("on") }); play.classList.add("on"); };
+  const clk = make("button", "clk", "Click"); clk.type = "button"; clk.setAttribute("aria-pressed", "false");
+  clk.onclick = () => { clk.classList.toggle("on"); clk.setAttribute("aria-pressed", clk.classList.contains("on")); };
+  btns.append(play);
+  if (slot.kind !== "sting") { const seam = make("button", "seam", "Seam"); seam.type = "button"; seam.onclick = async () => { await playSeam(t); seam.classList.add("on"); }; btns.append(seam); }
+  if (slot.click || slot.kind === "fight") { clk.classList.add("on"); clk.setAttribute("aria-pressed", "true"); btns.append(clk); }
+  if (slot.kind === "layer" && slot.over) {
+    const over = make("button", "over", "Over the bed"); over.type = "button";
+    const hold = make("button", "hold", "Hold to hover"); hold.type = "button"; hold.title = "Hold while the coat plays over the Selection theme";
+    over.onclick = async () => { if (over.classList.contains("on")) { stopAll(); return; } stopAll(); const bed = chosen(slot.over); const [bb, cb] = await Promise.all([load(bed), load(t)]);
+      const c = ac(), at = c.currentTime + 0.05; const B = source(bb), C = source(cb, 0.12); B.s.start(at); C.s.start(at);
+      const p = { take: t.take, preview: true, coat: C.g, stop() { try { B.s.stop(); C.s.stop(); } catch (e) {} } }; C.s.onended = () => { if (playing === p) stopAll(); }; playing = p; over.classList.add("on"); };
+    const swell = up => { if (!playing || !playing.coat) return; const c = ac(); playing.coat.gain.cancelScheduledValues(c.currentTime); playing.coat.gain.setTargetAtTime(up ? 1 : 0.12, c.currentTime, up ? 0.15 : 0.35); hold.classList.toggle("on", up); };
+    hold.addEventListener("pointerdown", () => swell(true)); hold.addEventListener("pointerup", () => swell(false)); hold.addEventListener("pointerleave", () => swell(false));
+    hold.addEventListener("keydown", e => { if (e.key === " " || e.key === "Enter") { e.preventDefault(); swell(true); } }); hold.addEventListener("keyup", () => swell(false));
+    btns.append(over, hold);
+  }
+  const keep = make("button", "keep", "Keep"); keep.type = "button";
+  keep.onclick = () => { const p = picks[t.cue] = picks[t.cue] || {}; p.pick = p.pick === t.take ? "" : t.take; if (p.pick) p.none = false; save(t.cue); };
+  const maybe = make("button", "maybe", "Maybe"); maybe.type = "button";
+  maybe.onclick = () => { const p = picks[t.cue] = picks[t.cue] || {}; p.maybes = p.maybes || []; const i = p.maybes.indexOf(t.take); if (i >= 0) p.maybes.splice(i, 1); else p.maybes.push(t.take); save(t.cue); };
+  btns.append(keep, maybe); card.append(btns);
+  return card;
+}
+function buildPlace(slot) {
+  const sec = make("section", "place"); sec.id = slot.slot;
+  const head = make("div", "placehead");
+  const left = make("div"); left.append(make("div", "label", "Where it plays")); left.append(make("h2", null, slot.place)); const sc = make("div", "scene", slot.scene); left.append(sc);
+  const facts = make("div", "facts"); const w = make("p"); w.append(make("b", null, "Starts: ")); w.append(document.createTextNode(slot.when));
+  const e = make("p"); e.append(make("b", null, "Ends: ")); e.append(document.createTextNode(slot.ends)); facts.append(w, e);
+  head.append(left, facts); sec.append(head);
+  DATA.cues.filter(c => c.slot === slot.slot).forEach(c => {
+    const cue = make("div", "cue"); const ch = make("div", "cuehead"); ch.append(make("strong", null, c.id.replace(/([a-z])([A-Z])/g, "$1 $2")));
+    ch.append(make("span", "label mono", c.bpm + " BPM · " + c.key + " · " + fmt(c.seconds))); cue.append(ch);
+    const det = make("details", "prompt"); det.append(make("summary", null, "What I asked the model for")); det.append(make("p", null, c.tags)); cue.append(det);
+    const grid = make("div", "takes"); const ts = cueTakes(c.id);
+    if (!ts.length) grid.append(make("p", "empty", "No takes made yet."));
+    ts.forEach(t => grid.append(buildTake(t, slot))); cue.append(grid);
+    const foot = make("div", "cuefoot"); const none = make("button", null, "None of these"); none.type = "button"; none.id = "none-" + c.id;
+    none.onclick = () => { const p = picks[c.id] = picks[c.id] || {}; p.none = !p.none; if (p.none) p.pick = ""; save(c.id); };
+    const note = make("textarea"); note.id = "note-" + c.id; note.placeholder = "Notes for the next pass (what to change, what to keep)"; note.setAttribute("aria-label", "Notes on " + c.id);
+    note.oninput = () => { const p = picks[c.id] = picks[c.id] || {}; p.note = note.value; save(c.id); };
+    const saved = make("span", "saved"); saved.id = "saved-" + c.id; foot.append(none, note, saved); cue.append(foot);
+    sec.append(cue);
+  });
+  return sec;
+}
+function buildPreview(pv) {
+  const box = make("div", "preview"); const what = make("div", "what"); what.append(make("strong", null, pv.label));
+  const uses = make("div", "uses"); what.append(uses);
+  const upd = () => { const a = chosen(pv.from), s = pv.sting ? chosen(pv.sting) : null, b = chosen(pv.to); uses.textContent = [a, s, b].filter(Boolean).map(t => t.take).join("  →  ") || "Needs takes"; };
+  upd(); box._upd = upd;
+  const btn = make("button", "prev", "Play the change"); btn.type = "button";
+  btn.onclick = async () => {
+    if (btn.classList.contains("on")) { stopAll(); return; }
+    stopAll(); upd(); const a = chosen(pv.from), s = pv.sting ? chosen(pv.sting) : null, b = chosen(pv.to); if (!a || !b) return;
+    const [ab, sb, bb] = await Promise.all([load(a), s ? load(s) : null, load(b)]); const c = ac(); const at = c.currentTime + 0.05;
+    const A = source(ab); const from = Math.min(pv.from_at, Math.max(0, ab.duration - pv.hold - 3)); A.s.start(at, from);
+    let cut = at + pv.hold;
+    if (pv.on_bar) { const bpm = (a.check && a.check.bpm) || a.bpm; const bar = 240 / bpm; const first = (a.check && a.check.first_beat) || 0; const pos = from + pv.hold - first; cut = at + (Math.ceil(pos / bar) * bar - (from - first)); }
+    A.g.gain.setValueAtTime(1, cut); A.g.gain.linearRampToValueAtTime(0.0001, cut + pv.fade_out); A.s.stop(cut + pv.fade_out + 0.05);
+    let S = null; if (sb) { S = source(sb); S.s.start(cut); }
+    const B = source(bb, 0.0001); const bStart = pv.sting ? cut + pv.fade_out : cut; const bOff = pv.on_bar ? ((b.check && b.check.first_beat) || 0) : 0;
+    B.s.start(bStart, bOff); B.g.gain.setValueAtTime(0.0001, bStart); B.g.gain.linearRampToValueAtTime(1, bStart + pv.fade_in); B.s.stop(bStart + 16);
+    const p = { take: null, preview: true, stop() { [A, S, B].forEach(n => { if (n) try { n.s.stop(); } catch (e) {} }); } };
+    B.s.onended = () => { if (playing === p) stopAll(); }; playing = p; btn.classList.add("on");
+  };
+  box.append(what, btn); return box;
+}
+
+async function start() {
+  if (!DATA) { $("#status").textContent = "This is the empty template that audition.py fills in. The page with the tracks is the published audition artifact (its link is in the music-gen skill)."; return; }
+  $("#batch").textContent = DATA.batch.replace(/_/g, " ") + " · " + DATA.takes.length + " takes";
+  $("#note").textContent = DATA.note;
+  const route = $("#route"); DATA.slots.forEach((s, i) => { if (i) route.append(make("span", null, "→")); const a = make("a", null, s.place.replace(/ -.*$/, "")); a.href = "#" + s.slot; route.append(a); });
+  const pv = $("#previews"); DATA.previews.forEach(p => pv.append(buildPreview(p)));
+  const places = $("#places"); DATA.slots.forEach(s => places.append(buildPlace(s)));
+  $("#pickcode").textContent = pickLine();
+  $("#copy").onclick = () => { const txt = pickLine(); const done = () => ($("#copied").textContent = "Copied");
+    if (navigator.clipboard) navigator.clipboard.writeText(txt).then(done).catch(() => { const r = document.createRange(); r.selectNodeContents($("#pickcode")); getSelection().removeAllRanges(); getSelection().addRange(r); $("#copied").textContent = "Selected: press Ctrl+C"; }); };
+  redrawAll(); window.addEventListener("resize", redrawAll);
+  if (window.matchMedia) matchMedia("(prefers-color-scheme: dark)").addEventListener("change", redrawAll);
+  // Waveforms load in the background, a few at a time.
+  const queue = DATA.takes.slice(); const worker = async () => { while (queue.length) { const t = queue.shift(); try { await computePeaks(t); } catch (e) {} } };
+  [worker(), worker(), worker()];
+
+  try { db = window.claude && window.claude.use ? await window.claude.use("db") : null; } catch (e) { db = null; }
+  if (!db) { $("#status").textContent = "Saving is off in this view. Your picks still build the line at the bottom: copy it into the chat."; return; }
+  $("#status").textContent = "Picks save to this page as you click.";
+  db.collection("picks").onSnapshot(snap => {
+    snap.docs.forEach(d => { const v = d.data() || {}; if (!v.cue || v.batch !== DATA.batch) return; picks[v.cue] = { pick: v.pick || "", maybes: v.maybes || [], none: !!v.none, note: v.note || "" }; renderPickState(v.cue); });
+    $("#pickcode").textContent = pickLine(); document.querySelectorAll(".preview").forEach(b => b._upd && b._upd());
+  }, () => { $("#status").textContent = "Could not read saved picks. New clicks still build the line at the bottom."; });
+}
+start().catch(e => { const st = document.getElementById("status"); if (st) st.textContent = "The page hit an error: " + (e && e.message || e); });
+})();
+</script>

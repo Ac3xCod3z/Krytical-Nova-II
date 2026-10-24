@@ -66,7 +66,7 @@ grid, because the character's one material and the game's colour system read tho
 Decided with the user 8 Oct 2026 on the fox, and the route for every pet made this way:
 
 1. The model arrives through the Tripo Bridge add-on into whatever file is open. The user saves it as its own
-   file, `Assets/_ArtSource/Blender~/Pets/<Pet>/SM_Pet_<Pet>_S1.blend` (File > Save As). One pet, one file.
+   file, `G:/My Drive/KryticalNova/Art/Blender/Pets/<Pet>/SM_Pet_<Pet>_S1.blend` (File > Save As). One pet, one file.
 2. `pet_from_scan.py --object "<its name>_source" --name SM_Pet_<Pet>_S1 --tris 2000 --colours 6 --merge 0.13 --smooth 4 --bold 3.2`
    (the Kitsune Spirit's numbers; `--bold 1` keeps the texture's own colours)
    - keeps the original as `<name>_source` (hidden), so any step can be redone;
@@ -138,7 +138,7 @@ head. With `--live`, give file arguments as full paths.
 Getting a model out of the artist's open, unsaved Blender session without writing from it: Blender autosaves
 on its own every two minutes to `%TEMP%/<file>_<pid>_autosave.blend`. Copy that file, open the copy headless,
 remove everything but the one object, and save it as the pet's own .blend. Creatures that are not pets (the
-18 m Storm Sovereign) go under `Blender~/Creatures/<Name>/` as `SM_Creature_<Name>`, with a higher triangle
+18 m Storm Sovereign) go under `G:/My Drive/KryticalNova/Art/Blender/Creatures/<Name>/` as `SM_Creature_<Name>`, with a higher triangle
 budget (`pet_finish.py --max-tris 6000`). A scan's own eyes rarely survive flattening. Show the artist the result before rebuilding a face: a rebuilt
 Tidecaller face was rejected outright.
 

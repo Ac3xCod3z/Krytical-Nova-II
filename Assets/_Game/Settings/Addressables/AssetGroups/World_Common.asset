@@ -1945,6 +1945,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 0d93a8c38cc93244e9a6015a288b7cce
+    m_Address: Assets/_Game/Audio/Data/Assets/MusicTrack_TwistedVision.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 0d97bca8bc1348348933789db36f24af
     m_Address: Assets/_Game/Gameplay/Housing/Data/Assets/Items/Furnishing_23010.asset
     m_ReadOnly: 0
@@ -2595,6 +2600,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 117f1258b279e2842b2627263d45f8cd
+    m_Address: Assets/_Game/Audio/Data/Assets/MusicTrack_KN_TitleTheme.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 1180e42ea6ad0154cb106e75b0861700
     m_Address: Assets/_Game/Gameplay/Items/Data/Assets/Icons/Tuning_VioletChip.png
     m_ReadOnly: 0
@@ -2757,6 +2767,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 129b06d57c8f1e9468e1f3b82f00c79c
     m_Address: Assets/Synty/PolygonSciFiCity/Models/Collision/Convex/SM_Bld_Large_01_Convex.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 12b5219f30ecbf34daf05b7e93a58cea
+    m_Address: Assets/_Game/Audio/Data/Assets/MusicTrack_HoldAGrudge.asset
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -3080,6 +3095,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 14e67689aa144794886212d6becd5959
+    m_Address: Assets/_Game/Audio/Music/MUS_KN_CoatNull.ogg
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 14f0bbf781334a44d985f190d6747932
     m_Address: Assets/_Game/Gameplay/Items/Data/Assets/Gear/SKTN/Amulet_SKTN_C01.asset
     m_ReadOnly: 0
@@ -3207,6 +3227,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 159df5870d469a142af7b3267ba83db7
     m_Address: Assets/Synty/PolygonDarkFantasy/Textures/Misc/Wood_FloorBoards_02_Normals.png
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 15a70d9cc14544d283ddfe10b9fc85f9
+    m_Address: Assets/_Game/Audio/Data/Assets/DeckPack_NovaOriginals.asset
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -4027,6 +4052,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 1aafe23084827d74eb61caf49769895a
     m_Address: Assets/Synty/PolygonDarkFortress/Models/BR_Characters.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 1ab57cf6e05a03b49ab97b296e69e01a
+    m_Address: Assets/_Game/Audio/Music/MUS_UpTheDownStaircase.ogg
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -6225,6 +6255,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 2934daf7a271dc44896c51bbab59c390
+    m_Address: Assets/_Game/GameFeel/Data/Assets/BeatRingSettings.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 2936bab001ad902428051df5bdbdd2df
     m_Address: Assets/Synty/InterfaceFantasyWarriorHUD/Sprites/Icons_Inventory/ICON_FantasyWarrior_Inventory_Hammers_01_Clean.png
     m_ReadOnly: 0
@@ -6375,6 +6410,16 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 29fe8f2b82a084e43ad451feb30c2c35
+    m_Address: Assets/_Game/Audio/Music/MUS_BleakBeat.ogg
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 2a07c16edeea3bc4ea2a889e698d0281
+    m_Address: Assets/_Game/Audio/SFX/Movement/SFX_WaterStep_02.wav
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 2a0f1b65f84bb304d9e35d388030dd9c
     m_Address: Assets/Synty/InterfaceDarkFantasyHUD/Sprites/HUD/SPR_HUD_DarkFantasy_Map_Ring_Small_Underlay.png
     m_ReadOnly: 0
@@ -6502,6 +6547,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 2ac1e46f6b5b04c4d98f37b055368ded
     m_Address: Assets/_Game/Audio/Ambience/Weather/AMB_Weather_Snow.wav
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 2ac5043d4ab1ad44291eeb7a564ae7b6
+    m_Address: Assets/_Game/VFX/GameFeel/PFX_Water_Wake.prefab
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -7457,6 +7507,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 313281e41d3471244ba9fc45bda669ab
     m_Address: Assets/_Game/VFX/Materials/Comic/PFX_Word_RareFind/Text_0_0_0.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 313500596327b3344a2f887ac456f856
+    m_Address: Assets/_Game/VFX/GameFeel/T_RunWindSoft.png
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -8830,6 +8885,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 3a2c2f401e3816945b8b445870f9640b
+    m_Address: Assets/_Game/VFX/Materials/M_BeatRing.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 3a2d5b15ca8d4884297423799d03653e
     m_Address: Assets/Synty/AnimationIdles/Animations/Sidekick/Feminine/PickNose/Actions/A_MOD_IDL_PickNose_Loop_Femn.fbx
     m_ReadOnly: 0
@@ -9915,6 +9975,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 41dd271c130f8cc4cba2b9fbb620cf50
+    m_Address: Assets/_Game/Audio/Music/MUS_TwistedVision.ogg
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 41ecc25fc1c52864ab844620ecb54bc3
     m_Address: Assets/Synty/PolygonNatureBiomes/PNB_Meadow_Forest/Terrain/Ruin_Tiles_Normals_01.png
     m_ReadOnly: 0
@@ -10395,6 +10460,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 451a658f95ee57b4fbbe8daac8cd771c
+    m_Address: Assets/_Game/Audio/Music/MUS_KN_SelectHegemony.ogg
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 451af7f446755164fa3bcae40df87682
     m_Address: Assets/_Game/VFX/Materials/Comic/PFX_Word_PetPounce/Text_0_1_1.mat
     m_ReadOnly: 0
@@ -10452,6 +10522,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 45a08c4288d553848ac55b1ead5a6be5
     m_Address: Assets/_Game/Gameplay/Housing/Data/Assets/Icons/Furnishing_23008_Bench_01.png
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 45a3a8fc31884cd45aa237275eb2b072
+    m_Address: Assets/_Game/VFX/Materials/M_RunWind.mat
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -10770,6 +10845,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 47a7c8d8b046daa4db3855f6fd191b24
+    m_Address: Assets/_Game/Audio/Data/Assets/MusicTrack_ThrillMe.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 47b395a1fe10fb54c97a994943bd2949
     m_Address: Assets/Synty/PolygonFantasyKingdom/Models/SM_Bld_House_Wall_01.fbx
     m_ReadOnly: 0
@@ -10985,6 +11065,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 4900abb1010d499eafb4da9605a5cf1e
+    m_Address: Assets/_Game/Audio/Data/Assets/DeckPack_Library.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 490a67015954ef141883b2987e3977af
     m_Address: Assets/_Game/Gameplay/Items/Data/Assets/Gear/SOLD/Boots_SOLD_R45.asset
     m_ReadOnly: 0
@@ -11012,6 +11097,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 493c6ba742b20a64d90ffbe9e4f40711
     m_Address: Assets/Plugins/AllIn1ShaderNodes/Demo/Graphs/GRPH_Demo_VfxSlash.shadergraph
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 493ea8ed5b00dac49867ce451db69701
+    m_Address: Assets/_Game/Audio/Music/MUS_ThrillMe.ogg
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -11062,6 +11152,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 4997e6ebb2685bd46b844e1449ae74b1
     m_Address: Assets/_Game/Gameplay/Items/Data/Assets/Icons/Cape_SKTN_06_SKTN_Lichbound.png
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 49ab66e76b9a8f5428cd7694cd1e6263
+    m_Address: Assets/_Game/Audio/Data/Assets/MusicTrack_KN_SelectCovenant.asset
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -11192,6 +11287,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 4aaaa6b3f321c85458e4b888356b944d
     m_Address: Assets/_Game/Gameplay/Progression/Data/Assets/Icons/Carbine_S7.png
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 4aac1d090111ec84a8981424942ee4ff
+    m_Address: Assets/_Game/Audio/Data/Assets/MusicTrack_SpinningALegendaryTale.asset
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -11627,6 +11727,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 4de1769cf0db3914ba75a73eedfd05cd
     m_Address: Assets/_Game/Gameplay/Items/Data/Assets/Gear/SKTN/Gloves_SKTN_U40.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 4de81e0a72c548d89a87652098d3dd42
+    m_Address: Assets/_Game/Audio/Data/Assets/DeckLibrary.asset
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -13260,6 +13365,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 58734f0bb3671774391794d3ede1cb5f
+    m_Address: Assets/_Game/Audio/Music/MUS_KN_CoatHegemony.ogg
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 5873932ec63aece43984b7d537ae44c4
     m_Address: Assets/Synty/InterfaceDarkFantasyHUD/Sprites/HUD/SPR_HUD_DarkFantasy_Map_ViewCone_01.png
     m_ReadOnly: 0
@@ -14390,6 +14500,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 610b1bd9c5968994cbf6634acd005288
+    m_Address: Assets/_Game/Audio/SFX/Movement/SFX_WaterStep_04.wav
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 611311f44b73037418a1b6209fe6c9fb
     m_Address: Assets/_Game/VFX/Materials/Comic/PFX_Word_Claymore_Heavy/Text_0_3_1.mat
     m_ReadOnly: 0
@@ -14697,6 +14812,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 636975e40e2b1e842aa8d5df635befaf
     m_Address: Assets/_Game/VFX/Materials/FX_Cutout_Round_01_VertexLit_URP_FFFFFF.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 637e668f27c838a4987d314a7c24c562
+    m_Address: Assets/_Game/Audio/Music/MUS_ExplosiveStory.ogg
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -15335,6 +15455,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 683ff8b395a9c14468eda51951c01bae
+    m_Address: Assets/_Game/Audio/Data/Assets/MusicTrack_BleakBeat.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 684c77e5e345aa44da75e119a4630e55
     m_Address: Assets/_Game/Gameplay/Progression/Data/Assets/Icons/FlashOfRage.png
     m_ReadOnly: 0
@@ -15435,6 +15560,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 697204a6b405b8c49970db1a7a995e0c
+    m_Address: Assets/_Game/Audio/Music/MUS_PushUp.ogg
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 697630866827c3d4da8d60441dab259a
     m_Address: Assets/_Game/VFX/GameFeel/Shaders/Derez.shader
     m_ReadOnly: 0
@@ -15442,6 +15572,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 698248a7a3d3bb04cae3ae86e6ca9e94
     m_Address: Assets/Synty/PolygonFantasyKingdom/Models/Convex/SM_Prop_Table_War_01_Convex.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6983aebe65dd7fa46aa8ff20aa2c04e7
+    m_Address: Assets/_Game/Audio/Data/Assets/MusicTrack_KN_CoatNull.asset
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -16250,6 +16385,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6f9b2dda9d12e8e46a95de6e83b0a82a
+    m_Address: Assets/_Game/Audio/SFX/Movement/SFX_WaterStep_01.wav
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 6f9f14abd3a12d1419f7ba45d1a53839
     m_Address: Assets/_Game/VFX/Materials/Comic/PFX_Word_ServoClaws_Critical/Text_0_1_0.mat
     m_ReadOnly: 0
@@ -16372,6 +16512,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 702149268ba5e6640af63407a91b8349
     m_Address: Assets/Synty/AnimationIdles/Animations/Sidekick/Masculine/Eat/Actions/A_MOD_IDL_Eat_Scoff_Masc.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 70217b85feb0c0b43b63a875d7b4ec08
+    m_Address: Assets/_Game/Audio/Music/MUS_HoldAGrudge.ogg
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -17080,6 +17225,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7485062052cc4bd68005ca13cb4e287f
+    m_Address: Assets/_Game/UI/HUD/Deck/Deck.uss
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 7489498540615fb4d87fe845e1424427
     m_Address: Assets/_Game/Gameplay/Items/Data/Assets/Gear/Claymore/Weapon_Claymore_C25.asset
     m_ReadOnly: 0
@@ -17257,6 +17407,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 75a8db6eeb069674f9a87d4ac248ca40
     m_Address: Assets/_Game/Gameplay/Housing/Data/Assets/Items/Furnishing_20055.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 75aebafb506362e4a98b899087959146
+    m_Address: Assets/_Game/Audio/Music/MUS_KN_TitleTheme.ogg
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -19880,6 +20035,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 88430cc237430ce42905c900afc55058
+    m_Address: Assets/_Game/Audio/SFX/Movement/SFX_WaterStep_03.wav
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 884363e040704974f835378bcd48a440
     m_Address: Assets/_Game/Gameplay/Housing/Data/Assets/Icons/Furnishing_26011_Chair_01.png
     m_ReadOnly: 0
@@ -20342,6 +20502,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 8b86a91b570220b49a878c53343f2c79
     m_Address: Assets/_ThirdParty/JMO Assets/Cartoon FX Remaster/CFXR Assets/Graphics/cfxr fire blur fade hdr ab.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8baf61ce03c1990449be725c067b5aed
+    m_Address: Assets/_Game/Audio/Data/Assets/MusicTrack_HoodCruising.asset
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -21595,6 +21760,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 94aa595c0240d09489673353b68e75cc
+    m_Address: Assets/_Game/Audio/Data/Assets/MusicTrack_UpTheDownStaircase.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 94abb92f730aab04bad340a44668c96c
     m_Address: Assets/_Game/Gameplay/Items/Data/Assets/Gear/ELVN/Amulet_ELVN_R85.asset
     m_ReadOnly: 0
@@ -21727,6 +21897,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 959130b491c6ad947b9e8b7102872488
     m_Address: Assets/_Game/Gameplay/Items/Data/Assets/Gear/SKTN/Armor_SKTN_C28.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 959d5494a9e515c41a1f0ac1d095817f
+    m_Address: Assets/_Game/Audio/Data/Assets/MusicTrack_ExplosiveStory.asset
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -22790,6 +22965,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9c98cf836b1960a48848d0700da077e4
+    m_Address: Assets/_Game/Audio/Data/Assets/MusicTrack_KN_CoatCovenant.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 9c9c596a2404dd14bbdb5dba2bec1a72
     m_Address: Assets/_Game/Gameplay/Progression/Data/Assets/Skills/GlaiveSkills/Skill_Glaive_Lv80TwoHit.asset
     m_ReadOnly: 0
@@ -23310,6 +23490,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a040a2e42019afa418c2c0cbb793cfde
+    m_Address: Assets/_Game/Audio/Music/MUS_KN_SelectNull.ogg
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: a040b6253c4d634429a2e99763ca871d
     m_Address: Assets/_Game/Gameplay/Items/Data/Assets/Gear/VIKG/Boots_VIKG_R95.asset
     m_ReadOnly: 0
@@ -23825,6 +24010,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a3ad675cb24da9a4ba9c8ce4285d2a52
+    m_Address: Assets/_Game/VFX/Materials/M_WaterWake_Ring.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: a3ad741d5c9d09740af88bcf0b528b50
     m_Address: Assets/Synty/PolygonElvenRealm/Prefabs/Props/SM_Prop_Couch_01.prefab
     m_ReadOnly: 0
@@ -24195,6 +24385,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a630e510d815c1f46bf2e33fd977a340
+    m_Address: Assets/_Game/Audio/Music/MUS_KN_ConcordHeroesGathering.ogg
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: a64e9039d3514da4d90cc92f81408970
     m_Address: Assets/_Game/Gameplay/Progression/Data/Assets/Icons/Longaxe_Lv80TwoHit.png
     m_ReadOnly: 0
@@ -24272,6 +24467,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: a6baa73ab4ef3a7459ad862cfe806582
     m_Address: Assets/_Game/VFX/Materials/Comic/PFX_PvpCrit_Null/Text_0_2_1.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a6bb1075312d9dd4c89ae94063867f34
+    m_Address: Assets/_Game/Audio/Data/Assets/MusicTrack_SeeThroughMirror.asset
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -24700,6 +24900,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a94c517dbab3e0f4295d50354c85d3cb
+    m_Address: Assets/_Game/Audio/Music/MUS_KN_CoatCovenant.ogg
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: a94cd052d02adff468a542ec8bc7022d
     m_Address: Assets/_Game/Gameplay/Items/Data/Assets/Gloves/Gloves_SOLD_03.asset
     m_ReadOnly: 0
@@ -24862,6 +25067,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: aa9f7c0ba00ac9d40acd46009203270a
     m_Address: Assets/Synty/InterfaceDarkFantasyHUD/Sprites/HUD/SPR_HUD_DarkFantasy_Box_Small_Parchment_03.png
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: aaae11172c3799e4383c13cf681eb2a5
+    m_Address: Assets/_Game/Audio/Music/MUS_SpinningALegendaryTale.ogg
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -25707,6 +25917,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: affc35d1d344f2841932a433c8d849be
     m_Address: Assets/_Game/Gameplay/Items/Data/Assets/GearMaterials/Failsafe_Lucky.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b00592e4a23250242b99bce61d2c69e7
+    m_Address: Assets/_Game/VFX/GameFeel/PFX_Water_Step.prefab
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -26907,6 +27122,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: b87912368fbd4a6db4a118a9a7088707
     m_Address: Assets/_Game/Characters/Pets/KitsuneSpirit_100/M_Pet_KitsuneSpirit_100_Tails.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b87cedbf04133d94c93fce1be1519385
+    m_Address: Assets/_Game/VFX/Materials/M_WaterWake_Drop.mat
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -28130,6 +28350,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c0e206bde6f36964d950234c372582fb
+    m_Address: Assets/_Game/Audio/Data/Assets/MusicTrack_KN_SelectHegemony.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: c0e6ffa0c48e47a429609aad88b6638d
     m_Address: Assets/_Game/Gameplay/Items/Data/Assets/Capes/Cape_VIKG_08.asset
     m_ReadOnly: 0
@@ -28297,6 +28522,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: c1d00794f626982438b7a83fedd71fbf
     m_Address: Assets/Synty/PolygonCyberCity/Models/SM_Prop_Lantern_01.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c1d1d663192536244bd7d800287e556a
+    m_Address: Assets/_Game/Audio/Music/MUS_HoodCruising.ogg
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -29260,6 +29490,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c7d1373cdefc79849a5bf38d2550eccc
+    m_Address: Assets/_Game/Audio/Music/MUS_SeeThroughMirror.ogg
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: c7d4c5ba23a94c542a9aa3540d389afb
     m_Address: Assets/Synty/InterfaceDarkFantasyHUD/Sprites/DarkFantasy/SPR_DarkFantasy_Frame_Box_Medium_17.png
     m_ReadOnly: 0
@@ -29597,6 +29832,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: c9eaeaf21d52ad0419ad7b795df47bf3
     m_Address: Assets/_Game/VFX/Materials/Comic/PFX_Word_Held/Text_0_2_0.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c9f59998eba2b4047923ee7951ad928f
+    m_Address: Assets/_Game/Audio/Data/Assets/MusicTrack_PushUp.asset
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -30102,6 +30342,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: cd1d988cf057acc45a999d254756a850
     m_Address: Assets/Synty/PolygonNatureBiomes/PNB_Tropical_Jungle/Terrain/Terrain_Sand_Wet_01.terrainlayer
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: cd1f3ac421534714d95499e284423924
+    m_Address: Assets/_Game/Audio/Data/Assets/MusicTrack_IsolatedTerrorAttack.asset
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -30972,6 +31217,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: d29dc059680e60348bc2e243d264af87
     m_Address: Assets/_Game/Gameplay/Items/Data/Assets/GearProgressionSettings.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d29dc5811457ce84ea95d7d03ce05fa4
+    m_Address: Assets/_Game/Audio/Data/Assets/MusicTrack_BingeWatcher.asset
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -32722,6 +32972,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: df03fc77e31c70345a2ddb5c7a1a1aba
     m_Address: Assets/_Game/UI/HUD/Faction/Covenant/HUD_Covenant_PlayerCard.prefab
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: df0470659714daf479a2aca581cc347e
+    m_Address: Assets/_Game/Audio/Music/MUS_BingeWatcher.ogg
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -34985,6 +35240,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: edd442814c5417f409013d26f1a5a9a8
+    m_Address: Assets/_Game/VFX/GameFeel/PFX_Run_Wind.prefab
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: ede274060501fc744833d1cd9ea94590
     m_Address: Assets/_Game/VFX/GameFeel/PFX_Aura_AzureWall.prefab
     m_ReadOnly: 0
@@ -35287,6 +35547,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: f002d07f2faccc444998f0e5237a1e08
     m_Address: Assets/Synty/AnimationIdles/Animations/Sidekick/Feminine/Thoughtful/Actions/A_MOD_IDL_Thoughtful_R_ChinScratch_Femn.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f006d2456820d084591406f4e39ac7d3
+    m_Address: Assets/_Game/Audio/Data/Assets/MusicTrack_KN_ConcordHeroesGathering.asset
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -35842,6 +36107,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: f4106ba9953cea94d8555d111eeb953f
     m_Address: Assets/Synty/PolygonDungeon/Models/SM_Env_BonePile_02.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f4153729bd4df074093818b542e862db
+    m_Address: Assets/_Game/Audio/Music/MUS_IsolatedTerrorAttack.ogg
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -36950,6 +37220,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: facbba2ba714cdf45a3a1f3d1d824c78
+    m_Address: Assets/_Game/Audio/Data/Assets/MusicTrack_KN_CoatHegemony.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: fad226f7edab9ce40b361d7e9b7d6db8
     m_Address: Assets/Synty/PolygonDarkFortress/Prefabs/Props/SM_Prop_Lantern_01.prefab
     m_ReadOnly: 0
@@ -37680,6 +37955,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ff1dc5e8e24fc4a419987c8f66aaef15
+    m_Address: Assets/_Game/Audio/Music/MUS_KN_SelectCovenant.ogg
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: ff2009e121dfe0e4e9531baa3bf60168
     m_Address: Assets/_Game/Gameplay/Progression/Data/Assets/Skills/WarbowSkills/Skill_Warbow_Lv60Multi.asset
     m_ReadOnly: 0
@@ -37732,6 +38012,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: ff720e4af0bf4e24a75f643d7f9e9466
     m_Address: Assets/_Game/Characters/Pets/Tidecaller_75/AC_Pet_Tidecaller_75.controller
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ff776995c714b7347af0d52727f8dc8b
+    m_Address: Assets/_Game/Audio/Data/Assets/MusicTrack_KN_SelectNull.asset
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0

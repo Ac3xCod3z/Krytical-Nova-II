@@ -1,0 +1,49 @@
+{
+ "batch": "Vol1_Sketches_2026-10-20",
+ "title": "Krytical Nova - Volume 1 sketches",
+ "note": "Soul-Engine Rock, leaning Hi-Fi Rush: guitar-driven rhythm rock and big-beat electronics, a beat you can always find. Instrumental only. Sketches from the local ACE-Step 1.5 XL SFT; the direction the owner likes is re-made on Flow Music for the final.",
+ "slots": [
+  {"slot": "title", "order": 1, "place": "Title screen", "scene": "Scenes/MainMenu/Title.unity",
+   "when": "Starts on the logo glitch (red and cyan on the dark page) and loops under the owner's cover painting.",
+   "ends": "Pressing a key plays the Title outro; the theme fades out over 2 s.", "kind": "loop", "fade_out": 2.0},
+  {"slot": "title_out", "order": 2, "place": "Title outro sting", "scene": "Scenes/MainMenu/Title.unity",
+   "when": "The moment the player presses a key on the title page and the comic page turns.",
+   "ends": "Rings out; the Selection theme fades in under its tail.", "kind": "sting"},
+  {"slot": "select", "order": 3, "place": "Selection theme", "scene": "FactionSelect / CharacterSelect / CharacterCreator",
+   "when": "Fades in 1.5 s after the title theme is gone and plays through faction select, character select and the creator.",
+   "ends": "Fades out over 3 s when the world starts loading.", "kind": "loop", "fade_in": 1.5, "follows": "title"},
+  {"slot": "faction_coat", "order": 4, "place": "Faction select: the faction's coat", "scene": "Scenes/MainMenu/FactionSelect.unity",
+   "when": "Same tempo and key as the Selection theme. Hovering a faction's banner swells its coat over the bed (Hegemony, Null, Covenant).",
+   "ends": "Sinks back under the bed when the pointer leaves; the chosen faction's coat stays a little louder in the creator.", "kind": "layer", "over": "select"},
+  {"slot": "concord_idle", "order": 5, "place": "Concord, out of a fight", "scene": "Scenes/World/Towns/Zone01_StarterTown.unity",
+   "when": "The free truce town around the Central Plaza, walking about. Sparse, so the fight hits harder.",
+   "ends": "Drops out on the next bar when a Callout starts.", "kind": "loop"},
+  {"slot": "callout_fight", "order": 6, "place": "Concord Callout (duel) - Cadence fight music", "scene": "Scenes/World/Towns/Zone01_StarterTown.unity",
+   "when": "A Callout starts (PlayerCombatState.InCallout). The server's MusicConductor keeps the beat; a skill pressed within 90 ms of it hits 6 % harder.",
+   "ends": "Fades out over 2.5 s, 6 s after the last blow.", "kind": "fight", "click": true}
+ ],
+ "previews": [
+  {"id": "title_to_select", "label": "Title, press a key, Selection theme", "from": "title", "sting": "title_out", "to": "select",
+   "from_at": 24, "hold": 8, "fade_out": 2.0, "fade_in": 1.5},
+  {"id": "idle_to_callout", "label": "Walking in Concord, then a Callout starts", "from": "concord_idle", "to": "callout_fight",
+   "from_at": 16, "hold": 8, "fade_out": 1.0, "fade_in": 0.6, "on_bar": true}
+ ],
+ "cues": [
+  {"id": "TitleTheme", "slot": "title", "takes": 3, "seed": 1101, "bpm": 96, "key": "D minor", "seconds": 120,
+   "tags": "cinematic alternative rock video game title theme, instrumental, half-time groove with a huge punchy kick and cracking snare, overdriven electric guitar plays a bold four-note rising motif that is cut short by a drum hit before the last note, chugging palm-muted rhythm guitar, warm analog synth bass, glitchy digital stutter effects, wide synth pad, big drum fill builds into an anthemic section, heroic and defiant, sci-fi meets ancient, polished modern mix"},
+  {"id": "TitleOutro", "slot": "title_out", "takes": 2, "seed": 1201, "bpm": 96, "key": "D minor", "seconds": 10,
+   "tags": "short video game menu sting, instrumental, a single huge drum hit and overdriven power chord in D minor, glitchy reverse cymbal swell, the chord rings out and decays, confident and punchy, cinematic rock"},
+  {"id": "SelectBed", "slot": "select", "takes": 3, "seed": 1301, "bpm": 100, "key": "D minor", "seconds": 120,
+   "tags": "laid-back funk rock groove for a video game character select menu, instrumental, tight dry drums with crisp hi-hats, groovy electric bass, clean chopped funk guitar, soft synth pad, head-nodding and cool, steady loopable groove, lots of space, nothing busy, modern polished mix"},
+  {"id": "CoatHegemony", "slot": "faction_coat", "takes": 2, "seed": 1401, "bpm": 100, "key": "D minor", "seconds": 60,
+   "tags": "glossy corporate funk rock and electro, instrumental, slap bass, clean chopped funk guitar, bright synth brass stabs, sidechained supersaw pad, crisp quantized drums, sleek neon cyberpunk city, confident and polished"},
+  {"id": "CoatNull", "slot": "faction_coat", "takes": 2, "seed": 1501, "bpm": 100, "key": "D minor", "seconds": 60,
+   "tags": "industrial rock, instrumental, drop-tuned heavy guitar riff, metallic anvil and gear percussion, servo whine, bitcrushed synth, dry cold mix with no reverb, mechanical and exact, cold and funereal, machine precision"},
+  {"id": "CoatCovenant", "slot": "faction_coat", "takes": 2, "seed": 1601, "bpm": 100, "key": "D minor", "seconds": 60,
+   "tags": "nordic folk rock, instrumental, pounding war drums, hardanger fiddle melody, hurdy-gurdy drone, nyckelharpa, low brass, distorted rhythm guitar, warm wooden room, defiant and communal, viking saga"},
+  {"id": "ConcordIdle", "slot": "concord_idle", "takes": 2, "seed": 1701, "bpm": 92, "key": "F major", "seconds": 120,
+   "tags": "relaxed lo-fi funk for a peaceful video game town hub, instrumental, soft brushed drums, warm clean electric guitar, mellow electric piano, round bass, gentle and sunny, sparse arrangement with space, calm market square at midday, loopable"},
+  {"id": "CalloutFight", "slot": "callout_fight", "takes": 4, "seed": 1801, "bpm": 155, "key": "E minor", "seconds": 120,
+   "tags": "high energy rhythm action video game battle music like Hi-Fi Rush, instrumental, driving punk rock and big beat electronic, four-on-the-floor kick with a hard backbeat snare on every bar, fast distorted guitar riffs, funky slap bass, synth stabs on the beat, crowd-pumping drops, very clear strong steady beat, energetic and fun, comic-book action, tight modern mix"}
+ ]
+}
