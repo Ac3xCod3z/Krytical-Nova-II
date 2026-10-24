@@ -81,6 +81,11 @@ namespace KryticalNova.Core
         void WallStanding(Transform actor, bool onWall);
         /// <summary>The actor runs or stands on water (Waterstride), or has left it: the wake at the feet.</summary>
         void WaterStriding(Transform actor, bool onWater);
+        /// <summary>
+        /// A body struck the water hard, on every machine: a jump off it or onto it, or a fall in. Much more than a
+        /// footstep (owner, 24 Oct 2026: the force of a jump shows).
+        /// </summary>
+        void WaterSplash(Transform actor, Vector3 at, bool isLocalPlayer);
         void Landed(Transform actor, bool isLocalPlayer);
         /// <summary>The actor left the ground (true) or is back on it, including after an aborted jump (false).</summary>
         void Airborne(Transform actor, bool airborne);

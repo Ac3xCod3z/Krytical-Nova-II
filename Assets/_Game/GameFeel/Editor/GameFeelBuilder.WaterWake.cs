@@ -9,6 +9,8 @@ namespace KryticalNova.EditorTools
         private const string WaterWakeName = "PFX_Water_Wake";
         private const string WaterStepName = "PFX_Water_Step";
         private const string WaterStepPlayer = "Water Step";
+        private const string WaterSplashName = "PFX_Water_Splash";
+        private const string WaterSplashPlayer = "Water Splash";
 
         /// <summary>
         /// The wake of Waterstride (owner, 22 Oct 2026): rings that spread on the water where the feet strike it, more
@@ -26,9 +28,10 @@ namespace KryticalNova.EditorTools
                 so.FindProperty("waterWakeVfx").objectReferenceValue = Load(Vfx(WaterWakeName));
                 // Its footsteps, built again in place: a splash and a ripple for everyone, a splash sound for the player.
                 foreach (Transform old in root.GetComponentsInChildren<Transform>(true))
-                    if (old != null && old.name == WaterStepPlayer) Object.DestroyImmediate(old.gameObject);
+                    if (old != null && (old.name == WaterStepPlayer || old.name == WaterSplashPlayer)) Object.DestroyImmediate(old.gameObject);
                 Transform world = root.transform.Find("World");
                 AddWaterStepFeel(root, world != null ? world.gameObject : root, so);
+                AddWaterSplashFeel(root, world != null ? world.gameObject : root, so);
                 so.ApplyModifiedPropertiesWithoutUndo();
                 PrefabUtility.SaveAsPrefabAsset(root, PrefabPath);
             }
@@ -143,6 +146,107 @@ namespace KryticalNova.EditorTools
                 splash.transform.localPosition = new Vector3(0f, 0.04f, 0f);
 
                 SavePrefab(root, Vfx(WaterStepName));
+            }
+            finally { Object.DestroyImmediate(root); }
+        }
+
+        /// <summary>
+        /// A body striking the water hard (owner, 24 Oct 2026: "make the effects more prominent for jumps and lands to
+        /// represent the more force than walking or running"): a jump off the water, a landing on it, a fall in. Three
+        /// rings one after another, a white burst of foam, a crown of drops and a few heavy ones thrown higher. Its
+        /// sound, until one is picked for it (Sound Scout), is the water step over the landing thud.
+        /// </summary>
+        private static void AddWaterSplashFeel(GameObject root, GameObject world, SerializedObject so)
+        {
+            BuildWaterSplashPrefab();
+            so.FindProperty("waterSplashFeel").objectReferenceValue = Player(root, WaterSplashPlayer, p => { Sound(p, "Water Step"); Sound(p, "Land Thud"); });
+            so.FindProperty("waterSplashWorldFeel").objectReferenceValue = World(world, WaterSplashPlayer, new Fx(WaterSplashName, warm: 3));
+        }
+
+        private static void BuildWaterSplashPrefab()
+        {
+            var root = new GameObject(WaterSplashName);
+            try
+            {
+                Material ringMaterial = WeatherVfxBuilder.ParticleMaterial("M_WaterWake_Ring", RingTexture, additive: false);
+                Material dropMaterial = WeatherVfxBuilder.ParticleMaterial("M_WaterWake_Drop", DiscTexture, additive: false);
+
+                // Rings: three, one after another, spreading wide.
+                ParticleSystem rings = WakeSystem(root, "Rings", ringMaterial);
+                OneShot(rings, 1);
+                var emission = rings.emission;
+                emission.SetBursts(new[] { new ParticleSystem.Burst(0f, 1), new ParticleSystem.Burst(0.12f, 1), new ParticleSystem.Burst(0.26f, 1) });
+                var main = rings.main;
+                main.maxParticles = 3;
+                main.duration = 1.6f;
+                main.startLifetime = 1.4f;
+                main.startSize = 1.1f;
+                main.startColor = new Color(0.9f, 0.98f, 1f, 0.85f);
+                var centred = rings.shape;
+                centred.enabled = false; // from the point the body struck, not scattered round it
+                var size = rings.sizeOverLifetime;
+                size.enabled = true;
+                size.size = new ParticleSystem.MinMaxCurve(1f, new AnimationCurve(new Keyframe(0f, 0.4f, 0f, 2.4f), new Keyframe(1f, 5.5f)));
+                FadeOutWake(rings, 0.04f);
+                rings.GetComponent<ParticleSystemRenderer>().renderMode = ParticleSystemRenderMode.HorizontalBillboard;
+                rings.transform.localPosition = new Vector3(0f, 0.03f, 0f);
+
+                // Foam: a white burst flat on the water where the body went in, fading as it spreads.
+                ParticleSystem foam = WakeSystem(root, "Foam", dropMaterial);
+                OneShot(foam, 1);
+                main = foam.main;
+                main.startLifetime = 0.7f;
+                main.startSize = 1.3f;
+                main.startColor = new Color(1f, 1f, 1f, 0.5f);
+                centred = foam.shape;
+                centred.enabled = false;
+                size = foam.sizeOverLifetime;
+                size.enabled = true;
+                size.size = new ParticleSystem.MinMaxCurve(1f, new AnimationCurve(new Keyframe(0f, 0.5f, 0f, 2f), new Keyframe(1f, 1.8f)));
+                FadeOutWake(foam, 0.02f);
+                foam.GetComponent<ParticleSystemRenderer>().renderMode = ParticleSystemRenderMode.HorizontalBillboard;
+                foam.transform.localPosition = new Vector3(0f, 0.04f, 0f);
+
+                // Crown: a ring of drops thrown up and out from the rim, falling back.
+                ParticleSystem crown = WakeSystem(root, "Crown", dropMaterial);
+                OneShot(crown, 48);
+                main = crown.main;
+                main.startLifetime = new ParticleSystem.MinMaxCurve(0.55f, 0.9f);
+                main.startSize = new ParticleSystem.MinMaxCurve(0.06f, 0.15f);
+                main.startSpeed = new ParticleSystem.MinMaxCurve(3.2f, 5.8f);
+                main.startColor = new Color(0.93f, 0.99f, 1f, 0.95f);
+                main.gravityModifier = 1.5f;
+                var shape = crown.shape;
+                shape.enabled = true;
+                shape.shapeType = ParticleSystemShapeType.Cone;
+                shape.angle = 32f;
+                shape.radius = 0.35f;
+                shape.radiusThickness = 0f;
+                shape.rotation = new Vector3(-90f, 0f, 0f);
+                FadeOutWake(crown, 0.02f);
+                crown.GetComponent<ParticleSystemRenderer>().renderMode = ParticleSystemRenderMode.Billboard;
+                crown.transform.localPosition = new Vector3(0f, 0.05f, 0f);
+
+                // Plume: a few big drops thrown higher from the middle.
+                ParticleSystem plume = WakeSystem(root, "Plume", dropMaterial);
+                OneShot(plume, 14);
+                main = plume.main;
+                main.startLifetime = new ParticleSystem.MinMaxCurve(0.7f, 1.05f);
+                main.startSize = new ParticleSystem.MinMaxCurve(0.12f, 0.24f);
+                main.startSpeed = new ParticleSystem.MinMaxCurve(5.5f, 8f);
+                main.startColor = new Color(0.95f, 1f, 1f, 0.9f);
+                main.gravityModifier = 1.6f;
+                shape = plume.shape;
+                shape.enabled = true;
+                shape.shapeType = ParticleSystemShapeType.Cone;
+                shape.angle = 9f;
+                shape.radius = 0.12f;
+                shape.rotation = new Vector3(-90f, 0f, 0f);
+                FadeOutWake(plume, 0.02f);
+                plume.GetComponent<ParticleSystemRenderer>().renderMode = ParticleSystemRenderMode.Billboard;
+                plume.transform.localPosition = new Vector3(0f, 0.05f, 0f);
+
+                SavePrefab(root, Vfx(WaterSplashName));
             }
             finally { Object.DestroyImmediate(root); }
         }

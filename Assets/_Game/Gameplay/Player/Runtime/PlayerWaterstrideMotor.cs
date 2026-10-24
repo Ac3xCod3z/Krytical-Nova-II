@@ -138,6 +138,8 @@ namespace KryticalNova.Player
         {
             WaterMap map = ZoneMap;
             if (map == null || settings == null) return false;
+            // With Jump selected the click is a jump's landing, onto the water or off it (PlayerJumpMotor).
+            if (movementSkills != null && movementSkills.IsJumpSelected) return false;
             bool onWater = IsOnWater;
             if (!onWater && !(movementSkills != null && movementSkills.IsRunning && WaterstrideOpen)) return false;
             if (ray.direction.y < -1e-4f)
@@ -421,6 +423,80 @@ namespace KryticalNova.Player
             route.Clear();
             SetOnWater(false);
         }
+
+        // ------------------------------------------------------------------ jumping off and onto the water (owner, 24 Oct 2026)
+
+        /// <summary>
+        /// Where a jump clicked at <paramref name="clicked"/> would come down on this zone's water: the point on its surface.
+        /// False where the place is not water (the click met the ground or the bed of shallow water).
+        /// </summary>
+        public bool TryWaterLanding(Vector3 clicked, out Vector3 surface)
+        {
+            surface = clicked;
+            WaterMap map = ZoneMap;
+            if (map == null || clicked.y > map.waterLevel + 0.3f || !map.IsWater(clicked)) return false;
+            surface = new Vector3(clicked.x, map.waterLevel, clicked.z);
+            return true;
+        }
+
+        /// <summary>Where movement is decided: a jump leaves the water from here; the stand ends and the jump takes the body.</summary>
+        public void ServerLeaveForJump()
+        {
+            if (!HasAuthority || !IsOnWater) return;
+            state = State.None;
+            route.Clear();
+            SetOnWater(false);
+        }
+
+        /// <summary>
+        /// Where movement is decided: a jump came down on the water at <paramref name="feet"/>. With Waterstride open and
+        /// Flux for it the player stands there as on ground (and runs on from it like any Waterstride); otherwise they
+        /// fall in and come up on the nearest shore, losing a share of their HP.
+        /// </summary>
+        public void ServerLandedOnWater(Vector3 feet, bool splash = true)
+        {
+            if (!HasAuthority) return;
+            WaterMap map = ZoneMap;
+            if (map != null) feet.y = map.waterLevel;
+            if (splash) ServerSplash(feet);
+            bool stand = settings != null && WaterstrideOpen && resources != null && resources.IsAlive
+                && (settings.fluxPerSecond <= 0f || resources.CanSpendChi(settings.fluxPerSecond));
+            if (!stand) { FallIn(feet); return; }
+            if (agent != null) agent.enabled = false;
+            transform.position = feet + Vector3.up * Offset;
+            route.Clear();
+            fluxOwed = 0f;
+            state = State.Standing;
+            SetOnWater(true);
+        }
+
+        /// <summary>In the water: out on the nearest shore, a share of Max HP lost (never the last of it).</summary>
+        private void FallIn(Vector3 feet)
+        {
+            float lost = 0f;
+            if (resources != null && resources.IsAlive && settings != null && settings.fallInHealthShare > 0f)
+            {
+                lost = Mathf.Min(resources.MaxHealth * settings.fallInHealthShare, resources.Health - 1f);
+                if (lost > 0f) resources.ApplyDamage(lost);
+            }
+            float reach = settings != null ? settings.fallInShoreReach : StrandedReach;
+            if (NavMesh.SamplePosition(feet, out NavMeshHit shore, reach, Filter())) Land(shore.position, shore.position, false);
+            else { state = State.None; route.Clear(); SetOnWater(false); } // no shore near: PointAndClickPlayer puts a lost agent back
+            string line = lost >= 1f ? $"You fell in the water and climbed out on the shore (-{Mathf.RoundToInt(lost)} HP)." : "You fell in the water and climbed out on the shore.";
+            if (IsSpawned) ToldRpc(line);
+            else Message?.Invoke(line);
+        }
+
+        /// <summary>A body struck the water hard here (a jump off it or onto it, a fall in): the big splash on every machine.</summary>
+        public void ServerSplash(Vector3 at)
+        {
+            if (!HasAuthority) return;
+            ClientPresentationRegistry.Feel?.WaterSplash(transform, at, !IsSpawned || IsOwner);
+            if (IsSpawned) SplashRpc(at);
+        }
+
+        [Rpc(SendTo.NotServer)]
+        private void SplashRpc(Vector3 at) => ClientPresentationRegistry.Feel?.WaterSplash(transform, at, IsOwner);
 
         private void SetOnWater(bool on)
         {
