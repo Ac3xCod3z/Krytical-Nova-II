@@ -50,6 +50,8 @@ namespace KryticalNova.UI
                 () => AudioPreferences.BeatHint, value => AudioPreferences.BeatHint = value);
             SettingsRows.Toggle(page, "Bigger mark on the first beat of a bar",
                 () => AudioPreferences.BeatCountIn, value => AudioPreferences.BeatCountIn = value);
+            SettingsRows.Toggle(page, "Lights and glows pulse to the beat in a fight",
+                () => AudioPreferences.BeatLights, value => AudioPreferences.BeatLights = value);
             SettingsRows.Toggle(page, "Metronome tick on every beat",
                 () => AudioPreferences.Metronome, value => AudioPreferences.Metronome = value);
         }
