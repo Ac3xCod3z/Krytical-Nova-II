@@ -2080,6 +2080,63 @@
     -unity-background-image-tint-color: rgba(176, 20, 11, 0.38);
     background-color: rgba(0, 0, 0, 0);
 }
+.kn-faction-null .beat-track-line {
+    background-image: url("/Assets/Synty/InterfaceDarkFantasyHUD/Sprites/HUD/SPR_HUD_DarkFantasy_Line_01_Clean.png#SPR_HUD_DarkFantasy_Line_01_Clean");
+    -unity-background-image-tint-color: rgba(236, 214, 210, 0.55);
+    background-color: rgba(0, 0, 0, 0);
+    height: 6px;
+    top: 8px;
+    border-radius: 0;
+    -unity-background-scale-mode: stretch-to-fill;
+}
+.kn-faction-null .beat-track-mark {
+    background-image: url("/Assets/Synty/InterfaceDarkFantasyHUD/Sprites/HUD/SPR_HUD_DarkFantasy_Arrow_Small_02_Clean.png#SPR_HUD_DarkFantasy_Arrow_Small_02_Clean");
+    -unity-background-image-tint-color: rgba(236, 214, 210, 1);
+    background-color: rgba(0, 0, 0, 0);
+    -unity-background-scale-mode: scale-to-fit;
+    width: 14px;
+    height: 18px;
+    top: 2px;
+    margin-left: -7px;
+    border-radius: 0;
+}
+.kn-faction-null .beat-track-mark--bar {
+    background-image: url("/Assets/Synty/InterfaceDarkFantasyHUD/Sprites/HUD/SPR_FX_DarkFantasy_Sigil_Ring_Small_01.png#SPR_FX_DarkFantasy_Sigil_Ring_Small_01");
+    -unity-background-image-tint-color: rgba(232, 60, 50, 1);
+    width: 20px;
+    height: 20px;
+    top: 1px;
+    margin-left: -10px;
+}
+.kn-faction-null .beat-track-centre {
+    background-image: url("/Assets/Synty/InterfaceDarkFantasyHUD/Sprites/HUD/SPR_FX_DarkFantasy_Sigil_Ring_Medium_03.png#SPR_FX_DarkFantasy_Sigil_Ring_Medium_03");
+    -unity-background-image-tint-color: rgba(255, 255, 255, 0.7);
+    background-color: rgba(0, 0, 0, 0);
+    border-width: 0;
+    -unity-background-scale-mode: scale-to-fit;
+    width: 28px;
+    height: 28px;
+    top: -3px;
+    margin-left: -14px;
+    border-radius: 0;
+}
+.kn-faction-null .beat-track-centre--window {
+    -unity-background-image-tint-color: rgb(255, 210, 60);
+    background-color: rgba(0, 0, 0, 0);
+    scale: 1.15 1.15;
+}
+.kn-faction-null .beat-track-catch {
+    background-image: url("/Assets/Synty/InterfaceDarkFantasyHUD/Sprites/HUD/SPR_FX_DarkFantasy_Sigil_Ring_Large_05.png#SPR_FX_DarkFantasy_Sigil_Ring_Large_05");
+    -unity-background-image-tint-color: rgb(255, 214, 80);
+    background-color: rgba(0, 0, 0, 0);
+    border-width: 0;
+    -unity-background-scale-mode: scale-to-fit;
+    width: 28px;
+    height: 28px;
+    top: -3px;
+    margin-left: -14px;
+    border-radius: 0;
+}
 .kn-faction-null .kn-card > .kn-card-frame {
     background-image: url("/Assets/Synty/InterfaceDarkFantasyHUD/Sprites/DarkFantasy/SPR_DarkFantasy_Frame_Box_Medium_17.png#SPR_DarkFantasy_Frame_Box_Medium_17");
     -unity-background-image-tint-color: rgb(255, 255, 255);

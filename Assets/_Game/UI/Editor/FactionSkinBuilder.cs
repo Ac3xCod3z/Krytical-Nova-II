@@ -136,6 +136,7 @@ namespace KryticalNova.EditorTools
                 EnsureInventoryParts(asset);
                 EnsureInventoryFrames(asset);
                 EnsureSettingsParts(asset);
+                EnsureBeatTrackParts(asset);
                 EnsureCursor(asset);
                 string text = Generate(asset, out int rules);
                 string target = SheetPath(faction);
@@ -498,6 +499,58 @@ namespace KryticalNova.EditorTools
                     skin.toggleBorder = 12f;
                     skin.rowHighlight = S(FantasyMenus + "Sprites/General/SPR_FantasyMenus_Gradient_Horizontal_01.png");
                     skin.rowHighlightTint = new Color32(0x0B, 0x6E, 0xB0, 0x60);
+                    break;
+                }
+            }
+            EditorUtility.SetDirty(skin);
+            AssetDatabase.SaveAssetIfDirty(skin);
+        }
+
+        /// <summary>
+        /// The beat track's parts from each faction's own HUD pack (owner, 24 Oct 2026: "the same but make it look
+        /// better"): a rail, a mark for a beat coming in, a mark for the first beat of a bar, the centre and the catch
+        /// ring. Gold stays the colour of the Cadence window in every skin. A skin that has its rail is left as it is.
+        /// </summary>
+        private static void EnsureBeatTrackParts(UiSkin skin)
+        {
+            if (skin.beatRail != null) return;
+            Sprite S(string path) => Load<Sprite>(path);
+            switch (skin.faction)
+            {
+                case FactionId.Hegemony:
+                {
+                    string h = SciFiHud + "Sprites/HUD/SPR_HUD_SciFiSoldier_";
+                    skin.beatRail = S(h + "Compass_Bar_Cluster_01_Underlay.png");
+                    skin.beatMark = S(h + "Reticle_Arrow_02.png");
+                    skin.beatBarMark = S(h + "Pip_Hexagon_01_Active.png");
+                    skin.beatCentre = S(h + "Ring_Hexagon_Large_01_Clean.png");
+                    skin.beatCatch = S(h + "Ring_Large_01.png");
+                    skin.beatTint = new Color32(0xC8, 0xF0, 0xFF, 0xFF);
+                    skin.beatBarTint = new Color32(0x3C, 0xDC, 0xFF, 0xFF);
+                    break;
+                }
+                case FactionId.Null:
+                {
+                    string h = DarkFantasy + "Sprites/HUD/SPR_";
+                    skin.beatRail = S(h + "HUD_DarkFantasy_Line_01_Clean.png");
+                    skin.beatMark = S(h + "HUD_DarkFantasy_Arrow_Small_02_Clean.png");
+                    skin.beatBarMark = S(h + "FX_DarkFantasy_Sigil_Ring_Small_01.png");
+                    skin.beatCentre = S(h + "FX_DarkFantasy_Sigil_Ring_Medium_03.png");
+                    skin.beatCatch = S(h + "FX_DarkFantasy_Sigil_Ring_Large_05.png");
+                    skin.beatTint = new Color32(0xEC, 0xD6, 0xD2, 0xFF);
+                    skin.beatBarTint = new Color32(0xE8, 0x3C, 0x32, 0xFF);
+                    break;
+                }
+                case FactionId.Covenant:
+                {
+                    string h = FantasyWarrior + "Sprites/HUD/SPR_HUD_FantasyWarrior_";
+                    skin.beatRail = S(h + "Reticle_Line_01_Large.png"); // whole, tapered at the ends (Line_01 has breaks)
+                    skin.beatMark = S(h + "Arrow_02.png");
+                    skin.beatBarMark = S(h + "Mask_Diamond_01.png");
+                    skin.beatCentre = S(h + "Tracery_Diamond_03.png");
+                    skin.beatCatch = S(h + "Tracery_Circle_08.png");
+                    skin.beatTint = new Color32(0xF5, 0xE6, 0xC8, 0xFF);
+                    skin.beatBarTint = new Color32(0x6E, 0xC8, 0xFF, 0xFF);
                     break;
                 }
             }
@@ -1084,6 +1137,23 @@ namespace KryticalNova.EditorTools
             }
             if (asset.rowHighlight != null)
                 Rule(".settings-row:hover, .kn-toggle:hover", $"background-image: {UrlOf(asset.rowHighlight)};", $"-unity-background-image-tint-color: {Rgba(asset.rowHighlightTint)};", "background-color: rgba(0, 0, 0, 0);");
+            // The beat track above the Hotbar: the same layout, in the pack's own parts. Gold is the Cadence window's
+            // colour in every skin, so the window and the catch are gold whatever the faction.
+            if (asset.beatRail != null)
+            {
+                const string none = "background-color: rgba(0, 0, 0, 0);", noBorder = "border-width: 0;", fit = "-unity-background-scale-mode: scale-to-fit;";
+                Rule(".beat-track-line", $"background-image: {UrlOf(asset.beatRail)};", $"-unity-background-image-tint-color: {Rgba(new Color(asset.beatTint.r, asset.beatTint.g, asset.beatTint.b, 0.55f))};",
+                    none, "height: 6px;", "top: 8px;", "border-radius: 0;", "-unity-background-scale-mode: stretch-to-fill;");
+                Rule(".beat-track-mark", $"background-image: {UrlOf(asset.beatMark)};", $"-unity-background-image-tint-color: {Rgba(asset.beatTint)};",
+                    none, fit, "width: 14px;", "height: 18px;", "top: 2px;", "margin-left: -7px;", "border-radius: 0;");
+                Rule(".beat-track-mark--bar", $"background-image: {UrlOf(asset.beatBarMark)};", $"-unity-background-image-tint-color: {Rgba(asset.beatBarTint)};",
+                    "width: 20px;", "height: 20px;", "top: 1px;", "margin-left: -10px;");
+                Rule(".beat-track-centre", $"background-image: {UrlOf(asset.beatCentre)};", "-unity-background-image-tint-color: rgba(255, 255, 255, 0.7);",
+                    none, noBorder, fit, "width: 28px;", "height: 28px;", "top: -3px;", "margin-left: -14px;", "border-radius: 0;");
+                Rule(".beat-track-centre--window", "-unity-background-image-tint-color: rgb(255, 210, 60);", none, "scale: 1.15 1.15;");
+                Rule(".beat-track-catch", $"background-image: {UrlOf(asset.beatCatch)};", "-unity-background-image-tint-color: rgb(255, 214, 80);",
+                    none, noBorder, fit, "width: 28px;", "height: 28px;", "top: -3px;", "margin-left: -14px;", "border-radius: 0;");
+            }
             // The parts every page shares: the ornate frame of a card and of a skill's tile.
             if (asset.cardPictureFrame != null)
                 Rule($".kn-card > .{SyntySkin.CardFrameClass}", $"background-image: {UrlOf(asset.cardPictureFrame)};", "-unity-background-image-tint-color: rgb(255, 255, 255);",
