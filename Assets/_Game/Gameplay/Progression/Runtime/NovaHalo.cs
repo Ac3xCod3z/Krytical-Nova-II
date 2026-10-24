@@ -426,7 +426,7 @@ namespace KryticalNova.Progression
                 dim *= Flicker[Mathf.Clamp(beat, 0, Flicker.Length - 1)];
             }
             float brightness = tierLook.brightness * dim;
-            float flare = flash * tierLook.brightness;
+            float flare = flash * tierLook.brightness * KryticalNova.Core.Accessibility.FlashScale; // Settings ▸ Accessibility
 
             block.Clear();
             block.SetColor(InnerId, tierLook.inner);

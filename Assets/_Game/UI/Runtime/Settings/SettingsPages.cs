@@ -20,7 +20,7 @@ namespace KryticalNova.UI
     /// </summary>
     public sealed class SettingsPages
     {
-        public static readonly string[] Pages = { "graphics", "audio", "interface", "gameplay", "controls", GuidePageName };
+        public static readonly string[] Pages = { "graphics", "audio", "interface", "gameplay", "controls", "accessibility", GuidePageName };
         /// <summary>The page that explains the game. It has no settings: APPLY, REVERT and RESET do not apply to it.</summary>
         public const string GuidePageName = "guide";
         private const string GuideOpenClass = "guide-open";
@@ -34,6 +34,7 @@ namespace KryticalNova.UI
 
         private readonly GraphicsSettingsTab graphicsTab = new GraphicsSettingsTab();
         private readonly AudioSettingsTab audioTab = new AudioSettingsTab();
+        private readonly AccessibilitySettingsTab accessibilityTab = new AccessibilitySettingsTab();
         private readonly SettingsLedger ledger = new SettingsLedger();
         private readonly GuidePage guidePage = new GuidePage();
         private ControlsSettingsTab controlsTab;
@@ -87,6 +88,8 @@ namespace KryticalNova.UI
             {
                 graphicsTab.Build(root.Q("settings-page-graphics"));
                 audioTab.Build(root.Q("settings-page-audio"));
+                VisualElement accessibility = root.Q("settings-page-accessibility");
+                if (accessibility != null) accessibilityTab.Build(accessibility);
                 BuildInterface();
                 BuildGameplay(root.Q("settings-page-gameplay"));
             }
@@ -258,6 +261,7 @@ namespace KryticalNova.UI
             {
                 case "graphics": GraphicsPreferences.ResetToDefaults(); break;
                 case "audio": AudioPreferences.ResetToDefaults(); break;
+                case "accessibility": AccessibilityPreferences.ResetToDefaults(); break;
                 case "interface": HudPreferences.ResetToDefaults(); break;
                 case "gameplay":
                     CameraPreferences.ResetToDefaults();

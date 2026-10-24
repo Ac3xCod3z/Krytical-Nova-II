@@ -42,6 +42,16 @@ namespace KryticalNova.UI
             if (Application.isEditor)
                 SettingsRows.Help(page, "Resolution and window mode take effect in the built game, not in the Editor's Game view.");
 
+            SettingsRows.Header(page, "HDR");
+            bool hdr = GraphicsSettingsApplier.HdrAvailable;
+            SettingsRows.Help(page, hdr ? "Your display can show HDR: brighter highlights and deeper colour. Paper white is the game's overall brightness; peak is how bright glows and the sun may go."
+                                        : "This display does not report HDR (or Windows HDR is off). Turn on HDR in Windows' display settings to use it.");
+            Add(SettingsRows.Toggle(page, "HDR output", () => GraphicsPreferences.HdrOutput, value => GraphicsPreferences.HdrOutput = value));
+            Add(SettingsRows.Slider(page, "HDR paper white", GraphicsPreferences.MinPaperWhite, GraphicsPreferences.MaxPaperWhite,
+                () => GraphicsPreferences.HdrPaperWhite, value => GraphicsPreferences.HdrPaperWhite = value, out _, nits => Mathf.RoundToInt(nits) + " nits"));
+            Add(SettingsRows.Slider(page, "HDR peak brightness", GraphicsPreferences.MinPeak, GraphicsPreferences.MaxPeak,
+                () => GraphicsPreferences.HdrPeak, value => GraphicsPreferences.HdrPeak = value, out _, nits => Mathf.RoundToInt(nits) + " nits"));
+
             SettingsRows.Header(page, "UPSCALING");
             upscalers.Clear();
             upscalers.Add(UpscalerChoice.Off);
