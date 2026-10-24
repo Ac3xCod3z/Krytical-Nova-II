@@ -44,8 +44,10 @@ so you can correct me early.
       picture, so the pass does not reach them; their colours can be put through `Accessibility.Correct` next.
 - [ ] **HDR settings.** *Understood:* HDR on / off and brightness (paper white, peak) in Settings ▸ Graphics, and set up
       in a short display step the very first time the game starts, adjustable later.
-- [ ] **Beat track skinned per faction.** *Understood:* the beat lines above the Hotbar should use each faction's HUD
+- [x] **Beat track skinned per faction.** *Understood:* the beat lines above the Hotbar should use each faction's HUD
       art from the skin assets, the same layout but looking more custom and better.
+      *Built:* each faction's own HUD pack parts (rail, chevrons pointing in, a first-of-bar mark, centre and catch
+      ring) through the skin assets and Build Faction Skins; gold stays the Cadence window in every skin.
 
 ## Next, in this order
 
@@ -67,6 +69,6 @@ so you can correct me early.
 ## Housekeeping
 
 - [ ] GM Command Reference updated (dummy commands gone, new ones added)
-- [ ] Encyclopedia of Nova rebuilt and published after each landing
+- [x] Encyclopedia of Nova rebuilt and published after each landing (version 128 for accessibility; again for the beat track)
 - [x] Test server stopped and test session removed when you are done testing (24 Oct: server closed, session file
       removed, the Editor's last server back to "Play here")

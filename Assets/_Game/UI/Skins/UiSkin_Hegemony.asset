@@ -112,6 +112,13 @@ MonoBehaviour:
   toggleBorder: 11
   rowHighlight: {fileID: 21300000, guid: ce5ee8ca938c0054694de7d488659284, type: 3}
   rowHighlightTint: {r: 0, g: 0.5529412, b: 0.654902, a: 0.4392157}
+  beatRail: {fileID: 21300000, guid: 1e944f057e992754e9715d013c280840, type: 3}
+  beatMark: {fileID: 21300000, guid: 445337730d18da541933e4ce6afd0498, type: 3}
+  beatBarMark: {fileID: 21300000, guid: e1ab7424b5c11bd4f99e8f3ebc195b80, type: 3}
+  beatCentre: {fileID: 21300000, guid: 68d19d5d684e0404f9257177192d38f8, type: 3}
+  beatCatch: {fileID: 21300000, guid: 7f8499bcb46e6fa488392b8485e3996c, type: 3}
+  beatTint: {r: 0.78431374, g: 0.9411765, b: 1, a: 1}
+  beatBarTint: {r: 0.23529412, g: 0.8627451, b: 1, a: 1}
   titleScreen: {fileID: 7972974810867652038, guid: 266d19ecf15f9814f842719bacca662f, type: 3}
   choiceScreen: {fileID: 7972974810867652038, guid: 2942942c7943a28469379803d5ba8b0a, type: 3}
   listScreen: {fileID: 7972974810867652038, guid: b8a08de2e2ce99943a5274946a397dd9, type: 3}

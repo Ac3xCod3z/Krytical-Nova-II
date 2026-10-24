@@ -20,7 +20,7 @@ script, which is then published to the link above. `--baseline` saves today's up
 ## Today
 
 <!-- map:summary -->
-Generated 24 Oct 2026, 14:17: 691 runtime scripts (130,920 lines) declaring 972 types (179 MonoBehaviours, 64 NetworkBehaviours, 96 ScriptableObject classes); 121 test scripts; 4715 prefabs, 46 scenes and 2719 assets read. 198 system-to-system links, of which 0 run uphill, 0 pairs of systems use each other both ways, and 0 links would have to go for the systems to form a clean stack. The largest tangle, classes that all reach each other through some chain of uses, holds 10 classes from 1 systems (UI 10, ...).
+Generated 24 Oct 2026, 14:34: 691 runtime scripts (130,933 lines) declaring 972 types (179 MonoBehaviours, 64 NetworkBehaviours, 96 ScriptableObject classes); 121 test scripts; 4715 prefabs, 46 scenes and 2719 assets read. 198 system-to-system links, of which 0 run uphill, 0 pairs of systems use each other both ways, and 0 links would have to go for the systems to form a clean stack. The largest tangle, classes that all reach each other through some chain of uses, holds 10 classes from 1 systems (UI 10, ...).
 <!-- /map:summary -->
 
 **Checked against the compiler.**
@@ -88,7 +88,7 @@ Checked against the 203 references the assemblies declare between systems: every
 | Gameplay/NPC | Simulation | 3 | 290 | 5 | 17 | 0.23 | 1 | 1 of 4 |
 | Gameplay/Factions | Simulation | 6 | 169 | 0 | 25 | 0.0 | 0 | 1 of 3 |
 | GameFeel | Presentation | 30 | 5,509 | 53 | 2 | 0.96 | 4 | 17 of 38 |
-| UI | Presentation | 141 | 36,128 | 318 | 5 | 0.98 | 17 | 32 of 146 |
+| UI | Presentation | 141 | 36,141 | 318 | 5 | 0.98 | 17 | 32 of 146 |
 | Audio | Presentation | 14 | 1,222 | 5 | 16 | 0.24 | 1 | 1 of 15 |
 | Tools | Tooling | 30 | 5,149 | 186 | 0 | 1.0 | 3 | 0 of 32 |
 <!-- /map:systems -->
