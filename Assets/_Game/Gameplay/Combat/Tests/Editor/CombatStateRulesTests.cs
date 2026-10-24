@@ -59,5 +59,20 @@ namespace KryticalNova.Combat.Tests
         {
             Assert.AreEqual(CombatReasons.Held, Why(10000f, lastAct: 100f, lastThreat: 100f, held: true));
         }
+
+        // The Strike Dummy (owner, 24 Oct 2026): after a blow on it, the fight holds while it is selected or near.
+        [Test]
+        public void StruckDummy_HoldsWhileSelectedOrWithin30m()
+        {
+            Assert.IsTrue(PlayerCombatState.DummyHolds(selected: true, distance: 80f, leaveMetres: 30f));
+            Assert.IsTrue(PlayerCombatState.DummyHolds(selected: false, distance: 12f, leaveMetres: 30f));
+        }
+
+        [Test]
+        public void StruckDummy_EndsOnlyWhenDeselectedAnd30mAway()
+        {
+            Assert.IsFalse(PlayerCombatState.DummyHolds(selected: false, distance: 30f, leaveMetres: 30f));
+            Assert.IsFalse(PlayerCombatState.DummyHolds(selected: false, distance: 45f, leaveMetres: 30f));
+        }
     }
 }
