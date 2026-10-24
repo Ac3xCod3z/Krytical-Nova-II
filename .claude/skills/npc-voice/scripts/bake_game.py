@@ -1,6 +1,6 @@
 """Bake the picked NPC voice lines into the game: Drive FLAC -> levelled OGG in Assets/_Game/Audio/Voices/NPC/.
 
-python -I bake_game.py <batch.json> <picks.json> <clips folder>
+python -I bake_game.py <batch.json> <picks.json> <clips folder> [--only Npc,Npc]
 
 For each NPC: the picked voice's kept lines that passed the speaker check (a scrapped line has no clip and is left
 out, so an NPC never speaks in another voice). Each is levelled to -20 LUFS (true peak -1.5 dB), mono, 24 kHz, Ogg
@@ -15,10 +15,20 @@ DEST = os.path.join(PROJECT, "Assets", "_Game", "Audio", "Voices", "NPC")
 
 def main():
     batch, picks_path, clips = sys.argv[1], sys.argv[2], sys.argv[3]
+    # --only: rebake just these NPCs; every other NPC keeps its files and its manifest entry as they are.
+    only = set(sys.argv[sys.argv.index("--only") + 1].split(",")) if "--only" in sys.argv else set()
     vendors = {v["npc"]: v for v in json.load(open(batch, encoding="utf-8"))["vendors"]}
     picks = json.load(open(picks_path, encoding="utf-8"))
+    manifest_path = os.path.join(DEST, "npc_voice_lines.json")
+    kept = {}
+    if only and os.path.exists(manifest_path):
+        kept = {m["npc"]: m for m in json.load(open(manifest_path, encoding="utf-8"))["npcs"]}
     manifest, missing = [], []
     for npc, pick in picks["picks"].items():
+        if only and npc not in only:
+            if npc in kept:
+                manifest.append(kept[npc])
+            continue
         v = vendors[npc]
         folder = os.path.join(DEST, npc)
         if os.path.isdir(folder):
@@ -40,7 +50,7 @@ def main():
                           "clip": f"Assets/_Game/Audio/Voices/NPC/{npc}/{name}"})
         manifest.append({"npc": npc, "asset": f"NPC_{picks['asset_ids'][npc]}", "voice": pick["voice"],
                          "voiceDescription": v["voices"][pick["voice"]], "lines": lines})
-    with open(os.path.join(DEST, "npc_voice_lines.json"), "w", encoding="utf-8") as f:
+    with open(manifest_path, "w", encoding="utf-8") as f:
         json.dump({"_about": "Made by .claude/skills/npc-voice/scripts/bake_game.py; read by Krytical Nova > Setup > NPC Voice Lines.",
                    "npcs": manifest}, f, indent=1, ensure_ascii=False)
     total = sum(len(m["lines"]) for m in manifest)

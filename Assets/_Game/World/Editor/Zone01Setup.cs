@@ -58,7 +58,7 @@ namespace KryticalNova.EditorTools
                 Services = "Null Instructor for Servo Claws. Learn and upgrade your combat skills." },
             new NpcSeed { Id = "Trader", Role = NpcRole.Trader, Model = "SM_Chr_Rich_Female_01",
                 Name = "Broker", Title = "The Exchange",
-                Greeting = "Everything has a buyer. Everything.",
+                Greeting = "Everything has a buyer, darling. Everything. The trick is knowing who will pay, and how much.",
                 Services = "With a Commission Receipt, list Rare gear (12% Temper or more) on the Exchange, or browse and buy gear listed by other players." },
             new NpcSeed { Id = "MallManager", Role = NpcRole.MallManager, Model = "SM_Chr_Hologram_Female_01",
                 Name = "Store Clerk", Title = "Nova Store",
