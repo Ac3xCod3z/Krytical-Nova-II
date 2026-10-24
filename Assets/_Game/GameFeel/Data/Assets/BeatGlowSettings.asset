@@ -12,10 +12,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5590caafd6be38a47aead68d8eb7aec2, type: 3}
   m_Name: BeatGlowSettings
   m_EditorClassIdentifier: KryticalNova.GameFeel::KryticalNova.GameFeel.BeatGlowSettings
-  sharpness: 7
+  sharpness: 5
   barLift: 1.4
-  bloomBoost: 0.9
-  lightBoost: 0.45
+  dip: 0.3
+  emissionBoost: 1.4
+  bloomBoost: 1.1
+  lightBoost: 0.7
   lightRadius: 45
   lightRescanSeconds: 4
   shaderBoost: 0.4

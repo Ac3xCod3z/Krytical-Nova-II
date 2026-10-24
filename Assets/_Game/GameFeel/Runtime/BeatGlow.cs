@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 using KryticalNova.Audio;
@@ -6,15 +7,18 @@ using KryticalNova.Items;
 using KryticalNova.UI;
 using UnityEngine;
 using UnityEngine.Rendering;
+using UnityEngine.SceneManagement;
 
 namespace KryticalNova.GameFeel
 {
     /// <summary>
-    /// The world's light keeps the beat in a fight (owner, 24 Oct 2026): on each beat of the fight music the screen's
-    /// bloom lifts a little, so every emissive thing in view (signs, the town's orb, pets' eyes and bodies, glows) flares
-    /// with it; point and spot lights round the player swell; and our own glowing shaders (the Nova) read the same pulse
-    /// from one global value. Out of a fight nothing moves and everything is as it was. It costs one global float, one
-    /// volume value and a few lights a frame: no material is touched. Settings ▸ Audio can switch it off.
+    /// The world's light keeps the beat in a fight (owner, 24 Oct 2026): everything glowing breathes with the fight
+    /// music, settling a little lower between beats and rising well above itself on each beat, more on the first of a
+    /// bar. Four things move together: the glowing surfaces of the map (every emissive material: signs, the town's orb,
+    /// neon, lit windows), the screen's bloom round them, point and spot lights near the player, and our own glowing
+    /// shaders (the Nova) through one global value. Out of a fight everything is exactly as it was, and every material
+    /// is put back when the fight ends, the map changes or Play stops. A few dozen material colours and lights a frame:
+    /// about a tenth of a millisecond. Settings ▸ Audio can switch it off.
     /// </summary>
     [DisallowMultipleComponent]
     public sealed class BeatGlow : MonoBehaviour
@@ -23,6 +27,11 @@ namespace KryticalNova.GameFeel
         // Beautify (the game's bloom) has no assembly of its own to reference: its volume component is found by name.
         private const string BloomComponent = "Beautify.Universal.Beautify";
         private const string BloomField = "bloomIntensity";
+        // Emission as URP Lit has it, and as Synty's shaders have it.
+        private static readonly int UrpEmission = Shader.PropertyToID("_EmissionColor");
+        private static readonly int SyntyEmission = Shader.PropertyToID("_Emission_Color");
+        private static readonly int SyntyEmissionOn = Shader.PropertyToID("_Enable_Emission");
+        private const int RenderersPerFrame = 400; // the look for glowing materials is spread over frames
 
         [SerializeField] private BeatGlowSettings settings;
 
@@ -40,20 +49,46 @@ namespace KryticalNova.GameFeel
             public float baseIntensity, written;
         }
 
-        private readonly List<Lit> lights = new List<Lit>();
-        private float nextScan;
+        private struct Glowing
+        {
+            public Material material;
+            public int property;
+            public Color baseColour;
+        }
 
-        private void OnEnable() => Build();
+        private readonly List<Lit> lights = new List<Lit>();
+        private readonly List<Glowing> surfaces = new List<Glowing>();
+        private float nextScan;
+        private Scene surfacesOf;
+        private bool surfacesFound, surfacesLooking;
+
+        private void OnEnable()
+        {
+            Build();
+            SceneManager.activeSceneChanged += OnSceneChanged;
+            Application.quitting += Rest;
+        }
 
         private void OnDisable()
         {
+            SceneManager.activeSceneChanged -= OnSceneChanged;
+            Application.quitting -= Rest;
             Rest();
             if (volume != null) volume.enabled = false;
         }
 
         private void OnDestroy()
         {
+            Rest();
             if (profile != null) Destroy(profile);
+        }
+
+        // A new map: its materials are its own; the old ones are put back first.
+        private void OnSceneChanged(Scene from, Scene to)
+        {
+            Rest();
+            surfaces.Clear();
+            surfacesFound = false;
         }
 
         private void Build()
@@ -88,19 +123,34 @@ namespace KryticalNova.GameFeel
                 ReadBloomBase();
                 return;
             }
+            if (!glowing) Begin();
             glowing = true;
-            float pulse = CombatBeat.Pulse(settings.sharpness) * (CombatBeat.OnBar ? settings.barLift : 1f); // already scaled by live
+            // 0 between beats, 1 on one (more on a bar's first), already faded in and out with the fight.
+            float pulse = CombatBeat.Pulse(settings.sharpness) * (CombatBeat.OnBar ? settings.barLift : 1f);
+            float dip = settings.dip * live;
 
             Shader.SetGlobalFloat(PulseId, pulse * settings.shaderBoost);
             if (volume != null && bloom != null && bloomBase >= 0f)
             {
                 volume.weight = 1f;
-                bloom.value = bloomBase * (1f + settings.bloomBoost * pulse);
+                bloom.value = bloomBase * Swing(dip, settings.bloomBoost, pulse);
             }
-            PulseLights(pulse);
+            PulseLights(Swing(dip, settings.lightBoost, pulse));
+            PulseSurfaces(Swing(dip, settings.emissionBoost, pulse));
         }
 
-        // The zone's own bloom, read while this volume adds nothing (out of a fight), so the lift is a share of it.
+        // Between beats a share lower (the dip), on the beat that much higher (the boost): 1 is as the map has it.
+        private static float Swing(float dip, float boost, float pulse) => Mathf.Max(0f, 1f - dip + (dip + boost) * pulse);
+
+        private void Begin()
+        {
+            if (!surfacesFound || surfacesOf != SceneManager.GetActiveScene())
+            {
+                if (!surfacesLooking) StartCoroutine(FindSurfaces());
+            }
+        }
+
+        // The zone's own bloom, read while this volume adds nothing (out of a fight), so the swing is a share of it.
         private void ReadBloomBase()
         {
             if (bloomType == null || bloomField == null || VolumeManager.instance == null || VolumeManager.instance.stack == null) return;
@@ -108,12 +158,73 @@ namespace KryticalNova.GameFeel
             if (current != null && bloomField.GetValue(current) is VolumeParameter<float> value) bloomBase = value.value;
         }
 
+        // ------------------------------------------------------------------ glowing surfaces
+
+        // Every material in the map that glows, once a map, a few hundred renderers a frame so no frame hitches.
+        private IEnumerator FindSurfaces()
+        {
+            surfacesLooking = true;
+            Scene scene = SceneManager.GetActiveScene();
+            var seen = new HashSet<Material>();
+            foreach (Glowing each in surfaces) seen.Add(each.material);
+            Renderer[] renderers = FindObjectsByType<Renderer>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
+            for (int i = 0; i < renderers.Length; i++)
+            {
+                if (i > 0 && i % RenderersPerFrame == 0) yield return null;
+                Renderer renderer = renderers[i];
+                if (renderer == null || renderer is ParticleSystemRenderer || renderer is TrailRenderer || renderer is LineRenderer) continue;
+                foreach (Material material in renderer.sharedMaterials)
+                {
+                    if (material == null || !seen.Add(material)) continue;
+                    if (TryGlow(material, out Glowing glow)) surfaces.Add(glow);
+                }
+            }
+            surfacesOf = scene;
+            surfacesFound = true;
+            surfacesLooking = false;
+        }
+
+        private static bool TryGlow(Material material, out Glowing glow)
+        {
+            glow = default;
+            if (material.HasProperty(SyntyEmission) && (!material.HasProperty(SyntyEmissionOn) || material.GetFloat(SyntyEmissionOn) > 0.5f))
+                glow = new Glowing { material = material, property = SyntyEmission, baseColour = material.GetColor(SyntyEmission) };
+            else if (material.HasProperty(UrpEmission) && material.IsKeywordEnabled("_EMISSION"))
+                glow = new Glowing { material = material, property = UrpEmission, baseColour = material.GetColor(UrpEmission) };
+            else return false;
+            return glow.baseColour.maxColorComponent > 0.01f;
+        }
+
+        private void PulseSurfaces(float factor)
+        {
+            for (int i = 0; i < surfaces.Count; i++)
+            {
+                Glowing glow = surfaces[i];
+                if (glow.material == null) continue;
+                Color colour = glow.baseColour * factor;
+                colour.a = glow.baseColour.a;
+                glow.material.SetColor(glow.property, colour);
+            }
+        }
+
+        private void RestoreSurfaces()
+        {
+            foreach (Glowing glow in surfaces)
+            {
+                if (glow.material == null) continue;
+                glow.material.SetColor(glow.property, glow.baseColour);
+#if UNITY_EDITOR
+                // Back as it was: the Editor must not save the map's materials (vendor assets) because a fight pulsed them.
+                UnityEditor.EditorUtility.ClearDirty(glow.material);
+#endif
+            }
+        }
+
         // ------------------------------------------------------------------ lights round the player
 
-        private void PulseLights(float pulse)
+        private void PulseLights(float factor)
         {
             if (Time.unscaledTime >= nextScan) Scan();
-            float factor = 1f + settings.lightBoost * pulse;
             for (int i = 0; i < lights.Count; i++)
             {
                 Lit lit = lights[i];
@@ -149,7 +260,7 @@ namespace KryticalNova.GameFeel
             }
         }
 
-        // Out of a fight: every light as it was, no lift, no pulse.
+        // Out of a fight: every light, surface and the bloom as they were, no pulse.
         private void Rest()
         {
             glowing = false;
@@ -159,6 +270,7 @@ namespace KryticalNova.GameFeel
                 if (lit.light != null && Mathf.Approximately(lit.light.intensity, lit.written)) lit.light.intensity = lit.baseIntensity;
             lights.Clear();
             nextScan = 0f;
+            RestoreSurfaces();
         }
     }
 }
