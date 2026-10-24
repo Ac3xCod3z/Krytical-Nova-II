@@ -35,6 +35,17 @@ namespace KryticalNova.UI.Menus
         [SerializeField, Min(2f)] private float fullBodyDistance = 5.2f;
         [Tooltip("Height the full-body view is centred on. A little above the character's middle, so they stand clear of the footer.")]
         [SerializeField] private float fullBodyPivotHeight = 1.02f;
+        [Header("Height ruler (the creator's Body tab, owner 24 Oct 2026)")]
+        [Tooltip("A tree from the world, shown beside the ruler at a known height for scale.")]
+        [SerializeField] private GameObject heightReferenceTree;
+        [SerializeField, Min(1f)] private float heightReferenceTreeMetres = 4f;
+        [Tooltip("A plain unlit material for the ruler's bars (tinted in code).")]
+        [SerializeField] private Material heightRulerMaterial;
+        [Tooltip("While the ruler shows the camera eases back a little (owner: \"slightly zoom out\"): this distance and pivot height.")]
+        [SerializeField, Min(2f)] private float heightRulerDistance = 7.4f;
+        [SerializeField] private float heightRulerPivotHeight = 1.55f;
+        [Tooltip("Seconds the ruler stays after the last change of the Height slider.")]
+        [SerializeField, Min(0.5f)] private float heightRulerLinger = 2.5f;
         [SerializeField] private Light rimLight;
         [SerializeField] private Light fillLight;
         [Tooltip("Backdrop renderers tinted with a dark shade of the faction colour.")]
@@ -121,7 +132,47 @@ namespace KryticalNova.UI.Menus
         }
 
         /// <summary>Show (or restyle) the character. Returns false when the recipe cannot be built.</summary>
-        public bool Show(in CharacterRecipe recipe) => Show(recipe, true);
+        public bool Show(in CharacterRecipe recipe) => Show(recipe, !Bare);
+
+        /// <summary>
+        /// Show the character in its bare body instead of the basic outfit (the creator's Body tab, owner 24 Oct 2026: the
+        /// proportions show best unclothed). Takes effect at the next <see cref="Show(in CharacterRecipe)"/>.
+        /// </summary>
+        public bool Bare { get; set; }
+
+        // ---------------- Height ruler ----------------
+
+        private HeightRuler heightRuler;
+        private float heightRulerUntil;
+        private bool heightRulerShown;
+
+        /// <summary>The Height slider moved: the ruler shows (and the camera eases back a little) for a moment more.</summary>
+        public void ShowHeightRuler()
+        {
+            if (heightRuler == null)
+                heightRuler = HeightRuler.Build(stage != null ? stage : transform, heightRulerMaterial, TMPro.TMP_Settings.defaultFontAsset,
+                    heightReferenceTree, heightReferenceTreeMetres);
+            if (doll != null) heightRuler.Follow(doll.transform);
+            heightRulerUntil = Time.unscaledTime + heightRulerLinger;
+            SetHeightRuler(true);
+        }
+
+        /// <summary>Off at once (another tab).</summary>
+        public void HideHeightRuler()
+        {
+            heightRulerUntil = 0f;
+            SetHeightRuler(false);
+        }
+
+        private void SetHeightRuler(bool on)
+        {
+            if (heightRulerShown == on) return;
+            heightRulerShown = on;
+            if (heightRuler != null) heightRuler.gameObject.SetActive(on);
+            orbit.maxDistance = on ? heightRulerDistance : fullBodyDistance;
+            orbit.farPivotHeight = on ? heightRulerPivotHeight : fullBodyPivotHeight;
+            orbit.Focus(0f);
+        }
 
         private bool Show(in CharacterRecipe recipe, bool dressed)
         {
@@ -215,6 +266,7 @@ namespace KryticalNova.UI.Menus
 
         private void Update()
         {
+            if (heightRulerShown && Time.unscaledTime > heightRulerUntil) SetHeightRuler(false);
             if (!ambient || expressions == null || doll == null || !doll.isActiveAndEnabled || doll.IsBusy) return;
             ambientWait -= Time.unscaledDeltaTime;
             if (ambientWait > 0f) return;

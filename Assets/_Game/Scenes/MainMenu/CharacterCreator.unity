@@ -67048,6 +67048,12 @@ MonoBehaviour:
   screenShiftX: 0.56
   fullBodyDistance: 5.2
   fullBodyPivotHeight: 1.02
+  heightReferenceTree: {fileID: 1766626281795622, guid: 86a6bda8f78af6b449cd7570bc4efc6f, type: 3}
+  heightReferenceTreeMetres: 4
+  heightRulerMaterial: {fileID: 2100000, guid: 3275dc45ebcaa4d449063214c5936afa, type: 2}
+  heightRulerDistance: 7.4
+  heightRulerPivotHeight: 1.55
+  heightRulerLinger: 2.5
   rimLight: {fileID: 1796968873}
   fillLight: {fileID: 1096658124}
   backdrop:
