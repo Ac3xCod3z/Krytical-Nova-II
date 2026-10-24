@@ -16,6 +16,17 @@ MonoBehaviour:
   displayName: Armorer
   title: "Forge \xB7 Gear \xB7 Alloys"
   greeting: Bring me steel and coin, and I'll make you something worth swinging.
+  lines:
+  - text: Bring me steel and coin, and I'll make you something worth swinging.
+    clip: {fileID: 8300000, guid: ec82fec6aeb6fb3409135177194ac21e, type: 3}
+  - text: Alumite first. Every great weapon begins with a humble foundation.
+    clip: {fileID: 8300000, guid: ddcb51b5b7f2d1347b1391e8a6d88697, type: 3}
+  - text: Temper it right and it holds. Rush it and it breaks. Your Creds, your call.
+    clip: {fileID: 8300000, guid: 5496f7771f40e2a439495fd6ac1d213a, type: 3}
+  - text: Got a Rare nobody's touched yet? Let me show you what a Reforge can do.
+    clip: {fileID: 8300000, guid: e56705806ef7a664897263dd304ec2fc, type: 3}
+  - text: Good steel deserves better than the bottom of a pack. Let's make it worth wearing.
+    clip: {fileID: 8300000, guid: 1949b5de82c695a47b27fe36224e702e, type: 3}
   services: 'Works your gear at the forge: Tempering with Alloys, Fusion of Rare and Epic pieces, Tuning for Renown, and Reforge of an untouched Rare. Sells Common weapons and outfits for your faction, the basic Alloys, Fusion Catalysts and Tuning Chips, and buys what you have to sell.'
   offers: 40
   interactRange: 3

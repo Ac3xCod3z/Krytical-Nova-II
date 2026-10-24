@@ -16,6 +16,15 @@ MonoBehaviour:
   displayName: Broker
   title: The Exchange
   greeting: Everything has a buyer. Everything.
+  lines:
+  - text: Rare, tempered, untouched. Name your price, and I will find the one who pays it.
+    clip: {fileID: 8300000, guid: 6d2ec2f680fe27443aec1aa030668014, type: 3}
+  - text: The market never sleeps, darling. Neither do I.
+    clip: {fileID: 8300000, guid: 9dd6bce6f57056346941bba1fd1672d9, type: 3}
+  - text: Buy low, sell high, and never tell anyone what you paid.
+    clip: {fileID: 8300000, guid: 61515de416f2b22439c60792a33658f1, type: 3}
+  - text: Looking or selling? Either way, I take my cut.
+    clip: {fileID: 8300000, guid: 0a25872736ea97d4083a526e7bce039c, type: 3}
   services: With a Commission Receipt, list Rare gear (12% Temper or more) on the Exchange, or browse and buy gear listed by other players.
   offers: 0
   interactRange: 3

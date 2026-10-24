@@ -16,6 +16,17 @@ MonoBehaviour:
   displayName: Fixer
   title: "Slotting \xB7 Cores"
   greeting: Slots, Cores, cutters. Paid in Renown.
+  lines:
+  - text: Slots, Cores, cutters. Paid in Renown.
+    clip: {fileID: 8300000, guid: 08c7a19e63964d84d9fa5083fb444007, type: 3}
+  - text: Bring the Renown, I'll bring the Cutter. Nobody asks questions.
+    clip: {fileID: 8300000, guid: b9ff55e696e846b408bad45688ff7269, type: 3}
+  - text: Your gear has room for more. Want me to open it up?
+    clip: {fileID: 8300000, guid: 5a725b4b42f116b4a9d0939f538f9f11, type: 3}
+  - text: A cut slot is for good. Think before you cut.
+    clip: {fileID: 8300000, guid: 1a91c0534be17f24eb5338eac06aaf3b, type: 3}
+  - text: No refunds, no small talk. What do you need?
+    clip: {fileID: 8300000, guid: 178611b24b31ca84aab94e1be5d800ae, type: 3}
   services: 'Slotting: buy Slot Cutters with Renown to cut Core slots into your gear.'
   offers: 0
   interactRange: 3

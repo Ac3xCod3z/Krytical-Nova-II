@@ -16,6 +16,17 @@ MonoBehaviour:
   displayName: Store Clerk
   title: Nova Store
   greeting: Premium goods, premium service. How may I assist?
+  lines:
+  - text: Premium goods, premium service. How may I assist?
+    clip: {fileID: 8300000, guid: b3e7a33a55ebce94da03094aa2bde2d8, type: 3}
+  - text: Welcome back! New looks arrive all the time.
+    clip: {fileID: 8300000, guid: aa19ca63af0e7654d9b517a5d140a56a, type: 3}
+  - text: Everything here is for show. The power, you earn out there.
+    clip: {fileID: 8300000, guid: 70f9ee6115f6aa346b3a18c3363e39fd, type: 3}
+  - text: Browse as long as you like. I never close.
+    clip: {fileID: 8300000, guid: 3d290936a25623a4b89a6cfbff8b16f0, type: 3}
+  - text: Thank you for shopping at the Nova Store.
+    clip: {fileID: 8300000, guid: 25a8cc292f47f764ba1cb3605b0536ad, type: 3}
   services: 'Runs the Nova Store: premium cosmetic goods and tickets.'
   offers: 0
   interactRange: 3

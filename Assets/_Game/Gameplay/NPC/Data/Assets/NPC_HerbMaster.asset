@@ -16,6 +16,17 @@ MonoBehaviour:
   displayName: Apothecary
   title: "Stims \xB7 Flasks \xB7 Recall Tags"
   greeting: Stims for the body, Flux for the mind. Stock up before you leave the walls.
+  lines:
+  - text: Stims for the body, Flux for the mind. Stock up before you leave the walls.
+    clip: {fileID: 8300000, guid: 724f8f4d0f42fb041a7546c509877fa5, type: 3}
+  - text: Out past the walls the wounds come fast. Keep a Stim in your hand, not at the bottom of your pack.
+    clip: {fileID: 8300000, guid: 3b06136d9e94ec34ca562fa2800fd39d, type: 3}
+  - text: Running low on Flux? Hand me your Flask and I'll fill it while you wait.
+    clip: {fileID: 8300000, guid: 19e86bed686d85b4dba21147b1e5417a, type: 3}
+  - text: A Recall Tag weighs nothing. Not carrying one can cost you everything.
+    clip: {fileID: 8300000, guid: cf1b556b8e2c6904c8f6f3e440a60531, type: 3}
+  - text: Back in one piece. Good. Let's keep it that way.
+    clip: {fileID: 8300000, guid: d71c0aa70463eed4ab2cbb7df7708509, type: 3}
   services: Sells HP, Flux and Dual Stims in three sizes, Flux Flasks, Recall Tags and Pet Rations, refills your Flasks, and buys what you have to sell.
   offers: 4128
   interactRange: 3

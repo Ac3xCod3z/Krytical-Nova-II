@@ -16,6 +16,17 @@ MonoBehaviour:
   displayName: Monoblade Instructor
   title: "Combat Skills \xB7 Monoblade"
   greeting: A blade is only as sharp as the hand that guides it.
+  lines:
+  - text: A blade is only as sharp as the hand that guides it.
+    clip: {fileID: 8300000, guid: 48b2db50becbb264b81958a41e866318, type: 3}
+  - text: Again. A cut you cannot repeat is only luck.
+    clip: {fileID: 8300000, guid: badd050072c2f6840aaa0a4b859e8405, type: 3}
+  - text: Your footwork decides the fight before your blade does.
+    clip: {fileID: 8300000, guid: a376c8d06f3337b408db536f2e7116ea, type: 3}
+  - text: Show me what you have learned since last time.
+    clip: {fileID: 8300000, guid: e91111c8972d7bf40be76ce8e7491673, type: 3}
+  - text: Patience. The Monoblade rewards those who wait for the opening.
+    clip: {fileID: 8300000, guid: c594065cef2d5c9438be425c1fd47b23, type: 3}
   services: Hegemony Instructor for the Monoblade. Learn and upgrade your combat skills.
   offers: 0
   interactRange: 3

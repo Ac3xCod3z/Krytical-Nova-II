@@ -26,8 +26,11 @@ namespace KryticalNova.EditorTools
         private const float ShortClipSeconds = 1.5f;
         private const string AmbienceGroup = "Ambience";
         private const string AmbienceParameter = "AmbienceVolume";
-        // The volumes FEEL's mixer exposes already (and ours, once it is there).
-        private static readonly string[] KnownParameters = { "MasterVolume", "MusicVolume", "SfxVolume", "UiVolume", AmbienceParameter };
+        /// <summary>What the town NPCs say (owner, 24 Oct 2026: its own Voices slider, starting at half like the rest).</summary>
+        public const string VoiceGroup = "Voice";
+        private const string VoiceParameter = "VoiceVolume";
+        // The volumes FEEL's mixer exposes already (and ours, once they are there).
+        private static readonly string[] KnownParameters = { "MasterVolume", "MusicVolume", "SfxVolume", "UiVolume", AmbienceParameter, VoiceParameter };
 
         public static AudioMixer EnsureMixer()
         {
@@ -43,18 +46,30 @@ namespace KryticalNova.EditorTools
                 AssetDatabase.ImportAsset(MixerPath);
                 mixer = AssetDatabase.LoadAssetAtPath<AudioMixer>(MixerPath);
             }
-            if (mixer != null && mixer.FindMatchingGroups(AmbienceGroup).Length == 0 && !TryAddAmbienceGroup(mixer))
+            if (mixer != null && mixer.FindMatchingGroups(AmbienceGroup).Length == 0 && !TryAddGroup(mixer, AmbienceGroup, AmbienceParameter))
                 Debug.LogWarning($"[Audio] {MixerPath} has no '{AmbienceGroup}' group and one could not be added from code. " +
                                  $"Add it under Master in the Audio Mixer window and expose its volume as '{AmbienceParameter}'; " +
                                  "until then weather sound follows the Effects slider.");
+            if (mixer != null && mixer.FindMatchingGroups(VoiceGroup).Length == 0 && !TryAddGroup(mixer, VoiceGroup, VoiceParameter))
+                Debug.LogWarning($"[Audio] {MixerPath} has no '{VoiceGroup}' group and one could not be added from code. " +
+                                 $"Add it under Master in the Audio Mixer window and expose its volume as '{VoiceParameter}'; " +
+                                 "until then NPC voices follow the Master slider only.");
             return mixer;
         }
 
+        /// <summary>The Voice group NPC lines play into (made by <see cref="EnsureMixer"/>), or null.</summary>
+        public static AudioMixerGroup VoiceOutput()
+        {
+            AudioMixer mixer = EnsureMixer();
+            return mixer != null ? mixer.FindMatchingGroups(VoiceGroup).FirstOrDefault(g => g.name == VoiceGroup) : null;
+        }
+
         /// <summary>
-        /// Adds the Ambience group and exposes its volume. Mixer authoring has no public API, so this goes through
-        /// the editor's own controller by reflection and reports failure instead of throwing.
+        /// Adds a group under Master and exposes its volume as <paramref name="parameter"/>. Mixer authoring has no
+        /// public API, so this goes through the editor's own controller by reflection and reports failure instead of
+        /// throwing.
         /// </summary>
-        private static bool TryAddAmbienceGroup(AudioMixer mixer)
+        private static bool TryAddGroup(AudioMixer mixer, string groupName, string parameter)
         {
             try
             {
@@ -65,7 +80,7 @@ namespace KryticalNova.EditorTools
                 MethodInfo addChild = controllerType.GetMethod("AddChildToParent", flags);
                 if (master == null || create == null || addChild == null) return false;
 
-                object group = create.Invoke(mixer, new object[] { AmbienceGroup, false });
+                object group = create.Invoke(mixer, new object[] { groupName, false });
                 addChild.Invoke(mixer, new[] { group, master });
 
                 // Expose the new group's volume under the name the Settings slider drives.
@@ -86,7 +101,7 @@ namespace KryticalNova.EditorTools
                 {
                     SerializedProperty name = exposed.GetArrayElementAtIndex(i).FindPropertyRelative("name");
                     if (System.Array.IndexOf(KnownParameters, name.stringValue) >= 0) continue;
-                    name.stringValue = AmbienceParameter;
+                    name.stringValue = parameter;
                     named = true;
                 }
                 if (!named) return false;
@@ -94,11 +109,11 @@ namespace KryticalNova.EditorTools
 
                 EditorUtility.SetDirty(mixer);
                 AssetDatabase.SaveAssets();
-                return mixer.FindMatchingGroups(AmbienceGroup).Length > 0;
+                return mixer.FindMatchingGroups(groupName).Length > 0;
             }
             catch (Exception e)
             {
-                Debug.LogWarning($"[Audio] Adding the Ambience group failed: {e.GetBaseException().Message}");
+                Debug.LogWarning($"[Audio] Adding the {groupName} group failed: {e.GetBaseException().Message}");
                 return false;
             }
         }

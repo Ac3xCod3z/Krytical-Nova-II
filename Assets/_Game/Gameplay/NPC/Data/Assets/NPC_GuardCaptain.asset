@@ -16,6 +16,17 @@ MonoBehaviour:
   displayName: Marshal
   title: "Contracts \xB7 Battle Transit"
   greeting: Ready to earn your keep? The frontier won't defend itself.
+  lines:
+  - text: Ready to earn your keep? The frontier won't defend itself.
+    clip: {fileID: 8300000, guid: 2a368ec192851b24ba89e4c56af2e8c3, type: 3}
+  - text: Contracts are posted. Pick one that won't get you killed.
+    clip: {fileID: 8300000, guid: 8dd27fe2c895aaa40ac78a434b62031a, type: 3}
+  - text: The frontier needs hands. Yours look idle.
+    clip: {fileID: 8300000, guid: e933f7d04bb347c41b4d6535f7d77bb2, type: 3}
+  - text: Come back with the job done and you get paid. That's the deal.
+    clip: {fileID: 8300000, guid: b104e0f06df44d044aa3666b83448cf8, type: 3}
+  - text: Keep your weapon down inside the walls. Out there, do what you have to.
+    clip: {fileID: 8300000, guid: d6d84b713a0cbbb4d95b2decad2df87c, type: 3}
   services: Standard leveling Contracts, and Transit to level-appropriate battles and Runs.
   offers: 0
   interactRange: 3

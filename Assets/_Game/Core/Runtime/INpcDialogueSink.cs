@@ -7,7 +7,10 @@ namespace KryticalNova.Core
     {
         string DisplayName { get; }
         string Title { get; }
+        /// <summary>The line the NPC says this time (picked when the player walked up).</summary>
         string Greeting { get; }
+        /// <summary>That line in the NPC's voice, or null when it is only shown.</summary>
+        AudioClip GreetingClip { get; }
         string Services { get; }
         float InteractRange { get; }
         Vector3 Position { get; }

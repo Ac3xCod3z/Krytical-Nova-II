@@ -16,6 +16,17 @@ MonoBehaviour:
   displayName: Stylist
   title: Hair
   greeting: Sit. Whatever they did to your hair out there, I can fix it.
+  lines:
+  - text: Sit. Whatever they did to your hair out there, I can fix it.
+    clip: {fileID: 8300000, guid: fc8ff1475ad803045809944900016064, type: 3}
+  - text: Sit down, sit down. Let's see what we're working with.
+    clip: {fileID: 8300000, guid: 50b36fd110bb286408c6fcd9415df55b, type: 3}
+  - text: One Restyle Pass, as many changes as you like.
+    clip: {fileID: 8300000, guid: 6f63de7a983559c40b129131a8766739, type: 3}
+  - text: Trust me. You'll walk out of here a new person.
+    clip: {fileID: 8300000, guid: 620dfeba5ad883f4e960122c17d9be50, type: 3}
+  - text: Helmet hair again? I see it every day.
+    clip: {fileID: 8300000, guid: d145e83f332875a419aeacb408afb3fe, type: 3}
   services: Changes your hair, brows, facial hair and hair colour. One Restyle Pass covers every change made at once.
   offers: 256
   interactRange: 3

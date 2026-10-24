@@ -13,6 +13,7 @@ namespace KryticalNova.UI
             (AudioChannel.Effects, "Effects"),
             (AudioChannel.Ambience, "Ambience"),
             (AudioChannel.Interface, "Interface"),
+            (AudioChannel.Voice, "Voices"),
         };
 
         public void Build(VisualElement page)

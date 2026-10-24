@@ -51,7 +51,7 @@ MonoBehaviour:
         - 'Everyone starts out walking. <b>Run</b> and <b>Jump</b> are movement skills: learn them in the Skills window, opened with {key:SkillsWindow} , drag them onto the Hotbar, and press the slot to switch to one. Press it again to go back to walking.'
         - 'Running costs a little Flux each time you click a new place, not for every second you run. Without enough Flux the click is refused: press the slot again to walk.'
         - With Jump chosen, your next click picks where you land instead of where you walk.
-        - Up on a roof, click the street below to get down: you run to the edge and leap off, from any height, then carry on to where you clicked. Click another spot of the roof to walk there.
+        - 
         - 'Waterstride (level 60, Run and Jump at rank 20): with Run chosen, click water to run out across it, and stand on it where you stop. It costs a little Flux every second on the water; click land to run ashore.'
         - The line under your health bars says which of the three is on, and how fast you are moving.
       - kind: 2
@@ -819,7 +819,7 @@ MonoBehaviour:
         - How you earn one | Your pet evolves into that stage while it is out, or you put a pet out at that stage
         - A pet you bought grown | Gives the look it has now and the ones it grows into with you, never the earlier ones
         - What it goes over | Any pet that has grown at least as far as the Morph's stage
-        - Where | The Holoweaver: click your pet on the equipment page, for the same Creds as a Weave
+        - 'Where | The Holoweaver: click your pet on the equipment page, for the same Creds as a Weave'
         - What stays your pet's | Its bonus, growth and hunger
       - kind: 2
         heading: Dye
@@ -1325,8 +1325,8 @@ MonoBehaviour:
         heading: A Callout
         lines:
         - Select a player and press <b>CALLOUT</b> on the target strip, or type <b>/callout</b> and their name. They must be near.
-        - They accept. Black bars close in on both your screens and a 3 · 2 · 1 counts down; their name turns red.
-        - Fight. Any weapon and any skill. The bars stay until it ends: when one of you falls.
+        - "They accept. Black bars close in on both your screens and a 3 \xB7 2 \xB7 1 counts down; their name turns red."
+        - 
         - Walking far from where it began, or leaving the game, forfeits.
       - kind: 2
         heading: Who can attack whom
@@ -1338,7 +1338,7 @@ MonoBehaviour:
         heading: 
         lines:
         - Losing a Callout costs no XP.
-        - In a fight, the ring of bars round your pet keeps the music's beat: when it flares, a skill pressed now is on Cadence. Settings, Audio can switch it off.
+        - 
         - Settings can decline Callouts for you without showing them.
     - id: creds
       title: Creds
@@ -1449,8 +1449,7 @@ MonoBehaviour:
         heading: The pages
         lines:
         - Graphics | Resolution, window mode, a quality preset and the details under it
-        - Audio | Volume of music, effects, ambience and the interface
-        - The Deck | {key:Deck} Your own music player: every track of the soundtrack, heard by you alone
+        - Audio | Volume of music, effects, ambience, the interface and NPC voices
         - Interface | HUD layout, names over heads, the minimap, chat, interface size
         - Gameplay | The camera, damage numbers, and requests to decline for you
         - Controls | Every key

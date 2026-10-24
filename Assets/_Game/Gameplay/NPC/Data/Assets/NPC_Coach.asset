@@ -16,7 +16,17 @@ MonoBehaviour:
   displayName: Coach
   title: "Body \xB7 Height"
   greeting: 'Heavier, leaner, bigger: tell me what you want to carry and we''ll get you there.'
-  services: "Changes your body: build, muscle, bust and butt (a feminine body), definition
-    (a masculine body) and height. One Training Pass covers every change made at once."
+  lines:
+  - text: 'Heavier, leaner, bigger: tell me what you want to carry and we''ll get you there.'
+    clip: {fileID: 8300000, guid: c6d1de142958c8c40bac23218527f62f, type: 3}
+  - text: Taller, broader, leaner. One Training Pass and we start today.
+    clip: {fileID: 8300000, guid: 954bdc44c5030f543a0cb1b8e2733d1b, type: 3}
+  - text: Strong frame. Let's build on it.
+    clip: {fileID: 8300000, guid: 09231b20171bcf645863f2efaf0d996a, type: 3}
+  - text: Stand up straight. Let's see what we're working with.
+    clip: {fileID: 8300000, guid: 288c435417a66fe4b9030469c6812a31, type: 3}
+  - text: Whatever you carry out there, carry it well.
+    clip: {fileID: 8300000, guid: 17b05eb2612a11c438612cbf1b9dc776, type: 3}
+  services: 'Changes your body: build, muscle, bust and butt (a feminine body), definition (a masculine body) and height. One Training Pass covers every change made at once.'
   offers: 1024
   interactRange: 3

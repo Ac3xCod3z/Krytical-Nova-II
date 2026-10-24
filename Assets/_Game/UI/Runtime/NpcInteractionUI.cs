@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using KryticalNova.Core;
 using KryticalNova.NPC;
 using UnityEngine;
+using UnityEngine.Audio;
 using UnityEngine.InputSystem;
 using UnityEngine.UIElements;
 
@@ -22,6 +23,10 @@ namespace KryticalNova.UI
 
         [Tooltip("Nameplates further than this from the camera are hidden.")]
         [SerializeField, Min(5f)] private float nameplateDistance = 38f;
+        [Tooltip("Where NPC lines play. Empty: the bound mixer's Voice group (the Voices slider in Settings).")]
+        [SerializeField] private AudioMixerGroup voiceOutput;
+        private const string VoiceGroupName = "Voice";
+        private AudioSource voiceSource;
 
         private readonly Dictionary<NpcInteractable, VisualElement> plates = new Dictionary<NpcInteractable, VisualElement>();
         private readonly List<NpcInteractable> staleNpcs = new List<NpcInteractable>();
@@ -71,6 +76,7 @@ namespace KryticalNova.UI
 
         private void OnDisable()
         {
+            StopVoice();
             ClientPresentationRegistry.UnregisterDialogue(this);
             ClientPresentationRegistry.UnregisterMessages(this);
             ClientPresentationRegistry.UnregisterPointerBlock(this);
@@ -108,6 +114,29 @@ namespace KryticalNova.UI
             dialogueServices.text = npc.Services;
             BuildServiceButtons(npc);
             SetVisible(dialogue, true);
+            PlayVoice(npc.GreetingClip);
+        }
+
+        /// <summary>The NPC says its line (owner, 24 Oct 2026); a new dialogue or a closed one stops the last line.</summary>
+        private void PlayVoice(AudioClip clip)
+        {
+            if (voiceSource != null) voiceSource.Stop();
+            if (clip == null) return;
+            if (voiceSource == null)
+            {
+                voiceSource = gameObject.AddComponent<AudioSource>();
+                voiceSource.playOnAwake = false;
+                voiceSource.spatialBlend = 0f; // the player's own dialogue: heard as the window opens, not placed in the world
+            }
+            if (voiceSource.outputAudioMixerGroup == null)
+                voiceSource.outputAudioMixerGroup = voiceOutput != null ? voiceOutput : AudioPreferences.Group(VoiceGroupName);
+            voiceSource.clip = clip;
+            voiceSource.Play();
+        }
+
+        private void StopVoice()
+        {
+            if (voiceSource != null) voiceSource.Stop();
         }
 
         /// <summary>One button per working service this NPC offers; the "coming soon" button stands in when there is none.</summary>
@@ -135,6 +164,7 @@ namespace KryticalNova.UI
 
         public void HideDialogue()
         {
+            StopVoice();
             EndCurrentNpc();
             currentNpc = null;
             currentPlayer = null;

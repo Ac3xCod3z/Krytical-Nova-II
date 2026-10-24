@@ -16,6 +16,17 @@ MonoBehaviour:
   displayName: Herald
   title: "Ascension \xB7 Nova Standings"
   greeting: Renown is only a number until someone speaks it aloud. Let me speak yours.
+  lines:
+  - text: Renown is only a number until someone speaks it aloud. Let me speak yours.
+    clip: {fileID: 8300000, guid: 473e53df5238a6c48beca8971ac88ba3, type: 3}
+  - text: Say your name, and the whole town will know what you have earned.
+    clip: {fileID: 8300000, guid: 7167f6340f467af4d882cb09cbc2b943, type: 3}
+  - text: Rise, and let Concord see it.
+    clip: {fileID: 8300000, guid: 407f8c2914ab2054e87066be411e3947, type: 3}
+  - text: Every rank you buy is yours forever. Wear one with pride.
+    clip: {fileID: 8300000, guid: 33d527cac46e7d84bbf225823872c24f, type: 3}
+  - text: Ascension is a gamble. Fortune favours the bold.
+    clip: {fileID: 8300000, guid: 0d315ddbf5eab6646a81df9444f7226c, type: 3}
   services: 'Spends your Renown. Ascension: 100 Renown and Creds for a chance to rise a level; each level raises all four attributes, and every eighth level changes your Nova. Nova Standings: buy ranks on four tracks that each raise one stat, and wear one as your title.'
   offers: 16
   interactRange: 3

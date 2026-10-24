@@ -1,0 +1,25 @@
+{
+    "name": "KryticalNova.NPC.Tests.Editor",
+    "rootNamespace": "KryticalNova.NPC.Tests",
+    "references": [
+        "KryticalNova.Runtime",
+        "KryticalNova.NPC",
+        "UnityEngine.TestRunner",
+        "UnityEditor.TestRunner"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "nunit.framework.dll"
+    ],
+    "autoReferenced": false,
+    "defineConstraints": [
+        "UNITY_INCLUDE_TESTS"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

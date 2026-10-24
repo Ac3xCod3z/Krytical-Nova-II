@@ -7,7 +7,7 @@ using UnityEngine.Audio;
 namespace KryticalNova.UI
 {
     /// <summary>The volume sliders of the Settings window, in the order they are shown.</summary>
-    public enum AudioChannel { Master, Music, Effects, Ambience, Interface }
+    public enum AudioChannel { Master, Music, Effects, Ambience, Interface, Voice }
 
     /// <summary>
     /// The player's volume options, persisted in PlayerPrefs like <see cref="HudPreferences"/>, and the one place
@@ -17,8 +17,10 @@ namespace KryticalNova.UI
     public static class AudioPreferences
     {
         // The mixer's exposed volume parameters, by channel.
-        private static readonly string[] Parameters = { "MasterVolume", "MusicVolume", "SfxVolume", "AmbienceVolume", "UiVolume" };
-        private static readonly string[] Keys = { "master", "music", "effects", "ambience", "interface" };
+        // Voice (owner, 24 Oct 2026) starts at DefaultVolume like the rest: a volume never set reads the default, so
+        // VolumeDefaultsVersion stays as it is (raising it would put every player's other volumes back too).
+        private static readonly string[] Parameters = { "MasterVolume", "MusicVolume", "SfxVolume", "AmbienceVolume", "UiVolume", "VoiceVolume" };
+        private static readonly string[] Keys = { "master", "music", "effects", "ambience", "interface", "voice" };
         private const float Silent = -80f;
         /// <summary>The furthest the beat can be moved either way, in milliseconds.</summary>
         public const float BeatOffsetLimit = 150f;
@@ -158,6 +160,15 @@ namespace KryticalNova.UI
 
         /// <summary>True once a mixer is bound, so the saved volumes are applied.</summary>
         public static bool IsBound => mixer != null;
+
+        /// <summary>The bound mixer's group of that name (e.g. "Voice"), or null before a mixer is bound.</summary>
+        public static AudioMixerGroup Group(string name)
+        {
+            if (mixer == null) return null;
+            foreach (AudioMixerGroup group in mixer.FindMatchingGroups(name))
+                if (group.name == name) return group;
+            return null;
+        }
 
         /// <summary>True when the bound mixer has a group for the channel.</summary>
         public static bool Has(AudioChannel channel) => mixer != null && mixer.GetFloat(Parameters[(int)channel], out _);

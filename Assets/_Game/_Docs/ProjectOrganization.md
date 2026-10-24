@@ -212,7 +212,7 @@ _Game/
 │                          Setup/ = the two wiring steps: player prefab and zone scene, Hierarchy/ = vHierarchy data)
 │                          Debug/ (QC commands)
 │                          (future: Profiling/ Importers/)
-├── Audio/                 Mixers/ (KN_Main.mixer: Master with Music, Sfx, UI and Ambience; the Settings sliders drive it)
+├── Audio/                 Mixers/ (KN_Main.mixer: Master with Music, Sfx, UI, Ambience and Voice; the Settings sliders drive it)
 │                          SFX/{Combat,Movement,Moments,Interface}/ (SFX_<Slot>[_<Faction>]_<nn>.wav: a sound slot plays every
 │                          numbered file of its name, never the same one twice running)  Ambience/Weather/ (AMB_Weather_<Name>
 │                          loops, SFX_Thunder_<nn>). Baked and levelled by the sound-scout skill from the library outside the
@@ -223,7 +223,9 @@ _Game/
 │                          Music, `MusicSetup`)  Runtime/ (KryticalNova.Audio: BeatMath, MusicConductor = where the zone's fight music is,
 │                          for everyone; CombatMusicPlayer = plays it on a player's own game, in a fight only; CombatBeat = the beat as
 │                          that player hears it, for everything that keeps time: design 17)  Tests/Editor/
-│                          (future: Voice/)
+│                          Voices/NPC/<Npc>/ (VO_<Npc>_<n>.ogg: what a town NPC says when a player walks up, in the voice the
+│                          owner picked; npc_voice_lines.json beside them is the list Krytical Nova ▸ Setup ▸ NPC Voice Lines
+│                          (`NpcVoiceSetup`) puts on each NpcDefinition. Baked by the npc-voice skill's bake_game.py, never by hand)
 └── (future) Art/ (shared-only art)  Tests/ (cross-system tests)
 ```
 
