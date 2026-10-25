@@ -633,7 +633,7 @@ rules below.
 **When.** A FEEL feedback (`MMF_Smear`) on the world half of the **Run Start**, **Death** and **Critical Death**
 moments of `PFX_GameFeel`, so it plays on every client for every character and is timed, and switched on or off,
 with the moment's dust and comic text. Run Start fires only when the run clip starts (the Run skill: 10 m/s at rank 1
-up to 29 m/s at rank 20), never for a walk. `GameFeelBuilder` puts the feedbacks there: **Krytical Nova ▸ GameFeel ▸
+up to 28 m/s at rank 20 since 25 Oct 2026), never for a walk. `GameFeelBuilder` puts the feedbacks there: **Krytical Nova ▸ GameFeel ▸
 Rebuild Smear Feel** does only that (and makes the settings asset when it is missing); **Build Game Feel** and
 **Rebuild Death Feel** include it.
 

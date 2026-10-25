@@ -1,0 +1,49 @@
+{
+    "name": "KryticalNova.Mounts.Tests.Editor",
+    "rootNamespace": "KryticalNova.Tests",
+    "references": [
+        "KryticalNova.Runtime",
+        "KryticalNova.Audio",
+        "KryticalNova.Autopilot",
+        "KryticalNova.CharacterCreation",
+        "KryticalNova.Combat",
+        "KryticalNova.Crafting",
+        "KryticalNova.Economy",
+        "KryticalNova.Factions",
+        "KryticalNova.Forge",
+        "KryticalNova.Hostiles",
+        "KryticalNova.Housing",
+        "KryticalNova.Items",
+        "KryticalNova.NPC",
+        "KryticalNova.Networking",
+        "KryticalNova.Persistence",
+        "KryticalNova.Mounts",
+        "KryticalNova.Pets",
+        "KryticalNova.Player",
+        "KryticalNova.Progression",
+        "KryticalNova.Rendering",
+        "KryticalNova.Restyle",
+        "KryticalNova.Social",
+        "KryticalNova.Wallet",
+        "KryticalNova.World",
+        "Unity.Netcode.Runtime",
+        "Unity.Collections",
+        "UnityEngine.TestRunner",
+        "UnityEditor.TestRunner"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "nunit.framework.dll"
+    ],
+    "autoReferenced": false,
+    "defineConstraints": [
+        "UNITY_INCLUDE_TESTS"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

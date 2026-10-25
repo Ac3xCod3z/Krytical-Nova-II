@@ -65,6 +65,8 @@ namespace KryticalNova.Items
         public EquipmentLooks Looks => looks;
         /// <summary>Whether the worn helmet is drawn (the Equipment page's toggle). Helmets are vanity, not a slot.</summary>
         public bool HelmetShown => !looks.helmetHidden;
+        /// <summary>The worn cape is drawn (the Equipment page's cape toggle; shown by default).</summary>
+        public bool CapeShown => !looks.capeHidden;
         /// <summary>The colourways a dyed piece can wear.</summary>
         public GearThemeLibrary Colourways => catalog != null ? catalog.Themes : null;
 
@@ -119,6 +121,7 @@ namespace KryticalNova.Items
             if (previous.pet != next.pet || previous.petStage != next.petStage) LookChanged?.Invoke(EquipSlot.Pet);
             // The helmet rides the armor's look (head attachment): switching it redraws the armor slot.
             if (previous.helmetHidden != next.helmetHidden) LookChanged?.Invoke(EquipSlot.Armor);
+            if (previous.capeHidden != next.capeHidden) LookChanged?.Invoke(EquipSlot.Cape);
         }
 
         private void OnNetLooksChanged(EquipmentLooks previous, EquipmentLooks next)

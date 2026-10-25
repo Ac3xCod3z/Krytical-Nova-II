@@ -117,6 +117,7 @@ A vendor sells from a shelf and buys what the player carries. Two are open, the 
 | | Recall Tag | 150 |
 | | Flux Flask (and its refill, 60 a drink, from the Apothecary's dialogue) | 600 |
 | | Pet Ration | 50 |
+| | Mount Feed | 50 (placeholder; owner, 25 Oct 2026) |
 | Armorer (`VS_Armorer`) | Alumite (+3 %) | 500 |
 | | Iridion (+6 %) | 1,500 |
 | | Fusion Catalyst, Tuning Chip | 10,000 |

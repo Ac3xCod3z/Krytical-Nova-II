@@ -25,6 +25,10 @@ namespace KryticalNova.Core
         AutobuffTime = 8,
         /// <summary>Gives the character a new name, chosen as it is used (a Name Change Pass; owner, 22 Oct 2026).</summary>
         NameChange = 9,
+        /// <summary>Adds the mount the item is to the character's Mount window (a Brambleback item; owner, 25 Oct 2026).</summary>
+        RegisterMount = 10,
+        /// <summary>Feeds the selected mount (Mount Feed).</summary>
+        FeedMount = 11,
     }
 
     /// <summary>

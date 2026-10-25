@@ -239,6 +239,8 @@ namespace KryticalNova.Items
         public byte petStage;
         /// <summary>The player switched the helmet off on the Equipment page (helmets are a vanity toggle; shown by default).</summary>
         public bool helmetHidden;
+        /// <summary>The player switched the cape's look off on the Equipment page (owner, 25 Oct 2026: as the helmet). It keeps its stats.</summary>
+        public bool capeHidden;
 
         public ushort GetWeave(EquipSlot slot)
         {
@@ -312,16 +314,17 @@ namespace KryticalNova.Items
             serializer.SerializeValue(ref pet);
             serializer.SerializeValue(ref petStage);
             serializer.SerializeValue(ref helmetHidden);
+            serializer.SerializeValue(ref capeHidden);
         }
 
         public bool Equals(EquipmentLooks o) =>
             weapon == o.weapon && armor == o.armor && gloves == o.gloves && boots == o.boots && cape == o.cape &&
             armorDye == o.armorDye && glovesDye == o.glovesDye && bootsDye == o.bootsDye && capeDye == o.capeDye && weaponDye == o.weaponDye &&
-            pet == o.pet && petStage == o.petStage && helmetHidden == o.helmetHidden;
+            pet == o.pet && petStage == o.petStage && helmetHidden == o.helmetHidden && capeHidden == o.capeHidden;
 
         public override bool Equals(object obj) => obj is EquipmentLooks o && Equals(o);
         public override int GetHashCode() =>
-            HashCode.Combine(weapon, armor, gloves, boots, cape, HashCode.Combine(armorDye, glovesDye, bootsDye, capeDye, weaponDye, pet, petStage), helmetHidden);
+            HashCode.Combine(weapon, armor, gloves, boots, cape, HashCode.Combine(armorDye, glovesDye, bootsDye, capeDye, weaponDye, pet, petStage), helmetHidden, capeHidden);
     }
 
     /// <summary>

@@ -51,6 +51,9 @@ MonoBehaviour:
   - item: {fileID: 11400000, guid: 2a7f4099c68c36a4cadc335f7ce5b409, type: 2}
     price: 600
     weeklyLimit: 0
+  - item: {fileID: 11400000, guid: 9165003c89569e54b96dea3aa5a9ea2d, type: 2}
+    price: 50
+    weeklyLimit: 0
   rotation: []
   sellsLadderGear: 0
   gearRarity: 0

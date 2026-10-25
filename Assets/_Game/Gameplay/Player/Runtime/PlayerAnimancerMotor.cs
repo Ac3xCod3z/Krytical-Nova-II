@@ -200,6 +200,14 @@ namespace KryticalNova.Player
         // (the owner predicts it locally) and follows it otherwise.
         private bool presentedWeaponDrawn;
 
+        // Riding (owner, 25 Oct 2026): the rider sits on a mount's seat. The base layer plays the seated clips the
+        // mount system hands over; strikes, casts, draws and flinches play on the upper-body layer over the seat.
+        private bool seated;
+        private AnimationClip seatedIdleClip, seatedWalkClip, seatedRunClip;
+
+        /// <summary>The rider is on a mount (<see cref="SetSeated"/>). Every machine.</summary>
+        public bool IsSeated => seated;
+
         public bool IsWeaponDrawn => presentedWeaponDrawn;
         /// <summary>The Animancer that drives the character's humanoid rig (the prefab has more than one).</summary>
         public AnimancerComponent Animancer => animancer;
@@ -300,7 +308,9 @@ namespace KryticalNova.Player
 
             // While a draw/sheath plays on the upper-body layer, the legs keep following movement.
             // A full-body hit reaction holds the legs too, until it ends or the character moves off.
-            if ((currentState == CharacterAnimState.Locomotion && !hitHoldsBody) || (drawOnUpperBody && IsWeaponDrawActionPlaying))
+            // Seated, a strike or cast plays over the seat: the base layer keeps riding.
+            if ((currentState == CharacterAnimState.Locomotion && !hitHoldsBody) || (drawOnUpperBody && IsWeaponDrawActionPlaying)
+                || (seated && currentState == CharacterAnimState.Attacking))
             {
                 UpdateLocomotion();
             }
@@ -311,6 +321,7 @@ namespace KryticalNova.Player
         [Tooltip("Seconds before a new move order given while running may take the run off again (its smear and dust): every new destination smears, but not more often than this.")]
         [SerializeField, Min(0f)] private float runRetakeSeconds = 0.4f;
         private float lastRunTakeOff = -100f;
+        private bool reportedRideWalk;
 
         /// <summary>
         /// Tells game feel when the run starts and stops. Judged from the clip actually playing rather than at the
@@ -318,19 +329,32 @@ namespace KryticalNova.Player
         /// </summary>
         private void ReportRunning()
         {
-            bool legsFollowMovement = currentState == CharacterAnimState.Locomotion || (drawOnUpperBody && IsWeaponDrawActionPlaying);
+            bool legsFollowMovement = currentState == CharacterAnimState.Locomotion || (drawOnUpperBody && IsWeaponDrawActionPlaying)
+                || (seated && currentState == CharacterAnimState.Attacking);
+            // On a mount its gallop is the run (the speed effects) and its walk kicks up dust only (owner, 25 Oct 2026).
             bool running = legsFollowMovement && currentLocomotionClip != null
-                && (currentLocomotionClip == runClip || currentLocomotionClip == drawnRunClip);
-            if (running == reportedRunning) return;
+                && (currentLocomotionClip == runClip || currentLocomotionClip == drawnRunClip
+                    || (seated && currentLocomotionClip == seatedRunClip && seatedRunClip != seatedWalkClip));
+            bool rideWalking = legsFollowMovement && seated && !running && currentLocomotionClip != null
+                && currentLocomotionClip == seatedWalkClip && currentLocomotionClip != seatedIdleClip;
             var feel = ClientPresentationRegistry.Feel;
             if (feel == null) return; // not listening yet: report once it is
-            reportedRunning = running;
-            if (running)
+            if (running != reportedRunning)
             {
-                lastRunTakeOff = Time.time;
-                feel.RunStarted(transform, !IsSpawned || IsOwner);
+                reportedRunning = running;
+                if (running)
+                {
+                    lastRunTakeOff = Time.time;
+                    feel.RunStarted(transform, !IsSpawned || IsOwner);
+                }
+                else feel.RunStopped(transform);
             }
-            else feel.RunStopped(transform);
+            // After the run: a gallop easing to a walk ends the run's dust first, then the walk's starts.
+            if (rideWalking != reportedRideWalk)
+            {
+                reportedRideWalk = rideWalking;
+                feel.RideWalk(transform, rideWalking);
+            }
         }
 
         /// <summary>
@@ -351,6 +375,7 @@ namespace KryticalNova.Player
         private void OnDisable()
         {
             reportedRunning = false;
+            reportedRideWalk = false;
             hitHoldsBody = false;
             hitRoutine = null;
             EndEmote(true);
@@ -456,6 +481,11 @@ namespace KryticalNova.Player
         private void UpdateLocomotion()
         {
             if (animancer == null) return;
+            if (seated)
+            {
+                UpdateSeatedLocomotion();
+                return;
+            }
 
             bool drawn = presentedWeaponDrawn;
             AnimationClip targetIdle = (drawn && drawnIdleClip != null) ? drawnIdleClip : idleClip;
@@ -515,9 +545,58 @@ namespace KryticalNova.Player
             if (clip == null || clip == currentLocomotionClip) return;
             currentLocomotionClip = clip;
             currentLocomotionState = animancer.Layers[0].Play(clip, fade);
-            currentLocomotionState.ApplyFootIK = locomotionFootIK;
+            currentLocomotionState.ApplyFootIK = locomotionFootIK && !seated; // a seated rider's feet are in the stirrups
             currentLocomotionState.Speed = 1f;
         }
+
+        // On a mount: no stop clips. Walk by default, the gallop while Run is selected (the mount does the same).
+        private void UpdateSeatedLocomotion()
+        {
+            stopState = null;
+            slowerGaitTimer = 0f;
+            if (!IsMoving())
+            {
+                PlayLocomotionClip(seatedIdleClip, locomotionFadeDuration);
+                return;
+            }
+            bool run = movementSkills != null && movementSkills.IsRunning;
+            PlayLocomotionClip(run ? seatedRunClip : seatedWalkClip, locomotionFadeDuration);
+        }
+
+        /// <summary>
+        /// Sits the rider on a mount: from now on <paramref name="idle"/>, <paramref name="walk"/> and
+        /// <paramref name="run"/> are its locomotion, with no stop clips and no foot IK, and combat clips
+        /// (<see cref="PlayAction"/>) play on the upper body only. Null idle stands it up again. Every machine.
+        /// </summary>
+        public void SetSeated(AnimationClip idle, AnimationClip walk, AnimationClip run)
+        {
+            seated = idle != null;
+            seatedIdleClip = idle;
+            seatedWalkClip = walk != null ? walk : idle;
+            seatedRunClip = run != null ? run : seatedWalkClip;
+            stopState = null;
+            currentLocomotionClip = null;
+            if (seated) EndEmote(true);
+            if (!seated && currentState == CharacterAnimState.Attacking) FadeOutUpperBody();
+            if (currentState == CharacterAnimState.Locomotion || currentState == CharacterAnimState.Attacking) UpdateLocomotion();
+        }
+
+        /// <summary>
+        /// Plays a strike, cast or channel clip. On foot the whole body plays it (as before); seated only the upper
+        /// body does, so the rider stays in the saddle while the arm swings the weapon (owner, 25 Oct 2026).
+        /// </summary>
+        public AnimancerState PlayAction(AnimationClip clip, float fade)
+        {
+            if (animancer == null || clip == null) return null;
+            if (!seated || !drawOnUpperBody) return animancer.Play(clip, fade);
+            AnimancerState state = animancer.Layers[UpperBodyLayerIndex].Play(clip, fade);
+            state.ApplyFootIK = false;
+            return state;
+        }
+
+        /// <summary>The layer <see cref="PlayAction"/> plays on now.</summary>
+        public AnimancerLayer ActionLayer => animancer == null ? null
+            : seated && drawOnUpperBody ? animancer.Layers[UpperBodyLayerIndex] : animancer.Layers[0];
 
         private AnimationClip GetStopClip(AnimationClip fromClip, out Vector2 window)
         {
@@ -541,7 +620,8 @@ namespace KryticalNova.Player
             // speed hovers just above nothing: once it has stopped, only real travel sets it moving again. Without
             // this the run and its stop restart over and over at the end of every move.
             bool inMoveClip = currentLocomotionClip == walkClip || currentLocomotionClip == drawnWalkClip
-                || currentLocomotionClip == runClip || currentLocomotionClip == drawnRunClip;
+                || currentLocomotionClip == runClip || currentLocomotionClip == drawnRunClip
+                || (seated && currentLocomotionClip != null && currentLocomotionClip != seatedIdleClip);
             float threshold = movedHere || inMoveClip ? moveSpeedThreshold : Mathf.Max(moveSpeedThreshold, RemoteMoveOffSpeed);
             if (currentSpeed <= threshold) return false;
 
@@ -1005,6 +1085,8 @@ namespace KryticalNova.Player
 
         private AnimationClip LocomotionClipForSpeed()
         {
+            if (seated) return currentSpeed <= moveSpeedThreshold ? seatedIdleClip
+                : movementSkills != null && movementSkills.IsRunning ? seatedRunClip : seatedWalkClip;
             bool drawn = presentedWeaponDrawn;
             if (currentSpeed <= moveSpeedThreshold) return (drawn && drawnIdleClip != null) ? drawnIdleClip : idleClip;
             if (GaitSpeed >= walkSpeedThreshold) return (drawn && drawnRunClip != null) ? drawnRunClip : runClip;
@@ -1058,7 +1140,7 @@ namespace KryticalNova.Player
 
             // Standing still the whole body reacts. Moving, striking or casting, only the upper body does: the legs,
             // the swing and the cast keep the base layer.
-            bool fullBody = currentState == CharacterAnimState.Locomotion && !IsTravelling;
+            bool fullBody = currentState == CharacterAnimState.Locomotion && !IsTravelling && !seated;
             if (!fullBody && !drawOnUpperBody) return;
 
             nextHitReactionTime = Time.time + hitReactionCooldown;
@@ -1141,7 +1223,7 @@ namespace KryticalNova.Player
 
         private void PlayPickUp()
         {
-            if (animancer == null || !isActiveAndEnabled || pickUpDownClip == null) return;
+            if (animancer == null || !isActiveAndEnabled || pickUpDownClip == null || seated) return; // a rider reaches down from the saddle: no dip
             // One gesture at a time: a flinch is not cut short to bend down, and items taken in a row share one dip.
             if (currentState != CharacterAnimState.Locomotion || hitRoutine != null) return;
             hitRoutine = StartCoroutine(PickUpRoutine());
@@ -1215,7 +1297,7 @@ namespace KryticalNova.Player
         /// (an emote waits for that to finish).
         /// </summary>
         public bool CanStartEmote =>
-            (currentState == CharacterAnimState.Locomotion || IsWeaponDrawActionPlaying) && !IsTravelling;
+            (currentState == CharacterAnimState.Locomotion || IsWeaponDrawActionPlaying) && !IsTravelling && !seated;
         /// <summary>
         /// Raised on this machine when an emote or stance ends by itself or is cut short (moving off, striking,
         /// casting, jumping, a draw, a hit, death). Not raised when another emote takes its place.
@@ -1418,6 +1500,7 @@ namespace KryticalNova.Player
             {
                 currentState = CharacterAnimState.Locomotion;
                 currentLocomotionClip = null;
+                if (seated) FadeOutUpperBody(); // the strike was over the seat: hand the arms back
             }
         }
 

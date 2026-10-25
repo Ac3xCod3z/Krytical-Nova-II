@@ -4898,3 +4898,8 @@ MonoBehaviour:
     set: Cyberpunk/Gadget
     number: 5
     chosen: 1
+  - kind: 2
+    target: Mount_Feed
+    set: Fantasy/Berry and Seed
+    number: 13
+    chosen: 1

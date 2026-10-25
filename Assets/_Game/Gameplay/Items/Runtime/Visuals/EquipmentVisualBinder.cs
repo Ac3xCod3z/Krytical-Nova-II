@@ -86,8 +86,10 @@ namespace KryticalNova.Items.Visuals
                     break; // stats only
                 default:
                     if (slot == EquipSlot.Armor && appearance != null) appearance.SetHelmetShown(equipment.HelmetShown);
-                    if (appearance != null) appearance.SetSlot(slot, equipment.GetShownDefinition(slot), equipment.GetDyeCells(slot));
-                    if (slot == EquipSlot.Cape && weaponMount != null) weaponMount.SetCapeWorn(worn != null);
+                    // A cape switched off on the Equipment page is not drawn (owner, 25 Oct 2026); it still counts for stats.
+                    bool hidden = slot == EquipSlot.Cape && !equipment.CapeShown;
+                    if (appearance != null) appearance.SetSlot(slot, hidden ? null : equipment.GetShownDefinition(slot), equipment.GetDyeCells(slot));
+                    if (slot == EquipSlot.Cape && weaponMount != null) weaponMount.SetCapeWorn(worn != null && !hidden);
                     break;
             }
         }

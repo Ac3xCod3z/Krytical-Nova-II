@@ -74,6 +74,8 @@ namespace KryticalNova.Core
         void TargetSelected(Transform target, WorldTargetKind kind);
         void RunStarted(Transform actor, bool isLocalPlayer);
         void RunStopped(Transform actor);
+        /// <summary>A rider's mount is walking (true) or has stopped walking (false): the dust at its feet, nothing more (owner, 25 Oct 2026).</summary>
+        void RideWalk(Transform actor, bool walking);
         /// <summary>A jump's crouch began (the press, on the jumper's own screen; the server's start elsewhere).</summary>
         void JumpCharge(Transform actor, bool isLocalPlayer);
         void JumpTakeoff(Transform actor, bool isLocalPlayer);
