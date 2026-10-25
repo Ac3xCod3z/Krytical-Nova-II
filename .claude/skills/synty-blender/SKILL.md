@@ -145,6 +145,27 @@ and `pet_export.py` writes a clean deform-only skeleton with each action baked a
 and the Unity settings are in `references/pet-spec.md`. `enable_addon.py --module rigify` turns on a bundled
 add-on in the live window and keeps it on.
 
+## Job: seat a piece on a body without crushing it (straps, harness, plates)
+
+Made on the Brambleback mount saddle (24 Oct 2026; owner: "its not on the face and parts arnt on the body"), and
+meant for armor pieces too. A rigid fit (one scale/offset for the whole piece) gets the big parts right and leaves
+straps floating or sunk; a Shrinkwrap flattens straps and folds buckles. Do it piece by piece:
+
+1. **Number the pieces:** `island_map.py --object <piece> --out <folder/prefix>`, then
+   `python label_islands.py <prefix>` (Blender's Python has no Pillow). Read the side/below/front pictures and write
+   down which island is what. Delete the extras the AI invented (the mount had two stirrup pairs where the art
+   shows one per side seen in perspective): compare with the art, not with what looks plausible.
+2. **Rigid-place the big parts first** (seat, plate, helmet shell): scale/offset/pitch by a search that keeps the
+   nearest ~55 % of the piece 1-1.5 cm outside the body with a heavy penalty for inside, plus one anchor (the
+   bridle's front just behind the snout tip). Fit separate groups separately (a bridle to the head, the saddle to
+   the back); a strap that joins two groups (reins) blends between their moves along its length.
+3. **Close the gap:** `conform_to_body.py --object <piece> --body <obj,obj> --islands 3,7,12 --offset 0.012`.
+   Each island moves along the body normal to the offset, the move smoothed over the island's own edges so the
+   strap keeps its thickness and a plate its curve; buckles/rings (`--rigid-under`) ride whole. `--mode lift` for
+   straps under a chest or belly (straight up to the underside; nearest-surface snaps them onto the legs).
+   `--dry-run` reports the largest move first. Works on Sidekick bodies: pass the part meshes as `--body`.
+4. **Look** from the side, both sides, front and below before showing anything.
+
 ## Where things go
 
 | What | Where |
@@ -376,6 +397,10 @@ working scene `G:/My Drive/KryticalNova/Art/Blender/Sidekick/Gear/<Piece>.blend`
    (`Assets/_Game/Characters/Shared/SidekickParts/Resources/Meshes/<Set>/`) on the owner's go-ahead. The parts
    session brings them into Unity. The textures are 8192 px from Tripo: size them down for the game (2048 is
    plenty for a part this size) unless the owner says otherwise.
+
+**A whole set, start to finish: read `references/tripo-gear-set-playbook.md` first** (every step with its check,
+and everything the Dock Runner taught; tools `glove_rebuild.py`, `keys_report.py`, `weapon_pass.py`,
+`icon_sheet_cut.py`).
 
 **Tripo T-pose gear, the way it works now (Dock Runner, 23 Oct 2026).** Recipe for the pictures is in memory
 (`tripo-front-image-recipe`): Nano Banana 2 dresses our mannequin render (`MannequinViews/`), the mannequin stays in.

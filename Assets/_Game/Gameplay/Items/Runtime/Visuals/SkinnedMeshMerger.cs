@@ -87,6 +87,11 @@ namespace KryticalNova.Items.Visuals
         private static readonly int[] uvDimensions = new int[MaxUvChannels];
         private static readonly List<BoneWeight> boneWeights = new List<BoneWeight>(32768);
         private static readonly List<int> triangles = new List<int>(98304);
+        // Painted parts (GearPaintLook) are drawn in their paint's material, so each paint gets a submesh of its own
+        // after the body's (submesh 0, the colour map).
+        private static readonly List<List<int>> paintTriangles = new List<List<int>>();
+        private readonly List<GearPaintLook> paints = new List<GearPaintLook>();
+        private readonly List<SidekickPartRef> paintParts = new List<SidekickPartRef>();
         private readonly Dictionary<string, int> boneIndexByName = new Dictionary<string, int>(StringComparer.Ordinal);
         private static readonly List<Matrix4x4> bindposes = new List<Matrix4x4>(160);
 
@@ -137,6 +142,11 @@ namespace KryticalNova.Items.Visuals
             referenceBindposes = bindposes ?? Array.Empty<Matrix4x4>();
         }
 
+        /// <summary>The paints of the last merge: submesh i + 1 is drawn in paint i (submesh 0 is the colour-mapped body).</summary>
+        public IReadOnlyList<GearPaintLook> Paints => paints;
+        /// <summary>The first part of the last merge drawn in paint i: which worn piece that paint belongs to.</summary>
+        public IReadOnlyList<SidekickPartRef> PaintParts => paintParts;
+
         public bool HasBone(string name) => skeleton.ContainsKey(name);
         public Transform FindBone(string name) => skeleton.TryGetValue(name, out var t) ? t : null;
 
@@ -167,6 +177,8 @@ namespace KryticalNova.Items.Visuals
             positions.Clear(); normals.Clear(); tangents.Clear(); boneWeights.Clear(); triangles.Clear();
             bindposes.Clear(); boneIndexByName.Clear(); outBones.Clear();
             for (int c = 0; c < MaxUvChannels; c++) { uvs[c].Clear(); uvDimensions[c] = 0; }
+            paints.Clear(); paintParts.Clear();
+            foreach (var list in paintTriangles) list.Clear();
 
             // Reference bones first so the bone order is stable and matches the original prefab.
             for (int i = 0; i < referenceBones.Length; i++)
@@ -202,7 +214,9 @@ namespace KryticalNova.Items.Visuals
             }
             mesh.boneWeights = boneWeights.ToArray();
             mesh.bindposes = bindposes.ToArray();
+            mesh.subMeshCount = 1 + paints.Count;
             mesh.SetTriangles(triangles, 0, true);
+            for (int p = 0; p < paints.Count; p++) mesh.SetTriangles(paintTriangles[p], p + 1, true);
             AddLiveShapes(mesh);
             // GPU skinning needs no CPU copy; frees ~100 bytes/vertex per character.
             mesh.UploadMeshData(true);
@@ -285,22 +299,36 @@ namespace KryticalNova.Items.Visuals
             }
             for (int i = partWeights.Count; i < vc; i++) boneWeights.Add(new BoneWeight { weight0 = 1f });
 
-            // Sidekick parts ship as quads split over several submeshes; flatten everything into one triangle list.
+            // Sidekick parts ship as quads split over several submeshes; flatten everything into one triangle list
+            // (a painted part's into its paint's list).
+            var into = triangles;
+            if (GearPaint.TryGetLook(part, out var look))
+            {
+                int p = paints.IndexOf(look);
+                if (p < 0)
+                {
+                    p = paints.Count;
+                    paints.Add(look);
+                    paintParts.Add(part);
+                    if (paintTriangles.Count <= p) paintTriangles.Add(new List<int>(8192));
+                }
+                into = paintTriangles[p];
+            }
             for (int s = 0; s < m.subMeshCount; s++)
             {
                 m.GetIndices(partTris, s);
                 switch (m.GetTopology(s))
                 {
                     case MeshTopology.Triangles:
-                        for (int i = 0; i < partTris.Count; i++) triangles.Add(partTris[i] + baseIndex);
+                        for (int i = 0; i < partTris.Count; i++) into.Add(partTris[i] + baseIndex);
                         break;
                     case MeshTopology.Quads:
                         for (int i = 0; i + 3 < partTris.Count; i += 4)
                         {
                             int a = partTris[i] + baseIndex, b = partTris[i + 1] + baseIndex;
                             int c = partTris[i + 2] + baseIndex, d = partTris[i + 3] + baseIndex;
-                            triangles.Add(a); triangles.Add(b); triangles.Add(c);
-                            triangles.Add(a); triangles.Add(c); triangles.Add(d);
+                            into.Add(a); into.Add(b); into.Add(c);
+                            into.Add(a); into.Add(c); into.Add(d);
                         }
                         break;
                 }

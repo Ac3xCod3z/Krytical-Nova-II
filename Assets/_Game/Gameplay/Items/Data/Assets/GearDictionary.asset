@@ -593,11 +593,11 @@ MonoBehaviour:
     factions: 2
     bodies: 2
     weaponClass: 0
-    look: {fileID: 11400000, guid: 7066931c84ddab44f830065212b6f73b, type: 2}
-    set: Ravager
-    theme: ROBO_Ravager
-    icon: {fileID: 21300000, guid: 2abafceb3d9341647b84a006c51d5d4d, type: 3}
-    displayName: Ravager Plating
+    look: {fileID: 11400000, guid: 9f35c55929dac5d40869463fec872d79, type: 2}
+    set: Scrap Sentinel
+    theme: KRYT_Scrap Sentinel
+    icon: {fileID: 21300000, guid: 7f4e692e8a58e684d84881a123f0455b, type: 3}
+    displayName: Scrap Sentinel Plating
     description: 'Worn on the body: torso, arms, hips and legs.'
   - lineId: 42
     tag: ROBO
@@ -668,11 +668,11 @@ MonoBehaviour:
     factions: 2
     bodies: 2
     weaponClass: 0
-    look: {fileID: 11400000, guid: 72ce6de26266aeb438aebd76d1afc36c, type: 2}
-    set: Ravager
-    theme: ROBO_Ravager
-    icon: {fileID: 21300000, guid: fc2cc904f9f78e144a006d8ae5ff5aa3, type: 3}
-    displayName: Ravager Servos
+    look: {fileID: 11400000, guid: 2ab75b86f79d300409d8bed48181853e, type: 2}
+    set: Scrap Sentinel
+    theme: KRYT_Scrap Sentinel
+    icon: {fileID: 21300000, guid: 69fea0f25b369a449be7840cd9de8b38, type: 3}
+    displayName: Scrap Sentinel Servos
     description: Worn on the hands.
   - lineId: 47
     tag: ROBO
@@ -743,11 +743,11 @@ MonoBehaviour:
     factions: 2
     bodies: 2
     weaponClass: 0
-    look: {fileID: 11400000, guid: 05ff14d587105294ab27f4f08f693e6b, type: 2}
-    set: Ravager
-    theme: ROBO_Ravager
-    icon: {fileID: 21300000, guid: 7f756ae1b1041da4d9632ee99f501c32, type: 3}
-    displayName: Ravager Stabilizers
+    look: {fileID: 11400000, guid: be9cbf5b30c6b1b4d94a16429a284206, type: 2}
+    set: Scrap Sentinel
+    theme: KRYT_Scrap Sentinel
+    icon: {fileID: 21300000, guid: ab4d395f1a0606b4e8e48f9f5f3d1b8b, type: 3}
+    displayName: Scrap Sentinel Stabilizers
     description: Worn on the feet.
   - lineId: 52
     tag: ROBO
@@ -788,11 +788,11 @@ MonoBehaviour:
     factions: 2
     bodies: 2
     weaponClass: 0
-    look: {fileID: 11400000, guid: adde2d52023f20c45b7a5640be78c566, type: 2}
-    set: Ravager
-    theme: ROBO_Ravager
-    icon: {fileID: 21300000, guid: 4e757479f2078b2439d53de5f8e0d16d, type: 3}
-    displayName: Ravager Back Unit
+    look: {fileID: 11400000, guid: 6adeb4202641ca84c9e0e276b5ab68d4, type: 2}
+    set: Scrap Sentinel
+    theme: KRYT_Scrap Sentinel
+    icon: {fileID: 21300000, guid: fa5f08560e963914ab3df0ef86c14734, type: 3}
+    displayName: Scrap Sentinel Back Unit
     description: Worn across the back.
   - lineId: 56
     tag: ROBO
@@ -863,11 +863,11 @@ MonoBehaviour:
     factions: 2
     bodies: 4
     weaponClass: 0
-    look: {fileID: 11400000, guid: b6dfa3f872dfb2142bf5b9b1082fb523, type: 2}
-    set: Deathsworn
-    theme: SKTN_Deathsworn
-    icon: {fileID: 21300000, guid: af948fa416a58ce48a18a48bc038a971, type: 3}
-    displayName: Deathsworn Armor
+    look: {fileID: 11400000, guid: d479659237c3c4946aab7be53c61d4b9, type: 2}
+    set: Hollow Warden
+    theme: KRYT_Hollow Warden
+    icon: {fileID: 21300000, guid: cbcba71d9a00f824889118edb08770b1, type: 3}
+    displayName: Hollow Warden Armor
     description: 'Worn on the body: torso, arms, hips and legs.'
   - lineId: 61
     tag: SKTN
@@ -938,11 +938,11 @@ MonoBehaviour:
     factions: 2
     bodies: 4
     weaponClass: 0
-    look: {fileID: 11400000, guid: aac3a8d81a165e84a86ffcbebf9ee48e, type: 2}
-    set: Deathsworn
-    theme: SKTN_Deathsworn
-    icon: {fileID: 21300000, guid: 746ca9f4d6c97584f9072d5203ed4e54, type: 3}
-    displayName: Deathsworn Gauntlets
+    look: {fileID: 11400000, guid: 5e449da2ea1857f4daed6bb089085510, type: 2}
+    set: Hollow Warden
+    theme: KRYT_Hollow Warden
+    icon: {fileID: 21300000, guid: 3d024425d75618741ab72dd986c7da26, type: 3}
+    displayName: Hollow Warden Gauntlets
     description: Worn on the hands.
   - lineId: 66
     tag: SKTN
@@ -1013,11 +1013,11 @@ MonoBehaviour:
     factions: 2
     bodies: 4
     weaponClass: 0
-    look: {fileID: 11400000, guid: 5ae9ec0a294473646a08c33eaee7567a, type: 2}
-    set: Deathsworn
-    theme: SKTN_Deathsworn
-    icon: {fileID: 21300000, guid: 2af6cf3419da0274bae6f7b6c503e726, type: 3}
-    displayName: Deathsworn Greaves
+    look: {fileID: 11400000, guid: fc54c40dc039eb9479f8f8149bc31f61, type: 2}
+    set: Hollow Warden
+    theme: KRYT_Hollow Warden
+    icon: {fileID: 21300000, guid: 62e61e46db8e4fd47954162bd630f5a0, type: 3}
+    displayName: Hollow Warden Greaves
     description: Worn on the feet.
   - lineId: 71
     tag: SKTN
@@ -1058,11 +1058,11 @@ MonoBehaviour:
     factions: 2
     bodies: 4
     weaponClass: 0
-    look: {fileID: 11400000, guid: 5f746e51e00554544be9242f5f712113, type: 2}
-    set: Deathsworn
-    theme: SKTN_Deathsworn
-    icon: {fileID: 21300000, guid: 5d54e7b0b42140e47a3d2eda2f55c3fc, type: 3}
-    displayName: Deathsworn Shroud
+    look: {fileID: 11400000, guid: 3a739c431ba907e4da025067401897ea, type: 2}
+    set: Hollow Warden
+    theme: KRYT_Hollow Warden
+    icon: {fileID: 21300000, guid: b1159f6a2e36fb247bed3bd1d598ffd6, type: 3}
+    displayName: Hollow Warden Shroud
     description: Worn across the back.
   - lineId: 75
     tag: SKTN
@@ -1898,11 +1898,11 @@ MonoBehaviour:
     factions: 2
     bodies: 7
     weaponClass: 4
-    look: {fileID: 11400000, guid: 5dac2ac50276f8249b00e4eeafcf1260, type: 2}
-    set: 
+    look: {fileID: 11400000, guid: a7813fff6dfb6f043ac153cf9d51aeb5, type: 2}
+    set: Scrap Sentinel
     theme: 
-    icon: {fileID: 0}
-    displayName: Rendering Cleaver
+    icon: {fileID: 21300000, guid: 591a93ea101f56847934df9b20eb8afe, type: 3}
+    displayName: Scrap Sentinel Harvester
     description: 'Harvester: the offense weapon of the Null.'
   - lineId: 133
     tag: Harvester
@@ -1973,11 +1973,11 @@ MonoBehaviour:
     factions: 2
     bodies: 7
     weaponClass: 5
-    look: {fileID: 11400000, guid: db31732a69a854d4b912e4c3d9077961, type: 2}
-    set: 
+    look: {fileID: 11400000, guid: eae1671679ba1d74f979f361c58168fa, type: 2}
+    set: Scrap Sentinel
     theme: 
-    icon: {fileID: 0}
-    displayName: Servo Dagger
+    icon: {fileID: 21300000, guid: a47f9308899d24141b4a0f0c7c6ad852, type: 3}
+    displayName: Scrap Sentinel Servo Claws
     description: 'Servo Claws: the defense weapon of the Null.'
   - lineId: 138
     tag: ServoClaws
@@ -2048,11 +2048,11 @@ MonoBehaviour:
     factions: 2
     bodies: 7
     weaponClass: 6
-    look: {fileID: 11400000, guid: 24bf6d32991bb4b499709a2fe23f6bc3, type: 2}
-    set: 
+    look: {fileID: 11400000, guid: 8efefcd4503811045b57290a9c01634c, type: 2}
+    set: Scrap Sentinel
     theme: 
-    icon: {fileID: 0}
-    displayName: Plasma Caster
+    icon: {fileID: 21300000, guid: baa0a18f8a5aa584995343df045fb348, type: 3}
+    displayName: Scrap Sentinel Arc Caster
     description: 'Arc Caster: the ranged weapon of the Null.'
   - lineId: 143
     tag: ArcCaster
@@ -2679,10 +2679,10 @@ MonoBehaviour:
     bodies: 7
     weaponClass: 0
     look: {fileID: 11400000, guid: 7257173e08304ed449a5f3813fbb2108, type: 2}
-    set: Ravager
+    set: Scrap Sentinel
     theme: 
-    icon: {fileID: 0}
-    displayName: Ravager Coupling
+    icon: {fileID: 21300000, guid: 5cc592b72a5a5c24599fd81ac29a8738, type: 3}
+    displayName: Scrap Sentinel Coupling
     description: Worn on a finger.
   - lineId: 185
     tag: ROBO
@@ -2694,10 +2694,10 @@ MonoBehaviour:
     bodies: 7
     weaponClass: 0
     look: {fileID: 11400000, guid: b4d2abaa3e258274a9682ffe18e4b96b, type: 2}
-    set: Ravager
+    set: Scrap Sentinel
     theme: 
-    icon: {fileID: 0}
-    displayName: Ravager Capacitor
+    icon: {fileID: 21300000, guid: 42f6c852c64cbe843a5ceddbd49e9786, type: 3}
+    displayName: Scrap Sentinel Capacitor
     description: Worn around the neck.
   - lineId: 186
     tag: ROBO
@@ -2829,10 +2829,10 @@ MonoBehaviour:
     bodies: 7
     weaponClass: 0
     look: {fileID: 11400000, guid: 7257173e08304ed449a5f3813fbb2108, type: 2}
-    set: Deathsworn
+    set: Hollow Warden
     theme: 
-    icon: {fileID: 0}
-    displayName: Deathsworn Knucklebone
+    icon: {fileID: 21300000, guid: 7e6673ee6640bd44586007b53ca076a4, type: 3}
+    displayName: Hollow Warden Ring
     description: Worn on a finger.
   - lineId: 195
     tag: SKTN
@@ -2844,10 +2844,10 @@ MonoBehaviour:
     bodies: 7
     weaponClass: 0
     look: {fileID: 11400000, guid: b4d2abaa3e258274a9682ffe18e4b96b, type: 2}
-    set: Deathsworn
+    set: Hollow Warden
     theme: 
-    icon: {fileID: 0}
-    displayName: Deathsworn Phylactery
+    icon: {fileID: 21300000, guid: 885b7e74b8b02b24aa5515ee683eb4b0, type: 3}
+    displayName: Hollow Warden Amulet
     description: Worn around the neck.
   - lineId: 196
     tag: SKTN
@@ -5719,50 +5719,50 @@ MonoBehaviour:
     lineId: 40
     weaponClass: 0
   - itemId: 10640
-    name: Ravager Plating
+    name: Scrap Sentinel Plating
     slot: 2
     rarity: 2
     factions: 2
     bodies: 2
     pack: SCFI_ROBO
-    variant: 6
-    partIds: 9701980199019a019b019c019d019e01a001a101t
+    variant: 1
+    partIds: 6b046c046d04770478047004710472047504t
     itemLevel: 45
     lineId: 41
     weaponClass: 0
   - itemId: 10641
-    name: Ravager Plating
+    name: Scrap Sentinel Plating
     slot: 2
     rarity: 2
     factions: 2
     bodies: 2
     pack: SCFI_ROBO
-    variant: 6
-    partIds: 9701980199019a019b019c019d019e01a001a101t
+    variant: 1
+    partIds: 6b046c046d04770478047004710472047504t
     itemLevel: 55
     lineId: 41
     weaponClass: 0
   - itemId: 10642
-    name: Ravager Plating
+    name: Scrap Sentinel Plating
     slot: 2
     rarity: 2
     factions: 2
     bodies: 2
     pack: SCFI_ROBO
-    variant: 6
-    partIds: 9701980199019a019b019c019d019e01a001a101t
+    variant: 1
+    partIds: 6b046c046d04770478047004710472047504t
     itemLevel: 65
     lineId: 41
     weaponClass: 0
   - itemId: 10643
-    name: Ravager Plating
+    name: Scrap Sentinel Plating
     slot: 2
     rarity: 2
     factions: 2
     bodies: 2
     pack: SCFI_ROBO
-    variant: 6
-    partIds: 9701980199019a019b019c019d019e01a001a101t
+    variant: 1
+    partIds: 6b046c046d04770478047004710472047504t
     itemLevel: 75
     lineId: 41
     weaponClass: 0
@@ -6055,50 +6055,50 @@ MonoBehaviour:
     lineId: 45
     weaponClass: 0
   - itemId: 10720
-    name: Ravager Servos
+    name: Scrap Sentinel Servos
     slot: 3
     rarity: 2
     factions: 2
     bodies: 2
     pack: SCFI_ROBO
-    variant: 3
-    partIds: 67016801t
+    variant: 1
+    partIds: 6e046f04t
     itemLevel: 45
     lineId: 46
     weaponClass: 0
   - itemId: 10721
-    name: Ravager Servos
+    name: Scrap Sentinel Servos
     slot: 3
     rarity: 2
     factions: 2
     bodies: 2
     pack: SCFI_ROBO
-    variant: 3
-    partIds: 67016801t
+    variant: 1
+    partIds: 6e046f04t
     itemLevel: 55
     lineId: 46
     weaponClass: 0
   - itemId: 10722
-    name: Ravager Servos
+    name: Scrap Sentinel Servos
     slot: 3
     rarity: 2
     factions: 2
     bodies: 2
     pack: SCFI_ROBO
-    variant: 3
-    partIds: 67016801t
+    variant: 1
+    partIds: 6e046f04t
     itemLevel: 65
     lineId: 46
     weaponClass: 0
   - itemId: 10723
-    name: Ravager Servos
+    name: Scrap Sentinel Servos
     slot: 3
     rarity: 2
     factions: 2
     bodies: 2
     pack: SCFI_ROBO
-    variant: 3
-    partIds: 67016801t
+    variant: 1
+    partIds: 6e046f04t
     itemLevel: 75
     lineId: 46
     weaponClass: 0
@@ -6391,50 +6391,50 @@ MonoBehaviour:
     lineId: 50
     weaponClass: 0
   - itemId: 10800
-    name: Ravager Stabilizers
+    name: Scrap Sentinel Stabilizers
     slot: 4
     rarity: 2
     factions: 2
     bodies: 2
     pack: SCFI_ROBO
-    variant: 3
-    partIds: 6c016d01t
+    variant: 1
+    partIds: 73047404t
     itemLevel: 45
     lineId: 51
     weaponClass: 0
   - itemId: 10801
-    name: Ravager Stabilizers
+    name: Scrap Sentinel Stabilizers
     slot: 4
     rarity: 2
     factions: 2
     bodies: 2
     pack: SCFI_ROBO
-    variant: 3
-    partIds: 6c016d01t
+    variant: 1
+    partIds: 73047404t
     itemLevel: 55
     lineId: 51
     weaponClass: 0
   - itemId: 10802
-    name: Ravager Stabilizers
+    name: Scrap Sentinel Stabilizers
     slot: 4
     rarity: 2
     factions: 2
     bodies: 2
     pack: SCFI_ROBO
-    variant: 3
-    partIds: 6c016d01t
+    variant: 1
+    partIds: 73047404t
     itemLevel: 65
     lineId: 51
     weaponClass: 0
   - itemId: 10803
-    name: Ravager Stabilizers
+    name: Scrap Sentinel Stabilizers
     slot: 4
     rarity: 2
     factions: 2
     bodies: 2
     pack: SCFI_ROBO
-    variant: 3
-    partIds: 6c016d01t
+    variant: 1
+    partIds: 73047404t
     itemLevel: 75
     lineId: 51
     weaponClass: 0
@@ -6547,50 +6547,50 @@ MonoBehaviour:
     lineId: 53
     weaponClass: 0
   - itemId: 10864
-    name: Ravager Back Unit
+    name: Scrap Sentinel Back Unit
     slot: 7
     rarity: 2
     factions: 2
     bodies: 2
     pack: SCFI_ROBO
-    variant: 4
-    partIds: 8101t
+    variant: 1
+    partIds: 7604t
     itemLevel: 45
     lineId: 55
     weaponClass: 0
   - itemId: 10865
-    name: Ravager Back Unit
+    name: Scrap Sentinel Back Unit
     slot: 7
     rarity: 2
     factions: 2
     bodies: 2
     pack: SCFI_ROBO
-    variant: 4
-    partIds: 8101t
+    variant: 1
+    partIds: 7604t
     itemLevel: 55
     lineId: 55
     weaponClass: 0
   - itemId: 10866
-    name: Ravager Back Unit
+    name: Scrap Sentinel Back Unit
     slot: 7
     rarity: 2
     factions: 2
     bodies: 2
     pack: SCFI_ROBO
-    variant: 4
-    partIds: 8101t
+    variant: 1
+    partIds: 7604t
     itemLevel: 65
     lineId: 55
     weaponClass: 0
   - itemId: 10867
-    name: Ravager Back Unit
+    name: Scrap Sentinel Back Unit
     slot: 7
     rarity: 2
     factions: 2
     bodies: 2
     pack: SCFI_ROBO
-    variant: 4
-    partIds: 8101t
+    variant: 1
+    partIds: 7604t
     itemLevel: 75
     lineId: 55
     weaponClass: 0
@@ -6883,50 +6883,50 @@ MonoBehaviour:
     lineId: 59
     weaponClass: 0
   - itemId: 10944
-    name: Deathsworn Armor
+    name: Hollow Warden Armor
     slot: 2
     rarity: 2
     factions: 2
     bodies: 4
     pack: FANT_SKTN
-    variant: 4
-    partIds: ae00af00b000b100b200b300b400b500b800b900ba00bb00bc00bd00b600t
+    variant: 1
+    partIds: 79047a047b047e048104t
     itemLevel: 45
     lineId: 60
     weaponClass: 0
   - itemId: 10945
-    name: Deathsworn Armor
+    name: Hollow Warden Armor
     slot: 2
     rarity: 2
     factions: 2
     bodies: 4
     pack: FANT_SKTN
-    variant: 4
-    partIds: ae00af00b000b100b200b300b400b500b800b900ba00bb00bc00bd00b600t
+    variant: 1
+    partIds: 79047a047b047e048104t
     itemLevel: 55
     lineId: 60
     weaponClass: 0
   - itemId: 10946
-    name: Deathsworn Armor
+    name: Hollow Warden Armor
     slot: 2
     rarity: 2
     factions: 2
     bodies: 4
     pack: FANT_SKTN
-    variant: 4
-    partIds: ae00af00b000b100b200b300b400b500b800b900ba00bb00bc00bd00b600t
+    variant: 1
+    partIds: 79047a047b047e048104t
     itemLevel: 65
     lineId: 60
     weaponClass: 0
   - itemId: 10947
-    name: Deathsworn Armor
+    name: Hollow Warden Armor
     slot: 2
     rarity: 2
     factions: 2
     bodies: 4
     pack: FANT_SKTN
-    variant: 4
-    partIds: ae00af00b000b100b200b300b400b500b800b900ba00bb00bc00bd00b600t
+    variant: 1
+    partIds: 79047a047b047e048104t
     itemLevel: 75
     lineId: 60
     weaponClass: 0
@@ -7219,50 +7219,50 @@ MonoBehaviour:
     lineId: 64
     weaponClass: 0
   - itemId: 11024
-    name: Deathsworn Gauntlets
+    name: Hollow Warden Gauntlets
     slot: 3
     rarity: 2
     factions: 2
     bodies: 4
     pack: FANT_SKTN
-    variant: 2
-    partIds: 88008900t
+    variant: 1
+    partIds: 7c047d04t
     itemLevel: 45
     lineId: 65
     weaponClass: 0
   - itemId: 11025
-    name: Deathsworn Gauntlets
+    name: Hollow Warden Gauntlets
     slot: 3
     rarity: 2
     factions: 2
     bodies: 4
     pack: FANT_SKTN
-    variant: 2
-    partIds: 88008900t
+    variant: 1
+    partIds: 7c047d04t
     itemLevel: 55
     lineId: 65
     weaponClass: 0
   - itemId: 11026
-    name: Deathsworn Gauntlets
+    name: Hollow Warden Gauntlets
     slot: 3
     rarity: 2
     factions: 2
     bodies: 4
     pack: FANT_SKTN
-    variant: 2
-    partIds: 88008900t
+    variant: 1
+    partIds: 7c047d04t
     itemLevel: 65
     lineId: 65
     weaponClass: 0
   - itemId: 11027
-    name: Deathsworn Gauntlets
+    name: Hollow Warden Gauntlets
     slot: 3
     rarity: 2
     factions: 2
     bodies: 4
     pack: FANT_SKTN
-    variant: 2
-    partIds: 88008900t
+    variant: 1
+    partIds: 7c047d04t
     itemLevel: 75
     lineId: 65
     weaponClass: 0
@@ -7555,50 +7555,50 @@ MonoBehaviour:
     lineId: 69
     weaponClass: 0
   - itemId: 11104
-    name: Deathsworn Greaves
+    name: Hollow Warden Greaves
     slot: 4
     rarity: 2
     factions: 2
     bodies: 4
     pack: FANT_SKTN
-    variant: 2
-    partIds: 8d008e00t
+    variant: 1
+    partIds: 7f048004t
     itemLevel: 45
     lineId: 70
     weaponClass: 0
   - itemId: 11105
-    name: Deathsworn Greaves
+    name: Hollow Warden Greaves
     slot: 4
     rarity: 2
     factions: 2
     bodies: 4
     pack: FANT_SKTN
-    variant: 2
-    partIds: 8d008e00t
+    variant: 1
+    partIds: 7f048004t
     itemLevel: 55
     lineId: 70
     weaponClass: 0
   - itemId: 11106
-    name: Deathsworn Greaves
+    name: Hollow Warden Greaves
     slot: 4
     rarity: 2
     factions: 2
     bodies: 4
     pack: FANT_SKTN
-    variant: 2
-    partIds: 8d008e00t
+    variant: 1
+    partIds: 7f048004t
     itemLevel: 65
     lineId: 70
     weaponClass: 0
   - itemId: 11107
-    name: Deathsworn Greaves
+    name: Hollow Warden Greaves
     slot: 4
     rarity: 2
     factions: 2
     bodies: 4
     pack: FANT_SKTN
-    variant: 2
-    partIds: 8d008e00t
+    variant: 1
+    partIds: 7f048004t
     itemLevel: 75
     lineId: 70
     weaponClass: 0
@@ -7711,50 +7711,50 @@ MonoBehaviour:
     lineId: 72
     weaponClass: 0
   - itemId: 11168
-    name: Deathsworn Shroud
+    name: Hollow Warden Shroud
     slot: 7
     rarity: 2
     factions: 2
     bodies: 4
     pack: FANT_SKTN
-    variant: 4
-    partIds: b700t
+    variant: 1
+    partIds: 8204t
     itemLevel: 45
     lineId: 74
     weaponClass: 0
   - itemId: 11169
-    name: Deathsworn Shroud
+    name: Hollow Warden Shroud
     slot: 7
     rarity: 2
     factions: 2
     bodies: 4
     pack: FANT_SKTN
-    variant: 4
-    partIds: b700t
+    variant: 1
+    partIds: 8204t
     itemLevel: 55
     lineId: 74
     weaponClass: 0
   - itemId: 11170
-    name: Deathsworn Shroud
+    name: Hollow Warden Shroud
     slot: 7
     rarity: 2
     factions: 2
     bodies: 4
     pack: FANT_SKTN
-    variant: 4
-    partIds: b700t
+    variant: 1
+    partIds: 8204t
     itemLevel: 65
     lineId: 74
     weaponClass: 0
   - itemId: 11171
-    name: Deathsworn Shroud
+    name: Hollow Warden Shroud
     slot: 7
     rarity: 2
     factions: 2
     bodies: 4
     pack: FANT_SKTN
-    variant: 4
-    partIds: b700t
+    variant: 1
+    partIds: 8204t
     itemLevel: 75
     lineId: 74
     weaponClass: 0
@@ -11383,7 +11383,7 @@ MonoBehaviour:
     lineId: 131
     weaponClass: 4
   - itemId: 12096
-    name: Rendering Cleaver
+    name: Scrap Sentinel Harvester
     slot: 1
     rarity: 2
     factions: 2
@@ -11395,7 +11395,7 @@ MonoBehaviour:
     lineId: 132
     weaponClass: 4
   - itemId: 12097
-    name: Rendering Cleaver
+    name: Scrap Sentinel Harvester
     slot: 1
     rarity: 2
     factions: 2
@@ -11407,7 +11407,7 @@ MonoBehaviour:
     lineId: 132
     weaponClass: 4
   - itemId: 12098
-    name: Rendering Cleaver
+    name: Scrap Sentinel Harvester
     slot: 1
     rarity: 2
     factions: 2
@@ -11419,7 +11419,7 @@ MonoBehaviour:
     lineId: 132
     weaponClass: 4
   - itemId: 12099
-    name: Rendering Cleaver
+    name: Scrap Sentinel Harvester
     slot: 1
     rarity: 2
     factions: 2
@@ -11719,7 +11719,7 @@ MonoBehaviour:
     lineId: 136
     weaponClass: 5
   - itemId: 12176
-    name: Servo Dagger
+    name: Scrap Sentinel Servo Claws
     slot: 1
     rarity: 2
     factions: 2
@@ -11731,7 +11731,7 @@ MonoBehaviour:
     lineId: 137
     weaponClass: 5
   - itemId: 12177
-    name: Servo Dagger
+    name: Scrap Sentinel Servo Claws
     slot: 1
     rarity: 2
     factions: 2
@@ -11743,7 +11743,7 @@ MonoBehaviour:
     lineId: 137
     weaponClass: 5
   - itemId: 12178
-    name: Servo Dagger
+    name: Scrap Sentinel Servo Claws
     slot: 1
     rarity: 2
     factions: 2
@@ -11755,7 +11755,7 @@ MonoBehaviour:
     lineId: 137
     weaponClass: 5
   - itemId: 12179
-    name: Servo Dagger
+    name: Scrap Sentinel Servo Claws
     slot: 1
     rarity: 2
     factions: 2
@@ -12055,7 +12055,7 @@ MonoBehaviour:
     lineId: 141
     weaponClass: 6
   - itemId: 12256
-    name: Plasma Caster
+    name: Scrap Sentinel Arc Caster
     slot: 1
     rarity: 2
     factions: 2
@@ -12067,7 +12067,7 @@ MonoBehaviour:
     lineId: 142
     weaponClass: 6
   - itemId: 12257
-    name: Plasma Caster
+    name: Scrap Sentinel Arc Caster
     slot: 1
     rarity: 2
     factions: 2
@@ -12079,7 +12079,7 @@ MonoBehaviour:
     lineId: 142
     weaponClass: 6
   - itemId: 12258
-    name: Plasma Caster
+    name: Scrap Sentinel Arc Caster
     slot: 1
     rarity: 2
     factions: 2
@@ -12091,7 +12091,7 @@ MonoBehaviour:
     lineId: 142
     weaponClass: 6
   - itemId: 12259
-    name: Plasma Caster
+    name: Scrap Sentinel Arc Caster
     slot: 1
     rarity: 2
     factions: 2
@@ -14923,7 +14923,7 @@ MonoBehaviour:
     lineId: 183
     weaponClass: 0
   - itemId: 12928
-    name: Ravager Coupling
+    name: Scrap Sentinel Coupling
     slot: 5
     rarity: 2
     factions: 2
@@ -14935,7 +14935,7 @@ MonoBehaviour:
     lineId: 184
     weaponClass: 0
   - itemId: 12929
-    name: Ravager Coupling
+    name: Scrap Sentinel Coupling
     slot: 5
     rarity: 2
     factions: 2
@@ -14947,7 +14947,7 @@ MonoBehaviour:
     lineId: 184
     weaponClass: 0
   - itemId: 12930
-    name: Ravager Coupling
+    name: Scrap Sentinel Coupling
     slot: 5
     rarity: 2
     factions: 2
@@ -14959,7 +14959,7 @@ MonoBehaviour:
     lineId: 184
     weaponClass: 0
   - itemId: 12931
-    name: Ravager Coupling
+    name: Scrap Sentinel Coupling
     slot: 5
     rarity: 2
     factions: 2
@@ -14971,7 +14971,7 @@ MonoBehaviour:
     lineId: 184
     weaponClass: 0
   - itemId: 12944
-    name: Ravager Capacitor
+    name: Scrap Sentinel Capacitor
     slot: 6
     rarity: 2
     factions: 2
@@ -14983,7 +14983,7 @@ MonoBehaviour:
     lineId: 185
     weaponClass: 0
   - itemId: 12945
-    name: Ravager Capacitor
+    name: Scrap Sentinel Capacitor
     slot: 6
     rarity: 2
     factions: 2
@@ -14995,7 +14995,7 @@ MonoBehaviour:
     lineId: 185
     weaponClass: 0
   - itemId: 12946
-    name: Ravager Capacitor
+    name: Scrap Sentinel Capacitor
     slot: 6
     rarity: 2
     factions: 2
@@ -15007,7 +15007,7 @@ MonoBehaviour:
     lineId: 185
     weaponClass: 0
   - itemId: 12947
-    name: Ravager Capacitor
+    name: Scrap Sentinel Capacitor
     slot: 6
     rarity: 2
     factions: 2
@@ -15595,7 +15595,7 @@ MonoBehaviour:
     lineId: 193
     weaponClass: 0
   - itemId: 13088
-    name: Deathsworn Knucklebone
+    name: Hollow Warden Ring
     slot: 5
     rarity: 2
     factions: 2
@@ -15607,7 +15607,7 @@ MonoBehaviour:
     lineId: 194
     weaponClass: 0
   - itemId: 13089
-    name: Deathsworn Knucklebone
+    name: Hollow Warden Ring
     slot: 5
     rarity: 2
     factions: 2
@@ -15619,7 +15619,7 @@ MonoBehaviour:
     lineId: 194
     weaponClass: 0
   - itemId: 13090
-    name: Deathsworn Knucklebone
+    name: Hollow Warden Ring
     slot: 5
     rarity: 2
     factions: 2
@@ -15631,7 +15631,7 @@ MonoBehaviour:
     lineId: 194
     weaponClass: 0
   - itemId: 13091
-    name: Deathsworn Knucklebone
+    name: Hollow Warden Ring
     slot: 5
     rarity: 2
     factions: 2
@@ -15643,7 +15643,7 @@ MonoBehaviour:
     lineId: 194
     weaponClass: 0
   - itemId: 13104
-    name: Deathsworn Phylactery
+    name: Hollow Warden Amulet
     slot: 6
     rarity: 2
     factions: 2
@@ -15655,7 +15655,7 @@ MonoBehaviour:
     lineId: 195
     weaponClass: 0
   - itemId: 13105
-    name: Deathsworn Phylactery
+    name: Hollow Warden Amulet
     slot: 6
     rarity: 2
     factions: 2
@@ -15667,7 +15667,7 @@ MonoBehaviour:
     lineId: 195
     weaponClass: 0
   - itemId: 13106
-    name: Deathsworn Phylactery
+    name: Hollow Warden Amulet
     slot: 6
     rarity: 2
     factions: 2
@@ -15679,7 +15679,7 @@ MonoBehaviour:
     lineId: 195
     weaponClass: 0
   - itemId: 13107
-    name: Deathsworn Phylactery
+    name: Hollow Warden Amulet
     slot: 6
     rarity: 2
     factions: 2

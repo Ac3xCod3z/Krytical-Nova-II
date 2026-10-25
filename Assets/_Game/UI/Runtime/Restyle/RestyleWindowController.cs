@@ -209,6 +209,9 @@ namespace KryticalNova.UI
 
         // ------------------------------------------------------------------ what can be changed
 
+        // Set by a row whose change adds or removes other rows (Heterochromia and the right eye's colour).
+        private bool rebuildRows;
+
         /// <summary>One row for everything the service owns that this lineage has a choice in.</summary>
         private void BuildRows()
         {
@@ -232,25 +235,31 @@ namespace KryticalNova.UI
                     by => RecipeEdit.Step(ref draft, catalog, setup, picked, by));
             }
 
+            // Heterochromia (owner, 24 Oct 2026): off, one eye colour for both eyes; on, a left and a right eye colour,
+            // each picked on its own. The left eye keeps the Eyes channel, the right takes its own channel.
+            bool eyesOffered = RestyleRules.OwnsChannel(service, CharacterColorChannels.Eyes) && setup.OffersChannel(CharacterColorChannels.Eyes);
+            bool twoEyes = eyesOffered && RecipeEdit.HasHeterochromia(draft);
             foreach (byte id in setup.channels)
             {
                 if (!RestyleRules.OwnsChannel(service, id) || !database.TryGetChannel(id, out CharacterCreationDatabase.ColorChannel channel)) continue;
                 if (channel.swatches == null || channel.swatches.Length == 0) continue;
-                CharacterCreationDatabase.ColorChannel picked = channel;
-                Stepper(string.IsNullOrEmpty(channel.displayName) ? "Colour" : channel.displayName + " colour",
-                    () =>
-                    {
-                        int index = RecipeEdit.SwatchIndex(draft, picked);
-                        return index < 0 ? "Own" : $"{index + 1} / {picked.swatches.Length}";
-                    },
-                    by =>
-                    {
-                        int count = picked.swatches.Length;
-                        int index = ((Mathf.Max(RecipeEdit.SwatchIndex(draft, picked), by > 0 ? -1 : 0) + by) % count + count) % count;
-                        RecipeEdit.SetColor(ref draft, picked.id, picked.swatches[index]);
-                    },
-                    () => RecipeEdit.TryGetColor(draft, picked.id, out Color32 colour) ? (Color?)(Color)colour : null);
+                string label = twoEyes && id == CharacterColorChannels.Eyes ? "Left eye"
+                    : string.IsNullOrEmpty(channel.displayName) ? null : channel.displayName;
+                ColourStepper(label == null ? "Colour" : label + " colour", channel);
+                if (twoEyes && id == CharacterColorChannels.Eyes && database.TryGetChannel(CharacterColorChannels.EyeRight, out var right)
+                    && right.swatches != null && right.swatches.Length > 0)
+                    ColourStepper("Right eye colour", right);
             }
+            if (eyesOffered)
+                Stepper("Heterochromia", () => RecipeEdit.HasHeterochromia(draft) ? "On" : "Off", _ =>
+                {
+                    Color32 fallback = RecipeEdit.TryGetColor(current, CharacterColorChannels.Eyes, out var eyes) ? eyes : new Color32(255, 255, 255, 255);
+                    RecipeEdit.SetHeterochromia(ref draft, !RecipeEdit.HasHeterochromia(draft), fallback);
+                    rebuildRows = true; // the right eye's row comes or goes
+                });
+            // Glowing Eyes for every lineage the Reshaper serves (a skeleton's and a robot's eyes glow too).
+            if (RestyleRules.OwnsChannel(service, CharacterColorChannels.Eyes))
+                Stepper("Glowing eyes", () => draft.eyeGlow ? "On" : "Off", _ => draft.eyeGlow = !draft.eyeGlow);
 
             if (RestyleRules.OwnsSkin(service))
             {
@@ -287,6 +296,25 @@ namespace KryticalNova.UI
                 rowsHost.Add(none);
             }
             ShowAction();
+        }
+
+        /// <summary>A colour row: steps through the channel's swatches, showing the colour beside the number.</summary>
+        private void ColourStepper(string label, CharacterCreationDatabase.ColorChannel channel)
+        {
+            CharacterCreationDatabase.ColorChannel picked = channel;
+            Stepper(label,
+                () =>
+                {
+                    int index = RecipeEdit.SwatchIndex(draft, picked);
+                    return index < 0 ? "Own" : $"{index + 1} / {picked.swatches.Length}";
+                },
+                by =>
+                {
+                    int count = picked.swatches.Length;
+                    int index = ((Mathf.Max(RecipeEdit.SwatchIndex(draft, picked), by > 0 ? -1 : 0) + by) % count + count) % count;
+                    RecipeEdit.SetColor(ref draft, picked.id, picked.swatches[index]);
+                },
+                () => RecipeEdit.TryGetColor(draft, picked.id, out Color32 colour) ? (Color?)(Color)colour : null);
         }
 
         private readonly Dictionary<(byte, string), bool> bodyKeys = new Dictionary<(byte, string), bool>();
@@ -357,6 +385,7 @@ namespace KryticalNova.UI
                     Show();
                     ShowOnDoll();
                     ShowAction();
+                    if (rebuildRows) { rebuildRows = false; rowsHost.schedule.Execute(BuildRows); } // rows that come or go
                 }) { text = text };
                 button.AddToClassList("restyle-step");
                 return button;

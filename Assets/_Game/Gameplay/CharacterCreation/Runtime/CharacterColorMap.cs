@@ -31,13 +31,37 @@ namespace KryticalNova.CharacterCreation
                     foreach (var cell in cells) SetCell(pixels, cell.u, cell.v, cell.color);
             }
 
-            for (int i = 0; i < recipe.ColorCount; i++)
+            // the right eye's own colour last, whatever order the picks were made in, so it is never painted over by Eyes
+            for (int pass = 0; pass < 2; pass++)
+                for (int i = 0; i < recipe.ColorCount; i++)
+                {
+                    var pick = recipe.colors[i];
+                    if ((pick.channel == CharacterColorChannels.EyeRight) != (pass == 1)) continue;
+                    if (!database.TryGetChannel(pick.channel, out var channel) || channel.targets == null) continue;
+                    foreach (var target in channel.targets) SetCell(pixels, target.u, target.v, Shade(pick.color, target.shade));
+                }
+        }
+
+        /// <summary>
+        /// The glowing eyes' emission map (owner, 24 Oct 2026): black everywhere but the two eye-colour cells, which
+        /// glow in the colour <paramref name="colours"/> (the filled colour map) gives them, <paramref name="strength"/>
+        /// times over so bloom picks them up. Same 32x32 layout as the colour map.
+        /// </summary>
+        public static void FillEyeGlow(Color32[] colours, Color[] emission, float strength)
+        {
+            for (int i = 0; i < emission.Length; i++) emission[i] = Color.black;
+            foreach (var (u, v) in EyeColourCells)
             {
-                var pick = recipe.colors[i];
-                if (!database.TryGetChannel(pick.channel, out var channel) || channel.targets == null) continue;
-                foreach (var target in channel.targets) SetCell(pixels, target.u, target.v, Shade(pick.color, target.shade));
+                int row = v * 2 * Size + u * 2;
+                Color c = (Color)colours[row] * strength;
+                c.a = 1f;
+                emission[row] = emission[row + 1] = emission[row + Size] = emission[row + Size + 1] = c;
             }
         }
+
+        /// <summary>Sidekick's "Eye Color Left" and "Eye Color Right" cells: the iris of every lineage's eyes.</summary>
+        // and (8,2), the whole eye of a skeleton's eye parts and a robot's eyes in its head (read from the parts, 24 Oct 2026)
+        private static readonly (int u, int v)[] EyeColourCells = { (4, 2), (5, 2), (8, 2) };
 
         /// <summary>
         /// Paints a worn piece's set colours over the map: only the cells that piece's own meshes use, so skin, hair

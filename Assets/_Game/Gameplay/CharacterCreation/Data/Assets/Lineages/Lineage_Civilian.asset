@@ -87,7 +87,7 @@ MonoBehaviour:
     presets:
     - name: Civilian 01
       recipe:
-        version: 1
+        version: 2
         faction: 1
         lineage: 1
         bodyType: 0
@@ -109,9 +109,14 @@ MonoBehaviour:
         eyeliner: 0
         grime: 0
         weaponClass: 0
+        bust: 0
+        butt: 0
+        defined: 0
+        height: 50
+        eyeGlow: 0
     - name: Civilian 02
       recipe:
-        version: 1
+        version: 2
         faction: 1
         lineage: 1
         bodyType: 0
@@ -133,9 +138,14 @@ MonoBehaviour:
         eyeliner: 0
         grime: 0
         weaponClass: 0
+        bust: 0
+        butt: 0
+        defined: 0
+        height: 50
+        eyeGlow: 0
     - name: Civilian 03
       recipe:
-        version: 1
+        version: 2
         faction: 1
         lineage: 1
         bodyType: 0
@@ -157,9 +167,14 @@ MonoBehaviour:
         eyeliner: 0
         grime: 0
         weaponClass: 0
+        bust: 0
+        butt: 0
+        defined: 0
+        height: 50
+        eyeGlow: 0
     - name: Civilian 04
       recipe:
-        version: 1
+        version: 2
         faction: 1
         lineage: 1
         bodyType: 0
@@ -181,9 +196,14 @@ MonoBehaviour:
         eyeliner: 0
         grime: 0
         weaponClass: 0
+        bust: 0
+        butt: 0
+        defined: 0
+        height: 50
+        eyeGlow: 0
     - name: Civilian 05
       recipe:
-        version: 1
+        version: 2
         faction: 1
         lineage: 1
         bodyType: 0
@@ -205,9 +225,14 @@ MonoBehaviour:
         eyeliner: 0
         grime: 0
         weaponClass: 0
+        bust: 0
+        butt: 0
+        defined: 0
+        height: 50
+        eyeGlow: 0
     - name: Civilian 06
       recipe:
-        version: 1
+        version: 2
         faction: 1
         lineage: 1
         bodyType: 0
@@ -229,6 +254,11 @@ MonoBehaviour:
         eyeliner: 0
         grime: 0
         weaponClass: 0
+        bust: 0
+        butt: 0
+        defined: 0
+        height: 50
+        eyeGlow: 0
     skinTones:
     - name: Pale White
       swatch:
@@ -1188,7 +1218,7 @@ MonoBehaviour:
     presets:
     - name: Civilian 01
       recipe:
-        version: 1
+        version: 2
         faction: 1
         lineage: 1
         bodyType: 1
@@ -1210,9 +1240,14 @@ MonoBehaviour:
         eyeliner: 0
         grime: 0
         weaponClass: 0
+        bust: 0
+        butt: 0
+        defined: 0
+        height: 50
+        eyeGlow: 0
     - name: Civilian 02
       recipe:
-        version: 1
+        version: 2
         faction: 1
         lineage: 1
         bodyType: 1
@@ -1234,9 +1269,14 @@ MonoBehaviour:
         eyeliner: 0
         grime: 0
         weaponClass: 0
+        bust: 0
+        butt: 0
+        defined: 0
+        height: 50
+        eyeGlow: 0
     - name: Civilian 03
       recipe:
-        version: 1
+        version: 2
         faction: 1
         lineage: 1
         bodyType: 1
@@ -1258,9 +1298,14 @@ MonoBehaviour:
         eyeliner: 0
         grime: 0
         weaponClass: 0
+        bust: 0
+        butt: 0
+        defined: 0
+        height: 50
+        eyeGlow: 0
     - name: Civilian 04
       recipe:
-        version: 1
+        version: 2
         faction: 1
         lineage: 1
         bodyType: 1
@@ -1282,9 +1327,14 @@ MonoBehaviour:
         eyeliner: 0
         grime: 0
         weaponClass: 0
+        bust: 0
+        butt: 0
+        defined: 0
+        height: 50
+        eyeGlow: 0
     - name: Civilian 05
       recipe:
-        version: 1
+        version: 2
         faction: 1
         lineage: 1
         bodyType: 1
@@ -1306,9 +1356,14 @@ MonoBehaviour:
         eyeliner: 0
         grime: 0
         weaponClass: 0
+        bust: 0
+        butt: 0
+        defined: 0
+        height: 50
+        eyeGlow: 0
     - name: Civilian 06
       recipe:
-        version: 1
+        version: 2
         faction: 1
         lineage: 1
         bodyType: 1
@@ -1330,6 +1385,11 @@ MonoBehaviour:
         eyeliner: 0
         grime: 0
         weaponClass: 0
+        bust: 0
+        butt: 0
+        defined: 0
+        height: 50
+        eyeGlow: 0
     skinTones:
     - name: Pale White
       swatch:

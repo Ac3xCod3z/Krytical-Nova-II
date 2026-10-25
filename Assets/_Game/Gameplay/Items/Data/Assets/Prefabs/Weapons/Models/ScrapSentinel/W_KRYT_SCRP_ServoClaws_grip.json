@@ -1,0 +1,35 @@
+{
+ "weapon": "W_KRYT_SCRP_ServoClaws",
+ "kind": "sword",
+ "source": "G:/My Drive/Krytical Nova Armors/Rares lv.45-75/Robot/Scrap Sentinel ServoClaws/ScrapSentinel_ServoClaw.fbx",
+ "scale": 0.2308,
+ "frame": "Blender: grip at the origin, butt -> tip +Y, broad side +Z (a pistol's handle -Z)",
+ "length_m": 0.3,
+ "butt_y": -0.09,
+ "tip_y": 0.21,
+ "faces": 5792,
+ "palette_use": {
+  "#242124": 0.677,
+  "#454146": 0.079,
+  "#D8C6B0": 0.074,
+  "#F4B741": 0.064,
+  "#664429": 0.035,
+  "#C7892B": 0.025,
+  "#9D6B2D": 0.015,
+  "#44322A": 0.014,
+  "#97B37E": 0.007,
+  "#6D5C51": 0.005,
+  "#4C5B4D": 0.004,
+  "#9F866E": 0.0
+ },
+ "main_hand": {
+  "hand": "right",
+  "point": [
+   0,
+   0,
+   0
+  ]
+ },
+ "guard_along": 0.4583,
+ "grip_along": 0.3
+}

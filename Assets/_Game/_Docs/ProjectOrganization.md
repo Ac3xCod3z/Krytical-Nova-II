@@ -120,6 +120,7 @@ _Game/
 │   │                      Editor/ (also GearThemeBuilder, WeaponGlowZoneBaker)  Prefabs/ (WorldDrop, CredsStack = the cash a drop of Creds shows)  Tests/Editor/
 │   ├── NPC/               Runtime/  Data/Assets/
 │   ├── Persistence/       Runtime/ (ServerSave, account and character documents, PlayerSaveAgent)  Tests/Editor/
+│   ├── Mounts/            Runtime/ (PlayerMounts, MountRider, MountFeeding, StirrupIK, MountRules)  Data/ + Data/Assets/ (MountSettings, MountCatalog, MountDef_*, Icons/)  Editor/ (MountAssetBuilder: Items ▸ 11. Build Mounts; MountStageIconBaker)  Tests/Editor/
 │   ├── Pets/              Runtime/ (growth, hunger, PlayerPet; PetChatterRules, PetChatterMoments)  Data/ + Data/Assets/ (settings, catalog, definitions;
 │   │                      Chatter/ = what each pet says, the emoji library and its baked emoji;
 │   │                      Icons/ = Pet_<Pet>_S<stage>: the icon of each evolution that has a model of its own)
@@ -134,6 +135,7 @@ _Game/
 ├── Characters/            Representation only: models, rigs, materials, animations, visual prefabs
 │   ├── Player/            Player_01/ (Sidekick character)  Animations/
 │   ├── NPC/               Prefabs/  Animations/
+│   ├── Mounts/            <Mount>_<stage>/ (a mount stage's model, 2K textures, prefab and clips: Brambleback_0/_50/_100) and Rider/Animations/ (the rider's clips per stage). Exported from G:\My Drive\KryticalNova\Art\Blender\Mounts by export_unity.py
 │   ├── Pets/              <Pet>/ (a pet's own model, prefab and animator controller: KitsuneSpirit/, Emberwing/, DroneCore/ and Tidecaller/ (each of these two with its own texture and materials), Tidecaller_25/ _50/ _75/ _100/ (its four later forms). Made in Blender, see
 │   │                      G:\My Drive\KryticalNova\Art\Blender\Pets; `PetAssetBuilder.PetModels` points here)
 │   ├── Shared/            Props/ (SM_EmoteProp_*: what a character holds during prop emotes; baked from Synty's samples)
@@ -286,6 +288,7 @@ Every script in `_Game` must belong to an assembly (`.asmdef` or `.asmref`). Not
 | `KryticalNova.Economy.Tests.Editor` | `Gameplay/Economy/Tests/Editor/`             | EditMode tests (wallet, storage, trade and Kiosk rules)                                |
 | `KryticalNova.Persistence.Tests.Editor` | `Gameplay/Persistence/Tests/Editor/`     | EditMode tests (save stores, account documents)                                        |
 | `KryticalNova.Pets.Tests.Editor`  | `Gameplay/Pets/Tests/Editor/`                  | EditMode tests (pet growth, stages, hunger; when a pet speaks, and what the four pets say) |
+| `KryticalNova.Mounts.Tests.Editor` | `Gameplay/Mounts/Tests/Editor/`               | EditMode tests (mount growth, three stages, hunger, stats, riding speed) |
 | `KryticalNova.UI.Tests.Editor`    | `UI/Tests/Editor/`                             | EditMode tests (where a service window docks and how far the camera slides; where a pet's bubble goes; the faction skins and the menus' pick of one; Settings: APPLY and REVERT, the pages, the camera maths; the menus' comic book; the character creator in every skin; faction select's champions). Depends on Runtime, UI, Editor and Editor.Menus |
 | `KryticalNova.Hostiles.Tests.Editor` | `Gameplay/Hostiles/Tests/Editor/`           | EditMode tests (the Hostile stat curve against the game's damage formula at every level; the respawn queue of a Hostile Zone; the level-gap table gap by gap; what a kill drops) |
 | `KryticalNova.Housing.Tests.Editor` | `Gameplay/Housing/Tests/Editor/`             | EditMode tests (setting a furnishing down, moving and putting away; what stands on what; the budget; the faction rule; the grid and overlapping footprints; undo and redo) |

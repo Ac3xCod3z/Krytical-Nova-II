@@ -145,7 +145,7 @@ Material:
     - _BaseColor: {r: 1, g: 1, b: 1, a: 1}
     - _Color: {r: 1, g: 1, b: 1, a: 1}
     - _EmissionColor: {r: 0.98833734, g: 0.98833734, b: 0.98833734, a: 1}
-    - _Emission_Color: {r: 1, g: 1, b: 1, a: 1}
+    - _Emission_Color: {r: 0.76893485, g: 0.76893485, b: 0.76893485, a: 1}
     - _Hair_Color: {r: 0.0754717, g: 0.07151383, b: 0.065859735, a: 0}
     - _Skin_Color: {r: 0.801, g: 0.6408, b: 0.5465647, a: 0}
   m_BuildTextureStacks: []

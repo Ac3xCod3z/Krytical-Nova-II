@@ -18,7 +18,9 @@ Its map is the scene `Assets/_Game/Scenes/World/...` of the same name.
 
 **First pass, built.**
 - Every place has its kit (variants at world scale), its brief and an `Owner/` folder.
-- All 38 maps are laid out from their layout files (`Assets/_Game/World/Data/ZoneLayouts/`) and have concept shots in their `Concept/` folder. **New Meridian** is the pilot, checked against the owner's mockups.
+- All 38 maps are laid out from their layout files (`Assets/_Game/World/Data/ZoneLayouts/`) (their first-pass concept shots were deleted on 25 Oct 2026 at the owner's word). **New Meridian** is the pilot, checked against the owner's mockups.
+
+**Levels (owner, 25 Oct 2026).** The level of each place in this doc follows the World Atlas's new bands: a Home City's outskirts 1–20, Z1 18–40, Z2 38–60, Z3 58–80, Z4 78–100, The Scar 95–108, the Ruptureworks 105–112. Where a brief below names the old bands (1-22, 20-45, 45-67, 65-90, 88-105), the Atlas wins. The Home Cities need outskirts: their maps grow to about 2.4 km (Atlas, each Home City).
 
 **Not yet.**
 - ~~Six packs not in the project yet~~: done 19 Oct 2026 with the **Zone Pack Importer**. **Krytical Nova ▸ World ▸ Zone Pack Importer** brings in only the prefabs the kits and layouts use from Apocalypse Wasteland, Fantasy Village, Dungeon, Dungeon Realms and Mech, with the meshes, materials and textures they need, one pack at a time: 1,594 files (about 200 MB) instead of the whole packs (1.75 GB). Nothing in Kaiju is used, so none of it came in. The kits were built again (684 more pieces, none missing) and every map was laid out again. One Mech shin-pad keeps an empty second material slot: Synty ships it that way.
@@ -773,107 +775,17 @@ The Rupture's tie to the original catastrophe stays undecided (Lore Bible sectio
 
 **Run: The Quiet Archive** (3 floors). The Stacks (a 60 m hall of shelves), the Map Room (a round 30 m room, a carved relief of the homeland), the Vault of Erasure (a sealed 20 m vault). Every stolen map and record of the homeland is kept here. Assets: Samurai Empire `SM_Bld_Wall_*`, `SM_Bld_Alcove_*`; Elven Realm `SM_Prop_Cabinet_*`, `SM_Prop_BookHolder_*`; Alpine Mountain `SM_Env_Ice_Sheet_*`.
 
-## The owner's mockups and the first-pass shots
+## The owner's mockups
 
-The owner's five finished-look mockups from the Figma World Atlas, then a shot of every built map. The shots are taken in the maps themselves through the game's comic look: what can be built, because it is what was built. They are a first pass, before the hand dressing (taken again 19 Oct 2026 with the imported packs' pieces in place). Every place's folder holds more shots: one per point of interest, and a top-down Layout.
+The owner's five finished-look mockups from the Figma World Atlas. (The first-pass shots of the built maps were taken
+out of the docs on 25 Oct 2026 at the owner's word; the shots in each place's `Concept/` folder were deleted too.)
 
 ![Mockup: New Meridian, isometric](art/mockups/mockup-new-meridian-isometric.jpg)
 
-![First pass: New Meridian, the same view](art/zones/MeridianSprawl_NewMeridian_Isometric.jpg)
-
 ![Mockup: New Meridian, street](art/mockups/mockup-new-meridian-street.jpg)
-
-![First pass: New Meridian, street](art/zones/MeridianSprawl_NewMeridian_Street.jpg)
 
 ![Mockup: Cessation](art/mockups/mockup-cessation-overview.jpg)
 
 ![Mockup: Cessation, closer](art/mockups/mockup-cessation-close.jpg)
 
 ![Mockup: Kagero](art/mockups/mockup-kagero.jpg)
-
-### Shots: Meridian Sprawl
-
-![NewMeridian](art/zones/MeridianSprawl_NewMeridian_Vista.jpg)
-
-![Run Silo12](art/zones/MeridianSprawl_Run_Silo12_Vista.jpg)
-
-![Run Substation9](art/zones/MeridianSprawl_Run_Substation9_Vista.jpg)
-
-![Run TheCoreworks](art/zones/MeridianSprawl_Run_TheCoreworks_Vista.jpg)
-
-![Run TheGalleria](art/zones/MeridianSprawl_Run_TheGalleria_Vista.jpg)
-
-![Z1 TransitRow](art/zones/MeridianSprawl_Z1_TransitRow_Vista.jpg)
-
-![Z2 Crestfall](art/zones/MeridianSprawl_Z2_Crestfall_Vista.jpg)
-
-![Z3 AlderCounty](art/zones/MeridianSprawl_Z3_AlderCounty_Vista.jpg)
-
-![Z4 GantryRidge](art/zones/MeridianSprawl_Z4_GantryRidge_Vista.jpg)
-
-### Shots: Elders-Reach
-
-![Aldhavn](art/zones/EldersReach_Aldhavn_Vista.jpg)
-
-![Run Hearthbarrow](art/zones/EldersReach_Run_Hearthbarrow_Vista.jpg)
-
-![Run HowlstoneCrypts](art/zones/EldersReach_Run_HowlstoneCrypts_Vista.jpg)
-
-![Run TheRootvault](art/zones/EldersReach_Run_TheRootvault_Vista.jpg)
-
-![Run WrecktideGrotto](art/zones/EldersReach_Run_WrecktideGrotto_Vista.jpg)
-
-![Z1 BirchlightVale](art/zones/EldersReach_Z1_BirchlightVale_Vista.jpg)
-
-![Z2 Skeldfjord](art/zones/EldersReach_Z2_Skeldfjord_Vista.jpg)
-
-![Z3 TheSylwood](art/zones/EldersReach_Z3_TheSylwood_Vista.jpg)
-
-![Z4 Barrowfell](art/zones/EldersReach_Z4_Barrowfell_Vista.jpg)
-
-### Shots: Cessation
-
-![Run OssuarySigma](art/zones/Cessation_Run_OssuarySigma_Vista.jpg)
-
-![Run TheDisassembly](art/zones/Cessation_Run_TheDisassembly_Vista.jpg)
-
-![Run TheIdleWorks](art/zones/Cessation_Run_TheIdleWorks_Vista.jpg)
-
-![Run TheStirringWell](art/zones/Cessation_Run_TheStirringWell_Vista.jpg)
-
-![Terminus](art/zones/Cessation_Terminus_Vista.jpg)
-
-![Z1 ThePalefields](art/zones/Cessation_Z1_ThePalefields_Vista.jpg)
-
-![Z2 TheScrapline](art/zones/Cessation_Z2_TheScrapline_Vista.jpg)
-
-![Z3 TheNeedlegarden](art/zones/Cessation_Z3_TheNeedlegarden_Vista.jpg)
-
-![Z4 NoctCaldera](art/zones/Cessation_Z4_NoctCaldera_Vista.jpg)
-
-### Shots: The Scar
-
-![Run TheRuptureworks](art/zones/TheScar_Run_TheRuptureworks_Vista.jpg)
-
-![The Scar](art/zones/TheScar_Vista.jpg)
-
-### Shots: Sunderpeak (hidden)
-
-![Kagero](art/zones/Sunderpeak_Kagero_Vista.jpg)
-
-![Run Steamhollow](art/zones/Sunderpeak_Run_Steamhollow_Vista.jpg)
-
-![Run TheLanternGallery](art/zones/Sunderpeak_Run_TheLanternGallery_Vista.jpg)
-
-![Run TheListeningHouse](art/zones/Sunderpeak_Run_TheListeningHouse_Vista.jpg)
-
-![Run TheQuietArchive](art/zones/Sunderpeak_Run_TheQuietArchive_Vista.jpg)
-
-![Z1 TheEmberTerraces](art/zones/Sunderpeak_Z1_TheEmberTerraces_Vista.jpg)
-
-![Z2 TheCaneSea](art/zones/Sunderpeak_Z2_TheCaneSea_Vista.jpg)
-
-![Z3 BlackfallGorge](art/zones/Sunderpeak_Z3_BlackfallGorge_Vista.jpg)
-
-![Z4 TheVeilpass](art/zones/Sunderpeak_Z4_TheVeilpass_Vista.jpg)
-

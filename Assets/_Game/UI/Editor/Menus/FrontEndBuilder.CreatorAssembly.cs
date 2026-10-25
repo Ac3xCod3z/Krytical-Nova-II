@@ -65,6 +65,7 @@ namespace KryticalNova.EditorTools
             Place(footer, new Vector2(0f, 0f), new Vector2(1f, 0f), new Vector2(0.5f, 0f), Vector2.zero, new Vector2(0f, 140f));
             Box("SPR_Background", footer).gameObject.AddComponent<Image>().raycastTarget = false;
             Stretch(Part(skin.footer, footer, "Input_Footer_01"));
+            AddEyeRows(creator);
             PrepareCreatorFooter(screen);
 
             ReadableFaces(screen);

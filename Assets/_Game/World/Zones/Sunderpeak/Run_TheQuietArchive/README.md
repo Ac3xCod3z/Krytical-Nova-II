@@ -7,7 +7,6 @@ The full text, with the region kit and how the doc is read, is `Assets/_Game/_Do
 ## What is in this folder
 
 - `Kit/`: the prefabs this place is built from, as variants of the Synty ones, already at world scale (Buildings 166, Ground 7, Props 11). What the whole region shares is in `../_RegionKit/`. Place from here, not from `Assets/Synty`.
-- `Concept/`: renders of the built map, taken through the game's own comic look (made by **Krytical Nova ▸ World ▸ Render Concept Shots Of Open Map**): `_Vista` (the wide view), `_Layout` (top down) and one per point of interest.
 - `Concept/Reference/` (where this place has one): the owner's finished-look mockup from the Figma World Atlas.
 - `Concept/Owner/`: **your concept art goes here.** Name it `<what it shows>_<number>.png` (for example `Gate_01.png`); anything in this folder is yours and no tool writes to it.
 

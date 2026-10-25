@@ -63,7 +63,7 @@ MonoBehaviour:
     presets:
     - name: Skeleton 01
       recipe:
-        version: 1
+        version: 2
         faction: 2
         lineage: 4
         bodyType: 0
@@ -85,9 +85,14 @@ MonoBehaviour:
         eyeliner: 0
         grime: 0
         weaponClass: 0
+        bust: 0
+        butt: 0
+        defined: 0
+        height: 50
+        eyeGlow: 0
     - name: Skeleton 02
       recipe:
-        version: 1
+        version: 2
         faction: 2
         lineage: 4
         bodyType: 0
@@ -109,9 +114,14 @@ MonoBehaviour:
         eyeliner: 0
         grime: 0
         weaponClass: 0
+        bust: 0
+        butt: 0
+        defined: 0
+        height: 50
+        eyeGlow: 0
     - name: Skeleton 03
       recipe:
-        version: 1
+        version: 2
         faction: 2
         lineage: 4
         bodyType: 0
@@ -133,9 +143,14 @@ MonoBehaviour:
         eyeliner: 0
         grime: 0
         weaponClass: 0
+        bust: 0
+        butt: 0
+        defined: 0
+        height: 50
+        eyeGlow: 0
     - name: Skeleton 04
       recipe:
-        version: 1
+        version: 2
         faction: 2
         lineage: 4
         bodyType: 0
@@ -157,9 +172,14 @@ MonoBehaviour:
         eyeliner: 0
         grime: 0
         weaponClass: 0
+        bust: 0
+        butt: 0
+        defined: 0
+        height: 50
+        eyeGlow: 0
     - name: Skeleton 05
       recipe:
-        version: 1
+        version: 2
         faction: 2
         lineage: 4
         bodyType: 0
@@ -181,6 +201,11 @@ MonoBehaviour:
         eyeliner: 0
         grime: 0
         weaponClass: 0
+        bust: 0
+        butt: 0
+        defined: 0
+        height: 50
+        eyeGlow: 0
     skinTones: []
     channels: 0403y
   feminine:
@@ -219,7 +244,7 @@ MonoBehaviour:
     presets:
     - name: Skeleton 01
       recipe:
-        version: 1
+        version: 2
         faction: 2
         lineage: 4
         bodyType: 1
@@ -241,9 +266,14 @@ MonoBehaviour:
         eyeliner: 0
         grime: 0
         weaponClass: 0
+        bust: 0
+        butt: 0
+        defined: 0
+        height: 50
+        eyeGlow: 0
     - name: Skeleton 02
       recipe:
-        version: 1
+        version: 2
         faction: 2
         lineage: 4
         bodyType: 1
@@ -265,9 +295,14 @@ MonoBehaviour:
         eyeliner: 0
         grime: 0
         weaponClass: 0
+        bust: 0
+        butt: 0
+        defined: 0
+        height: 50
+        eyeGlow: 0
     - name: Skeleton 03
       recipe:
-        version: 1
+        version: 2
         faction: 2
         lineage: 4
         bodyType: 1
@@ -289,9 +324,14 @@ MonoBehaviour:
         eyeliner: 0
         grime: 0
         weaponClass: 0
+        bust: 0
+        butt: 0
+        defined: 0
+        height: 50
+        eyeGlow: 0
     - name: Skeleton 04
       recipe:
-        version: 1
+        version: 2
         faction: 2
         lineage: 4
         bodyType: 1
@@ -313,9 +353,14 @@ MonoBehaviour:
         eyeliner: 0
         grime: 0
         weaponClass: 0
+        bust: 0
+        butt: 0
+        defined: 0
+        height: 50
+        eyeGlow: 0
     - name: Skeleton 05
       recipe:
-        version: 1
+        version: 2
         faction: 2
         lineage: 4
         bodyType: 1
@@ -337,5 +382,10 @@ MonoBehaviour:
         eyeliner: 0
         grime: 0
         weaponClass: 0
+        bust: 0
+        butt: 0
+        defined: 0
+        height: 50
+        eyeGlow: 0
     skinTones: []
     channels: 0403y

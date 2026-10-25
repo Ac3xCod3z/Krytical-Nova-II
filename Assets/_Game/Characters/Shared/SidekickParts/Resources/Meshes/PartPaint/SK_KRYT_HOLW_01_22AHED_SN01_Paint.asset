@@ -1,0 +1,17 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f26465138d83c6e4c8f1e909b82c2f23, type: 3}
+  m_Name: SK_KRYT_HOLW_01_22AHED_SN01_Paint
+  m_EditorClassIdentifier: KryticalNova.Items::KryticalNova.Items.Visuals.GearPaintLook
+  material: {fileID: 2100000, guid: 7328aab1dc43e87428cc453dfe412c48, type: 2}
+  regions: {fileID: 2800000, guid: 7693327e7e0affe43a1d7700ace43318, type: 3}
+  regionBrightness: {x: 0.016063904, y: 0.06378525, z: 0.030872509, w: 0.07928807}

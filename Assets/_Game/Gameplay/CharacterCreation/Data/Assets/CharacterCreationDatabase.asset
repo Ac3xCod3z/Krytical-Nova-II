@@ -113,6 +113,36 @@ MonoBehaviour:
       rgba: 4282006216
     - serializedVersion: 2
       rgba: 4283085032
+  - id: 6
+    displayName: Right Eye
+    targets:
+    - u: 5
+      v: 2
+      shade: 1
+    - u: 5
+      v: 4
+      shade: 0.75
+    swatches:
+    - serializedVersion: 2
+      rgba: 4280765035
+    - serializedVersion: 2
+      rgba: 4282805135
+    - serializedVersion: 2
+      rgba: 4281240256
+    - serializedVersion: 2
+      rgba: 4284125006
+    - serializedVersion: 2
+      rgba: 4288715311
+    - serializedVersion: 2
+      rgba: 4291854143
+    - serializedVersion: 2
+      rgba: 4289239180
+    - serializedVersion: 2
+      rgba: 4292370314
+    - serializedVersion: 2
+      rgba: 4282006216
+    - serializedVersion: 2
+      rgba: 4283085032
   - id: 3
     displayName: Glow
     targets:
@@ -150,6 +180,9 @@ MonoBehaviour:
     - u: 9
       v: 1
       shade: 0.85
+    - u: 15
+      v: 15
+      shade: 0.7
     swatches:
     - serializedVersion: 2
       rgba: 4291354342

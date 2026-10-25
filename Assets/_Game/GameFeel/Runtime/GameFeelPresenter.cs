@@ -696,6 +696,8 @@ namespace KryticalNova.GameFeel
         private static float RunWindStrength(Transform actor)
         {
             if (actor == null || !actor.TryGetComponent(out PlayerMovementSkills movement)) return 0f;
+            // On a mount the wind follows its speed: a full wind from the top Run speed on foot (28 m/s) up.
+            if (movement.IsRiding) return Mathf.Lerp(0.08f, 1f, Mathf.Clamp01(movement.CurrentSpeed / 28f));
             MovementSkillData run = movement.GetDefinition(MovementSkillId.Run);
             int top = run != null ? run.MaxRank : 20;
             return top <= 1 ? 1f : Mathf.Lerp(0.08f, 1f, Mathf.Clamp01((movement.RunRank - 1f) / (top - 1f))); // rank 1 barely stirs the air
@@ -705,6 +707,16 @@ namespace KryticalNova.GameFeel
         {
             ActorVfx.Find(actor)?.SetRunning(false, runLoopVfx);
             ActorSmear.Find(actor)?.Release(); // the smear kept up through the run fades now
+        }
+
+        // A mount at a walk kicks up the run's dust at its feet, with no wind, smear or take-off (owner, 25 Oct 2026).
+        public void RideWalk(Transform actor, bool walking)
+        {
+            if (actor == null) return;
+            ActorVfx vfx = walking ? ActorVfx.For(actor) : ActorVfx.Find(actor);
+            if (vfx == null) return;
+            if (walking) vfx.SetRunWind(runWindVfx, 0f);
+            vfx.SetRunning(walking, runLoopVfx);
         }
 
         public void JumpCharge(Transform actor, bool isLocalPlayer)

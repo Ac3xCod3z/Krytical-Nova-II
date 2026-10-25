@@ -1,0 +1,86 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c08cd151176b3ac48bce95dff5401983, type: 3}
+  m_Name: MountDef_StoneHorn
+  m_EditorClassIdentifier: KryticalNova.Mounts::KryticalNova.Mounts.MountDefinition
+  mountId: 3
+  itemId: 0
+  displayName: Stone Horn
+  description: Not in the game yet.
+  firstStat: 0
+  firstMax: 50
+  secondStat: 3
+  secondMax: 50
+  stages:
+  - name: 
+    model: {fileID: 0}
+    icon: {fileID: 0}
+    seat: {x: 0, y: 0, z: 0}
+    idle: {fileID: 0}
+    walk: {fileID: 0}
+    run: {fileID: 0}
+    idleExtras: []
+    glow: {r: 0, g: 0, b: 0, a: 0}
+    riderIdle: {fileID: -623603649343465320, guid: 6b730300fe0c98346bf8c1b6e19ab5d6, type: 3}
+    riderWalk: {fileID: -623603649343465320, guid: aaeecb821d3e6574a969bbd9d208692f, type: 3}
+    riderRun: {fileID: -623603649343465320, guid: 84f5de61198da7948b2de2f1efb726ab, type: 3}
+    mountUp: {fileID: -623603649343465320, guid: 7f16c0b041a029943b27070c588517b0, type: 3}
+    dismount: {fileID: -623603649343465320, guid: ea4661891e8414b49b66d440b92b4b5d, type: 3}
+    riderIdleExtras:
+    - {fileID: -623603649343465320, guid: a0995c03289a09e4ca605423954d4f53, type: 3}
+    - {fileID: -623603649343465320, guid: c5673a265ed54464bb3b981fd5d6110d, type: 3}
+    stirrupLeft: {x: 0, y: 0, z: 0}
+    stirrupRight: {x: 0, y: 0, z: 0}
+  - name: 
+    model: {fileID: 0}
+    icon: {fileID: 0}
+    seat: {x: 0, y: 0, z: 0}
+    idle: {fileID: 0}
+    walk: {fileID: 0}
+    run: {fileID: 0}
+    idleExtras: []
+    glow: {r: 0, g: 0, b: 0, a: 0}
+    riderIdle: {fileID: -623603649343465320, guid: c5baf4bc1aff0164c9880682a9fda88c, type: 3}
+    riderWalk: {fileID: -623603649343465320, guid: 3cf8230829ebb7c49b959e62847a0706, type: 3}
+    riderRun: {fileID: -623603649343465320, guid: 93965a0b17cc9ba43a0f3b7fef07934d, type: 3}
+    mountUp: {fileID: -623603649343465320, guid: f3cf3d6ac66c9bc40a7493d82522735e, type: 3}
+    dismount: {fileID: -623603649343465320, guid: 93c7e763f6c0c424598efc8a940704b8, type: 3}
+    riderIdleExtras:
+    - {fileID: -623603649343465320, guid: 572812d02e824c6499bbd45d7ec5e4a0, type: 3}
+    - {fileID: -623603649343465320, guid: 71463b715c6fbc7419a25888861db5e5, type: 3}
+    stirrupLeft: {x: 0, y: 0, z: 0}
+    stirrupRight: {x: 0, y: 0, z: 0}
+  - name: 
+    model: {fileID: 0}
+    icon: {fileID: 0}
+    seat: {x: 0, y: 0, z: 0}
+    idle: {fileID: 0}
+    walk: {fileID: 0}
+    run: {fileID: 0}
+    idleExtras: []
+    glow: {r: 0, g: 0, b: 0, a: 0}
+    riderIdle: {fileID: -623603649343465320, guid: a77d19b4f98ddfc48a03a3c6b026af64, type: 3}
+    riderWalk: {fileID: -623603649343465320, guid: 9c0e87220b3cd1f43aa32aea9535c2ef, type: 3}
+    riderRun: {fileID: -623603649343465320, guid: d294e4f384f88ca4887dca08d6799ff7, type: 3}
+    mountUp: {fileID: -623603649343465320, guid: 92120f9104f4d124c909b79de79cb82d, type: 3}
+    dismount: {fileID: -623603649343465320, guid: 7fc9a520822d1a64898bff5129d8548d, type: 3}
+    riderIdleExtras:
+    - {fileID: -623603649343465320, guid: 2c309fcd18c89f942a0af411cee8c67a, type: 3}
+    - {fileID: -623603649343465320, guid: 6c693e5828f6ff14c8217f125e4ba7e3, type: 3}
+    stirrupLeft: {x: 0, y: 0, z: 0}
+    stirrupRight: {x: 0, y: 0, z: 0}
+  riderIdle: {fileID: 0}
+  riderWalk: {fileID: 0}
+  riderRun: {fileID: 0}
+  riderIdleExtras: []
+  mountUp: {fileID: 0}
+  dismount: {fileID: 0}

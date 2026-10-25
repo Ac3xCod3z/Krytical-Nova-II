@@ -39,6 +39,7 @@ namespace KryticalNova.EditorTools.GM
         private const string EconomyTab = "Economy";
         private const string SocialTab = "Social";
         private const string PetsTab = "Pets";
+        private const string MountsTab = "Mounts";
         private const string RenownTab = "Renown";
         private const string HostilesTab = "Hostiles";
         private const string CadenceTab = "Cadence";
@@ -1274,6 +1275,77 @@ namespace KryticalNova.EditorTools.GM
 
         [ButtonGroup(Tabs + "/" + PetsTab + "/Animation"), EnableIf(nameof(IsReady)), LabelText("List"), PropertyOrder(832)]
         private void ListPetAnimations() => Run("gm.pet.anims");
+
+        // ================================================================ MOUNTS (owner, 25 Oct 2026)
+
+        [TabGroup(Tabs, MountsTab), Title("Give"), ValueDropdown(nameof(MountChoices)), EnableIf(nameof(IsReady)), LabelText("Mount"), PropertyOrder(860)]
+        [InfoBox("Gives the mount's item to the player's Pack, the way a player gets one. Using it from the Pack (right-click) adds the " +
+                 "mount to the Mount window (N); select it there and press V to ride. Only the Brambleback has art so far.")]
+        [SerializeField] private string mountToGive = "brambleback";
+
+        private static ValueDropdownList<string> MountChoices() => new ValueDropdownList<string>
+        {
+            { "1  Brambleback", "brambleback" }, { "2  Grave Trot (no art yet)", "2" }, { "3  Stone Horn (no art yet)", "3" }, { "4  Circuit Strider (no art yet)", "4" },
+        };
+
+        [ButtonGroup(Tabs + "/" + MountsTab + "/Give"), EnableIf(nameof(IsReady)), LabelText("Give Mount Item"), PropertyOrder(861)]
+        private void GiveMount() => Run($"gm.mount.give {mountToGive}");
+
+        [ButtonGroup(Tabs + "/" + MountsTab + "/Give"), EnableIf(nameof(IsReady)), LabelText("Take It Back Out Of The Window"), PropertyOrder(862)]
+        private void ForgetMount() => Run($"gm.mount.forget {mountToGive}");
+
+        [ButtonGroup(Tabs + "/" + MountsTab + "/Give"), EnableIf(nameof(IsReady)), LabelText("Status"), PropertyOrder(863)]
+        private void MountStatus() => Run("gm.mount");
+
+        [TabGroup(Tabs, MountsTab), Title("The Selected Mount"), ShowInInspector, DisplayAsString, LabelText("Now"), PropertyOrder(864)]
+        private string MountNow
+        {
+            get
+            {
+                var mounts = LocalPlayer != null ? LocalPlayer.GetComponent<KryticalNova.Mounts.PlayerMounts>() : null;
+                if (mounts == null) return "(enter Play Mode)";
+                if (mounts.Selected == null) return "no mount selected";
+                return $"{mounts.Selected.displayName}, {mounts.GrowthPercent}% growth, {mounts.Selected.StageName(mounts.Stage)}, " +
+                       $"{(mounts.IsFed ? "fed" : "starving")}, {mounts.Phase}";
+            }
+        }
+
+        [ButtonGroup(Tabs + "/" + MountsTab + "/Ride"), EnableIf(nameof(IsReady)), LabelText("Ride / Get Off"), PropertyOrder(865)]
+        private void RideMount() => Run("gm.mount.ride");
+
+        [TabGroup(Tabs, MountsTab), PropertyRange(0f, 100f), EnableIf(nameof(IsReady)), LabelText("Growth %"), PropertyOrder(870)]
+        [InfoBox("Three stages, one per model: it evolves at 50 and at 100.")]
+        [SerializeField] private float mountGrowth = 50f;
+
+        [ButtonGroup(Tabs + "/" + MountsTab + "/Growth"), EnableIf(nameof(IsReady)), LabelText("Set Growth"), PropertyOrder(871)]
+        private void SetMountGrowth() => Run($"gm.mount.growth {mountGrowth.ToString(System.Globalization.CultureInfo.InvariantCulture)}");
+
+        [ButtonGroup(Tabs + "/" + MountsTab + "/Growth"), EnableIf(nameof(IsReady)), LabelText("Stage 1 (0%)"), PropertyOrder(872)]
+        private void MountStage1() => Run("gm.mount.growth 0");
+
+        [ButtonGroup(Tabs + "/" + MountsTab + "/Growth"), EnableIf(nameof(IsReady)), LabelText("Stage 2 (50%)"), PropertyOrder(873)]
+        private void MountStage2() => Run("gm.mount.growth 50");
+
+        [ButtonGroup(Tabs + "/" + MountsTab + "/Growth"), EnableIf(nameof(IsReady)), LabelText("Stage 3 (100%)"), PropertyOrder(874)]
+        private void MountStage3() => Run("gm.mount.growth 100");
+
+        [TabGroup(Tabs, MountsTab), PropertyRange(0f, 100f), EnableIf(nameof(IsReady)), LabelText("Hunger %"), PropertyOrder(880)]
+        [SerializeField] private float mountHunger = 100f;
+
+        [ButtonGroup(Tabs + "/" + MountsTab + "/Hunger"), EnableIf(nameof(IsReady)), LabelText("Set Hunger"), PropertyOrder(881)]
+        private void SetMountHunger() => Run($"gm.mount.hunger {mountHunger.ToString(System.Globalization.CultureInfo.InvariantCulture)}");
+
+        [ButtonGroup(Tabs + "/" + MountsTab + "/Hunger"), EnableIf(nameof(IsReady)), LabelText("Feed To Full"), PropertyOrder(882)]
+        private void FeedMount() => Run("gm.mount.feed");
+
+        [ButtonGroup(Tabs + "/" + MountsTab + "/Hunger"), EnableIf(nameof(IsReady)), LabelText("Give 5 Mount Feed"), PropertyOrder(883)]
+        private void GiveMountFeed() => Run("item.give Mount_Feed 5");
+
+        [TabGroup(Tabs, MountsTab), Min(0f), EnableIf(nameof(IsReady)), LabelText("EXP"), PropertyOrder(890)]
+        [SerializeField] private float mountXp = 1000f;
+
+        [ButtonGroup(Tabs + "/" + MountsTab + "/Xp"), EnableIf(nameof(IsReady)), LabelText("Give EXP"), PropertyOrder(891)]
+        private void GiveMountXp() => Run($"gm.mount.xp {mountXp.ToString(System.Globalization.CultureInfo.InvariantCulture)}");
 
         // ================================================================ RENOWN (Renown, Ascension, Nova Standings)
 

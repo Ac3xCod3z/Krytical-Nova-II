@@ -39,10 +39,14 @@ namespace KryticalNova.EditorTools
         private struct Set
         {
             public string code, folder, name, palettePrimary;
+            public string species; // the part names' body suffix: HU01 (default, humans), RO01 robots, SN01 skeletons
             public string[] roles; // primary, secondary, under, accent, trim, leather, glow, metal x4
             public Piece[] pieces;
             public (ushort lineId, string displayName, string icon)[] renamed; // ring and amulet of the same band: the set's name
             public Weapon[] weapons;
+            // Painted (owner, 24 Oct 2026): the parts keep their Tripo paint, one PNG each, named in <folder>_paint.json;
+            // a dye recolours the paint (GearPaintImporter, GearPaint) instead of the swatch cells.
+            public bool painted;
         }
 
         /// <summary>
@@ -81,6 +85,55 @@ namespace KryticalNova.EditorTools
             },
         };
 
+        private static readonly Set ScrapSentinel = new Set
+        {
+            code = "SCRP", folder = "ScrapSentinel", name = "Scrap Sentinel", species = "RO01",
+            // primary yellow, secondary dark, under, accent cream, trim, leather, glow green, metals
+            roles = new[] { "F4B741", "3B383C", "1C191A", "D8C6B0", "C7892B", "44322A", "3CE35A", "776D6D", "4F4545", "363135", "242124" },
+            pieces = new[]
+            {
+                // Robot Rare, levels 45-75 (band 2): the Ravager lines become the Scrap Sentinel set. On a robot the head
+                // piece is the head itself (owner, 24 Oct 2026); the bare head hides while it is shown (CharacterAppearance).
+                new Piece { slot = EquipSlot.Armor, lineId = 41, displayName = "Scrap Sentinel Plating", parts = new[] { "10TORS", "11AUPL", "12AUPR", "13ALWL", "14ALWR", "17HIPS", "18LEGL", "19LEGR", "22AHED" }, icon = "ScrapSentinel_Plating_01" },
+                new Piece { slot = EquipSlot.Gloves, lineId = 46, displayName = "Scrap Sentinel Servos", parts = new[] { "15HNDL", "16HNDR" }, icon = "ScrapSentinel_Servos_02" },
+                new Piece { slot = EquipSlot.Boots, lineId = 51, displayName = "Scrap Sentinel Stabilizers", parts = new[] { "20FOTL", "21FOTR" }, icon = "ScrapSentinel_Stabilizers_03" },
+                new Piece { slot = EquipSlot.Cape, lineId = 55, displayName = "Scrap Sentinel Back Unit", parts = new[] { "24ABAC" }, icon = "ScrapSentinel_BackUnit_04" },
+            },
+            renamed = new (ushort, string, string)[] { (184, "Scrap Sentinel Coupling", "ScrapSentinel_Coupling_08"), (185, "Scrap Sentinel Capacitor", "ScrapSentinel_Capacitor_09") },
+            weapons = new[]
+            {
+                // The Rare band-2 lines of the three Null classes. The Harvester is a one-handed sickle-pick (0.84 m, like
+                // the cleaver); the Servo Claws a pair over the fists, along the forearm; the Arc Caster a twin-barrel gun.
+                new Weapon { lineId = 132, name = "Harvester", displayName = "Scrap Sentinel Harvester", like = "Weapon_Harvester_03", icon = "ScrapSentinel_Harvester_05" },
+                new Weapon { lineId = 137, name = "ServoClaws", displayName = "Scrap Sentinel Servo Claws", like = "Weapon_ServoClaws_03", holdEuler = new Vector3(270f, 0f, 180f), icon = "ScrapSentinel_ServoClaws_07" },
+                new Weapon { lineId = 142, name = "ArcCaster", displayName = "Scrap Sentinel Arc Caster", like = "Weapon_ArcCaster_03", icon = "ScrapSentinel_ArcCaster_06" },
+            },
+        };
+
+        private static readonly Set HollowWarden = new Set
+        {
+            code = "HOLW", folder = "HollowWarden", name = "Hollow Warden", species = "SN01", painted = true,
+            // The paint is its own colours; these name the set's colourway (bone, iron, cloth, bronze trim, ghost-blue glow).
+            roles = new[] { "4A4744", "2F3538", "26221F", "C9B98F", "A0773A", "4A3628", "7FE6F0", "8E9294", "5F6467", "41464A", "2A2D30" },
+            pieces = new[]
+            {
+                // Skeleton Rare, levels 45-75 (band 2): the Deathsworn lines become the Hollow Warden set. The bracers are
+                // in the upper arms and the knee guards in the waist (the fitted scene has no 13/14 or 18/19 parts).
+                new Piece { slot = EquipSlot.Armor, lineId = 60, displayName = "Hollow Warden Armor", parts = new[] { "10TORS", "11AUPL", "12AUPR", "17HIPS", "22AHED" }, icon = "HollowWarden_Armor_01" },
+                new Piece { slot = EquipSlot.Gloves, lineId = 65, displayName = "Hollow Warden Gauntlets", parts = new[] { "15HNDL", "16HNDR" }, icon = "HollowWarden_Gloves_02" },
+                new Piece { slot = EquipSlot.Boots, lineId = 70, displayName = "Hollow Warden Greaves", parts = new[] { "20FOTL", "21FOTR" }, icon = "HollowWarden_Boots_03" },
+                new Piece { slot = EquipSlot.Cape, lineId = 74, displayName = "Hollow Warden Shroud", parts = new[] { "24ABAC" }, icon = "HollowWarden_Cape_04" },
+            },
+            renamed = new (ushort, string, string)[] { (194, "Hollow Warden Ring", "HollowWarden_Ring_09"), (195, "Hollow Warden Amulet", "HollowWarden_Amulet_10") },
+            // Its weapons wait: the Null Rare weapon lines (132, 137, 142) wear Scrap Sentinel's.
+        };
+
+        [MenuItem("Krytical Nova/Items/Blender Sets/Add Hollow Warden (Skeleton Rare 45-75, painted)")]
+        public static void AddHollowWarden() => Add(HollowWarden);
+
+        [MenuItem("Krytical Nova/Items/Blender Sets/Add Scrap Sentinel (Robot Rare 45-75)")]
+        public static void AddScrapSentinel() => Add(ScrapSentinel);
+
         // Painted icons of the set's pieces (owner, 24 Oct 2026: AI-painted from each piece's in-game capture, in the
         // Cyberpunk pack's style), given the comic treatment like every pack icon.
         private const string IconArtRoot = "Assets/_Game/Icons/Art/Generated";
@@ -94,6 +147,7 @@ namespace KryticalNova.EditorTools
         {
             string folder = $"{PartsRoot}/{set.folder}";
             int imported = ApplyImportSettings(folder);
+            if (set.painted) GearPaintImporter.Import(folder);
             var catalog = SidekickPartCatalogBaker.Bake();
 
             var themes = AssetDatabase.LoadAssetAtPath<GearThemeLibrary>(GearThemeBuilder.LibraryPath);
@@ -107,7 +161,7 @@ namespace KryticalNova.EditorTools
                 var ids = new List<ushort>();
                 foreach (string slot in piece.parts)
                 {
-                    string partName = $"SK_KRYT_{set.code}_01_{slot}_HU01";
+                    string partName = $"SK_KRYT_{set.code}_01_{slot}_{set.species ?? "HU01"}";
                     ushort id = catalog.IdOf(partName);
                     if (id == 0) { Debug.LogError($"[Items] {partName} is not in the part catalog: is it in {folder}?"); return; }
                     ids.Add(id);
@@ -371,7 +425,8 @@ namespace KryticalNova.EditorTools
             look.partCatalog = catalog;
             look.appearancePartIds = partIds;
             look.appearanceParts = new List<SidekickPartRef>();
-            look.colorCells = GearThemeBuilder.PaintedCells(look);
+            // A painted set reads no colour cells (its paint is its own): it must not repaint cells other parts use.
+            look.colorCells = set.painted ? Array.Empty<byte>() : GearThemeBuilder.PaintedCells(look);
             EditorUtility.SetDirty(look);
             return look;
         }

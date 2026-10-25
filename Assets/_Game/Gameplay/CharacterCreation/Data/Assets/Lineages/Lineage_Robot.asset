@@ -54,7 +54,7 @@ MonoBehaviour:
     presets:
     - name: Robot 01
       recipe:
-        version: 1
+        version: 2
         faction: 2
         lineage: 3
         bodyType: 0
@@ -76,9 +76,14 @@ MonoBehaviour:
         eyeliner: 0
         grime: 0
         weaponClass: 0
+        bust: 0
+        butt: 0
+        defined: 0
+        height: 50
+        eyeGlow: 0
     - name: Robot 02
       recipe:
-        version: 1
+        version: 2
         faction: 2
         lineage: 3
         bodyType: 0
@@ -100,9 +105,14 @@ MonoBehaviour:
         eyeliner: 0
         grime: 0
         weaponClass: 0
+        bust: 0
+        butt: 0
+        defined: 0
+        height: 50
+        eyeGlow: 0
     - name: Robot 03
       recipe:
-        version: 1
+        version: 2
         faction: 2
         lineage: 3
         bodyType: 0
@@ -124,9 +134,14 @@ MonoBehaviour:
         eyeliner: 0
         grime: 0
         weaponClass: 0
+        bust: 0
+        butt: 0
+        defined: 0
+        height: 50
+        eyeGlow: 0
     - name: Robot 04
       recipe:
-        version: 1
+        version: 2
         faction: 2
         lineage: 3
         bodyType: 0
@@ -148,9 +163,14 @@ MonoBehaviour:
         eyeliner: 0
         grime: 0
         weaponClass: 0
+        bust: 0
+        butt: 0
+        defined: 0
+        height: 50
+        eyeGlow: 0
     - name: Robot 05
       recipe:
-        version: 1
+        version: 2
         faction: 2
         lineage: 3
         bodyType: 0
@@ -172,9 +192,14 @@ MonoBehaviour:
         eyeliner: 0
         grime: 0
         weaponClass: 0
+        bust: 0
+        butt: 0
+        defined: 0
+        height: 50
+        eyeGlow: 0
     - name: Robot 06
       recipe:
-        version: 1
+        version: 2
         faction: 2
         lineage: 3
         bodyType: 0
@@ -196,9 +221,14 @@ MonoBehaviour:
         eyeliner: 0
         grime: 0
         weaponClass: 0
+        bust: 0
+        butt: 0
+        defined: 0
+        height: 50
+        eyeGlow: 0
     - name: Robot 07
       recipe:
-        version: 1
+        version: 2
         faction: 2
         lineage: 3
         bodyType: 0
@@ -220,9 +250,14 @@ MonoBehaviour:
         eyeliner: 0
         grime: 0
         weaponClass: 0
+        bust: 0
+        butt: 0
+        defined: 0
+        height: 50
+        eyeGlow: 0
     - name: Robot 08
       recipe:
-        version: 1
+        version: 2
         faction: 2
         lineage: 3
         bodyType: 0
@@ -244,9 +279,14 @@ MonoBehaviour:
         eyeliner: 0
         grime: 0
         weaponClass: 0
+        bust: 0
+        butt: 0
+        defined: 0
+        height: 50
+        eyeGlow: 0
     - name: Robot 09
       recipe:
-        version: 1
+        version: 2
         faction: 2
         lineage: 3
         bodyType: 0
@@ -268,9 +308,14 @@ MonoBehaviour:
         eyeliner: 0
         grime: 0
         weaponClass: 0
+        bust: 0
+        butt: 0
+        defined: 0
+        height: 50
+        eyeGlow: 0
     - name: Robot 10
       recipe:
-        version: 1
+        version: 2
         faction: 2
         lineage: 3
         bodyType: 0
@@ -292,9 +337,14 @@ MonoBehaviour:
         eyeliner: 0
         grime: 0
         weaponClass: 0
+        bust: 0
+        butt: 0
+        defined: 0
+        height: 50
+        eyeGlow: 0
     - name: Robot 11
       recipe:
-        version: 1
+        version: 2
         faction: 2
         lineage: 3
         bodyType: 0
@@ -316,9 +366,14 @@ MonoBehaviour:
         eyeliner: 0
         grime: 0
         weaponClass: 0
+        bust: 0
+        butt: 0
+        defined: 0
+        height: 50
+        eyeGlow: 0
     - name: Robot 12
       recipe:
-        version: 1
+        version: 2
         faction: 2
         lineage: 3
         bodyType: 0
@@ -340,6 +395,11 @@ MonoBehaviour:
         eyeliner: 0
         grime: 0
         weaponClass: 0
+        bust: 0
+        butt: 0
+        defined: 0
+        height: 50
+        eyeGlow: 0
     skinTones: []
     channels: 0503y
   feminine:
@@ -369,7 +429,7 @@ MonoBehaviour:
     presets:
     - name: Robot 01
       recipe:
-        version: 1
+        version: 2
         faction: 2
         lineage: 3
         bodyType: 1
@@ -391,9 +451,14 @@ MonoBehaviour:
         eyeliner: 0
         grime: 0
         weaponClass: 0
+        bust: 0
+        butt: 0
+        defined: 0
+        height: 50
+        eyeGlow: 0
     - name: Robot 02
       recipe:
-        version: 1
+        version: 2
         faction: 2
         lineage: 3
         bodyType: 1
@@ -415,9 +480,14 @@ MonoBehaviour:
         eyeliner: 0
         grime: 0
         weaponClass: 0
+        bust: 0
+        butt: 0
+        defined: 0
+        height: 50
+        eyeGlow: 0
     - name: Robot 03
       recipe:
-        version: 1
+        version: 2
         faction: 2
         lineage: 3
         bodyType: 1
@@ -439,9 +509,14 @@ MonoBehaviour:
         eyeliner: 0
         grime: 0
         weaponClass: 0
+        bust: 0
+        butt: 0
+        defined: 0
+        height: 50
+        eyeGlow: 0
     - name: Robot 04
       recipe:
-        version: 1
+        version: 2
         faction: 2
         lineage: 3
         bodyType: 1
@@ -463,9 +538,14 @@ MonoBehaviour:
         eyeliner: 0
         grime: 0
         weaponClass: 0
+        bust: 0
+        butt: 0
+        defined: 0
+        height: 50
+        eyeGlow: 0
     - name: Robot 05
       recipe:
-        version: 1
+        version: 2
         faction: 2
         lineage: 3
         bodyType: 1
@@ -487,9 +567,14 @@ MonoBehaviour:
         eyeliner: 0
         grime: 0
         weaponClass: 0
+        bust: 0
+        butt: 0
+        defined: 0
+        height: 50
+        eyeGlow: 0
     - name: Robot 06
       recipe:
-        version: 1
+        version: 2
         faction: 2
         lineage: 3
         bodyType: 1
@@ -511,9 +596,14 @@ MonoBehaviour:
         eyeliner: 0
         grime: 0
         weaponClass: 0
+        bust: 0
+        butt: 0
+        defined: 0
+        height: 50
+        eyeGlow: 0
     - name: Robot 07
       recipe:
-        version: 1
+        version: 2
         faction: 2
         lineage: 3
         bodyType: 1
@@ -535,9 +625,14 @@ MonoBehaviour:
         eyeliner: 0
         grime: 0
         weaponClass: 0
+        bust: 0
+        butt: 0
+        defined: 0
+        height: 50
+        eyeGlow: 0
     - name: Robot 08
       recipe:
-        version: 1
+        version: 2
         faction: 2
         lineage: 3
         bodyType: 1
@@ -559,9 +654,14 @@ MonoBehaviour:
         eyeliner: 0
         grime: 0
         weaponClass: 0
+        bust: 0
+        butt: 0
+        defined: 0
+        height: 50
+        eyeGlow: 0
     - name: Robot 09
       recipe:
-        version: 1
+        version: 2
         faction: 2
         lineage: 3
         bodyType: 1
@@ -583,9 +683,14 @@ MonoBehaviour:
         eyeliner: 0
         grime: 0
         weaponClass: 0
+        bust: 0
+        butt: 0
+        defined: 0
+        height: 50
+        eyeGlow: 0
     - name: Robot 10
       recipe:
-        version: 1
+        version: 2
         faction: 2
         lineage: 3
         bodyType: 1
@@ -607,9 +712,14 @@ MonoBehaviour:
         eyeliner: 0
         grime: 0
         weaponClass: 0
+        bust: 0
+        butt: 0
+        defined: 0
+        height: 50
+        eyeGlow: 0
     - name: Robot 11
       recipe:
-        version: 1
+        version: 2
         faction: 2
         lineage: 3
         bodyType: 1
@@ -631,9 +741,14 @@ MonoBehaviour:
         eyeliner: 0
         grime: 0
         weaponClass: 0
+        bust: 0
+        butt: 0
+        defined: 0
+        height: 50
+        eyeGlow: 0
     - name: Robot 12
       recipe:
-        version: 1
+        version: 2
         faction: 2
         lineage: 3
         bodyType: 1
@@ -655,5 +770,10 @@ MonoBehaviour:
         eyeliner: 0
         grime: 0
         weaponClass: 0
+        bust: 0
+        butt: 0
+        defined: 0
+        height: 50
+        eyeGlow: 0
     skinTones: []
     channels: 0503y

@@ -88,6 +88,11 @@ namespace KryticalNova.Rendering
         [SerializeField] private Profile[] profiles =
         {
             new Profile("abac,ahpb,ahpf,ahpl,ahpr,hips,legl,legr,tors", 0.06f, 0.10f, 1.0f, 0.35f, 0.02f), // cloth
+            // A wide cloak hung on chains all the way round (cloak_dyn_*, Hollow Warden). Heavy and calm (owner, 25 Oct
+            // 2026: loose chains "going insane", jittery): it springs back firmly, loses its swing fast and travels with the
+            // body. Thin, since the cloak is modelled round the lowered arms: a thick one started inside the arm capsules and
+            // was shoved out every frame.
+            new Profile("cloak", 0.22f, 0.30f, 0.7f, 0.6f, 0.03f),
             new Profile("hair", 0.10f, 0.14f, 0.7f, 0.5f, 0.015f),
             new Profile("fchr", 0.25f, 0.2f, 0.4f, 0.7f, 0.01f),
             new Profile("", 0.2f, 0.18f, 0.5f, 0.6f, 0.01f), // anything else (ears, shoulder and head trinkets)
@@ -480,11 +485,13 @@ namespace KryticalNova.Rendering
                     if (sideLocal != Vector3.zero)
                     {
                         // Crossed the middle of the body towards the other side, and still in front of it rather than
-                        // round it: back to its own side, as far out as the capsule keeps it.
+                        // round it: back to its own side, as far out as the capsule keeps it. Only once it has crossed:
+                        // a piece that merely sinks into its own side is pushed out smoothly below, or a top knot
+                        // sagging into the head was thrown out half a radius at a time and twitched (owner, 24 Oct 2026).
                         Vector3 n = capA[c].TransformDirection(sideLocal);
                         float along = Vector3.Dot(d, n);
                         Vector3 across = d - n * along;
-                        if (along < r * 0.5f && across.sqrMagnitude < r * r * SideReach * SideReach)
+                        if (along < 0f && across.sqrMagnitude < r * r * SideReach * SideReach)
                         {
                             p = q + across + n * r;
                             continue;

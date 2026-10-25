@@ -509,6 +509,7 @@ namespace KryticalNova.EditorTools
 
         private static List<CharacterCreationDatabase.ColorChannel> BuildChannels(Dictionary<string, PropertyRow> propertyByName)
         {
+            Color32[] eyeSwatches = Swatches("6B4A27", "8F6B46", "C08A2E", "4E8F5A", "2F9AA0", "3F7FD0", "8C98A8", "8A5FD8", "C83A3A", "E8B04A");
             CharacterCreationDatabase.ColorTarget Target(string property, float shade)
             {
                 if (!propertyByName.TryGetValue(property, out var row))
@@ -540,7 +541,14 @@ namespace KryticalNova.EditorTools
                         Target("Eye Color Left", 1f), Target("Eye Color Right", 1f),
                         Target("Eye Edge Left", 0.75f), Target("Eye Edge Right", 0.75f)
                     },
-                    swatches = Swatches("6B4A27", "8F6B46", "C08A2E", "4E8F5A", "2F9AA0", "3F7FD0", "8C98A8", "8A5FD8", "C83A3A", "E8B04A")
+                    swatches = eyeSwatches
+                },
+                new CharacterCreationDatabase.ColorChannel
+                {
+                    // Heterochromia: painted after Eyes (CharacterColorMap), so the right eye takes this colour.
+                    id = CharacterColorChannels.EyeRight, displayName = "Right Eye",
+                    targets = new[] { Target("Eye Color Right", 1f), Target("Eye Edge Right", 0.75f) },
+                    swatches = eyeSwatches
                 },
                 new CharacterCreationDatabase.ColorChannel
                 {
@@ -551,7 +559,14 @@ namespace KryticalNova.EditorTools
                 new CharacterCreationDatabase.ColorChannel
                 {
                     id = ChannelBone, displayName = "Bone",
-                    targets = new[] { Target("Bone 01", 1f), Target("Bone 02", 0.85f) },
+                    // The skeleton head paints its eye sockets on cell (15,15), which has no property in Sidekick's
+                    // database; without it the sockets stayed white whatever bone colour was picked (owner, 24 Oct 2026).
+                    // Only the Skeleton lineage has this channel, so the cell's other users are never touched.
+                    targets = new[]
+                    {
+                        Target("Bone 01", 1f), Target("Bone 02", 0.85f),
+                        new CharacterCreationDatabase.ColorTarget { u = 15, v = 15, shade = 0.7f }
+                    },
                     swatches = Swatches("E6DEC8", "D2C4A0", "A9A9A0", "4A4640", "8A9A70", "9A5A50", "9AA8B8")
                 },
                 new CharacterCreationDatabase.ColorChannel

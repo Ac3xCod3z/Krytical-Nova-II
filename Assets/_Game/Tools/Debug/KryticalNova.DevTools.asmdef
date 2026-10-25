@@ -18,6 +18,7 @@
         "KryticalNova.Networking",
         "KryticalNova.Persistence",
         "KryticalNova.Pets",
+        "KryticalNova.Mounts",
         "KryticalNova.Player",
         "KryticalNova.Progression",
         "KryticalNova.Rendering",
