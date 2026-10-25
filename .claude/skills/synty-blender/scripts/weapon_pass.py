@@ -186,6 +186,10 @@ def find_frame(ob, a, grips):
             t, lo, hi = -t, -hi, -lo
             guard_t = -guard_t
         grip_t = max(lo + 0.3 * (guard_t - lo), guard_t - SWORD_HAND * span / a.length)
+        if a.grip_along is not None:
+            # a one-hander whose widest part is its head, not a guard (Scrap Sentinel's sickle-pick Harvester): the
+            # hand goes where the sheet says, measured from the butt
+            grip_t = lo + a.grip_along * span
         info["guard_along"] = (guard_t - lo) / span
         info["grip_along"] = (grip_t - lo) / span
     elif a.kind == "polearm":
@@ -204,6 +208,7 @@ def find_frame(ob, a, grips):
         if abs(s.max() - mid) < abs(s.min() - mid):
             side = -side
             s = -s
+            mid = -mid          # the middle flips with the side (Bastion Field's pistol found no handle without it)
         deep = s > mid + 0.55 * (s.max() - mid)
         handle_t = float(np.median(t[deep]))
         # muzzle is the end further from the handle

@@ -122,6 +122,9 @@ GameObject:
   - component: {fileID: 405693714767347966}
   - component: {fileID: 4931137393825480415}
   - component: {fileID: 5104465639737783720}
+  - component: {fileID: 7045732743493074609}
+  - component: {fileID: 341969012808825080}
+  - component: {fileID: 500040589684047261}
   m_Layer: 2
   m_Name: Player
   m_TagString: Player
@@ -3902,6 +3905,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Combat.PlayerCombatState
   ShowTopMostFoldoutHeaderGroup: 1
   lingerSeconds: 6
+  dummyLeaveMetres: 30
 --- !u!114 &4584245545938065754
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4247,6 +4251,44 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: KryticalNova.Persistence::KryticalNova.Persistence.PlayerRename
   ShowTopMostFoldoutHeaderGroup: 1
+--- !u!114 &7045732743493074609
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3071671160467358554}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ce5a1e98d1c4a0f49969417ed3734679, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: KryticalNova.Mounts::KryticalNova.Mounts.PlayerMounts
+  ShowTopMostFoldoutHeaderGroup: 1
+  catalog: {fileID: 11400000, guid: 5f40173c15122614e959b507a9a9ce30, type: 2}
+--- !u!114 &341969012808825080
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3071671160467358554}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fc894f8781072ab4cad161ab57b934b0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: KryticalNova.Mounts::KryticalNova.Mounts.MountFeeding
+--- !u!114 &500040589684047261
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3071671160467358554}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1e4748ee8c99277499e0f144788957d5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: KryticalNova.Mounts::KryticalNova.Mounts.MountRider
 --- !u!1 &3107468420846213464
 GameObject:
   m_ObjectHideFlags: 0

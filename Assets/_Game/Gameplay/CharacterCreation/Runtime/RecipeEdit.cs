@@ -170,6 +170,27 @@ namespace KryticalNova.CharacterCreation
             recipe.colors = colors.ToArray();
         }
 
+        /// <summary>True when the right eye has a colour of its own (heterochromia).</summary>
+        public static bool HasHeterochromia(in CharacterRecipe recipe) => TryGetColor(recipe, CharacterColorChannels.EyeRight, out _);
+
+        /// <summary>
+        /// Heterochromia on: the right eye starts as the eye colour (<paramref name="eyeColour"/> when the look has none
+        /// picked yet), ready to be changed. Off: the right eye's own colour goes and Eyes colours both again.
+        /// </summary>
+        public static void SetHeterochromia(ref CharacterRecipe recipe, bool on, Color32 eyeColour)
+        {
+            if (on == HasHeterochromia(recipe)) return;
+            if (on)
+            {
+                SetColor(ref recipe, CharacterColorChannels.EyeRight, TryGetColor(recipe, CharacterColorChannels.Eyes, out var eyes) ? eyes : eyeColour);
+                return;
+            }
+            var colors = new List<ColorOverride>(recipe.ColorCount);
+            for (int i = 0; i < recipe.ColorCount; i++)
+                if (recipe.colors[i].channel != CharacterColorChannels.EyeRight) colors.Add(recipe.colors[i]);
+            recipe.colors = colors.ToArray();
+        }
+
         /// <summary>Index of the swatch the channel currently uses, or -1 (the palette's own colour).</summary>
         public static int SwatchIndex(in CharacterRecipe recipe, in CharacterCreationDatabase.ColorChannel channel)
         {

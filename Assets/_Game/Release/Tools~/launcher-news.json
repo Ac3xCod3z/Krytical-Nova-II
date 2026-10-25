@@ -1,23 +1,80 @@
 {
   "items": [
     {
-      "title": "Back Into the World",
-      "body": "Entering Concord no longer leaves a black screen with the music playing: the game no longer rebuilds its lighting at the moment you arrive. Every map loads and shows as it should."
+      "title": "Mounts: the Brambleback",
+      "body": "Your first mount. A GM can give you a Brambleback; right-click it in your Pack and it goes into your Mount window. Press V to get on and off. You walk by default and gallop with Run, up to 34 m/s once it is fully grown."
     },
     {
-      "title": "Name Change Pass",
-      "body": "A new item gives your character a new name. Use it, type the name, and once the server takes it you return to character select after a 5 second count, so the server knows you by it. Coming to the Nova Store."
+      "title": "The Mount Window",
+      "body": "Press N for your Mount window, dressed in your faction's skin: four boxes for the four mounts of the game, your mount's picture for the stage it has grown to, its growth, hunger, stats and speeds. Click a mount you own to ride it."
     },
     {
-      "title": "Numbers in Names",
-      "body": "Character names may hold digits now, after the first letter: Ace007 and Rook9 are fine. Names are still one word of 3 to 16 characters, unique in the whole game."
+      "title": "Feed It, Grow It",
+      "body": "Mounts grow like pets. The mount you have selected earns EXP from your Hostile kills, gets hungry while you ride it and evolves twice, at 50% and 100%, into a bigger, armoured beast. Mount Feed is sold at the Apothecary. Each mount gives two of the four main stats."
     },
     {
-      "title": "Crew Tag Colours",
-      "body": "When you found a Crew you choose the colour of its tag's letters and of the plate behind them, with a live preview. Crews founded before keep their look."
+      "title": "Fight From the Saddle",
+      "body": "No need to get off: your strikes, skills and weapon draws play from the saddle while your mount keeps moving. Riders lean into the gallop and kick up dust at a walk, with the full speed trails at a run."
+    },
+    {
+      "title": "Faster Running",
+      "body": "The Run skill now tops out at 28 m/s at rank 20, every rank in between rescaled to match."
+    },
+    {
+      "title": "Hide Your Cape",
+      "body": "A CAPE: ON/OFF switch on the Equipment page, beside the helmet's. The cape keeps its stats; only its look is hidden."
+    },
+    {
+      "title": "New Gear: Hollow Warden & Scrap Sentinel",
+      "body": "Two new sets, hand-made in Blender: the Hollow Warden's bone-and-iron armour with its painted plates, and the Scrap Sentinel robot set. Plus Glowing Eyes and Heterochromia in the character creator and at the Reshaper."
     }
   ],
   "history": [
+    {
+      "label": "24 Oct 2026 · Name Change Pass & Crew tags",
+      "items": [
+        {
+          "title": "Back Into the World",
+          "body": "Entering Concord no longer leaves a black screen with the music playing: the game no longer rebuilds its lighting at the moment you arrive. Every map loads and shows as it should."
+        },
+        {
+          "title": "Name Change Pass",
+          "body": "A new item gives your character a new name. Use it, type the name, and once the server takes it you return to character select after a 5 second count, so the server knows you by it. Coming to the Nova Store."
+        },
+        {
+          "title": "Numbers in Names",
+          "body": "Character names may hold digits now, after the first letter: Ace007 and Rook9 are fine. Names are still one word of 3 to 16 characters, unique in the whole game."
+        },
+        {
+          "title": "Crew Tag Colours",
+          "body": "When you found a Crew you choose the colour of its tag's letters and of the plate behind them, with a live preview. Crews founded before keep their look."
+        }
+      ],
+      "patchNotes": [
+        {
+          "heading": "New",
+          "lines": [
+            "Name Change Pass: use it from your Pack, type your new name, and once the server accepts it you go back to character select after a 5 second count, under your new name. The pass is only used when the name is accepted. It will be sold in the Nova Store.",
+            "Character names may contain numbers, as long as they start with a letter.",
+            "Founding a Crew: pick the colour of the tag's letters and of its background, and see the tag as it will look before you found it."
+          ]
+        },
+        {
+          "heading": "Accounts",
+          "lines": [
+            "If you sign in with an account that already belongs to another player, the characters you played on this PC now come with you instead of being left behind.",
+            "Game Masters can move a player's characters from one account to another when a sign-in went wrong."
+          ]
+        },
+        {
+          "heading": "Fixes",
+          "lines": [
+            "Entering the world no longer turns the screen black while the music plays.",
+            "Closing the Deck puts your phone, orb or rune stone away, and the Hegemony Deck's play button is easy to read again."
+          ]
+        }
+      ]
+    },
     {
       "label": "22 Oct 2026 · Waterstride, the Deck & patch notes",
       "items": [
@@ -237,25 +294,46 @@
   ],
   "patchNotes": [
     {
-      "heading": "New",
+      "heading": "Mounts",
       "lines": [
-        "Name Change Pass: use it from your Pack, type your new name, and once the server accepts it you go back to character select after a 5 second count, under your new name. The pass is only used when the name is accepted. It will be sold in the Nova Store.",
-        "Character names may contain numbers, as long as they start with a letter.",
-        "Founding a Crew: pick the colour of the tag's letters and of its background, and see the tag as it will look before you found it."
+        "New: mounts. The Brambleback comes as an item; using it from your Pack adds it to your Mount window (N). Select it there and press V to get on or off.",
+        "Walk by default, gallop with the Run selection (the same button as on foot). Speed grows with the mount: walk 6 to 9 m/s, run 20 to 34 m/s. A starving mount rides at its slowest.",
+        "Three stages: Sapling, Thornhide (50%) and Elder Bramble (100%), each with its own model, armour and icon.",
+        "The selected mount earns EXP from your Hostile kills, ridden or not, and gets hungry only while you ride it. Mount Feed (Apothecary, 50 Creds) fills it.",
+        "Each mount gives two of the four main stats, up to +50 each at full growth. The Brambleback gives Vitality and Strength.",
+        "Fight mounted: strikes, skills and draws play on the upper body while the mount keeps going. Jumps and vaults take you off.",
+        "Riders sit each stage's own saddle with their feet in the stirrups, lean into a gallop, and mount and dismount with a full climb.",
+        "Dust at a walk, the full run trails at a gallop.",
+        "Two more mount boxes show as coming later: Grave Trot, Stone Horn and Circuit Strider."
       ]
     },
     {
-      "heading": "Accounts",
+      "heading": "New",
       "lines": [
-        "If you sign in with an account that already belongs to another player, the characters you played on this PC now come with you instead of being left behind.",
-        "Game Masters can move a player's characters from one account to another when a sign-in went wrong."
+        "Cape on/off: hide your cape's look from the Equipment page, as with helmets. It keeps its stats.",
+        "Hollow Warden and Scrap Sentinel gear sets.",
+        "Glowing Eyes and Heterochromia in the character creator and at the Reshaper; skeleton eye sockets take the bone colour.",
+        "Character creator: an Outfit bare/clothed switch and a height ruler on the Body tab.",
+        "Body sliders (Bust, Butt, Definition, Height) in the creator and at the Coach.",
+        "Capes, sashes, long hair and beards swing as you move.",
+        "Accessibility settings: colour-blind correction, HDR and a photosensitivity notice.",
+        "Cadence: a closing ring, a beat track, EARLY / LATE, a count-in and a metronome setting; the world's light keeps the beat in a fight."
+      ]
+    },
+    {
+      "heading": "Movement",
+      "lines": [
+        "Run speed now tops out at 28 m/s at rank 20.",
+        "Jump onto and off the water; fall in without Waterstride, with a big splash.",
+        "Walking on a dedicated server plays the walk, no longer a slowed run."
       ]
     },
     {
       "heading": "Fixes",
       "lines": [
-        "Entering the world no longer turns the screen black while the music plays.",
-        "Closing the Deck puts your phone, orb or rune stone away, and the Hegemony Deck's play button is easy to read again."
+        "Hair no longer twitches.",
+        "Autoward casts every ward on one press; Pass and Kiosk timers show correctly.",
+        "Strike Dummies hold Cadence until you deselect them and walk 30 m away."
       ]
     }
   ]

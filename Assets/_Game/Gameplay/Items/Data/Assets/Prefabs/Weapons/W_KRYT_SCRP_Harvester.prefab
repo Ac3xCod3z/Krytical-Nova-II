@@ -1,0 +1,258 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &1797015460416785334
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 7563815899881585297}
+  - component: {fileID: 7104136789427516604}
+  - component: {fileID: 5032497747796671335}
+  - component: {fileID: 5400378492431977528}
+  - component: {fileID: 4818557590149710383}
+  m_Layer: 0
+  m_Name: W_KRYT_SCRP_Harvester
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &7563815899881585297
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1797015460416785334}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 3936544758448946926}
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &7104136789427516604
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1797015460416785334}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 27a0b2f383b20a04ead8add7cce65f0e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: KryticalNova.Items::KryticalNova.Items.Visuals.WeaponGrip
+  twoHanded: 0
+  offHandAt: {x: 0, y: 0, z: 0}
+  offHandFrom: {x: 0, y: 0, z: 0}
+  offHandTo: {x: 0, y: 0, z: 0}
+--- !u!114 &5032497747796671335
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1797015460416785334}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3ec9666289507b04d82338b034be8b99, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: KryticalNova.Items::KryticalNova.Items.Visuals.WeaponGlowZone
+  zone:
+    mode: 1
+    box:
+      m_Center: {x: -0.019356921, y: -0.19913995, z: 1.12}
+      m_Extent: {x: 0.1473878, y: 0.60020185, z: 0.26000008}
+    dark:
+      m_Center: {x: 0, y: 0, z: 0}
+      m_Extent: {x: 0, y: 0, z: 0}
+  exclude: []
+  keepAsSet: 0
+--- !u!114 &5400378492431977528
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1797015460416785334}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbf1bd061d12ae346aa55bea77fb59b6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: KryticalNova.Items::KryticalNova.Items.Visuals.WeaponReach
+  points:
+  - {x: -0.020357508, y: 0.3810619, z: 1.1330026}
+  - {x: -0.02105241, y: 0.09711808, z: -0.27709436}
+  - {x: 0.0013180895, y: 0.36398202, z: 1.1847621}
+  - {x: -0.04107525, y: 0.37689131, z: 1.1334625}
+  - {x: -0.008613731, y: 0.09632173, z: -0.27702788}
+  - {x: -0.020244692, y: 0.36740297, z: 1.186102}
+  - {x: -0.034316182, y: 0.0962632, z: -0.27698833}
+  - {x: 0.001209431, y: 0.37698752, z: 1.1333975}
+  - {x: -0.040966593, y: 0.36388582, z: 1.1848272}
+  - {x: 0.016263913, y: 0.35295272, z: 1.1825534}
+  - {x: -0.05596711, y: 0.36366248, z: 1.1348556}
+  - {x: -0.019936826, y: 0.2826279, z: 1.2607559}
+  - {x: 0.061119106, y: 0.2946871, z: 1.1502002}
+  - {x: -0.055868775, y: 0.35278857, z: 1.1826645}
+  - {x: -0.0052177133, y: 0.019949375, z: -0.33828923}
+  - {x: 0.04607163, y: 0.12242001, z: 1.3539926}
+  - {x: -0.04505109, y: 0.080997884, z: -0.27122152}
+  - {x: -0.08409885, y: 0.12212371, z: 1.3541929}
+  - {x: -0.037553053, y: 0.01987576, z: -0.33823946}
+  - {x: 0.07552847, y: 0.21933565, z: 1.2430295}
+  - {x: -0.11433803, y: 0.21890344, z: 1.2433215}
+  - {x: 0.10779425, y: 0.16265471, z: 1.1138338}
+  - {x: -0.020974988, y: 0.020566966, z: -0.33999994}
+  - {x: -0.07541511, y: -0.004414778, z: -0.19396085}
+  - {x: 0.10793934, y: 0.13679686, z: 1.1698669}
+  - {x: 0.04613591, y: 0.096030235, z: 1.3567325}
+  - {x: -0.05078917, y: 0.019255277, z: -0.31981918}
+  - {x: 0.008077735, y: 0.019389274, z: -0.3199098}
+  - {x: -0.08403457, y: 0.09573393, z: 1.3569328}
+  - {x: -0.14651714, y: 0.09833635, z: 1.1666895}
+  - {x: -0.0033446788, y: -0.06928345, z: -0.330694}
+  - {x: 0.017905021, y: -0.25385755, z: 1.3514187}
+  - {x: -0.038996466, y: -0.06936461, z: -0.33063912}
+  - {x: 0.013444379, y: -0.58022594, z: 1.2027581}
+  - {x: -0.06740005, y: -0.30766517, z: 1.332943}
+  - {x: 0.018024437, y: -0.31130573, z: 1.3440461}
+  - {x: -0.05390473, y: -0.06322017, z: -0.31125194}
+  - {x: 0.011595067, y: -0.063071094, z: -0.31135273}
+  - {x: -0.05410825, y: -0.31146994, z: 1.344157}
+  - {x: -0.04873897, y: -0.58036757, z: 1.2028539}
+  - {x: 0.019043142, y: -0.4212612, z: 1.3046131}
+  - {x: -0.017271323, y: -0.77934176, z: 0.88337445}
+  - {x: -0.03712488, y: -0.5640638, z: 1.2311544}
+  - {x: -0.020758167, y: -0.06949431, z: -0.33231655}
+  - {x: 0.0018680737, y: -0.58465517, z: 1.2165704}
+  - {x: -0.017195698, y: -0.77036023, z: 0.9457933}
+  - {x: -0.02541947, y: -0.68426055, z: 1.116916}
+  - {x: -0.036463164, y: -0.082436614, z: -0.3201159}
+  - {x: -0.017123813, y: -0.73508805, z: 1.0446604}
+  - {x: -0.0172297, y: -0.77799433, z: 0.91240954}
+  - {x: -0.007304165, y: -0.113550514, z: -0.2752448}
+  - {x: -0.017144037, y: -0.7504866, z: 1.0087484}
+  - {x: -0.017167997, y: -0.7622441, z: 0.97579277}
+--- !u!114 &4818557590149710383
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1797015460416785334}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 49c780d2153aaad4196a180e3fe8d87d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: KryticalNova.Items::KryticalNova.Items.Visuals.WeaponPaint
+  bands:
+  - hue: 0.09423162
+    width: 0.06
+    role: 4
+    value: 0.733044
+  - hue: 0.25471696
+    width: 0.06
+    role: 1
+    value: 0.7019608
+  shades: []
+  paintMetal: 1
+  paintDark: 1
+  paintLights: 1
+  keepAsSet: 0
+--- !u!1 &7552005371915854027
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 3936544758448946926}
+  - component: {fileID: 8752375262799986096}
+  - component: {fileID: 5571995662875132610}
+  m_Layer: 0
+  m_Name: Model
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &3936544758448946926
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7552005371915854027}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0.7071067, y: -0.000000030908616, z: -0.00000003090862, w: -0.7071068}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 7563815899881585297}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!33 &8752375262799986096
+MeshFilter:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7552005371915854027}
+  m_Mesh: {fileID: -9054439131185475329, guid: 3c621ccf8686cf148913699b12360296, type: 3}
+--- !u!23 &5571995662875132610
+MeshRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7552005371915854027}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_DynamicOccludee: 1
+  m_StaticShadowCaster: 0
+  m_MotionVectors: 1
+  m_LightProbeUsage: 1
+  m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
+  m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
+  m_RenderingLayerMask: 1
+  m_RendererPriority: 0
+  m_Materials:
+  - {fileID: 2100000, guid: c6caaea5a864e6e4f9c062f2cca94fe0, type: 2}
+  m_StaticBatchInfo:
+    firstSubMesh: 0
+    subMeshCount: 0
+  m_StaticBatchRoot: {fileID: 0}
+  m_ProbeAnchor: {fileID: 0}
+  m_LightProbeVolumeOverride: {fileID: 0}
+  m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
+  m_PreserveUVs: 0
+  m_IgnoreNormalsForChartDetection: 0
+  m_ImportantGI: 0
+  m_StitchLightmapSeams: 1
+  m_SelectedEditorRenderState: 3
+  m_MinimumChartSize: 4
+  m_AutoUVMaxDistance: 0.5
+  m_AutoUVMaxAngle: 89
+  m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_MaskInteraction: 0
+  m_AdditionalVertexStreams: {fileID: 0}

@@ -161,6 +161,8 @@ namespace KryticalNova.UI
             BindButton("preview-reset", () => stage?.ResetView());
             helmetToggle = root.Q<Button>("helmet-toggle");
             BindButton("helmet-toggle", ToggleHelmet);
+            capeToggle = root.Q<Button>("cape-toggle");
+            BindButton("cape-toggle", ToggleCape);
             BindButton("item-confirm-yes", ConfirmDrop);
             BindButton("item-confirm-no", HideConfirm);
             BindButton("open-inventory", () => SetInventoryOpen(!IsOpen(inventoryWindow)));
@@ -246,6 +248,7 @@ namespace KryticalNova.UI
             RefreshCreds();
             RefreshOwner();
             RefreshHelmet();
+            RefreshCape();
         }
 
         // ------------------------------------------------------------------ helmet (vanity toggle, not a slot)
@@ -255,6 +258,26 @@ namespace KryticalNova.UI
         private void OnLookChanged(EquipSlot slot)
         {
             if (slot == EquipSlot.Armor) RefreshHelmet();
+            if (slot == EquipSlot.Cape) RefreshCape();
+        }
+
+        // ------------------------------------------------------------------ cape (vanity toggle, owner 25 Oct 2026)
+
+        private Button capeToggle;
+
+        private void ToggleCape()
+        {
+            if (equipment == null || !equipment.TryGetComponent(out KryticalNova.Restyle.PlayerWeaves weaves)) return;
+            weaves.RequestCapeShown(!equipment.CapeShown);
+        }
+
+        /// <summary>The button shows only while a cape is worn; its text says whether it is drawn.</summary>
+        private void RefreshCape()
+        {
+            if (capeToggle == null) return;
+            bool worn = equipment != null && equipment.GetDefinition(EquipSlot.Cape) != null;
+            capeToggle.style.display = worn ? DisplayStyle.Flex : DisplayStyle.None;
+            capeToggle.text = equipment != null && equipment.CapeShown ? "CAPE: ON" : "CAPE: OFF";
         }
 
         private void ToggleHelmet()
@@ -555,6 +578,7 @@ namespace KryticalNova.UI
         {
             RefreshEquipment();
             if (slot == EquipSlot.Armor) RefreshHelmet();
+            if (slot == EquipSlot.Cape) RefreshCape();
         }
 
         /// <summary>

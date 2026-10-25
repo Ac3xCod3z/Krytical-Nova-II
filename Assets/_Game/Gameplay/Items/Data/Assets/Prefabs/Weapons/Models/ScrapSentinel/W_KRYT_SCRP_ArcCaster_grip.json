@@ -1,0 +1,35 @@
+{
+ "weapon": "W_KRYT_SCRP_ArcCaster",
+ "kind": "pistol",
+ "source": "G:/My Drive/Krytical Nova Armors/Rares lv.45-75/Robot/Scrap Sentinel ArcCaster/ScrapSentinel_ArcCaster.fbx",
+ "scale": 1.1801,
+ "frame": "Blender: grip at the origin, butt -> tip +Y, broad side +Z (a pistol's handle -Z)",
+ "length_m": 1.18,
+ "butt_y": -0.236,
+ "tip_y": 0.944,
+ "faces": 5255,
+ "palette_use": {
+  "#363135": 0.51,
+  "#C7892B": 0.141,
+  "#97B37E": 0.098,
+  "#776D6D": 0.046,
+  "#D8C6B0": 0.044,
+  "#9F866E": 0.038,
+  "#4C5B4D": 0.034,
+  "#664429": 0.033,
+  "#9D6B2D": 0.028,
+  "#F4B741": 0.017,
+  "#1C191A": 0.011,
+  "#F9EBCF": 0.0
+ },
+ "main_hand": {
+  "hand": "right",
+  "point": [
+   0,
+   0,
+   0
+  ]
+ },
+ "grip_along": 0.2,
+ "handle_side": "down"
+}

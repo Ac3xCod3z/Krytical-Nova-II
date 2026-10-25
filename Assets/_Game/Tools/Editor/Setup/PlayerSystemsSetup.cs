@@ -54,6 +54,7 @@ namespace KryticalNova.EditorTools
         // loop (the body is moved by the motor, never by the clip), and the Base Locomotion crouch and fall.
         private const string VaultCopies = "Assets/_Game/Characters/Player/Animations/Vaults/";
         private const string BaseLocomotion = "Assets/Synty/AnimationBaseLocomotion/Animations/Sidekick/Masculine/";
+        public const string MountCatalogPath = "Assets/_Game/Gameplay/Mounts/Data/Assets/MountCatalog.asset";
         public const string FlaskSettingsPath = "Assets/_Game/Gameplay/Items/Data/Assets/FlaskSettings.asset";
         public const string FurnishingCatalogPath = "Assets/_Game/Gameplay/Housing/Data/Assets/FurnishingCatalog.asset";
         private const string ExpressionLibraryPath = "Assets/_Game/Gameplay/CharacterCreation/Data/Assets/CharacterExpressionLibrary.asset";
@@ -74,6 +75,10 @@ namespace KryticalNova.EditorTools
             // Cadence: a skill key pressed on the beat of the fight music (design 17).
             new Row("KryticalNova.Combat.PlayerCadence", ("settings", CadenceSettingsPath)),
             new Row("KryticalNova.Pets.PlayerPet", ("catalog", "Assets/_Game/Gameplay/Pets/Data/Assets/PetCatalog.asset")),
+            // Mounts (owner, 25 Oct 2026): the four boxes, riding, feed and growth (server); Mount Feed; the look of a ride.
+            new Row("KryticalNova.Mounts.PlayerMounts", ("catalog", MountCatalogPath)),
+            new Row("KryticalNova.Mounts.MountFeeding"),
+            new Row("KryticalNova.Mounts.MountRider"),
             new Row("KryticalNova.Economy.PlayerWallet", ("settings", EconomySettingsPath)),
             new Row("KryticalNova.Items.PlayerLoot", ("dropPrefab", GameplayPrefabsSetup.WorldDropPath)),
             new Row("KryticalNova.Economy.PlayerVault"),

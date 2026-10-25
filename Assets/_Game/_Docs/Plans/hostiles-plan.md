@@ -501,7 +501,7 @@ Gap = Hostile level − player level. The player sees the colour for their own l
 
 **Death penalty (closes build-list row 30):** lose 5% of current-level XP on death while hunting, never dropping a level; no penalty from Prime 33 up, in Callouts or in PvP.
 
-**Zone level bands (3-level species steps):**
+**Zone level bands (3-level species steps).** *Owner, 25 Oct 2026: the bands below are replaced in the World Atlas (`../Design/World-Atlas.md`, "How the world fits together"): a Home City's outskirts 1–20 (species 1–19, Bruisers 12, 20), Z1 18–40, Z2 38–60, Z3 58–80, Z4 78–100, The Scar 95–108, the Ruptureworks 105–112. Zone01 (Concord) keeps its built 1–22. The table is the plan as first written:*
 
 | Zone | Band | Species levels (one Hostile type each) | Bruiser level |
 |---|---|---|---|

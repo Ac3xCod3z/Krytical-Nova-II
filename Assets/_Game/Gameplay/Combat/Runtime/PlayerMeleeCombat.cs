@@ -426,7 +426,8 @@ namespace KryticalNova.Combat
         {
             if (animancer == null || clip == null) return;
 
-            var state = animancer.Play(clip, comboCrossFade);
+            // Through the motor: on a mount only the upper body swings (owner, 25 Oct 2026).
+            var state = animancerMotor != null ? animancerMotor.PlayAction(clip, comboCrossFade) : animancer.Play(clip, comboCrossFade);
             state.Speed = speed;
             state.Time = 0f;
             state.ApplyFootIK = strikeFootIK;

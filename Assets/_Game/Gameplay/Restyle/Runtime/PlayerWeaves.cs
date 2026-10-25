@@ -165,6 +165,20 @@ namespace KryticalNova.Restyle
             ServerHelmet(shown);
         }
 
+        /// <summary>Show or hide the worn cape's look (the Equipment page's toggle, as the helmet's). Free, anywhere; the cape keeps its stats.</summary>
+        public void RequestCapeShown(bool shown)
+        {
+            if (IsSpawned) CapeRpc(shown);
+            else ServerCape(shown);
+        }
+
+        [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
+        private void CapeRpc(bool shown)
+        {
+            if (!RpcBudget.Allow(this, CallKind.Items, nameof(CapeRpc))) return;
+            ServerCape(shown);
+        }
+
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
         private void WeaveRpc(byte slot, ushort lineId)
         {
@@ -233,6 +247,15 @@ namespace KryticalNova.Restyle
             EquipmentLooks looks = equipment.Looks;
             if (looks.helmetHidden == !shown) return;
             looks.helmetHidden = !shown;
+            Commit(looks);
+        }
+
+        private void ServerCape(bool shown)
+        {
+            if (!HasAuthority) return;
+            EquipmentLooks looks = equipment.Looks;
+            if (looks.capeHidden == !shown) return;
+            looks.capeHidden = !shown;
             Commit(looks);
         }
 

@@ -706,6 +706,24 @@
                     "initialStateCheck": false
                 },
                 {
+                    "name": "Mounts",
+                    "type": "Button",
+                    "id": "772bd0a0-88a1-4bfe-9388-0130000000f1",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "Ride",
+                    "type": "Button",
+                    "id": "772bd0a0-88a1-4bfe-9388-0130000000f2",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
                     "name": "Guide",
                     "type": "Button",
                     "id": "772bd0a0-88a1-4bfe-9388-01300000000e",
@@ -876,6 +894,28 @@
                     "processors": "",
                     "groups": "Keyboard&Mouse",
                     "action": "Deck",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "282bd0a0-88a1-4bfe-9388-0130000000f1",
+                    "path": "<Keyboard>/n",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Keyboard&Mouse",
+                    "action": "Mounts",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "282bd0a0-88a1-4bfe-9388-0130000000f2",
+                    "path": "<Keyboard>/v",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Keyboard&Mouse",
+                    "action": "Ride",
                     "isComposite": false,
                     "isPartOfComposite": false
                 },

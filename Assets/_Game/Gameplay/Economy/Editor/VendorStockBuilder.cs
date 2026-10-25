@@ -56,6 +56,7 @@ namespace KryticalNova.EditorTools.Economy
                     (Consumables + "Recall_Tag.asset", 150L),
                     (Consumables + "Flux_Flask.asset", 600L),
                     (Consumables + "Pet_Ration.asset", 50L),
+                    (Consumables + "Mount_Feed.asset", 50L), // placeholder price (owner, 25 Oct 2026: tune later)
                 },
             },
             // The two basic Alloys and the plain material of the other forge jobs, then Common gear by rule.

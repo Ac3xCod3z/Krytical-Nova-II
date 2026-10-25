@@ -303,12 +303,13 @@ namespace KryticalNova.Combat
             if (animancerMotor != null) animancerMotor.SetAttackingState(true);
             // A quick clip waits in the ready pose so its hits land on the timing every class shares (castClipDelay).
             if (skill.castClipDelay > 0f) yield return new WaitForSeconds(skill.castClipDelay);
-            var state = animancer.Play(skill.castClip, castCrossFade);
+            var state = PlayCast(skill.castClip, castCrossFade);
             state.Speed = skill.castClipSpeed;
             state.Time = skill.castClipTrim; // a long wind-up starts part-way in
             state.ApplyFootIK = castFootIK;
 
-            if (!skill.HasCastLift)
+            // A rider casts from the saddle: no leap.
+            if (!skill.HasCastLift || Seated)
             {
                 yield return new WaitForSeconds(Mathf.Max(0f, skill.CastLockDuration - skill.castClipDelay));
             }
@@ -350,7 +351,7 @@ namespace KryticalNova.Combat
         private IEnumerator ChannelRoutine(SkillDefinitionSO skill)
         {
             if (animancerMotor != null) animancerMotor.SetAttackingState(true);
-            var enter = animancer.Play(skill.castClip, castCrossFade);
+            var enter = PlayCast(skill.castClip, castCrossFade);
             enter.Speed = skill.castClipSpeed;
             enter.Time = 0f;
             enter.ApplyFootIK = castFootIK;
@@ -360,13 +361,13 @@ namespace KryticalNova.Combat
 
             if (IsChanneling(skill))
             {
-                animancer.Play(skill.channelLoopClip, ChannelCrossFade).ApplyFootIK = castFootIK;
+                PlayCast(skill.channelLoopClip, ChannelCrossFade).ApplyFootIK = castFootIK;
                 while (IsChanneling(skill)) yield return null;
             }
 
             if (BodyIsFree)
             {
-                var exit = animancer.Play(skill.castClip, ChannelCrossFade);
+                var exit = PlayCast(skill.castClip, ChannelCrossFade);
                 exit.Speed = -skill.castClipSpeed;
                 exit.NormalizedTime = 1f;
                 exit.ApplyFootIK = castFootIK;
@@ -460,8 +461,14 @@ namespace KryticalNova.Combat
             if (presentRoutine != null) { StopCoroutine(presentRoutine); presentRoutine = null; }
             SetBodyLift(0f);
             if (animancerMotor != null) animancerMotor.SetAttackingState(true);
-            animancer.Play(skill.chargeLoopClip, castCrossFade).ApplyFootIK = castFootIK;
+            PlayCast(skill.chargeLoopClip, castCrossFade).ApplyFootIK = castFootIK;
         }
+
+        private bool Seated => animancerMotor != null && animancerMotor.IsSeated;
+
+        // Through the motor: on a mount only the upper body casts, over the seat (owner, 25 Oct 2026).
+        private AnimancerState PlayCast(AnimationClip clip, float fade) =>
+            animancerMotor != null ? animancerMotor.PlayAction(clip, fade) : animancer.Play(clip, fade);
 
         private void PresentChargeEnded(SkillDefinitionSO skill, bool completed)
         {

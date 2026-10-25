@@ -63,6 +63,38 @@ namespace KryticalNova.Items.Visuals
             return part.IsValid;
         }
 
+        // A part's lights (lenses, lamps): the Sidekick shader has no emission, so they are a small mesh of their own on
+        // the same rig, by the part's name plus "_Lights" (owner, 24 Oct 2026: the Scrap Sentinel lens must glow).
+        private const string LightsFolder = "Meshes/PartLights/";
+        private const string LightMaterialPath = LightsFolder + "M_PartLight";
+        private static readonly Dictionary<Mesh, SidekickPartRef> Lights = new Dictionary<Mesh, SidekickPartRef>();
+        private static Material lightMaterial;
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetLights() { Lights.Clear(); lightMaterial = null; }
+
+        /// <summary>The glowing lights of <paramref name="part"/> and the material they glow in; false when it has none.</summary>
+        public static bool TryLoadLights(SidekickPartRef part, out SidekickPartRef lights, out Material material)
+        {
+            lights = default;
+            material = null;
+            if (part.mesh == null) return false;
+            if (!Lights.TryGetValue(part.mesh, out lights))
+            {
+                string name = part.mesh.name;
+                int lod = name.IndexOf(' ');
+                if (lod > 0) name = name.Substring(0, lod);
+                var model = Resources.Load<GameObject>(LightsFolder + name + "_Lights");
+                var smr = model != null ? model.GetComponentInChildren<SkinnedMeshRenderer>(true) : null;
+                if (smr != null) lights = SidekickPartRefs.FromRenderer(smr, part.region);
+                Lights[part.mesh] = lights;
+            }
+            if (!lights.IsValid) return false;
+            if (lightMaterial == null) lightMaterial = Resources.Load<Material>(LightMaterialPath);
+            material = lightMaterial;
+            return material != null;
+        }
+
         /// <summary>Loads several parts into <paramref name="results"/>, skipping any that fail.</summary>
         public static void LoadAll(SidekickPartCatalog catalog, IReadOnlyList<ushort> ids, List<SidekickPartRef> results)
         {

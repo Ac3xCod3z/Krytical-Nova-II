@@ -69,6 +69,10 @@ namespace KryticalNova.UI.Menus
 
         [Header("Colour")]
         [SerializeField] private MenuSwatchGroup[] swatchGroups = Array.Empty<MenuSwatchGroup>();
+        [Tooltip("The right eye's own colour, shown under the eye colour while Heterochromia is on.")]
+        [SerializeField] private MenuSwatchGroup rightEyeGroup;
+        [Tooltip("The eyes' switches: Glowing Eyes, then Heterochromia.")]
+        [SerializeField] private MenuOptionRow[] colourRows = Array.Empty<MenuOptionRow>();
 
         [Header("Finalise")]
         [SerializeField] private TMP_InputField nameInput;
@@ -179,6 +183,18 @@ namespace KryticalNova.UI.Menus
             if (tab == Tab.Preview && next != Tab.Preview) ResetPreview();
             if (tab == Tab.Head && next != Tab.Head) ShowMouth(false);
             tab = next;
+            // The Body tab shows the body bare or clothed, as the player switches it (owner, 24 Oct 2026: a toggle, so they
+            // see themselves either way); every other tab shows the outfit. The ruler is the Body tab's.
+            if (showroom != null)
+            {
+                bool bare = next == Tab.Body && bodyBare;
+                if (!bare) showroom.HideHeightRuler();
+                if (showroom.Bare != bare)
+                {
+                    showroom.Bare = bare;
+                    Preview();
+                }
+            }
             for (int i = 0; i < tabButtons.Length; i++)
                 if (tabButtons[i] != null) tabButtons[i].SetSelected(TabOfButton(i) == next);
             SetActive(originSection, next == Tab.Origin || next == Tab.Discipline);
@@ -361,6 +377,17 @@ namespace KryticalNova.UI.Menus
             SetListTitle("Body");
             int row = 0;
             if (setup.builds.Count > 0 && row < optionRows.Length) optionRows[row++].Show("Build", BuildName, StepBuild);
+            // Bare or clothed while the proportions are set (owner, 24 Oct 2026); starts bare, the choice is kept.
+            if (row < optionRows.Length) optionRows[row++].Show("Outfit", () => bodyBare ? "Bare" : "Clothed", _ =>
+            {
+                bodyBare = !bodyBare;
+                if (showroom != null && tab == Tab.Body)
+                {
+                    showroom.Bare = bodyBare;
+                    Preview();
+                }
+                RefreshOptionRows();
+            });
             HideOptionRows(row);
             if (sliderRows.Length > 0)
                 sliderRows[0].Show("Body Size", "Slim", "Heavy", -100f, 100f, recipe.build, v => ShapeChanged(BuildSlider, (sbyte)v, recipe.muscle));
@@ -376,9 +403,17 @@ namespace KryticalNova.UI.Menus
             }
             else if (BodyHas("kn_defined"))
                 ShowSlider(slider++, "Definition", "Smooth", "Defined", recipe.defined, DefinedSlider, v => recipe.defined = v);
-            ShowSlider(slider++, "Height", "Short", "Tall", recipe.Height, HeightSlider, v => recipe.height = v);
+            // While the height changes, a ruler with a tree for scale stands beside the character (owner, 24 Oct 2026).
+            ShowSlider(slider++, "Height", "Short", "Tall", recipe.Height, HeightSlider, v =>
+            {
+                recipe.height = v;
+                if (showroom != null) showroom.ShowHeightRuler();
+            });
             for (int i = slider; i < sliderRows.Length; i++) sliderRows[i].Hide();
         }
+
+        // The Body tab's Outfit switch: the body shown bare (true) or in the basic outfit.
+        private bool bodyBare = true;
 
         private readonly Dictionary<(byte, string), bool> bodyKeys = new Dictionary<(byte, string), bool>();
 
@@ -605,14 +640,51 @@ namespace KryticalNova.UI.Menus
                 foreach (var tone in setup.skinTones) skinSwatches.Add(tone.swatch);
                 swatchGroups[group++].Show("Skin", skinSwatches, recipe.skinTone - 1, PickSkin);
             }
+            bool twoEyes = setup.OffersChannel(CharacterColorChannels.Eyes) && RecipeEdit.HasHeterochromia(recipe);
             foreach (byte id in setup.channels)
             {
                 if (group >= swatchGroups.Length) break;
                 if (!database.TryGetChannel(id, out var channel) || channel.swatches == null) continue;
                 var picked = channel;
-                swatchGroups[group++].Show(channel.displayName, channel.swatches, RecipeEdit.SwatchIndex(recipe, channel), index => PickColor(picked, index));
+                string label = twoEyes && id == CharacterColorChannels.Eyes ? "Left Eye" : channel.displayName;
+                swatchGroups[group++].Show(label, channel.swatches, RecipeEdit.SwatchIndex(recipe, channel), index => PickColor(picked, index));
             }
             for (; group < swatchGroups.Length; group++) swatchGroups[group].Hide();
+            ShowEyeOptions(twoEyes);
+        }
+
+        /// <summary>
+        /// Glowing Eyes for every lineage; Heterochromia, with the right eye's own swatches, wherever eye colour is
+        /// offered (owner, 24 Oct 2026). Both are On/Off arrow rows, as the Body tab's Outfit row is.
+        /// </summary>
+        private void ShowEyeOptions(bool twoEyes)
+        {
+            if (rightEyeGroup != null)
+            {
+                if (twoEyes && database.TryGetChannel(CharacterColorChannels.EyeRight, out var right) && right.swatches != null)
+                    rightEyeGroup.Show(right.displayName, right.swatches, RecipeEdit.SwatchIndex(recipe, right), index => PickColor(right, index));
+                else rightEyeGroup.Hide();
+            }
+            int row = 0;
+            if (row < colourRows.Length)
+                colourRows[row++].Show("Glowing Eyes", () => recipe.eyeGlow ? "On" : "Off", _ =>
+                {
+                    Record(DiscreteEdit);
+                    recipe.eyeGlow = !recipe.eyeGlow;
+                    Preview();
+                    ShowColours();
+                });
+            if (row < colourRows.Length && setup.OffersChannel(CharacterColorChannels.Eyes))
+                colourRows[row++].Show("Heterochromia", () => RecipeEdit.HasHeterochromia(recipe) ? "On" : "Off", _ =>
+                {
+                    Record(DiscreteEdit);
+                    Color32 fallback = database.TryGetChannel(CharacterColorChannels.Eyes, out var eyes) && eyes.swatches != null
+                        && eyes.swatches.Length > 0 ? eyes.swatches[0] : new Color32(107, 74, 39, 255);
+                    RecipeEdit.SetHeterochromia(ref recipe, !RecipeEdit.HasHeterochromia(recipe), fallback);
+                    Preview();
+                    ShowColours();
+                });
+            for (; row < colourRows.Length; row++) if (colourRows[row] != null) colourRows[row].Hide();
         }
 
         private void PickSkin(int index)

@@ -296,6 +296,9 @@
 .helmet-toggle {
     top: 32px;
 }
+.cape-toggle {
+    top: 58px;
+}
 .try-on-chip {
     position: absolute;
     left: 6px; top: 6px;

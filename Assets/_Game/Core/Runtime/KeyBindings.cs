@@ -32,6 +32,10 @@ namespace KryticalNova.Core
         public const string AutopilotSettings = "AutopilotSettings";
         public const string Arrange = "Arrange";
         public const string Deck = "Deck";
+        /// <summary>The Mount window (owner, 25 Oct 2026: N).</summary>
+        public const string Mounts = "Mounts";
+        /// <summary>Gets on the selected mount, or off it (owner, 25 Oct 2026: V).</summary>
+        public const string Ride = "Ride";
 
         /// <summary>A window key: its action in the asset's Windows map, and what the Controls list calls it.</summary>
         public readonly struct WindowKey
@@ -59,6 +63,8 @@ namespace KryticalNova.Core
             new WindowKey(AutopilotSettings, "Autopilot and Magnet"),
             new WindowKey(Arrange, "Arrange (Furnishing Crate)"),
             new WindowKey(Deck, "The Deck (music)"),
+            new WindowKey(Mounts, "Mounts"),
+            new WindowKey(Ride, "Mount / dismount"),
         };
 
         /// <summary>The player-asset actions the Controls list offers, by map, with the name it shows for each.</summary>

@@ -13,9 +13,9 @@ MonoBehaviour:
   m_Name: Weapon_ArcCaster_R45
   m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Items.ItemDefinition
   itemId: 12256
-  displayName: Plasma Caster
+  displayName: Scrap Sentinel Arc Caster
   description: 'Arc Caster: the ranged weapon of the Null.'
-  icon: {fileID: 21300000, guid: be5867b47cc0694439c00dc4652bdfe5, type: 3}
+  icon: {fileID: 21300000, guid: baa0a18f8a5aa584995343df045fb348, type: 3}
   sharesIconOf: {fileID: 0}
   rarity: 2
   equipSlot: 1
@@ -51,12 +51,12 @@ MonoBehaviour:
   colorTheme: 0
   colorThemes: {fileID: 0}
   colorCells: 
-  weaponPrefab: {fileID: 8349965750577355173, guid: a8a99f599f5b1434e9a2d3c2bf5c7898, type: 3}
+  weaponPrefab: {fileID: 4097993117772466456, guid: de4f90fdf5c009a46a9e15979e34bc9a, type: 3}
   weaponLocalPosition: {x: 0, y: 0, z: 0}
   weaponLocalEuler: {x: 270, y: 0, z: 180}
   weaponLocalScale: {x: 1, y: 1, z: 1}
-  hitboxCenter: {x: 0, y: 0.04757885, z: 0.43121338}
-  hitboxSize: {x: 0.18, y: 0.30649972, z: 0.76242673}
+  hitboxCenter: {x: 0, y: 0.15902804, z: 0.52199996}
+  hitboxSize: {x: 0.26563725, y: 0.41291195, z: 0.9439999}
   paired: 0
   offHandLocalPosition: {x: 0, y: 0, z: 0}
   offHandLocalEuler: {x: 0, y: 0, z: 0}

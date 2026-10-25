@@ -155,6 +155,8 @@ def main():
     rig = bpy.data.objects["SK_Rig"]
     armor = [o for o in bpy.data.objects if o.type == "MESH" and o.name.startswith("SK_KRYT_")]
     covered = {o.name.split("_")[4] for o in armor}
+    if any(o.name.split(".")[0].endswith("_22AHED_RO01") for o in armor):
+        covered.add("01HEAD")                  # a robot set's head piece is the head (the game hides the bare one)
     body = [o for o in bpy.data.objects if o.type == "MESH" and o.parent == rig and not o.name.startswith("SK_KRYT_")]
     hidden_body = [o for o in body if o.name.split("_")[4] in covered]
     for o in bpy.data.objects:

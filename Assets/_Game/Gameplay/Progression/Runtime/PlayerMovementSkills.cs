@@ -38,13 +38,32 @@ namespace KryticalNova.Progression
         public int RunRank => runRank;
         public int JumpRank => jumpRank;
         public bool IsRunning => selectedSkill == MovementSkillId.Run && runRank > 0;
-        public bool IsJumpSelected => selectedSkill == MovementSkillId.Jump && jumpRank > 0;
-        public float CurrentSpeed => BaseSpeed * StatSpeedMultiplier * (gmState != null ? Mathf.Max(0.1f, gmState.SpeedMultiplier) : 1f);
+        /// <summary>A rider does not jump (owner, 25 Oct 2026: get off first).</summary>
+        public bool IsJumpSelected => selectedSkill == MovementSkillId.Jump && jumpRank > 0 && !IsRiding;
+        /// <summary>On a mount: walking and running go at the mount's speeds (<see cref="SetRideSpeeds"/>).</summary>
+        public bool IsRiding => rideWalkSpeed > 0f;
+        public float CurrentSpeed => BaseSpeed * (IsRiding ? 1f : StatSpeedMultiplier) * (gmState != null ? Mathf.Max(0.1f, gmState.SpeedMultiplier) : 1f);
         /// <summary>What the Move Speed stat (Boots, the ranged Stance) multiplies walking and running by.</summary>
         public float StatSpeedMultiplier => movementSettings == null || combatStats == null ? 1f
             : movementSettings.StatSpeedMultiplier(combatStats.GetStatValue(StatType.MoveSpeedPercent));
-        private float BaseSpeed => movementSettings == null ? 0f : IsRunning && runSkill != null && runSkill.TryGetRank(runRank, out var rank)
+        private float BaseSpeed => IsRiding ? (IsRunning ? rideRunSpeed : rideWalkSpeed)
+            : movementSettings == null ? 0f : IsRunning && runSkill != null && runSkill.TryGetRank(runRank, out var rank)
             ? Mathf.Max(movementSettings.walkSpeed, rank.runSpeed) : movementSettings.walkSpeed;
+
+        private float rideWalkSpeed, rideRunSpeed;
+
+        /// <summary>
+        /// The mount's walk and run, in metres a second, while its rider is on it; 0 = on foot again. Run is still
+        /// the Run selection (the same button as on foot). The Move Speed stat does not add to it (owner, 25 Oct 2026: a
+        /// mount's top speed is 34 m/s); a GM's speed still does.
+        /// Set on every machine by the mount system.
+        /// </summary>
+        public void SetRideSpeeds(float walk, float run)
+        {
+            rideWalkSpeed = Mathf.Max(0f, walk);
+            rideRunSpeed = Mathf.Max(rideWalkSpeed, run);
+            Changed?.Invoke();
+        }
 
         /// <summary>True where this player's ranks and selection are decided (the server, or offline).</summary>
         public bool HasAuthority => !IsSpawned || IsServer;

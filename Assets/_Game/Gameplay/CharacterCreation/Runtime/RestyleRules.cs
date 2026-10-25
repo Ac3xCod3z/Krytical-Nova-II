@@ -20,6 +20,11 @@ namespace KryticalNova.CharacterCreation
     public static class CharacterColorChannels
     {
         public const byte Hair = 1, Eyes = 2, Glow = 3, Bone = 4, Metal = 5;
+        /// <summary>
+        /// Heterochromia (owner, 24 Oct 2026): the right eye's own colour, on top of <see cref="Eyes"/>. A look has it
+        /// only while the box is ticked; it is offered wherever Eyes is and never listed among a lineage's channels.
+        /// </summary>
+        public const byte EyeRight = 6;
     }
 
     /// <summary>
@@ -90,6 +95,7 @@ namespace KryticalNova.CharacterCreation
             for (int i = 0; i < proposed.ColorCount; i++)
                 if (OwnsChannel(service, proposed.colors[i].channel)) colors.Add(proposed.colors[i]);
             result.colors = colors.ToArray();
+            if (OwnsChannel(service, CharacterColorChannels.Eyes)) result.eyeGlow = proposed.eyeGlow;
 
             if (OwnsSkin(service))
             {
@@ -116,7 +122,7 @@ namespace KryticalNova.CharacterCreation
         {
             if (a.faction != b.faction || a.lineage != b.lineage || a.bodyType != b.bodyType || a.build != b.build || a.muscle != b.muscle
                 || a.palette != b.palette || a.skinTone != b.skinTone || a.scars != b.scars || a.eyeliner != b.eyeliner || a.grime != b.grime
-                || a.weaponClass != b.weaponClass || !a.ToShape().Equals(b.ToShape()) || a.Height != b.Height || a.PartCount != b.PartCount || a.ColorCount != b.ColorCount)
+                || a.weaponClass != b.weaponClass || a.eyeGlow != b.eyeGlow || !a.ToShape().Equals(b.ToShape()) || a.Height != b.Height || a.PartCount != b.PartCount || a.ColorCount != b.ColorCount)
                 return false;
             for (int i = 0; i < a.PartCount; i++)
                 if (Array.IndexOf(b.parts, a.parts[i]) < 0) return false;

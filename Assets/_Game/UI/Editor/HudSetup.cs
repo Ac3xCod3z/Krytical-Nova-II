@@ -53,6 +53,7 @@ namespace KryticalNova.EditorTools
             "KryticalNova.UI.PlayerNamecardController, KryticalNova.UI",
             "KryticalNova.UI.HostileNameplateController, KryticalNova.UI",
             "KryticalNova.UI.AutopilotWindowController, KryticalNova.UI",
+            "KryticalNova.UI.MountWindowController, KryticalNova.UI", // also puts itself on a HUD at run time
             "KryticalNova.UI.PetBubbleController, KryticalNova.UI",
             "KryticalNova.UI.EmoteWheelController, KryticalNova.UI",
             "KryticalNova.UI.GameMenuController, KryticalNova.UI",

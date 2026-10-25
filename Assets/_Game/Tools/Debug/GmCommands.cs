@@ -146,6 +146,7 @@ namespace KryticalNova.DevTools
                 "APPEARANCE   gm.weave [off]   (opens the Holoweaver here; Weaves and dyes then work with no NPC near) · gm.dye · gm.weave.unlock <all|item> · gm.weave.clear · gm.weave.list · gm.restyle <stylist|reshaper|coach|off> · gm.passes [n]   (Chroma Cells, Prism Cells, Restyle, Training and Name Change Passes)",
                 "CRAFTING     gm.craft [off]   (opens the Fabricator here; crafting then works with no NPC near) · gm.craftkit [times]   (the materials of every recipe) · gm.dossier   (the three Dossiers) · gm.zenith [all]   (the Zenith Dossiers of the player's faction, or all nine)",
                 "XP BOOSTERS  gm.boosters [n]   (n of each: Field, Companion, Tandem) · gm.boost   (what is running) · gm.boost.clear",
+                "MOUNTS       gm.mount · gm.mount.give [brambleback|1-4] · gm.mount.ride · gm.mount.growth <0-100> · gm.mount.hunger <0-100> · gm.mount.feed · gm.mount.xp <n> · gm.mount.forget <mount>   (the selected mount; evolves at 50 and 100)",
                 "PETS         gm.pet · gm.pet.growth <0-100> · gm.pet.hunger <0-100> · gm.pet.feed · gm.pet.xp <n> · gm.pet.event <win|loss> · gm.pet.say <1-7|moment> · gm.pet.anims · gm.pet.anim <#>   (# = its number in gm.pet.anims)",
                 "EFFECTS      gm.fx.hit [normal|elemental|crit|shatter|backlash] [light|heavy] · gm.fx.pvpcrit [splash|frame|faction|default]   (shown on this screen; nothing is hit)",
                 "SAVING       gm.save · gm.save.where · gm.save.wipe confirm",

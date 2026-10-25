@@ -1,0 +1,24 @@
+{
+    "name": "KryticalNova.Mounts",
+    "rootNamespace": "KryticalNova.Mounts",
+    "references": [
+        "KryticalNova.Runtime",
+        "KryticalNova.Hostiles",
+        "KryticalNova.Networking",
+        "KryticalNova.Player",
+        "KryticalNova.Progression",
+        "KryticalNova.Social",
+        "Unity.Netcode.Runtime",
+        "Unity.Collections",
+        "Kybernetik.Animancer"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

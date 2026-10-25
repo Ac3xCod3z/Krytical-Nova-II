@@ -19,7 +19,7 @@ so you can correct me early.
 
 ## Working on now
 
-- [ ] **Accessibility: flashing.** *Understood:* a photosensitivity warning the first time the game starts, and an
+- [x] **Accessibility: flashing.** *Understood:* a photosensitivity warning the first time the game starts, and an
       Accessibility page in Settings where every flashing or pulsing effect can be turned down (a strength slider and a
       Reduce flashing switch): the beat glow, Beat Ring flashes and camera kick, COMBO shake, hit flashes, pet flashes,
       Nova flashes and lightning.
@@ -42,7 +42,7 @@ so you can correct me early.
       *Built:* a screen pass after post-processing (`ColourBlindFeature`, daltonization) on the PC renderer, costing
       nothing while Off; the setup's colour swatches use the same sums. *Not yet:* the HUD and menus are drawn over the
       picture, so the pass does not reach them; their colours can be put through `Accessibility.Correct` next.
-- [ ] **HDR settings.** *Understood:* HDR on / off and brightness (paper white, peak) in Settings ▸ Graphics, and set up
+- [x] **HDR settings.** (built, PR 155; not yet seen on an HDR screen: this PC reports none) *Understood:* HDR on / off and brightness (paper white, peak) in Settings ▸ Graphics, and set up
       in a short display step the very first time the game starts, adjustable later.
 - [x] **Beat track skinned per faction.** *Understood:* the beat lines above the Hotbar should use each faction's HUD
       art from the skin assets, the same layout but looking more custom and better.
@@ -51,20 +51,44 @@ so you can correct me early.
 
 ## Next, in this order
 
-- [ ] **When Cadence stops.** *Understood:* the fight music and Cadence must not end just because a timer runs out. Each
+- [x] **When Cadence stops.** *Understood:* the fight music and Cadence must not end just because a timer runs out. Each
       kind of fight gets its own "is it over?" check:
-  - Strike Dummy: until you deselect the dummy **and** move at least 30 m from it.
+  - Strike Dummy: until you deselect the dummy **and** move at least 30 m from it. *Owner, 24 Oct:* only once it
+    has been **struck**; being within 30 m without hitting it starts nothing. *Built:* `CombatReasons.Dummy`.
   - Hostiles: while any Hostile targets you or is still coming at you; it ends once all are dead or none approach.
+    *Already so:* each Hostile that has you as its target keeps the fight going (a dead one stops).
   - Callouts: until the bout ends. Wars and PvP events: their own rule when they are built.
-- [ ] **Water.** *Understood:* you can jump on water (land on it as on ground) and fall into it; falling in puts you back
+- [x] **Water.** *Understood:* you can jump on water (land on it as on ground) and fall into it; falling in puts you back
       on the nearest shore, losing some HP. *Owner, 24 Oct:* the effects of a jump off and a landing on water must be
       more prominent than walking or running on it (bigger splash, spray ring and sound), to show the greater force.
-- [ ] **Character creator, proportions page.** *Understood:* while on the page with height, bust and butt sliders the
+      *Built:* a jump lands on the water as on ground when Waterstride is open and there is Flux for it (then it is
+      Waterstride as usual); otherwise the player falls in and comes up on the nearest shore, losing 15 % of Max HP
+      (never the last). A jump off the water, a landing on it and a fall in throw a big splash for everyone. Played in
+      Concord's river: fell in at level 1 (-45 of 300 HP, out on the shore), stood on the water at level 60, jumped back
+      to land. The splash sound is the water step over the landing thud for now; a heavy one can be picked with Sound
+      Scout.
+- [x] **Character creator, proportions page.** *Understood:* while on the page with height, bust and butt sliders the
       character wears the bare outfit so the change shows best. While adjusting height only, a height ruler stands
       beside them with something from the world for scale (a tree), and a note under it says it is there for reference.
+      *Owner, 24 Oct:* the outfit is a **toggle** on that page (bare or clothed, to help decide), and the camera may
+      zoom out slightly while the height changes. *Built:* an **Outfit: Bare / Clothed** row on the Body tab (starts
+      bare; every other tab shows the outfit); changing Height eases the camera back a little and shows a metre ruler
+      beside the character with the head height in gold, a 4 m tree behind, and the note under the ruler; it goes 2.5 s
+      after the last change. Played in the creator: 1.94 m tall, 1.64 m short.
 - [ ] **GM Tools window.** *Understood:* the World tab cannot change the time or anything else, and parts of the window
       are blacked out (boxes and text you cannot see), though most buttons still work. Fix the World tab and the drawing.
       *Owner, 24 Oct:* seen at least while in Play mode; check both in Play and out of it.
+
+- [x] **Walking on the dedicated server.** *Understood (owner, 24 Oct):* on the dedicated server, with Run not
+      selected, the character plays a slow run instead of walking. With Run off it must walk properly (the walk
+      animation at walking speed), as it does when playing in the Editor.
+      *Tested 24 Oct* as a client of the test server (built from main, port 7796, straight into Zone01 as Tolan):
+      with Run off the walk clip plays at normal speed at 5 m/s; Run on then off goes back to the walk clip. Not
+      reproduced from the Editor. *Seen (owner):* the installed game on the real server. *Cause:* the run clip, once
+      in, only went back to walk under 7 - 2 = 5 m/s, and the walk is exactly 5 m/s: a speed spike from a server
+      correction (real network) put the run clip in and a walk a hair over 5 kept it, played slowed down.
+      *Fixed:* with Run not selected anything under the run threshold is the walk clip (`UsesRunClip`, tested). To
+      check in the installed game once a new build is published.
 
 ## Housekeeping
 

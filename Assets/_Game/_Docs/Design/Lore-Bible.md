@@ -321,7 +321,7 @@ Five Core families were previously mentioned in development, but their individua
 
 Set by the owner in the Figma **World Atlas** (copied 15 Oct 2026). The look, layout, points of interest and dressing of every place are in `World-Atlas.md`; this section records only the names, so stories and quests use them consistently.
 
-Each founding faction holds a region: a Home City (neutral ground, no Hostiles, no PvP) and four field zones leading outward, each with a Run (a dungeon). The fourth zone's gate opens onto **The Scar**, the wound where all four lands meet.
+Each founding faction holds a region: a Home City (the city inside its walls is safe: no Hostiles, no PvP; the land outside its walls is where the faction's young start, owner, 25 Oct 2026) and four field zones leading outward, each with a Run (a dungeon). The fourth zone's gate opens onto **The Scar**, the wound where all four lands meet.
 
 | Region | Faction | Home City | Field zones, outward (their Runs) |
 | --- | --- | --- | --- |

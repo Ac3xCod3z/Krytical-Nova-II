@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using KryticalNova.Player;
 using KryticalNova.Progression;
 using Unity.Netcode;
 using UnityEngine;
@@ -22,6 +23,11 @@ namespace KryticalNova.Combat
         Hostile = 8,
         /// <summary>On ground that is always a fight (a war, The Scar), or held by a GM.</summary>
         Held = 16,
+        /// <summary>
+        /// Working a Strike Dummy: from the first blow on it until it is no longer selected and the player is 30 m from
+        /// it (owner, 24 Oct 2026: the fight does not end because a timer ran out).
+        /// </summary>
+        Dummy = 32,
     }
 
     /// <summary>
@@ -39,6 +45,8 @@ namespace KryticalNova.Combat
 
         [Tooltip("Seconds without a blow given or taken, an attack skill cast or a Hostile after the player, before the fight counts as over.")]
         [SerializeField, Min(0.5f)] private float lingerSeconds = 6f;
+        [Tooltip("After striking a Strike Dummy the fight holds until the dummy is no longer selected and the player is at least this far from it (m).")]
+        [SerializeField, Min(1f)] private float dummyLeaveMetres = 30f;
 
         private readonly NetworkVariable<bool> netInCombat = new NetworkVariable<bool>(false,
             NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
@@ -52,6 +60,13 @@ namespace KryticalNova.Combat
         private float lastThreat = float.NegativeInfinity;
         private readonly HashSet<object> holders = new HashSet<object>();
         private float nextCheck;
+        // The Strike Dummy being worked (where the fight is decided), and what the player has selected: on the owner's
+        // machine it is read from the body, and the server is told its NetworkObject id (0: nothing) when it changes.
+        private PointAndClickPlayer body;
+        private CombatEntity dummy;
+        private ulong selectedId;
+        private Transform sentSelection;
+        private bool selectionSent;
 
         /// <summary>True while this player is in a fight. The same on every machine.</summary>
         public bool InCombat => IsSpawned ? netInCombat.Value : offlineInCombat;
@@ -90,6 +105,7 @@ namespace KryticalNova.Combat
             melee = GetComponent<PlayerMeleeCombat>();
             skills = GetComponent<PlayerCombatSkills>();
             duel = GetComponent<PlayerDuel>();
+            body = GetComponent<PointAndClickPlayer>();
         }
 
         private void OnEnable()
@@ -121,6 +137,9 @@ namespace KryticalNova.Combat
             lastThreat = float.NegativeInfinity;
             holders.Clear();
             Reasons = CombatReasons.None;
+            dummy = null;
+            selectedId = 0;
+            selectionSent = false;
         }
 
         public override void OnNetworkDespawn()
@@ -132,7 +151,11 @@ namespace KryticalNova.Combat
         private void OnNetChanged(bool previous, bool current) => Changed?.Invoke(current);
 
         private void OnDamaged(DamageResult result, CharacterCombatStats attacker) => Note();
-        private void OnHitResolved(IDamageable target, DamageResult result) => Note();
+        private void OnHitResolved(IDamageable target, DamageResult result)
+        {
+            if (Decides && target is CombatEntity struck && struck.IsStrikeDummy) dummy = struck;
+            Note();
+        }
         private void OnSkillCast(SkillDefinitionSO skill) { if (skill != null && skill.IsAttack) Note(); }
 
         /// <summary>An act of a fight just happened: the player is in one from now.</summary>
@@ -166,6 +189,7 @@ namespace KryticalNova.Combat
 
         private void Update()
         {
+            if (IsSpawned && IsOwner && !IsServer) SendSelection();
             if (!Decides || Time.time < nextCheck) return;
             Look();
         }
@@ -174,9 +198,51 @@ namespace KryticalNova.Combat
         {
             nextCheck = Time.time + CheckSeconds;
             Reasons = Why(Time.time, lastAct, lastThreat, lingerSeconds, melee != null && melee.IsAttacking,
-                duel != null && duel.IsDuelling, holders.Count > 0);
+                duel != null && duel.IsDuelling, holders.Count > 0)
+                | (WorkingDummy() ? CombatReasons.Dummy : CombatReasons.None);
             Set(Reasons != CombatReasons.None);
         }
+
+        /// <summary>
+        /// The Strike Dummy rule (owner, 24 Oct 2026): the fight with a dummy goes on while it is still selected or the
+        /// player is within <paramref name="leaveMetres"/> of it; it ends only when both have changed.
+        /// </summary>
+        public static bool DummyHolds(bool selected, float distance, float leaveMetres) => selected || distance < leaveMetres;
+
+        private bool WorkingDummy()
+        {
+            if (dummy == null) return false;
+            float distance = Vector3.Distance(transform.position, dummy.transform.position);
+            if (DummyHolds(DummySelected(), distance, dummyLeaveMetres)) return true;
+            dummy = null;
+            return false;
+        }
+
+        private bool DummySelected()
+        {
+            // The owner's own machine (offline, or the host's player) reads the body; the server is told by the owner.
+            if (!IsSpawned || IsOwner)
+            {
+                Transform selected = body != null ? body.SelectedTarget : null;
+                return selected != null && selected.GetComponentInParent<CombatEntity>() == dummy;
+            }
+            var net = dummy.GetComponentInParent<NetworkObject>();
+            return net != null && selectedId != 0 && net.NetworkObjectId == selectedId;
+        }
+
+        // Owner (a client): tells the server what is selected when it changes.
+        private void SendSelection()
+        {
+            Transform selected = body != null ? body.SelectedTarget : null;
+            if (selectionSent && selected == sentSelection) return;
+            selectionSent = true;
+            sentSelection = selected;
+            NetworkObject net = selected != null ? selected.GetComponentInParent<NetworkObject>() : null;
+            SelectionRpc(net != null ? net.NetworkObjectId : 0);
+        }
+
+        [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
+        private void SelectionRpc(ulong networkObjectId) => selectedId = networkObjectId;
 
         private void Set(bool fighting)
         {

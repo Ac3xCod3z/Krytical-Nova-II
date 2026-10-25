@@ -46,7 +46,10 @@ def get(path, tries=4):
                 return json.loads(r.read())
         except (ConnectionError, urllib.error.URLError, TimeoutError):
             if i == tries - 1:
-                raise
+                # 24 Oct 2026: Python's reads of the 4 MB /object_info were reset every time while curl read it whole
+                # (Norton's shield on the Store Python, most likely); curl is the fallback
+                out = subprocess.run(["curl", "-s", "-m", "120", URL + path], capture_output=True, check=True)
+                return json.loads(out.stdout)
             time.sleep(3)
 
 

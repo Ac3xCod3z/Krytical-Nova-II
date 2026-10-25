@@ -1,0 +1,94 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c08cd151176b3ac48bce95dff5401983, type: 3}
+  m_Name: MountDef_Brambleback
+  m_EditorClassIdentifier: KryticalNova.Mounts::KryticalNova.Mounts.MountDefinition
+  mountId: 1
+  itemId: 8101
+  displayName: Brambleback
+  description: A mossy, bramble-backed beast that carries its rider through the wilds; its armour grows as it does.
+  firstStat: 1
+  firstMax: 50
+  secondStat: 0
+  secondMax: 50
+  stages:
+  - name: Sapling
+    model: {fileID: 2737840603221146731, guid: f9706cd4d0bc0d9438ab0d020ace82de, type: 3}
+    icon: {fileID: 21300000, guid: 5e7e36674ee15b94e8ec743d5a4bedd0, type: 3}
+    seat: {x: -0, y: 0.2124, z: -0.1486}
+    idle: {fileID: -623603649343465320, guid: e21561c342a61874086106bb64a97099, type: 3}
+    walk: {fileID: -623603649343465320, guid: 1eaaadb27a9e0af4dab0c40bd6dbcaf7, type: 3}
+    run: {fileID: -623603649343465320, guid: 8fa1a317f7946014f913509eaee8b5e1, type: 3}
+    idleExtras:
+    - {fileID: -623603649343465320, guid: c60650c13dc006e4b8b8ff34e4dab456, type: 3}
+    - {fileID: -623603649343465320, guid: a308be2e881259e4ebb79a004651afa0, type: 3}
+    glow: {r: 0.55, g: 0.85, b: 0.35, a: 1}
+    riderIdle: {fileID: -623603649343465320, guid: 6b730300fe0c98346bf8c1b6e19ab5d6, type: 3}
+    riderWalk: {fileID: -623603649343465320, guid: aaeecb821d3e6574a969bbd9d208692f, type: 3}
+    riderRun: {fileID: -623603649343465320, guid: 84f5de61198da7948b2de2f1efb726ab, type: 3}
+    mountUp: {fileID: -623603649343465320, guid: 7f16c0b041a029943b27070c588517b0, type: 3}
+    dismount: {fileID: -623603649343465320, guid: ea4661891e8414b49b66d440b92b4b5d, type: 3}
+    riderIdleExtras:
+    - {fileID: -623603649343465320, guid: a0995c03289a09e4ca605423954d4f53, type: 3}
+    - {fileID: -623603649343465320, guid: c5673a265ed54464bb3b981fd5d6110d, type: 3}
+    stirrupLeft: {x: -0.4558351, y: 0.52562356, z: -0.05605054}
+    stirrupRight: {x: 0.45583504, y: 0.5256217, z: -0.05604863}
+  - name: Thornhide
+    model: {fileID: 2015473720809413570, guid: 8c19e89e609ccfc46a1c9533007adb59, type: 3}
+    icon: {fileID: 21300000, guid: 260ebbc60c589914c83b2a3de679073c, type: 3}
+    seat: {x: -0, y: 0.3384, z: -0.3265}
+    idle: {fileID: -623603649343465320, guid: fba71bf8f3729a6429f592064040d957, type: 3}
+    walk: {fileID: -623603649343465320, guid: 9a36d6d4b7fa1e5488c2982143b1b733, type: 3}
+    run: {fileID: -623603649343465320, guid: 4463d9238d3897a4784de841f509eef0, type: 3}
+    idleExtras:
+    - {fileID: -623603649343465320, guid: 569e21976e4d6f447ba93ba914477cbf, type: 3}
+    - {fileID: -623603649343465320, guid: 24dabbc8b8307fd48befe080ae89af4c, type: 3}
+    glow: {r: 0.35, g: 0.9, b: 0.45, a: 1}
+    riderIdle: {fileID: -623603649343465320, guid: c5baf4bc1aff0164c9880682a9fda88c, type: 3}
+    riderWalk: {fileID: -623603649343465320, guid: 3cf8230829ebb7c49b959e62847a0706, type: 3}
+    riderRun: {fileID: -623603649343465320, guid: 93965a0b17cc9ba43a0f3b7fef07934d, type: 3}
+    mountUp: {fileID: -623603649343465320, guid: f3cf3d6ac66c9bc40a7493d82522735e, type: 3}
+    dismount: {fileID: -623603649343465320, guid: 93c7e763f6c0c424598efc8a940704b8, type: 3}
+    riderIdleExtras:
+    - {fileID: -623603649343465320, guid: 572812d02e824c6499bbd45d7ec5e4a0, type: 3}
+    - {fileID: -623603649343465320, guid: 71463b715c6fbc7419a25888861db5e5, type: 3}
+    stirrupLeft: {x: -0.47089154, y: 0.7893445, z: 0.019845009}
+    stirrupRight: {x: 0.5474704, y: 0.86984986, z: 0.019785881}
+  - name: Elder Bramble
+    model: {fileID: 7672985543321337542, guid: 01b5c8a558aa55f4bbf9c3b8958564bf, type: 3}
+    icon: {fileID: 21300000, guid: d04d93b9ababefc49b55a90ba1ef67fb, type: 3}
+    seat: {x: -0, y: 0.503, z: -0.3012}
+    idle: {fileID: -623603649343465320, guid: 3dea795c0823db049a30111e15218d36, type: 3}
+    walk: {fileID: -623603649343465320, guid: 24ee5abd9fa9b0242aa5f5797a4ff6ca, type: 3}
+    run: {fileID: -623603649343465320, guid: 13cfd6e19b1bdaa49b30502bc1a02a01, type: 3}
+    idleExtras:
+    - {fileID: -623603649343465320, guid: da8ad07054b9fd5448dd6050db170d57, type: 3}
+    - {fileID: -623603649343465320, guid: 18917a9eeb0551d4b9d1ace456e74eb8, type: 3}
+    glow: {r: 0.95, g: 0.8, b: 0.3, a: 1}
+    riderIdle: {fileID: -623603649343465320, guid: a77d19b4f98ddfc48a03a3c6b026af64, type: 3}
+    riderWalk: {fileID: -623603649343465320, guid: 9c0e87220b3cd1f43aa32aea9535c2ef, type: 3}
+    riderRun: {fileID: -623603649343465320, guid: d294e4f384f88ca4887dca08d6799ff7, type: 3}
+    mountUp: {fileID: -623603649343465320, guid: 92120f9104f4d124c909b79de79cb82d, type: 3}
+    dismount: {fileID: -623603649343465320, guid: 7fc9a520822d1a64898bff5129d8548d, type: 3}
+    riderIdleExtras:
+    - {fileID: -623603649343465320, guid: 2c309fcd18c89f942a0af411cee8c67a, type: 3}
+    - {fileID: -623603649343465320, guid: 6c693e5828f6ff14c8217f125e4ba7e3, type: 3}
+    stirrupLeft: {x: -0.53074056, y: 0.90404654, z: -0.18241978}
+    stirrupRight: {x: 0.5307421, y: 0.90404505, z: -0.18241978}
+  riderIdle: {fileID: -623603649343465320, guid: 6b730300fe0c98346bf8c1b6e19ab5d6, type: 3}
+  riderWalk: {fileID: -623603649343465320, guid: aaeecb821d3e6574a969bbd9d208692f, type: 3}
+  riderRun: {fileID: -623603649343465320, guid: 84f5de61198da7948b2de2f1efb726ab, type: 3}
+  riderIdleExtras:
+  - {fileID: -623603649343465320, guid: a0995c03289a09e4ca605423954d4f53, type: 3}
+  - {fileID: -623603649343465320, guid: c5673a265ed54464bb3b981fd5d6110d, type: 3}
+  mountUp: {fileID: -623603649343465320, guid: 7f16c0b041a029943b27070c588517b0, type: 3}
+  dismount: {fileID: -623603649343465320, guid: ea4661891e8414b49b66d440b92b4b5d, type: 3}

@@ -165,6 +165,10 @@ def main():
     if rig is None:
         raise SystemExit("Rigify did not make a rig.")
     rig.name = rig.data.name = rig_name
+    # Rigify puts the new rig at the world origin, but the bones were laid out from the metarig's place (the
+    # model's origin): a model that is not at the origin would be bound to bones standing somewhere else
+    rig.matrix_world = meta.matrix_world.copy()
+    bpy.context.view_layer.update()
     meta.hide_set(True)
     meta.hide_render = True
     deform = {b.name for b in rig.data.bones if b.use_deform}

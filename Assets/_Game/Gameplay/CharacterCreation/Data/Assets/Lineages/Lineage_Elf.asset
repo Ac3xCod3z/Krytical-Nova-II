@@ -87,7 +87,7 @@ MonoBehaviour:
     presets:
     - name: Elf 01
       recipe:
-        version: 1
+        version: 2
         faction: 3
         lineage: 6
         bodyType: 0
@@ -109,9 +109,14 @@ MonoBehaviour:
         eyeliner: 0
         grime: 0
         weaponClass: 0
+        bust: 0
+        butt: 0
+        defined: 0
+        height: 50
+        eyeGlow: 0
     - name: Elf 02
       recipe:
-        version: 1
+        version: 2
         faction: 3
         lineage: 6
         bodyType: 0
@@ -133,9 +138,14 @@ MonoBehaviour:
         eyeliner: 0
         grime: 0
         weaponClass: 0
+        bust: 0
+        butt: 0
+        defined: 0
+        height: 50
+        eyeGlow: 0
     - name: Elf 03
       recipe:
-        version: 1
+        version: 2
         faction: 3
         lineage: 6
         bodyType: 0
@@ -157,9 +167,14 @@ MonoBehaviour:
         eyeliner: 0
         grime: 0
         weaponClass: 0
+        bust: 0
+        butt: 0
+        defined: 0
+        height: 50
+        eyeGlow: 0
     - name: Elf 04
       recipe:
-        version: 1
+        version: 2
         faction: 3
         lineage: 6
         bodyType: 0
@@ -181,9 +196,14 @@ MonoBehaviour:
         eyeliner: 0
         grime: 0
         weaponClass: 0
+        bust: 0
+        butt: 0
+        defined: 0
+        height: 50
+        eyeGlow: 0
     - name: Elf 05
       recipe:
-        version: 1
+        version: 2
         faction: 3
         lineage: 6
         bodyType: 0
@@ -205,9 +225,14 @@ MonoBehaviour:
         eyeliner: 0
         grime: 0
         weaponClass: 0
+        bust: 0
+        butt: 0
+        defined: 0
+        height: 50
+        eyeGlow: 0
     - name: Elf 06
       recipe:
-        version: 1
+        version: 2
         faction: 3
         lineage: 6
         bodyType: 0
@@ -229,9 +254,14 @@ MonoBehaviour:
         eyeliner: 0
         grime: 0
         weaponClass: 0
+        bust: 0
+        butt: 0
+        defined: 0
+        height: 50
+        eyeGlow: 0
     - name: Elf 07
       recipe:
-        version: 1
+        version: 2
         faction: 3
         lineage: 6
         bodyType: 0
@@ -253,9 +283,14 @@ MonoBehaviour:
         eyeliner: 0
         grime: 0
         weaponClass: 0
+        bust: 0
+        butt: 0
+        defined: 0
+        height: 50
+        eyeGlow: 0
     - name: Elf 08
       recipe:
-        version: 1
+        version: 2
         faction: 3
         lineage: 6
         bodyType: 0
@@ -277,6 +312,11 @@ MonoBehaviour:
         eyeliner: 0
         grime: 0
         weaponClass: 0
+        bust: 0
+        butt: 0
+        defined: 0
+        height: 50
+        eyeGlow: 0
     skinTones:
     - name: Tone 01
       swatch:
@@ -1776,7 +1816,7 @@ MonoBehaviour:
     presets:
     - name: Elf 01
       recipe:
-        version: 1
+        version: 2
         faction: 3
         lineage: 6
         bodyType: 1
@@ -1798,9 +1838,14 @@ MonoBehaviour:
         eyeliner: 0
         grime: 0
         weaponClass: 0
+        bust: 0
+        butt: 0
+        defined: 0
+        height: 50
+        eyeGlow: 0
     - name: Elf 02
       recipe:
-        version: 1
+        version: 2
         faction: 3
         lineage: 6
         bodyType: 1
@@ -1822,9 +1867,14 @@ MonoBehaviour:
         eyeliner: 0
         grime: 0
         weaponClass: 0
+        bust: 0
+        butt: 0
+        defined: 0
+        height: 50
+        eyeGlow: 0
     - name: Elf 03
       recipe:
-        version: 1
+        version: 2
         faction: 3
         lineage: 6
         bodyType: 1
@@ -1846,9 +1896,14 @@ MonoBehaviour:
         eyeliner: 0
         grime: 0
         weaponClass: 0
+        bust: 0
+        butt: 0
+        defined: 0
+        height: 50
+        eyeGlow: 0
     - name: Elf 04
       recipe:
-        version: 1
+        version: 2
         faction: 3
         lineage: 6
         bodyType: 1
@@ -1870,9 +1925,14 @@ MonoBehaviour:
         eyeliner: 0
         grime: 0
         weaponClass: 0
+        bust: 0
+        butt: 0
+        defined: 0
+        height: 50
+        eyeGlow: 0
     - name: Elf 05
       recipe:
-        version: 1
+        version: 2
         faction: 3
         lineage: 6
         bodyType: 1
@@ -1894,9 +1954,14 @@ MonoBehaviour:
         eyeliner: 0
         grime: 0
         weaponClass: 0
+        bust: 0
+        butt: 0
+        defined: 0
+        height: 50
+        eyeGlow: 0
     - name: Elf 06
       recipe:
-        version: 1
+        version: 2
         faction: 3
         lineage: 6
         bodyType: 1
@@ -1918,9 +1983,14 @@ MonoBehaviour:
         eyeliner: 0
         grime: 0
         weaponClass: 0
+        bust: 0
+        butt: 0
+        defined: 0
+        height: 50
+        eyeGlow: 0
     - name: Elf 07
       recipe:
-        version: 1
+        version: 2
         faction: 3
         lineage: 6
         bodyType: 1
@@ -1942,9 +2012,14 @@ MonoBehaviour:
         eyeliner: 0
         grime: 0
         weaponClass: 0
+        bust: 0
+        butt: 0
+        defined: 0
+        height: 50
+        eyeGlow: 0
     - name: Elf 08
       recipe:
-        version: 1
+        version: 2
         faction: 3
         lineage: 6
         bodyType: 1
@@ -1966,6 +2041,11 @@ MonoBehaviour:
         eyeliner: 0
         grime: 0
         weaponClass: 0
+        bust: 0
+        butt: 0
+        defined: 0
+        height: 50
+        eyeGlow: 0
     skinTones:
     - name: Tone 01
       swatch:

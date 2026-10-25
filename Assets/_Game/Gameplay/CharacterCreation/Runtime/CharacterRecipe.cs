@@ -53,6 +53,8 @@ namespace KryticalNova.CharacterCreation
         public byte defined;
         /// <summary>0 to 100: the whole character scaled from the floor, 0 = 0.90, 50 = 1.00, 100 = 1.10.</summary>
         public byte height;
+        /// <summary>The eyes glow in their own colour (owner, 24 Oct 2026), on any lineage. Older saves read as not glowing.</summary>
+        public bool eyeGlow;
 
         public bool IsEmpty => lineage == 0;
         public int PartCount => parts != null ? parts.Length : 0;
@@ -127,6 +129,7 @@ namespace KryticalNova.CharacterCreation
                 || build != other.build || muscle != other.muscle || palette != other.palette || skinTone != other.skinTone
                 || scars != other.scars || eyeliner != other.eyeliner || grime != other.grime || weaponClass != other.weaponClass
                 || bust != other.bust || butt != other.butt || defined != other.defined || height != other.height
+                || eyeGlow != other.eyeGlow
                 || PartCount != other.PartCount || ColorCount != other.ColorCount)
                 return false;
             for (int i = 0; i < PartCount; i++)
@@ -141,7 +144,7 @@ namespace KryticalNova.CharacterCreation
         public override int GetHashCode()
         {
             int hash = HashCode.Combine(version, (byte)faction, lineage, (byte)bodyType, build, muscle, palette, skinTone);
-            hash = HashCode.Combine(hash, bust, butt, defined, height);
+            hash = HashCode.Combine(hash, bust, butt, defined, height, eyeGlow);
             for (int i = 0; i < PartCount; i++) hash = HashCode.Combine(hash, parts[i]);
             return hash;
         }
