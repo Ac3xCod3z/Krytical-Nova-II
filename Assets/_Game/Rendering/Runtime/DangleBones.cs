@@ -480,11 +480,13 @@ namespace KryticalNova.Rendering
                     if (sideLocal != Vector3.zero)
                     {
                         // Crossed the middle of the body towards the other side, and still in front of it rather than
-                        // round it: back to its own side, as far out as the capsule keeps it.
+                        // round it: back to its own side, as far out as the capsule keeps it. Only once it has crossed:
+                        // a piece that merely sinks into its own side is pushed out smoothly below, or a top knot
+                        // sagging into the head was thrown out half a radius at a time and twitched (owner, 24 Oct 2026).
                         Vector3 n = capA[c].TransformDirection(sideLocal);
                         float along = Vector3.Dot(d, n);
                         Vector3 across = d - n * along;
-                        if (along < r * 0.5f && across.sqrMagnitude < r * r * SideReach * SideReach)
+                        if (along < 0f && across.sqrMagnitude < r * r * SideReach * SideReach)
                         {
                             p = q + across + n * r;
                             continue;

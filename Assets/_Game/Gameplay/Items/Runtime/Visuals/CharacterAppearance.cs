@@ -43,6 +43,9 @@ namespace KryticalNova.Items.Visuals
         };
         [Tooltip("Adds a FaceBlinker; the eyelid blink shapes are kept live on the merged mesh.")]
         [SerializeField] private bool blink = true;
+        [Tooltip("Glowing eyes: how strongly the eyes' second material shines, times the eye-glow map. Kept slight " +
+                 "(owner, 24 Oct 2026: the normal eye colour with an emissive channel, no halo).")]
+        [SerializeField] private float eyeGlowIntensity = 0.29f; // owner, 24 Oct 2026: "glows just a little bit more" (+15 %)
         [Tooltip("Bone order + bindposes of the original baked mesh, captured by the setup tool. Keeps merges exact and lets clones (the preview doll) merge without reading the live mesh.")]
         [SerializeField] private string[] referenceBoneNames = System.Array.Empty<string>();
         [SerializeField] private Matrix4x4[] referenceBindposes = System.Array.Empty<Matrix4x4>();
@@ -62,6 +65,9 @@ namespace KryticalNova.Items.Visuals
         private readonly List<string> boneNames = new List<string>(160);
         private readonly List<SkinnedMeshRenderer> debugRenderers = new List<SkinnedMeshRenderer>();
         private SkinnedMeshMerger merger;
+        private EyeGlow eyeGlow;
+        private bool eyesGlow;
+        private Texture eyeColourMap, eyeEmissionMap;
         private Mesh ownedMesh;
         private CharacterAppearance sharedSource;
         private bool dirty;
@@ -117,6 +123,7 @@ namespace KryticalNova.Items.Visuals
         {
             if (sharedSource != null) sharedSource.Rebuilt -= OnSourceRebuilt;
             if (ownedMesh != null) Destroy(ownedMesh);
+            eyeGlow?.Dispose();
         }
 
         /// <summary>
@@ -243,12 +250,36 @@ namespace KryticalNova.Items.Visuals
             dirty = IsConfigured;
         }
 
+        /// <summary>
+        /// Glowing eyes (the creator's row): the eyes drawn once more in a second material, the character's colour map
+        /// <paramref name="colourMap"/> with <paramref name="emissionMap"/> (black but for the eyes) as its emission.
+        /// Kept through every rebuild.
+        /// </summary>
+        public void SetEyeGlow(bool on, Texture colourMap, Texture emissionMap)
+        {
+            on &= colourMap != null && emissionMap != null;
+            if (eyesGlow == on && (!on || (eyeColourMap == colourMap && eyeEmissionMap == emissionMap))) { if (on) RebuildEyeGlow(sharedSource != null ? sharedSource.CurrentParts : partList); return; }
+            eyesGlow = on;
+            eyeColourMap = colourMap;
+            eyeEmissionMap = emissionMap;
+            RebuildEyeGlow(sharedSource != null ? sharedSource.CurrentParts : partList);
+        }
+
+        private void RebuildEyeGlow(IReadOnlyList<SidekickPartRef> parts)
+        {
+            if (!eyesGlow || merger == null || targetRenderer == null) { eyeGlow?.Clear(); return; }
+            eyeGlow ??= new EyeGlow();
+            eyeGlow.Show(parts, eyeColourMap, eyeEmissionMap, eyeGlowIntensity, targetRenderer.transform.parent,
+                targetRenderer.gameObject.layer, targetRenderer.rootBone, targetRenderer.localBounds, bodyShape, merger.FindBone);
+        }
+
         public void RebuildNow()
         {
             dirty = false;
             if (merger == null || !IsConfigured) return;
             ResolveParts();
             if (mergeParts) RebuildMerged(); else RebuildSeparate();
+            RebuildEyeGlow(partList);
             BindDangleBones();
             Rebuilt?.Invoke();
         }
@@ -335,6 +366,7 @@ namespace KryticalNova.Items.Visuals
             boneNames.Clear();
             boneNames.AddRange(names);
             ApplyToRenderer(targetRenderer, sharedSource.CurrentMesh, bones);
+            RebuildEyeGlow(sharedSource.CurrentParts);
             BindDangleBones();
             Rebuilt?.Invoke();
         }

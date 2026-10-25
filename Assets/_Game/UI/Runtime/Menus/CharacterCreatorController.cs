@@ -69,6 +69,10 @@ namespace KryticalNova.UI.Menus
 
         [Header("Colour")]
         [SerializeField] private MenuSwatchGroup[] swatchGroups = Array.Empty<MenuSwatchGroup>();
+        [Tooltip("The right eye's own colour, shown under the eye colour while Heterochromia is on.")]
+        [SerializeField] private MenuSwatchGroup rightEyeGroup;
+        [Tooltip("The eyes' switches: Glowing Eyes, then Heterochromia.")]
+        [SerializeField] private MenuOptionRow[] colourRows = Array.Empty<MenuOptionRow>();
 
         [Header("Finalise")]
         [SerializeField] private TMP_InputField nameInput;
@@ -636,14 +640,51 @@ namespace KryticalNova.UI.Menus
                 foreach (var tone in setup.skinTones) skinSwatches.Add(tone.swatch);
                 swatchGroups[group++].Show("Skin", skinSwatches, recipe.skinTone - 1, PickSkin);
             }
+            bool twoEyes = setup.OffersChannel(CharacterColorChannels.Eyes) && RecipeEdit.HasHeterochromia(recipe);
             foreach (byte id in setup.channels)
             {
                 if (group >= swatchGroups.Length) break;
                 if (!database.TryGetChannel(id, out var channel) || channel.swatches == null) continue;
                 var picked = channel;
-                swatchGroups[group++].Show(channel.displayName, channel.swatches, RecipeEdit.SwatchIndex(recipe, channel), index => PickColor(picked, index));
+                string label = twoEyes && id == CharacterColorChannels.Eyes ? "Left Eye" : channel.displayName;
+                swatchGroups[group++].Show(label, channel.swatches, RecipeEdit.SwatchIndex(recipe, channel), index => PickColor(picked, index));
             }
             for (; group < swatchGroups.Length; group++) swatchGroups[group].Hide();
+            ShowEyeOptions(twoEyes);
+        }
+
+        /// <summary>
+        /// Glowing Eyes for every lineage; Heterochromia, with the right eye's own swatches, wherever eye colour is
+        /// offered (owner, 24 Oct 2026). Both are On/Off arrow rows, as the Body tab's Outfit row is.
+        /// </summary>
+        private void ShowEyeOptions(bool twoEyes)
+        {
+            if (rightEyeGroup != null)
+            {
+                if (twoEyes && database.TryGetChannel(CharacterColorChannels.EyeRight, out var right) && right.swatches != null)
+                    rightEyeGroup.Show(right.displayName, right.swatches, RecipeEdit.SwatchIndex(recipe, right), index => PickColor(right, index));
+                else rightEyeGroup.Hide();
+            }
+            int row = 0;
+            if (row < colourRows.Length)
+                colourRows[row++].Show("Glowing Eyes", () => recipe.eyeGlow ? "On" : "Off", _ =>
+                {
+                    Record(DiscreteEdit);
+                    recipe.eyeGlow = !recipe.eyeGlow;
+                    Preview();
+                    ShowColours();
+                });
+            if (row < colourRows.Length && setup.OffersChannel(CharacterColorChannels.Eyes))
+                colourRows[row++].Show("Heterochromia", () => RecipeEdit.HasHeterochromia(recipe) ? "On" : "Off", _ =>
+                {
+                    Record(DiscreteEdit);
+                    Color32 fallback = database.TryGetChannel(CharacterColorChannels.Eyes, out var eyes) && eyes.swatches != null
+                        && eyes.swatches.Length > 0 ? eyes.swatches[0] : new Color32(107, 74, 39, 255);
+                    RecipeEdit.SetHeterochromia(ref recipe, !RecipeEdit.HasHeterochromia(recipe), fallback);
+                    Preview();
+                    ShowColours();
+                });
+            for (; row < colourRows.Length; row++) if (colourRows[row] != null) colourRows[row].Hide();
         }
 
         private void PickSkin(int index)

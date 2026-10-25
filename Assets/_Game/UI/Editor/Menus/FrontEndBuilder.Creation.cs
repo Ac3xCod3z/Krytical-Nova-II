@@ -70,6 +70,72 @@ namespace KryticalNova.EditorTools
             Debug.Log($"[FrontEnd] {added} body slider row(s) added to the character creator.");
         }
 
+        /// <summary>
+        /// Gives the creator scene as it is the eye options (owner, 24 Oct 2026: glowing eyes and heterochromia),
+        /// nothing else rebuilt: each creator gets a copy of its last colour group for the right eye and two copies of
+        /// its first option row for the switches. A full build of the front-end scenes makes them too.
+        /// </summary>
+        [MenuItem("Krytical Nova/Front End/Add Eye Rows to Character Creator")]
+        public static void AddEyeRowsInPlace()
+        {
+            if (EditorApplication.isPlayingOrWillChangePlaymode) { Debug.LogWarning("[FrontEnd] Leave Play mode first."); return; }
+            string path = ScenePath(FrontEnd.CharacterCreatorScene);
+            UnityEngine.SceneManagement.Scene open = UnityEngine.SceneManagement.SceneManager.GetSceneByPath(path);
+            bool wasOpen = open.IsValid() && open.isLoaded;
+            var scene = wasOpen ? open : UnityEditor.SceneManagement.EditorSceneManager.OpenScene(path, UnityEditor.SceneManagement.OpenSceneMode.Additive);
+            int added = 0;
+            foreach (GameObject root in scene.GetRootGameObjects())
+                foreach (CharacterCreatorController creator in root.GetComponentsInChildren<CharacterCreatorController>(true))
+                    if (AddEyeRows(creator)) added++;
+            Selection.activeGameObject = null;
+            UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(scene);
+            UnityEditor.SceneManagement.EditorSceneManager.SaveScene(scene);
+            if (!wasOpen) UnityEditor.SceneManagement.EditorSceneManager.CloseScene(scene, true);
+            Debug.Log($"[FrontEnd] Eye rows added to {added} character creator(s).");
+        }
+
+        /// <summary>The right eye's colour group and the two eye switches, copied from the creator's own rows. False when it has them.</summary>
+        private static bool AddEyeRows(CharacterCreatorController creator)
+        {
+            var serialized = new SerializedObject(creator);
+            SerializedProperty right = serialized.FindProperty("rightEyeGroup");
+            SerializedProperty switches = serialized.FindProperty("colourRows");
+            SerializedProperty groups = serialized.FindProperty("swatchGroups");
+            SerializedProperty options = serialized.FindProperty("optionRows");
+            if (right == null || switches == null || right.objectReferenceValue != null || groups.arraySize == 0 || options.arraySize == 0)
+                return false;
+            var lastGroup = groups.GetArrayElementAtIndex(groups.arraySize - 1).objectReferenceValue as MenuSwatchGroup;
+            var firstOption = options.GetArrayElementAtIndex(0).objectReferenceValue as MenuOptionRow;
+            if (lastGroup == null || firstOption == null) return false;
+
+            GameObject eye = DuplicateInPlace(lastGroup.gameObject, lastGroup.transform.parent, lastGroup.transform.GetSiblingIndex() + 1, "Section_Colour_Eye_Right");
+            right.objectReferenceValue = eye.GetComponent<MenuSwatchGroup>();
+            switches.arraySize = 2;
+            int at = eye.transform.GetSiblingIndex() + 1;
+            string[] names = { "Row_Eye_Glow", "Row_Eye_Heterochromia" };
+            for (int i = 0; i < names.Length; i++)
+            {
+                GameObject row = DuplicateInPlace(firstOption.gameObject, eye.transform.parent, at + i, names[i]);
+                switches.GetArrayElementAtIndex(i).objectReferenceValue = row.GetComponent<MenuOptionRow>();
+            }
+            serialized.ApplyModifiedPropertiesWithoutUndo();
+            return true;
+        }
+
+        /// <summary>A copy as Ctrl+D makes it (a vendor prefab's instance stays one), placed under <paramref name="parent"/>.</summary>
+        private static GameObject DuplicateInPlace(GameObject source, Transform parent, int siblingIndex, string name)
+        {
+            Selection.activeGameObject = source;
+            Unsupported.DuplicateGameObjectsUsingPasteboard();
+            GameObject copy = Selection.activeGameObject;
+            if (copy == null || copy == source) copy = Object.Instantiate(source, parent);
+            copy.transform.SetParent(parent, false);
+            copy.transform.SetSiblingIndex(siblingIndex);
+            copy.name = name;
+            copy.SetActive(true);
+            return copy;
+        }
+
         // ---------------------------------------------------------------- faction select
 
         private static void BuildFactionSelect(CharacterCreationDatabase database)
@@ -319,6 +385,7 @@ namespace KryticalNova.EditorTools
             PrepareOptions(MenuUi.Find(panels, "Section_Body"), creator);
             PrepareColours(MenuUi.Find(panels, "Section_Colour"), creator);
             PrepareFinalise(MenuUi.Find(panels, "Section_Finalise"), creator);
+            AddEyeRows(creator);
             PrepareCreatorFooter(screen);
         }
 

@@ -65,7 +65,12 @@ namespace KryticalNova.CharacterCreation
             if (recipe.skinTone > setup.skinTones.Count) { reason = ReasonBadSkinTone; return false; }
             if (recipe.ColorCount > CharacterRecipe.MaxColors) { reason = ReasonBadColor; return false; }
             for (int i = 0; i < recipe.ColorCount; i++)
-                if (!setup.OffersChannel(recipe.colors[i].channel)) { reason = ReasonBadColor; return false; }
+            {
+                byte channel = recipe.colors[i].channel;
+                // the right eye's own colour comes with the eye colour: wherever Eyes is offered, so is heterochromia
+                if (channel == CharacterColorChannels.EyeRight) channel = CharacterColorChannels.Eyes;
+                if (!setup.OffersChannel(channel)) { reason = ReasonBadColor; return false; }
+            }
             return true;
         }
     }

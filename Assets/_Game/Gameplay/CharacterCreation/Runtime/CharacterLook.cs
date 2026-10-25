@@ -20,6 +20,9 @@ namespace KryticalNova.CharacterCreation
         private static readonly int CutsAmountId = Shader.PropertyToID("_CutsAmount");
         private static readonly int EyelinerAmountId = Shader.PropertyToID("_EyelinerAmount");
         private static readonly int DirtAmountId = Shader.PropertyToID("_DirtAmount");
+        private static readonly int EmissionMapId = Shader.PropertyToID("_EmissionMap");
+        /// <summary>How many times over a glowing eye shines its colour (over 1, so bloom catches it).</summary>
+        private const float EyeGlowStrength = 4f;
 
         private readonly ResolvedAppearance resolved = new ResolvedAppearance();
         private readonly Dictionary<string, Transform> joints = new Dictionary<string, Transform>(StringComparer.Ordinal);
@@ -27,6 +30,8 @@ namespace KryticalNova.CharacterCreation
         private Material material;
         private Texture2D colorMap;
         private Color32[] pixels;
+        private Texture2D eyeGlowMap;
+        private Color[] eyeGlowPixels;
         private bool jointsIndexed;
         private CharacterCreationDatabase database;
         private CharacterLook mirrored;
@@ -156,6 +161,33 @@ namespace KryticalNova.CharacterCreation
             if (material.HasProperty(CutsAmountId)) material.SetFloat(CutsAmountId, recipe.scars * 0.01f);
             if (material.HasProperty(EyelinerAmountId)) material.SetFloat(EyelinerAmountId, recipe.eyeliner * 0.01f);
             if (material.HasProperty(DirtAmountId)) material.SetFloat(DirtAmountId, recipe.grime * 0.01f);
+            ApplyEyeGlow(recipe.eyeGlow);
+        }
+
+        /// <summary>
+        /// Glowing eyes (owner, 24 Oct 2026): an emission map, black but for the eyes, which shine in the eye colour the
+        /// colour map just took. The Sidekick shader has no emission of its own, so the eyes are drawn once more in a
+        /// second material with this map as its emission (the appearance's EyeGlow). Off, the map is black again.
+        /// </summary>
+        private void ApplyEyeGlow(bool glow)
+        {
+            if (!glow && eyeGlowMap == null) { appearance.SetEyeGlow(false, null, null); return; }
+            if (eyeGlowMap == null)
+            {
+                // half floats: a colour can be brighter than white, which is what makes it glow under bloom
+                eyeGlowMap = new Texture2D(CharacterColorMap.Size, CharacterColorMap.Size, TextureFormat.RGBAHalf, false, true)
+                {
+                    name = name + "_EyeGlow",
+                    filterMode = FilterMode.Point,
+                    wrapMode = TextureWrapMode.Clamp
+                };
+                eyeGlowPixels = new Color[CharacterColorMap.PixelCount];
+            }
+            CharacterColorMap.FillEyeGlow(pixels, eyeGlowPixels, glow ? EyeGlowStrength : 0f);
+            eyeGlowMap.SetPixels(eyeGlowPixels);
+            eyeGlowMap.Apply(false, false);
+            if (material.HasProperty(EmissionMapId)) material.SetTexture(EmissionMapId, eyeGlowMap);
+            appearance.SetEyeGlow(glow, colorMap, eyeGlowMap);
         }
 
         /// <summary>
@@ -207,6 +239,7 @@ namespace KryticalNova.CharacterCreation
             if (mirrored != null) mirrored.Applied -= MirrorOriginal;
             if (material != null) Destroy(material);
             if (colorMap != null) Destroy(colorMap);
+            if (eyeGlowMap != null) Destroy(eyeGlowMap);
         }
     }
 }
