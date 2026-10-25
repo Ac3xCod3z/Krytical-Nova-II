@@ -31,7 +31,7 @@ namespace KryticalNova.EditorTools
         public const string SourceFolder = "Assets/_Game/Release/Tools~";
         public const string SettingsPath = SourceFolder + "/release-settings.json";
         /// <summary>
-        /// The launcher's news for the next release (owner, 18 Oct 2026): up to four headlines with what changed, written
+        /// The launcher's news for the next release (owner, 18 Oct 2026): up to seven headlines with what changed, written
         /// before a release meant for LIVE from everything since the last LIVE one, and committed (a publish builds a commit).
         /// </summary>
         public const string NewsPath = SourceFolder + "/launcher-news.json";
