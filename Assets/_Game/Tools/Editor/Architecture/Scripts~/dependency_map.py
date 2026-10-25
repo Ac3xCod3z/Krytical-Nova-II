@@ -1004,8 +1004,24 @@ for s in systems:
                      "so": len([t for t in RT if types[t]["sys"] == s and types[t]["role"] == "so"]),
                      "net": len([t for t in RT if types[t]["sys"] == s and types[t]["role"] == "net"])})
 
+# --- the map against the compiler ---------------------------------------------------------------------------------------
+# Each assembly declares the assemblies it may use. A link the map found in code that no declaration allows would not
+# compile, so it means the map misread a name. A declaration with no link in code is either a reference nothing uses
+# (it can go) or one the compiler needs although no line names the type: a member that returns another assembly's type
+# (CS0012), which a text reader cannot see.
+sys_of_asm = {a: r["id"] for r in sys_rows for a in r["asm"]}
+declared = set()
+for a, refs in ASM_REFS.items():
+    for r in refs:
+        sa, sb = sys_of_asm.get(a), sys_of_asm.get(r)
+        if sa and sb and sa != sb:
+            declared.add((sa, sb))
+unseen = sorted(declared - set(sys_edges))
+refused = sorted(set(sys_edges) - declared)
+
 data = {
     "meta": {"generated": datetime.datetime.now().strftime("%d %b %Y, %H:%M"),
+             "declared": len(declared), "unseen": len(unseen), "refused": len(refused),
              "files": len([f for f in files if f["kind"] == "rt"]), "testFiles": len([f for f in files if f["kind"] == "test"]),
              "lines": sum(f["lines"] for f in files if f["kind"] == "rt"), "types": len(RT),
              "so": len([t for t in RT if types[t]["role"] == "so"]), "net": len([t for t in RT if types[t]["role"] == "net"]),
@@ -1022,6 +1038,8 @@ data = {
                   "back": v["back"], "twoway": v["twoway"],
                   "pairs": [[fi, t, k, ln] for fi, t, k, ln in sorted(v["pairs"])][:400]}
                  for (a, b), v in sorted(sys_edges.items())],
+    "unseen": [{"a": a, "b": b} for a, b in unseen],
+    "refused": [{"a": a, "b": b} for a, b in refused],
     "files": [{"p": f["p"], "s": f["sys"], "k": f["kind"], "l": f["lines"], "a": f["asm"]} for f in files],
     "types": out_types,
     "assets": [{"p": assets[ai]["p"], "k": assets[ai]["k"]} for ai in sorted(needed_assets)],
@@ -1067,6 +1085,16 @@ blocks["systems"] = md_table(
     ["System", "Layer", "Scripts", "Lines", "Uses (types)", "Used by (types)", "Instability", "Tests", "Types touched by a test"],
     [[r["id"], r["layer"], r["files"], f"{r['lines']:,}", r["fanOut"], r["fanIn"], r["inst"], r["testFiles"],
       f"{r['tested']} of {r['testable']}"] for r in sorted(sys_rows, key=lambda r: (r["rank"], r["order"]))])
+blocks["compiler"] = (
+    f"Checked against the {len(declared)} references the assemblies declare between systems: "
+    + (f"**{len(refused)} links found in code that no declaration allows** (the map misread them: "
+       + ", ".join(f"{a} -> {b}" for a, b in refused) + "). " if refused else
+       "every link the map found is one the compiler allows. ")
+    + (f"{len(unseen)} declared references name no type in code: "
+       + ", ".join(f"{a} -> {b}" for a, b in unseen)
+       + ". Each is either unused and can go, or needed by the compiler for a type reached through another "
+         "assembly's member (error CS0012 when removed), which reading the code as text cannot see." if unseen else
+       "Every declared reference is used in code."))
 blocks["uphill"] = md_table(
     ["From", "Uses (higher layer)", "Files", "Types it uses", "First place"],
     [[a, b, len(v["files"]), ", ".join(sorted(set(tname(t) for t in v["types"])))[:160],
@@ -1126,5 +1154,8 @@ print(data["meta"]["files"], "runtime scripts,", data["meta"]["testFiles"], "tes
 print(dict(asset_kind_count), "assets read;", sum(len(v) for v in so_assets.values()), "ScriptableObject assets")
 print(len(sys_edges), "system links:", data["meta"]["uphill"], "uphill,", data["meta"]["twoway"], "two-way pairs,",
       data["meta"]["back"], "to cut for a clean stack")
+print(f"against the compiler: {len(declared)} declared references between systems; {len(refused)} links in code no "
+      f"declaration allows (the map misread them){': ' + ', '.join(f'{a} -> {b}' for a, b in refused) if refused else ''}; "
+      f"{len(unseen)} declared with no type named in code: {', '.join(f'{a} -> {b}' for a, b in unseen) or 'none'}")
 print(len(problems), "problems ranked; page:", rel(os.path.join(OUT_DIR, "dependency-map.html")))
 sys.exit(status)

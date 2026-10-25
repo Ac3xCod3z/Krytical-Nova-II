@@ -22,6 +22,11 @@
     --ok: #2f8f4e;
     --code: #ece3c6;
     --shadow: #14161c;
+    --ochre: #b07a00;
+    /* layers, bottom to top, and the waves of a ripple */
+    --lay0: #5b6476; --lay1: #3a6fd0; --lay2: #9a7414; --lay3: #8b43b0; --lay4: #2f8f4e;
+    --lay0-soft: #e3e6ec; --lay1-soft: #dbe6fb; --lay2-soft: #f4ead0; --lay3-soft: #eedff6; --lay4-soft: #d9f0e1;
+    --w1: #ff8fae; --w2: #ffbfd0; --w3: #ffe2ea;
     --display: "Bangers", "Impact", sans-serif;
     --head: "Barlow Condensed", "Arial Narrow", sans-serif;
     --body: "Barlow", "Segoe UI", system-ui, sans-serif;
@@ -31,14 +36,20 @@
     :root:not([data-theme="light"]) {
       --paper: #141a2b; --panel: #1d2540; --ink: #f4eeda; --muted: #a9adc2; --line: #46507a; --dots: rgba(244, 238, 218, 0.07);
       --pop: #ffc928; --pop-ink: #14161c; --cyan: #3fd2e2; --cyan-soft: #17465a; --magenta: #ff5c8f; --magenta-soft: #4f1d33;
-      --ok: #5fd08a; --code: #2a3357; --shadow: #05070d;
+      --ok: #5fd08a; --code: #2a3357; --shadow: #05070d; --ochre: #f0b93a;
+      --lay0: #a3adc2; --lay1: #7ea8ff; --lay2: #e2b75a; --lay3: #c99be4; --lay4: #5fd08a;
+      --lay0-soft: #262f48; --lay1-soft: #1c2c52; --lay2-soft: #3a3020; --lay3-soft: #33224a; --lay4-soft: #1b3a2a;
+      --w1: #a8335a; --w2: #702540; --w3: #4a1d30;
       color-scheme: dark;
     }
   }
   :root[data-theme="dark"] {
     --paper: #141a2b; --panel: #1d2540; --ink: #f4eeda; --muted: #a9adc2; --line: #46507a; --dots: rgba(244, 238, 218, 0.07);
     --pop: #ffc928; --pop-ink: #14161c; --cyan: #3fd2e2; --cyan-soft: #17465a; --magenta: #ff5c8f; --magenta-soft: #4f1d33;
-    --ok: #5fd08a; --code: #2a3357; --shadow: #05070d;
+    --ok: #5fd08a; --code: #2a3357; --shadow: #05070d; --ochre: #f0b93a;
+    --lay0: #a3adc2; --lay1: #7ea8ff; --lay2: #e2b75a; --lay3: #c99be4; --lay4: #5fd08a;
+    --lay0-soft: #262f48; --lay1-soft: #1c2c52; --lay2-soft: #3a3020; --lay3-soft: #33224a; --lay4-soft: #1b3a2a;
+    --w1: #a8335a; --w2: #702540; --w3: #4a1d30;
     color-scheme: dark;
   }
 
@@ -110,32 +121,94 @@
           text-decoration-thickness: 2px; text-underline-offset: 2px; text-align: left; }
   .link:hover { color: var(--cyan); }
 
-  /* the map */
+  /* the map: systems in five layer bands, users on top. Hover previews a system's links, a click pins it; Ripple and
+     Path are the two questions a refactor asks ("what does a change here reach?", "how does A get to B?"). */
   .mapgrid { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 16px; align-items: start; }
-  .mapwrap { overflow-x: auto; padding: 8px; }
-  .mapwrap svg { display: block; min-width: 860px; width: 100%; height: auto; }
-  .lvl-label { font: 600 11px var(--head); letter-spacing: 0.1em; text-transform: uppercase; fill: var(--muted); }
-  .band { fill: var(--dots); }
-  .node rect.box { fill: var(--panel); stroke: var(--ink); stroke-width: 2; }
+  .maptools { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; justify-content: space-between; padding: 4px 6px 0; }
+  .seg-ctl { display: inline-flex; border: 2px solid var(--ink); border-radius: 5px; overflow: hidden; box-shadow: 3px 3px 0 var(--shadow); }
+  .seg-ctl button { font: 700 14px var(--head); letter-spacing: 0.06em; text-transform: uppercase; background: var(--panel); border: 0; padding: 4px 11px; cursor: pointer; }
+  .seg-ctl button + button { border-left: 2px solid var(--ink); }
+  .seg-ctl button:hover { background: var(--cyan-soft); }
+  .seg-ctl button[aria-pressed="true"] { background: var(--pop); color: var(--pop-ink); }
+  .mapwrap { position: relative; overflow-x: auto; padding: 4px; touch-action: pan-y; }
+  .mapwrap svg { display: block; min-width: 860px; width: 100%; height: auto; user-select: none; }
+  .mapwrap.panning svg { cursor: grabbing; }
+  .zoom { position: absolute; right: 12px; top: 10px; display: flex; flex-direction: column; gap: 4px; z-index: 2; }
+  .zoom button { width: 30px; height: 30px; font: 700 18px/1 var(--head); background: var(--panel); border: 2px solid var(--ink); border-radius: 5px; cursor: pointer; box-shadow: 2px 2px 0 var(--shadow); }
+  .zoom button:hover { background: var(--cyan-soft); }
+  .band { stroke: none; }
+  .band-label { font: 700 11px var(--head); letter-spacing: 0.12em; text-transform: uppercase; }
+  .band-sub { font: 500 10px var(--mono); fill: var(--muted); }
+  .node { cursor: pointer; transition: opacity 0.25s; }
+  .node rect.box { fill: var(--panel); stroke: var(--ink); stroke-width: 2; transition: fill 0.3s, stroke 0.2s; }
+  .node rect.stripe { stroke: none; }
   .node rect.size { fill: var(--cyan-soft); }
   .node text { font: 700 13px var(--head); letter-spacing: 0.02em; fill: var(--ink); pointer-events: none; }
-  .node text.sub { font: 500 10.5px var(--mono); fill: var(--muted); }
-  .node { cursor: pointer; }
-  .node:hover rect.box, .node.sel rect.box { stroke: var(--magenta); stroke-width: 3; }
-  .node.dim { opacity: 0.35; }
-  .edge { fill: none; stroke: var(--line); }
-  .edge.back { stroke: var(--magenta); }
-  .edge.up { stroke: var(--magenta); stroke-dasharray: 6 4; }
-  .edge.outsel { stroke: var(--cyan); }
-  .edge.insel { stroke: #c98f00; }
+  .node text.sub { font: 500 10px var(--mono); fill: var(--muted); }
+  .node .badge-bg { fill: var(--ink); opacity: 0; transition: opacity 0.2s; }
+  .node .badge { font: 400 15px var(--display); fill: var(--paper); text-anchor: middle; opacity: 0; transition: opacity 0.2s; }
+  .node.has-badge .badge, .node.has-badge .badge-bg { opacity: 1; }
+  .node:hover rect.box, .node.sel rect.box, .node:focus-visible rect.box { stroke: var(--magenta); stroke-width: 3; }
+  .node.dim { opacity: 0.22; }
+  .node.off { opacity: 0.1; pointer-events: none; }
+  .node.origin rect.box { fill: var(--pop); }
+  .node.w1 rect.box { fill: var(--w1); }
+  .node.w2 rect.box { fill: var(--w2); }
+  .node.w3 rect.box { fill: var(--w3); }
+  .node.onpath rect.box { fill: var(--cyan-soft); stroke: var(--cyan); stroke-width: 3; }
+  .edge { fill: none; stroke: var(--line); opacity: 0.2; transition: opacity 0.25s, stroke 0.25s; }
+  .edge.cold { opacity: 0.04; }
+  .edge.hot { opacity: 0.95; }
+  .edge.out { stroke: var(--cyan); }
+  .edge.in { stroke: var(--ochre); }
+  .edge.ripple { stroke: var(--magenta); }
+  .edge.path { stroke: var(--cyan); }
+  .edge.back { stroke: var(--magenta); opacity: 0.95; }
+  .edge.up { stroke: var(--magenta); stroke-dasharray: 6 4; opacity: 0.95; }
+  .edge.unseen { stroke: var(--muted); stroke-dasharray: 2 5; opacity: 0.55; }
+  .edge.flow { stroke-dasharray: 9 6; animation: flow 0.9s linear infinite; }
+  @keyframes flow { to { stroke-dashoffset: -15; } }
   .edge-hit { fill: none; stroke: transparent; stroke-width: 12; cursor: pointer; }
-  .legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: 13px; }
+  .edge-hit.off { pointer-events: none; }
+  .tip { position: absolute; z-index: 5; pointer-events: none; background: var(--panel); border: 2px solid var(--ink); border-radius: 5px;
+         box-shadow: 4px 4px 0 var(--shadow); padding: 7px 10px; font-size: 13px; max-width: 260px; }
+  .tip b { font: 700 15px var(--head); letter-spacing: 0.03em; display: block; }
+  .legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 13px; align-items: center; }
   .legend i { display: inline-block; width: 26px; height: 0; border-top: 3px solid var(--line); vertical-align: middle; margin-right: 6px; }
-  .legend i.back { border-color: var(--magenta); }
-  .legend i.up { border-top: 3px dashed var(--magenta); }
   .legend i.out { border-color: var(--cyan); }
-  .legend i.in { border-color: #c98f00; }
+  .legend i.in { border-color: var(--ochre); }
+  .legend i.unseen { border-top: 3px dotted var(--muted); }
+  .legend i.bad { border-top: 3px dashed var(--magenta); }
+  .layerkey { display: flex; flex-direction: column; gap: 5px; }
+  .layerkey button { display: grid; grid-template-columns: 14px minmax(0, 1fr) auto; gap: 8px; align-items: center; text-align: left; background: none;
+                     border: 1.5px solid var(--line); border-radius: 4px; padding: 4px 8px; cursor: pointer; }
+  .layerkey button:hover { background: var(--cyan-soft); }
+  .layerkey button[aria-pressed="false"] { opacity: 0.45; text-decoration: line-through; }
+  .layerkey .sw { width: 14px; height: 14px; border-radius: 3px; border: 1.5px solid var(--ink); }
+  .wave { display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: 8px; align-items: start; }
+  .wave .n { font: 400 20px/1 var(--display); text-align: center; border: 2px solid var(--ink); border-radius: 4px; padding: 3px 0 1px; }
+  .chain { display: flex; flex-wrap: wrap; gap: 4px 6px; align-items: center; }
+  .health { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .health div { border: 2px solid var(--ink); border-radius: 5px; padding: 6px 9px; background: var(--paper); }
+  .health b { display: block; font: 400 28px/1 var(--display); font-variant-numeric: tabular-nums; }
+  .health span { font: 600 12px var(--head); letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+  .health .ok b { color: var(--ok); }
   .side { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 112px); max-height: calc(100vh - 130px); overflow: auto; }
+
+  /* the matrix: rows use columns; a clean stack keeps every mark on one side of the diagonal */
+  .matwrap { overflow-x: auto; position: relative; }
+  .matwrap svg { display: block; }
+  .mx-label { font: 600 12px var(--head); letter-spacing: 0.02em; fill: var(--ink); cursor: pointer; }
+  .mx-label.hl { fill: var(--magenta); }
+  .mx-cell { cursor: pointer; stroke: var(--panel); stroke-width: 1; }
+  .mx-cell:hover { stroke: var(--ink); stroke-width: 2; }
+  .mx-grid { fill: var(--paper); }
+  .mx-cross { fill: var(--cyan-soft); opacity: 0.55; pointer-events: none; }
+  .mx-diag { stroke: var(--muted); stroke-width: 1; stroke-dasharray: 3 3; }
+  .mx-sep { stroke: var(--ink); stroke-width: 1.5; }
+  .scale { display: inline-flex; height: 12px; width: 140px; border: 1.5px solid var(--ink); border-radius: 3px; overflow: hidden; vertical-align: middle; }
+  .scale span { flex: 1; }
+  @media (prefers-reduced-motion: reduce) { .edge.flow { animation: none; stroke-dasharray: none; } }
 
   /* lists and tables */
   .tablewrap { overflow-x: auto; }
@@ -230,12 +303,13 @@ $("#lede").innerHTML = `Every runtime script of the game, what it uses and who u
 const scoreSegs = [
   [M.files, "runtime scripts", "", "systems"], [M.types, "classes & types", "", "systems"], [M.so, "ScriptableObject classes", "", "data"],
   [M.uphill, "links running uphill", "bad", "problems"], [M.twoway, "pairs that use each other", "bad", "problems"],
-  [M.back, "links to cut for a clean stack", "warn", "map"], [M.tangle, "classes in one tangle", "bad", "read"], [D.problems.length, "problems ranked", "warn", "problems"]];
-$("#score").innerHTML = scoreSegs.map(([n, l, c, to]) => `<a class="seg ${c}" href="#${to}"><b>${n}</b><span>${l}</span></a>`).join("");
+  [M.back, "links to cut for a clean stack", "warn", "map"], [M.refused, "links the compiler would refuse", "bad", "read"], [D.problems.length, "problems ranked", "warn", "problems"]];
+// a zero where zero is the goal reads as good news, not as a warning
+$("#score").innerHTML = scoreSegs.map(([n, l, c, to]) => `<a class="seg ${c && n ? c : ""}" href="#${to}"><b${c === "bad" && !n ? ' style="color:var(--ok)"' : ""}>${n}</b><span>${l}</span></a>`).join("");
 $("#foot").textContent = `Generated ${M.generated} by Tools/Editor/Architecture/Scripts~/dependency_map.py. Read the "How to read" view for what the map can and cannot see.`;
 
 // --- views ----------------------------------------------------------------------------------------------------------
-const VIEWS = [["map", "Map"], ["problems", "Problems"], ["systems", "Systems"], ["hubs", "Hubs"], ["data", "Design data"], ["tests", "Tests"], ["read", "How to read"]];
+const VIEWS = [["map", "Map"], ["matrix", "Matrix"], ["problems", "Problems"], ["systems", "Systems"], ["hubs", "Hubs"], ["data", "Design data"], ["tests", "Tests"], ["read", "How to read"]];
 $("#tabs").innerHTML = VIEWS.map(([id, n]) => `<a class="tab" href="#${id}" data-v="${id}">${n}</a>`).join("");
 let trail = [];
 function show(view, arg, push = true) {
@@ -244,7 +318,7 @@ function show(view, arg, push = true) {
   document.querySelectorAll(".tab").forEach(t => t.setAttribute("aria-current", t.dataset.v === view ? "page" : "false"));
   const v = $("#view");
   v.innerHTML = "";
-  ({ map: viewMap, problems: viewProblems, systems: viewSystems, hubs: viewHubs, data: viewData, tests: viewTests, read: viewRead,
+  ({ map: viewMap, matrix: viewMatrix, problems: viewProblems, systems: viewSystems, hubs: viewHubs, data: viewData, tests: viewTests, read: viewRead,
      sys: viewSystem, type: viewType, edge: viewEdge })[view](v, arg);
   if (push) window.scrollTo({ top: Math.min(window.scrollY, $(".bar").offsetTop), behavior: "auto" });
 }
@@ -283,110 +357,344 @@ function sortable(table) {
 }
 
 // --- Map ------------------------------------------------------------------------------------------------------------
-let mapMode = "problem", mapSel = null;
+// The graph is drawn once per visit; hovering, picking and the two modes only switch classes on what is drawn.
+const LAYERS = D.meta.ranks.map(r => r.name);                       // bottom to top
+const layerIdx = name => LAYERS.indexOf(name);
+const nice = id => id.replace("Gameplay/", "");
+const outOf = {}, inTo = {};
+D.sysEdges.forEach((e, i) => { (outOf[e.a] = outOf[e.a] || []).push(i); (inTo[e.b] = inTo[e.b] || []).push(i); });
+let mapMode = "explore", rippleDir = "up", mapSel = null, hoverSys = null, pathA = null, pathB = null;
+let showUnseen = true, hiddenLayers = new Set(), vb = null, geo = null;
+
 function viewMap(v) {
-  v.innerHTML = `<div class="stack">
-    <div class="mapgrid">
+  v.innerHTML = `<div class="mapgrid">
       <section class="panel stack" style="padding:10px">
-        <div class="row" style="justify-content:space-between;padding:4px 6px 0">
-          <div class="row" role="group" aria-label="Which links">
-            <button class="chip ${mapMode === "problem" ? "on" : ""}" data-mode="problem">Problem links</button>
-            <button class="chip ${mapMode === "all" ? "on" : ""}" data-mode="all">All links</button>
+        <div class="maptools">
+          <div class="seg-ctl" role="group" aria-label="What to explore">
+            <button data-mode="explore" aria-pressed="${mapMode === "explore"}" title="Hover a system to see what it uses and what uses it; click to pin it">Explore</button>
+            <button data-mode="ripple" aria-pressed="${mapMode === "ripple"}" title="Click a system: everything a change to it can reach, wave by wave">Ripple</button>
+            <button data-mode="path" aria-pressed="${mapMode === "path"}" title="Click two systems: how the first one reaches the second">Path</button>
           </div>
-          <div class="legend"><span><i></i>uses (downhill, fine)</span><span><i class="back"></i>loop to cut</span><span><i class="up"></i>runs uphill</span>
-            <span><i class="out"></i>selected uses</span><span><i class="in"></i>used by selected</span></div>
+          <div class="legend"><span><i class="out"></i>uses</span><span><i class="in"></i>used by</span>
+            <button class="chip ${showUnseen ? "on" : ""}" id="unseenBtn" title="References the assemblies declare that no line of code names">declared only <span class="num">${D.unseen.length}</span></button>
+            ${D.meta.uphill + D.meta.back ? `<span><i class="bad"></i>wrong way</span>` : ""}</div>
         </div>
-        <div class="mapwrap" id="mapwrap"></div>
+        <div class="mapwrap" id="mapwrap"><div class="zoom"><button data-z="in" aria-label="Zoom in">+</button><button data-z="out" aria-label="Zoom out">−</button><button data-z="fit" aria-label="Fit the whole map" style="font-size:12px">fit</button></div>
+          <div class="tip" id="tip" hidden></div></div>
+        <p class="muted" style="padding:0 6px 4px;font-size:13px" id="maphint"></p>
       </section>
       <aside class="panel side stack" id="side"></aside>
-    </div>
-  </div>`;
-  v.querySelectorAll("[data-mode]").forEach(b => b.onclick = () => { mapMode = b.dataset.mode; viewMap(v); });
+    </div>`;
+  v.querySelectorAll("[data-mode]").forEach(b => b.onclick = () => { mapMode = b.dataset.mode; mapSel = pathA = pathB = null;
+    v.querySelectorAll("[data-mode]").forEach(x => x.setAttribute("aria-pressed", x === b)); applyState(); sideInfo(); });
+  $("#unseenBtn").onclick = e => { showUnseen = !showUnseen; e.currentTarget.classList.toggle("on", showUnseen); applyState(); };
+  v.querySelectorAll("[data-z]").forEach(b => b.onclick = () => zoomBy(b.dataset.z === "in" ? 0.8 : b.dataset.z === "out" ? 1.25 : 0));
   drawMap();
+  applyState();
   sideInfo();
 }
+
 function layout() {
   const levels = {};
   D.systems.forEach(s => (levels[s.level] = levels[s.level] || []).push(s));
   const maxL = Math.max(...D.systems.map(s => s.level));
-  const W = 1000, rowH = 74, top = 20, nodeW = 150, nodeH = 44, pos = {};
+  const W = 1000, rowH = 74, top = 20, nodeW = 150, nodeH = 44, left = 104, pos = {};
   Object.entries(levels).forEach(([l, list]) => {
     list.sort((a, b) => a.order - b.order);
-    const gap = Math.min(40, (W - 90 - list.length * nodeW) / Math.max(1, list.length - 1));
+    const gap = Math.min(40, (W - left - list.length * nodeW) / Math.max(1, list.length - 1));
     const total = list.length * nodeW + (list.length - 1) * gap;
-    let x = 90 + (W - 90 - total) / 2;
+    let x = left + (W - left - total) / 2;
     list.forEach(s => { pos[s.id] = { x, y: top + (maxL - l) * rowH, w: nodeW, h: nodeH }; x += nodeW + gap; });
   });
   return { pos, W, H: top + (maxL + 1) * rowH, maxL, rowH, top };
 }
+function curve(a, b) {
+  const ax = a.x + a.w / 2, bx = b.x + b.w / 2;
+  if (a.y < b.y) return `M${ax},${a.y + a.h} C${ax},${a.y + a.h + 40} ${bx},${b.y - 40} ${bx},${b.y}`;
+  if (a.y > b.y) return `M${ax + 10},${a.y} C${ax + 70},${a.y - 50} ${bx + 70},${b.y + b.h + 50} ${bx + 10},${b.y + b.h}`;
+  const yy = a.y + a.h, mid = (ax + bx) / 2;
+  return `M${ax},${yy} Q${mid},${yy + 36} ${bx},${yy}`;
+}
 function drawMap() {
-  const { pos, W, H, maxL, rowH, top } = layout();
+  geo = layout();
+  const { pos, W, H, maxL, rowH, top } = geo;
   const maxLines = Math.max(...D.systems.map(s => s.lines));
-  let bands = "", edges = "", hits = "", nodes = "";
-  const rankAt = {};
-  D.systems.forEach(s => { rankAt[s.level] = rankAt[s.level] || s.layer; });
-  for (let l = maxL; l >= 0; l--) {
-    const y = top + (maxL - l) * rowH;
-    if ((maxL - l) % 2 === 0) bands += `<rect class="band" x="0" y="${y - 14}" width="${W}" height="${rowH}"></rect>`;
-    bands += `<text class="lvl-label" x="6" y="${y + 26}">step ${l}</text>`;
-  }
   const maxF = Math.max(...D.sysEdges.map(e => e.files));
+  let bands = "", edges = "", hits = "", nodes = "";
+  // one band per layer, from its highest step to its lowest
+  LAYERS.forEach((name, li) => {
+    const ls = D.systems.filter(s => s.layer === name).map(s => s.level);
+    if (!ls.length) return;
+    const y0 = top + (maxL - Math.max(...ls)) * rowH - 14, y1 = top + (maxL - Math.min(...ls)) * rowH + rowH - 14;
+    const n = D.systems.filter(s => s.layer === name).length;
+    bands += `<rect class="band" x="0" y="${y0}" width="${W}" height="${y1 - y0}" fill="var(--lay${li}-soft)" opacity="0.55"></rect>
+      <rect x="0" y="${y0}" width="5" height="${y1 - y0}" fill="var(--lay${li})"></rect>
+      <text class="band-label" x="12" y="${(y0 + y1) / 2 - 2}" fill="var(--lay${li})">${esc(name)}</text>
+      <text class="band-sub" x="12" y="${(y0 + y1) / 2 + 12}">${n} system${n > 1 ? "s" : ""}</text>`;
+  });
   D.sysEdges.forEach((e, i) => {
     const a = pos[e.a], b = pos[e.b];
     if (!a || !b) return;
-    const problem = e.back || e.uphill;
-    const touches = mapSel && (e.a === mapSel || e.b === mapSel);
-    if (mapMode === "problem" && !problem && !touches) return;
-    let cls = "edge" + (e.uphill ? " up" : e.back ? " back" : "");
-    if (touches && !problem) cls += e.a === mapSel ? " outsel" : " insel";
-    const w = 1 + 4 * Math.sqrt(e.files / maxF);
-    let op = problem ? 0.95 : touches ? 0.85 : mapSel ? 0.06 : 0.22;
-    if (mapSel && problem && !touches) op = 0.25;
-    const ax = a.x + a.w / 2, bx = b.x + b.w / 2;
-    let d;
-    if (a.y < b.y) d = `M${ax},${a.y + a.h} C${ax},${a.y + a.h + 40} ${bx},${b.y - 40} ${bx},${b.y}`;
-    else if (a.y > b.y) d = `M${ax + 10},${a.y} C${ax + 70},${a.y - 50} ${bx + 70},${b.y + b.h + 50} ${bx + 10},${b.y + b.h}`;
-    else { const yy = a.y + a.h, mid = (ax + bx) / 2; d = `M${ax},${yy} Q${mid},${yy + 36} ${bx},${yy}`; }
-    edges += `<path class="${cls}" d="${d}" stroke-width="${w.toFixed(1)}" opacity="${op}"></path>`;
-    hits += `<path class="edge-hit" d="${d}" data-edge="${i}"><title>${esc(e.a)} uses ${esc(e.b)}: ${e.files} file(s), ${e.types} type(s)</title></path>`;
+    const d = curve(a, b), w = 1 + 4 * Math.sqrt(e.files / maxF);
+    edges += `<path class="edge${e.uphill ? " up" : e.back ? " back" : ""}" d="${d}" stroke-width="${w.toFixed(1)}" data-i="${i}"></path>`;
+    hits += `<path class="edge-hit" d="${d}" data-edge="${i}"></path>`;
+  });
+  D.unseen.forEach((e, i) => {
+    const a = pos[e.a], b = pos[e.b];
+    if (a && b) edges += `<path class="edge unseen" d="${curve(a, b)}" stroke-width="1.5" data-u="${i}"></path>`;
   });
   D.systems.forEach(s => {
-    const p = pos[s.id];
-    const related = !mapSel || s.id === mapSel || D.sysEdges.some(e => (e.a === mapSel && e.b === s.id) || (e.b === mapSel && e.a === s.id));
-    const bw = Math.max(3, (p.w - 4) * Math.sqrt(s.lines / maxLines));
-    const name = s.id.replace("Gameplay/", "");
-    nodes += `<g class="node ${s.id === mapSel ? "sel" : ""} ${related ? "" : "dim"}" data-node="${esc(s.id)}" tabindex="0" role="button" aria-label="${esc(s.id)}">
+    const p = pos[s.id], li = layerIdx(s.layer);
+    const bw = Math.max(3, (p.w - 10) * Math.sqrt(s.lines / maxLines));
+    nodes += `<g class="node" data-node="${esc(s.id)}" tabindex="0" role="button" aria-label="${esc(s.id)}">
       <rect class="box" x="${p.x}" y="${p.y}" width="${p.w}" height="${p.h}" rx="5"></rect>
-      <rect class="size" x="${p.x + 2}" y="${p.y + p.h - 9}" width="${bw.toFixed(1)}" height="7" rx="1"></rect>
-      <text x="${p.x + 8}" y="${p.y + 17}">${esc(name)}</text>
-      <text class="sub" x="${p.x + 8}" y="${p.y + 31}">${s.files} files · ${(s.lines / 1000).toFixed(1)}k</text></g>`;
+      <rect class="stripe" x="${p.x + 1}" y="${p.y + 1}" width="6" height="${p.h - 2}" rx="3" fill="var(--lay${li})"></rect>
+      <rect class="size" x="${p.x + 8}" y="${p.y + p.h - 8}" width="${bw.toFixed(1)}" height="5" rx="1"></rect>
+      <text x="${p.x + 13}" y="${p.y + 17}">${esc(nice(s.id))}</text>
+      <text class="sub" x="${p.x + 13}" y="${p.y + 31}">${s.files} files · ${(s.lines / 1000).toFixed(1)}k lines</text>
+      <rect class="badge-bg" x="${p.x + p.w - 20}" y="${p.y - 9}" width="24" height="20" rx="4"></rect>
+      <text class="badge" x="${p.x + p.w - 8}" y="${p.y + 7}"></text></g>`;
   });
-  $("#mapwrap").innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Systems stacked by layer, with the links between them">${bands}${edges}${hits}${nodes}</svg>`;
-  $("#mapwrap").querySelectorAll("[data-node]").forEach(g => {
-    const pick = () => { mapSel = mapSel === g.dataset.node ? null : g.dataset.node; drawMap(); sideInfo(); };
-    g.addEventListener("click", pick);
-    g.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); pick(); } });
+  const wrap = $("#mapwrap");
+  wrap.insertAdjacentHTML("beforeend", `<svg id="mapsvg" viewBox="0 0 ${W} ${H}" role="img" aria-label="Systems stacked by layer, with the links between them">${bands}${edges}${hits}${nodes}</svg>`);
+  vb = { x: 0, y: 0, w: W, h: H, W, H };
+  const tip = $("#tip");
+  const place = ev => { const r = wrap.getBoundingClientRect(); tip.style.left = Math.min(ev.clientX - r.left + wrap.scrollLeft + 14, wrap.scrollWidth - 270) + "px"; tip.style.top = (ev.clientY - r.top + 14) + "px"; };
+  wrap.querySelectorAll("[data-node]").forEach(g => {
+    const id = g.dataset.node, s = sysById[id];
+    g.addEventListener("mouseenter", ev => { hoverSys = id; applyState();
+      tip.innerHTML = `<b>${esc(id)}</b>${esc(s.layer)} · ${s.files} files · ${s.lines.toLocaleString()} lines<br>uses ${(outOf[id] || []).length} systems · used by ${(inTo[id] || []).length}<br><span class="muted">${s.tested} of ${s.testable} classes touched by tests</span>`;
+      tip.hidden = false; place(ev); });
+    g.addEventListener("mousemove", place);
+    g.addEventListener("mouseleave", () => { hoverSys = null; tip.hidden = true; applyState(); });
+    g.addEventListener("click", () => pickNode(id));
+    g.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); pickNode(id); } });
   });
-  $("#mapwrap").querySelectorAll("[data-edge]").forEach(p => p.addEventListener("click", () => show("edge", p.dataset.edge)));
+  wrap.querySelectorAll("[data-edge]").forEach(p => {
+    const e = D.sysEdges[+p.dataset.edge];
+    p.addEventListener("mouseenter", ev => { tip.innerHTML = `<b>${esc(nice(e.a))} → ${esc(nice(e.b))}</b>${e.files} file${e.files > 1 ? "s" : ""} use ${e.types} type${e.types > 1 ? "s" : ""}<br><span class="muted">click for the exact lines</span>`; tip.hidden = false; place(ev); });
+    p.addEventListener("mousemove", place);
+    p.addEventListener("mouseleave", () => tip.hidden = true);
+    p.addEventListener("click", () => show("edge", p.dataset.edge));
+  });
+  // drag to pan once zoomed in; Ctrl + wheel (or a pinch on a trackpad) zooms around the pointer
+  const svg = $("#mapsvg");
+  let drag = null;
+  svg.addEventListener("pointerdown", e => { if (e.target.closest("[data-node],[data-edge]") || vb.w >= vb.W) return; drag = { x: e.clientX, y: e.clientY, vx: vb.x, vy: vb.y }; wrap.classList.add("panning"); svg.setPointerCapture(e.pointerId); });
+  svg.addEventListener("pointermove", e => { if (!drag) return; const k = vb.w / svg.clientWidth; vb.x = drag.vx - (e.clientX - drag.x) * k; vb.y = drag.vy - (e.clientY - drag.y) * k; setVB(); });
+  svg.addEventListener("pointerup", () => { drag = null; wrap.classList.remove("panning"); });
+  svg.addEventListener("wheel", e => { if (!e.ctrlKey && !e.metaKey) return; e.preventDefault(); const r = svg.getBoundingClientRect();
+    zoomBy(e.deltaY > 0 ? 1.15 : 0.87, (e.clientX - r.left) / r.width, (e.clientY - r.top) / r.height); }, { passive: false });
 }
+function setVB() {
+  vb.w = Math.min(vb.W, vb.w); vb.h = vb.w * vb.H / vb.W;
+  vb.x = Math.max(0, Math.min(vb.W - vb.w, vb.x)); vb.y = Math.max(0, Math.min(vb.H - vb.h, vb.y));
+  $("#mapsvg").setAttribute("viewBox", `${vb.x.toFixed(1)} ${vb.y.toFixed(1)} ${vb.w.toFixed(1)} ${vb.h.toFixed(1)}`);
+}
+function zoomBy(f, fx = 0.5, fy = 0.5) {
+  if (!f) { vb.x = vb.y = 0; vb.w = vb.W; return setVB(); }
+  const nw = Math.max(vb.W * 0.3, Math.min(vb.W, vb.w * f));
+  vb.x += (vb.w - nw) * fx; vb.y += (vb.h - nw * vb.H / vb.W) * fy; vb.w = nw; setVB();
+}
+
+// breadth-first waves along the links: "up" follows who uses a system (what a change to it reaches), "down" what it uses
+function waves(start, dir) {
+  const seen = new Map([[start, 0]]), tree = [];
+  let frontier = [start], n = 0;
+  while (frontier.length) {
+    n++;
+    const next = [];
+    frontier.forEach(s => ((dir === "up" ? inTo[s] : outOf[s]) || []).forEach(i => {
+      const e = D.sysEdges[i], o = dir === "up" ? e.a : e.b;
+      if (hiddenLayers.has(sysById[o].layer)) return;
+      if (!seen.has(o)) { seen.set(o, n); next.push(o); tree.push(i); }
+    }));
+    frontier = next;
+  }
+  return { seen, tree };
+}
+function route2(a, b) {   // shortest chain of "uses" from a to b, or null
+  const prev = new Map([[a, null]]), q = [a];
+  while (q.length) {
+    const s = q.shift();
+    if (s === b) break;
+    (outOf[s] || []).forEach(i => { const o = D.sysEdges[i].b; if (!prev.has(o)) { prev.set(o, i); q.push(o); } });
+  }
+  if (!prev.has(b)) return null;
+  const chain = [];
+  for (let s = b; prev.get(s) != null; s = D.sysEdges[prev.get(s)].a) chain.unshift(prev.get(s));
+  return chain;
+}
+function pickNode(id) {
+  if (mapMode === "path") {
+    if (!pathA || (pathA && pathB)) { pathA = id; pathB = null; }
+    else if (id !== pathA) pathB = id;
+  } else mapSel = mapSel === id ? null : id;
+  applyState(); sideInfo();
+}
+function applyState() {
+  const svg = $("#mapsvg");
+  if (!svg) return;
+  const nodeEls = svg.querySelectorAll("[data-node]"), edgeEls = svg.querySelectorAll("path.edge[data-i]");
+  const nodeCls = {}, edgeCls = {};
+  let hint = "";
+  if (mapMode === "explore") {
+    const f = hoverSys || mapSel;
+    if (f) {
+      const near = new Set([f]);
+      (outOf[f] || []).forEach(i => { edgeCls[i] = "hot out flow"; near.add(D.sysEdges[i].b); });
+      (inTo[f] || []).forEach(i => { edgeCls[i] = "hot in flow"; near.add(D.sysEdges[i].a); });
+      D.systems.forEach(s => nodeCls[s.id] = near.has(s.id) ? (s.id === mapSel ? "sel" : "") : "dim");
+      D.sysEdges.forEach((e, i) => { if (!edgeCls[i]) edgeCls[i] = "cold"; });
+    }
+    hint = f ? `${nice(f)} uses ${(outOf[f] || []).length} systems (blue, flowing towards them) and is used by ${(inTo[f] || []).length} (amber). Click a line for the exact files and lines.`
+             : "Hover a system to see its links; click to pin it. Ctrl + wheel zooms, drag pans once zoomed.";
+  } else if (mapMode === "ripple") {
+    if (mapSel) {
+      const { seen, tree } = waves(mapSel, rippleDir);
+      D.systems.forEach(s => { const w = seen.get(s.id); nodeCls[s.id] = w === 0 ? "origin sel" : w ? "w" + Math.min(3, w) : "dim"; });
+      D.sysEdges.forEach((e, i) => edgeCls[i] = tree.includes(i) ? "hot ripple flow" : "cold");
+      hint = rippleDir === "up" ? `Change ${nice(mapSel)} and these can be affected: the number on each is how many links away it sits.`
+                                : `What ${nice(mapSel)} stands on: the number on each is how many links away it sits.`;
+    } else hint = "Click a system to see how far a change to it can travel.";
+  } else {
+    if (pathA) {
+      const chain = pathB ? route2(pathA, pathB) || [] : [];
+      const on = new Set([pathA, pathB].filter(Boolean));
+      chain.forEach(i => { on.add(D.sysEdges[i].a); on.add(D.sysEdges[i].b); edgeCls[i] = "hot path flow"; });
+      D.systems.forEach(s => nodeCls[s.id] = on.has(s.id) ? "onpath" + (s.id === pathA || s.id === pathB ? " sel" : "") : "dim");
+      D.sysEdges.forEach((e, i) => { if (!edgeCls[i]) edgeCls[i] = "cold"; });
+      hint = !pathB ? `From ${nice(pathA)}: now click the system to reach.` : chain.length ? `${chain.length} link${chain.length > 1 ? "s" : ""} from ${nice(pathA)} to ${nice(pathB)}.` : `${nice(pathA)} never reaches ${nice(pathB)}, so a change to ${nice(pathB)} cannot break it.`;
+    } else hint = "Click a system, then a second one: the shortest chain of uses from the first to the second.";
+  }
+  const rippleSeen = mapMode === "ripple" && mapSel ? waves(mapSel, rippleDir).seen : null;
+  nodeEls.forEach(g => {
+    const id = g.dataset.node, off = hiddenLayers.has(sysById[id].layer);
+    g.setAttribute("class", "node " + (off ? "off" : nodeCls[id] || ""));
+    const w = rippleSeen ? rippleSeen.get(id) : 0;
+    g.classList.toggle("has-badge", !!w);
+    g.querySelector(".badge").textContent = w ? String(w) : "";
+  });
+  edgeEls.forEach(p => {
+    const i = +p.dataset.i, e = D.sysEdges[i];
+    const off = hiddenLayers.has(sysById[e.a].layer) || hiddenLayers.has(sysById[e.b].layer);
+    p.setAttribute("class", "edge" + (e.uphill ? " up" : e.back ? " back" : "") + " " + (off ? "cold" : edgeCls[i] || ""));
+  });
+  svg.querySelectorAll("[data-edge]").forEach(p => { const e = D.sysEdges[+p.dataset.edge];
+    p.classList.toggle("off", hiddenLayers.has(sysById[e.a].layer) || hiddenLayers.has(sysById[e.b].layer)); });
+  svg.querySelectorAll("path.edge[data-u]").forEach(p => { const e = D.unseen[+p.dataset.u];
+    p.style.display = showUnseen && !hiddenLayers.has(sysById[e.a].layer) && !hiddenLayers.has(sysById[e.b].layer) && mapMode === "explore" ? "" : "none"; });
+  $("#maphint").textContent = hint;
+}
+
 function sideInfo() {
   const side = $("#side");
+  const layerKey = `<h4>Layers</h4><div class="layerkey">${LAYERS.map((n, li) => [n, li]).reverse().map(([n, li]) => {
+      const c = D.systems.filter(s => s.layer === n).length;
+      return `<button data-layer="${esc(n)}" aria-pressed="${!hiddenLayers.has(n)}"><span class="sw" style="background:var(--lay${li})"></span><span>${esc(n)}</span><span class="num muted">${c}</span></button>`; }).join("")}</div>
+    <p class="muted" style="font-size:13px">A system may use its own layer and the ones below. Click a layer to hide it.</p>`;
+  const bind = () => side.querySelectorAll("[data-layer]").forEach(b => b.onclick = () => {
+    const n = b.dataset.layer; hiddenLayers.has(n) ? hiddenLayers.delete(n) : hiddenLayers.add(n); applyState(); sideInfo(); });
+  const linkLine = (i, other) => { const e = D.sysEdges[i];
+    return `<div><button class="link" data-act="edge" data-id="${i}">${esc(nice(other))}</button><span class="muted num">${e.files} file${e.files > 1 ? "s" : ""}, ${e.types} type${e.types > 1 ? "s" : ""}</span>${e.uphill ? '<span class="chip bad">uphill</span>' : e.back ? '<span class="chip warn">loop</span>' : ""}</div>`; };
+
+  if (mapMode === "ripple" && mapSel) {
+    const { seen } = waves(mapSel, rippleDir);
+    const byWave = {};
+    seen.forEach((w, id) => { if (w) (byWave[w] = byWave[w] || []).push(id); });
+    const total = seen.size - 1;
+    side.innerHTML = `<div class="row" style="justify-content:space-between"><h3>${esc(nice(mapSel))}</h3><button class="chip" data-act="sys" data-id="${esc(mapSel)}">Open page</button></div>
+      <div class="seg-ctl" role="group" aria-label="Direction"><button data-dir="up" aria-pressed="${rippleDir === "up"}">What it affects</button><button data-dir="down" aria-pressed="${rippleDir === "down"}">What it needs</button></div>
+      <p>${rippleDir === "up" ? `A change to <b>${esc(nice(mapSel))}</b> can reach <b>${total}</b> of ${D.systems.length - 1} other systems.` : `<b>${esc(nice(mapSel))}</b> stands on <b>${total}</b> other systems.`}</p>
+      ${Object.entries(byWave).map(([w, ids]) => `<div class="wave"><span class="n" style="background:var(--w${Math.min(3, +w)})">${w}</span><div class="row">${ids.sort().map(id => `<button class="chip" data-act="sys" data-id="${esc(id)}">${esc(nice(id))}</button>`).join("")}</div></div>`).join("") || '<p class="muted">Nothing: no other system depends on it.</p>'}
+      <p class="muted" style="font-size:13px">Wave 1 ${rippleDir === "up" ? "uses it directly" : "is what it uses directly"}; wave 2 goes through wave 1, and so on.</p>${layerKey}`;
+    side.querySelectorAll("[data-dir]").forEach(b => b.onclick = () => { rippleDir = b.dataset.dir; applyState(); sideInfo(); });
+    return bind();
+  }
+  if (mapMode === "path") {
+    const chain = pathA && pathB ? route2(pathA, pathB) : null;
+    const back = pathA && pathB ? route2(pathB, pathA) : null;
+    side.innerHTML = `<h3>Path</h3>
+      ${!pathA ? `<p>Click the system to start from, then the one to reach.</p>` : !pathB ? `<p>From <b>${esc(nice(pathA))}</b>. Now click the system to reach.</p>` :
+        chain ? `<p><b>${esc(nice(pathA))}</b> reaches <b>${esc(nice(pathB))}</b> in ${chain.length} link${chain.length > 1 ? "s" : ""}:</p>
+          <div class="chain">${chain.map((i, j) => `${j === 0 ? `<span class="chip">${esc(nice(D.sysEdges[i].a))}</span>` : ""}<button class="link" data-act="edge" data-id="${i}">→</button><span class="chip">${esc(nice(D.sysEdges[i].b))}</span>`).join("")}</div>
+          <p class="muted" style="font-size:13px">Each arrow opens the files and lines behind that link.</p>` :
+        `<p><b>${esc(nice(pathA))}</b> never reaches <b>${esc(nice(pathB))}</b>${back ? `, but ${esc(nice(pathB))} reaches ${esc(nice(pathA))} in ${back.length} link${back.length > 1 ? "s" : ""}` : ""}. A change to ${esc(nice(pathB))} cannot break ${esc(nice(pathA))}.</p>`}
+      ${pathA ? `<button class="chip" id="pathReset">Start again</button>` : ""}${layerKey}`;
+    const r = $("#pathReset"); if (r) r.onclick = () => { pathA = pathB = null; applyState(); sideInfo(); };
+    return bind();
+  }
   if (!mapSel) {
-    const cuts = D.sysEdges.map((e, i) => [e, i]).filter(([e]) => e.back || e.uphill).sort((x, y) => (y[0].uphill - x[0].uphill) || (x[0].files - y[0].files));
-    side.innerHTML = `<h3>Links to cut</h3>
-      <p class="muted">Remove these ${cuts.length} links and the systems form a clean stack, every reference pointing down. Most are one to five files. Click one for the exact lines; click a system on the map to see everything it touches.</p>
-      <div class="ev">${cuts.map(([e, i]) => `<div><button class="link" data-act="edge" data-id="${i}">${esc(e.a.replace("Gameplay/", ""))} → ${esc(e.b.replace("Gameplay/", ""))}</button>
-        <span class="chip ${e.uphill ? "bad" : "warn"}">${e.uphill ? "uphill" : e.twoway ? "two-way" : "loop"}</span><span class="muted num">${e.files} file${e.files > 1 ? "s" : ""}</span></div>`).join("")}</div>`;
-    return;
+    const clean = !D.meta.uphill && !D.meta.twoway && !D.meta.back;
+    const cuts = D.sysEdges.map((e, i) => [e, i]).filter(([e]) => e.back || e.uphill);
+    side.innerHTML = `<h3>${clean ? "A clean stack" : "Links to cut"}</h3>
+      <div class="health"><div class="${D.meta.uphill ? "" : "ok"}"><b>${D.meta.uphill}</b><span>links uphill</span></div><div class="${D.meta.twoway ? "" : "ok"}"><b>${D.meta.twoway}</b><span>two-way pairs</span></div>
+        <div class="${D.meta.refused ? "" : "ok"}"><b>${D.meta.refused}</b><span>links the compiler would refuse</span></div><div><b>${D.sysEdges.length}</b><span>links between systems</span></div></div>
+      <p class="muted" style="font-size:13px">${clean ? "Every link points down or stays in its layer, and each system is its own assembly, so the compiler refuses a loop." : `Remove these ${cuts.length} links and every reference points down.`}
+        The map was checked against the ${D.meta.declared} references the assemblies declare: ${D.meta.refused ? `${D.meta.refused} links it found are not allowed by them, so it misread something.` : "every link it found is one the compiler allows."}
+        ${D.unseen.length ? `${D.unseen.length} declared references name no type in code (dotted on the map).` : ""}</p>
+      ${cuts.length ? `<div class="ev">${cuts.map(([e, i]) => linkLine(i, e.a + " → " + e.b)).join("")}</div>` : ""}
+      ${layerKey}`;
+    return bind();
   }
   const s = sysById[mapSel];
-  const outs = D.sysEdges.map((e, i) => [e, i]).filter(([e]) => e.a === mapSel).sort((x, y) => y[0].files - x[0].files);
-  const ins = D.sysEdges.map((e, i) => [e, i]).filter(([e]) => e.b === mapSel).sort((x, y) => y[0].files - x[0].files);
-  const line = ([e, i], other) => `<div><button class="link" data-act="edge" data-id="${i}">${esc(other)}</button><span class="muted num">${e.files} file${e.files > 1 ? "s" : ""}, ${e.types} type${e.types > 1 ? "s" : ""}</span>${e.uphill ? '<span class="chip bad">uphill</span>' : e.back ? '<span class="chip warn">loop</span>' : ""}</div>`;
+  const outs = (outOf[mapSel] || []).slice().sort((x, y) => D.sysEdges[y].files - D.sysEdges[x].files);
+  const ins = (inTo[mapSel] || []).slice().sort((x, y) => D.sysEdges[y].files - D.sysEdges[x].files);
   side.innerHTML = `<div class="row" style="justify-content:space-between"><h3>${esc(s.id)}</h3><button class="chip" data-act="sys" data-id="${esc(s.id)}">Open page</button></div>
     <p class="muted">${esc(s.layer)} · ${s.files} files · ${s.lines.toLocaleString()} lines · ${esc(s.asm.join(", "))}</p>
-    <h4>Uses (${outs.length})</h4><div class="ev">${outs.map(x => line(x, x[0].b)).join("") || '<span class="muted">nothing outside itself</span>'}</div>
-    <h4>Used by (${ins.length})</h4><div class="ev">${ins.map(x => line(x, x[0].a)).join("") || '<span class="muted">nothing</span>'}</div>`;
+    <div class="row"><button class="chip" id="toRipple">What a change to it reaches</button></div>
+    <h4>Uses (${outs.length})</h4><div class="ev">${outs.map(i => linkLine(i, D.sysEdges[i].b)).join("") || '<span class="muted">nothing outside itself</span>'}</div>
+    <h4>Used by (${ins.length})</h4><div class="ev">${ins.map(i => linkLine(i, D.sysEdges[i].a)).join("") || '<span class="muted">nothing</span>'}</div>${layerKey}`;
+  $("#toRipple").onclick = () => { mapMode = "ripple"; rippleDir = "up"; document.querySelectorAll("[data-mode]").forEach(x => x.setAttribute("aria-pressed", x.dataset.mode === "ripple")); applyState(); sideInfo(); };
+  bind();
+}
+
+// --- Matrix ---------------------------------------------------------------------------------------------------------
+function viewMatrix(v) {
+  const order = [...D.systems].sort((a, b) => b.rank - a.rank || b.level - a.level || a.order - b.order).map(s => s.id);
+  const n = order.length, C = 24, L = 176, Hd = 150, idx = Object.fromEntries(order.map((id, i) => [id, i]));
+  const maxF = Math.max(...D.sysEdges.map(e => e.files));
+  const W = L + n * C + 8, H = Hd + n * C + 8;
+  let below = 0, cells = "", labels = "", seps = "";
+  D.sysEdges.forEach((e, i) => {
+    const r = idx[e.a], c = idx[e.b];
+    if (r == null || c == null) return;
+    if (c < r) below++;
+    const t = Math.sqrt(e.files / maxF), bad = e.uphill || e.back;
+    cells += `<rect class="mx-cell" x="${L + c * C + 1}" y="${Hd + r * C + 1}" width="${C - 2}" height="${C - 2}" rx="3" data-edge="${i}"
+      fill="${bad ? "var(--magenta)" : "var(--cyan)"}" fill-opacity="${(0.18 + 0.82 * t).toFixed(2)}"><title>${esc(e.a)} uses ${esc(e.b)}: ${e.files} file(s), ${e.types} type(s)</title></rect>`;
+  });
+  D.unseen.forEach(e => { const r = idx[e.a], c = idx[e.b]; if (r == null || c == null) return;
+    cells += `<rect x="${L + c * C + 4}" y="${Hd + r * C + 4}" width="${C - 8}" height="${C - 8}" rx="2" fill="none" stroke="var(--muted)" stroke-dasharray="2 2"><title>${esc(e.a)} declares ${esc(e.b)} but names no type of it</title></rect>`; });
+  order.forEach((id, i) => {
+    const li = layerIdx(sysById[id].layer);
+    labels += `<rect x="${L - 8}" y="${Hd + i * C + 4}" width="5" height="${C - 8}" rx="2" fill="var(--lay${li})"></rect>
+      <text class="mx-label" data-row="${i}" x="${L - 14}" y="${Hd + i * C + C / 2 + 4}" text-anchor="end" data-act="sys" data-id="${esc(id)}">${esc(nice(id))}</text>
+      <text class="mx-label" data-col="${i}" transform="translate(${L + i * C + C / 2 + 4},${Hd - 10}) rotate(-60)" data-act="sys" data-id="${esc(id)}">${esc(nice(id))}</text>`;
+    if (i > 0 && sysById[order[i - 1]].layer !== sysById[id].layer)
+      seps += `<line class="mx-sep" x1="${L - 10}" y1="${Hd + i * C}" x2="${L + n * C}" y2="${Hd + i * C}"></line><line class="mx-sep" x1="${L + i * C}" y1="${Hd - 4}" x2="${L + i * C}" y2="${Hd + n * C}"></line>`;
+  });
+  v.innerHTML = `<section class="panel stack">
+    <div class="prose"><h2>Who uses whom</h2>
+      <p>Each row is a system, each column a system it may use; a filled square means the row uses the column, darker for more files. Rows and columns run in the same order, top layer first, so in a clean stack every square sits <b>above the diagonal</b>. ${below ? `<b style="color:var(--magenta)">${below}</b> square${below > 1 ? "s sit" : " sits"} below it: a link running up the stack.` : "None sits below it today."}</p></div>
+    <div class="legend"><span>fewer files <span class="scale">${[0.2, 0.4, 0.6, 0.8, 1].map(o => `<span style="background:var(--cyan);opacity:${o}"></span>`).join("")}</span> more</span>
+      <span><svg width="18" height="18" aria-hidden="true"><rect x="2" y="2" width="14" height="14" rx="2" fill="none" stroke="var(--muted)" stroke-dasharray="2 2"></rect></svg> declared, no type named</span>
+      <span>Hover for the count, click a square for the files and lines.</span></div>
+    <div class="matwrap"><svg id="matsvg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="Matrix of which system uses which">
+      <rect class="mx-grid" x="${L}" y="${Hd}" width="${n * C}" height="${n * C}"></rect>
+      <rect class="mx-cross" id="mxRow" x="${L}" y="0" width="${n * C}" height="${C}" visibility="hidden"></rect>
+      <rect class="mx-cross" id="mxCol" x="0" y="${Hd}" width="${C}" height="${n * C}" visibility="hidden"></rect>
+      <line class="mx-diag" x1="${L}" y1="${Hd}" x2="${L + n * C}" y2="${Hd + n * C}"></line>${seps}${cells}${labels}</svg></div>
+  </section>`;
+  const svg = $("#matsvg"), rowR = $("#mxRow"), colR = $("#mxCol");
+  svg.querySelectorAll(".mx-cell").forEach(r => {
+    const e = D.sysEdges[+r.dataset.edge], ri = idx[e.a], ci = idx[e.b];
+    r.addEventListener("mouseenter", () => {
+      rowR.setAttribute("y", Hd + ri * C); colR.setAttribute("x", L + ci * C); rowR.setAttribute("visibility", "visible"); colR.setAttribute("visibility", "visible");
+      svg.querySelector(`[data-row="${ri}"]`).classList.add("hl"); svg.querySelector(`[data-col="${ci}"]`).classList.add("hl"); });
+    r.addEventListener("mouseleave", () => { rowR.setAttribute("visibility", "hidden"); colR.setAttribute("visibility", "hidden"); svg.querySelectorAll(".hl").forEach(x => x.classList.remove("hl")); });
+    r.addEventListener("click", () => show("edge", r.dataset.edge));
+  });
 }
 
 // --- one link between two systems -----------------------------------------------------------------------------------
@@ -448,7 +756,7 @@ function viewSystems(v) {
       <td class="n">${s.fanOut}</td><td class="n">${s.fanIn}</td><td class="n">${s.inst}</td><td class="n">${s.so}</td><td class="n">${s.net}</td>
       <td data-v="${s.testable ? s.tested / s.testable : 0}"><div class="row" style="flex-wrap:nowrap">${meter(s.testable ? s.tested / s.testable : 0)}<span class="num muted">${s.tested}/${s.testable}</span></div></td></tr>`).join("")}</tbody></table></div>
     <h3>Assemblies today</h3>
-    <p class="prose">What the compiler enforces. Everything in <code>KryticalNova.Runtime</code> can use everything else in it, which is why loops between gameplay systems compile. Only the borders below are walls.</p>
+    <p class="prose">What the compiler enforces. Each system compiles into its own assembly (<code>KryticalNova.Runtime</code> is Core alone) and may use only the assemblies it lists, so a loop between systems does not compile.</p>
     <div class="ev">${Object.entries(D.assemblies).map(([a, r]) => `<div><code>${esc(a)}</code><span class="muted">→ ${r.length ? r.map(esc).join(", ") : "nothing of ours"}</span>${M.asmrefs[a] ? `<span class="chip soft">${M.asmrefs[a]} folders joined by asmref</span>` : ""}</div>`).join("")}</div>
   </section>`;
   sortable($("#systab"));
@@ -597,21 +905,30 @@ function viewRead(v) {
       This follows the rules in <code>_Docs/ProjectOrganization.md</code> section 4: Core knows nothing of gameplay, gameplay never knows its presentation, presentation observes gameplay.</p>
     <h3>Steps</h3>
     <p>Inside a layer the systems are ordered so that as few links as possible point backwards. The map draws them as steps, step 0 at the bottom. A grey line goes down a step: fine.
-      A pink line goes up: either it runs <b>uphill</b> into a higher layer (dashed), or it closes a <b>loop</b> between systems of the same layer (solid). The loops are the reason the big
-      <code>KryticalNova.Runtime</code> assembly cannot be split per system yet; cutting the pink links is the work that makes it possible.</p>
+      A pink line goes up: either it runs <b>uphill</b> into a higher layer (dashed), or it closes a <b>loop</b> between systems of the same layer (solid). Since 19 Oct 2026 every
+      system is its own assembly, so the compiler refuses a loop; the map should show none.</p>
+    <h3>Explore, Ripple and Path</h3>
+    <p><b>Explore</b>: hover a system for what it uses (blue, flowing towards it) and what uses it (amber); click to pin it. <b>Ripple</b>: click a system for everything a change to it can reach,
+      wave by wave (wave 1 uses it directly, wave 2 uses wave 1...), or switch to what it needs. <b>Path</b>: click two systems for the shortest chain of uses from the first to the second;
+      when there is none, a change to the second cannot break the first. The <b>Matrix</b> shows the same links as a grid, where a clean stack keeps every square above the diagonal.</p>
     <h3>Ripple</h3>
     <p>For each class: the files that use it directly, the systems they sit in, and the types that reach it through others. A class with a large ripple is expensive to change and needs tests before it moves.</p>
     <h3>The tangle</h3>
     <p><b>${M.tangle}</b> classes all reach each other through some chain of uses: ${Object.entries(M.tangleSys).map(([s, n]) => `${esc(s.replace("Gameplay/", ""))} ${n}`).join(", ")}.
-      That is why so many classes show about the same number of types reaching them through others: inside the tangle, a change can in principle travel to every member.
-      Cutting the pink links shrinks it, and each system that falls out of it can get an assembly of its own. A class page marks its members "in the tangle".</p>
+      Inside a tangle a change can in principle travel to every member, so its classes show about the same number of types reaching them through others.
+      With one assembly per system a tangle can only live inside one system. A class page marks its members "in the tangle".</p>
     <h3>How a link is found</h3>
     <p>The script reads every runtime and test <code>.cs</code> file as text, strips comments and strings, and resolves every name against the classes the project declares, through each file's namespace and <code>using</code> lines.
       It marks how a class is used: inherits, serialized field (designer wiring), GetComponent, static access, FindObject, or plain use. Assets are read as Unity text YAML: <code>m_Script</code> GUIDs say which script a prefab, scene or data asset holds;
       other GUIDs say which data assets they point at; <code>[SerializeReference]</code> entries name a class and assembly as text.</p>
     <h3>What it cannot see</h3>
-    <p>It is not the compiler. It misses links made through reflection or strings (listed under Design data), UnityEvents wired in the Inspector, links in Editor code (left out on purpose) and references that only go through an interface or a base class.
-      A simple name that two namespaces both declare is skipped rather than guessed. Counts can be off by a little; every link it does show names the file and line, so it can be checked.</p>
+    <p>It is not the compiler. It misses links made through reflection or strings (listed under Design data), UnityEvents wired in the Inspector, links in Editor code (left out on purpose), references that only go through an interface or a base class,
+      and a type reached through another assembly's member without its name being written (the compiler still needs that assembly referenced: error CS0012).
+      A simple name that two namespaces both declare is skipped rather than guessed. Every link it does show names the file and line, so it can be checked.</p>
+    <h3>Checked against the compiler</h3>
+    <p>Each assembly declares the assemblies it may use; there are ${D.meta.declared} such references between systems. A link the map found that none of them allows would not compile, so it would mean the map misread a name:
+      ${D.meta.refused ? `<b style="color:var(--magenta)">${D.meta.refused}</b> today (${D.refused.map(e => esc(e.a) + " → " + esc(e.b)).join(", ")}).` : "there are none today."}
+      ${D.unseen.length ? `${D.unseen.length} declared references name no type in code (${D.unseen.map(e => esc(nice(e.a)) + " → " + esc(nice(e.b))).join(", ")}): each is either unused or one of the CS0012 kind. They show as dotted lines on the map and dotted squares in the matrix.` : "Every declared reference is used in code."}</p>
     <h3>Re-run it</h3>
     <p>From the project folder: <code>python "Assets/_Game/Tools/Editor/Architecture/Scripts~/dependency_map.py"</code> (a few seconds, Unity can stay closed).
       <code>--baseline</code> saves today's uphill links and two-way pairs; <code>--check</code> fails when a new one appears, so a refactor cannot quietly add one back.

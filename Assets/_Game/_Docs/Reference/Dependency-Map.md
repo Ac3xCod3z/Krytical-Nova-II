@@ -20,8 +20,14 @@ script, which is then published to the link above. `--baseline` saves today's up
 ## Today
 
 <!-- map:summary -->
-Generated 25 Oct 2026, 16:13: 709 runtime scripts (134,410 lines) declaring 996 types (184 MonoBehaviours, 65 NetworkBehaviours, 101 ScriptableObject classes); 124 test scripts; 4722 prefabs, 46 scenes and 2748 assets read. 206 system-to-system links, of which 0 run uphill, 0 pairs of systems use each other both ways, and 0 links would have to go for the systems to form a clean stack. The largest tangle, classes that all reach each other through some chain of uses, holds 10 classes from 1 systems (UI 10, ...).
+Generated 25 Oct 2026, 16:44: 709 runtime scripts (134,410 lines) declaring 996 types (184 MonoBehaviours, 65 NetworkBehaviours, 101 ScriptableObject classes); 124 test scripts; 4722 prefabs, 46 scenes and 2748 assets read. 206 system-to-system links, of which 0 run uphill, 0 pairs of systems use each other both ways, and 0 links would have to go for the systems to form a clean stack. The largest tangle, classes that all reach each other through some chain of uses, holds 10 classes from 1 systems (UI 10, ...).
 <!-- /map:summary -->
+
+**Checked against the compiler.**
+
+<!-- map:compiler -->
+Checked against the 211 references the assemblies declare between systems: every link the map found is one the compiler allows. 5 declared references name no type in code: GameFeel -> Gameplay/CharacterCreation, Gameplay/Factions -> Core, Gameplay/Persistence -> Gameplay/Factions, Gameplay/Wallet -> Core, Tools -> Gameplay/NPC. Each is either unused and can go, or needed by the compiler for a type reached through another assembly's member (error CS0012 when removed), which reading the code as text cannot see.
+<!-- /map:compiler -->
 
 ## How to read it
 
@@ -36,8 +42,8 @@ Generated 25 Oct 2026, 16:13: 709 runtime scripts (134,410 lines) declaring 996 
 - **Uphill.** A link from a lower layer into a higher one. The lower system then cannot be changed, tested or split out
   without dragging the higher one along.
 - **Loop.** Two systems of the same layer that use each other, directly or around a longer circle. The map orders each
-  layer so that as few links as possible point backwards. The ones still pointing backwards are the cuts. They are why
-  `KryticalNova.Runtime` cannot be split into one assembly per system yet.
+  layer so that as few links as possible point backwards. Since 19 Oct 2026 every system is its own assembly, so the
+  compiler refuses a loop outright; the map finds none.
 - **Ripple.** For a class: the files that use it directly, and the types that reach it through others. A large ripple
   means a change to it travels far.
 - **Instability.** Uses ÷ (uses + used by). Near 0, many lean on it and it should change rarely. Near 1, it leans on
@@ -46,9 +52,12 @@ Generated 25 Oct 2026, 16:13: 709 runtime scripts (134,410 lines) declaring 996 
   - reflection and string lookups (counted separately below);
   - UnityEvents wired in the Inspector;
   - Editor code, which is left out on purpose;
-  - links that only go through an interface.
+  - links that only go through an interface;
+  - a type reached through another assembly's member without its name being written (the compiler still needs that
+    assembly referenced: error CS0012).
 
-  A name two namespaces both declare is skipped rather than guessed. Every link it shows names its file and line.
+  A name two namespaces both declare is skipped rather than guessed. Every link it shows names its file and line. To
+  catch what it misreads, it checks itself against the references the assemblies declare (above).
 
 ## Systems
 
