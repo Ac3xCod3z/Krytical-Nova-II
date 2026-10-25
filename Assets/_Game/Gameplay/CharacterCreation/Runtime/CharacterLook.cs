@@ -143,7 +143,11 @@ namespace KryticalNova.CharacterCreation
             {
                 // One material per character: the colour map is what makes two players look different.
                 material = new Material(smr.sharedMaterial) { name = smr.sharedMaterial.name + " (Character)" };
-                smr.sharedMaterial = material;
+                // Slot 0 only: painted gear parts draw in their own paint materials after it (CharacterAppearance).
+                var slots = smr.sharedMaterials;
+                if (slots.Length == 0) slots = new Material[1];
+                slots[0] = material;
+                smr.sharedMaterials = slots;
             }
             if (colorMap == null)
             {

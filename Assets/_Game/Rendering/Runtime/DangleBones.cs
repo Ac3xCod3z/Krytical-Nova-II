@@ -88,6 +88,11 @@ namespace KryticalNova.Rendering
         [SerializeField] private Profile[] profiles =
         {
             new Profile("abac,ahpb,ahpf,ahpl,ahpr,hips,legl,legr,tors", 0.06f, 0.10f, 1.0f, 0.35f, 0.02f), // cloth
+            // A wide cloak hung on chains all the way round (cloak_dyn_*, Hollow Warden). Heavy and calm (owner, 25 Oct
+            // 2026: loose chains "going insane", jittery): it springs back firmly, loses its swing fast and travels with the
+            // body. Thin, since the cloak is modelled round the lowered arms: a thick one started inside the arm capsules and
+            // was shoved out every frame.
+            new Profile("cloak", 0.22f, 0.30f, 0.7f, 0.6f, 0.03f),
             new Profile("hair", 0.10f, 0.14f, 0.7f, 0.5f, 0.015f),
             new Profile("fchr", 0.25f, 0.2f, 0.4f, 0.7f, 0.01f),
             new Profile("", 0.2f, 0.18f, 0.5f, 0.6f, 0.01f), // anything else (ears, shoulder and head trinkets)

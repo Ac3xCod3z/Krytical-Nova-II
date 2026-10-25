@@ -13,9 +13,9 @@ MonoBehaviour:
   m_Name: Weapon_Harvester_R55
   m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Items.ItemDefinition
   itemId: 12097
-  displayName: Rendering Cleaver
+  displayName: Scrap Sentinel Harvester
   description: 'Harvester: the offense weapon of the Null.'
-  icon: {fileID: 21300000, guid: 683d1c10886a26e48ab25035cae61e0a, type: 3}
+  icon: {fileID: 21300000, guid: 591a93ea101f56847934df9b20eb8afe, type: 3}
   sharesIconOf: {fileID: 0}
   rarity: 2
   equipSlot: 1
@@ -51,12 +51,12 @@ MonoBehaviour:
   colorTheme: 0
   colorThemes: {fileID: 0}
   colorCells: 
-  weaponPrefab: {fileID: 4286267127627927373, guid: f275ab62ab3d05c4fb32efd62b5bd506, type: 3}
+  weaponPrefab: {fileID: 1797015460416785334, guid: 3b64f5efc649e8c4dba5a9931d1bf3f3, type: 3}
   weaponLocalPosition: {x: 0, y: 0, z: 0}
   weaponLocalEuler: {x: 0, y: 0, z: 0}
   weaponLocalScale: {x: 1, y: 1, z: 1}
-  hitboxCenter: {x: 0, y: 0.067405626, z: 0.39173585}
-  hitboxSize: {x: 0.18, y: 0.32519895, z: 0.6834717}
+  hitboxCenter: {x: 0, y: -0.19913995, z: 0.7300001}
+  hitboxSize: {x: 0.2547757, y: 1.160404, z: 1.3600001}
   paired: 0
   offHandLocalPosition: {x: 0, y: 0, z: 0}
   offHandLocalEuler: {x: 0, y: 0, z: 0}

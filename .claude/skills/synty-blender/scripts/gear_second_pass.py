@@ -994,23 +994,28 @@ def to_lab(rgb):
 
 
 def face_colours(piece, size=2048):
-    """sRGB colour of each face, sampled from the piece's own texture at its corners and centre (median)."""
-    img = None
-    for slot in piece.material_slots:
+    """sRGB colour of each face, sampled from the texture of its own material at its corners and centre (median).
+    A piece joined from several Tripo pieces has one material per piece (Bastion Field's armor: chest, belt, trousers,
+    bracers); read from one picture only, every face of the others took that picture's colours."""
+    maps = {}                                          # material index -> (image, pixels)
+    for mi, slot in enumerate(piece.material_slots):
         m = slot.material
         if m and m.node_tree:
             for n in m.node_tree.nodes:
                 if n.type == "TEX_IMAGE" and n.image:
                     img = n.image
-    if img is None:
+                    if img.size[0] > size:
+                        img.scale(size, size)
+                    w, h = img.size
+                    maps[mi] = (img, np.array(img.pixels[:], np.float32).reshape(h, w, img.channels)[..., :3])
+    if not maps:
         raise SystemExit("The piece has no texture to read colours from.")
-    if img.size[0] > size:
-        img.scale(size, size)
-    w, h = img.size
-    px = np.array(img.pixels[:], np.float32).reshape(h, w, img.channels)[..., :3]
+    fallback = maps[max(maps)]
     uv = piece.data.uv_layers.active.data
     out = []
     for p in piece.data.polygons:
+        img, px = maps.get(p.material_index, fallback)
+        h, w = px.shape[:2]
         pts = [uv[i].uv for i in p.loop_indices]
         c = sum((Vector(x) for x in pts), Vector((0, 0))) / len(pts)
         samples = [c] + [c.lerp(Vector(x), 0.6) for x in pts]

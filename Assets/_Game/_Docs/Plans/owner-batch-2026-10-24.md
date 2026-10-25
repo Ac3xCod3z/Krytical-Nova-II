@@ -19,7 +19,7 @@ so you can correct me early.
 
 ## Working on now
 
-- [ ] **Accessibility: flashing.** *Understood:* a photosensitivity warning the first time the game starts, and an
+- [x] **Accessibility: flashing.** *Understood:* a photosensitivity warning the first time the game starts, and an
       Accessibility page in Settings where every flashing or pulsing effect can be turned down (a strength slider and a
       Reduce flashing switch): the beat glow, Beat Ring flashes and camera kick, COMBO shake, hit flashes, pet flashes,
       Nova flashes and lightning.
@@ -42,7 +42,7 @@ so you can correct me early.
       *Built:* a screen pass after post-processing (`ColourBlindFeature`, daltonization) on the PC renderer, costing
       nothing while Off; the setup's colour swatches use the same sums. *Not yet:* the HUD and menus are drawn over the
       picture, so the pass does not reach them; their colours can be put through `Accessibility.Correct` next.
-- [ ] **HDR settings.** *Understood:* HDR on / off and brightness (paper white, peak) in Settings ▸ Graphics, and set up
+- [x] **HDR settings.** (built, PR 155; not yet seen on an HDR screen: this PC reports none) *Understood:* HDR on / off and brightness (paper white, peak) in Settings ▸ Graphics, and set up
       in a short display step the very first time the game starts, adjustable later.
 - [x] **Beat track skinned per faction.** *Understood:* the beat lines above the Hotbar should use each faction's HUD
       art from the skin assets, the same layout but looking more custom and better.

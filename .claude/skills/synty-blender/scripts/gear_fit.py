@@ -1011,6 +1011,8 @@ def count_dips(ob, skin):
     from mathutils import geometry
     me = ob.data
     n = 0
+    if not skin:
+        return 0                                  # nothing to keep clear of (a robot's head piece)
     for sex in ("M", "F"):
         vals = mc.rest_values({"sex": sex})
         sv, st = mc.skin_soup(skin, vals)
@@ -1470,7 +1472,9 @@ def run_fit(a, src, piece, piece_name, lineage, rig, body, fcol, spec, report, p
         report["armhole_edge_vertices_closed"] = close_armholes(piece, body, rig, g["evaluated_soup"])
     if lineage not in ("Robot", "Skeleton"):
         report["underarm_gusset_faces"] = underarm_gusset(piece, body, rig, g["evaluated_soup"], fcol)
-    if lineage != "Robot":
+    # KN_NO_CINCH=1: a set whose waist is a hard belt with pouches, not a shirt (Bastion Field, 24 Oct 2026: the cinch
+    # tore its pouches into shards)
+    if lineage != "Robot" and not __import__("os").environ.get("KN_NO_CINCH"):
         report["waist_cinched_vertices"] = cinch_waist(piece, body, rig, g["evaluated_soup"])
         report["waist_cells"] = cinch_waist.stats
     # robot plates are hard: no cuff drawn in round the arm (Synty's robot arms are rigid chassis too)
@@ -1932,6 +1936,14 @@ def run_fit_piece(a, src, piece, piece_name, lineage, rig, body, fcol, spec, rep
     slot = a.slot
     ev = g["evaluated_soup"]
     clear_of = {s_: o for s_, o in body.items() if s_ in PUSH_CLEAR.get(slot, body.keys())}
+    if slot == "helmet" and lineage == "Robot":
+        # a robot set's helmet is the robot's head (owner, 24 Oct 2026): the game hides the bare head under it, so
+        # there is nothing to keep clear of, and pushing it off the bulkier bare head would only bend it
+        clear_of = {}
+    if slot == "boots" and __import__("os").environ.get("KN_BOOTS_NO_PUSH"):
+        # KN_BOOTS_NO_PUSH=1: the set's own trousers replace the lower leg and tuck into the boot, so the boot is not
+        # pushed off the bare calf (Bastion Field, 24 Oct 2026: its collar flared out 6 cm each side like wings)
+        clear_of = {}
     report["pushed_clear_vertices"] = conform(piece, clear_of, ev, rigid=lineage == "Robot")
     report["floaters_seated"] = seat_floaters(piece)
     if slot == "cape":
@@ -1990,7 +2002,7 @@ def run_fit_piece(a, src, piece, piece_name, lineage, rig, body, fcol, spec, rep
         calmed = calm_lone_pushes(ob, transferred) if not hard else 0
         faces_pushed = clear_faces(ob, push_skin) if not hard else 0
         skin_out = clear_skin_points(ob, push_skin) if slot in ("gloves", "boots") else 0
-        if slot == "helmet":
+        if slot == "helmet" and push_skin:
             report["helmet_clearance"] = head_clearance(ob, push_skin)
             left = clear_by_keys(ob, push_skin, push=False)
         if calmed or faces_pushed or skin_out:

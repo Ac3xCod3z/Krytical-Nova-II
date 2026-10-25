@@ -9053,4 +9053,196 @@ MonoBehaviour:
     variant: 1
     species: HU
     usesWrap: 0
-  nextId: 1131
+  - id: 1131
+    name: SK_KRYT_SCRP_01_10TORS_RO01
+    resourcePath: Meshes/Gear/ScrapSentinel/SK_KRYT_SCRP_01_10TORS_RO01
+    region: 10
+    pack: KRYT_SCRP
+    variant: 1
+    species: RO
+    usesWrap: 0
+  - id: 1132
+    name: SK_KRYT_SCRP_01_11AUPL_RO01
+    resourcePath: Meshes/Gear/ScrapSentinel/SK_KRYT_SCRP_01_11AUPL_RO01
+    region: 11
+    pack: KRYT_SCRP
+    variant: 1
+    species: RO
+    usesWrap: 0
+  - id: 1133
+    name: SK_KRYT_SCRP_01_12AUPR_RO01
+    resourcePath: Meshes/Gear/ScrapSentinel/SK_KRYT_SCRP_01_12AUPR_RO01
+    region: 12
+    pack: KRYT_SCRP
+    variant: 1
+    species: RO
+    usesWrap: 0
+  - id: 1134
+    name: SK_KRYT_SCRP_01_15HNDL_RO01
+    resourcePath: Meshes/Gear/ScrapSentinel/SK_KRYT_SCRP_01_15HNDL_RO01
+    region: 15
+    pack: KRYT_SCRP
+    variant: 1
+    species: RO
+    usesWrap: 0
+  - id: 1135
+    name: SK_KRYT_SCRP_01_16HNDR_RO01
+    resourcePath: Meshes/Gear/ScrapSentinel/SK_KRYT_SCRP_01_16HNDR_RO01
+    region: 16
+    pack: KRYT_SCRP
+    variant: 1
+    species: RO
+    usesWrap: 0
+  - id: 1136
+    name: SK_KRYT_SCRP_01_17HIPS_RO01
+    resourcePath: Meshes/Gear/ScrapSentinel/SK_KRYT_SCRP_01_17HIPS_RO01
+    region: 17
+    pack: KRYT_SCRP
+    variant: 1
+    species: RO
+    usesWrap: 0
+  - id: 1137
+    name: SK_KRYT_SCRP_01_18LEGL_RO01
+    resourcePath: Meshes/Gear/ScrapSentinel/SK_KRYT_SCRP_01_18LEGL_RO01
+    region: 18
+    pack: KRYT_SCRP
+    variant: 1
+    species: RO
+    usesWrap: 0
+  - id: 1138
+    name: SK_KRYT_SCRP_01_19LEGR_RO01
+    resourcePath: Meshes/Gear/ScrapSentinel/SK_KRYT_SCRP_01_19LEGR_RO01
+    region: 19
+    pack: KRYT_SCRP
+    variant: 1
+    species: RO
+    usesWrap: 0
+  - id: 1139
+    name: SK_KRYT_SCRP_01_20FOTL_RO01
+    resourcePath: Meshes/Gear/ScrapSentinel/SK_KRYT_SCRP_01_20FOTL_RO01
+    region: 20
+    pack: KRYT_SCRP
+    variant: 1
+    species: RO
+    usesWrap: 0
+  - id: 1140
+    name: SK_KRYT_SCRP_01_21FOTR_RO01
+    resourcePath: Meshes/Gear/ScrapSentinel/SK_KRYT_SCRP_01_21FOTR_RO01
+    region: 21
+    pack: KRYT_SCRP
+    variant: 1
+    species: RO
+    usesWrap: 0
+  - id: 1141
+    name: SK_KRYT_SCRP_01_22AHED_RO01
+    resourcePath: Meshes/Gear/ScrapSentinel/SK_KRYT_SCRP_01_22AHED_RO01
+    region: 22
+    pack: KRYT_SCRP
+    variant: 1
+    species: RO
+    usesWrap: 0
+  - id: 1142
+    name: SK_KRYT_SCRP_01_24ABAC_RO01
+    resourcePath: Meshes/Gear/ScrapSentinel/SK_KRYT_SCRP_01_24ABAC_RO01
+    region: 24
+    pack: KRYT_SCRP
+    variant: 1
+    species: RO
+    usesWrap: 0
+  - id: 1143
+    name: SK_KRYT_SCRP_01_13ALWL_RO01
+    resourcePath: Meshes/Gear/ScrapSentinel/SK_KRYT_SCRP_01_13ALWL_RO01
+    region: 13
+    pack: KRYT_SCRP
+    variant: 1
+    species: RO
+    usesWrap: 0
+  - id: 1144
+    name: SK_KRYT_SCRP_01_14ALWR_RO01
+    resourcePath: Meshes/Gear/ScrapSentinel/SK_KRYT_SCRP_01_14ALWR_RO01
+    region: 14
+    pack: KRYT_SCRP
+    variant: 1
+    species: RO
+    usesWrap: 0
+  - id: 1145
+    name: SK_KRYT_HOLW_01_10TORS_SN01
+    resourcePath: Meshes/Gear/HollowWarden/SK_KRYT_HOLW_01_10TORS_SN01
+    region: 10
+    pack: KRYT_HOLW
+    variant: 1
+    species: SN
+    usesWrap: 0
+  - id: 1146
+    name: SK_KRYT_HOLW_01_11AUPL_SN01
+    resourcePath: Meshes/Gear/HollowWarden/SK_KRYT_HOLW_01_11AUPL_SN01
+    region: 11
+    pack: KRYT_HOLW
+    variant: 1
+    species: SN
+    usesWrap: 0
+  - id: 1147
+    name: SK_KRYT_HOLW_01_12AUPR_SN01
+    resourcePath: Meshes/Gear/HollowWarden/SK_KRYT_HOLW_01_12AUPR_SN01
+    region: 12
+    pack: KRYT_HOLW
+    variant: 1
+    species: SN
+    usesWrap: 0
+  - id: 1148
+    name: SK_KRYT_HOLW_01_15HNDL_SN01
+    resourcePath: Meshes/Gear/HollowWarden/SK_KRYT_HOLW_01_15HNDL_SN01
+    region: 15
+    pack: KRYT_HOLW
+    variant: 1
+    species: SN
+    usesWrap: 0
+  - id: 1149
+    name: SK_KRYT_HOLW_01_16HNDR_SN01
+    resourcePath: Meshes/Gear/HollowWarden/SK_KRYT_HOLW_01_16HNDR_SN01
+    region: 16
+    pack: KRYT_HOLW
+    variant: 1
+    species: SN
+    usesWrap: 0
+  - id: 1150
+    name: SK_KRYT_HOLW_01_17HIPS_SN01
+    resourcePath: Meshes/Gear/HollowWarden/SK_KRYT_HOLW_01_17HIPS_SN01
+    region: 17
+    pack: KRYT_HOLW
+    variant: 1
+    species: SN
+    usesWrap: 0
+  - id: 1151
+    name: SK_KRYT_HOLW_01_20FOTL_SN01
+    resourcePath: Meshes/Gear/HollowWarden/SK_KRYT_HOLW_01_20FOTL_SN01
+    region: 20
+    pack: KRYT_HOLW
+    variant: 1
+    species: SN
+    usesWrap: 0
+  - id: 1152
+    name: SK_KRYT_HOLW_01_21FOTR_SN01
+    resourcePath: Meshes/Gear/HollowWarden/SK_KRYT_HOLW_01_21FOTR_SN01
+    region: 21
+    pack: KRYT_HOLW
+    variant: 1
+    species: SN
+    usesWrap: 0
+  - id: 1153
+    name: SK_KRYT_HOLW_01_22AHED_SN01
+    resourcePath: Meshes/Gear/HollowWarden/SK_KRYT_HOLW_01_22AHED_SN01
+    region: 22
+    pack: KRYT_HOLW
+    variant: 1
+    species: SN
+    usesWrap: 0
+  - id: 1154
+    name: SK_KRYT_HOLW_01_24ABAC_SN01
+    resourcePath: Meshes/Gear/HollowWarden/SK_KRYT_HOLW_01_24ABAC_SN01
+    region: 24
+    pack: KRYT_HOLW
+    variant: 1
+    species: SN
+    usesWrap: 0
+  nextId: 1155

@@ -13,9 +13,9 @@ MonoBehaviour:
   m_Name: Ring_SKTN_R75
   m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Items.ItemDefinition
   itemId: 13091
-  displayName: Deathsworn Knucklebone
+  displayName: Hollow Warden Ring
   description: Worn on a finger.
-  icon: {fileID: 21300000, guid: bed638238f54d7841846df10ffed1e3c, type: 3}
+  icon: {fileID: 21300000, guid: 7e6673ee6640bd44586007b53ca076a4, type: 3}
   sharesIconOf: {fileID: 0}
   rarity: 2
   equipSlot: 5

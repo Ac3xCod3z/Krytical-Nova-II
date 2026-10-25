@@ -13,9 +13,9 @@ MonoBehaviour:
   m_Name: Cape_ROBO_R75
   m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Items.ItemDefinition
   itemId: 10867
-  displayName: Ravager Back Unit
+  displayName: Scrap Sentinel Back Unit
   description: Worn across the back.
-  icon: {fileID: 21300000, guid: 4e757479f2078b2439d53de5f8e0d16d, type: 3}
+  icon: {fileID: 21300000, guid: fa5f08560e963914ab3df0ef86c14734, type: 3}
   sharesIconOf: {fileID: 0}
   rarity: 2
   equipSlot: 7
@@ -40,12 +40,12 @@ MonoBehaviour:
   useCooldown: 1
   usableFromHotbar: 0
   placeholderGlyph: 
-  appearancePartIds: 8101t
+  appearancePartIds: 7604t
   partCatalog: {fileID: 11400000, guid: 8679543dc9e4ba34898118a0249b9ac1, type: 2}
   appearanceParts: []
-  colorTheme: 10
+  colorTheme: 26
   colorThemes: {fileID: 11400000, guid: 19312dbf68325b34ea623ff93b84dd3d, type: 2}
-  colorCells: 788898a7a8y
+  colorCells: 67778797a7y
   weaponPrefab: {fileID: 0}
   weaponLocalPosition: {x: 0, y: 0, z: 0}
   weaponLocalEuler: {x: 0, y: 0, z: 0}

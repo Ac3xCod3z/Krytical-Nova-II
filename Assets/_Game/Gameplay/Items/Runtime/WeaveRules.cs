@@ -89,7 +89,13 @@ namespace KryticalNova.Items
         {
             if (shown == null || !IsDyeSlot(shown.equipSlot)) return false;
             if (shown.equipSlot == EquipSlot.Weapon) return shown.weaponPrefab != null;
-            return shown.colorCells != null && shown.colorCells.Length > 0;
+            if (shown.colorCells != null && shown.colorCells.Length > 0) return true;
+            // A painted piece (owner, 24 Oct 2026) reads no colour cells: its paint is dyed instead (GearPaint).
+            var parts = shown.GetAppearanceParts();
+            if (parts != null)
+                for (int i = 0; i < parts.Count; i++)
+                    if (KryticalNova.Items.Visuals.GearPaint.TryGetLook(parts[i], out _)) return true;
+            return false;
         }
 
         /// <summary>Why the piece shown in a slot may not be dyed in a colourway (0 = back to its own colours), or null.</summary>

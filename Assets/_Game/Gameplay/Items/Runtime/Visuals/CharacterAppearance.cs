@@ -43,6 +43,12 @@ namespace KryticalNova.Items.Visuals
         };
         [Tooltip("Adds a FaceBlinker; the eyelid blink shapes are kept live on the merged mesh.")]
         [SerializeField] private bool blink = true;
+        [Tooltip("The halo round a worn part's lights (a robot head's lens): reach in metres, brightness at the outline, " +
+                 "and how deep and fast it breathes. The colour is the lights' own. Bloom is off in this game, so the halo is the glow.")]
+        [SerializeField] private float lightGlowWidth = 0.03f;
+        [SerializeField] private float lightGlowIntensity = 1.8f;
+        [SerializeField, Range(0f, 1f)] private float lightGlowPulse = 0.3f;
+        [SerializeField] private float lightGlowPulseSpeed = 0.6f;
         [Tooltip("Glowing eyes: how strongly the eyes' second material shines, times the eye-glow map. Kept slight " +
                  "(owner, 24 Oct 2026: the normal eye colour with an emissive channel, no halo).")]
         [SerializeField] private float eyeGlowIntensity = 0.29f; // owner, 24 Oct 2026: "glows just a little bit more" (+15 %)
@@ -64,14 +70,26 @@ namespace KryticalNova.Items.Visuals
         private readonly List<Transform> boneBuffer = new List<Transform>(160);
         private readonly List<string> boneNames = new List<string>(160);
         private readonly List<SkinnedMeshRenderer> debugRenderers = new List<SkinnedMeshRenderer>();
+        private readonly List<SkinnedMeshRenderer> lightRenderers = new List<SkinnedMeshRenderer>();
+        private GlowHalo lightHalo; // made on first use: a halo draws its beat from Random, which a component's constructor may not call
         private SkinnedMeshMerger merger;
         private EyeGlow eyeGlow;
+        // Parts that move by real cloth (GearClothLook, a cloak): left out of the merge and drawn by this, with Unity's Cloth.
+        private GearCloth cloth;
+        private CharacterLod lod;
+        private readonly List<SidekickPartRef> mergeList = new List<SidekickPartRef>(48);
+        private readonly List<(SidekickPartRef part, GearClothLook look)> clothParts = new List<(SidekickPartRef, GearClothLook)>();
         private bool eyesGlow;
         private Texture eyeColourMap, eyeEmissionMap;
         private Mesh ownedMesh;
         private CharacterAppearance sharedSource;
         private bool dirty;
+        private bool paintsStale;
         private bool helmetShown = true;
+        // The paints the shown mesh draws in (submesh i + 1 = paint i) and a part of each, to find its piece and dye.
+        private readonly List<GearPaintLook> shownPaints = new List<GearPaintLook>();
+        private readonly List<SidekickPartRef> shownPaintParts = new List<SidekickPartRef>();
+        private static readonly List<Material> materialBuffer = new List<Material>(8);
 
         /// <summary>Raised after every rebuild, so mirrors (the equipment preview doll) can re-share the mesh.</summary>
         public event Action Rebuilt;
@@ -123,7 +141,9 @@ namespace KryticalNova.Items.Visuals
         {
             if (sharedSource != null) sharedSource.Rebuilt -= OnSourceRebuilt;
             if (ownedMesh != null) Destroy(ownedMesh);
+            lightHalo?.Clear();
             eyeGlow?.Dispose();
+            cloth?.Dispose();
         }
 
         /// <summary>
@@ -160,6 +180,7 @@ namespace KryticalNova.Items.Visuals
             {
                 if (item == null) worn.Remove(slot); else worn[slot] = item;
                 if (dye == null) dyes.Remove(slot); else dyes[slot] = dye;
+                paintsStale = true; // a painted piece takes its dye in its paint, not the colour map
                 WornChanged?.Invoke();
             }
             IReadOnlyList<SidekickPartRef> parts = item != null ? item.GetAppearanceParts() : null;
@@ -279,7 +300,9 @@ namespace KryticalNova.Items.Visuals
             if (merger == null || !IsConfigured) return;
             ResolveParts();
             if (mergeParts) RebuildMerged(); else RebuildSeparate();
+            RebuildLights(partList);
             RebuildEyeGlow(partList);
+            RebuildCloth(partList);
             BindDangleBones();
             Rebuilt?.Invoke();
         }
@@ -287,6 +310,88 @@ namespace KryticalNova.Items.Visuals
         private void LateUpdate()
         {
             if (dirty) RebuildNow();
+            else if (paintsStale) ApplyPaints(targetRenderer);
+            // a far-away character's cloak hangs as skinned: its cloth stops (the same tier the dangle bones rest at)
+            if (cloth != null && cloth.Renderers.Count > 0) cloth.SetSimulated(lod == null || lod.Tier < 2);
+        }
+
+        /// <summary>The parts to merge, and the cloth parts kept out of the merge (<see cref="GearCloth"/>).</summary>
+        private void SplitCloth(IReadOnlyList<SidekickPartRef> parts)
+        {
+            mergeList.Clear();
+            clothParts.Clear();
+            foreach (var p in parts)
+            {
+                if (GearCloth.TryGetLook(p, out var look)) clothParts.Add((p, look));
+                else mergeList.Add(p);
+            }
+        }
+
+        private void RebuildCloth(IReadOnlyList<SidekickPartRef> parts)
+        {
+            if (!mergeParts || merger == null || targetRenderer == null) return;
+            SplitCloth(parts);
+            if (clothParts.Count == 0) { cloth?.Clear(); return; }
+            if (lod == null) lod = GetComponentInParent<CharacterLod>();
+            cloth ??= new GearCloth();
+            cloth.Show(clothParts, targetRenderer.transform.parent, targetRenderer.gameObject.layer, targetRenderer.rootBone,
+                targetRenderer.localBounds, bodyShape, merger.FindBone, ClothMaterial);
+        }
+
+        /// <summary>A cloth part's material: its paint in its piece's dye, or the character's own colour-mapped material.</summary>
+        private Material ClothMaterial(SidekickPartRef part)
+        {
+            if (GearPaint.TryGetLook(part, out var paint))
+            {
+                var item = PieceWearing(part, out var slot);
+                GearPaint.TryFindColourway(item, GetDye(slot), out var colourway);
+                return GearPaint.MaterialFor(paint, colourway);
+            }
+            return targetRenderer != null ? targetRenderer.sharedMaterial : null;
+        }
+
+        /// <summary>
+        /// Painted parts' submeshes take their paint, in the dye of the piece they belong to; slot 0 (the body and every
+        /// colour-mapped part) keeps the material it has, the character's own (CharacterLook).
+        /// </summary>
+        private void ApplyPaints(SkinnedMeshRenderer smr)
+        {
+            paintsStale = false;
+            if (smr == null) return;
+            materialBuffer.Clear();
+            smr.GetSharedMaterials(materialBuffer);
+            var body = materialBuffer.Count > 0 ? materialBuffer[0] : null;
+            materialBuffer.Clear();
+            materialBuffer.Add(body);
+            for (int i = 0; i < shownPaints.Count; i++)
+            {
+                var item = PieceWearing(shownPaintParts[i], out var slot);
+                GearPaint.TryFindColourway(item, GetDye(slot), out var colourway);
+                materialBuffer.Add(GearPaint.MaterialFor(shownPaints[i], colourway));
+            }
+            smr.sharedMaterials = materialBuffer.ToArray();
+            if (cloth != null)
+                foreach (var r in cloth.Renderers)
+                {
+                    if (r == null) continue;
+                    foreach (var (part, _) in clothParts)
+                        if (part.mesh == r.sharedMesh)
+                        {
+                            var m = ClothMaterial(part);
+                            var mats = new Material[r.sharedMesh.subMeshCount];
+                            for (int i = 0; i < mats.Length; i++) mats[i] = m;
+                            r.sharedMaterials = mats;
+                        }
+                }
+        }
+
+        private ItemDefinition PieceWearing(SidekickPartRef part, out EquipSlot slot)
+        {
+            foreach (var kv in slotParts)
+                foreach (var p in kv.Value)
+                    if (p.mesh == part.mesh) { slot = kv.Key; return GetWorn(slot); }
+            slot = default;
+            return null;
         }
 
         private void ResolveParts()
@@ -311,10 +416,16 @@ namespace KryticalNova.Items.Visuals
             if (resolved.TryGetValue(BodyRegion.AttachmentHead, out var helmet) && !IsFixed(helmet))
             {
                 if (!helmetShown) resolved.Remove(BodyRegion.AttachmentHead);
-                else if (resolved.TryGetValue(BodyRegion.Hair, out var hair))
+                else
                 {
-                    if (PartLibrary.TryLoadUnderHelmet(hair, out var tucked)) resolved[BodyRegion.Hair] = tucked;
-                    else resolved.Remove(BodyRegion.Hair); // all of this hair sits under the helmet
+                    if (resolved.TryGetValue(BodyRegion.Hair, out var hair))
+                    {
+                        if (PartLibrary.TryLoadUnderHelmet(hair, out var tucked)) resolved[BodyRegion.Hair] = tucked;
+                        else resolved.Remove(BodyRegion.Hair); // all of this hair sits under the helmet
+                    }
+                    // A robot set's helmet is the robot's head itself (owner, 24 Oct 2026, Scrap Sentinel): our robot
+                    // head pieces (SK_KRYT_*_RO01) stand in for the bare head, which would only poke through.
+                    if (IsRobotHeadPiece(helmet)) resolved.Remove(BodyRegion.Head);
                 }
             }
             // A bare-chested torso needs the chest wrap on a feminine body (same rule as Sidekick's own tool).
@@ -323,6 +434,12 @@ namespace KryticalNova.Items.Visuals
                 resolved[BodyRegion.Wrap] = wrapPart;
             partList.Clear();
             partList.AddRange(resolved.Values); // region order => deterministic bone order for sharing
+        }
+
+        private static bool IsRobotHeadPiece(SidekickPartRef part)
+        {
+            string n = part.mesh != null ? part.mesh.name : null;
+            return n != null && n.StartsWith("SK_KRYT_", StringComparison.Ordinal) && n.EndsWith("_RO01", StringComparison.Ordinal);
         }
 
         private bool IsFixed(SidekickPartRef part)
@@ -334,7 +451,8 @@ namespace KryticalNova.Items.Visuals
         private void RebuildMerged()
         {
             ClearDebugRenderers();
-            var mesh = merger.Merge(partList, bodyShape, boneBuffer, name + "_Merged", idleFace,
+            SplitCloth(partList);
+            var mesh = merger.Merge(mergeList, bodyShape, boneBuffer, name + "_Merged", idleFace,
                 liveFaceShapes != null ? liveFaceShapes : blink ? (IReadOnlyList<string>)FaceBlinker.LiveShapes : null, bareBody);
             if (mesh == null) return;
             var old = ownedMesh;
@@ -342,6 +460,11 @@ namespace KryticalNova.Items.Visuals
             boneNames.Clear();
             foreach (var b in boneBuffer) boneNames.Add(b.name);
             ApplyToRenderer(targetRenderer, mesh, boneBuffer.ToArray());
+            shownPaints.Clear();
+            shownPaints.AddRange(merger.Paints);
+            shownPaintParts.Clear();
+            shownPaintParts.AddRange(merger.PaintParts);
+            ApplyPaints(targetRenderer);
             if (old != null) Destroy(old);
         }
 
@@ -366,7 +489,14 @@ namespace KryticalNova.Items.Visuals
             boneNames.Clear();
             boneNames.AddRange(names);
             ApplyToRenderer(targetRenderer, sharedSource.CurrentMesh, bones);
+            shownPaints.Clear();
+            shownPaints.AddRange(sharedSource.shownPaints);
+            shownPaintParts.Clear();
+            shownPaintParts.AddRange(sharedSource.shownPaintParts);
+            ApplyPaints(targetRenderer);
+            RebuildLights(sharedSource.CurrentParts);
             RebuildEyeGlow(sharedSource.CurrentParts);
+            RebuildCloth(sharedSource.CurrentParts);
             BindDangleBones();
             Rebuilt?.Invoke();
         }
@@ -414,6 +544,51 @@ namespace KryticalNova.Items.Visuals
                 }
                 debugRenderers.Add(smr);
             }
+        }
+
+        // ---- Lights: the glowing bits of worn parts (lenses), drawn beside the merged body while their part shows ----
+
+        private void RebuildLights(IReadOnlyList<SidekickPartRef> parts)
+        {
+            ClearLights();
+            if (parts == null || merger == null) return;
+            foreach (var part in parts)
+            {
+                if (!PartLibrary.TryLoadLights(part, out var lights, out var material)) continue;
+                var go = new GameObject(lights.mesh.name);
+                go.layer = targetRenderer.gameObject.layer;
+                go.transform.SetParent(targetRenderer.transform.parent, false);
+                var smr = go.AddComponent<SkinnedMeshRenderer>();
+                var bones = new Transform[lights.boneNames.Length];
+                for (int i = 0; i < bones.Length; i++) bones[i] = merger.FindBone(lights.boneNames[i]) ?? transform;
+                smr.bones = bones;
+                smr.rootBone = targetRenderer.rootBone;
+                smr.sharedMesh = lights.mesh;
+                smr.sharedMaterial = material;
+                smr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                smr.localBounds = targetRenderer.localBounds;
+                for (int i = 0; i < lights.mesh.blendShapeCount; i++)
+                    smr.SetBlendShapeWeight(i, bodyShape.WeightFor(lights.mesh.GetBlendShapeName(i)));
+                lightRenderers.Add(smr);
+                // Bloom is off in this game, so the lights glow through the screen-space halo, in their own colour.
+                if (lightHalo == null) lightHalo = new GlowHalo();
+                lightHalo.Set(new GlowHaloLook
+                {
+                    color = material.HasProperty(BaseColorId) ? material.GetColor(BaseColorId) : material.color,
+                    intensity = lightGlowIntensity, width = lightGlowWidth,
+                    pulse = lightGlowPulse, pulseSpeed = lightGlowPulseSpeed
+                });
+                lightHalo.Add(go);
+            }
+        }
+
+        private static readonly int BaseColorId = Shader.PropertyToID("_BaseColor");
+
+        private void ClearLights()
+        {
+            lightHalo?.Clear();
+            foreach (var r in lightRenderers) if (r != null) Destroy(r.gameObject);
+            lightRenderers.Clear();
         }
 
         private void ClearDebugRenderers()
