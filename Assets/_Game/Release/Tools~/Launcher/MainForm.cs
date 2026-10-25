@@ -766,6 +766,8 @@ namespace KryticalNova.Release
             using (var deep = new SolidBrush(DeepCyan))
             using (var number = new Font(display, 18f))
             {
+                // Seven headlines (owner, 25 Oct 2026) fit the sheet only with the rows a little closer together.
+                int rowStep = items.Count > 4 ? 34 : 38, gap = items.Count > 4 ? 9 : 12;
                 for (int i = 0; i < items.Count; i++)
                 {
                     bool open = i == openItem;
@@ -781,7 +783,7 @@ namespace KryticalNova.Release
                     g.DrawString(items[i].title.ToUpperInvariant(), title, open || hot ? deep : ink, textLeft, y + 2);
                     int index = i;
                     clickable.Add((row, () => { openItem = openItem == index ? -1 : index; Invalidate(Grow(NewsBox, 8)); }));
-                    y += 38;
+                    y += rowStep;
                     if (open)
                     {
                         SizeF size = g.MeasureString(items[i].body, text, textWidth);
@@ -790,7 +792,7 @@ namespace KryticalNova.Release
                     }
                     if (i < items.Count - 1)
                         using (var dash = new Pen(Color.FromArgb(64, Ink), 2f) { DashStyle = DashStyle.Dash }) g.DrawLine(dash, left, y, right, y);
-                    y += 12;
+                    y += gap;
                 }
             }
             return y;

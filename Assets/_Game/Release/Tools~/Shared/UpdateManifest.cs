@@ -138,7 +138,7 @@ namespace KryticalNova.Release
     [DataContract]
     public sealed class LauncherNews
     {
-        public const int MostItems = 4;
+        public const int MostItems = 7;
         public const int LongestTitle = 32;
         public const int LongestBody = 300;
         public const int MostReleasesKept = 24;
