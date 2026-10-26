@@ -189,7 +189,10 @@ namespace KryticalNova.World
         {
             if (IsHeadless)
             {
-                enabled = false;
+                // Only a running headless server switches it off. A batch build opens the maps in edit mode too, and a
+                // presenter switched off there is packed into the map bundles that way: every game then has a black,
+                // frozen sky (build 12, 25 Oct 2026).
+                if (Application.isPlaying) enabled = false;
                 return;
             }
 
