@@ -170,6 +170,7 @@ namespace KryticalNova.UI
             if (wasInSession && !inSession && view != View.Working && view != View.Leaving && !LeftByChoice())
             {
                 // The server's own words when it gave any (a GM sent them away, a shutdown, a full server).
+                NetworkManager network = NetworkManager.Singleton;
                 string reason = network != null ? network.DisconnectReason : null;
                 endedNote.text = string.IsNullOrWhiteSpace(reason)
                     ? "The server closed, or the connection was lost. Your progress is kept on the server."
