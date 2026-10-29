@@ -23,5 +23,31 @@ namespace KryticalNova.EditorTools
             Debug.Log("[ServerBuildBatch] Linux dedicated server build " + (ok ? "succeeded" : "FAILED") + " (IL2CPP: " + il2cpp + ", Mono: " + mono + ").");
             EditorApplication.Exit(ok ? 0 : 1);
         }
+
+        /// <summary>
+        /// The measuring tools' bot client (a development Windows PLAYER) built from a batch. The checkout's remembered standalone subtarget may still be
+        /// Server (left by a server build), which would compile UNITY_SERVER code into the "client" and make it start a dedicated server on port 7777;
+        /// so the subtarget is forced to Player for this run and put back afterwards. Exit code 0 only when a fresh KryticalNovaII.exe exists.
+        /// </summary>
+        public static void BuildBotClientPlayer()
+        {
+            StandaloneBuildSubtarget was = EditorUserBuildSettings.standaloneBuildSubtarget;
+            string exe = MeasureTools.ClientFolder + "/KryticalNovaII.exe";
+            System.DateTime started = System.DateTime.UtcNow;
+            bool ok;
+            try
+            {
+                EditorUserBuildSettings.standaloneBuildSubtarget = StandaloneBuildSubtarget.Player;
+                Debug.Log("[ServerBuildBatch] Bot client: standalone subtarget forced to " + EditorUserBuildSettings.standaloneBuildSubtarget + " (was " + was + ").");
+                MeasureTools.BuildBotClient();
+                ok = System.IO.File.Exists(exe) && System.IO.File.GetLastWriteTimeUtc(exe) >= started;
+            }
+            finally
+            {
+                EditorUserBuildSettings.standaloneBuildSubtarget = was;
+            }
+            Debug.Log("[ServerBuildBatch] Bot client build " + (ok ? "succeeded" : "FAILED") + ".");
+            EditorApplication.Exit(ok ? 0 : 1);
+        }
     }
 }
