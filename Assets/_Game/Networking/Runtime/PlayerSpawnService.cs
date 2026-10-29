@@ -60,6 +60,59 @@ namespace KryticalNova.Networking
             NetworkPlacement.Place(player, position, point.rotation);
         }
 
+        /// <summary>
+        /// Server of the entity netcode (M3a-2b): a spot for a joining player's body, from this map's spawn points in turn, skipping
+        /// any point one of <paramref name="occupied"/> stands on (body roots; compared on the ground plane). The position is a body
+        /// root: the NavMesh point plus <paramref name="baseOffset"/> (the agent's). False when the map has no service or no points.
+        /// The Netcode for GameObjects path (<see cref="PlaceSpawnedPlayer"/>) is unchanged.
+        /// </summary>
+        public static bool PickPoint(IReadOnlyList<Vector3> occupied, float baseOffset, out Vector3 position, out Quaternion rotation)
+        {
+            position = default;
+            rotation = Quaternion.identity;
+            if (instance == null) return false;
+            var points = PlayerSpawnPoint.Active;
+            if (points.Count == 0) return false;
+            int index = NextFreeIndex(points.Count, i => points[i].transform.position, ref instance.nextIndex, occupied, OccupiedRadius);
+            Transform point = points[index].transform;
+            position = point.position;
+            if (NavMesh.SamplePosition(position, out NavMeshHit hit, NavMeshSampleRadius, NavMesh.AllAreas))
+                position = hit.position;
+            position += Vector3.up * baseOffset;
+            rotation = point.rotation;
+            return true;
+        }
+
+        /// <summary>
+        /// Pure part of <see cref="PickPoint"/>: the index of the next point in turn (counting on from <paramref name="next"/>) with
+        /// nobody of <paramref name="occupied"/> within <paramref name="radius"/> on the ground plane; the first one tried when all are
+        /// taken; -1 when there are no points.
+        /// </summary>
+        public static int NextFreeIndex(int count, System.Func<int, Vector3> pointAt, ref int next, IReadOnlyList<Vector3> occupied, float radius)
+        {
+            if (count <= 0) return -1;
+            if (next < 0) next = 0;
+            int fallback = next % count;
+            for (int tried = 0; tried < count; tried++)
+            {
+                int index = next++ % count;
+                if (!IsNear(pointAt(index), occupied, radius)) return index;
+            }
+            return fallback;
+        }
+
+        private static bool IsNear(Vector3 point, IReadOnlyList<Vector3> occupied, float radius)
+        {
+            if (occupied == null) return false;
+            for (int i = 0; i < occupied.Count; i++)
+            {
+                Vector3 offset = occupied[i] - point;
+                offset.y = 0f;
+                if (offset.sqrMagnitude < radius * radius) return true;
+            }
+            return false;
+        }
+
         /// <summary>The next point in turn that no other player is standing on (the host starts on one of them).</summary>
         private Transform NextFreePoint(IReadOnlyList<PlayerSpawnPoint> points, Transform player)
         {

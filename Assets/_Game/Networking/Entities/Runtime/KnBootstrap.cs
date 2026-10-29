@@ -46,6 +46,7 @@ namespace KryticalNova.Networking.Entities
             World server = CreateServerWorld(ServerWorldName);
             BodyRoleNetRoleAdapter.Install();
             KnServerEntry.Start(server, settings); // tick rate, join rule, listen, status page, POST /stop, stop signals
+            KnWorldHooks.RaiseServer(server);      // the game's admission and leave handler (M3a-2b)
         }
 #endif
 
@@ -59,7 +60,8 @@ namespace KryticalNova.Networking.Entities
             BodyRoleNetRoleAdapter.Install();
             KnNetDefaults.Apply(server);
             Listen(server, port);
-            StartClientWorld(NetworkEndpoint.LoopbackIpv4.WithPort(port), joinPayload, KnTransportMode.Plain, default);
+            // Host mode is out of M3a-2b (decision D5): the game's hooks are not raised, so a host stays a bare netcode session.
+            StartClientWorld(NetworkEndpoint.LoopbackIpv4.WithPort(port), joinPayload, KnTransportMode.Plain, default, raiseHook: false);
         }
 
         /// <summary>A client world that connects to <paramref name="address"/>:<paramref name="port"/>; false when the address is not valid.</summary>
@@ -106,7 +108,7 @@ namespace KryticalNova.Networking.Entities
                 World.DefaultGameObjectInjectionWorld = null;
         }
 
-        private static void StartClientWorld(NetworkEndpoint endpoint, string joinPayload, KnTransportMode mode, RelayServerData relay)
+        private static void StartClientWorld(NetworkEndpoint endpoint, string joinPayload, KnTransportMode mode, RelayServerData relay, bool raiseHook = true)
         {
             World client = CreateClientWorld(ClientWorldName);
             BodyRoleNetRoleAdapter.Install();
@@ -115,6 +117,7 @@ namespace KryticalNova.Networking.Entities
             client.EntityManager.CreateSingleton(new KnJoinPayload { Text = new Unity.Collections.FixedString4096Bytes(joinPayload ?? string.Empty) });
             Entity request = client.EntityManager.CreateEntity(typeof(NetworkStreamRequestConnect));
             client.EntityManager.SetComponentData(request, new NetworkStreamRequestConnect { Endpoint = endpoint });
+            if (raiseHook) KnWorldHooks.RaiseClient(client); // the game's body factory, clicks and character (M3a-2b)
         }
 
         internal static void Listen(World server, ushort port)

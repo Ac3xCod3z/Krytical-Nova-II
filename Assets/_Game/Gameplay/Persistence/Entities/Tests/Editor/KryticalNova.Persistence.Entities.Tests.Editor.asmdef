@@ -1,0 +1,31 @@
+{
+    "name": "KryticalNova.Persistence.Entities.Tests.Editor",
+    "rootNamespace": "KryticalNova.Persistence.Entities.Tests",
+    "references": [
+        "KryticalNova.Runtime",
+        "KryticalNova.CharacterCreation",
+        "KryticalNova.Factions",
+        "KryticalNova.Progression",
+        "KryticalNova.Networking.Entities",
+        "KryticalNova.Persistence.Entities",
+        "UnityEngine.TestRunner",
+        "UnityEditor.TestRunner",
+        "Unity.Netcode.Runtime",
+        "Unity.Collections"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "nunit.framework.dll"
+    ],
+    "autoReferenced": false,
+    "defineConstraints": [
+        "UNITY_INCLUDE_TESTS"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

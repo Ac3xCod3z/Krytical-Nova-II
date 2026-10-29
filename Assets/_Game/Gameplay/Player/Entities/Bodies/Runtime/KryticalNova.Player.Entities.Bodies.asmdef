@@ -2,7 +2,15 @@
     "name": "KryticalNova.Player.Entities.Bodies",
     "rootNamespace": "KryticalNova.Player.Entities.Bodies",
     "references": [
-        "KryticalNova.Runtime"
+        "KryticalNova.Runtime",
+        "KryticalNova.Networking.Entities",
+        "KryticalNova.Player.Entities",
+        "KryticalNova.Player.Entities.Presentation",
+        "Unity.Entities",
+        "Unity.NetCode",
+        "Unity.Transforms",
+        "Unity.Collections",
+        "Unity.Mathematics"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

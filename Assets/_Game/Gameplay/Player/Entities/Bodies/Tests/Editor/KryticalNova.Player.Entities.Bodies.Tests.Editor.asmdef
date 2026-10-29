@@ -3,9 +3,23 @@
     "rootNamespace": "KryticalNova.Player.Entities.Bodies.Tests",
     "references": [
         "KryticalNova.Runtime",
+        "KryticalNova.Networking.Entities",
+        "KryticalNova.Networking.Entities.Tests.Editor",
+        "KryticalNova.Player.Entities",
+        "KryticalNova.Player.Entities.Tests.Editor",
+        "KryticalNova.Player.Entities.Presentation",
         "KryticalNova.Player.Entities.Bodies",
         "UnityEngine.TestRunner",
-        "UnityEditor.TestRunner"
+        "UnityEditor.TestRunner",
+        "Unity.Burst",
+        "Unity.Collections",
+        "Unity.Mathematics",
+        "Unity.Entities",
+        "Unity.Entities.Hybrid",
+        "Unity.Scenes",
+        "Unity.Networking.Transport",
+        "Unity.NetCode",
+        "Unity.Transforms"
     ],
     "includePlatforms": [
         "Editor"

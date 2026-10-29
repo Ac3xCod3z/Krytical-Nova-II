@@ -1,0 +1,32 @@
+{
+    "name": "KryticalNova.Persistence.Entities",
+    "rootNamespace": "KryticalNova.Persistence.Entities",
+    "references": [
+        "KryticalNova.Runtime",
+        "KryticalNova.CharacterCreation",
+        "KryticalNova.Factions",
+        "KryticalNova.Progression",
+        "KryticalNova.Networking",
+        "KryticalNova.Networking.Entities",
+        "KryticalNova.Persistence",
+        "KryticalNova.Player",
+        "KryticalNova.Player.Entities",
+        "KryticalNova.Player.Entities.Presentation",
+        "KryticalNova.Player.Entities.Bodies",
+        "Unity.Entities",
+        "Unity.NetCode",
+        "Unity.Netcode.Runtime",
+        "Unity.Collections",
+        "Unity.Mathematics",
+        "Unity.Transforms"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
