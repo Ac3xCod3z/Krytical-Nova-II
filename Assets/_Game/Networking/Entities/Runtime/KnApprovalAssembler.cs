@@ -39,7 +39,7 @@ namespace KryticalNova.Networking.Entities
         public int RosterAnswers { get; private set; }
 
         /// <summary>Where roster problems are logged (account and what failed, never the answer). Null = nothing.</summary>
-        public Action<string> Log;
+        public Action<string> RosterLog;
 
         private readonly List<string> m_Pages = new List<string>();
 
@@ -189,7 +189,7 @@ namespace KryticalNova.Networking.Entities
         private void AnswerRoster(EntityCommandBuffer ecb, Entity connection, Entry entry, KnJoinVerdict verdict)
         {
             JoinCheckForgetOnce(connection, entry);
-            if (!KnRosterAnswer.TryMake(Roster ?? RosterLookup.Current, verdict.Account, verdict.OldAccount, verdict.Request, m_Pages, out string refusal, Log))
+            if (!KnRosterAnswer.TryMake(Roster ?? RosterLookup.Current, verdict.Account, verdict.OldAccount, verdict.Request, m_Pages, out string refusal, RosterLog))
             {
                 Refuse(ecb, connection, entry, KnRefuseReason.Refused, refusal);
                 return;
