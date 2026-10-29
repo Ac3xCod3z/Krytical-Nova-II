@@ -667,6 +667,18 @@ Countdowns tell the players at 5 minutes, 2 minutes, 1 minute, 30 and 10 seconds
 Only pulling the plug, or ending the program in Task Manager, skips the save. Even then little is lost: every player
 is also saved once a minute while they play, and as they leave.
 
+### Stopping the server (Linux)
+
+A Linux server program ends within a fraction of a second when it is sent a plain kill (SIGTERM) and Unity does not save first, so a
+service manager (systemd) must not rely on that. The server therefore answers **`POST http://127.0.0.1:<game port + 1>/stop`** (the status
+port, over TCP; the status answers use the same number over UDP). It listens on 127.0.0.1 only, needs the header `X-KN-Key` with the save
+service key (the key file in `saveServiceKeyFile`; a server without a save service has no stop endpoint), and answers `200` with
+`{"stopping":true}` before it stops. It then does exactly what **Stop** on the control page does: saves every player and the world,
+backs up, tells the players, and quits with exit code 0. A second call answers `202` (already stopping); a wrong key or a caller that is
+not this machine gets `403` with no detail, and any other method gets `405`. As a second line the Linux server also catches SIGTERM and
+runs the same save-and-quit on the game's own thread. The call is meant for the service's stop step (`ExecStop`), never for people:
+people use the control page.
+
 ## 9. Backups
 
 - **When:** at start, every `backupHours` (6 by default), at every stop and restart, on **Backup now** and on
@@ -910,3 +922,4 @@ Things learned the hard way:
 - 20 Oct 2026: phase 5 milestone 1: a server per map behind one name (section 2b). Transit Row's server runs beside
   Concord's in the app, a tab each; it is never in the server list, always direct, saves only through the save service,
   makes no backups and keeps its records in `MapServers\<map>`. Ports 7779 and 7780 to forward for it.
+- 29 Oct 2026: `POST /stop` on the status port (127.0.0.1, save service key) and a SIGTERM catcher for Linux, so a service manager stops the server with a save.
