@@ -63,9 +63,37 @@ namespace KryticalNova.Persistence.Entities
             var admissionSystem = server.GetExistingSystemManaged<KnAdmissionSystem>();
             if (admissionSystem != null) admissionSystem.Admission = admission;
             else Debug.LogError("[KnServer] the server world has no KnAdmissionSystem: nobody can enter.");
+            InstallLeave(server);
             // The scene's avatar must not hold an account on a server (ServerSave.TryBind would hand it over).
             KryticalNova.Networking.OfflinePlayerHandoff.ReleaseOfflineAvatar();
             return admission;
+        }
+
+        /// <summary>
+        /// Server world: the leave handler in the closed-connection system (ghost invalidated, save and release, body, ghost, budgets).
+        /// The access record (<c>ServerRecords.Left</c>) is keyed by the Netcode for GameObjects client id and keeps nothing without its
+        /// NetworkManager, so it is not called here (M4 ports it).
+        /// </summary>
+        public static PlayerLeaveHandler InstallLeave(World server)
+        {
+            var closed = server.GetExistingSystemManaged<ConnectionClosedSystem>();
+            if (closed == null)
+            {
+                Debug.LogError("[KnServer] the server world has no ConnectionClosedSystem: leaving players would not be saved.");
+                return null;
+            }
+            foreach (IKnConnectionClosedHandler existing in closed.Handlers)
+                if (existing is PlayerLeaveHandler already) return already;
+            var leave = new PlayerLeaveHandler(server)
+            {
+                Forget = key =>
+                {
+                    KryticalNova.Networking.RpcBudget.Forget(key);
+                    KryticalNova.Networking.NetworkHealth.Forget(key);
+                },
+            };
+            closed.Handlers.Add(leave);
+            return leave;
         }
     }
 }

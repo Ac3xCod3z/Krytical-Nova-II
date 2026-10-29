@@ -64,6 +64,7 @@ namespace KryticalNova.Player.Entities.Bodies.Tests
         public GameObject Template;
         public ServerBodyAdmission Admission;
         public KnAdmissionSystem AdmissionSystem;
+        public PlayerLeaveHandler Leave;
         public readonly FakeRules Rules = new FakeRules();
         public readonly List<string> Log = new List<string>();
         /// <summary>Spawn points the rig's picker hands out (first free one, 1.5 m clearance); empty = the origin.</summary>
@@ -97,6 +98,8 @@ namespace KryticalNova.Player.Entities.Bodies.Tests
             };
             rig.AdmissionSystem = rig.Server.GetExistingSystemManaged<KnAdmissionSystem>();
             rig.AdmissionSystem.Admission = rig.Admission;
+            rig.Leave = new PlayerLeaveHandler(rig.Server) { Trace = step => rig.Log.Add(step), Forget = key => rig.Log.Add("forget") };
+            rig.Server.GetExistingSystemManaged<ConnectionClosedSystem>().Handlers.Add(rig.Leave);
             return rig;
         }
 
@@ -124,6 +127,21 @@ namespace KryticalNova.Player.Entities.Bodies.Tests
             client.GetExistingSystemManaged<KnClientGoInGameSystem>().Source = new FixedGoInGame();
             int used = Tw.TickUntil(() => AdmissionSystem.Admitted + AdmissionSystem.Refused > before, maxTicks);
             Assert.GreaterOrEqual(used, 0, "the server never decided. Logs: " + string.Join(" | ", Tw.Interesting));
+            return used;
+        }
+
+        /// <summary>The client hangs up; ticks until the server has seen the close (the key is dead). Returns ticks used.</summary>
+        public int Disconnect(World client, int maxTicks = 120)
+        {
+            PlayerKey key = KeyOf(client);
+            using (var q = client.EntityManager.CreateEntityQuery(ComponentType.ReadOnly<NetworkStreamConnection>()))
+            {
+                var connections = q.ToEntityArray(Allocator.Temp);
+                foreach (Entity c in connections) client.EntityManager.AddComponent<NetworkStreamRequestDisconnect>(c);
+                connections.Dispose();
+            }
+            int used = Tw.TickUntil(() => !PlayerKeys.IsAlive(key), maxTicks);
+            Assert.GreaterOrEqual(used, 0, "the server never saw the close. Logs: " + string.Join(" | ", Tw.Interesting));
             return used;
         }
 
