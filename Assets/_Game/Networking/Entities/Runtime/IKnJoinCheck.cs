@@ -2,7 +2,14 @@ using Unity.Entities;
 
 namespace KryticalNova.Networking.Entities
 {
-    public enum KnJoinStatus { Pending, Accepted, Refused }
+    public enum KnJoinStatus
+    {
+        Pending,
+        Accepted,
+        Refused,
+        /// <summary>The sender is proven and only asks about its characters (roster path): it is answered and never let in.</summary>
+        Question,
+    }
 
     public readonly struct KnJoinVerdict
     {
@@ -13,8 +20,10 @@ namespace KryticalNova.Networking.Entities
         public readonly string Account;
         public readonly string OldAccount;
         public readonly bool Proven;
+        /// <summary>For <see cref="KnJoinStatus.Question"/>: the packed roster request (<c>RosterWire.Pack</c>).</summary>
+        public readonly string Request;
 
-        public KnJoinVerdict(KnJoinStatus status, KnRefuseReason reason, string detail, string account = null, string oldAccount = null, bool proven = false)
+        public KnJoinVerdict(KnJoinStatus status, KnRefuseReason reason, string detail, string account = null, string oldAccount = null, bool proven = false, string request = null)
         {
             Status = status;
             Reason = reason;
@@ -22,12 +31,15 @@ namespace KryticalNova.Networking.Entities
             Account = account;
             OldAccount = oldAccount;
             Proven = proven;
+            Request = request;
         }
 
         public static KnJoinVerdict Pending => new KnJoinVerdict(KnJoinStatus.Pending, KnRefuseReason.None, null);
         public static KnJoinVerdict Accept => new KnJoinVerdict(KnJoinStatus.Accepted, KnRefuseReason.None, null);
         public static KnJoinVerdict AcceptAs(string account, string oldAccount, bool proven) =>
             new KnJoinVerdict(KnJoinStatus.Accepted, KnRefuseReason.None, null, account, oldAccount, proven);
+        public static KnJoinVerdict AskRoster(string account, string oldAccount, bool proven, string request) =>
+            new KnJoinVerdict(KnJoinStatus.Question, KnRefuseReason.None, null, account, oldAccount, proven, request);
         public static KnJoinVerdict Refuse(KnRefuseReason reason, string detail) => new KnJoinVerdict(KnJoinStatus.Refused, reason, detail);
     }
 

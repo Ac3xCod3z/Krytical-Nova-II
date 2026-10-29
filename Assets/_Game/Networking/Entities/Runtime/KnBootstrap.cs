@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Unity.Entities;
 using Unity.NetCode;
 using Unity.Networking.Transport;
+using Unity.Networking.Transport.Relay;
 using UnityEngine;
 
 namespace KryticalNova.Networking.Entities
@@ -29,6 +30,7 @@ namespace KryticalNova.Networking.Entities
         public override bool Initialize(string defaultWorldName)
         {
             AutoConnectPort = 0; // never connect or listen by itself: we ask for it
+            KnTransport.Install(); // direct UDP, DTLS and Relay, chosen per world
 #if UNITY_SERVER
             StartDedicatedServer();
 #else
@@ -55,11 +57,12 @@ namespace KryticalNova.Networking.Entities
             World server = CreateServerWorld(ServerWorldName);
             KnNetDefaults.Apply(server);
             Listen(server, port);
-            StartClientWorld(NetworkEndpoint.LoopbackIpv4.WithPort(port), joinPayload);
+            StartClientWorld(NetworkEndpoint.LoopbackIpv4.WithPort(port), joinPayload, KnTransportMode.Plain, default);
         }
 
         /// <summary>A client world that connects to <paramref name="address"/>:<paramref name="port"/>; false when the address is not valid.</summary>
-        public static bool StartClient(string address, ushort port, string joinPayload = "client")
+        /// <param name="encrypted">DTLS to a dedicated server (the default; every release server insists on it). False for a LAN or loopback test.</param>
+        public static bool StartClient(string address, ushort port, string joinPayload = "client", bool encrypted = true)
         {
             if (!NetworkEndpoint.TryParse(address, port, out NetworkEndpoint endpoint))
             {
@@ -67,8 +70,15 @@ namespace KryticalNova.Networking.Entities
                 return false;
             }
             Stop();
-            StartClientWorld(endpoint, joinPayload);
+            StartClientWorld(endpoint, joinPayload, encrypted ? KnTransportMode.Secure : KnTransportMode.Plain, default);
             return true;
+        }
+
+        /// <summary>A client world that joins through Unity Relay with the allocation the caller got from the Relay service.</summary>
+        public static void StartClientRelay(RelayServerData relay, string joinPayload = "client")
+        {
+            Stop();
+            StartClientWorld(relay.Endpoint, joinPayload, KnTransportMode.Relay, relay);
         }
 
         /// <summary>Disposes every client, thin client and server world this bootstrap made (leaves the local world).</summary>
@@ -89,9 +99,10 @@ namespace KryticalNova.Networking.Entities
                 World.DefaultGameObjectInjectionWorld = null;
         }
 
-        private static void StartClientWorld(NetworkEndpoint endpoint, string joinPayload)
+        private static void StartClientWorld(NetworkEndpoint endpoint, string joinPayload, KnTransportMode mode, RelayServerData relay)
         {
             World client = CreateClientWorld(ClientWorldName);
+            KnTransport.Assign(client, new KnWorldTransport { Mode = mode, Relay = relay });
             KnNetDefaults.Apply(client);
             client.EntityManager.CreateSingleton(new KnJoinPayload { Text = new Unity.Collections.FixedString4096Bytes(joinPayload ?? string.Empty) });
             Entity request = client.EntityManager.CreateEntity(typeof(NetworkStreamRequestConnect));

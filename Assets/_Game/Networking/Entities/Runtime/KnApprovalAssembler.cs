@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Unity.Collections;
 using Unity.Entities;
@@ -20,6 +21,27 @@ namespace KryticalNova.Networking.Entities
 
         /// <summary>Ticks between the refusal RPC and closing the connection (the RPC leaves in the same tick it is created).</summary>
         public int RefuseDisconnectTicks = 5;
+
+        /// <summary>
+        /// Who answers a question about characters (the roster path). Null = Core's <see cref="RosterLookup.Current"/>, which
+        /// Persistence fills; with neither, the question is refused with "does not keep characters". Called on the main thread,
+        /// once per question, like the Netcode for GameObjects server did inside its approval callback.
+        /// </summary>
+        public IServerRoster Roster;
+
+        /// <summary>
+        /// Ticks the server waits for the asking game to hang up after the last roster page was sent; the game closes its short
+        /// connection as soon as the answer is whole, this is only the safety net (150 ticks = 5 s at 30 Hz).
+        /// </summary>
+        public int RosterCloseTicks = 150;
+
+        /// <summary>Roster questions answered with pages so far (a counter for the control page and tests).</summary>
+        public int RosterAnswers { get; private set; }
+
+        /// <summary>Where roster problems are logged (account and what failed, never the answer). Null = nothing.</summary>
+        public Action<string> Log;
+
+        private readonly List<string> m_Pages = new List<string>();
 
         private sealed class Entry
         {
@@ -154,10 +176,39 @@ namespace KryticalNova.Networking.Entities
                         });
                     }
                     break;
+                case KnJoinStatus.Question:
+                    AnswerRoster(ecb, connection, entry, verdict);
+                    break;
                 case KnJoinStatus.Refused:
                     Refuse(ecb, connection, entry, verdict.Reason, verdict.Detail);
                     break;
             }
+        }
+
+        // A proven game asking about its characters: answered in pages, then closed. It never gets ConnectionApproved or a NetworkId.
+        private void AnswerRoster(EntityCommandBuffer ecb, Entity connection, Entry entry, KnJoinVerdict verdict)
+        {
+            JoinCheckForgetOnce(connection, entry);
+            if (!KnRosterAnswer.TryMake(Roster ?? RosterLookup.Current, verdict.Account, verdict.OldAccount, verdict.Request, m_Pages, out string refusal, Log))
+            {
+                Refuse(ecb, connection, entry, KnRefuseReason.Refused, refusal);
+                return;
+            }
+            RosterAnswers++;
+            for (int i = 0; i < m_Pages.Count; i++)
+            {
+                Entity rpc = ecb.CreateEntity();
+                ecb.AddComponent(rpc, new KnRosterReply { Index = i, Count = m_Pages.Count, Data = KnFixed.Text512(m_Pages[i]) });
+                ecb.AddComponent(rpc, new SendRpcCommandRequest { TargetConnection = connection });
+            }
+            ecb.AddComponent(connection, new KnPendingDisconnect { TicksLeft = RosterCloseTicks });
+            m_Pages.Clear();
+        }
+
+        private void JoinCheckForgetOnce(Entity connection, Entry entry)
+        {
+            entry.Decided = true;
+            JoinCheck.Forget(connection);
         }
 
         private void Refuse(EntityCommandBuffer ecb, Entity connection, Entry entry, KnRefuseReason reason, string detail)

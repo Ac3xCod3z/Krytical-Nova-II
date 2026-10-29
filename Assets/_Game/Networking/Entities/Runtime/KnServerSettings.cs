@@ -24,9 +24,16 @@ namespace KryticalNova.Networking.Entities
         public string saveService = "";
         /// <summary>The save service key file ("" = Documents\KryticalNova-Secrets\save-service-key.txt). Also the key of <c>POST /stop</c>.</summary>
         public string saveServiceKeyFile = "";
-        /// <summary>DTLS certificate and private key (PEM). Both set = the server wants encryption (M2b-2 wires the driver).</summary>
+        /// <summary>DTLS certificate and private key (PEM). Both set = the server wants encryption (the driver constructor wires it: KnTransport).</summary>
         public string certificateFile = "";
         public string privateKeyFile = "";
+        /// <summary>"direct" (players come to this machine's UDP port, DTLS when the certificate is there) or "relay" (through Unity Relay).</summary>
+        public string connectionMode = "direct";
+        /// <summary>
+        /// A release server runs without encryption only when this says so. Without it, a missing or unreadable certificate keeps
+        /// the server from starting (a development run only warns).
+        /// </summary>
+        public bool plainTransport;
         public string serverName = "Krytical Nova Server";
         /// <summary>Takes development bot tokens (thin-client soak). Ignored, with a warning, in a build that has no bots compiled in.</summary>
         public bool devBots;
@@ -94,7 +101,10 @@ namespace KryticalNova.Networking.Entities
         {
             if (args == null) return;
             foreach (string flag in args)
+            {
                 if (string.Equals(flag, "-devbots", StringComparison.OrdinalIgnoreCase)) devBots = true;
+                if (string.Equals(flag, "-plaintransport", StringComparison.OrdinalIgnoreCase)) plainTransport = true;
+            }
             for (int i = 0; i < args.Length - 1; i++)
             {
                 string value = args[i + 1];
@@ -107,6 +117,7 @@ namespace KryticalNova.Networking.Entities
                     case "-savekeyfile": saveServiceKeyFile = value; break;
                     case "-certificate": certificateFile = value; break;
                     case "-privatekey": privateKeyFile = value; break;
+                    case "-connectionmode": connectionMode = value; break;
                     case "-role": role = string.Equals(value.Trim(), "map", StringComparison.OrdinalIgnoreCase) ? "map" : "main"; break;
                 }
             }
@@ -121,6 +132,8 @@ namespace KryticalNova.Networking.Entities
             if (pagePort < 0 || pagePort > 65535) pagePort = 0;
             maxPlayers = Mathf.Clamp(maxPlayers, 1, 1000);
             if (string.IsNullOrWhiteSpace(map)) map = "Zone01_StarterTown";
+            connectionMode = string.Equals((connectionMode ?? string.Empty).Trim(), KnTransportPlanner.RelayMode, StringComparison.OrdinalIgnoreCase)
+                ? KnTransportPlanner.RelayMode : KnTransportPlanner.DirectMode;
         }
     }
 }

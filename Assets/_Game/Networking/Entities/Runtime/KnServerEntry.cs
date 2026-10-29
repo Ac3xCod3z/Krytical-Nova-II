@@ -35,6 +35,26 @@ namespace KryticalNova.Networking.Entities
                 log: line => Debug.Log("[KnServer] " + line));
         }
 
+        /// <summary>
+        /// Decides and applies the server's transport (direct UDP, DTLS or Relay; see <see cref="KnTransportPlanner"/>). The line
+        /// is for the log and never holds a secret. False: the server must not listen.
+        /// </summary>
+        public static bool PrepareTransport(World server, KnServerSettings settings, bool isRelease, out string line)
+        {
+            string folder = System.IO.Path.GetDirectoryName(Application.dataPath);
+            KnServerTransportPlan plan = KnTransportPlanner.PlanServer(settings, isRelease, KnTransport.PendingServerRelay.HasValue, folder);
+            if (!KnTransport.ApplyServerPlan(server, plan, isRelease, out string warning, out string problem))
+            {
+                line = problem;
+                return false;
+            }
+            string mode = plan.Mode == KnTransportMode.Secure ? "Direct connections are encrypted (DTLS)."
+                : plan.Mode == KnTransportMode.Relay ? "Players connect through Unity Relay (encrypted by Relay)." : "Direct connections are not encrypted.";
+            line = warning != null ? warning : mode;
+            if (warning != null && plan.Mode != KnTransportMode.Plain) Debug.LogWarning("[KnServer] " + warning);
+            return true;
+        }
+
         /// <summary>The project the tokens must belong to: the settings' own, else this build's.</summary>
         public static string ProjectId(KnServerSettings settings) =>
             string.IsNullOrWhiteSpace(settings.cloudProjectId) ? Application.cloudProjectId : settings.cloudProjectId;
@@ -60,8 +80,14 @@ namespace KryticalNova.Networking.Entities
 #else
             if (settings.devBots) Debug.LogWarning("[KnServer] devBots is set but this build has no bots compiled in: ignored.");
 #endif
-            if (settings.WantsEncryption)
-                Debug.LogError("[KnServer] A certificate and private key are set but the encrypted transport is not wired in yet: this server is running WITHOUT encryption.");
+            // The transport is chosen before the world's first update, which is when Netcode builds the driver.
+            if (!PrepareTransport(server, settings, isRelease: !Application.isEditor && !Debug.isDebugBuild, out string transportLine))
+            {
+                Debug.LogError("[KnServer] " + transportLine);
+                Application.Quit(1);
+                return;
+            }
+            Debug.Log("[KnServer] " + transportLine);
 
             KnBootstrap.Listen(server, (ushort)settings.port);
             Debug.Log($"[KnServer] listening on UDP {settings.port}, role {settings.role}, map {settings.map}, max {settings.maxPlayers} players, " +

@@ -88,14 +88,14 @@ namespace KryticalNova.Networking.Entities
     /// The join rule of a dedicated server, in order: the join text must read (version, mode), the build must match, the server
     /// must have room, the Unity token must prove an account, that account must not be banned, and the travel ticket must pass.
     /// Every step is repeatable: the assembler polls until a verdict, a step that needs the network says Pending and is asked
-    /// again next tick. A question about characters (the roster path) is not answered here yet and is refused with its reason.
+    /// again next tick. A question about characters (the roster path) passes the same proof and ban check, skips the ticket and comes back as a <see cref="KnJoinStatus.Question"/> for the assembler to answer.
     /// </summary>
     public sealed class KnJoinCheck : IKnJoinCheck
     {
         private sealed class State
         {
             public bool Parsed;
-            public string Token, OldAccount, Ticket;
+            public string Token, OldAccount, Ticket, Request;
             public bool Editor;
             public string Account;
             public bool Proven;
@@ -148,7 +148,11 @@ namespace KryticalNova.Networking.Entities
                 return KnJoinVerdict.Refuse(KnRefuseReason.Banned, banned);
             }
 
-            // 3. the travel ticket
+            // 3. a question about characters is answered here and never travels on: no ticket, no place on the server
+            if (!string.IsNullOrEmpty(st.Request))
+                return KnJoinVerdict.AskRoster(st.Account, st.OldAccount, st.Proven, st.Request);
+
+            // 4. the travel ticket
             KnJoinVerdict ticket = m_Tickets.Check(connection, st.Account, st.Ticket);
             if (ticket.Status == KnJoinStatus.Pending) return ticket;
             if (ticket.Status == KnJoinStatus.Refused) return KnJoinVerdict.Refuse(ticket.Reason == KnRefuseReason.None ? KnRefuseReason.BadTicket : ticket.Reason, ticket.Detail);
@@ -174,8 +178,7 @@ namespace KryticalNova.Networking.Entities
             if (verdict != JoinRules.Verdict.None)
                 return KnJoinVerdict.Refuse(verdict == JoinRules.Verdict.Full ? KnRefuseReason.ServerFull : KnRefuseReason.WrongVersion,
                     JoinRules.Words(verdict, m_Options.ServerBuild, build));
-            if (!string.IsNullOrEmpty(request))
-                return KnJoinVerdict.Refuse(KnRefuseReason.Refused, "This server does not answer questions about characters yet.");
+            st.Request = request;
             st.Parsed = true;
             st.Editor = editor;
             st.Token = token;

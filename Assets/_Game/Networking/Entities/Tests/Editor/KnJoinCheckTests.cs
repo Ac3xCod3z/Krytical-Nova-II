@@ -86,12 +86,33 @@ namespace KryticalNova.Networking.Entities.Tests
         }
 
         [Test]
-        public void CharacterQuestion_IsRefused_UntilTheRosterPathLands()
+        public void CharacterQuestion_IsProven_ThenHandedBackAsAQuestion_WithoutATicketCheck()
         {
-            var check = Check(new ScriptedProof());
+            var tickets = new ScriptedTickets { Rule = (a, t, polls) => KnJoinVerdict.Refuse(KnRefuseReason.BadTicket, "no") };
+            var check = Check(new ScriptedProof(), tickets);
             KnJoinVerdict v = check.Poll(Conn(1), Payload(request: "packed-roster-request"));
+            Assert.AreEqual(KnJoinStatus.Question, v.Status);
+            Assert.AreEqual("packed-roster-request", v.Request);
+            Assert.AreEqual(AccountA, v.Account);
+            Assert.IsTrue(v.Proven);
+            Assert.AreEqual(0, tickets.Seen.Count, "a question never needs a travel ticket");
+        }
+
+        [Test]
+        public void CharacterQuestion_OnAFullServer_IsStillAnswered_ButABannedAccountIsNot()
+        {
+            Assert.AreEqual(KnJoinStatus.Question, Check(new ScriptedProof(), online: 3, max: 3).Poll(Conn(1), Payload(request: "r")).Status);
+            m_Bans.Banned[AccountA] = "banned";
+            KnJoinVerdict v = Check(new ScriptedProof()).Poll(Conn(2), Payload(request: "r"));
             Assert.AreEqual(KnJoinStatus.Refused, v.Status);
-            Assert.AreEqual(KnRefuseReason.Refused, v.Reason);
+            Assert.AreEqual(KnRefuseReason.Banned, v.Reason);
+        }
+
+        [Test]
+        public void CharacterQuestion_WithoutProof_IsRefusedAsNoProof()
+        {
+            var check = Check(new ScriptedProof { Rule = (t, p) => KnProof.Failed("bad") });
+            Assert.AreEqual(KnRefuseReason.NoProof, check.Poll(Conn(1), Payload(request: "r")).Reason);
         }
 
         [Test]
