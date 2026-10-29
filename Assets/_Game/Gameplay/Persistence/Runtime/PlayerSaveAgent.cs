@@ -18,7 +18,7 @@ namespace KryticalNova.Persistence
     /// A player without a saved character behind it (a test avatar) is simply never saved.
     /// </summary>
     [DisallowMultipleComponent]
-    public sealed class PlayerSaveAgent : NetworkBehaviour, ISaveScheduler
+    public sealed class PlayerSaveAgent : NetworkBehaviour, ISaveScheduler, IServerLeaving
     {
         [Tooltip("Seconds between automatic saves of this player.")]
         [SerializeField, Min(10f)] private float autosaveSeconds = 60f;
@@ -103,7 +103,7 @@ namespace KryticalNova.Persistence
         {
             // Leaving the world: the select screen is next, and shows what was worn at this moment.
             if (wornDue >= 0f) RememberWorn();
-            if (IsServer) SaveAndRelease();
+            if (IsServer) OnServerLeaving();
             Accessibility.Changed -= SendAgreement;
             base.OnNetworkDespawn();
         }
@@ -409,6 +409,9 @@ namespace KryticalNova.Persistence
             if (character == null || !HasAuthority) return;
             nextSave = Mathf.Min(nextSave, Time.unscaledTime + Mathf.Max(0f, withinSeconds));
         }
+
+        /// <summary>The server is about to destroy this body: the character is saved and the account let go (twice is harmless).</summary>
+        public void OnServerLeaving() => SaveAndRelease();
 
         /// <summary>Saves and lets go of the character (the player left, or the offline avatar gave way to a session).</summary>
         internal void SaveAndRelease()

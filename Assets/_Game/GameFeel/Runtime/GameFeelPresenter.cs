@@ -899,16 +899,14 @@ namespace KryticalNova.GameFeel
         private static bool IsPlayer(Transform actor)
         {
             if (actor == null) return false;
-            var net = actor.GetComponentInParent<Unity.Netcode.NetworkObject>();
-            return net != null && net.IsPlayerObject;
+            return WorldTargets.IsPlayer(actor);
         }
 
         /// <summary>The player of this machine (or anyone, in a game with no network).</summary>
         private static bool IsLocalPlayer(Transform actor)
         {
             if (actor == null) return false;
-            var net = actor.GetComponentInParent<Unity.Netcode.NetworkObject>();
-            return net == null || !net.IsSpawned || (net.IsPlayerObject && net.IsOwner);
+            return WorldTargets.IsLocalPlayer(actor);
         }
 
         /// <summary>The local player's own kill: the camera is shoved the way the blow went, so the kill reads as theirs.</summary>

@@ -1,6 +1,6 @@
 using System;
 using System.Text;
-using Unity.Netcode;
+using KryticalNova.Core;
 using Unity.Profiling;
 using UnityEngine;
 
@@ -260,21 +260,16 @@ namespace KryticalNova.UI
 
         private void WriteNetwork()
         {
-            NetworkManager network = NetworkManager.Singleton;
-            if (network == null || !network.IsListening)
+            if (!NetSession.IsRunning)
             {
                 Line("Session", "none");
                 return;
             }
-            Line("Session", network.IsHost ? "host" : network.IsServer ? "server" : "client");
-            if (network.IsClient && !network.IsServer)
-            {
-                ulong ping = network.NetworkConfig.NetworkTransport.GetCurrentRtt(NetworkManager.ServerClientId);
-                Line("Ping", ping + " ms");
-            }
-            if (network.IsServer) Line("Players", network.ConnectedClientsIds.Count.ToString());
-            if (network.NetworkTickSystem != null) Line("Tick rate", network.NetworkTickSystem.TickRate + " a second");
-            if (network.SpawnManager != null) Line("Networked objects", network.SpawnManager.SpawnedObjectsList.Count.ToString());
+            Line("Session", NetSession.ModeWord);
+            if (NetSession.TryGetRttMs(out long ping)) Line("Ping", ping + " ms");
+            if (NetSession.IsServer) Line("Players", NetSession.PlayerCount.ToString());
+            if (NetSession.TickRate > 0) Line("Tick rate", NetSession.TickRate + " a second");
+            if (NetSession.NetworkedObjectCount >= 0) Line("Networked objects", NetSession.NetworkedObjectCount.ToString());
         }
 
         private void Line(string label, string value) => text.Append(label.PadRight(22)).Append(value).Append('\n');

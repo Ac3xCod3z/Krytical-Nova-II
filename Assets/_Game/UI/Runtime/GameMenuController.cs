@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using KryticalNova.CharacterCreation;
+using KryticalNova.Core;
 using KryticalNova.Items;
 using KryticalNova.Networking;
 using NetworkConnectionManager = KryticalNova.Networking.NetworkConnectionManager;
@@ -165,8 +166,7 @@ namespace KryticalNova.UI
         /// <summary>A player who was in someone's session and no longer is, without having asked to leave, is told so.</summary>
         private void WatchSession()
         {
-            NetworkManager network = NetworkManager.Singleton;
-            bool inSession = network != null && network.IsConnectedClient && !network.IsServer;
+            bool inSession = NetSession.IsConnectedClient && !NetSession.IsServer;
             if (wasInSession && !inSession && view != View.Working && view != View.Leaving && !LeftByChoice())
             {
                 // The server's own words when it gave any (a GM sent them away, a shutdown, a full server).
@@ -280,9 +280,8 @@ namespace KryticalNova.UI
         private static string WhoLine()
         {
             string name = CharacterName();
-            NetworkManager network = NetworkManager.Singleton;
-            string session = network == null || !network.IsListening ? "not in a session"
-                : network.IsHost ? "hosting" : network.IsServer ? "running a server" : "in a session";
+            string session = !NetSession.IsRunning ? "not in a session"
+                : NetSession.IsHost ? "hosting" : NetSession.IsServer ? "running a server" : "in a session";
             return name != null ? $"{name}  ·  {session}" : session;
         }
 
@@ -336,10 +335,9 @@ namespace KryticalNova.UI
         private static string LeavingNote(bool exit)
         {
             string where = exit ? "The game closes." : "You return to character select.";
-            NetworkManager network = NetworkManager.Singleton;
-            if (network != null && network.IsServer)
+            if (NetSession.IsServer)
             {
-                int others = network.ConnectedClientsIds.Count - (network.IsHost ? 1 : 0);
+                int others = NetSession.PlayerCount - (NetSession.IsHost ? 1 : 0);
                 if (others > 0)
                     return $"You are hosting. {others} other player{(others == 1 ? "" : "s")} will be disconnected. Everyone is saved first. {where}";
                 return $"You are hosting: the session ends when you leave. Your character is saved first. {where}";
