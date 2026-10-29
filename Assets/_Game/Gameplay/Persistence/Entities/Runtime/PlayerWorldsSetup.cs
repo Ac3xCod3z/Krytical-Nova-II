@@ -57,7 +57,16 @@ namespace KryticalNova.Persistence.Entities
         {
             var planner = new NavMeshPathPlanner();
             PlayerEntitiesSetup.Install(server, planner);
-            var rules = new PlayerAdmission { Planner = planner };
+            var rules = new PlayerAdmission
+            {
+                Planner = planner,
+                // Entry and every later change of a player's look: observers fetch the text by its new version (step 8).
+                LookChanged = (body, ghost, text) =>
+                {
+                    if (!server.IsCreated) return;
+                    server.GetExistingSystemManaged<PlayerLookServerSystem>()?.SetLook(ghost, text);
+                },
+            };
             var admission = new ServerBodyAdmission(server, prefab ?? (Func<GameObject>)PlayerPrefab, rules)
             {
                 Picker = (IReadOnlyList<Vector3> occupied, out Vector3 position, out Quaternion rotation) =>
@@ -95,6 +104,8 @@ namespace KryticalNova.Persistence.Entities
             };
             PlayerEntitiesSetup.Install(client, planner);
             KryticalNova.Player.Entities.Presentation.PlayerPresentationSetup.Install(client, factory, new BodyClickSource());
+            var looks = client.GetExistingSystemManaged<PlayerLookClientSystem>();
+            if (looks != null) looks.Applier = new IdentityLookApplier();
             return factory;
         }
 

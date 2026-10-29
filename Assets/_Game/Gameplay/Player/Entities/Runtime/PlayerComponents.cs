@@ -104,6 +104,16 @@ namespace KryticalNova.Player.Entities
         [GhostField] public byte Value;
     }
 
+    /// <summary>
+    /// Which look the player wears (M3a-2b step 8): a number the server bumps whenever the look changes. The look itself (name and
+    /// recipe as text) is fetched once per number by the client and cached, so the snapshot carries four bytes, not the recipe.
+    /// 0 = no look yet (the body shows the prefab's own).
+    /// </summary>
+    public struct PlayerLook : IComponentData
+    {
+        [GhostField] public uint Version;
+    }
+
     /// <summary>Walk and run speed in mm/s, written by the server (rank, mount, gear), never recomputed by the client in the loop.</summary>
     public struct MoveStats : IComponentData
     {

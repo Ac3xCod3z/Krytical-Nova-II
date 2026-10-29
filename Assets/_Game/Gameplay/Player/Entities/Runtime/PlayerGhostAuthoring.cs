@@ -32,6 +32,7 @@ namespace KryticalNova.Player.Entities
                 AddComponent<MoveState>(e);
                 AddComponent<PlayerPose>(e);
                 AddComponent<TeleportSeq>(e);
+                AddComponent<PlayerLook>(e);
                 AddComponent(e, new MoveStats { WalkMmps = a.walkMmps, RunMmps = a.runMmps });
                 AddBuffer<PathCorner>(e);
                 AddComponent<PathPlan>(e);

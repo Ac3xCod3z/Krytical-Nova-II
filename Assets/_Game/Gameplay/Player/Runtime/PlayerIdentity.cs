@@ -242,6 +242,16 @@ namespace KryticalNova.Player
         }
 
         /// <summary>
+        /// ClientView of the entity netcode (M3a-2b step 8): shows the look the server says this player wears (name, faction, body,
+        /// parts, height). Only what is seen changes: no starter kit, no save, nothing sent anywhere. An empty or unchanged look does nothing.
+        /// </summary>
+        public void ApplyView(in CharacterNetState state)
+        {
+            if (state.IsEmpty || state.Equals(current)) return;
+            Apply(state, grantKit: false);
+        }
+
+        /// <summary>
         /// Server (or offline) only: gives the character another look and shows it to everyone. The recipe is
         /// checked like a new character's; what may differ from the old look is the caller's business.
         /// </summary>
@@ -277,7 +287,7 @@ namespace KryticalNova.Player
             if (IsSpawned) netState.Value = state; // the other games apply it
         }
 
-        private void Apply(CharacterNetState state)
+        private void Apply(CharacterNetState state, bool grantKit = true)
         {
             current = state;
             lineage = database != null ? database.GetLineage(state.lineage) : null;
@@ -288,7 +298,7 @@ namespace KryticalNova.Player
             FitBodyToHeight(state.ToRecipe().HeightScale);
             if (combatEntity != null) combatEntity.SetEntityName(CharacterName);
             // A new character starts in the level-1 outfit of its own pack, holding its Discipline's weapon.
-            if (inventory != null && (!IsSpawned || IsServer)) inventory.ServerGrantStarterKit(GearPack, Faction, Body, Discipline);
+            if (grantKit && inventory != null && (!IsSpawned || IsServer)) inventory.ServerGrantStarterKit(GearPack, Faction, Body, Discipline);
             // The player's own game keeps its copy of the look in step, so the select screen shows the same character.
             if ((!IsSpawned || IsOwner) && CharacterSession.TryGetActive(out CharacterProfile mine) && mine.id == characterId)
                 CharacterSession.RememberRecipe(state.ToRecipe());
