@@ -260,3 +260,6 @@ Linux (see `online-linux-cloud-servers-plan.md`, untracked in the real repo).
 2. Where Linux parity runs: spare machine / WSL2 / cloud VM. Recommend WSL2 server-only for tests, cloud later.
 3. Prediction-error and tick thresholds in section 5: accept starting values or set your own? Recommend accept, tune after M2.
 4. Bots may bypass sign-in on the TEST server only (as the measure server does): yes/no. Recommend yes, compiled out of release builds.
+
+## Addendum (29 Oct 2026): built-player tests on this PC and Norton Behavioral Protection
+Freshly built, unsigned player exes (Unity Mono/IL2CPP, server and client) are flagged `IDP.Generic` by Norton **Behavioral Protection**: all threads end up `Suspended`, and the exe may be quarantined. Folder exclusions in the normal scan list do not stop it. Layer D tests (built server + clients) therefore need one of: a Linux/WSL server with a Linux headless client; a signed build; or the owner turning Behavioral Protection off (or excluding the exes there) for the test window. See the migration plan, section 31 and 31.1. A hung built player: look at thread states first.
