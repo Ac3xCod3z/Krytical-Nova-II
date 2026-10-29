@@ -91,6 +91,8 @@ namespace KryticalNova.Networking.Entities
         {
             KnNetDefaults.Apply(server);
             KnStopRequests.Reset();
+            var stopSystem = server.GetExistingSystemManaged<KnStopSystem>();
+            if (stopSystem != null) stopSystem.Machine.GraceTicks = KnNetDefaults.StopGraceTicks(settings.stopGraceSeconds > 0f ? settings.stopGraceSeconds : KnNetDefaults.StopGraceSeconds);
 
             var assembler = server.GetExistingSystemManaged<KnApprovalAssembler>();
             assembler.JoinCheck = BuildJoinCheck(settings, GameBuild.Version, Application.isEditor, ProjectId(settings), () => assembler.ApprovedCount);

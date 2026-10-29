@@ -26,11 +26,15 @@ namespace KryticalNova.Networking.Entities
 
         private EntityQuery m_Connections;
         private EntityQuery m_Stopping;
+        private EntityQuery m_Open;
+        private EntityQuery m_Driver;
 
         protected override void OnCreate()
         {
             Machine = new KnStopMachine(this);
             m_Connections = GetEntityQuery(ComponentType.ReadOnly<NetworkStreamConnection>(), ComponentType.Exclude<NetworkStreamRequestDisconnect>());
+            m_Driver = GetEntityQuery(ComponentType.ReadOnly<NetworkStreamDriver>());
+            m_Open = GetEntityQuery(ComponentType.ReadOnly<NetworkStreamConnection>());
             m_Stopping = GetEntityQuery(ComponentType.ReadOnly<KnServerStopping>());
         }
 
@@ -67,6 +71,23 @@ namespace KryticalNova.Networking.Entities
             var connections = m_Connections.ToEntityArray(Allocator.Temp);
             for (int i = 0; i < connections.Length; i++)
                 EntityManager.AddComponentData(connections[i], new NetworkStreamRequestDisconnect { Reason = NetworkStreamDisconnectReason.ConnectionClose });
+            connections.Dispose();
+        }
+
+        int IKnStopActions.OpenConnections() => m_Open.CalculateEntityCount();
+
+        // The legal way (NetworkStreamDriver.Disconnect): the transport connection is closed now; NetworkStreamReceiveSystem sees it
+        // as Disconnected on its next update and destroys the entity. Destroying the entity ourselves would leave the socket open.
+        void IKnStopActions.ForceCloseAll()
+        {
+            if (m_Open.IsEmpty || m_Driver.IsEmpty) return;
+            NetworkStreamDriver driver = m_Driver.GetSingleton<NetworkStreamDriver>();
+            var connections = m_Open.ToEntityArray(Allocator.Temp);
+            for (int i = 0; i < connections.Length; i++)
+            {
+                try { driver.Disconnect(EntityManager, connections[i]); }
+                catch (Exception e) { Debug.LogWarning("[KnServer] Could not force-close a connection: " + e.Message); }
+            }
             connections.Dispose();
         }
 

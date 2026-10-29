@@ -39,6 +39,8 @@ namespace KryticalNova.Networking.Entities
         public bool devBots;
         /// <summary>The Unity project the sign-in tokens must belong to; "" = this build's own (<c>Application.cloudProjectId</c>).</summary>
         public string cloudProjectId = "";
+        /// <summary>The most seconds the stop waits for the players' connections to close before it force-closes them and quits (default <see cref="KnNetDefaults.StopGraceSeconds"/>).</summary>
+        public float stopGraceSeconds = KnNetDefaults.StopGraceSeconds;
 
         /// <summary>"main" or "map" (<c>-role</c> on the command line only, as in the NGO server).</summary>
         [NonSerialized] public string role = "main";

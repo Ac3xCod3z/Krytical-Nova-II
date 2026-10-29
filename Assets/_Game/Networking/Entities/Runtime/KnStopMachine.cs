@@ -51,16 +51,22 @@ namespace KryticalNova.Networking.Entities
         void CloseDoor();
         /// <summary>Save every player and the world through Core's IServerShutdown. May throw; the machine goes on.</summary>
         void SaveAll();
-        /// <summary>Close every open connection.</summary>
+        /// <summary>Ask every open connection to close (the polite way: the transport says goodbye).</summary>
         void DisconnectAll();
+        /// <summary>How many connections are still open.</summary>
+        int OpenConnections();
+        /// <summary>Close, at once and without waiting, every connection that is still open (the grace ran out).</summary>
+        void ForceCloseAll();
         void Quit(int exitCode);
         void Log(string line);
     }
 
     /// <summary>
     /// The server's safe stop as a small state machine, one <see cref="Step"/> per simulation tick on the main thread:
-    /// first step after the request: close the door, save everyone, disconnect everyone; then wait
-    /// <see cref="QuitDelayTicks"/> ticks so the disconnects leave the machine; then quit once with exit code 0.
+    /// first step after the request: close the door, save everyone, disconnect everyone; then wait for the
+    /// connections to close, at most <see cref="GraceTicks"/> ticks (it quits at once when they are all gone, and force-closes
+    /// whatever is still open when the grace is over: the transport's own disconnect timeout took 32 s in the M2c run); then quit
+    /// once with exit code 0.
     /// <see cref="Request"/> is idempotent. A save that throws is logged and the stop goes on (a hung server is worse than a late
     /// save, and every player was also saved when their connection closed).
     /// </summary>
@@ -72,8 +78,8 @@ namespace KryticalNova.Networking.Entities
         private bool m_Began;
         private int m_TicksLeft;
 
-        /// <summary>Ticks between the disconnects and the quit (about a second at 30 Hz).</summary>
-        public int QuitDelayTicks = 30;
+        /// <summary>The most ticks to wait for the connections to close after the disconnects (default 3 s at the simulation rate).</summary>
+        public int GraceTicks = KnNetDefaults.StopGraceTicks(KnNetDefaults.StopGraceSeconds);
 
         public Phase Current { get; private set; } = Phase.Running;
         public string Reason { get; private set; }
@@ -103,11 +109,19 @@ namespace KryticalNova.Networking.Entities
                 Safely(m_Actions.CloseDoor, "closing the door");
                 Safely(m_Actions.SaveAll, "saving");
                 Safely(m_Actions.DisconnectAll, "disconnecting");
-                m_TicksLeft = Math.Max(1, QuitDelayTicks);
+                m_TicksLeft = Math.Max(1, GraceTicks);
                 m_Actions.Log("[KnServer] Saved. Waiting for the players to be sent away, then quitting.");
                 return;
             }
-            if (--m_TicksLeft > 0) return;
+            int open = 0;
+            try { open = m_Actions.OpenConnections(); }
+            catch (Exception e) { m_Actions.Log("[KnServer] Problem while counting connections (the stop goes on): " + e.GetType().Name + ": " + e.Message); }
+            if (open > 0 && --m_TicksLeft > 0) return;
+            if (open > 0)
+            {
+                m_Actions.Log("[KnServer] " + open + " connection(s) did not close in time: closing them now.");
+                Safely(m_Actions.ForceCloseAll, "closing the last connections");
+            }
             Current = Phase.Done;
             m_Actions.Quit(ExitCode);
         }

@@ -16,6 +16,15 @@ namespace KryticalNova.Networking.Entities
         /// </summary>
         public const uint HandshakeApprovalTimeoutMs = 15_000;
 
+        /// <summary>
+        /// The most the stop waits for the connections to close after the disconnects were sent (seconds; the server's
+        /// <c>stopGraceSeconds</c> setting overrides it). Still-open connections are force-closed after it, then the server quits.
+        /// </summary>
+        public const float StopGraceSeconds = 3f;
+
+        /// <summary>Whole simulation ticks for a grace in seconds (at least 1).</summary>
+        public static int StopGraceTicks(float seconds) => System.Math.Max(1, (int)System.Math.Ceiling(seconds * SimulationTickRate));
+
         public static ClientServerTickRate TickRate()
         {
             var rate = new ClientServerTickRate

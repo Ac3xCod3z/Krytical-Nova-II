@@ -15,9 +15,14 @@ namespace KryticalNova.Networking.Entities.Tests
         {
             public readonly List<string> Calls = new List<string>();
             public bool SaveThrows;
+            public int Open;                 // connections "still open"
+            public int GoneAfterChecks = -1; // >= 0: Open drops to 0 after this many checks of OpenConnections
+            private int m_Checks;
             public void CloseDoor() => Calls.Add("door");
             public void SaveAll() { Calls.Add("save"); if (SaveThrows) throw new InvalidOperationException("disk full"); }
             public void DisconnectAll() => Calls.Add("disconnect");
+            public int OpenConnections() { if (GoneAfterChecks >= 0 && ++m_Checks > GoneAfterChecks) Open = 0; return Open; }
+            public void ForceCloseAll() { Calls.Add("force"); Open = 0; }
             public void Quit(int exitCode) => Calls.Add("quit:" + exitCode);
             public void Log(string line) => Calls.Add("log");
             public string Order => string.Join(",", Calls.FindAll(c => c != "log"));
@@ -54,26 +59,58 @@ namespace KryticalNova.Networking.Entities.Tests
         [Test]
         public void Machine_ClosesTheDoor_Saves_Disconnects_ThenQuitsOnce_WithCodeZero()
         {
-            var fake = new Fake();
-            var machine = new KnStopMachine(fake) { QuitDelayTicks = 5 };
+            var fake = new Fake { Open = 2, GoneAfterChecks = 3 };
+            var machine = new KnStopMachine(fake) { GraceTicks = 50 };
             Assert.IsTrue(machine.Request("test"));
             machine.Step();
             Assert.AreEqual("door,save,disconnect", fake.Order, "all three happen in the first step, in this order");
             for (int i = 0; i < 3; i++) machine.Step();
-            Assert.AreEqual("door,save,disconnect", fake.Order, "no quit while the disconnects are leaving");
+            Assert.AreEqual("door,save,disconnect", fake.Order, "no quit while the connections are still open");
             machine.Step();
-            machine.Step();
-            Assert.AreEqual("door,save,disconnect,quit:0", fake.Order);
+            Assert.AreEqual("door,save,disconnect,quit:0", fake.Order, "all gone: quit at once, nothing forced");
             Assert.AreEqual(KnStopMachine.Phase.Done, machine.Current);
             for (int i = 0; i < 50; i++) machine.Step();
             Assert.AreEqual("door,save,disconnect,quit:0", fake.Order, "quit happens once");
         }
 
         [Test]
+        public void Machine_AllConnectionsAlreadyGone_QuitsAtOnce_NotAfterTheGrace()
+        {
+            var fake = new Fake { Open = 0 };
+            var machine = new KnStopMachine(fake) { GraceTicks = 1000 };
+            machine.Request("test");
+            machine.Step();
+            machine.Step();
+            Assert.AreEqual("door,save,disconnect,quit:0", fake.Order);
+        }
+
+        [Test]
+        public void Machine_ConnectionsThatLinger_AreForceClosed_AfterTheGrace_ThenItQuits()
+        {
+            var fake = new Fake { Open = 3 }; // never close by themselves
+            var machine = new KnStopMachine(fake) { GraceTicks = 5 };
+            machine.Request("test");
+            machine.Step();
+            for (int i = 0; i < 4; i++) machine.Step();
+            Assert.AreEqual("door,save,disconnect", fake.Order, "still inside the grace");
+            machine.Step();
+            Assert.AreEqual("door,save,disconnect,force,quit:0", fake.Order, "force-close first, then quit");
+            for (int i = 0; i < 50; i++) machine.Step();
+            Assert.AreEqual("door,save,disconnect,force,quit:0", fake.Order, "once");
+        }
+
+        [Test]
+        public void Machine_DefaultGrace_IsThreeSecondsOfTicks()
+        {
+            Assert.AreEqual(90, new KnStopMachine(new Fake()).GraceTicks);
+            Assert.AreEqual(1, KnNetDefaults.StopGraceTicks(0f));
+        }
+
+        [Test]
         public void Machine_AskedTwice_StopsOnce()
         {
             var fake = new Fake();
-            var machine = new KnStopMachine(fake) { QuitDelayTicks = 2 };
+            var machine = new KnStopMachine(fake) { GraceTicks = 2 };
             Assert.IsTrue(machine.Request("first"));
             Assert.IsFalse(machine.Request("second"));
             machine.Step();
@@ -87,12 +124,12 @@ namespace KryticalNova.Networking.Entities.Tests
         [Test]
         public void Machine_ASaveThatThrows_IsLogged_AndTheStopStillFinishes()
         {
-            var fake = new Fake { SaveThrows = true };
-            var machine = new KnStopMachine(fake) { QuitDelayTicks = 1 };
+            var fake = new Fake { SaveThrows = true, Open = 1 };
+            var machine = new KnStopMachine(fake) { GraceTicks = 1 };
             machine.Request("test");
             machine.Step();
             machine.Step();
-            Assert.AreEqual("door,save,disconnect,quit:0", fake.Order);
+            Assert.AreEqual("door,save,disconnect,force,quit:0", fake.Order, "a throwing save still disconnects, force-closes and quits");
             Assert.IsTrue(fake.Calls.Exists(c => c == "log"));
         }
 
@@ -216,7 +253,7 @@ namespace KryticalNova.Networking.Entities.Tests
             Assert.AreEqual(2, KnTestWorld.Count<NetworkId>(tw.Server));
 
             var stop = tw.Server.GetExistingSystemManaged<KnStopSystem>();
-            stop.Machine.QuitDelayTicks = 20;
+            stop.Machine.GraceTicks = 20;
             var events = new List<string>();
             int connectedAtSave = -1;
             ServerShutdown.Handler = ServerShutdown.FromAction(() =>
@@ -259,7 +296,7 @@ namespace KryticalNova.Networking.Entities.Tests
             tw.Tick(3);
 
             var stop = tw.Server.GetExistingSystemManaged<KnStopSystem>();
-            stop.Machine.QuitDelayTicks = 400; // stay in the stopping phase for the whole test
+            stop.Machine.GraceTicks = 400; // stay in the stopping phase for the whole test
             ServerShutdown.Handler = ServerShutdown.FromAction(() => { });
             KnStopSystem.QuitOverride = _ => { };
             KnStopRequests.Request(KnStopSource.Console);
@@ -274,7 +311,7 @@ namespace KryticalNova.Networking.Entities.Tests
         {
             using var tw = new KnTestWorld();
             tw.CreateWorlds(0);
-            tw.Server.GetExistingSystemManaged<KnStopSystem>().Machine.QuitDelayTicks = 2;
+            tw.Server.GetExistingSystemManaged<KnStopSystem>().Machine.GraceTicks = 2;
             int quits = 0;
             KnStopSystem.QuitOverride = _ => quits++;
             KnStopRequests.Request(KnStopSource.Code);
