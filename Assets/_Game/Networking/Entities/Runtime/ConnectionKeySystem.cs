@@ -49,6 +49,12 @@ namespace KryticalNova.Networking.Entities
                 ulong serial = ++s_Serial;
                 PlayerKey key = PlayerKeys.Mint(serial);
                 EntityManager.AddComponentData(connections[i], new ConnectionPlayerKey { Key = key.Value, Serial = serial });
+                // The account the join check proved goes where the rest of the game looks for it (Core's ServerAccounts, by PlayerKey).
+                if (EntityManager.HasComponent<ConnectionAccount>(connections[i]))
+                {
+                    var account = EntityManager.GetComponentData<ConnectionAccount>(connections[i]);
+                    ServerAccounts.Remember(key, account.Account.ToString(), account.OldAccount.ToString());
+                }
             }
             connections.Dispose();
         }
@@ -58,7 +64,11 @@ namespace KryticalNova.Networking.Entities
             // The world goes away with connections still open: their keys die with it.
             using var all = EntityManager.CreateEntityQuery(ComponentType.ReadOnly<ConnectionPlayerKey>());
             var keys = all.ToComponentDataArray<ConnectionPlayerKey>(Allocator.Temp);
-            for (int i = 0; i < keys.Length; i++) PlayerKeys.Release(keys[i].Serial);
+            for (int i = 0; i < keys.Length; i++)
+            {
+                ServerAccounts.Forget(keys[i].PlayerKey);
+                PlayerKeys.Release(keys[i].Serial);
+            }
             keys.Dispose();
         }
     }

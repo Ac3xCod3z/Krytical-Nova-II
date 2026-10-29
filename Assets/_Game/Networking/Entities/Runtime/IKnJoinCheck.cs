@@ -9,16 +9,25 @@ namespace KryticalNova.Networking.Entities
         public readonly KnJoinStatus Status;
         public readonly KnRefuseReason Reason;
         public readonly string Detail;
+        /// <summary>When accepted: the account the connection plays under (empty from a check that proves nothing).</summary>
+        public readonly string Account;
+        public readonly string OldAccount;
+        public readonly bool Proven;
 
-        public KnJoinVerdict(KnJoinStatus status, KnRefuseReason reason, string detail)
+        public KnJoinVerdict(KnJoinStatus status, KnRefuseReason reason, string detail, string account = null, string oldAccount = null, bool proven = false)
         {
             Status = status;
             Reason = reason;
             Detail = detail;
+            Account = account;
+            OldAccount = oldAccount;
+            Proven = proven;
         }
 
         public static KnJoinVerdict Pending => new KnJoinVerdict(KnJoinStatus.Pending, KnRefuseReason.None, null);
         public static KnJoinVerdict Accept => new KnJoinVerdict(KnJoinStatus.Accepted, KnRefuseReason.None, null);
+        public static KnJoinVerdict AcceptAs(string account, string oldAccount, bool proven) =>
+            new KnJoinVerdict(KnJoinStatus.Accepted, KnRefuseReason.None, null, account, oldAccount, proven);
         public static KnJoinVerdict Refuse(KnRefuseReason reason, string detail) => new KnJoinVerdict(KnJoinStatus.Refused, reason, detail);
     }
 
@@ -36,7 +45,7 @@ namespace KryticalNova.Networking.Entities
         void Forget(Entity connection);
     }
 
-    /// <summary>The default until the real check lands (M2b): lets everyone in. A test implementation, not for a public server.</summary>
+    /// <summary>Lets everyone in, proving nothing. For tests and the Editor; the dedicated server uses <see cref="KnJoinCheck"/>.</summary>
     public sealed class AcceptAllJoinCheck : IKnJoinCheck
     {
         public KnJoinVerdict Poll(Entity connection, string payload) => KnJoinVerdict.Accept;

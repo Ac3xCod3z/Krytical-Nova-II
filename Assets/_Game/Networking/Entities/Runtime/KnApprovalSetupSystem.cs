@@ -7,7 +7,11 @@ namespace KryticalNova.Networking.Entities
     /// Switches connection approval on in every world that has this assembly (server and client both need it), once, before the
     /// driver listens or connects. After this every join goes through <see cref="KnApprovalRequest"/> chunks.
     /// </summary>
+#if KN_DEV_BOTS || UNITY_EDITOR
     [WorldSystemFilter(WorldSystemFilterFlags.ServerSimulation | WorldSystemFilterFlags.ClientSimulation | WorldSystemFilterFlags.ThinClientSimulation)]
+#else
+    [WorldSystemFilter(WorldSystemFilterFlags.ServerSimulation | WorldSystemFilterFlags.ClientSimulation)]
+#endif
     [UpdateInGroup(typeof(NetworkReceiveSystemGroup))]
     [UpdateBefore(typeof(NetworkStreamConnectSystem))]
     [UpdateBefore(typeof(NetworkStreamListenSystem))]

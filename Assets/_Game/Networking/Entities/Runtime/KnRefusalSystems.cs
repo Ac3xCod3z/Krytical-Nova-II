@@ -35,7 +35,11 @@ namespace KryticalNova.Networking.Entities
     }
 
     /// <summary>Client: keeps the server's <see cref="JoinRefusedRpc"/> as the <see cref="KnJoinRefusal"/> singleton for the join UI.</summary>
+#if KN_DEV_BOTS || UNITY_EDITOR
     [WorldSystemFilter(WorldSystemFilterFlags.ClientSimulation | WorldSystemFilterFlags.ThinClientSimulation)]
+#else
+    [WorldSystemFilter(WorldSystemFilterFlags.ClientSimulation)]
+#endif
     public partial class KnJoinRefusedClientSystem : SystemBase
     {
         private EntityQuery m_Refused;

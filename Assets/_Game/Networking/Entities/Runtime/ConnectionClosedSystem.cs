@@ -49,6 +49,7 @@ namespace KryticalNova.Networking.Entities
                 for (int h = 0; h < Handlers.Count; h++) Handlers[h].OnConnectionClosed(key);
                 GameObject body = BodyOf?.Invoke(key);
                 if (body != null) ServerLeaving.Notify(body);
+                ServerAccounts.Forget(key); // last: the handlers and the body above still read the account
             }
             keys.Dispose();
         }

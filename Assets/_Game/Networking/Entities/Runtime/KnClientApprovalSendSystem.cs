@@ -11,7 +11,11 @@ namespace KryticalNova.Networking.Entities
     /// <see cref="KnJoinPayload"/> as <see cref="KnApprovalRequest"/> chunks, once. With no payload it sends nothing and the
     /// server's timeout ends the attempt.
     /// </summary>
+#if KN_DEV_BOTS || UNITY_EDITOR
     [WorldSystemFilter(WorldSystemFilterFlags.ClientSimulation | WorldSystemFilterFlags.ThinClientSimulation)]
+#else
+    [WorldSystemFilter(WorldSystemFilterFlags.ClientSimulation)] // release builds: a bot (thin client) never gets a join system
+#endif
     public partial class KnClientApprovalSendSystem : SystemBase
     {
         private EntityQuery m_Waiting;

@@ -37,11 +37,18 @@ namespace KryticalNova.Networking.Entities
         private readonly List<Entity> m_Keys = new List<Entity>();
         private EntityQuery m_Chunks;
         private EntityQuery m_Limits;
+        private EntityQuery m_Stopping;
+        private EntityQuery m_Approved;
+
+        /// <summary>Connections let in so far that are still open (what "server full" counts). Main thread.</summary>
+        public int ApprovedCount => m_Approved.CalculateEntityCount();
 
         protected override void OnCreate()
         {
             m_Chunks = GetEntityQuery(ComponentType.ReadOnly<ReceiveRpcCommandRequest>(), ComponentType.ReadOnly<KnApprovalRequest>());
             m_Limits = GetEntityQuery(ComponentType.ReadOnly<KnApprovalLimits>());
+            m_Stopping = GetEntityQuery(ComponentType.ReadOnly<KnServerStopping>());
+            m_Approved = GetEntityQuery(ComponentType.ReadOnly<ConnectionApproved>());
             JoinCheck = KnBootstrap.JoinCheckFactory?.Invoke() ?? new AcceptAllJoinCheck();
         }
 
@@ -49,6 +56,7 @@ namespace KryticalNova.Networking.Entities
         {
             KnApprovalLimits limits = m_Limits.TryGetSingleton(out KnApprovalLimits custom) ? custom : KnApprovalLimits.Default;
             double now = World.Time.ElapsedTime;
+            bool stopping = !m_Stopping.IsEmpty;
             var ecb = new EntityCommandBuffer(Allocator.Temp);
 
             if (!m_Chunks.IsEmpty)
@@ -83,7 +91,9 @@ namespace KryticalNova.Networking.Entities
                     continue;
                 }
                 if (entry.Decided) continue; // kept until the connection is gone, so late chunks are swallowed
-                if (now - entry.FirstSeen > limits.MaxSeconds)
+                if (stopping)
+                    Refuse(ecb, connection, entry, KnRefuseReason.ServerStopping, "The server is restarting. Join again in a minute.");
+                else if (now - entry.FirstSeen > limits.MaxSeconds)
                     Refuse(ecb, connection, entry, KnRefuseReason.TimedOut, "The join took too long.");
                 else if (entry.Complete)
                     Apply(ecb, connection, entry, JoinCheck.Poll(connection, entry.Payload));
@@ -132,7 +142,17 @@ namespace KryticalNova.Networking.Entities
                 case KnJoinStatus.Accepted:
                     entry.Decided = true;
                     JoinCheck.Forget(connection);
-                    ecb.AddComponent<ConnectionApproved>(connection);
+                    // Direct, not through the buffer: the next join check in this same tick must already count this connection (server full).
+                    EntityManager.AddComponent<ConnectionApproved>(connection);
+                    if (!string.IsNullOrEmpty(verdict.Account))
+                    {
+                        EntityManager.AddComponentData(connection, new ConnectionAccount
+                        {
+                            Account = KnFixed.Text64(verdict.Account),
+                            OldAccount = KnFixed.Text64(verdict.OldAccount),
+                            Proven = verdict.Proven,
+                        });
+                    }
                     break;
                 case KnJoinStatus.Refused:
                     Refuse(ecb, connection, entry, verdict.Reason, verdict.Detail);
@@ -145,7 +165,7 @@ namespace KryticalNova.Networking.Entities
             entry.Decided = true;
             JoinCheck.Forget(connection);
             Entity rpc = ecb.CreateEntity();
-            ecb.AddComponent(rpc, new JoinRefusedRpc { Reason = (byte)reason, Detail = new FixedString128Bytes(detail ?? string.Empty) });
+            ecb.AddComponent(rpc, new JoinRefusedRpc { Reason = (byte)reason, Detail = KnFixed.Text512(detail) });
             ecb.AddComponent(rpc, new SendRpcCommandRequest { TargetConnection = connection });
             ecb.AddComponent(connection, new KnPendingDisconnect { TicksLeft = RefuseDisconnectTicks });
         }

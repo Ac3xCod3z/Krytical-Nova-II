@@ -246,6 +246,24 @@ namespace KryticalNova.Networking.Entities.Tests
             return c;
         }
 
+        /// <summary>
+        /// A development bot: a thin-client world joining with <paramref name="joinPayload"/>. Null (nothing created) while
+        /// <see cref="KnDevBots.Enabled"/> is off, which is the guard the tests pin.
+        /// </summary>
+        public World AddThinClient(string joinPayload, bool connect = true)
+        {
+            World c = KnDevBots.CreateWorld();
+            if (c == null) return null;
+            string old = JoinPayload;
+            JoinPayload = joinPayload;
+            Prepare(c, isServer: false);
+            JoinPayload = old;
+            Clients.Add(c);
+            Tick(1);
+            if (connect) ConnectClient(c);
+            return c;
+        }
+
         public void WaitConnected(int maxTicks = 600)
         {
             int used = TickUntil(() =>
