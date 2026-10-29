@@ -1,0 +1,33 @@
+{
+    "name": "KryticalNova.Persistence.Entities.Tests.PlayMode",
+    "rootNamespace": "KryticalNova.Persistence.Entities.Tests.Play",
+    "references": [
+        "KryticalNova.Runtime",
+        "KryticalNova.CharacterCreation",
+        "KryticalNova.Factions",
+        "KryticalNova.Items",
+        "KryticalNova.Progression",
+        "KryticalNova.Networking.Entities",
+        "KryticalNova.Persistence",
+        "KryticalNova.Persistence.Entities",
+        "KryticalNova.Player",
+        "KryticalNova.Player.Entities.Bodies",
+        "KryticalNova.Player.Entities.Presentation",
+        "Unity.Netcode.Runtime",
+        "Unity.Collections",
+        "UnityEngine.TestRunner"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "nunit.framework.dll"
+    ],
+    "autoReferenced": false,
+    "defineConstraints": [
+        "UNITY_INCLUDE_TESTS"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
