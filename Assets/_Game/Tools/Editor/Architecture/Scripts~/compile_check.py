@@ -10,7 +10,22 @@ Use it to check a refactor in a worktree while the owner's Editor stays open on 
     python ".../compile_check.py" --checkout C:/path/to/worktree --projects C:/path/to/main/folder
     python ".../compile_check.py" --server     also compile the runtime assemblies as the dedicated server does
                                                (UNITY_SERVER defined, Editor-only code left out)
+    python ".../compile_check.py" --ecs-library C:/path/to/clone   where the Entities / Netcode packages and their built DLLs are
 It prints the errors and exits 1 when any assembly fails. Warnings are not shown.
+
+Entities and Netcode for Entities (DOTS migration, M2b-2): an assembly whose .asmdef references Unity.Entities or Unity.NetCode is
+compiled WITH the packages' source generators, because without them a bad IJobEntity, ISystem or RPC compiles "green" and fails
+only in Unity (spike M1, "Compile gate"). For such an assembly this script
+  - adds the generator DLLs as <Analyzer> lines: Unity.Entities/SourceGenerators/*.dll (11 of them) and, for Unity.NetCode, the
+    NetCodeAnalyzers.dll and NetCodeSourceGenerator.dll plus the Netcode templates as <AdditionalFiles> (without them the
+    generator stops with "Missing internal Netcode package template");
+  - references the packages' own built DLLs (Library/ScriptAssemblies/<Name>.dll) for every assembly the .asmdef names that the
+    Editor's project files do not cover, and drops the template's package projects the .asmdef does not name;
+  - finds the packages in <ecs-library>/Library/PackageCache/com.unity.<entities|netcode>@*, else in the main folder's PackageCache,
+    else in the Editor install (UNITY_EDITOR_DATA, or Program Files/Unity/Hub/Editor/*/Editor/Data).
+<ecs-library> is --ecs-library, else the checkout when it has Library/ScriptAssemblies, else the --projects folder. It needs one
+Unity compile of that project to have happened (batch or Editor), so the DLLs exist; names that are still missing are listed at
+the end. Assemblies that reference neither are compiled exactly as before.
 
 What it cannot see: an assembly that exists only in the checkout (a new .asmdef) is made from its .asmdef's
 references and the runtime project's settings; package or vendor code that changed in the checkout is compiled from
@@ -41,6 +56,7 @@ def main_folder():
 
 
 PROJECTS = os.path.normpath(arg("--projects", main_folder()))
+ECS_LIB = os.path.normpath(arg("--ecs-library", CHECKOUT if os.path.isdir(os.path.join(CHECKOUT, "Library", "ScriptAssemblies")) else PROJECTS))
 GAME = os.path.join(CHECKOUT, "Assets", "_Game")
 OUT = os.path.join(CHECKOUT, "Temp", "compile-check")
 os.makedirs(OUT, exist_ok=True)
@@ -89,6 +105,77 @@ for folder, dirs, files in os.walk(GAME):
 # --- the project files ------------------------------------------------------------------------------------------------
 existing = {n[:-7] for n in os.listdir(PROJECTS) if n.endswith(".csproj")}
 ours = sorted(a for a in set(asmdefs) | {a for a in scripts if a.startswith("KryticalNova")} if a.startswith("KryticalNova"))
+# --- Entities / Netcode for Entities: source generators and the packages' built DLLs -------------------------------------
+ECS_ROOTS = ("Unity.Entities", "Unity.NetCode")
+ECS_EXTRA = ("Unity.Burst", "Unity.Collections", "Unity.Mathematics", "Unity.Entities", "Unity.Transforms")   # the generated code uses these
+ENTITIES_GENERATORS = ["Common.dll", "JobEntityGenerator.dll", "SystemGenerator.Common.dll", "SystemGenerator.EntityQueryBulkOperations.dll",
+                       "SystemGenerator.LambdaJobs.dll", "SystemGenerator.SystemAPI.Query.dll", "SystemGenerator.SystemAPI.QueryBuilder.dll",
+                       "SystemGenerator.SystemAPI.dll", "SystemGenerator.dll", "Unity.Entities.Analyzer.CodeFixes.dll", "Unity.Entities.Analyzer.dll"]
+NETCODE_GENERATORS = ["NetCodeAnalyzers.dll", "NetCodeSourceGenerator.dll"]
+SCRIPT_DLLS = os.path.join(ECS_LIB, "Library", "ScriptAssemblies")
+MISSING_ECS = set()
+
+
+def package_dir(prefix):
+    """The folder of package com.unity.<prefix>: this project's cache, the main folder's cache, then the Editor install."""
+    import glob
+    patterns = [os.path.join(ECS_LIB, "Library", "PackageCache", prefix + "@*"), os.path.join(PROJECTS, "Library", "PackageCache", prefix + "@*")]
+    data = os.environ.get("UNITY_EDITOR_DATA")
+    builtin = os.path.join("Resources", "PackageManager", "BuiltInPackages", prefix)
+    if data:
+        patterns.append(os.path.join(data, builtin))
+    patterns += [os.path.join("C:\\", "Program Files", "Unity", "Hub", "Editor", "*", "Editor", "Data", builtin),
+                 os.path.expanduser(os.path.join("~", "Unity", "Hub", "Editor", "*", "Editor", "Data", builtin))]
+    for pattern in patterns:
+        found = sorted(glob.glob(pattern))
+        if found:
+            return found[-1]
+    return None
+
+
+def ecs_names(asm):
+    """The names of the assemblies this .asmdef references (our own by their .asmdef name) and whether it is an Entities one."""
+    names = {guid_names.get(r, r) for r in asmdefs.get(asm, {}).get("references", [])}
+    return names, any(n.startswith(ECS_ROOTS) for n in names)
+
+
+def ecs_generators(names):
+    """<Analyzer> and <AdditionalFiles> lines for an assembly that references Unity.Entities and/or Unity.NetCode."""
+    lines = []
+    entities = package_dir("com.unity.entities")
+    netcode = package_dir("com.unity.netcode")
+    if any(n.startswith("Unity.Entities") or n.startswith("Unity.NetCode") for n in names):
+        folder = os.path.join(entities, "Unity.Entities", "SourceGenerators") if entities else None
+        found = [os.path.join(folder, d) for d in ENTITIES_GENERATORS if folder and os.path.exists(os.path.join(folder, d))]
+        if not found and folder and os.path.isdir(folder):
+            found = [os.path.join(folder, d) for d in sorted(os.listdir(folder)) if d.endswith(".dll")]
+        if not found:
+            MISSING_ECS.add("Entities source generators (com.unity.entities package not found)")
+        lines += [f'    <Analyzer Include="{d}" />' for d in found]
+    if any(n.startswith("Unity.NetCode") for n in names):
+        folder = os.path.join(netcode, "Runtime", "SourceGenerators") if netcode else None
+        found = [os.path.join(folder, d) for d in NETCODE_GENERATORS if folder and os.path.exists(os.path.join(folder, d))]
+        if len(found) != len(NETCODE_GENERATORS):
+            MISSING_ECS.add("Netcode source generators (com.unity.netcode package not found)")
+        lines += [f'    <Analyzer Include="{d}" />' for d in found]
+        if folder:
+            lines.append(f'    <AdditionalFiles Include="{os.path.join(folder, "Templates", "**", "*.NetCodeSourceGenerator.additionalfile")}" />')
+    return lines
+
+
+def ecs_references(names, present):
+    """<Reference> lines for the package DLLs an Entities assembly names that the template does not already have."""
+    lines = []
+    for n in sorted(names | set(ECS_EXTRA)):
+        if n.startswith("KryticalNova") or n in present:
+            continue
+        dll = os.path.join(SCRIPT_DLLS, n + ".dll")
+        if os.path.exists(dll):
+            lines.append(f'    <Reference Include="{n}"><HintPath>{dll}</HintPath></Reference>')
+        elif n in names:
+            MISSING_ECS.add(n)
+    return lines
+
 ITEM = re.compile(r'(<(?:Compile|None|Content|AdditionalFiles|EmbeddedResource) Include=")([^"]+)(")')
 PROJREF = re.compile(r'<ProjectReference Include="([^"]+)" />')
 
@@ -132,6 +219,12 @@ def make(asm):
         wanted = {guid_names.get(r, r) for r in asmdefs[asm].get("references", [])}
         refs = [r for r in refs if not r.startswith("KryticalNova") or r[:-7] in wanted]
         refs += [w + ".csproj" for w in wanted if w.startswith("KryticalNova") and w + ".csproj" not in refs]
+    ecs_lines = []
+    names, is_ecs = ecs_names(asm)
+    if is_ecs:   # the packages' projects the Editor wrote stay only where this .asmdef names them; the rest come as built DLLs
+        refs = [r for r in refs if r.startswith("KryticalNova") or r[:-7] in names]
+        present = {r[:-7] for r in refs} | set(re.findall(r'<Reference Include="([^",]+)', text))
+        ecs_lines = ecs_references(names, present) + ecs_generators(names)
     text = re.sub(r"\s*<ProjectReference Include=\"[^\"]+\" />", "", text)
     lines = []
     for r in refs:
@@ -140,6 +233,8 @@ def make(asm):
         lines.append(f'    <ProjectReference Include="{target}" />')
     compile_items = "\n".join(f'    <Compile Include="{p}" />' for p in sorted(scripts[asm]))
     block = f"  <ItemGroup>\n{compile_items}\n  </ItemGroup>\n  <ItemGroup>\n" + "\n".join(lines) + "\n  </ItemGroup>\n"
+    if ecs_lines:
+        block += "  <ItemGroup>\n" + "\n".join(ecs_lines) + "\n  </ItemGroup>\n"
     text = text.replace('  <Import Project="Sdk.targets"', block + '  <Import Project="Sdk.targets"', 1)
     path = os.path.join(OUT, asm + ".csproj")
     with open(path, "w", encoding="utf-8") as f:
@@ -171,6 +266,9 @@ for e in errors[:60]:
     print(e.replace(CHECKOUT + os.sep, ""))
 if len(errors) > 60:
     print(f"... and {len(errors) - 60} more")
+if MISSING_ECS:
+    print("Entities/Netcode inputs not found (compile once in Unity so Library/ScriptAssemblies exists, or pass --ecs-library): "
+          + ", ".join(sorted(MISSING_ECS)))
 print(f"{len(built) - len(failed)} of {len(built)} assemblies compiled{' (server defines)' if SERVER else ''}"
       + (f"; failed: {', '.join(failed)}" if failed else ""))
 sys.exit(1 if failed else 0)
