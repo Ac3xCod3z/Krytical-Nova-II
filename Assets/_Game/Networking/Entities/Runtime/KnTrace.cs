@@ -1,4 +1,3 @@
-#if KN_PROBE || UNITY_EDITOR || DEVELOPMENT_BUILD
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -8,6 +7,7 @@ using UnityEngine;
 namespace KryticalNova.Networking.Entities
 {
     /// <summary>
+    /// Compiled into every build (release servers too: the bootstrap and roster call it); it does nothing unless <c>-knout</c> is on the command line or <see cref="Configure"/> was called.
     /// A plain-file trace for the probe players (and Editor/development runs): one line per call with the time and thread, written with
     /// <c>File.AppendAllText</c> before anything that could block. Switched on by <see cref="Configure"/> (the probe client does it) or by
     /// <c>-knout &lt;folder&gt;</c> on the command line; otherwise every call returns at once. Found necessary in the first real-socket
@@ -54,4 +54,3 @@ namespace KryticalNova.Networking.Entities
         }
     }
 }
-#endif
