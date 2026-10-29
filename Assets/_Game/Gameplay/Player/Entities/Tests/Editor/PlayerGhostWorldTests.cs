@@ -49,11 +49,16 @@ namespace KryticalNova.Player.Entities.Tests
             Log($"click/arrive delay={delayMs} ms: common ticks={cmp.Common} mismatches={cmp.Mismatch} first={cmp.FirstMismatchTick}; " +
                 $"owner runs={diag.Runs} firstRuns={diag.FirstRuns} maxRunsOneTick={diag.MaxRunsOneTick} orderStarts={diag.OrderStarts}");
             Assert.GreaterOrEqual(cmp.Common, 150, "too few ticks compared");
-            Assert.AreEqual(0, cmp.Mismatch, "integer state differs between server and owner at tick " + cmp.FirstMismatchTick);
+            Assert.AreEqual(0, cmp.Mismatch, "integer state differs between server and owner at tick " + cmp.FirstMismatchTick + ": " + cmp.FirstDump);
             if (delayMs > 0)
             {
                 Assert.Greater(diag.Runs, diag.FirstRuns, "no re-simulation happened: the test proves nothing about rollback");
-                Assert.Greater(diag.MaxRunsOneTick, 1);
+                // MaxRunsOneTick of the diag counts runs of the same tick back to back; a tick is re-simulated in a LATER frame, so the
+                // ring slot (which keeps the tick) is where the count of repeats shows
+                var ring = rig.Clients[0].EntityManager.GetBuffer<PlayerMoveTrace>(rig.GhostIn(0, 0), true);
+                int most = 0; for (int i = 0; i < ring.Length; i++) most = math.max(most, ring[i].RunsForTick);
+                Log($"most re-simulations of one tick: {most}");
+                Assert.Greater(most, 1, "no tick was simulated twice");
             }
         }
 
@@ -228,6 +233,26 @@ namespace KryticalNova.Player.Entities.Tests
             Assert.AreEqual(rig.ServerPose(), rig.OwnerPose());
         }
 
+        [Test]
+        public void ServerOrderMidWalk_OnlyTheTickOfTheOrderIsMispredicted_AndStateConvergesAfterIt()
+        {
+            // regression for RandomCommandSequences seed 11: the owner cannot predict a server order, so its trace entry of the order's
+            // first tick differs by one step; every other tick, and the final state, must be equal
+            using var rig = PlayerRig.Create(2, 100);
+            uint t0 = rig.ServerTick;
+            rig.Sources[0].Click(new int3(30000, 0, 0));
+            rig.Tick(60);
+            rig.IssueOrder(0, new int3(-5000, 0, 9000));
+            rig.Tick(300);
+            var skipped = rig.CompareOwner(0, t0, rig.ServerTick - 1);
+            Assert.AreEqual(0, skipped.Mismatch, skipped.FirstDump);
+            rig.Unpredictable.Clear();
+            var strict = rig.CompareOwner(0, t0, rig.ServerTick - 1);
+            Assert.LessOrEqual(strict.Mismatch, 2, "only the order's own tick (and its neighbour) may differ: " + strict.FirstDump);
+            Assert.AreEqual(rig.ServerMove(), rig.OwnerMove());
+            Assert.AreEqual(rig.ServerPose(), rig.OwnerPose());
+        }
+
         // ---------------------------------------------------------------------------------------------- walk and run
         [Test]
         public void WalkThenRun_RunIsFaster_AndBothWorldsAgree()
@@ -281,7 +306,7 @@ namespace KryticalNova.Player.Entities.Tests
                     int pick = rnd.Next(10);
                     if (pick < 7) rig.Sources[0].Click(new int3(rnd.Next(-15000, 15000), 0, rnd.Next(-15000, 15000)), rnd.Next(3) == 0);
                     else if (pick < 9) rig.Sources[0].Stop();
-                    else PlayerEntitiesSetup.IssueOrder(rig.Server.EntityManager, rig.ServerGhosts[0], new int3(rnd.Next(-9000, 9000), 0, rnd.Next(-9000, 9000)));
+                    else rig.IssueOrder(0, new int3(rnd.Next(-9000, 9000), 0, rnd.Next(-9000, 9000)));
                     next = t + rnd.Next(5, 40);
                 }
                 rig.Tick(1);
@@ -290,7 +315,7 @@ namespace KryticalNova.Player.Entities.Tests
             var cmp = rig.CompareOwner(0, t0 + 20, rig.ServerTick - 1);
             Log($"random seed {seed}: common={cmp.Common} mismatch={cmp.Mismatch} first={cmp.FirstMismatchTick}");
             Assert.GreaterOrEqual(cmp.Common, 400);
-            Assert.AreEqual(0, cmp.Mismatch, "first difference at tick " + cmp.FirstMismatchTick);
+            Assert.AreEqual(0, cmp.Mismatch, "first difference at tick " + cmp.FirstMismatchTick + ": " + cmp.FirstDump);
             Assert.AreEqual(rig.ServerMove(), rig.OwnerMove());
             Assert.AreEqual(rig.ServerPose(), rig.OwnerPose());
             Assert.AreEqual(rig.ServerPose(), rig.Get<PlayerPose>(rig.Clients[1], rig.GhostIn(1, 0)));
