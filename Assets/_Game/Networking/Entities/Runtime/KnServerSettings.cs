@@ -22,12 +22,46 @@ namespace KryticalNova.Networking.Entities
         public int maxPlayers = 100;
         public string map = "Zone01_StarterTown";
         public string saveService = "";
+        /// <summary>The save service key file ("" = Documents\KryticalNova-Secrets\save-service-key.txt). Also the key of <c>POST /stop</c>.</summary>
+        public string saveServiceKeyFile = "";
+        /// <summary>DTLS certificate and private key (PEM). Both set = the server wants encryption (M2b-2 wires the driver).</summary>
+        public string certificateFile = "";
+        public string privateKeyFile = "";
+        public string serverName = "Krytical Nova Server";
+        /// <summary>Takes development bot tokens (thin-client soak). Ignored, with a warning, in a build that has no bots compiled in.</summary>
+        public bool devBots;
+        /// <summary>The Unity project the sign-in tokens must belong to; "" = this build's own (<c>Application.cloudProjectId</c>).</summary>
+        public string cloudProjectId = "";
 
         /// <summary>"main" or "map" (<c>-role</c> on the command line only, as in the NGO server).</summary>
         [NonSerialized] public string role = "main";
 
         /// <summary>The status/control page port: <c>-pageport</c>, else the file's pagePort (0 = off).</summary>
         public int PagePort => pagePort;
+
+        /// <summary>True when this server saves through the save service (the file names it); otherwise it saves to files.</summary>
+        public bool UsesSaveService => !string.IsNullOrWhiteSpace(saveService);
+
+        /// <summary>True when a certificate and a private key are both named.</summary>
+        public bool WantsEncryption => !string.IsNullOrWhiteSpace(certificateFile) && !string.IsNullOrWhiteSpace(privateKeyFile);
+
+        /// <summary>The key file in use: the named one, else the owner's secrets folder.</summary>
+        public string SaveServiceKeyPath => !string.IsNullOrWhiteSpace(saveServiceKeyFile) ? saveServiceKeyFile
+            : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "KryticalNova-Secrets", "save-service-key.txt");
+
+        /// <summary>
+        /// The save service key text (trimmed), or "" when this server has no save service or no key file. Never logged. The
+        /// stop endpoint needs it: without a key nothing may ask the server to stop through the page.
+        /// </summary>
+        public string ReadStopKey()
+        {
+            try
+            {
+                if (UsesSaveService && File.Exists(SaveServiceKeyPath)) return File.ReadAllText(SaveServiceKeyPath).Trim();
+            }
+            catch (Exception) { /* no key: the stop endpoint stays shut */ }
+            return string.Empty;
+        }
 
         /// <summary>Defaults, then the file's text (null or empty = no file), then the arguments.</summary>
         public static KnServerSettings Parse(string json, string[] args)
@@ -59,6 +93,8 @@ namespace KryticalNova.Networking.Entities
         private void ApplyArguments(string[] args)
         {
             if (args == null) return;
+            foreach (string flag in args)
+                if (string.Equals(flag, "-devbots", StringComparison.OrdinalIgnoreCase)) devBots = true;
             for (int i = 0; i < args.Length - 1; i++)
             {
                 string value = args[i + 1];
@@ -68,6 +104,9 @@ namespace KryticalNova.Networking.Entities
                     case "-pageport": pagePort = Int(value, pagePort); break;
                     case "-maxplayers": maxPlayers = Int(value, maxPlayers); break;
                     case "-map": map = value; break;
+                    case "-savekeyfile": saveServiceKeyFile = value; break;
+                    case "-certificate": certificateFile = value; break;
+                    case "-privatekey": privateKeyFile = value; break;
                     case "-role": role = string.Equals(value.Trim(), "map", StringComparison.OrdinalIgnoreCase) ? "map" : "main"; break;
                 }
             }

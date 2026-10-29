@@ -20,7 +20,7 @@ namespace KryticalNova.Networking.Entities
         public const string ServerWorldName = "KnServer";
         public const string ClientWorldName = "KnClient";
 
-        /// <summary>Makes the server's join check when a server world is created (the real check is plugged in here in M2b). Null = accept all.</summary>
+        /// <summary>Makes the join check of a server world created by <see cref="StartHost"/> or a test. The dedicated server does not use it: <see cref="KnServerEntry"/> sets the real <see cref="KnJoinCheck"/>. Null = accept all.</summary>
         public static Func<IKnJoinCheck> JoinCheckFactory;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
@@ -42,13 +42,7 @@ namespace KryticalNova.Networking.Entities
         {
             KnServerSettings settings = KnServerSettings.LoadForThisServer();
             World server = CreateServerWorld(ServerWorldName);
-            KnNetDefaults.Apply(server);
-            Listen(server, (ushort)settings.port);
-            Debug.Log($"[KnServer] server world created, listening on UDP {settings.port}, role {settings.role}, map {settings.map}, page port {settings.PagePort}.");
-            // TODO(M2b): status/control page on settings.PagePort (managed, reads a snapshot) and POST /stop on port+1 (loopback, X-KN-Key).
-            // TODO(M2b): SIGTERM handler (libc signal(15), sets a flag only) + a main-thread system that saves everyone and calls
-            //            Application.Quit(0) (spike: wantsToQuit is not called on SIGTERM). Core has no stop interface yet: add a small
-            //            one (like IServerLeaving) when that lands; the POST /stop page calls the same path.
+            KnServerEntry.Start(server, settings); // tick rate, join rule, listen, status page, POST /stop, stop signals
         }
 #endif
 
@@ -104,7 +98,7 @@ namespace KryticalNova.Networking.Entities
             client.EntityManager.SetComponentData(request, new NetworkStreamRequestConnect { Endpoint = endpoint });
         }
 
-        private static void Listen(World server, ushort port)
+        internal static void Listen(World server, ushort port)
         {
             Entity request = server.EntityManager.CreateEntity(typeof(NetworkStreamRequestListen));
             server.EntityManager.SetComponentData(request, new NetworkStreamRequestListen { Endpoint = NetworkEndpoint.AnyIpv4.WithPort(port) });
