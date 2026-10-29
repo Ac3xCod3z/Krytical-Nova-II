@@ -59,6 +59,9 @@ namespace KryticalNova.Core
         /// <summary>True once a source has been handed over.</summary>
         public static bool HasSource => source != null;
 
+        /// <summary>The source handed over, or null (a netcode that wraps the previous one asks for it).</summary>
+        public static INetSessionSource Source => source;
+
         public static bool IsRunning => source != null && source.IsRunning;
         public static bool IsServer => source != null && source.IsServer;
         public static bool IsClient => source != null && source.IsClient;

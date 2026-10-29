@@ -32,6 +32,7 @@ namespace KryticalNova.Networking.Entities
             IKnTravelTicketCheck tickets = null)
         {
             KnJoinCheckOptions options = JoinOptions(settings, serverBuild, isEditor);
+            KryticalNova.Core.ServerPolicy.RequireProofOverride = options.RequireProof; // PlayerIdentity asks Core, not a connection manager
             return new KnJoinCheck(options, new UnityAccountProof(projectId), tickets ?? BuildTicketCheck(settings), online,
                 log: line => Debug.Log("[KnServer] " + line));
         }
