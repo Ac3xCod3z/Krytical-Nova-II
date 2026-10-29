@@ -118,28 +118,37 @@ namespace KryticalNova.Player.Entities
     public partial struct PlayerTeleportSystem : ISystem
     {
         [BurstCompile]
-        public void OnCreate(ref SystemState state) => state.RequireForUpdate<NetworkTime>();
+        public void OnCreate(ref SystemState state)
+        {
+            state.RequireForUpdate<NetworkTime>();
+            m_Requests = state.GetComponentLookup<TeleportRequest>();
+        }
 
         [BurstCompile]
         public void OnUpdate(ref SystemState state)
         {
-            new TeleportJob().Schedule();
+            m_Requests.Update(ref state);
+            new TeleportJob { Requests = m_Requests }.Schedule();
         }
 
+        ComponentLookup<TeleportRequest> m_Requests;
+
         [BurstCompile]
-        [WithAll(typeof(Simulate), typeof(PlayerGhostTag))]
+        [WithAll(typeof(Simulate), typeof(PlayerGhostTag), typeof(TeleportRequest))]
         partial struct TeleportJob : IJobEntity
         {
-            void Execute(ref MoveState move, ref PlayerPose pose, ref LocalTransform transform, ref TeleportSeq seq,
-                in TeleportRequest request, EnabledRefRW<TeleportRequest> enabled)
+            [NativeDisableParallelForRestriction] public ComponentLookup<TeleportRequest> Requests;
+
+            void Execute(Entity entity, ref MoveState move, ref PlayerPose pose, ref LocalTransform transform, ref TeleportSeq seq)
             {
+                var request = Requests[entity];
                 pose.XMm = request.XMm; pose.YMm = request.YMm; pose.ZMm = request.ZMm;
                 pose.YawCdeg = ((request.YawCdeg % 36000) + 36000) % 36000;
                 PlayerMovement.CancelWalk(ref move);
                 transform.Position = new float3(pose.XMm, pose.YMm, pose.ZMm) * 0.001f;
                 transform.Rotation = quaternion.RotateY(math.radians(pose.YawCdeg * 0.01f));
                 seq.Value = (byte)(seq.Value + 1);
-                enabled.ValueRW = false;
+                Requests.SetComponentEnabled(entity, false);
             }
         }
     }
