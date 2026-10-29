@@ -84,7 +84,7 @@ namespace KryticalNova.Networking
             foreach (ulong client in new List<ulong>(Active.Keys))
             {
                 GmEntry still = Find(Active[client]);
-                bool sameAccount = still != null && ServerAccounts.TryGet(client, out ServerAccounts.Entry proven) && proven.Account == still.account;
+                bool sameAccount = still != null && ServerAccounts.TryGet(NetPlayerKeys.Find(client), out ServerAccounts.Entry proven) && proven.Account == still.account;
                 if (still == null || !still.IsBound || !sameAccount) Sign(client, null);
             }
         }
@@ -132,7 +132,7 @@ namespace KryticalNova.Networking
         public static bool SignInBound(ulong clientId, out string name)
         {
             name = null;
-            if (!ServerAccounts.TryGet(clientId, out ServerAccounts.Entry proven)) return false;
+            if (!ServerAccounts.TryGet(NetPlayerKeys.Find(clientId), out ServerAccounts.Entry proven)) return false;
             GmEntry entry = FindByAccount(proven.Account);
             if (entry == null) return false;
             name = entry.name;

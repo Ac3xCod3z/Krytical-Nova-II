@@ -5,6 +5,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using KryticalNova.Core;
 using UnityEngine;
 
 namespace KryticalNova.Networking
@@ -232,7 +233,7 @@ namespace KryticalNova.Networking
             public string OldAccount;
         }
 
-        private static readonly Dictionary<ulong, Entry> Entries = new Dictionary<ulong, Entry>();
+        private static readonly Dictionary<PlayerKey, Entry> Entries = new Dictionary<PlayerKey, Entry>();
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void ResetStatics()
@@ -240,19 +241,19 @@ namespace KryticalNova.Networking
             lock (Entries) Entries.Clear();
         }
 
-        public static void Remember(ulong clientId, string account, string oldAccount)
+        public static void Remember(PlayerKey player, string account, string oldAccount)
         {
-            lock (Entries) Entries[clientId] = new Entry { Account = account, OldAccount = oldAccount ?? string.Empty };
+            lock (Entries) Entries[player] = new Entry { Account = account, OldAccount = oldAccount ?? string.Empty };
         }
 
-        public static bool TryGet(ulong clientId, out Entry entry)
+        public static bool TryGet(PlayerKey player, out Entry entry)
         {
-            lock (Entries) return Entries.TryGetValue(clientId, out entry);
+            lock (Entries) return Entries.TryGetValue(player, out entry);
         }
 
-        public static void Forget(ulong clientId)
+        public static void Forget(PlayerKey player)
         {
-            lock (Entries) Entries.Remove(clientId);
+            lock (Entries) Entries.Remove(player);
         }
     }
 }

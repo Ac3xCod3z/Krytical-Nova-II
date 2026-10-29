@@ -638,8 +638,9 @@ namespace KryticalNova.Networking
 
         private static void AnswerRosterFor(ulong client, NetworkManager.ConnectionApprovalResponse response, string oldAccount, string packed, string unproven = null)
         {
-            string account = ServerAccounts.TryGet(client, out ServerAccounts.Entry proven) ? proven.Account : unproven;
-            ServerAccounts.Forget(client); // this connection never plays
+            string account = ServerAccounts.TryGet(NetPlayerKeys.Find(client), out ServerAccounts.Entry proven) ? proven.Account : unproven;
+            ServerAccounts.Forget(NetPlayerKeys.Find(client)); // this connection never plays
+            NetPlayerKeys.Release(client);
             DateTime now = DateTime.UtcNow;
             if (ServerBans.IsBanned(account, now, out BanEntry ban))
             {
@@ -678,10 +679,10 @@ namespace KryticalNova.Networking
         /// </summary>
         private static bool Banned(ulong client, NetworkManager.ConnectionApprovalResponse response, string unproven = null)
         {
-            string account = ServerAccounts.TryGet(client, out ServerAccounts.Entry proven) ? proven.Account : unproven;
+            string account = ServerAccounts.TryGet(NetPlayerKeys.Find(client), out ServerAccounts.Entry proven) ? proven.Account : unproven;
             DateTime now = DateTime.UtcNow;
             if (!ServerBans.IsBanned(account, now, out BanEntry ban)) return false;
-            ServerAccounts.Forget(client);
+            ServerAccounts.Forget(NetPlayerKeys.Find(client));
             Refuse(client, response, ServerBans.Refusal(ban, now), $"banned account {account}");
             return true;
         }
@@ -704,6 +705,7 @@ namespace KryticalNova.Networking
         {
             response.Approved = false;
             response.Reason = reason;
+            NetPlayerKeys.Release(client); // a turned-away connection keeps no PlayerKey
             ServerRecords.Write(RecordKind.Access, $"Turned away connection {client}: {why ?? reason}" + (why != null ? $" (told: {reason})" : string.Empty));
         }
 
@@ -719,7 +721,7 @@ namespace KryticalNova.Networking
             if (string.IsNullOrEmpty(token)) { why = "no sign-in token"; return false; }
             if (!UnityKeys.Ready || (kid != null && !UnityKeys.Current.ContainsKey(kid))) return false;
             if (!UnityToken.Verify(token, UnityKeys.Current, Application.cloudProjectId, DateTime.UtcNow, out string playerId, out why)) return false;
-            ServerAccounts.Remember(client, AccountIds.FromUnityPlayer(playerId), oldAccount);
+            ServerAccounts.Remember(NetPlayerKeys.Of(client), AccountIds.FromUnityPlayer(playerId), oldAccount);
             return true;
         }
 
@@ -800,9 +802,10 @@ namespace KryticalNova.Networking
             nm.OnClientDisconnectCallback += id =>
             {
                 ServerRecords.Left(id);
-                ServerAccounts.Forget(id);
+                ServerAccounts.Forget(NetPlayerKeys.Find(id));
                 RpcBudget.Forget(id);
                 NetworkHealth.Forget(id);
+                NetPlayerKeys.Release(id); // last: the lines above are keyed by the key or by the client id
                 Debug.Log($"[Server] Player left (connection {id}). Online: {OnlineWithout(nm, id)}.");
             };
             // Unity's sign-in keys, fetched now so the first player is not kept waiting (online phase 2).
