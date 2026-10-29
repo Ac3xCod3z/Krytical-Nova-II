@@ -88,7 +88,31 @@ namespace KryticalNova.Player.Entities.Tests
         public static float3 M(PlayerPose p) => new float3(p.XMm, p.YMm, p.ZMm) * 0.001f;
 
         // ---- history comparison --------------------------------------------------------------------------------------
-        public struct TraceCompare { public int Common, Mismatch, ServerOnly; public int FirstMismatchTick; }
+        public struct TraceCompare { public int Common, Mismatch, ServerOnly; public int FirstMismatchTick; public string FirstDump; }
+
+        /// <summary>
+        /// Ticks the owner could not predict: a server order (or placement) takes effect on the first tick after it is issued, and the
+        /// owner's trace entry for that one tick keeps its misprediction (the snapshot of that tick rolls it back and re-simulates only
+        /// LATER ticks). The compare skips them; the state after them must still be equal.
+        /// </summary>
+        public readonly System.Collections.Generic.HashSet<uint> Unpredictable = new System.Collections.Generic.HashSet<uint>();
+
+        public void IssueOrder(int owner, int3 goal, bool runPaid = false)
+        {
+            uint next = ServerTick + 1;
+            Unpredictable.Add(next); Unpredictable.Add(next + 1);
+            PlayerEntitiesSetup.IssueOrder(Server.EntityManager, ServerGhosts[owner], goal, runPaid);
+        }
+
+        public void Teleport(int owner, int3 pos, int yaw = 0)
+        {
+            uint next = ServerTick + 1;
+            Unpredictable.Add(next); Unpredictable.Add(next + 1);
+            PlayerEntitiesSetup.Teleport(Server.EntityManager, ServerGhosts[owner], pos, yaw);
+        }
+
+        static string Dump(PlayerMoveTrace t) =>
+            $"tick {t.Tick} order {t.OrderSeq} flags {t.Flags} progress {t.ProgressMm} speed {t.SpeedMmps} pos ({t.XMm},{t.YMm},{t.ZMm}) yaw {t.YawCdeg} runs {t.RunsForTick}";
 
         /// <summary>Compares the server's per-tick ring with the owner client's for ticks in [fromTick, toTick].</summary>
         public TraceCompare CompareOwner(int owner, uint fromTick, uint toTick)
@@ -99,14 +123,14 @@ namespace KryticalNova.Player.Entities.Tests
             for (int i = 0; i < sh.Length && i < ch.Length; i++)
             {
                 var s = sh[i]; var c = ch[i];
-                if (s.Tick == 0 || s.Tick < fromTick || s.Tick > toTick) continue;
+                if (s.Tick == 0 || s.Tick < fromTick || s.Tick > toTick || Unpredictable.Contains(s.Tick)) continue;
                 if (c.Tick != s.Tick) { r.ServerOnly++; continue; }
                 r.Common++;
                 if (s.ProgressMm != c.ProgressMm || s.SpeedMmps != c.SpeedMmps || s.XMm != c.XMm || s.YMm != c.YMm || s.ZMm != c.ZMm
                     || s.Flags != c.Flags || s.OrderSeq != c.OrderSeq || s.YawCdeg != c.YawCdeg)
                 {
                     r.Mismatch++;
-                    if (r.FirstMismatchTick < 0) r.FirstMismatchTick = (int)s.Tick;
+                    if (r.FirstMismatchTick < 0) { r.FirstMismatchTick = (int)s.Tick; r.FirstDump = "SERVER " + Dump(s) + " | OWNER " + Dump(c); }
                 }
             }
             return r;
