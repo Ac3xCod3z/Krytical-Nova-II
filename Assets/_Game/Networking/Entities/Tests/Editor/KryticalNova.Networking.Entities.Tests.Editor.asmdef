@@ -12,7 +12,11 @@
         "Unity.Entities",
         "Unity.Scenes",
         "Unity.Networking.Transport",
-        "Unity.NetCode"
+        "Unity.NetCode",
+        "Unity.Entities.Hybrid",
+        "Unity.Transforms",
+        "Unity.NetCode.Hybrid",
+        "Unity.NetCode.Authoring.Hybrid"
     ],
     "includePlatforms": [
         "Editor"
