@@ -1,0 +1,16 @@
+{
+    "name": "KryticalNova.Player.Entities.Bodies",
+    "rootNamespace": "KryticalNova.Player.Entities.Bodies",
+    "references": [
+        "KryticalNova.Runtime"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
