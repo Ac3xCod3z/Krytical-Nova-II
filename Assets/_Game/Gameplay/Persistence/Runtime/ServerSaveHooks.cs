@@ -10,7 +10,7 @@ namespace KryticalNova.Persistence
     /// everyone, the backups, the kept ledger and the save service's health. Every call goes straight to
     /// <see cref="ServerSave"/>, <see cref="ServerBackups"/> or the store; Networking only no longer names them.
     /// </summary>
-    internal sealed class ServerSaveHooks : IServerSaves
+    internal sealed class ServerSaveHooks : IServerSaves, IServerShutdown
     {
 #if UNITY_EDITOR
         [UnityEditor.InitializeOnLoadMethod]   // EditMode tests of bans see the saves too
@@ -18,8 +18,10 @@ namespace KryticalNova.Persistence
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void Register()
         {
-            ServerHooks.Saves = new ServerSaveHooks();
+            var hooks = new ServerSaveHooks();
+            ServerHooks.Saves = hooks;
             ServerHooks.Roster = new ServerRoster();
+            ServerShutdown.Handler = hooks; // the Netcode for Entities server's stop path saves everyone through this
         }
 
         public bool HasAuthority => ServerSave.HasAuthority;
@@ -27,6 +29,7 @@ namespace KryticalNova.Persistence
         public void SaveWorld(string name) => ServerSave.SaveWorld(name);
         public List<string> AccountsWithCharacter(string characterName) => ServerSave.AccountsWithCharacter(characterName);
         public void FlushAll() => ServerSave.FlushAll();
+        void IServerShutdown.SaveAll() => ServerSave.FlushAll();
         public bool CarryOverEnabled { set => ServerSave.CarryOverEnabled = value; }
         public ILedgerStore Ledger => ServerSave.Store as ILedgerStore;
 
