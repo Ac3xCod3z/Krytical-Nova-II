@@ -1,0 +1,117 @@
+using System;
+using NUnit.Framework;
+using Unity.Collections;
+using Unity.Entities;
+using Unity.Mathematics;
+using Unity.NetCode;
+using Unity.Transforms;
+using KryticalNova.Networking.Entities.Tests;
+
+namespace KryticalNova.Player.Entities.Tests
+{
+    /// <summary>
+    /// Server + N clients in one process (KnTestWorld), the player ghost spawned for every client, planners and scripted command
+    /// sources installed. Client i owns ghost i. Everything is ticked by hand, so a test is deterministic.
+    /// </summary>
+    public sealed class PlayerRig : IDisposable
+    {
+        public KnTestWorld Tw;
+        public World Server;
+        public World[] Clients;
+        public Entity[] ServerGhosts;                 // ghost of client i, in the server world
+        public ScriptedCommandSource[] Sources;       // command source of client i
+        public StraightLinePlanner ServerPlanner = new StraightLinePlanner();
+        public StraightLinePlanner ClientPlanner = new StraightLinePlanner();
+
+        public static PlayerRig Create(int clients = 2, int delayMs = 0, int3[] starts = null, int warmupTicks = 60)
+        {
+            var rig = new PlayerRig();
+            rig.Tw = new KnTestWorld { SimulatedDelayMs = delayMs };
+            rig.Tw.CreateWorlds(clients);
+            rig.Tw.LoadSubScene(PlayerTestAssets.SubSceneGuid);
+            rig.Tw.Connect();
+            rig.Server = rig.Tw.Server;
+            rig.Clients = rig.Tw.Clients.ToArray();
+            rig.Sources = new ScriptedCommandSource[clients];
+            rig.ServerGhosts = new Entity[clients];
+            PlayerEntitiesSetup.Install(rig.Server, rig.ServerPlanner);
+            for (int i = 0; i < clients; i++)
+            {
+                rig.Sources[i] = new ScriptedCommandSource();
+                PlayerEntitiesSetup.Install(rig.Clients[i], rig.ClientPlanner, rig.Sources[i]);
+            }
+
+            var prefab = KnTestWorld.Singleton<PlayerGhostPrefab>(rig.Server).Prefab;
+            var em = rig.Server.EntityManager;
+            for (int i = 0; i < clients; i++)
+            {
+                var at = starts != null && i < starts.Length ? starts[i] : new int3(0, 0, 5000 * i);
+                rig.ServerGhosts[i] = PlayerEntitiesSetup.SpawnServer(em, prefab, KnTestWorld.NetworkIdOf(rig.Clients[i]), at);
+            }
+
+            int ok = rig.Tw.TickUntil(() =>
+            {
+                foreach (var c in rig.Clients)
+                    if (KnTestWorld.Count<PlayerGhostTag>(c) != clients) return false;
+                return true;
+            }, 300);
+            Assert.GreaterOrEqual(ok, 0, "player ghosts did not reach every client. Logs: " + string.Join(" | ", rig.Tw.Interesting));
+            rig.Tw.Tick(warmupTicks);   // let the client clock settle: the first inputs must arrive on time
+            return rig;
+        }
+
+        public void Tick(int n = 1) => Tw.Tick(n);
+
+        public uint ServerTick => KnTestWorld.Singleton<NetworkTime>(Server).ServerTick.TickIndexForValidTick;
+
+        // ---- finding ghosts ------------------------------------------------------------------------------------------
+        /// <summary>The ghost client <paramref name="viewer"/> sees for the player of client <paramref name="owner"/>.</summary>
+        public Entity GhostIn(int viewer, int owner)
+        {
+            var w = Clients[viewer];
+            int ownerId = KnTestWorld.NetworkIdOf(Clients[owner]);
+            using var q = w.EntityManager.CreateEntityQuery(ComponentType.ReadOnly<PlayerGhostTag>(), ComponentType.ReadOnly<GhostOwner>());
+            using var ents = q.ToEntityArray(Allocator.Temp);
+            foreach (var e in ents)
+                if (w.EntityManager.GetComponentData<GhostOwner>(e).NetworkId == ownerId) return e;
+            Assert.Fail($"client {viewer} has no ghost of client {owner}");
+            return Entity.Null;
+        }
+
+        public T Get<T>(World w, Entity e) where T : unmanaged, IComponentData => w.EntityManager.GetComponentData<T>(e);
+
+        public MoveState ServerMove(int owner = 0) => Get<MoveState>(Server, ServerGhosts[owner]);
+        public PlayerPose ServerPose(int owner = 0) => Get<PlayerPose>(Server, ServerGhosts[owner]);
+        public MoveState OwnerMove(int owner = 0) => Get<MoveState>(Clients[owner], GhostIn(owner, owner));
+        public PlayerPose OwnerPose(int owner = 0) => Get<PlayerPose>(Clients[owner], GhostIn(owner, owner));
+
+        public static float3 M(PlayerPose p) => new float3(p.XMm, p.YMm, p.ZMm) * 0.001f;
+
+        // ---- history comparison --------------------------------------------------------------------------------------
+        public struct TraceCompare { public int Common, Mismatch, ServerOnly; public int FirstMismatchTick; }
+
+        /// <summary>Compares the server's per-tick ring with the owner client's for ticks in [fromTick, toTick].</summary>
+        public TraceCompare CompareOwner(int owner, uint fromTick, uint toTick)
+        {
+            var sh = Server.EntityManager.GetBuffer<PlayerMoveTrace>(ServerGhosts[owner], true);
+            var ch = Clients[owner].EntityManager.GetBuffer<PlayerMoveTrace>(GhostIn(owner, owner), true);
+            var r = new TraceCompare { FirstMismatchTick = -1 };
+            for (int i = 0; i < sh.Length && i < ch.Length; i++)
+            {
+                var s = sh[i]; var c = ch[i];
+                if (s.Tick == 0 || s.Tick < fromTick || s.Tick > toTick) continue;
+                if (c.Tick != s.Tick) { r.ServerOnly++; continue; }
+                r.Common++;
+                if (s.ProgressMm != c.ProgressMm || s.SpeedMmps != c.SpeedMmps || s.XMm != c.XMm || s.YMm != c.YMm || s.ZMm != c.ZMm
+                    || s.Flags != c.Flags || s.OrderSeq != c.OrderSeq || s.YawCdeg != c.YawCdeg)
+                {
+                    r.Mismatch++;
+                    if (r.FirstMismatchTick < 0) r.FirstMismatchTick = (int)s.Tick;
+                }
+            }
+            return r;
+        }
+
+        public void Dispose() => Tw?.Dispose();
+    }
+}
