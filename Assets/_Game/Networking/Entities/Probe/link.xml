@@ -1,0 +1,5 @@
+<linker>
+  <!-- The probe builds keep the Entities networking code and the probe whole (nothing here is reached by a scene). -->
+  <assembly fullname="KryticalNova.Networking.Entities" preserve="all" />
+  <assembly fullname="KryticalNova.Networking.Entities.Probe" preserve="all" />
+</linker>

@@ -1,0 +1,20 @@
+{
+    "name": "KryticalNova.Networking.Entities.Probe",
+    "rootNamespace": "KryticalNova.Networking.Entities.Probe",
+    "references": [
+        "KryticalNova.Runtime",
+        "KryticalNova.Networking.Entities",
+        "Unity.Entities",
+        "Unity.NetCode",
+        "Unity.Collections"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

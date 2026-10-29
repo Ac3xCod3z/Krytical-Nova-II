@@ -1,0 +1,20 @@
+{
+    "name": "KryticalNova.Networking.Entities.Probe.Editor",
+    "rootNamespace": "KryticalNova.Networking.Entities.Probe",
+    "references": [
+        "KryticalNova.Networking.Entities.Probe",
+        "Unity.Addressables",
+        "Unity.Addressables.Editor"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
