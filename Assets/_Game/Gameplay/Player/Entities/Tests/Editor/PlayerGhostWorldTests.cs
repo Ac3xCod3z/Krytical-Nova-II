@@ -243,10 +243,13 @@ namespace KryticalNova.Player.Entities.Tests
             rig.Sources[0].Click(new int3(30000, 0, 0));
             rig.Tick(60);
             rig.IssueOrder(0, new int3(-5000, 0, 9000));
-            rig.Tick(300);
+            rig.Tick(150);
             var skipped = rig.CompareOwner(0, t0, rig.ServerTick - 1);
+            Assert.GreaterOrEqual(skipped.Common, 150, "every tick after the order is compared");
+            rig.Tick(150);
+            skipped = rig.CompareOwner(0, t0, rig.ServerTick - 1);
             Assert.AreEqual(0, skipped.Mismatch, skipped.FirstDump);
-            rig.Unpredictable.Clear();
+            rig.Unpredictable.Clear(); rig.SkipOrderStartTicks = false;
             var strict = rig.CompareOwner(0, t0, rig.ServerTick - 1);
             Assert.LessOrEqual(strict.Mismatch, 2, "only the order's own tick (and its neighbour) may differ: " + strict.FirstDump);
             Assert.AreEqual(rig.ServerMove(), rig.OwnerMove());
