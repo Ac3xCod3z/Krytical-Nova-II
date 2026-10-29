@@ -109,14 +109,13 @@ namespace KryticalNova.Items
         {
             // Only the offline scene avatar claims Local here. Networked players are enabled before they spawn, and a
             // remote player's proxy must never become Local, so they wait for OnNetworkSpawn's ownership check.
-            var nm = NetworkManager.Singleton;
-            if (!IsSpawned && (nm == null || !nm.IsListening) && Local == null) SetLocal(this);
+            if (NetRole.IsUnspawned(this) && NetRole.IsOffline && Local == null) SetLocal(this);
         }
 
         private void Start()
         {
             // Offline avatar: nobody else will grant the starter kit.
-            if (!IsSpawned) GrantStarterLoadout();
+            if (NetRole.IsUnspawned(this)) GrantStarterLoadout();
         }
 
         private void OnDisable()
@@ -129,19 +128,19 @@ namespace KryticalNova.Items
             base.OnNetworkSpawn();
             netCells.OnListChanged += OnNetCellsChanged;
             netEquippedData.OnValueChanged += OnNetEquippedDataChanged;
-            if (IsServer)
+            if (NetRole.IsServerBody(this))
             {
                 GrantStarterLoadout();
                 WriteNetCells();
                 netEquippedData.Value = equippedData;
             }
-            else if (IsOwner)
+            else if (NetRole.IsOwner(this))
             {
                 equippedData = netEquippedData.Value;
                 equipment.SetItemData(equippedData);
                 PullNetCells();
             }
-            if (IsOwner) SetLocal(this);
+            if (NetRole.IsOwner(this)) SetLocal(this);
             else if (Local == this) SetLocal(null);
         }
 
@@ -171,27 +170,27 @@ namespace KryticalNova.Items
 
         public void RequestMove(ItemLocation from, ItemLocation to)
         {
-            if (IsSpawned) MoveRpc(from, to); else ServerMove(from, to);
+            if (NetRole.IsNetworked(this)) MoveRpc(from, to); else ServerMove(from, to);
         }
 
         public void RequestQuickEquip(int bagIndex)
         {
-            if (IsSpawned) QuickEquipRpc((byte)bagIndex); else ServerQuickEquip((byte)bagIndex);
+            if (NetRole.IsNetworked(this)) QuickEquipRpc((byte)bagIndex); else ServerQuickEquip((byte)bagIndex);
         }
 
         public void RequestQuickUnequip(EquipSlot slot)
         {
-            if (IsSpawned) QuickUnequipRpc(slot); else ServerQuickUnequip(slot);
+            if (NetRole.IsNetworked(this)) QuickUnequipRpc(slot); else ServerQuickUnequip(slot);
         }
 
         public void RequestDestroy(ItemLocation at)
         {
-            if (IsSpawned) DestroyRpc(at); else ServerDestroy(at);
+            if (NetRole.IsNetworked(this)) DestroyRpc(at); else ServerDestroy(at);
         }
 
         public void RequestSort()
         {
-            if (IsSpawned) SortRpc(); else ServerSort();
+            if (NetRole.IsNetworked(this)) SortRpc(); else ServerSort();
         }
 
         /// <summary>
@@ -208,7 +207,7 @@ namespace KryticalNova.Items
                 NameChangeAsked?.Invoke(bagIndex);
                 return;
             }
-            if (IsSpawned) UseRpc((byte)bagIndex); else ServerUse((byte)bagIndex);
+            if (NetRole.IsNetworked(this)) UseRpc((byte)bagIndex); else ServerUse((byte)bagIndex);
         }
 
         // ---------------- Hotbar items (IHotbarItemSource) ----------------
@@ -494,7 +493,7 @@ namespace KryticalNova.Items
             if (used.useEffect != ItemUseEffect.None) HandlerFor(used.useEffect)?.ServerUse(new UsedItem(used.itemId, used.displayName));
 
             if (used.restoreHealth <= 0f && used.restoreChi <= 0f) return; // the effect's own system presents it
-            if (IsSpawned) ItemUsedRpc(used.restoreHealth > 0f, used.restoreChi > 0f);
+            if (NetRole.IsNetworked(this)) ItemUsedRpc(used.restoreHealth > 0f, used.restoreChi > 0f);
             else PresentItemUsed(used.restoreHealth > 0f, used.restoreChi > 0f);
         }
 
@@ -648,7 +647,7 @@ namespace KryticalNova.Items
             Mutate((ItemStack[] b, ref EquippedItems l, out string r) => { r = null; Array.Clear(b, 0, b.Length); return true; });
         }
 
-        private bool CanMutate() => !IsSpawned || IsServer;
+        private bool CanMutate() => NetRole.MayMutate(this);
 
         // ---------------------------------------------------------------- saving
 
@@ -711,7 +710,7 @@ namespace KryticalNova.Items
                     if (def != null && EquipSlots.IsValid(slot) && def.equipSlot == slot) worn[slot] = new ItemStack(item.stack.itemId, 1, item.stack.data);
                 }
 
-            if (IsSpawned) WriteNetCells();
+            if (NetRole.IsNetworked(this)) WriteNetCells();
             SetEquippedData(worn.data);
             equipment.ServerSetLoadout(worn.ids);
             Changed?.Invoke();
@@ -726,13 +725,13 @@ namespace KryticalNova.Items
             {
                 if (!string.IsNullOrEmpty(reason))
                 {
-                    if (IsSpawned && !IsOwnedByServer) RequestFailedRpc(reason);
+                    if (NetRole.IsNetworked(this) && !NetRole.IsOwnedByServer(this)) RequestFailedRpc(reason);
                     else NotifyFailed(reason);
                 }
                 return;
             }
             Array.Copy(scratch, cells, Capacity);
-            if (IsSpawned) WriteNetCells();
+            if (NetRole.IsNetworked(this)) WriteNetCells();
             // Data first: whoever reacts to the new loadout (a pet coming out) reads the state that came with it.
             SetEquippedData(worn.data);
             equipment.ServerSetLoadout(worn.ids);
@@ -742,13 +741,13 @@ namespace KryticalNova.Items
         private void SetEquippedData(EquipmentData data)
         {
             equippedData = data;
-            if (IsSpawned && IsServer) netEquippedData.Value = data;
+            if (NetRole.IsServerBody(this)) netEquippedData.Value = data;
             equipment.SetItemData(data);
         }
 
         private void OnNetEquippedDataChanged(EquipmentData previous, EquipmentData next)
         {
-            if (IsServer) return; // already applied locally
+            if (NetRole.IsServerBody(this)) return; // already applied locally
             equippedData = next;
             equipment.SetItemData(next);
             Changed?.Invoke();
@@ -804,7 +803,7 @@ namespace KryticalNova.Items
         private void OnNetCellsChanged(NetworkListEvent<ItemStack> change)
         {
             // Initial sync arrives as one event per cell; coalesce into a single pull per frame.
-            if (!IsServer && IsOwner) pullPending = true;
+            if (!NetRole.IsServerBody(this) && NetRole.IsOwner(this)) pullPending = true;
         }
 
         private void LateUpdate()
