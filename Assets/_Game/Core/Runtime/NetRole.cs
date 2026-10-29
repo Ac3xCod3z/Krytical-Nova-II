@@ -87,7 +87,7 @@ namespace KryticalNova.Core
         public static bool IsServerBody(Component networked) => Of(networked) == NetRoleKind.ServerBody;
 
         /// <summary>Spawned on a client that is not the server.</summary>
-        public static bool IsClientView(Component networked) => Of(networked) == NetRoleKind.ClientView;
+        public static bool IsClientViewBody(Component networked) => Of(networked) == NetRoleKind.ClientView;
 
         /// <summary>This object's rules may change its state: not spawned (offline) or the server's copy.</summary>
         public static bool MayMutate(Component networked) => Of(networked) != NetRoleKind.ClientView;
