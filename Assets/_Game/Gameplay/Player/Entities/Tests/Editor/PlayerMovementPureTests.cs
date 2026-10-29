@@ -86,7 +86,7 @@ namespace KryticalNova.Player.Entities.Tests
         [Test]
         public void PointAt_WalksCorners_AndEndsOnTheLastPoint()
         {
-            using var c = new NativeArray<int3>(3, Allocator.Temp);
+            var c = new NativeArray<int3>(3, Allocator.Temp);
             c[0] = P(0, 0, 0); c[1] = P(10000, 0, 0); c[2] = P(10000, 0, 10000);
             var start = P(0, 0, 0);
             Assert.AreEqual(20000, PlayerPath.LengthMm(start, c, 3));
@@ -104,7 +104,7 @@ namespace KryticalNova.Player.Entities.Tests
         [Test]
         public void PathStartsFromTheStartPoint_NotFromTheFirstCorner()
         {
-            using var c = new NativeArray<int3>(2, Allocator.Temp);
+            var c = new NativeArray<int3>(2, Allocator.Temp);
             c[0] = P(500, 0, 0);          // the planner's start differs from where the player really is
             c[1] = P(10000, 0, 0);
             var start = P(0, 0, 0);
