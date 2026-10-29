@@ -249,3 +249,28 @@ owner feel checkpoints after M3a and M4; rollback rule (fail = keep NGO on main)
 (`-batchmode -nographics`), one Editor at a time, kill if free RAM < 3 GB, never touch the main project's Editor. If RAM is short, tell Master (do not wait silently).
 **Seams PR rules:** branch from `main` (branches `seams/<topic>` created in the clone checkout, then merged into `dots/netcode-entities`), NGO only, no behaviour change, one concern per PR,
 no push without telling Master the LFS size (none expected).
+
+## 14. Scripting backend (owner, 29 Oct 2026): IL2CPP everywhere (Q4)
+The Windows client and the Linux dedicated server both ship as **IL2CPP**; Mono is only for fast Editor iteration.
+How the real project sets it today (read 29 Oct): `ProjectSettings` shows Standalone = Mono; `TestBuildBuilder.Build()` builds Mono by default and its menu
+`MenuIl2Cpp` / `Build(ScriptingImplementation.IL2CPP)` switches the backend + `Il2CppCompilerConfiguration.Release` for the build and restores the
+settings afterwards (needs the Visual Studio C++ workload: `Il2CppMissing()` says what is absent); `ServerBuildBuilder` builds Mono only.
+Plan consequences: (1) `ServerBuildBuilder` gets an IL2CPP switch and builds the Linux server IL2CPP by default (Server named build target, Release C++ config);
+(2) client release builds go through the IL2CPP path; (3) parity tests (Windows vs Linux prediction) run IL2CPP+Burst on both; (4) Linux IL2CPP cross-build from Windows
+needs the Linux toolchain package (verified in the M1 spike, result below).
+
+### 14.1 M1 Linux spike result (29 Oct 2026, throwaway project `C:\Users\dlaco\KN-worktrees\dots-spike`, Unity 6000.6.3f1)
+- Linux x64 **IL2CPP + Burst** dedicated-server build of an empty Netcode-for-Entities server (custom `ClientServerBootstrap`, server world only, one Burst `ISystem`):
+  builds from Windows in 287 s cold / 87 s incremental; Unity peak 1.2 GB; toolchain `com.unity.toolchain.win-x86_64-linux 1.1.0` + sysroot resolved automatically;
+  `lib_burst_generated.so` present. Entities/Netcode source generators and IL post-processors run in `-batchmode -nographics`. Packages are built into the Editor (6.6.0; burst 2.0.0; mathematics 1.4.0).
+- Runs in WSL Ubuntu-24.04: listens UDP 7797, about 200 MB RSS, Burst system alive.
+- **SIGTERM finding:** the stock Unity Linux player exits in 0.2 s on SIGTERM **without calling `Application.wantsToQuit`** (no save). Proven fix: libc `signal(15)` handler
+  (`[MonoPInvokeCallback]`, sets a flag only) + a main-thread `SystemBase` that runs the save-all and calls `Application.Quit(0)`: stopped 1.23 s after SIGTERM (1 s simulated save).
+  Rule for the real server: never rely on `wantsToQuit` for saving; use this pattern, with a status-page admin stop endpoint as the systemd `ExecStop` fallback. Exit code to be confirmed with the real server.
+- Not yet proven: Mono run to completion, subscene baking in a build, Entities Graphics exclusion, Windows-vs-Linux state hashes, Addressable-map subscene (S11).
+
+## 15. M0 progress
+- [x] Seam 1: `PlayerKey` + `PlayerKeys` (Core), `NetPlayerKeys` (Networking adapter), `IPlayerBody.Owner`, `ServerAccounts` keyed by `PlayerKey` (branch `seams/player-key`, commit 773438fd6, 25 files; `dependency_map --check` 0 uphill/0 two-way;
+  `compile_check` 59/59 and `--server` 27/27; EditMode tests written, NOT yet run (needs an Editor)). Merged into `dots/netcode-entities`; to be offered to main as its own PR (with the LFS size note: none).
+- [ ] Seam 1b: re-key `RpcBudget`, `NetworkHealth`, `ServerRecords` client-id dictionaries, `ServerControlPage` player list/kick.
+- [ ] Seams: `NetRole`, `NetClock`, `NetSession`, `IServerLeaving`, `IWorldTargets`, `X.cs`/`X.Net.cs` splits + stub compile gate, fixed/paged RPC args, `MapAnchor` in builders, placement + server-walk entry points, Core/UI asmdefs without `Unity.Netcode.Runtime`.
