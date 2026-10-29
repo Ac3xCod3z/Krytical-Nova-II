@@ -225,6 +225,7 @@ namespace KryticalNova.EditorTools
             string target = icon.Substring(0, icon.LastIndexOf('_')); // the number at the end only orders the folder
             return IconBaker.BakePicture(source, target, IconBaker.Settings());
         }
+            GearLookIconFiller.Fill();
 
         /// <summary>
         /// One weapon of the set: its palette material, its model prefab (grip at the origin, the WeaponGrip from its

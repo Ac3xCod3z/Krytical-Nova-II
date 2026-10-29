@@ -15,7 +15,7 @@ MonoBehaviour:
   itemId: 0
   displayName: Dock Runner Glaive
   description: Glaive look.
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: c33e082fa97985b40b93f1f2cd43ac3d, type: 3}
   sharesIconOf: {fileID: 0}
   rarity: 2
   equipSlot: 1

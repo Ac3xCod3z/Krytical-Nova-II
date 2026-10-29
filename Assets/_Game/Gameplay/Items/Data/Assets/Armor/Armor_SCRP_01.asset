@@ -15,7 +15,7 @@ MonoBehaviour:
   itemId: 0
   displayName: Scrap Sentinel Plating
   description: 
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 7f4e692e8a58e684d84881a123f0455b, type: 3}
   sharesIconOf: {fileID: 0}
   rarity: 2
   equipSlot: 2

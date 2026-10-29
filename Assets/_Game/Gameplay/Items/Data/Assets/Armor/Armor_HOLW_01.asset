@@ -15,7 +15,7 @@ MonoBehaviour:
   itemId: 0
   displayName: Hollow Warden Armor
   description: 
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: cbcba71d9a00f824889118edb08770b1, type: 3}
   sharesIconOf: {fileID: 0}
   rarity: 2
   equipSlot: 2
