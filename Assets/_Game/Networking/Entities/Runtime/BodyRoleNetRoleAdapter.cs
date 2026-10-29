@@ -19,7 +19,7 @@ namespace KryticalNova.Networking.Entities
     {
         private readonly INetRoleAdapter m_Fallback;
         private readonly Func<NetRoleKind> m_ProcessProbe;
-        private readonly Dictionary<int, BodyRoleTag> m_Tags = new Dictionary<int, BodyRoleTag>();
+        private readonly Dictionary<GameObject, BodyRoleTag> m_Tags = new Dictionary<GameObject, BodyRoleTag>();
 
         /// <param name="fallback">The adapter to ask while no entity netcode world exists (may be null).</param>
         /// <param name="processProbe">What this process is; null = look at the netcode worlds (tests pass a stub).</param>
@@ -111,7 +111,7 @@ namespace KryticalNova.Networking.Entities
         private BodyRoleTag TagOf(Component part)
         {
             if (part == null) return null;
-            int id = part.gameObject.GetInstanceID();
+            GameObject id = part.gameObject;
             if (m_Tags.TryGetValue(id, out BodyRoleTag cached))
             {
                 if (cached != null) return cached;
