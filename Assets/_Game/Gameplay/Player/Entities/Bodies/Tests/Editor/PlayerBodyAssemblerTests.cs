@@ -115,6 +115,7 @@ namespace KryticalNova.Player.Entities.Bodies.Tests
         public void Apply_ServerKeepsPlayerInputDisabledWhileTheClickScriptNeedsIt()
         {
             GameObject go = Plain();
+            go.AddComponent<PlayerInput>();
             go.AddComponent<PointAndClickPlayer>();
             go.AddComponent<PlayerEquipment>();
             BodyBuildReport report = PlayerBodyAssembler.Apply(go, BodyShape.Server);
@@ -130,7 +131,8 @@ namespace KryticalNova.Player.Entities.Bodies.Tests
         public void Apply_RemoteRemovesDependantsFirst()
         {
             GameObject go = Plain();
-            go.AddComponent<PointAndClickPlayer>(); // adds PlayerInput by RequireComponent
+            go.AddComponent<PlayerInput>();         // the real prefab carries it; Unity does not auto-add a RequireComponent for fakes declared in another file
+            go.AddComponent<PointAndClickPlayer>();
             go.AddComponent<PlayerEquipment>();
             go.AddComponent<Mystery>();
             BodyBuildReport report = PlayerBodyAssembler.Apply(go, BodyShape.ViewRemote);
@@ -146,6 +148,7 @@ namespace KryticalNova.Player.Entities.Bodies.Tests
         public void IsRequiredByAnother_ReadsRequireComponent()
         {
             GameObject go = Plain();
+            go.AddComponent<PlayerInput>();
             go.AddComponent<PointAndClickPlayer>();
             Assert.IsTrue(PlayerBodyAssembler.IsRequiredByAnother(go.GetComponent<PlayerInput>()));
             Assert.IsFalse(PlayerBodyAssembler.IsRequiredByAnother(go.GetComponent<PointAndClickPlayer>()));
