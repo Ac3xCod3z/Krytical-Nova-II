@@ -25,6 +25,7 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
+$script:TotalCapSeconds = 300
 Set-StrictMode -Version 2
 
 # ------------------------------------------------------------------ constants (the only ports this script may use)
@@ -76,6 +77,8 @@ function Wait-Until([scriptblock]$condition, [double]$seconds, [string]$what) {
     $deadline = (Get-Date).AddSeconds($seconds)
     while ((Get-Date) -lt $deadline) {
         Watch-Ram
+        # Hard cap for the whole run (a hung probe once kept this script alive for 19 minutes): stop everything and let the catch write the report.
+        if ($script:Clock.Elapsed.TotalSeconds -gt $script:TotalCapSeconds) { throw "total time cap of $($script:TotalCapSeconds) s reached while waiting for: $what" }
         if (& $condition) { return $true }
         Start-Sleep -Milliseconds 300
     }
@@ -151,6 +154,7 @@ try {
     Add-Step 'Ports free' $true "UDP/TCP $GamePort, $PagePort, $ReservedPort free"
 
     New-Item -ItemType Directory -Force -Path $RunDir | Out-Null
+    try { Start-Transcript -Path (Join-Path $RunDir 'driver.log') -Force | Out-Null } catch { }
     New-Item -ItemType Directory -Force -Path (Join-Path $RunDir 'saves') | Out-Null
 
     # ---- 1. the server's files: a made-up key (the page's /stop and /players want one) and the settings beside the exe

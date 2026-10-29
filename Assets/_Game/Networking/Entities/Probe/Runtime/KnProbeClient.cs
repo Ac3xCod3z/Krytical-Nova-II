@@ -37,6 +37,8 @@ namespace KryticalNova.Networking.Entities.Probe
             var client = go.AddComponent<KnProbeClient>();
             client.m_Args = args;
             client.m_Folder = folder;
+            s_TraceFolder = folder;
+            s_TraceName = "probe-trace-client-" + KnProbeFiles.Sanitize(args.Name) + ".txt";
             client.m_Result = new KnProbeResult
             {
                 role = "client",
@@ -51,13 +53,43 @@ namespace KryticalNova.Networking.Entities.Probe
             return client;
         }
 
-        private static void Log(string line) => Debug.Log($"[KnProbe] {line} t={KnProbeResult.NowMs()}");
+        private static void Log(string line)
+        {
+            Trace(line);   // to the plain file first: if Debug.Log ever blocks, the file still shows where we were
+            Debug.Log($"[KnProbe] {line} t={KnProbeResult.NowMs()}");
+        }
+
+        private static readonly System.Diagnostics.Stopwatch s_TraceClock = System.Diagnostics.Stopwatch.StartNew();
+        private string m_TracePath;
+        private double m_NextBeat;
+
+        private static string s_TraceFolder;
+
+        private static void Trace(string line)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(s_TraceFolder)) return;
+                System.IO.File.AppendAllText(System.IO.Path.Combine(s_TraceFolder, s_TraceName ?? "probe-trace-client.txt"),
+                    $"{s_TraceClock.ElapsedMilliseconds,8} ms  thread {System.Threading.Thread.CurrentThread.ManagedThreadId,3}  {line}" + Environment.NewLine);
+            }
+            catch (Exception) { /* tracing never breaks the probe */ }
+        }
+
+        private static string s_TraceName;
 
         private void Flush() => KnProbeFiles.Write(m_Folder, KnProbeRole.Client, m_Args.Name, m_Result);
 
         private void Update()
         {
             if (m_Ended) return;
+            if (Now >= m_NextBeat)
+            {
+                m_NextBeat = Now + 1.0;
+                Trace($"beat phase={m_Machine.Phase} world={(m_World != null && m_World.IsCreated ? m_World.Name : "none")} haveQueries={m_HaveQueries} " +
+                      $"networkIdEmpty={(m_HaveQueries && m_World != null && m_World.IsCreated ? m_NetworkId.IsEmpty.ToString() : "n/a")} " +
+                      $"clientWorlds={ClientServerBootstrap.ClientWorlds.Count}");
+            }
             try
             {
                 Step();
