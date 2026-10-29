@@ -6,7 +6,7 @@ namespace KryticalNova.World
     /// <summary>
     /// The entire replicated world-environment state (~48 bytes). It only changes when the weather
     /// changes or a GM edits the clock; every client derives time of day and blend progress locally
-    /// from <see cref="NetworkManager.ServerTime"/>.
+    /// from NetClock (server time).
     /// </summary>
     public struct WorldEnvironmentState : INetworkSerializable, IEquatable<WorldEnvironmentState>
     {

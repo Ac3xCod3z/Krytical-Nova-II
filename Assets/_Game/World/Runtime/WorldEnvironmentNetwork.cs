@@ -1,4 +1,5 @@
 using System;
+using KryticalNova.Core;
 using Unity.Netcode;
 using UnityEngine;
 
@@ -61,7 +62,7 @@ namespace KryticalNova.World
         public bool WeatherLocked => weatherLocked;
 
         /// <summary>Shared clock: server time when networked, local time offline.</summary>
-        public double Now => IsSpawned && NetworkManager != null ? NetworkManager.ServerTime.Time : Time.timeAsDouble;
+        public double Now => IsSpawned && NetworkManager != null ? NetClock.Now : Time.timeAsDouble;
 
         // Per-frame evaluation (read by WorldClock and presentation).
         public float TimeOfDay01 { get; private set; }
@@ -103,7 +104,7 @@ namespace KryticalNova.World
         public override void OnNetworkSpawn()
         {
             base.OnNetworkSpawn();
-            double serverNow = NetworkManager.ServerTime.Time;
+            double serverNow = NetClock.Now;
 
             if (IsServer)
             {
