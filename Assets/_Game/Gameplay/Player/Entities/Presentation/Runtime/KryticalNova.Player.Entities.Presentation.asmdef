@@ -1,0 +1,22 @@
+{
+    "name": "KryticalNova.Player.Entities.Presentation",
+    "rootNamespace": "KryticalNova.Player.Entities.Presentation",
+    "references": [
+        "KryticalNova.Runtime",
+        "KryticalNova.Player.Entities",
+        "Unity.Entities",
+        "Unity.NetCode",
+        "Unity.Transforms",
+        "Unity.Collections",
+        "Unity.Mathematics"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
