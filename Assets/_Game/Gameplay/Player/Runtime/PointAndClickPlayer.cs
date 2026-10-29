@@ -188,6 +188,47 @@ namespace KryticalNova.Player
         private float agentOffFor;
         private PlayerDeathMotor deathMotor;
 
+        // ---------------- entity netcode bodies (M3a-2b, decision D4) ----------------
+        // A body built by the entity netcode carries a BodyRoleTag. As the local ClientView this class keeps the camera, the selection
+        // and its ray, and sends ground clicks to the ghost (BodyClicks) instead of steering the agent; as a ServerBody it is switched
+        // off and its server API moves the ghost through the tag's mover. Without a tag (offline avatar, Netcode for GameObjects) nothing
+        // here changes anything.
+        public const string NotYetNetworkedText = "Not networked yet on this server: only walking is.";
+        private BodyRoleTag bodyTag;
+        private bool bodyTagLooked;
+
+        private BodyRoleTag BodyTag
+        {
+            get
+            {
+                if (!bodyTagLooked)
+                {
+                    bodyTag = BodyRoleTag.Of(this);
+                    bodyTagLooked = true;
+                }
+                return bodyTag;
+            }
+        }
+
+        /// <summary>This is the ClientView of the entity netcode: the ghost moves the body; clicks go to the server.</summary>
+        public bool ViewMode => BodyTag != null && BodyTag.Kind == NetRoleKind.ClientView;
+
+        // A ServerBody's mover (the ghost), or null: the agent moves this body as before.
+        private IBodyMover ServerMover => BodyTag != null && BodyTag.Kind == NetRoleKind.ServerBody ? BodyTag.Mover : null;
+
+        // The local flag settled after the body woke up: take or give back keyboard, mouse and camera, as OnNetworkSpawn does for an owner.
+        private void OnBodyLocalChanged(BodyRoleTag tag)
+        {
+            if (!ViewMode) return;
+            if (tag.IsLocal)
+            {
+                KryticalNova.Networking.OfflinePlayerHandoff.ReleaseOfflineAvatar();
+                if (playerInput != null) playerInput.enabled = true;
+                SetupLocalCamera();
+            }
+            else if (playerInput != null) playerInput.enabled = false;
+        }
+
         private void Reset()
         {
             groundLayers = LayerMask.GetMask(GroundLayerName);
@@ -235,6 +276,7 @@ namespace KryticalNova.Player
             }
             requestedPath = new NavMeshPath();
             agent.updateRotation = false;
+            if (BodyTag != null) BodyTag.LocalChanged += OnBodyLocalChanged;
         }
 
         public override void OnNetworkSpawn()
@@ -347,7 +389,8 @@ namespace KryticalNova.Player
 
             ConfigureOrbitCamera();
 
-            if (!IsSpawned || IsServer)
+            // A ClientView never stands its agent on the NavMesh: the ghost moves the body.
+            if (!ViewMode && (!IsSpawned || IsServer))
             {
                 if (!PlaceAgentOnNavigation())
                     enabled = false;
@@ -422,7 +465,11 @@ namespace KryticalNova.Player
             if (IsSpawned && !IsOwner && !IsServer)
                 return;
 
-            if (!IsSpawned || IsServer)
+            if (ViewMode)
+            {
+                // the ghost moves this body (PlayerPresentationFollowSystem); nothing of the agent's walk runs here
+            }
+            else if (!IsSpawned || IsServer)
             {
                 RecoverLostAgent();
                 ApplyMovementSettings();
@@ -438,8 +485,11 @@ namespace KryticalNova.Player
             if (IsSpawned && !IsOwner)
                 return;
 
-            UpdatePendingInteract();
-            UpdateTravel();
+            if (!ViewMode)
+            {
+                UpdatePendingInteract();
+                UpdateTravel();
+            }
             ApplyScreenFraming(); // asked for by the HUD, not by input: it runs whatever the checks below say
 
             if (gameplayActions == null || !gameplayActions.enabled || !playerInput.inputIsActive
@@ -594,7 +644,7 @@ namespace KryticalNova.Player
 
             // Standing on a wall: a click goes on along it, over its edge, down, or (Jump selected) jumps off toward
             // the place clicked. A click on a unit still selects it.
-            if (wallRunMotor != null && wallRunMotor.IsOnWall && hit.collider.GetComponentInParent<IDamageable>() == null)
+            if (!ViewMode && wallRunMotor != null && wallRunMotor.IsOnWall && hit.collider.GetComponentInParent<IDamageable>() == null)
             {
                 bool jump = movementSkills != null && movementSkills.IsJumpSelected;
                 if (wallRunMotor.TryWallClick(hit.point, hit.normal, jump))
@@ -603,7 +653,7 @@ namespace KryticalNova.Player
             }
 
             // Standing in a tree: a click on the ground drops down to it; a click on a unit still selects it.
-            if (wallRunMotor != null && wallRunMotor.IsPerched && hit.collider.GetComponentInParent<IDamageable>() == null)
+            if (!ViewMode && wallRunMotor != null && wallRunMotor.IsPerched && hit.collider.GetComponentInParent<IDamageable>() == null)
             {
                 if ((groundLayers.value & (1 << hit.collider.gameObject.layer)) == 0) { CommandMessage?.Invoke("Click the ground to drop down to it."); return; }
                 if (!wallRunMotor.TryDropTo(hit.point, out string dropReason)) { if (!string.IsNullOrEmpty(dropReason)) CommandMessage?.Invoke(dropReason); }
@@ -635,6 +685,9 @@ namespace KryticalNova.Player
                     if (!targetEntity.IsAlive) CommandMessage?.Invoke($"{targetEntity.EntityName} is defeated.");
                     return;
                 }
+
+                // ClientView: selecting is shown here; walking over and attacking are server rules not networked yet (M4).
+                if (ViewMode) { CommandMessage?.Invoke(NotYetNetworkedText); return; }
 
                 // Second click on a friendly unit (another player): walk over to them.
                 if (!hostile)
@@ -696,6 +749,7 @@ namespace KryticalNova.Player
                     Select(unit, WorldTargetKind.Friendly);
                     return;
                 }
+                if (ViewMode) { CommandMessage?.Invoke(NotYetNetworkedText); return; }
 
                 ReplaceRoute();
                 EndTravel(false);
@@ -707,7 +761,7 @@ namespace KryticalNova.Player
 
             // Waterstride: a click on water with Run selected runs out across it; on the water, any click is the way on
             // (over the water, or ashore and on).
-            if (waterMotor != null && waterMotor.TryClick(ray, hit))
+            if (!ViewMode && waterMotor != null && waterMotor.TryClick(ray, hit))
             {
                 CancelAttack();
                 if (selectedTarget != null) ClearSelection();
@@ -725,7 +779,7 @@ namespace KryticalNova.Player
 
             // Wallstride: a wall or a tree clicked with Run or Jump selected is run up, or jumped at and caught. A steep
             // slope of the ground itself (a mountain side) counts as a wall where the zone's surface graph covers it.
-            if (wallRunMotor != null && !walkableFromHere && (!onGround || wallRunMotor.IsSteepWallClick(hit.point, hit.normal))
+            if (!ViewMode && wallRunMotor != null && !walkableFromHere && (!onGround || wallRunMotor.IsSteepWallClick(hit.point, hit.normal))
                 && movementSkills != null
                 && (movementSkills.IsRunning || movementSkills.IsJumpSelected)
                 && wallRunMotor.TryClimbClicked(hit.point, hit.normal, hit.collider, raycastLayers.value, modelForwardOffset))
@@ -760,9 +814,18 @@ namespace KryticalNova.Player
 
             if (movementSkills != null && movementSkills.IsJumpSelected)
             {
+                if (ViewMode) { CommandMessage?.Invoke(NotYetNetworkedText); return; }
                 if (jumpMotor == null) { CommandMessage?.Invoke("Jump controller is missing."); return; }
                 if (!jumpMotor.TryJump(hit.point, raycastLayers, modelForwardOffset, out string reason)) CommandMessage?.Invoke(reason);
                 else ClientPresentationRegistry.Markers?.ShowMoveMarker(transform, hit.point, hit.normal);
+                return;
+            }
+
+            // ClientView: the ground point goes to the ghost as a click (the server plans and walks it; the owner predicts it).
+            if (ViewMode)
+            {
+                BodyClicks.Ground(hit.point, movementSkills != null && movementSkills.IsRunning);
+                ClientPresentationRegistry.Markers?.ShowMoveMarker(transform, hit.point, hit.normal);
                 return;
             }
 
@@ -842,7 +905,8 @@ namespace KryticalNova.Player
             if (buffManager == null) buffManager = GetComponent<CharacterBuffManager>();
             if (buffManager != null && buffManager.IsChanneling) buffManager.InterruptChanneled();
 
-            if (IsSpawned && !IsServer)
+            if (ViewMode) BodyClicks.Ground(goal, false); // the arrival line is not shown yet: the ghost walks it (M3b)
+            else if (IsSpawned && !IsServer)
             {
                 RequestMoveDestinationServerRpc(goal);
                 LeadOwnWalk(goal);
@@ -1242,6 +1306,7 @@ namespace KryticalNova.Player
         {
             reason = null;
             if (IsSpawned && !IsServer) { reason = "Only the server may do this."; return false; }
+            if (ServerMover != null) { reason = NotYetNetworkedText; return false; } // the ghost has no jump yet (M3b)
             if (jumpMotor == null) { reason = "Jump controller is missing."; return false; }
             return jumpMotor.TryJump(landing, raycastLayers, modelForwardOffset, out reason);
         }
@@ -1250,6 +1315,14 @@ namespace KryticalNova.Player
         {
             if (IsSpawned && !IsServer) return false;
             if (resources != null && !resources.IsAlive) return false;
+            IBodyMover mover = ServerMover;
+            if (mover != null)
+            {
+                // A ServerBody: the ghost walks (planned by the server's planner). Running is not charged yet (M3b moves the Flux cost).
+                if (buffManager != null && buffManager.IsChanneling) buffManager.InterruptChanneled();
+                mover.MoveTo(destinationPoint, payRun && movementSkills != null && movementSkills.IsRunning);
+                return true;
+            }
             if (jumpMotor != null && jumpMotor.IsBusy) return false;
             if (vaultMotor != null && vaultMotor.IsBusy) return false;
             if (wallRunMotor != null && wallRunMotor.IsBusy) return false;
@@ -1469,6 +1542,8 @@ namespace KryticalNova.Player
         /// <summary>Where movement is decided: stops this player where it stands.</summary>
         public void ServerStopMoving()
         {
+            IBodyMover mover = ServerMover;
+            if (mover != null) { mover.Stop(); return; }
             if (!IsSpawned || IsServer) StopMoving();
         }
 
@@ -2126,6 +2201,7 @@ namespace KryticalNova.Player
 
         public override void OnDestroy()
         {
+            if (bodyTag != null) bodyTag.LocalChanged -= OnBodyLocalChanged;
             EndOrbit();
             base.OnDestroy();
         }
@@ -2146,7 +2222,8 @@ namespace KryticalNova.Player
         private void OnEnable()
         {
             ActivePlayers.Add(this);
-            PlayerBodies.Use(ActivePlayers);
+            // A ClientView's bodies are listed by the ghost registry: this list must not replace it.
+            if (!ViewMode) PlayerBodies.Use(ActivePlayers);
             // Re-enabled offline avatar (e.g. after leaving a network session): reclaim the camera.
             if (didStart && !IsSpawned)
                 SetupLocalCamera();

@@ -13,6 +13,12 @@ namespace KryticalNova.Networking
         /// </summary>
         public static void Place(Transform root, Vector3 position, Quaternion rotation)
         {
+            // A body of the entity netcode is moved by its ghost: the ghost is placed (every client snaps) and the body with it.
+            if (root.TryGetComponent<KryticalNova.Core.BodyRoleTag>(out var tag) && tag.Mover != null)
+            {
+                tag.Mover.Teleport(position, rotation);
+                return;
+            }
             if (root.TryGetComponent<NavMeshAgent>(out var agent) && agent.isActiveAndEnabled && agent.isOnNavMesh)
                 agent.Warp(position);
             root.SetPositionAndRotation(position, rotation);

@@ -49,7 +49,7 @@ namespace KryticalNova.Player.Entities.Presentation
     [UpdateBefore(typeof(PlayerPresentationFollowSystem))]
     public partial class PlayerBodySpawnSystem : SystemBase
     {
-        EntityQuery m_New, m_Gone, m_Linked;
+        EntityQuery m_New, m_Gone, m_Linked, m_Own;
         bool m_WarnedFactory;
 
         /// <summary>Set by <see cref="PlayerPresentationSetup.Install"/>. Without it no body is made (one error).</summary>
@@ -71,6 +71,7 @@ namespace KryticalNova.Player.Entities.Presentation
                 .WithNone<PlayerGhostTag>());
             m_Linked = GetEntityQuery(new EntityQueryBuilder(Allocator.Temp)
                 .WithAll<PlayerBodyLink, PlayerGhostTag>());
+            m_Own = GetEntityQuery(ComponentType.ReadOnly<NetworkId>());
             RequireAnyForUpdate(m_New, m_Gone, m_Linked);
         }
 
@@ -112,7 +113,7 @@ namespace KryticalNova.Player.Entities.Presentation
                 foreach (var e in linked)
                     if (GhostBodyRegistry.TryGetByGhost(World, e, out var entry))
                     {
-                        bool local = RegisterLocalPlayer && IsOwnedHere(em, e);
+                        bool local = RegisterLocalPlayer && IsOwnedHere(em, e, m_Own);
                         if (local != entry.IsLocal) GhostBodyRegistry.SetLocal(entry, local);
                     }
             }
@@ -125,7 +126,7 @@ namespace KryticalNova.Player.Entities.Presentation
             {
                 NetworkId = em.GetComponentData<GhostOwner>(e).NetworkId,
                 Key = PlayerKey.None,
-                IsLocal = RegisterLocalPlayer && IsOwnedHere(em, e),
+                IsLocal = RegisterLocalPlayer && IsOwnedHere(em, e, m_Own),
                 Position = new Vector3(t.Position.x, t.Position.y, t.Position.z),
                 YawDegrees = FollowMath.YawDegrees(t.Rotation),
             };
@@ -147,8 +148,16 @@ namespace KryticalNova.Player.Entities.Presentation
             em.AddComponentData(e, new PlayerBodyLink { Linked = 1 });
         }
 
-        static bool IsOwnedHere(EntityManager em, Entity e) =>
-            em.HasComponent<GhostOwnerIsLocal>(e) && em.IsComponentEnabled<GhostOwnerIsLocal>(e);
+        // GhostOwnerIsLocal settles a frame after the ghost appears, but the owner's NetworkId is already in the ghost: comparing it with
+        // this world's own NetworkId decides at once, so the body is built in its right shape (a local ClientView keeps input and camera,
+        // a remote one does not) instead of being rebuilt a frame later (M3a-2b step 7). Once settled both answers are the same.
+        static bool IsOwnedHere(EntityManager em, Entity e, EntityQuery own)
+        {
+            if (em.HasComponent<GhostOwnerIsLocal>(e) && em.IsComponentEnabled<GhostOwnerIsLocal>(e)) return true;
+            if (!em.HasComponent<GhostOwner>(e) || own.CalculateEntityCount() != 1) return false;
+            int mine = own.GetSingleton<NetworkId>().Value;
+            return mine != 0 && em.GetComponentData<GhostOwner>(e).NetworkId == mine;
+        }
 
         void DestroyBody(GhostBodyEntry entry)
         {

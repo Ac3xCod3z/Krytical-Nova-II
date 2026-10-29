@@ -110,6 +110,9 @@ namespace KryticalNova.Player.Entities.Presentation
         {
             entry.IsLocal = isLocal;
             if (entry.Body == null) return;
+            // A body built as a ClientView carries its role: its local flag follows (PointAndClickPlayer and the stubs listen).
+            BodyRoleTag tag = entry.Body.GetComponent<BodyRoleTag>();
+            if (tag != null && tag.Kind == NetRoleKind.ClientView) tag.SetLocal(isLocal);
             if (isLocal) LocalPlayer.Set(entry.Body);
             else if (ReferenceEquals(LocalPlayer.Object, entry.Body)) LocalPlayer.Set(null);
         }

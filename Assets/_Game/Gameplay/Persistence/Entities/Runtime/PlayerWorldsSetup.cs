@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using KryticalNova.Core;
 using KryticalNova.Networking.Entities;
 using KryticalNova.Player.Entities;
 using KryticalNova.Player.Entities.Bodies;
@@ -29,6 +30,8 @@ namespace KryticalNova.Persistence.Entities
         {
             if (IsProbeRun()) return;
             KnWorldHooks.ServerWorldMade += world => InstallServer(world);
+            KnWorldHooks.ClientWorldMade += world => InstallClient(world);
+            KnGoInGame.Source = new CharacterSessionGoInGame();
         }
 
         private static bool IsProbeRun()
@@ -67,6 +70,32 @@ namespace KryticalNova.Persistence.Entities
             // The scene's avatar must not hold an account on a server (ServerSave.TryBind would hand it over).
             KryticalNova.Networking.OfflinePlayerHandoff.ReleaseOfflineAvatar();
             return admission;
+        }
+
+        /// <summary>
+        /// Client world: the body factory (real Player.prefab as ClientView), the clicks of the local body's view mode, and the client's
+        /// planner (configured from the local body's NavMeshAgent when it is made). Returns the factory (tests read its counters).
+        /// </summary>
+        public static ClientBodyFactory InstallClient(World client, Func<GameObject> prefab = null)
+        {
+            var planner = new NavMeshPathPlanner();
+            BodyClicks.Clear();
+            var factory = new ClientBodyFactory(prefab ?? (Func<GameObject>)PlayerPrefab)
+            {
+                BeforeLocalBody = KryticalNova.Networking.OfflinePlayerHandoff.ReleaseOfflineAvatar,
+                BodyMade = (body, request) =>
+                {
+                    if (!request.IsLocal) return;
+                    var agent = body.GetComponent<UnityEngine.AI.NavMeshAgent>();
+                    if (agent == null) return;
+                    planner.AgentTypeId = agent.agentTypeID;
+                    planner.AreaMask = agent.areaMask;
+                    planner.BaseOffsetM = agent.baseOffset;
+                },
+            };
+            PlayerEntitiesSetup.Install(client, planner);
+            KryticalNova.Player.Entities.Presentation.PlayerPresentationSetup.Install(client, factory, new BodyClickSource());
+            return factory;
         }
 
         /// <summary>

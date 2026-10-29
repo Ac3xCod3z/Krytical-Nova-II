@@ -121,7 +121,11 @@ namespace KryticalNova.Player
 
         private void Start()
         {
-            // Offline avatar: nobody else will assign an identity.
+            // Offline avatar: nobody else will assign an identity. A body of the entity netcode gets its character from the server
+            // (ServerBody: ServerBegin) or from the look of observers (ClientView: ApplyView); only the local ClientView stub takes
+            // this game's own character, as the offline avatar does (decision D2).
+            BodyRoleTag tag = BodyRoleTag.Of(this);
+            if (tag != null && !(tag.Kind == NetRoleKind.ClientView && tag.IsLocal)) return;
             if (!IsSpawned && CharacterSession.TryGetActive(out var profile))
                 ServerAssign(CharacterNetState.From(profile.name, profile.recipe), CharacterSession.AccountId, profile.id);
         }

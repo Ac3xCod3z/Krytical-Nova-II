@@ -109,7 +109,8 @@ namespace KryticalNova.Items
         {
             // Only the offline scene avatar claims Local here. Networked players are enabled before they spawn, and a
             // remote player's proxy must never become Local, so they wait for OnNetworkSpawn's ownership check.
-            if (NetRole.IsUnspawned(this) && NetRole.IsOffline && Local == null) SetLocal(this);
+            // The local ClientView of the entity netcode is a local stub too (M3a-2b, decision D2): the HUD reads Local.
+            if (NetRole.IsUnspawned(this) && (NetRole.IsOffline || BodyRoleTag.IsLocalClientView(this)) && Local == null) SetLocal(this);
         }
 
         private void Start()
