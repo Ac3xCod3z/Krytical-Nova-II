@@ -317,3 +317,13 @@ dependency_map + compile_check, tests run, risk, rollback).
 Seams: `player-key` (773438fd6), `player-key-2` (9d5c85dfa), `server-stop-endpoint` (f7911ed7c), `net-clock` (e264c7944), `net-role` slice 1 (03e1d55ec, 4a8fca55f), `net-session` (76337636f, 2e2b5d9c4).
 Merged tree: dependency_map 206 links 0 uphill/0 two-way; compile 59/59; --server 27/27; tests for seams 1 and 1b run and passed (19), others written, not run.
 Decision (proposed to Master): X.cs/X.Net.cs splits happen per system at port time (M3-M8), not as a pre-split. Remaining M0 seams: `MapAnchor` in editor builders, fixed/paged RPC args, `IServerLeaving` wiring (Stage 2).
+
+## 21. Decision: split per system at port time (approved by Master, 29 Oct 2026)
+The `X.cs` / `X.Net.cs` split of each NetworkBehaviour happens at the moment that system is ported, inside the DOTS branch, together with its test (definition-of-done rule, section 16) — not as a pre-split on main.
+Reason: refactoring ~59 classes on main first means refactoring each one twice (NGO edge now, N4E edge later), multiplies merge conflicts with sessions that keep editing those files, and tests nothing new.
+Remaining small M0 seams: `MapAnchor` in editor builders, fixed/paged RPC arguments, `IServerLeaving` wiring into the disconnect path (Stage 2 `ConnectionClosedSystem`).
+
+## 22. Main drift log (keep current: files `main` changed since our base that our branch also touches)
+Base: `3ad5ba303` (main on 29 Oct 2026). Our branch touches 100 files so far (docs, Core/Networking/Persistence/Player/GameFeel/UI/World netcode edges, tools).
+- 29 Oct 2026: `main` is still at `3ad5ba303`: 0 new commits, 0 overlapping files.
+Check before every merge and weekly: `git diff --name-only 3ad5ba303 main` intersected with `git diff --name-only 3ad5ba303 dots/netcode-entities`; also list new `[Rpc]` / `NetworkVariable` lines added on main (those are new edges the DOTS branch must port).
