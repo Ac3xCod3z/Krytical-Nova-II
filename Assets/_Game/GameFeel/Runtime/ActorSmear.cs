@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using KryticalNova.Items.Visuals;
-using Unity.Netcode;
+using KryticalNova.Core;
 using UnityEngine;
 
 namespace KryticalNova.GameFeel
@@ -57,8 +57,7 @@ namespace KryticalNova.GameFeel
         public static ActorSmear For(Transform actor)
         {
             if (actor == null) return null;
-            var net = actor.GetComponentInParent<NetworkObject>();
-            if (net != null) actor = net.transform;
+            actor = WorldTargets.RootOf(actor);
             return actor.TryGetComponent(out ActorSmear smear) ? smear : actor.gameObject.AddComponent<ActorSmear>();
         }
 
@@ -66,8 +65,7 @@ namespace KryticalNova.GameFeel
         public static ActorSmear Find(Transform actor)
         {
             if (actor == null) return null;
-            var net = actor.GetComponentInParent<NetworkObject>();
-            if (net != null) actor = net.transform;
+            actor = WorldTargets.RootOf(actor);
             return actor.TryGetComponent(out ActorSmear smear) ? smear : null;
         }
 

@@ -143,14 +143,13 @@ namespace KryticalNova.UI
 
         private void Refresh()
         {
-            var nm = NetworkManager.Singleton;
-            bool connected = nm != null && (nm.IsClient || nm.IsServer);
+            bool connected = NetSession.IsClient || NetSession.IsServer;
             SetVisible(offlineGroup, !connected);
             SetVisible(onlineGroup, connected);
             if (!connected) return;
 
-            roleLabel.text = nm.IsHost ? "Role: Host (Server + Client)" : nm.IsServer ? "Role: Dedicated Server" : "Role: Client";
-            clientsLabel.text = nm.IsServer ? $"Connected Clients: {nm.ConnectedClientsIds.Count}" : nm.IsConnectedClient ? "Connected to host" : "Waiting for the host...";
+            roleLabel.text = NetSession.IsHost ? "Role: Host (Server + Client)" : NetSession.IsServer ? "Role: Dedicated Server" : "Role: Client";
+            clientsLabel.text = NetSession.IsServer ? $"Connected Clients: {NetSession.PlayerCount}" : NetSession.IsConnectedClient ? "Connected to host" : "Waiting for the host...";
             string code = Manager != null ? Manager.ActiveSessionCode : null;
             SetVisible(sessionRow, !string.IsNullOrEmpty(code));
             if (!string.IsNullOrEmpty(code)) sessionCodeLabel.text = $"Session Code: {code}";

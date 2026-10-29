@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using KryticalNova.Items.Visuals;
 using KryticalNova.Networking;
-using Unity.Netcode;
+using KryticalNova.Core;
 using UnityEngine;
 
 namespace KryticalNova.GameFeel
@@ -97,8 +97,7 @@ namespace KryticalNova.GameFeel
 
         private static Transform Root(Transform actor)
         {
-            var net = actor.GetComponentInParent<NetworkObject>();
-            return net != null ? net.transform : actor;
+            return WorldTargets.RootOf(actor);
         }
 
         private void Awake() => rootHeight = ActorAnchor.RootHeight(transform);

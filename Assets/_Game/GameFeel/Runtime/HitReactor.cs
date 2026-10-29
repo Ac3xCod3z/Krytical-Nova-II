@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using BoingKit;
 using KryticalNova.Progression;
-using Unity.Netcode.Components;
+using KryticalNova.Core;
 using UnityEngine;
 
 namespace KryticalNova.GameFeel
@@ -181,7 +181,7 @@ namespace KryticalNova.GameFeel
         /// <summary>Root, unless a NetworkTransform syncs it (scale would be fought over); then the visual child.</summary>
         private static Transform VisualRoot(Transform target)
         {
-            if (target.GetComponent<NetworkTransform>() == null) return target;
+            if (!WorldTargets.SyncsTransform(target.gameObject)) return target;
             foreach (Transform child in target)
                 if (child.GetComponentInChildren<SkinnedMeshRenderer>() != null || child.GetComponentInChildren<MeshRenderer>() != null)
                     return child;

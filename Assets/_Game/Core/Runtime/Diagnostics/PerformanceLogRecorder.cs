@@ -3,7 +3,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Text;
-using Unity.Netcode;
+using KryticalNova.Core;
 using Unity.Profiling;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -368,8 +368,6 @@ namespace KryticalNova.Diagnostics
 
             if (view == null) view = Camera.main;
             Vector3 at = view != null ? view.transform.position : Vector3.zero;
-            NetworkManager network = NetworkManager.Singleton;
-            bool listening = network != null && network.IsListening;
             var second = new PerformanceLogText.Second
             {
                 Time = Seconds(now), Scene = scene, Frames = frames, OverTwentyMs = overTwenty,
@@ -379,8 +377,8 @@ namespace KryticalNova.Diagnostics
                 SetPass = Last(setPass), Triangles = Last(triangles), Batches = Last(batches), DrawCalls = Last(drawCalls),
                 MemoryMb = (long)(Last(usedMemory) / Megabyte), ScriptMemoryMb = (long)(Last(scriptMemory) / Megabyte),
                 Collections = collections,
-                Players = listening && network.IsServer ? network.ConnectedClientsIds.Count : listening ? 1 : 0,
-                NetworkedObjects = listening && network.SpawnManager != null ? network.SpawnManager.SpawnedObjectsList.Count : 0,
+                Players = NetSession.PlayerCount,
+                NetworkedObjects = Math.Max(0, NetSession.NetworkedObjectCount),
                 CameraX = at.x, CameraZ = at.z,
                 LogMicrosecondsAFrame = frames > 0 ? logTicks * 1000000.0 / Stopwatch.Frequency / frames : 0,
             };
@@ -397,8 +395,7 @@ namespace KryticalNova.Diagnostics
         // Hosting, joining and leaving change what the PC has to do: said as a change, not left to be guessed.
         private void WriteSession()
         {
-            NetworkManager network = NetworkManager.Singleton;
-            string now = network == null || !network.IsListening ? "none" : network.IsHost ? "host" : network.IsServer ? "server" : "client";
+            string now = NetSession.ModeWord;
             if (now == session) return;
             session = now;
             StillLoading(LoadingSeconds);
