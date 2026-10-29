@@ -407,8 +407,17 @@ free-text SQL, editing anything in the database, a multi-box list, user accounts
   1.5 s, `Stopping: The server was asked to stop (SIGTERM). Saving every player and the world...` then `Saved. Stopping.`, exit 0. `kill -9`: systemd restarted it
   (listening again, save service healthy, the world document still there). Found while testing: `Restart=always` restarted the game after a clean admin stop; the
   unit now uses `Restart=on-failure`.
-- [ ] IL2CPP Linux build when the PC is idle with 15+ GB headroom (owner at home) - [ ] bot/player save-loss check on the real build (needs a client bot joining
-  the WSL server; not done) - [ ] fresh IL2CPP build before the real stop test is repeated on it.
+- [x] **Run 6 (29 Oct 2026, 16:29-16:34, commit 233ac1460, owner at the PC, `-job-worker-count 2`):** IL2CPP killed again by the watchdog (min available 1.1 GB,
+  Unity process tree peak **17.1 GB**, 4 minutes). No compile error; it dies where IL2CPP/Bee starts. Three failed IL2CPP tries (runs 4, 6 and the first batch)
+  say the same thing: **IL2CPP of this game needs about 17 GB on top of what the PC already holds (31 GB total), so it does not fit here while the owner works.**
+  Decision (owner via Master, 29 Oct): no more IL2CPP tries on this PC. Options kept: (A) retry with >= 20 GB available at the start (everything closed);
+  (B) **now:** tests use the Mono Linux server (save behaviour does not depend on the backend); (C) the IL2CPP release server is built on a bigger machine or a
+  Hetzner build box later (a CCX-class box with 32 GB is enough for a one-hour job).
+- **Build numbers (bot vs server):** both read `Builds/Release/Store/manifest.json` through `ReleasePublisher.LastReleaseBuild()` (build 12, written 25 Oct) and
+  stamp `bundleVersion` "0.1.0 build 12", so a bot client built in the same checkout matches the Mono server built there (08:33 the same day); a differing
+  number is turned away at join.
+- [ ] Bot/player save-loss check on the real build (needs the bot client, `MeasureTools.BuildBotClient`; on hold until fresh Windows exes are shown to run
+  on this PC) - [ ] stop tests again on an IL2CPP build once one exists.
 
 
 ## Change log
