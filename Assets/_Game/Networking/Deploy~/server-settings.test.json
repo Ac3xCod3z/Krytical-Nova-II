@@ -1,0 +1,15 @@
+{
+    "serverName": "Krytical Nova Cloud Test",
+    "port": 7777,
+    "maxPlayers": 30,
+    "map": "Zone01_StarterTown",
+    "connectionMode": "direct",
+    "pagePort": 8090,
+    "backupHours": 6.0,
+    "backupsKept": 10,
+    "saveService": "http://127.0.0.1:7802",
+    "saveServiceKeyFile": "/etc/kn/save-service-key.txt",
+    "certificateFile": "/etc/kn/certificates/server.crt",
+    "privateKeyFile": "/etc/kn/certificates/server.key",
+    "mapServers": []
+}

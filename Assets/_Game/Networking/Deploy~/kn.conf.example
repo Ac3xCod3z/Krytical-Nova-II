@@ -1,0 +1,17 @@
+# Copy to kn.conf (not committed) and edit. No secrets here: the Hetzner token is only ever the HCLOUD_TOKEN environment variable.
+KN_NAME=kn-test-1               # server name in the Hetzner project
+KN_LOCATION=ash                 # ash = Ashburn (US east), hil = Hillsboro (US west)
+KN_TYPE=cpx31                   # 4 vCPU / 8 GB (US price ~EUR 63/month, billed by the hour); confirm it is in stock in the console
+KN_IMAGE=ubuntu-24.04
+KN_SSH_KEY=$HOME/.ssh/kn_hetzner          # private key; the .pub beside it goes to Hetzner
+KN_ADMIN_USER=kn-admin
+KN_ADMIN_CIDR=0.0.0.0/0,::/0              # who may reach SSH (key only). Home IP changes: leave open, or put your current IP/32
+KN_FIREWALL=kn-test-fw
+KN_BUILD_DIR=Builds/Server/Linux          # the folder "Krytical Nova > Build > Dedicated Server (Linux)" made (has KryticalNovaServer.x86_64)
+KN_SAVESERVICE_DIR=                       # dotnet publish -r linux-x64 output of SaveService (deploy.sh makes it when empty)
+KN_CERT_DIR=$HOME/Documents/KryticalNova-Secrets/server-cloud   # holds server.crt + server.key (certificates.sh server <folder>)
+KN_DUMP_DIR=$HOME/Documents/KryticalNova-Backups/cloud-test     # teardown copies the test database here before it deletes anything
+KN_MAX_HOURS=8                            # create.sh records the start; cost-check.sh and the reminder warn after this many hours
+# Estimates used ONLY when hcloud cannot answer (dry run, no token). The real price is read from Hetzner before create.sh asks.
+KN_EST_HOURLY_EUR=0.10
+KN_EST_MONTHLY_EUR=62.99

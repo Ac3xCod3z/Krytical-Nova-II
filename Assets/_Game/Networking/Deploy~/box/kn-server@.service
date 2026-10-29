@@ -1,0 +1,29 @@
+[Unit]
+Description=Krytical Nova game server (%i)
+After=kn-save.service network.target
+Requires=kn-save.service
+
+[Service]
+User=kn
+Group=kn
+Environment=HOME=/var/lib/kn
+WorkingDirectory=/opt/kn/current/server
+# %i is "main" or the number of an entry of mapServers in server-settings.json (see kn-args.sh).
+ExecStart=/opt/kn/current/kn-args.sh %i
+# Stop = kn-stop.sh asks the game to save everyone and quit (a Unity Linux player does not save on SIGTERM); then SIGTERM is the
+# fallback. Give it time. Exit code 3 is the game's own "restart me".
+ExecStop=/opt/kn/current/kn-stop.sh %i
+KillSignal=SIGTERM
+KillMode=mixed
+TimeoutStopSec=90
+# a stop by the admin (exit 0) stays stopped; a crash or the game's own restart (exit 3) starts it again
+Restart=on-failure
+RestartSec=3
+SuccessExitStatus=0
+LimitNOFILE=65536
+NoNewPrivileges=true
+ProtectSystem=full
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
