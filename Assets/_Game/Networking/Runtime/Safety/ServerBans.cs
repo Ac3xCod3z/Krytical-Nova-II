@@ -255,7 +255,7 @@ namespace KryticalNova.Networking
                 clientId = client.ClientId;
                 character = name;
                 // The proven account; on an Editor host test without sign-in, the one the save is kept under.
-                account = ServerAccounts.TryGet(clientId, out ServerAccounts.Entry proven) ? proven.Account
+                account = ServerAccounts.TryGet(NetPlayerKeys.Find(clientId), out ServerAccounts.Entry proven) ? proven.Account
                     : facts.Found ? facts.Account : string.Empty;
                 return true;
             }

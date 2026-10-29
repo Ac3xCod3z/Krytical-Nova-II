@@ -162,7 +162,7 @@ namespace KryticalNova.Persistence
 
             // Online phase 2: the characters this game played before Unity sign-in move to its proven account, once.
             if (IsSpawned && OwnerClientId != NetworkManager.ServerClientId
-                && KryticalNova.Networking.ServerAccounts.TryGet(OwnerClientId, out var proven) && proven.Account == wantedAccount)
+                && KryticalNova.Networking.ServerAccounts.TryGet(KryticalNova.Networking.NetPlayerKeys.Find(OwnerClientId), out var proven) && proven.Account == wantedAccount)
                 ServerSave.CarryOverOnce(proven.OldAccount, wantedAccount);
 
             if (!ServerSave.TryBind(this, wantedAccount, out string refusal))

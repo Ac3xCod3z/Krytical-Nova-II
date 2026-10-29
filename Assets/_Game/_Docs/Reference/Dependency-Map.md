@@ -20,7 +20,7 @@ script, which is then published to the link above. `--baseline` saves today's up
 ## Today
 
 <!-- map:summary -->
-Generated 25 Oct 2026, 16:44: 709 runtime scripts (134,410 lines) declaring 996 types (184 MonoBehaviours, 65 NetworkBehaviours, 101 ScriptableObject classes); 124 test scripts; 4722 prefabs, 46 scenes and 2748 assets read. 206 system-to-system links, of which 0 run uphill, 0 pairs of systems use each other both ways, and 0 links would have to go for the systems to form a clean stack. The largest tangle, classes that all reach each other through some chain of uses, holds 10 classes from 1 systems (UI 10, ...).
+Generated 29 Oct 2026, 06:31: 712 runtime scripts (134,536 lines) declaring 999 types (184 MonoBehaviours, 65 NetworkBehaviours, 101 ScriptableObject classes); 126 test scripts; 4722 prefabs, 46 scenes and 2748 assets read. 206 system-to-system links, of which 0 run uphill, 0 pairs of systems use each other both ways, and 0 links would have to go for the systems to form a clean stack. The largest tangle, classes that all reach each other through some chain of uses, holds 10 classes from 1 systems (UI 10, ...).
 <!-- /map:summary -->
 
 **Checked against the compiler.**
@@ -64,8 +64,8 @@ Checked against the 211 references the assemblies declare between systems: every
 <!-- map:systems -->
 | System | Layer | Scripts | Lines | Uses (types) | Used by (types) | Instability | Tests | Types touched by a test |
 |---|---|---|---|---|---|---|---|---|
-| Core | Foundation | 47 | 3,885 | 0 | 212 | 0.0 | 4 | 15 of 34 |
-| Networking | Infrastructure | 41 | 7,603 | 5 | 90 | 0.05 | 3 | 25 of 54 |
+| Core | Foundation | 49 | 3,979 | 0 | 215 | 0.0 | 5 | 17 of 36 |
+| Networking | Infrastructure | 42 | 7,631 | 7 | 92 | 0.07 | 4 | 26 of 55 |
 | Rendering | Infrastructure | 17 | 3,589 | 3 | 28 | 0.1 | 1 | 2 of 21 |
 | Environment | Simulation | 6 | 834 | 0 | 2 | 0.0 | 0 | 0 of 6 |
 | Gameplay/Autopilot | Simulation | 11 | 1,423 | 41 | 13 | 0.76 | 3 | 6 of 12 |
@@ -79,11 +79,11 @@ Checked against the 211 references the assemblies declare between systems: every
 | Gameplay/Pets | Simulation | 12 | 1,445 | 33 | 32 | 0.51 | 4 | 13 of 19 |
 | Gameplay/Social | Simulation | 39 | 5,805 | 52 | 49 | 0.51 | 9 | 23 of 52 |
 | Gameplay/Combat | Simulation | 13 | 3,362 | 44 | 27 | 0.62 | 4 | 5 of 14 |
-| Gameplay/Persistence | Simulation | 10 | 3,158 | 60 | 14 | 0.81 | 14 | 7 of 14 |
-| Gameplay/Player | Simulation | 25 | 10,685 | 62 | 48 | 0.56 | 4 | 11 of 28 |
+| Gameplay/Persistence | Simulation | 10 | 3,158 | 61 | 14 | 0.81 | 14 | 7 of 14 |
+| Gameplay/Player | Simulation | 25 | 10,686 | 64 | 48 | 0.57 | 4 | 11 of 28 |
 | Gameplay/CharacterCreation | Simulation | 26 | 3,173 | 27 | 70 | 0.28 | 10 | 25 of 29 |
 | Gameplay/Items | Simulation | 66 | 11,860 | 46 | 182 | 0.2 | 13 | 41 of 88 |
-| World | Simulation | 37 | 6,374 | 14 | 41 | 0.25 | 2 | 9 of 43 |
+| World | Simulation | 37 | 6,377 | 14 | 41 | 0.25 | 2 | 9 of 43 |
 | Gameplay/Progression | Simulation | 46 | 8,125 | 25 | 207 | 0.11 | 6 | 27 of 58 |
 | Gameplay/Wallet | Simulation | 3 | 132 | 0 | 18 | 0.0 | 0 | 2 of 2 |
 | Gameplay/NPC | Simulation | 3 | 290 | 5 | 17 | 0.23 | 1 | 1 of 4 |
@@ -180,7 +180,7 @@ Classes over 700 lines. Several of them also reach into three or more other syst
 | Class | System | Lines | Other systems it uses | Files using it |
 |---|---|---|---|---|
 | ProgressionHUD | UI | 2212 | Audio, Core, Gameplay/Autopilot, Gameplay/Economy, Gameplay/Items, Gameplay/Player, Gameplay/Progression | 5 |
-| PointAndClickPlayer | Gameplay/Player | 2145 | Core, Gameplay/Progression, Networking, Rendering | 32 |
+| PointAndClickPlayer | Gameplay/Player | 2146 | Core, Gameplay/Progression, Networking, Rendering | 32 |
 | PlayerWallRunMotor | Gameplay/Player | 1760 | Core, Gameplay/Progression, Networking, World | 8 |
 | ArrangeController | UI | 1663 | Core, Gameplay/Housing, Gameplay/Items, Gameplay/Player, Gameplay/Progression | 0 |
 | GearUIController | UI | 1628 | Core, Gameplay/CharacterCreation, Gameplay/Economy, Gameplay/Items, Gameplay/Pets, Gameplay/Player, Gameplay/Progression, Gameplay/Restyle, Gameplay/Wallet | 21 |
@@ -192,8 +192,8 @@ Classes over 700 lines. Several of them also reach into three or more other syst
 | PlayerCombatSkills | Gameplay/Progression | 965 | Core, Networking | 18 |
 | HudLayoutEditor | UI | 964 | - | 12 |
 | GearWorkWindowController | UI | 947 | Core, Gameplay/Economy, Gameplay/Forge, Gameplay/Items, Gameplay/NPC, Gameplay/Progression | 0 |
+| NetworkConnectionManager | Networking | 936 | Core | 15 |
 | CharacterCreatorController | UI | 935 | Gameplay/CharacterCreation, Gameplay/Factions, Gameplay/Items, Gameplay/Progression | 0 |
-| NetworkConnectionManager | Networking | 933 | Core | 15 |
 | GmCommands | Tools | 910 | Core, Gameplay/Combat, Gameplay/Factions, Gameplay/Items, Gameplay/Player, Gameplay/Progression, Gameplay/Social, Networking, World | 0 |
 | PlayerJumpMotor | Gameplay/Player | 844 | Gameplay/Progression, Networking | 7 |
 | CharacterSelectController | UI | 840 | Gameplay/CharacterCreation, Networking | 0 |
@@ -345,7 +345,7 @@ first. The page lists the file and line behind each.
 | 12 | Hub | ServerChat.Announce (state) | Core, Gameplay/Items, Gameplay/Social | 3 | 2 | small |
 | 13 | Design data | 347 gameplay numbers fixed in code | Gameplay/Autopilot, Gameplay/CharacterCreation, Gameplay/Combat, Gameplay/Crafting, Gameplay/Economy ... | 3 | 108 | large |
 | 14 | Hub | WorldEnvironmentNetwork.Instance (locator) | World, Tools | 3 | 10 | medium |
-| 15 | God class | PointAndClickPlayer (2145 lines) | Gameplay/Player | 3 | 33 | large |
+| 15 | God class | PointAndClickPlayer (2146 lines) | Gameplay/Player | 3 | 33 | large |
 | 16 | Hub | NetworkConnectionManager.Instance (locator) | Networking, UI, World | 3 | 6 | medium |
 | 17 | Hub | NpcInteractable.Active (locator) | Gameplay/NPC, Gameplay/Economy, UI | 3 | 6 | medium |
 | 18 | Hub | ServerHooks.Saves (state) | Networking, Gameplay/Persistence, World | 3 | 6 | medium |

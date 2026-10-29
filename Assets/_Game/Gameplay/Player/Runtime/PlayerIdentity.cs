@@ -182,7 +182,7 @@ namespace KryticalNova.Player
         private string ProvenAccount(string claimed)
         {
             if (OwnerClientId == NetworkManager.ServerClientId) return claimed; // the host's own player
-            if (ServerAccounts.TryGet(OwnerClientId, out ServerAccounts.Entry proven)) return proven.Account;
+            if (ServerAccounts.TryGet(NetPlayerKeys.Find(OwnerClientId), out ServerAccounts.Entry proven)) return proven.Account;
             return KryticalNova.Networking.NetworkConnectionManager.RequireProof ? string.Empty : claimed;
         }
 

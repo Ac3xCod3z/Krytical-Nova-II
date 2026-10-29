@@ -573,7 +573,7 @@ namespace KryticalNova.Networking
             NetworkManager network = NetworkManager.Singleton;
             if (network == null || !network.IsServer || !ulong.TryParse(who, out ulong client) || !network.ConnectedClients.ContainsKey(client))
                 return "That player is no longer here.";
-            if (!ServerAccounts.TryGet(client, out ServerAccounts.Entry proven)) return "That player's account is not proven (they joined without Unity sign-in).";
+            if (!ServerAccounts.TryGet(NetPlayerKeys.Find(client), out ServerAccounts.Entry proven)) return "That player's account is not proven (they joined without Unity sign-in).";
             GmEntry already = GmRoster.FindByAccount(proven.Account);
             if (already != null && already != entry) return $"That player is already GM {already.name}.";
             var list = new List<GmEntry>(GmRoster.All);

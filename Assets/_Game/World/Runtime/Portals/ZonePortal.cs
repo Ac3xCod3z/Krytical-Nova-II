@@ -65,7 +65,8 @@ namespace KryticalNova.World.Portals
             offset.y = 0f;
             if (offset.magnitude > activationRadius + RadiusTolerance) return;
 
-            ulong clientId = networked ? player.OwnerClientId : OfflineClientId;
+            ulong clientId = OfflineClientId;
+            if (networked && !PlayerKeys.TryGetConnection(player.Owner, out clientId)) return; // no live key: not a connected player
             float now = Time.time;
             if (nextUseTime.TryGetValue(clientId, out float allowedAt) && now < allowedAt) return;
             nextUseTime[clientId] = now + cooldownSeconds;

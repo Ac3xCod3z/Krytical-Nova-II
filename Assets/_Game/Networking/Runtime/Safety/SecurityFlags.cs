@@ -112,7 +112,7 @@ namespace KryticalNova.Networking
         private static void Describe(Flag flag)
         {
             flag.Character = "(no character yet)";
-            flag.Account = ServerAccounts.TryGet(flag.ClientId, out ServerAccounts.Entry entry) ? entry.Account : "(not signed in)";
+            flag.Account = ServerAccounts.TryGet(NetPlayerKeys.Find(flag.ClientId), out ServerAccounts.Entry entry) ? entry.Account : "(not signed in)";
             flag.Map = SceneManager.GetActiveScene().name;
             NetworkManager manager = NetworkManager.Singleton;
             if (manager != null && manager.ConnectedClients.TryGetValue(flag.ClientId, out NetworkClient client) && client.PlayerObject != null)
