@@ -39,6 +39,7 @@ namespace KryticalNova.Networking.Entities.Probe
             client.m_Folder = folder;
             s_TraceFolder = folder;
             s_TraceName = "probe-trace-client-" + KnProbeFiles.Sanitize(args.Name) + ".txt";
+            KnTrace.Configure(folder, s_TraceName);
             client.m_Result = new KnProbeResult
             {
                 role = "client",

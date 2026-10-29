@@ -134,11 +134,13 @@ namespace KryticalNova.Networking.Entities
             if (IsDone) return true;
             World world = m_World;
             m_World = null;
+            KnTrace.Write("roster finish: ok=" + result.Ok + " before world dispose, worldCreated=" + (world != null && world.IsCreated));
             if (world != null && world.IsCreated)
             {
                 if (World.DefaultGameObjectInjectionWorld == world) World.DefaultGameObjectInjectionWorld = null;
                 world.Dispose();
             }
+            KnTrace.Write("roster finish: world disposed");
             m_Completion.TrySetResult(result);
             m_OnDone?.Invoke();
             return true;

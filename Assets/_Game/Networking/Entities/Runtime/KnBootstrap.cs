@@ -70,7 +70,9 @@ namespace KryticalNova.Networking.Entities
                 return false;
             }
             Stop();
+            KnTrace.Write("start client: creating the world");
             StartClientWorld(endpoint, joinPayload, encrypted ? KnTransportMode.Secure : KnTransportMode.Plain, default);
+            KnTrace.Write("start client: world created");
             return true;
         }
 
@@ -88,9 +90,12 @@ namespace KryticalNova.Networking.Entities
             worlds.AddRange(ClientWorlds);
             worlds.AddRange(ThinClientWorlds);
             worlds.AddRange(ServerWorlds);
+            KnTrace.Write("bootstrap stop: " + worlds.Count + " world(s)");
             foreach (World world in worlds)
             {
+                KnTrace.Write("bootstrap stop: disposing '" + (world != null && world.IsCreated ? world.Name : "(gone)") + "'");
                 if (world != null && world.IsCreated) world.Dispose();
+                KnTrace.Write("bootstrap stop: disposed");
             }
             ClientWorlds.Clear();
             ThinClientWorlds.Clear();
