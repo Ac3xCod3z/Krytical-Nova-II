@@ -24,6 +24,7 @@ namespace KryticalNova.Networking
 
         private static ServerLifetime instance;
         private static int consoleStop;  // set by the console's thread, read by the game's
+        private static volatile int termRequested; // set by the Linux SIGTERM handler, read by the game's
         private static readonly ManualResetEventSlim Stopped = new ManualResetEventSlim(false);
         private static ConsoleHandler handler; // held, or the garbage collector frees the callback Windows calls
 
@@ -50,6 +51,15 @@ namespace KryticalNova.Networking
 
         /// <summary>True while a stop is under way (saves and backups are being written).</summary>
         public static bool Stopping => instance != null && instance.stopping;
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetStatics()
+        {
+            instance = null;
+            consoleStop = 0;
+            termRequested = 0;
+            Stopped.Reset();
+        }
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         private static void Boot()
@@ -98,6 +108,12 @@ namespace KryticalNova.Networking
             if (Interlocked.Exchange(ref consoleStop, 0) == 1 && !stopping)
             {
                 StopNow("The server was closed.");
+                return;
+            }
+            if (termRequested == 1 && !stopping)
+            {
+                termRequested = 0;
+                StopNow("The server was asked to stop (SIGTERM).");
                 return;
             }
             if (stopping) return;
@@ -224,8 +240,29 @@ namespace KryticalNova.Networking
         private static extern bool SetConsoleCtrlHandler(ConsoleHandler routine, bool add);
 #endif
 
+        // ------------------------------------------------------------------ SIGTERM (Linux)
+        // A stock Unity Linux player ends on SIGTERM in about 0.2 s without Application.wantsToQuit, so nothing is saved.
+        // The handler runs on any thread with almost nothing safe to call: it only sets a flag, and Update (the game's
+        // thread) runs the same StopNow as the control page. POST /stop (ServerStopEndpoint) is the first line; this is the second.
+#if UNITY_STANDALONE_LINUX && !UNITY_EDITOR
+        private delegate void SignalHandler(int signal);
+        private const int SigTerm = 15;
+        private static SignalHandler signalHandler; // held, or the garbage collector frees the callback the system calls
+
+        [DllImport("libc", EntryPoint = "signal")]
+        private static extern System.IntPtr SetSignal(int signal, SignalHandler handler);
+
+        [AOT.MonoPInvokeCallback(typeof(SignalHandler))]
+        private static void OnSigTerm(int signal) => termRequested = 1;
+#endif
+
         private static void InstallConsoleHandler()
         {
+#if UNITY_STANDALONE_LINUX && !UNITY_EDITOR
+            signalHandler = OnSigTerm;
+            try { SetSignal(SigTerm, signalHandler); }
+            catch (System.Exception e) { Debug.LogWarning("[Server] Could not watch SIGTERM: stopping by signal will not save first (" + e.GetType().Name + ")."); }
+#endif
 #if UNITY_STANDALONE_WIN
             handler = OnConsoleEvent;
             if (!SetConsoleCtrlHandler(handler, true)) Debug.LogWarning("[Server] Could not watch the console window: closing it will not save first.");
