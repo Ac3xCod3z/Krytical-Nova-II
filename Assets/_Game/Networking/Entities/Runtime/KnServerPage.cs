@@ -102,6 +102,43 @@ namespace KryticalNova.Networking.Entities
         }
     }
 
+
+    /// <summary>
+    /// Page request tracing to a plain file (only when the command line has <c>-knout &lt;folder&gt;</c>, as the probe players do): one line per stage
+    /// with the thread id and the time, written with <c>File.AppendAllText</c> BEFORE any Unity call, so a request that stops is visible even if
+    /// the game's own log is what blocks. Found necessary in the first real-socket run (M2c). No-op otherwise.
+    /// </summary>
+    public static class KnPageTrace
+    {
+        private static readonly object s_Lock = new object();
+        private static readonly System.Diagnostics.Stopwatch s_Clock = System.Diagnostics.Stopwatch.StartNew();
+        private static string s_Path;
+        private static bool s_Looked;
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void Reset() { s_Path = null; s_Looked = false; }
+
+        public static void Write(string stage)
+        {
+            try
+            {
+                lock (s_Lock)
+                {
+                    if (!s_Looked)
+                    {
+                        s_Looked = true;
+                        string[] args = Environment.GetCommandLineArgs();
+                        for (int i = 0; i < args.Length - 1; i++)
+                            if (args[i] == "-knout") { s_Path = System.IO.Path.Combine(args[i + 1], "page-trace.txt"); break; }
+                    }
+                    if (s_Path == null) return;
+                    System.IO.File.AppendAllText(s_Path, $"{s_Clock.ElapsedMilliseconds,8} ms  thread {Thread.CurrentThread.ManagedThreadId,3}  {stage}" + Environment.NewLine);
+                }
+            }
+            catch (Exception) { /* tracing must never break the page */ }
+        }
+    }
+
     /// <summary>
     /// The server's page: a TCP listener on the page port (game port + 1 in the host-layer contract) with its own threads, and
     /// the UDP "how are you?" answer the Servers window reads (<see cref="ServerStatusProtocol"/>) on the same number. Managed
@@ -192,6 +229,7 @@ namespace KryticalNova.Networking.Entities
                     Thread.Sleep(failures < 5 ? 50 : 1000);
                     continue;
                 }
+                KnPageTrace.Write("accepted");
                 if (accepted++ < 3) Debug.Log("[KnServer] Page request accepted.");
                 if (Interlocked.Increment(ref m_Active) > MaxConcurrentRequests)
                 {
@@ -211,33 +249,47 @@ namespace KryticalNova.Networking.Entities
 
         private void Handle(TcpClient client)
         {
+            KnPageTrace.Write("handle: start");
             using (client)
             {
                 try
                 {
                     client.ReceiveTimeout = 5000;
                     client.SendTimeout = 5000;
+                    KnPageTrace.Write("handle: timeouts set");
                     NetworkStream stream = client.GetStream();
                     bool loopback = client.Client.RemoteEndPoint is IPEndPoint remote && IPAddress.IsLoopback(remote.Address);
+                    KnPageTrace.Write("handle: before read, loopback=" + loopback);
                     ControlPageRules.Request request = ControlPageRules.Read(stream, out bool empty);
+                    KnPageTrace.Write("handle: after read, empty=" + empty + ", request=" + (request == null ? "null" : request.Method + " " + request.Path));
                     if (empty) return;
+                    KnPageTrace.Write("handle: before status");
+                    KnStatusSnapshot status = KnServerStatus.Current;
+                    KnPageTrace.Write("handle: status taken, null=" + (status == null));
+                    bool stopping = KnStopRequests.Stopping;
+                    KnPageTrace.Write("handle: stopping=" + stopping);
                     KnPageRules.Reply reply = request == null
                         ? new KnPageRules.Reply(400, null, string.Empty, false)
                         : KnPageRules.Handle(request.Method, request.Path, loopback, request.Header(StopEndpointRules.KeyHeader), m_Key,
-                            KnServerStatus.Current, m_Stop, KnStopRequests.Stopping, request.Query);
+                            status, m_Stop, stopping, request.Query);
+                    KnPageTrace.Write("handle: reply decided, status " + reply.Status + ", body " + reply.Body.Length + " chars");
                     Write(stream, reply, request != null && request.Method == "HEAD");
+                    KnPageTrace.Write("handle: written and flushed");
                     if (reply.KickKey != 0) KnKickRequests.Request(reply.KickKey); // the answer has gone out; the main thread closes the connection
                     if (reply.BeginStop)
                     {
+                        KnPageTrace.Write("handle: stop requested");
                         Debug.Log("[KnServer] Stop requested through the stop endpoint.");
                         KnStopRequests.Request(KnStopSource.Http); // the answer has gone out; the main thread saves and quits
                     }
                 }
                 catch (Exception e)
                 {
+                    KnPageTrace.Write("handle: exception " + e.GetType().Name + ": " + e.Message);
                     if (!ControlPageRules.IsClientHangUp(e)) Debug.LogWarning("[KnServer] Page request failed: " + e.GetType().Name);
                 }
             }
+            KnPageTrace.Write("handle: closed");
         }
 
         private static void Write(NetworkStream stream, KnPageRules.Reply reply, bool headOnly)
