@@ -1,5 +1,6 @@
 using System;
 using KryticalNova.Combat;
+using KryticalNova.Core;
 using Unity.Netcode;
 using UnityEngine;
 
@@ -58,7 +59,7 @@ namespace KryticalNova.Audio
         public bool HasAuthority => !IsSpawned || IsServer;
 
         /// <summary>Shared clock: server time when networked, local time offline.</summary>
-        public double Now => IsSpawned && NetworkManager != null ? NetworkManager.ServerTime.Time : Time.timeAsDouble;
+        public double Now => IsSpawned && NetworkManager != null ? NetClock.Now : Time.timeAsDouble;
 
         private void Awake()
         {
