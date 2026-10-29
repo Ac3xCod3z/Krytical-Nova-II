@@ -28,11 +28,38 @@ namespace KryticalNova.Networking.Entities
         }
 
         /// <summary>The real join rule: Unity sign-in proof, bans from Core's slot, accept-all tickets until a world service exists.</summary>
-        public static KnJoinCheck BuildJoinCheck(KnServerSettings settings, string serverBuild, bool isEditor, string projectId, Func<int> online)
+        public static KnJoinCheck BuildJoinCheck(KnServerSettings settings, string serverBuild, bool isEditor, string projectId, Func<int> online,
+            IKnTravelTicketCheck tickets = null)
         {
             KnJoinCheckOptions options = JoinOptions(settings, serverBuild, isEditor);
-            return new KnJoinCheck(options, new UnityAccountProof(projectId), new AcceptAllTickets(), online,
+            return new KnJoinCheck(options, new UnityAccountProof(projectId), tickets ?? BuildTicketCheck(settings), online,
                 log: line => Debug.Log("[KnServer] " + line));
+        }
+
+        /// <summary>
+        /// The travel ticket rule: with a save service the world service redeems tickets (a map server insists on one); without it
+        /// every join is accepted, which a map server cannot do safely, so it says so.
+        /// </summary>
+        public static IKnTravelTicketCheck BuildTicketCheck(KnServerSettings settings)
+        {
+            bool mapServer = string.Equals(settings.role, "map", StringComparison.OrdinalIgnoreCase);
+            if (settings.UsesSaveService)
+            {
+                try
+                {
+                    return new WorldServiceTicketCheck(new KnHttpTicketTransport(settings.saveService, settings.ReadStopKey()),
+                        WorldServiceTicketCheck.ServerId(settings.port), requireTicket: mapServer, log: line => Debug.Log("[KnServer] " + line));
+                }
+                catch (Exception e)
+                {
+                    Debug.LogError("[KnServer] The world service address could not be used (" + e.GetType().Name + "): travel tickets are NOT checked.");
+                }
+            }
+            else if (mapServer)
+            {
+                Debug.LogWarning("[KnServer] This is a map server without a save service: it cannot check travel tickets and takes everyone.");
+            }
+            return new AcceptAllTickets();
         }
 
         /// <summary>

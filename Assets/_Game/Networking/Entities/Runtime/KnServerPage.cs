@@ -23,19 +23,39 @@ namespace KryticalNova.Networking.Entities
             public readonly string ContentType;
             public readonly string Body;
             public readonly bool BeginStop;
+            /// <summary>Non-zero: the PlayerKey of a player the main thread must now disconnect.</summary>
+            public readonly ulong KickKey;
 
-            public Reply(int status, string contentType, string body, bool beginStop)
+            public Reply(int status, string contentType, string body, bool beginStop, ulong kickKey = 0)
             {
                 Status = status;
                 ContentType = contentType;
                 Body = body ?? string.Empty;
                 BeginStop = beginStop;
+                KickKey = kickKey;
             }
         }
 
+        public const string PlayersPath = "/players";
+        public const string KickPath = "/kick";
+
         public static Reply Handle(string method, string path, bool fromLoopback, string givenKey, string expectedKey,
-            KnStatusSnapshot status, StopEndpointRules stop, bool serverAlreadyStopping)
+            KnStatusSnapshot status, StopEndpointRules stop, bool serverAlreadyStopping, string query = null)
         {
+            if (path == PlayersPath || path == KickPath)
+            {
+                // The player list and the kick are the server owner's: this machine only, and the same key as the stop endpoint.
+                if (!fromLoopback || string.IsNullOrEmpty(expectedKey) || !ControlPageRules.SecretEquals(givenKey, expectedKey))
+                    return new Reply(403, null, string.Empty, false);
+                if (path == PlayersPath)
+                    return method == "GET" || method == "HEAD"
+                        ? new Reply(200, "application/json", (status ?? new KnStatusSnapshot()).PlayersJson(), false)
+                        : new Reply(405, null, string.Empty, false);
+                if (method != "POST") return new Reply(405, null, string.Empty, false);
+                if (!TryReadPlayer(query, out ulong key)) return new Reply(400, "application/json", "{\"error\":\"give ?player=<key> from the player list\"}", false);
+                if (status == null || !status.HasPlayer(key)) return new Reply(404, "application/json", "{\"error\":\"no such player online\"}", false);
+                return new Reply(202, "application/json", "{\"kick\":true,\"player\":\"" + key.ToString(System.Globalization.CultureInfo.InvariantCulture) + "\"}", false, key);
+            }
             if (path == StopEndpointRules.StopPath)
             {
                 StopEndpointRules.Decision d = stop.Decide(method, path, fromLoopback, givenKey, expectedKey, serverAlreadyStopping);
@@ -50,6 +70,20 @@ namespace KryticalNova.Networking.Entities
                 return new Reply(200, "application/json", (status ?? new KnStatusSnapshot()).ToJson(), false);
             }
             return new Reply(404, null, string.Empty, false);
+        }
+
+        /// <summary>Reads <c>player=&lt;decimal key&gt;</c> out of a query string. Zero is not a player.</summary>
+        public static bool TryReadPlayer(string query, out ulong key)
+        {
+            key = 0;
+            if (string.IsNullOrEmpty(query)) return false;
+            foreach (string pair in query.Split('&'))
+            {
+                int eq = pair.IndexOf('=');
+                if (eq > 0 && pair.Substring(0, eq) == "player")
+                    return ulong.TryParse(pair.Substring(eq + 1), System.Globalization.NumberStyles.None, System.Globalization.CultureInfo.InvariantCulture, out key) && key != 0;
+            }
+            return false;
         }
 
         public static string ReasonPhrase(int status)
@@ -178,8 +212,9 @@ namespace KryticalNova.Networking.Entities
                     KnPageRules.Reply reply = request == null
                         ? new KnPageRules.Reply(400, null, string.Empty, false)
                         : KnPageRules.Handle(request.Method, request.Path, loopback, request.Header(StopEndpointRules.KeyHeader), m_Key,
-                            KnServerStatus.Current, m_Stop, KnStopRequests.Stopping);
+                            KnServerStatus.Current, m_Stop, KnStopRequests.Stopping, request.Query);
                     Write(stream, reply, request != null && request.Method == "HEAD");
+                    if (reply.KickKey != 0) KnKickRequests.Request(reply.KickKey); // the answer has gone out; the main thread closes the connection
                     if (reply.BeginStop)
                     {
                         Debug.Log("[KnServer] Stop requested through the stop endpoint.");

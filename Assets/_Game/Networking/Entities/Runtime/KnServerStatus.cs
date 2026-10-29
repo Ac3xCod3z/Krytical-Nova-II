@@ -7,6 +7,18 @@ using UnityEngine;
 
 namespace KryticalNova.Networking.Entities
 {
+    /// <summary>One player as the control page shows it: never the account, never the address.</summary>
+    public sealed class KnPlayerRow
+    {
+        /// <summary>The server's PlayerKey (<c>PlayerKey.Value</c>): what a kick names. Never the NetworkId, which is handed out again.</summary>
+        public ulong Key;
+        public int NetworkId;
+        public string Name = string.Empty;
+        /// <summary>Round trip in milliseconds; -1 when not measured yet.</summary>
+        public int PingMs = -1;
+        public string Map = string.Empty;
+    }
+
     /// <summary>
     /// What the status page and the UDP status answer say, copied out of the world once a second by <see cref="KnStatusSystem"/>.
     /// Immutable and plain, so another thread reading it never touches the entity world (the HTTP thread must not).
@@ -26,6 +38,31 @@ namespace KryticalNova.Networking.Entities
         public double UptimeSeconds;
         /// <summary>UTC ticks when the snapshot was taken.</summary>
         public long TakenUtcTicks;
+        /// <summary>The players online; empty when the snapshot was made without rows. Read only after <see cref="KnServerStatus.Publish"/>.</summary>
+        public KnPlayerRow[] PlayerRows = new KnPlayerRow[0];
+
+        public bool HasPlayer(ulong key)
+        {
+            for (int i = 0; i < PlayerRows.Length; i++) if (PlayerRows[i].Key == key) return true;
+            return false;
+        }
+
+        /// <summary>The control page's player list: key (as text, a 64-bit number does not fit a script number), id, name, ping, map.</summary>
+        public string PlayersJson()
+        {
+            var sb = new StringBuilder(64 + PlayerRows.Length * 96);
+            sb.Append("{\"count\":").Append(PlayerRows.Length.ToString(CultureInfo.InvariantCulture)).Append(",\"players\":[");
+            for (int i = 0; i < PlayerRows.Length; i++)
+            {
+                KnPlayerRow r = PlayerRows[i];
+                if (i > 0) sb.Append(',');
+                sb.Append("{\"key\":\"").Append(r.Key.ToString(CultureInfo.InvariantCulture)).Append("\",\"id\":").Append(r.NetworkId.ToString(CultureInfo.InvariantCulture))
+                  .Append(",\"name\":").Append(KnJson.Quote(r.Name))
+                  .Append(",\"ping\":").Append(r.PingMs.ToString(CultureInfo.InvariantCulture))
+                  .Append(",\"map\":").Append(KnJson.Quote(r.Map)).Append('}');
+            }
+            return sb.Append("]}").ToString();
+        }
 
         /// <summary>The page's JSON answer: no account, no address, nothing a stranger should not read.</summary>
         public string ToJson()
@@ -84,6 +121,9 @@ namespace KryticalNova.Networking.Entities
         public static string Role = "main";
         public static int MaxPlayers = 100;
 
+        /// <summary>The character name of a player, filled by the Player system later (empty before a character is chosen). Main thread only.</summary>
+        public static System.Func<KryticalNova.Core.PlayerKey, string> NameOf;
+
         public static KnStatusSnapshot Current => s_Current;
 
         public static void Publish(KnStatusSnapshot snapshot) => s_Current = snapshot ?? new KnStatusSnapshot();
@@ -96,6 +136,7 @@ namespace KryticalNova.Networking.Entities
             Build = Map = string.Empty;
             Role = "main";
             MaxPlayers = 100;
+            NameOf = null;
         }
     }
 
@@ -126,13 +167,33 @@ namespace KryticalNova.Networking.Entities
             m_Next = now + Interval;
             uint tick = 0;
             if (m_Time.TryGetSingleton(out NetworkTime time) && time.ServerTick.IsValid) tick = time.ServerTick.TickIndexForValidTick;
+            var connections = m_Players.ToEntityArray(Unity.Collections.Allocator.Temp);
+            var ids = m_Players.ToComponentDataArray<NetworkId>(Unity.Collections.Allocator.Temp);
+            var keys = m_Players.ToComponentDataArray<ConnectionPlayerKey>(Unity.Collections.Allocator.Temp);
+            var rows = new KnPlayerRow[connections.Length];
+            for (int i = 0; i < rows.Length; i++)
+            {
+                float rtt = EntityManager.HasComponent<NetworkSnapshotAck>(connections[i]) ? EntityManager.GetComponentData<NetworkSnapshotAck>(connections[i]).EstimatedRTT : 0f;
+                rows[i] = new KnPlayerRow
+                {
+                    Key = keys[i].Key,
+                    NetworkId = ids[i].Value,
+                    Name = KnServerStatus.NameOf?.Invoke(keys[i].PlayerKey) ?? string.Empty,
+                    PingMs = rtt > 0f ? (int)rtt : -1,
+                    Map = KnServerStatus.Map,
+                };
+            }
+            connections.Dispose();
+            ids.Dispose();
+            keys.Dispose();
             KnServerStatus.Publish(new KnStatusSnapshot
             {
                 Name = KnServerStatus.Name,
                 Build = KnServerStatus.Build,
                 Map = KnServerStatus.Map,
                 Role = KnServerStatus.Role,
-                Players = m_Players.CalculateEntityCount(),
+                Players = rows.Length,
+                PlayerRows = rows,
                 MaxPlayers = KnServerStatus.MaxPlayers,
                 Tick = tick,
                 Stopping = KnStopRequests.Stopping,
