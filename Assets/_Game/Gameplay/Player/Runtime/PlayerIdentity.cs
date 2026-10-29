@@ -183,7 +183,7 @@ namespace KryticalNova.Player
         {
             if (OwnerClientId == NetworkManager.ServerClientId) return claimed; // the host's own player
             if (ServerAccounts.TryGet(NetPlayerKeys.Find(OwnerClientId), out ServerAccounts.Entry proven)) return proven.Account;
-            return KryticalNova.Networking.NetworkConnectionManager.RequireProof ? string.Empty : claimed;
+            return ServerPolicy.RequireProof(KryticalNova.Networking.NetworkConnectionManager.RequireProof) ? string.Empty : claimed;
         }
 
         /// <summary>
@@ -223,6 +223,18 @@ namespace KryticalNova.Player
                 Apply(state);
             }
             if (IsSpawned) netState.Value = state;
+        }
+
+        /// <summary>
+        /// Server body of the entity netcode: gives this body its character (account and character ids come from the server's own
+        /// records, never from the request). Null when the character is in place, else the words to refuse the player with.
+        /// </summary>
+        public string ServerBegin(in CharacterNetState state, string account, string character)
+        {
+            if (HasIdentity) return "This body already has a character.";
+            if (state.IsEmpty) return "No character was sent.";
+            ServerAssign(state, account, character);
+            return HasIdentity ? null : "That character's name or look is not allowed on this server.";
         }
 
         /// <summary>

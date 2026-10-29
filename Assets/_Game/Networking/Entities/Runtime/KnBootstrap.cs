@@ -44,6 +44,7 @@ namespace KryticalNova.Networking.Entities
         {
             KnServerSettings settings = KnServerSettings.LoadForThisServer();
             World server = CreateServerWorld(ServerWorldName);
+            BodyRoleNetRoleAdapter.Install();
             KnServerEntry.Start(server, settings); // tick rate, join rule, listen, status page, POST /stop, stop signals
         }
 #endif
@@ -55,6 +56,7 @@ namespace KryticalNova.Networking.Entities
         {
             Stop();
             World server = CreateServerWorld(ServerWorldName);
+            BodyRoleNetRoleAdapter.Install();
             KnNetDefaults.Apply(server);
             Listen(server, port);
             StartClientWorld(NetworkEndpoint.LoopbackIpv4.WithPort(port), joinPayload, KnTransportMode.Plain, default);
@@ -107,6 +109,7 @@ namespace KryticalNova.Networking.Entities
         private static void StartClientWorld(NetworkEndpoint endpoint, string joinPayload, KnTransportMode mode, RelayServerData relay)
         {
             World client = CreateClientWorld(ClientWorldName);
+            BodyRoleNetRoleAdapter.Install();
             KnTransport.Assign(client, new KnWorldTransport { Mode = mode, Relay = relay });
             KnNetDefaults.Apply(client);
             client.EntityManager.CreateSingleton(new KnJoinPayload { Text = new Unity.Collections.FixedString4096Bytes(joinPayload ?? string.Empty) });

@@ -975,7 +975,7 @@ namespace KryticalNova.Persistence
             refusal = null;
             if (BoundAccounts.TryGetValue(accountId, out PlayerSaveAgent holder) && holder != null && holder != agent)
             {
-                if (holder.IsSpawned)
+                if (NetRole.IsNetworked(holder)) // a body in a session, whichever netcode carries it; the offline avatar gives way
                 {
                     refusal = "This account already has a character in the world.";
                     return false;

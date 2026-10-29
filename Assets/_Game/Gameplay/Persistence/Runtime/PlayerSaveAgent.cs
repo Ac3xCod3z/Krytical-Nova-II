@@ -18,7 +18,7 @@ namespace KryticalNova.Persistence
     /// A player without a saved character behind it (a test avatar) is simply never saved.
     /// </summary>
     [DisallowMultipleComponent]
-    public sealed class PlayerSaveAgent : NetworkBehaviour, ISaveScheduler, IServerLeaving
+    public sealed class PlayerSaveAgent : NetworkBehaviour, ISaveScheduler, IServerLeaving, IRoleAwareBody
     {
         [Tooltip("Seconds between automatic saves of this player.")]
         [SerializeField, Min(10f)] private float autosaveSeconds = 60f;
@@ -28,6 +28,8 @@ namespace KryticalNova.Persistence
         private PlayerCharacterProgression progression;
         private PlayerEquipment equipment;
         private ISaveParticipant[] participants = Array.Empty<ISaveParticipant>();
+        // A body of the entity netcode passes most parts through (decision D3, M3a-2b); every other body loads and saves them all.
+        private Func<string, bool> passthrough = SavePassthrough.Never;
         // Owner only: what is worn changed and the select screen's copy is to be brought up to date.
         private const float WornDelay = 1f;
         private readonly System.Collections.Generic.List<WornPiece> wornScratch = new System.Collections.Generic.List<WornPiece>(EquipSlots.Count);
@@ -58,6 +60,7 @@ namespace KryticalNova.Persistence
             progression = GetComponent<PlayerCharacterProgression>();
             equipment = GetComponent<PlayerEquipment>();
             participants = GetComponents<ISaveParticipant>();
+            if (BodyRoleTag.Of(this) != null) passthrough = SavePassthrough.Is;
         }
 
         private void OnEnable()
@@ -198,42 +201,20 @@ namespace KryticalNova.Persistence
             // Save migrations (online phase 4): every part is stepped up to this build's version before its system reads it.
             // A step that fails (or a part saved by a newer build) stops the load: the save stays exactly as it is, never
             // replaced by a fresh start, and the player is told.
-            var upgraded = new string[participants.Length];
-            for (int i = 0; i < participants.Length; i++)
+            SaveLoadResult loadResult = SaveParticipantSet.Load(participants, account, character, passthrough,
+                // One system's bad document must not cost the player the rest of the character.
+                (key, e) => Debug.LogError($"[Save] {identity.CharacterName}: '{key}' could not be restored: {e}", this));
+            if (!loadResult.Ok)
             {
-                ISaveParticipant participant = participants[i];
-                string stored = participant.SaveScope == SaveScope.Account ? account.Get(participant.SaveKey) : character.Get(participant.SaveKey);
-                try
-                {
-                    upgraded[i] = participant is IMigratingSave migrating ? SaveVersions.Upgrade(stored, migrating) : stored;
-                }
-                catch (Exception e)
-                {
-                    Debug.LogError($"[Save] {identity.CharacterName} ({accountId}): '{participant.SaveKey}' could not be brought up to this build ({e.Message}). " +
-                                   "The character was not loaded and its save is kept as it is.", this);
-                    string said = "Your save could not be read by this version of the game. It is kept safe; tell the server's owner.";
-                    account = null;
-                    character = null;
-                    ServerSave.Release(this, wantedAccount);
-                    accountId = string.Empty;
-                    if (NetRole.IsRemoteOwned(this)) NetRole.DisconnectOwner(this, said);
-                    return;
-                }
-            }
-
-            for (int i = 0; i < participants.Length; i++)
-            {
-                ISaveParticipant participant = participants[i];
-                string json = upgraded[i];
-                try
-                {
-                    participant.RestoreSave(json);
-                }
-                catch (Exception e)
-                {
-                    // One system's bad document must not cost the player the rest of the character.
-                    Debug.LogError($"[Save] {identity.CharacterName}: '{participant.SaveKey}' could not be restored: {e}", this);
-                }
+                Debug.LogError($"[Save] {identity.CharacterName} ({accountId}): '{loadResult.FailedKey}' could not be brought up to this build ({loadResult.FailedMessage}). " +
+                               "The character was not loaded and its save is kept as it is.", this);
+                string said = "Your save could not be read by this version of the game. It is kept safe; tell the server's owner.";
+                account = null;
+                character = null;
+                ServerSave.Release(this, wantedAccount);
+                accountId = string.Empty;
+                if (NetRole.IsRemoteOwned(this)) NetRole.DisconnectOwner(this, said);
+                return;
             }
             // Max HP and Flux come from the level and gear that were just put back.
             if (!isNew && resources != null && resources.IsAlive) resources.RestoreAll();
@@ -294,7 +275,7 @@ namespace KryticalNova.Persistence
 
         // A player of a dedicated server (not the host's own): the server keeps the roster (ServerRoster).
         private bool RosterKeptByServer => NetRole.IsRemoteOwned(this)
-                                           && KryticalNova.Networking.NetworkConnectionManager.RequireProof;
+                                           && ServerPolicy.RequireProof(KryticalNova.Networking.NetworkConnectionManager.RequireProof);
 
         /// <summary>Why a character may not play on a server that keeps the roster, in the words the player reads; null when it may.</summary>
         public static string NotOnRoster(CharacterSave saved, string nameSent)
@@ -330,26 +311,13 @@ namespace KryticalNova.Persistence
             if (character == null || !HasAuthority) return false;
             nextSave = Time.unscaledTime + autosaveSeconds;
 
-            bool changed = false;
-            foreach (ISaveParticipant participant in participants)
-            {
-                string json;
-                try
-                {
-                    // Stamped with the part's version when it has one (save migrations).
-                    json = SaveVersions.Stamped(participant.CaptureSave(), participant);
-                }
-                catch (Exception e)
-                {
-                    Debug.LogError($"[Save] {identity.CharacterName}: '{participant.SaveKey}' could not be captured; its last save is kept: {e}", this);
-                    continue;
-                }
-                changed |= participant.SaveScope == SaveScope.Account ? account.Set(participant.SaveKey, json) : character.Set(participant.SaveKey, json);
-            }
+            bool changed = SaveParticipantSet.Capture(participants, account, character, passthrough,
+                (key, e) => Debug.LogError($"[Save] {identity.CharacterName}: '{key}' could not be captured; its last save is kept: {e}", this));
 
             string characterName = identity.CharacterName;
             int faction = (int)identity.Faction;
-            int level = progression != null ? progression.CurrentLevel : 1;
+            // Level is the progression part's header: left as loaded while that part is passed through.
+            int level = progression != null && !passthrough(progression.SaveKey) ? progression.CurrentLevel : progression != null ? character.level : 1;
             if (character.name != characterName || character.faction != faction || character.level != level)
             {
                 character.name = characterName;
