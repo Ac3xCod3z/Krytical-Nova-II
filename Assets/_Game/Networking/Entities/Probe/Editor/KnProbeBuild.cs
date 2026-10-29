@@ -159,14 +159,16 @@ namespace KryticalNova.Networking.Entities.Probe
         private static void MakeScene()
         {
             if (!AssetDatabase.IsValidFolder(GeneratedFolder)) AssetDatabase.CreateFolder("Assets/_Game/Networking/Entities/Probe", "Generated");
-            Scene scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Additive);
+            // In a batch run nobody has a scene open and an additive scene cannot be made beside the untitled one: use a single scene.
+            bool batch = Application.isBatchMode;
+            Scene scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, batch ? NewSceneMode.Single : NewSceneMode.Additive);
             try
             {
                 if (!EditorSceneManager.SaveScene(scene, ScenePath)) throw new IOException("the empty probe scene could not be saved at " + ScenePath);
             }
             finally
             {
-                EditorSceneManager.CloseScene(scene, true);
+                if (!batch) EditorSceneManager.CloseScene(scene, true);
             }
             AssetDatabase.Refresh();
         }
