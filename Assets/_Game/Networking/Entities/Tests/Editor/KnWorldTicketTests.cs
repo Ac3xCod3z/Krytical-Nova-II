@@ -35,9 +35,12 @@ namespace KryticalNova.Networking.Entities.Tests
         private FakeTicketTransport m_Transport;
         private List<string> m_Log;
 
+        private IBanLookup m_BanLookupBefore;
+
         [SetUp]
         public void SetUp()
         {
+            m_BanLookupBefore = BanLookup.Current;
             m_Transport = new FakeTicketTransport();
             m_Log = new List<string>();
             KnArrivals.Reset();
@@ -48,7 +51,7 @@ namespace KryticalNova.Networking.Entities.Tests
         public void TearDown()
         {
             KnArrivals.Reset();
-            BanLookup.Current = null;
+            BanLookup.Current = m_BanLookupBefore;
         }
 
         private WorldServiceTicketCheck Tickets(bool requireTicket = false) =>

@@ -101,18 +101,22 @@ namespace KryticalNova.Networking.Entities
                 return Finish(new KnRosterResult { Error = "The server's answer could not be read. It may run another build of the game." });
             }
 
+            // The queries are disposed BEFORE Finish destroys the world: disposing a query of a destroyed world fails.
+            KnRosterResult done = null;
             using (var refused = em.CreateEntityQuery(ComponentType.ReadOnly<KnJoinRefusal>()))
             {
                 if (refused.TryGetSingleton(out KnJoinRefusal refusal))
-                    return Finish(new KnRosterResult { Error = refusal.Detail.ToString(), Reason = (KnRefuseReason)refusal.Reason });
+                    done = new KnRosterResult { Error = refusal.Detail.ToString(), Reason = (KnRefuseReason)refusal.Reason };
             }
+            if (done != null) return Finish(done);
 
             using (var connections = em.CreateEntityQuery(ComponentType.ReadOnly<NetworkStreamConnection>()))
             {
                 if (!connections.IsEmpty) m_SawConnection = true;
                 else if (m_SawConnection)
-                    return Finish(new KnRosterResult { Error = "The server closed the connection without answering. It may run another build of the game." });
+                    done = new KnRosterResult { Error = "The server closed the connection without answering. It may run another build of the game." };
             }
+            if (done != null) return Finish(done);
 
             if (m_Clock() > m_Deadline)
                 return Finish(new KnRosterResult { Error = "The server did not answer. It may be off, or not reachable from here." });

@@ -16,9 +16,12 @@ namespace KryticalNova.Networking.Entities.Tests
     {
         private FakeBans m_Bans;
 
+        private IBanLookup m_BanLookupBefore;
+
         [SetUp]
         public void SetUp()
         {
+            m_BanLookupBefore = BanLookup.Current;
             m_Bans = new FakeBans();
             BanLookup.Current = m_Bans;
         }
@@ -26,7 +29,7 @@ namespace KryticalNova.Networking.Entities.Tests
         [TearDown]
         public void TearDown()
         {
-            BanLookup.Current = null;
+            BanLookup.Current = m_BanLookupBefore;
         }
 
         // ------------------------------------------------------------------ alone

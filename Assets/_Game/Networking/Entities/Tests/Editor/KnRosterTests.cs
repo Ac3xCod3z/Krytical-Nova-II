@@ -29,11 +29,24 @@ namespace KryticalNova.Networking.Entities.Tests
     {
         private const string Request = "{\"op\":\"list\"}";
 
+        // The slots are process-wide and the game fills them at load (ServerHooksTests checks that): keep and restore them.
+        private IBanLookup m_BansBefore;
+        private IServerRoster m_RosterBefore;
+
         [SetUp]
-        public void SetUp() => BanLookup.Current = new FakeBans();
+        public void SetUp()
+        {
+            m_BansBefore = BanLookup.Current;
+            m_RosterBefore = RosterLookup.Current;
+            BanLookup.Current = new FakeBans();
+        }
 
         [TearDown]
-        public void TearDown() => BanLookup.Current = null;
+        public void TearDown()
+        {
+            BanLookup.Current = m_BansBefore;
+            RosterLookup.Current = m_RosterBefore;
+        }
 
         // ------------------------------------------------------------------ pure
 
