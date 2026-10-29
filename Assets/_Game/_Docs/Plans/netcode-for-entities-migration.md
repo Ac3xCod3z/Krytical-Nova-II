@@ -450,3 +450,10 @@ Note: min free RAM touched 3.3 GB (watchdog floor 3.0) — the first import afte
 - Move the front-end screens (character select, server list) to `KnRosterClient` and `KnBootstrap.StartClient` (UI not edited here).
 - Port the rest of the control page and the Server app to the Entities page (M10), after the systems they read exist on Entities.
 - `ServerRoster.Answer` async if it ever blocks a tick.
+
+## 29. Evidence: batch run after M2b-2 and the compile gate (29 Oct 2026, 11:32-11:34, 124 s, Unity peak 6.6 GB, min free 6.5 GB)
+- First run after M2b-2: 1253 passed / 10 failed: 5 known content failures + 5 new: 4 `KnRosterTests` (NullReference: roster query disposed after its world was destroyed -> fixed: queries are disposed before `Finish` destroys the world) and `ServerHooksTests.EverySlotIsFilledWhenTheGameLoads` (my tests nulled the process-wide `RosterLookup`/`BanLookup` slots the game fills at load -> every test file now keeps and restores them).
+- After the fix: **1258 passed, 5 failed (the known gear/icon content failures), 10 skipped of 1273.** M2b-2 DONE at the EditMode layer: roster path (paged, short-lived client world), transport rules (direct/DTLS/Relay choice, certificate rules, no secrets in logs), control page players/kick, travel-ticket check against `world/redeem`, Encyclopedia rows for Networking.
+- **Compile gate (M1 finding closed):** `compile_check.py` now compiles the Entities assemblies with the source generators: `61 of 61 assemblies compiled`; `--server`: `28 of 28`. Proven with a deliberate probe (non-partial `IJobEntity`): the check FAILED with `EA0007 Missing partial on IJobEntity` and passed again after the probe was removed. ECS code is now covered by the cheap gate; Burst AOT and baking errors still need a Unity build.
+- `dependency_map.py --check`: 0 uphill, 0 two-way.
+- Remaining before M2 closes: M2c, the built-server 2-client test (direct UDP; manual list for DTLS / Relay / missing certificate in section 28), plus the first roster/join front-end wiring (UI untouched so far).
