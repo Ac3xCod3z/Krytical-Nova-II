@@ -88,13 +88,16 @@ namespace KryticalNova.Player.Entities.Tests
         public static float3 M(PlayerPose p) => new float3(p.XMm, p.YMm, p.ZMm) * 0.001f;
 
         // ---- history comparison --------------------------------------------------------------------------------------
-        public struct TraceCompare { public int Common, Mismatch, ServerOnly; public int FirstMismatchTick; public string FirstDump; }
+        public struct TraceCompare { public int Common, Mismatch, ServerOnly, Skipped; public int FirstMismatchTick; public string FirstDump; }
 
         /// <summary>
         /// Ticks the owner could not predict: a server order (or placement) takes effect on the first tick after it is issued, and the
         /// owner's trace entry for that one tick keeps its misprediction (the snapshot of that tick rolls it back and re-simulates only
         /// LATER ticks). The compare skips them; the state after them must still be equal.
         /// </summary>
+        /// <summary>Skip the tick on which the server's order number changes (see CompareOwner); the following ticks are still compared.</summary>
+        public bool SkipOrderStartTicks = true;
+
         public readonly System.Collections.Generic.HashSet<uint> Unpredictable = new System.Collections.Generic.HashSet<uint>();
 
         public void IssueOrder(int owner, int3 goal, bool runPaid = false)
@@ -124,6 +127,8 @@ namespace KryticalNova.Player.Entities.Tests
             {
                 var s = sh[i]; var c = ch[i];
                 if (s.Tick == 0 || s.Tick < fromTick || s.Tick > toTick || Unpredictable.Contains(s.Tick)) continue;
+                if (SkipOrderStartTicks && s.Tick > 0 && sh[(int)((s.Tick - 1) % (uint)sh.Length)] is var prev && prev.Tick == s.Tick - 1 && prev.OrderSeq != s.OrderSeq)
+                { r.Skipped++; continue; }   // the server took up an order on this tick: the owner's entry for exactly this tick may be one step behind
                 if (c.Tick != s.Tick) { r.ServerOnly++; continue; }
                 r.Common++;
                 if (s.ProgressMm != c.ProgressMm || s.SpeedMmps != c.SpeedMmps || s.XMm != c.XMm || s.YMm != c.YMm || s.ZMm != c.ZMm
