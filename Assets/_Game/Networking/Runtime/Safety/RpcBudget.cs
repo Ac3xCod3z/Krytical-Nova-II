@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using KryticalNova.Core;
 using Unity.Netcode;
 using UnityEngine;
 
@@ -26,7 +27,7 @@ namespace KryticalNova.Networking
             public bool Dropped;
         }
 
-        private static readonly Dictionary<ulong, Client> Clients = new Dictionary<ulong, Client>();
+        private static readonly Dictionary<PlayerKey, Client> Clients = new Dictionary<PlayerKey, Client>();
 
         /// <summary>The limits in force (server-settings.json on a server; the defaults otherwise).</summary>
         public static CallLimits Limits { get; private set; } = new CallLimits();
@@ -42,7 +43,13 @@ namespace KryticalNova.Networking
         public static void Configure(CallLimits limits) => Limits = limits ?? new CallLimits();
 
         /// <summary>A game left: its allowances go with it.</summary>
-        public static void Forget(ulong clientId) => Clients.Remove(clientId);
+        public static void Forget(ulong clientId) => Forget(NetPlayerKeys.Find(clientId));
+
+        /// <summary>A game left: its allowances go with it (by the player's key; call before the key is released).</summary>
+        public static void Forget(PlayerKey key) => Clients.Remove(key);
+
+        /// <summary>True while allowances are kept for this player.</summary>
+        public static bool IsTracking(PlayerKey key) => Clients.ContainsKey(key);
 
         /// <summary>
         /// Server: may <paramref name="from"/>'s owner make this request now? False when it is over its allowance: the
@@ -60,9 +67,33 @@ namespace KryticalNova.Networking
             manager = manager != null ? manager : NetworkManager.Singleton;
             if (manager == null || !manager.IsServer || clientId == NetworkManager.ServerClientId) return true;
 
-            float now = Time.realtimeSinceStartup;
-            if (!Clients.TryGetValue(clientId, out Client client)) Clients[clientId] = client = new Client();
-            if (client.Dropped) return false; // being disconnected for flooding
+            PlayerKey key = NetPlayerKeys.Of(clientId); // the wire edge: the NGO client id becomes the key once, here
+            SpendResult result = Spend(key, kind, Time.realtimeSinceStartup);
+            if (result == SpendResult.Allowed) return true;
+            if (result == SpendResult.Disconnecting) return false; // being disconnected for flooding
+            CallLimit limit = Limits.For(kind);
+            if (result == SpendResult.Flooding)
+            {
+                SecurityFlags.Raise(clientId, call, $"Sent {Clients[key].Drops.Count} requests over its limits in {Limits.floodSeconds:0} s",
+                    "Flooding the server", "Disconnected");
+                manager.DisconnectClient(clientId, "Too many requests: your game was disconnected.");
+                return false;
+            }
+            SecurityFlags.Raise(clientId, call, $"Sent {call} faster than allowed", $"Over the {kind} limit ({limit.perSecond:0.#} a second, {limit.burst:0} at once)");
+            return false;
+        }
+
+        /// <summary>What <see cref="Spend"/> decided.</summary>
+        public enum SpendResult : byte { Allowed, Over, Flooding, Disconnecting }
+
+        /// <summary>
+        /// The allowance rule alone (no Netcode): takes one from this player's bucket of <paramref name="kind"/> at
+        /// <paramref name="now"/> seconds. Over the limit counts towards the flood rule; a flooding player is marked dropped.
+        /// </summary>
+        public static SpendResult Spend(PlayerKey key, CallKind kind, float now)
+        {
+            if (!Clients.TryGetValue(key, out Client client)) Clients[key] = client = new Client();
+            if (client.Dropped) return SpendResult.Disconnecting;
 
             CallLimit limit = Limits.For(kind);
             if (!client.Buckets.TryGetValue(kind, out Bucket bucket)) bucket = new Bucket { Tokens = limit.burst, Stamp = now };
@@ -72,7 +103,7 @@ namespace KryticalNova.Networking
             {
                 bucket.Tokens -= 1f;
                 client.Buckets[kind] = bucket;
-                return true;
+                return SpendResult.Allowed;
             }
             client.Buckets[kind] = bucket;
 
@@ -82,13 +113,9 @@ namespace KryticalNova.Networking
             if (client.Drops.Count >= Mathf.Max(1, Limits.floodDrops))
             {
                 client.Dropped = true;
-                SecurityFlags.Raise(clientId, call, $"Sent {client.Drops.Count} requests over its limits in {Limits.floodSeconds:0} s",
-                    "Flooding the server", "Disconnected");
-                manager.DisconnectClient(clientId, "Too many requests: your game was disconnected.");
-                return false;
+                return SpendResult.Flooding;
             }
-            SecurityFlags.Raise(clientId, call, $"Sent {call} faster than allowed", $"Over the {kind} limit ({limit.perSecond:0.#} a second, {limit.burst:0} at once)");
-            return false;
+            return SpendResult.Over;
         }
 
         /// <summary>

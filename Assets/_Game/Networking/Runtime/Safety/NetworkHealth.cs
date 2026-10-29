@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using KryticalNova.Core;
 using Unity.Netcode;
 using UnityEngine;
 
@@ -24,7 +25,7 @@ namespace KryticalNova.Networking
     {
         public const float WindowSeconds = 300f;
 
-        private static readonly Dictionary<ulong, Queue<(float time, LagEvent kind)>> Events = new Dictionary<ulong, Queue<(float, LagEvent)>>();
+        private static readonly Dictionary<PlayerKey, Queue<(float time, LagEvent kind)>> Events = new Dictionary<PlayerKey, Queue<(float, LagEvent)>>();
         private static int lateSinceTaken;
         private static int goneSinceTaken;
 
@@ -35,11 +36,16 @@ namespace KryticalNova.Networking
             lateSinceTaken = goneSinceTaken = 0;
         }
 
-        /// <summary>Server: a request from <paramref name="clientId"/> came too late to count.</summary>
-        public static void Record(ulong clientId, LagEvent kind)
+        /// <summary>Server: a request from this connection (the wire edge: its NGO client id) came too late to count.</summary>
+        public static void Record(ulong clientId, LagEvent kind) => Record(NetPlayerKeys.Of(clientId), kind, Time.realtimeSinceStartup);
+
+        /// <summary>Server: a request from this player came too late to count.</summary>
+        public static void Record(PlayerKey key, LagEvent kind) => Record(key, kind, Time.realtimeSinceStartup);
+
+        /// <summary>The same at <paramref name="now"/> seconds (the clock is a parameter so the rule can be tested).</summary>
+        public static void Record(PlayerKey key, LagEvent kind, float now)
         {
-            if (!Events.TryGetValue(clientId, out var queue)) Events[clientId] = queue = new Queue<(float, LagEvent)>();
-            float now = Time.realtimeSinceStartup;
+            if (!Events.TryGetValue(key, out var queue)) Events[key] = queue = new Queue<(float, LagEvent)>();
             queue.Enqueue((now, kind));
             Trim(queue, now);
             if (kind == LagEvent.LateHit) lateSinceTaken++;
@@ -47,18 +53,30 @@ namespace KryticalNova.Networking
         }
 
         /// <summary>A player left: their events go with them.</summary>
-        public static void Forget(ulong clientId) => Events.Remove(clientId);
+        public static void Forget(ulong clientId) => Forget(NetPlayerKeys.Find(clientId));
 
-        /// <summary>How many of <paramref name="kind"/> from <paramref name="clientId"/> in the last five minutes.</summary>
-        public static int Count(ulong clientId, LagEvent kind)
+        /// <summary>A player left: their events go with them (by key; call before the key is released).</summary>
+        public static void Forget(PlayerKey key) => Events.Remove(key);
+
+        /// <summary>How many of <paramref name="kind"/> from this connection in the last five minutes.</summary>
+        public static int Count(ulong clientId, LagEvent kind) => Count(NetPlayerKeys.Find(clientId), kind, Time.realtimeSinceStartup);
+
+        /// <summary>How many of <paramref name="kind"/> from this player in the last five minutes.</summary>
+        public static int Count(PlayerKey key, LagEvent kind) => Count(key, kind, Time.realtimeSinceStartup);
+
+        /// <summary>The same at <paramref name="now"/> seconds.</summary>
+        public static int Count(PlayerKey key, LagEvent kind, float now)
         {
-            if (!Events.TryGetValue(clientId, out var queue)) return 0;
-            Trim(queue, Time.realtimeSinceStartup);
+            if (!Events.TryGetValue(key, out var queue)) return 0;
+            Trim(queue, now);
             int count = 0;
             foreach (var e in queue)
                 if (e.kind == kind) count++;
             return count;
         }
+
+        /// <summary>The player's round trip in milliseconds, or -1 when unknown or the key is no longer alive.</summary>
+        public static int PingMs(PlayerKey key) => NetPlayerKeys.TryGetClientId(key, out ulong clientId) ? PingMs(clientId) : -1;
 
         /// <summary>The player's round trip to the server in milliseconds, or -1 when unknown.</summary>
         public static int PingMs(ulong clientId)

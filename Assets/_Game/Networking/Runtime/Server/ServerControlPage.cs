@@ -1,5 +1,6 @@
 #if UNITY_SERVER
 using System;
+using KryticalNova.Core;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
@@ -174,12 +175,13 @@ namespace KryticalNova.Networking
                     string name = facts.Found ? facts.Character : player.name;
                     string faction = facts.Faction;
                     int level = facts.Level;
+                    PlayerKey key = NetPlayerKeys.Of(client.ClientId); // the HTTP "id" stays the connection id; the server's own books are by key
                     players.Add("{\"id\":" + client.ClientId + ",\"name\":" + ControlPageRules.Json(name) + ",\"level\":" + level +
                                 ",\"faction\":" + ControlPageRules.Json(faction) + ",\"map\":" + ControlPageRules.Json(player.scene.name) +
                                 ",\"gm\":" + ControlPageRules.Json(GmRoster.NameOf(client.ClientId) ?? string.Empty) +
-                                ",\"ping\":" + NetworkHealth.PingMs(client.ClientId) +
-                                ",\"lateHits\":" + NetworkHealth.Count(client.ClientId, LagEvent.LateHit) +
-                                ",\"goneTargets\":" + NetworkHealth.Count(client.ClientId, LagEvent.GoneTarget) + "}");
+                                ",\"ping\":" + NetworkHealth.PingMs(key) +
+                                ",\"lateHits\":" + NetworkHealth.Count(key, LagEvent.LateHit) +
+                                ",\"goneTargets\":" + NetworkHealth.Count(key, LagEvent.GoneTarget) + "}");
                 }
             // The Game Masters by name and whether they are signed in now; their passwords never leave the settings file.
             var masters = new List<string>();
@@ -492,7 +494,7 @@ namespace KryticalNova.Networking
             if (id == NetworkManager.ServerClientId) return "That is the host's own player: the host cannot be sent away.";
             string told = string.IsNullOrWhiteSpace(reason) ? "A GM removed you from the server." : "A GM removed you from the server: " + reason.Trim();
             string removed = ServerRecords.Who(id);
-            network.DisconnectClient(id, told);
+            network.DisconnectClient(id, told); // the page names a connection: the NGO id stays at this wire edge
             return $"Removed {removed}.";
         }
 
