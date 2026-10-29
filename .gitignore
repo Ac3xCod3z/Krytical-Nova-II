@@ -128,3 +128,7 @@ __pycache__/
 /Assets/_ArtSource/Blender~/Creatures/
 /Assets/_ArtSource/Blender~/Pets/
 /Assets/_ArtSource/Blender~/Sidekick/
+
+# Player.Entities tests rebuild their ghost prefab and SubScene here at the first test
+/Assets/_Game/Gameplay/Player/Entities/Tests/Editor/Generated/
+/Assets/_Game/Gameplay/Player/Entities/Tests/Editor/Generated.meta

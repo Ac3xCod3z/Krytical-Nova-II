@@ -1,0 +1,38 @@
+{
+    "name": "KryticalNova.Player.Entities.Tests.Editor",
+    "rootNamespace": "KryticalNova.Player.Entities.Tests",
+    "references": [
+        "KryticalNova.Runtime",
+        "KryticalNova.Networking.Entities",
+        "KryticalNova.Networking.Entities.Tests.Editor",
+        "KryticalNova.Player.Entities",
+        "UnityEngine.TestRunner",
+        "UnityEditor.TestRunner",
+        "Unity.Burst",
+        "Unity.Collections",
+        "Unity.Mathematics",
+        "Unity.Entities",
+        "Unity.Entities.Hybrid",
+        "Unity.Scenes",
+        "Unity.Networking.Transport",
+        "Unity.NetCode",
+        "Unity.Transforms",
+        "Unity.NetCode.Hybrid",
+        "Unity.NetCode.Authoring.Hybrid"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": true,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "nunit.framework.dll"
+    ],
+    "autoReferenced": false,
+    "defineConstraints": [
+        "UNITY_INCLUDE_TESTS"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

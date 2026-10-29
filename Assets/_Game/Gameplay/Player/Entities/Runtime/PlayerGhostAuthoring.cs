@@ -1,0 +1,70 @@
+using Unity.Entities;
+using UnityEngine;
+
+namespace KryticalNova.Player.Entities
+{
+    /// <summary>
+    /// Put on the player ghost prefab next to <c>GhostAuthoringComponent</c> (Default Ghost Mode: Owner Predicted, Has Owner on,
+    /// Dynamic optimisation). Bakes every component of the player's walk. Lives in this non-Editor assembly because an
+    /// authoring component in an Editor-only assembly cannot be added to a prefab in tests (spike M1). The ghost prefab only
+    /// reaches a world through a SubScene (see <see cref="PlayerGhostPrefabAuthoring"/>).
+    /// </summary>
+    [DisallowMultipleComponent]
+    public sealed class PlayerGhostAuthoring : MonoBehaviour
+    {
+        [Tooltip("Walk speed in mm/s (the server rewrites it from rank, mount and gear).")]
+        public int walkMmps = 5000;
+        [Tooltip("Run speed in mm/s.")]
+        public int runMmps = 9000;
+        [Tooltip("Length of the per-tick history ring kept for tests and the divergence log; 0 = none.")]
+        public int traceTicks;
+
+        public int TraceTicks => traceTicks;
+
+        sealed class Baker : Baker<PlayerGhostAuthoring>
+        {
+            public override void Bake(PlayerGhostAuthoring a)
+            {
+                var e = GetEntity(TransformUsageFlags.Dynamic);
+                AddComponent<PlayerGhostTag>(e);
+                AddComponent<PlayerInput>(e);
+                AddComponent<ServerOrder>(e);
+                AddComponent<MoveState>(e);
+                AddComponent<PlayerPose>(e);
+                AddComponent<TeleportSeq>(e);
+                AddComponent(e, new MoveStats { WalkMmps = a.walkMmps, RunMmps = a.runMmps });
+                AddBuffer<PathCorner>(e);
+                AddComponent<PathPlan>(e);
+                AddBuffer<ClientPlanCorner>(e);
+                AddComponent<ClientPlanHeader>(e);
+                AddComponent<PlayerMoveDiag>(e);
+                AddComponent<ServerOrderRequest>(e);
+                SetComponentEnabled<ServerOrderRequest>(e, false);
+                AddComponent<TeleportRequest>(e);
+                SetComponentEnabled<TeleportRequest>(e, false);
+                if (a.traceTicks > 0)
+                {
+                    var trace = AddBuffer<PlayerMoveTrace>(e);
+                    for (int i = 0; i < a.traceTicks; i++) trace.Add(default);
+                }
+            }
+        }
+    }
+
+    /// <summary>In a SubScene: makes the player ghost prefab known to the world as the <see cref="PlayerGhostPrefab"/> singleton.</summary>
+    [DisallowMultipleComponent]
+    public sealed class PlayerGhostPrefabAuthoring : MonoBehaviour
+    {
+        public GameObject prefab;
+
+        sealed class Baker : Baker<PlayerGhostPrefabAuthoring>
+        {
+            public override void Bake(PlayerGhostPrefabAuthoring a)
+            {
+                if (a.prefab == null) return;
+                var e = GetEntity(TransformUsageFlags.None);
+                AddComponent(e, new PlayerGhostPrefab { Prefab = GetEntity(a.prefab, TransformUsageFlags.Dynamic) });
+            }
+        }
+    }
+}
