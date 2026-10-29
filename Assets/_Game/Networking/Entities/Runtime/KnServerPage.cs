@@ -178,22 +178,34 @@ namespace KryticalNova.Networking.Entities
 
         private void AcceptLoop()
         {
+            Debug.Log("[KnServer] Page accept loop started on TCP " + TcpPort + ".");
+            int failures = 0, accepted = 0;
             while (m_Running)
             {
                 TcpClient client;
                 try { client = m_Tcp.AcceptTcpClient(); }
-                catch (Exception) { if (!m_Running) return; continue; }
+                catch (Exception e)
+                {
+                    if (!m_Running) return;
+                    // Never spin silently: say what failed (a few times), then slow down.
+                    if (failures++ < 5) Debug.LogWarning("[KnServer] Page accept failed: " + e.GetType().Name + " " + e.Message);
+                    Thread.Sleep(failures < 5 ? 50 : 1000);
+                    continue;
+                }
+                if (accepted++ < 3) Debug.Log("[KnServer] Page request accepted.");
                 if (Interlocked.Increment(ref m_Active) > MaxConcurrentRequests)
                 {
                     Interlocked.Decrement(ref m_Active);
                     client.Close();
                     continue;
                 }
-                ThreadPool.QueueUserWorkItem(_ =>
+                // A thread of its own per request (at most MaxConcurrentRequests): the shared thread pool of the game can be busy or
+                // starved by blocking calls elsewhere (found in the first real-socket run: connections were accepted and never answered).
+                new Thread(() =>
                 {
                     try { Handle(client); }
                     finally { Interlocked.Decrement(ref m_Active); }
-                });
+                }) { IsBackground = true, Name = "KN server page request" }.Start();
             }
         }
 
