@@ -96,7 +96,7 @@ prediction error p95 <= 0.05 m at 60 ms, tick p95 < 15 ms with 102 monsters (fro
   (owner decision "Maps are Addressable (B)"; unchecked until now). **Compile gate:** add the Entities/Netcode source-generator + analyzer DLLs to the
   `compile_check.py` csproj template and prove it on a deliberately broken `IJobEntity`; otherwise the gate becomes a Unity batch compile + Burst AOT log scan
   (Windows + Linux). Pin the exact Editor patch (6000.6.3f1) for main, clone, client and server builds with a build-id gate; read the patch release notes first.
-  M1 gate = connect/approve in the test world (no dedicated-server 2-client test yet). Add entities, entities.graphics, netcode, physics, burst, collections,
+  M1 gate = connect/approve in the netcode test world (layers A-C only); the first real 2-client test is M2 (fixes the earlier contradiction between this line and the per-milestone rule). Add entities, entities.graphics, netcode, physics, burst, collections,
   mathematics (versions from the 6.6 registry, verified on import; manifest currently has none). Bootstrap scene,
   `KnBootstrap` (client+server in player/host build, server-only on dedicated), tick 30/30. **Batch spike (S-Linux):** an empty
   N4E server builds for Linux x64 Mono and IL2CPP with Burst, subscene baking, Entities Graphics excluded on server; `lib_burst_generated`
@@ -274,3 +274,30 @@ needs the Linux toolchain package (verified in the M1 spike, result below).
   `compile_check` 59/59 and `--server` 27/27; EditMode tests written, NOT yet run (needs an Editor)). Merged into `dots/netcode-entities`; to be offered to main as its own PR (with the LFS size note: none).
 - [ ] Seam 1b: re-key `RpcBudget`, `NetworkHealth`, `ServerRecords` client-id dictionaries, `ServerControlPage` player list/kick.
 - [ ] Seams: `NetRole`, `NetClock`, `NetSession`, `IServerLeaving`, `IWorldTargets`, `X.cs`/`X.Net.cs` splits + stub compile gate, fixed/paged RPC args, `MapAnchor` in builders, placement + server-walk entry points, Core/UI asmdefs without `Unity.Netcode.Runtime`.
+
+## 16. Definition of done per system (owner rule, 29 Oct 2026)
+Test each system as soon as it is completed; never batch up work untested. A system is done only when (1) its tests pass (EditMode / netcode test world, plus a 2-client check where it touches netcode),
+(2) the result is recorded on this checklist with evidence (test names, screenshots) BEFORE the next system or milestone starts, and (3) a one-line completion report went to Master. A failing system stops the line;
+the rollback rule stays: NGO stays on main, nothing merges. Seams stay local branches (no push, no PR, no merge) until the owner reviews a per-seam review card (branch, commit, files/lines, systems touched,
+dependency_map + compile_check, tests run, risk, rollback).
+
+## 17. Coverage and tests (details in the designs folder)
+- `netcode-for-entities-designs/coverage-table.md`: 98 rows (35 runtime asmdefs, 24 test asmdefs, 41 asmrefs; all 63 NetworkBehaviours; all 67 build-list rows) with fate, milestone, owner and proving test.
+  The table adds milestone labels M4b (world singletons), M5b (progression/crafting), M5c (social/companions) and a crosswalk to the numbering above.
+- Missed by the first scope: `PlayerRename`, `PlayerGmSight`, `PlayerWaterstrideMotor` (NetworkBehaviours total 63, not 59); also `PlayerHotbarMemory`, `ServerReach`/`ServerList`, `ServerApp` flags,
+  surface-graph and water-route pathing. Cutover items added: the `JoinRules` build check, launcher/Release/publish path, NGO and N4E builds cannot coexist, Addressable map + Entities subscene build path (spike S11).
+- `netcode-for-entities-designs/editor-test-matrix.md`: layers A (rules), B (ECS systems), C (server+client worlds in one process, loopback) run as EditMode tests in the clone's Editor/batch
+  (`run_editmode_tests.py`); D (built test server + built second client + one Editor client in Play) from M2; E bots, F latency, Burst/IL2CPP/Linux parity and performance need builds.
+  Before the first Editor open with ECS: add packages entities/netcode (6.6.0; burst 2.0.0, collections 6.6.0, mathematics 1.4.0, transport 6.6.0 come built-in), no Unity Physics, Entities Graphics deferred; domain reload is off so statics reset.
+- Owner answers (29 Oct): `ZoneSessionManager` kept until M2 decides, deleted at cutover if unused; hosting = offline local server + client only, no player-hosted public games (Relay/mediated sessions keep working);
+  Entities Graphics deferred, GameObject views first.
+- Early seam added: **server `POST /stop`** on the status port (port+1): loopback 127.0.0.1 only, header `X-KN-Key` = save service key, same save-all as the control page Stop button, answer 200/202 then `Application.Quit(0)`;
+  systemd `ExecStop` (kn-stop.sh, waits up to 85 s, TimeoutStopSec=90) falls back to SIGTERM; the spike's libc SIGTERM handler is the second line. One concern, small PR, NGO-side, needed by today's Linux server too.
+
+## 18. Evidence log
+- 29 Oct, seams 1 + 1b merged on `dots/netcode-entities`: full batch EditMode run in the clone (first project import, Unity 6000.6.3f1): **1124 passed, 5 failed, 10 skipped of 1139**.
+  All 19 tests of the seams passed: PlayerKeysTests (6), PerPlayerKeyTests (6), NetPlayerKeysTests (2), GmRosterTests (5).
+  The 5 failures are content tests unrelated to netcode (`CharacterDataTests.OnlySkeletonArmorCarriesAHelm`, `EyeOptionTests.GlowingEyesLightOnlyTheIrises`, `IconAssetsTests.EveryRingAndAmuletOfTheLadder_WearsItsLooksLibraryIcon`,
+  `IconAssetsTests.NoItem_IsBlank` (Armor_HOLW_01 no icon), `GearLadderTests.EverySetAboveCommonWearsItsOwnTheme` (Armor_SKTN_R45)). The branch differs from `main` only in netcode `.cs` and `.meta` files (+ docs), so these come from `main`'s
+  in-progress gear content; not yet confirmed by running main (no second Editor import).
+- First import needed >12 GB: the first run was killed by the 3 GB watchdog at 520 s (Unity 8 GB peak + workers); the second finished with min free 4.3 GB after Blender was closed.
