@@ -24,7 +24,10 @@ using System.Text.Json;
 using KryticalNova.SaveService;
 using Npgsql;
 
-string secrets = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "KryticalNova-Secrets");
+// KN_SECRETS_DIR (a Linux server: /etc/kn) replaces the Documents folder; unset, nothing changes.
+string secrets = Environment.GetEnvironmentVariable("KN_SECRETS_DIR") is { Length: > 0 } secretsOverride
+    ? secretsOverride
+    : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "KryticalNova-Secrets");
 string databaseFile = Path.Combine(secrets, "save-service.json");
 string keyFile = Path.Combine(secrets, "save-service-key.txt");
 
@@ -59,7 +62,12 @@ if (args.Contains("--restore-real"))
     int at = Array.IndexOf(args, "--restore-real");
     string? file = at + 1 < args.Length && !args[at + 1].StartsWith("--") ? args[at + 1] : null;
     bool running;
-    try { using var probe = new System.Net.Sockets.TcpClient(); probe.Connect("127.0.0.1", 7801); running = true; }
+    // The port to probe follows --urls=... when given (a Linux server may listen on another address); default 127.0.0.1:7801.
+    string probeHost = "127.0.0.1"; int probePort = 7801;
+    string? urlsArg = args.FirstOrDefault(a => a.StartsWith("--urls=", StringComparison.Ordinal))?[7..];
+    if (urlsArg != null && Uri.TryCreate(urlsArg.Split(';')[0].Replace("0.0.0.0", "127.0.0.1").Replace("+", "127.0.0.1").Replace("*", "127.0.0.1"), UriKind.Absolute, out Uri? served))
+    { probeHost = served.Host; probePort = served.Port; }
+    try { using var probe = new System.Net.Sockets.TcpClient(); probe.Connect(probeHost, probePort); running = true; }
     catch (System.Net.Sockets.SocketException) { running = false; }
     return await backup.RestoreRealAsync(file, running);
 }
