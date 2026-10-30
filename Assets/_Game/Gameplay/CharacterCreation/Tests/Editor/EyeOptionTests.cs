@@ -100,7 +100,7 @@ namespace KryticalNova.Tests
             CharacterColorMap.FillEyeGlow(pixels, emission, 4f);
             int lit = 0;
             foreach (Color c in emission) if (c.r > 0f) lit++;
-            Assert.That(lit, Is.EqualTo(8), "two cells of 2x2 texels");
+            Assert.That(lit, Is.EqualTo(12), "three cells of 2x2 texels: the two irises and the whole eye of a skeleton or robot");
             Assert.That(emission[2 * 2 * CharacterColorMap.Size + 4 * 2].r, Is.GreaterThan(1f), "brighter than white, for bloom");
             CharacterColorMap.FillEyeGlow(pixels, emission, 0f);
             foreach (Color c in emission) Assert.That(c.r, Is.EqualTo(0f));

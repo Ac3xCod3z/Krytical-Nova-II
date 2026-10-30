@@ -15,7 +15,7 @@ MonoBehaviour:
   itemId: 0
   displayName: Scrap Sentinel Back Unit
   description: 
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: fa5f08560e963914ab3df0ef86c14734, type: 3}
   sharesIconOf: {fileID: 0}
   rarity: 2
   equipSlot: 7

@@ -15,7 +15,7 @@ MonoBehaviour:
   itemId: 0
   displayName: Scrap Sentinel Arc Caster
   description: Arc Caster look.
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: baa0a18f8a5aa584995343df045fb348, type: 3}
   sharesIconOf: {fileID: 0}
   rarity: 2
   equipSlot: 1

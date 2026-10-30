@@ -77,11 +77,19 @@ namespace KryticalNova.Tests
             foreach (IconTarget item in IconTargets.Items())
                 if (item.asset is ItemDefinition look && (look.equipSlot == EquipSlot.Ring || look.equipSlot == EquipSlot.Amulet)) looks.Add(look.icon);
             Assert.Greater(looks.Count, 0, "the jewellery looks take their icons from the library");
+            // a Tripo set's ring and amulet wear the set's own painted icon (owner-approved art), not a library look's
+            var painted = new HashSet<string>();
+            foreach (string file in Directory.GetFiles("Assets/_Game/Icons/Art/Generated", "*.png", SearchOption.AllDirectories))
+            {
+                string name = Path.GetFileNameWithoutExtension(file);
+                painted.Add(name.Substring(0, name.LastIndexOf('_')));
+            }
             int worn = 0;
             foreach (string guid in AssetDatabase.FindAssets("t:ItemDefinition", new[] { IconTargets.ItemRoot }))
             {
                 var item = AssetDatabase.LoadAssetAtPath<ItemDefinition>(AssetDatabase.GUIDToAssetPath(guid));
                 if (item == null || !item.IsLadderGear || (item.equipSlot != EquipSlot.Ring && item.equipSlot != EquipSlot.Amulet)) continue;
+                if (item.icon != null && painted.Contains(item.icon.name)) continue;
                 Assert.IsTrue(looks.Contains(item.icon), item.name + " does not wear a jewellery look's icon");
                 worn++;
             }
