@@ -416,8 +416,32 @@ free-text SQL, editing anything in the database, a multi-box list, user accounts
 - **Build numbers (bot vs server):** both read `Builds/Release/Store/manifest.json` through `ReleasePublisher.LastReleaseBuild()` (build 12, written 25 Oct) and
   stamp `bundleVersion` "0.1.0 build 12", so a bot client built in the same checkout matches the Mono server built there (08:33 the same day); a differing
   number is turned away at join.
-- [ ] Bot/player save-loss check on the real build (needs the bot client, `MeasureTools.BuildBotClient`; on hold until fresh Windows exes are shown to run
-  on this PC) - [ ] stop tests again on an IL2CPP build once one exists.
+- [x] **Player save-loss test on the Linux server (29 Oct 2026, 19:40-20:05, owner by hand):** Mono Linux server (build 12) in WSL2 on the TEST database,
+  test certificate pair, the owner in the Editor (Play from the Title) through "This PC (testing)" with `Library/KryticalNova.TestSession` (port 17777,
+  join, scratch save) and a UDP relay. New character "Linuxtest" made through the server roster. Compared every save document through the save service.
+  - **A (play 2 min):** 30 documents written (account, 19 character parts, world names/contacts); Creds 34, level 1 / 6 XP, pack 9001x5 9002x4 11984x1.
+  - **B (clean stop, `systemctl stop` -> POST /stop):** "Saved. Stopping." 36 ms after the stop began, unit down in 4 s, exit 0; the stop wrote the final
+    spot. Rejoin: **Creds, level/XP, pack and equipment all kept (PASS).** The player came back at the spawn point (see findings).
+  - **C (`kill -9`, `Restart=on-failure`):** systemd restarted the server by itself, listening again in 8 s; the saved documents were byte-for-byte the
+    same before and after the kill (nothing half-written). Rejoin: owner reports nothing missing (PASS). The owner stood still for about two minutes before
+    the kill, so everything had been autosaved already: the worst case (actions in the last 60 s, `PlayerSaveAgent.autosaveSeconds`) was not exercised.
+- **Findings:**
+  - **Position is not restored on join, by design today:** `PlayerSaveAgent` (lines 360-373) writes map and x/y/z "for when there is more than one map",
+    but nothing reads them back; `PlayerSpawnService` puts every join on the map's next `PlayerSpawnPoint`, and the next save then stores the spawn spot.
+    Same on the Windows server. "Rejoin where you stood" would be a separate small feature.
+  - **Bots cannot join a roster-keeping server yet:** `MeasureBot.EnsureCharacter` makes its character in the local store; since milestone 5 the server
+    keeps the roster ("That character is not on this server"). Without `-profile` a bot also uses the default local profile (it picked the owner's own
+    local character, read only). Fix later (development builds only): bots pass `-profile bot<n>` and create their character through the server roster.
+  - **Bot client build:** a build checkout left on the Server subtarget compiles `UNITY_SERVER` into the "client" (it started a dedicated server on 7777).
+    `ServerBuildBatch.BuildBotClientPlayer` forces the Player subtarget; proof before any run: the four server-only types (`ServerPerformanceLog`,
+    `ServerLifetime`, `ServerControlPage`, `ServerReach`) must be absent from `KryticalNova.Networking.dll`.
+  - **Windows -> WSL2:** NAT mode forwards only TCP to `127.0.0.1`, so game UDP needs the WSL IP or a relay (the test used a small Python relay on
+    127.0.0.1:17777/17778). The WSL IP can change after `wsl --shutdown`; read it fresh. The box's `ufw` must allow the test ports (17777-17778/udp).
+    The relay first died when the server was killed (Windows reports the ICMP "port unreachable" as WSAECONNRESET); fixed in the relay.
+  - **Norton Behavioral Protection** froze freshly built Windows exes (IDP.Generic) even with folder exclusions; tests ran with it off for the test only.
+  - **IL2CPP** of this game needs about 17 GB on this PC (three tries killed); the release Linux server is built elsewhere later.
+- [ ] Still unproven: an IL2CPP Linux build; the Linux server with the real (production) certificate; bots through the server roster; loss of actions in the
+  last 60 s before a crash (expected at most one autosave interval).
 
 
 ## Change log
