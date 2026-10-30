@@ -8,6 +8,8 @@ namespace KryticalNova.Networking
     /// Sets optimal server tick budgets (30 Hz fixed), disables vSync and rendering overhead. On a server build it also
     /// switches off render-only vendor components in every scene that loads (the build does it too, in
     /// <c>ServerSceneStripper</c>): a server ships no shaders, and the lamps' light cones would throw every frame.
+    /// UI Toolkit documents go too: the UI assembly is not in a server build, so nothing reads them, and laying out their
+    /// text looks for the system's fonts, which needs a shader and threw on every server start.
     /// </summary>
     public static class DedicatedServerOptimizer
     {
@@ -47,7 +49,8 @@ namespace KryticalNova.Networking
                 {
                     if (behaviour == null || !behaviour.enabled) continue;
                     string ns = behaviour.GetType().Namespace;
-                    if (ns == null || System.Array.IndexOf(RenderOnlyNamespaces, ns) < 0) continue;
+                    bool renderOnly = ns != null && System.Array.IndexOf(RenderOnlyNamespaces, ns) >= 0;
+                    if (!renderOnly && !(behaviour is UnityEngine.UIElements.UIDocument)) continue;
                     behaviour.enabled = false;
                     off++;
                 }
