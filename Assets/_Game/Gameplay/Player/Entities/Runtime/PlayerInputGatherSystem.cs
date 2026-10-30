@@ -74,9 +74,13 @@ namespace KryticalNova.Player.Entities
             RequireForUpdate(m_Query);
         }
 
+        // the tick this frame's input is for (the click log only)
+        NetworkTick m_Tick;
+
         protected override void OnUpdate()
         {
             var em = EntityManager;
+            m_Tick = SystemAPI.TryGetSingleton<NetworkTime>(out var nt) ? nt.ServerTick : default;
             using var entities = m_Query.ToEntityArray(Allocator.Temp);
             foreach (var e in entities)
             {
@@ -126,6 +130,7 @@ namespace KryticalNova.Player.Entities
                 input.GoalXMm = cmd.GoalMm.x;
                 input.GoalYMm = cmd.GoalMm.y;
                 input.GoalZMm = cmd.GoalMm.z;
+                if (PlayerClickLog.Sink != null && m_Tick.IsValid) PlayerClickLog.Client(header.Seq, m_Tick.TickIndexForValidTick);
             }
             finally { corners.Dispose(); }
         }

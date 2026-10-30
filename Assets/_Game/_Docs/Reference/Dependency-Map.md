@@ -20,7 +20,7 @@ script, which is then published to the link above. `--baseline` saves today's up
 ## Today
 
 <!-- map:summary -->
-Generated 29 Oct 2026, 20:20: 808 runtime scripts (144,797 lines) declaring 1227 types (192 MonoBehaviours, 65 NetworkBehaviours, 101 ScriptableObject classes); 168 test scripts; 4722 prefabs, 46 scenes and 2748 assets read. 207 system-to-system links, of which 0 run uphill, 0 pairs of systems use each other both ways, and 0 links would have to go for the systems to form a clean stack. The largest tangle, classes that all reach each other through some chain of uses, holds 10 classes from 1 systems (UI 10, ...).
+Generated 29 Oct 2026, 21:17: 809 runtime scripts (144,915 lines) declaring 1228 types (192 MonoBehaviours, 65 NetworkBehaviours, 102 ScriptableObject classes); 168 test scripts; 4722 prefabs, 46 scenes and 2748 assets read. 207 system-to-system links, of which 0 run uphill, 0 pairs of systems use each other both ways, and 0 links would have to go for the systems to form a clean stack. The largest tangle, classes that all reach each other through some chain of uses, holds 10 classes from 1 systems (UI 10, ...).
 <!-- /map:summary -->
 
 **Checked against the compiler.**
@@ -65,7 +65,7 @@ Checked against the 211 references the assemblies declare between systems: every
 | System | Layer | Scripts | Lines | Uses (types) | Used by (types) | Instability | Tests | Types touched by a test |
 |---|---|---|---|---|---|---|---|---|
 | Core | Foundation | 69 | 5,743 | 0 | 280 | 0.0 | 7 | 43 of 61 |
-| Networking | Infrastructure | 83 | 12,396 | 40 | 99 | 0.29 | 27 | 82 of 140 |
+| Networking | Infrastructure | 83 | 12,435 | 40 | 99 | 0.29 | 27 | 82 of 140 |
 | Rendering | Infrastructure | 17 | 3,589 | 3 | 28 | 0.1 | 1 | 2 of 21 |
 | Environment | Simulation | 6 | 834 | 0 | 2 | 0.0 | 0 | 0 of 6 |
 | Gameplay/Autopilot | Simulation | 11 | 1,423 | 41 | 13 | 0.76 | 3 | 6 of 12 |
@@ -79,8 +79,8 @@ Checked against the 211 references the assemblies declare between systems: every
 | Gameplay/Pets | Simulation | 12 | 1,445 | 33 | 32 | 0.51 | 4 | 13 of 19 |
 | Gameplay/Social | Simulation | 39 | 5,805 | 52 | 49 | 0.51 | 9 | 23 of 52 |
 | Gameplay/Combat | Simulation | 13 | 3,362 | 44 | 27 | 0.62 | 4 | 5 of 14 |
-| Gameplay/Persistence | Simulation | 16 | 3,674 | 97 | 14 | 0.87 | 17 | 11 of 21 |
-| Gameplay/Player | Simulation | 54 | 13,913 | 76 | 60 | 0.56 | 18 | 68 of 100 |
+| Gameplay/Persistence | Simulation | 16 | 3,683 | 98 | 14 | 0.88 | 17 | 11 of 21 |
+| Gameplay/Player | Simulation | 55 | 13,983 | 76 | 61 | 0.55 | 18 | 69 of 101 |
 | Gameplay/CharacterCreation | Simulation | 26 | 3,173 | 27 | 73 | 0.27 | 10 | 25 of 29 |
 | Gameplay/Items | Simulation | 66 | 11,860 | 49 | 182 | 0.21 | 13 | 42 of 88 |
 | World | Simulation | 37 | 6,379 | 16 | 41 | 0.28 | 2 | 9 of 43 |
@@ -194,7 +194,7 @@ Classes over 700 lines. Several of them also reach into three or more other syst
 | PlayerCombatSkills | Gameplay/Progression | 965 | Core, Networking | 18 |
 | HudLayoutEditor | UI | 964 | - | 12 |
 | GearWorkWindowController | UI | 947 | Core, Gameplay/Economy, Gameplay/Forge, Gameplay/Items, Gameplay/NPC, Gameplay/Progression | 0 |
-| NetworkConnectionManager | Networking | 937 | Core | 15 |
+| NetworkConnectionManager | Networking | 940 | Core | 15 |
 | CharacterCreatorController | UI | 935 | Gameplay/CharacterCreation, Gameplay/Factions, Gameplay/Items, Gameplay/Progression | 0 |
 | GmCommands | Tools | 910 | Core, Gameplay/Combat, Gameplay/Factions, Gameplay/Items, Gameplay/Player, Gameplay/Progression, Gameplay/Social, Networking, World | 0 |
 | PlayerJumpMotor | Gameplay/Player | 844 | Gameplay/Progression, Networking | 7 |
@@ -308,6 +308,7 @@ Each ScriptableObject class, how many assets of it exist, and where they are wir
 | ZoneCatalog | World | 1 | 4 | 0 / 39 / 0 |
 | ZoneTerrainProfile | World | 1 | 0 | 0 / 0 / 0 |
 | GearClothLook | Gameplay/Items | 0 | 2 | 0 / 0 / 0 |
+| PlayerWorldAssets | Gameplay/Player | 0 | 1 | 0 / 0 / 0 |
 | ColourBlindFeature | Rendering | 0 | 0 | 0 / 0 / 0 |
 | ComicLetteringFeature | Rendering | 0 | 0 | 0 / 0 / 0 |
 | ComicStyleFeature | Rendering | 0 | 0 | 0 / 0 / 0 |
@@ -319,7 +320,7 @@ Where tuning still lives in code, and other links the compiler cannot see:
 - **Gameplay numbers fixed in code:** 352 in 110 files. Most: `Gameplay/Crafting/Data/CraftingSettings.cs` (28), `Gameplay/Player/Runtime/PlayerWallRunMotor.cs` (17), `Gameplay/Player/Runtime/PlayerVaultMotor.cs` (15), `Gameplay/Player/Runtime/PointAndClickPlayer.cs` (15), `Gameplay/Items/Data/GearProgressionSettings.cs` (13), `Gameplay/Items/Runtime/WeaponPaintRules.cs` (11), `Gameplay/Player/Runtime/PlayerJumpMotor.cs` (10), `Gameplay/Player/Runtime/PlayerWallRunMotor.WallWalk.cs` (10).
 - **Settings fallbacks** (`settings != null ? settings.x : 8`): 96.
 - **Runtime writes to shared assets** (ScriptableObject or pipeline fields): 25 — `Rendering/Runtime/PipelineRebuilds.cs:60`, `Rendering/Runtime/PipelineRebuilds.cs:68`, `Rendering/Runtime/PipelineRebuilds.cs:104`, `Rendering/Runtime/PipelineRebuilds.cs:105`, `UI/Runtime/Settings/GraphicsSettingsApplier.cs:142`, `UI/Runtime/Settings/GraphicsSettingsApplier.cs:143`, `UI/Runtime/Settings/GraphicsSettingsApplier.cs:144`, `UI/Runtime/Settings/GraphicsSettingsApplier.cs:145`.
-- **Lookups by name** (Type.GetType, Find("..."), Resources.Load, SendMessage): 20.
+- **Lookups by name** (Type.GetType, Find("..."), Resources.Load, SendMessage): 21.
 - **Asset entries that store a class by name and assembly** ([SerializeReference]): 174 in 2 assets.
 - **Static accessors that call GetComponent on every use:** 0.
 - **FindObject calls in runtime code:** 33.

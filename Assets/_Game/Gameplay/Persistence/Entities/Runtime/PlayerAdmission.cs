@@ -43,12 +43,15 @@ namespace KryticalNova.Persistence.Entities
             if (!RecipeText.TryDecode(context.RecipeText, out CharacterRecipe recipe)) return BadCharacterText;
             bool requireProof = ServerPolicy.RequireProof(false);
             if (requireProof && !SaveKeys.IsId(context.Account)) return NeedsSignInText;
-            bool saved = SaveKeys.IsId(context.Account) && SaveKeys.IsId(context.CharacterId);
+            // A bot of the 2-client gate gets its own character on a test-lane server (plan 43.1); everyone else keeps the id sent.
+            string characterId = TestLaneBotCharacters.Ensure(context.Account, context.CharacterId, context.Name, recipe, out string botRefusal);
+            if (botRefusal != null) return botRefusal;
+            bool saved = SaveKeys.IsId(context.Account) && SaveKeys.IsId(characterId);
             if (requireProof && !saved) return BadCharacterText;
 
             // Changed -> PlayerSaveAgent.TryLoad runs inside this call (it may queue its own refusal through NetRole.DisconnectOwner;
             // KnPlayerRefusals keeps the first reason for a key, so the agent's words win over the generic one returned below).
-            string refusal = identity.ServerBegin(CharacterNetState.From(context.Name, recipe), context.Account, context.CharacterId);
+            string refusal = identity.ServerBegin(CharacterNetState.From(context.Name, recipe), context.Account, characterId);
             if (refusal != null) return refusal;
             var agent = body.GetComponent<PlayerSaveAgent>();
             if (saved && (agent == null || !agent.IsLoaded)) return NotLoadedText;

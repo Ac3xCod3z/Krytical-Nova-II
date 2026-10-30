@@ -22,8 +22,24 @@ namespace KryticalNova.Networking.Entities
         /// <summary>On = this process creates bot worlds, and a server of this process takes bot tokens. Reset on every Play.</summary>
         public static bool Enabled;
 
+        // Accounts this server let in as bots (the test lane makes their characters: plan 43.1). Joins run on the main thread.
+        private static readonly System.Collections.Generic.HashSet<string> BotAccounts = new System.Collections.Generic.HashSet<string>();
+
         [UnityEngine.RuntimeInitializeOnLoadMethod(UnityEngine.RuntimeInitializeLoadType.SubsystemRegistration)]
-        private static void ResetStatics() => Enabled = false;
+        private static void ResetStatics()
+        {
+            Enabled = false;
+            BotAccounts.Clear();
+        }
+
+        /// <summary>The join check let <paramref name="account"/> in with a bot token.</summary>
+        public static void RememberBot(string account)
+        {
+            if (!string.IsNullOrEmpty(account)) BotAccounts.Add(account);
+        }
+
+        /// <summary>True when <paramref name="account"/> joined this server as a development bot.</summary>
+        public static bool IsBotAccount(string account) => !string.IsNullOrEmpty(account) && BotAccounts.Contains(account);
 
         public static string TokenFor(int number) => TokenPrefix + number.ToString(System.Globalization.CultureInfo.InvariantCulture);
 

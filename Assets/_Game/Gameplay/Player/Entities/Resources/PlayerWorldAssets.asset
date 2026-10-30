@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8a5d2b00ae6b4c0fb459cdf5963050bb, type: 3}
+  m_Name: PlayerWorldAssets
+  m_EditorClassIdentifier: KryticalNova.Player.Entities::KryticalNova.Player.Entities.PlayerWorldAssets
+  ghostScene:
+    Id:
+      GlobalId:
+        SceneObjectIdentifier0: 0
+        SceneObjectIdentifier1: 0
+        AssetGUID:
+          Value:
+            x: 590491810
+            y: 1320191312
+            z: 3525683867
+            w: 2204509622
+        IdentifierType: 1
+      GenerationType: 4
+  playerPrefab: {fileID: 3071671160467358554, guid: 52503238b9ac2f545a4511a34d62f4e7, type: 3}

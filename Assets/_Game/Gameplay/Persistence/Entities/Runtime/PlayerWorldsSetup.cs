@@ -62,6 +62,9 @@ namespace KryticalNova.Persistence.Entities
         public static ServerBodyAdmission InstallServer(World server, Func<GameObject> prefab = null, bool loadGhostScene = true)
         {
             if (loadGhostScene) PlayerWorldAssets.LoadGhostScene(server);
+#if KN_TEST_LANE && (KN_DEV_BOTS || UNITY_EDITOR)
+            TestLaneBotCharacters.IsBot = KnDevBots.IsBotAccount; // the 2-client gate's bots get characters (plan 43.1)
+#endif
             var planner = new NavMeshPathPlanner();
             PlayerEntitiesSetup.Install(server, planner);
             var rules = new PlayerAdmission

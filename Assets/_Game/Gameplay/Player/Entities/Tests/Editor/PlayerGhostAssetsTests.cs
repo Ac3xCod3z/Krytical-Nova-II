@@ -60,7 +60,8 @@ namespace KryticalNova.Player.Entities.Tests
             Assert.IsFalse(string.IsNullOrEmpty(guid), "no subscene: run Build Player Ghost Assets");
             using var tw = new KnTestWorld();
             tw.CreateWorlds(1);
-            tw.LoadSubScene(Hash128.Parse(guid));
+            // Entities reads a GUID string in its own byte order (UnityEngine.Hash128.Parse would name another scene)
+            tw.LoadSubScene(new Unity.Entities.Hash128(guid));
             foreach (World w in tw.AllWorlds)
             {
                 Entity prefab = KnTestWorld.Singleton<PlayerGhostPrefab>(w).Prefab;

@@ -39,15 +39,11 @@ namespace KryticalNova.Player.Entities.Editor
 
         public static void Build()
         {
-            if (string.IsNullOrEmpty(SceneManager.GetActiveScene().path))
+            // in the Editor the subscene is opened next to the open scene, which needs that scene saved (a batch run opens it alone)
+            if (!Application.isBatchMode && string.IsNullOrEmpty(SceneManager.GetActiveScene().path))
             {
-                // the subscene is opened additively, which needs a saved active scene; a batch run starts in an untitled one
-                if (!Application.isBatchMode)
-                {
-                    Debug.LogError("[KnBuild] Save the open scene first: the player ghost subscene is opened next to it.");
-                    return;
-                }
-                EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+                Debug.LogError("[KnBuild] Save the open scene first: the player ghost subscene is opened next to it.");
+                return;
             }
             EnsureFolder(PrefabFolder);
             EnsureFolder(SceneFolder);
@@ -108,7 +104,9 @@ namespace KryticalNova.Player.Entities.Editor
             var so = new SerializedObject(prefab.GetComponent<GhostAuthoringComponent>());
             SerializedProperty id = so.FindProperty("prefabId");
             string guid = AssetDatabase.AssetPathToGUID(PrefabPath);
-            if (id == null || id.stringValue == guid) return;
+            if (id == null) return;
+            // Netcode's OnValidate fills it in memory when the prefab loads, so "already right" here says nothing about the file:
+            // write it and save every time (the baker throws on an empty id).
             id.stringValue = guid;
             so.ApplyModifiedPropertiesWithoutUndo();
             EditorUtility.SetDirty(prefab);
@@ -117,9 +115,11 @@ namespace KryticalNova.Player.Entities.Editor
 
         static void EnsureSubScene(GameObject prefab)
         {
+            // A batch run has nothing open worth keeping and cannot add a scene beside an untitled one: the subscene is the only scene.
+            bool single = Application.isBatchMode;
             Scene scene = File.Exists(SubScenePath)
-                ? EditorSceneManager.OpenScene(SubScenePath, OpenSceneMode.Additive)
-                : EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Additive);
+                ? EditorSceneManager.OpenScene(SubScenePath, single ? OpenSceneMode.Single : OpenSceneMode.Additive)
+                : EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, single ? NewSceneMode.Single : NewSceneMode.Additive);
             try
             {
                 PlayerGhostPrefabAuthoring holder = null;
@@ -138,7 +138,7 @@ namespace KryticalNova.Player.Entities.Editor
             }
             finally
             {
-                EditorSceneManager.CloseScene(scene, true);
+                if (!single) EditorSceneManager.CloseScene(scene, true);
             }
         }
 

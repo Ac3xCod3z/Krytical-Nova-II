@@ -195,6 +195,7 @@ namespace KryticalNova.Networking.Entities
                 st.Account = botAccount;
                 st.Proven = false; // a bot's account is named, never proven
                 st.AccountKnown = true;
+                KnDevBots.RememberBot(botAccount);
                 return KnJoinVerdict.Accept;
             }
 #endif
