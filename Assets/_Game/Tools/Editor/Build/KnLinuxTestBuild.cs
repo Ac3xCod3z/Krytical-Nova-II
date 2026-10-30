@@ -24,6 +24,7 @@ namespace KryticalNova.EditorTools
         public const string ServerFolder = "Builds/KnGameServerLinux";
         public const string ClientFolder = "Builds/KnGameClientLinux";
         public const string ClientIl2cppFolder = "Builds/KnGameClientLinuxIl2cpp";
+        public const string ServerIl2cppFolder = "Builds/KnGameServerLinuxIl2cpp";
         public const string ServerExe = "KnGameServer.x86_64";
         public const string ClientExe = "KnGameClient.x86_64";
         /// <summary>The one map both test players carry (the server's default map; the bots load it by name).</summary>
@@ -36,12 +37,13 @@ namespace KryticalNova.EditorTools
         public const string GhostBakeScenePath = "Assets/_Game/Gameplay/Player/Entities/Scenes/PlayerGhostBake.unity";
 
         /// <summary>
-        /// Burst's own per-platform settings file. These two builds write it with Burst AOT off for the build only and take it away
-        /// afterwards (or put back what was there), even when the build fails: the last stage of the server build reached a 22 GB
-        /// peak with Burst on and the watchdog stopped it (30 Oct 2026; owner pick). The test players then run Burst jobs as plain C#.
-        /// Windows players and every other build keep Burst.
+        /// Burst's own per-platform settings file. With <c>KN_LINUX_TEST_BURST_OFF=1</c> a build writes it with Burst AOT off for the
+        /// build only and takes it away afterwards (or puts back what was there), even when the build fails. Off by default since B3
+        /// run 2 (30 Oct 2026): Mono players without Burst fit in RAM but every client crashed in Netcode's GhostSpawnSystem on its
+        /// non-Burst path (plan section 47). The players are built with IL2CPP and Burst instead, which fit (owner pick).
         /// </summary>
         public const string BurstSettingsPath = "ProjectSettings/BurstAotSettings_StandaloneLinux64.json";
+        static bool BurstOff => Environment.GetEnvironmentVariable("KN_LINUX_TEST_BURST_OFF") == "1";
         const string BurstOffJson = "{\n    \"MonoBehaviour\": {\n        \"Version\": 4,\n        \"EnableBurstCompilation\": false\n    }\n}\n";
 
         /// <summary>True while one of these builds runs (<see cref="KnLinuxTestShaderStrip"/> strips every shader then: both players are headless).</summary>
@@ -63,13 +65,16 @@ namespace KryticalNova.EditorTools
         /// <summary>The headless client with IL2CPP instead of Mono (for an Editor without the Linux Mono player variation).</summary>
         public static void BuildClientIl2cpp() => Finish(Build(server: false, il2cpp: true));
 
+        /// <summary>The test server with IL2CPP and Burst (B3 run 3; the Mono server with Burst passed 22 GB on this PC).</summary>
+        public static void BuildServerIl2cpp() => Finish(Build(server: true, il2cpp: true));
+
         static void Finish(bool ok)
         {
             if (Application.isBatchMode) EditorApplication.Exit(ok ? 0 : 1);
         }
 
         public static string OutputFolder(bool server, bool il2cpp = false) =>
-            Path.GetFullPath(Path.Combine(Path.GetDirectoryName(Application.dataPath) ?? ".", server ? ServerFolder : il2cpp ? ClientIl2cppFolder : ClientFolder));
+            Path.GetFullPath(Path.Combine(Path.GetDirectoryName(Application.dataPath) ?? ".", server ? (il2cpp ? ServerIl2cppFolder : ServerFolder) : il2cpp ? ClientIl2cppFolder : ClientFolder));
 
         /// <summary>Where a build keeps the baked ghost subscene's header (Entities: StreamingAssets/EntityScenes/&lt;scene GUID&gt;.entityheader).</summary>
         public static string GhostHeaderPath(string folder, bool server) =>
@@ -79,16 +84,17 @@ namespace KryticalNova.EditorTools
         /// <summary>What Unity lacks for this build, in words; null when the module is there.</summary>
         public static string ModuleMissing(bool server, bool il2cpp = false)
         {
-            if (server) return ServerBuildBuilder.ModuleMissing(ServerBuildBuilder.Os.Linux);
+            if (server && !il2cpp) return ServerBuildBuilder.ModuleMissing(ServerBuildBuilder.Os.Linux);
             string backend = il2cpp ? "il2cpp" : "mono";
+            string variation = "linux64_" + (server ? "server" : "player") + "_development_" + backend;
             string variations = Path.Combine(EditorApplication.applicationContentsPath, "PlaybackEngines", "LinuxStandaloneSupport", "Variations");
-            bool there = Directory.Exists(variations) && Directory.GetDirectories(variations, "linux64_player_development_" + backend).Length > 0;
-            return there ? null : $"The Linux {backend} player development variation is not installed for {Application.unityVersion} (Unity Hub > Add modules > Linux Build Support ({(il2cpp ? "IL2CPP" : "Mono")})).";
+            bool there = Directory.Exists(variations) && Directory.GetDirectories(variations, variation).Length > 0;
+            return there ? null : $"The Linux {variation} variation is not installed for {Application.unityVersion} (Unity Hub > Add modules > Linux Build Support ({(il2cpp ? "IL2CPP" : "Mono")})).";
         }
 
         public static bool Build(bool server, bool il2cpp = false)
         {
-            string what = server ? "Linux test server" : il2cpp ? "Linux headless client (IL2CPP)" : "Linux headless client";
+            string what = (server ? "Linux test server" : "Linux headless client") + (il2cpp ? " (IL2CPP)" : "");
             if (EditorApplication.isPlayingOrWillChangePlaymode || EditorApplication.isCompiling)
             {
                 Debug.LogError($"[KnLinuxTestBuild] Not now: Unity is in Play mode or compiling. Build the {what} again afterwards.");
@@ -124,16 +130,19 @@ namespace KryticalNova.EditorTools
             StandaloneBuildSubtarget subtargetWas = EditorUserBuildSettings.standaloneBuildSubtarget;
             var addressables = UnityEditor.AddressableAssets.AddressableAssetSettingsDefaultObject.Settings;
             var bundlesWere = addressables != null ? addressables.BuildAddressablesWithPlayerBuild : default;
-            var standalone = UnityEditor.Build.NamedBuildTarget.Standalone;
+            // a Dedicated Server build reads its own scripting backend (the Server target), not the Standalone one (30 Oct: an
+            // "IL2CPP" server came out Mono while only Standalone was switched)
+            var standalone = server ? UnityEditor.Build.NamedBuildTarget.Server : UnityEditor.Build.NamedBuildTarget.Standalone;
             ScriptingImplementation backendWas = PlayerSettings.GetScriptingBackend(standalone);
             ScriptingImplementation backend = il2cpp ? ScriptingImplementation.IL2CPP : ScriptingImplementation.Mono2x;
             var stopwatch = Stopwatch.StartNew();
             BuildReport report = null;
             string burstPath = Path.Combine(Path.GetDirectoryName(Application.dataPath) ?? ".", BurstSettingsPath);
+            bool burstOff = BurstOff;
             string burstWas = File.Exists(burstPath) ? File.ReadAllText(burstPath) : null;
             try
             {
-                File.WriteAllText(burstPath, BurstOffJson);
+                if (burstOff) File.WriteAllText(burstPath, BurstOffJson);
                 // the maps are in the build list (as on the NGO server); the game's Addressable bundles are not needed here
                 if (addressables != null)
                     addressables.BuildAddressablesWithPlayerBuild = UnityEditor.AddressableAssets.Settings.AddressableAssetSettings.PlayerBuildOption.DoNotBuildWithPlayer;
@@ -158,8 +167,8 @@ namespace KryticalNova.EditorTools
             {
                 try
                 {
-                    if (burstWas != null) File.WriteAllText(burstPath, burstWas);
-                    else if (File.Exists(burstPath)) File.Delete(burstPath);
+                    if (burstOff && burstWas != null) File.WriteAllText(burstPath, burstWas);
+                    else if (burstOff && File.Exists(burstPath)) File.Delete(burstPath);
                 }
                 catch (Exception e) { Debug.LogError($"[KnLinuxTestBuild] Could not put back {BurstSettingsPath} ({e.Message}): remove it by hand."); }
                 IsBuilding = false;
@@ -182,7 +191,13 @@ namespace KryticalNova.EditorTools
             if (ok)
             {
                 string burstLib = Path.Combine(folder, Path.GetFileNameWithoutExtension(server ? ServerExe : ClientExe) + "_Data", "Plugins", "lib_burst_generated.so");
-                Debug.Log("[KnLinuxTestBuild] Burst AOT " + (File.Exists(burstLib) ? "WAS STILL BUILT (" + burstLib + ")" : "off as asked (no lib_burst_generated.so)"));
+                bool hasBurst = File.Exists(burstLib);
+                Debug.Log("[KnLinuxTestBuild] Burst AOT " + (hasBurst ? "built" : "not built") + (hasBurst == burstOff ? " (NOT what was asked)" : " (as asked)"));
+            }
+            if (ok && il2cpp != File.Exists(Path.Combine(folder, "GameAssembly.so")))
+            {
+                Debug.LogError($"[KnLinuxTestBuild] {what} FAILED: the build came out {(il2cpp ? "Mono" : "IL2CPP")}, not what was asked.");
+                return false;
             }
             if (ok)
                 Debug.Log($"[KnLinuxTestBuild] {what} OK: {folder} ({report.summary.totalSize / (1024.0 * 1024.0):F0} MB, {stopwatch.Elapsed.TotalMinutes:F1} min, " +

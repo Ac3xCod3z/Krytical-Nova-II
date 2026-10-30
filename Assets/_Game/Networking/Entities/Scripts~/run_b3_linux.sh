@@ -30,8 +30,9 @@ ss -ltn | grep -q ":$PAGE_PORT " && die "TCP $PAGE_PORT is in use"
 
 mkdir -p "$RUN/server" "$RUN/bots"
 CLIENT_BUILD="${KN_CLIENT_BUILD:-KnGameClientLinux}"   # KnGameClientLinuxIl2cpp for the IL2CPP client (BuildClientIl2cpp)
+SERVER_BUILD="${KN_SERVER_BUILD:-KnGameServerLinux}"   # KnGameServerLinuxIl2cpp for the IL2CPP server (BuildServerIl2cpp)
 for side in Server Client; do
-  src="$CLONE/Builds/KnGame${side}Linux"; [ "$side" = Client ] && src="$CLONE/Builds/$CLIENT_BUILD"; dst="$ROOT/${side,,}"
+  src="$CLONE/Builds/$SERVER_BUILD"; [ "$side" = Client ] && src="$CLONE/Builds/$CLIENT_BUILD"; dst="$ROOT/${side,,}"
   [ -d "$src" ] || die "no build at $src (run KnLinuxTestBuild.Build$side first)"
   rm -rf "$dst"; cp -r "$src" "$dst"; chmod +x "$dst"/*.x86_64
 done
