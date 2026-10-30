@@ -150,6 +150,9 @@ namespace KryticalNova.EditorTools
                 if (addressables != null)
                     addressables.BuildAddressablesWithPlayerBuild = UnityEditor.AddressableAssets.Settings.AddressableAssetSettings.PlayerBuildOption.DoNotBuildWithPlayer;
                 if (backendWas != backend) PlayerSettings.SetScriptingBackend(standalone, backend);
+                // Burst reads the Editor's own subtarget, not BuildPlayerOptions.subtarget: after a server build left it on Server,
+                // every client build came out without Burst (30 Oct 2026). Set it to this build's, put back in finally.
+                EditorUserBuildSettings.standaloneBuildSubtarget = server ? StandaloneBuildSubtarget.Server : StandaloneBuildSubtarget.Player;
                 IsBuilding = true;
                 report = BuildPipeline.BuildPlayer(new BuildPlayerOptions
                 {
