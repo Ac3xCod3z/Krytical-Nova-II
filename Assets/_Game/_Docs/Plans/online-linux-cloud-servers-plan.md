@@ -441,7 +441,9 @@ free-text SQL, editing anything in the database, a multi-box list, user accounts
   - **Norton Behavioral Protection** froze freshly built Windows exes (IDP.Generic) even with folder exclusions; tests ran with it off for the test only.
   - **IL2CPP** of this game needs about 17 GB on this PC (three tries killed); the release Linux server is built elsewhere later.
 - [ ] Still unproven: an IL2CPP Linux build; the Linux server with the real (production) certificate; bots through the server roster; loss of actions in the
-  last 60 s before a crash (expected at most one autosave interval).
+  last 60 s before a crash (expected at most one autosave interval). Follow-up: a bot (once it joins through the roster) that earns or picks up
+  something and is killed with `kill -9` within 10 s of the action; compare against the documents before the action.
+- Case C: the owner confirmed the changes after the last rejoin (Creds 109 -> 1, a purchase and a weapon swap) were their own actions.
 
 
 ## Change log
