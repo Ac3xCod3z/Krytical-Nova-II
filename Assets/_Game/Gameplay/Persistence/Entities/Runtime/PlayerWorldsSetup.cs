@@ -65,6 +65,16 @@ namespace KryticalNova.Persistence.Entities
 #if KN_TEST_LANE && (KN_DEV_BOTS || UNITY_EDITOR)
             TestLaneBotCharacters.IsBot = KnDevBots.IsBotAccount; // the 2-client gate's bots get characters (plan 43.1)
 #endif
+#if KN_TEST_LANE
+            PlayerClickLog.Sink = KnTrace.Write; // the click-start pairs of the 2-client gate (plan 43)
+#endif
+            // The roster checks new looks against the player's character rules; without a NetworkManager it finds them here.
+            if (KryticalNova.Persistence.ServerRoster.Database == null)
+            {
+                GameObject player = PlayerPrefab();
+                var identity = player != null ? player.GetComponent<KryticalNova.Player.PlayerIdentity>() : null;
+                if (identity != null) KryticalNova.Persistence.ServerRoster.Database = identity.Database;
+            }
             var planner = new NavMeshPathPlanner();
             PlayerEntitiesSetup.Install(server, planner);
             var rules = new PlayerAdmission

@@ -93,7 +93,9 @@ namespace KryticalNova.Player.Entities
                         Refuse(em, e, input);
                         Refused++;
                     }
-                    else if (PlayerClickLog.Sink != null) PlayerClickLog.Server(input.ClickSeq, nt.ServerTick.TickIndexForValidTick);
+                    else if (PlayerClickLog.Sink != null)
+                        PlayerClickLog.Server(em.HasComponent<GhostOwner>(e) ? em.GetComponentData<GhostOwner>(e).NetworkId : 0,
+                            input.ClickSeq, nt.ServerTick.TickIndexForValidTick);
                 }
             }
         }

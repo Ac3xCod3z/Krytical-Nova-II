@@ -130,7 +130,9 @@ namespace KryticalNova.Player.Entities
                 input.GoalXMm = cmd.GoalMm.x;
                 input.GoalYMm = cmd.GoalMm.y;
                 input.GoalZMm = cmd.GoalMm.z;
-                if (PlayerClickLog.Sink != null && m_Tick.IsValid) PlayerClickLog.Client(header.Seq, m_Tick.TickIndexForValidTick);
+                if (PlayerClickLog.Sink != null && m_Tick.IsValid)
+                    PlayerClickLog.Client(em.HasComponent<GhostOwner>(e) ? em.GetComponentData<GhostOwner>(e).NetworkId : 0,
+                        header.Seq, m_Tick.TickIndexForValidTick);
             }
             finally { corners.Dispose(); }
         }

@@ -15,7 +15,7 @@ namespace KryticalNova.Player.Entities.Tests
         [OneTimeTearDown] public void OneTimeTearDown() => PlayerTestAssets.Cleanup();
         [TearDown] public void TearDown() => PlayerClickLog.Sink = null;
 
-        static readonly Regex Line = new Regex(@"^\[KnClick\] (client|server) seq=(\d+) tick=(\d+)$");
+        static readonly Regex Line = new Regex(@"^\[KnClick\] (client|server) owner=(\d+) seq=(\d+) tick=(\d+)$");
 
         [Test]
         public void EachClick_IsLoggedByOwnerAndServer_WithTheSameSeq_AndAtMostOneTickApart()
@@ -36,7 +36,8 @@ namespace KryticalNova.Player.Entities.Tests
             {
                 Match m = Line.Match(l);
                 Assert.IsTrue(m.Success, "a line the pairing script cannot read: " + l);
-                (m.Groups[1].Value == "client" ? client : server)[m.Groups[2].Value] = uint.Parse(m.Groups[3].Value);
+                Assert.AreNotEqual("0", m.Groups[2].Value, "the owner's NetworkId is named: " + l);
+                (m.Groups[1].Value == "client" ? client : server)[m.Groups[2].Value + "/" + m.Groups[3].Value] = uint.Parse(m.Groups[4].Value);
             }
             Assert.AreEqual(3, client.Count, "one owner line per click: " + string.Join(" | ", lines));
             CollectionAssert.AreEquivalent(client.Keys, server.Keys, "the server started every click: " + string.Join(" | ", lines));

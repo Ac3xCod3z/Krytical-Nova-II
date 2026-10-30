@@ -10,6 +10,8 @@ Use it to check a refactor in a worktree while the owner's Editor stays open on 
     python ".../compile_check.py" --checkout C:/path/to/worktree --projects C:/path/to/main/folder
     python ".../compile_check.py" --server     also compile the runtime assemblies as the dedicated server does
                                                (UNITY_SERVER defined, Editor-only code left out)
+    python ".../compile_check.py" --defines "KN_TEST_LANE;KN_DEV_BOTS"   extra scripting defines, as a build's
+                                               extraScriptingDefines add them (with --server for a server build's set)
     python ".../compile_check.py" --ecs-library C:/path/to/clone   where the Entities / Netcode packages and their built DLLs are
 It prints the errors and exits 1 when any assembly fails. Warnings are not shown.
 
@@ -47,6 +49,7 @@ def arg(name, default=None):
 
 CHECKOUT = os.path.normpath(arg("--checkout", os.path.join(HERE, *[".."] * 6)))
 SERVER = "--server" in args
+EXTRA_DEFINES = [d for d in (arg("--defines", "") or "").split(";") if d.strip()]
 
 
 def main_folder():
@@ -212,6 +215,9 @@ def make(asm):
     if SERVER:
         text = re.sub(r"<DefineConstants>([^<]*)</DefineConstants>", lambda m: "<DefineConstants>" + ";".join(
             [d for d in m.group(1).split(";") if not d.startswith("UNITY_EDITOR")] + ["UNITY_SERVER"]) + "</DefineConstants>", text)
+    if EXTRA_DEFINES:
+        text = re.sub(r"<DefineConstants>([^<]*)</DefineConstants>",
+                      lambda m: "<DefineConstants>" + ";".join(m.group(1).split(";") + EXTRA_DEFINES) + "</DefineConstants>", text)
     # the template's references to packages and vendors stand (Unity points at their built DLLs where it made no
     # project for them); our own assemblies come from the checkout's .asmdef below
     refs = PROJREF.findall(text)
@@ -270,5 +276,6 @@ if MISSING_ECS:
     print("Entities/Netcode inputs not found (compile once in Unity so Library/ScriptAssemblies exists, or pass --ecs-library): "
           + ", ".join(sorted(MISSING_ECS)))
 print(f"{len(built) - len(failed)} of {len(built)} assemblies compiled{' (server defines)' if SERVER else ''}"
+      + (f" (+{';'.join(EXTRA_DEFINES)})" if EXTRA_DEFINES else "")
       + (f"; failed: {', '.join(failed)}" if failed else ""))
 sys.exit(1 if failed else 0)
