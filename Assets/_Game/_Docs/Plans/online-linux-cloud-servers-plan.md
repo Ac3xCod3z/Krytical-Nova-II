@@ -276,7 +276,7 @@ production layout (11, 12).
 - [ ] 2. **Listen address vs public address** joins the contract: the server binds 0.0.0.0, and the address the world
   service hands out and `ServerReach` publishes must be the public IPv4 (a `publicAddress` setting), never 127.0.0.1 or a
   private one. The cloud box needs a public IPv4 (priced separately at Hetzner).
-  Written 30 Oct 2026 (not yet compiled or run): `publicAddress` in `server-settings.json` (and `-publicAddress`), dropped
+  Built 30 Oct 2026 (compiled client and server, `world_test.py` passed; `ServerSettingsTests` not yet run in Unity): `publicAddress` in `server-settings.json` (and `-publicAddress`), dropped
   with a log note when it is local, private, shared (100.64/10) or not IPv4; `ServerReach` uses it and asks no address
   service; `WorldLink` sends it (or the address `ServerReach` looked up) in every presence report; the world service keeps
   only a public IPv4 and hands it out in `/world/servers` and with a travel ticket; `deploy.sh` fills it with the box's IP.
@@ -303,11 +303,12 @@ production layout (11, 12).
   Checked 30 Oct 2026: the save service binds 127.0.0.1 (7801, `--test` 7802), Postgres on the box localhost, `/stop`
   loopback; the control page bound every address (only the firewall, the home-network check and the password kept the
   internet out). `--test` relaxes only the database (`krytical_nova_test`), the port and the nightly copies; the key
-  check and the bind stay. Fix written 30 Oct 2026 (not yet compiled or run): `pageAddress` in `server-settings.json`
+  check and the bind stay. Fix built 30 Oct 2026 (compiled client and server, `world_test.py` passed; `ServerSettingsTests` not yet run in Unity): `pageAddress` in `server-settings.json`
   (and `-pageAddress`), default `0.0.0.0` (this PC and the phone unchanged); anything but this machine or a home-network
   address falls back to `127.0.0.1`; `deploy.sh` writes `127.0.0.1` on the box (reached by SSH tunnel). The save service
   refuses to start when `--urls` / `ASPNETCORE_URLS` names a public address, every address or a host name
-  (`ListenAddress`). Tests: `ServerSettingsTests`, `world_test.py`.
+  (`ListenAddress`). Tests: `ServerSettingsTests`, `world_test.py`. Found on the way: .NET reads `--test --urls=...` as
+  `--test=--urls=...`, so the box's unit lost its address (harmless, the default is the same); the address now comes first.
 - [ ] 11. **No cross-vendor database link by accident:** game and database machines come from the same vendor (private
   network), or a WireGuard link plus TLS; the HTTP between map servers and SaveService is plain HTTP with a key today.
   This replaces "move the game machines to another host, keep the database" above.

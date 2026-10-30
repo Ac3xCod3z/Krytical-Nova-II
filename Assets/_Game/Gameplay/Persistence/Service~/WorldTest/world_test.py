@@ -64,9 +64,10 @@ def main():
         print('Something already listens on 7802 (a test save service?). Stop it first; this test starts its own.')
         return 2
     command = ['dotnet', SERVICE, '--test'] if SERVICE.endswith('.dll') else [SERVICE, '--test']
-    # Linux plan item 10: told to listen on every address, the service stops at once and never opens the port.
+    # Linux plan item 10: told to listen on every address, the service stops at once and never opens the port. The
+    # address goes before --test: .NET reads a bare --test followed by another argument as --test=<that argument>.
     try:
-        refused = subprocess.run(command + ['--urls=http://0.0.0.0:7802'], stdout=subprocess.DEVNULL,
+        refused = subprocess.run(command[:-1] + ['--urls=http://0.0.0.0:7802', '--test'], stdout=subprocess.DEVNULL,
                                  stderr=subprocess.PIPE, timeout=60)
         refused_ok = refused.returncode == 1 and b'private network only' in refused.stderr and not listening()
     except subprocess.TimeoutExpired:
