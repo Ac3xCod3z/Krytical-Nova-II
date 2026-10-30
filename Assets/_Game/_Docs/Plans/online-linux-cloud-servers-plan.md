@@ -133,17 +133,20 @@ Deploy~/
 
 Checklist:
 
-- [ ] **A. Linux server build verified on Linux** (the build exists: `ServerBuildBuilder`, `start-server.sh`). Run it
+- [x] **A. Linux server build verified on Linux** (the build exists: `ServerBuildBuilder`, `start-server.sh`). Run it
   once on a throwaway VM; confirm flags, `SIGTERM` save, ports, no display. Fix gaps in the build, not the script.
-- [ ] **B. SaveService for Linux:** `dotnet publish -r linux-x64 --self-contained` of `Persistence/Service~/SaveService`;
+  Done 29 Oct 2026 in WSL2 with the Mono build (PR 166): stop paths and the player save-loss test passed ("what was measured" below);
+  IL2CPP does not fit on this PC.
+- [x] **B. SaveService for Linux:** `dotnet publish -r linux-x64 --self-contained` of `Persistence/Service~/SaveService`;
   check Npgsql, paths, the `--test` mode (port 7802, database `krytical_nova_test`), the backup job (it uses Windows
   paths and Google Drive today; on Linux write dumps to `/var/backups/kn` and push them to a bucket).
-- [ ] **C. cloud-init + units:** user `kn` (no login), folders `/opt/kn/builds/<n>`, `/etc/kn/*.env` (root, mode 600; the
+  Done 29 Oct 2026 (PR 165, proven in WSL2 on the test database); the Linux backup job is still a follow-up (item 9).
+- [x] **C. cloud-init + units:** user `kn` (no login), folders `/opt/kn/builds/<n>`, `/etc/kn/*.env` (root, mode 600; the
   secrets live here, never in git), systemd `kn-save.service` and a template `kn-map@.service` (one instance per map,
-  `Restart=on-failure`, `KillSignal=SIGTERM`, `TimeoutStopSec` long enough to save).
-- [ ] **D. Postgres 18 on the box:** listens on the Unix socket and localhost only; `krytical_nova_test` for the test
+  `Restart=on-failure`, `KillSignal=SIGTERM`, `TimeoutStopSec` long enough to save). Done 29 Oct 2026 (PR 167, proven in WSL2).
+- [x] **D. Postgres 18 on the box:** listens on the Unix socket and localhost only; `krytical_nova_test` for the test
   setup; real database name never created on the test box. Nightly `pg_dump` plus the restore drill into
-  `krytical_nova_drill`.
+  `krytical_nova_drill`. Postgres 18 proven in WSL2 29 Oct 2026 (PR 167); the nightly `pg_dump` is still a follow-up.
 - [ ] **E. Terraform:** server, SSH key, Hetzner Cloud Firewall (below), optional volume for the database, outputs the
   address. Token read from an environment variable the owner sets (never in a file in the repo).
 - [ ] **F. `deploy.sh`:** numbered builds, symlink swap, restart, roll back to the previous number.
@@ -270,7 +273,7 @@ production layout (11, 12).
 - [ ] 2. **Listen address vs public address** joins the contract: the server binds 0.0.0.0, and the address the world
   service hands out and `ServerReach` publishes must be the public IPv4 (a `publicAddress` setting), never 127.0.0.1 or a
   private one. The cloud box needs a public IPv4 (priced separately at Hetzner).
-- [ ] 3. **WSL2 first, $0.** Prove the Linux server build, Linux SaveService publish, Postgres, systemd units, SIGTERM save
+- [x] 3. **WSL2 first, $0.** Prove the Linux server build, Linux SaveService publish, Postgres, systemd units, SIGTERM save
   and `deploy.sh` in Ubuntu on WSL2 (systemd on) before any account. Rent cloud hours only for the outside port scan, the
   bot join from the PC and the friend test.
 - [ ] 4. **RAM:** phase 5 says 1 to 1.5 GB per map server; "a few hundred MB" above is wrong until Phase 7 measures. Stage 1
@@ -311,12 +314,13 @@ production layout (11, 12).
   contract for Netcode for GameObjects and for Entities.
   - [x] Scripts: `box/kn-stop.sh`, the unit's `ExecStop`, `shutdown-save-test.sh`; proven in WSL2 **with stubs only**
     (stub with `/stop`: 2 s, exit 0, saved line; stub with SIGTERM only: falls back, exit 0).
-  - [ ] **Game code (not written, not mine to write here):** the `/stop` endpoint on the status port (127.0.0.1, key-checked)
+  - [x] **Game code:** on main (commit f7911ed7c): the `/stop` endpoint on the status port (127.0.0.1, key-checked)
     that runs the same save-all as the control page's Stop, then quits with exit 0. Owner: networking/server session.
   - [ ] **Real-server shutdown-save test:** run `sudo ./shutdown-save-test.sh` with the real Linux build (WSL2, then the cloud
     box): passes only if the unit stops within 90 s, exit 0, and the real "everyone saved" log line appears (set
     `KN_SAVED_PATTERN` to that line). Also kill-test the stop (power-off style `systemctl kill -s KILL`) and confirm no save is
-    lost beyond the autosave interval.
+    lost beyond the autosave interval. **WSL2 passed 29 Oct 2026** ("what was measured" below: PATH A, PATH B, `kill -9`);
+    the cloud box run is still open.
 
 ## Remote mode for the Krytical Nova Server app (design only; owner request 29 Oct 2026)
 
@@ -450,6 +454,9 @@ free-text SQL, editing anything in the database, a multi-box list, user accounts
 
 ## Change log
 
+- 29 Oct 2026 (end): PRs 165 (SaveService on Linux), 166 (server shader strip, batch build, bot client) and 167 (`Deploy~`
+  scripts and this plan) merged into main; items A to D, 3 and the `/stop` game code ticked. Open items are carried by the
+  server follow-ups session.
 - 29 Oct 2026 (later): item 16 added after the DOTS spike found Unity does not save on SIGTERM; WSL2 proof of box setup,
   Postgres 18, SaveService and units passed (game server was a stub).
 - 29 Oct 2026: plan written from five Google AI Mode chats plus vendor pages (Hetzner, OVH, Vultr, Tailscale, Microsoft).
