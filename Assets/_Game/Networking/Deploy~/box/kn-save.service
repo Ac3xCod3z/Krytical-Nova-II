@@ -1,0 +1,22 @@
+[Unit]
+Description=Krytical Nova save service (TEST database only on the test box)
+After=postgresql.service network.target
+Requires=postgresql.service
+
+[Service]
+User=kn
+Group=kn
+Environment=KN_SECRETS_DIR=/etc/kn
+Environment=DOTNET_gcServer=0
+WorkingDirectory=/opt/kn/current/saveservice
+# --test: port 7802, database krytical_nova_test. Listens on this machine only.
+ExecStart=/opt/kn/current/saveservice/SaveService --test --urls=http://127.0.0.1:7802
+Restart=on-failure
+RestartSec=3
+NoNewPrivileges=true
+ProtectSystem=full
+ProtectHome=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
