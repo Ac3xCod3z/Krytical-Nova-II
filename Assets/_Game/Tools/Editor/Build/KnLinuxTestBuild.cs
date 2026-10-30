@@ -23,6 +23,7 @@ namespace KryticalNova.EditorTools
     {
         public const string ServerFolder = "Builds/KnGameServerLinux";
         public const string ClientFolder = "Builds/KnGameClientLinux";
+        public const string ClientIl2cppFolder = "Builds/KnGameClientLinuxIl2cpp";
         public const string ServerExe = "KnGameServer.x86_64";
         public const string ClientExe = "KnGameClient.x86_64";
         /// <summary>The one map both test players carry (the server's default map; the bots load it by name).</summary>
@@ -47,32 +48,36 @@ namespace KryticalNova.EditorTools
 
         public static void BuildClient() => Finish(Build(server: false));
 
+        /// <summary>The headless client with IL2CPP instead of Mono (for an Editor without the Linux Mono player variation).</summary>
+        public static void BuildClientIl2cpp() => Finish(Build(server: false, il2cpp: true));
+
         static void Finish(bool ok)
         {
             if (Application.isBatchMode) EditorApplication.Exit(ok ? 0 : 1);
         }
 
-        public static string OutputFolder(bool server) =>
-            Path.GetFullPath(Path.Combine(Path.GetDirectoryName(Application.dataPath) ?? ".", server ? ServerFolder : ClientFolder));
+        public static string OutputFolder(bool server, bool il2cpp = false) =>
+            Path.GetFullPath(Path.Combine(Path.GetDirectoryName(Application.dataPath) ?? ".", server ? ServerFolder : il2cpp ? ClientIl2cppFolder : ClientFolder));
 
         /// <summary>What Unity lacks for this build, in words; null when the module is there.</summary>
-        public static string ModuleMissing(bool server)
+        public static string ModuleMissing(bool server, bool il2cpp = false)
         {
             if (server) return ServerBuildBuilder.ModuleMissing(ServerBuildBuilder.Os.Linux);
+            string backend = il2cpp ? "il2cpp" : "mono";
             string variations = Path.Combine(EditorApplication.applicationContentsPath, "PlaybackEngines", "LinuxStandaloneSupport", "Variations");
-            bool there = Directory.Exists(variations) && Directory.GetDirectories(variations, "linux64_player_development_mono").Length > 0;
-            return there ? null : $"The Linux Mono player development variation is not installed for {Application.unityVersion} (Unity Hub > Add modules > Linux Build Support (Mono)).";
+            bool there = Directory.Exists(variations) && Directory.GetDirectories(variations, "linux64_player_development_" + backend).Length > 0;
+            return there ? null : $"The Linux {backend} player development variation is not installed for {Application.unityVersion} (Unity Hub > Add modules > Linux Build Support ({(il2cpp ? "IL2CPP" : "Mono")})).";
         }
 
-        public static bool Build(bool server)
+        public static bool Build(bool server, bool il2cpp = false)
         {
-            string what = server ? "Linux test server" : "Linux headless client";
+            string what = server ? "Linux test server" : il2cpp ? "Linux headless client (IL2CPP)" : "Linux headless client";
             if (EditorApplication.isPlayingOrWillChangePlaymode || EditorApplication.isCompiling)
             {
                 Debug.LogError($"[KnLinuxTestBuild] Not now: Unity is in Play mode or compiling. Build the {what} again afterwards.");
                 return false;
             }
-            string problem = ModuleMissing(server)
+            string problem = ModuleMissing(server, il2cpp)
                 ?? (AssetDatabase.LoadMainAssetAtPath(WorldAssetsPath) == null ? $"{WorldAssetsPath} is missing: run Krytical Nova ▸ Online ▸ Entities ▸ Build Player Ghost Assets first." : null);
             // Only the gate's map: with every map in the list the build's process tree passed 21-23 GB and the watchdog stopped it twice.
             string[] scenes = { MapScenePath };
@@ -83,7 +88,7 @@ namespace KryticalNova.EditorTools
                 return false;
             }
 
-            string folder = OutputFolder(server);
+            string folder = OutputFolder(server, il2cpp);
             try
             {
                 if (Directory.Exists(folder)) Directory.Delete(folder, true);
@@ -99,6 +104,9 @@ namespace KryticalNova.EditorTools
             StandaloneBuildSubtarget subtargetWas = EditorUserBuildSettings.standaloneBuildSubtarget;
             var addressables = UnityEditor.AddressableAssets.AddressableAssetSettingsDefaultObject.Settings;
             var bundlesWere = addressables != null ? addressables.BuildAddressablesWithPlayerBuild : default;
+            var standalone = UnityEditor.Build.NamedBuildTarget.Standalone;
+            ScriptingImplementation backendWas = PlayerSettings.GetScriptingBackend(standalone);
+            ScriptingImplementation backend = il2cpp ? ScriptingImplementation.IL2CPP : ScriptingImplementation.Mono2x;
             var stopwatch = Stopwatch.StartNew();
             BuildReport report = null;
             try
@@ -106,6 +114,7 @@ namespace KryticalNova.EditorTools
                 // the maps are in the build list (as on the NGO server); the game's Addressable bundles are not needed here
                 if (addressables != null)
                     addressables.BuildAddressablesWithPlayerBuild = UnityEditor.AddressableAssets.Settings.AddressableAssetSettings.PlayerBuildOption.DoNotBuildWithPlayer;
+                if (backendWas != backend) PlayerSettings.SetScriptingBackend(standalone, backend);
                 IsBuilding = true;
                 report = BuildPipeline.BuildPlayer(new BuildPlayerOptions
                 {
@@ -125,6 +134,7 @@ namespace KryticalNova.EditorTools
             finally
             {
                 IsBuilding = false;
+                if (PlayerSettings.GetScriptingBackend(standalone) != backendWas) PlayerSettings.SetScriptingBackend(standalone, backendWas);
                 if (addressables != null) addressables.BuildAddressablesWithPlayerBuild = bundlesWere;
                 if (EditorUserBuildSettings.activeBuildTarget != targetWas || EditorUserBuildSettings.standaloneBuildSubtarget != subtargetWas)
                 {
@@ -136,7 +146,7 @@ namespace KryticalNova.EditorTools
             bool ok = report != null && report.summary.result == BuildResult.Succeeded;
             if (ok)
                 Debug.Log($"[KnLinuxTestBuild] {what} OK: {folder} ({report.summary.totalSize / (1024.0 * 1024.0):F0} MB, {stopwatch.Elapsed.TotalMinutes:F1} min, " +
-                          $"Mono, development, {string.Join(" ", server ? ServerDefines : ClientDefines)}).");
+                          $"{(il2cpp ? "IL2CPP" : "Mono")}, development, {string.Join(" ", server ? ServerDefines : ClientDefines)}).");
             else
                 Debug.LogError($"[KnLinuxTestBuild] {what} FAILED: {(report != null ? report.summary.result + ", " + report.summary.totalErrors + " errors" : "no report")}. See the Editor log.");
             return ok;
