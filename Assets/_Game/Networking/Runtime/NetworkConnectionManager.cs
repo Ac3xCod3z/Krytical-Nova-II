@@ -1,3 +1,4 @@
+using KryticalNova.Core;
 using System;
 using System.Threading.Tasks;
 using Unity.Netcode;
@@ -802,10 +803,11 @@ namespace KryticalNova.Networking
             nm.OnClientDisconnectCallback += id =>
             {
                 ServerRecords.Left(id);
-                ServerAccounts.Forget(NetPlayerKeys.Find(id));
-                RpcBudget.Forget(id);
-                NetworkHealth.Forget(id);
-                NetPlayerKeys.Release(id); // last: the lines above are keyed by the key or by the client id
+                PlayerKey gone = NetPlayerKeys.Find(id);
+                ServerAccounts.Forget(gone);
+                RpcBudget.Forget(gone);
+                NetworkHealth.Forget(gone);
+                NetPlayerKeys.Release(id); // last: the lines above are keyed by the key
                 Debug.Log($"[Server] Player left (connection {id}). Online: {OnlineWithout(nm, id)}.");
             };
             // Unity's sign-in keys, fetched now so the first player is not kept waiting (online phase 2).
