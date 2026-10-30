@@ -389,6 +389,8 @@ free-text SQL, editing anything in the database, a multi-box list, user accounts
   because Dedicated Server Optimizations is enabled"): UI Toolkit looks up OS fallback fonts in a build with no shaders. Seen on the
   Linux server (WSL2, 16 Oct build) **and in `Logs/TestServer-7796.log` from the Windows server**, so it is not Linux-only. Harmless so
   far (the server keeps running); fix by not creating UI Toolkit text on the server, or by filtering it in the log.
+  **Fixed in code 30 Oct 2026, not yet seen in a server log:** every `UIDocument` is switched off on a server, in the build's copy of each
+  scene (`ServerSceneStripper`) and as scenes load (`DedicatedServerOptimizer`); the UI assembly is not in a server build, so nothing reads them.
 - [ ] A Unity Linux player does not run `Application.wantsToQuit` on SIGTERM (plan item 16); the DOTS branch adds a libc SIGTERM
   handler and the `/stop` endpoint. Prove both with `shutdown-save-test.sh` on the real build.
 

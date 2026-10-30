@@ -36,7 +36,10 @@ namespace KryticalNova.EditorTools
                 {
                     if (behaviour == null || !behaviour.enabled) continue;
                     string ns = behaviour.GetType().Namespace;
-                    if (ns == null || !RenderOnlyNamespaces.Contains(ns)) continue;
+                    bool renderOnly = ns != null && RenderOnlyNamespaces.Contains(ns);
+                    // UI Toolkit documents: no UI assembly reads them on a server, and laying out their text looks for
+                    // the system's fonts, which needs a shader (DedicatedServerOptimizer does the same as scenes load).
+                    if (!renderOnly && !(behaviour is UnityEngine.UIElements.UIDocument)) continue;
                     behaviour.enabled = false;
                     off++;
                 }
