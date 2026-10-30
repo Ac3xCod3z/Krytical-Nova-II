@@ -4,7 +4,7 @@ service's /world/... calls. Two pretend map servers (Concord and Transit Row) re
 server they are on to the other map, and only that server may redeem it, once, within its 30 seconds.
 
 TEST database only: it starts its own save service with --test (port 7802, krytical_nova_test) and refuses to run if
-something already listens there. The world service keeps nothing in the database.
+something already listens there. First it checks that the service will not start on every address (Linux plan item 10). The world service keeps nothing in the database.
 
     python world_test.py <SaveService.dll or SaveService.exe>
 
@@ -64,6 +64,13 @@ def main():
         print('Something already listens on 7802 (a test save service?). Stop it first; this test starts its own.')
         return 2
     command = ['dotnet', SERVICE, '--test'] if SERVICE.endswith('.dll') else [SERVICE, '--test']
+    # Linux plan item 10: told to listen on every address, the service stops at once and never opens the port.
+    try:
+        refused = subprocess.run(command + ['--urls=http://0.0.0.0:7802'], stdout=subprocess.DEVNULL,
+                                 stderr=subprocess.PIPE, timeout=60)
+        refused_ok = refused.returncode == 1 and b'private network only' in refused.stderr and not listening()
+    except subprocess.TimeoutExpired:
+        refused_ok = False
     service = subprocess.Popen(command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     try:
         for _ in range(60):
@@ -79,6 +86,7 @@ def main():
                 pass
             time.sleep(0.5)
         print('World service test')
+        check('the service refuses to listen on every address', refused_ok)
 
         status, _ = call('GET', '/world/servers', key='not-the-key')
         check('a call without the service key is refused', status == 401)

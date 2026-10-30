@@ -300,6 +300,14 @@ production layout (11, 12).
 - [ ] 10. **SaveService is never on public 443.** It holds the database; the public face must be a separate thin process.
   Check that control pages and 7801/7802 bind to localhost or the private address (not only blocked by the firewall),
   and what `SaveService --test` relaxes before using it on a public host.
+  Checked 30 Oct 2026: the save service binds 127.0.0.1 (7801, `--test` 7802), Postgres on the box localhost, `/stop`
+  loopback; the control page bound every address (only the firewall, the home-network check and the password kept the
+  internet out). `--test` relaxes only the database (`krytical_nova_test`), the port and the nightly copies; the key
+  check and the bind stay. Fix written 30 Oct 2026 (not yet compiled or run): `pageAddress` in `server-settings.json`
+  (and `-pageAddress`), default `0.0.0.0` (this PC and the phone unchanged); anything but this machine or a home-network
+  address falls back to `127.0.0.1`; `deploy.sh` writes `127.0.0.1` on the box (reached by SSH tunnel). The save service
+  refuses to start when `--urls` / `ASPNETCORE_URLS` names a public address, every address or a host name
+  (`ListenAddress`). Tests: `ServerSettingsTests`, `world_test.py`.
 - [ ] 11. **No cross-vendor database link by accident:** game and database machines come from the same vendor (private
   network), or a WireGuard link plus TLS; the HTTP between map servers and SaveService is plain HTTP with a key today.
   This replaces "move the game machines to another host, keep the database" above.
@@ -462,6 +470,8 @@ free-text SQL, editing anything in the database, a multi-box list, user accounts
 
 ## Change log
 
+- 30 Oct 2026: item 10 checked (the control page bound every address); fix written: `pageAddress` (127.0.0.1 on the
+  box) and the save service refusing a public listen address.
 - 29 Oct 2026 (end): PRs 165 (SaveService on Linux), 166 (server shader strip, batch build, bot client) and 167 (`Deploy~`
   scripts and this plan) merged into main; items A to D, 3 and the `/stop` game code ticked. Open items are carried by the
   server follow-ups session.

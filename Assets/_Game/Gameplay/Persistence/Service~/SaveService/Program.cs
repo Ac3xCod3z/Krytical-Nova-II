@@ -10,7 +10,8 @@
 // - A batch (a player's save, a trade: several documents and ledger lines) is one transaction, all or none; a batch sent
 //   again after its answer was lost is recognised by its id and not applied twice (milestone 3).
 // - It listens on this PC only (http://127.0.0.1:7801) until the save service moves beside the servers on a private
-//   network. With --test it serves the tests' own database (krytical_nova_test) on port 7802 instead.
+//   network; it refuses to start on a public or every-address one (ListenAddress, Linux plan item 10). With --test it
+//   serves the tests' own database (krytical_nova_test) on port 7802 instead.
 // - Milestone 6: it backs the database up every night at 4 AM into Documents\KryticalNova-Backups\database and Google Drive,
 //   keeping 14 days (NightlyBackup). --backup-now makes one copy and stops; --restore-drill [file] puts the newest copy
 //   (or that one) into the practice database and checks it, then stops; --restore-real [file] puts it back into
@@ -78,6 +79,17 @@ if (args.Contains("--backup-now"))
     return made.Contains("FAILED") ? 1 : 0;
 }
 
+// Never where the internet can reach it (Linux plan item 10): a public or every-address --urls / ASPNETCORE_URLS is
+// refused before the database is opened.
+var builder = WebApplication.CreateSlimBuilder(args);
+string listenOn = builder.Configuration["urls"] ?? urls;
+if (ListenAddress.Refusal(listenOn) is { } refused)
+{
+    Console.Error.WriteLine(refused);
+    return 1;
+}
+builder.WebHost.UseUrls(listenOn);
+
 var connection = new NpgsqlConnectionStringBuilder
 {
     Host = database.Host, Port = database.Port, Database = database.Database, Username = database.User, Password = database.Password,
@@ -86,8 +98,6 @@ var connection = new NpgsqlConnectionStringBuilder
 var store = new DocumentStore(NpgsqlDataSource.Create(connection.ConnectionString));
 await store.PrepareAsync();
 
-var builder = WebApplication.CreateSlimBuilder(args);
-builder.WebHost.UseUrls(builder.Configuration["urls"] ?? urls);
 builder.Logging.SetMinimumLevel(LogLevel.Warning);
 var app = builder.Build();
 
@@ -209,7 +219,7 @@ app.MapPost("/world/ticket", (TicketRequest request) => Results.Ok(world.Issue(r
 app.MapPost("/world/redeem", (RedeemRequest request) => Results.Ok(world.Redeem(request)));
 
 Console.WriteLine($"Krytical Nova save service: database {database.Database} on {database.Host}:{database.Port}, " +
-                  $"listening on {builder.Configuration["urls"] ?? urls}{(test ? " (TEST saves)" : "")}.");
+                  $"listening on {listenOn}{(test ? " (TEST saves)" : "")}.");
 if (!test) _ = backup.RunAsync(app.Lifetime.ApplicationStopping);
 await app.RunAsync();
 return 0;

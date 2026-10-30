@@ -92,7 +92,7 @@ namespace KryticalNova.Networking
             addresses = ControlPageRules.HomeAddresses();
             try
             {
-                listener = new TcpListener(IPAddress.Any, options.pagePort);
+                listener = new TcpListener(IPAddress.Parse(options.pageAddress), options.pagePort);
                 listener.Start();
             }
             catch (Exception e)
@@ -103,7 +103,11 @@ namespace KryticalNova.Networking
             }
             running = true;
             new Thread(AcceptLoop) { IsBackground = true, Name = "Control page" }.Start();
-            foreach (string address in addresses) Debug.Log($"[Server] Control page: http://{address}:{options.pagePort} (home network only).");
+            if (options.pageAddress != ServerLaunchOptions.AllAddresses)
+                Debug.Log($"[Server] Control page: http://{options.pageAddress}:{options.pagePort} only (pageAddress"
+                          + (IPAddress.IsLoopback(IPAddress.Parse(options.pageAddress)) ? "; from another machine through an SSH tunnel)." : ")."));
+            else
+                foreach (string address in addresses) Debug.Log($"[Server] Control page: http://{address}:{options.pagePort} (home network only).");
             if (!Directory.Exists(folder)) Debug.LogWarning($"[Server] The control page's files are missing ({folder}): build the server again.");
         }
 

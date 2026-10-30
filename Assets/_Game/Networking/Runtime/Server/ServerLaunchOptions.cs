@@ -33,6 +33,8 @@ namespace KryticalNova.Networking
         public string connectionMode = "direct";
         [Tooltip("The control page's port, on the home network only. 0 switches the page off.")]
         public int pagePort = 8090;
+        [Tooltip("Where the control page listens. 0.0.0.0: every address of this PC, so a phone on the home Wi-Fi reaches it. 127.0.0.1: this machine only (a rented machine; reached through an SSH tunnel). Only this machine or a home-network address is taken.")]
+        public string pageAddress = AllAddresses;
         [Tooltip("The control page's password. Only ever in this file; when empty the server makes one and writes it here.")]
         public string pagePassword = "";
         [Tooltip("Hours between backups of the save folder; 0 backs up only at start and stop.")]
@@ -204,7 +206,7 @@ namespace KryticalNova.Networking
             return options;
         }
 
-        /// <summary>Command-line overrides: -name, -port, -maxPlayers, -saveFolder, -map, -mode, -pagePort, -backupHours, -backupsKept, -role, -publicAddress.</summary>
+        /// <summary>Command-line overrides: -name, -port, -maxPlayers, -saveFolder, -map, -mode, -pagePort, -backupHours, -backupsKept, -role, -publicAddress, -pageAddress.</summary>
         public void ApplyArguments(string[] args, List<string> notes)
         {
             if (args == null) return;
@@ -227,6 +229,7 @@ namespace KryticalNova.Networking
                     case "-backupskept": backupsKept = Int(value, backupsKept, key, notes); break;
                     case "-role": role = string.Equals(value.Trim(), MapRole, StringComparison.OrdinalIgnoreCase) ? MapRole : MainRole; break;
                     case "-publicaddress": publicAddress = value; break;
+                    case "-pageaddress": pageAddress = value; break;
                     default: continue;
                 }
                 notes.Add($"{key} from the command line");
@@ -257,9 +260,19 @@ namespace KryticalNova.Networking
                 publicAddress = string.Empty;
             }
             else if (publicAddress.Length > 0) notes.Add($"public address {publicAddress} (from the settings)");
+            // The control page never listens where the internet reaches it (Linux plan item 10): anything but every address,
+            // this machine or a home-network address falls back to this machine only.
+            pageAddress = string.IsNullOrWhiteSpace(pageAddress) ? AllAddresses : pageAddress.Trim();
+            if (!ControlPageRules.IsPageAddress(pageAddress))
+            {
+                notes.Add($"pageAddress \"{pageAddress}\" is not this machine or a home-network address: the control page listens on {ThisMachineOnly} only");
+                pageAddress = ThisMachineOnly;
+            }
         }
 
         public const string Direct = "direct";
+        /// <summary>The control page on every address of this PC (the default) or on this machine only.</summary>
+        public const string AllAddresses = "0.0.0.0", ThisMachineOnly = "127.0.0.1";
         public const string Relay = "relay";
 
         /// <summary>True in Relay mode: players come through Unity Relay with a join code instead of to this PC's port.</summary>
