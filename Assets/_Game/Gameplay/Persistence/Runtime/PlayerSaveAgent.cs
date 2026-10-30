@@ -18,7 +18,7 @@ namespace KryticalNova.Persistence
     /// A player without a saved character behind it (a test avatar) is simply never saved.
     /// </summary>
     [DisallowMultipleComponent]
-    public sealed class PlayerSaveAgent : NetworkBehaviour, ISaveScheduler
+    public sealed class PlayerSaveAgent : NetworkBehaviour, ISaveScheduler, IServerLeaving
     {
         [Tooltip("Seconds between automatic saves of this player.")]
         [SerializeField, Min(10f)] private float autosaveSeconds = 60f;
@@ -48,8 +48,8 @@ namespace KryticalNova.Persistence
         /// <summary>The account document while loaded (server / offline). Account-wide systems read and change it here.</summary>
         public AccountSave Account => account;
 
-        private bool HasAuthority => !IsSpawned || IsServer;
-        private bool IsLocalPlayer => IsSpawned ? IsOwner : NetworkManager.Singleton == null || !NetworkManager.Singleton.IsListening;
+        private bool HasAuthority => NetRole.MayMutate(this);
+        private bool IsLocalPlayer => NetRole.IsLocalOwner(this);
 
         private void Awake()
         {
@@ -71,7 +71,7 @@ namespace KryticalNova.Persistence
                 equipment.LookChanged += OnWornTemperChanged;
             }
             // The offline avatar comes back after a session: pick up what the networked player saved.
-            if (!IsSpawned) TryLoad();
+            if (NetRole.IsUnspawned(this)) TryLoad();
         }
 
         private void OnDisable()
@@ -85,14 +85,14 @@ namespace KryticalNova.Persistence
                 equipment.LookChanged -= OnWornTemperChanged;
             }
             // The offline avatar is switched off while a session runs: its character belongs to the networked player now.
-            if (!IsSpawned) SaveAndRelease();
+            if (NetRole.IsUnspawned(this)) SaveAndRelease();
         }
 
         public override void OnNetworkSpawn()
         {
             base.OnNetworkSpawn();
             TryLoad();
-            if (IsOwner)
+            if (NetRole.IsOwner(this))
             {
                 Accessibility.Changed += SendAgreement;
                 SendAgreement();
@@ -103,7 +103,7 @@ namespace KryticalNova.Persistence
         {
             // Leaving the world: the select screen is next, and shows what was worn at this moment.
             if (wornDue >= 0f) RememberWorn();
-            if (IsServer) SaveAndRelease();
+            if (NetRole.IsServerBody(this)) OnServerLeaving();
             Accessibility.Changed -= SendAgreement;
             base.OnNetworkDespawn();
         }
@@ -161,14 +161,14 @@ namespace KryticalNova.Persistence
             if (!SaveKeys.IsId(wantedAccount) || !SaveKeys.IsId(wantedCharacter)) return;
 
             // Online phase 2: the characters this game played before Unity sign-in move to its proven account, once.
-            if (IsSpawned && OwnerClientId != NetworkManager.ServerClientId
-                && KryticalNova.Networking.ServerAccounts.TryGet(OwnerClientId, out var proven) && proven.Account == wantedAccount)
+            if (NetRole.IsRemoteOwned(this)
+                && KryticalNova.Networking.ServerAccounts.TryGet(KryticalNova.Networking.NetPlayerKeys.Find(NetRole.OwnerId(this)), out var proven) && proven.Account == wantedAccount)
                 ServerSave.CarryOverOnce(proven.OldAccount, wantedAccount);
 
             if (!ServerSave.TryBind(this, wantedAccount, out string refusal))
             {
                 Debug.LogWarning($"[Save] {identity.CharacterName}: {refusal}", this);
-                if (IsSpawned && OwnerClientId != NetworkManager.ServerClientId) NetworkManager.DisconnectClient(OwnerClientId, refusal);
+                if (NetRole.IsRemoteOwned(this)) NetRole.DisconnectOwner(this, refusal);
                 return;
             }
 
@@ -181,7 +181,7 @@ namespace KryticalNova.Persistence
             {
                 Debug.LogWarning($"[Save] {identity.CharacterName} ({wantedCharacter}) of account {wantedAccount}: {notOnRoster}", this);
                 ServerSave.Release(this, wantedAccount);
-                NetworkManager.DisconnectClient(OwnerClientId, notOnRoster);
+                NetRole.DisconnectOwner(this, notOnRoster);
                 return;
             }
 
@@ -216,7 +216,7 @@ namespace KryticalNova.Persistence
                     character = null;
                     ServerSave.Release(this, wantedAccount);
                     accountId = string.Empty;
-                    if (IsSpawned && OwnerClientId != NetworkManager.ServerClientId) NetworkManager.DisconnectClient(OwnerClientId, said);
+                    if (NetRole.IsRemoteOwned(this)) NetRole.DisconnectOwner(this, said);
                     return;
                 }
             }
@@ -264,7 +264,7 @@ namespace KryticalNova.Persistence
         private void SendAgreement()
         {
             long agreed = Accessibility.WarningAgreedUtc;
-            if (agreed == 0 || agreed == sentAgreement || !IsSpawned) return;
+            if (agreed == 0 || agreed == sentAgreement || NetRole.IsUnspawned(this)) return;
             sentAgreement = agreed;
             AgreementRpc(agreed);
         }
@@ -293,7 +293,7 @@ namespace KryticalNova.Persistence
         }
 
         // A player of a dedicated server (not the host's own): the server keeps the roster (ServerRoster).
-        private bool RosterKeptByServer => IsSpawned && OwnerClientId != NetworkManager.ServerClientId
+        private bool RosterKeptByServer => NetRole.IsRemoteOwned(this)
                                            && KryticalNova.Networking.NetworkConnectionManager.RequireProof;
 
         /// <summary>Why a character may not play on a server that keeps the roster, in the words the player reads; null when it may.</summary>
@@ -409,6 +409,9 @@ namespace KryticalNova.Persistence
             if (character == null || !HasAuthority) return;
             nextSave = Mathf.Min(nextSave, Time.unscaledTime + Mathf.Max(0f, withinSeconds));
         }
+
+        /// <summary>The server is about to destroy this body: the character is saved and the account let go (twice is harmless).</summary>
+        public void OnServerLeaving() => SaveAndRelease();
 
         /// <summary>Saves and lets go of the character (the player left, or the offline avatar gave way to a session).</summary>
         internal void SaveAndRelease()

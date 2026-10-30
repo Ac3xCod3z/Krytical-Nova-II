@@ -2,7 +2,7 @@ using System.Text;
 using KryticalNova.Audio;
 using KryticalNova.Combat;
 using KryticalNova.Items;
-using Unity.Netcode;
+using KryticalNova.Core;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -94,8 +94,7 @@ namespace KryticalNova.UI
         {
             FindPlayer();
             // A GM tool, with a player to read: where the game is decided, or on a player's own game the server sends to.
-            NetworkManager network = NetworkManager.Singleton;
-            bool decidedHere = network == null || !network.IsListening || network.IsServer;
+            bool decidedHere = NetSession.DecidesGame;
             bool show = cadence != null && (decidedHere ? PlayerCadence.ReadoutShown : PlayerCadence.ReadoutSentHere);
             if (plate.gameObject.activeSelf != show) plate.gameObject.SetActive(show);
             if (!show) return;

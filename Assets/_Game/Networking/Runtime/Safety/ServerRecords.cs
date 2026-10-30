@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using KryticalNova.Core;
 using Unity.Netcode;
 using UnityEngine;
 
@@ -31,7 +32,7 @@ namespace KryticalNova.Networking
         private static readonly object Gate = new object();
         // Each player in the game as last named with a character, so the line of their leaving still names them after
         // their character has gone. Only players who were let in are here.
-        private static readonly Dictionary<ulong, string> InGame = new Dictionary<ulong, string>();
+        private static readonly Dictionary<PlayerKey, string> InGame = new Dictionary<PlayerKey, string>();
 
         /// <summary>Where the files are written (the dedicated server's save folder); null: log lines only.</summary>
         public static string LogFolder { get; set; }
@@ -53,15 +54,20 @@ namespace KryticalNova.Networking
         /// <summary>Access record: a player was let in.</summary>
         public static void Joined(ulong clientId)
         {
-            InGame[clientId] = Who(clientId);
-            Write(RecordKind.Access, "Joined: " + InGame[clientId]);
+            PlayerKey key = NetPlayerKeys.Of(clientId);
+            InGame[key] = Who(clientId);
+            Write(RecordKind.Access, "Joined: " + InGame[key]);
         }
+
+        /// <summary>True from <see cref="Joined"/> until <see cref="Left"/>.</summary>
+        public static bool IsInGame(PlayerKey key) => InGame.ContainsKey(key);
 
         /// <summary>Access record: a player who was in the game left (a game that was turned away was never in: no line).</summary>
         public static void Left(ulong clientId)
         {
-            if (!InGame.TryGetValue(clientId, out string last)) return;
-            InGame.Remove(clientId);
+            PlayerKey key = NetPlayerKeys.Find(clientId);
+            if (!InGame.TryGetValue(key, out string last)) return;
+            InGame.Remove(key);
             string now = Who(clientId);
             Write(RecordKind.Access, "Left: " + (now.StartsWith(NoCharacter, StringComparison.Ordinal) ? last : now));
         }
@@ -155,14 +161,15 @@ namespace KryticalNova.Networking
         public static string Who(ulong clientId)
         {
             NetworkManager network = NetworkManager.Singleton;
+            PlayerKey key = NetPlayerKeys.Find(clientId);
             if (network != null && network.ConnectedClients.TryGetValue(clientId, out NetworkClient client) && client.PlayerObject != null)
             {
                 string who = Who(client.PlayerObject);
-                if (InGame.ContainsKey(clientId) && !who.StartsWith(NoCharacter, StringComparison.Ordinal)) InGame[clientId] = who;
+                if (InGame.ContainsKey(key) && !who.StartsWith(NoCharacter, StringComparison.Ordinal)) InGame[key] = who;
                 return who;
             }
-            if (InGame.TryGetValue(clientId, out string last) && !last.StartsWith(NoCharacter, StringComparison.Ordinal)) return last;
-            string account = ServerAccounts.TryGet(clientId, out ServerAccounts.Entry entry) ? entry.Account : "(not signed in)";
+            if (InGame.TryGetValue(key, out string last) && !last.StartsWith(NoCharacter, StringComparison.Ordinal)) return last;
+            string account = ServerAccounts.TryGet(key, out ServerAccounts.Entry entry) ? entry.Account : "(not signed in)";
             return $"{NoCharacter} (account {account}, connection {clientId})";
         }
 
