@@ -130,7 +130,7 @@ namespace KryticalNova.Networking
                     if (client.PlayerObject == null) continue;
                     ServerHooks.PlayerFacts facts = ServerHooks.Describe(client.PlayerObject.gameObject);
                     string account = !string.IsNullOrEmpty(facts.Account) ? facts.Account
-                        : ServerAccounts.TryGet(client.ClientId, out ServerAccounts.Entry entry) ? entry.Account : string.Empty;
+                        : ServerAccounts.TryGet(NetPlayerKeys.Find(client.ClientId), out ServerAccounts.Entry entry) ? entry.Account : string.Empty;
                     if (string.IsNullOrEmpty(account)) continue;
                     players.Add(new Player { account = account, character = facts.Character ?? string.Empty });
                 }

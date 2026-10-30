@@ -24,7 +24,8 @@ namespace KryticalNova.Tests
             for (ulong id = 0; id < 10; id++)
             {
                 GmRoster.Forget(id);
-                ServerAccounts.Forget(id);
+                ServerAccounts.Forget(NetPlayerKeys.Find(id));
+                NetPlayerKeys.Release(id);
             }
         }
 
@@ -32,7 +33,7 @@ namespace KryticalNova.Tests
         public void ABoundAccountIsGmWhenItJoins()
         {
             GmRoster.SetAll(new[] { Ash(), Bo() });
-            ServerAccounts.Remember(4, AshAccount, "");
+            ServerAccounts.Remember(NetPlayerKeys.Of(4), AshAccount, "");
             Assert.IsTrue(GmRoster.SignInBound(4, out string name));
             Assert.AreEqual("Ash", name);
             Assert.IsTrue(GmRoster.IsGm(4));
@@ -44,7 +45,7 @@ namespace KryticalNova.Tests
         public void AnyOtherAccountIsNot()
         {
             GmRoster.SetAll(new[] { Ash(), Bo() });
-            ServerAccounts.Remember(5, BoAccount, "");
+            ServerAccounts.Remember(NetPlayerKeys.Of(5), BoAccount, "");
             Assert.IsFalse(GmRoster.SignInBound(5, out _), "Bo is not bound yet");
             Assert.IsFalse(GmRoster.SignInBound(6, out _), "a connection with no proven account");
             Assert.IsFalse(GmRoster.IsGm(5));
@@ -55,7 +56,7 @@ namespace KryticalNova.Tests
         public void UnbindingOrRemovingAGmEndsTheirRightsAndSaysSo()
         {
             GmRoster.SetAll(new[] { Ash(), Bo() });
-            ServerAccounts.Remember(7, AshAccount, "");
+            ServerAccounts.Remember(NetPlayerKeys.Of(7), AshAccount, "");
             GmRoster.SignInBound(7, out _);
             var revoked = new List<ulong>();
             GmRoster.Revoked += revoked.Add;

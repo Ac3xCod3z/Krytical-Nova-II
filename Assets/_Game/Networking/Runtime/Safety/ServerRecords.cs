@@ -162,7 +162,7 @@ namespace KryticalNova.Networking
                 return who;
             }
             if (InGame.TryGetValue(clientId, out string last) && !last.StartsWith(NoCharacter, StringComparison.Ordinal)) return last;
-            string account = ServerAccounts.TryGet(clientId, out ServerAccounts.Entry entry) ? entry.Account : "(not signed in)";
+            string account = ServerAccounts.TryGet(NetPlayerKeys.Find(clientId), out ServerAccounts.Entry entry) ? entry.Account : "(not signed in)";
             return $"{NoCharacter} (account {account}, connection {clientId})";
         }
 

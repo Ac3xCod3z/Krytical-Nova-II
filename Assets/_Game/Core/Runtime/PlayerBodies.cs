@@ -13,7 +13,8 @@ namespace KryticalNova.Core
     public interface IPlayerBody
     {
         Transform Transform { get; }
-        ulong OwnerClientId { get; }
+        /// <summary>Who owns this body, as the server knows them; <see cref="PlayerKey.None"/> where this machine keeps no keys (a client).</summary>
+        PlayerKey Owner { get; }
 
         /// <summary>Spawned and owned by this machine.</summary>
         bool IsLocal { get; }
