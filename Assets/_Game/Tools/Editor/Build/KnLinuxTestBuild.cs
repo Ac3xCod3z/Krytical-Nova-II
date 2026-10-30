@@ -35,6 +35,15 @@ namespace KryticalNova.EditorTools
         public const string GhostSubScenePath = "Assets/_Game/Gameplay/Player/Entities/Scenes/PlayerGhostPrefabs.unity";
         public const string GhostBakeScenePath = "Assets/_Game/Gameplay/Player/Entities/Scenes/PlayerGhostBake.unity";
 
+        /// <summary>
+        /// Burst's own per-platform settings file. These two builds write it with Burst AOT off for the build only and take it away
+        /// afterwards (or put back what was there), even when the build fails: the last stage of the server build reached a 22 GB
+        /// peak with Burst on and the watchdog stopped it (30 Oct 2026; owner pick). The test players then run Burst jobs as plain C#.
+        /// Windows players and every other build keep Burst.
+        /// </summary>
+        public const string BurstSettingsPath = "ProjectSettings/BurstAotSettings_StandaloneLinux64.json";
+        const string BurstOffJson = "{\n    \"MonoBehaviour\": {\n        \"Version\": 4,\n        \"EnableBurstCompilation\": false\n    }\n}\n";
+
         /// <summary>True while one of these builds runs (<see cref="KnLinuxTestShaderStrip"/> strips every shader then: both players are headless).</summary>
         public static bool IsBuilding { get; private set; }
 
@@ -120,8 +129,11 @@ namespace KryticalNova.EditorTools
             ScriptingImplementation backend = il2cpp ? ScriptingImplementation.IL2CPP : ScriptingImplementation.Mono2x;
             var stopwatch = Stopwatch.StartNew();
             BuildReport report = null;
+            string burstPath = Path.Combine(Path.GetDirectoryName(Application.dataPath) ?? ".", BurstSettingsPath);
+            string burstWas = File.Exists(burstPath) ? File.ReadAllText(burstPath) : null;
             try
             {
+                File.WriteAllText(burstPath, BurstOffJson);
                 // the maps are in the build list (as on the NGO server); the game's Addressable bundles are not needed here
                 if (addressables != null)
                     addressables.BuildAddressablesWithPlayerBuild = UnityEditor.AddressableAssets.Settings.AddressableAssetSettings.PlayerBuildOption.DoNotBuildWithPlayer;
@@ -144,6 +156,12 @@ namespace KryticalNova.EditorTools
             }
             finally
             {
+                try
+                {
+                    if (burstWas != null) File.WriteAllText(burstPath, burstWas);
+                    else if (File.Exists(burstPath)) File.Delete(burstPath);
+                }
+                catch (Exception e) { Debug.LogError($"[KnLinuxTestBuild] Could not put back {BurstSettingsPath} ({e.Message}): remove it by hand."); }
                 IsBuilding = false;
                 if (PlayerSettings.GetScriptingBackend(standalone) != backendWas) PlayerSettings.SetScriptingBackend(standalone, backendWas);
                 if (addressables != null) addressables.BuildAddressablesWithPlayerBuild = bundlesWere;
@@ -160,6 +178,11 @@ namespace KryticalNova.EditorTools
             {
                 Debug.LogError($"[KnLinuxTestBuild] {what} FAILED: the player ghost subscene was not baked into the build ({header} is missing): nobody could enter.");
                 return false;
+            }
+            if (ok)
+            {
+                string burstLib = Path.Combine(folder, Path.GetFileNameWithoutExtension(server ? ServerExe : ClientExe) + "_Data", "Plugins", "lib_burst_generated.so");
+                Debug.Log("[KnLinuxTestBuild] Burst AOT " + (File.Exists(burstLib) ? "WAS STILL BUILT (" + burstLib + ")" : "off as asked (no lib_burst_generated.so)"));
             }
             if (ok)
                 Debug.Log($"[KnLinuxTestBuild] {what} OK: {folder} ({report.summary.totalSize / (1024.0 * 1024.0):F0} MB, {stopwatch.Elapsed.TotalMinutes:F1} min, " +
