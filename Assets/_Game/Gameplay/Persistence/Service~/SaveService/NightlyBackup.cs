@@ -51,8 +51,23 @@ namespace KryticalNova.SaveService
             }
         }
 
+        /// <summary>
+        /// Off-box copy by a program instead of a folder (a Linux server has no Google Drive for desktop), for example
+        /// "rclone" with offsiteArgs "copy \"{file}\" remote:kn-backups". Run once per copy and once per manifest; {file} is the
+        /// full path. Empty: the offsite folder way above. The remote's own rules keep or delete old copies.
+        /// </summary>
+        [JsonPropertyName("offsiteCommand")] public string OffsiteCommand { get; init; } = "";
+        [JsonPropertyName("offsiteArgs")] public string OffsiteArgs { get; init; } = "";
+
+        public bool UsesOffsiteCommand => !string.IsNullOrWhiteSpace(OffsiteCommand);
+
         public string Bin => !string.IsNullOrWhiteSpace(PostgresBin) ? PostgresBin
-            : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "PostgreSQL", "18", "bin");
+            : OperatingSystem.IsWindows()
+                ? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "PostgreSQL", "18", "bin")
+                : "/usr/lib/postgresql/18/bin";
+
+        /// <summary>A Postgres program's file name here: pg_dump.exe on Windows, pg_dump elsewhere.</summary>
+        public static string Exe(string name) => OperatingSystem.IsWindows() ? name + ".exe" : name;
 
         public static BackupSettings Load(string file)
         {
@@ -111,6 +126,7 @@ namespace KryticalNova.SaveService
         private readonly DatabaseSettings database;
         private readonly SemaphoreSlim running = new SemaphoreSlim(1, 1);
         private string? problem;
+        private string? offsiteCommandCopied; // the newest copy the off-box command sent, this run
 
         public NightlyBackup(BackupSettings settings, DatabaseSettings database)
         {
@@ -146,6 +162,11 @@ namespace KryticalNova.SaveService
         public BackupStatus Status()
         {
             FileInfo? last = Newest();
+            if (settings.UsesOffsiteCommand)
+            {
+                int keptHere = Directory.Exists(settings.LocalFolder) ? Directory.GetFiles(settings.LocalFolder, Prefix + "*" + Extension).Length : 0;
+                return new BackupStatus(last?.LastWriteTime, last?.Length ?? 0, last != null && offsiteCommandCopied == last.Name, keptHere, problem);
+            }
             string? offsite = settings.OffsiteFolder;
             bool uploading = OffsiteUploads(offsite, out string? notUploading);
             bool copied = uploading && last != null && offsite != null && File.Exists(Path.Combine(offsite, last.Name));
@@ -198,7 +219,7 @@ namespace KryticalNova.SaveService
 
         private async Task<string> MakeLockedAsync(string why)
         {
-            string pgDump = Path.Combine(settings.Bin, "pg_dump.exe"), pgRestore = Path.Combine(settings.Bin, "pg_restore.exe");
+            string pgDump = Path.Combine(settings.Bin, BackupSettings.Exe("pg_dump")), pgRestore = Path.Combine(settings.Bin, BackupSettings.Exe("pg_restore"));
             if (!File.Exists(pgDump)) return Fail($"pg_dump was not found in {settings.Bin} (set postgresBin in backup-settings.json).");
             try
             {
@@ -232,8 +253,22 @@ namespace KryticalNova.SaveService
 
                 // Off this PC: Google Drive for desktop uploads what lands in its folder.
                 string where = "";
-                string? offsite = settings.OffsiteFolder;
-                if (offsite != null)
+                string? offsite = settings.UsesOffsiteCommand ? null : settings.OffsiteFolder;
+                if (settings.UsesOffsiteCommand)
+                {
+                    foreach (string sent in new[] { path, manifestPath })
+                    {
+                        (code, output) = await RunPlainAsync(settings.OffsiteCommand, settings.OffsiteArgs.Replace("{file}", sent));
+                        if (code != 0)
+                        {
+                            Trim(settings.LocalFolder, now);
+                            return Fail($"made {name}, but the off-box command stopped on {Path.GetFileName(sent)}: " + Short(output));
+                        }
+                    }
+                    offsiteCommandCopied = name;
+                    where = ", sent off this box by " + settings.OffsiteCommand;
+                }
+                else if (offsite != null)
                 {
                     try
                     {
@@ -251,7 +286,7 @@ namespace KryticalNova.SaveService
                 }
                 int removed = Trim(settings.LocalFolder, now);
                 problem = null;
-                if (offsite == null)
+                if (offsite == null && !settings.UsesOffsiteCommand)
                 {
                     OffsiteUploads(null, out problem);
                     where = ". WARNING: " + problem;
@@ -359,7 +394,7 @@ namespace KryticalNova.SaveService
             }
 
             var clock = Stopwatch.StartNew();
-            (int code, string output) = await RunAsync(Path.Combine(settings.Bin, "pg_restore.exe"),
+            (int code, string output) = await RunAsync(Path.Combine(settings.Bin, BackupSettings.Exe("pg_restore")),
                 $"-h {database.Host} -p {database.Port} -U {database.User} -d {target} --clean --if-exists --no-owner --no-privileges \"{file}\"");
             if (code != 0) { Console.WriteLine("pg_restore stopped: " + Short(output)); return 1; }
 
@@ -404,6 +439,19 @@ SELECT (SELECT count(*) FROM documents),
                 UseShellExecute = false, CreateNoWindow = true, RedirectStandardOutput = true, RedirectStandardError = true,
             };
             info.Environment["PGPASSWORD"] = database.Password;
+            using Process process = Process.Start(info)!;
+            Task<string> output = process.StandardOutput.ReadToEndAsync(), errors = process.StandardError.ReadToEndAsync();
+            await process.WaitForExitAsync();
+            return (process.ExitCode, (await errors) + (await output));
+        }
+
+        // Runs the off-box program: no database password in its environment.
+        private static async Task<(int code, string output)> RunPlainAsync(string exe, string arguments)
+        {
+            var info = new ProcessStartInfo(exe, arguments)
+            {
+                UseShellExecute = false, CreateNoWindow = true, RedirectStandardOutput = true, RedirectStandardError = true,
+            };
             using Process process = Process.Start(info)!;
             Task<string> output = process.StandardOutput.ReadToEndAsync(), errors = process.StandardError.ReadToEndAsync();
             await process.WaitForExitAsync();
