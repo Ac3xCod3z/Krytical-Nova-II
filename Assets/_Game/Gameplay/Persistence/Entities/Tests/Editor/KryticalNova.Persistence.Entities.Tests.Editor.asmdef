@@ -13,7 +13,8 @@
         "Unity.Netcode.Runtime",
         "Unity.Collections",
         "KryticalNova.Player.Entities",
-        "Unity.Entities"
+        "Unity.Entities",
+        "Unity.NetCode"
     ],
     "includePlatforms": [
         "Editor"

@@ -74,6 +74,29 @@ namespace KryticalNova.Networking.Entities
             StartClientWorld(NetworkEndpoint.LoopbackIpv4.WithPort(port), joinPayload, KnTransportMode.Plain, default, raiseHook: false);
         }
 
+        /// <summary>
+        /// The owner's "Play DOTS here" in the Editor (M3a feel checkpoint): a server world that listens on loopback only and a client
+        /// world that joins it, both with the game's hooks (unlike <see cref="StartHost"/>, a bare session). Plain UDP. Refuses a port of
+        /// the real server (<see cref="KnServerSettings.RealLanePorts"/>); false then, with the reason in the log.
+        /// </summary>
+        public static bool StartPlayHere(ushort port, string joinPayload)
+        {
+            if (Array.IndexOf(KnServerSettings.RealLanePorts, (int)port) >= 0)
+            {
+                Debug.LogError($"[KnPlayHere] Port {port} belongs to the real server: not started.");
+                return false;
+            }
+            Stop();
+            World server = CreateServerWorld(ServerWorldName);
+            BodyRoleNetRoleAdapter.Install();
+            KnNetDefaults.Apply(server);
+            Entity listen = server.EntityManager.CreateEntity(typeof(NetworkStreamRequestListen));
+            server.EntityManager.SetComponentData(listen, new NetworkStreamRequestListen { Endpoint = NetworkEndpoint.LoopbackIpv4.WithPort(port) });
+            KnWorldHooks.RaiseServer(server);
+            StartClientWorld(NetworkEndpoint.LoopbackIpv4.WithPort(port), joinPayload, KnTransportMode.Plain, default);
+            return true;
+        }
+
         /// <summary>A client world that connects to <paramref name="address"/>:<paramref name="port"/>; false when the address is not valid.</summary>
         /// <param name="encrypted">DTLS to a dedicated server (the default; every release server insists on it). False for a LAN or loopback test.</param>
         public static bool StartClient(string address, ushort port, string joinPayload = "client", bool encrypted = true)
