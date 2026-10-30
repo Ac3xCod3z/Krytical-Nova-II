@@ -21,10 +21,11 @@ load_conf() {
 
 need() { command -v "$1" >/dev/null 2>&1 || { [ "$DRY_RUN" = 1 ] && say "(note: $1 is not installed here; fine for a dry run)" || die "$1 is not installed."; }; }
 
-# The game ports of a server-settings.json: "udp:<port>" for every game port and its status port (port+1).
+# The ports of a server-settings.json (ports.py): every game UDP port and its status port, one per line; with --pages,
+# every control page's TCP port. Stops the script when two servers would share a port.
 game_ports() {
   PY="$(command -v python3 || command -v python)" || die "python is needed to read the ports"
-  "$PY" "$HERE/ports.py" "$1"
+  "$PY" "$HERE/ports.py" "$@" || die "the ports in $1 cannot be used (see above)"
 }
 
 ssh_opts() { printf '%s' "-i $KN_SSH_KEY -o StrictHostKeyChecking=accept-new -o ConnectTimeout=10"; }

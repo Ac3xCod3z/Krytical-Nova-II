@@ -61,12 +61,16 @@ The control page (port 8090) is never opened to the internet. To see it: `ssh -i
 ## What is checked, and what is not
 
 - Checked on the PC: shell syntax, JSON, dry runs of all four cloud scripts.
-- **Not run yet:** `hcloud` calls, `box-setup.sh`, `pg-setup.sh`, the systemd units. These are proven first on WSL2
-  (Ubuntu 24.04 with systemd) before any cloud money is spent (plan, advisor item 3).
+- **Not run yet:** the `hcloud` calls. `box-setup.sh`, `pg-setup.sh` and the systemd units were proven on WSL2 (Ubuntu
+  24.04 with systemd, 29 Oct 2026) before any cloud money is spent (plan, advisor item 3).
 - Known gaps, from the plan: the server publishing its **public address** (the `publicAddress` contract item) is not
   built, so friends type the address in F1; map servers beyond Concord stay off (`"mapServers": []`) until travelling
   exists; `kn-server@0` etc. start map servers if you add entries to `mapServers` and run `systemctl enable --now kn-server@0`.
 - **Stopping saves through an explicit call, not SIGTERM** (a Unity Linux player does not save on SIGTERM): `box/kn-stop.sh` posts
-  to `http://127.0.0.1:<port+1>/stop` with the save service key. The game does not have that endpoint yet (plan item 16); until it
-  does, a real stop of the real build may lose up to one autosave interval. Run `shutdown-save-test.sh` with the real build.
+  to `http://127.0.0.1:<status port>/stop` with the save service key (the status port is the game port + 1, or the listed
+  server's `statusPort`). The game has the endpoint (commit f7911ed7c) and the stop was proven in WSL2 on 29 Oct 2026; the
+  cloud-box run of `shutdown-save-test.sh` is still open.
+- **Ports come from one table:** `server-settings.json` (the listed server and its `mapServers`), read by `ports.py`
+  for the firewall (`create.sh`), the outside check (`smoke-test.sh`), and with `jq` on the box (`box/kn-args.sh`,
+  `box/kn-stop.sh`). There is no `ports.json`. `ports.py` refuses a table where two servers would share a port.
 - The box holds the **test** database only (`krytical_nova_test`); the real name `krytical_nova` is never created there.
