@@ -316,6 +316,7 @@ default (and makes the page password). Close the server, edit it with Notepad, s
 | `map` | Zone01_StarterTown | The map the server opens with. A name the build does not have falls back to Zone01. |
 | `connectionMode` | direct | `direct`: players come to this PC's address through the router's forwarded ports. `relay`: through Unity Relay, no router work. Switch it on the control page (How players reach it). |
 | `pagePort` | 8090 | The control page's port. 0 switches the page off. |
+| `performanceLogFolder` | empty | Where the performance logs (`server_*.csv`) go. Empty: `PerformanceLogs` beside the server. The cloud test box uses `/var/log/kn/performance`, outside the build, so a new build keeps them. |
 | `pageAddress` | 0.0.0.0 | Where the control page listens. `0.0.0.0` (every address of this PC) keeps it reachable from a phone on the home Wi-Fi. `127.0.0.1` is this machine only: the cloud test box uses it (its `deploy.sh` writes it) and is reached through an SSH tunnel. Only this machine or a home-network address is taken; anything else falls back to `127.0.0.1` (the server's first log line says so). |
 | `pagePassword` | made for you | The control page's password. Only ever in this file. Empty makes a new one at the next start. |
 | `backupHours` | 6 | Hours between backups. 0 backs up only at start and stop. |
@@ -749,7 +750,9 @@ Each comes with the same two ways out as the game menu (character select or exit
 The control page's header has a **load** chip, for example *"3 players · 30 fps · 2.1 ms average · 4.0 ms 95% · 6.2 ms
 worst · 0 slow"*. The server runs 30 game ticks a second, so each tick has 33 ms; the chip shows how much of that the
 server actually works. It keeps up while frames stay under 33 ms (**0 slow**); it turns amber when one did not. The same
-numbers go every 5 seconds into `PerformanceLogs/server_*.csv` beside the server (open it with Excel).
+numbers go every 5 seconds into `PerformanceLogs/server_*.csv` beside the server (open it with Excel; another folder:
+`performanceLogFolder` in the settings). A server running for days starts a new file each day, and the newest 30 files of
+each server are kept.
 
 **Measuring how many players a server holds** uses test players ("bots") and a separate measure server, never yours:
 menu **Krytical Nova ▸ Online ▸ Measure**:

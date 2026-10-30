@@ -67,6 +67,8 @@ namespace KryticalNova.Networking
         public string saveService = "";
         [Tooltip("The save service's key. Empty: Documents/KryticalNova-Secrets/save-service-key.txt of the Windows user running the server. Never shared.")]
         public string saveServiceKeyFile = "";
+        [Tooltip("Where the server's performance logs (server_*.csv) go. Empty: PerformanceLogs beside the server, as before. A rented machine names a folder outside the build (the cloud test box: /var/log/kn/performance), so a new build keeps them. A relative path is from the server's folder.")]
+        public string performanceLogFolder = "";
         [Tooltip("Online phase 4: days the ledger (every trade, sale, shop deal, Vault move and loot, one line each) is kept; older lines are dropped once a day.")]
         public int ledgerDays = 90;
         [Tooltip("Months of the record files (gm.log, economy.log, access.log, flags.log) kept: a new file each month, the oldest dropped.")]
@@ -103,6 +105,11 @@ namespace KryticalNova.Networking
         /// <summary>The save service's key file in use.</summary>
         public string SaveServiceKeyFile => !string.IsNullOrWhiteSpace(saveServiceKeyFile) ? saveServiceKeyFile
             : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "KryticalNova-Secrets", "save-service-key.txt");
+
+        /// <summary>The folder of the server's performance logs as a full path (Linux plan item 6).</summary>
+        public string PerformanceLogFolderPath => string.IsNullOrWhiteSpace(performanceLogFolder)
+            ? Path.Combine(ServerFolder, "PerformanceLogs")
+            : Path.GetFullPath(Path.IsPathRooted(performanceLogFolder) ? performanceLogFolder : Path.Combine(ServerFolder, performanceLogFolder));
 
         /// <summary>The status port in use.</summary>
         public int StatusPort => statusPort > 0 ? statusPort : port + 1;

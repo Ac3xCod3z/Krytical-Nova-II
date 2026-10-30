@@ -140,7 +140,9 @@ Checklist:
 - [x] **B. SaveService for Linux:** `dotnet publish -r linux-x64 --self-contained` of `Persistence/Service~/SaveService`;
   check Npgsql, paths, the `--test` mode (port 7802, database `krytical_nova_test`), the backup job (it uses Windows
   paths and Google Drive today; on Linux write dumps to `/var/backups/kn` and push them to a bucket).
-  Done 29 Oct 2026 (PR 165, proven in WSL2 on the test database); the Linux backup job is still a follow-up (item 9).
+  Done 29 Oct 2026 (PR 165, proven in WSL2 on the test database). The Linux backup job, 30 Oct 2026 (written, not yet run):
+  `kn-backup.timer` dumps the test database nightly into `/var/backups/kn` (14 kept, each checked), off the box through
+  rclone when the owner names a place, else `pull-backups.sh` on the PC; `teardown.sh` still copies first (item 9).
 - [x] **C. cloud-init + units:** user `kn` (no login), folders `/opt/kn/builds/<n>`, `/etc/kn/*.env` (root, mode 600; the
   secrets live here, never in git), systemd `kn-save.service` and a template `kn-map@.service` (one instance per map,
   `Restart=on-failure`, `KillSignal=SIGTERM`, `TimeoutStopSec` long enough to save). Done 29 Oct 2026 (PR 167, proven in WSL2).
@@ -291,6 +293,10 @@ production layout (11, 12).
 - [ ] 6. **Linux server pitfalls (item A):** cap the server frame rate (no vsync in batchmode, an uncapped server eats a
   core); prove SIGTERM runs the save-everyone path, `KillMode=mixed`, measured `TimeoutStopSec`; `-logFile` to a known path
   or journald with rotation (also `perf_*.txt`); pin one Ubuntu LTS; Mono, or the Linux IL2CPP toolchain if IL2CPP.
+  30 Oct 2026: the frame cap (30) was already in the game; SIGTERM is item 16's stop path. Written (not yet compiled or run on a
+  box): the logs go to the journal (`-logFile -`), capped by `box-setup.sh` at 2 GB and 30 days; the server's
+  `server_*.csv` go to `performanceLogFolder` (`/var/log/kn/performance` on the box, kept across builds), a new file each
+  day, the newest 30 per server kept. Ubuntu 24.04 and Mono stay as chosen.
 - [ ] 7. **Postgres:** "18" means the PGDG apt repository (Ubuntu 24.04 ships 16); match the Windows major version; import
   with `pg_dump -Fc --no-owner` and a set locale (Windows collation names do not exist on Linux); prove in WSL2.
 - [ ] 8. **Database login:** pick one and write it down: peer login over the socket with one role, or scram passwords over
@@ -436,6 +442,8 @@ free-text SQL, editing anything in the database, a multi-box list, user accounts
   Decision (owner via Master, 29 Oct): no more IL2CPP tries on this PC. Options kept: (A) retry with >= 20 GB available at the start (everything closed);
   (B) **now:** tests use the Mono Linux server (save behaviour does not depend on the backend); (C) the IL2CPP release server is built on a bigger machine or a
   Hetzner build box later (a CCX-class box with 32 GB is enough for a one-hour job).
+  30 Oct 2026, from the DOTS session: an IL2CPP **Linux client** build (one map, shader strip) did fit on this PC, at an
+  18 GB peak. The full IL2CPP server is still untried since; a retry would follow option (A) (everything else closed).
 - **Build numbers (bot vs server):** both read `Builds/Release/Store/manifest.json` through `ReleasePublisher.LastReleaseBuild()` (build 12, written 25 Oct) and
   stamp `bundleVersion` "0.1.0 build 12", so a bot client built in the same checkout matches the Mono server built there (08:33 the same day); a differing
   number is turned away at join.
@@ -471,6 +479,8 @@ free-text SQL, editing anything in the database, a multi-box list, user accounts
 
 ## Change log
 
+- 30 Oct 2026: item 6 leftovers (journal with a cap, performance logs outside the build with a daily file and pruning)
+  and the Linux backup job (nightly `pg_dump` on the box, rclone or `pull-backups.sh` off it) written; IL2CPP note from DOTS.
 - 30 Oct 2026: item 10 checked (the control page bound every address); fix written: `pageAddress` (127.0.0.1 on the
   box) and the save service refusing a public listen address.
 - 29 Oct 2026 (end): PRs 165 (SaveService on Linux), 166 (server shader strip, batch build, bot client) and 167 (`Deploy~`
