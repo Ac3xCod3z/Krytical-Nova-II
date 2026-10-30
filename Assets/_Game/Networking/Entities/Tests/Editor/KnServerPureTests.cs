@@ -117,5 +117,19 @@ namespace KryticalNova.Networking.Entities.Tests
             Assert.IsNull(JoinRules.Refusal("0.1.0 build 6", false, payload, 9, 10));
             Assert.AreEqual(JoinRules.Words(JoinRules.Verdict.Unreadable, null, null), JoinRules.Refusal("x", false, new byte[] { 1, 2 }, 0, 10));
         }
+
+        [Test]
+        public void TestLane_RefusesEveryPortOfTheRealServer()
+        {
+            string[] Args(params string[] a) { var all = new string[a.Length + 1]; all[0] = "exe"; a.CopyTo(all, 1); return all; }
+            const string testSave = "{\"saveService\":\"http://127.0.0.1:7802\"}";
+            Assert.IsNull(KnServerSettings.Parse(testSave, Args("-port", "7797", "-pageport", "7798")).TestLaneProblem(), "the probe ports and the test save service");
+            StringAssert.Contains("7777", KnServerSettings.Parse(testSave, Args("-pageport", "7798")).TestLaneProblem(), "no -port = the default 7777");
+            StringAssert.Contains("7778", KnServerSettings.Parse(testSave, Args("-port", "7778", "-pageport", "7798")).TestLaneProblem());
+            StringAssert.Contains("8090", KnServerSettings.Parse(testSave, Args("-port", "7797")).TestLaneProblem(), "the default page port is the real one");
+            StringAssert.Contains("7801", KnServerSettings.Parse("{\"saveService\":\"http://127.0.0.1:7801\"}", Args("-port", "7797", "-pageport", "7798")).TestLaneProblem());
+            Assert.IsNotNull(KnServerSettings.Parse("{\"saveService\":\"not an address\"}", Args("-port", "7797", "-pageport", "7798")).TestLaneProblem());
+            Assert.IsNull(KnServerSettings.Parse(null, Args("-port", "7797", "-pageport", "7798")).TestLaneProblem(), "no save service (files) is allowed");
+        }
     }
 }

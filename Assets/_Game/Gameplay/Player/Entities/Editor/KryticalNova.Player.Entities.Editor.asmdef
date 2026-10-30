@@ -1,0 +1,24 @@
+{
+    "name": "KryticalNova.Player.Entities.Editor",
+    "rootNamespace": "KryticalNova.Player.Entities.Editor",
+    "references": [
+        "KryticalNova.Player.Entities",
+        "Unity.Entities",
+        "Unity.Entities.Hybrid",
+        "Unity.Collections",
+        "Unity.NetCode",
+        "Unity.NetCode.Hybrid",
+        "Unity.NetCode.Authoring.Hybrid"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

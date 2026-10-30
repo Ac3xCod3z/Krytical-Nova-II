@@ -71,6 +71,9 @@ namespace KryticalNova.Networking
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void Boot()
         {
+#if KN_ENTITIES_SERVER
+            return; // the entity netcode's server has its own page (KnServerPage)
+#endif
             if (instance != null || ServerSingleCopy.AnotherCopyRuns) return;
             ServerLaunchOptions options = ServerLaunchOptions.LoadForThisServer();
             if (options.pagePort <= 0)

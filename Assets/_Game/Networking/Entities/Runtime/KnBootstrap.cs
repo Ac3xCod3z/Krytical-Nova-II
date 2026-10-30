@@ -43,6 +43,16 @@ namespace KryticalNova.Networking.Entities
         private static void StartDedicatedServer()
         {
             KnServerSettings settings = KnServerSettings.LoadForThisServer();
+#if KN_TEST_LANE
+            // A test-lane build (the B3 Linux gate) refuses to start on anything of the real server's (plan section 43).
+            string offLane = settings.TestLaneProblem();
+            if (offLane != null)
+            {
+                Debug.LogError("[KnServer] This test-lane server does not start: " + offLane + ".");
+                UnityEngine.Application.Quit(2);
+                return;
+            }
+#endif
             World server = CreateServerWorld(ServerWorldName);
             BodyRoleNetRoleAdapter.Install();
             KnServerEntry.Start(server, settings); // tick rate, join rule, listen, status page, POST /stop, stop signals

@@ -64,6 +64,9 @@ namespace KryticalNova.Networking
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         private static void Boot()
         {
+#if KN_ENTITIES_SERVER
+            return; // the entity netcode's server (KnServerEntry) owns stop signals, saving and the page; this one stays off
+#endif
             // A second copy on this PC quits before its first backup (ServerSingleCopy).
             if (instance != null || ServerSingleCopy.AnotherCopyRuns) return;
             var host = new GameObject("Server Lifetime");

@@ -128,6 +128,26 @@ namespace KryticalNova.Networking.Entities
         private static int Int(string text, int fallback) =>
             int.TryParse(text, NumberStyles.Integer, CultureInfo.InvariantCulture, out int v) ? v : fallback;
 
+        /// <summary>The real server's ports (game, query, real save service, page): a test-lane server never touches them.</summary>
+        public static readonly int[] RealLanePorts = { 7777, 7778, 7801, 8090 };
+
+        /// <summary>
+        /// Null when this server keeps off the real lane; else why not. Checked by a test-lane build (<c>KN_TEST_LANE</c>, the B3 Linux
+        /// gate) before its world is made: the game port, the page port and the save service's port must all be other than
+        /// <see cref="RealLanePorts"/> (the default game port is 7777, so a test server always names its <c>-port</c>).
+        /// </summary>
+        public string TestLaneProblem()
+        {
+            if (Array.IndexOf(RealLanePorts, port) >= 0) return "game port " + port + " belongs to the real server (use -port 7797)";
+            if (Array.IndexOf(RealLanePorts, pagePort) >= 0) return "page port " + pagePort + " belongs to the real server (use -pageport 7798)";
+            if (!string.IsNullOrWhiteSpace(saveService))
+            {
+                if (!Uri.TryCreate(saveService.Trim(), UriKind.Absolute, out Uri uri)) return "the save service address \"" + saveService + "\" cannot be read";
+                if (Array.IndexOf(RealLanePorts, uri.Port) >= 0) return "save service port " + uri.Port + " is the real save service (the test lane is 7802)";
+            }
+            return null;
+        }
+
         private void Clamp()
         {
             if (port < 1 || port > 65535) port = DefaultPort;

@@ -6,6 +6,7 @@
         "KryticalNova.Networking.Entities",
         "KryticalNova.Networking.Entities.Tests.Editor",
         "KryticalNova.Player.Entities",
+        "KryticalNova.Player.Entities.Editor",
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner",
         "Unity.Burst",

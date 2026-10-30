@@ -66,7 +66,10 @@ namespace KryticalNova.Networking
         private void Start()
         {
             PrepareConnections();
-#if UNITY_SERVER
+#if UNITY_SERVER && KN_ENTITIES_SERVER
+            // A dedicated server of the entity netcode (KnBootstrap): Netcode for GameObjects never listens here, so the two
+            // never fight for the port, the server list or the save store (plan section 43).
+#elif UNITY_SERVER
             StartDedicatedServer();
 #else
             bool testing = Application.isEditor && (EditorCloneProfile() != null || EditorTestSession.JoinOnly);

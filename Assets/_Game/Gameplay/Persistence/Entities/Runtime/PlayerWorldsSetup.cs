@@ -42,19 +42,26 @@ namespace KryticalNova.Persistence.Entities
         }
 
         /// <summary>
-        /// The real Player.prefab: the override, else the player prefab of the scene's NetworkManager (the same one the Netcode for
-        /// GameObjects game spawns; <c>ServerRoster</c> reads it the same way). Asked at each admission: the scene may load after the world.
+        /// The real Player.prefab: the override, else the one in <see cref="PlayerWorldAssets"/> (a dedicated server of the entity netcode
+        /// has no NetworkManager), else the player prefab of the scene's NetworkManager (the same one the Netcode for GameObjects game
+        /// spawns; <c>ServerRoster</c> reads it the same way). Asked at each admission: the scene may load after the world.
         /// </summary>
         public static GameObject PlayerPrefab()
         {
             if (PrefabOverride != null) return PrefabOverride;
+            PlayerWorldAssets assets = PlayerWorldAssets.Instance;
+            if (assets != null && assets.playerPrefab != null) return assets.playerPrefab;
             NetworkManager network = NetworkManager.Singleton;
             return network != null && network.NetworkConfig != null ? network.NetworkConfig.PlayerPrefab : null;
         }
 
-        /// <summary>Server world: planner, admission, spawn points. Returns the admission (tests read its counters).</summary>
-        public static ServerBodyAdmission InstallServer(World server, Func<GameObject> prefab = null)
+        /// <summary>
+        /// Server world: the ghost subscene (R8), planner, admission, spawn points. Returns the admission (tests read its counters).
+        /// <paramref name="loadGhostScene"/> false = the caller loads a ghost subscene of its own (a test world).
+        /// </summary>
+        public static ServerBodyAdmission InstallServer(World server, Func<GameObject> prefab = null, bool loadGhostScene = true)
         {
+            if (loadGhostScene) PlayerWorldAssets.LoadGhostScene(server);
             var planner = new NavMeshPathPlanner();
             PlayerEntitiesSetup.Install(server, planner);
             var rules = new PlayerAdmission
@@ -83,10 +90,12 @@ namespace KryticalNova.Persistence.Entities
 
         /// <summary>
         /// Client world: the body factory (real Player.prefab as ClientView), the clicks of the local body's view mode, and the client's
-        /// planner (configured from the local body's NavMeshAgent when it is made). Returns the factory (tests read its counters).
+        /// planner (configured from the local body's NavMeshAgent when it is made). The ghost subscene is loaded first: a client that
+        /// goes in game without the server's ghost prefab is disconnected by netcode. Returns the factory (tests read its counters).
         /// </summary>
-        public static ClientBodyFactory InstallClient(World client, Func<GameObject> prefab = null)
+        public static ClientBodyFactory InstallClient(World client, Func<GameObject> prefab = null, bool loadGhostScene = true)
         {
+            if (loadGhostScene) PlayerWorldAssets.LoadGhostScene(client);
             var planner = new NavMeshPathPlanner();
             BodyClicks.Clear();
             var factory = new ClientBodyFactory(prefab ?? (Func<GameObject>)PlayerPrefab)
