@@ -433,7 +433,7 @@ free-text SQL, editing anything in the database, a multi-box list, user accounts
   - **Position is not restored on join, by design today:** `PlayerSaveAgent` (lines 360-373) writes map and x/y/z "for when there is more than one map",
     but nothing reads them back; `PlayerSpawnService` puts every join on the map's next `PlayerSpawnPoint`, and the next save then stores the spawn spot.
     Same on the Windows server. "Rejoin where you stood" would be a separate small feature.
-  - **Bots cannot join a roster-keeping server yet:** `MeasureBot.EnsureCharacter` makes its character in the local store; since milestone 5 the server
+  - **Bots cannot join a roster-keeping server yet** (fixed in code 30 Oct 2026, not yet run: the bot asks the server's roster): `MeasureBot.EnsureCharacter` makes its character in the local store; since milestone 5 the server
     keeps the roster ("That character is not on this server"). Without `-profile` a bot also uses the default local profile (it picked the owner's own
     local character, read only). Fix later (development builds only): bots pass `-profile bot<n>` and create their character through the server roster.
   - **Bot client build:** a build checkout left on the Server subtarget compiles `UNITY_SERVER` into the "client" (it started a dedicated server on 7777).

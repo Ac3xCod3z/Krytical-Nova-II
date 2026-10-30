@@ -144,7 +144,7 @@ namespace KryticalNova.EditorTools
             string status = Page("/api/status", null);
             if (status == null) { Debug.LogError("[Measure] The measure server's page does not answer."); return; }
             int equipped = 0;
-            foreach (Match player in Regex.Matches(status, "\\{\"id\":(\\d+),\"name\":\"(Bot[a-z]+)\""))
+            foreach (Match player in Regex.Matches(status, "\\{\"id\":(\\d+),\"name\":\"(Bot[a-z]+[0-9]?)\""))
             {
                 string id = player.Groups[1].Value;
                 if (Page("/api/command", "{\"line\":\"gm.target " + id + "\"}") == null) continue;
