@@ -79,7 +79,7 @@ namespace KryticalNova.Persistence.Entities
             // from the prefab now: the first spawn spot is picked before any body exists (owner's feel test 30 Oct: with base
             // offset 0 the first player stood half in the ground until it walked)
             ConfigurePlanner(planner, (prefab ?? PlayerPrefab)());
-            PlayerEntitiesSetup.Install(server, planner, runCost: new BodyRunCost(server));
+            PlayerEntitiesSetup.Install(server, planner, runCost: new BodyRunCost(server), clickBudget: new BudgetClickLimit(server));
             // walk numbers from the settings asset, the same on server and client (prediction must agree)
             PlayerMoveFromSkills.InstallSettings(server, PlayerMoveFromSkills.SettingsOf((prefab ?? PlayerPrefab)()));
             var rules = new PlayerAdmission

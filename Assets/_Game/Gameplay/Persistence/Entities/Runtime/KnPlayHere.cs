@@ -202,6 +202,104 @@ namespace KryticalNova.Persistence.Entities
             void OnEnable() => Application.logMessageReceived += Count;
             void OnDisable() => Application.logMessageReceived -= Count;
 
+            // ---- click timing and frame rate (owner's feel test 30 Oct: "slow, laggy"; measured, not guessed) ----
+            const double ClickWatchSeconds = 3d;
+            const float FpsEverySeconds = 5f;
+            int m_SeenClicks;
+            bool m_Watching;
+            double m_Press;
+            int m_PressFrame;
+            Vector3 m_PressBody;
+            ushort m_Seq, m_LastFrameSeq;
+            Vector3 m_LastFrameBody;
+            double m_Gather = -1, m_Predicted = -1, m_Body = -1, m_Ack = -1;
+            float m_FpsSince;
+            int m_FpsFrames;
+            float m_WorstFrame;
+
+            float m_LastY = float.NaN, m_WorstDy, m_IkPelvis, m_IkFoot;
+
+            void Update()
+            {
+                m_FpsFrames++;
+                m_WorstFrame = Mathf.Max(m_WorstFrame, Time.unscaledDeltaTime);
+                m_FpsSince += Time.unscaledDeltaTime;
+                string ik = "no foot IK";
+                if (TryLocalGhost(out _, out _, out GameObject body))
+                {
+                    float y = body.transform.position.y;
+                    if (!float.IsNaN(m_LastY)) m_WorstDy = Mathf.Max(m_WorstDy, Mathf.Abs(y - m_LastY));
+                    m_LastY = y;
+                    var feet = body.GetComponentInChildren<FootGroundingIK>(true);
+                    if (feet != null)
+                    {
+                        m_IkPelvis = Mathf.Max(m_IkPelvis, Mathf.Abs(feet.PelvisOffset));
+                        m_IkFoot = Mathf.Max(m_IkFoot, Mathf.Max(Mathf.Abs(feet.LeftGroundDelta), Mathf.Abs(feet.RightGroundDelta)));
+                        ik = $"foot IK {(feet.isActiveAndEnabled ? "on" : "OFF")}, blend {feet.Blend:F2}, biggest pelvis shift {m_IkPelvis * 1000f:F0} mm, " +
+                             $"biggest foot ground step {m_IkFoot * 1000f:F0} mm";
+                    }
+                }
+                if (m_FpsSince >= FpsEverySeconds)
+                {
+                    Debug.Log($"[KnPlayHere] fps {m_FpsFrames / m_FpsSince:F0} over {m_FpsSince:F0} s, worst frame {m_WorstFrame * 1000f:F0} ms, " +
+                              $"biggest height change of the body in one frame {m_WorstDy * 1000f:F0} mm; {ik}");
+                    m_FpsSince = 0f; m_FpsFrames = 0; m_WorstFrame = 0f; m_WorstDy = 0f; m_IkPelvis = 0f; m_IkFoot = 0f;
+                }
+                WatchClicks();
+            }
+
+            void WatchClicks()
+            {
+                if (!TryLocalGhost(out World client, out Entity ghost, out GameObject view)) return;
+                EntityManager em = client.EntityManager;
+                if (BodyClicks.GroundClicks != m_SeenClicks)
+                {
+                    // this Update may run after the press and the gather of the same frame: compare with the frame before
+                    m_SeenClicks = BodyClicks.GroundClicks;
+                    m_Watching = true;
+                    m_Press = BodyClicks.LastGroundRealtime;
+                    m_PressFrame = BodyClicks.LastGroundFrame;
+                    m_PressBody = m_LastFrameBody;
+                    m_Seq = m_LastFrameSeq;
+                    m_Gather = m_Predicted = m_Body = m_Ack = -1;
+                }
+                m_LastFrameSeq = em.GetComponentData<ClientPlanHeader>(ghost).Seq;
+                m_LastFrameBody = view.transform.position;
+                if (!m_Watching) return;
+                double now = Time.realtimeSinceStartupAsDouble;
+                ushort seq = em.GetComponentData<ClientPlanHeader>(ghost).Seq;
+                if (m_Gather < 0 && seq != m_Seq) { m_Gather = now; m_Seq = seq; }
+                if (m_Gather >= 0)
+                {
+                    var move = em.GetComponentData<MoveState>(ghost);
+                    if (m_Predicted < 0 && move.OrderSeq == m_Seq && (move.Flags & MoveFlags.Moving) != 0) m_Predicted = now;
+                    if (m_Body < 0 && Vector3.Distance(view.transform.position, m_PressBody) > 0.01f) m_Body = now;
+                    if (m_Ack < 0 && em.GetComponentData<PathPlan>(ghost).Seq == m_Seq) m_Ack = now;
+                }
+                bool done = m_Gather >= 0 && m_Predicted >= 0 && m_Body >= 0 && m_Ack >= 0;
+                if (!done && now - m_Press < ClickWatchSeconds) return;
+                m_Watching = false;
+                string Ms(double at) => at < 0 ? "never" : $"{(at - m_Press) * 1000d:F0} ms";
+                Debug.Log($"[KnClick] seq {m_Seq}: press -> gather {Ms(m_Gather)}, first predicted move {Ms(m_Predicted)}, body moves {Ms(m_Body)}, " +
+                          $"server's plan {Ms(m_Ack)} ({Time.frameCount - m_PressFrame} frames watched)");
+            }
+
+            static bool TryLocalGhost(out World client, out Entity ghost, out GameObject view)
+            {
+                client = KnBootstrap.ClientWorld;
+                ghost = Entity.Null;
+                view = null;
+                if (client == null) return false;
+                foreach (GhostBodyEntry entry in GhostBodyRegistry.Entries)
+                    if (ReferenceEquals(entry.World, client) && entry.IsLocal && entry.Body != null)
+                    {
+                        ghost = entry.Ghost;
+                        view = entry.Body;
+                        return client.EntityManager.Exists(ghost) && client.EntityManager.HasComponent<ClientPlanHeader>(ghost);
+                    }
+                return false;
+            }
+
             void Count(string text, string stack, LogType type)
             {
                 if (type == LogType.Error || type == LogType.Exception || type == LogType.Assert) m_Errors++;

@@ -37,6 +37,7 @@ namespace KryticalNova.Persistence.Entities
             ArrivalMinPermille = Mm(s.arrivalMinSpeedFactor),
             StopMm = Mm(s.stoppingDistance),
             MaxClickRangeMm = 0,
+            TurnCdegPerSecond = Mathf.RoundToInt(s.turnSpeed * 100f),
         };
 
         /// <summary>Puts the baked settings in <paramref name="world"/> as its one <see cref="PlayerMoveSettings"/> (replaces an older one).</summary>
@@ -62,6 +63,24 @@ namespace KryticalNova.Persistence.Entities
         }
 
         static int Mm(float metres) => Mathf.RoundToInt(metres * 1000f);
+    }
+
+    /// <summary>
+    /// Server: the move-click limit of the request limits (<c>RpcBudget</c>, kind Move; the numbers are the server settings' "callLimits"),
+    /// counted per player by the <c>PlayerKey</c> the registry holds for the ghost. A ghost without a key (a test world) is not limited.
+    /// </summary>
+    public sealed class BudgetClickLimit : IClickBudget
+    {
+        readonly World m_World;
+
+        public BudgetClickLimit(World serverWorld) => m_World = serverWorld;
+
+        public bool Allow(Entity ghost)
+        {
+            if (!GhostBodyRegistry.TryGetByGhost(m_World, ghost, out GhostBodyEntry entry) || entry.Key == KryticalNova.Core.PlayerKey.None) return true;
+            return KryticalNova.Networking.RpcBudget.Spend(entry.Key, KryticalNova.Networking.CallKind.Move, Time.realtimeSinceStartup)
+                   == KryticalNova.Networking.RpcBudget.SpendResult.Allowed;
+        }
     }
 
     /// <summary>Server: running costs the Run rank's Flux per destination, paid by the ghost's server body (<see cref="PlayerMovementSkills"/>).</summary>

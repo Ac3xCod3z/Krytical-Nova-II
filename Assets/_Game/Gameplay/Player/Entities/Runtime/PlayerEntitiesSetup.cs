@@ -15,13 +15,15 @@ namespace KryticalNova.Player.Entities
         /// the first player acts: the planner for the server world, planner + source for the client world. The same planner object
         /// may serve several worlds in tests. Worlds without the matching system are left alone.
         /// </summary>
-        public static void Install(World world, IPathPlanner planner, IPlayerCommandSource source = null, IRunCost runCost = null)
+        public static void Install(World world, IPathPlanner planner, IPlayerCommandSource source = null, IRunCost runCost = null,
+            IClickBudget clickBudget = null)
         {
             var server = world.GetExistingSystemManaged<PlayerServerPlanSystem>();
             if (server != null)
             {
                 server.Planner = planner;
                 server.RunCost = runCost;
+                server.ClickBudget = clickBudget;
             }
             var gather = world.GetExistingSystemManaged<PlayerInputGatherSystem>();
             if (gather != null)

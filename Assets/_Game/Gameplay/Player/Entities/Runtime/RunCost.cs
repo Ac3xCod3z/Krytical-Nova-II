@@ -15,4 +15,14 @@ namespace KryticalNova.Player.Entities
         /// <summary>Takes the price of one running destination. Called only after <see cref="CanPay"/> said yes on the same tick.</summary>
         void Pay(Entity ghost);
     }
+
+    /// <summary>
+    /// Server: how many move clicks a player may make (owner, 30 Oct 2026: 10 a second, the request limit "move" of the server's settings).
+    /// <see cref="PlayerServerPlanSystem"/> asks once per click before planning; a click over the limit is refused like any other.
+    /// </summary>
+    public interface IClickBudget
+    {
+        /// <summary>True when the player of <paramref name="ghost"/> may make this click now (it is counted).</summary>
+        bool Allow(Entity ghost);
+    }
 }

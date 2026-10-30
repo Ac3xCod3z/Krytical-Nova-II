@@ -73,6 +73,12 @@ namespace KryticalNova.Player
         /// </summary>
         public float BodyLift { get; set; }
 
+        /// <summary>What the solve did last frame, for logs (the entity netcode's feel checks): pelvis shift and each foot's ground step, metres; blend 0..1.</summary>
+        public float PelvisOffset => pelvisOffset;
+        public float LeftGroundDelta => leftFoot.GroundDelta;
+        public float RightGroundDelta => rightFoot.GroundDelta;
+        public float Blend => masterWeight;
+
         private void Awake()
         {
             animator = GetComponent<Animator>();

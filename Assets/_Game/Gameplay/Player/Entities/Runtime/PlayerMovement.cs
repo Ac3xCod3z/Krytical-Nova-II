@@ -104,9 +104,62 @@ namespace KryticalNova.Player.Entities
             // ---- pose ------------------------------------------------------------------------------------------------
             PlayerPath.PointAt(start, corners, count, m.ProgressMm, out int3 p, out int3 dir);
             pose.XMm = p.x; pose.YMm = p.y; pose.ZMm = p.z;
-            pose.YawCdeg = PlayerPath.YawCdegOf(dir, pose.YawCdeg);
+            pose.YawCdeg = TurnToward(pose.YawCdeg, PlayerPath.YawCdegOf(dir, pose.YawCdeg), TurnStepCdeg(cfg, tickMicros));
 
             if (arrived) CancelWalk(ref m);
+        }
+
+        /// <summary>Hundredths of a degree the body may turn in one tick; 0 = no limit (face the way at once).</summary>
+        public static int TurnStepCdeg(in PlayerMoveSettings cfg, int tickMicros) =>
+            cfg.TurnCdegPerSecond <= 0 ? 0 : math.max(1, (int)((long)cfg.TurnCdegPerSecond * tickMicros / MicrosPerSecond));
+
+        /// <summary>
+        /// Turns <paramref name="fromCdeg"/> toward <paramref name="toCdeg"/> the short way by at most <paramref name="maxStepCdeg"/>
+        /// (0 = all the way). Integer, 0..35999 in and out.
+        /// </summary>
+        public static int TurnToward(int fromCdeg, int toCdeg, int maxStepCdeg)
+        {
+            int delta = ((toCdeg - fromCdeg) % 36000 + 54000) % 36000 - 18000; // -18000..17999, the short way
+            if (maxStepCdeg > 0) delta = math.clamp(delta, -maxStepCdeg, maxStepCdeg);
+            int to = (fromCdeg + delta) % 36000;
+            return to < 0 ? to + 36000 : to;
+        }
+
+        /// <summary>
+        /// Where the walk of this tick has got to <paramref name="elapsedMicros"/> into the next tick (0..one tick), for the presentation
+        /// of the owner's predicted body between full ticks: the same corners and speed the next <see cref="Step"/> would use, the
+        /// progress capped at the stop point, the turn carried on by the same rate. Never compared, never written to the ghost.
+        /// False when no walk is under way (the pose is the answer).
+        /// </summary>
+        public static bool PoseAhead(in MoveState m, in PlayerPose pose,
+            in PathPlan plan, NativeArray<int3> serverCorners, in ClientPlanHeader client, NativeArray<int3> clientCorners,
+            in PlayerMoveSettings cfg, int tickMicros, int elapsedMicros, out int3 posMm, out int yawCdeg)
+        {
+            posMm = pose.Mm;
+            yawCdeg = pose.YawCdeg;
+            if ((m.Flags & MoveFlags.Moving) == 0) return false;
+            NativeArray<int3> corners;
+            int count;
+            if (plan.Seq == m.OrderSeq && plan.Count >= 2) { corners = serverCorners; count = plan.Count; }
+            else if (client.Seq == m.OrderSeq && client.Count >= 2) { corners = clientCorners; count = client.Count; }
+            else return false;
+            int3 start = new int3(m.StartXMm, m.StartYMm, m.StartZMm);
+            int length = PlayerPath.LengthMm(start, corners, count);
+            if (length <= 0) return false;
+            int elapsed = math.clamp(elapsedMicros, 0, tickMicros);
+            long ahead = (long)m.SpeedMmps * elapsed / MicrosPerSecond;
+            int cap = math.max(m.ProgressMm, length - cfg.StopMm); // never past the stop point, never back
+            int progress = (int)math.min((long)cap, m.ProgressMm + ahead);
+            PlayerPath.PointAt(start, corners, count, progress, out posMm, out int3 dir);
+            int way = PlayerPath.YawCdegOf(dir, pose.YawCdeg);
+            int step = TurnStepCdeg(cfg, tickMicros);
+            if (step <= 0) yawCdeg = way;
+            else
+            {
+                int turnNow = (int)((long)step * elapsed / math.max(1, tickMicros));
+                yawCdeg = turnNow <= 0 ? pose.YawCdeg : TurnToward(pose.YawCdeg, way, turnNow);
+            }
+            return true;
         }
 
         static void BeginWalk(ref MoveState m, in PlayerPose pose, bool run)

@@ -215,6 +215,11 @@ namespace KryticalNova.Player.Entities
         public int StopMm;
         /// <summary>Farthest a click may be from the player; the server refuses a farther one. 0 = no limit.</summary>
         public int MaxClickRangeMm;
+        /// <summary>
+        /// How fast the body turns toward its way, hundredths of a degree a second (settings.turnSpeed 540 deg/s = 54000). 0 = it faces
+        /// the way at once (the tests' default). Integer per tick on server and owner alike.
+        /// </summary>
+        public int TurnCdegPerSecond;
 
         public static PlayerMoveSettings Default => new PlayerMoveSettings
         {
@@ -226,6 +231,7 @@ namespace KryticalNova.Player.Entities
             ArrivalMinPermille = 550,
             StopMm = 0,
             MaxClickRangeMm = 0,
+            TurnCdegPerSecond = 0,
         };
     }
 

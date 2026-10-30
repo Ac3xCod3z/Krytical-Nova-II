@@ -21,6 +21,7 @@ namespace KryticalNova.Persistence.Entities.Tests
             m_Settings.arrivalMaxRadius = 7.5f;
             m_Settings.arrivalMinSpeedFactor = 0.6f;
             m_Settings.stoppingDistance = 0.25f;
+            m_Settings.turnSpeed = 540f;
         }
 
         [TearDown]
@@ -38,6 +39,7 @@ namespace KryticalNova.Persistence.Entities.Tests
             Assert.AreEqual(600, baked.ArrivalMinPermille);
             Assert.AreEqual(250, baked.StopMm);
             Assert.AreEqual(0, baked.MaxClickRangeMm, "no setting for the click range yet: no limit");
+            Assert.AreEqual(54000, baked.TurnCdegPerSecond, "540 degrees a second");
         }
 
         [Test]

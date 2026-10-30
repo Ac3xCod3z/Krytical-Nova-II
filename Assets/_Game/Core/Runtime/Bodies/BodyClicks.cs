@@ -24,12 +24,29 @@ namespace KryticalNova.Core
         private static readonly Queue<Click> Pending = new Queue<Click>();
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        private static void ResetStatics() => Pending.Clear();
+        private static void ResetStatics()
+        {
+            Pending.Clear();
+            LastGroundRealtime = 0d;
+            LastGroundFrame = 0;
+            GroundClicks = 0;
+        }
 
         public static int Count => Pending.Count;
 
+        /// <summary>When the newest ground click was made (real time, frame) and how many there were: the click timing log reads them.</summary>
+        public static double LastGroundRealtime { get; private set; }
+        public static int LastGroundFrame { get; private set; }
+        public static int GroundClicks { get; private set; }
+
         /// <summary>A click on the ground at <paramref name="point"/> (metres); <paramref name="run"/> = the run movement skill is selected.</summary>
-        public static void Ground(Vector3 point, bool run) => Add(new Click { Point = point, Run = run });
+        public static void Ground(Vector3 point, bool run)
+        {
+            LastGroundRealtime = Time.realtimeSinceStartupAsDouble;
+            LastGroundFrame = Time.frameCount;
+            GroundClicks++;
+            Add(new Click { Point = point, Run = run });
+        }
 
         /// <summary>The player asked to stop where they stand.</summary>
         public static void Stop() => Add(new Click { Stop = true });

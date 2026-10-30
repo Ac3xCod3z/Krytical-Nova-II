@@ -129,6 +129,73 @@ namespace KryticalNova.Player.Entities.Tests
             Assert.AreEqual(9000, w.Pose.YawCdeg, "facing +X is 90 degrees");
         }
 
+        // ------------------------------------------------------------------------------------------------ turning (owner's feel test 30 Oct)
+        [Test]
+        public void TurnToward_GoesTheShortWay_AndStopsOnTheTarget()
+        {
+            Assert.AreEqual(1800, PlayerMovement.TurnToward(0, 9000, 1800));
+            Assert.AreEqual(34200, PlayerMovement.TurnToward(0, 27000, 1800), "270 is reached the short way, through 342");
+            Assert.AreEqual(9000, PlayerMovement.TurnToward(8000, 9000, 1800), "no overshoot");
+            Assert.AreEqual(500, PlayerMovement.TurnToward(35000, 500, 0), "0 = all the way at once");
+            Assert.AreEqual(100, PlayerMovement.TurnToward(35900, 1000, 200));
+        }
+
+        [Test]
+        public void WithATurnSpeed_ATurnBehindTakesTicks_AndTheWalkStillArrives()
+        {
+            using var w = new Walker();
+            w.Cfg.TurnCdegPerSecond = 54000; // 540 deg/s = 18 deg a tick at 30 Hz
+            w.Pose.YawCdeg = 27000;          // facing -X
+            w.SetClient(1, P(0, 0, 0), P(20000, 0, 0));
+            w.Click(1);
+            w.Step();
+            Assert.AreEqual(27000 - 1799, w.Pose.YawCdeg, "one tick turns 18 degrees (540 x 1/30, rounded down)");
+            int ticksToFace = 1;
+            while (w.Pose.YawCdeg != 9000 && ticksToFace < 50) { w.Step(); ticksToFace++; }
+            Assert.AreEqual(9000, w.Pose.YawCdeg);
+            Assert.AreEqual(11, ticksToFace, "180 degrees at 18 a tick: 10 ticks and the rounding remainder");
+            w.RunUntilIdle();
+            Assert.AreEqual(20000, w.Pose.XMm, "turning does not change where the walk goes");
+        }
+
+        // ------------------------------------------------------------------------------------------------ drawing between ticks
+        [Test]
+        public void PoseAhead_IsThePoseAtNoTime_AndOneTickAheadIsTheNextTicksPoint()
+        {
+            using var w = new Walker();
+            w.SetClient(1, P(0, 0, 0), P(20000, 0, 0));
+            w.Click(1);
+            for (int i = 0; i < 20; i++) w.Step(); // at full walking speed
+            Assert.IsTrue(PlayerMovement.PoseAhead(in w.M, in w.Pose, in w.Plan, w.ServerCorners, in w.Client, w.ClientCorners, in w.Cfg, Tick30, 0,
+                out int3 now, out _));
+            Assert.AreEqual(w.Pose.Mm, now);
+            Assert.IsTrue(PlayerMovement.PoseAhead(in w.M, in w.Pose, in w.Plan, w.ServerCorners, in w.Client, w.ClientCorners, in w.Cfg, Tick30, Tick30 / 2,
+                out int3 half, out _));
+            w.Step();
+            Assert.LessOrEqual(math.abs(half.x - (now.x + w.Pose.XMm) / 2), 2, "half a tick ahead is half way to the next tick's point");
+        }
+
+        [Test]
+        public void PoseAhead_NeverPassesTheStopPoint_AndIsNothingWhenStanding()
+        {
+            using var w = new Walker();
+            w.Cfg.StopMm = 200;
+            w.SetClient(1, P(0, 0, 0), P(3000, 0, 0));
+            w.Click(1);
+            int far = 0;
+            while ((w.M.Flags & MoveFlags.Moving) != 0)
+            {
+                PlayerMovement.PoseAhead(in w.M, in w.Pose, in w.Plan, w.ServerCorners, in w.Client, w.ClientCorners, in w.Cfg, Tick30, Tick30,
+                    out int3 ahead, out _);
+                far = math.max(far, ahead.x);
+                w.Step();
+            }
+            Assert.LessOrEqual(far, 3000 - 200 + 1, "drawn ahead, but never past where the walk stops");
+            Assert.IsFalse(PlayerMovement.PoseAhead(in w.M, in w.Pose, in w.Plan, w.ServerCorners, in w.Client, w.ClientCorners, in w.Cfg, Tick30, Tick30,
+                out int3 still, out _));
+            Assert.AreEqual(w.Pose.Mm, still);
+        }
+
         [Test]
         public void SpeedRisesToWalkSpeed_ThenEasesInTheArrivalZone()
         {

@@ -339,6 +339,106 @@ namespace KryticalNova.Player.Entities.Tests
             Assert.AreEqual(rig.ServerMove(), rig.OwnerMove());
         }
 
+        // ------------------------------------------------------------------------------------------------ owner's feel bar (30 Oct)
+        [Test]
+        public void ANewClickMidWalk_IsTakenOnTheNextTick_AndTheServerAgreesWithoutASnap()
+        {
+            using var rig = PlayerRig.Create(2, 100);
+            uint t0 = rig.ServerTick;
+            rig.Sources[0].Click(new int3(40000, 0, 0));
+            rig.Tick(40);
+            ushort first = rig.OwnerMove().OrderSeq;
+            Assert.AreNotEqual(0, rig.OwnerMove().Flags & MoveFlags.Moving, "walking to A");
+            var goalB = new int3(0, 0, 15000);
+            // The click is gathered for the tick the client is predicting this frame (logged). When that tick is still partial
+            // the walk cannot start on it yet (moves run on full ticks); it must start on that very tick, i.e. on the first
+            // frame in which the tick is fully predicted, never a tick later.
+            uint clickTick = 0;
+            PlayerClickLog.Sink = l => { if (l.StartsWith("[KnClick] client")) clickTick = uint.Parse(l.Substring(l.LastIndexOf('=') + 1)); };
+            rig.Sources[0].Click(goalB);
+            int frames = 0;
+            try
+            {
+                do { rig.Tick(1); frames++; }
+                while (frames < 4 && (clickTick == 0 || NewestFullTick(rig.Clients[0]) < clickTick));
+            }
+            finally { PlayerClickLog.Sink = null; }
+            Log($"click gathered for tick {clickTick}; fully predicted after {frames} frame(s)");
+            Assert.AreNotEqual(0, clickTick, "the click was gathered");
+            Assert.LessOrEqual(frames, 2, "the click's tick is fully predicted within one tick of the press");
+            var owner = rig.OwnerMove();
+            Assert.AreNotEqual(first, owner.OrderSeq, "the owner drops A and walks to B on the click's own tick, no wait for the server");
+            var ring = rig.Clients[0].EntityManager.GetBuffer<PlayerMoveTrace>(rig.GhostIn(0, 0), true);
+            var ownTrace = ring[(int)(clickTick % (uint)ring.Length)];
+            Assert.AreEqual(clickTick, ownTrace.Tick, "the owner traced the click's tick");
+            Assert.AreEqual(owner.OrderSeq, ownTrace.OrderSeq, "B started on exactly the tick the click was gathered for");
+            Assert.AreEqual(rig.Get<ClientPlanHeader>(rig.Clients[0], rig.GhostIn(0, 0)).Seq, owner.OrderSeq);
+            Assert.AreNotEqual(0, owner.Flags & MoveFlags.Moving);
+            rig.Tick(260);
+            Assert.AreEqual(goalB, rig.ServerPose().Mm, "the server took the same click: its result stands");
+            Assert.AreEqual(rig.ServerPose(), rig.OwnerPose());
+            var trace = rig.CompareOwner(0, t0, rig.ServerTick - 1);
+            Assert.AreEqual(0, trace.Mismatch, "owner and server agreed on every tick, so nothing was corrected: " + trace.FirstDump);
+        }
+
+        /// <summary>The newest tick the client has predicted in full (a partial tick does not move the body).</summary>
+        static uint NewestFullTick(World client)
+        {
+            var nt = KnTestWorld.Singleton<NetworkTime>(client);
+            if (!nt.ServerTick.IsValid) return 0;
+            uint t = nt.ServerTick.TickIndexForValidTick;
+            return nt.IsPartialTick ? t - 1 : t;
+        }
+
+        sealed class FakeClickBudget : IClickBudget
+        {
+            public bool Open;
+            public int Asked;
+            public bool Allow(Entity ghost) { Asked++; return Open; }
+        }
+
+        [Test]
+        public void AClickOverTheRateLimit_IsRefusedBeforePlanning_AndTheNextAllowedOneWalks()
+        {
+            using var rig = PlayerRig.Create(2, 100);
+            var budget = new FakeClickBudget { Open = false };
+            var plan = rig.Server.GetExistingSystemManaged<PlayerServerPlanSystem>();
+            plan.ClickBudget = budget;
+            rig.Sources[0].Click(Goal);
+            rig.Tick(120);
+            Assert.AreEqual(0, rig.ServerPose().XMm, "over the limit: the server does not walk");
+            Assert.AreEqual(0, rig.OwnerPose().XMm, "and the owner is taken back");
+            Assert.AreEqual(1, plan.OverBudget);
+            Assert.AreEqual(1, budget.Asked, "one click, asked once");
+            budget.Open = true;
+            rig.Sources[0].Click(new int3(5000, 0, 0));
+            rig.Tick(80);
+            Assert.AreEqual(5000, rig.ServerPose().XMm);
+            Assert.AreEqual(rig.ServerPose(), rig.OwnerPose());
+        }
+
+        [Test]
+        public void AClientThatClaimsFasterSpeeds_IsCorrectedToTheServersWalk()
+        {
+            // a tampered client writes its own MoveStats (5x the walk); the server walks at its own and its snapshots win
+            using var rig = PlayerRig.Create(2, 100);
+            var cheat = new MoveStats { WalkMmps = 25000, RunMmps = 45000 };
+            var honest = rig.Get<MoveStats>(rig.Server, rig.ServerGhosts[0]);
+            rig.Sources[0].Click(new int3(40000, 0, 0));
+            int fastest = 0;
+            for (int i = 0; i < 120; i++)
+            {
+                rig.Clients[0].EntityManager.SetComponentData(rig.GhostIn(0, 0), cheat);
+                rig.Tick(1);
+                fastest = math.max(fastest, rig.ServerMove().SpeedMmps);
+            }
+            Assert.LessOrEqual(fastest, honest.WalkMmps, "the server never walked faster than its own speeds");
+            rig.Tick(300);
+            Assert.AreEqual(honest, rig.Get<MoveStats>(rig.Clients[0], rig.GhostIn(0, 0)), "the snapshots put the server's speeds back");
+            Assert.AreEqual(new int3(40000, 0, 0), rig.ServerPose().Mm);
+            Assert.AreEqual(rig.ServerPose(), rig.OwnerPose(), "the owner ends where the server put it, not where the cheat would");
+        }
+
         [Test]
         public void RunFlag_IsOnTheMoveState_WhileRunning()
         {

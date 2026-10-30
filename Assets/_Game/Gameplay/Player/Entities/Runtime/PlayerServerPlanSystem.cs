@@ -30,6 +30,12 @@ namespace KryticalNova.Player.Entities
         /// <summary>The price of a running click; null = running is free (tests, a world without the game's skills).</summary>
         public IRunCost RunCost { get; set; }
 
+        /// <summary>The move-click rate limit; null = no limit (tests, a world without the game's request limits).</summary>
+        public IClickBudget ClickBudget { get; set; }
+
+        /// <summary>Clicks refused for coming too fast (tests, the status page).</summary>
+        public int OverBudget { get; private set; }
+
         /// <summary>Why the last click was refused for its price (tests; the message to the player comes with M8's chat port).</summary>
         public string LastCostRefusal { get; private set; }
 
@@ -93,6 +99,14 @@ namespace KryticalNova.Player.Entities
 
                 {
                     var goal = new int3(input.GoalXMm, input.GoalYMm, input.GoalZMm);
+                    // too many clicks: refused before any planning, so a flood costs the server no NavMesh work
+                    if (ClickBudget != null && !ClickBudget.Allow(e))
+                    {
+                        OverBudget++;
+                        Refuse(em, e, input);
+                        Refused++;
+                        continue;
+                    }
                     bool tooFar = cfg.MaxClickRangeMm > 0 && PlayerPath.DistanceMm(pose.Mm, goal) > cfg.MaxClickRangeMm;
                     // a run is paid per destination, only for a click that will start (the Netcode for GameObjects rule)
                     bool run = input.Run != 0 && RunCost != null;

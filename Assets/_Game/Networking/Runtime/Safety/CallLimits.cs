@@ -48,7 +48,8 @@ namespace KryticalNova.Networking
     [Serializable]
     public sealed class CallLimits
     {
-        public CallLimit move = new CallLimit(30f, 20f);
+        [Tooltip("Move requests: walking and running clicks, jumps, climbs, rides, follows. Owner, 30 Oct 2026: 10 move clicks a second.")]
+        public CallLimit move = new CallLimit(10f, 10f);
         public CallLimit combat = new CallLimit(25f, 15f);
         public CallLimit items = new CallLimit(40f, 15f);
         public CallLimit money = new CallLimit(10f, 5f);
