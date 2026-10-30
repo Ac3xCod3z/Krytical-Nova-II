@@ -35,6 +35,26 @@ namespace KryticalNova.Player.Entities.Bodies.Tests
             Log?.Add("admitted" + (AdmittedProbe != null ? "(" + AdmittedProbe() + ")" : string.Empty));
     }
 
+    /// <summary>
+    /// Stand-in for the rules of a real body that must hear the player leave (PlayerSaveAgent, PlayerTrade): records each call and
+    /// what the test's probe says about the world at that moment (e.g. the ghost's owner id). Declared here, not in a file of its own
+    /// name: Unity refuses to add a MonoBehaviour whose own script file sits in an Editor folder ("it is an editor script").
+    /// </summary>
+    public sealed class LeaveRecorder : MonoBehaviour, IServerLeaving
+    {
+        /// <summary>Shared log of the test (set before the call).</summary>
+        public List<string> Log;
+        /// <summary>What to write at the moment of the call (the test reads the world here).</summary>
+        public Func<string> Probe;
+        public int Calls;
+
+        public void OnServerLeaving()
+        {
+            Calls++;
+            Log?.Add("leaving" + (Probe != null ? "(" + Probe() + ")" : string.Empty));
+        }
+    }
+
     /// <summary>Hands the same character to its client world every time it is asked (the client system sends it once).</summary>
     public sealed class FixedGoInGame : IKnGoInGameSource
     {

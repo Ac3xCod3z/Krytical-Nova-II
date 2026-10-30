@@ -299,10 +299,14 @@ namespace KryticalNova.Networking.Entities.Tests
         }
 
         // ------------------------------------------------------------------ subscenes
-        /// <summary>Loads a subscene (by scene asset GUID) into every world, ticking until loaded in all.</summary>
-        public void LoadSubScene(Hash128 sceneGuid, int maxTicks = 400)
+        /// <summary>
+        /// Loads a subscene (by scene asset GUID) into every world, ticking until loaded in all; <paramref name="only"/> = into that one
+        /// world (a client added later, which must load what the server has before it goes in game).
+        /// </summary>
+        public void LoadSubScene(Hash128 sceneGuid, int maxTicks = 400, World only = null)
         {
-            foreach (var w in AllWorlds)
+            IEnumerable<World> worlds = only != null ? (IEnumerable<World>)new[] { only } : AllWorlds;
+            foreach (var w in worlds)
             {
                 // resolve the scene entity first (imports the entity scene synchronously)
                 var probe = SceneSystem.LoadSceneAsync(w.Unmanaged, sceneGuid,
@@ -313,7 +317,7 @@ namespace KryticalNova.Networking.Entities.Tests
                 }
             }
             var scenes = new List<(World, Entity)>();
-            foreach (var w in AllWorlds)
+            foreach (var w in worlds)
                 scenes.Add((w, SceneSystem.LoadSceneAsync(w.Unmanaged, sceneGuid,
                     new SceneSystem.LoadParameters { Flags = SceneLoadFlags.BlockOnImport | SceneLoadFlags.BlockOnStreamIn })));
             for (int i = 0; i < maxTicks; i++)

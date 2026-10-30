@@ -38,8 +38,12 @@ namespace KryticalNova.Player.Entities.Bodies.Tests
             ServerShutdown.Handler = null;
         }
 
+        // A destroyed server ghost keeps only netcode's cleanup component until the ghost send system lets it go, so Exists stays true
+        // for a while: it is gone when it no longer carries its own components.
+        static bool Gone(EntityManager em, Entity ghost) => !em.Exists(ghost) || !em.HasComponent<PlayerGhostTag>(ghost);
+
         static string OwnerOf(BodyRig rig, Entity ghost) =>
-            rig.Server.EntityManager.Exists(ghost) ? "owner=" + rig.Server.EntityManager.GetComponentData<GhostOwner>(ghost).NetworkId : "gone";
+            !Gone(rig.Server.EntityManager, ghost) ? "owner=" + rig.Server.EntityManager.GetComponentData<GhostOwner>(ghost).NetworkId : "gone";
 
         static List<string> After(List<string> log, string marker)
         {
@@ -64,7 +68,7 @@ namespace KryticalNova.Player.Entities.Bodies.Tests
             CollectionAssert.AreEqual(new[] { "invalidated", "leaving(owner=0)", "left", "body destroyed", "ghost destroyed", "forget" },
                 After(rig.Log, "--close--"));
             Assert.IsTrue(body == null);
-            Assert.IsFalse(rig.Server.EntityManager.Exists(ghost));
+            Assert.IsTrue(Gone(rig.Server.EntityManager, ghost));
             Assert.AreEqual(0, GhostBodyRegistry.ServerBodyCount);
             Assert.AreEqual(0, rig.ServerGhosts);
             Assert.AreEqual(1, rig.Leave.Left);
@@ -117,14 +121,14 @@ namespace KryticalNova.Player.Entities.Bodies.Tests
 
             var em = rig.Server.EntityManager;
             int ticks = 0;
-            while (em.Exists(ghost) && ticks < 5)
+            while (!Gone(em, ghost) && ticks < 5)
             {
                 Assert.AreEqual(0, em.GetComponentData<GhostOwner>(ghost).NetworkId, "ownerless in between");
                 Assert.IsTrue(em.HasComponent<PlayerLeaving>(ghost));
                 rig.Tick();
                 ticks++;
             }
-            Assert.IsFalse(em.Exists(ghost), "the cleanup took it within a few ticks");
+            Assert.IsTrue(Gone(em, ghost), "the cleanup took it within a few ticks");
             Assert.AreEqual(1, rig.Server.GetExistingSystemManaged<PlayerLeavingCleanupSystem>().Destroyed);
         }
 
@@ -142,6 +146,7 @@ namespace KryticalNova.Player.Entities.Bodies.Tests
             a.Dispose();
 
             World b = rig.Tw.AddClient(rig.Tw.JoinPayload);
+            rig.Tw.LoadSubScene(PlayerTestAssets.SubSceneGuid, only: b); // the ghost prefab, as the server has it
             PlayerEntitiesSetup.Install(b, new StraightLinePlanner());
             int got = rig.Tw.TickUntil(() => KnTestWorld.HasNetworkId(b), 300);
             Assert.GreaterOrEqual(got, 0, "the second client never connected");
@@ -151,7 +156,7 @@ namespace KryticalNova.Player.Entities.Bodies.Tests
             rig.Enter(b);
             PlayerKey keyB = rig.KeyOf(b);
             Assert.AreNotEqual(keyA, keyB, "a new connection gets a new key even with the old NetworkId");
-            Assert.IsFalse(rig.Server.EntityManager.Exists(ghostA), "A's ghost is gone");
+            Assert.IsTrue(Gone(rig.Server.EntityManager, ghostA), "A's ghost is gone");
             Assert.AreEqual(1, rig.ServerGhosts);
 
             int seen = rig.Tw.TickUntil(() => KnTestWorld.Count<PlayerGhostTag>(b) == 1, 200);
