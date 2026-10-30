@@ -11,7 +11,9 @@
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner",
         "Unity.Netcode.Runtime",
-        "Unity.Collections"
+        "Unity.Collections",
+        "KryticalNova.Player.Entities",
+        "Unity.Entities"
     ],
     "includePlatforms": [
         "Editor"

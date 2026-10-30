@@ -280,6 +280,65 @@ namespace KryticalNova.Player.Entities.Tests
             Assert.Less(run, walk);
         }
 
+        sealed class FakeRunCost : IRunCost
+        {
+            public bool Affordable;
+            public int Asked, Paid;
+            public bool CanPay(Entity ghost, out string reason)
+            {
+                Asked++;
+                reason = Affordable ? null : "Not enough Flux.";
+                return Affordable;
+            }
+            public void Pay(Entity ghost) => Paid++;
+        }
+
+        [Test]
+        public void ARunningClick_ThePlayerCannotPayFor_IsRefused_AndAPaidOneIsChargedOnce()
+        {
+            using var rig = PlayerRig.Create(2, 100);
+            var cost = new FakeRunCost { Affordable = false };
+            var plan = rig.Server.GetExistingSystemManaged<PlayerServerPlanSystem>();
+            plan.RunCost = cost;
+            rig.Sources[0].Click(Goal, true);
+            rig.Tick(120);
+            Assert.AreEqual(0, rig.ServerPose().XMm, "no Flux: the run does not start");
+            Assert.AreEqual(0, rig.OwnerPose().XMm, "and the owner is taken back");
+            Assert.AreEqual(0, cost.Paid);
+            Assert.AreEqual("Not enough Flux.", plan.LastCostRefusal);
+            // a walk costs nothing and is not asked about
+            int asked = cost.Asked;
+            rig.Sources[0].Click(new int3(5000, 0, 0));
+            rig.Tick(80);
+            Assert.AreEqual(5000, rig.ServerPose().XMm);
+            Assert.AreEqual(asked, cost.Asked, "walking is free");
+            // with the Flux the run starts and is paid once
+            cost.Affordable = true;
+            rig.Sources[0].Click(new int3(15000, 0, 0), true);
+            rig.Tick(120);
+            Assert.AreEqual(15000, rig.ServerPose().XMm);
+            Assert.AreEqual(rig.ServerPose(), rig.OwnerPose());
+            Assert.AreEqual(1, cost.Paid, "one destination, one price");
+        }
+
+        [Test]
+        public void ASpeedChangeMidWalk_ReachesTheOwner_AndBothWorldsEndEqual()
+        {
+            // what a GM speed, a mount or a new Run rank does: the server writes MoveStats (PlayerMoveStatsRefreshSystem in the game)
+            using var rig = PlayerRig.Create(2, 100);
+            rig.Sources[0].Click(new int3(40000, 0, 0));
+            rig.Tick(40);
+            var faster = new MoveStats { WalkMmps = 10000, RunMmps = 15000 };
+            rig.Server.EntityManager.SetComponentData(rig.ServerGhosts[0], faster);
+            rig.Tick(30);
+            Assert.AreEqual(faster, rig.Get<MoveStats>(rig.Clients[0], rig.GhostIn(0, 0)), "the owner gets the new speeds");
+            Assert.AreEqual(10000, rig.ServerMove().SpeedMmps, "the walk goes on at the new speed");
+            rig.Tick(200);
+            Assert.AreEqual(new int3(40000, 0, 0), rig.ServerPose().Mm);
+            Assert.AreEqual(rig.ServerPose(), rig.OwnerPose());
+            Assert.AreEqual(rig.ServerMove(), rig.OwnerMove());
+        }
+
         [Test]
         public void RunFlag_IsOnTheMoveState_WhileRunning()
         {

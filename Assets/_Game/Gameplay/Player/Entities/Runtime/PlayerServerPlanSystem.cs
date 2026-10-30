@@ -27,6 +27,12 @@ namespace KryticalNova.Player.Entities
         /// <summary>Set by <see cref="PlayerEntitiesSetup.Install"/>; no silent default.</summary>
         public IPathPlanner Planner { get; set; }
 
+        /// <summary>The price of a running click; null = running is free (tests, a world without the game's skills).</summary>
+        public IRunCost RunCost { get; set; }
+
+        /// <summary>Why the last click was refused for its price (tests; the message to the player comes with M8's chat port).</summary>
+        public string LastCostRefusal { get; private set; }
+
         /// <summary>Clicks refused and requests dropped (tests and the status page read it).</summary>
         public int Refused { get; private set; }
 
@@ -88,12 +94,19 @@ namespace KryticalNova.Player.Entities
                 {
                     var goal = new int3(input.GoalXMm, input.GoalYMm, input.GoalZMm);
                     bool tooFar = cfg.MaxClickRangeMm > 0 && PlayerPath.DistanceMm(pose.Mm, goal) > cfg.MaxClickRangeMm;
-                    if (tooFar || !TryWritePlan(em, e, pose, goal, input.ClickSeq, out _))
+                    // a run is paid per destination, only for a click that will start (the Netcode for GameObjects rule)
+                    bool run = input.Run != 0 && RunCost != null;
+                    string costReason = null;
+                    bool unpaid = run && !RunCost.CanPay(e, out costReason);
+                    if (unpaid) LastCostRefusal = costReason;
+                    if (tooFar || unpaid || !TryWritePlan(em, e, pose, goal, input.ClickSeq, out _))
                     {
                         Refuse(em, e, input);
                         Refused++;
+                        continue;
                     }
-                    else if (PlayerClickLog.Sink != null)
+                    if (run) RunCost.Pay(e);
+                    if (PlayerClickLog.Sink != null)
                         PlayerClickLog.Server(em.HasComponent<GhostOwner>(e) ? em.GetComponentData<GhostOwner>(e).NetworkId : 0,
                             input.ClickSeq, nt.ServerTick.TickIndexForValidTick);
                 }

@@ -76,7 +76,9 @@ namespace KryticalNova.Persistence.Entities
                 if (identity != null) KryticalNova.Persistence.ServerRoster.Database = identity.Database;
             }
             var planner = new NavMeshPathPlanner();
-            PlayerEntitiesSetup.Install(server, planner);
+            PlayerEntitiesSetup.Install(server, planner, runCost: new BodyRunCost(server));
+            // walk numbers from the settings asset, the same on server and client (prediction must agree)
+            PlayerMoveFromSkills.InstallSettings(server, PlayerMoveFromSkills.SettingsOf((prefab ?? PlayerPrefab)()));
             var rules = new PlayerAdmission
             {
                 Planner = planner,
@@ -91,6 +93,12 @@ namespace KryticalNova.Persistence.Entities
             {
                 Picker = (IReadOnlyList<Vector3> occupied, out Vector3 position, out Quaternion rotation) =>
                     KryticalNova.Networking.PlayerSpawnService.PickPoint(occupied, planner.BaseOffsetM, out position, out rotation),
+                // the speeds of the loaded character (Run rank, mount, gear, GM); PlayerMoveStatsRefreshSystem keeps them current
+                MoveStatsOf = body =>
+                {
+                    PlayerMoveFromSkills.InstallSettings(server, PlayerMoveFromSkills.SettingsOf(body));
+                    return PlayerMoveFromSkills.StatsOf(body);
+                },
             };
             var admissionSystem = server.GetExistingSystemManaged<KnAdmissionSystem>();
             if (admissionSystem != null) admissionSystem.Admission = admission;
@@ -117,6 +125,7 @@ namespace KryticalNova.Persistence.Entities
                 BodyMade = (body, request) =>
                 {
                     if (!request.IsLocal) return;
+                    PlayerMoveFromSkills.InstallSettings(client, PlayerMoveFromSkills.SettingsOf(body));
                     var agent = body.GetComponent<UnityEngine.AI.NavMeshAgent>();
                     if (agent == null) return;
                     planner.AgentTypeId = agent.agentTypeID;
@@ -125,6 +134,7 @@ namespace KryticalNova.Persistence.Entities
                 },
             };
             PlayerEntitiesSetup.Install(client, planner);
+            PlayerMoveFromSkills.InstallSettings(client, PlayerMoveFromSkills.SettingsOf((prefab ?? PlayerPrefab)()));
             KryticalNova.Player.Entities.Presentation.PlayerPresentationSetup.Install(client, factory, new BodyClickSource());
             var looks = client.GetExistingSystemManaged<PlayerLookClientSystem>();
             if (looks != null) looks.Applier = new IdentityLookApplier();
