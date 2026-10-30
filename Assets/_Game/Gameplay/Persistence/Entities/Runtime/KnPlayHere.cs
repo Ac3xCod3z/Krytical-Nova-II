@@ -199,8 +199,9 @@ namespace KryticalNova.Persistence.Entities
             public string Walk;
             int m_Errors;
 
-            void OnEnable() => Application.logMessageReceived += Count;
-            void OnDisable() => Application.logMessageReceived -= Count;
+            // the per-click lines of both worlds ([KnClick] client / server / refused why=...) go to the Console
+            void OnEnable() { Application.logMessageReceived += Count; PlayerClickLog.Sink = Debug.Log; }
+            void OnDisable() { Application.logMessageReceived -= Count; PlayerClickLog.Sink = null; }
 
             // ---- click timing and frame rate (owner's feel test 30 Oct: "slow, laggy"; measured, not guessed) ----
             const double ClickWatchSeconds = 3d;

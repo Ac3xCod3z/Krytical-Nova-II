@@ -56,10 +56,16 @@ namespace KryticalNova.Networking.Entities.Tests
         /// <summary>Every Unity log line (log, warning, error) raised while this test world lives.</summary>
         public readonly List<string> Logs = new List<string>();
         public float Dt => 1f / SimulationTickRate;
+        /// <summary>
+        /// Frames per simulation tick (1 = one frame is one tick). Above 1 every <see cref="Tick"/> is one frame of Dt / FramesPerTick,
+        /// so the client predicts partial ticks between full ones, as the game does at 60+ fps.
+        /// </summary>
+        public int FramesPerTick = 1;
         public int TickCount { get; private set; }
 
         double m_Elapsed;
         uint m_StampMs = 1000;
+        double m_StampCarryMs;
         readonly INetworkStreamDriverConstructor m_OldConstructor;
         readonly bool m_OldIgnore;
         readonly bool m_OldRunInBackground;
@@ -181,10 +187,19 @@ namespace KryticalNova.Networking.Entities.Tests
         void TickOnce()
         {
             TickCount++;
-            m_Elapsed += Dt;
-            m_StampMs += (uint)Mathf.RoundToInt(Dt * 1000f);
+            float dt = Dt / Mathf.Max(1, FramesPerTick);
+            m_Elapsed += dt;
+            // one frame a tick keeps the old whole-ms steps; shorter frames carry the fraction so the clock does not drift
+            if (FramesPerTick <= 1) m_StampMs += (uint)Mathf.RoundToInt(Dt * 1000f);
+            else
+            {
+                m_StampCarryMs += dt * 1000.0;
+                uint whole = (uint)System.Math.Floor(m_StampCarryMs);
+                m_StampMs += whole;
+                m_StampCarryMs -= whole;
+            }
             s_FixedStamp?.SetValue(null, m_StampMs); // deterministic RTT clock (internal in Netcode, set by reflection)
-            var td = new TimeData(m_Elapsed, Dt);
+            var td = new TimeData(m_Elapsed, dt);
             foreach (var w in AllWorlds) w.SetTime(td);
             foreach (var w in AllWorlds) Update<InitializationSystemGroup>(w);
             foreach (var w in AllWorlds) Update<SimulationSystemGroup>(w);

@@ -63,6 +63,7 @@ namespace KryticalNova.Player.Entities
                 var input = em.GetComponentData<PlayerInput>(e);
                 bool click = input.Click.IsSet && input.ClickSeq != 0;
                 bool request = em.IsComponentEnabled<ServerOrderRequest>(e);
+                if (input.Click.IsSet && input.ClickSeq == 0) LogRefusal(em, e, input, nt, "noseq");
                 if (!click && !request) continue;
                 if (Planner == null)
                 {
@@ -71,7 +72,7 @@ namespace KryticalNova.Player.Entities
                         m_WarnedPlanner = true;
                         Debug.LogError("PlayerServerPlanSystem: no IPathPlanner installed (PlayerEntitiesSetup.Install); orders are refused.");
                     }
-                    if (click) Refuse(em, e, input);
+                    if (click) { LogRefusal(em, e, input, nt, "planner"); Refuse(em, e, input); }
                     if (request) em.SetComponentEnabled<ServerOrderRequest>(e, false);
                     Refused++;
                     continue;
@@ -103,6 +104,7 @@ namespace KryticalNova.Player.Entities
                     if (ClickBudget != null && !ClickBudget.Allow(e))
                     {
                         OverBudget++;
+                        LogRefusal(em, e, input, nt, "budget");
                         Refuse(em, e, input);
                         Refused++;
                         continue;
@@ -115,6 +117,7 @@ namespace KryticalNova.Player.Entities
                     if (unpaid) LastCostRefusal = costReason;
                     if (tooFar || unpaid || !TryWritePlan(em, e, pose, goal, input.ClickSeq, out _))
                     {
+                        LogRefusal(em, e, input, nt, tooFar ? "range" : unpaid ? "cost" : "path");
                         Refuse(em, e, input);
                         Refused++;
                         continue;
@@ -144,6 +147,13 @@ namespace KryticalNova.Player.Entities
                 return true;
             }
             finally { corners.Dispose(); }
+        }
+
+        static void LogRefusal(EntityManager em, Entity e, in PlayerInput input, in NetworkTime nt, string why)
+        {
+            if (PlayerClickLog.Sink == null) return;
+            PlayerClickLog.Refused(em.HasComponent<GhostOwner>(e) ? em.GetComponentData<GhostOwner>(e).NetworkId : 0,
+                input.ClickSeq, nt.ServerTick.TickIndexForValidTick, why);
         }
 
         static void Refuse(EntityManager em, Entity e, PlayerInput input)

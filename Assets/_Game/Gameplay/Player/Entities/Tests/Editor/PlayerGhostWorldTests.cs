@@ -381,6 +381,39 @@ namespace KryticalNova.Player.Entities.Tests
             Assert.AreEqual(0, trace.Mismatch, "owner and server agreed on every tick, so nothing was corrected: " + trace.FirstDump);
         }
 
+        [Test]
+        public void AtThreeFramesATick_EveryClickWalks_WhicheverFrameOfItsTickItLandsOn()
+        {
+            // owner's GUI test 30 Oct (84 fps): a click followed by an empty frame of the same tick reached server and owner with
+            // its seq and goal wiped (Netcode keeps the event's count across the frames of a tick, not the plain fields), so most
+            // clicks only turned the body. Here each click lands on a different frame of its tick.
+            using var rig = PlayerRig.Create(1, 100);
+            rig.Tw.FramesPerTick = 3;
+            rig.Tick(60);                                   // the client clock settles at the new frame rate
+            var lines = new List<string>();
+            PlayerClickLog.Sink = l => { lock (lines) lines.Add(l); };
+            try
+            {
+                for (int phase = 0; phase < 3; phase++)
+                {
+                    rig.Tick(phase);                        // move the click to another frame of its tick
+                    var goal = new int3(3000 + 4000 * phase, 0, 2000 * phase);
+                    rig.Sources[0].Click(goal);
+                    int frames = 0;
+                    while (rig.OwnerMove().OrderSeq == 0 || (rig.OwnerMove().Flags & MoveFlags.Moving) == 0 || rig.OwnerMove().OrderSeq != rig.Get<ClientPlanHeader>(rig.Clients[0], rig.GhostIn(0, 0)).Seq)
+                    {
+                        rig.Tick(1);
+                        Assert.Less(++frames, 12, $"phase {phase}: the owner never started the walk. Log: {string.Join(" | ", lines)}");
+                    }
+                    rig.Tick(3 * 400);
+                    Assert.AreEqual(goal, rig.ServerPose().Mm, $"phase {phase}: the server walked the click. Log: {string.Join(" | ", lines)}");
+                    Assert.AreEqual(rig.ServerPose(), rig.OwnerPose());
+                }
+            }
+            finally { PlayerClickLog.Sink = null; }
+            Assert.IsFalse(lines.Exists(l => l.StartsWith("[KnClick] refused")), "no click was refused: " + string.Join(" | ", lines));
+        }
+
         /// <summary>The newest tick the client has predicted in full (a partial tick does not move the body).</summary>
         static uint NewestFullTick(World client)
         {

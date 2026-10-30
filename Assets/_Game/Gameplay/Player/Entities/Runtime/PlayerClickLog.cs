@@ -20,5 +20,12 @@ namespace KryticalNova.Player.Entities
         public static void Client(int owner, ushort seq, uint tick) => Sink?.Invoke("[KnClick] client owner=" + owner + " seq=" + seq + " tick=" + tick);
 
         public static void Server(int owner, ushort seq, uint tick) => Sink?.Invoke("[KnClick] server owner=" + owner + " seq=" + seq + " tick=" + tick);
+
+        /// <summary>
+        /// The server refused a click: <c>[KnClick] refused owner=N seq=S tick=T why=W</c> (budget, range, cost, path, planner).
+        /// seq 0 = an event without its fields (a click the client did not fill in).
+        /// </summary>
+        public static void Refused(int owner, ushort seq, uint tick, string why) =>
+            Sink?.Invoke("[KnClick] refused owner=" + owner + " seq=" + seq + " tick=" + tick + " why=" + why);
     }
 }
