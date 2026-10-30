@@ -92,6 +92,23 @@ namespace KryticalNova.Tests
         }
 
         [Test]
+        public void TheControlPageNeverListensWhereTheInternetReachesIt()
+        {
+            File.WriteAllText(Path.Combine(serverFolder, ServerLaunchOptions.FileName), "{ }");
+            Assert.AreEqual("0.0.0.0", ServerLaunchOptions.Load(serverFolder, new string[0], out _).pageAddress, "every address by default (the phone on the Wi-Fi)");
+            File.WriteAllText(Path.Combine(serverFolder, ServerLaunchOptions.FileName), "{ \"pageAddress\": \" 127.0.0.1 \" }");
+            Assert.AreEqual("127.0.0.1", ServerLaunchOptions.Load(serverFolder, new string[0], out _).pageAddress, "a rented machine: this machine only, trimmed");
+            Assert.AreEqual("192.168.1.20", ServerLaunchOptions.Load(serverFolder, new[] { "Server.exe", "-pageAddress", "192.168.1.20" }, out _).pageAddress,
+                "the command line wins; a home-network address is taken");
+            foreach (string outside in new[] { "203.0.113.10", "100.100.1.1", "239.1.1.1", "::", "nova.example" })
+            {
+                ServerLaunchOptions options = ServerLaunchOptions.Load(serverFolder, new[] { "Server.exe", "-pageAddress", outside }, out string report);
+                Assert.AreEqual("127.0.0.1", options.pageAddress, $"{outside} falls back to this machine only (Linux plan item 10)");
+                StringAssert.Contains("not this machine or a home-network address", report);
+            }
+        }
+
+        [Test]
         public void BackupsAreNamedByTimeAndOnlyTheNewestAreKept()
         {
             Assert.AreEqual("save_2026-10-16_14-05-09_start.zip", ServerBackups.FileNameFor(new DateTime(2026, 10, 16, 14, 5, 9), "start"));

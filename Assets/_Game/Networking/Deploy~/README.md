@@ -56,7 +56,8 @@ bash lint.sh                       # nothing touches the cloud
 ./teardown.sh                      # ALWAYS when the test is over: copies the test database here, then deletes the box
 ```
 
-The control page (port 8090) is never opened to the internet. To see it: `ssh -i ~/.ssh/kn_hetzner -L 8090:127.0.0.1:8090 kn-admin@<address>`, then open http://127.0.0.1:8090.
+The control page (port 8090) is never opened to the internet: on the box it listens on 127.0.0.1 only (`pageAddress`,
+written by `deploy.sh`; plan item 10), so the firewall is not its only guard. To see it: `ssh -i ~/.ssh/kn_hetzner -L 8090:127.0.0.1:8090 kn-admin@<address>`, then open http://127.0.0.1:8090.
 
 ## What is checked, and what is not
 
@@ -65,6 +66,9 @@ The control page (port 8090) is never opened to the internet. To see it: `ssh -i
   24.04 with systemd, 29 Oct 2026) before any cloud money is spent (plan, advisor item 3).
 - **The box's address:** `deploy.sh` writes the box's IP into `publicAddress` in the settings it installs, so the server
   list entry `auto` and the world service hand out that address (never 127.0.0.1 or a private one; plan item 2).
+- **Nothing private listens on the box's public address (plan item 10):** the control page binds 127.0.0.1
+  (`pageAddress`), the save service refuses to start on any address but this machine or a private network (even if
+  `--urls` or `ASPNETCORE_URLS` say otherwise), Postgres listens on localhost, and `/stop` on loopback.
 - Known gaps, from the plan: map servers beyond Concord stay off (`"mapServers": []`) until travelling
   exists; `kn-server@0` etc. start map servers if you add entries to `mapServers` and run `systemctl enable --now kn-server@0`.
 - **Stopping saves through an explicit call, not SIGTERM** (a Unity Linux player does not save on SIGTERM): `box/kn-stop.sh` posts

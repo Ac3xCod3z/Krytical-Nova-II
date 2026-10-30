@@ -316,6 +316,7 @@ default (and makes the page password). Close the server, edit it with Notepad, s
 | `map` | Zone01_StarterTown | The map the server opens with. A name the build does not have falls back to Zone01. |
 | `connectionMode` | direct | `direct`: players come to this PC's address through the router's forwarded ports. `relay`: through Unity Relay, no router work. Switch it on the control page (How players reach it). |
 | `pagePort` | 8090 | The control page's port. 0 switches the page off. |
+| `pageAddress` | 0.0.0.0 | Where the control page listens. `0.0.0.0` (every address of this PC) keeps it reachable from a phone on the home Wi-Fi. `127.0.0.1` is this machine only: the cloud test box uses it (its `deploy.sh` writes it) and is reached through an SSH tunnel. Only this machine or a home-network address is taken; anything else falls back to `127.0.0.1` (the server's first log line says so). |
 | `pagePassword` | made for you | The control page's password. Only ever in this file. Empty makes a new one at the next start. |
 | `backupHours` | 6 | Hours between backups. 0 backs up only at start and stop. |
 | `backupsKept` | 10 | How many backups are kept; the oldest go first. |
@@ -344,6 +345,7 @@ broke is left as it is while the server uses the defaults (the window says so).
 | `-saveFolder "<path>"` | `-saveFolder "D:\KN Saves"` |
 | `-map <scene>` | `-map EldersReach_Aldhavn` |
 | `-pagePort <number>` | `-pagePort 8091` |
+| `-pageAddress <address>` | `-pageAddress 127.0.0.1` |
 | `-backupHours <hours>` | `-backupHours 1` |
 | `-backupsKept <number>` | `-backupsKept 20` |
 | `-role map` | the app adds it for each map server (section 2b); never needed by hand |
@@ -776,6 +778,7 @@ server is on the old PC and the bots run here (owner, 17 Oct 2026).
 | Not sure which port it really uses | | In PowerShell: `Get-NetUDPEndpoint -OwningProcess (Get-Process KryticalNovaServer).Id` |
 | "A Krytical Nova server is already running on this PC … This copy stops." | You started the server a second time (two windows) | Close that window with a key; the first server is fine. Its window or control page is the one to use. |
 | "Could not listen on port …" or "The control page could not open port …" | Something else uses that port | Close the other program, or change `port` / `pagePort`. |
+| The save service stops at once: "listens on this machine or a private network only" | Its `--urls`, or an `ASPNETCORE_URLS` / `DOTNET_URLS` setting on the PC, names a public address or every address (`0.0.0.0`, `*`, `+`) | Remove that setting: the service listens on `127.0.0.1` by itself. It never opens itself to the internet (Linux plan item 10). |
 | The window says "could not read server-settings.json" | A typo broke the file (a missing comma or quote) | Fix it, or delete it and start once to get a fresh one (a new page password too). |
 | "Player turned away … the server is full" | `maxPlayers` reached | Raise `maxPlayers`. |
 | The build says "The server … is still running, or a file in it is open" | The server (or a window showing a file in its folder) is open | Stop the server, close that window, build again. |

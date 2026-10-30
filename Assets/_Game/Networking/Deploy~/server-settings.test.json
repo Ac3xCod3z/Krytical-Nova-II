@@ -6,6 +6,7 @@
     "connectionMode": "direct",
     "publicAddress": "",
     "pagePort": 8090,
+    "pageAddress": "127.0.0.1",
     "backupHours": 6.0,
     "backupsKept": 10,
     "saveService": "http://127.0.0.1:7802",

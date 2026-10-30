@@ -53,6 +53,17 @@ namespace KryticalNova.Networking
             return b[0] != 0 && b[0] < 224 && !(b[0] == 100 && b[1] >= 64 && b[1] <= 127);
         }
 
+        /// <summary>
+        /// Where the control page may listen (Linux plan item 10): 0.0.0.0 (every address of this PC; the home-network check
+        /// still turns callers from the internet away) or one IPv4 address of this machine or the home network (above).
+        /// </summary>
+        public static bool IsPageAddress(string text)
+        {
+            if (string.IsNullOrWhiteSpace(text) || !IPAddress.TryParse(text.Trim(), out IPAddress address)
+                || address.AddressFamily != AddressFamily.InterNetwork) return false;
+            return address.Equals(IPAddress.Any) || IsHomeNetwork(address);
+        }
+
         /// <summary>This PC's addresses on the home network, for "How to connect"; 127.0.0.1 when none is found.</summary>
         public static List<string> HomeAddresses()
         {

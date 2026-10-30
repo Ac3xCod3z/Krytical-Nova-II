@@ -10,7 +10,8 @@ Environment=KN_SECRETS_DIR=/etc/kn
 Environment=DOTNET_gcServer=0
 WorkingDirectory=/opt/kn/current/saveservice
 # --test: port 7802, database krytical_nova_test. Listens on this machine only.
-ExecStart=/opt/kn/current/saveservice/SaveService --test --urls=http://127.0.0.1:7802
+# --urls before --test: .NET reads "--test <next>" as --test=<next>, which swallowed the address.
+ExecStart=/opt/kn/current/saveservice/SaveService --urls=http://127.0.0.1:7802 --test
 Restart=on-failure
 RestartSec=3
 NoNewPrivileges=true
