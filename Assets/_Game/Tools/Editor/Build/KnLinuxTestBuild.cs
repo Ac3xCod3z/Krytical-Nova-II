@@ -12,7 +12,7 @@ namespace KryticalNova.EditorTools
     /// The two Linux players of the entity netcode's 2-client gate (DOTS plan section 43, "B3 by the Linux route"; Norton's
     /// Behavioral Protection freezes every fresh Windows exe, so both run in WSL): a dedicated server (Server subtarget,
     /// <c>UNITY_SERVER</c>) and a headless client (Player subtarget, run with <c>-batchmode -nographics</c>), Mono x64, development
-    /// builds, the maps in the build list as <see cref="ServerBuildBuilder"/> has them, no Addressable bundles. Defines:
+    /// builds, one map (<see cref="MapScenePath"/>), no Addressable bundles, no shaders (<see cref="KnLinuxTestShaderStrip"/>). Defines:
     /// <c>KN_ENTITIES_SERVER</c> (server: the Netcode for GameObjects server parts stay off), <c>KN_TEST_LANE</c> (refuses the real
     /// server's ports), <c>KN_DEV_BOTS</c> (bot tokens instead of a Unity sign-in). Output <c>Builds/KnGameServerLinux</c> and
     /// <c>Builds/KnGameClientLinux</c> (git-ignored). The Editor's build target, subtarget and Addressables option are put back.
@@ -25,8 +25,14 @@ namespace KryticalNova.EditorTools
         public const string ClientFolder = "Builds/KnGameClientLinux";
         public const string ServerExe = "KnGameServer.x86_64";
         public const string ClientExe = "KnGameClient.x86_64";
+        /// <summary>The one map both test players carry (the server's default map; the bots load it by name).</summary>
+        public const string MapScenePath = "Assets/_Game/Scenes/World/Towns/Zone01_StarterTown.unity";
+
         /// <summary>Made by Build Player Ghost Assets; without it every admission is refused "not ready" (R8).</summary>
         public const string WorldAssetsPath = "Assets/_Game/Gameplay/Player/Entities/Resources/PlayerWorldAssets.asset";
+
+        /// <summary>True while one of these builds runs (<see cref="KnLinuxTestShaderStrip"/> strips every shader then: both players are headless).</summary>
+        public static bool IsBuilding { get; private set; }
 
         public static readonly string[] ServerDefines = { "KN_ENTITIES_SERVER", "KN_TEST_LANE", "KN_DEV_BOTS" };
         public static readonly string[] ClientDefines = { "KN_TEST_LANE", "KN_DEV_BOTS" };
@@ -68,8 +74,9 @@ namespace KryticalNova.EditorTools
             }
             string problem = ModuleMissing(server)
                 ?? (AssetDatabase.LoadMainAssetAtPath(WorldAssetsPath) == null ? $"{WorldAssetsPath} is missing: run Krytical Nova ▸ Online ▸ Entities ▸ Build Player Ghost Assets first." : null);
-            string[] scenes = BuildSceneOrder.ShippedForServer();
-            if (problem == null && scenes.Length == 0) problem = "there are no scenes to build";
+            // Only the gate's map: with every map in the list the build's process tree passed 21-23 GB and the watchdog stopped it twice.
+            string[] scenes = { MapScenePath };
+            if (problem == null && AssetDatabase.LoadMainAssetAtPath(MapScenePath) == null) problem = MapScenePath + " is missing";
             if (problem != null)
             {
                 Debug.LogError("[KnLinuxTestBuild] " + problem);
@@ -99,6 +106,7 @@ namespace KryticalNova.EditorTools
                 // the maps are in the build list (as on the NGO server); the game's Addressable bundles are not needed here
                 if (addressables != null)
                     addressables.BuildAddressablesWithPlayerBuild = UnityEditor.AddressableAssets.Settings.AddressableAssetSettings.PlayerBuildOption.DoNotBuildWithPlayer;
+                IsBuilding = true;
                 report = BuildPipeline.BuildPlayer(new BuildPlayerOptions
                 {
                     scenes = scenes,
@@ -116,6 +124,7 @@ namespace KryticalNova.EditorTools
             }
             finally
             {
+                IsBuilding = false;
                 if (addressables != null) addressables.BuildAddressablesWithPlayerBuild = bundlesWere;
                 if (EditorUserBuildSettings.activeBuildTarget != targetWas || EditorUserBuildSettings.standaloneBuildSubtarget != subtargetWas)
                 {
