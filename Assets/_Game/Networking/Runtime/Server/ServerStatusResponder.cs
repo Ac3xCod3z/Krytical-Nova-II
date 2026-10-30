@@ -35,6 +35,7 @@ namespace KryticalNova.Networking
             instance = host.AddComponent<ServerStatusResponder>();
             instance.options = options;
             instance.Refresh();
+            ServerStopEndpoint.Begin(options); // POST /stop on 127.0.0.1, same number over TCP (Linux service managers)
             try
             {
                 instance.socket = new UdpClient(new IPEndPoint(IPAddress.Any, options.StatusPort));
