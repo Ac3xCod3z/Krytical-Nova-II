@@ -43,6 +43,8 @@ namespace KryticalNova.Networking
         public GmEntry[] gameMasters = new GmEntry[0];
         [Tooltip("The UDP port where the server tells the Servers window it is on, its players and build. 0: the game port + 1. Forward it with the game port.")]
         public int statusPort;
+        [Tooltip("The address players on the internet reach this server at (an IPv4 like 203.0.113.10), handed out in the server list and by the world service. Empty: the server asks an address service at start (this PC behind its router). Set it on a rented machine; a private or local address is not taken.")]
+        public string publicAddress = "";
         [Tooltip("The servers players see in the game's Servers window. Kept on the control page; Publish List uploads them.")]
         public ServerListing[] serverList = new ServerListing[0];
         [Tooltip("Where Publish List uploads servers.json: the Cloud Content Delivery bucket, project and environment.")]
@@ -202,7 +204,7 @@ namespace KryticalNova.Networking
             return options;
         }
 
-        /// <summary>Command-line overrides: -name, -port, -maxPlayers, -saveFolder, -map, -mode, -pagePort, -backupHours, -backupsKept, -role.</summary>
+        /// <summary>Command-line overrides: -name, -port, -maxPlayers, -saveFolder, -map, -mode, -pagePort, -backupHours, -backupsKept, -role, -publicAddress.</summary>
         public void ApplyArguments(string[] args, List<string> notes)
         {
             if (args == null) return;
@@ -224,6 +226,7 @@ namespace KryticalNova.Networking
                         break;
                     case "-backupskept": backupsKept = Int(value, backupsKept, key, notes); break;
                     case "-role": role = string.Equals(value.Trim(), MapRole, StringComparison.OrdinalIgnoreCase) ? MapRole : MainRole; break;
+                    case "-publicaddress": publicAddress = value; break;
                     default: continue;
                 }
                 notes.Add($"{key} from the command line");
@@ -245,6 +248,15 @@ namespace KryticalNova.Networking
             // A map server is reached by its address and port, which the game is given when it travels (online phase 5).
             if (IsMapServer && connectionMode != Direct) { notes.Add("a map server takes players directly: direct"); connectionMode = Direct; }
             mapServers ??= new MapServerEntry[0];
+            // Players are never handed this PC's own or a home-network address (Linux plan item 2): such a setting is dropped
+            // and the address service is asked instead, as when the setting is empty.
+            publicAddress = (publicAddress ?? string.Empty).Trim();
+            if (publicAddress.Length > 0 && !ControlPageRules.IsPublicIPv4(publicAddress))
+            {
+                notes.Add($"publicAddress \"{publicAddress}\" is not a public IPv4 address players can reach: not used, the address service is asked instead");
+                publicAddress = string.Empty;
+            }
+            else if (publicAddress.Length > 0) notes.Add($"public address {publicAddress} (from the settings)");
         }
 
         public const string Direct = "direct";

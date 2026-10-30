@@ -276,6 +276,11 @@ production layout (11, 12).
 - [ ] 2. **Listen address vs public address** joins the contract: the server binds 0.0.0.0, and the address the world
   service hands out and `ServerReach` publishes must be the public IPv4 (a `publicAddress` setting), never 127.0.0.1 or a
   private one. The cloud box needs a public IPv4 (priced separately at Hetzner).
+  Written 30 Oct 2026 (not yet compiled or run): `publicAddress` in `server-settings.json` (and `-publicAddress`), dropped
+  with a log note when it is local, private, shared (100.64/10) or not IPv4; `ServerReach` uses it and asks no address
+  service; `WorldLink` sends it (or the address `ServerReach` looked up) in every presence report; the world service keeps
+  only a public IPv4 and hands it out in `/world/servers` and with a travel ticket; `deploy.sh` fills it with the box's IP.
+  Tests: `ServerSettingsTests`, `world_test.py`.
 - [x] 3. **WSL2 first, $0.** Prove the Linux server build, Linux SaveService publish, Postgres, systemd units, SIGTERM save
   and `deploy.sh` in Ubuntu on WSL2 (systemd on) before any account. Rent cloud hours only for the outside port scan, the
   bot join from the PC and the friend test.
