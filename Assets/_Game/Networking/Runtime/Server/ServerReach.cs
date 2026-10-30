@@ -14,7 +14,8 @@ namespace KryticalNova.Networking
     /// join code (no router work; the owner's backup for when forwarding fails). Either way nobody types anything: a
     /// server-list entry whose address is <c>auto</c> (<see cref="ServerListing.AutoAddress"/>) is this server, and the
     /// server fills in its public address and Relay code each time it publishes. It looks its public address up at
-    /// start and every ten minutes and publishes the list again by itself when the address or the code changed.
+    /// start and every ten minutes and publishes the list again by itself when the address or the code changed; a server
+    /// whose settings name its <c>publicAddress</c> (a rented machine) uses that and asks no address service.
     /// Also the one place the list is uploaded from (the control page's PUBLISH LIST calls <see cref="Publish"/>).
     /// Only in a server build.
     /// </summary>
@@ -84,7 +85,8 @@ namespace KryticalNova.Networking
         // On a worker thread: an upload takes several seconds and must not stop the game.
         private void CheckAndPublish()
         {
-            string found = LookUpPublicAddress();
+            // A rented machine names its address in the settings (publicAddress): nothing is asked of an address service.
+            string found = !string.IsNullOrEmpty(options.publicAddress) ? options.publicAddress : LookUpPublicAddress();
             if (found != null)
             {
                 if (found != PublicAddress) Debug.Log($"[Server] This PC's public address: {found}.");

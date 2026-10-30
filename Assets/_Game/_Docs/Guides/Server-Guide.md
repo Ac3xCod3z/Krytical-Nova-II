@@ -322,6 +322,7 @@ default (and makes the page password). Close the server, edit it with Notepad, s
 | `gameMasters` | none | Up to three GMs, each a name and the account it is bound to. Set them on the control page (Add GM, then Bind). |
 | `carryOverOldSaves` | true | The characters a game played before Unity sign-in move once to its proven account. Switch off before anyone else plays. |
 | `statusPort` | 0 (= game port + 1, so 7778) | Where the server tells the Servers window it is on, its players and its build. |
+| `publicAddress` | empty | The address players on the internet reach this server at (an IPv4 like 203.0.113.10). Leave it empty on this PC: the server asks an address service at start, as before. Set it on a rented machine (the cloud test box's `deploy.sh` fills it in). A local or home-network address is not taken (the server's first log line says so). |
 | `serverList` | none | The servers players see. Set them on the control page and press PUBLISH LIST. |
 | `listBucket`, `cloudProjectId`, `cloudEnvironment` | krytical-nova-servers, this project, production | Where PUBLISH LIST uploads the list. Leave them. |
 | `ugsPath` | empty (`%LOCALAPPDATA%\KryticalNova\tools\ugs.exe`) | Unity's command-line tool on this PC, for PUBLISH LIST. |

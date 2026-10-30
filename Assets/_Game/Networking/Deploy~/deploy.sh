@@ -24,7 +24,12 @@ dest="/opt/kn/builds/$n"
 ssh_t "sudo install -d -o kn -g kn $dest/server $dest/saveservice"
 run rsync -az --delete -e "ssh $(ssh_opts)" "$build/" "$KN_ADMIN_USER@$ip:/tmp/kn-server-$n/"
 run rsync -az --delete -e "ssh $(ssh_opts)" "$svc/" "$KN_ADMIN_USER@$ip:/tmp/kn-svc-$n/"
-run scp $(ssh_opts) "$HERE/server-settings.test.json" "$KN_ADMIN_USER@$ip:/tmp/server-settings.test.json"
+# The settings a new box starts with, with the box's own address as the one players are given (plan item 2).
+PY="$(command -v python3 || command -v python)" || die "python is needed to write the settings"
+settings_out="$(mktemp -d)/server-settings.test.json"
+"$PY" -c 'import json, sys; s = json.load(open(sys.argv[1])); s["publicAddress"] = sys.argv[2]; json.dump(s, open(sys.argv[3], "w"), indent=4)' \
+  "$HERE/server-settings.test.json" "$ip" "$settings_out"
+run scp $(ssh_opts) "$settings_out" "$KN_ADMIN_USER@$ip:/tmp/server-settings.test.json"
 ssh_t "sudo rsync -a --delete /tmp/kn-server-$n/ $dest/server/ && sudo rsync -a --delete /tmp/kn-svc-$n/ $dest/saveservice/ && sudo chmod +x $dest/server/KryticalNovaServer.x86_64 $dest/saveservice/SaveService && ( [ -f $dest/server/server-settings.json ] || sudo cp /tmp/server-settings.test.json $dest/server/server-settings.json ) && sudo cp /opt/kn/kn-args.sh /opt/kn/kn-stop.sh $dest/ && echo '{\"folder\":\"/var/backups/kn\",\"offsite\":\"none\"}' | sudo tee $dest/saveservice/backup-settings.json >/dev/null && sudo chown -R kn:kn $dest"
 # Certificate: the owner's CA signed it; the key stays root:kn 640 on the box.
 ssh_t "sudo install -d -o root -g kn -m 750 /etc/kn/certificates"

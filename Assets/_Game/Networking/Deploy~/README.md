@@ -63,8 +63,9 @@ The control page (port 8090) is never opened to the internet. To see it: `ssh -i
 - Checked on the PC: shell syntax, JSON, dry runs of all four cloud scripts.
 - **Not run yet:** `hcloud` calls, `box-setup.sh`, `pg-setup.sh`, the systemd units. These are proven first on WSL2
   (Ubuntu 24.04 with systemd) before any cloud money is spent (plan, advisor item 3).
-- Known gaps, from the plan: the server publishing its **public address** (the `publicAddress` contract item) is not
-  built, so friends type the address in F1; map servers beyond Concord stay off (`"mapServers": []`) until travelling
+- **The box's address:** `deploy.sh` writes the box's IP into `publicAddress` in the settings it installs, so the server
+  list entry `auto` and the world service hand out that address (never 127.0.0.1 or a private one; plan item 2).
+- Known gaps, from the plan: map servers beyond Concord stay off (`"mapServers": []`) until travelling
   exists; `kn-server@0` etc. start map servers if you add entries to `mapServers` and run `systemctl enable --now kn-server@0`.
 - **Stopping saves through an explicit call, not SIGTERM** (a Unity Linux player does not save on SIGTERM): `box/kn-stop.sh` posts
   to `http://127.0.0.1:<port+1>/stop` with the save service key. The game does not have that endpoint yet (plan item 16); until it

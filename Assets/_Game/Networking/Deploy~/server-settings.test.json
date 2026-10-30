@@ -4,6 +4,7 @@
     "maxPlayers": 30,
     "map": "Zone01_StarterTown",
     "connectionMode": "direct",
+    "publicAddress": "",
     "pagePort": 8090,
     "backupHours": 6.0,
     "backupsKept": 10,

@@ -26,13 +26,14 @@ namespace KryticalNova.Networking
         [Serializable]
         public struct MapServer
         {
-            public string server, map, name;
+            // address: where players on the internet reach it; empty when that server does not know (Linux plan item 2).
+            public string server, map, name, address;
             public int port, players, secondsAgo;
         }
 
         [Serializable] private sealed class Answer { public MapServer[] servers = new MapServer[0]; }
         [Serializable] private sealed class Player { public string account, character; }
-        [Serializable] private sealed class Report { public string server, map, name; public int port; public Player[] players; }
+        [Serializable] private sealed class Report { public string server, map, name, address; public int port; public Player[] players; }
 
         private static WorldLink instance;
         private static readonly object Gate = new object();
@@ -134,7 +135,19 @@ namespace KryticalNova.Networking
                     if (string.IsNullOrEmpty(account)) continue;
                     players.Add(new Player { account = account, character = facts.Character ?? string.Empty });
                 }
-            return new Report { server = serverId, map = options.map, name = ShownName(options), port = options.port, players = players.ToArray() };
+            return new Report { server = serverId, map = options.map, name = ShownName(options), address = PublicAddress(options), port = options.port, players = players.ToArray() };
+        }
+
+        // Where players on the internet reach this server: the settings' publicAddress, or (the listed server on this PC) the
+        // address its ServerReach looked up; empty when neither is known. Never a local or home-network address (item 2).
+        private static string PublicAddress(ServerLaunchOptions options)
+        {
+            if (!string.IsNullOrEmpty(options.publicAddress)) return options.publicAddress;
+#if UNITY_SERVER
+            return ServerReach.PublicAddress;
+#else
+            return string.Empty;
+#endif
         }
 
         // The listed server goes by its own name (Nova); a map server by the name the Server app gives its tab.

@@ -51,9 +51,12 @@ def check(what, ok):
         failures.append(what)
 
 
-def report(server, world_map, name, port, players):
-    return call('POST', '/world/presence', {'server': server, 'map': world_map, 'name': name, 'port': port,
-                                            'players': [{'account': a, 'character': c} for a, c in players]})
+def report(server, world_map, name, port, players, address=None):
+    body = {'server': server, 'map': world_map, 'name': name, 'port': port,
+            'players': [{'account': a, 'character': c} for a, c in players]}
+    if address is not None:
+        body['address'] = address
+    return call('POST', '/world/presence', body)
 
 
 def main():
@@ -80,9 +83,10 @@ def main():
         status, _ = call('GET', '/world/servers', key='not-the-key')
         check('a call without the service key is refused', status == 401)
 
-        status, answer = report(CONCORD, 'Zone01_StarterTown', 'Concord', 7790, [('acct-ash', 'Ash')])
+        # Concord names a local address (never handed out), Transit Row a public one (Linux plan item 2).
+        status, answer = report(CONCORD, 'Zone01_StarterTown', 'Concord', 7790, [('acct-ash', 'Ash')], '127.0.0.1')
         check('Concord reports', status == 200)
-        status, _ = report(TRANSIT, 'MeridianSprawl_Z1_TransitRow', 'Transit Row', 7792, [])
+        status, _ = report(TRANSIT, 'MeridianSprawl_Z1_TransitRow', 'Transit Row', 7792, [], '203.0.113.20')
         check('Transit Row reports', status == 200)
         status, _ = report('', 'x', 'x', 7790, [])
         check('a report without a server is refused', status == 400)
@@ -90,6 +94,9 @@ def main():
         status, servers = call('GET', '/world/servers')
         check('both map servers are listed', status == 200 and sorted(s['map'] for s in servers) ==
               ['MeridianSprawl_Z1_TransitRow', 'Zone01_StarterTown'])
+        addresses = {s['map']: s.get('address') for s in servers}
+        check('a public address is kept, a local one never', addresses.get('MeridianSprawl_Z1_TransitRow') == '203.0.113.20'
+              and addresses.get('Zone01_StarterTown') is None)
         status, where = call('GET', '/world/where?account=acct-ash')
         check('Ash is on Concord', status == 200 and where['server'] == CONCORD and where['character'] == 'Ash')
         status, _ = call('GET', '/world/where?account=acct-nobody')
@@ -103,8 +110,8 @@ def main():
 
         _, ticket = call('POST', '/world/ticket', {'account': 'acct-ash', 'character': 'Ash', 'from': CONCORD,
                                                    'toMap': 'MeridianSprawl_Z1_TransitRow', 'arrival': 'portal-south'})
-        check('a ticket to Transit Row is granted with its port', ticket['granted'] and ticket['port'] == 7792 and
-              ticket['server'] == TRANSIT and len(ticket['ticket']) == 64)
+        check('a ticket to Transit Row is granted with its port and address', ticket['granted'] and ticket['port'] == 7792 and
+              ticket.get('address') == '203.0.113.20' and ticket['server'] == TRANSIT and len(ticket['ticket']) == 64)
 
         _, redeemed = call('POST', '/world/redeem', {'ticket': ticket['ticket'], 'server': CONCORD})
         check('another server cannot redeem it', not redeemed['granted'])
