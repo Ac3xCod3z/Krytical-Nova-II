@@ -756,7 +756,7 @@ menu **Krytical Nova ▸ Online ▸ Measure**:
 | --- | --- |
 | 1. Build Bot Client | A test copy of the game (latest release number) in `Builds/Bots/Client` |
 | 2. Build Measure Server, 3. Start Measure Server | Its own server in `Builds/Bots/MeasureServer`: port 7790, control page http://localhost:8091, its own save, no server list |
-| 4. Add 5 Bots | Five more bots with no window; each makes a character ("Botkari") and joins |
+| 4. Add 5 Bots | Five more bots with no window, each signed in as a player of its own (`-profile bot01` and so on); each asks the server for its character, makes one there the first time ("Botkari"; "Botkari1" when the name is taken) and joins |
 | 5. Equip Bots | Level 60, every skill, Autopilot time, through the measure server's GM commands |
 | 6. Stop All Bots, 7. Stop Measure Server | Ends the test |
 
