@@ -104,7 +104,14 @@ path with a scripted jump), same guards as the walk run.
 4. Death: `Dead`, `DeathPose`, `PlayerDeathServerSystem`, respawn; tests.
 5. Scripted run, then the owner's feel checkpoint for jump and death.
 
-## 5. Owner questions (recommendation first)
+## 5. Owner answers (30 Oct 2026, via Master)
+
+- **Q1 (a):** the jump is predicted on the press, as `BeginOwnJump` feels today; the server corrects.
+- **Q2 (a):** Flux is paid at take-off; an abort before take-off is free.
+- **Q3 (a):** the ghost owns the root; Motion Warping does not move it (the clip plays in place, the curves come from the same clip).
+- **Q4:** death is decided on the server only, not predicted.
+
+The questions as they were asked:
 
 - **Q1 Owner prediction of the jump:** (a) predicted on the press as today's `BeginOwnJump` feels, server corrects (recommended);
   (b) wait for the server (about one round trip before the crouch turns into flight).
