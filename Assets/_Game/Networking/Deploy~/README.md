@@ -53,6 +53,7 @@ bash lint.sh                       # nothing touches the cloud
 ./smoke-test.sh                    # all ok?
 # play: in the game press F1, type the box's address (printed by create.sh) and port 7777, JOIN
 ./deploy.sh 2                      # a newer build; ./deploy.sh rollback goes back
+./pull-backups.sh                  # the box's nightly database copies to this PC (KN_DUMP_DIR)
 ./teardown.sh                      # ALWAYS when the test is over: copies the test database here, then deletes the box
 ```
 
@@ -79,3 +80,13 @@ written by `deploy.sh`; plan item 10), so the firewall is not its only guard. To
   for the firewall (`create.sh`), the outside check (`smoke-test.sh`), and with `jq` on the box (`box/kn-args.sh`,
   `box/kn-stop.sh`). There is no `ports.json`. `ports.py` refuses a table where two servers would share a port.
 - The box holds the **test** database only (`krytical_nova_test`); the real name `krytical_nova` is never created there.
+- **Nightly copies of the test database (Linux backups):** `kn-backup.timer` runs `box/kn-backup.sh` at 04:00: `pg_dump -Fc`
+  into `/var/backups/kn`, checked with `pg_restore --list`, the newest 14 kept; `/var/backups/kn/last-backup.txt` says when
+  and whether it left the box. Off the box: `pull-backups.sh` fetches new copies to `KN_DUMP_DIR` on this PC; or the owner
+  puts an rclone login in `/etc/kn/rclone.conf` and the place in `/etc/kn/backup-remote` (for example `drive:KryticalNova-Backups/cloud-test`),
+  and every copy goes there too. `teardown.sh` still copies the database to this PC before it deletes anything.
+  Run once in WSL2 on 30 Oct 2026 (a copy made and checked, the oldest dropped); the timer itself is not yet run.
+- **Logs (plan item 6):** the servers and the save service write to the journal (`-logFile -`; read with
+  `journalctl -u kn-server@main` or `-u kn-save`), which `box-setup.sh` caps at 2 GB and 30 days. The servers'
+  performance logs go to `/var/log/kn/performance` (`performanceLogFolder`), outside the build folders so a new build
+  keeps them; a new file each day, the newest 30 per server kept. The frame rate is capped at 30 by the game.

@@ -13,7 +13,7 @@ apt-get install -y -qq jq curl ca-certificates gnupg rsync ufw fail2ban unattend
 
 id kn >/dev/null 2>&1 || useradd --system --create-home --home-dir /var/lib/kn --shell /usr/sbin/nologin kn
 install -d -o root -g kn -m 750 /etc/kn
-install -d -o kn -g kn -m 750 /opt/kn /opt/kn/builds /var/lib/kn /var/backups/kn
+install -d -o kn -g kn -m 750 /opt/kn /opt/kn/builds /var/lib/kn /var/backups/kn /var/log/kn /var/log/kn/performance
 
 # The save service key: made once, on the box, never leaves it. The game server and the service read the same file.
 [ -f /etc/kn/save-service-key.txt ] || { umask 077; openssl rand -hex 32 > /etc/kn/save-service-key.txt; chown root:kn /etc/kn/save-service-key.txt; chmod 640 /etc/kn/save-service-key.txt; }
@@ -22,8 +22,19 @@ bash "$here/pg-setup.sh"
 
 install -m 755 "$here/kn-args.sh" /opt/kn/kn-args.sh
 install -m 755 "$here/kn-stop.sh" /opt/kn/kn-stop.sh
-install -m 644 "$here/kn-save.service" "$here/kn-server@.service" /etc/systemd/system/
+install -m 755 "$here/kn-backup.sh" /opt/kn/kn-backup.sh
+install -m 644 "$here/kn-save.service" "$here/kn-server@.service" "$here/kn-backup.service" "$here/kn-backup.timer" /etc/systemd/system/
+# The servers' and the save service's logs go to the journal (-logFile -); it keeps at most 2 GB and 30 days (plan item 6).
+install -d /etc/systemd/journald.conf.d
+printf '[Journal]
+Storage=persistent
+SystemMaxUse=2G
+MaxRetentionSec=30day
+' > /etc/systemd/journald.conf.d/90-kn.conf
+systemctl restart systemd-journald
 systemctl daemon-reload
+# The test database is copied every night at 04:00 (kn-backup.sh; the save service makes none under --test).
+systemctl enable --now kn-backup.timer >/dev/null
 
 # Firewall behind the cloud firewall: deny in, allow SSH and the game's UDP ports only. Nothing else, ever.
 ufw --force reset >/dev/null

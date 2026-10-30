@@ -11,5 +11,5 @@ try:
 except ImportError:
     print("(pyyaml not installed: yaml skipped)"); raise SystemExit
 yaml.safe_load(open("cloud-init.yaml").read().replace("@@SSH_PUBKEY@@","k").replace("@@ADMIN_USER@@","u")); print("yaml ok      cloud-init.yaml")' || fail=1
-for s in create deploy teardown smoke-test cost-check; do echo "--- dry run: $s"; KN_DEPLOY_CONF=/nonexistent ./$s.sh ${s/deploy/1} --dry-run >/dev/null && echo "dry run ok  $s" || { echo "dry run FAILED $s"; fail=1; }; done
+for s in create deploy teardown smoke-test cost-check pull-backups; do echo "--- dry run: $s"; KN_DEPLOY_CONF=/nonexistent ./$s.sh ${s/deploy/1} --dry-run >/dev/null && echo "dry run ok  $s" || { echo "dry run FAILED $s"; fail=1; }; done
 exit $fail

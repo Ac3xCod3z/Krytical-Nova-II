@@ -6,6 +6,7 @@
     "connectionMode": "direct",
     "publicAddress": "",
     "pagePort": 8090,
+    "performanceLogFolder": "/var/log/kn/performance",
     "pageAddress": "127.0.0.1",
     "backupHours": 6.0,
     "backupsKept": 10,
