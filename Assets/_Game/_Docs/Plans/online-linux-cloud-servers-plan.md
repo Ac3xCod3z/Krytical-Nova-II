@@ -268,8 +268,11 @@ Where this section and the text above disagree, this section wins. Order of work
 (3, 6, 7, 8) → teardown and backup (9) → `hcloud` Stage 1 → Stage 2 measurements and host choice → Terraform and
 production layout (11, 12).
 
-- [ ] 1. **No `ports.json`.** The port table is `mapServers` in `server-settings.json` (phase 5, milestone 1). Scripts read it
+- [x] 1. **No `ports.json`.** The port table is `mapServers` in `server-settings.json` (phase 5, milestone 1). Scripts read it
   (for example with `jq`); the world service keeps learning addresses from the 10 second presence reports.
+  Done 30 Oct 2026: `ports.py` (firewall in `create.sh`, the outside check in `smoke-test.sh`, which also checks every map
+  server's control page is closed) and `jq` on the box (`kn-args.sh`, `kn-stop.sh`) all read that table; the listed server's
+  own `statusPort` is honoured; `ports.py` refuses a table where two servers share a port.
 - [ ] 2. **Listen address vs public address** joins the contract: the server binds 0.0.0.0, and the address the world
   service hands out and `ServerReach` publishes must be the public IPv4 (a `publicAddress` setting), never 127.0.0.1 or a
   private one. The cloud box needs a public IPv4 (priced separately at Hetzner).
