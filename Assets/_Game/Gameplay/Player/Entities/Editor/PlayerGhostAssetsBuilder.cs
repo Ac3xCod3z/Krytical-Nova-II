@@ -1,6 +1,7 @@
 using System.IO;
 using Unity.Entities.Serialization;
 using Unity.NetCode;
+using Unity.Scenes;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -21,6 +22,14 @@ namespace KryticalNova.Player.Entities.Editor
         public const string PrefabPath = PrefabFolder + "/PlayerGhost.prefab";
         public const string SceneFolder = "Assets/_Game/Gameplay/Player/Entities/Scenes";
         public const string SubScenePath = SceneFolder + "/PlayerGhostPrefabs.unity";
+        /// <summary>
+        /// A scene that only points at <see cref="SubScenePath"/> with a SubScene component (auto load off). A player build bakes only
+        /// the subscenes that a scene in its list points to, and the ghost subscene is otherwise referenced only from
+        /// <see cref="PlayerWorldAssets"/>: without this scene in the list the built game has no copy and nobody can enter (B3 run 1,
+        /// 30 Oct 2026). It is listed, never loaded.
+        /// </summary>
+        public const string BakeScenePath = SceneFolder + "/PlayerGhostBake.unity";
+        public const string BakeHolderName = "PlayerGhostSubScene";
         public const string HolderName = "PlayerGhostPrefabHolder";
         public const string ResourcesFolder = "Assets/_Game/Gameplay/Player/Entities/Resources";
         public const string WorldAssetsPath = ResourcesFolder + "/" + PlayerWorldAssets.ResourcePath + ".asset";
@@ -50,10 +59,40 @@ namespace KryticalNova.Player.Entities.Editor
             EnsureFolder(ResourcesFolder);
             GameObject prefab = EnsurePrefab();
             EnsureSubScene(prefab);
+            EnsureBakeScene();
             EnsureWorldAssets();
             AssetDatabase.SaveAssets();
             Debug.Log("[KnBuild] player ghost assets: " + PrefabPath + ", " + SubScenePath + " (scene GUID " +
-                      AssetDatabase.AssetPathToGUID(SubScenePath) + ") and " + WorldAssetsPath);
+                      AssetDatabase.AssetPathToGUID(SubScenePath) + "), " + BakeScenePath + " and " + WorldAssetsPath);
+        }
+
+        static void EnsureBakeScene()
+        {
+            bool single = Application.isBatchMode;
+            Scene scene = File.Exists(BakeScenePath)
+                ? EditorSceneManager.OpenScene(BakeScenePath, single ? OpenSceneMode.Single : OpenSceneMode.Additive)
+                : EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, single ? NewSceneMode.Single : NewSceneMode.Additive);
+            try
+            {
+                SubScene sub = null;
+                foreach (GameObject go in scene.GetRootGameObjects())
+                    if (go.TryGetComponent(out sub)) break;
+                if (sub == null)
+                {
+                    var go = new GameObject(BakeHolderName);
+                    SceneManager.MoveGameObjectToScene(go, scene);
+                    sub = go.AddComponent<SubScene>();
+                }
+                sub.SceneAsset = AssetDatabase.LoadAssetAtPath<SceneAsset>(SubScenePath);
+                sub.AutoLoadScene = false; // the server and client worlds load it themselves (PlayerWorldAssets.LoadGhostScene)
+                EditorUtility.SetDirty(sub);
+                if (!EditorSceneManager.SaveScene(scene, BakeScenePath))
+                    throw new IOException("the player ghost bake scene could not be saved at " + BakeScenePath);
+            }
+            finally
+            {
+                if (!single) EditorSceneManager.CloseScene(scene, true);
+            }
         }
 
         static void EnsureWorldAssets()

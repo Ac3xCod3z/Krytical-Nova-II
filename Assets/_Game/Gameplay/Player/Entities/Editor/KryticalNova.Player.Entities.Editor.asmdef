@@ -5,6 +5,7 @@
         "KryticalNova.Player.Entities",
         "Unity.Entities",
         "Unity.Entities.Hybrid",
+        "Unity.Scenes",
         "Unity.Collections",
         "Unity.NetCode",
         "Unity.NetCode.Hybrid",

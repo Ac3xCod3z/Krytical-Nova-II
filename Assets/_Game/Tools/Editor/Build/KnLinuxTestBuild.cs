@@ -12,7 +12,7 @@ namespace KryticalNova.EditorTools
     /// The two Linux players of the entity netcode's 2-client gate (DOTS plan section 43, "B3 by the Linux route"; Norton's
     /// Behavioral Protection freezes every fresh Windows exe, so both run in WSL): a dedicated server (Server subtarget,
     /// <c>UNITY_SERVER</c>) and a headless client (Player subtarget, run with <c>-batchmode -nographics</c>), Mono x64, development
-    /// builds, one map (<see cref="MapScenePath"/>), no Addressable bundles, no shaders (<see cref="KnLinuxTestShaderStrip"/>). Defines:
+    /// builds, one map (<see cref="MapScenePath"/>) plus the scene that bakes the ghost subscene, no Addressable bundles, no shaders (<see cref="KnLinuxTestShaderStrip"/>). Defines:
     /// <c>KN_ENTITIES_SERVER</c> (server: the Netcode for GameObjects server parts stay off), <c>KN_TEST_LANE</c> (refuses the real
     /// server's ports), <c>KN_DEV_BOTS</c> (bot tokens instead of a Unity sign-in). Output <c>Builds/KnGameServerLinux</c> and
     /// <c>Builds/KnGameClientLinux</c> (git-ignored). The Editor's build target, subtarget and Addressables option are put back.
@@ -31,6 +31,9 @@ namespace KryticalNova.EditorTools
 
         /// <summary>Made by Build Player Ghost Assets; without it every admission is refused "not ready" (R8).</summary>
         public const string WorldAssetsPath = "Assets/_Game/Gameplay/Player/Entities/Resources/PlayerWorldAssets.asset";
+        /// <summary>The player ghost subscene, and the scene that points at it so the build bakes it (both made by Build Player Ghost Assets).</summary>
+        public const string GhostSubScenePath = "Assets/_Game/Gameplay/Player/Entities/Scenes/PlayerGhostPrefabs.unity";
+        public const string GhostBakeScenePath = "Assets/_Game/Gameplay/Player/Entities/Scenes/PlayerGhostBake.unity";
 
         /// <summary>True while one of these builds runs (<see cref="KnLinuxTestShaderStrip"/> strips every shader then: both players are headless).</summary>
         public static bool IsBuilding { get; private set; }
@@ -59,6 +62,11 @@ namespace KryticalNova.EditorTools
         public static string OutputFolder(bool server, bool il2cpp = false) =>
             Path.GetFullPath(Path.Combine(Path.GetDirectoryName(Application.dataPath) ?? ".", server ? ServerFolder : il2cpp ? ClientIl2cppFolder : ClientFolder));
 
+        /// <summary>Where a build keeps the baked ghost subscene's header (Entities: StreamingAssets/EntityScenes/&lt;scene GUID&gt;.entityheader).</summary>
+        public static string GhostHeaderPath(string folder, bool server) =>
+            Path.Combine(folder, Path.GetFileNameWithoutExtension(server ? ServerExe : ClientExe) + "_Data", "StreamingAssets", "EntityScenes",
+                         AssetDatabase.AssetPathToGUID(GhostSubScenePath) + ".entityheader");
+
         /// <summary>What Unity lacks for this build, in words; null when the module is there.</summary>
         public static string ModuleMissing(bool server, bool il2cpp = false)
         {
@@ -80,8 +88,11 @@ namespace KryticalNova.EditorTools
             string problem = ModuleMissing(server, il2cpp)
                 ?? (AssetDatabase.LoadMainAssetAtPath(WorldAssetsPath) == null ? $"{WorldAssetsPath} is missing: run Krytical Nova ▸ Online ▸ Entities ▸ Build Player Ghost Assets first." : null);
             // Only the gate's map: with every map in the list the build's process tree passed 21-23 GB and the watchdog stopped it twice.
-            string[] scenes = { MapScenePath };
-            if (problem == null && AssetDatabase.LoadMainAssetAtPath(MapScenePath) == null) problem = MapScenePath + " is missing";
+            // The bake scene is listed (never loaded) so the ghost subscene is baked into the build (B3 run 1: no copy, nobody entered).
+            string[] scenes = { MapScenePath, GhostBakeScenePath };
+            foreach (string scene in scenes)
+                if (problem == null && AssetDatabase.LoadMainAssetAtPath(scene) == null)
+                    problem = scene + " is missing" + (scene == GhostBakeScenePath ? ": run Krytical Nova ▸ Online ▸ Entities ▸ Build Player Ghost Assets first." : "");
             if (problem != null)
             {
                 Debug.LogError("[KnLinuxTestBuild] " + problem);
@@ -144,6 +155,12 @@ namespace KryticalNova.EditorTools
             }
 
             bool ok = report != null && report.summary.result == BuildResult.Succeeded;
+            string header = GhostHeaderPath(folder, server);
+            if (ok && !File.Exists(header))
+            {
+                Debug.LogError($"[KnLinuxTestBuild] {what} FAILED: the player ghost subscene was not baked into the build ({header} is missing): nobody could enter.");
+                return false;
+            }
             if (ok)
                 Debug.Log($"[KnLinuxTestBuild] {what} OK: {folder} ({report.summary.totalSize / (1024.0 * 1024.0):F0} MB, {stopwatch.Elapsed.TotalMinutes:F1} min, " +
                           $"{(il2cpp ? "IL2CPP" : "Mono")}, development, {string.Join(" ", server ? ServerDefines : ClientDefines)}).");

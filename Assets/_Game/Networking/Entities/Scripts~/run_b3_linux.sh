@@ -53,7 +53,7 @@ echo "WAIT: client A (the Editor, Play) joins $WSL_IP:$GAME_PORT now; bots start
 sleep "$WAIT_FOR_A"
 
 bot() { # number, seconds, extra label
-  "$CLIENT_EXE" -batchmode -nographics -kntestclient "$1" -connect 127.0.0.1 -port $GAME_PORT -seconds "$2" \
+  "$CLIENT_EXE" -batchmode -nographics -kntestclient "$1" -label "$3" -connect 127.0.0.1 -port $GAME_PORT -seconds "$2" \
     -walk "$WALK" -out "$RUN/bots" -logFile "$RUN/bots/player-$3.log" &
   echo $!
 }
@@ -61,8 +61,10 @@ B1=$(bot 1 120 b1); sleep 15
 B3=$(bot 1 30 b3dup)                      # same account as bot 1, while bot 1 is in
 B2=$(bot 2 60 b2late); sleep 20
 echo "kill -9 bot 1 (pid $B1) mid-walk"; kill -9 "$B1"
-wait "$B3"; B3_EXIT=$?
-wait "$B2"; B2_EXIT=$?
+wait "$B3"; wait "$B2"
+# the bot's own verdict is the first word of its result file (the process exit code read 1 in run 1 whatever Application.Quit got)
+result() { head -c 2 "$RUN/bots/kntestclient-$1.result" 2>/dev/null | tr -d ' \n' || true; }
+B2_EXIT=$(result b2late); B3_EXIT=$(result b3dup); B1_EXIT=$(result b1)
 sleep 5                                   # the server sees bot 1's connection close (transport timeout)
 
 echo "POST /stop"
@@ -72,7 +74,7 @@ kill -0 $SERVER_PID 2>/dev/null && { kill -9 $SERVER_PID; SERVER_EXIT="killed (d
 
 {
   echo "# B3 Linux run $(basename "$RUN")"
-  echo "- server exit: $SERVER_EXIT (POST /stop -> $STOP_CODE); bot 2 (late) exit $B2_EXIT (want 0); bot 3 (second login) exit $B3_EXIT (want 3)"
+  echo "- server exit: $SERVER_EXIT (POST /stop -> $STOP_CODE); bot 2 (late) result ${B2_EXIT:-none} (want 0); bot 3 (second login) result ${B3_EXIT:-none} (want 3); bot 1 result ${B1_EXIT:-none} (killed mid-walk: want none)"
   for f in "$RUN"/bots/*.result; do [ -f "$f" ] && echo "- $(basename "$f"): $(cat "$f")"; done
   echo; echo "## Click starts (server tick minus owner tick, per owner NetworkId and seq; bots only, client A's are in the Editor log)"
   SERVER_CLICKS=$(cat "$RUN"/server/kn-trace-*.txt 2>/dev/null | grep -o 'server owner=[0-9]* seq=[0-9]* tick=[0-9]*')
@@ -85,8 +87,16 @@ kill -0 $SERVER_PID 2>/dev/null && { kill -9 $SERVER_PID; SERVER_EXIT="killed (d
       echo "  $o $s: owner tick $ct, server ${st:-none}, diff $([ -n "$st" ] && echo $((st - ct)) || echo '?')"
     done
   done
+  echo; echo "## What each bot saw of the others ([KnSight], every 2 s: owner, look version, body, position)"
+  for log in "$RUN"/bots/kntestclient-*.log; do
+    [ -f "$log" ] || continue
+    echo "- $(basename "$log"): $(grep -c 'KnSight\] others=[1-9]' "$log") lines seeing someone; first and last:"
+    grep 'KnSight\] others=[1-9]' "$log" | sed -n '1p;$p' | sed 's/^/    /'
+  done
   echo; echo "## Server lines about leaving and saving (read the order for bot 1: save before its ghost goes)"
   grep -hiE 'leav|left|save|ghost|refus|turned away|exception' "$RUN"/server/*.log "$RUN"/server/kn-trace-*.txt | tail -60 | sed 's/^/    /'
-  echo; echo "## Exceptions anywhere"; cat "$RUN"/server/*.log "$RUN"/bots/*.log 2>/dev/null | grep -c 'Exception'
+  # only real exception headers ("XyzException: message"); stack-trace frames such as GetOrCreateSystemsAndLogException are not counted
+  echo; echo "## Exceptions anywhere"; cat "$RUN"/server/*.log "$RUN"/bots/*.log 2>/dev/null | grep -cE '(^|[^A-Za-z])[A-Za-z.]*Exception: '
+  cat "$RUN"/server/*.log "$RUN"/bots/*.log 2>/dev/null | grep -oE '[A-Za-z.]*Exception: .{0,80}' | sort | uniq -c | sed 's/^/    /'
 } > "$REPORT"
 echo "report: $REPORT"; cat "$REPORT"

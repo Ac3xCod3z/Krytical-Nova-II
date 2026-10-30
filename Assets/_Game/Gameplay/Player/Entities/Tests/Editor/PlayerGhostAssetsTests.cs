@@ -42,6 +42,18 @@ namespace KryticalNova.Player.Entities.Tests
         }
 
         [Test]
+        public void TheBakeScene_PointsAtTheGhostSubScene_WithoutAutoLoad()
+        {
+            // a player build bakes only subscenes a listed scene points at (B3 run 1: the built game had no copy, nobody entered)
+            var bake = AssetDatabase.LoadAssetAtPath<SceneAsset>(PlayerGhostAssetsBuilder.BakeScenePath);
+            Assert.IsNotNull(bake, "no " + PlayerGhostAssetsBuilder.BakeScenePath + ": run Build Player Ghost Assets");
+            string text = System.IO.File.ReadAllText(PlayerGhostAssetsBuilder.BakeScenePath);
+            string subSceneGuid = AssetDatabase.AssetPathToGUID(PlayerGhostAssetsBuilder.SubScenePath);
+            StringAssert.Contains("guid: " + subSceneGuid, text, "the SubScene points at the ghost subscene");
+            StringAssert.Contains("AutoLoadScene: 0", text, "the worlds load it themselves");
+        }
+
+        [Test]
         public void TheWorldAssets_NameTheSubSceneAndThePlayerPrefab_AndLoadFromResources()
         {
             var assets = Resources.Load<PlayerWorldAssets>(PlayerWorldAssets.ResourcePath);
