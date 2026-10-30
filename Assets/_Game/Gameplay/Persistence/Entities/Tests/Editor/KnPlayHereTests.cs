@@ -29,6 +29,24 @@ namespace KryticalNova.Persistence.Entities.Tests
         }
 
         [Test]
+        public void TheScriptedWalk_ReadsMetres_AndRefusesAnythingElse()
+        {
+            var points = new System.Collections.Generic.List<Vector3>();
+            Assert.IsTrue(KnPlayHere.TryPoints("0,-12;3.5,-10", points));
+            Assert.AreEqual(2, points.Count);
+            Assert.AreEqual(new Vector3(3.5f, 0f, -10f), points[1]);
+            Assert.IsFalse(KnPlayHere.TryPoints("0,-12;3", points));
+            Assert.AreEqual(0, points.Count, "a bad list leaves nothing to walk");
+            Assert.IsFalse(KnPlayHere.TryPoints("", points));
+        }
+
+        [Test]
+        public void TheMapToPlay_Exists()
+        {
+            Assert.IsNotNull(UnityEditor.AssetDatabase.LoadAssetAtPath<UnityEditor.SceneAsset>(KnPlayHere.MapPath), KnPlayHere.MapPath);
+        }
+
+        [Test]
         public void TheTester_GetsTheFirstLineagesDefaultLook_FromTheShippedPlayerPrefab()
         {
             Assert.IsTrue(KnPlayHere.TryTesterLook(out string recipe, out string problem), problem);
