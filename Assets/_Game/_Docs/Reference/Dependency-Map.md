@@ -20,7 +20,7 @@ script, which is then published to the link above. `--baseline` saves today's up
 ## Today
 
 <!-- map:summary -->
-Generated 29 Oct 2026, 21:53: 722 runtime scripts (135,582 lines) declaring 1020 types (186 MonoBehaviours, 65 NetworkBehaviours, 101 ScriptableObject classes); 133 test scripts; 4722 prefabs, 46 scenes and 2748 assets read. 206 system-to-system links, of which 0 run uphill, 0 pairs of systems use each other both ways, and 0 links would have to go for the systems to form a clean stack. The largest tangle, classes that all reach each other through some chain of uses, holds 10 classes from 1 systems (UI 10, ...).
+Generated 29 Oct 2026, 22:33: 722 runtime scripts (135,585 lines) declaring 1020 types (186 MonoBehaviours, 65 NetworkBehaviours, 101 ScriptableObject classes); 133 test scripts; 4722 prefabs, 46 scenes and 2748 assets read. 206 system-to-system links, of which 0 run uphill, 0 pairs of systems use each other both ways, and 0 links would have to go for the systems to form a clean stack. The largest tangle, classes that all reach each other through some chain of uses, holds 10 classes from 1 systems (UI 10, ...).
 <!-- /map:summary -->
 
 **Checked against the compiler.**
@@ -65,7 +65,7 @@ Checked against the 211 references the assemblies declare between systems: every
 | System | Layer | Scripts | Lines | Uses (types) | Used by (types) | Instability | Tests | Types touched by a test |
 |---|---|---|---|---|---|---|---|---|
 | Core | Foundation | 54 | 4,405 | 0 | 238 | 0.0 | 7 | 24 of 43 |
-| Networking | Infrastructure | 47 | 8,132 | 20 | 93 | 0.18 | 9 | 31 of 60 |
+| Networking | Infrastructure | 47 | 8,135 | 20 | 93 | 0.18 | 9 | 31 of 60 |
 | Rendering | Infrastructure | 17 | 3,589 | 3 | 28 | 0.1 | 1 | 2 of 21 |
 | Environment | Simulation | 6 | 834 | 0 | 2 | 0.0 | 0 | 0 of 6 |
 | Gameplay/Autopilot | Simulation | 11 | 1,423 | 41 | 13 | 0.76 | 3 | 6 of 12 |
