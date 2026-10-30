@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using Animancer;
-using Unity.Netcode;
+using KryticalNova.Core;
 using UnityEngine;
 
 namespace KryticalNova.GameFeel
@@ -44,8 +44,7 @@ namespace KryticalNova.GameFeel
         public static ActorTimeSlow For(Transform actor)
         {
             if (actor == null) return null;
-            var net = actor.GetComponentInParent<NetworkObject>();
-            if (net != null) actor = net.transform;
+            actor = WorldTargets.RootOf(actor);
             return actor.TryGetComponent(out ActorTimeSlow slow) ? slow : actor.gameObject.AddComponent<ActorTimeSlow>();
         }
 
