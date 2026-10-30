@@ -45,6 +45,9 @@ namespace KryticalNova.EditorTools
         public const string BurstSettingsPath = "ProjectSettings/BurstAotSettings_StandaloneLinux64.json";
         static bool BurstOff => Environment.GetEnvironmentVariable("KN_LINUX_TEST_BURST_OFF") == "1";
         const string BurstOffJson = "{\n    \"MonoBehaviour\": {\n        \"Version\": 4,\n        \"EnableBurstCompilation\": false\n    }\n}\n";
+        // Written (and taken away after) for a Burst build too: without a settings file Burst's player step stopped compiling on
+        // 30 Oct after the Burst-off builds (no bcl run, no library) and came back only with the setting stated outright.
+        const string BurstOnJson = "{\n    \"MonoBehaviour\": {\n        \"Version\": 4,\n        \"EnableBurstCompilation\": true,\n        \"EnableOptimisations\": true,\n        \"EnableSafetyChecks\": false,\n        \"EnableDebugInAllBuilds\": false,\n        \"CpuMinTargetX64\": 0,\n        \"CpuMaxTargetX64\": 0,\n        \"OptimizeFor\": 0\n    }\n}\n";
 
         /// <summary>True while one of these builds runs (<see cref="KnLinuxTestShaderStrip"/> strips every shader then: both players are headless).</summary>
         public static bool IsBuilding { get; private set; }
@@ -142,7 +145,7 @@ namespace KryticalNova.EditorTools
             string burstWas = File.Exists(burstPath) ? File.ReadAllText(burstPath) : null;
             try
             {
-                if (burstOff) File.WriteAllText(burstPath, BurstOffJson);
+                File.WriteAllText(burstPath, burstOff ? BurstOffJson : BurstOnJson);
                 // the maps are in the build list (as on the NGO server); the game's Addressable bundles are not needed here
                 if (addressables != null)
                     addressables.BuildAddressablesWithPlayerBuild = UnityEditor.AddressableAssets.Settings.AddressableAssetSettings.PlayerBuildOption.DoNotBuildWithPlayer;
@@ -167,8 +170,8 @@ namespace KryticalNova.EditorTools
             {
                 try
                 {
-                    if (burstOff && burstWas != null) File.WriteAllText(burstPath, burstWas);
-                    else if (burstOff && File.Exists(burstPath)) File.Delete(burstPath);
+                    if (burstWas != null) File.WriteAllText(burstPath, burstWas);
+                    else if (File.Exists(burstPath)) File.Delete(burstPath);
                 }
                 catch (Exception e) { Debug.LogError($"[KnLinuxTestBuild] Could not put back {BurstSettingsPath} ({e.Message}): remove it by hand."); }
                 IsBuilding = false;
@@ -182,17 +185,17 @@ namespace KryticalNova.EditorTools
             }
 
             bool ok = report != null && report.summary.result == BuildResult.Succeeded;
-            string header = GhostHeaderPath(folder, server);
-            if (ok && !File.Exists(header))
-            {
-                Debug.LogError($"[KnLinuxTestBuild] {what} FAILED: the player ghost subscene was not baked into the build ({header} is missing): nobody could enter.");
-                return false;
-            }
             if (ok)
             {
                 string burstLib = Path.Combine(folder, Path.GetFileNameWithoutExtension(server ? ServerExe : ClientExe) + "_Data", "Plugins", "lib_burst_generated.so");
                 bool hasBurst = File.Exists(burstLib);
                 Debug.Log("[KnLinuxTestBuild] Burst AOT " + (hasBurst ? "built" : "not built") + (hasBurst == burstOff ? " (NOT what was asked)" : " (as asked)"));
+            }
+            string header = GhostHeaderPath(folder, server);
+            if (ok && !File.Exists(header))
+            {
+                Debug.LogError($"[KnLinuxTestBuild] {what} FAILED: the player ghost subscene was not baked into the build ({header} is missing): nobody could enter.");
+                return false;
             }
             if (ok && il2cpp != File.Exists(Path.Combine(folder, "GameAssembly.so")))
             {
