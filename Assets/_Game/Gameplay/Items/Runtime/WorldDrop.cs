@@ -130,7 +130,7 @@ namespace KryticalNova.Items
             if (IsServer)
             {
                 netStack.Value = stack;
-                if (reservedFor != Nobody) heldUntil = NetworkManager.ServerTime.Time + Mathf.Max(0f, reservedUntil - Time.time);
+                if (reservedFor != Nobody) heldUntil = NetClock.Now + Mathf.Max(0f, reservedUntil - Time.time);
                 netHold.Value = new Hold { holder = reservedFor, until = heldUntil, seconds = holdSeconds };
             }
             else
@@ -257,7 +257,7 @@ namespace KryticalNova.Items
             get
             {
                 if (reservedFor == Nobody) return 0f;
-                double left = IsSpawned ? heldUntil - NetworkManager.ServerTime.Time : reservedUntil - Time.time;
+                double left = IsSpawned ? heldUntil - NetClock.Now : reservedUntil - Time.time;
                 return (float)System.Math.Max(0.0, left);
             }
         }

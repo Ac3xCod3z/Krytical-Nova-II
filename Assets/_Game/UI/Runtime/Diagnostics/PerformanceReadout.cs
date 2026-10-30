@@ -1,5 +1,6 @@
 using System;
 using System.Text;
+using KryticalNova.Core;
 using Unity.Netcode;
 using Unity.Profiling;
 using UnityEngine;
@@ -273,7 +274,7 @@ namespace KryticalNova.UI
                 Line("Ping", ping + " ms");
             }
             if (network.IsServer) Line("Players", network.ConnectedClientsIds.Count.ToString());
-            if (network.NetworkTickSystem != null) Line("Tick rate", network.NetworkTickSystem.TickRate + " a second");
+            if (NetClock.TickRate > 0) Line("Tick rate", NetClock.TickRate + " a second");
             if (network.SpawnManager != null) Line("Networked objects", network.SpawnManager.SpawnedObjectsList.Count.ToString());
         }
 
