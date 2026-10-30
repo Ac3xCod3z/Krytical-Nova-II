@@ -57,7 +57,8 @@ namespace KryticalNova.Networking
             if (avatar == null) return;
             var nm = NetworkManager.Singleton;
             var connection = NetworkConnectionManager.Instance;
-            bool inSession = (nm != null && nm.IsListening) || (connection != null && connection.IsStartingSession) || IsHeadlessServer;
+            bool inSession = (nm != null && nm.IsListening) || (connection != null && connection.IsStartingSession) || IsHeadlessServer
+                             || EntityNetcodeSession.Owns;
             if (inSession) avatar.SetActive(false);
             if (instance == null) return;
             instance.offlinePlayer = avatar;
@@ -70,6 +71,12 @@ namespace KryticalNova.Networking
             instance = this;
             // Nobody plays on a headless server: the avatar must be gone before the first session starts.
             if (IsHeadlessServer && offlinePlayer != null) offlinePlayer.SetActive(false);
+            // The entity netcode's own body is the player this session ("Play DOTS here"): the offline avatar never comes in.
+            if (EntityNetcodeSession.Owns && offlinePlayer != null)
+            {
+                offlinePlayer.SetActive(false);
+                isHandedOff = true;
+            }
         }
 
         private void Start()
@@ -100,6 +107,12 @@ namespace KryticalNova.Networking
         private void Update()
         {
             if (offlinePlayer == null || IsHeadlessServer) return;
+            if (EntityNetcodeSession.Owns)
+            {
+                // never restored while the entity netcode runs: it has no NGO session, so the check below would bring it back
+                if (offlinePlayer.activeSelf) Hide();
+                return;
+            }
 
             var nm = NetworkManager.Singleton;
             NetworkObject localPlayer = nm != null && nm.IsClient && nm.LocalClient != null ? nm.LocalClient.PlayerObject : null;

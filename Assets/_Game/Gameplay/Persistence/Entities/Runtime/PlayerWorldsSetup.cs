@@ -76,6 +76,9 @@ namespace KryticalNova.Persistence.Entities
                 if (identity != null) KryticalNova.Persistence.ServerRoster.Database = identity.Database;
             }
             var planner = new NavMeshPathPlanner();
+            // from the prefab now: the first spawn spot is picked before any body exists (owner's feel test 30 Oct: with base
+            // offset 0 the first player stood half in the ground until it walked)
+            ConfigurePlanner(planner, (prefab ?? PlayerPrefab)());
             PlayerEntitiesSetup.Install(server, planner, runCost: new BodyRunCost(server));
             // walk numbers from the settings asset, the same on server and client (prediction must agree)
             PlayerMoveFromSkills.InstallSettings(server, PlayerMoveFromSkills.SettingsOf((prefab ?? PlayerPrefab)()));
@@ -126,11 +129,7 @@ namespace KryticalNova.Persistence.Entities
                 {
                     if (!request.IsLocal) return;
                     PlayerMoveFromSkills.InstallSettings(client, PlayerMoveFromSkills.SettingsOf(body));
-                    var agent = body.GetComponent<UnityEngine.AI.NavMeshAgent>();
-                    if (agent == null) return;
-                    planner.AgentTypeId = agent.agentTypeID;
-                    planner.AreaMask = agent.areaMask;
-                    planner.BaseOffsetM = agent.baseOffset;
+                    ConfigurePlanner(planner, body);
                 },
             };
             PlayerEntitiesSetup.Install(client, planner);
@@ -139,6 +138,16 @@ namespace KryticalNova.Persistence.Entities
             var looks = client.GetExistingSystemManaged<PlayerLookClientSystem>();
             if (looks != null) looks.Applier = new IdentityLookApplier();
             return factory;
+        }
+
+        /// <summary>The planner walks the way the player's NavMeshAgent would (agent type, areas, base offset); nothing without one.</summary>
+        public static void ConfigurePlanner(NavMeshPathPlanner planner, GameObject player)
+        {
+            var agent = player != null ? player.GetComponent<UnityEngine.AI.NavMeshAgent>() : null;
+            if (planner == null || agent == null) return;
+            planner.AgentTypeId = agent.agentTypeID;
+            planner.AreaMask = agent.areaMask;
+            planner.BaseOffsetM = agent.baseOffset;
         }
 
         /// <summary>

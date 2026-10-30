@@ -126,7 +126,10 @@ namespace KryticalNova.Persistence.Entities
             if (!Active) return;
             // before any scene object loads or saves (ServerSave resets its store at SubsystemRegistration, which ran already)
             ServerSave.Store = new MemorySaveStore();
-            Debug.Log("[KnPlayHere] Saves go to memory only this session: nothing is written to disk.");
+            // Netcode for GameObjects stays off: no host on 7777, no player from the local profile, the offline avatar hidden
+            // (owner's feel test 30 Oct: the scene's NGO host started too and took the clicks and the camera)
+            EntityNetcodeSession.Owns = true;
+            Debug.Log("[KnPlayHere] Saves go to memory only this session: nothing is written to disk. Netcode for GameObjects stays off.");
         }
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
@@ -216,6 +219,12 @@ namespace KryticalNova.Persistence.Entities
                 var skills = body.GetComponent<PlayerMovementSkills>();
                 if (skills != null) skills.GmSetMaxRanks();
                 Log($"the tester entered after {Time.realtimeSinceStartup - started:F1} s; Run rank {(skills != null ? skills.RunRank : 0)}, Flux {Flux(body)}");
+                // the Netcode for GameObjects side must be off (owner's feel test 30 Oct: its host took the clicks and the camera)
+                var ngo = Unity.Netcode.NetworkManager.Singleton;
+                bool ngoUp = ngo != null && ngo.IsListening;
+                var role = LocalPlayer.Object.GetComponent<KryticalNova.Core.BodyRoleTag>();
+                Log($"Netcode for GameObjects {(ngoUp ? "IS RUNNING (wrong)" : "off")}; the local player is '{LocalPlayer.Object.name}' ({(role != null ? role.Kind.ToString() : "no role")})");
+                if (ngoUp) Debug.LogError("[KnPlayHere] Netcode for GameObjects is running beside the entity netcode.");
                 if (string.IsNullOrEmpty(Walk)) yield break; // by hand: the owner clicks
 
                 var points = new List<Vector3>();

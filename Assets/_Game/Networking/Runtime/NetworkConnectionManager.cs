@@ -72,6 +72,12 @@ namespace KryticalNova.Networking
 #elif UNITY_SERVER
             StartDedicatedServer();
 #else
+            if (EntityNetcodeSession.Owns)
+            {
+                // "Play DOTS here": the entity netcode runs this session; Netcode for GameObjects must not host, join or bind a port.
+                Debug.Log("[Network] The entity netcode runs this session: Netcode for GameObjects stays off.");
+                return;
+            }
             bool testing = Application.isEditor && (EditorCloneProfile() != null || EditorTestSession.JoinOnly);
             // Playing on this PC alone keeps the made-up account; joining a server sets the proven one (JoinChosenServer).
             KryticalNova.Core.LocalAccount.VerifiedId = null;
