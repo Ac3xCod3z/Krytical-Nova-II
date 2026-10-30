@@ -85,7 +85,7 @@ written by `deploy.sh`; plan item 10), so the firewall is not its only guard. To
   and whether it left the box. Off the box: `pull-backups.sh` fetches new copies to `KN_DUMP_DIR` on this PC; or the owner
   puts an rclone login in `/etc/kn/rclone.conf` and the place in `/etc/kn/backup-remote` (for example `drive:KryticalNova-Backups/cloud-test`),
   and every copy goes there too. `teardown.sh` still copies the database to this PC before it deletes anything.
-  Written 30 Oct 2026, not yet run on a box or in WSL2.
+  Run once in WSL2 on 30 Oct 2026 (a copy made and checked, the oldest dropped); the timer itself is not yet run.
 - **Logs (plan item 6):** the servers and the save service write to the journal (`-logFile -`; read with
   `journalctl -u kn-server@main` or `-u kn-save`), which `box-setup.sh` caps at 2 GB and 30 days. The servers'
   performance logs go to `/var/log/kn/performance` (`performanceLogFolder`), outside the build folders so a new build

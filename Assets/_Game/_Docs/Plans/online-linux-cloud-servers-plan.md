@@ -140,7 +140,7 @@ Checklist:
 - [x] **B. SaveService for Linux:** `dotnet publish -r linux-x64 --self-contained` of `Persistence/Service~/SaveService`;
   check Npgsql, paths, the `--test` mode (port 7802, database `krytical_nova_test`), the backup job (it uses Windows
   paths and Google Drive today; on Linux write dumps to `/var/backups/kn` and push them to a bucket).
-  Done 29 Oct 2026 (PR 165, proven in WSL2 on the test database). The Linux backup job, 30 Oct 2026 (written, not yet run):
+  Done 29 Oct 2026 (PR 165, proven in WSL2 on the test database). The Linux backup job, 30 Oct 2026 (`kn-backup.sh` run once in WSL2 on the test database; the timer not yet run):
   `kn-backup.timer` dumps the test database nightly into `/var/backups/kn` (14 kept, each checked), off the box through
   rclone when the owner names a place, else `pull-backups.sh` on the PC; `teardown.sh` still copies first (item 9).
 - [x] **C. cloud-init + units:** user `kn` (no login), folders `/opt/kn/builds/<n>`, `/etc/kn/*.env` (root, mode 600; the
@@ -293,7 +293,7 @@ production layout (11, 12).
 - [ ] 6. **Linux server pitfalls (item A):** cap the server frame rate (no vsync in batchmode, an uncapped server eats a
   core); prove SIGTERM runs the save-everyone path, `KillMode=mixed`, measured `TimeoutStopSec`; `-logFile` to a known path
   or journald with rotation (also `perf_*.txt`); pin one Ubuntu LTS; Mono, or the Linux IL2CPP toolchain if IL2CPP.
-  30 Oct 2026: the frame cap (30) was already in the game; SIGTERM is item 16's stop path. Written (not yet compiled or run on a
+  30 Oct 2026: the frame cap (30) was already in the game; SIGTERM is item 16's stop path. Built (compiled client and server; not yet run on a
   box): the logs go to the journal (`-logFile -`), capped by `box-setup.sh` at 2 GB and 30 days; the server's
   `server_*.csv` go to `performanceLogFolder` (`/var/log/kn/performance` on the box, kept across builds), a new file each
   day, the newest 30 per server kept. Ubuntu 24.04 and Mono stay as chosen.
