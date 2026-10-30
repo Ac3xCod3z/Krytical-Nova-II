@@ -8,8 +8,9 @@
 set -uo pipefail
 inst="${1:?instance}"
 base=/opt/kn/current/server/server-settings.json
-if [ "$inst" = main ]; then port=$(jq -r '.port' "$base"); else port=$(jq -r ".mapServers[$inst].port" "$base"); fi
-status=$((port + 1))
+# The status port: the listed server's own "statusPort" when it sets one, otherwise the game port + 1 (as the game does).
+if [ "$inst" = main ]; then status=$(jq -r 'if (.statusPort // 0) > 0 then .statusPort else (.port // 7777) + 1 end' "$base")
+else status=$(jq -r ".mapServers[$inst].port + 1" "$base"); fi
 key=$(cat /etc/kn/save-service-key.txt 2>/dev/null || true)
 code=$(curl -s -m 10 -o /dev/null -w '%{http_code}' -X POST -H "X-KN-Key: $key" "http://127.0.0.1:$status/stop") || code=000
 echo "[kn-stop] POST /stop on $status -> $code"
