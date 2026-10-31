@@ -184,6 +184,13 @@ so no session is blocked in the middle of its work by surprise.
     failure, a listed test that passes, a stopped run) and on real child processes for the job stop.
   - [ ] The first real `--full --all` run in a Unity slot, and its failures written into `known-test-failures.json`.
 - [ ] 3. B: the batch entry points of Validate Project Organization and Check Icons (needs a Unity slot to run them once).
+  - [x] Built 31 Oct: `Tools/Editor/Checks/BatchChecks.cs` (`KryticalNova.EditorTools.Checks.BatchChecks.Run`) runs
+    both menu checks in one batch Unity, with no dialog, writes `Logs/batch-checks.txt` and exits 1 on an error.
+    `run_batch_checks.py` launches it with the same memory guard as the tests. `kn_check --full` runs it as `editor`
+    when anything under `Assets/` outside the docs changed. Errors already there go in `known-findings.json` as
+    `organization_unity` (by path) and `icons` (by text). The judge was tried on made-up findings.
+  - [ ] The first real run in a Unity slot (together with step 2's `--full --all`): the compile, and its findings
+    written into `known-findings.json`.
 - [x] 4. E and G: `Guides/Review-Rules.md` (real failures by severity with where each was seen, round limits,
   learned rules); the Master adds its link in CLAUDE.md.
 - [x] 5. D: the risk tiers (`Scripts~/risk-tiers.json`; `kn_check` prints the level on every run, `--risk` alone).

@@ -6,7 +6,8 @@
     python ".../kn_check.py" --stamp-ok                           exit 0 when the last full --quick pass still
                                                                   matches the files as they are now
     python ".../kn_check.py" --risk                               only the change's risk level and what it needs
-    python ".../kn_check.py" --full                               --quick and the EditMode tests (a batch Unity)
+    python ".../kn_check.py" --full                               --quick, the EditMode tests and the Editor checks
+                                                                  (batch Unity runs)
 
 Every run also prints the change's risk level (risk-tiers.json beside this file: high when a player could lose items,
 Creds or a save, be locked out or see another's data; medium when a feature could stop working; low otherwise) and
@@ -28,6 +29,10 @@ origin/main (commits of this branch, edits and new files); --all runs every one:
                  already failed on main are listed in known-test-failures.json with the reason: the check passes when
                  exactly the listed ones fail among those that ran; a new failure fails it, and so does a listed test
                  that now passes (take it off the list).
+  editor         Validate Project Organization and Check Icons as the Editor runs them (run_batch_checks.py, a
+                 batch Unity), when anything under Assets/ outside the docs changed. Errors already there when the
+                 check joined are in known-findings.json ("organization" and "organization_unity" by path, "icons" by
+                 the problem's text); new ones fail it, and so does a listed one that is gone.
 
 The compile steps are a dotnet job: on this PC run one heavy Unity or dotnet job at a time. They build with at most
 2 MSBuild nodes, and the dotnet build servers are shut down after them. The tests are a heavy Unity job: one at a time, and the
@@ -66,7 +71,7 @@ STAMP = os.path.join(CHECKOUT, "Logs", "kn-check-stamp.json")
 LAST = os.path.join(CHECKOUT, "Logs", "kn-check-last.json")   # the last full run, passed or failed
 DEP_DOC = os.path.join(CHECKOUT, "Assets", "_Game", "_Docs", "Reference", "Dependency-Map.md")
 QUICK = ["organization", "dependencies", "compile", "server"]
-FULL = QUICK + ["tests"]
+FULL = QUICK + ["tests", "editor"]
 
 
 def load_json(path):
@@ -211,12 +216,47 @@ def check_tests():
     return judge_tests(parsed[1], known)
 
 
+def judge_editor(findings, known):
+    """(passed, lines) for the batch Editor checks against known-findings.json."""
+    errors = [(c, p, m) for c, s, p, m in findings if s == "error"]
+    broke = [(c, m) for c, s, _, m in findings if s == "broke"]
+    org_known = {k["path"] for k in known.get("organization", []) + known.get("organization_unity", [])}
+    icon_known = {k["problem"] for k in known.get("icons", [])}
+    new = [(c, p, m) for c, p, m in errors if (p not in org_known if c == "organization" else m not in icon_known)]
+    org_found = {p for c, p, _ in errors if c == "organization"}
+    icon_found = {m for c, _, m in errors if c == "icons"}
+    broken = {c for c, _ in broke}   # a check that broke found nothing, so nothing of it is gone
+    gone = [k["path"] for k in known.get("organization_unity", [])
+            if "organization" not in broken and k["path"] not in org_found]
+    gone += [k["problem"] for k in known.get("icons", []) if "icons" not in broken and k["problem"] not in icon_found]
+    lines = [f"BROKE {c}: {m[:400]}" for c, m in broke]
+    lines += [f"NEW {c} {p + ': ' if p else ''}{m[:400]}" for c, p, m in new]
+    lines += [f"GONE {g}: fixed, so take it off known-findings.json" for g in gone]
+    for check in ("organization", "icons"):
+        n = sum(1 for c, _, _ in errors if c == check)
+        lines.append(f"{check}: {n} error(s) ({n - sum(1 for c, _, _ in new if c == check)} known)")
+    return not broke and not new and not gone, lines
+
+
+def check_editor():
+    sys.path.insert(0, HERE)
+    import run_batch_checks
+    p = subprocess.run([sys.executable, os.path.join(HERE, "run_batch_checks.py"), "--checkout", CHECKOUT],
+                       capture_output=True, text=True, encoding="utf-8", errors="replace")
+    out = (p.stdout + p.stderr).strip().splitlines()
+    findings = run_batch_checks.parse(os.path.join(CHECKOUT, "Logs", "batch-checks.txt"))
+    if findings is None or any(line.startswith("STOPPED") for line in out):
+        return False, out[-30:] + ["the Editor checks did not finish, so nothing is known about them"]
+    return judge_editor(findings, load_json(KNOWN))
+
+
 CHECKS = {
     "organization": check_organization,
     "dependencies": check_dependencies,
     "compile": lambda: run_script("compile_check.py", "--maxcpu", "2"),
     "server": lambda: run_script("compile_check.py", "--server", "--maxcpu", "2"),
     "tests": check_tests,
+    "editor": check_editor,
 }
 COMPILES = ("compile", "server")
 
@@ -291,6 +331,7 @@ NEEDS = {
                              and (p.endswith((".asmdef", ".asmref")) or ("/Editor/" not in p and "/Tests/" not in p))
                              for p in ch),
     "tests": lambda ch: reached_systems(ch) != set(),
+    "editor": lambda ch: any(p.startswith("Assets/") and "/_Docs/" not in p for p in ch),
 }
 
 
@@ -348,8 +389,8 @@ def main():
             print(f"--- {name}: skipped, nothing it reads changed")
             skipped.append(name)
             continue
-        if name == "tests" and any(n in COMPILES and not ok for n, ok in results):
-            print("--- tests: not run, the code does not compile")
+        if name in ("tests", "editor") and any(n in COMPILES and not ok for n, ok in results):
+            print(f"--- {name}: not run, the code does not compile")
             results.append((name, False))
             continue
         print(f"--- {name} ...", flush=True)
