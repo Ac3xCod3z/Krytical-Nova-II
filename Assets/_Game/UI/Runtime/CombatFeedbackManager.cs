@@ -9,6 +9,8 @@ namespace KryticalNova.UI
     /// <summary>Displays animated floating combat numbers and status banners in UI Toolkit projected from world coordinates.</summary>
     [DisallowMultipleComponent]
     [RequireComponent(typeof(UIDocument))]
+    // Placed on the screen after the Cinemachine brain (100) has moved the camera this frame (see NamecardOrder).
+    [DefaultExecutionOrder(NamecardOrder.AfterCamera)]
     public sealed class CombatFeedbackManager : MonoBehaviour, ICombatFeedbackSink
     {
         private const float FloatDuration = 1.0f;

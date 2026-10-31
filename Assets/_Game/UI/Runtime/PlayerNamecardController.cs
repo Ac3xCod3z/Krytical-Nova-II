@@ -25,6 +25,9 @@ namespace KryticalNova.UI
     /// </summary>
     [DisallowMultipleComponent]
     [RequireComponent(typeof(UIDocument))]
+    // After the Cinemachine brain (execution order 100) has moved the camera this frame: projected with the camera of the
+    // frame before, a card over a body walking across the screen shook (owner's DOTS retry 4, 30 Oct 2026).
+    [DefaultExecutionOrder(NamecardOrder.AfterCamera)]
     public sealed class PlayerNamecardController : MonoBehaviour
     {
         private const string LayerName = "player-namecards";
@@ -400,5 +403,14 @@ namespace KryticalNova.UI
         }
 
         private static Color Opaque(Color color) => new Color(color.r, color.g, color.b, 1f);
+    }
+}
+
+namespace KryticalNova.UI
+{
+    /// <summary>Script order of the world-anchored cards: after the Cinemachine brain (100), which moves the camera in LateUpdate.</summary>
+    public static class NamecardOrder
+    {
+        public const int AfterCamera = 200;
     }
 }

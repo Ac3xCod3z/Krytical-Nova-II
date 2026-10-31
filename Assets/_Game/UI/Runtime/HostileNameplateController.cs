@@ -21,6 +21,9 @@ namespace KryticalNova.UI
     /// </summary>
     [DisallowMultipleComponent]
     [RequireComponent(typeof(UIDocument))]
+    // After the Cinemachine brain (execution order 100) has moved the camera this frame: projected with the camera of the
+    // frame before, a card over a body walking across the screen shook (owner's DOTS retry 4, 30 Oct 2026).
+    [DefaultExecutionOrder(NamecardOrder.AfterCamera)]
     public sealed class HostileNameplateController : MonoBehaviour
     {
         private const string LayerName = "player-namecards";

@@ -100,7 +100,17 @@ namespace KryticalNova.Core
             if (source != null) source.Collect(into);
         }
 
-        public static bool SyncsTransform(GameObject body) => body != null && source != null && source.SyncsTransform(body);
+        /// <summary>
+        /// Whether something else moves this object's root (so its scale and rotation must be left alone): the session's own answer
+        /// (Netcode for GameObjects: a NetworkTransform), or a body the entity netcode builds and places every frame (its
+        /// <see cref="BodyRoleTag"/> says ServerBody or ClientView). Owner's DOTS retries 3-4 (30-31 Oct 2026): without the second, the
+        /// hit reaction took a ghost body's root for its own visual and put its first rotation back every frame, so the body never turned.
+        /// </summary>
+        public static bool SyncsTransform(GameObject body) =>
+            body != null && ((source != null && source.SyncsTransform(body)) || DrivenByEntityNetcode(body));
+
+        private static bool DrivenByEntityNetcode(GameObject body) =>
+            body.TryGetComponent(out BodyRoleTag tag) && (tag.Kind == NetRoleKind.ServerBody || tag.Kind == NetRoleKind.ClientView);
 
         /// <summary>The root of the actor a transform belongs to, or the transform itself when no session knows it.</summary>
         public static Transform RootOf(Transform anyPart) =>

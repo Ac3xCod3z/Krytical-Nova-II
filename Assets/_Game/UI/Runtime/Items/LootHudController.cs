@@ -16,6 +16,8 @@ namespace KryticalNova.UI
     /// </summary>
     [DisallowMultipleComponent]
     [RequireComponent(typeof(UIDocument))]
+    // Placed on the screen after the Cinemachine brain (100) has moved the camera this frame (see NamecardOrder).
+    [DefaultExecutionOrder(NamecardOrder.AfterCamera)]
     public sealed class LootHudController : MonoBehaviour
     {
         private const string LayerClass = "loot-labels";

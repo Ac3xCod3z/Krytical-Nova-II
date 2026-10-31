@@ -185,7 +185,7 @@ namespace KryticalNova.Player.Entities.Presentation.Tests
         }
 
         [Test]
-        public void APoseChangedAfterTheFollow_IsPutBackBeforeTheCamera()
+        public void APoseChangedAfterTheFollow_IsCounted_NotHidden()
         {
             using var p = PresRig.Create(0);
             var rig = p.Rig;
@@ -196,12 +196,11 @@ namespace KryticalNova.Player.Entities.Presentation.Tests
             Assert.IsTrue(state.HasPose);
             Vector3 pos = body.position;
             float yaw = body.eulerAngles.y;
-            Assert.IsFalse(state.ReapplyPose(), "nothing changed it: nothing to do");
-            body.SetPositionAndRotation(pos + Vector3.left, Quaternion.Euler(0f, yaw + 120f, 0f));   // what an animation or a script might do
-            Assert.IsTrue(state.ReapplyPose());
-            Assert.AreEqual(pos, body.position);
-            Assert.AreEqual(yaw, body.eulerAngles.y, 0.01f);
+            Assert.IsFalse(state.CheckPose(), "nothing changed it");
+            body.SetPositionAndRotation(pos, Quaternion.Euler(0f, yaw + 120f, 0f));   // a second writer
+            Assert.IsTrue(state.CheckPose(), "seen");
             Assert.AreEqual(1, state.Overwritten);
+            Assert.AreEqual(yaw + 120f, body.eulerAngles.y, 0.01f, "and left as it is: a second writer is fixed, not hidden");
         }
 
         [Test]

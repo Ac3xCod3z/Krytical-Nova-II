@@ -748,3 +748,23 @@ GUI retry 3 (30 Oct): no judder side-on, but the body slid without turning: some
 LateUpdate (likely the animation pass) put the old root rotation back. `PlayerPresentationState` (order -200, after the animation,
 before the camera) now puts the follow's pose back in LateUpdate and counts it; the Play DOTS here fps line reports the count.
 Tests `TheOwnersBody_FacesTheWayItWalks_AndTurnsForANewClick`, `APoseChangedAfterTheFollow_IsPutBackBeforeTheCamera`.
+
+GUI runs 1-8 (30-31 Oct, real Editor window, `run_gui.ps1`, frames + `[KnYaw]`): the body slid without turning because
+`HitReactor` (GameFeel) took a ghost body's ROOT as its visual: `WorldTargets.SyncsTransform` only knew NGO's NetworkTransform,
+so on an entity-netcode body it answered "nothing else moves this", and the reactor wrote its first rotation and scale back every
+LateUpdate (order 0). Hidden until the follow moved before the camera (6b07f9e1f). Fixed: `SyncsTransform` is also true for a
+body tagged ServerBody/ClientView (Core). Proof run 8: 8 of 8 walks and runs face the way (body = model = server yaw at every
+LateUpdate order); `PlayerPresentationState` now only counts a second writer (order 290), never hides it. Nameplates, damage
+numbers, pet bubbles, loot labels and NPC prompts are placed after the Cinemachine brain (order 200 > 100).
+
+Walk acceptance list (owner, 31 Oct; each ticked only with its proof):
+- [x] first click walks at once (89af050fc, `OneGroundClick_...`, GUI retry 2)
+- [x] turns while walking, 1080 deg/s, left/right/behind (GUI run 8: 8 of 8)
+- [x] stops on the marker (0a7b80312; GUI run 8: the server 0.00 m off every point)
+- [x] speeds from the game's assets (walk 5, Run 10..28, mount 34; `RunSpeedSourceTests`)
+- [x] walking side-on smooth: head anchor 0-2.2 px per frame at 64 fps (GUI run 8, capture off)
+- [ ] running side-on smooth: 3.8-6.2 px per frame at 28 m/s on 2 of 4 runs (limit 3)
+- [ ] no camera jump on the first click after spawn (344 px once)
+- [x] nameplate/pet follow the body: pet <= 1.8 px; cards placed after the camera (`NamecardOrderTests`)
+- [ ] scripted arrival check counts short moves (the server is on the point; the script misses them)
+- [ ] owner's by-hand retest

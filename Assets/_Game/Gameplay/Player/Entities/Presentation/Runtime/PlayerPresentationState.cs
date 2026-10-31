@@ -17,7 +17,7 @@ namespace KryticalNova.Player.Entities.Presentation
     /// <see cref="State"/>; nothing here writes back to the ghost.
     /// </summary>
     [DisallowMultipleComponent]
-    [DefaultExecutionOrder(-200)] // after the animation, before the camera follows the body in LateUpdate (as PlayerMoveAnticipation was)
+    [DefaultExecutionOrder(290)] // after the LateUpdates that may touch the body (cards 200), before it is drawn
     public sealed class PlayerPresentationState : MonoBehaviour
     {
         public PlayerAnimState State;
@@ -30,21 +30,28 @@ namespace KryticalNova.Player.Entities.Presentation
         public Vector3 PosePosition;
         public float PoseYaw;
         /// <summary>
-        /// Frames on which something moved or turned the body between the follow (end of the simulation) and LateUpdate (owner's GUI
-        /// retry 3, 30 Oct: the body slid without turning); the pose is put back each time. Debugging and the Play DOTS here log.
+        /// Frames on which something moved or turned the body after the follow placed it (owner's GUI retries 3-4, 30-31 Oct 2026: the
+        /// hit reaction held a ghost body's root at its first rotation). Counted, never corrected: a second writer must be found and
+        /// fixed, not hidden. Debugging and the Play DOTS here log.
         /// </summary>
         public int Overwritten;
+        /// <summary>The yaw the follow was given this frame (degrees) and whether it came from PoseAhead (else the ghost's transform); debugging.</summary>
+        public float InputYaw;
+        public bool InputFromPoseAhead;
 
-        void LateUpdate() => ReapplyPose();
+        void LateUpdate() => CheckPose();
 
-        /// <summary>Puts the follow's pose back if anything changed it since; true when it had to.</summary>
-        public bool ReapplyPose()
+        /// <summary>The body's yaw when the check ran this frame (degrees); debugging.</summary>
+        public float YawAtCheck;
+
+        /// <summary>True (and counted) when the body is no longer where the follow put it this frame.</summary>
+        public bool CheckPose()
         {
-            if (!HasPose) return false;
             var t = transform;
+            YawAtCheck = t.eulerAngles.y;
+            if (!HasPose) return false;
             if ((t.position - PosePosition).sqrMagnitude < 1e-8f && Mathf.Abs(Mathf.DeltaAngle(t.eulerAngles.y, PoseYaw)) < 0.01f) return false;
             Overwritten++;
-            t.SetPositionAndRotation(PosePosition, Quaternion.Euler(0f, PoseYaw, 0f));
             return true;
         }
     }

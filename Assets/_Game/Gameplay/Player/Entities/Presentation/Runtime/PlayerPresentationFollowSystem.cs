@@ -73,6 +73,7 @@ namespace KryticalNova.Player.Entities.Presentation
                 float3 ghostPos = t.Position;
                 float ghostYaw = FollowMath.YawDegrees(t.Rotation);
                 bool smoothTicks = predicted;
+                bool fromAhead = false;
                 if (predicted && em.HasComponent<PathPlan>(e) && em.HasComponent<ClientPlanHeader>(e) && em.HasComponent<PlayerPose>(e)
                     && em.HasBuffer<PathCorner>(e) && em.HasBuffer<ClientPlanCorner>(e))
                 {
@@ -84,6 +85,7 @@ namespace KryticalNova.Player.Entities.Presentation
                     {
                         ghostPos = new float3(aheadMm.x, aheadMm.y, aheadMm.z) * 0.001f;
                         ghostYaw = aheadYaw * 0.01f;
+                        fromAhead = true;
                     }
                     // the position is now right for this frame: the follow only slides out corrections, it no longer steps between ticks
                     smoothTicks = false;
@@ -111,6 +113,8 @@ namespace KryticalNova.Player.Entities.Presentation
                     state.HasPose = true;
                     state.PosePosition = body.position;
                     state.PoseYaw = entry.Follow.Yaw;
+                    state.InputYaw = ghostYaw;
+                    state.InputFromPoseAhead = fromAhead;
                     state.State = new PlayerAnimState
                     {
                         Speed = (move.Flags & MoveFlags.Moving) != 0 ? move.SpeedMmps * 0.001f : 0f,
