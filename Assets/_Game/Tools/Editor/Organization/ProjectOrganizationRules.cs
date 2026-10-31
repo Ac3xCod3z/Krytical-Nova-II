@@ -8,7 +8,8 @@ namespace KryticalNova.EditorTools.Organization
 {
     /// <summary>
     /// Single source of truth for what may live where in Assets/. Human-readable version:
-    /// Assets/_Game/_Docs/ProjectOrganization.md — keep the two in sync.
+    /// Assets/_Game/_Docs/ProjectOrganization.md — keep the two in sync. The lists are copied into
+    /// Tools/Editor/Architecture/Scripts~/organization_check.py for kn_check; change both.
     /// </summary>
     public static class ProjectOrganizationRules
     {

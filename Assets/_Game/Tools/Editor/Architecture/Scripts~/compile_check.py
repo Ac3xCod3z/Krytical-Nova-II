@@ -10,6 +10,7 @@ Use it to check a refactor in a worktree while the owner's Editor stays open on 
     python ".../compile_check.py" --checkout C:/path/to/worktree --projects C:/path/to/main/folder
     python ".../compile_check.py" --server     also compile the runtime assemblies as the dedicated server does
                                                (UNITY_SERVER defined, Editor-only code left out)
+    python ".../compile_check.py" --maxcpu 2   build with at most 2 MSBuild nodes
 It prints the errors and exits 1 when any assembly fails. Warnings are not shown.
 
 What it cannot see: an assembly that exists only in the checkout (a new .asmdef) is made from its .asmdef's
@@ -32,6 +33,7 @@ def arg(name, default=None):
 
 CHECKOUT = os.path.normpath(arg("--checkout", os.path.join(HERE, *[".."] * 6)))
 SERVER = "--server" in args
+MAXCPU = arg("--maxcpu")   # e.g. 2: fewer MSBuild nodes, so a compile shares the PC with other jobs
 
 
 def main_folder():
@@ -161,8 +163,8 @@ with open(trav, "w", encoding="utf-8") as f:
             + "".join(f'    <ProjectReference Include="{p}" />\n' for p in built) + "  </ItemGroup>\n</Project>\n")
 failed, errors = [], []
 for p in built:
-    r = subprocess.run(["dotnet", "build", p, "-nologo", "-v", "q", "-clp:ErrorsOnly;NoSummary", "-p:WarningLevel=0"],
-                       capture_output=True, text=True)
+    r = subprocess.run(["dotnet", "build", p, "-nologo", "-v", "q", "-clp:ErrorsOnly;NoSummary", "-p:WarningLevel=0"]
+                       + ([f"-maxcpucount:{MAXCPU}"] if MAXCPU else []), capture_output=True, text=True)
     errs = sorted(set(re.sub(r"\s*\[[^\]]*\]$", "", l.strip()) for l in (r.stdout + r.stderr).splitlines() if ": error " in l))
     if r.returncode != 0:
         failed.append(os.path.basename(p)[:-7])
