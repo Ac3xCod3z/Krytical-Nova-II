@@ -414,6 +414,44 @@ namespace KryticalNova.Player.Entities.Tests
             Assert.IsFalse(lines.Exists(l => l.StartsWith("[KnClick] refused")), "no click was refused: " + string.Join(" | ", lines));
         }
 
+        [Test]
+        public void WithLostAndLatePackets_EveryClickIsStillTakenWithItsGoal()
+        {
+            // owner's GUI run 31 Oct: a click whose own tick reached the server late came as an event with seq 0 and was refused
+            // ("noseq"); the newest click's fields now ride on every input until the next click
+            using var rig = PlayerRig.Create(1, 100, dropInterval: 3);
+            rig.Tw.FramesPerTick = 3;
+            rig.Tick(90);
+            var lines = new List<string>();
+            PlayerClickLog.Sink = l => { lock (lines) lines.Add(l); };
+            try
+            {
+                for (int i = 0; i < 6; i++)
+                {
+                    var goal = new int3(4000 * (i % 3 + 1), 0, i % 2 == 0 ? 3000 : -3000);
+                    rig.Sources[0].Click(goal);
+                    rig.Tick(3 * 150);
+                    Assert.AreEqual(goal, rig.ServerPose().Mm, $"click {i}: the server walked it. Log: {string.Join(" | ", lines)}");
+                    // the click's fields ride on every later input: they must never start the ended walk again
+                    var ended = rig.ServerMove();
+                    Assert.AreEqual(0, ended.Flags & MoveFlags.Moving, $"click {i}: the walk ended");
+                    rig.Tick(3 * 30);
+                    Assert.AreEqual(ended, rig.ServerMove(), $"click {i}: the carried seq did not restart it");
+                    Assert.AreEqual(goal, rig.ServerPose().Mm);
+                }
+                // a click replaced mid-walk is not taken up again by the next one's carried fields either
+                rig.Sources[0].Click(new int3(-20000, 0, 0));
+                rig.Tick(3 * 10);
+                rig.Sources[0].Click(new int3(0, 0, 9000));
+                rig.Tick(3 * 200);
+                Assert.AreEqual(new int3(0, 0, 9000), rig.ServerPose().Mm, "the newer click stands; the replaced one never comes back");
+                rig.Tick(3 * 30);
+                Assert.AreEqual(new int3(0, 0, 9000), rig.ServerPose().Mm);
+            }
+            finally { PlayerClickLog.Sink = null; }
+            Assert.IsFalse(lines.Exists(l => l.StartsWith("[KnClick] refused")), "no click was refused: " + string.Join(" | ", lines));
+        }
+
         /// <summary>The newest tick the client has predicted in full (a partial tick does not move the body).</summary>
         static uint NewestFullTick(World client)
         {

@@ -23,10 +23,10 @@ namespace KryticalNova.Player.Entities.Tests
         public StraightLinePlanner ServerPlanner = new StraightLinePlanner();
         public StraightLinePlanner ClientPlanner = new StraightLinePlanner();
 
-        public static PlayerRig Create(int clients = 2, int delayMs = 0, int3[] starts = null, int warmupTicks = 60)
+        public static PlayerRig Create(int clients = 2, int delayMs = 0, int3[] starts = null, int warmupTicks = 60, int dropInterval = 0)
         {
             var rig = new PlayerRig();
-            rig.Tw = new KnTestWorld { SimulatedDelayMs = delayMs };
+            rig.Tw = new KnTestWorld { SimulatedDelayMs = delayMs, SimulatedDropInterval = dropInterval };
             rig.Tw.CreateWorlds(clients);
             rig.Tw.LoadSubScene(PlayerTestAssets.SubSceneGuid);
             rig.Tw.Connect();

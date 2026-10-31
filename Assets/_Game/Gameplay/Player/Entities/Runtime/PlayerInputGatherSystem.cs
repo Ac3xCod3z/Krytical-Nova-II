@@ -77,11 +77,12 @@ namespace KryticalNova.Player.Entities
         // the tick this frame's input is for
         NetworkTick m_Tick;
 
-        // The newest click and the tick it went in for. Netcode keeps an event of a partial tick when a later frame of the same tick
-        // writes none (it adds the counts), but the plain fields (seq, goal, run) are the LAST frame's: at 60+ fps a click followed
-        // by an empty frame of the same tick reached server and owner with seq 0 and was ignored (owner's GUI test, 30 Oct). So the
-        // later frames of that tick carry the click's fields again, without a new event.
-        readonly Dictionary<Entity, (NetworkTick Tick, PlayerInput Input)> m_LastClick = new Dictionary<Entity, (NetworkTick, PlayerInput)>();
+        // The newest click. Netcode delivers an input EVENT by its count: the server sees it on the first tick whose count is higher,
+        // which is a later tick when the click's own tick arrives late or is lost; and on later frames of a partial tick the plain
+        // fields are the last frame's. Either way a click came with seq 0 and was refused (owner's GUI tests, 30-31 Oct: "noseq").
+        // So every input carries the newest click's fields until the next click; the event itself is set only once. The server
+        // plans only on a new event, and the walk ignores a seq it already took.
+        readonly Dictionary<Entity, PlayerInput> m_LastClick = new Dictionary<Entity, PlayerInput>();
 
         protected override void OnUpdate()
         {
@@ -98,17 +99,13 @@ namespace KryticalNova.Player.Entities
                     else if (cmd.Kind == PlayerCommandKind.Click)
                         PlanClick(em, e, cmd, ref input);
                 }
-                if (input.Click.IsSet) m_LastClick[e] = (m_Tick, input);
-                else if (m_LastClick.TryGetValue(e, out var last))
-                {
-                    if (m_Tick.IsValid && last.Tick.IsValid && last.Tick.Equals(m_Tick)) CarryClick(ref input, last.Input);
-                    else m_LastClick.Remove(e);          // its tick is over
-                }
+                if (input.Click.IsSet) m_LastClick[e] = input;
+                else if (m_LastClick.TryGetValue(e, out var last)) CarryClick(ref input, last);
                 em.SetComponentData(e, input);
             }
         }
 
-        /// <summary>The click's fields on a later frame of its tick; the event itself is not set again (Netcode already counts it).</summary>
+        /// <summary>The newest click's fields on a later input; the event itself is not set again (Netcode already counts it).</summary>
         public static void CarryClick(ref PlayerInput input, in PlayerInput click)
         {
             input.ClickSeq = click.ClickSeq;
