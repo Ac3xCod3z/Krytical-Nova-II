@@ -177,7 +177,7 @@ else:
     batch = os.path.join(OUT, "all.proj")
     items = "".join(f'    <Ours Include="{p}" />\n' for p in built)
     with open(batch, "w", encoding="utf-8") as f:
-        f.write('<Project>\n  <ItemGroup>\n' + items + '  </ItemGroup>\n'
+        f.write('<Project DefaultTargets="Build">\n  <ItemGroup>\n' + items + '  </ItemGroup>\n'
                 '  <Target Name="Restore">\n    <MSBuild Projects="@(Ours)" Targets="Restore" BuildInParallel="true" />\n  </Target>\n'
                 '  <Target Name="Build">\n    <MSBuild Projects="@(Ours)" Targets="Build" BuildInParallel="true"'
                 ' ContinueOnError="ErrorAndContinue" />\n  </Target>\n</Project>\n')
