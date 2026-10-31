@@ -181,7 +181,7 @@ so no session is blocked in the middle of its work by surprise.
 - [x] 5. D: the risk tiers (`Scripts~/risk-tiers.json`; `kn_check` prints the level on every run, `--risk` alone).
   Over the last 20 merged PRs: 4 high (save service, save system), 13 medium, 3 low (docs, a measuring bot). Server
   build tools were added to medium after that run; UI files are never high by name alone.
-- [ ] 6. F: the Evals heading and the CLAUDE.md line.
+- [x] 6. F: `Plans/Plan-Template.md`, whose Evals section comes before any code; the Master adds the CLAUDE.md line.
 - [ ] 7. C: the commit hook (warns; blocks only a high-risk change whose `--quick` failed), last, after telling the Master.
 
 ## The owner's picks (30 Oct 2026)
