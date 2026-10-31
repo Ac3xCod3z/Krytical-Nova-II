@@ -176,12 +176,14 @@ namespace KryticalNova.Player.Entities.Tests
         }
 
         [Test]
-        public void PoseAhead_NeverPassesTheStopPoint_AndIsNothingWhenStanding()
+        public void PoseAhead_NeverPassesThePoint_AndIsNothingWhenStanding()
         {
             using var w = new Walker();
             w.Cfg.StopMm = 200;
             w.SetClient(1, P(0, 0, 0), P(3000, 0, 0));
             w.Click(1);
+            w.Step();
+            Assert.AreNotEqual(0, w.M.Flags & MoveFlags.Moving, "walking");
             int far = 0;
             while ((w.M.Flags & MoveFlags.Moving) != 0)
             {
@@ -190,10 +192,69 @@ namespace KryticalNova.Player.Entities.Tests
                 far = math.max(far, ahead.x);
                 w.Step();
             }
-            Assert.LessOrEqual(far, 3000 - 200 + 1, "drawn ahead, but never past where the walk stops");
+            Assert.LessOrEqual(far, 3000, "drawn ahead, but never past the point");
+            Assert.AreEqual(3000, w.Pose.XMm, "the walk stops ON the point");
             Assert.IsFalse(PlayerMovement.PoseAhead(in w.M, in w.Pose, in w.Plan, w.ServerCorners, in w.Client, w.ClientCorners, in w.Cfg, Tick30, Tick30,
                 out int3 still, out _));
             Assert.AreEqual(w.Pose.Mm, still);
+        }
+
+        // ------------------------------------------------------------------------------------------------ the NGO game's feel (owner's bar, 30 Oct)
+        [Test]
+        public void ANewWalk_StartsAtFullSpeed_OnItsFirstTick()
+        {
+            // PointAndClickPlayer.SnapVelocityToPath: the agent's velocity is set to the full speed along the way at the click
+            using var w = new Walker();
+            w.SetClient(1, P(0, 0, 0), P(20000, 0, 0));
+            w.Click(1);
+            w.Step();
+            Assert.AreEqual(5000, w.M.SpeedMmps, "walking speed at once, no run-up");
+            Assert.AreEqual(166, w.Pose.XMm, "one tick at 5 m/s");
+        }
+
+        [Test]
+        public void WithAStoppingDistance_TheWalkStopsOnThePoint()
+        {
+            // PointAndClickPlayer.PlaceOn: inside the stopping distance the body is put on the destination, not 0.2 m short
+            using var w = new Walker();
+            w.Cfg.StopMm = 200;
+            w.SetClient(1, P(0, 0, 0), P(7000, 0, 3000));
+            w.Click(1);
+            w.Step();
+            w.RunUntilIdle();
+            Assert.AreEqual(P(7000, 0, 3000), w.Pose.Mm);
+            Assert.AreEqual(0, w.M.Flags & MoveFlags.Moving);
+        }
+
+        [Test]
+        public void AClickInsideTheStoppingDistance_StartsNothing()
+        {
+            // the NGO game does not start the agent for a point within its stopping distance
+            using var w = new Walker();
+            w.Cfg.StopMm = 200;
+            w.Pose.YawCdeg = 4500;
+            w.SetClient(1, P(0, 0, 0), P(150, 0, 0));
+            w.Click(1);
+            w.Step();
+            Assert.AreEqual(0, w.M.Flags & MoveFlags.Moving);
+            Assert.AreEqual(P(0, 0, 0), w.Pose.Mm, "the body does not hop onto the point");
+            Assert.AreEqual(4500, w.Pose.YawCdeg, "nor turn");
+        }
+
+        [Test]
+        public void Acceleration_IsTheTopSpeedTimesAccelerationPerSpeed()
+        {
+            // the agent's acceleration: max(acceleration 25 m/s2, speed x 8); at 10 m/s that is 80 m/s2 = 2666 mm/s a tick
+            using var w = new Walker();
+            w.SetClient(1, P(0, 0, 0), P(200000, 0, 0));
+            w.Click(1);
+            for (int i = 0; i < 10; i++) w.Step();
+            Assert.AreEqual(5000, w.M.SpeedMmps);
+            w.Stats = new MoveStats { WalkMmps = 10000, RunMmps = 10000 };
+            w.Step();
+            Assert.AreEqual(5000 + 2666, w.M.SpeedMmps);
+            w.Step();
+            Assert.AreEqual(10000, w.M.SpeedMmps, "two ticks from 5 to 10 m/s");
         }
 
         [Test]

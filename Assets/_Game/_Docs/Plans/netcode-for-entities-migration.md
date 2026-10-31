@@ -706,3 +706,36 @@ Norton's Behavioral Protection flags every freshly built unsigned Windows exe (s
 - Run 1 had stopped writing its log after the tester entered: its wrapper ran inside a tool call that timed out. The wrapper now runs as its own hidden process with a transcript (session scratchpad `run_detached.ps1`).
 - **Owner's feel test 30 Oct (GUI Editor): three bugs, fixed in code (not yet compiled or rerun).** (1) Safety: the scene's `NetworkConnectionManager` auto-started a Netcode for GameObjects local host in Editor Play (`autoStartInEditor`), bound UDP 7777 and spawned the owner's Editor profile character "[GM] Tolan"; the batch run never showed it (that auto-start skips batch mode). Fix: `Networking/Runtime/EntityNetcodeSession.Owns`, set by `KnPlayHere` before the scene loads; `NetworkConnectionManager.Start` then neither hosts nor joins, and `OfflinePlayerHandoff` keeps the scene's offline avatar hidden (its `Update` would otherwise bring it back, as no NGO session runs). (2) The clicks and the camera went to that NGO player; with NGO off they go to the entity body's view mode (`BodyClicks`) and its camera binding. (3) The Tester stood half in the ground: the server's first spawn spot is picked before any body exists, while the server planner's base offset was still 0. Fix: `PlayerWorldsSetup.ConfigurePlanner` from the prefab's NavMeshAgent at install. The scripted run now logs whether Netcode for GameObjects runs (error if it does) and which body is the local player.
 - Profile check after the feel test: no file under the local profile (`AppData/LocalLow/Ascension Studios/Krytical Nova`) changed after noon except Unity's analytics and the test runner's `TestResults.xml`; no save file was written (saves were in memory). PlayerPrefs (registry) not checked.
+
+## 51. Movement must feel exactly like the NGO game: side by side (30 Oct 2026, owner's bar)
+Owner, 30 Oct: the DOTS walk must feel exactly like the original game's (first-click response, turn-to-face, speed, acceleration,
+stopping, re-click, smoothness, camera), built differently underneath, server still authoritative. GUI retry 1 found clicks lost:
+fixed in 89af050fc (a click followed by another frame of its tick lost its seq/goal; tests at 3 frames a tick and through
+`BodyClicks.Ground`). NGO numbers below are the runtime ones (`Movement.asset`, `Run.asset`, Player.prefab).
+
+| Behaviour | NGO game | DOTS now | Test |
+|---|---|---|---|
+| [x] Click input | press frame only; not over UI or while orbiting | same reader (`PointAndClickPlayer` view mode -> `BodyClicks.Ground`) | `BodyClickPathTests` |
+| [x] Every click is taken | one RPC per press | fixed 89af050fc (was ~1 in 3 at 84 fps) | `AtThreeFramesATick_...`, `OneGroundClick_...` |
+| [x] First visible move | press frame (`LeadOwnWalk`, local agent) | predicted on the click's own tick; drawn ahead to the frame (`PoseAhead`) | `ANewClickMidWalk_IsTakenOnTheNextTick_...` |
+| [x] Start speed | full speed at once (`SnapVelocityToPath`) | full speed on the first tick (was a 0.2 s run-up) | `ANewWalk_StartsAtFullSpeed_OnItsFirstTick` |
+| [x] Acceleration | max(25 m/s2, top speed x 8): 40 walking | max(AccelMmps2, top speed x AccelPerSpeed) (was current speed x 8) | `Acceleration_IsTheTopSpeedTimesAccelerationPerSpeed` |
+| [x] Top speeds | walk 5 m/s; Run ranks 10..28 m/s; x Move Speed 0.5-1.5 | `MoveStats` from `PlayerMovementSkills.SpeedFor` (same numbers) | `PlayerMoveFromSkillsTests` |
+| [x] Turn | RotateTowards velocity at turnSpeed 1080 deg/s (asset; code default 540), turns while moving, no turn in place | `TurnCdegPerSecond` baked from `turnSpeed` (1080 at runtime), turns while walking | `WithATurnSpeed_...` |
+| [x] Arrival slowdown | radius clamp(speed x 0.3, 1.5, 8) m; factor lerp(0.55, 1, sqrt(rest/radius)) | same formula, integers | `SpeedRisesToWalkSpeed_ThenEasesInTheArrivalZone` |
+| [x] Stop | within stoppingDistance 0.2 m + one step: `PlaceOn(destination)`, velocity 0 | stops ON the point (was 0.2 m short) | `WithAStoppingDistance_TheWalkStopsOnThePoint` |
+| [x] Click on the spot (<= 0.2 m) | nothing starts | nothing starts, no hop, no turn | `AClickInsideTheStoppingDistance_StartsNothing` |
+| [x] Re-click mid-walk | replans from the shown position, full speed in the new direction, no skid | replans from the predicted pose, full speed at once | `ANewClickMidWalk_StartsFromTheCurrentPose_AndKeepsTheSpeed` |
+| [x] Rate limit | server: burst 10, 10 a second (Move) | same budget, keyed by PlayerKey; refusals logged `[KnClick] refused why=budget` | `AClickOverTheRateLimit_...` |
+| [x] Marker | at the raw hit point, ground-snapped, Feel MoveCommand | same code (view mode) | (presentation, by eye) |
+| [x] Animation speed | own walk: `agent.velocity.magnitude`; run clip at >= 7 m/s, hysteresis 2, 0.15 s; playback speed/clip speed 0.8-1.6 | own body: the predicted ghost's speed (`PlayerAnimancerMotor.ExternalSpeed`, set in `PlayerWorldsSetup.DriveAnimationFromGhost`), same clip rules | `TheOwnBodysAnimation_ReadsTheGhostsSpeed_NotAMeasurement` |
+| [x] Root motion | off | off (same prefab) | - |
+| [ ] Camera | OrbitalFollow on "Camera Target", world-space binding, damping 0, no recentering, radius 9 | same scene camera on the view body | by eye (owner) |
+| [ ] Server disagreement | rare: 0.2 s smoothstep ease onto the server after a hand-over (apart > 3 m + speed x (RTT+0.3), or settled) | prediction rollback; equal on both sides, so no correction in normal play | trace tests (0 mismatches); by eye with lag |
+| [ ] Stall / arriving short | server: 0.75 s with < 0.1 m -> replan once, then stop | not built (fixed-path walk cannot stall) | later (M3c, with obstacles) |
+
+Open after this: the camera and
+correction rows wait for the owner's GUI retry 2.
+Speeds checked from the game's own assets (`RunSpeedSourceTests`, 30 Oct): Run rank 1 = 10.00 m/s, rank 10 = 18.53, rank 20 (top)
+= 28.00; walk 5.00; mounted top 34.00 (walk 9.00, `MountSettings.asset`); a 20 % speed Stance on top of Run 28 = 33.60 (cap x1.5).
+The ghost's `MoveStats` are `PlayerMovementSkills.SpeedFor` itself, so whatever the Stance, Boots, a mount or a GM add reaches it.

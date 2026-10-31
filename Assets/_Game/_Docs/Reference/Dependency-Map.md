@@ -20,7 +20,7 @@ script, which is then published to the link above. `--baseline` saves today's up
 ## Today
 
 <!-- map:summary -->
-Generated 30 Oct 2026, 18:43: 816 runtime scripts (146,132 lines) declaring 1239 types (193 MonoBehaviours, 65 NetworkBehaviours, 102 ScriptableObject classes); 172 test scripts; 4723 prefabs, 48 scenes and 2749 assets read. 207 system-to-system links, of which 0 run uphill, 0 pairs of systems use each other both ways, and 0 links would have to go for the systems to form a clean stack. The largest tangle, classes that all reach each other through some chain of uses, holds 10 classes from 1 systems (UI 10, ...).
+Generated 30 Oct 2026, 20:27: 816 runtime scripts (146,212 lines) declaring 1239 types (193 MonoBehaviours, 65 NetworkBehaviours, 102 ScriptableObject classes); 174 test scripts; 4723 prefabs, 48 scenes and 2749 assets read. 207 system-to-system links, of which 0 run uphill, 0 pairs of systems use each other both ways, and 0 links would have to go for the systems to form a clean stack. The largest tangle, classes that all reach each other through some chain of uses, holds 10 classes from 1 systems (UI 10, ...).
 <!-- /map:summary -->
 
 **Checked against the compiler.**
@@ -79,12 +79,12 @@ Checked against the 211 references the assemblies declare between systems: every
 | Gameplay/Pets | Simulation | 12 | 1,445 | 33 | 32 | 0.51 | 4 | 13 of 19 |
 | Gameplay/Social | Simulation | 39 | 5,805 | 52 | 49 | 0.51 | 9 | 23 of 52 |
 | Gameplay/Combat | Simulation | 13 | 3,362 | 44 | 27 | 0.62 | 4 | 5 of 14 |
-| Gameplay/Persistence | Simulation | 20 | 4,598 | 129 | 14 | 0.9 | 20 | 14 of 28 |
-| Gameplay/Player | Simulation | 57 | 14,182 | 76 | 78 | 0.49 | 19 | 70 of 102 |
+| Gameplay/Persistence | Simulation | 20 | 4,616 | 131 | 14 | 0.9 | 21 | 15 of 28 |
+| Gameplay/Player | Simulation | 57 | 14,244 | 76 | 80 | 0.49 | 20 | 71 of 102 |
 | Gameplay/CharacterCreation | Simulation | 26 | 3,173 | 27 | 74 | 0.27 | 10 | 25 of 29 |
 | Gameplay/Items | Simulation | 66 | 11,860 | 49 | 182 | 0.21 | 13 | 42 of 88 |
 | World | Simulation | 37 | 6,379 | 16 | 41 | 0.28 | 2 | 9 of 43 |
-| Gameplay/Progression | Simulation | 46 | 8,132 | 25 | 210 | 0.11 | 6 | 27 of 58 |
+| Gameplay/Progression | Simulation | 46 | 8,132 | 25 | 210 | 0.11 | 6 | 28 of 58 |
 | Gameplay/Wallet | Simulation | 3 | 132 | 0 | 18 | 0.0 | 0 | 2 of 2 |
 | Gameplay/NPC | Simulation | 3 | 290 | 5 | 17 | 0.23 | 1 | 1 of 4 |
 | Gameplay/Factions | Simulation | 6 | 169 | 0 | 26 | 0.0 | 0 | 1 of 3 |
@@ -126,7 +126,7 @@ Each row is the cheaper side of a loop: cut these references and the two systems
 | EquipSlot | Gameplay/Items | enum | 39 | 10 | 298 | 15 | 0 |
 | LocalPlayer | Core | plain | 39 | 18 | 228 | 6 | 0 |
 | PlayerResources | Gameplay/Progression | net | 37 | 14 | 227 | 0 | 41 |
-| PointAndClickPlayer | Gameplay/Player | net | 32 | 8 | 166 | 1 | 41 |
+| PointAndClickPlayer | Gameplay/Player | net | 32 | 8 | 167 | 1 | 41 |
 | CharacterCombatStats | Gameplay/Progression | mono | 30 | 13 | 246 | 1 | 51 |
 | CharacterRecipe | Gameplay/CharacterCreation | plain | 29 | 7 | 228 | 10 | 0 |
 | PlayerCharacterProgression | Gameplay/Progression | net | 28 | 12 | 247 | 0 | 41 |
@@ -139,7 +139,7 @@ Each row is the cheaper side of a loop: cut these references and the two systems
 | SaveScope | Core | enum | 23 | 10 | 252 | 1 | 0 |
 | ISaveParticipant | Core | interface | 22 | 10 | 251 | 1 | 0 |
 | SkillDefinitionSO | Gameplay/Progression | so | 22 | 8 | 218 | 7 | 0 |
-| KeyBindings | Core | plain | 22 | 4 | 176 | 2 | 0 |
+| KeyBindings | Core | plain | 22 | 4 | 177 | 2 | 0 |
 <!-- /map:ripple -->
 
 ## Hubs (static members reached from other systems)
@@ -187,7 +187,7 @@ Classes over 700 lines. Several of them also reach into three or more other syst
 | PlayerWallRunMotor | Gameplay/Player | 1760 | Core, Gameplay/Progression, Networking, World | 8 |
 | ArrangeController | UI | 1663 | Core, Gameplay/Housing, Gameplay/Items, Gameplay/Player, Gameplay/Progression | 0 |
 | GearUIController | UI | 1628 | Core, Gameplay/CharacterCreation, Gameplay/Economy, Gameplay/Items, Gameplay/Pets, Gameplay/Player, Gameplay/Progression, Gameplay/Restyle, Gameplay/Wallet | 21 |
-| PlayerAnimancerMotor | Gameplay/Player | 1513 | Core, Gameplay/Progression, Networking | 15 |
+| PlayerAnimancerMotor | Gameplay/Player | 1525 | Core, Gameplay/Progression, Networking | 16 |
 | GameFeelPresenter | GameFeel | 1239 | Core, Gameplay/Combat, Gameplay/Factions, Gameplay/Items, Gameplay/Pets, Gameplay/Player, Gameplay/Progression, Networking, UI | 1 |
 | PetFollower | Gameplay/Items | 1056 | Rendering | 5 |
 | ServerSave | Gameplay/Persistence | 991 | Core, Networking | 19 |
@@ -370,7 +370,7 @@ first. The page lists the file and line behind each.
 | 33 | Hub | PlayerInventory.LocalChanged (event) | Gameplay/Items, Gameplay/Persistence, UI | 3 | 21 | large |
 | 34 | Duplicated state | 20 classes keep their own static player / object lists | Environment, Gameplay/Economy, Gameplay/Items, Gameplay/NPC, Gameplay/Player ... | 3 | 20 | large |
 | 35 | Hub | GearUIController.Instance (locator) | UI | 3 | 20 | large |
-| 36 | God class | PlayerAnimancerMotor (1513 lines) | Gameplay/Player | 3 | 16 | large |
+| 36 | God class | PlayerAnimancerMotor (1525 lines) | Gameplay/Player | 3 | 17 | large |
 | 37 | God class | PlayerMeleeCombat (983 lines) | Gameplay/Combat | 3 | 10 | large |
 | 38 | God class | PlayerWallRunMotor (1760 lines) | Gameplay/Player | 3 | 10 | large |
 | 39 | God class | ProgressionHUD (2212 lines) | UI | 3 | 6 | large |

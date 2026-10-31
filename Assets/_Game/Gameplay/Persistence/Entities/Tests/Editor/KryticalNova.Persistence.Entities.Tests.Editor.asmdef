@@ -13,6 +13,8 @@
         "Unity.Netcode.Runtime",
         "Unity.Collections",
         "KryticalNova.Player.Entities",
+        "KryticalNova.Player.Entities.Presentation",
+        "KryticalNova.Player",
         "Unity.Entities",
         "Unity.NetCode"
     ],

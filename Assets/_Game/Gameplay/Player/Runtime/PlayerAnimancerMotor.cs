@@ -401,14 +401,26 @@ namespace KryticalNova.Player
         {
             get
             {
-                bool movedHere = agent != null && agent.isActiveAndEnabled && agent.isOnNavMesh;
+                bool movedHere = ExternalSpeed != null || (agent != null && agent.isActiveAndEnabled && agent.isOnNavMesh);
                 return movedHere || movementSkills == null ? currentSpeed : movementSkills.CurrentSpeed;
             }
         }
 
+        /// <summary>
+        /// The exact speed of a body something else drives here, in metres a second (the DOTS view of the player's own predicted
+        /// ghost), read like the agent's velocity of the NGO game's own walk, so the walk and stop clips start on the move's first
+        /// and last frame instead of after the measuring window. Null = the agent's velocity, else measured.
+        /// </summary>
+        public Func<float> ExternalSpeed { get; set; }
+
         private void UpdateSpeed()
         {
-            if (agent != null && agent.isActiveAndEnabled && agent.isOnNavMesh)
+            if (ExternalSpeed != null)
+            {
+                currentSpeed = ExternalSpeed();
+                speedCount = 0;   // as for the agent: the measured history must not read this walk's travel afterwards
+            }
+            else if (agent != null && agent.isActiveAndEnabled && agent.isOnNavMesh)
             {
                 currentSpeed = agent.velocity.magnitude;
                 // The measured history stands still while the agent drives the body (the player's own walk, online

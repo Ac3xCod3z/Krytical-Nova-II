@@ -73,10 +73,14 @@ namespace KryticalNova.Player.Entities
             int3 start = new int3(m.StartXMm, m.StartYMm, m.StartZMm);
             int length = PlayerPath.LengthMm(start, corners, count);
             if (length <= 0) { CancelWalk(ref m); return; }
+            bool starting = m.ProgressMm == 0 && m.RemMicro == 0;
+            // a click within the stopping distance starts nothing (the NGO game: the agent is not started for it)
+            if (starting && length <= cfg.StopMm) { CancelWalk(ref m); return; }
 
             // ---- speed -----------------------------------------------------------------------------------------------
             int target = (m.Flags & MoveFlags.Run) != 0 ? stats.RunMmps : stats.WalkMmps;
             target = math.max(0, target);
+            int top = target;
             int remaining = math.max(0, length - m.ProgressMm);
             int radius = math.clamp(
                 (int)((long)target * cfg.ArrivalSlowdownMs / 1000),
@@ -89,9 +93,15 @@ namespace KryticalNova.Player.Entities
                 int factor = cfg.ArrivalMinPermille + (int)((long)(1000 - cfg.ArrivalMinPermille) * ease / 1000);
                 target = (int)((long)target * factor / 1000);
             }
-            int accel = math.max(cfg.AccelMmps2, (int)math.min((long)m.SpeedMmps * cfg.AccelPerSpeed, int.MaxValue / 2));
-            int dv = math.max(1, (int)((long)accel * tickMicros / MicrosPerSecond));
-            m.SpeedMmps = m.SpeedMmps < target ? math.min(target, m.SpeedMmps + dv) : math.max(target, m.SpeedMmps - dv);
+            // The NGO game: a new walk (first click or re-click) starts at full speed along the new way (SnapVelocityToPath),
+            // and the agent's acceleration is max(acceleration, top speed x accelerationPerSpeed).
+            if (starting) m.SpeedMmps = target;
+            else
+            {
+                int accel = math.max(cfg.AccelMmps2, (int)math.min((long)top * cfg.AccelPerSpeed, int.MaxValue / 2));
+                int dv = math.max(1, (int)((long)accel * tickMicros / MicrosPerSecond));
+                m.SpeedMmps = m.SpeedMmps < target ? math.min(target, m.SpeedMmps + dv) : math.max(target, m.SpeedMmps - dv);
+            }
 
             // ---- progress --------------------------------------------------------------------------------------------
             long acc = (long)m.SpeedMmps * tickMicros + m.RemMicro;
@@ -100,6 +110,7 @@ namespace KryticalNova.Player.Entities
             m.ProgressMm = (int)math.min((long)length, m.ProgressMm + step);
 
             bool arrived = m.ProgressMm + cfg.StopMm >= length;
+            if (arrived) m.ProgressMm = length;   // the NGO game places the body ON the point when it stops (PlaceOn)
 
             // ---- pose ------------------------------------------------------------------------------------------------
             PlayerPath.PointAt(start, corners, count, m.ProgressMm, out int3 p, out int3 dir);
@@ -148,8 +159,8 @@ namespace KryticalNova.Player.Entities
             if (length <= 0) return false;
             int elapsed = math.clamp(elapsedMicros, 0, tickMicros);
             long ahead = (long)m.SpeedMmps * elapsed / MicrosPerSecond;
-            int cap = math.max(m.ProgressMm, length - cfg.StopMm); // never past the stop point, never back
-            int progress = (int)math.min((long)cap, m.ProgressMm + ahead);
+            int progress = (int)math.min((long)length, m.ProgressMm + ahead);
+            if (progress + cfg.StopMm >= length) progress = length;   // the next step stops ON the point (as Step does)
             PlayerPath.PointAt(start, corners, count, progress, out posMm, out int3 dir);
             int way = PlayerPath.YawCdegOf(dir, pose.YawCdeg);
             int step = TurnStepCdeg(cfg, tickMicros);

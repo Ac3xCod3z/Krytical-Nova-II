@@ -70,5 +70,25 @@ namespace KryticalNova.Persistence.Entities.Tests
         {
             Assert.IsNull(PlayerMoveFromSkills.SettingsOf(null));
         }
+
+        [Test]
+        public void TheOwnBodysAnimation_ReadsTheGhostsSpeed_NotAMeasurement()
+        {
+            // the NGO game's own walk animated at the agent's velocity; the DOTS view of the own ghost at its predicted speed
+            var body = new GameObject("own body");
+            try
+            {
+                var motor = body.AddComponent<KryticalNova.Player.PlayerAnimancerMotor>();
+                PlayerWorldsSetup.DriveAnimationFromGhost(body);
+                Assert.IsNotNull(motor.ExternalSpeed);
+                Assert.AreEqual(0f, motor.ExternalSpeed(), "no state yet: standing");
+                var state = body.AddComponent<KryticalNova.Player.Entities.Presentation.PlayerPresentationState>();
+                state.State.Speed = 5f;
+                Assert.AreEqual(5f, motor.ExternalSpeed());
+                state.State.Speed = 0f;
+                Assert.AreEqual(0f, motor.ExternalSpeed(), "the stop is seen on the same frame");
+            }
+            finally { Object.DestroyImmediate(body); }
+        }
     }
 }

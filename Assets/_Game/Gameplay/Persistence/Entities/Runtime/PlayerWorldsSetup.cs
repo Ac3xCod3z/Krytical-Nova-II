@@ -130,6 +130,7 @@ namespace KryticalNova.Persistence.Entities
                     if (!request.IsLocal) return;
                     PlayerMoveFromSkills.InstallSettings(client, PlayerMoveFromSkills.SettingsOf(body));
                     ConfigurePlanner(planner, body);
+                    DriveAnimationFromGhost(body);
                 },
             };
             PlayerEntitiesSetup.Install(client, planner);
@@ -138,6 +139,22 @@ namespace KryticalNova.Persistence.Entities
             var looks = client.GetExistingSystemManaged<PlayerLookClientSystem>();
             if (looks != null) looks.Applier = new IdentityLookApplier();
             return factory;
+        }
+
+        /// <summary>
+        /// The player's own body animates at its predicted ghost's speed (<see cref="KryticalNova.Player.Entities.Presentation.PlayerPresentationState"/>,
+        /// written every frame by the follow), as the NGO game's own walk read its agent's velocity: no measuring lag at a start or a stop.
+        /// </summary>
+        public static void DriveAnimationFromGhost(GameObject body)
+        {
+            var motor = body != null ? body.GetComponent<KryticalNova.Player.PlayerAnimancerMotor>() : null;
+            if (motor == null) return;
+            KryticalNova.Player.Entities.Presentation.PlayerPresentationState state = null;   // added by the spawn system after the body is made
+            motor.ExternalSpeed = () =>
+            {
+                if (state == null && body != null) state = body.GetComponent<KryticalNova.Player.Entities.Presentation.PlayerPresentationState>();
+                return state != null ? state.State.Speed : 0f;
+            };
         }
 
         /// <summary>The planner walks the way the player's NavMeshAgent would (agent type, areas, base offset); nothing without one.</summary>
