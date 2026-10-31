@@ -141,6 +141,14 @@ defines changed since the last good build, or when there is no record yet (the f
 cache costs one full rebuild of the maps; the same settings as last time keep the cache. The server build always puts the
 checkout back on Player when it ends.
 
+One more rule: setting the subtarget does not recompile the Editor that is running, and its scripts, compiled while the
+checkout stood on Server, would still run as a server's while the maps are built. So when the guard had to correct the
+subtarget, the build **stops before building anything** and starts again in a freshly compiled Unity. Publish to Test does
+this by itself (you see "publishing again in a fresh Unity" in the console); a batch script runs
+`-executeMethod KryticalNova.EditorTools.ClientBuildGuard.PrepareOnly` first, or re-runs when the exit code is 4. In the
+Editor window the scripts reload and you run the build again. The server's scene copy is decided by the build's own
+report (never the Editor's remembered subtarget), so a stuck Server subtarget cannot strip a game's scene.
+
 ## 1b. The launcher's news (before a build meant for LIVE)
 
 The launcher's paper panel shows **WHAT'S NEW!**: up to **four** headlines, each opening to a few lines on what changed

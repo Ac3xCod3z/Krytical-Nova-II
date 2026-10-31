@@ -40,5 +40,28 @@ namespace KryticalNova.Tests
             string stamp = ClientBuildGuard.Stamp(StandaloneBuildSubtarget.Player, Defines, Version);
             Assert.IsTrue(ClientBuildGuard.NeedsPurge(stamp, stamp, true));
         }
+
+        [Test]
+        public void ARestartIsNeededWhenTheSubtargetWasCorrectedOrTheEditorWasCompiledAsAServer()
+        {
+            Assert.IsFalse(ClientBuildGuard.NeedsRestart(false, false));
+            Assert.IsTrue(ClientBuildGuard.NeedsRestart(true, false), "subtarget corrected in this process: its scripts are still the server's");
+            Assert.IsTrue(ClientBuildGuard.NeedsRestart(false, true), "scripts compiled as a server's even with the Player subtarget set");
+            Assert.IsTrue(ClientBuildGuard.NeedsRestart(true, true));
+        }
+
+        [Test]
+        public void TheEditorRunningTheTestsIsNotCompiledAsAServer()
+        {
+            Assert.IsFalse(ClientBuildGuard.EditorCompiledAsServer, "the game's tests must run in an Editor compiled as the game's");
+        }
+
+        [Test]
+        public void OnlyTheBuildItselfSaysItIsAServerBuild()
+        {
+            Assert.IsTrue(ServerSceneStripper.IsServerBuild(true, StandaloneBuildSubtarget.Player));
+            Assert.IsTrue(ServerSceneStripper.IsServerBuild(false, StandaloneBuildSubtarget.Server));
+            Assert.IsFalse(ServerSceneStripper.IsServerBuild(false, StandaloneBuildSubtarget.Player), "a Server subtarget left in the Editor never makes a game build a server's");
+        }
     }
 }
