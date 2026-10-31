@@ -19,6 +19,8 @@ namespace KryticalNova.EditorTools
         public string Name;
         /// <summary>For a component: the GameObject it sits on (m_GameObject's path id).</summary>
         public long OwnerId;
+        /// <summary>For a Transform: the Transform it hangs under (m_Father's path id), 0 at the root.</summary>
+        public long FatherId;
         /// <summary>The component's own serialized field names, standard ones left out: tells scripts apart without the script.</summary>
         public string Signature;
     }
@@ -93,6 +95,10 @@ namespace KryticalNova.EditorTools
                 else if (lastTop == "m_GameObject" && line.StartsWith("\t\tm_PathID ", StringComparison.Ordinal))
                 {
                     current.OwnerId = FirstLong(line.Substring(2));
+                }
+                else if (lastTop == "m_Father" && line.StartsWith("\t\tm_PathID ", StringComparison.Ordinal))
+                {
+                    current.FatherId = FirstLong(line.Substring(2));
                 }
             }
             Finish(current, fields);

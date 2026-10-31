@@ -156,7 +156,9 @@ with Unity's own tools (WebExtract and binary2text, about 5 minutes) and counts 
 the enabled box off and objects that are inactive. It compares that with the same map's source scene as the Editor loads it.
 A bundle with **more** switched off than its scene fails the publish with a plain list ("World_X: 1 more component(s) are
 switched off in the built bundle ... : 1 x EnvironmentPresenter"); nothing is uploaded. Fewer off in the bundle is fine
-(editor-only objects are left out of a build). What may be off on a server is written in `Tools/Editor/Build/ServerOff.md`;
+(editor-only objects are left out of a build). Besides the counts it compares **object by object**: every GameObject's
+active box by its hierarchy path and every component's enabled box by path and type, so a swap (one thing switched on,
+another off) is caught too, and each difference is listed by name. What may be off on a server is written in `Tools/Editor/Build/ServerOff.md`;
 none of it may differ in a game's bundle.
 
 The record of a passed audit (`Builds/Release/bundle-audit-build-N.json`: each bundle's fingerprint) is written beside the
