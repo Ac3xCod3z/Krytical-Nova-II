@@ -814,6 +814,37 @@ system fills) so every system can ask it without knowing the netcode.
   kick, no message, no death view, no pet panel change); my own still do. Proven in a 2-client run with logs, plus an EditMode
   test per kind.
 
+Prep for this step (mini-boss 6, 31 Oct; no code yet). **The answer exists in Core:** `NetRole.IsLocalOwner(component)`. It is
+true offline, `IsOwner` for an NGO body, and `BodyRoleTag.IsLocal` for an entity-netcode body (through `BodyRoleNetRoleAdapter`).
+`NetRole.IsNetworked` and `NetRole.IsOwner` answer the same way. Every system may use Core, so no new type and no new reference.
+Acceptance list (each ticked with its proof):
+- [ ] one rule for "mine", written in `NetRole`'s summary: offline = mine; NGO = `IsOwner`; entity netcode = the local ClientView
+  body; a ServerBody is nobody's on this machine (no view, no message, no camera)
+- [ ] the 33 exact `!IsSpawned || IsOwner` checks become `NetRole.IsLocalOwner(this)` (list below). The 50 `IsSpawned && IsOwner` and
+  the 18 `IsSpawned && !IsOwner` are read one by one: "a networked body I own" -> `NetRole.IsNetworked(this) && NetRole.IsOwner(this)`,
+  "a remote body" -> `NetRole.IsNetworked(this) && !NetRole.IsOwner(this)`. A check that guards an NGO RPC or a NetworkVariable stays
+  on NGO's own flags (it only runs on NGO bodies); each one left is listed with why.
+- [ ] my run take-off view kick plays; another player's never does (`PlayerAnimancerMotor` -> `GameFeelPresenter.RunStarted`)
+- [ ] my command messages and refusals show; another player's never do (`PointAndClickPlayer.CommandMessage` and the systems' messages)
+- [ ] my death plays the death view; another player's death only plays on their body (`PlayerDeathMotor`)
+- [ ] my pet's panel follows my pet; another player's pet never changes it (`PlayerPet`), and the same for mounts (`PlayerMounts`)
+- [ ] the NGO game is unchanged: `!IsSpawned || IsOwner` and `NetRole.IsLocalOwner` agree on every NGO and offline body (an
+  EditMode test per kind, both answers)
+- [ ] a 2-client run in the Editor test world (two ClientView bodies, one local), logged per kind; at most 2 runs
+- [ ] `netrole_audit.py` (Tools/Editor/Architecture) passes, and its baseline only shrinks
+
+The 33 exact sites, by system (line numbers on 31 Oct):
+- Player (13): PlayerAnimancerMotor 353, 376 (run kick); PlayerDeathMotor 326, 389, 655; PlayerIdentity 303; PlayerVaultMotor 646, 694;
+  PlayerWallRunMotor 1045, 1053, 1057, 1080, 1084; PlayerWaterstrideMotor 497
+- Combat (6): PlayerCadence 160; PlayerCombatState 224; PlayerMeleeCombat 880, 1002; PlayerSkillAttacks 67; PlayerSkillQueue 62
+- Restyle (3): PlayerRestyle 141; PlayerWeaveLibrary 204; PlayerWeaves 389
+- Progression (2): PlayerCharacterProgression 122; PlayerExperienceBoosts 151
+- Autopilot (2): PlayerAutobuff 112; PlayerAutopilot 210
+- one each: Crafting PlayerCrafting 146; Economy PlayerStorage 354; Housing PlayerRecall 43; Items PlayerLoot 205; Mounts PlayerMounts 325;
+  Pets PlayerPet 537
+Order: Core rule and the agreement tests first; then the four acceptance kinds (Player, Pets/Mounts, messages); then the rest by
+system, one commit per system group; then the 2-client run.
+
 ## 53. M3b jump: acceptance list (owner's bar via Master, 31 Oct 2026; design `netcode-for-entities-designs/m3b-design.md`)
 
 The DOTS jump must feel exactly like the NGO jump, server still deciding. NGO numbers are the runtime ones: `JumpMotion.asset`
