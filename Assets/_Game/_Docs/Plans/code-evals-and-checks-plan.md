@@ -174,7 +174,7 @@ so no session is blocked in the middle of its work by surprise.
 
 - [x] 1. A without the test step: `kn_check.py --quick`, the Python organization rules (`organization_check.py`), the
   known-findings list and the stamp. No Unity needed.
-- [ ] 2. The `--full` tier with `known-test-failures.json` (needs a Unity slot to record today's failures).
+- [x] 2. The `--full` tier with `known-test-failures.json` (needs a Unity slot to record today's failures).
   - [x] Built 31 Oct: `kn_check --full` adds a `tests` check. It runs the test assemblies of every system the change
     reaches: the changed systems and every system that uses them, from `out/dependency-map.json`; a Core change runs all
     24, a UI change runs GameFeel, Tools and UI. `run_editmode_tests.py --assemblies` runs them, and `own_tree.py` puts the
@@ -182,7 +182,12 @@ so no session is blocked in the middle of its work by surprise.
     2 GB free for 15 s it is asked to quit (a clean close leaves no Scene Backup dialog) and stopped by force only after
     60 s, logged FORCED; below 1 GB it is stopped by force at once. The dotnet build servers are shut down after it. Tried with a stand-in for Unity (a new
     failure, a listed test that passes, a stopped run) and on real child processes for the job stop.
-  - [ ] The first real `--full --all` run in a Unity slot, and its failures written into `known-test-failures.json`.
+  - [x] The first real `--full --all` run, 31 Oct in the `build` worktree (warm Library): 1182 EditMode tests in 24
+    assemblies ran in 201 s, 0 failed and 10 skipped, so `known-test-failures.json` stays empty. The guard did not
+    need to step in. Two things seen: one compile try failed on a NuGet restore race ("Cannot create a file when that
+    file already exists") and passed when run again, and the no-output guard reported it correctly; and the batch
+    Unity deleted an untracked Addressables `link.xml` left in that worktree, so no stamp was written. The message
+    now names the files that changed.
 - [ ] 3. B: the batch entry points of Validate Project Organization and Check Icons (needs a Unity slot to run them once).
 - [x] 4. E and G: `Guides/Review-Rules.md` (real failures by severity with where each was seen, round limits,
   learned rules); the Master adds its link in CLAUDE.md.
