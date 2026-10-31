@@ -1,3 +1,6 @@
 {
- "organization": []
+ "organization": [
+  {"path": "Assets/Human-Custom", "why": "DOTS clone only: main moved it to _Game/Characters/Player (PR 180); the clone takes that move at its next merge of main"},
+  {"path": "Assets/SceneDependencyCache", "why": "DOTS clone only, not in git: Unity's subscene build cache written by the Linux test builds"}
+ ]
 }
