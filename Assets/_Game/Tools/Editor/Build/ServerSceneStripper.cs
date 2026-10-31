@@ -11,16 +11,10 @@ namespace KryticalNova.EditorTools
     /// The dedicated server's copy of each scene, as it goes into the build: render-only vendor components are
     /// switched off before they ever wake. A server ships no shaders, and the lamps' light cones (Volumetric Lights)
     /// otherwise try to make a material every frame and throw. The scenes on disk and the client build are untouched.
+    /// What may go off is <see cref="ServerOffList"/>, nothing else.
     /// </summary>
     public sealed class ServerSceneStripper : IProcessSceneWithReport
     {
-        /// <summary>Namespaces of vendor components that only draw: the server has nothing to draw them on.</summary>
-        private static readonly HashSet<string> RenderOnlyNamespaces = new HashSet<string>
-        {
-            "VolumetricLights",
-            "VolumetricFogAndMist2",
-        };
-
         public int callbackOrder => 0;
 
         public void OnProcessScene(Scene scene, BuildReport report)
@@ -35,11 +29,8 @@ namespace KryticalNova.EditorTools
                 foreach (Behaviour behaviour in root.GetComponentsInChildren<Behaviour>(true))
                 {
                     if (behaviour == null || !behaviour.enabled) continue;
-                    string ns = behaviour.GetType().Namespace;
-                    bool renderOnly = ns != null && RenderOnlyNamespaces.Contains(ns);
-                    // UI Toolkit documents: no UI assembly reads them on a server, and laying out their text looks for
-                    // the system's fonts, which needs a shader (DedicatedServerOptimizer does the same as scenes load).
-                    if (!renderOnly && !(behaviour is UnityEngine.UIElements.UIDocument)) continue;
+                    // Render-only vendor components and UI Toolkit documents (ServerOffList, ServerOff.md say why).
+                    if (!ServerOffList.MayBeOffOnServer(behaviour)) continue;
                     behaviour.enabled = false;
                     off++;
                 }
