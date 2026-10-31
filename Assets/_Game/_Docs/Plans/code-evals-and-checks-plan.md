@@ -1,6 +1,7 @@
 # Code evals and checks plan
 
-**Status: agreed 30 Oct 2026 (the owner's picks are at the end). One PR per step; step 1 is being built.**
+**Status: agreed 30 Oct 2026 (the owner's picks are at the end). One PR per step; step 1 is built (`kn_check --all`
+in about 1 minute after `compile_check` moved to a single dotnet run); step 2 is next.**
 
 The aim: a change is proved to work before anyone calls it done, so a small slip is caught in the same session that
 made it instead of turning up later in a build, on the test server or in a player's save. The idea comes from a video
@@ -171,7 +172,7 @@ everywhere. No new skill.
 The commit gate (C) goes last, after `kn_check` has proved itself, and the Master is told before it is switched on,
 so no session is blocked in the middle of its work by surprise.
 
-- [ ] 1. A without the test step: `kn_check.py --quick`, the Python organization rules (`organization_check.py`), the
+- [x] 1. A without the test step: `kn_check.py --quick`, the Python organization rules (`organization_check.py`), the
   known-findings list and the stamp. No Unity needed.
 - [ ] 2. The `--full` tier with `known-test-failures.json` (needs a Unity slot to record today's failures).
 - [ ] 3. B: the batch entry points of Validate Project Organization and Check Icons (needs a Unity slot to run them once).
