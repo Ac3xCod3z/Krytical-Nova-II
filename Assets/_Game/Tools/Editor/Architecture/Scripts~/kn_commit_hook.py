@@ -73,6 +73,12 @@ def main():
         if not checkout or not os.path.exists(os.path.join(checkout, KN_CHECK)):
             return 0   # not a Krytical Nova II checkout
         script = os.path.join(checkout, KN_CHECK)
+        # an older kn_check.py (a branch from before --state) ignores the unknown option and runs a full --quick,
+        # compile included: never start that from a hook, only say so
+        with open(script, encoding="utf-8", errors="replace") as f:
+            if '"--state"' not in f.read():
+                return say(context="kn_check commit reminder skipped: this checkout's kn_check.py is older than "
+                                   "--state (merge main to get it); run kn_check.py --quick yourself before committing.")
         p = subprocess.run([sys.executable, script, "--checkout", checkout, "--state"],
                            capture_output=True, text=True, timeout=20)
         state = json.loads(p.stdout.strip().splitlines()[-1])
