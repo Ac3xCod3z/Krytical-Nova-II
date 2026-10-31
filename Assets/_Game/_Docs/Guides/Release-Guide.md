@@ -149,6 +149,21 @@ this by itself (you see "publishing again in a fresh Unity" in the console); a b
 Editor window the scripts reload and you run the build again. The server's scene copy is decided by the build's own
 report (never the Editor's remembered subtarget), so a stuck Server subtarget cannot strip a game's scene.
 
+## 1a-3. The bundle audit: no map may ship with more switched off than its scene (31 Oct 2026)
+
+After the game is built and **before anything is staged or uploaded to TEST**, `BundleAuditGate` opens every built map bundle
+with Unity's own tools (WebExtract and binary2text, about 5 minutes) and counts what is switched off in it: components with
+the enabled box off and objects that are inactive. It compares that with the same map's source scene as the Editor loads it.
+A bundle with **more** switched off than its scene fails the publish with a plain list ("World_X: 1 more component(s) are
+switched off in the built bundle ... : 1 x EnvironmentPresenter"); nothing is uploaded. Fewer off in the bundle is fine
+(editor-only objects are left out of a build). What may be off on a server is written in `Tools/Editor/Build/ServerOff.md`;
+none of it may differ in a game's bundle.
+
+The record of a passed audit (`Builds/Release/bundle-audit-build-N.json`: each bundle's fingerprint) is written beside the
+release. **Promote Test to Live** checks it again, read-only: no record, a failed record, or a staged bundle whose
+fingerprint is not the audited one stops the promotion with the reason. A build made before this gate has no record and
+cannot be promoted: publish it again.
+
 ## 1b. The launcher's news (before a build meant for LIVE)
 
 The launcher's paper panel shows **WHAT'S NEW!**: up to **four** headlines, each opening to a few lines on what changed

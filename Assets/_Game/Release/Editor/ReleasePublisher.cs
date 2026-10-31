@@ -177,6 +177,11 @@ namespace KryticalNova.EditorTools
             }
             if (!Directory.Exists(GameFolder)) return Fail("there is no release build in " + GameFolder);
 
+            // The gate: no map bundle may carry more switched-off components or inactive objects than its scene (build 13, 31 Oct 2026).
+            BundleAuditGate.Result audit = BundleAuditGate.Audit(GameFolder, Root, build);
+            Log(audit.Report.TrimEnd());
+            if (!audit.Ok) return Fail("the bundle audit found maps that differ from their scenes (listed above); nothing was staged or uploaded");
+
             string launcher = Path.GetFullPath(ToolsFolder + "/Launcher/" + LauncherName);
             string news = File.Exists(NewsPath) ? $" --news \"{Path.GetFullPath(NewsPath)}\"" : "";
             if (!RunTool($"stage --game \"{Path.GetFullPath(GameFolder)}\" --launcher \"{launcher}\" --out \"{Path.GetFullPath(StoreFolder)}\" --version \"v{BaseVersion()}\" --build {build}{news}", out string staged))
@@ -225,6 +230,9 @@ namespace KryticalNova.EditorTools
         public static string Promote()
         {
             Settings settings = Settings.Load();
+            // The gate again, read-only: the staged bundles are the ones that passed the audit.
+            string unsafeReason = BundleAuditGate.VerifyStaged(Root, StoreFolder + "/manifest.json");
+            if (unsafeReason != null) { Log("Promote refused: " + unsafeReason); return "Not promoted: " + unsafeReason; }
             if (!RunUgs($"ccd badges list -b {settings.bucketName} -n test -j -e {settings.environment} -p {settings.projectId}", out string list))
                 return "Could not read the TEST line: see " + LogPath;
             Match release = Regex.Match(list, "\"(?:releasenum|releaseNum|ReleaseNum)\"\\s*:\\s*(\\d+)");
