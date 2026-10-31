@@ -1,0 +1,47 @@
+{
+ "about": "kn_check sorts a change by what breaking it does to a player. A changed file takes the first tier that matches it, checked low_always, then high, then medium; anything else is low. A change takes the highest tier of its files. 'prefixes' match the start of the path from the repository root, 'names' match part of the file name (not under 'names_skip': UI only shows what the server decides). Review rules: Assets/_Game/_Docs/Guides/Review-Rules.md.",
+ "low_always": {
+  "why": "docs and tests cannot hurt a player",
+  "parts": ["/_Docs/", "/Tests/"],
+  "suffixes": [".md", ".md.meta", ".txt"]
+ },
+ "high": {
+  "why": "a player could lose items, Creds or a save, be locked out, or see another player's data",
+  "prefixes": [
+   "Assets/_Game/Gameplay/Persistence/",
+   "Assets/_Game/Gameplay/Economy/",
+   "Assets/_Game/Gameplay/Wallet/",
+   "Assets/_Game/Core/Runtime/SaveSystem/",
+   "Assets/_Game/Networking/Runtime/Safety/",
+   "Assets/_Game/Networking/ServerApp~/",
+   "Assets/_Game/Networking/ControlPage~/"
+  ],
+  "names_skip": ["Assets/_Game/UI/"],
+  "names": ["Crew", "Vault", "Ledger", "Trade", "Kiosk", "Wallet", "Account", "PlayerKey", "NetPlayerKeys",
+            "GmRoster", "PlayerGm", "RosterLink", "ServerEncryption", "ServerBans", "SaveTogether"]
+ },
+ "medium": {
+  "why": "a feature could stop working, but nothing is lost",
+  "prefixes": [
+   "Assets/_Game/Gameplay/",
+   "Assets/_Game/World/",
+   "Assets/_Game/Networking/",
+   "Assets/_Game/Rendering/",
+   "Assets/_Game/Core/",
+   "Assets/_Game/Release/",
+   "Assets/_Game/Tools/Editor/Setup/",
+   "Assets/_Game/Tools/Editor/Build/",
+   "Assets/_Game/Tools/Editor/Architecture/",
+   "Assets/DefaultNetworkPrefabs.asset",
+   "Assets/Resources/",
+   "ProjectSettings/",
+   "Packages/"
+  ],
+  "names": []
+ },
+ "needs": {
+  "high": "Master's /code-review at high, a second-client test, and kn_check --full once it exists",
+  "medium": "Master's /code-review at medium",
+  "low": "nothing more than this check; Master's /code-review at low"
+ }
+}
