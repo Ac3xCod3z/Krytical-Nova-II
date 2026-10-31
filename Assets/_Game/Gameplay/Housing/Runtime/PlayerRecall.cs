@@ -40,7 +40,7 @@ namespace KryticalNova.Housing
         private bool hitDuringChannel;
 
         private bool Decides => !IsSpawned || IsServer;
-        private bool IsLocal => !IsSpawned || IsOwner;
+        private bool IsLocal => KryticalNova.Core.BodyRoleTag.IsMine(this, !IsSpawned || IsOwner);
 
         /// <summary>True while this character is channelling a Recall (on the machine that decides).</summary>
         public bool Recalling => channelling;

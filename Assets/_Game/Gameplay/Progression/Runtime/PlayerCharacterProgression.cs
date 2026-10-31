@@ -119,7 +119,7 @@ namespace KryticalNova.Progression
         {
             KryticalNova.Diagnostics.PerformanceLog.Mark("level.gained", null, level);
             LevelGained?.Invoke(level);
-            ClientPresentationRegistry.Feel?.LevelUp(transform, !IsSpawned || IsOwner);
+            ClientPresentationRegistry.Feel?.LevelUp(transform, KryticalNova.Core.BodyRoleTag.IsMine(this, !IsSpawned || IsOwner));
         }
 
         /// <summary>Publishes a change made here, where the progression is decided.</summary>

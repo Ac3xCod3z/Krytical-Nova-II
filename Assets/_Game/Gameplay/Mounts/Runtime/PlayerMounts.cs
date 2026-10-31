@@ -322,7 +322,7 @@ namespace KryticalNova.Mounts
         {
             MountDefinition mount = Selected;
             if (mount == null) return;
-            bool mine = !IsSpawned || IsOwner;
+            bool mine = KryticalNova.Core.BodyRoleTag.IsMine(this, !IsSpawned || IsOwner);
             ClientPresentationRegistry.Feel?.PetEvolved(transform, mount.Stage(stage).glow, mine);
             Evolved?.Invoke(mount, stage);
         }

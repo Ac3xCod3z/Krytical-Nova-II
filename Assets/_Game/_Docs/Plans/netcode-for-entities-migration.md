@@ -845,6 +845,18 @@ The 33 exact sites, by system (line numbers on 31 Oct):
 Order: Core rule and the agreement tests first; then the four acceptance kinds (Player, Pets/Mounts, messages); then the rest by
 system, one commit per system group; then the 2-client run.
 
+Progress (31 Oct). `NetRole.IsLocalOwner` is not a drop-in: the adapter's `Of()` answers Offline for components that are not
+`IRoleAwareBody`. The one answer is `BodyRoleTag.IsMine(part, ngoMine)` in Core: the tag for an entity-netcode body, NGO's own answer
+for every other body.
+- [x] part 1 (aaf0af23d): the helper, `BodyIsMineTests`, and the Player group's 13 sites (run kick, death view and respawn,
+  vault / Wallstride / Waterstride feel, identity)
+- [x] part 2: the 13 presentation sites outside Player. Messages: Autobuff, Autopilot, Crafting, Storage, Loot, Experience Boosts,
+  Restyle, Weave Library, Weaves. Feel: level-up, Recall charge, pet and mount evolve.
+- [ ] Combat's 6 (`PlayerCadence.IsMine`, `PlayerCombatState` 224, `PlayerMeleeCombat.AttackerIsHere` / `IsLocalPlayerPresentation`,
+  `PlayerSkillAttacks.IsLocalPlayerPresentation`, `PlayerSkillQueue.IsMine`): left on purpose. They decide where combat logic runs,
+  and combat is not on the entity netcode yet, so they move with the combat milestone (its acceptance list first).
+- [ ] the 50 `IsSpawned && IsOwner` and 18 `IsSpawned && !IsOwner`, read one by one; then the 2-client run
+
 ## 53. M3b jump: acceptance list (owner's bar via Master, 31 Oct 2026; design `netcode-for-entities-designs/m3b-design.md`)
 
 The DOTS jump must feel exactly like the NGO jump, server still deciding. NGO numbers are the runtime ones: `JumpMotion.asset`

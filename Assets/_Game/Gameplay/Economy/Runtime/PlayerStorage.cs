@@ -351,7 +351,7 @@ namespace KryticalNova.Economy
         {
             if (string.IsNullOrEmpty(text)) return;
             if (IsSpawned && !IsOwnedByServer) TellRpc(text);
-            else if (!IsSpawned || IsOwner) ClientPresentationRegistry.Messages?.ShowMessage(text);
+            else if (KryticalNova.Core.BodyRoleTag.IsMine(this, !IsSpawned || IsOwner)) ClientPresentationRegistry.Messages?.ShowMessage(text);
         }
 
         [Rpc(SendTo.Owner)]

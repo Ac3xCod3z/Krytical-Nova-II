@@ -534,7 +534,7 @@ namespace KryticalNova.Pets
         {
             if (pet == null) return;
             KryticalNova.Diagnostics.PerformanceLog.Mark("pet.evolved", null, stage);
-            bool mine = !IsSpawned || IsOwner;
+            bool mine = KryticalNova.Core.BodyRoleTag.IsMine(this, !IsSpawned || IsOwner);
             Transform body = follower != null && follower.PetTransform != null ? follower.PetTransform : transform;
             ClientPresentationRegistry.Feel?.PetEvolved(body, pet.Stage(stage).glow, mine);
             Evolved?.Invoke(pet, stage);

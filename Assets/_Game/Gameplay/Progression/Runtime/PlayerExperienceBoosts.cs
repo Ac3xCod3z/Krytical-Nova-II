@@ -148,7 +148,7 @@ namespace KryticalNova.Progression
         private void Tell(string text)
         {
             if (IsSpawned && !IsOwner) TellRpc(text);
-            else if (!IsSpawned || IsOwner) ClientPresentationRegistry.Messages?.ShowMessage(text);
+            else if (KryticalNova.Core.BodyRoleTag.IsMine(this, !IsSpawned || IsOwner)) ClientPresentationRegistry.Messages?.ShowMessage(text);
         }
 
         [Rpc(SendTo.Owner)]
