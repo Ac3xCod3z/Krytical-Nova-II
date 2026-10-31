@@ -74,8 +74,9 @@ Systems, Hubs, Design data, Tests and How to read.
   assets hold.
 - `compile_check.py`, `run_editmode_tests.py`: see above.
 - `kn_check.py`, `organization_check.py`, `known-findings.json`, `known-test-failures.json`: the gate, below.
-- `own_tree.py`: runs a batch Unity in its own job object and stops only that tree when the PC runs low on memory
-  (below 1 GB free at once, below 2 GB for 15 s); `run_editmode_tests.py` uses it.
+- `own_tree.py`: runs a batch Unity in its own job object and stops only that tree when the PC runs low on memory:
+  below 2 GB free for 15 s it asks Unity to quit and forces it only after 60 s (FORCED), below 1 GB it forces at once;
+  `run_editmode_tests.py` uses it.
 
 ## The gate before a commit: kn_check
 

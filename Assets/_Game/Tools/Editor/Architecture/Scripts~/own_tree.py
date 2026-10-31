@@ -2,8 +2,12 @@
 
 On this 31 GB PC a stuck batch Unity once took the memory the owner's Editor needed. run() starts the program in a
 Windows job object, so the program and everything it starts belong to that job and nothing else does; stopping the job
-stops exactly that tree, never another Unity found by name. While it runs, the free memory is read every second: below
-1 GB the job is stopped at once, below 2 GB for 15 seconds in a row it is stopped too.
+stops exactly that tree, never another Unity found by name. While it runs, the free memory is read every second:
+
+- below 2 GB for 15 seconds in a row: the program is asked to quit (taskkill without /F, its own tree by its id), so
+  Unity closes cleanly and leaves no Scene Backup dialog behind; only if it is still running after 60 s is the job
+  stopped by force, and the reason says FORCED;
+- below 1 GB, the emergency (also while waiting for a clean quit): the job is stopped by force at once (FORCED).
 
     code, why = own_tree.run(cmd)     why is None, or the reason the job was stopped
 """
@@ -16,6 +20,7 @@ from ctypes import wintypes
 STOP_AT_ONCE = 1 << 30          # below 1 GB free
 STOP_AFTER = 2 << 30            # below 2 GB free ...
 STOP_AFTER_SECONDS = 15         # ... for this long
+CLEAN_WAIT_SECONDS = 60         # how long a program asked to quit gets before it is stopped by force
 STOPPED = 3                     # the exit code run() gives a stopped job
 
 
@@ -86,12 +91,28 @@ def run(cmd, below_normal=True):
                 low_since = (low_since or time.time()) if free < STOP_AFTER else None
                 time.sleep(1)
                 continue
+            if free >= STOP_AT_ONCE and _quit_cleanly(process):
+                return STOPPED, why + ": asked this run to quit and it closed cleanly; nothing else was touched"
             k32.TerminateJobObject(wintypes.HANDLE(job), STOPPED)
             process.wait()
-            return STOPPED, why + ": stopped this run and everything it started, nothing else"
+            return STOPPED, why + ": FORCED, stopped this run and everything it started by force, nothing else"
         return process.returncode, None
     finally:
         k32.CloseHandle(wintypes.HANDLE(job))
+
+
+def _quit_cleanly(process):
+    """Asks the process (and its own children, found by its id) to quit; True when it did within the wait. Gives up
+    at once when free memory falls below the emergency floor meanwhile."""
+    subprocess.run(["taskkill", "/PID", str(process.pid), "/T"], capture_output=True, text=True)
+    end = time.time() + CLEAN_WAIT_SECONDS
+    while time.time() < end:
+        if process.poll() is not None:
+            return True
+        if free_memory() < STOP_AT_ONCE:
+            return False
+        time.sleep(1)
+    return process.poll() is not None
 
 
 def shut_build_servers():
