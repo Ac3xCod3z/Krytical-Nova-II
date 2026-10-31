@@ -852,10 +852,21 @@ for every other body.
   vault / Wallstride / Waterstride feel, identity)
 - [x] part 2: the 13 presentation sites outside Player. Messages: Autobuff, Autopilot, Crafting, Storage, Loot, Experience Boosts,
   Restyle, Weave Library, Weaves. Feel: level-up, Recall charge, pet and mount evolve.
-- [ ] Combat's 6 (`PlayerCadence.IsMine`, `PlayerCombatState` 224, `PlayerMeleeCombat.AttackerIsHere` / `IsLocalPlayerPresentation`,
-  `PlayerSkillAttacks.IsLocalPlayerPresentation`, `PlayerSkillQueue.IsMine`): left on purpose. They decide where combat logic runs,
-  and combat is not on the entity netcode yet, so they move with the combat milestone (its acceptance list first).
-- [ ] the 50 `IsSpawned && IsOwner` and 18 `IsSpawned && !IsOwner`, read one by one; then the 2-client run
+- [x] part 3, Combat: 5 of the 6 ask `IsMine`. They are local presentation or input: `PlayerCadence.IsMine` (beat key, combo UI),
+  `PlayerSkillQueue.IsMine` (own input), both `IsLocalPlayerPresentation` (swing and hit VFX, feel), and `PlayerCombatState`'s
+  dummy selection (read off the own body, else NGO's object path). `PlayerMeleeCombat.AttackerIsHere` stays: it is NGO routing,
+  and its "no" sends `DamageFeedbackRpc`, which must never run on a body NGO never spawned. The entity-netcode damage feedback comes
+  with the combat milestone.
+- [x] the 50 `IsSpawned && IsOwner` and 18 `IsSpawned && !IsOwner`, read one by one (31 Oct): none needs a change.
+  - 44 of the 50 are the owner's NGO RPC sends, named on the same line. The other 6 are NGO routing too: `PlayerCombatState`
+    192 `SendSelection`, `PlayerKiosk` 154 (the stand's NGO object), `PlayerMoveAnticipation` 147 (NGO-only, stripped on DOTS bodies),
+    `PlayerCombatSkills` 293 (its NetworkVariable), `PlayerCrew` 133 `FoundRpc`, and `PointAndClickPlayer`'s `IPlayerBody.IsLocal`
+    (an NGO body's own answer; a DOTS body's `IPlayerBody` is `GhostPlayerBody`).
+  - 7 of the 18 are `TellRpc` to a remote NGO owner. On a DOTS body they are skipped, and the next line's `IsMine` shows nothing on a
+    server body; the DOTS message route comes with M8's chat port.
+  - The other 11 are "only the owner acts" guards in Autobuff, Autopilot, `PlayerLoadouts` and `PointAndClickPlayer`. `PlayerRoleTable`
+    covers them: a remote view strips Movement, Automation and the Rules, a server body strips Automation and disables Movement.
+- [ ] the 2-client run in the Editor test world (another player's run kick, messages, death and pet never act on mine; mine do)
 
 ## 53. M3b jump: acceptance list (owner's bar via Master, 31 Oct 2026; design `netcode-for-entities-designs/m3b-design.md`)
 

@@ -59,7 +59,7 @@ namespace KryticalNova.Combat
         public event Action Changed;
 
         private bool Decides => !IsSpawned || IsServer;
-        private bool IsMine => !IsSpawned || IsOwner;
+        private bool IsMine => KryticalNova.Core.BodyRoleTag.IsMine(this, !IsSpawned || IsOwner);
 
         private void Awake()
         {

@@ -221,7 +221,7 @@ namespace KryticalNova.Combat
         private bool DummySelected()
         {
             // The owner's own machine (offline, or the host's player) reads the body; the server is told by the owner.
-            if (!IsSpawned || IsOwner)
+            if (KryticalNova.Core.BodyRoleTag.IsMine(this, !IsSpawned || IsOwner))
             {
                 Transform selected = body != null ? body.SelectedTarget : null;
                 return selected != null && selected.GetComponentInParent<CombatEntity>() == dummy;

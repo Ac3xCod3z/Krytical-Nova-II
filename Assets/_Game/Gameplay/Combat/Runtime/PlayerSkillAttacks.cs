@@ -64,7 +64,7 @@ namespace KryticalNova.Combat
 
         public bool CanInterruptCast(SkillDefinitionSO next) => next != null && next.IsAttack && Time.time >= castCancelFrom;
 
-        private bool IsLocalPlayerPresentation => !IsSpawned || IsOwner;
+        private bool IsLocalPlayerPresentation => KryticalNova.Core.BodyRoleTag.IsMine(this, !IsSpawned || IsOwner);
 
         private void Awake()
         {

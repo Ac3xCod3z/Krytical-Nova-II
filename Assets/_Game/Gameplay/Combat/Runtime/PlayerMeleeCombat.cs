@@ -877,6 +877,8 @@ namespace KryticalNova.Combat
                 | (result.ShieldShattered ? ShatteredBit : 0) | (elemental ? ElementalBit : 0));
         }
 
+        // NGO routing, not "is this body mine": false sends DamageFeedbackRpc to the owner. A DOTS body is never NGO-spawned, so this
+        // stays true there (no RPC on an unspawned object); the entity-netcode damage feedback comes with the combat milestone (plan 52).
         private bool AttackerIsHere => !IsSpawned || IsOwner;
 
         private void ShowDamageToAttacker(Vector3 position, DamageResult result, bool fromSkill)
@@ -999,6 +1001,6 @@ namespace KryticalNova.Combat
         }
 
         /// <summary>True on the machine whose player this is (or offline), i.e. where camera-level feedback belongs.</summary>
-        private bool IsLocalPlayerPresentation => !IsSpawned || IsOwner;
+        private bool IsLocalPlayerPresentation => KryticalNova.Core.BodyRoleTag.IsMine(this, !IsSpawned || IsOwner);
     }
 }
