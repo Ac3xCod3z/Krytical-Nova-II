@@ -1,0 +1,4 @@
+{
+ "about": "EditMode tests that already failed on main when kn_check --full joined the gate, each with the reason. kn_check --full passes when exactly these fail among the tests that ran: a new failure fails it, and so does a listed test that now passes (take it off, so the list only shrinks). 'name' is the test's full name as the results file gives it.",
+ "tests": []
+}

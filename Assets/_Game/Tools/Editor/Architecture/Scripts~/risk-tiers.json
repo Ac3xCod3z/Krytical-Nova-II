@@ -40,7 +40,7 @@
   "names": []
  },
  "needs": {
-  "high": "Master's /code-review at high, a second-client test, and kn_check --full once it exists",
+  "high": "Master's /code-review at high, a second-client test, and kn_check --full",
   "medium": "Master's /code-review at medium",
   "low": "nothing more than this check; Master's /code-review at low"
  }
