@@ -344,6 +344,18 @@ namespace KryticalNova.Player
             if (cinemachineCamera != null) cinemachineCamera.PreviousStateIsValid = false;   // a cut, no blend from where it looked
         }
 
+        /// <summary>The scene's orbit camera is tracking this body (its "Camera Target" or the body itself): the world may be shown.</summary>
+        public bool IsCameraOnThisBody
+        {
+            get
+            {
+                if (orbitCamera == null) return false;
+                var cinemachineCamera = orbitCamera.GetComponent<CinemachineCamera>();
+                Transform tracked = cinemachineCamera != null ? cinemachineCamera.Target.TrackingTarget : null;
+                return tracked != null && (tracked == transform || tracked.IsChildOf(transform));
+            }
+        }
+
         private CinemachineCamera PointOrbitCameraAtThisBody()
         {
             if (orbitCamera == null)

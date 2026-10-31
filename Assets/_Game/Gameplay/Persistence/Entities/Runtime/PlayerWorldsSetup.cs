@@ -156,6 +156,15 @@ namespace KryticalNova.Persistence.Entities
             KryticalNova.Player.Entities.Presentation.PlayerPresentationSetup.Install(client, factory, new BodyClickSource());
             var looks = client.GetExistingSystemManaged<PlayerLookClientSystem>();
             if (looks != null) looks.Applier = new IdentityLookApplier();
+            // the join's door (the loading screen) stays shut until the world may be shown: the body made, the camera on it, steady
+            // frames, or the cap (WorldEntryDoor); a world that is gone never holds it
+            var doorSystem = client.GetExistingSystemManaged<WorldEntryDoorSystem>();
+            if (doorSystem != null)
+            {
+                var door = new WorldEntryDoor();
+                doorSystem.Door = door;
+                KryticalNova.Networking.JoinFlow.HoldUntilWorldReady(() => door.IsOpen || !client.IsCreated);
+            }
             return factory;
         }
 

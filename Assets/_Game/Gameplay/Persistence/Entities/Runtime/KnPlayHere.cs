@@ -1028,8 +1028,6 @@ namespace KryticalNova.Persistence.Entities
 
             /// <summary>The scripted run stops itself after this (stops Play, reports what it has), before the batch watchdog's 300 s.</summary>
             public const float HardCapSeconds = 270f;
-            /// <summary>Steady frames before the first scripted click: this long with every frame under <see cref="SettledFrameMs"/>.</summary>
-            public const float SettledSeconds = 1f, SettledFrameMs = 50f;
             float m_RunStarted;
 
             bool OverTheCap()
@@ -1069,19 +1067,16 @@ namespace KryticalNova.Persistence.Entities
                     yield return new WaitForSeconds(2f);
                     Log($"the camera settled on the body before the first click: moved {(cam != null ? Vector3.Distance(camAtEntry, cam.transform.position) : 0f):F2} m " +
                         $"in the {Time.realtimeSinceStartup - settleStart:F1} s after entering");
-                    // A player clicks behind the loading screen's end, not in the Editor's warm-up (GUI run clicktick-1, 31 Oct: a press in
-                    // 779 ms frames reached the server 11 ticks late). Wait for SettledSeconds of frames all under SettledFrameMs.
-                    float waitStart = Time.realtimeSinceStartup, steadySince = Time.realtimeSinceStartup, worst = 0f;
-                    while (Time.realtimeSinceStartup - steadySince < SettledSeconds && Time.realtimeSinceStartup - waitStart < 60f)
-                    {
-                        yield return null;
-                        float ms = Time.unscaledDeltaTime * 1000f;
-                        worst = Mathf.Max(worst, ms);
-                        if (ms >= SettledFrameMs) steadySince = Time.realtimeSinceStartup;
-                    }
-                    bool settled = Time.realtimeSinceStartup - steadySince >= SettledSeconds;
-                    Log($"frames {(settled ? "settled" : "NEVER settled")} before the first click: {SettledSeconds:F1} s with every frame under {SettledFrameMs:F0} ms " +
-                        $"after {Time.realtimeSinceStartup - waitStart:F1} s of waiting (worst frame meanwhile {worst:F0} ms)");
+                    // A player clicks once the loading screen has opened, not in the Editor's warm-up (GUI run clicktick-1, 31 Oct: a press
+                    // in 779 ms frames reached the server 11 ticks late): wait for the join's door (WorldEntryDoor: body, camera, steady
+                    // frames, or its cap), as the loading screen does.
+                    float waitStart = Time.realtimeSinceStartup;
+                    while (KryticalNova.Networking.JoinFlow.Joining && Time.realtimeSinceStartup - waitStart < 60f) yield return null;
+                    var doorSystem = KnBootstrap.ClientWorld?.GetExistingSystemManaged<WorldEntryDoorSystem>();
+                    WorldEntryDoor door = doorSystem != null ? doorSystem.Door : null;
+                    Log(door == null ? "the join's door: NO door installed (the first click does not wait)"
+                        : $"the join's door {(door.IsOpen ? "opened by " + door.OpenedBy : "NEVER opened")} after {door.WaitedSeconds:F1} s with the body and the camera " +
+                          $"ready (worst frame meanwhile {door.WorstFrameMs:F0} ms); the click waited {Time.realtimeSinceStartup - waitStart:F1} s more for it");
                 }
                 if (string.IsNullOrEmpty(Walk) && string.IsNullOrEmpty(Jump)) yield break; // by hand: the owner clicks
 

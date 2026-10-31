@@ -795,6 +795,15 @@ wrapper's job is not the cause; nor is our code. Batch-mode runs (tests, builds)
 and DLSS is only not refreshed for that run. A by-hand Editor that hangs at start the same way can be freed by ending its
 `nvngx_update.exe` children in Task Manager.
 
+- [x] **The join's door waits for the world (Master, 31 Oct).** The DOTS client holds `JoinFlow` (`HoldUntilWorldReady`; `Joining`
+  stays true, so the menus' "Joining <server>" loading screen holds with no UI change) until `WorldEntryDoor` says the world may be
+  shown: the local body is made, the orbit camera tracks it (`PointAndClickPlayer.IsCameraOnThisBody`), and 1 s of frames are each
+  under 50 ms. On a slow PC the door opens anyway 10 s after the body and the camera are ready, logged `[KnJoin] ... the cap`.
+  Proof: EditMode `WorldEntryDoorTests` (steady second, a 779 ms hitch starts it again, the slow-PC cap, JoinFlow unchanged without a
+  hold), and GUI run door-1 (31 Oct): "steady frames after 2.5 s with the body and the camera ready (worst frame meanwhile 647 ms)".
+  The first jump after it started on the owner's tick although its click came 7 ticks late (116 = 116, lift 0.203 s).
+  Still to come: the menus' Enter must start the DOTS join (the plan's front-end move); the door is ready for it.
+
 Required step **before the first 2-client test** of the DOTS game (owner, via Master, 31 Oct): **one answer to "is this body
 mine" for entity-netcode bodies.** 124 places decide "mine" with `!IsSpawned || IsOwner` (run take-off view kick, messages,
 death, pets, mounts, skills, combat presentation, recall, identity...). An entity-netcode body is never spawned by NGO, so the
