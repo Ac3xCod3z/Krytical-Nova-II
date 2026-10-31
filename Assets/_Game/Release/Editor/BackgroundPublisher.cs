@@ -22,6 +22,8 @@ namespace KryticalNova.EditorTools
         public const string BatchLogPath = ReleasePublisher.Root + "/background-publish.log";
         private const string LockPath = ReleasePublisher.Root + "/background-publish.lock";
         private const string ResultPath = ReleasePublisher.Root + "/background-publish.result";
+        private const string RestartedMarker = ReleasePublisher.Root + "/background-publish.restarted";
+        private const string RestartResult = "RESTART";
         private const string Menu = "Krytical Nova/Release/";
 
         private static double s_NextCheck;
@@ -166,7 +168,17 @@ namespace KryticalNova.EditorTools
             s_NextCheck = EditorApplication.timeSinceStartup + 5;
             if (!File.Exists(LockPath) || RunningPublish() != null) return;
             string result = File.Exists(ResultPath) ? File.ReadAllText(ResultPath).Trim() : "FAILED: Unity quit without saying how it went. See " + BatchLogPath;
+            string[] lockLines = File.ReadAllLines(LockPath);
             File.Delete(LockPath);
+            if (result.StartsWith(RestartResult) && lockLines.Length > 1 && !File.Exists(RestartedMarker))
+            {
+                // Once only: the marker is removed when a publish ends any other way.
+                File.WriteAllText(RestartedMarker, lockLines[1]);
+                string again = Start(lockLines[1]);
+                if (again == null) { Debug.Log("[Release] The checkout's subtarget was corrected: publishing again in a fresh Unity."); return; }
+                result = "FAILED: " + again;
+            }
+            if (File.Exists(RestartedMarker)) File.Delete(RestartedMarker);
             if (result.StartsWith("OK")) Debug.Log("[Release] Background publish done: " + result + ". Check it with your test launcher, then Krytical Nova ▸ Release ▸ Promote Test to Live.");
             else Debug.LogError("[Release] Background publish " + result + " Details: " + ReleasePublisher.LogPath);
         }
@@ -179,6 +191,15 @@ namespace KryticalNova.EditorTools
             int code = 1;
             try
             {
+                // A game is a Player build, and this Editor's scripts must be compiled as the game's. If the subtarget had to be
+                // corrected (a server build left it on Server) this run stops here, before anything is built, and the Editor that
+                // started it runs it again in a freshly compiled Unity (WatchRunningPublish); two Unity cannot share the project.
+                if (ClientBuildGuard.EnsurePlayer("Publish to Test"))
+                {
+                    Finish(RestartResult + ": the subtarget was corrected; the publish starts again in a fresh Unity.");
+                    code = ClientBuildGuard.RestartExitCode;
+                    return;
+                }
                 string problem = AcceleratorProblem();
                 if (problem != null)
                 {

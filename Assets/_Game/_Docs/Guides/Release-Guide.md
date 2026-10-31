@@ -130,6 +130,25 @@ It takes about a minute. On 18 Oct 2026 Unity crashed while quitting after it (t
 Windows minutes a month on small machines, the project is very large, and the signing key and the CCD login live in
 your Windows account.
 
+## 1a-2. A game build is always a Player build (31 Oct 2026)
+
+A server build, or one that was killed halfway, can leave the build checkout on the **Server** subtarget. Every game build
+since then would compile as a server, and map bundles made meanwhile can carry server-only state: build 13 shipped ten of its
+29 maps with the sky switched off. Now every game build starts with `ClientBuildGuard` (Tools/Editor/Build): it forces and
+checks the **Player** subtarget on Windows, stops with a plain message if it cannot, and **clears the map content cache**
+(`Library/BuildCache` and the Addressables output) when the subtarget had to be corrected, when Unity or the scripting
+defines changed since the last good build, or when there is no record yet (the first publish after this change). A cleared
+cache costs one full rebuild of the maps; the same settings as last time keep the cache. The server build always puts the
+checkout back on Player when it ends.
+
+One more rule: setting the subtarget does not recompile the Editor that is running, and its scripts, compiled while the
+checkout stood on Server, would still run as a server's while the maps are built. So when the guard had to correct the
+subtarget, the build **stops before building anything** and starts again in a freshly compiled Unity. Publish to Test does
+this by itself (you see "publishing again in a fresh Unity" in the console); a batch script runs
+`-executeMethod KryticalNova.EditorTools.ClientBuildGuard.PrepareOnly` first, or re-runs when the exit code is 4. In the
+Editor window the scripts reload and you run the build again. The server's scene copy is decided by the build's own
+report (never the Editor's remembered subtarget), so a stuck Server subtarget cannot strip a game's scene.
+
 ## 1b. The launcher's news (before a build meant for LIVE)
 
 The launcher's paper panel shows **WHAT'S NEW!**: up to **four** headlines, each opening to a few lines on what changed
