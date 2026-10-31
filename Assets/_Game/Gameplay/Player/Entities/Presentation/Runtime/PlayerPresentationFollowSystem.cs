@@ -8,13 +8,24 @@ using UnityEngine;
 namespace KryticalNova.Player.Entities.Presentation
 {
     /// <summary>
+    /// Where the player bodies are made and placed each frame: the end of the simulation, in the player loop's Update phase, so
+    /// every body is final before the LateUpdates that read it (the Cinemachine brain, foot IK). The PresentationSystemGroup runs
+    /// after all LateUpdates (Entities appends it to PreLateUpdate): there the camera aimed at last frame's body and walking
+    /// across the screen judders (owner's GUI retry 2, 30 Oct). The NGO game placed its own walk before the camera too
+    /// (PlayerMoveAnticipation, execution order -200).
+    /// </summary>
+    [WorldSystemFilter(WorldSystemFilterFlags.ClientSimulation)]
+    [UpdateInGroup(typeof(SimulationSystemGroup), OrderLast = true)]
+    public partial class PlayerBodiesBeforeCameraGroup : ComponentSystemGroup { }
+
+    /// <summary>
     /// Client only, every rendered frame (after the simulation and prediction have finished): puts each player body where its ghost is,
     /// with the easing of <see cref="FollowMath"/> (between full ticks of a predicted ghost, a decaying offset so a rollback correction
     /// slides, a snap when <see cref="TeleportSeq"/> changed). It reads the ghost and writes the body; it never writes the ghost.
     /// Also fills <see cref="PlayerPresentationState"/> for the animation. Managed, so not Burst.
     /// </summary>
     [WorldSystemFilter(WorldSystemFilterFlags.ClientSimulation)]
-    [UpdateInGroup(typeof(PresentationSystemGroup))]
+    [UpdateInGroup(typeof(PlayerBodiesBeforeCameraGroup))]
     public partial class PlayerPresentationFollowSystem : SystemBase
     {
         /// <summary>How far above or below the drawn point the ground is looked for (metres).</summary>

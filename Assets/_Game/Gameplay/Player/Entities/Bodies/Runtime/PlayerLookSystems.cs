@@ -184,8 +184,7 @@ namespace KryticalNova.Player.Entities.Bodies
     /// for (again after <see cref="RetryFrames"/> when no answer came). Until then the body shows the prefab's own look.
     /// </summary>
     [WorldSystemFilter(WorldSystemFilterFlags.ClientSimulation)]
-    [UpdateInGroup(typeof(PresentationSystemGroup))]
-    [UpdateAfter(typeof(PlayerBodySpawnSystem))]
+    [UpdateInGroup(typeof(PresentationSystemGroup))]   // after the bodies are made (PlayerBodiesBeforeCameraGroup ends the simulation)
     public partial class PlayerLookClientSystem : SystemBase
     {
         /// <summary>Set by the game (<c>PlayerWorldsSetup</c>); without it looks are cached but not shown.</summary>

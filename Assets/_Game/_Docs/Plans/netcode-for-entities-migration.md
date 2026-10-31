@@ -739,3 +739,8 @@ correction rows wait for the owner's GUI retry 2.
 Speeds checked from the game's own assets (`RunSpeedSourceTests`, 30 Oct): Run rank 1 = 10.00 m/s, rank 10 = 18.53, rank 20 (top)
 = 28.00; walk 5.00; mounted top 34.00 (walk 9.00, `MountSettings.asset`); a 20 % speed Stance on top of Run 28 = 33.60 (cap x1.5).
 The ghost's `MoveStats` are `PlayerMovementSkills.SpeedFor` itself, so whatever the Stance, Boots, a mount or a GM add reaches it.
+
+GUI retry 2 (30 Oct): first click, turn, stop and re-click all right; a long walk seen side-on juddered. Cause: the bodies were placed
+in the PresentationSystemGroup, which Entities runs after every LateUpdate, so the Cinemachine brain (LateUpdate) aimed at last
+frame's body. Fixed: `PlayerBodiesBeforeCameraGroup` (end of the simulation, Update phase) holds the body spawn and follow, as the NGO
+game placed its walk before the camera (`PlayerMoveAnticipation`, order -200). Test `TheBodies_ArePlacedAtTheEndOfTheSimulation_...`.

@@ -151,6 +151,22 @@ namespace KryticalNova.Player.Entities.Presentation.Tests
 
         // ---------------------------------------------------------------------------------------------- following
         [Test]
+        public void TheBodies_ArePlacedAtTheEndOfTheSimulation_BeforeTheCameraReadsThem()
+        {
+            // owner's GUI retry 2 (30 Oct): placed in the PresentationSystemGroup (after every LateUpdate) the body was a frame behind
+            // the Cinemachine brain (LateUpdate) and a walk across the screen juddered; the NGO game placed its walk before the camera
+            using var p = PresRig.Create(0);
+            var client = p.Rig.Clients[0];
+            var group = client.GetExistingSystemManaged<PlayerBodiesBeforeCameraGroup>();
+            Assert.IsNotNull(group);
+            var sim = client.GetExistingSystemManaged<SimulationSystemGroup>();
+            Assert.Contains(group, (System.Collections.ICollection)sim.ManagedSystems, "in the simulation (the player loop's Update phase)");
+            var inGroup = group.ManagedSystems;
+            Assert.Contains(client.GetExistingSystemManaged<PlayerBodySpawnSystem>(), (System.Collections.ICollection)inGroup);
+            Assert.Contains(client.GetExistingSystemManaged<PlayerPresentationFollowSystem>(), (System.Collections.ICollection)inGroup);
+        }
+
+        [Test]
         public void TheBodies_FollowTheGhosts_OverAWalk_At100ms()
         {
             using var p = PresRig.Create(100);

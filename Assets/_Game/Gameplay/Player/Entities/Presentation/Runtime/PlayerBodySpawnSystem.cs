@@ -45,7 +45,7 @@ namespace KryticalNova.Player.Entities.Presentation
     /// through <see cref="LocalPlayer"/>), and destroys it when the ghost is gone or the world goes down.
     /// </summary>
     [WorldSystemFilter(WorldSystemFilterFlags.ClientSimulation)]
-    [UpdateInGroup(typeof(PresentationSystemGroup))]
+    [UpdateInGroup(typeof(PlayerBodiesBeforeCameraGroup))]
     [UpdateBefore(typeof(PlayerPresentationFollowSystem))]
     public partial class PlayerBodySpawnSystem : SystemBase
     {
