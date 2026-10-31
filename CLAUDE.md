@@ -16,6 +16,11 @@ Read `Assets/_Game/_Docs/ProjectOrganization.md` before creating, moving, or gen
 - Move assets through Unity (`AssetDatabase.MoveAsset`) or together with their `.meta`; then grep for old path literals.
 - Validate with menu **Krytical Nova ▸ Project ▸ Validate Project Organization**.
 
+## Code review (mandatory, owner 30 Oct 2026)
+
+Every PR is reviewed against `Assets/_Game/_Docs/Guides/Review-Rules.md` at its risk level before it goes in, and
+`kn_check.py --quick` (in `Tools/Editor/Architecture/Scripts~`) runs on every change. Checks warn rather than block.
+
 ## Dependencies between systems (mandatory, owner 19 Oct 2026: before writing any code)
 
 Every system is its own assembly (`KryticalNova.<System>`; Core stays `KryticalNova.Runtime`), stacked in layers. Read

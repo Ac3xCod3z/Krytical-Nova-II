@@ -178,7 +178,9 @@ so no session is blocked in the middle of its work by surprise.
 - [ ] 3. B: the batch entry points of Validate Project Organization and Check Icons (needs a Unity slot to run them once).
 - [x] 4. E and G: `Guides/Review-Rules.md` (real failures by severity with where each was seen, round limits,
   learned rules); the Master adds its link in CLAUDE.md.
-- [ ] 5. D: the risk tiers (the table above, then a run over the last 20 merged PRs to see whether the sorting looks right).
+- [x] 5. D: the risk tiers (`Scripts~/risk-tiers.json`; `kn_check` prints the level on every run, `--risk` alone).
+  Over the last 20 merged PRs: 4 high (save service, save system), 13 medium, 3 low (docs, a measuring bot). Server
+  build tools were added to medium after that run; UI files are never high by name alone.
 - [ ] 6. F: the Evals heading and the CLAUDE.md line.
 - [ ] 7. C: the commit hook (warns; blocks only a high-risk change whose `--quick` failed), last, after telling the Master.
 

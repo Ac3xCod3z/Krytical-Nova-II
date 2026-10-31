@@ -88,5 +88,7 @@ the file-path rules of Validate Project Organization (`organization_check.py`, a
 `compile_check.py --server`. `--only organization,dependencies` runs some of them. Findings that were there before a
 check joined the gate are in `known-findings.json` with their reason: they do not fail it, a new one does, and so does
 a listed one that has gone (take it off the list). When all four pass, `Logs/kn-check-stamp.json` records the git tree
-of the files at that moment, and `--stamp-ok` says whether the files are still the same. The plan is
+of the files at that moment, and `--stamp-ok` says whether the files are still the same. Every run also prints the
+change's risk level from `risk-tiers.json` (high, medium or low, and what that level needs before the PR goes in, as in
+`_Docs/Guides/Review-Rules.md`); `--risk` prints only that. The plan is
 `_Docs/Plans/code-evals-and-checks-plan.md`.

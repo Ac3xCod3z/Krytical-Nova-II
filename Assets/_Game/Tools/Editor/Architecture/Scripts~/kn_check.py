@@ -5,6 +5,11 @@
     python ".../kn_check.py" --only organization,dependencies     some checks only (writes no stamp)
     python ".../kn_check.py" --stamp-ok                           exit 0 when the last full --quick pass still
                                                                   matches the files as they are now
+    python ".../kn_check.py" --risk                               only the change's risk level and what it needs
+
+Every run also prints the change's risk level (risk-tiers.json beside this file: high when a player could lose items,
+Creds or a save, be locked out or see another's data; medium when a feature could stop working; low otherwise) and
+what that level needs before the PR goes in (Assets/_Game/_Docs/Guides/Review-Rules.md).
 
 --quick (the default, under 2 minutes, Unity can stay closed) runs only the checks whose files changed against
 origin/main (commits of this branch, edits and new files); --all runs every one:
@@ -145,7 +150,41 @@ HELD = CODE + (".meta", ".prefab", ".unity", ".asset")
 
 
 def in_game(p):
+    if "/_Docs/" in p:   # docs and their .meta files hold no scripts and no asset links
+        return False
     return p.startswith(("Assets/_Game/", "Assets/Resources/")) or p == "Assets/DefaultNetworkPrefabs.asset"
+
+
+TIERS = os.path.join(HERE, "risk-tiers.json")
+RANK = {"low": 0, "medium": 1, "high": 2}
+
+
+def tier_of(path, table):
+    low = table.get("low_always", {})
+    if any(part in path for part in low.get("parts", [])) or path.endswith(tuple(low.get("suffixes", []))):
+        return "low"
+    name = path.rsplit("/", 1)[-1]
+    for tier in ("high", "medium"):
+        t = table.get(tier, {})
+        by_name = not path.startswith(tuple(t.get("names_skip", []))) and any(n in name for n in t.get("names", []))
+        if path.startswith(tuple(t.get("prefixes", []))) or by_name:
+            return tier
+    return "low"
+
+
+def risk(changed):
+    """The change's tier (the highest of its files) and the files that decide it."""
+    table = load_json(TIERS)
+    tiers = {p: tier_of(p, table) for p in changed}
+    top = max(tiers.values(), key=RANK.get, default="low")
+    return top, sorted(p for p, t in tiers.items() if t == top), table.get("needs", {}).get(top, "")
+
+
+def print_risk(changed):
+    top, deciding, needs = risk(changed)
+    shown = ", ".join(deciding[:3]) + (f" and {len(deciding) - 3} more" if len(deciding) > 3 else "")
+    print(f"risk: {top}" + (f" ({shown})" if deciding and top != "low" else "") + (f"; needs: {needs}" if needs else ""))
+    return top
 
 
 # Which changed files each check reads; a check none of them touch is skipped (--all runs it anyway).
@@ -176,6 +215,13 @@ def stamp_ok():
 def main():
     if "--stamp-ok" in args:
         return 0 if stamp_ok() else 1
+    if "--risk" in args:
+        changed = changed_files()
+        if changed is None:
+            print("could not work out the changed files against origin/main")
+            return 2
+        print_risk(changed)
+        return 0
     if "--full" in args:
         print("--full (EditMode tests, Check Icons) is not built yet; it comes with known-test-failures.json")
         return 2
@@ -193,6 +239,10 @@ def main():
         print("could not work out the changed files against origin/main: running every check")
     elif changed is not None:
         print(f"{len(changed)} file(s) changed against origin/main")
+    tier = None
+    if changed is not None or not only:
+        known = changed if changed is not None else changed_files()
+        tier = print_risk(known) if known is not None else None
     results, skipped = [], []
     for name in names:
         if changed is not None and not NEEDS[name](changed):
@@ -225,7 +275,7 @@ def main():
             return 1
         os.makedirs(os.path.dirname(STAMP), exist_ok=True)
         with open(STAMP, "w", encoding="utf-8") as f:
-            json.dump({"tier": "quick", "tree": tree_after, "head": git("rev-parse", "HEAD").stdout.strip(),
+            json.dump({"tier": "quick", "risk": tier, "tree": tree_after, "head": git("rev-parse", "HEAD").stdout.strip(),
                        "time": datetime.datetime.now().isoformat(timespec="seconds"),
                        "checks": [n for n, _ in results], "skipped": skipped}, f, indent=1)
         print(f"stamp written: {os.path.relpath(STAMP, CHECKOUT)}")
