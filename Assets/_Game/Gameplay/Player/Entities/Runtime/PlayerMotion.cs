@@ -90,6 +90,11 @@ namespace KryticalNova.Player.Entities
         public int TakeoffMicros, ApexMicros, LandMicros;
         /// <summary>Landing cooldown, microseconds (JumpMotion.asset landingCooldown 0.25 s).</summary>
         public int CooldownMicros;
+        /// <summary>
+        /// How far back the server starts a jump on the click's own tick when the click reaches it late, microseconds: NGO's own
+        /// take-off hold (the owner waited at most this long for its server, <c>PlayerJumpMotor.OwnTakeoffHoldMax</c>, 0.25 s).
+        /// </summary>
+        public int ClickWindowMicros;
         public FixedList128Bytes<short> Rise;
         public FixedList128Bytes<short> Fall;
         /// <summary>
@@ -100,14 +105,17 @@ namespace KryticalNova.Player.Entities
         public FixedList128Bytes<short> Crouch;
 
         /// <summary>
-        /// The clip's numbers (take-off 0.183 s, apex 0.767 s, touchdown 1.407 s, cooldown 0.25 s) with straight-line shares.
-        /// Only for worlds that have no baked singleton (tests); the game bakes the real curve.
+        /// The clip's numbers (take-off 0.183 s, apex 0.767 s, touchdown 1.407 s, cooldown 0.25 s, click window 0.25 s) with
+        /// straight-line shares. Only for worlds that have no baked singleton (tests); the game bakes the real curve.
         /// </summary>
         public static PlayerMotionCurves Default
         {
             get
             {
-                var curves = new PlayerMotionCurves { TakeoffMicros = 183333, ApexMicros = 766667, LandMicros = 1406667, CooldownMicros = 250000 };
+                var curves = new PlayerMotionCurves
+                {
+                    TakeoffMicros = 183333, ApexMicros = 766667, LandMicros = 1406667, CooldownMicros = 250000, ClickWindowMicros = 250000,
+                };
                 for (int i = 0; i <= Samples; i++)
                 {
                     short share = (short)(i * 1000 / Samples);
@@ -123,7 +131,8 @@ namespace KryticalNova.Player.Entities
         /// is NGO's: (height(t) - height(phase start)) / (height(phase end) - height(phase start)), clamped to 0..1, or 1 when the
         /// phase hardly changes height (under 0.01).
         /// </summary>
-        public static PlayerMotionCurves FromClip(float takeoffSeconds, float apexSeconds, float landSeconds, float cooldownSeconds, Func<float, float> rootY)
+        public static PlayerMotionCurves FromClip(float takeoffSeconds, float apexSeconds, float landSeconds, float cooldownSeconds, Func<float, float> rootY,
+            float clickWindowSeconds = 0.25f)
         {
             if (rootY == null) throw new ArgumentNullException(nameof(rootY));
             if (!(takeoffSeconds >= 0f && apexSeconds > takeoffSeconds && landSeconds > apexSeconds))
@@ -134,6 +143,7 @@ namespace KryticalNova.Player.Entities
                 ApexMicros = (int)math.round(apexSeconds * 1e6f),
                 LandMicros = (int)math.round(landSeconds * 1e6f),
                 CooldownMicros = (int)math.round(math.max(0f, cooldownSeconds) * 1e6f),
+                ClickWindowMicros = (int)math.round(math.max(0f, clickWindowSeconds) * 1e6f),
             };
             Fill(ref curves.Rise, takeoffSeconds, apexSeconds, rootY);
             Fill(ref curves.Fall, apexSeconds, landSeconds, rootY);
@@ -175,6 +185,30 @@ namespace KryticalNova.Player.Entities
             ApexYMm = apexYMm,
             YawCdeg = YawCdeg(fromFeet, landingFeet),
         };
+
+        /// <summary>
+        /// The tick the server starts a jump on: the owner's press tick (<paramref name="claimed"/>), so a click that reaches the server
+        /// late still starts where the owner's own plan started (GUI run predict-2, 31 Oct: client tick 113, server 117, the arc restarted
+        /// 133 ms late). A claim only, clamped: never in the future, never more than the click window back (an older claim is not
+        /// trusted: the server's own tick), and never before the previous jump's end (touchdown and cooldown) or the start of a server
+        /// order (<paramref name="notBefore"/>, invalid = none), so a jump never reaches back over another action.
+        /// </summary>
+        public static NetworkTick ClickStartTick(NetworkTick now, NetworkTick claimed, in MotionPlan previous, NetworkTick notBefore,
+            in PlayerMotionCurves curves, int tickMicros)
+        {
+            if (!now.IsValid || !claimed.IsValid || claimed.IsNewerThan(now)) return now;
+            int windowTicks = tickMicros > 0 ? curves.ClickWindowMicros / tickMicros : 0;
+            if (now.TicksSince(claimed) > windowTicks) return now;
+            NetworkTick start = claimed;
+            if (previous.Kind != MotionKind.None && previous.StartTick.IsValid && tickMicros > 0)
+            {
+                NetworkTick end = previous.StartTick;
+                end.Add((uint)(((long)curves.LandMicros + curves.CooldownMicros + tickMicros - 1) / tickMicros));
+                if (end.IsNewerThan(start)) start = end;
+            }
+            if (notBefore.IsValid && notBefore.IsNewerThan(start)) start = notBefore;
+            return start.IsNewerThan(now) ? now : start;
+        }
 
         /// <summary>The plan moves the body on this tick: a jump from its press to its touchdown (the touchdown tick included).</summary>
         public static bool Active(in MotionPlan plan, in PlayerMotionCurves curves, NetworkTick tick, int tickMicros)

@@ -33,8 +33,9 @@ namespace KryticalNova.Player
         private const float RemoteLandingGrace = 0.6f;
         private const float RemoteLandingTolerance = 0.05f;
         // The player's own jump starts on the press and holds its crouch until the server's body leaves the ground
-        // (online phase 3): at most this long, and "left" means the feet this much higher than at the press.
-        private const float OwnTakeoffHoldMax = 0.25f;
+        // (online phase 3): at most this long, and "left" means the feet this much higher than at the press. The entity-netcode
+        // server starts a late jump click up to this far back on the owner's press tick (PlayerMotionCurves.ClickWindowMicros).
+        public const float OwnTakeoffHoldMax = 0.25f;
         private const float OwnTakeoffRise = 0.03f;
         [SerializeField] private JumpMotionData motionData;
         [SerializeField] private PlayerJumpPresentation presentation;

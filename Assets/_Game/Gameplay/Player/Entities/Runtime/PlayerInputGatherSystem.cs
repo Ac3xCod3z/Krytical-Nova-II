@@ -127,6 +127,7 @@ namespace KryticalNova.Player.Entities
             input.ClickSeq = click.ClickSeq;
             input.Run = click.Run;
             input.Jump = click.Jump;
+            input.ClickTick = click.ClickTick;
             input.GoalXMm = click.GoalXMm;
             input.GoalYMm = click.GoalYMm;
             input.GoalZMm = click.GoalZMm;
@@ -190,6 +191,7 @@ namespace KryticalNova.Player.Entities
             input.ClickSeq = header.Seq;
             input.Run = 0;
             input.Jump = 1;
+            input.ClickTick = m_Tick.IsValid ? m_Tick.SerializedData : 0u;   // the owner's plan starts on this tick
             input.GoalXMm = cmd.GoalMm.x;
             input.GoalYMm = cmd.GoalMm.y;
             input.GoalZMm = cmd.GoalMm.z;

@@ -25,7 +25,8 @@ namespace KryticalNova.Persistence.Entities
                 if (player != null) Debug.LogWarning("[KnPlayer] " + player.name + " has no jump motor with a two-phase jump clip: the ghost jumps with straight curves.");
                 return null;
             }
-            return PlayerMotionCurves.FromClip(p.Takeoff, p.Apex, p.Land, motor.MotionData.landingCooldown, rootY.Evaluate);
+            return PlayerMotionCurves.FromClip(p.Takeoff, p.Apex, p.Land, motor.MotionData.landingCooldown, rootY.Evaluate,
+                PlayerJumpMotor.OwnTakeoffHoldMax);
         }
 
         /// <summary>Puts the baked curves in <paramref name="world"/> as its one <see cref="PlayerMotionCurves"/> (replaces an older one).</summary>

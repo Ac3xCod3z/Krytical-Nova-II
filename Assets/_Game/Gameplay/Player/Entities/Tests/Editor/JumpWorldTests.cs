@@ -99,6 +99,24 @@ namespace KryticalNova.Player.Entities.Tests
             }
         }
 
+        [TestCase(0)]
+        [TestCase(100)]
+        public void TheServer_StartsTheJump_OnTheOwnersPressTick(int delayMs)
+        {
+            // GUI run predict-2 (31 Oct): a late click got the server's tick, and its plan restarted the owner's arc
+            var (rig, _) = Rig(delayMs);
+            using (rig)
+            {
+                rig.Sources[0].Jump(new int3(4000, 0, 0));
+                for (int i = 0; i < 20; i++) rig.Tick();
+                MotionPlan own = rig.Get<ClientMotionPlan>(rig.Clients[0], rig.GhostIn(0, 0)).Plan;
+                MotionPlan server = ServerPlan(rig);
+                Assert.AreEqual(MotionKind.Jump, own.Kind, "the owner planned it");
+                Assert.AreEqual(MotionKind.Jump, server.Kind, "the server planned it");
+                Assert.AreEqual(own.StartTick, server.StartTick, "one start tick on both sides");
+            }
+        }
+
         [Test]
         public void AClickInTheAir_IsRefused_AndASecondJumpWaitsForTheCooldown()
         {

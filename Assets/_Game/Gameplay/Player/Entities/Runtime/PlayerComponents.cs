@@ -53,6 +53,12 @@ namespace KryticalNova.Player.Entities
         public byte Run;
         /// <summary>1 = the click asks to jump there (M3b); the walk never starts from it.</summary>
         public byte Jump;
+        /// <summary>
+        /// The tick the owner pressed the click on (<c>NetworkTick.SerializedData</c>, 0 = none): a jump the server receives late starts
+        /// on it, the owner's own start, so the server's plan never restarts the owner's arc. A claim only: the server clamps it
+        /// (<see cref="JumpFlight.ClickStartTick"/>).
+        /// </summary>
+        public uint ClickTick;
         public InputEvent Click;
         public InputEvent Stop;
     }

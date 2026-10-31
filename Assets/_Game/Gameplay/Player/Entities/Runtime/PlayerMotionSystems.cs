@@ -34,6 +34,8 @@ namespace KryticalNova.Player.Entities
 
         public int Planned { get; private set; }
         public int Refused { get; private set; }
+        /// <summary>How many ticks before its own tick the server started the last jump (0 = the click came in time; tests and the scripted run).</summary>
+        public int LastStartTicksBack { get; private set; }
 
         protected override void OnCreate()
         {
@@ -88,7 +90,12 @@ namespace KryticalNova.Player.Entities
                             input.ClickSeq, nt.ServerTick.TickIndexForValidTick, "jump: " + why);
                     continue;
                 }
-                em.SetComponentData(e, JumpFlight.NewJump(input.ClickSeq, nt.ServerTick, pose.Mm, landing, apexY));
+                // on the owner's press tick when the click came late (clamped: the window, the previous jump, a server order)
+                var claimed = new NetworkTick { SerializedData = input.ClickTick };
+                NetworkTick orderStart = em.HasComponent<ServerOrder>(e) ? em.GetComponentData<ServerOrder>(e).StartTick : default;
+                NetworkTick start = JumpFlight.ClickStartTick(nt.ServerTick, claimed, in plan, orderStart, in curves, tickMicros);
+                LastStartTicksBack = nt.ServerTick.TicksSince(start);
+                em.SetComponentData(e, JumpFlight.NewJump(input.ClickSeq, start, pose.Mm, landing, apexY));
                 Planned++;
                 if (PlayerClickLog.Sink != null)
                     PlayerClickLog.Server(em.HasComponent<GhostOwner>(e) ? em.GetComponentData<GhostOwner>(e).NetworkId : 0,

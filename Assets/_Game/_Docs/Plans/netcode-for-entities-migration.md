@@ -837,10 +837,18 @@ The DOTS jump must feel exactly like the NGO jump, server still deciding. NGO nu
   - [x] the jump clip starts on the press frame (GUI run predict-2: 0 frames, 2 of 2). The owner's plan starts on the tick being
     predicted, and in the rest of the press's tick the follow's clock read -1 (run predict-1: 1-2 frames late). It reads 0 now, so
     the clip is held at its start for less than a tick.
-  - [ ] lift within 0.30 s on every jump: 0.213 / 0.210 / 0.219 s, but 0.325 s on the first jump after entering (run predict-2). Cause
+  - [x] lift within 0.30 s on every jump. GUI run clicktick-2 (31 Oct) waited for settled frames after entering (1 s under 50 ms,
+    logged). The first jump after entering then started on the same tick on both sides (server 168 = owner 168), lift 0.203 s; the
+    second 258 = 258, 0.217 s. Clip and prediction on the press frame, landing 0.0 cm, refusals 3 of 3 again. Before: 0.213 / 0.210 /
+    0.219 s, but 0.325 s on the first jump after entering (run predict-2). Cause
     proven ([KnClick]): the client gathered the click on tick 113, and the server planned it on tick 117 (the click arrived late), so
-    the server's plan replaced the owner's and the arc started over. Next step (A): the click carries its own tick, and the server
-    starts the jump on it when it is at most NGO's 0.25 s back (clamped: never in the future, never before the previous jump's end).
+    the server's plan replaced the owner's and the arc started over. Step (A): the click carries its own tick (`PlayerInput.ClickTick`),
+    and the server starts the jump on it when it is at most NGO's 0.25 s back (`JumpFlight.ClickStartTick`, `PlayerMotionCurves.
+    ClickWindowMicros` from `PlayerJumpMotor.OwnTakeoffHoldMax`). It is clamped: never in the future, never before the previous jump's
+    end or a server order's start, and a claim older than the window (a 1 s-old one in the tests) is not trusted.
+    Documented fallback (Master, 31 Oct): a click that arrives more than 0.25 s late starts on the server's tick, the same as NGO (its
+    owner held the crouch 0.25 s, then went on). The owner's arc then restarts once. GUI run clicktick-1 showed it only for a press in
+    the Editor's warm-up (779 ms frames), which a player behind the loading screen never gets.
 - [x] a jump the rank or the Flux does not allow is refused by the owner and the server with the same words, and nothing starts
   (GUI run predict-2, 3 of 3: no owner plan, the drawn body rose 0.0 cm): rank 0 "Learn Jump first.", rank 1 at 30 m "Too far: Jump
   rank reaches 20.0 m.", 4 of 5 Flux "Not enough Flux. Jump needs 5 Flux per destination." Both sides check in NGO's order (rank,

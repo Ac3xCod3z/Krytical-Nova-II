@@ -22,6 +22,49 @@ namespace KryticalNova.Player.Entities.Tests
         };
 
         [Test]
+        public void ALateClick_StartsOnItsOwnTick_WithinTheWindow()
+        {
+            // GUI run predict-2 (31 Oct): pressed on tick 113, planned by the server on 117
+            var curves = PlayerMotionCurves.Default;
+            var now = new NetworkTick(117);
+            Assert.AreEqual(113u, JumpFlight.ClickStartTick(now, new NetworkTick(113), default, default, curves, TickMicros).TickIndexForValidTick);
+            Assert.AreEqual(117u, JumpFlight.ClickStartTick(now, new NetworkTick(117), default, default, curves, TickMicros).TickIndexForValidTick,
+                "in time: its own tick");
+            // the window is NGO's 0.25 s hold: 7 whole ticks at 30 Hz (never more than the window)
+            Assert.AreEqual(110u, JumpFlight.ClickStartTick(now, new NetworkTick(110), default, default, curves, TickMicros).TickIndexForValidTick);
+            Assert.AreEqual(117u, JumpFlight.ClickStartTick(now, new NetworkTick(109), default, default, curves, TickMicros).TickIndexForValidTick,
+                "8 ticks back is past the window: the server's own tick");
+        }
+
+        [Test]
+        public void AClaimedTick_OneSecondOld_OrInTheFuture_IsNotTrusted()
+        {
+            var curves = PlayerMotionCurves.Default;
+            var now = new NetworkTick(300);
+            Assert.AreEqual(300u, JumpFlight.ClickStartTick(now, new NetworkTick(270), default, default, curves, TickMicros).TickIndexForValidTick,
+                "a client claiming a tick 1 s old gets the server's tick");
+            Assert.AreEqual(300u, JumpFlight.ClickStartTick(now, new NetworkTick(305), default, default, curves, TickMicros).TickIndexForValidTick,
+                "never in the future");
+            Assert.AreEqual(300u, JumpFlight.ClickStartTick(now, default, default, default, curves, TickMicros).TickIndexForValidTick,
+                "no claim: the server's tick");
+        }
+
+        [Test]
+        public void ALateClick_NeverStartsBeforeThePreviousJumpsEnd_OrAServerOrder()
+        {
+            var curves = PlayerMotionCurves.Default;
+            int endTicks = (curves.LandMicros + curves.CooldownMicros + TickMicros - 1) / TickMicros;   // 50 at 30 Hz
+            var previous = Plan(int3.zero, new int3(3000, 0, 0), 1400, startTick: 100);
+            var now = new NetworkTick((uint)(100 + endTicks + 3));
+            NetworkTick early = new NetworkTick((uint)(100 + endTicks - 2));
+            Assert.AreEqual((uint)(100 + endTicks), JumpFlight.ClickStartTick(now, early, previous, default, curves, TickMicros).TickIndexForValidTick,
+                "a claim inside the last jump's cooldown starts at its end");
+            var order = new NetworkTick((uint)(100 + endTicks + 2));
+            Assert.AreEqual(order.TickIndexForValidTick, JumpFlight.ClickStartTick(now, early, previous, order, curves, TickMicros).TickIndexForValidTick,
+                "nor before a server order that started after the press");
+        }
+
+        [Test]
         public void TheFeet_StayOnTheStart_UntilTakeoff_AndEndOnTheLanding()
         {
             var curves = PlayerMotionCurves.Default;
