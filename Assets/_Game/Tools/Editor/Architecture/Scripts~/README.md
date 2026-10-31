@@ -72,7 +72,7 @@ Systems, Hubs, Design data, Tests and How to read.
 - `template.html`: the page, in the Encyclopedia's comic look. The data goes in at `/*__DATA__*/null`.
 - `baseline.json`: the ratchet, written by `--baseline`: the uphill links, the two-way pairs and the scripts that
   assets hold.
-- `compile_check.py`, `run_editmode_tests.py`: see above.
+- `compile_check.py`, `run_editmode_tests.py`: see above; `run_batch_checks.py`: the Editor checks, below.
 - `kn_check.py`, `organization_check.py`, `known-findings.json`, `known-test-failures.json`: the gate, below.
 - `own_tree.py`: runs a batch Unity in its own job object and stops only that tree when the PC runs low on memory:
   below 2 GB free for 15 s it asks Unity to quit and forces it only after 60 s (FORCED), below 1 GB it forces at once;
@@ -99,6 +99,9 @@ change's risk level from `risk-tiers.json` (high, medium or low, and what that l
 every system the change reaches, meaning the changed systems and every system that uses them (`--all`: every test
 assembly). Tests that already failed on main are in `known-test-failures.json` with their reason. The check passes when
 exactly those fail among the tests that ran; a new failure fails it, and so does a listed test that now passes.
+`--full` then adds `editor`: `run_batch_checks.py` runs Validate Project Organization and Check Icons in a batch Unity
+(`Tools/Editor/Checks/BatchChecks.cs`, no dialog, results in `Logs/batch-checks.txt`). It runs when anything under
+`Assets/` outside the docs changed, and its known errors are in `known-findings.json` (`organization_unity`, `icons`).
 
 `kn_commit_hook.py` is a Claude Code `PreToolUse` hook for Bash (switched on in `.claude/settings.json` only with
 the Master's OK). On `git commit` or `gh pr create` in a checkout of this project it asks `kn_check.py --state` (about
