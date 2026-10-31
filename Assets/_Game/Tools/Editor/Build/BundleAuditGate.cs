@@ -107,8 +107,8 @@ namespace KryticalNova.EditorTools
                     foreach (Transform t in root.GetComponentsInChildren<Transform>(true))
                     {
                         GameObject go = t.gameObject;
-                        string path = PathOf(t);
-                        states.AddObject(path, go.activeSelf);
+                        string objectPath = PathOf(t);
+                        states.AddObject(objectPath, go.activeSelf);
                         foreach (Component component in go.GetComponents<Component>())
                         {
                             if (component == null) continue;
@@ -124,7 +124,7 @@ namespace KryticalNova.EditorTools
                                 states.ScriptNames[signature] = type;
                                 type = ObjectStates.BehaviourPrefix + signature;
                             }
-                            states.AddComponent(path, type, on);
+                            states.AddComponent(objectPath, type, on);
                         }
                         if (!go.activeSelf) total.InactiveObjects++;
                         foreach (MonoBehaviour behaviour in go.GetComponents<MonoBehaviour>())
