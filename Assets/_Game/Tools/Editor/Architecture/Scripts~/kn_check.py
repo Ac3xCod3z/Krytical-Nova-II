@@ -420,7 +420,10 @@ def main():
     if not only:
         tree_after = files_tree()
         if tree_before is None or tree_before != tree_after:
-            print("files changed while the checks ran (another session?): no stamp written; run it again")
+            moved = git("diff-tree", "-r", "--name-only", tree_before, tree_after).stdout.splitlines() \
+                if tree_before and tree_after else []
+            print("files changed while the checks ran (another session, or Unity writing in this checkout): no stamp "
+                  "written; run it again" + (": " + ", ".join(moved[:10]) if moved else ""))
             return 1
         os.makedirs(os.path.dirname(STAMP), exist_ok=True)
         with open(STAMP, "w", encoding="utf-8") as f:
