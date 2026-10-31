@@ -11,7 +11,7 @@ Read `Assets/_Game/_Docs/ProjectOrganization.md` before creating, moving, or gen
 - Code goes in the system's `Runtime/`, `Editor/`, `Data/` or `Tests/` folder and must be covered by an
   asmdef/asmref. Namespace: `KryticalNova.<System>[.<Sub>]`.
 - Vendor packages live untouched in `Assets/_ThirdParty/<Vendor>/`. Exceptions pinned at the root:
-  `Synty/`, `DownloadCache/`, `QuickDestruction/`, `FastScriptReload/`, `Plugins/`, `Resources/`, `TextMesh Pro/`, `DefaultNetworkPrefabs.asset`.
+  `Synty/`, `DownloadCache/`, `QuickDestruction/`, `FastScriptReload/`, `Plugins/`, `Resources/`, `TextMesh Pro/`, `Unity Cloud/`, `DefaultNetworkPrefabs.asset`.
 - Editor builders that create assets must write into the owning system's folder (path constants).
 - Move assets through Unity (`AssetDatabase.MoveAsset`) or together with their `.meta`; then grep for old path literals.
 - Validate with menu **Krytical Nova ▸ Project ▸ Validate Project Organization**.

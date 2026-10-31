@@ -1,8 +1,3 @@
 {
- "organization": [
-  {"path": "Assets/Human-Custom", "since": "2026-10-30",
-   "reason": "a custom Sidekick character saved at the Assets root; not yet moved into a system folder"},
-  {"path": "Assets/Unity Cloud", "since": "2026-10-30",
-   "reason": "a Unity package's folder at the Assets root; not yet added to the reserved roots or moved"}
- ]
+ "organization": []
 }

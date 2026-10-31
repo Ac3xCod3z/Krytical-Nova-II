@@ -29,6 +29,7 @@ namespace KryticalNova.EditorTools.Organization
         {
             "Plugins", "Resources", "StreamingAssets", "Editor Default Resources", "Gizmos", "WebGLTemplates",
             "AddressableAssetsData", "Samples", "XR", "_Recovery", "TextMesh Pro",
+            "Unity Cloud", // com.unity.cloud.common hard-codes Assets/Unity Cloud/Editor/CertificatePinningSettings.asset
         };
 
         /// <summary>
