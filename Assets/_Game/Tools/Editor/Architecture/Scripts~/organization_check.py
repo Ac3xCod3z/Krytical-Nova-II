@@ -33,7 +33,8 @@ def names(*items):
 
 OWNED_ROOTS = names("_Game", "_ThirdParty", "_Plugins", "_ArtSource")
 UNITY_RESERVED_ROOTS = names("Plugins", "Resources", "StreamingAssets", "Editor Default Resources", "Gizmos",
-                             "WebGLTemplates", "AddressableAssetsData", "Samples", "XR", "_Recovery", "TextMesh Pro")
+                             "WebGLTemplates", "AddressableAssetsData", "Samples", "XR", "_Recovery", "TextMesh Pro",
+                             "Unity Cloud")
 PINNED_VENDOR_ROOTS = names("Synty", "DownloadCache", "QuickDestruction", "FastScriptReload")
 PINNED_ROOT_FILES = names("DefaultNetworkPrefabs.asset", "csc.rsp", "mcs.rsp", "link.xml")
 LEGACY_BUCKET_NAMES = names("Scripts", "Prefabs", "Materials", "Textures", "Models", "Meshes", "Shaders", "Scenes",
