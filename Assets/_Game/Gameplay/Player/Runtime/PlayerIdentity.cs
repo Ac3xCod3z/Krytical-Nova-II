@@ -300,7 +300,7 @@ namespace KryticalNova.Player
             // A new character starts in the level-1 outfit of its own pack, holding its Discipline's weapon.
             if (grantKit && inventory != null && (!IsSpawned || IsServer)) inventory.ServerGrantStarterKit(GearPack, Faction, Body, Discipline);
             // The player's own game keeps its copy of the look in step, so the select screen shows the same character.
-            if ((!IsSpawned || IsOwner) && CharacterSession.TryGetActive(out CharacterProfile mine) && mine.id == characterId)
+            if (BodyRoleTag.IsMine(this, !IsSpawned || IsOwner) && CharacterSession.TryGetActive(out CharacterProfile mine) && mine.id == characterId)
                 CharacterSession.RememberRecipe(state.ToRecipe());
             WearerChanged?.Invoke();
             Changed?.Invoke();

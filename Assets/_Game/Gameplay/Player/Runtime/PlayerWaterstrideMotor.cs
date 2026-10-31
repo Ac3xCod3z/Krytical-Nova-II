@@ -494,7 +494,7 @@ namespace KryticalNova.Player
         public void ServerSplash(Vector3 at)
         {
             if (!HasAuthority) return;
-            ClientPresentationRegistry.Feel?.WaterSplash(transform, at, !IsSpawned || IsOwner);
+            ClientPresentationRegistry.Feel?.WaterSplash(transform, at, BodyRoleTag.IsMine(this, !IsSpawned || IsOwner));
             if (IsSpawned) SplashRpc(at);
         }
 

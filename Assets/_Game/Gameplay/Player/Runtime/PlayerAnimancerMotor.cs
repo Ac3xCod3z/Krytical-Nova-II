@@ -350,7 +350,7 @@ namespace KryticalNova.Player
                 if (running)
                 {
                     lastRunTakeOff = Time.time;
-                    feel.RunStarted(transform, !IsSpawned || IsOwner);
+                    feel.RunStarted(transform, BodyRoleTag.IsMine(this, !IsSpawned || IsOwner));
                 }
                 else feel.RunStopped(transform);
             }
@@ -373,7 +373,7 @@ namespace KryticalNova.Player
             var feel = ClientPresentationRegistry.Feel;
             if (feel == null) return;
             lastRunTakeOff = Time.time;
-            feel.RunStarted(transform, !IsSpawned || IsOwner);
+            feel.RunStarted(transform, BodyRoleTag.IsMine(this, !IsSpawned || IsOwner));
         }
 
         // The character's effects are dropped when it is disabled; a run still going on re-enable is reported again.

@@ -323,7 +323,7 @@ namespace KryticalNova.Player
             fallState = animancerMotor.PlayDeathClip(front.fall, fallFadeIn);
             if (fallState != null) fallState.Speed = derezClipSpeed;
 
-            bool victimIsLocal = !IsSpawned || IsOwner;
+            bool victimIsLocal = BodyRoleTag.IsMine(this, !IsSpawned || IsOwner);
             bool killerIsLocal = killer != null && IsLocalPlayer(killer);
             involvesLocalPlayer = victimIsLocal || killerIsLocal;
             var feel = ClientPresentationRegistry.Feel;
@@ -386,7 +386,7 @@ namespace KryticalNova.Player
                 motionWarping.Play(warpAsset, new[] { new WarpPoint { position = landing, rotation = transform.rotation } });
             }
 
-            bool victimIsLocal = !IsSpawned || IsOwner;
+            bool victimIsLocal = BodyRoleTag.IsMine(this, !IsSpawned || IsOwner);
             bool killerIsLocal = killer != null && IsLocalPlayer(killer);
             involvesLocalPlayer = victimIsLocal || killerIsLocal;
             var feel = ClientPresentationRegistry.Feel;
@@ -652,7 +652,7 @@ namespace KryticalNova.Player
             fallState = null;
             animancerMotor.Revive(reviveFade);
             ClientPresentationRegistry.Feel?.SetDisintegrated(transform, false); // a de-rezzed body (and pet) comes back
-            ClientPresentationRegistry.Feel?.Respawned(transform, !IsSpawned || IsOwner);
+            ClientPresentationRegistry.Feel?.Respawned(transform, BodyRoleTag.IsMine(this, !IsSpawned || IsOwner));
         }
 
         private void RestoreAgent()

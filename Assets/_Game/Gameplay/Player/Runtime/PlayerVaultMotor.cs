@@ -643,7 +643,7 @@ namespace KryticalNova.Player
             var feel = ClientPresentationRegistry.Feel;
             if (feel != null)
             {
-                feel.JumpTakeoff(transform, !IsSpawned || IsOwner);
+                feel.JumpTakeoff(transform, BodyRoleTag.IsMine(this, !IsSpawned || IsOwner));
                 feel.Airborne(transform, true);
             }
         }
@@ -691,7 +691,7 @@ namespace KryticalNova.Player
             if (feel != null)
             {
                 feel.Airborne(transform, false);
-                feel.Landed(transform, !IsSpawned || IsOwner);
+                feel.Landed(transform, BodyRoleTag.IsMine(this, !IsSpawned || IsOwner));
             }
             // Where it is decided, the move carries on from the landing; in the player's own game, its own walk does
             // (online phase 3), so the run starts on touchdown instead of the body sliding on in the landing pose.

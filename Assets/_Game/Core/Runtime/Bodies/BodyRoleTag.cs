@@ -60,5 +60,17 @@ namespace KryticalNova.Core
             BodyRoleTag tag = Of(part);
             return tag != null && tag.kind == NetRoleKind.ClientView && tag.isLocal;
         }
+
+        /// <summary>
+        /// The one answer to "is this body this machine's own player?" (its view kicks, messages, death view, camera, panels; plan 52).
+        /// A body of the entity netcode answers from its tag: only the local ClientView is mine, a ServerBody is nobody's on this machine.
+        /// Every other body (offline, Netcode for GameObjects) keeps NGO's own answer, <paramref name="ngoMine"/>
+        /// (<c>!IsSpawned || IsOwner</c>), unchanged. Without it an entity-netcode body, never NGO-spawned, was "mine" on every machine.
+        /// </summary>
+        public static bool IsMine(Component part, bool ngoMine)
+        {
+            BodyRoleTag tag = Of(part);
+            return tag != null && tag.kind != NetRoleKind.Offline ? tag.kind == NetRoleKind.ClientView && tag.isLocal : ngoMine;
+        }
     }
 }
