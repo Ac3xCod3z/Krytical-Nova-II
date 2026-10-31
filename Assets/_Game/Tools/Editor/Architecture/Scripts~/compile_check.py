@@ -12,6 +12,7 @@ Use it to check a refactor in a worktree while the owner's Editor stays open on 
                                                (UNITY_SERVER defined, Editor-only code left out)
     python ".../compile_check.py" --maxcpu 2   build with at most 2 MSBuild nodes
     python ".../compile_check.py" --each       one dotnet run per assembly, the old slower way (same output)
+    python ".../compile_check.py" --restore-only   restore only: must fail with "not compiled" (a test of the guard)
 It prints the errors and exits 1 when any assembly fails. Warnings are not shown.
 
 What it cannot see: an assembly that exists only in the checkout (a new .asmdef) is made from its .asmdef's
@@ -23,6 +24,7 @@ import os
 import re
 import subprocess
 import sys
+import time
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 args = sys.argv[1:]
@@ -181,7 +183,10 @@ else:
                 '  <Target Name="Restore">\n    <MSBuild Projects="@(Ours)" Targets="Restore" BuildInParallel="true" />\n  </Target>\n'
                 '  <Target Name="Build">\n    <MSBuild Projects="@(Ours)" Targets="Build" BuildInParallel="true"'
                 ' ContinueOnError="ErrorAndContinue" />\n  </Target>\n</Project>\n')
-    r = subprocess.run(["dotnet", "build", batch] + BUILD, capture_output=True, text=True)
+    started = time.time()
+    # --restore-only runs the restore step alone, to prove the guard below fails a run that compiled nothing
+    r = subprocess.run(["dotnet", "build", batch] + BUILD + (["-t:Restore"] if "--restore-only" in args else []),
+                       capture_output=True, text=True)
     own = {}   # assembly -> its own errors, from the project named at the end of each error line
     for l in (r.stdout + r.stderr).splitlines():
         if ": error " not in l:
@@ -201,6 +206,14 @@ else:
             if name not in bad and any(u in bad for u in uses.get(name, [])):
                 bad.add(name)
                 grew = True
+    # a clean run must have written every assembly it reports as compiled: the project files are rewritten above,
+    # so each one is compiled again on every run, never skipped as up to date (catches a run that only restored)
+    for p in built:
+        name = os.path.basename(p)[:-7]
+        dll = os.path.join(OUT, "bin", name + ".dll")
+        if name not in bad and (not os.path.exists(dll) or os.path.getmtime(dll) < started - 1):
+            bad.add(name)
+            own.setdefault(name, []).append(f"{name}: not compiled (no output from this run)")
     failed = [os.path.basename(p)[:-7] for p in built if os.path.basename(p)[:-7] in bad]
     for name in sorted(own):
         errors += [e for e in own[name] if e not in errors]
