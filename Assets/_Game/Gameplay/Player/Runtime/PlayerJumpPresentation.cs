@@ -127,9 +127,12 @@ namespace KryticalNova.Player
         public bool SupportsWarpedJump => animancerMotor != null && animancerMotor.HasWarpedJump;
 
         /// <summary>Starts the clip at its crouch; the motor starts warping on the same frame.</summary>
-        public void BeginWarpedJump()
+        public void BeginWarpedJump() => BeginWarpedJump(0f);
+
+        /// <summary>Starts the clip <paramref name="clipSeconds"/> in (the entity-netcode jump, where the ghost owns the root; M3b).</summary>
+        public void BeginWarpedJump(float clipSeconds)
         {
-            if (SupportsWarpedJump) animancerMotor.PlayWarpedJump();
+            if (SupportsWarpedJump) animancerMotor.PlayWarpedJumpFrom(clipSeconds);
             ClientPresentationRegistry.Feel?.JumpCharge(transform, IsLocalPlayer());
         }
 

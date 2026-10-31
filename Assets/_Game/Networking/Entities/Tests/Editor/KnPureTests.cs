@@ -43,6 +43,8 @@ namespace KryticalNova.Networking.Entities.Tests
             Assert.AreEqual(30, rate.SimulationTickRate);
             Assert.AreEqual(30, rate.NetworkTickRate);
             Assert.Greater(rate.HandshakeApprovalTimeoutMS, 5000u);
+            Assert.AreEqual(1, rate.MaxSimulationStepBatchSize, "every tick runs on its own: the walk and the jump are per-tick plans");
+            Assert.AreEqual(KnNetDefaults.MaxTicksPerFrame, rate.MaxSimulationStepsPerFrame);
         }
 
         [Test]

@@ -15,6 +15,7 @@
         "KryticalNova.Player.Entities.Presentation",
         "Unity.Netcode.Runtime",
         "Unity.Collections",
+        "MotionWarping.Runtime",
         "UnityEngine.TestRunner"
     ],
     "includePlatforms": [],

@@ -15,6 +15,8 @@ namespace KryticalNova.Player.Entities
         public PlayerCommandKind Kind;
         public int3 GoalMm;
         public bool Run;
+        /// <summary>The click asks to jump to <see cref="GoalMm"/> (M3b).</summary>
+        public bool Jump;
     }
 
     /// <summary>
@@ -35,6 +37,9 @@ namespace KryticalNova.Player.Entities
 
         public void Click(int3 goalMm, bool run = false) =>
             m_Queue.Enqueue(new PlayerCommand { Kind = PlayerCommandKind.Click, GoalMm = goalMm, Run = run });
+
+        public void Jump(int3 goalMm) =>
+            m_Queue.Enqueue(new PlayerCommand { Kind = PlayerCommandKind.Click, GoalMm = goalMm, Jump = true });
 
         public void Stop() => m_Queue.Enqueue(new PlayerCommand { Kind = PlayerCommandKind.Stop });
 
@@ -67,6 +72,9 @@ namespace KryticalNova.Player.Entities
         /// <summary>Set by <see cref="PlayerEntitiesSetup.Install"/>. No silent default: a click without a planner is dropped with one error.</summary>
         public IPathPlanner Planner { get; set; }
 
+        /// <summary>The owner's jump planner (the client's NavMesh and the rank's rules); null = a jump click is sent unpredicted.</summary>
+        public IJumpPlanner JumpPlanner { get; set; }
+
         protected override void OnCreate()
         {
             m_Query = GetEntityQuery(new EntityQueryBuilder(Allocator.Temp)
@@ -76,6 +84,9 @@ namespace KryticalNova.Player.Entities
 
         // the tick this frame's input is for
         NetworkTick m_Tick;
+        // the jump clip's clock (a jump click in the air or the landing cooldown is not predicted)
+        PlayerMotionCurves m_Curves;
+        int m_TickMicros;
 
         // The newest click. Netcode delivers an input EVENT by its count: the server sees it on the first tick whose count is higher,
         // which is a later tick when the click's own tick arrives late or is lost; and on later frames of a partial tick the plain
@@ -88,6 +99,9 @@ namespace KryticalNova.Player.Entities
         {
             var em = EntityManager;
             m_Tick = SystemAPI.TryGetSingleton<NetworkTime>(out var nt) ? nt.ServerTick : default;
+            m_Curves = SystemAPI.TryGetSingleton<PlayerMotionCurves>(out var curves) ? curves : PlayerMotionCurves.Default;
+            m_TickMicros = PlayerMovement.TickMicros(SystemAPI.TryGetSingleton<ClientServerTickRate>(out var rate) && rate.SimulationTickRate > 0
+                ? rate.SimulationTickRate : 30);
             using var entities = m_Query.ToEntityArray(Allocator.Temp);
             foreach (var e in entities)
             {
@@ -96,6 +110,8 @@ namespace KryticalNova.Player.Entities
                 {
                     if (cmd.Kind == PlayerCommandKind.Stop)
                         input.Stop.Set();
+                    else if (cmd.Kind == PlayerCommandKind.Click && cmd.Jump)
+                        PlanJumpClick(em, e, cmd, ref input);
                     else if (cmd.Kind == PlayerCommandKind.Click)
                         PlanClick(em, e, cmd, ref input);
                 }
@@ -110,6 +126,7 @@ namespace KryticalNova.Player.Entities
         {
             input.ClickSeq = click.ClickSeq;
             input.Run = click.Run;
+            input.Jump = click.Jump;
             input.GoalXMm = click.GoalXMm;
             input.GoalYMm = click.GoalYMm;
             input.GoalZMm = click.GoalZMm;
@@ -154,6 +171,57 @@ namespace KryticalNova.Player.Entities
                         header.Seq, m_Tick.TickIndexForValidTick);
             }
             finally { corners.Dispose(); }
+        }
+
+        /// <summary>
+        /// A jump click (owner answer Q1 a: predicted on the press). It takes the next click number, with no walk corners (the walk
+        /// never starts from it), and the owner plans the jump at once into <see cref="ClientMotionPlan"/> on the tick of the press;
+        /// the server plans it again and its <see cref="MotionPlan"/> with the same number replaces the owner's.
+        /// </summary>
+        void PlanJumpClick(EntityManager em, Entity e, in PlayerCommand cmd, ref PlayerInput input)
+        {
+            var header = em.GetComponentData<ClientPlanHeader>(e);
+            header.Seq = NextClientSeq(header.Seq);
+            header.Count = 0;
+            header.Writes++;
+            em.SetComponentData(e, header);
+
+            input.Click.Set();
+            input.ClickSeq = header.Seq;
+            input.Run = 0;
+            input.Jump = 1;
+            input.GoalXMm = cmd.GoalMm.x;
+            input.GoalYMm = cmd.GoalMm.y;
+            input.GoalZMm = cmd.GoalMm.z;
+
+            var pose = em.GetComponentData<PlayerPose>(e);
+            string why = JumpPlanner == null ? "no jump planner on the client" : !m_Tick.IsValid ? "no tick yet"
+                : !em.HasComponent<ClientMotionPlan>(e) ? "the ghost has no ClientMotionPlan" : Busy(em, e) ? "still in a jump or its cooldown" : null;
+            if (why == null && JumpPlanner.TryPlan(e, pose.Mm, cmd.GoalMm, out int3 landing, out int apexY, out why))
+            {
+                em.SetComponentData(e, new ClientMotionPlan
+                {
+                    Plan = JumpFlight.NewJump(header.Seq, m_Tick, pose.Mm, landing, apexY),
+                });
+            }
+            else if (PlayerClickLog.Sink != null)
+                PlayerClickLog.Sink("[KnJump] the owner did not predict jump click " + header.Seq + ": " + why + " (it waits for the server's plan)");
+            if (PlayerClickLog.Sink != null && m_Tick.IsValid)
+                PlayerClickLog.Client(em.HasComponent<GhostOwner>(e) ? em.GetComponentData<GhostOwner>(e).NetworkId : 0,
+                    header.Seq, m_Tick.TickIndexForValidTick);
+        }
+
+        /// <summary>
+        /// The owner is still in a jump or its landing cooldown: the server will refuse this jump click (NGO's rules), so it is sent
+        /// but not flown; a new plan from the air would fly from mid-air until the refusal came back.
+        /// </summary>
+        bool Busy(EntityManager em, Entity e)
+        {
+            if (!em.HasComponent<MotionPlan>(e)) return false;
+            var flown = em.GetComponentData<MotionPlan>(e);
+            if (em.HasComponent<MoveState>(e))
+                flown = PlayerMotionSystem.Choose(flown, em.GetComponentData<ClientMotionPlan>(e).Plan, em.GetComponentData<MoveState>(e).RefusedSeq);
+            return JumpFlight.Active(flown, m_Curves, m_Tick, m_TickMicros) || JumpFlight.CoolingDown(flown, m_Curves, m_Tick, m_TickMicros);
         }
 
         /// <summary>Client order numbers run 1..0x7FFF and wrap; 0 means none.</summary>

@@ -165,7 +165,7 @@ namespace KryticalNova.Progression
         private void Update()
         {
             if (!initialized || resourceData == null) return;
-            if (IsSpawned && !IsServer) return; // Only server handles passive regeneration and capacity calculations
+            if (IsMirror) return; // Only server handles passive regeneration and capacity calculations
 
             // Also reflects live Inspector balance edits without changing the shared asset.
             RecalculateMaximums();
@@ -194,7 +194,7 @@ namespace KryticalNova.Progression
 
         private void RecalculateMaximums()
         {
-            if (IsSpawned && !IsServer) return;
+            if (IsMirror) return;
 
             float nextHealth;
             float nextChi;
@@ -233,6 +233,28 @@ namespace KryticalNova.Progression
 
         /// <summary>True where this player's HP and Chi are decided (the server, or offline). Clients only mirror them.</summary>
         public bool HasAuthority => !IsSpawned || IsServer;
+
+        // An NGO client, or an entity-netcode client's own view body once its server's Flux has come (MirrorChi).
+        private bool IsMirror => (IsSpawned && !IsServer) || chiMirrored;
+        private bool chiMirrored;
+
+        /// <summary>
+        /// An entity-netcode client's own view body: the Flux and most Flux its server sent (the player ghost's owner-only Flux),
+        /// so the owner's own checks refuse what the server would, in the NGO client's words. From then on this body neither
+        /// recalculates its maximums nor recovers on its own: the server's numbers stand. Not for an NGO body (network variables).
+        /// </summary>
+        public void MirrorChi(float current, float max)
+        {
+            if (IsSpawned) return;
+            chiMirrored = true;   // first: the server's maximum stands, this body's own stats are not read
+            EnsureInitialized();
+            max = Mathf.Max(0f, max);
+            current = Mathf.Clamp(current, 0f, max);
+            if (Mathf.Approximately(current, chi) && Mathf.Approximately(max, maxChi)) return;
+            chi = current;
+            maxChi = max;
+            Changed?.Invoke();
+        }
 
         // GM toggles are per player (see PlayerGmState); characters without one are never affected.
         private bool HasInfiniteChi => gmState != null && gmState.InfiniteChi;

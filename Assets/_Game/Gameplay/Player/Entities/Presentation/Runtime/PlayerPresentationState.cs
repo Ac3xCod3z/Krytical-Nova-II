@@ -38,6 +38,21 @@ namespace KryticalNova.Player.Entities.Presentation
         /// <summary>The yaw the follow was given this frame (degrees) and whether it came from PoseAhead (else the ghost's transform); debugging.</summary>
         public float InputYaw;
         public bool InputFromPoseAhead;
+        /// <summary>The jump the body shows (its plan number; 0 = none) and how far it got: 0 begun, 1 took off, 2 landed.</summary>
+        public ushort JumpSeq;
+        public byte JumpPhase;
+        /// <summary>The drawn root is on a jump's arc this frame (not stood on the ground).</summary>
+        public bool InJump;
+        /// <summary>
+        /// On a jump frame: how far the drawn root is from the exact arc at this frame's time (metres). The owner's bar (31 Oct): the
+        /// arc is the same at every frame rate, the drawn body within 1 cm of it.
+        /// </summary>
+        public float JumpArcErrorM;
+        /// <summary>
+        /// How far the drawn body stood above the ghost when its jump began (the ground snap of the walk; metres): carried into the jump
+        /// and faded out by the apex, so the press never pops the body up or down.
+        /// </summary>
+        public float JumpStartDeltaM;
 
         void LateUpdate() => CheckPose();
 

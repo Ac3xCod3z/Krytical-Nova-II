@@ -123,6 +123,22 @@ namespace KryticalNova.Progression
             Changed?.Invoke();
         }
 
+        /// <summary>
+        /// An entity-netcode client's own view body: the ranks its server sent (the player ghost's owner-only ranks), so the owner
+        /// plans and checks its own jumps and runs as the NGO client did with its mirrored state. Not for an NGO body (it mirrors
+        /// through its network variable) and never where the ranks are decided.
+        /// </summary>
+        public void MirrorRanks(int run, int jump)
+        {
+            if (IsSpawned || runSkill == null || jumpSkill == null) return;
+            run = Mathf.Clamp(run, 0, runSkill.MaxRank);
+            jump = Mathf.Clamp(jump, 0, jumpSkill.MaxRank);
+            if (run == runRank && jump == jumpRank) return;
+            runRank = run;
+            jumpRank = jump;
+            Changed?.Invoke();
+        }
+
         /// <summary>Publishes a change made here, where the skills are decided.</summary>
         private void Commit()
         {

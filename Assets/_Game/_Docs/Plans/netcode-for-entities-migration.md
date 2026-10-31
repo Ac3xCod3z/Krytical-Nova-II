@@ -763,8 +763,123 @@ Walk acceptance list (owner, 31 Oct; each ticked only with its proof):
 - [x] stops on the marker (0a7b80312; GUI run 8: the server 0.00 m off every point)
 - [x] speeds from the game's assets (walk 5, Run 10..28, mount 34; `RunSpeedSourceTests`)
 - [x] walking side-on smooth: head anchor 0-2.2 px per frame at 64 fps (GUI run 8, capture off)
-- [ ] running side-on smooth: 3.8-6.2 px per frame at 28 m/s on 2 of 4 runs (limit 3)
-- [ ] no camera jump on the first click after spawn (344 px once)
+- [x] running side-on smooth (31 Oct, GUI run 3k): at render time the camera's offset from the body changed 0 mm over 266 moving
+  frames (walk and run 0 px). The judder numbers of runs 2-3j below were measuring artifacts: the probes were nested classes, and
+  Unity keeps the execution order per script file, so their order did not hold. Pass/fail is now the render-time check
+  (`RenderWatch`, limit 10 mm). Earlier reading, kept: 3.8-6.2 px per frame at 28 m/s on 2 of 4 runs (limit 3). Cause named (GUI run cam-3, 31 Oct): the
+  steps come only on frames where the field of view changes 40 -> 44 deg, the GameFeel "Run Start" kick (+4 deg over 0.4 s, played
+  by `PlayerAnimancerMotor` -> `GameFeelPresenter.RunStarted` for the own body, from a standstill), the same code and asset as the
+  NGO game: designed, not judder. With the view steady the head step is 0.0 px at full run speed; the camera's position and turn
+  follow exactly, resolution scale 1, the anchor is body + 2 m (no bone). The scripted check now holds the zoom out of the step
+  (last frame's projection, this frame's view); tick after its GUI run.
+- [x] no camera jump on the first click after spawn (was 344 px once). Two causes: the probe measured the camera's first move onto the
+  body that had just entered (now it waits 2 s and logs that apart), and the camera really took the body only after the first drawn
+  frame (the DOTS body is made already local, so no event came). `PointAndClickPlayer.TakeCameraNow` from `PlayerWorldsSetup`'s
+  BodyMade: GUI run 4 (31 Oct), the first drawn frame with the body is already 8.23 m from the head (its settled distance); with the
+  fix off (runs 2, 3) it was 10.99 m, then a 3.91 m snap. NGO's own spawn cut is the same.
 - [x] nameplate/pet follow the body: pet <= 1.8 px; cards placed after the camera (`NamecardOrderTests`)
-- [ ] scripted arrival check counts short moves (the server is on the point; the script misses them)
-- [ ] owner's by-hand retest
+- [ ] scripted arrival check counts short moves (the server is on the point; the script misses them). Cause (cam-3): a judder
+  flag also set "not arrived"; both misses had the server 0.00 m off. Arrival, facing and smoothness are now counted apart.
+- [ ] owner's by-hand retest: PENDING (owner, 31 Oct: "I can't test anytime soon", work goes on in plan order)
+
+## 52. Known issues and required steps found in the walk work (31 Oct 2026)
+
+Known issue: **the GUI Editor can freeze at start on NVIDIA's DLSS updater.** The Editor's GPU set-up (the `com.unity.modules.nvidia`
+upscaler module) starts twelve `nvngx_update.exe -api update -feature dlss|dlssg|dlssd -cmsid 0..3 -bootstrap`. On 31 Oct three GUI
+runs froze right after the project loaded: the Editor's main thread waited at 0 CPU (blank window, no more log lines) while the
+updaters hung at 0 CPU from the second the freeze began (02:37:28; they had written NVIDIA's config at 02:37:31). Reproduced
+without Unity: `-cmsid 2 -feature dlss` hangs even alone, cmsid 0 and 1 finish in about 1 s, and the hung one holds no network
+connection (a local NVIDIA lock, not the download). The hang also happens outside any job object (the cmsid 2 test above), so the
+wrapper's job is not the cause; nor is our code. Batch-mode runs (tests, builds) are not affected. Workaround in the DOTS GUI run wrapper: an
+`nvngx_update` started by that run's own Editor that is still running after 20 s is stopped and logged; the Editor then goes on
+and DLSS is only not refreshed for that run. A by-hand Editor that hangs at start the same way can be freed by ending its
+`nvngx_update.exe` children in Task Manager.
+
+Required step **before the first 2-client test** of the DOTS game (owner, via Master, 31 Oct): **one answer to "is this body
+mine" for entity-netcode bodies.** 124 places decide "mine" with `!IsSpawned || IsOwner` (run take-off view kick, messages,
+death, pets, mounts, skills, combat presentation, recall, identity...). An entity-netcode body is never spawned by NGO, so the
+test is true for EVERY body in the process: another player's run would zoom my camera, their messages would show on my screen,
+their death would play my death view. The answer belongs in Core (the body's `BodyRoleTag` and `LocalPlayer`, which the Player
+system fills) so every system can ask it without knowing the netcode.
+- [ ] Acceptance: with two clients, a second player's run take-off, messages, death and pet never act on my client (no view
+  kick, no message, no death view, no pet panel change); my own still do. Proven in a 2-client run with logs, plus an EditMode
+  test per kind.
+
+## 53. M3b jump: acceptance list (owner's bar via Master, 31 Oct 2026; design `netcode-for-entities-designs/m3b-design.md`)
+
+The DOTS jump must feel exactly like the NGO jump, server still deciding. NGO numbers are the runtime ones: `JumpMotion.asset`
+(gravity 14, apex clearance 1.4 m, anticipation 0.12 s, landing cooldown 0.25 s, height-by-distance exponent 1.5, minimum rise
+0.8 m, landing sample radius 0.3 m), `Jump.asset` (rank 1: 20 m distance and 20 m rise, top rank 67.5 m; 5 Flux every rank),
+`Warp_Player_DoubleJump.asset` (take-off 0.183 s, apex 0.767 s, touchdown 1.407 s of the clip; at 30 Hz the first ticks at or after them are 6, 24 and 43: the ghost lands up to one tick, 33 ms, after the clip), and
+`PlayerJumpMotor` (owner crouch on the press, held at most 0.25 s for the server). Each item is ticked only with its proof.
+
+- [x] S7 spike measured (31 Oct, runs 5-9, fixed frame times; `S7WarpVsGhostSpikeTests`, PlayMode category S7). KINEMATION's warp
+  is not a function of time: in flight it is 16.2 / 8.1 / 4.0 cm off the exact arc at 30 / 60 / 120 frames a second (it changes phase
+  only on the first frame after the phase time), it lands 4.4 / 4.0 / 3.9 cm off its own target (NGO then put the agent back on the
+  NavMesh), and before take-off it lowers the root by the clip's crouch (19.5-20.8 cm). The old bar ("within 2 cm of the warp")
+  cannot be met at any frame rate.
+- **Owner's bar (31 Oct, via Master), replacing it.** Their words: frame-rate dependence "is probably a bad design choice since some
+  players would have an advantage", and the crouch "was based on the server and timing before so we had to add that crouch
+  because there was delay between player jumping and the server". So: the DOTS jump flies the exact arc, the same at every frame
+  rate, and is not judged against the warp in flight; the crouch stays only as a look of the drawn body (presentation, server
+  unchanged), not a timing rule, and the owner checks it by hand.
+  - [ ] the crouch look (S7 run 9 before the fade: 1.29 cm; to prove after it, and by the owner): the drawn body follows the clip's dip before take-off, then fades it out over the rise, no step at take-off
+    (`JumpFlight.CrouchMm`, `PlayerMotionCurves.Crouch` baked from the clip); S7 run 9: within 1.29 cm of the warp's crouch
+    (`TheCrouch_LowersTheDrawnBody_BeforeTakeoff`, `TheCrouchesEnd_FadesIntoTheRise_WithoutAStep`)
+  - [ ] the arc is the same at 30 / 60 / 120 fps: the drawn body within 1 cm of the exact arc on every jump frame (scripted GUI
+    run, `JumpArcErrorM`); EditMode: the body on the owner's arc every tick (`InAJump_TheOwnersBody_IsOnTheArc_EveryTick_...`)
+- [ ] press to lift: the crouch shows on the press frame (predicted, owner Q1 a), take-off 0.183 s after it (tick 6), with no
+  wait for the server; NGO held up to 0.25 s for its server, the DOTS jump never waits longer than that
+  - [x] the owner predicts from the press (31 Oct, GUI runs predict-1/2): its own plan exists on the press frame (0 frames, 4 of 4
+    jumps). Before, the owner's planner said "Learn Jump first.": the ranks were never sent to the client. Now the player ghost
+    carries the learned ranks (`MoveRanks`) and the Flux (`OwnerFlux`), owner only, written by `PlayerMoveStatsRefreshSystem` and
+    put on the own body by `PlayerMoveRanksMirrorSystem` (`PlayerMovementSkills.MirrorRanks`, `PlayerResources.MirrorChi`).
+  - [x] the jump clip starts on the press frame (GUI run predict-2: 0 frames, 2 of 2). The owner's plan starts on the tick being
+    predicted, and in the rest of the press's tick the follow's clock read -1 (run predict-1: 1-2 frames late). It reads 0 now, so
+    the clip is held at its start for less than a tick.
+  - [ ] lift within 0.30 s on every jump: 0.213 / 0.210 / 0.219 s, but 0.325 s on the first jump after entering (run predict-2). Cause
+    proven ([KnClick]): the client gathered the click on tick 113, and the server planned it on tick 117 (the click arrived late), so
+    the server's plan replaced the owner's and the arc started over. Next step (A): the click carries its own tick, and the server
+    starts the jump on it when it is at most NGO's 0.25 s back (clamped: never in the future, never before the previous jump's end).
+- [x] a jump the rank or the Flux does not allow is refused by the owner and the server with the same words, and nothing starts
+  (GUI run predict-2, 3 of 3: no owner plan, the drawn body rose 0.0 cm): rank 0 "Learn Jump first.", rank 1 at 30 m "Too far: Jump
+  rank reaches 20.0 m.", 4 of 5 Flux "Not enough Flux. Jump needs 5 Flux per destination." Both sides check in NGO's order (rank,
+  Flux, then landing, limits and arc): `PointAndClickPlayer.ViewJumpRefusal`, `BodyJumpCost.CanPay`, and the owner's
+  `BodyJumpPlanner(checkCost: true)`. The ranks and the Flux reach the owner in about 0.8 s.
+- [ ] height: apex = max(1.4 m over the higher end, rise for the distance by the rank, exponent 1.5, at least 0.8 m); rise up to
+  the rank's limit, down unlimited (owner 22 Oct); apex at the clip's apex time (tick 24)
+- [x] (GUI runs 2-4, predict-1/2, 31 Oct: every jump landed 0.0 cm from the plan and 0.00 m from the click, after the stateless landing
+  `JumpFlight.Places`) distance and landing: up to the rank's distance; lands within 2 cm of the server's planned point (a walkable or water spot
+  within 0.3 m of the click; owner's bar 31 Oct); world tests land exactly (`AJump_LandsWhereTheServerPlanned_...`)
+- [ ] air control as NGO: none. The path is fixed at take-off; a walk or jump click in the air is refused with NGO's message
+  "Finish this jump before choosing another destination." (`PointAndClickPlayer` line 633; the design's "waits for the landing"
+  was wrong); a second jump is refused until the 0.25 s landing cooldown is over
+- [x] (GUI runs predict-1/2: "paid 1x", 5 Flux each; the refusals paid nothing) Flux: checked on the click, 5 paid once at take-off
+  (owner Q2 a); a refusal or an abort before take-off is free
+- [ ] the ghost owns the root: Motion Warping never moves the body; the clip plays in place with the ghost's curves; no second
+  writer after the follow (the `[KnYaw]`-style per-order probe shows the root = the ghost pose)
+- [ ] a forced rollback mid-air (100 ms latency) neither restarts the clip nor moves the body more than the follow's offset
+- [ ] lands facing the way it jumped (landing yaw), the walk resumes from the landing point on the next click
+- [ ] side-on and behind: the head anchor steps evenly through the arc (same zoom-held check as the walk), GUI run with frames
+- [ ] (2-client day) an observer sees the same take-off tick, arc and landing
+- [ ] owner's by-hand retest: PENDING (owner, 31 Oct: "I can't test anytime soon", work goes on in plan order)
+
+Check note (31 Oct): the clone is a git worktree of the main folder, and `compile_check.py` takes Unity's project files from the
+main worktree by default. A test assembly that exists only in the clone (the S7 PlayMode test) then gets a generic template, which
+gave a false KINEMATION error. Run it for the clone with `--projects "<clone folder>"` (74/74 that way).
+
+Tests it needs (design section 3):
+- Pure: planner limits with the real `JumpMotionData` and ranks (distance, rise, down unlimited, too short, out of range);
+  curve tables (end points exact, apex at tick 24, travel monotonic); tick conversion of the clip phases (6 / 24 / 43).
+- Worlds (server + client, 0 and 100 ms, `PlayerRig`): the jump lands exactly where the server planned and owner and server
+  agree on every tick of the trace ring; a refused jump is taken back; Flux paid once at take-off, not on a refusal or an abort
+  before take-off; the cooldown refuses a second jump; a walk click in the air is refused (no queued walk); a late-arriving or lost
+  jump click is still taken (the click-loss rule of 5d6fc04d6).
+- Presentation: the clip starts at `now - StartTick` (a late snapshot fast-forwards, rollback never restarts it); no writer
+  moves the root after the follow.
+- Scripted run: `KN_PLAYHERE_JUMP="x,z;x,z"` jumps logged like the walk (press to crouch, take-off and landing ticks, landing
+  error, Flux before and after, worst head step), quits 0 only when every jump passes; captured frames into a contact sheet.
+
+Order (design section 4): S7 first; then the curve baker + `PlayerMotionCurves` and the planner lifted out of `PlayerJumpMotor`
+into a shared class (the NGO motor keeps using it); then `MotionPlan`, `PlayerMotionSystem`, `PlayerJumpServerSystem`, owner
+prediction and presentation; then the scripted run.

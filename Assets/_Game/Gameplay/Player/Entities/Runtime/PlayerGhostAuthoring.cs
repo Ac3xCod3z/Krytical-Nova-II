@@ -34,10 +34,14 @@ namespace KryticalNova.Player.Entities
                 AddComponent<TeleportSeq>(e);
                 AddComponent<PlayerLook>(e);
                 AddComponent(e, new MoveStats { WalkMmps = a.walkMmps, RunMmps = a.runMmps });
+                AddComponent<MoveRanks>(e);
+                AddComponent<OwnerFlux>(e);
                 AddBuffer<PathCorner>(e);
                 AddComponent<PathPlan>(e);
                 AddBuffer<ClientPlanCorner>(e);
                 AddComponent<ClientPlanHeader>(e);
+                AddComponent<MotionPlan>(e);
+                AddComponent<ClientMotionPlan>(e);
                 AddComponent<PlayerMoveDiag>(e);
                 AddComponent<ServerOrderRequest>(e);
                 SetComponentEnabled<ServerOrderRequest>(e, false);

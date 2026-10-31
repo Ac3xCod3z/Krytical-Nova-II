@@ -91,7 +91,7 @@ path with a scripted jump), same guards as the walk run.
   points exact, apex at the clip's apex tick, monotonic travel); death chain choice by blow side (back never turns).
 - Worlds (server + 2 clients, 0 and 100 ms): a jump lands exactly where the server planned, owner and server equal on every tick of
   the trace ring; a refused jump is taken back; Flux paid once at take-off, not on a refusal or an abort before take-off; the
-  cooldown blocks a second jump; an observer sees the same landing; a walk click during a jump waits for the landing (as today).
+  cooldown blocks a second jump; an observer sees the same landing; a walk click during a jump is refused with "Finish this jump before choosing another destination." (as today, `PointAndClickPlayer`; corrected 31 Oct).
 - Death: the ghost is `Dead`, walking and jumping are refused, the knock lands where the server said, a late joiner sees `DeathPose`,
   the respawn teleports and clears `Dead`; disintegration leaves `Gone`.
 - Scripted run (Play DOTS here): `KN_PLAYHERE_JUMP` points, logged like the walk run.

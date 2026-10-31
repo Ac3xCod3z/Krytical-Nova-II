@@ -16,6 +16,8 @@ namespace KryticalNova.Core
             public Vector3 Point;
             public bool Run;
             public bool Stop;
+            /// <summary>The click asks to jump there (the Jump movement skill is selected).</summary>
+            public bool Jump;
         }
 
         /// <summary>Most clicks kept between two takes.</summary>
@@ -46,6 +48,15 @@ namespace KryticalNova.Core
             LastGroundFrame = Time.frameCount;
             GroundClicks++;
             Add(new Click { Point = point, Run = run });
+        }
+
+        /// <summary>A jump to <paramref name="point"/> (metres): the Jump movement skill is selected.</summary>
+        public static void Jump(Vector3 point)
+        {
+            LastGroundRealtime = Time.realtimeSinceStartupAsDouble;
+            LastGroundFrame = Time.frameCount;
+            GroundClicks++;
+            Add(new Click { Point = point, Jump = true });
         }
 
         /// <summary>The player asked to stop where they stand.</summary>

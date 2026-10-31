@@ -214,6 +214,11 @@ namespace KryticalNova.Player
         /// <summary>Sheathed idle, also used by the equipment preview doll.</summary>
         public AnimationClip IdleClip => idleClip;
         public CharacterAnimState CurrentState => currentState;
+
+        /// <summary>The warped jump's clip and its time, or "no jump clip" (proof runs of the entity-netcode jump).</summary>
+        public string WarpedJumpLine => warpedJumpActive && warpedJumpClipIndex >= 0 && warpedJumpClips[warpedJumpClipIndex] != null
+            ? $"jump clip {warpedJumpClipIndex} '{warpedJumpClips[warpedJumpClipIndex].name}' at {warpedJumpTime:F2} s{(warpedJumpHeld ? " held" : "")}"
+            : "no jump clip";
         /// <summary>The body is travelling (measured, so it also holds for characters this machine does not drive).</summary>
         public bool IsTravelling => currentSpeed > moveSpeedThreshold;
         public bool IsActionBusy => currentState == CharacterAnimState.Equipping ||
@@ -971,7 +976,13 @@ namespace KryticalNova.Player
         /// Starts the jump's clip chain from the take-off crouch. The chain runs on its own clock at normal speed; the
         /// jump motor's warp follows the same clock, so the pose and the body's travel stay in step.
         /// </summary>
-        public void PlayWarpedJump()
+        public void PlayWarpedJump() => PlayWarpedJumpFrom(0f);
+
+        /// <summary>
+        /// <see cref="PlayWarpedJump"/> with <paramref name="seconds"/> of the chain already over: the entity-netcode jump starts the
+        /// clip where its plan is (a late snapshot fast-forwards; M3b).
+        /// </summary>
+        public void PlayWarpedJumpFrom(float seconds)
         {
             if (!HasWarpedJump || currentState == CharacterAnimState.Dead) return;
             StopActiveActionRoutine();
@@ -979,7 +990,7 @@ namespace KryticalNova.Player
             stopState = null;
             warpedJumpActive = true;
             warpedJumpHeld = false;
-            warpedJumpTime = 0f;
+            warpedJumpTime = Mathf.Max(0f, seconds);
             warpedJumpClipIndex = -1;
             AdvanceWarpedJump();
         }

@@ -22,9 +22,9 @@ namespace KryticalNova.Player
     [RequireComponent(typeof(NavMeshAgent), typeof(PlayerMovementSkills), typeof(PlayerResources))]
     public sealed class PlayerJumpMotor : NetworkBehaviour
     {
-        private const float MinimumTravelDistance = 0.15f;
+        private const float MinimumTravelDistance = JumpMotionData.MinimumTravelDistance;
         private const float MinimumTime = 0.01f;
-        private const float LandingHeightTolerance = 0.2f;
+        private const float LandingHeightTolerance = JumpPlanRules.LandingHeightTolerance;
         private const float FlipFinishMargin = 0.04f;
         private const float MaximumSweepTimeStep = 0.02f;
         // A jump shown here but simulated elsewhere: the body arrives through NetworkTransform a little after the
@@ -122,6 +122,48 @@ namespace KryticalNova.Player
             restoreOnEnable = false;
             if (!RestoreAgent(takeoffRootPosition))
                 Debug.LogWarning("Jump could not reattach the player to its takeoff surface after reactivation.", this);
+        }
+
+        /// <summary>The motion data (the entity-netcode jump takes its landing cooldown from it).</summary>
+        public JumpMotionData MotionData => motionData;
+
+        /// <summary>The jump clip's phases and root height curve, from which the entity-netcode jump bakes its curves.</summary>
+        public bool TryReadJumpClip(out JumpPlanRules.Phases phases, out AnimationCurve rootY)
+        {
+            rootY = warpAsset != null ? warpAsset.rootY : null;
+            return JumpPlanRules.Phases.TryRead(warpAsset, out phases);
+        }
+
+        /// <summary>The refusal of a jump without a learned Jump rank, the same on every machine that checks it.</summary>
+        public const string LearnJumpFirst = "Learn Jump first.";
+
+        /// <summary>
+        /// Plans a warped jump for a body of the entity netcode, where this motor and the agent are switched off and the ghost owns
+        /// the feet: the same rules as <see cref="TryJump"/> (learned rank, landing, limits, apex, clear arc; <see cref="JumpPlanRules"/>)
+        /// from <paramref name="startFeet"/>, without the busy and cooldown checks (the ghost keeps those) or the Flux (taken at
+        /// take-off by the server). A Wallstride catch is not planned here yet (M3c): a blocked arc is refused. Null when it stands.
+        /// </summary>
+        public string PlanForGhost(Vector3 startFeet, Vector3 clickedPoint, out Vector3 plannedLanding, out float plannedPeak)
+        {
+            plannedLanding = clickedPoint;
+            plannedPeak = startFeet.y;
+            if (motionData == null || warpAsset == null) return "Jump animation is not configured.";
+            var movement = skills != null ? skills : GetComponent<PlayerMovementSkills>();
+            var navAgent = agent != null ? agent : GetComponent<NavMeshAgent>();
+            MovementSkillRank rank = default;
+            if (movement != null && !movement.TryGetLearnedRank(MovementSkillId.Jump, out rank)) return LearnJumpFirst;
+            float maxDist = movement != null ? rank.jumpDistance : 20f;
+            float jumpH = movement != null ? rank.jumpHeight : 5f;
+            var player = GetComponent<PointAndClickPlayer>();
+            int layers = (player != null ? player.RaycastLayers.value : Physics.DefaultRaycastLayers) & ~(1 << gameObject.layer);
+            var filter = new NavMeshQueryFilter { agentTypeID = navAgent != null ? navAgent.agentTypeID : 0, areaMask = navAgent != null ? navAgent.areaMask : -1 };
+            var capsule = new JumpPlanRules.Capsule
+            {
+                Radius = navAgent != null ? navAgent.radius : 0.5f, Height = navAgent != null ? navAgent.height : 2f,
+                Skin = motionData.collisionSkin, Layers = layers,
+            };
+            return JumpPlanRules.PlanWarped(startFeet, clickedPoint, maxDist, jumpH, motionData, warpAsset, filter, capsule,
+                out plannedLanding, out plannedPeak, out _);
         }
 
         /// <summary>Validates a clicked landing point before interrupting the current path. Chi is charged at takeoff.</summary>
@@ -231,7 +273,7 @@ namespace KryticalNova.Player
             { reason = "Jump animation is not configured."; return false; }
             if (agent != null && agent.isActiveAndEnabled && !agent.isOnNavMesh) { reason = "Jump must start on walkable ground."; return false; }
             MovementSkillRank rank = default;
-            if (skills != null && !skills.TryGetLearnedRank(MovementSkillId.Jump, out rank)) { reason = "Learn Jump first."; return false; }
+            if (skills != null && !skills.TryGetLearnedRank(MovementSkillId.Jump, out rank)) { reason = LearnJumpFirst; return false; }
             if (skills != null && !skills.CanPayForCommand(MovementSkillId.Jump, out reason)) return false;
             
             float agentOffset = agent != null ? agent.baseOffset : 0f;
@@ -246,22 +288,15 @@ namespace KryticalNova.Player
             { reason = "Choose a walkable landing surface."; return false; }
             else landingFeet = landing.position;
             startFeet = transform.position - Vector3.up * agentOffset;
-            Vector3 displacement = landingFeet - startFeet;
-            float horizontalDistance = new Vector2(displacement.x, displacement.z).magnitude;
-            if (horizontalDistance < MinimumTravelDistance) { reason = "Choose a landing point farther away."; return false; }
             float maxDist = skills != null ? rank.jumpDistance : 20f;
-            if (horizontalDistance > maxDist)
-            { reason = $"Too far: Jump rank reaches {maxDist:0.0} m."; return false; }
             float jumpH = skills != null ? rank.jumpHeight : 5f;
-            // Down has no limit (owner, 22 Oct 2026: "jump off buildings to the ground at any distance"); up is the rank's.
-            if (displacement.y > jumpH)
-            { reason = $"Too high: Jump rank reaches +{jumpH:0.0} m."; return false; }
+            // the rank's limits and the apex are JumpMotionData's (shared with the entity-netcode jump planner)
+            string limit = JumpMotionData.LimitRefusal(startFeet, landingFeet, maxDist, jumpH);
+            if (limit != null) { reason = limit; return false; }
             collisionLayers = obstacleLayersValue & ~(1 << gameObject.layer);
             facingOffset = modelForwardOffset;
             takeoffRootPosition = transform.position;
-            float clearanceApex = Mathf.Max(startFeet.y, landingFeet.y) + motionData.apexClearance;
-            // Short hops stay low; only a max-range jump climbs to the rank's full height.
-            peakHeight = Mathf.Max(clearanceApex, startFeet.y + motionData.RiseForDistance(horizontalDistance, maxDist, jumpH));
+            peakHeight = motionData.PeakHeight(startFeet, landingFeet, maxDist, jumpH);
             if (PlanFlight(out reason)) return true;
             // Wallstride: what blocks the arc may be a wall or a tree to catch, and climb on from.
             return TryPlanCatchInstead(jumpH, ref reason);
@@ -316,7 +351,7 @@ namespace KryticalNova.Player
             { reason = "Jump animation is not configured."; return false; }
             if (agent != null && agent.isActiveAndEnabled && !agent.isOnNavMesh) { reason = "Jump must start on walkable ground."; return false; }
             MovementSkillRank rank = default;
-            if (skills != null && !skills.TryGetLearnedRank(MovementSkillId.Jump, out rank)) { reason = "Learn Jump first."; return false; }
+            if (skills != null && !skills.TryGetLearnedRank(MovementSkillId.Jump, out rank)) { reason = LearnJumpFirst; return false; }
             if (skills != null && !skills.CanPayForCommand(MovementSkillId.Jump, out reason)) return false;
             startFeet = transform.position - Vector3.up * (agent != null ? agent.baseOffset : 0f);
             Vector3 flat = catchFeet - startFeet;
@@ -404,9 +439,7 @@ namespace KryticalNova.Player
             { reason = "Jump warp asset has no flight phases. Rebuild it from the Krytical Nova menu."; return false; }
 
             // Travel is even over the flight, so the apex sits where the clip's apex falls in time.
-            float airTime = warpLandTime - warpTakeoffTime;
-            apexFeet = Vector3.Lerp(startFeet, landingFeet, (warpApexTime - warpTakeoffTime) / airTime);
-            apexFeet.y = peakHeight;
+            apexFeet = JumpPlanRules.ApexFeet(startFeet, landingFeet, peakHeight, WarpPhaseTimes);
             if (!ValidateWarpedTrajectory()) { reason = "The jump arc or landing area is blocked."; return false; }
             return true;
         }
@@ -596,44 +629,15 @@ namespace KryticalNova.Player
         /// (horizontal travel linear in time; height follows the clip's own rise and fall, rescaled to reach the
         /// apex and the landing) so the route can be collision-checked before committing.
         /// </summary>
-        private Vector3 EvaluateWarpedFeet(float clipTime)
-        {
-            if (clipTime <= warpTakeoffTime) return startFeet;
-            AnimationCurve height = warpAsset.rootY;
-            if (clipTime <= warpApexTime)
-            {
-                Vector3 feet = Vector3.Lerp(startFeet, apexFeet, Mathf.InverseLerp(warpTakeoffTime, warpApexTime, clipTime));
-                float clipTotal = height.Evaluate(warpApexTime) - height.Evaluate(warpTakeoffTime);
-                float share = Mathf.Abs(clipTotal) > MinimumTime
-                    ? Mathf.Clamp01((height.Evaluate(clipTime) - height.Evaluate(warpTakeoffTime)) / clipTotal) : 1f;
-                feet.y = Mathf.Lerp(startFeet.y, peakHeight, share);
-                return feet;
-            }
-            else
-            {
-                clipTime = Mathf.Min(clipTime, warpLandTime);
-                Vector3 feet = Vector3.Lerp(apexFeet, landingFeet, Mathf.InverseLerp(warpApexTime, warpLandTime, clipTime));
-                float clipTotal = height.Evaluate(warpLandTime) - height.Evaluate(warpApexTime);
-                float share = Mathf.Abs(clipTotal) > MinimumTime
-                    ? Mathf.Clamp01((height.Evaluate(clipTime) - height.Evaluate(warpApexTime)) / clipTotal) : 1f;
-                feet.y = Mathf.Lerp(peakHeight, landingFeet.y, share);
-                return feet;
-            }
-        }
+        private Vector3 EvaluateWarpedFeet(float clipTime) =>
+            JumpPlanRules.WarpedFeet(startFeet, apexFeet, landingFeet, peakHeight, WarpPhaseTimes, warpAsset.rootY, clipTime);
 
-        private bool ValidateWarpedTrajectory()
-        {
-            if (!IsLandingClear()) return false;
-            Vector3 previous = startFeet;
-            for (int step = 1; step <= motionData.trajectorySamples; step++)
-            {
-                float clipTime = Mathf.Lerp(warpTakeoffTime, warpLandTime, (float)step / motionData.trajectorySamples);
-                Vector3 next = EvaluateWarpedFeet(clipTime);
-                if (!IsSegmentClear(previous, next)) return false;
-                previous = next;
-            }
-            return true;
-        }
+        private JumpPlanRules.Phases WarpPhaseTimes =>
+            new JumpPlanRules.Phases { Takeoff = warpTakeoffTime, Apex = warpApexTime, Land = warpLandTime };
+
+        private bool ValidateWarpedTrajectory() =>
+            JumpPlanRules.IsWarpedRouteClear(startFeet, apexFeet, landingFeet, peakHeight, WarpPhaseTimes, warpAsset.rootY,
+                motionData.trajectorySamples, SweepCapsule);
 
         private void FinishWarpedJump()
         {
@@ -727,29 +731,14 @@ namespace KryticalNova.Player
             return true;
         }
 
-        private void CapsuleAt(Vector3 feet, out Vector3 bottom, out Vector3 top, out float radius)
+        private JumpPlanRules.Capsule SweepCapsule => new JumpPlanRules.Capsule
         {
-            float skin = motionData.collisionSkin;
-            radius = Mathf.Max(MinimumTime, agent.radius - skin);
-            bottom = feet + Vector3.up * agent.radius;
-            top = feet + Vector3.up * Mathf.Max(agent.radius, agent.height - agent.radius);
-        }
+            Radius = agent.radius, Height = agent.height, Skin = motionData.collisionSkin, Layers = collisionLayers,
+        };
 
-        private bool IsSegmentClear(Vector3 from, Vector3 to)
-        {
-            CapsuleAt(from, out var bottom, out var top, out float radius);
-            Vector3 delta = to - from;
-            float distance = delta.magnitude;
-            if (Physics.CheckCapsule(bottom, top, radius, collisionLayers, QueryTriggerInteraction.Ignore)) return false;
-            return distance <= Mathf.Epsilon || !Physics.CapsuleCast(bottom, top, radius, delta / distance,
-                distance, collisionLayers, QueryTriggerInteraction.Ignore);
-        }
+        private bool IsSegmentClear(Vector3 from, Vector3 to) => SweepCapsule.IsSegmentClear(from, to);
 
-        private bool IsLandingClear()
-        {
-            CapsuleAt(landingFeet, out var bottom, out var top, out float radius);
-            return !Physics.CheckCapsule(bottom, top, radius, collisionLayers, QueryTriggerInteraction.Ignore);
-        }
+        private bool IsLandingClear() => SweepCapsule.IsClear(landingFeet);
 
         private bool RestoreAgent(Vector3 rootPosition)
         {

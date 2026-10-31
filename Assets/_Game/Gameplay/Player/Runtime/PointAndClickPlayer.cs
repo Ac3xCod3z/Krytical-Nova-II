@@ -318,23 +318,53 @@ namespace KryticalNova.Player
             if (agent != null && agent.isActiveAndEnabled && !agent.isOnNavMesh) agent.Warp(transform.position);
         }
 
-        private void SetupLocalCamera()
+        /// <summary>
+        /// A body of the entity netcode: why its own rules refuse a jump to <paramref name="point"/>, in the NGO client's order and
+        /// words (learned rank, Flux, then landing, limits and a clear arc), or null when the click may go to the server, which
+        /// checks the same things again (the ranks come from the server, <c>PlayerMovementSkills.MirrorRanks</c>).
+        /// </summary>
+        public string ViewJumpRefusal(Vector3 point)
+        {
+            if (jumpMotor == null) return "Jump controller is missing.";
+            if (movementSkills != null && !movementSkills.TryGetLearnedRank(MovementSkillId.Jump, out _)) return PlayerJumpMotor.LearnJumpFirst;
+            if (movementSkills != null && !movementSkills.CanPayForCommand(MovementSkillId.Jump, out string cost)) return cost;
+            Vector3 feet = transform.position - Vector3.up * (agent != null ? agent.baseOffset : 0f);
+            return jumpMotor.PlanForGhost(feet, point, out _, out _);
+        }
+
+        /// <summary>
+        /// A body of the entity netcode that is the local player's from the frame it is made (its local flag never changes, so no
+        /// event comes): the orbit camera takes it now, as a cut, so the first frame drawn with the body already looks at it. GUI
+        /// run 2 (31 Oct): with the camera taken in Start, one frame was drawn 3.9 m off the body, then it snapped.
+        /// </summary>
+        public void TakeCameraNow()
+        {
+            if (!ViewMode) return;
+            var cinemachineCamera = PointOrbitCameraAtThisBody();
+            if (cinemachineCamera != null) cinemachineCamera.PreviousStateIsValid = false;   // a cut, no blend from where it looked
+        }
+
+        private CinemachineCamera PointOrbitCameraAtThisBody()
         {
             if (orbitCamera == null)
             {
                 orbitCamera = FindAnyObjectByType<CinemachineOrbitalFollow>();
             }
-            if (orbitCamera != null)
+            if (orbitCamera == null) return null;
+            var cameraTarget = transform.Find("Camera Target");
+            Transform targetTransform = cameraTarget != null ? cameraTarget : transform;
+            cameraTrackingTarget = targetTransform;
+            var cinemachineCamera = orbitCamera.GetComponent<CinemachineCamera>();
+            if (cinemachineCamera != null)
             {
-                var cameraTarget = transform.Find("Camera Target");
-                Transform targetTransform = cameraTarget != null ? cameraTarget : transform;
-                cameraTrackingTarget = targetTransform;
-                var cinemachineCamera = orbitCamera.GetComponent<CinemachineCamera>();
-                if (cinemachineCamera != null)
-                {
-                    cinemachineCamera.Target.TrackingTarget = targetTransform;
-                }
+                cinemachineCamera.Target.TrackingTarget = targetTransform;
             }
+            return cinemachineCamera;
+        }
+
+        private void SetupLocalCamera()
+        {
+            PointOrbitCameraAtThisBody();
 
             // Fade props that block the view of this (local) player.
             var cam = gameplayCamera != null ? gameplayCamera : Camera.main;
@@ -814,8 +844,17 @@ namespace KryticalNova.Player
 
             if (movementSkills != null && movementSkills.IsJumpSelected)
             {
-                if (ViewMode) { CommandMessage?.Invoke(NotYetNetworkedText); return; }
                 if (jumpMotor == null) { CommandMessage?.Invoke("Jump controller is missing."); return; }
+                if (ViewMode)
+                {
+                    // the ghost jumps (M3b): a click the owner's own rules refuse is refused at once, as the NGO client did; the
+                    // server plans it again and the owner flies it from the press
+                    string why = ViewJumpRefusal(hit.point);
+                    if (why != null) { CommandMessage?.Invoke(why); return; }
+                    BodyClicks.Jump(hit.point);
+                    ClientPresentationRegistry.Markers?.ShowMoveMarker(transform, hit.point, hit.normal);
+                    return;
+                }
                 if (!jumpMotor.TryJump(hit.point, raycastLayers, modelForwardOffset, out string reason)) CommandMessage?.Invoke(reason);
                 else ClientPresentationRegistry.Markers?.ShowMoveMarker(transform, hit.point, hit.normal);
                 return;
@@ -1306,7 +1345,7 @@ namespace KryticalNova.Player
         {
             reason = null;
             if (IsSpawned && !IsServer) { reason = "Only the server may do this."; return false; }
-            if (ServerMover != null) { reason = NotYetNetworkedText; return false; } // the ghost has no jump yet (M3b)
+            if (ServerMover != null) { reason = NotYetNetworkedText; return false; } // a Squad follower copying a ghost's jump is M3c
             if (jumpMotor == null) { reason = "Jump controller is missing."; return false; }
             return jumpMotor.TryJump(landing, raycastLayers, modelForwardOffset, out reason);
         }

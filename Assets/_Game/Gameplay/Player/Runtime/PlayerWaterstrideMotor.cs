@@ -430,7 +430,10 @@ namespace KryticalNova.Player
         /// Where a jump clicked at <paramref name="clicked"/> would come down on this zone's water: the point on its surface.
         /// False where the place is not water (the click met the ground or the bed of shallow water).
         /// </summary>
-        public bool TryWaterLanding(Vector3 clicked, out Vector3 surface)
+        public bool TryWaterLanding(Vector3 clicked, out Vector3 surface) => TryWaterLandingAt(clicked, out surface);
+
+        /// <summary><see cref="TryWaterLanding"/> without a body: the zone's water map only (the entity-netcode jump planner).</summary>
+        public static bool TryWaterLandingAt(Vector3 clicked, out Vector3 surface)
         {
             surface = clicked;
             WaterMap map = ZoneMap;

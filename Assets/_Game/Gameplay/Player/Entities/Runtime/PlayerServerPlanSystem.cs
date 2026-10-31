@@ -56,11 +56,15 @@ namespace KryticalNova.Player.Entities
             var nt = SystemAPI.GetSingleton<NetworkTime>();
             if (!nt.ServerTick.IsValid) return;
             var cfg = SystemAPI.TryGetSingleton<PlayerMoveSettings>(out var set) ? set : PlayerMoveSettings.Default;
+            var curves = SystemAPI.TryGetSingleton<PlayerMotionCurves>(out var c) ? c : PlayerMotionCurves.Default;
+            int tickMicros = PlayerMovement.TickMicros(SystemAPI.TryGetSingleton<ClientServerTickRate>(out var rate) && rate.SimulationTickRate > 0
+                ? rate.SimulationTickRate : 30);
             var em = EntityManager;
             using var entities = m_Query.ToEntityArray(Allocator.Temp);
             foreach (var e in entities)
             {
                 var input = em.GetComponentData<PlayerInput>(e);
+                if (input.Jump != 0 && input.Click.IsSet && !em.IsComponentEnabled<ServerOrderRequest>(e)) continue;   // PlayerJumpServerSystem's
                 bool click = input.Click.IsSet && input.ClickSeq != 0;
                 bool request = em.IsComponentEnabled<ServerOrderRequest>(e);
                 if (input.Click.IsSet && input.ClickSeq == 0) LogRefusal(em, e, input, nt, "noseq");
@@ -105,6 +109,14 @@ namespace KryticalNova.Player.Entities
                     {
                         OverBudget++;
                         LogRefusal(em, e, input, nt, "budget");
+                        Refuse(em, e, input);
+                        Refused++;
+                        continue;
+                    }
+                    // NGO: a click while a jump is in the air is refused ("Finish this jump before choosing another destination.")
+                    if (em.HasComponent<MotionPlan>(e) && JumpFlight.Active(em.GetComponentData<MotionPlan>(e), curves, nt.ServerTick, tickMicros))
+                    {
+                        LogRefusal(em, e, input, nt, "airborne");
                         Refuse(em, e, input);
                         Refused++;
                         continue;

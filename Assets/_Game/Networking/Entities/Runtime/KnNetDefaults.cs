@@ -22,6 +22,14 @@ namespace KryticalNova.Networking.Entities
         /// </summary>
         public const float StopGraceSeconds = 3f;
 
+        /// <summary>
+        /// A server that falls behind runs up to this many whole ticks in one frame, each on its own, never several ticks folded into
+        /// one step (the package's default batches up to 4). The player's walk and jump are integer plans the owner predicts tick by
+        /// tick; a folded step moved the server's walk one tick for several and skipped a jump's landing tick (GUI run 1, 31 Oct, at
+        /// 9 frames a second: every jump landed 2-25 cm short of its plan).
+        /// </summary>
+        public const int MaxTicksPerFrame = 4;
+
         /// <summary>Whole simulation ticks for a grace in seconds (at least 1).</summary>
         public static int StopGraceTicks(float seconds) => System.Math.Max(1, (int)System.Math.Ceiling(seconds * SimulationTickRate));
 
@@ -32,6 +40,8 @@ namespace KryticalNova.Networking.Entities
                 SimulationTickRate = SimulationTickRate,
                 NetworkTickRate = NetworkTickRate,
                 HandshakeApprovalTimeoutMS = HandshakeApprovalTimeoutMs,
+                MaxSimulationStepsPerFrame = MaxTicksPerFrame,
+                MaxSimulationStepBatchSize = 1,
             };
             rate.ResolveDefaults();
             return rate;

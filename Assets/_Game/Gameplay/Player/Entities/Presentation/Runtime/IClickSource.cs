@@ -13,6 +13,8 @@ namespace KryticalNova.Player.Entities.Presentation
         public bool Run;
         /// <summary>A stop; <see cref="Point"/> is ignored.</summary>
         public bool Stop;
+        /// <summary>The click asks to jump to <see cref="Point"/> (the Jump movement skill is selected).</summary>
+        public bool Jump;
     }
 
     /// <summary>
@@ -33,6 +35,7 @@ namespace KryticalNova.Player.Entities.Presentation
 
         public void Click(Vector3 point, bool run = false) => m_Queue.Enqueue(new WorldClick { Point = point, Run = run });
         public void Stop() => m_Queue.Enqueue(new WorldClick { Stop = true });
+        public void Jump(Vector3 point) => m_Queue.Enqueue(new WorldClick { Point = point, Jump = true });
         public void Clear() => m_Queue.Clear();
 
         public bool TryTake(out WorldClick click)
@@ -59,7 +62,8 @@ namespace KryticalNova.Player.Entities.Presentation
             if (m_Source == null || !m_Source.TryTake(out var click)) return false;
             if (click.Stop) { command.Kind = PlayerCommandKind.Stop; return true; }
             command.Kind = PlayerCommandKind.Click;
-            command.Run = click.Run;
+            command.Run = click.Run && !click.Jump;
+            command.Jump = click.Jump;
             command.GoalMm = new int3(Mm(click.Point.x), Mm(click.Point.y), Mm(click.Point.z));
             return true;
         }

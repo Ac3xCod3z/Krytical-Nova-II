@@ -184,6 +184,47 @@ namespace KryticalNova.Player.Entities.Presentation.Tests
             Assert.AreEqual(270f, observer.eulerAngles.y, 1f, "and another player sees it face that way too");
         }
 
+        /// <summary>Straight to the click, apex 1.4 m over the higher end (a short hop's clearance).</summary>
+        sealed class StraightJumpPlanner : IJumpPlanner
+        {
+            public bool TryPlan(Entity ghost, int3 fromFeetMm, int3 clickedMm, out int3 landingFeetMm, out int apexYMm, out string reason)
+            {
+                landingFeetMm = clickedMm;
+                apexYMm = math.max(fromFeetMm.y, clickedMm.y) + 1400;
+                reason = null;
+                return true;
+            }
+        }
+
+        [Test]
+        public void InAJump_TheOwnersBody_IsOnTheArc_EveryTick_AndLandsFacingTheWay()
+        {
+            // M3b: the walk is cancelled in the air, so the follow's walk limit would have eased the arc out as a correction
+            using var p = PresRig.Create(0);
+            var rig = p.Rig;
+            var planner = new StraightJumpPlanner();
+            rig.Server.GetExistingSystemManaged<PlayerJumpServerSystem>().Planner = planner;
+            rig.Clients[0].GetExistingSystemManaged<PlayerInputGatherSystem>().JumpPlanner = planner;
+            var body = p.BodyOf(0, 0);
+            var observer = p.BodyOf(1, 0);
+            rig.Sources[0].Jump(new int3(6000, 0, 0));
+            float top = 0f, worst = 0f;
+            for (int i = 0; i < 50; i++)
+            {
+                rig.Tick();
+                top = Mathf.Max(top, body.position.y);
+                worst = Mathf.Max(worst, Mathf.Abs(body.position.y - rig.OwnerPose().YMm * 0.001f));
+            }
+            Assert.Greater(top, 1.3f, "the body went up the arc");
+            Assert.Less(worst, 0.01f, "the body is on the owner's arc on every tick, not trailing it");
+            Assert.IsTrue(p.EntryOf(0, 0).State.JumpSeq != 0 && p.EntryOf(0, 0).State.JumpPhase == 2, "the jump was shown and landed");
+            rig.Tick(30);
+            Assert.AreEqual(6f, body.position.x, 0.02f);
+            Assert.AreEqual(0f, body.position.y, 0.02f);
+            Assert.AreEqual(90f, body.eulerAngles.y, 1f, "it lands facing the way it jumped");
+            Assert.AreEqual(6f, observer.position.x, 0.05f, "another player sees it land there");
+        }
+
         [Test]
         public void APoseChangedAfterTheFollow_IsCounted_NotHidden()
         {

@@ -70,7 +70,10 @@ namespace KryticalNova.Player.Entities
                 var serverCorners = serverBuffer.Reinterpret<int3>().AsNativeArray();
                 var clientCorners = clientBuffer.Reinterpret<int3>().AsNativeArray();
 
-                PlayerMovement.Step(ref move, ref pose, in input, in order, in plan, serverCorners, in client, clientCorners,
+                // a jump click never starts a walk (PlayerMotionSystem flies it after this step)
+                PlayerInput walkInput = input;
+                if (walkInput.Jump != 0) walkInput.Click = default;
+                PlayerMovement.Step(ref move, ref pose, in walkInput, in order, in plan, serverCorners, in client, clientCorners,
                     in stats, in Cfg, TickMicros);
 
                 transform.Position = new float3(pose.XMm, pose.YMm, pose.ZMm) * 0.001f;
@@ -110,6 +113,7 @@ namespace KryticalNova.Player.Entities
     /// <summary>
     /// Server only: applies a <see cref="TeleportRequest"/>. The pose is set, the walk dropped, and <see cref="TeleportSeq"/>
     /// bumped so the presentation body snaps instead of easing. The owner is not asked to predict it: the snapshot carries it.
+    /// A jump in the air is called off too, else its flight would put the body back on the arc until touchdown.
     /// </summary>
     [WorldSystemFilter(WorldSystemFilterFlags.ServerSimulation)]
     [UpdateInGroup(typeof(PredictedSimulationSystemGroup))]
@@ -122,22 +126,26 @@ namespace KryticalNova.Player.Entities
         {
             state.RequireForUpdate<NetworkTime>();
             m_Requests = state.GetComponentLookup<TeleportRequest>();
+            m_Plans = state.GetComponentLookup<MotionPlan>();
         }
 
         [BurstCompile]
         public void OnUpdate(ref SystemState state)
         {
             m_Requests.Update(ref state);
-            new TeleportJob { Requests = m_Requests }.Schedule();
+            m_Plans.Update(ref state);
+            new TeleportJob { Requests = m_Requests, Plans = m_Plans }.Schedule();
         }
 
         ComponentLookup<TeleportRequest> m_Requests;
+        ComponentLookup<MotionPlan> m_Plans;
 
         [BurstCompile]
         [WithAll(typeof(Simulate), typeof(PlayerGhostTag), typeof(TeleportRequest))]
         partial struct TeleportJob : IJobEntity
         {
             [NativeDisableParallelForRestriction] public ComponentLookup<TeleportRequest> Requests;
+            [NativeDisableParallelForRestriction] public ComponentLookup<MotionPlan> Plans;
 
             void Execute(Entity entity, ref MoveState move, ref PlayerPose pose, ref LocalTransform transform, ref TeleportSeq seq)
             {
@@ -145,6 +153,12 @@ namespace KryticalNova.Player.Entities
                 pose.XMm = request.XMm; pose.YMm = request.YMm; pose.ZMm = request.ZMm;
                 pose.YawCdeg = ((request.YawCdeg % 36000) + 36000) % 36000;
                 PlayerMovement.CancelWalk(ref move);
+                if (Plans.HasComponent(entity))
+                {
+                    var plan = Plans[entity];
+                    plan.Kind = MotionKind.None;
+                    Plans[entity] = plan;
+                }
                 transform.Position = new float3(pose.XMm, pose.YMm, pose.ZMm) * 0.001f;
                 transform.Rotation = quaternion.RotateY(math.radians(pose.YawCdeg * 0.01f));
                 seq.Value = (byte)(seq.Value + 1);

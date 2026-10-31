@@ -51,6 +51,8 @@ namespace KryticalNova.Player.Entities
         public ushort ClickSeq;
         /// <summary>1 = the click asks to run.</summary>
         public byte Run;
+        /// <summary>1 = the click asks to jump there (M3b); the walk never starts from it.</summary>
+        public byte Jump;
         public InputEvent Click;
         public InputEvent Stop;
     }
@@ -119,6 +121,28 @@ namespace KryticalNova.Player.Entities
     {
         [GhostField] public int WalkMmps;
         [GhostField] public int RunMmps;
+    }
+
+    /// <summary>
+    /// The learned Run and Jump ranks (0 = not learned), written by the server from the body's skills. Owner only: the owner's client
+    /// plans and checks its own jumps with them, as the NGO client did with its mirrored ranks; the server checks again.
+    /// </summary>
+    [GhostComponent(OwnerSendType = SendToOwnerType.SendToOwner)]
+    public struct MoveRanks : IComponentData
+    {
+        [GhostField] public byte Run;
+        [GhostField] public byte Jump;
+    }
+
+    /// <summary>
+    /// The player's Flux and most Flux in thousandths, written by the server from the body's resources. Owner only: the owner's
+    /// client checks the cost of its own jumps and runs with it (as the NGO client did) and its HUD shows it; the server pays.
+    /// </summary>
+    [GhostComponent(OwnerSendType = SendToOwnerType.SendToOwner)]
+    public struct OwnerFlux : IComponentData
+    {
+        [GhostField] public int Milli;
+        [GhostField] public int MaxMilli;
     }
 
     /// <summary>One corner of the server's planned path (millimetres). Owner only: observers never see the path.</summary>

@@ -16,7 +16,8 @@
         "KryticalNova.Player.Entities.Presentation",
         "KryticalNova.Player",
         "Unity.Entities",
-        "Unity.NetCode"
+        "Unity.NetCode",
+        "MotionWarping.Runtime"
     ],
     "includePlatforms": [
         "Editor"

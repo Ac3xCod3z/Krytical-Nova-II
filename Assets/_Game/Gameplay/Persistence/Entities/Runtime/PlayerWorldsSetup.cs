@@ -21,8 +21,18 @@ namespace KryticalNova.Persistence.Entities
         /// <summary>The body prefab when the scene's NetworkManager does not hold it (tests, a scene without one).</summary>
         public static GameObject PrefabOverride;
 
+        /// <summary>
+        /// The camera takes the local body in the frame it is made (on in the game). A switch only so a proof run can measure one camera
+        /// change at a time (Play DOTS here, 31 Oct).
+        /// </summary>
+        public static bool TakeCameraWhenBodyMade = true;
+
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        private static void ResetStatics() => PrefabOverride = null;
+        private static void ResetStatics()
+        {
+            PrefabOverride = null;
+            TakeCameraWhenBodyMade = true;
+        }
 
         // After SubsystemRegistration (where KnWorldHooks resets) and before the worlds are made (BeforeSceneLoad bootstrap).
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterAssembliesLoaded)]
@@ -79,9 +89,11 @@ namespace KryticalNova.Persistence.Entities
             // from the prefab now: the first spawn spot is picked before any body exists (owner's feel test 30 Oct: with base
             // offset 0 the first player stood half in the ground until it walked)
             ConfigurePlanner(planner, (prefab ?? PlayerPrefab)());
-            PlayerEntitiesSetup.Install(server, planner, runCost: new BodyRunCost(server), clickBudget: new BudgetClickLimit(server));
-            // walk numbers from the settings asset, the same on server and client (prediction must agree)
+            PlayerEntitiesSetup.Install(server, planner, runCost: new BodyRunCost(server), clickBudget: new BudgetClickLimit(server),
+                jumpPlanner: new BodyJumpPlanner(server), jumpCost: new BodyJumpCost(server));
+            // walk numbers from the settings asset and the jump's curves from its clip, the same on server and client (prediction must agree)
             PlayerMoveFromSkills.InstallSettings(server, PlayerMoveFromSkills.SettingsOf((prefab ?? PlayerPrefab)()));
+            PlayerJumpFromSkills.InstallCurves(server, (prefab ?? PlayerPrefab)());
             var rules = new PlayerAdmission
             {
                 Planner = planner,
@@ -127,14 +139,20 @@ namespace KryticalNova.Persistence.Entities
                 BeforeLocalBody = KryticalNova.Networking.OfflinePlayerHandoff.ReleaseOfflineAvatar,
                 BodyMade = (body, request) =>
                 {
+                    // every view body shows the ghosts' jumps with its own clip (M3b)
+                    if (body != null && body.GetComponent<GhostJumpView>() == null) body.AddComponent<GhostJumpView>();
                     if (!request.IsLocal) return;
                     PlayerMoveFromSkills.InstallSettings(client, PlayerMoveFromSkills.SettingsOf(body));
+                    PlayerJumpFromSkills.InstallCurves(client, body);
+                    // the camera looks at the body from the first frame it is drawn (no frame off it, then a snap)
+                    if (TakeCameraWhenBodyMade) body.GetComponent<KryticalNova.Player.PointAndClickPlayer>()?.TakeCameraNow();
                     ConfigurePlanner(planner, body);
                     DriveAnimationFromGhost(body);
                 },
             };
-            PlayerEntitiesSetup.Install(client, planner);
+            PlayerEntitiesSetup.Install(client, planner, jumpPlanner: new BodyJumpPlanner(client, checkCost: true));
             PlayerMoveFromSkills.InstallSettings(client, PlayerMoveFromSkills.SettingsOf((prefab ?? PlayerPrefab)()));
+            PlayerJumpFromSkills.InstallCurves(client, (prefab ?? PlayerPrefab)());
             KryticalNova.Player.Entities.Presentation.PlayerPresentationSetup.Install(client, factory, new BodyClickSource());
             var looks = client.GetExistingSystemManaged<PlayerLookClientSystem>();
             if (looks != null) looks.Applier = new IdentityLookApplier();

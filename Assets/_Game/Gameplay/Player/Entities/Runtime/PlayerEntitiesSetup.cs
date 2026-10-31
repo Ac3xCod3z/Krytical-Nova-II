@@ -13,11 +13,20 @@ namespace KryticalNova.Player.Entities
         /// <summary>
         /// Gives a world its path planner and, in a client world, its command source. Call once after the world exists and before
         /// the first player acts: the planner for the server world, planner + source for the client world. The same planner object
-        /// may serve several worlds in tests. Worlds without the matching system are left alone.
+        /// may serve several worlds in tests. Worlds without the matching system are left alone. The jump's planner goes to the server
+        /// and to the owner's gather (its prediction); its cost to the server only.
         /// </summary>
         public static void Install(World world, IPathPlanner planner, IPlayerCommandSource source = null, IRunCost runCost = null,
-            IClickBudget clickBudget = null)
+            IClickBudget clickBudget = null, IJumpPlanner jumpPlanner = null, IJumpCost jumpCost = null)
         {
+            var jump = world.GetExistingSystemManaged<PlayerJumpServerSystem>();
+            if (jump != null)
+            {
+                jump.Planner = jumpPlanner;
+                jump.Cost = jumpCost;
+            }
+            var pay = world.GetExistingSystemManaged<PlayerJumpPaySystem>();
+            if (pay != null) pay.Cost = jumpCost;
             var server = world.GetExistingSystemManaged<PlayerServerPlanSystem>();
             if (server != null)
             {
@@ -29,6 +38,7 @@ namespace KryticalNova.Player.Entities
             if (gather != null)
             {
                 gather.Planner = planner;
+                gather.JumpPlanner = jumpPlanner;
                 if (source != null) gather.Source = source;
             }
         }

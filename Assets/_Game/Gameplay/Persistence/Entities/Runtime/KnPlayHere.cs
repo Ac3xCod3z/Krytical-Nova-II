@@ -40,6 +40,19 @@ namespace KryticalNova.Persistence.Entities
         public const string MenuPath = "Krytical Nova/Online/Entities/Play DOTS here";
         public const string MapPath = "Assets/_Game/Scenes/World/Towns/Zone01_StarterTown.unity";
         public const string WalkVariable = "KN_PLAYHERE_WALK";
+
+        /// <summary>
+        /// The own body, held from the moment the tester entered (run 3e, 31 Oct: the bisect switched PlayerInventory off, whose
+        /// OnDisable clears LocalPlayer, and every probe then lost the body). Before entering it is LocalPlayer's.
+        /// </summary>
+        static GameObject s_OwnBody;
+        static GameObject OwnBody => s_OwnBody != null ? s_OwnBody : KryticalNova.Core.LocalPlayer.Object;
+        /// <summary>Scripted jumps (M3b, plan 53): <c>KN_PLAYHERE_JUMP="x,z;x,z"</c>, after any walk, each logged and judged.</summary>
+        public const string JumpVariable = "KN_PLAYHERE_JUMP";
+
+        /// <summary>A scripted run (walk or jump) was asked for: it quits by itself.</summary>
+        static bool Scripted => !string.IsNullOrEmpty(Environment.GetEnvironmentVariable(WalkVariable))
+            || !string.IsNullOrEmpty(Environment.GetEnvironmentVariable(JumpVariable));
         /// <summary>A folder: the scripted run saves a Game-view picture there every 0.1 s (proof for the owner, GUI Editor only).</summary>
         public const string CaptureVariable = "KN_PLAYHERE_CAPTURE";
 
@@ -56,10 +69,28 @@ namespace KryticalNova.Persistence.Entities
         {
             public static readonly int[] Orders = { -150, -50, -1, 1, 50, 99, 101, 150, 250 };
             public static readonly float[] Yaw = new float[Orders.Length];
+            /// <summary>The body's place at each order too (GUI run 2, 31 Oct: the camera trailed the body by one frame; who moved it when).</summary>
+            public static readonly Vector3[] Pos = new Vector3[Orders.Length];
+            /// <summary>The body's place at the last order of the previous frame (did it move this frame).</summary>
+            public static Vector3 LastFramePos;
+            /// <summary>Counted in the frame itself (run 3i: the coroutine judge read 0 of 20 while every frame was put back).</summary>
+            public static int MovingFrames, PutBackFrames;
+            static Vector3 s_PrevPos0;
+            /// <summary>The frame of the last <see cref="Record"/> at order -150 (the follow runs before every LateUpdate, or not).</summary>
+            public static int FrameAtFirst = -1;
             public static void Record(int i)
             {
-                GameObject body = LocalPlayer.Object;
+                GameObject body = OwnBody;
                 Yaw[i] = body != null ? body.transform.eulerAngles.y : float.NaN;
+                Pos[i] = body != null ? body.transform.position : Vector3.zero;
+                if (i == 0) FrameAtFirst = Time.frameCount;
+                if (i == Orders.Length - 1)
+                {
+                    LastFramePos = Pos[i];
+                    // moved this frame (order -150 against the last frame's) and put back at order 0 (order -1 against order 1)
+                    if (Vector3.Distance(Pos[0], s_PrevPos0) > 0.005f) { MovingFrames++; if (Vector3.Distance(Pos[2], Pos[3]) > 0.005f) PutBackFrames++; }
+                    s_PrevPos0 = Pos[0];
+                }
                 if (i != 2 || body == null) return;                       // order -1: just before the order-0 LateUpdates
                 var inventory = body.GetComponent("PlayerInventory");
                 var field = inventory != null ? inventory.GetType().GetField("pullPending", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic) : null;
@@ -130,6 +161,205 @@ namespace KryticalNova.Persistence.Entities
         static bool TurnedAtOrderZero() => Mathf.Abs(Mathf.DeltaAngle(YawProbes.Yaw[2], YawProbes.Yaw[3])) > 0.5f;
 
         /// <summary>
+        /// GUI run 3b (31 Oct): an order-0 LateUpdate puts the own body back on LAST frame's place (it is on the follow's pose at order
+        /// -1 and on the old one at order 1), so the camera (order 100) trails it by a frame. Halves the order-0 LateUpdates, one half
+        /// off at a time, judging only frames where the body moved, until the writer is left. Runs beside the walks; all back on after.
+        /// </summary>
+        static IEnumerator FindOrderZeroMover()
+        {
+            // Run 3c (31 Oct): switching ProgressionHUD back on threw (SkillTreeView.Build) and the retries had no end. Now every
+            // toggle is guarded: a behaviour that throws is put back on, left out of the search and listed; at most 3 tries
+            // without a verdict; it stops by itself.
+            var suspects = LateUpdatesAt(0);
+            var skipped = new List<string>();
+            Debug.Log($"[KnPlayHere] place bisect: {suspects.Count} behaviours with a LateUpdate at order 0");
+            var baseVerdict = new bool[2];
+            yield return JudgeMovedBack(baseVerdict);
+            Debug.Log($"[KnPlayHere] place bisect: control, all on: {Verdict(baseVerdict)} ({LastJudge})");
+            if (!baseVerdict[1]) { Debug.Log("[KnPlayHere] place bisect: no put-back with all on: nothing to search"); yield break; }
+            int rounds = 0, noVerdict = 0;
+            while (suspects.Count > 1 && rounds++ < 12)
+            {
+                var half = suspects.GetRange(0, suspects.Count / 2);
+                var off = new List<MonoBehaviour>();
+                foreach (var b in half) if (TrySwitch(b, false, skipped)) off.Add(b);
+                RestoreLocalPlayer();   // PlayerInventory.OnDisable clears LocalPlayer; the writer may read it
+                var verdict = new bool[2];
+                yield return JudgeMovedBack(verdict);
+                foreach (var b in off) TrySwitch(b, true, skipped);
+                RestoreLocalPlayer();
+                suspects.RemoveAll(b => b == null || skipped.Contains(PathOf(b)));
+                half.RemoveAll(b => b == null || skipped.Contains(PathOf(b)));
+                if (!verdict[0])
+                {
+                    if (++noVerdict >= 3) { Debug.Log("[KnPlayHere] place bisect: GAVE UP, the body did not move for 3 tries"); break; }
+                    Debug.Log($"[KnPlayHere] place bisect: the body stopped moving before a verdict; try {noVerdict} of 3");
+                    rounds--;
+                    continue;
+                }
+                var rest = suspects.FindAll(b => !half.Contains(b));
+                suspects = !verdict[1] ? half : rest;
+                Debug.Log($"[KnPlayHere] place bisect: round {rounds}: {(verdict[1] ? "still put back" : "NOT put back")} with {half.Count} off ({LastJudge}) -> {suspects.Count} left");
+                if (suspects.Count <= 16) Debug.Log("[KnPlayHere] place bisect: left: " + string.Join(", ", suspects.ConvertAll(b => PathOf(b))));
+                yield return null;
+            }
+            if (suspects.Count == 1 && suspects[0] != null && TrySwitch(suspects[0], false, skipped))
+            {
+                RestoreLocalPlayer();
+                var alone = new bool[2];
+                yield return JudgeMovedBack(alone);
+                TrySwitch(suspects[0], true, skipped);
+                RestoreLocalPlayer();
+                Debug.Log($"[KnPlayHere] place bisect: proof, only {PathOf(suspects[0])} off: {Verdict(alone)} ({LastJudge})");
+            }
+            Debug.Log("[KnPlayHere] " + (suspects.Count == 1 && suspects[0] != null ? "place bisect: THE WRITER IS " + PathOf(suspects[0])
+                : $"place bisect: no single writer found ({suspects.Count} left)") +
+                (skipped.Count > 0 ? "; left out because switching them threw: " + string.Join(", ", skipped) : ""));
+        }
+
+        static int s_LoggedExceptions;
+        static void CountExceptions(string text, string stack, LogType type) { if (type == LogType.Exception) s_LoggedExceptions++; }
+
+        /// <summary>
+        /// Switches a behaviour on or off; when that throws (Unity logs an exception from OnEnable/OnDisable instead of passing it to the
+        /// caller, so both are watched), it is put back on and listed (false).
+        /// </summary>
+        static bool TrySwitch(MonoBehaviour b, bool on, List<string> skipped)
+        {
+            if (b == null) return false;
+            int before = s_LoggedExceptions;
+            string why = null;
+            Application.logMessageReceived += CountExceptions;
+            try { b.enabled = on; }
+            catch (Exception e) { why = e.GetType().Name + ": " + e.Message; }
+            finally { Application.logMessageReceived -= CountExceptions; }
+            if (why == null && s_LoggedExceptions == before) return true;
+            string name = PathOf(b);
+            if (!skipped.Contains(name)) skipped.Add(name);
+            Debug.Log($"[KnPlayHere] place bisect: switching {name} {(on ? "on" : "off")} threw {why ?? "(logged)"}; left out of the search");
+            try { b.enabled = true; } catch (Exception) { }
+            return false;
+        }
+
+        /// <summary>
+        /// Run 3g (31 Oct): controls instead of a bisect (3f's verdict, WeaponHitbox, was biased: after PlayerInventory was switched off
+        /// once, no round saw the put-back again). Nothing is switched off except as named; each is judged on walking frames.
+        /// </summary>
+        static IEnumerator PlaceControls()
+        {
+            var verdict = new bool[2];
+            int pullBefore = YawProbes.PullPendingFrames, frameBefore = Time.frameCount;
+            yield return JudgeMovedBack(verdict);
+            Debug.Log($"[KnPlayHere] place control A, all on: {Verdict(verdict)}; the inventory pull was pending on " +
+                      $"{YawProbes.PullPendingFrames - pullBefore} of {Time.frameCount - frameBefore} frames");
+
+            GameObject own = OwnBody;
+            var inv = own != null ? own.GetComponent("PlayerInventory") : null;
+            var changed = inv != null ? inv.GetType().GetField("Changed", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Public) : null;
+            if (changed?.GetValue(inv) is Delegate d)
+            {
+                var names = new System.Text.StringBuilder();
+                foreach (var h in d.GetInvocationList())
+                    names.Append(" | ").Append(h.Method.DeclaringType?.FullName).Append('.').Append(h.Method.Name).Append(h.Target is Component c ? " on " + c.name : "");
+                Debug.Log("[KnPlayHere] place control: inventory Changed listeners" + names);
+            }
+
+            verdict = new bool[2];
+            YawProbes.SuppressPull = true;
+            yield return JudgeMovedBack(verdict);
+            YawProbes.SuppressPull = false;
+            Debug.Log($"[KnPlayHere] place control B, inventory pull held back: {Verdict(verdict)}");
+
+            var hitbox = own != null ? own.GetComponentInChildren(System.Type.GetType("KryticalNova.Combat.WeaponHitbox, KryticalNova.Combat") ?? typeof(MonoBehaviour), false) as MonoBehaviour : null;
+            verdict = new bool[2];
+            if (hitbox != null && hitbox.GetType().Name == "WeaponHitbox") hitbox.enabled = false;
+            yield return JudgeMovedBack(verdict);
+            if (hitbox != null && hitbox.GetType().Name == "WeaponHitbox") hitbox.enabled = true;
+            Debug.Log($"[KnPlayHere] place control C, only WeaponHitbox off ({(hitbox != null ? hitbox.GetType().Name : "none found")}): {Verdict(verdict)}");
+
+            verdict = new bool[2];
+            yield return JudgeMovedBack(verdict);
+            Debug.Log($"[KnPlayHere] place control D, all on again: {Verdict(verdict)}");
+        }
+
+        /// <summary>Puts the own body back as LocalPlayer when switching something off cleared it.</summary>
+        static void RestoreLocalPlayer()
+        {
+            if (s_OwnBody != null && KryticalNova.Core.LocalPlayer.Object != s_OwnBody)
+            {
+                KryticalNova.Core.LocalPlayer.Set(s_OwnBody);
+                Debug.Log("[KnPlayHere] place bisect: LocalPlayer was cleared (PlayerInventory.OnDisable); set back to the own body");
+            }
+        }
+
+        /// <summary>
+        /// Run 3j (31 Oct): the put-back is on EVERY moving frame (run 3i). All order-0 LateUpdates off together (is it one of them at
+        /// all?), then each alone for 6 moving frames; counted at order 250 in the frame itself. Ones that throw when switched are
+        /// skipped and listed; LocalPlayer is set back after each switch.
+        /// </summary>
+        static IEnumerator SingleSwitchTest()
+        {
+            var suspects = LateUpdatesAt(0);
+            var skipped = new List<string>();
+            Debug.Log($"[KnPlayHere] single test: {suspects.Count} behaviours with a LateUpdate at order 0");
+            yield return Count(6, "all on");
+            var off = new List<MonoBehaviour>();
+            foreach (var b in suspects) if (TrySwitch(b, false, skipped)) off.Add(b);
+            RestoreLocalPlayer();
+            yield return Count(6, $"ALL {off.Count} order-0 LateUpdates off");
+            foreach (var b in off) TrySwitch(b, true, skipped);
+            RestoreLocalPlayer();
+            yield return Count(4, "all on again");
+            foreach (var b in suspects)
+            {
+                if (b == null || skipped.Contains(PathOf(b))) continue;
+                if (!TrySwitch(b, false, skipped)) continue;
+                RestoreLocalPlayer();
+                yield return Count(6, "only " + PathOf(b) + " off");
+                TrySwitch(b, true, skipped);
+                RestoreLocalPlayer();
+                for (int i = 0; i < 2; i++) yield return null;
+            }
+            Debug.Log("[KnPlayHere] single test: done" + (skipped.Count > 0 ? "; skipped (threw when switched): " + string.Join(", ", skipped) : ""));
+        }
+
+        /// <summary>Waits for <paramref name="moving"/> moving frames (at most 600 frames) and logs how many were put back.</summary>
+        static IEnumerator Count(int moving, string what)
+        {
+            int m0 = YawProbes.MovingFrames, p0 = YawProbes.PutBackFrames;
+            for (int i = 0; i < 600 && YawProbes.MovingFrames - m0 < moving; i++) yield return null;
+            int m = YawProbes.MovingFrames - m0, pb = YawProbes.PutBackFrames - p0;
+            Debug.Log($"[KnPlayHere] single test: {what}: {pb} of {m} moving frames put back{(m > 0 && pb == 0 ? "  <== NO PUT-BACK" : "")}");
+        }
+
+        static string Verdict(bool[] v) => !v[0] ? "NO VERDICT (the body did not move)" : v[1] ? "PUT BACK (the camera trails)" : "not put back";
+
+        /// <summary>Waits for up to 4 frames where the body moved; verdict[0] = some moved, verdict[1] = put back at order 0 on any.</summary>
+        static IEnumerator JudgeMovedBack(bool[] verdict)
+        {
+            // moved = the follow's place (order -150) changed from the frame before; NOT order -150 against order 250 of the same frame,
+            // which are equal whenever the writer is off (run 3d: every try with the writer's half off read as "not moving")
+            int seen = 0, putBack = 0;
+            Vector3 before = YawProbes.Pos[0];
+            // run 3g: the put-back comes on about a quarter of the walking frames, in short runs; 4 frames often missed it all
+            for (int i = 0; i < 900 && seen < JudgeFrames; i++)
+            {
+                yield return null;
+                Vector3 now = YawProbes.Pos[0];
+                bool moved = Vector3.Distance(now, before) > 0.005f;
+                before = now;
+                if (!moved) continue;
+                seen++;
+                if (Vector3.Distance(YawProbes.Pos[2], YawProbes.Pos[3]) > 0.005f) { verdict[1] = true; putBack++; }
+            }
+            verdict[0] = seen >= JudgeFrames / 2;
+            LastJudge = $"{putBack} of {seen} moving frames put back";
+        }
+
+        const int JudgeFrames = 20;
+        static string LastJudge = "";
+
+        /// <summary>
         /// Halves the order-0 LateUpdates, switching one half off for a few frames, until the one that turns the body is left
         /// (owner's GUI retries 3-4: the body slid without turning). Everything is switched back on.
         /// </summary>
@@ -152,7 +382,7 @@ namespace KryticalNova.Persistence.Entities
             Debug.Log("[KnPlayHere] " + (suspects.Count == 1 && suspects[0] != null ? "bisect: THE WRITER IS " + PathOf(suspects[0]) : "bisect: no single writer found"));
 
             // which part of the inventory: its pull (LateUpdate -> PullNetCells -> Changed), or being enabled at all
-            GameObject own = LocalPlayer.Object;
+            GameObject own = OwnBody;
             var inv = own != null ? own.GetComponent("PlayerInventory") : null;
             if (inv == null) yield break;
             int before = YawProbes.PullPendingFrames;
@@ -200,17 +430,110 @@ namespace KryticalNova.Persistence.Entities
         }
 
         [DefaultExecutionOrder(300)]
+        /// <summary>
+        /// The first frames DRAWN after the own body appeared (owner via Master, 31 Oct): a player may click at once and sees whatever is
+        /// drawn, so the camera must already be on the body on the first of them. Logged at render time, with the camera's place on the
+        /// last frame drawn before the body existed, so a snap after a drawn off-body frame shows as a big "moved".
+        /// </summary>
+        sealed class SpawnCameraWatch : MonoBehaviour
+        {
+            public const int Frames = 10;
+            int m_Drawn = -1, m_LastFrame = -1;
+            Vector3 m_LastCam;
+            bool m_Has;
+
+            void OnEnable() => UnityEngine.Rendering.RenderPipelineManager.beginContextRendering += AtRender;
+            void OnDisable() => UnityEngine.Rendering.RenderPipelineManager.beginContextRendering -= AtRender;
+
+            void AtRender(UnityEngine.Rendering.ScriptableRenderContext context, List<Camera> cameras)
+            {
+                if (m_Drawn >= Frames - 1 || Time.frameCount == m_LastFrame) return;   // the Scene view renders too: once a frame
+                m_LastFrame = Time.frameCount;
+                Camera cam = Camera.main;
+                if (cam == null) return;
+                Vector3 at = cam.transform.position;
+                GameObject body = OwnBody;
+                if (body == null) { m_LastCam = at; m_Has = true; return; }   // the world drawn before the player entered
+                m_Drawn++;
+                float toAnchor = Vector3.Distance(at, body.transform.position + Vector3.up * 2f);
+                float moved = m_Has ? Vector3.Distance(at, m_LastCam) : 0f;
+                m_LastCam = at;
+                m_Has = true;
+                Debug.Log($"[KnSpawnCam] drawn frame {m_Drawn} with the body (frame {Time.frameCount}, dt {Time.deltaTime * 1000f:F0} ms): " +
+                          $"camera to head anchor {toAnchor:F2} m, camera moved {moved:F2} m since the last drawn frame; body at " +
+                          $"{body.transform.position.x:F2},{body.transform.position.y:F2},{body.transform.position.z:F2}");
+            }
+        }
+
+        /// <summary>
+        /// Run 3k (31 Oct): the truth at render time, after every LateUpdate whatever their order. The LateUpdate probes are nested
+        /// classes, and Unity keeps execution order per script file, so their DefaultExecutionOrder may not hold (run 3j's count at
+        /// "250" saw no put-back while run 3i's trace at "300" saw one every frame). Here, once per drawn frame: how much the camera's
+        /// offset from the body changed (0 = the camera follows exactly; a one-frame lag changes it by the body's own move).
+        /// </summary>
+        sealed class RenderWatch : MonoBehaviour
+        {
+            public static int Frames, Lagging;
+            public static float WorstOffsetChangeMm;
+            int m_LastFrame = -1, m_Lines;
+            Vector3 m_LastOffset, m_LastBody;
+            bool m_Has;
+
+            void OnEnable() => UnityEngine.Rendering.RenderPipelineManager.beginContextRendering += AtRender;
+            void OnDisable() => UnityEngine.Rendering.RenderPipelineManager.beginContextRendering -= AtRender;
+
+            public static void Reset() { Frames = 0; Lagging = 0; WorstOffsetChangeMm = 0f; }
+
+            void AtRender(UnityEngine.Rendering.ScriptableRenderContext context, List<Camera> cameras)
+            {
+                if (Time.frameCount == m_LastFrame) return;
+                m_LastFrame = Time.frameCount;
+                Camera cam = Camera.main;
+                GameObject body = OwnBody;
+                if (cam == null || body == null) return;
+                Vector3 offset = cam.transform.position - body.transform.position;
+                float bodyMoved = m_Has ? Vector3.Distance(body.transform.position, m_LastBody) : 0f;
+                float change = m_Has ? Vector3.Distance(offset, m_LastOffset) : 0f;
+                m_LastOffset = offset; m_LastBody = body.transform.position; m_Has = true;
+                if (bodyMoved < 0.005f) return;
+                Frames++;
+                WorstOffsetChangeMm = Mathf.Max(WorstOffsetChangeMm, change * 1000f);
+                if (change > 0.005f) Lagging++;
+                if (s_RenderTrace && m_Lines++ < 300)
+                    Debug.Log($"[KnRender] frame {Time.frameCount} dt {Time.deltaTime * 1000f:F1} ms body moved {bodyMoved * 1000f:F0} mm " +
+                              $"camera offset changed {change * 1000f:F0} mm{(change > 0.005f ? " LAG" : "")}");
+            }
+
+            static readonly bool s_RenderTrace = Environment.GetEnvironmentVariable("KN_PLAYHERE_RENDER_TRACE") == "1";
+        }
+
         sealed class ScreenWatch : MonoBehaviour
         {
             public string CaptureFolder;
-            public static float WorstAnchorPx, WorstPetPx;
+            // Steps are judged with LAST frame's projection and this frame's view: a field-of-view change (the Run Start kick, the
+            // same GameFeel in the NGO game) zooms the whole picture and is the designed look, not judder. The zoom's own worst is
+            // reported beside it.
+            public static float WorstAnchorPx, WorstPetPx, WorstZoomPx;
             public static int Frames;
             Vector3 m_LastAnchor = new Vector3(float.NaN, 0f, 0f), m_LastPet = new Vector3(float.NaN, 0f, 0f);
             float m_NextShot;
             int m_Shot;
             MonoBehaviour m_Pet;
+            Vector3 m_LastBody, m_LastCam;
+            Quaternion m_LastCamRot = Quaternion.identity;
+            Matrix4x4 m_LastProjection;
+            int m_LastGc;
+            int m_CamLines, m_JumpLines;
 
-            public static void ResetWorst() { WorstAnchorPx = 0f; WorstPetPx = 0f; Frames = 0; }
+            public static void ResetWorst() { WorstAnchorPx = 0f; WorstPetPx = 0f; WorstZoomPx = 0f; Frames = 0; }
+
+            /// <summary>Where <paramref name="world"/> lands on the screen through <paramref name="projection"/> and the camera's view now.</summary>
+            static Vector3 OnScreen(Camera cam, Matrix4x4 projection, Vector3 world)
+            {
+                Vector4 clip = projection * (cam.worldToCameraMatrix * new Vector4(world.x, world.y, world.z, 1f));
+                if (Mathf.Abs(clip.w) < 1e-6f) return new Vector3(float.NaN, 0f, 0f);
+                return new Vector3((clip.x / clip.w * 0.5f + 0.5f) * cam.pixelWidth, (clip.y / clip.w * 0.5f + 0.5f) * cam.pixelHeight, clip.w);
+            }
 
             /// <summary>The own body's yaw after the camera (this LateUpdate, order 300) and when the frame is drawn.</summary>
             public static float YawAfterCamera = float.NaN, YawAtRender = float.NaN;
@@ -218,21 +541,138 @@ namespace KryticalNova.Persistence.Entities
             void OnEnable() => UnityEngine.Rendering.RenderPipelineManager.beginContextRendering += AtRender;
             void OnDisable() => UnityEngine.Rendering.RenderPipelineManager.beginContextRendering -= AtRender;
 
+            static string Fmt(Vector3 v) => $"{v.x:F2},{v.z:F2}";
+
+            static string PosLine()
+            {
+                var sb = new System.Text.StringBuilder();
+                for (int i = 0; i < YawProbes.Orders.Length; i++) sb.Append(YawProbes.Orders[i]).Append(' ').Append(Fmt(YawProbes.Pos[i])).Append(i + 1 < YawProbes.Orders.Length ? ", " : "");
+                return sb.ToString();
+            }
+
+            static bool s_ListedLateScripts;
+
+            /// <summary>Once: every enabled script on the own body (and its children) with a LateUpdate, and its execution order.</summary>
+            static string LateScriptsOnce()
+            {
+                if (s_ListedLateScripts || OwnBody == null) return "";
+                s_ListedLateScripts = true;
+                var sb = new System.Text.StringBuilder("; LateUpdate scripts on the own body:");
+                const System.Reflection.BindingFlags any = System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public
+                                                          | System.Reflection.BindingFlags.NonPublic;
+                foreach (var behaviour in OwnBody.GetComponentsInChildren<MonoBehaviour>(false))
+                {
+                    if (behaviour == null || !behaviour.isActiveAndEnabled) continue;
+                    var type = behaviour.GetType();
+                    if (type.GetMethod("LateUpdate", any) == null) continue;
+                    var order = (DefaultExecutionOrder)Attribute.GetCustomAttribute(type, typeof(DefaultExecutionOrder));
+                    sb.Append(' ').Append(type.Name).Append('(').Append(order != null ? order.order : 0).Append(") on '").Append(behaviour.name).Append('\'');
+                }
+                return sb.ToString();
+            }
+
+            /// <summary>Where the follow put the own body this frame (before any LateUpdate), from its state.</summary>
+            static string FollowPose()
+            {
+                GameObject body = OwnBody;
+                var state = body != null ? body.GetComponent<PlayerPresentationState>() : null;
+                return state != null && state.HasPose ? Fmt(state.PosePosition) : "none";
+            }
+
+            /// <summary>The Cinemachine brain's live camera and whether it is blending: who placed the camera this frame.</summary>
+            static string CameraBrainLine(Camera cam)
+            {
+                var brain = cam.GetComponent("CinemachineBrain");   // Cinemachine is not a reference of this assembly: read by name
+                if (brain == null) return "none";
+                var type = brain.GetType();
+                var live = type.GetProperty("ActiveVirtualCamera")?.GetValue(brain) as Component;
+                return $"live {(live != null ? live.name : "none")} blending {type.GetProperty("IsBlending")?.GetValue(brain)}";
+            }
+
             static void AtRender(UnityEngine.Rendering.ScriptableRenderContext context, List<Camera> cameras)
             {
-                GameObject body = LocalPlayer.Object;
+                GameObject body = OwnBody;
                 if (body != null) YawAtRender = body.transform.eulerAngles.y;
+            }
+
+            static readonly bool s_TickTrace = Environment.GetEnvironmentVariable("KN_PLAYHERE_TICK_TRACE") == "1";
+            int m_TraceLines;
+            uint m_LastTraceTick;
+            Vector3 m_LastTracePos;
+
+            /// <summary>
+            /// Run 3i (31 Oct, Master's lead): the put-back comes on the long frames; per walking frame, which frames: dt, the client's
+            /// tick (p = partial), how many whole ticks it moved, the put-back at order 0 and the body's move.
+            /// </summary>
+            void TraceTick(GameObject body)
+            {
+                if (!s_TickTrace || m_TraceLines >= 500) return;
+                Vector3 now = YawProbes.Pos[0];
+                float moved = Vector3.Distance(now, m_LastTracePos);
+                m_LastTracePos = now;
+                if (moved < 0.005f) return;
+                World client = KnBootstrap.ClientWorld;
+                string tick = "?";
+                uint index = 0;
+                if (client != null && client.IsCreated)
+                {
+                    using var q = client.EntityManager.CreateEntityQuery(typeof(Unity.NetCode.NetworkTime));
+                    if (q.CalculateEntityCount() == 1)
+                    {
+                        var nt = q.GetSingleton<Unity.NetCode.NetworkTime>();
+                        if (nt.ServerTick.IsValid)
+                        {
+                            index = nt.ServerTick.TickIndexForValidTick;
+                            tick = index + (nt.IsPartialTick ? "p" : "") + " frac " + nt.ServerTickFraction.ToString("F2");
+                        }
+                    }
+                }
+                int advanced = m_LastTraceTick == 0 ? 0 : (int)(index - m_LastTraceTick);
+                m_LastTraceTick = index;
+                float putBack = Vector3.Distance(YawProbes.Pos[2], YawProbes.Pos[3]) * 1000f;
+                m_TraceLines++;
+                Debug.Log($"[KnTick] frame {Time.frameCount} dt {Time.deltaTime * 1000f:F1} ms tick {tick} (+{advanced}) moved {moved * 1000f:F0} mm " +
+                          $"put back {putBack:F0} mm{(putBack > 5f ? " PUT-BACK" : "")}");
             }
 
             void LateUpdate()
             {
                 var cam = Camera.main;
-                GameObject body = LocalPlayer.Object;
+                GameObject body = OwnBody;
                 if (cam == null || body == null) return;
+                TraceTick(body);
                 YawAfterCamera = body.transform.eulerAngles.y;
                 Frames++;
-                Vector3 anchor = cam.WorldToScreenPoint(body.transform.position + body.transform.up * 2f);
-                if (!float.IsNaN(m_LastAnchor.x)) WorstAnchorPx = Mathf.Max(WorstAnchorPx, ((Vector2)(anchor - m_LastAnchor)).magnitude);
+                Vector3 anchorWorld = body.transform.position + body.transform.up * 2f;
+                Vector3 anchor = OnScreen(cam, cam.projectionMatrix, anchorWorld);
+                bool first = float.IsNaN(m_LastAnchor.x);
+                float zoomStep = first ? 0f : ((Vector2)(anchor - m_LastAnchor)).magnitude;
+                float step = first ? 0f : ((Vector2)(OnScreen(cam, m_LastProjection, anchorWorld) - m_LastAnchor)).magnitude;
+                if (!first) { WorstAnchorPx = Mathf.Max(WorstAnchorPx, step); WorstZoomPx = Mathf.Max(WorstZoomPx, zoomStep); }
+                // fast moves, frame by frame: body travel, camera travel, camera distance (the deoccluder pulls it in), screen step
+                Vector3 bodyPos = body.transform.position, camPos = cam.transform.position;
+                if (!float.IsNaN(m_LastAnchor.x) && m_CamLines < 600)
+                {
+                    float bodyMove = Vector3.Distance(bodyPos, m_LastBody), camMove = Vector3.Distance(camPos, m_LastCam);
+                    if (bodyMove / Mathf.Max(1e-4f, Time.deltaTime) > 10f)
+                    {
+                        m_CamLines++;
+                        Vector3 gap = (camPos - m_LastCam) - (bodyPos - m_LastBody);   // camera travel minus body travel, as a vector
+                        float turned = Quaternion.Angle(cam.transform.rotation, m_LastCamRot);
+                        Debug.Log($"[KnCam] frame {Time.frameCount} dt {Time.deltaTime * 1000f:F1} ms body moved {bodyMove * 1000f:F0} mm camera moved {camMove * 1000f:F0} mm " +
+                                  $"travel gap {gap.magnitude * 1000f:F1} mm camera turned {turned:F3} deg GC {System.GC.CollectionCount(0) - m_LastGc} " +
+                                  $"fov {cam.fieldOfView:F2} aspect {cam.aspect:F3} pixels {cam.pixelWidth}x{cam.pixelHeight} scaled {cam.scaledPixelWidth} " +
+                                  $"res scale {ScalableBufferManager.widthScaleFactor:F3} " +
+                                  $"camera to anchor {Vector3.Distance(camPos, anchorWorld):F3} m anchor screen step {step:F1} px y {bodyPos.y:F3}");
+                    }
+                }
+                if (!first && step > Runner.MaxScreenStepPx && m_JumpLines++ < 40)
+                    Debug.Log($"[KnJump] frame {Time.frameCount} dt {Time.deltaTime * 1000f:F1} ms anchor step {step:F1} px (with zoom {zoomStep:F1}) " +
+                              $"body moved {Vector3.Distance(bodyPos, m_LastBody) * 1000f:F0} mm camera moved {Vector3.Distance(camPos, m_LastCam) * 1000f:F0} mm " +
+                              $"camera turned {Quaternion.Angle(cam.transform.rotation, m_LastCamRot):F3} deg fov {cam.fieldOfView:F2} " +
+                              $"camera to anchor {Vector3.Distance(camPos, anchorWorld):F3} m camera {camPos} body {bodyPos} brain {CameraBrainLine(cam)}; " +
+                              $"body by LateUpdate order: {PosLine()} (frame {YawProbes.FrameAtFirst}); follow wrote {FollowPose()}{LateScriptsOnce()}");
+                m_LastBody = bodyPos; m_LastCam = camPos; m_LastCamRot = cam.transform.rotation; m_LastGc = System.GC.CollectionCount(0);
                 m_LastAnchor = anchor;
                 if (m_Pet == null && Frames % 60 == 1)   // the pet's type lives in a system this one does not use: found by name
                     foreach (var behaviour in UnityEngine.Object.FindObjectsByType<MonoBehaviour>(FindObjectsInactive.Exclude))
@@ -240,10 +680,12 @@ namespace KryticalNova.Persistence.Entities
                 var pet = m_Pet;
                 if (pet != null)
                 {
-                    Vector3 at = cam.WorldToScreenPoint(pet.transform.position);
-                    if (!float.IsNaN(m_LastPet.x)) WorstPetPx = Mathf.Max(WorstPetPx, ((Vector2)(at - m_LastPet)).magnitude);
+                    Vector3 at = OnScreen(cam, cam.projectionMatrix, pet.transform.position);
+                    if (!float.IsNaN(m_LastPet.x))
+                        WorstPetPx = Mathf.Max(WorstPetPx, ((Vector2)(OnScreen(cam, m_LastProjection, pet.transform.position) - m_LastPet)).magnitude);
                     m_LastPet = at;
                 }
+                m_LastProjection = cam.projectionMatrix;
                 if (!string.IsNullOrEmpty(CaptureFolder) && Time.realtimeSinceStartup >= m_NextShot)
                 {
                     m_NextShot = Time.realtimeSinceStartup + 0.1f;
@@ -277,9 +719,9 @@ namespace KryticalNova.Persistence.Entities
         /// </summary>
         public static void Batch()
         {
-            if (string.IsNullOrEmpty(Environment.GetEnvironmentVariable(WalkVariable)))
+            if (!Scripted)
             {
-                Debug.LogError("[KnPlayHere] " + WalkVariable + " is not set: nothing to walk.");
+                Debug.LogError("[KnPlayHere] " + WalkVariable + " and " + JumpVariable + " are not set: nothing to walk or jump.");
                 EditorApplication.Exit(2);
                 return;
             }
@@ -356,19 +798,29 @@ namespace KryticalNova.Persistence.Entities
             }
             KnGoInGame.Source = new TesterGoInGame(new GoInGamePayload { CharacterId = string.Empty, Name = TesterName, RecipeText = recipeText });
             string join = JoinRules.PayloadText(GameBuild.Version, true);
+            // one camera change per proof run: KN_PLAYHERE_SPAWNCAM_FIX=0 measures without the spawn-camera fix
+            s_OwnBody = null;
+            PlayerWorldsSetup.TakeCameraWhenBodyMade = Environment.GetEnvironmentVariable("KN_PLAYHERE_SPAWNCAM_FIX") != "0";
+            Debug.Log("[KnPlayHere] spawn-camera fix " + (PlayerWorldsSetup.TakeCameraWhenBodyMade ? "on" : "OFF"));
             if (!KnBootstrap.StartPlayHere(Port, join)) { StopPlay(1); return; }
             Debug.Log($"[KnPlayHere] Entity-netcode server and client started on loopback {Port}. Click the ground to walk.");
             var host = new GameObject("KnPlayHere");
             UnityEngine.Object.DontDestroyOnLoad(host);
-            host.AddComponent<Runner>().Walk = Environment.GetEnvironmentVariable(WalkVariable);
+            if (Scripted)
+                Application.SetStackTraceLogType(LogType.Log, StackTraceLogType.None);   // scripted run: logging must not cause the spikes it measures
+            var runner = host.AddComponent<Runner>();
+            runner.Walk = Environment.GetEnvironmentVariable(WalkVariable);
+            runner.Jump = Environment.GetEnvironmentVariable(JumpVariable);
             host.AddComponent<ScreenWatch>().CaptureFolder = Environment.GetEnvironmentVariable(CaptureVariable);
             YawProbes.Attach(host);
+            host.AddComponent<SpawnCameraWatch>();
+            host.AddComponent<RenderWatch>();
         }
 
         static void StopPlay(int exitCode)
         {
             s_ExitCode = exitCode;
-            if (s_QuitAfter || !string.IsNullOrEmpty(Environment.GetEnvironmentVariable(WalkVariable))) EditorApplication.isPlaying = false;
+            if (s_QuitAfter || Scripted) EditorApplication.isPlaying = false;
         }
 
         /// <summary>The database's first lineage in its default look (the same way the test-lane bots enter).</summary>
@@ -411,6 +863,7 @@ namespace KryticalNova.Persistence.Entities
         sealed class Runner : MonoBehaviour
         {
             public string Walk;
+            public string Jump;
             int m_Errors;
 
             // the per-click lines of both worlds ([KnClick] client / server / refused why=...) go to the Console
@@ -573,39 +1026,82 @@ namespace KryticalNova.Persistence.Entities
                 if (type == LogType.Error || type == LogType.Exception || type == LogType.Assert) m_Errors++;
             }
 
+            /// <summary>The scripted run stops itself after this (stops Play, reports what it has), before the batch watchdog's 300 s.</summary>
+            public const float HardCapSeconds = 270f;
+            float m_RunStarted;
+
+            bool OverTheCap()
+            {
+                if (Time.realtimeSinceStartup - m_RunStarted < HardCapSeconds) return false;
+                Log($"HARD CAP: the scripted run passed {HardCapSeconds:F0} s; stopping with what it has");
+                return true;
+            }
+
             IEnumerator Start()
             {
+                m_RunStarted = Time.realtimeSinceStartup;
                 float started = Time.realtimeSinceStartup;
-                while (LocalPlayer.Object == null || !TryServer(out _, out _))
+                while (OwnBody == null || !TryServer(out _, out _))
                 {
                     if (Time.realtimeSinceStartup - started > 60f) { Log("the tester never entered within 60 s"); Finish(false); yield break; }
                     yield return null;
                 }
                 TryServer(out GameObject body, out Entity ghost);
+                s_OwnBody = KryticalNova.Core.LocalPlayer.Object;
                 var skills = body.GetComponent<PlayerMovementSkills>();
                 if (skills != null) skills.GmSetMaxRanks();
                 Log($"the tester entered after {Time.realtimeSinceStartup - started:F1} s; Run rank {(skills != null ? skills.RunRank : 0)}, Flux {Flux(body)}");
                 // the Netcode for GameObjects side must be off (owner's feel test 30 Oct: its host took the clicks and the camera)
                 var ngo = Unity.Netcode.NetworkManager.Singleton;
                 bool ngoUp = ngo != null && ngo.IsListening;
-                var role = LocalPlayer.Object.GetComponent<KryticalNova.Core.BodyRoleTag>();
-                Log($"Netcode for GameObjects {(ngoUp ? "IS RUNNING (wrong)" : "off")}; the local player is '{LocalPlayer.Object.name}' ({(role != null ? role.Kind.ToString() : "no role")})");
+                var role = OwnBody.GetComponent<KryticalNova.Core.BodyRoleTag>();
+                Log($"Netcode for GameObjects {(ngoUp ? "IS RUNNING (wrong)" : "off")}; the local player is '{OwnBody.name}' ({(role != null ? role.Kind.ToString() : "no role")})");
                 if (ngoUp) Debug.LogError("[KnPlayHere] Netcode for GameObjects is running beside the entity netcode.");
-                if (string.IsNullOrEmpty(Walk)) yield break; // by hand: the owner clicks
+                if (!string.IsNullOrEmpty(Walk) || !string.IsNullOrEmpty(Jump))
+                {
+                    // The camera's first move onto the body that just entered is the spawn, not a click (GUI run 1, 31 Oct: 3.9 m in
+                    // one 333 ms warm-up frame with the body still, judged as the first click's step). Let it settle, log it apart.
+                    Camera cam = Camera.main;
+                    Vector3 camAtEntry = cam != null ? cam.transform.position : Vector3.zero;
+                    float settleStart = Time.realtimeSinceStartup;
+                    yield return new WaitForSeconds(2f);
+                    Log($"the camera settled on the body before the first click: moved {(cam != null ? Vector3.Distance(camAtEntry, cam.transform.position) : 0f):F2} m " +
+                        $"in the {Time.realtimeSinceStartup - settleStart:F1} s after entering");
+                }
+                if (string.IsNullOrEmpty(Walk) && string.IsNullOrEmpty(Jump)) yield break; // by hand: the owner clicks
 
                 var points = new List<Vector3>();
-                if (!TryPoints(Walk, points)) { Log(WalkVariable + " does not read as x,z;x,z: " + Walk); Finish(false); yield break; }
+                if (!string.IsNullOrEmpty(Walk) && !TryPoints(Walk, points)) { Log(WalkVariable + " does not read as x,z;x,z: " + Walk); Finish(false); yield break; }
+                var jumpPoints = new List<Vector3>();
+                if (!string.IsNullOrEmpty(Jump) && !TryPoints(Jump, jumpPoints)) { Log(JumpVariable + " does not read as x,z;x,z: " + Jump); Finish(false); yield break; }
                 int arrived = 0, tries = 0;
                 m_YawFrom = ServerPosition(ghost);
                 foreach (bool run in new[] { false, true })
                     foreach (Vector3 flat in points)
                     {
+                        if (OverTheCap()) { Finish(false); yield break; }
                         tries++;
                         Vector3 p = flat;
                         p.y = Physics.Raycast(new Vector3(p.x, 500f, p.z), Vector3.down, out RaycastHit hit, 1000f) ? hit.point.y : 0f;
                         float flux = Flux(body);
                         BodyClicks.Ground(p, run);
                         ScreenWatch.ResetWorst();
+                        RenderWatch.Reset();
+                        if (!m_PlaceBisectStarted && Environment.GetEnvironmentVariable("KN_PLAYHERE_PLACE_BISECT") == "1")
+                        {
+                            m_PlaceBisectStarted = true;
+                            StartCoroutine(FindOrderZeroMover());
+                        }
+                        if (!m_PlaceBisectStarted && Environment.GetEnvironmentVariable("KN_PLAYHERE_SINGLE_TEST") == "1")
+                        {
+                            m_PlaceBisectStarted = true;
+                            StartCoroutine(SingleSwitchTest());
+                        }
+                        if (!m_PlaceBisectStarted && Environment.GetEnvironmentVariable("KN_PLAYHERE_PLACE_CONTROL") == "1")
+                        {
+                            m_PlaceBisectStarted = true;
+                            StartCoroutine(PlaceControls());
+                        }
                         float clicked = Time.realtimeSinceStartup;
                         bool moving = false, done = false;
                         while (Time.realtimeSinceStartup - clicked < ArriveTimeoutSeconds)
@@ -617,33 +1113,217 @@ namespace KryticalNova.Persistence.Entities
                         }
                         Vector3 server = ServerPosition(ghost);
                         float off = Flat(server - p);
-                        bool ok = done && off < 1.5f;
+                        // arrived: the walk ended with the server on the point; a short move can start and end between two looks
+                        bool ok = (done || !moving) && off < 1.5f;
                         if (!YawFaces(ghost, p, out string yawReport))
                         {
-                            ok = false;
                             if (m_YawFailures++ == 0) yield return FindOrderZeroWriter();
                         }
                         Log(yawReport + "; " + YawProbes.Line());
-                        bool smooth = ScreenWatch.WorstAnchorPx <= MaxScreenStepPx && ScreenWatch.WorstPetPx <= MaxScreenStepPx;
-                        if (!smooth) { ok = false; m_JudderFailures++; }
-                        Log($"followers on the screen over {ScreenWatch.Frames} frames: head anchor worst step {ScreenWatch.WorstAnchorPx:F1} px, " +
-                            $"pet worst step {ScreenWatch.WorstPetPx:F1} px (limit {MaxScreenStepPx} px) -> {(smooth ? "smooth" : "JUDDER")}");
+                        // run 3k (31 Oct): the LateUpdate screen step was a measuring artifact (its watcher's order did not hold); the
+                        // verdict is the render-time one: the camera keeps its offset from the body (within MaxOffsetChangeMm)
+                        bool smooth = RenderWatch.WorstOffsetChangeMm <= MaxOffsetChangeMm;
+                        if (!smooth) m_JudderFailures++;
+                        Log($"at render time over {RenderWatch.Frames} moving frames: camera offset from the body changed on {RenderWatch.Lagging} " +
+                            $"(worst {RenderWatch.WorstOffsetChangeMm:F0} mm; 0 = the camera follows the body exactly)");
+                        Log($"followers on the screen over {ScreenWatch.Frames} frames: head anchor worst step {ScreenWatch.WorstAnchorPx:F1} px " +
+                            $"({ScreenWatch.WorstZoomPx:F1} px with the field-of-view kick), pet worst step {ScreenWatch.WorstPetPx:F1} px " +
+                            $"(limit {MaxScreenStepPx} px) -> {(smooth ? "smooth" : "JUDDER")}");
                         if (ok) arrived++;
                         string refusal = KnBootstrap.ServerWorld?.GetExistingSystemManaged<PlayerServerPlanSystem>()?.LastCostRefusal;
-                        Log($"{(run ? "run" : "walk")} to {p.x:F1},{p.z:F1}: {(ok ? "arrived" : moving ? "NOT there" : "never started")} after " +
+                        Log($"{(run ? "run" : "walk")} to {p.x:F1},{p.z:F1}: {(ok ? "arrived" : moving ? "NOT there" : off < 1.5f ? "arrived" : "never started")} after " +
                             $"{Time.realtimeSinceStartup - clicked:F1} s; server {server.x:F2},{server.z:F2} ({off:F2} m off), body " +
-                            $"{LocalPlayer.Object.transform.position.x:F2},{LocalPlayer.Object.transform.position.z:F2}; Flux {flux:F0} -> {Flux(body):F0}" +
+                            $"{OwnBody.transform.position.x:F2},{OwnBody.transform.position.z:F2}; Flux {flux:F0} -> {Flux(body):F0}" +
                             (string.IsNullOrEmpty(refusal) ? "" : "; last refusal: " + refusal));
                     }
-                Log($"done: {arrived} of {tries} arrived, {m_YawFailures} facing the wrong way, {m_JudderFailures} juddering, {m_Errors} error lines");
-                Finish(arrived == tries && m_Errors == 0);
+                int landed = 0;
+                foreach (Vector3 flat in jumpPoints)
+                {
+                    if (OverTheCap()) { Finish(false); yield break; }
+                    var outcome = new JumpOutcome();
+                    yield return JumpTo(flat, body, ghost, outcome);
+                    if (outcome.Ok) landed++;
+                }
+                // a low rank: the owner's client and the server refuse the same jump with the same words (the clean case is the jumps above)
+                var lowRank = new JumpOutcome { Ok = true };
+                if (jumpPoints.Count > 0) yield return LowRankRefusals(body, ghost, skills, lowRank);
+                Log($"done: {arrived} of {tries} arrived, {landed} of {jumpPoints.Count} jumps passed, low-rank refusals {(lowRank.Ok ? "match" : "DIFFER")}, " +
+                    $"{m_YawFailures} facing the wrong way, {m_JudderFailures} juddering, {m_Errors} error lines");
+                Finish(arrived == tries && landed == jumpPoints.Count && lowRank.Ok && m_YawFailures == 0 && m_JudderFailures == 0 && m_Errors == 0);
+            }
+
+            sealed class JumpOutcome { public bool Ok; }
+
+            /// <summary>
+            /// The ranks reach the owner (MoveRanks) and a jump the rank does not allow is refused by the owner's own check and by the
+            /// server with the same words: rank 0 ("Learn Jump first."), then rank 1 at a spot past its distance. Top ranks again after.
+            /// </summary>
+            IEnumerator LowRankRefusals(GameObject body, Entity ghost, PlayerMovementSkills skills, JumpOutcome outcome)
+            {
+                var serverJumps = KnBootstrap.ServerWorld.GetExistingSystemManaged<PlayerJumpServerSystem>();
+                var ownSkills = OwnBody.GetComponent<PlayerMovementSkills>();
+                var click = OwnBody.GetComponent<PointAndClickPlayer>();
+                if (skills == null || ownSkills == null || click == null || serverJumps == null)
+                { Log("low rank: FAIL; no movement skills, click or server jump system to test with"); outcome.Ok = false; yield break; }
+                int run = skills.RunRank, top = skills.JumpRank;
+                MovementSkillData jumpData = skills.GetDefinition(MovementSkillId.Jump);
+                float rank1Distance = jumpData != null && jumpData.TryGetRank(1, out MovementSkillRank r1) ? r1.jumpDistance : 20f;
+                float topCost = jumpData != null && jumpData.TryGetRank(top, out MovementSkillRank rt) ? rt.chiCost : 5f;
+                var serverFlux = body.GetComponent<PlayerResources>();
+                var ownFlux = OwnBody.GetComponent<PlayerResources>();
+                Vector3 from = ServerPosition(ghost);
+                bool hasClient = TryLocalGhost(out World clientWorld, out Entity clientGhost, out _);
+                // rank 0 ("Learn Jump first."), rank 1 past its distance, then the top rank without the Flux for one jump
+                foreach (int rank in new[] { 0, 1, -1 })
+                {
+                    bool fluxCase = rank < 0;
+                    float set = Time.realtimeSinceStartup;
+                    bool mirrored;
+                    if (fluxCase)
+                    {
+                        if (serverFlux == null || ownFlux == null) { Log("low Flux: FAIL; no resources"); outcome.Ok = false; continue; }
+                        skills.GmSetMaxRanks();
+                        while (ownSkills.JumpRank != top && Time.realtimeSinceStartup - set < 3f) yield return null;
+                        serverFlux.TrySpendChi(Mathf.Max(0f, serverFlux.Chi - (topCost - 1f)));   // one Flux short of a jump
+                        set = Time.realtimeSinceStartup;
+                        while (ownFlux.Chi >= topCost && Time.realtimeSinceStartup - set < 3f) yield return null;
+                        mirrored = ownFlux.Chi < topCost && ownSkills.JumpRank == top;
+                    }
+                    else
+                    {
+                        skills.RestoreSave(JsonUtility.ToJson(new MovementSkillState { runRank = (byte)run, jumpRank = (byte)rank }));
+                        while (ownSkills.JumpRank != rank && Time.realtimeSinceStartup - set < 3f) yield return null;
+                        mirrored = ownSkills.JumpRank == rank;
+                    }
+                    // rank 0 and Flux: a spot 2 m off; rank 1: a spot 1.5x its distance away (past the limit), on the ground where one is found
+                    Vector3 p = from + new Vector3(2f, 0f, 0f);
+                    if (rank == 1)
+                        foreach (Vector3 way in new[] { Vector3.right, Vector3.forward, Vector3.left, Vector3.back })
+                        {
+                            Vector3 q = from + way * (rank1Distance * 1.5f);
+                            if (Physics.Raycast(new Vector3(q.x, 500f, q.z), Vector3.down, out RaycastHit h, 1000f)
+                                && UnityEngine.AI.NavMesh.SamplePosition(h.point, out _, 0.3f, UnityEngine.AI.NavMesh.AllAreas)) { p = h.point; break; }
+                        }
+                    if (rank != 1 && Physics.Raycast(new Vector3(p.x, 500f, p.z), Vector3.down, out RaycastHit g, 1000f)) p = g.point;
+                    string clientWhy = click.ViewJumpRefusal(p);
+                    int refused0 = serverJumps.Refused, planned0 = serverJumps.Planned;
+                    ushort clientSeq0 = hasClient ? clientWorld.EntityManager.GetComponentData<ClientMotionPlan>(clientGhost).Plan.PlanSeq : (ushort)0;
+                    float bodyY0 = OwnBody.transform.position.y, bodyRise = 0f;
+                    BodyClicks.Jump(p);   // sent anyway (a real click stops at the owner's check): the server must refuse it on its own
+                    float sent = Time.realtimeSinceStartup;
+                    while (Time.realtimeSinceStartup - sent < 0.8f)
+                    {
+                        yield return new WaitForEndOfFrame();
+                        bodyRise = Mathf.Max(bodyRise, OwnBody.transform.position.y - bodyY0);
+                    }
+                    string serverWhy = serverJumps.Refused > refused0 ? serverJumps.LastRefusal : null;
+                    // no visible start: the owner made no plan of its own for it and the drawn body never left the ground
+                    bool predicted = hasClient && clientWorld.IsCreated
+                        && clientWorld.EntityManager.GetComponentData<ClientMotionPlan>(clientGhost).Plan.PlanSeq != clientSeq0;
+                    bool ok = mirrored && clientWhy != null && serverWhy != null && clientWhy == serverWhy && serverJumps.Planned == planned0
+                        && !predicted && bodyRise < 0.02f;
+                    if (!ok) outcome.Ok = false;
+                    string label = fluxCase ? $"low Flux (server {serverFlux.Chi:F0}, owner {ownFlux.Chi:F0}, a jump costs {topCost:F0})" : $"low rank {rank}";
+                    Log($"{label}: {(ok ? "PASS" : "FAIL")}; the server's numbers {(mirrored ? "arrived" : "NEVER arrived")} at the owner after " +
+                        $"{Time.realtimeSinceStartup - set:F2} s (owner Jump rank {ownSkills.JumpRank}); jump to {p.x:F1},{p.z:F1} " +
+                        $"({Flat(p - from):F1} m): client \"{clientWhy ?? "allowed"}\", server \"{serverWhy ?? (serverJumps.Planned > planned0 ? "PLANNED it" : "no answer")}\"; " +
+                        $"owner {(predicted ? "PREDICTED it" : "made no plan")}, drawn body rose {bodyRise * 100f:F1} cm (limit 2)");
+                }
+                skills.GmSetMaxRanks();
+                if (serverFlux != null) serverFlux.RestoreChi(serverFlux.MaxChi);
+                float back = Time.realtimeSinceStartup;
+                while ((ownSkills.JumpRank != skills.JumpRank || (ownFlux != null && serverFlux != null && ownFlux.Chi < serverFlux.Chi - 0.01f))
+                       && Time.realtimeSinceStartup - back < 3f) yield return null;
+                Log($"top ranks and Flux again: server Jump {skills.JumpRank} Flux {Flux(body):F0}, owner Jump {ownSkills.JumpRank} Flux {(ownFlux != null ? ownFlux.Chi : -1f):F0}");
+            }
+
+            /// <summary>
+            /// One scripted jump (plan 53): press to lift on the own body, the server's apex and landing against its plan and the click,
+            /// Flux taken once, the root never moved off the follow's pose by another writer, and the head anchor's worst step.
+            /// </summary>
+            IEnumerator JumpTo(Vector3 flat, GameObject body, Entity ghost, JumpOutcome outcome)
+            {
+                World serverWorld = KnBootstrap.ServerWorld;
+                var planner = serverWorld.GetExistingSystemManaged<PlayerJumpServerSystem>();
+                var pay = serverWorld.GetExistingSystemManaged<PlayerJumpPaySystem>();
+                Vector3 p = flat;
+                p.y = Physics.Raycast(new Vector3(p.x, 500f, p.z), Vector3.down, out RaycastHit hit, 1000f) ? hit.point.y : 0f;
+                Vector3 from = ServerPosition(ghost);
+                float flux = Flux(body);
+                int planned0 = planner.Planned, refused0 = planner.Refused, paid0 = pay.Paid;
+                Transform own = OwnBody.transform;
+                var state = OwnBody.GetComponent<PlayerPresentationState>();
+                var motor = OwnBody.GetComponentInChildren<PlayerAnimancerMotor>();
+                int clipLines = 0;
+                Vector3 bodyStart = own.position;
+                float lift = -1f, bodyTop = float.MinValue, serverTop = float.MinValue, worstRoot = 0f, worstArc = 0f;
+                // the press as the real click makes it: the owner's own rules first (PointAndClickPlayer view mode), then the click
+                var click = OwnBody.GetComponent<PointAndClickPlayer>();
+                string clientWhy = click != null ? click.ViewJumpRefusal(p) : "no PointAndClickPlayer on the own body";
+                if (clientWhy != null)
+                {
+                    outcome.Ok = false;
+                    Log($"jump to {p.x:F1},{p.z:F1}: FAIL; the owner's client refused it: {clientWhy}");
+                    yield break;
+                }
+                bool hasClient = TryLocalGhost(out World clientWorld, out Entity clientGhost, out _);
+                ushort clientSeq0 = hasClient ? clientWorld.EntityManager.GetComponentData<ClientMotionPlan>(clientGhost).Plan.PlanSeq : (ushort)0;
+                int pressFrame = Time.frameCount, predictedFrame = -1, clipFrame = -1;
+                BodyClicks.Jump(p);
+                ScreenWatch.ResetWorst();
+                RenderWatch.Reset();
+                float pressed = Time.realtimeSinceStartup;
+                while (Time.realtimeSinceStartup - pressed < 2.4f && planner.Refused == refused0)
+                {
+                    yield return new WaitForEndOfFrame();
+                    Vector3 b = own.position;
+                    // prediction: the owner's own plan for this click (made from the press, not the server's); the clip on the drawn body
+                    if (predictedFrame < 0 && hasClient && clientWorld.IsCreated && clientWorld.EntityManager.Exists(clientGhost))
+                    {
+                        MotionPlan mine = clientWorld.EntityManager.GetComponentData<ClientMotionPlan>(clientGhost).Plan;
+                        if (mine.Kind != MotionKind.None && mine.PlanSeq != clientSeq0) predictedFrame = Time.frameCount;
+                    }
+                    if (clipFrame < 0 && motor != null && motor.WarpedJumpLine != "no jump clip") clipFrame = Time.frameCount;
+                    if (lift < 0f && b.y > bodyStart.y + 0.02f) lift = Time.realtimeSinceStartup - pressed;
+                    bodyTop = Mathf.Max(bodyTop, b.y);
+                    serverTop = Mathf.Max(serverTop, ServerPosition(ghost).y);
+                    if (state != null && state.HasPose) worstRoot = Mathf.Max(worstRoot, Vector3.Distance(b, state.PosePosition));
+                    if (state != null && state.InJump) worstArc = Mathf.Max(worstArc, state.JumpArcErrorM);
+                    if (motor != null && clipLines++ < 30)
+                        Log($"jump frame {Time.frameCount} +{Time.realtimeSinceStartup - pressed:F2} s: animation {motor.CurrentState}, {motor.WarpedJumpLine}; body y {b.y:F2}");
+                }
+                var plan = serverWorld.EntityManager.GetComponentData<MotionPlan>(ghost);
+                Vector3 to = new Vector3(plan.ToXMm, plan.ToYMm, plan.ToZMm) * 0.001f;
+                Vector3 server = ServerPosition(ghost);
+                bool taken = planner.Planned == planned0 + 1;
+                float landError = Vector3.Distance(server, to), clickError = Flat(server - p);
+                bool liftOk = lift >= 0f && lift <= 0.3f;
+                // NGO started the clip on the press frame (BeginOwnJump); the owner predicts it (its own plan) instead of waiting for the server
+                bool predictedOk = predictedFrame >= 0 && predictedFrame - pressFrame <= 0;
+                bool clipOk = clipFrame >= 0 && clipFrame - pressFrame <= 0;
+                bool smooth = RenderWatch.WorstOffsetChangeMm <= MaxOffsetChangeMm;
+                if (!smooth) m_JudderFailures++;
+                // the owner's bar (31 Oct): the drawn body on the exact arc within 1 cm at any frame rate; the landing within 2 cm of the plan
+                outcome.Ok = taken && landError < 0.02f && clickError < 0.5f && pay.Paid == paid0 + 1 && worstRoot < 0.02f && worstArc < 0.01f && liftOk
+                    && predictedOk && clipOk;
+                Log($"jump to {p.x:F1},{p.z:F1}: {(outcome.Ok ? "PASS" : "FAIL")}; {(taken ? "planned" : "NOT planned: " + planner.LastRefusal)}; " +
+                    $"owner predicted {(predictedFrame < 0 ? "NEVER" : (predictedFrame - pressFrame) + " frames after the press")}, jump clip " +
+                    $"{(clipFrame < 0 ? "NEVER" : (clipFrame - pressFrame) + " frames after the press")} (limit 0 = the press frame); " +
+                    $"press to lift {lift:F3} s (limit 0.30); apex server {serverTop - from.y:F2} m (plan {(plan.ApexYMm * 0.001f) - from.y:F2}), body {bodyTop - bodyStart.y:F2} m; " +
+                    $"landed server {server.x:F2},{server.y:F2},{server.z:F2}: {landError * 100f:F1} cm from the plan, {clickError:F2} m from the click; " +
+                    $"Flux {flux:F0} -> {Flux(body):F0} (paid {pay.Paid - paid0}x); root off the follow's pose worst {worstRoot * 100f:F1} cm; drawn body off the exact arc worst {worstArc * 100f:F2} cm (limit 1); fps {1f / Mathf.Max(1e-4f, Time.smoothDeltaTime):F0}; " +
+                    $"camera offset from the body worst change {RenderWatch.WorstOffsetChangeMm:F0} mm at render time (limit {MaxOffsetChangeMm:F0}) -> {(smooth ? "smooth" : "JUDDER")}");
+                yield return new WaitForSeconds(0.6f);   // the landing cooldown (0.25 s) and the recovery clip
             }
 
             static void Log(string text) => Debug.Log("[KnPlayHere] " + text);
 
             Vector3 m_YawFrom;
+            bool m_PlaceBisectStarted;
             int m_YawFailures, m_JudderFailures;
-            const float MaxScreenStepPx = 3f;
+            public const float MaxScreenStepPx = 3f;
+            /// <summary>At the camera's ~8 m, 10 mm of camera-to-body change in one frame is about 2 px on a 1080p screen.</summary>
+            public const float MaxOffsetChangeMm = 10f;
 
             /// <summary>
             /// After a walk from the last spot to <paramref name="to"/>: the server faces the way it walked, and the own body (root and
@@ -708,6 +1388,40 @@ namespace KryticalNova.Persistence.Entities
             }
 
             static float Flat(Vector3 v) => new Vector2(v.x, v.z).magnitude;
+        }
+    }
+
+    /// <summary>
+    /// The clean stop of a scripted proof run (owner, 31 Oct: "shouldn't it just close down properly?"; a force-killed Editor leaves
+    /// scene backups and stops the next start on "Scene Backup Detected"). The run's wrapper writes <see cref="StopFile"/>; this sees it
+    /// on the next Editor update, leaves Play mode and exits with code 3. The wrapper kills the process only if it has not ended in time.
+    /// </summary>
+    [InitializeOnLoad]
+    static class KnStopRequest
+    {
+        public const string StopFile = "Temp/kn-stop-request";
+        static bool s_Stopping;
+
+        static KnStopRequest() => EditorApplication.update += Poll;
+
+        static void Poll()
+        {
+            if (s_Stopping || !System.IO.File.Exists(StopFile)) return;
+            string why = "";
+            try { why = System.IO.File.ReadAllText(StopFile).Trim(); System.IO.File.Delete(StopFile); } catch (Exception) { }
+            s_Stopping = true;
+            Debug.Log("[KnStop] stop requested (" + why + "): leaving Play mode, then exiting");
+            if (EditorApplication.isPlaying)
+            {
+                EditorApplication.playModeStateChanged += ExitWhenStopped;
+                EditorApplication.isPlaying = false;
+            }
+            else EditorApplication.Exit(3);
+        }
+
+        static void ExitWhenStopped(PlayModeStateChange change)
+        {
+            if (change == PlayModeStateChange.EnteredEditMode) EditorApplication.Exit(3);
         }
     }
 }

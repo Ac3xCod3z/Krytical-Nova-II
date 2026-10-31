@@ -15,7 +15,7 @@ namespace KryticalNova.Player.Entities.Bodies
         {
             click = default;
             if (!BodyClicks.TryTake(out BodyClicks.Click taken)) return false;
-            click = new WorldClick { Point = taken.Point, Run = taken.Run, Stop = taken.Stop };
+            click = new WorldClick { Point = taken.Point, Run = taken.Run, Stop = taken.Stop, Jump = taken.Jump };
             return true;
         }
     }

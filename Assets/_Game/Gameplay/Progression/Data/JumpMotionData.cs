@@ -35,6 +35,36 @@ namespace KryticalNova.Progression
             float t = rankDistance > 0f ? Mathf.Clamp01(horizontalDistance / rankDistance) : 1f;
             return Mathf.Max(minimumRise, rankHeight * Mathf.Pow(t, heightByDistanceExponent));
         }
+
+        /// <summary>Shorter than this is no jump.</summary>
+        public const float MinimumTravelDistance = 0.15f;
+
+        /// <summary>
+        /// The rank's limits for a jump from <paramref name="startFeet"/> to <paramref name="landingFeet"/>: why it is refused, or
+        /// null. Down has no limit (owner, 22 Oct 2026: "jump off buildings to the ground at any distance"); up is the rank's.
+        /// Shared by the NGO motor and the entity-netcode jump planner (one copy of the rules).
+        /// </summary>
+        public static string LimitRefusal(Vector3 startFeet, Vector3 landingFeet, float rankDistance, float rankHeight)
+        {
+            Vector3 displacement = landingFeet - startFeet;
+            float horizontalDistance = new Vector2(displacement.x, displacement.z).magnitude;
+            if (horizontalDistance < MinimumTravelDistance) return "Choose a landing point farther away.";
+            if (horizontalDistance > rankDistance) return $"Too far: Jump rank reaches {rankDistance:0.0} m.";
+            if (displacement.y > rankHeight) return $"Too high: Jump rank reaches +{rankHeight:0.0} m.";
+            return null;
+        }
+
+        /// <summary>
+        /// The apex height of the feet: the clearance over the higher end, or the rise this distance earns by the rank if that is
+        /// higher (short hops stay low; only a max-range jump climbs to the rank's full height).
+        /// </summary>
+        public float PeakHeight(Vector3 startFeet, Vector3 landingFeet, float rankDistance, float rankHeight)
+        {
+            Vector3 displacement = landingFeet - startFeet;
+            float horizontalDistance = new Vector2(displacement.x, displacement.z).magnitude;
+            float clearanceApex = Mathf.Max(startFeet.y, landingFeet.y) + apexClearance;
+            return Mathf.Max(clearanceApex, startFeet.y + RiseForDistance(horizontalDistance, rankDistance, rankHeight));
+        }
         [Header("Safety")]
         [Min(MinimumPositive)] public float landingSampleRadius = DefaultSnapDistance;
         [Min(MinimumPositive)] public float collisionSkin = DefaultSkin;
