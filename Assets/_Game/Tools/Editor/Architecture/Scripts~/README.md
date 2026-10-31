@@ -90,5 +90,11 @@ check joined the gate are in `known-findings.json` with their reason: they do no
 a listed one that has gone (take it off the list). When all four pass, `Logs/kn-check-stamp.json` records the git tree
 of the files at that moment, and `--stamp-ok` says whether the files are still the same. Every run also prints the
 change's risk level from `risk-tiers.json` (high, medium or low, and what that level needs before the PR goes in, as in
-`_Docs/Guides/Review-Rules.md`); `--risk` prints only that. The plan is
+`_Docs/Guides/Review-Rules.md`); `--risk` prints only that.
+
+`kn_commit_hook.py` is a Claude Code `PreToolUse` hook for Bash (switched on in `.claude/settings.json` only with
+the Master's OK). On `git commit` or `gh pr create` in a checkout of this project it asks `kn_check.py --state` (about
+2 seconds) whether the last passing run still matches the files. It says nothing when it does; otherwise the session
+gets one warning line with the reason and the line to run. It refuses the command only for a high-risk change whose
+last full run failed on exactly these files. `kn_check` keeps that last run in `Logs/kn-check-last.json`. The plan is
 `_Docs/Plans/code-evals-and-checks-plan.md`.

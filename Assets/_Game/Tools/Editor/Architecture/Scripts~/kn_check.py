@@ -51,6 +51,7 @@ def arg(name, default=None):
 CHECKOUT = os.path.normpath(arg("--checkout", os.path.join(HERE, *[".."] * 6)))
 KNOWN = os.path.join(HERE, "known-findings.json")
 STAMP = os.path.join(CHECKOUT, "Logs", "kn-check-stamp.json")
+LAST = os.path.join(CHECKOUT, "Logs", "kn-check-last.json")   # the last full run, passed or failed
 DEP_DOC = os.path.join(CHECKOUT, "Assets", "_Game", "_Docs", "Reference", "Dependency-Map.md")
 QUICK = ["organization", "dependencies", "compile", "server"]
 
@@ -215,6 +216,13 @@ def stamp_ok():
 def main():
     if "--stamp-ok" in args:
         return 0 if stamp_ok() else 1
+    if "--state" in args:   # one JSON line for kn_commit_hook.py: does the stamp match, the risk, the last run
+        tree, changed = files_tree(), changed_files()
+        stamp = load_json(STAMP)
+        print(json.dumps({"tree": tree, "stamp_ok": bool(stamp) and stamp.get("tree") == tree,
+                          "stamp_time": stamp.get("time"), "risk": risk(changed)[0] if changed is not None else None,
+                          "last": load_json(LAST) or None}))
+        return 0
     if "--risk" in args:
         changed = changed_files()
         if changed is None:
@@ -263,6 +271,11 @@ def main():
         shut_build_servers()
     failed = [n for n, ok in results if not ok]
     print()
+    if not only:   # every full run, pass or fail, for kn_commit_hook.py
+        os.makedirs(os.path.dirname(LAST), exist_ok=True)
+        with open(LAST, "w", encoding="utf-8") as f:
+            json.dump({"tree": tree_before, "risk": tier, "failed": failed,
+                       "time": datetime.datetime.now().isoformat(timespec="seconds")}, f, indent=1)
     if failed:
         print(f"kn_check: FAILED {', '.join(failed)}. Re-run one with --only {failed[0]}")
         return 1
