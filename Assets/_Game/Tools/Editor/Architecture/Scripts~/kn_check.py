@@ -6,6 +6,7 @@
     python ".../kn_check.py" --stamp-ok                           exit 0 when the last full --quick pass still
                                                                   matches the files as they are now
     python ".../kn_check.py" --risk                               only the change's risk level and what it needs
+    python ".../kn_check.py" --full                               --quick and the EditMode tests (a batch Unity)
 
 Every run also prints the change's risk level (risk-tiers.json beside this file: high when a player could lose items,
 Creds or a save, be locked out or see another's data; medium when a feature could stop working; low otherwise) and
@@ -20,14 +21,23 @@ origin/main (commits of this branch, edits and new files); --all runs every one:
   server         compile_check.py --server: the runtime assemblies compile as the dedicated server builds them;
                  when runtime code (not Editor/ or Tests/) or assemblies changed
 
+--full adds, after those:
+  tests          the EditMode tests (run_editmode_tests.py) of every system the change can reach: the systems whose
+                 files changed and every system that uses them (out/dependency-map.json); --all runs every test
+                 assembly. A batch Unity in this checkout, so the checkout must not be open in an Editor. Tests that
+                 already failed on main are listed in known-test-failures.json with the reason: the check passes when
+                 exactly the listed ones fail among those that ran; a new failure fails it, and so does a listed test
+                 that now passes (take it off the list).
+
 The compile steps are a dotnet job: on this PC run one heavy Unity or dotnet job at a time. They build with at most
-2 MSBuild nodes, and the dotnet build servers are shut down after them.
+2 MSBuild nodes, and the dotnet build servers are shut down after them. The tests are a heavy Unity job: one at a time, and the
+batch Unity is stopped (only it) when the PC runs low on memory (own_tree.py).
 
 Findings that were already there when a check joined the gate are listed in known-findings.json beside this file, each
 with the reason; they are reported but do not fail the gate. A new finding fails it, and so does a listed one that is
 gone (take it off the list, so the list only shrinks). dependency_map.py keeps its own list, baseline.json.
 
-When every --quick check passes, Logs/kn-check-stamp.json records the git tree of the checkout's files at that moment
+When every --quick (or --full) check passes, Logs/kn-check-stamp.json records the git tree of the checkout's files at that moment
 (tracked and untracked, .gitignore respected). --stamp-ok compares it with the files now; a commit gate uses that.
 Exits 1 when a check failed.
 """
@@ -50,10 +60,13 @@ def arg(name, default=None):
 
 CHECKOUT = os.path.normpath(arg("--checkout", os.path.join(HERE, *[".."] * 6)))
 KNOWN = os.path.join(HERE, "known-findings.json")
+KNOWN_TESTS = os.path.join(HERE, "known-test-failures.json")
+MAP_JSON = os.path.join(HERE, "out", "dependency-map.json")
 STAMP = os.path.join(CHECKOUT, "Logs", "kn-check-stamp.json")
 LAST = os.path.join(CHECKOUT, "Logs", "kn-check-last.json")   # the last full run, passed or failed
 DEP_DOC = os.path.join(CHECKOUT, "Assets", "_Game", "_Docs", "Reference", "Dependency-Map.md")
 QUICK = ["organization", "dependencies", "compile", "server"]
+FULL = QUICK + ["tests"]
 
 
 def load_json(path):
@@ -120,18 +133,98 @@ def check_dependencies():
                 f.write(before)
 
 
+def system_of(path):
+    """The system a path under Assets/_Game belongs to, as dependency_map.py names it (Core, Gameplay/Items...)."""
+    parts = path[len("Assets/_Game/"):].split("/")
+    return "Gameplay/" + parts[1] if parts[0] == "Gameplay" and len(parts) > 2 else parts[0]
+
+
+def test_assemblies():
+    """{test assembly name: system} for every test assembly under Assets/_Game."""
+    found = {}
+    for folder, _, files in os.walk(os.path.join(CHECKOUT, "Assets", "_Game")):
+        rel = os.path.relpath(folder, CHECKOUT).replace(os.sep, "/") + "/"
+        if "/Tests/" not in rel or "~/" in rel:
+            continue
+        for f in files:
+            if f.endswith(".asmdef"):
+                with open(os.path.join(folder, f), encoding="utf-8-sig") as fh:
+                    found[json.load(fh)["name"]] = system_of(rel)
+    return found
+
+
+EVERY_SYSTEM = ("Packages/", "ProjectSettings/", "Assets/Resources/", "Assets/DefaultNetworkPrefabs.asset")
+
+
+def reached_systems(changed):
+    """The systems whose files changed, and every system that uses one of them; None means all of them."""
+    if changed is None or any(p.startswith(EVERY_SYSTEM) for p in changed):
+        return None
+    touched = {system_of(p) for p in changed if p.startswith("Assets/_Game/") and in_game(p) and p.endswith(HELD)}
+    if not touched:
+        return set()
+    if not os.path.exists(MAP_JSON):
+        check_dependencies()   # writes out/dependency-map.json and puts the report back
+    users = {}
+    for e in load_json(MAP_JSON).get("sysEdges", []):
+        users.setdefault(e["b"], set()).add(e["a"])
+    reached, todo = set(touched), list(touched)
+    while todo:
+        for user in users.get(todo.pop(), ()):
+            if user not in reached:
+                reached.add(user)
+                todo.append(user)
+    return reached
+
+
+def judge_tests(cases, known):
+    """(passed, lines) for test results against the known failures: only the listed tests may fail."""
+    failed = {n: m for n, (r, m) in cases.items() if r == "Failed"}
+    new = sorted(n for n in failed if n not in known)
+    gone = sorted(n for n in known if n in cases and cases[n][0] == "Passed")
+    lines = [f"NEW FAILURE {n}: {failed[n][:400]}" for n in new]
+    lines += [f"GONE {n}: passes now, so take it off known-test-failures.json" for n in gone]
+    ran = sum(1 for r, _ in cases.values() if r in ("Passed", "Failed"))
+    lines.append(f"{ran} test(s) ran: {len(failed)} failed ({len(failed) - len(new)} known)")
+    return not new and not gone, lines
+
+
+def check_tests():
+    every = test_assemblies()
+    reached = None if "--all" in args else reached_systems(changed_files())
+    chosen = sorted(a for a, system in every.items() if reached is None or system in reached)
+    if not chosen:
+        return True, ["no test assembly belongs to a system this change reaches"]
+    sys.path.insert(0, HERE)
+    import run_editmode_tests
+    short = ", ".join(a.replace("KryticalNova.", "").replace(".Tests.Editor", "") for a in chosen)
+    print(f"    {len(chosen)} of {len(every)} test assemblies: {short}", flush=True)
+    cmd = [sys.executable, os.path.join(HERE, "run_editmode_tests.py"), "--checkout", CHECKOUT]
+    if reached is not None:
+        cmd += ["--assemblies", ";".join(chosen)]
+    p = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", errors="replace")
+    out = (p.stdout + p.stderr).strip().splitlines()
+    parsed = run_editmode_tests.parse(os.path.join(CHECKOUT, "Logs", "editmode-results.xml"))
+    if parsed is None or any(line.startswith("STOPPED") for line in out):
+        return False, out[-30:] + ["the tests did not finish, so nothing is known about them"]
+    known = {k["name"]: k for k in load_json(KNOWN_TESTS).get("tests", [])}
+    return judge_tests(parsed[1], known)
+
+
 CHECKS = {
     "organization": check_organization,
     "dependencies": check_dependencies,
     "compile": lambda: run_script("compile_check.py", "--maxcpu", "2"),
     "server": lambda: run_script("compile_check.py", "--server", "--maxcpu", "2"),
+    "tests": check_tests,
 }
 COMPILES = ("compile", "server")
 
 
 def shut_build_servers():
-    """dotnet keeps MSBuild and compiler servers alive after a build; stop them so the memory comes back."""
-    subprocess.run(["dotnet", "build-server", "shutdown"], capture_output=True, text=True)
+    sys.path.insert(0, HERE)
+    import own_tree
+    own_tree.shut_build_servers()
 
 
 def changed_files():
@@ -197,6 +290,7 @@ NEEDS = {
     "server": lambda ch: any(p.startswith("Assets/_Game/") and p.endswith(CODE)
                              and (p.endswith((".asmdef", ".asmref")) or ("/Editor/" not in p and "/Tests/" not in p))
                              for p in ch),
+    "tests": lambda ch: reached_systems(ch) != set(),
 }
 
 
@@ -230,15 +324,12 @@ def main():
             return 2
         print_risk(changed)
         return 0
-    if "--full" in args:
-        print("--full (EditMode tests, Check Icons) is not built yet; it comes with known-test-failures.json")
-        return 2
-
     only = arg("--only")
-    names = [n.strip() for n in only.split(",")] if only else QUICK
+    tier = "full" if "--full" in args else "quick"
+    names = [n.strip() for n in only.split(",")] if only else (FULL if tier == "full" else QUICK)
     unknown = [n for n in names if n not in CHECKS]
     if unknown:
-        print(f"unknown check(s): {', '.join(unknown)}; the checks are {', '.join(QUICK)}")
+        print(f"unknown check(s): {', '.join(unknown)}; the checks are {', '.join(FULL)}")
         return 2
 
     tree_before = None if only else files_tree()
@@ -247,15 +338,19 @@ def main():
         print("could not work out the changed files against origin/main: running every check")
     elif changed is not None:
         print(f"{len(changed)} file(s) changed against origin/main")
-    tier = None
+    level = None
     if changed is not None or not only:
         known = changed if changed is not None else changed_files()
-        tier = print_risk(known) if known is not None else None
+        level = print_risk(known) if known is not None else None
     results, skipped = [], []
     for name in names:
         if changed is not None and not NEEDS[name](changed):
             print(f"--- {name}: skipped, nothing it reads changed")
             skipped.append(name)
+            continue
+        if name == "tests" and any(n in COMPILES and not ok for n, ok in results):
+            print("--- tests: not run, the code does not compile")
+            results.append((name, False))
             continue
         print(f"--- {name} ...", flush=True)
         start = time.time()
@@ -274,7 +369,7 @@ def main():
     if not only:   # every full run, pass or fail, for kn_commit_hook.py
         os.makedirs(os.path.dirname(LAST), exist_ok=True)
         with open(LAST, "w", encoding="utf-8") as f:
-            json.dump({"tree": tree_before, "risk": tier, "failed": failed,
+            json.dump({"tree": tree_before, "risk": level, "tier": tier, "failed": failed,
                        "time": datetime.datetime.now().isoformat(timespec="seconds")}, f, indent=1)
     if failed:
         print(f"kn_check: FAILED {', '.join(failed)}. Re-run one with --only {failed[0]}")
@@ -288,7 +383,7 @@ def main():
             return 1
         os.makedirs(os.path.dirname(STAMP), exist_ok=True)
         with open(STAMP, "w", encoding="utf-8") as f:
-            json.dump({"tier": "quick", "risk": tier, "tree": tree_after, "head": git("rev-parse", "HEAD").stdout.strip(),
+            json.dump({"tier": tier, "risk": level, "tree": tree_after, "head": git("rev-parse", "HEAD").stdout.strip(),
                        "time": datetime.datetime.now().isoformat(timespec="seconds"),
                        "checks": [n for n, _ in results], "skipped": skipped}, f, indent=1)
         print(f"stamp written: {os.path.relpath(STAMP, CHECKOUT)}")

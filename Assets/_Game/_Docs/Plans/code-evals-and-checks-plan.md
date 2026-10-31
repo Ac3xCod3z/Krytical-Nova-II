@@ -175,6 +175,13 @@ so no session is blocked in the middle of its work by surprise.
 - [x] 1. A without the test step: `kn_check.py --quick`, the Python organization rules (`organization_check.py`), the
   known-findings list and the stamp. No Unity needed.
 - [ ] 2. The `--full` tier with `known-test-failures.json` (needs a Unity slot to record today's failures).
+  - [x] Built 31 Oct: `kn_check --full` adds a `tests` check. It runs the test assemblies of every system the change
+    reaches: the changed systems and every system that uses them, from `out/dependency-map.json`; a Core change runs all
+    24, a UI change runs GameFeel, Tools and UI. `run_editmode_tests.py --assemblies` runs them, and `own_tree.py` puts the
+    batch Unity in its own job object: below 1 GB free at once, or below 2 GB for 15 s, only that tree is stopped and the
+    run counts as not finished. The dotnet build servers are shut down after it. Tried with a stand-in for Unity (a new
+    failure, a listed test that passes, a stopped run) and on real child processes for the job stop.
+  - [ ] The first real `--full --all` run in a Unity slot, and its failures written into `known-test-failures.json`.
 - [ ] 3. B: the batch entry points of Validate Project Organization and Check Icons (needs a Unity slot to run them once).
 - [x] 4. E and G: `Guides/Review-Rules.md` (real failures by severity with where each was seen, round limits,
   learned rules); the Master adds its link in CLAUDE.md.

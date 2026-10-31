@@ -7,19 +7,25 @@ Accelerator's shared import results); later runs import only what changed.
     python "Assets/_Game/Tools/Editor/Architecture/Scripts~/run_editmode_tests.py"                 this checkout
     python ".../run_editmode_tests.py" --checkout C:/path/to/worktree
     python ".../run_editmode_tests.py" --filter "KryticalNova.Items"     only tests whose full name matches
+    python ".../run_editmode_tests.py" --assemblies "KryticalNova.Items.Tests.Editor;KryticalNova.Core.Tests.Editor"
+                                                                        only these test assemblies
     python ".../run_editmode_tests.py" --read                           only read the last results again
 
-Unity runs below normal priority and uses the Unity Accelerator at 127.0.0.1:10443 like the background publisher.
+Unity runs below normal priority and uses the Unity Accelerator at 127.0.0.1:10443 like the background publisher. It
+runs inside its own job object (own_tree.py): when the PC's free memory falls below 1 GB, or stays below 2 GB for 15 s,
+that Unity and what it started are stopped, nothing else, and the run counts as not finished (exit 3). The dotnet
+build servers are shut down after the run.
 The results go to <checkout>/Logs/editmode-results.xml and the log to <checkout>/Logs/editmode-tests.log. Prints the
 totals and every failure with its message; exits 1 when a test failed or the run did not finish.
 """
 import os
 import re
-import subprocess
 import sys
 import xml.etree.ElementTree as ET
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, HERE)
+import own_tree   # noqa: E402
 args = sys.argv[1:]
 
 
@@ -66,10 +72,32 @@ def run():
            "-cacheServerEnableImportResultCaching"]
     if arg("--filter"):
         cmd += ["-testFilter", arg("--filter")]
+    if arg("--assemblies"):
+        cmd += ["-assemblyNames", arg("--assemblies")]
     print("Running EditMode tests in", CHECKOUT, "(log:", LOG + ")", flush=True)
-    below_normal = 0x00004000 if os.name == "nt" else 0
-    code = subprocess.run(cmd, creationflags=below_normal).returncode
+    try:
+        code, why = own_tree.run(cmd)
+    finally:
+        own_tree.shut_build_servers()
+    if why:
+        if os.path.exists(RESULTS):
+            os.remove(RESULTS)   # a stopped run's results are not the whole run
+        sys.exit(f"STOPPED: {why}. The tests did not finish.")
     print("Unity exited with", code)
+
+
+def parse(path=None):
+    """The results file as (totals, {full name: (result, message)}); None when there is none."""
+    path = path or RESULTS
+    if not os.path.exists(path):
+        return None
+    root = ET.parse(path).getroot()
+    cases = {}
+    for case in root.iter("test-case"):
+        msg = case.find("./failure/message")
+        cases[case.attrib.get("fullname")] = (case.attrib.get("result"),
+                                              (msg.text or "").strip() if msg is not None else "")
+    return root.attrib, cases
 
 
 def read():
@@ -93,6 +121,7 @@ def read():
     return 1 if failed or a.get("result", "").startswith("Failed") else 0
 
 
-if "--read" not in args:
-    run()
-sys.exit(read())
+if __name__ == "__main__":
+    if "--read" not in args:
+        run()
+    sys.exit(read())

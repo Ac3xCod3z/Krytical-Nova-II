@@ -73,7 +73,9 @@ Systems, Hubs, Design data, Tests and How to read.
 - `baseline.json`: the ratchet, written by `--baseline`: the uphill links, the two-way pairs and the scripts that
   assets hold.
 - `compile_check.py`, `run_editmode_tests.py`: see above.
-- `kn_check.py`, `organization_check.py`, `known-findings.json`: the gate, below.
+- `kn_check.py`, `organization_check.py`, `known-findings.json`, `known-test-failures.json`: the gate, below.
+- `own_tree.py`: runs a batch Unity in its own job object and stops only that tree when the PC runs low on memory
+  (below 1 GB free at once, below 2 GB for 15 s); `run_editmode_tests.py` uses it.
 
 ## The gate before a commit: kn_check
 
@@ -91,6 +93,11 @@ a listed one that has gone (take it off the list). When all four pass, `Logs/kn-
 of the files at that moment, and `--stamp-ok` says whether the files are still the same. Every run also prints the
 change's risk level from `risk-tiers.json` (high, medium or low, and what that level needs before the PR goes in, as in
 `_Docs/Guides/Review-Rules.md`); `--risk` prints only that.
+
+`--full` (a heavy Unity job: in a slot, with the checkout closed in the Editor) adds `tests`: the EditMode tests of
+every system the change reaches, meaning the changed systems and every system that uses them (`--all`: every test
+assembly). Tests that already failed on main are in `known-test-failures.json` with their reason. The check passes when
+exactly those fail among the tests that ran; a new failure fails it, and so does a listed test that now passes.
 
 `kn_commit_hook.py` is a Claude Code `PreToolUse` hook for Bash (switched on in `.claude/settings.json` only with
 the Master's OK). On `git commit` or `gh pr create` in a checkout of this project it asks `kn_check.py --state` (about
