@@ -10,6 +10,9 @@ Use it to check a refactor in a worktree while the owner's Editor stays open on 
     python ".../compile_check.py" --checkout C:/path/to/worktree --projects C:/path/to/main/folder
     python ".../compile_check.py" --server     also compile the runtime assemblies as the dedicated server does
                                                (UNITY_SERVER defined, Editor-only code left out)
+    python ".../compile_check.py" --maxcpu 2   build with at most 2 MSBuild nodes
+    python ".../compile_check.py" --each       one dotnet run per assembly, the old slower way (same output)
+    python ".../compile_check.py" --restore-only   restore only: must fail with "not compiled" (a test of the guard)
 It prints the errors and exits 1 when any assembly fails. Warnings are not shown.
 
 What it cannot see: an assembly that exists only in the checkout (a new .asmdef) is made from its .asmdef's
@@ -21,6 +24,7 @@ import os
 import re
 import subprocess
 import sys
+import time
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 args = sys.argv[1:]
@@ -32,6 +36,7 @@ def arg(name, default=None):
 
 CHECKOUT = os.path.normpath(arg("--checkout", os.path.join(HERE, *[".."] * 6)))
 SERVER = "--server" in args
+MAXCPU = arg("--maxcpu")   # e.g. 2: fewer MSBuild nodes, so a compile shares the PC with other jobs
 
 
 def main_folder():
@@ -97,6 +102,9 @@ def absolute(path, base):
     return path if os.path.isabs(path) else os.path.normpath(os.path.join(base, path))
 
 
+uses = {}   # assembly -> our assemblies it references (a build of it builds those first)
+
+
 def make(asm):
     """Write the checkout's version of one first-party project; return its path, or None if it has no scripts."""
     if not scripts.get(asm):
@@ -134,12 +142,17 @@ def make(asm):
         refs += [w + ".csproj" for w in wanted if w.startswith("KryticalNova") and w + ".csproj" not in refs]
     text = re.sub(r"\s*<ProjectReference Include=\"[^\"]+\" />", "", text)
     lines = []
+    uses[asm] = [r[:-7] for r in refs if r.startswith("KryticalNova")]
     for r in refs:
         name = r[:-7]
         target = os.path.join(OUT, r) if name.startswith("KryticalNova") else os.path.join(PROJECTS, r)
         lines.append(f'    <ProjectReference Include="{target}" />')
     compile_items = "\n".join(f'    <Compile Include="{p}" />' for p in sorted(scripts[asm]))
-    block = f"  <ItemGroup>\n{compile_items}\n  </ItemGroup>\n  <ItemGroup>\n" + "\n".join(lines) + "\n  </ItemGroup>\n"
+    # pinned last, so they win over the template: the output lands at bin/<asm>.dll, where the single run looks for it
+    pinned = (f"  <PropertyGroup>\n    <OutputPath>{bin_dir}</OutputPath>\n"
+              "    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>\n  </PropertyGroup>\n")
+    block = (f"  <ItemGroup>\n{compile_items}\n  </ItemGroup>\n  <ItemGroup>\n" + "\n".join(lines) + "\n  </ItemGroup>\n"
+             + pinned)
     text = text.replace('  <Import Project="Sdk.targets"', block + '  <Import Project="Sdk.targets"', 1)
     path = os.path.join(OUT, asm + ".csproj")
     with open(path, "w", encoding="utf-8") as f:
@@ -154,19 +167,63 @@ if SERVER:   # the server build has no Editor or test assemblies, nor the ones m
         return (".Editor" not in name and ".Tests" not in name
                 and "!UNITY_SERVER" not in asmdefs.get(name, {}).get("defineConstraints", []))
     built = [p for p in built if on_server(p)]
-# a traversal project builds them all in one dotnet run
-trav = os.path.join(OUT, "all.proj")
-with open(trav, "w", encoding="utf-8") as f:
-    f.write('<Project Sdk="Microsoft.Build.Traversal/4.1.0">\n  <ItemGroup>\n'
-            + "".join(f'    <ProjectReference Include="{p}" />\n' for p in built) + "  </ItemGroup>\n</Project>\n")
+BUILD = ["-nologo", "-v", "q", "-clp:ErrorsOnly;NoSummary", "-p:WarningLevel=0"] + ([f"-maxcpucount:{MAXCPU}"] if MAXCPU else [])
+ERROR_PROJECT = re.compile(r"\[([^\]]+?\.csproj)[^\]]*\]$")
 failed, errors = [], []
-for p in built:
-    r = subprocess.run(["dotnet", "build", p, "-nologo", "-v", "q", "-clp:ErrorsOnly;NoSummary", "-p:WarningLevel=0"],
+if "--each" in args:   # the old way, one dotnet run per assembly: slower, for when the single run misbehaves
+    for p in built:
+        r = subprocess.run(["dotnet", "build", p] + BUILD, capture_output=True, text=True)
+        errs = sorted(set(re.sub(r"\s*\[[^\]]*\]$", "", l.strip()) for l in (r.stdout + r.stderr).splitlines() if ": error " in l))
+        if r.returncode != 0:
+            failed.append(os.path.basename(p)[:-7])
+            errors += [e for e in errs if e not in errors] or [f"{os.path.basename(p)}: build failed ({r.returncode})"]
+else:
+    # one dotnet run builds them all (start-up paid once); a plain MSBuild project, so no SDK has to be downloaded.
+    # ErrorAndContinue: an assembly that fails does not stop the others, so every error is reported.
+    batch = os.path.join(OUT, "all.proj")
+    items = "".join(f'    <Ours Include="{p}" />\n' for p in built)
+    with open(batch, "w", encoding="utf-8") as f:
+        f.write('<Project DefaultTargets="Build">\n  <ItemGroup>\n' + items + '  </ItemGroup>\n'
+                '  <Target Name="Restore">\n    <MSBuild Projects="@(Ours)" Targets="Restore" BuildInParallel="true" />\n  </Target>\n'
+                '  <Target Name="Build">\n    <MSBuild Projects="@(Ours)" Targets="Build" BuildInParallel="true"'
+                ' ContinueOnError="ErrorAndContinue" />\n  </Target>\n</Project>\n')
+    started = time.time()
+    # --restore-only runs the restore step alone, to prove the guard below fails a run that compiled nothing
+    r = subprocess.run(["dotnet", "build", batch] + BUILD + (["-t:Restore"] if "--restore-only" in args else []),
                        capture_output=True, text=True)
-    errs = sorted(set(re.sub(r"\s*\[[^\]]*\]$", "", l.strip()) for l in (r.stdout + r.stderr).splitlines() if ": error " in l))
-    if r.returncode != 0:
-        failed.append(os.path.basename(p)[:-7])
-        errors += [e for e in errs if e not in errors] or [f"{os.path.basename(p)}: build failed ({r.returncode})"]
+    own = {}   # assembly -> its own errors, from the project named at the end of each error line
+    for l in (r.stdout + r.stderr).splitlines():
+        if ": error " not in l:
+            continue
+        m = ERROR_PROJECT.search(l.strip())
+        name = os.path.basename(m.group(1))[:-7] if m else "all"
+        e = re.sub(r"\s*\[[^\]]*\]$", "", l.strip())
+        if e not in own.setdefault(name, []):
+            own[name].append(e)
+    # a clean run must have written every assembly with no error of its own: the project files are rewritten above,
+    # so each one is compiled again on every run, never skipped as up to date (catches a run that only restored).
+    # Checked before the line below, so an assembly that was not compiled fails the ones that use it too.
+    for p in built:
+        name = os.path.basename(p)[:-7]
+        dll = os.path.join(OUT, "bin", name + ".dll")
+        if name not in own and (not os.path.exists(dll) or os.path.getmtime(dll) < started - 1):
+            own[name] = [f"{name}: not compiled (no output from this run)"]
+    # as with one run per assembly, an assembly also counts as failed when one it references failed
+    bad = set(own)
+    grew = True
+    while grew:
+        grew = False
+        for p in built:
+            name = os.path.basename(p)[:-7]
+            if name not in bad and any(u in bad for u in uses.get(name, [])):
+                bad.add(name)
+                grew = True
+    failed = [os.path.basename(p)[:-7] for p in built if os.path.basename(p)[:-7] in bad]
+    for name in sorted(own):
+        errors += [e for e in own[name] if e not in errors]
+    if r.returncode != 0 and not errors:
+        failed = failed or ["all"]
+        errors.append(f"all.proj: build failed ({r.returncode})")
 for e in errors[:60]:
     print(e.replace(CHECKOUT + os.sep, ""))
 if len(errors) > 60:

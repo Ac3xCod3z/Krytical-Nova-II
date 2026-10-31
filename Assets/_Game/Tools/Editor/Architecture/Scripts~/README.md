@@ -73,3 +73,20 @@ Systems, Hubs, Design data, Tests and How to read.
 - `baseline.json`: the ratchet, written by `--baseline`: the uphill links, the two-way pairs and the scripts that
   assets hold.
 - `compile_check.py`, `run_editmode_tests.py`: see above.
+- `kn_check.py`, `organization_check.py`, `known-findings.json`: the gate, below.
+
+## The gate before a commit: kn_check
+
+```bash
+python "Assets/_Game/Tools/Editor/Architecture/Scripts~/kn_check.py"
+```
+
+`--quick` (the default, under 2 minutes, Unity can stay closed) runs the checks whose files changed against
+`origin/main` and names each one that failed (`--all` runs all four whatever changed):
+the file-path rules of Validate Project Organization (`organization_check.py`, a Python copy of
+`ProjectOrganizationRules`), `dependency_map.py --check` (the report it rewrites is put back), `compile_check.py` and
+`compile_check.py --server`. `--only organization,dependencies` runs some of them. Findings that were there before a
+check joined the gate are in `known-findings.json` with their reason: they do not fail it, a new one does, and so does
+a listed one that has gone (take it off the list). When all four pass, `Logs/kn-check-stamp.json` records the git tree
+of the files at that moment, and `--stamp-ok` says whether the files are still the same. The plan is
+`_Docs/Plans/code-evals-and-checks-plan.md`.
