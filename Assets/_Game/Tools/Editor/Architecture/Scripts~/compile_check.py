@@ -148,7 +148,11 @@ def make(asm):
         target = os.path.join(OUT, r) if name.startswith("KryticalNova") else os.path.join(PROJECTS, r)
         lines.append(f'    <ProjectReference Include="{target}" />')
     compile_items = "\n".join(f'    <Compile Include="{p}" />' for p in sorted(scripts[asm]))
-    block = f"  <ItemGroup>\n{compile_items}\n  </ItemGroup>\n  <ItemGroup>\n" + "\n".join(lines) + "\n  </ItemGroup>\n"
+    # pinned last, so they win over the template: the output lands at bin/<asm>.dll, where the single run looks for it
+    pinned = (f"  <PropertyGroup>\n    <OutputPath>{bin_dir}</OutputPath>\n"
+              "    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>\n  </PropertyGroup>\n")
+    block = (f"  <ItemGroup>\n{compile_items}\n  </ItemGroup>\n  <ItemGroup>\n" + "\n".join(lines) + "\n  </ItemGroup>\n"
+             + pinned)
     text = text.replace('  <Import Project="Sdk.targets"', block + '  <Import Project="Sdk.targets"', 1)
     path = os.path.join(OUT, asm + ".csproj")
     with open(path, "w", encoding="utf-8") as f:
@@ -196,6 +200,14 @@ else:
         e = re.sub(r"\s*\[[^\]]*\]$", "", l.strip())
         if e not in own.setdefault(name, []):
             own[name].append(e)
+    # a clean run must have written every assembly with no error of its own: the project files are rewritten above,
+    # so each one is compiled again on every run, never skipped as up to date (catches a run that only restored).
+    # Checked before the line below, so an assembly that was not compiled fails the ones that use it too.
+    for p in built:
+        name = os.path.basename(p)[:-7]
+        dll = os.path.join(OUT, "bin", name + ".dll")
+        if name not in own and (not os.path.exists(dll) or os.path.getmtime(dll) < started - 1):
+            own[name] = [f"{name}: not compiled (no output from this run)"]
     # as with one run per assembly, an assembly also counts as failed when one it references failed
     bad = set(own)
     grew = True
@@ -206,14 +218,6 @@ else:
             if name not in bad and any(u in bad for u in uses.get(name, [])):
                 bad.add(name)
                 grew = True
-    # a clean run must have written every assembly it reports as compiled: the project files are rewritten above,
-    # so each one is compiled again on every run, never skipped as up to date (catches a run that only restored)
-    for p in built:
-        name = os.path.basename(p)[:-7]
-        dll = os.path.join(OUT, "bin", name + ".dll")
-        if name not in bad and (not os.path.exists(dll) or os.path.getmtime(dll) < started - 1):
-            bad.add(name)
-            own.setdefault(name, []).append(f"{name}: not compiled (no output from this run)")
     failed = [os.path.basename(p)[:-7] for p in built if os.path.basename(p)[:-7] in bad]
     for name in sorted(own):
         errors += [e for e in own[name] if e not in errors]
