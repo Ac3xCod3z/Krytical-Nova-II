@@ -159,12 +159,15 @@ namespace KryticalNova.EditorTools
             Directory.CreateDirectory(folder);
             if (Directory.Exists(keptLogs)) Directory.Move(keptLogs, logs);
 
+            // A game is a Player build, whatever a server build left behind in this checkout (ClientBuildGuard).
+            ClientBuildGuard.Prepare(output.Title);
             var options = new BuildPlayerOptions
             {
                 scenes = scenes,
                 locationPathName = folder + "/" + ExeName,
                 targetGroup = BuildTargetGroup.Standalone,
                 target = BuildTarget.StandaloneWindows64,
+                subtarget = (int)StandaloneBuildSubtarget.Player,
                 options = output.Options
             };
             // The maps' bundles are built with the game: what the maps share goes in one bundle first, never a copy in each.
@@ -173,6 +176,7 @@ namespace KryticalNova.EditorTools
             WriteSizeReport(report, scenes, output.Title, "Scripting backend: " + BackendName(backend), output.ReportPath);
 
             bool ok = report.summary.result == BuildResult.Succeeded;
+            if (ok) ClientBuildGuard.RecordBuilt();
             if (ok) Debug.Log($"[Build] {output.Title} ({BackendName(backend)}) written to {folder} ({Megabytes(report.summary.totalSize)}). Sizes: {output.ReportPath}");
             else Debug.LogError($"[Build] {output.Title} {report.summary.result}: {report.summary.totalErrors} errors. See {output.ReportPath}");
             return ok;

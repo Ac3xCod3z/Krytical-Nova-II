@@ -149,7 +149,6 @@ namespace KryticalNova.EditorTools
             BuildTarget target = os == Os.Windows ? BuildTarget.StandaloneWindows64 : BuildTarget.StandaloneLinux64;
             string exe = folder + "/" + ExeName + (os == Os.Windows ? ".exe" : ".x86_64");
             BuildTarget targetWas = EditorUserBuildSettings.activeBuildTarget;
-            StandaloneBuildSubtarget subtargetWas = EditorUserBuildSettings.standaloneBuildSubtarget;
 
             BuildReport report;
             // The game builds its map bundles with itself; a server loads its maps from its build list and needs none.
@@ -181,10 +180,12 @@ namespace KryticalNova.EditorTools
                     if (File.Exists(settings)) File.Delete(settings);
                     File.Move(keptSettings, settings);
                 }
-                // A server build may leave the Editor on the server target, where the HUD and menu tools are left out.
-                if (EditorUserBuildSettings.activeBuildTarget != targetWas || EditorUserBuildSettings.standaloneBuildSubtarget != subtargetWas)
+                // A server build may leave the Editor on the server target, where the HUD and menu tools are left out. It goes
+                // back to Player, never to "what it was": a checkout that already stood on Server (a killed build left it)
+                // would otherwise stay there and compile every game build as a server (ClientBuildGuard).
+                if (EditorUserBuildSettings.activeBuildTarget != targetWas || EditorUserBuildSettings.standaloneBuildSubtarget != StandaloneBuildSubtarget.Player)
                 {
-                    EditorUserBuildSettings.standaloneBuildSubtarget = subtargetWas;
+                    EditorUserBuildSettings.standaloneBuildSubtarget = StandaloneBuildSubtarget.Player;
                     EditorUserBuildSettings.SwitchActiveBuildTarget(BuildTargetGroup.Standalone, targetWas);
                 }
             }
