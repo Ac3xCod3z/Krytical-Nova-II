@@ -108,6 +108,9 @@ namespace KryticalNova.Player.Entities.Presentation
                 if (state != null)
                 {
                     if (snapped) state.Snaps++;
+                    state.HasPose = true;
+                    state.PosePosition = body.position;
+                    state.PoseYaw = entry.Follow.Yaw;
                     state.State = new PlayerAnimState
                     {
                         Speed = (move.Flags & MoveFlags.Moving) != 0 ? move.SpeedMmps * 0.001f : 0f,

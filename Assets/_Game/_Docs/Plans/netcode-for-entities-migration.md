@@ -744,3 +744,7 @@ GUI retry 2 (30 Oct): first click, turn, stop and re-click all right; a long wal
 in the PresentationSystemGroup, which Entities runs after every LateUpdate, so the Cinemachine brain (LateUpdate) aimed at last
 frame's body. Fixed: `PlayerBodiesBeforeCameraGroup` (end of the simulation, Update phase) holds the body spawn and follow, as the NGO
 game placed its walk before the camera (`PlayerMoveAnticipation`, order -200). Test `TheBodies_ArePlacedAtTheEndOfTheSimulation_...`.
+GUI retry 3 (30 Oct): no judder side-on, but the body slid without turning: something between the end of the simulation and
+LateUpdate (likely the animation pass) put the old root rotation back. `PlayerPresentationState` (order -200, after the animation,
+before the camera) now puts the follow's pose back in LateUpdate and counts it; the Play DOTS here fps line reports the count.
+Tests `TheOwnersBody_FacesTheWayItWalks_AndTurnsForANewClick`, `APoseChangedAfterTheFollow_IsPutBackBeforeTheCamera`.

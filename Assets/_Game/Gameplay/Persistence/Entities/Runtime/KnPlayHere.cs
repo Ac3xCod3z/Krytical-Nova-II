@@ -219,6 +219,7 @@ namespace KryticalNova.Persistence.Entities
             float m_WorstFrame;
 
             float m_LastY = float.NaN, m_WorstDy, m_IkPelvis, m_IkFoot;
+            int m_LastOverwritten;
 
             void Update()
             {
@@ -242,8 +243,13 @@ namespace KryticalNova.Persistence.Entities
                 }
                 if (m_FpsSince >= FpsEverySeconds)
                 {
+                    // frames on which something moved or turned the body after the follow placed it (put back before the camera)
+                    int overwritten = TryLocalGhost(out _, out _, out GameObject own) && own.TryGetComponent(out PlayerPresentationState pose)
+                        ? pose.Overwritten : 0;
                     Debug.Log($"[KnPlayHere] fps {m_FpsFrames / m_FpsSince:F0} over {m_FpsSince:F0} s, worst frame {m_WorstFrame * 1000f:F0} ms, " +
-                              $"biggest height change of the body in one frame {m_WorstDy * 1000f:F0} mm; {ik}");
+                              $"biggest height change of the body in one frame {m_WorstDy * 1000f:F0} mm; {ik}; " +
+                              $"pose put back after something else moved the body: {overwritten - m_LastOverwritten} frames");
+                    m_LastOverwritten = overwritten;
                     m_FpsSince = 0f; m_FpsFrames = 0; m_WorstFrame = 0f; m_WorstDy = 0f; m_IkPelvis = 0f; m_IkFoot = 0f;
                 }
                 WatchClicks();

@@ -20,7 +20,7 @@ script, which is then published to the link above. `--baseline` saves today's up
 ## Today
 
 <!-- map:summary -->
-Generated 30 Oct 2026, 21:34: 816 runtime scripts (146,222 lines) declaring 1240 types (193 MonoBehaviours, 65 NetworkBehaviours, 102 ScriptableObject classes); 174 test scripts; 4723 prefabs, 48 scenes and 2749 assets read. 207 system-to-system links, of which 0 run uphill, 0 pairs of systems use each other both ways, and 0 links would have to go for the systems to form a clean stack. The largest tangle, classes that all reach each other through some chain of uses, holds 10 classes from 1 systems (UI 10, ...).
+Generated 30 Oct 2026, 22:24: 816 runtime scripts (146,255 lines) declaring 1240 types (193 MonoBehaviours, 65 NetworkBehaviours, 102 ScriptableObject classes); 174 test scripts; 4723 prefabs, 48 scenes and 2749 assets read. 207 system-to-system links, of which 0 run uphill, 0 pairs of systems use each other both ways, and 0 links would have to go for the systems to form a clean stack. The largest tangle, classes that all reach each other through some chain of uses, holds 10 classes from 1 systems (UI 10, ...).
 <!-- /map:summary -->
 
 **Checked against the compiler.**
@@ -79,8 +79,8 @@ Checked against the 211 references the assemblies declare between systems: every
 | Gameplay/Pets | Simulation | 12 | 1,445 | 33 | 32 | 0.51 | 4 | 13 of 19 |
 | Gameplay/Social | Simulation | 39 | 5,805 | 52 | 49 | 0.51 | 9 | 23 of 52 |
 | Gameplay/Combat | Simulation | 13 | 3,362 | 44 | 27 | 0.62 | 4 | 5 of 14 |
-| Gameplay/Persistence | Simulation | 20 | 4,616 | 131 | 14 | 0.9 | 21 | 15 of 28 |
-| Gameplay/Player | Simulation | 57 | 14,254 | 76 | 80 | 0.49 | 20 | 74 of 103 |
+| Gameplay/Persistence | Simulation | 20 | 4,622 | 131 | 14 | 0.9 | 21 | 15 of 28 |
+| Gameplay/Player | Simulation | 57 | 14,281 | 76 | 80 | 0.49 | 20 | 74 of 103 |
 | Gameplay/CharacterCreation | Simulation | 26 | 3,173 | 27 | 74 | 0.27 | 10 | 25 of 29 |
 | Gameplay/Items | Simulation | 66 | 11,860 | 49 | 182 | 0.21 | 13 | 42 of 88 |
 | World | Simulation | 37 | 6,379 | 16 | 41 | 0.28 | 2 | 9 of 43 |

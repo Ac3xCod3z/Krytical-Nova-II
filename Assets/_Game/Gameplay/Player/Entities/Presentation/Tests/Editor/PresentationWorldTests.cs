@@ -167,6 +167,44 @@ namespace KryticalNova.Player.Entities.Presentation.Tests
         }
 
         [Test]
+        public void TheOwnersBody_FacesTheWayItWalks_AndTurnsForANewClick()
+        {
+            // owner's GUI retry 3 (30 Oct): the body slid to the click still facing its old way
+            using var p = PresRig.Create(100);
+            var rig = p.Rig;
+            var body = p.BodyOf(0, 0);
+            var observer = p.BodyOf(1, 0);
+            rig.Sources[0].Click(new int3(20000, 0, 0));
+            rig.Tick(30);
+            Assert.AreEqual(90f, body.eulerAngles.y, 1f, "walking along +X the body faces +X");
+            rig.Sources[0].Click(new int3(-20000, 0, 0));
+            rig.Tick(30);
+            Assert.AreEqual(270f, body.eulerAngles.y, 1f, "a click behind turns it round to -X");
+            rig.Tick(30);
+            Assert.AreEqual(270f, observer.eulerAngles.y, 1f, "and another player sees it face that way too");
+        }
+
+        [Test]
+        public void APoseChangedAfterTheFollow_IsPutBackBeforeTheCamera()
+        {
+            using var p = PresRig.Create(0);
+            var rig = p.Rig;
+            rig.Sources[0].Click(new int3(20000, 0, 0));
+            rig.Tick(20);
+            var body = p.BodyOf(0, 0);
+            var state = p.EntryOf(0, 0).State;
+            Assert.IsTrue(state.HasPose);
+            Vector3 pos = body.position;
+            float yaw = body.eulerAngles.y;
+            Assert.IsFalse(state.ReapplyPose(), "nothing changed it: nothing to do");
+            body.SetPositionAndRotation(pos + Vector3.left, Quaternion.Euler(0f, yaw + 120f, 0f));   // what an animation or a script might do
+            Assert.IsTrue(state.ReapplyPose());
+            Assert.AreEqual(pos, body.position);
+            Assert.AreEqual(yaw, body.eulerAngles.y, 0.01f);
+            Assert.AreEqual(1, state.Overwritten);
+        }
+
+        [Test]
         public void TheBodies_FollowTheGhosts_OverAWalk_At100ms()
         {
             using var p = PresRig.Create(100);
