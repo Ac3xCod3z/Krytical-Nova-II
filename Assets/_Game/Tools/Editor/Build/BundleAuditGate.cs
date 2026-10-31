@@ -74,10 +74,12 @@ namespace KryticalNova.EditorTools
                 string[] files = Directory.GetFiles(folder, prefix + "*.bundle");
                 if (files.Length != 1) { result.Problems.Add($"{group.Name}: expected one built bundle '{prefix}*.bundle', found {files.Length}."); continue; }
 
-                MapCounts scene = CountScenes(scenes);
-                MapCounts bundle = CountBundle(files[0], webExtract, binary2text, result);
+                MapCounts scene = CountScenes(scenes, out ObjectStates sceneStates);
+                MapCounts bundle = CountBundle(files[0], webExtract, binary2text, result, out ObjectStates bundleStates);
                 if (bundle == null) continue;
                 List<string> problems = BundleDump.Compare(group.Name, scene, bundle);
+                // Object by object, by name: catches a swap (one thing switched on, another off) that the counts miss.
+                problems.AddRange(ObjectCompare.Compare(group.Name, sceneStates, bundleStates));
                 result.Problems.AddRange(problems);
                 result.Log.AppendLine($"  {group.Name}: scene off {scene.DisabledBehaviours}/{scene.InactiveObjects}, bundle off {bundle.DisabledBehaviours}/{bundle.InactiveObjects}{(problems.Count == 0 ? "" : "  <-- DIFFERS")}");
                 record.bundles.Add(new Bundle { file = Path.GetFileName(files[0]), sha256 = Sha256(files[0]), size = new FileInfo(files[0]).Length });
@@ -93,9 +95,11 @@ namespace KryticalNova.EditorTools
             return result;
         }
 
-        private static MapCounts CountScenes(List<string> scenePaths)
+        private static MapCounts CountScenes(List<string> scenePaths, out ObjectStates states)
         {
             var total = new MapCounts();
+            states = new ObjectStates();
+            var signatures = new Dictionary<Type, string>();
             foreach (string path in scenePaths)
             {
                 Scene scene = EditorSceneManager.OpenScene(path, OpenSceneMode.Single);
@@ -103,6 +107,25 @@ namespace KryticalNova.EditorTools
                     foreach (Transform t in root.GetComponentsInChildren<Transform>(true))
                     {
                         GameObject go = t.gameObject;
+                        string objectPath = PathOf(t);
+                        states.AddObject(objectPath, go.activeSelf);
+                        foreach (Component component in go.GetComponents<Component>())
+                        {
+                            if (component == null) continue;
+                            bool on;
+                            if (component is Behaviour behaviour) on = behaviour.enabled;
+                            else if (component is Renderer renderer) on = renderer.enabled;
+                            else if (component is Collider collider) on = collider.enabled;
+                            else continue;
+                            string type = component.GetType().Name;
+                            if (component is MonoBehaviour script)
+                            {
+                                if (!signatures.TryGetValue(script.GetType(), out string signature)) signatures[script.GetType()] = signature = SignatureOf(script);
+                                states.ScriptNames[signature] = type;
+                                type = ObjectStates.BehaviourPrefix + signature;
+                            }
+                            states.AddComponent(objectPath, type, on);
+                        }
                         if (!go.activeSelf) total.InactiveObjects++;
                         foreach (MonoBehaviour behaviour in go.GetComponents<MonoBehaviour>())
                         {
@@ -115,6 +138,14 @@ namespace KryticalNova.EditorTools
             return total;
         }
 
+        private static string PathOf(Transform t)
+        {
+            var names = new List<string>();
+            for (Transform current = t; current != null; current = current.parent) names.Add(current.name);
+            names.Reverse();
+            return string.Join("/", names);
+        }
+
         private static string SignatureOf(MonoBehaviour behaviour)
         {
             var names = new List<string>();
@@ -124,8 +155,9 @@ namespace KryticalNova.EditorTools
             return BundleDump.SignatureOf(names);
         }
 
-        private static MapCounts CountBundle(string bundleFile, string webExtract, string binary2text, Result result)
+        private static MapCounts CountBundle(string bundleFile, string webExtract, string binary2text, Result result, out ObjectStates states)
         {
+            states = null;
             string work = Path.GetFullPath(Scratch);
             if (Directory.Exists(work)) Directory.Delete(work, true);
             Directory.CreateDirectory(work);
@@ -143,6 +175,7 @@ namespace KryticalNova.EditorTools
             }
             Directory.Delete(work, true);
             if (objects.Count == 0) { result.Problems.Add(Path.GetFileName(bundleFile) + ": nothing could be read from the bundle."); return null; }
+            states = ObjectCompare.FromDump(objects);
             return BundleDump.Count(objects);
         }
 
