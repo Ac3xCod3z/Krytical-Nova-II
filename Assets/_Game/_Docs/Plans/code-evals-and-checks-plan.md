@@ -1,7 +1,7 @@
 # Code evals and checks plan
 
-**Status: agreed 30 Oct 2026 (the owner's picks are at the end). One PR per step; step 1 is built (`kn_check --all`
-in about 1 minute after `compile_check` moved to a single dotnet run); step 2 is next.**
+**Status: agreed 30 Oct 2026 (the owner's picks are at the end). One PR per step; every step is built (31 Oct):
+`kn_check --quick` before a commit, `kn_check --full` (EditMode tests and the Editor checks) before a PR.**
 
 The aim: a change is proved to work before anyone calls it done, so a small slip is caught in the same session that
 made it instead of turning up later in a build, on the test server or in a player's save. The idea comes from a video
@@ -188,14 +188,15 @@ so no session is blocked in the middle of its work by surprise.
     file already exists") and passed when run again, and the no-output guard reported it correctly; and the batch
     Unity deleted an untracked Addressables `link.xml` left in that worktree, so no stamp was written. The message
     now names the files that changed.
-- [ ] 3. B: the batch entry points of Validate Project Organization and Check Icons (needs a Unity slot to run them once).
+- [x] 3. B: the batch entry points of Validate Project Organization and Check Icons (needs a Unity slot to run them once).
   - [x] Built 31 Oct: `Tools/Editor/Checks/BatchChecks.cs` (`KryticalNova.EditorTools.Checks.BatchChecks.Run`) runs
     both menu checks in one batch Unity, with no dialog, writes `Logs/batch-checks.txt` and exits 1 on an error.
     `run_batch_checks.py` launches it with the same memory guard as the tests. `kn_check --full` runs it as `editor`
     when anything under `Assets/` outside the docs changed. Errors already there go in `known-findings.json` as
     `organization_unity` (by path) and `icons` (by text). The judge was tried on made-up findings.
-  - [ ] The first real run in a Unity slot (together with step 2's `--full --all`): the compile, and its findings
-    written into `known-findings.json`.
+  - [x] The first real run, 31 Oct in the same `--full --all` as step 2: all 59 assemblies compiled, `BatchChecks.cs`
+    included, and `editor` took 90 s: 0 organization errors, 0 icon errors, and 2 name warnings (the
+    `FinalDuelBigBeatDjent` music track and its asset). `known-findings.json` stays empty.
 - [x] 4. E and G: `Guides/Review-Rules.md` (real failures by severity with where each was seen, round limits,
   learned rules); the Master adds its link in CLAUDE.md.
 - [x] 5. D: the risk tiers (`Scripts~/risk-tiers.json`; `kn_check` prints the level on every run, `--risk` alone).
