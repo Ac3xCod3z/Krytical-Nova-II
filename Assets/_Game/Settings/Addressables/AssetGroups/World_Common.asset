@@ -32710,6 +32710,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: dcb5d23435c9eba4e8a00822dbf0730f
+    m_Address: Assets/_Game/GameFeel/Data/Assets/BeatGlowSettings.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: dce2781def16c01459c909f7af53ca70
     m_Address: Assets/_Game/Gameplay/Items/Data/Assets/Gear/SOLD/Amulet_SOLD_U25.asset
     m_ReadOnly: 0
@@ -34307,6 +34312,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: e772b59796b26d743a8fbacdf258ed85
     m_Address: Assets/_Game/Gameplay/Items/Data/Assets/Icons/Boots_ROBO_05_ROBO_Prime.png
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e778f3b0fa04b30498b1ae45f1786a28
+    m_Address: Assets/_Game/VFX/GameFeel/PFX_Water_Splash.prefab
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
