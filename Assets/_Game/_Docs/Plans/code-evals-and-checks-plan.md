@@ -182,7 +182,9 @@ so no session is blocked in the middle of its work by surprise.
   Over the last 20 merged PRs: 4 high (save service, save system), 13 medium, 3 low (docs, a measuring bot). Server
   build tools were added to medium after that run; UI files are never high by name alone.
 - [x] 6. F: `Plans/Plan-Template.md`, whose Evals section comes before any code; the Master adds the CLAUDE.md line.
-- [ ] 7. C: the commit hook (warns; blocks only a high-risk change whose `--quick` failed), last, after telling the Master.
+- [x] 7. C: the commit hook (`Scripts~/kn_commit_hook.py`; warns; blocks only a high-risk change whose `--quick`
+  failed). Merged in PR 183; switched on 31 Oct 2026 at user level on the owner's word. A checkout whose `kn_check.py`
+  is older than `--state` is skipped with a warning, so the hook never starts a full run or a compile.
 
 ## The owner's picks (30 Oct 2026)
 
