@@ -71,6 +71,7 @@ namespace KryticalNova.Player
         /// </summary>
         private static void MarkPlacedTrees(Scene scene)
         {
+            if (!scene.IsValid() || !scene.isLoaded) return;
             foreach (GameObject root in scene.GetRootGameObjects())
                 foreach (CapsuleCollider capsule in root.GetComponentsInChildren<CapsuleCollider>(true))
                 {
@@ -82,7 +83,55 @@ namespace KryticalNova.Player
                     marker.kind = ClimbableKind.Tree;
                     marker.trunkRadius = Mathf.Max(0.1f, capsule.radius * Mathf.Max(scale.x, scale.z));
                     marker.height = height;
+                    PlacedTreesMarked++;
                 }
+        }
+
+        // ------------------------------------------------------------------ bodies the entity netcode moves (M3c part 3)
+
+        private static readonly List<Transform> anchors = new List<Transform>(8);
+        private static readonly HashSet<Scene> markedScenes = new HashSet<Scene>();
+
+        /// <summary>Placed trees marked as trees so far (the scripted run's instrument).</summary>
+        public static int PlacedTreesMarked { get; private set; }
+
+        /// <summary>Terrain tree colliders standing now, in every field (the scripted run's instrument).</summary>
+        public static int LiveTotal
+        {
+            get
+            {
+                int n = 0;
+                foreach (Terrain t in Terrain.activeTerrains)
+                    if (t != null && t.TryGetComponent(out TreeProxyField field)) n += field.LiveCount;
+                return n;
+            }
+        }
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetStatics()
+        {
+            anchors.Clear();
+            markedScenes.Clear();
+            PlacedTreesMarked = 0;
+        }
+
+        /// <summary>A body whose motor is off (<see cref="TreeProxyAnchor"/>): trees near it get colliders as near an NGO player.</summary>
+        public static void AddAnchor(Transform body) { if (body != null && !anchors.Contains(body)) anchors.Add(body); }
+
+        public static void RemoveAnchor(Transform body) => anchors.Remove(body);
+
+        /// <summary>
+        /// The placed trees of a scene marked as trees once more, when a body of the entity netcode enters it (the marking at the scene's load
+        /// is NGO's; under the entity netcode a placed tree read as a wall, 1 Nov). Marked trees are skipped, so it never marks twice.
+        /// </summary>
+        public static void MarkPlacedTreesOnce(Scene scene)
+        {
+            if (!scene.IsValid() || !markedScenes.Add(scene)) return;
+            MarkPlacedTrees(scene);
+            foreach (Terrain each in Terrain.activeTerrains)
+                if (each != null && each.gameObject.scene == scene && each.terrainData != null && each.terrainData.treeInstanceCount > 0
+                    && each.GetComponent<TreeProxyField>() == null)
+                    each.gameObject.AddComponent<TreeProxyField>();
         }
 
         private static bool LooksLikeTree(string objectName) =>
@@ -155,6 +204,12 @@ namespace KryticalNova.Player
                 PlayerWallRunMotor player = players[p];
                 if (player == null || !player.WantsTreeProxies || player.gameObject.scene != gameObject.scene) continue;
                 Gather(player.transform.position, radius, cap);
+            }
+            for (int a = anchors.Count - 1; a >= 0; a--)
+            {
+                Transform anchor = anchors[a];
+                if (anchor == null) { anchors.RemoveAt(a); continue; }
+                if (anchor.gameObject.scene == gameObject.scene) Gather(anchor.position, radius, cap);
             }
 
             leaving.Clear();

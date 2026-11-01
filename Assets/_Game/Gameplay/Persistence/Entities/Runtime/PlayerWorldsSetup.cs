@@ -113,6 +113,8 @@ namespace KryticalNova.Persistence.Entities
                 // the speeds of the loaded character (Run rank, mount, gear, GM); PlayerMoveStatsRefreshSystem keeps them current
                 MoveStatsOf = body =>
                 {
+                    // the server's body: trees near it are climbable, placed trees marked (NGO's tree proxies follow its players; M3c part 3)
+                    if (body != null && body.GetComponent<KryticalNova.Player.TreeProxyAnchor>() == null) body.AddComponent<KryticalNova.Player.TreeProxyAnchor>();
                     PlayerMoveFromSkills.InstallSettings(server, PlayerMoveFromSkills.SettingsOf(body));
                     return PlayerMoveFromSkills.StatsOf(body);
                 },
@@ -144,6 +146,8 @@ namespace KryticalNova.Persistence.Entities
                     // every view body shows the ghosts' jumps with its own clip (M3b)
                     if (body != null && body.GetComponent<GhostJumpView>() == null) body.AddComponent<GhostJumpView>();
                     if (!request.IsLocal) return;
+                    // the owner's own body plans its climbs too: the trees near it (NGO WantsTreeProxies: the server and the owner)
+                    if (body.GetComponent<KryticalNova.Player.TreeProxyAnchor>() == null) body.AddComponent<KryticalNova.Player.TreeProxyAnchor>();
                     PlayerMoveFromSkills.InstallSettings(client, PlayerMoveFromSkills.SettingsOf(body));
                     PlayerJumpFromSkills.InstallCurves(client, body);
                     // the camera looks at the body from the first frame it is drawn (no frame off it, then a snap)

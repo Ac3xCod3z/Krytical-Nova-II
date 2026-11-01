@@ -1541,6 +1541,13 @@ namespace KryticalNova.Persistence.Entities
                 yield return new WaitForSeconds(1f);
                 var ask = new PlayerWallRunMotor.GhostWallAsk { Open = true, Alive = true, Run = true, Flux = 999f, HasFluxForOne = true,
                     Up = Vector3.up, Forward = Vector3.forward, GroundSpeed = em.GetComponentData<MoveStats>(ghost).RunMmps * 0.001f };
+                if (tree)
+                {
+                    // the instrument first (Master, 1 Nov): placed trees marked as trees and terrain tree colliders live near the bodies
+                    yield return new WaitForSeconds(0.6f);
+                    Log($"tree: trees marked {TreeProxyField.PlacedTreesMarked}, proxies live {TreeProxyField.LiveTotal}; Zone01's placed tree " +
+                        $"SM_Env_Tree_01 at 12.6,-13.1 reads {motor.ClimbKindAt(new Vector3(12.6f, 1.2f, -13.1f), Vector3.back)} (expected Tree)");
+                }
                 string why = motor.FindTestClimb(ServerPosition(ghost) - Vector3.up * offset, ask, out Vector3 stand, out Vector3 point, out Vector3 normal, tree);
                 if (why != null) { Log("climb: NOT TESTED; " + why); tally.Tried++; yield break; }
                 Log($"climb: the test face at {point.x:F1},{point.y:F2},{point.z:F1} facing {normal.x:F2},{normal.z:F2} (kind {motor.ClimbKindAt(point, normal)}); " +
