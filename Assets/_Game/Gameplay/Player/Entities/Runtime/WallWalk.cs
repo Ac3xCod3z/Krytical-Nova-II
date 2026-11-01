@@ -102,6 +102,8 @@ namespace KryticalNova.Player.Entities
     {
         [GhostField] public short UpX, UpY, UpZ, FwdX, FwdY, FwdZ;
         [GhostField] public byte Phase;
+        /// <summary>How long the phase's legs take together, milliseconds (the clip is fitted to it, NGO <c>WallRunPose.Duration</c>); 0 = untimed.</summary>
+        [GhostField] public ushort PhaseMillis;
 
         public bool Tilted => UpX != 0 || UpY != 0 || UpZ != 0;
         public float3 Up => Tilted ? math.normalizesafe(new float3(UpX, UpY, UpZ), new float3(0f, 1f, 0f)) : new float3(0f, 1f, 0f);

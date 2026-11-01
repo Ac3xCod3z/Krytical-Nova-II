@@ -58,6 +58,20 @@ namespace KryticalNova.Persistence.Entities
             if (splash) feel.WaterSplash(transform, transform.position, KryticalNova.Core.BodyRoleTag.IsMine(this, true));
         }
 
+        PlayerWallRunMotor m_Wall;
+        PlayerWallRunMotor Wall => m_Wall != null ? m_Wall : m_Wall = GetComponentInChildren<PlayerWallRunMotor>(true);
+
+        /// <summary>
+        /// A phase of the ghost's wall walk on this body (M3c): NGO's own clips, feel and feet on the wall (<see cref="PlayerWallRunMotor"/>
+        /// Show). The own body's view also learns whether it stands on a wall, so every click there goes to the wall walk.
+        /// </summary>
+        public void WallPhase(byte phase, float seconds)
+        {
+            bool mine = KryticalNova.Core.BodyRoleTag.IsMine(this, true);
+            if (mine) KryticalNova.Core.BodyClicks.LocalOnWall = phase == (byte)WallRunPhase.WallMove || phase == (byte)WallRunPhase.WallHold;
+            Wall?.ShowGhostPhase((WallRunPhase)phase, seconds, mine);
+        }
+
         public void EndVault(float speedMps)
         {
             var motor = Vault;

@@ -24,6 +24,16 @@ namespace KryticalNova.Player
             public float GroundSpeed;
         }
 
+        /// <summary>
+        /// A ghost's wall walk phase on this (view) body: NGO's own <see cref="Show"/> (the clip fitted to <paramref name="seconds"/>, the
+        /// feel, the feet on the wall), with <paramref name="mine"/> saying whose body it is (its sounds, its fades).
+        /// </summary>
+        public void ShowGhostPhase(WallRunPhase phase, float seconds, bool mine)
+        {
+            ghostMine = mine;
+            Show(new WallRunPose { Phase = phase, Duration = seconds });
+        }
+
         /// <summary>Wallstride's gate for a level and ranks (NGO <see cref="WallRunRules.IsOpen"/> with this body's settings).</summary>
         public bool WallstrideOpenFor(int level, int runRank, int jumpRank) => WallRunRules.IsOpen(level, runRank, jumpRank, settings);
 

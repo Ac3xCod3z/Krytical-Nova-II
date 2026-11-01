@@ -33,5 +33,11 @@ namespace KryticalNova.Player.Entities.Presentation
         /// it (the big splash, NGO's <c>ServerSplash</c>).
         /// </summary>
         void WaterStriding(bool onWater, bool splash);
+
+        /// <summary>
+        /// A phase of Wallstride's wall walk begins (M3c; the numbers of NGO's <c>WallRunPhase</c>): its clip fitted to
+        /// <paramref name="seconds"/>, the feel, the feet on the wall. Phase 0 = back on the ground.
+        /// </summary>
+        void WallPhase(byte phase, float seconds);
     }
 }

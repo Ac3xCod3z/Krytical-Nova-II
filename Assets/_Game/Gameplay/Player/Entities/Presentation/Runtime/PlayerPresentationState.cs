@@ -47,6 +47,10 @@ namespace KryticalNova.Player.Entities.Presentation
         public ushort VaultSeq;
         /// <summary>The body is shown on the water (the wake is on; M3c).</summary>
         public bool ShownOnWater;
+        /// <summary>The wall walk's phase the body last played (M3c), and the drawn rotation eased toward the tilt (NGO's wall turn rate).</summary>
+        public byte ShownWallPhase;
+        public Quaternion ShownRotation = Quaternion.identity;
+        public bool ShownTilted;
         public bool InVault;
         /// <summary>The frame the shown vault's clip began (the scripted run compares the owner's and an observer's).</summary>
         public int VaultClipFrame;

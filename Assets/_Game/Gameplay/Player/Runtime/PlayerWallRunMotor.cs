@@ -1033,6 +1033,11 @@ namespace KryticalNova.Player
             Show(current);
         }
 
+        // A ghost's body (the entity netcode) says whose it is; null = NGO's own test.
+        private bool? ghostMine;
+
+        private bool Mine() => ghostMine ?? BodyRoleTag.IsMine(this, !IsSpawned || IsOwner);
+
         private void Show(WallRunPose pose)
         {
             if (pose.Phase == shownPhase) return;
@@ -1042,7 +1047,7 @@ namespace KryticalNova.Player
             // Standing on a wall shows at the feet (owner, 18 Oct 2026: wallstride must read as wallstride).
             if (feel != null) feel.WallStanding(transform, IsOnWallPhase(pose.Phase));
             if (feel != null && IsOnWallPhase(pose.Phase) && (before == WallRunPhase.Plant || before == WallRunPhase.JumpOn))
-                feel.Landed(transform, BodyRoleTag.IsMine(this, !IsSpawned || IsOwner)); // the feet meet the face
+                feel.Landed(transform, Mine()); // the feet meet the face
             if (animancerMotor == null) return;
             switch (pose.Phase)
             {
@@ -1050,11 +1055,11 @@ namespace KryticalNova.Player
                     if (playingAction) animancerMotor.EndWarpedAction(fadeOut, resumeSpeed);
                     else animancerMotor.ResetJumpAnimation();
                     playingAction = false;
-                    if (feel != null) { feel.Airborne(transform, false); feel.Landed(transform, BodyRoleTag.IsMine(this, !IsSpawned || IsOwner)); }
+                    if (feel != null) { feel.Airborne(transform, false); feel.Landed(transform, Mine()); }
                     break;
                 case WallRunPhase.Plant:
                     Play(plantClip, pose.Duration, fallbackAirborne: true);
-                    if (feel != null) { feel.JumpTakeoff(transform, BodyRoleTag.IsMine(this, !IsSpawned || IsOwner)); feel.Airborne(transform, true); }
+                    if (feel != null) { feel.JumpTakeoff(transform, Mine()); feel.Airborne(transform, true); }
                     break;
                 case WallRunPhase.Climb:
                     Play(climbClip, 0f, fallbackAirborne: true, speed: climbClipSpeed);
@@ -1077,11 +1082,11 @@ namespace KryticalNova.Player
                     break;
                 case WallRunPhase.PushOff:
                     Play(animancerMotor.WarpedJumpClip(1), pose.Duration, fallbackAirborne: true);
-                    if (feel != null) { feel.JumpTakeoff(transform, BodyRoleTag.IsMine(this, !IsSpawned || IsOwner)); feel.Airborne(transform, true); }
+                    if (feel != null) { feel.JumpTakeoff(transform, Mine()); feel.Airborne(transform, true); }
                     break;
                 case WallRunPhase.JumpOn:
                     Play(animancerMotor.WarpedJumpClip(0), pose.Duration, fallbackAirborne: true);
-                    if (feel != null) { feel.JumpTakeoff(transform, BodyRoleTag.IsMine(this, !IsSpawned || IsOwner)); feel.Airborne(transform, true); }
+                    if (feel != null) { feel.JumpTakeoff(transform, Mine()); feel.Airborne(transform, true); }
                     break;
                 default:
                     Play(dropClip, 0f, fallbackAirborne: true);
@@ -1096,7 +1101,7 @@ namespace KryticalNova.Player
             if (clip != null)
             {
                 float rate = seconds > MinimumDuration ? clip.length / seconds : speed;
-                animancerMotor.PlayWarpedAction(clip, 0f, rate, IsSpawned && !IsServer ? RemoteFade : fadeIn);
+                animancerMotor.PlayWarpedAction(clip, 0f, rate, (IsSpawned && !IsServer) || ghostMine == false ? RemoteFade : fadeIn);
                 playingAction = true;
             }
             else if (fallbackAirborne) animancerMotor.PlayJumpAirborne();

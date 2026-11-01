@@ -320,6 +320,7 @@ namespace KryticalNova.Player.Entities
             {
                 byte phase = here.Phase != WallPhase.None ? here.Phase : (onWall ? WallPhase.WallMove : WallPhase.None);
                 tilt = WallLeg.TiltOf(legs[i - 1], here, a, b, onWall, share, phase, pose.YawCdeg);
+                tilt.PhaseMillis = PhaseMillis(legs, count, i);
                 pose.YawCdeg = WallLeg.YawOf(in tilt, pose.YawCdeg);
             }
             else
@@ -342,6 +343,40 @@ namespace KryticalNova.Player.Entities
                 tilt = default;
             }
             CancelWalk(ref m);
+        }
+
+        /// <summary>The time of the run of timed legs with segment <paramref name="i"/>'s phase around it, milliseconds (0 for an untimed segment).</summary>
+        static ushort PhaseMillis(NativeArray<WallCorner> legs, int count, int i)
+        {
+            if (legs[i].Micros <= 0) return 0;
+            byte phase = legs[i].Phase;
+            long micros = 0;
+            for (int j = i; j >= 1 && legs[j].Micros > 0 && legs[j].Phase == phase; j--) micros += legs[j].Micros;
+            for (int j = i + 1; j < count && legs[j].Micros > 0 && legs[j].Phase == phase; j++) micros += legs[j].Micros;
+            return (ushort)math.min(micros / 1000, ushort.MaxValue);
+        }
+
+        /// <summary>
+        /// The owner's pose drawn <paramref name="elapsedMicros"/> into the next tick on a wall walk (M3c): the same step on copies, so the
+        /// eased legs and the tilt are right between ticks too. False when the walk has no wall walk (the ordinary <c>PoseAhead</c> draws it).
+        /// </summary>
+        public static bool PoseAheadOnWall(in MoveState m, in PlayerPose pose, in PathPlan plan, NativeArray<int3> serverCorners,
+            in ClientPlanHeader client, NativeArray<int3> clientCorners, in WallPlan serverWall, NativeArray<WallCorner> serverLegs,
+            in WallPlan clientWall, NativeArray<WallCorner> clientLegs, in MoveStats stats, in PlayerMoveSettings cfg, int tickMicros, int elapsedMicros,
+            out int3 posMm, out int yawCdeg, out PoseTilt tilt)
+        {
+            posMm = pose.Mm;
+            yawCdeg = pose.YawCdeg;
+            tilt = default;
+            if ((m.Flags & MoveFlags.Moving) == 0) return false;
+            if (!WallWalkOf(in m, in plan, serverCorners, in client, clientCorners, in serverWall, serverLegs, in clientWall, clientLegs,
+                    out var corners, out int count, out WallPlan wall, out var legs)) return false;
+            var ahead = m;
+            var p = pose;
+            StepWallWalk(ref ahead, ref p, ref tilt, corners, count, in wall, legs, in stats, in cfg, math.clamp(elapsedMicros, 0, tickMicros));
+            posMm = p.Mm;
+            yawCdeg = p.YawCdeg;
+            return true;
         }
 
         /// <summary>Where the stretch of ground that segment <paramref name="idx"/> is on ends: the start of the next leg or wall segment, else the path's end.</summary>

@@ -37,6 +37,8 @@ namespace KryticalNova.Player.Entities.Presentation
         const float JumpFollowMaxSpeedMps = 1000f;
         /// <summary>The most of the walk's ground snap a jump carries from its start (metres); more is a placement, not a snap.</summary>
         const float JumpStartDeltaMaxM = 0.5f;
+        /// <summary>How fast the drawn body turns onto a wall's face and back upright (NGO <c>wallTurnRate</c>: 1 - e^(-10 dt) a frame).</summary>
+        const float WallTurnRate = 10f;
 
         EntityQuery m_Query;
 
@@ -82,6 +84,8 @@ namespace KryticalNova.Player.Entities.Presentation
                 float ghostYaw = FollowMath.YawDegrees(t.Rotation);
                 bool smoothTicks = predicted;
                 bool fromAhead = false;
+                PoseTilt aheadTilt = default;
+                bool hasAheadTilt = false;
                 if (predicted && em.HasComponent<PathPlan>(e) && em.HasComponent<ClientPlanHeader>(e) && em.HasComponent<PlayerPose>(e)
                     && em.HasBuffer<PathCorner>(e) && em.HasBuffer<ClientPlanCorner>(e))
                 {
@@ -89,7 +93,19 @@ namespace KryticalNova.Player.Entities.Presentation
                     var clientCorners = em.GetBuffer<ClientPlanCorner>(e, true).Reinterpret<int3>().AsNativeArray();
                     VaultPlan serverVault = em.HasComponent<VaultPlan>(e) ? em.GetComponentData<VaultPlan>(e) : default;
                     VaultPlan clientVault = em.HasComponent<ClientVaultPlan>(e) ? em.GetComponentData<ClientVaultPlan>(e).Plan : default;
-                    if (PlayerMovement.PoseAhead(in move, em.GetComponentData<PlayerPose>(e), em.GetComponentData<PathPlan>(e), serverCorners,
+                    if (em.HasComponent<WallPlan>(e) && em.HasComponent<ClientWallPlan>(e) && em.HasBuffer<WallCorner>(e) && em.HasBuffer<ClientWallCorner>(e)
+                        && PlayerMovement.PoseAheadOnWall(in move, em.GetComponentData<PlayerPose>(e), em.GetComponentData<PathPlan>(e), serverCorners,
+                            em.GetComponentData<ClientPlanHeader>(e), clientCorners, em.GetComponentData<WallPlan>(e), em.GetBuffer<WallCorner>(e, true).AsNativeArray(),
+                            em.GetComponentData<ClientWallPlan>(e).Plan, em.GetBuffer<ClientWallCorner>(e, true).Reinterpret<WallCorner>().AsNativeArray(),
+                            in stats, in moveCfg, tickMicros, elapsedMicros, out int3 wallMm, out int wallYaw, out PoseTilt wallTilt))
+                    {
+                        ghostPos = new float3(wallMm.x, wallMm.y, wallMm.z) * 0.001f;
+                        ghostYaw = wallYaw * 0.01f;
+                        aheadTilt = wallTilt;
+                        hasAheadTilt = true;
+                        fromAhead = true;
+                    }
+                    else if (PlayerMovement.PoseAhead(in move, em.GetComponentData<PlayerPose>(e), em.GetComponentData<PathPlan>(e), serverCorners,
                             em.GetComponentData<ClientPlanHeader>(e), clientCorners, in serverVault, in clientVault, in moveCfg, tickMicros, elapsedMicros,
                             out int3 aheadMm, out int aheadYaw))
                     {
@@ -141,7 +157,12 @@ namespace KryticalNova.Player.Entities.Presentation
                     drawnProgress += (int)((long)move.SpeedMmps * math.clamp(elapsedMicros, 0, tickMicros) / 1000000);
                 }
                 bool inVault = (move.Flags & MoveFlags.Moving) != 0 && VaultLeg.On(in vault, move.OrderSeq, drawnProgress);
-                bool airborne = inJump || inVault;
+                // Wallstride's wall walk (M3c): on the face, or in one of its legs (the plant, over the top, a jump off): never snapped to the
+                // ground, drawn turned onto the face; the tilt is the ghost's (an observer's interpolated one) or the owner's drawn ahead
+                PoseTilt tilt = hasAheadTilt ? aheadTilt : em.HasComponent<PoseTilt>(e) ? em.GetComponentData<PoseTilt>(e) : default;
+                bool onWall = move.Wall != 0 || tilt.Tilted;
+                bool inWallLeg = tilt.Tilted && tilt.PhaseMillis > 0;
+                bool airborne = inJump || inVault || inWallLeg;
                 bool onWater = move.Water != 0;   // Waterstride (M3c): the pose is on the water's surface, never snapped to the ground
 
                 bool snapped = FollowMath.Step(ref entry.Follow, ghostPos, ghostYaw, tele, smoothTicks,
@@ -154,12 +175,23 @@ namespace KryticalNova.Player.Entities.Presentation
                 // "an issue with the ground on each step"). Drawn only: the ghost's X and Z stay the server's.
                 var agent = entry.Body.GetComponent<UnityEngine.AI.NavMeshAgent>();
                 float baseOffset = agent != null ? agent.baseOffset : 0f;
-                if (!airborne && !onWater && UnityEngine.AI.NavMesh.SamplePosition(new Vector3(p.x, p.y - baseOffset, p.z), out var ground, GroundSampleM,
+                if (!airborne && !onWater && !onWall && UnityEngine.AI.NavMesh.SamplePosition(new Vector3(p.x, p.y - baseOffset, p.z), out var ground, GroundSampleM,
                         agent != null ? agent.areaMask : UnityEngine.AI.NavMesh.AllAreas))
                     p.y = ground.position.y + baseOffset;
-                body.SetPositionAndRotation(new Vector3(p.x, p.y, p.z), Quaternion.Euler(0f, entry.Follow.Yaw, 0f));
-
                 var state = entry.State;
+                Quaternion rotation = Quaternion.Euler(0f, entry.Follow.Yaw, 0f);
+                if (state != null && (tilt.Tilted || state.ShownTilted))
+                {
+                    // NGO eases the body onto the face and back upright at the wall's turn rate; a snap (teleport) puts it there at once
+                    Quaternion target = tilt.Tilted ? Quaternion.LookRotation((Vector3)tilt.Forward, (Vector3)tilt.Up) : rotation;
+                    Quaternion from = state.ShownTilted ? state.ShownRotation : body.rotation;
+                    rotation = snapped ? target : Quaternion.Slerp(from, target, 1f - Mathf.Exp(-WallTurnRate * dt));
+                    state.ShownRotation = rotation;
+                    // back upright: the tilt is done once the drawn body is within a degree of standing
+                    state.ShownTilted = tilt.Tilted || Quaternion.Angle(rotation, target) > 1f;
+                }
+                body.SetPositionAndRotation(new Vector3(p.x, p.y, p.z), rotation);
+
                 if (state != null)
                 {
                     if (snapped) state.Snaps++;
@@ -172,6 +204,12 @@ namespace KryticalNova.Player.Entities.Presentation
                     state.JumpArcErrorM = inJump ? math.distance(entry.Follow.Position, ghostPos) : 0f;
                     ShowJump(state, entry.Body.GetComponent<IGhostMotionView>(), in jump, jumpMicros, in curves);
                     ShowVault(state, entry.Body.GetComponent<IGhostMotionView>(), in vault, inVault, drawnProgress, move.SpeedMmps);
+                    byte wallPhase = tilt.Tilted ? tilt.Phase : (byte)0;
+                    if (state.ShownWallPhase != wallPhase)
+                    {
+                        state.ShownWallPhase = wallPhase;
+                        entry.Body.GetComponent<IGhostMotionView>()?.WallPhase(wallPhase, tilt.PhaseMillis * 0.001f);
+                    }
                     if (state.ShownOnWater != onWater)
                     {
                         // a change during or just after a jump is a jump off the water or onto it: the splash too
