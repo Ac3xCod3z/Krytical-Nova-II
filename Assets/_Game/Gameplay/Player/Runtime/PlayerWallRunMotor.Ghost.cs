@@ -132,6 +132,13 @@ namespace KryticalNova.Player
             if (!ask.Alive) return "Not now.";
             int target = NodeAt(graph, point, normal);
             float wallSpeed = ask.GroundSpeed * settings.wallSpeedShare;
+            // a prop on the face (owner, 1 Nov: no clipping): the way goes round it, and a click on it goes to the nearest free place
+            System.Func<int, bool> blocked = PropBlocker(graph);
+            if (target >= 0 && blocked(target))
+            {
+                target = NearestFree(graph, target, blocked);
+                if (target < 0) return "Something is in the way.";
+            }
 
             if (!ask.OnWall)
             {
@@ -146,7 +153,7 @@ namespace KryticalNova.Player
                     if (string.IsNullOrEmpty(JumpOntoForGhost(graph, feet, ask, target, wallSpeed, out layout)) && layout != null) return string.Empty;
                     layout = null;
                 }
-                SurfaceRoute.Route route = SurfaceRoute.ToNode(graph, feet, target, Filter());
+                SurfaceRoute.Route route = SurfaceRoute.ToNode(graph, feet, target, Filter(), blocked);
                 if (route == null || !route.HasEntry) return "There is no way onto that wall from here.";
                 if (!ask.HasFluxForOne) return WallRunRules.Reason(ClimbVerdict.NoFlux, settings);
                 layout = new WallWalkLayout(settings, StickProbe, feet, Vector3.up, ask.Forward, wallSpeed);
@@ -176,7 +183,7 @@ namespace KryticalNova.Player
             if (target >= 0)
             {
                 // along the wall
-                SurfaceRoute.Route along = SurfaceRoute.Along(graph, here, target);
+                SurfaceRoute.Route along = SurfaceRoute.Along(graph, here, target, blocked);
                 if (along == null) return "That part of the wall is not joined to this one.";
                 layout = new WallWalkLayout(settings, StickProbe, feet, ask.Up, ask.Forward, wallSpeed);
                 layout.AlongAndOff(graph, along, 0, w => OpenLandingFor(w, wallBase));
@@ -185,8 +192,8 @@ namespace KryticalNova.Player
 
             // off the wall: over its edge onto a top, or down to the ground, whichever is the shorter way there
             if (!NavMesh.SamplePosition(point, out NavMeshHit there, 1.5f, Filter())) return "Choose a place to go to.";
-            SurfaceRoute.Route top = SurfaceRoute.Off(graph, here, there.position, SurfaceGraph.JoinKind.Top, Filter());
-            SurfaceRoute.Route down = SurfaceRoute.Off(graph, here, there.position, SurfaceGraph.JoinKind.Ground, Filter());
+            SurfaceRoute.Route top = SurfaceRoute.Off(graph, here, there.position, SurfaceGraph.JoinKind.Top, Filter(), blocked);
+            SurfaceRoute.Route down = SurfaceRoute.Off(graph, here, there.position, SurfaceGraph.JoinKind.Ground, Filter(), blocked);
             SurfaceRoute.Route best = top == null ? down : down == null ? top : (top.Length <= down.Length ? top : down);
             if (best != null)
             {
@@ -220,6 +227,49 @@ namespace KryticalNova.Player
             return layout;
         }
 
+        /// <summary>
+        /// The nodes a body cannot stand on for a prop on the face (<see cref="WallWalkLayout.PropOnFace"/>), asked once per node per plan.
+        /// The face's own collider is the one NGO's probe meets in along the node's normal.
+        /// </summary>
+        private System.Func<int, bool> PropBlocker(SurfaceGraph graph)
+        {
+            var known = new System.Collections.Generic.Dictionary<int, bool>();
+            int mask = GroundMask();
+            return node =>
+            {
+                if (known.TryGetValue(node, out bool b)) return b;
+                Vector3 n = graph.normals[node], p = graph.points[node];
+                Collider face = Physics.Raycast(p, -n, out RaycastHit hit, settings.wallStandOff + 0.5f, SurfaceMask(), QueryTriggerInteraction.Ignore) ? hit.collider : null;
+                b = WallWalkLayout.PropOnFace(FeetAt(graph, node), n, face, transform.root, mask);
+                known[node] = b;
+                return b;
+            };
+        }
+
+        /// <summary>The free node nearest a blocked one, along the graph's edges within 1.5 m; -1 when there is none.</summary>
+        private static int NearestFree(SurfaceGraph graph, int start, System.Func<int, bool> blocked)
+        {
+            var seen = new System.Collections.Generic.HashSet<int> { start };
+            var queue = new System.Collections.Generic.Queue<int>();
+            queue.Enqueue(start);
+            int best = -1;
+            float bestD = 1.5f;
+            while (queue.Count > 0)
+            {
+                int at = queue.Dequeue();
+                for (int e = graph.edgeStart[at]; e < graph.edgeStart[at + 1]; e++)
+                {
+                    int next = graph.edgeTo[e];
+                    if (!seen.Add(next)) continue;
+                    float d = Vector3.Distance(graph.points[next], graph.points[start]);
+                    if (d > 1.5f) continue;
+                    if (!blocked(next) && d < bestD) { bestD = d; best = next; }
+                    queue.Enqueue(next);
+                }
+            }
+            return best;
+        }
+
         /// <summary>NGO <see cref="JumpOnto"/> for the ghost: an arc that turns the body to meet the face, then along to the place clicked.</summary>
         private string JumpOntoForGhost(SurfaceGraph graph, Vector3 from, in GhostWallAsk ask, int target, float wallSpeed, out WallWalkLayout layout)
         {
@@ -233,6 +283,8 @@ namespace KryticalNova.Player
                 low.y = from.y + JumpOnRise * 0.6f;
                 catchNode = graph.Nearest(low, 2.5f);
                 if (catchNode < 0) return "Too high to jump to.";
+                if (PropBlocker(graph)(catchNode)) catchNode = NearestFree(graph, catchNode, PropBlocker(graph));
+                if (catchNode < 0) return "Something is in the way.";
             }
             Vector3 to = FeetAt(graph, catchNode);
             Vector3 flat = to - from;
@@ -243,7 +295,7 @@ namespace KryticalNova.Player
 
             SurfaceRoute.Route route = catchNode == target
                 ? new SurfaceRoute.Route { Nodes = new[] { target } }
-                : SurfaceRoute.Along(graph, catchNode, target) ?? new SurfaceRoute.Route { Nodes = new[] { catchNode } };
+                : SurfaceRoute.Along(graph, catchNode, target, PropBlocker(graph)) ?? new SurfaceRoute.Route { Nodes = new[] { catchNode } };
             float g = settings.dropGravity;
             float apexY = Mathf.Max(from.y, to.y) + JumpOnLift;
             float up = Mathf.Sqrt(2f * Mathf.Max(0.05f, apexY - from.y) / g), down = Mathf.Sqrt(2f * Mathf.Max(0.05f, apexY - to.y) / g);

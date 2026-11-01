@@ -30,6 +30,32 @@ namespace KryticalNova.Player
         /// <summary>NGO's stick probe (<c>StickProbeOut</c>, <c>StickProbeLength</c>) and its limit off the node's normal.</summary>
         public const float StickProbeOut = 0.6f, StickProbeLength = 1.2f, StickMaxOffNode = 60f;
 
+        /// <summary>The body standing on a face, for the prop test: its radius and how far out from the face it reaches (m).</summary>
+        public const float BodyRadius = 0.3f, BodyHeight = 1.7f, BodyClearance = 0.15f;
+
+        static readonly Collider[] Overlaps = new Collider[16];
+
+        /// <summary>
+        /// A prop on the face where the body would stand (owner, 1 Nov: an air-conditioner box was walked through; no clipping): a collider
+        /// in the body's capsule, standing out along the face's normal from <see cref="BodyClearance"/> above the feet. The face's own collider,
+        /// triggers and <paramref name="ignoreRoot"/> (the body itself) do not count. NGO has no such check: its stick probe starts 0.6 m out and
+        /// misses a box deeper than that.
+        /// </summary>
+        public static bool PropOnFace(Vector3 feet, Vector3 normal, Collider face, Transform ignoreRoot, int mask)
+        {
+            Vector3 n = normal.sqrMagnitude > 1e-6f ? normal.normalized : Vector3.up;
+            Vector3 a = feet + n * (BodyClearance + BodyRadius), b = feet + n * (BodyHeight - BodyRadius);
+            int count = Physics.OverlapCapsuleNonAlloc(a, b, BodyRadius, Overlaps, mask, QueryTriggerInteraction.Ignore);
+            for (int i = 0; i < count; i++)
+            {
+                Collider c = Overlaps[i];
+                if (c == null || c == face || c.isTrigger) continue;
+                if (ignoreRoot != null && c.transform.IsChildOf(ignoreRoot)) continue;
+                return true;
+            }
+            return false;
+        }
+
         /// <summary>One corner: where the feet go and how the segment that ends here is moved.</summary>
         public struct Corner
         {

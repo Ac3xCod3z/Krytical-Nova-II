@@ -34,59 +34,59 @@ namespace KryticalNova.World.Surfaces
         private const float CornerCost = 1.2f;
 
         /// <summary>From <paramref name="from"/> (ground) up a surface onto <paramref name="to"/> (a top); null when there is no way.</summary>
-        public static Route Plan(SurfaceGraph graph, Vector3 from, Vector3 to, NavMeshQueryFilter filter)
+        public static Route Plan(SurfaceGraph graph, Vector3 from, Vector3 to, NavMeshQueryFilter filter, System.Func<int, bool> blocked = null)
         {
             if (graph == null || graph.NodeCount == 0) return null;
             List<Way> entries = WaysIn(graph, from, filter, false);
             Dictionary<int, Way> exits = WaysOut(graph, to, SurfaceGraph.JoinKind.Top, filter);
-            return Finish(graph, entries, exits, to);
+            return Finish(graph, entries, exits, to, blocked);
         }
 
         /// <summary>
         /// From <paramref name="from"/> to <paramref name="to"/> (both on the NavMesh, a roof or the ground) over a surface:
         /// on at its foot or over its edge, off the same either way. The way down from a roof to the street, or up.
         /// </summary>
-        public static Route Through(SurfaceGraph graph, Vector3 from, Vector3 to, NavMeshQueryFilter filter)
+        public static Route Through(SurfaceGraph graph, Vector3 from, Vector3 to, NavMeshQueryFilter filter, System.Func<int, bool> blocked = null)
         {
             if (graph == null || graph.NodeCount == 0) return null;
             List<Way> entries = WaysIn(graph, from, filter, true);
             Dictionary<int, Way> exits = WaysOut(graph, to, SurfaceGraph.JoinKind.Top, filter);
             foreach (KeyValuePair<int, Way> ground in WaysOut(graph, to, SurfaceGraph.JoinKind.Ground, filter))
                 if (!exits.TryGetValue(ground.Key, out Way known) || ground.Value.Cost < known.Cost) exits[ground.Key] = ground.Value;
-            return Finish(graph, entries, exits, to);
+            return Finish(graph, entries, exits, to, blocked);
         }
 
         /// <summary>
         /// From <paramref name="from"/> (the ground, or a roof) onto the surface at <paramref name="goal"/>, coming onto it
         /// at its foot or over its edge from above; null when there is no way.
         /// </summary>
-        public static Route ToNode(SurfaceGraph graph, Vector3 from, int goal, NavMeshQueryFilter filter)
+        public static Route ToNode(SurfaceGraph graph, Vector3 from, int goal, NavMeshQueryFilter filter, System.Func<int, bool> blocked = null)
         {
             if (graph == null || goal < 0 || goal >= graph.NodeCount) return null;
             List<Way> entries = WaysIn(graph, from, filter, true);
             var exits = new Dictionary<int, Way> { [goal] = default };
-            return Finish(graph, entries, exits, graph.points[goal]);
+            return Finish(graph, entries, exits, graph.points[goal], blocked);
         }
 
         /// <summary>Along the surface from <paramref name="start"/> to <paramref name="goal"/>; null when they are not joined.</summary>
-        public static Route Along(SurfaceGraph graph, int start, int goal)
+        public static Route Along(SurfaceGraph graph, int start, int goal, System.Func<int, bool> blocked = null)
         {
             if (graph == null || start < 0 || goal < 0 || start >= graph.NodeCount || goal >= graph.NodeCount) return null;
             var entries = new List<Way> { new Way { Node = start } };
             var exits = new Dictionary<int, Way> { [goal] = default };
-            return Finish(graph, entries, exits, graph.points[goal]);
+            return Finish(graph, entries, exits, graph.points[goal], blocked);
         }
 
         /// <summary>
         /// From <paramref name="start"/> on the surface off it at a join of <paramref name="kind"/> (over an edge onto a top,
         /// or down onto the ground) and on to <paramref name="to"/>; null when there is no way.
         /// </summary>
-        public static Route Off(SurfaceGraph graph, int start, Vector3 to, SurfaceGraph.JoinKind kind, NavMeshQueryFilter filter)
+        public static Route Off(SurfaceGraph graph, int start, Vector3 to, SurfaceGraph.JoinKind kind, NavMeshQueryFilter filter, System.Func<int, bool> blocked = null)
         {
             if (graph == null || start < 0 || start >= graph.NodeCount) return null;
             var entries = new List<Way> { new Way { Node = start } };
             Dictionary<int, Way> exits = WaysOut(graph, to, kind, filter);
-            return Finish(graph, entries, exits, to);
+            return Finish(graph, entries, exits, to, blocked);
         }
 
         /// <summary>A way in or out: the node, the join, the walk to or from it and what that walk costs.</summary>
@@ -129,8 +129,11 @@ namespace KryticalNova.World.Surfaces
             return ways;
         }
 
-        /// <summary>A* from every way in at once; a node that is a way out finishes with its walk.</summary>
-        private static Route Finish(SurfaceGraph graph, List<Way> entries, Dictionary<int, Way> exits, Vector3 toward)
+        /// <summary>
+        /// A* from every way in at once; a node that is a way out finishes with its walk. <paramref name="blocked"/> (optional) names nodes
+        /// the body cannot stand on (a prop on the face: owner, 1 Nov, no clipping): the way goes round them; null = every node, as before.
+        /// </summary>
+        private static Route Finish(SurfaceGraph graph, List<Way> entries, Dictionary<int, Way> exits, Vector3 toward, System.Func<int, bool> blocked = null)
         {
             if (entries.Count == 0 || exits.Count == 0) return null;
             int n = graph.NodeCount;
@@ -153,6 +156,7 @@ namespace KryticalNova.World.Surfaces
             var entryOf = new Dictionary<int, Way>();
             foreach (Way way in entries)
             {
+                if (blocked != null && way.HasJoin && blocked(way.Node)) continue;   // a way onto the surface at a prop: not that one
                 Touch(way.Node);
                 if (way.Cost >= g[way.Node]) continue;
                 g[way.Node] = way.Cost;
@@ -179,6 +183,7 @@ namespace KryticalNova.World.Surfaces
                     int next = graph.edgeTo[e];
                     Touch(next);
                     if (stamp[next] == shut) continue;
+                    if (blocked != null && blocked(next)) { stamp[next] = shut; continue; }
                     float step = Vector3.Distance(p, graph.points[next]);
                     if (graph.edgeKind[e] == SurfaceGraph.EdgeKind.Corner) step *= CornerCost; // a corner is a little slower
                     float tentative = g[current] + step;
