@@ -1939,6 +1939,7 @@ namespace KryticalNova.Persistence.Entities
             sealed class PopWatch
             {
                 Vector3 m_PrevBody, m_PrevTarget;
+                float m_PrevDt;
                 bool m_Has;
                 public int Pops;
                 public float WorstM;
@@ -1946,8 +1947,15 @@ namespace KryticalNova.Persistence.Entities
 
                 public void Reset() { m_Has = false; Pops = 0; WorstM = 0f; Worst = ""; }
 
-                public void Frame(Vector3 body, Vector3 target, float runMps, float dt)
+                /// <summary>
+                /// Called from the script's coroutine, which Unity resumes BEFORE the entity simulation of the same frame: the body read here
+                /// is where the follow put it in the previous frame, so its move is judged by that frame's time (<paramref name="dt"/> of the
+                /// previous call). gui-pop-1 (1 Nov): a 61 ms frame's move judged by the next frame's 33 ms read as "the path jumped 1.69 m".
+                /// </summary>
+                public void Frame(Vector3 body, Vector3 target, float runMps, float frameDt)
                 {
+                    float dt = m_PrevDt;
+                    m_PrevDt = frameDt;
                     if (m_Has)
                     {
                         float bodyStep = (body - m_PrevBody).magnitude, targetStep = (target - m_PrevTarget).magnitude;
