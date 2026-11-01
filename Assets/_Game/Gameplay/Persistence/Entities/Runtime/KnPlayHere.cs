@@ -1844,6 +1844,7 @@ namespace KryticalNova.Persistence.Entities
                 if (progression != null && progression.CurrentLevel < 60) progression.SetLevel(60);
                 if (resources != null) resources.RestoreChi(resources.MaxChi);
                 yield return new WaitForSeconds(1f);
+                Vector3 spawn = ServerPosition(ghost) - Vector3.up * offset;   // the graph walls the wall walk is tried on are by the spawn
                 var ask = new PlayerWallRunMotor.GhostWallAsk { Open = true, Alive = true, Run = true, Jump = true, Flux = 999f, HasFluxForOne = true,
                     Up = Vector3.up, Forward = Vector3.forward, GroundSpeed = em.GetComponentData<MoveStats>(ghost).RunMmps * 0.001f };
                 // Zone01's walls near the spawn are all the surface graph's (the wall walk's): the catch is for surfaces it does not cover, so the
@@ -1889,7 +1890,7 @@ namespace KryticalNova.Persistence.Entities
 
                 // a jump onto a wall of the zone's graph (owner, 1 Nov, design 5.4): the real jump, grabbing where clicked within the Jump rank's
                 // reach, above it as high as the jump gets under the click, then the wall walk up to it; three heights: below, at, above the reach
-                string wallWhy = motor.FindTestWall(stand, out PlayerWallRunMotor.TestWall wall);
+                string wallWhy = motor.FindTestWall(spawn, out PlayerWallRunMotor.TestWall wall);
                 if (wallWhy != null) { Log("catch: a graph wall: NOT TESTED; " + wallWhy); tally.Tried++; yield break; }
                 float reach = body.GetComponent<PlayerJumpMotor>() is PlayerJumpMotor jm ? jm.GhostJumpReach : 5f;
                 Vector3 ground = wall.Front;

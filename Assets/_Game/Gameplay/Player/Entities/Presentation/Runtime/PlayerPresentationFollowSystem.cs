@@ -165,9 +165,11 @@ namespace KryticalNova.Player.Entities.Presentation
                 PoseTilt tilt = hasAheadTilt ? aheadTilt : em.HasComponent<PoseTilt>(e) ? em.GetComponentData<PoseTilt>(e) : default;
                 bool onWall = move.Wall != 0 || tilt.Tilted;
                 bool inWallLeg = tilt.Tilted && tilt.PhaseMillis > 0;
-                // a catch's climb (Wallstride part 4) is never on the ground, from the moment the jump meets the wall (gui-catch-2, 1 Nov: a catch
-                // 0.8 m up was drawn snapped to the ground for a frame at the hand-off, then back up: "the body jumped 0.80 m")
-                bool catchClimb = JumpFlight.IsCatch(in jump) && move.OrderSeq == jump.PlanSeq && (move.Flags & MoveFlags.Moving) != 0;
+                // a catch (Wallstride part 4) is never on the ground from its press until its climb ends: also the frames between the drawn jump's
+                // end (the catch time, mid-tick) and the hand-off on the next full tick (gui-catch-2/3, 1 Nov: a catch 0.8 m up was drawn snapped
+                // to the ground there for a frame, then back up: "the body jumped 0.80 m")
+                bool catchClimb = JumpFlight.IsCatch(in jump) && jumpMicros >= 0
+                    && (move.OrderSeq != jump.PlanSeq || (move.Flags & MoveFlags.Moving) != 0);
                 bool airborne = inJump || inVault || inWallLeg || catchClimb;
                 bool onWater = move.Water != 0;   // Waterstride (M3c): the pose is on the water's surface, never snapped to the ground
 
