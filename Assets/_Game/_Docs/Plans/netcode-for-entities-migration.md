@@ -1005,3 +1005,50 @@ The rest of M4 (plan section 4):
 - [ ] the Wallet vertical slice, one Trade with a disconnect mid-trade, the kill test, and the golden ledger on the TEST database only
   (`ServerSave.SaveTogether`, `EconomyLedger`; CLAUDE.md "All-or-nothing changes").
 - [ ] owner feel checkpoint after M4 (by hand; pending is allowed, as for M3).
+
+## 55. M3c traversal and server walks: acceptance list (owner pick 31 Oct 2026: M3c before M4; written before code)
+
+The DOTS vault, Wallstride, Waterstride, follow and skill walk-in must feel exactly like NGO's, server still deciding. They are built
+the M3b way: the server plans a `MotionPlan` (or a `ServerOrder` for walks), the owner predicts it from the press when its own rules
+allow (the section 53 pattern: same rules, same order, same words on both sides), and the body is drawn on the plan's exact curve. The
+clip plays in place on the plan's clock; KINEMATION Motion Warping is the source of the curve (baked, like the jump's), never a second
+writer of the root (owner's rules: [[traversal-uses-motion-warping]]; only copies of clips are adjusted). NGO's code is the reference:
+`PlayerVaultMotor` (TryArm / Watch / Landed, `TraversalSettings`, `VaultAnimationMap` per faction), `PlayerWallRunMotor` (+ `.WallWalk`,
+the zone surface graph), `PlayerWaterstrideMotor` (`WaterMap`, Flux per second), `PlayerFollow` (`FollowRules`, `SquadSettings`, jump copy).
+Each item is ticked only with its proof: EditMode world tests (0 and 100 ms) for rules, GUI runs with Game-view frames against NGO's
+behaviour for feel. At most 2 runs per step.
+
+Order (smallest first, each finished before the next): 1 skill walk-in, 2 follow, 3 vault, 4 Waterstride, 5 Wallstride.
+
+1. Skill walk-in (the `ServerOrder` walk exists: `PlayerEntitiesSetup` "walk the player to a point")
+- [ ] a skill clicked out of range walks the player into range by the server's order, at the Run or walk speed the click would use (Flux for
+  Run as a click), and the skill starts on arrival; a new click or another order cancels it; the owner sees it start from the order's tick
+- [ ] the range and the stop point are NGO's (the skill's range minus NGO's margin); a target that moves updates the walk as NGO did
+2. Follow (Squad)
+- [ ] the follower walks after the member by the server's orders, stops `SquadSettings`' distance off, re-plans as NGO did
+- [ ] the member's jumps are copied: walk to the take-off, jump to the landing with the follower's own Jump (rank, Flux, arc; section 53
+  rules), so two can cross a river together; ends on the NGO conditions (own order, fight, defeat, Squad change, map change)
+3. Vault
+- [ ] going over is the rule: a walk whose straight line is blocked by a vaultable obstacle, no longer than walking round, vaults (NGO's
+  `TryArm`, `Watch`); the plan carries the take-off, the obstacle, the landing and the faction's clip (`VaultAnimationMap`)
+- [ ] the take-off happens without stopping (speed carried through), the landing hands the rest of the walk back; the same vaults as NGO for a
+  table of obstacles (heights up to 2.2 m, the Wallstride minimum)
+- [ ] the drawn body on the plan's curve within 1 cm at 30/60/120 fps (the section 53 bar); no clipping into the obstacle (bones vs face,
+  side-view film strip)
+4. Waterstride
+- [ ] the NGO gate: level 60, Run and Jump rank 20; a click on water with Run selected runs to the nearest shore point, across by the `WaterMap`
+  route, stands on the water at the end; a land click from the water runs to the nearest shore and walks on
+- [ ] Flux every second on the water, paid by the server; out of Flux, carried back to the nearest shore; the owner's Flux (section 53
+  `OwnerFlux`) refuses at once in NGO's words
+5. Wallstride (wall-run, tree perch, wall leaps, wall walk)
+- [ ] the owner's rules (memory [[wallstride-decisions]]): no glitching, never inside a building, a jump catches a wall at a slant
+  (65 degrees, run 45 degrees) with the turn eased in the plant, a player is NEVER knocked or forced off a wall, can always leave by choice
+- [ ] the climb as one warp route of eased legs, planned by the server from the zone's surface graph, predicted by the owner; the ground
+  marker lies on the wall; a way down from a roof
+- [ ] a death on a wall, in a tree, in the air or on a roof disintegrates in place (no fall to the ground), pet with them
+- [ ] feet VFX, Wall fights unchanged (combat itself comes in M4)
+
+For all five
+- [ ] other players see the same start tick, curve and landing (2-client test world, `BodyIsMineWorldTests` style)
+- [ ] a forced rollback mid-move neither restarts the clip nor moves the body more than the follow's offset
+- [ ] owner feel checkpoint after M3c (by hand; pending is allowed)
