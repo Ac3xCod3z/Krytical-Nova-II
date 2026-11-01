@@ -61,6 +61,53 @@ namespace KryticalNova.Tests
             Assert.Pass(report.ToString());
         }
 
+        // gui-pop-1 (1 Nov): "proxies live 0" under the entity netcode although the terrain has 1600 trees. Which trees TreeProxyField keeps
+        // (a prototype with a capsule, at least 3 m tall) and how far the nearest are from the tree runs' start and the origin.
+        [Test, Explicit]
+        public void ListTheTerrainTreesTheProxiesWouldKeep()
+        {
+            EditorSceneManager.OpenScene(Scene, OpenSceneMode.Single);
+            var report = new StringBuilder();
+            var starts = new[] { ("tree runs' start", new Vector3(-6.8f, 0f, -7.5f)), ("origin", Vector3.zero) };
+            foreach (Terrain t in Terrain.activeTerrains)
+            {
+                TerrainData data = t.terrainData;
+                report.AppendLine($"[probe] terrain {t.name} scene {t.gameObject.scene.name} at {t.GetPosition()} size {data.size}: {data.treeInstanceCount} trees, " +
+                    $"{data.treePrototypes.Length} prototypes; field on it in the saved scene: {t.GetComponent<TreeProxyField>() != null}");
+                var ok = new bool[data.treePrototypes.Length];
+                var height = new float[data.treePrototypes.Length];
+                for (int i = 0; i < data.treePrototypes.Length; i++)
+                {
+                    GameObject prefab = data.treePrototypes[i].prefab;
+                    CapsuleCollider capsule = prefab != null ? prefab.GetComponentInChildren<CapsuleCollider>(true) : null;
+                    ok[i] = capsule != null;
+                    height[i] = capsule != null ? capsule.height * capsule.transform.lossyScale.y : 0f;
+                    report.AppendLine($"[probe]   prototype {i} {(prefab != null ? prefab.name : "none")}: capsule {(capsule != null ? $"height {height[i]:F1} m" : "NONE")}");
+                }
+                int kept = 0;
+                var near = new System.Collections.Generic.List<(float d, Vector3 foot, string start)>();
+                foreach (TreeInstance tree in data.treeInstances)
+                {
+                    int p = tree.prototypeIndex;
+                    if (p < 0 || p >= ok.Length || !ok[p] || height[p] * tree.heightScale < 3f) continue;
+                    kept++;
+                    Vector3 foot = t.GetPosition() + Vector3.Scale(tree.position, data.size);
+                    foreach (var (name, at) in starts)
+                        near.Add((Vector2.Distance(new Vector2(foot.x, foot.z), new Vector2(at.x, at.z)), foot, name));
+                }
+                report.AppendLine($"[probe]   kept as climbable: {kept}");
+                near.Sort((a, b) => a.d.CompareTo(b.d));
+                foreach (var (name, _) in starts)
+                {
+                    int shown = 0;
+                    foreach (var n in near)
+                        if (n.start == name && shown++ < 3) report.AppendLine($"[probe]   nearest to the {name}: {n.d:F1} m, foot {n.foot}");
+                }
+            }
+            Debug.Log(report.ToString());
+            Assert.Pass(report.ToString());
+        }
+
         static string Path(Transform t)
         {
             string p = t.name;

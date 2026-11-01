@@ -1546,7 +1546,8 @@ namespace KryticalNova.Persistence.Entities
                     // the instrument first (Master, 1 Nov): placed trees marked as trees and terrain tree colliders live near the bodies
                     yield return new WaitForSeconds(0.6f);
                     Log($"tree: trees marked {TreeProxyField.PlacedTreesMarked}, proxies live {TreeProxyField.LiveTotal}; Zone01's placed tree " +
-                        $"SM_Env_Tree_01 at 12.6,-13.1 reads {motor.ClimbKindAt(new Vector3(12.6f, 1.2f, -13.1f), Vector3.back)} (expected Tree)");
+                        $"SM_Env_Tree_01 at 12.6,-13.1 reads {motor.ClimbKindAt(new Vector3(12.6f, 1.2f, -13.1f), Vector3.back)} (expected Tree); " +
+                        $"{TreeProxyField.AnchorReport()}");
                 }
                 string why = motor.FindTestClimb(ServerPosition(ghost) - Vector3.up * offset, ask, out Vector3 stand, out Vector3 point, out Vector3 normal, tree);
                 if (why != null) { Log("climb: NOT TESTED; " + why); tally.Tried++; yield break; }
@@ -1556,13 +1557,13 @@ namespace KryticalNova.Persistence.Entities
                 // the pop check proved in this run (owner pick a): standing still, the teleport to the start, a plain run at full speed
                 m_Pops.Reset();
                 float watch = Time.realtimeSinceStartup;
-                while (Time.realtimeSinceStartup - watch < 1f) { yield return null; PopFrame(ghost); }
+                while (Time.realtimeSinceStartup - watch < 1f) { yield return new WaitForEndOfFrame(); PopFrame(ghost); }
                 Log($"climb: pop check on a known clean case (standing 1 s): {m_Pops.Pops} pop(s) (expected 0) {m_Pops.Worst}");
                 m_Pops.Reset();
                 PopFrame(ghost);
                 Teleport(em, ghost, stand + Vector3.up * offset);
                 watch = Time.realtimeSinceStartup;
-                while (Time.realtimeSinceStartup - watch < 1.5f) { yield return null; PopFrame(ghost); }
+                while (Time.realtimeSinceStartup - watch < 1.5f) { yield return new WaitForEndOfFrame(); PopFrame(ghost); }
                 Log($"climb: pop check on a known fault (the teleport to the start): {m_Pops.Pops} pop(s) (expected 1 or more): {m_Pops.Worst}");
                 Vector3 side = Vector3.Cross(Vector3.up, normal).normalized;
                 if (UnityEngine.AI.NavMesh.SamplePosition(stand + side * 15f, out UnityEngine.AI.NavMeshHit street, 3f, UnityEngine.AI.NavMesh.AllAreas)
@@ -1575,7 +1576,7 @@ namespace KryticalNova.Persistence.Entities
                     bool started = false;
                     while (Time.realtimeSinceStartup - ran < 6f)
                     {
-                        yield return null;
+                        yield return new WaitForEndOfFrame();
                         PopFrame(ghost);
                         top = Mathf.Max(top, em.GetComponentData<MoveState>(ghost).SpeedMmps);
                         if (Moving(ghost)) started = true;
@@ -1598,10 +1599,49 @@ namespace KryticalNova.Persistence.Entities
                     yield return TreeTry(body, ghost, tally, "up the tree again (Run)", point, normal, stand, offset, false, false, TreeEnd.Perched);
                     yield return TreeTry(body, ghost, tally, "down by a Jump click (NGO: the same drop)", below, Vector3.up, stand, offset, true, false, TreeEnd.Down);
                     yield return TreeTry(body, ghost, tally, "up the tree again (Run)", point, normal, stand, offset, false, false, TreeEnd.Perched);
-                    Vector3 far = stand + (stand - point).normalized * 30f;
-                    if (UnityEngine.AI.NavMesh.SamplePosition(far, out UnityEngine.AI.NavMeshHit farHit, 4f, UnityEngine.AI.NavMesh.AllAreas))
-                        yield return TreeTry(body, ghost, tally, "a click 30 m off (NGO: too far, still perched)", farHit.position, Vector3.up, stand, offset, false, true, TreeEnd.Perched);
+                    if (FarGround(point, stand, out Vector3 far, out string farWhy))
+                        yield return TreeTry(body, ghost, tally, "a click 30 m off (NGO: too far, still perched)", far, Vector3.up, stand, offset, false, true, TreeEnd.Perched);
+                    else { tally.Tried++; Log("tree: a click 30 m off: NOT TESTED; " + farWhy); }
                     yield return TreeTry(body, ghost, tally, "down by a click below to finish", below, Vector3.up, stand, offset, false, false, TreeEnd.Down);
+
+                    // a terrain tree (its collider is a proxy the field puts near the bodies; the nearest is ~180 m from the start in Zone01): the
+                    // instrument at the bodies' new place first, then up, too far and down
+                    if (!TreeProxyField.NearestTree(stand, out Vector3 trunk, out float trunkHeight))
+                    {
+                        tally.Tried++;
+                        Log($"tree: terrain tree: NOT TESTED; no terrain tree in a field ({TreeProxyField.AnchorReport()})");
+                        yield break;
+                    }
+                    Vector3 terrainStand = default;
+                    bool placed = false;
+                    for (int k = 0; k < 16 && !placed; k++)
+                    {
+                        Vector3 dir = Quaternion.Euler(0f, k * 22.5f, 0f) * Vector3.forward;
+                        if (UnityEngine.AI.NavMesh.SamplePosition(trunk + dir * 7f, out UnityEngine.AI.NavMeshHit near7, 2f, UnityEngine.AI.NavMesh.AllAreas)
+                            && Flat(near7.position - trunk) >= 5f)
+                        { terrainStand = near7.position; placed = true; }
+                    }
+                    if (!placed)
+                    {
+                        tally.Tried++;
+                        Log($"tree: terrain tree at {trunk.x:F1},{trunk.z:F1} ({Flat(trunk - stand):F0} m away): NOT TESTED; no NavMesh 5-9 m from its trunk");
+                        yield break;
+                    }
+                    int liveBefore = TreeProxyField.LiveTotal;
+                    Teleport(em, ghost, terrainStand + Vector3.up * offset);
+                    yield return new WaitForSeconds(1.5f);   // the field refreshes four times a second
+                    Log($"tree: terrain tree {trunkHeight:F1} m tall at {trunk.x:F1},{trunk.z:F1} ({Flat(trunk - stand):F0} m from the placed tree's start); " +
+                        $"proxies live {liveBefore} at the start, {TreeProxyField.LiveTotal} here (expected more than 0); {TreeProxyField.AnchorReport()}");
+                    string terrainWhy = motor.FindTestClimb(terrainStand, ask, out Vector3 tStand, out Vector3 tPoint, out Vector3 tNormal, true);
+                    if (terrainWhy != null) { tally.Tried++; Log("tree: terrain tree: NOT TESTED; " + terrainWhy); yield break; }
+                    Log($"tree: the terrain tree's face at {tPoint.x:F1},{tPoint.y:F2},{tPoint.z:F1} (kind {motor.ClimbKindAt(tPoint, tNormal)}), the start {tStand.x:F1},{tStand.z:F1}");
+                    Teleport(em, ghost, tStand + Vector3.up * offset);
+                    yield return new WaitForSeconds(1.5f);
+                    yield return TreeTry(body, ghost, tally, "a terrain tree: up with Run (ends perched)", tPoint, tNormal, tStand, offset, false, false, TreeEnd.Perched);
+                    if (FarGround(tPoint, tStand, out Vector3 tFar, out string tFarWhy))
+                        yield return TreeTry(body, ghost, tally, "a terrain tree: a click 30 m off (NGO: too far, still perched)", tFar, Vector3.up, tStand, offset, false, true, TreeEnd.Perched);
+                    else { tally.Tried++; Log("tree: a terrain tree: a click 30 m off: NOT TESTED; " + tFarWhy); }
+                    yield return TreeTry(body, ghost, tally, "a terrain tree: down by a click below", tStand, Vector3.up, tStand, offset, false, false, TreeEnd.Down);
                     yield break;
                 }
 
@@ -1617,6 +1657,34 @@ namespace KryticalNova.Persistence.Entities
             }
 
             enum TreeEnd { Perched, Down }
+
+            /// <summary>
+            /// Ground for the too-far click: on the NavMesh 30-34 m from the trunk, at least 27 m off it flat (NGO's drop reaches 25 m), looked for
+            /// all round the tree, away from the start first. gui-tree-2 skipped the try silently: the one way it looked had no NavMesh.
+            /// </summary>
+            static bool FarGround(Vector3 trunk, Vector3 stand, out Vector3 far, out string why)
+            {
+                far = default;
+                Vector3 away = stand - trunk;
+                away.y = 0f;
+                away = away.sqrMagnitude > 1e-4f ? away.normalized : Vector3.forward;
+                for (int k = 0; k < 16; k++)
+                {
+                    // 0, +22.5, -22.5, +45 ... degrees from straight away from the start
+                    float deg = (k + 1) / 2 * 22.5f * (k % 2 == 0 ? 1f : -1f);
+                    Vector3 dir = Quaternion.Euler(0f, deg, 0f) * away;
+                    for (float r = 30f; r <= 34f; r += 2f)
+                        if (UnityEngine.AI.NavMesh.SamplePosition(trunk + dir * r, out UnityEngine.AI.NavMeshHit hit, 3f, UnityEngine.AI.NavMesh.AllAreas)
+                            && Flat(hit.position - trunk) >= 27f)
+                        {
+                            far = hit.position;
+                            why = null;
+                            return true;
+                        }
+                }
+                why = $"no NavMesh 30-34 m from the trunk at {trunk.x:F1},{trunk.z:F1} in 16 directions";
+                return false;
+            }
 
             /// <summary>
             /// One scripted tree click (part 3), judged: planned (or refused, when <paramref name="refused"/>), where it ended (perched: Wall 2,
@@ -1758,13 +1826,13 @@ namespace KryticalNova.Persistence.Entities
                 // the teleport 9 m out in front of the wall (where the running tries start) is a known pop
                 m_Pops.Reset();
                 float watch = Time.realtimeSinceStartup;
-                while (Time.realtimeSinceStartup - watch < 1f) { yield return null; PopFrame(ghost); }
+                while (Time.realtimeSinceStartup - watch < 1f) { yield return new WaitForEndOfFrame(); PopFrame(ghost); }
                 Log($"wall: pop check on a known clean case (standing 1 s): {m_Pops.Pops} pop(s) (expected 0) {m_Pops.Worst}");
                 m_Pops.Reset();
                 PopFrame(ghost);
                 Teleport(em, ghost, wall.FrontFar + Vector3.up * offset);
                 watch = Time.realtimeSinceStartup;
-                while (Time.realtimeSinceStartup - watch < 1.5f) { yield return null; PopFrame(ghost); }
+                while (Time.realtimeSinceStartup - watch < 1.5f) { yield return new WaitForEndOfFrame(); PopFrame(ghost); }
                 Log($"wall: pop check on a known fault (the teleport 9 m out): {m_Pops.Pops} pop(s) (expected 1 or more): {m_Pops.Worst}");
 
                 // the prop check (owner, 1 Nov: no clipping; gui-wall-2's "along" ended inside an air-conditioner box) proved first on the
@@ -1802,7 +1870,7 @@ namespace KryticalNova.Persistence.Entities
                     bool started = false;
                     while (Time.realtimeSinceStartup - ran < 6f)
                     {
-                        yield return null;
+                        yield return new WaitForEndOfFrame();
                         PopFrame(ghost);
                         top = Mathf.Max(top, em.GetComponentData<MoveState>(ghost).SpeedMmps);
                         if (Moving(ghost)) started = true;
@@ -1939,7 +2007,6 @@ namespace KryticalNova.Persistence.Entities
             sealed class PopWatch
             {
                 Vector3 m_PrevBody, m_PrevTarget;
-                float m_PrevDt;
                 bool m_Has;
                 public int Pops;
                 public float WorstM;
@@ -1948,14 +2015,12 @@ namespace KryticalNova.Persistence.Entities
                 public void Reset() { m_Has = false; Pops = 0; WorstM = 0f; Worst = ""; }
 
                 /// <summary>
-                /// Called from the script's coroutine, which Unity resumes BEFORE the entity simulation of the same frame: the body read here
-                /// is where the follow put it in the previous frame, so its move is judged by that frame's time (<paramref name="dt"/> of the
-                /// previous call). gui-pop-1 (1 Nov): a 61 ms frame's move judged by the next frame's 33 ms read as "the path jumped 1.69 m".
+                /// Called at the end of a frame (<c>WaitForEndOfFrame</c>), after the entity simulation has placed the body, so the move is
+                /// judged by the time of the frame that made it. A plain <c>yield return null</c> resumes BEFORE the simulation and pairs last
+                /// frame's move with this frame's time: gui-pop-1 (1 Nov) read a 61 ms frame's run as "the path jumped 1.69 m in 33 ms".
                 /// </summary>
-                public void Frame(Vector3 body, Vector3 target, float runMps, float frameDt)
+                public void Frame(Vector3 body, Vector3 target, float runMps, float dt)
                 {
-                    float dt = m_PrevDt;
-                    m_PrevDt = frameDt;
                     if (m_Has)
                     {
                         float bodyStep = (body - m_PrevBody).magnitude, targetStep = (target - m_PrevTarget).magnitude;

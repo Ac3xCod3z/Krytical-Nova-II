@@ -120,6 +120,40 @@ namespace KryticalNova.Player
 
         public static void RemoveAnchor(Transform body) => anchors.Remove(body);
 
+        /// <summary>The anchors and their scenes, and the scenes that have a field (the scripted run's instrument).</summary>
+        public static string AnchorReport()
+        {
+            var parts = new List<string>(anchors.Count + 2);
+            foreach (Transform anchor in anchors)
+                if (anchor != null) parts.Add($"{anchor.name} in {anchor.gameObject.scene.name}");
+            foreach (Terrain t in Terrain.activeTerrains)
+                if (t != null && t.TryGetComponent(out TreeProxyField field))
+                    parts.Add($"field on {t.name} in {t.gameObject.scene.name} ({field.TreeCount} trees, {field.LiveCount} live)");
+            return parts.Count == 0 ? "no anchors, no fields" : string.Join("; ", parts);
+        }
+
+        /// <summary>The climbable terrain tree nearest <paramref name="around"/> in any field (the scripted run's terrain tree).</summary>
+        public static bool NearestTree(Vector3 around, out Vector3 foot, out float height)
+        {
+            foot = default;
+            height = 0f;
+            float best = float.MaxValue;
+            foreach (Terrain t in Terrain.activeTerrains)
+            {
+                if (t == null || !t.TryGetComponent(out TreeProxyField field)) continue;
+                foreach (TreeShape tree in field.trees)
+                {
+                    Vector3 offset = tree.Foot - around;
+                    offset.y = 0f;
+                    if (offset.sqrMagnitude >= best) continue;
+                    best = offset.sqrMagnitude;
+                    foot = tree.Foot;
+                    height = tree.Height;
+                }
+            }
+            return best < float.MaxValue;
+        }
+
         /// <summary>
         /// The placed trees of a scene marked as trees once more, when a body of the entity netcode enters it (the marking at the scene's load
         /// is NGO's; under the entity netcode a placed tree read as a wall, 1 Nov). Marked trees are skipped, so it never marks twice.
