@@ -142,6 +142,7 @@ namespace KryticalNova.Player.Entities.Presentation
                 }
                 bool inVault = (move.Flags & MoveFlags.Moving) != 0 && VaultLeg.On(in vault, move.OrderSeq, drawnProgress);
                 bool airborne = inJump || inVault;
+                bool onWater = move.Water != 0;   // Waterstride (M3c): the pose is on the water's surface, never snapped to the ground
 
                 bool snapped = FollowMath.Step(ref entry.Follow, ghostPos, ghostYaw, tele, smoothTicks,
                     (move.Flags & MoveFlags.Moving) != 0 || airborne, airborne ? JumpFollowMaxSpeedMps : maxSpeed, dt, tickSeconds, in cfg);
@@ -153,7 +154,7 @@ namespace KryticalNova.Player.Entities.Presentation
                 // "an issue with the ground on each step"). Drawn only: the ghost's X and Z stay the server's.
                 var agent = entry.Body.GetComponent<UnityEngine.AI.NavMeshAgent>();
                 float baseOffset = agent != null ? agent.baseOffset : 0f;
-                if (!airborne && UnityEngine.AI.NavMesh.SamplePosition(new Vector3(p.x, p.y - baseOffset, p.z), out var ground, GroundSampleM,
+                if (!airborne && !onWater && UnityEngine.AI.NavMesh.SamplePosition(new Vector3(p.x, p.y - baseOffset, p.z), out var ground, GroundSampleM,
                         agent != null ? agent.areaMask : UnityEngine.AI.NavMesh.AllAreas))
                     p.y = ground.position.y + baseOffset;
                 body.SetPositionAndRotation(new Vector3(p.x, p.y, p.z), Quaternion.Euler(0f, entry.Follow.Yaw, 0f));
@@ -171,6 +172,13 @@ namespace KryticalNova.Player.Entities.Presentation
                     state.JumpArcErrorM = inJump ? math.distance(entry.Follow.Position, ghostPos) : 0f;
                     ShowJump(state, entry.Body.GetComponent<IGhostMotionView>(), in jump, jumpMicros, in curves);
                     ShowVault(state, entry.Body.GetComponent<IGhostMotionView>(), in vault, inVault, drawnProgress, move.SpeedMmps);
+                    if (state.ShownOnWater != onWater)
+                    {
+                        // a change during or just after a jump is a jump off the water or onto it: the splash too
+                        state.ShownOnWater = onWater;
+                        bool byJump = jump.Kind == MotionKind.Jump && jumpMicros >= 0 && jumpMicros < curves.LandMicros + 1000000;
+                        entry.Body.GetComponent<IGhostMotionView>()?.WaterStriding(onWater, byJump);
+                    }
                     state.State = new PlayerAnimState
                     {
                         Speed = (move.Flags & MoveFlags.Moving) != 0 ? move.SpeedMmps * 0.001f : 0f,

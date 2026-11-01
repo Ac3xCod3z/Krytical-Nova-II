@@ -397,6 +397,29 @@ namespace KryticalNova.Player
             return why;
         }
 
+        /// <summary>
+        /// A jump of a body of the entity netcode came down at <paramref name="feet"/>: 0 = not water (ground), 1 = it stands on the water,
+        /// 2 = it fell in (the HP is taken from this body now, NGO's <c>FallIn</c>) and comes out at <paramref name="shoreFeet"/>.
+        /// </summary>
+        public int LandedForGhost(Vector3 feet, int level, int runRank, int jumpRank, out Vector3 shoreFeet, out string line)
+        {
+            shoreFeet = feet;
+            line = null;
+            if (!WaterstrideRules.WaterLanding(ZoneMap, feet + Vector3.up * 0.01f, out Vector3 surface)) return 0;
+            bool alive = resources != null && resources.IsAlive;
+            bool open = WaterstrideRules.IsOpen(settings, level, runRank, jumpRank);
+            if (WaterstrideRules.StandsOnLanding(settings, open, alive, resources != null && resources.CanSpendChi(FluxPerSecond))) return 1;
+            float lost = resources != null ? WaterstrideRules.FallInLoss(settings, resources.MaxHealth, resources.Health, resources.IsAlive) : 0f;
+            if (lost > 0f) resources.ApplyDamage(lost);
+            line = WaterstrideRules.FallInLine(lost);
+            float reach = settings != null ? settings.fallInShoreReach : StrandedReach;
+            if (NavMesh.SamplePosition(surface, out NavMeshHit shore, reach, Filter())) shoreFeet = shore.position;
+            return 2;
+        }
+
+        /// <summary>Where a click's camera ray meets this zone's runnable water before its first hit (a body of the entity netcode sends it).</summary>
+        public bool TryWaterUnderRay(Ray ray, RaycastHit hit, out Vector3 surface) => WaterstrideRules.WaterUnderRay(ZoneMap, ray, hit.distance, out surface);
+
         /// <summary>Out of Flux, for a body of the entity netcode: the way back over the water to the nearest shore (<paramref name="landFeet"/>).</summary>
         public bool PlanStrandedForGhost(Vector3 feet, List<Vector3> route, out Vector3 landFeet) =>
             WaterstrideRules.PlanStranded(ZoneMap, settings, Shore(), feet, route, out landFeet);

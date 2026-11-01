@@ -16,6 +16,17 @@ namespace KryticalNova.Player.Entities
         Refused,
     }
 
+    /// <summary>What a jump's landing on water comes to (NGO's <c>ServerLandedOnWater</c>).</summary>
+    public enum WaterLandingAnswer : byte
+    {
+        /// <summary>Not water: the jump landed on ground.</summary>
+        NotWater,
+        /// <summary>Waterstride open and Flux for a second: the player stands on the water.</summary>
+        Stands,
+        /// <summary>Fell in: a share of HP lost (taken by the planner's body), out on the shore point given.</summary>
+        FallsIn,
+    }
+
     /// <summary>
     /// Plans Waterstride where the world is known (the zone's water map, the NavMesh shore, the body's level, ranks, Flux and moves; NGO's
     /// rules in <c>WaterstrideRules</c>): filled by the layer that knows the body, on the server and, for the owner's prediction, on the
@@ -32,6 +43,12 @@ namespace KryticalNova.Player.Entities
 
         /// <summary>Out of Flux: the way back to the nearest shore at the stranded speed. False when there is none within reach.</summary>
         bool PlanStranded(Entity ghost, int3 startMm, NativeList<int3> corners, out WaterPlan leg);
+
+        /// <summary>
+        /// Server: a jump came down at <paramref name="landingMm"/> (the pose's millimetres). On water it stands, or falls in: then the HP
+        /// is taken here and <paramref name="shoreMm"/> is where the body comes out (the pose's millimetres).
+        /// </summary>
+        WaterLandingAnswer Landed(Entity ghost, int3 landingMm, out int3 shoreMm);
     }
 
     /// <summary>The Flux of a body on the water, paid where it is decided (the server's body). Managed.</summary>
@@ -145,6 +162,72 @@ namespace KryticalNova.Player.Entities
                 em.SetComponentData(e, order);
             }
             finally { corners.Dispose(); }
+        }
+    }
+    /// <summary>
+    /// Server only, after the jump of the tick: a jump that has come down on the water is decided once (NGO's <c>ServerLandedOnWater</c>):
+    /// with Waterstride open and the Flux for a second the player stands on it (<see cref="MoveState.Water"/>, the Flux system pays from
+    /// there); otherwise they fall in, lose a share of HP and are put on the nearest shore (a teleport). The plan keeps the decision
+    /// (<see cref="MotionFlags.WaterDecided"/>), so it is never made twice.
+    /// </summary>
+    [WorldSystemFilter(WorldSystemFilterFlags.ServerSimulation)]
+    [UpdateInGroup(typeof(PredictedSimulationSystemGroup))]
+    [UpdateAfter(typeof(PlayerJumpPaySystem))]
+    public partial class WaterstrideLandingSystem : SystemBase
+    {
+        EntityQuery m_Query;
+
+        /// <summary>Set by <see cref="PlayerEntitiesSetup.Install"/>; null = every landing is ground (the jump as before).</summary>
+        public IWaterPlanner Planner { get; set; }
+
+        /// <summary>Landings on water that stood, and that fell in (tests, the scripted run).</summary>
+        public int Stood { get; private set; }
+        public int FellIn { get; private set; }
+
+        protected override void OnCreate()
+        {
+            RequireForUpdate<NetworkTime>();
+            m_Query = GetEntityQuery(new EntityQueryBuilder(Allocator.Temp).WithAll<PlayerGhostTag, MotionPlan, MoveState, Simulate>());
+            RequireForUpdate(m_Query);
+        }
+
+        protected override void OnUpdate()
+        {
+            if (Planner == null) return;
+            var nt = SystemAPI.GetSingleton<NetworkTime>();
+            if (!nt.ServerTick.IsValid || nt.IsPartialTick) return;
+            var curves = SystemAPI.TryGetSingleton<PlayerMotionCurves>(out var c) ? c : PlayerMotionCurves.Default;
+            int tickMicros = PlayerMovement.TickMicros(SystemAPI.TryGetSingleton<ClientServerTickRate>(out var rate) && rate.SimulationTickRate > 0
+                ? rate.SimulationTickRate : 30);
+            var em = EntityManager;
+            using var entities = m_Query.ToEntityArray(Allocator.Temp);
+            foreach (var e in entities)
+            {
+                var plan = em.GetComponentData<MotionPlan>(e);
+                if (plan.Kind != MotionKind.Jump || (plan.Flags & MotionFlags.WaterDecided) != 0) continue;
+                if (!JumpFlight.Landed(plan, curves, JumpFlight.ElapsedMicros(plan, nt.ServerTick, tickMicros))) continue;
+                plan.Flags |= MotionFlags.WaterDecided;
+                em.SetComponentData(e, plan);
+                var answer = Planner.Landed(e, plan.ToMm, out int3 shore);
+                if (answer == WaterLandingAnswer.Stands)
+                {
+                    var move = em.GetComponentData<MoveState>(e);
+                    move.Water = 1;
+                    em.SetComponentData(e, move);
+                    Stood++;
+                }
+                else if (answer == WaterLandingAnswer.FallsIn)
+                {
+                    FellIn++;
+                    if (PlayerClickLog.Sink != null) PlayerClickLog.Sink("[KnWater] fell in the water; out on the shore " + shore);
+                    if (em.HasComponent<TeleportRequest>(e))
+                    {
+                        var pose = em.HasComponent<PlayerPose>(e) ? em.GetComponentData<PlayerPose>(e) : default;
+                        em.SetComponentData(e, new TeleportRequest { XMm = shore.x, YMm = shore.y, ZMm = shore.z, YawCdeg = pose.YawCdeg });
+                        em.SetComponentEnabled<TeleportRequest>(e, true);
+                    }
+                }
+            }
         }
     }
 }

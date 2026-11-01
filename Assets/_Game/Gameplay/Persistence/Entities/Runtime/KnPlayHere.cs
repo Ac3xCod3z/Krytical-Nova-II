@@ -53,7 +53,8 @@ namespace KryticalNova.Persistence.Entities
         /// <summary>A scripted run (walk or jump) was asked for: it quits by itself.</summary>
         static bool Scripted => !string.IsNullOrEmpty(Environment.GetEnvironmentVariable(WalkVariable))
             || !string.IsNullOrEmpty(Environment.GetEnvironmentVariable(JumpVariable))
-            || !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("KN_PLAYHERE_VAULT"));   // the scripted vaults (M3c)
+            || !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("KN_PLAYHERE_VAULT"))    // the scripted vaults (M3c)
+            || Environment.GetEnvironmentVariable("KN_PLAYHERE_WATER") == "1";                  // the scripted Waterstride (M3c)
         /// <summary>A folder: the scripted run saves a Game-view picture there every 0.1 s (proof for the owner, GUI Editor only).</summary>
         public const string CaptureVariable = "KN_PLAYHERE_CAPTURE";
 
@@ -1058,7 +1059,7 @@ namespace KryticalNova.Persistence.Entities
                 var role = OwnBody.GetComponent<KryticalNova.Core.BodyRoleTag>();
                 Log($"Netcode for GameObjects {(ngoUp ? "IS RUNNING (wrong)" : "off")}; the local player is '{OwnBody.name}' ({(role != null ? role.Kind.ToString() : "no role")})");
                 if (ngoUp) Debug.LogError("[KnPlayHere] Netcode for GameObjects is running beside the entity netcode.");
-                if (!string.IsNullOrEmpty(Walk) || !string.IsNullOrEmpty(Jump) || VaultCount > 0)
+                if (!string.IsNullOrEmpty(Walk) || !string.IsNullOrEmpty(Jump) || VaultCount > 0 || WaterRun)
                 {
                     // The camera's first move onto the body that just entered is the spawn, not a click (GUI run 1, 31 Oct: 3.9 m in
                     // one 333 ms warm-up frame with the body still, judged as the first click's step). Let it settle, log it apart.
@@ -1160,9 +1161,12 @@ namespace KryticalNova.Persistence.Entities
                 if (jumpPoints.Count > 0) yield return LowRankRefusals(body, ghost, skills, lowRank);
                 var vaults = new VaultTally();
                 if (VaultCount > 0) yield return Vaults(ghost, vaults);
+                var waters = new VaultTally();
+                if (WaterRun) yield return Waters(body, ghost, waters);
                 Log($"done: {arrived} of {tries} arrived, {landed} of {jumpPoints.Count} jumps passed, low-rank refusals {(lowRank.Ok ? "match" : "DIFFER")}, " +
-                    $"{vaults.Passed} of {vaults.Tried} vaults passed, {m_YawFailures} facing the wrong way, {m_JudderFailures} juddering, {m_Errors} error lines");
-                Finish(arrived == tries && landed == jumpPoints.Count && lowRank.Ok && vaults.Passed == vaults.Tried
+                    $"{vaults.Passed} of {vaults.Tried} vaults passed, {waters.Passed} of {waters.Tried} Waterstride tries passed, " +
+                    $"{m_YawFailures} facing the wrong way, {m_JudderFailures} juddering, {m_Errors} error lines");
+                Finish(arrived == tries && landed == jumpPoints.Count && lowRank.Ok && vaults.Passed == vaults.Tried && waters.Passed == waters.Tried
                     && m_YawFailures == 0 && m_JudderFailures == 0 && m_Errors == 0);
             }
 
@@ -1327,6 +1331,149 @@ namespace KryticalNova.Persistence.Entities
                     yield return new WaitForSeconds(0.8f);
                 }
             }
+
+            /// <summary>The scripted Waterstride run (env KN_PLAYHERE_WATER=1; M3c, `m3c-waterstride-design.md` section 4).</summary>
+            static bool WaterRun => Environment.GetEnvironmentVariable("KN_PLAYHERE_WATER") == "1";
+
+            /// <summary>Zone01's river north of the spawn (its water map: z 193-219 m, a bridge at x -6..6): the south and north banks used.</summary>
+            static readonly Vector3 SouthBank = new Vector3(20f, 0f, 188f), NorthBank = new Vector3(30f, 0f, 228f);
+
+            /// <summary>
+            /// The scripted Waterstride (M3c): level 60 and the top ranks for the tester, put on the river's south bank, then six tries, each
+            /// logged with the wall clock for the video and judged: a run out over the water to a click on it (stands there), a water click
+            /// past it, a land click across the river past the shore (ashore and on), a run out again with the Flux run down (carried back
+            /// to the shore), a water click without Run from land (not Waterstride's: NGO walks it), and a jump onto the water (stands).
+            /// The instrument first: the server's planner on a known refusal (level 1) and a known run (level 60) before any click.
+            /// </summary>
+            IEnumerator Waters(GameObject body, Entity ghost, VaultTally tally)
+            {
+                World server = KnBootstrap.ServerWorld;
+                var plans = server.GetExistingSystemManaged<PlayerServerPlanSystem>();
+                var fluxSystem = server.GetExistingSystemManaged<WaterstrideFluxSystem>();
+                var landing = server.GetExistingSystemManaged<WaterstrideLandingSystem>();
+                var planner = plans != null ? plans.WaterPlanner as BodyWaterPlanner : null;
+                if (planner == null || fluxSystem == null || landing == null) { Log("water: FAIL; the server has no Waterstride planner or systems"); tally.Tried++; yield break; }
+                var em = server.EntityManager;
+                var progression = body.GetComponent<PlayerCharacterProgression>();
+                var resources = body.GetComponent<PlayerResources>();
+                float level = 0f;
+                float offset = body.GetComponent<UnityEngine.AI.NavMeshAgent>() is UnityEngine.AI.NavMeshAgent ag ? ag.baseOffset : 0f;
+
+                // to the south bank (a teleport, as gm.travel does)
+                if (!UnityEngine.AI.NavMesh.SamplePosition(SouthBank, out UnityEngine.AI.NavMeshHit south, 6f, UnityEngine.AI.NavMesh.AllAreas)
+                    || !UnityEngine.AI.NavMesh.SamplePosition(NorthBank, out UnityEngine.AI.NavMeshHit north, 6f, UnityEngine.AI.NavMesh.AllAreas))
+                { Log("water: FAIL; no NavMesh on the river's banks"); tally.Tried++; yield break; }
+                Teleport(em, ghost, south.position + Vector3.up * offset);
+                yield return new WaitForSeconds(1.5f);
+
+                // the instrument on a known refusal and a known run (no click): level 1 is not Waterstride's, level 60 runs out
+                Vector3 water1 = new Vector3(south.position.x, -1.2f, 206f);
+                string Probe()
+                {
+                    var corners = new Unity.Collections.NativeList<Unity.Mathematics.int3>(PlayerLimits.MaxCorners, Unity.Collections.Allocator.Temp);
+                    PlayerPose pose = em.GetComponentData<PlayerPose>(ghost);
+                    var answer = planner.Plan(ghost, pose.Mm, Mm(water1), true, false, false, corners, out _, out _);
+                    corners.Dispose();
+                    return answer + " (\"" + planner.LastDecision + "\")";
+                }
+                if (progression != null) level = progression.CurrentLevel;
+                Log($"water planner check at level {level:F0} (expected NotWater, the gate): {Probe()}");
+                if (progression != null && progression.CurrentLevel < 60) progression.SetLevel(60);
+                yield return new WaitForSeconds(1f);   // the level reaches the ghost (MoveRanks) and the owner
+                Log($"water planner check at level {(progression != null ? progression.CurrentLevel : 0)} (expected Planned, out over the water): {Probe()}");
+
+                // the six tries
+                yield return WaterTry(body, ghost, tally, "run out over the water", water1, run: true, jump: false, expectWater: true, expectRun: true);
+                yield return WaterTry(body, ghost, tally, "water to water, clicked past", new Vector3(south.position.x + 14f, -1.2f, 213f), true, false, true, true);
+                yield return WaterTry(body, ghost, tally, "ashore across the river, clicked past the shore", north.position, true, false, false, true);
+                // a run out from the north bank, then the Flux run down: carried back to the shore
+                int strand0 = fluxSystem.Strandings;
+                yield return WaterTry(body, ghost, tally, "run out from the north bank", new Vector3(north.position.x - 4f, -1.2f, 210f), true, false, true, true);
+                if (resources != null && resources.Chi > 2f) resources.TrySpendChi(resources.Chi - 2f);
+                float drained = Time.realtimeSinceStartup;
+                while (fluxSystem.Strandings == strand0 && Time.realtimeSinceStartup - drained < 6f) yield return null;
+                float strandedAt = Time.realtimeSinceStartup;
+                while (Time.realtimeSinceStartup - strandedAt < 12f && (Moving(ghost) || em.GetComponentData<MoveState>(ghost).Water != 0)) yield return null;
+                tally.Tried++;
+                bool back = fluxSystem.Strandings == strand0 + 1 && em.GetComponentData<MoveState>(ghost).Water == 0
+                    && UnityEngine.AI.NavMesh.SamplePosition(ServerPosition(ghost) - Vector3.up * offset, out _, 0.5f, UnityEngine.AI.NavMesh.AllAreas);
+                if (back) tally.Passed++;
+                Log($"water: out of Flux at {DateTime.Now.ToString("HH:mm:ss.fff", CultureInfo.InvariantCulture)}: {(back ? "PASS" : "FAIL")}; stranded " +
+                    $"{fluxSystem.Strandings - strand0}x, back ashore at {ServerPosition(ghost).x:F1},{ServerPosition(ghost).z:F1} after {Time.realtimeSinceStartup - strandedAt:F1} s; Flux {Flux(body):F0}");
+                if (resources != null) resources.RestoreChi(resources.MaxChi);
+                yield return new WaitForSeconds(0.8f);
+                yield return WaterTry(body, ghost, tally, "a water click without Run (not Waterstride's: walked as NGO)", new Vector3(north.position.x + 6f, -1.2f, 212f), false, false, false, false);
+                yield return WaterTry(body, ghost, tally, "a jump onto the water (stands)", new Vector3(north.position.x, -1.2f, 214f), false, true, true, false);
+                Log($"water: Flux paid {fluxSystem.Paid} points in all, {landing.Stood} jump(s) stood on the water, {landing.FellIn} fell in");
+            }
+
+            /// <summary>
+            /// One scripted Waterstride click, logged and judged: the server's answer (a Waterstride run or not), the owner on the same leg,
+            /// where it ended (within 0.3 m of the click), on the water or not as expected, and no glide over 2 cm after the stop.
+            /// </summary>
+            IEnumerator WaterTry(GameObject body, Entity ghost, VaultTally tally, string what, Vector3 click, bool run, bool jump, bool expectWater, bool expectRun)
+            {
+                if (OverTheCap()) yield break;
+                World server = KnBootstrap.ServerWorld;
+                var em = server.EntityManager;
+                var plans = server.GetExistingSystemManaged<PlayerServerPlanSystem>();
+                var landing = server.GetExistingSystemManaged<WaterstrideLandingSystem>();
+                bool hasClient = TryLocalGhost(out World clientWorld, out Entity clientGhost, out _);
+                tally.Tried++;
+                int runs0 = plans.WaterRuns, stood0 = landing.Stood;
+                float flux0 = Flux(body);
+                string at = DateTime.Now.ToString("HH:mm:ss.fff", CultureInfo.InvariantCulture);
+                if (jump) BodyClicks.Jump(click);
+                else BodyClicks.Ground(click, run);
+                float clicked = Time.realtimeSinceStartup, stoppedAt = -1f, glide = 0f;
+                Vector3 bodyAtStop = default;
+                bool moving = false;
+                while (Time.realtimeSinceStartup - clicked < 15f)
+                {
+                    yield return new WaitForEndOfFrame();
+                    bool now = Moving(ghost) || (jump && Time.realtimeSinceStartup - clicked < 2f);
+                    if (now) moving = true;
+                    else if (!moving && Time.realtimeSinceStartup - clicked > 3f) break;   // never started (refused, or no way)
+                    Vector3 b = OwnBody.transform.position;
+                    if (moving && !now)
+                    {
+                        if (stoppedAt < 0f) { stoppedAt = Time.realtimeSinceStartup; bodyAtStop = b; }
+                        else
+                        {
+                            glide = Mathf.Max(glide, Flat(b - bodyAtStop));
+                            if (Time.realtimeSinceStartup - stoppedAt > 0.8f) break;
+                        }
+                    }
+                }
+                var move = em.GetComponentData<MoveState>(ghost);
+                WaterPlan leg = em.GetComponentData<WaterPlan>(ghost);
+                WaterPlan own = hasClient && clientWorld.IsCreated ? clientWorld.EntityManager.GetComponentData<ClientWaterPlan>(clientGhost).Plan : default;
+                byte ownWater = hasClient && clientWorld.IsCreated ? clientWorld.EntityManager.GetComponentData<MoveState>(clientGhost).Water : (byte)255;
+                bool planned = plans.WaterRuns == runs0 + 1;
+                bool sameLeg = !expectRun || (own.Seq == leg.Seq && own.LegStartMm == leg.LegStartMm);
+                Vector3 end = ServerPosition(ghost);
+                float off = Flat(end - click);
+                bool wet = move.Water != 0;
+                bool ok = (jump ? landing.Stood == stood0 + 1 : planned == expectRun) && sameLeg && wet == expectWater && ownWater == move.Water
+                    && glide < 0.02f && (!expectRun && !jump || off < (expectWater ? 0.75f : 0.3f));   // on the water: the clicked cell's centre (NGO)
+                if (ok) tally.Passed++;
+                Log($"water: {what} clicked at {at}: {(ok ? "PASS" : "FAIL")}; server {(planned ? "planned a Waterstride run" : "planned no Waterstride run")} " +
+                    $"(\"{(plans.WaterPlanner as BodyWaterPlanner)?.LastDecision}\"{(string.IsNullOrEmpty(plans.LastWaterRefusal) ? "" : "; last refusal: " + plans.LastWaterRefusal)}), " +
+                    $"owner {(sameLeg ? "on the same leg" : "on ANOTHER leg")} (start {leg.LegStartMm} mm, speed {leg.SpeedMmps} mm/s); on the water: server {move.Water}, owner {ownWater} " +
+                    $"(expected {(expectWater ? 1 : 0)}); ended {off:F2} m from the click (limit {(expectWater ? "0.75, a cell's centre" : "0.3")}) at {end.x:F1},{end.y:F2},{end.z:F1}; glide after the stop {glide * 100f:F1} cm (limit 2); " +
+                    $"Flux {flux0:F0} -> {Flux(body):F0}");
+                yield return new WaitForSeconds(0.8f);
+            }
+
+            static void Teleport(EntityManager em, Entity ghost, Vector3 root)
+            {
+                PlayerPose pose = em.GetComponentData<PlayerPose>(ghost);
+                em.SetComponentData(ghost, new TeleportRequest { XMm = Mathf.RoundToInt(root.x * 1000f), YMm = Mathf.RoundToInt(root.y * 1000f), ZMm = Mathf.RoundToInt(root.z * 1000f), YawCdeg = pose.YawCdeg });
+                em.SetComponentEnabled<TeleportRequest>(ghost, true);
+            }
+
+            static Unity.Mathematics.int3 Mm(Vector3 m) =>
+                new Unity.Mathematics.int3(Mathf.RoundToInt(m.x * 1000f), Mathf.RoundToInt(m.y * 1000f), Mathf.RoundToInt(m.z * 1000f));
 
             /// <summary>
             /// Points straight across the planters (the hedges, `SM_Env_Hedge*`) nearest to <paramref name="from"/>: for each, 4, 6 and 8 m past

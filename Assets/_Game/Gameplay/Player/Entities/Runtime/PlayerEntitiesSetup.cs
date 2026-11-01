@@ -27,6 +27,8 @@ namespace KryticalNova.Player.Entities
                 water.Planner = waterPlanner;
                 water.Flux = waterFlux;
             }
+            var landing = world.GetExistingSystemManaged<WaterstrideLandingSystem>();
+            if (landing != null) landing.Planner = waterPlanner;
             // the vault's planner, like the jump's, goes to the server and to the owner's gather (its prediction; M3c)
             var jump = world.GetExistingSystemManaged<PlayerJumpServerSystem>();
             if (jump != null)

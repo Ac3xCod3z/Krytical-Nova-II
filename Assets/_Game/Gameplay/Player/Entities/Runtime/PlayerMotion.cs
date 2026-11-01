@@ -25,6 +25,8 @@ namespace KryticalNova.Player.Entities
     {
         /// <summary>The server took the jump's Flux at take-off (never predicted).</summary>
         public const byte Paid = 1;
+        /// <summary>The server decided the landing on water (Waterstride, M3c): stood on it, fell in, or it was ground.</summary>
+        public const byte WaterDecided = 2;
     }
 
     /// <summary>

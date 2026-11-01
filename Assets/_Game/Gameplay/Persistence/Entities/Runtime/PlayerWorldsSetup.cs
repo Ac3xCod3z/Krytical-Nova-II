@@ -152,7 +152,7 @@ namespace KryticalNova.Persistence.Entities
                 },
             };
             PlayerEntitiesSetup.Install(client, planner, jumpPlanner: new BodyJumpPlanner(client, checkCost: true), vaultPlanner: new BodyVaultPlanner(client),
-                waterPlanner: new BodyWaterPlanner(client, planner));
+                waterPlanner: new BodyWaterPlanner(client, planner, tellOwner: true));
             PlayerMoveFromSkills.InstallSettings(client, PlayerMoveFromSkills.SettingsOf((prefab ?? PlayerPrefab)()));
             PlayerJumpFromSkills.InstallCurves(client, (prefab ?? PlayerPrefab)());
             KryticalNova.Player.Entities.Presentation.PlayerPresentationSetup.Install(client, factory, new BodyClickSource());

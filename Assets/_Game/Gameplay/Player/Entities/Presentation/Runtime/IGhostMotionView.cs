@@ -27,5 +27,11 @@ namespace KryticalNova.Player.Entities.Presentation
 
         /// <summary>The vault lands: back to the walk at <paramref name="speedMps"/>, with the landing feel.</summary>
         void EndVault(float speedMps);
+
+        /// <summary>
+        /// On the water or off it (Waterstride, M3c): the wake at the feet. <paramref name="splash"/>: a jump left the water or came down on
+        /// it (the big splash, NGO's <c>ServerSplash</c>).
+        /// </summary>
+        void WaterStriding(bool onWater, bool splash);
     }
 }

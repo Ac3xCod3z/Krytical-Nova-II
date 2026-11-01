@@ -50,6 +50,12 @@ namespace KryticalNova.Player.Entities.Tests
                 };
                 return true;
             }
+
+            public WaterLandingAnswer Landed(Entity ghost, int3 landingMm, out int3 shoreMm)
+            {
+                shoreMm = landingMm;
+                return WaterLandingAnswer.NotWater;
+            }
         }
 
         /// <summary>A purse of whole Flux points.</summary>

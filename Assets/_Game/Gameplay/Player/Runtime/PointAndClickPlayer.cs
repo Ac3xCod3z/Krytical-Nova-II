@@ -332,6 +332,12 @@ namespace KryticalNova.Player
             return jumpMotor.PlanForGhost(feet, point, out _, out _);
         }
 
+        /// <summary>A body of the entity netcode: shows a line its own planners refused a click with (NGO's words), as the NGO client did.</summary>
+        public void ShowViewRefusal(string line)
+        {
+            if (ViewMode && !string.IsNullOrEmpty(line)) CommandMessage?.Invoke(line);
+        }
+
         /// <summary>
         /// A body of the entity netcode that is the local player's from the frame it is made (its local flag never changes, so no
         /// event comes): the orbit camera takes it now, as a cut, so the first frame drawn with the body already looks at it. GUI
@@ -810,6 +816,19 @@ namespace KryticalNova.Player
                 pendingInteract = null;
                 EndTravel(false);
                 ClientPresentationRegistry.Markers?.ShowMoveMarker(transform, waterMotor.LastClickPoint, Vector3.up);
+                return;
+            }
+            // ClientView (M3c): a click whose ray meets runnable water first goes to the ghost as that point on the surface; the owner's
+            // and the server's planners apply Waterstride's rules to it (NGO's own gate included), or walk it as an ordinary click.
+            if (ViewMode && waterMotor != null && !(movementSkills != null && movementSkills.IsJumpSelected)
+                && waterMotor.TryWaterUnderRay(ray, hit, out Vector3 waterSurface))
+            {
+                CancelAttack();
+                if (selectedTarget != null) ClearSelection();
+                pendingInteract = null;
+                EndTravel(false);
+                BodyClicks.Ground(waterSurface, movementSkills != null && movementSkills.IsRunning);
+                ClientPresentationRegistry.Markers?.ShowMoveMarker(transform, waterSurface, Vector3.up);
                 return;
             }
 

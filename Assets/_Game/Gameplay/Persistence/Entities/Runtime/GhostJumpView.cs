@@ -49,6 +49,15 @@ namespace KryticalNova.Persistence.Entities
             }
         }
 
+        /// <summary>The wake at the feet on the water, and the splash of a jump off it or onto it (NGO's <c>Show</c> and <c>ServerSplash</c>).</summary>
+        public void WaterStriding(bool onWater, bool splash)
+        {
+            var feel = KryticalNova.Core.ClientPresentationRegistry.Feel;
+            if (feel == null) return;
+            feel.WaterStriding(transform, onWater);
+            if (splash) feel.WaterSplash(transform, transform.position, KryticalNova.Core.BodyRoleTag.IsMine(this, true));
+        }
+
         public void EndVault(float speedMps)
         {
             var motor = Vault;

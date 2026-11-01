@@ -45,6 +45,8 @@ namespace KryticalNova.Player.Entities.Presentation
         public bool InJump;
         /// <summary>The vault the body shows (its walk's number; 0 = none) and whether the drawn body is over the obstacle this frame (M3c).</summary>
         public ushort VaultSeq;
+        /// <summary>The body is shown on the water (the wake is on; M3c).</summary>
+        public bool ShownOnWater;
         public bool InVault;
         /// <summary>The frame the shown vault's clip began (the scripted run compares the owner's and an observer's).</summary>
         public int VaultClipFrame;

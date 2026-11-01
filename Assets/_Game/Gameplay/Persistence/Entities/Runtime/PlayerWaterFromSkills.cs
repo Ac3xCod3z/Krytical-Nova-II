@@ -21,14 +21,17 @@ namespace KryticalNova.Persistence.Entities
         readonly World m_World;
         readonly IPathPlanner m_Paths;
         readonly List<Vector3> m_Route = new List<Vector3>(32);
+        readonly bool m_TellOwner;
 
         /// <summary>Why the last click was or was not Waterstride's (NGO's words; tests and the scripted run).</summary>
         public string LastDecision { get; private set; }
 
-        public BodyWaterPlanner(World world, IPathPlanner paths)
+        /// <param name="tellOwner">The owner's client: a refusal is shown on the own body in NGO's words, as the NGO client did.</param>
+        public BodyWaterPlanner(World world, IPathPlanner paths, bool tellOwner = false)
         {
             m_World = world;
             m_Paths = paths;
+            m_TellOwner = tellOwner;
         }
 
         public WaterAnswer Plan(Entity ghost, int3 startMm, int3 goalMm, bool run, bool onWater, bool stranded, NativeList<int3> corners,
@@ -52,7 +55,12 @@ namespace KryticalNova.Persistence.Entities
             string why = motor.PlanForGhost(feet, M(goalMm), run, onWater, stranded, ranks.Level, ranks.Run, ranks.Jump, alive, hasFlux,
                 (run ? stats.RunMmps : stats.WalkMmps) * 0.001f, m_Route, out PlayerWaterstrideMotor.GhostWater plan);
             if (why == string.Empty) { LastDecision = "not Waterstride's"; return WaterAnswer.NotWater; }
-            if (why != null) { LastDecision = reason = why; return WaterAnswer.Refused; }
+            if (why != null)
+            {
+                LastDecision = reason = why;
+                if (m_TellOwner) body.GetComponent<PointAndClickPlayer>()?.ShowViewRefusal(why);
+                return WaterAnswer.Refused;
+            }
 
             corners.Add(startMm);
             int legStart = 0;
@@ -121,6 +129,23 @@ namespace KryticalNova.Persistence.Entities
                 TurnCdegPerSecond = Mathf.RoundToInt(PlayerWaterstrideMotor.TurnDegreesPerSecond * 100f),
             };
             return true;
+        }
+
+        public WaterLandingAnswer Landed(Entity ghost, int3 landingMm, out int3 shoreMm)
+        {
+            shoreMm = landingMm;
+            GameObject body = PlayerJumpFromSkills.BodyOf(m_World, ghost);
+            var motor = body != null ? body.GetComponent<PlayerWaterstrideMotor>() : null;
+            if (motor == null) return WaterLandingAnswer.NotWater;
+            float offset = OffsetOf(body);
+            var em = m_World.EntityManager;
+            MoveRanks ranks = em.HasComponent<MoveRanks>(ghost) ? em.GetComponentData<MoveRanks>(ghost) : default;
+            int answer = motor.LandedForGhost(M(landingMm) - Vector3.up * offset, ranks.Level, ranks.Run, ranks.Jump, out Vector3 shore, out string line);
+            LastDecision = answer == 0 ? "landed on ground" : answer == 1 ? "stands on the water" : line;
+            if (answer == 0) return WaterLandingAnswer.NotWater;
+            if (answer == 1) return WaterLandingAnswer.Stands;
+            shoreMm = Mm(shore + Vector3.up * offset);
+            return WaterLandingAnswer.FallsIn;
         }
 
         /// <summary>The corners of <paramref name="path"/> up to <paramref name="progressMm"/> along it, ending exactly there.</summary>
