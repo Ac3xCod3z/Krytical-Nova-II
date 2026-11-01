@@ -30,7 +30,8 @@ namespace KryticalNova.EditorTools
         private const string IsolationGroup = "Duplicate Asset Isolation"; // the name the package's own fix gives its group
         /// <summary>
         /// What <see cref="IsolateShared"/> last saw and moved, per checkout (Library is never committed): line 1 the
-        /// fingerprint of the maps and the groups before it ran, then the GUIDs it moved into <see cref="CommonGroup"/>.
+        /// fingerprint of the maps and the groups before it ran, line 2 after it ran, then the GUIDs it moved into
+        /// <see cref="CommonGroup"/>.
         /// </summary>
         public const string IsolationStampPath = "Library/KryticalNova-MapIsolation.stamp";
 
@@ -95,7 +96,12 @@ namespace KryticalNova.EditorTools
         public static string IsolateShared()
         {
             AddressableAssetSettings settings = EnsureSettings();
-            string fingerprint = Fingerprint(settings);
+            return IsolateShared(settings, Fingerprint(settings));
+        }
+
+        // The search itself, given the fingerprint of what it is about to read (worked out once by the caller).
+        private static string IsolateShared(AddressableAssetSettings settings, string fingerprint)
+        {
             var rule = new UnityEditor.AddressableAssets.Build.AnalyzeRules.CheckBundleDupeDependencies();
             rule.FixIssues(settings);
             var movedGuids = new List<string>();
@@ -124,16 +130,19 @@ namespace KryticalNova.EditorTools
                 AssetDatabase.SaveAssets();
             }
             int total = common != null ? common.entries.Count : 0;
-            WriteIsolationStamp(fingerprint, movedGuids);
+            // Nothing moved: the groups are as they were, so the fingerprint after is the one before (no second pass).
+            WriteIsolationStamp(fingerprint, moved == 0 ? fingerprint : Fingerprint(settings), movedGuids);
             return $"[Maps] {moved} more asset(s) shared by two or more maps moved into {CommonGroup} ({total} in all): no map bundle carries its own copy.";
         }
 
         /// <summary>
         /// Before a game build (31 Oct 2026, owner's pick): <see cref="IsolateShared"/>'s full search took about 6 minutes of
         /// every publish and found nothing new when the maps had not changed, so it runs only when the maps, what they use or
-        /// the Addressables groups differ from what the last search saw (<see cref="IsolationStampPath"/>). When skipped, the
-        /// assets that search moved are moved again (a build checkout is reset to the commit before each publish, which
-        /// undoes moves that were never committed). A wrong skip only leaves copies in map bundles (a bigger download);
+        /// the Addressables groups differ from what the last search saw (<see cref="IsolationStampPath"/>). Two states count
+        /// as seen: the groups as the search found them, which is what a build checkout has again after it is reset to the
+        /// commit before each publish (the reset undoes moves that were never committed, so the assets that search moved are
+        /// moved again here), and the groups as the search left them, which is what the project you work in keeps, so a test
+        /// build there does not search again either. A wrong skip only leaves copies in map bundles (a bigger download);
         /// nothing breaks. The menu Isolate Shared Map Assets (Full Search) always searches.
         /// </summary>
         public static string IsolateSharedWhenChanged()
@@ -141,12 +150,12 @@ namespace KryticalNova.EditorTools
             AddressableAssetSettings settings = EnsureSettings();
             string[] stamp = File.Exists(IsolationStampPath) ? File.ReadAllLines(IsolationStampPath) : Array.Empty<string>();
             string fingerprint = Fingerprint(settings);
-            if (stamp.Length == 0 || stamp[0] != fingerprint) return IsolateShared();
+            if (stamp.Length < 2 || (stamp[0] != fingerprint && stamp[1] != fingerprint)) return IsolateShared(settings, fingerprint);
 
             AddressableAssetGroup common = settings.FindGroup(CommonGroup);
-            if (common == null) return IsolateShared();
+            if (common == null) return IsolateShared(settings, fingerprint);
             int again = 0;
-            foreach (string guid in stamp.Skip(1).Where(g => g.Length > 0))
+            foreach (string guid in stamp.Skip(2).Where(g => g.Length > 0))
             {
                 if (string.IsNullOrEmpty(AssetDatabase.GUIDToAssetPath(guid))) continue;
                 AddressableAssetEntry entry = settings.FindAssetEntry(guid);
@@ -181,21 +190,21 @@ namespace KryticalNova.EditorTools
             }
         }
 
-        // The fingerprint is the one from before the search: a build checkout is reset to the same commit next time, so it
-        // matches again, and the moved GUIDs are put back by IsolateSharedWhenChanged.
-        private static void WriteIsolationStamp(string fingerprint, List<string> movedGuids)
+        // Before: a build checkout is reset to the same commit next time, so it matches again, and the moved GUIDs are put
+        // back by IsolateSharedWhenChanged. After: the project you work in keeps the moves, so it matches there.
+        private static void WriteIsolationStamp(string before, string after, List<string> movedGuids)
         {
-            var lines = new List<string> { fingerprint };
+            var guids = new List<string>();
             if (File.Exists(IsolationStampPath))
             {
                 string[] was = File.ReadAllLines(IsolationStampPath);
                 // Moves the last search made that this one did not need (they are in the groups now) are kept, in case the
                 // checkout is reset to a commit without them.
-                if (was.Length > 0) lines.AddRange(was.Skip(1).Where(g => g.Length > 0 && !movedGuids.Contains(g)));
+                guids.AddRange(was.Skip(2).Where(g => g.Length > 0 && !movedGuids.Contains(g)));
             }
-            lines.AddRange(movedGuids);
+            guids.AddRange(movedGuids);
             Directory.CreateDirectory(Path.GetDirectoryName(IsolationStampPath));
-            File.WriteAllLines(IsolationStampPath, lines.Distinct());
+            File.WriteAllLines(IsolationStampPath, new[] { before, after }.Concat(guids.Distinct()));
         }
 
         private static AddressableAssetSettings EnsureSettings()

@@ -38,8 +38,38 @@ namespace KryticalNova.EditorTools
         /// <summary>True while a server build runs (<see cref="ServerSceneStripper"/> reads it).</summary>
         public static bool IsBuilding { get; private set; }
 
-        public static string OutputFolder(Os os) => $"{BuildRoot}/{os}/{ExeName}";
-        public static string ReportPath(Os os) => $"{BuildRoot}/BuildReport-{os}.txt";
+        public static string OutputFolder(Os os) => $"{Root}/{os}/{ExeName}";
+        public static string ReportPath(Os os) => $"{Root}/BuildReport-{os}.txt";
+
+        private static string s_Root;
+
+        /// <summary>
+        /// Where servers are written: <see cref="BuildRoot"/>, except in a checkout whose <c>Builds</c> is a link to the main
+        /// project's (the build and server checkouts), where it is the main project's own folder by its real path. Norton
+        /// watches the server's exe by path (19 Oct 2026 it quarantined it and blocked that path) and its exclusions name the
+        /// main project's <c>Builds</c>: a server written through a new link would be a new path to it.
+        /// </summary>
+        public static string Root => s_Root ?? (s_Root = Path.Combine(RealBuildsFolder(), "Server").Replace('\\', '/'));
+
+        /// <summary>
+        /// This project's <c>Builds</c>, or, when it is a link (a checkout made by BackgroundPublisher), the main project's
+        /// <c>Builds</c> by its real path, found from the checkout's <c>.git</c> file
+        /// (<c>gitdir: &lt;main&gt;/.git/worktrees/&lt;name&gt;</c>).
+        /// </summary>
+        public static string RealBuildsFolder()
+        {
+            string builds = Path.GetFullPath("Builds");
+            if (!Directory.Exists(builds) || (new DirectoryInfo(builds).Attributes & FileAttributes.ReparsePoint) == 0) return builds;
+            string dotGit = Path.GetFullPath(".git");
+            if (!File.Exists(dotGit)) return builds;
+            string line = File.ReadAllText(dotGit).Trim();
+            if (!line.StartsWith("gitdir:", StringComparison.Ordinal)) return builds;
+            // <main>/.git/worktrees/<name>: three folders up is the main project.
+            string gitDir = Path.GetFullPath(line.Substring("gitdir:".Length).Trim());
+            string main = Path.GetDirectoryName(Path.GetDirectoryName(Path.GetDirectoryName(gitDir)));
+            string real = main == null ? null : Path.Combine(main, "Builds");
+            return real != null && Directory.Exists(real) ? real : builds;
+        }
 
         [MenuItem("Krytical Nova/Build/Dedicated Server (Windows)", priority = 52)]
         private static void MenuWindows() => MenuBuild(Os.Windows);
@@ -115,10 +145,14 @@ namespace KryticalNova.EditorTools
 
         /// <summary>
         /// The same, into another folder (the measuring tools' own server, chunk 7; null is the owner's server folder) and
-        /// with the scripting backend named (Mono, the server's own, unless IL2CPP is asked for).
+        /// with the scripting backend named. None named: Mono for Windows (the server's own); for Linux the project's Server
+        /// backend, as before (ServerBuildBatch.BuildLinux's -il2cpp / -mono set it).
         /// </summary>
-        public static bool Build(Os os, string intoFolder, ScriptingImplementation backend = ScriptingImplementation.Mono2x) =>
-            ReleasePublisher.WithVersion(ReleasePublisher.LastReleaseBuild(), () => BuildAsIs(os, intoFolder, backend));
+        public static bool Build(Os os, string intoFolder, ScriptingImplementation? backend = null)
+        {
+            ScriptingImplementation chosen = backend ?? (os == Os.Windows ? ScriptingImplementation.Mono2x : PlayerSettings.GetScriptingBackend(NamedBuildTarget.Server));
+            return ReleasePublisher.WithVersion(ReleasePublisher.LastReleaseBuild(), () => BuildAsIs(os, intoFolder, chosen));
+        }
 
         private static string BackendName(ScriptingImplementation backend) => backend == ScriptingImplementation.IL2CPP ? "IL2CPP" : "Mono";
 
@@ -150,7 +184,7 @@ namespace KryticalNova.EditorTools
                 return false;
             }
             string settings = Path.Combine(folder, SettingsFileName), keptSettings = intoFolder == null
-                ? Path.Combine(BuildRoot, os + "-" + SettingsFileName + ".kept")
+                ? Path.Combine(Root, os + "-" + SettingsFileName + ".kept")
                 : folder.TrimEnd('/', '\\') + "-" + SettingsFileName + ".kept";
             if (File.Exists(settings)) File.Copy(settings, keptSettings, true);
             if (Directory.Exists(folder)) Directory.Delete(folder, true);

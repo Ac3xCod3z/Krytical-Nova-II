@@ -90,8 +90,8 @@ ones. Never work in it: every publish first throws away whatever is changed in i
 
 What **Publish to Test** does now: checks the Accelerator, moves the build checkout to your commit, and starts a second
 Unity there with no window (batch mode, below normal priority so your Editor keeps the processor first). That Unity
-runs the same publish as before (game build, staging, signing, upload to TEST) and quits; your Editor then starts a third
-Unity in the **server checkout** for the matching server (section 1a-4), and its Console says how each went. It is started from your Editor, so it runs as you and finds your signing key
+runs the same publish as before (game build, staging, signing, upload to TEST) and, just before it quits, queues a third
+Unity in the **server checkout** for the matching server (section 1a-4), which runs when it has gone, even with your Editor closed; your Console says how each went when it is open. It is started from your Editor, so it runs as you and finds your signing key
 and your UGS login (a terminal inside the Claude app cannot: its AppData is elsewhere).
 
 **Memory.** The second Unity uses about 4 GB while it imports and more while it builds. Close the Player 2 clone before
@@ -335,7 +335,7 @@ not let them turn back on without a reset. Seen on the owner's PC on 18 Oct 2026
 | Piece | Where | What it does |
 | --- | --- | --- |
 | `ReleasePublisher` | `Release/Editor` | The Release menus: release build, tools build, stage, CCD upload, promote, player zip, test launcher. |
-| `BackgroundPublisher` | `Release/Editor` | Publish to Test in the build checkout: the Accelerator check (`AcceleratorProblem`, also used by the in-Editor publish), moving the checkout, starting the batch Unity (`RunInBatch`), then the matching server in the server checkout (`StartServer`, `ServerBuildBatch.BuildWindows`), and the Console message when each is done. |
+| `BackgroundPublisher` | `Release/Editor` | Publish to Test in the build checkout: the Accelerator check (`AcceleratorProblem`, also used by the in-Editor publish), moving the checkout, starting the batch Unity (`RunInBatch`), then the matching server, queued by the game's Unity before it quits so it runs with the Editor closed too (`QueueServerAfterExit`, `ServerBuildBatch.BuildWindows`), and the Console message when each is done. |
 | `publish-test.ps1` | `Release/Publish~` | The same publish from a script, game then server, with stage timings and the lines to check (section 1a-4). |
 | `TestBuildBuilder.Output` | `Tools/Editor/Build` | Lets the release build share the test build's code with its own folder and packing (no LZ4HC single file). |
 | `UpdateManifest`, `UpdateCrypto` | `Release/Tools~/Shared` | The update list, SHA-256, ECDSA P-256 signature check, safe paths. |

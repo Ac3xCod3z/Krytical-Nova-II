@@ -6,8 +6,8 @@
 #   ... -File publish-test.ps1 -ServerOnly                                               the server of the last release only
 #
 # Start it through explorer.exe or a normal PowerShell window (it needs the owner's real profile for the signing key and the
-# UGS login). One heavy job at a time: it refuses to start while another Unity runs. Kill rule (own tree only): under
-# 0.05 GB available at once, or under 0.15 GB for 120 s. The status file says each stage, its minutes and what to check.
+# UGS login). One heavy job at a time: it refuses to start while another Unity runs. Kill rule (own tree only),
+# the project's standing rule, under 2 GB available for 15 s. The status file says each stage, its minutes and what to check.
 param([string]$Commit = '', [switch]$ServerOnly, [int]$JobWorkers = 3)
 $ErrorActionPreference = 'Continue'
 $main = 'C:\Users\dlaco\Krytical Nova II'
@@ -50,8 +50,8 @@ function RunUnity($label, $folder, $extra, $log) {
     $avail = [math]::Round((Get-Counter '\Memory\Available MBytes' -SampleInterval 1 -MaxSamples 1).CounterSamples[0].CookedValue/1024,1)
     if ($avail -lt $script:min) { $script:min = $avail }
     $n++; if ($n % 12 -eq 0) { S "$label : available=${avail}GB lowest=$($script:min)GB, $([math]::Round(((Get-Date)-$start).TotalMinutes,1)) min" }
-    $kill = $avail -lt 0.05
-    if ($avail -lt 0.15) { if (-not $lowSince) { $lowSince = Get-Date } elseif (((Get-Date)-$lowSince).TotalSeconds -ge 120) { $kill = $true } } else { $lowSince = $null }
+    $kill = $false
+    if ($avail -lt 2.0) { if (-not $lowSince) { $lowSince = Get-Date } elseif (((Get-Date)-$lowSince).TotalSeconds -ge 15) { $kill = $true } } else { $lowSince = $null }
     if ($kill) { [void][KnPublishJob]::TerminateJobObject($job,1); S "$label : LOW RAM ($avail GB): stopped (own tree only)"; return 99 }
   }
   $p.WaitForExit()
@@ -92,12 +92,12 @@ try {
   if (-not $ServerOnly) {
     Checkout $co $Commit
     Remove-Item "$root\background-publish.result","$root\background-publish.lock","$root\background-publish.restarted" -ErrorAction SilentlyContinue
-    $c = RunUnity 'game' $co '-executeMethod KryticalNova.EditorTools.BackgroundPublisher.RunInBatch' "$root\background-publish.log"
+    $c = RunUnity 'game' $co '-executeMethod KryticalNova.EditorTools.BackgroundPublisher.RunInBatch -knServerStepByScript' "$root\background-publish.log"
     $result = if (Test-Path "$root\background-publish.result") { (Get-Content "$root\background-publish.result" -Raw).Trim() } else { '' }
     if ($result.StartsWith('RESTART')) {
       S 'the guard corrected the subtarget: the game once more in a fresh Unity'
       Remove-Item "$root\background-publish.result" -ErrorAction SilentlyContinue
-      $c = RunUnity 'game (again)' $co '-executeMethod KryticalNova.EditorTools.BackgroundPublisher.RunInBatch' "$root\background-publish.log"
+      $c = RunUnity 'game (again)' $co '-executeMethod KryticalNova.EditorTools.BackgroundPublisher.RunInBatch -knServerStepByScript' "$root\background-publish.log"
       $result = if (Test-Path "$root\background-publish.result") { (Get-Content "$root\background-publish.result" -Raw).Trim() } else { '' }
     }
     S "game result: '$result'"
