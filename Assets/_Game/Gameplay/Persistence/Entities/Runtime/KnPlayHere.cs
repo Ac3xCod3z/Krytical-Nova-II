@@ -1534,8 +1534,18 @@ namespace KryticalNova.Persistence.Entities
                 if (why != null) { Log("wall: NOT TESTED; " + why); tally.Tried++; yield break; }
                 Log($"wall: the test wall's foot at {wall.Foot.x:F1},{wall.Foot.y:F2},{wall.Foot.z:F1}, facing {wall.Normal.x:F2},{wall.Normal.z:F2}; " +
                     $"the roof at {wall.Top.x:F1},{wall.Top.y:F2},{wall.Top.z:F1}");
-                Teleport(em, ghost, wall.Front + Vector3.up * offset);
-                yield return new WaitForSeconds(1.5f);
+                // the pop check (owner, 1 Nov: run at running speed, look for any slide or glitch) proved first: standing still is clean,
+                // the teleport 9 m out in front of the wall (where the running tries start) is a known pop
+                m_Pops.Reset();
+                float watch = Time.realtimeSinceStartup;
+                while (Time.realtimeSinceStartup - watch < 1f) { yield return null; m_Pops.Frame(OwnBody.transform.position, ServerSpeed(ghost), Time.unscaledDeltaTime); }
+                Log($"wall: pop check on a known clean case (standing 1 s): {m_Pops.Pops} pop(s), worst {m_Pops.WorstM:F2} m over the frame's allowance (expected 0)");
+                m_Pops.Reset();
+                m_Pops.Frame(OwnBody.transform.position, 0f, 0f);
+                Teleport(em, ghost, wall.FrontFar + Vector3.up * offset);
+                watch = Time.realtimeSinceStartup;
+                while (Time.realtimeSinceStartup - watch < 1.5f) { yield return null; m_Pops.Frame(OwnBody.transform.position, ServerSpeed(ghost), Time.unscaledDeltaTime); }
+                Log($"wall: pop check on a known fault (the teleport 9 m out): {m_Pops.Pops} pop(s), worst {m_Pops.WorstM:F2} m over the allowance (expected 1 or more)");
 
                 // the instrument on a known refusal and a known plan (no click)
                 string Probe()
@@ -1608,6 +1618,8 @@ namespace KryticalNova.Persistence.Entities
                 float clicked = Time.realtimeSinceStartup, stoppedAt = -1f, glide = 0f;
                 Vector3 bodyAtStop = default;
                 bool moving = false;
+                int topSpeed = 0;
+                m_Pops.Reset();
                 while (Time.realtimeSinceStartup - clicked < 20f)
                 {
                     yield return new WaitForEndOfFrame();
@@ -1615,6 +1627,9 @@ namespace KryticalNova.Persistence.Entities
                     if (now) moving = true;
                     else if (!moving && Time.realtimeSinceStartup - clicked > 3f) break;   // never started (refused, or no way)
                     Vector3 b = OwnBody.transform.position;
+                    float speed = ServerSpeed(ghost);
+                    topSpeed = Mathf.Max(topSpeed, Mathf.RoundToInt(speed * 1000f));
+                    m_Pops.Frame(b, speed, Time.unscaledDeltaTime);
                     if (moving && !now)
                     {
                         if (stoppedAt < 0f) { stoppedAt = Time.realtimeSinceStartup; bodyAtStop = b; }
@@ -1639,15 +1654,51 @@ namespace KryticalNova.Persistence.Entities
                 bool onWall = move.Wall != 0;
                 bool tiltRight = onWall ? tilt.Tilted && Vector3.Dot(tilt.Up, normal) > 0.8f : !tilt.Tilted;
                 bool ok = planned && onWall == expectWall && ownWall == move.Wall && own.Seq != 0 && apart < 0.05f && tiltRight
-                    && glide < 0.02f && off < (expectWall ? 0.8f : 1.0f);
+                    && glide < 0.02f && off < (expectWall ? 0.8f : 1.0f) && m_Pops.Pops == 0;
                 if (ok) tally.Passed++;
                 string refusal = plans.LastWallRefusal;
                 Log($"wall: {what} clicked at {at}: {(ok ? "PASS" : "FAIL")}; server {(planned ? "planned the wall walk" : "planned NO wall walk")} " +
                     $"(\"{(plans.WallPlanner as BodyWallPlanner)?.LastDecision}\"{(string.IsNullOrEmpty(refusal) ? "" : "; last refusal: " + refusal)}), plan seq {wall.Seq} " +
                     $"(owner's own {own.Seq}), on the wall: server {move.Wall}, owner {ownWall} (expected {(expectWall ? 1 : 0)}); tilt up {tilt.UpX},{tilt.UpY},{tilt.UpZ} " +
                     $"phase {tilt.Phase} ({(tiltRight ? "right" : "WRONG")}); ended {off:F2} m from the click at {feet.x:F1},{feet.y:F2},{feet.z:F1}; owner {apart * 100f:F1} cm " +
-                    $"from the server; glide after the stop {glide * 100f:F1} cm (limit 2); Flux {flux0:F0} -> {Flux(body):F0}");
+                    $"from the server; glide after the stop {glide * 100f:F1} cm (limit 2); speed on the wall {wall.SpeedMmps} mm/s, top speed {topSpeed} mm/s " +
+                    $"({(run ? "Run" : jump ? "Jump" : "walk")}); pops {m_Pops.Pops} (worst {m_Pops.WorstM:F2} m over the frame's allowance, limit 0); Flux {flux0:F0} -> {Flux(body):F0}");
                 yield return new WaitForSeconds(0.8f);
+            }
+
+            /// <summary>
+            /// A slide or glitch of the drawn body (owner, 1 Nov): a frame whose step is longer than the ghost's speed allows for that frame
+            /// (x 2.2: an eased leg peaks at twice its mean speed; + 10 cm). Proved on a known pop (a teleport) and a still body before the tries.
+            /// </summary>
+            sealed class PopWatch
+            {
+                Vector3 m_Prev;
+                bool m_Has;
+                public int Pops;
+                public float WorstM;
+
+                public void Reset() { m_Has = false; Pops = 0; WorstM = 0f; }
+
+                public void Frame(Vector3 body, float speedMps, float dt)
+                {
+                    if (m_Has)
+                    {
+                        float over = (body - m_Prev).magnitude - (speedMps * dt * 2.2f + 0.1f);
+                        if (over > 0f) { Pops++; WorstM = Mathf.Max(WorstM, over); }
+                    }
+                    m_Prev = body;
+                    m_Has = true;
+                }
+            }
+
+            readonly PopWatch m_Pops = new PopWatch();
+
+            /// <summary>The server's walk speed for the ghost now (a leg's own speed on a timed leg), m/s.</summary>
+            static float ServerSpeed(Entity ghost)
+            {
+                var em = KnBootstrap.ServerWorld.EntityManager;
+                var m = em.GetComponentData<MoveState>(ghost);
+                return (m.Flags & MoveFlags.Moving) != 0 ? m.SpeedMmps * 0.001f : 0f;
             }
 
             static Unity.Mathematics.int3 Permille(Vector3 v) =>
