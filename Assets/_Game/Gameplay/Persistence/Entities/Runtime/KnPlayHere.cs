@@ -1538,14 +1538,14 @@ namespace KryticalNova.Persistence.Entities
                 // the teleport 9 m out in front of the wall (where the running tries start) is a known pop
                 m_Pops.Reset();
                 float watch = Time.realtimeSinceStartup;
-                while (Time.realtimeSinceStartup - watch < 1f) { yield return null; m_Pops.Frame(OwnBody.transform.position, ServerSpeed(ghost), Time.unscaledDeltaTime); }
-                Log($"wall: pop check on a known clean case (standing 1 s): {m_Pops.Pops} pop(s), worst {m_Pops.WorstM:F2} m over the frame's allowance (expected 0)");
+                while (Time.realtimeSinceStartup - watch < 1f) { yield return null; PopFrame(ghost); }
+                Log($"wall: pop check on a known clean case (standing 1 s): {m_Pops.Pops} pop(s) (expected 0) {m_Pops.Worst}");
                 m_Pops.Reset();
-                m_Pops.Frame(OwnBody.transform.position, 0f, 0f);
+                PopFrame(ghost);
                 Teleport(em, ghost, wall.FrontFar + Vector3.up * offset);
                 watch = Time.realtimeSinceStartup;
-                while (Time.realtimeSinceStartup - watch < 1.5f) { yield return null; m_Pops.Frame(OwnBody.transform.position, ServerSpeed(ghost), Time.unscaledDeltaTime); }
-                Log($"wall: pop check on a known fault (the teleport 9 m out): {m_Pops.Pops} pop(s), worst {m_Pops.WorstM:F2} m over the allowance (expected 1 or more)");
+                while (Time.realtimeSinceStartup - watch < 1.5f) { yield return null; PopFrame(ghost); }
+                Log($"wall: pop check on a known fault (the teleport 9 m out): {m_Pops.Pops} pop(s) (expected 1 or more): {m_Pops.Worst}");
 
                 // the prop check (owner, 1 Nov: no clipping; gui-wall-2's "along" ended inside an air-conditioner box) proved first on the
                 // node it ended at (a known fault: the box is in the body there) and the node "onto" goes to (known clean)
@@ -1570,6 +1570,31 @@ namespace KryticalNova.Persistence.Entities
                 yield return new WaitForSeconds(1f);   // the level reaches the ghost (MoveRanks) and the owner
                 Log($"wall planner check at level {(progression != null ? progression.CurrentLevel : 0)} (expected Planned, onto the wall): {Probe()}");
                 if (resources != null) resources.RestoreChi(resources.MaxChi);
+
+                // the pop check on a known clean case at full speed: a plain run along the street (Run, level 60), no wall
+                Vector3 street = wall.FrontFar + Vector3.Cross(Vector3.up, wall.Normal).normalized * 15f;
+                if (UnityEngine.AI.NavMesh.SamplePosition(street, out UnityEngine.AI.NavMeshHit streetHit, 3f, UnityEngine.AI.NavMesh.AllAreas))
+                {
+                    m_Pops.Reset();
+                    BodyClicks.Ground(streetHit.position, true);
+                    float ran = Time.realtimeSinceStartup;
+                    int top = 0;
+                    bool started = false;
+                    while (Time.realtimeSinceStartup - ran < 6f)
+                    {
+                        yield return null;
+                        PopFrame(ghost);
+                        top = Mathf.Max(top, em.GetComponentData<MoveState>(ghost).SpeedMmps);
+                        if (Moving(ghost)) started = true;
+                        else if (started) break;
+                    }
+                    Log($"wall: pop check on a known clean case (a plain run of {Flat(streetHit.position - wall.FrontFar):F1} m along the street at {top} mm/s): " +
+                        $"{m_Pops.Pops} pop(s) (expected 0) {m_Pops.Worst}");
+                    yield return new WaitForSeconds(0.5f);
+                    BodyClicks.Ground(wall.FrontFar, true);   // back to the start, 9 m out
+                    yield return new WaitForSeconds(2f);
+                }
+                else Log("wall: pop check on a plain run: NOT TESTED (no NavMesh 15 m along the street)");
 
                 Vector3 up = Vector3.up;
                 yield return WallTry(body, ghost, tally, "onto the wall from the ground (Run)", wall.Onto, wall.Normal, true, false, true, offset);
@@ -1625,6 +1650,9 @@ namespace KryticalNova.Persistence.Entities
                 Vector3 bodyAtStop = default;
                 bool moving = false;
                 int topSpeed = 0, inProp = 0;
+                string plant45 = null;
+                float groundY = UnityEngine.AI.NavMesh.SamplePosition(ServerPosition(ghost) - Vector3.up * offset, out UnityEngine.AI.NavMeshHit g0, 2f, UnityEngine.AI.NavMesh.AllAreas)
+                    ? g0.position.y : ServerPosition(ghost).y - offset;
                 m_Pops.Reset();
                 while (Time.realtimeSinceStartup - clicked < 20f)
                 {
@@ -1635,7 +1663,13 @@ namespace KryticalNova.Persistence.Entities
                     Vector3 b = OwnBody.transform.position;
                     float speed = ServerSpeed(ghost);
                     topSpeed = Mathf.Max(topSpeed, Mathf.RoundToInt(speed * 1000f));
-                    m_Pops.Frame(b, speed, Time.unscaledDeltaTime);
+                    PopFrame(ghost);
+                    // the plant (owner, 1 Nov): how high the feet are as the drawn body passes 45 degrees onto the face
+                    if (plant45 == null && Vector3.Angle(OwnBody.transform.up, Vector3.up) >= 45f && em.GetComponentData<PoseTilt>(ghost).Phase == WallPhase.Plant)
+                    {
+                        Vector3 f = b - OwnBody.transform.up * offset;
+                        plant45 = $"feet {f.y - groundY:F2} m above the ground and {Vector3.Dot(f - click, normal):F2} m out from the face";
+                    }
                     // on the wall: the drawn body never inside a prop on the face
                     var shownTilt = em.GetComponentData<PoseTilt>(ghost);
                     if (shownTilt.Tilted && em.GetComponentData<MoveState>(ghost).Wall != 0
@@ -1664,7 +1698,7 @@ namespace KryticalNova.Persistence.Entities
                 bool onWall = move.Wall != 0;
                 bool tiltRight = onWall ? tilt.Tilted && Vector3.Dot(tilt.Up, normal) > 0.8f : !tilt.Tilted;
                 bool ok = planned && onWall == expectWall && ownWall == move.Wall && own.Seq != 0 && apart < 0.05f && tiltRight
-                    && glide < 0.02f && off < (expectWall ? 1.5f : 1.0f) && inProp == 0;   // the pop check is information only until it is proved on running (owner pick c, 1 Nov)
+                    && glide < 0.02f && off < (expectWall ? 1.5f : 1.0f) && inProp == 0 && m_Pops.Pops == 0;   // owner pick a, 1 Nov: pops judged against the drawn path
                 if (ok) tally.Passed++;
                 string refusal = plans.LastWallRefusal;
                 Log($"wall: {what} clicked at {at}: {(ok ? "PASS" : "FAIL")}; server {(planned ? "planned the wall walk" : "planned NO wall walk")} " +
@@ -1672,33 +1706,54 @@ namespace KryticalNova.Persistence.Entities
                     $"(owner's own {own.Seq}), on the wall: server {move.Wall}, owner {ownWall} (expected {(expectWall ? 1 : 0)}); tilt up {tilt.UpX},{tilt.UpY},{tilt.UpZ} " +
                     $"phase {tilt.Phase} ({(tiltRight ? "right" : "WRONG")}); ended {off:F2} m from the click at {feet.x:F1},{feet.y:F2},{feet.z:F1}; owner {apart * 100f:F1} cm " +
                     $"from the server; glide after the stop {glide * 100f:F1} cm (limit 2); speed on the wall {wall.SpeedMmps} mm/s, top speed {topSpeed} mm/s " +
-                    $"({(run ? "Run" : jump ? "Jump" : "walk")}); pops {m_Pops.Pops} (worst {m_Pops.WorstM:F2} m over the frame's allowance, information only); frames inside a prop {inProp} (limit 0); Flux {flux0:F0} -> {Flux(body):F0}");
+                    $"({(run ? "Run" : jump ? "Jump" : "walk")}); pops {m_Pops.Pops} (limit 0{(m_Pops.Pops > 0 ? "; worst: " + m_Pops.Worst : "")}); frames inside a prop {inProp} (limit 0); at 45 degrees in the plant: {plant45 ?? "no plant"}; Flux {flux0:F0} -> {Flux(body):F0}");
                 yield return new WaitForSeconds(0.8f);
             }
 
             /// <summary>
-            /// A slide or glitch of the drawn body (owner, 1 Nov): a frame whose step is longer than the ghost's speed allows for that frame
-            /// (x 2.2: an eased leg peaks at twice its mean speed; + 10 cm). Proved on a known pop (a teleport) and a still body before the tries.
+            /// A slide or glitch of the drawn body (owner, 1 Nov; pick a: judged against the drawn body's own path, the point the follow aims
+            /// it at each frame). A pop is a frame where the body moves more than its target did (+ 20 cm: a follow glitch), or the target itself
+            /// jumps farther than the run speed allows over the frame (x 1.5, at least 1 m: a path glitch, as a teleport). Proved in the same run
+            /// on a plain run at full speed (clean) and the teleport (fault) before the tries.
             /// </summary>
             sealed class PopWatch
             {
-                Vector3 m_Prev;
+                Vector3 m_PrevBody, m_PrevTarget;
                 bool m_Has;
                 public int Pops;
                 public float WorstM;
+                public string Worst = "";
 
-                public void Reset() { m_Has = false; Pops = 0; WorstM = 0f; }
+                public void Reset() { m_Has = false; Pops = 0; WorstM = 0f; Worst = ""; }
 
-                public void Frame(Vector3 body, float speedMps, float dt)
+                public void Frame(Vector3 body, Vector3 target, float runMps, float dt)
                 {
                     if (m_Has)
                     {
-                        float over = (body - m_Prev).magnitude - (speedMps * dt * 2.2f + 0.1f);
-                        if (over > 0f) { Pops++; WorstM = Mathf.Max(WorstM, over); }
+                        float bodyStep = (body - m_PrevBody).magnitude, targetStep = (target - m_PrevTarget).magnitude;
+                        float follow = bodyStep - targetStep - 0.2f;
+                        float path = targetStep - Mathf.Max(1f, runMps * dt * 1.5f);
+                        float over = Mathf.Max(follow, path);
+                        if (over > 0f)
+                        {
+                            Pops++;
+                            if (over > WorstM) { WorstM = over; Worst = follow >= path ? $"the body jumped {bodyStep:F2} m while its path moved {targetStep:F2} m" : $"the path jumped {targetStep:F2} m in {dt * 1000f:F0} ms"; }
+                        }
                     }
-                    m_Prev = body;
+                    m_PrevBody = body;
+                    m_PrevTarget = target;
                     m_Has = true;
                 }
+            }
+
+            /// <summary>The drawn body and the point the follow aimed it at this frame, and the run speed (m/s).</summary>
+            void PopFrame(Entity ghost)
+            {
+                var state = OwnBody.GetComponent<PlayerPresentationState>();
+                Vector3 b = OwnBody.transform.position;
+                var em = KnBootstrap.ServerWorld.EntityManager;
+                float run = em.GetComponentData<MoveStats>(ghost).RunMmps * 0.001f;
+                m_Pops.Frame(b, state != null && state.HasPose ? state.TargetPosition : b, Mathf.Max(run, ServerSpeed(ghost)), Time.unscaledDeltaTime);
             }
 
             readonly PopWatch m_Pops = new PopWatch();

@@ -195,6 +195,7 @@ namespace KryticalNova.Player.Entities.Presentation
                 if (state != null)
                 {
                     if (snapped) state.Snaps++;
+                    state.TargetPosition = new Vector3(ghostPos.x, ghostPos.y, ghostPos.z);
                     state.HasPose = true;
                     state.PosePosition = body.position;
                     state.PoseYaw = entry.Follow.Yaw;

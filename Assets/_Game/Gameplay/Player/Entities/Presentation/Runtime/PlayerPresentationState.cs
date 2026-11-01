@@ -47,6 +47,8 @@ namespace KryticalNova.Player.Entities.Presentation
         public ushort VaultSeq;
         /// <summary>The body is shown on the water (the wake is on; M3c).</summary>
         public bool ShownOnWater;
+        /// <summary>Where the follow aimed the body this frame (the ghost's pose drawn ahead, or the jump's arc): tests judge the drawn body against it.</summary>
+        public Vector3 TargetPosition;
         /// <summary>The wall walk's phase the body last played (M3c), and the drawn rotation eased toward the tilt (NGO's wall turn rate).</summary>
         public byte ShownWallPhase;
         public Quaternion ShownRotation = Quaternion.identity;
