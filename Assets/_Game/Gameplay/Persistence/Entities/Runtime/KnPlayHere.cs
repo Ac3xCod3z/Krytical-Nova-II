@@ -54,7 +54,8 @@ namespace KryticalNova.Persistence.Entities
         static bool Scripted => !string.IsNullOrEmpty(Environment.GetEnvironmentVariable(WalkVariable))
             || !string.IsNullOrEmpty(Environment.GetEnvironmentVariable(JumpVariable))
             || !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("KN_PLAYHERE_VAULT"))    // the scripted vaults (M3c)
-            || Environment.GetEnvironmentVariable("KN_PLAYHERE_WATER") == "1";                  // the scripted Waterstride (M3c)
+            || Environment.GetEnvironmentVariable("KN_PLAYHERE_WATER") == "1"                   // the scripted Waterstride (M3c)
+            || Environment.GetEnvironmentVariable("KN_PLAYHERE_WALL") == "1";                   // the scripted wall walk (M3c)
         /// <summary>A folder: the scripted run saves a Game-view picture there every 0.1 s (proof for the owner, GUI Editor only).</summary>
         public const string CaptureVariable = "KN_PLAYHERE_CAPTURE";
 
@@ -1059,7 +1060,7 @@ namespace KryticalNova.Persistence.Entities
                 var role = OwnBody.GetComponent<KryticalNova.Core.BodyRoleTag>();
                 Log($"Netcode for GameObjects {(ngoUp ? "IS RUNNING (wrong)" : "off")}; the local player is '{OwnBody.name}' ({(role != null ? role.Kind.ToString() : "no role")})");
                 if (ngoUp) Debug.LogError("[KnPlayHere] Netcode for GameObjects is running beside the entity netcode.");
-                if (!string.IsNullOrEmpty(Walk) || !string.IsNullOrEmpty(Jump) || VaultCount > 0 || WaterRun)
+                if (!string.IsNullOrEmpty(Walk) || !string.IsNullOrEmpty(Jump) || VaultCount > 0 || WaterRun || WallRun)
                 {
                     // The camera's first move onto the body that just entered is the spawn, not a click (GUI run 1, 31 Oct: 3.9 m in
                     // one 333 ms warm-up frame with the body still, judged as the first click's step). Let it settle, log it apart.
@@ -1163,10 +1164,14 @@ namespace KryticalNova.Persistence.Entities
                 if (VaultCount > 0) yield return Vaults(ghost, vaults);
                 var waters = new VaultTally();
                 if (WaterRun) yield return Waters(body, ghost, waters);
+                var walls = new VaultTally();
+                if (WallRun) yield return Walls(body, ghost, walls);
                 Log($"done: {arrived} of {tries} arrived, {landed} of {jumpPoints.Count} jumps passed, low-rank refusals {(lowRank.Ok ? "match" : "DIFFER")}, " +
                     $"{vaults.Passed} of {vaults.Tried} vaults passed, {waters.Passed} of {waters.Tried} Waterstride tries passed, " +
+                    $"{walls.Passed} of {walls.Tried} wall walk tries passed, " +
                     $"{m_YawFailures} facing the wrong way, {m_JudderFailures} juddering, {m_Errors} error lines");
                 Finish(arrived == tries && landed == jumpPoints.Count && lowRank.Ok && vaults.Passed == vaults.Tried && waters.Passed == waters.Tried
+                    && walls.Passed == walls.Tried
                     && m_YawFailures == 0 && m_JudderFailures == 0 && m_Errors == 0);
             }
 
@@ -1481,6 +1486,152 @@ namespace KryticalNova.Persistence.Entities
                     $"Flux {flux0:F0} -> {Flux(body):F0}");
                 yield return new WaitForSeconds(0.8f);
             }
+
+            /// <summary>The scripted wall walk run (env KN_PLAYHERE_WALL=1; M3c, `m3c-wallstride-design.md` section 3, step 5).</summary>
+            static bool WallRun => Environment.GetEnvironmentVariable("KN_PLAYHERE_WALL") == "1";
+
+            /// <summary>
+            /// The scripted wall walk (M3c): level 60 and the top ranks for the tester, a wall near the spawn found in Zone01's own surface
+            /// graph, the tester put 6 m in front of it, then nine tries, each logged with the wall clock for the video and judged: onto the
+            /// wall with Run, along it, over its edge onto the roof, from the roof down onto the face (the way down), off it to the ground, a
+            /// Jump onto the wall, a Jump off it, out of Grip (pushed off), and a plain click past the wall's foot while on it. The instrument
+            /// first: the server's planner on a known refusal (level 1: the gate) and a known plan (level 60) before any click.
+            /// </summary>
+            IEnumerator Walls(GameObject body, Entity ghost, VaultTally tally)
+            {
+                World server = KnBootstrap.ServerWorld;
+                var plans = server.GetExistingSystemManaged<PlayerServerPlanSystem>();
+                var grip = server.GetExistingSystemManaged<WallGripSystem>();
+                var planner = plans != null ? plans.WallPlanner as BodyWallPlanner : null;
+                var motor = body.GetComponent<PlayerWallRunMotor>();
+                if (planner == null || grip == null || motor == null) { Log("wall: FAIL; the server has no wall walk planner, Grip system or wall motor"); tally.Tried++; yield break; }
+                var em = server.EntityManager;
+                var progression = body.GetComponent<PlayerCharacterProgression>();
+                var resources = body.GetComponent<PlayerResources>();
+                float offset = body.GetComponent<UnityEngine.AI.NavMeshAgent>() is UnityEngine.AI.NavMeshAgent ag ? ag.baseOffset : 0f;
+
+                string why = motor.FindTestWall(ServerPosition(ghost) - Vector3.up * offset, out PlayerWallRunMotor.TestWall wall);
+                if (why != null) { Log("wall: NOT TESTED; " + why); tally.Tried++; yield break; }
+                Log($"wall: the test wall's foot at {wall.Foot.x:F1},{wall.Foot.y:F2},{wall.Foot.z:F1}, facing {wall.Normal.x:F2},{wall.Normal.z:F2}; " +
+                    $"the roof at {wall.Top.x:F1},{wall.Top.y:F2},{wall.Top.z:F1}");
+                Teleport(em, ghost, wall.Front + Vector3.up * offset);
+                yield return new WaitForSeconds(1.5f);
+
+                // the instrument on a known refusal and a known plan (no click)
+                string Probe()
+                {
+                    var corners = new Unity.Collections.NativeList<Unity.Mathematics.int3>(PlayerLimits.MaxWallCorners, Unity.Collections.Allocator.Temp);
+                    var legs = new Unity.Collections.NativeList<WallCorner>(PlayerLimits.MaxWallCorners, Unity.Collections.Allocator.Temp);
+                    PlayerPose pose = em.GetComponentData<PlayerPose>(ghost);
+                    var answer = planner.Plan(ghost, pose.Mm, pose.YawCdeg, default, Mm(wall.Onto), Permille(wall.Normal), true, false, false, corners, legs, out _, out _);
+                    int n = corners.Length;
+                    corners.Dispose();
+                    legs.Dispose();
+                    return answer + " (\"" + planner.LastDecision + "\", " + n + " corners)";
+                }
+                Log($"wall planner check at level {(progression != null ? progression.CurrentLevel : 0)} (expected Refused, the gate): {Probe()}");
+                if (progression != null && progression.CurrentLevel < 60) progression.SetLevel(60);
+                yield return new WaitForSeconds(1f);   // the level reaches the ghost (MoveRanks) and the owner
+                Log($"wall planner check at level {(progression != null ? progression.CurrentLevel : 0)} (expected Planned, onto the wall): {Probe()}");
+                if (resources != null) resources.RestoreChi(resources.MaxChi);
+
+                Vector3 up = Vector3.up;
+                yield return WallTry(body, ghost, tally, "onto the wall from the ground (Run)", wall.Onto, wall.Normal, true, false, true, offset);
+                yield return WallTry(body, ghost, tally, "along the wall", wall.Along, wall.Normal, true, false, true, offset);
+                yield return WallTry(body, ghost, tally, "over its edge onto the roof", wall.Top, up, true, false, false, offset);
+                yield return WallTry(body, ghost, tally, "from the roof down onto the face (the way down)", wall.Lower, wall.Normal, true, false, true, offset);
+                yield return WallTry(body, ghost, tally, "off it to the ground in front", wall.Front, up, true, false, false, offset);
+                yield return WallTry(body, ghost, tally, "a Jump onto the wall", wall.Onto, wall.Normal, false, true, true, offset);
+                yield return WallTry(body, ghost, tally, "a Jump off it to the ground", wall.FrontFar, up, false, true, false, offset);
+                // onto it again, then the Flux run down: pushed off to the ground in front (NGO's only forced way off)
+                if (resources != null) resources.RestoreChi(resources.MaxChi);
+                yield return WallTry(body, ghost, tally, "onto the wall again (Run)", wall.Lower, wall.Normal, true, false, true, offset);
+                int push0 = grip.PushOffs;
+                if (resources != null && resources.Chi > 10f) resources.TrySpendChi(resources.Chi - 10f);
+                float drained = Time.realtimeSinceStartup;
+                while (grip.PushOffs == push0 && Time.realtimeSinceStartup - drained < 6f) yield return null;
+                float pushedAt = Time.realtimeSinceStartup;
+                while (Time.realtimeSinceStartup - pushedAt < 8f && (Moving(ghost) || em.GetComponentData<MoveState>(ghost).Wall != 0)) yield return null;
+                tally.Tried++;
+                bool down = grip.PushOffs == push0 + 1 && em.GetComponentData<MoveState>(ghost).Wall == 0
+                    && UnityEngine.AI.NavMesh.SamplePosition(ServerPosition(ghost) - Vector3.up * offset, out _, 0.5f, UnityEngine.AI.NavMesh.AllAreas);
+                if (down) tally.Passed++;
+                Log($"wall: out of Grip at {DateTime.Now.ToString("HH:mm:ss.fff", CultureInfo.InvariantCulture)}: {(down ? "PASS" : "FAIL")}; pushed off " +
+                    $"{grip.PushOffs - push0}x, down at {ServerPosition(ghost).x:F1},{ServerPosition(ghost).y:F2},{ServerPosition(ghost).z:F1} after {Time.realtimeSinceStartup - pushedAt:F1} s; Flux {Flux(body):F0}");
+                if (resources != null) resources.RestoreChi(resources.MaxChi);
+                yield return new WaitForSeconds(0.8f);
+                // on the wall, a plain click past its foot (not a wall click): NGO takes every click on a wall as the wall's (down, then on)
+                yield return WallTry(body, ghost, tally, "onto the wall (Run) for the plain click", wall.Onto, wall.Normal, true, false, true, offset);
+                yield return WallTry(body, ghost, tally, "a plain click past the wall's foot, from the wall", wall.FrontFar, up, true, false, false, offset, plain: true);
+                Log($"wall: Grip paid {grip.Paid} points in all, {grip.PushOffs} push-off(s), {plans.WallWalks} wall walks planned");
+            }
+
+            /// <summary>
+            /// One scripted wall click, logged and judged: the server planned it as the wall's (or refused it, said why), the owner on the same
+            /// plan and within 5 cm of the server, the body where clicked (within 0.8 m: the nearest node), on the wall or not as expected,
+            /// tilted onto the face on it and upright off it, and no glide over 2 cm after the stop.
+            /// </summary>
+            IEnumerator WallTry(GameObject body, Entity ghost, VaultTally tally, string what, Vector3 click, Vector3 normal, bool run, bool jump,
+                bool expectWall, float offset, bool plain = false)
+            {
+                if (OverTheCap()) yield break;
+                World server = KnBootstrap.ServerWorld;
+                var em = server.EntityManager;
+                var plans = server.GetExistingSystemManaged<PlayerServerPlanSystem>();
+                bool hasClient = TryLocalGhost(out World clientWorld, out Entity clientGhost, out _);
+                tally.Tried++;
+                int walks0 = plans.WallWalks;
+                float flux0 = Flux(body);
+                string at = DateTime.Now.ToString("HH:mm:ss.fff", CultureInfo.InvariantCulture);
+                if (plain) BodyClicks.Ground(click, run);
+                else BodyClicks.Wall(click, normal, run, jump);
+                float clicked = Time.realtimeSinceStartup, stoppedAt = -1f, glide = 0f;
+                Vector3 bodyAtStop = default;
+                bool moving = false;
+                while (Time.realtimeSinceStartup - clicked < 20f)
+                {
+                    yield return new WaitForEndOfFrame();
+                    bool now = Moving(ghost);
+                    if (now) moving = true;
+                    else if (!moving && Time.realtimeSinceStartup - clicked > 3f) break;   // never started (refused, or no way)
+                    Vector3 b = OwnBody.transform.position;
+                    if (moving && !now)
+                    {
+                        if (stoppedAt < 0f) { stoppedAt = Time.realtimeSinceStartup; bodyAtStop = b; }
+                        else
+                        {
+                            glide = Mathf.Max(glide, (b - bodyAtStop).magnitude);
+                            if (Time.realtimeSinceStartup - stoppedAt > 1f) break;
+                        }
+                    }
+                }
+                var move = em.GetComponentData<MoveState>(ghost);
+                var tilt = em.GetComponentData<PoseTilt>(ghost);
+                var wall = em.GetComponentData<WallPlan>(ghost);
+                var own = hasClient && clientWorld.IsCreated ? clientWorld.EntityManager.GetComponentData<ClientWallPlan>(clientGhost).Plan : default;
+                byte ownWall = hasClient && clientWorld.IsCreated ? clientWorld.EntityManager.GetComponentData<MoveState>(clientGhost).Wall : (byte)255;
+                PlayerPose ownPose = hasClient && clientWorld.IsCreated ? clientWorld.EntityManager.GetComponentData<PlayerPose>(clientGhost) : default;
+                bool planned = plans.WallWalks == walks0 + 1;
+                Vector3 root = ServerPosition(ghost);
+                Vector3 feet = root - (tilt.Tilted ? (Vector3)tilt.Up : Vector3.up) * offset;
+                float off = (feet - click).magnitude;
+                float apart = (new Vector3(ownPose.XMm, ownPose.YMm, ownPose.ZMm) * 0.001f - root).magnitude;
+                bool onWall = move.Wall != 0;
+                bool tiltRight = onWall ? tilt.Tilted && Vector3.Dot(tilt.Up, normal) > 0.8f : !tilt.Tilted;
+                bool ok = planned && onWall == expectWall && ownWall == move.Wall && own.Seq != 0 && apart < 0.05f && tiltRight
+                    && glide < 0.02f && off < (expectWall ? 0.8f : 1.0f);
+                if (ok) tally.Passed++;
+                string refusal = plans.LastWallRefusal;
+                Log($"wall: {what} clicked at {at}: {(ok ? "PASS" : "FAIL")}; server {(planned ? "planned the wall walk" : "planned NO wall walk")} " +
+                    $"(\"{(plans.WallPlanner as BodyWallPlanner)?.LastDecision}\"{(string.IsNullOrEmpty(refusal) ? "" : "; last refusal: " + refusal)}), plan seq {wall.Seq} " +
+                    $"(owner's own {own.Seq}), on the wall: server {move.Wall}, owner {ownWall} (expected {(expectWall ? 1 : 0)}); tilt up {tilt.UpX},{tilt.UpY},{tilt.UpZ} " +
+                    $"phase {tilt.Phase} ({(tiltRight ? "right" : "WRONG")}); ended {off:F2} m from the click at {feet.x:F1},{feet.y:F2},{feet.z:F1}; owner {apart * 100f:F1} cm " +
+                    $"from the server; glide after the stop {glide * 100f:F1} cm (limit 2); Flux {flux0:F0} -> {Flux(body):F0}");
+                yield return new WaitForSeconds(0.8f);
+            }
+
+            static Unity.Mathematics.int3 Permille(Vector3 v) =>
+                new Unity.Mathematics.int3(Mathf.RoundToInt(v.x * 1000f), Mathf.RoundToInt(v.y * 1000f), Mathf.RoundToInt(v.z * 1000f));
 
             /// <summary>
             /// A point on the river the server's own jump planner takes from where the body stands (rings of 6-20 m, every 30 degrees); null

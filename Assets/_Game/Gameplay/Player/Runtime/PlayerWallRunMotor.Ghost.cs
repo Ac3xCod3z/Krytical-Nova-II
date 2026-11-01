@@ -34,6 +34,72 @@ namespace KryticalNova.Player
             Show(new WallRunPose { Phase = phase, Duration = seconds });
         }
 
+        /// <summary>A wall the scripted test run uses (KnPlayHere), all its points found in the zone's own surface graph.</summary>
+        public struct TestWall
+        {
+            /// <summary>The foot (the ground join's NavMesh point), the ground 6 m and 9 m out in front, the roof's NavMesh point over the edge.</summary>
+            public Vector3 Foot, Front, FrontFar, Top;
+            /// <summary>Points on the face (a click there): 4 m up, 3 m along at that height, 2.5 m up; the face's normal.</summary>
+            public Vector3 Onto, Along, Lower, Normal;
+        }
+
+        /// <summary>
+        /// For the scripted test run: an upright wall near <paramref name="near"/> that the zone's graph covers from its foot to a roof, with a
+        /// node 4 m up, one 3 m along at that height, one 2.5 m up, and open NavMesh in front of it. Null when found, else why not.
+        /// </summary>
+        public string FindTestWall(Vector3 near, out TestWall wall)
+        {
+            wall = default;
+            SurfaceGraph graph = ZoneGraph;
+            if (graph == null || settings == null) return "the zone has no surface graph";
+            graph.EnsureLoaded();
+            var grounds = new System.Collections.Generic.List<SurfaceGraph.Join>(64);
+            var tops = new System.Collections.Generic.List<SurfaceGraph.Join>(16);
+            graph.JoinsNear(near, SurfaceGraph.JoinKind.Ground, 60, grounds);
+            int upright = 0, tall = 0, roofed = 0;
+            foreach (SurfaceGraph.Join join in grounds)
+            {
+                Vector3 n = graph.normals[join.node], p = graph.points[join.node];
+                float angle = Vector3.Angle(n, Vector3.up);
+                if (angle < 80f || angle > 100f) continue;
+                upright++;
+                int SameFace(Vector3 at)
+                {
+                    int k = graph.Nearest(at, 0.5f);
+                    return k >= 0 && Vector3.Dot(graph.normals[k], n) > 0.95f ? k : -1;
+                }
+                Vector3 side = Vector3.Cross(Vector3.up, n).normalized;
+                int high = SameFace(p + Vector3.up * 4f), low = SameFace(p + Vector3.up * 2.5f);
+                int along = SameFace(p + Vector3.up * 4f + side * 3f);
+                if (along < 0) along = SameFace(p + Vector3.up * 4f - side * 3f);
+                if (high < 0 || low < 0 || along < 0) continue;
+                tall++;
+                graph.JoinsNear(p + Vector3.up * 6f, SurfaceGraph.JoinKind.Top, 10, tops);
+                bool hasTop = false;
+                SurfaceGraph.Join top = default;
+                foreach (SurfaceGraph.Join t in tops)
+                {
+                    Vector3 flat = t.navPoint - p;
+                    flat.y = 0f;
+                    if (Vector3.Dot(graph.normals[t.node], n) > 0.9f && flat.magnitude < 4f && t.navPoint.y > p.y + 3f) { hasTop = true; top = t; break; }
+                }
+                if (!hasTop) continue;
+                roofed++;
+                Vector3 outward = WallWalkLayout.Outward(n, Vector3.forward);
+                if (!NavMesh.SamplePosition(join.navPoint + outward * 6f, out NavMeshHit front, 1.5f, Filter())
+                    || !NavMesh.SamplePosition(join.navPoint + outward * 9f, out NavMeshHit far, 1.5f, Filter())
+                    || !OnOpenGround(front.position) || !OnOpenGround(far.position)) continue;
+                Vector3 Face(int node) => graph.points[node] - graph.normals[node] * settings.wallStandOff;
+                wall = new TestWall
+                {
+                    Foot = join.navPoint, Front = front.position, FrontFar = far.position, Top = top.navPoint,
+                    Onto = Face(high), Along = Face(along), Lower = Face(low), Normal = n,
+                };
+                return null;
+            }
+            return $"no wall fits near {near.x:F0},{near.z:F0}: {grounds.Count} ground joins, {upright} upright, {tall} tall enough, {roofed} with a roof";
+        }
+
         /// <summary>Wallstride's gate for a level and ranks (NGO <see cref="WallRunRules.IsOpen"/> with this body's settings).</summary>
         public bool WallstrideOpenFor(int level, int runRank, int jumpRank) => WallRunRules.IsOpen(level, runRank, jumpRank, settings);
 
