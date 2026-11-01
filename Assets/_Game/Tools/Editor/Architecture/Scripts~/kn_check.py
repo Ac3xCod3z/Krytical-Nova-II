@@ -15,7 +15,8 @@ what that level needs before the PR goes in (Assets/_Game/_Docs/Guides/Review-Ru
 
 --quick (the default, under 2 minutes, Unity can stay closed) runs only the checks whose files changed against
 origin/main (commits of this branch, edits and new files); --all runs every one:
-  organization   the file-path rules of Validate Project Organization (organization_check.py); always, under 1 s
+  organization   the file-path rules of Validate Project Organization (organization_check.py), and define_guard.py
+                 warnings (scripting defines that moved recompile everything; never fails); always, under 1 s
   dependencies   dependency_map.py --check: no new uphill link or two-way pair, assets keep their scripts;
                  when scripts, assemblies, prefabs, scenes, assets or .meta files under _Game changed
   compile        compile_check.py: every first-party assembly compiles (dotnet); when code or assemblies changed
@@ -124,6 +125,9 @@ def check_organization():
     lines = [f"NEW {p}: {m}" for p, m in new]
     lines += [f"GONE {p}: fixed, so take it off known-findings.json" for p in gone]
     lines.append(f"{len(errors)} error(s) ({len(errors) - len(new)} known), {len(warnings)} warning(s)")
+    # Scripting defines that moved recompile every script in Unity (define_guard.py): warned, never failed on.
+    import define_guard
+    lines += ["WARN " + w for w in define_guard.check(CHECKOUT)]
     return not new and not gone, lines
 
 
@@ -397,7 +401,8 @@ def main():
         start = time.time()
         passed, lines = CHECKS[name]()
         took = time.time() - start
-        shown = lines if not passed else lines[-3:]
+        # a passed check shows its last lines and every warning (WARN lines never fail it)
+        shown = lines if not passed else [l for l in lines if l.startswith("WARN ")] + [l for l in lines if not l.startswith("WARN ")][-3:]
         for line in shown[-60:]:
             print("    " + line)
         print(f"--- {name}: {'passed' if passed else 'FAILED'} ({took:.0f} s)", flush=True)

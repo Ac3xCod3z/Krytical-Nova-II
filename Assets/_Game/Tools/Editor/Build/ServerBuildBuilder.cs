@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Linq;
 using UnityEditor;
+using UnityEditor.Build;
 using UnityEditor.Build.Reporting;
 using UnityEngine;
 
@@ -16,7 +17,10 @@ namespace KryticalNova.EditorTools
     /// <para>Beside the exe it puts the control page's files (<c>ControlPage</c>, from <c>Networking/ControlPage~</c> and
     /// the comic fonts) and a start script (<c>Start Server.bat</c>, or <c>start-server.sh</c> on Linux) that shows the log in
     /// its window and starts the server again after a restart. The Editor is put back on the build target it was on
-    /// before.</para>
+    /// before, except in the server checkout (<see cref="BackgroundPublisher.ServerCheckoutFolder"/>), which stays on the
+    /// Server subtarget so its scripts are never compiled again for nothing.</para>
+    /// <para>The scripting backend is the build's own (Mono unless a caller asks for IL2CPP), set for the build and put back,
+    /// whatever a client build left in ProjectSettings; the size report names the backend the build really used.</para>
     /// </summary>
     public static class ServerBuildBuilder
     {
@@ -66,12 +70,13 @@ namespace KryticalNova.EditorTools
         }
 
         /// <summary>What Unity lacks for a server build for this system, in words; null when the module is there.</summary>
-        public static string ModuleMissing(Os os)
+        public static string ModuleMissing(Os os, ScriptingImplementation backend = ScriptingImplementation.Mono2x)
         {
             string engine = os == Os.Windows ? "windowsstandalonesupport" : "LinuxStandaloneSupport";
             string prefix = os == Os.Windows ? "win64_server_" : "linux64_server_";
             string variations = Path.Combine(EditorApplication.applicationContentsPath, "PlaybackEngines", engine, "Variations");
-            bool there = Directory.Exists(variations) && Directory.GetDirectories(variations, prefix + "*mono").Length > 0;
+            string kind = backend == ScriptingImplementation.IL2CPP ? "*il2cpp" : "*mono";
+            bool there = Directory.Exists(variations) && Directory.GetDirectories(variations, prefix + kind).Length > 0;
             return there ? null
                 : $"A {os} dedicated server build needs Unity's module \"{os} Dedicated Server Build Support\" for {Application.unityVersion} " +
                   "(Unity Hub > Installs > the gear on this version > Add modules). Restart the Editor after installing.";
@@ -108,13 +113,18 @@ namespace KryticalNova.EditorTools
         /// </summary>
         public static bool Build(Os os) => Build(os, null);
 
-        /// <summary>The same, into another folder (the measuring tools' own server, chunk 7); null is the owner's server folder.</summary>
-        public static bool Build(Os os, string intoFolder) =>
-            ReleasePublisher.WithVersion(ReleasePublisher.LastReleaseBuild(), () => BuildAsIs(os, intoFolder));
+        /// <summary>
+        /// The same, into another folder (the measuring tools' own server, chunk 7; null is the owner's server folder) and
+        /// with the scripting backend named (Mono, the server's own, unless IL2CPP is asked for).
+        /// </summary>
+        public static bool Build(Os os, string intoFolder, ScriptingImplementation backend = ScriptingImplementation.Mono2x) =>
+            ReleasePublisher.WithVersion(ReleasePublisher.LastReleaseBuild(), () => BuildAsIs(os, intoFolder, backend));
 
-        private static bool BuildAsIs(Os os, string intoFolder)
+        private static string BackendName(ScriptingImplementation backend) => backend == ScriptingImplementation.IL2CPP ? "IL2CPP" : "Mono";
+
+        private static bool BuildAsIs(Os os, string intoFolder, ScriptingImplementation backend)
         {
-            string missing = ModuleMissing(os);
+            string missing = ModuleMissing(os, backend);
             if (missing != null)
             {
                 Debug.LogError("[Build] " + missing);
@@ -151,6 +161,12 @@ namespace KryticalNova.EditorTools
             BuildTarget targetWas = EditorUserBuildSettings.activeBuildTarget;
 
             BuildReport report;
+            // The server's backend is set for this build: a client publish can leave IL2CPP in the checkout's ProjectSettings when
+            // its Unity is stopped before it saves the put-back value, and the Server target can fall back to Standalone's.
+            ScriptingImplementation backendWas = PlayerSettings.GetScriptingBackend(NamedBuildTarget.Server);
+            if (backendWas != backend) PlayerSettings.SetScriptingBackend(NamedBuildTarget.Server, backend);
+            string backendUsed = BackendName(PlayerSettings.GetScriptingBackend(NamedBuildTarget.Server));
+            bool serverCheckout = BackgroundPublisher.InServerCheckout;
             // The game builds its map bundles with itself; a server loads its maps from its build list and needs none.
             var addressables = UnityEditor.AddressableAssets.AddressableAssetSettingsDefaultObject.Settings;
             var bundlesWere = addressables != null ? addressables.BuildAddressablesWithPlayerBuild : default;
@@ -166,13 +182,17 @@ namespace KryticalNova.EditorTools
                     target = target,
                     subtarget = (int)StandaloneBuildSubtarget.Server,
                     // A clean build: the scenes must go through ServerSceneStripper, not come from the cache of a client build.
-                    options = BuildOptions.CompressWithLz4HC | BuildOptions.CleanBuildCache
+                    // (It clears the player build's cache, Library/PlayerDataCache; the map bundles' Library/BuildCache was
+                    // seen to survive it, 31 Oct 2026.) LZ4, not LZ4HC: a server is unpacked on this PC, never downloaded,
+                    // and LZ4HC cost 1.5 to 2 minutes a build (owner's pick, 31 Oct 2026).
+                    options = BuildOptions.CompressWithLz4 | BuildOptions.CleanBuildCache
                 });
             }
             finally
             {
                 IsBuilding = false;
                 if (addressables != null) addressables.BuildAddressablesWithPlayerBuild = bundlesWere;
+                if (backendWas != backend) PlayerSettings.SetScriptingBackend(NamedBuildTarget.Server, backendWas);
                 // Put back after the build, and even when it failed: the settings are the owner's, never the build's.
                 if (File.Exists(keptSettings))
                 {
@@ -182,20 +202,21 @@ namespace KryticalNova.EditorTools
                 }
                 // A server build may leave the Editor on the server target, where the HUD and menu tools are left out. It goes
                 // back to Player, never to "what it was": a checkout that already stood on Server (a killed build left it)
-                // would otherwise stay there and compile every game build as a server (ClientBuildGuard).
-                if (EditorUserBuildSettings.activeBuildTarget != targetWas || EditorUserBuildSettings.standaloneBuildSubtarget != StandaloneBuildSubtarget.Player)
+                // would otherwise stay there and compile every game build as a server (ClientBuildGuard). The server checkout
+                // builds servers only and stays on Server, so its next server build compiles nothing again.
+                if (!serverCheckout && (EditorUserBuildSettings.activeBuildTarget != targetWas || EditorUserBuildSettings.standaloneBuildSubtarget != StandaloneBuildSubtarget.Player))
                 {
                     EditorUserBuildSettings.standaloneBuildSubtarget = StandaloneBuildSubtarget.Player;
                     EditorUserBuildSettings.SwitchActiveBuildTarget(BuildTargetGroup.Standalone, targetWas);
                 }
             }
 
-            TestBuildBuilder.WriteSizeReport(report, scenes, $"Dedicated server ({os})", "Scripting backend: Mono, Dedicated Server target", ReportPath(os));
+            TestBuildBuilder.WriteSizeReport(report, scenes, $"Dedicated server ({os})", $"Scripting backend: {backendUsed}, Dedicated Server target", ReportPath(os));
             bool ok = report.summary.result == BuildResult.Succeeded;
             if (ok) AddBesideTheServer(os, folder);
             if (ok && os == Os.Windows) BuildSaveService(folder);
             if (ok && os == Os.Windows) BuildServerApp(folder, shortcuts: intoFolder == null);
-            if (ok) Debug.Log($"[Build] Dedicated server ({os}) written to {folder} ({TestBuildBuilder.Megabytes(report.summary.totalSize)}). Sizes: {ReportPath(os)}");
+            if (ok) Debug.Log($"[Build] Dedicated server ({os}, {backendUsed}) written to {folder} ({TestBuildBuilder.Megabytes(report.summary.totalSize)}). Sizes: {ReportPath(os)}");
             else Debug.LogError($"[Build] Dedicated server ({os}) {report.summary.result}: {report.summary.totalErrors} errors. See {ReportPath(os)}");
             return ok;
         }

@@ -5,23 +5,61 @@ using UnityEngine;
 namespace KryticalNova.EditorTools
 {
     /// <summary>
-    /// Batch entry for the Linux dedicated server (online Linux plan): <c>Unity -batchmode -nographics -quit -projectPath ... -executeMethod
-    /// KryticalNova.Tools.Editor.Build.ServerBuildBatch.BuildLinux [-il2cpp]</c>. The same build as the menu, with the exit code a script can read.
-    /// <c>-il2cpp</c> sets the server's scripting backend to IL2CPP for this run only (the project setting is not saved).
+    /// Batch entries for the dedicated servers. Linux (online Linux plan): <c>Unity -batchmode -nographics -quit -projectPath ... -executeMethod
+    /// KryticalNova.EditorTools.ServerBuildBatch.BuildLinux [-il2cpp]</c>. Windows, the publish's server step (31 Oct 2026: built in its own
+    /// checkout, <see cref="BackgroundPublisher.ServerCheckoutFolder"/>, opened with <c>-standaloneBuildSubtarget Server</c>):
+    /// <c>-executeMethod KryticalNova.EditorTools.ServerBuildBatch.BuildWindows</c>, which also writes <see cref="ResultPath"/>.
+    /// The same builds as the menu, with an exit code a script can read. The backend is Mono; <c>-il2cpp</c> asks for IL2CPP for
+    /// this run only (the project setting is put back).
     /// </summary>
     public static class ServerBuildBatch
     {
+        /// <summary>"OK" or "FAILED: why", for the script or Editor that started the Windows server build.</summary>
+        public const string ResultPath = ReleasePublisher.Root + "/server-only.result";
+
+        private static ScriptingImplementation Backend() =>
+            System.Array.IndexOf(System.Environment.GetCommandLineArgs(), "-il2cpp") >= 0 ? ScriptingImplementation.IL2CPP : ScriptingImplementation.Mono2x;
+
         public static void BuildLinux()
         {
-            bool il2cpp = System.Array.IndexOf(System.Environment.GetCommandLineArgs(), "-il2cpp") >= 0;
-            bool mono = System.Array.IndexOf(System.Environment.GetCommandLineArgs(), "-mono") >= 0;
-            if (il2cpp) PlayerSettings.SetScriptingBackend(NamedBuildTarget.Server, ScriptingImplementation.IL2CPP);
-            if (mono) PlayerSettings.SetScriptingBackend(NamedBuildTarget.Server, ScriptingImplementation.Mono2x);
-            string missing = ServerBuildBuilder.ModuleMissing(ServerBuildBuilder.Os.Linux);
+            ScriptingImplementation backend = Backend();
+            string missing = ServerBuildBuilder.ModuleMissing(ServerBuildBuilder.Os.Linux, backend);
             if (missing != null) { Debug.LogError("[ServerBuildBatch] " + missing); EditorApplication.Exit(2); return; }
-            bool ok = ServerBuildBuilder.Build(ServerBuildBuilder.Os.Linux);
-            Debug.Log("[ServerBuildBatch] Linux dedicated server build " + (ok ? "succeeded" : "FAILED") + " (IL2CPP: " + il2cpp + ", Mono: " + mono + ").");
+            bool ok = ServerBuildBuilder.Build(ServerBuildBuilder.Os.Linux, null, backend);
+            Debug.Log("[ServerBuildBatch] Linux dedicated server build " + (ok ? "succeeded" : "FAILED") + " (" + backend + ").");
             EditorApplication.Exit(ok ? 0 : 1);
+        }
+
+        /// <summary>The release's Windows server (the server step of a publish, or a rebuild of it alone).</summary>
+        public static void BuildWindows()
+        {
+            int code = 1;
+            string result = "FAILED: Unity stopped before the build ended";
+            try
+            {
+                System.IO.Directory.CreateDirectory(ReleasePublisher.Root);
+                if (System.IO.File.Exists(ResultPath)) System.IO.File.Delete(ResultPath);
+                string busy = ServerBuildBuilder.FolderBusy(ServerBuildBuilder.OutputFolder(ServerBuildBuilder.Os.Windows));
+                if (busy != null) result = "FAILED: " + busy;
+                else if (ServerBuildBuilder.Build(ServerBuildBuilder.Os.Windows, null, Backend()))
+                {
+                    result = "OK";
+                    code = 0;
+                }
+                else result = "FAILED: see " + ServerBuildBuilder.ReportPath(ServerBuildBuilder.Os.Windows);
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogException(e);
+                result = "FAILED: " + e.Message;
+            }
+            finally
+            {
+                System.IO.File.WriteAllText(ResultPath, result);
+                System.IO.File.AppendAllText(ReleasePublisher.LogPath, (code == 0 ? "Server rebuilt for build " + ReleasePublisher.LastReleaseBuild() + "." : "The server did not build: " + result) + System.Environment.NewLine);
+                Debug.Log("[ServerBuildBatch] Windows dedicated server: " + result);
+                EditorApplication.Exit(code);
+            }
         }
 
         /// <summary>

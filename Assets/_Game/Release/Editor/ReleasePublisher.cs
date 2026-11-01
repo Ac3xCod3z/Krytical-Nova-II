@@ -160,9 +160,12 @@ namespace KryticalNova.EditorTools
         /// <summary>
         /// Build, stage, sign and (when CCD is set up) upload to the test line, then build the server of the same
         /// number. A line per step in the release log. <paramref name="buildGame"/> false re-stages the game already
-        /// in Builds/Release/Game (for tests: its version is the one it was built with).
+        /// in Builds/Release/Game (for tests: its version is the one it was built with). <paramref name="buildServer"/> false
+        /// leaves the server to the server checkout (the background publish, <see cref="BackgroundPublisher"/>): a server build
+        /// in this Library would switch it to the Server subtarget and back, and a Unity stopped in between leaves the next
+        /// client build to clear its content cache and rebuild every map (build 14, 31 Oct 2026).
         /// </summary>
-        public static bool Publish(bool buildGame = true)
+        public static bool Publish(bool buildGame = true, bool buildServer = true)
         {
             Directory.CreateDirectory(Root);
             Log("--- Publish to Test " + DateTime.Now);
@@ -198,7 +201,8 @@ namespace KryticalNova.EditorTools
                 return Fail("the upload to Cloud Content Delivery failed");
             Log("Uploaded build " + version + " to the TEST line.");
             Debug.Log($"[Release] Build {version} is on the TEST line. Check it with your test launcher, then Krytical Nova ▸ Release ▸ Promote Test to Live.");
-            BuildMatchingServer();
+            if (buildServer) BuildMatchingServer();
+            else Log("Server: built next in its own checkout (" + BackgroundPublisher.ServerCheckoutFolder + ").");
             return true;
         }
 

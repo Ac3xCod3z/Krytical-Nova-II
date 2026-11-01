@@ -3,7 +3,8 @@
 A running guide, in plain words, to getting the game to players and keeping it up to date. Updated after every
 release step.
 
-**Last updated:** 18 Oct 2026, publishing in the background (the build checkout and the Unity Accelerator).
+**Last updated:** 1 Nov 2026, faster publishes: the server in a checkout of its own, the map search only when the maps
+changed, the server packed with LZ4 (section 1a-4).
 
 ## In one minute
 
@@ -89,8 +90,8 @@ ones. Never work in it: every publish first throws away whatever is changed in i
 
 What **Publish to Test** does now: checks the Accelerator, moves the build checkout to your commit, and starts a second
 Unity there with no window (batch mode, below normal priority so your Editor keeps the processor first). That Unity
-runs the same publish as before (game build, staging, signing, upload to TEST, the matching server) and quits; your
-Editor's Console then says how it went. It is started from your Editor, so it runs as you and finds your signing key
+runs the same publish as before (game build, staging, signing, upload to TEST) and quits; your Editor then starts a third
+Unity in the **server checkout** for the matching server (section 1a-4), and its Console says how each went. It is started from your Editor, so it runs as you and finds your signing key
 and your UGS login (a terminal inside the Claude app cannot: its AppData is elsewhere).
 
 **Memory.** The second Unity uses about 4 GB while it imports and more while it builds. Close the Player 2 clone before
@@ -138,8 +139,9 @@ since then would compile as a server, and map bundles made meanwhile can carry s
 checks the **Player** subtarget on Windows, stops with a plain message if it cannot, and **clears the map content cache**
 (`Library/BuildCache` and the Addressables output) when the subtarget had to be corrected, when Unity or the scripting
 defines changed since the last good build, or when there is no record yet (the first publish after this change). A cleared
-cache costs one full rebuild of the maps; the same settings as last time keep the cache. The server build always puts the
-checkout back on Player when it ends.
+cache costs one full rebuild of the maps; the same settings as last time keep the cache. A server build in a shared checkout
+(the menu, in your Editor) puts it back on Player when it ends; the publish no longer builds the server in the build
+checkout at all (section 1a-4).
 
 One more rule: setting the subtarget does not recompile the Editor that is running, and its scripts, compiled while the
 checkout stood on Server, would still run as a server's while the maps are built. So when the guard had to correct the
@@ -165,6 +167,47 @@ The record of a passed audit (`Builds/Release/bundle-audit-build-N.json`: each b
 release. **Promote Test to Live** checks it again, read-only: no record, a failed record, or a staged bundle whose
 fingerprint is not the audited one stops the promotion with the reason. A build made before this gate has no record and
 cannot be promoted: publish it again.
+
+## 1a-4. Faster publishes (1 Nov 2026, the owner's picks of 31 Oct)
+
+Build 14 took 31.5 minutes. Three things in it were repeated work:
+
+- **The server has a checkout of its own:** `C:\Users\dlaco\KN-worktrees\build-server` (a git worktree, made by the first
+  publish that needs it; its `Builds` is linked to this project's like the build checkout's). Its Unity is opened with
+  `-standaloneBuildSubtarget Server` and stays on Server, so the server's scripts are compiled once and kept, and the build
+  checkout stays on Player with its scripts and its map-bundle cache. Before, the publish built the server in the build
+  checkout: it switched to Server and back (about 2.6 minutes of recompiling and reimporting, plus a 2.4-minute
+  prepare-only Unity), and when that Unity was stopped halfway (build 14) the next game build found Server, threw its
+  content record away (`ClientBuildGuard`) and rebuilt all 29 maps. The server's `CleanBuildCache` was checked: it clears
+  the player build's cache only; `Library/BuildCache` (the maps') was untouched by build 14's server build. The guard and
+  the bundle audit are unchanged: every game build still forces and checks Player, and no map is uploaded without the audit.
+  **Disk:** the server checkout's files are about 15 GB and its Library builds up to about as much as the build checkout's
+  (52.6 GB on 1 Nov 2026, less without IL2CPP and the map bundles). Its first build imports the project through the
+  Accelerator (about 11 minutes, once).
+- **The map search runs only when the maps changed:** before every game build the search for assets two or more maps share
+  (`MapAddressables.IsolateShared`, about 6 minutes) now runs only when a map scene, anything the maps use or an
+  Addressables group differs from what the last search saw (`Library/KryticalNova-MapIsolation.stamp`). When skipped, what
+  that search moved into `World_Common` is moved again. **Krytical Nova ▸ World ▸ Isolate Shared Map Assets (Full
+  Search)** always searches. A wrong skip only leaves copies in map bundles (a bigger download); nothing breaks.
+- **The server is packed with LZ4** instead of LZ4HC (1.5 to 2 minutes less; a server is never downloaded). The server
+  build also sets its scripting backend (Mono) for the build and its size report names the one it really used: a client
+  publish stopped early can leave IL2CPP in the build checkout's ProjectSettings.
+
+**From a script** (the Editor link down, or a planned daytime publish): run
+`Assets\_Game\Release\Publish~\publish-test.ps1` in a normal PowerShell window (`-ServerOnly` rebuilds only the server
+of the last release; `-Commit <sha>` publishes another commit). It syncs the build checkout, runs the game publish, checks
+the audit, then builds the server in the server checkout, each Unity in a job object of its own, and writes every stage,
+its minutes and the lines to check into `Builds/Release/publish-status.txt`.
+
+**What to check after a publish:** the `[Maps]` line in `background-publish.log` (skipped, or how many moved); the
+`[Build] Release build: ... content cache kept` line (a cleared cache means every map rebuilt); the CCD `operations:` line
+in `release-log.txt` (build 14 added 74 files); `Scripting backend: Mono` at the top of `Builds/Server/BuildReport-Windows.txt`;
+and no "Define symbols changed" compile in either log.
+
+**The Sentis define is pinned** (Editor opening, same day): `FORCE_SENTIS_ANALYTICS` is in the Standalone and Server defines,
+so the Sentis package no longer adds and removes `SENTIS_ANALYTICS_ENABLED` each time an Editor window and a batch Unity
+take turns (each flip recompiled every script, 60 to 80 s). `define_guard.py` (beside `kn_check.py`) warns when the define
+lines differ from the committed ones or a recent Unity log says "Define symbols changed"; kn_check and compile_check print it.
 
 ## 1b. The launcher's news (before a build meant for LIVE)
 
@@ -292,7 +335,8 @@ not let them turn back on without a reset. Seen on the owner's PC on 18 Oct 2026
 | Piece | Where | What it does |
 | --- | --- | --- |
 | `ReleasePublisher` | `Release/Editor` | The Release menus: release build, tools build, stage, CCD upload, promote, player zip, test launcher. |
-| `BackgroundPublisher` | `Release/Editor` | Publish to Test in the build checkout: the Accelerator check (`AcceleratorProblem`, also used by the in-Editor publish), moving the checkout, starting the batch Unity (`RunInBatch`), and the Console message when it is done. |
+| `BackgroundPublisher` | `Release/Editor` | Publish to Test in the build checkout: the Accelerator check (`AcceleratorProblem`, also used by the in-Editor publish), moving the checkout, starting the batch Unity (`RunInBatch`), then the matching server in the server checkout (`StartServer`, `ServerBuildBatch.BuildWindows`), and the Console message when each is done. |
+| `publish-test.ps1` | `Release/Publish~` | The same publish from a script, game then server, with stage timings and the lines to check (section 1a-4). |
 | `TestBuildBuilder.Output` | `Tools/Editor/Build` | Lets the release build share the test build's code with its own folder and packing (no LZ4HC single file). |
 | `UpdateManifest`, `UpdateCrypto` | `Release/Tools~/Shared` | The update list, SHA-256, ECDSA P-256 signature check, safe paths. |
 | ReleaseTool | `Release/Tools~/ReleaseTool` | `keygen`, `export-key`, `import-key`, `stage`, `verify`. .NET Framework 4.7.2, key kept with DPAPI. |
@@ -327,3 +371,6 @@ good again.
   `--picture <file>` saves a picture of the launcher and closes it, for checking its look.
 - 20 Oct 2026: save migrations: when a system's save changed shape, run Check Saves Against This Build on a copy of the real
   saves before publishing (section 1).
+- 1 Nov 2026: faster publishes (section 1a-4): the server in its own checkout (`KN-worktrees/build-server`, on Server), the
+  map search only when the maps changed, the server packed with LZ4 and its backend set and reported truthfully,
+  `publish-test.ps1`; the Sentis define pinned (`FORCE_SENTIS_ANALYTICS`) with `define_guard.py`; the Bezi plugin removed.

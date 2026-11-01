@@ -13,7 +13,9 @@ namespace KryticalNova.EditorTools
     /// meanwhile can carry server-only state (31 Oct 2026: ten of build 13's 29 maps shipped with the sky presenter off).
     /// <see cref="Prepare"/> runs before any client content or player build: it forces Player, asserts it, and clears the
     /// content cache (Library/BuildCache and the Addressables output) when bundles may have been made under other settings.
-    /// A cleared cache costs one full rebuild of the maps; the same settings as last time keep the cache.
+    /// A cleared cache costs one full rebuild of the maps; the same settings as last time keep the cache. A publish therefore
+    /// never builds its server in the build checkout (1 Nov 2026): the server has a checkout of its own that stays on Server
+    /// (BackgroundPublisher.ServerCheckoutFolder), so this guard finds Player there and keeps the cache.
     /// <para>
     /// Setting the subtarget does not recompile the Editor's own scripts in the process that is running: while the Server
     /// subtarget was active they were compiled with UNITY_SERVER, and the [ExecuteAlways] and edit-mode code that builds
