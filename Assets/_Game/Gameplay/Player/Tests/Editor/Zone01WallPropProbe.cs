@@ -41,6 +41,26 @@ namespace KryticalNova.Tests
             Assert.Pass(report.ToString());
         }
 
+        // gui-climb-1's test face (the owner saw a tree), facing -z
+        [Test, Explicit]
+        public void ListWhatIsAtTheClimbFace()
+        {
+            EditorSceneManager.OpenScene(Scene, OpenSceneMode.Single);
+            Physics.SyncTransforms();
+            var report = new StringBuilder();
+            Vector3 face = new Vector3(12.6f, 1.2f, -13.1f);
+            foreach (Collider c in Physics.OverlapSphere(face, 1.5f, ~0, QueryTriggerInteraction.Collide))
+                report.AppendLine($"[probe] collider {Path(c.transform)} {c.GetType().Name} layer {LayerMask.LayerToName(c.gameObject.layer)} " +
+                    $"bounds {c.bounds.center} size {c.bounds.size} marker {(c.GetComponentInParent<ClimbableSurface>() is ClimbableSurface m ? m.kind.ToString() : "none")}");
+            foreach (Renderer r in Object.FindObjectsByType<Renderer>(FindObjectsSortMode.None))
+                if (r.bounds.size.magnitude < 40f && r.bounds.Intersects(new Bounds(face, Vector3.one * 3f)))
+                    report.AppendLine($"[probe] renderer {Path(r.transform)} bounds {r.bounds.center} size {r.bounds.size}");
+            foreach (Terrain t in Terrain.activeTerrains)
+                report.AppendLine($"[probe] terrain {t.name}: {t.terrainData.treeInstanceCount} trees");
+            Debug.Log(report.ToString());
+            Assert.Pass(report.ToString());
+        }
+
         static string Path(Transform t)
         {
             string p = t.name;
