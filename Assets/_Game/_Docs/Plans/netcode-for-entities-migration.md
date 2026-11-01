@@ -1057,15 +1057,30 @@ which do not run on a DOTS client. They take two server gaps with them: Run Flux
 - [x] at running speed (owner's ask, 31 Oct): GUI run 2 with Run on (1a6e6880e, `KN_PLAYHERE_VAULT_RUN=1`): 3 of 3 PASS, 2 over the spawn
   planters, 0.0 cm glide after the landing. Owner accepted the logged numbers; that run filmed no vault (the Editor recompiled first and
   the recording's time limit ran out).
-- [ ] a running-speed vault VIDEO (owner, 1 Nov): an extra in the first Waterstride GUI run. 3-4 vaults clicked past, 2 over the spawn
-  planters, each started far enough back that walking round does not win; ffmpeg started only after "[KnPlayHere] the tester entered"
+- [x] a running-speed vault VIDEO (owner, 1 Nov): an extra in the first Waterstride GUI run. GUI run gui-water-1 (1 Nov, 6cb5cf311): 3 of 3
+  running vaults clicked past PASS (0.0 cm glide, ended on the click, owner on the server's leg), 2 of them over spawn planter 1 at
+  5.6,-8.5 (the script's "planter 2" is the same one, crossed back), 1 over a planter 12.2 m out; GIF
+  `DOTS-proof/dots-running-vaults-gui-water-1.gif`. The short click just behind an obstacle was NOT TESTED (the script's obstacle finder
+  found none, as in gui-vault-4): next GUI run uses planter 1 directly (approach from about 5 m, click 1.4 m behind its far edge).
 4. Waterstride
 - [x] FIRST (m3c-waterstride-design.md section 1, 24 rules; the gaps found: the owner has no level, the view body skips the water click, a DOTS jump onto water stands for free) (owner, 31 Oct): the "NGO rules" table for this system (rule, NGO file:line, numbers, the scene data it needs: layers,
   colliders, markers, NavMesh; the DOTS equivalent and whether the DOTS server/client body has it), before design or code
-- [ ] the NGO gate: level 60, Run and Jump rank 20; a click on water with Run selected runs to the nearest shore point, across by the `WaterMap`
+- [x] the NGO gate: level 60, Run and Jump rank 20; a click on water with Run selected runs to the nearest shore point, across by the `WaterMap`
   route, stands on the water at the end; a land click from the water runs to the nearest shore and walks on
-- [ ] Flux every second on the water, paid by the server; out of Flux, carried back to the nearest shore; the owner's Flux (section 53
+  Proof: EditMode `WaterstrideRulesTests` (15, NGO's words and order), `WaterLegTests`, `WaterWorldTests` (0/100 ms); GUI run gui-water-1
+  (1 Nov) on Zone01's river: the planner checked first (level 1: not Waterstride's; level 60: out over the water), then PASS for the run
+  out (owner on the server's leg, both on the water, the clicked cell's centre, 0.0 cm glide), water to water, ashore across the river
+  past the shore (ended on the click, off the water), a run out from the north bank, and a no-Run water click (not Waterstride's, as
+  NGO). GIFs `DOTS-proof/dots-water-1..4-*.gif`.
+- [x] Flux every second on the water, paid by the server; out of Flux, carried back to the nearest shore; the owner's Flux (section 53
   `OwnerFlux`) refuses at once in NGO's words
+  Proof: `WaterWorldTests` (3 a second in whole points; out of Flux, the server's order back ashore at 6 m/s, a click on the way refused
+  by the owner); GUI run gui-water-1: 21 points paid over the run, out of Flux stranded once, back ashore in 1.7 s. The owner's refusal
+  words: `WaterstrideRulesTests` (shown on the own body through `PointAndClickPlayer.ShowViewRefusal`).
+- [ ] still open for Waterstride (1 Nov): a jump onto the water and off it in the GUI (gui-water-1's jump was NOT TESTED: the shared
+  jump rules refused the script's spot, "The jump arc or landing area is blocked"; the next run picks the spot with the planner); the
+  fall-in by hand; the Arsenal card's level on the owner's HUD (it reads the body's own level, still 1 on the DOTS client; rule 24);
+  another player sees the wake (2-client day); a jump called off at take-off from the water goes back onto it (NGO 829-834, not built).
 5. Wallstride (wall-run, tree perch, wall leaps, wall walk)
 - [ ] FIRST (owner, 31 Oct): the "NGO rules" table for this system (rule, NGO file:line, numbers, the scene data it needs: layers,
   colliders, markers, NavMesh; the DOTS equivalent and whether the DOTS server/client body has it), before design or code
