@@ -75,7 +75,48 @@ namespace KryticalNova.Player
                 { layout = null; return "There is no way to the foot of that wall."; }
                 WalkUpTo(layout, path.corners, ArmTrigger + (agent != null ? agent.stoppingDistance : 0f));
             }
-            ClimbLegs(layout, climb, ask.GroundSpeed, ask.Forward);
+            ClimbLegs(layout, climb, ask.GroundSpeed, ask.Forward, false);
+            return string.Empty;
+        }
+
+        /// <summary>
+        /// NGO's jump at a wall for a ghost (part 4, `m3c-wallstride-design.md` section 5, rules C1-C4): Jump selected and a click on a climbable
+        /// surface the zone's graph does not cover. NGO's <see cref="Decide"/> from a jump (no Run needed, a slant up to 65 degrees), the catch
+        /// point (<see cref="CatchPointOn"/>), then the jump motor's own checks and flight to it
+        /// (<see cref="PlayerJumpMotor.PlanCatchForGhost"/>), all in NGO's words and order. <paramref name="layout"/> is the climb that runs on
+        /// from the catch point when the jump meets the surface (NGO <c>StartRoute(fromJump: true)</c>). Null layout and empty reason: not a
+        /// climbable surface (the ordinary jump takes the click).
+        /// </summary>
+        public string PlanCatchForGhost(Vector3 feet, Vector3 point, Vector3 normal, in GhostWallAsk ask, out Vector3 catchFeet, out float peak,
+            out WallWalkLayout layout)
+        {
+            layout = null;
+            catchFeet = feet;
+            peak = feet.y;
+            if (settings == null) return string.Empty;
+            Collider surface = FindSurface(point, normal);
+            if (surface != null && VendorStall.Is(surface)) return "Vendor stalls can't be climbed.";
+            if (surface == null || !IsClimbableObject(surface, out _)) return string.Empty;
+            bool onMesh = NavMesh.SamplePosition(feet, out NavMeshHit near, 0.6f, Filter());
+            if (onMesh) feet = near.position;
+            ghostAsk = ask;
+            bool ok;
+            Plan climb;
+            string reason;
+            try { ok = Decide(point, normal, surface, feet, true, out climb, out reason); }
+            finally { ghostAsk = null; }
+            if (!ok) return reason;
+            catchFeet = CatchPointOn(climb, feet);
+            // NGO TryJumpToCatch, in its order (busy and cooldown are the ghost's, refused before a click gets here)
+            if (jumpMotor == null) return "Jump animation is not configured.";
+            if (!onMesh) return "Jump must start on walkable ground.";
+            string why = jumpMotor.PlanCatchForGhost(feet, catchFeet, out peak);
+            if (why != null) return why;
+            Vector3 flight = catchFeet - feet;
+            flight.y = 0f;
+            Vector3 facing = flight.sqrMagnitude > 1e-4f ? flight.normalized : ask.Forward;
+            layout = new WallWalkLayout(settings, null, catchFeet, Vector3.up, facing, ask.GroundSpeed * settings.wallSpeedShare);
+            ClimbLegs(layout, climb, ask.GroundSpeed, facing, true);
             return string.Empty;
         }
 
@@ -106,14 +147,23 @@ namespace KryticalNova.Player
             return marker != null ? marker.kind.ToString() : "Wall";
         }
 
-        /// <summary>NGO <see cref="StartRoute"/> (not from a jump) as layout legs, from where the run to the foot ended.</summary>
-        private void ClimbLegs(WallWalkLayout layout, Plan climb, float groundSpeed, Vector3 forward)
+        /// <summary>
+        /// NGO <see cref="StartRoute"/> as layout legs, from where the run to the foot ended, or (<paramref name="fromJump"/>) from the catch point:
+        /// then the plant is quick when the jump met the surface head-on and longer the wider it came at it (NGO 680-687).
+        /// </summary>
+        private void ClimbLegs(WallWalkLayout layout, Plan climb, float groundSpeed, Vector3 forward, bool fromJump)
         {
             Vector3 start = layout.LastFeet;
             float climbSpeed = WallRunRules.ClimbSpeed(groundSpeed, settings);
             Quaternion upright = Facing(-climb.Normal);
             Quaternion leaned = upright * Quaternion.Euler(-settings.climbLean, 0f, 0f);
             float plantSeconds = settings.plantSeconds;
+            if (fromJump)
+            {
+                float slant = WallRunRules.ApproachAngle(forward, climb.Normal);
+                plantSeconds = Mathf.Lerp(Mathf.Min(settings.plantSeconds, 0.12f), settings.plantSeconds + 0.12f,
+                    Mathf.Clamp01(slant / Mathf.Max(1f, settings.maxJumpApproachAngle)));
+            }
             float plantRise = climbSpeed * plantSeconds * 0.5f;
             Vector3 plantTo = new Vector3(climb.BaseFeet.x, Mathf.Max(start.y, climb.BaseFeet.y) + plantRise, climb.BaseFeet.z);
             plantTo.y = Mathf.Min(plantTo.y, Mathf.Max(climb.ClimbEndFeet.y, climb.BaseFeet.y));
@@ -199,6 +249,44 @@ namespace KryticalNova.Player
             foreach (var kv in why) parts.Add($"{kv.Value}x \"{kv.Key}\"");
             return $"no face fits near {near.x:F0},{near.z:F0}: {rays} rays, {climbable} climbable, {covered} covered by the graph (the wall walk's); " +
                 string.Join(", ", parts);
+        }
+
+        /// <summary>
+        /// For the scripted test run: the face of the tree whose trunk stands at <paramref name="trunk"/>, seen from open NavMesh 6-8 m out with a
+        /// chest-height ray aimed straight at the trunk (a trunk is too thin for <see cref="FindTestClimb"/>'s 45-degree rays: gui-tree-4, 1 Nov,
+        /// 1216 rays, 0 met it), judged by NGO's Decide. Null when found, else why not.
+        /// </summary>
+        public string FindTestTreeClimb(Vector3 trunk, GhostWallAsk ask, out Vector3 stand, out Vector3 point, out Vector3 normal)
+        {
+            stand = point = normal = default;
+            if (settings == null) return "no Wallstride settings";
+            int stands = 0, hits = 0;
+            var why = new System.Collections.Generic.Dictionary<string, int>();
+            for (float r = 6f; r <= 8f; r += 1f)
+            for (int deg = 0; deg < 360; deg += 15)
+            {
+                Vector3 way = Quaternion.Euler(0f, deg, 0f) * Vector3.forward;
+                if (!NavMesh.SamplePosition(trunk + way * r, out NavMeshHit from, 1f, Filter()) || !OnOpenGround(from.position)) continue;
+                stands++;
+                Vector3 origin = from.position + Vector3.up * FaceProbeHeight;
+                Vector3 aim = new Vector3(trunk.x, origin.y, trunk.z) - origin;
+                if (!Physics.Raycast(origin, aim.normalized, out RaycastHit hit, aim.magnitude + 1f, SurfaceMask(), QueryTriggerInteraction.Ignore)) continue;
+                if (!IsClimbableObject(hit.collider, out ClimbableSurface marker) || marker == null || marker.kind != ClimbableKind.Tree) continue;
+                hits++;
+                ghostAsk = ask;
+                bool ok;
+                string reason;
+                try { ok = Decide(hit.point, hit.normal, hit.collider, from.position, false, out Plan climb, out reason) && climb.HasTop; }
+                finally { ghostAsk = null; }
+                if (!ok) { string k = string.IsNullOrEmpty(reason) ? "no top" : reason; why[k] = why.TryGetValue(k, out int c) ? c + 1 : 1; continue; }
+                stand = from.position;
+                point = hit.point;
+                normal = hit.normal;
+                return null;
+            }
+            var parts = new System.Collections.Generic.List<string>();
+            foreach (var kv in why) parts.Add($"{kv.Value}x \"{kv.Key}\"");
+            return $"no face of the tree at {trunk.x:F0},{trunk.z:F0}: {stands} places to stand 6-8 m out, {hits} rays met the trunk; " + string.Join(", ", parts);
         }
 
         /// <summary>A wall the scripted test run uses (KnPlayHere), all its points found in the zone's own surface graph.</summary>

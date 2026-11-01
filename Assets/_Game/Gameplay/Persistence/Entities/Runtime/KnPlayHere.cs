@@ -1633,7 +1633,7 @@ namespace KryticalNova.Persistence.Entities
                     yield return new WaitForSeconds(1.5f);   // the field refreshes four times a second
                     Log($"tree: terrain tree {trunkHeight:F1} m tall at {trunk.x:F1},{trunk.z:F1} ({Flat(trunk - stand):F0} m from the placed tree's start); " +
                         $"proxies live {liveBefore} at the start, {TreeProxyField.LiveTotal} here (expected more than 0); {TreeProxyField.AnchorReport()}");
-                    string terrainWhy = motor.FindTestClimb(terrainStand, ask, out Vector3 tStand, out Vector3 tPoint, out Vector3 tNormal, true);
+                    string terrainWhy = motor.FindTestTreeClimb(trunk, ask, out Vector3 tStand, out Vector3 tPoint, out Vector3 tNormal);
                     if (terrainWhy != null) { tally.Tried++; Log("tree: terrain tree: NOT TESTED; " + terrainWhy); yield break; }
                     Log($"tree: the terrain tree's face at {tPoint.x:F1},{tPoint.y:F2},{tPoint.z:F1} (kind {motor.ClimbKindAt(tPoint, tNormal)}), the start {tStand.x:F1},{tStand.z:F1}");
                     Teleport(em, ghost, tStand + Vector3.up * offset);
