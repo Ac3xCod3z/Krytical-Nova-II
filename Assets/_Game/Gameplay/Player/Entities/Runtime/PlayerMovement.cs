@@ -25,7 +25,11 @@ namespace KryticalNova.Player.Entities
             m.SpeedMmps = 0;
             m.ProgressMm = 0;
             m.RemMicro = 0;
+            m.DelayMicros = 0;
         }
+
+        /// <summary>The part of a tick before a press at <paramref name="permille"/> of it (clamped to the tick).</summary>
+        public static int PressDelayMicros(ushort permille, int tickMicros) => (int)((long)tickMicros * math.min((int)permille, 999) / 1000);
 
         /// <summary>
         /// Advances the walk by one full tick. <paramref name="serverCorners"/> and <paramref name="clientCorners"/> are the two
@@ -123,6 +127,7 @@ namespace KryticalNova.Player.Entities
                 {
                     m.OrderSeq = input.ClickSeq;
                     BeginWalk(ref m, in pose, input.Run != 0);
+                    m.DelayMicros = PressDelayMicros(input.PressPermille, tickMicros);   // the walk starts at the press, inside this tick
                 }
             }
 
@@ -185,7 +190,9 @@ namespace KryticalNova.Player.Entities
             }
 
             // ---- progress --------------------------------------------------------------------------------------------
-            long acc = (long)m.SpeedMmps * tickMicros + m.RemMicro;
+            int spend = math.max(0, tickMicros - m.DelayMicros);   // the first tick of a click: only the part after the press
+            m.DelayMicros = 0;
+            long acc = (long)m.SpeedMmps * spend + m.RemMicro;
             long step = acc / MicrosPerSecond;
             m.RemMicro = (int)(acc % MicrosPerSecond);
             m.ProgressMm = (int)math.min((long)length, m.ProgressMm + step);
@@ -257,8 +264,9 @@ namespace KryticalNova.Player.Entities
             int groundTop = math.max(0, (m.Flags & MoveFlags.Run) != 0 ? stats.RunMmps : stats.WalkMmps);
             bool accelerated = false;
 
-            // ---- spend the tick, segment by segment ------------------------------------------------------------------
-            long budget = tickMicros;
+            // ---- spend the tick, segment by segment (the first tick of a click: only the part after the press) -------
+            long budget = math.max(0, tickMicros - m.DelayMicros);
+            m.DelayMicros = 0;
             for (int guard = 0; guard < 2 * PlayerLimits.MaxWallCorners && budget > 0 && m.ProgressMm < length; guard++)
             {
                 if (!WallLeg.SegmentAt(start, corners, count, m.ProgressMm, out int idx, out int segStart, out int segLen, out _, out _)) break;
@@ -469,6 +477,40 @@ namespace KryticalNova.Player.Entities
             {
                 int turnNow = (int)((long)step * elapsed / math.max(1, tickMicros));
                 yawCdeg = turnNow <= 0 ? pose.YawCdeg : TurnToward(pose.YawCdeg, way, turnNow);
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// The owner's pose drawn ahead (as <see cref="PoseAhead(in MoveState, in PlayerPose, in PathPlan, NativeArray{int3}, in ClientPlanHeader, NativeArray{int3}, in VaultPlan, in VaultPlan, in PlayerMoveSettings, int, int, out int3, out int)"/>),
+        /// and in the tick of a new click that the walk has not taken yet, the new walk as the next step will start it: from the pose along
+        /// the owner's own corners at the click's speed, from the press (owner pick P1, 1 Nov: else the drawn target stood still for the
+        /// rest of that tick and then jumped a whole tick's run, ~1.5 m at 28 m/s in one frame).
+        /// </summary>
+        public static bool PoseAheadWithClick(in MoveState m, in PlayerPose pose, in PlayerInput input, in MoveStats stats,
+            in PathPlan plan, NativeArray<int3> serverCorners, in ClientPlanHeader client, NativeArray<int3> clientCorners,
+            in VaultPlan serverVault, in VaultPlan clientVault,
+            in PlayerMoveSettings cfg, int tickMicros, int elapsedMicros, out int3 posMm, out int yawCdeg)
+        {
+            VaultPlan vault = serverVault.Seq != 0 && serverVault.Seq == m.OrderSeq ? serverVault : clientVault;
+            bool busy = (m.Flags & MoveFlags.Moving) != 0 && VaultLeg.On(in vault, m.OrderSeq, m.ProgressMm);
+            bool pending = !busy && input.ClickSeq != 0 && input.Jump == 0 && input.Wall == 0 && input.ClickSeq == client.Seq && client.Count >= 2
+                && input.ClickSeq != m.OrderSeq && input.ClickSeq != m.RefusedSeq && clientCorners.IsCreated;
+            if (!pending)
+                return PoseAhead(in m, in pose, in plan, serverCorners, in client, clientCorners, in serverVault, in clientVault, in cfg, tickMicros,
+                    elapsedMicros, out posMm, out yawCdeg);
+            int speed = math.max(0, input.Run != 0 ? stats.RunMmps : stats.WalkMmps);
+            int moving = math.max(0, math.clamp(elapsedMicros, 0, tickMicros) - PressDelayMicros(input.PressPermille, tickMicros));
+            int count = math.min((int)client.Count, clientCorners.Length);
+            int length = PlayerPath.LengthMm(pose.Mm, clientCorners, count);
+            int progress = (int)math.min((long)length, (long)speed * moving / MicrosPerSecond);
+            PlayerPath.PointAt(pose.Mm, clientCorners, count, progress, out posMm, out int3 dir);
+            yawCdeg = pose.YawCdeg;
+            if (progress > 0)
+            {
+                int way = PlayerPath.YawCdegOf(dir, pose.YawCdeg);
+                int step = TurnStepCdeg(cfg, tickMicros);
+                yawCdeg = step <= 0 ? way : TurnToward(pose.YawCdeg, way, (int)((long)step * moving / math.max(1, tickMicros)));
             }
             return true;
         }

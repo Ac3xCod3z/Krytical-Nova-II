@@ -105,7 +105,8 @@ namespace KryticalNova.Player.Entities.Presentation
                         hasAheadTilt = true;
                         fromAhead = true;
                     }
-                    else if (PlayerMovement.PoseAhead(in move, em.GetComponentData<PlayerPose>(e), em.GetComponentData<PathPlan>(e), serverCorners,
+                    else if (PlayerMovement.PoseAheadWithClick(in move, em.GetComponentData<PlayerPose>(e),
+                            em.HasComponent<PlayerInput>(e) ? em.GetComponentData<PlayerInput>(e) : default, in stats, em.GetComponentData<PathPlan>(e), serverCorners,
                             em.GetComponentData<ClientPlanHeader>(e), clientCorners, in serverVault, in clientVault, in moveCfg, tickMicros, elapsedMicros,
                             out int3 aheadMm, out int aheadYaw))
                     {

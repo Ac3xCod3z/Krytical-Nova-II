@@ -1580,7 +1580,7 @@ namespace KryticalNova.Persistence.Entities
                 yield return new WaitForSeconds(1.5f);
                 if (resources != null && resources.Chi > 5f) resources.TrySpendChi(resources.Chi - 5f);
                 yield return new WaitForSeconds(0.5f);
-                yield return ClimbTry(body, ghost, tally, "the same climb with 5 Flux (NGO: stopped at the foot)", point, normal, stand, offset, false);
+                yield return ClimbTry(body, ghost, tally, "the same climb with 5 Flux (NGO: refused at the click)", point, normal, stand, offset, false);
                 if (resources != null) resources.RestoreChi(resources.MaxChi);
                 Log($"climb: {grip.ClimbsPaid} climb(s) paid, {grip.ClimbsRefused} stopped for want of Flux, {plans.WallWalks} wall clicks planned");
             }
@@ -1629,13 +1629,13 @@ namespace KryticalNova.Persistence.Entities
                 float apart = (new Vector3(ownPose.XMm, ownPose.YMm, ownPose.ZMm) * 0.001f - ServerPosition(ghost)).magnitude;
                 bool planned = plans.WallWalks == walks0 + 1;
                 bool up = end.y > stand.y + 1.5f;
-                bool ok = planned && (expectClimb ? grip.ClimbsPaid == paid0 + 1 && up : grip.ClimbsRefused == refused0 + 1 && !up)
+                bool ok = (expectClimb ? planned && grip.ClimbsPaid == paid0 + 1 && up : !planned && !up)   // too little Flux: NGO refuses at the click
                     && !tilt.Tilted && em.GetComponentData<MoveState>(ghost).Wall == 0 && apart < 0.05f && glide < 0.02f && m_Pops.Pops == 0;
                 if (ok) tally.Passed++;
                 Log($"climb: {what} clicked at {at}: {(ok ? "PASS" : "FAIL")}; server {(planned ? "planned it" : "planned NOTHING")} " +
                     $"(\"{(plans.WallPlanner as BodyWallPlanner)?.LastDecision}\"{(string.IsNullOrEmpty(plans.LastWallRefusal) ? "" : "; last refusal: " + plans.LastWallRefusal)}); " +
                     $"paid {grip.ClimbsPaid - paid0}, stopped for Flux {grip.ClimbsRefused - refused0}; ended {end.y - stand.y:F2} m above the start at {end.x:F1},{end.y:F2},{end.z:F1} " +
-                    $"(expected {(expectClimb ? "on the top" : "at the foot")}); upright {!tilt.Tilted}; owner {apart * 100f:F1} cm from the server; glide {glide * 100f:F1} cm; " +
+                    $"(expected {(expectClimb ? "on the top" : "refused, at the start")}); upright {!tilt.Tilted}; owner {apart * 100f:F1} cm from the server; glide {glide * 100f:F1} cm; " +
                     $"pops {m_Pops.Pops}{(m_Pops.Pops > 0 ? " (worst: " + m_Pops.Worst + ")" : "")}; at 45 degrees in the plant: {plant45 ?? "no plant"}; Flux {flux0:F0} -> {Flux(body):F0}");
                 yield return new WaitForSeconds(0.8f);
             }

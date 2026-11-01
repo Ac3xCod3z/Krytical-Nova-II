@@ -1093,6 +1093,11 @@ which do not run on a DOTS client. They take two server gaps with them: Run Flux
     have a renderer and no collider, so the wall walk (like NGO's stick probe) walks through them (probe 8a14136a3). The prop check stays.
   - open into part 2's first GUI run: the pop check judged against the drawn body's own path flagged 1 path jump (1.54 m in 23 ms) on a
     plain 28 m/s street run, its known clean case (gui-wall-5); the plant's turn reaches 45 degrees with the feet 0.17 m up (looks low).
+- [ ] part 2, the STRAIGHT CLIMB (design section 4, c88463ad5): gui-climb-1 climbed as NGO (12 Flux, on the top, upright). Note (1 Nov):
+  with too little Flux NGO's Decide refuses at the click ("Not enough Flux (12 to climb)."); the stop at the foot is only for Flux spent
+  on the way there. The ground walk's drawn target jumped ~1.5 m at a click (it stood still for the rest of the press's tick, then a whole
+  tick's run): the walk now starts at the press (`PlayerInput.PressPermille`, `MoveState.DelayMicros`, `PoseAheadWithClick`; test
+  `PoseAheadContinuityTests` 0 jumps at 0 and 100 ms); the GUI proof (plain run 0 pops) is next.
 - [ ] the owner's rules (memory [[wallstride-decisions]]): no glitching, never inside a building, a jump catches a wall at a slant
   (65 degrees, run 45 degrees) with the turn eased in the plant, a player is NEVER knocked or forced off a wall, can always leave by choice
 - [ ] the climb as one warp route of eased legs, planned by the server from the zone's surface graph, predicted by the owner; the ground

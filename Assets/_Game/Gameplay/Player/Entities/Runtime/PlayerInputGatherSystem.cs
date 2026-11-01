@@ -98,8 +98,9 @@ namespace KryticalNova.Player.Entities
             RequireForUpdate(m_Query);
         }
 
-        // the tick this frame's input is for
+        // the tick this frame's input is for, and how far into it this frame is
         NetworkTick m_Tick;
+        ushort m_PressPermille;
         // the jump clip's clock (a jump click in the air or the landing cooldown is not predicted)
         PlayerMotionCurves m_Curves;
         int m_TickMicros;
@@ -115,6 +116,9 @@ namespace KryticalNova.Player.Entities
         {
             var em = EntityManager;
             m_Tick = SystemAPI.TryGetSingleton<NetworkTime>(out var nt) ? nt.ServerTick : default;
+            // how far into the tick being gathered the press is (the walk starts there; owner pick P1, 1 Nov)
+            m_PressPermille = nt.ServerTick.IsValid && nt.ServerTickFraction > 0f && nt.ServerTickFraction < 1f
+                ? (ushort)math.clamp((int)(nt.ServerTickFraction * 1000f), 0, 999) : (ushort)0;
             m_Curves = SystemAPI.TryGetSingleton<PlayerMotionCurves>(out var curves) ? curves : PlayerMotionCurves.Default;
             m_TickMicros = PlayerMovement.TickMicros(SystemAPI.TryGetSingleton<ClientServerTickRate>(out var rate) && rate.SimulationTickRate > 0
                 ? rate.SimulationTickRate : 30);
@@ -146,6 +150,7 @@ namespace KryticalNova.Player.Entities
             input.Run = click.Run;
             input.Jump = click.Jump;
             input.ClickTick = click.ClickTick;
+            input.PressPermille = click.PressPermille;
             input.Wall = click.Wall;
             input.NormalX = click.NormalX; input.NormalY = click.NormalY; input.NormalZ = click.NormalZ;
             input.GoalXMm = click.GoalXMm;
@@ -221,6 +226,7 @@ namespace KryticalNova.Player.Entities
                 input.Click.Set();
                 input.ClickSeq = header.Seq;
                 input.Run = (byte)(cmd.Run ? 1 : 0);
+                input.PressPermille = m_PressPermille;
                 input.GoalXMm = cmd.GoalMm.x;
                 input.GoalYMm = cmd.GoalMm.y;
                 input.GoalZMm = cmd.GoalMm.z;
@@ -274,6 +280,7 @@ namespace KryticalNova.Player.Entities
                 input.ClickSeq = header.Seq;
                 input.Run = (byte)(cmd.Run ? 1 : 0);
                 input.Jump = 0;
+                input.PressPermille = m_PressPermille;
                 input.Wall = (byte)(WallClick.Wall | (cmd.Jump ? WallClick.Jump : 0));
                 input.NormalX = (short)cmd.NormalPermille.x; input.NormalY = (short)cmd.NormalPermille.y; input.NormalZ = (short)cmd.NormalPermille.z;
                 input.GoalXMm = cmd.GoalMm.x;

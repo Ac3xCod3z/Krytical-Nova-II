@@ -61,6 +61,11 @@ namespace KryticalNova.Player.Entities
         /// (<see cref="JumpFlight.ClickStartTick"/>).
         /// </summary>
         public uint ClickTick;
+        /// <summary>
+        /// How far into its tick the click was pressed, permille (0..999; owner pick P1, 1 Nov): the walk starts there, not at the tick's
+        /// start, so the drawn body does not stand still for the rest of the tick and then jump a whole tick's run. A claim, clamped.
+        /// </summary>
+        public ushort PressPermille;
         /// <summary><see cref="WallClick"/> bits: the click is Wallstride's wall walk (M3c); then <see cref="Jump"/> is 0 (the jump systems leave it).</summary>
         public byte Wall;
         /// <summary>The clicked surface's normal in permille (a wall click: NGO finds the wall's node from the point and the normal).</summary>
@@ -110,6 +115,8 @@ namespace KryticalNova.Player.Entities
         /// cleared by the walk; a teleport clears it. The server takes Grip while it is 1; a stop does nothing.
         /// </summary>
         [GhostField] public byte Wall;
+        /// <summary>The part of the walk's first tick before the press (microseconds): the first step moves only the rest. 0 after it.</summary>
+        [GhostField] public int DelayMicros;
     }
 
     /// <summary>The integer truth of where the player stands and which way it faces; LocalTransform is written from it.</summary>
