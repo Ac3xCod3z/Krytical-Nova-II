@@ -52,7 +52,8 @@ namespace KryticalNova.Persistence.Entities
 
         /// <summary>A scripted run (walk or jump) was asked for: it quits by itself.</summary>
         static bool Scripted => !string.IsNullOrEmpty(Environment.GetEnvironmentVariable(WalkVariable))
-            || !string.IsNullOrEmpty(Environment.GetEnvironmentVariable(JumpVariable));
+            || !string.IsNullOrEmpty(Environment.GetEnvironmentVariable(JumpVariable))
+            || !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("KN_PLAYHERE_VAULT"));   // the scripted vaults (M3c)
         /// <summary>A folder: the scripted run saves a Game-view picture there every 0.1 s (proof for the owner, GUI Editor only).</summary>
         public const string CaptureVariable = "KN_PLAYHERE_CAPTURE";
 
@@ -1057,7 +1058,7 @@ namespace KryticalNova.Persistence.Entities
                 var role = OwnBody.GetComponent<KryticalNova.Core.BodyRoleTag>();
                 Log($"Netcode for GameObjects {(ngoUp ? "IS RUNNING (wrong)" : "off")}; the local player is '{OwnBody.name}' ({(role != null ? role.Kind.ToString() : "no role")})");
                 if (ngoUp) Debug.LogError("[KnPlayHere] Netcode for GameObjects is running beside the entity netcode.");
-                if (!string.IsNullOrEmpty(Walk) || !string.IsNullOrEmpty(Jump))
+                if (!string.IsNullOrEmpty(Walk) || !string.IsNullOrEmpty(Jump) || VaultCount > 0)
                 {
                     // The camera's first move onto the body that just entered is the spawn, not a click (GUI run 1, 31 Oct: 3.9 m in
                     // one 333 ms warm-up frame with the body still, judged as the first click's step). Let it settle, log it apart.
@@ -1078,7 +1079,7 @@ namespace KryticalNova.Persistence.Entities
                         : $"the join's door {(door.IsOpen ? "opened by " + door.OpenedBy : "NEVER opened")} after {door.WaitedSeconds:F1} s with the body and the camera " +
                           $"ready (worst frame meanwhile {door.WorstFrameMs:F0} ms); the click waited {Time.realtimeSinceStartup - waitStart:F1} s more for it");
                 }
-                if (string.IsNullOrEmpty(Walk) && string.IsNullOrEmpty(Jump)) yield break; // by hand: the owner clicks
+                if (string.IsNullOrEmpty(Walk) && string.IsNullOrEmpty(Jump) && VaultCount <= 0) yield break; // by hand: the owner clicks
 
                 var points = new List<Vector3>();
                 if (!string.IsNullOrEmpty(Walk) && !TryPoints(Walk, points)) { Log(WalkVariable + " does not read as x,z;x,z: " + Walk); Finish(false); yield break; }
@@ -1157,12 +1158,190 @@ namespace KryticalNova.Persistence.Entities
                 // a low rank: the owner's client and the server refuse the same jump with the same words (the clean case is the jumps above)
                 var lowRank = new JumpOutcome { Ok = true };
                 if (jumpPoints.Count > 0) yield return LowRankRefusals(body, ghost, skills, lowRank);
+                var vaults = new VaultTally();
+                if (VaultCount > 0) yield return Vaults(ghost, vaults);
                 Log($"done: {arrived} of {tries} arrived, {landed} of {jumpPoints.Count} jumps passed, low-rank refusals {(lowRank.Ok ? "match" : "DIFFER")}, " +
-                    $"{m_YawFailures} facing the wrong way, {m_JudderFailures} juddering, {m_Errors} error lines");
-                Finish(arrived == tries && landed == jumpPoints.Count && lowRank.Ok && m_YawFailures == 0 && m_JudderFailures == 0 && m_Errors == 0);
+                    $"{vaults.Passed} of {vaults.Tried} vaults passed, {m_YawFailures} facing the wrong way, {m_JudderFailures} juddering, {m_Errors} error lines");
+                Finish(arrived == tries && landed == jumpPoints.Count && lowRank.Ok && vaults.Passed == vaults.Tried
+                    && m_YawFailures == 0 && m_JudderFailures == 0 && m_Errors == 0);
             }
 
             sealed class JumpOutcome { public bool Ok; }
+
+            sealed class VaultTally { public int Passed, Tried; }
+
+            /// <summary>How many vaults with the click well past the obstacle (env KN_PLAYHERE_VAULT); one short click behind it follows.</summary>
+            static int VaultCount => int.TryParse(Environment.GetEnvironmentVariable("KN_PLAYHERE_VAULT"), out int n) ? n : 0;
+
+            /// <summary>
+            /// The scripted vaults (M3c; owner, 31 Oct: watch for the body sliding after the landing): for each, a vault the server's own
+            /// planners find on a ring round the body, the click at least 4 m past the landing (the last one only just behind it); logged
+            /// with the wall clock so the video can be cut. Pass: planned, owner and server on the same leg, the clip played, the walk ends
+            /// on the click, and the drawn body stops with the walk (no glide over 2 cm once the server stopped).
+            /// </summary>
+            IEnumerator Vaults(Entity ghost, VaultTally tally)
+            {
+                World server = KnBootstrap.ServerWorld;
+                var plans = server.GetExistingSystemManaged<PlayerServerPlanSystem>();
+                if (plans == null || plans.Planner == null || plans.VaultPlanner == null) { Log("vault: FAIL; the server has no path or vault planner"); tally.Tried++; yield break; }
+                bool hasClient = TryLocalGhost(out World clientWorld, out Entity clientGhost, out _);
+                var state = OwnBody.GetComponent<PlayerPresentationState>();
+                var anim = OwnBody.GetComponentInChildren<PlayerAnimancerMotor>();
+                // the instrument on a known case first: 2 m over the open ground at the spawn reads "straight line is clear"
+                if (plans.VaultPlanner is BodyVaultPlanner probe)
+                {
+                    PlayerPose at0 = server.EntityManager.GetComponentData<PlayerPose>(ghost);
+                    var near = new Unity.Mathematics.int3(at0.XMm + 2000, at0.YMm, at0.ZMm);
+                    var scratch = new Unity.Collections.NativeList<Unity.Mathematics.int3>(PlayerLimits.MaxCorners, Unity.Collections.Allocator.Temp);
+                    VaultPath.Plan(plans.Planner, probe, ghost, at0.Mm, near, 5000, scratch, out _);
+                    scratch.Dispose();
+                    Log($"vault planner check (2 m over the open ground at the spawn, expected \"straight line is clear\"): \"{probe.LastDecision ?? "(no answer)"}\"");
+                    // the planters right at the spawn (owner, 31 Oct: "we built the vaulting for the original game right where he spawns")
+                    var crossing = new Unity.Collections.NativeList<Unity.Mathematics.int3>(PlayerLimits.MaxCorners, Unity.Collections.Allocator.Temp);
+                    Vector3 spawn = new Vector3(at0.XMm, at0.YMm, at0.ZMm) * 0.001f;
+                    foreach (Vector3 goal in HedgeGoals(spawn, 3))
+                    {
+                        var goalMm = new Unity.Mathematics.int3(Mathf.RoundToInt(goal.x * 1000f), Mathf.RoundToInt(goal.y * 1000f), Mathf.RoundToInt(goal.z * 1000f));
+                        bool way = VaultPath.Plan(plans.Planner, probe, ghost, at0.Mm, goalMm, 5000, crossing, out VaultPlan v);
+                        Log($"vault planner on a planter: walk to {goal.x:F1},{goal.z:F1} across it ({Flat(goal - spawn):F1} m): " +
+                            $"{(v.LegLengthMm > 0 ? $"VAULT (leg {v.LegLengthMm} mm, rise {v.RaiseMm} mm)" : "no vault")}, way {(way ? "found" : "NONE")}; planner: \"{probe.LastDecision ?? "(not asked)"}\"");
+                    }
+                    crossing.Dispose();
+                }
+                int total = VaultCount + 1;
+                for (int n = 0; n < total; n++)
+                {
+                    if (OverTheCap()) yield break;
+                    bool shortClick = n == total - 1;
+                    tally.Tried++;
+                    if (!FindVault(plans, ghost, shortClick, out Vector3 goal, out string found))
+                    { Log($"vault {n + 1}: FAIL; {found}"); continue; }
+                    int vaults0 = plans.Vaults, clip0 = state != null ? state.VaultClipFrame : 0;
+                    string at = DateTime.Now.ToString("HH:mm:ss.fff", CultureInfo.InvariantCulture);
+                    Vector3 bodyStart = OwnBody.transform.position;
+                    BodyClicks.Ground(goal, false);
+                    float clicked = Time.realtimeSinceStartup, stoppedAt = -1f, glide = 0f, topBody = float.MinValue;
+                    Vector3 bodyAtStop = default;
+                    bool moving = false, wasInVault = false;
+                    string afterLanding = null;
+                    while (Time.realtimeSinceStartup - clicked < 12f)
+                    {
+                        yield return new WaitForEndOfFrame();
+                        bool now = Moving(ghost);
+                        if (now) moving = true;
+                        Vector3 b = OwnBody.transform.position;
+                        topBody = Mathf.Max(topBody, b.y);
+                        if (state != null)
+                        {
+                            if (wasInVault && !state.InVault && afterLanding == null && anim != null) afterLanding = anim.CurrentState.ToString();
+                            wasInVault |= state.InVault;
+                        }
+                        if (moving && !now)
+                        {
+                            if (stoppedAt < 0f) { stoppedAt = Time.realtimeSinceStartup; bodyAtStop = b; }
+                            else
+                            {
+                                glide = Mathf.Max(glide, Flat(b - bodyAtStop));
+                                if (Time.realtimeSinceStartup - stoppedAt > 0.6f) break;
+                            }
+                        }
+                    }
+                    VaultPlan v = server.EntityManager.GetComponentData<VaultPlan>(ghost);
+                    VaultPlan own = hasClient && clientWorld.IsCreated ? clientWorld.EntityManager.GetComponentData<ClientVaultPlan>(clientGhost).Plan : default;
+                    bool planned = plans.Vaults == vaults0 + 1;
+                    bool sameLeg = own.Seq == v.Seq && own.LegStartMm == v.LegStartMm && own.LegLengthMm == v.LegLengthMm;
+                    bool clip = state != null && state.VaultClipFrame != clip0;
+                    float off = Flat(ServerPosition(ghost) - goal);
+                    bool ok = planned && sameLeg && clip && wasInVault && off < 1.5f && glide < 0.02f;
+                    if (ok) tally.Passed++;
+                    Log($"vault {n + 1} ({(shortClick ? "short click just behind" : "click past")}) clicked at {at}: {(ok ? "PASS" : "FAIL")}; {found}; " +
+                        $"server {(planned ? "planned the vault" : "planned NO vault")}, owner {(sameLeg ? "on the same leg" : "on ANOTHER leg")} (start {v.LegStartMm} mm, " +
+                        $"{v.LegLengthMm} mm, air {v.AirMicros / 1000} ms, rise {v.RaiseMm} mm, style {v.Style}); clip {(clip ? "played" : "NOT played")} " +
+                        $"(frame {(state != null ? state.VaultClipFrame : 0)}); body rose {(topBody - bodyStart.y) * 100f:F0} cm; after the landing: {afterLanding ?? "never landed"}; " +
+                        $"ended {off:F2} m from the click; glide after the stop {glide * 100f:F1} cm (limit 2)");
+                    yield return new WaitForSeconds(0.8f);
+                }
+            }
+
+            /// <summary>
+            /// Points straight across the planters (the hedges, `SM_Env_Hedge*`) nearest to <paramref name="from"/>: for each, 4, 6 and 8 m past
+            /// its middle on the line from the body, on the NavMesh. The vaulting of the NGO game was built over these at the spawn.
+            /// </summary>
+            static List<Vector3> HedgeGoals(Vector3 from, int hedges)
+            {
+                var found = new List<Transform>();
+                foreach (Transform t in UnityEngine.Object.FindObjectsByType<Transform>(FindObjectsSortMode.None))
+                    if (t.name.StartsWith("SM_Env_Hedge", StringComparison.Ordinal)) found.Add(t);
+                found.Sort((a, b) => Flat(a.position - from).CompareTo(Flat(b.position - from)));
+                var goals = new List<Vector3>();
+                for (int i = 0; i < found.Count && i < hedges; i++)
+                {
+                    Vector3 middle = found[i].GetComponentInChildren<Renderer>() is Renderer r ? r.bounds.center : found[i].position;
+                    Vector3 way = middle - from;
+                    way.y = 0f;
+                    if (way.sqrMagnitude < 0.01f) continue;
+                    way.Normalize();
+                    foreach (float past in new[] { 4f, 6f, 8f })
+                    {
+                        Vector3 p = middle + way * past;
+                        if (Physics.Raycast(new Vector3(p.x, from.y + 50f, p.z), Vector3.down, out RaycastHit hit, 100f)
+                            && UnityEngine.AI.NavMesh.SamplePosition(hit.point, out UnityEngine.AI.NavMeshHit nav, 0.5f, UnityEngine.AI.NavMesh.AllAreas))
+                            goals.Add(nav.position);
+                    }
+                }
+                return goals;
+            }
+
+            /// <summary>A click the server's own planners vault on the way to: on a ring round the body, the walk on from the landing at least 4 m (or 0.3-1.5 m for the short click).</summary>
+            static bool FindVault(PlayerServerPlanSystem plans, Entity ghost, bool shortClick, out Vector3 goal, out string found)
+            {
+                goal = default;
+                World server = KnBootstrap.ServerWorld;
+                PlayerPose pose = server.EntityManager.GetComponentData<PlayerPose>(ghost);
+                MoveStats stats = server.EntityManager.GetComponentData<MoveStats>(ghost);
+                Vector3 from = new Vector3(pose.XMm, pose.YMm, pose.ZMm) * 0.001f;
+                var corners = new Unity.Collections.NativeList<Unity.Mathematics.int3>(PlayerLimits.MaxCorners, Unity.Collections.Allocator.Temp);
+                // why each candidate got no vault (the planner's own words), so "no obstacle near" and "the planner refuses" read apart
+                var reasons = new Dictionary<string, int>();
+                void Count(string why) => reasons[why] = reasons.TryGetValue(why, out int c) ? c + 1 : 1;
+                var bodyPlanner = plans.VaultPlanner as BodyVaultPlanner;
+                try
+                {
+                    // the planters near the body first (straight across each), then rings
+                    foreach (Vector3 across in HedgeGoals(from, 6))
+                    {
+                        var goalMm = new Unity.Mathematics.int3(Mathf.RoundToInt(across.x * 1000f), Mathf.RoundToInt(across.y * 1000f), Mathf.RoundToInt(across.z * 1000f));
+                        if (!VaultPath.Plan(plans.Planner, plans.VaultPlanner, ghost, pose.Mm, goalMm, stats.WalkMmps, corners, out VaultPlan hv) || hv.LegLengthMm <= 0)
+                        { Count("planter: " + (bodyPlanner != null && bodyPlanner.LastDecision != null ? bodyPlanner.LastDecision : "no way or no vault")); continue; }
+                        int left = PlayerPath.LengthMm(pose.Mm, corners.AsArray(), corners.Length) - hv.LegStartMm - hv.LegLengthMm;
+                        if (shortClick ? left < 300 || left > 1500 : left < 4000) { Count("planter: vault, but the walk on from the landing too " + (shortClick ? "long or short" : "short")); continue; }
+                        goal = across;
+                        found = $"a planter {Flat(across - from):F1} m out, the walk on from the landing {left / 1000f:F1} m";
+                        return true;
+                    }
+                    foreach (float radius in new[] { 5f, 8f, 12f, 16f, 22f, 30f, 40f })
+                        for (int i = 0; i < 48; i++)
+                        {
+                            float a = i * 7.5f * Mathf.Deg2Rad;
+                            Vector3 p = from + new Vector3(Mathf.Sin(a), 0f, Mathf.Cos(a)) * radius;
+                            if (!Physics.Raycast(new Vector3(p.x, from.y + 50f, p.z), Vector3.down, out RaycastHit hit, 100f)) { Count("no ground under the point"); continue; }
+                            if (!UnityEngine.AI.NavMesh.SamplePosition(hit.point, out UnityEngine.AI.NavMeshHit nav, 0.5f, UnityEngine.AI.NavMesh.AllAreas)) { Count("point off the NavMesh"); continue; }
+                            var goalMm = new Unity.Mathematics.int3(Mathf.RoundToInt(nav.position.x * 1000f), Mathf.RoundToInt(nav.position.y * 1000f), Mathf.RoundToInt(nav.position.z * 1000f));
+                            if (!VaultPath.Plan(plans.Planner, plans.VaultPlanner, ghost, pose.Mm, goalMm, stats.WalkMmps, corners, out VaultPlan v) || v.LegLengthMm <= 0)
+                            { Count(bodyPlanner != null && bodyPlanner.LastDecision != null ? bodyPlanner.LastDecision : "no way or no vault"); continue; }
+                            int after = PlayerPath.LengthMm(pose.Mm, corners.AsArray(), corners.Length) - v.LegStartMm - v.LegLengthMm;
+                            if (shortClick ? after < 300 || after > 1500 : after < 4000) { Count("vault, but the walk on from the landing too " + (shortClick ? "long or short" : "short")); continue; }
+                            goal = nav.position;
+                            found = $"obstacle {radius:F0} m out at {i * 7.5f:F1} deg, the walk on from the landing {after / 1000f:F1} m";
+                            return true;
+                        }
+                    var parts = new List<string>();
+                    foreach (var r in reasons) parts.Add($"{r.Value}x \"{r.Key}\"");
+                    found = "no vaultable obstacle on rings of 5-40 m round the body; why not: " + string.Join(", ", parts);
+                    return false;
+                }
+                finally { corners.Dispose(); }
+            }
 
             /// <summary>
             /// The ranks reach the owner (MoveRanks) and a jump the rank does not allow is refused by the owner's own check and by the

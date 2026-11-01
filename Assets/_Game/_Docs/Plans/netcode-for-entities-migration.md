@@ -974,6 +974,9 @@ numbers, Cadence). Each item is ticked only with its proof. GUI runs prove feel;
 Order note: in plan section 4, M3c (vault, Wallstride, Waterstride, follow, skill walk-in) comes before M4. "Skill walk-in" (walk to range,
 then cast) is used by combat. Pick before code: M3c first, or M4 with the walk-in pulled in.
 
+- [ ] FIRST (owner, 31 Oct): the "NGO rules" table for combat (per part: melee, skills, hostility, vitals, wallet/trade) (rule, NGO file:line, numbers, the scene data it needs: layers,
+  colliders, markers, NavMesh; the DOTS equivalent and whether the DOTS server/client body has it), before design or code
+
 Rules (server, EditMode world tests at 0 and 100 ms):
 - [ ] one combat formula: `CombatCalculator` as a Burst-compatible static on blittable structs, called by NGO and DOTS alike. A parity test
   runs the same inputs through the old and the new and gets identical results (damage, crit, evade, reflect, shield) before anything
@@ -1029,14 +1032,20 @@ which do not run on a DOTS client. They take two server gaps with them: Run Flux
 (`PointAndClickPlayer.ServerMoveTo` mover branch), and the server body does not know the Run selection (DOTS sends Run per click).
 
 1. Skill walk-in (the `ServerOrder` walk exists: `PlayerEntitiesSetup` "walk the player to a point")
+- [ ] FIRST (owner, 31 Oct): the "NGO rules" table for this system (rule, NGO file:line, numbers, the scene data it needs: layers,
+  colliders, markers, NavMesh; the DOTS equivalent and whether the DOTS server/client body has it), before design or code
 - [ ] a skill clicked out of range walks the player into range by the server's order, at the Run or walk speed the click would use (Flux for
   Run as a click), and the skill starts on arrival; a new click or another order cancels it; the owner sees it start from the order's tick
 - [ ] the range and the stop point are NGO's (the skill's range minus NGO's margin); a target that moves updates the walk as NGO did
 2. Follow (Squad)
+- [ ] FIRST (owner, 31 Oct): the "NGO rules" table for this system (rule, NGO file:line, numbers, the scene data it needs: layers,
+  colliders, markers, NavMesh; the DOTS equivalent and whether the DOTS server/client body has it), before design or code
 - [ ] the follower walks after the member by the server's orders, stops `SquadSettings`' distance off, re-plans as NGO did
 - [ ] the member's jumps are copied: walk to the take-off, jump to the landing with the follower's own Jump (rank, Flux, arc; section 53
   rules), so two can cross a river together; ends on the NGO conditions (own order, fight, defeat, Squad change, map change)
 3. Vault
+- [x] FIRST (m3c-vault-design.md section 5) (owner, 31 Oct): the "NGO rules" table for this system (rule, NGO file:line, numbers, the scene data it needs: layers,
+  colliders, markers, NavMesh; the DOTS equivalent and whether the DOTS server/client body has it), before design or code
 - [ ] going over is the rule: a walk whose straight line is blocked by a vaultable obstacle, no longer than walking round, vaults (NGO's
   `TryArm`, `Watch`); the plan carries the take-off, the obstacle, the landing and the faction's clip (`VaultAnimationMap`)
 - [ ] the take-off happens without stopping (speed carried through), the landing hands the rest of the walk back; the same vaults as NGO for a
@@ -1044,11 +1053,15 @@ which do not run on a DOTS client. They take two server gaps with them: Run Flux
 - [ ] the drawn body on the plan's curve within 1 cm at 30/60/120 fps (the section 53 bar); no clipping into the obstacle (bones vs face,
   side-view film strip)
 4. Waterstride
+- [ ] FIRST (owner, 31 Oct): the "NGO rules" table for this system (rule, NGO file:line, numbers, the scene data it needs: layers,
+  colliders, markers, NavMesh; the DOTS equivalent and whether the DOTS server/client body has it), before design or code
 - [ ] the NGO gate: level 60, Run and Jump rank 20; a click on water with Run selected runs to the nearest shore point, across by the `WaterMap`
   route, stands on the water at the end; a land click from the water runs to the nearest shore and walks on
 - [ ] Flux every second on the water, paid by the server; out of Flux, carried back to the nearest shore; the owner's Flux (section 53
   `OwnerFlux`) refuses at once in NGO's words
 5. Wallstride (wall-run, tree perch, wall leaps, wall walk)
+- [ ] FIRST (owner, 31 Oct): the "NGO rules" table for this system (rule, NGO file:line, numbers, the scene data it needs: layers,
+  colliders, markers, NavMesh; the DOTS equivalent and whether the DOTS server/client body has it), before design or code
 - [ ] the owner's rules (memory [[wallstride-decisions]]): no glitching, never inside a building, a jump catches a wall at a slant
   (65 degrees, run 45 degrees) with the turn eased in the plant, a player is NEVER knocked or forced off a wall, can always leave by choice
 - [ ] the climb as one warp route of eased legs, planned by the server from the zone's surface graph, predicted by the owner; the ground

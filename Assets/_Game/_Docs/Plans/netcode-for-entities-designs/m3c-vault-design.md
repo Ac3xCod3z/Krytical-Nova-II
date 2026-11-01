@@ -47,3 +47,31 @@ Plan section 55 item 3 is the acceptance list. This is how it is built.
 3. `IVaultPlanner` adapter + the planners' path splice, server and owner: world tests with a stub planner, then the real one in the GUI.
 4. Presentation (clip, feel, no ground snap) and the KnPlayHere scripted vault (a known obstacle near the Zone01 spawn, with
    frames, compared against NGO's vault over the same obstacle).
+
+## 5. NGO vault rules (owner, 31 Oct: DOTS must vault exactly what NGO vaults)
+
+Source: `Gameplay/Player/Runtime/PlayerVaultMotor.cs` (line numbers on 31 Oct), numbers from `Player.prefab` and `TraversalSettings`.
+DOTS runs the same code (`PlanForGhost` -> `TryPlan`) on the server body and on the owner's view body. There is no vaultable marker,
+tag or component: an obstacle is vaultable by its shape alone.
+
+| # | Rule (NGO) | Source | Number | DOTS: same code? | Does the DOTS body have what it needs? |
+|---|---|---|---|---|---|
+| 1 | the motor is set up (data) | 213, `PlanForGhost` | animations + traversal + warp template | yes (data-only check for a server body) | yes: serialized on the motor, kept (disabled) on server/view bodies |
+| 2 | the straight line to the destination leaves the NavMesh (a NavMesh edge on the way) | 242 `NavMesh.Raycast` | agent's area mask | yes | agent kept (disabled): area mask readable. Zone01 NavMesh identical to main (no diff) |
+| 3 | moves under 1 m flat are never vaults | after 242 | 1 m | yes | yes |
+| 4 | the ground height in front of the edge (PhysX down-ray) | 254 | 1.5 m ray, player raycast layers | yes | layers = `PointAndClickPlayer.raycastLayers` (bits 73: layers 0, 3, 6); kept on bodies |
+| 5 | an obstacle face at 0.85 x min height, straight out from the NavMesh edge (or along the travel), within 3.2 m | 502-506 | min height 0.18 m | yes | needs the planter's COLLIDER on a raycast layer; the hedge prefab itself has none, the planter's collider is on its stone mesh (layer to confirm in the run) |
+| 6 | never a character (an agent or something damageable) | 508 | - | yes | DOTS has TWO bodies in one process (server + view): their colliders are characters, skipped |
+| 7 | met at most 80 degrees off square | 510-515 | 80 deg | yes | yes |
+| 8 | top 0.18-2.2 m, thickness up to 1.8 m, ground again behind it (no drop) | 520-541 | 0.18 / 2.2 / 1.8 m, ground tolerance 0.12 m | yes | colliders + layers as rule 5 |
+| 9 | room to take off: standing in front within the style's run-up, or the run-up spot on the NavMesh, or the NavMesh edge within 3 m | 260, 430-452 | maximumRunUp 3 m, aside 0.5 m | yes | yes |
+| 10 | room to land: the style's landing distance (+2.4 m search) on the NavMesh, within 0.5 m of the ground's height, standing room clear, nothing taller than 0.3 m in the way down | 262, 460-478 | landingSearch 2.4, step 0.3, landing step 0.5 m | yes | capsule check uses the agent's radius/height (kept) |
+| 11 | the crossing above the top is clear (a box 1.1 m tall) | 264, 553 | clearance 0.12 m | yes | yes |
+| 12 | a walkable way on from the landing | 268 | NavMesh path | yes | yes |
+| 13 | going over is not longer than walking round | 272-273 | minimumDistanceSaved 0 | yes; DOTS passes its own walk's length round | DOTS walk length = the walk planner's corners (should match the agent's path) |
+| 14 | the style (clip) for the height: low < 0.75 m <= middle < 1.35 m <= tall | `TraversalSettings.HeightOf` | 0.75 / 1.35 m | yes (class sent, each body resolves its clip) | the view body resolves with its own faction (as NGO) |
+| 15 | a click during a vault is ignored; the walk goes on to its destination | `PointAndClickPlayer` 940, 1378; `ResumeMoveAfterVault` | - | yes (refused on the leg, server and owner) | - |
+
+Which rule fails on the spawn planters (GUI run gui-vault-2: "none found" 5 times): not known from that run. It logged no reasons.
+The next run logs the planner's own reason per candidate, and straight across the three planters nearest the spawn
+(`HedgeGoals`). That names the failing rule by NGO's own words before any fix.
