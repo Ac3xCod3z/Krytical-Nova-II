@@ -213,3 +213,36 @@ legs, built by the motor for a ghost (`PlayerWallRunMotor.PlanClimbForGhost`, co
   as it should (the script expected a stop at the foot: that is only when Flux runs out on the way). The plant leans 12 degrees, so no
   45-degree crossing. Pop check: still 0, teleport 1, plain 28 m/s run 2 ("the path jumped 1.47 m in 26 ms", as gui-wall-5): the
   ground walk's drawn target jumps ~1.5 m in a frame; the next item (Master). GIFs `DOTS-proof/dots-climb-1..4-*.gif`.
+
+## 5. Part 4, the jump that catches a wall: NGO rules, then the design (DOTS 8, 1 Nov)
+
+### 5.1 NGO rules (read from the code; rows 7, 18-20 of section 1 in full)
+
+| # | Rule (NGO) | Source | Numbers | Scene data | DOTS today |
+|---|---|---|---|---|---|
+| C1 | Jump selected, click on a climbable surface the graph does not cover: `Decide(fromJump: true)` from the feet (stride = from a jump: Run not needed; slant within 65 degrees), then the catch point, then `TryJumpToCatch` | M:277-285 | slant 65 | colliders | not built: a Jump wall click off the graph is the ordinary jump |
+| C2 | catch point: the climb's foot (x, z), height = start feet + `catchHeight`, clamped between the climb's base and its end (1.1 m under the edge) | M:600-604 | catchHeight 1.4, edgeBelowHands 1.1 | - | - |
+| C3 | `TryJumpToCatch` refusals, in order: "Finish this jump before choosing another destination." / "Let the landing settle before jumping again." / "Jump animation is not configured." / "Jump must start on walkable ground." / learn Jump first / the Jump's Flux (`CanPayForCommand`) / "Too far: Jump rank reaches {d} m." / "Too close to jump at." / "Too high to jump at: Jump rank reaches {h} m." / the flight's own refusal, else "The jump at it is blocked." | JM:345-373, 329-339 | rank distance and height; `MinimumTravelDistance` | colliders (the flight's sweep) | the DOTS jump has the same words for the ordinary jump (M3b) |
+| C4 | the catch flight is NGO's jump (warped clip, crouch, take-off, the rank's arc) to the catch point; apex = max(start, catch) + `apexClearance`; the arc must be clear | JM:333-338, 307-315 | apexClearance | colliders | the DOTS jump (`MotionPlan`, `JumpFlight`) flies the same curve |
+| C5 | an ordinary jump whose arc is blocked: a sphere cast (radius x 0.6) from the feet + 1 m along the jump's line; when what it meets passes `Decide(fromJump)`, the jump becomes a catch (C2, C4); else the blocked jump's refusal stands | JM:301-303, 321-327; M:331-348 | radius x 0.6, 1 m, min 0.3 m | colliders | not built: the DOTS planner refuses a blocked arc |
+| C6 | the jump's Flux paid as any jump (at take-off); the climb's 12 when the jump meets the wall (`BeginCaught` -> `Pay`) | JM:356; M:357-361 | 12 | - | the jump's Flux is paid at take-off (M3b); `WallGripSystem.PayClimbs` pays a climb as its plant starts |
+| C7 | at the end of the flight (where the landing would be) no landing: `CatchSurface` stops the jump, sets the landing cooldown, and the climb runs on from there (`StartRoute(fromJump: true)`: the plant 0.12-0.30 s by the slant / 65, the turn eased in) | JM:383-393, 645, 760; M:356-367, 667-700 | landingCooldown; plant 0.12-0.30 | - | the climb legs exist (part 2) but only `fromJump: false` |
+| C8 | not enough Flux to hold on (the 12): "Could not hold on. Returned to takeoff." (`AbortJump`: back to the take-off point) | JM:392 | 12 | - | - |
+| C9 | clicks while it flies or climbs are ignored (busy); a stop does nothing | M:418-435; PCP:685 | - | - | the same rule as the jump and the climb today |
+
+### 5.2 Design: two ways, for the Master (pick before code)
+
+(a, RECOMMENDED: exact NGO feel) **The DOTS jump, then the climb, chained on the server's tick.** The click is planned by NGO's own code
+for a ghost (`PlanCatchForGhost`: C1/C5 -> C2 -> the jump's checks C3 -> `PlanForGhost`'s flight to the catch point) and sent as the
+jump it is: a `MotionPlan` (Kind Jump, a new flag `Catch`) to the catch point, plus the climb's legs (`fromJump: true`) as a wall walk
+whose `ServerOrder` starts on the jump's landing tick (`StartTick + LandMicros`). The jump system skips the landing for a `Catch` plan; the
+walk starts the climb from the catch point on that tick; `PayClimbs` takes the 12 as its plant starts, or, short of Flux, the walk is the
+NGO return to take-off (C8). The owner predicts both from the press (the jump as in M3b, the walk from its own plan), so the jump looks
+and times exactly as every other DOTS jump.
+(b) **One wall walk with the jump as two arc legs** (like the wall walk's `JumpOnto`): less new machinery, but the flight is not NGO's
+jump clip and curve (no crouch, a simple gravity arc), so it would not feel like NGO's catch.
+
+Steps for (a), each with EditMode tests, the GUI proof at the end (announced to the Master): 1. `PlanCatchForGhost` + `fromJump` legs
+(pure layout tests); 2. `MotionPlan.Catch` + the walk starting on a tick (server and owner, world tests at 0 and 100 ms: the hand-off on
+the same tick, 12 Flux, the return to take-off); 3. the blocked ordinary jump (C5); 4. presentation (no landing clip, the plant from the
+flight); 5. GUI run `KN_PLAYHERE_CATCH=1`: a Jump click at a wall, a jump whose arc meets a wall, the same short of Flux, pops.
