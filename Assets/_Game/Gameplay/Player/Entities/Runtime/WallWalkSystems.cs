@@ -153,8 +153,9 @@ namespace KryticalNova.Player.Entities
             {
                 var move = em.GetComponentData<MoveState>(e);
                 var owed = em.GetComponentData<WallGripOwed>(e);
-                if (move.Wall == 0)
+                if (move.Wall != 1)
                 {
+                    // off a wall (perched in a tree costs nothing, NGO)
                     // counted from the moment on the wall (NGO resets it as the wall move begins)
                     if (owed.Micro != 0) em.SetComponentData(e, new WallGripOwed());
                     continue;

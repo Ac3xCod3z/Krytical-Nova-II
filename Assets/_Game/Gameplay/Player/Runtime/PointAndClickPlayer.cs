@@ -704,6 +704,9 @@ namespace KryticalNova.Player
             // down or a jump off; the owner's and the server's planners tell why not). A click on a unit still selects it.
             if (ViewMode && BodyClicks.LocalOnWall && hit.collider.GetComponentInParent<IDamageable>() == null)
             {
+                // perched in a tree: only the ground is a place to drop to (NGO, the same words)
+                if (BodyClicks.LocalPerched && (groundLayers.value & (1 << hit.collider.gameObject.layer)) == 0)
+                { CommandMessage?.Invoke("Click the ground to drop down to it."); return; }
                 BodyClicks.Wall(hit.point, hit.normal, movementSkills != null && movementSkills.IsRunning, movementSkills != null && movementSkills.IsJumpSelected);
                 ClientPresentationRegistry.Markers?.ShowMoveMarker(transform, hit.point, hit.normal);
                 return;

@@ -198,6 +198,26 @@ namespace KryticalNova.Player.Entities.Tests
         }
 
         [Test]
+        public void ATreeClimb_EndsPerched_UprightOffTheGround_AndAStopDoesNothing()
+        {
+            var perch = new int3(5400, 5000, 0);
+            using var w = new Walk(
+                new[] { int3.zero, Foot, Planted, perch },
+                new[] { default, default, OnFace(WallPhase.Plant, 180000, WallEase.In, WallEase.Out), Upright(WallPhase.ToPerch, 400000, WallEase.In, WallEase.Out) },
+                new WallPlan { Seq = 1, SpeedMmps = WallSpeed, OnWallFrom = 255, OffWallFrom = 255, Flags = WallFlags.EndsPerched });
+            var input = Click(1);
+            for (int i = 0; i < 300 && (i == 0 || w.Moving); i++) { w.Step(in input); input = default; }
+            Assert.AreEqual(perch, w.Pose.Mm, "in the tree, at the place to stand");
+            Assert.AreEqual(2, w.M.Wall, "perched (off the ground, no Grip)");
+            Assert.AreEqual(WallPhase.Perched, w.Tilt.Phase, "NGO's Perched: the crouch plays");
+            Assert.AreEqual(1000, w.Tilt.UpY, "upright");
+            var stop = default(PlayerInput);
+            stop.Stop.Set();
+            w.Step(in stop);
+            Assert.AreEqual(2, w.M.Wall, "a stop does nothing in the tree");
+        }
+
+        [Test]
         public void TheWallsTilt_BlendsTheUp_AndFacesTheWayAlong()
         {
             var from = OnFace(WallPhase.WallMove);

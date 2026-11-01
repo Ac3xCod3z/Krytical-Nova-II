@@ -79,6 +79,33 @@ namespace KryticalNova.Player
             return string.Empty;
         }
 
+        /// <summary>
+        /// Perched in a tree (part 3): a click on the ground below drops down to it (NGO <see cref="ServerDropTo"/>, the same checks and
+        /// words): a walkable place within 1.5 m on open ground, within 25 m of the tree, an arc under gravity over a 0.4 m lift.
+        /// </summary>
+        public string PlanDropForGhost(Vector3 feet, Vector3 point, Vector3 forward, out WallWalkLayout layout)
+        {
+            layout = null;
+            if (settings == null) return "Not now.";
+            if (!NavMesh.SamplePosition(point, out NavMeshHit landing, 1.5f, Filter()) || !OnOpenGround(landing.position))
+                return "Choose a walkable place to drop down to.";
+            Vector3 flat = landing.position - feet;
+            flat.y = 0f;
+            if (flat.magnitude > settings.maxDropDistance) return $"Too far: drop within {settings.maxDropDistance:0} m of the tree.";
+            layout = new WallWalkLayout(settings, null, feet, Vector3.up, forward, 0f);
+            layout.WallEnds();
+            layout.Arc(WallRunPhase.DropDown, landing.position, 0.4f, Facing(landing.position - feet));
+            return string.Empty;
+        }
+
+        /// <summary>The kind of a climbable surface at a point (the scripted run logs it): Tree, Wall, or none.</summary>
+        public string ClimbKindAt(Vector3 point, Vector3 normal)
+        {
+            Collider surface = FindSurface(point, normal);
+            if (surface == null || !IsClimbableObject(surface, out ClimbableSurface marker)) return "none";
+            return marker != null ? marker.kind.ToString() : "Wall";
+        }
+
         /// <summary>NGO <see cref="StartRoute"/> (not from a jump) as layout legs, from where the run to the foot ended.</summary>
         private void ClimbLegs(WallWalkLayout layout, Plan climb, float groundSpeed, Vector3 forward)
         {
@@ -100,6 +127,9 @@ namespace KryticalNova.Player
             }
             if (climb.HasTop)
             {
+                // a tree: into it to the place to stand, and perched there (NGO 704, 720); else over the edge onto the top
+                WallRunPhase over = climb.Kind == ClimbableKind.Tree ? WallRunPhase.ToPerch : WallRunPhase.Mantle;
+                layout.EndsPerched = climb.Kind == ClimbableKind.Tree;
                 Vector3 inward = climb.TopFeet - from;
                 inward.y = 0f;
                 float inDistance = inward.magnitude;
@@ -107,12 +137,12 @@ namespace KryticalNova.Player
                 float liftIn = Mathf.Min(0.35f, inDistance * 0.3f);
                 Vector3 lifted = new Vector3(from.x, Mathf.Max(from.y, climb.TopFeet.y) + settings.mantleClearance, from.z) + inDirection * liftIn;
                 float liftSeconds = Mathf.Max(MinimumDuration, 2f * (lifted.y - from.y) / climbSpeed);
-                layout.Leg(WallRunPhase.Mantle, lifted, upright, liftSeconds, WallWalkLayout.EaseOut, WallWalkLayout.EaseIn);
+                layout.Leg(over, lifted, upright, liftSeconds, WallWalkLayout.EaseOut, WallWalkLayout.EaseIn);
                 float alongSpeed = 2f * liftIn / liftSeconds;
                 float rest = Mathf.Max(0f, inDistance - liftIn);
                 float overSeconds = alongSpeed > 0.1f ? 2f * rest / alongSpeed : settings.mantleSeconds;
                 overSeconds = Mathf.Clamp(overSeconds, settings.mantleSeconds * 0.5f, settings.mantleSeconds * 1.5f);
-                layout.Leg(WallRunPhase.Mantle, climb.TopFeet, upright, overSeconds, WallWalkLayout.EaseIn, WallWalkLayout.EaseOut);
+                layout.Leg(over, climb.TopFeet, upright, overSeconds, WallWalkLayout.EaseIn, WallWalkLayout.EaseOut);
             }
             else
             {
@@ -133,7 +163,7 @@ namespace KryticalNova.Player
         /// the zone's graph does not cover: horizontal rays at chest height from NavMesh points around, the face judged by NGO's own Decide.
         /// <paramref name="stand"/> is where the ray started (on the NavMesh, 6-8 m out). Null when found, else why not.
         /// </summary>
-        public string FindTestClimb(Vector3 near, GhostWallAsk ask, out Vector3 stand, out Vector3 point, out Vector3 normal)
+        public string FindTestClimb(Vector3 near, GhostWallAsk ask, out Vector3 stand, out Vector3 point, out Vector3 normal, bool tree = false)
         {
             stand = point = normal = default;
             if (settings == null) return "no Wallstride settings";
@@ -149,7 +179,8 @@ namespace KryticalNova.Player
                     Vector3 dir = Quaternion.Euler(0f, turn, 0f) * Vector3.forward;
                     rays++;
                     if (!Physics.Raycast(from.position + Vector3.up * FaceProbeHeight, dir, out RaycastHit hit, 8f, SurfaceMask(), QueryTriggerInteraction.Ignore)) continue;
-                    if (hit.distance < 6f || !IsClimbableObject(hit.collider, out _) || VendorStall.Is(hit.collider)) continue;
+                    if (hit.distance < 6f || !IsClimbableObject(hit.collider, out ClimbableSurface marker) || VendorStall.Is(hit.collider)) continue;
+                    if (tree != (marker != null && marker.kind == ClimbableKind.Tree)) continue;   // a tree, or not a tree, as asked
                     climbable++;
                     if (WantsWallWalkClick(hit.point, hit.normal, false)) { covered++; continue; }
                     ghostAsk = ask;

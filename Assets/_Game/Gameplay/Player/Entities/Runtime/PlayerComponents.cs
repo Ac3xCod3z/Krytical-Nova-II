@@ -111,6 +111,7 @@ namespace KryticalNova.Player.Entities
         /// </summary>
         [GhostField] public byte Water;
         /// <summary>
+        /// 2 = perched in a tree (Wallstride part 3: a stop does nothing, every click is a drop, no Grip).
         /// 1 = on a wall (Wallstride's wall walk, M3c): on a segment of a <see cref="WallPlan"/> on the wall, or standing at its end. Set and
         /// cleared by the walk; a teleport clears it. The server takes Grip while it is 1; a stop does nothing.
         /// </summary>

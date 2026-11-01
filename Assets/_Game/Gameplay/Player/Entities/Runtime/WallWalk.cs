@@ -49,6 +49,8 @@ namespace KryticalNova.Player.Entities
         public const byte PayOnPlant = 4;
         /// <summary>The server has decided the plant's Flux (paid, or not and the walk stopped at the foot); never twice.</summary>
         public const byte Paid = 8;
+        /// <summary>A tree climb: the walk ends perched (NGO's Perched; <see cref="MoveState.Wall"/> = 2, upright, no Grip).</summary>
+        public const byte EndsPerched = 16;
     }
 
     /// <summary>

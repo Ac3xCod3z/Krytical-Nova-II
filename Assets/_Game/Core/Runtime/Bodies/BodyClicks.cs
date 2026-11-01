@@ -36,6 +36,7 @@ namespace KryticalNova.Core
             LastGroundFrame = 0;
             GroundClicks = 0;
             LocalOnWall = false;
+            LocalPerched = false;
         }
 
         public static int Count => Pending.Count;
@@ -77,6 +78,9 @@ namespace KryticalNova.Core
 
         /// <summary>The local body stands or moves on a wall (its ghost says so): the view sends every click as a wall click.</summary>
         public static bool LocalOnWall { get; set; }
+
+        /// <summary>The local body is perched in a tree: a click that is not on the ground is refused (NGO), any other drops down.</summary>
+        public static bool LocalPerched { get; set; }
 
         /// <summary>The player asked to stop where they stand.</summary>
         public static void Stop() => Add(new Click { Stop = true });

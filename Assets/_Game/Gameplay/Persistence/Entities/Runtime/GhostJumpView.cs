@@ -68,7 +68,11 @@ namespace KryticalNova.Persistence.Entities
         public void WallPhase(byte phase, float seconds)
         {
             bool mine = KryticalNova.Core.BodyRoleTag.IsMine(this, true);
-            if (mine) KryticalNova.Core.BodyClicks.LocalOnWall = phase == (byte)WallRunPhase.WallMove || phase == (byte)WallRunPhase.WallHold;
+            if (mine)
+            {
+                KryticalNova.Core.BodyClicks.LocalOnWall = phase == (byte)WallRunPhase.WallMove || phase == (byte)WallRunPhase.WallHold || phase == (byte)WallRunPhase.Perched;
+                KryticalNova.Core.BodyClicks.LocalPerched = phase == (byte)WallRunPhase.Perched;
+            }
             Wall?.ShowGhostPhase((WallRunPhase)phase, seconds, mine);
         }
 

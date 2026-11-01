@@ -345,6 +345,13 @@ namespace KryticalNova.Player.Entities
                 m.Wall = 1;
                 tilt.Phase = WallPhase.WallHold;
             }
+            else if ((wall.Flags & WallFlags.EndsPerched) != 0)
+            {
+                // perched in a tree (NGO EndRoute: upright, facing as the last leg; the perch's crouch plays): off the ground, no Grip
+                m.Wall = 2;
+                float yaw = math.radians(pose.YawCdeg * 0.01f);
+                tilt = new PoseTilt { UpY = 1000, FwdX = (short)math.round(math.sin(yaw) * 1000f), FwdZ = (short)math.round(math.cos(yaw) * 1000f), Phase = WallPhase.Perched };
+            }
             else
             {
                 m.Wall = 0;

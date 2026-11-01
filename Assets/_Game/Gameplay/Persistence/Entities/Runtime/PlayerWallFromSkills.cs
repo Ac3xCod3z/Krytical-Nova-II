@@ -53,7 +53,12 @@ namespace KryticalNova.Persistence.Entities
             // NGO's order: the wall walk where the zone's graph covers the wall (or the body is on one), else the straight climb (part 2)
             string why;
             WallWalkLayout layout;
-            if (onWall || motor.WantsWallWalkClick(point, normal, false)) why = motor.PlanWallForGhost(feet, point, normal, in ask, wallBase, out layout);
+            if (tilt.Phase == WallPhase.Perched)
+            {
+                // perched in a tree: every click is a drop to the ground below (NGO PointAndClickPlayer 713-718, Jump selected or not)
+                why = motor.PlanDropForGhost(feet, point, ask.Forward, out layout);
+            }
+            else if (onWall || motor.WantsWallWalkClick(point, normal, false)) why = motor.PlanWallForGhost(feet, point, normal, in ask, wallBase, out layout);
             else
             {
                 if (jump) { LastDecision = "a jump at a wall without the graph (the catch is part 4)"; return WallAnswer.NotWall; }
@@ -67,7 +72,7 @@ namespace KryticalNova.Persistence.Entities
                 return WallAnswer.Refused;
             }
             Write(layout, poseMm, offset, corners, legs, out plan);
-            LastDecision = layout.PayOnPlant ? "a straight climb" : layout.EndsOnWall ? "onto the wall" : "over or off the wall";
+            LastDecision = layout.EndsPerched ? "a tree climb, perched" : layout.PayOnPlant ? "a straight climb" : layout.EndsOnWall ? "onto the wall" : "over or off the wall";
             return WallAnswer.Planned;
         }
 
@@ -138,7 +143,7 @@ namespace KryticalNova.Persistence.Entities
                 OnWallFrom = (byte)Mathf.Clamp(layout.OnWallFrom, 0, 255),
                 OffWallFrom = (byte)Mathf.Clamp(layout.OffWallFrom, 0, 255),
                 Flags = (byte)((layout.EndsOnWall ? WallFlags.EndsOnWall : 0) | (layout.Truncated ? WallFlags.Truncated : 0)
-                    | (layout.PayOnPlant ? WallFlags.PayOnPlant : 0)),
+                    | (layout.PayOnPlant ? WallFlags.PayOnPlant : 0) | (layout.EndsPerched ? WallFlags.EndsPerched : 0)),
             };
         }
 
