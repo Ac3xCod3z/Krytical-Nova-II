@@ -40,6 +40,12 @@ namespace KryticalNova.Player.Entities
                 AddComponent<WaterPlan>(e);
                 AddComponent<ClientWaterPlan>(e);
                 AddComponent<WaterFluxOwed>(e);
+                AddComponent<WallPlan>(e);
+                AddComponent<ClientWallPlan>(e);
+                AddBuffer<WallCorner>(e);
+                AddBuffer<ClientWallCorner>(e);
+                AddComponent<PoseTilt>(e);
+                AddComponent<WallGripOwed>(e);
                 AddComponent<OwnerFlux>(e);
                 AddBuffer<PathCorner>(e);
                 AddComponent<PathPlan>(e);

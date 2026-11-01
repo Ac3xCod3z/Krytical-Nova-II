@@ -72,16 +72,44 @@ namespace KryticalNova.Player.Entities
             in WaterPlan serverWater, in WaterPlan clientWater,
             in MoveStats stats, in PlayerMoveSettings cfg, int tickMicros)
         {
+            PoseTilt tilt = default;
+            Step(ref m, ref pose, ref tilt, in input, in order, in plan, serverCorners, in client, clientCorners, in serverVault, in clientVault,
+                in serverWater, in clientWater, default, default, default, default, in stats, in cfg, tickMicros);
+        }
+
+        /// <summary>
+        /// The walk with its vault, its Waterstride leg and its wall walk (M3c, `m3c-wallstride-design.md` section 3). A walk whose order
+        /// carries a <see cref="WallPlan"/> moves segment by segment as its <see cref="WallCorner"/>s say: a timed leg takes exactly its time
+        /// on NGO's eases, a wall segment runs at the wall's speed, a ground segment by the walk's own rules; the progress is spent across
+        /// segments within the tick, so a leg never takes a tick more or less than its time. NGO: a stop does nothing on the wall (the agent
+        /// is off), and nothing starts during a timed leg (clicks are ignored while the motor is busy off the wall; a server order waits).
+        /// </summary>
+        public static void Step(
+            ref MoveState m, ref PlayerPose pose, ref PoseTilt tilt,
+            in PlayerInput input, in ServerOrder order,
+            in PathPlan plan, NativeArray<int3> serverCorners,
+            in ClientPlanHeader client, NativeArray<int3> clientCorners,
+            in VaultPlan serverVault, in VaultPlan clientVault,
+            in WaterPlan serverWater, in WaterPlan clientWater,
+            in WallPlan serverWall, NativeArray<WallCorner> serverLegs,
+            in WallPlan clientWall, NativeArray<WallCorner> clientLegs,
+            in MoveStats stats, in PlayerMoveSettings cfg, int tickMicros)
+        {
             // the vault of the walk under way (the server's for its corners, else the owner's own)
             VaultPlan vault = serverVault.Seq != 0 && serverVault.Seq == m.OrderSeq ? serverVault : clientVault;
             bool inVault = (m.Flags & MoveFlags.Moving) != 0 && VaultLeg.On(in vault, m.OrderSeq, m.ProgressMm);
             bool stranded = (m.Flags & MoveFlags.Moving) != 0 && WaterLeg.Stranded(WaterLeg.Of(in serverWater, in clientWater, m.OrderSeq), m.OrderSeq);
-            if (input.Stop.IsSet && !inVault && m.Water == 0) CancelWalk(ref m);
+            bool inTimedLeg = (m.Flags & MoveFlags.Moving) != 0
+                && WallWalkOf(in m, in plan, serverCorners, in client, clientCorners, in serverWall, serverLegs, in clientWall, clientLegs,
+                    out var wc, out int wcount, out _, out var wlegs)
+                && WallLeg.SegmentAt(new int3(m.StartXMm, m.StartYMm, m.StartZMm), wc, wcount, m.ProgressMm, out int wi, out _, out _, out _, out _)
+                && wi < wlegs.Length && wlegs[wi].Micros > 0;
+            if (input.Stop.IsSet && !inVault && !inTimedLeg && m.Water == 0 && m.Wall == 0) CancelWalk(ref m);
 
             // ---- start of a walk -------------------------------------------------------------------------------------
-            if (inVault)
+            if (inVault || inTimedLeg)
             {
-                // over the obstacle: no new walk until the landing (NGO); a server order waits for it
+                // over the obstacle or in a leg of the wall walk: no new walk until it ends (NGO); a server order waits for it
             }
             else if (order.Seq != 0 && order.Seq != m.ServerSeq)
             {
@@ -103,6 +131,15 @@ namespace KryticalNova.Player.Entities
             }
 
             if ((m.Flags & MoveFlags.Moving) == 0) return;
+            if (WallWalkOf(in m, in plan, serverCorners, in client, clientCorners, in serverWall, serverLegs, in clientWall, clientLegs,
+                    out var wallCorners, out int wallCount, out WallPlan wall, out var legs))
+            {
+                StepWallWalk(ref m, ref pose, ref tilt, wallCorners, wallCount, in wall, legs, in stats, in cfg, tickMicros);
+                return;
+            }
+            // a walk with no wall walk is on the ground, upright
+            m.Wall = 0;
+            tilt = default;
             if (vault.Seq != m.OrderSeq) vault = serverVault.Seq != 0 && serverVault.Seq == m.OrderSeq ? serverVault : clientVault;
             WaterPlan water = WaterLeg.Of(in serverWater, in clientWater, m.OrderSeq);
             bool hasWater = water.Seq != 0 && water.Seq == m.OrderSeq;
@@ -170,6 +207,161 @@ namespace KryticalNova.Player.Entities
             m.Water = (byte)(hasWater && WaterLeg.On(in water, m.OrderSeq, m.ProgressMm) ? 1 : 0);
 
             if (arrived) CancelWalk(ref m);
+        }
+
+        /// <summary>
+        /// The corners and the wall walk of the walk under way: the server's when its corners carry the walk's number, else the owner's own.
+        /// False when that walk has no wall walk (or not a leg for every corner).
+        /// </summary>
+        static bool WallWalkOf(in MoveState m, in PathPlan plan, NativeArray<int3> serverCorners, in ClientPlanHeader client, NativeArray<int3> clientCorners,
+            in WallPlan serverWall, NativeArray<WallCorner> serverLegs, in WallPlan clientWall, NativeArray<WallCorner> clientLegs,
+            out NativeArray<int3> corners, out int count, out WallPlan wall, out NativeArray<WallCorner> legs)
+        {
+            corners = default; count = 0; wall = default; legs = default;
+            if (plan.Seq == m.OrderSeq && plan.Count >= 2)
+            {
+                if (!WallLeg.Of(in serverWall, m.OrderSeq) || !serverLegs.IsCreated) return false;
+                corners = serverCorners; count = plan.Count; wall = serverWall; legs = serverLegs;
+            }
+            else if (client.Seq == m.OrderSeq && client.Count >= 2)
+            {
+                if (!WallLeg.Of(in clientWall, m.OrderSeq) || !clientLegs.IsCreated) return false;
+                corners = clientCorners; count = client.Count; wall = clientWall; legs = clientLegs;
+            }
+            else return false;
+            if (!corners.IsCreated) return false;
+            count = math.min(count, corners.Length);
+            return count >= 2 && legs.Length >= count;
+        }
+
+        /// <summary>
+        /// One tick of a wall walk (see the full Step with the wall plans):
+        /// the tick's time is spent segment by segment at each one's speed, then the pose, the tilt and the wall flag come from the progress.
+        /// </summary>
+        static void StepWallWalk(ref MoveState m, ref PlayerPose pose, ref PoseTilt tilt, NativeArray<int3> corners, int count,
+            in WallPlan wall, NativeArray<WallCorner> legs, in MoveStats stats, in PlayerMoveSettings cfg, int tickMicros)
+        {
+            m.Water = 0;
+            int3 start = new int3(m.StartXMm, m.StartYMm, m.StartZMm);
+            int length = PlayerPath.LengthMm(start, corners, count);
+            if (length <= 0) { CancelWalk(ref m); return; }
+            bool starting = m.ProgressMm == 0 && m.RemMicro == 0;
+            int groundTop = math.max(0, (m.Flags & MoveFlags.Run) != 0 ? stats.RunMmps : stats.WalkMmps);
+            bool accelerated = false;
+
+            // ---- spend the tick, segment by segment ------------------------------------------------------------------
+            long budget = tickMicros;
+            for (int guard = 0; guard < 2 * PlayerLimits.MaxWallCorners && budget > 0 && m.ProgressMm < length; guard++)
+            {
+                if (!WallLeg.SegmentAt(start, corners, count, m.ProgressMm, out int idx, out int segStart, out int segLen, out _, out _)) break;
+                WallCorner leg = legs[idx];
+                int speed;
+                if (leg.Micros > 0) speed = WallLeg.TimedSpeedMmps(segLen, leg.Micros);
+                else if (WallLeg.OnWall(in wall, idx)) speed = math.max(1, wall.SpeedMmps);
+                else
+                {
+                    // the ground: the walk's own rules up to the end of this stretch of ground (NGO: the agent walks to the wall's foot)
+                    int groundEnd = GroundStretchEnd(start, corners, count, in wall, legs, idx, segStart + segLen);
+                    int target = ArrivalTarget(groundTop, groundEnd - m.ProgressMm, in cfg);
+                    bool entering = starting || (m.ProgressMm == segStart && idx > 1 && (legs[idx - 1].Micros > 0 || WallLeg.OnWall(in wall, idx - 1)));
+                    if (entering) speed = target;
+                    else if (accelerated) speed = m.SpeedMmps;
+                    else
+                    {
+                        int accel = math.max(cfg.AccelMmps2, (int)math.min((long)groundTop * cfg.AccelPerSpeed, int.MaxValue / 2));
+                        int dv = math.max(1, (int)((long)accel * tickMicros / MicrosPerSecond));
+                        speed = m.SpeedMmps < target ? math.min(target, m.SpeedMmps + dv) : math.max(target, m.SpeedMmps - dv);
+                    }
+                    accelerated = true;
+                    speed = math.max(1, speed);
+                }
+                starting = false;
+                m.SpeedMmps = speed;
+                int segEnd = segStart + segLen;
+                long need = (long)(segEnd - m.ProgressMm) * MicrosPerSecond - m.RemMicro;   // micro-millimetres to the segment's end
+                long can = (long)speed * budget;
+                if (can >= need)
+                {
+                    budget -= (need + speed - 1) / speed;
+                    m.ProgressMm = segEnd;
+                    m.RemMicro = 0;
+                    continue;
+                }
+                long acc = can + m.RemMicro;
+                m.ProgressMm = (int)math.min((long)length, m.ProgressMm + acc / MicrosPerSecond);
+                m.RemMicro = (int)(acc % MicrosPerSecond);
+                budget = 0;
+            }
+
+            // ---- arrival ---------------------------------------------------------------------------------------------
+            WallLeg.SegmentAt(start, corners, count, length, out int lastIdx, out _, out _, out _, out _);
+            bool lastOnGround = legs[lastIdx].Micros == 0 && !WallLeg.OnWall(in wall, lastIdx);
+            bool arrived = m.ProgressMm >= length || (lastOnGround && m.ProgressMm + cfg.StopMm >= length);
+            if (arrived) m.ProgressMm = length;   // on the point, as the walk does
+
+            // ---- pose, tilt, on the wall -----------------------------------------------------------------------------
+            WallLeg.SegmentAt(start, corners, count, m.ProgressMm, out int i, out int s0, out int len, out int3 a, out int3 b);
+            WallCorner here = legs[i];
+            int share = len > 0 ? (int)math.clamp((long)(m.ProgressMm - s0) * 1000 / len, 0, 1000) : 1000;
+            bool onWall = WallLeg.OnWall(in wall, i);
+            int3 p;
+            if (here.Micros > 0) p = WallLeg.TimedPoint(a, b, in here, share);
+            else PlayerPath.PointAt(start, corners, count, m.ProgressMm, out p, out _);
+            pose.XMm = p.x; pose.YMm = p.y; pose.ZMm = p.z;
+            if (here.Micros > 0 || onWall)
+            {
+                byte phase = here.Phase != WallPhase.None ? here.Phase : (onWall ? WallPhase.WallMove : WallPhase.None);
+                tilt = WallLeg.TiltOf(legs[i - 1], here, a, b, onWall, share, phase, pose.YawCdeg);
+                pose.YawCdeg = WallLeg.YawOf(in tilt, pose.YawCdeg);
+            }
+            else
+            {
+                tilt = default;
+                pose.YawCdeg = TurnToward(pose.YawCdeg, PlayerPath.YawCdegOf(b - a, pose.YawCdeg), TurnStepCdeg(cfg, tickMicros));
+            }
+            m.Wall = (byte)(onWall ? 1 : 0);
+
+            if (!arrived) return;
+            if ((wall.Flags & WallFlags.EndsOnWall) != 0)
+            {
+                // standing on the wall at the route's end (NGO WallHold): the tilt stays, Grip goes on
+                m.Wall = 1;
+                tilt.Phase = WallPhase.WallHold;
+            }
+            else
+            {
+                m.Wall = 0;
+                tilt = default;
+            }
+            CancelWalk(ref m);
+        }
+
+        /// <summary>Where the stretch of ground that segment <paramref name="idx"/> is on ends: the start of the next leg or wall segment, else the path's end.</summary>
+        static int GroundStretchEnd(int3 start, NativeArray<int3> corners, int count, in WallPlan wall, NativeArray<WallCorner> legs, int idx, int segEnd)
+        {
+            int along = segEnd;
+            int3 prev = corners[idx];
+            for (int j = idx + 1; j < count; j++)
+            {
+                if (legs[j].Micros > 0 || WallLeg.OnWall(in wall, j)) return along;
+                along += PlayerPath.DistanceMm(prev, corners[j]);
+                prev = corners[j];
+            }
+            return along;
+        }
+
+        /// <summary>The walk's target speed <paramref name="remainingMm"/> before it ends (NGO's arrival slowing, as the ground walk does).</summary>
+        static int ArrivalTarget(int top, int remainingMm, in PlayerMoveSettings cfg)
+        {
+            int radius = math.clamp(
+                (int)((long)top * cfg.ArrivalSlowdownMs / 1000),
+                cfg.ArrivalMinRadiusMm,
+                math.max(cfg.ArrivalMinRadiusMm, cfg.ArrivalMaxRadiusMm));
+            if (radius <= 0 || remainingMm >= radius) return top;
+            int tPermille = (int)((long)math.max(0, remainingMm) * 1000 / radius);
+            int ease = (int)PlayerPath.ISqrt((long)tPermille * 1000);
+            int factor = cfg.ArrivalMinPermille + (int)((long)(1000 - cfg.ArrivalMinPermille) * ease / 1000);
+            return (int)((long)top * factor / 1000);
         }
 
         /// <summary>Hundredths of a degree the body may turn in one tick; 0 = no limit (face the way at once).</summary>

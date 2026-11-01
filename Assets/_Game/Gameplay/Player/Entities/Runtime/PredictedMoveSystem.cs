@@ -62,10 +62,12 @@ namespace KryticalNova.Player.Entities
             [NativeDisableParallelForRestriction] public BufferLookup<PlayerMoveTrace> Traces;
 
             void Execute(Entity entity,
-                ref MoveState move, ref PlayerPose pose, ref LocalTransform transform, ref PlayerMoveDiag diag,
+                ref MoveState move, ref PlayerPose pose, ref PoseTilt tilt, ref LocalTransform transform, ref PlayerMoveDiag diag,
                 in PlayerInput input, in ServerOrder order, in PathPlan plan, in ClientPlanHeader client, in MoveStats stats,
                 in VaultPlan vault, in ClientVaultPlan clientVault, in WaterPlan water, in ClientWaterPlan clientWater,
-                in DynamicBuffer<PathCorner> serverBuffer, in DynamicBuffer<ClientPlanCorner> clientBuffer)
+                in WallPlan wall, in ClientWallPlan clientWall,
+                in DynamicBuffer<PathCorner> serverBuffer, in DynamicBuffer<ClientPlanCorner> clientBuffer,
+                in DynamicBuffer<WallCorner> serverLegs, in DynamicBuffer<ClientWallCorner> clientLegs)
             {
                 ushort orderBefore = move.OrderSeq;
                 var serverCorners = serverBuffer.Reinterpret<int3>().AsNativeArray();
@@ -74,11 +76,13 @@ namespace KryticalNova.Player.Entities
                 // a jump click never starts a walk (PlayerMotionSystem flies it after this step)
                 PlayerInput walkInput = input;
                 if (walkInput.Jump != 0) walkInput.Click = default;
-                PlayerMovement.Step(ref move, ref pose, in walkInput, in order, in plan, serverCorners, in client, clientCorners,
-                    in vault, in clientVault.Plan, in water, in clientWater.Plan, in stats, in Cfg, TickMicros);
+                PlayerMovement.Step(ref move, ref pose, ref tilt, in walkInput, in order, in plan, serverCorners, in client, clientCorners,
+                    in vault, in clientVault.Plan, in water, in clientWater.Plan,
+                    in wall, serverLegs.AsNativeArray(), in clientWall.Plan, clientLegs.Reinterpret<WallCorner>().AsNativeArray(),
+                    in stats, in Cfg, TickMicros);
 
                 transform.Position = new float3(pose.XMm, pose.YMm, pose.ZMm) * 0.001f;
-                transform.Rotation = quaternion.RotateY(math.radians(pose.YawCdeg * 0.01f));
+                transform.Rotation = WallLeg.Rotation(in pose, in tilt);
 
                 diag.Runs++;
                 if (First) diag.FirstRuns++;
@@ -148,13 +152,15 @@ namespace KryticalNova.Player.Entities
             [NativeDisableParallelForRestriction] public ComponentLookup<TeleportRequest> Requests;
             [NativeDisableParallelForRestriction] public ComponentLookup<MotionPlan> Plans;
 
-            void Execute(Entity entity, ref MoveState move, ref PlayerPose pose, ref LocalTransform transform, ref TeleportSeq seq)
+            void Execute(Entity entity, ref MoveState move, ref PlayerPose pose, ref PoseTilt tilt, ref LocalTransform transform, ref TeleportSeq seq)
             {
                 var request = Requests[entity];
                 pose.XMm = request.XMm; pose.YMm = request.YMm; pose.ZMm = request.ZMm;
                 pose.YawCdeg = ((request.YawCdeg % 36000) + 36000) % 36000;
                 PlayerMovement.CancelWalk(ref move);
                 move.Water = 0;   // a teleport ends Waterstride where it puts the body (NGO: Cancel)
+                move.Wall = 0;    // and the wall walk (NGO: the wall motor's Cancel lands it on the NavMesh)
+                tilt = default;
                 if (Plans.HasComponent(entity))
                 {
                     var plan = Plans[entity];

@@ -38,6 +38,8 @@ namespace KryticalNova.Player.Entities
         /// <summary>Client orders count 1..0x7FFF; server orders have the high bit set, so the two spaces never meet.</summary>
         public const ushort ServerSeqBit = 0x8000;
         public const ushort ClientSeqMax = 0x7FFF;
+        /// <summary>Most corners of a wall walk (its node feet are many; a longer route goes on as a server order from the cut).</summary>
+        public const int MaxWallCorners = 64;
     }
 
     /// <summary>
@@ -99,6 +101,11 @@ namespace KryticalNova.Player.Entities
         /// walk; a teleport and a jump's take-off clear it, a jump that stands on the water sets it. The server pays Flux while it is 1.
         /// </summary>
         [GhostField] public byte Water;
+        /// <summary>
+        /// 1 = on a wall (Wallstride's wall walk, M3c): on a segment of a <see cref="WallPlan"/> on the wall, or standing at its end. Set and
+        /// cleared by the walk; a teleport clears it. The server takes Grip while it is 1; a stop does nothing.
+        /// </summary>
+        [GhostField] public byte Wall;
     }
 
     /// <summary>The integer truth of where the player stands and which way it faces; LocalTransform is written from it.</summary>
