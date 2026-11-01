@@ -132,8 +132,11 @@ namespace KryticalNova.Player
             return parts.Count == 0 ? "no anchors, no fields" : string.Join("; ", parts);
         }
 
-        /// <summary>The climbable terrain tree nearest <paramref name="around"/> in any field (the scripted run's terrain tree).</summary>
-        public static bool NearestTree(Vector3 around, out Vector3 foot, out float height)
+        /// <summary>
+        /// The climbable terrain tree nearest <paramref name="around"/> in any field, at least <paramref name="minHeight"/> tall (the scripted
+        /// run's terrain tree; gui-tree-3: the nearest, 4.5 m, is one NGO refuses, "There is no room at the top.").
+        /// </summary>
+        public static bool NearestTree(Vector3 around, float minHeight, out Vector3 foot, out float height)
         {
             foot = default;
             height = 0f;
@@ -143,6 +146,7 @@ namespace KryticalNova.Player
                 if (t == null || !t.TryGetComponent(out TreeProxyField field)) continue;
                 foreach (TreeShape tree in field.trees)
                 {
+                    if (tree.Height < minHeight) continue;
                     Vector3 offset = tree.Foot - around;
                     offset.y = 0f;
                     if (offset.sqrMagnitude >= best) continue;

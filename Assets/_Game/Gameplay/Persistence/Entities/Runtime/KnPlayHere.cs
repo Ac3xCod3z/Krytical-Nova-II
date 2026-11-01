@@ -1605,8 +1605,9 @@ namespace KryticalNova.Persistence.Entities
                     yield return TreeTry(body, ghost, tally, "down by a click below to finish", below, Vector3.up, stand, offset, false, false, TreeEnd.Down);
 
                     // a terrain tree (its collider is a proxy the field puts near the bodies; the nearest is ~180 m from the start in Zone01): the
-                    // instrument at the bodies' new place first, then up, too far and down
-                    if (!TreeProxyField.NearestTree(stand, out Vector3 trunk, out float trunkHeight))
+                    // instrument at the bodies' new place first, then up, too far and down. At least 6 m tall: gui-tree-3's nearest (4.5 m) is one
+                    // NGO refuses ("There is no room at the top.")
+                    if (!TreeProxyField.NearestTree(stand, 6f, out Vector3 trunk, out float trunkHeight))
                     {
                         tally.Tried++;
                         Log($"tree: terrain tree: NOT TESTED; no terrain tree in a field ({TreeProxyField.AnchorReport()})");
