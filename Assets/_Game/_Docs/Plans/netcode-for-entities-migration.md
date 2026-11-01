@@ -1082,7 +1082,7 @@ which do not run on a DOTS client. They take two server gaps with them: Run Flux
   fall-in by hand; the Arsenal card's level on the owner's HUD (it reads the body's own level, still 1 on the DOTS client; rule 24);
   another player sees the wake (2-client day); a jump called off at take-off from the water goes back onto it (NGO 829-834, not built).
 5. Wallstride (wall-run, tree perch, wall leaps, wall walk)
-- [ ] FIRST (owner, 31 Oct): the "NGO rules" table for this system (rule, NGO file:line, numbers, the scene data it needs: layers,
+- [x] FIRST (m3c-wallstride-design.md section 1, 41 rules; two NGO climb paths: straight climb by rays, wall walk on the surface graph) (owner, 31 Oct): the "NGO rules" table for this system (rule, NGO file:line, numbers, the scene data it needs: layers,
   colliders, markers, NavMesh; the DOTS equivalent and whether the DOTS server/client body has it), before design or code
 - [ ] the owner's rules (memory [[wallstride-decisions]]): no glitching, never inside a building, a jump catches a wall at a slant
   (65 degrees, run 45 degrees) with the turn eased in the plant, a player is NEVER knocked or forced off a wall, can always leave by choice
