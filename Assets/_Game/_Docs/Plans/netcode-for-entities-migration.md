@@ -1055,7 +1055,7 @@ which do not run on a DOTS client. They take two server gaps with them: Run Flux
   (open: measured only at the run's own frame rate; the side-view film strip for clipping still to do) (bones vs face,
   side-view film strip)
 4. Waterstride
-- [ ] FIRST (owner, 31 Oct): the "NGO rules" table for this system (rule, NGO file:line, numbers, the scene data it needs: layers,
+- [x] FIRST (m3c-waterstride-design.md section 1, 24 rules; the gaps found: the owner has no level, the view body skips the water click, a DOTS jump onto water stands for free) (owner, 31 Oct): the "NGO rules" table for this system (rule, NGO file:line, numbers, the scene data it needs: layers,
   colliders, markers, NavMesh; the DOTS equivalent and whether the DOTS server/client body has it), before design or code
 - [ ] the NGO gate: level 60, Run and Jump rank 20; a click on water with Run selected runs to the nearest shore point, across by the `WaterMap`
   route, stands on the water at the end; a land click from the water runs to the nearest shore and walks on
