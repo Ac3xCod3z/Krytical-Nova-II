@@ -1060,7 +1060,8 @@ namespace KryticalNova.Persistence.Entities
                 var role = OwnBody.GetComponent<KryticalNova.Core.BodyRoleTag>();
                 Log($"Netcode for GameObjects {(ngoUp ? "IS RUNNING (wrong)" : "off")}; the local player is '{OwnBody.name}' ({(role != null ? role.Kind.ToString() : "no role")})");
                 if (ngoUp) Debug.LogError("[KnPlayHere] Netcode for GameObjects is running beside the entity netcode.");
-                if (!string.IsNullOrEmpty(Walk) || !string.IsNullOrEmpty(Jump) || VaultCount > 0 || WaterRun || WallRun)
+                Log("scripted parts: " + ScriptedParts());
+                if (HasScriptedTries)
                 {
                     // The camera's first move onto the body that just entered is the spawn, not a click (GUI run 1, 31 Oct: 3.9 m in
                     // one 333 ms warm-up frame with the body still, judged as the first click's step). Let it settle, log it apart.
@@ -1081,7 +1082,7 @@ namespace KryticalNova.Persistence.Entities
                         : $"the join's door {(door.IsOpen ? "opened by " + door.OpenedBy : "NEVER opened")} after {door.WaitedSeconds:F1} s with the body and the camera " +
                           $"ready (worst frame meanwhile {door.WorstFrameMs:F0} ms); the click waited {Time.realtimeSinceStartup - waitStart:F1} s more for it");
                 }
-                if (string.IsNullOrEmpty(Walk) && string.IsNullOrEmpty(Jump) && VaultCount <= 0) yield break; // by hand: the owner clicks
+                if (!HasScriptedTries) { Log("no scripted tries: the owner clicks by hand"); yield break; }
 
                 var points = new List<Vector3>();
                 if (!string.IsNullOrEmpty(Walk) && !TryPoints(Walk, points)) { Log(WalkVariable + " does not read as x,z;x,z: " + Walk); Finish(false); yield break; }
@@ -1173,6 +1174,25 @@ namespace KryticalNova.Persistence.Entities
                 Finish(arrived == tries && landed == jumpPoints.Count && lowRank.Ok && vaults.Passed == vaults.Tried && waters.Passed == waters.Tried
                     && walls.Passed == walls.Tried
                     && m_YawFailures == 0 && m_JudderFailures == 0 && m_Errors == 0);
+            }
+
+            /// <summary>
+            /// The ONE list of the run's scripted parts (1 Nov: gui-wall-1 stood still because the early exit after the join's door knew only
+            /// the walk, the jumps and the vaults, so a run of Waterstride or the wall walk alone never started). Every gate reads this; a new
+            /// scripted part is added here, and to <see cref="Scripted"/>, which reads the same variables before the runner exists.
+            /// </summary>
+            bool HasScriptedTries => !string.IsNullOrEmpty(Walk) || !string.IsNullOrEmpty(Jump) || VaultCount > 0 || WaterRun || WallRun;
+
+            /// <summary>Which scripted parts are on, for the log's first lines (a part that should run and is not listed shows at once).</summary>
+            string ScriptedParts()
+            {
+                var on = new List<string>();
+                if (!string.IsNullOrEmpty(Walk)) on.Add("walk");
+                if (!string.IsNullOrEmpty(Jump)) on.Add("jumps");
+                if (VaultCount > 0) on.Add($"vaults {VaultCount}");
+                if (WaterRun) on.Add("Waterstride");
+                if (WallRun) on.Add("wall walk");
+                return on.Count > 0 ? string.Join(", ", on) : "none (by hand)";
             }
 
             sealed class JumpOutcome { public bool Ok; }
