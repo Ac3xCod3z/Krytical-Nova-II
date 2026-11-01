@@ -1054,6 +1054,11 @@ which do not run on a DOTS client. They take two server gaps with them: Run Flux
 - [ ] the drawn body on the plan's curve within 1 cm at 30/60/120 fps (the section 53 bar); no clipping into the obstacle
   (open: measured only at the run's own frame rate; the side-view film strip for clipping still to do) (bones vs face,
   side-view film strip)
+- [x] at running speed (owner's ask, 31 Oct): GUI run 2 with Run on (1a6e6880e, `KN_PLAYHERE_VAULT_RUN=1`): 3 of 3 PASS, 2 over the spawn
+  planters, 0.0 cm glide after the landing. Owner accepted the logged numbers; that run filmed no vault (the Editor recompiled first and
+  the recording's time limit ran out).
+- [ ] a running-speed vault VIDEO (owner, 1 Nov): an extra in the first Waterstride GUI run. 3-4 vaults clicked past, 2 over the spawn
+  planters, each started far enough back that walking round does not win; ffmpeg started only after "[KnPlayHere] the tester entered"
 4. Waterstride
 - [x] FIRST (m3c-waterstride-design.md section 1, 24 rules; the gaps found: the owner has no level, the view body skips the water click, a DOTS jump onto water stands for free) (owner, 31 Oct): the "NGO rules" table for this system (rule, NGO file:line, numbers, the scene data it needs: layers,
   colliders, markers, NavMesh; the DOTS equivalent and whether the DOTS server/client body has it), before design or code

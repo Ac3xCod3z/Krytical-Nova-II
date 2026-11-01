@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using KryticalNova.Core;
 using KryticalNova.Progression;
 using KryticalNova.World;
-using KryticalNova.World.Water;
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.AI;
@@ -25,13 +24,11 @@ namespace KryticalNova.Player
     [RequireComponent(typeof(NavMeshAgent), typeof(PlayerMovementSkills), typeof(PlayerResources))]
     public sealed class PlayerWaterstrideMotor : NetworkBehaviour
     {
-        private const float StepAlong = 0.5f;      // metres between the samples of a line looking for the water's edge
-        private const float LookForWater = 80f;    // farthest along a click's line the water's edge is looked for
-        private const float ShoreTrigger = 0.7f;   // metres from the shore point the run onto the water starts
+        private const float ShoreTrigger = WaterstrideRules.ShoreTrigger;
         private const float ArriveDistance = 0.08f;
         private const float TurnSpeed = 720f;      // degrees a second the body turns to the way it runs
         private const float WalkWatchSeconds = 0.25f;
-        private const float StrandedReach = 80f;   // farthest the nearest shore is looked for when Flux runs out
+        private const float StrandedReach = WaterstrideRules.StrandedReach;
 
         private enum State : byte { None, ToShore, Running, Standing, Stranded }
 
@@ -63,9 +60,8 @@ namespace KryticalNova.Player
         public WaterstrideSettings Settings => settings;
 
         /// <summary>Waterstride is open for this character: level 60, Run and Jump at rank 20 (the settings' numbers).</summary>
-        public bool WaterstrideOpen => settings != null && movementSkills != null && progression != null
-            && progression.CurrentLevel >= settings.requiredLevel && movementSkills.RunRank >= settings.requiredRunRank
-            && movementSkills.JumpRank >= settings.requiredJumpRank;
+        public bool WaterstrideOpen => movementSkills != null && progression != null
+            && WaterstrideRules.IsOpen(settings, progression.CurrentLevel, movementSkills.RunRank, movementSkills.JumpRank);
 
         /// <summary>On the water now (every machine).</summary>
         public bool IsOnWater => HasAuthority ? state == State.Running || state == State.Standing || state == State.Stranded : netOnWater.Value;
@@ -142,17 +138,12 @@ namespace KryticalNova.Player
             if (movementSkills != null && movementSkills.IsJumpSelected) return false;
             bool onWater = IsOnWater;
             if (!onWater && !(movementSkills != null && movementSkills.IsRunning && WaterstrideOpen)) return false;
-            if (ray.direction.y < -1e-4f)
+            if (WaterstrideRules.WaterUnderRay(map, ray, hit.distance, out Vector3 onSurface))
             {
-                float along = (map.waterLevel - ray.origin.y) / ray.direction.y;
-                Vector3 onSurface = ray.GetPoint(along);
-                if (along > 0f && along <= hit.distance + 0.05f && map.IsWater(onSurface))
-                {
-                    LastClickPoint = onSurface;
-                    if (HasAuthority) { if (!ServerWaterClick(onSurface, out string why)) Message?.Invoke(why); }
-                    else RequestWaterServerRpc(onSurface);
-                    return true;
-                }
+                LastClickPoint = onSurface;
+                if (HasAuthority) { if (!ServerWaterClick(onSurface, out string why)) Message?.Invoke(why); }
+                else RequestWaterServerRpc(onSurface);
+                return true;
             }
             if (!onWater) return false;
             LastClickPoint = hit.point;
@@ -187,33 +178,13 @@ namespace KryticalNova.Player
 
         private bool ServerWaterClick(Vector3 point, out string reason)
         {
+            reason = WaterstrideRules.PlanWaterClick(ZoneMap, settings, AskNow(), Shore(), Feet, point, route, out WaterstrideRules.Way way);
+            if (reason != null) return false;
             reason = string.Empty;
-            WaterMap map = ZoneMap;
-            if (map == null || settings == null) { reason = "There is no water to run on here."; return false; }
-            if (!CanStride(out reason)) return false;
-            if (state == State.Stranded) { reason = "Out of Flux: back to the shore first."; return false; }
-            point.y = map.waterLevel;
-            if (!map.TryCell(point, out Vector2Int target) || !map.IsWater(target)) { reason = "That water cannot be run on."; return false; }
-
-            if (IsOnWater)
-            {
-                if (!WaterRoute.NearestWater(map, Feet, settings.shoreReach, out Vector2Int here)) { reason = "No way over the water there."; return false; }
-                if (!WaterRoute.Find(map, here, target, settings.maxRouteCells, route)) { reason = "No way over the water there."; return false; }
-                RunRoute(landAfter: false);
-                return true;
-            }
-
-            // From land: to the shore where the line to the place first meets the water, then out over it.
-            if (agent == null || !agent.isActiveAndEnabled || !agent.isOnNavMesh) { reason = "Waterstride must start on walkable ground."; return false; }
-            Vector3 from = Feet;
-            if (!EdgeAlong(map, from, point, out Vector3 lastLand, out Vector3 firstWater)) { reason = "There is no shore on the way to that water."; return false; }
-            if (!NavMesh.SamplePosition(lastLand, out NavMeshHit shore, settings.shoreReach, Filter())) { reason = "There is no shore to run out from there."; return false; }
-            if (!WaterRoute.NearestWater(map, firstWater, settings.shoreReach, out Vector2Int entry)
-                || !WaterRoute.Find(map, entry, target, settings.maxRouteCells, route)) { reason = "No way over the water there."; return false; }
+            if (!way.FromLand || way.StartsNow) { RunRoute(landAfter: false); return true; }
             var path = new NavMeshPath();
-            if (!agent.CalculatePath(shore.position, path) || path.status != NavMeshPathStatus.PathComplete) { reason = "There is no way to that shore."; return false; }
-            shoreFeet = shore.position;
-            if (Flat(from, shoreFeet) <= ShoreTrigger) { RunRoute(landAfter: false); return true; }
+            if (!agent.CalculatePath(way.ShoreFeet, path) || path.status != NavMeshPathStatus.PathComplete) { route.Clear(); reason = "There is no way to that shore."; return false; }
+            shoreFeet = way.ShoreFeet;
             agent.SetPath(path);
             agent.isStopped = false;
             state = State.ToShore;
@@ -223,66 +194,29 @@ namespace KryticalNova.Player
 
         private bool ServerLandClick(Vector3 point, out string reason)
         {
+            reason = WaterstrideRules.PlanLandClick(ZoneMap, settings, AskNow(), Shore(), Feet, point, route, out WaterstrideRules.Way way);
+            if (reason != null) return false;
             reason = string.Empty;
-            WaterMap map = ZoneMap;
-            if (map == null || settings == null || !IsOnWater) return false;
-            if (state == State.Stranded) { reason = "Out of Flux: back to the shore first."; return false; }
-            if (!NavMesh.SamplePosition(point, out NavMeshHit there, 2f, Filter())) { reason = "Choose a walkable ground or platform surface."; return false; }
-            // The water's edge on the line from that place back to the player: run to it, step ashore, walk on.
-            if (!EdgeAlong(map, there.position, Feet, out Vector3 landSide, out Vector3 waterSide)
-                || !NavMesh.SamplePosition(landSide, out NavMeshHit shore, settings.shoreReach, Filter()))
-            {
-                // No edge on that line: the nearest shore to the place.
-                if (!NavMesh.SamplePosition(there.position, out shore, settings.shoreReach, Filter())) { reason = "There is no shore near there."; return false; }
-                waterSide = shore.position;
-            }
-            if (!WaterRoute.NearestWater(map, Feet, settings.shoreReach, out Vector2Int here)) { reason = "No way over the water there."; return false; }
-            if (!WaterRoute.NearestWater(map, waterSide, settings.shoreReach, out Vector2Int exit)
-                || !WaterRoute.Find(map, here, exit, settings.maxRouteCells, route)) { reason = "No way over the water there."; return false; }
-            landFeet = shore.position;
-            walkOnTo = there.position;
+            landFeet = way.LandFeet;
+            walkOnTo = way.WalkOnTo;
             RunRoute(landAfter: true);
             return true;
         }
 
-        private bool CanStride(out string reason)
+        /// <summary>The body's answers for the rules' refusals.</summary>
+        private WaterstrideRules.Ask AskNow() => new WaterstrideRules.Ask
         {
-            reason = string.Empty;
-            if (!WaterstrideOpen) { reason = $"Waterstride opens at level {settings.requiredLevel} with Run and Jump at rank {settings.requiredRunRank}."; return false; }
-            if (resources == null || !resources.IsAlive) { reason = "No HP remaining."; return false; }
-            if ((jumpMotor != null && jumpMotor.IsBusy) || (vaultMotor != null && vaultMotor.IsBusy) || (wallRunMotor != null && wallRunMotor.IsBusy))
-            { reason = "Finish this move first."; return false; }
-            if (!IsOnWater && (movementSkills == null || !movementSkills.IsRunning)) { reason = "Select Run to run on water."; return false; }
-            if (settings.fluxPerSecond > 0f && !resources.CanSpendChi(settings.fluxPerSecond)) { reason = "Not enough Flux to run on water."; return false; }
-            return true;
-        }
+            Open = WaterstrideOpen,
+            Alive = resources != null && resources.IsAlive,
+            OtherMoveBusy = (jumpMotor != null && jumpMotor.IsBusy) || (vaultMotor != null && vaultMotor.IsBusy) || (wallRunMotor != null && wallRunMotor.IsBusy),
+            Running = movementSkills != null && movementSkills.IsRunning,
+            HasFluxForASecond = resources != null && resources.CanSpendChi(WaterstrideRules.FluxPerSecond(settings)),
+            OnWater = IsOnWater,
+            Stranded = state == State.Stranded,
+            OnWalkableGround = agent != null && agent.isActiveAndEnabled && agent.isOnNavMesh,
+        };
 
-        /// <summary>
-        /// Walking from <paramref name="from"/> towards <paramref name="to"/>, the last place on land and the first on the
-        /// water (or the other way round when <paramref name="from"/> is on land and <paramref name="to"/> on water).
-        /// </summary>
-        private static bool EdgeAlong(WaterMap map, Vector3 from, Vector3 to, out Vector3 lastLand, out Vector3 firstWater)
-        {
-            lastLand = firstWater = from;
-            Vector3 flat = to - from;
-            flat.y = 0f;
-            float length = Mathf.Min(flat.magnitude, LookForWater);
-            if (length < 0.01f) return false;
-            Vector3 way = flat / flat.magnitude;
-            Vector3 previous = from;
-            for (float d = 0f; d <= length + 0.001f; d += StepAlong)
-            {
-                Vector3 p = from + way * d;
-                if (map.IsWater(p))
-                {
-                    lastLand = previous;
-                    firstWater = new Vector3(p.x, map.waterLevel, p.z);
-                    return d > 0f;
-                }
-                previous = p;
-            }
-            return false;
-        }
+        private WaterstrideRules.IShore Shore() => new WaterstrideRules.NavMeshShore(Filter());
 
         private void RunRoute(bool landAfter)
         {
@@ -314,7 +248,7 @@ namespace KryticalNova.Player
             if (state == State.Standing) return;
 
             WaterMap map = ZoneMap;
-            float speed = state == State.Stranded ? settings.strandedSpeed : Mathf.Max(1f, (movementSkills != null ? movementSkills.CurrentSpeed : 6f) * settings.speedShare);
+            float speed = WaterstrideRules.Speed(settings, movementSkills != null ? movementSkills.CurrentSpeed : 6f, state == State.Stranded);
             float step = speed * Time.deltaTime;
             Vector3 feet = Feet;
             while (step > 0f && routeIndex < route.Count)
@@ -368,17 +302,10 @@ namespace KryticalNova.Player
         /// <summary>Out of Flux: carried back over the water to the nearest shore, for nothing more.</summary>
         private void Strand()
         {
-            WaterMap map = ZoneMap;
-            Vector3 feet = Feet;
-            if (map == null || !NavMesh.SamplePosition(feet, out NavMeshHit shore, StrandedReach, Filter())) { Cancel(); return; }
-            landFeet = shore.position;
-            walkOnTo = shore.position;
+            if (!WaterstrideRules.PlanStranded(ZoneMap, settings, Shore(), Feet, route, out Vector3 shore)) { Cancel(); return; }
+            landFeet = shore;
+            walkOnTo = shore;
             state = State.Stranded;
-            route.Clear();
-            bool found = WaterRoute.NearestWater(map, feet, settings.shoreReach, out Vector2Int here)
-                && WaterRoute.NearestWater(map, shore.position, settings.shoreReach, out Vector2Int exit)
-                && WaterRoute.Find(map, here, exit, settings.maxRouteCells, route);
-            if (!found) { route.Clear(); route.Add(new Vector3(shore.position.x, map.waterLevel, shore.position.z)); }
             routeIndex = 0;
             if (IsSpawned) ToldRpc("Out of Flux: back to the shore.");
             else Message?.Invoke("Out of Flux: back to the shore.");
@@ -435,11 +362,7 @@ namespace KryticalNova.Player
         /// <summary><see cref="TryWaterLanding"/> without a body: the zone's water map only (the entity-netcode jump planner).</summary>
         public static bool TryWaterLandingAt(Vector3 clicked, out Vector3 surface)
         {
-            surface = clicked;
-            WaterMap map = ZoneMap;
-            if (map == null || clicked.y > map.waterLevel + 0.3f || !map.IsWater(clicked)) return false;
-            surface = new Vector3(clicked.x, map.waterLevel, clicked.z);
-            return true;
+            return WaterstrideRules.WaterLanding(ZoneMap, clicked, out surface);
         }
 
         /// <summary>Where movement is decided: a jump leaves the water from here; the stand ends and the jump takes the body.</summary>
@@ -462,8 +385,8 @@ namespace KryticalNova.Player
             WaterMap map = ZoneMap;
             if (map != null) feet.y = map.waterLevel;
             if (splash) ServerSplash(feet);
-            bool stand = settings != null && WaterstrideOpen && resources != null && resources.IsAlive
-                && (settings.fluxPerSecond <= 0f || resources.CanSpendChi(settings.fluxPerSecond));
+            bool stand = resources != null && WaterstrideRules.StandsOnLanding(settings, WaterstrideOpen, resources.IsAlive,
+                resources.CanSpendChi(WaterstrideRules.FluxPerSecond(settings)));
             if (!stand) { FallIn(feet); return; }
             if (agent != null) agent.enabled = false;
             transform.position = feet + Vector3.up * Offset;
@@ -476,16 +399,12 @@ namespace KryticalNova.Player
         /// <summary>In the water: out on the nearest shore, a share of Max HP lost (never the last of it).</summary>
         private void FallIn(Vector3 feet)
         {
-            float lost = 0f;
-            if (resources != null && resources.IsAlive && settings != null && settings.fallInHealthShare > 0f)
-            {
-                lost = Mathf.Min(resources.MaxHealth * settings.fallInHealthShare, resources.Health - 1f);
-                if (lost > 0f) resources.ApplyDamage(lost);
-            }
+            float lost = resources != null ? WaterstrideRules.FallInLoss(settings, resources.MaxHealth, resources.Health, resources.IsAlive) : 0f;
+            if (lost > 0f) resources.ApplyDamage(lost);
             float reach = settings != null ? settings.fallInShoreReach : StrandedReach;
             if (NavMesh.SamplePosition(feet, out NavMeshHit shore, reach, Filter())) Land(shore.position, shore.position, false);
             else { state = State.None; route.Clear(); SetOnWater(false); } // no shore near: PointAndClickPlayer puts a lost agent back
-            string line = lost >= 1f ? $"You fell in the water and climbed out on the shore (-{Mathf.RoundToInt(lost)} HP)." : "You fell in the water and climbed out on the shore.";
+            string line = WaterstrideRules.FallInLine(lost);
             if (IsSpawned) ToldRpc(line);
             else Message?.Invoke(line);
         }
