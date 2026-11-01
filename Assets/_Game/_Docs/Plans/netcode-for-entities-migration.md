@@ -962,3 +962,46 @@ Tests it needs (design section 3):
 Order (design section 4): S7 first; then the curve baker + `PlayerMotionCurves` and the planner lifted out of `PlayerJumpMotor`
 into a shared class (the NGO motor keeps using it); then `MotionPlan`, `PlayerMotionSystem`, `PlayerJumpServerSystem`, owner
 prediction and presentation; then the scripted run.
+
+## 54. M4 combat: acceptance list (written before code, 31 Oct 2026; for the Master and the owner to confirm)
+
+The DOTS combat must play exactly like the NGO combat, with the server deciding every hit, and no player advantage from frame rate
+or ping beyond the lag compensation's window. NGO's own code is the reference: `PlayerMeleeCombat` (combo steps, hit windows),
+`PlayerSkillAttacks` and `PlayerSkillQueue` (casts, charges, queued skills), `CombatCalculator` (the one formula), `CombatEntity` and
+`CharacterBuffManager` (HP, Flux, buffs), `CombatHostility` (factions, duels, `gm.pvp`), and the presentation (`HitReactor`, damage
+numbers, Cadence). Each item is ticked only with its proof. GUI runs prove feel; EditMode world tests prove rules. At most 2 runs per step.
+
+Order note: in plan section 4, M3c (vault, Wallstride, Waterstride, follow, skill walk-in) comes before M4. "Skill walk-in" (walk to range,
+then cast) is used by combat. Pick before code: M3c first, or M4 with the walk-in pulled in.
+
+Rules (server, EditMode world tests at 0 and 100 ms):
+- [ ] one combat formula: `CombatCalculator` as a Burst-compatible static on blittable structs, called by NGO and DOTS alike. A parity test
+  runs the same inputs through the old and the new and gets identical results (damage, crit, evade, reflect, shield) before anything
+  else moves.
+- [ ] `Vitals` on the player ghost (HP, Flux, alive) written by the server only. The owner's HUD reads it. The Flux of section 53 (`OwnerFlux`)
+  becomes part of it, with no second source.
+- [ ] melee as input: the attack click goes in `PlayerInput` (target ghost + click seq, carried like a walk click); the server validates
+  range, facing rule, cooldown and hostility; the hit moment comes from the clip's data tick (no frame timing). The combo steps, their
+  timing and the cancel rules are the same as NGO's `PlayerMeleeCombat`.
+- [ ] skills as input: cast, charge (held, released), queue (one queued attack, the NGO rules), Flux paid once by the server, a
+  refusal in NGO's words on both sides (the section 53 pattern: the owner checks first, the server again).
+- [ ] lag compensation: a server-only `PositionHistory` ring (16 ticks: position + capsule) on every hittable ghost. The hit is tested at
+  the attacker's interpolation tick (what they saw), never further back than the ring. Tests: a target that moved away after the
+  attacker saw it is still hit within the window; a claim older than the window is refused, not trusted (the section 53 clamp pattern).
+- [ ] hostility as a pure function (`CombatHostility` on data): other factions hostile by default, `gm.pvp`, duels pairwise; the same
+  answers as NGO for a table of cases.
+- [ ] the Combat Dummy is the first ghost target (server spawned, registered in `GameplayPrefabsSetup.SpawnedPrefabs`), then players.
+- [ ] death from combat uses the section 53 `MotionPlan` death knock; respawn as NGO.
+
+Presentation (client):
+- [ ] a HitEvent ring on the ghost goes to `ClientPresentationRegistry` (damage numbers, `HitReactor`, VFX). Each hit is shown once, a
+  rollback never repeats it, and the attacker's and target's own feel only for the body that `BodyRoleTag.IsMine` says is mine (plan 52).
+  `PlayerMeleeCombat.AttackerIsHere` (NGO routing) is replaced by this route.
+- [ ] the owner's swing starts on the press frame (predicted animation only, like the jump clip); the hit number appears when the server's
+  hit arrives. Measure press to swing and press to number at 0 and 100 ms and compare them with NGO's.
+- [ ] Cadence (on-beat bonus) stays a local look plus a server-checked bonus window (no frame-rate advantage).
+
+The rest of M4 (plan section 4):
+- [ ] the Wallet vertical slice, one Trade with a disconnect mid-trade, the kill test, and the golden ledger on the TEST database only
+  (`ServerSave.SaveTogether`, `EconomyLedger`; CLAUDE.md "All-or-nothing changes").
+- [ ] owner feel checkpoint after M4 (by hand; pending is allowed, as for M3).
