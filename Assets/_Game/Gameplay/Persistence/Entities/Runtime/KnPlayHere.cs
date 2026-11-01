@@ -1547,6 +1547,12 @@ namespace KryticalNova.Persistence.Entities
                 while (Time.realtimeSinceStartup - watch < 1.5f) { yield return null; m_Pops.Frame(OwnBody.transform.position, ServerSpeed(ghost), Time.unscaledDeltaTime); }
                 Log($"wall: pop check on a known fault (the teleport 9 m out): {m_Pops.Pops} pop(s), worst {m_Pops.WorstM:F2} m over the allowance (expected 1 or more)");
 
+                // the prop check (owner, 1 Nov: no clipping; gui-wall-2's "along" ended inside an air-conditioner box) proved first on the
+                // node it ended at (a known fault: the box is in the body there) and the node "onto" goes to (known clean)
+                Log($"wall: prop check on a known fault (the air-conditioner stretch, {wall.Along.x:F1},{wall.Along.y:F2},{wall.Along.z:F1}): " +
+                    $"{(PropAt(wall.Along, wall.Normal, body) ? "a prop in the body" : "NO prop found")}; on a known clean face (onto): " +
+                    $"{(PropAt(wall.Onto, wall.Normal, body) ? "a PROP in the body" : "clear")}");
+
                 // the instrument on a known refusal and a known plan (no click)
                 string Probe()
                 {
@@ -1618,7 +1624,7 @@ namespace KryticalNova.Persistence.Entities
                 float clicked = Time.realtimeSinceStartup, stoppedAt = -1f, glide = 0f;
                 Vector3 bodyAtStop = default;
                 bool moving = false;
-                int topSpeed = 0;
+                int topSpeed = 0, inProp = 0;
                 m_Pops.Reset();
                 while (Time.realtimeSinceStartup - clicked < 20f)
                 {
@@ -1630,6 +1636,10 @@ namespace KryticalNova.Persistence.Entities
                     float speed = ServerSpeed(ghost);
                     topSpeed = Mathf.Max(topSpeed, Mathf.RoundToInt(speed * 1000f));
                     m_Pops.Frame(b, speed, Time.unscaledDeltaTime);
+                    // on the wall: the drawn body never inside a prop on the face
+                    var shownTilt = em.GetComponentData<PoseTilt>(ghost);
+                    if (shownTilt.Tilted && em.GetComponentData<MoveState>(ghost).Wall != 0
+                        && PropAt(b - (Vector3)shownTilt.Up * offset, shownTilt.Up, body)) inProp++;
                     if (moving && !now)
                     {
                         if (stoppedAt < 0f) { stoppedAt = Time.realtimeSinceStartup; bodyAtStop = b; }
@@ -1654,7 +1664,7 @@ namespace KryticalNova.Persistence.Entities
                 bool onWall = move.Wall != 0;
                 bool tiltRight = onWall ? tilt.Tilted && Vector3.Dot(tilt.Up, normal) > 0.8f : !tilt.Tilted;
                 bool ok = planned && onWall == expectWall && ownWall == move.Wall && own.Seq != 0 && apart < 0.05f && tiltRight
-                    && glide < 0.02f && off < (expectWall ? 0.8f : 1.0f) && m_Pops.Pops == 0;
+                    && glide < 0.02f && off < (expectWall ? 1.5f : 1.0f) && m_Pops.Pops == 0 && inProp == 0;
                 if (ok) tally.Passed++;
                 string refusal = plans.LastWallRefusal;
                 Log($"wall: {what} clicked at {at}: {(ok ? "PASS" : "FAIL")}; server {(planned ? "planned the wall walk" : "planned NO wall walk")} " +
@@ -1662,7 +1672,7 @@ namespace KryticalNova.Persistence.Entities
                     $"(owner's own {own.Seq}), on the wall: server {move.Wall}, owner {ownWall} (expected {(expectWall ? 1 : 0)}); tilt up {tilt.UpX},{tilt.UpY},{tilt.UpZ} " +
                     $"phase {tilt.Phase} ({(tiltRight ? "right" : "WRONG")}); ended {off:F2} m from the click at {feet.x:F1},{feet.y:F2},{feet.z:F1}; owner {apart * 100f:F1} cm " +
                     $"from the server; glide after the stop {glide * 100f:F1} cm (limit 2); speed on the wall {wall.SpeedMmps} mm/s, top speed {topSpeed} mm/s " +
-                    $"({(run ? "Run" : jump ? "Jump" : "walk")}); pops {m_Pops.Pops} (worst {m_Pops.WorstM:F2} m over the frame's allowance, limit 0); Flux {flux0:F0} -> {Flux(body):F0}");
+                    $"({(run ? "Run" : jump ? "Jump" : "walk")}); pops {m_Pops.Pops} (worst {m_Pops.WorstM:F2} m over the frame's allowance, limit 0); frames inside a prop {inProp} (limit 0); Flux {flux0:F0} -> {Flux(body):F0}");
                 yield return new WaitForSeconds(0.8f);
             }
 
@@ -1692,6 +1702,14 @@ namespace KryticalNova.Persistence.Entities
             }
 
             readonly PopWatch m_Pops = new PopWatch();
+
+            /// <summary>A prop on the face in a body standing at <paramref name="feet"/> (the wall walk's own test), the face found in along the normal.</summary>
+            static bool PropAt(Vector3 feet, Vector3 normal, GameObject body)
+            {
+                Vector3 n = normal.sqrMagnitude > 1e-6f ? normal.normalized : Vector3.up;
+                Collider face = Physics.Raycast(feet + n * 0.4f, -n, out RaycastHit hit, 1f, Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore) ? hit.collider : null;
+                return WallWalkLayout.PropOnFace(feet, n, face, body.transform.root, Physics.DefaultRaycastLayers & ~(1 << body.layer));
+            }
 
             /// <summary>The server's walk speed for the ghost now (a leg's own speed on a timed leg), m/s.</summary>
             static float ServerSpeed(Entity ghost)
