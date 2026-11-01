@@ -261,6 +261,8 @@ namespace KryticalNova.Player.Entities
                     corners, legs, out WallPlan wall, out string why);
                 if (answer == WallAnswer.NotWall)
                 {
+                    // Jump selected at a wall the graph does not cover: Wallstride's catch (part 4), else the ordinary jump
+                    if (cmd.Jump && PlanCatchClick(em, e, cmd, ref input)) return;
                     if (cmd.Jump) PlanJumpClick(em, e, cmd, ref input);
                     else PlanClick(em, e, cmd, ref input);
                     return;
@@ -343,6 +345,61 @@ namespace KryticalNova.Player.Entities
             if (PlayerClickLog.Sink != null && m_Tick.IsValid)
                 PlayerClickLog.Client(em.HasComponent<GhostOwner>(e) ? em.GetComponentData<GhostOwner>(e).NetworkId : 0,
                     header.Seq, m_Tick.TickIndexForValidTick);
+        }
+
+        /// <summary>
+        /// Wallstride's catch (part 4): a jump at a wall the graph does not cover, planned by the same rules as the server with the own body.
+        /// A refusal is shown on the body in NGO's words and nothing is sent; a catch is sent as the jump it is (its climb under the same
+        /// number) and flown from the press, as every jump. False: not a climbable surface (the ordinary jump takes the click).
+        /// </summary>
+        bool PlanCatchClick(EntityManager em, Entity e, in PlayerCommand cmd, ref PlayerInput input)
+        {
+            if (!em.HasComponent<ClientMotionPlan>(e) || !em.HasComponent<ClientWallPlan>(e)) return false;
+            var pose = em.GetComponentData<PlayerPose>(e);
+            var corners = new NativeList<int3>(PlayerLimits.MaxWallCorners, Allocator.Temp);
+            var legs = new NativeList<WallCorner>(PlayerLimits.MaxWallCorners, Allocator.Temp);
+            try
+            {
+                WallAnswer answer = WallPlanner.Catch(e, pose.Mm, pose.YawCdeg, cmd.GoalMm, cmd.NormalPermille, cmd.Run, corners, legs,
+                    out WallPlan wall, out int3 catchMm, out int apexY, out string why);
+                if (answer == WallAnswer.NotWall) return false;
+                if (answer == WallAnswer.Refused || corners.Length < 2)
+                {
+                    if (PlayerClickLog.Sink != null) PlayerClickLog.Sink("[KnWall] the owner refused a jump at a wall: " + why);
+                    return true;
+                }
+                var header = em.GetComponentData<ClientPlanHeader>(e);
+                header.Seq = NextClientSeq(header.Seq);
+                header.Count = (byte)WallWrite.Client(em, e, header.Seq, corners, legs, wall);
+                header.Writes++;
+                em.SetComponentData(e, header);
+                if (em.HasComponent<ClientVaultPlan>(e)) em.SetComponentData(e, new ClientVaultPlan());
+                if (em.HasComponent<ClientWaterPlan>(e)) em.SetComponentData(e, new ClientWaterPlan());
+
+                input.Click.Set();
+                input.ClickSeq = header.Seq;
+                input.Run = (byte)(cmd.Run ? 1 : 0);
+                input.Jump = 1;
+                input.Wall = (byte)(WallClick.Wall | WallClick.Jump);
+                input.NormalX = (short)cmd.NormalPermille.x; input.NormalY = (short)cmd.NormalPermille.y; input.NormalZ = (short)cmd.NormalPermille.z;
+                input.ClickTick = m_Tick.IsValid ? m_Tick.SerializedData : 0u;   // the owner's plan starts on this tick
+                input.PressPermille = m_PressPermille;
+                input.GoalXMm = cmd.GoalMm.x;
+                input.GoalYMm = cmd.GoalMm.y;
+                input.GoalZMm = cmd.GoalMm.z;
+                // flown from the press unless the server will refuse it for a jump still under way (sent all the same, as a jump click)
+                if (m_Tick.IsValid && !Busy(em, e))
+                {
+                    MotionPlan jump = JumpFlight.NewJump(header.Seq, m_Tick, pose.Mm, catchMm, apexY);
+                    jump.Flags |= MotionFlags.Catch;
+                    em.SetComponentData(e, new ClientMotionPlan { Plan = jump });
+                }
+                if (PlayerClickLog.Sink != null && m_Tick.IsValid)
+                    PlayerClickLog.Client(em.HasComponent<GhostOwner>(e) ? em.GetComponentData<GhostOwner>(e).NetworkId : 0,
+                        header.Seq, m_Tick.TickIndexForValidTick);
+                return true;
+            }
+            finally { corners.Dispose(); legs.Dispose(); }
         }
 
         /// <summary>

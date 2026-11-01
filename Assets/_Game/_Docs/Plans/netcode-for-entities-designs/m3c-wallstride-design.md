@@ -246,3 +246,17 @@ Steps for (a), each with EditMode tests, the GUI proof at the end (announced to 
 (pure layout tests); 2. `MotionPlan.Catch` + the walk starting on a tick (server and owner, world tests at 0 and 100 ms: the hand-off on
 the same tick, 12 Flux, the return to take-off); 3. the blocked ordinary jump (C5); 4. presentation (no landing clip, the plant from the
 flight); 5. GUI run `KN_PLAYHERE_CATCH=1`: a Jump click at a wall, a jump whose arc meets a wall, the same short of Flux, pops.
+
+### 5.3 Owner change from NGO: the catch is where the arc meets the wall (owner via the Master, 1 Nov)
+
+Owner's words (close): "a jump at the wall should figure the best point to grab on to the wall depending on where the arc is in relation to
+the wall, like a high jump should be able to get onto a high point of the wall, feeling good, not like you're being placed somewhere on
+the wall, but going onto the wall pretty much where you wanted it to." So design (a) stays (the real DOTS jump, crouch and clip, then
+the climb on the catch tick), with this one change from NGO's C2 (start feet + 1.4 m):
+- The jump aims at the place clicked on the wall (its body centre there), by the rank's own apex rules and refusals ("Too far", "Too
+  close", "Too high to jump at", the clear arc). The catch is where that arc, as the DOTS jump flies it (`JumpFlight.FeetAt`), first
+  reaches the face's stand-off plane: the arc's own height at the wall, at that arc time (`MotionPlan.CatchMicros`), not at its end.
+  A higher or longer jump catches higher.
+- Clamped only to the face's valid range: not below the plant height (the climb's base), not above the climb's end (1.1 m under the edge).
+- Kept from NGO: the 12 Flux at the catch, short = "Could not hold on. Returned to takeoff."; the plant from a jump (C7); the refusals.
+- Proof: the GUI run with 3 tries at different jump heights and distances showing different catch heights, with GIFs.

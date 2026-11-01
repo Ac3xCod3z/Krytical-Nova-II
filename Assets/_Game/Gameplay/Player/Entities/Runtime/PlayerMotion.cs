@@ -27,6 +27,11 @@ namespace KryticalNova.Player.Entities
         public const byte Paid = 1;
         /// <summary>The server decided the landing on water (Waterstride, M3c): stood on it, fell in, or it was ground.</summary>
         public const byte WaterDecided = 2;
+        /// <summary>
+        /// Wallstride's catch (part 4): the jump ends against a wall at its <c>To</c>, with no landing, and the climb of the same number runs on
+        /// from there on the touchdown tick (<see cref="JumpFlight.CatchHandOff"/>).
+        /// </summary>
+        public const byte Catch = 4;
     }
 
     /// <summary>
@@ -390,6 +395,16 @@ namespace KryticalNova.Player.Entities
             int ticks = tick.TicksSince(plan.StartTick);
             return ticks <= 0 ? 0 : (long)ticks * tickMicros;
         }
+
+        /// <summary>A jump that ends against a wall (Wallstride's catch, part 4).</summary>
+        public static bool IsCatch(in MotionPlan plan) => plan.Kind == MotionKind.Jump && (plan.Flags & MotionFlags.Catch) != 0;
+
+        /// <summary>
+        /// The catch's climb begins on this tick: the jump has met the wall (its touchdown time) and the climb of its number has not begun.
+        /// Stateless, so a rollback hands off on the same tick again (NGO <c>CatchSurface</c> -> <c>BeginCaught</c>).
+        /// </summary>
+        public static bool CatchHandOff(in MotionPlan plan, in PlayerMotionCurves curves, long elapsedMicros, in MoveState move) =>
+            IsCatch(in plan) && Landed(in plan, in curves, elapsedMicros) && move.OrderSeq != plan.PlanSeq;
 
         /// <summary>True once the clip has reached its touchdown.</summary>
         public static bool Landed(in MotionPlan plan, in PlayerMotionCurves curves, long elapsedMicros) => elapsedMicros >= curves.LandMicros;

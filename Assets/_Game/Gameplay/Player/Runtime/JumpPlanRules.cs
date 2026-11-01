@@ -153,5 +153,21 @@ namespace KryticalNova.Player
                 return "The jump arc or landing area is blocked.";
             return null;
         }
+
+        /// <summary>
+        /// The warped flight to a Wallstride catch point (`PlayerJumpMotor.PlanCatchFlight`): no NavMesh landing (the point is against the
+        /// surface), refused past the rank's height, the apex the higher end plus the motion's clearance, the arc clear. Null when it stands.
+        /// </summary>
+        public static string PlanCatchWarped(Vector3 startFeet, Vector3 catchFeet, float rankHeight, JumpMotionData motion, MotionWarpingAsset warp,
+            in Capsule capsule, out float peakHeight)
+        {
+            peakHeight = Mathf.Max(startFeet.y, catchFeet.y) + motion.apexClearance;
+            if (catchFeet.y - startFeet.y > rankHeight) return $"Too high to jump at: Jump rank reaches {rankHeight:0.0} m.";
+            if (!Phases.TryRead(warp, out Phases p)) return "Jump warp asset has no flight phases. Rebuild it from the Krytical Nova menu.";
+            Vector3 apex = ApexFeet(startFeet, catchFeet, peakHeight, p);
+            if (!IsWarpedRouteClear(startFeet, apex, catchFeet, peakHeight, p, warp.rootY, motion.trajectorySamples, capsule))
+                return "The jump arc or landing area is blocked.";
+            return null;
+        }
     }
 }

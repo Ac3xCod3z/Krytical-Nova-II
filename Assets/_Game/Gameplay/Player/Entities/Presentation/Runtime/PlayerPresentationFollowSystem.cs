@@ -294,7 +294,8 @@ namespace KryticalNova.Player.Entities.Presentation
                 view?.BeginJump(micros * 1e-6f);
             }
             if (state.JumpPhase < 1 && micros >= curves.TakeoffMicros) { state.JumpPhase = 1; view?.JumpTookOff(); }
-            if (state.JumpPhase < 2 && micros >= curves.LandMicros) { state.JumpPhase = 2; view?.JumpLanded(); }
+            // a catch (Wallstride part 4) has no landing: the climb's plant takes the body from the touchdown (NGO CatchSurface)
+            if (state.JumpPhase < 2 && micros >= curves.LandMicros) { state.JumpPhase = 2; if (!JumpFlight.IsCatch(in plan)) view?.JumpLanded(); }
         }
     }
 }

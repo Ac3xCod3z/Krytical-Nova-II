@@ -42,6 +42,7 @@ namespace KryticalNova.Player.Entities
             {
                 jump.Planner = jumpPlanner;
                 jump.Cost = jumpCost;
+                jump.WallPlanner = wallPlanner;   // a jump at a wall is Wallstride's catch (part 4)
             }
             var pay = world.GetExistingSystemManaged<PlayerJumpPaySystem>();
             if (pay != null) pay.Cost = jumpCost;

@@ -155,16 +155,42 @@ namespace KryticalNova.Player
             if (movement != null && !movement.TryGetLearnedRank(MovementSkillId.Jump, out rank)) return LearnJumpFirst;
             float maxDist = movement != null ? rank.jumpDistance : 20f;
             float jumpH = movement != null ? rank.jumpHeight : 5f;
+            var filter = new NavMeshQueryFilter { agentTypeID = navAgent != null ? navAgent.agentTypeID : 0, areaMask = navAgent != null ? navAgent.areaMask : -1 };
+            return JumpPlanRules.PlanWarped(startFeet, clickedPoint, maxDist, jumpH, motionData, warpAsset, filter, GhostCapsule(navAgent),
+                out plannedLanding, out plannedPeak, out _);
+        }
+
+        /// <summary>
+        /// NGO's <see cref="TryJumpToCatch"/> for a body of the entity netcode (Wallstride part 4): the jump at a surface the wall motor chose
+        /// to catch, ending at <paramref name="catchFeet"/> against it, with the same checks and words, without the busy and cooldown checks
+        /// (the ghost keeps those) or the Flux (taken at take-off by the server). Null when it stands.
+        /// </summary>
+        public string PlanCatchForGhost(Vector3 startFeet, Vector3 catchFeet, out float plannedPeak)
+        {
+            plannedPeak = startFeet.y;
+            if (motionData == null || warpAsset == null) return "Jump animation is not configured.";
+            var movement = skills != null ? skills : GetComponent<PlayerMovementSkills>();
+            MovementSkillRank rank = default;
+            if (movement != null && !movement.TryGetLearnedRank(MovementSkillId.Jump, out rank)) return LearnJumpFirst;
+            Vector3 flat = catchFeet - startFeet;
+            flat.y = 0f;
+            float maxDist = movement != null ? rank.jumpDistance : 20f;
+            if (flat.magnitude > maxDist) return $"Too far: Jump rank reaches {maxDist:0.0} m.";
+            if (flat.magnitude < MinimumTravelDistance) return "Too close to jump at.";
+            return JumpPlanRules.PlanCatchWarped(startFeet, catchFeet, movement != null ? rank.jumpHeight : 5f, motionData, warpAsset,
+                GhostCapsule(agent != null ? agent : GetComponent<NavMeshAgent>()), out plannedPeak);
+        }
+
+        /// <summary>The swept body of a ghost's jump: the agent's size, the motion's skin, the player's raycast layers less its own.</summary>
+        private JumpPlanRules.Capsule GhostCapsule(NavMeshAgent navAgent)
+        {
             var player = GetComponent<PointAndClickPlayer>();
             int layers = (player != null ? player.RaycastLayers.value : Physics.DefaultRaycastLayers) & ~(1 << gameObject.layer);
-            var filter = new NavMeshQueryFilter { agentTypeID = navAgent != null ? navAgent.agentTypeID : 0, areaMask = navAgent != null ? navAgent.areaMask : -1 };
-            var capsule = new JumpPlanRules.Capsule
+            return new JumpPlanRules.Capsule
             {
                 Radius = navAgent != null ? navAgent.radius : 0.5f, Height = navAgent != null ? navAgent.height : 2f,
                 Skin = motionData.collisionSkin, Layers = layers,
             };
-            return JumpPlanRules.PlanWarped(startFeet, clickedPoint, maxDist, jumpH, motionData, warpAsset, filter, capsule,
-                out plannedLanding, out plannedPeak, out _);
         }
 
         /// <summary>Validates a clicked landing point before interrupting the current path. Chi is charged at takeoff.</summary>

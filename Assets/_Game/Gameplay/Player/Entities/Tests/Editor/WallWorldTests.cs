@@ -2,6 +2,8 @@ using NUnit.Framework;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
+using Unity.NetCode;
+using KryticalNova.Networking.Entities.Tests;
 
 namespace KryticalNova.Player.Entities.Tests
 {
@@ -15,6 +17,20 @@ namespace KryticalNova.Player.Entities.Tests
     {
         const int FaceX = 5970;   // the feet on the wall, out from a face at x = 6 m facing -x
         static readonly int3 Landing = new int3(3000, 0, 0);
+        const int CatchClick = 55555;   // a Jump click at a wall the graph does not cover (part 4)
+        static readonly int3 CatchAt = new int3(5600, 1400, 0);
+
+        /// <summary>Refuses every ordinary jump: a catch test must never fall back to one.</summary>
+        sealed class NoJumpPlanner : IJumpPlanner
+        {
+            public bool TryPlan(Entity ghost, int3 fromFeetMm, int3 clickedMm, out int3 landingFeetMm, out int apexYMm, out string reason)
+            {
+                landingFeetMm = fromFeetMm;
+                apexYMm = fromFeetMm.y;
+                reason = "an ordinary jump (the test wanted the catch)";
+                return false;
+            }
+        }
 
         /// <summary>A wall at x = 6 m (stands in for the surface graph, the NavMesh and NGO's rules).</summary>
         sealed class StubWallPlanner : IWallPlanner
@@ -32,6 +48,7 @@ namespace KryticalNova.Player.Entities.Tests
                 plan = default;
                 reason = null;
                 if (pointMm.x == 99999) { Refusals++; reason = "That cannot be climbed."; return WallAnswer.Refused; }
+                if (pointMm.x == CatchClick) return WallAnswer.NotWall;   // no graph there: the catch's (Catch)
                 Plans++;
                 if (pointMm.x == 77777)
                 {
@@ -60,6 +77,31 @@ namespace KryticalNova.Player.Entities.Tests
                 OnWallPlans++;
                 corners.Add(new int3(FaceX, pointMm.y, pointMm.z)); legs.Add(Face(WallPhase.WallMove));
                 plan = new WallPlan { SpeedMmps = 9000, OnWallFrom = 1, OffWallFrom = 2, Flags = WallFlags.EndsOnWall };
+                return WallAnswer.Planned;
+            }
+
+            public int Catches;
+
+            /// <summary>A jump at the wall at x = 6 m: caught 1.4 m up at its foot, then NGO's plant from a jump, up the face, over the top.</summary>
+            public WallAnswer Catch(Entity ghost, int3 poseMm, int yawCdeg, int3 pointMm, int3 normalPermille, bool run,
+                NativeList<int3> corners, NativeList<WallCorner> legs, out WallPlan plan, out int3 catchMm, out int apexYMm, out string reason)
+            {
+                plan = default;
+                reason = null;
+                catchMm = poseMm;
+                apexYMm = poseMm.y;
+                if (pointMm.x != CatchClick) return WallAnswer.NotWall;
+                Catches++;
+                catchMm = CatchAt;
+                apexYMm = CatchAt.y + 800;
+                corners.Add(CatchAt); legs.Add(default);
+                var lean = new WallCorner { Phase = WallPhase.Plant, Micros = 150000, Ease = WallCorner.Eases(WallEase.In, WallEase.Out), UpY = 978, UpX = -208, FwdX = 1000 };
+                corners.Add(new int3(5600, 2000, 0)); legs.Add(lean);
+                lean.Phase = WallPhase.Climb; lean.Micros = 400000; lean.Ease = 0;
+                corners.Add(new int3(5600, 4000, 0)); legs.Add(lean);
+                corners.Add(new int3(6500, 5000, 0));
+                legs.Add(new WallCorner { Phase = WallPhase.Mantle, Micros = 400000, Ease = WallCorner.Eases(WallEase.In, WallEase.Out), UpY = 1000, FwdX = 1000 });
+                plan = new WallPlan { SpeedMmps = 9000, OnWallFrom = 255, OffWallFrom = 255, Flags = WallFlags.PayOnPlant };
                 return WallAnswer.Planned;
             }
 
@@ -193,6 +235,86 @@ namespace KryticalNova.Player.Entities.Tests
                 Assert.AreEqual(5, grip.Points, "nothing taken");
                 Assert.Less(rig.ServerPose().YMm, 800, "stays at the foot (server)");
                 Assert.Less(rig.OwnerPose().YMm, 800, "and the owner, corrected by the server");
+            }
+        }
+
+        /// <summary>
+        /// Part 4 (`m3c-wallstride-design.md` section 5): a Jump click at a wall the graph does not cover flies the jump to the catch point and,
+        /// with no landing, the climb of the same number runs on from there on the touchdown tick, on the server and the owner alike; NGO's 12
+        /// Flux are paid as the plant starts, or, short of them (spent while it flew: NGO's Decide already refuses a click without them),
+        /// "Could not hold on. Returned to takeoff." (back on the take-off point).
+        /// </summary>
+        [TestCase(0, true)]
+        [TestCase(100, true)]
+        [TestCase(0, false)]
+        [TestCase(100, false)]
+        public void AJumpAtAWall_IsCaught_AndTheClimbRunsOnFromTheCatch_OrItReturnsToTakeoff(int delayMs, bool enoughFlux)
+        {
+            var planner = new StubWallPlanner();
+            var grip = new StubGrip { Points = enoughFlux ? 100 : 5 };
+            using var rig = Rig(delayMs, planner, grip);
+            var jumps = rig.Server.GetExistingSystemManaged<PlayerJumpServerSystem>();
+            jumps.Planner = new NoJumpPlanner();
+            jumps.WallPlanner = planner;
+            rig.Clients[0].GetExistingSystemManaged<PlayerInputGatherSystem>().JumpPlanner = new NoJumpPlanner();
+            var curves = PlayerMotionCurves.Default;
+            int tickMicros = PlayerMovement.TickMicros(30);
+            var start = rig.ServerPose().Mm;
+
+            rig.Sources[0].Wall(new int3(CatchClick, 3000, 0), Wall, run: false, jump: true);
+            uint serverHandOff = 0, ownerHandOff = 0, serverStart = 0, ownerStart = 0;
+            int highest = int.MinValue;
+            int3 serverAtHandOff = default;
+            long elapsedAtHandOff = -1;
+            for (int i = 0; i < 200; i++)
+            {
+                rig.Tick();
+                var em = rig.Server.EntityManager;
+                var plan = em.GetComponentData<MotionPlan>(rig.ServerGhosts[0]);
+                var move = rig.ServerMove();
+                if (serverHandOff == 0 && JumpFlight.IsCatch(in plan) && move.OrderSeq == plan.PlanSeq)
+                {
+                    serverHandOff = rig.ServerTick;
+                    serverAtHandOff = rig.ServerPose().Mm;
+                    elapsedAtHandOff = JumpFlight.ElapsedMicros(in plan, KnTestWorld.Singleton<NetworkTime>(rig.Server).ServerTick, tickMicros);
+                }
+                if (serverHandOff == 0) highest = math.max(highest, rig.ServerPose().YMm);
+                var client = rig.Clients[0];
+                var ownPlan = PlayerMotionSystem.Choose(client.EntityManager.GetComponentData<MotionPlan>(rig.GhostIn(0, 0)),
+                    client.EntityManager.GetComponentData<ClientMotionPlan>(rig.GhostIn(0, 0)).Plan, rig.OwnerMove().RefusedSeq);
+                if (ownerHandOff == 0 && JumpFlight.IsCatch(in ownPlan) && rig.OwnerMove().OrderSeq == ownPlan.PlanSeq)
+                {
+                    // the owner's state is its last FULL tick: on a partial tick that is the one before the clock's
+                    var ownNt = KnTestWorld.Singleton<NetworkTime>(client);
+                    NetworkTick full = ownNt.ServerTick;
+                    if (ownNt.ServerTickFraction > 0f && ownNt.ServerTickFraction < 1f) full.Decrement();
+                    ownerHandOff = full.TickIndexForValidTick;
+                    ownerStart = ownPlan.StartTick.TickIndexForValidTick;
+                }
+                if (serverStart == 0 && JumpFlight.IsCatch(in plan)) serverStart = plan.StartTick.TickIndexForValidTick;
+            }
+            var system = rig.Server.GetExistingSystemManaged<WallGripSystem>();
+            Assert.AreEqual(1, jumps.Catches, "the server planned the click as a catch");
+            Assert.AreNotEqual(0u, serverHandOff, "the climb ran on from the catch (server)");
+            Assert.AreEqual(CatchAt, serverAtHandOff, "handed off on the catch point, no landing");
+            Assert.GreaterOrEqual(elapsedAtHandOff, curves.LandMicros, "at the jump's touchdown time");
+            Assert.Less(elapsedAtHandOff, curves.LandMicros + tickMicros, "on the touchdown tick");
+            Assert.Greater(highest, CatchAt.y, "the jump's arc rose over the catch point first");
+            Assert.AreEqual(serverStart, ownerStart, "the owner flew the same jump from the same press tick");
+            Assert.AreEqual(serverHandOff, ownerHandOff, "the owner handed off on the same tick (predicted from the press)");
+            if (enoughFlux)
+            {
+                Assert.AreEqual(1, system.ClimbsPaid, "paid once, as the plant starts (NGO BeginCaught)");
+                Assert.AreEqual(100 - 12, grip.Points, "NGO's 12 Flux");
+                Assert.AreEqual(new int3(6500, 5000, 0), rig.ServerPose().Mm, "up and over the top (server)");
+                Assert.AreEqual(new int3(6500, 5000, 0), rig.OwnerPose().Mm, "and the owner");
+            }
+            else
+            {
+                Assert.AreEqual(1, system.ClimbsRefused, "Could not hold on");
+                Assert.AreEqual(5, grip.Points, "nothing taken");
+                Assert.AreEqual(start, rig.ServerPose().Mm, "Returned to takeoff (server)");
+                Assert.AreEqual(start, rig.OwnerPose().Mm, "and the owner");
             }
         }
 

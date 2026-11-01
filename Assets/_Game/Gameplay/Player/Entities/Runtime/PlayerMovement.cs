@@ -120,7 +120,8 @@ namespace KryticalNova.Player.Entities
                 if (plan.Seq == order.Seq && plan.Count >= 2)
                     BeginWalk(ref m, in pose, (order.Flags & OrderFlags.RunPaid) != 0);
             }
-            else if (input.Click.IsSet && input.ClickSeq != 0 && input.ClickSeq != m.RefusedSeq && input.ClickSeq != m.OrderSeq && !stranded)
+            // a jump click is never a walk (a catch's climb corners carry its number, and begin only where the jump meets the wall)
+            else if (input.Click.IsSet && input.Jump == 0 && input.ClickSeq != 0 && input.ClickSeq != m.RefusedSeq && input.ClickSeq != m.OrderSeq && !stranded)
             {
                 bool havePath = (plan.Seq == input.ClickSeq && plan.Count >= 2) || (client.Seq == input.ClickSeq && client.Count >= 2);
                 if (havePath)
@@ -520,6 +521,20 @@ namespace KryticalNova.Player.Entities
                 yawCdeg = step <= 0 ? way : TurnToward(pose.YawCdeg, way, (int)((long)step * moving / math.max(1, tickMicros)));
             }
             return true;
+        }
+
+        /// <summary>
+        /// Wallstride's catch (part 4): the climb begins where the jump met the wall, as the walk of the jump's own number from the catch point
+        /// (its corners and legs are the climb's, written with the jump). NGO <c>BeginCaught</c>.
+        /// </summary>
+        public static void BeginCatchClimb(ref MoveState m, int3 catchMm, ushort seq)
+        {
+            CancelWalk(ref m);
+            m.OrderSeq = seq;
+            m.Flags = MoveFlags.Moving;
+            m.StartXMm = catchMm.x;
+            m.StartYMm = catchMm.y;
+            m.StartZMm = catchMm.z;
         }
 
         static void BeginWalk(ref MoveState m, in PlayerPose pose, bool run)

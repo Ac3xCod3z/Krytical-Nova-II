@@ -29,6 +29,12 @@ namespace KryticalNova.Player.Entities
         /// <summary>The jump's Flux; null = free (tests, a world without the game's skills).</summary>
         public IJumpCost Cost { get; set; }
 
+        /// <summary>Wallstride's catch (part 4): a jump click at a wall the graph does not cover; null = every jump click is the ordinary jump.</summary>
+        public IWallPlanner WallPlanner { get; set; }
+
+        /// <summary>Jumps planned as catches (tests, the scripted run).</summary>
+        public int Catches { get; private set; }
+
         /// <summary>Why the last jump was refused (tests and the scripted run; the message to the player comes with M8's chat port).</summary>
         public string LastRefusal { get; private set; }
 
@@ -65,6 +71,10 @@ namespace KryticalNova.Player.Entities
                 string why = null;
                 int3 landing = default;
                 int apexY = 0;
+                WallAnswer caught = WallAnswer.NotWall;
+                WallPlan wall = default;
+                using var corners = new NativeList<int3>(PlayerLimits.MaxWallCorners, Allocator.Temp);
+                using var legs = new NativeList<WallCorner>(PlayerLimits.MaxWallCorners, Allocator.Temp);
                 if (JumpFlight.Active(plan, curves, nt.ServerTick, tickMicros)) why = "Finish this jump before choosing another destination.";
                 else if (JumpFlight.CoolingDown(plan, curves, nt.ServerTick, tickMicros)) why = "Let the landing settle before jumping again.";
                 // NGO ignores a click while the body is over an obstacle (no message: it is back on the ground in a moment; M3c)
@@ -78,8 +88,17 @@ namespace KryticalNova.Player.Entities
                     }
                     why = "Jump is not set up on this server.";
                 }
-                else if (Cost != null && !Cost.CanPay(e, out why)) { }
-                else if (!Planner.TryPlan(e, pose.Mm, goal, out landing, out apexY, out why)) { }
+                else
+                {
+                    // a jump at a wall the graph does not cover is Wallstride's catch (part 4; NGO judges the wall before the jump's Flux)
+                    if ((input.Wall & WallClick.Wall) != 0 && WallPlanner != null && em.HasComponent<WallPlan>(e))
+                        caught = WallPlanner.Catch(e, pose.Mm, pose.YawCdeg, goal, new int3(input.NormalX, input.NormalY, input.NormalZ), input.Run != 0,
+                            corners, legs, out wall, out landing, out apexY, out why);
+                    if (caught == WallAnswer.Refused) { }
+                    else if (Cost != null && !Cost.CanPay(e, out why)) { }
+                    else if (caught == WallAnswer.NotWall && !Planner.TryPlan(e, pose.Mm, goal, out landing, out apexY, out why)) { }
+                    else if (caught == WallAnswer.Planned && corners.Length < 2) why = "There is no way to the foot of that wall.";
+                }
                 if (why != null)
                 {
                     LastRefusal = why;
@@ -97,7 +116,15 @@ namespace KryticalNova.Player.Entities
                 NetworkTick orderStart = em.HasComponent<ServerOrder>(e) ? em.GetComponentData<ServerOrder>(e).StartTick : default;
                 NetworkTick start = JumpFlight.ClickStartTick(nt.ServerTick, claimed, in plan, orderStart, in curves, tickMicros);
                 LastStartTicksBack = nt.ServerTick.TicksSince(start);
-                em.SetComponentData(e, JumpFlight.NewJump(input.ClickSeq, start, pose.Mm, landing, apexY));
+                MotionPlan jump = JumpFlight.NewJump(input.ClickSeq, start, pose.Mm, landing, apexY);
+                if (caught == WallAnswer.Planned)
+                {
+                    // the climb that runs on where the jump meets the wall, under the jump's own number
+                    jump.Flags |= MotionFlags.Catch;
+                    WallWrite.Server(em, e, input.ClickSeq, corners, legs, wall);
+                    Catches++;
+                }
+                em.SetComponentData(e, jump);
                 Planned++;
                 if (PlayerClickLog.Sink != null)
                     PlayerClickLog.Server(em.HasComponent<GhostOwner>(e) ? em.GetComponentData<GhostOwner>(e).NetworkId : 0,
@@ -140,6 +167,8 @@ namespace KryticalNova.Player.Entities
                 MotionPlan use = plan.ValueRO;
                 if (clientPlans.HasComponent(entity))
                     use = Choose(plan.ValueRO, clientPlans[entity].Plan, move.ValueRO.RefusedSeq);
+                // a catch whose climb has begun (or is over): the climb moves the body now (Wallstride part 4)
+                if (JumpFlight.IsCatch(in use) && move.ValueRO.OrderSeq == use.PlanSeq) continue;
                 NetworkTick orderStart = orders.HasComponent(entity) ? orders[entity].StartTick : default;
                 if (!JumpFlight.Places(use, curves, nt.ServerTick, tickMicros, JumpFlight.ClickWalkSeq(move.ValueRO), move.ValueRO.RefusedSeq, orderStart)) continue;
                 long elapsed = JumpFlight.ElapsedMicros(use, nt.ServerTick, tickMicros);
@@ -147,6 +176,15 @@ namespace KryticalNova.Player.Entities
                 ref var p = ref pose.ValueRW;
                 p.XMm = feet.x; p.YMm = feet.y; p.ZMm = feet.z;
                 p.YawCdeg = use.YawCdeg;
+                if (JumpFlight.CatchHandOff(in use, in curves, elapsed, in move.ValueRO))
+                {
+                    // the jump met the wall: no landing, the climb of its number runs on from the catch point (NGO CatchSurface)
+                    PlayerMovement.BeginCatchClimb(ref move.ValueRW, use.ToMm, use.PlanSeq);
+                    move.ValueRW.Water = 0;
+                    transform.ValueRW.Position = new float3(p.XMm, p.YMm, p.ZMm) * 0.001f;
+                    transform.ValueRW.Rotation = quaternion.RotateY(math.radians(p.YawCdeg * 0.01f));
+                    continue;
+                }
                 PlayerMovement.CancelWalk(ref move.ValueRW);
                 // in the air the body is off the water (NGO: ServerLeaveForJump); after touchdown the server's landing decides (a stand sets it)
                 if (!JumpFlight.Landed(use, curves, elapsed)) move.ValueRW.Water = 0;

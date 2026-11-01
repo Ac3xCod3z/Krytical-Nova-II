@@ -61,7 +61,7 @@ namespace KryticalNova.Persistence.Entities
             else if (onWall || motor.WantsWallWalkClick(point, normal, false)) why = motor.PlanWallForGhost(feet, point, normal, in ask, wallBase, out layout);
             else
             {
-                if (jump) { LastDecision = "a jump at a wall without the graph (the catch is part 4)"; return WallAnswer.NotWall; }
+                if (jump) { LastDecision = "a jump at a wall without the graph (the catch's: Catch)"; return WallAnswer.NotWall; }
                 why = motor.PlanClimbForGhost(feet, point, normal, in ask, out layout);
                 if (layout == null && string.IsNullOrEmpty(why)) { LastDecision = "not climbable"; return WallAnswer.NotWall; }
             }
@@ -73,6 +73,37 @@ namespace KryticalNova.Persistence.Entities
             }
             Write(layout, poseMm, offset, corners, legs, out plan);
             LastDecision = layout.EndsPerched ? "a tree climb, perched" : layout.PayOnPlant ? "a straight climb" : layout.EndsOnWall ? "onto the wall" : "over or off the wall";
+            return WallAnswer.Planned;
+        }
+
+        public WallAnswer Catch(Entity ghost, int3 poseMm, int yawCdeg, int3 pointMm, int3 normalPermille, bool run,
+            NativeList<int3> corners, NativeList<WallCorner> legs, out WallPlan plan, out int3 catchMm, out int apexYMm, out string reason)
+        {
+            plan = default;
+            reason = null;
+            catchMm = poseMm;
+            apexYMm = poseMm.y;
+            corners.Clear();
+            legs.Clear();
+            GameObject body = PlayerJumpFromSkills.BodyOf(m_World, ghost);
+            var motor = body != null ? body.GetComponent<PlayerWallRunMotor>() : null;
+            if (motor == null) { LastDecision = "no wall motor"; return WallAnswer.NotWall; }
+            float offset = OffsetOf(body);
+            var ask = Ask(body, motor, ghost, yawCdeg, default, run, true, false);
+            Vector3 feet = M(poseMm) - Vector3.up * offset;
+            Vector3 normal = new Vector3(normalPermille.x, normalPermille.y, normalPermille.z) * 0.001f;
+            string why = motor.PlanCatchForGhost(feet, M(pointMm), normal, in ask, out Vector3 catchFeet, out float peak, out WallWalkLayout layout);
+            if (layout == null && string.IsNullOrEmpty(why)) { LastDecision = "not climbable (the ordinary jump)"; return WallAnswer.NotWall; }
+            if (layout == null)
+            {
+                LastDecision = reason = why;
+                if (m_TellOwner) body.GetComponent<PointAndClickPlayer>()?.ShowViewRefusal(reason);
+                return WallAnswer.Refused;
+            }
+            catchMm = Mm(catchFeet + Vector3.up * offset);
+            apexYMm = Mathf.RoundToInt((peak + offset) * 1000f);
+            Write(layout, catchMm, offset, corners, legs, out plan);
+            LastDecision = layout.EndsPerched ? "a jump at a tree, caught, perched" : "a jump at a wall, caught";
             return WallAnswer.Planned;
         }
 

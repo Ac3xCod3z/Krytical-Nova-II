@@ -32,6 +32,14 @@ namespace KryticalNova.Player.Entities
         WallAnswer Plan(Entity ghost, int3 poseMm, int yawCdeg, in PoseTilt tilt, int3 pointMm, int3 normalPermille, bool run, bool jump,
             bool onWall, NativeList<int3> corners, NativeList<WallCorner> legs, out WallPlan plan, out string reason);
 
+        /// <summary>
+        /// A jump at a surface the graph does not cover (Wallstride part 4, NGO <c>TryJumpToCatch</c>): the jump to the catch point
+        /// (<paramref name="catchMm"/>, its apex height), and the climb that runs on from there as corners and legs, the first corner the catch
+        /// point. NotWall: not a climbable surface (the ordinary jump takes the click); Refused: NGO's words in <paramref name="reason"/>.
+        /// </summary>
+        WallAnswer Catch(Entity ghost, int3 poseMm, int yawCdeg, int3 pointMm, int3 normalPermille, bool run,
+            NativeList<int3> corners, NativeList<WallCorner> legs, out WallPlan plan, out int3 catchMm, out int apexYMm, out string reason);
+
         /// <summary>Server, out of Grip: off the wall in a flip to the ground in front of it (NGO <c>PushOff</c>). False when there is no body.</summary>
         bool PushOff(Entity ghost, int3 poseMm, int yawCdeg, in PoseTilt tilt, NativeList<int3> corners, NativeList<WallCorner> legs, out WallPlan plan);
     }
@@ -209,6 +217,18 @@ namespace KryticalNova.Player.Entities
                 int price = Grip != null ? Grip.ClimbFlux : 0;
                 if (price <= 0 || Grip.TryPay(e, price)) { ClimbsPaid++; continue; }
                 ClimbsRefused++;
+                // a jump's catch (part 4) that cannot hold on goes back to where the jump took off (NGO CatchSurface -> AbortJump)
+                if (em.HasComponent<MotionPlan>(e) && em.HasComponent<TeleportRequest>(e))
+                {
+                    var jump = em.GetComponentData<MotionPlan>(e);
+                    if (JumpFlight.IsCatch(in jump) && jump.PlanSeq == move.OrderSeq)
+                    {
+                        if (PlayerClickLog.Sink != null) PlayerClickLog.Sink("[KnWall] Could not hold on. Returned to takeoff.");
+                        em.SetComponentData(e, new TeleportRequest { XMm = jump.FromXMm, YMm = jump.FromYMm, ZMm = jump.FromZMm, YawCdeg = jump.YawCdeg });
+                        em.SetComponentEnabled<TeleportRequest>(e, true);
+                        continue;
+                    }
+                }
                 if (PlayerClickLog.Sink != null) PlayerClickLog.Sink("[KnWall] Not enough Flux to climb: stopped at the foot");
                 // NGO: the climb does not begin; the player stands where the run to the foot ended
                 var pose = em.GetComponentData<PlayerPose>(e);
