@@ -116,9 +116,11 @@ namespace KryticalNova.Player.Entities
         {
             var em = EntityManager;
             m_Tick = SystemAPI.TryGetSingleton<NetworkTime>(out var nt) ? nt.ServerTick : default;
-            // how far into the tick being gathered the press is (the walk starts there; owner pick P1, 1 Nov)
-            m_PressPermille = nt.ServerTick.IsValid && nt.ServerTickFraction > 0f && nt.ServerTickFraction < 1f
-                ? (ushort)math.clamp((int)(nt.ServerTickFraction * 1000f), 0, 999) : (ushort)0;
+            // how far into the tick being gathered the press is (the walk starts there; owner pick P1, 1 Nov). A frame that completes its
+            // tick (fraction 1) predicts that whole tick at once: its press is at the tick's end, not its start (else the first frame ran a
+            // whole tick, 0.93 m at 28 m/s: gui-tree-2's last "path jumped", PoseAheadContinuityTests at the GUI's frames)
+            m_PressPermille = !nt.ServerTick.IsValid || nt.ServerTickFraction <= 0f ? (ushort)0
+                : (ushort)math.clamp((int)(nt.ServerTickFraction * 1000f), 0, 999);
             m_Curves = SystemAPI.TryGetSingleton<PlayerMotionCurves>(out var curves) ? curves : PlayerMotionCurves.Default;
             m_TickMicros = PlayerMovement.TickMicros(SystemAPI.TryGetSingleton<ClientServerTickRate>(out var rate) && rate.SimulationTickRate > 0
                 ? rate.SimulationTickRate : 30);
