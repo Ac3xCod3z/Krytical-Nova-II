@@ -274,3 +274,11 @@ else to a fixed node at feet + 2.1 m under the click, then ran up. Owner's chang
   wall. New with the real jump: the Jump rank's own checks ("Too far: Jump rank reaches", "Too close to jump at.") and its Flux at take-off.
 - A jump from a wall to another place on it (the leap) stays NGO's arc.
 - Proof: the GUI run, three heights on a graph wall (below, at and above the reach), with GIFs.
+
+### 5.5 Part 4's test places (planned before the run, owner rule 1 Nov; proved by `Zone01WallPropProbe.ThePlannedTestPlaces_StandInZone01`)
+
+| Place | Coordinates (Zone01) | Used for | Proof in edit mode |
+|---|---|---|---|
+| Zone01's placed tree `SM_Env_Tree_01` (trunk) | 12.6, 0, -13.1 | three jumps at a tree (low, middle, high), the tree part | gui-catch-2/3: caught and perched |
+| In front of the wall walk's test graph wall (face z -45.3, facing +z) | -10.1, 0, -40 | three jumps onto a graph wall: below, at, above the Jump reach | the probe: `FindTestWall` finds it, tall enough, a top |
+| A 7 m terrain tree out in the open | 186.68, 0.27, -82.07 | the terrain-tree climb (proxies) | the probe: NGO's Decide accepts it with the terrain's tree colliders off |

@@ -1110,6 +1110,10 @@ which do not run on a DOTS client. They take two server gaps with them: Run Flux
 - [ ] feet VFX, Wall fights unchanged (combat itself comes in M4)
 
 For all five
+- [ ] TEST PLACES PLANNED BEFORE EACH GUI RUN (owner, 1 Nov; binding for every later test too, M4 combat included): the exact walls,
+  trees, obstacles and water spots in Zone01 (they may be far from the spawn) written here with their coordinates, proved in edit mode
+  first (a batch probe: the place exists and passes the game's own rules), and the run teleports to each; never "search near the start"
+  (gui-catch-3 never tested its wall: it looked near the tree's start and found none). Part 4's places: design section 5.5.
 - [ ] other players see the same start tick, curve and landing (2-client test world, `BodyIsMineWorldTests` style)
 - [ ] a forced rollback mid-move neither restarts the clip nor moves the body more than the follow's offset
 - [ ] owner feel checkpoint after M3c (by hand; pending is allowed)

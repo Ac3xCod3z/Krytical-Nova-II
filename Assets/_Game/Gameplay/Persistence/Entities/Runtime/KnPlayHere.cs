@@ -1613,7 +1613,8 @@ namespace KryticalNova.Persistence.Entities
                     // a terrain tree (its collider is a proxy the field puts near the bodies; the nearest is ~180 m from the start in Zone01): the
                     // instrument at the bodies' new place first, then up, too far and down. At least 6 m tall: gui-tree-3's nearest (4.5 m) is one
                     // NGO refuses ("There is no room at the top.")
-                    if (!TreeProxyField.NearestTree(stand, 6f, out Vector3 trunk, out float trunkHeight))
+                    // the planned terrain tree, out in the open (owner, 1 Nov; proved in edit mode: NGO's Decide accepts it)
+                    if (!TreeProxyField.NearestTree(TestTerrainTree, 6f, out Vector3 trunk, out float trunkHeight))
                     {
                         tally.Tried++;
                         Log($"tree: terrain tree: NOT TESTED; no terrain tree in a field ({TreeProxyField.AnchorReport()})");
@@ -1844,7 +1845,6 @@ namespace KryticalNova.Persistence.Entities
                 if (progression != null && progression.CurrentLevel < 60) progression.SetLevel(60);
                 if (resources != null) resources.RestoreChi(resources.MaxChi);
                 yield return new WaitForSeconds(1f);
-                Vector3 spawn = ServerPosition(ghost) - Vector3.up * offset;   // the graph walls the wall walk is tried on are by the spawn
                 var ask = new PlayerWallRunMotor.GhostWallAsk { Open = true, Alive = true, Run = true, Jump = true, Flux = 999f, HasFluxForOne = true,
                     Up = Vector3.up, Forward = Vector3.forward, GroundSpeed = em.GetComponentData<MoveStats>(ghost).RunMmps * 0.001f };
                 // Zone01's walls near the spawn are all the surface graph's (the wall walk's): the catch is for surfaces it does not cover, so the
@@ -1890,7 +1890,8 @@ namespace KryticalNova.Persistence.Entities
 
                 // a jump onto a wall of the zone's graph (owner, 1 Nov, design 5.4): the real jump, grabbing where clicked within the Jump rank's
                 // reach, above it as high as the jump gets under the click, then the wall walk up to it; three heights: below, at, above the reach
-                string wallWhy = motor.FindTestWall(spawn, out PlayerWallRunMotor.TestWall wall);
+                // the planned test wall (owner, 1 Nov: test places are planned and proved in edit mode before the run, never searched for)
+                string wallWhy = motor.FindTestWall(TestGraphWall, out PlayerWallRunMotor.TestWall wall);
                 if (wallWhy != null) { Log("catch: a graph wall: NOT TESTED; " + wallWhy); tally.Tried++; yield break; }
                 float reach = body.GetComponent<PlayerJumpMotor>() is PlayerJumpMotor jm ? jm.GhostJumpReach : 5f;
                 Vector3 ground = wall.Front;
@@ -1919,6 +1920,12 @@ namespace KryticalNova.Persistence.Entities
 
             /// <summary>Zone01's placed tree near the spawn (SM_Env_Tree_01, its trunk; the tree tries and the catch use it).</summary>
             static readonly Vector3 PlacedTree = new Vector3(12.6f, 0f, -13.1f);
+
+            /// <summary>
+            /// The test places planned before the run (owner, 1 Nov), proved in edit mode by Zone01WallPropProbe.ThePlannedTestPlaces_StandInZone01:
+            /// in front of the wall walk's test graph wall (the face at z -45.3, facing +z), and a 7 m terrain tree out in the open.
+            /// </summary>
+            static readonly Vector3 TestGraphWall = new Vector3(-10.1f, 0f, -40f), TestTerrainTree = new Vector3(186.68f, 0.27f, -82.07f);
 
             /// <summary>One scripted Jump click at a wall (part 4), judged: planned as a catch, handed off where the jump met the face, on to the top.</summary>
             IEnumerator CatchTry(GameObject body, Entity ghost, VaultTally tally, string what, Vector3 click, Vector3 normal, Vector3 from, float offset, CatchResult result,

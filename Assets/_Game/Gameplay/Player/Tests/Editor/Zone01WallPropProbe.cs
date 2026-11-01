@@ -178,6 +178,75 @@ namespace KryticalNova.Tests
             Assert.Pass(report.ToString());
         }
 
+        // Owner rule (1 Nov): every test's places are planned before the run and proved here, never searched for near the start. Part 4's two:
+        // the wall walk's test graph wall (in front of it: the point the scripted run teleports to) and a terrain tree out in the open. The run
+        // (KnPlayHere.TestGraphWall / TestTerrainTree) uses exactly these.
+        static readonly Vector3 TestGraphWall = new Vector3(-10.1f, 0f, -40f), TestTerrainTree = new Vector3(186.68f, 0.27f, -82.07f);
+
+        [Test, Explicit]
+        public void ThePlannedTestPlaces_StandInZone01()
+        {
+            EditorSceneManager.OpenScene(Scene, OpenSceneMode.Single);
+            var report = new StringBuilder();
+            var flags = System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic;
+            // the zone's rules (its surface graph) and a player body, set up as in the game
+            var rules = Object.FindFirstObjectByType<KryticalNova.World.ZoneRules>();
+            typeof(KryticalNova.World.ZoneRules).GetMethod("Awake", flags)?.Invoke(rules, null);
+            var playerPrefab = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Game/Gameplay/Player/Prefabs/Player.prefab");
+            var player = (GameObject)UnityEditor.PrefabUtility.InstantiatePrefab(playerPrefab);
+            var proxy = new GameObject("Tree Proxy (probe)");
+            try
+            {
+                var motor = player.GetComponent<PlayerWallRunMotor>();
+                typeof(PlayerWallRunMotor).GetMethod("Awake", flags)?.Invoke(motor, null);
+                Physics.SyncTransforms();
+                string why = motor.FindTestWall(TestGraphWall, out PlayerWallRunMotor.TestWall wall);
+                report.AppendLine(why == null
+                    ? $"[probe] graph wall near {TestGraphWall}: FOUND; foot {wall.Foot}, front {wall.Front}, onto (4 m) {wall.Onto}, lower (2.5 m) {wall.Lower}, top {wall.Top}, normal {wall.Normal}"
+                    : $"[probe] graph wall near {TestGraphWall}: NOT FOUND; {why}");
+                var jump = player.GetComponent<PlayerJumpMotor>();
+                float reach = jump != null ? jump.GhostJumpReach : 5f;
+                report.AppendLine($"[probe] Jump reach {reach:F1} m (the prefab's own ranks); the run's three clicks: {Mathf.Min(2.5f, reach - 1f):F1}, {reach - 0.2f:F1}, {reach + 2f:F1} m up; the wall's top {(why == null ? (wall.Top.y - wall.Foot.y).ToString("F1") : "?")} m up");
+
+                // the terrain tree: its proxy as TreeProxyField makes it, NGO's Decide asked through the aimed ray, the scene as saved
+                Terrain terrain = Terrain.activeTerrains[0];
+                var setting = new UnityEditor.SerializedObject(terrain.GetComponent<TerrainCollider>());
+                TerrainData data = terrain.terrainData;
+                float best = float.MaxValue, radius = 0f, height = 0f;
+                Vector3 foot = default;
+                foreach (TreeInstance tree in data.treeInstances)
+                {
+                    GameObject prefab = data.treePrototypes[tree.prototypeIndex].prefab;
+                    CapsuleCollider capsule = prefab != null ? prefab.GetComponentInChildren<CapsuleCollider>(true) : null;
+                    if (capsule == null) continue;
+                    Vector3 at = terrain.GetPosition() + Vector3.Scale(tree.position, data.size);
+                    float d = Vector2.Distance(new Vector2(at.x, at.z), new Vector2(TestTerrainTree.x, TestTerrainTree.z));
+                    if (d >= best) continue;
+                    best = d; foot = at;
+                    height = capsule.height * capsule.transform.lossyScale.y * tree.heightScale;
+                    radius = capsule.radius * Mathf.Max(capsule.transform.lossyScale.x, capsule.transform.lossyScale.z) * tree.widthScale;
+                }
+                proxy.transform.position = foot;
+                var body = proxy.AddComponent<CapsuleCollider>();
+                body.direction = 1; body.radius = radius; body.height = height; body.center = new Vector3(0f, height * 0.5f, 0f);
+                var marker = proxy.AddComponent<ClimbableSurface>();
+                marker.kind = ClimbableKind.Tree; marker.trunkRadius = radius; marker.height = height; marker.perchHeight = height * 0.6f;
+                Physics.SyncTransforms();
+                var ask = new PlayerWallRunMotor.GhostWallAsk { Open = true, Alive = true, Run = true, Flux = 999f, HasFluxForOne = true,
+                    Up = Vector3.up, Forward = Vector3.forward, GroundSpeed = 28f };
+                string treeWhy = motor.FindTestTreeClimb(foot, ask, out Vector3 stand, out Vector3 point, out _);
+                report.AppendLine($"[probe] terrain tree at {foot} ({height:F1} m, {best:F2} m from the planned point), the scene's tree colliders " +
+                    $"{(setting.FindProperty("m_EnableTreeColliders").boolValue ? "ON" : "off")}: {(treeWhy == null ? $"Decide ACCEPTS (face {point}, start {stand})" : treeWhy)}");
+            }
+            finally
+            {
+                Object.DestroyImmediate(player);
+                Object.DestroyImmediate(proxy);
+            }
+            Debug.Log(report.ToString());
+            Assert.Pass(report.ToString());
+        }
+
         static string Path(Transform t)
         {
             string p = t.name;
