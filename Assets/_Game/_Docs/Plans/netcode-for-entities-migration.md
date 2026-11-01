@@ -866,7 +866,15 @@ for every other body.
     server body; the DOTS message route comes with M8's chat port.
   - The other 11 are "only the owner acts" guards in Autobuff, Autopilot, `PlayerLoadouts` and `PointAndClickPlayer`. `PlayerRoleTable`
     covers them: a remote view strips Movement, Automation and the Rules, a server body strips Automation and disables Movement.
-- [ ] the 2-client run in the Editor test world (another player's run kick, messages, death and pet never act on mine; mine do)
+- [x] the 2-client run in the Editor test world (31 Oct, `BodyIsMineWorldTests`, 0 and 100 ms). A server and two clients, a body per
+  ghost tagged as `ClientBodyFactory` tags it. On each client only its own player's body is mine; NGO's old answer said yes for all
+  four. Each kind asks this one answer (`BodyRoleTag.IsMine(this, ...)` at every site above). Of the kinds, only the run kick's
+  component (`PlayerAnimancerMotor`, Presentation) is on another player's view at all: their death motor, messages and pet are
+  stripped from a remote view by `PlayerRoleTable`, and on a server body `IsMine` is false.
+  Open: a by-eye 2-player check needs a second real client. In the Editor that is a thin client with a dev-bot character, which needs
+  the test lane's bot characters (plan 43.1, `KN_TEST_LANE`), not defined in the Editor. Also, with the entity netcode my own
+  messages and level-up come from my server body, which `IsMine` now keeps silent. They need the client route (M8 chat port); in
+  Play DOTS here they no longer show.
 
 ## 53. M3b jump: acceptance list (owner's bar via Master, 31 Oct 2026; design `netcode-for-entities-designs/m3b-design.md`)
 
