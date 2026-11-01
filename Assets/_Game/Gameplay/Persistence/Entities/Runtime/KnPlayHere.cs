@@ -1553,7 +1553,9 @@ namespace KryticalNova.Persistence.Entities
                         $"SM_Env_Tree_01 at 12.6,-13.1 reads {motor.ClimbKindAt(new Vector3(12.6f, 1.2f, -13.1f), Vector3.back)} (expected Tree); " +
                         $"{TreeProxyField.AnchorReport()}");
                 }
-                string why = motor.FindTestClimb(ServerPosition(ghost) - Vector3.up * offset, ask, out Vector3 stand, out Vector3 point, out Vector3 normal, tree);
+                // a tree by the ray aimed at Zone01's placed tree (gui-catch-1: the 45-degree rays found it in gui-tree-2..4, then not at all)
+                string why = tree ? motor.FindTestTreeClimb(PlacedTree, ask, out Vector3 stand, out Vector3 point, out Vector3 normal)
+                    : motor.FindTestClimb(ServerPosition(ghost) - Vector3.up * offset, ask, out stand, out point, out normal, false);
                 if (why != null) { Log("climb: NOT TESTED; " + why); tally.Tried++; yield break; }
                 Log($"climb: the test face at {point.x:F1},{point.y:F2},{point.z:F1} facing {normal.x:F2},{normal.z:F2} (kind {motor.ClimbKindAt(point, normal)}); " +
                     $"the start {stand.x:F1},{stand.z:F1}");
@@ -1826,9 +1828,11 @@ namespace KryticalNova.Persistence.Entities
                 yield return new WaitForSeconds(1f);
                 var ask = new PlayerWallRunMotor.GhostWallAsk { Open = true, Alive = true, Run = true, Jump = true, Flux = 999f, HasFluxForOne = true,
                     Up = Vector3.up, Forward = Vector3.forward, GroundSpeed = em.GetComponentData<MoveStats>(ghost).RunMmps * 0.001f };
-                string why = motor.FindTestClimb(ServerPosition(ghost) - Vector3.up * offset, ask, out Vector3 stand, out Vector3 point, out Vector3 normal);
+                // Zone01's walls near the spawn are all the surface graph's (the wall walk's): the catch is for surfaces it does not cover, so the
+                // placed tree (gui-catch-1, 1 Nov: no wall face fits; NGO catches a tree and ends perched), found by the ray aimed at its trunk
+                string why = motor.FindTestTreeClimb(PlacedTree, ask, out Vector3 stand, out Vector3 point, out Vector3 normal);
                 if (why != null) { Log("catch: NOT TESTED; " + why); tally.Tried++; yield break; }
-                Log($"catch: the test face at {point.x:F1},{point.y:F2},{point.z:F1} facing {normal.x:F2},{normal.z:F2}; the start {stand.x:F1},{stand.z:F1}");
+                Log($"catch: the test tree's face at {point.x:F1},{point.y:F2},{point.z:F1} facing {normal.x:F2},{normal.z:F2}; the start {stand.x:F1},{stand.z:F1}");
 
                 // the pop check proved in this run: standing still is clean, the teleport to the start is a known pop
                 m_Pops.Reset();
@@ -1867,6 +1871,9 @@ namespace KryticalNova.Persistence.Entities
             }
 
             sealed class CatchResult { public string Height = "none"; }
+
+            /// <summary>Zone01's placed tree near the spawn (SM_Env_Tree_01, its trunk; the tree tries and the catch use it).</summary>
+            static readonly Vector3 PlacedTree = new Vector3(12.6f, 0f, -13.1f);
 
             /// <summary>One scripted Jump click at a wall (part 4), judged: planned as a catch, handed off where the jump met the face, on to the top.</summary>
             IEnumerator CatchTry(GameObject body, Entity ghost, VaultTally tally, string what, Vector3 click, Vector3 normal, Vector3 from, float offset, CatchResult result)
@@ -1918,7 +1925,7 @@ namespace KryticalNova.Persistence.Entities
                 Log($"catch: {what} clicked at {at}: {(ok ? "PASS" : "FAIL")}; server {(planned ? "planned a catch" : "planned NO catch")} " +
                     $"(\"{(jumps.WallPlanner as BodyWallPlanner)?.LastDecision}\"{(string.IsNullOrEmpty(jumps.LastRefusal) ? "" : "; last jump refusal: " + jumps.LastRefusal)}); " +
                     $"caught {(handed ? caughtAt.ToString("F2", CultureInfo.InvariantCulture) + " m above the take-off" : "NEVER")} (click {click.y - from.y:F2} m up); " +
-                    $"climb paid {grip.ClimbsPaid - paid0}; ended {end.y - from.y:F2} m up at {end.x:F1},{end.y:F2},{end.z:F1} (expected on the top); " +
+                    $"climb paid {grip.ClimbsPaid - paid0}; ended {end.y - from.y:F2} m up at {end.x:F1},{end.y:F2},{end.z:F1} (expected on the top or perched); " +
                     $"owner {apart * 100f:F1} cm from the server; glide {glide * 100f:F1} cm; pops {m_Pops.Pops}{(m_Pops.Pops > 0 ? " (worst: " + m_Pops.Worst + ")" : "")}; " +
                     $"Flux {flux0:F0} -> {Flux(body):F0}");
                 yield return new WaitForSeconds(0.8f);
