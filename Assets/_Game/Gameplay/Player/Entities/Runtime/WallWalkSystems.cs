@@ -44,6 +44,9 @@ namespace KryticalNova.Player.Entities
 
         /// <summary>Takes <paramref name="points"/> whole Flux; false when the body has not got them (nothing is taken).</summary>
         bool TryPay(Entity ghost, int points);
+
+        /// <summary>The straight climb's price, whole Flux (NGO <c>fluxCost</c> 12).</summary>
+        int ClimbFlux { get; }
     }
 
     /// <summary>
@@ -173,6 +176,47 @@ namespace KryticalNova.Player.Entities
                     em.SetComponentData(e, owed);
                 }
                 if ((move.Flags & MoveFlags.Moving) == 0) TakeUpCutWalk(em, e, nt.ServerTick, in move);
+            }
+            PayClimbs(em, nt.ServerTick);
+        }
+
+        /// <summary>Straight climbs paid (tests, the scripted run), and stopped at the foot for want of Flux.</summary>
+        public int ClimbsPaid { get; private set; }
+        public int ClimbsRefused { get; private set; }
+
+        /// <summary>
+        /// A straight climb's Flux, taken as its plant starts (NGO <c>Begin</c>: "Not enough Flux (12 to climb)." and the player stays at the
+        /// foot). Decided once per climb (<see cref="WallFlags.Paid"/>).
+        /// </summary>
+        void PayClimbs(EntityManager em, NetworkTick tick)
+        {
+            using var entities = m_Query.ToEntityArray(Allocator.Temp);
+            foreach (var e in entities)
+            {
+                var move = em.GetComponentData<MoveState>(e);
+                var wall = em.GetComponentData<WallPlan>(e);
+                if ((move.Flags & MoveFlags.Moving) == 0 || !WallLeg.Of(in wall, move.OrderSeq)) continue;
+                if ((wall.Flags & WallFlags.PayOnPlant) == 0 || (wall.Flags & WallFlags.Paid) != 0) continue;
+                var plan = em.GetComponentData<PathPlan>(e);
+                if (plan.Seq != move.OrderSeq) continue;
+                var corners = em.GetBuffer<PathCorner>(e).Reinterpret<int3>().AsNativeArray();
+                var legs = em.GetBuffer<WallCorner>(e);
+                if (!WallLeg.SegmentAt(new int3(move.StartXMm, move.StartYMm, move.StartZMm), corners, math.min(plan.Count, corners.Length), move.ProgressMm,
+                        out int i, out _, out _, out _, out _) || i >= legs.Length || legs[i].Micros <= 0) continue;   // still on the run to the foot
+                wall.Flags |= WallFlags.Paid;
+                em.SetComponentData(e, wall);
+                int price = Grip != null ? Grip.ClimbFlux : 0;
+                if (price <= 0 || Grip.TryPay(e, price)) { ClimbsPaid++; continue; }
+                ClimbsRefused++;
+                if (PlayerClickLog.Sink != null) PlayerClickLog.Sink("[KnWall] Not enough Flux to climb: stopped at the foot");
+                // NGO: the climb does not begin; the player stands where the run to the foot ended
+                var pose = em.GetComponentData<PlayerPose>(e);
+                var stay = new NativeList<int3>(2, Allocator.Temp);
+                var none = new NativeList<WallCorner>(2, Allocator.Temp);
+                stay.Add(pose.Mm); stay.Add(pose.Mm);
+                none.Add(default); none.Add(default);
+                WallWrite.Order(em, e, tick, stay, none, default);
+                stay.Dispose(); none.Dispose();
             }
         }
 

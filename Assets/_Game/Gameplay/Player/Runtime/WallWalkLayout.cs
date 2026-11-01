@@ -72,6 +72,8 @@ namespace KryticalNova.Player
         public delegate bool FaceProbe(Vector3 origin, Vector3 direction, float length, out Vector3 point, out Vector3 normal);
 
         public readonly List<Corner> Corners = new List<Corner>(64);
+        /// <summary>A straight climb: the server takes NGO's Flux for it as its plant starts (NGO <c>Begin</c>).</summary>
+        public bool PayOnPlant;
         /// <summary>The walk ends standing on the wall (NGO WallHold).</summary>
         public bool EndsOnWall;
         /// <summary>Cut at the corner budget: the rest of the way goes on from the last corner.</summary>

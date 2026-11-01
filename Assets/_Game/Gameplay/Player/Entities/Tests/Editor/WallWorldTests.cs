@@ -33,6 +33,20 @@ namespace KryticalNova.Player.Entities.Tests
                 reason = null;
                 if (pointMm.x == 99999) { Refusals++; reason = "That cannot be climbed."; return WallAnswer.Refused; }
                 Plans++;
+                if (pointMm.x == 77777)
+                {
+                    // a straight climb (part 2): the run to the foot, NGO's plant, up the face, over the top; Flux at the plant
+                    corners.Add(poseMm); legs.Add(default);
+                    corners.Add(new int3(5000, 0, poseMm.z)); legs.Add(default);
+                    var lean = new WallCorner { Phase = WallPhase.Plant, Micros = 180000, Ease = WallCorner.Eases(WallEase.In, WallEase.Out), UpY = 978, UpX = -208, FwdX = 1000 };
+                    corners.Add(new int3(5600, 700, poseMm.z)); legs.Add(lean);
+                    lean.Phase = WallPhase.Climb; lean.Micros = 500000; lean.Ease = 0;
+                    corners.Add(new int3(5600, 4000, poseMm.z)); legs.Add(lean);
+                    corners.Add(new int3(6500, 5000, poseMm.z));
+                    legs.Add(new WallCorner { Phase = WallPhase.Mantle, Micros = 400000, Ease = WallCorner.Eases(WallEase.In, WallEase.Out), UpY = 1000, FwdX = 1000 });
+                    plan = new WallPlan { SpeedMmps = 9000, OnWallFrom = 255, OffWallFrom = 255, Flags = WallFlags.PayOnPlant };
+                    return WallAnswer.Planned;
+                }
                 corners.Add(poseMm);
                 legs.Add(onWall ? Face(WallPhase.WallMove) : default);
                 if (!onWall)
@@ -66,6 +80,7 @@ namespace KryticalNova.Player.Entities.Tests
         {
             public int Points;
             public int GripPerSecondMilli => 15000;
+            public int ClimbFlux => 12;
 
             public bool TryPay(Entity ghost, int points)
             {
@@ -145,6 +160,40 @@ namespace KryticalNova.Player.Entities.Tests
             Assert.AreEqual(0, rig.OwnerMove().Wall);
             Assert.IsFalse(rig.Get<PoseTilt>(rig.Server, rig.ServerGhosts[0]).Tilted, "upright again");
             Assert.IsFalse(rig.Get<PoseTilt>(rig.Clients[0], rig.GhostIn(0, 0)).Tilted);
+        }
+
+        [TestCase(100, true)]
+        [TestCase(5, false)]
+        public void AStraightClimb_PaysItsFluxAsThePlantStarts_OrStopsAtTheFoot(int flux, bool climbs)
+        {
+            var planner = new StubWallPlanner();
+            var grip = new StubGrip { Points = flux };
+            using var rig = Rig(0, planner, grip);
+            rig.Sources[0].Wall(new int3(77777, 3000, 0), Wall);
+            var system = rig.Server.GetExistingSystemManaged<WallGripSystem>();
+            bool paidBeforeFoot = false;
+            for (int i = 0; i < 150; i++)
+            {
+                rig.Tick();
+                if (system.ClimbsPaid > 0 && rig.ServerPose().XMm < 4900) paidBeforeFoot = true;
+            }
+            Assert.IsFalse(paidBeforeFoot, "nothing is paid on the run to the foot (NGO pays as the climb begins)");
+            if (climbs)
+            {
+                Assert.AreEqual(1, system.ClimbsPaid, "paid once");
+                Assert.AreEqual(100 - 12, grip.Points, "NGO's 12 Flux");
+                Assert.AreEqual(new int3(6500, 5000, 0), rig.ServerPose().Mm, "up and over the top (server)");
+                Assert.AreEqual(new int3(6500, 5000, 0), rig.OwnerPose().Mm, "and the owner");
+                Assert.AreEqual(0, rig.ServerMove().Wall, "a straight climb takes no Grip");
+                Assert.AreEqual(0, system.Paid, "no Grip was paid");
+            }
+            else
+            {
+                Assert.AreEqual(1, system.ClimbsRefused, "Not enough Flux: the climb does not begin");
+                Assert.AreEqual(5, grip.Points, "nothing taken");
+                Assert.Less(rig.ServerPose().YMm, 800, "stays at the foot (server)");
+                Assert.Less(rig.OwnerPose().YMm, 800, "and the owner, corrected by the server");
+            }
         }
 
         [Test]

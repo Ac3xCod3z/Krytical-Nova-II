@@ -45,6 +45,10 @@ namespace KryticalNova.Player.Entities
         public const byte EndsOnWall = 1;
         /// <summary>The route was cut at the corner budget; the server issues the rest from the last corner.</summary>
         public const byte Truncated = 2;
+        /// <summary>A straight climb (part 2): the server takes its Flux as the plant starts (NGO <c>Begin</c>).</summary>
+        public const byte PayOnPlant = 4;
+        /// <summary>The server has decided the plant's Flux (paid, or not and the walk stopped at the foot); never twice.</summary>
+        public const byte Paid = 8;
     }
 
     /// <summary>

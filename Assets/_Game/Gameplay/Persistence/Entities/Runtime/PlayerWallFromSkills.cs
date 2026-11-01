@@ -49,7 +49,17 @@ namespace KryticalNova.Persistence.Entities
             if (!onWall) m_Base[ghost] = feet;
             Vector3 wallBase = m_Base.TryGetValue(ghost, out Vector3 b) ? b : feet;
             Vector3 normal = new Vector3(normalPermille.x, normalPermille.y, normalPermille.z) * 0.001f;
-            string why = motor.PlanWallForGhost(feet, M(pointMm), normal, in ask, wallBase, out WallWalkLayout layout);
+            Vector3 point = M(pointMm);
+            // NGO's order: the wall walk where the zone's graph covers the wall (or the body is on one), else the straight climb (part 2)
+            string why;
+            WallWalkLayout layout;
+            if (onWall || motor.WantsWallWalkClick(point, normal, false)) why = motor.PlanWallForGhost(feet, point, normal, in ask, wallBase, out layout);
+            else
+            {
+                if (jump) { LastDecision = "a jump at a wall without the graph (the catch is part 4)"; return WallAnswer.NotWall; }
+                why = motor.PlanClimbForGhost(feet, point, normal, in ask, out layout);
+                if (layout == null && string.IsNullOrEmpty(why)) { LastDecision = "not climbable"; return WallAnswer.NotWall; }
+            }
             if (layout == null)
             {
                 LastDecision = reason = string.IsNullOrEmpty(why) ? "no way" : why;
@@ -57,7 +67,7 @@ namespace KryticalNova.Persistence.Entities
                 return WallAnswer.Refused;
             }
             Write(layout, poseMm, offset, corners, legs, out plan);
-            LastDecision = layout.EndsOnWall ? "onto the wall" : "over or off the wall";
+            LastDecision = layout.PayOnPlant ? "a straight climb" : layout.EndsOnWall ? "onto the wall" : "over or off the wall";
             return WallAnswer.Planned;
         }
 
@@ -95,7 +105,9 @@ namespace KryticalNova.Persistence.Entities
                 Alive = resources == null || resources.IsAlive,
                 Busy = false,   // a click in the air or in a leg is refused before it gets here (the plan system, the gather)
                 Jump = jump,
+                Run = run,
                 HasFluxForOne = flux.Milli >= 1000,
+                Flux = flux.Milli * 0.001f,
                 OnWall = onWall,
                 Up = tilt.Tilted ? (Vector3)tilt.Up : Vector3.up,
                 Forward = tilt.Tilted ? (Vector3)tilt.Forward : heading,
@@ -125,7 +137,8 @@ namespace KryticalNova.Persistence.Entities
                 SpeedMmps = Mathf.RoundToInt(layout.WallSpeed * 1000f),
                 OnWallFrom = (byte)Mathf.Clamp(layout.OnWallFrom, 0, 255),
                 OffWallFrom = (byte)Mathf.Clamp(layout.OffWallFrom, 0, 255),
-                Flags = (byte)((layout.EndsOnWall ? WallFlags.EndsOnWall : 0) | (layout.Truncated ? WallFlags.Truncated : 0)),
+                Flags = (byte)((layout.EndsOnWall ? WallFlags.EndsOnWall : 0) | (layout.Truncated ? WallFlags.Truncated : 0)
+                    | (layout.PayOnPlant ? WallFlags.PayOnPlant : 0)),
             };
         }
 
@@ -146,16 +159,19 @@ namespace KryticalNova.Persistence.Entities
     public sealed class BodyWallGrip : IWallGrip
     {
         readonly World m_World;
-        readonly int m_PerSecondMilli;
+        readonly int m_PerSecondMilli, m_ClimbFlux;
 
         public BodyWallGrip(World world, GameObject prefab)
         {
             m_World = world;
             var motor = prefab != null ? prefab.GetComponent<PlayerWallRunMotor>() : null;
             m_PerSecondMilli = motor != null ? Mathf.RoundToInt(motor.GripFluxPerSecond * 1000f) : 0;
+            m_ClimbFlux = motor != null ? Mathf.CeilToInt(motor.ClimbFlux) : 0;
         }
 
         public int GripPerSecondMilli => m_PerSecondMilli;
+
+        public int ClimbFlux => m_ClimbFlux;
 
         public bool TryPay(Entity ghost, int points)
         {

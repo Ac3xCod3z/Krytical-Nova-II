@@ -415,12 +415,14 @@ namespace KryticalNova.Player
             }
             bool eligible = IsClimbableObject(surface, out ClimbableSurface marker);
             ClimbableKind kind = marker != null ? marker.kind : ClimbableKind.Wall;
-            bool stride = fromJump || (movementSkills != null && (movementSkills.IsRunning || movementSkills.IsJumpSelected));
+            bool stride = ghostAsk.HasValue ? fromJump || ghostAsk.Value.Run || ghostAsk.Value.Jump
+                : fromJump || (movementSkills != null && (movementSkills.IsRunning || movementSkills.IsJumpSelected));
             bool shaped = eligible && kind != ClimbableKind.Never && Shape(point, normal, kind, marker, fromFeet, out climb);
             var query = new ClimbQuery
             {
-                Unlocked = WallstrideOpen,
-                Busy = resources == null || !resources.IsAlive || IsBusy || (!fromJump && jumpMotor != null && jumpMotor.IsBusy),
+                Unlocked = ghostAsk.HasValue ? ghostAsk.Value.Open : WallstrideOpen,
+                Busy = ghostAsk.HasValue ? !ghostAsk.Value.Alive || ghostAsk.Value.Busy
+                    : resources == null || !resources.IsAlive || IsBusy || (!fromJump && jumpMotor != null && jumpMotor.IsBusy),
                 Stride = stride,
                 FromJump = fromJump,
                 Eligible = eligible && (shaped || kind == ClimbableKind.Never),
@@ -431,7 +433,8 @@ namespace KryticalNova.Player
                 Height = shaped ? climb.Height : 0f,
                 HasTop = shaped && climb.HasTop,
                 RoomAtTop = shaped && climb.Room,
-                CanPay = resources != null && resources.CanSpendChi(settings != null ? settings.fluxCost : 0f),
+                CanPay = ghostAsk.HasValue ? ghostAsk.Value.Flux >= (settings != null ? settings.fluxCost : 0f)
+                    : resources != null && resources.CanSpendChi(settings != null ? settings.fluxCost : 0f),
             };
             ClimbVerdict verdict = WallRunRules.Evaluate(query, settings);
             reason = WallRunRules.Reason(verdict, settings);

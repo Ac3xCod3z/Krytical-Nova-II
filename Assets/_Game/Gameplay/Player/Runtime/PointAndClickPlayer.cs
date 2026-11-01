@@ -865,7 +865,7 @@ namespace KryticalNova.Player
             // as a wall click with its normal: NGO's wall walk onto it (the straight climb, trees and catches are later parts of M3c).
             if (ViewMode && wallRunMotor != null && !walkableFromHere && movementSkills != null
                 && (movementSkills.IsRunning || movementSkills.IsJumpSelected)
-                && wallRunMotor.WantsWallWalkClick(hit.point, hit.normal, onGround))
+                && (wallRunMotor.WantsWallWalkClick(hit.point, hit.normal, onGround) || (!onGround && wallRunMotor.IsClimbableClick(hit.collider))))
             {
                 CancelAttack();
                 if (selectedTarget != null) ClearSelection();

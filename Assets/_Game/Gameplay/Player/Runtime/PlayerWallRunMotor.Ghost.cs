@@ -16,7 +16,9 @@ namespace KryticalNova.Player
         /// <summary>What the ghost's body is doing, as NGO's checks need it (the entity side knows it, the body does not).</summary>
         public struct GhostWallAsk
         {
-            public bool Open, Alive, Busy, Jump, HasFluxForOne;
+            public bool Open, Alive, Busy, Jump, Run, HasFluxForOne;
+            /// <summary>The ghost's Flux now (the straight climb's price is checked against it, NGO <c>CanSpendChi(fluxCost)</c>).</summary>
+            public float Flux;
             public bool OnWall;
             /// <summary>The body's up (the tilt's) and forward.</summary>
             public Vector3 Up, Forward;
@@ -32,6 +34,98 @@ namespace KryticalNova.Player
         {
             ghostMine = mine;
             Show(new WallRunPose { Phase = phase, Duration = seconds });
+        }
+
+        // A ghost's checks for NGO's Decide (null = the body's own, as NGO)
+        private GhostWallAsk? ghostAsk;
+
+        /// <summary>The straight climb's price, Flux (NGO <c>fluxCost</c> 12, paid when the plant starts).</summary>
+        public float ClimbFlux => settings != null ? settings.fluxCost : 0f;
+
+        /// <summary>
+        /// NGO's straight climb for a ghost (part 2, `m3c-wallstride-design.md` section 4): a click with Run on a climbable surface the
+        /// zone's graph does not cover. The server finds the surface again from the point (NGO <c>FindSurface</c>), NGO's
+        /// <see cref="Decide"/> judges it in NGO's words, and the climb is laid out as one walk: the run to its foot (cut where NGO's
+        /// arming starts the plant) and NGO's legs (<see cref="StartRoute"/>): the plant, up the face, over the top (or the kick-off).
+        /// Null layout and empty reason: not a climb (not a climbable surface: the ordinary click takes it).
+        /// </summary>
+        public string PlanClimbForGhost(Vector3 feet, Vector3 point, Vector3 normal, in GhostWallAsk ask, out WallWalkLayout layout)
+        {
+            layout = null;
+            if (settings == null) return string.Empty;
+            Collider surface = FindSurface(point, normal);
+            if (surface != null && VendorStall.Is(surface)) return "Vendor stalls can't be climbed.";
+            if (surface == null || !IsClimbableObject(surface, out _)) return string.Empty;
+            if (!NavMesh.SamplePosition(feet, out NavMeshHit onMesh, 0.6f, Filter())) return "Not now.";
+            feet = onMesh.position;
+            ghostAsk = ask;
+            bool ok;
+            Plan climb;
+            string reason;
+            try { ok = Decide(point, normal, surface, feet, false, out climb, out reason); }
+            finally { ghostAsk = null; }
+            if (!ok) return reason;
+            layout = new WallWalkLayout(settings, null, feet, Vector3.up, ask.Forward, ask.GroundSpeed * settings.wallSpeedShare);
+            // NGO ArmOrBegin: within reach of the foot the climb begins at once, else the run to the foot, the plant starting as it arrives
+            if (Flat(feet, climb.BaseFeet) > ArmTrigger + Radius)
+            {
+                Vector3 foot = NavMesh.SamplePosition(climb.BaseFeet, out NavMeshHit near, FootReach, Filter()) ? near.position : climb.BaseFeet;
+                var path = new NavMeshPath();
+                if (!NavMesh.CalculatePath(feet, foot, Filter(), path) || path.status != NavMeshPathStatus.PathComplete)
+                { layout = null; return "There is no way to the foot of that wall."; }
+                WalkUpTo(layout, path.corners, ArmTrigger + (agent != null ? agent.stoppingDistance : 0f));
+            }
+            ClimbLegs(layout, climb, ask.GroundSpeed, ask.Forward);
+            return string.Empty;
+        }
+
+        /// <summary>NGO <see cref="StartRoute"/> (not from a jump) as layout legs, from where the run to the foot ended.</summary>
+        private void ClimbLegs(WallWalkLayout layout, Plan climb, float groundSpeed, Vector3 forward)
+        {
+            Vector3 start = layout.LastFeet;
+            float climbSpeed = WallRunRules.ClimbSpeed(groundSpeed, settings);
+            Quaternion upright = Facing(-climb.Normal);
+            Quaternion leaned = upright * Quaternion.Euler(-settings.climbLean, 0f, 0f);
+            float plantSeconds = settings.plantSeconds;
+            float plantRise = climbSpeed * plantSeconds * 0.5f;
+            Vector3 plantTo = new Vector3(climb.BaseFeet.x, Mathf.Max(start.y, climb.BaseFeet.y) + plantRise, climb.BaseFeet.z);
+            plantTo.y = Mathf.Min(plantTo.y, Mathf.Max(climb.ClimbEndFeet.y, climb.BaseFeet.y));
+            layout.Leg(WallRunPhase.Plant, plantTo, leaned, plantSeconds, WallWalkLayout.EaseIn, WallWalkLayout.EaseOut);
+            Vector3 from = plantTo;
+            float rise = climb.ClimbEndFeet.y - plantTo.y;
+            if (rise > 0.05f)
+            {
+                layout.Leg(WallRunPhase.Climb, climb.ClimbEndFeet, leaned, rise / climbSpeed, WallWalkLayout.Linear, WallWalkLayout.Linear);
+                from = climb.ClimbEndFeet;
+            }
+            if (climb.HasTop)
+            {
+                Vector3 inward = climb.TopFeet - from;
+                inward.y = 0f;
+                float inDistance = inward.magnitude;
+                Vector3 inDirection = inDistance > 1e-3f ? inward / inDistance : Vector3.zero;
+                float liftIn = Mathf.Min(0.35f, inDistance * 0.3f);
+                Vector3 lifted = new Vector3(from.x, Mathf.Max(from.y, climb.TopFeet.y) + settings.mantleClearance, from.z) + inDirection * liftIn;
+                float liftSeconds = Mathf.Max(MinimumDuration, 2f * (lifted.y - from.y) / climbSpeed);
+                layout.Leg(WallRunPhase.Mantle, lifted, upright, liftSeconds, WallWalkLayout.EaseOut, WallWalkLayout.EaseIn);
+                float alongSpeed = 2f * liftIn / liftSeconds;
+                float rest = Mathf.Max(0f, inDistance - liftIn);
+                float overSeconds = alongSpeed > 0.1f ? 2f * rest / alongSpeed : settings.mantleSeconds;
+                overSeconds = Mathf.Clamp(overSeconds, settings.mantleSeconds * 0.5f, settings.mantleSeconds * 1.5f);
+                layout.Leg(WallRunPhase.Mantle, climb.TopFeet, upright, overSeconds, WallWalkLayout.EaseIn, WallWalkLayout.EaseOut);
+            }
+            else
+            {
+                // no top in reach: kick off it, down to the ground in front of it (NGO)
+                Vector3 outward = climb.Normal;
+                outward.y = 0f;
+                outward = outward.sqrMagnitude > 1e-4f ? outward.normalized : -forward;
+                Vector3 aim = from + outward * settings.kickOffDistance;
+                Vector3 landing = NavMesh.SamplePosition(new Vector3(aim.x, climb.BaseFeet.y, aim.z), out NavMeshHit hit, 2f, Filter()) ? hit.position : climb.BaseFeet;
+                if (!OnOpenGround(landing)) landing = climb.BaseFeet;
+                layout.Arc(WallRunPhase.KickOff, landing, settings.kickOffLift, Facing(outward));
+            }
+            layout.PayOnPlant = true;
         }
 
         /// <summary>A wall the scripted test run uses (KnPlayHere), all its points found in the zone's own surface graph.</summary>
@@ -110,6 +204,9 @@ namespace KryticalNova.Player
         /// The view's test of a wall click (PointAndClickPlayer in view mode): the zone's graph has a node by the point (NGO
         /// <see cref="NodeAt"/>). The gate is not asked here: a locked player's click goes to the planners, which refuse it in NGO's words.
         /// </summary>
+        /// <summary>The view's test of a straight climb's click: a vendor's stall (refused in NGO's words) or a climbable surface (NGO).</summary>
+        public bool IsClimbableClick(Collider surface) => surface != null && (VendorStall.Is(surface) || IsClimbableObject(surface, out _));
+
         public bool WantsWallWalkClick(Vector3 point, Vector3 normal, bool groundLayer)
         {
             SurfaceGraph graph = ZoneGraph;
