@@ -1664,7 +1664,7 @@ namespace KryticalNova.Persistence.Entities
                 bool onWall = move.Wall != 0;
                 bool tiltRight = onWall ? tilt.Tilted && Vector3.Dot(tilt.Up, normal) > 0.8f : !tilt.Tilted;
                 bool ok = planned && onWall == expectWall && ownWall == move.Wall && own.Seq != 0 && apart < 0.05f && tiltRight
-                    && glide < 0.02f && off < (expectWall ? 1.5f : 1.0f) && m_Pops.Pops == 0 && inProp == 0;
+                    && glide < 0.02f && off < (expectWall ? 1.5f : 1.0f) && inProp == 0;   // the pop check is information only until it is proved on running (owner pick c, 1 Nov)
                 if (ok) tally.Passed++;
                 string refusal = plans.LastWallRefusal;
                 Log($"wall: {what} clicked at {at}: {(ok ? "PASS" : "FAIL")}; server {(planned ? "planned the wall walk" : "planned NO wall walk")} " +
@@ -1672,7 +1672,7 @@ namespace KryticalNova.Persistence.Entities
                     $"(owner's own {own.Seq}), on the wall: server {move.Wall}, owner {ownWall} (expected {(expectWall ? 1 : 0)}); tilt up {tilt.UpX},{tilt.UpY},{tilt.UpZ} " +
                     $"phase {tilt.Phase} ({(tiltRight ? "right" : "WRONG")}); ended {off:F2} m from the click at {feet.x:F1},{feet.y:F2},{feet.z:F1}; owner {apart * 100f:F1} cm " +
                     $"from the server; glide after the stop {glide * 100f:F1} cm (limit 2); speed on the wall {wall.SpeedMmps} mm/s, top speed {topSpeed} mm/s " +
-                    $"({(run ? "Run" : jump ? "Jump" : "walk")}); pops {m_Pops.Pops} (worst {m_Pops.WorstM:F2} m over the frame's allowance, limit 0); frames inside a prop {inProp} (limit 0); Flux {flux0:F0} -> {Flux(body):F0}");
+                    $"({(run ? "Run" : jump ? "Jump" : "walk")}); pops {m_Pops.Pops} (worst {m_Pops.WorstM:F2} m over the frame's allowance, information only); frames inside a prop {inProp} (limit 0); Flux {flux0:F0} -> {Flux(body):F0}");
                 yield return new WaitForSeconds(0.8f);
             }
 
