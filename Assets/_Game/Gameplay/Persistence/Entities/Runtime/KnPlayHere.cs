@@ -57,7 +57,8 @@ namespace KryticalNova.Persistence.Entities
             || Environment.GetEnvironmentVariable("KN_PLAYHERE_WATER") == "1"                   // the scripted Waterstride (M3c)
             || Environment.GetEnvironmentVariable("KN_PLAYHERE_WALL") == "1"                    // the scripted wall walk (M3c)
             || Environment.GetEnvironmentVariable("KN_PLAYHERE_CLIMB") == "1"                   // the scripted straight climb (M3c part 2)
-            || Environment.GetEnvironmentVariable("KN_PLAYHERE_TREE") == "1";                   // the scripted tree, perch and drop (M3c part 3)
+            || Environment.GetEnvironmentVariable("KN_PLAYHERE_TREE") == "1"                    // the scripted tree, perch and drop (M3c part 3)
+            || Environment.GetEnvironmentVariable("KN_PLAYHERE_CATCH") == "1";                  // the scripted jump that catches a wall (M3c part 4)
         /// <summary>A folder: the scripted run saves a Game-view picture there every 0.1 s (proof for the owner, GUI Editor only).</summary>
         public const string CaptureVariable = "KN_PLAYHERE_CAPTURE";
 
@@ -1170,6 +1171,8 @@ namespace KryticalNova.Persistence.Entities
                 var walls = new VaultTally();
                 if (WallRun) yield return Walls(body, ghost, walls);
                 if (ClimbRun) yield return Climbs(body, ghost, walls);
+                // the catch before the trees: the tree part ends at a terrain tree far from the spawn's walls
+                if (CatchRun) yield return Catches(body, ghost, walls);
                 if (TreeRun) yield return Climbs(body, ghost, walls, tree: true);
                 Log($"done: {arrived} of {tries} arrived, {landed} of {jumpPoints.Count} jumps passed, low-rank refusals {(lowRank.Ok ? "match" : "DIFFER")}, " +
                     $"{vaults.Passed} of {vaults.Tried} vaults passed, {waters.Passed} of {waters.Tried} Waterstride tries passed, " +
@@ -1185,7 +1188,7 @@ namespace KryticalNova.Persistence.Entities
             /// the walk, the jumps and the vaults, so a run of Waterstride or the wall walk alone never started). Every gate reads this; a new
             /// scripted part is added here, and to <see cref="Scripted"/>, which reads the same variables before the runner exists.
             /// </summary>
-            bool HasScriptedTries => !string.IsNullOrEmpty(Walk) || !string.IsNullOrEmpty(Jump) || VaultCount > 0 || WaterRun || WallRun || ClimbRun || TreeRun;
+            bool HasScriptedTries => !string.IsNullOrEmpty(Walk) || !string.IsNullOrEmpty(Jump) || VaultCount > 0 || WaterRun || WallRun || ClimbRun || TreeRun || CatchRun;
 
             /// <summary>Which scripted parts are on, for the log's first lines (a part that should run and is not listed shows at once).</summary>
             string ScriptedParts()
@@ -1198,6 +1201,7 @@ namespace KryticalNova.Persistence.Entities
                 if (WallRun) on.Add("wall walk");
                 if (ClimbRun) on.Add("straight climb");
                 if (TreeRun) on.Add("tree, perch and drop");
+                if (CatchRun) on.Add("jumps that catch a wall");
                 return on.Count > 0 ? string.Join(", ", on) : "none (by hand)";
             }
 
@@ -1793,6 +1797,130 @@ namespace KryticalNova.Persistence.Entities
                     $"paid {grip.ClimbsPaid - paid0}, stopped for Flux {grip.ClimbsRefused - refused0}; ended {end.y - stand.y:F2} m above the start at {end.x:F1},{end.y:F2},{end.z:F1} " +
                     $"(expected {(expectClimb ? "on the top" : "refused, at the start")}); upright {!tilt.Tilted}; owner {apart * 100f:F1} cm from the server; glide {glide * 100f:F1} cm; " +
                     $"pops {m_Pops.Pops}{(m_Pops.Pops > 0 ? " (worst: " + m_Pops.Worst + ")" : "")}; at 45 degrees in the plant: {plant45 ?? "no plant"}; Flux {flux0:F0} -> {Flux(body):F0}");
+                yield return new WaitForSeconds(0.8f);
+            }
+
+            /// <summary>The scripted jump that catches a wall (env KN_PLAYHERE_CATCH=1; M3c part 4, `m3c-wallstride-design.md` section 5).</summary>
+            static bool CatchRun => Environment.GetEnvironmentVariable("KN_PLAYHERE_CATCH") == "1";
+
+            /// <summary>
+            /// The scripted jumps at a wall (part 4, with the owner's change 5.3: caught where the arc meets the wall): a face near the spawn the
+            /// graph does not cover (NGO's Decide), the pop check proved in the run, then three Jump clicks at it, at different heights and the last
+            /// from farther back, each judged (a catch planned, handed off where it meets the face, on to the top, owner with the server, no pop)
+            /// and the three catch heights side by side (expected to rise with the click).
+            /// </summary>
+            IEnumerator Catches(GameObject body, Entity ghost, VaultTally tally)
+            {
+                World server = KnBootstrap.ServerWorld;
+                var em = server.EntityManager;
+                var jumps = server.GetExistingSystemManaged<PlayerJumpServerSystem>();
+                var grip = server.GetExistingSystemManaged<WallGripSystem>();
+                var motor = body.GetComponent<PlayerWallRunMotor>();
+                var progression = body.GetComponent<PlayerCharacterProgression>();
+                var resources = body.GetComponent<PlayerResources>();
+                if (jumps == null || jumps.WallPlanner == null || grip == null || motor == null)
+                { Log("catch: FAIL; no jump system with a wall planner, Grip system or wall motor"); tally.Tried++; yield break; }
+                float offset = body.GetComponent<UnityEngine.AI.NavMeshAgent>() is UnityEngine.AI.NavMeshAgent ag ? ag.baseOffset : 0f;
+                if (progression != null && progression.CurrentLevel < 60) progression.SetLevel(60);
+                if (resources != null) resources.RestoreChi(resources.MaxChi);
+                yield return new WaitForSeconds(1f);
+                var ask = new PlayerWallRunMotor.GhostWallAsk { Open = true, Alive = true, Run = true, Jump = true, Flux = 999f, HasFluxForOne = true,
+                    Up = Vector3.up, Forward = Vector3.forward, GroundSpeed = em.GetComponentData<MoveStats>(ghost).RunMmps * 0.001f };
+                string why = motor.FindTestClimb(ServerPosition(ghost) - Vector3.up * offset, ask, out Vector3 stand, out Vector3 point, out Vector3 normal);
+                if (why != null) { Log("catch: NOT TESTED; " + why); tally.Tried++; yield break; }
+                Log($"catch: the test face at {point.x:F1},{point.y:F2},{point.z:F1} facing {normal.x:F2},{normal.z:F2}; the start {stand.x:F1},{stand.z:F1}");
+
+                // the pop check proved in this run: standing still is clean, the teleport to the start is a known pop
+                m_Pops.Reset();
+                float watch = Time.realtimeSinceStartup;
+                while (Time.realtimeSinceStartup - watch < 1f) { yield return new WaitForEndOfFrame(); PopFrame(ghost); }
+                Log($"catch: pop check on a known clean case (standing 1 s): {m_Pops.Pops} pop(s) (expected 0) {m_Pops.Worst}");
+                m_Pops.Reset();
+                PopFrame(ghost);
+                Teleport(em, ghost, stand + Vector3.up * offset);
+                watch = Time.realtimeSinceStartup;
+                while (Time.realtimeSinceStartup - watch < 1.5f) { yield return new WaitForEndOfFrame(); PopFrame(ghost); }
+                Log($"catch: pop check on a known fault (the teleport to the start): {m_Pops.Pops} pop(s) (expected 1 or more): {m_Pops.Worst}");
+
+                // three jumps at the face: low, middle, high; the last from 3 m farther out
+                Vector3 outward = new Vector3(normal.x, 0f, normal.z).normalized;
+                Vector3 farther = UnityEngine.AI.NavMesh.SamplePosition(stand + outward * 3f, out UnityEngine.AI.NavMeshHit back, 1.5f, UnityEngine.AI.NavMesh.AllAreas)
+                    ? back.position : stand;
+                var heights = new List<string>();
+                var tries = new (string what, float up, Vector3 from)[]
+                {
+                    ("low, at 1.8 m up the face", 1.8f, stand),
+                    ("middle, at 2.8 m up the face", 2.8f, stand),
+                    ($"high, at 3.8 m up the face, {Flat(farther - point):F1} m out", 3.8f, farther),
+                };
+                foreach (var (what, upBy, from) in tries)
+                {
+                    Teleport(em, ghost, from + Vector3.up * offset);
+                    yield return new WaitForSeconds(1.5f);
+                    if (resources != null) resources.RestoreChi(resources.MaxChi);
+                    yield return new WaitForSeconds(0.5f);
+                    var result = new CatchResult();
+                    yield return CatchTry(body, ghost, tally, what, new Vector3(point.x, from.y + upBy, point.z), normal, from, offset, result);
+                    heights.Add(result.Height);
+                }
+                Log($"catch: caught at {string.Join(", ", heights)} above the take-off (expected rising with the click; owner, 1 Nov: where the arc meets the wall)");
+            }
+
+            sealed class CatchResult { public string Height = "none"; }
+
+            /// <summary>One scripted Jump click at a wall (part 4), judged: planned as a catch, handed off where the jump met the face, on to the top.</summary>
+            IEnumerator CatchTry(GameObject body, Entity ghost, VaultTally tally, string what, Vector3 click, Vector3 normal, Vector3 from, float offset, CatchResult result)
+            {
+                if (OverTheCap()) yield break;
+                World server = KnBootstrap.ServerWorld;
+                var em = server.EntityManager;
+                var jumps = server.GetExistingSystemManaged<PlayerJumpServerSystem>();
+                var grip = server.GetExistingSystemManaged<WallGripSystem>();
+                bool hasClient = TryLocalGhost(out World clientWorld, out Entity clientGhost, out _);
+                tally.Tried++;
+                int catches0 = jumps.Catches, paid0 = grip.ClimbsPaid;
+                float flux0 = Flux(body);
+                string at = DateTime.Now.ToString("HH:mm:ss.fff", CultureInfo.InvariantCulture);
+                BodyClicks.Wall(click, normal, false, true);
+                float clicked = Time.realtimeSinceStartup, stoppedAt = -1f, glide = 0f;
+                Vector3 bodyAtStop = default;
+                float caughtAt = float.NaN;
+                bool handed = false;
+                m_Pops.Reset();
+                while (Time.realtimeSinceStartup - clicked < 12f)
+                {
+                    yield return new WaitForEndOfFrame();
+                    var plan = em.GetComponentData<MotionPlan>(ghost);
+                    var move = em.GetComponentData<MoveState>(ghost);
+                    if (!handed && JumpFlight.IsCatch(in plan) && move.OrderSeq == plan.PlanSeq)
+                    {
+                        handed = true;
+                        caughtAt = ServerPosition(ghost).y - offset - from.y;
+                    }
+                    PopFrame(ghost);
+                    Vector3 b = OwnBody.transform.position;
+                    bool busy = Moving(ghost) || (plan.Kind == MotionKind.Jump && !handed);
+                    if (!busy && Time.realtimeSinceStartup - clicked > 3f && !handed) break;   // never caught
+                    if (handed && !Moving(ghost))
+                    {
+                        if (stoppedAt < 0f) { stoppedAt = Time.realtimeSinceStartup; bodyAtStop = b; }
+                        else { glide = Mathf.Max(glide, (b - bodyAtStop).magnitude); if (Time.realtimeSinceStartup - stoppedAt > 1f) break; }
+                    }
+                }
+                Vector3 end = ServerPosition(ghost) - Vector3.up * offset;
+                PlayerPose ownPose = hasClient && clientWorld.IsCreated ? clientWorld.EntityManager.GetComponentData<PlayerPose>(clientGhost) : default;
+                float apart = (new Vector3(ownPose.XMm, ownPose.YMm, ownPose.ZMm) * 0.001f - ServerPosition(ghost)).magnitude;
+                bool planned = jumps.Catches == catches0 + 1;
+                bool up = end.y > from.y + 1.5f;
+                bool ok = planned && handed && grip.ClimbsPaid == paid0 + 1 && up && apart < 0.05f && glide < 0.02f && m_Pops.Pops == 0;
+                if (ok) tally.Passed++;
+                result.Height = handed ? $"{caughtAt:F2} m" : "none";
+                Log($"catch: {what} clicked at {at}: {(ok ? "PASS" : "FAIL")}; server {(planned ? "planned a catch" : "planned NO catch")} " +
+                    $"(\"{(jumps.WallPlanner as BodyWallPlanner)?.LastDecision}\"{(string.IsNullOrEmpty(jumps.LastRefusal) ? "" : "; last jump refusal: " + jumps.LastRefusal)}); " +
+                    $"caught {(handed ? caughtAt.ToString("F2", CultureInfo.InvariantCulture) + " m above the take-off" : "NEVER")} (click {click.y - from.y:F2} m up); " +
+                    $"climb paid {grip.ClimbsPaid - paid0}; ended {end.y - from.y:F2} m up at {end.x:F1},{end.y:F2},{end.z:F1} (expected on the top); " +
+                    $"owner {apart * 100f:F1} cm from the server; glide {glide * 100f:F1} cm; pops {m_Pops.Pops}{(m_Pops.Pops > 0 ? " (worst: " + m_Pops.Worst + ")" : "")}; " +
+                    $"Flux {flux0:F0} -> {Flux(body):F0}");
                 yield return new WaitForSeconds(0.8f);
             }
 

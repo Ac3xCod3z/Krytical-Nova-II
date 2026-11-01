@@ -79,20 +79,29 @@ namespace KryticalNova.Player
             return string.Empty;
         }
 
-        /// <summary>
-        /// NGO's jump at a wall for a ghost (part 4, `m3c-wallstride-design.md` section 5, rules C1-C4): Jump selected and a click on a climbable
-        /// surface the zone's graph does not cover. NGO's <see cref="Decide"/> from a jump (no Run needed, a slant up to 65 degrees), the catch
-        /// point (<see cref="CatchPointOn"/>), then the jump motor's own checks and flight to it
-        /// (<see cref="PlayerJumpMotor.PlanCatchForGhost"/>), all in NGO's words and order. <paramref name="layout"/> is the climb that runs on
-        /// from the catch point when the jump meets the surface (NGO <c>StartRoute(fromJump: true)</c>). Null layout and empty reason: not a
-        /// climbable surface (the ordinary jump takes the click).
-        /// </summary>
-        public string PlanCatchForGhost(Vector3 feet, Vector3 point, Vector3 normal, in GhostWallAsk ask, out Vector3 catchFeet, out float peak,
-            out WallWalkLayout layout)
+        /// <summary>A jump at a wall, judged (part 4): where it aims, the climb it catches, for the entity side to find where its arc meets the wall.</summary>
+        public sealed class GhostCatch
         {
-            layout = null;
-            catchFeet = feet;
-            peak = feet.y;
+            /// <summary>Where the jump takes off and where it aims (the feet), the arc's peak (feet height).</summary>
+            public Vector3 StartFeet, AimFeet;
+            public float Peak;
+            /// <summary>The climb's base (the stand-off plane's point at its foot), the highest a catch may be, the face's outward normal.</summary>
+            public Vector3 BaseFeet, ClimbEndFeet, Normal;
+            // the motor's own climb (its type is the motor's), boxed: read back by CatchLayoutForGhost
+            internal object Climb;
+        }
+
+        /// <summary>
+        /// NGO's jump at a wall for a ghost (part 4, `m3c-wallstride-design.md` section 5, rules C1-C4, and the owner's change 5.3): Jump selected
+        /// and a click on a climbable surface the zone's graph does not cover. NGO's <see cref="Decide"/> from a jump (no Run needed, a slant up to
+        /// 65 degrees), then the jump motor's own checks and flight (<see cref="PlayerJumpMotor.PlanCatchForGhost"/>), all in NGO's words and
+        /// order, aimed at the place clicked (the body's middle there; owner, 1 Nov) within the face's range: not below the climb's base, not
+        /// above its end. Where the arc meets the wall is the entity side's (it flies the arc), then <see cref="CatchLayoutForGhost"/>. Null
+        /// <paramref name="shape"/> and empty reason: not a climbable surface (the ordinary jump takes the click).
+        /// </summary>
+        public string PlanCatchForGhost(Vector3 feet, Vector3 point, Vector3 normal, in GhostWallAsk ask, out GhostCatch shape)
+        {
+            shape = null;
             if (settings == null) return string.Empty;
             Collider surface = FindSurface(point, normal);
             if (surface != null && VendorStall.Is(surface)) return "Vendor stalls can't be climbed.";
@@ -106,18 +115,38 @@ namespace KryticalNova.Player
             try { ok = Decide(point, normal, surface, feet, true, out climb, out reason); }
             finally { ghostAsk = null; }
             if (!ok) return reason;
-            catchFeet = CatchPointOn(climb, feet);
+            // the owner's catch (5.3): aimed at the place clicked, the body's middle there, within the face's range
+            float half = (agent != null ? agent.height : 2f) * 0.5f;
+            Vector3 aim = new Vector3(climb.BaseFeet.x, Mathf.Clamp(point.y - half, climb.BaseFeet.y, Mathf.Max(climb.BaseFeet.y, climb.ClimbEndFeet.y)),
+                climb.BaseFeet.z);
             // NGO TryJumpToCatch, in its order (busy and cooldown are the ghost's, refused before a click gets here)
             if (jumpMotor == null) return "Jump animation is not configured.";
             if (!onMesh) return "Jump must start on walkable ground.";
-            string why = jumpMotor.PlanCatchForGhost(feet, catchFeet, out peak);
+            string why = jumpMotor.PlanCatchForGhost(feet, aim, out float peak);
             if (why != null) return why;
-            Vector3 flight = catchFeet - feet;
+            Vector3 n = climb.Normal;
+            n.y = 0f;
+            shape = new GhostCatch
+            {
+                StartFeet = feet, AimFeet = aim, Peak = peak, BaseFeet = climb.BaseFeet,
+                ClimbEndFeet = new Vector3(climb.BaseFeet.x, Mathf.Max(climb.BaseFeet.y, climb.ClimbEndFeet.y), climb.BaseFeet.z),
+                Normal = n.sqrMagnitude > 1e-4f ? n.normalized : -ask.Forward, Climb = climb,
+            };
+            return string.Empty;
+        }
+
+        /// <summary>
+        /// The climb that runs on where a jump at a wall met it (<paramref name="catchFeet"/>, found by the entity side on the arc it flies):
+        /// NGO's <c>StartRoute(fromJump: true)</c>, the plant quick when the jump met the face head-on.
+        /// </summary>
+        public WallWalkLayout CatchLayoutForGhost(GhostCatch shape, Vector3 catchFeet, in GhostWallAsk ask)
+        {
+            Vector3 flight = catchFeet - shape.StartFeet;
             flight.y = 0f;
             Vector3 facing = flight.sqrMagnitude > 1e-4f ? flight.normalized : ask.Forward;
-            layout = new WallWalkLayout(settings, null, catchFeet, Vector3.up, facing, ask.GroundSpeed * settings.wallSpeedShare);
-            ClimbLegs(layout, climb, ask.GroundSpeed, facing, true);
-            return string.Empty;
+            var layout = new WallWalkLayout(settings, null, catchFeet, Vector3.up, facing, ask.GroundSpeed * settings.wallSpeedShare);
+            ClimbLegs(layout, (Plan)shape.Climb, ask.GroundSpeed, facing, true);
+            return layout;
         }
 
         /// <summary>

@@ -128,7 +128,9 @@ namespace KryticalNova.Player.Entities.Presentation
                         jump = PlayerMotionSystem.Choose(jump, em.GetComponentData<ClientMotionPlan>(e).Plan, move.RefusedSeq);
                     jumpMicros = JumpClock(in jump, in nt, predicted, elapsedMicros, tickMicros);
                 }
-                bool inJump = jump.Kind == MotionKind.Jump && jumpMicros >= 0 && jumpMicros < curves.LandMicros;
+                // a catch's jump ends where its arc meets the wall (Wallstride part 4), the climb draws the body from there
+                long jumpEnds = JumpFlight.IsCatch(in jump) ? JumpFlight.CatchTime(in jump, in curves) : curves.LandMicros;
+                bool inJump = jump.Kind == MotionKind.Jump && jumpMicros >= 0 && jumpMicros < jumpEnds;
                 if (inJump)
                 {
                     int3 feet = JumpFlight.FeetAt(in jump, in curves, jumpMicros);
@@ -295,7 +297,11 @@ namespace KryticalNova.Player.Entities.Presentation
             }
             if (state.JumpPhase < 1 && micros >= curves.TakeoffMicros) { state.JumpPhase = 1; view?.JumpTookOff(); }
             // a catch (Wallstride part 4) has no landing: the climb's plant takes the body from the touchdown (NGO CatchSurface)
-            if (state.JumpPhase < 2 && micros >= curves.LandMicros) { state.JumpPhase = 2; if (!JumpFlight.IsCatch(in plan)) view?.JumpLanded(); }
+            if (JumpFlight.IsCatch(in plan))
+            {
+                if (state.JumpPhase < 2 && micros >= JumpFlight.CatchTime(in plan, in curves)) state.JumpPhase = 2;
+            }
+            else if (state.JumpPhase < 2 && micros >= curves.LandMicros) { state.JumpPhase = 2; view?.JumpLanded(); }
         }
     }
 }

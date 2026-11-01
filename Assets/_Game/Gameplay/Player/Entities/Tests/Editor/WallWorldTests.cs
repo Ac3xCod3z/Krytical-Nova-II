@@ -84,10 +84,12 @@ namespace KryticalNova.Player.Entities.Tests
 
             /// <summary>A jump at the wall at x = 6 m: caught 1.4 m up at its foot, then NGO's plant from a jump, up the face, over the top.</summary>
             public WallAnswer Catch(Entity ghost, int3 poseMm, int yawCdeg, int3 pointMm, int3 normalPermille, bool run,
-                NativeList<int3> corners, NativeList<WallCorner> legs, out WallPlan plan, out int3 catchMm, out int apexYMm, out string reason)
+                NativeList<int3> corners, NativeList<WallCorner> legs, out WallPlan plan, out int3 catchMm, out int apexYMm, out int catchMicros,
+                out string reason)
             {
                 plan = default;
                 reason = null;
+                catchMicros = 0;   // at the arc's end (a click on the face)
                 catchMm = poseMm;
                 apexYMm = poseMm.y;
                 if (pointMm.x != CatchClick) return WallAnswer.NotWall;

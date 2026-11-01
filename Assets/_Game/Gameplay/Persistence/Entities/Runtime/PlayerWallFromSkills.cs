@@ -77,12 +77,14 @@ namespace KryticalNova.Persistence.Entities
         }
 
         public WallAnswer Catch(Entity ghost, int3 poseMm, int yawCdeg, int3 pointMm, int3 normalPermille, bool run,
-            NativeList<int3> corners, NativeList<WallCorner> legs, out WallPlan plan, out int3 catchMm, out int apexYMm, out string reason)
+            NativeList<int3> corners, NativeList<WallCorner> legs, out WallPlan plan, out int3 catchMm, out int apexYMm, out int catchMicros,
+            out string reason)
         {
             plan = default;
             reason = null;
             catchMm = poseMm;
             apexYMm = poseMm.y;
+            catchMicros = 0;
             corners.Clear();
             legs.Clear();
             GameObject body = PlayerJumpFromSkills.BodyOf(m_World, ghost);
@@ -92,19 +94,40 @@ namespace KryticalNova.Persistence.Entities
             var ask = Ask(body, motor, ghost, yawCdeg, default, run, true, false);
             Vector3 feet = M(poseMm) - Vector3.up * offset;
             Vector3 normal = new Vector3(normalPermille.x, normalPermille.y, normalPermille.z) * 0.001f;
-            string why = motor.PlanCatchForGhost(feet, M(pointMm), normal, in ask, out Vector3 catchFeet, out float peak, out WallWalkLayout layout);
-            if (layout == null && string.IsNullOrEmpty(why)) { LastDecision = "not climbable (the ordinary jump)"; return WallAnswer.NotWall; }
-            if (layout == null)
+            string why = motor.PlanCatchForGhost(feet, M(pointMm), normal, in ask, out PlayerWallRunMotor.GhostCatch shape);
+            if (shape == null && string.IsNullOrEmpty(why)) { LastDecision = "not climbable (the ordinary jump)"; return WallAnswer.NotWall; }
+            if (shape == null)
             {
                 LastDecision = reason = why;
                 if (m_TellOwner) body.GetComponent<PointAndClickPlayer>()?.ShowViewRefusal(reason);
                 return WallAnswer.Refused;
             }
-            catchMm = Mm(catchFeet + Vector3.up * offset);
-            apexYMm = Mathf.RoundToInt((peak + offset) * 1000f);
-            Write(layout, catchMm, offset, corners, legs, out plan);
-            LastDecision = layout.EndsPerched ? "a jump at a tree, caught, perched" : "a jump at a wall, caught";
+            // the owner's catch (5.3): where the arc the ghost flies (JumpFlight.FeetAt) first reaches the wall's stand-off plane, within the face's
+            // range; past that range the arc's own end (the aim, inside it by the motor's rule)
+            catchMm = Mm(shape.AimFeet + Vector3.up * offset);
+            apexYMm = Mathf.RoundToInt((shape.Peak + offset) * 1000f);
+            PlayerMotionCurves curves = Curves();
+            MotionPlan flight = JumpFlight.NewJump(0, default, poseMm, catchMm, apexYMm);
+            for (long t = curves.TakeoffMicros; t < curves.LandMicros; t += 2000)
+            {
+                Vector3 at = M(JumpFlight.FeetAt(in flight, in curves, t)) - Vector3.up * offset;
+                if (Vector3.Dot(at - shape.BaseFeet, shape.Normal) > 0f) continue;
+                if (at.y >= shape.BaseFeet.y && at.y <= shape.ClimbEndFeet.y) catchMicros = (int)t;
+                break;
+            }
+            int3 caught = JumpFlight.FeetAt(in flight, in curves, catchMicros > 0 ? catchMicros : curves.LandMicros);
+            WallWalkLayout layout = motor.CatchLayoutForGhost(shape, M(caught) - Vector3.up * offset, in ask);
+            Write(layout, caught, offset, corners, legs, out plan);
+            LastDecision = (layout.EndsPerched ? "a jump at a tree, caught" : "a jump at a wall, caught") +
+                $" {M(caught).y - offset - feet.y:F2} m above the take-off{(catchMicros > 0 ? " where the arc met it" : " at the arc's end")}";
             return WallAnswer.Planned;
+        }
+
+        /// <summary>The jump clip's times this world flies (its baked singleton, else the defaults).</summary>
+        PlayerMotionCurves Curves()
+        {
+            using var query = m_World.EntityManager.CreateEntityQuery(ComponentType.ReadOnly<PlayerMotionCurves>());
+            return query.TryGetSingleton(out PlayerMotionCurves curves) ? curves : PlayerMotionCurves.Default;
         }
 
         public bool PushOff(Entity ghost, int3 poseMm, int yawCdeg, in PoseTilt tilt, NativeList<int3> corners, NativeList<WallCorner> legs, out WallPlan plan)

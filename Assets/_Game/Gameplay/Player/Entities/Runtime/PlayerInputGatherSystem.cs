@@ -361,7 +361,7 @@ namespace KryticalNova.Player.Entities
             try
             {
                 WallAnswer answer = WallPlanner.Catch(e, pose.Mm, pose.YawCdeg, cmd.GoalMm, cmd.NormalPermille, cmd.Run, corners, legs,
-                    out WallPlan wall, out int3 catchMm, out int apexY, out string why);
+                    out WallPlan wall, out int3 catchMm, out int apexY, out int catchMicros, out string why);
                 if (answer == WallAnswer.NotWall) return false;
                 if (answer == WallAnswer.Refused || corners.Length < 2)
                 {
@@ -392,6 +392,7 @@ namespace KryticalNova.Player.Entities
                 {
                     MotionPlan jump = JumpFlight.NewJump(header.Seq, m_Tick, pose.Mm, catchMm, apexY);
                     jump.Flags |= MotionFlags.Catch;
+                    jump.CatchMicros = catchMicros;
                     em.SetComponentData(e, new ClientMotionPlan { Plan = jump });
                 }
                 if (PlayerClickLog.Sink != null && m_Tick.IsValid)

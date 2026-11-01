@@ -34,11 +34,13 @@ namespace KryticalNova.Player.Entities
 
         /// <summary>
         /// A jump at a surface the graph does not cover (Wallstride part 4, NGO <c>TryJumpToCatch</c>): the jump to the catch point
-        /// (<paramref name="catchMm"/>, its apex height), and the climb that runs on from there as corners and legs, the first corner the catch
-        /// point. NotWall: not a climbable surface (the ordinary jump takes the click); Refused: NGO's words in <paramref name="reason"/>.
+        /// (<paramref name="catchMm"/>: where the jump aims, its apex height, and <paramref name="catchMicros"/> the clip time its arc meets the
+        /// wall, 0 = at the touchdown; owner's change 5.3), and the climb that runs on from there as corners and legs, the first corner the point
+        /// the arc meets the wall. NotWall: not a climbable surface (the ordinary jump takes the click); Refused: NGO's words in <paramref name="reason"/>.
         /// </summary>
         WallAnswer Catch(Entity ghost, int3 poseMm, int yawCdeg, int3 pointMm, int3 normalPermille, bool run,
-            NativeList<int3> corners, NativeList<WallCorner> legs, out WallPlan plan, out int3 catchMm, out int apexYMm, out string reason);
+            NativeList<int3> corners, NativeList<WallCorner> legs, out WallPlan plan, out int3 catchMm, out int apexYMm, out int catchMicros,
+            out string reason);
 
         /// <summary>Server, out of Grip: off the wall in a flip to the ground in front of it (NGO <c>PushOff</c>). False when there is no body.</summary>
         bool PushOff(Entity ghost, int3 poseMm, int yawCdeg, in PoseTilt tilt, NativeList<int3> corners, NativeList<WallCorner> legs, out WallPlan plan);

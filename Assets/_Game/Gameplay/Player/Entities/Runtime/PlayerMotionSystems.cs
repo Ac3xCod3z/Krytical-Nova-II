@@ -73,6 +73,7 @@ namespace KryticalNova.Player.Entities
                 int apexY = 0;
                 WallAnswer caught = WallAnswer.NotWall;
                 WallPlan wall = default;
+                int catchMicros = 0;
                 using var corners = new NativeList<int3>(PlayerLimits.MaxWallCorners, Allocator.Temp);
                 using var legs = new NativeList<WallCorner>(PlayerLimits.MaxWallCorners, Allocator.Temp);
                 if (JumpFlight.Active(plan, curves, nt.ServerTick, tickMicros)) why = "Finish this jump before choosing another destination.";
@@ -93,7 +94,7 @@ namespace KryticalNova.Player.Entities
                     // a jump at a wall the graph does not cover is Wallstride's catch (part 4; NGO judges the wall before the jump's Flux)
                     if ((input.Wall & WallClick.Wall) != 0 && WallPlanner != null && em.HasComponent<WallPlan>(e))
                         caught = WallPlanner.Catch(e, pose.Mm, pose.YawCdeg, goal, new int3(input.NormalX, input.NormalY, input.NormalZ), input.Run != 0,
-                            corners, legs, out wall, out landing, out apexY, out why);
+                            corners, legs, out wall, out landing, out apexY, out catchMicros, out why);
                     if (caught == WallAnswer.Refused) { }
                     else if (Cost != null && !Cost.CanPay(e, out why)) { }
                     else if (caught == WallAnswer.NotWall && !Planner.TryPlan(e, pose.Mm, goal, out landing, out apexY, out why)) { }
@@ -121,6 +122,7 @@ namespace KryticalNova.Player.Entities
                 {
                     // the climb that runs on where the jump meets the wall, under the jump's own number
                     jump.Flags |= MotionFlags.Catch;
+                    jump.CatchMicros = catchMicros;
                     WallWrite.Server(em, e, input.ClickSeq, corners, legs, wall);
                     Catches++;
                 }
@@ -179,7 +181,9 @@ namespace KryticalNova.Player.Entities
                 if (JumpFlight.CatchHandOff(in use, in curves, elapsed, in move.ValueRO))
                 {
                     // the jump met the wall: no landing, the climb of its number runs on from the catch point (NGO CatchSurface)
-                    PlayerMovement.BeginCatchClimb(ref move.ValueRW, use.ToMm, use.PlanSeq);
+                    int3 caught = JumpFlight.CatchFeet(in use, in curves);
+                    p.XMm = caught.x; p.YMm = caught.y; p.ZMm = caught.z;
+                    PlayerMovement.BeginCatchClimb(ref move.ValueRW, caught, use.PlanSeq);
                     move.ValueRW.Water = 0;
                     transform.ValueRW.Position = new float3(p.XMm, p.YMm, p.ZMm) * 0.001f;
                     transform.ValueRW.Rotation = quaternion.RotateY(math.radians(p.YawCdeg * 0.01f));

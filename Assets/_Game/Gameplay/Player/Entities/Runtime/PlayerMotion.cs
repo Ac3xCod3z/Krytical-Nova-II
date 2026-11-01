@@ -52,6 +52,11 @@ namespace KryticalNova.Player.Entities
         [GhostField] public int ApexYMm;
         /// <summary>The way it faces through the jump and after the landing.</summary>
         [GhostField] public int YawCdeg;
+        /// <summary>
+        /// A catch (<see cref="MotionFlags.Catch"/>): the clip time its arc meets the wall (owner, 1 Nov: the catch is where the arc meets it,
+        /// `m3c-wallstride-design.md` 5.3); the climb runs on from <see cref="JumpFlight.CatchFeet"/> then. 0 = at the touchdown.
+        /// </summary>
+        [GhostField] public int CatchMicros;
 
         public int3 FromMm => new int3(FromXMm, FromYMm, FromZMm);
         public int3 ToMm => new int3(ToXMm, ToYMm, ToZMm);
@@ -404,7 +409,13 @@ namespace KryticalNova.Player.Entities
         /// Stateless, so a rollback hands off on the same tick again (NGO <c>CatchSurface</c> -> <c>BeginCaught</c>).
         /// </summary>
         public static bool CatchHandOff(in MotionPlan plan, in PlayerMotionCurves curves, long elapsedMicros, in MoveState move) =>
-            IsCatch(in plan) && Landed(in plan, in curves, elapsedMicros) && move.OrderSeq != plan.PlanSeq;
+            IsCatch(in plan) && elapsedMicros >= CatchTime(in plan, in curves) && move.OrderSeq != plan.PlanSeq;
+
+        /// <summary>The clip time a catch meets the wall: its own (where the arc meets it), else the touchdown.</summary>
+        public static long CatchTime(in MotionPlan plan, in PlayerMotionCurves curves) => plan.CatchMicros > 0 ? plan.CatchMicros : curves.LandMicros;
+
+        /// <summary>Where a catch meets the wall: the arc at <see cref="CatchTime"/> (the climb's first corner is this same point).</summary>
+        public static int3 CatchFeet(in MotionPlan plan, in PlayerMotionCurves curves) => FeetAt(in plan, in curves, CatchTime(in plan, in curves));
 
         /// <summary>True once the clip has reached its touchdown.</summary>
         public static bool Landed(in MotionPlan plan, in PlayerMotionCurves curves, long elapsedMicros) => elapsedMicros >= curves.LandMicros;
