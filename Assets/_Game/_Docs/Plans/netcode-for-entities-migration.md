@@ -1001,6 +1001,10 @@ Presentation (client):
   hit arrives. Measure press to swing and press to number at 0 and 100 ms and compare them with NGO's.
 - [ ] Cadence (on-beat bonus) stays a local look plus a server-checked bonus window (no frame-rate advantage).
 
+Moved in from M3c (owner pick 31 Oct): skill walk-in and Squad follow (section 55 items 1 and 2), with their server gaps:
+- [ ] Run Flux charged once for a server-ordered run, as NGO's `ServerMoveTo` (refused without the Flux; later steering steps free)
+- [ ] the Run selection known on the server (a server order runs when Run is selected, at every step, not only the first)
+
 The rest of M4 (plan section 4):
 - [ ] the Wallet vertical slice, one Trade with a disconnect mid-trade, the kill test, and the golden ledger on the TEST database only
   (`ServerSave.SaveTogether`, `EconomyLedger`; CLAUDE.md "All-or-nothing changes").
@@ -1018,7 +1022,11 @@ the zone surface graph), `PlayerWaterstrideMotor` (`WaterMap`, Flux per second),
 Each item is ticked only with its proof: EditMode world tests (0 and 100 ms) for rules, GUI runs with Game-view frames against NGO's
 behaviour for feel. At most 2 runs per step.
 
-Order (smallest first, each finished before the next): 1 skill walk-in, 2 follow, 3 vault, 4 Waterstride, 5 Wallstride.
+Order (owner pick 31 Oct, each finished before the next): **vault, then Waterstride, then Wallstride**. These are driven by clicks the DOTS
+client already sends, so each is proven in the GUI against NGO now. Skill walk-in and follow (items 1 and 2 below) MOVED to M4 (section 54)
+and the Squad port: both are started by the owner through NGO RPCs (skill hotbar -> `PlayerSkillQueue`; Squad follow -> `PlayerFollow`),
+which do not run on a DOTS client. They take two server gaps with them: Run Flux is not charged for server-ordered runs
+(`PointAndClickPlayer.ServerMoveTo` mover branch), and the server body does not know the Run selection (DOTS sends Run per click).
 
 1. Skill walk-in (the `ServerOrder` walk exists: `PlayerEntitiesSetup` "walk the player to a point")
 - [ ] a skill clicked out of range walks the player into range by the server's order, at the Run or walk speed the click would use (Flux for
