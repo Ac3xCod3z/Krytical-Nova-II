@@ -181,3 +181,30 @@ returning plain lists (corners, legs) and NGO's refusal words, built from the mo
   pushed off), owner 0.0 cm from the server, no glide, tilt on the face; the plain click past the foot from the wall NOT TESTED (the RAM
   watchdog stopped Unity at 0.9 GB free with the recorder on). GIFs `DOTS-proof/dots-wall-1..4-*.gif`. To check in the GIF: the body
   passes an air-conditioner box on the face during "along" (possible clipping).
+
+## 4. Design: part 2, the straight climb (owner, 1 Nov: part 1 accepted, A/C deferred, part 2 next)
+
+NGO rules 2, 5-13, 17, 20-23 of section 1. The same idea as the wall walk: one walk whose corners are the run to the foot and NGO's own
+legs, built by the motor for a ghost (`PlayerWallRunMotor.PlanClimbForGhost`, commit c88463ad5).
+
+- Order (NGO `TryClimbClicked`): a vendor's stall is refused ("Vendor stalls can't be climbed."); a wall the zone's graph covers (or a
+  body on a wall) goes to the wall walk; else the straight climb. The server finds the surface again from the point (NGO `FindSurface`);
+  not climbable = not Wallstride's (the ordinary click). Jump selected on a surface the graph does not cover is the catch (part 4): the
+  ordinary jump until then.
+- Judged by NGO's own `Decide` and `Shape` (refusals in NGO's words and order), reading the ghost's gate, life, stride (Run) and Flux
+  through `ghostAsk` instead of the body's (null = NGO's own, the NGO game unchanged).
+- Laid out (NGO `ArmOrBegin` + `StartRoute`, not from a jump): within 0.45 m + the agent's radius of the foot the climb begins at once;
+  else the NavMesh run to the foot, cut where NGO's arming starts the plant (0.45 m + stopping distance short); then the plant
+  (`plantSeconds` 0.18, height In, ground Out, leaned 12 degrees), up the face at clamp(ground x 0.55, 4, 8) m/s, and over the top (lift
+  Out/In, then in over it In/Out, `mantleSeconds` 0.4 clamped x0.5-1.5) or, with no top, NGO's kick-off arc. It ends standing on the top
+  (NGO `Land`; no walk on). No Grip (`MoveState.Wall` stays 0); the tilt follows the legs' facings; clicks and a stop do nothing during it.
+- Flux: NGO's 12 (`fluxCost`) taken by the server as the plant starts (`WallGripSystem.PayClimbs`, NGO `Begin`); too little and the
+  walk stops at the foot (a server order to stand). Decided once per climb (`WallFlags.Paid`).
+- Not in part 2: trees, perch and drop (part 3), the jump's catch (part 4), the self-starting run (part 5), the open-front face search for
+  stalls (NGO `NearestFaceAround`: it runs inside `Decide`, so it comes with it).
+
+- [x] 1. Code + EditMode: `WallWorldTests.AStraightClimb_PaysItsFluxAsThePlantStarts_OrStopsAtTheFoot` (both ways), 19/19 with the wall
+  tests; compile 74/74 and --server 33/33; 0 uphill.
+- [ ] 2. GUI run (KnPlayHere `KN_PLAYHERE_CLIMB=1`): a face near the spawn the graph does not cover (`FindTestClimb`, judged by NGO's
+  Decide), the pop check proved in the same run (still 0, teleport >= 1, plain run at 28 m/s 0), a climb with Run (on the top, 12 Flux,
+  foot height at 45 degrees in the plant) and the same with 5 Flux (stopped at the foot).

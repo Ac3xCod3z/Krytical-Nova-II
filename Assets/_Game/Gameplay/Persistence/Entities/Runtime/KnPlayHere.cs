@@ -55,7 +55,8 @@ namespace KryticalNova.Persistence.Entities
             || !string.IsNullOrEmpty(Environment.GetEnvironmentVariable(JumpVariable))
             || !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("KN_PLAYHERE_VAULT"))    // the scripted vaults (M3c)
             || Environment.GetEnvironmentVariable("KN_PLAYHERE_WATER") == "1"                   // the scripted Waterstride (M3c)
-            || Environment.GetEnvironmentVariable("KN_PLAYHERE_WALL") == "1";                   // the scripted wall walk (M3c)
+            || Environment.GetEnvironmentVariable("KN_PLAYHERE_WALL") == "1"                    // the scripted wall walk (M3c)
+            || Environment.GetEnvironmentVariable("KN_PLAYHERE_CLIMB") == "1";                  // the scripted straight climb (M3c part 2)
         /// <summary>A folder: the scripted run saves a Game-view picture there every 0.1 s (proof for the owner, GUI Editor only).</summary>
         public const string CaptureVariable = "KN_PLAYHERE_CAPTURE";
 
@@ -1167,6 +1168,7 @@ namespace KryticalNova.Persistence.Entities
                 if (WaterRun) yield return Waters(body, ghost, waters);
                 var walls = new VaultTally();
                 if (WallRun) yield return Walls(body, ghost, walls);
+                if (ClimbRun) yield return Climbs(body, ghost, walls);
                 Log($"done: {arrived} of {tries} arrived, {landed} of {jumpPoints.Count} jumps passed, low-rank refusals {(lowRank.Ok ? "match" : "DIFFER")}, " +
                     $"{vaults.Passed} of {vaults.Tried} vaults passed, {waters.Passed} of {waters.Tried} Waterstride tries passed, " +
                     $"{walls.Passed} of {walls.Tried} wall walk tries passed, " +
@@ -1181,7 +1183,7 @@ namespace KryticalNova.Persistence.Entities
             /// the walk, the jumps and the vaults, so a run of Waterstride or the wall walk alone never started). Every gate reads this; a new
             /// scripted part is added here, and to <see cref="Scripted"/>, which reads the same variables before the runner exists.
             /// </summary>
-            bool HasScriptedTries => !string.IsNullOrEmpty(Walk) || !string.IsNullOrEmpty(Jump) || VaultCount > 0 || WaterRun || WallRun;
+            bool HasScriptedTries => !string.IsNullOrEmpty(Walk) || !string.IsNullOrEmpty(Jump) || VaultCount > 0 || WaterRun || WallRun || ClimbRun;
 
             /// <summary>Which scripted parts are on, for the log's first lines (a part that should run and is not listed shows at once).</summary>
             string ScriptedParts()
@@ -1192,6 +1194,7 @@ namespace KryticalNova.Persistence.Entities
                 if (VaultCount > 0) on.Add($"vaults {VaultCount}");
                 if (WaterRun) on.Add("Waterstride");
                 if (WallRun) on.Add("wall walk");
+                if (ClimbRun) on.Add("straight climb");
                 return on.Count > 0 ? string.Join(", ", on) : "none (by hand)";
             }
 
@@ -1504,6 +1507,136 @@ namespace KryticalNova.Persistence.Entities
                     $"owner {(sameLeg ? "on the same leg" : "on ANOTHER leg")} (start {leg.LegStartMm} mm, speed {leg.SpeedMmps} mm/s); on the water: server {move.Water}, owner {ownWater} " +
                     $"(expected {(expectWater ? 1 : 0)}); ended {off:F2} m from the click (limit {(expectWater ? "0.75, a cell's centre" : "0.3")}) at {end.x:F1},{end.y:F2},{end.z:F1}; glide after the stop {glide * 100f:F1} cm (limit 2); " +
                     $"Flux {flux0:F0} -> {Flux(body):F0}");
+                yield return new WaitForSeconds(0.8f);
+            }
+
+            /// <summary>The scripted straight climb run (env KN_PLAYHERE_CLIMB=1; M3c part 2, `m3c-wallstride-design.md` section 4).</summary>
+            static bool ClimbRun => Environment.GetEnvironmentVariable("KN_PLAYHERE_CLIMB") == "1";
+
+            /// <summary>
+            /// The scripted straight climb (part 2): level 60 and the top ranks, a face near the spawn that NGO's climb takes and the graph does
+            /// not cover, then: the pop check proved in this run (standing still and a plain run at full speed are clean, the teleport is a
+            /// fault), a climb with Run from 6-8 m out (onto the top, 12 Flux, the foot height as the body passes 45 degrees in the plant), and
+            /// the same climb with too little Flux (NGO: stopped at the foot).
+            /// </summary>
+            IEnumerator Climbs(GameObject body, Entity ghost, VaultTally tally)
+            {
+                World server = KnBootstrap.ServerWorld;
+                var em = server.EntityManager;
+                var grip = server.GetExistingSystemManaged<WallGripSystem>();
+                var plans = server.GetExistingSystemManaged<PlayerServerPlanSystem>();
+                var motor = body.GetComponent<PlayerWallRunMotor>();
+                var progression = body.GetComponent<PlayerCharacterProgression>();
+                var resources = body.GetComponent<PlayerResources>();
+                if (grip == null || motor == null || plans == null) { Log("climb: FAIL; no Grip system, wall motor or plan system"); tally.Tried++; yield break; }
+                float offset = body.GetComponent<UnityEngine.AI.NavMeshAgent>() is UnityEngine.AI.NavMeshAgent ag ? ag.baseOffset : 0f;
+                if (progression != null && progression.CurrentLevel < 60) progression.SetLevel(60);
+                if (resources != null) resources.RestoreChi(resources.MaxChi);
+                yield return new WaitForSeconds(1f);
+                var ask = new PlayerWallRunMotor.GhostWallAsk { Open = true, Alive = true, Run = true, Flux = 999f, HasFluxForOne = true,
+                    Up = Vector3.up, Forward = Vector3.forward, GroundSpeed = em.GetComponentData<MoveStats>(ghost).RunMmps * 0.001f };
+                string why = motor.FindTestClimb(ServerPosition(ghost) - Vector3.up * offset, ask, out Vector3 stand, out Vector3 point, out Vector3 normal);
+                if (why != null) { Log("climb: NOT TESTED; " + why); tally.Tried++; yield break; }
+                Log($"climb: the test face at {point.x:F1},{point.y:F2},{point.z:F1} facing {normal.x:F2},{normal.z:F2}; the start {stand.x:F1},{stand.z:F1}");
+
+                // the pop check proved in this run (owner pick a): standing still, the teleport to the start, a plain run at full speed
+                m_Pops.Reset();
+                float watch = Time.realtimeSinceStartup;
+                while (Time.realtimeSinceStartup - watch < 1f) { yield return null; PopFrame(ghost); }
+                Log($"climb: pop check on a known clean case (standing 1 s): {m_Pops.Pops} pop(s) (expected 0) {m_Pops.Worst}");
+                m_Pops.Reset();
+                PopFrame(ghost);
+                Teleport(em, ghost, stand + Vector3.up * offset);
+                watch = Time.realtimeSinceStartup;
+                while (Time.realtimeSinceStartup - watch < 1.5f) { yield return null; PopFrame(ghost); }
+                Log($"climb: pop check on a known fault (the teleport to the start): {m_Pops.Pops} pop(s) (expected 1 or more): {m_Pops.Worst}");
+                Vector3 side = Vector3.Cross(Vector3.up, normal).normalized;
+                if (UnityEngine.AI.NavMesh.SamplePosition(stand + side * 15f, out UnityEngine.AI.NavMeshHit street, 3f, UnityEngine.AI.NavMesh.AllAreas)
+                    || UnityEngine.AI.NavMesh.SamplePosition(stand - side * 15f, out street, 3f, UnityEngine.AI.NavMesh.AllAreas))
+                {
+                    m_Pops.Reset();
+                    BodyClicks.Ground(street.position, true);
+                    float ran = Time.realtimeSinceStartup;
+                    int top = 0;
+                    bool started = false;
+                    while (Time.realtimeSinceStartup - ran < 6f)
+                    {
+                        yield return null;
+                        PopFrame(ghost);
+                        top = Mathf.Max(top, em.GetComponentData<MoveState>(ghost).SpeedMmps);
+                        if (Moving(ghost)) started = true;
+                        else if (started) break;
+                    }
+                    Log($"climb: pop check on a known clean case (a plain run of {Flat(street.position - stand):F1} m at {top} mm/s): {m_Pops.Pops} pop(s) (expected 0) {m_Pops.Worst}");
+                    yield return new WaitForSeconds(0.5f);
+                    BodyClicks.Ground(stand, true);
+                    yield return new WaitForSeconds(2f);
+                }
+                else Log("climb: pop check on a plain run: NOT TESTED (no NavMesh 15 m to the side)");
+
+                // the climb, then the same with too little Flux
+                yield return ClimbTry(body, ghost, tally, "a straight climb with Run, onto the top", point, normal, stand, offset, true);
+                Teleport(em, ghost, stand + Vector3.up * offset);
+                yield return new WaitForSeconds(1.5f);
+                if (resources != null && resources.Chi > 5f) resources.TrySpendChi(resources.Chi - 5f);
+                yield return new WaitForSeconds(0.5f);
+                yield return ClimbTry(body, ghost, tally, "the same climb with 5 Flux (NGO: stopped at the foot)", point, normal, stand, offset, false);
+                if (resources != null) resources.RestoreChi(resources.MaxChi);
+                Log($"climb: {grip.ClimbsPaid} climb(s) paid, {grip.ClimbsRefused} stopped for want of Flux, {plans.WallWalks} wall clicks planned");
+            }
+
+            /// <summary>One scripted straight climb, judged: planned as a climb, paid (or stopped at the foot), where it ended, upright, the pops.</summary>
+            IEnumerator ClimbTry(GameObject body, Entity ghost, VaultTally tally, string what, Vector3 click, Vector3 normal, Vector3 stand, float offset, bool expectClimb)
+            {
+                if (OverTheCap()) yield break;
+                World server = KnBootstrap.ServerWorld;
+                var em = server.EntityManager;
+                var plans = server.GetExistingSystemManaged<PlayerServerPlanSystem>();
+                var grip = server.GetExistingSystemManaged<WallGripSystem>();
+                bool hasClient = TryLocalGhost(out World clientWorld, out Entity clientGhost, out _);
+                tally.Tried++;
+                int walks0 = plans.WallWalks, paid0 = grip.ClimbsPaid, refused0 = grip.ClimbsRefused;
+                float flux0 = Flux(body);
+                string at = DateTime.Now.ToString("HH:mm:ss.fff", CultureInfo.InvariantCulture);
+                BodyClicks.Wall(click, normal, true, false);
+                float clicked = Time.realtimeSinceStartup, stoppedAt = -1f, glide = 0f;
+                Vector3 bodyAtStop = default;
+                bool moving = false;
+                string plant45 = null;
+                m_Pops.Reset();
+                while (Time.realtimeSinceStartup - clicked < 15f)
+                {
+                    yield return new WaitForEndOfFrame();
+                    bool now = Moving(ghost);
+                    if (now) moving = true;
+                    else if (!moving && Time.realtimeSinceStartup - clicked > 3f) break;
+                    Vector3 b = OwnBody.transform.position;
+                    PopFrame(ghost);
+                    if (plant45 == null && Vector3.Angle(OwnBody.transform.up, Vector3.up) >= 45f && em.GetComponentData<PoseTilt>(ghost).Phase == WallPhase.Plant)
+                    {
+                        Vector3 f = b - OwnBody.transform.up * offset;
+                        plant45 = $"feet {f.y - stand.y:F2} m above the ground and {Vector3.Dot(f - click, normal):F2} m out from the face";
+                    }
+                    if (moving && !now)
+                    {
+                        if (stoppedAt < 0f) { stoppedAt = Time.realtimeSinceStartup; bodyAtStop = b; }
+                        else { glide = Mathf.Max(glide, (b - bodyAtStop).magnitude); if (Time.realtimeSinceStartup - stoppedAt > 1f) break; }
+                    }
+                }
+                Vector3 end = ServerPosition(ghost) - Vector3.up * offset;
+                var tilt = em.GetComponentData<PoseTilt>(ghost);
+                PlayerPose ownPose = hasClient && clientWorld.IsCreated ? clientWorld.EntityManager.GetComponentData<PlayerPose>(clientGhost) : default;
+                float apart = (new Vector3(ownPose.XMm, ownPose.YMm, ownPose.ZMm) * 0.001f - ServerPosition(ghost)).magnitude;
+                bool planned = plans.WallWalks == walks0 + 1;
+                bool up = end.y > stand.y + 1.5f;
+                bool ok = planned && (expectClimb ? grip.ClimbsPaid == paid0 + 1 && up : grip.ClimbsRefused == refused0 + 1 && !up)
+                    && !tilt.Tilted && em.GetComponentData<MoveState>(ghost).Wall == 0 && apart < 0.05f && glide < 0.02f && m_Pops.Pops == 0;
+                if (ok) tally.Passed++;
+                Log($"climb: {what} clicked at {at}: {(ok ? "PASS" : "FAIL")}; server {(planned ? "planned it" : "planned NOTHING")} " +
+                    $"(\"{(plans.WallPlanner as BodyWallPlanner)?.LastDecision}\"{(string.IsNullOrEmpty(plans.LastWallRefusal) ? "" : "; last refusal: " + plans.LastWallRefusal)}); " +
+                    $"paid {grip.ClimbsPaid - paid0}, stopped for Flux {grip.ClimbsRefused - refused0}; ended {end.y - stand.y:F2} m above the start at {end.x:F1},{end.y:F2},{end.z:F1} " +
+                    $"(expected {(expectClimb ? "on the top" : "at the foot")}); upright {!tilt.Tilted}; owner {apart * 100f:F1} cm from the server; glide {glide * 100f:F1} cm; " +
+                    $"pops {m_Pops.Pops}{(m_Pops.Pops > 0 ? " (worst: " + m_Pops.Worst + ")" : "")}; at 45 degrees in the plant: {plant45 ?? "no plant"}; Flux {flux0:F0} -> {Flux(body):F0}");
                 yield return new WaitForSeconds(0.8f);
             }
 

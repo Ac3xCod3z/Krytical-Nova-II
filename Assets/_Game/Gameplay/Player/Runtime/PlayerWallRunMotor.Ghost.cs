@@ -128,6 +128,48 @@ namespace KryticalNova.Player
             layout.PayOnPlant = true;
         }
 
+        /// <summary>
+        /// For the scripted test run (part 2): a face near <paramref name="near"/> that NGO's straight climb takes with Run at level 60 and
+        /// the zone's graph does not cover: horizontal rays at chest height from NavMesh points around, the face judged by NGO's own Decide.
+        /// <paramref name="stand"/> is where the ray started (on the NavMesh, 6-8 m out). Null when found, else why not.
+        /// </summary>
+        public string FindTestClimb(Vector3 near, GhostWallAsk ask, out Vector3 stand, out Vector3 point, out Vector3 normal)
+        {
+            stand = point = normal = default;
+            if (settings == null) return "no Wallstride settings";
+            int rays = 0, climbable = 0, covered = 0;
+            var why = new System.Collections.Generic.Dictionary<string, int>();
+            for (float r = 6f; r <= 40f; r += 4f)
+            for (int deg = 0; deg < 360; deg += 20)
+            {
+                Vector3 way = Quaternion.Euler(0f, deg, 0f) * Vector3.forward;
+                if (!NavMesh.SamplePosition(near + way * r, out NavMeshHit from, 2f, Filter()) || !OnOpenGround(from.position)) continue;
+                for (int turn = 0; turn < 360; turn += 45)
+                {
+                    Vector3 dir = Quaternion.Euler(0f, turn, 0f) * Vector3.forward;
+                    rays++;
+                    if (!Physics.Raycast(from.position + Vector3.up * FaceProbeHeight, dir, out RaycastHit hit, 8f, SurfaceMask(), QueryTriggerInteraction.Ignore)) continue;
+                    if (hit.distance < 6f || !IsClimbableObject(hit.collider, out _) || VendorStall.Is(hit.collider)) continue;
+                    climbable++;
+                    if (WantsWallWalkClick(hit.point, hit.normal, false)) { covered++; continue; }
+                    ghostAsk = ask;
+                    bool ok;
+                    string reason;
+                    try { ok = Decide(hit.point, hit.normal, hit.collider, from.position, false, out Plan climb, out reason) && climb.HasTop; }
+                    finally { ghostAsk = null; }
+                    if (!ok) { string k = string.IsNullOrEmpty(reason) ? "no top" : reason; why[k] = why.TryGetValue(k, out int c) ? c + 1 : 1; continue; }
+                    stand = from.position;
+                    point = hit.point;
+                    normal = hit.normal;
+                    return null;
+                }
+            }
+            var parts = new System.Collections.Generic.List<string>();
+            foreach (var kv in why) parts.Add($"{kv.Value}x \"{kv.Key}\"");
+            return $"no face fits near {near.x:F0},{near.z:F0}: {rays} rays, {climbable} climbable, {covered} covered by the graph (the wall walk's); " +
+                string.Join(", ", parts);
+        }
+
         /// <summary>A wall the scripted test run uses (KnPlayHere), all its points found in the zone's own surface graph.</summary>
         public struct TestWall
         {
