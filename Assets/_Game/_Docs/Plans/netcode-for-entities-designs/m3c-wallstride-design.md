@@ -163,14 +163,21 @@ returning plain lists (corners, legs) and NGO's refusal words, built from the mo
 
 ### 3.5 Steps (each with EditMode tests; the GUI proof with GIFs at the end of the part, announced to the Master)
 
-- [ ] 1. `WallLeg` maths (pure): timed legs with NGO's eases, wall segments at their speed, the tilt blend; the `Step` wall overload;
+- [x] 1. `WallLeg` maths (pure): timed legs with NGO's eases, wall segments at their speed, the tilt blend; the `Step` wall overload;
   world tests at 0 and 100 ms like `WaterWorldTests` (a stub planner: a straight 10 m wall, a roof).
-- [ ] 2. The planner on the motor (`PlanForGhost`: from the ground, along, off by top / ground, jump onto, jump off) + thinning + the
+- [x] 2. The planner on the motor (`PlanForGhost`: from the ground, along, off by top / ground, jump onto, jump off) + thinning + the
   face snap; tests on a handmade graph (no zone).
-- [ ] 3. Wiring: input (Wall + normal), the view-mode click, the server plan branch with NGO's refusal words, the owner's gather, the
+- [x] 3. Wiring: input (Wall + normal), the view-mode click, the server plan branch with NGO's refusal words, the owner's gather, the
   Grip system + push-off; world tests (Grip paid whole, out of Grip pushed off, a Stop on the wall does nothing, a click mid-plant
   starts nothing).
-- [ ] 4. Presentation: the tilt eased at 10, phases to clips, feet VFX, the marker on the wall, no ground snap.
+- [x] 4. Presentation: the tilt eased at 10, phases to clips, feet VFX, the marker on the wall, no ground snap.
 - [ ] 5. GUI run on Zone01 (KnPlayHere `KN_PLAYHERE_WALL=1`): onto a wall from the ground, along it, over its edge onto a roof, down
   from the roof onto the wall (the way down), off it to the ground, a leap to another wall, a jump off, out of Grip (Flux set low)
   pushed off, clicks past the wall; pass / fail per try; GIFs to Drive `DOTS-proof`.
+  Commits 5ff89281b, 6bce24e57, d92a4297d, 1a48d9672 (EditMode 235/235), script da617e6de + gate fix a9b05836f (gui-wall-1 never reached
+  the script: the exit after the join's door knew only walk, jumps and vaults; one list of scripted parts now). GUI run gui-wall-2 (1 Nov,
+  a wall at -10,-45 from the graph): planner check level 1 refused in NGO's words, level 60 planned; 9 of 9 tries PASS (onto with Run,
+  along, over the edge onto the roof, from the roof down onto the face, off to the ground, Jump onto, Jump off, onto again, out of Grip
+  pushed off), owner 0.0 cm from the server, no glide, tilt on the face; the plain click past the foot from the wall NOT TESTED (the RAM
+  watchdog stopped Unity at 0.9 GB free with the recorder on). GIFs `DOTS-proof/dots-wall-1..4-*.gif`. To check in the GIF: the body
+  passes an air-conditioner box on the face during "along" (possible clipping).
