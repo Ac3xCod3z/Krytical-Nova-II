@@ -108,6 +108,76 @@ namespace KryticalNova.Tests
             Assert.Pass(report.ToString());
         }
 
+        // gui-catch-2 (1 Nov): NGO's Decide refused the 7 m terrain tree at 186.7,-82.1 ("There is no room at the top.") at every side. Suspect: the
+        // TerrainCollider's own tree colliders are on in Zone01 (m_EnableTreeColliders 1), so the perch overlaps the terrain's copy of the tree
+        // (BodyBlocked ignores only the proxy). The tree's proxy made as TreeProxyField makes it, then NGO's Decide asked with them on and off.
+        [Test, Explicit]
+        public void TheTerrainTree_IsRefused_WithTheTerrainsTreeColliders_AndClimbableWithout()
+        {
+            EditorSceneManager.OpenScene(Scene, OpenSceneMode.Single);
+            var report = new StringBuilder();
+            Terrain terrain = Terrain.activeTerrains[0];
+            TerrainData data = terrain.terrainData;
+            var collider = terrain.GetComponent<TerrainCollider>();
+            // the setting has no script property in this Unity: the serialized field the scene file holds
+            var setting = new UnityEditor.SerializedObject(collider);
+            report.AppendLine($"[probe] terrain {terrain.name}: tree colliders in the saved scene {setting.FindProperty("m_EnableTreeColliders").boolValue}");
+            // the climbable tree nearest the one gui-catch-2 tried
+            Vector3 wanted = new Vector3(186.7f, 0f, -82.1f);
+            float best = float.MaxValue, radius = 0f, height = 0f;
+            Vector3 foot = default;
+            foreach (TreeInstance tree in data.treeInstances)
+            {
+                GameObject prefab = data.treePrototypes[tree.prototypeIndex].prefab;
+                CapsuleCollider capsule = prefab != null ? prefab.GetComponentInChildren<CapsuleCollider>(true) : null;
+                if (capsule == null) continue;
+                float h = capsule.height * capsule.transform.lossyScale.y * tree.heightScale;
+                if (h < 3f) continue;
+                Vector3 at = terrain.GetPosition() + Vector3.Scale(tree.position, data.size);
+                float d = Vector2.Distance(new Vector2(at.x, at.z), new Vector2(wanted.x, wanted.z));
+                if (d >= best) continue;
+                best = d; foot = at; height = h;
+                Vector3 s = capsule.transform.lossyScale;
+                radius = capsule.radius * Mathf.Max(s.x, s.z) * tree.widthScale;
+            }
+            report.AppendLine($"[probe] the tree: foot {foot}, {height:F1} m tall, trunk radius {radius:F2} ({best:F1} m from the one tried)");
+            // its proxy, as TreeProxyField.Place makes it
+            var proxy = new GameObject("Tree Proxy (probe)");
+            proxy.transform.position = foot;
+            var body = proxy.AddComponent<CapsuleCollider>();
+            body.direction = 1; body.radius = radius; body.height = height; body.center = new Vector3(0f, height * 0.5f, 0f);
+            var marker = proxy.AddComponent<ClimbableSurface>();
+            marker.kind = ClimbableKind.Tree; marker.trunkRadius = radius; marker.height = height; marker.perchHeight = height * 0.6f;
+            // a player body to ask NGO's own Decide with (its motor's Awake runs as in the game)
+            var playerPrefab = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Game/Gameplay/Player/Prefabs/Player.prefab");
+            var player = (GameObject)UnityEditor.PrefabUtility.InstantiatePrefab(playerPrefab);
+            try
+            {
+                var motor = player.GetComponent<PlayerWallRunMotor>();
+                typeof(PlayerWallRunMotor).GetMethod("Awake", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)?.Invoke(motor, null);
+                var ask = new PlayerWallRunMotor.GhostWallAsk { Open = true, Alive = true, Run = true, Flux = 999f, HasFluxForOne = true,
+                    Up = Vector3.up, Forward = Vector3.forward, GroundSpeed = 28f };
+                foreach (bool on in new[] { true, false })
+                {
+                    setting.FindProperty("m_EnableTreeColliders").boolValue = on;
+                    setting.ApplyModifiedPropertiesWithoutUndo();   // in memory only: the scene is not saved
+                    Physics.SyncTransforms();
+                    string why = motor.FindTestTreeClimb(foot, ask, out Vector3 stand, out Vector3 point, out _);
+                    report.AppendLine($"[probe] terrain tree colliders {(on ? "ON" : "OFF")}: {(why == null ? $"Decide ACCEPTS (face at {point}, start {stand})" : why)}");
+                    Vector3 perch = marker.PerchFor(Vector3.forward, 0.6f, 0.5f);
+                    foreach (Collider c in Physics.OverlapCapsule(perch + Vector3.up * 0.6f, perch + Vector3.up * 1.5f, 0.45f, ~0, QueryTriggerInteraction.Ignore))
+                        report.AppendLine($"[probe]   at the perch {perch}: {Path(c.transform)} {c.GetType().Name}");
+                }
+            }
+            finally
+            {
+                Object.DestroyImmediate(player);
+                Object.DestroyImmediate(proxy);
+            }
+            Debug.Log(report.ToString());
+            Assert.Pass(report.ToString());
+        }
+
         static string Path(Transform t)
         {
             string p = t.name;

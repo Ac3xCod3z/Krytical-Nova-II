@@ -434,12 +434,8 @@ namespace KryticalNova.Player
                 if (ask.Busy) return "Not now.";
                 if (!NavMesh.SamplePosition(feet, out NavMeshHit onMesh, 0.6f, Filter())) return "Not now.";
                 feet = onMesh.position;
-                if (ask.Jump && ask.HasFluxForOne)
-                {
-                    // NGO: a jump that does not work goes on to the way onto the wall from its foot (its reason is not told)
-                    if (string.IsNullOrEmpty(JumpOntoForGhost(graph, feet, ask, target, wallSpeed, out layout)) && layout != null) return string.Empty;
-                    layout = null;
-                }
+                // a jump onto the wall is the real jump now (owner, 1 Nov; PlanJumpOntoCatchForGhost, the catch's path): one that does not work
+                // goes on to the way onto the wall from its foot, as NGO
                 SurfaceRoute.Route route = SurfaceRoute.ToNode(graph, feet, target, Filter(), blocked);
                 if (route == null || !route.HasEntry) return "There is no way onto that wall from here.";
                 if (!ask.HasFluxForOne) return WallRunRules.Reason(ClimbVerdict.NoFlux, settings);
@@ -555,6 +551,72 @@ namespace KryticalNova.Player
                 }
             }
             return best;
+        }
+
+        /// <summary>
+        /// A jump from the ground onto a wall of the zone's graph, as the real jump (owner, 1 Nov, `m3c-wallstride-design.md` 5.4; NGO's
+        /// <see cref="JumpOnto"/> flew a gravity arc): the grab is the place clicked while it is within the Jump rank's reach, else the graph's
+        /// point nearest the highest the jump reaches under it, then the wall walk runs up to the click. NGO's checks and words (the gate, life,
+        /// Flux for a second, "Too high to jump to.", "Too far: jump within 25 m.", "Something is in the way."), then the jump's own. The layout
+        /// starts at the grab (where the jump ends): a plant onto the face, eased by the slant as a catch's, then along. Empty reason and a null
+        /// layout: not this (no graph node by the click, or the body is on a wall: NGO's leap).
+        /// </summary>
+        public string PlanJumpOntoCatchForGhost(Vector3 feet, Vector3 point, Vector3 normal, in GhostWallAsk ask, out Vector3 grabFeet, out float peak,
+            out WallWalkLayout layout)
+        {
+            layout = null;
+            grabFeet = feet;
+            peak = feet.y;
+            SurfaceGraph graph = ZoneGraph;
+            if (graph == null || settings == null || ask.OnWall) return string.Empty;
+            int target = NodeAt(graph, point, normal);
+            if (target < 0) return string.Empty;
+            System.Func<int, bool> blocked = PropBlocker(graph);
+            if (blocked(target)) target = NearestFree(graph, target, blocked);
+            if (target < 0) return "Something is in the way.";
+            if (!ask.Open) return WallRunRules.Reason(ClimbVerdict.Locked, settings);
+            if (!ask.Alive || ask.Busy) return "Not now.";
+            if (!ask.HasFluxForOne) return WallRunRules.Reason(ClimbVerdict.NoFlux, settings);
+            if (!NavMesh.SamplePosition(feet, out NavMeshHit onMesh, 0.6f, Filter())) return "Jump must start on walkable ground.";
+            feet = onMesh.position;
+            if (jumpMotor == null) return "Jump animation is not configured.";
+            int grab = target;
+            float reach = jumpMotor.GhostJumpReach;
+            if (FeetAt(graph, target).y - feet.y > reach)
+            {
+                // above the jump's reach: grab the face as high as the jump gets under the place clicked, and run up to it
+                Vector3 low = graph.points[target];
+                low.y = feet.y + reach;
+                grab = graph.Nearest(low, 2.5f);
+                if (grab < 0) return "Too high to jump to.";
+                if (blocked(grab)) grab = NearestFree(graph, grab, blocked);
+                if (grab < 0) return "Something is in the way.";
+            }
+            Vector3 to = FeetAt(graph, grab);
+            Vector3 flat = to - feet;
+            flat.y = 0f;
+            if (flat.magnitude > settings.maxDropDistance) return $"Too far: jump within {settings.maxDropDistance:0} m.";
+            Vector3 n = graph.normals[grab];
+            if (!JumpClear(feet, to, Vector3.up, n)) return "Something is in the way.";
+            string why = jumpMotor.PlanJumpOntoForGhost(feet, to, out peak);
+            if (why != null) return why;
+
+            SurfaceRoute.Route route = grab == target
+                ? new SurfaceRoute.Route { Nodes = new[] { target } }
+                : SurfaceRoute.Along(graph, grab, target, blocked) ?? new SurfaceRoute.Route { Nodes = new[] { grab } };
+            Vector3 travel = flat.sqrMagnitude > 1e-4f ? flat.normalized : -n;
+            layout = new WallWalkLayout(settings, StickProbe, to, Vector3.up, travel, ask.GroundSpeed * settings.wallSpeedShare);
+            // the plant onto the face: quick head-on, longer the wider it came at it (the catch's, NGO 680-687), the turn eased in
+            float slant = WallRunRules.ApproachAngle(travel, n);
+            float plant = Mathf.Lerp(Mathf.Min(settings.plantSeconds, 0.12f), settings.plantSeconds + 0.12f,
+                Mathf.Clamp01(slant / Mathf.Max(1f, settings.maxJumpApproachAngle)));
+            layout.Leg(WallRunPhase.Plant, to + Vector3.up * 0.15f, WallWalkLayout.WallFacing(n, Vector3.up, travel), plant, WallWalkLayout.EaseIn, WallWalkLayout.EaseOut);
+            layout.WallStarts();
+            layout.AlongAndOff(graph, route, 1);
+            grabFeet = to;
+            string fit = Fit(layout);
+            if (!string.IsNullOrEmpty(fit)) layout = null;
+            return fit;
         }
 
         /// <summary>NGO <see cref="JumpOnto"/> for the ghost: an arc that turns the body to meet the face, then along to the place clicked.</summary>

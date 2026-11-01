@@ -1640,7 +1640,25 @@ namespace KryticalNova.Persistence.Entities
                     Log($"tree: terrain tree {trunkHeight:F1} m tall at {trunk.x:F1},{trunk.z:F1} ({Flat(trunk - stand):F0} m from the placed tree's start); " +
                         $"proxies live {liveBefore} at the start, {TreeProxyField.LiveTotal} here (expected more than 0); {TreeProxyField.AnchorReport()}");
                     string terrainWhy = motor.FindTestTreeClimb(trunk, ask, out Vector3 tStand, out Vector3 tPoint, out Vector3 tNormal);
-                    if (terrainWhy != null) { tally.Tried++; Log("tree: terrain tree: NOT TESTED; " + terrainWhy); yield break; }
+                    if (terrainWhy != null)
+                    {
+                        tally.Tried++;
+                        Log("tree: terrain tree: NOT TESTED; " + terrainWhy);
+                        // the instrument (1 Nov): in edit mode NGO's Decide accepts this tree; in Play it said "There is no room at the top.": what
+                        // overlaps the perch here, in Play (NGO's BodyBlocked: a body capsule at the perch, the tree's own proxy left out)
+                        ClimbableSurface proxy = null;
+                        foreach (Collider c in Physics.OverlapSphere(trunk + Vector3.up, 1.5f, ~0, QueryTriggerInteraction.Ignore))
+                            if (c.GetComponentInParent<ClimbableSurface>() is ClimbableSurface m && m.kind == ClimbableKind.Tree) { proxy = m; break; }
+                        if (proxy == null) { Log("tree: at the terrain tree's perch: NO tree proxy found by the trunk"); yield break; }
+                        Vector3 perchSide = terrainStand - trunk;
+                        perchSide.y = 0f;
+                        Vector3 perch = proxy.PerchFor(perchSide.sqrMagnitude > 1e-4f ? perchSide.normalized : Vector3.forward, 0.6f, 0.5f);
+                        var hits = new List<string>();
+                        foreach (Collider c in Physics.OverlapCapsule(perch + Vector3.up * 0.6f, perch + Vector3.up * 1.5f, 0.45f, ~0, QueryTriggerInteraction.Ignore))
+                            hits.Add($"{c.name} ({c.GetType().Name}, layer {LayerMask.LayerToName(c.gameObject.layer)}{(c.GetComponent<ClimbableSurface>() == proxy ? ", the tree's own proxy" : "")})");
+                        Log($"tree: at the terrain tree's perch {perch.x:F1},{perch.y:F2},{perch.z:F1} in Play: {(hits.Count == 0 ? "nothing" : string.Join("; ", hits))}");
+                        yield break;
+                    }
                     Log($"tree: the terrain tree's face at {tPoint.x:F1},{tPoint.y:F2},{tPoint.z:F1} (kind {motor.ClimbKindAt(tPoint, tNormal)}), the start {tStand.x:F1},{tStand.z:F1}");
                     Teleport(em, ghost, tStand + Vector3.up * offset);
                     yield return new WaitForSeconds(1.5f);
@@ -1868,6 +1886,32 @@ namespace KryticalNova.Persistence.Entities
                     heights.Add(result.Height);
                 }
                 Log($"catch: caught at {string.Join(", ", heights)} above the take-off (expected rising with the click; owner, 1 Nov: where the arc meets the wall)");
+
+                // a jump onto a wall of the zone's graph (owner, 1 Nov, design 5.4): the real jump, grabbing where clicked within the Jump rank's
+                // reach, above it as high as the jump gets under the click, then the wall walk up to it; three heights: below, at, above the reach
+                string wallWhy = motor.FindTestWall(stand, out PlayerWallRunMotor.TestWall wall);
+                if (wallWhy != null) { Log("catch: a graph wall: NOT TESTED; " + wallWhy); tally.Tried++; yield break; }
+                float reach = body.GetComponent<PlayerJumpMotor>() is PlayerJumpMotor jm ? jm.GhostJumpReach : 5f;
+                Vector3 ground = wall.Front;
+                Log($"catch: the graph wall's foot at {wall.Foot.x:F1},{wall.Foot.y:F2},{wall.Foot.z:F1} facing {wall.Normal.x:F2},{wall.Normal.z:F2}; Jump reaches {reach:F1} m");
+                var grabs = new List<string>();
+                foreach (var (what, upBy) in new (string, float)[]
+                {
+                    ("a graph wall, below the reach", Mathf.Min(2.5f, reach - 1f)),
+                    ("a graph wall, at the reach", reach - 0.2f),
+                    ("a graph wall, above the reach (grab lower, run up)", reach + 2f),
+                })
+                {
+                    Vector3 click = wall.Lower + Vector3.up * (wall.Foot.y + upBy - wall.Lower.y);
+                    Teleport(em, ghost, ground + Vector3.up * offset);
+                    yield return new WaitForSeconds(1.5f);
+                    if (resources != null) resources.RestoreChi(resources.MaxChi);
+                    yield return new WaitForSeconds(0.5f);
+                    var result = new CatchResult();
+                    yield return CatchTry(body, ghost, tally, $"{what}, at {upBy:F1} m up the face", click, wall.Normal, ground, offset, result, onWall: true);
+                    grabs.Add(result.Height);
+                }
+                Log($"catch: graph wall grabbed at {string.Join(", ", grabs)} above the take-off (expected: where clicked under the reach, the reach above it)");
             }
 
             sealed class CatchResult { public string Height = "none"; }
@@ -1876,7 +1920,8 @@ namespace KryticalNova.Persistence.Entities
             static readonly Vector3 PlacedTree = new Vector3(12.6f, 0f, -13.1f);
 
             /// <summary>One scripted Jump click at a wall (part 4), judged: planned as a catch, handed off where the jump met the face, on to the top.</summary>
-            IEnumerator CatchTry(GameObject body, Entity ghost, VaultTally tally, string what, Vector3 click, Vector3 normal, Vector3 from, float offset, CatchResult result)
+            IEnumerator CatchTry(GameObject body, Entity ghost, VaultTally tally, string what, Vector3 click, Vector3 normal, Vector3 from, float offset, CatchResult result,
+                bool onWall = false)
             {
                 if (OverTheCap()) yield break;
                 World server = KnBootstrap.ServerWorld;
@@ -1919,13 +1964,15 @@ namespace KryticalNova.Persistence.Entities
                 float apart = (new Vector3(ownPose.XMm, ownPose.YMm, ownPose.ZMm) * 0.001f - ServerPosition(ghost)).magnitude;
                 bool planned = jumps.Catches == catches0 + 1;
                 bool up = end.y > from.y + 1.5f;
-                bool ok = planned && handed && grip.ClimbsPaid == paid0 + 1 && up && apart < 0.05f && glide < 0.02f && m_Pops.Pops == 0;
+                // onto a graph wall: no climb price (the wall walk's Grip instead), it ends on the wall by the place clicked
+                bool there = onWall ? em.GetComponentData<MoveState>(ghost).Wall == 1 && Vector3.Distance(end, click) < 1.5f : grip.ClimbsPaid == paid0 + 1 && up;
+                bool ok = planned && handed && there && apart < 0.05f && glide < 0.02f && m_Pops.Pops == 0;
                 if (ok) tally.Passed++;
                 result.Height = handed ? $"{caughtAt:F2} m" : "none";
                 Log($"catch: {what} clicked at {at}: {(ok ? "PASS" : "FAIL")}; server {(planned ? "planned a catch" : "planned NO catch")} " +
                     $"(\"{(jumps.WallPlanner as BodyWallPlanner)?.LastDecision}\"{(string.IsNullOrEmpty(jumps.LastRefusal) ? "" : "; last jump refusal: " + jumps.LastRefusal)}); " +
                     $"caught {(handed ? caughtAt.ToString("F2", CultureInfo.InvariantCulture) + " m above the take-off" : "NEVER")} (click {click.y - from.y:F2} m up); " +
-                    $"climb paid {grip.ClimbsPaid - paid0}; ended {end.y - from.y:F2} m up at {end.x:F1},{end.y:F2},{end.z:F1} (expected on the top or perched); " +
+                    $"climb paid {grip.ClimbsPaid - paid0}; ended {end.y - from.y:F2} m up at {end.x:F1},{end.y:F2},{end.z:F1} (expected {(onWall ? "on the wall by the click, " + Vector3.Distance(end, click).ToString("F2", CultureInfo.InvariantCulture) + " m from it" : "on the top or perched")}); " +
                     $"owner {apart * 100f:F1} cm from the server; glide {glide * 100f:F1} cm; pops {m_Pops.Pops}{(m_Pops.Pops > 0 ? " (worst: " + m_Pops.Worst + ")" : "")}; " +
                     $"Flux {flux0:F0} -> {Flux(body):F0}");
                 yield return new WaitForSeconds(0.8f);

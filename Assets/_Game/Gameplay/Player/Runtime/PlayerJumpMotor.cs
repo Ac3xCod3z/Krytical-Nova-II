@@ -181,6 +181,37 @@ namespace KryticalNova.Player
                 GhostCapsule(agent != null ? agent : GetComponent<NavMeshAgent>()), out plannedPeak);
         }
 
+        /// <summary>The height the learned Jump rank reaches (m; NGO's "Too high to jump at" limit), 5 without the skills.</summary>
+        public float GhostJumpReach
+        {
+            get
+            {
+                var movement = skills != null ? skills : GetComponent<PlayerMovementSkills>();
+                return movement != null && movement.TryGetLearnedRank(MovementSkillId.Jump, out MovementSkillRank rank) ? rank.jumpHeight : 5f;
+            }
+        }
+
+        /// <summary>
+        /// The jump onto a wall of the zone's graph for a ghost (owner, 1 Nov: the real jump, as the catch; `m3c-wallstride-design.md` 5.4):
+        /// the rank's checks and words, the apex the higher end plus the motion's clearance. The way is the wall walk's own check (NGO
+        /// <c>JumpClear</c>), not the landing capsule: the grab point is against the face. Null when it stands.
+        /// </summary>
+        public string PlanJumpOntoForGhost(Vector3 startFeet, Vector3 grabFeet, out float plannedPeak)
+        {
+            plannedPeak = startFeet.y;
+            if (motionData == null || warpAsset == null) return "Jump animation is not configured.";
+            var movement = skills != null ? skills : GetComponent<PlayerMovementSkills>();
+            MovementSkillRank rank = default;
+            if (movement != null && !movement.TryGetLearnedRank(MovementSkillId.Jump, out rank)) return LearnJumpFirst;
+            Vector3 flat = grabFeet - startFeet;
+            flat.y = 0f;
+            float maxDist = movement != null ? rank.jumpDistance : 20f;
+            if (flat.magnitude > maxDist) return $"Too far: Jump rank reaches {maxDist:0.0} m.";
+            if (flat.magnitude < MinimumTravelDistance) return "Too close to jump at.";
+            plannedPeak = Mathf.Max(startFeet.y, grabFeet.y) + motionData.apexClearance;
+            return null;
+        }
+
         /// <summary>The swept body of a ghost's jump: the agent's size, the motion's skin, the player's raycast layers less its own.</summary>
         private JumpPlanRules.Capsule GhostCapsule(NavMeshAgent navAgent)
         {

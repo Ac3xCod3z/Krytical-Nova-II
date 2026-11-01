@@ -260,3 +260,17 @@ the climb on the catch tick), with this one change from NGO's C2 (start feet + 1
 - Clamped only to the face's valid range: not below the plant height (the climb's base), not above the climb's end (1.1 m under the edge).
 - Kept from NGO: the 12 Flux at the catch, short = "Could not hold on. Returned to takeoff."; the plant from a jump (C7); the refusals.
 - Proof: the GUI run with 3 tries at different jump heights and distances showing different catch heights, with GIFs.
+
+### 5.4 Owner change from NGO: a jump onto a graph wall is the real jump too (owner via the Master, 1 Nov, pick b)
+
+NGO's wall walk "Jump onto" (`JumpOnto`, rule 25/28) flew its own gravity arc (apex +0.8 m, two legs) to the clicked node within 3.5 m,
+else to a fixed node at feet + 2.1 m under the click, then ran up. Owner's change, so every wall jump feels the same:
+- The flight is the DOTS jump (crouch, the clip, the rank's arc; `MotionPlan` with `Catch`), handed off on its touchdown tick to the wall
+  walk of the same number (`PlanJumpOntoCatchForGhost`), the body's plant onto the face eased by the slant as the catch's (0.12-0.30 s).
+- The grab is the place clicked while it is within the Jump rank's reach (`GhostJumpReach`, the rank's jump height); above it, the graph's
+  point nearest the highest the jump reaches under the click, then the wall walk runs up to the click.
+- Kept: NGO's checks and words for the wall walk (the gate, "Not now.", Flux for a second, "Too high to jump to.", "Too far: jump within
+  25 m.", "Something is in the way."), a jump onto that does not work goes on to the way onto the wall from its foot (NGO), Grip on the
+  wall. New with the real jump: the Jump rank's own checks ("Too far: Jump rank reaches", "Too close to jump at.") and its Flux at take-off.
+- A jump from a wall to another place on it (the leap) stays NGO's arc.
+- Proof: the GUI run, three heights on a graph wall (below, at and above the reach), with GIFs.

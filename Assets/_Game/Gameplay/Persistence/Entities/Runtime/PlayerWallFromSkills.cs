@@ -58,7 +58,14 @@ namespace KryticalNova.Persistence.Entities
                 // perched in a tree: every click is a drop to the ground below (NGO PointAndClickPlayer 713-718, Jump selected or not)
                 why = motor.PlanDropForGhost(feet, point, ask.Forward, out layout);
             }
-            else if (onWall || motor.WantsWallWalkClick(point, normal, false)) why = motor.PlanWallForGhost(feet, point, normal, in ask, wallBase, out layout);
+            else if (onWall || motor.WantsWallWalkClick(point, normal, false))
+            {
+                // a jump onto a wall from the ground is the real jump (owner, 1 Nov, design 5.4): the catch's path (Catch) takes it when it stands
+                if (jump && !onWall && motor.PlanJumpOntoCatchForGhost(feet, point, normal, in ask, out _, out _, out WallWalkLayout onto) == string.Empty
+                    && onto != null)
+                { LastDecision = "a jump onto the wall (the catch's: Catch)"; return WallAnswer.NotWall; }
+                why = motor.PlanWallForGhost(feet, point, normal, in ask, wallBase, out layout);
+            }
             else
             {
                 if (jump) { LastDecision = "a jump at a wall without the graph (the catch's: Catch)"; return WallAnswer.NotWall; }
@@ -94,6 +101,22 @@ namespace KryticalNova.Persistence.Entities
             var ask = Ask(body, motor, ghost, yawCdeg, default, run, true, false);
             Vector3 feet = M(poseMm) - Vector3.up * offset;
             Vector3 normal = new Vector3(normalPermille.x, normalPermille.y, normalPermille.z) * 0.001f;
+            // a jump onto a wall of the zone's graph (owner, 1 Nov, design 5.4): the real jump to the grab point, then the wall walk
+            string onto = motor.PlanJumpOntoCatchForGhost(feet, M(pointMm), normal, in ask, out Vector3 grab, out float ontoPeak, out WallWalkLayout ontoLayout);
+            if (ontoLayout != null)
+            {
+                catchMm = Mm(grab + Vector3.up * offset);
+                apexYMm = Mathf.RoundToInt((ontoPeak + offset) * 1000f);
+                Write(ontoLayout, catchMm, offset, corners, legs, out plan);
+                LastDecision = $"a jump onto the wall, grabbed {grab.y - feet.y:F2} m above the take-off";
+                return WallAnswer.Planned;
+            }
+            if (!string.IsNullOrEmpty(onto))
+            {
+                LastDecision = reason = onto;
+                if (m_TellOwner) body.GetComponent<PointAndClickPlayer>()?.ShowViewRefusal(reason);
+                return WallAnswer.Refused;
+            }
             string why = motor.PlanCatchForGhost(feet, M(pointMm), normal, in ask, out PlayerWallRunMotor.GhostCatch shape);
             if (shape == null && string.IsNullOrEmpty(why)) { LastDecision = "not climbable (the ordinary jump)"; return WallAnswer.NotWall; }
             if (shape == null)

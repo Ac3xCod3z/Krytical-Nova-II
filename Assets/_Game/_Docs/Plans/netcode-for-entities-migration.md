@@ -230,6 +230,10 @@ Order so that main is never broken and the final merge stays small:
 2. **At cutover (PR from `dots/netcode-entities`):** new packages + manifest/lock; Bootstrap scene + `KnBootstrap`; ghost subscenes;
    all `X.Net` edges; Monsters system + data + nav grids; test assets; server build changes (`ServerBuildBuilder` IL2CPP switch,
    baking-exclusion precheck, Burst-present check, linux-x64 SaveService publish); thin-client bots; docs/Encyclopedia/Server Guide/Dependency Map.
+   Scene data (owner pick, 1 Nov; NOT YET CONFIRMED as the cause): Zone01_StarterTown's TerrainCollider `m_EnableTreeColliders` is on,
+   where `TreeProxyField` expects it off; every other zone has it off (the dev scene Test_Cadence has it on). In Play, NGO's Decide refused
+   a 7 m terrain tree ("There is no room at the top."); the edit-mode probe accepts it both ways, so the Play run names the collider at the
+   perch first. If it is the terrain's own tree, main's Zone01 needs the same one-line change at cutover.
 3. **Removed at cutover:** NGO package, `NetworkManager.prefab`, `DefaultNetworkPrefabs.asset`, `SceneObjectKeeper`, `SceneNetworkGuard`,
    `OfflinePlayerHandoff`, NGO prefab handlers, `GameplayPrefabsSetup.SpawnedPrefabs` rule (-> ghost subscene), NGO YAML tests,
    Emerald integration (`HostileBrainLink` etc.) once all species run on Monsters.
