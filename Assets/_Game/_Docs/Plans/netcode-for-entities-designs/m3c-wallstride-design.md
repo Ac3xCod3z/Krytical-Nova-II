@@ -79,3 +79,98 @@ that arms by itself. Each finished and proven in the GUI before the next.
 B. **The body's tilt on a wall.** NGO sends all three rotation axes (the body stands on the face). The DOTS pose has yaw only. Options:
 (a, recommended) a replicated `PlayerPose` up-vector (the face normal in permille, 3 x short) used only while on a wall; (b) the tilt
 drawn from the surface graph on each client (no ghost field, but observers could disagree with the server near corners).
+
+Picks (owner, 1 Nov, through the Master): **A = (b)** the wall walk on the surface graph first (plant, move with Grip, top-out, step
+down, leap, jump off, push-off), then the straight climb, trees / perch / drop, the jump that catches a wall, and the self-starting run.
+**B = (a)** a replicated up-vector, used only on a wall. The owner's standing Wallstride rules hold for every part: no glitching or
+clipping, never knocked off, the player leaves only by choice (or out of Grip), a way down from roofs, the marker on the wall, feet VFX.
+
+## 3. Design: part 1, the wall walk
+
+### 3.1 One idea: the wall is legs of the walk's own path
+
+The DOTS walk is already a 3D polyline in mm with a progress (`PlayerPath`), and the vault and Waterstride are ranges of that progress
+with their own speed and shape. The wall walk is the same: a click on a wall gives ONE walk whose corners run on the NavMesh to the
+join's `navPoint`, then the plant point, the wall's node feet, and the way off (top-out or step-down points, then the walk on). A
+**`WallLeg` per corner** (the segment that ends at that corner) says how that segment is moved:
+
+| field | meaning |
+|---|---|
+| `Micros` | 0 = moved at the walk's speed (ground segments: the walk's own rules; wall segments: `WallPlan.SpeedMmps`, NGO ground speed x `wallSpeedShare`, no acceleration or arrival slowing). > 0 = a **timed leg** (NGO `Leg.Seconds`): progress runs at length / time, so the leg takes exactly that long |
+| `EaseUp`, `EaseAlong` | NGO's `Ease` (Linear / In / Out / InOut) for the height and the ground part of a timed leg: the point is `lerp(a, b, ease(f))` per axis, `f` the share of the leg covered. Even progress + eased position = NGO's warp curve (`AddLeg` keys) |
+| `UpX/Y/Z`, `FwdX/Y/Z` | the body's facing at the corner in permille (NGO `Leg.Facing`, or on the wall `WallFacing(node normal, travel)`); zero = upright, facing the way |
+| `Phase` | `WallRunPhase` of the segment (Plant, WallMove, Mantle, DropDown, PushOff, JumpOn) for the presentation |
+
+Header `WallPlan` {Seq, SpeedMmps, OnWallFrom (index of the first corner on the wall), OffWallFrom, Flags: EndsOnWall, Truncated} on the
+server (ghost, owner only, like `PathPlan`) and `ClientWallPlan` + a `ClientWallLeg` buffer for the owner's own click (not ghost fields:
+a rollback leaves them, like water). `PlayerMovement.Step` gains the wall overload: on a wall or timed segment the speed is the leg's,
+the pose is the eased point, a Stop does nothing while `MoveState.Wall != 0` (NGO: `StopMoving` returns early, the agent is off on a
+wall), and no click starts during a timed segment (NGO ignores clicks while `IsBusy` and not on the wall, PCP:685).
+
+Stateless like the vault: the pose, the tilt and the phase are functions of the progress, so a rollback never leaves them wrong.
+`MoveState.Wall` (ghost byte): 1 while the progress is on the wall (from `OnWallFrom` to `OffWallFrom`), or the walk ended on the wall
+(`EndsOnWall`, NGO WallHold). Set and cleared by the walk only; a teleport clears it.
+
+### 3.2 The tilt (pick B a)
+
+`PoseTilt` (ghost to everyone): {UpX, UpY, UpZ, FwdX, FwdY, FwdZ} short permille + `Phase` byte. Zero up = upright (the yaw in
+`PlayerPose` rules). Written by the step on server and owner from the segment: on a timed leg the facing goes from the previous corner's
+to this corner's by the leg's share (NGO warps the rotation over the leg); on wall segments the up blends between the two nodes' normals
+by the share and the forward is the travel projected on that plane (NGO `WallFacing`). `PlayerPose.YawCdeg` keeps the forward's ground
+heading, so everything that reads yaw today (targeting, the minimap) still works. The presentation eases the drawn rotation toward the
+tilt at NGO's `wallTurnRate` (10, `1 - e^(-10 dt)`), NGO's own easing, on every machine.
+
+### 3.3 Where each NGO rule goes (DOTS equivalent | built in DOTS now?)
+
+| NGO rule (section 1) | DOTS | now |
+|---|---|---|
+| 1 gate (60 / 20 / 20) | owner: `MoveRanks` (Level, Run, Jump); server: the body's skills | ranks yes, Wallstride gate no |
+| 2 a wall click | `PointAndClickPlayer` view branch: a ray meeting a non-Ground layer, or a steep slope the graph covers, with Run or Jump selected -> a wall click; `PlayerInput` gains `Wall` byte + the normal (3 short permille) | no |
+| 3-4 node lookup (45 deg, 0.38, 1.2, a top click < 36 deg never snaps below) | the motor's own `NodeAt`, made usable for a ghost | no |
+| 5-6 click order, vendor stall, the server re-finds it | server plan system: the wall branch before the walk; the planner finds the node from the point and normal itself (the graph, never the client's word) | no |
+| 25 from the ground: refusals in NGO's words and order; Jump + Flux >= 1 -> JumpOnto; `SurfaceRoute.ToNode`; Flux >= 1 (the "12" text) | `IWallPlanner.Plan` (a Persistence.Entities adapter over the body's motor, like `BodyWaterPlanner`); the owner plans the same with its own body (graph and NavMesh are on the client) | no |
+| 26 plant (navPoint at 0.6 + r, 0.32 s, Ease In / Out; from a roof two legs out over the edge and down) | timed legs in the walk: the NavMesh walk ends at the `navPoint`, then the plant leg(s) | no |
+| 27 on the wall: speed ground x 1.0, stuck to the face, facing, lift 0.03 | wall segments at `WallPlan.SpeedMmps`; corners = node feet **snapped to the real face at plan time** (NGO's stick probe: 0.6 out, 1.2 long, >= 36 deg, < 60 deg off the node), so no PhysX in the loop; the polyline is thinned where it runs straight on the face (a node is kept where the way or the normal turns > 2 deg or the face moves > 2 cm off the line) | no |
+| 27 Grip 15/s in whole points; none -> PushOff | `WallGripSystem` (server, after the move) like `WaterstrideFluxSystem`: millionths owed while `MoveState.Wall == 1`, paid whole; can't pay -> a server order (`ServerOrder`, server seq) whose corners are the push-off arc | no |
+| 28 clicks on a wall: Along / Off(Top) / Off(Ground) the shorter / jump off; Jump: a node > 2 m away -> JumpOnto, else JumpOff; refusals | `IWallPlanner.Plan` with the body on the wall (NGO `CurrentNode`: nearest node to feet + up x 0.38 within 2 m) | no |
+| 29 leap (a rise > 3.5 m caught lower, 25 m, a clear way, apex +0.8, gravity 14, round a corner 1.5 m out) | two timed legs (NGO `JumpOnto`: Out / Linear, then In / Linear), then the wall corners; the planner's PhysX `JumpClear` | no |
+| 30 jump off (lift 1.2, raised 1.5 up to 3 times, 25 m, not > 1 m up) | timed arc legs (NGO `AddArc`, `ArcClear` in the planner), phase PushOff, then the ground | no |
+| 31 top-out (lift + mantle 0.4 s) / step-down (arc lift 0.25) / hold; then the walk on | timed legs at the route's end, then the NavMesh corners of the walk on (`route.Departure`) | no |
+| 32 out of Grip: PushOff 3 m out (NavMesh within 3, else where the wall walk started), open ground | the Grip system asks `IWallPlanner.PushOff` (body PhysX + NavMesh) | no |
+| 33 wall fights | M4 (combat) | later |
+| 34 clicks ignored mid-climb; "Come down first." for travel | the step (no start during a timed leg); the travel refusal where travel is asked | partly |
+| 35 death off the ground | the death part (not on DOTS yet) | later |
+| 36 GM teleport lands on NavMesh | `TeleportRequest` clears `Wall` and the tilt | teleport yes, the clear no |
+| 37 replication | `PlayerPose` + `PoseTilt` (with the phase) to all; corners and legs owner only; refusals to the owner (`ShowViewRefusal`) | no |
+| 38 clips per phase, fades | the body's view (`IGhostMotionView`, `GhostJumpView`): plant fitted, mantle fitted, push-off flip, jump-on, wall move = the game's own locomotion turned on the face | no |
+| 39 feet VFX `PFX_Wall_Loop`, Landed on the face | `Feel` calls from the same view, sounds for the own player only | no |
+| 40 marker on the wall (> 50 deg) | `WorldMarkerPresenter` with the click's normal (the view branch passes it) | to check |
+| 41 the graph (Zone01, preloaded) | read through `ZoneRules.Current.Entry.surfaceGraph` by the motor, on server and client bodies | yes (NGO side) |
+| 2-24 straight climb, trees, catches, auto-arm | parts 2-5 | later |
+
+Limits: `PathCorner` holds 32 corners today. A wall walk may use up to **64** (`PlayerLimits.MaxWallCorners`); a longer thinned route is
+cut at the last node that fits and flagged `Truncated`: on arrival the server issues the rest as a server order from there (the next
+order starts on the tick the last one ends, so the body never stops). The owner's own plan is cut at the same node.
+
+### 3.4 Layers
+
+`Player.Entities`: `WallPlan`, `WallLeg`, `PoseTilt`, the step, `IWallPlanner` (Plan, PushOff), `WallGripSystem`, wiring in the server
+plan and the gather. `Player` (`PlayerWallRunMotor`, which already reads World's graph): public `PlanForGhost` / `PushOffForGhost`
+returning plain lists (corners, legs) and NGO's refusal words, built from the motor's own `NodeAt`, `SurfaceRoute`, `JumpClear`,
+`ArcClear`, `FeetAt`, `WallFacing` and the leg layout (`AddLeg` / `AddArc` numbers). `Persistence.Entities`: `BodyWallPlanner` (mm,
+`BodyOf(world, ghost)`), installed in `PlayerWorldsSetup`. Presentation: the view and the follow system (no ground snap while
+`Wall != 0` or a timed leg is under way). No new assembly references; `dependency_map.py --check` before the commit.
+
+### 3.5 Steps (each with EditMode tests; the GUI proof with GIFs at the end of the part, announced to the Master)
+
+- [ ] 1. `WallLeg` maths (pure): timed legs with NGO's eases, wall segments at their speed, the tilt blend; the `Step` wall overload;
+  world tests at 0 and 100 ms like `WaterWorldTests` (a stub planner: a straight 10 m wall, a roof).
+- [ ] 2. The planner on the motor (`PlanForGhost`: from the ground, along, off by top / ground, jump onto, jump off) + thinning + the
+  face snap; tests on a handmade graph (no zone).
+- [ ] 3. Wiring: input (Wall + normal), the view-mode click, the server plan branch with NGO's refusal words, the owner's gather, the
+  Grip system + push-off; world tests (Grip paid whole, out of Grip pushed off, a Stop on the wall does nothing, a click mid-plant
+  starts nothing).
+- [ ] 4. Presentation: the tilt eased at 10, phases to clips, feet VFX, the marker on the wall, no ground snap.
+- [ ] 5. GUI run on Zone01 (KnPlayHere `KN_PLAYHERE_WALL=1`): onto a wall from the ground, along it, over its edge onto a roof, down
+  from the roof onto the wall (the way down), off it to the ground, a leap to another wall, a jump off, out of Grip (Flux set low)
+  pushed off, clicks past the wall; pass / fail per try; GIFs to Drive `DOTS-proof`.
