@@ -35,6 +35,8 @@ namespace KryticalNova.Player.Entities
                 AddComponent<PlayerLook>(e);
                 AddComponent(e, new MoveStats { WalkMmps = a.walkMmps, RunMmps = a.runMmps });
                 AddComponent<MoveRanks>(e);
+                AddComponent<VaultPlan>(e);
+                AddComponent<ClientVaultPlan>(e);
                 AddComponent<OwnerFlux>(e);
                 AddBuffer<PathCorner>(e);
                 AddComponent<PathPlan>(e);

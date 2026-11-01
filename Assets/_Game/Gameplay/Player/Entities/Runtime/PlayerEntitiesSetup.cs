@@ -17,8 +17,9 @@ namespace KryticalNova.Player.Entities
         /// and to the owner's gather (its prediction); its cost to the server only.
         /// </summary>
         public static void Install(World world, IPathPlanner planner, IPlayerCommandSource source = null, IRunCost runCost = null,
-            IClickBudget clickBudget = null, IJumpPlanner jumpPlanner = null, IJumpCost jumpCost = null)
+            IClickBudget clickBudget = null, IJumpPlanner jumpPlanner = null, IJumpCost jumpCost = null, IVaultPlanner vaultPlanner = null)
         {
+            // the vault's planner, like the jump's, goes to the server and to the owner's gather (its prediction; M3c)
             var jump = world.GetExistingSystemManaged<PlayerJumpServerSystem>();
             if (jump != null)
             {
@@ -33,12 +34,14 @@ namespace KryticalNova.Player.Entities
                 server.Planner = planner;
                 server.RunCost = runCost;
                 server.ClickBudget = clickBudget;
+                server.VaultPlanner = vaultPlanner;
             }
             var gather = world.GetExistingSystemManaged<PlayerInputGatherSystem>();
             if (gather != null)
             {
                 gather.Planner = planner;
                 gather.JumpPlanner = jumpPlanner;
+                gather.VaultPlanner = vaultPlanner;
                 if (source != null) gather.Source = source;
             }
         }

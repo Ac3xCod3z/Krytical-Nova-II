@@ -30,6 +30,12 @@ namespace KryticalNova.Player.Entities
         /// <summary>The price of a running click; null = running is free (tests, a world without the game's skills).</summary>
         public IRunCost RunCost { get; set; }
 
+        /// <summary>Vaults over obstacles on the way (M3c); null = the walk always goes round.</summary>
+        public IVaultPlanner VaultPlanner { get; set; }
+
+        /// <summary>Walks planned with a vault in them (tests, the scripted run).</summary>
+        public int Vaults { get; private set; }
+
         /// <summary>The move-click rate limit; null = no limit (tests, a world without the game's request limits).</summary>
         public IClickBudget ClickBudget { get; set; }
 
@@ -83,6 +89,7 @@ namespace KryticalNova.Player.Entities
                 }
 
                 var pose = em.GetComponentData<PlayerPose>(e);
+                if (request && InVault(em, e)) continue;   // a server order waits for the landing (its request stays on)
                 if (request)
                 {
                     var r = em.GetComponentData<ServerOrderRequest>(e);
@@ -90,7 +97,7 @@ namespace KryticalNova.Player.Entities
                     var order = em.GetComponentData<ServerOrder>(e);
                     ushort seq = NextServerSeq(order.Seq);
                     var goal = new int3(r.GoalXMm, r.GoalYMm, r.GoalZMm);
-                    if (TryWritePlan(em, e, pose, goal, seq, out bool truncated))
+                    if (TryWritePlan(em, e, pose, goal, seq, (r.Flags & OrderFlags.RunPaid) != 0, out bool truncated))
                     {
                         order.Seq = seq;
                         order.StartTick = nt.ServerTick;
@@ -121,13 +128,21 @@ namespace KryticalNova.Player.Entities
                         Refused++;
                         continue;
                     }
+                    // NGO: a click while the body is over an obstacle is ignored; the walk goes on to its destination (M3c)
+                    if (InVault(em, e))
+                    {
+                        LogRefusal(em, e, input, nt, "vaulting");
+                        Refuse(em, e, input);
+                        Refused++;
+                        continue;
+                    }
                     bool tooFar = cfg.MaxClickRangeMm > 0 && PlayerPath.DistanceMm(pose.Mm, goal) > cfg.MaxClickRangeMm;
                     // a run is paid per destination, only for a click that will start (the Netcode for GameObjects rule)
                     bool run = input.Run != 0 && RunCost != null;
                     string costReason = null;
                     bool unpaid = run && !RunCost.CanPay(e, out costReason);
                     if (unpaid) LastCostRefusal = costReason;
-                    if (tooFar || unpaid || !TryWritePlan(em, e, pose, goal, input.ClickSeq, out _))
+                    if (tooFar || unpaid || !TryWritePlan(em, e, pose, goal, input.ClickSeq, input.Run != 0, out _))
                     {
                         LogRefusal(em, e, input, nt, tooFar ? "range" : unpaid ? "cost" : "path");
                         Refuse(em, e, input);
@@ -142,13 +157,34 @@ namespace KryticalNova.Player.Entities
             }
         }
 
-        bool TryWritePlan(EntityManager em, Entity e, in PlayerPose pose, int3 goal, ushort seq, out bool truncated)
+        /// <summary>The walk under way is on its vault's leg (over the obstacle).</summary>
+        public static bool InVault(EntityManager em, Entity e)
+        {
+            if (!em.HasComponent<VaultPlan>(e)) return false;
+            var m = em.GetComponentData<MoveState>(e);
+            return (m.Flags & MoveFlags.Moving) != 0 && VaultLeg.On(em.GetComponentData<VaultPlan>(e), m.OrderSeq, m.ProgressMm);
+        }
+
+        bool TryWritePlan(EntityManager em, Entity e, in PlayerPose pose, int3 goal, ushort seq, bool run, out bool truncated)
         {
             truncated = false;
             var corners = new NativeList<int3>(PlayerLimits.MaxCorners, Allocator.Temp);
             try
             {
-                if (!Planner.TryPlan(pose.Mm, goal, corners) || corners.Length < 2) return false;
+                // the speed the walk reaches a take-off at sets a vault's air time (the click's own Run choice)
+                int speed = 0;
+                if (em.HasComponent<MoveStats>(e))
+                {
+                    var stats = em.GetComponentData<MoveStats>(e);
+                    speed = run ? stats.RunMmps : stats.WalkMmps;
+                }
+                if (!VaultPath.Plan(Planner, em.HasComponent<VaultPlan>(e) ? VaultPlanner : null, e, pose.Mm, goal, speed, corners, out VaultPlan vault)
+                    || corners.Length < 2) return false;
+                if (em.HasComponent<VaultPlan>(e))
+                {
+                    if (vault.LegLengthMm > 0) { vault.Seq = seq; Vaults++; }
+                    em.SetComponentData(e, vault);
+                }
                 int count = math.min(corners.Length, PlayerLimits.MaxCorners);
                 truncated = corners.Length > PlayerLimits.MaxCorners;
                 var buffer = em.GetBuffer<PathCorner>(e);

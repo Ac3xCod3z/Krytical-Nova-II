@@ -67,6 +67,8 @@ namespace KryticalNova.Player.Entities
                 int apexY = 0;
                 if (JumpFlight.Active(plan, curves, nt.ServerTick, tickMicros)) why = "Finish this jump before choosing another destination.";
                 else if (JumpFlight.CoolingDown(plan, curves, nt.ServerTick, tickMicros)) why = "Let the landing settle before jumping again.";
+                // NGO ignores a click while the body is over an obstacle (no message: it is back on the ground in a moment; M3c)
+                else if (PlayerServerPlanSystem.InVault(em, e)) why = "over an obstacle";
                 else if (Planner == null)
                 {
                     if (!m_WarnedPlanner)

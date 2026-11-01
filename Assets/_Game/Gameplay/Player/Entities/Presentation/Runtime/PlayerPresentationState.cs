@@ -43,6 +43,11 @@ namespace KryticalNova.Player.Entities.Presentation
         public byte JumpPhase;
         /// <summary>The drawn root is on a jump's arc this frame (not stood on the ground).</summary>
         public bool InJump;
+        /// <summary>The vault the body shows (its walk's number; 0 = none) and whether the drawn body is over the obstacle this frame (M3c).</summary>
+        public ushort VaultSeq;
+        public bool InVault;
+        /// <summary>The frame the shown vault's clip began (the scripted run compares the owner's and an observer's).</summary>
+        public int VaultClipFrame;
         /// <summary>
         /// On a jump frame: how far the drawn root is from the exact arc at this frame's time (metres). The owner's bar (31 Oct): the
         /// arc is the same at every frame rate, the drawn body within 1 cm of it.

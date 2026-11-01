@@ -87,8 +87,10 @@ namespace KryticalNova.Player.Entities.Presentation
                 {
                     var serverCorners = em.GetBuffer<PathCorner>(e, true).Reinterpret<int3>().AsNativeArray();
                     var clientCorners = em.GetBuffer<ClientPlanCorner>(e, true).Reinterpret<int3>().AsNativeArray();
+                    VaultPlan serverVault = em.HasComponent<VaultPlan>(e) ? em.GetComponentData<VaultPlan>(e) : default;
+                    VaultPlan clientVault = em.HasComponent<ClientVaultPlan>(e) ? em.GetComponentData<ClientVaultPlan>(e).Plan : default;
                     if (PlayerMovement.PoseAhead(in move, em.GetComponentData<PlayerPose>(e), em.GetComponentData<PathPlan>(e), serverCorners,
-                            em.GetComponentData<ClientPlanHeader>(e), clientCorners, in moveCfg, tickMicros, elapsedMicros,
+                            em.GetComponentData<ClientPlanHeader>(e), clientCorners, in serverVault, in clientVault, in moveCfg, tickMicros, elapsedMicros,
                             out int3 aheadMm, out int aheadYaw))
                     {
                         ghostPos = new float3(aheadMm.x, aheadMm.y, aheadMm.z) * 0.001f;
@@ -128,8 +130,21 @@ namespace KryticalNova.Player.Entities.Presentation
                     smoothTicks = false;
                 }
 
+                // A vault: the drawn body is over the obstacle while the walk's progress is on the vault's leg (M3c); the height is in the
+                // pose already (the owner's PoseAhead, an observer's interpolated ghost)
+                VaultPlan vault = default;
+                int drawnProgress = move.ProgressMm;
+                if (em.HasComponent<VaultPlan>(e)) vault = em.GetComponentData<VaultPlan>(e);
+                if (predicted)
+                {
+                    if (vault.Seq != move.OrderSeq && em.HasComponent<ClientVaultPlan>(e)) vault = em.GetComponentData<ClientVaultPlan>(e).Plan;
+                    drawnProgress += (int)((long)move.SpeedMmps * math.clamp(elapsedMicros, 0, tickMicros) / 1000000);
+                }
+                bool inVault = (move.Flags & MoveFlags.Moving) != 0 && VaultLeg.On(in vault, move.OrderSeq, drawnProgress);
+                bool airborne = inJump || inVault;
+
                 bool snapped = FollowMath.Step(ref entry.Follow, ghostPos, ghostYaw, tele, smoothTicks,
-                    (move.Flags & MoveFlags.Moving) != 0 || inJump, inJump ? JumpFollowMaxSpeedMps : maxSpeed, dt, tickSeconds, in cfg);
+                    (move.Flags & MoveFlags.Moving) != 0 || airborne, airborne ? JumpFollowMaxSpeedMps : maxSpeed, dt, tickSeconds, in cfg);
 
                 var body = entry.Body.transform;
                 float3 p = entry.Follow.Position;
@@ -138,7 +153,7 @@ namespace KryticalNova.Player.Entities.Presentation
                 // "an issue with the ground on each step"). Drawn only: the ghost's X and Z stay the server's.
                 var agent = entry.Body.GetComponent<UnityEngine.AI.NavMeshAgent>();
                 float baseOffset = agent != null ? agent.baseOffset : 0f;
-                if (!inJump && UnityEngine.AI.NavMesh.SamplePosition(new Vector3(p.x, p.y - baseOffset, p.z), out var ground, GroundSampleM,
+                if (!airborne && UnityEngine.AI.NavMesh.SamplePosition(new Vector3(p.x, p.y - baseOffset, p.z), out var ground, GroundSampleM,
                         agent != null ? agent.areaMask : UnityEngine.AI.NavMesh.AllAreas))
                     p.y = ground.position.y + baseOffset;
                 body.SetPositionAndRotation(new Vector3(p.x, p.y, p.z), Quaternion.Euler(0f, entry.Follow.Yaw, 0f));
@@ -155,6 +170,7 @@ namespace KryticalNova.Player.Entities.Presentation
                     state.InJump = inJump;
                     state.JumpArcErrorM = inJump ? math.distance(entry.Follow.Position, ghostPos) : 0f;
                     ShowJump(state, entry.Body.GetComponent<IGhostMotionView>(), in jump, jumpMicros, in curves);
+                    ShowVault(state, entry.Body.GetComponent<IGhostMotionView>(), in vault, inVault, drawnProgress, move.SpeedMmps);
                     state.State = new PlayerAnimState
                     {
                         Speed = (move.Flags & MoveFlags.Moving) != 0 ? move.SpeedMmps * 0.001f : 0f,
@@ -188,6 +204,29 @@ namespace KryticalNova.Player.Entities.Presentation
         /// Plays each phase of a jump once on the body (by the plan's number, so a rollback or the server's copy of the owner's own plan
         /// never restarts it): the clip from where it should be, the take-off, the landing; a jump taken back is cancelled.
         /// </summary>
+        /// <summary>
+        /// Plays a vault on the body once (by its walk's number, so a rollback or a late snapshot never restarts it): the clip from where
+        /// the drawn body is along the leg when it gets there, the landing when it leaves the leg (M3c).
+        /// </summary>
+        static void ShowVault(PlayerPresentationState state, IGhostMotionView view, in VaultPlan vault, bool inVault, int progressMm, int speedMmps)
+        {
+            if (inVault && state.VaultSeq != vault.Seq)
+            {
+                state.VaultSeq = vault.Seq;
+                state.InVault = true;
+                state.VaultClipFrame = UnityEngine.Time.frameCount;
+                float air = vault.AirMicros * 1e-6f;
+                float elapsed = vault.LegLengthMm > 0 ? air * math.saturate((progressMm - vault.LegStartMm) / (float)vault.LegLengthMm) : 0f;
+                view?.BeginVault(vault.Style, elapsed, air);
+                return;
+            }
+            if (!inVault && state.InVault)
+            {
+                state.InVault = false;
+                view?.EndVault(speedMmps * 0.001f);
+            }
+        }
+
         static void ShowJump(PlayerPresentationState state, IGhostMotionView view, in MotionPlan plan, long micros, in PlayerMotionCurves curves)
         {
             bool shown = state.JumpSeq != 0;

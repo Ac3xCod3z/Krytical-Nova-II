@@ -1,4 +1,5 @@
 using Unity.Collections;
+using Unity.Entities;
 using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.AI;
@@ -14,6 +15,75 @@ namespace KryticalNova.Player.Entities
     {
         /// <summary>Adds the corners to <paramref name="cornersMm"/> (empty on entry). False = no way: the order is refused.</summary>
         bool TryPlan(int3 startMm, int3 goalMm, NativeList<int3> cornersMm);
+    }
+
+    /// <summary>A vault the planner found (M3c): where it takes off and lands (the pose's height, mm) and its leg's numbers.</summary>
+    public struct VaultSplice
+    {
+        public int3 TakeoffMm, LandingMm;
+        public int AirMicros, RaiseMm;
+        public short RiseEndsPermille, FallStartsPermille;
+        /// <summary>The obstacle's height class (the body picks its own clip for it).</summary>
+        public byte Style;
+    }
+
+    /// <summary>
+    /// Finds a vault on the straight line from the start to the goal that beats the walk round (NGO's rules, filled by the layer that knows
+    /// the body: <c>PlayerVaultMotor.PlanForGhost</c>); on the server and, for the owner's prediction, on the client. Managed, main thread.
+    /// </summary>
+    public interface IVaultPlanner
+    {
+        /// <param name="walkLengthMm">The walk round's length; <see cref="int.MaxValue"/> when there is no way round.</param>
+        /// <param name="speedMmps">The speed the walk reaches the take-off at (the air time follows from it).</param>
+        bool TryPlan(Entity ghost, int3 startMm, int3 goalMm, int walkLengthMm, int speedMmps, out VaultSplice vault);
+    }
+
+    /// <summary>
+    /// The walk's corners with a vault in them (M3c, `m3c-vault-design.md`): the way to the take-off, the leg over the obstacle, the way
+    /// on from the landing. One copy for the server's plan and the owner's own, so both splice the same corners.
+    /// </summary>
+    public static class VaultPath
+    {
+        /// <summary>
+        /// Plans <paramref name="startMm"/> to <paramref name="goalMm"/> into <paramref name="corners"/>, over an obstacle when
+        /// <paramref name="vaults"/> finds one shorter than the way round. <paramref name="vault"/> is the leg (its Seq is the caller's
+        /// to set), all zero without one. False = no way at all.
+        /// </summary>
+        public static bool Plan(IPathPlanner planner, IVaultPlanner vaults, Entity ghost, int3 startMm, int3 goalMm, int speedMmps,
+            NativeList<int3> corners, out VaultPlan vault)
+        {
+            vault = default;
+            corners.Clear();
+            bool walk = planner.TryPlan(startMm, goalMm, corners) && corners.Length >= 2;
+            if (vaults == null) return walk;
+            int walkLength = walk ? PlayerPath.LengthMm(startMm, corners.AsArray(), corners.Length) : int.MaxValue;
+            if (!vaults.TryPlan(ghost, startMm, goalMm, walkLength, speedMmps, out VaultSplice s)) return walk;
+            var toTakeoff = new NativeList<int3>(PlayerLimits.MaxCorners, Allocator.Temp);
+            var onward = new NativeList<int3>(PlayerLimits.MaxCorners, Allocator.Temp);
+            try
+            {
+                if (!planner.TryPlan(startMm, s.TakeoffMm, toTakeoff) || toTakeoff.Length < 1) return walk;
+                if (!planner.TryPlan(s.LandingMm, goalMm, onward) || onward.Length < 1) return walk;
+                if (toTakeoff.Length + onward.Length > PlayerLimits.MaxCorners) return walk;   // too long a way to splice: walk round
+                corners.Clear();
+                for (int i = 0; i < toTakeoff.Length; i++) corners.Add(toTakeoff[i]);
+                int3 takeoff = corners[corners.Length - 1];
+                int legStart = PlayerPath.LengthMm(startMm, corners.AsArray(), corners.Length);
+                int3 landing = onward[0];
+                corners.Add(landing);
+                for (int i = 1; i < onward.Length; i++) corners.Add(onward[i]);
+                if (corners.Length < 2) return walk;
+                vault = new VaultPlan
+                {
+                    LegStartMm = legStart,
+                    LegLengthMm = PlayerPath.DistanceMm(takeoff, landing),
+                    AirMicros = s.AirMicros, RaiseMm = s.RaiseMm,
+                    RiseEndsPermille = s.RiseEndsPermille, FallStartsPermille = s.FallStartsPermille, Style = s.Style,
+                };
+                return true;
+            }
+            finally { toTakeoff.Dispose(); onward.Dispose(); }
+        }
     }
 
     /// <summary>The way is a straight line (tests, bots, flat test maps). With <see cref="Dogleg"/> it turns once, to test corners.</summary>

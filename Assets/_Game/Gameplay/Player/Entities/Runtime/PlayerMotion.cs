@@ -61,6 +61,68 @@ namespace KryticalNova.Player.Entities
     }
 
     /// <summary>
+    /// A vault over an obstacle as one leg of a walk's path (M3c, design `m3c-vault-design.md`): the walk's corners run through the
+    /// take-off and the landing, and while the walk's progress is on that leg the body moves at the leg's own speed and rises over the
+    /// obstacle on NGO's curve (<see cref="VaultLeg"/>). Planned by the server with the walk (all players see it); integers only.
+    /// </summary>
+    public struct VaultPlan : IComponentData
+    {
+        /// <summary>The walk's order number this vault belongs to (0 = none).</summary>
+        [GhostField] public ushort Seq;
+        /// <summary>The walk's progress at the take-off and the leg's length, millimetres along the path.</summary>
+        [GhostField] public int LegStartMm, LegLengthMm;
+        /// <summary>The vault's air time, microseconds (NGO's <c>VaultTiming</c>).</summary>
+        [GhostField] public int AirMicros;
+        /// <summary>How high the body rises over the leg's straight line, millimetres.</summary>
+        [GhostField] public int RaiseMm;
+        /// <summary>Where the rise ends and the fall starts, permille of the leg.</summary>
+        [GhostField] public short RiseEndsPermille, FallStartsPermille;
+        /// <summary>The body's vault style for this obstacle (presentation: which clip).</summary>
+        [GhostField] public byte Style;
+    }
+
+    /// <summary>The owner's own vault for its own click's path (not a ghost field: a rollback leaves it alone).</summary>
+    public struct ClientVaultPlan : IComponentData
+    {
+        public VaultPlan Plan;
+    }
+
+    /// <summary>The vault leg in integers (pure, Burst-safe; the server and the owner call it with the same plan and progress).</summary>
+    public static class VaultLeg
+    {
+        /// <summary>The walk of <paramref name="orderSeq"/> is on <paramref name="v"/>'s leg at <paramref name="progressMm"/>.</summary>
+        public static bool On(in VaultPlan v, ushort orderSeq, int progressMm) =>
+            v.Seq != 0 && v.Seq == orderSeq && v.LegLengthMm > 0 && v.AirMicros > 0
+            && progressMm >= v.LegStartMm && progressMm < v.LegStartMm + v.LegLengthMm;
+
+        /// <summary>The leg's own speed: its length over the air time (NGO's warp: even travel along the ground).</summary>
+        public static int SpeedMmps(in VaultPlan v) =>
+            v.AirMicros > 0 ? (int)math.min((long)v.LegLengthMm * 1000000L / v.AirMicros, int.MaxValue) : 0;
+
+        /// <summary>
+        /// The rise over the leg's straight line at <paramref name="progressMm"/>: NGO's four keys with flat tangents (a smoothstep up to
+        /// <see cref="VaultPlan.RaiseMm"/> by the rise's end, level, a smoothstep down from the fall's start). 0 off the leg.
+        /// </summary>
+        public static int HeightMm(in VaultPlan v, int progressMm)
+        {
+            if (v.LegLengthMm <= 0) return 0;
+            long s = (long)(progressMm - v.LegStartMm) * 1000 / v.LegLengthMm;
+            if (s <= 0 || s >= 1000) return 0;
+            int rise = math.clamp((int)v.RiseEndsPermille, 1, 999), fall = math.clamp((int)v.FallStartsPermille, rise, 999);
+            if (s < rise) return (int)((long)v.RaiseMm * Smooth((int)(s * 1000 / rise)) / 1000);
+            if (s <= fall) return v.RaiseMm;
+            return (int)((long)v.RaiseMm * Smooth((int)((1000 - s) * 1000 / (1000 - fall))) / 1000);
+        }
+
+        /// <summary>Smoothstep in permille: 3t^2 - 2t^3 (a Hermite with flat tangents, as Unity's curve between flat keys).</summary>
+        public static int Smooth(int tPermille)
+        {
+            long t = math.clamp(tPermille, 0, 1000);
+            return (int)(t * t * (3000 - 2 * t) / 1000000);
+        }
+    }
+
+    /// <summary>
     /// Plans a jump where the world is known (NavMesh, water, PhysX sweep, the rank's limits from <c>JumpMotionData</c>):
     /// filled by the layer that knows the body, on the server and (for the owner's prediction) on the client.
     /// </summary>

@@ -37,12 +37,35 @@ namespace KryticalNova.Player.Entities
             in PlayerInput input, in ServerOrder order,
             in PathPlan plan, NativeArray<int3> serverCorners,
             in ClientPlanHeader client, NativeArray<int3> clientCorners,
+            in MoveStats stats, in PlayerMoveSettings cfg, int tickMicros) =>
+            Step(ref m, ref pose, in input, in order, in plan, serverCorners, in client, clientCorners, default, default, in stats, in cfg, tickMicros);
+
+        /// <summary>
+        /// The walk with its vault (M3c): <paramref name="serverVault"/> belongs to the server's corners, <paramref name="clientVault"/> to
+        /// the owner's (each used for its own walk's number). While the progress is on the vault's leg the body moves at the leg's own
+        /// speed (no acceleration, no slowdown) and rises on NGO's curve (<see cref="VaultLeg"/>); a click on the leg starts nothing
+        /// (NGO ignores a click during a vault; the walk goes on to its destination). Stateless on the leg: the pose is a function of
+        /// the progress, so a rollback or a skipped tick never leaves it wrong.
+        /// </summary>
+        public static void Step(
+            ref MoveState m, ref PlayerPose pose,
+            in PlayerInput input, in ServerOrder order,
+            in PathPlan plan, NativeArray<int3> serverCorners,
+            in ClientPlanHeader client, NativeArray<int3> clientCorners,
+            in VaultPlan serverVault, in VaultPlan clientVault,
             in MoveStats stats, in PlayerMoveSettings cfg, int tickMicros)
         {
-            if (input.Stop.IsSet) CancelWalk(ref m);
+            // the vault of the walk under way (the server's for its corners, else the owner's own)
+            VaultPlan vault = serverVault.Seq != 0 && serverVault.Seq == m.OrderSeq ? serverVault : clientVault;
+            bool inVault = (m.Flags & MoveFlags.Moving) != 0 && VaultLeg.On(in vault, m.OrderSeq, m.ProgressMm);
+            if (input.Stop.IsSet && !inVault) CancelWalk(ref m);
 
             // ---- start of a walk -------------------------------------------------------------------------------------
-            if (order.Seq != 0 && order.Seq != m.ServerSeq)
+            if (inVault)
+            {
+                // over the obstacle: no new walk until the landing (NGO); a server order waits for it
+            }
+            else if (order.Seq != 0 && order.Seq != m.ServerSeq)
             {
                 // A server order overrides input. It is consumed even when its corners are missing (nothing to walk).
                 m.ServerSeq = order.Seq;
@@ -62,6 +85,7 @@ namespace KryticalNova.Player.Entities
             }
 
             if ((m.Flags & MoveFlags.Moving) == 0) return;
+            if (vault.Seq != m.OrderSeq) vault = serverVault.Seq != 0 && serverVault.Seq == m.OrderSeq ? serverVault : clientVault;
 
             // ---- the corners this walk follows -----------------------------------------------------------------------
             NativeArray<int3> corners;
@@ -94,8 +118,10 @@ namespace KryticalNova.Player.Entities
                 target = (int)((long)target * factor / 1000);
             }
             // The NGO game: a new walk (first click or re-click) starts at full speed along the new way (SnapVelocityToPath),
-            // and the agent's acceleration is max(acceleration, top speed x accelerationPerSpeed).
-            if (starting) m.SpeedMmps = target;
+            // and the agent's acceleration is max(acceleration, top speed x accelerationPerSpeed). On a vault leg: the leg's speed.
+            bool onLeg = VaultLeg.On(in vault, m.OrderSeq, m.ProgressMm);
+            if (onLeg) m.SpeedMmps = VaultLeg.SpeedMmps(in vault);
+            else if (starting) m.SpeedMmps = target;
             else
             {
                 int accel = math.max(cfg.AccelMmps2, (int)math.min((long)top * cfg.AccelPerSpeed, int.MaxValue / 2));
@@ -114,7 +140,8 @@ namespace KryticalNova.Player.Entities
 
             // ---- pose ------------------------------------------------------------------------------------------------
             PlayerPath.PointAt(start, corners, count, m.ProgressMm, out int3 p, out int3 dir);
-            pose.XMm = p.x; pose.YMm = p.y; pose.ZMm = p.z;
+            int rise = VaultLeg.On(in vault, m.OrderSeq, m.ProgressMm) ? VaultLeg.HeightMm(in vault, m.ProgressMm) : 0;
+            pose.XMm = p.x; pose.YMm = p.y + rise; pose.ZMm = p.z;
             pose.YawCdeg = TurnToward(pose.YawCdeg, PlayerPath.YawCdegOf(dir, pose.YawCdeg), TurnStepCdeg(cfg, tickMicros));
 
             if (arrived) CancelWalk(ref m);
@@ -144,6 +171,14 @@ namespace KryticalNova.Player.Entities
         /// </summary>
         public static bool PoseAhead(in MoveState m, in PlayerPose pose,
             in PathPlan plan, NativeArray<int3> serverCorners, in ClientPlanHeader client, NativeArray<int3> clientCorners,
+            in PlayerMoveSettings cfg, int tickMicros, int elapsedMicros, out int3 posMm, out int yawCdeg) =>
+            PoseAhead(in m, in pose, in plan, serverCorners, in client, clientCorners, default, default, in cfg, tickMicros, elapsedMicros,
+                out posMm, out yawCdeg);
+
+        /// <summary>The pose drawn ahead with the walk's vault (M3c): over the leg the body is on NGO's curve at the frame's own progress.</summary>
+        public static bool PoseAhead(in MoveState m, in PlayerPose pose,
+            in PathPlan plan, NativeArray<int3> serverCorners, in ClientPlanHeader client, NativeArray<int3> clientCorners,
+            in VaultPlan serverVault, in VaultPlan clientVault,
             in PlayerMoveSettings cfg, int tickMicros, int elapsedMicros, out int3 posMm, out int yawCdeg)
         {
             posMm = pose.Mm;
@@ -162,6 +197,8 @@ namespace KryticalNova.Player.Entities
             int progress = (int)math.min((long)length, m.ProgressMm + ahead);
             if (progress + cfg.StopMm >= length) progress = length;   // the next step stops ON the point (as Step does)
             PlayerPath.PointAt(start, corners, count, progress, out posMm, out int3 dir);
+            VaultPlan vault = serverVault.Seq != 0 && serverVault.Seq == m.OrderSeq ? serverVault : clientVault;
+            if (VaultLeg.On(in vault, m.OrderSeq, progress)) posMm.y += VaultLeg.HeightMm(in vault, progress);
             int way = PlayerPath.YawCdegOf(dir, pose.YawCdeg);
             int step = TurnStepCdeg(cfg, tickMicros);
             if (step <= 0) yawCdeg = way;

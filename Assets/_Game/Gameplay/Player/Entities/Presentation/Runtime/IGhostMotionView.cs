@@ -18,5 +18,14 @@ namespace KryticalNova.Player.Entities.Presentation
 
         /// <summary>The jump was taken back before it landed (refused, called off at take-off, a teleport): back to standing.</summary>
         void JumpCancelled();
+
+        /// <summary>
+        /// A vault starts (M3c): the body's own clip for the obstacle's height class, <paramref name="elapsedSeconds"/> of the
+        /// <paramref name="airSeconds"/> already over (a late frame or snapshot fast-forwards), with the take-off feel.
+        /// </summary>
+        void BeginVault(byte heightClass, float elapsedSeconds, float airSeconds);
+
+        /// <summary>The vault lands: back to the walk at <paramref name="speedMps"/>, with the landing feel.</summary>
+        void EndVault(float speedMps);
     }
 }

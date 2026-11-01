@@ -75,6 +75,9 @@ namespace KryticalNova.Player.Entities
         /// <summary>The owner's jump planner (the client's NavMesh and the rank's rules); null = a jump click is sent unpredicted.</summary>
         public IJumpPlanner JumpPlanner { get; set; }
 
+        /// <summary>The owner's vault planner (M3c): its own walk goes over the obstacle the server's will; null = it walks round.</summary>
+        public IVaultPlanner VaultPlanner { get; set; }
+
         protected override void OnCreate()
         {
             m_Query = GetEntityQuery(new EntityQueryBuilder(Allocator.Temp)
@@ -145,16 +148,30 @@ namespace KryticalNova.Player.Entities
                 return;
             }
 
+            // NGO: a click while the body is over an obstacle is ignored, nothing is sent (the server refuses it too; M3c)
+            if (OwnerInVault(em, e)) return;
             var pose = em.GetComponentData<PlayerPose>(e);
             var corners = new NativeList<int3>(PlayerLimits.MaxCorners, Allocator.Temp);
             try
             {
-                if (!Planner.TryPlan(pose.Mm, cmd.GoalMm, corners) || corners.Length < 2) return;
+                int speed = 0;
+                if (em.HasComponent<MoveStats>(e))
+                {
+                    var stats = em.GetComponentData<MoveStats>(e);
+                    speed = cmd.Run ? stats.RunMmps : stats.WalkMmps;
+                }
+                IVaultPlanner vaults = em.HasComponent<ClientVaultPlan>(e) ? VaultPlanner : null;
+                if (!VaultPath.Plan(Planner, vaults, e, pose.Mm, cmd.GoalMm, speed, corners, out VaultPlan vault) || corners.Length < 2) return;
 
                 var header = em.GetComponentData<ClientPlanHeader>(e);
                 header.Seq = NextClientSeq(header.Seq);
                 header.Count = (byte)math.min(corners.Length, PlayerLimits.MaxCorners);
                 header.Writes++;
+                if (em.HasComponent<ClientVaultPlan>(e))
+                {
+                    if (vault.LegLengthMm > 0) vault.Seq = header.Seq;
+                    em.SetComponentData(e, new ClientVaultPlan { Plan = vault });
+                }
                 var buffer = em.GetBuffer<ClientPlanCorner>(e);
                 buffer.Clear();
                 for (int i = 0; i < header.Count; i++)
@@ -174,6 +191,16 @@ namespace KryticalNova.Player.Entities
             finally { corners.Dispose(); }
         }
 
+        /// <summary>The owner's predicted walk is on its vault's leg (the server's vault for the walk's number, else the owner's own).</summary>
+        static bool OwnerInVault(EntityManager em, Entity e)
+        {
+            if (!em.HasComponent<MoveState>(e)) return false;
+            var m = em.GetComponentData<MoveState>(e);
+            if ((m.Flags & MoveFlags.Moving) == 0) return false;
+            if (em.HasComponent<VaultPlan>(e) && VaultLeg.On(em.GetComponentData<VaultPlan>(e), m.OrderSeq, m.ProgressMm)) return true;
+            return em.HasComponent<ClientVaultPlan>(e) && VaultLeg.On(em.GetComponentData<ClientVaultPlan>(e).Plan, m.OrderSeq, m.ProgressMm);
+        }
+
         /// <summary>
         /// A jump click (owner answer Q1 a: predicted on the press). It takes the next click number, with no walk corners (the walk
         /// never starts from it), and the owner plans the jump at once into <see cref="ClientMotionPlan"/> on the tick of the press;
@@ -181,6 +208,7 @@ namespace KryticalNova.Player.Entities
         /// </summary>
         void PlanJumpClick(EntityManager em, Entity e, in PlayerCommand cmd, ref PlayerInput input)
         {
+            if (OwnerInVault(em, e)) return;   // NGO: ignored over an obstacle, nothing sent (M3c)
             var header = em.GetComponentData<ClientPlanHeader>(e);
             header.Seq = NextClientSeq(header.Seq);
             header.Count = 0;

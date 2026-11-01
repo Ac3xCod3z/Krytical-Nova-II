@@ -293,6 +293,21 @@ namespace KryticalNova.Player
             public float Top;
             /// <summary>The faction's style for this height (its clip, windows and clearances).</summary>
             public VaultStyle Style;
+            /// <summary>The obstacle's height class (<see cref="TraversalSettings.HeightOf"/>): each machine resolves its own clip from it.</summary>
+            public VaultHeight Height;
+        }
+
+        /// <summary>
+        /// This body's vault style for a height class (presentation of an entity-netcode vault): the faction's and body's own, or the
+        /// default set's, as <see cref="StyleFor"/>. False when the motor has no animations.
+        /// </summary>
+        public bool TryStyleOf(VaultHeight height, out VaultStyle style)
+        {
+            style = default;
+            if (animations == null || !animations.IsUsable) return false;
+            FactionId faction = identity != null ? identity.Faction : FactionId.None;
+            BodyType body = identity != null ? identity.State.bodyType : BodyType.Masculine;
+            return animations.TryResolve(faction, body, height, out style);
         }
 
         /// <summary>
@@ -304,14 +319,16 @@ namespace KryticalNova.Player
         public string PlanForGhost(Vector3 startFeet, Vector3 destination, float walkLength, int obstacleLayers, out GhostVault vault)
         {
             vault = default;
-            if (!Ready) return "not available";
+            // planning needs only the data (a server body has no animator or warp: those are presentation)
+            if (animations == null || !animations.IsUsable || traversal == null || warpTemplate == null) return "not available";
             if (agent == null) agent = GetComponent<NavMeshAgent>();
+            if (identity == null) identity = GetComponent<PlayerIdentity>();
             if (scratchPath == null) scratchPath = new NavMeshPath();
             if (!TryPlan(startFeet, destination, walkLength, obstacleLayers, 0f, out Plan found)) return LastDecision;
             vault = new GhostVault
             {
                 Takeoff = found.Takeoff, Landing = found.Landing, NearEdge = found.NearEdge, FarEdge = found.FarEdge,
-                Top = found.Top, Style = StyleFor(found.Top),
+                Top = found.Top, Style = StyleFor(found.Top), Height = traversal.HeightOf(found.Top),
             };
             return null;
         }
@@ -335,6 +352,9 @@ namespace KryticalNova.Player
 
         /// <summary>The obstacle's gap kept above it (metres) and the warp clip's length (seconds), for <see cref="VaultTiming"/>.</summary>
         public float Clearance => clearance;
+        /// <summary>The clip's fade into and out of the vault (seconds), for an entity-netcode body's presentation.</summary>
+        public float FadeIn => fadeIn;
+        public float FadeOut => fadeOut;
         public float WarpLength => warpAsset != null ? warpAsset.GetLength() : warpTemplate != null ? warpTemplate.GetLength() : 0f;
 
         /// <summary>

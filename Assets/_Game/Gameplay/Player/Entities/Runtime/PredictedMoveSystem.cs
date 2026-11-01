@@ -64,6 +64,7 @@ namespace KryticalNova.Player.Entities
             void Execute(Entity entity,
                 ref MoveState move, ref PlayerPose pose, ref LocalTransform transform, ref PlayerMoveDiag diag,
                 in PlayerInput input, in ServerOrder order, in PathPlan plan, in ClientPlanHeader client, in MoveStats stats,
+                in VaultPlan vault, in ClientVaultPlan clientVault,
                 in DynamicBuffer<PathCorner> serverBuffer, in DynamicBuffer<ClientPlanCorner> clientBuffer)
             {
                 ushort orderBefore = move.OrderSeq;
@@ -74,7 +75,7 @@ namespace KryticalNova.Player.Entities
                 PlayerInput walkInput = input;
                 if (walkInput.Jump != 0) walkInput.Click = default;
                 PlayerMovement.Step(ref move, ref pose, in walkInput, in order, in plan, serverCorners, in client, clientCorners,
-                    in stats, in Cfg, TickMicros);
+                    in vault, in clientVault.Plan, in stats, in Cfg, TickMicros);
 
                 transform.Position = new float3(pose.XMm, pose.YMm, pose.ZMm) * 0.001f;
                 transform.Rotation = quaternion.RotateY(math.radians(pose.YawCdeg * 0.01f));
