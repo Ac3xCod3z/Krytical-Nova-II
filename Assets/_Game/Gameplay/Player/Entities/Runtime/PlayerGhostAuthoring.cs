@@ -46,6 +46,7 @@ namespace KryticalNova.Player.Entities
                 AddBuffer<ClientWallCorner>(e);
                 AddComponent<PoseTilt>(e);
                 AddComponent<WallGripOwed>(e);
+                AddComponent<WallGoal>(e);
                 AddComponent<OwnerFlux>(e);
                 AddBuffer<PathCorner>(e);
                 AddComponent<PathPlan>(e);

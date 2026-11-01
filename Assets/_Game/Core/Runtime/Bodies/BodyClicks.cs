@@ -18,6 +18,9 @@ namespace KryticalNova.Core
             public bool Stop;
             /// <summary>The click asks to jump there (the Jump movement skill is selected).</summary>
             public bool Jump;
+            /// <summary>A click on a wall for Wallstride's wall walk, with the surface's normal there.</summary>
+            public bool Wall;
+            public Vector3 Normal;
         }
 
         /// <summary>Most clicks kept between two takes.</summary>
@@ -32,6 +35,7 @@ namespace KryticalNova.Core
             LastGroundRealtime = 0d;
             LastGroundFrame = 0;
             GroundClicks = 0;
+            LocalOnWall = false;
         }
 
         public static int Count => Pending.Count;
@@ -58,6 +62,21 @@ namespace KryticalNova.Core
             GroundClicks++;
             Add(new Click { Point = point, Jump = true });
         }
+
+        /// <summary>
+        /// A click for Wallstride's wall walk at <paramref name="point"/> on a surface facing <paramref name="normal"/>: onto a wall from the
+        /// ground, or any click while the body is on a wall (NGO's <c>ServerWallClick</c> decides what it is).
+        /// </summary>
+        public static void Wall(Vector3 point, Vector3 normal, bool run, bool jump)
+        {
+            LastGroundRealtime = Time.realtimeSinceStartupAsDouble;
+            LastGroundFrame = Time.frameCount;
+            GroundClicks++;
+            Add(new Click { Point = point, Normal = normal, Run = run, Jump = jump, Wall = true });
+        }
+
+        /// <summary>The local body stands or moves on a wall (its ghost says so): the view sends every click as a wall click.</summary>
+        public static bool LocalOnWall { get; set; }
 
         /// <summary>The player asked to stop where they stand.</summary>
         public static void Stop() => Add(new Click { Stop = true });

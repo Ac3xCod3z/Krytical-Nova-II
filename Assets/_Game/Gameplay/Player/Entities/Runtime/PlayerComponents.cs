@@ -61,6 +61,10 @@ namespace KryticalNova.Player.Entities
         /// (<see cref="JumpFlight.ClickStartTick"/>).
         /// </summary>
         public uint ClickTick;
+        /// <summary><see cref="WallClick"/> bits: the click is Wallstride's wall walk (M3c); then <see cref="Jump"/> is 0 (the jump systems leave it).</summary>
+        public byte Wall;
+        /// <summary>The clicked surface's normal in permille (a wall click: NGO finds the wall's node from the point and the normal).</summary>
+        public short NormalX, NormalY, NormalZ;
         public InputEvent Click;
         public InputEvent Stop;
     }

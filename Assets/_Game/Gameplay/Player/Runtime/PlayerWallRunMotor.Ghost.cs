@@ -24,6 +24,25 @@ namespace KryticalNova.Player
             public float GroundSpeed;
         }
 
+        /// <summary>Wallstride's gate for a level and ranks (NGO <see cref="WallRunRules.IsOpen"/> with this body's settings).</summary>
+        public bool WallstrideOpenFor(int level, int runRank, int jumpRank) => WallRunRules.IsOpen(level, runRank, jumpRank, settings);
+
+        /// <summary>Grip on a wall, Flux a second (NGO <c>gripFluxPerSecond</c>).</summary>
+        public float GripFluxPerSecond => settings != null ? settings.gripFluxPerSecond : 0f;
+
+        /// <summary>
+        /// The view's test of a wall click (PointAndClickPlayer in view mode): the zone's graph has a node by the point (NGO
+        /// <see cref="NodeAt"/>). The gate is not asked here: a locked player's click goes to the planners, which refuse it in NGO's words.
+        /// </summary>
+        public bool WantsWallWalkClick(Vector3 point, Vector3 normal, bool groundLayer)
+        {
+            SurfaceGraph graph = ZoneGraph;
+            if (graph == null || settings == null) return false;
+            // the ground layer counts only where it is steep enough to be a wall (NGO IsSteepWallClick)
+            if (groundLayer && Vector3.Angle(normal, Vector3.up) < settings.graphMinSurfaceAngle) return false;
+            return NodeAt(graph, point, normal) >= 0;
+        }
+
         /// <summary>
         /// A click concerning a wall, for the ghost standing at <paramref name="feet"/>: a layout of the walk there, or NGO's refusal.
         /// Empty reason and a null layout: not Wallstride's click (no graph node near it and the body is not on a wall).

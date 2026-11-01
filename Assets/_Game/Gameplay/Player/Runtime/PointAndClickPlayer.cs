@@ -700,6 +700,15 @@ namespace KryticalNova.Player
                 return;
             }
 
+            // ClientView (M3c): the ghost stands on a wall, so every click goes to it as a wall click (NGO's wall walk decides along, over,
+            // down or a jump off; the owner's and the server's planners tell why not). A click on a unit still selects it.
+            if (ViewMode && BodyClicks.LocalOnWall && hit.collider.GetComponentInParent<IDamageable>() == null)
+            {
+                BodyClicks.Wall(hit.point, hit.normal, movementSkills != null && movementSkills.IsRunning, movementSkills != null && movementSkills.IsJumpSelected);
+                ClientPresentationRegistry.Markers?.ShowMoveMarker(transform, hit.point, hit.normal);
+                return;
+            }
+
             // Standing in a tree: a click on the ground drops down to it; a click on a unit still selects it.
             if (!ViewMode && wallRunMotor != null && wallRunMotor.IsPerched && hit.collider.GetComponentInParent<IDamageable>() == null)
             {
@@ -849,6 +858,21 @@ namespace KryticalNova.Player
                 if (selectedTarget != null) ClearSelection();
                 pendingInteract = null;
                 EndTravel(false);
+                return;
+            }
+
+            // ClientView (M3c): a wall (or a steep slope) the zone's surface graph covers, clicked with Run or Jump selected, goes to the ghost
+            // as a wall click with its normal: NGO's wall walk onto it (the straight climb, trees and catches are later parts of M3c).
+            if (ViewMode && wallRunMotor != null && !walkableFromHere && movementSkills != null
+                && (movementSkills.IsRunning || movementSkills.IsJumpSelected)
+                && wallRunMotor.WantsWallWalkClick(hit.point, hit.normal, onGround))
+            {
+                CancelAttack();
+                if (selectedTarget != null) ClearSelection();
+                pendingInteract = null;
+                EndTravel(false);
+                BodyClicks.Wall(hit.point, hit.normal, movementSkills.IsRunning, movementSkills.IsJumpSelected);
+                ClientPresentationRegistry.Markers?.ShowMoveMarker(transform, hit.point, hit.normal);
                 return;
             }
 

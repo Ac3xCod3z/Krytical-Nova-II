@@ -91,7 +91,8 @@ namespace KryticalNova.Persistence.Entities
             ConfigurePlanner(planner, (prefab ?? PlayerPrefab)());
             PlayerEntitiesSetup.Install(server, planner, runCost: new BodyRunCost(server), clickBudget: new BudgetClickLimit(server),
                 jumpPlanner: new BodyJumpPlanner(server), jumpCost: new BodyJumpCost(server), vaultPlanner: new BodyVaultPlanner(server),
-                waterPlanner: new BodyWaterPlanner(server, planner), waterFlux: new BodyWaterFlux(server, (prefab ?? PlayerPrefab)()));
+                waterPlanner: new BodyWaterPlanner(server, planner), waterFlux: new BodyWaterFlux(server, (prefab ?? PlayerPrefab)()),
+                wallPlanner: new BodyWallPlanner(server), wallGrip: new BodyWallGrip(server, (prefab ?? PlayerPrefab)()));
             // walk numbers from the settings asset and the jump's curves from its clip, the same on server and client (prediction must agree)
             PlayerMoveFromSkills.InstallSettings(server, PlayerMoveFromSkills.SettingsOf((prefab ?? PlayerPrefab)()));
             PlayerJumpFromSkills.InstallCurves(server, (prefab ?? PlayerPrefab)());
@@ -152,7 +153,7 @@ namespace KryticalNova.Persistence.Entities
                 },
             };
             PlayerEntitiesSetup.Install(client, planner, jumpPlanner: new BodyJumpPlanner(client, checkCost: true), vaultPlanner: new BodyVaultPlanner(client),
-                waterPlanner: new BodyWaterPlanner(client, planner, tellOwner: true));
+                waterPlanner: new BodyWaterPlanner(client, planner, tellOwner: true), wallPlanner: new BodyWallPlanner(client, tellOwner: true));
             PlayerMoveFromSkills.InstallSettings(client, PlayerMoveFromSkills.SettingsOf((prefab ?? PlayerPrefab)()));
             PlayerJumpFromSkills.InstallCurves(client, (prefab ?? PlayerPrefab)());
             KryticalNova.Player.Entities.Presentation.PlayerPresentationSetup.Install(client, factory, new BodyClickSource());

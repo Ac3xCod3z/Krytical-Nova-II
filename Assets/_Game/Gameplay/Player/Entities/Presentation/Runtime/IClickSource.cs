@@ -15,6 +15,9 @@ namespace KryticalNova.Player.Entities.Presentation
         public bool Stop;
         /// <summary>The click asks to jump to <see cref="Point"/> (the Jump movement skill is selected).</summary>
         public bool Jump;
+        /// <summary>A click on a wall for Wallstride's wall walk (M3c), and the surface's normal there.</summary>
+        public bool Wall;
+        public Vector3 Normal;
     }
 
     /// <summary>
@@ -64,6 +67,9 @@ namespace KryticalNova.Player.Entities.Presentation
             command.Kind = PlayerCommandKind.Click;
             command.Run = click.Run && !click.Jump;
             command.Jump = click.Jump;
+            command.Wall = click.Wall;
+            if (click.Wall) command.Run = click.Run;   // a wall click keeps Run with Jump (NGO's wall walk reads both)
+            command.NormalPermille = new int3(Mm(click.Normal.x), Mm(click.Normal.y), Mm(click.Normal.z));
             command.GoalMm = new int3(Mm(click.Point.x), Mm(click.Point.y), Mm(click.Point.z));
             return true;
         }

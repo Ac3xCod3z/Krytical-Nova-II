@@ -99,11 +99,7 @@ namespace KryticalNova.Player.Entities
             VaultPlan vault = serverVault.Seq != 0 && serverVault.Seq == m.OrderSeq ? serverVault : clientVault;
             bool inVault = (m.Flags & MoveFlags.Moving) != 0 && VaultLeg.On(in vault, m.OrderSeq, m.ProgressMm);
             bool stranded = (m.Flags & MoveFlags.Moving) != 0 && WaterLeg.Stranded(WaterLeg.Of(in serverWater, in clientWater, m.OrderSeq), m.OrderSeq);
-            bool inTimedLeg = (m.Flags & MoveFlags.Moving) != 0
-                && WallWalkOf(in m, in plan, serverCorners, in client, clientCorners, in serverWall, serverLegs, in clientWall, clientLegs,
-                    out var wc, out int wcount, out _, out var wlegs)
-                && WallLeg.SegmentAt(new int3(m.StartXMm, m.StartYMm, m.StartZMm), wc, wcount, m.ProgressMm, out int wi, out _, out _, out _, out _)
-                && wi < wlegs.Length && wlegs[wi].Micros > 0;
+            bool inTimedLeg = InTimedWallLeg(in m, in plan, serverCorners, in client, clientCorners, in serverWall, serverLegs, in clientWall, clientLegs);
             if (input.Stop.IsSet && !inVault && !inTimedLeg && m.Water == 0 && m.Wall == 0) CancelWalk(ref m);
 
             // ---- start of a walk -------------------------------------------------------------------------------------
@@ -208,6 +204,18 @@ namespace KryticalNova.Player.Entities
 
             if (arrived) CancelWalk(ref m);
         }
+
+        /// <summary>
+        /// The walk under way is in a timed leg of its wall walk (the plant, the top-out, a jump onto or off a wall): nothing starts until it
+        /// ends (NGO ignores clicks while the motor is busy off the wall). The server's corners when they carry the walk's number, else the owner's.
+        /// </summary>
+        public static bool InTimedWallLeg(in MoveState m, in PathPlan plan, NativeArray<int3> serverCorners, in ClientPlanHeader client, NativeArray<int3> clientCorners,
+            in WallPlan serverWall, NativeArray<WallCorner> serverLegs, in WallPlan clientWall, NativeArray<WallCorner> clientLegs) =>
+            (m.Flags & MoveFlags.Moving) != 0
+            && WallWalkOf(in m, in plan, serverCorners, in client, clientCorners, in serverWall, serverLegs, in clientWall, clientLegs,
+                out var corners, out int count, out _, out var legs)
+            && WallLeg.SegmentAt(new int3(m.StartXMm, m.StartYMm, m.StartZMm), corners, count, m.ProgressMm, out int i, out _, out _, out _, out _)
+            && i < legs.Length && legs[i].Micros > 0;
 
         /// <summary>
         /// The corners and the wall walk of the walk under way: the server's when its corners carry the walk's number, else the owner's own.

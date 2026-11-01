@@ -36,6 +36,13 @@ namespace KryticalNova.Player.Entities
         /// <summary>Waterstride (M3c): runs out over the water, on it and ashore; null = no click is Waterstride's.</summary>
         public IWaterPlanner WaterPlanner { get; set; }
 
+        /// <summary>Wallstride's wall walk (M3c): onto a wall, along it and off it; null = no click is the wall's.</summary>
+        public IWallPlanner WallPlanner { get; set; }
+
+        /// <summary>Clicks planned as the wall walk, and why the last one was refused (tests; the owner is told by its own planner).</summary>
+        public int WallWalks { get; private set; }
+        public string LastWallRefusal { get; private set; }
+
         /// <summary>Clicks planned as Waterstride, and why the last one was refused (tests; the message comes with M8's chat port).</summary>
         public int WaterRuns { get; private set; }
         public string LastWaterRefusal { get; private set; }
@@ -96,7 +103,14 @@ namespace KryticalNova.Player.Entities
                 }
 
                 var pose = em.GetComponentData<PlayerPose>(e);
-                if (request && InVault(em, e)) continue;   // a server order waits for the landing (its request stays on)
+                if (request && (InVault(em, e) || InWallLeg(em, e))) continue;   // a server order waits for the landing (its request stays on)
+                if (request && em.GetComponentData<MoveState>(e).Wall != 0)
+                {
+                    // NGO: a server walk is not taken on a wall (the agent is off; PointAndClickPlayer.ServerMoveTo has no NavMesh there)
+                    em.SetComponentEnabled<ServerOrderRequest>(e, false);
+                    Refused++;
+                    continue;
+                }
                 if (request && em.GetComponentData<MoveState>(e).Water != 0)
                 {
                     // NGO: a server walk is not taken on the water (PointAndClickPlayer.ServerMoveTo returns false)
@@ -150,7 +164,29 @@ namespace KryticalNova.Player.Entities
                         Refused++;
                         continue;
                     }
+                    // NGO: a click in a leg of the wall walk (the plant, the top-out, a jump off) is ignored (PointAndClickPlayer 685)
+                    if (InWallLeg(em, e))
+                    {
+                        LogRefusal(em, e, input, nt, "wall leg");
+                        Refuse(em, e, input);
+                        Refused++;
+                        continue;
+                    }
                     bool tooFar = cfg.MaxClickRangeMm > 0 && PlayerPath.DistanceMm(pose.Mm, goal) > cfg.MaxClickRangeMm;
+                    // Wallstride's wall walk: a click on a wall, or any click while on one (NGO ServerWallClick); free of Run Flux
+                    if (!tooFar && TryWall(em, e, pose, goal, input, out bool wallRefused))
+                    {
+                        if (wallRefused)
+                        {
+                            LogRefusal(em, e, input, nt, "wall: " + LastWallRefusal);
+                            Refuse(em, e, input);
+                            Refused++;
+                        }
+                        else if (PlayerClickLog.Sink != null)
+                            PlayerClickLog.Server(em.HasComponent<GhostOwner>(e) ? em.GetComponentData<GhostOwner>(e).NetworkId : 0,
+                                input.ClickSeq, nt.ServerTick.TickIndexForValidTick);
+                        continue;
+                    }
                     // Waterstride's clicks are planned by its own rules and cost no Run Flux (NGO: the water motor sets the path itself)
                     if (!tooFar && TryWater(em, e, pose, goal, input, out bool waterRefused))
                     {
@@ -219,6 +255,59 @@ namespace KryticalNova.Player.Entities
             finally { corners.Dispose(); }
         }
 
+        /// <summary>
+        /// A click the wall walk takes (true): planned into the corners, <see cref="WallCorner"/>s and <see cref="WallPlan"/>, or refused
+        /// (<paramref name="refused"/>). False when it is not the wall's: the ordinary walk plans it.
+        /// </summary>
+        bool TryWall(EntityManager em, Entity e, in PlayerPose pose, int3 goal, in PlayerInput input, out bool refused)
+        {
+            refused = false;
+            if (WallPlanner == null || !em.HasComponent<WallPlan>(e)) return false;
+            var move = em.GetComponentData<MoveState>(e);
+            if ((input.Wall & WallClick.Wall) == 0 && move.Wall == 0) return false;
+            var tilt = em.HasComponent<PoseTilt>(e) ? em.GetComponentData<PoseTilt>(e) : default;
+            var normal = new int3(input.NormalX, input.NormalY, input.NormalZ);
+            bool jump = (input.Wall & WallClick.Jump) != 0;
+            var corners = new NativeList<int3>(PlayerLimits.MaxWallCorners, Allocator.Temp);
+            var legs = new NativeList<WallCorner>(PlayerLimits.MaxWallCorners, Allocator.Temp);
+            try
+            {
+                var answer = WallPlanner.Plan(e, pose.Mm, pose.YawCdeg, in tilt, goal, normal, input.Run != 0, jump, move.Wall != 0, corners, legs,
+                    out WallPlan plan, out string reason);
+                if (answer == WallAnswer.NotWall) return false;
+                if (answer == WallAnswer.Refused || corners.Length < 2)
+                {
+                    LastWallRefusal = reason ?? "no way";
+                    refused = true;
+                    return true;
+                }
+                WallWrite.Server(em, e, input.ClickSeq, corners, legs, plan);
+                if (em.HasComponent<WallGoal>(e))
+                    em.SetComponentData(e, (plan.Flags & WallFlags.Truncated) != 0
+                        ? new WallGoal { Seq = input.ClickSeq, PointMm = goal, NormalPermille = normal, Run = input.Run != 0, Jump = jump }
+                        : default);
+                if (em.HasComponent<VaultPlan>(e)) em.SetComponentData(e, new VaultPlan());
+                if (em.HasComponent<WaterPlan>(e)) em.SetComponentData(e, new WaterPlan());
+                WallWalks++;
+                return true;
+            }
+            finally { corners.Dispose(); legs.Dispose(); }
+        }
+
+        /// <summary>The walk under way is in a timed leg of its wall walk (the plant, the top-out, a jump onto or off a wall).</summary>
+        public static bool InWallLeg(EntityManager em, Entity e)
+        {
+            if (!em.HasComponent<WallPlan>(e) || !em.HasBuffer<WallCorner>(e) || !em.HasComponent<MoveState>(e)) return false;
+            var m = em.GetComponentData<MoveState>(e);
+            if ((m.Flags & MoveFlags.Moving) == 0) return false;
+            var client = em.HasComponent<ClientPlanHeader>(e) ? em.GetComponentData<ClientPlanHeader>(e) : default;
+            var clientWall = em.HasComponent<ClientWallPlan>(e) ? em.GetComponentData<ClientWallPlan>(e).Plan : default;
+            NativeArray<int3> clientCorners = em.HasBuffer<ClientPlanCorner>(e) ? em.GetBuffer<ClientPlanCorner>(e).Reinterpret<int3>().AsNativeArray() : default;
+            NativeArray<WallCorner> clientLegs = em.HasBuffer<ClientWallCorner>(e) ? em.GetBuffer<ClientWallCorner>(e).Reinterpret<WallCorner>().AsNativeArray() : default;
+            return PlayerMovement.InTimedWallLeg(in m, em.GetComponentData<PathPlan>(e), em.GetBuffer<PathCorner>(e).Reinterpret<int3>().AsNativeArray(),
+                in client, clientCorners, em.GetComponentData<WallPlan>(e), em.GetBuffer<WallCorner>(e).AsNativeArray(), in clientWall, clientLegs);
+        }
+
         /// <summary>The walk under way is on its vault's leg (over the obstacle).</summary>
         public static bool InVault(EntityManager em, Entity e)
         {
@@ -247,6 +336,7 @@ namespace KryticalNova.Player.Entities
                     if (vault.LegLengthMm > 0) { vault.Seq = seq; Vaults++; }
                     em.SetComponentData(e, vault);
                 }
+                if (em.HasComponent<WallPlan>(e)) em.SetComponentData(e, new WallPlan());
                 int count = math.min(corners.Length, PlayerLimits.MaxCorners);
                 truncated = corners.Length > PlayerLimits.MaxCorners;
                 var buffer = em.GetBuffer<PathCorner>(e);

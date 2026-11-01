@@ -17,6 +17,9 @@ namespace KryticalNova.Player.Entities
         public bool Run;
         /// <summary>The click asks to jump to <see cref="GoalMm"/> (M3b).</summary>
         public bool Jump;
+        /// <summary>A click on a wall for Wallstride's wall walk (M3c), with the surface's normal in permille.</summary>
+        public bool Wall;
+        public int3 NormalPermille;
     }
 
     /// <summary>
@@ -37,6 +40,10 @@ namespace KryticalNova.Player.Entities
 
         public void Click(int3 goalMm, bool run = false) =>
             m_Queue.Enqueue(new PlayerCommand { Kind = PlayerCommandKind.Click, GoalMm = goalMm, Run = run });
+
+        /// <summary>A click on a wall for the wall walk (M3c), on a surface facing <paramref name="normalPermille"/>.</summary>
+        public void Wall(int3 goalMm, int3 normalPermille, bool run = true, bool jump = false) =>
+            m_Queue.Enqueue(new PlayerCommand { Kind = PlayerCommandKind.Click, GoalMm = goalMm, Run = run, Jump = jump, Wall = true, NormalPermille = normalPermille });
 
         public void Jump(int3 goalMm) =>
             m_Queue.Enqueue(new PlayerCommand { Kind = PlayerCommandKind.Click, GoalMm = goalMm, Jump = true });
@@ -81,6 +88,9 @@ namespace KryticalNova.Player.Entities
         /// <summary>The owner's Waterstride planner (M3c): its own run over the water is the one the server's will be; null = none.</summary>
         public IWaterPlanner WaterPlanner { get; set; }
 
+        /// <summary>The owner's wall walk planner (M3c): its own way on the wall is the one the server's will be; null = no wall clicks.</summary>
+        public IWallPlanner WallPlanner { get; set; }
+
         protected override void OnCreate()
         {
             m_Query = GetEntityQuery(new EntityQueryBuilder(Allocator.Temp)
@@ -116,6 +126,8 @@ namespace KryticalNova.Player.Entities
                 {
                     if (cmd.Kind == PlayerCommandKind.Stop)
                         input.Stop.Set();
+                    else if (cmd.Kind == PlayerCommandKind.Click && WallPlanner != null && (cmd.Wall || OwnerOnWall(em, e)))
+                        PlanWallClick(em, e, cmd, ref input);
                     else if (cmd.Kind == PlayerCommandKind.Click && cmd.Jump)
                         PlanJumpClick(em, e, cmd, ref input);
                     else if (cmd.Kind == PlayerCommandKind.Click)
@@ -134,6 +146,8 @@ namespace KryticalNova.Player.Entities
             input.Run = click.Run;
             input.Jump = click.Jump;
             input.ClickTick = click.ClickTick;
+            input.Wall = click.Wall;
+            input.NormalX = click.NormalX; input.NormalY = click.NormalY; input.NormalZ = click.NormalZ;
             input.GoalXMm = click.GoalXMm;
             input.GoalYMm = click.GoalYMm;
             input.GoalZMm = click.GoalZMm;
@@ -151,8 +165,8 @@ namespace KryticalNova.Player.Entities
                 return;
             }
 
-            // NGO: a click while the body is over an obstacle is ignored, nothing is sent (the server refuses it too; M3c)
-            if (OwnerInVault(em, e)) return;
+            // NGO: a click while the body is over an obstacle or in a leg of the wall walk is ignored, nothing is sent (the server refuses it too; M3c)
+            if (OwnerInVault(em, e) || PlayerServerPlanSystem.InWallLeg(em, e)) return;
             var pose = em.GetComponentData<PlayerPose>(e);
             var corners = new NativeList<int3>(PlayerLimits.MaxCorners, Allocator.Temp);
             try
@@ -217,6 +231,61 @@ namespace KryticalNova.Player.Entities
             finally { corners.Dispose(); }
         }
 
+        /// <summary>The owner's body stands or moves on a wall (NGO: every click on a wall is the wall's, PointAndClickPlayer 695).</summary>
+        static bool OwnerOnWall(EntityManager em, Entity e) => em.HasComponent<MoveState>(e) && em.GetComponentData<MoveState>(e).Wall != 0;
+
+        /// <summary>
+        /// A click of Wallstride's wall walk (M3c): the owner plans it by the same rules as the server, with its own body; a refused one is
+        /// not sent (shown on the body in NGO's words by the planner); a planned one is its own walk until the server's arrives. Not the
+        /// wall's after all (no node near it and not on a wall): the ordinary click or jump.
+        /// </summary>
+        void PlanWallClick(EntityManager em, Entity e, in PlayerCommand cmd, ref PlayerInput input)
+        {
+            if (OwnerInVault(em, e) || PlayerServerPlanSystem.InWallLeg(em, e) || !em.HasComponent<ClientWallPlan>(e)) return;
+            var pose = em.GetComponentData<PlayerPose>(e);
+            var move = em.GetComponentData<MoveState>(e);
+            var tilt = em.HasComponent<PoseTilt>(e) ? em.GetComponentData<PoseTilt>(e) : default;
+            var corners = new NativeList<int3>(PlayerLimits.MaxWallCorners, Allocator.Temp);
+            var legs = new NativeList<WallCorner>(PlayerLimits.MaxWallCorners, Allocator.Temp);
+            try
+            {
+                WallAnswer answer = WallPlanner.Plan(e, pose.Mm, pose.YawCdeg, in tilt, cmd.GoalMm, cmd.NormalPermille, cmd.Run, cmd.Jump, move.Wall != 0,
+                    corners, legs, out WallPlan wall, out string why);
+                if (answer == WallAnswer.NotWall)
+                {
+                    if (cmd.Jump) PlanJumpClick(em, e, cmd, ref input);
+                    else PlanClick(em, e, cmd, ref input);
+                    return;
+                }
+                if (answer == WallAnswer.Refused || corners.Length < 2)
+                {
+                    if (PlayerClickLog.Sink != null) PlayerClickLog.Sink("[KnWall] the owner refused a wall click: " + why);
+                    return;
+                }
+                var header = em.GetComponentData<ClientPlanHeader>(e);
+                header.Seq = NextClientSeq(header.Seq);
+                header.Count = (byte)WallWrite.Client(em, e, header.Seq, corners, legs, wall);
+                header.Writes++;
+                em.SetComponentData(e, header);
+                if (em.HasComponent<ClientVaultPlan>(e)) em.SetComponentData(e, new ClientVaultPlan());
+                if (em.HasComponent<ClientWaterPlan>(e)) em.SetComponentData(e, new ClientWaterPlan());
+
+                input.Click.Set();
+                input.ClickSeq = header.Seq;
+                input.Run = (byte)(cmd.Run ? 1 : 0);
+                input.Jump = 0;
+                input.Wall = (byte)(WallClick.Wall | (cmd.Jump ? WallClick.Jump : 0));
+                input.NormalX = (short)cmd.NormalPermille.x; input.NormalY = (short)cmd.NormalPermille.y; input.NormalZ = (short)cmd.NormalPermille.z;
+                input.GoalXMm = cmd.GoalMm.x;
+                input.GoalYMm = cmd.GoalMm.y;
+                input.GoalZMm = cmd.GoalMm.z;
+                if (PlayerClickLog.Sink != null && m_Tick.IsValid)
+                    PlayerClickLog.Client(em.HasComponent<GhostOwner>(e) ? em.GetComponentData<GhostOwner>(e).NetworkId : 0,
+                        header.Seq, m_Tick.TickIndexForValidTick);
+            }
+            finally { corners.Dispose(); legs.Dispose(); }
+        }
+
         /// <summary>The owner's predicted walk is on its vault's leg (the server's vault for the walk's number, else the owner's own).</summary>
         static bool OwnerInVault(EntityManager em, Entity e)
         {
@@ -234,7 +303,7 @@ namespace KryticalNova.Player.Entities
         /// </summary>
         void PlanJumpClick(EntityManager em, Entity e, in PlayerCommand cmd, ref PlayerInput input)
         {
-            if (OwnerInVault(em, e)) return;   // NGO: ignored over an obstacle, nothing sent (M3c)
+            if (OwnerInVault(em, e) || PlayerServerPlanSystem.InWallLeg(em, e)) return;   // NGO: ignored over an obstacle or in a wall leg, nothing sent (M3c)
             var header = em.GetComponentData<ClientPlanHeader>(e);
             header.Seq = NextClientSeq(header.Seq);
             header.Count = 0;
