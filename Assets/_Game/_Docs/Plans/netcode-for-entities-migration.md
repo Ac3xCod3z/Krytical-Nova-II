@@ -1044,13 +1044,15 @@ which do not run on a DOTS client. They take two server gaps with them: Run Flux
 - [ ] the member's jumps are copied: walk to the take-off, jump to the landing with the follower's own Jump (rank, Flux, arc; section 53
   rules), so two can cross a river together; ends on the NGO conditions (own order, fight, defeat, Squad change, map change)
 3. Vault
+  Proof (GUI run gui-vault-3, 31 Oct, c0dda1aea: 5 of 5 vaults, 4 clicks past and 1 just behind, one over a spawn planter; planned by the server, owner on the same leg, clip played, Locomotion after the landing, 0.00 m from the click, 0.0 cm glide; GIFs Drive AI Outputs/DOTS-proof).
 - [x] FIRST (m3c-vault-design.md section 5) (owner, 31 Oct): the "NGO rules" table for this system (rule, NGO file:line, numbers, the scene data it needs: layers,
   colliders, markers, NavMesh; the DOTS equivalent and whether the DOTS server/client body has it), before design or code
-- [ ] going over is the rule: a walk whose straight line is blocked by a vaultable obstacle, no longer than walking round, vaults (NGO's
+- [x] going over is the rule: a walk whose straight line is blocked by a vaultable obstacle, no longer than walking round, vaults (NGO's
   `TryArm`, `Watch`); the plan carries the take-off, the obstacle, the landing and the faction's clip (`VaultAnimationMap`)
-- [ ] the take-off happens without stopping (speed carried through), the landing hands the rest of the walk back; the same vaults as NGO for a
+- [x] the take-off happens without stopping (speed carried through), the landing hands the rest of the walk back; the same vaults as NGO for a
   table of obstacles (heights up to 2.2 m, the Wallstride minimum)
-- [ ] the drawn body on the plan's curve within 1 cm at 30/60/120 fps (the section 53 bar); no clipping into the obstacle (bones vs face,
+- [ ] the drawn body on the plan's curve within 1 cm at 30/60/120 fps (the section 53 bar); no clipping into the obstacle
+  (open: measured only at the run's own frame rate; the side-view film strip for clipping still to do) (bones vs face,
   side-view film strip)
 4. Waterstride
 - [ ] FIRST (owner, 31 Oct): the "NGO rules" table for this system (rule, NGO file:line, numbers, the scene data it needs: layers,
