@@ -1084,6 +1084,15 @@ which do not run on a DOTS client. They take two server gaps with them: Run Flux
 5. Wallstride (wall-run, tree perch, wall leaps, wall walk)
 - [x] FIRST (m3c-wallstride-design.md section 1, 41 rules; two NGO climb paths: straight climb by rays, wall walk on the surface graph) (owner, 31 Oct): the "NGO rules" table for this system (rule, NGO file:line, numbers, the scene data it needs: layers,
   colliders, markers, NavMesh; the DOTS equivalent and whether the DOTS server/client body has it), before design or code
+- [x] part 1, the WALL WALK (owner pick A b, 1 Nov; design section 3): plant, move with Grip, top-out, step down, way down from a roof,
+  leap (Jump onto), jump off, push-off out of Grip, the tilt replicated (PoseTilt). Commits 5ff89281b, 6bce24e57, d92a4297d, 1a48d9672,
+  props-on-the-face blockers b7be7538d; EditMode 235/235. GUI runs gui-wall-2..5 (running, 9 m run-up, 28 m/s): every try ended within
+  0.06 m of its click, owner 0.0 cm from the server, 0.0 cm glide, tilt right; out of Grip pushed off in 1.2 s. ACCEPTED by the owner
+  (1 Nov). GIFs `DOTS-proof/dots-wall-*.gif`, `dots-wall-running-*.gif`, `dots-wall5-*.gif`.
+  - known gap, DEFERRED by the owner (1 Nov, "skip this A/C thing"), not a fail: Zone01's 79 `SM_Prop_AirConditioningUnit_01` instances
+    have a renderer and no collider, so the wall walk (like NGO's stick probe) walks through them (probe 8a14136a3). The prop check stays.
+  - open into part 2's first GUI run: the pop check judged against the drawn body's own path flagged 1 path jump (1.54 m in 23 ms) on a
+    plain 28 m/s street run, its known clean case (gui-wall-5); the plant's turn reaches 45 degrees with the feet 0.17 m up (looks low).
 - [ ] the owner's rules (memory [[wallstride-decisions]]): no glitching, never inside a building, a jump catches a wall at a slant
   (65 degrees, run 45 degrees) with the turn eased in the plant, a player is NEVER knocked or forced off a wall, can always leave by choice
 - [ ] the climb as one warp route of eased legs, planned by the server from the zone's surface graph, predicted by the owner; the ground
