@@ -1170,6 +1170,60 @@ namespace KryticalNova.Persistence.Entities
 
             sealed class VaultTally { public int Passed, Tried; }
 
+            sealed class PlanterApproach { public bool Ready; public Vector3 Goal; public string Why; }
+
+            /// <summary>The scripted vault clicks run (env KN_PLAYHERE_VAULT_RUN=1; owner, 31 Oct: look for the slide at running speed).</summary>
+            static bool VaultRun => Environment.GetEnvironmentVariable("KN_PLAYHERE_VAULT_RUN") == "1";
+
+            /// <summary>How many of the scripted vaults go over the spawn planters (env KN_PLAYHERE_VAULT_PLANTERS).</summary>
+            static int PlanterVaults => int.TryParse(Environment.GetEnvironmentVariable("KN_PLAYHERE_VAULT_PLANTERS"), out int n) ? n : 0;
+
+            /// <summary>
+            /// Lines up a vault over the <paramref name="index"/>-th nearest spawn planter: walks to 3.5 m in front of it (from where the
+            /// body stands), then checks with the server's own planners that a click 6 m past it vaults.
+            /// </summary>
+            IEnumerator ApproachPlanter(Entity ghost, int index, PlanterApproach result)
+            {
+                World server = KnBootstrap.ServerWorld;
+                var plans = server.GetExistingSystemManaged<PlayerServerPlanSystem>();
+                Vector3 from = ServerPosition(ghost);
+                var hedges = new List<Transform>();
+                foreach (Transform t in UnityEngine.Object.FindObjectsByType<Transform>(FindObjectsSortMode.None))
+                    if (t.name.StartsWith("SM_Env_Hedge", StringComparison.Ordinal)) hedges.Add(t);
+                hedges.Sort((a, b) => Flat(a.position - from).CompareTo(Flat(b.position - from)));
+                if (index >= hedges.Count) { result.Why = "no planter left"; yield break; }
+                Vector3 middle = hedges[index].GetComponentInChildren<Renderer>() is Renderer r ? r.bounds.center : hedges[index].position;
+                Vector3 way = middle - from;
+                way.y = 0f;
+                way = way.sqrMagnitude > 0.01f ? way.normalized : Vector3.forward;
+                if (!UnityEngine.AI.NavMesh.SamplePosition(middle - way * 3.5f, out UnityEngine.AI.NavMeshHit before, 1f, UnityEngine.AI.NavMesh.AllAreas)
+                    || !UnityEngine.AI.NavMesh.SamplePosition(middle + way * 6f, out UnityEngine.AI.NavMeshHit past, 1f, UnityEngine.AI.NavMesh.AllAreas))
+                { result.Why = "no NavMesh in front of or past the planter"; yield break; }
+                BodyClicks.Ground(before.position, false);
+                float clicked = Time.realtimeSinceStartup;
+                bool moving = false;
+                while (Time.realtimeSinceStartup - clicked < 10f)
+                {
+                    yield return null;
+                    bool now = Moving(ghost);
+                    if (now) moving = true;
+                    else if (moving || Time.realtimeSinceStartup - clicked > 2f) break;
+                }
+                yield return new WaitForSeconds(0.4f);
+                PlayerPose pose = server.EntityManager.GetComponentData<PlayerPose>(ghost);
+                MoveStats stats = server.EntityManager.GetComponentData<MoveStats>(ghost);
+                var goalMm = new Unity.Mathematics.int3(Mathf.RoundToInt(past.position.x * 1000f), Mathf.RoundToInt(past.position.y * 1000f), Mathf.RoundToInt(past.position.z * 1000f));
+                var corners = new Unity.Collections.NativeList<Unity.Mathematics.int3>(PlayerLimits.MaxCorners, Unity.Collections.Allocator.Temp);
+                bool vault = VaultPath.Plan(plans.Planner, plans.VaultPlanner, ghost, pose.Mm, goalMm, VaultRun ? stats.RunMmps : stats.WalkMmps, corners, out VaultPlan v)
+                    && v.LegLengthMm > 0;
+                corners.Dispose();
+                string reason = plans.VaultPlanner is BodyVaultPlanner bp ? bp.LastDecision : "?";
+                result.Ready = vault;
+                result.Goal = past.position;
+                result.Why = vault ? $"over spawn planter {index + 1} at {middle.x:F1},{middle.z:F1} (from 3.5 m in front, click 6 m past)"
+                    : $"planter {index + 1} at {middle.x:F1},{middle.z:F1}: the server's planner says \"{reason}\" from 3.5 m in front";
+            }
+
             /// <summary>How many vaults with the click well past the obstacle (env KN_PLAYHERE_VAULT); one short click behind it follows.</summary>
             static int VaultCount => int.TryParse(Environment.GetEnvironmentVariable("KN_PLAYHERE_VAULT"), out int n) ? n : 0;
 
@@ -1214,12 +1268,23 @@ namespace KryticalNova.Persistence.Entities
                     if (OverTheCap()) yield break;
                     bool shortClick = n == total - 1;
                     tally.Tried++;
-                    if (!FindVault(plans, ghost, shortClick, out Vector3 goal, out string found))
+                    Vector3 goal;
+                    string found;
+                    if (n < PlanterVaults && !shortClick)
+                    {
+                        // over a spawn planter (owner, 31 Oct): walk to 3.5 m in front of it first, then click 6 m past it
+                        var approach = new PlanterApproach();
+                        yield return ApproachPlanter(ghost, n, approach);
+                        if (!approach.Ready) { Log($"vault {n + 1}: FAIL; {approach.Why}"); continue; }
+                        goal = approach.Goal;
+                        found = approach.Why;
+                    }
+                    else if (!FindVault(plans, ghost, shortClick, out goal, out found))
                     { Log($"vault {n + 1}: FAIL; {found}"); continue; }
                     int vaults0 = plans.Vaults, clip0 = state != null ? state.VaultClipFrame : 0;
                     string at = DateTime.Now.ToString("HH:mm:ss.fff", CultureInfo.InvariantCulture);
                     Vector3 bodyStart = OwnBody.transform.position;
-                    BodyClicks.Ground(goal, false);
+                    BodyClicks.Ground(goal, VaultRun);
                     float clicked = Time.realtimeSinceStartup, stoppedAt = -1f, glide = 0f, topBody = float.MinValue;
                     Vector3 bodyAtStop = default;
                     bool moving = false, wasInVault = false;
@@ -1311,7 +1376,7 @@ namespace KryticalNova.Persistence.Entities
                     foreach (Vector3 across in HedgeGoals(from, 6))
                     {
                         var goalMm = new Unity.Mathematics.int3(Mathf.RoundToInt(across.x * 1000f), Mathf.RoundToInt(across.y * 1000f), Mathf.RoundToInt(across.z * 1000f));
-                        if (!VaultPath.Plan(plans.Planner, plans.VaultPlanner, ghost, pose.Mm, goalMm, stats.WalkMmps, corners, out VaultPlan hv) || hv.LegLengthMm <= 0)
+                        if (!VaultPath.Plan(plans.Planner, plans.VaultPlanner, ghost, pose.Mm, goalMm, VaultRun ? stats.RunMmps : stats.WalkMmps, corners, out VaultPlan hv) || hv.LegLengthMm <= 0)
                         { Count("planter: " + (bodyPlanner != null && bodyPlanner.LastDecision != null ? bodyPlanner.LastDecision : "no way or no vault")); continue; }
                         int left = PlayerPath.LengthMm(pose.Mm, corners.AsArray(), corners.Length) - hv.LegStartMm - hv.LegLengthMm;
                         if (shortClick ? left < 300 || left > 1500 : left < 4000) { Count("planter: vault, but the walk on from the landing too " + (shortClick ? "long or short" : "short")); continue; }
@@ -1327,7 +1392,7 @@ namespace KryticalNova.Persistence.Entities
                             if (!Physics.Raycast(new Vector3(p.x, from.y + 50f, p.z), Vector3.down, out RaycastHit hit, 100f)) { Count("no ground under the point"); continue; }
                             if (!UnityEngine.AI.NavMesh.SamplePosition(hit.point, out UnityEngine.AI.NavMeshHit nav, 0.5f, UnityEngine.AI.NavMesh.AllAreas)) { Count("point off the NavMesh"); continue; }
                             var goalMm = new Unity.Mathematics.int3(Mathf.RoundToInt(nav.position.x * 1000f), Mathf.RoundToInt(nav.position.y * 1000f), Mathf.RoundToInt(nav.position.z * 1000f));
-                            if (!VaultPath.Plan(plans.Planner, plans.VaultPlanner, ghost, pose.Mm, goalMm, stats.WalkMmps, corners, out VaultPlan v) || v.LegLengthMm <= 0)
+                            if (!VaultPath.Plan(plans.Planner, plans.VaultPlanner, ghost, pose.Mm, goalMm, VaultRun ? stats.RunMmps : stats.WalkMmps, corners, out VaultPlan v) || v.LegLengthMm <= 0)
                             { Count(bodyPlanner != null && bodyPlanner.LastDecision != null ? bodyPlanner.LastDecision : "no way or no vault"); continue; }
                             int after = PlayerPath.LengthMm(pose.Mm, corners.AsArray(), corners.Length) - v.LegStartMm - v.LegLengthMm;
                             if (shortClick ? after < 300 || after > 1500 : after < 4000) { Count("vault, but the walk on from the landing too " + (shortClick ? "long or short" : "short")); continue; }
