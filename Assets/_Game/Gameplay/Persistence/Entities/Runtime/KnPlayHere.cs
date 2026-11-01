@@ -1186,7 +1186,7 @@ namespace KryticalNova.Persistence.Entities
             /// Lines up a vault over the <paramref name="index"/>-th nearest spawn planter: walks to 3.5 m in front of it (from where the
             /// body stands), then checks with the server's own planners that a click 6 m past it vaults.
             /// </summary>
-            IEnumerator ApproachPlanter(Entity ghost, int index, PlanterApproach result)
+            IEnumerator ApproachPlanter(Entity ghost, int index, PlanterApproach result, bool shortClick = false)
             {
                 World server = KnBootstrap.ServerWorld;
                 var plans = server.GetExistingSystemManaged<PlayerServerPlanSystem>();
@@ -1200,8 +1200,12 @@ namespace KryticalNova.Persistence.Entities
                 Vector3 way = middle - from;
                 way.y = 0f;
                 way = way.sqrMagnitude > 0.01f ? way.normalized : Vector3.forward;
-                if (!UnityEngine.AI.NavMesh.SamplePosition(middle - way * 3.5f, out UnityEngine.AI.NavMeshHit before, 1f, UnityEngine.AI.NavMesh.AllAreas)
-                    || !UnityEngine.AI.NavMesh.SamplePosition(middle + way * 6f, out UnityEngine.AI.NavMeshHit past, 1f, UnityEngine.AI.NavMesh.AllAreas))
+                // the short click (Master, 1 Nov): from about 5 m in front, 1.4 m behind the planter's far edge (its bounds along the way)
+                Vector3 extents = hedges[index].GetComponentInChildren<Renderer>() is Renderer rr ? rr.bounds.extents : Vector3.one * 0.5f;
+                float halfDepth = Mathf.Abs(extents.x * way.x) + Mathf.Abs(extents.z * way.z);
+                float front = shortClick ? 5f : 3.5f, beyond = shortClick ? halfDepth + 1.4f : 6f;
+                if (!UnityEngine.AI.NavMesh.SamplePosition(middle - way * front, out UnityEngine.AI.NavMeshHit before, 1f, UnityEngine.AI.NavMesh.AllAreas)
+                    || !UnityEngine.AI.NavMesh.SamplePosition(middle + way * beyond, out UnityEngine.AI.NavMeshHit past, 1f, UnityEngine.AI.NavMesh.AllAreas))
                 { result.Why = "no NavMesh in front of or past the planter"; yield break; }
                 BodyClicks.Ground(before.position, false);
                 float clicked = Time.realtimeSinceStartup;
@@ -1224,8 +1228,9 @@ namespace KryticalNova.Persistence.Entities
                 string reason = plans.VaultPlanner is BodyVaultPlanner bp ? bp.LastDecision : "?";
                 result.Ready = vault;
                 result.Goal = past.position;
-                result.Why = vault ? $"over spawn planter {index + 1} at {middle.x:F1},{middle.z:F1} (from 3.5 m in front, click 6 m past)"
-                    : $"planter {index + 1} at {middle.x:F1},{middle.z:F1}: the server's planner says \"{reason}\" from 3.5 m in front";
+                string click = shortClick ? "click 1.4 m behind its far edge" : "click 6 m past";
+                result.Why = vault ? $"over spawn planter {index + 1} at {middle.x:F1},{middle.z:F1} (from {front:F1} m in front, {click})"
+                    : $"planter {index + 1} at {middle.x:F1},{middle.z:F1}: the server's planner says \"{reason}\" from {front:F1} m in front ({click})";
             }
 
             /// <summary>How many vaults with the click well past the obstacle (env KN_PLAYHERE_VAULT); one short click behind it follows.</summary>
@@ -1274,7 +1279,16 @@ namespace KryticalNova.Persistence.Entities
                     tally.Tried++;
                     Vector3 goal;
                     string found;
-                    if (n < PlanterVaults && !shortClick)
+                    if (shortClick && PlanterVaults > 0)
+                    {
+                        // the short click from planter 1 directly, never the finder (Master, 1 Nov: the finder missed it twice)
+                        var approach = new PlanterApproach();
+                        yield return ApproachPlanter(ghost, 0, approach, shortClick: true);
+                        if (!approach.Ready) { Log($"vault {n + 1}: NOT TESTED; {approach.Why}"); continue; }
+                        goal = approach.Goal;
+                        found = approach.Why;
+                    }
+                    else if (n < PlanterVaults && !shortClick)
                     {
                         // over a spawn planter (owner, 31 Oct): walk to 3.5 m in front of it first, then click 6 m past it
                         var approach = new PlanterApproach();
@@ -1403,7 +1417,10 @@ namespace KryticalNova.Persistence.Entities
                 if (resources != null) resources.RestoreChi(resources.MaxChi);
                 yield return new WaitForSeconds(0.8f);
                 yield return WaterTry(body, ghost, tally, "a water click without Run (not Waterstride's: walked as NGO)", new Vector3(north.position.x + 6f, -1.2f, 212f), false, false, false, false);
-                yield return WaterTry(body, ghost, tally, "a jump onto the water (stands)", new Vector3(north.position.x, -1.2f, 214f), false, true, true, false);
+                Vector3 jumpSpot;
+                string jumpWhy = JumpOntoWaterSpot(ghost, out jumpSpot);
+                if (jumpWhy != null) { tally.Tried++; Log($"water: a jump onto the water: NOT TESTED; {jumpWhy}"); }
+                else yield return WaterTry(body, ghost, tally, "a jump onto the water (stands)", jumpSpot, false, true, true, false);
                 Log($"water: Flux paid {fluxSystem.Paid} points in all, {landing.Stood} jump(s) stood on the water, {landing.FellIn} fell in");
             }
 
@@ -1464,6 +1481,37 @@ namespace KryticalNova.Persistence.Entities
                     $"Flux {flux0:F0} -> {Flux(body):F0}");
                 yield return new WaitForSeconds(0.8f);
             }
+
+            /// <summary>
+            /// A point on the river the server's own jump planner takes from where the body stands (rings of 6-20 m, every 30 degrees); null
+            /// when one is found, else why not (the planner's answers counted).
+            /// </summary>
+            static string JumpOntoWaterSpot(Entity ghost, out Vector3 spot)
+            {
+                spot = default;
+                World server = KnBootstrap.ServerWorld;
+                var jumps = server.GetExistingSystemManaged<PlayerJumpServerSystem>();
+                if (jumps == null || jumps.Planner == null) return "the server has no jump planner";
+                PlayerPose pose = server.EntityManager.GetComponentData<PlayerPose>(ghost);
+                Vector3 from = new Vector3(pose.XMm, pose.YMm, pose.ZMm) * 0.001f;
+                var why = new Dictionary<string, int>();
+                for (float radius = 6f; radius <= 20f; radius += 2f)
+                for (int deg = 0; deg < 360; deg += 30)
+                {
+                    float a = deg * Mathf.Deg2Rad;
+                    Vector3 p = new Vector3(from.x + Mathf.Sin(a) * radius, -1.2f, from.z + Mathf.Cos(a) * radius);
+                    if (jumps.Planner.TryPlan(ghost, pose.Mm, Mm(p), out _, out _, out string reason)
+                        && WaterstrideRulesProbe(p)) { spot = p; return null; }
+                    string key = reason ?? "landing not on the water";
+                    why[key] = why.TryGetValue(key, out int c) ? c + 1 : 1;
+                }
+                var parts = new List<string>();
+                foreach (var kv in why) parts.Add($"{kv.Value}x \"{kv.Key}\"");
+                return "no spot on the water the jump planner takes; why not: " + string.Join(", ", parts);
+            }
+
+            /// <summary>The point is on Zone01's runnable water (its map), so a jump there comes down on the water.</summary>
+            static bool WaterstrideRulesProbe(Vector3 p) => PlayerWaterstrideMotor.TryWaterLandingAt(p, out _);
 
             static void Teleport(EntityManager em, Entity ghost, Vector3 root)
             {
