@@ -33,6 +33,13 @@ namespace KryticalNova.Player.Entities
         /// <summary>Vaults over obstacles on the way (M3c); null = the walk always goes round.</summary>
         public IVaultPlanner VaultPlanner { get; set; }
 
+        /// <summary>Waterstride (M3c): runs out over the water, on it and ashore; null = no click is Waterstride's.</summary>
+        public IWaterPlanner WaterPlanner { get; set; }
+
+        /// <summary>Clicks planned as Waterstride, and why the last one was refused (tests; the message comes with M8's chat port).</summary>
+        public int WaterRuns { get; private set; }
+        public string LastWaterRefusal { get; private set; }
+
         /// <summary>Walks planned with a vault in them (tests, the scripted run).</summary>
         public int Vaults { get; private set; }
 
@@ -90,6 +97,13 @@ namespace KryticalNova.Player.Entities
 
                 var pose = em.GetComponentData<PlayerPose>(e);
                 if (request && InVault(em, e)) continue;   // a server order waits for the landing (its request stays on)
+                if (request && em.GetComponentData<MoveState>(e).Water != 0)
+                {
+                    // NGO: a server walk is not taken on the water (PointAndClickPlayer.ServerMoveTo returns false)
+                    em.SetComponentEnabled<ServerOrderRequest>(e, false);
+                    Refused++;
+                    continue;
+                }
                 if (request)
                 {
                     var r = em.GetComponentData<ServerOrderRequest>(e);
@@ -137,6 +151,20 @@ namespace KryticalNova.Player.Entities
                         continue;
                     }
                     bool tooFar = cfg.MaxClickRangeMm > 0 && PlayerPath.DistanceMm(pose.Mm, goal) > cfg.MaxClickRangeMm;
+                    // Waterstride's clicks are planned by its own rules and cost no Run Flux (NGO: the water motor sets the path itself)
+                    if (!tooFar && TryWater(em, e, pose, goal, input, out bool waterRefused))
+                    {
+                        if (waterRefused)
+                        {
+                            LogRefusal(em, e, input, nt, "water: " + LastWaterRefusal);
+                            Refuse(em, e, input);
+                            Refused++;
+                        }
+                        else if (PlayerClickLog.Sink != null)
+                            PlayerClickLog.Server(em.HasComponent<GhostOwner>(e) ? em.GetComponentData<GhostOwner>(e).NetworkId : 0,
+                                input.ClickSeq, nt.ServerTick.TickIndexForValidTick);
+                        continue;
+                    }
                     // a run is paid per destination, only for a click that will start (the Netcode for GameObjects rule)
                     bool run = input.Run != 0 && RunCost != null;
                     string costReason = null;
@@ -155,6 +183,40 @@ namespace KryticalNova.Player.Entities
                             input.ClickSeq, nt.ServerTick.TickIndexForValidTick);
                 }
             }
+        }
+
+        /// <summary>
+        /// A click Waterstride takes (true): planned into the corners and <see cref="WaterPlan"/>, or refused (<paramref name="refused"/>).
+        /// False when it is not Waterstride's: the ordinary walk plans it.
+        /// </summary>
+        bool TryWater(EntityManager em, Entity e, in PlayerPose pose, int3 goal, in PlayerInput input, out bool refused)
+        {
+            refused = false;
+            if (WaterPlanner == null || !em.HasComponent<WaterPlan>(e)) return false;
+            var move = em.GetComponentData<MoveState>(e);
+            bool stranded = (move.Flags & MoveFlags.Moving) != 0 && WaterLeg.Stranded(em.GetComponentData<WaterPlan>(e), move.OrderSeq);
+            var corners = new NativeList<int3>(PlayerLimits.MaxCorners, Allocator.Temp);
+            try
+            {
+                var answer = WaterPlanner.Plan(e, pose.Mm, goal, input.Run != 0, move.Water != 0, stranded, corners, out WaterPlan leg, out string reason);
+                if (answer == WaterAnswer.NotWater) return false;
+                if (answer == WaterAnswer.Refused || corners.Length < 2)
+                {
+                    LastWaterRefusal = reason ?? "no way";
+                    refused = true;
+                    return true;
+                }
+                int count = math.min(corners.Length, PlayerLimits.MaxCorners);
+                var buffer = em.GetBuffer<PathCorner>(e);
+                buffer.Clear();
+                for (int i = 0; i < count; i++) buffer.Add(new PathCorner { XMm = corners[i].x, YMm = corners[i].y, ZMm = corners[i].z });
+                em.SetComponentData(e, new PathPlan { Seq = input.ClickSeq, Count = (byte)count });
+                leg.Seq = input.ClickSeq;
+                em.SetComponentData(e, leg);
+                WaterRuns++;
+                return true;
+            }
+            finally { corners.Dispose(); }
         }
 
         /// <summary>The walk under way is on its vault's leg (over the obstacle).</summary>

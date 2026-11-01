@@ -17,8 +17,16 @@ namespace KryticalNova.Player.Entities
         /// and to the owner's gather (its prediction); its cost to the server only.
         /// </summary>
         public static void Install(World world, IPathPlanner planner, IPlayerCommandSource source = null, IRunCost runCost = null,
-            IClickBudget clickBudget = null, IJumpPlanner jumpPlanner = null, IJumpCost jumpCost = null, IVaultPlanner vaultPlanner = null)
+            IClickBudget clickBudget = null, IJumpPlanner jumpPlanner = null, IJumpCost jumpCost = null, IVaultPlanner vaultPlanner = null,
+            IWaterPlanner waterPlanner = null, IWaterFlux waterFlux = null)
         {
+            // Waterstride (M3c): its planner to the server, the owner's gather and the Flux system (the way back); its Flux to the server
+            var water = world.GetExistingSystemManaged<WaterstrideFluxSystem>();
+            if (water != null)
+            {
+                water.Planner = waterPlanner;
+                water.Flux = waterFlux;
+            }
             // the vault's planner, like the jump's, goes to the server and to the owner's gather (its prediction; M3c)
             var jump = world.GetExistingSystemManaged<PlayerJumpServerSystem>();
             if (jump != null)
@@ -35,6 +43,7 @@ namespace KryticalNova.Player.Entities
                 server.RunCost = runCost;
                 server.ClickBudget = clickBudget;
                 server.VaultPlanner = vaultPlanner;
+                server.WaterPlanner = waterPlanner;
             }
             var gather = world.GetExistingSystemManaged<PlayerInputGatherSystem>();
             if (gather != null)
@@ -42,6 +51,7 @@ namespace KryticalNova.Player.Entities
                 gather.Planner = planner;
                 gather.JumpPlanner = jumpPlanner;
                 gather.VaultPlanner = vaultPlanner;
+                gather.WaterPlanner = waterPlanner;
                 if (source != null) gather.Source = source;
             }
         }

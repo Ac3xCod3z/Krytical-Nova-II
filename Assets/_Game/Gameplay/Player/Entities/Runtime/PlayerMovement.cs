@@ -53,12 +53,30 @@ namespace KryticalNova.Player.Entities
             in PathPlan plan, NativeArray<int3> serverCorners,
             in ClientPlanHeader client, NativeArray<int3> clientCorners,
             in VaultPlan serverVault, in VaultPlan clientVault,
+            in MoveStats stats, in PlayerMoveSettings cfg, int tickMicros) =>
+            Step(ref m, ref pose, in input, in order, in plan, serverCorners, in client, clientCorners, in serverVault, in clientVault,
+                default, default, in stats, in cfg, tickMicros);
+
+        /// <summary>
+        /// The walk with its vault and its Waterstride leg (M3c): each plan belongs to its own corners (the server's or the owner's). On
+        /// the water leg the body runs at the leg's own speed (no acceleration, no slowing at the end) and turns at the leg's rate;
+        /// <see cref="MoveState.Water"/> follows the leg, and stays 1 when the walk ends standing on the water. NGO: on the water a stop
+        /// does nothing (the run goes on), and while stranded (out of Flux, carried ashore) a click starts nothing.
+        /// </summary>
+        public static void Step(
+            ref MoveState m, ref PlayerPose pose,
+            in PlayerInput input, in ServerOrder order,
+            in PathPlan plan, NativeArray<int3> serverCorners,
+            in ClientPlanHeader client, NativeArray<int3> clientCorners,
+            in VaultPlan serverVault, in VaultPlan clientVault,
+            in WaterPlan serverWater, in WaterPlan clientWater,
             in MoveStats stats, in PlayerMoveSettings cfg, int tickMicros)
         {
             // the vault of the walk under way (the server's for its corners, else the owner's own)
             VaultPlan vault = serverVault.Seq != 0 && serverVault.Seq == m.OrderSeq ? serverVault : clientVault;
             bool inVault = (m.Flags & MoveFlags.Moving) != 0 && VaultLeg.On(in vault, m.OrderSeq, m.ProgressMm);
-            if (input.Stop.IsSet && !inVault) CancelWalk(ref m);
+            bool stranded = (m.Flags & MoveFlags.Moving) != 0 && WaterLeg.Stranded(WaterLeg.Of(in serverWater, in clientWater, m.OrderSeq), m.OrderSeq);
+            if (input.Stop.IsSet && !inVault && m.Water == 0) CancelWalk(ref m);
 
             // ---- start of a walk -------------------------------------------------------------------------------------
             if (inVault)
@@ -74,7 +92,7 @@ namespace KryticalNova.Player.Entities
                 if (plan.Seq == order.Seq && plan.Count >= 2)
                     BeginWalk(ref m, in pose, (order.Flags & OrderFlags.RunPaid) != 0);
             }
-            else if (input.Click.IsSet && input.ClickSeq != 0 && input.ClickSeq != m.RefusedSeq && input.ClickSeq != m.OrderSeq)
+            else if (input.Click.IsSet && input.ClickSeq != 0 && input.ClickSeq != m.RefusedSeq && input.ClickSeq != m.OrderSeq && !stranded)
             {
                 bool havePath = (plan.Seq == input.ClickSeq && plan.Count >= 2) || (client.Seq == input.ClickSeq && client.Count >= 2);
                 if (havePath)
@@ -86,6 +104,8 @@ namespace KryticalNova.Player.Entities
 
             if ((m.Flags & MoveFlags.Moving) == 0) return;
             if (vault.Seq != m.OrderSeq) vault = serverVault.Seq != 0 && serverVault.Seq == m.OrderSeq ? serverVault : clientVault;
+            WaterPlan water = WaterLeg.Of(in serverWater, in clientWater, m.OrderSeq);
+            bool hasWater = water.Seq != 0 && water.Seq == m.OrderSeq;
 
             // ---- the corners this walk follows -----------------------------------------------------------------------
             NativeArray<int3> corners;
@@ -120,7 +140,9 @@ namespace KryticalNova.Player.Entities
             // The NGO game: a new walk (first click or re-click) starts at full speed along the new way (SnapVelocityToPath),
             // and the agent's acceleration is max(acceleration, top speed x accelerationPerSpeed). On a vault leg: the leg's speed.
             bool onLeg = VaultLeg.On(in vault, m.OrderSeq, m.ProgressMm);
+            bool onWater = hasWater && WaterLeg.On(in water, m.OrderSeq, m.ProgressMm);
             if (onLeg) m.SpeedMmps = VaultLeg.SpeedMmps(in vault);
+            else if (onWater) m.SpeedMmps = water.SpeedMmps;
             else if (starting) m.SpeedMmps = target;
             else
             {
@@ -142,14 +164,20 @@ namespace KryticalNova.Player.Entities
             PlayerPath.PointAt(start, corners, count, m.ProgressMm, out int3 p, out int3 dir);
             int rise = VaultLeg.On(in vault, m.OrderSeq, m.ProgressMm) ? VaultLeg.HeightMm(in vault, m.ProgressMm) : 0;
             pose.XMm = p.x; pose.YMm = p.y + rise; pose.ZMm = p.z;
-            pose.YawCdeg = TurnToward(pose.YawCdeg, PlayerPath.YawCdegOf(dir, pose.YawCdeg), TurnStepCdeg(cfg, tickMicros));
+            int turn = onWater ? TurnStepCdeg(water.TurnCdegPerSecond, tickMicros) : TurnStepCdeg(cfg, tickMicros);
+            pose.YawCdeg = TurnToward(pose.YawCdeg, PlayerPath.YawCdegOf(dir, pose.YawCdeg), turn);
+            // on the water from the leg's start, ashore at its end; a walk with no water leg is on land
+            m.Water = (byte)(hasWater && WaterLeg.On(in water, m.OrderSeq, m.ProgressMm) ? 1 : 0);
 
             if (arrived) CancelWalk(ref m);
         }
 
         /// <summary>Hundredths of a degree the body may turn in one tick; 0 = no limit (face the way at once).</summary>
-        public static int TurnStepCdeg(in PlayerMoveSettings cfg, int tickMicros) =>
-            cfg.TurnCdegPerSecond <= 0 ? 0 : math.max(1, (int)((long)cfg.TurnCdegPerSecond * tickMicros / MicrosPerSecond));
+        public static int TurnStepCdeg(in PlayerMoveSettings cfg, int tickMicros) => TurnStepCdeg(cfg.TurnCdegPerSecond, tickMicros);
+
+        /// <summary>Hundredths of a degree a turn rate allows in one tick; 0 = no limit.</summary>
+        public static int TurnStepCdeg(int cdegPerSecond, int tickMicros) =>
+            cdegPerSecond <= 0 ? 0 : math.max(1, (int)((long)cdegPerSecond * tickMicros / MicrosPerSecond));
 
         /// <summary>
         /// Turns <paramref name="fromCdeg"/> toward <paramref name="toCdeg"/> the short way by at most <paramref name="maxStepCdeg"/>

@@ -122,6 +122,67 @@ namespace KryticalNova.Player.Entities
         }
     }
 
+    /// <summary><see cref="WaterPlan.Flags"/> bits.</summary>
+    public static class WaterFlags
+    {
+        /// <summary>The walk ends on the water: the player stands there (NGO's "Standing").</summary>
+        public const byte EndsOnWater = 1;
+        /// <summary>Out of Flux, carried back to the shore by the server (NGO's "Stranded"): clicks are refused on the way.</summary>
+        public const byte Stranded = 2;
+    }
+
+    /// <summary>
+    /// Waterstride as one leg of a walk's path (M3c, design `m3c-waterstride-design.md`): the walk's corners run to the shore, over the
+    /// water by the zone's water map, and ashore. While the walk's progress is on the leg the body runs at the leg's own speed (no
+    /// acceleration, no slowing at the end) and turns at its own rate. Planned by the server with the walk (all players see it: the wake);
+    /// integers only. Whether the body is on the water now is <see cref="MoveState.Water"/>.
+    /// </summary>
+    public struct WaterPlan : IComponentData
+    {
+        /// <summary>The walk's order number this leg belongs to (0 = none).</summary>
+        [GhostField] public ushort Seq;
+        /// <summary>The walk's progress where the run onto the water starts (0 = from the water), millimetres along the path.</summary>
+        [GhostField] public int LegStartMm;
+        /// <summary>The walk's progress where it steps ashore; ignored with <see cref="WaterFlags.EndsOnWater"/>.</summary>
+        [GhostField] public int LegEndMm;
+        /// <summary>The speed on the water, mm/s (NGO: the ground speed x the settings' share, at least 1 m/s; stranded, its own).</summary>
+        [GhostField] public int SpeedMmps;
+        /// <summary>How fast the body turns on the water, hundredths of a degree a second (NGO 720 deg/s).</summary>
+        [GhostField] public int TurnCdegPerSecond;
+        [GhostField] public byte Flags;
+    }
+
+    /// <summary>The owner's own water leg for its own click's path (not a ghost field: a rollback leaves it alone).</summary>
+    public struct ClientWaterPlan : IComponentData
+    {
+        public WaterPlan Plan;
+    }
+
+    /// <summary>Server only: the Flux owed for the time on the water, in millionths of a point (paid a whole point at a time, as NGO).</summary>
+    public struct WaterFluxOwed : IComponentData
+    {
+        public long Micro;
+    }
+
+    /// <summary>The water leg in integers (pure, Burst-safe; the server and the owner call it with the same plan and progress).</summary>
+    public static class WaterLeg
+    {
+        /// <summary>The walk of <paramref name="orderSeq"/> is on <paramref name="w"/>'s leg at <paramref name="progressMm"/>.</summary>
+        public static bool On(in WaterPlan w, ushort orderSeq, int progressMm) =>
+            w.Seq != 0 && w.Seq == orderSeq && w.SpeedMmps > 0 && progressMm >= w.LegStartMm
+            && ((w.Flags & WaterFlags.EndsOnWater) != 0 || progressMm < w.LegEndMm);
+
+        /// <summary>The leg is stranded (out of Flux, on the way back to the shore).</summary>
+        public static bool Stranded(in WaterPlan w, ushort orderSeq) => w.Seq != 0 && w.Seq == orderSeq && (w.Flags & WaterFlags.Stranded) != 0;
+
+        /// <summary>The leg of the walk under way: the server's for its own order, else the owner's.</summary>
+        public static WaterPlan Of(in WaterPlan server, in WaterPlan client, ushort orderSeq) =>
+            server.Seq != 0 && server.Seq == orderSeq ? server : client;
+
+        /// <summary>The Flux owed for <paramref name="micros"/> on the water at <paramref name="fluxPerSecondMilli"/> thousandths a second, in millionths.</summary>
+        public static long OwedMicro(int fluxPerSecondMilli, int micros) => (long)fluxPerSecondMilli * micros / 1000;
+    }
+
     /// <summary>
     /// Plans a jump where the world is known (NavMesh, water, PhysX sweep, the rank's limits from <c>JumpMotionData</c>):
     /// filled by the layer that knows the body, on the server and (for the owner's prediction) on the client.

@@ -351,6 +351,56 @@ namespace KryticalNova.Player
             SetOnWater(false);
         }
 
+        // ------------------------------------------------------------------ the entity netcode's planner (M3c)
+
+        /// <summary>A Waterstride click planned for a body of the entity netcode (<see cref="PlanForGhost"/>): the way, as the rules gave it.</summary>
+        public struct GhostWater
+        {
+            public WaterstrideRules.Way Way;
+            /// <summary>The speed on the water, metres a second.</summary>
+            public float Speed;
+        }
+
+        /// <summary>The turn on the water, degrees a second (NGO's run over the water).</summary>
+        public const float TurnDegreesPerSecond = TurnSpeed;
+
+        /// <summary>Flux a second on the water, and the stranded speed (the settings' numbers; 0 without settings).</summary>
+        public float FluxPerSecond => WaterstrideRules.FluxPerSecond(settings);
+        public float StrandedSpeed => settings != null ? settings.strandedSpeed : 0f;
+
+        /// <summary>
+        /// NGO's Waterstride rules for a body of the entity netcode, whose agent and motor are switched off: the ghost's feet, its click
+        /// (a water click is a point ON the surface, as the owner's click sends it), and its own answers. Null when it runs (the way over
+        /// the water in <paramref name="route"/>), "" when the click is not Waterstride's (the ordinary walk plans it), else the reason in
+        /// NGO's words. The level and ranks come from the caller (the ghost's, on the owner's client).
+        /// </summary>
+        public string PlanForGhost(Vector3 feet, Vector3 goal, bool run, bool onWater, bool stranded, int level, int runRank, int jumpRank,
+            bool alive, bool hasFluxForASecond, float groundSpeed, List<Vector3> route, out GhostWater plan)
+        {
+            plan = default;
+            route.Clear();
+            WaterMap map = ZoneMap;
+            if (map == null || settings == null) return string.Empty;
+            bool open = WaterstrideRules.IsOpen(settings, level, runRank, jumpRank);
+            bool onSurface = map.IsWater(goal) && Mathf.Abs(goal.y - map.waterLevel) <= 0.05f;
+            // NGO's TryClick: from land only a water click with Run selected and Waterstride open; on the water every click
+            if (!onWater && !(onSurface && run && open)) return string.Empty;
+            var ask = new WaterstrideRules.Ask
+            {
+                Open = open, Alive = alive, Running = run, HasFluxForASecond = hasFluxForASecond, OnWater = onWater, Stranded = stranded,
+                OnWalkableGround = NavMesh.SamplePosition(feet, out _, 0.5f, Filter()),
+            };
+            string why = onSurface
+                ? WaterstrideRules.PlanWaterClick(map, settings, ask, Shore(), feet, goal, route, out plan.Way)
+                : WaterstrideRules.PlanLandClick(map, settings, ask, Shore(), feet, goal, route, out plan.Way);
+            plan.Speed = WaterstrideRules.Speed(settings, groundSpeed, false);
+            return why;
+        }
+
+        /// <summary>Out of Flux, for a body of the entity netcode: the way back over the water to the nearest shore (<paramref name="landFeet"/>).</summary>
+        public bool PlanStrandedForGhost(Vector3 feet, List<Vector3> route, out Vector3 landFeet) =>
+            WaterstrideRules.PlanStranded(ZoneMap, settings, Shore(), feet, route, out landFeet);
+
         // ------------------------------------------------------------------ jumping off and onto the water (owner, 24 Oct 2026)
 
         /// <summary>

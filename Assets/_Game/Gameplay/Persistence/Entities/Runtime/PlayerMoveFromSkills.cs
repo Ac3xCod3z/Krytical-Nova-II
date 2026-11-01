@@ -67,7 +67,12 @@ namespace KryticalNova.Persistence.Entities
         {
             var skills = body != null ? body.GetComponent<PlayerMovementSkills>() : null;
             if (skills == null) return null;
-            return new MoveRanks { Run = (byte)Mathf.Clamp(skills.RunRank, 0, byte.MaxValue), Jump = (byte)Mathf.Clamp(skills.JumpRank, 0, byte.MaxValue) };
+            var progression = body.GetComponent<PlayerCharacterProgression>();
+            return new MoveRanks
+            {
+                Run = (byte)Mathf.Clamp(skills.RunRank, 0, byte.MaxValue), Jump = (byte)Mathf.Clamp(skills.JumpRank, 0, byte.MaxValue),
+                Level = (ushort)Mathf.Clamp(progression != null ? progression.CurrentLevel : 0, 0, ushort.MaxValue),
+            };
         }
 
         /// <summary>The ghost's Flux for a server body now (thousandths); null when the body has no resources.</summary>
@@ -152,7 +157,7 @@ namespace KryticalNova.Persistence.Entities
                 {
                     MoveRanks? ranks = PlayerMoveFromSkills.RanksOf(entry.Body);
                     MoveRanks had = em.GetComponentData<MoveRanks>(entry.Ghost);
-                    if (ranks.HasValue && (had.Run != ranks.Value.Run || had.Jump != ranks.Value.Jump))
+                    if (ranks.HasValue && (had.Run != ranks.Value.Run || had.Jump != ranks.Value.Jump || had.Level != ranks.Value.Level))
                     {
                         em.SetComponentData(entry.Ghost, ranks.Value);
                         RankWrites++;

@@ -142,11 +142,14 @@ namespace KryticalNova.Player.Entities
                     use = Choose(plan.ValueRO, clientPlans[entity].Plan, move.ValueRO.RefusedSeq);
                 NetworkTick orderStart = orders.HasComponent(entity) ? orders[entity].StartTick : default;
                 if (!JumpFlight.Places(use, curves, nt.ServerTick, tickMicros, JumpFlight.ClickWalkSeq(move.ValueRO), move.ValueRO.RefusedSeq, orderStart)) continue;
-                int3 feet = JumpFlight.FeetAt(use, curves, JumpFlight.ElapsedMicros(use, nt.ServerTick, tickMicros));
+                long elapsed = JumpFlight.ElapsedMicros(use, nt.ServerTick, tickMicros);
+                int3 feet = JumpFlight.FeetAt(use, curves, elapsed);
                 ref var p = ref pose.ValueRW;
                 p.XMm = feet.x; p.YMm = feet.y; p.ZMm = feet.z;
                 p.YawCdeg = use.YawCdeg;
                 PlayerMovement.CancelWalk(ref move.ValueRW);
+                // in the air the body is off the water (NGO: ServerLeaveForJump); after touchdown the server's landing decides (a stand sets it)
+                if (!JumpFlight.Landed(use, curves, elapsed)) move.ValueRW.Water = 0;
                 transform.ValueRW.Position = new float3(p.XMm, p.YMm, p.ZMm) * 0.001f;
                 transform.ValueRW.Rotation = quaternion.RotateY(math.radians(p.YawCdeg * 0.01f));
             }

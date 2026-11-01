@@ -37,6 +37,9 @@ namespace KryticalNova.Player.Entities
                 AddComponent<MoveRanks>(e);
                 AddComponent<VaultPlan>(e);
                 AddComponent<ClientVaultPlan>(e);
+                AddComponent<WaterPlan>(e);
+                AddComponent<ClientWaterPlan>(e);
+                AddComponent<WaterFluxOwed>(e);
                 AddComponent<OwnerFlux>(e);
                 AddBuffer<PathCorner>(e);
                 AddComponent<PathPlan>(e);

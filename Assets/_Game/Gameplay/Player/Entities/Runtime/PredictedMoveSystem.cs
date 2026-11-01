@@ -64,7 +64,7 @@ namespace KryticalNova.Player.Entities
             void Execute(Entity entity,
                 ref MoveState move, ref PlayerPose pose, ref LocalTransform transform, ref PlayerMoveDiag diag,
                 in PlayerInput input, in ServerOrder order, in PathPlan plan, in ClientPlanHeader client, in MoveStats stats,
-                in VaultPlan vault, in ClientVaultPlan clientVault,
+                in VaultPlan vault, in ClientVaultPlan clientVault, in WaterPlan water, in ClientWaterPlan clientWater,
                 in DynamicBuffer<PathCorner> serverBuffer, in DynamicBuffer<ClientPlanCorner> clientBuffer)
             {
                 ushort orderBefore = move.OrderSeq;
@@ -75,7 +75,7 @@ namespace KryticalNova.Player.Entities
                 PlayerInput walkInput = input;
                 if (walkInput.Jump != 0) walkInput.Click = default;
                 PlayerMovement.Step(ref move, ref pose, in walkInput, in order, in plan, serverCorners, in client, clientCorners,
-                    in vault, in clientVault.Plan, in stats, in Cfg, TickMicros);
+                    in vault, in clientVault.Plan, in water, in clientWater.Plan, in stats, in Cfg, TickMicros);
 
                 transform.Position = new float3(pose.XMm, pose.YMm, pose.ZMm) * 0.001f;
                 transform.Rotation = quaternion.RotateY(math.radians(pose.YawCdeg * 0.01f));
@@ -154,6 +154,7 @@ namespace KryticalNova.Player.Entities
                 pose.XMm = request.XMm; pose.YMm = request.YMm; pose.ZMm = request.ZMm;
                 pose.YawCdeg = ((request.YawCdeg % 36000) + 36000) % 36000;
                 PlayerMovement.CancelWalk(ref move);
+                move.Water = 0;   // a teleport ends Waterstride where it puts the body (NGO: Cancel)
                 if (Plans.HasComponent(entity))
                 {
                     var plan = Plans[entity];

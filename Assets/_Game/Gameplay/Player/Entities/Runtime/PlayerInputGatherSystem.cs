@@ -78,6 +78,9 @@ namespace KryticalNova.Player.Entities
         /// <summary>The owner's vault planner (M3c): its own walk goes over the obstacle the server's will; null = it walks round.</summary>
         public IVaultPlanner VaultPlanner { get; set; }
 
+        /// <summary>The owner's Waterstride planner (M3c): its own run over the water is the one the server's will be; null = none.</summary>
+        public IWaterPlanner WaterPlanner { get; set; }
+
         protected override void OnCreate()
         {
             m_Query = GetEntityQuery(new EntityQueryBuilder(Allocator.Temp)
@@ -154,6 +157,22 @@ namespace KryticalNova.Player.Entities
             var corners = new NativeList<int3>(PlayerLimits.MaxCorners, Allocator.Temp);
             try
             {
+                // Waterstride's click (M3c): the owner plans it by the same rules as the server; a refused one is not sent (NGO)
+                WaterPlan water = default;
+                WaterAnswer waterAnswer = WaterAnswer.NotWater;
+                if (WaterPlanner != null && em.HasComponent<ClientWaterPlan>(e) && em.HasComponent<MoveState>(e))
+                {
+                    var move = em.GetComponentData<MoveState>(e);
+                    WaterPlan flown = WaterLeg.Of(em.HasComponent<WaterPlan>(e) ? em.GetComponentData<WaterPlan>(e) : default,
+                        em.GetComponentData<ClientWaterPlan>(e).Plan, move.OrderSeq);
+                    bool stranded = (move.Flags & MoveFlags.Moving) != 0 && WaterLeg.Stranded(flown, move.OrderSeq);
+                    waterAnswer = WaterPlanner.Plan(e, pose.Mm, cmd.GoalMm, cmd.Run, move.Water != 0, stranded, corners, out water, out string why);
+                    if (waterAnswer == WaterAnswer.Refused || (waterAnswer == WaterAnswer.Planned && corners.Length < 2))
+                    {
+                        if (PlayerClickLog.Sink != null) PlayerClickLog.Sink("[KnWater] the owner refused a water click: " + why);
+                        return;
+                    }
+                }
                 int speed = 0;
                 if (em.HasComponent<MoveStats>(e))
                 {
@@ -161,7 +180,9 @@ namespace KryticalNova.Player.Entities
                     speed = cmd.Run ? stats.RunMmps : stats.WalkMmps;
                 }
                 IVaultPlanner vaults = em.HasComponent<ClientVaultPlan>(e) ? VaultPlanner : null;
-                if (!VaultPath.Plan(Planner, vaults, e, pose.Mm, cmd.GoalMm, speed, corners, out VaultPlan vault) || corners.Length < 2) return;
+                VaultPlan vault = default;
+                if (waterAnswer != WaterAnswer.Planned
+                    && (!VaultPath.Plan(Planner, vaults, e, pose.Mm, cmd.GoalMm, speed, corners, out vault) || corners.Length < 2)) return;
 
                 var header = em.GetComponentData<ClientPlanHeader>(e);
                 header.Seq = NextClientSeq(header.Seq);
@@ -171,6 +192,11 @@ namespace KryticalNova.Player.Entities
                 {
                     if (vault.LegLengthMm > 0) vault.Seq = header.Seq;
                     em.SetComponentData(e, new ClientVaultPlan { Plan = vault });
+                }
+                if (em.HasComponent<ClientWaterPlan>(e))
+                {
+                    water.Seq = waterAnswer == WaterAnswer.Planned ? header.Seq : (ushort)0;
+                    em.SetComponentData(e, new ClientWaterPlan { Plan = water });
                 }
                 var buffer = em.GetBuffer<ClientPlanCorner>(e);
                 buffer.Clear();

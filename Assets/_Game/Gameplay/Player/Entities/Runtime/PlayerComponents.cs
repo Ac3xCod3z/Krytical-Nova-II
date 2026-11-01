@@ -94,6 +94,11 @@ namespace KryticalNova.Player.Entities
         [GhostField] public int SpeedMmps;
         /// <summary>Where the walk began; the first point of the polyline (the planner's first corner is ignored).</summary>
         [GhostField] public int StartXMm, StartYMm, StartZMm;
+        /// <summary>
+        /// 1 = on the water (Waterstride, M3c): running on a <see cref="WaterPlan"/> leg, or standing at its end. Set and cleared by the
+        /// walk; a teleport and a jump's take-off clear it, a jump that stands on the water sets it. The server pays Flux while it is 1.
+        /// </summary>
+        [GhostField] public byte Water;
     }
 
     /// <summary>The integer truth of where the player stands and which way it faces; LocalTransform is written from it.</summary>
@@ -138,6 +143,8 @@ namespace KryticalNova.Player.Entities
     {
         [GhostField] public byte Run;
         [GhostField] public byte Jump;
+        /// <summary>The character's level (Waterstride opens at 60, M3c: the owner checks it as the server does).</summary>
+        [GhostField] public ushort Level;
     }
 
     /// <summary>
