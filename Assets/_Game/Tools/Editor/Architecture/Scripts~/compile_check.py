@@ -228,6 +228,11 @@ for e in errors[:60]:
     print(e.replace(CHECKOUT + os.sep, ""))
 if len(errors) > 60:
     print(f"... and {len(errors) - 60} more")
+# a define change recompiles everything in Unity: said here, never failed on (define_guard.py)
+sys.path.insert(0, HERE)
+import define_guard
+for w in define_guard.check(CHECKOUT):
+    print("WARN " + w)
 print(f"{len(built) - len(failed)} of {len(built)} assemblies compiled{' (server defines)' if SERVER else ''}"
       + (f"; failed: {', '.join(failed)}" if failed else ""))
 sys.exit(1 if failed else 0)

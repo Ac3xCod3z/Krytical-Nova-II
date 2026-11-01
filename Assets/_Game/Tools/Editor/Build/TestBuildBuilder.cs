@@ -114,6 +114,9 @@ namespace KryticalNova.EditorTools
                 }
             }
 
+            // A game is a Player build, whatever a server build left behind in this checkout (ClientBuildGuard). Checked before the
+            // backend is switched: a batch run that has to start again ends here, and must not leave IL2CPP in ProjectSettings.
+            ClientBuildGuard.Prepare(output.Title);
             NamedBuildTarget standalone = NamedBuildTarget.Standalone;
             ScriptingImplementation backendWas = PlayerSettings.GetScriptingBackend(standalone);
             // The project's own backend: nothing is set and nothing has to be put back, so ProjectSettings is not written.
@@ -159,8 +162,6 @@ namespace KryticalNova.EditorTools
             Directory.CreateDirectory(folder);
             if (Directory.Exists(keptLogs)) Directory.Move(keptLogs, logs);
 
-            // A game is a Player build, whatever a server build left behind in this checkout (ClientBuildGuard).
-            ClientBuildGuard.Prepare(output.Title);
             var options = new BuildPlayerOptions
             {
                 scenes = scenes,
@@ -170,8 +171,9 @@ namespace KryticalNova.EditorTools
                 subtarget = (int)StandaloneBuildSubtarget.Player,
                 options = output.Options
             };
-            // The maps' bundles are built with the game: what the maps share goes in one bundle first, never a copy in each.
-            Debug.Log(MapAddressables.IsolateShared());
+            // The maps' bundles are built with the game: what the maps share goes in one bundle first, never a copy in each
+            // (searched again only when the maps or their groups changed since the last search).
+            Debug.Log(MapAddressables.IsolateSharedWhenChanged());
             BuildReport report = BuildPipeline.BuildPlayer(options);
             WriteSizeReport(report, scenes, output.Title, "Scripting backend: " + BackendName(backend), output.ReportPath);
 

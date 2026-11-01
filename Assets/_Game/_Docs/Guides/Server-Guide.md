@@ -3,7 +3,7 @@
 A running guide to the game's own server, in plain words. It says what works **today**, and it is updated after
 every server step (online phase 1, `Plans/online-phase-01-dedicated-server.md`).
 
-**Last updated:** 20 Oct 2026, a server per map behind one name: Transit Row's server beside Concord's (phase 5, milestone 1).
+**Last updated:** 1 Nov 2026, a publish builds the server in a checkout of its own (section 1).
 
 ## In one minute
 
@@ -71,6 +71,11 @@ every server step (online phase 1, `Plans/online-phase-01-dedicated-server.md`).
    app and its shortcuts, for a server already built.
 3. A size report is written to `Builds/Server/BuildReport-Windows.txt`. Its "116 errors" are shader messages from
    the GI pack: a server draws nothing, so they do no harm.
+
+**With a publish** (1 Nov 2026) the server is built in its own checkout, `C:\Users\dlaco\KN-worktrees\build-server`, which
+stays on the Server subtarget, right after the game (Release Guide, section 1a-4); to rebuild only the server of the last
+release from a script, run `Assets\_Game\Release\Publish~\publish-test.ps1 -ServerOnly`. The server is packed with LZ4 and
+built with Mono; the report's second line names the backend it really used.
 
 A rebuild replaces the server's folder but **keeps your `server-settings.json`**, and never touches the saves (they
 live beside the folder, not in it). **Stop the server before you build:** while it runs from that folder the build
@@ -930,3 +935,4 @@ Things learned the hard way:
   Concord's in the app, a tab each; it is never in the server list, always direct, saves only through the save service,
   makes no backups and keeps its records in `MapServers\<map>`. Ports 7779 and 7780 to forward for it.
 - 29 Oct 2026: `POST /stop` on the status port (127.0.0.1, save service key) and a SIGTERM catcher for Linux, so a service manager stops the server with a save.
+- 1 Nov 2026: a publish builds the server in its own checkout (`KN-worktrees/build-server`, Server subtarget) after the game; packed with LZ4; the backend (Mono) set for the build and named truthfully in the report; `publish-test.ps1 -ServerOnly` rebuilds only the server (section 1).
