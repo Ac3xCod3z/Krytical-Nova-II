@@ -208,3 +208,8 @@ legs, built by the motor for a ghost (`PlayerWallRunMotor.PlanClimbForGhost`, co
 - [ ] 2. GUI run (KnPlayHere `KN_PLAYHERE_CLIMB=1`): a face near the spawn the graph does not cover (`FindTestClimb`, judged by NGO's
   Decide), the pop check proved in the same run (still 0, teleport >= 1, plain run at 28 m/s 0), a climb with Run (on the top, 12 Flux,
   foot height at 45 degrees in the plant) and the same with 5 Flux (stopped at the foot).
+  gui-climb-1 (1 Nov): the climb with Run PASSES as NGO (planned, 12 Flux paid, 5.45 m up on the top, upright, owner 0.0 cm, glide 0.0 cm;
+  judged FAIL only on 1 ground path pop); with 5 Flux NGO's Decide refuses at the click ("Not enough Flux (12 to climb).", nothing sent)
+  as it should (the script expected a stop at the foot: that is only when Flux runs out on the way). The plant leans 12 degrees, so no
+  45-degree crossing. Pop check: still 0, teleport 1, plain 28 m/s run 2 ("the path jumped 1.47 m in 26 ms", as gui-wall-5): the
+  ground walk's drawn target jumps ~1.5 m in a frame; the next item (Master). GIFs `DOTS-proof/dots-climb-1..4-*.gif`.
