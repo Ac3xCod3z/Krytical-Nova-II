@@ -215,6 +215,29 @@ namespace KryticalNova.Player
             if (!agent.isActiveAndEnabled || !agent.isOnNavMesh) return false;
 
             Vector3 feet = transform.position - Vector3.up * agent.baseOffset;
+            if (!TryPlan(feet, destination, walkLength, obstacleLayers.value, modelForwardOffset, out Plan found)) return false;
+            if (!arm)
+            {
+                takeoffPoint = found.Takeoff;
+                return true;
+            }
+
+            plan = found;
+            armed = true;
+            watching = false;
+            armedAt = Time.time;
+            takeoffPoint = plan.Takeoff;
+            return true;
+        }
+
+        /// <summary>
+        /// The vault rules from <paramref name="feet"/> to <paramref name="destination"/> (shared with the entity-netcode body: see
+        /// <see cref="PlanForGhost"/>): the straight line leaves the NavMesh at an obstacle that can be gone over, with room to take off
+        /// and land, a clear crossing, a walkable way on, and at least <c>minimumDistanceSaved</c> shorter than walking round.
+        /// </summary>
+        private bool TryPlan(Vector3 feet, Vector3 destination, float walkLength, int obstacleLayers, float modelForwardOffset, out Plan found)
+        {
+            found = default;
             // The straight line stays on the NavMesh: nothing to go over.
             LastDecision = "straight line is clear";
             if (!NavMesh.Raycast(feet, destination, out NavMeshHit edge, agent.areaMask)) return false;
@@ -224,7 +247,7 @@ namespace KryticalNova.Player
             if (travel.sqrMagnitude < 1f) return false;
             travel.Normalize();
 
-            int layers = obstacleLayers.value & ~(1 << gameObject.layer);
+            int layers = obstacleLayers & ~(1 << gameObject.layer);
             // Heights are measured from the visible ground in front of the obstacle: it can sit a little off the NavMesh,
             // and on a slope it is not the height the character stands at.
             Vector3 beforeEdge = edge.position - travel * 0.15f + Vector3.up * 0.6f;
@@ -249,13 +272,7 @@ namespace KryticalNova.Player
             LastDecision = "walking round is shorter";
             if (walkLength - over < minimumDistanceSaved) return false;
             LastDecision = "vault";
-            if (!arm)
-            {
-                takeoffPoint = takeoff;
-                return true;
-            }
-
-            plan = new Plan
+            found = new Plan
             {
                 Takeoff = takeoff,
                 Landing = landing,
@@ -265,12 +282,60 @@ namespace KryticalNova.Player
                 Top = top,
                 FacingOffset = modelForwardOffset,
             };
-            armed = true;
-            watching = false;
-            armedAt = Time.time;
-            takeoffPoint = plan.Takeoff;
             return true;
         }
+
+        /// <summary>A vault planned for a body of the entity netcode (<see cref="PlanForGhost"/>): where it goes, and its curve.</summary>
+        public struct GhostVault
+        {
+            public Vector3 Takeoff, Landing, NearEdge, FarEdge;
+            /// <summary>The obstacle's top above the feet, metres.</summary>
+            public float Top;
+            /// <summary>The faction's style for this height (its clip, windows and clearances).</summary>
+            public VaultStyle Style;
+        }
+
+        /// <summary>
+        /// Plans a vault for a body of the entity netcode, where this motor and the agent are switched off and the ghost owns the feet:
+        /// the same rules as <see cref="TryArm"/> (<see cref="TryPlan"/>) from <paramref name="startFeet"/>, without the busy and authority
+        /// checks (the ghost keeps those). <paramref name="walkLength"/> is the walk's own length round (infinity when there is no way
+        /// round). Null when it stands, else why not (NGO's <see cref="LastDecision"/> words).
+        /// </summary>
+        public string PlanForGhost(Vector3 startFeet, Vector3 destination, float walkLength, int obstacleLayers, out GhostVault vault)
+        {
+            vault = default;
+            if (!Ready) return "not available";
+            if (agent == null) agent = GetComponent<NavMeshAgent>();
+            if (scratchPath == null) scratchPath = new NavMeshPath();
+            if (!TryPlan(startFeet, destination, walkLength, obstacleLayers, 0f, out Plan found)) return LastDecision;
+            vault = new GhostVault
+            {
+                Takeoff = found.Takeoff, Landing = found.Landing, NearEdge = found.NearEdge, FarEdge = found.FarEdge,
+                Top = found.Top, Style = StyleFor(found.Top),
+            };
+            return null;
+        }
+
+        /// <summary>
+        /// A vault's timing and height shape, the one copy for NGO's warp (<see cref="Begin"/>) and the entity-netcode curve: the air time
+        /// is the flat distance at the run's speed, kept inside the style's window and the clip; the body rises to <paramref name="raise"/>
+        /// (the obstacle's top less the pose's own clearance, plus <c>clearance</c>) before the near edge, holds across, and comes down
+        /// after the far edge (<paramref name="riseEnds"/>, <paramref name="fallStarts"/> in seconds from the take-off).
+        /// </summary>
+        public static void VaultTiming(float distance, float toNear, float toFar, float top, Vector2 airWindow, float warpLength,
+            float poseClearance, float clearance, float speed, out float airTime, out float raise, out float riseEnds, out float fallStarts)
+        {
+            distance = Mathf.Max(0.1f, distance);
+            airTime = Mathf.Clamp(distance / Mathf.Max(0.1f, speed), airWindow.x, Mathf.Min(airWindow.y, warpLength - 0.02f));
+            raise = Mathf.Max(MinimumRaise, top - poseClearance + clearance);
+            // Up before the near edge, level across the top, down after the far edge.
+            riseEnds = airTime * Mathf.Clamp((toNear - EdgeLead) / distance, 0.15f, 0.45f);
+            fallStarts = airTime * Mathf.Clamp((toFar + EdgeLead) / distance, 0.55f, 0.85f);
+        }
+
+        /// <summary>The obstacle's gap kept above it (metres) and the warp clip's length (seconds), for <see cref="VaultTiming"/>.</summary>
+        public float Clearance => clearance;
+        public float WarpLength => warpAsset != null ? warpAsset.GetLength() : warpTemplate != null ? warpTemplate.GetLength() : 0f;
 
         /// <summary>
         /// Keeps looking for a vault while the agent walks a route that started without one: something tall stood in the
@@ -603,13 +668,9 @@ namespace KryticalNova.Player
             plan.Destination = vault.Destination;
 
             VaultStyle style = StyleFor(vault.Top);
-            float distance = Mathf.Max(0.1f, Flat(startFeet, landingFeet));
-            airTime = Mathf.Clamp(distance / travelSpeed, style.airTime.x, Mathf.Min(style.airTime.y, warpAsset.GetLength() - 0.02f));
-
-            float raise = Mathf.Max(MinimumRaise, vault.Top - style.poseClearance + clearance);
-            // Up before the near edge, level across the top, down after the far edge.
-            float riseEnds = airTime * Mathf.Clamp((Flat(startFeet, vault.NearEdge) - EdgeLead) / distance, 0.15f, 0.45f);
-            float fallStarts = airTime * Mathf.Clamp((Flat(startFeet, vault.FarEdge) + EdgeLead) / distance, 0.55f, 0.85f);
+            VaultTiming(Flat(startFeet, landingFeet), Flat(startFeet, vault.NearEdge), Flat(startFeet, vault.FarEdge), vault.Top,
+                style.airTime, warpAsset.GetLength(), style.poseClearance, clearance, travelSpeed,
+                out airTime, out float raise, out float riseEnds, out float fallStarts);
 
             Vector3 across = landingFeet - startFeet;
             across.y = 0f;
