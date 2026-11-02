@@ -2528,6 +2528,14 @@ namespace KryticalNova.Persistence.Entities
                 yield return new WaitForSeconds(0.8f);
             }
 
+            /// <summary>The collider is part of a town building (Synty's <c>SM_Bld_</c> pieces, within four parents).</summary>
+            static bool OnBuilding(Transform t)
+            {
+                for (int i = 0; t != null && i < 5; i++, t = t.parent)
+                    if (t.name.StartsWith("SM_Bld", StringComparison.Ordinal)) return true;
+                return false;
+            }
+
             /// <summary>Roof to roof (env KN_PLAYHERE_ROOFS=1; owner, 2 Nov, feel test item 8).</summary>
             static bool RoofsRun => Environment.GetEnvironmentVariable("KN_PLAYHERE_ROOFS") == "1";
 
@@ -2562,6 +2570,8 @@ namespace KryticalNova.Persistence.Entities
                     if (v.y < 2.5f) continue;
                     if (!Physics.Raycast(v + Vector3.up * 0.5f, Vector3.down, out RaycastHit under, 1.5f, rays, QueryTriggerInteraction.Ignore)) continue;
                     if (groundLayer >= 0 && under.collider.gameObject.layer == groundLayer) continue;
+                    // a building's roof (owner, 2 Nov: "jumping between building rooftops"; gui-roofs-1 found rock tops)
+                    if (!OnBuilding(under.collider.transform)) continue;
                     long cell = ((long)Mathf.FloorToInt(v.x / 2f) << 32) ^ (uint)Mathf.FloorToInt(v.z / 2f);
                     if (cells.Add(cell)) tops.Add(v);
                 }
