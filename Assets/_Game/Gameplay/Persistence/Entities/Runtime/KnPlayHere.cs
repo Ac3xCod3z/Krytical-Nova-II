@@ -60,7 +60,8 @@ namespace KryticalNova.Persistence.Entities
             || Environment.GetEnvironmentVariable("KN_PLAYHERE_TREE") == "1"                    // the scripted tree, perch and drop (M3c part 3)
             || Environment.GetEnvironmentVariable("KN_PLAYHERE_CATCH") == "1"                   // the scripted jump that catches a wall (M3c part 4)
             || Environment.GetEnvironmentVariable("KN_PLAYHERE_AUTO") == "1"                    // the scripted self-starting run (M3c part 5)
-            || Environment.GetEnvironmentVariable("KN_PLAYHERE_LEDGE") == "1";                  // the scripted route jumps (M3c part 5b)
+            || Environment.GetEnvironmentVariable("KN_PLAYHERE_LEDGE") == "1"                   // the scripted route jumps (M3c part 5b)
+            || Environment.GetEnvironmentVariable("KN_PLAYHERE_FIXES") == "1";                  // the owner's feel-test fixes 1-3 (2 Nov)
         /// <summary>A folder: the scripted run saves a Game-view picture there every 0.1 s (proof for the owner, GUI Editor only).</summary>
         public const string CaptureVariable = "KN_PLAYHERE_CAPTURE";
 
@@ -1213,6 +1214,7 @@ namespace KryticalNova.Persistence.Entities
                 if (AutoRun) yield return Autos(body, ghost, walls);
                 if (LedgeRun) yield return Ledges(body, ghost, walls);
                 if (TreeRun) yield return Climbs(body, ghost, walls, tree: true);
+                if (FixesRun) yield return Fixes(body, ghost, walls);
                 Log($"done: {arrived} of {tries} arrived, {landed} of {jumpPoints.Count} jumps passed, low-rank refusals {(lowRank.Ok ? "match" : "DIFFER")}, " +
                     $"{vaults.Passed} of {vaults.Tried} vaults passed, {waters.Passed} of {waters.Tried} Waterstride tries passed, " +
                     $"{walls.Passed} of {walls.Tried} wall walk tries passed, " +
@@ -1227,7 +1229,7 @@ namespace KryticalNova.Persistence.Entities
             /// the walk, the jumps and the vaults, so a run of Waterstride or the wall walk alone never started). Every gate reads this; a new
             /// scripted part is added here, and to <see cref="Scripted"/>, which reads the same variables before the runner exists.
             /// </summary>
-            bool HasScriptedTries => !string.IsNullOrEmpty(Walk) || !string.IsNullOrEmpty(Jump) || VaultCount > 0 || WaterRun || WallRun || ClimbRun || TreeRun || CatchRun || AutoRun || LedgeRun;
+            bool HasScriptedTries => !string.IsNullOrEmpty(Walk) || !string.IsNullOrEmpty(Jump) || VaultCount > 0 || WaterRun || WallRun || ClimbRun || TreeRun || CatchRun || AutoRun || LedgeRun || FixesRun;
 
             /// <summary>Which scripted parts are on, for the log's first lines (a part that should run and is not listed shows at once).</summary>
             string ScriptedParts()
@@ -1243,6 +1245,7 @@ namespace KryticalNova.Persistence.Entities
                 if (CatchRun) on.Add("jumps that catch a wall");
                 if (AutoRun) on.Add("the self-starting run");
                 if (LedgeRun) on.Add("the route's jumps");
+                if (FixesRun) on.Add("the feel-test fixes 1-3");
                 return on.Count > 0 ? string.Join(", ", on) : "none (by hand)";
             }
 
@@ -2032,6 +2035,127 @@ namespace KryticalNova.Persistence.Entities
                 bool onIt = em.GetComponentData<MoveState>(ghost).Wall == 1 && plans.WallWalks == walks0 + 1;
                 if (onIt) tally.Passed++;
                 Log($"auto: a click directly on the wall (the core case): {(onIt ? "PASS" : "FAIL")}; wall walks {plans.WallWalks - walks0}, on the wall {em.GetComponentData<MoveState>(ghost).Wall}");
+            }
+
+            /// <summary>The owner's feel-test fixes 1-3 (env KN_PLAYHERE_FIXES=1; `m3c-wallstride-design.md` section 9).</summary>
+            static bool FixesRun => Environment.GetEnvironmentVariable("KN_PLAYHERE_FIXES") == "1";
+
+            /// <summary>The real click path of the owner's body (the ray, the water, the jump branch), as a mouse press at that screen point.</summary>
+            static void PressAt(GameObject body, Vector3 world)
+            {
+                Camera cam = Camera.main;
+                var player = body.GetComponent<PointAndClickPlayer>();
+                if (cam == null || player == null) return;
+                Vector3 screen = cam.WorldToScreenPoint(world);
+                typeof(PointAndClickPlayer).GetMethod("TryMoveToPointer", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
+                    ?.Invoke(player, new object[] { new Vector2(screen.x, screen.y) });
+            }
+
+            /// <summary>
+            /// The owner's feel-test fixes 1-3 (2 Nov), on the river south bank (the Waterstride part's places): 1) the map's travel with Run
+            /// on runs (and walks with Run off, the control); 2) a jump made on the water, clicked through the real ray, lands on the spot
+            /// of the surface clicked (the lake bed under it is logged: where the old aim would have landed); 3) a new click while
+            /// waterstriding: the body never steps away from the new place first.
+            /// </summary>
+            IEnumerator Fixes(GameObject body, Entity ghost, VaultTally tally)
+            {
+                World server = KnBootstrap.ServerWorld;
+                var em = server.EntityManager;
+                var progression = body.GetComponent<PlayerCharacterProgression>();
+                var resources = body.GetComponent<PlayerResources>();
+                var skills = OwnBody.GetComponent<PlayerMovementSkills>();
+                var view = OwnBody.GetComponent<PointAndClickPlayer>();
+                float offset = body.GetComponent<UnityEngine.AI.NavMeshAgent>() is UnityEngine.AI.NavMeshAgent ag ? ag.baseOffset : 0f;
+                if (skills == null || view == null) { Log("fixes: FAIL; the owner's body has no skills or click player"); tally.Tried++; yield break; }
+                if (progression != null && progression.CurrentLevel < 60) progression.SetLevel(60);
+                if (!UnityEngine.AI.NavMesh.SamplePosition(SouthBank, out UnityEngine.AI.NavMeshHit south, 6f, UnityEngine.AI.NavMesh.AllAreas))
+                { Log("fixes: FAIL; no NavMesh on the south bank"); tally.Tried++; yield break; }
+                Teleport(em, ghost, south.position + Vector3.up * offset);
+                yield return new WaitForSeconds(1.5f);
+                void Select(MovementSkillId id) { if (id == MovementSkillId.Run ? !skills.IsRunning : !skills.IsJumpSelected) skills.ToggleSelection(id); }
+
+                // 1) the map's travel: Run on runs, Run off walks (NGO's ExecuteLocalMove / ServerMoveTo)
+                Vector3 inland = south.position + new Vector3(0f, 0f, -24f);
+                if (!UnityEngine.AI.NavMesh.SamplePosition(inland, out UnityEngine.AI.NavMeshHit inlandHit, 6f, UnityEngine.AI.NavMesh.AllAreas))
+                { Log("fixes: FAIL; no NavMesh inland of the south bank"); tally.Tried++; yield break; }
+                MoveStats stats = em.GetComponentData<MoveStats>(ghost);
+                foreach (bool run in new[] { true, false })
+                {
+                    tally.Tried++;
+                    if (resources != null) resources.RestoreChi(resources.MaxChi);
+                    if (run) Select(MovementSkillId.Run); else skills.SelectWalk();
+                    Vector3 to = run ? inlandHit.position : south.position;
+                    bool sent = view.TravelTo(to, "the test place");
+                    float t0 = Time.realtimeSinceStartup;
+                    int fastest = 0;
+                    while (Time.realtimeSinceStartup - t0 < 12f)
+                    {
+                        yield return null;
+                        var m = em.GetComponentData<MoveState>(ghost);
+                        if ((m.Flags & MoveFlags.Moving) != 0) fastest = Math.Max(fastest, m.SpeedMmps);
+                        else if (Time.realtimeSinceStartup - t0 > 1f) break;
+                    }
+                    int want = run ? stats.RunMmps : stats.WalkMmps;
+                    float off = Flat(ServerPosition(ghost) - Vector3.up * offset - to);
+                    bool ok = sent && fastest == want && off < 0.5f;
+                    if (ok) tally.Passed++;
+                    Log($"fixes: the map's travel with Run {(run ? "on" : "off")}: {(ok ? "PASS" : "FAIL")}; sent {sent}, fastest {fastest * 0.001f:F1} m/s " +
+                        $"(walk {stats.WalkMmps * 0.001f:F1}, run {stats.RunMmps * 0.001f:F1}), ended {off:F2} m from the place");
+                }
+
+                // 2) a jump made on the water lands on the surface spot clicked
+                tally.Tried++;
+                if (resources != null) resources.RestoreChi(resources.MaxChi);
+                Select(MovementSkillId.Run);
+                Vector3 water1 = new Vector3(south.position.x, -1.2f, 206f);
+                BodyClicks.Ground(water1, true);
+                float w0 = Time.realtimeSinceStartup;
+                while (Time.realtimeSinceStartup - w0 < 10f && (Moving(ghost) || Time.realtimeSinceStartup - w0 < 1f)) yield return null;
+                bool onWater = em.GetComponentData<MoveState>(ghost).Water != 0;
+                Vector3 feet = ServerPosition(ghost) - Vector3.up * offset;
+                Vector3 target = new Vector3(feet.x + 6f, feet.y, feet.z + 4f);
+                Camera cam = Camera.main;
+                float bedOff = -1f;
+                if (cam != null && Physics.Raycast(cam.ScreenPointToRay(cam.WorldToScreenPoint(target)), out RaycastHit bed, 500f))
+                    bedOff = Flat(bed.point - target);
+                Select(MovementSkillId.Jump);
+                PressAt(OwnBody, target);
+                float j0 = Time.realtimeSinceStartup;
+                while (Time.realtimeSinceStartup - j0 < 4f) yield return null;
+                Vector3 landed = ServerPosition(ghost) - Vector3.up * offset;
+                float jumpOff = Flat(landed - target);
+                bool jumpOk = onWater && jumpOff < 0.35f;
+                if (jumpOk) tally.Passed++;
+                Log($"fixes: a jump made on the water: {(jumpOk ? "PASS" : "FAIL")}; started on the water {onWater}; landed {jumpOff:F2} m from the surface " +
+                    $"spot clicked; the lake bed under that click is {bedOff:F2} m past it (where the old aim landed)");
+
+                // 3) a new click while waterstriding: the body never steps away from the new place first
+                tally.Tried++;
+                if (resources != null) resources.RestoreChi(resources.MaxChi);
+                Select(MovementSkillId.Run);
+                Vector3 here = ServerPosition(ghost) - Vector3.up * offset;
+                PressAt(OwnBody, new Vector3(here.x + 9f, here.y, here.z + 1f));
+                float r0 = Time.realtimeSinceStartup;
+                while (Time.realtimeSinceStartup - r0 < 0.7f) yield return null;
+                bool movingOnWater = Moving(ghost) && em.GetComponentData<MoveState>(ghost).Water != 0;
+                Vector3 at = ServerPosition(ghost) - Vector3.up * offset;
+                Vector3 second = new Vector3(at.x - 1f, at.y, at.z + 8f);
+                float start = Flat(at - second), worstBack = 0f, best = start;
+                PressAt(OwnBody, second);
+                float s0 = Time.realtimeSinceStartup;
+                while (Time.realtimeSinceStartup - s0 < 1f)
+                {
+                    yield return new WaitForEndOfFrame();
+                    float d = Flat(OwnBody.transform.position - second);
+                    worstBack = Mathf.Max(worstBack, d - best);
+                    best = Mathf.Min(best, d);
+                }
+                bool reOk = movingOnWater && worstBack < 0.05f && best < start - 1f;
+                if (reOk) tally.Passed++;
+                Log($"fixes: a new click while waterstriding: {(reOk ? "PASS" : "FAIL")}; moving on the water {movingOnWater}; the drawn body stepped " +
+                    $"away from the new place by at most {worstBack:F2} m and got {start - best:F1} m nearer in 1 s");
+                skills.SelectWalk();
+                if (resources != null) resources.RestoreChi(resources.MaxChi);
             }
 
             /// <summary>The scripted route jumps (env KN_PLAYHERE_LEDGE=1; M3c part 5b, `m3c-wallstride-design.md` section 7).</summary>

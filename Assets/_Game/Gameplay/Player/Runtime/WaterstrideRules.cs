@@ -218,6 +218,16 @@ namespace KryticalNova.Player
             ? $"You fell in the water and climbed out on the shore (-{Mathf.RoundToInt(lost)} HP)."
             : "You fell in the water and climbed out on the shore.";
 
+        /// <summary>
+        /// A route that starts on the water, begun from the feet: its first points are dropped while the water reaches the next one in a
+        /// straight line from <paramref name="feet"/>. NGO went to the centre of the feet's cell first, up to 0.7 m beside or behind them,
+        /// then turned (owner's feel test 2 Nov: a new click on the water jerked where the ground does not).
+        /// </summary>
+        public static void StartFromFeet(WaterMap map, Vector3 feet, List<Vector3> route)
+        {
+            while (route.Count >= 2 && WaterRoute.Clear(map, feet, route[1])) route.RemoveAt(0);
+        }
+
         /// <summary>The speed on the water: a share of the ground speed, at least 1 m/s; stranded, the settings' own.</summary>
         public static float Speed(WaterstrideSettings s, float groundSpeed, bool stranded) =>
             stranded ? s.strandedSpeed : Mathf.Max(1f, groundSpeed * s.speedShare);

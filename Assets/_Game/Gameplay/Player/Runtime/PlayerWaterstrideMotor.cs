@@ -393,6 +393,8 @@ namespace KryticalNova.Player
             string why = onSurface
                 ? WaterstrideRules.PlanWaterClick(map, settings, ask, Shore(), feet, goal, route, out plan.Way)
                 : WaterstrideRules.PlanLandClick(map, settings, ask, Shore(), feet, goal, route, out plan.Way);
+            // on the water the route begins at the feet, not their cell's centre (the owner and the server plan the same)
+            if (why == null && onWater) WaterstrideRules.StartFromFeet(map, feet, route);
             plan.Speed = WaterstrideRules.Speed(settings, groundSpeed, false);
             return why;
         }

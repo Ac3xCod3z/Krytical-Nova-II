@@ -467,3 +467,17 @@ the DOTS crew notes `dots9-owner-feel-findings-2nov.md`; the short form:
 | 6 | Backflip from a roof | NGO has the pieces only: the roof ground-click order A1 -> A3 -> drop -> vault (PCP:1659-1676), the walk/run to the edge, the drop rules (PCP:1585-1637) | A1 (down the wall) is asked before the drop | **Owner's rule, not NGO's (the backflip is new):** a ground click from a roof goes to the edge at the current speed and backflips off; a wall click goes onto the wall; both with Wallstride on, no switch |
 | 7 | The backflip lands walking | NGO has the fall loop and the landing: one clip chain, fall loop, landing with its settle (PlayerAnimancerMotor.cs:967-973, 1008-1072) | the flip clip stretched over both legs of one phase; touchdown goes straight to walk | **Owner's rule:** the flip, then the fall loop until the ground, then the landing (NGO's fall loop and landing pieces) |
 | 8 | Jump onto other roofs | with Jump selected a roof click is a direct jump (PCP:903-919); plain clicks only authored links | the same for Jump-selected clicks | Owner pick: a plain click jumps to another roof (owner change) / Jump-selected only (NGO) |
+
+**Owner picks (2 Nov, via the Master; order 1, 2, 3, then 6 + 7, then 4, 5, 8):**
+- 4 (a), **owner change from NGO**: one shared planner takes the fastest of walk, vault and Waterstride across; Waterstride across is used
+  whenever it is faster, Run on or off (NGO only waterstrides on a click on the water, with Run).
+- 5 (a): the real fix now, an owner->server use request for the Flask, consumables and Serenity (HP pills and buffs too), the save and
+  ledger rules kept (`PlayerWallet`, `EconomyLedger`, no side doors); anything that changes saves goes to the Master before code. The
+  test tops Flux up meanwhile.
+- 6 (a), **owner's rule (the backflip is new)**: from a roof a ground click goes to the edge at the current speed and backflips off;
+  a wall click goes onto the wall; Wallstride on, no switch.
+- 7 (a), **owner's rule on NGO's pieces**: the flip on the way up, the fall loop on the way down (its own phase), the landing clip with
+  its settle before walking on.
+- 8 both: (a) **owner change from NGO**: with Jump learned, a plain click on another roof with no walk there goes to the edge and jumps
+  across with the normal jump clip (a lower roof before the street drop); (b) NGO's Jump-selected roof jump kept, a click on a climbable
+  object no longer taken as a wall click first, proved on planned Zone01 roofs.

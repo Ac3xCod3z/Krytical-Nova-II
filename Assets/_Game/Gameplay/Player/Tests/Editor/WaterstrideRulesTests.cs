@@ -136,6 +136,19 @@ namespace KryticalNova.Tests
         }
 
         [Test]
+        public void OnTheWater_ANewClick_StartsFromTheFeet_NotFromTheCentreOfTheirCell()
+        {
+            // owner's feel test 2 Nov: the route went 0.4 m back to the cell's centre (5.5) before turning to the new click
+            var a = Ready(); a.OnWater = true;
+            var feet = new Vector3(5.1f, Level, 0.9f);
+            Assert.IsNull(WaterstrideRules.PlanWaterClick(map, settings, a, new WestShore(), feet, new Vector3(15f, Level, 10f), route, out _));
+            Assert.AreEqual(new Vector3(5.5f, Level, 0.5f), route[0], "NGO's route begins at the feet's cell centre");
+            WaterstrideRules.StartFromFeet(map, feet, route);
+            Assert.AreEqual(1, route.Count, "open water in a straight line: one leg from the feet");
+            Assert.AreEqual(new Vector3(15.5f, Level, 10.5f), route[0], "straight to the clicked cell");
+        }
+
+        [Test]
         public void OnTheWater_AWaterClick_RunsFromTheFeet_WithNoShore()
         {
             var a = Ready(); a.OnWater = true;

@@ -903,18 +903,22 @@ namespace KryticalNova.Player
             if (movementSkills != null && movementSkills.IsJumpSelected)
             {
                 if (jumpMotor == null) { CommandMessage?.Invoke("Jump controller is missing."); return; }
+                // over water the ray's hit is the bed under it (the water has no collider), and a water landing keeps the clicked x/z:
+                // the jump aims at the spot on the surface the player sees (owner's feel test 2 Nov: a jump off the water overshot)
+                Vector3 aim = hit.point, aimNormal = hit.normal;
+                if (waterMotor != null && waterMotor.TryWaterUnderRay(ray, hit, out Vector3 waterAim)) { aim = waterAim; aimNormal = Vector3.up; }
                 if (ViewMode)
                 {
                     // the ghost jumps (M3b): a click the owner's own rules refuse is refused at once, as the NGO client did; the
                     // server plans it again and the owner flies it from the press
-                    string why = ViewJumpRefusal(hit.point);
+                    string why = ViewJumpRefusal(aim);
                     if (why != null) { CommandMessage?.Invoke(why); return; }
-                    BodyClicks.Jump(hit.point);
-                    ClientPresentationRegistry.Markers?.ShowMoveMarker(transform, hit.point, hit.normal);
+                    BodyClicks.Jump(aim);
+                    ClientPresentationRegistry.Markers?.ShowMoveMarker(transform, aim, aimNormal);
                     return;
                 }
-                if (!jumpMotor.TryJump(hit.point, raycastLayers, modelForwardOffset, out string reason)) CommandMessage?.Invoke(reason);
-                else ClientPresentationRegistry.Markers?.ShowMoveMarker(transform, hit.point, hit.normal);
+                if (!jumpMotor.TryJump(aim, raycastLayers, modelForwardOffset, out string reason)) CommandMessage?.Invoke(reason);
+                else ClientPresentationRegistry.Markers?.ShowMoveMarker(transform, aim, aimNormal);
                 return;
             }
 
@@ -1002,7 +1006,9 @@ namespace KryticalNova.Player
             if (buffManager == null) buffManager = GetComponent<CharacterBuffManager>();
             if (buffManager != null && buffManager.IsChanneling) buffManager.InterruptChanneled();
 
-            if (ViewMode) BodyClicks.Ground(goal, false); // the arrival line is not shown yet: the ghost walks it (M3b)
+            // the ghost walks or runs it as NGO's ExecuteLocalMove / ServerMoveTo did (owner's feel test 2 Nov: the map's run walked);
+            // the arrival line is not shown yet
+            if (ViewMode) BodyClicks.Ground(goal, movementSkills != null && movementSkills.IsRunning);
             else if (IsSpawned && !IsServer)
             {
                 RequestMoveDestinationServerRpc(goal);
