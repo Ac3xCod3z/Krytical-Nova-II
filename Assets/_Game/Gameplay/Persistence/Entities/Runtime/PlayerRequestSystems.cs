@@ -51,6 +51,47 @@ namespace KryticalNova.Persistence.Entities
         public ulong Data;
     }
 
+    /// <summary>A line the server says to one player (<see cref="OwnerMessages"/>): shown in the player's message area.</summary>
+    public struct ServerTellRpc : IRpcCommand
+    {
+        public FixedString512Bytes Text;
+    }
+
+    /// <summary>
+    /// Server: <see cref="OwnerMessages"/> for the bodies of the entity netcode: the line goes to the connection of the player whose server
+    /// body said it (found by its <see cref="PlayerKey"/> in the registry). A body that is not a server body is not told here.
+    /// </summary>
+    public sealed class EntityOwnerMessages : IOwnerMessages
+    {
+        public bool Tell(Component part, string text)
+        {
+            BodyRoleTag tag = BodyRoleTag.Of(part);
+            if (tag == null || tag.Kind != NetRoleKind.ServerBody || tag.Key == PlayerKey.None) return false;
+            if (!GhostBodyRegistry.TryGetByKey(tag.Key, out GhostBodyEntry entry) || entry.World == null || !entry.World.IsCreated) return false;
+            return Send(entry.World, entry.NetworkId, text);
+        }
+
+        /// <summary>Sends <paramref name="text"/> to the in-game connection <paramref name="networkId"/> of <paramref name="server"/>.</summary>
+        public static bool Send(World server, int networkId, string text)
+        {
+            if (server == null || !server.IsCreated || networkId == 0 || string.IsNullOrEmpty(text)) return false;
+            var em = server.EntityManager;
+            using var query = em.CreateEntityQuery(ComponentType.ReadOnly<NetworkId>(), ComponentType.ReadOnly<NetworkStreamInGame>());
+            using var connections = query.ToEntityArray(Allocator.Temp);
+            using var ids = query.ToComponentDataArray<NetworkId>(Allocator.Temp);
+            for (int i = 0; i < connections.Length; i++)
+            {
+                if (ids[i].Value != networkId) continue;
+                if (text.Length > 500) text = text.Substring(0, 500);
+                Entity rpc = em.CreateEntity();
+                em.AddComponentData(rpc, new ServerTellRpc { Text = new FixedString512Bytes(text) });
+                em.AddComponentData(rpc, new SendRpcCommandRequest { TargetConnection = connections[i] });
+                return true;
+            }
+            return false;
+        }
+    }
+
     /// <summary>
     /// Client: the local view body's requests (<see cref="IBodyRequests"/> on its tag) become RPCs to the server. Nothing is used or cast
     /// here: the server's answer comes back as <see cref="RequestReplyRpc"/>.
@@ -159,6 +200,13 @@ namespace KryticalNova.Persistence.Entities
             reply = default;
             var inventory = body != null ? body.GetComponent<PlayerInventory>() : null;
             if (inventory == null) return false;
+            // an item whose effect lands in a part this server still passes through would be spent from the (real) Pack and its
+            // effect lost at the next save: refused, nothing taken, until that system's port (M8 research, 2 Nov: mounts, boosts, Dossiers)
+            if (inventory.Catalog != null && inventory.Catalog.Get(itemId) is ItemDefinition def && !EffectPorted(def.useEffect))
+            {
+                reply = new RequestReplyRpc { Kind = RequestReplyRpc.ItemRefused, Text = Fit(NotPortedText) };
+                return false;
+            }
             string refused = null;
             bool used = false, health = false, flux = false;
             Action<string> onRefused = reason => refused ??= reason;
@@ -175,6 +223,17 @@ namespace KryticalNova.Persistence.Entities
             else if (refused != null) reply = new RequestReplyRpc { Kind = RequestReplyRpc.ItemRefused, Text = Fit(refused) };
             return used;
         }
+
+        /// <summary>What a refused item use of an effect not ported yet tells the player.</summary>
+        public const string NotPortedText = "This item can't be used on this server yet.";
+
+        /// <summary>
+        /// The item effects whose result this server saves (or that save nothing): HP/Flux stims, the Flask (its drinks are on the bottle),
+        /// a pet's ration (its growth is on the pet item), a Serum (its part is real), Recall (a move). Every other effect writes a part that
+        /// is still passed through (Autopilot, Dossiers, XP boosts, Autobuff, mounts) or has its own flow (Name Change), so it waits for its port.
+        /// </summary>
+        public static bool EffectPorted(ItemUseEffect effect) => effect == ItemUseEffect.None || effect == ItemUseEffect.FluxFlask
+            || effect == ItemUseEffect.FeedPet || effect == ItemUseEffect.Serum || effect == ItemUseEffect.Recall;
 
         void Cast(Entity connection, string skillId)
         {
@@ -287,21 +346,34 @@ namespace KryticalNova.Persistence.Entities
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     public partial class PlayerRequestClientSystem : SystemBase
     {
-        EntityQuery m_Replies, m_Cells;
+        EntityQuery m_Replies, m_Cells, m_Tells;
 
-        /// <summary>Answers and cells applied (tests).</summary>
+        /// <summary>Answers, cells and the server's lines applied (tests).</summary>
         public int Replies { get; private set; }
         public int Cells { get; private set; }
+        public int Tells { get; private set; }
 
         protected override void OnCreate()
         {
             m_Replies = GetEntityQuery(ComponentType.ReadOnly<ReceiveRpcCommandRequest>(), ComponentType.ReadOnly<RequestReplyRpc>());
             m_Cells = GetEntityQuery(ComponentType.ReadOnly<ReceiveRpcCommandRequest>(), ComponentType.ReadOnly<PackCellRpc>());
+            m_Tells = GetEntityQuery(ComponentType.ReadOnly<ReceiveRpcCommandRequest>(), ComponentType.ReadOnly<ServerTellRpc>());
         }
 
         protected override void OnUpdate()
         {
             var em = EntityManager;
+            if (!m_Tells.IsEmpty)
+            {
+                var tells = m_Tells.ToComponentDataArray<ServerTellRpc>(Allocator.Temp);
+                em.DestroyEntity(m_Tells);
+                foreach (ServerTellRpc tell in tells)
+                {
+                    ClientPresentationRegistry.Messages?.ShowMessage(tell.Text.ToString());
+                    Tells++;
+                }
+                tells.Dispose();
+            }
             GameObject body = LocalBody();
             if (!m_Cells.IsEmpty)
             {
