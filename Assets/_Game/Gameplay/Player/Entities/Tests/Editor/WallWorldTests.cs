@@ -15,11 +15,11 @@ namespace KryticalNova.Player.Entities.Tests
     /// </summary>
     public class WallWorldTests
     {
-        const int FaceX = 5970;   // the feet on the wall, out from a face at x = 6 m facing -x
+        public const int FaceX = 5970;   // the feet on the wall, out from a face at x = 6 m facing -x
         static readonly int3 Landing = new int3(3000, 0, 0);
         const int CatchClick = 55555;   // a Jump click at a wall the graph does not cover (part 4)
-        const int AutoClick = 9000;     // a plain click on the roof past the wall, that Wallstride runs over by itself (part 5)
-        const int LedgeClick = 9500;    // a plain click on the street below a roof's edge, the walk jumping off it (part 5b)
+        public const int AutoClick = 9000;     // a plain click on the roof past the wall, that Wallstride runs over by itself (part 5)
+        public const int LedgeClick = 9500;    // a plain click on the street below a roof's edge, the walk jumping off it (part 5b)
         static readonly int3 CatchAt = new int3(5600, 1400, 0);
 
         /// <summary>Refuses every ordinary jump: a catch test must never fall back to one.</summary>
@@ -35,7 +35,7 @@ namespace KryticalNova.Player.Entities.Tests
         }
 
         /// <summary>A wall at x = 6 m (stands in for the surface graph, the NavMesh and NGO's rules).</summary>
-        sealed class StubWallPlanner : IWallPlanner
+        public sealed class StubWallPlanner : IWallPlanner
         {
             public int Plans, Refusals, OnWallPlans;
 
@@ -159,7 +159,7 @@ namespace KryticalNova.Player.Entities.Tests
         }
 
         /// <summary>A purse of whole Flux points.</summary>
-        sealed class StubGrip : IWallGrip
+        public sealed class StubGrip : IWallGrip
         {
             public int Points;
             public int GripPerSecondMilli => 15000;
@@ -173,18 +173,26 @@ namespace KryticalNova.Player.Entities.Tests
             }
         }
 
-        static PlayerRig Rig(int delayMs, StubWallPlanner planner, StubGrip grip)
+        /// <summary>The rig with the stub wall on the server and every client (the presentation's two-client tests share it, design 8.2).</summary>
+        public static PlayerRig Rig(int delayMs, StubWallPlanner planner, StubGrip grip, int clients = 1)
         {
-            var rig = PlayerRig.Create(1, delayMs);
+            var rig = PlayerRig.Create(clients, delayMs);
+            Install(rig, planner, grip);
+            return rig;
+        }
+
+        public static void Install(PlayerRig rig, StubWallPlanner planner, StubGrip grip)
+        {
             rig.Server.GetExistingSystemManaged<PlayerServerPlanSystem>().WallPlanner = planner;
             var system = rig.Server.GetExistingSystemManaged<WallGripSystem>();
             system.Planner = planner;
             system.Grip = grip;
-            rig.Clients[0].GetExistingSystemManaged<PlayerInputGatherSystem>().WallPlanner = planner;
-            return rig;
+            foreach (var client in rig.Clients)
+                client.GetExistingSystemManaged<PlayerInputGatherSystem>().WallPlanner = planner;
         }
 
-        static readonly int3 Wall = new int3(-1000, 0, 0);
+        /// <summary>The face's normal for a wall click (the face at x = 6 m faces -x).</summary>
+        public static readonly int3 Wall = new int3(-1000, 0, 0);
 
         [TestCase(0)]
         [TestCase(100)]
@@ -226,7 +234,7 @@ namespace KryticalNova.Player.Entities.Tests
             Assert.AreEqual(1, rig.OwnerMove().Wall);
         }
 
-        sealed class PaidRuns : IRunCost
+        public sealed class PaidRuns : IRunCost
         {
             public bool Affordable = true;
             public int Paid;
@@ -286,7 +294,7 @@ namespace KryticalNova.Player.Entities.Tests
             Assert.AreEqual(new int3(6500, 5000, 3000), rig.ServerPose().Mm, "the server's body stays");
         }
 
-        sealed class PaidJumps : IJumpCost
+        public sealed class PaidJumps : IJumpCost
         {
             public bool Affordable = true;
             public int Paid;

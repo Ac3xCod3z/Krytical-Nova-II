@@ -1148,6 +1148,12 @@ For all five
   trees, obstacles and water spots in Zone01 (they may be far from the spawn) written here with their coordinates, proved in edit mode
   first (a batch probe: the place exists and passes the game's own rules), and the run teleports to each; never "search near the start"
   (gui-catch-3 never tested its wall: it looked near the tree's start and found none). Part 4's places: design section 5.5.
-- [ ] other players see the same start tick, curve and landing (2-client test world, `BodyIsMineWorldTests` style)
-- [ ] a forced rollback mid-move neither restarts the clip nor moves the body more than the follow's offset
+- [x] other players see the same start tick, curve and landing (2-client test world, `BodyIsMineWorldTests` style)
+  (design 8; `WallPresentationWorldTests.AnotherPlayer_SeesTheSameWallPhases_TheSameCurve_AndTheSameLanding`, 2 Nov): the straight climb,
+  the run over a wall by itself and the roof-edge jump at 0 and 100 ms: the observer plays the server's phases each once, begins each on
+  the server's own start tick (0 ticks apart), shows only the server's per-tick poses in order, ends on its landing. NGO rules O1-O4.
+- [x] a forced rollback mid-move neither restarts the clip nor moves the body more than the follow's offset
+  (`WallPresentationWorldTests.AForcedRollbackMidClimb_NeitherRestartsTheClip_NorPopsTheBody`, 2 Nov, 100 ms): the owner's ghost pushed
+  0.6 m off mid-climb jumped 0.38 m in a frame; the drawn body's largest step stayed 0.22 m (the climb's own), the clip phases [1,2,3,0] as
+  the server's, each once; ends on the ghost. EditMode 230/230.
 - [ ] owner feel checkpoint after M3c (by hand; pending is allowed)
