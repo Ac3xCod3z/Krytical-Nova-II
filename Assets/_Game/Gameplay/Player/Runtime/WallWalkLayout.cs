@@ -116,8 +116,11 @@ namespace KryticalNova.Player
                 Up = facing * Vector3.up, Forward = facing * Vector3.forward,
             });
 
-        /// <summary>NGO <c>AddArc</c>: a fall under gravity from the last corner to <paramref name="to"/>, over an apex <paramref name="lift"/> above the higher.</summary>
-        public void Arc(WallRunPhase phase, Vector3 to, float lift, Quaternion facing)
+        /// <summary>
+        /// NGO <c>AddArc</c>: a fall under gravity from the last corner to <paramref name="to"/>, over an apex <paramref name="lift"/> above the higher.
+        /// <paramref name="fallAfterApex"/>: the way down after the apex is its own phase (<see cref="WallRunPhase.RouteFall"/>: a route's jump).
+        /// </summary>
+        public void Arc(WallRunPhase phase, Vector3 to, float lift, Quaternion facing, bool fallAfterApex = false)
         {
             Vector3 from = LastFeet;
             float g = settings != null ? settings.dropGravity : 14f;
@@ -128,6 +131,7 @@ namespace KryticalNova.Player
                 Vector3 apex = Vector3.Lerp(from, to, up / (up + down));
                 apex.y = apexY;
                 Leg(phase, apex, facing, up, EaseOut, Linear);
+                if (fallAfterApex) phase = WallRunPhase.RouteFall;
             }
             Leg(phase, to, facing, Mathf.Max(0.3f, down), EaseIn, Linear);
         }

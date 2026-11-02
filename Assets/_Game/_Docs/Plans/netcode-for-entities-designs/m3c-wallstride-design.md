@@ -481,3 +481,17 @@ the DOTS crew notes `dots9-owner-feel-findings-2nov.md`; the short form:
 - 8 both: (a) **owner change from NGO**: with Jump learned, a plain click on another roof with no walk there goes to the edge and jumps
   across with the normal jump clip (a lower roof before the street drop); (b) NGO's Jump-selected roof jump kept, a click on a climbable
   object no longer taken as a wall click first, proved on planned Zone01 roofs.
+
+**Built for 6 and 7 (DOTS 9, 2 Nov):**
+- 6: `PlanAutoForGhost` asks the roof-edge drop (`PlanLedgesForGhost`) before NGO's A1 when there is no walk and the place is at least
+  1.5 m below; a drop the jump refuses falls through to A1 (down the wall), as NGO's order has it. The walk to the edge goes at the
+  walk's own speed (Run or not). The by-hand Wallstride switch is gone.
+- 7: a route jump's arc is three phases: the jump (`LedgeJump` / `GapJump`) up to the apex, `RouteFall` (14) down to the ground and
+  `RouteLand` (15), NGO's landing settle (0.15 s, `LandingSettleSeconds`) on a 2 cm step, then the walk. The jump's clip is fitted to
+  70 % of the whole air time (`PhaseMillis` adds the fall; the flip starts on the way up and ends on the way down, never 3-5x fast on a
+  short rise), then NGO's fall loop (`WarpedJumpClip(2)`) until the ground, the landing clip (`WarpedJumpClip(3)`) at touchdown. The
+  share 0.7 is a DOTS choice inside the owner's pick (a).
+
+**Proof of 2 and 3, and the owner's hand test:** the GUI proof aims the clicks with a ray from above (as a camera would) and hands them
+to the body (`BodyClicks`), because the scripted screen presses missed. The owner tests both by hand after the trip, which covers the
+camera-click wiring: a jump from the water lands on the clicked spot (2); a re-click while waterstriding turns at once, no step back (3).

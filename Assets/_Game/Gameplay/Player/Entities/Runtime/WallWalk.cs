@@ -34,6 +34,10 @@ namespace KryticalNova.Player.Entities
 
         /// <summary>A route's jump (part 5b): off a roof's edge or across a gap; the Jump's Flux is paid as it starts.</summary>
         public static bool IsRouteJump(byte phase) => phase == LedgeJump || phase == GapJump;
+        /// <summary>A route's jump coming down after its apex: the fall loop (owner, 2 Nov, design 9 item 7).</summary>
+        public const byte RouteFall = 14;
+        /// <summary>A route's jump touching down: the landing and NGO's settle before the walk goes on.</summary>
+        public const byte RouteLand = 15;
     }
 
     /// <summary>NGO's <c>Ease</c> (how a leg covers its height or its ground part): evenly, setting off, coming to rest, both.</summary>

@@ -725,20 +725,8 @@ namespace KryticalNova.Persistence.Entities
         /// <summary>The GUI Editor opened with <c>-executeMethod</c> straight into "Play DOTS here" by hand (the owner's feel checkpoint).</summary>
         public static void ByHand() => Begin(quitAfter: false);
 
-        /// <summary>The feel checkpoint's levels: 60 opens Waterstride and Wallstride; 1 locks Wallstride (the walk's own jumps: the backflip).</summary>
-        const int FeelLevelOpen = 60, FeelLevelLocked = 1;
-        const string WallstrideSwitchPath = "Krytical Nova/Online/Entities/Play DOTS here: Wallstride on or off (level 60 or 1)";
-
-        [MenuItem(WallstrideSwitchPath)]
-        static void SwitchWallstride()
-        {
-            if (!Runner.TryServer(out GameObject body, out _)) { Debug.LogWarning("[KnPlayHere] No player in Play DOTS here."); return; }
-            var progression = body.GetComponent<PlayerCharacterProgression>();
-            SetFeelLevel(progression != null && progression.CurrentLevel >= FeelLevelOpen ? FeelLevelLocked : FeelLevelOpen);
-        }
-
-        [MenuItem(WallstrideSwitchPath, true)]
-        static bool SwitchWallstrideValid() => Active && EditorApplication.isPlaying;
+        /// <summary>The feel checkpoint's level: 60 opens every traversal (owner, 2 Nov: no Wallstride switch; a roof's ground click backflips with it on).</summary>
+        const int FeelLevelOpen = 60;
 
         static void SetFeelLevel(int level)
         {
@@ -746,8 +734,7 @@ namespace KryticalNova.Persistence.Entities
             var progression = body.GetComponent<PlayerCharacterProgression>();
             if (progression == null) return;
             progression.SetLevel(level);
-            Debug.Log($"[KnPlayHere] level {level}: Wallstride {(level >= FeelLevelOpen ? "on" : "off (the walk's own jumps: the roof-edge backflip)")}, " +
-                $"Waterstride {(level >= FeelLevelOpen ? "on" : "off")}");
+            Debug.Log($"[KnPlayHere] level {level}: Wallstride and Waterstride {(level >= FeelLevelOpen ? "on" : "off")}");
         }
 
         /// <summary>
@@ -1118,8 +1105,7 @@ namespace KryticalNova.Persistence.Entities
                 }
                 if (!HasScriptedTries)
                 {
-                    // the owner's feel checkpoint (M3c, 2 Nov): every traversal open by hand; the menu's Wallstride switch drops to level 1
-                    // for the roof-edge backflip (with Wallstride open the walk takes a wall down instead, NGO's order)
+                    // the owner's feel checkpoint (M3c, 2 Nov): every traversal open by hand
                     SetFeelLevel(FeelLevelOpen);
                     Log("no scripted tries: the owner clicks by hand");
                     yield break;
@@ -2124,12 +2110,22 @@ namespace KryticalNova.Persistence.Entities
                 bool onWater = em.GetComponentData<MoveState>(ghost).Water != 0;
                 Vector3 feet = ServerPosition(ghost) - Vector3.up * offset;
                 Vector3 target = new Vector3(feet.x + 6f, feet.y, feet.z + 4f);
-                Camera cam = Camera.main;
+                // the click's ray as the game camera casts it (behind and above the body, about 50 degrees down) through the surface spot:
+                // the hit under it is the lake bed; the view's own aim (TryWaterUnderRay) turns it back into the spot on the surface
+                Vector3 back = (feet - target); back.y = 0f; back = back.normalized;
+                var ray = new Ray(target + back * 8f + Vector3.up * 9.5f, (target - (target + back * 8f + Vector3.up * 9.5f)).normalized);
                 float bedOff = -1f;
-                if (cam != null && Physics.Raycast(cam.ScreenPointToRay(cam.WorldToScreenPoint(target)), out RaycastHit bed, 500f, Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore))
+                Vector3 aim = target;
+                string jumpPress = "no hit under the click";
+                var water = OwnBody.GetComponent<PlayerWaterstrideMotor>();
+                if (Physics.Raycast(ray, out RaycastHit bed, 500f, Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore))
+                {
                     bedOff = Flat(bed.point - target);
+                    jumpPress = water != null && water.TryWaterUnderRay(ray, bed, out aim) ? $"aimed at the surface {Flat(aim - target):F2} m from the spot" : "the view found no water on the ray (aims at the bed)";
+                    if (water == null || !water.TryWaterUnderRay(ray, bed, out aim)) aim = bed.point;
+                }
                 Select(MovementSkillId.Jump);
-                string jumpPress = PressAt(OwnBody, target);
+                BodyClicks.Jump(aim);
                 float j0 = Time.realtimeSinceStartup;
                 while (Time.realtimeSinceStartup - j0 < 4f) yield return null;
                 Vector3 landed = ServerPosition(ghost) - Vector3.up * offset;
@@ -2144,14 +2140,16 @@ namespace KryticalNova.Persistence.Entities
                 if (resources != null) resources.RestoreChi(resources.MaxChi);
                 Select(MovementSkillId.Run);
                 Vector3 here = ServerPosition(ghost) - Vector3.up * offset;
-                string runPress = PressAt(OwnBody, new Vector3(here.x + 9f, here.y, here.z + 1f));
+                string runPress = "sent";
+                BodyClicks.Ground(new Vector3(here.x + 9f, here.y, here.z + 1f), true);
                 float r0 = Time.realtimeSinceStartup;
                 while (Time.realtimeSinceStartup - r0 < 0.7f) yield return null;
                 bool movingOnWater = Moving(ghost) && em.GetComponentData<MoveState>(ghost).Water != 0;
                 Vector3 at = ServerPosition(ghost) - Vector3.up * offset;
                 Vector3 second = new Vector3(at.x - 1f, at.y, at.z + 8f);
                 float start = Flat(at - second), worstBack = 0f, best = start;
-                string turnPress = PressAt(OwnBody, second);
+                string turnPress = "sent";
+                BodyClicks.Ground(second, true);
                 float s0 = Time.realtimeSinceStartup;
                 while (Time.realtimeSinceStartup - s0 < 1f)
                 {
@@ -2193,7 +2191,8 @@ namespace KryticalNova.Persistence.Entities
                 var progression = body.GetComponent<PlayerCharacterProgression>();
                 if (motor == null) { Log("ledge: FAIL; no wall motor"); tally.Tried++; yield break; }
                 float offset = body.GetComponent<UnityEngine.AI.NavMeshAgent>() is UnityEngine.AI.NavMeshAgent ag ? ag.baseOffset : 0f;
-                if (progression != null) progression.SetLevel(1);   // Wallstride locked: the walk's own jumps, never the wall's ways
+                // owner, 2 Nov (design 9 item 6): with Wallstride ON a ground click from a roof backflips off its edge, a wall click goes onto the wall
+                if (progression != null && progression.CurrentLevel < 60) progression.SetLevel(60);
                 yield return new WaitForSeconds(1f);
                 m_Pops.Reset();
                 float watch = Time.realtimeSinceStartup;
@@ -2209,12 +2208,30 @@ namespace KryticalNova.Persistence.Entities
                 // owner, 2 Nov: the backflip is only off a roof's edge; the gaps keep the normal jump (proved in gui-ledge-1, not run again)
                 string wallWhy = motor.FindTestWall(TestGraphWall, out PlayerWallRunMotor.TestWall wall);
                 if (wallWhy != null) { Log("ledge: the roof with no walk down: NOT TESTED; " + wallWhy); tally.Tried++; yield break; }
-                yield return LedgeTry(body, ghost, tally, "off a roof with no walk down to the street, masculine", wall.Top, wall.FrontFar, BodyType.Masculine, offset);
-                yield return LedgeTry(body, ghost, tally, "off the same roof, feminine", wall.Top, wall.FrontFar, BodyType.Feminine, offset);
+                yield return LedgeTry(body, ghost, tally, "off a roof with no walk down to the street, Wallstride on, running, masculine", wall.Top, wall.FrontFar, BodyType.Masculine, offset, run: true);
+                yield return LedgeTry(body, ghost, tally, "off the same roof, walking, feminine", wall.Top, wall.FrontFar, BodyType.Feminine, offset, run: false);
+                // the wall click from the roof still goes onto the wall (Wallstride), never the drop
+                if (OverTheCap()) yield break;
+                Teleport(em, ghost, wall.Top + Vector3.up * offset);
+                yield return new WaitForSeconds(1.5f);
+                if (body.GetComponent<PlayerResources>() is PlayerResources res) res.RestoreChi(res.MaxChi);
+                tally.Tried++;
+                BodyClicks.Wall(wall.Onto, wall.Normal, true, false);
+                float w0 = Time.realtimeSinceStartup;
+                bool onWall = false, routeJump = false;
+                while (Time.realtimeSinceStartup - w0 < 5f)
+                {
+                    yield return null;
+                    onWall |= em.GetComponentData<MoveState>(ghost).Wall != 0;
+                    routeJump |= WallPhase.IsRouteJump(em.GetComponentData<PoseTilt>(ghost).Phase);
+                }
+                bool wallOk = onWall && !routeJump;
+                if (wallOk) tally.Passed++;
+                Log($"ledge: a wall click from the same roof: {(wallOk ? "PASS" : "FAIL")}; onto the wall {onWall}, a route jump {routeJump}");
             }
 
             /// <summary>One plain click whose walk must jump, the owner's body shown as <paramref name="look"/>, judged.</summary>
-            IEnumerator LedgeTry(GameObject body, Entity ghost, VaultTally tally, string what, Vector3 from, Vector3 to, BodyType look, float offset)
+            IEnumerator LedgeTry(GameObject body, Entity ghost, VaultTally tally, string what, Vector3 from, Vector3 to, BodyType look, float offset, bool run = false)
             {
                 if (OverTheCap()) yield break;
                 World server = KnBootstrap.ServerWorld;
@@ -2239,17 +2256,31 @@ namespace KryticalNova.Persistence.Entities
                 int autos0 = plans.AutoWalls, paid0 = grip != null ? grip.LedgeJumpsPaid : 0;
                 float flux0 = Flux(body);
                 string at = DateTime.Now.ToString("HH:mm:ss.fff", CultureInfo.InvariantCulture);
-                BodyClicks.Ground(to, false);
+                BodyClicks.Ground(to, run);
                 float clicked = Time.realtimeSinceStartup, stoppedAt = -1f, glide = 0f;
                 Vector3 bodyAtStop = default;
-                bool sawJump = false;
+                bool sawJump = false, sawFall = false, sawLand = false;
+                // design 9 item 7: the drawn body is down on the ground when the jump's last phase gives way to the walk
+                var shown = OwnBody != null ? OwnBody.GetComponent<PlayerPresentationState>() : null;
+                byte lastShown = 0;
+                float walkedAbove = -1f;
                 m_Pops.Reset();
                 while (Time.realtimeSinceStartup - clicked < 15f)
                 {
                     yield return new WaitForEndOfFrame();
                     PopFrame(ghost);
-                    sawJump |= WallPhase.IsRouteJump(em.GetComponentData<PoseTilt>(ghost).Phase);
+                    byte serverPhase = em.GetComponentData<PoseTilt>(ghost).Phase;
+                    sawJump |= WallPhase.IsRouteJump(serverPhase);
+                    sawFall |= serverPhase == WallPhase.RouteFall;
+                    sawLand |= serverPhase == WallPhase.RouteLand;
                     Vector3 b = OwnBody.transform.position;
+                    if (shown != null)
+                    {
+                        if (lastShown != 0 && shown.ShownWallPhase == 0 && walkedAbove < 0f
+                            && UnityEngine.AI.NavMesh.SamplePosition(b, out UnityEngine.AI.NavMeshHit under, 3f, UnityEngine.AI.NavMesh.AllAreas))
+                            walkedAbove = b.y - offset - under.position.y;
+                        lastShown = shown.ShownWallPhase;
+                    }
                     if (Time.realtimeSinceStartup - clicked > 1f && !Moving(ghost))
                     {
                         if (stoppedAt < 0f) { stoppedAt = Time.realtimeSinceStartup; bodyAtStop = b; }
@@ -2262,13 +2293,15 @@ namespace KryticalNova.Persistence.Entities
                 bool took = plans.AutoWalls == autos0 + 1;
                 int paid = grip != null ? grip.LedgeJumpsPaid - paid0 : 0;
                 float miss = Vector3.Distance(end, to);
-                bool ok = took && sawJump && paid >= 1 && miss < 0.6f && apart < 0.05f && glide < 0.02f && m_Pops.Pops == 0;
+                bool ok = took && sawJump && sawFall && sawLand && walkedAbove >= -0.1f && walkedAbove < 0.1f
+                    && paid >= 1 && miss < 0.6f && apart < 0.05f && glide < 0.02f && m_Pops.Pops == 0;
                 if (ok) tally.Passed++;
                 Log($"ledge: {what} clicked at {at}: {(ok ? "PASS" : "FAIL")}; the server {(took ? "took it as the walk's jumps" : "made it a plain walk")} " +
                     $"(\"{(plans.WallPlanner as BodyWallPlanner)?.LastDecision}\"); the jump shown {sawJump}, Jump Flux paid {paid}; the owner's body " +
                     $"{(view != null ? view.State.bodyType.ToString() : "?")}; ended {miss:F2} m from the click at {end.x:F1},{end.y:F2},{end.z:F1}; " +
                     $"owner {apart * 100f:F1} cm from the server; glide {glide * 100f:F1} cm; pops {m_Pops.Pops}" +
-                    $"{(m_Pops.Pops > 0 ? " (worst: " + m_Pops.Worst + ")" : "")}; Flux {flux0:F0} -> {Flux(body):F0}");
+                    $"{(m_Pops.Pops > 0 ? " (worst: " + m_Pops.Worst + ")" : "")}; Flux {flux0:F0} -> {Flux(body):F0}; " +
+                    $"fall {sawFall}, landing {sawLand}, the drawn body {walkedAbove:F2} m above the ground when the walk took over");
                 yield return new WaitForSeconds(0.8f);
             }
 

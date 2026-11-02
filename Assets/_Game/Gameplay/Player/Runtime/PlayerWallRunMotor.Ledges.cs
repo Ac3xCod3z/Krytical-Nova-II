@@ -17,6 +17,9 @@ namespace KryticalNova.Player
         private const float LedgeDropMinHeight = 1.5f, LedgeDropTrigger = 0.6f;
         private static readonly float[] LedgeDropReach = { 4.5f, 3f, 1.8f };
 
+        // NGO's landing settle before the body moves off (PlayerAnimancerMotor.LandingSettleSeconds), on a 2 cm step
+        private const float RouteLandSettle = 0.15f, RouteLandStep = 0.02f;
+
         /// <summary>Why the last route's jump could not be laid out (NGO's words; the scripted run and the owner's message), or null.</summary>
         public string LastLedgeRefusal { get; private set; }
 
@@ -114,7 +117,13 @@ namespace KryticalNova.Player
             Vector3 from = layout.LastFeet;
             string why = jumpMotor.PlanForGhost(from, to, out Vector3 landing, out float peak);
             if (why != null) return why;
-            layout.Arc(phase, landing, peak - Mathf.Max(from.y, landing.y), WallWalkLayout.Facing(landing - from));
+            Quaternion facing = WallWalkLayout.Facing(landing - from);
+            layout.Arc(phase, landing, peak - Mathf.Max(from.y, landing.y), facing, fallAfterApex: true);
+            // touchdown: the landing and NGO's settle (PlayerAnimancerMotor.LandingSettleSeconds) before the walk goes on, a step of
+            // 2 cm on (a leg is timed by its length); owner, 2 Nov, design 9 item 7
+            Vector3 on = facing * Vector3.forward;
+            on.y = 0f;
+            layout.Leg(WallRunPhase.RouteLand, landing + on.normalized * RouteLandStep, facing, RouteLandSettle, WallWalkLayout.Linear, WallWalkLayout.Linear);
             return null;
         }
     }

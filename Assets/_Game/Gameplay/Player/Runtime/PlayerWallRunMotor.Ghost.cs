@@ -113,6 +113,15 @@ namespace KryticalNova.Player
             var walk = new NavMeshPath();
             bool walkable = NavMesh.CalculatePath(feet, destination, filter, walk) && walk.status == NavMeshPathStatus.PathComplete;
 
+            // Owner's rule (2 Nov, design 9 item 6; the backflip is new, not NGO's): from a roof with no walk down, a ground click below goes
+            // to the edge at the walk's own speed and backflips off, before NGO's way down the wall (A1); a wall click still goes onto the
+            // wall (the wall click, never asked here). A drop the jump refuses falls through to the wall's ways, as NGO's order has it.
+            if (!walkable && feet.y - destination.y >= LedgeDropMinHeight)
+            {
+                WallWalkLayout drop = PlanLedgesForGhost(feet, destination, walk, walkable, in ask);
+                if (drop != null && LastLedgeRefusal == null) { way = AutoWay.Ledge; return drop; }
+            }
+
             // A1: over a wall by the graph (NGO TryArmSurfaceRoute; the prop blockers of the wall walk, owner 1 Nov)
             SurfaceGraph graph = ZoneGraph;
             if (ask.Open && graph != null && ask.HasFluxForOne && (!walkable || ask.Run))

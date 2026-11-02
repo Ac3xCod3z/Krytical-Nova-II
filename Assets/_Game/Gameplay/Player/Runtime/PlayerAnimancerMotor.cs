@@ -1089,6 +1089,10 @@ namespace KryticalNova.Player
             warpedJumpState.ApplyFootIK = false; // airborne: nothing to plant the feet on
         }
 
+        /// <summary>Seconds left of the warped action playing now at its speed (0 when none, or a warped jump's chain).</summary>
+        public float WarpedActionSecondsLeft => !warpedJumpActive && warpedJumpState != null && warpedJumpState.Speed > 0f && warpedJumpState.Clip != null
+            ? Mathf.Max(0f, (warpedJumpState.Clip.length - warpedJumpState.Time) / warpedJumpState.Speed) : 0f;
+
         /// <summary>
         /// Touchdown of a warped action: straight back into locomotion at the speed the body resumes with, using the
         /// jump's own hand-off, so the character lands running instead of settling first.

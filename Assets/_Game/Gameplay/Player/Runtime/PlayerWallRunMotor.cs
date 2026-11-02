@@ -43,6 +43,10 @@ namespace KryticalNova.Player
         LedgeJump,
         /// <summary>A jump across a gap or down a drop between roofs on the way (part 5b; <see cref="LedgeJumpClips"/>, empty = the normal jump).</summary>
         GapJump,
+        /// <summary>A route's jump coming down after its apex (owner, 2 Nov, design 9 item 7): the fall loop until the ground (NGO's jump chain).</summary>
+        RouteFall,
+        /// <summary>A route's jump touching down: the landing clip and NGO's settle before the walk goes on.</summary>
+        RouteLand,
     }
 
     /// <summary>The phase every machine plays, and how it faces.</summary>
@@ -1106,14 +1110,40 @@ namespace KryticalNova.Player
                         ? ledgeJumpClips.For(pose.Phase == WallRunPhase.LedgeJump ? LedgeJumpKind.EdgeDrop : LedgeJumpKind.Gap,
                             identity != null ? identity.State.bodyType : KryticalNova.CharacterCreation.BodyType.Masculine)
                         : null;
-                    Play(jumpClip != null ? jumpClip : animancerMotor.WarpedJumpClip(0), pose.Duration, fallbackAirborne: true);
+                    // the take-off and the flip fill most of the air (the jump and its fall), the fall loop the rest (owner, 2 Nov: the flip
+                    // looked good; the body must not walk before the ground)
+                    Play(jumpClip != null ? jumpClip : animancerMotor.WarpedJumpClip(0), pose.Duration * RouteFlipShare, fallbackAirborne: true);
                     if (feel != null) { feel.JumpTakeoff(transform, Mine()); feel.Airborne(transform, true); }
+                    break;
+                case WallRunPhase.RouteFall:
+                    // NGO's fall loop until the ground, once the flip has played out
+                    if (fallRoutine != null) StopCoroutine(fallRoutine);
+                    fallRoutine = StartCoroutine(FallLoopAfterFlip(animancerMotor.WarpedActionSecondsLeft));
+                    break;
+                case WallRunPhase.RouteLand:
+                    if (fallRoutine != null) { StopCoroutine(fallRoutine); fallRoutine = null; }
+                    Play(animancerMotor.WarpedJumpClip(3), 0f, fallbackAirborne: false);   // NGO's landing clip at its own speed, in place
+                    if (feel != null) { feel.Airborne(transform, false); feel.Landed(transform, Mine()); }
                     break;
                 default:
                     Play(dropClip, 0f, fallbackAirborne: true);
                     if (feel != null) feel.Airborne(transform, true);
                     break;
             }
+        }
+
+        /// <summary>The share of a route jump's air time the take-off and flip fill; the fall loop plays the rest (design 9 item 7).</summary>
+        private const float RouteFlipShare = 0.7f;
+        private Coroutine fallRoutine;
+
+        private System.Collections.IEnumerator FallLoopAfterFlip(float wait)
+        {
+            if (wait > 0f) yield return new WaitForSeconds(wait);
+            fallRoutine = null;
+            if (shownPhase != WallRunPhase.RouteFall) yield break;
+            AnimationClip loop = animancerMotor.WarpedJumpClip(2);
+            if (loop != null) Play(loop, 0f, fallbackAirborne: true);
+            else animancerMotor.PlayJumpAirborne();
         }
 
         /// <summary>Plays a clip over the body (fitted to <paramref name="seconds"/> when given), or the jump's airborne pose.</summary>

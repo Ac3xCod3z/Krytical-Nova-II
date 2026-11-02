@@ -368,7 +368,11 @@ namespace KryticalNova.Player.Entities
             byte phase = legs[i].Phase;
             long micros = 0;
             for (int j = i; j >= 1 && legs[j].Micros > 0 && legs[j].Phase == phase; j--) micros += legs[j].Micros;
-            for (int j = i + 1; j < count && legs[j].Micros > 0 && legs[j].Phase == phase; j++) micros += legs[j].Micros;
+            int next = i + 1;
+            for (; next < count && legs[next].Micros > 0 && legs[next].Phase == phase; next++) micros += legs[next].Micros;
+            // a route's jump is shown over its whole air time, the fall after its apex included (design 9 item 7: the flip, then the fall loop)
+            if (WallPhase.IsRouteJump(phase))
+                for (; next < count && legs[next].Micros > 0 && legs[next].Phase == WallPhase.RouteFall; next++) micros += legs[next].Micros;
             return (ushort)math.min(micros / 1000, ushort.MaxValue);
         }
 

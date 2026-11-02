@@ -127,8 +127,11 @@ namespace KryticalNova.Player.Entities.Tests
                     corners.Add(new int3(4000, 5000, poseMm.z)); legs.Add(default);
                     var air = new WallCorner { Phase = WallPhase.LedgeJump, Micros = 300000, Ease = WallCorner.Eases(WallEase.Out, WallEase.Linear), UpY = 1000, FwdX = 1000 };
                     corners.Add(new int3(5000, 5800, poseMm.z)); legs.Add(air);
-                    air.Micros = 700000; air.Ease = WallCorner.Eases(WallEase.In, WallEase.Linear);
+                    // after the apex the fall (design 9 item 7: the fall loop), then the landing's settle on a 2 cm step
+                    air.Phase = WallPhase.RouteFall; air.Micros = 700000; air.Ease = WallCorner.Eases(WallEase.In, WallEase.Linear);
                     corners.Add(new int3(7000, 0, poseMm.z)); legs.Add(air);
+                    air.Phase = WallPhase.RouteLand; air.Micros = 150000; air.Ease = 0;
+                    corners.Add(new int3(7020, 0, poseMm.z)); legs.Add(air);
                     corners.Add(new int3(LedgeClick, 0, poseMm.z)); legs.Add(default);
                     plan = new WallPlan { SpeedMmps = 9000, OnWallFrom = 255, OffWallFrom = 255 };
                     return WallAnswer.Planned;
@@ -322,16 +325,22 @@ namespace KryticalNova.Player.Entities.Tests
             var system = rig.Server.GetExistingSystemManaged<WallGripSystem>();
             system.JumpCost = jumps;
             rig.Sources[0].Click(new int3(LedgeClick, 0, 0));
-            bool sawLedge = false;
+            bool sawLedge = false, sawFall = false, sawLand = false;
+            int jumpMillis = 0;
             for (int i = 0; i < 150; i++)
             {
                 rig.Tick();
-                sawLedge |= rig.Get<PoseTilt>(rig.Server, rig.ServerGhosts[0]).Phase == WallPhase.LedgeJump;
+                var tilt = rig.Get<PoseTilt>(rig.Server, rig.ServerGhosts[0]);
+                if (tilt.Phase == WallPhase.LedgeJump) { sawLedge = true; jumpMillis = tilt.PhaseMillis; }
+                sawFall |= tilt.Phase == WallPhase.RouteFall;
+                sawLand |= tilt.Phase == WallPhase.RouteLand;
             }
             Assert.AreEqual(1, rig.Server.GetExistingSystemManaged<PlayerServerPlanSystem>().AutoWalls, "the server planned the walk with its jump");
             if (enoughFlux)
             {
                 Assert.IsTrue(sawLedge, "the jump's phase was shown");
+                Assert.AreEqual(1000, jumpMillis, "the jump's clip is fitted to its whole air time, the fall after the apex included (design 9 item 7)");
+                Assert.IsTrue(sawFall && sawLand, "then the fall loop and the landing, before the walk on");
                 Assert.AreEqual(1, jumps.Paid, "the Jump's Flux paid once");
                 Assert.AreEqual(1, system.LedgeJumpsPaid);
                 Assert.AreEqual(new int3(LedgeClick, 0, 0), rig.ServerPose().Mm, "landed and walked on (server)");
