@@ -363,4 +363,26 @@ filtered suite 202/202; compile 74/74, server 33/33.
 | a face the graph does not cover, walkable top 8.9 m up | start -25.0,0.05,-57.0; face -25.0,1.25,-50.5 facing -z; top -24.3,9.00,-49.4 | running at its top: up the face by itself, then on 2 m (owner change); walking: the plain walk | `FindPart5ClimbFaces` (50 m grid over the terrain: 8 climbable faces, 4 taken by A3; none by the spawn, whose walls are all the graph's): UpClimb |
 | the test graph wall's front | -10.08,0.03,-38.82 | a click directly on the wall (the core case, unchanged) | part 4's places (5.5) |
 
-- [ ] GUI run `KN_PLAYHERE_AUTO=1` (gui-auto-1): the pop check proved, the seven tries above, GIFs to Drive `DOTS-proof`.
+- [x] GUI run `KN_PLAYHERE_AUTO=1` (gui-auto-1, 2 Nov): 7 of 7 PASS. The pop check proved in the run (standing 0, the teleport 1).
+  Street to roof running, roof to street walking, street to roof walking: over the wall by itself (on the wall on the way, 0.00-0.06 m
+  from the click). Street to street: a plain walk. Up the face running: climbed (12 Flux), on 2 m over the roof (owner change), 0.09 m
+  from the click. The same walking: a plain walk. A click directly on the wall: onto it. Owner 0.0 cm from the server, glide 0.0 cm,
+  pops 0 on every try. GIFs `DOTS-proof/dots-auto1-1..5-*.gif`.
+
+## 7. Part 5b, the roof-edge drop and the route's gap jump: NGO rules (DOTS 9, 2 Nov; before any design or code)
+
+Owner picks (1 Nov): a move off a roof with no walk down drops off its edge, and a route that meets a gap between roofs jumps it, with
+the real jump, then keeps going; built as its own part right after part 5, the jump-off playing the Synty Sporty backflip (`_Masc` /
+`_Femn` by the replicated body type, chosen by data; see 6.1). PCP = `PointAndClickPlayer.cs`.
+
+| # | Rule (NGO) | Source | Numbers | Scene data | DOTS today |
+|---|---|---|---|---|---|
+| B1 | the agent never crosses a NavMeshLink by itself: a route that reaches one jumps it with the real Jump to the link's far end, then carries on to the ordered place | PCP:255, 1556-1573, 1559-1564 | - | Zone01: 98 `NavMeshLink`s (the gaps between roofs) | not built; the DOTS walk plans with `NavMesh.CalculatePath` (`NavMeshPathPlanner`), whose corners include the links' ends, so a route is expected to cross a gap as a straight line in the air (to prove in edit mode first) |
+| B2 | a gap the jump refuses: the jump's own words, else "Jump is needed to cross that gap."; the body goes back on the link's near end and stops | PCP:1568, 1574-1577 | - | - | - |
+| B3 | the drop is asked only when there is no walk there (after the wall's ways, before the vault) | PCP:1673 | - | - | - |
+| B4 | the drop's plan: the feet at least `DropMinHeight` above the place; the edge toward the place (`NavMesh.Raycast` along the line), else the roof's nearest edge (`FindClosestEdge`); landings 4.5 / 3 / 1.8 m out past the edge (farthest first: clear of the wall below), each a ray down (500 m) that lands at least 1.5 m below the edge on NavMesh within 1.5 m and 0.5 m of height; a complete walk to the edge | PCP:1585-1618 | DropMinHeight 1.5; DropReach 4.5, 3, 1.8; 500; 1.5; 0.5 | roof NavMesh edges, colliders below | not built |
+| B5 | at the edge (within `DropTrigger` 0.6 m + two frames' travel) the first landing the jump takes is jumped; none: the move stops, the jump's words or "There is no way down from here." | PCP:1621-1637 | DropTrigger 0.6 | - | - |
+| B6 | after the landing, the move walks on to the ordered place (`crossingLink` -> `ResumeMoveAfterVault`) | PCP:1559-1564, 1632 | - | NavMesh | the walk on after a hand-off exists for the catch (part 4) |
+| B7 | the jump is NGO's `TryJump` (the Jump rank's distance and height, its Flux, the warped jump clip) | PCP:1569, 1631; `PlayerJumpMotor.TryJump` | rank | colliders | the DOTS jump (`MotionPlan`, M3b) with the same checks and words |
+
+Owner changes for 5b: the jump-off clip is the Sporty backflip (data, by body type), not NGO's jump clip.

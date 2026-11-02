@@ -1116,11 +1116,13 @@ which do not run on a DOTS client. They take two server gaps with them: Run Flux
   17e7125cb; `WallWorldTests` catch 4/4 at 0 and 100 ms). gui-catch-5 (all 16 tries PASS, pops 0, owner 0.0 cm): the tree caught
   where the arc meets it, 0.80 / 1.80 / 2.80 m; the graph wall grabbed where clicked, 2.54 / 5.15 / 8.15 m (Jump rank 20 reaches 67.5 m in
   Play: every Zone01 wall click is within reach). GIFs `dots-catch2-1..3`, `dots-catch4-1`, `dots-catch5-1..3`.
-- [ ] part 5, THE SELF-STARTING RUN (NGO rule 16, auto-arm): NGO rules first, its test places planned and proven, then design and code.
-  Done so far (design section 6): NGO rules A1-A6; owner picks (1 Nov): after a climb by itself the move keeps going (owner change), the
-  roof-edge drop and the route's gap jump are the next small part (with the backflip off the edge); the map's travel is a plain click in
-  DOTS, so it takes the same way. Code + EditMode (`WallWorldTests` 0/100 ms, filtered suite 202/202); test places proved in edit mode
-  (design 6.2). Left: the GUI run gui-auto-1 with GIFs.
+- [x] part 5, THE SELF-STARTING RUN (NGO rule 16, auto-arm): NGO rules first, its test places planned and proven, then design and code.
+  Design section 6: NGO rules A1-A6; owner picks (1 Nov): after a climb by itself the move keeps going (owner change), the roof-edge drop
+  and the route's gap jump are the next small part (with the backflip off the edge); the map's travel is a plain click in DOTS, so it
+  takes the same way. Code c219b9671 + EditMode (`WallWorldTests` 0/100 ms, filtered suite 202/202); test places proved in edit mode
+  (design 6.2). GUI run gui-auto-1 (2 Nov): 7 of 7 PASS (over a wall by itself both ways, running and walking where there is no walk; up
+  a face by itself and on; the plain walk where Wallstride does not take it; a direct wall click unchanged), owner 0.0 cm, glide 0, pops 0.
+  GIFs `DOTS-proof/dots-auto1-1..5-*.gif`.
 - [ ] part 5b, THE ROOF-EDGE DROP AND THE ROUTE'S GAP JUMP (NGO PCP:1552-1637; owner pick 1 Nov): walk to the edge, the real DOTS jump with
   the Sporty backflip off it (`_Masc` / `_Femn` by the body type, data), keep going; GUI proof with one masculine and one feminine try.
 - [ ] the owner's rules (memory [[wallstride-decisions]]): no glitching, never inside a building, a jump catches a wall at a slant
