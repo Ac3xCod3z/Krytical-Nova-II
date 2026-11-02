@@ -61,7 +61,8 @@ namespace KryticalNova.Persistence.Entities
             || Environment.GetEnvironmentVariable("KN_PLAYHERE_CATCH") == "1"                   // the scripted jump that catches a wall (M3c part 4)
             || Environment.GetEnvironmentVariable("KN_PLAYHERE_AUTO") == "1"                    // the scripted self-starting run (M3c part 5)
             || Environment.GetEnvironmentVariable("KN_PLAYHERE_LEDGE") == "1"                   // the scripted route jumps (M3c part 5b)
-            || Environment.GetEnvironmentVariable("KN_PLAYHERE_FIXES") == "1";                  // the owner's feel-test fixes 1-3 (2 Nov)
+            || Environment.GetEnvironmentVariable("KN_PLAYHERE_FIXES") == "1"                   // the owner's feel-test fixes 1-3 (2 Nov)
+            || Environment.GetEnvironmentVariable("KN_PLAYHERE_ACROSS") == "1";                 // across the water when quicker (item 4)
         /// <summary>A folder: the scripted run saves a Game-view picture there every 0.1 s (proof for the owner, GUI Editor only).</summary>
         public const string CaptureVariable = "KN_PLAYHERE_CAPTURE";
 
@@ -1201,6 +1202,7 @@ namespace KryticalNova.Persistence.Entities
                 if (LedgeRun) yield return Ledges(body, ghost, walls);
                 if (TreeRun) yield return Climbs(body, ghost, walls, tree: true);
                 if (FixesRun) yield return Fixes(body, ghost, walls);
+                if (AcrossRun) yield return Acrosses(body, ghost, waters);
                 Log($"done: {arrived} of {tries} arrived, {landed} of {jumpPoints.Count} jumps passed, low-rank refusals {(lowRank.Ok ? "match" : "DIFFER")}, " +
                     $"{vaults.Passed} of {vaults.Tried} vaults passed, {waters.Passed} of {waters.Tried} Waterstride tries passed, " +
                     $"{walls.Passed} of {walls.Tried} wall walk tries passed, " +
@@ -1215,7 +1217,7 @@ namespace KryticalNova.Persistence.Entities
             /// the walk, the jumps and the vaults, so a run of Waterstride or the wall walk alone never started). Every gate reads this; a new
             /// scripted part is added here, and to <see cref="Scripted"/>, which reads the same variables before the runner exists.
             /// </summary>
-            bool HasScriptedTries => !string.IsNullOrEmpty(Walk) || !string.IsNullOrEmpty(Jump) || VaultCount > 0 || WaterRun || WallRun || ClimbRun || TreeRun || CatchRun || AutoRun || LedgeRun || FixesRun;
+            bool HasScriptedTries => !string.IsNullOrEmpty(Walk) || !string.IsNullOrEmpty(Jump) || VaultCount > 0 || WaterRun || WallRun || ClimbRun || TreeRun || CatchRun || AutoRun || LedgeRun || FixesRun || AcrossRun;
 
             /// <summary>Which scripted parts are on, for the log's first lines (a part that should run and is not listed shows at once).</summary>
             string ScriptedParts()
@@ -1232,6 +1234,7 @@ namespace KryticalNova.Persistence.Entities
                 if (AutoRun) on.Add("the self-starting run");
                 if (LedgeRun) on.Add("the route's jumps");
                 if (FixesRun) on.Add("the feel-test fixes 1-3");
+                if (AcrossRun) on.Add("across the water when quicker");
                 return on.Count > 0 ? string.Join(", ", on) : "none (by hand)";
             }
 
@@ -1512,7 +1515,7 @@ namespace KryticalNova.Persistence.Entities
                 bool moving = false;
                 while (Time.realtimeSinceStartup - clicked < 15f)
                 {
-                    yield return new WaitForEndOfFrame();
+                    yield return null;   // not WaitForEndOfFrame: it never resumes in a batch Editor
                     bool now = Moving(ghost) || (jump && Time.realtimeSinceStartup - clicked < 2f);
                     if (now) moving = true;
                     else if (!moving && Time.realtimeSinceStartup - clicked > 3f) break;   // never started (refused, or no way)
@@ -1545,6 +1548,150 @@ namespace KryticalNova.Persistence.Entities
                     $"(expected {(expectWater ? 1 : 0)}); ended {off:F2} m from the click (limit {(expectWater ? "0.75, a cell's centre" : "0.3")}) at {end.x:F1},{end.y:F2},{end.z:F1}; glide after the stop {glide * 100f:F1} cm (limit 2); " +
                     $"Flux {flux0:F0} -> {Flux(body):F0}");
                 yield return new WaitForSeconds(0.8f);
+            }
+
+            /// <summary>Across the water when quicker (env KN_PLAYHERE_ACROSS=1; owner change, feel test 2 Nov item 4).</summary>
+            static bool AcrossRun => Environment.GetEnvironmentVariable("KN_PLAYHERE_ACROSS") == "1";
+
+            /// <summary>Zone01's bridge over the river (x -6..6): its south and north ends, where the walk over it is as quick as across.</summary>
+            static readonly Vector3 BridgeSouth = new Vector3(0f, 0f, 187f), BridgeNorth = new Vector3(0f, 0f, 225f);
+
+            /// <summary>
+            /// Across the water (item 4, owner change: the quickest of walk, vault and Waterstride across, Run on or off): from the river's
+            /// south bank a click on the north bank runs across (Run on, then walking), the bridge's own crossing is walked (as quick). The
+            /// instrument first: the server's planner asked the same clicks before any click, with its reason.
+            /// </summary>
+            IEnumerator Acrosses(GameObject body, Entity ghost, VaultTally tally)
+            {
+                World server = KnBootstrap.ServerWorld;
+                var plans = server.GetExistingSystemManaged<PlayerServerPlanSystem>();
+                var planner = plans != null ? plans.WaterPlanner as BodyWaterPlanner : null;
+                var skills = OwnBody.GetComponent<PlayerMovementSkills>();
+                if (planner == null || skills == null) { Log("across: FAIL; the server has no Waterstride planner or the body no skills"); tally.Tried++; yield break; }
+                var em = server.EntityManager;
+                var progression = body.GetComponent<PlayerCharacterProgression>();
+                var resources = body.GetComponent<PlayerResources>();
+                float offset = body.GetComponent<UnityEngine.AI.NavMeshAgent>() is UnityEngine.AI.NavMeshAgent ag ? ag.baseOffset : 0f;
+                if (progression != null && progression.CurrentLevel < 60) progression.SetLevel(60);
+                if (!UnityEngine.AI.NavMesh.SamplePosition(SouthBank, out UnityEngine.AI.NavMeshHit south, 6f, UnityEngine.AI.NavMesh.AllAreas)
+                    || !UnityEngine.AI.NavMesh.SamplePosition(NorthBank, out UnityEngine.AI.NavMeshHit north, 6f, UnityEngine.AI.NavMesh.AllAreas))
+                { Log("across: FAIL; no NavMesh on the river's banks"); tally.Tried++; yield break; }
+                bool bridge = UnityEngine.AI.NavMesh.SamplePosition(BridgeSouth, out UnityEngine.AI.NavMeshHit bridgeSouth, 6f, UnityEngine.AI.NavMesh.AllAreas)
+                    & UnityEngine.AI.NavMesh.SamplePosition(BridgeNorth, out UnityEngine.AI.NavMeshHit bridgeNorth, 6f, UnityEngine.AI.NavMesh.AllAreas);
+                void Run(bool on) { if (on) { if (!skills.IsRunning) skills.ToggleSelection(MovementSkillId.Run); } else skills.SelectWalk(); }
+                string Probe(Vector3 to, bool run)
+                {
+                    var corners = new Unity.Collections.NativeList<Unity.Mathematics.int3>(PlayerLimits.MaxCorners, Unity.Collections.Allocator.Temp);
+                    PlayerPose pose = em.GetComponentData<PlayerPose>(ghost);
+                    var answer = planner.Plan(ghost, pose.Mm, Mm(to), run, false, false, corners, out _, out _);
+                    corners.Dispose();
+                    return answer + " (\"" + planner.LastDecision + "\")";
+                }
+
+                Teleport(em, ghost, south.position + Vector3.up * offset);
+                yield return new WaitForSeconds(1.5f);
+                if (resources != null) resources.RestoreChi(resources.MaxChi);
+                Log($"across planner check, south bank {south.position} to north bank {north.position}, Run on (expected Planned, across): {Probe(north.position, true)}");
+                Log($"across planner check, the same, Run off (expected Planned, across walking): {Probe(north.position, false)}");
+                Run(true);
+                yield return WaterTry(body, ghost, tally, "across the river, Run on", north.position, true, false, false, true);
+
+                Teleport(em, ghost, south.position + Vector3.up * offset);
+                yield return new WaitForSeconds(1.5f);
+                if (resources != null) resources.RestoreChi(resources.MaxChi);
+                Run(false);
+                yield return WaterTry(body, ghost, tally, "across the river, Run off (walking)", north.position, false, false, false, true);
+
+                if (bridge)
+                {
+                    Teleport(em, ghost, bridgeSouth.position + Vector3.up * offset);
+                    yield return new WaitForSeconds(1.5f);
+                    if (resources != null) resources.RestoreChi(resources.MaxChi);
+                    Log($"across planner check, the bridge {bridgeSouth.position} to {bridgeNorth.position}, Run on (expected NotWater, the bridge is as quick): {Probe(bridgeNorth.position, true)}");
+                    Run(true);
+                    yield return WaterTry(body, ghost, tally, "over the bridge (as quick: walked, not across)", bridgeNorth.position, true, false, false, false);
+                }
+                else { tally.Tried++; Log("across: the bridge control: NOT TESTED; no NavMesh at its ends"); }
+                skills.SelectWalk();
+                if (resources != null) resources.RestoreChi(resources.MaxChi);
+                yield return FenceRow(body, ghost, tally);
+            }
+
+            /// <summary>
+            /// Vaults in a row (owner, 2 Nov, item 4): two spawn planters in line, found by the server's own planners (a vault from in front
+            /// of the first, and another from its landing; the place is logged, so a GUI run repeats a place the batch run proved), then one
+            /// click past the second: both vaulted (the second planned at the first one's landing), ending on the click.
+            /// </summary>
+            IEnumerator FenceRow(GameObject body, Entity ghost, VaultTally tally)
+            {
+                World server = KnBootstrap.ServerWorld;
+                var em = server.EntityManager;
+                var plans = server.GetExistingSystemManaged<PlayerServerPlanSystem>();
+                MoveStats stats = em.GetComponentData<MoveStats>(ghost);
+                float offset = body.GetComponent<UnityEngine.AI.NavMeshAgent>() is UnityEngine.AI.NavMeshAgent ag ? ag.baseOffset : 0f;
+                var hedges = new List<Transform>();
+                foreach (Transform t in UnityEngine.Object.FindObjectsByType<Transform>(FindObjectsSortMode.None))
+                    if (t.name.StartsWith("SM_Env_Hedge", StringComparison.Ordinal)) hedges.Add(t);
+                hedges.Sort((a, b) => string.CompareOrdinal(a.name + a.position, b.name + b.position));   // the same order every run
+                Vector3 Middle(Transform t) => t.GetComponentInChildren<Renderer>() is Renderer r ? r.bounds.center : t.position;
+                var corners = new Unity.Collections.NativeList<Unity.Mathematics.int3>(PlayerLimits.MaxCorners, Unity.Collections.Allocator.Temp);
+                bool Vault(Vector3 from, Vector3 to, out Vector3 landing)
+                {
+                    landing = from;
+                    if (!VaultPath.Plan(plans.Planner, plans.VaultPlanner, ghost, Mm(from + Vector3.up * offset), Mm(to + Vector3.up * offset), stats.RunMmps, corners, out VaultPlan v)
+                        || v.LegLengthMm <= 0) return false;
+                    int along = 0;
+                    for (int i = 1; i < corners.Length; i++)
+                    {
+                        along += PlayerPath.DistanceMm(corners[i - 1], corners[i]);
+                        if (along > v.LegStartMm + 1) { landing = new Vector3(corners[i].x, corners[i].y, corners[i].z) * 0.001f - Vector3.up * offset; return true; }
+                    }
+                    return false;
+                }
+                Vector3 front = default, past = default;
+                string found = null;
+                int asked = 0;
+                for (int i = 0; i < hedges.Count && found == null && asked < 400; i++)
+                for (int j = 0; j < hedges.Count && found == null && asked < 400; j++)
+                {
+                    if (i == j) continue;
+                    Vector3 a = Middle(hedges[i]), b = Middle(hedges[j]), way = b - a;
+                    way.y = 0f;
+                    if (way.magnitude < 4f || way.magnitude > 14f) continue;
+                    way.Normalize();
+                    asked++;
+                    if (!UnityEngine.AI.NavMesh.SamplePosition(a - way * 3.5f, out UnityEngine.AI.NavMeshHit f, 1f, UnityEngine.AI.NavMesh.AllAreas)
+                        || !UnityEngine.AI.NavMesh.SamplePosition(b + way * 3f, out UnityEngine.AI.NavMeshHit p, 1f, UnityEngine.AI.NavMesh.AllAreas)) continue;
+                    if (!Vault(f.position, p.position, out Vector3 landed) || !Vault(landed, p.position, out _)) continue;
+                    front = f.position; past = p.position;
+                    found = $"{hedges[i].name} at {a} then {hedges[j].name} at {b}";
+                }
+                corners.Dispose();
+                tally.Tried++;
+                if (found == null) { Log($"across: vaults in a row: NOT TESTED; no two planters in line found ({asked} pairs asked)"); yield break; }
+                Log($"across: vaults in a row: the place: {found}; from {front} to {past} ({asked} pairs asked)");
+                var skills = OwnBody.GetComponent<PlayerMovementSkills>();
+                if (skills != null && !skills.IsRunning) skills.ToggleSelection(MovementSkillId.Run);
+                Teleport(em, ghost, front + Vector3.up * offset);
+                yield return new WaitForSeconds(1.5f);
+                int vaults0 = plans.Vaults, chained0 = plans.ChainedVaults;
+                string at = DateTime.Now.ToString("HH:mm:ss.fff", CultureInfo.InvariantCulture);
+                BodyClicks.Ground(past, true);
+                float clicked = Time.realtimeSinceStartup;
+                bool moving = false;
+                while (Time.realtimeSinceStartup - clicked < 12f)
+                {
+                    yield return null;
+                    bool now = Moving(ghost);
+                    if (now) moving = true;
+                    else if (moving || Time.realtimeSinceStartup - clicked > 3f) break;
+                }
+                float off = Flat(ServerPosition(ghost) - Vector3.up * offset - past);
+                bool ok = plans.Vaults - vaults0 == 2 && plans.ChainedVaults - chained0 == 1 && off < 0.3f;
+                if (ok) tally.Passed++;
+                Log($"across: vaults in a row clicked at {at}: {(ok ? "PASS" : "FAIL")}; {plans.Vaults - vaults0} vault(s) planned, " +
+                    $"{plans.ChainedVaults - chained0} from a landing; ended {off:F2} m from the click");
+                skills?.SelectWalk();
             }
 
             /// <summary>The scripted straight climb run (env KN_PLAYHERE_CLIMB=1; M3c part 2, `m3c-wallstride-design.md` section 4).</summary>

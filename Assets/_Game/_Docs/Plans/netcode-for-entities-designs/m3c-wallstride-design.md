@@ -492,6 +492,25 @@ the DOTS crew notes `dots9-owner-feel-findings-2nov.md`; the short form:
   short rise), then NGO's fall loop (`WarpedJumpClip(2)`) until the ground, the landing clip (`WarpedJumpClip(3)`) at touchdown. The
   share 0.7 is a DOTS choice inside the owner's pick (a).
 
+**Built for 4 (DOTS 9, 2 Nov; rules table `dots9-item4-rules-table.md` in the shared notes):**
+- Owner change, not NGO (NGO walks round: a land click from land is never Waterstride's, `PlayerWaterstrideMotor.cs:140-148`). A land
+  click from land whose line crosses water is also planned across (`WaterstrideRules.PlanAcross`): the walk to the shore where the line
+  first meets the water, the way over it (`WaterRoute`) to the shore where the line back from the place last leaves it, ashore, the
+  walk on. Run is not needed; the water's speed is the ground speed of the click (walk 5 m/s, or the Run rank's).
+- One shared compare (`BodyWaterPlanner.TryAcross`, the same on the server and the owner): the crossing's seconds (land metres at the
+  ground speed, water metres at the water speed) against the click's own way without it (`VaultPath.Plan`: the walk, or the walk with
+  its vault, the vault's leg at its air time). Across is taken when quicker by 0.25 s (`AcrossMarginSeconds`, so a near tie goes the
+  same way on both) and when the Flux covers every second on the water (3 a second, whole points), else the walk plans the click as
+  before. A walk that stops short of the place (a partial NavMesh path: the far bank) counts as no way round.
+- DOTS choices inside the pick: vault against walk stays NGO's length rule (min saving 0); a crossing pays no Run Flux (as a water click);
+  NGO's mid-walk vault watch (`KeepWatching`) is not ported (the owner picked the click-time planner, option a, over it).
+- Vaults in a row (owner pick a, 2 Nov): when a vault lands, the way on to the same place is planned again from the landing (NGO's
+  `ResumeMoveAfterVault`), and another vault on it is taken as a server order the owner predicts (`PlayerServerPlanSystem.ChainVault`;
+  the Run already paid stays paid). Test `VaultWorldTests.TwoFencesInARow_...` (server and owner, 0 and 100 ms); proof: two spawn planters
+  in line, found by the server's planner and logged.
+- Tests: `WaterstrideRulesTests` (a river with two banks: the way across, run or not; the clicks it never takes; the time, margin and
+  Flux rules). Proof: `KnPlayHere` `KN_PLAYHERE_ACROSS=1` (south bank to north bank Run on and walking, the bridge as the control).
+
 **Proof of 2 and 3, and the owner's hand test:** the GUI proof aims the clicks with a ray from above (as a camera would) and hands them
 to the body (`BodyClicks`), because the scripted screen presses missed. The owner tests both by hand after the trip, which covers the
 camera-click wiring: a jump from the water lands on the clicked spot (2); a re-click while waterstriding turns at once, no step back (3).

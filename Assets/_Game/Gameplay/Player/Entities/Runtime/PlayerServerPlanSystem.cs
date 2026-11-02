@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
@@ -87,6 +88,7 @@ namespace KryticalNova.Player.Entities
             foreach (var e in entities)
             {
                 var input = em.GetComponentData<PlayerInput>(e);
+                ChainVault(em, e, in input);
                 if (input.Jump != 0 && input.Click.IsSet && !em.IsComponentEnabled<ServerOrderRequest>(e)) continue;   // PlayerJumpServerSystem's
                 bool click = input.Click.IsSet && input.ClickSeq != 0;
                 bool request = em.IsComponentEnabled<ServerOrderRequest>(e);
@@ -346,6 +348,64 @@ namespace KryticalNova.Player.Entities
             NativeArray<WallCorner> clientLegs = em.HasBuffer<ClientWallCorner>(e) ? em.GetBuffer<ClientWallCorner>(e).Reinterpret<WallCorner>().AsNativeArray() : default;
             return PlayerMovement.InTimedWallLeg(in m, em.GetComponentData<PathPlan>(e), em.GetBuffer<PathCorner>(e).Reinterpret<int3>().AsNativeArray(),
                 in client, clientCorners, em.GetComponentData<WallPlan>(e), em.GetBuffer<WallCorner>(e).AsNativeArray(), in clientWall, clientLegs);
+        }
+
+        /// <summary>A walk over its vault: where it was going and whether it ran (the way on is planned again at the landing).</summary>
+        struct VaultWatch
+        {
+            public bool Over;
+            public int3 Goal;
+            public bool Run;
+        }
+
+        readonly Dictionary<Entity, VaultWatch> m_VaultWatch = new Dictionary<Entity, VaultWatch>();
+
+        /// <summary>Vaults taken from a landing, on the way on to the same place (tests read it).</summary>
+        public int ChainedVaults { get; private set; }
+
+        /// <summary>
+        /// Vaults in a row (owner, 2 Nov, item 4: "use those things as the fastest path"; NGO's <c>ResumeMoveAfterVault</c>): when a vault
+        /// lands, the way on to the same place is planned again from the landing, and when that finds another vault the walk takes it,
+        /// as a server order (the owner predicts it like a click). One vault per plan (one <see cref="VaultPlan"/> leg); the run already
+        /// paid stays paid.
+        /// </summary>
+        void ChainVault(EntityManager em, Entity e, in PlayerInput input)
+        {
+            if (Planner == null || VaultPlanner == null || !em.HasComponent<VaultPlan>(e)) return;
+            bool over = InVault(em, e);
+            m_VaultWatch.TryGetValue(e, out VaultWatch watch);
+            if (over == watch.Over) return;
+            if (over)
+            {
+                var plan = em.GetComponentData<PathPlan>(e);
+                var buffer = em.GetBuffer<PathCorner>(e);
+                if (plan.Count < 1 || buffer.Length < plan.Count) return;
+                PathCorner last = buffer[plan.Count - 1];
+                var m = em.GetComponentData<MoveState>(e);
+                bool ordered = (m.OrderSeq & PlayerLimits.ServerSeqBit) != 0;
+                bool run = ordered ? (em.GetComponentData<ServerOrder>(e).Flags & OrderFlags.RunPaid) != 0 : input.Run != 0;
+                m_VaultWatch[e] = new VaultWatch { Over = true, Goal = new int3(last.XMm, last.YMm, last.ZMm), Run = run };
+                return;
+            }
+            m_VaultWatch.Remove(e);
+            var move = em.GetComponentData<MoveState>(e);
+            if ((move.Flags & MoveFlags.Moving) == 0 || move.Water != 0 || move.Wall != 0 || em.IsComponentEnabled<ServerOrderRequest>(e)) return;
+            int speed = 0;
+            if (em.HasComponent<MoveStats>(e))
+            {
+                var stats = em.GetComponentData<MoveStats>(e);
+                speed = watch.Run ? stats.RunMmps : stats.WalkMmps;
+            }
+            var corners = new NativeList<int3>(PlayerLimits.MaxCorners, Allocator.Temp);
+            try
+            {
+                // only a way on with another vault is ordered: a plain walk on goes on as it is
+                if (!VaultPath.Plan(Planner, VaultPlanner, e, em.GetComponentData<PlayerPose>(e).Mm, watch.Goal, speed, corners, out VaultPlan next)
+                    || next.LegLengthMm <= 0) return;
+            }
+            finally { corners.Dispose(); }
+            PlayerEntitiesSetup.IssueOrder(em, e, watch.Goal, runPaid: watch.Run);
+            ChainedVaults++;
         }
 
         /// <summary>The walk under way is on its vault's leg (over the obstacle).</summary>

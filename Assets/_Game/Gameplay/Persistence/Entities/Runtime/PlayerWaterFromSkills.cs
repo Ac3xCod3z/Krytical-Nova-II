@@ -20,6 +20,7 @@ namespace KryticalNova.Persistence.Entities
     {
         readonly World m_World;
         readonly IPathPlanner m_Paths;
+        readonly IVaultPlanner m_Vaults;
         readonly List<Vector3> m_Route = new List<Vector3>(32);
         readonly bool m_TellOwner;
 
@@ -27,11 +28,13 @@ namespace KryticalNova.Persistence.Entities
         public string LastDecision { get; private set; }
 
         /// <param name="tellOwner">The owner's client: a refusal is shown on the own body in NGO's words, as the NGO client did.</param>
-        public BodyWaterPlanner(World world, IPathPlanner paths, bool tellOwner = false)
+        /// <param name="vaults">The vault planner the walk round is timed with (item 4: across the water only when quicker than both).</param>
+        public BodyWaterPlanner(World world, IPathPlanner paths, bool tellOwner = false, IVaultPlanner vaults = null)
         {
             m_World = world;
             m_Paths = paths;
             m_TellOwner = tellOwner;
+            m_Vaults = vaults;
         }
 
         public WaterAnswer Plan(Entity ghost, int3 startMm, int3 goalMm, bool run, bool onWater, bool stranded, NativeList<int3> corners,
@@ -40,6 +43,7 @@ namespace KryticalNova.Persistence.Entities
             leg = default;
             reason = null;
             corners.Clear();
+            LastDecision = null;
             GameObject body = PlayerJumpFromSkills.BodyOf(m_World, ghost);
             var motor = body != null ? body.GetComponent<PlayerWaterstrideMotor>() : null;
             if (motor == null) { LastDecision = "no water motor"; return WaterAnswer.NotWater; }
@@ -54,14 +58,85 @@ namespace KryticalNova.Persistence.Entities
             Vector3 feet = M(startMm) - Vector3.up * offset;
             string why = motor.PlanForGhost(feet, M(goalMm), run, onWater, stranded, ranks.Level, ranks.Run, ranks.Jump, alive, hasFlux,
                 (run ? stats.RunMmps : stats.WalkMmps) * 0.001f, m_Route, out PlayerWaterstrideMotor.GhostWater plan);
-            if (why == string.Empty) { LastDecision = "not Waterstride's"; return WaterAnswer.NotWater; }
+            if (why == string.Empty)
+            {
+                // a land click from land: across the water when that is the quickest way (owner change, item 4); else the walk's
+                if (!onWater && !stranded && m_Paths != null
+                    && TryAcross(ghost, motor, offset, feet, startMm, goalMm, run, ranks, stats, resources, alive, hasFlux, corners, out leg))
+                    return WaterAnswer.Planned;
+                corners.Clear();
+                leg = default;
+                LastDecision ??= "not Waterstride's";
+                return WaterAnswer.NotWater;
+            }
             if (why != null)
             {
                 LastDecision = reason = why;
                 if (m_TellOwner) body.GetComponent<PointAndClickPlayer>()?.ShowViewRefusal(why);
                 return WaterAnswer.Refused;
             }
+            if (!Write(startMm, plan, offset, corners, out leg, out reason)) return WaterAnswer.Refused;
+            LastDecision = plan.Way.ToLand ? "ashore" : plan.Way.FromLand ? "out over the water" : "over the water";
+            return WaterAnswer.Planned;
+        }
 
+        /// <summary>
+        /// Across the water (owner change, item 4; `m3c-waterstride-design.md`): planned, then timed against the walk round, or the
+        /// vault, from the same pose; taken only when quicker by <see cref="WaterstrideRules.AcrossMarginSeconds"/> and when the Flux
+        /// covers every second on the water. Never a refusal: when it is not taken, the walk plans the click.
+        /// </summary>
+        bool TryAcross(Entity ghost, PlayerWaterstrideMotor motor, float offset, Vector3 feet, int3 startMm, int3 goalMm, bool run,
+            MoveRanks ranks, MoveStats stats, PlayerResources resources, bool alive, bool hasFlux, NativeList<int3> corners, out WaterPlan leg)
+        {
+            leg = default;
+            int groundMmps = run ? stats.RunMmps : stats.WalkMmps;
+            float ground = groundMmps * 0.001f;
+            if (ground <= 0f) { LastDecision = "not Waterstride's"; return false; }
+            string why = motor.PlanAcrossForGhost(feet, M(goalMm), false, false, ranks.Level, ranks.Run, ranks.Jump, alive, hasFlux, ground,
+                m_Route, out PlayerWaterstrideMotor.GhostWater plan);
+            if (why != null) { LastDecision = why == string.Empty ? "not Waterstride's" : "not across: " + why; return false; }
+            if (!Write(startMm, plan, offset, corners, out leg, out string writeWhy) || corners.Length < 2)
+            { LastDecision = "not across: " + writeWhy; return false; }
+            float total = PlayerPath.LengthMm(startMm, corners.AsArray(), corners.Length) * 0.001f;
+            float water = (leg.LegEndMm - leg.LegStartMm) * 0.001f;
+            float across = WaterstrideRules.Seconds(total - water, ground, water, plan.Speed);
+            float flux = WaterstrideRules.FluxFor(motor.FluxPerSecond, water / plan.Speed);
+            if (flux > 0f && (resources == null || !resources.CanSpendChi(flux)))
+            { LastDecision = $"not across: {flux:F0} Flux for the crossing"; return false; }
+            float other = GroundSeconds(ghost, startMm, goalMm, ground, groundMmps);
+            if (!WaterstrideRules.AcrossWins(across, other))
+            { LastDecision = $"not across: {across:F1} s against {other:F1} s round"; return false; }
+            LastDecision = $"across the water: {across:F1} s against {other:F1} s round";
+            return true;
+        }
+
+        /// <summary>
+        /// The seconds of the click's way without the water: the walk, or the walk with its vault (the same <see cref="VaultPath"/> the
+        /// click would plan). Infinite when there is none, or the walk stops short of the place (a partial way: the far bank cannot be
+        /// walked to).
+        /// </summary>
+        float GroundSeconds(Entity ghost, int3 startMm, int3 goalMm, float ground, int groundMmps)
+        {
+            var way = new NativeList<int3>(PlayerLimits.MaxCorners, Allocator.Temp);
+            try
+            {
+                if (!VaultPath.Plan(m_Paths, m_Vaults, ghost, startMm, goalMm, groundMmps, way, out VaultPlan vault) || way.Length < 2)
+                    return float.PositiveInfinity;
+                int3 end = way[way.Length - 1];
+                if (WaterstrideRules.Flat(M(end), M(goalMm)) > WaterstrideRules.LandSampleRadius + 0.5f) return float.PositiveInfinity;
+                float length = PlayerPath.LengthMm(startMm, way.AsArray(), way.Length) * 0.001f;
+                if (vault.LegLengthMm <= 0) return length / ground;
+                return (length - vault.LegLengthMm * 0.001f) / ground + vault.AirMicros * 1e-6f;
+            }
+            finally { way.Dispose(); }
+        }
+
+        /// <summary>The corners and the leg of a planned run (from land: the walk to the shore first; to land: ashore and the walk on).</summary>
+        bool Write(int3 startMm, in PlayerWaterstrideMotor.GhostWater plan, float offset, NativeList<int3> corners, out WaterPlan leg, out string reason)
+        {
+            leg = default;
+            reason = null;
+            corners.Clear();
             corners.Add(startMm);
             int legStart = 0;
             if (plan.Way.FromLand && !plan.Way.StartsNow)
@@ -71,7 +146,7 @@ namespace KryticalNova.Persistence.Entities
                 try
                 {
                     if (m_Paths == null || !m_Paths.TryPlan(startMm, Mm(plan.Way.ShoreFeet + Vector3.up * offset), toShore) || toShore.Length < 2)
-                    { LastDecision = reason = "There is no way to that shore."; corners.Clear(); return WaterAnswer.Refused; }
+                    { LastDecision = reason = "There is no way to that shore."; corners.Clear(); return false; }
                     int length = PlayerPath.LengthMm(startMm, toShore.AsArray(), toShore.Length);
                     legStart = math.max(0, length - Mathf.RoundToInt(WaterstrideRules.ShoreTrigger * 1000f));
                     AddUpTo(corners, startMm, toShore, legStart);
@@ -98,15 +173,14 @@ namespace KryticalNova.Persistence.Entities
                 }
             }
             else flags |= WaterFlags.EndsOnWater;
-            if (corners.Length > PlayerLimits.MaxCorners) { LastDecision = reason = "No way over the water there."; corners.Clear(); return WaterAnswer.Refused; }
+            if (corners.Length > PlayerLimits.MaxCorners) { LastDecision = reason = "No way over the water there."; corners.Clear(); return false; }
             leg = new WaterPlan
             {
                 LegStartMm = legStart, LegEndMm = legEnd, Flags = flags,
                 SpeedMmps = Mathf.RoundToInt(plan.Speed * 1000f),
                 TurnCdegPerSecond = Mathf.RoundToInt(PlayerWaterstrideMotor.TurnDegreesPerSecond * 100f),
             };
-            LastDecision = plan.Way.ToLand ? "ashore" : plan.Way.FromLand ? "out over the water" : "over the water";
-            return WaterAnswer.Planned;
+            return true;
         }
 
         public bool PlanStranded(Entity ghost, int3 startMm, NativeList<int3> corners, out WaterPlan leg)

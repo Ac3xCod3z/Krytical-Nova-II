@@ -89,9 +89,10 @@ namespace KryticalNova.Persistence.Entities
             // from the prefab now: the first spawn spot is picked before any body exists (owner's feel test 30 Oct: with base
             // offset 0 the first player stood half in the ground until it walked)
             ConfigurePlanner(planner, (prefab ?? PlayerPrefab)());
+            var serverVaults = new BodyVaultPlanner(server);
             PlayerEntitiesSetup.Install(server, planner, runCost: new BodyRunCost(server), clickBudget: new BudgetClickLimit(server),
-                jumpPlanner: new BodyJumpPlanner(server), jumpCost: new BodyJumpCost(server), vaultPlanner: new BodyVaultPlanner(server),
-                waterPlanner: new BodyWaterPlanner(server, planner), waterFlux: new BodyWaterFlux(server, (prefab ?? PlayerPrefab)()),
+                jumpPlanner: new BodyJumpPlanner(server), jumpCost: new BodyJumpCost(server), vaultPlanner: serverVaults,
+                waterPlanner: new BodyWaterPlanner(server, planner, vaults: serverVaults), waterFlux: new BodyWaterFlux(server, (prefab ?? PlayerPrefab)()),
                 wallPlanner: new BodyWallPlanner(server), wallGrip: new BodyWallGrip(server, (prefab ?? PlayerPrefab)()));
             // walk numbers from the settings asset and the jump's curves from its clip, the same on server and client (prediction must agree)
             PlayerMoveFromSkills.InstallSettings(server, PlayerMoveFromSkills.SettingsOf((prefab ?? PlayerPrefab)()));
@@ -156,8 +157,9 @@ namespace KryticalNova.Persistence.Entities
                     DriveAnimationFromGhost(body);
                 },
             };
-            PlayerEntitiesSetup.Install(client, planner, jumpPlanner: new BodyJumpPlanner(client, checkCost: true), vaultPlanner: new BodyVaultPlanner(client),
-                waterPlanner: new BodyWaterPlanner(client, planner, tellOwner: true), wallPlanner: new BodyWallPlanner(client, tellOwner: true));
+            var clientVaults = new BodyVaultPlanner(client);
+            PlayerEntitiesSetup.Install(client, planner, jumpPlanner: new BodyJumpPlanner(client, checkCost: true), vaultPlanner: clientVaults,
+                waterPlanner: new BodyWaterPlanner(client, planner, tellOwner: true, vaults: clientVaults), wallPlanner: new BodyWallPlanner(client, tellOwner: true));
             PlayerMoveFromSkills.InstallSettings(client, PlayerMoveFromSkills.SettingsOf((prefab ?? PlayerPrefab)()));
             PlayerJumpFromSkills.InstallCurves(client, (prefab ?? PlayerPrefab)());
             KryticalNova.Player.Entities.Presentation.PlayerPresentationSetup.Install(client, factory, new BodyClickSource());

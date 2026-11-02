@@ -400,6 +400,28 @@ namespace KryticalNova.Player
         }
 
         /// <summary>
+        /// Across the water for a body of the entity netcode (owner change, item 4): a land click beyond water, from land, Run on or off.
+        /// Null when it can run (the way over the water in <paramref name="route"/>), "" when this zone has no water, else why not.
+        /// </summary>
+        public string PlanAcrossForGhost(Vector3 feet, Vector3 goal, bool onWater, bool stranded, int level, int runRank, int jumpRank,
+            bool alive, bool hasFluxForASecond, float groundSpeed, List<Vector3> route, out GhostWater plan)
+        {
+            plan = default;
+            route.Clear();
+            WaterMap map = ZoneMap;
+            if (map == null || settings == null) return string.Empty;
+            var ask = new WaterstrideRules.Ask
+            {
+                Open = WaterstrideRules.IsOpen(settings, level, runRank, jumpRank), Alive = alive, Running = true,
+                HasFluxForASecond = hasFluxForASecond, OnWater = onWater, Stranded = stranded,
+                OnWalkableGround = NavMesh.SamplePosition(feet, out _, 0.5f, Filter()),
+            };
+            string why = WaterstrideRules.PlanAcross(map, settings, ask, Shore(), feet, goal, route, out plan.Way);
+            plan.Speed = WaterstrideRules.Speed(settings, groundSpeed, false);
+            return why;
+        }
+
+        /// <summary>
         /// A jump of a body of the entity netcode came down at <paramref name="feet"/>: 0 = not water (ground), 1 = it stands on the water,
         /// 2 = it fell in (the HP is taken from this body now, NGO's <c>FallIn</c>) and comes out at <paramref name="shoreFeet"/>.
         /// </summary>

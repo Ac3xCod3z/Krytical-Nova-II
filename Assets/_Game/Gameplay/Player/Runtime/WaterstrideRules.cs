@@ -181,6 +181,65 @@ namespace KryticalNova.Player
         }
 
         /// <summary>
+        /// Across the water (owner change, feel test 2 Nov item 4; not NGO, which walks round): a click on land beyond water, from land.
+        /// The walk to the shore where the line to the place first meets the water, the way over it to the shore where the line back
+        /// from the place last leaves it, ashore, and on. Run is not needed (owner: "Run on or off"). Null when it can run; otherwise why
+        /// not (never shown: the walk round plans the click then). Whether it is taken is <see cref="AcrossWins"/>'s question.
+        /// </summary>
+        public static string PlanAcross(WaterMap map, WaterstrideSettings s, in Ask a, IShore shore, Vector3 feet, Vector3 point,
+            List<Vector3> route, out Way way)
+        {
+            way = default;
+            route.Clear();
+            if (map == null || s == null) return "no water";
+            if (a.OnWater || a.Stranded) return "already on the water";
+            Ask running = a;
+            running.Running = true;
+            string why = CanStride(s, running);
+            if (why != null) return why;
+            if (!a.OnWalkableGround) return "Waterstride must start on walkable ground.";
+            if (map.IsWater(point)) return "a click on the water";
+            if (!shore.Sample(point, LandSampleRadius, out Vector3 there)) return "no walkable ground there";
+            if (!EdgeAlong(map, feet, there, out Vector3 lastLand, out Vector3 firstWater)) return "no water on the way";
+            if (!EdgeAlong(map, there, feet, out Vector3 landSide, out Vector3 waterSide)) return "no water on the way back";
+            if (!shore.Sample(lastLand, s.shoreReach, out Vector3 shoreFeet) || !shore.Sample(landSide, s.shoreReach, out Vector3 landFeet))
+                return "no shore";
+            if (!WaterRoute.NearestWater(map, firstWater, s.shoreReach, out Vector2Int entry)
+                || !WaterRoute.NearestWater(map, waterSide, s.shoreReach, out Vector2Int exit)
+                || !WaterRoute.Find(map, entry, exit, s.maxRouteCells, route)) { route.Clear(); return "no way over the water"; }
+            if (!shore.PathComplete(feet, shoreFeet)) { route.Clear(); return "no way to that shore"; }
+            way.FromLand = true;
+            way.ShoreFeet = shoreFeet;
+            way.StartsNow = Flat(feet, shoreFeet) <= ShoreTrigger;
+            way.ToLand = true;
+            way.LandFeet = landFeet;
+            way.WalkOnTo = there;
+            return null;
+        }
+
+        /// <summary>
+        /// Across beats the other way only when it is this much quicker: the owner's client and the server plan from poses a few
+        /// centimetres apart, and a near tie must not go one way on the one and the other way on the other.
+        /// </summary>
+        public const float AcrossMarginSeconds = 0.25f;
+
+        /// <summary>The time a way takes: its land metres at the ground speed, its water metres at the water speed.</summary>
+        public static float Seconds(float landMeters, float groundSpeed, float waterMeters, float waterSpeed)
+        {
+            if (groundSpeed <= 0f || (waterMeters > 0f && waterSpeed <= 0f)) return float.PositiveInfinity;
+            return landMeters / groundSpeed + (waterMeters > 0f ? waterMeters / waterSpeed : 0f);
+        }
+
+        /// <summary>The way across the water is taken: it is quicker than the walk or the vault by <see cref="AcrossMarginSeconds"/>.</summary>
+        public static bool AcrossWins(float acrossSeconds, float otherSeconds) => acrossSeconds + AcrossMarginSeconds < otherSeconds;
+
+        /// <summary>
+        /// The Flux the water's seconds cost, in whole points as they are paid. A crossing is only taken when the player has all of it:
+        /// a quicker way the Flux cannot finish would strand them on the water.
+        /// </summary>
+        public static float FluxFor(float fluxPerSecond, float waterSeconds) => Mathf.Ceil(Mathf.Max(0f, fluxPerSecond) * Mathf.Max(0f, waterSeconds));
+
+        /// <summary>
         /// Out of Flux on the water: the way back to the walkable place nearest the feet (within <see cref="StrandedReach"/>). False when
         /// there is none (the run is called off where it is).
         /// </summary>

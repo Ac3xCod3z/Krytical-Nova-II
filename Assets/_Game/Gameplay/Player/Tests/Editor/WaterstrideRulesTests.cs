@@ -240,5 +240,97 @@ namespace KryticalNova.Tests
             Assert.IsFalse(WaterstrideRules.WaterUnderRay(map, ray, 5f, out _), "something stands above the water");
             Assert.IsFalse(WaterstrideRules.WaterUnderRay(map, new Ray(new Vector3(-5f, 10f, 0f), Vector3.down), 30f, out _), "over land");
         }
+
+        // ------------------------------------------------------------------ across the water (owner change, feel test 2 Nov item 4)
+
+        /// <summary>Two banks: land west of x = 0 and east of x = 10 (a river 10 m wide); a point near a bank finds that bank.</summary>
+        private sealed class RiverBanks : WaterstrideRules.IShore
+        {
+            public bool Refuse;
+
+            public bool Sample(Vector3 point, float radius, out Vector3 found)
+            {
+                found = point;
+                if (Refuse) return false;
+                if (point.x < 0f || point.x >= 10f) { found = new Vector3(point.x, 0f, point.z); return true; }
+                if (point.x - radius < 0f) { found = new Vector3(-0.01f, 0f, point.z); return true; }
+                if (point.x + radius >= 10f) { found = new Vector3(10f, 0f, point.z); return true; }
+                return false;
+            }
+
+            public bool PathComplete(Vector3 from, Vector3 to) => !Refuse;
+        }
+
+        /// <summary>The handmade map with only x from 0 to 10 m water: a river with land on both sides.</summary>
+        private WaterMap River()
+        {
+            var river = ScriptableObject.CreateInstance<WaterMap>();
+            river.waterLevel = Level;
+            river.origin = new Vector2(-20f, -20f);
+            river.cellSize = 1f;
+            river.width = river.depth = 40;
+            var cells = new bool[40 * 40];
+            for (int z = 0; z < 40; z++)
+            for (int x = 20; x < 30; x++) cells[z * 40 + x] = true;
+            river.Set(cells, "test river");
+            return river;
+        }
+
+        [Test]
+        public void Across_ALandClickOverTheRiver_WalksToTheNearShore_RunsOver_StepsAshore_AndWalksOn_RunOrNot()
+        {
+            WaterMap river = River();
+            try
+            {
+                var a = Ready(); a.Running = false;
+                Assert.IsNull(WaterstrideRules.PlanAcross(river, settings, a, new RiverBanks(), new Vector3(-5f, 0f, 0f), new Vector3(15f, 0f, 0f), route, out var way),
+                    "Run off: across is used walking too (owner: Run on or off)");
+                Assert.IsTrue(way.FromLand && way.ToLand);
+                Assert.IsFalse(way.StartsNow);
+                Assert.AreEqual(-0.5f, way.ShoreFeet.x, 1e-4f, "the last land sample on the line out");
+                Assert.AreEqual(10f, way.LandFeet.x, 1e-4f, "the first land on the line back from the place");
+                Assert.AreEqual(15f, way.WalkOnTo.x, 1e-4f, "then on to the place clicked");
+                Assert.AreEqual(2, route.Count, "straight over the river");
+                Assert.AreEqual(0.5f, route[0].x, 1e-4f);
+                Assert.AreEqual(9.5f, route[1].x, 1e-4f);
+            }
+            finally { Object.DestroyImmediate(river); }
+        }
+
+        [Test]
+        public void Across_IsNeverTaken_ForAClickWithNoWaterOnTheWay_OnTheWater_OrWhenClosed()
+        {
+            WaterMap river = River();
+            try
+            {
+                var feet = new Vector3(-5f, 0f, 0f);
+                var far = new Vector3(15f, 0f, 0f);
+                var banks = new RiverBanks();
+                Assert.AreEqual("no water on the way", WaterstrideRules.PlanAcross(river, settings, Ready(), banks, feet, new Vector3(-15f, 0f, 5f), route, out _));
+                Assert.AreEqual("a click on the water", WaterstrideRules.PlanAcross(river, settings, Ready(), banks, feet, new Vector3(5f, Level, 0f), route, out _));
+                var a = Ready(); a.OnWater = true;
+                Assert.AreEqual("already on the water", WaterstrideRules.PlanAcross(river, settings, a, banks, new Vector3(5f, Level, 0f), far, route, out _));
+                a = Ready(); a.Open = false;
+                Assert.AreEqual("Waterstride opens at level 60 with Run and Jump at rank 20.", WaterstrideRules.PlanAcross(river, settings, a, banks, feet, far, route, out _));
+                a = Ready(); a.HasFluxForASecond = false;
+                Assert.AreEqual("Not enough Flux to run on water.", WaterstrideRules.PlanAcross(river, settings, a, banks, feet, far, route, out _));
+                Assert.AreEqual("no walkable ground there", WaterstrideRules.PlanAcross(river, settings, Ready(), new RiverBanks { Refuse = true }, feet, far, route, out _));
+                Assert.AreEqual(0, route.Count);
+            }
+            finally { Object.DestroyImmediate(river); }
+        }
+
+        [Test]
+        public void Across_IsTaken_OnlyWhenQuicker_ByTheMargin_AndWhenTheFluxCoversEverySecondOnTheWater()
+        {
+            Assert.AreEqual(2.0f, WaterstrideRules.Seconds(10f, 5f, 0f, 0f), 1e-5f, "land only: metres over the ground speed");
+            Assert.AreEqual(3.0f, WaterstrideRules.Seconds(10f, 5f, 10f, 10f), 1e-5f, "land at its speed plus water at its own");
+            Assert.IsTrue(float.IsPositiveInfinity(WaterstrideRules.Seconds(10f, 0f, 0f, 0f)), "no speed: never");
+            Assert.IsTrue(WaterstrideRules.AcrossWins(3f, 3.3f));
+            Assert.IsFalse(WaterstrideRules.AcrossWins(3f, 3.2f), "a near tie stays the walk's (owner and server agree)");
+            Assert.IsTrue(WaterstrideRules.AcrossWins(3f, float.PositiveInfinity), "no way round at all");
+            Assert.AreEqual(7f, WaterstrideRules.FluxFor(3f, 2.1f), 1e-5f, "3 a second, whole points as paid");
+            Assert.AreEqual(0f, WaterstrideRules.FluxFor(0f, 9f), 1e-5f, "free water costs nothing");
+        }
     }
 }
