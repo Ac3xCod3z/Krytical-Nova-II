@@ -1132,8 +1132,11 @@ namespace KryticalNova.Player
             }
         }
 
-        /// <summary>The share of a route jump's air time the take-off and flip fill; the fall loop plays the rest (design 9 item 7).</summary>
-        private const float RouteFlipShare = 0.7f;
+        /// <summary>
+        /// The share of a route jump's air time the take-off and flip fill; the fall loop plays the rest (design 9 item 7). 0.8 (was 0.7):
+        /// the owner found both flips "a tad too fast" (gui-ledge-3, 2 Nov).
+        /// </summary>
+        private const float RouteFlipShare = 0.8f;
         private Coroutine fallRoutine;
 
         private System.Collections.IEnumerator FallLoopAfterFlip(float wait)

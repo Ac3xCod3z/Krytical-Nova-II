@@ -138,7 +138,9 @@ namespace KryticalNova.EditorTools
 
         /// <summary>
         /// The flip's own window in the clip: from the first frame the body (the humanoid root's rotation, <c>RootQ</c>) tips more than
-        /// <see cref="FlipTipDegrees"/> away from how it stood at the start to the last such frame, with <see cref="FlipMargin"/> either side.
+        /// <see cref="FlipTipDegrees"/> away from how it stood at the start to the first frame it is back within that after the flip's
+        /// peak, with <see cref="FlipMargin"/> either side. Not the last tipped frame: the masculine emote steps about after it lands,
+        /// leaning past that now and then, and its 0.9 s of steps played in the air as walking legs (owner, gui-ledge-3, 2 Nov).
         /// The whole clip when it never tips that far.
         /// </summary>
         private static Vector2 FlipWindow(AnimationClip clip)
@@ -153,15 +155,21 @@ namespace KryticalNova.EditorTools
             if (q.Any(c => c == null)) return new Vector2(0f, clip.length);
             Quaternion At(float t) => new Quaternion(q[0].Evaluate(t), q[1].Evaluate(t), q[2].Evaluate(t), q[3].Evaluate(t)).normalized;
             Quaternion start = At(0f);
-            float first = -1f, last = -1f, step = 1f / Mathf.Max(1f, clip.frameRate);
+            float first = -1f, peak = 0f, peakAt = 0f, step = 1f / Mathf.Max(1f, clip.frameRate);
             for (float t = 0f; t <= clip.length; t += step)
             {
-                if (Quaternion.Angle(start, At(t)) < FlipTipDegrees) continue;
-                if (first < 0f) first = t;
-                last = t;
+                float tip = Quaternion.Angle(start, At(t));
+                if (tip > peak) { peak = tip; peakAt = t; }
+                if (tip >= FlipTipDegrees && first < 0f) first = t;
             }
             if (first < 0f) return new Vector2(0f, clip.length);
-            return new Vector2(Mathf.Max(0f, first - FlipMargin), Mathf.Min(clip.length, last + FlipMargin));
+            // upright again as the copy began (its first frame), not as the emote began: the masculine emote starts leaning, and against
+            // that its stepping tail never counted as upright (the clip builder's run, 2 Nov: the window stayed 0.17-2.60 s)
+            Quaternion began = At(Mathf.Max(0f, first - FlipMargin));
+            float upright = clip.length;
+            for (float t = peakAt; t <= clip.length; t += step)
+                if (Quaternion.Angle(began, At(t)) < FlipTipDegrees) { upright = t; break; }
+            return new Vector2(Mathf.Max(0f, first - FlipMargin), Mathf.Min(clip.length, upright + FlipMargin));
         }
 
         /// <summary>The curve's part inside <paramref name="window"/>, moved to start at 0: its keys there, and its value at either end.</summary>
