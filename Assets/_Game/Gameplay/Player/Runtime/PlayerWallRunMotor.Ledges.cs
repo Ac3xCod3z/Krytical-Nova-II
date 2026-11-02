@@ -8,7 +8,8 @@ namespace KryticalNova.Player
     /// <c>PointAndClickPlayer.CrossLinks</c> (a gap between roofs on the walk is jumped) and <c>TryPlanDrop</c> / <c>WatchDrop</c> (with no walk
     /// there, off the roof's edge), laid out as timed jump legs in one walk instead of a jump started at the edge. The jump's own checks
     /// and words (<see cref="PlayerJumpMotor.PlanForGhost"/>: the rank's distance and height, a clear arc), its apex as the leg's height; its
-    /// Flux is the server's, as each leg starts. The legs play <see cref="WallRunPhase.LedgeJump"/> (the owner's backflip, by body type).
+    /// Flux is the server's, as each leg starts. Off a roof's edge the legs play <see cref="WallRunPhase.LedgeJump"/> (the owner's backflip, by
+    /// body type), across a gap <see cref="WallRunPhase.GapJump"/> (the normal jump; owner, 2 Nov).
     /// </summary>
     public sealed partial class PlayerWallRunMotor
     {
@@ -40,7 +41,7 @@ namespace KryticalNova.Player
                 {
                     if (!IsGap(corners[i - 1], corners[i], filter)) { layout.Ground(corners[i]); continue; }
                     jumped = true;
-                    string why = LedgeArc(layout, corners[i]);
+                    string why = LedgeArc(layout, corners[i], WallRunPhase.GapJump);
                     if (why == null) continue;
                     // NGO CrossLinks: back on the link's near end and the move stops there
                     LastLedgeRefusal = string.IsNullOrEmpty(why) ? "Jump is needed to cross that gap." : why;
@@ -80,7 +81,7 @@ namespace KryticalNova.Player
             bool dropped = false;
             foreach (Vector3 landing in landings)
             {
-                refusal = LedgeArc(layout, landing);
+                refusal = LedgeArc(layout, landing, WallRunPhase.LedgeJump);
                 if (refusal == null) { dropped = true; break; }
             }
             if (!dropped)
@@ -105,14 +106,15 @@ namespace KryticalNova.Player
 
         /// <summary>
         /// One jump of the route from the layout's last corner to <paramref name="to"/>: NGO's jump checks (<see cref="PlayerJumpMotor.PlanForGhost"/>),
-        /// then a timed arc to its landing over its own apex, played as <see cref="WallRunPhase.LedgeJump"/>. Null when laid out, else the jump's words.
+        /// then a timed arc to its landing over its own apex, played as <paramref name="phase"/> (<see cref="WallRunPhase.LedgeJump"/> off a roof's edge,
+        /// <see cref="WallRunPhase.GapJump"/> across a gap: each its own clip, owner 2 Nov). Null when laid out, else the jump's words.
         /// </summary>
-        private string LedgeArc(WallWalkLayout layout, Vector3 to)
+        private string LedgeArc(WallWalkLayout layout, Vector3 to, WallRunPhase phase)
         {
             Vector3 from = layout.LastFeet;
             string why = jumpMotor.PlanForGhost(from, to, out Vector3 landing, out float peak);
             if (why != null) return why;
-            layout.Arc(WallRunPhase.LedgeJump, landing, peak - Mathf.Max(from.y, landing.y), WallWalkLayout.Facing(landing - from));
+            layout.Arc(phase, landing, peak - Mathf.Max(from.y, landing.y), WallWalkLayout.Facing(landing - from));
             return null;
         }
     }

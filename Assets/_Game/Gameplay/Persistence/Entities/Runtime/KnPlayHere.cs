@@ -2003,12 +2003,12 @@ namespace KryticalNova.Persistence.Entities
             static bool LedgeRun => Environment.GetEnvironmentVariable("KN_PLAYHERE_LEDGE") == "1";
 
             /// <summary>
-            /// Part 5b's places, planned before the run (owner rule, 1 Nov) and proved in edit mode by
-            /// Zone01WallPropProbe.HowAWalkCrossesZone01sRoofGaps: a flat 2 m gap between roofs and a 2.4 m drop-down link between roofs; and, with
-            /// Wallstride locked, the test graph wall's roof, which has no walk down (ThePart5TestPlaces_StandInZone01), to the street in front.
+            /// Part 5b's places, planned before the run (owner rule, 1 Nov) and proved in edit mode: with Wallstride locked, the test graph wall's
+            /// roof, which has no walk down (Zone01WallPropProbe.ThePart5TestPlaces_StandInZone01), to the street in front; and the pop check's
+            /// teleport to the foot of a drop between roofs (HowAWalkCrossesZone01sRoofGaps). gui-ledge-1 also crossed a 2 m gap at 51 -> 59, 88.5
+            /// and the 2.4 m drop from -89, 11.5 (owner, 2 Nov: those keep the normal jump, not run again).
             /// </summary>
-            static readonly Vector3 GapWest = new Vector3(51.0f, 6.17f, 88.5f), GapEast = new Vector3(59.0f, 6.17f, 88.5f),
-                DropLinkTop = new Vector3(-89.0f, 24.19f, 11.5f), DropLinkBelow = new Vector3(-81.0f, 21.82f, 11.5f);
+            static readonly Vector3 DropLinkBelow = new Vector3(-81.0f, 21.82f, 11.5f);
 
             /// <summary>
             /// The route's jumps (part 5b): each try a plain click whose walk must jump (a gap, a drop-down link, or with Wallstride locked the
@@ -2032,17 +2032,16 @@ namespace KryticalNova.Persistence.Entities
                 Log($"ledge: pop check on a known clean case (standing 1 s): {m_Pops.Pops} pop(s) (expected 0) {m_Pops.Worst}");
                 m_Pops.Reset();
                 PopFrame(ghost);
-                Teleport(em, ghost, GapWest + Vector3.up * offset);
+                Teleport(em, ghost, DropLinkBelow + Vector3.up * offset);
                 watch = Time.realtimeSinceStartup;
                 while (Time.realtimeSinceStartup - watch < 1.5f) { yield return new WaitForEndOfFrame(); PopFrame(ghost); }
                 Log($"ledge: pop check on a known fault (the teleport to the roof): {m_Pops.Pops} pop(s) (expected 1 or more): {m_Pops.Worst}");
 
-                yield return LedgeTry(body, ghost, tally, "across a 2 m gap between roofs, masculine", GapWest, GapEast, BodyType.Masculine, offset);
-                yield return LedgeTry(body, ghost, tally, "back across it, feminine", GapEast, GapWest, BodyType.Feminine, offset);
-                yield return LedgeTry(body, ghost, tally, "down a 2.4 m drop between roofs, masculine", DropLinkTop, DropLinkBelow, BodyType.Masculine, offset);
+                // owner, 2 Nov: the backflip is only off a roof's edge; the gaps keep the normal jump (proved in gui-ledge-1, not run again)
                 string wallWhy = motor.FindTestWall(TestGraphWall, out PlayerWallRunMotor.TestWall wall);
-                if (wallWhy != null) { Log("ledge: the roof with no walk down: NOT TESTED; " + wallWhy); tally.Tried++; }
-                else yield return LedgeTry(body, ghost, tally, "off a roof with no walk down to the street, feminine", wall.Top, wall.FrontFar, BodyType.Feminine, offset);
+                if (wallWhy != null) { Log("ledge: the roof with no walk down: NOT TESTED; " + wallWhy); tally.Tried++; yield break; }
+                yield return LedgeTry(body, ghost, tally, "off a roof with no walk down to the street, masculine", wall.Top, wall.FrontFar, BodyType.Masculine, offset);
+                yield return LedgeTry(body, ghost, tally, "off the same roof, feminine", wall.Top, wall.FrontFar, BodyType.Feminine, offset);
             }
 
             /// <summary>One plain click whose walk must jump, the owner's body shown as <paramref name="look"/>, judged.</summary>
@@ -2080,7 +2079,7 @@ namespace KryticalNova.Persistence.Entities
                 {
                     yield return new WaitForEndOfFrame();
                     PopFrame(ghost);
-                    sawJump |= em.GetComponentData<PoseTilt>(ghost).Phase == WallPhase.LedgeJump;
+                    sawJump |= WallPhase.IsRouteJump(em.GetComponentData<PoseTilt>(ghost).Phase);
                     Vector3 b = OwnBody.transform.position;
                     if (Time.realtimeSinceStartup - clicked > 1f && !Moving(ghost))
                     {

@@ -7,7 +7,7 @@ using UnityEngine;
 namespace KryticalNova.EditorTools
 {
     /// <summary>
-    /// The route jump's clip (part 5b, owner 1 Nov: the Synty Sporty backflip off a roof's edge or across a gap, `_Masc` / `_Femn` by body
+    /// The route jump's clip (part 5b, owner 1-2 Nov: the Synty Sporty backflip off a roof's edge only, `_Masc` / `_Femn` by body
     /// type): measures the four variants of each (plain, RM, RMH, RMV: how far each moves its root and where), makes the player's own
     /// in-place copy of the one whose travel is all in the root (the leg's arc moves the body, so the root's travel is left out of the pose,
     /// as the vault's copies do), writes the <see cref="LedgeJumpClips"/> asset and puts it on Player.prefab's wall motor. Re-runnable.
@@ -32,8 +32,9 @@ namespace KryticalNova.EditorTools
                 clips = ScriptableObject.CreateInstance<LedgeJumpClips>();
                 AssetDatabase.CreateAsset(clips, AssetPath);
             }
-            clips.masculine = masc;
-            clips.feminine = femn;
+            // the backflip only off a roof's edge (owner, 2 Nov); the gaps keep their clips (empty = the normal jump)
+            clips.edgeDrop.masculine = masc;
+            clips.edgeDrop.feminine = femn;
             EditorUtility.SetDirty(clips);
 
             GameObject root = PrefabUtility.LoadPrefabContents(PlayerPrefabPath);
@@ -88,8 +89,11 @@ namespace KryticalNova.EditorTools
             copy.name = $"LedgeJump_Backflip_{suffix}";
             AnimationUtility.SetAnimationEvents(copy, System.Array.Empty<AnimationEvent>());
             int before = AnimationUtility.GetCurveBindings(copy).Length;
-            int keys = KeepHumanoidCurvesOnly(copy);
-            report.AppendLine($"[LedgeJump] {suffix}: kept the humanoid curves only ({before} curves -> {AnimationUtility.GetCurveBindings(copy).Length}), {keys} keys after thinning");
+            // gui-ledge-1 (2 Nov): the whole 3.5 s emote (wind-up, flip, landing pose) fitted into ~0.7 s of air hid the flip: only its window stays
+            Vector2 window = FlipWindow(pick);
+            int keys = KeepHumanoidCurvesOnly(copy, window);
+            report.AppendLine($"[LedgeJump] {suffix}: the flip's window {window.x:F2}-{window.y:F2} s of {pick.length:F2} s (the body tipped past {FlipTipDegrees:F0} degrees); " +
+                $"kept the humanoid curves only ({before} curves -> {AnimationUtility.GetCurveBindings(copy).Length}), {keys} keys after thinning");
             AnimationClipSettings settings = AnimationUtility.GetAnimationClipSettings(copy);
             settings.loopTime = false;
             settings.loopBlendPositionXZ = false;  // the travel stays in the root: the leg's arc moves the body
@@ -107,7 +111,7 @@ namespace KryticalNova.EditorTools
         /// body never plays (26 MB of text per clip). Those go, and keys a straight line between their neighbours already gives (within
         /// <see cref="ThinTolerance"/>) are thinned out. Returns the keys kept.
         /// </summary>
-        private static int KeepHumanoidCurvesOnly(AnimationClip clip)
+        private static int KeepHumanoidCurvesOnly(AnimationClip clip, Vector2 window)
         {
             int kept = 0;
             foreach (EditorCurveBinding binding in AnimationUtility.GetCurveBindings(clip))
@@ -119,11 +123,55 @@ namespace KryticalNova.EditorTools
                 }
                 AnimationCurve curve = AnimationUtility.GetEditorCurve(clip, binding);
                 if (curve == null) continue;
-                AnimationCurve thin = Thin(curve);
+                AnimationCurve thin = Thin(Window(curve, window));
                 AnimationUtility.SetEditorCurve(clip, binding, thin);
                 kept += thin.length;
             }
             return kept;
+        }
+
+        /// <summary>How far the body must tip from upright for the flip to have started (and be back within, for it to have ended).</summary>
+        private const float FlipTipDegrees = 20f;
+
+        /// <summary>A little before the body tips and after it is upright again, so the take-off and the landing pose are not cut short (s).</summary>
+        private const float FlipMargin = 0.1f;
+
+        /// <summary>
+        /// The flip's own window in the clip: from the first frame the body (the humanoid root's rotation, <c>RootQ</c>) tips more than
+        /// <see cref="FlipTipDegrees"/> away from how it stood at the start to the last such frame, with <see cref="FlipMargin"/> either side.
+        /// The whole clip when it never tips that far.
+        /// </summary>
+        private static Vector2 FlipWindow(AnimationClip clip)
+        {
+            var q = new AnimationCurve[4];
+            foreach (EditorCurveBinding binding in AnimationUtility.GetCurveBindings(clip))
+            {
+                if (!binding.propertyName.StartsWith("RootQ.")) continue;
+                int i = "xyzw".IndexOf(binding.propertyName[binding.propertyName.Length - 1]);
+                if (i >= 0) q[i] = AnimationUtility.GetEditorCurve(clip, binding);
+            }
+            if (q.Any(c => c == null)) return new Vector2(0f, clip.length);
+            Quaternion At(float t) => new Quaternion(q[0].Evaluate(t), q[1].Evaluate(t), q[2].Evaluate(t), q[3].Evaluate(t)).normalized;
+            Quaternion start = At(0f);
+            float first = -1f, last = -1f, step = 1f / Mathf.Max(1f, clip.frameRate);
+            for (float t = 0f; t <= clip.length; t += step)
+            {
+                if (Quaternion.Angle(start, At(t)) < FlipTipDegrees) continue;
+                if (first < 0f) first = t;
+                last = t;
+            }
+            if (first < 0f) return new Vector2(0f, clip.length);
+            return new Vector2(Mathf.Max(0f, first - FlipMargin), Mathf.Min(clip.length, last + FlipMargin));
+        }
+
+        /// <summary>The curve's part inside <paramref name="window"/>, moved to start at 0: its keys there, and its value at either end.</summary>
+        private static AnimationCurve Window(AnimationCurve curve, Vector2 window)
+        {
+            var keys = new System.Collections.Generic.List<Keyframe> { new Keyframe(0f, curve.Evaluate(window.x)) };
+            foreach (Keyframe k in curve.keys)
+                if (k.time > window.x && k.time < window.y) keys.Add(new Keyframe(k.time - window.x, k.value));
+            keys.Add(new Keyframe(window.y - window.x, curve.Evaluate(window.y)));
+            return new AnimationCurve(keys.ToArray());
         }
 
         // muscles run -1..1 (0.004 = 0.2 % of the range) and the root (left out of the pose anyway) in metres: below what the eye sees on the body

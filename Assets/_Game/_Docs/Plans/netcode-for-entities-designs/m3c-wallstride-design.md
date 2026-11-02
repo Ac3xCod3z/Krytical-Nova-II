@@ -413,3 +413,9 @@ first leg starts, once; without it a server order to stand at the edge), `LedgeJ
 `_RM` in place: its travel and rise stay in the root, left out of the pose, as the vault's copies), and
 `WallWorldTests.AWalkOffARoofsEdge_JumpsItAndWalksOn_PayingTheJumpOnce_OrStopsAtTheEdge`. Known difference from NGO: a refused jump is
 told to the owner at the click (NGO says it at the edge).
+
+**Owner change (2 Nov): the backflip only off a roof's edge.** The edge drop (B3-B5) plays `WallRunPhase.LedgeJump` and the gap or drop
+between roofs (B1) plays `WallRunPhase.GapJump` (entity 13); `LedgeJumpClips` holds a clip pair per kind (`edgeDrop`: the backflip;
+`gap`: empty = the game's own jump clip, `WarpedJumpClip`). Both pay the Jump's Flux as they start. gui-ledge-1's gap and drop-link tries
+(numbers PASS) are not run again; the proof of the backflip is the edge drop, one masculine and one feminine try (gui-ledge-2), with the
+clip trimmed to the flip's own window (gui-ledge-1 showed the whole 3.5 s emote squeezed into the air time).

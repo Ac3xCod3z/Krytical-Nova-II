@@ -27,8 +27,13 @@ namespace KryticalNova.Player.Entities
         public const byte WallHold = 9;
         public const byte PushOff = 10;
         public const byte JumpOn = 11;
-        /// <summary>A jump off a roof's edge or across a gap between roofs on the way (part 5b): the Jump's Flux as it starts.</summary>
+        /// <summary>A jump off a roof's edge with no walk down on the way (part 5b): the Jump's Flux as it starts.</summary>
         public const byte LedgeJump = 12;
+        /// <summary>A jump across a gap or down a drop between roofs on the way (part 5b): the Jump's Flux as it starts.</summary>
+        public const byte GapJump = 13;
+
+        /// <summary>A route's jump (part 5b): off a roof's edge or across a gap; the Jump's Flux is paid as it starts.</summary>
+        public static bool IsRouteJump(byte phase) => phase == LedgeJump || phase == GapJump;
     }
 
     /// <summary>NGO's <c>Ease</c> (how a leg covers its height or its ground part): evenly, setting off, coming to rest, both.</summary>

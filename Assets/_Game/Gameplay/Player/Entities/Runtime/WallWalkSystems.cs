@@ -226,10 +226,10 @@ namespace KryticalNova.Player.Entities
                 var corners = em.GetBuffer<PathCorner>(e).Reinterpret<int3>().AsNativeArray();
                 var legs = em.GetBuffer<WallCorner>(e);
                 if (!WallLeg.SegmentAt(new int3(move.StartXMm, move.StartYMm, move.StartZMm), corners, math.min(plan.Count, corners.Length), move.ProgressMm,
-                        out int i, out _, out _, out _, out _) || i >= legs.Length || legs[i].Phase != WallPhase.LedgeJump) continue;
+                        out int i, out _, out _, out _, out _) || i >= legs.Length || !WallPhase.IsRouteJump(legs[i].Phase)) continue;
                 int first = i;
                 if (first < 1) continue;
-                while (first > 1 && legs[first - 1].Phase == WallPhase.LedgeJump) first--;
+                while (first > 1 && legs[first - 1].Phase == legs[i].Phase) first--;
                 if (m_LedgePaid.TryGetValue(e, out var paid) && paid.Seq == move.OrderSeq && paid.Leg == first) continue;
                 m_LedgePaid[e] = (move.OrderSeq, first);
                 if (JumpCost == null || JumpCost.CanPay(e, out _)) { JumpCost?.Pay(e); LedgeJumpsPaid++; continue; }

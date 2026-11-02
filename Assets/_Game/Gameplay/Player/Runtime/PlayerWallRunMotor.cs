@@ -39,8 +39,10 @@ namespace KryticalNova.Player
         PushOff,
         /// <summary>A jump at a wall that lands on it, standing on the face.</summary>
         JumpOn,
-        /// <summary>A jump off a roof's edge or across a gap between roofs on the way somewhere (part 5b; the clip from <see cref="LedgeJumpClips"/>).</summary>
+        /// <summary>A jump off a roof's edge with no walk down on the way somewhere (part 5b; the clip from <see cref="LedgeJumpClips"/>: the backflip).</summary>
         LedgeJump,
+        /// <summary>A jump across a gap or down a drop between roofs on the way (part 5b; <see cref="LedgeJumpClips"/>, empty = the normal jump).</summary>
+        GapJump,
     }
 
     /// <summary>The phase every machine plays, and how it faces.</summary>
@@ -1096,10 +1098,15 @@ namespace KryticalNova.Player
                     if (feel != null) { feel.JumpTakeoff(transform, Mine()); feel.Airborne(transform, true); }
                     break;
                 case WallRunPhase.LedgeJump:
-                    // the owner's jump-off (part 5b): the clip of this body's type, every machine the same (the body type is replicated)
+                case WallRunPhase.GapJump:
+                    // a route's jump (part 5b): the kind's clip for this body's type (every machine the same: the body type is replicated),
+                    // else the game's own jump clip (owner, 2 Nov: the backflip only off a roof's edge)
                     PlayerIdentity identity = GetComponent<PlayerIdentity>();
-                    Play(ledgeJumpClips != null ? ledgeJumpClips.For(identity != null ? identity.State.bodyType : KryticalNova.CharacterCreation.BodyType.Masculine) : null,
-                        pose.Duration, fallbackAirborne: true);
+                    AnimationClip jumpClip = ledgeJumpClips != null
+                        ? ledgeJumpClips.For(pose.Phase == WallRunPhase.LedgeJump ? LedgeJumpKind.EdgeDrop : LedgeJumpKind.Gap,
+                            identity != null ? identity.State.bodyType : KryticalNova.CharacterCreation.BodyType.Masculine)
+                        : null;
+                    Play(jumpClip != null ? jumpClip : animancerMotor.WarpedJumpClip(0), pose.Duration, fallbackAirborne: true);
                     if (feel != null) { feel.JumpTakeoff(transform, Mine()); feel.Airborne(transform, true); }
                     break;
                 default:
