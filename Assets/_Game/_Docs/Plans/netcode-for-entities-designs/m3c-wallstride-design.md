@@ -282,3 +282,22 @@ else to a fixed node at feet + 2.1 m under the click, then ran up. Owner's chang
 | Zone01's placed tree `SM_Env_Tree_01` (trunk) | 12.6, 0, -13.1 | three jumps at a tree (low, middle, high), the tree part | gui-catch-2/3: caught and perched |
 | In front of the wall walk's test graph wall (face z -45.3, facing +z) | -10.1, 0, -40 | three jumps onto a graph wall: below, at, above the Jump reach | the probe: `FindTestWall` finds it, tall enough, a top |
 | An 8 m terrain tree in the open (nothing but the ground within 4 m) | 31.85, 1.06, -215.76 | the terrain-tree climb (proxies) | `FindTerrainTreesInTheOpen`: NGO's Decide accepts it, its face is not the wall walk's (the first pick, 186.68,-82.07, stood against Ruin 26's rubble: a wall-walk click, gui-catch-4) |
+
+## 6. Part 5, the self-starting run: NGO rules (DOTS 8, 1 Nov; before any design or code)
+
+An ordinary ground click (no wall click) can still go over or up a wall in NGO: `PointAndClickPlayer.TryPlanRoute` (PCP:1652-1681) asks,
+in this order, before the walk is sent: the surface graph's route over a wall, the straight climb, the roof-edge drop, the vault.
+PCP = `PointAndClickPlayer.cs`, M = `PlayerWallRunMotor.cs`, WW = `PlayerWallRunMotor.WallWalk.cs`.
+
+| # | Rule (NGO) | Source | Numbers | Scene data | DOTS today |
+|---|---|---|---|---|---|
+| A1 | over a wall by the graph (`TryArmSurfaceRoute`): Wallstride open, not busy, Flux for 1, the zone has a graph; when there is NO walk there (a roof to the street) or, while Running, the walk is at least 2x the route over the wall (`SurfaceRoute.Through` from the feet to the place); the agent walks to the route's entry first | WW:325-343; PCP:1659-1664 | autoDetourFactor 2; Flux >= 1 | the surface graph, NavMesh | not built: a plain click is a walk (or a vault/Waterstride) only |
+| A2 | arming the graph route: the plant starts within `WallArmTrigger` 0.6 m + the agent's radius of the entry's NavMesh point; the route then runs as the wall walk (part 1) | WW:25, 172-236 | 0.6 | graph joins | the wall walk's own legs exist (part 1) |
+| A3 | up a wall by the straight climb (`TryArmTowards`): Running, Wallstride open; the place is at least half `minWallHeight` above the feet and 0.5 m away; no walk there, or the walk is at least 2x the straight line; a ray 1 m up toward the place, as far as `autoLookAhead` (8 m) or the place, meets a face NGO's `Decide` takes (not from a jump) and its top is within 2 m of the place's height; the agent walks to the climb's foot | M:298-324; PCP:1666-1671 | minWallHeight 2.2 (half 1.1); autoLookAhead 8; autoDetourFactor 2; 2 m | colliders, NavMesh | not built (part 2 builds the climb from a wall CLICK) |
+| A4 | arming the climb: it begins within `ArmTrigger` 0.45 m + stopping distance + two frames' travel of the foot; a later order that moves the destination more than 0.6 m after 0.15 s drops it | M:88-90, 967-973 | 0.45, 0.15 s, 0.6 m | - | part 2's run-to-the-foot cut does the same from a click |
+| A5 | off a roof with no walk down: the way goes to the roof's edge toward the place (else its nearest edge) and drops from there, from any height (owner, 22 Oct); the move walks on after the landing | PCP:1585-1630 (`TryPlanDrop`, `WatchDrop`) | DropMinHeight | NavMesh edges | not built in DOTS |
+| A6 | otherwise the vault (built, M3c), else the plain walk | PCP:1673-1681 | - | - | built |
+
+Test places to plan and prove in edit mode before part 5's GUI run (the owner's rule): a roof with no walk down and a street spot below it
+(A1 / A5), a street-to-roof click with a long walk round (A1 running), and a running click on top of a straight-climb face with no walk
+up (A3, likely Zone01's placed tree or a ruin face).
