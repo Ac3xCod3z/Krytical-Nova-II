@@ -2040,15 +2040,25 @@ namespace KryticalNova.Persistence.Entities
             /// <summary>The owner's feel-test fixes 1-3 (env KN_PLAYHERE_FIXES=1; `m3c-wallstride-design.md` section 9).</summary>
             static bool FixesRun => Environment.GetEnvironmentVariable("KN_PLAYHERE_FIXES") == "1";
 
-            /// <summary>The real click path of the owner's body (the ray, the water, the jump branch), as a mouse press at that screen point.</summary>
-            static void PressAt(GameObject body, Vector3 world)
+            /// <summary>
+            /// The real click path of the owner's body (the ray, the water, the jump branch: <see cref="PointAndClickPlayer.ClickWorld"/>), as a
+            /// mouse press at that point's place on the player's own camera. Returns what happened, for the log: the game's message, if any.
+            /// </summary>
+            static string PressAt(GameObject body, Vector3 world)
             {
-                Camera cam = Camera.main;
                 var player = body.GetComponent<PointAndClickPlayer>();
-                if (cam == null || player == null) return;
+                if (player == null) return "no click player";
+                Camera cam = player.GameplayCamera != null ? player.GameplayCamera : Camera.main;
+                if (cam == null) return "no camera";
                 Vector3 screen = cam.WorldToScreenPoint(world);
-                typeof(PointAndClickPlayer).GetMethod("TryMoveToPointer", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
-                    ?.Invoke(player, new object[] { new Vector2(screen.x, screen.y) });
+                var at = new Vector2(screen.x, screen.y);
+                if (screen.z <= 0f || !cam.pixelRect.Contains(at)) return $"off screen ({screen.x:F0},{screen.y:F0},{screen.z:F1} in {cam.pixelRect})";
+                string said = null;
+                Action<string> hear = m => said = m;
+                player.CommandMessage += hear;
+                player.ClickWorld(at);
+                player.CommandMessage -= hear;
+                return said != null ? "the game said: " + said : $"pressed at {at.x:F0},{at.y:F0}";
             }
 
             /// <summary>
@@ -2084,8 +2094,8 @@ namespace KryticalNova.Persistence.Entities
                     tally.Tried++;
                     if (resources != null) resources.RestoreChi(resources.MaxChi);
                     if (run) Select(MovementSkillId.Run); else skills.SelectWalk();
-                    Vector3 to = run ? inlandHit.position : south.position;
-                    bool sent = view.TravelTo(to, "the test place");
+                    bool sent = view.TravelTo(run ? inlandHit.position : south.position, "the test place");
+                    Vector3 to = view.TravelDestination;   // the goal TravelTo resolved on the NavMesh
                     float t0 = Time.realtimeSinceStartup;
                     int fastest = 0;
                     while (Time.realtimeSinceStartup - t0 < 12f)
@@ -2116,10 +2126,10 @@ namespace KryticalNova.Persistence.Entities
                 Vector3 target = new Vector3(feet.x + 6f, feet.y, feet.z + 4f);
                 Camera cam = Camera.main;
                 float bedOff = -1f;
-                if (cam != null && Physics.Raycast(cam.ScreenPointToRay(cam.WorldToScreenPoint(target)), out RaycastHit bed, 500f))
+                if (cam != null && Physics.Raycast(cam.ScreenPointToRay(cam.WorldToScreenPoint(target)), out RaycastHit bed, 500f, Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore))
                     bedOff = Flat(bed.point - target);
                 Select(MovementSkillId.Jump);
-                PressAt(OwnBody, target);
+                string jumpPress = PressAt(OwnBody, target);
                 float j0 = Time.realtimeSinceStartup;
                 while (Time.realtimeSinceStartup - j0 < 4f) yield return null;
                 Vector3 landed = ServerPosition(ghost) - Vector3.up * offset;
@@ -2127,21 +2137,21 @@ namespace KryticalNova.Persistence.Entities
                 bool jumpOk = onWater && jumpOff < 0.35f;
                 if (jumpOk) tally.Passed++;
                 Log($"fixes: a jump made on the water: {(jumpOk ? "PASS" : "FAIL")}; started on the water {onWater}; landed {jumpOff:F2} m from the surface " +
-                    $"spot clicked; the lake bed under that click is {bedOff:F2} m past it (where the old aim landed)");
+                    $"spot clicked; the lake bed under that click is {bedOff:F2} m past it (where the old aim landed); the press: {jumpPress}");
 
                 // 3) a new click while waterstriding: the body never steps away from the new place first
                 tally.Tried++;
                 if (resources != null) resources.RestoreChi(resources.MaxChi);
                 Select(MovementSkillId.Run);
                 Vector3 here = ServerPosition(ghost) - Vector3.up * offset;
-                PressAt(OwnBody, new Vector3(here.x + 9f, here.y, here.z + 1f));
+                string runPress = PressAt(OwnBody, new Vector3(here.x + 9f, here.y, here.z + 1f));
                 float r0 = Time.realtimeSinceStartup;
                 while (Time.realtimeSinceStartup - r0 < 0.7f) yield return null;
                 bool movingOnWater = Moving(ghost) && em.GetComponentData<MoveState>(ghost).Water != 0;
                 Vector3 at = ServerPosition(ghost) - Vector3.up * offset;
                 Vector3 second = new Vector3(at.x - 1f, at.y, at.z + 8f);
                 float start = Flat(at - second), worstBack = 0f, best = start;
-                PressAt(OwnBody, second);
+                string turnPress = PressAt(OwnBody, second);
                 float s0 = Time.realtimeSinceStartup;
                 while (Time.realtimeSinceStartup - s0 < 1f)
                 {
@@ -2153,7 +2163,7 @@ namespace KryticalNova.Persistence.Entities
                 bool reOk = movingOnWater && worstBack < 0.05f && best < start - 1f;
                 if (reOk) tally.Passed++;
                 Log($"fixes: a new click while waterstriding: {(reOk ? "PASS" : "FAIL")}; moving on the water {movingOnWater}; the drawn body stepped " +
-                    $"away from the new place by at most {worstBack:F2} m and got {start - best:F1} m nearer in 1 s");
+                    $"away from the new place by at most {worstBack:F2} m and got {start - best:F1} m nearer in 1 s; the presses: {runPress} / {turnPress}");
                 skills.SelectWalk();
                 if (resources != null) resources.RestoreChi(resources.MaxChi);
             }
