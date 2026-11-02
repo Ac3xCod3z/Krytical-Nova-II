@@ -8,6 +8,7 @@
         "KryticalNova.Progression",
         "KryticalNova.Networking",
         "KryticalNova.Networking.Entities",
+        "KryticalNova.Networking.Entities.Tests.Editor",
         "KryticalNova.Persistence.Entities",
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner",

@@ -89,6 +89,8 @@ namespace KryticalNova.Persistence.Entities
             // from the prefab now: the first spawn spot is picked before any body exists (owner's feel test 30 Oct: with base
             // offset 0 the first player stood half in the ground until it walked)
             ConfigurePlanner(planner, (prefab ?? PlayerPrefab)());
+            // what a server body says to its own player goes to that player's connection (M7/M8 system 0)
+            KryticalNova.Core.OwnerMessages.Current = new EntityOwnerMessages();
             var serverVaults = new BodyVaultPlanner(server);
             PlayerEntitiesSetup.Install(server, planner, runCost: new BodyRunCost(server), clickBudget: new BudgetClickLimit(server),
                 jumpPlanner: new BodyJumpPlanner(server), jumpCost: new BodyJumpCost(server), vaultPlanner: serverVaults,
