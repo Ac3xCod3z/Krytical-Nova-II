@@ -19,6 +19,7 @@ namespace KryticalNova.Player.Entities.Tests
         static readonly int3 Landing = new int3(3000, 0, 0);
         const int CatchClick = 55555;   // a Jump click at a wall the graph does not cover (part 4)
         const int AutoClick = 9000;     // a plain click on the roof past the wall, that Wallstride runs over by itself (part 5)
+        const int LedgeClick = 9500;    // a plain click on the street below a roof's edge, the walk jumping off it (part 5b)
         static readonly int3 CatchAt = new int3(5600, 1400, 0);
 
         /// <summary>Refuses every ordinary jump: a catch test must never fall back to one.</summary>
@@ -118,6 +119,20 @@ namespace KryticalNova.Player.Entities.Tests
                 out WallPlan plan)
             {
                 plan = default;
+                if (goalMm.x == LedgeClick)
+                {
+                    // part 5b: walk to a roof's edge 5 m up, the jump down off it (a timed arc of two legs, LedgeJump), the walk on
+                    Autos++;
+                    corners.Add(poseMm); legs.Add(default);
+                    corners.Add(new int3(4000, 5000, poseMm.z)); legs.Add(default);
+                    var air = new WallCorner { Phase = WallPhase.LedgeJump, Micros = 300000, Ease = WallCorner.Eases(WallEase.Out, WallEase.Linear), UpY = 1000, FwdX = 1000 };
+                    corners.Add(new int3(5000, 5800, poseMm.z)); legs.Add(air);
+                    air.Micros = 700000; air.Ease = WallCorner.Eases(WallEase.In, WallEase.Linear);
+                    corners.Add(new int3(7000, 0, poseMm.z)); legs.Add(air);
+                    corners.Add(new int3(LedgeClick, 0, poseMm.z)); legs.Add(default);
+                    plan = new WallPlan { SpeedMmps = 9000, OnWallFrom = 255, OffWallFrom = 255 };
+                    return WallAnswer.Planned;
+                }
                 if (goalMm.x != AutoClick) return WallAnswer.NotWall;
                 Autos++;
                 corners.Add(poseMm); legs.Add(default);
@@ -269,6 +284,58 @@ namespace KryticalNova.Player.Entities.Tests
             rig.Tick(30);
             Assert.AreEqual(1, plans.AutoWalls, "nothing planned without the Run's Flux");
             Assert.AreEqual(new int3(6500, 5000, 3000), rig.ServerPose().Mm, "the server's body stays");
+        }
+
+        sealed class PaidJumps : IJumpCost
+        {
+            public bool Affordable = true;
+            public int Paid;
+            public bool CanPay(Entity ghost, out string reason)
+            {
+                reason = Affordable ? null : "Not enough Flux.";
+                return Affordable;
+            }
+            public void Pay(Entity ghost) => Paid++;
+        }
+
+        /// <summary>
+        /// Part 5b (`m3c-wallstride-design.md` section 7.1 a): a walk with a jump off a roof's edge runs it on the server and the owner alike, the
+        /// Jump's Flux paid once as the jump's leg starts (NGO pays at take-off), then on to the place; without the Flux the walk stops at the edge.
+        /// </summary>
+        [TestCase(0, true)]
+        [TestCase(100, true)]
+        [TestCase(0, false)]
+        public void AWalkOffARoofsEdge_JumpsItAndWalksOn_PayingTheJumpOnce_OrStopsAtTheEdge(int delayMs, bool enoughFlux)
+        {
+            var planner = new StubWallPlanner();
+            var grip = new StubGrip { Points = 1000 };
+            using var rig = Rig(delayMs, planner, grip);
+            var jumps = new PaidJumps { Affordable = enoughFlux };
+            var system = rig.Server.GetExistingSystemManaged<WallGripSystem>();
+            system.JumpCost = jumps;
+            rig.Sources[0].Click(new int3(LedgeClick, 0, 0));
+            bool sawLedge = false;
+            for (int i = 0; i < 150; i++)
+            {
+                rig.Tick();
+                sawLedge |= rig.Get<PoseTilt>(rig.Server, rig.ServerGhosts[0]).Phase == WallPhase.LedgeJump;
+            }
+            Assert.AreEqual(1, rig.Server.GetExistingSystemManaged<PlayerServerPlanSystem>().AutoWalls, "the server planned the walk with its jump");
+            if (enoughFlux)
+            {
+                Assert.IsTrue(sawLedge, "the jump's phase was shown");
+                Assert.AreEqual(1, jumps.Paid, "the Jump's Flux paid once");
+                Assert.AreEqual(1, system.LedgeJumpsPaid);
+                Assert.AreEqual(new int3(LedgeClick, 0, 0), rig.ServerPose().Mm, "landed and walked on (server)");
+                Assert.AreEqual(new int3(LedgeClick, 0, 0), rig.OwnerPose().Mm, "and the owner");
+            }
+            else
+            {
+                Assert.AreEqual(0, jumps.Paid, "nothing taken");
+                Assert.AreEqual(1, system.LedgeJumpsRefused, "Not enough Flux: the jump does not start");
+                Assert.AreEqual(new int3(4000, 5000, 0), rig.ServerPose().Mm, "stands at the edge (server)");
+                Assert.AreEqual(new int3(4000, 5000, 0), rig.OwnerPose().Mm, "and the owner, corrected by the server");
+            }
         }
 
         [Test]

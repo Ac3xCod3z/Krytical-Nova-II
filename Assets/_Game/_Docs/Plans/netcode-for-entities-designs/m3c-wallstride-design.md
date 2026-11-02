@@ -386,3 +386,30 @@ the real jump, then keeps going; built as its own part right after part 5, the j
 | B7 | the jump is NGO's `TryJump` (the Jump rank's distance and height, its Flux, the warped jump clip) | PCP:1569, 1631; `PlayerJumpMotor.TryJump` | rank | colliders | the DOTS jump (`MotionPlan`, M3b) with the same checks and words |
 
 Owner changes for 5b: the jump-off clip is the Sporty backflip (data, by body type), not NGO's jump clip.
+
+### 7.1 Design: two ways, for the Master (pick before code)
+
+(a, RECOMMENDED) **A timed jump leg inside the walk, the wall walk's own machinery.** The route is planned as one walk (as the wall
+walk's layout): the NavMesh corners to the edge (or the link's near end), cut where NGO's trigger starts the jump (`DropTrigger` 0.6 m),
+then one timed arc leg (`WallWalkLayout.Arc`) to the landing with a new phase `LedgeJump`, then the NavMesh corners on to the place; a
+second gap on the way is a second leg in the same walk. The leg's time and height come from the Jump rank's own arc (the DOTS jump's
+apex and air time for that distance and drop, `JumpFlight`), its checks and words are the jump's (distance, height, "Jump is needed to
+cross that gap.", "There is no way down from here."), and its Flux is the jump's, paid by the server as the leg starts (as the climb's 12
+is paid on its plant). The `LedgeJump` phase plays the jump-off clip from a small data asset (`LedgeJumpClips`: a clip per body type,
+`_Masc` / `_Femn`, as `VaultAnimationMap` picks by body type), fitted to the leg's time like every wall phase. Stateless (a rollback never
+leaves it wrong), predicted by the owner from the press with the same plan, and the server writes it like any wall walk.
+(b) **The DOTS jump handed off at the walk's end**, then a walk on (the mirror of part 4's catch): the jump's own `MotionPlan` (crouch,
+take-off, the rank's curve), but a chain of hand-offs per gap (walk, jump, walk, jump...) with a server order after each landing; more
+moving parts, and the jump clip is replaced by the backflip anyway.
+
+Both need first: how a DOTS walk plans across a link today (`Zone01WallPropProbe.HowAWalkCrossesZone01sRoofGaps`, edit mode), and a way
+to find a link's segment in a path's corners (a corner pair whose middle has no NavMesh under it).
+
+**Owner's pick (2 Nov): (a).** Built (DOTS 9): `PlayerWallRunMotor.PlanLedgesForGhost` (`PlayerWallRunMotor.Ledges.cs`: a gap is a
+stretch of the NavMesh path with no NavMesh under its middle; the drop as NGO's `TryPlanDrop`; each jump by `PlayerJumpMotor.PlanForGhost`,
+its apex the leg's height), asked last in `PlanAutoForGhost` (Wallstride or not; the wall ways stay behind the gate), `WallRunPhase.LedgeJump`
+(entity `WallPhase.LedgeJump` 12) with `LedgeJumpClips` on the wall motor, `WallGripSystem.PayLedgeJumps` (the Jump's Flux as each jump's
+first leg starts, once; without it a server order to stand at the edge), `LedgeJumpClipsBuilder` (logs the four Synty variants, copies
+`_RM` in place: its travel and rise stay in the root, left out of the pose, as the vault's copies), and
+`WallWorldTests.AWalkOffARoofsEdge_JumpsItAndWalksOn_PayingTheJumpOnce_OrStopsAtTheEdge`. Known difference from NGO: a refused jump is
+told to the owner at the click (NGO says it at the edge).

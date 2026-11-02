@@ -26,6 +26,7 @@ namespace KryticalNova.Player.Entities
             {
                 grip.Planner = wallPlanner;
                 grip.Grip = wallGrip;
+                grip.JumpCost = jumpCost;   // the route's jumps (part 5b) pay the Jump's Flux
             }
             // Waterstride (M3c): its planner to the server, the owner's gather and the Flux system (the way back); its Flux to the server
             var water = world.GetExistingSystemManaged<WaterstrideFluxSystem>();

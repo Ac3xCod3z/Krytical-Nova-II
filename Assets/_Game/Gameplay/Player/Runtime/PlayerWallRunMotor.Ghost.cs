@@ -88,7 +88,7 @@ namespace KryticalNova.Player
         }
 
         /// <summary>Which of NGO's self-starting ways a plain click took (part 5): the scripted run and the tests log it.</summary>
-        public enum AutoWay : byte { None, OverWall, UpClimb }
+        public enum AutoWay : byte { None, OverWall, UpClimb, Ledge }
 
         // NGO PointAndClickPlayer's destination sample radius (DefaultSampleRadius), as the ghost's walk planner samples the click
         private const float AutoSampleRadius = 2f;
@@ -97,13 +97,14 @@ namespace KryticalNova.Player
         /// NGO's self-starting run for a ghost (part 5, `m3c-wallstride-design.md` section 6, rules A1-A4): a plain ground click asks,
         /// in NGO's order (<c>TryPlanRoute</c>), the way over a wall by the zone's graph (<see cref="TryArmSurfaceRoute"/>: no walk there, or
         /// Running and the walk at least <c>autoDetourFactor</c> times the route) and then the straight climb up a face the place stands on
-        /// (<see cref="TryArmTowards"/>). Laid out exactly as the wall click (part 1) and the climb (part 2) are. Null: neither (the vault or
-        /// the plain walk takes the click); never a refusal, as NGO falls through.
+        /// (<see cref="TryArmTowards"/>). Laid out exactly as the wall click (part 1) and the climb (part 2) are. Then, Wallstride or not, the
+        /// route's jumps (part 5b, section 7): a gap between roofs on the walk, or, with no walk there, the drop off the roof's edge
+        /// (<see cref="PlanLedgesForGhost"/>). Null: none of them (the vault or the plain walk takes the click); never a refusal, as NGO falls through.
         /// </summary>
         public WallWalkLayout PlanAutoForGhost(Vector3 feet, Vector3 destination, in GhostWallAsk ask, out AutoWay way)
         {
             way = AutoWay.None;
-            if (settings == null || !ask.Open || !ask.Alive || ask.Busy || ask.OnWall) return null;
+            if (settings == null || !ask.Alive || ask.Busy || ask.OnWall) return null;
             NavMeshQueryFilter filter = Filter();
             if (!NavMesh.SamplePosition(feet, out NavMeshHit onMesh, 0.6f, filter)
                 || !NavMesh.SamplePosition(destination, out NavMeshHit there, AutoSampleRadius, filter)) return null;
@@ -114,7 +115,7 @@ namespace KryticalNova.Player
 
             // A1: over a wall by the graph (NGO TryArmSurfaceRoute; the prop blockers of the wall walk, owner 1 Nov)
             SurfaceGraph graph = ZoneGraph;
-            if (graph != null && ask.HasFluxForOne && (!walkable || ask.Run))
+            if (ask.Open && graph != null && ask.HasFluxForOne && (!walkable || ask.Run))
             {
                 SurfaceRoute.Route route = SurfaceRoute.Through(graph, feet, destination, filter, PropBlocker(graph));
                 if (route != null && route.HasEntry && (!walkable || PathLength(walk) >= route.Length * settings.autoDetourFactor))
@@ -136,7 +137,22 @@ namespace KryticalNova.Player
             }
 
             // A3: up a face the place stands on, Running (NGO TryArmTowards)
-            if (!ask.Run) return null;
+            if (ask.Open && ask.Run)
+            {
+                WallWalkLayout up = UpClimbForGhost(feet, destination, walk, walkable, in ask);
+                if (up != null) { way = AutoWay.UpClimb; return up; }
+            }
+
+            // B1-B6: the route's jumps (part 5b), last before the vault (NGO TryPlanRoute: the drop after the wall's ways)
+            WallWalkLayout ledges = PlanLedgesForGhost(feet, destination, walk, walkable, in ask);
+            if (ledges != null) way = AutoWay.Ledge;
+            return ledges;
+        }
+
+        /// <summary>NGO <see cref="TryArmTowards"/> for a ghost (A3), laid out as part 2's climb, then on to the place (owner's change).</summary>
+        private WallWalkLayout UpClimbForGhost(Vector3 feet, Vector3 destination, NavMeshPath walk, bool walkable, in GhostWallAsk ask)
+        {
+            NavMeshQueryFilter filter = Filter();
             Vector3 flat = destination - feet;
             flat.y = 0f;
             float straight = flat.magnitude;
@@ -153,7 +169,6 @@ namespace KryticalNova.Player
             if (!ok || Mathf.Abs(climb.TopFeet.y - destination.y) > 2f) return null;
             WallWalkLayout up = ClimbLayout(feet, climb, in ask);
             if (up == null) return null;
-            way = AutoWay.UpClimb;
             // owner's change from NGO (1 Nov, design 6.1): on from the top to the place (NGO stands on the top), as the way over a wall walks on
             var on = new NavMeshPath();
             if ((destination - up.LastFeet).sqrMagnitude > 0.25f && NavMesh.CalculatePath(up.LastFeet, destination, filter, on)

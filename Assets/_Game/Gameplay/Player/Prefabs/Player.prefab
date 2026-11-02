@@ -4164,6 +4164,7 @@ MonoBehaviour:
   mantleClip: {fileID: 7400000, guid: 8803746afbbc61d49bb4f52aae2e7fb9, type: 2}
   perchClip: {fileID: 7667018580565293932, guid: a09f3cda3c572104d8747dabcae98bf7, type: 3}
   dropClip: {fileID: -2327705448931114778, guid: 27077ace308b2e14682962c65d9ed621, type: 3}
+  ledgeJumpClips: {fileID: 11400000, guid: ee4e9fa82f3c4ad44b7fdbf65e49bc23, type: 2}
   fadeIn: 0.1
   fadeOut: 0.15
 --- !u!114 &6994377297614759536

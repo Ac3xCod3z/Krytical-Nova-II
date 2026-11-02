@@ -196,6 +196,54 @@ namespace KryticalNova.Player.Entities
                 if ((move.Flags & MoveFlags.Moving) == 0) TakeUpCutWalk(em, e, nt.ServerTick, in move);
             }
             PayClimbs(em, nt.ServerTick);
+            PayLedgeJumps(em, nt.ServerTick);
+        }
+
+        /// <summary>The route's jumps' Flux (part 5b; NGO's jump: <c>BodyJumpCost</c>); null = they are free (tests without one).</summary>
+        public IJumpCost JumpCost { get; set; }
+
+        /// <summary>Route jumps paid, and stopped at the edge for want of Flux (tests, the scripted run).</summary>
+        public int LedgeJumpsPaid { get; private set; }
+        public int LedgeJumpsRefused { get; private set; }
+
+        // the last route jump paid per body (order number, the jump's first leg): the server never re-simulates, so this never pays twice
+        readonly System.Collections.Generic.Dictionary<Entity, (ushort Seq, int Leg)> m_LedgePaid = new System.Collections.Generic.Dictionary<Entity, (ushort, int)>();
+
+        /// <summary>
+        /// A route jump's Flux (a gap between roofs, or the drop off a roof: part 5b), taken as its leg starts, as NGO's jump pays at take-off;
+        /// without it the walk stops at the edge where the jump would have started (NGO: <c>TryJump</c> refuses, the move stops).
+        /// </summary>
+        void PayLedgeJumps(EntityManager em, NetworkTick tick)
+        {
+            using var entities = m_Query.ToEntityArray(Allocator.Temp);
+            foreach (var e in entities)
+            {
+                var move = em.GetComponentData<MoveState>(e);
+                var wall = em.GetComponentData<WallPlan>(e);
+                if ((move.Flags & MoveFlags.Moving) == 0 || !WallLeg.Of(in wall, move.OrderSeq)) continue;
+                var plan = em.GetComponentData<PathPlan>(e);
+                if (plan.Seq != move.OrderSeq) continue;
+                var corners = em.GetBuffer<PathCorner>(e).Reinterpret<int3>().AsNativeArray();
+                var legs = em.GetBuffer<WallCorner>(e);
+                if (!WallLeg.SegmentAt(new int3(move.StartXMm, move.StartYMm, move.StartZMm), corners, math.min(plan.Count, corners.Length), move.ProgressMm,
+                        out int i, out _, out _, out _, out _) || i >= legs.Length || legs[i].Phase != WallPhase.LedgeJump) continue;
+                int first = i;
+                if (first < 1) continue;
+                while (first > 1 && legs[first - 1].Phase == WallPhase.LedgeJump) first--;
+                if (m_LedgePaid.TryGetValue(e, out var paid) && paid.Seq == move.OrderSeq && paid.Leg == first) continue;
+                m_LedgePaid[e] = (move.OrderSeq, first);
+                if (JumpCost == null || JumpCost.CanPay(e, out _)) { JumpCost?.Pay(e); LedgeJumpsPaid++; continue; }
+                LedgeJumpsRefused++;
+                if (PlayerClickLog.Sink != null) PlayerClickLog.Sink("[KnWall] Not enough Flux to jump: stopped at the edge");
+                // NGO: the jump does not start; the player stands at the edge it would have jumped from
+                var pose = em.GetComponentData<PlayerPose>(e);
+                var stay = new NativeList<int3>(2, Allocator.Temp);
+                var none = new NativeList<WallCorner>(2, Allocator.Temp);
+                stay.Add(pose.Mm); stay.Add(corners[first - 1]);
+                none.Add(default); none.Add(default);
+                WallWrite.Order(em, e, tick, stay, none, default);
+                stay.Dispose(); none.Dispose();
+            }
         }
 
         /// <summary>Straight climbs paid (tests, the scripted run), and stopped at the foot for want of Flux.</summary>

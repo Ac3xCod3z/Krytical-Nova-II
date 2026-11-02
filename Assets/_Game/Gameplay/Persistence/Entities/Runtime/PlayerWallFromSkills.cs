@@ -162,7 +162,11 @@ namespace KryticalNova.Persistence.Entities
             if (layout == null) return WallAnswer.NotWall;
             m_Base[ghost] = feet;
             Write(layout, poseMm, offset, corners, legs, out plan);
-            LastDecision = way == PlayerWallRunMotor.AutoWay.OverWall ? "a run over a wall by itself" : "a run up a face by itself";
+            LastDecision = way == PlayerWallRunMotor.AutoWay.OverWall ? "a run over a wall by itself"
+                : way == PlayerWallRunMotor.AutoWay.UpClimb ? "a run up a face by itself"
+                : motor.LastLedgeRefusal == null ? "a walk with its jumps (a gap or a roof's edge)" : "a walk to the edge: " + motor.LastLedgeRefusal;
+            // a jump the rank refuses: the walk ends at the edge, and the owner is told in NGO's words (NGO says it there)
+            if (m_TellOwner && motor.LastLedgeRefusal != null) body.GetComponent<PointAndClickPlayer>()?.ShowViewRefusal(motor.LastLedgeRefusal);
             return WallAnswer.Planned;
         }
 

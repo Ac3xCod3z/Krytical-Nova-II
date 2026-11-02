@@ -39,6 +39,8 @@ namespace KryticalNova.Player
         PushOff,
         /// <summary>A jump at a wall that lands on it, standing on the face.</summary>
         JumpOn,
+        /// <summary>A jump off a roof's edge or across a gap between roofs on the way somewhere (part 5b; the clip from <see cref="LedgeJumpClips"/>).</summary>
+        LedgeJump,
     }
 
     /// <summary>The phase every machine plays, and how it faces.</summary>
@@ -105,6 +107,8 @@ namespace KryticalNova.Player
         [SerializeField] private AnimationClip perchClip;
         [Tooltip("Coming down from a tree or off a wall. Empty: the jump's own airborne pose.")]
         [SerializeField] private AnimationClip dropClip;
+        [Tooltip("A jump off a roof's edge or across a gap between roofs (part 5b): the clip per body type. Empty: the jump's airborne pose.")]
+        [SerializeField] private LedgeJumpClips ledgeJumpClips;
         [SerializeField, Min(0.01f)] private float fadeIn = 0.1f;
         [SerializeField, Min(0.01f)] private float fadeOut = 0.15f;
 
@@ -1089,6 +1093,13 @@ namespace KryticalNova.Player
                     break;
                 case WallRunPhase.JumpOn:
                     Play(animancerMotor.WarpedJumpClip(0), pose.Duration, fallbackAirborne: true);
+                    if (feel != null) { feel.JumpTakeoff(transform, Mine()); feel.Airborne(transform, true); }
+                    break;
+                case WallRunPhase.LedgeJump:
+                    // the owner's jump-off (part 5b): the clip of this body's type, every machine the same (the body type is replicated)
+                    PlayerIdentity identity = GetComponent<PlayerIdentity>();
+                    Play(ledgeJumpClips != null ? ledgeJumpClips.For(identity != null ? identity.State.bodyType : KryticalNova.CharacterCreation.BodyType.Masculine) : null,
+                        pose.Duration, fallbackAirborne: true);
                     if (feel != null) { feel.JumpTakeoff(transform, Mine()); feel.Airborne(transform, true); }
                     break;
                 default:

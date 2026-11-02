@@ -371,6 +371,66 @@ namespace KryticalNova.Tests
             Assert.Pass(report.ToString());
         }
 
+        // Part 5b (design 7, rule B1): Zone01's NavMeshLinks are the gaps between roofs. NGO never lets the agent cross one by itself (it jumps
+        // it); the DOTS walk plans with NavMesh.CalculatePath. For the first links: a path from 3 m before the link to 3 m past it, its corners,
+        // and whether a straight segment of it runs through the air (no ground within 0.6 m under its middle): the DOTS walk would float there.
+        [Test, Explicit]
+        public void HowAWalkCrossesZone01sRoofGaps()
+        {
+            EditorSceneManager.OpenScene(Scene, OpenSceneMode.Single);
+            var report = new StringBuilder();
+            var flags = System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic;
+            var rules = Object.FindFirstObjectByType<KryticalNova.World.ZoneRules>();
+            typeof(KryticalNova.World.ZoneRules).GetMethod("Awake", flags)?.Invoke(rules, null);
+            var playerPrefab = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Game/Gameplay/Player/Prefabs/Player.prefab");
+            var player = (GameObject)UnityEditor.PrefabUtility.InstantiatePrefab(playerPrefab);
+            var motor = player.GetComponent<PlayerWallRunMotor>();
+            typeof(PlayerWallRunMotor).GetMethod("Awake", flags)?.Invoke(motor, null);
+            foreach (var m in player.GetComponents<MonoBehaviour>())
+                if (m is PlayerJumpMotor) typeof(PlayerJumpMotor).GetMethod("Awake", flags)?.Invoke(m, null);
+            var walkAsk = new PlayerWallRunMotor.GhostWallAsk { Open = false, Alive = true, Run = false, Flux = 999f, HasFluxForOne = true,
+                Up = Vector3.up, Forward = Vector3.forward, GroundSpeed = 6f };
+            System.Type linkType = System.Type.GetType("Unity.AI.Navigation.NavMeshLink, Unity.AI.Navigation");
+            if (linkType == null) { Assert.Pass("[probe] no NavMeshLink type"); return; }
+            var links = Object.FindObjectsByType(linkType, FindObjectsInactive.Exclude, FindObjectsSortMode.None);
+            report.AppendLine($"[probe] {links.Length} NavMeshLinks enabled in Zone01");
+            var start = linkType.GetProperty("startPoint");
+            var end = linkType.GetProperty("endPoint");
+            var bidirectional = linkType.GetProperty("bidirectional");
+            int checkedLinks = 0, air = 0, refused = 0;
+            var path = new UnityEngine.AI.NavMeshPath();
+            foreach (Object o in links)
+            {
+                if (checkedLinks >= 12) break;
+                var link = (Component)o;
+                Vector3 a = link.transform.TransformPoint((Vector3)start.GetValue(link));
+                Vector3 b = link.transform.TransformPoint((Vector3)end.GetValue(link));
+                Vector3 way = new Vector3(b.x - a.x, 0f, b.z - a.z).normalized;
+                if (!UnityEngine.AI.NavMesh.SamplePosition(a - way * 3f, out UnityEngine.AI.NavMeshHit from, 1.5f, UnityEngine.AI.NavMesh.AllAreas)
+                    || !UnityEngine.AI.NavMesh.SamplePosition(b + way * 3f, out UnityEngine.AI.NavMeshHit to, 1.5f, UnityEngine.AI.NavMesh.AllAreas)) continue;
+                checkedLinks++;
+                bool found = UnityEngine.AI.NavMesh.CalculatePath(from.position, to.position, UnityEngine.AI.NavMesh.AllAreas, path);
+                if (!found || path.status == UnityEngine.AI.NavMeshPathStatus.PathInvalid) { refused++; report.AppendLine($"[probe] link {Path(link.transform)}: no path ({path.status})"); continue; }
+                string through = "none";
+                for (int i = 1; i < path.corners.Length; i++)
+                {
+                    Vector3 mid = (path.corners[i - 1] + path.corners[i]) * 0.5f;
+                    if (!Physics.Raycast(mid + Vector3.up * 0.3f, Vector3.down, 0.9f, ~0, QueryTriggerInteraction.Ignore))
+                    { through = $"{path.corners[i - 1]} -> {path.corners[i]} ({Vector3.Distance(path.corners[i - 1], path.corners[i]):F1} m)"; air++; break; }
+                }
+                WallWalkLayout jumps = motor.PlanAutoForGhost(from.position, to.position, in walkAsk, out PlayerWallRunMotor.AutoWay autoWay);
+                int legs = 0;
+                if (jumps != null) foreach (var c in jumps.Corners) if (c.Phase == WallRunPhase.LedgeJump) legs++;
+                report.AppendLine($"[probe] link {Path(link.transform)} {a} -> {b} ({Vector3.Distance(a, b):F1} m, drop {a.y - b.y:F1} m, both ways {bidirectional?.GetValue(link)}): " +
+                    $"path {path.status}, {path.corners.Length} corners; a segment through the air: {through}; part 5b (Wallstride locked, walking): {autoWay}, " +
+                    $"{legs} jump legs{(motor.LastLedgeRefusal != null ? ", refused: " + motor.LastLedgeRefusal : "")}; from {from.position} to {to.position}");
+            }
+            report.AppendLine($"[probe] {checkedLinks} links checked: {air} with a walk segment through the air, {refused} with no path");
+            Object.DestroyImmediate(player);
+            Debug.Log(report.ToString());
+            Assert.Pass(report.ToString());
+        }
+
         // gui-catch-4 (1 Nov): the planned terrain tree stood against Ruin 26's rubble, so its trunk was a wall-walk click. A tree truly in the
         // open: 6 m and up, nothing but the ground within 4 m, NGO's Decide accepts it (its proxy made as TreeProxyField makes it) and its face is
         // not the wall walk's. The first three nearest the spawn, for the plan.
