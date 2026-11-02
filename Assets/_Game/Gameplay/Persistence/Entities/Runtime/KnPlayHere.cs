@@ -59,7 +59,8 @@ namespace KryticalNova.Persistence.Entities
             || Environment.GetEnvironmentVariable("KN_PLAYHERE_CLIMB") == "1"                   // the scripted straight climb (M3c part 2)
             || Environment.GetEnvironmentVariable("KN_PLAYHERE_TREE") == "1"                    // the scripted tree, perch and drop (M3c part 3)
             || Environment.GetEnvironmentVariable("KN_PLAYHERE_CATCH") == "1"                   // the scripted jump that catches a wall (M3c part 4)
-            || Environment.GetEnvironmentVariable("KN_PLAYHERE_AUTO") == "1";                   // the scripted self-starting run (M3c part 5)
+            || Environment.GetEnvironmentVariable("KN_PLAYHERE_AUTO") == "1"                    // the scripted self-starting run (M3c part 5)
+            || Environment.GetEnvironmentVariable("KN_PLAYHERE_LEDGE") == "1";                  // the scripted route jumps (M3c part 5b)
         /// <summary>A folder: the scripted run saves a Game-view picture there every 0.1 s (proof for the owner, GUI Editor only).</summary>
         public const string CaptureVariable = "KN_PLAYHERE_CAPTURE";
 
@@ -1175,6 +1176,7 @@ namespace KryticalNova.Persistence.Entities
                 // the catch before the trees: the tree part ends at a terrain tree far from the spawn's walls
                 if (CatchRun) yield return Catches(body, ghost, walls);
                 if (AutoRun) yield return Autos(body, ghost, walls);
+                if (LedgeRun) yield return Ledges(body, ghost, walls);
                 if (TreeRun) yield return Climbs(body, ghost, walls, tree: true);
                 Log($"done: {arrived} of {tries} arrived, {landed} of {jumpPoints.Count} jumps passed, low-rank refusals {(lowRank.Ok ? "match" : "DIFFER")}, " +
                     $"{vaults.Passed} of {vaults.Tried} vaults passed, {waters.Passed} of {waters.Tried} Waterstride tries passed, " +
@@ -1190,7 +1192,7 @@ namespace KryticalNova.Persistence.Entities
             /// the walk, the jumps and the vaults, so a run of Waterstride or the wall walk alone never started). Every gate reads this; a new
             /// scripted part is added here, and to <see cref="Scripted"/>, which reads the same variables before the runner exists.
             /// </summary>
-            bool HasScriptedTries => !string.IsNullOrEmpty(Walk) || !string.IsNullOrEmpty(Jump) || VaultCount > 0 || WaterRun || WallRun || ClimbRun || TreeRun || CatchRun || AutoRun;
+            bool HasScriptedTries => !string.IsNullOrEmpty(Walk) || !string.IsNullOrEmpty(Jump) || VaultCount > 0 || WaterRun || WallRun || ClimbRun || TreeRun || CatchRun || AutoRun || LedgeRun;
 
             /// <summary>Which scripted parts are on, for the log's first lines (a part that should run and is not listed shows at once).</summary>
             string ScriptedParts()
@@ -1205,6 +1207,7 @@ namespace KryticalNova.Persistence.Entities
                 if (TreeRun) on.Add("tree, perch and drop");
                 if (CatchRun) on.Add("jumps that catch a wall");
                 if (AutoRun) on.Add("the self-starting run");
+                if (LedgeRun) on.Add("the route's jumps");
                 return on.Count > 0 ? string.Join(", ", on) : "none (by hand)";
             }
 
@@ -1994,6 +1997,111 @@ namespace KryticalNova.Persistence.Entities
                 bool onIt = em.GetComponentData<MoveState>(ghost).Wall == 1 && plans.WallWalks == walks0 + 1;
                 if (onIt) tally.Passed++;
                 Log($"auto: a click directly on the wall (the core case): {(onIt ? "PASS" : "FAIL")}; wall walks {plans.WallWalks - walks0}, on the wall {em.GetComponentData<MoveState>(ghost).Wall}");
+            }
+
+            /// <summary>The scripted route jumps (env KN_PLAYHERE_LEDGE=1; M3c part 5b, `m3c-wallstride-design.md` section 7).</summary>
+            static bool LedgeRun => Environment.GetEnvironmentVariable("KN_PLAYHERE_LEDGE") == "1";
+
+            /// <summary>
+            /// Part 5b's places, planned before the run (owner rule, 1 Nov) and proved in edit mode by
+            /// Zone01WallPropProbe.HowAWalkCrossesZone01sRoofGaps: a flat 2 m gap between roofs and a 2.4 m drop-down link between roofs; and, with
+            /// Wallstride locked, the test graph wall's roof, which has no walk down (ThePart5TestPlaces_StandInZone01), to the street in front.
+            /// </summary>
+            static readonly Vector3 GapWest = new Vector3(51.0f, 6.17f, 88.5f), GapEast = new Vector3(59.0f, 6.17f, 88.5f),
+                DropLinkTop = new Vector3(-89.0f, 24.19f, 11.5f), DropLinkBelow = new Vector3(-81.0f, 21.82f, 11.5f);
+
+            /// <summary>
+            /// The route's jumps (part 5b): each try a plain click whose walk must jump (a gap, a drop-down link, or with Wallstride locked the
+            /// edge of a roof with no walk down), judged: taken by the server as the walk's jumps, the LedgeJump phase shown, the Jump's Flux paid,
+            /// on to the place clicked, owner with the server, no glide, no pop. The owner's own body is shown masculine and feminine in turn (its
+            /// view only; owner, 1 Nov: one masculine and one feminine try in the GIFs).
+            /// </summary>
+            IEnumerator Ledges(GameObject body, Entity ghost, VaultTally tally)
+            {
+                World server = KnBootstrap.ServerWorld;
+                var em = server.EntityManager;
+                var motor = body.GetComponent<PlayerWallRunMotor>();
+                var progression = body.GetComponent<PlayerCharacterProgression>();
+                if (motor == null) { Log("ledge: FAIL; no wall motor"); tally.Tried++; yield break; }
+                float offset = body.GetComponent<UnityEngine.AI.NavMeshAgent>() is UnityEngine.AI.NavMeshAgent ag ? ag.baseOffset : 0f;
+                if (progression != null) progression.SetLevel(1);   // Wallstride locked: the walk's own jumps, never the wall's ways
+                yield return new WaitForSeconds(1f);
+                m_Pops.Reset();
+                float watch = Time.realtimeSinceStartup;
+                while (Time.realtimeSinceStartup - watch < 1f) { yield return new WaitForEndOfFrame(); PopFrame(ghost); }
+                Log($"ledge: pop check on a known clean case (standing 1 s): {m_Pops.Pops} pop(s) (expected 0) {m_Pops.Worst}");
+                m_Pops.Reset();
+                PopFrame(ghost);
+                Teleport(em, ghost, GapWest + Vector3.up * offset);
+                watch = Time.realtimeSinceStartup;
+                while (Time.realtimeSinceStartup - watch < 1.5f) { yield return new WaitForEndOfFrame(); PopFrame(ghost); }
+                Log($"ledge: pop check on a known fault (the teleport to the roof): {m_Pops.Pops} pop(s) (expected 1 or more): {m_Pops.Worst}");
+
+                yield return LedgeTry(body, ghost, tally, "across a 2 m gap between roofs, masculine", GapWest, GapEast, BodyType.Masculine, offset);
+                yield return LedgeTry(body, ghost, tally, "back across it, feminine", GapEast, GapWest, BodyType.Feminine, offset);
+                yield return LedgeTry(body, ghost, tally, "down a 2.4 m drop between roofs, masculine", DropLinkTop, DropLinkBelow, BodyType.Masculine, offset);
+                string wallWhy = motor.FindTestWall(TestGraphWall, out PlayerWallRunMotor.TestWall wall);
+                if (wallWhy != null) { Log("ledge: the roof with no walk down: NOT TESTED; " + wallWhy); tally.Tried++; }
+                else yield return LedgeTry(body, ghost, tally, "off a roof with no walk down to the street, feminine", wall.Top, wall.FrontFar, BodyType.Feminine, offset);
+            }
+
+            /// <summary>One plain click whose walk must jump, the owner's body shown as <paramref name="look"/>, judged.</summary>
+            IEnumerator LedgeTry(GameObject body, Entity ghost, VaultTally tally, string what, Vector3 from, Vector3 to, BodyType look, float offset)
+            {
+                if (OverTheCap()) yield break;
+                World server = KnBootstrap.ServerWorld;
+                var em = server.EntityManager;
+                var plans = server.GetExistingSystemManaged<PlayerServerPlanSystem>();
+                var grip = server.GetExistingSystemManaged<WallGripSystem>();
+                var resources = body.GetComponent<PlayerResources>();
+                // the owner's own body in the look asked for (its view only; the clip follows the body type every machine knows)
+                PlayerIdentity view = OwnBody != null ? OwnBody.GetComponent<PlayerIdentity>() : null;
+                if (view != null && view.State.bodyType != look)
+                {
+                    CharacterNetState state = view.State;
+                    state.bodyType = look;
+                    view.ApplyView(state);
+                }
+                Teleport(em, ghost, from + Vector3.up * offset);
+                yield return new WaitForSeconds(1.5f);
+                if (resources != null) resources.RestoreChi(resources.MaxChi);
+                yield return new WaitForSeconds(0.5f);
+                bool hasClient = TryLocalGhost(out World clientWorld, out Entity clientGhost, out _);
+                tally.Tried++;
+                int autos0 = plans.AutoWalls, paid0 = grip != null ? grip.LedgeJumpsPaid : 0;
+                float flux0 = Flux(body);
+                string at = DateTime.Now.ToString("HH:mm:ss.fff", CultureInfo.InvariantCulture);
+                BodyClicks.Ground(to, false);
+                float clicked = Time.realtimeSinceStartup, stoppedAt = -1f, glide = 0f;
+                Vector3 bodyAtStop = default;
+                bool sawJump = false;
+                m_Pops.Reset();
+                while (Time.realtimeSinceStartup - clicked < 15f)
+                {
+                    yield return new WaitForEndOfFrame();
+                    PopFrame(ghost);
+                    sawJump |= em.GetComponentData<PoseTilt>(ghost).Phase == WallPhase.LedgeJump;
+                    Vector3 b = OwnBody.transform.position;
+                    if (Time.realtimeSinceStartup - clicked > 1f && !Moving(ghost))
+                    {
+                        if (stoppedAt < 0f) { stoppedAt = Time.realtimeSinceStartup; bodyAtStop = b; }
+                        else { glide = Mathf.Max(glide, (b - bodyAtStop).magnitude); if (Time.realtimeSinceStartup - stoppedAt > 1f) break; }
+                    }
+                }
+                Vector3 end = ServerPosition(ghost) - Vector3.up * offset;
+                PlayerPose ownPose = hasClient && clientWorld.IsCreated ? clientWorld.EntityManager.GetComponentData<PlayerPose>(clientGhost) : default;
+                float apart = (new Vector3(ownPose.XMm, ownPose.YMm, ownPose.ZMm) * 0.001f - ServerPosition(ghost)).magnitude;
+                bool took = plans.AutoWalls == autos0 + 1;
+                int paid = grip != null ? grip.LedgeJumpsPaid - paid0 : 0;
+                float miss = Vector3.Distance(end, to);
+                bool ok = took && sawJump && paid >= 1 && miss < 0.6f && apart < 0.05f && glide < 0.02f && m_Pops.Pops == 0;
+                if (ok) tally.Passed++;
+                Log($"ledge: {what} clicked at {at}: {(ok ? "PASS" : "FAIL")}; the server {(took ? "took it as the walk's jumps" : "made it a plain walk")} " +
+                    $"(\"{(plans.WallPlanner as BodyWallPlanner)?.LastDecision}\"); the jump shown {sawJump}, Jump Flux paid {paid}; the owner's body " +
+                    $"{(view != null ? view.State.bodyType.ToString() : "?")}; ended {miss:F2} m from the click at {end.x:F1},{end.y:F2},{end.z:F1}; " +
+                    $"owner {apart * 100f:F1} cm from the server; glide {glide * 100f:F1} cm; pops {m_Pops.Pops}" +
+                    $"{(m_Pops.Pops > 0 ? " (worst: " + m_Pops.Worst + ")" : "")}; Flux {flux0:F0} -> {Flux(body):F0}");
+                yield return new WaitForSeconds(0.8f);
             }
 
             /// <summary>One plain ground click from <paramref name="from"/> to <paramref name="to"/>, judged against the way expected.</summary>
