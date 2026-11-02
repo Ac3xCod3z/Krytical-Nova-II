@@ -25,4 +25,13 @@ namespace KryticalNova.Player.Entities
         /// <summary>True when the player of <paramref name="ghost"/> may make this click now (it is counted).</summary>
         bool Allow(Entity ghost);
     }
+
+    /// <summary>
+    /// Server: a click the server took (a walk, a vault, a run over the water, a wall walk). Moving ends a channelled buff such as
+    /// Heavenly Serenity (NGO: <c>PointAndClickPlayer.ServerMoveTo</c>); filled by the game's skills (feel test item 5).
+    /// </summary>
+    public interface IClickTaken
+    {
+        void Taken(Entity ghost);
+    }
 }

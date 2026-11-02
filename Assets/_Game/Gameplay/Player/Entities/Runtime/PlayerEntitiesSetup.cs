@@ -18,7 +18,8 @@ namespace KryticalNova.Player.Entities
         /// </summary>
         public static void Install(World world, IPathPlanner planner, IPlayerCommandSource source = null, IRunCost runCost = null,
             IClickBudget clickBudget = null, IJumpPlanner jumpPlanner = null, IJumpCost jumpCost = null, IVaultPlanner vaultPlanner = null,
-            IWaterPlanner waterPlanner = null, IWaterFlux waterFlux = null, IWallPlanner wallPlanner = null, IWallGrip wallGrip = null)
+            IWaterPlanner waterPlanner = null, IWaterFlux waterFlux = null, IWallPlanner wallPlanner = null, IWallGrip wallGrip = null,
+            IClickTaken clickTaken = null)
         {
             // Wallstride's wall walk (M3c): its planner to the server, the owner's gather and the Grip system (the push-off); Grip to the server
             var grip = world.GetExistingSystemManaged<WallGripSystem>();
@@ -56,6 +57,7 @@ namespace KryticalNova.Player.Entities
                 server.VaultPlanner = vaultPlanner;
                 server.WaterPlanner = waterPlanner;
                 server.WallPlanner = wallPlanner;
+                server.ClickTaken = clickTaken;
             }
             var gather = world.GetExistingSystemManaged<PlayerInputGatherSystem>();
             if (gather != null)

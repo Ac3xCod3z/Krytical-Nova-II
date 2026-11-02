@@ -5,6 +5,7 @@
         "KryticalNova.Runtime",
         "KryticalNova.CharacterCreation",
         "KryticalNova.Factions",
+        "KryticalNova.Items",
         "KryticalNova.Progression",
         "KryticalNova.Networking",
         "KryticalNova.Networking.Entities",

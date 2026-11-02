@@ -647,6 +647,15 @@ namespace KryticalNova.Progression
             if (queue != null && queue.Queued != null) queue.Clear(); // this cast is the answer to whatever was waiting
             KryticalNova.Diagnostics.PerformanceLog.Mark("skill.cast", skill != null ? skill.skillId : null);
 
+            // the entity netcode's own view body: a buff (Heavenly Serenity, a ward) is cast by the server on its body, and this copy
+            // shows it when the server says so (feel test item 5); attacks come with the combat port
+            if (!skill.IsAttack && BodyRoleTag.RequestsOf(this) is IBodyRequests requests)
+            {
+                castRequestPendingUntil = Time.time + CastRequestTimeout;
+                requests.CastSkill(skill.skillId);
+                return true;
+            }
+
             if (IsSpawned && !IsServer)
             {
                 castRequestPendingUntil = Time.time + CastRequestTimeout;
@@ -859,6 +868,31 @@ namespace KryticalNova.Progression
             }
 
             if (!shownOnPress) PresentCast(skill, rank, FromReference(targetReference));
+        }
+
+        /// <summary>
+        /// The entity netcode's own view body: the server cast <paramref name="skillId"/> on its body (feel test item 5). This copy shows
+        /// it as an NGO client did (<c>TriggerSkillCastClientRpc</c>): the cooldown, its copy of the buff (whose ticks change nothing
+        /// here: the HP and Flux are the server's), the line and the cast.
+        /// </summary>
+        public void ShowServerCast(string skillId, int rank)
+        {
+            SkillDefinitionSO skill = GetSkill(skillId);
+            if (skill == null) return;
+            castRequestPendingUntil = 0f;
+            cooldownEndTimes[skill.RankKey] = Time.time + skill.cooldown;
+            if (!skill.IsAttack && buffManager != null) buffManager.ApplyBuff(skill, rank);
+            SkillCast?.Invoke(skill);
+            SkillMessage?.Invoke($"Activated {skill.displayName} (Rank {rank})!");
+            Changed?.Invoke();
+            PresentCast(skill, rank, null);
+        }
+
+        /// <summary>The entity netcode's own view body: the server refused the cast (its words).</summary>
+        public void ShowCastRefused(string reason)
+        {
+            castRequestPendingUntil = 0f;
+            if (!string.IsNullOrEmpty(reason)) SkillMessage?.Invoke(reason);
         }
 
         private void PresentCast(SkillDefinitionSO skill, int rank, Transform target)

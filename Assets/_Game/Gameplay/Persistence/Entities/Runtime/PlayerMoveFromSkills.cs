@@ -80,7 +80,11 @@ namespace KryticalNova.Persistence.Entities
         {
             var resources = body != null ? body.GetComponent<PlayerResources>() : null;
             if (resources == null) return null;
-            return new OwnerFlux { Milli = Mm(resources.Chi), MaxMilli = Mm(resources.MaxChi) };
+            return new OwnerFlux
+            {
+                Milli = Mm(resources.Chi), MaxMilli = Mm(resources.MaxChi),
+                HealthMilli = Mm(resources.Health), MaxHealthMilli = Mm(resources.MaxHealth),
+            };
         }
 
         static int Mm(float metres) => Mathf.RoundToInt(metres * 1000f);
@@ -101,6 +105,23 @@ namespace KryticalNova.Persistence.Entities
             if (!GhostBodyRegistry.TryGetByGhost(m_World, ghost, out GhostBodyEntry entry) || entry.Key == KryticalNova.Core.PlayerKey.None) return true;
             return KryticalNova.Networking.RpcBudget.Spend(entry.Key, KryticalNova.Networking.CallKind.Move, Time.realtimeSinceStartup)
                    == KryticalNova.Networking.RpcBudget.SpendResult.Allowed;
+        }
+    }
+
+    /// <summary>
+    /// Server: a click the server took ends the server body's channelled buff (Heavenly Serenity), as NGO's <c>ServerMoveTo</c> did; the
+    /// owner's own copy already ended on the press (feel test item 5).
+    /// </summary>
+    public sealed class BodyClickTaken : IClickTaken
+    {
+        readonly World m_World;
+
+        public BodyClickTaken(World serverWorld) => m_World = serverWorld;
+
+        public void Taken(Entity ghost)
+        {
+            if (GhostBodyRegistry.TryGetByGhost(m_World, ghost, out GhostBodyEntry entry) && entry.Body != null)
+                entry.Body.GetComponent<CharacterBuffManager>()?.InterruptChanneled();
         }
     }
 
@@ -167,7 +188,8 @@ namespace KryticalNova.Persistence.Entities
                 {
                     OwnerFlux? flux = PlayerMoveFromSkills.FluxOf(entry.Body);
                     OwnerFlux hadFlux = em.GetComponentData<OwnerFlux>(entry.Ghost);
-                    if (flux.HasValue && (hadFlux.Milli != flux.Value.Milli || hadFlux.MaxMilli != flux.Value.MaxMilli))
+                    if (flux.HasValue && (hadFlux.Milli != flux.Value.Milli || hadFlux.MaxMilli != flux.Value.MaxMilli
+                        || hadFlux.HealthMilli != flux.Value.HealthMilli || hadFlux.MaxHealthMilli != flux.Value.MaxHealthMilli))
                     {
                         em.SetComponentData(entry.Ghost, flux.Value);
                         FluxWrites++;
@@ -221,6 +243,7 @@ namespace KryticalNova.Persistence.Entities
                 {
                     OwnerFlux flux = em.GetComponentData<OwnerFlux>(entry.Ghost);
                     if (flux.MaxMilli > 0) resources.MirrorChi(flux.Milli * 0.001f, flux.MaxMilli * 0.001f);
+                    if (flux.MaxHealthMilli > 0) resources.MirrorHealth(flux.HealthMilli * 0.001f, flux.MaxHealthMilli * 0.001f);
                 }
             }
         }

@@ -263,6 +263,7 @@ namespace KryticalNova.Progression
         public bool TrySpendChi(float amount)
         {
             if (HasInfiniteChi && IsAlive) return true;
+            if (chiMirrored) return CanSpendChi(amount);   // a mirror only answers; the server spends
             if (!CanSpendChi(amount)) return false;
             if (amount <= 0f) return true;
             chi = Mathf.Max(0f, chi - amount);
@@ -275,6 +276,7 @@ namespace KryticalNova.Progression
         /// <summary>Restores a positive amount of Chi, clamped to the current capacity.</summary>
         public void RestoreChi(float amount)
         {
+            if (chiMirrored) return;   // a mirror never fills itself: the server does, and the Flux comes back (item 5)
             if (!initialized || !float.IsFinite(amount) || amount <= 0f) return;
             chi = Mathf.Min(maxChi, chi + amount);
             SyncNetworkState();
@@ -306,9 +308,27 @@ namespace KryticalNova.Progression
         [Rpc(SendTo.Owner, InvokePermission = RpcInvokePermission.Server)]
         private void DamagedRpc(float fraction01) => ClientPresentationRegistry.Feel?.LocalPlayerDamaged(fraction01);
 
+        /// <summary>
+        /// An entity-netcode client's own view body: the HP and Max HP its server sent (with the owner-only Flux), so the HUD shows a heal
+        /// the server made (a stim, Serenity's ticks; owner, 2 Nov, item 5). Like <see cref="MirrorChi"/>: the server's numbers stand.
+        /// </summary>
+        public void MirrorHealth(float current, float max)
+        {
+            if (IsSpawned) return;
+            chiMirrored = true;
+            EnsureInitialized();
+            max = Mathf.Max(1f, max);
+            current = Mathf.Clamp(current, 0f, max);
+            if (Mathf.Approximately(current, health) && Mathf.Approximately(max, maxHealth)) return;
+            health = current;
+            maxHealth = max;
+            Changed?.Invoke();
+        }
+
         /// <summary>Heals a living player without exceeding maximum HP.</summary>
         public void Heal(float amount)
         {
+            if (chiMirrored) return;   // a mirror never heals itself: the server heals its body and the HP comes back (item 5)
             if (!IsAlive || !float.IsFinite(amount) || amount <= 0f) return;
             health = Mathf.Min(maxHealth, health + amount);
             SyncNetworkState();

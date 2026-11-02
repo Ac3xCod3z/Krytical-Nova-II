@@ -6,6 +6,7 @@
         "KryticalNova.CharacterCreation",
         "KryticalNova.Factions",
         "KryticalNova.Items",
+        "KryticalNova.Economy",
         "KryticalNova.Progression",
         "KryticalNova.Networking.Entities",
         "KryticalNova.Persistence",
@@ -14,6 +15,8 @@
         "KryticalNova.Player.Entities.Bodies",
         "KryticalNova.Player.Entities.Presentation",
         "Unity.Netcode.Runtime",
+        "Unity.Entities",
+        "Unity.NetCode",
         "Unity.Collections",
         "MotionWarping.Runtime",
         "UnityEngine.TestRunner"

@@ -65,6 +65,28 @@ namespace KryticalNova.Items
         /// drop, granted), as against handed on by another player. The Weave Library collects its look.
         /// </summary>
         public event Action<ushort> Earned;
+        /// <summary>
+        /// Where it is decided: an item was used (its id, and whether it restored HP and Flux). The entity netcode answers its player's
+        /// request with it (feel test item 5).
+        /// </summary>
+        public event Action<ushort, bool, bool> ItemUsed;
+
+        /// <summary>The entity netcode's own view body: the server refused its request; the player reads why, as NGO showed it.</summary>
+        public void ShowRefused(string reason)
+        {
+            if (!string.IsNullOrEmpty(reason)) NotifyFailed(reason);
+        }
+
+        /// <summary>
+        /// The entity netcode's own view body: one Pack cell as the server's body has it now, so the HUD and the hotbar show the counts
+        /// and the Flask's drinks the server keeps (feel test item 5). Only the Pack: what is worn stays as the look shows it.
+        /// </summary>
+        public void MirrorCell(int index, ItemStack stack)
+        {
+            if (!BodyRoleTag.IsLocalClientView(this) || index < 0 || index >= Capacity || cells[index].Equals(stack)) return;
+            cells[index] = stack;
+            Changed?.Invoke();
+        }
 
         public ItemCatalog Catalog => catalog;
         public GearDictionary Gear => gearDictionary;
@@ -206,6 +228,13 @@ namespace KryticalNova.Items
             if (catalog != null && catalog.Get(Get(bagIndex).itemId) is ItemDefinition asked && asked.useEffect == ItemUseEffect.NameChange)
             {
                 NameChangeAsked?.Invoke(bagIndex);
+                return;
+            }
+            // the entity netcode's own view body: the server uses it on its body, by the item's id (the two Packs are not the same array)
+            if (BodyRoleTag.RequestsOf(this) is IBodyRequests requests)
+            {
+                ushort id = Get(bagIndex).itemId;
+                if (id == 0) NotifyFailed(InventoryRules.ReasonEmpty); else requests.UseItem(id);
                 return;
             }
             if (NetRole.IsNetworked(this)) UseRpc((byte)bagIndex); else ServerUse((byte)bagIndex);
@@ -492,6 +521,7 @@ namespace KryticalNova.Items
             if (used.restoreHealth > 0f) resources.Heal(used.restoreHealth);
             if (used.restoreChi > 0f) resources.RestoreChi(used.restoreChi);
             if (used.useEffect != ItemUseEffect.None) HandlerFor(used.useEffect)?.ServerUse(new UsedItem(used.itemId, used.displayName));
+            ItemUsed?.Invoke(used.itemId, used.restoreHealth > 0f, used.restoreChi > 0f);
 
             if (used.restoreHealth <= 0f && used.restoreChi <= 0f) return; // the effect's own system presents it
             if (NetRole.IsNetworked(this)) ItemUsedRpc(used.restoreHealth > 0f, used.restoreChi > 0f);
@@ -757,7 +787,8 @@ namespace KryticalNova.Items
         private void NotifyFailed(string reason)
         {
             RequestFailed?.Invoke(reason);
-            ClientPresentationRegistry.Messages?.ShowMessage(reason);
+            // a server's body of the entity netcode tells its player by the request's answer, not on this machine's screen
+            if (!NetRole.IsServerBody(this)) ClientPresentationRegistry.Messages?.ShowMessage(reason);
         }
 
         private void GrantStarterLoadout()

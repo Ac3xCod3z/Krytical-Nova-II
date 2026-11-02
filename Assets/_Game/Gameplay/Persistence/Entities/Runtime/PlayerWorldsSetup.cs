@@ -93,7 +93,8 @@ namespace KryticalNova.Persistence.Entities
             PlayerEntitiesSetup.Install(server, planner, runCost: new BodyRunCost(server), clickBudget: new BudgetClickLimit(server),
                 jumpPlanner: new BodyJumpPlanner(server), jumpCost: new BodyJumpCost(server), vaultPlanner: serverVaults,
                 waterPlanner: new BodyWaterPlanner(server, planner, vaults: serverVaults), waterFlux: new BodyWaterFlux(server, (prefab ?? PlayerPrefab)()),
-                wallPlanner: new BodyWallPlanner(server), wallGrip: new BodyWallGrip(server, (prefab ?? PlayerPrefab)()));
+                wallPlanner: new BodyWallPlanner(server), wallGrip: new BodyWallGrip(server, (prefab ?? PlayerPrefab)()),
+                clickTaken: new BodyClickTaken(server));
             // walk numbers from the settings asset and the jump's curves from its clip, the same on server and client (prediction must agree)
             PlayerMoveFromSkills.InstallSettings(server, PlayerMoveFromSkills.SettingsOf((prefab ?? PlayerPrefab)()));
             PlayerJumpFromSkills.InstallCurves(server, (prefab ?? PlayerPrefab)());
@@ -147,6 +148,8 @@ namespace KryticalNova.Persistence.Entities
                     // every view body shows the ghosts' jumps with its own clip (M3b)
                     if (body != null && body.GetComponent<GhostJumpView>() == null) body.AddComponent<GhostJumpView>();
                     if (!request.IsLocal) return;
+                    // items and buffs are used by the server on its body; this body asks (feel test item 5)
+                    if (body.GetComponent<KryticalNova.Core.BodyRoleTag>() is KryticalNova.Core.BodyRoleTag tag) tag.Requests = new EntityBodyRequests(client);
                     // the owner's own body plans its climbs too: the trees near it (NGO WantsTreeProxies: the server and the owner)
                     if (body.GetComponent<KryticalNova.Player.TreeProxyAnchor>() == null) body.AddComponent<KryticalNova.Player.TreeProxyAnchor>();
                     PlayerMoveFromSkills.InstallSettings(client, PlayerMoveFromSkills.SettingsOf(body));

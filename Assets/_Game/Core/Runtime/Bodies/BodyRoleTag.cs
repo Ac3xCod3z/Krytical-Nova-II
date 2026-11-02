@@ -31,6 +31,16 @@ namespace KryticalNova.Core
         /// <summary>Where movement requests go; null = move the body yourself (agent).</summary>
         public IBodyMover Mover { get; set; }
 
+        /// <summary>Where item uses and skill casts go (the local view body); null = decide them on this body.</summary>
+        public IBodyRequests Requests { get; set; }
+
+        /// <summary>The requests of the local view body this part belongs to, or null (every other body decides itself).</summary>
+        public static IBodyRequests RequestsOf(Component part)
+        {
+            BodyRoleTag tag = Of(part);
+            return tag != null && tag.kind == NetRoleKind.ClientView && tag.isLocal ? tag.Requests : null;
+        }
+
         /// <summary>Raised when <see cref="IsLocal"/> changes (ownership settles after the body exists).</summary>
         public event Action<BodyRoleTag> LocalChanged;
 

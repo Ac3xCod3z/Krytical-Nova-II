@@ -217,6 +217,119 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
             agent.OnServerLeaving();
         }
 
+        /// <summary>
+        /// Feel test item 5 (owner, 2 Nov): the Pack, the Serums and the wallet are real on the server's body. A character saved with
+        /// stims in its Pack and Creds in its wallet (the NGO components' own texts: the same format, no migration) loads into a fresh
+        /// server body with exactly that, and saves back every byte as it was.
+        /// </summary>
+        [UnityTest]
+        public IEnumerator B3_ThePackSerumsAndWallet_AreReal_ASaveLoadsUnchanged_AndSavesBackByteForByte()
+        {
+            NetRole.Install(new BodyRoleNetRoleAdapter(null, () => NetRoleKind.ServerBody));
+            const string account = "00112233445566778899aabbccddeeff";
+            const string characterId = "ffeeddccbbaa99887766554433221100";
+            GameObject first = Make(NetRoleKind.ServerBody, false, new PlayerKey(3));
+            yield return null;
+            CharacterRecipe recipe = AnyLegalRecipe(first.GetComponent<PlayerIdentity>().Database);
+            var stored = new AccountSave { accountId = account };
+            stored.characters.Add(new CharacterSave { characterId = characterId, name = "Stims" });
+            Assert.IsTrue(ServerSave.WriteAccount(stored));
+            ServerSave.WaitForDisk();
+            ServerBodyContext Context(int key) => new ServerBodyContext
+            {
+                Key = new PlayerKey((ulong)key), Serial = (ulong)key, NetworkId = key, Account = account, CharacterId = characterId, Name = "Stims",
+                RecipeText = RecipeText.Encode(recipe),
+            };
+
+            var rules = new PlayerAdmission();
+            Assert.IsNull(rules.Begin(first, Context(3)), "admitted");
+            for (int i = 0; i < 10; i++) yield return null;
+            var inventory = first.GetComponent<PlayerInventory>();
+            int stims = inventory.CountItem(9001);
+            Assert.AreEqual(5, inventory.ServerGive(9001, 5), "the server's body takes the stims (HP Stim (S), id 9001)");
+            first.GetComponent<KryticalNova.Economy.PlayerWallet>().ServerSet(250);
+            first.GetComponent<PlayerSaveAgent>().Save();
+            ServerSave.WaitForDisk();
+            CharacterSave saved = ServerSave.ReadAccountFrom(ServerSave.Store, account).Find(characterId);
+            string pack = saved.Get("inventory"), wallet = saved.Get("wallet");
+            Assert.IsNotNull(pack, "the Pack is real: it is saved");
+            Assert.IsNotNull(wallet, "the wallet is real: it is saved");
+            first.GetComponent<PlayerSaveAgent>().OnServerLeaving();
+            Object.Destroy(first);
+            yield return null;
+
+            GameObject second = Make(NetRoleKind.ServerBody, false, new PlayerKey(4));
+            yield return null;
+            Assert.IsNull(rules.Begin(second, Context(4)), "admitted again");
+            for (int i = 0; i < 10; i++) yield return null;
+            Assert.AreEqual(stims + 5, second.GetComponent<PlayerInventory>().CountItem(9001), "the saved Pack is loaded, not the starter bag");
+            Assert.AreEqual(wallet, second.GetComponent<KryticalNova.Economy.PlayerWallet>().CaptureSave(), "the saved Creds are loaded");
+            second.GetComponent<PlayerSaveAgent>().Save();
+            ServerSave.WaitForDisk();
+            CharacterSave back = ServerSave.ReadAccountFrom(ServerSave.Store, account).Find(characterId);
+            Assert.AreEqual(pack, back.Get("inventory"), "the Pack saves back byte for byte");
+            Assert.AreEqual(wallet, back.Get("wallet"), "the wallet saves back byte for byte");
+            second.GetComponent<PlayerSaveAgent>().OnServerLeaving();
+        }
+
+        /// <summary>
+        /// Feel test item 5 (owner, 2 Nov): a use asked by the owner runs on the server's body by the item's id, with NGO's rules: a full
+        /// pool refuses, a hurt one heals and the stack loses one, a second use at once is refused by the shared cooldown (no double
+        /// use), an item not held is refused, and no use writes a ledger line (NGO writes none).
+        /// </summary>
+        [UnityTest]
+        public IEnumerator B4_AUse_RunsOnTheServerBody_ByTheItemsId_OnceUnderTheCooldown_AndWritesNoLedgerLine()
+        {
+            NetRole.Install(new BodyRoleNetRoleAdapter(null, () => NetRoleKind.ServerBody));
+            const string account = "0f1e2d3c4b5a69788796a5b4c3d2e1f0";
+            const string characterId = "a1b2c3d4e5f60718293a4b5c6d7e8f90";
+            GameObject body = Make(NetRoleKind.ServerBody, false, new PlayerKey(5));
+            yield return null;
+            CharacterRecipe recipe = AnyLegalRecipe(body.GetComponent<PlayerIdentity>().Database);
+            var stored = new AccountSave { accountId = account };
+            stored.characters.Add(new CharacterSave { characterId = characterId, name = "User" });
+            Assert.IsTrue(ServerSave.WriteAccount(stored));
+            ServerSave.WaitForDisk();
+            var context = new ServerBodyContext
+            {
+                Key = new PlayerKey(5), Serial = 5, NetworkId = 5, Account = account, CharacterId = characterId, Name = "User",
+                RecipeText = RecipeText.Encode(recipe),
+            };
+            Assert.IsNull(new PlayerAdmission().Begin(body, in context), "admitted");
+            for (int i = 0; i < 10; i++) yield return null;
+
+            var inventory = body.GetComponent<PlayerInventory>();
+            var resources = body.GetComponent<KryticalNova.Progression.PlayerResources>();
+            inventory.ServerGive(9001, 3);
+            int held = inventory.CountItem(9001);
+            bool ledgerBefore = ServerSave.HasPendingLedger(account);
+
+            Assert.IsFalse(PlayerRequestServerSystem.UseOn(body, 9001, out RequestReplyRpc reply), "full HP: a stim would be wasted");
+            Assert.AreEqual(RequestReplyRpc.ItemRefused, reply.Kind);
+            Assert.AreEqual("Already at full strength.", reply.Text.ToString());
+            Assert.AreEqual(held, inventory.CountItem(9001));
+
+            resources.ApplyDamage(resources.MaxHealth * 0.5f);
+            float hurt = resources.Health;
+            Assert.IsTrue(PlayerRequestServerSystem.UseOn(body, 9001, out reply), "hurt: the stim is used");
+            Assert.AreEqual(RequestReplyRpc.ItemUsed, reply.Kind);
+            Assert.AreEqual(1, reply.Health, "it restored HP (the owner's feel)");
+            Assert.AreEqual(held - 1, inventory.CountItem(9001), "one used from the server's own Pack");
+            Assert.Greater(resources.Health, hurt, "the server's body healed");
+
+            Assert.IsFalse(PlayerRequestServerSystem.UseOn(body, 9001, out reply), "a second use at once: no double use");
+            Assert.AreEqual("You can't use another item yet.", reply.Text.ToString());
+            Assert.AreEqual(held - 1, inventory.CountItem(9001));
+
+            if (inventory.CountItem(9006) == 0)
+            {
+                Assert.IsFalse(PlayerRequestServerSystem.UseOn(body, 9006, out reply), "an item not held is never used");
+                Assert.AreEqual("You have none left.", reply.Text.ToString());
+            }
+            Assert.AreEqual(ledgerBefore, ServerSave.HasPendingLedger(account), "a use writes no ledger line (NGO writes none)");
+            body.GetComponent<PlayerSaveAgent>().OnServerLeaving();
+        }
+
         static CharacterRecipe AnyLegalRecipe(CharacterCreationDatabase database)
         {
             Assert.IsNotNull(database, "PlayerIdentity has its character database");

@@ -511,6 +511,20 @@ the DOTS crew notes `dots9-owner-feel-findings-2nov.md`; the short form:
 - Tests: `WaterstrideRulesTests` (a river with two banks: the way across, run or not; the clicks it never takes; the time, margin and
   Flux rules). Proof: `KnPlayHere` `KN_PLAYHERE_ACROSS=1` (south bank to north bank Run on and walking, the bridge as the control).
 
+**Built for 5 (DOTS 9, 2 Nov; owner pick a, "Whole fix now"; rules table `dots9-item5-rules-table.md` in the shared notes):**
+- Saves: the Pack (`inventory`: counts and the Flask's drinks), `serums` and `wallet` are real on the server's body (`SavePassthrough`);
+  same parts, same format (the NGO components' own text), so no migration; the other parts stay passed through. A use writes no
+  ledger line (NGO writes none) and changes one player's documents (no `SaveTogether`); Creds change only through `PlayerWallet`.
+- Requests: the local view body's `BodyRoleTag.Requests` (`IBodyRequests`, Core) sends `ItemUseRpc` (by item id: the two Packs are
+  not the same array) and `SkillCastRpc` (buffs only; attacks with M4). The server runs NGO's own `UseItem`/`ServerUse` and
+  `ServerTryCast` on its body, counted by the request limits (items, combat), and answers (`RequestReplyRpc`): the feel, a refusal in
+  NGO's words, or the cast for the body's copy to show (`ShowServerCast`). The shared 1 s use cooldown stops a double use.
+- The owner sees the server's numbers: the Pack cell by cell (`PackCellRpc`, cleared on arrival), HP beside the Flux (`OwnerFlux`
+  HP fields, `MirrorHealth`); a mirror never heals, fills or spends itself (`PlayerResources`). A click the server takes ends its
+  body's Serenity (`IClickTaken`, NGO `ServerMoveTo`).
+- Tests (PlayMode, real prefab): `B3_...` a saved Pack and wallet load into a fresh server body and save back byte for byte; `B4_...`
+  use by id, full pool refused, cooldown (no double use), none left, no ledger line. `SavePassthroughTests` updated.
+
 **Proof of 2 and 3, and the owner's hand test:** the GUI proof aims the clicks with a ray from above (as a camera would) and hands them
 to the body (`BodyClicks`), because the scripted screen presses missed. The owner tests both by hand after the trip, which covers the
 camera-click wiring: a jump from the water lands on the clicked spot (2); a re-click while waterstriding turns at once, no step back (3).

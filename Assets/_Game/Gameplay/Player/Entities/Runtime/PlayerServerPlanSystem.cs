@@ -57,6 +57,9 @@ namespace KryticalNova.Player.Entities
         /// <summary>The move-click rate limit; null = no limit (tests, a world without the game's request limits).</summary>
         public IClickBudget ClickBudget { get; set; }
 
+        /// <summary>Told of every click taken (moving ends a channelled buff; feel test item 5); null = nobody.</summary>
+        public IClickTaken ClickTaken { get; set; }
+
         /// <summary>Clicks refused for coming too fast (tests, the status page).</summary>
         public int OverBudget { get; private set; }
 
@@ -187,9 +190,13 @@ namespace KryticalNova.Player.Entities
                             Refuse(em, e, input);
                             Refused++;
                         }
-                        else if (PlayerClickLog.Sink != null)
-                            PlayerClickLog.Server(em.HasComponent<GhostOwner>(e) ? em.GetComponentData<GhostOwner>(e).NetworkId : 0,
-                                input.ClickSeq, nt.ServerTick.TickIndexForValidTick);
+                        else
+                        {
+                            ClickTaken?.Taken(e);
+                            if (PlayerClickLog.Sink != null)
+                                PlayerClickLog.Server(em.HasComponent<GhostOwner>(e) ? em.GetComponentData<GhostOwner>(e).NetworkId : 0,
+                                    input.ClickSeq, nt.ServerTick.TickIndexForValidTick);
+                        }
                         continue;
                     }
                     // Waterstride's clicks are planned by its own rules and cost no Run Flux (NGO: the water motor sets the path itself)
@@ -201,9 +208,13 @@ namespace KryticalNova.Player.Entities
                             Refuse(em, e, input);
                             Refused++;
                         }
-                        else if (PlayerClickLog.Sink != null)
-                            PlayerClickLog.Server(em.HasComponent<GhostOwner>(e) ? em.GetComponentData<GhostOwner>(e).NetworkId : 0,
-                                input.ClickSeq, nt.ServerTick.TickIndexForValidTick);
+                        else
+                        {
+                            ClickTaken?.Taken(e);
+                            if (PlayerClickLog.Sink != null)
+                                PlayerClickLog.Server(em.HasComponent<GhostOwner>(e) ? em.GetComponentData<GhostOwner>(e).NetworkId : 0,
+                                    input.ClickSeq, nt.ServerTick.TickIndexForValidTick);
+                        }
                         continue;
                     }
                     // a run is paid per destination, only for a click that will start (the Netcode for GameObjects rule)
@@ -216,6 +227,7 @@ namespace KryticalNova.Player.Entities
                     if (!tooFar && !unpaid && TryAutoWall(em, e, pose, goal, input))
                     {
                         if (run) RunCost.Pay(e);
+                        ClickTaken?.Taken(e);
                         if (PlayerClickLog.Sink != null)
                             PlayerClickLog.Server(em.HasComponent<GhostOwner>(e) ? em.GetComponentData<GhostOwner>(e).NetworkId : 0,
                                 input.ClickSeq, nt.ServerTick.TickIndexForValidTick);
@@ -229,6 +241,7 @@ namespace KryticalNova.Player.Entities
                         continue;
                     }
                     if (run) RunCost.Pay(e);
+                    ClickTaken?.Taken(e);
                     if (PlayerClickLog.Sink != null)
                         PlayerClickLog.Server(em.HasComponent<GhostOwner>(e) ? em.GetComponentData<GhostOwner>(e).NetworkId : 0,
                             input.ClickSeq, nt.ServerTick.TickIndexForValidTick);

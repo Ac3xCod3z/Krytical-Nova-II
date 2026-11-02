@@ -175,6 +175,9 @@ namespace KryticalNova.Player.Entities
     {
         [GhostField] public int Milli;
         [GhostField] public int MaxMilli;
+        /// <summary>The HP and Max HP in thousandths (owner, 2 Nov, item 5: a heal the server made shows on the owner's HUD).</summary>
+        [GhostField] public int HealthMilli;
+        [GhostField] public int MaxHealthMilli;
     }
 
     /// <summary>One corner of the server's planned path (millimetres). Owner only: observers never see the path.</summary>
