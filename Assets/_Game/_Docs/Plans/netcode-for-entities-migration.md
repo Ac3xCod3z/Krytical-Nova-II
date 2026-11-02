@@ -1131,6 +1131,11 @@ which do not run on a DOTS client. They take two server gaps with them: Run Flux
   down; the Jump's Flux paid once each, 0.02-0.06 m from the click, owner 0.0 cm, glide 0, pops 0), GIFs `DOTS-proof/dots-ledge1-1..4-*.gif`.
   NOT yet proven: the backflip's look (the whole 3.5 s emote fitted into ~0.7 s of air hides the flip; the builder now trims the copy to
   the flip's own window, to run when the PC is free, then gui-ledge-2).
+  Owner change (2 Nov): the backflip only off a roof's edge; the gaps keep the normal jump (a clip per jump kind in `LedgeJumpClips`;
+  b03ccc4a4: flip windows masculine 0.17-2.57 s, feminine 0.13-1.57 s, 2.2 / 1.5 MB). GUI run gui-ledge-2 (2 Nov, two runs, the second
+  because the first video lost its end): the two roof-edge drops 2 of 2 PASS each time (0.06 m from the click, the Jump's Flux paid once,
+  the owner's body as set, owner 0.0 cm, glide 0, pops 0), GIFs `DOTS-proof/dots-ledge2-1-*` (masculine) and `dots-ledge2-2-*`
+  (feminine), `-1b` / `-2b` at half speed. Waits for the owner's look at the flip (it plays about 3.4x / 2x its own speed in the air).
 - [ ] the owner's rules (memory [[wallstride-decisions]]): no glitching, never inside a building, a jump catches a wall at a slant
   (65 degrees, run 45 degrees) with the turn eased in the plant, a player is NEVER knocked or forced off a wall, can always leave by choice
 - [ ] the climb as one warp route of eased legs, planned by the server from the zone's surface graph, predicted by the owner; the ground
