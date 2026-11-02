@@ -1897,11 +1897,13 @@ namespace KryticalNova.Persistence.Entities
                 Vector3 ground = wall.Front;
                 Log($"catch: the graph wall's foot at {wall.Foot.x:F1},{wall.Foot.y:F2},{wall.Foot.z:F1} facing {wall.Normal.x:F2},{wall.Normal.z:F2}; Jump reaches {reach:F1} m");
                 var grabs = new List<string>();
+                // three heights on the wall, each grabbed where clicked (owner pick B a, 1 Nov: at Wallstride's gate, Jump rank 20, the jump
+                // reaches 67.5 m in Play, so every graph-wall click in Zone01 is within reach)
                 foreach (var (what, upBy) in new (string, float)[]
                 {
-                    ("a graph wall, below the reach", Mathf.Min(2.5f, reach - 1f)),
-                    ("a graph wall, at the reach", reach - 0.2f),
-                    ("a graph wall, above the reach (grab lower, run up)", reach + 2f),
+                    ("a graph wall, low", 2.5f),
+                    ("a graph wall, middle", 5f),
+                    ("a graph wall, high", 8f),
                 })
                 {
                     Vector3 click = wall.Lower + Vector3.up * (wall.Foot.y + upBy - wall.Lower.y);
@@ -1913,7 +1915,7 @@ namespace KryticalNova.Persistence.Entities
                     yield return CatchTry(body, ghost, tally, $"{what}, at {upBy:F1} m up the face", click, wall.Normal, ground, offset, result, onWall: true);
                     grabs.Add(result.Height);
                 }
-                Log($"catch: graph wall grabbed at {string.Join(", ", grabs)} above the take-off (expected: where clicked under the reach, the reach above it)");
+                Log($"catch: graph wall grabbed at {string.Join(", ", grabs)} above the take-off (expected: where clicked, 2.5, 5 and 8 m)");
             }
 
             sealed class CatchResult { public string Height = "none"; }

@@ -145,6 +145,28 @@ namespace KryticalNova.EditorTools
             return report;
         }
 
+        /// <summary>
+        /// Batch (-executeMethod): opens Zone01 and bakes its graph, after checking its terrain's own tree colliders are off (owner, 1 Nov: trees
+        /// are climbed through TreeProxyField's proxies, to a perch; baked with them on, every terrain trunk carried wall-walk nodes). Exits 1
+        /// without baking when they are on.
+        /// </summary>
+        public static void BakeZone01Batch()
+        {
+            UnityEditor.SceneManagement.EditorSceneManager.OpenScene("Assets/_Game/Scenes/World/Towns/Zone01_StarterTown.unity",
+                UnityEditor.SceneManagement.OpenSceneMode.Single);
+            foreach (Terrain t in Terrain.activeTerrains)
+            {
+                var collider = t.GetComponent<TerrainCollider>();
+                if (collider == null || !new SerializedObject(collider).FindProperty("m_EnableTreeColliders").boolValue) continue;
+                Debug.LogError($"[Surface graph] {t.name}: the terrain's own tree colliders are on; not baked");
+                EditorApplication.Exit(1);
+                return;
+            }
+            Physics.SyncTransforms();
+            Debug.Log(BakeZone());
+            EditorApplication.Exit(0);
+        }
+
         /// <summary>The zone's catalogue entry points at its graph, so the game uses it there.</summary>
         private static void UseForZone(SurfaceGraph graph, string sceneName)
         {

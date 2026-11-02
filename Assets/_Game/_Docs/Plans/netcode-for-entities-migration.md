@@ -233,7 +233,9 @@ Order so that main is never broken and the final merge stays small:
    Scene data (owner pick, 1 Nov; CONFIRMED in Play, gui-catch-3: at a terrain tree's perch the overlap was "Zone01 Terrain
    (TerrainCollider)", besides the tree's own proxy): Zone01_StarterTown's TerrainCollider `m_EnableTreeColliders` set to 0 in the clone,
    as `TreeProxyField` intends (on, NGO's Decide refused every terrain tree: "There is no room at the top."). Main's Zone01 needs the same
-   one-line change at cutover. Every other zone already has it off (the dev scene Test_Cadence has it on).
+   one-line change at cutover. Every other zone already has it off (the dev scene Test_Cadence has it on). AND a rebake of Zone01's surface
+   graph with them off (owner pick, 1 Nov; `SurfaceGraphBuilder.BakeZone01Batch`): baked with them on (22 Oct), every terrain trunk carried
+   wall-walk nodes, so a click on a terrain tree went to the wall walk instead of a climb to a perch (gui-catch-4). Main needs both.
 3. **Removed at cutover:** NGO package, `NetworkManager.prefab`, `DefaultNetworkPrefabs.asset`, `SceneObjectKeeper`, `SceneNetworkGuard`,
    `OfflinePlayerHandoff`, NGO prefab handlers, `GameplayPrefabsSetup.SpawnedPrefabs` rule (-> ghost subscene), NGO YAML tests,
    Emerald integration (`HostileBrainLink` etc.) once all species run on Monsters.
