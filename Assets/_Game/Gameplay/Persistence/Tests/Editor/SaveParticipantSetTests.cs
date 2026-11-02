@@ -194,23 +194,26 @@ namespace KryticalNova.Tests
         public void TearDown() => SavePassthrough.ResetToDefault();
 
         [Test]
-        public void Default_OnlyLookAndProgressionAreReal()
+        public void Default_TheLookProgressionPackSerumsAndWalletAreReal()
         {
-            CollectionAssert.AreEquivalent(new[] { "look", "progression" }, SavePassthrough.RealKeys.ToArray());
+            CollectionAssert.AreEquivalent(new[] { "look", "progression", "inventory", "serums", "wallet" }, SavePassthrough.RealKeys.ToArray());
             Assert.IsFalse(SavePassthrough.Is("look"));
             Assert.IsFalse(SavePassthrough.Is("progression"));
-            Assert.IsTrue(SavePassthrough.Is("wallet"));
+            Assert.IsFalse(SavePassthrough.Is("inventory"), "items are used on the server's body: the Pack is real (owner, 2 Nov, item 5)");
+            Assert.IsFalse(SavePassthrough.Is("serums"));
+            Assert.IsFalse(SavePassthrough.Is("wallet"));
+            Assert.IsTrue(SavePassthrough.Is("vault"));
             Assert.IsTrue(SavePassthrough.Is("a key nobody knows"), "unknown keys are passed through: the safe side");
-            Assert.IsFalse(SavePassthrough.Never("wallet"));
+            Assert.IsFalse(SavePassthrough.Never("vault"));
         }
 
         [Test]
         public void MakeReal_FlipsOneKey_AndResetPutsItBack()
         {
-            SavePassthrough.MakeReal("wallet");
-            Assert.IsFalse(SavePassthrough.Is("wallet"));
+            SavePassthrough.MakeReal("vault");
+            Assert.IsFalse(SavePassthrough.Is("vault"));
             SavePassthrough.ResetToDefault();
-            Assert.IsTrue(SavePassthrough.Is("wallet"));
+            Assert.IsTrue(SavePassthrough.Is("vault"));
         }
 
         [Test]
