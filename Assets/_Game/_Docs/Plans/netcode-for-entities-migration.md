@@ -1123,7 +1123,7 @@ which do not run on a DOTS client. They take two server gaps with them: Run Flux
   (design 6.2). GUI run gui-auto-1 (2 Nov): 7 of 7 PASS (over a wall by itself both ways, running and walking where there is no walk; up
   a face by itself and on; the plain walk where Wallstride does not take it; a direct wall click unchanged), owner 0.0 cm, glide 0, pops 0.
   GIFs `DOTS-proof/dots-auto1-1..5-*.gif`.
-- [ ] part 5b, THE ROOF-EDGE DROP AND THE ROUTE'S GAP JUMP (NGO PCP:1552-1637; owner pick 1 Nov): walk to the edge, the real DOTS jump with
+- [x] part 5b, THE ROOF-EDGE DROP AND THE ROUTE'S GAP JUMP (NGO PCP:1552-1637; owner pick 1 Nov): walk to the edge, the real DOTS jump with
   the Sporty backflip off it (`_Masc` / `_Femn` by the body type, data), keep going; GUI proof with one masculine and one feminine try.
   Built (design 7.1 a): 6dcd957d3 amended to 41f5044b8 (clip copies 26 MB -> 2.8 MB each: humanoid curves only, thinned), script 841437baa;
   EditMode 207/207; the probe found 10 of 12 Zone01 roof links crossed through the air by the DOTS walk before this. GUI run gui-ledge-1
@@ -1135,7 +1135,7 @@ which do not run on a DOTS client. They take two server gaps with them: Run Flux
   b03ccc4a4: flip windows masculine 0.17-2.57 s, feminine 0.13-1.57 s, 2.2 / 1.5 MB). GUI run gui-ledge-2 (2 Nov, two runs, the second
   because the first video lost its end): the two roof-edge drops 2 of 2 PASS each time (0.06 m from the click, the Jump's Flux paid once,
   the owner's body as set, owner 0.0 cm, glide 0, pops 0), GIFs `DOTS-proof/dots-ledge2-1-*` (masculine) and `dots-ledge2-2-*`
-  (feminine), `-1b` / `-2b` at half speed. Waits for the owner's look at the flip (it plays about 3.4x / 2x its own speed in the air).
+  (feminine), `-1b` / `-2b` at half speed. Owner (2 Nov, via the Master): "Yes, keep it": the backflip accepted as it is.
 - [ ] the owner's rules (memory [[wallstride-decisions]]): no glitching, never inside a building, a jump catches a wall at a slant
   (65 degrees, run 45 degrees) with the turn eased in the plant, a player is NEVER knocked or forced off a wall, can always leave by choice
 - [ ] the climb as one warp route of eased legs, planned by the server from the zone's surface graph, predicted by the owner; the ground

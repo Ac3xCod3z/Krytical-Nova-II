@@ -419,3 +419,35 @@ between roofs (B1) plays `WallRunPhase.GapJump` (entity 13); `LedgeJumpClips` ho
 `gap`: empty = the game's own jump clip, `WarpedJumpClip`). Both pay the Jump's Flux as they start. gui-ledge-1's gap and drop-link tries
 (numbers PASS) are not run again; the proof of the backflip is the edge drop, one masculine and one feminine try (gui-ledge-2), with the
 clip trimmed to the flip's own window (gui-ledge-1 showed the whole 3.5 s emote squeezed into the air time).
+
+## 8. "For all five": what other players see, and a forced rollback (DOTS 9, 2 Nov; NGO rules before design and code)
+
+### 8.1 NGO rules (read from the code)
+
+| # | NGO rule | Where |
+|---|---|---|
+| O1 | The body reaches the other machines through NetworkTransform, interpolated (`Interpolate: 1`, `PositionThreshold: 0.001`); the move itself runs only where movement is authoritative | `PlayerWallRunMotor.cs:76-78`; `Player.prefab` NetworkTransform |
+| O2 | What to play goes to everyone as one NetworkVariable (`netPose`: phase, yaw, the phase's seconds), set where the move is authoritative on every phase change | `PlayerWallRunMotor.cs:132`, `SetPhase` 965-971 |
+| O3 | Every other machine plays it on the change (`OnPoseChanged`), and plays a phase once: the same phase again shows nothing | 1039-1043, `Show` 1050-1052 |
+| O4 | A late joiner plays the current phase at spawn (a player in a tree shows as one) | 231 |
+| O5 | NGO predicts nothing (the authority moves the body), so it has no rollback; the box's rule is the netcode's own (ghosts-design 3.2.7: a correction slides through the follow's offset; `IGhostMotionView`: a clip begins once per phase, a rollback never restarts it) | ghosts-design 3.2.7 |
+
+### 8.2 The DOTS equivalent (built in parts 1-5b) and what is proved here
+
+O1 = the integer `PlayerPose` ghost field and the interpolated `LocalTransform` on an observer; O2 = `PoseTilt` (phase, `PhaseMillis`,
+tilt) to everyone; O3 = `PlayerPresentationFollowSystem` calls `IGhostMotionView.WallPhase` only when the shown phase changes; O4 = the
+ghost's first snapshot. Nothing new is built: two edit-mode tests in the presentation's two-client rig (`PresentationWorldTests` style,
+server + 2 clients, plain bodies with a recording `IGhostMotionView`), with the wall stubs of `WallWorldTests` shared:
+
+- **T1 `AnotherPlayer_SeesTheSameWallPhases_TheSameCurve_AndTheSameLanding` (0 and 100 ms)**, for the straight climb, the run over a wall
+  by itself (part 5) and the roof-edge jump (part 5b): the server's per-tick pose and phase are recorded; on the observer, every
+  `WallPhase` call and the observer ghost's pose every tick. Pass: the observer's list of phases is the server's (no phase lost, none
+  twice); at each phase start the observer's pose is the server's pose on the tick that phase began (the same start tick, seen through
+  the interpolation delay); every pose the observer shows is one of the server's per-tick poses, in tick order (the same curve); the
+  observer's last pose is the server's landing.
+- **T2 `AForcedRollbackMidClimb_NeitherRestartsTheClip_NorPopsTheBody` (100 ms)**: mid-climb the owner's ghost is pushed 0.6 m off in its
+  own world (as `ARollbackCorrection_SlidesTheBody_InsteadOfPopping`); the next snapshot rolls it back. Pass: the owner body's `WallPhase`
+  calls equal the server's phase list (the clip not begun again), the body's largest frame step stays under half the injected error
+  above the climb's own step (it slides through the offset), and it ends on the ghost. Inconclusive if the ghost never jumped.
+
+The 2-client GUI day stays as written in plan 55 (`(2-client day)` boxes); these tests are the edit-mode proof.
