@@ -2118,9 +2118,11 @@ namespace KryticalNova.Persistence.Entities
                 Vector3 aim = target;
                 string jumpPress = "no hit under the click";
                 var water = OwnBody.GetComponent<PlayerWaterstrideMotor>();
-                if (Physics.Raycast(ray, out RaycastHit bed, 500f, Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore))
+                // the click's own layers (PCP.TryPickPointerHit; batch-fixes-2 run 1 used the default layers and hit at the spot itself)
+                if (Physics.Raycast(ray, out RaycastHit bed, 500f, view.RaycastLayers.value, QueryTriggerInteraction.Ignore))
                 {
                     bedOff = Flat(bed.point - target);
+                    Log($"fixes: the click's ray hit {bed.collider.name} (layer {LayerMask.LayerToName(bed.collider.gameObject.layer)}) at y {bed.point.y:F2}; the surface spot is at y {target.y:F2}");
                     jumpPress = water != null && water.TryWaterUnderRay(ray, bed, out aim) ? $"aimed at the surface {Flat(aim - target):F2} m from the spot" : "the view found no water on the ray (aims at the bed)";
                     if (water == null || !water.TryWaterUnderRay(ray, bed, out aim)) aim = bed.point;
                 }
@@ -2138,10 +2140,12 @@ namespace KryticalNova.Persistence.Entities
                 // 3) a new click while waterstriding: the body never steps away from the new place first
                 tally.Tried++;
                 if (resources != null) resources.RestoreChi(resources.MaxChi);
-                Select(MovementSkillId.Run);
+                // walking (5 m/s), so the body is still on its way when the new click comes (batch-fixes-2 run 1: running, it had
+                // arrived 9 m off before 0.7 s); Waterstride across is used walking too (owner, item 4)
+                skills.SelectWalk();
                 Vector3 here = ServerPosition(ghost) - Vector3.up * offset;
                 string runPress = "sent";
-                BodyClicks.Ground(new Vector3(here.x + 9f, here.y, here.z + 1f), true);
+                BodyClicks.Ground(new Vector3(here.x + 12f, here.y, here.z + 1f), false);
                 float r0 = Time.realtimeSinceStartup;
                 while (Time.realtimeSinceStartup - r0 < 0.7f) yield return null;
                 bool movingOnWater = Moving(ghost) && em.GetComponentData<MoveState>(ghost).Water != 0;
@@ -2149,11 +2153,11 @@ namespace KryticalNova.Persistence.Entities
                 Vector3 second = new Vector3(at.x - 1f, at.y, at.z + 8f);
                 float start = Flat(at - second), worstBack = 0f, best = start;
                 string turnPress = "sent";
-                BodyClicks.Ground(second, true);
+                BodyClicks.Ground(second, false);
                 float s0 = Time.realtimeSinceStartup;
                 while (Time.realtimeSinceStartup - s0 < 1f)
                 {
-                    yield return new WaitForEndOfFrame();
+                    yield return null;   // not WaitForEndOfFrame: it never resumes in a batch Editor (2+3 are proved in batch)
                     float d = Flat(OwnBody.transform.position - second);
                     worstBack = Mathf.Max(worstBack, d - best);
                     best = Mathf.Min(best, d);
