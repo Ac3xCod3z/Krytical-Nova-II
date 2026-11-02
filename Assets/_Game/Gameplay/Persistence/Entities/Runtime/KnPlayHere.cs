@@ -1925,9 +1925,10 @@ namespace KryticalNova.Persistence.Entities
 
             /// <summary>
             /// The test places planned before the run (owner, 1 Nov), proved in edit mode by Zone01WallPropProbe.ThePlannedTestPlaces_StandInZone01:
-            /// in front of the wall walk's test graph wall (the face at z -45.3, facing +z), and a 7 m terrain tree out in the open.
+            /// in front of the wall walk's test graph wall (the face at z -45.3, facing +z), and an 8 m terrain tree truly in the open (nothing but the
+            /// ground within 4 m; Zone01WallPropProbe.FindTerrainTreesInTheOpen; the first pick, 186.7,-82.1, stood against Ruin 26's rubble).
             /// </summary>
-            static readonly Vector3 TestGraphWall = new Vector3(-10.1f, 0f, -40f), TestTerrainTree = new Vector3(186.68f, 0.27f, -82.07f);
+            static readonly Vector3 TestGraphWall = new Vector3(-10.1f, 0f, -40f), TestTerrainTree = new Vector3(31.85f, 1.06f, -215.76f);
 
             /// <summary>One scripted Jump click at a wall (part 4), judged: planned as a catch, handed off where the jump met the face, on to the top.</summary>
             IEnumerator CatchTry(GameObject body, Entity ghost, VaultTally tally, string what, Vector3 click, Vector3 normal, Vector3 from, float offset, CatchResult result,

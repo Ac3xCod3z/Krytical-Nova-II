@@ -281,4 +281,4 @@ else to a fixed node at feet + 2.1 m under the click, then ran up. Owner's chang
 |---|---|---|---|
 | Zone01's placed tree `SM_Env_Tree_01` (trunk) | 12.6, 0, -13.1 | three jumps at a tree (low, middle, high), the tree part | gui-catch-2/3: caught and perched |
 | In front of the wall walk's test graph wall (face z -45.3, facing +z) | -10.1, 0, -40 | three jumps onto a graph wall: below, at, above the Jump reach | the probe: `FindTestWall` finds it, tall enough, a top |
-| A 7 m terrain tree out in the open | 186.68, 0.27, -82.07 | the terrain-tree climb (proxies) | the probe: NGO's Decide accepts it with the terrain's tree colliders off |
+| An 8 m terrain tree in the open (nothing but the ground within 4 m) | 31.85, 1.06, -215.76 | the terrain-tree climb (proxies) | `FindTerrainTreesInTheOpen`: NGO's Decide accepts it, its face is not the wall walk's (the first pick, 186.68,-82.07, stood against Ruin 26's rubble: a wall-walk click, gui-catch-4) |
