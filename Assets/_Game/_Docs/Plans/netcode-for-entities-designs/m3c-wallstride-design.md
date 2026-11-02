@@ -451,3 +451,19 @@ server + 2 clients, plain bodies with a recording `IGhostMotionView`), with the 
   above the climb's own step (it slides through the offset), and it ends on the ghost. Inconclusive if the ghost never jumped.
 
 The 2-client GUI day stays as written in plan 55 (`(2-client day)` boxes); these tests are the edit-mode proof.
+
+## 9. The owner's M3c feel test (2 Nov): findings, NGO rules and the plan (DOTS 9; before code)
+
+The owner played the M3c traversal by hand (Play DOTS here, level 60). Eight findings; the NGO rules (file:line) and the causes are in
+the DOTS crew notes `dots9-owner-feel-findings-2nov.md`; the short form:
+
+| # | Finding | NGO rule | DOTS cause | Plan (owner picks pending where marked) |
+|---|---|---|---|---|
+| 1 | The map's auto-run walks with Run on | `TravelTo` reads Run, pays once (PCP:976-979, 1272-1274, 1445-1450) | PCP:1005 sends run = false | Pass Run (NGO) |
+| 2 | A jump made on the water lands past the click | Jump click = the raw ray hit, the lake bed (PCP:903-917); the landing keeps its X/Z (WaterstrideRules.cs:200-205): NGO has it too | same shared code | The jump uses the water's surface point (`TryWaterUnderRay`) |
+| 3 | A new click on the water jerks | route from the feet's cell centre, 720 deg/s turn (WaterRoute.cs:30-34, 83) | corners feet -> cell centre (PlayerWaterFromSkills.cs:65, 81) | Route straight from the feet |
+| 4 | Vault and Waterstride only on the straight line | vault: straight line + a re-check every 0.25 s while walking (PlayerVaultMotor.cs:244-273, 364, 414-424); Waterstride: only a click on the water | the re-check never ported | Owner pick: fastest-path planner / port the re-check / corners |
+| 5 | No Flux refill | Flux back from the Flask, items, Serenity on the authority | uses run on the client's mirror body, overwritten from the server body (PlayerMoveFromSkills.cs:217-223) | Owner pick: owner->server use request now, or a test top-up now |
+| 6 | Backflip from a roof | NGO has the pieces only: the roof ground-click order A1 -> A3 -> drop -> vault (PCP:1659-1676), the walk/run to the edge, the drop rules (PCP:1585-1637) | A1 (down the wall) is asked before the drop | **Owner's rule, not NGO's (the backflip is new):** a ground click from a roof goes to the edge at the current speed and backflips off; a wall click goes onto the wall; both with Wallstride on, no switch |
+| 7 | The backflip lands walking | NGO has the fall loop and the landing: one clip chain, fall loop, landing with its settle (PlayerAnimancerMotor.cs:967-973, 1008-1072) | the flip clip stretched over both legs of one phase; touchdown goes straight to walk | **Owner's rule:** the flip, then the fall loop until the ground, then the landing (NGO's fall loop and landing pieces) |
+| 8 | Jump onto other roofs | with Jump selected a roof click is a direct jump (PCP:903-919); plain clicks only authored links | the same for Jump-selected clicks | Owner pick: a plain click jumps to another roof (owner change) / Jump-selected only (NGO) |
