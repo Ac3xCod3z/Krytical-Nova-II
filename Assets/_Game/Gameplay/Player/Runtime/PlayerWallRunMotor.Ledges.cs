@@ -100,6 +100,45 @@ namespace KryticalNova.Player
             return layout.FitTo(WallWalkLayout.MaxCorners) ? layout : null;
         }
 
+        // how far onto the other roof the jump lands, past its near edge
+        private const float RoofLandingInset = 0.6f;
+
+        /// <summary>
+        /// Owner change (2 Nov, design 9 item 8 a; NGO jumps between roofs only along authored links or with Jump selected): a plain click on
+        /// another roof with no walk there goes to this roof's edge toward it and jumps across with the normal jump (<see cref="WallRunPhase.GapJump"/>)
+        /// onto that roof's near edge, then walks on to the place. The jump's own checks (Jump learned, the rank's distance and height, a clear
+        /// arc) decide; a roof it cannot reach is not this way (null: the street drop or the wall's ways are asked next). The street is never
+        /// a roof: a place on the ground layer is left to the drop off the edge (item 6), so a lower roof is jumped to and the street dropped to.
+        /// </summary>
+        public WallWalkLayout PlanRoofJumpForGhost(Vector3 feet, Vector3 destination, in GhostWallAsk ask)
+        {
+            if (settings == null || jumpMotor == null) return null;   // Jump learned: the jump's own checks (LedgeArc) refuse it otherwise
+            NavMeshQueryFilter filter = Filter();
+            Vector3 flat = destination - feet;
+            flat.y = 0f;
+            if (flat.sqrMagnitude < 0.25f) return null;
+            // a roof: what is under the place is not the ground layer (the street, the terrain)
+            int ground = LayerMask.NameToLayer("Ground");
+            if (Physics.Raycast(destination + Vector3.up * 0.5f, Vector3.down, out RaycastHit under, 2f, Physics.DefaultRaycastLayers & ~(1 << gameObject.layer),
+                    QueryTriggerInteraction.Ignore) && ground >= 0 && under.collider.gameObject.layer == ground) return null;
+            // this roof's edge toward the place, and the other roof's edge toward this one
+            if (!NavMesh.Raycast(feet, destination, out NavMeshHit edge, filter)) return null;
+            if (!NavMesh.Raycast(destination, feet, out NavMeshHit farEdge, filter)) return null;
+            Vector3 inward = destination - farEdge.position;
+            inward.y = 0f;
+            Vector3 aim = farEdge.position + (inward.sqrMagnitude > 0.01f ? inward.normalized * Mathf.Min(RoofLandingInset, inward.magnitude) : Vector3.zero);
+            if (!NavMesh.SamplePosition(aim, out NavMeshHit landing, 0.5f, filter)) return null;
+            var on = new NavMeshPath();
+            if (!NavMesh.CalculatePath(landing.position, destination, filter, on) || on.status != NavMeshPathStatus.PathComplete) return null;
+            var toEdge = new NavMeshPath();
+            if (!NavMesh.CalculatePath(feet, edge.position, filter, toEdge) || toEdge.status != NavMeshPathStatus.PathComplete) return null;
+            var layout = new WallWalkLayout(settings, null, feet, Vector3.up, ask.Forward, ask.GroundSpeed);
+            WalkUpTo(layout, toEdge.corners, LedgeDropTrigger);
+            if (LedgeArc(layout, landing.position, WallRunPhase.GapJump) != null) return null;
+            for (int i = 1; i < on.corners.Length; i++) layout.Ground(on.corners[i]);
+            return layout.FitTo(WallWalkLayout.MaxCorners) ? layout : null;
+        }
+
         /// <summary>A stretch of a NavMesh path that is a NavMeshLink: no NavMesh within 0.3 m under its middle (a gap or a drop).</summary>
         private static bool IsGap(Vector3 a, Vector3 b, NavMeshQueryFilter filter)
         {

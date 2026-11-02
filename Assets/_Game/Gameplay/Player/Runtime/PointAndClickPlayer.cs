@@ -866,8 +866,11 @@ namespace KryticalNova.Player
 
             // ClientView (M3c): a wall (or a steep slope) the zone's surface graph covers, clicked with Run or Jump selected, goes to the ghost
             // as a wall click with its normal: NGO's wall walk onto it (the straight climb, trees and catches are later parts of M3c).
+            // With Jump selected, a walkable top (another roof, a stall's top) is the jump's, as in NGO (its climb never takes a top): the
+            // building under it is climbable, and taken as a wall click first, a roof click never jumped (owner's feel test 2 Nov, item 8 b)
             if (ViewMode && wallRunMotor != null && !walkableFromHere && movementSkills != null
                 && (movementSkills.IsRunning || movementSkills.IsJumpSelected)
+                && !(movementSkills.IsJumpSelected && walkableTop)
                 && (wallRunMotor.WantsWallWalkClick(hit.point, hit.normal, onGround) || (!onGround && wallRunMotor.IsClimbableClick(hit.collider))))
             {
                 CancelAttack();

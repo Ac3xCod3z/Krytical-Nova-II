@@ -116,6 +116,14 @@ namespace KryticalNova.Player
             // Owner's rule (2 Nov, design 9 item 6; the backflip is new, not NGO's): from a roof with no walk down, a ground click below goes
             // to the edge at the walk's own speed and backflips off, before NGO's way down the wall (A1); a wall click still goes onto the
             // wall (the wall click, never asked here). A drop the jump refuses falls through to the wall's ways, as NGO's order has it.
+            // Owner's rule (2 Nov, design 9 item 8 a; not NGO's): a plain click on another roof with no walk there jumps across to it, first
+            // (a lower roof is jumped to before the street is dropped to; the street is never a roof)
+            if (!walkable)
+            {
+                WallWalkLayout across = PlanRoofJumpForGhost(feet, destination, in ask);
+                if (across != null) { way = AutoWay.Ledge; return across; }
+            }
+
             if (!walkable && feet.y - destination.y >= LedgeDropMinHeight)
             {
                 WallWalkLayout drop = PlanLedgesForGhost(feet, destination, walk, walkable, in ask);

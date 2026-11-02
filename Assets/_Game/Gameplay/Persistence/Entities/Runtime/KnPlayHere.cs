@@ -64,7 +64,8 @@ namespace KryticalNova.Persistence.Entities
             || Environment.GetEnvironmentVariable("KN_PLAYHERE_LEDGE") == "1"                   // the scripted route jumps (M3c part 5b)
             || Environment.GetEnvironmentVariable("KN_PLAYHERE_FIXES") == "1"                   // the owner's feel-test fixes 1-3 (2 Nov)
             || Environment.GetEnvironmentVariable("KN_PLAYHERE_ACROSS") == "1"                  // across the water when quicker (item 4)
-            || Environment.GetEnvironmentVariable("KN_PLAYHERE_ITEMS") == "1";                  // items used by the server (item 5)
+            || Environment.GetEnvironmentVariable("KN_PLAYHERE_ITEMS") == "1"                   // items used by the server (item 5)
+            || Environment.GetEnvironmentVariable("KN_PLAYHERE_ROOFS") == "1";                  // roof to roof (item 8)
         /// <summary>A folder: the scripted run saves a Game-view picture there every 0.1 s (proof for the owner, GUI Editor only).</summary>
         public const string CaptureVariable = "KN_PLAYHERE_CAPTURE";
 
@@ -1206,6 +1207,7 @@ namespace KryticalNova.Persistence.Entities
                 if (FixesRun) yield return Fixes(body, ghost, walls);
                 if (AcrossRun) yield return Acrosses(body, ghost, waters);
                 if (ItemsRun) yield return Items(body, ghost, walls);
+                if (RoofsRun) yield return RoofJumps(body, ghost, walls);
                 Log($"done: {arrived} of {tries} arrived, {landed} of {jumpPoints.Count} jumps passed, low-rank refusals {(lowRank.Ok ? "match" : "DIFFER")}, " +
                     $"{vaults.Passed} of {vaults.Tried} vaults passed, {waters.Passed} of {waters.Tried} Waterstride tries passed, " +
                     $"{walls.Passed} of {walls.Tried} wall walk tries passed, " +
@@ -1220,7 +1222,7 @@ namespace KryticalNova.Persistence.Entities
             /// the walk, the jumps and the vaults, so a run of Waterstride or the wall walk alone never started). Every gate reads this; a new
             /// scripted part is added here, and to <see cref="Scripted"/>, which reads the same variables before the runner exists.
             /// </summary>
-            bool HasScriptedTries => !string.IsNullOrEmpty(Walk) || !string.IsNullOrEmpty(Jump) || VaultCount > 0 || WaterRun || WallRun || ClimbRun || TreeRun || CatchRun || AutoRun || LedgeRun || FixesRun || AcrossRun || ItemsRun;
+            bool HasScriptedTries => !string.IsNullOrEmpty(Walk) || !string.IsNullOrEmpty(Jump) || VaultCount > 0 || WaterRun || WallRun || ClimbRun || TreeRun || CatchRun || AutoRun || LedgeRun || FixesRun || AcrossRun || ItemsRun || RoofsRun;
 
             /// <summary>Which scripted parts are on, for the log's first lines (a part that should run and is not listed shows at once).</summary>
             string ScriptedParts()
@@ -1239,6 +1241,7 @@ namespace KryticalNova.Persistence.Entities
                 if (FixesRun) on.Add("the feel-test fixes 1-3");
                 if (AcrossRun) on.Add("across the water when quicker");
                 if (ItemsRun) on.Add("items used by the server");
+                if (RoofsRun) on.Add("roof to roof");
                 return on.Count > 0 ? string.Join(", ", on) : "none (by hand)";
             }
 
@@ -2450,7 +2453,7 @@ namespace KryticalNova.Persistence.Entities
             }
 
             /// <summary>One plain click whose walk must jump, the owner's body shown as <paramref name="look"/>, judged.</summary>
-            IEnumerator LedgeTry(GameObject body, Entity ghost, VaultTally tally, string what, Vector3 from, Vector3 to, BodyType look, float offset, bool run = false)
+            IEnumerator LedgeTry(GameObject body, Entity ghost, VaultTally tally, string what, Vector3 from, Vector3 to, BodyType look, float offset, bool run = false, bool gap = false)
             {
                 if (OverTheCap()) yield break;
                 World server = KnBootstrap.ServerWorld;
@@ -2478,7 +2481,7 @@ namespace KryticalNova.Persistence.Entities
                 BodyClicks.Ground(to, run);
                 float clicked = Time.realtimeSinceStartup, stoppedAt = -1f, glide = 0f;
                 Vector3 bodyAtStop = default;
-                bool sawJump = false, sawFall = false, sawLand = false;
+                bool sawJump = false, sawFall = false, sawLand = false, sawGap = false;
                 // design 9 item 7: the drawn body is down on the ground when the jump's last phase gives way to the walk
                 var shown = OwnBody != null ? OwnBody.GetComponent<PlayerPresentationState>() : null;
                 byte lastShown = 0;
@@ -2486,10 +2489,11 @@ namespace KryticalNova.Persistence.Entities
                 m_Pops.Reset();
                 while (Time.realtimeSinceStartup - clicked < 15f)
                 {
-                    yield return new WaitForEndOfFrame();
+                    yield return null;   // not WaitForEndOfFrame: a batch Editor never resumes it
                     PopFrame(ghost);
                     byte serverPhase = em.GetComponentData<PoseTilt>(ghost).Phase;
                     sawJump |= WallPhase.IsRouteJump(serverPhase);
+                    sawGap |= serverPhase == WallPhase.GapJump;
                     sawFall |= serverPhase == WallPhase.RouteFall;
                     sawLand |= serverPhase == WallPhase.RouteLand;
                     Vector3 b = OwnBody.transform.position;
@@ -2512,7 +2516,7 @@ namespace KryticalNova.Persistence.Entities
                 bool took = plans.AutoWalls == autos0 + 1;
                 int paid = grip != null ? grip.LedgeJumpsPaid - paid0 : 0;
                 float miss = Vector3.Distance(end, to);
-                bool ok = took && sawJump && sawFall && sawLand && walkedAbove >= -0.1f && walkedAbove < 0.1f
+                bool ok = took && sawJump && sawGap == gap && sawFall && sawLand && walkedAbove >= -0.1f && walkedAbove < 0.1f
                     && paid >= 1 && miss < 0.6f && apart < 0.05f && glide < 0.02f && m_Pops.Pops == 0;
                 if (ok) tally.Passed++;
                 Log($"ledge: {what} clicked at {at}: {(ok ? "PASS" : "FAIL")}; the server {(took ? "took it as the walk's jumps" : "made it a plain walk")} " +
@@ -2520,8 +2524,107 @@ namespace KryticalNova.Persistence.Entities
                     $"{(view != null ? view.State.bodyType.ToString() : "?")}; ended {miss:F2} m from the click at {end.x:F1},{end.y:F2},{end.z:F1}; " +
                     $"owner {apart * 100f:F1} cm from the server; glide {glide * 100f:F1} cm; pops {m_Pops.Pops}" +
                     $"{(m_Pops.Pops > 0 ? " (worst: " + m_Pops.Worst + ")" : "")}; Flux {flux0:F0} -> {Flux(body):F0}; " +
-                    $"fall {sawFall}, landing {sawLand}, the drawn body {walkedAbove:F2} m above the ground when the walk took over");
+                    $"{(sawGap ? "the normal jump (a gap)" : "the backflip (a roof's edge)")}, fall {sawFall}, landing {sawLand}, the drawn body {walkedAbove:F2} m above the ground when the walk took over");
                 yield return new WaitForSeconds(0.8f);
+            }
+
+            /// <summary>Roof to roof (env KN_PLAYHERE_ROOFS=1; owner, 2 Nov, feel test item 8).</summary>
+            static bool RoofsRun => Environment.GetEnvironmentVariable("KN_PLAYHERE_ROOFS") == "1";
+
+            /// <summary>
+            /// Item 8 (owner: both ways). The places first, found by the server's own planner and logged (a GUI run repeats places a batch
+            /// run proved): two roofs with no walk between, the other one at about the same height, and one lower by 1.5 m or more. Then
+            /// (a) a plain click on the other roof: to the edge, the normal jump across, on to the place (masculine, running); the same onto
+            /// the lower roof (feminine, walking): jumped to, not the street's backflip; and (b) with Jump selected, the same roof clicked:
+            /// the jump itself goes there (the owner's click that a climbable building used to take as a wall click; owner's hand test too).
+            /// </summary>
+            IEnumerator RoofJumps(GameObject body, Entity ghost, VaultTally tally)
+            {
+                World server = KnBootstrap.ServerWorld;
+                var em = server.EntityManager;
+                var plans = server.GetExistingSystemManaged<PlayerServerPlanSystem>();
+                var progression = body.GetComponent<PlayerCharacterProgression>();
+                if (plans == null || plans.WallPlanner == null) { tally.Tried++; Log("roofs: FAIL; the server has no wall planner"); yield break; }
+                if (progression != null && progression.CurrentLevel < 60) progression.SetLevel(60);
+                yield return new WaitForSeconds(1f);
+                float offset = body.GetComponent<UnityEngine.AI.NavMeshAgent>() is UnityEngine.AI.NavMeshAgent ag ? ag.baseOffset : 0f;
+                PlayerPose pose = em.GetComponentData<PlayerPose>(ghost);
+
+                // roof points: NavMesh vertices standing on something that is not the ground layer (batch-roofs-1: the terrain's hills
+                // above 2.5 m were 53527 points and the search never reached a roof), one per 2 m cell
+                var mesh = UnityEngine.AI.NavMesh.CalculateTriangulation();
+                var tops = new List<Vector3>();
+                var cells = new HashSet<long>();
+                int groundLayer = LayerMask.NameToLayer("Ground");
+                int rays = Physics.DefaultRaycastLayers & ~(1 << body.layer);
+                foreach (Vector3 v in mesh.vertices)
+                {
+                    if (v.y < 2.5f) continue;
+                    if (!Physics.Raycast(v + Vector3.up * 0.5f, Vector3.down, out RaycastHit under, 1.5f, rays, QueryTriggerInteraction.Ignore)) continue;
+                    if (groundLayer >= 0 && under.collider.gameObject.layer == groundLayer) continue;
+                    long cell = ((long)Mathf.FloorToInt(v.x / 2f) << 32) ^ (uint)Mathf.FloorToInt(v.z / 2f);
+                    if (cells.Add(cell)) tops.Add(v);
+                }
+                tops.Sort((a, b) => a.x != b.x ? a.x.CompareTo(b.x) : a.z != b.z ? a.z.CompareTo(b.z) : a.y.CompareTo(b.y));   // the same order every run
+                var corners = new Unity.Collections.NativeList<Unity.Mathematics.int3>(PlayerLimits.MaxWallCorners, Unity.Collections.Allocator.Temp);
+                var legs = new Unity.Collections.NativeList<WallCorner>(PlayerLimits.MaxWallCorners, Unity.Collections.Allocator.Temp);
+                var path = new UnityEngine.AI.NavMeshPath();
+                bool Across(Vector3 from, Vector3 to)
+                {
+                    if (UnityEngine.AI.NavMesh.CalculatePath(from, to, UnityEngine.AI.NavMesh.AllAreas, path) && path.status == UnityEngine.AI.NavMeshPathStatus.PathComplete) return false;
+                    if (plans.WallPlanner.Auto(ghost, Mm(from + Vector3.up * offset), pose.YawCdeg, Mm(to + Vector3.up * offset), true, corners, legs, out _) != WallAnswer.Planned) return false;
+                    bool gap = false, edge = false;
+                    for (int i = 0; i < legs.Length; i++) { gap |= legs[i].Phase == WallPhase.GapJump; edge |= legs[i].Phase == WallPhase.LedgeJump; }
+                    return gap && !edge;
+                }
+                Vector3 level0 = default, level1 = default, low0 = default, low1 = default;
+                bool level = false, low = false;
+                int asked = 0;
+                for (int i = 0; i < tops.Count && (!level || !low) && asked < 600; i++)
+                for (int j = 0; j < tops.Count && (!level || !low) && asked < 600; j++)
+                {
+                    Vector3 a = tops[i], b = tops[j];
+                    float apart = Flat(b - a), dy = b.y - a.y;
+                    if (apart < 3f || apart > 9f || dy > 0.5f) continue;
+                    bool isLevel = dy > -1.5f;
+                    if ((isLevel && level) || (!isLevel && low)) continue;
+                    // places a little in from the roofs' edges (a vertex is on an edge)
+                    Vector3 way = (b - a); way.y = 0f; way.Normalize();
+                    if (!UnityEngine.AI.NavMesh.SamplePosition(b + way * 1.5f, out UnityEngine.AI.NavMeshHit inB, 1f, UnityEngine.AI.NavMesh.AllAreas)
+                        || Mathf.Abs(inB.position.y - b.y) > 0.5f) continue;
+                    if (!UnityEngine.AI.NavMesh.SamplePosition(a - way * 2f, out UnityEngine.AI.NavMeshHit inA, 1f, UnityEngine.AI.NavMesh.AllAreas)
+                        || Mathf.Abs(inA.position.y - a.y) > 0.5f) continue;
+                    asked++;
+                    if (!Across(inA.position, inB.position)) continue;
+                    if (isLevel) { level = true; level0 = inA.position; level1 = inB.position; }
+                    else { low = true; low0 = inA.position; low1 = inB.position; }
+                }
+                corners.Dispose();
+                legs.Dispose();
+                Log($"roofs: the places ({asked} pairs asked of {tops.Count} roof points): level {(level ? $"{level0} -> {level1}" : "NOT FOUND")}; lower {(low ? $"{low0} -> {low1}" : "NOT FOUND")}");
+
+                if (level) yield return LedgeTry(body, ghost, tally, "a plain click on the next roof (no walk there), running, masculine", level0, level1, BodyType.Masculine, offset, run: true, gap: true);
+                else { tally.Tried++; Log("roofs: the next roof: NOT TESTED; no such place found"); }
+                if (low) yield return LedgeTry(body, ghost, tally, "a plain click on a lower roof (jumped to, not dropped to the street), walking, feminine", low0, low1, BodyType.Feminine, offset, run: false, gap: true);
+                else { tally.Tried++; Log("roofs: the lower roof: NOT TESTED; no such place found"); }
+
+                // (b) Jump selected, the same next roof: the jump itself goes there
+                if (!level || OverTheCap()) yield break;
+                var skills = OwnBody.GetComponent<PlayerMovementSkills>();
+                Teleport(em, ghost, level0 + Vector3.up * offset);
+                yield return new WaitForSeconds(1.5f);
+                if (body.GetComponent<PlayerResources>() is PlayerResources res) res.RestoreChi(res.MaxChi);
+                tally.Tried++;
+                if (skills != null && !skills.IsJumpSelected) skills.ToggleSelection(MovementSkillId.Jump);
+                string at = DateTime.Now.ToString("HH:mm:ss.fff", CultureInfo.InvariantCulture);
+                BodyClicks.Jump(level1);
+                float j0 = Time.realtimeSinceStartup;
+                while (Time.realtimeSinceStartup - j0 < 4f) yield return null;
+                float miss = Flat(ServerPosition(ghost) - Vector3.up * offset - level1);
+                bool landed = miss < 0.6f && Mathf.Abs(ServerPosition(ghost).y - offset - level1.y) < 0.5f;
+                if (landed) tally.Passed++;
+                Log($"roofs: Jump selected, the next roof clicked at {at}: {(landed ? "PASS" : "FAIL")}; landed {miss:F2} m from the click on its roof");
+                skills?.SelectWalk();
             }
 
             /// <summary>One plain ground click from <paramref name="from"/> to <paramref name="to"/>, judged against the way expected.</summary>

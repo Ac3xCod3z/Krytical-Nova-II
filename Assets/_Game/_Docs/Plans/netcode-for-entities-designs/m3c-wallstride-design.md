@@ -525,6 +525,19 @@ the DOTS crew notes `dots9-owner-feel-findings-2nov.md`; the short form:
 - Tests (PlayMode, real prefab): `B3_...` a saved Pack and wallet load into a fresh server body and save back byte for byte; `B4_...`
   use by id, full pool refused, cooldown (no double use), none left, no ledger line. `SavePassthroughTests` updated.
 
+**Built for 8 (DOTS 9, 2 Nov; owner: both ways):**
+- (a) Owner change, not NGO (NGO jumps between roofs only on authored links or with Jump selected): a plain click on another roof with
+  no walk there (`PlanRoofJumpForGhost`, asked first in `PlanAutoForGhost`, before the street drop and the wall's ways) walks to this
+  roof's edge toward it, jumps across with the normal jump (`GapJump`, its fall loop and landing) onto that roof's near edge (0.6 m in),
+  and walks on. The jump's own checks decide (Jump learned, the rank's distance and height, a clear arc); a roof it cannot reach is not
+  this way. A place on the ground layer (the street, the terrain) is never a roof: it keeps item 6's backflip drop, so a lower roof is
+  jumped to and the street dropped to.
+- (b) NGO's Jump-selected way kept: with Jump selected a walkable top is the jump's; the view no longer takes it as a wall click because
+  the building under it is climbable (`PointAndClickPlayer`, the ClientView wall-click test).
+- Proof: `KnPlayHere` `KN_PLAYHERE_ROOFS=1` finds the places with the server's own planner (a level pair, a lower pair; logged), then a
+  plain click each (masculine running, feminine walking) and the Jump-selected click. The routing of (b) through the camera click is the
+  owner's hand test.
+
 **Proof of 2 and 3, and the owner's hand test:** the GUI proof aims the clicks with a ray from above (as a camera would) and hands them
 to the body (`BodyClicks`), because the scripted screen presses missed. The owner tests both by hand after the trip, which covers the
 camera-click wiring: a jump from the water lands on the clicked spot (2); a re-click while waterstriding turns at once, no step back (3).
