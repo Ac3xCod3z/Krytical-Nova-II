@@ -194,6 +194,8 @@ namespace KryticalNova.Player.Entities
                         return;
                     }
                 }
+                // Wallstride by itself (part 5, NGO TryPlanRoute before the vault): the same question the server asks of the same click
+                if (waterAnswer != WaterAnswer.Planned && PlanAutoWallClick(em, e, cmd, in pose, ref input)) return;
                 int speed = 0;
                 if (em.HasComponent<MoveStats>(e))
                 {
@@ -237,6 +239,43 @@ namespace KryticalNova.Player.Entities
                         header.Seq, m_Tick.TickIndexForValidTick);
             }
             finally { corners.Dispose(); }
+        }
+
+        /// <summary>
+        /// A plain click Wallstride takes by itself (part 5): over a wall by the zone's graph, or up a face while running. The owner plans it
+        /// as its own wall walk until the server's arrives; the input is a plain click (<see cref="PlayerInput.Wall"/> 0), as the server asks
+        /// the same question itself. False: the vault or the walk plans it.
+        /// </summary>
+        bool PlanAutoWallClick(EntityManager em, Entity e, in PlayerCommand cmd, in PlayerPose pose, ref PlayerInput input)
+        {
+            if (WallPlanner == null || !em.HasComponent<ClientWallPlan>(e)) return false;
+            var corners = new NativeList<int3>(PlayerLimits.MaxWallCorners, Allocator.Temp);
+            var legs = new NativeList<WallCorner>(PlayerLimits.MaxWallCorners, Allocator.Temp);
+            try
+            {
+                if (WallPlanner.Auto(e, pose.Mm, pose.YawCdeg, cmd.GoalMm, cmd.Run, corners, legs, out WallPlan wall) != WallAnswer.Planned
+                    || corners.Length < 2) return false;
+                var header = em.GetComponentData<ClientPlanHeader>(e);
+                header.Seq = NextClientSeq(header.Seq);
+                header.Count = (byte)WallWrite.Client(em, e, header.Seq, corners, legs, wall);
+                header.Writes++;
+                em.SetComponentData(e, header);
+                if (em.HasComponent<ClientVaultPlan>(e)) em.SetComponentData(e, new ClientVaultPlan());
+                if (em.HasComponent<ClientWaterPlan>(e)) em.SetComponentData(e, new ClientWaterPlan());
+
+                input.Click.Set();
+                input.ClickSeq = header.Seq;
+                input.Run = (byte)(cmd.Run ? 1 : 0);
+                input.PressPermille = m_PressPermille;
+                input.GoalXMm = cmd.GoalMm.x;
+                input.GoalYMm = cmd.GoalMm.y;
+                input.GoalZMm = cmd.GoalMm.z;
+                if (PlayerClickLog.Sink != null && m_Tick.IsValid)
+                    PlayerClickLog.Client(em.HasComponent<GhostOwner>(e) ? em.GetComponentData<GhostOwner>(e).NetworkId : 0,
+                        header.Seq, m_Tick.TickIndexForValidTick);
+                return true;
+            }
+            finally { corners.Dispose(); legs.Dispose(); }
         }
 
         /// <summary>The owner's body stands or moves on a wall (NGO: every click on a wall is the wall's, PointAndClickPlayer 695).</summary>

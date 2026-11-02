@@ -43,6 +43,9 @@ namespace KryticalNova.Player.Entities
         public int WallWalks { get; private set; }
         public string LastWallRefusal { get; private set; }
 
+        /// <summary>Plain clicks Wallstride took by itself (part 5: over a wall, or up a face while running; tests, the scripted run).</summary>
+        public int AutoWalls { get; private set; }
+
         /// <summary>Clicks planned as Waterstride, and why the last one was refused (tests; the message comes with M8's chat port).</summary>
         public int WaterRuns { get; private set; }
         public string LastWaterRefusal { get; private set; }
@@ -206,6 +209,16 @@ namespace KryticalNova.Player.Entities
                     string costReason = null;
                     bool unpaid = run && !RunCost.CanPay(e, out costReason);
                     if (unpaid) LastCostRefusal = costReason;
+                    // Wallstride by itself (part 5, NGO TryPlanRoute before the vault): over a wall, or up a face while running; the Run is
+                    // paid as for any move (NGO ServerMoveTo), the wall's own Flux by the wall walk and the climb
+                    if (!tooFar && !unpaid && TryAutoWall(em, e, pose, goal, input))
+                    {
+                        if (run) RunCost.Pay(e);
+                        if (PlayerClickLog.Sink != null)
+                            PlayerClickLog.Server(em.HasComponent<GhostOwner>(e) ? em.GetComponentData<GhostOwner>(e).NetworkId : 0,
+                                input.ClickSeq, nt.ServerTick.TickIndexForValidTick);
+                        continue;
+                    }
                     if (tooFar || unpaid || !TryWritePlan(em, e, pose, goal, input.ClickSeq, input.Run != 0, out _))
                     {
                         LogRefusal(em, e, input, nt, tooFar ? "range" : unpaid ? "cost" : "path");
@@ -289,6 +302,33 @@ namespace KryticalNova.Player.Entities
                 if (em.HasComponent<VaultPlan>(e)) em.SetComponentData(e, new VaultPlan());
                 if (em.HasComponent<WaterPlan>(e)) em.SetComponentData(e, new WaterPlan());
                 WallWalks++;
+                return true;
+            }
+            finally { corners.Dispose(); legs.Dispose(); }
+        }
+
+        /// <summary>
+        /// A plain ground click Wallstride takes by itself (true, part 5): planned as a wall walk on the click's number. False: the vault or
+        /// the walk plans it (NGO never refuses here, it tries the next way).
+        /// </summary>
+        bool TryAutoWall(EntityManager em, Entity e, in PlayerPose pose, int3 goal, in PlayerInput input)
+        {
+            if (WallPlanner == null || !em.HasComponent<WallPlan>(e)) return false;
+            var corners = new NativeList<int3>(PlayerLimits.MaxWallCorners, Allocator.Temp);
+            var legs = new NativeList<WallCorner>(PlayerLimits.MaxWallCorners, Allocator.Temp);
+            try
+            {
+                if (WallPlanner.Auto(e, pose.Mm, pose.YawCdeg, goal, input.Run != 0, corners, legs, out WallPlan plan) != WallAnswer.Planned
+                    || corners.Length < 2) return false;
+                WallWrite.Server(em, e, input.ClickSeq, corners, legs, plan);
+                // a route cut at the corner budget goes on from where it stops: the rest is the place, off the wall (the wall walk's own way)
+                if (em.HasComponent<WallGoal>(e))
+                    em.SetComponentData(e, (plan.Flags & WallFlags.Truncated) != 0
+                        ? new WallGoal { Seq = input.ClickSeq, PointMm = goal, Run = input.Run != 0 }
+                        : default);
+                if (em.HasComponent<VaultPlan>(e)) em.SetComponentData(e, new VaultPlan());
+                if (em.HasComponent<WaterPlan>(e)) em.SetComponentData(e, new WaterPlan());
+                AutoWalls++;
                 return true;
             }
             finally { corners.Dispose(); legs.Dispose(); }

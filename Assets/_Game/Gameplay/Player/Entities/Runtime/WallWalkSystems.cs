@@ -42,6 +42,13 @@ namespace KryticalNova.Player.Entities
             NativeList<int3> corners, NativeList<WallCorner> legs, out WallPlan plan, out int3 catchMm, out int apexYMm, out int catchMicros,
             out string reason);
 
+        /// <summary>
+        /// A plain ground click that Wallstride takes by itself (part 5, NGO <c>TryPlanRoute</c>: over a wall by the zone's graph, or up a face
+        /// the place stands on while running), laid out as a wall walk. NotWall: neither (the vault or the walk takes it); never refused.
+        /// </summary>
+        WallAnswer Auto(Entity ghost, int3 poseMm, int yawCdeg, int3 goalMm, bool run, NativeList<int3> corners, NativeList<WallCorner> legs,
+            out WallPlan plan);
+
         /// <summary>Server, out of Grip: off the wall in a flip to the ground in front of it (NGO <c>PushOff</c>). False when there is no body.</summary>
         bool PushOff(Entity ghost, int3 poseMm, int yawCdeg, in PoseTilt tilt, NativeList<int3> corners, NativeList<WallCorner> legs, out WallPlan plan);
     }

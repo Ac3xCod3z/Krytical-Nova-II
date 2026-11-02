@@ -262,6 +262,115 @@ namespace KryticalNova.Tests
             Assert.Pass(report.ToString());
         }
 
+        // Part 5's places (owner rule 1 Nov; design 6.2): the self-starting run asked exactly as the ghost planner asks it
+        // (PlanAutoForGhost), at the wall walk's test graph wall (its roof and the street in front) and at a straight-climb face by the spawn.
+        static readonly Vector3 Spawn = new Vector3(-6.8f, 0f, -7.5f);
+
+        [Test, Explicit]
+        public void ThePart5TestPlaces_StandInZone01()
+        {
+            EditorSceneManager.OpenScene(Scene, OpenSceneMode.Single);
+            var report = new StringBuilder();
+            var flags = System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic;
+            var rules = Object.FindFirstObjectByType<KryticalNova.World.ZoneRules>();
+            typeof(KryticalNova.World.ZoneRules).GetMethod("Awake", flags)?.Invoke(rules, null);
+            var playerPrefab = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Game/Gameplay/Player/Prefabs/Player.prefab");
+            var player = (GameObject)UnityEditor.PrefabUtility.InstantiatePrefab(playerPrefab);
+            try
+            {
+                var motor = player.GetComponent<PlayerWallRunMotor>();
+                typeof(PlayerWallRunMotor).GetMethod("Awake", flags)?.Invoke(motor, null);
+                Physics.SyncTransforms();
+                PlayerWallRunMotor.GhostWallAsk Ask(bool run) => new PlayerWallRunMotor.GhostWallAsk { Open = true, Alive = true, Run = run,
+                    Flux = 999f, HasFluxForOne = true, Up = Vector3.up, Forward = Vector3.forward, GroundSpeed = run ? 28f : 6f };
+                string Way(Vector3 from, Vector3 to, bool run)
+                {
+                    var ask = Ask(run);
+                    WallWalkLayout layout = motor.PlanAutoForGhost(from, to, in ask, out PlayerWallRunMotor.AutoWay way);
+                    var walk = new UnityEngine.AI.NavMeshPath();
+                    bool walkable = UnityEngine.AI.NavMesh.CalculatePath(from, to, UnityEngine.AI.NavMesh.AllAreas, walk)
+                        && walk.status == UnityEngine.AI.NavMeshPathStatus.PathComplete;
+                    float length = 0f;
+                    for (int i = 1; walkable && i < walk.corners.Length; i++) length += Vector3.Distance(walk.corners[i - 1], walk.corners[i]);
+                    return $"{way} ({(layout != null ? $"{layout.Corners.Count} corners, ends {layout.LastFeet}" : "no layout")}); the walk there " +
+                        (walkable ? $"{length:F1} m" : "NONE");
+                }
+
+                string why = motor.FindTestWall(TestGraphWall, out PlayerWallRunMotor.TestWall wall);
+                if (why != null) report.AppendLine($"[probe] graph wall near {TestGraphWall}: NOT FOUND; {why}");
+                else
+                {
+                    report.AppendLine($"[probe] graph wall: foot {wall.Foot}, front {wall.Front}, far {wall.FrontFar}, roof {wall.Top}");
+                    report.AppendLine($"[probe] A1 roof -> street, walking: {Way(wall.Top, wall.FrontFar, false)}");
+                    report.AppendLine($"[probe] A1 street -> roof, running: {Way(wall.FrontFar, wall.Top, true)}");
+                    report.AppendLine($"[probe] A1 street -> roof, walking (NGO: only with no walk there): {Way(wall.FrontFar, wall.Top, false)}");
+                    report.AppendLine($"[probe] control: street -> street, running: {Way(wall.FrontFar, wall.Front, true)}");
+                }
+
+                var climbAsk = Ask(true);
+                string climbWhy = motor.FindTestClimb(Spawn, climbAsk, out Vector3 stand, out Vector3 point, out Vector3 normal);
+                if (climbWhy != null) report.AppendLine($"[probe] straight-climb face near the spawn: NOT FOUND; {climbWhy}");
+                else
+                {
+                    motor.PlanClimbForGhost(stand, point, normal, in climbAsk, out WallWalkLayout climb);
+                    Vector3 top = climb != null ? climb.LastFeet : point;
+                    report.AppendLine($"[probe] straight-climb face {point} normal {normal}, start {stand}, its top {top}");
+                    report.AppendLine($"[probe] A3 start -> the top, running: {Way(stand, top, true)}");
+                    report.AppendLine($"[probe] A3 start -> the top, walking (NGO: never): {Way(stand, top, false)}");
+                }
+            }
+            finally { Object.DestroyImmediate(player); }
+            Debug.Log(report.ToString());
+            Assert.Pass(report.ToString());
+        }
+
+        // Part 5's straight climb by itself (A3) needs a face the graph does not cover whose top is walkable, with no walk up or one twice as
+        // long: none by the spawn (the probe above). This looks over the whole terrain on a 50 m grid and lists the first five that NGO's rule
+        // takes (PlanAutoForGhost answers UpClimb from the face's start to its top).
+        [Test, Explicit]
+        public void FindPart5ClimbFaces()
+        {
+            EditorSceneManager.OpenScene(Scene, OpenSceneMode.Single);
+            var report = new StringBuilder();
+            var flags = System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic;
+            var rules = Object.FindFirstObjectByType<KryticalNova.World.ZoneRules>();
+            typeof(KryticalNova.World.ZoneRules).GetMethod("Awake", flags)?.Invoke(rules, null);
+            var playerPrefab = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Game/Gameplay/Player/Prefabs/Player.prefab");
+            var player = (GameObject)UnityEditor.PrefabUtility.InstantiatePrefab(playerPrefab);
+            try
+            {
+                var motor = player.GetComponent<PlayerWallRunMotor>();
+                typeof(PlayerWallRunMotor).GetMethod("Awake", flags)?.Invoke(motor, null);
+                Physics.SyncTransforms();
+                var ask = new PlayerWallRunMotor.GhostWallAsk { Open = true, Alive = true, Run = true, Flux = 999f, HasFluxForOne = true,
+                    Up = Vector3.up, Forward = Vector3.forward, GroundSpeed = 28f };
+                Terrain terrain = Terrain.activeTerrains[0];
+                Vector3 min = terrain.GetPosition(), size = terrain.terrainData.size;
+                int centres = 0, faces = 0, found = 0;
+                var seen = new System.Collections.Generic.List<Vector3>();
+                for (float x = min.x + 25f; x < min.x + size.x && found < 5; x += 50f)
+                for (float z = min.z + 25f; z < min.z + size.z && found < 5; z += 50f)
+                {
+                    centres++;
+                    if (motor.FindTestClimb(new Vector3(x, 0f, z), ask, out Vector3 stand, out Vector3 point, out Vector3 normal) != null) continue;
+                    if (seen.Exists(p => Vector3.Distance(p, point) < 5f)) continue;
+                    seen.Add(point);
+                    faces++;
+                    motor.PlanClimbForGhost(stand, point, normal, in ask, out WallWalkLayout climb);
+                    if (climb == null) continue;
+                    Vector3 top = climb.LastFeet;
+                    WallWalkLayout auto = motor.PlanAutoForGhost(stand, top, in ask, out PlayerWallRunMotor.AutoWay way);
+                    report.AppendLine($"[probe] face {point.x:F1},{point.y:F2},{point.z:F1} normal {normal.x:F2},{normal.z:F2}, start {stand.x:F1},{stand.y:F2},{stand.z:F1}, " +
+                        $"top {top.x:F1},{top.y:F2},{top.z:F1} ({top.y - stand.y:F1} m up): by itself {way}");
+                    if (way == PlayerWallRunMotor.AutoWay.UpClimb) found++;
+                }
+                report.AppendLine($"[probe] {centres} grid centres, {faces} distinct climbable faces, {found} taken by the straight climb by itself (A3)");
+            }
+            finally { Object.DestroyImmediate(player); }
+            Debug.Log(report.ToString());
+            Assert.Pass(report.ToString());
+        }
+
         // gui-catch-4 (1 Nov): the planned terrain tree stood against Ruin 26's rubble, so its trunk was a wall-walk click. A tree truly in the
         // open: 6 m and up, nothing but the ground within 4 m, NGO's Decide accepts it (its proxy made as TreeProxyField makes it) and its face is
         // not the wall walk's. The first three nearest the spawn, for the plan.

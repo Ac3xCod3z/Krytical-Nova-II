@@ -301,3 +301,66 @@ PCP = `PointAndClickPlayer.cs`, M = `PlayerWallRunMotor.cs`, WW = `PlayerWallRun
 Test places to plan and prove in edit mode before part 5's GUI run (the owner's rule): a roof with no walk down and a street spot below it
 (A1 / A5), a street-to-roof click with a long walk round (A1 running), and a running click on top of a straight-climb face with no walk
 up (A3, likely Zone01's placed tree or a ruin face).
+
+More read from the code (DOTS 9, 1 Nov):
+- A1/A3 are asked in NGO's `ServerMoveTo` before the Run is paid (PCP:1437-1450): a self-starting run is an ordinary move, so the Run
+  Flux is paid as for any click; the wall's own Flux comes on top (A1: Grip on the wall, the "Flux for 1" check at the click; A3: the
+  climb's 12 as its plant starts). A route NGO cannot take is not a refusal: the next way in the order is tried, and the plain walk last.
+- A3 ends standing on the top: the climb's `Land` resets the agent's path and `FinishRoute` runs only when a path arrives (PCP:1777,
+  1797-1807), so NGO does not walk on to the place clicked (its top is within 2 m of the place's height, not necessarily under it). A1
+  walks on (`AlongAndOff` lays the route's `Departure`, NGO `WalkOnAfterLanding`, WW:363, 572-583).
+- A5 is a walk to the roof's edge, then NGO's real jump (`TryJump` to the first landing that takes it), then the walk on (`crossingLink`,
+  as `CrossLinks` does for a NavMeshLink gap between roofs, PCP:1552-1578). DOTS has neither yet: the gap jump on a route is also an
+  NGO rule not ported (found here; it belongs to the walk, plan 55 item 3/M3a).
+
+### 6.1 Design (DOTS 9, 1 Nov): the planners ask the wall on a plain click, before the vault
+
+One planner question, asked on the server and by the owner the same way, as the water and the wall clicks are:
+- `IWallPlanner.Auto(ghost, poseMm, yaw, goalMm, run, corners, legs, out plan)` -> `NotWall` or `Planned` (never a refusal: NGO falls
+  through to the next way). `BodyWallPlanner.Auto` calls a new `PlayerWallRunMotor.PlanAutoForGhost(feet, destination, ask)`, NGO's
+  `TryArmSurfaceRoute` then `TryArmTowards` read for a ghost (the walk there by `NavMesh.CalculatePath` from the feet, as the agent's;
+  `ask.Busy` false, the Flux and the gate the ghost's). A1 lays out exactly as a wall click from the ground does (the walk to the entry
+  cut at `WallArmTrigger` + stopping distance, `PlantAndAlong`, the way off and the walk on); A3 exactly as part 2's climb (`ClimbLegs`,
+  `PayOnPlant`), ending on the top.
+- Server (`PlayerServerPlanSystem`, the click branch): after `TryWater`, before the Run's cost: a click that is not a wall click, from
+  the ground, not too far, asks `Auto`; planned -> the Run is paid as for any move (`RunCost`, NGO), refused when it cannot be paid (NGO:
+  the move is refused), and the corners are written with `WallWrite.Server` on the click's number (Grip, the climb's 12 and the
+  hand-offs are part 1/2's). The owner (`PlayerInputGatherSystem.PlanClick`): the same question before the vault, written with
+  `WallWrite.Client`; `PlayerInput.Wall` stays 0 (the server asks the same question itself, never takes the owner's word).
+- A4's "a later order drops the arming" is the DOTS rule already: every click replaces the plan.
+- Tests (EditMode world, 0 and 100 ms, the stub planner): a plain click the stub routes over a wall runs it with the Run paid once and
+  Grip on the wall; one it does not route is the plain walk; the owner and the server end on the same corners; too little Run Flux
+  refuses the move.
+
+- The map's travel (NGO `TravelTo`, "an ordinary move order with a destination found on the map") is a plain ground click in DOTS
+  (`BodyClicks.Ground`), so it takes the same way (owner, 1 Nov: the self-starting route matters most for the map's auto-run; a click
+  directly on a wall with Wallstride open stays the core case, parts 1-4, unchanged by this).
+
+Owner's picks (1 Nov, through the Master):
+- The roof-edge drop (A5) and the route's gap jump (walk to the edge, the real jump, keep going) are a small part of their own right
+  after part 5 (one piece of machinery for both, NGO PCP:1552-1637). Its design leaves a hook for a jump-off clip as data, not code
+  (owner, 1 Nov: a backflip off the edge later; candidates in the project: Synty Emotes & Taunts `A_MOD_EMOT_Sporty_Backflip`
+  Masc/Femn, plain and RM/RMH/RMV root-motion variants, and `Characters/Player/Animations/ApexFrontFlip.anim`).
+  **Owner change (1 Nov, through the Master): built in that part, not later:** the jump-off plays Synty Emotes & Taunts
+  `A_MOD_EMOT_Sporty_Backflip`, the `_Masc` clip for masculine body types and `_Femn` for feminine (the player's replicated body type, as
+  the vault map's body axis), chosen by data (no clip names in code). Research first which of plain / RM / RMH / RMV fits: the jump's own
+  arc moves the body, so the pose likely needs the in-place copy, as with the vault clips. Proof: that part's GUI GIF, one masculine and
+  one feminine try.
+- **Owner change from NGO:** after a self-starting climb (A3) the move keeps going from the top to the place clicked (or the map's
+  destination), as the way over a wall does; NGO stands on the top.
+
+Built (DOTS 9, 1 Nov): `PlayerWallRunMotor.PlanAutoForGhost` (+ `ClimbLayout` shared with part 2), `IWallPlanner.Auto` /
+`BodyWallPlanner.Auto`, `PlayerServerPlanSystem.TryAutoWall` (after Waterstride, before the Run's cost; `AutoWalls`), the gather's
+`PlanAutoWallClick` (before the vault). EditMode `WallWorldTests.APlainClick_OverAWall_RunsOverItByItself_PayingTheRunOnce_AndGrip` (0 and
+100 ms: over the wall on both sides, Run paid once, Grip on the wall, a click it does not take walks, an unpaid Run is refused); the
+filtered suite 202/202; compile 74/74, server 33/33.
+
+### 6.2 Part 5's test places (planned before the run, owner rule 1 Nov; proved in edit mode)
+
+| Place | Coordinates (Zone01) | Try | Proof (`Zone01WallPropProbe`) |
+|---|---|---|---|
+| the test graph wall's street (9 m out) and its roof | street -10.08,0.03,-35.82; roof -10.50,9.00,-46.08 | street to roof running and walking, roof to street walking: over the wall by itself (the roof has no walk up or down); street to street running: the plain walk (control) | `ThePart5TestPlaces_StandInZone01`: OverWall (20-21 corners) both ways, no walk there; control None (a 3 m walk) |
+| a face the graph does not cover, walkable top 8.9 m up | start -25.0,0.05,-57.0; face -25.0,1.25,-50.5 facing -z; top -24.3,9.00,-49.4 | running at its top: up the face by itself, then on 2 m (owner change); walking: the plain walk | `FindPart5ClimbFaces` (50 m grid over the terrain: 8 climbable faces, 4 taken by A3; none by the spawn, whose walls are all the graph's): UpClimb |
+| the test graph wall's front | -10.08,0.03,-38.82 | a click directly on the wall (the core case, unchanged) | part 4's places (5.5) |
+
+- [ ] GUI run `KN_PLAYHERE_AUTO=1` (gui-auto-1): the pop check proved, the seven tries above, GIFs to Drive `DOTS-proof`.

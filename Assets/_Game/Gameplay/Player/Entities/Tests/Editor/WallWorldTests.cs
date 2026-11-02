@@ -18,6 +18,7 @@ namespace KryticalNova.Player.Entities.Tests
         const int FaceX = 5970;   // the feet on the wall, out from a face at x = 6 m facing -x
         static readonly int3 Landing = new int3(3000, 0, 0);
         const int CatchClick = 55555;   // a Jump click at a wall the graph does not cover (part 4)
+        const int AutoClick = 9000;     // a plain click on the roof past the wall, that Wallstride runs over by itself (part 5)
         static readonly int3 CatchAt = new int3(5600, 1400, 0);
 
         /// <summary>Refuses every ordinary jump: a catch test must never fall back to one.</summary>
@@ -107,6 +108,29 @@ namespace KryticalNova.Player.Entities.Tests
                 return WallAnswer.Planned;
             }
 
+            public int Autos;
+
+            /// <summary>
+            /// Part 5: a plain click on the roof at <see cref="AutoClick"/> runs over the wall at x = 6 m by itself (NGO TryArmSurfaceRoute): the
+            /// walk to its foot, the plant, up the face, over the edge, and the walk on to the place; any other plain click is not the wall's.
+            /// </summary>
+            public WallAnswer Auto(Entity ghost, int3 poseMm, int yawCdeg, int3 goalMm, bool run, NativeList<int3> corners, NativeList<WallCorner> legs,
+                out WallPlan plan)
+            {
+                plan = default;
+                if (goalMm.x != AutoClick) return WallAnswer.NotWall;
+                Autos++;
+                corners.Add(poseMm); legs.Add(default);
+                corners.Add(new int3(5000, 0, poseMm.z)); legs.Add(default);
+                corners.Add(new int3(FaceX, 500, poseMm.z)); legs.Add(Face(WallPhase.Plant, 320000, WallEase.In, WallEase.Out));
+                corners.Add(new int3(FaceX, 4000, poseMm.z)); legs.Add(Face(WallPhase.WallMove));
+                corners.Add(new int3(6500, 5000, poseMm.z));
+                legs.Add(new WallCorner { Phase = WallPhase.Mantle, Micros = 400000, Ease = WallCorner.Eases(WallEase.In, WallEase.Out), UpY = 1000, FwdX = 1000 });
+                corners.Add(new int3(AutoClick, 5000, poseMm.z)); legs.Add(default);
+                plan = new WallPlan { SpeedMmps = 9000, OnWallFrom = 3, OffWallFrom = 4 };
+                return WallAnswer.Planned;
+            }
+
             public bool PushOff(Entity ghost, int3 poseMm, int yawCdeg, in PoseTilt tilt, NativeList<int3> corners, NativeList<WallCorner> legs, out WallPlan plan)
             {
                 corners.Add(poseMm); legs.Add(Face(WallPhase.WallMove));
@@ -185,6 +209,66 @@ namespace KryticalNova.Player.Entities.Tests
             Assert.AreEqual(new int3(FaceX, 3000, 2000), rig.ServerPose().Mm, "along the wall to it (server)");
             Assert.AreEqual(new int3(FaceX, 3000, 2000), rig.OwnerPose().Mm, "and the owner");
             Assert.AreEqual(1, rig.OwnerMove().Wall);
+        }
+
+        sealed class PaidRuns : IRunCost
+        {
+            public bool Affordable = true;
+            public int Paid;
+            public bool CanPay(Entity ghost, out string reason)
+            {
+                reason = Affordable ? null : "Not enough Flux.";
+                return Affordable;
+            }
+            public void Pay(Entity ghost) => Paid++;
+        }
+
+        /// <summary>
+        /// Part 5 (`m3c-wallstride-design.md` section 6.1): a plain click Wallstride takes by itself runs over the wall on the server and the
+        /// owner alike, the Run paid once as for any move (NGO ServerMoveTo), Grip paid on the wall, then the walk on to the place; a plain click
+        /// it does not take is the ordinary walk; one whose Run cannot be paid is refused and goes nowhere.
+        /// </summary>
+        [TestCase(0)]
+        [TestCase(100)]
+        public void APlainClick_OverAWall_RunsOverItByItself_PayingTheRunOnce_AndGrip(int delayMs)
+        {
+            var planner = new StubWallPlanner();
+            var grip = new StubGrip { Points = 1000 };
+            using var rig = Rig(delayMs, planner, grip);
+            var runs = new PaidRuns();
+            var plans = rig.Server.GetExistingSystemManaged<PlayerServerPlanSystem>();
+            plans.RunCost = runs;
+            var place = new int3(AutoClick, 5000, 0);
+            rig.Sources[0].Click(place, run: true);
+            bool onWall = false;
+            for (int i = 0; i < 200; i++)
+            {
+                rig.Tick();
+                onWall |= rig.ServerMove().Wall != 0;
+            }
+            Assert.AreEqual(1, plans.AutoWalls, "the server took the plain click as Wallstride's");
+            Assert.Greater(planner.Autos, 1, "the owner asked the same question");
+            Assert.AreEqual(rig.Get<WallPlan>(rig.Server, rig.ServerGhosts[0]).Seq, rig.Get<ClientWallPlan>(rig.Clients[0], rig.GhostIn(0, 0)).Plan.Seq,
+                "the owner's own wall walk belongs to the same click");
+            Assert.IsTrue(onWall, "on the wall on the way");
+            Assert.AreEqual(place, rig.ServerPose().Mm, "over the wall and on to the place (server)");
+            Assert.AreEqual(place, rig.OwnerPose().Mm, "and the owner");
+            Assert.AreEqual(0, rig.ServerMove().Wall, "off the wall at the end");
+            Assert.AreEqual(1, runs.Paid, "the Run paid once, as for any move");
+            Assert.Greater(rig.Server.GetExistingSystemManaged<WallGripSystem>().Paid, 0, "Grip on the wall");
+
+            // not the wall's: the ordinary walk
+            rig.Sources[0].Click(new int3(6500, 5000, 3000), run: true);
+            rig.Tick(90);
+            Assert.AreEqual(1, plans.AutoWalls, "a plain click Wallstride does not take is the walk's");
+            Assert.AreEqual(new int3(6500, 5000, 3000), rig.ServerPose().Mm, "walked there");
+
+            // the Run cannot be paid: the move is refused (NGO)
+            runs.Affordable = false;
+            rig.Sources[0].Click(new int3(AutoClick, 5000, 6000), run: true);
+            rig.Tick(30);
+            Assert.AreEqual(1, plans.AutoWalls, "nothing planned without the Run's Flux");
+            Assert.AreEqual(new int3(6500, 5000, 3000), rig.ServerPose().Mm, "the server's body stays");
         }
 
         [Test]

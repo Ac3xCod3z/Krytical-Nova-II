@@ -58,7 +58,8 @@ namespace KryticalNova.Persistence.Entities
             || Environment.GetEnvironmentVariable("KN_PLAYHERE_WALL") == "1"                    // the scripted wall walk (M3c)
             || Environment.GetEnvironmentVariable("KN_PLAYHERE_CLIMB") == "1"                   // the scripted straight climb (M3c part 2)
             || Environment.GetEnvironmentVariable("KN_PLAYHERE_TREE") == "1"                    // the scripted tree, perch and drop (M3c part 3)
-            || Environment.GetEnvironmentVariable("KN_PLAYHERE_CATCH") == "1";                  // the scripted jump that catches a wall (M3c part 4)
+            || Environment.GetEnvironmentVariable("KN_PLAYHERE_CATCH") == "1"                   // the scripted jump that catches a wall (M3c part 4)
+            || Environment.GetEnvironmentVariable("KN_PLAYHERE_AUTO") == "1";                   // the scripted self-starting run (M3c part 5)
         /// <summary>A folder: the scripted run saves a Game-view picture there every 0.1 s (proof for the owner, GUI Editor only).</summary>
         public const string CaptureVariable = "KN_PLAYHERE_CAPTURE";
 
@@ -1173,6 +1174,7 @@ namespace KryticalNova.Persistence.Entities
                 if (ClimbRun) yield return Climbs(body, ghost, walls);
                 // the catch before the trees: the tree part ends at a terrain tree far from the spawn's walls
                 if (CatchRun) yield return Catches(body, ghost, walls);
+                if (AutoRun) yield return Autos(body, ghost, walls);
                 if (TreeRun) yield return Climbs(body, ghost, walls, tree: true);
                 Log($"done: {arrived} of {tries} arrived, {landed} of {jumpPoints.Count} jumps passed, low-rank refusals {(lowRank.Ok ? "match" : "DIFFER")}, " +
                     $"{vaults.Passed} of {vaults.Tried} vaults passed, {waters.Passed} of {waters.Tried} Waterstride tries passed, " +
@@ -1188,7 +1190,7 @@ namespace KryticalNova.Persistence.Entities
             /// the walk, the jumps and the vaults, so a run of Waterstride or the wall walk alone never started). Every gate reads this; a new
             /// scripted part is added here, and to <see cref="Scripted"/>, which reads the same variables before the runner exists.
             /// </summary>
-            bool HasScriptedTries => !string.IsNullOrEmpty(Walk) || !string.IsNullOrEmpty(Jump) || VaultCount > 0 || WaterRun || WallRun || ClimbRun || TreeRun || CatchRun;
+            bool HasScriptedTries => !string.IsNullOrEmpty(Walk) || !string.IsNullOrEmpty(Jump) || VaultCount > 0 || WaterRun || WallRun || ClimbRun || TreeRun || CatchRun || AutoRun;
 
             /// <summary>Which scripted parts are on, for the log's first lines (a part that should run and is not listed shows at once).</summary>
             string ScriptedParts()
@@ -1202,6 +1204,7 @@ namespace KryticalNova.Persistence.Entities
                 if (ClimbRun) on.Add("straight climb");
                 if (TreeRun) on.Add("tree, perch and drop");
                 if (CatchRun) on.Add("jumps that catch a wall");
+                if (AutoRun) on.Add("the self-starting run");
                 return on.Count > 0 ? string.Join(", ", on) : "none (by hand)";
             }
 
@@ -1919,6 +1922,134 @@ namespace KryticalNova.Persistence.Entities
             }
 
             sealed class CatchResult { public string Height = "none"; }
+
+            /// <summary>The scripted self-starting run (env KN_PLAYHERE_AUTO=1; M3c part 5, `m3c-wallstride-design.md` section 6).</summary>
+            static bool AutoRun => Environment.GetEnvironmentVariable("KN_PLAYHERE_AUTO") == "1";
+
+            /// <summary>
+            /// Part 5's straight climb by itself (A3), planned before the run (owner rule, 1 Nov) and proved in edit mode by
+            /// Zone01WallPropProbe.FindPart5ClimbFaces (PlanAutoForGhost: UpClimb): a face the graph does not cover at -25.0,1.25,-50.5 facing -z,
+            /// started from 6.5 m out, its walkable top 8.9 m up (none by the spawn: its walls are all the graph's).
+            /// </summary>
+            static readonly Vector3 AutoClimbStand = new Vector3(-25.0f, 0.05f, -57.0f), AutoClimbTop = new Vector3(-24.3f, 9.00f, -49.4f);
+
+            /// <summary>
+            /// Part 5 (NGO TryPlanRoute: plain ground clicks Wallstride takes by itself), at the places proved in edit mode: the test graph wall's
+            /// roof and the street in front of it, and a straight-climb face by the spawn. The pop check proved first; then each try judged: what
+            /// the server made of the click (over a wall, up a face, or the plain walk) against what was expected, on to the place clicked, owner
+            /// with the server, no glide, no pop. Last, the core case unchanged: a click directly on the wall.
+            /// </summary>
+            IEnumerator Autos(GameObject body, Entity ghost, VaultTally tally)
+            {
+                World server = KnBootstrap.ServerWorld;
+                var em = server.EntityManager;
+                var motor = body.GetComponent<PlayerWallRunMotor>();
+                var progression = body.GetComponent<PlayerCharacterProgression>();
+                var resources = body.GetComponent<PlayerResources>();
+                if (motor == null) { Log("auto: FAIL; no wall motor"); tally.Tried++; yield break; }
+                float offset = body.GetComponent<UnityEngine.AI.NavMeshAgent>() is UnityEngine.AI.NavMeshAgent ag ? ag.baseOffset : 0f;
+                if (progression != null && progression.CurrentLevel < 60) progression.SetLevel(60);
+                if (resources != null) resources.RestoreChi(resources.MaxChi);
+                yield return new WaitForSeconds(1f);
+                string wallWhy = motor.FindTestWall(TestGraphWall, out PlayerWallRunMotor.TestWall wall);
+                if (wallWhy != null) { Log("auto: the graph wall: NOT TESTED; " + wallWhy); tally.Tried++; yield break; }
+                Log($"auto: the graph wall's foot {wall.Foot.x:F1},{wall.Foot.y:F2},{wall.Foot.z:F1}, roof {wall.Top.x:F1},{wall.Top.y:F2},{wall.Top.z:F1}, street {wall.FrontFar.x:F1},{wall.FrontFar.z:F1}");
+
+                m_Pops.Reset();
+                float watch = Time.realtimeSinceStartup;
+                while (Time.realtimeSinceStartup - watch < 1f) { yield return new WaitForEndOfFrame(); PopFrame(ghost); }
+                Log($"auto: pop check on a known clean case (standing 1 s): {m_Pops.Pops} pop(s) (expected 0) {m_Pops.Worst}");
+                m_Pops.Reset();
+                PopFrame(ghost);
+                Teleport(em, ghost, wall.FrontFar + Vector3.up * offset);
+                watch = Time.realtimeSinceStartup;
+                while (Time.realtimeSinceStartup - watch < 1.5f) { yield return new WaitForEndOfFrame(); PopFrame(ghost); }
+                Log($"auto: pop check on a known fault (the teleport to the street): {m_Pops.Pops} pop(s) (expected 1 or more): {m_Pops.Worst}");
+
+                // the expected ways are the edit-mode probe's (ThePart5TestPlaces_StandInZone01, design 6.2): this roof has no walk up or down;
+                // None = NGO's plain walk (not Wallstride's)
+                yield return AutoTry(body, ghost, tally, "street to the roof, running", wall.FrontFar, wall.Top, true, PlayerWallRunMotor.AutoWay.OverWall, offset);
+                yield return AutoTry(body, ghost, tally, "roof to the street, walking (no walk down)", wall.Top, wall.FrontFar, false, PlayerWallRunMotor.AutoWay.OverWall, offset);
+                yield return AutoTry(body, ghost, tally, "street to the roof, walking (no walk up)", wall.FrontFar, wall.Top, false, PlayerWallRunMotor.AutoWay.OverWall, offset);
+                yield return AutoTry(body, ghost, tally, "street to street, running (control)", wall.FrontFar, wall.Front, true, PlayerWallRunMotor.AutoWay.None, offset);
+
+                // up a face by itself, then on over the roof to the place (the owner's change): the top, and 2 m on from it when the roof is there
+                Vector3 inward = new Vector3(AutoClimbTop.x - AutoClimbStand.x, 0f, AutoClimbTop.z - AutoClimbStand.z).normalized;
+                Vector3 past = UnityEngine.AI.NavMesh.SamplePosition(AutoClimbTop + inward * 2f, out UnityEngine.AI.NavMeshHit on, 0.3f, UnityEngine.AI.NavMesh.AllAreas)
+                    && Mathf.Abs(on.position.y - AutoClimbTop.y) < 0.3f ? on.position : AutoClimbTop;
+                Log($"auto: the straight-climb face's start {AutoClimbStand.x:F1},{AutoClimbStand.z:F1}, its top {AutoClimbTop.x:F1},{AutoClimbTop.y:F2},{AutoClimbTop.z:F1}, the place {past.x:F1},{past.y:F2},{past.z:F1}");
+                yield return AutoTry(body, ghost, tally, "up the face, running, and on to a place past its top (owner change)", AutoClimbStand, past, true,
+                    PlayerWallRunMotor.AutoWay.UpClimb, offset);
+                yield return AutoTry(body, ghost, tally, "the same, walking (NGO: never by itself)", AutoClimbStand, past, false, PlayerWallRunMotor.AutoWay.None, offset);
+
+                // the core case, unchanged: a click directly on the wall with Run (owner, 1 Nov: wall battles)
+                Teleport(em, ghost, wall.Front + Vector3.up * offset);
+                yield return new WaitForSeconds(1.5f);
+                var plans = server.GetExistingSystemManaged<PlayerServerPlanSystem>();
+                int walks0 = plans.WallWalks;
+                tally.Tried++;
+                BodyClicks.Wall(wall.Onto, wall.Normal, true, false);
+                float clicked = Time.realtimeSinceStartup;
+                while (Time.realtimeSinceStartup - clicked < 8f && (Time.realtimeSinceStartup - clicked < 1f || Moving(ghost))) yield return null;
+                bool onIt = em.GetComponentData<MoveState>(ghost).Wall == 1 && plans.WallWalks == walks0 + 1;
+                if (onIt) tally.Passed++;
+                Log($"auto: a click directly on the wall (the core case): {(onIt ? "PASS" : "FAIL")}; wall walks {plans.WallWalks - walks0}, on the wall {em.GetComponentData<MoveState>(ghost).Wall}");
+            }
+
+            /// <summary>One plain ground click from <paramref name="from"/> to <paramref name="to"/>, judged against the way expected.</summary>
+            IEnumerator AutoTry(GameObject body, Entity ghost, VaultTally tally, string what, Vector3 from, Vector3 to, bool run,
+                PlayerWallRunMotor.AutoWay expected, float offset)
+            {
+                if (OverTheCap()) yield break;
+                World server = KnBootstrap.ServerWorld;
+                var em = server.EntityManager;
+                var plans = server.GetExistingSystemManaged<PlayerServerPlanSystem>();
+                var grip = server.GetExistingSystemManaged<WallGripSystem>();
+                var resources = body.GetComponent<PlayerResources>();
+                Teleport(em, ghost, from + Vector3.up * offset);
+                yield return new WaitForSeconds(1.5f);
+                if (resources != null) resources.RestoreChi(resources.MaxChi);
+                yield return new WaitForSeconds(0.5f);
+                bool hasClient = TryLocalGhost(out World clientWorld, out Entity clientGhost, out _);
+                tally.Tried++;
+                int autos0 = plans.AutoWalls, paid0 = grip != null ? grip.ClimbsPaid : 0;
+                float flux0 = Flux(body);
+                string at = DateTime.Now.ToString("HH:mm:ss.fff", CultureInfo.InvariantCulture);
+                BodyClicks.Ground(to, run);
+                float clicked = Time.realtimeSinceStartup, stoppedAt = -1f, glide = 0f;
+                Vector3 bodyAtStop = default;
+                bool sawWall = false;
+                m_Pops.Reset();
+                while (Time.realtimeSinceStartup - clicked < 20f)
+                {
+                    yield return new WaitForEndOfFrame();
+                    PopFrame(ghost);
+                    sawWall |= em.GetComponentData<MoveState>(ghost).Wall != 0;
+                    Vector3 b = OwnBody.transform.position;
+                    if (Time.realtimeSinceStartup - clicked > 1f && !Moving(ghost))
+                    {
+                        if (stoppedAt < 0f) { stoppedAt = Time.realtimeSinceStartup; bodyAtStop = b; }
+                        else { glide = Mathf.Max(glide, (b - bodyAtStop).magnitude); if (Time.realtimeSinceStartup - stoppedAt > 1f) break; }
+                    }
+                }
+                Vector3 end = ServerPosition(ghost) - Vector3.up * offset;
+                PlayerPose ownPose = hasClient && clientWorld.IsCreated ? clientWorld.EntityManager.GetComponentData<PlayerPose>(clientGhost) : default;
+                float apart = (new Vector3(ownPose.XMm, ownPose.YMm, ownPose.ZMm) * 0.001f - ServerPosition(ghost)).magnitude;
+                bool took = plans.AutoWalls == autos0 + 1;
+                int climbs = grip != null ? grip.ClimbsPaid - paid0 : 0;
+                bool wayOk = expected == PlayerWallRunMotor.AutoWay.None ? !took
+                    : expected == PlayerWallRunMotor.AutoWay.OverWall ? took && sawWall : took && climbs == 1;
+                float miss = Vector3.Distance(end, to);
+                // the plain walk ends where NavMesh lets it (a walk may not reach a roof): only Wallstride's tries must end on the place
+                bool there = expected == PlayerWallRunMotor.AutoWay.None || miss < 0.6f;
+                bool ok = wayOk && there && apart < 0.05f && glide < 0.02f && m_Pops.Pops == 0;
+                if (ok) tally.Passed++;
+                Log($"auto: {what} clicked at {at}: {(ok ? "PASS" : "FAIL")}; expected {expected}, the server {(took ? "took it as Wallstride's" : "made it a plain walk")} " +
+                    $"(\"{(plans.WallPlanner as BodyWallPlanner)?.LastDecision}\"); on a wall {sawWall}, climbs paid {climbs}; ended {miss:F2} m from the click at " +
+                    $"{end.x:F1},{end.y:F2},{end.z:F1}; owner {apart * 100f:F1} cm from the server; glide {glide * 100f:F1} cm; pops {m_Pops.Pops}" +
+                    $"{(m_Pops.Pops > 0 ? " (worst: " + m_Pops.Worst + ")" : "")}; Flux {flux0:F0} -> {Flux(body):F0}");
+                yield return new WaitForSeconds(0.8f);
+            }
 
             /// <summary>Zone01's placed tree near the spawn (SM_Env_Tree_01, its trunk; the tree tries and the catch use it).</summary>
             static readonly Vector3 PlacedTree = new Vector3(12.6f, 0f, -13.1f);

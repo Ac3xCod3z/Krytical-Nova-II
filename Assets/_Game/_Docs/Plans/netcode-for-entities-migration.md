@@ -1117,6 +1117,12 @@ which do not run on a DOTS client. They take two server gaps with them: Run Flux
   where the arc meets it, 0.80 / 1.80 / 2.80 m; the graph wall grabbed where clicked, 2.54 / 5.15 / 8.15 m (Jump rank 20 reaches 67.5 m in
   Play: every Zone01 wall click is within reach). GIFs `dots-catch2-1..3`, `dots-catch4-1`, `dots-catch5-1..3`.
 - [ ] part 5, THE SELF-STARTING RUN (NGO rule 16, auto-arm): NGO rules first, its test places planned and proven, then design and code.
+  Done so far (design section 6): NGO rules A1-A6; owner picks (1 Nov): after a climb by itself the move keeps going (owner change), the
+  roof-edge drop and the route's gap jump are the next small part (with the backflip off the edge); the map's travel is a plain click in
+  DOTS, so it takes the same way. Code + EditMode (`WallWorldTests` 0/100 ms, filtered suite 202/202); test places proved in edit mode
+  (design 6.2). Left: the GUI run gui-auto-1 with GIFs.
+- [ ] part 5b, THE ROOF-EDGE DROP AND THE ROUTE'S GAP JUMP (NGO PCP:1552-1637; owner pick 1 Nov): walk to the edge, the real DOTS jump with
+  the Sporty backflip off it (`_Masc` / `_Femn` by the body type, data), keep going; GUI proof with one masculine and one feminine try.
 - [ ] the owner's rules (memory [[wallstride-decisions]]): no glitching, never inside a building, a jump catches a wall at a slant
   (65 degrees, run 45 degrees) with the turn eased in the plant, a player is NEVER knocked or forced off a wall, can always leave by choice
 - [ ] the climb as one warp route of eased legs, planned by the server from the zone's surface graph, predicted by the owner; the ground

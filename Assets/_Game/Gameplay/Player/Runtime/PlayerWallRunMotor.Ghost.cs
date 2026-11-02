@@ -65,18 +65,101 @@ namespace KryticalNova.Player
             try { ok = Decide(point, normal, surface, feet, false, out climb, out reason); }
             finally { ghostAsk = null; }
             if (!ok) return reason;
-            layout = new WallWalkLayout(settings, null, feet, Vector3.up, ask.Forward, ask.GroundSpeed * settings.wallSpeedShare);
-            // NGO ArmOrBegin: within reach of the foot the climb begins at once, else the run to the foot, the plant starting as it arrives
+            layout = ClimbLayout(feet, climb, in ask);
+            return layout != null ? string.Empty : "There is no way to the foot of that wall.";
+        }
+
+        /// <summary>
+        /// NGO <c>ArmOrBegin</c> + <see cref="StartRoute"/> as one layout: within reach of the foot the climb begins at once, else the run to
+        /// the foot, the plant starting as it arrives. Null when there is no walk to the foot.
+        /// </summary>
+        private WallWalkLayout ClimbLayout(Vector3 feet, Plan climb, in GhostWallAsk ask)
+        {
+            var layout = new WallWalkLayout(settings, null, feet, Vector3.up, ask.Forward, ask.GroundSpeed * settings.wallSpeedShare);
             if (Flat(feet, climb.BaseFeet) > ArmTrigger + Radius)
             {
                 Vector3 foot = NavMesh.SamplePosition(climb.BaseFeet, out NavMeshHit near, FootReach, Filter()) ? near.position : climb.BaseFeet;
                 var path = new NavMeshPath();
-                if (!NavMesh.CalculatePath(feet, foot, Filter(), path) || path.status != NavMeshPathStatus.PathComplete)
-                { layout = null; return "There is no way to the foot of that wall."; }
+                if (!NavMesh.CalculatePath(feet, foot, Filter(), path) || path.status != NavMeshPathStatus.PathComplete) return null;
                 WalkUpTo(layout, path.corners, ArmTrigger + (agent != null ? agent.stoppingDistance : 0f));
             }
             ClimbLegs(layout, climb, ask.GroundSpeed, ask.Forward, false);
-            return string.Empty;
+            return layout;
+        }
+
+        /// <summary>Which of NGO's self-starting ways a plain click took (part 5): the scripted run and the tests log it.</summary>
+        public enum AutoWay : byte { None, OverWall, UpClimb }
+
+        // NGO PointAndClickPlayer's destination sample radius (DefaultSampleRadius), as the ghost's walk planner samples the click
+        private const float AutoSampleRadius = 2f;
+
+        /// <summary>
+        /// NGO's self-starting run for a ghost (part 5, `m3c-wallstride-design.md` section 6, rules A1-A4): a plain ground click asks,
+        /// in NGO's order (<c>TryPlanRoute</c>), the way over a wall by the zone's graph (<see cref="TryArmSurfaceRoute"/>: no walk there, or
+        /// Running and the walk at least <c>autoDetourFactor</c> times the route) and then the straight climb up a face the place stands on
+        /// (<see cref="TryArmTowards"/>). Laid out exactly as the wall click (part 1) and the climb (part 2) are. Null: neither (the vault or
+        /// the plain walk takes the click); never a refusal, as NGO falls through.
+        /// </summary>
+        public WallWalkLayout PlanAutoForGhost(Vector3 feet, Vector3 destination, in GhostWallAsk ask, out AutoWay way)
+        {
+            way = AutoWay.None;
+            if (settings == null || !ask.Open || !ask.Alive || ask.Busy || ask.OnWall) return null;
+            NavMeshQueryFilter filter = Filter();
+            if (!NavMesh.SamplePosition(feet, out NavMeshHit onMesh, 0.6f, filter)
+                || !NavMesh.SamplePosition(destination, out NavMeshHit there, AutoSampleRadius, filter)) return null;
+            feet = onMesh.position;
+            destination = there.position;
+            var walk = new NavMeshPath();
+            bool walkable = NavMesh.CalculatePath(feet, destination, filter, walk) && walk.status == NavMeshPathStatus.PathComplete;
+
+            // A1: over a wall by the graph (NGO TryArmSurfaceRoute; the prop blockers of the wall walk, owner 1 Nov)
+            SurfaceGraph graph = ZoneGraph;
+            if (graph != null && ask.HasFluxForOne && (!walkable || ask.Run))
+            {
+                SurfaceRoute.Route route = SurfaceRoute.Through(graph, feet, destination, filter, PropBlocker(graph));
+                if (route != null && route.HasEntry && (!walkable || PathLength(walk) >= route.Length * settings.autoDetourFactor))
+                {
+                    var layout = new WallWalkLayout(settings, StickProbe, feet, Vector3.up, ask.Forward, ask.GroundSpeed * settings.wallSpeedShare);
+                    bool reached = true;
+                    if (Flat(feet, route.Entry.navPoint) > WallArmTrigger + Radius)
+                    {
+                        var path = new NavMeshPath();
+                        reached = NavMesh.CalculatePath(feet, route.Entry.navPoint, filter, path) && path.status == NavMeshPathStatus.PathComplete;
+                        if (reached) WalkUpTo(layout, path.corners, WallArmTrigger + (agent != null ? agent.stoppingDistance : 0f));
+                    }
+                    if (reached)
+                    {
+                        layout.PlantAndAlong(graph, route, ask.Forward);
+                        if (layout.FitTo(WallWalkLayout.MaxCorners)) { way = AutoWay.OverWall; return layout; }
+                    }
+                }
+            }
+
+            // A3: up a face the place stands on, Running (NGO TryArmTowards)
+            if (!ask.Run) return null;
+            Vector3 flat = destination - feet;
+            flat.y = 0f;
+            float straight = flat.magnitude;
+            if (straight < 0.5f || destination.y - feet.y < settings.minWallHeight * 0.5f) return null;
+            if (walkable && PathLength(walk) < straight * settings.autoDetourFactor) return null;
+            int count = Physics.RaycastNonAlloc(feet + Vector3.up * 1f, flat / straight, Hits, Mathf.Min(straight, settings.autoLookAhead),
+                SurfaceMask(), QueryTriggerInteraction.Ignore);
+            if (!Nearest(count, out RaycastHit hit)) return null;
+            ghostAsk = ask;
+            bool ok;
+            Plan climb;
+            try { ok = Decide(hit.point, hit.normal, hit.collider, feet, false, out climb, out _); }
+            finally { ghostAsk = null; }
+            if (!ok || Mathf.Abs(climb.TopFeet.y - destination.y) > 2f) return null;
+            WallWalkLayout up = ClimbLayout(feet, climb, in ask);
+            if (up == null) return null;
+            way = AutoWay.UpClimb;
+            // owner's change from NGO (1 Nov, design 6.1): on from the top to the place (NGO stands on the top), as the way over a wall walks on
+            var on = new NavMeshPath();
+            if ((destination - up.LastFeet).sqrMagnitude > 0.25f && NavMesh.CalculatePath(up.LastFeet, destination, filter, on)
+                && on.status == NavMeshPathStatus.PathComplete)
+                for (int i = 1; i < on.corners.Length; i++) up.Ground(on.corners[i]);
+            return up;
         }
 
         /// <summary>A jump at a wall, judged (part 4): where it aims, the climb it catches, for the entity side to find where its arc meets the wall.</summary>

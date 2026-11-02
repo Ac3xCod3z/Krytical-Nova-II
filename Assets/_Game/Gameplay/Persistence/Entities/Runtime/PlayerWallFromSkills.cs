@@ -146,6 +146,26 @@ namespace KryticalNova.Persistence.Entities
             return WallAnswer.Planned;
         }
 
+        public WallAnswer Auto(Entity ghost, int3 poseMm, int yawCdeg, int3 goalMm, bool run, NativeList<int3> corners, NativeList<WallCorner> legs,
+            out WallPlan plan)
+        {
+            plan = default;
+            corners.Clear();
+            legs.Clear();
+            GameObject body = PlayerJumpFromSkills.BodyOf(m_World, ghost);
+            var motor = body != null ? body.GetComponent<PlayerWallRunMotor>() : null;
+            if (motor == null) return WallAnswer.NotWall;
+            float offset = OffsetOf(body);
+            var ask = Ask(body, motor, ghost, yawCdeg, default, run, false, false);
+            Vector3 feet = M(poseMm) - Vector3.up * offset;
+            WallWalkLayout layout = motor.PlanAutoForGhost(feet, M(goalMm), in ask, out PlayerWallRunMotor.AutoWay way);
+            if (layout == null) return WallAnswer.NotWall;
+            m_Base[ghost] = feet;
+            Write(layout, poseMm, offset, corners, legs, out plan);
+            LastDecision = way == PlayerWallRunMotor.AutoWay.OverWall ? "a run over a wall by itself" : "a run up a face by itself";
+            return WallAnswer.Planned;
+        }
+
         /// <summary>The jump clip's times this world flies (its baked singleton, else the defaults).</summary>
         PlayerMotionCurves Curves()
         {
