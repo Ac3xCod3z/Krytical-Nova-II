@@ -1157,3 +1157,14 @@ For all five
   0.6 m off mid-climb jumped 0.38 m in a frame; the drawn body's largest step stayed 0.22 m (the climb's own), the clip phases [1,2,3,0] as
   the server's, each once; ends on the ghost. EditMode 230/230.
 - [ ] owner feel checkpoint after M3c (by hand; pending is allowed)
+
+## 56. M7 + M8 breakdown (2 Nov 2026, owner order via Master: M7 and M8 next, M4 waits)
+
+Plan: `netcode-for-entities-designs/m7-m8-breakdown-plan.md` (per system: DOTS edge, dependencies, tests, risk, size; order with
+checkpoints; the owner's Thursday hand-test list; owner questions). NGO rules tables: `netcode-for-entities-designs/m7m8-rules-tables/`.
+- [ ] System 0: item-use guard (`EffectPorted`, written 2 Nov, test pending), owner message line, owner Creds/Renown/level mirror, generic request.
+- [ ] M7: 7.1 clock/weather, 7.2 music, 7.3 portal, 7.4 GM tools, 7.5 drops + loot, 7.6 Kiosk stands.
+- [ ] M8 group 1: wallet, inventory rest, loadouts, Flask refill.
+- [ ] M8 group 3: progression, skills, XP boosts, Serums mirror, Nova, Forge, crafting, restyle, weaves, library, Autobuff.
+- [ ] M8 group 2: storage, shopping, trade, Kiosk player side.
+- [ ] M8 group 4: chat, contacts, party, sponsor, Crew, emotes, pets, mounts, crate, Recall, housing check; duels and Cadence wait for M4.
