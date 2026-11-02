@@ -721,6 +721,34 @@ namespace KryticalNova.Persistence.Entities
         [MenuItem(MenuPath, true)]
         static bool PlayHereValid() => !EditorApplication.isPlayingOrWillChangePlaymode;
 
+        /// <summary>The GUI Editor opened with <c>-executeMethod</c> straight into "Play DOTS here" by hand (the owner's feel checkpoint).</summary>
+        public static void ByHand() => Begin(quitAfter: false);
+
+        /// <summary>The feel checkpoint's levels: 60 opens Waterstride and Wallstride; 1 locks Wallstride (the walk's own jumps: the backflip).</summary>
+        const int FeelLevelOpen = 60, FeelLevelLocked = 1;
+        const string WallstrideSwitchPath = "Krytical Nova/Online/Entities/Play DOTS here: Wallstride on or off (level 60 or 1)";
+
+        [MenuItem(WallstrideSwitchPath)]
+        static void SwitchWallstride()
+        {
+            if (!Runner.TryServer(out GameObject body, out _)) { Debug.LogWarning("[KnPlayHere] No player in Play DOTS here."); return; }
+            var progression = body.GetComponent<PlayerCharacterProgression>();
+            SetFeelLevel(progression != null && progression.CurrentLevel >= FeelLevelOpen ? FeelLevelLocked : FeelLevelOpen);
+        }
+
+        [MenuItem(WallstrideSwitchPath, true)]
+        static bool SwitchWallstrideValid() => Active && EditorApplication.isPlaying;
+
+        static void SetFeelLevel(int level)
+        {
+            if (!Runner.TryServer(out GameObject body, out _)) return;
+            var progression = body.GetComponent<PlayerCharacterProgression>();
+            if (progression == null) return;
+            progression.SetLevel(level);
+            Debug.Log($"[KnPlayHere] level {level}: Wallstride {(level >= FeelLevelOpen ? "on" : "off (the walk's own jumps: the roof-edge backflip)")}, " +
+                $"Waterstride {(level >= FeelLevelOpen ? "on" : "off")}");
+        }
+
         /// <summary>
         /// Batch: <c>Unity -batchmode -projectPath ... -executeMethod KryticalNova.Persistence.Entities.KnPlayHere.Batch</c> with
         /// <see cref="WalkVariable"/> set (no <c>-quit</c>: the run quits by itself).
@@ -1087,7 +1115,14 @@ namespace KryticalNova.Persistence.Entities
                         : $"the join's door {(door.IsOpen ? "opened by " + door.OpenedBy : "NEVER opened")} after {door.WaitedSeconds:F1} s with the body and the camera " +
                           $"ready (worst frame meanwhile {door.WorstFrameMs:F0} ms); the click waited {Time.realtimeSinceStartup - waitStart:F1} s more for it");
                 }
-                if (!HasScriptedTries) { Log("no scripted tries: the owner clicks by hand"); yield break; }
+                if (!HasScriptedTries)
+                {
+                    // the owner's feel checkpoint (M3c, 2 Nov): every traversal open by hand; the menu's Wallstride switch drops to level 1
+                    // for the roof-edge backflip (with Wallstride open the walk takes a wall down instead, NGO's order)
+                    SetFeelLevel(FeelLevelOpen);
+                    Log("no scripted tries: the owner clicks by hand");
+                    yield break;
+                }
 
                 var points = new List<Vector3>();
                 if (!string.IsNullOrEmpty(Walk) && !TryPoints(Walk, points)) { Log(WalkVariable + " does not read as x,z;x,z: " + Walk); Finish(false); yield break; }
@@ -2829,7 +2864,7 @@ namespace KryticalNova.Persistence.Entities
 
             void Finish(bool ok) => StopPlay(ok ? 0 : 1);
 
-            static bool TryServer(out GameObject body, out Entity ghost)
+            internal static bool TryServer(out GameObject body, out Entity ghost)
             {
                 body = null;
                 ghost = Entity.Null;
