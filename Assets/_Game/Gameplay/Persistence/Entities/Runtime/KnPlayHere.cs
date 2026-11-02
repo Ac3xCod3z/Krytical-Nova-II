@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using KryticalNova.CharacterCreation;
 using KryticalNova.Core;
+using KryticalNova.Items;
 using KryticalNova.Networking;
 using KryticalNova.Networking.Entities;
 using KryticalNova.Player;
@@ -62,7 +63,8 @@ namespace KryticalNova.Persistence.Entities
             || Environment.GetEnvironmentVariable("KN_PLAYHERE_AUTO") == "1"                    // the scripted self-starting run (M3c part 5)
             || Environment.GetEnvironmentVariable("KN_PLAYHERE_LEDGE") == "1"                   // the scripted route jumps (M3c part 5b)
             || Environment.GetEnvironmentVariable("KN_PLAYHERE_FIXES") == "1"                   // the owner's feel-test fixes 1-3 (2 Nov)
-            || Environment.GetEnvironmentVariable("KN_PLAYHERE_ACROSS") == "1";                 // across the water when quicker (item 4)
+            || Environment.GetEnvironmentVariable("KN_PLAYHERE_ACROSS") == "1"                  // across the water when quicker (item 4)
+            || Environment.GetEnvironmentVariable("KN_PLAYHERE_ITEMS") == "1";                  // items used by the server (item 5)
         /// <summary>A folder: the scripted run saves a Game-view picture there every 0.1 s (proof for the owner, GUI Editor only).</summary>
         public const string CaptureVariable = "KN_PLAYHERE_CAPTURE";
 
@@ -1203,6 +1205,7 @@ namespace KryticalNova.Persistence.Entities
                 if (TreeRun) yield return Climbs(body, ghost, walls, tree: true);
                 if (FixesRun) yield return Fixes(body, ghost, walls);
                 if (AcrossRun) yield return Acrosses(body, ghost, waters);
+                if (ItemsRun) yield return Items(body, ghost, walls);
                 Log($"done: {arrived} of {tries} arrived, {landed} of {jumpPoints.Count} jumps passed, low-rank refusals {(lowRank.Ok ? "match" : "DIFFER")}, " +
                     $"{vaults.Passed} of {vaults.Tried} vaults passed, {waters.Passed} of {waters.Tried} Waterstride tries passed, " +
                     $"{walls.Passed} of {walls.Tried} wall walk tries passed, " +
@@ -1217,7 +1220,7 @@ namespace KryticalNova.Persistence.Entities
             /// the walk, the jumps and the vaults, so a run of Waterstride or the wall walk alone never started). Every gate reads this; a new
             /// scripted part is added here, and to <see cref="Scripted"/>, which reads the same variables before the runner exists.
             /// </summary>
-            bool HasScriptedTries => !string.IsNullOrEmpty(Walk) || !string.IsNullOrEmpty(Jump) || VaultCount > 0 || WaterRun || WallRun || ClimbRun || TreeRun || CatchRun || AutoRun || LedgeRun || FixesRun || AcrossRun;
+            bool HasScriptedTries => !string.IsNullOrEmpty(Walk) || !string.IsNullOrEmpty(Jump) || VaultCount > 0 || WaterRun || WallRun || ClimbRun || TreeRun || CatchRun || AutoRun || LedgeRun || FixesRun || AcrossRun || ItemsRun;
 
             /// <summary>Which scripted parts are on, for the log's first lines (a part that should run and is not listed shows at once).</summary>
             string ScriptedParts()
@@ -1235,6 +1238,7 @@ namespace KryticalNova.Persistence.Entities
                 if (LedgeRun) on.Add("the route's jumps");
                 if (FixesRun) on.Add("the feel-test fixes 1-3");
                 if (AcrossRun) on.Add("across the water when quicker");
+                if (ItemsRun) on.Add("items used by the server");
                 return on.Count > 0 ? string.Join(", ", on) : "none (by hand)";
             }
 
@@ -2168,6 +2172,70 @@ namespace KryticalNova.Persistence.Entities
                 bool onIt = em.GetComponentData<MoveState>(ghost).Wall == 1 && plans.WallWalks == walks0 + 1;
                 if (onIt) tally.Passed++;
                 Log($"auto: a click directly on the wall (the core case): {(onIt ? "PASS" : "FAIL")}; wall walks {plans.WallWalks - walks0}, on the wall {em.GetComponentData<MoveState>(ghost).Wall}");
+            }
+
+            /// <summary>Items used by the server on its body (env KN_PLAYHERE_ITEMS=1; owner, 2 Nov, feel test item 5).</summary>
+            static bool ItemsRun => Environment.GetEnvironmentVariable("KN_PLAYHERE_ITEMS") == "1";
+
+            /// <summary>
+            /// Item 5 (owner pick a): the owner's own body asks, the server uses the item on its body, and the owner sees the server's
+            /// numbers. An HP stim with half the HP gone (healed on the server, the owner's HP and Pack count follow); the Flux Flask with
+            /// the Flux run down (it pours 45 % of Max Flux over 8 s on the server, the owner's Flux follows, the bottle keeps its
+            /// drink count); then a save to the session's memory store holds the Pack exactly as the server has it (what a relog loads).
+            /// </summary>
+            IEnumerator Items(GameObject body, Entity ghost, VaultTally tally)
+            {
+                var inventory = body.GetComponent<PlayerInventory>();
+                var resources = body.GetComponent<PlayerResources>();
+                var own = OwnBody != null ? OwnBody.GetComponent<PlayerInventory>() : null;
+                var ownResources = OwnBody != null ? OwnBody.GetComponent<PlayerResources>() : null;
+                if (inventory == null || resources == null || own == null || ownResources == null)
+                { tally.Tried++; Log("items: FAIL; a body has no inventory or resources"); yield break; }
+                const ushort Stim = 9001, Flask = 9012;
+                inventory.ServerGive(Stim, 3);
+                if (inventory.CountItem(Flask) == 0) inventory.ServerGive(Flask, 1);
+                yield return new WaitForSeconds(1.2f);   // the Pack's cells reach the owner
+
+                // an HP stim, asked by the owner's own body
+                tally.Tried++;
+                resources.ApplyDamage(resources.MaxHealth * 0.5f);
+                yield return new WaitForSeconds(0.6f);
+                float serverHp0 = resources.Health, ownHp0 = ownResources.Health;
+                int serverCount0 = inventory.CountItem(Stim), ownCount0 = own.CountItem(Stim);
+                string at = DateTime.Now.ToString("HH:mm:ss.fff", CultureInfo.InvariantCulture);
+                own.UseItem(Stim);
+                yield return new WaitForSeconds(1.5f);
+                bool stimOk = resources.Health > serverHp0 && Mathf.Abs(ownResources.Health - resources.Health) < 1f
+                    && inventory.CountItem(Stim) == serverCount0 - 1 && own.CountItem(Stim) == ownCount0 - 1;
+                if (stimOk) tally.Passed++;
+                Log($"items: an HP stim asked by the owner at {at}: {(stimOk ? "PASS" : "FAIL")}; server HP {serverHp0:F0} -> {resources.Health:F0}, owner's HP " +
+                    $"{ownHp0:F0} -> {ownResources.Health:F0}; stims: server {serverCount0} -> {inventory.CountItem(Stim)}, owner {ownCount0} -> {own.CountItem(Stim)}");
+
+                // the Flux Flask, with the Flux run down
+                tally.Tried++;
+                if (resources.Chi > resources.MaxChi * 0.2f) resources.TrySpendChi(resources.Chi - resources.MaxChi * 0.2f);
+                yield return new WaitForSeconds(1.2f);   // past the shared use cooldown, and the low Flux reaches the owner
+                float serverFlux0 = resources.Chi, ownFlux0 = ownResources.Chi;
+                at = DateTime.Now.ToString("HH:mm:ss.fff", CultureInfo.InvariantCulture);
+                own.UseItem(Flask);
+                yield return new WaitForSeconds(9f);
+                ulong bottle = 0, ownBottle = 0;
+                for (int i = 0; i < PlayerInventory.Capacity; i++)
+                {
+                    if (inventory.Get(i).itemId == Flask) bottle = inventory.Get(i).data;
+                    if (own.Get(i).itemId == Flask) ownBottle = own.Get(i).data;
+                }
+                bool flaskOk = resources.Chi - serverFlux0 >= resources.MaxChi * 0.4f && Mathf.Abs(ownResources.Chi - resources.Chi) < 1f
+                    && (bottle & 0xFF) == 1 && ownBottle == bottle;
+                if (flaskOk) tally.Passed++;
+                Log($"items: the Flux Flask asked by the owner at {at}: {(flaskOk ? "PASS" : "FAIL")}; server Flux {serverFlux0:F0} -> {resources.Chi:F0} of " +
+                    $"{resources.MaxChi:F0}, owner's Flux {ownFlux0:F0} -> {ownResources.Chi:F0}; the bottle's drinks used: server {bottle & 0xFF}, owner {ownBottle & 0xFF}");
+
+                // the tester enters without an account (this run's safety: nothing is saved), so its relog is not run here: the PlayMode
+                // test B3 saves a Pack on the real prefab, loads it into a fresh server body and saves it back byte for byte
+                Log($"items: the Pack after this run: {inventory.CountItem(Stim)} stims, the Flask's drinks used {bottle & 0xFF} (a relog of a saved " +
+                    "character keeps them: PlayMode B3; this tester has no account, so nothing is saved here)");
+                resources.RestoreAll();
             }
 
             /// <summary>The owner's feel-test fixes 1-3 (env KN_PLAYHERE_FIXES=1; `m3c-wallstride-design.md` section 9).</summary>
