@@ -9,6 +9,10 @@ namespace KryticalNova.World.Portals
     /// A zone exit. The server (or the offline game) detects a player entering the trigger, re-checks the
     /// distance, applies a per-player cooldown and asks <see cref="TransferHandler"/> to move the player.
     /// Only the player who entered is told the result.
+    /// On a server of the entity netcode (M7.3, 2 Nov 2026) NGO is not listening and its trigger would answer on the server's own screen
+    /// with one cooldown for everyone: there the portal looks at the server bodies four times a second instead (<see cref="ServerLook"/>),
+    /// fires when one comes inside the same radius, keeps the cooldown per <see cref="PlayerKey"/> and tells that player through
+    /// <see cref="OwnerMessages"/>; the trigger then stays quiet on every machine of that session.
     /// </summary>
     [DisallowMultipleComponent]
     [RequireComponent(typeof(Collider))]
@@ -32,7 +36,14 @@ namespace KryticalNova.World.Portals
         [SerializeField, Min(0f)] private float cooldownSeconds = 3f;
         [SerializeField, TextArea] private string sealedMessage = "The way beyond is sealed… for now.";
 
+        private const float ServerLookInterval = 0.25f;
+
         private readonly Dictionary<ulong, float> nextUseTime = new Dictionary<ulong, float>();
+        private readonly Dictionary<PlayerKey, float> nextUseByKey = new Dictionary<PlayerKey, float>();
+        private readonly HashSet<PlayerKey> inside = new HashSet<PlayerKey>();
+        private readonly HashSet<PlayerKey> seen = new HashSet<PlayerKey>();
+        private readonly List<PlayerKey> left = new List<PlayerKey>();
+        private float nextServerLook;
 
         private static readonly List<ZonePortal> ActivePortals = new List<ZonePortal>(4);
         /// <summary>Enabled portals, for map/compass markers.</summary>
@@ -52,11 +63,56 @@ namespace KryticalNova.World.Portals
             GetComponent<Collider>().isTrigger = true;
         }
 
+        private void Update()
+        {
+            if (!EntitySessionServer() || Time.time < nextServerLook) return;
+            nextServerLook = Time.time + ServerLookInterval;
+            ServerLook(PlayerBodies.All, Time.time);
+        }
+
+        /// <summary>An entity-netcode session (NGO not listening) and this process runs its server.</summary>
+        private static bool EntitySessionServer()
+        {
+            NetworkManager manager = NetworkManager.Singleton;
+            return (manager == null || !manager.IsListening) && NetRole.Process == NetRoleKind.ServerBody;
+        }
+
+        /// <summary>
+        /// One look over the server bodies (entity netcode): a body that came inside the radius since the last look, and is not cooling down,
+        /// is transferred and its player told. Bodies with no key are not connected players and are left alone (as NGO's trigger).
+        /// </summary>
+        public void ServerLook(IReadOnlyList<IPlayerBody> bodies, float now)
+        {
+            seen.Clear();
+            for (int i = 0; i < bodies.Count; i++)
+            {
+                IPlayerBody body = bodies[i];
+                if (body == null || body.Transform == null || !NetRole.IsServerBody(body.Transform)) continue;
+                PlayerKey key = body.Owner;
+                if (key == PlayerKey.None) continue;
+                Vector3 offset = body.Transform.position - transform.position;
+                offset.y = 0f;
+                if (offset.magnitude > activationRadius + RadiusTolerance) continue;
+                seen.Add(key);
+                if (!inside.Add(key)) continue;                                    // still inside since an earlier look: no new entry
+                if (nextUseByKey.TryGetValue(key, out float allowedAt) && now < allowedAt) continue;
+                nextUseByKey[key] = now + cooldownSeconds;
+                ZoneTransferResult result = TransferHandler != null
+                    ? TransferHandler.TryTransfer(this, body.Transform.gameObject)
+                    : new ZoneTransferResult(false, sealedMessage);
+                if (!string.IsNullOrEmpty(result.Message)) OwnerMessages.TryTell(body.Transform, result.Message);
+            }
+            left.Clear();
+            foreach (PlayerKey key in inside) if (!seen.Contains(key)) left.Add(key);
+            foreach (PlayerKey key in left) inside.Remove(key);
+        }
+
         private void OnTriggerEnter(Collider other)
         {
             NetworkManager manager = NetworkManager.Singleton;
             bool networked = manager != null && manager.IsListening;
             if (networked && !manager.IsServer) return;
+            if (!networked && NetRole.Process != NetRoleKind.Offline) return;   // entity netcode: the server's ServerLook answers
 
             IPlayerBody player = other.GetComponentInParent<IPlayerBody>();
             if (player == null) return;
