@@ -553,19 +553,10 @@ namespace KryticalNova.Networking
             return $"{gone} is off the list. Press PUBLISH LIST so players stop seeing it.";
         }
 
-        /// <summary>Adds a Game Master and writes the list into the settings file.</summary>
-        private string AddGm(string name)
-        {
-            var list = new List<GmEntry>(GmRoster.All);
-            string problem = GmRoster.ValidateNew(list, name);
-            if (problem != null) return problem;
-            name = name.Trim();
-            list.Add(new GmEntry { name = name });
-            if (!options.SaveGameMasters(list.ToArray(), out string error)) return error;
-            GmRoster.SetAll(list);
-            Debug.Log($"[GM] {name} was made a GM on the control page.");
-            return $"{name} is a GM. Bind them: pick the player beside their name while they are in the game.";
-        }
+        // The GM buttons: the rules and words are GmRosterEdits (shared with the entity netcode's page).
+        private string SaveGms(GmEntry[] list) => options.SaveGameMasters(list, out string error) ? null : error;
+
+        private string AddGm(string name) => GmRosterEdits.Add(name, SaveGms);
 
         /// <summary>
         /// Binds a GM to the account of a player in the game now (online phase 2, owner: GMs are bound on the control page,
@@ -573,38 +564,14 @@ namespace KryticalNova.Networking
         /// </summary>
         private string BindGm(string name, string who)
         {
-            GmEntry entry = GmRoster.Find((name ?? string.Empty).Trim());
-            if (entry == null) return $"There is no GM called {name}.";
+            if (GmRoster.Find((name ?? string.Empty).Trim()) == null) return $"There is no GM called {name}.";
             NetworkManager network = NetworkManager.Singleton;
             if (network == null || !network.IsServer || !ulong.TryParse(who, out ulong client) || !network.ConnectedClients.ContainsKey(client))
                 return "That player is no longer here.";
-            if (!ServerAccounts.TryGet(NetPlayerKeys.Find(client), out ServerAccounts.Entry proven)) return "That player's account is not proven (they joined without Unity sign-in).";
-            GmEntry already = GmRoster.FindByAccount(proven.Account);
-            if (already != null && already != entry) return $"That player is already GM {already.name}.";
-            var list = new List<GmEntry>(GmRoster.All);
-            foreach (GmEntry each in list)
-                if (each == entry) each.account = proven.Account;
-            if (!options.SaveGameMasters(list.ToArray(), out string error)) return error;
-            GmRoster.SetAll(list);
-            GmRoster.SignInBound(client, out _);
-            string player = PlayerName(client);
-            Debug.Log($"[GM] {entry.name} was bound to {player}'s account on the control page.");
-            return $"{entry.name} is now {player}'s account: GM at once, and every time they join.";
+            return GmRosterEdits.Bind(name, client, PlayerName(client), SaveGms);
         }
 
-        private string UnbindGm(string name)
-        {
-            GmEntry entry = GmRoster.Find((name ?? string.Empty).Trim());
-            if (entry == null) return $"There is no GM called {name}.";
-            if (!entry.IsBound) return $"{entry.name} is not bound to anyone.";
-            var list = new List<GmEntry>(GmRoster.All);
-            foreach (GmEntry each in list)
-                if (each == entry) each.account = string.Empty;
-            if (!options.SaveGameMasters(list.ToArray(), out string error)) return error;
-            GmRoster.SetAll(list);
-            Debug.Log($"[GM] {entry.name} was unbound on the control page.");
-            return $"{entry.name} is bound to no one now; their GM rights ended.";
-        }
+        private string UnbindGm(string name) => GmRosterEdits.Unbind(name, SaveGms);
 
         private static string PlayerName(ulong client)
         {
@@ -615,18 +582,7 @@ namespace KryticalNova.Networking
         }
 
         /// <summary>Removes a Game Master; if they are signed in, their GM rights end at once.</summary>
-        private string RemoveGm(string name)
-        {
-            GmEntry entry = GmRoster.Find((name ?? string.Empty).Trim());
-            if (entry == null) return $"There is no GM called {name}.";
-            bool online = GmRoster.IsSignedIn(entry.name);
-            var list = new List<GmEntry>(GmRoster.All);
-            list.Remove(entry);
-            if (!options.SaveGameMasters(list.ToArray(), out string error)) return error;
-            GmRoster.SetAll(list);
-            Debug.Log($"[GM] {entry.name} is no longer a GM (control page).");
-            return $"{entry.name} is no longer a GM." + (online ? " Their GM rights ended at once." : string.Empty);
-        }
+        private string RemoveGm(string name) => GmRosterEdits.Remove(name, SaveGms);
 
         /// <summary>Runs <paramref name="work"/> on the game's thread and waits for its answer.</summary>
         private string OnMain(Func<string> work)

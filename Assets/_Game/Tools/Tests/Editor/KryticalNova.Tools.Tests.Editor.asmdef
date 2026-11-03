@@ -26,6 +26,7 @@
         "KryticalNova.Social",
         "KryticalNova.Wallet",
         "KryticalNova.World",
+        "KryticalNova.DevTools",
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner"
     ],

@@ -91,6 +91,9 @@ namespace KryticalNova.Persistence.Entities
             ConfigurePlanner(planner, (prefab ?? PlayerPrefab)());
             // what a server body says to its own player goes to that player's connection (M7/M8 system 0)
             KryticalNova.Core.OwnerMessages.Current = new EntityOwnerMessages();
+#if UNITY_SERVER || UNITY_EDITOR
+            KnPageRules.Commands = new KnPageGmTools();   // the page's command box and GM list (M7.4)
+#endif
             var serverVaults = new BodyVaultPlanner(server);
             PlayerEntitiesSetup.Install(server, planner, runCost: new BodyRunCost(server), clickBudget: new BudgetClickLimit(server),
                 jumpPlanner: new BodyJumpPlanner(server), jumpCost: new BodyJumpCost(server), vaultPlanner: serverVaults,

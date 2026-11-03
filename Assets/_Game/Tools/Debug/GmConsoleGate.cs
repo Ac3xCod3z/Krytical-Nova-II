@@ -32,12 +32,13 @@ namespace KryticalNova.DevTools
             get
             {
                 NetworkManager nm = NetworkManager.Singleton;
-                return nm == null || !nm.IsListening || nm.IsServer;
+                if (nm != null && nm.IsListening) return nm.IsServer;
+                return !KryticalNova.Core.NetRole.IsClientView;   // a client of the entity netcode runs nothing here (M7.4)
             }
         }
 
         /// <summary>Whether this player may have the console now: anyone where commands run here, a GM on a server.</summary>
-        private static bool Allowed => RunsHere || (PlayerGm.Local != null && PlayerGm.Local.IsGm);
+        private static bool Allowed => RunsHere || (PlayerGm.Local != null && PlayerGm.Local.IsGm) || (PlayerGm.Remote != null && PlayerGm.Remote.IsGm);
 
         private void OnEnable()
         {

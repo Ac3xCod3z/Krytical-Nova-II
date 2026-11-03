@@ -24,6 +24,7 @@ namespace KryticalNova.DevTools
             DontDestroyOnLoad(host);
             host.AddComponent<ServerConsoleInput>();
             KryticalNova.Networking.ServerControlPage.CommandRunner = Run;
+            KryticalNova.Networking.ServerHooks.RunCommand = Run;   // the entity netcode's page (M7.4)
             var reader = new Thread(Read) { IsBackground = true, Name = "Server console input" };
             reader.Start();
         }

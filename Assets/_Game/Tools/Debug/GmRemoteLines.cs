@@ -30,9 +30,13 @@ namespace KryticalNova.DevTools
             get
             {
                 NetworkManager nm = NetworkManager.Singleton;
-                return nm != null && nm.IsListening && !nm.IsServer && PlayerGm.Local != null && PlayerGm.Local.IsGm;
+                if (nm != null && nm.IsListening) return !nm.IsServer && PlayerGm.Local != null && PlayerGm.Local.IsGm;
+                return EntityClient;
             }
         }
+
+        /// <summary>A client of the entity netcode (M7.4): every line goes to the server, which checks GM rights itself.</summary>
+        private static bool EntityClient => KryticalNova.Core.NetRole.IsClientView && PlayerGm.Remote != null;
 
         public string Process(string text)
         {
@@ -40,7 +44,8 @@ namespace KryticalNova.DevTools
             string line = text.Trim();
             if (line.Equals("clear", System.StringComparison.OrdinalIgnoreCase)) return text;
             NoteTarget(line);
-            PlayerGm.Local.Run(line);
+            if (PlayerGm.Local != null && PlayerGm.Local.IsSpawned) PlayerGm.Local.Run(line);
+            else PlayerGm.Remote?.Send(line.Length > PlayerGm.LongestLine ? line.Substring(0, PlayerGm.LongestLine) : line);
             return Sent;
         }
 
@@ -50,7 +55,7 @@ namespace KryticalNova.DevTools
             if (!line.StartsWith("gm.target ", System.StringComparison.OrdinalIgnoreCase)) return;
             string who = line.Substring("gm.target ".Length).Trim();
             if (who.Equals("self", System.StringComparison.OrdinalIgnoreCase) || who.Equals("me", System.StringComparison.OrdinalIgnoreCase)) RemoteTarget = null;
-            else if (ulong.TryParse(who, out ulong id)) RemoteTarget = PlayerGm.Local != null && id == PlayerGm.Local.OwnerClientId ? (ulong?)null : id;
+            else if (ulong.TryParse(who, out ulong id)) RemoteTarget = PlayerGm.Local != null && PlayerGm.Local.IsSpawned && id == PlayerGm.Local.OwnerClientId ? (ulong?)null : id;
         }
 
         [Command(Sent, "Sent to the server: the answer follows from there.")]

@@ -34,6 +34,10 @@ namespace KryticalNova.Networking
         /// <summary>Says a line to every player online as the server (the GM channel); returns how many heard it. Filled by Social.</summary>
         public static Func<string, string, int> Announce;
 
+        /// <summary>Runs a command line typed on a control page as <c>from</c> ("Control page (...)") on the game's thread and returns the
+        /// answer, kept in the GM record. Filled by the dev tools (the server console).</summary>
+        public static Func<string, string, string> RunCommand;
+
         /// <summary>The saves. Filled by Persistence.</summary>
         public static IServerSaves Saves;
 

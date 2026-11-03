@@ -31,11 +31,33 @@ namespace KryticalNova.Networking
         /// <summary>Server: runs a GM's line for that GM's connection and returns the answer (set by the dev tools).</summary>
         public static Func<ulong, string, string> CommandRunner;
 
+        /// <summary>
+        /// A client of the entity netcode (M7.4, 2 Nov 2026): this part is never network-spawned there, so the GM rights the server gave
+        /// and the way to send a line come through this link instead (set by the entity netcode's client while its world lives).
+        /// </summary>
+        public interface IRemoteLink
+        {
+            /// <summary>The server made this machine's player GM.</summary>
+            bool IsGm { get; }
+
+            /// <summary>Sends one GM line to the server; the answer comes back through <see cref="Reply"/>.</summary>
+            void Send(string line);
+        }
+
+        public static IRemoteLink Remote;
+
+        /// <summary>The entity netcode's client hands on an answer of the server (as <c>ReplyRpc</c> does here).</summary>
+        public static void RaiseReply(string text) => Reply?.Invoke(text);
+
+        /// <summary>The longest GM line the server takes.</summary>
+        public const int LongestLine = MaxLineLength;
+
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void ResetStatics()
         {
             Local = null;
             Reply = null;
+            Remote = null;
         }
 
         /// <summary>The host's own player, a player who unlocked GM this session, or the offline player.</summary>

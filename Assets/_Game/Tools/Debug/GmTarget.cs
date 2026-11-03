@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using KryticalNova.Core;
 using KryticalNova.Items;
 using Unity.Netcode;
 using UnityEngine;
@@ -34,6 +35,22 @@ namespace KryticalNova.DevTools
             }
         }
 
+        /// <summary>
+        /// A server of the entity netcode (M7.4, 2 Nov 2026): NGO is not listening and this process runs the server. A player is then the
+        /// connection id <see cref="PlayerKeys"/> knows (the one the GM roster and the records use) and their server body.
+        /// </summary>
+        private static bool EntityServer => Session == null && NetRole.Process == NetRoleKind.ServerBody;
+
+        /// <summary>The server body of the entity netcode's player on <paramref name="clientId"/>, or null.</summary>
+        private static GameObject EntityBody(ulong clientId)
+        {
+            PlayerKey key = PlayerKeys.Find(clientId);
+            if (key == PlayerKey.None) return null;
+            foreach (IPlayerBody body in PlayerBodies.All)
+                if (body != null && body.Owner == key && body.Transform != null && NetRole.IsServerBody(body.Transform)) return body.Transform.gameObject;
+            return null;
+        }
+
         /// <summary>Who the commands act on, kept aside while a joined GM's line runs (<see cref="GmCommandRelay"/>).</summary>
         public struct Saved
         {
@@ -50,7 +67,7 @@ namespace KryticalNova.DevTools
         }
 
         /// <summary>The picked player's client id, or null while the commands act on the local player.</summary>
-        public static ulong? ClientId => hasTarget && Session != null ? targetClientId : (ulong?)null;
+        public static ulong? ClientId => hasTarget && (Session != null || EntityServer) ? targetClientId : (ulong?)null;
 
         /// <summary>Acts on this machine's own player again.</summary>
         public static void TargetSelf() => hasTarget = false;
@@ -60,6 +77,13 @@ namespace KryticalNova.DevTools
         {
             error = null;
             var nm = Session;
+            if (nm == null && EntityServer)
+            {
+                if (EntityBody(clientId) == null) { error = $"No connected player with client id {clientId}. Try gm.players."; return false; }
+                hasTarget = true;
+                targetClientId = clientId;
+                return true;
+            }
             if (nm == null) { error = "No network session is running."; return false; }
             if (!nm.IsServer) { error = NoAuthority; return false; }
             if (!nm.ConnectedClients.TryGetValue(clientId, out var client) || client.PlayerObject == null)
@@ -98,6 +122,15 @@ namespace KryticalNova.DevTools
                 }
                 hasTarget = false; // they left: back to the local player
             }
+            if (nm == null && EntityServer)
+            {
+                // a server of the entity netcode has no player of its own: only a picked player (a GM's line picks its own)
+                GameObject body = hasTarget ? EntityBody(targetClientId) : null;
+                if (body != null) { player = body; return true; }
+                hasTarget = false;
+                error = "No local player on this server. Pick one with gm.target <clientId> (see gm.players).";
+                return false;
+            }
 
             var local = PlayerInventory.Local;
             if (local == null)
@@ -114,6 +147,13 @@ namespace KryticalNova.DevTools
         {
             var result = new List<(ulong, GameObject)>();
             var nm = Session;
+            if (nm == null && EntityServer)
+            {
+                foreach (IPlayerBody body in PlayerBodies.All)
+                    if (body != null && body.Transform != null && NetRole.IsServerBody(body.Transform) && PlayerKeys.TryGetConnection(body.Owner, out ulong id))
+                        result.Add((id, body.Transform.gameObject));
+                return result;
+            }
             if (nm == null || !nm.IsServer) return result;
             foreach (var client in nm.ConnectedClientsList)
                 if (client.PlayerObject != null) result.Add((client.ClientId, client.PlayerObject.gameObject));

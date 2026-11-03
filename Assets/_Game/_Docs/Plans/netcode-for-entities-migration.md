@@ -1166,8 +1166,11 @@ checkpoints; the owner's Thursday hand-test list; owner questions). NGO rules ta
 - [ ] M7: 7.1 clock/weather, 7.2 music, 7.3 portal, 7.4 GM tools, 7.5 drops + loot, 7.6 Kiosk stands.
   - [x] 7.3 portal (9b6d3fef4): the server looks at its bodies (3 m + 0.75, on entry, 3 s cooldown per PlayerKey), only that player
     told; ZonePortalServerLookTests PASS. Batch walk-in proof and the owner's hand test (Thursday) to come.
-  - [ ] 7.1 clock/weather: committed; WorldStateSyncTests arrival + change + no-resend PASS (2 Nov, run 2 after the world-clock gate
-    fix); **late joiner: pending, test fixed** (it was made with no join text, so never approved); re-run in the 7.4 EditMode run.
+  - [x] 7.1 clock/weather (aef8d246f): WorldStateSyncTests PASS in full (arrival, change, no resend, late joiner; the late joiner
+    passed in the 7.4 run, 66/66). Owner's two-client sky check on Thursday.
+  - [ ] 7.4 GM tools: GM lines (a) and the page's command box + GM list (b) built, EditMode 66/66 (GmLineTests, GmTarget, page
+    routes and buttons; NGO's ControlPage 29, GmRoster 6, KnControlPage 8 unchanged). Left: the [GM] tag for observers, the gm
+    ledger line proof, the review summary.
 - [ ] M8 group 1: wallet, inventory rest, loadouts, Flask refill.
 - [ ] M8 group 3: progression, skills, XP boosts, Serums mirror, Nova, Forge, crafting, restyle, weaves, library, Autobuff.
 - [ ] M8 group 2: storage, shopping, trade, Kiosk player side.

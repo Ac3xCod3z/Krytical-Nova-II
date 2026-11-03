@@ -25,23 +25,65 @@ namespace KryticalNova.Networking.Entities
             public readonly bool BeginStop;
             /// <summary>Non-zero: the PlayerKey of a player the main thread must now disconnect.</summary>
             public readonly ulong KickKey;
+            /// <summary>Not null: the answer is this work's, run on the game's thread (a command, a GM button); <see cref="Body"/> is unused.</summary>
+            public readonly Func<string> Work;
+            /// <summary>The work's answer is JSON already (the GM list); otherwise it is text, sent as <c>{"answer":"..."}</c>.</summary>
+            public readonly bool WorkIsJson;
 
-            public Reply(int status, string contentType, string body, bool beginStop, ulong kickKey = 0)
+            public Reply(int status, string contentType, string body, bool beginStop, ulong kickKey = 0, Func<string> work = null, bool workIsJson = false)
             {
                 Status = status;
                 ContentType = contentType;
                 Body = body ?? string.Empty;
                 BeginStop = beginStop;
                 KickKey = kickKey;
+                Work = work;
+                WorkIsJson = workIsJson;
             }
+        }
+
+        /// <summary>
+        /// The owner's GM tools on this page (M7.4, owner 2 Nov 2026: the command box and the GM list first): run on the game's thread, the words
+        /// and rules NGO's control page has. Filled by the entity netcode's player side; empty, the page answers 503.
+        /// </summary>
+        public interface ICommands
+        {
+            string Command(string line, string from);
+            /// <summary>The GMs as JSON: <c>[{"name":..,"bound":..,"signedIn":..}]</c>.</summary>
+            string GmListJson();
+            string GmAdd(string name);
+            /// <summary>Binds the GM <paramref name="name"/> to the account of the player <paramref name="playerKey"/> (from the player list).</summary>
+            string GmBind(string name, ulong playerKey);
+            string GmUnbind(string name);
+            string GmRemove(string name);
+        }
+
+        public static ICommands Commands;
+
+        public const string CommandPath = "/api/command";
+        public const string GmPath = "/api/gm";
+
+        [Serializable]
+        private sealed class Body
+        {
+            public string line = string.Empty;
+            public string name = string.Empty;
+            public string player = string.Empty;
         }
 
         public const string PlayersPath = "/players";
         public const string KickPath = "/kick";
 
         public static Reply Handle(string method, string path, bool fromLoopback, string givenKey, string expectedKey,
-            KnStatusSnapshot status, StopEndpointRules stop, bool serverAlreadyStopping, string query = null)
+            KnStatusSnapshot status, StopEndpointRules stop, bool serverAlreadyStopping, string query = null, string body = null)
         {
+            if (path == CommandPath || path == GmPath || path.StartsWith(GmPath + "/", StringComparison.Ordinal))
+            {
+                // The owner's, like the player list: this machine only, and the same key as the stop endpoint.
+                if (!fromLoopback || string.IsNullOrEmpty(expectedKey) || !ControlPageRules.SecretEquals(givenKey, expectedKey))
+                    return new Reply(403, null, string.Empty, false);
+                return Tools(method, path, body);
+            }
             if (path == PlayersPath || path == KickPath)
             {
                 // The player list and the kick are the server owner's: this machine only, and the same key as the stop endpoint.
@@ -72,6 +114,42 @@ namespace KryticalNova.Networking.Entities
             return new Reply(404, null, string.Empty, false);
         }
 
+        private static Reply Tools(string method, string path, string body)
+        {
+            ICommands tools = Commands;
+            if (tools == null) return new Reply(503, "application/json", "{\"error\":\"GM tools are not ready yet.\"}", false);
+            if (path == GmPath)
+                return method == "GET" || method == "HEAD"
+                    ? new Reply(200, "application/json", string.Empty, false, 0, tools.GmListJson, true)
+                    : new Reply(405, null, string.Empty, false);
+            if (method != "POST") return new Reply(405, null, string.Empty, false);
+            Body b;
+            try { b = string.IsNullOrWhiteSpace(body) ? new Body() : JsonUtility.FromJson<Body>(body) ?? new Body(); }
+            catch (Exception) { return new Reply(400, "application/json", "{\"error\":\"The request is not JSON.\"}", false); }
+            string line = (b.line ?? string.Empty).Trim(), name = b.name ?? string.Empty;
+            switch (path)
+            {
+                case CommandPath:
+                    if (line.Length == 0) return Answer("Type a command first.");
+                    if (line.Length > 500) line = line.Substring(0, 500);
+                    return new Reply(200, "application/json", string.Empty, false, 0, () => tools.Command(line, "Control page (this machine)"));
+                case GmPath + "/add": return new Reply(200, "application/json", string.Empty, false, 0, () => tools.GmAdd(name));
+                case GmPath + "/bind":
+                    if (!ulong.TryParse(b.player, System.Globalization.NumberStyles.None, System.Globalization.CultureInfo.InvariantCulture, out ulong key) || key == 0)
+                        return Answer("Pick the player from the player list.");
+                    return new Reply(200, "application/json", string.Empty, false, 0, () => tools.GmBind(name, key));
+                case GmPath + "/unbind": return new Reply(200, "application/json", string.Empty, false, 0, () => tools.GmUnbind(name));
+                case GmPath + "/remove": return new Reply(200, "application/json", string.Empty, false, 0, () => tools.GmRemove(name));
+            }
+            return new Reply(404, "application/json", "{\"error\":\"No such call.\"}", false);
+        }
+
+        /// <summary>The game's thread did not answer in time.</summary>
+        public static Reply Reply504() => new Reply(504, "application/json", "{\"answer\":\"The server did not answer in time.\"}", false);
+
+        /// <summary>A text answer as the page's JSON.</summary>
+        public static Reply Answer(string text) => new Reply(200, "application/json", "{\"answer\":" + ControlPageRules.Json(text ?? string.Empty) + "}", false);
+
         /// <summary>Reads <c>player=&lt;decimal key&gt;</c> out of a query string. Zero is not a player.</summary>
         public static bool TryReadPlayer(string query, out ulong key)
         {
@@ -97,6 +175,7 @@ namespace KryticalNova.Networking.Entities
                 case 404: return "Not Found";
                 case 405: return "Method Not Allowed";
                 case 503: return "Service Unavailable";
+                case 504: return "Gateway Timeout";
                 default: return "Error";
             }
         }
@@ -271,7 +350,8 @@ namespace KryticalNova.Networking.Entities
                     KnPageRules.Reply reply = request == null
                         ? new KnPageRules.Reply(400, null, string.Empty, false)
                         : KnPageRules.Handle(request.Method, request.Path, loopback, request.Header(StopEndpointRules.KeyHeader), m_Key,
-                            status, m_Stop, stopping, request.Query);
+                            status, m_Stop, stopping, request.Query, request.Body);
+                    if (reply.Work != null) reply = KnPageWork.Run(reply);   // waits for the game's thread (a command, a GM button)
                     KnPageTrace.Write("handle: reply decided, status " + reply.Status + ", body " + reply.Body.Length + " chars");
                     Write(stream, reply, request != null && request.Method == "HEAD");
                     KnPageTrace.Write("handle: written and flushed");
