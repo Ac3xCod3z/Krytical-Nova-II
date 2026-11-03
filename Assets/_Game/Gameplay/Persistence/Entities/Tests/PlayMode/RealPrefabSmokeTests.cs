@@ -47,6 +47,7 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
         IChatOwnerLink m_OldChat;
         IContactsOwnerLink m_OldContacts;
         IPartyOwnerLink m_OldParty;
+        IFollowOwnerLink m_OldFollow;
 
         [SetUp]
         public void SetUp()
@@ -62,6 +63,7 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
             m_OldChat = ChatOwnerLink.Current;
             m_OldContacts = ContactsOwnerLink.Current;
             m_OldParty = PartyOwnerLink.Current;
+            m_OldFollow = FollowOwnerLink.Current;
             SavePassthrough.ResetToDefault();
         }
 
@@ -78,6 +80,7 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
             ChatOwnerLink.Current = m_OldChat;
             ContactsOwnerLink.Current = m_OldContacts;
             PartyOwnerLink.Current = m_OldParty;
+            FollowOwnerLink.Current = m_OldFollow;
             LogAssert.ignoreFailingMessages = false;
         }
 
@@ -463,13 +466,15 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
             public void CrateOp(bool withdraw, ushort a, ushort count) => Ops.Add($"Crate {(withdraw ? "Withdraw" : "Store")} {a} {count}");
             public void ContactOp(ContactOpKind op, string a, string b, bool flag) => Ops.Add($"Contact {op} {a}|{b}|{flag}");
             public void PartyOp(PartyOpKind op, string name, bool flag) => Ops.Add($"Party {op} {name}|{flag}");
+            public void Follow(string memberName) => Ops.Add("Follow " + memberName);
             public void Chat(ChatChannel channel, string text, string whisperTarget, byte[] linkContainers, byte[] linkCells) =>
                 Ops.Add($"Chat {channel} {ChatLinks.Strip(text)}|{whisperTarget}|{linkContainers?.Length ?? 0}");
         }
 
         /// <summary>What the server bodies told their players (the message line) and sent their trade windows (view, notice, prompt).</summary>
-        sealed class Told : IOwnerMessages, ITradeOwnerLink, IKioskOwnerLink, IWorkshopOwnerLink, KryticalNova.Progression.INovaLink, IRestyleOwnerLink, IChatOwnerLink, IContactsOwnerLink, IPartyOwnerLink
+        sealed class Told : IOwnerMessages, ITradeOwnerLink, IKioskOwnerLink, IWorkshopOwnerLink, KryticalNova.Progression.INovaLink, IRestyleOwnerLink, IChatOwnerLink, IContactsOwnerLink, IPartyOwnerLink, IFollowOwnerLink
         {
+            public void Following(Component part, string memberName) => Lines.Add((Body(part), "following " + memberName));
             // Squads (M8 8.4.3): "squad <id:name ...>" (0 = the player it went to), the invitation and its closing
             public void Roster(Component part, BodyPartyMember[] members) =>
                 Lines.Add((Body(part), "squad " + string.Join(" ", System.Array.ConvertAll(members ?? new BodyPartyMember[0], m => m.id + ":" + m.name))));
@@ -2707,6 +2712,92 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
 
                 foreach (GameObject body in new[] { a, c }) { ServerLeaving.Notify(body); body.GetComponent<PlayerSaveAgent>().OnServerLeaving(); }
                 b.GetComponent<PlayerSaveAgent>().OnServerLeaving();
+            }
+            finally
+            {
+                OwnerMessages.Current = oldMessages;
+                PlayerKeys.Reset();
+            }
+        }
+
+        /// <summary>The ghost's side of a server body's walk, as the test sees it (the real one issues a ServerOrder).</summary>
+        sealed class MoverSeen : IBodyMover
+        {
+            public readonly List<Vector3> Moves = new List<Vector3>();
+            public int Stops;
+            public void MoveTo(Vector3 point, bool run) => Moves.Add(point);
+            public void Stop() => Stops++;
+            public void Teleport(Vector3 position, Quaternion rotation) { }
+        }
+
+        [UnityTest]
+        public IEnumerator B31_Follow_RunsOnTheServerBody_WalksBehindTheMemberThroughTheGhost_AnOwnClickStopsIt_AndTheViewOnlyAsks()
+        {
+            NetRole.Install(new BodyRoleNetRoleAdapter(null, () => NetRoleKind.ServerBody));
+            IOwnerMessages oldMessages = OwnerMessages.Current;
+            var told = new Told();
+            OwnerMessages.Current = told;
+            ChatOwnerLink.Current = told;
+            PartyOwnerLink.Current = told;
+            FollowOwnerLink.Current = told;
+            try
+            {
+                PlayerKeys.Reset();
+                GameObject a = Admitted(PlayerKeys.Mint(311).Value, "31a1000000000000000000000000000a", "c3110000000000000000000000000311", "Talwyn");
+                GameObject b = Admitted(PlayerKeys.Mint(312).Value, "31b1000000000000000000000000000b", "c3120000000000000000000000000312", "Brannoc");
+                GameObject c = Admitted(PlayerKeys.Mint(313).Value, "31c1000000000000000000000000000c", "c3130000000000000000000000000313", "Corvane");
+                for (int i = 0; i < 30; i++) yield return null;
+                // planned before the run: A at 0, B 10 m east (beyond NGO's 5 m set-off, inside its 60 m), C anywhere, not in the Squad
+                a.transform.position = new Vector3(0f, 0.08f, 0f);
+                b.transform.position = new Vector3(10f, 0.08f, 0f);
+                var mover = new MoverSeen();
+                a.GetComponent<BodyRoleTag>().Mover = mover;
+                a.GetComponent<IBodyParty>().RunPartyOp(PartyOpKind.InviteByName, "Brannoc", false);
+                b.GetComponent<IBodyParty>().RunPartyOp(PartyOpKind.Respond, "", true);
+                Assert.AreNotEqual(0UL, a.GetComponent<IBodyParty>().PartyId, "A and B are one Squad");
+                var fa = a.GetComponent<IBodyFollow>();
+                var fc = c.GetComponent<IBodyFollow>();
+                Assert.IsNotNull(fa, "the server body has its Follow");
+
+                // 1. NGO's refusals on the server body
+                fc.RunFollow("Talwyn");
+                Assert.IsTrue(told.Any(c, "system Talwyn is not in your squad."), "not in one Squad: " + string.Join(" | ", told.To(c)));
+                fa.RunFollow("Nobodyhere");
+                Assert.IsTrue(told.Any(a, "system That player is not here."), "no such player");
+
+                // 2. A follows B: told, its view told, and the server body walks to 3.5 m behind B through its ghost
+                fa.RunFollow("Brannoc");
+                Assert.IsTrue(told.Any(a, "system You are following Brannoc. Move to stop."), "NGO's line: " + string.Join(" | ", told.To(a)));
+                Assert.IsTrue(told.Any(a, "following Brannoc"), "the owner's view is told");
+                float until = Time.time + 1.5f;
+                while (mover.Moves.Count == 0 && Time.time < until) yield return null;
+                Assert.Greater(mover.Moves.Count, 0, "the follower set off (PointAndClickPlayer.ServerMoveTo -> the ghost's order)");
+                Vector3 stand = mover.Moves[0];
+                Assert.AreEqual(6.5f, stand.x, 0.3f, "3.5 m this side of B");
+                Assert.AreEqual(0f, stand.z, 0.3f);
+
+                // 3. the player's own click (NGO's MoveOrdered; on DOTS a new ClickSeq on the ghost) ends it with NGO's line
+                fa.OwnMoveOrdered();
+                until = Time.time + 1.5f;
+                while (!told.Any(a, "system You stopped following Brannoc.") && Time.time < until) yield return null;
+                Assert.IsTrue(told.Any(a, "system You stopped following Brannoc."), "an own click stops it: " + string.Join(" | ", told.To(a)));
+                Assert.AreEqual("following ", told.Lines.FindLast(l => l.body == a && l.what.StartsWith("following")).what, "the view is told it follows nobody");
+
+                // 4. the owner's view only asks (a picked member by name) and shows whom it follows
+                var asked = new Asked();
+                GameObject view = Make(NetRoleKind.ClientView, true, new PlayerKey(a.GetComponent<BodyRoleTag>().Key.Value));
+                view.GetComponent<BodyRoleTag>().Requests = asked;
+                yield return null;
+                var viewPart = (Component)view.GetComponent<IBodyFollow>();
+                Type type = viewPart.GetType();
+                type.GetMethod("Follow", new[] { typeof(string) }).Invoke(viewPart, new object[] { " Brannoc " });
+                CollectionAssert.AreEqual(new[] { "Follow Brannoc" }, asked.Ops, "sent to the server");
+                ((IBodyFollow)viewPart).MirrorFollowing("Brannoc");
+                Assert.AreEqual("Brannoc", type.GetProperty("Following").GetValue(viewPart), "the own view shows it");
+                ((IBodyFollow)viewPart).OwnMoveOrdered();   // a view never decides: nothing
+                Assert.AreEqual(1, asked.Ops.Count);
+
+                foreach (GameObject body in new[] { a, b, c }) { ServerLeaving.Notify(body); body.GetComponent<PlayerSaveAgent>().OnServerLeaving(); }
             }
             finally
             {

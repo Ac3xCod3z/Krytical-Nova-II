@@ -211,7 +211,9 @@ backflips' speed (80 % of the air). Added as M7/M8 systems land (each: what to c
   requests from you."; /contact add, /block, /unblock in chat.
 - 8.4.3a (built 3 Nov): two clients: invite the other (player menu and /invite name), accept the prompt: both see the Squad frames, the
   other's namecard and minimap dot show the Squad; /p reaches only the Squad; promote, then leave: the Squad of one is disbanded.
-- 8.4.x: Follow, founding a Crew, an emote and a mount seen from the second client.
+- 8.4.3b (built 3 Nov): in a Squad, Follow the other (player menu / Squad frame): you walk 3.5 m behind as they move, set off again when
+  they get 5 m ahead; click the ground yourself: "You stopped following ..."; walk 60 m apart: it ends. (Jump copy: 8.4.3c.)
+- 8.4.x: founding a Crew, an emote and a mount seen from the second client.
 The list is kept current in this section as systems land.
 
 Owner follow-ups (found while porting; not DOTS work):

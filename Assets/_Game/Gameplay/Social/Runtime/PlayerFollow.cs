@@ -23,7 +23,7 @@ namespace KryticalNova.Social
     /// </summary>
     [DisallowMultipleComponent]
     [RequireComponent(typeof(PlayerParty))]
-    public sealed class PlayerFollow : NetworkBehaviour
+    public sealed class PlayerFollow : NetworkBehaviour, IBodyFollow, IServerLeaving
     {
         [SerializeField] private SquadSettings settings;
 
@@ -76,9 +76,68 @@ namespace KryticalNova.Social
         {
             base.OnNetworkSpawn();
             if (!IsServer) return;
+            Listen();
+        }
+
+        private void Listen()
+        {
             if (controls != null) controls.MoveOrdered += OnMoveOrdered;
             if (entity != null) entity.Damaged += OnDamaged;
             if (skills != null) skills.SkillCast += OnSkillCast;
+        }
+
+        // ------------------------------------------------------------------ the entity netcode (M8 8.4.3b)
+
+        // Its bodies are never network-spawned: the server body listens as NGO's server did on spawn; a view only asks and shows.
+        private bool EntityServer => BodyRoleTag.Of(this) is { Kind: NetRoleKind.ServerBody };
+        private bool Decides => (IsSpawned && IsServer) || EntityServer;
+        private IBodyRequests Requests => BodyRoleTag.RequestsOf(this) is IBodyRequests requests ? requests : null;
+
+        // NGO's IsSpawned on another player meant "still in the game"; a server body of the entity netcode is that while it is awake.
+        private static bool Present(PlayerParty member) =>
+            member != null && (member.IsSpawned || BodyRoleTag.Of(member) is { Kind: NetRoleKind.ServerBody } && member.isActiveAndEnabled);
+
+        private void Start()
+        {
+            if (EntityServer) Listen();
+        }
+
+        public override void OnDestroy()
+        {
+            if (controls != null) controls.MoveOrdered -= OnMoveOrdered;
+            if (entity != null) entity.Damaged -= OnDamaged;
+            if (skills != null) skills.SkillCast -= OnSkillCast;
+            Unwatch();
+            base.OnDestroy();
+        }
+
+        /// <summary>The entity netcode's server body leaves before its save: NGO's despawn.</summary>
+        public void OnServerLeaving()
+        {
+            if (!EntityServer) return;
+            Unwatch();
+            target = null;
+            targetName = string.Empty;
+        }
+
+        /// <summary>A server body of the entity netcode starts its owner's Follow (NGO's FollowByNameRpc body, after the Move limit).</summary>
+        public void RunFollow(string memberName)
+        {
+            if (EntityServer && !string.IsNullOrWhiteSpace(memberName)) ServerFollowByName(memberName.Trim());
+        }
+
+        /// <summary>A server body of the entity netcode: its player's own click or jump (NGO's MoveOrdered).</summary>
+        public void OwnMoveOrdered()
+        {
+            if (EntityServer) ordered = true;
+        }
+
+        /// <summary>The entity netcode's own view: whom the server says it follows (NGO's owner FollowingRpc).</summary>
+        public void MirrorFollowing(string memberName)
+        {
+            if (!BodyRoleTag.IsLocalClientView(this)) return;
+            shownTarget = memberName ?? string.Empty;
+            Changed?.Invoke();
         }
 
         public override void OnNetworkDespawn()
@@ -97,12 +156,14 @@ namespace KryticalNova.Social
         /// <summary>Follow the Squad member <paramref name="member"/> (in sight). Call on the owner's machine.</summary>
         public void Follow(PlayerParty member)
         {
+            if (member != null && Requests is { } requests) { requests.Follow(member.MemberName); return; }   // a picked member goes by name
             if (IsSpawned && IsOwner && member != null && member.IsSpawned) FollowRpc(member.NetworkObject);
         }
 
         /// <summary>Follow the Squad member called <paramref name="memberName"/>, wherever they are.</summary>
         public void Follow(string memberName)
         {
+            if (!string.IsNullOrWhiteSpace(memberName) && Requests is { } requests) { requests.Follow(memberName.Trim()); return; }
             if (IsSpawned && IsOwner && !string.IsNullOrWhiteSpace(memberName)) FollowByNameRpc(memberName.Trim());
         }
 
@@ -118,15 +179,29 @@ namespace KryticalNova.Social
         {
             if (!RpcBudget.Allow(this, CallKind.Move, nameof(FollowByNameRpc))) return;
             if (!RpcBudget.TextFits(this, nameof(FollowByNameRpc), memberName)) return;
+            ServerFollowByName(memberName);
+        }
+
+        private void ServerFollowByName(string memberName)
+        {
             PlayerParty found = null;
-            foreach (var client in NetworkManager.ConnectedClientsList)
+            if (EntityServer)
             {
-                if (client.PlayerObject == null || !client.PlayerObject.TryGetComponent(out PlayerParty other)) continue;
-                if (other == party || !string.Equals(other.MemberName, memberName, StringComparison.OrdinalIgnoreCase)) continue;
-                // Two players may share a name: the one in this player's Squad is meant.
-                if (found == null || party.IsInPartyWith(other)) found = other;
+                // the entity netcode's server bodies (NGO's ConnectedClientsList never fills there)
+                foreach (BodyRoleTag tag in BodyRoleTag.ServerBodies)
+                    if (tag != null && tag.TryGetComponent(out PlayerParty other)) Consider(other, memberName, ref found);
             }
+            else
+                foreach (var client in NetworkManager.ConnectedClientsList)
+                    if (client.PlayerObject != null && client.PlayerObject.TryGetComponent(out PlayerParty other)) Consider(other, memberName, ref found);
             ServerFollow(found, ChatRouting.Clean(memberName));
+        }
+
+        private void Consider(PlayerParty other, string memberName, ref PlayerParty found)
+        {
+            if (other == party || !string.Equals(other.MemberName, memberName, StringComparison.OrdinalIgnoreCase)) return;
+            // Two players may share a name: the one in this player's Squad is meant.
+            if (found == null || party.IsInPartyWith(other)) found = other;
         }
 
         // ------------------------------------------------------------------ server
@@ -134,7 +209,7 @@ namespace KryticalNova.Social
         private void ServerFollow(PlayerParty member, string askedName)
         {
             if (settings == null || controls == null) return;
-            bool present = member != null && member.IsSpawned;
+            bool present = Present(member);
             string name = present ? member.MemberName : askedName ?? string.Empty;
             string refusal = FollowRules.StartRefusal(present, member == party, present && party.IsInPartyWith(member),
                 entity == null || entity.IsAlive, present ? DistanceTo(member) : 0f, settings.followMaxDistance, name);
@@ -151,7 +226,7 @@ namespace KryticalNova.Social
             jumpIsFollow = false;
             nextLook = 0f;
             Tell($"You are following {targetName}. Move to stop.");
-            FollowingRpc(targetName);
+            ShowFollowing(targetName);
         }
 
         private void OnMoveOrdered() => ordered = true;
@@ -172,7 +247,7 @@ namespace KryticalNova.Social
         private void Update()
         {
             if (target == null && targetName.Length == 0) return;
-            if (!IsSpawned || !IsServer || Time.time < nextLook) return;
+            if (!Decides || Time.time < nextLook) return;
             nextLook = Time.time + settings.followRepathSeconds;
 
             // A copied jump in the air: wait for the landing (an abort leaves the follower at the take-off; the next look re-walks).
@@ -182,7 +257,7 @@ namespace KryticalNova.Social
                 jumpIsFollow = false;
             }
 
-            bool present = target != null && target.IsSpawned && target.gameObject.scene == gameObject.scene;
+            bool present = Present(target) && target.gameObject.scene == gameObject.scene;
             var facts = new FollowFacts
             {
                 targetPresent = present,
@@ -277,7 +352,13 @@ namespace KryticalNova.Social
             target = null;
             targetName = string.Empty;
             moving = false;
-            FollowingRpc(string.Empty);
+            ShowFollowing(string.Empty);
+        }
+
+        private void ShowFollowing(string memberName)
+        {
+            if (EntityServer) FollowOwnerLink.Current?.Following(this, memberName);   // its player's view (M8 8.4.3b)
+            else FollowingRpc(memberName);
         }
 
         private float DistanceTo(PlayerParty member)

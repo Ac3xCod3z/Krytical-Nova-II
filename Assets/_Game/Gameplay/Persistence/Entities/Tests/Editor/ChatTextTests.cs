@@ -73,6 +73,22 @@ namespace KryticalNova.Persistence.Entities.Tests
         }
 
         [Test]
+        public void OwnClicks_AreNewClickNumbers_TheFirstSightOnlySetsTheMark()
+        {
+            var watch = new OwnClickWatch();
+            var a = new PlayerKey(1);
+            var b = new PlayerKey(2);
+            Assert.IsFalse(watch.IsNewClick(a, 7), "the first look at a player is not a click (it arrived with its last one)");
+            Assert.IsFalse(watch.IsNewClick(a, 7), "the same click again: none");
+            Assert.IsTrue(watch.IsNewClick(a, 8), "a new number: a click of its own");
+            Assert.IsFalse(watch.IsNewClick(b, 8), "another player's first look");
+            Assert.IsTrue(watch.IsNewClick(a, 9));
+            Assert.IsFalse(watch.IsNewClick(a, 0), "no click number: none");
+            watch.Forget(a);
+            Assert.IsFalse(watch.IsNewClick(a, 10), "forgotten: a first look again");
+        }
+
+        [Test]
         public void TheSend_KeepsNgosLinkLimit()
         {
             Assert.IsTrue(ChatText.TrySend(ChatChannel.General, "hi", "", null, null, out ChatSendRpc none));

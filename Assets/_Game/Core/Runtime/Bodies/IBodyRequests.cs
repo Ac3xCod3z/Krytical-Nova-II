@@ -225,5 +225,8 @@ namespace KryticalNova.Core
 
         /// <summary>Asks the server to run a Squad request (M8 8.4.3): invite, answer, leave, remove or promote by name.</summary>
         void PartyOp(PartyOpKind op, string name, bool flag);
+
+        /// <summary>Asks the server to follow the Squad member of that name (M8 8.4.3b, NGO's FollowRpc / FollowByNameRpc).</summary>
+        void Follow(string memberName);
     }
 }
