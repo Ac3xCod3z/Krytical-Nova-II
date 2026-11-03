@@ -38,6 +38,16 @@ namespace KryticalNova.Progression
         public SerumSettings Settings => settings;
         public SerumState State => state;
 
+        /// <summary>
+        /// The entity netcode's own view body shows the server's Serums (M8 8.3.4; NGO's netState on the owner): the stat sheet's bonuses and
+        /// its "Serum x/100" lines follow. Another player's body has no Serums part.
+        /// </summary>
+        public void MirrorState(SerumState next)
+        {
+            if (!BodyRoleTag.IsLocalClientView(this) || next.Equals(state)) return;
+            Show(next);
+        }
+
         private bool HasAuthority => !IsSpawned || IsServer;
 
         private void Awake()
@@ -115,6 +125,8 @@ namespace KryticalNova.Progression
         private void Tell(string text)
         {
             if (string.IsNullOrEmpty(text)) return;
+            // a server body of the entity netcode: its player's message line, never this machine's screen (M8 8.3.4)
+            if (BodyRoleTag.Of(this) is { Kind: NetRoleKind.ServerBody }) { OwnerMessages.TryTell(this, text); return; }
             if (IsSpawned && !IsOwnedByServer) TellRpc(text);
             else ClientPresentationRegistry.Messages?.ShowMessage(text);
         }

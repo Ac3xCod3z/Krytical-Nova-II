@@ -41,7 +41,9 @@ namespace KryticalNova.Progression
             settings = null;
         }
 #endif
-        private bool Decides => !IsSpawned || IsServer;
+        // A client view of the entity netcode only shows the server's clocks (MirrorSeconds); its server body runs them (M8 8.3.3).
+        private bool Decides => (!IsSpawned || IsServer) && !EntityView;
+        private bool EntityView => KryticalNova.Core.BodyRoleTag.Of(this) is { Kind: KryticalNova.Core.NetRoleKind.ClientView };
         private ExperienceBooster[] Boosters => Settings?.Boosters ?? Array.Empty<ExperienceBooster>();
 
         /// <summary>How many boosters there are (running or not).</summary>
@@ -51,7 +53,7 @@ namespace KryticalNova.Progression
         /// <summary>Seconds a booster has left: the server's own figure where the game is decided, what it last told the owner elsewhere.</summary>
         public float SecondsLeft(int index)
         {
-            if (Decides) return index >= 0 && index < seconds.Length ? seconds[index] : 0f;
+            if (Decides || EntityView) return index >= 0 && index < seconds.Length ? seconds[index] : 0f;
             return netSeconds != null && index >= 0 && index < netSeconds.Count ? netSeconds[index] : 0f;
         }
 
@@ -130,6 +132,16 @@ namespace KryticalNova.Progression
             else if (any && Time.time >= nextSend) Send();
         }
 
+        /// <summary>The entity netcode's own view body shows a booster's clock as the server sent it (NGO's owner-only list).</summary>
+        public void MirrorSeconds(int index, float left)
+        {
+            if (!KryticalNova.Core.BodyRoleTag.IsLocalClientView(this)) return;
+            Fit();
+            if (index < 0 || index >= seconds.Length || Mathf.Approximately(seconds[index], left)) return;
+            seconds[index] = left;
+            Changed?.Invoke();
+        }
+
         private string NameOf(int index)
         {
             string name = TryGetComponent(out IItemNames names) ? names.NameOf(Boosters[index].itemId) : null;
@@ -147,6 +159,8 @@ namespace KryticalNova.Progression
 
         private void Tell(string text)
         {
+            // a server body of the entity netcode: its player's message line, never this machine's screen (M8 8.3.3)
+            if (KryticalNova.Core.BodyRoleTag.Of(this) is { Kind: KryticalNova.Core.NetRoleKind.ServerBody }) { KryticalNova.Core.OwnerMessages.TryTell(this, text); return; }
             if (IsSpawned && !IsOwner) TellRpc(text);
             else if (KryticalNova.Core.BodyRoleTag.IsMine(this, !IsSpawned || IsOwner)) ClientPresentationRegistry.Messages?.ShowMessage(text);
         }

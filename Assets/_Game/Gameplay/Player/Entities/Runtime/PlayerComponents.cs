@@ -208,6 +208,16 @@ namespace KryticalNova.Player.Entities
         [GhostField] public int Strength, Vitality, Agility, Spirit;
     }
 
+    /// <summary>
+    /// The Serums the player has taken, kind by kind (M8 8.3.4): NGO's <c>PlayerSerums.netState</c>, for the owner's stat sheet. Written by
+    /// the server from the body; owner only (others see only the stats, which they do not compute).
+    /// </summary>
+    [GhostComponent(OwnerSendType = SendToOwnerType.SendToOwner)]
+    public struct OwnerSerums : IComponentData
+    {
+        [GhostField] public ushort K0, K1, K2, K3, K4, K5, K6, K7;
+    }
+
     /// <summary>One corner of the server's planned path (millimetres). Owner only: observers never see the path.</summary>
     [GhostComponent(OwnerSendType = SendToOwnerType.SendToOwner)]
     public struct PathCorner : IBufferElementData

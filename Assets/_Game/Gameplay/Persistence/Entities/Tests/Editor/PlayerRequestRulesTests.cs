@@ -13,12 +13,13 @@ namespace KryticalNova.Persistence.Entities.Tests
         [Test]
         public void OnlyEffectsWhoseResultIsSaved_AreUsed_EveryOtherWaitsForItsPort()
         {
-            var ported = new[] { ItemUseEffect.None, ItemUseEffect.FluxFlask, ItemUseEffect.FeedPet, ItemUseEffect.Serum, ItemUseEffect.Recall };
+            var ported = new[] { ItemUseEffect.None, ItemUseEffect.FluxFlask, ItemUseEffect.FeedPet, ItemUseEffect.Serum, ItemUseEffect.Recall,
+                ItemUseEffect.ExperienceBoost };   // M8 8.3.3: the xpboosts part is real
             foreach (ItemUseEffect effect in Enum.GetValues(typeof(ItemUseEffect)))
                 Assert.AreEqual(Array.IndexOf(ported, effect) >= 0, PlayerRequestServerSystem.EffectPorted(effect), effect.ToString());
             Assert.IsFalse(PlayerRequestServerSystem.EffectPorted(ItemUseEffect.RegisterMount), "a mount lands in the passed-through mounts part");
             Assert.IsFalse(PlayerRequestServerSystem.EffectPorted(ItemUseEffect.FeedMount));
-            Assert.IsFalse(PlayerRequestServerSystem.EffectPorted(ItemUseEffect.ExperienceBoost), "xpboosts is passed through");
+            Assert.IsTrue(PlayerRequestServerSystem.EffectPorted(ItemUseEffect.ExperienceBoost), "xpboosts is real now (M8 8.3.3)");
             Assert.IsFalse(PlayerRequestServerSystem.EffectPorted(ItemUseEffect.LearnSkill), "skills is passed through");
         }
     }

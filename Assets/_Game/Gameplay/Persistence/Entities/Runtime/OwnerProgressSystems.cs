@@ -30,6 +30,25 @@ namespace KryticalNova.Persistence.Entities
             };
         }
 
+        /// <summary>The Serums of the server's <paramref name="body"/>, kind by kind (M8 8.3.4); null without a Serums part.</summary>
+        public static OwnerSerums? ReadSerums(GameObject body)
+        {
+            var serums = body != null ? body.GetComponent<PlayerSerums>() : null;
+            if (serums == null) return null;
+            SerumState s = serums.State;
+            return new OwnerSerums
+            {
+                K0 = (ushort)s.Taken(0), K1 = (ushort)s.Taken(1), K2 = (ushort)s.Taken(2), K3 = (ushort)s.Taken(3),
+                K4 = (ushort)s.Taken(4), K5 = (ushort)s.Taken(5), K6 = (ushort)s.Taken(6), K7 = (ushort)s.Taken(7),
+            };
+        }
+
+        public static SerumState StateOf(in OwnerSerums o) => new SerumState().With(0, o.K0).With(1, o.K1).With(2, o.K2).With(3, o.K3)
+            .With(4, o.K4).With(5, o.K5).With(6, o.K6).With(7, o.K7);
+
+        public static bool Same(in OwnerSerums a, in OwnerSerums b) =>
+            a.K0 == b.K0 && a.K1 == b.K1 && a.K2 == b.K2 && a.K3 == b.K3 && a.K4 == b.K4 && a.K5 == b.K5 && a.K6 == b.K6 && a.K7 == b.K7;
+
         public static bool Same(in OwnerProgress a, in OwnerProgress b) =>
             a.Creds == b.Creds && a.Level == b.Level && a.Experience == b.Experience && a.StatPoints == b.StatPoints && a.SkillPoints == b.SkillPoints
             && a.Renown == b.Renown && a.Strength == b.Strength && a.Vitality == b.Vitality && a.Agility == b.Agility && a.Spirit == b.Spirit;
@@ -62,6 +81,10 @@ namespace KryticalNova.Persistence.Entities
             {
                 if (!ReferenceEquals(entry.World, World) || !em.Exists(entry.Ghost) || !em.HasComponent<OwnerProgress>(entry.Ghost)) continue;
                 OwnerProgress? now = OwnerProgressBridge.Read(entry.Body);
+                // the Serums taken, for the owner's stat sheet (M8 8.3.4)
+                if (em.HasComponent<OwnerSerums>(entry.Ghost) && OwnerProgressBridge.ReadSerums(entry.Body) is OwnerSerums serums
+                    && !OwnerProgressBridge.Same(serums, em.GetComponentData<OwnerSerums>(entry.Ghost)))
+                    em.SetComponentData(entry.Ghost, serums);
                 // the level everyone sees on the nameplate (M8 8.3.1)
                 if (now.HasValue && em.HasComponent<PlayerLevelTag>(entry.Ghost) && em.GetComponentData<PlayerLevelTag>(entry.Ghost).Level != now.Value.Level)
                     em.SetComponentData(entry.Ghost, new PlayerLevelTag { Level = (short)Mathf.Clamp(now.Value.Level, 0, short.MaxValue) });
@@ -92,6 +115,8 @@ namespace KryticalNova.Persistence.Entities
                     other.MirrorObservedLevel(em.GetComponentData<PlayerLevelTag>(entry.Ghost).Level);   // another player's nameplate level
                 if (!entry.IsLocal || !ReferenceEquals(entry.World, World) || entry.Body == null) continue;
                 if (!em.Exists(entry.Ghost) || !em.HasComponent<OwnerProgress>(entry.Ghost)) continue;
+                if (em.HasComponent<OwnerSerums>(entry.Ghost) && entry.Body.TryGetComponent(out PlayerSerums ownSerums))
+                    ownSerums.MirrorState(OwnerProgressBridge.StateOf(em.GetComponentData<OwnerSerums>(entry.Ghost)));   // equal: no change
                 OwnerProgress p = em.GetComponentData<OwnerProgress>(entry.Ghost);
                 if (p.Level < 1 || (m_Shown.TryGetValue(entry.Body, out OwnerProgress had) && OwnerProgressBridge.Same(had, p))) continue;
                 m_Shown[entry.Body] = p;

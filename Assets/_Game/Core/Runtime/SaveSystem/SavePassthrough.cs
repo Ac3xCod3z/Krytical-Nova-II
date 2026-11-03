@@ -16,13 +16,13 @@ namespace KryticalNova.Core
         /// The parts that are real: the look and the progression header (M3a-2b), and the Pack (its counts and the Flask's drinks), the
         /// Serums taken and the wallet (owner, 2 Nov, feel test item 5: items are used on the server's body, so what is used must last).
         /// </summary>
-        private static readonly string[] DefaultReal = { "look", "progression", "inventory", "serums", "wallet", "loadouts" };
+        private static readonly string[] DefaultReal = { "look", "progression", "inventory", "serums", "wallet", "loadouts", "xpboosts" };
 
         /// <summary>The parts that were classified as passthrough on purpose; a new participant must be added to one of the two lists.</summary>
         public static readonly string[] PassthroughKeys =
         {
             "autobuff", "autopilot", "deepvault", "vendorWeek", "trade", "vault", "crate", "mounts",
-            "skills", "xpboosts", "movement", "nova", "weaves", "weave", "sponsor",
+            "skills", "movement", "nova", "weaves", "weave", "sponsor",
         };
 
         private static readonly HashSet<string> Real = new HashSet<string>(DefaultReal);

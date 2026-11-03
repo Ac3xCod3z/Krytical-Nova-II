@@ -51,6 +51,7 @@ namespace KryticalNova.Player.Entities
                 AddComponent<WallGoal>(e);
                 AddComponent<OwnerFlux>(e);
                 AddComponent<OwnerProgress>(e);
+                AddComponent<OwnerSerums>(e);
                 AddBuffer<PathCorner>(e);
                 AddComponent<PathPlan>(e);
                 AddBuffer<ClientPlanCorner>(e);

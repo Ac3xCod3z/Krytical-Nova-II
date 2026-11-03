@@ -722,6 +722,104 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
             Assert.AreEqual(1, levelUps, "a level gained later shows as one");
         }
 
+        [UnityTest]
+        public IEnumerator B12_TheOwnersStatSheet_ShowsTheSerumsTheServerBodyTook()
+        {
+            NetRole.Install(new BodyRoleNetRoleAdapter(null, () => NetRoleKind.ServerBody));
+            GameObject server = Make(NetRoleKind.ServerBody, false, new PlayerKey(13));
+            GameObject view = Make(NetRoleKind.ClientView, true, new PlayerKey(13));
+            GameObject remote = Make(NetRoleKind.ClientView, false, new PlayerKey(13));
+            yield return null;
+            var serums = server.GetComponent<PlayerSerums>();
+            Assert.IsNotNull(serums, "the server body has its Serums part");
+            Assert.IsTrue(serums.ServerSetTaken(0, 3), "the server body took 3 of the first kind");
+            Assert.IsTrue(serums.ServerSetTaken(2, 7));
+
+            OwnerSerums? read = OwnerProgressBridge.ReadSerums(server);
+            Assert.IsTrue(read.HasValue);
+            Assert.AreEqual(3, read.Value.K0);
+            Assert.AreEqual(7, read.Value.K2);
+
+            var viewSerums = view.GetComponent<PlayerSerums>();
+            int changed = 0;
+            viewSerums.Changed += () => changed++;
+            viewSerums.MirrorState(OwnerProgressBridge.StateOf(read.Value));
+            Assert.AreEqual(serums.State, viewSerums.State, "the owner's sheet has the server's Serums");
+            Assert.AreEqual(1, changed, "its windows are told once");
+            viewSerums.MirrorState(OwnerProgressBridge.StateOf(read.Value));
+            Assert.AreEqual(1, changed, "the same state again: nothing to redraw");
+            Assert.IsNull(remote.GetComponent<PlayerSerums>(), "another player's body has no Serums (stats only, as NGO's observers)");
+        }
+
+        [UnityTest]
+        public IEnumerator B13_AnXpBooster_IsUsedAndKept_TheSaveIsReal_AndTheOwnerSeesTheClock()
+        {
+            NetRole.Install(new BodyRoleNetRoleAdapter(null, () => NetRoleKind.ServerBody));
+            Assert.IsFalse(SavePassthrough.Is("xpboosts"), "the xpboosts part is real now");
+            Assert.IsTrue(PlayerRequestServerSystem.EffectPorted(ItemUseEffect.ExperienceBoost), "and boosters are used");
+
+            // an idle clock text in NGO's format (no booster running: it never changes from save to save)
+            GameObject maker = Make(NetRoleKind.ServerBody, false, new PlayerKey(14));
+            GameObject view = Make(NetRoleKind.ClientView, true, new PlayerKey(14));
+            yield return null;
+            string idleText = maker.GetComponent<PlayerExperienceBoosts>().CaptureSave();
+
+            const string account = "7e6d5c4b3a2918070605f4e3d2c1b0a9";
+            const string characterId = "e1f2a3b4c5d6e7f8091a2b3c4d5e6f70";
+            GameObject body = Make(NetRoleKind.ServerBody, false, new PlayerKey(15));
+            yield return null;
+            CharacterRecipe recipe = AnyLegalRecipe(body.GetComponent<PlayerIdentity>().Database);
+            var stored = new AccountSave { accountId = account };
+            var character = new CharacterSave { characterId = characterId, name = "Boost" };
+            character.Set("xpboosts", idleText);
+            stored.characters.Add(character);
+            Assert.IsTrue(ServerSave.WriteAccount(stored));
+            ServerSave.WaitForDisk();
+            var context = new ServerBodyContext
+            {
+                Key = new PlayerKey(15), Serial = 15, NetworkId = 15, Account = account, CharacterId = characterId, Name = "Boost",
+                RecipeText = RecipeText.Encode(recipe),
+            };
+            Assert.IsNull(new PlayerAdmission().Begin(body, in context), "admitted");
+            var agent = body.GetComponent<PlayerSaveAgent>();
+            for (int i = 0; i < 30; i++) yield return null;
+            agent.Save();
+            ServerSave.WaitForDisk();
+            Assert.AreEqual(idleText, ServerSave.ReadAccountFrom(ServerSave.Store, account).Find(characterId).Get("xpboosts"),
+                "an old idle clock text loads and saves back byte for byte (same format, no migration)");
+
+            // a booster used through the item path (ItemUseRpc's server side): the item goes, the clock runs
+            var inv = body.GetComponent<PlayerInventory>();
+            var boosts = body.GetComponent<PlayerExperienceBoosts>();
+            ItemDefinition booster = null;
+            foreach (ItemDefinition def in inv.Catalog.Items) if (def != null && def.useEffect == ItemUseEffect.ExperienceBoost) { booster = def; break; }
+            Assert.IsNotNull(booster, "the catalog has an XP booster");
+            int index = -1;
+            for (int i = 0; i < boosts.Count; i++) if (boosts.BoosterAt(i).itemId == booster.itemId) { index = i; break; }
+            Assert.GreaterOrEqual(index, 0, "the booster is in the settings' list");
+            inv.ServerGive(booster.itemId, 1);
+            int held = inv.CountItem(booster.itemId);
+            Assert.IsTrue(PlayerRequestServerSystem.UseOn(body, booster.itemId, out RequestReplyRpc reply), "used: " + reply.Text);
+            Assert.AreEqual(held - 1, inv.CountItem(booster.itemId), "the item is used from the Pack");
+            float left = boosts.SecondsLeft(index);
+            Assert.Greater(left, 0f, "its clock runs");
+
+            // the running clock comes back from its save text (the time of saving is written while a clock runs, as NGO)
+            string runningText = boosts.CaptureSave();
+            GameObject fresh = Make(NetRoleKind.ServerBody, false, new PlayerKey(16));
+            yield return null;
+            var freshBoosts = fresh.GetComponent<PlayerExperienceBoosts>();
+            freshBoosts.RestoreSave(runningText);
+            Assert.AreEqual(Mathf.Round(left), freshBoosts.SecondsLeft(index), 2f, "the clock comes back from the save");
+
+            // the owner's view shows the server's clock and never runs one itself
+            var viewBoosts = view.GetComponent<PlayerExperienceBoosts>();
+            viewBoosts.MirrorSeconds(index, left);
+            Assert.AreEqual(left, viewBoosts.SecondsLeft(index), 0.01f, "the owner sees the server's clock");
+            Assert.AreEqual(0f, viewBoosts.ServerCharacterBonus, "a view never gives the bonus");
+            agent.OnServerLeaving();
+        }
+
         static CharacterRecipe AnyLegalRecipe(CharacterCreationDatabase database)
         {
             Assert.IsNotNull(database, "PlayerIdentity has its character database");

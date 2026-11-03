@@ -107,6 +107,13 @@ namespace KryticalNova.Persistence.Entities
         public short Count;
     }
 
+    /// <summary>One XP booster's clock to its owner (NGO's owner-only list): exact on a use or run-out, at most 15 s behind otherwise.</summary>
+    public struct XpBoostClockRpc : IRpcCommand
+    {
+        public byte Index;
+        public float Seconds;
+    }
+
     public struct ServerTellRpc : IRpcCommand
     {
         public FixedString512Bytes Text;
@@ -399,7 +406,8 @@ namespace KryticalNova.Persistence.Entities
         /// is still passed through (Autopilot, Dossiers, XP boosts, Autobuff, mounts) or has its own flow (Name Change), so it waits for its port.
         /// </summary>
         public static bool EffectPorted(ItemUseEffect effect) => effect == ItemUseEffect.None || effect == ItemUseEffect.FluxFlask
-            || effect == ItemUseEffect.FeedPet || effect == ItemUseEffect.Serum || effect == ItemUseEffect.Recall;
+            || effect == ItemUseEffect.FeedPet || effect == ItemUseEffect.Serum || effect == ItemUseEffect.Recall
+            || effect == ItemUseEffect.ExperienceBoost;   // M8 8.3.3: the "xpboosts" part is real (B13)
 
         void Cast(Entity connection, string skillId)
         {
@@ -447,6 +455,10 @@ namespace KryticalNova.Persistence.Entities
 
         readonly Dictionary<Entity, ItemStack[]> m_Sent = new Dictionary<Entity, ItemStack[]>();
         readonly Dictionary<Entity, LoadoutEntry[]> m_SentLoadouts = new Dictionary<Entity, LoadoutEntry[]>();
+        readonly Dictionary<Entity, (float[] seconds, float nextSend)> m_SentClocks = new Dictionary<Entity, (float[], float)>();
+
+        /// <summary>NGO's PlayerExperienceBoosts.SendSeconds: a running clock is sent at most this often between uses and run-outs.</summary>
+        public const float ClockSendSeconds = 15f;
         readonly Dictionary<int, Entity> m_Connections = new Dictionary<int, Entity>();
         readonly List<Entity> m_Gone = new List<Entity>();
         EntityQuery m_InGame;
@@ -455,6 +467,7 @@ namespace KryticalNova.Persistence.Entities
         /// <summary>Cells and loadout slots sent (tests).</summary>
         public int CellsSent { get; private set; }
         public int LoadoutSlotsSent { get; private set; }
+        public int ClocksSent { get; private set; }
 
         protected override void OnCreate() =>
             m_InGame = GetEntityQuery(ComponentType.ReadOnly<NetworkId>(), ComponentType.ReadOnly<NetworkStreamInGame>());
@@ -473,7 +486,7 @@ namespace KryticalNova.Persistence.Entities
 
             m_Gone.Clear();
             foreach (Entity ghost in m_Sent.Keys) if (!em.Exists(ghost)) m_Gone.Add(ghost);
-            foreach (Entity ghost in m_Gone) { m_Sent.Remove(ghost); m_SentLoadouts.Remove(ghost); }
+            foreach (Entity ghost in m_Gone) { m_Sent.Remove(ghost); m_SentLoadouts.Remove(ghost); m_SentClocks.Remove(ghost); }
 
             foreach (GhostBodyEntry entry in GhostBodyRegistry.Entries)
             {
@@ -513,6 +526,30 @@ namespace KryticalNova.Persistence.Entities
                         LoadoutSlotsSent++;
                     }
                 }
+                // the XP boosters' clocks (NGO: the owner-only list; exact on a use or run-out, else every 15 s)
+                if (entry.Body.TryGetComponent(out PlayerExperienceBoosts boosts) && boosts.Count > 0)
+                {
+                    float now = UnityEngine.Time.time;
+                    bool arriving = !m_SentClocks.TryGetValue(entry.Ghost, out var clocks) || clocks.seconds.Length != boosts.Count;
+                    if (arriving) clocks = (new float[boosts.Count], 0f);
+                    bool due = now >= clocks.nextSend;
+                    bool sentAny = false;
+                    for (int i = 0; i < boosts.Count; i++)
+                    {
+                        float left = boosts.SecondsLeft(i);
+                        float had = clocks.seconds[i];
+                        bool jump = (left > 0f) != (had > 0f) || left > had + 1f;   // a use (more time) or a run-out
+                        if (!arriving && !jump && !(due && !Mathf.Approximately(left, had))) continue;
+                        clocks.seconds[i] = left;
+                        Entity clockRpc = em.CreateEntity();
+                        em.AddComponentData(clockRpc, new XpBoostClockRpc { Index = (byte)i, Seconds = left });
+                        em.AddComponentData(clockRpc, new SendRpcCommandRequest { TargetConnection = connection });
+                        sentAny = true;
+                        ClocksSent++;
+                    }
+                    if (arriving || sentAny && due) clocks.nextSend = now + ClockSendSeconds;
+                    m_SentClocks[entry.Ghost] = clocks;
+                }
                 // the worn pieces with their own state (NGO: the loadout and netEquippedData to the owner), after the Pack's cells
                 for (int slot = 1; slot < WornCells; slot++)
                 {
@@ -545,7 +582,7 @@ namespace KryticalNova.Persistence.Entities
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     public partial class PlayerRequestClientSystem : SystemBase
     {
-        EntityQuery m_Replies, m_Cells, m_Tells, m_Slots;
+        EntityQuery m_Replies, m_Cells, m_Tells, m_Slots, m_Clocks;
 
         /// <summary>Answers, cells and the server's lines applied (tests).</summary>
         public int Replies { get; private set; }
@@ -558,6 +595,7 @@ namespace KryticalNova.Persistence.Entities
             m_Cells = GetEntityQuery(ComponentType.ReadOnly<ReceiveRpcCommandRequest>(), ComponentType.ReadOnly<PackCellRpc>());
             m_Tells = GetEntityQuery(ComponentType.ReadOnly<ReceiveRpcCommandRequest>(), ComponentType.ReadOnly<ServerTellRpc>());
             m_Slots = GetEntityQuery(ComponentType.ReadOnly<ReceiveRpcCommandRequest>(), ComponentType.ReadOnly<LoadoutSlotRpc>());
+            m_Clocks = GetEntityQuery(ComponentType.ReadOnly<ReceiveRpcCommandRequest>(), ComponentType.ReadOnly<XpBoostClockRpc>());
         }
 
         protected override void OnUpdate()
@@ -591,6 +629,14 @@ namespace KryticalNova.Persistence.Entities
                         Cells++;
                     }
                 cells.Dispose();
+            }
+            if (!m_Clocks.IsEmpty)
+            {
+                var clocks = m_Clocks.ToComponentDataArray<XpBoostClockRpc>(Allocator.Temp);
+                em.DestroyEntity(m_Clocks);
+                var boosts = body != null ? body.GetComponent<PlayerExperienceBoosts>() : null;
+                if (boosts != null) foreach (XpBoostClockRpc clock in clocks) boosts.MirrorSeconds(clock.Index, clock.Seconds);
+                clocks.Dispose();
             }
             if (!m_Slots.IsEmpty)
             {
