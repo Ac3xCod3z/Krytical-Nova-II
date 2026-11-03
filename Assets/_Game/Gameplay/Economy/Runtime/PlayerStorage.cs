@@ -27,7 +27,7 @@ namespace KryticalNova.Economy
     /// both sides. Only the owner can read it. Offline (the unspawned scene avatar) the same rules run locally.
     /// </summary>
     [RequireComponent(typeof(PlayerInventory))]
-    public abstract class PlayerStorage : NetworkBehaviour, ISaveParticipant
+    public abstract class PlayerStorage : NetworkBehaviour, ISaveParticipant, IBodyStorage
     {
         // A client sees itself a little ahead of where the server has it; allow for that when checking the NPC is near.
         private const float ReachPadding = 2.5f;
@@ -73,7 +73,52 @@ namespace KryticalNova.Economy
         public long CredsCap => wallet != null ? wallet.Cap : long.MaxValue;
         public long CredsRoom => Math.Max(0, CredsCap - creds);
 
-        private bool HasAuthority => !IsSpawned || IsServer;
+        // A client view of the entity netcode only shows the server's storage (MirrorCell / MirrorCreds); its server body decides (M8 8.2.1).
+        private bool HasAuthority => (!IsSpawned || IsServer) && !EntityView;
+        private bool EntityView => KryticalNova.Core.BodyRoleTag.Of(this) is { Kind: KryticalNova.Core.NetRoleKind.ClientView };
+        private bool EntityServer => KryticalNova.Core.BodyRoleTag.Of(this) is { Kind: KryticalNova.Core.NetRoleKind.ServerBody };
+
+        // The entity netcode's own view: the server's body does it (M8 8.2.1); the mirror shows what came of it.
+        private bool AskServer(KryticalNova.Core.StorageOpKind op, int a, int b, long amount)
+        {
+            if (!(KryticalNova.Core.BodyRoleTag.RequestsOf(this) is KryticalNova.Core.IBodyRequests requests)) return false;
+            requests.StorageOp((byte)Kind, op, (short)Mathf.Clamp(a, short.MinValue, short.MaxValue), (short)Mathf.Clamp(b, short.MinValue, short.MaxValue), amount);
+            return true;
+        }
+
+        byte IBodyStorage.StorageKind => (byte)Kind;
+        int IBodyStorage.CellCount => cells.Length;
+
+        /// <summary>A server body of the entity netcode runs its owner's storage request (NGO's RPC bodies, after the caller's limit).</summary>
+        public void RunStorageOp(KryticalNova.Core.StorageOpKind op, int a, int b, long amount)
+        {
+            if (!EntityServer) return;
+            switch (op)
+            {
+                case KryticalNova.Core.StorageOpKind.Deposit: ServerDeposit(a, b, (int)Math.Max(0L, Math.Min(amount, ushort.MaxValue))); break;
+                case KryticalNova.Core.StorageOpKind.Withdraw: ServerWithdraw(a, b, (int)Math.Max(0L, Math.Min(amount, ushort.MaxValue))); break;
+                case KryticalNova.Core.StorageOpKind.Move: ServerMove(a, b); break;
+                case KryticalNova.Core.StorageOpKind.Sort: ServerSort(); break;
+                case KryticalNova.Core.StorageOpKind.DepositCreds: ServerDepositCreds(amount); break;
+                case KryticalNova.Core.StorageOpKind.WithdrawCreds: ServerWithdrawCreds(amount); break;
+            }
+        }
+
+        /// <summary>The entity netcode's own view body shows the server's cell (NGO's owner-only list).</summary>
+        public void MirrorCell(int cell, ItemStack stack)
+        {
+            if (!KryticalNova.Core.BodyRoleTag.IsLocalClientView(this) || cell < 0 || cell >= cells.Length || cells[cell].Equals(stack)) return;
+            cells[cell] = stack;
+            Changed?.Invoke();
+        }
+
+        /// <summary>The entity netcode's own view body shows the server's stored Creds.</summary>
+        public void MirrorCreds(long value)
+        {
+            if (!KryticalNova.Core.BodyRoleTag.IsLocalClientView(this) || creds == value) return;
+            creds = value;
+            Changed?.Invoke();
+        }
 
         /// <summary>This machine's own storage of a kind, or null.</summary>
         public static PlayerStorage Local(StorageKind kind)
@@ -130,6 +175,7 @@ namespace KryticalNova.Economy
         /// <summary>Pack cell into storage: onto a chosen cell, or wherever it fits. <paramref name="count"/> 0 = the whole stack.</summary>
         public void RequestDeposit(int packCell, int toCell = -1, int count = 0)
         {
+            if (AskServer(KryticalNova.Core.StorageOpKind.Deposit, packCell, toCell, count)) return;
             if (IsSpawned) DepositRpc((short)packCell, (short)toCell, (ushort)Mathf.Clamp(count, 0, ushort.MaxValue));
             else ServerDeposit(packCell, toCell, count);
         }
@@ -137,27 +183,32 @@ namespace KryticalNova.Economy
         /// <summary>Storage cell into the Pack: onto a chosen cell, or wherever it fits. <paramref name="count"/> 0 = the whole stack.</summary>
         public void RequestWithdraw(int cell, int packCell = -1, int count = 0)
         {
+            if (AskServer(KryticalNova.Core.StorageOpKind.Withdraw, cell, packCell, count)) return;
             if (IsSpawned) WithdrawRpc((short)cell, (short)packCell, (ushort)Mathf.Clamp(count, 0, ushort.MaxValue));
             else ServerWithdraw(cell, packCell, count);
         }
 
         public void RequestMove(int from, int to)
         {
+            if (AskServer(KryticalNova.Core.StorageOpKind.Move, from, to, 0)) return;
             if (IsSpawned) MoveRpc((short)from, (short)to); else ServerMove(from, to);
         }
 
         public void RequestSort()
         {
+            if (AskServer(KryticalNova.Core.StorageOpKind.Sort, 0, 0, 0)) return;
             if (IsSpawned) SortRpc(); else ServerSort();
         }
 
         public void RequestDepositCreds(long amount)
         {
+            if (AskServer(KryticalNova.Core.StorageOpKind.DepositCreds, 0, 0, amount)) return;
             if (IsSpawned) DepositCredsRpc(amount); else ServerDepositCreds(amount);
         }
 
         public void RequestWithdrawCreds(long amount)
         {
+            if (AskServer(KryticalNova.Core.StorageOpKind.WithdrawCreds, 0, 0, amount)) return;
             if (IsSpawned) WithdrawCredsRpc(amount); else ServerWithdrawCreds(amount);
         }
 
@@ -350,6 +401,7 @@ namespace KryticalNova.Economy
         private void Tell(string text)
         {
             if (string.IsNullOrEmpty(text)) return;
+            if (EntityServer) { KryticalNova.Core.OwnerMessages.TryTell(this, text); return; }   // its player's message line (M8 8.2.1)
             if (IsSpawned && !IsOwnedByServer) TellRpc(text);
             else if (KryticalNova.Core.BodyRoleTag.IsMine(this, !IsSpawned || IsOwner)) ClientPresentationRegistry.Messages?.ShowMessage(text);
         }

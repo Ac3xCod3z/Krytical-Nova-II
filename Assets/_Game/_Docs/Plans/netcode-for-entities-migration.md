@@ -1177,7 +1177,7 @@ checkpoints; the owner's Thursday hand-test list; owner questions). NGO rules ta
     (`PlayerGmTag`), GmTarget by connection; EditMode (GmLine 3, GmTarget, page routes 4 + buttons, NGO's ControlPage 29 /
     GmRoster 6 / KnControlPage 8 unchanged), PlayMode B5: a GM line on the real prefab gives +2 and writes one `gm` ledger line.
     Review summary to the Master (HIGH). Left for later: GM window controls on DOTS, the other page controls, GM sight and toggles.
-  - [ ] 7.5 drops + loot (player drops and gm.drop; hostile loot waits for M5/M6): built 3 Nov, waits for the Master's review. The hold is
+  - [x] 7.5 drops + loot (player drops and gm.drop; hostile loot waits for M5/M6): built 3 Nov, review approved. The hold is
     keyed by PlayerKey (NGO's NetworkObjectId hold was always Nobody on a DOTS body), pickup/drop requests run NGO's PlayerLoot rules on
     the server body (ledger `drop` / `loot` as NGO), clients see drops as pooled views (DropShownRpc / DropGoneRpc); B16, DropListDiffTests.
 - [x] M8 group 1: wallet, inventory rest, loadouts, Flask refill (2 Nov night - 3 Nov).
@@ -1200,4 +1200,7 @@ checkpoints; the owner's Thursday hand-test list; owner questions). NGO rules ta
   - [x] Movement ranks: Run / Jump bought on the server body (MovementUpgradeRpc, Money), `movement` real (Wallstride opens from them);
     B15; save note approved. (M8 group 3 core done.)
 - [ ] M8 group 2: storage, shopping, trade, Kiosk player side.
+  - [ ] 8.2.1 storage (Vault + Deep Vault): requests run NGO's PlayerStorage rules on the server body (Vaultkeeper range, Items limit,
+    Creds through PlayerWallet VaultDeposit/VaultWithdraw at the Money limit), cells + Creds mirrored to the owner, `vault` + `deepvault`
+    real together (Items IBodyStorage keeps Economy out of the network layer); B17. Save note + review summary to the Master first.
 - [ ] M8 group 4: chat, contacts, party, sponsor, Crew, emotes, pets, mounts, crate, Recall, housing check; duels and Cadence wait for M4.

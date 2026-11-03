@@ -435,6 +435,7 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
             public void UpgradeMovement(byte skill, byte count) => Ops.Add($"Move {skill} {count}");
             public void Pickup(uint dropId) => Ops.Add($"Pickup {dropId}");
             public void DropItem(byte container, byte index) => Ops.Add($"Drop {container}:{index}");
+            public void StorageOp(byte kind, StorageOpKind op, short a, short b, long amount) => Ops.Add($"Storage {kind} {op} {a} {b} {amount}");
         }
 
         [UnityTest]
@@ -1049,6 +1050,110 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
             a.GetComponent<PlayerSaveAgent>().OnServerLeaving();
             b.GetComponent<PlayerSaveAgent>().OnServerLeaving();
             PlayerKeys.Reset();
+        }
+
+        GameObject Npc(KryticalNova.NPC.NpcOffer offers, Vector3 at)
+        {
+            var definition = ScriptableObject.CreateInstance<KryticalNova.NPC.NpcDefinition>();
+            definition.offers = offers;
+            var npcObject = new GameObject("Npc " + offers);
+            npcObject.SetActive(false);
+            var npc = npcObject.AddComponent<KryticalNova.NPC.NpcInteractable>();
+            typeof(KryticalNova.NPC.NpcInteractable).GetField("definition", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(npc, definition);
+            npcObject.transform.position = at;
+            npcObject.SetActive(true);
+            m_Made.Add(npcObject);
+            return npcObject;
+        }
+
+        [UnityTest]
+        public IEnumerator B17_TheVaults_RunOnTheServerBody_CredsThroughTheWallet_BothSavesAreReal()
+        {
+            NetRole.Install(new BodyRoleNetRoleAdapter(null, () => NetRoleKind.ServerBody));
+            Assert.IsFalse(SavePassthrough.Is("vault"), "the vault part is real now");
+            Assert.IsFalse(SavePassthrough.Is("deepvault"), "and the deepvault part");
+            GameObject maker = Make(NetRoleKind.ServerBody, false, new PlayerKey(23));
+            GameObject view = Make(NetRoleKind.ClientView, true, new PlayerKey(23));
+            yield return null;
+            var inv = maker.GetComponent<PlayerInventory>();
+            var wallet = maker.GetComponent<KryticalNova.Economy.PlayerWallet>();
+            var vault = maker.GetComponent<KryticalNova.Economy.PlayerVault>();
+            var deep = maker.GetComponent<KryticalNova.Economy.PlayerDeepVault>();
+            Assert.IsNotNull(vault, "the body has a Vault");
+            Assert.IsNotNull(deep, "and a Deep Vault");
+
+            inv.ServerGive(9001, 5);
+            int Cell() { for (int i = 0; i < PlayerInventory.Capacity; i++) if (inv.Get(i).itemId == 9001) return i; return -1; }
+            int held = inv.CountItem(9001);
+
+            // no Vaultkeeper in reach: refused, nothing moves
+            vault.RunStorageOp(StorageOpKind.Deposit, Cell(), -1, 0);
+            Assert.AreEqual(held, inv.CountItem(9001), "no Vaultkeeper: nothing deposited");
+
+            GameObject keeper = Npc(KryticalNova.NPC.NpcOffer.Vault | KryticalNova.NPC.NpcOffer.DeepVault, maker.transform.position + Vector3.right);
+            vault.RunStorageOp(StorageOpKind.Deposit, Cell(), -1, 2);
+            Assert.AreEqual(held - 2, inv.CountItem(9001), "two went from the Pack");
+            int inVault = 0;
+            for (int i = 0; i < ((IBodyStorage)vault).CellCount; i++) if (vault.Get(i).itemId == 9001) inVault += vault.Get(i).count;
+            Assert.AreEqual(2, inVault, "into the Vault");
+            deep.RunStorageOp(StorageOpKind.Deposit, Cell(), -1, 1);
+            Assert.AreEqual(held - 3, inv.CountItem(9001), "one into the Deep Vault");
+
+            wallet.ServerSet(1000);
+            vault.RunStorageOp(StorageOpKind.DepositCreds, 0, 0, 300);
+            Assert.AreEqual(700, wallet.Creds, "Creds left the wallet");
+            Assert.AreEqual(300, vault.Creds, "into the Vault");
+            vault.RunStorageOp(StorageOpKind.WithdrawCreds, 0, 0, 100);
+            Assert.AreEqual(800, wallet.Creds, "and back to the wallet");
+            Assert.AreEqual(200, vault.Creds);
+            vault.RunStorageOp(StorageOpKind.WithdrawCreds, 0, 0, 5000);
+            Assert.AreEqual(800, wallet.Creds, "more than is kept: refused, nothing moves");
+            Assert.AreEqual(200, vault.Creds);
+
+            // the owner's view only asks, and shows the server's storage
+            var viewVault = view.GetComponent<KryticalNova.Economy.PlayerVault>();
+            var asked = new Asked();
+            view.GetComponent<BodyRoleTag>().Requests = asked;
+            viewVault.RequestDepositCreds(50);
+            CollectionAssert.AreEqual(new[] { "Storage 0 DepositCreds 0 0 50" }, asked.Ops, "sent to the server");
+            viewVault.RunStorageOp(StorageOpKind.DepositCreds, 0, 0, 50);
+            Assert.AreEqual(0, viewVault.Creds, "a view never moves anything itself");
+            for (int i = 0; i < ((IBodyStorage)vault).CellCount; i++) viewVault.MirrorCell(i, vault.Get(i));
+            viewVault.MirrorCreds(vault.Creds);
+            Assert.AreEqual(200, viewVault.Creds, "the owner's window shows the server's Creds");
+            Assert.AreEqual(vault.UsedCells, viewVault.UsedCells, "and its cells");
+
+            string vaultText = vault.CaptureSave(), deepText = deep.CaptureSave();
+
+            // old saves (NGO's texts) load into a fresh admitted server body unchanged and save back every byte
+            const string account = "2b3c4d5e6f708192a3b4c5d6e7f80910";
+            const string characterId = "d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9";
+            GameObject body = Make(NetRoleKind.ServerBody, false, new PlayerKey(24));
+            yield return null;
+            CharacterRecipe recipe = AnyLegalRecipe(body.GetComponent<PlayerIdentity>().Database);
+            var stored = new AccountSave { accountId = account };
+            stored.Set("deepvault", deepText);
+            var character = new CharacterSave { characterId = characterId, name = "Keeper" };
+            character.Set("vault", vaultText);
+            stored.characters.Add(character);
+            Assert.IsTrue(ServerSave.WriteAccount(stored));
+            ServerSave.WaitForDisk();
+            var context = new ServerBodyContext
+            {
+                Key = new PlayerKey(24), Serial = 24, NetworkId = 24, Account = account, CharacterId = characterId, Name = "Keeper",
+                RecipeText = RecipeText.Encode(recipe),
+            };
+            Assert.IsNull(new PlayerAdmission().Begin(body, in context), "admitted");
+            var agent = body.GetComponent<PlayerSaveAgent>();
+            for (int i = 0; i < 30; i++) yield return null;
+            Assert.AreEqual(200, body.GetComponent<KryticalNova.Economy.PlayerVault>().Creds, "the saved Vault is on the server body");
+            agent.Save();
+            ServerSave.WaitForDisk();
+            AccountSave back = ServerSave.ReadAccountFrom(ServerSave.Store, account);
+            Assert.AreEqual(vaultText, back.Find(characterId).Get("vault"), "the vault part saves back byte for byte");
+            Assert.AreEqual(deepText, back.Get("deepvault"), "the deepvault part saves back byte for byte");
+            agent.OnServerLeaving();
+            Object.Destroy(keeper);
         }
 
         static CharacterRecipe AnyLegalRecipe(CharacterCreationDatabase database)

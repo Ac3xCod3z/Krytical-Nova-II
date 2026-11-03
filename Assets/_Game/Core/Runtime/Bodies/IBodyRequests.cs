@@ -1,5 +1,16 @@
 namespace KryticalNova.Core
 {
+    /// <summary>What a storage request asks the server's body to do (NGO's <c>PlayerStorage</c> RPCs; M8 8.2.1).</summary>
+    public enum StorageOpKind : byte
+    {
+        Deposit = 1,
+        Withdraw = 2,
+        Move = 3,
+        Sort = 4,
+        DepositCreds = 5,
+        WithdrawCreds = 6,
+    }
+
     /// <summary>What a loadout request asks the server's body to do (NGO's <c>PlayerLoadouts</c> RPCs; M8 8.1.3).</summary>
     public enum LoadoutOpKind : byte
     {
@@ -59,5 +70,11 @@ namespace KryticalNova.Core
 
         /// <summary>Asks the server to put an item from the Pack or a slot on the ground (NGO's drop RPC).</summary>
         void DropItem(byte container, byte index);
+
+        /// <summary>
+        /// Asks the server to deposit, withdraw, move or sort in the Vault (kind 0) or the Deep Vault (kind 1), or to move Creds in or out:
+        /// <paramref name="a"/> and <paramref name="b"/> are NGO's cells, <paramref name="amount"/> the count or the Creds.
+        /// </summary>
+        void StorageOp(byte kind, StorageOpKind op, short a, short b, long amount);
     }
 }

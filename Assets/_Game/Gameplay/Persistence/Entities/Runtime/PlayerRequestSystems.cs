@@ -121,6 +121,30 @@ namespace KryticalNova.Persistence.Entities
         public byte Count;
     }
 
+    /// <summary>The owner asks the server's body to use the Vault or the Deep Vault (NGO's seven PlayerStorage RPCs; M8 8.2.1).</summary>
+    public struct StorageOpRpc : IRpcCommand
+    {
+        public byte Kind, Op;
+        public short A, B;
+        public long Amount;
+    }
+
+    /// <summary>One storage cell to its owner (NGO's owner-only list); <see cref="ClearAll"/> empties the owner's copy first (on arrival).</summary>
+    public struct StorageCellRpc : IRpcCommand
+    {
+        public const byte ClearAll = 255;
+        public byte Kind, Index;
+        public ushort ItemId, Count;
+        public ulong Data;
+    }
+
+    /// <summary>The Creds kept in a storage, to its owner (NGO's owner-only variable).</summary>
+    public struct StorageCredsRpc : IRpcCommand
+    {
+        public byte Kind;
+        public long Creds;
+    }
+
     /// <summary>The owner picks up a drop by its server id (NGO's <c>PlayerLoot.PickupRpc</c>; M7.5).</summary>
     public struct PickupRpc : IRpcCommand
     {
@@ -240,6 +264,15 @@ namespace KryticalNova.Persistence.Entities
             em.AddComponent<SendRpcCommandRequest>(rpc);
         }
 
+        public void StorageOp(byte kind, StorageOpKind op, short a, short b, long amount)
+        {
+            if (m_World == null || !m_World.IsCreated) return;
+            var em = m_World.EntityManager;
+            Entity rpc = em.CreateEntity();
+            em.AddComponentData(rpc, new StorageOpRpc { Kind = kind, Op = (byte)op, A = a, B = b, Amount = amount });
+            em.AddComponent<SendRpcCommandRequest>(rpc);
+        }
+
         public void Pickup(uint dropId)
         {
             if (m_World == null || !m_World.IsCreated || dropId == 0) return;
@@ -305,7 +338,7 @@ namespace KryticalNova.Persistence.Entities
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     public partial class PlayerRequestServerSystem : SystemBase
     {
-        EntityQuery m_Uses, m_Casts, m_PackOps, m_LoadoutOps, m_Refills, m_Allocations, m_Upgrades, m_MoveUpgrades, m_Pickups, m_Drops;
+        EntityQuery m_Uses, m_Casts, m_PackOps, m_LoadoutOps, m_Refills, m_Allocations, m_Upgrades, m_MoveUpgrades, m_Pickups, m_Drops, m_Storage;
 
         /// <summary>Requests run, refused, and dropped by the request limits (tests).</summary>
         public int Used { get; private set; }
@@ -318,6 +351,7 @@ namespace KryticalNova.Persistence.Entities
         public int Allocations { get; private set; }
         public int Upgrades { get; private set; }
         public int Pickups { get; private set; }
+        public int StorageOps { get; private set; }
         public int Drops { get; private set; }
 
         protected override void OnCreate()
@@ -332,6 +366,7 @@ namespace KryticalNova.Persistence.Entities
             m_MoveUpgrades = GetEntityQuery(ComponentType.ReadOnly<ReceiveRpcCommandRequest>(), ComponentType.ReadOnly<MovementUpgradeRpc>());
             m_Pickups = GetEntityQuery(ComponentType.ReadOnly<ReceiveRpcCommandRequest>(), ComponentType.ReadOnly<PickupRpc>());
             m_Drops = GetEntityQuery(ComponentType.ReadOnly<ReceiveRpcCommandRequest>(), ComponentType.ReadOnly<DropItemRpc>());
+            m_Storage = GetEntityQuery(ComponentType.ReadOnly<ReceiveRpcCommandRequest>(), ComponentType.ReadOnly<StorageOpRpc>());
         }
 
         protected override void OnUpdate()
@@ -363,6 +398,23 @@ namespace KryticalNova.Persistence.Entities
                 for (int i = 0; i < ops.Length; i++) RunPackOp(received[i].SourceConnection, ops[i]);
                 received.Dispose();
                 ops.Dispose();
+            }
+            if (!m_Storage.IsEmpty)
+            {
+                var received = m_Storage.ToComponentDataArray<ReceiveRpcCommandRequest>(Allocator.Temp);
+                var asks = m_Storage.ToComponentDataArray<StorageOpRpc>(Allocator.Temp);
+                em.DestroyEntity(m_Storage);
+                // NGO: items by the Items limit, Creds by the Money limit, then PlayerStorage's own rules on the server body
+                for (int i = 0; i < asks.Length; i++)
+                {
+                    var op = (StorageOpKind)asks[i].Op;
+                    CallKind kind = op == StorageOpKind.DepositCreds || op == StorageOpKind.WithdrawCreds ? CallKind.Money : CallKind.Items;
+                    if (!BodyOf(received[i].SourceConnection, kind, out GameObject body)) continue;
+                    foreach (var storage in body.GetComponents<IBodyStorage>())
+                        if (storage.StorageKind == asks[i].Kind) { storage.RunStorageOp(op, asks[i].A, asks[i].B, asks[i].Amount); StorageOps++; break; }
+                }
+                received.Dispose();
+                asks.Dispose();
             }
             if (!m_Pickups.IsEmpty)
             {
@@ -597,6 +649,8 @@ namespace KryticalNova.Persistence.Entities
         readonly Dictionary<Entity, LoadoutEntry[]> m_SentLoadouts = new Dictionary<Entity, LoadoutEntry[]>();
         readonly Dictionary<Entity, (float[] seconds, float nextSend)> m_SentClocks = new Dictionary<Entity, (float[], float)>();
         readonly Dictionary<Entity, (List<byte> ranks, ulong books)> m_SentSkills = new Dictionary<Entity, (List<byte>, ulong)>();
+        readonly Dictionary<(Entity, byte), (ItemStack[] cells, long creds)> m_SentStorage = new Dictionary<(Entity, byte), (ItemStack[], long)>();
+        readonly List<(Entity, byte)> m_StorageGone = new List<(Entity, byte)>();
         readonly List<byte> m_Ranks = new List<byte>();
 
         /// <summary>NGO's PlayerExperienceBoosts.SendSeconds: a running clock is sent at most this often between uses and run-outs.</summary>
@@ -611,6 +665,7 @@ namespace KryticalNova.Persistence.Entities
         public int LoadoutSlotsSent { get; private set; }
         public int ClocksSent { get; private set; }
         public int SkillCellsSent { get; private set; }
+        public int StorageCellsSent { get; private set; }
 
         protected override void OnCreate() =>
             m_InGame = GetEntityQuery(ComponentType.ReadOnly<NetworkId>(), ComponentType.ReadOnly<NetworkStreamInGame>());
@@ -630,6 +685,9 @@ namespace KryticalNova.Persistence.Entities
             m_Gone.Clear();
             foreach (Entity ghost in m_Sent.Keys) if (!em.Exists(ghost)) m_Gone.Add(ghost);
             foreach (Entity ghost in m_Gone) { m_Sent.Remove(ghost); m_SentLoadouts.Remove(ghost); m_SentClocks.Remove(ghost); m_SentSkills.Remove(ghost); }
+            m_StorageGone.Clear();
+            foreach (var k in m_SentStorage.Keys) if (!em.Exists(k.Item1)) m_StorageGone.Add(k);
+            foreach (var k in m_StorageGone) m_SentStorage.Remove(k);
 
             foreach (GhostBodyEntry entry in GhostBodyRegistry.Entries)
             {
@@ -668,6 +726,37 @@ namespace KryticalNova.Persistence.Entities
                         em.AddComponentData(slotRpc, new SendRpcCommandRequest { TargetConnection = connection });
                         LoadoutSlotsSent++;
                     }
+                }
+                // the Vault and Deep Vault cells and Creds (NGO: owner-only list + variable each), emptied then filled on arrival, then changes
+                foreach (var storage in entry.Body.GetComponents<IBodyStorage>())
+                {
+                    var key = (entry.Ghost, storage.StorageKind);
+                    bool arriving = !m_SentStorage.TryGetValue(key, out var told);
+                    if (arriving)
+                    {
+                        told = (new ItemStack[storage.CellCount], long.MinValue);
+                        Entity clear = em.CreateEntity();
+                        em.AddComponentData(clear, new StorageCellRpc { Kind = storage.StorageKind, Index = StorageCellRpc.ClearAll });
+                        em.AddComponentData(clear, new SendRpcCommandRequest { TargetConnection = connection });
+                    }
+                    for (int i = 0; i < told.cells.Length; i++)
+                    {
+                        ItemStack now = storage.Get(i);
+                        if (now.Equals(told.cells[i])) continue;
+                        told.cells[i] = now;
+                        Entity cellRpc = em.CreateEntity();
+                        em.AddComponentData(cellRpc, new StorageCellRpc { Kind = storage.StorageKind, Index = (byte)i, ItemId = now.itemId, Count = now.count, Data = now.data });
+                        em.AddComponentData(cellRpc, new SendRpcCommandRequest { TargetConnection = connection });
+                        StorageCellsSent++;
+                    }
+                    if (storage.Creds != told.creds)
+                    {
+                        told.creds = storage.Creds;
+                        Entity credsRpc = em.CreateEntity();
+                        em.AddComponentData(credsRpc, new StorageCredsRpc { Kind = storage.StorageKind, Creds = storage.Creds });
+                        em.AddComponentData(credsRpc, new SendRpcCommandRequest { TargetConnection = connection });
+                    }
+                    m_SentStorage[key] = told;
                 }
                 // the skills' ranks and unlocked books (NGO: the owner-only netRanks and netUnlockedBooks), all on arrival, then changes
                 if (entry.Body.TryGetComponent(out PlayerCombatSkills combatSkills))
@@ -751,7 +840,7 @@ namespace KryticalNova.Persistence.Entities
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     public partial class PlayerRequestClientSystem : SystemBase
     {
-        EntityQuery m_Replies, m_Cells, m_Tells, m_Slots, m_Clocks, m_SkillRanks, m_SkillBooks;
+        EntityQuery m_Replies, m_Cells, m_Tells, m_Slots, m_Clocks, m_SkillRanks, m_SkillBooks, m_StorageCells, m_StorageCreds;
 
         /// <summary>Answers, cells and the server's lines applied (tests).</summary>
         public int Replies { get; private set; }
@@ -767,6 +856,8 @@ namespace KryticalNova.Persistence.Entities
             m_Clocks = GetEntityQuery(ComponentType.ReadOnly<ReceiveRpcCommandRequest>(), ComponentType.ReadOnly<XpBoostClockRpc>());
             m_SkillRanks = GetEntityQuery(ComponentType.ReadOnly<ReceiveRpcCommandRequest>(), ComponentType.ReadOnly<SkillRankRpc>());
             m_SkillBooks = GetEntityQuery(ComponentType.ReadOnly<ReceiveRpcCommandRequest>(), ComponentType.ReadOnly<SkillBooksRpc>());
+            m_StorageCells = GetEntityQuery(ComponentType.ReadOnly<ReceiveRpcCommandRequest>(), ComponentType.ReadOnly<StorageCellRpc>());
+            m_StorageCreds = GetEntityQuery(ComponentType.ReadOnly<ReceiveRpcCommandRequest>(), ComponentType.ReadOnly<StorageCredsRpc>());
         }
 
         protected override void OnUpdate()
@@ -800,6 +891,28 @@ namespace KryticalNova.Persistence.Entities
                         Cells++;
                     }
                 cells.Dispose();
+            }
+            if (!m_StorageCells.IsEmpty || !m_StorageCreds.IsEmpty)
+            {
+                var cellRpcs = m_StorageCells.ToComponentDataArray<StorageCellRpc>(Allocator.Temp);
+                var credRpcs = m_StorageCreds.ToComponentDataArray<StorageCredsRpc>(Allocator.Temp);
+                em.DestroyEntity(m_StorageCells);
+                em.DestroyEntity(m_StorageCreds);
+                var storages = body != null ? body.GetComponents<IBodyStorage>() : null;
+                if (storages != null)
+                    foreach (var storage in storages)
+                    {
+                        foreach (StorageCellRpc c in cellRpcs)
+                        {
+                            if (c.Kind != storage.StorageKind) continue;
+                            if (c.Index == StorageCellRpc.ClearAll)
+                                for (int i = 0; i < storage.CellCount; i++) storage.MirrorCell(i, ItemStack.Empty);
+                            else storage.MirrorCell(c.Index, new ItemStack(c.ItemId, c.Count, c.Data));
+                        }
+                        foreach (StorageCredsRpc c in credRpcs) if (c.Kind == storage.StorageKind) storage.MirrorCreds(c.Creds);
+                    }
+                cellRpcs.Dispose();
+                credRpcs.Dispose();
             }
             if (!m_SkillRanks.IsEmpty || !m_SkillBooks.IsEmpty)
             {
