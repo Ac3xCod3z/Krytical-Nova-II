@@ -127,7 +127,11 @@ From movement (already done): item 2 jump from the water to a clicked spot (real
 item 8 b Jump selected + click a roof (real camera); item 5 stim + Flux Flask on the DOTS test server, relog, counts stay; the two
 backflips' speed (80 % of the air). Added as M7/M8 systems land (each: what to click, what to see):
 - 7.1/7.2: two clients see the same sky, time and weather; a GM time jump changes both; the music sounds the same on both.
-- 7.4: the GM window's commands (give, take, time, travel, kick) on a DOTS server; the control page's command box.
+- 7.3: walk into the Zone01 portal (north-east outskirts) on a DOTS test server: only you see "The way beyond is sealed... for now.",
+  once per walk in, and not again within 3 s.
+- 7.4: as a bound GM on a DOTS test server, F2 opens the GM console and gm.players / gm.time / gm.give answer in it (a player who is
+  not GM: F2 stays shut, and a line is refused); the GM window's commands (give, take, time, travel, kick); on the server page the
+  command box and the GM list (add, bind to a player in the game, unbind, remove).
 - 8.1.2/8.3.8/8.3.9: equip, restyle and a weave seen from a second client.
 - 7.5: drop an item, a second player cannot take it for 20 s, then can; it is gone after 3 minutes.
 - 8.2.x/7.6: a Vault deposit and withdraw, a shop buy and sell, a trade with a second player, a Kiosk sale, each after a relog.
@@ -148,3 +152,8 @@ Decided here without a question (DOTS choices, can be changed): Kiosk with its s
 drops as pooled GameObject views first (Entities Graphics later, as decided for bodies); social systems for one server now (the
 world-service relay across map servers is not built in NGO either); mount, XP-boost, Dossier, Autopilot and Autobuff item uses
 refused until their port (no item loss); Housing stays offline-only on DOTS.
+
+**Owner answers (2 Nov 2026, via Master):** Q1 "just like the current game": Creds in the Pack window, Renown in the Character window,
+level where NGO shows it, always correct when shown, by NGO's own update path (NGO keeps them in network variables, so owner-only
+ghost fields), no new HUD display. Q2 (a): port the NPC-range systems now with server range checks against the map's NPC objects and
+refusals as message lines. Q3 (a): `/api/command` + the GM roster now, the other control-page controls later.

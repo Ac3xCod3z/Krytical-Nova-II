@@ -1164,6 +1164,10 @@ Plan: `netcode-for-entities-designs/m7-m8-breakdown-plan.md` (per system: DOTS e
 checkpoints; the owner's Thursday hand-test list; owner questions). NGO rules tables: `netcode-for-entities-designs/m7m8-rules-tables/`.
 - [ ] System 0: item-use guard (`EffectPorted`, written 2 Nov, test pending), owner message line, owner Creds/Renown/level mirror, generic request.
 - [ ] M7: 7.1 clock/weather, 7.2 music, 7.3 portal, 7.4 GM tools, 7.5 drops + loot, 7.6 Kiosk stands.
+  - [x] 7.3 portal (9b6d3fef4): the server looks at its bodies (3 m + 0.75, on entry, 3 s cooldown per PlayerKey), only that player
+    told; ZonePortalServerLookTests PASS. Batch walk-in proof and the owner's hand test (Thursday) to come.
+  - [ ] 7.1 clock/weather: committed; WorldStateSyncTests arrival + change + no-resend PASS (2 Nov, run 2 after the world-clock gate
+    fix); **late joiner: pending, test fixed** (it was made with no join text, so never approved); re-run in the 7.4 EditMode run.
 - [ ] M8 group 1: wallet, inventory rest, loadouts, Flask refill.
 - [ ] M8 group 3: progression, skills, XP boosts, Serums mirror, Nova, Forge, crafting, restyle, weaves, library, Autobuff.
 - [ ] M8 group 2: storage, shopping, trade, Kiosk player side.

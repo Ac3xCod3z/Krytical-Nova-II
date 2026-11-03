@@ -52,17 +52,43 @@ namespace KryticalNova.World
         private int lastHour = -1;
         private double lastNow;
         private double lastLocalNow;
+        private bool onEntityClock;
 
         public DayCycleProfile DayCycle => dayCycle;
         public WeatherCatalog Catalog => weatherCatalog;
         public WorldEnvironmentState State => state;
 
         /// <summary>True offline, on the server and on a host. Only these may change the world.</summary>
-        public bool HasWorldAuthority => !IsSpawned || IsServer;
+        public bool HasWorldAuthority => (!IsSpawned || IsServer) && !RemoteAuthority;
         public bool WeatherLocked => weatherLocked;
 
-        /// <summary>Shared clock: server time when networked, local time offline.</summary>
-        public double Now => IsSpawned && NetworkManager != null ? NetClock.Now : Time.timeAsDouble;
+        /// <summary>
+        /// The entity netcode's client with no server in its process (M7.1): the world's state comes from the server
+        /// (<see cref="ApplyRemoteState"/>), this machine neither rolls weather nor obeys a local GM setter. Set by the entity netcode.
+        /// </summary>
+        public static bool RemoteAuthority;
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetRemote() => RemoteAuthority = false;
+
+        /// <summary>
+        /// Shared clock: server time when networked (Netcode for GameObjects, or the entity netcode's <see cref="NetClock"/>), local
+        /// time offline.
+        /// </summary>
+        public double Now => (IsSpawned && NetworkManager != null) || NetClock.IsRunning ? NetClock.Now : Time.timeAsDouble;
+
+        /// <summary>The entity netcode's server sent the world's state (M7.1): taken as an NGO client takes the replicated one.</summary>
+        public static void ApplyRemoteState(WorldEnvironmentState remote)
+        {
+            if (Instance != null) Instance.ApplyReplicatedState(remote);
+        }
+
+        /// <summary>The state as the entity netcode's server sends it (what an NGO server put in its network variable).</summary>
+        public static bool TryGetState(out WorldEnvironmentState current)
+        {
+            current = Instance != null ? Instance.state : default;
+            return Instance != null && current.DayLengthSeconds > 0f;
+        }
 
         // Per-frame evaluation (read by WorldClock and presentation).
         public float TimeOfDay01 { get; private set; }
@@ -145,6 +171,15 @@ namespace KryticalNova.World
 
         private void Update()
         {
+            // the entity netcode's clock started (or stopped): keep the sky continuous, as OnNetworkSpawn does for NGO
+            bool net = !IsSpawned && NetClock.IsRunning;
+            if (net != onEntityClock && HasWorldAuthority)
+            {
+                double to = net ? NetClock.Now : Time.timeAsDouble, from = net ? Time.timeAsDouble : lastNow;
+                state.Rebase(from, to);
+                nextWeatherChangeTime += to - from;
+            }
+            onEntityClock = net;
             double now = Now;
             lastNow = now;
             lastLocalNow = Time.timeAsDouble;

@@ -1,0 +1,22 @@
+{
+    "name": "KryticalNova.World.Entities",
+    "rootNamespace": "KryticalNova.World.Entities",
+    "references": [
+        "KryticalNova.Runtime",
+        "KryticalNova.World",
+        "KryticalNova.Networking.Entities",
+        "Unity.Entities",
+        "Unity.NetCode",
+        "Unity.Collections",
+        "Unity.Netcode.Runtime"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
