@@ -192,6 +192,8 @@ backflips' speed (80 % of the air). Added as M7/M8 systems land (each: what to c
   the burst), fuse, tune, reforge; at the Fabricator make Alloys; far from them: refused; relog: the tempered piece keeps its state.
 - 8.3.5 (built 3 Nov): at the Herald ascend (100 Renown and 500,000 Creds go; the halo reacts), buy a Vanguard Standing (it is worn: a
   second client sees the title and the halo), weave a lower Nova; relog: all kept; far from the Herald: refused.
+- 8.3.8 (built 3 Nov): at the Stylist change the hair, at the Reshaper the face, at the Coach the build (a pass goes each time): a second
+  client sees the new look; relog: kept; far from them: refused.
 - 8.2.x/7.6: a Vault deposit and withdraw, a shop buy and sell, a trade with a second player, a Kiosk sale, each after a relog.
 - 8.4.x: chat say/tell, a contact, a party with Follow, founding a Crew, an emote and a mount seen from the second client.
 The list is kept current in this section as systems land.
@@ -202,6 +204,10 @@ Owner follow-ups (found while porting; not DOTS work):
   killer thread can hit, or retry `read_all` / the ledger reads like the loop does.
 - DOTS view: clicking a Kiosk stand from far away does not walk there (7.6: in reach it opens, else "Move closer to browse it.").
   Fix it with the shared click-to-interact walk on DOTS views (NPCs, drops, stands), or in M8 group 4 (master-6, 3 Nov).
+- `ServerBansTests.TheRecordsAreOneLineEachInTheirOwnFile` fails since 1 Nov in the clone AND on main (same test, same `ServerRecords.WriteFile`
+  / `CurrentFile` code; read-only check 3 Nov): it writes with a fixed date (18 Oct 2026) while `CurrentFile` compares the file's real last
+  write time, so the second economy line rotates the file into `economy-2026-11.log`. A date-bound test, not a records bug: give the test
+  a fixed "now" for the file times too (or write with `DateTime.Now`).
 
 ## 9. Owner questions (real choices; recommendation first)
 

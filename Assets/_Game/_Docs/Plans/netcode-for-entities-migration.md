@@ -1209,10 +1209,14 @@ checkpoints; the owner's Thursday hand-test list; owner questions). NGO rules ta
     crafts itself (Items IBodyGearWork / IBodyCrafting); no save key (gear state rides in the Pack). B22. Not ported: the Temper 120
     server-wide announcement (chat, group 4). HIGH review approved. B22 now also runs Fusion, Tuning (+ Renown), the Tuning reset and
     Reforge until one success each, NGO's price checked on every attempt, one forge line per attempt (master-6).
-  - [ ] 8.3.5 Nova: Ascension, Standings, the Standing worn and the Nova Weave run NGO's PlayerNova rules on the server body at the Money
+  - [x] 8.3.5 Nova: Ascension, Standings, the Standing worn and the Nova Weave run NGO's PlayerNova rules on the server body at the Money
     limit (Herald reach, Renown then Creds through PlayerWallet Herald / Appearance, Renown handed back on a Creds failure), the result
     to the owner by PlayerKey, the moment to everyone; the Nova to every view as the PlayerNovaTag ghost field (halo, title; remote views
-    keep PlayerNova), `nova` real. B23. Save note + review summary to the Master first.
+    keep PlayerNova), `nova` real. B23. Save note + HIGH review approved.
+  - [ ] 8.3.8 restyle (Stylist, Reshaper, Coach): the proposed look goes to the server body in pages of RecipeText (NGO sent it whole),
+    NGO's PlayerRestyle rules run there at the Money limit (NPC reach, Merge + the creator's validator, the pass from Pack or storage),
+    everyone gets the new look through the look text; a view never restyles itself (CharacterCreation IRestyleRequests / IBodyRestyle).
+    No save key (the look is real). B24. Review summary to the Master first.
 - [x] M8 group 2: storage, shopping, trade, Kiosk player side.
   - [x] 8.2.1 storage (Vault + Deep Vault): requests run NGO's PlayerStorage rules on the server body (Vaultkeeper range, Items limit,
     Creds through PlayerWallet VaultDeposit/VaultWithdraw at the Money limit), cells + Creds mirrored to the owner, `vault` + `deepvault`

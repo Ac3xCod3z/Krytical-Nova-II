@@ -22,7 +22,7 @@ namespace KryticalNova.Restyle
     /// </summary>
     [DisallowMultipleComponent]
     [RequireComponent(typeof(PlayerIdentity), typeof(PlayerInventory), typeof(PlayerItemSources))]
-    public sealed class PlayerRestyle : NetworkBehaviour
+    public sealed class PlayerRestyle : NetworkBehaviour, IBodyRestyle
     {
         private const float ReachPadding = 2.5f;
         private const string ReasonDefeated = "You can't do that while defeated.";
@@ -82,8 +82,28 @@ namespace KryticalNova.Restyle
 
         // ------------------------------------------------------------------ requests (owner)
 
+        // ------------------------------------------------------------------ the entity netcode (M8 8.3.8)
+
+        private bool EntityView => KryticalNova.Core.BodyRoleTag.Of(this) is { Kind: KryticalNova.Core.NetRoleKind.ClientView };
+        private bool EntityServer => KryticalNova.Core.BodyRoleTag.Of(this) is { Kind: KryticalNova.Core.NetRoleKind.ServerBody };
+
+        ushort IBodyRestyle.PassFor(byte service) => PassItemId((RestyleService)service);
+
+        /// <summary>A server body of the entity netcode runs its owner's request (NGO's RestyleRpc body, after the caller's Money limit).</summary>
+        public void RunRestyle(byte service, in CharacterRecipe proposed)
+        {
+            if (EntityServer) ServerRestyle((RestyleService)service, proposed);
+        }
+
+        /// <summary>The entity netcode's own view body: the server gave the character its new look (the look itself comes with the look text).</summary>
+        public void MirrorRestyled()
+        {
+            if (KryticalNova.Core.BodyRoleTag.IsLocalClientView(this)) Restyled?.Invoke();
+        }
+
         public void RequestRestyle(RestyleService service, in CharacterRecipe proposed)
         {
+            if (KryticalNova.Core.BodyRoleTag.RequestsOf(this) is IRestyleRequests requests) { requests.Restyle((byte)service, proposed); return; }
             if (IsSpawned) RestyleRpc((byte)service, CharacterNetState.From(identity.CharacterName, proposed));
             else ServerRestyle(service, proposed);
         }
@@ -97,7 +117,8 @@ namespace KryticalNova.Restyle
 
         // ------------------------------------------------------------------ server
 
-        private bool HasAuthority => !IsSpawned || IsServer;
+        // a client view of the entity netcode never restyles itself (it would spend its own mirror Pack's pass)
+        private bool HasAuthority => (!IsSpawned || IsServer) && !EntityView;
 
         private void ServerRestyle(RestyleService service, CharacterRecipe proposed)
         {
@@ -125,7 +146,8 @@ namespace KryticalNova.Restyle
             }
             if (saveAgent != null) saveAgent.SaveSoon();
             Tell(service == RestyleService.Coach ? "Your new build is on." : "Your new look is on.");
-            if (IsSpawned) RestyledRpc();
+            if (EntityServer) RestyleOwnerLink.Current?.Restyled(this);
+            else if (IsSpawned) RestyledRpc();
             else Restyled?.Invoke();
         }
 
@@ -137,6 +159,7 @@ namespace KryticalNova.Restyle
         private void Tell(string text)
         {
             if (string.IsNullOrEmpty(text)) return;
+            if (EntityServer) { KryticalNova.Core.OwnerMessages.TryTell(this, text); return; }   // its player's message line
             if (IsSpawned && !IsOwnedByServer) TellRpc(text);
             else if (KryticalNova.Core.BodyRoleTag.IsMine(this, !IsSpawned || IsOwner)) ClientPresentationRegistry.Messages?.ShowMessage(text);
         }

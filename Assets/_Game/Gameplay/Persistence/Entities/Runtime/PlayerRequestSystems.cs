@@ -369,7 +369,7 @@ namespace KryticalNova.Persistence.Entities
     /// Client: the local view body's requests (<see cref="IBodyRequests"/> on its tag) become RPCs to the server. Nothing is used or cast
     /// here: the server's answer comes back as <see cref="RequestReplyRpc"/>.
     /// </summary>
-    public sealed class EntityBodyRequests : IBodyRequests
+    public sealed class EntityBodyRequests : IBodyRequests, KryticalNova.CharacterCreation.IRestyleRequests
     {
         readonly World m_World;
 
@@ -454,6 +454,26 @@ namespace KryticalNova.Persistence.Entities
             Entity rpc = em.CreateEntity();
             em.AddComponentData(rpc, new GearWorkRpc { Op = (byte)op, Cell = cell, Cell2 = cell2, Alloy = alloy, Protection = protection });
             em.AddComponent<SendRpcCommandRequest>(rpc);
+        }
+
+        uint m_RestyleSeq;
+
+        /// <summary>The proposed look in pages of <see cref="RestylePageRpc.PageChars"/> (NGO sent it whole as a CharacterNetState).</summary>
+        public void Restyle(byte service, in KryticalNova.CharacterCreation.CharacterRecipe proposed)
+        {
+            if (m_World == null || !m_World.IsCreated) return;
+            string text = RecipeText.Encode(proposed);
+            int count = (text.Length + RestylePageRpc.PageChars - 1) / RestylePageRpc.PageChars;
+            if (count == 0 || count > RestylePageRpc.MostPages) return;
+            var em = m_World.EntityManager;
+            uint seq = ++m_RestyleSeq;
+            for (int i = 0; i < count; i++)
+            {
+                string chunk = text.Substring(i * RestylePageRpc.PageChars, System.Math.Min(RestylePageRpc.PageChars, text.Length - i * RestylePageRpc.PageChars));
+                Entity rpc = em.CreateEntity();
+                em.AddComponentData(rpc, new RestylePageRpc { Seq = seq, Service = service, Index = (byte)i, Count = (byte)count, Chunk = new FixedString512Bytes(chunk) });
+                em.AddComponent<SendRpcCommandRequest>(rpc);
+            }
         }
 
         public void Nova(NovaOpKind op, byte arg)

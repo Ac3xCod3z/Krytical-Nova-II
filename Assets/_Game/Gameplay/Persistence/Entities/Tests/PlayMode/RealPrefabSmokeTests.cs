@@ -421,8 +421,9 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
             Assert.AreEqual(1234, viewWallet.Creds, "the view still shows the server's balance");
         }
 
-        sealed class Asked : IBodyRequests
+        sealed class Asked : IBodyRequests, IRestyleRequests
         {
+            public void Restyle(byte service, in CharacterRecipe proposed) => Ops.Add($"Restyle {service} {proposed.height}");
             public readonly List<string> Ops = new List<string>();
             public void UseItem(ushort itemId) { }
             public void CastSkill(string skillId) { }
@@ -451,8 +452,9 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
         }
 
         /// <summary>What the server bodies told their players (the message line) and sent their trade windows (view, notice, prompt).</summary>
-        sealed class Told : IOwnerMessages, ITradeOwnerLink, IKioskOwnerLink, IWorkshopOwnerLink, KryticalNova.Progression.INovaLink
+        sealed class Told : IOwnerMessages, ITradeOwnerLink, IKioskOwnerLink, IWorkshopOwnerLink, KryticalNova.Progression.INovaLink, IRestyleOwnerLink
         {
+            public void Restyled(Component part) => Lines.Add((Body(part), "restyled"));
             public void Finished(Component part, in KryticalNova.Progression.NovaWorkResult r) =>
                 Lines.Add((Body(part), $"nova {(int)r.kind} {(int)r.outcome} {r.before}->{r.after}"));
             public void GearWorked(Component part, byte kind, byte outcome, ItemStack before, ItemStack after) =>
@@ -1932,6 +1934,76 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
             {
                 OwnerMessages.Current = oldMessages;
                 KryticalNova.Progression.NovaLink.Current = oldLink;
+                PlayerKeys.Reset();
+            }
+        }
+
+        [UnityTest]
+        public IEnumerator B24_ARestyle_RunsOnTheServerBody_AtItsNpc_TakesThePass_ChangesTheLookEveryoneSees_AndAViewOnlyAsks()
+        {
+            NetRole.Install(new BodyRoleNetRoleAdapter(null, () => NetRoleKind.ServerBody));
+            IOwnerMessages oldMessages = OwnerMessages.Current;
+            IRestyleOwnerLink oldLink = RestyleOwnerLink.Current;
+            var told = new Told();
+            OwnerMessages.Current = told;
+            RestyleOwnerLink.Current = told;
+            try
+            {
+                PlayerKeys.Reset();
+                const string account = "091021324354657687a9b0c1d2e3f405", characterId = "a1000000000000000000000000000081";
+                GameObject body = Admitted(PlayerKeys.Mint(81).Value, account, characterId, "Coachwell");
+                GameObject view = Make(NetRoleKind.ClientView, true, new PlayerKey(81));
+                for (int i = 0; i < 30; i++) yield return null;
+                var restyle = body.GetComponent<IBodyRestyle>();
+                var identity = body.GetComponent<PlayerIdentity>();
+                var inv = body.GetComponent<PlayerInventory>();
+                Assert.IsNotNull(restyle, "the body has its restyle");
+                byte coach = (byte)RestyleService.Coach;
+                ushort pass = restyle.PassFor(coach);
+                Assert.AreNotEqual(0, pass, "the Coach takes a Training Pass");
+                inv.ServerGive(pass, 1);
+                int passes = inv.CountItem(pass);
+
+                // the Coach changes the build only (NGO's RestyleRules.Merge): a new height, checked like a new character
+                CharacterRecipe current = identity.State.ToRecipe();
+                CharacterRecipe proposed = current.Clone();
+                proposed.height = (byte)(current.height == 50 ? 60 : 50);
+                Assert.IsTrue(CharacterRecipeValidator.Validate(RestyleRules.Merge(current, proposed, RestyleService.Coach, identity.Database.Parts), identity.Database, out string why),
+                    "the planned build is legal: " + why);
+                string lookBefore = PlayerAdmission.LookOf(identity);
+
+                restyle.RunRestyle(coach, proposed);
+                Assert.IsTrue(told.Any(body, "tell Visit a Coach to do that."), "NGO's reach: " + string.Join(" | ", told.To(body)));
+                Assert.AreEqual(passes, inv.CountItem(pass), "no pass used");
+
+                GameObject trainer = Npc(KryticalNova.NPC.NpcOffer.Coach, body.transform.position + Vector3.right);
+                restyle.RunRestyle(coach, proposed);
+                Assert.IsTrue(told.Any(body, "tell Your new build is on."), "the build changed: " + string.Join(" | ", told.To(body)));
+                Assert.IsTrue(told.Any(body, "restyled"), "and the owner's window is told");
+                Assert.AreEqual(passes - 1, inv.CountItem(pass), "one Training Pass used");
+                Assert.AreEqual(proposed.height, identity.State.ToRecipe().height, "the new height is the character's");
+                Assert.AreNotEqual(lookBefore, PlayerAdmission.LookOf(identity), "the look text everyone reads changed with it");
+
+                // the proposal travels in pages of RecipeText
+                string text = RecipeText.Encode(proposed);
+                Assert.LessOrEqual(text.Length, RestylePageRpc.PageChars * RestylePageRpc.MostPages, "a look fits the pages");
+                Assert.IsTrue(RecipeText.TryDecode(text, out CharacterRecipe back) && back.height == proposed.height, "and reads back");
+
+                // the owner's view only asks
+                var asked = new Asked();
+                view.GetComponent<BodyRoleTag>().Requests = asked;
+                var viewRestyle = (Component)view.GetComponent<IBodyRestyle>();
+                viewRestyle.GetType().GetMethod("RequestRestyle").Invoke(viewRestyle, new object[] { RestyleService.Coach, proposed });
+                CollectionAssert.AreEqual(new[] { $"Restyle {coach} {proposed.height}" }, asked.Ops, "sent to the server");
+                ((IBodyRestyle)viewRestyle).RunRestyle(coach, proposed);
+                ((IBodyRestyle)viewRestyle).MirrorRestyled();
+                body.GetComponent<PlayerSaveAgent>().OnServerLeaving();
+                Object.Destroy(trainer);
+            }
+            finally
+            {
+                OwnerMessages.Current = oldMessages;
+                RestyleOwnerLink.Current = oldLink;
                 PlayerKeys.Reset();
             }
         }
