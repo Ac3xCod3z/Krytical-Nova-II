@@ -234,6 +234,14 @@ namespace KryticalNova.Progression
             MovementSkillData definition = GetDefinition(skill);
             if (definition == null) return 0;
 
+            // the entity netcode's own view: the owner's prediction goes to the server's body; the ranks come back as MoveRanks
+            if (BodyRoleTag.RequestsOf(this) is IBodyRequests requests)
+            {
+                int asked = CountAffordableRanks(definition, GetRank(skill), maxCount);
+                if (asked > 0) requests.UpgradeMovement((byte)skill, (byte)Mathf.Min(asked, byte.MaxValue));
+                return asked;
+            }
+
             if (!HasAuthority)
             {
                 if (!IsOwner) return 0;
@@ -264,6 +272,10 @@ namespace KryticalNova.Progression
             }
             return upgraded;
         }
+
+        /// <summary>A server body of the entity netcode buys its owner's Run or Jump ranks (NGO's UpgradeServerRpc body, after the caller's limit).</summary>
+        public int RunUpgrade(MovementSkillId skill, int count) =>
+            BodyRoleTag.Of(this) is { Kind: NetRoleKind.ServerBody } ? TryUpgradeMultiple(skill, count) : 0;
 
         /// <summary>How many ranks above <paramref name="rank"/> the mirrored level and skill points cover.</summary>
         private int CountAffordableRanks(MovementSkillData definition, int rank, int maxCount)

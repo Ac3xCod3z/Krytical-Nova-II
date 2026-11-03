@@ -121,6 +121,12 @@ namespace KryticalNova.Persistence.Entities
         public byte Count;
     }
 
+    /// <summary>The owner buys Run or Jump ranks (NGO's <c>PlayerMovementSkills.UpgradeServerRpc</c>).</summary>
+    public struct MovementUpgradeRpc : IRpcCommand
+    {
+        public byte Skill, Count;
+    }
+
     /// <summary>One skill's rank to its owner (NGO's owner-only netRanks, by index of the available skills).</summary>
     public struct SkillRankRpc : IRpcCommand
     {
@@ -222,6 +228,15 @@ namespace KryticalNova.Persistence.Entities
             em.AddComponent<SendRpcCommandRequest>(rpc);
         }
 
+        public void UpgradeMovement(byte skill, byte count)
+        {
+            if (m_World == null || !m_World.IsCreated || count == 0) return;
+            var em = m_World.EntityManager;
+            Entity rpc = em.CreateEntity();
+            em.AddComponentData(rpc, new MovementUpgradeRpc { Skill = skill, Count = count });
+            em.AddComponent<SendRpcCommandRequest>(rpc);
+        }
+
         public void Allocate(byte attribute, short count)
         {
             if (m_World == null || !m_World.IsCreated || count <= 0) return;
@@ -260,7 +275,7 @@ namespace KryticalNova.Persistence.Entities
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     public partial class PlayerRequestServerSystem : SystemBase
     {
-        EntityQuery m_Uses, m_Casts, m_PackOps, m_LoadoutOps, m_Refills, m_Allocations, m_Upgrades;
+        EntityQuery m_Uses, m_Casts, m_PackOps, m_LoadoutOps, m_Refills, m_Allocations, m_Upgrades, m_MoveUpgrades;
 
         /// <summary>Requests run, refused, and dropped by the request limits (tests).</summary>
         public int Used { get; private set; }
@@ -282,6 +297,7 @@ namespace KryticalNova.Persistence.Entities
             m_Refills = GetEntityQuery(ComponentType.ReadOnly<ReceiveRpcCommandRequest>(), ComponentType.ReadOnly<FlaskRefillRpc>());
             m_Allocations = GetEntityQuery(ComponentType.ReadOnly<ReceiveRpcCommandRequest>(), ComponentType.ReadOnly<AllocateRpc>());
             m_Upgrades = GetEntityQuery(ComponentType.ReadOnly<ReceiveRpcCommandRequest>(), ComponentType.ReadOnly<SkillUpgradeRpc>());
+            m_MoveUpgrades = GetEntityQuery(ComponentType.ReadOnly<ReceiveRpcCommandRequest>(), ComponentType.ReadOnly<MovementUpgradeRpc>());
         }
 
         protected override void OnUpdate()
@@ -313,6 +329,20 @@ namespace KryticalNova.Persistence.Entities
                 for (int i = 0; i < ops.Length; i++) RunPackOp(received[i].SourceConnection, ops[i]);
                 received.Dispose();
                 ops.Dispose();
+            }
+            if (!m_MoveUpgrades.IsEmpty)
+            {
+                var received = m_MoveUpgrades.ToComponentDataArray<ReceiveRpcCommandRequest>(Allocator.Temp);
+                var asks = m_MoveUpgrades.ToComponentDataArray<MovementUpgradeRpc>(Allocator.Temp);
+                em.DestroyEntity(m_MoveUpgrades);
+                for (int i = 0; i < asks.Length; i++)
+                    if (BodyOf(received[i].SourceConnection, CallKind.Money, out GameObject body) && body.TryGetComponent(out PlayerMovementSkills moves))
+                    {
+                        moves.RunUpgrade((MovementSkillId)asks[i].Skill, asks[i].Count);
+                        Upgrades++;
+                    }
+                received.Dispose();
+                asks.Dispose();
             }
             if (!m_Upgrades.IsEmpty)
             {

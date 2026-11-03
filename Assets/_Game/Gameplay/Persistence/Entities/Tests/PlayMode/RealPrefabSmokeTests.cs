@@ -431,6 +431,7 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
             public void RefillFlask() => Ops.Add("RefillFlask");
             public void Allocate(byte attribute, short count) => Ops.Add($"Allocate {attribute} {count}");
             public void UpgradeSkill(string skillId, byte count) => Ops.Add($"Upgrade {skillId} {count}");
+            public void UpgradeMovement(byte skill, byte count) => Ops.Add($"Move {skill} {count}");
         }
 
         [UnityTest]
@@ -894,6 +895,61 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
             ServerSave.WaitForDisk();
             Assert.AreEqual(ngoText, ServerSave.ReadAccountFrom(ServerSave.Store, account).Find(characterId).Get("skills"),
                 "the skills part saves back byte for byte (same format, no migration)");
+            agent.OnServerLeaving();
+        }
+
+        [UnityTest]
+        public IEnumerator B15_RunAndJumpRanks_AreBoughtOnTheServerBody_AndTheMovementSaveIsReal()
+        {
+            NetRole.Install(new BodyRoleNetRoleAdapter(null, () => NetRoleKind.ServerBody));
+            Assert.IsFalse(SavePassthrough.Is("movement"), "the movement part is real now");
+            GameObject maker = Make(NetRoleKind.ServerBody, false, new PlayerKey(19));
+            GameObject view = Make(NetRoleKind.ClientView, true, new PlayerKey(19));
+            yield return null;
+            var moves = maker.GetComponent<PlayerMovementSkills>();
+            var progress = maker.GetComponent<PlayerCharacterProgression>();
+            progress.SetLevel(progress.MaxLevel);
+            progress.AddSkillPoints(500);
+            int run = moves.RunRank;
+            Assert.AreEqual(1, moves.RunUpgrade(MovementSkillId.Run, 1), "the server body buys a Run rank by NGO's rules");
+            Assert.AreEqual(run + 1, moves.RunRank);
+            string ngoText = moves.CaptureSave();
+
+            var viewMoves = view.GetComponent<PlayerMovementSkills>();
+            var asked = new Asked();
+            view.GetComponent<BodyRoleTag>().Requests = asked;
+            OwnerProgressBridge.Mirror(view, OwnerProgressBridge.Read(maker).Value);
+            int viewJump = viewMoves.JumpRank;
+            int predicted = viewMoves.TryUpgradeMultiple(MovementSkillId.Jump, 1);
+            Assert.AreEqual(1, predicted, "the owner's prediction");
+            CollectionAssert.AreEqual(new[] { $"Move {(byte)MovementSkillId.Jump} 1" }, asked.Ops, "sent to the server");
+            Assert.AreEqual(viewJump, viewMoves.JumpRank, "the view buys nothing itself");
+            Assert.AreEqual(0, viewMoves.RunUpgrade(MovementSkillId.Jump, 1), "a view never upgrades");
+
+            const string account = "0a1b2c3d4e5f60718293a4b5c6d7e8f9";
+            const string characterId = "f9e8d7c6b5a4938271605f4e3d2c1b0a";
+            GameObject body = Make(NetRoleKind.ServerBody, false, new PlayerKey(20));
+            yield return null;
+            CharacterRecipe recipe = AnyLegalRecipe(body.GetComponent<PlayerIdentity>().Database);
+            var stored = new AccountSave { accountId = account };
+            var character = new CharacterSave { characterId = characterId, name = "Runner" };
+            character.Set("movement", ngoText);
+            stored.characters.Add(character);
+            Assert.IsTrue(ServerSave.WriteAccount(stored));
+            ServerSave.WaitForDisk();
+            var context = new ServerBodyContext
+            {
+                Key = new PlayerKey(20), Serial = 20, NetworkId = 20, Account = account, CharacterId = characterId, Name = "Runner",
+                RecipeText = RecipeText.Encode(recipe),
+            };
+            Assert.IsNull(new PlayerAdmission().Begin(body, in context), "admitted");
+            var agent = body.GetComponent<PlayerSaveAgent>();
+            for (int i = 0; i < 30; i++) yield return null;
+            Assert.AreEqual(run + 1, body.GetComponent<PlayerMovementSkills>().RunRank, "the saved Run rank is on the server body");
+            agent.Save();
+            ServerSave.WaitForDisk();
+            Assert.AreEqual(ngoText, ServerSave.ReadAccountFrom(ServerSave.Store, account).Find(characterId).Get("movement"),
+                "the movement part saves back byte for byte (same format, no migration)");
             agent.OnServerLeaving();
         }
 

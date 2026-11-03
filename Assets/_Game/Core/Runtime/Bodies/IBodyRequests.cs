@@ -50,5 +50,8 @@ namespace KryticalNova.Core
 
         /// <summary>Asks the server to buy up to <paramref name="count"/> ranks of a skill with skill points (M8 8.3.2, NGO's upgrade RPC).</summary>
         void UpgradeSkill(string skillId, byte count);
+
+        /// <summary>Asks the server to buy up to <paramref name="count"/> ranks of Run or Jump (its id as a number; NGO's movement upgrade RPC).</summary>
+        void UpgradeMovement(byte skill, byte count);
     }
 }

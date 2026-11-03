@@ -1192,8 +1192,9 @@ checkpoints; the owner's Thursday hand-test list; owner questions). NGO rules ta
   - [x] 8.3.4 Serums mirror: OwnerSerums owner-only ghost -> the owner's stat sheet; the Serum line to the message line; B12.
   - [x] 8.3.3 XP boosts: `xpboosts` real, boosters used again (EffectPorted), clocks mirrored as NGO (use/run-out at once, else 15 s);
     B13; save note approved.
-  - [ ] 8.3.2 skills: ranks bought on the server body (SkillUpgradeRpc, Money), ranks + books mirrored as NGO (by index + 64-bit mask),
-    `skills` real, Skill Chips / Dossiers used again (LearnSkill); B14; save note to the Master first. Movement ranks (`movement`) still
-    passthrough: follow-up.
+  - [x] 8.3.2 skills: ranks bought on the server body (SkillUpgradeRpc, Money), ranks + books mirrored as NGO (by index + 64-bit mask),
+    `skills` real, Skill Chips / Dossiers used again (LearnSkill); B14; save note approved.
+  - [ ] Movement ranks: Run / Jump bought on the server body (MovementUpgradeRpc, Money), `movement` real (Wallstride opens from them);
+    B15; save note to the Master first.
 - [ ] M8 group 2: storage, shopping, trade, Kiosk player side.
 - [ ] M8 group 4: chat, contacts, party, sponsor, Crew, emotes, pets, mounts, crate, Recall, housing check; duels and Cadence wait for M4.
