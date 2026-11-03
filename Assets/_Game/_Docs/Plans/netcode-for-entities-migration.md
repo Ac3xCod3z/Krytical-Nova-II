@@ -1203,8 +1203,13 @@ checkpoints; the owner's Thursday hand-test list; owner questions). NGO rules ta
   - [x] 8.2.1 storage (Vault + Deep Vault): requests run NGO's PlayerStorage rules on the server body (Vaultkeeper range, Items limit,
     Creds through PlayerWallet VaultDeposit/VaultWithdraw at the Money limit), cells + Creds mirrored to the owner, `vault` + `deepvault`
     real together (Items IBodyStorage keeps Economy out of the network layer); B17; save note + HIGH review approved.
-  - [ ] 8.2.2 shopping (NPC shops): buy and sell requests run NGO's PlayerShopping rules on the server body (vendor reach, price by the
+  - [x] 8.2.2 shopping (NPC shops): buy and sell requests run NGO's PlayerShopping rules on the server body (vendor reach, price by the
     day, weekly limit, room first, Creds through PlayerWallet Vendor/Refund/VendorSale at the Money limit, shop.buy/shop.sell ledger lines,
     save at once), this week's limited purchases mirrored to the owner (VendorWeekRpc), `vendorWeek` real (Items IBodyShopping); B18.
-    Save note + review summary to the Master first.
+    Save note + HIGH review approved.
+  - [ ] 8.2.3 trade: the nine requests run NGO's PlayerTrade rules on the server body (Money limit; asked by name: other players' views
+    carry no PlayerTrade, and names resolve to server bodies by PlayerKey, never a NetworkId), view / notice / prompt to the owner by
+    PlayerKey (EntityTradeOwnerLink), leaving = IServerLeaving (NGO's despawn + a pending request dies with its asker), Commit and
+    SaveTogether unchanged, `trade` real (Items IBodyTrade); B19 (whole trade, both ledger lines, byte-equal), B20 (leave mid-trade,
+    NetworkId reuse, pending request); kill test PASSED on SaveService --test (7802). Save note + review summary to the Master first.
 - [ ] M8 group 4: chat, contacts, party, sponsor, Crew, emotes, pets, mounts, crate, Recall, housing check; duels and Cadence wait for M4.

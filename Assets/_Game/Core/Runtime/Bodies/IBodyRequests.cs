@@ -1,5 +1,18 @@
 namespace KryticalNova.Core
 {
+    /// <summary>What a trade request asks the server's body to do (NGO's <c>PlayerTrade</c> RPCs; M8 8.2.3).</summary>
+    public enum TradeOpKind : byte
+    {
+        RequestByName = 1,
+        Respond = 2,
+        Offer = 3,
+        Withdraw = 4,
+        SetCreds = 5,
+        Lock = 6,
+        Confirm = 7,
+        Cancel = 8,
+    }
+
     /// <summary>What a storage request asks the server's body to do (NGO's <c>PlayerStorage</c> RPCs; M8 8.2.1).</summary>
     public enum StorageOpKind : byte
     {
@@ -85,5 +98,12 @@ namespace KryticalNova.Core
         /// (<paramref name="itemId"/>, <paramref name="stackCount"/>, <paramref name="data"/>) and whether they confirmed the sale.
         /// </summary>
         void ShopSell(ushort cell, ushort count, ushort itemId, ushort stackCount, ulong data, bool confirmed);
+
+        /// <summary>
+        /// Asks the server to ask, answer, offer, withdraw, set Creds, lock, confirm or cancel in a trade (M8 8.2.3, NGO's trade RPCs):
+        /// <paramref name="name"/> the player asked (by name, as NGO's /trade name), <paramref name="a"/> the Pack cell or the line,
+        /// <paramref name="b"/> the count, <paramref name="creds"/> the Creds, <paramref name="flag"/> accept or lock.
+        /// </summary>
+        void TradeOp(TradeOpKind op, string name, short a, ushort b, long creds, bool flag);
     }
 }

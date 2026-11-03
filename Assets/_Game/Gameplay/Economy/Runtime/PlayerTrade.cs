@@ -56,7 +56,7 @@ namespace KryticalNova.Economy
     /// </summary>
     [DisallowMultipleComponent]
     [RequireComponent(typeof(PlayerInventory))]
-    public sealed class PlayerTrade : NetworkBehaviour, ISaveParticipant
+    public sealed class PlayerTrade : NetworkBehaviour, ISaveParticipant, IBodyTrade, IServerLeaving
     {
         private const string PromptId = "trade";
         // Walking a little past trading distance does not end a trade at once.
@@ -114,7 +114,11 @@ namespace KryticalNova.Economy
         /// <summary>The last thing the server said about this trade ("Vex's Pack has no room"); empty when nothing.</summary>
         public string LastNotice { get; private set; } = string.Empty;
 
-        private bool HasAuthority => !IsSpawned || IsServer;
+        // A client view of the entity netcode only shows the server's trade (MirrorView and the rest); its server body decides (M8 8.2.3).
+        private bool HasAuthority => (!IsSpawned || IsServer) && !EntityView;
+        private bool EntityView => BodyRoleTag.Of(this) is { Kind: NetRoleKind.ClientView };
+        private bool EntityServer => BodyRoleTag.Of(this) is { Kind: NetRoleKind.ServerBody };
+        private IBodyRequests Requests => BodyRoleTag.RequestsOf(this) is IBodyRequests requests ? requests : null;
         private int MaxLines => settings != null ? settings.tradeSlots : 12;
         private float Range => settings != null ? settings.tradeRange : 6f;
         private long PerTrade => settings != null ? settings.tradeCredsPerTrade : long.MaxValue;
@@ -142,12 +146,99 @@ namespace KryticalNova.Economy
             base.OnNetworkDespawn();
         }
 
+        /// <summary>
+        /// The entity netcode's server body is never despawned (M8 8.2.3): its player leaving does what NGO's despawn did, and also lets
+        /// go of a request it had sent, so the player asked can never accept a trade with someone who has gone.
+        /// </summary>
+        public void OnServerLeaving()
+        {
+            if (!EntityServer || leaving) return;
+            leaving = true;
+            requestedBy = null;
+            foreach (BodyRoleTag tag in BodyRoleTag.ServerBodies)
+                if (tag != null && tag.TryGetComponent(out PlayerTrade asked) && asked.requestedBy == this)
+                {
+                    asked.requestedBy = null;
+                    asked.HidePrompt();
+                }
+            if (session != null) EndSession(session, null, $"{TraderName} left the game. The trade was cancelled.");
+        }
+
+        // ------------------------------------------------------------------ the entity netcode (M8 8.2.3)
+
+        /// <summary>A server body of the entity netcode runs its owner's request (NGO's RPC bodies, after the caller's Money limit).</summary>
+        public void RunTradeOp(TradeOpKind op, string name, short a, ushort b, long creds, bool flag)
+        {
+            if (!EntityServer || leaving) return;
+            switch (op)
+            {
+                case TradeOpKind.RequestByName: ServerRequestByName(name); break;
+                case TradeOpKind.Respond: ServerRespond(flag); break;
+                case TradeOpKind.Offer: ServerOffer(a, b); break;
+                case TradeOpKind.Withdraw: ServerWithdraw(a); break;
+                case TradeOpKind.SetCreds: ServerSetCreds(creds); break;
+                case TradeOpKind.Lock: ServerLock(flag); break;
+                case TradeOpKind.Confirm: ServerConfirm(); break;
+                case TradeOpKind.Cancel: ServerCancel(); break;
+            }
+        }
+
+        /// <summary>The entity netcode's own view body shows the server's trade (NGO's ViewRpc).</summary>
+        public void MirrorView(in BodyTradeView shown)
+        {
+            if (!BodyRoleTag.IsLocalClientView(this)) return;
+            var header = new TradeHeader
+            {
+                active = shown.active,
+                myCreds = shown.myCreds, theirCreds = shown.theirCreds,
+                myLocked = shown.myLocked, theirLocked = shown.theirLocked,
+                myConfirmed = shown.myConfirmed, theirConfirmed = shown.theirConfirmed,
+                perTrade = shown.perTrade, remainingToday = shown.remainingToday,
+            };
+            header.partnerName.CopyFromTruncated(shown.partnerName ?? string.Empty);
+            ApplyView(header, Lines(shown.mine), Lines(shown.theirs));
+        }
+
+        /// <summary>The entity netcode's own view body shows the server's notice (NGO's NoticeRpc).</summary>
+        public void MirrorNotice(string text)
+        {
+            if (BodyRoleTag.IsLocalClientView(this)) ApplyNotice(text);
+        }
+
+        /// <summary>The entity netcode's own view body shows the request prompt (NGO's PromptRpc); its answer goes to the server.</summary>
+        public void MirrorPrompt(string fromName, float seconds)
+        {
+            if (BodyRoleTag.IsLocalClientView(this))
+                ClientPresentationRegistry.Prompts?.Show(PromptId, "TRADE", $"{fromName} wants to trade with you.", seconds, Respond);
+        }
+
+        public void MirrorPromptClosed()
+        {
+            if (BodyRoleTag.IsLocalClientView(this)) ClientPresentationRegistry.Prompts?.Hide(PromptId);
+        }
+
+        private static TradeLine[] Lines(BodyTradeLine[] from)
+        {
+            if (from == null || from.Length == 0) return Array.Empty<TradeLine>();
+            var lines = new TradeLine[from.Length];
+            for (int i = 0; i < from.Length; i++) lines[i] = new TradeLine(from[i].cell, from[i].stack);
+            return lines;
+        }
+
+        private static BodyTradeLine[] Lines(TradeLine[] from)
+        {
+            var lines = new BodyTradeLine[from != null ? from.Length : 0];
+            for (int i = 0; i < lines.Length; i++) lines[i] = new BodyTradeLine(from[i].cell, from[i].stack);
+            return lines;
+        }
+
         // ------------------------------------------------------------------ owner -> server
 
         /// <summary>Ask the player <paramref name="target"/> (the one selected in the world) to trade.</summary>
         public void Request(PlayerTrade target)
         {
             if (target == null) return;
+            if (Requests is { } requests) { requests.TradeOp(TradeOpKind.RequestByName, target.TraderName, 0, 0, 0, false); return; }
             if (!IsSpawned) ServerRequest(target);
             else if (IsOwner && target.IsSpawned) RequestRpc(target.NetworkObject);
         }
@@ -155,18 +246,21 @@ namespace KryticalNova.Economy
         /// <summary>Ask the player called <paramref name="playerName"/> to trade.</summary>
         public void Request(string playerName)
         {
+            if (Requests is { } requests) { if (!string.IsNullOrWhiteSpace(playerName)) requests.TradeOp(TradeOpKind.RequestByName, playerName.Trim(), 0, 0, 0, false); return; }
             if (IsSpawned && IsOwner && !string.IsNullOrWhiteSpace(playerName)) RequestByNameRpc(playerName.Trim());
         }
 
         /// <summary>Answer the request this player was sent.</summary>
         public void Respond(bool accept)
         {
+            if (Requests is { } requests) { requests.TradeOp(TradeOpKind.Respond, null, 0, 0, 0, accept); return; }
             if (IsSpawned) { if (IsOwner) RespondRpc(accept); } else ServerRespond(accept);
         }
 
         /// <summary>Put a Pack cell in the offer. <paramref name="count"/> 0 = the whole stack.</summary>
         public void Offer(int packCell, int count = 0)
         {
+            if (Requests is { } requests) { requests.TradeOp(TradeOpKind.Offer, null, (short)packCell, (ushort)Mathf.Clamp(count, 0, ushort.MaxValue), 0, false); return; }
             if (IsSpawned) { if (IsOwner) OfferRpc((short)packCell, (ushort)Mathf.Clamp(count, 0, ushort.MaxValue)); }
             else ServerOffer(packCell, count);
         }
@@ -174,28 +268,33 @@ namespace KryticalNova.Economy
         /// <summary>Take a line of the owner's offer back.</summary>
         public void Withdraw(int lineIndex)
         {
+            if (Requests is { } requests) { requests.TradeOp(TradeOpKind.Withdraw, null, (short)Mathf.Clamp(lineIndex, 0, 255), 0, 0, false); return; }
             if (IsSpawned) { if (IsOwner) WithdrawRpc((byte)Mathf.Clamp(lineIndex, 0, 255)); } else ServerWithdraw(lineIndex);
         }
 
         public void SetCreds(long amount)
         {
+            if (Requests is { } requests) { requests.TradeOp(TradeOpKind.SetCreds, null, 0, 0, amount, false); return; }
             if (IsSpawned) { if (IsOwner) SetCredsRpc(amount); } else ServerSetCreds(amount);
         }
 
         /// <summary>Lock the offer (nothing more changes), or unlock it again.</summary>
         public void SetLocked(bool on)
         {
+            if (Requests is { } requests) { requests.TradeOp(TradeOpKind.Lock, null, 0, 0, 0, on); return; }
             if (IsSpawned) { if (IsOwner) LockRpc(on); } else ServerLock(on);
         }
 
         /// <summary>Agree to the trade as both sides have locked it. It happens when both have confirmed.</summary>
         public void Confirm()
         {
+            if (Requests is { } requests) { requests.TradeOp(TradeOpKind.Confirm, null, 0, 0, 0, false); return; }
             if (IsSpawned) { if (IsOwner) ConfirmRpc(); } else ServerConfirm();
         }
 
         public void Cancel()
         {
+            if (Requests is { } requests) { requests.TradeOp(TradeOpKind.Cancel, null, 0, 0, 0, false); return; }
             if (IsSpawned) { if (IsOwner) CancelRpc(); } else ServerCancel();
         }
 
@@ -211,14 +310,31 @@ namespace KryticalNova.Economy
         {
             if (!RpcBudget.Allow(this, CallKind.Money, nameof(RequestByNameRpc))) return;
             if (!RpcBudget.TextFits(this, nameof(RequestByNameRpc), playerName)) return;
+            ServerRequestByName(playerName);
+        }
+
+        private void ServerRequestByName(string playerName)
+        {
+            if (!HasAuthority || string.IsNullOrWhiteSpace(playerName)) return;
             Online.Clear();
             OnlineTraders.Clear();
-            foreach (var client in NetworkManager.ConnectedClientsList)
+            if (EntityServer)
             {
-                if (client.PlayerObject == null || !client.PlayerObject.TryGetComponent(out PlayerTrade other)) continue;
-                Online.Add(new ChatParticipant { ClientId = client.ClientId, Name = other.TraderName });
-                OnlineTraders.Add(other);
+                // the entity netcode: its players' server bodies, told apart by their PlayerKey (a NetworkId can be reused)
+                foreach (BodyRoleTag tag in BodyRoleTag.ServerBodies)
+                {
+                    if (tag == null || tag.Key == PlayerKey.None || !tag.TryGetComponent(out PlayerTrade other) || other.leaving) continue;
+                    Online.Add(new ChatParticipant { ClientId = tag.Key.Value, Name = other.TraderName });
+                    OnlineTraders.Add(other);
+                }
             }
+            else
+                foreach (var client in NetworkManager.ConnectedClientsList)
+                {
+                    if (client.PlayerObject == null || !client.PlayerObject.TryGetComponent(out PlayerTrade other)) continue;
+                    Online.Add(new ChatParticipant { ClientId = client.ClientId, Name = other.TraderName });
+                    OnlineTraders.Add(other);
+                }
 
             ChatRouting.FindByName(playerName, Online, Found);
             if (Found.Count == 0) { Tell($"No player named '{ChatRouting.Clean(playerName)}' is online."); return; }
@@ -311,7 +427,7 @@ namespace KryticalNova.Economy
         private void ServerRequest(PlayerTrade target)
         {
             if (!HasAuthority) return;
-            if (target == null || target == this) { Tell("Trade with another player."); return; }
+            if (target == null || target == this || target.leaving) { Tell("Trade with another player."); return; }
             if (session != null) { Tell("You are already trading."); return; }
             if (target.session != null) { Tell($"{target.TraderName} is trading with someone else."); return; }
             if (target.requestedBy != null && target.requestedBy != this && Time.time <= target.requestExpires)
@@ -655,6 +771,19 @@ namespace KryticalNova.Economy
         private void SendView(TradeHeader header, TradeLine[] own, TradeLine[] partner)
         {
             if (leaving) return;
+            if (EntityServer)
+            {
+                TradeOwnerLink.Current?.View(this, new BodyTradeView
+                {
+                    active = header.active, partnerName = header.partnerName.ToString(),
+                    myCreds = header.myCreds, theirCreds = header.theirCreds,
+                    myLocked = header.myLocked, theirLocked = header.theirLocked,
+                    myConfirmed = header.myConfirmed, theirConfirmed = header.theirConfirmed,
+                    perTrade = header.perTrade, remainingToday = header.remainingToday,
+                    mine = Lines(own), theirs = Lines(partner),
+                });
+                return;
+            }
             if (IsSpawned) ViewRpc(header, own, partner);
             else ApplyView(header, own, partner);
         }
@@ -682,6 +811,7 @@ namespace KryticalNova.Economy
         {
             if (leaving) return;
             text ??= string.Empty;
+            if (EntityServer) { TradeOwnerLink.Current?.Notice(this, text); return; }
             if (IsSpawned) NoticeRpc(text);
             else ApplyNotice(text);
         }
@@ -698,6 +828,7 @@ namespace KryticalNova.Economy
         private void Tell(string text)
         {
             if (leaving || string.IsNullOrEmpty(text)) return;
+            if (EntityServer) { OwnerMessages.TryTell(this, text); return; }   // its player's message line until chat is ported (group 4)
             if (chat != null && chat.isActiveAndEnabled) chat.ServerSystem(text);
             else LastNotice = text;
         }
@@ -705,12 +836,15 @@ namespace KryticalNova.Economy
         private void ShowPrompt(string fromName, float seconds)
         {
             if (leaving) return;
+            if (EntityServer) { TradeOwnerLink.Current?.Prompt(this, fromName, seconds); return; }
             if (IsSpawned) PromptRpc(fromName, seconds);
         }
 
         private void HidePrompt()
         {
-            if (!leaving && IsSpawned) PromptClosedRpc();
+            if (leaving) return;
+            if (EntityServer) { TradeOwnerLink.Current?.PromptClosed(this); return; }
+            if (IsSpawned) PromptClosedRpc();
         }
 
         [Rpc(SendTo.Owner, InvokePermission = RpcInvokePermission.Server)]

@@ -439,6 +439,22 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
             public void ShopBuy(string vendor, ushort itemId, ushort count) => Ops.Add($"Buy {vendor} {itemId} {count}");
             public void ShopSell(ushort cell, ushort count, ushort itemId, ushort stackCount, ulong data, bool confirmed) =>
                 Ops.Add($"Sell {cell} {count} {itemId}x{stackCount}:{data} {confirmed}");
+            public void TradeOp(TradeOpKind op, string name, short a, ushort b, long creds, bool flag) => Ops.Add($"Trade {op} {name} {a} {b} {creds} {flag}");
+        }
+
+        /// <summary>What the server bodies told their players (the message line) and sent their trade windows (view, notice, prompt).</summary>
+        sealed class Told : IOwnerMessages, ITradeOwnerLink
+        {
+            public readonly List<(GameObject body, string what)> Lines = new List<(GameObject, string)>();
+            public bool Tell(Component part, string text) { Lines.Add((Body(part), "tell " + text)); return true; }
+            public void View(Component part, in BodyTradeView view) =>
+                Lines.Add((Body(part), $"view {view.active} {view.partnerName} mine {view.mine?.Length ?? 0} theirs {view.theirs?.Length ?? 0}"));
+            public void Notice(Component part, string text) => Lines.Add((Body(part), "notice " + text));
+            public void Prompt(Component part, string fromName, float seconds) => Lines.Add((Body(part), "prompt " + fromName));
+            public void PromptClosed(Component part) => Lines.Add((Body(part), "prompt closed"));
+            static GameObject Body(Component part) => BodyRoleTag.Of(part) != null ? BodyRoleTag.Of(part).gameObject : part.gameObject;
+            public List<string> To(GameObject body) => Lines.FindAll(l => l.body == body).ConvertAll(l => l.what);
+            public bool Any(GameObject body, string start) => Lines.Exists(l => l.body == body && l.what.StartsWith(start));
         }
 
         [UnityTest]
@@ -960,7 +976,7 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
             agent.OnServerLeaving();
         }
 
-        GameObject Admitted(ulong key, string account, string characterId, string name)
+        GameObject Admitted(ulong key, string account, string characterId, string name, int networkId = 0)
         {
             GameObject body = Make(NetRoleKind.ServerBody, false, new PlayerKey(key));
             CharacterRecipe recipe = AnyLegalRecipe(body.GetComponent<PlayerIdentity>().Database);
@@ -970,7 +986,7 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
             ServerSave.WaitForDisk();
             var context = new ServerBodyContext
             {
-                Key = new PlayerKey(key), Serial = key, NetworkId = (int)key, Account = account, CharacterId = characterId, Name = name,
+                Key = new PlayerKey(key), Serial = key, NetworkId = networkId != 0 ? networkId : (int)key, Account = account, CharacterId = characterId, Name = name,
                 RecipeText = RecipeText.Encode(recipe),
             };
             Assert.IsNull(new PlayerAdmission().Begin(body, in context), name + " admitted");
@@ -1295,6 +1311,212 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
             agent.OnServerLeaving();
             body.GetComponent<PlayerSaveAgent>().OnServerLeaving();
             PlayerKeys.Reset();
+        }
+
+        [UnityTest]
+        public IEnumerator B19_ATrade_RunsOnTheServerBodies_SwapsWhole_SavesBothTogether_WithBothLedgerLines_AndTradeIsReal()
+        {
+            NetRole.Install(new BodyRoleNetRoleAdapter(null, () => NetRoleKind.ServerBody));
+            Assert.IsFalse(SavePassthrough.Is("trade"), "the trade part is real now");
+            IOwnerMessages oldMessages = OwnerMessages.Current;
+            ITradeOwnerLink oldLink = TradeOwnerLink.Current;
+            var told = new Told();
+            OwnerMessages.Current = told;
+            TradeOwnerLink.Current = told;
+            try
+            {
+                PlayerKeys.Reset();
+                const string accountA = "5e6f708192a3b4c5d6e7f80910213243", accountB = "6f708192a3b4c5d6e7f8091021324354";
+                const string charA = "a1000000000000000000000000000031", charB = "b2000000000000000000000000000032";
+                GameObject a = Admitted(PlayerKeys.Mint(31).Value, accountA, charA, "Annika");
+                GameObject b = Admitted(PlayerKeys.Mint(32).Value, accountB, charB, "Bodhan");
+                GameObject viewA = Make(NetRoleKind.ClientView, true, new PlayerKey(31));
+                for (int i = 0; i < 30; i++) yield return null;
+                var tradeA = a.GetComponent<KryticalNova.Economy.PlayerTrade>();
+                var tradeB = b.GetComponent<KryticalNova.Economy.PlayerTrade>();
+                var invA = a.GetComponent<PlayerInventory>();
+                var invB = b.GetComponent<PlayerInventory>();
+                var walletA = a.GetComponent<KryticalNova.Economy.PlayerWallet>();
+                var walletB = b.GetComponent<KryticalNova.Economy.PlayerWallet>();
+                Assert.IsNotNull(tradeA, "the body has its trade");
+                invA.ServerGive(9001, 3);
+                walletA.ServerSet(1000);
+                walletB.ServerSet(500);
+                int heldA = invA.CountItem(9001), heldB = invB.CountItem(9001);
+                int cell = -1;
+                for (int i = 0; i < PlayerInventory.Capacity; i++) if (invA.Get(i).itemId == 9001) { cell = i; break; }
+
+                // asked by name (the menu's way on DOTS: the other body has no PlayerTrade on a client), answered, a session on both
+                tradeA.RunTradeOp(TradeOpKind.RequestByName, "Bodhan", 0, 0, 0, false);
+                Assert.IsTrue(told.Any(b, "prompt Annika"), "Bo is shown Ann's request: " + string.Join(" | ", told.To(b)));
+                tradeB.RunTradeOp(TradeOpKind.Respond, null, 0, 0, 0, true);
+                Assert.IsTrue(told.Any(a, "view True Bodhan"), "Ann's window opens on Bo");
+                Assert.IsTrue(told.Any(b, "view True Annika"), "and Bo's on Ann");
+
+                tradeA.RunTradeOp(TradeOpKind.Offer, null, (short)cell, 2, 0, false);
+                tradeB.RunTradeOp(TradeOpKind.SetCreds, null, 0, 0, 100, false);
+                tradeA.RunTradeOp(TradeOpKind.Confirm, null, 0, 0, 0, false);
+                Assert.IsTrue(told.Any(a, "notice Both offers must be locked first."), "NGO's rule: lock first");
+                tradeA.RunTradeOp(TradeOpKind.Lock, null, 0, 0, 0, true);
+                tradeB.RunTradeOp(TradeOpKind.Lock, null, 0, 0, 0, true);
+                tradeA.RunTradeOp(TradeOpKind.Confirm, null, 0, 0, 0, false);
+                Assert.AreEqual(heldA, invA.CountItem(9001), "one confirmation moves nothing");
+                tradeB.RunTradeOp(TradeOpKind.Confirm, null, 0, 0, 0, false);
+
+                // the swap: whole, on both sides, Creds through the wallets
+                Assert.AreEqual(heldA - 2, invA.CountItem(9001), "two left Ann's Pack");
+                Assert.AreEqual(heldB + 2, invB.CountItem(9001), "and are in Bo's");
+                Assert.AreEqual(1100, walletA.Creds, "Ann received Bo's 100 Creds");
+                Assert.AreEqual(400, walletB.Creds, "Bo paid them");
+                Assert.IsTrue(told.Any(a, "view False"), "the windows close");
+
+                // saved together: both accounts hold the trade, each with its ledger line
+                ServerSave.WaitForDisk();
+                AccountSave savedA = ServerSave.ReadAccountFrom(ServerSave.Store, accountA), savedB = ServerSave.ReadAccountFrom(ServerSave.Store, accountB);
+                StringAssert.Contains("9001", savedB.Find(charB).Get("inventory"), "Bo's saved Pack has the items");
+                List<LedgerEntry> linesA = ServerSave.ReadLedger(accountA, 0, 100).FindAll(l => l.kind == LedgerKinds.Trade);
+                List<LedgerEntry> linesB = ServerSave.ReadLedger(accountB, 0, 100).FindAll(l => l.kind == LedgerKinds.Trade);
+                Assert.AreEqual(1, linesA.Count, "one trade line on Ann");
+                Assert.AreEqual(-2, linesA[0].items.Find(x => x.item == 9001).count, "she gave two");
+                Assert.AreEqual(1, linesB.Count, "one trade line on Bo");
+                Assert.AreEqual(2, linesB[0].items.Find(x => x.item == 9001).count, "he received two");
+                string tradeText = savedB.Get("trade");
+                StringAssert.Contains("\"sent\":100", tradeText, "Bo's day total of Creds sent is saved with the account");
+
+                // the owner's view only asks
+                var asked = new Asked();
+                viewA.GetComponent<BodyRoleTag>().Requests = asked;
+                var viewTrade = viewA.GetComponent<KryticalNova.Economy.PlayerTrade>();
+                viewTrade.Request("Bodhan");
+                viewTrade.Offer(5, 2);
+                viewTrade.SetLocked(true);
+                viewTrade.Respond(false);
+                CollectionAssert.AreEqual(new[] { "Trade RequestByName Bodhan 0 0 0 False", "Trade Offer  5 2 0 False", "Trade Lock  0 0 0 True", "Trade Respond  0 0 0 False" },
+                    asked.Ops, "sent to the server");
+                viewTrade.MirrorView(new BodyTradeView { active = true, partnerName = "Bodhan", mine = new[] { new BodyTradeLine(5, new ItemStack(9001, 2)) } });
+                Assert.IsTrue(viewTrade.IsTrading, "the owner's window shows the server's trade");
+                Assert.AreEqual("Bodhan", viewTrade.PartnerName);
+                Assert.AreEqual(1, viewTrade.Mine.Count);
+
+                // an old save (NGO's account text) loads into a fresh admitted server body unchanged and saves back every byte
+                const string account2 = "708192a3b4c5d6e7f809102132435465", char2 = "c3000000000000000000000000000036";
+                GameObject other = Make(NetRoleKind.ServerBody, false, new PlayerKey(36));
+                yield return null;
+                CharacterRecipe recipe = AnyLegalRecipe(other.GetComponent<PlayerIdentity>().Database);
+                var stored = new AccountSave { accountId = account2 };
+                stored.Set("trade", tradeText);
+                stored.characters.Add(new CharacterSave { characterId = char2, name = "Calder" });
+                Assert.IsTrue(ServerSave.WriteAccount(stored));
+                ServerSave.WaitForDisk();
+                var context = new ServerBodyContext
+                {
+                    Key = new PlayerKey(36), Serial = 36, NetworkId = 36, Account = account2, CharacterId = char2, Name = "Calder", RecipeText = RecipeText.Encode(recipe),
+                };
+                Assert.IsNull(new PlayerAdmission().Begin(other, in context), "admitted");
+                var agent = other.GetComponent<PlayerSaveAgent>();
+                for (int i = 0; i < 30; i++) yield return null;
+                agent.Save();
+                ServerSave.WaitForDisk();
+                Assert.AreEqual(tradeText, ServerSave.ReadAccountFrom(ServerSave.Store, account2).Get("trade"), "the trade part saves back byte for byte");
+                agent.OnServerLeaving();
+                a.GetComponent<PlayerSaveAgent>().OnServerLeaving();
+                b.GetComponent<PlayerSaveAgent>().OnServerLeaving();
+            }
+            finally
+            {
+                OwnerMessages.Current = oldMessages;
+                TradeOwnerLink.Current = oldLink;
+                PlayerKeys.Reset();
+            }
+        }
+
+        [UnityTest]
+        public IEnumerator B20_LeavingMidTrade_CancelsWithNothingMoved_ANetworkIdReusedNeverGetsIt_AndAPendingRequestDiesWithItsAsker()
+        {
+            NetRole.Install(new BodyRoleNetRoleAdapter(null, () => NetRoleKind.ServerBody));
+            IOwnerMessages oldMessages = OwnerMessages.Current;
+            ITradeOwnerLink oldLink = TradeOwnerLink.Current;
+            var told = new Told();
+            OwnerMessages.Current = told;
+            TradeOwnerLink.Current = told;
+            try
+            {
+                PlayerKeys.Reset();
+                const string accountA = "8192a3b4c5d6e7f80910213243546576", accountB = "92a3b4c5d6e7f8091021324354657687", accountC = "a3b4c5d6e7f809102132435465768798";
+                const string charA = "a1000000000000000000000000000041", charB = "b2000000000000000000000000000042", charC = "c3000000000000000000000000000043";
+                GameObject a = Admitted(PlayerKeys.Mint(41).Value, accountA, charA, "Annika");
+                GameObject b = Admitted(PlayerKeys.Mint(42).Value, accountB, charB, "Bodhan");
+                for (int i = 0; i < 30; i++) yield return null;
+                var tradeA = a.GetComponent<KryticalNova.Economy.PlayerTrade>();
+                var tradeB = b.GetComponent<KryticalNova.Economy.PlayerTrade>();
+                var invA = a.GetComponent<PlayerInventory>();
+                var walletA = a.GetComponent<KryticalNova.Economy.PlayerWallet>();
+                var walletB = b.GetComponent<KryticalNova.Economy.PlayerWallet>();
+                invA.ServerGive(9001, 3);
+                walletA.ServerSet(1000);
+                walletB.ServerSet(500);
+                a.GetComponent<PlayerSaveAgent>().Save();
+                b.GetComponent<PlayerSaveAgent>().Save();
+                ServerSave.WaitForDisk();
+                int heldA = invA.CountItem(9001);
+                string packA = ServerSave.ReadAccountFrom(ServerSave.Store, accountA).Find(charA).Get("inventory");
+                string packB = ServerSave.ReadAccountFrom(ServerSave.Store, accountB).Find(charB).Get("inventory");
+                int cell = -1;
+                for (int i = 0; i < PlayerInventory.Capacity; i++) if (invA.Get(i).itemId == 9001) { cell = i; break; }
+
+                // 1. disconnect mid-trade: both locked, Ann confirmed, then Bo's connection closes
+                tradeA.RunTradeOp(TradeOpKind.RequestByName, "Bodhan", 0, 0, 0, false);
+                tradeB.RunTradeOp(TradeOpKind.Respond, null, 0, 0, 0, true);
+                tradeA.RunTradeOp(TradeOpKind.Offer, null, (short)cell, 2, 0, false);
+                tradeB.RunTradeOp(TradeOpKind.SetCreds, null, 0, 0, 100, false);
+                tradeA.RunTradeOp(TradeOpKind.Lock, null, 0, 0, 0, true);
+                tradeB.RunTradeOp(TradeOpKind.Lock, null, 0, 0, 0, true);
+                tradeA.RunTradeOp(TradeOpKind.Confirm, null, 0, 0, 0, false);
+                ServerLeaving.Notify(b);   // what the server does when the connection closes, before the body goes
+                ServerSave.WaitForDisk();
+                Assert.IsTrue(told.Any(a, "tell Bodhan left the game. The trade was cancelled."), "Ann is told: " + string.Join(" | ", told.To(a)));
+                Assert.AreEqual(heldA, invA.CountItem(9001), "nothing moved from Ann");
+                Assert.AreEqual(1000, walletA.Creds, "nor to her");
+                Assert.AreEqual(500, walletB.Creds, "nor from Bo");
+                Assert.AreEqual(packB, ServerSave.ReadAccountFrom(ServerSave.Store, accountB).Find(charB).Get("inventory"), "Bo's saved Pack is as it was");
+                a.GetComponent<PlayerSaveAgent>().Save();
+                ServerSave.WaitForDisk();
+                Assert.AreEqual(packA, ServerSave.ReadAccountFrom(ServerSave.Store, accountA).Find(charA).Get("inventory"), "and Ann's");
+                Assert.IsEmpty(ServerSave.ReadLedger(accountA, 0, 100).FindAll(l => l.kind == LedgerKinds.Trade), "no trade line");
+                int toBo = told.To(b).Count;
+                tradeA.RunTradeOp(TradeOpKind.Confirm, null, 0, 0, 0, false);
+                Assert.IsTrue(told.Any(a, "tell You are not trading."), "the session is gone on Ann too");
+                Assert.AreEqual(toBo, told.To(b).Count, "nothing more reaches the body that left");
+
+                // 2. a NetworkId given again: Cy joins on Bo's NetworkId (new PlayerKey) and never gets Bo's trade, view, notice or prompt
+                Object.Destroy(b);
+                yield return null;
+                GameObject c = Admitted(PlayerKeys.Mint(43).Value, accountC, charC, "Cyrus", networkId: 42);
+                for (int i = 0; i < 30; i++) yield return null;
+                var tradeC = c.GetComponent<KryticalNova.Economy.PlayerTrade>();
+                Assert.IsEmpty(told.To(c).FindAll(x => !x.StartsWith("tell ")), "Cy is sent nothing of Bo's (no trade view, notice or prompt)");
+                tradeA.RunTradeOp(TradeOpKind.RequestByName, "Bodhan", 0, 0, 0, false);
+                Assert.IsTrue(told.Any(a, "tell No player named 'Bodhan' is online."), "Bo's name no longer finds anyone");
+                Assert.IsEmpty(told.To(c).FindAll(x => !x.StartsWith("tell ")), "and no trade line reaches Cy");
+
+                // 3. a request pending when its asker leaves: the prompt closes and an accept starts nothing
+                tradeA.RunTradeOp(TradeOpKind.RequestByName, "Cyrus", 0, 0, 0, false);
+                Assert.IsTrue(told.Any(c, "prompt Annika"), "Cy is asked");
+                ServerLeaving.Notify(a);
+                Assert.IsTrue(told.Any(c, "prompt closed"), "Ann left: Cy's prompt closes");
+                tradeC.RunTradeOp(TradeOpKind.Respond, null, 0, 0, 0, true);
+                Assert.IsTrue(told.Any(c, "tell There is no trade request to answer."), "an accept finds nothing");
+                Assert.IsFalse(told.Any(c, "view True"), "no session starts");
+                tradeC.RunTradeOp(TradeOpKind.Offer, null, 0, 1, 0, false);
+                Assert.IsTrue(told.Any(c, "tell You are not trading."));
+                c.GetComponent<PlayerSaveAgent>().OnServerLeaving();
+            }
+            finally
+            {
+                OwnerMessages.Current = oldMessages;
+                TradeOwnerLink.Current = oldLink;
+                PlayerKeys.Reset();
+            }
         }
 
         static CharacterRecipe AnyLegalRecipe(CharacterCreationDatabase database)

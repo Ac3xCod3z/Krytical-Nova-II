@@ -171,6 +171,50 @@ namespace KryticalNova.Persistence.Entities
         public byte Begin;
     }
 
+    /// <summary>The owner's trade request (NGO's nine <c>PlayerTrade</c> RPCs; M8 8.2.3): the op, the name asked, a cell or line, a count, Creds, a flag.</summary>
+    public struct TradeOpRpc : IRpcCommand
+    {
+        public byte Op, Flag;
+        public FixedString64Bytes Name;
+        public short A;
+        public ushort B;
+        public long Creds;
+    }
+
+    /// <summary>One line of a trade view to its owner (sent before the <see cref="TradeViewRpc"/> with the same <see cref="Seq"/>).</summary>
+    public struct TradeLineRpc : IRpcCommand
+    {
+        public uint Seq;
+        public byte Theirs;
+        public short Cell;
+        public ushort ItemId, Count;
+        public ulong Data;
+    }
+
+    /// <summary>The trade's header to its owner (NGO's <c>TradeHeader</c>); its lines came first under the same <see cref="Seq"/>.</summary>
+    public struct TradeViewRpc : IRpcCommand
+    {
+        public const byte Active = 1, MyLocked = 2, TheirLocked = 4, MyConfirmed = 8, TheirConfirmed = 16;
+        public uint Seq;
+        public byte Flags, MineCount, TheirCount;
+        public FixedString64Bytes PartnerName;
+        public long MyCreds, TheirCreds, PerTrade, RemainingToday;
+    }
+
+    /// <summary>The trade window's notice to its owner (NGO's <c>NoticeRpc</c>).</summary>
+    public struct TradeNoticeRpc : IRpcCommand
+    {
+        public FixedString512Bytes Text;
+    }
+
+    /// <summary>The trade request prompt to its owner (NGO's <c>PromptRpc</c> / <c>PromptClosedRpc</c>).</summary>
+    public struct TradePromptRpc : IRpcCommand
+    {
+        public FixedString64Bytes From;
+        public float Seconds;
+        public byte Close;
+    }
+
     /// <summary>The owner picks up a drop by its server id (NGO's <c>PlayerLoot.PickupRpc</c>; M7.5).</summary>
     public struct PickupRpc : IRpcCommand
     {
@@ -237,6 +281,86 @@ namespace KryticalNova.Persistence.Entities
                 em.AddComponentData(rpc, new SendRpcCommandRequest { TargetConnection = connections[i] });
                 return true;
             }
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Server: <see cref="ITradeOwnerLink"/> for the bodies of the entity netcode (M8 8.2.3): the view, notice and prompt go to the
+    /// connection of the player whose server body it is, found by its <see cref="PlayerKey"/> in the registry, never by a NetworkId (a
+    /// NetworkId can be given again to the next player; a key never is). A body that is not a server body is not told here.
+    /// </summary>
+    public sealed class EntityTradeOwnerLink : ITradeOwnerLink
+    {
+        static uint s_Seq;
+
+        /// <summary>Lines sent (tests).</summary>
+        public static int Sent { get; private set; }
+
+        public void View(Component part, in BodyTradeView view)
+        {
+            if (!TryConnection(part, out EntityManager em, out Entity connection)) return;
+            uint seq = ++s_Seq;
+            int mine = Math.Min(view.mine != null ? view.mine.Length : 0, 64), theirs = Math.Min(view.theirs != null ? view.theirs.Length : 0, 64);
+            for (int i = 0; i < mine; i++) Send(em, connection, Line(seq, 0, view.mine[i]));
+            for (int i = 0; i < theirs; i++) Send(em, connection, Line(seq, 1, view.theirs[i]));
+            byte flags = (byte)((view.active ? TradeViewRpc.Active : 0) | (view.myLocked ? TradeViewRpc.MyLocked : 0) | (view.theirLocked ? TradeViewRpc.TheirLocked : 0)
+                | (view.myConfirmed ? TradeViewRpc.MyConfirmed : 0) | (view.theirConfirmed ? TradeViewRpc.TheirConfirmed : 0));
+            var header = new TradeViewRpc
+            {
+                Seq = seq, Flags = flags, MineCount = (byte)mine, TheirCount = (byte)theirs,
+                MyCreds = view.myCreds, TheirCreds = view.theirCreds, PerTrade = view.perTrade, RemainingToday = view.remainingToday,
+            };
+            header.PartnerName.CopyFromTruncated(view.partnerName ?? string.Empty);
+            Send(em, connection, header);
+        }
+
+        public void Notice(Component part, string text)
+        {
+            if (!TryConnection(part, out EntityManager em, out Entity connection)) return;
+            text ??= string.Empty;
+            if (text.Length > 500) text = text.Substring(0, 500);
+            Send(em, connection, new TradeNoticeRpc { Text = new FixedString512Bytes(text) });
+        }
+
+        public void Prompt(Component part, string fromName, float seconds)
+        {
+            if (!TryConnection(part, out EntityManager em, out Entity connection)) return;
+            var prompt = new TradePromptRpc { Seconds = seconds };
+            prompt.From.CopyFromTruncated(fromName ?? string.Empty);
+            Send(em, connection, prompt);
+        }
+
+        public void PromptClosed(Component part)
+        {
+            if (TryConnection(part, out EntityManager em, out Entity connection)) Send(em, connection, new TradePromptRpc { Close = 1 });
+        }
+
+        static TradeLineRpc Line(uint seq, byte theirs, BodyTradeLine line) =>
+            new TradeLineRpc { Seq = seq, Theirs = theirs, Cell = line.cell, ItemId = line.stack.itemId, Count = line.stack.count, Data = line.stack.data };
+
+        static void Send<T>(EntityManager em, Entity connection, T rpc) where T : unmanaged, IRpcCommand
+        {
+            Entity e = em.CreateEntity();
+            em.AddComponentData(e, rpc);
+            em.AddComponentData(e, new SendRpcCommandRequest { TargetConnection = connection });
+            Sent++;
+        }
+
+        /// <summary>The in-game connection of the player whose server body <paramref name="part"/> is on, by its key.</summary>
+        public static bool TryConnection(Component part, out EntityManager em, out Entity connection)
+        {
+            em = default;
+            connection = Entity.Null;
+            BodyRoleTag tag = BodyRoleTag.Of(part);
+            if (tag == null || tag.Kind != NetRoleKind.ServerBody || tag.Key == PlayerKey.None) return false;
+            if (!GhostBodyRegistry.TryGetByKey(tag.Key, out GhostBodyEntry entry) || entry.World == null || !entry.World.IsCreated) return false;
+            em = entry.World.EntityManager;
+            using var query = em.CreateEntityQuery(ComponentType.ReadOnly<NetworkId>(), ComponentType.ReadOnly<NetworkStreamInGame>());
+            using var connections = query.ToEntityArray(Allocator.Temp);
+            using var ids = query.ToComponentDataArray<NetworkId>(Allocator.Temp);
+            for (int i = 0; i < connections.Length; i++)
+                if (ids[i].Value == entry.NetworkId) { connection = connections[i]; return true; }
             return false;
         }
     }
@@ -321,6 +445,17 @@ namespace KryticalNova.Persistence.Entities
             em.AddComponent<SendRpcCommandRequest>(rpc);
         }
 
+        public void TradeOp(TradeOpKind op, string name, short a, ushort b, long creds, bool flag)
+        {
+            if (m_World == null || !m_World.IsCreated) return;
+            name ??= string.Empty;
+            if (System.Text.Encoding.UTF8.GetByteCount(name) > FixedString64Bytes.UTF8MaxLengthInBytes) return;   // NGO's TextFits refuses it too
+            var em = m_World.EntityManager;
+            Entity rpc = em.CreateEntity();
+            em.AddComponentData(rpc, new TradeOpRpc { Op = (byte)op, Name = new FixedString64Bytes(name), A = a, B = b, Creds = creds, Flag = (byte)(flag ? 1 : 0) });
+            em.AddComponent<SendRpcCommandRequest>(rpc);
+        }
+
         public void Pickup(uint dropId)
         {
             if (m_World == null || !m_World.IsCreated || dropId == 0) return;
@@ -386,7 +521,7 @@ namespace KryticalNova.Persistence.Entities
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     public partial class PlayerRequestServerSystem : SystemBase
     {
-        EntityQuery m_Uses, m_Casts, m_PackOps, m_LoadoutOps, m_Refills, m_Allocations, m_Upgrades, m_MoveUpgrades, m_Pickups, m_Drops, m_Storage, m_Buys, m_Sells;
+        EntityQuery m_Uses, m_Casts, m_PackOps, m_LoadoutOps, m_Refills, m_Allocations, m_Upgrades, m_MoveUpgrades, m_Pickups, m_Drops, m_Storage, m_Buys, m_Sells, m_Trades;
 
         /// <summary>Requests run, refused, and dropped by the request limits (tests).</summary>
         public int Used { get; private set; }
@@ -401,6 +536,7 @@ namespace KryticalNova.Persistence.Entities
         public int Pickups { get; private set; }
         public int StorageOps { get; private set; }
         public int ShopOps { get; private set; }
+        public int TradeOps { get; private set; }
         public int Drops { get; private set; }
 
         protected override void OnCreate()
@@ -418,6 +554,7 @@ namespace KryticalNova.Persistence.Entities
             m_Storage = GetEntityQuery(ComponentType.ReadOnly<ReceiveRpcCommandRequest>(), ComponentType.ReadOnly<StorageOpRpc>());
             m_Buys = GetEntityQuery(ComponentType.ReadOnly<ReceiveRpcCommandRequest>(), ComponentType.ReadOnly<ShopBuyRpc>());
             m_Sells = GetEntityQuery(ComponentType.ReadOnly<ReceiveRpcCommandRequest>(), ComponentType.ReadOnly<ShopSellRpc>());
+            m_Trades = GetEntityQuery(ComponentType.ReadOnly<ReceiveRpcCommandRequest>(), ComponentType.ReadOnly<TradeOpRpc>());
         }
 
         protected override void OnUpdate()
@@ -492,6 +629,21 @@ namespace KryticalNova.Persistence.Entities
                     {
                         shop.RunSell(asks[i].Cell, asks[i].Count, new ItemStack(asks[i].ItemId, asks[i].StackCount, asks[i].Data), asks[i].Confirmed != 0);
                         ShopOps++;
+                    }
+                received.Dispose();
+                asks.Dispose();
+            }
+            if (!m_Trades.IsEmpty)
+            {
+                var received = m_Trades.ToComponentDataArray<ReceiveRpcCommandRequest>(Allocator.Temp);
+                var asks = m_Trades.ToComponentDataArray<TradeOpRpc>(Allocator.Temp);
+                em.DestroyEntity(m_Trades);
+                // NGO: every trade RPC at the Money limit, then PlayerTrade's own rules on the server body
+                for (int i = 0; i < asks.Length; i++)
+                    if (BodyOf(received[i].SourceConnection, CallKind.Money, out GameObject body) && body.TryGetComponent(out IBodyTrade trade))
+                    {
+                        trade.RunTradeOp((TradeOpKind)asks[i].Op, asks[i].Name.ToString(), asks[i].A, asks[i].B, asks[i].Creds, asks[i].Flag != 0);
+                        TradeOps++;
                     }
                 received.Dispose();
                 asks.Dispose();
@@ -951,7 +1103,7 @@ namespace KryticalNova.Persistence.Entities
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     public partial class PlayerRequestClientSystem : SystemBase
     {
-        EntityQuery m_Replies, m_Cells, m_Tells, m_Slots, m_Clocks, m_SkillRanks, m_SkillBooks, m_StorageCells, m_StorageCreds, m_Weeks;
+        EntityQuery m_Replies, m_Cells, m_Tells, m_Slots, m_Clocks, m_SkillRanks, m_SkillBooks, m_StorageCells, m_StorageCreds, m_Weeks, m_TradeLines, m_TradeViews, m_TradeNotices, m_TradePrompts;
 
         /// <summary>Answers, cells and the server's lines applied (tests).</summary>
         public int Replies { get; private set; }
@@ -970,7 +1122,16 @@ namespace KryticalNova.Persistence.Entities
             m_StorageCells = GetEntityQuery(ComponentType.ReadOnly<ReceiveRpcCommandRequest>(), ComponentType.ReadOnly<StorageCellRpc>());
             m_StorageCreds = GetEntityQuery(ComponentType.ReadOnly<ReceiveRpcCommandRequest>(), ComponentType.ReadOnly<StorageCredsRpc>());
             m_Weeks = GetEntityQuery(ComponentType.ReadOnly<ReceiveRpcCommandRequest>(), ComponentType.ReadOnly<VendorWeekRpc>());
+            m_TradeLines = GetEntityQuery(ComponentType.ReadOnly<ReceiveRpcCommandRequest>(), ComponentType.ReadOnly<TradeLineRpc>());
+            m_TradeViews = GetEntityQuery(ComponentType.ReadOnly<ReceiveRpcCommandRequest>(), ComponentType.ReadOnly<TradeViewRpc>());
+            m_TradeNotices = GetEntityQuery(ComponentType.ReadOnly<ReceiveRpcCommandRequest>(), ComponentType.ReadOnly<TradeNoticeRpc>());
+            m_TradePrompts = GetEntityQuery(ComponentType.ReadOnly<ReceiveRpcCommandRequest>(), ComponentType.ReadOnly<TradePromptRpc>());
         }
+
+        // a trade view's lines wait here for their header (same Seq), which the server sends after them
+        readonly Dictionary<uint, (List<BodyTradeLine> mine, List<BodyTradeLine> theirs)> m_TradePending =
+            new Dictionary<uint, (List<BodyTradeLine>, List<BodyTradeLine>)>();
+        readonly List<uint> m_TradeOld = new List<uint>();
 
         protected override void OnUpdate()
         {
@@ -1025,6 +1186,57 @@ namespace KryticalNova.Persistence.Entities
                     }
                 cellRpcs.Dispose();
                 credRpcs.Dispose();
+            }
+            if (!m_TradeLines.IsEmpty || !m_TradeViews.IsEmpty || !m_TradeNotices.IsEmpty || !m_TradePrompts.IsEmpty)
+            {
+                var lines = m_TradeLines.ToComponentDataArray<TradeLineRpc>(Allocator.Temp);
+                var views = m_TradeViews.ToComponentDataArray<TradeViewRpc>(Allocator.Temp);
+                var notices = m_TradeNotices.ToComponentDataArray<TradeNoticeRpc>(Allocator.Temp);
+                var prompts = m_TradePrompts.ToComponentDataArray<TradePromptRpc>(Allocator.Temp);
+                em.DestroyEntity(m_TradeLines);
+                em.DestroyEntity(m_TradeViews);
+                em.DestroyEntity(m_TradeNotices);
+                em.DestroyEntity(m_TradePrompts);
+                foreach (TradeLineRpc line in lines)
+                {
+                    if (!m_TradePending.TryGetValue(line.Seq, out var pending))
+                        m_TradePending[line.Seq] = pending = (new List<BodyTradeLine>(), new List<BodyTradeLine>());
+                    (line.Theirs != 0 ? pending.theirs : pending.mine).Add(new BodyTradeLine(line.Cell, new ItemStack(line.ItemId, line.Count, line.Data)));
+                }
+                var trade = body != null ? body.GetComponent<IBodyTrade>() : null;
+                foreach (TradeViewRpc header in views)
+                {
+                    m_TradePending.TryGetValue(header.Seq, out var pending);
+                    m_TradePending.Remove(header.Seq);
+                    if (trade == null) continue;
+                    trade.MirrorView(new BodyTradeView
+                    {
+                        active = (header.Flags & TradeViewRpc.Active) != 0, partnerName = header.PartnerName.ToString(),
+                        myCreds = header.MyCreds, theirCreds = header.TheirCreds,
+                        myLocked = (header.Flags & TradeViewRpc.MyLocked) != 0, theirLocked = (header.Flags & TradeViewRpc.TheirLocked) != 0,
+                        myConfirmed = (header.Flags & TradeViewRpc.MyConfirmed) != 0, theirConfirmed = (header.Flags & TradeViewRpc.TheirConfirmed) != 0,
+                        perTrade = header.PerTrade, remainingToday = header.RemainingToday,
+                        mine = pending.mine != null ? pending.mine.ToArray() : Array.Empty<BodyTradeLine>(),
+                        theirs = pending.theirs != null ? pending.theirs.ToArray() : Array.Empty<BodyTradeLine>(),
+                    });
+                    // a header answers every earlier view: lines left from those are dropped
+                    m_TradeOld.Clear();
+                    foreach (uint seq in m_TradePending.Keys) if (seq < header.Seq) m_TradeOld.Add(seq);
+                    foreach (uint seq in m_TradeOld) m_TradePending.Remove(seq);
+                }
+                if (trade != null)
+                {
+                    foreach (TradeNoticeRpc notice in notices) trade.MirrorNotice(notice.Text.ToString());
+                    foreach (TradePromptRpc prompt in prompts)
+                    {
+                        if (prompt.Close != 0) trade.MirrorPromptClosed();
+                        else trade.MirrorPrompt(prompt.From.ToString(), prompt.Seconds);
+                    }
+                }
+                lines.Dispose();
+                views.Dispose();
+                notices.Dispose();
+                prompts.Dispose();
             }
             if (!m_Weeks.IsEmpty)
             {

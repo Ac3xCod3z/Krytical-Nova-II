@@ -179,6 +179,10 @@ backflips' speed (80 % of the air). Added as M7/M8 systems land (each: what to c
 - 8.2.2 (built 3 Nov): at the Armorer buy a forge material with a weekly limit: the window counts down what is left, asking for more
   than is left sells only that, Creds go down by the price; sell something back (70 %): Creds go up; a Rare or better asks to confirm;
   relog: the week's count is still there; far from the vendor: refused (the line shows in the message area).
+- 8.2.3 (built 3 Nov): two clients on a DOTS test server: right-click the other player > Trade (asks by name), the prompt shows on
+  the second, accept; offer items and Creds, lock both, confirm both: the items and Creds swap; relog both: still swapped; start
+  another and close one client mid-trade: the other is told it left, nothing moved; walk apart: cancelled. (/trade in chat waits for
+  the chat port; selecting a player and the strip's Trade button find no PlayerTrade on a DOTS view: use the menu.)
 - 8.2.x/7.6: a Vault deposit and withdraw, a shop buy and sell, a trade with a second player, a Kiosk sale, each after a relog.
 - 8.4.x: chat say/tell, a contact, a party with Follow, founding a Crew, an emote and a mount seen from the second client.
 The list is kept current in this section as systems land.

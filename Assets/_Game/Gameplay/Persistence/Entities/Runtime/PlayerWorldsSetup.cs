@@ -91,6 +91,7 @@ namespace KryticalNova.Persistence.Entities
             ConfigurePlanner(planner, (prefab ?? PlayerPrefab)());
             // what a server body says to its own player goes to that player's connection (M7/M8 system 0)
             KryticalNova.Core.OwnerMessages.Current = new EntityOwnerMessages();
+            KryticalNova.Items.TradeOwnerLink.Current = new EntityTradeOwnerLink();   // the trade view, notice and prompt (M8 8.2.3)
 #if UNITY_SERVER || UNITY_EDITOR
             KnPageRules.Commands = new KnPageGmTools();   // the page's command box and GM list (M7.4)
 #endif

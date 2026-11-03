@@ -197,24 +197,24 @@ namespace KryticalNova.Tests
         public void Default_ThePortedPartsAreReal()
         {
             CollectionAssert.AreEquivalent(new[] { "look", "progression", "inventory", "serums", "wallet", "loadouts", "xpboosts", "skills", "movement", "vault",
-                "deepvault", "vendorWeek" }, SavePassthrough.RealKeys.ToArray(), "each part goes real with the port that writes it (plan section 0)");
+                "deepvault", "vendorWeek", "trade" }, SavePassthrough.RealKeys.ToArray(), "each part goes real with the port that writes it (plan section 0)");
             Assert.IsFalse(SavePassthrough.Is("look"));
             Assert.IsFalse(SavePassthrough.Is("progression"));
             Assert.IsFalse(SavePassthrough.Is("inventory"), "items are used on the server's body: the Pack is real (owner, 2 Nov, item 5)");
             Assert.IsFalse(SavePassthrough.Is("serums"));
             Assert.IsFalse(SavePassthrough.Is("wallet"));
-            Assert.IsTrue(SavePassthrough.Is("trade"), "trade is not ported yet (M8 8.2.3)");
+            Assert.IsTrue(SavePassthrough.Is("crate"), "the crate is not ported yet (M8 group 4)");
             Assert.IsTrue(SavePassthrough.Is("a key nobody knows"), "unknown keys are passed through: the safe side");
-            Assert.IsFalse(SavePassthrough.Never("trade"));
+            Assert.IsFalse(SavePassthrough.Never("crate"));
         }
 
         [Test]
         public void MakeReal_FlipsOneKey_AndResetPutsItBack()
         {
-            SavePassthrough.MakeReal("trade");
-            Assert.IsFalse(SavePassthrough.Is("trade"));
+            SavePassthrough.MakeReal("crate");
+            Assert.IsFalse(SavePassthrough.Is("crate"));
             SavePassthrough.ResetToDefault();
-            Assert.IsTrue(SavePassthrough.Is("trade"));
+            Assert.IsTrue(SavePassthrough.Is("crate"));
         }
 
         [Test]
