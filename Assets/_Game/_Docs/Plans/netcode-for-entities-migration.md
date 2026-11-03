@@ -1200,7 +1200,11 @@ checkpoints; the owner's Thursday hand-test list; owner questions). NGO rules ta
   - [x] Movement ranks: Run / Jump bought on the server body (MovementUpgradeRpc, Money), `movement` real (Wallstride opens from them);
     B15; save note approved. (M8 group 3 core done.)
 - [ ] M8 group 2: storage, shopping, trade, Kiosk player side.
-  - [ ] 8.2.1 storage (Vault + Deep Vault): requests run NGO's PlayerStorage rules on the server body (Vaultkeeper range, Items limit,
+  - [x] 8.2.1 storage (Vault + Deep Vault): requests run NGO's PlayerStorage rules on the server body (Vaultkeeper range, Items limit,
     Creds through PlayerWallet VaultDeposit/VaultWithdraw at the Money limit), cells + Creds mirrored to the owner, `vault` + `deepvault`
-    real together (Items IBodyStorage keeps Economy out of the network layer); B17. Save note + review summary to the Master first.
+    real together (Items IBodyStorage keeps Economy out of the network layer); B17; save note + HIGH review approved.
+  - [ ] 8.2.2 shopping (NPC shops): buy and sell requests run NGO's PlayerShopping rules on the server body (vendor reach, price by the
+    day, weekly limit, room first, Creds through PlayerWallet Vendor/Refund/VendorSale at the Money limit, shop.buy/shop.sell ledger lines,
+    save at once), this week's limited purchases mirrored to the owner (VendorWeekRpc), `vendorWeek` real (Items IBodyShopping); B18.
+    Save note + review summary to the Master first.
 - [ ] M8 group 4: chat, contacts, party, sponsor, Crew, emotes, pets, mounts, crate, Recall, housing check; duels and Cadence wait for M4.

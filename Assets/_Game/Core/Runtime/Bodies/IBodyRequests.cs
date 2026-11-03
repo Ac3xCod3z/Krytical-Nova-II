@@ -76,5 +76,14 @@ namespace KryticalNova.Core
         /// <paramref name="a"/> and <paramref name="b"/> are NGO's cells, <paramref name="amount"/> the count or the Creds.
         /// </summary>
         void StorageOp(byte kind, StorageOpKind op, short a, short b, long amount);
+
+        /// <summary>Asks the server to buy up to <paramref name="count"/> of an item from the vendor (its stock's NPC by name; M8 8.2.2, NGO's buy RPC).</summary>
+        void ShopBuy(string vendor, ushort itemId, ushort count);
+
+        /// <summary>
+        /// Asks the server to sell <paramref name="count"/> from a Pack cell to the vendor in reach (NGO's sell RPC): the stack the player saw
+        /// (<paramref name="itemId"/>, <paramref name="stackCount"/>, <paramref name="data"/>) and whether they confirmed the sale.
+        /// </summary>
+        void ShopSell(ushort cell, ushort count, ushort itemId, ushort stackCount, ulong data, bool confirmed);
     }
 }

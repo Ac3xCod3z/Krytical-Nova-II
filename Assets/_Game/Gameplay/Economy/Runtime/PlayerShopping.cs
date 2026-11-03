@@ -26,7 +26,7 @@ namespace KryticalNova.Economy
     /// </summary>
     [DisallowMultipleComponent]
     [RequireComponent(typeof(PlayerInventory))]
-    public sealed class PlayerShopping : NetworkBehaviour, ISaveParticipant
+    public sealed class PlayerShopping : NetworkBehaviour, ISaveParticipant, IBodyShopping
     {
         // Beyond the vendor's own range: the player may have taken a step since the dialogue.
         private const float ReachPadding = 2.5f;
@@ -94,6 +94,48 @@ namespace KryticalNova.Economy
 
         private void OnNetBoughtChanged(NetworkListEvent<VendorBought> change) => WeeklyChanged?.Invoke();
         private void OnNetWeekChanged(long previous, long current) => WeeklyChanged?.Invoke();
+
+        // ------------------------------------------------------------------ the entity netcode (M8 8.2.2)
+
+        // A client view of the entity netcode only shows the server's week (MirrorWeek / MirrorBought); its server body decides.
+        private bool EntityView => KryticalNova.Core.BodyRoleTag.Of(this) is { Kind: KryticalNova.Core.NetRoleKind.ClientView };
+        private bool EntityServer => KryticalNova.Core.BodyRoleTag.Of(this) is { Kind: KryticalNova.Core.NetRoleKind.ServerBody };
+        private bool Decides => (IsSpawned && IsServer) || EntityServer;
+
+        private KryticalNova.Core.IBodyRequests Requests =>
+            KryticalNova.Core.BodyRoleTag.RequestsOf(this) is KryticalNova.Core.IBodyRequests requests ? requests : null;
+
+        long IBodyShopping.BoughtWeek => boughtWeek;
+        IReadOnlyDictionary<ushort, int> IBodyShopping.Bought => bought;
+
+        /// <summary>A server body of the entity netcode runs its owner's purchase (NGO's BuyRpc body, after the caller's limit).</summary>
+        public void RunBuy(string vendor, ushort itemId, int count)
+        {
+            if (EntityServer) Answer(ServerBuy(vendor, itemId, count));
+        }
+
+        /// <summary>A server body of the entity netcode runs its owner's sale (NGO's SellRpc body, after the caller's limit).</summary>
+        public void RunSell(int cell, int count, ItemStack expected, bool confirmed)
+        {
+            if (EntityServer) Answer(ServerSell(cell, count, expected, confirmed));
+        }
+
+        /// <summary>The entity netcode's own view body: a new copy of the server's week begins (NGO's owner-only netBoughtWeek).</summary>
+        public void MirrorWeek(long week)
+        {
+            if (!KryticalNova.Core.BodyRoleTag.IsLocalClientView(this)) return;
+            boughtWeek = week;
+            bought.Clear();
+            WeeklyChanged?.Invoke();
+        }
+
+        /// <summary>The entity netcode's own view body: one item's count of the server's week (NGO's owner-only netBought).</summary>
+        public void MirrorBought(ushort itemId, int count)
+        {
+            if (!KryticalNova.Core.BodyRoleTag.IsLocalClientView(this)) return;
+            if (count > 0) bought[itemId] = count; else bought.Remove(itemId);
+            WeeklyChanged?.Invoke();
+        }
 
         // ------------------------------------------------------------------ what the window reads
 
@@ -197,7 +239,7 @@ namespace KryticalNova.Economy
         /// <summary>Server or offline (GM): forget what this character bought this week.</summary>
         public void ServerResetWeek()
         {
-            if (IsSpawned && !IsServer) return;
+            if ((IsSpawned && !IsServer) || EntityView) return;
             boughtWeek = CurrentWeek;
             bought.Clear();
             PushBought();
@@ -214,6 +256,7 @@ namespace KryticalNova.Economy
         public void RequestBuy(VendorStock stock, ItemDefinition item, int count)
         {
             if (stock == null || stock.vendor == null || item == null) return;
+            if (Requests is { } requests) { requests.ShopBuy(stock.vendor.name, item.itemId, (ushort)Mathf.Clamp(count, 1, MaxPerPurchase)); return; }
             if (IsSpawned && IsOwner) BuyRpc(new FixedString64Bytes(stock.vendor.name), item.itemId, (ushort)Mathf.Clamp(count, 1, MaxPerPurchase));
             else if (!IsSpawned) ClientPresentationRegistry.Messages?.ShowMessage("Shops need an online session.");
         }
@@ -224,6 +267,11 @@ namespace KryticalNova.Economy
             if (inventory == null) return;
             ItemStack held = inventory.Get(packCell);
             if (held.IsEmpty) return;
+            if (Requests is { } requests)
+            {
+                requests.ShopSell((ushort)packCell, (ushort)Mathf.Clamp(count, 1, held.count), held.itemId, held.count, held.data, confirmed);
+                return;
+            }
             if (IsSpawned && IsOwner) SellRpc((ushort)packCell, (ushort)Mathf.Clamp(count, 1, held.count), held, confirmed);
             else if (!IsSpawned) ClientPresentationRegistry.Messages?.ShowMessage("Shops need an online session.");
         }
@@ -247,7 +295,7 @@ namespace KryticalNova.Economy
         /// <summary>Server: buys from a vendor. Returns why not (told to the player), or null when it was bought.</summary>
         public string ServerBuy(string vendorName, ushort itemId, int count)
         {
-            if (!IsSpawned || !IsServer) return "Shops need an online session.";
+            if (!Decides) return "Shops need an online session.";
             if (resources != null && !resources.IsAlive) return "You can't buy while defeated.";
             if (wallet == null || inventory == null || inventory.Catalog == null) return VendorRules.ReasonNotSold;
             VendorStock stock = vendors != null ? vendors.For(vendorName) : null;
@@ -306,7 +354,7 @@ namespace KryticalNova.Economy
         /// <summary>Server: sells from a Pack cell to the vendor the player stands by. Returns why not, or null when it was sold.</summary>
         public string ServerSell(int cell, int count, ItemStack expected, bool confirmed)
         {
-            if (!IsSpawned || !IsServer) return "Shops need an online session.";
+            if (!Decides) return "Shops need an online session.";
             if (resources != null && !resources.IsAlive) return "You can't sell while defeated.";
             if (wallet == null || inventory == null || inventory.Catalog == null) return VendorRules.ReasonNotBought;
             if (!CanSellHere) return VendorRules.ReasonTooFar;
@@ -334,6 +382,7 @@ namespace KryticalNova.Economy
         private void Answer(string refusal)
         {
             if (string.IsNullOrEmpty(refusal)) return;
+            if (EntityServer) { KryticalNova.Core.OwnerMessages.TryTell(this, refusal); return; }   // its player's message line (M8 8.2.2)
             if (IsOwnedByServer) ClientPresentationRegistry.Messages?.ShowMessage(refusal);
             else RefusedRpc(refusal);
         }
@@ -343,6 +392,7 @@ namespace KryticalNova.Economy
 
         private void Tell(string text)
         {
+            if (EntityServer) { KryticalNova.Core.OwnerMessages.TryTell(this, text); return; }   // until chat is ported (group 4)
             if (chat != null && IsSpawned && IsServer && !string.IsNullOrEmpty(text)) chat.ServerSystem(text);
         }
 
@@ -379,7 +429,7 @@ namespace KryticalNova.Economy
 
         public void RestoreSave(string json)
         {
-            if ((IsSpawned && !IsServer) || string.IsNullOrEmpty(json)) return;
+            if ((IsSpawned && !IsServer) || EntityView || string.IsNullOrEmpty(json)) return;
             VendorWeekSave save = JsonUtility.FromJson<VendorWeekSave>(json);
             boughtWeek = save.week;
             bought.Clear();

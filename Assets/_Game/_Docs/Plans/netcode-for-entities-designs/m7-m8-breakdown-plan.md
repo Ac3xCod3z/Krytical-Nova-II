@@ -176,6 +176,9 @@ backflips' speed (80 % of the air). Added as M7/M8 systems land (each: what to c
   HUD's "held" text on a DOTS client: it still reads NGO's IsHeldFor and should show WorldDrop.ViewHeldForMe; and gm.drop in front of a GM).
 - 8.2.1 (built 3 Nov): at the Vaultkeeper deposit and withdraw items and Creds in the Vault and the Deep Vault; relog (and switch
   character for the Deep Vault): everything is still there; far from the Vaultkeeper: refused.
+- 8.2.2 (built 3 Nov): at the Armorer buy a forge material with a weekly limit: the window counts down what is left, asking for more
+  than is left sells only that, Creds go down by the price; sell something back (70 %): Creds go up; a Rare or better asks to confirm;
+  relog: the week's count is still there; far from the vendor: refused (the line shows in the message area).
 - 8.2.x/7.6: a Vault deposit and withdraw, a shop buy and sell, a trade with a second player, a Kiosk sale, each after a relog.
 - 8.4.x: chat say/tell, a contact, a party with Follow, founding a Crew, an emote and a mount seen from the second client.
 The list is kept current in this section as systems land.

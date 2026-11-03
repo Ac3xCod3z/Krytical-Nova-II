@@ -145,6 +145,32 @@ namespace KryticalNova.Persistence.Entities
         public long Creds;
     }
 
+    /// <summary>The owner buys from a vendor (NGO's <c>PlayerShopping.BuyRpc</c>; M8 8.2.2): the stock's NPC by name, the item, how many.</summary>
+    public struct ShopBuyRpc : IRpcCommand
+    {
+        public FixedString64Bytes Vendor;
+        public ushort ItemId, Count;
+    }
+
+    /// <summary>The owner sells from a Pack cell (NGO's <c>PlayerShopping.SellRpc</c>): the stack the player saw and whether they confirmed.</summary>
+    public struct ShopSellRpc : IRpcCommand
+    {
+        public ushort Cell, Count, ItemId, StackCount;
+        public ulong Data;
+        public byte Confirmed;
+    }
+
+    /// <summary>
+    /// This week's limited purchases to their owner (NGO's owner-only netBoughtWeek + netBought): a <see cref="Begin"/> line with the week
+    /// empties the owner's copy, then one line per item.
+    /// </summary>
+    public struct VendorWeekRpc : IRpcCommand
+    {
+        public long Week;
+        public ushort ItemId, Count;
+        public byte Begin;
+    }
+
     /// <summary>The owner picks up a drop by its server id (NGO's <c>PlayerLoot.PickupRpc</c>; M7.5).</summary>
     public struct PickupRpc : IRpcCommand
     {
@@ -273,6 +299,28 @@ namespace KryticalNova.Persistence.Entities
             em.AddComponent<SendRpcCommandRequest>(rpc);
         }
 
+        public void ShopBuy(string vendor, ushort itemId, ushort count)
+        {
+            if (m_World == null || !m_World.IsCreated || itemId == 0 || count == 0 || string.IsNullOrEmpty(vendor)
+                || System.Text.Encoding.UTF8.GetByteCount(vendor) > FixedString64Bytes.UTF8MaxLengthInBytes) return;
+            var em = m_World.EntityManager;
+            Entity rpc = em.CreateEntity();
+            em.AddComponentData(rpc, new ShopBuyRpc { Vendor = new FixedString64Bytes(vendor), ItemId = itemId, Count = count });
+            em.AddComponent<SendRpcCommandRequest>(rpc);
+        }
+
+        public void ShopSell(ushort cell, ushort count, ushort itemId, ushort stackCount, ulong data, bool confirmed)
+        {
+            if (m_World == null || !m_World.IsCreated) return;
+            var em = m_World.EntityManager;
+            Entity rpc = em.CreateEntity();
+            em.AddComponentData(rpc, new ShopSellRpc
+            {
+                Cell = cell, Count = count, ItemId = itemId, StackCount = stackCount, Data = data, Confirmed = (byte)(confirmed ? 1 : 0),
+            });
+            em.AddComponent<SendRpcCommandRequest>(rpc);
+        }
+
         public void Pickup(uint dropId)
         {
             if (m_World == null || !m_World.IsCreated || dropId == 0) return;
@@ -338,7 +386,7 @@ namespace KryticalNova.Persistence.Entities
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     public partial class PlayerRequestServerSystem : SystemBase
     {
-        EntityQuery m_Uses, m_Casts, m_PackOps, m_LoadoutOps, m_Refills, m_Allocations, m_Upgrades, m_MoveUpgrades, m_Pickups, m_Drops, m_Storage;
+        EntityQuery m_Uses, m_Casts, m_PackOps, m_LoadoutOps, m_Refills, m_Allocations, m_Upgrades, m_MoveUpgrades, m_Pickups, m_Drops, m_Storage, m_Buys, m_Sells;
 
         /// <summary>Requests run, refused, and dropped by the request limits (tests).</summary>
         public int Used { get; private set; }
@@ -352,6 +400,7 @@ namespace KryticalNova.Persistence.Entities
         public int Upgrades { get; private set; }
         public int Pickups { get; private set; }
         public int StorageOps { get; private set; }
+        public int ShopOps { get; private set; }
         public int Drops { get; private set; }
 
         protected override void OnCreate()
@@ -367,6 +416,8 @@ namespace KryticalNova.Persistence.Entities
             m_Pickups = GetEntityQuery(ComponentType.ReadOnly<ReceiveRpcCommandRequest>(), ComponentType.ReadOnly<PickupRpc>());
             m_Drops = GetEntityQuery(ComponentType.ReadOnly<ReceiveRpcCommandRequest>(), ComponentType.ReadOnly<DropItemRpc>());
             m_Storage = GetEntityQuery(ComponentType.ReadOnly<ReceiveRpcCommandRequest>(), ComponentType.ReadOnly<StorageOpRpc>());
+            m_Buys = GetEntityQuery(ComponentType.ReadOnly<ReceiveRpcCommandRequest>(), ComponentType.ReadOnly<ShopBuyRpc>());
+            m_Sells = GetEntityQuery(ComponentType.ReadOnly<ReceiveRpcCommandRequest>(), ComponentType.ReadOnly<ShopSellRpc>());
         }
 
         protected override void OnUpdate()
@@ -413,6 +464,35 @@ namespace KryticalNova.Persistence.Entities
                     foreach (var storage in body.GetComponents<IBodyStorage>())
                         if (storage.StorageKind == asks[i].Kind) { storage.RunStorageOp(op, asks[i].A, asks[i].B, asks[i].Amount); StorageOps++; break; }
                 }
+                received.Dispose();
+                asks.Dispose();
+            }
+            if (!m_Buys.IsEmpty)
+            {
+                var received = m_Buys.ToComponentDataArray<ReceiveRpcCommandRequest>(Allocator.Temp);
+                var asks = m_Buys.ToComponentDataArray<ShopBuyRpc>(Allocator.Temp);
+                em.DestroyEntity(m_Buys);
+                // NGO: the Money limit, then PlayerShopping's own rules on the server body (reach, price, week limit, room, wallet, ledger, save)
+                for (int i = 0; i < asks.Length; i++)
+                    if (BodyOf(received[i].SourceConnection, CallKind.Money, out GameObject body) && body.TryGetComponent(out IBodyShopping shop))
+                    {
+                        shop.RunBuy(asks[i].Vendor.ToString(), asks[i].ItemId, asks[i].Count);
+                        ShopOps++;
+                    }
+                received.Dispose();
+                asks.Dispose();
+            }
+            if (!m_Sells.IsEmpty)
+            {
+                var received = m_Sells.ToComponentDataArray<ReceiveRpcCommandRequest>(Allocator.Temp);
+                var asks = m_Sells.ToComponentDataArray<ShopSellRpc>(Allocator.Temp);
+                em.DestroyEntity(m_Sells);
+                for (int i = 0; i < asks.Length; i++)
+                    if (BodyOf(received[i].SourceConnection, CallKind.Money, out GameObject body) && body.TryGetComponent(out IBodyShopping shop))
+                    {
+                        shop.RunSell(asks[i].Cell, asks[i].Count, new ItemStack(asks[i].ItemId, asks[i].StackCount, asks[i].Data), asks[i].Confirmed != 0);
+                        ShopOps++;
+                    }
                 received.Dispose();
                 asks.Dispose();
             }
@@ -651,6 +731,7 @@ namespace KryticalNova.Persistence.Entities
         readonly Dictionary<Entity, (List<byte> ranks, ulong books)> m_SentSkills = new Dictionary<Entity, (List<byte>, ulong)>();
         readonly Dictionary<(Entity, byte), (ItemStack[] cells, long creds)> m_SentStorage = new Dictionary<(Entity, byte), (ItemStack[], long)>();
         readonly List<(Entity, byte)> m_StorageGone = new List<(Entity, byte)>();
+        readonly Dictionary<Entity, (long week, Dictionary<ushort, int> bought)> m_SentWeeks = new Dictionary<Entity, (long, Dictionary<ushort, int>)>();
         readonly List<byte> m_Ranks = new List<byte>();
 
         /// <summary>NGO's PlayerExperienceBoosts.SendSeconds: a running clock is sent at most this often between uses and run-outs.</summary>
@@ -666,6 +747,7 @@ namespace KryticalNova.Persistence.Entities
         public int ClocksSent { get; private set; }
         public int SkillCellsSent { get; private set; }
         public int StorageCellsSent { get; private set; }
+        public int WeeksSent { get; private set; }
 
         protected override void OnCreate() =>
             m_InGame = GetEntityQuery(ComponentType.ReadOnly<NetworkId>(), ComponentType.ReadOnly<NetworkStreamInGame>());
@@ -684,7 +766,7 @@ namespace KryticalNova.Persistence.Entities
 
             m_Gone.Clear();
             foreach (Entity ghost in m_Sent.Keys) if (!em.Exists(ghost)) m_Gone.Add(ghost);
-            foreach (Entity ghost in m_Gone) { m_Sent.Remove(ghost); m_SentLoadouts.Remove(ghost); m_SentClocks.Remove(ghost); m_SentSkills.Remove(ghost); }
+            foreach (Entity ghost in m_Gone) { m_Sent.Remove(ghost); m_SentLoadouts.Remove(ghost); m_SentClocks.Remove(ghost); m_SentSkills.Remove(ghost); m_SentWeeks.Remove(ghost); }
             m_StorageGone.Clear();
             foreach (var k in m_SentStorage.Keys) if (!em.Exists(k.Item1)) m_StorageGone.Add(k);
             foreach (var k in m_StorageGone) m_SentStorage.Remove(k);
@@ -758,6 +840,20 @@ namespace KryticalNova.Persistence.Entities
                     }
                     m_SentStorage[key] = told;
                 }
+                // this week's limited purchases (NGO: the owner-only netBoughtWeek + netBought), on arrival, then whenever the week or a count changes
+                if (entry.Body.TryGetComponent(out IBodyShopping shopping))
+                {
+                    bool arriving = !m_SentWeeks.TryGetValue(entry.Ghost, out var told);
+                    if (arriving || !SameWeek(told.week, told.bought, shopping))
+                    {
+                        told = (shopping.BoughtWeek, new Dictionary<ushort, int>(shopping.Bought));
+                        m_SentWeeks[entry.Ghost] = told;
+                        SendWeek(em, connection, new VendorWeekRpc { Week = told.week, Begin = 1 });
+                        foreach (KeyValuePair<ushort, int> bought in told.bought)
+                            SendWeek(em, connection, new VendorWeekRpc { Week = told.week, ItemId = bought.Key, Count = (ushort)Mathf.Clamp(bought.Value, 0, ushort.MaxValue) });
+                        WeeksSent++;
+                    }
+                }
                 // the skills' ranks and unlocked books (NGO: the owner-only netRanks and netUnlockedBooks), all on arrival, then changes
                 if (entry.Body.TryGetComponent(out PlayerCombatSkills combatSkills))
                 {
@@ -824,6 +920,21 @@ namespace KryticalNova.Persistence.Entities
         /// <summary>Cells after the Pack's: one per equipment slot (index Capacity + slot; slot 0 is None).</summary>
         public const int WornCells = (int)EquipSlot.Pet + 1;
 
+        static bool SameWeek(long week, Dictionary<ushort, int> told, IBodyShopping shopping)
+        {
+            if (week != shopping.BoughtWeek || told.Count != shopping.Bought.Count) return false;
+            foreach (KeyValuePair<ushort, int> bought in shopping.Bought)
+                if (!told.TryGetValue(bought.Key, out int count) || count != bought.Value) return false;
+            return true;
+        }
+
+        static void SendWeek(EntityManager em, Entity connection, VendorWeekRpc line)
+        {
+            Entity rpc = em.CreateEntity();
+            em.AddComponentData(rpc, line);
+            em.AddComponentData(rpc, new SendRpcCommandRequest { TargetConnection = connection });
+        }
+
         void Send(Entity connection, PackCellRpc cell)
         {
             Entity rpc = EntityManager.CreateEntity();
@@ -840,7 +951,7 @@ namespace KryticalNova.Persistence.Entities
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     public partial class PlayerRequestClientSystem : SystemBase
     {
-        EntityQuery m_Replies, m_Cells, m_Tells, m_Slots, m_Clocks, m_SkillRanks, m_SkillBooks, m_StorageCells, m_StorageCreds;
+        EntityQuery m_Replies, m_Cells, m_Tells, m_Slots, m_Clocks, m_SkillRanks, m_SkillBooks, m_StorageCells, m_StorageCreds, m_Weeks;
 
         /// <summary>Answers, cells and the server's lines applied (tests).</summary>
         public int Replies { get; private set; }
@@ -858,6 +969,7 @@ namespace KryticalNova.Persistence.Entities
             m_SkillBooks = GetEntityQuery(ComponentType.ReadOnly<ReceiveRpcCommandRequest>(), ComponentType.ReadOnly<SkillBooksRpc>());
             m_StorageCells = GetEntityQuery(ComponentType.ReadOnly<ReceiveRpcCommandRequest>(), ComponentType.ReadOnly<StorageCellRpc>());
             m_StorageCreds = GetEntityQuery(ComponentType.ReadOnly<ReceiveRpcCommandRequest>(), ComponentType.ReadOnly<StorageCredsRpc>());
+            m_Weeks = GetEntityQuery(ComponentType.ReadOnly<ReceiveRpcCommandRequest>(), ComponentType.ReadOnly<VendorWeekRpc>());
         }
 
         protected override void OnUpdate()
@@ -913,6 +1025,19 @@ namespace KryticalNova.Persistence.Entities
                     }
                 cellRpcs.Dispose();
                 credRpcs.Dispose();
+            }
+            if (!m_Weeks.IsEmpty)
+            {
+                var lines = m_Weeks.ToComponentDataArray<VendorWeekRpc>(Allocator.Temp);
+                em.DestroyEntity(m_Weeks);
+                var shopping = body != null ? body.GetComponent<IBodyShopping>() : null;
+                if (shopping != null)
+                    foreach (VendorWeekRpc line in lines)
+                    {
+                        if (line.Begin != 0) shopping.MirrorWeek(line.Week);
+                        else shopping.MirrorBought(line.ItemId, line.Count);
+                    }
+                lines.Dispose();
             }
             if (!m_SkillRanks.IsEmpty || !m_SkillBooks.IsEmpty)
             {

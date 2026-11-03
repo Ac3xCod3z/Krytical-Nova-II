@@ -436,6 +436,9 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
             public void Pickup(uint dropId) => Ops.Add($"Pickup {dropId}");
             public void DropItem(byte container, byte index) => Ops.Add($"Drop {container}:{index}");
             public void StorageOp(byte kind, StorageOpKind op, short a, short b, long amount) => Ops.Add($"Storage {kind} {op} {a} {b} {amount}");
+            public void ShopBuy(string vendor, ushort itemId, ushort count) => Ops.Add($"Buy {vendor} {itemId} {count}");
+            public void ShopSell(ushort cell, ushort count, ushort itemId, ushort stackCount, ulong data, bool confirmed) =>
+                Ops.Add($"Sell {cell} {count} {itemId}x{stackCount}:{data} {confirmed}");
         }
 
         [UnityTest]
@@ -1154,6 +1157,144 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
             Assert.AreEqual(deepText, back.Get("deepvault"), "the deepvault part saves back byte for byte");
             agent.OnServerLeaving();
             Object.Destroy(keeper);
+        }
+
+        [UnityTest]
+        public IEnumerator B18_Shopping_RunsOnTheServerBody_TheWeeklyLimitHolds_LedgerLines_AndVendorWeekIsReal()
+        {
+            NetRole.Install(new BodyRoleNetRoleAdapter(null, () => NetRoleKind.ServerBody));
+            Assert.IsFalse(SavePassthrough.Is("vendorWeek"), "the vendorWeek part is real now");
+            PlayerKeys.Reset();
+            const string account = "3c4d5e6f708192a3b4c5d6e7f8091021", characterId = "e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0";
+            GameObject body = Admitted(PlayerKeys.Mint(25).Value, account, characterId, "Shopper");
+            GameObject view = Make(NetRoleKind.ClientView, true, new PlayerKey(25));
+            for (int i = 0; i < 30; i++) yield return null;
+
+            var shop = body.GetComponent<KryticalNova.Economy.PlayerShopping>();
+            var inv = body.GetComponent<PlayerInventory>();
+            var wallet = body.GetComponent<KryticalNova.Economy.PlayerWallet>();
+            Assert.IsNotNull(shop, "the body has its shopping");
+            Assert.IsNotNull(shop.Vendors, "and the vendor catalog");
+
+            // a listing with a weekly limit (the Armorer's forge materials, owner 17 Oct 2026)
+            KryticalNova.Economy.VendorStock stock = null;
+            ItemDefinition item = null;
+            int limit = 0;
+            foreach (var s in shop.Vendors.stocks)
+            {
+                if (s == null || s.vendor == null) continue;
+                foreach (var listing in s.listings)
+                    if (listing.item != null && listing.price > 0 && listing.weeklyLimit > 0 && inv.Catalog.Get(listing.item.itemId) != null)
+                    { stock = s; item = listing.item; limit = listing.weeklyLimit; break; }
+                if (stock != null) break;
+            }
+            Assert.IsNotNull(stock, "a vendor lists an item with a weekly limit");
+            Assert.IsTrue((stock.vendor.offers & KryticalNova.NPC.NpcOffer.Shop) != 0, stock.vendor.name + " offers a shop");
+            Assert.IsTrue(stock.TryGetListed(item, out long price) && price > 0, "a listed price (what NGO's TryPrice takes first)");
+
+            wallet.ServerSet(price * (limit + 10) + 100000);
+            long creds = wallet.Creds;
+            int held = inv.CountItem(item.itemId);
+
+            // no vendor in reach: refused, nothing moves
+            shop.RunBuy(stock.vendor.name, item.itemId, 1);
+            Assert.AreEqual(creds, wallet.Creds, "far from the vendor: no Creds spent");
+            Assert.AreEqual(held, inv.CountItem(item.itemId), "and nothing given");
+
+            // the vendor's NPC by the body
+            var npcObject = new GameObject("Npc " + stock.vendor.name);
+            npcObject.SetActive(false);
+            var npc = npcObject.AddComponent<KryticalNova.NPC.NpcInteractable>();
+            typeof(KryticalNova.NPC.NpcInteractable).GetField("definition", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(npc, stock.vendor);
+            npcObject.transform.position = body.transform.position + Vector3.right;
+            npcObject.SetActive(true);
+            m_Made.Add(npcObject);
+
+            // asking for more than the week allows sells only what is left of it, at NGO's price, through the wallet
+            shop.RunBuy(stock.vendor.name, item.itemId, limit + 5);
+            Assert.AreEqual(held + limit, inv.CountItem(item.itemId), "the week's limit is all that is sold");
+            Assert.AreEqual(creds - price * limit, wallet.Creds, "paid exactly the price of what was given");
+            Assert.AreEqual(limit, shop.BoughtThisWeek(item.itemId), "the week remembers it");
+            long afterBuy = wallet.Creds;
+            shop.RunBuy(stock.vendor.name, item.itemId, 1);
+            Assert.AreEqual(held + limit, inv.CountItem(item.itemId), "sold out this week: nothing more");
+            Assert.AreEqual(afterBuy, wallet.Creds, "and nothing spent");
+
+            // selling: a stack that changed since the player saw it (another state; NGO compares item and state) is left alone; then sold
+            int cell = -1;
+            for (int i = 0; i < PlayerInventory.Capacity; i++) if (inv.Get(i).itemId == item.itemId) { cell = i; break; }
+            ItemStack stack = inv.Get(cell);
+            long unit = shop.SellValue(item);
+            Assert.Greater(unit, 0, "the vendor buys it back");
+            shop.RunSell(cell, 1, new ItemStack(stack.itemId, stack.count, stack.data ^ 1UL), true);
+            Assert.AreEqual(afterBuy, wallet.Creds, "a changed stack: not sold");
+            if (shop.NeedsConfirm(item, stack))
+            {
+                shop.RunSell(cell, 1, stack, false);
+                Assert.AreEqual(afterBuy, wallet.Creds, "a sale that must be confirmed is refused without it");
+            }
+            int beforeSell = inv.CountItem(item.itemId);
+            shop.RunSell(cell, 1, stack, true);
+            Assert.AreEqual(beforeSell - 1, inv.CountItem(item.itemId), "one sold");
+            Assert.AreEqual(afterBuy + unit, wallet.Creds, "for the sell-back value, through the wallet");
+
+            // the ledger has NGO's shop.buy and shop.sell lines
+            body.GetComponent<PlayerSaveAgent>().Save();
+            ServerSave.WaitForDisk();
+            List<LedgerEntry> buys = ServerSave.ReadLedger(account, 0, 100).FindAll(l => l.kind == LedgerKinds.ShopBuy);
+            List<LedgerEntry> sells = ServerSave.ReadLedger(account, 0, 100).FindAll(l => l.kind == LedgerKinds.ShopSell);
+            Assert.AreEqual(1, buys.Count, "one shop.buy line");
+            Assert.AreEqual(limit, buys[0].items.Find(x => x.item == item.itemId).count, "with what was bought");
+            Assert.AreEqual(1, sells.Count, "one shop.sell line");
+            Assert.AreEqual(-1, sells[0].items.Find(x => x.item == item.itemId).count, "with what was sold");
+
+            // the owner's view only asks, and shows the server's week
+            var viewShop = view.GetComponent<KryticalNova.Economy.PlayerShopping>();
+            var viewInv = view.GetComponent<PlayerInventory>();
+            var asked = new Asked();
+            view.GetComponent<BodyRoleTag>().Requests = asked;
+            viewShop.RequestBuy(stock, item, 2);
+            viewInv.MirrorCell(0, new ItemStack(item.itemId, 3));
+            viewShop.RequestSell(0, 1, true);
+            CollectionAssert.AreEqual(new[] { $"Buy {stock.vendor.name} {item.itemId} 2", $"Sell 0 1 {item.itemId}x3:0 True" }, asked.Ops, "sent to the server");
+            int viewHeld = viewInv.CountItem(item.itemId);
+            viewShop.RunBuy(stock.vendor.name, item.itemId, 1);
+            Assert.AreEqual(viewHeld, viewInv.CountItem(item.itemId), "a view never buys itself");
+            viewShop.MirrorWeek(((KryticalNova.Items.IBodyShopping)shop).BoughtWeek);
+            viewShop.MirrorBought(item.itemId, limit);
+            Assert.AreEqual(limit, viewShop.BoughtThisWeek(item.itemId), "the owner's window shows the server's week");
+            viewShop.ServerResetWeek();
+            Assert.AreEqual(limit, viewShop.BoughtThisWeek(item.itemId), "a view never resets the week itself");
+
+            string weekText = shop.CaptureSave();
+
+            // an old save (NGO's text) loads into a fresh admitted server body unchanged and saves back every byte
+            const string account2 = "4d5e6f708192a3b4c5d6e7f809102132", characterId2 = "f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1";
+            GameObject other = Make(NetRoleKind.ServerBody, false, new PlayerKey(26));
+            yield return null;
+            CharacterRecipe recipe = AnyLegalRecipe(other.GetComponent<PlayerIdentity>().Database);
+            var stored = new AccountSave { accountId = account2 };
+            var character = new CharacterSave { characterId = characterId2, name = "Returner" };
+            character.Set("vendorWeek", weekText);
+            stored.characters.Add(character);
+            Assert.IsTrue(ServerSave.WriteAccount(stored));
+            ServerSave.WaitForDisk();
+            var context = new ServerBodyContext
+            {
+                Key = new PlayerKey(26), Serial = 26, NetworkId = 26, Account = account2, CharacterId = characterId2, Name = "Returner",
+                RecipeText = RecipeText.Encode(recipe),
+            };
+            Assert.IsNull(new PlayerAdmission().Begin(other, in context), "admitted");
+            var agent = other.GetComponent<PlayerSaveAgent>();
+            for (int i = 0; i < 30; i++) yield return null;
+            Assert.AreEqual(limit, other.GetComponent<KryticalNova.Economy.PlayerShopping>().BoughtThisWeek(item.itemId), "the saved week is on the server body");
+            agent.Save();
+            ServerSave.WaitForDisk();
+            AccountSave back = ServerSave.ReadAccountFrom(ServerSave.Store, account2);
+            Assert.AreEqual(weekText, back.Find(characterId2).Get("vendorWeek"), "the vendorWeek part saves back byte for byte");
+            agent.OnServerLeaving();
+            body.GetComponent<PlayerSaveAgent>().OnServerLeaving();
+            PlayerKeys.Reset();
         }
 
         static CharacterRecipe AnyLegalRecipe(CharacterCreationDatabase database)
