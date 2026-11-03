@@ -187,5 +187,11 @@ namespace KryticalNova.Core
         /// furnishings back into the Pack (M8 group 4, NGO's StoreRpc / WithdrawRpc): <paramref name="a"/> the Pack cell or the item id.
         /// </summary>
         void CrateOp(bool withdraw, ushort a, ushort count);
+
+        /// <summary>
+        /// Asks the server to say a chat line (M8 8.4.1, NGO's PlayerChat SendRpc / SendLinkedRpc): link <c>i</c> of the text is the item in
+        /// container <paramref name="linkContainers"/>[i], cell <paramref name="linkCells"/>[i] of this player's own Pack or worn gear (null: no links).
+        /// </summary>
+        void Chat(ChatChannel channel, string text, string whisperTarget, byte[] linkContainers, byte[] linkCells);
     }
 }

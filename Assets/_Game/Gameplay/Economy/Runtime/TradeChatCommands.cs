@@ -19,7 +19,7 @@ namespace KryticalNova.Economy
         private static string Trade(string argument)
         {
             PlayerTrade mine = PlayerTrade.Local;
-            if (mine == null || !mine.IsSpawned) return Offline;
+            if (mine == null || (!mine.IsSpawned && KryticalNova.Core.BodyRoleTag.RequestsOf(mine) == null)) return Offline;
 
             switch (argument.ToLowerInvariant())
             {

@@ -1251,5 +1251,12 @@ checkpoints; the owner's Thursday hand-test list; owner questions). NGO rules ta
   - [x] Furnishing Crate: store and withdraw run NGO's PlayerCrate rules on the server body at the Money limit (furnishings only, the
     faction rule, the cap per kind), the server body saves as NGO's server did, the owner gets the Crate as text pages by version,
     `crate` real (Items IBodyCrate). B27. Save note + review approved.
-  - [ ] Chat: DESIGNED, not coded (netcode-for-entities-designs/m8g4-chat-design.md: NGO facts with file:line, the DOTS edge, the
-    IsGameMaster hazard on unspawned server bodies, the tests). Next to code.
+  - [ ] 8.4.1 Chat (design netcode-for-entities-designs/m8g4-chat-design.md): the owner's view asks (ChatSendRpc at the Chat limit,
+    text cut on a character boundary, NGO's 3-link limit) and NGO's PlayerChat.ServerSend runs unchanged on the server body (Clean, links
+    from its own Pack/gear, 5 in 5 s, ChatRouting); Gather, Whisper's Name#id (PlayerKey, never a NetworkId) and ServerAnnounce read
+    BodyRoleTag.ServerBodies; every message to a player (lines, announcements, System notices, combat lines) goes to its connection by
+    PlayerKey (ChatLineRpc, no ghost) and the own view shows it with NGO's Show; **IsGameMaster on a server body = the GM roster by its
+    connection** (NGO's `!IsSpawned` made every DOTS body GM), the [GM] label the same, the own view asks PlayerGm.Remote. Owner pick
+    (3 Nov): the notices NGO sent as System chat lines (trade, Kiosk, shop Tell) are System lines again; message-line ones stay there.
+    /trade works on a DOTS view. Items IBodyChat / IChatOwnerLink. B28; ChatTextTests. Not in it: Party / Crew channel members (their
+    ports), the block list (Contacts), other slash commands (each with its system), the Temper 120 announcement call site (Forge).

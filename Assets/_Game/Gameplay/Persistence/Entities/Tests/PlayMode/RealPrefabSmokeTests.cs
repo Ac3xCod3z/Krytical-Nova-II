@@ -44,6 +44,7 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
         readonly List<string> m_Problems = new List<string>();
         readonly List<GameObject> m_Made = new List<GameObject>();
         ISaveStore m_OldStore;
+        IChatOwnerLink m_OldChat;
 
         [SetUp]
         public void SetUp()
@@ -56,6 +57,7 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
             LocalPlayer.Set(null);
             m_OldStore = ServerSave.Store;
             ServerSave.Store = new MemorySaveStore();
+            m_OldChat = ChatOwnerLink.Current;
             SavePassthrough.ResetToDefault();
         }
 
@@ -69,6 +71,7 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
             GhostBodyRegistry.Clear();
             LocalPlayer.Set(null);
             ServerSave.Store = m_OldStore;
+            ChatOwnerLink.Current = m_OldChat;
             LogAssert.ignoreFailingMessages = false;
         }
 
@@ -452,11 +455,21 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
             public void WeaveOp(WeaveOpKind op, byte slot, ushort id, byte stage) => Ops.Add($"Weave {op} {slot} {id} {stage}");
             public void AutobuffSlots(string[] skillIds) => Ops.Add("Autobuff " + string.Join("|", skillIds));
             public void CrateOp(bool withdraw, ushort a, ushort count) => Ops.Add($"Crate {(withdraw ? "Withdraw" : "Store")} {a} {count}");
+            public void Chat(ChatChannel channel, string text, string whisperTarget, byte[] linkContainers, byte[] linkCells) =>
+                Ops.Add($"Chat {channel} {ChatLinks.Strip(text)}|{whisperTarget}|{linkContainers?.Length ?? 0}");
         }
 
         /// <summary>What the server bodies told their players (the message line) and sent their trade windows (view, notice, prompt).</summary>
-        sealed class Told : IOwnerMessages, ITradeOwnerLink, IKioskOwnerLink, IWorkshopOwnerLink, KryticalNova.Progression.INovaLink, IRestyleOwnerLink
+        sealed class Told : IOwnerMessages, ITradeOwnerLink, IKioskOwnerLink, IWorkshopOwnerLink, KryticalNova.Progression.INovaLink, IRestyleOwnerLink, IChatOwnerLink
         {
+            // chat (M8 8.4.1): "system <text>" for a System notice, else "<kind> <channel> [to ]<sender>: <text>"
+            public bool Line(Component part, in BodyChatLine line)
+            {
+                string what = line.kind == BodyChatKind.Line && line.channel == ChatChannel.System ? "system " + line.text
+                    : $"{line.kind.ToString().ToLowerInvariant()} {line.channel} {(line.outgoing ? "to " : "")}{line.sender}: {ChatLinks.Strip(line.text)}";
+                Lines.Add((Body(part), what));
+                return true;
+            }
             public void Restyled(Component part) => Lines.Add((Body(part), "restyled"));
             public void Finished(Component part, in KryticalNova.Progression.NovaWorkResult r) =>
                 Lines.Add((Body(part), $"nova {(int)r.kind} {(int)r.outcome} {r.before}->{r.after}"));
@@ -1342,6 +1355,7 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
             ITradeOwnerLink oldLink = TradeOwnerLink.Current;
             var told = new Told();
             OwnerMessages.Current = told;
+            ChatOwnerLink.Current = told;
             TradeOwnerLink.Current = told;
             try
             {
@@ -1458,6 +1472,7 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
             ITradeOwnerLink oldLink = TradeOwnerLink.Current;
             var told = new Told();
             OwnerMessages.Current = told;
+            ChatOwnerLink.Current = told;
             TradeOwnerLink.Current = told;
             try
             {
@@ -1494,7 +1509,7 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
                 tradeA.RunTradeOp(TradeOpKind.Confirm, null, 0, 0, 0, false);
                 ServerLeaving.Notify(b);   // what the server does when the connection closes, before the body goes
                 ServerSave.WaitForDisk();
-                Assert.IsTrue(told.Any(a, "tell Bodhan left the game. The trade was cancelled."), "Ann is told: " + string.Join(" | ", told.To(a)));
+                Assert.IsTrue(told.Any(a, "system Bodhan left the game. The trade was cancelled."), "Ann is told: " + string.Join(" | ", told.To(a)));
                 Assert.AreEqual(heldA, invA.CountItem(9001), "nothing moved from Ann");
                 Assert.AreEqual(1000, walletA.Creds, "nor to her");
                 Assert.AreEqual(500, walletB.Creds, "nor from Bo");
@@ -1505,7 +1520,7 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
                 Assert.IsEmpty(ServerSave.ReadLedger(accountA, 0, 100).FindAll(l => l.kind == LedgerKinds.Trade), "no trade line");
                 int toBo = told.To(b).Count;
                 tradeA.RunTradeOp(TradeOpKind.Confirm, null, 0, 0, 0, false);
-                Assert.IsTrue(told.Any(a, "tell You are not trading."), "the session is gone on Ann too");
+                Assert.IsTrue(told.Any(a, "system You are not trading."), "the session is gone on Ann too");
                 Assert.AreEqual(toBo, told.To(b).Count, "nothing more reaches the body that left");
 
                 // 2. a NetworkId given again: Cy joins on Bo's NetworkId (new PlayerKey) and never gets Bo's trade, view, notice or prompt
@@ -1514,10 +1529,10 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
                 GameObject c = Admitted(PlayerKeys.Mint(43).Value, accountC, charC, "Cyrus", networkId: 42);
                 for (int i = 0; i < 30; i++) yield return null;
                 var tradeC = c.GetComponent<KryticalNova.Economy.PlayerTrade>();
-                Assert.IsEmpty(told.To(c).FindAll(x => !x.StartsWith("tell ")), "Cy is sent nothing of Bo's (no trade view, notice or prompt)");
+                Assert.IsEmpty(told.To(c).FindAll(x => !x.StartsWith("tell ") && !x.StartsWith("system ")), "Cy is sent nothing of Bo's (no trade view, notice or prompt)");
                 tradeA.RunTradeOp(TradeOpKind.RequestByName, "Bodhan", 0, 0, 0, false);
-                Assert.IsTrue(told.Any(a, "tell No player named 'Bodhan' is online."), "Bo's name no longer finds anyone");
-                Assert.IsEmpty(told.To(c).FindAll(x => !x.StartsWith("tell ")), "and no trade line reaches Cy");
+                Assert.IsTrue(told.Any(a, "system No player named 'Bodhan' is online."), "Bo's name no longer finds anyone");
+                Assert.IsEmpty(told.To(c).FindAll(x => !x.StartsWith("tell ") && !x.StartsWith("system ")), "and no trade line reaches Cy");
 
                 // 3. a request pending when its asker leaves: the prompt closes and an accept starts nothing
                 tradeA.RunTradeOp(TradeOpKind.RequestByName, "Cyrus", 0, 0, 0, false);
@@ -1525,10 +1540,10 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
                 ServerLeaving.Notify(a);
                 Assert.IsTrue(told.Any(c, "prompt closed"), "Ann left: Cy's prompt closes");
                 tradeC.RunTradeOp(TradeOpKind.Respond, null, 0, 0, 0, true);
-                Assert.IsTrue(told.Any(c, "tell There is no trade request to answer."), "an accept finds nothing");
+                Assert.IsTrue(told.Any(c, "system There is no trade request to answer."), "an accept finds nothing");
                 Assert.IsFalse(told.Any(c, "view True"), "no session starts");
                 tradeC.RunTradeOp(TradeOpKind.Offer, null, 0, 1, 0, false);
-                Assert.IsTrue(told.Any(c, "tell You are not trading."));
+                Assert.IsTrue(told.Any(c, "system You are not trading."));
                 c.GetComponent<PlayerSaveAgent>().OnServerLeaving();
             }
             finally
@@ -1547,6 +1562,7 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
             IKioskOwnerLink oldLink = KioskOwnerLink.Current;
             var told = new Told();
             OwnerMessages.Current = told;
+            ChatOwnerLink.Current = told;
             KioskOwnerLink.Current = told;
             KryticalNova.Economy.KioskService.ServerForgetStands();
             // a trade zone where Kiosks may open, around the bodies (World is not referenced by this test assembly)
@@ -1597,7 +1613,7 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
                 long net = kioskO.Settings.AfterTax(50, out _);
                 Assert.AreEqual(net, record.till, "the till holds the price after tax");
                 Assert.Greater(stand.Version, version, "the stand's shelf changed (its list goes to the players)");
-                Assert.IsTrue(told.Any(owner, "tell Kiosk: Tobias bought"), "the online owner is told");
+                Assert.IsTrue(told.Any(owner, "system Kiosk: Tobias bought"), "the online owner is told");
                 kioskO.RunBuy(stand.ServerId, 0, new BodyKioskListing(record.listings[0].stack, 50), 1);
                 Assert.IsTrue(told.Any(owner, "tell This is your own Kiosk."), "NGO's own-Kiosk rule");
                 ServerSave.WaitForDisk();
@@ -1661,6 +1677,7 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
             IWorkshopOwnerLink oldLink = WorkshopOwnerLink.Current;
             var told = new Told();
             OwnerMessages.Current = told;
+            ChatOwnerLink.Current = told;
             WorkshopOwnerLink.Current = told;
             try
             {
@@ -1849,6 +1866,7 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
             KryticalNova.Progression.INovaLink oldLink = KryticalNova.Progression.NovaLink.Current;
             var told = new Told();
             OwnerMessages.Current = told;
+            ChatOwnerLink.Current = told;
             KryticalNova.Progression.NovaLink.Current = told;
             try
             {
@@ -1949,6 +1967,7 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
             IRestyleOwnerLink oldLink = RestyleOwnerLink.Current;
             var told = new Told();
             OwnerMessages.Current = told;
+            ChatOwnerLink.Current = told;
             RestyleOwnerLink.Current = told;
             try
             {
@@ -2020,6 +2039,7 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
             IOwnerMessages oldMessages = OwnerMessages.Current;
             var told = new Told();
             OwnerMessages.Current = told;
+            ChatOwnerLink.Current = told;
             try
             {
                 PlayerKeys.Reset();
@@ -2230,6 +2250,7 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
             IOwnerMessages oldMessages = OwnerMessages.Current;
             var told = new Told();
             OwnerMessages.Current = told;
+            ChatOwnerLink.Current = told;
             try
             {
                 PlayerKeys.Reset();
@@ -2312,6 +2333,142 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
             }
             finally
             {
+                OwnerMessages.Current = oldMessages;
+                PlayerKeys.Reset();
+            }
+        }
+
+        [UnityTest]
+        public IEnumerator B28_Chat_RunsOnTheServerBodies_ByNgosChannelRules_TheGmChannelByTheRoster_NoticesToChat_AndTheViewOnlyAsks()
+        {
+            NetRole.Install(new BodyRoleNetRoleAdapter(null, () => NetRoleKind.ServerBody));
+            IOwnerMessages oldMessages = OwnerMessages.Current;
+            var told = new Told();
+            OwnerMessages.Current = told;
+            ChatOwnerLink.Current = told;
+            PlayerKey gmKey = PlayerKey.None;
+            ulong gmSerial = 0;
+            Action<ChatLine> shown = null;
+            Type chatType = Type.GetType("KryticalNova.Social.PlayerChat, KryticalNova.Social");
+            try
+            {
+                PlayerKeys.Reset();
+                const string accA = "28a1000000000000000000000000000a", accB = "28b1000000000000000000000000000b",
+                    accC = "28c1000000000000000000000000000c", accD = "28d1000000000000000000000000000d";
+                GameObject a = Admitted(PlayerKeys.Mint(281).Value, accA, "c2810000000000000000000000000281", "Talwyn");
+                GameObject b = Admitted(PlayerKeys.Mint(282).Value, accB, "c2820000000000000000000000000282", "Brannoc");
+                GameObject c = Admitted(PlayerKeys.Mint(283).Value, accC, "c2830000000000000000000000000283", "Corvane");
+                GameObject d = Admitted(PlayerKeys.Mint(284).Value, accD, "c2840000000000000000000000000284", "Brannoc");
+                for (int i = 0; i < 30; i++) yield return null;
+                // planned before the run: A and B 1 m apart, C and D 60 m away (General carries 40 m)
+                a.transform.position = new Vector3(0f, 0.08f, 0f);
+                b.transform.position = new Vector3(1f, 0.08f, 0f);
+                c.transform.position = new Vector3(60f, 0.08f, 0f);
+                d.transform.position = new Vector3(0f, 0.08f, 60f);
+                Assert.IsNotNull(chatType, "PlayerChat is in the game");
+                var chatA = a.GetComponent<IBodyChat>();
+                var chatB = b.GetComponent<IBodyChat>();
+                var chatC = c.GetComponent<IBodyChat>();
+                var chatD = d.GetComponent<IBodyChat>();
+                Assert.IsNotNull(chatA, "the server body has its chat");
+                bool IsGm(IBodyChat chat) => (bool)chatType.GetProperty("IsGameMaster").GetValue(chat);
+                PlayerKey KeyOf(GameObject body) => body.GetComponent<BodyRoleTag>().Key;
+
+                // 1. General: A and B (1 m) hear it, C (60 m) does not; one rate-limit slot each sender, NGO's 5 in 5 s
+                chatA.RunSend(ChatChannel.General, "hello there", string.Empty, null, null);
+                Assert.IsTrue(told.Any(a, "line General Talwyn: hello there"), "the speaker sees it: " + string.Join(" | ", told.To(a)));
+                Assert.IsTrue(told.Any(b, "line General Talwyn: hello there"), "B, 1 m away, hears it");
+                Assert.IsFalse(told.Any(c, "line General"), "C, 60 m away, does not");
+
+                // 2. Whisper: by name across the map, to self refused, unknown name refused, two of a name by Name#key
+                chatA.RunSend(ChatChannel.Whisper, "psst", "Corvane", null, null);
+                Assert.IsTrue(told.Any(c, "line Whisper Talwyn: psst"), "C gets the whisper");
+                Assert.IsTrue(told.Any(a, "line Whisper to Corvane: psst"), "A sees it as sent");
+                chatA.RunSend(ChatChannel.Whisper, "me", "Talwyn", null, null);
+                Assert.IsTrue(told.Any(a, "system You cannot whisper to yourself."), "NGO's self rule");
+                chatC.RunSend(ChatChannel.Whisper, "anyone", "Nobodyhere", null, null);
+                Assert.IsTrue(told.Any(c, "system No player named 'Nobodyhere' is online."), "NGO's unknown name");
+                chatC.RunSend(ChatChannel.Whisper, "which one", "Brannoc", null, null);
+                Assert.IsTrue(told.Any(c, $"system Several players share that name. Whisper one of: Brannoc#{KeyOf(b).Value}, Brannoc#{KeyOf(d).Value}"),
+                    "picked by PlayerKey, never a NetworkId: " + string.Join(" | ", told.To(c)));
+                chatC.RunSend(ChatChannel.Whisper, "for you", "Brannoc#" + KeyOf(d).Value, null, null);
+                Assert.IsTrue(told.Any(d, "line Whisper Corvane: for you"), "Name#key reaches that one");
+                Assert.IsFalse(told.Any(b, "line Whisper Corvane"), "and not the other");
+
+                // 3. the GM channel: an unspawned DOTS body is NOT a GM (NGO's !IsSpawned shortcut); a roster-bound one is
+                Assert.IsFalse(IsGm(chatA), "a DOTS server body is not GM by being unspawned");
+                chatA.RunSend(ChatChannel.Gm, "attention", string.Empty, null, null);
+                Assert.IsTrue(told.Any(a, "system Only a GM can use this channel."), "refused on the server body: " + string.Join(" | ", told.To(a)));
+                Assert.IsFalse(told.Any(b, "announce"), "nobody hears it");
+                gmSerial = b.GetComponent<BodyRoleTag>().ConnectionSerial;
+                gmKey = PlayerKeys.Mint(gmSerial);   // the key ConnectionKeySystem mints for that connection
+                KryticalNova.Networking.ServerAccounts.Remember(gmKey, accB, string.Empty);
+                KryticalNova.Networking.GmRoster.SetAll(new[] { new KryticalNova.Networking.GmEntry { name = "Warden", account = accB } });
+                Assert.IsTrue(KryticalNova.Networking.GmRoster.SignInBound(gmSerial, out _), "B's account is bound to a GM (M7.4)");
+                Assert.IsTrue(IsGm(chatB), "B is GM by the roster");
+                Assert.IsFalse(IsGm(chatA), "A still is not");
+                chatB.RunSend(ChatChannel.Gm, "restart soon", string.Empty, null, null);
+                foreach (GameObject body in new[] { a, b, c, d })
+                    Assert.IsTrue(told.Any(body, "announce Gm Brannoc: restart soon"), body.name + " hears the GM, wherever it is");
+                chatB.RunSend(ChatChannel.General, "hi", string.Empty, null, null);
+                Assert.IsTrue(told.Any(a, "line General [GM] Brannoc: hi"), "the [GM] tag on a GM's other lines");
+
+                // 4. the rate limit: D's sixth line within 5 s is refused with NGO's text
+                for (int i = 0; i < 6; i++) chatD.RunSend(ChatChannel.General, "spam " + i, string.Empty, null, null);
+                Assert.IsTrue(told.Any(d, "line General Brannoc: spam 4"), "five are said");
+                Assert.IsFalse(told.Any(d, "line General Brannoc: spam 5"), "the sixth is not");
+                Assert.IsTrue(told.Any(d, "system You are sending messages too quickly."), "NGO's refusal");
+
+                // 5. a server-wide announcement reaches every server body's player, and nobody who left
+                MethodInfo announce = chatType.GetMethod("ServerAnnounce", BindingFlags.Public | BindingFlags.Static);
+                int reached = (int)announce.Invoke(null, new object[] { AnnouncementKind.Gm, ChatChannel.Gm, "Nova", "all hands", null, (byte)0 });
+                Assert.AreEqual(4, reached, "all four");
+                Assert.AreEqual(BodyRoleTag.ServerBodies.Count, reached, "every server body");
+                Object.Destroy(c);
+                yield return null;
+                reached = (int)announce.Invoke(null, new object[] { AnnouncementKind.Gm, ChatChannel.Gm, "Nova", "second call", null, (byte)0 });
+                Assert.AreEqual(3, reached, "the leaver is not counted");
+                List<(GameObject body, string what)> second = told.Lines.FindAll(l => l.what == "announce Gm Nova: second call");
+                Assert.AreEqual(3, second.Count, "three told");
+                Assert.IsTrue(second.TrueForAll(l => l.body == a || l.body == b || l.body == d), "nothing reaches the leaver");
+
+                // 6. another system's notice: trade's refusal is a System line in A's chat (as NGO), only A's
+                a.GetComponent<KryticalNova.Economy.PlayerTrade>().RunTradeOp(TradeOpKind.RequestByName, "Nobodyhere", 0, 0, 0, false);
+                Assert.IsTrue(told.Any(a, "system No player named 'Nobodyhere' is online."), "trade tells A in chat");
+                Assert.IsFalse(told.Any(a, "tell No player named 'Nobodyhere'"), "not on the message line");
+                Assert.AreEqual(1, told.To(a).FindAll(x => x == "system No player named 'Nobodyhere' is online.").Count, "once, to A");
+                Assert.IsFalse(told.Any(b, "system No player named 'Nobodyhere'"), "and nobody else");
+
+                // 7. the owner's view only asks (exact request) and shows what the server sends
+                var asked = new Asked();
+                GameObject view = Make(NetRoleKind.ClientView, true, new PlayerKey(KeyOf(a).Value));
+                view.GetComponent<BodyRoleTag>().Requests = asked;
+                yield return null;
+                var viewChat = view.GetComponent<IBodyChat>();
+                Assert.IsNotNull(viewChat, "the own view keeps its chat (the window reads it)");
+                MethodInfo send = chatType.GetMethod("Send", new[] { typeof(ChatChannel), typeof(string), typeof(string), typeof(ItemLocation[]) });
+                int linesBefore = told.Lines.Count;
+                send.Invoke(viewChat, new object[] { ChatChannel.General, "from the view", null, null });
+                send.Invoke(viewChat, new object[] { ChatChannel.Whisper, "look " + ChatLinks.Marker(0), "Brannoc#" + KeyOf(b).Value,
+                    new[] { new ItemLocation { container = ItemContainer.Bag, index = 2 } } });
+                CollectionAssert.AreEqual(new[] { "Chat General from the view||0", $"Chat Whisper look |Brannoc#{KeyOf(b).Value}|1" }, asked.Ops, "sent to the server");
+                Assert.AreEqual(linesBefore, told.Lines.Count, "the view never says it itself");
+                Assert.IsFalse(IsGm(viewChat), "the view is GM only when the server says so");
+                var seen = new List<string>();
+                shown = line => seen.Add(line.Channel + " " + line.Text);
+                chatType.GetEvent("LineShown").AddEventHandler(null, shown);
+                viewChat.MirrorLine(new BodyChatLine { kind = BodyChatKind.Line, channel = ChatChannel.System, text = "mirrored" });
+                chatA.MirrorLine(new BodyChatLine { kind = BodyChatKind.Line, channel = ChatChannel.System, text = "not on a server body" });
+                CollectionAssert.AreEqual(new[] { "System mirrored" }, seen, "the own view shows the line; a server body never does");
+
+                foreach (GameObject body in new[] { a, b, d }) body.GetComponent<PlayerSaveAgent>().OnServerLeaving();
+            }
+            finally
+            {
+                if (shown != null) chatType.GetEvent("LineShown").RemoveEventHandler(null, shown);
+                KryticalNova.Networking.GmRoster.SetAll(Array.Empty<KryticalNova.Networking.GmEntry>());
+                KryticalNova.Networking.GmRoster.Forget(gmSerial);
+                KryticalNova.Networking.ServerAccounts.Forget(gmKey);
                 OwnerMessages.Current = oldMessages;
                 PlayerKeys.Reset();
             }

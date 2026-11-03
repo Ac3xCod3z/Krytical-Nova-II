@@ -828,7 +828,8 @@ namespace KryticalNova.Economy
         private void Tell(string text)
         {
             if (leaving || string.IsNullOrEmpty(text)) return;
-            if (EntityServer) { OwnerMessages.TryTell(this, text); return; }   // its player's message line until chat is ported (group 4)
+            // a server body of the entity netcode: its player's chat log as NGO (M8 8.4.1); the message line only without chat
+            if (EntityServer && (chat == null || !chat.isActiveAndEnabled)) { OwnerMessages.TryTell(this, text); return; }
             if (chat != null && chat.isActiveAndEnabled) chat.ServerSystem(text);
             else LastNotice = text;
         }

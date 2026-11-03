@@ -392,8 +392,9 @@ namespace KryticalNova.Economy
 
         private void Tell(string text)
         {
-            if (EntityServer) { KryticalNova.Core.OwnerMessages.TryTell(this, text); return; }   // until chat is ported (group 4)
-            if (chat != null && IsSpawned && IsServer && !string.IsNullOrEmpty(text)) chat.ServerSystem(text);
+            // a server body of the entity netcode: its player's chat log as NGO (M8 8.4.1); the message line only without chat
+            if (EntityServer && chat == null) { KryticalNova.Core.OwnerMessages.TryTell(this, text); return; }
+            if (chat != null && ((IsSpawned && IsServer) || EntityServer) && !string.IsNullOrEmpty(text)) chat.ServerSystem(text);
         }
 
         // A purchase or a sale is never lost to a crash.

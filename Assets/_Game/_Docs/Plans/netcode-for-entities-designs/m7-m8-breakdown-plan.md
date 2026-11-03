@@ -201,7 +201,11 @@ backflips' speed (80 % of the air). Added as M7/M8 systems land (each: what to c
   casting by themselves is NOT on DOTS yet: AutobuffCaster stays off until the ward cast is ported).
 - Crate (built 3 Nov): put furnishings in the Furnishing Crate and take some back; relog: the counts are kept; a non-furnishing: refused.
 - 8.2.x/7.6: a Vault deposit and withdraw, a shop buy and sell, a trade with a second player, a Kiosk sale, each after a relog.
-- 8.4.x: chat say/tell, a contact, a party with Follow, founding a Crew, an emote and a mount seen from the second client.
+- 8.4.1 (built 3 Nov): two clients on a DOTS test server: say something near each other (both see it), walk 50 m apart (the far one
+  does not), whisper by name (/w name) and answer with /r; as a bound GM use the GM channel (both get the line and the toast), a
+  non-GM is refused "Only a GM can use this channel."; send six lines fast (the sixth is refused); a trade refusal (/trade nobody)
+  appears as a System line in the chat log; link an item (Shift+right-click) and the other client sees the link.
+- 8.4.x: a contact, a party with Follow, founding a Crew, an emote and a mount seen from the second client.
 The list is kept current in this section as systems land.
 
 Owner follow-ups (found while porting; not DOTS work):

@@ -294,8 +294,9 @@ namespace KryticalNova.Economy
         /// <summary>Server: a line in this player's chat log.</summary>
         public void Tell(string text)
         {
-            if (EntityServer) { OwnerMessages.TryTell(this, text); return; }   // until chat is ported (group 4)
-            if (chat != null && IsSpawned && IsServer && !string.IsNullOrEmpty(text)) chat.ServerSystem(text);
+            // a server body of the entity netcode: its player's chat log as NGO (M8 8.4.1); the message line only without chat
+            if (EntityServer && chat == null) { OwnerMessages.TryTell(this, text); return; }
+            if (chat != null && ((IsSpawned && IsServer) || EntityServer) && !string.IsNullOrEmpty(text)) chat.ServerSystem(text);
         }
 
         /// <summary>Server: writes this character now. A sale or a purchase is never lost to a crash.</summary>

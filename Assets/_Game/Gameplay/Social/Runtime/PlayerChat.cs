@@ -20,7 +20,7 @@ namespace KryticalNova.Social
     /// Offline (the unspawned scene avatar) everything is decided and shown locally.
     /// </summary>
     [DisallowMultipleComponent]
-    public sealed class PlayerChat : NetworkBehaviour
+    public sealed class PlayerChat : NetworkBehaviour, IBodyChat
     {
         private const byte CriticalBit = 1;
         private const byte EvadedBit = 2;
@@ -61,9 +61,19 @@ namespace KryticalNova.Social
         public string SpeakerName => identity != null ? identity.CharacterName : name;
 
         /// <summary>Only a GM (<see cref="PlayerGm"/>: the host's own player, a joined player who typed a GM password, or the offline player) may speak on the GM channel.</summary>
-        public bool IsGameMaster => !IsSpawned || OwnerClientId == NetworkManager.ServerClientId || (gm != null && gm.IsGm);
+        /// <remarks>
+        /// The entity netcode's bodies are never network-spawned, so NGO's <c>!IsSpawned</c> (the offline player) would make every one of
+        /// them GM: its server body asks the GM roster by its connection (M7.4's bind), its own view what the server told it (M8 8.4.1).
+        /// </remarks>
+        public bool IsGameMaster => EntityServer ? GmRoster.IsGm(BodyRoleTag.Of(this).ConnectionSerial)
+            : EntityView ? PlayerGm.Remote != null && PlayerGm.Remote.IsGm
+            : !IsSpawned || OwnerClientId == NetworkManager.ServerClientId || (gm != null && gm.IsGm);
 
-        private bool HasAuthority => !IsSpawned || IsServer;
+        // A client view of the entity netcode only asks and shows; its server body decides who hears what (M8 8.4.1).
+        private bool HasAuthority => (!IsSpawned || IsServer) && !EntityView;
+        private bool EntityView => BodyRoleTag.Of(this) is { Kind: NetRoleKind.ClientView };
+        private bool EntityServer => BodyRoleTag.Of(this) is { Kind: NetRoleKind.ServerBody };
+        private IBodyRequests Requests => BodyRoleTag.RequestsOf(this) is IBodyRequests requests ? requests : null;
 
         private void Awake()
         {
@@ -126,14 +136,67 @@ namespace KryticalNova.Social
             text = ChatRouting.Clean(text);
             if (text.Length == 0) return;
             int count = links == null ? 0 : Mathf.Min(links.Length, ChatLinks.Max);
+            if (Requests is { } requests)
+            {
+                // the entity netcode's own view asks its server body, as NGO's SendRpc / SendLinkedRpc did
+                Locations(links, count, out byte[] askContainers, out byte[] askCells);
+                requests.Chat(channel, count == 0 ? ChatLinks.Strip(text) : text, whisperTarget ?? string.Empty, askContainers, askCells);
+                return;
+            }
+            if (EntityView) return;
             if (!IsSpawned) { ServerSend(channel, text, whisperTarget, links); return; }
             if (!IsOwner) return;
             if (count == 0) { SendRpc(channel, ChatLinks.Strip(text), whisperTarget ?? string.Empty); return; }
-            var containers = new byte[count];
-            var cells = new byte[count];
-            for (int i = 0; i < count; i++) { containers[i] = (byte)links[i].container; cells[i] = links[i].index; }
+            Locations(links, count, out byte[] containers, out byte[] cells);
             SendLinkedRpc(channel, text, whisperTarget ?? string.Empty, containers, cells);
         }
+
+        private static void Locations(ItemLocation[] links, int count, out byte[] containers, out byte[] cells)
+        {
+            containers = null;
+            cells = null;
+            if (count == 0) return;
+            containers = new byte[count];
+            cells = new byte[count];
+            for (int i = 0; i < count; i++) { containers[i] = (byte)links[i].container; cells[i] = links[i].index; }
+        }
+
+        /// <summary>A server body of the entity netcode says its owner's line (NGO's SendRpc / SendLinkedRpc body, after the Chat limit).</summary>
+        public void RunSend(ChatChannel channel, string text, string whisperTarget, byte[] linkContainers, byte[] linkCells)
+        {
+            if (!EntityServer) return;
+            ItemLocation[] links = null;
+            if (linkContainers != null || linkCells != null)
+            {
+                // NGO's SendLinkedRpc checks
+                if (linkContainers == null || linkCells == null || linkContainers.Length != linkCells.Length || linkContainers.Length > ChatLinks.Max) return;
+                links = new ItemLocation[linkContainers.Length];
+                for (int i = 0; i < links.Length; i++) links[i] = new ItemLocation { container = (ItemContainer)linkContainers[i], index = linkCells[i] };
+            }
+            ServerSend(channel, text ?? string.Empty, whisperTarget ?? string.Empty, links);
+        }
+
+        /// <summary>The entity netcode's own view: a message the server sent this player (NGO's owner RPCs).</summary>
+        public void MirrorLine(in BodyChatLine line)
+        {
+            if (!BodyRoleTag.IsLocalClientView(this)) return;
+            switch (line.kind)
+            {
+                case BodyChatKind.Line:
+                    bool linked = line.linkItems != null && line.linkItems.Length > 0 && line.linkData != null && line.linkData.Length == line.linkItems.Length;
+                    Show(line.channel, line.sender ?? string.Empty, line.text ?? string.Empty, line.outgoing, linked ? line.linkItems : null, linked ? line.linkData : null);
+                    break;
+                case BodyChatKind.Announce:
+                    ShowAnnounced(line.announcement, line.channel, line.sender ?? string.Empty, line.text ?? string.Empty, line.highlight ?? string.Empty, line.rarity);
+                    break;
+                case BodyChatKind.Combat:
+                    ShowCombatLine(line.outgoing, line.sender ?? string.Empty, line.damage, line.reflected, line.flags);
+                    break;
+            }
+        }
+
+        // A server body of the entity netcode is never network-spawned: NGO's owner RPCs never run there, the line goes to its player.
+        private void ToOwner(in BodyChatLine line) => ChatOwnerLink.Current?.Line(this, line);
 
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
         private void SendRpc(ChatChannel channel, string text, string whisperTarget)
@@ -232,7 +295,8 @@ namespace KryticalNova.Social
                     else
                     {
                         // The [GM] tag goes on the other channels' lines: a whisper's sender is the name /r answers to.
-                        string label = PlayerGm.Label(this, me.Name);
+                        // (A server body of the entity netcode: the GM roster, as IsGameMaster; NGO's tag reads IsSpawned.)
+                        string label = EntityServer ? (me.IsGameMaster ? PlayerGm.Tag + me.Name : me.Name) : PlayerGm.Label(this, me.Name);
                         for (int i = 0; i < Picked.Count; i++) EveryoneChat[Picked[i]].Deliver(channel, label, text, false, linkItems, linkData);
                     }
                     break;
@@ -297,6 +361,19 @@ namespace KryticalNova.Social
                 return reached;
             }
 
+            if (BodyRoleTag.ServerBodies.Count > 0)
+            {
+                // a server of the entity netcode (M8 8.4.1): NGO is not listening and there is no local player; every server body's player
+                int told = 0;
+                foreach (BodyRoleTag tag in BodyRoleTag.ServerBodies)
+                {
+                    if (tag == null || !tag.TryGetComponent(out PlayerChat chat) || !chat.isActiveAndEnabled) continue;
+                    chat.DeliverAnnounced(kind, channel, senderName, text, highlight, rarity);
+                    told++;
+                }
+                return told;
+            }
+
             var local = Local;
             if (local == null) return 0;
             local.DeliverAnnounced(kind, channel, senderName, text, highlight, rarity);
@@ -349,7 +426,8 @@ namespace KryticalNova.Social
 
         private ChatParticipant Describe() => new ChatParticipant
         {
-            ClientId = IsSpawned ? OwnerClientId : 0,
+            // the entity netcode's server body: its PlayerKey ("Name#key" picks one of two of a name), never a NetworkId (M8 8.4.1)
+            ClientId = EntityServer ? BodyRoleTag.Of(this).Key.Value : IsSpawned ? OwnerClientId : 0,
             Name = SpeakerName,
             Faction = identity != null ? identity.Faction : default,
             Guild = Guild,
@@ -362,6 +440,17 @@ namespace KryticalNova.Social
         {
             Everyone.Clear();
             EveryoneChat.Clear();
+            if (EntityServer)
+            {
+                // the entity netcode's server bodies (M8 8.4.1): NGO's ConnectedClientsList never fills there
+                foreach (BodyRoleTag tag in BodyRoleTag.ServerBodies)
+                {
+                    if (tag == null || !tag.TryGetComponent(out PlayerChat chat) || !chat.isActiveAndEnabled) continue;
+                    Everyone.Add(chat.Describe());
+                    EveryoneChat.Add(chat);
+                }
+                return;
+            }
             if (!IsSpawned)
             {
                 Everyone.Add(Describe());
@@ -381,6 +470,15 @@ namespace KryticalNova.Social
         private void Deliver(ChatChannel channel, string sender, string text, bool outgoing, ushort[] linkItems = null, ulong[] linkData = null)
         {
             bool linked = linkItems != null && linkItems.Length > 0 && linkData != null && linkData.Length == linkItems.Length;
+            if (EntityServer)
+            {
+                ToOwner(new BodyChatLine
+                {
+                    kind = BodyChatKind.Line, channel = channel, sender = sender ?? string.Empty, text = text, outgoing = outgoing,
+                    linkItems = linked ? linkItems : null, linkData = linked ? linkData : null,
+                });
+                return;
+            }
             if (!IsSpawned) Show(channel, sender, text, outgoing, linked ? linkItems : null, linked ? linkData : null);
             else if (linked) ReceiveLinkedRpc(channel, sender ?? string.Empty, text, outgoing, linkItems, linkData);
             else ReceiveRpc(channel, sender ?? string.Empty, text, outgoing);
@@ -396,6 +494,15 @@ namespace KryticalNova.Social
 
         private void DeliverAnnounced(AnnouncementKind kind, ChatChannel channel, string sender, string text, string highlight = null, byte rarity = 0)
         {
+            if (EntityServer)
+            {
+                ToOwner(new BodyChatLine
+                {
+                    kind = BodyChatKind.Announce, announcement = kind, channel = channel, sender = sender ?? string.Empty, text = text,
+                    highlight = highlight ?? string.Empty, rarity = rarity,
+                });
+                return;
+            }
             if (!IsSpawned) ShowAnnounced(kind, channel, sender ?? string.Empty, text, highlight ?? string.Empty, rarity);
             else AnnounceRpc(kind, channel, sender ?? string.Empty, text, highlight ?? string.Empty, rarity);
         }
@@ -472,6 +579,15 @@ namespace KryticalNova.Social
             if (!HasAuthority) return;
             byte flags = (byte)((result.IsCritical ? CriticalBit : 0) | (result.IsEvaded ? EvadedBit : 0)
                 | (result.IsReflected ? ReflectedBit : 0) | (result.ShieldShattered ? ShatteredBit : 0));
+            if (EntityServer)
+            {
+                ToOwner(new BodyChatLine
+                {
+                    kind = BodyChatKind.Combat, channel = ChatChannel.Combat, outgoing = outgoing, sender = other ?? string.Empty,
+                    damage = result.DamageDealt, reflected = result.ReflectedDamage, flags = flags,
+                });
+                return;
+            }
             if (!IsSpawned) ShowCombatLine(outgoing, other, result.DamageDealt, result.ReflectedDamage, flags);
             else CombatLineRpc(outgoing, other ?? string.Empty, result.DamageDealt, result.ReflectedDamage, flags);
         }

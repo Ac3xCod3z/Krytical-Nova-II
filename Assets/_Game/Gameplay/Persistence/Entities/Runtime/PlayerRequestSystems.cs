@@ -476,6 +476,16 @@ namespace KryticalNova.Persistence.Entities
             }
         }
 
+        public void Chat(ChatChannel channel, string text, string whisperTarget, byte[] linkContainers, byte[] linkCells)
+        {
+            if (m_World == null || !m_World.IsCreated) return;
+            if (!ChatText.TrySend(channel, text, whisperTarget, linkContainers, linkCells, out ChatSendRpc send)) return;   // NGO's RPC refused more links
+            var em = m_World.EntityManager;
+            Entity rpc = em.CreateEntity();
+            em.AddComponentData(rpc, send);
+            em.AddComponent<SendRpcCommandRequest>(rpc);
+        }
+
         public void CrateOp(bool withdraw, ushort a, ushort count)
         {
             if (m_World == null || !m_World.IsCreated) return;
