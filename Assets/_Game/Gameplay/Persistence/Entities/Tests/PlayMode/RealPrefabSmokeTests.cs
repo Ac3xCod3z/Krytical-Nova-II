@@ -451,6 +451,7 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
             public void Nova(NovaOpKind op, byte arg) => Ops.Add($"Nova {op} {arg}");
             public void WeaveOp(WeaveOpKind op, byte slot, ushort id, byte stage) => Ops.Add($"Weave {op} {slot} {id} {stage}");
             public void AutobuffSlots(string[] skillIds) => Ops.Add("Autobuff " + string.Join("|", skillIds));
+            public void CrateOp(bool withdraw, ushort a, ushort count) => Ops.Add($"Crate {(withdraw ? "Withdraw" : "Store")} {a} {count}");
         }
 
         /// <summary>What the server bodies told their players (the message line) and sent their trade windows (view, notice, prompt).</summary>
@@ -2219,6 +2220,101 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
             agent.OnServerLeaving();
             body.GetComponent<PlayerSaveAgent>().OnServerLeaving();
             PlayerKeys.Reset();
+        }
+
+        [UnityTest]
+        public IEnumerator B27_TheFurnishingCrate_RunsOnTheServerBody_StoreAndWithdraw_CrateIsReal_AndTheViewMirrors()
+        {
+            NetRole.Install(new BodyRoleNetRoleAdapter(null, () => NetRoleKind.ServerBody));
+            Assert.IsFalse(SavePassthrough.Is("crate"), "the crate part is real now");
+            IOwnerMessages oldMessages = OwnerMessages.Current;
+            var told = new Told();
+            OwnerMessages.Current = told;
+            try
+            {
+                PlayerKeys.Reset();
+                const string account = "54657687a9b0c1d2e3f405162738495a", characterId = "a1000000000000000000000000000111";
+                GameObject body = Admitted(PlayerKeys.Mint(111).Value, account, characterId, "Cratewright");
+                GameObject view = Make(NetRoleKind.ClientView, true, new PlayerKey(111));
+                for (int i = 0; i < 30; i++) yield return null;
+                var crate = body.GetComponent<IBodyCrate>();
+                var inv = body.GetComponent<PlayerInventory>();
+                Assert.IsNotNull(crate, "the body has its Crate");
+
+                // a furnishing NGO's catalog lets this character keep (picked by the rule before the run)
+                ItemDefinition furnishing = null;
+                foreach (ItemDefinition item in inv.Catalog.Items) if (item != null && crate.MayStore(item.itemId)) { furnishing = item; break; }
+                Assert.IsNotNull(furnishing, "a furnishing this character may keep in the Crate");
+                inv.ServerGive(furnishing.itemId, 3);
+                int Cell(ushort id) { for (int i = 0; i < PlayerInventory.Capacity; i++) if (inv.Get(i).itemId == id) return i; return -1; }
+                int held = inv.CountItem(furnishing.itemId);
+                int version = crate.Version;
+
+                crate.RunStore(Cell(furnishing.itemId), 2);
+                Assert.AreEqual(held - 2, inv.CountItem(furnishing.itemId), "two left the Pack");
+                Assert.AreEqual(2, crate.Count(furnishing.itemId), "into the Crate");
+                Assert.Greater(crate.Version, version, "its version went up (the owner gets a new copy)");
+                crate.RunWithdraw(furnishing.itemId, 1);
+                Assert.AreEqual(held - 1, inv.CountItem(furnishing.itemId), "one came back");
+                Assert.AreEqual(1, crate.Count(furnishing.itemId));
+
+                // not a furnishing: NGO's refusal to its player, nothing moves
+                inv.ServerGive(9001, 1);
+                crate.RunStore(Cell(9001), 1);
+                Assert.IsTrue(told.Any(body, "tell Only furnishings go in the Furnishing Crate."), "NGO's rule: " + string.Join(" | ", told.To(body)));
+
+                // the Crate as text reads back
+                var entries = new List<(ushort, int)>();
+                crate.ReadEntries(entries);
+                var back = new List<(ushort, int)>();
+                Assert.IsTrue(CrateText.TryDecode(CrateText.Encode(entries), back), "the Crate text reads back");
+                CollectionAssert.AreEqual(entries, back);
+
+                // the owner's view only asks, and shows the server's Crate
+                var asked = new Asked();
+                view.GetComponent<BodyRoleTag>().Requests = asked;
+                var viewPart = (Component)view.GetComponent<IBodyCrate>();
+                viewPart.GetType().GetMethod("RequestStore").Invoke(viewPart, new object[] { 4, 2 });
+                viewPart.GetType().GetMethod("RequestWithdraw").Invoke(viewPart, new object[] { furnishing.itemId, 1 });
+                CollectionAssert.AreEqual(new[] { "Crate Store 4 2", $"Crate Withdraw {furnishing.itemId} 1" }, asked.Ops, "sent to the server");
+                var viewCrate = (IBodyCrate)viewPart;
+                viewCrate.RunWithdraw(furnishing.itemId, 1);
+                viewCrate.MirrorEntries(back);
+                Assert.AreEqual(1, viewCrate.Count(furnishing.itemId), "the own view shows the server's Crate");
+
+                // NGO's text loads into a fresh admitted server body unchanged and saves back every byte
+                string text = null;
+                foreach (ISaveParticipant part in body.GetComponents<ISaveParticipant>()) if (part.SaveKey == "crate") text = part.CaptureSave();
+                Assert.IsNotNull(text);
+                const string account2 = "657687a9b0c1d2e3f405162738495a6b", character2 = "a1000000000000000000000000000112";
+                GameObject other = Make(NetRoleKind.ServerBody, false, new PlayerKey(112));
+                yield return null;
+                CharacterRecipe recipe = AnyLegalRecipe(other.GetComponent<PlayerIdentity>().Database);
+                var stored = new AccountSave { accountId = account2 };
+                var character = new CharacterSave { characterId = character2, name = "Cratereturn" };
+                character.Set("crate", text);
+                stored.characters.Add(character);
+                Assert.IsTrue(ServerSave.WriteAccount(stored));
+                ServerSave.WaitForDisk();
+                var context = new ServerBodyContext
+                {
+                    Key = new PlayerKey(112), Serial = 112, NetworkId = 112, Account = account2, CharacterId = character2, Name = "Cratereturn", RecipeText = RecipeText.Encode(recipe),
+                };
+                Assert.IsNull(new PlayerAdmission().Begin(other, in context), "admitted");
+                var agent = other.GetComponent<PlayerSaveAgent>();
+                for (int i = 0; i < 30; i++) yield return null;
+                Assert.AreEqual(1, other.GetComponent<IBodyCrate>().Count(furnishing.itemId), "the saved Crate is on the server body");
+                agent.Save();
+                ServerSave.WaitForDisk();
+                Assert.AreEqual(text, ServerSave.ReadAccountFrom(ServerSave.Store, account2).Find(character2).Get("crate"), "the crate part saves back byte for byte");
+                agent.OnServerLeaving();
+                body.GetComponent<PlayerSaveAgent>().OnServerLeaving();
+            }
+            finally
+            {
+                OwnerMessages.Current = oldMessages;
+                PlayerKeys.Reset();
+            }
         }
 
         static CharacterRecipe AnyLegalRecipe(CharacterCreationDatabase database)

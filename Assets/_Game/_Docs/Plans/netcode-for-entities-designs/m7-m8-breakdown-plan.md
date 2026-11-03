@@ -199,6 +199,7 @@ backflips' speed (80 % of the air). Added as M7/M8 systems land (each: what to c
   "New Weave" and it is in the library window; relog (and another character of the account): the library is still there.
 - 8.3.11 (built 3 Nov): use an Autobuff Pass (the Autoward window shows the days), set the eight cells, relog: both kept; (the cells
   casting by themselves is NOT on DOTS yet: AutobuffCaster stays off until the ward cast is ported).
+- Crate (built 3 Nov): put furnishings in the Furnishing Crate and take some back; relog: the counts are kept; a non-furnishing: refused.
 - 8.2.x/7.6: a Vault deposit and withdraw, a shop buy and sell, a trade with a second player, a Kiosk sale, each after a relog.
 - 8.4.x: chat say/tell, a contact, a party with Follow, founding a Crew, an emote and a mount seen from the second client.
 The list is kept current in this section as systems land.

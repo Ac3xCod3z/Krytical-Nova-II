@@ -476,6 +476,15 @@ namespace KryticalNova.Persistence.Entities
             }
         }
 
+        public void CrateOp(bool withdraw, ushort a, ushort count)
+        {
+            if (m_World == null || !m_World.IsCreated) return;
+            var em = m_World.EntityManager;
+            Entity rpc = em.CreateEntity();
+            em.AddComponentData(rpc, new CrateOpRpc { Withdraw = (byte)(withdraw ? 1 : 0), A = a, Count = count });
+            em.AddComponent<SendRpcCommandRequest>(rpc);
+        }
+
         public void AutobuffSlots(string[] skillIds)
         {
             if (m_World == null || !m_World.IsCreated) return;

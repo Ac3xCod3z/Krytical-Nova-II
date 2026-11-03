@@ -181,5 +181,11 @@ namespace KryticalNova.Core
 
         /// <summary>Asks the server to keep these eight Autoward cells (skill ids; M8 8.3.11, NGO's SetSlotsServerRpc).</summary>
         void AutobuffSlots(string[] skillIds);
+
+        /// <summary>
+        /// Asks the server to store furnishings from a Pack cell in the Furnishing Crate, or (<paramref name="withdraw"/>) take an item's
+        /// furnishings back into the Pack (M8 group 4, NGO's StoreRpc / WithdrawRpc): <paramref name="a"/> the Pack cell or the item id.
+        /// </summary>
+        void CrateOp(bool withdraw, ushort a, ushort count);
     }
 }

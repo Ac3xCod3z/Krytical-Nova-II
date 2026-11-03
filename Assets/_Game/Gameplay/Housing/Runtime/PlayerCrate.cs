@@ -19,7 +19,7 @@ namespace KryticalNova.Housing
     /// </summary>
     [DisallowMultipleComponent]
     [RequireComponent(typeof(PlayerInventory))]
-    public sealed class PlayerCrate : NetworkBehaviour, ISaveParticipant
+    public sealed class PlayerCrate : NetworkBehaviour, ISaveParticipant, IBodyCrate
     {
         public const string ReasonNotFurnishing = "Only furnishings go in the Furnishing Crate.";
         public const string ReasonCrateFull = "The Furnishing Crate holds no more of that.";
@@ -44,7 +44,44 @@ namespace KryticalNova.Housing
         public IReadOnlyList<CrateEntry> Entries => entries;
         public FactionId Faction => identity != null ? identity.Faction : FactionId.None;
 
-        private bool HasAuthority => !IsSpawned || IsServer;
+        // A client view of the entity netcode only shows the server's Crate (MirrorEntries); its server body decides (M8 group 4).
+        private bool HasAuthority => (!IsSpawned || IsServer) && !EntityView;
+        private bool EntityView => KryticalNova.Core.BodyRoleTag.Of(this) is { Kind: KryticalNova.Core.NetRoleKind.ClientView };
+        private bool EntityServer => KryticalNova.Core.BodyRoleTag.Of(this) is { Kind: KryticalNova.Core.NetRoleKind.ServerBody };
+        private KryticalNova.Core.IBodyRequests Requests =>
+            KryticalNova.Core.BodyRoleTag.RequestsOf(this) is KryticalNova.Core.IBodyRequests requests ? requests : null;
+
+        /// <summary>Goes up whenever what is in the Crate changes (the entity netcode sends the owner a new copy).</summary>
+        public int Version { get; private set; }
+
+        bool IBodyCrate.MayStore(ushort itemId) => catalog != null && catalog.HeldInCrate(itemId) && catalog.MayKeep(itemId, Faction);
+
+        void IBodyCrate.ReadEntries(List<(ushort itemId, int count)> into)
+        {
+            into.Clear();
+            foreach (CrateEntry entry in entries) into.Add((entry.itemId, entry.count));
+        }
+
+        /// <summary>A server body of the entity netcode runs its owner's store (NGO's StoreRpc body, after the Money limit).</summary>
+        public void RunStore(int packCell, int count)
+        {
+            if (EntityServer) Answer(ServerStore(packCell, count));
+        }
+
+        /// <summary>A server body of the entity netcode runs its owner's withdraw (NGO's WithdrawRpc body, after the Money limit).</summary>
+        public void RunWithdraw(ushort itemId, int count)
+        {
+            if (EntityServer) Answer(ServerWithdraw(itemId, count));
+        }
+
+        /// <summary>The entity netcode's own view body: the server's Crate (NGO's owner ViewRpc).</summary>
+        public void MirrorEntries(IReadOnlyList<(ushort itemId, int count)> shown)
+        {
+            if (!KryticalNova.Core.BodyRoleTag.IsLocalClientView(this)) return;
+            entries.Clear();
+            if (shown != null) foreach (var (itemId, count) in shown) if (itemId != 0 && count > 0) entries.Add(new CrateEntry { itemId = itemId, count = count });
+            Changed?.Invoke();
+        }
 
         private void Awake()
         {
@@ -79,6 +116,7 @@ namespace KryticalNova.Housing
         /// <summary>Moves furnishings from a Pack cell into the Crate.</summary>
         public void RequestStore(int packCell, int count)
         {
+            if (Requests is { } requests) { requests.CrateOp(false, (ushort)Mathf.Clamp(packCell, 0, ushort.MaxValue), (ushort)Mathf.Clamp(count, 1, ushort.MaxValue)); return; }
             if (!IsSpawned) Answer(ServerStore(packCell, count));
             else if (IsOwner) StoreRpc((ushort)Mathf.Clamp(packCell, 0, ushort.MaxValue), (ushort)Mathf.Clamp(count, 1, ushort.MaxValue));
         }
@@ -86,6 +124,7 @@ namespace KryticalNova.Housing
         /// <summary>Moves furnishings from the Crate into the Pack, as many as fit.</summary>
         public void RequestWithdraw(ushort itemId, int count)
         {
+            if (Requests is { } requests) { requests.CrateOp(true, itemId, (ushort)Mathf.Clamp(count, 1, ushort.MaxValue)); return; }
             if (!IsSpawned) Answer(ServerWithdraw(itemId, count));
             else if (IsOwner) WithdrawRpc(itemId, (ushort)Mathf.Clamp(count, 1, ushort.MaxValue));
         }
@@ -107,6 +146,7 @@ namespace KryticalNova.Housing
         private void Answer(string refusal)
         {
             if (string.IsNullOrEmpty(refusal)) return;
+            if (EntityServer) { KryticalNova.Core.OwnerMessages.TryTell(this, refusal); return; }   // its player's message line
             if (!IsSpawned || IsOwnedByServer) ClientPresentationRegistry.Messages?.ShowMessage(refusal);
             else RefusedRpc(refusal);
         }
@@ -189,9 +229,11 @@ namespace KryticalNova.Housing
 
         private void Commit()
         {
+            Version++;
             Changed?.Invoke();
             Push();
-            if (saveAgent != null && IsSpawned && IsServer) saveAgent.SaveSoon();
+            // the entity netcode's server body is never network-spawned: it saves like NGO's server (M8 group 4)
+            if (saveAgent != null && ((IsSpawned && IsServer) || EntityServer)) saveAgent.SaveSoon();
         }
 
         // The owner of a player that is not the host's own is told over the network; everyone else already knows.
@@ -230,6 +272,7 @@ namespace KryticalNova.Housing
             if (saved?.items != null)
                 foreach (CrateEntry entry in saved.items)
                     if (entry.itemId != 0 && entry.count > 0) entries.Add(entry);
+            Version++;
             Changed?.Invoke();
             Push();
         }

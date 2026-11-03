@@ -1192,7 +1192,7 @@ checkpoints; the owner's Thursday hand-test list; owner questions). NGO rules ta
   - [x] 8.1.4 Flask refill: FlaskRefillRpc -> NGO's ServerRefill on the server body (Apothecary NpcInteractable in reach, the cost
     through PlayerWallet / CredsSink.Vendor, no item ledger line as NGO); B10 (refused out of range and with too few Creds, exact
     price, Flask full, no double charge, a view never refills). Review summary to the Master (HIGH).
-- [ ] M8 group 3: progression, skills, XP boosts, Serums mirror, Nova, Forge, crafting, restyle, weaves, library, Autobuff.
+- [x] M8 group 3: progression, skills, XP boosts, Serums mirror, Nova, Forge, crafting, restyle, weaves, library, Autobuff.
   - [x] 8.3.1 progression: stat points by AllocateRpc (Money limit) on the server body by NGO's rule (partial when short, never below
     zero), the owner's windows by OwnerProgress, everyone's level on the nameplate (PlayerLevelTag; remote views keep their progression,
     no level-up on first sight); B11 (real prefab).
@@ -1222,10 +1222,11 @@ checkpoints; the owner's Thursday hand-test list; owner questions). NGO rules ta
     the Weave fee through PlayerWallet Appearance, dye Cells from Pack or storage), the own view wears the server's looks (MirrorLooks from
     the look text), the library goes to its owner as text pages by version; `weave` and `weaves` real together (Items IBodyWeaves /
     IBodyWeaveLibrary). B25. Save note + HIGH review approved. Dye (a worn ladder piece in a colourway) is a Thursday hand test.
-  - [ ] 8.3.11 Autobuff: PlayerAutobuff moves from Automation to Rules (kept on the server body): the Autobuff Pass is used there again
+  - [x] 8.3.11 Autobuff: PlayerAutobuff moves from Automation to Rules (kept on the server body): the Autobuff Pass is used there again
     (EffectPorted), the licence and the eight cells live there (the cells from the owner at the Account limit, as NGO), the owner's view
     gets both, `autobuff` real. B26. NOT done: AutobuffCaster (the casting) stays off on the own view: NGO's TryCastWardsAtOnce ->
-    CastWardsServerRpc is NGO-only; on DOTS it needs the wards cast through SkillCastRpc (one per ward) first. Save note to the Master.
+    CastWardsServerRpc is NGO-only; on DOTS it needs the wards cast through SkillCastRpc (one per ward) first: goes WITH M4 combat
+    (master-6, 3 Nov). Save note + review approved.
 - [x] M8 group 2: storage, shopping, trade, Kiosk player side.
   - [x] 8.2.1 storage (Vault + Deep Vault): requests run NGO's PlayerStorage rules on the server body (Vaultkeeper range, Items limit,
     Creds through PlayerWallet VaultDeposit/VaultWithdraw at the Money limit), cells + Creds mirrored to the owner, `vault` + `deepvault`
@@ -1246,3 +1247,7 @@ checkpoints; the owner's Thursday hand-test list; owner questions). NGO rules ta
     browsed in reach. B21 (open, buy, own-Kiosk refusal, collect, close; kiosk.open/buy/collect lines); service-store tests with
     SaveService --test 28/28. No save key of its own. HIGH review approved.
 - [ ] M8 group 4: chat, contacts, party, sponsor, Crew, emotes, pets, mounts, crate, Recall, housing check; duels and Cadence wait for M4.
+  - [x] (order items 1-2) the owner message line (OwnerMessages, system 0) and mount / Mount Feed uses refused until Mounts (EffectPorted).
+  - [ ] Furnishing Crate: store and withdraw run NGO's PlayerCrate rules on the server body at the Money limit (furnishings only, the
+    faction rule, the cap per kind), the server body saves as NGO's server did, the owner gets the Crate as text pages by version,
+    `crate` real (Items IBodyCrate). B27. Save note to the Master first.
