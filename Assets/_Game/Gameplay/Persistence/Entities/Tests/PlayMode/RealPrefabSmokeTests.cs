@@ -11,6 +11,7 @@ using KryticalNova.Core;
 using KryticalNova.Items;
 using KryticalNova.Networking.Entities;
 using KryticalNova.Player;
+using KryticalNova.Player.Entities;
 using KryticalNova.Player.Entities.Bodies;
 using KryticalNova.Player.Entities.Presentation;
 using Object = UnityEngine.Object;
@@ -328,6 +329,87 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
             }
             Assert.AreEqual(ledgerBefore, ServerSave.HasPendingLedger(account), "a use writes no ledger line (NGO writes none)");
             body.GetComponent<PlayerSaveAgent>().OnServerLeaving();
+        }
+
+        [UnityTest]
+        public IEnumerator B5_AGmLine_ActsOnTheGmsOwnServerBody_AndWritesOneGmLedgerLine()
+        {
+            NetRole.Install(new BodyRoleNetRoleAdapter(null, () => NetRoleKind.ServerBody));
+            const string account = "1a2b3c4d5e6f708192a3b4c5d6e7f801";
+            const string characterId = "b1c2d3e4f5a60718293a4b5c6d7e8f91";
+            PlayerKeys.Reset();
+            PlayerKey key = PlayerKeys.Mint(5);   // connection 5's key, as ConnectionKeySystem mints it
+            GameObject body = PlayerBodyAssembler.Create(Prefab(), NetRoleKind.ServerBody, key, 5, false, new Vector3(0f, 0.08f, 0f), 0f);
+            m_Made.Add(body);
+            yield return null;
+            CharacterRecipe recipe = AnyLegalRecipe(body.GetComponent<PlayerIdentity>().Database);
+            var stored = new AccountSave { accountId = account };
+            stored.characters.Add(new CharacterSave { characterId = characterId, name = "Ace" });
+            Assert.IsTrue(ServerSave.WriteAccount(stored));
+            ServerSave.WaitForDisk();
+            var context = new ServerBodyContext
+            {
+                Key = key, Serial = 5, NetworkId = 5, Account = account, CharacterId = characterId, Name = "Ace",
+                RecipeText = RecipeText.Encode(recipe),
+            };
+            Assert.IsNull(new PlayerAdmission().Begin(body, in context), "admitted");
+            for (int i = 0; i < 10; i++) yield return null;
+
+            Assert.AreEqual(key, ((IPlayerBody)body.GetComponent<PointAndClickPlayer>()).Owner, "a server body's owner is its own key");
+            Assert.AreSame(body.GetComponent<BodyRoleTag>(), BodyRoleTag.ServerBodyOf(key), "the portals and the GM find it in the server bodies");
+            Assert.IsNotNull(KryticalNova.Networking.PlayerGm.CommandRunner, "the dev tools run GM lines");
+            var inventory = body.GetComponent<PlayerInventory>();
+            int held = inventory.CountItem(9001);
+            int linesBefore = ServerSave.ReadLedger(account, 0, 100).FindAll(l => l.kind == LedgerKinds.Gm).Count;
+
+            string answer = KryticalNova.Networking.PlayerGm.CommandRunner(5, "item.give 9001 2");
+            for (int i = 0; i < 3 && answer.StartsWith("The commands are still being loaded", StringComparison.Ordinal); i++)
+            {
+                yield return null;
+                answer = KryticalNova.Networking.PlayerGm.CommandRunner(5, "item.give 9001 2");
+            }
+            StringAssert.StartsWith("Gave 2x", answer, "the line ran on this server body");
+            Assert.AreEqual(held + 2, inventory.CountItem(9001), "the GM's own server body got the items");
+
+            List<LedgerEntry> gm = ServerSave.ReadLedger(account, 0, 100).FindAll(l => l.kind == LedgerKinds.Gm);
+            Assert.AreEqual(linesBefore + 1, gm.Count, "one gm ledger line on the account");
+            Assert.AreEqual(1, gm[0].items.Count);
+            Assert.AreEqual(9001, gm[0].items[0].item);
+            Assert.AreEqual(2, gm[0].items[0].count, "with what it added");
+            StringAssert.Contains("item.give 9001 2", gm[0].note, "and the command itself");
+            body.GetComponent<PlayerSaveAgent>().OnServerLeaving();
+            PlayerKeys.Reset();
+        }
+
+        [UnityTest]
+        public IEnumerator B6_TheOwnersWindows_ShowTheServersCredsAndProgression_ByNgosOwnPaths()
+        {
+            NetRole.Install(new BodyRoleNetRoleAdapter(null, () => NetRoleKind.ServerBody));
+            GameObject server = Make(NetRoleKind.ServerBody, false, new PlayerKey(6));
+            GameObject view = Make(NetRoleKind.ClientView, true, new PlayerKey(6));
+            yield return null;
+            server.GetComponent<KryticalNova.Economy.PlayerWallet>().ServerSet(1234);
+            var serverProgress = server.GetComponent<KryticalNova.Progression.PlayerCharacterProgression>();
+            serverProgress.SetLevel(7);
+            serverProgress.AddRenown(40);
+
+            OwnerProgress? read = OwnerProgressBridge.Read(server);
+            Assert.IsTrue(read.HasValue, "the server body has a wallet and a progression");
+            Assert.AreEqual(1234, read.Value.Creds);
+            Assert.AreEqual(7, read.Value.Level);
+            Assert.AreEqual(serverProgress.Renown, read.Value.Renown);
+            Assert.AreEqual(serverProgress.StatPoints, read.Value.StatPoints);
+
+            var viewProgress = view.GetComponent<KryticalNova.Progression.PlayerCharacterProgression>();
+            int levelUps = 0;
+            viewProgress.LevelGained += _ => levelUps++;
+            OwnerProgressBridge.Mirror(view, read.Value);
+            Assert.AreEqual(1234, view.GetComponent<KryticalNova.Economy.PlayerWallet>().Creds, "the Pack window's Creds are the server's");
+            Assert.AreEqual(7, viewProgress.CurrentLevel, "the Character window's level is the server's");
+            Assert.AreEqual(serverProgress.Renown, viewProgress.Renown, "and its Renown");
+            Assert.AreEqual(serverProgress.SkillPoints, viewProgress.SkillPoints);
+            Assert.Greater(levelUps, 0, "a level gained on the server plays its level-up on the owner's game (NGO's path)");
+            Assert.IsTrue(OwnerProgressBridge.Same(read.Value, OwnerProgressBridge.Read(view).Value), "the owner shows exactly what the server holds");
         }
 
         static CharacterRecipe AnyLegalRecipe(CharacterCreationDatabase database)

@@ -64,7 +64,13 @@ namespace KryticalNova.Networking
         public bool IsGm => !IsSpawned || OwnerClientId == NetworkManager.ServerClientId || !gmName.Value.IsEmpty;
 
         /// <summary>Whether others see the [GM] tag on this player: a GM in a session.</summary>
-        public bool ShowsTag => IsSpawned && IsGm;
+        public bool ShowsTag => (IsSpawned && IsGm) || tagFromServer;
+
+        // The entity netcode's ghost says this player is GM (M7.4): the body is never network-spawned there.
+        private bool tagFromServer;
+
+        /// <summary>The entity netcode's client: the server's GM tag for this player's body (shown on the name as NGO did).</summary>
+        public void ShowTagFromServer(bool on) => tagFromServer = on;
 
         /// <summary>The GM name they signed in with ("Host" for the host's own player), or empty.</summary>
         public string GmName => !IsSpawned ? string.Empty

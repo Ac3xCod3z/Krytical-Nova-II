@@ -78,6 +78,12 @@ namespace KryticalNova.Progression
             if (!IsServer) ApplyReplicated(current, announceLevels: true);
         }
 
+        /// <summary>Everything the owner's windows show, as NGO's network variable carries it (the entity netcode reads it on the server).</summary>
+        public ProgressionState State => Capture();
+
+        /// <summary>The entity netcode's owner view: the server's progression, with its level-ups (NGO's OnNetStateChanged on a client).</summary>
+        public void MirrorState(ProgressionState state) => ApplyReplicated(state, announceLevels: true);
+
         private ProgressionState Capture()
         {
             var state = new ProgressionState

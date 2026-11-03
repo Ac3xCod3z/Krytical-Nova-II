@@ -23,6 +23,9 @@ the checkpoints, the owner's Thursday hand-test list and the owner questions.
   `KnPlayHere` proof; a GUI GIF run where there is something to see. Max 2 runs per step; runs that never reach the test do not count.
   Slots from the Master before every Unity or dotnet job. `dependency_map.py --check` and `compile_check.py` (+ `--server`) before
   every multi-system commit.
+- **Every system that looks at player bodies gets one real-prefab test** (Master, 2 Nov 2026), not only fake bodies: 7.3 and 7.4 passed
+  with fake `IPlayerBody`s while every real DOTS server body answered `Owner = None` (NGO's `OwnerClientId`), so both would have
+  skipped every player. `RealPrefabSmokeTests` (PlayMode, MemorySaveStore) is where these go.
 - The shared edge (built once, reused by all): requests from the owner's view body through `BodyRoleTag.Requests` (never the stub's
   local `ServerX`), answered by a reply RPC with the result or the refusal text; owner-only ghost fields for what the HUD shows; paged
   text RPCs (`GoInGamePages`/`KnRosterPages`) for big state; observers get small ghost fields. Guards: `IsSpawned && IsServer` code

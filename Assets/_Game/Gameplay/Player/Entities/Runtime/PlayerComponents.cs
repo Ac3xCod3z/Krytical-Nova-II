@@ -146,6 +146,15 @@ namespace KryticalNova.Player.Entities
         [GhostField] public uint Version;
     }
 
+    /// <summary>
+    /// The player is a Game Master (M7.4): everyone sees the [GM] tag on their name, as NGO showed it from <c>PlayerGm</c>'s network variable.
+    /// Written by the server from the GM roster; 1 = GM.
+    /// </summary>
+    public struct PlayerGmTag : IComponentData
+    {
+        [GhostField] public byte On;
+    }
+
     /// <summary>Walk and run speed in mm/s, written by the server (rank, mount, gear), never recomputed by the client in the loop.</summary>
     public struct MoveStats : IComponentData
     {
@@ -178,6 +187,19 @@ namespace KryticalNova.Player.Entities
         /// <summary>The HP and Max HP in thousandths (owner, 2 Nov, item 5: a heal the server made shows on the owner's HUD).</summary>
         [GhostField] public int HealthMilli;
         [GhostField] public int MaxHealthMilli;
+    }
+
+    /// <summary>
+    /// What the owner's windows show (M7/M8 system 0, owner Q1, 2 Nov 2026: "just like the current game"): the Creds of the Pack window and the
+    /// level, XP, points, attributes and Renown of the Character window, as NGO's owner-only wallet variable and progression variable carry
+    /// them. Written by the server from the body; owner only.
+    /// </summary>
+    [GhostComponent(OwnerSendType = SendToOwnerType.SendToOwner)]
+    public struct OwnerProgress : IComponentData
+    {
+        [GhostField] public long Creds;
+        [GhostField] public int Level, Experience, StatPoints, SkillPoints, Renown;
+        [GhostField] public int Strength, Vitality, Agility, Spirit;
     }
 
     /// <summary>One corner of the server's planned path (millimetres). Owner only: observers never see the path.</summary>

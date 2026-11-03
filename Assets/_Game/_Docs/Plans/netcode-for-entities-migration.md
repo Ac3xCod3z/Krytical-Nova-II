@@ -1162,15 +1162,21 @@ For all five
 
 Plan: `netcode-for-entities-designs/m7-m8-breakdown-plan.md` (per system: DOTS edge, dependencies, tests, risk, size; order with
 checkpoints; the owner's Thursday hand-test list; owner questions). NGO rules tables: `netcode-for-entities-designs/m7m8-rules-tables/`.
-- [ ] System 0: item-use guard (`EffectPorted`, written 2 Nov, test pending), owner message line, owner Creds/Renown/level mirror, generic request.
+- [ ] System 0: item-use guard (`EffectPorted`), owner message line (dd5171ca8), owner Creds/Renown/level mirror, generic request.
+  - [x] Owner Creds / Renown / level (owner Q1, NGO's own paths): `OwnerProgress` owner-only ghost; PlayMode B6 PASS (real prefab).
+  - [ ] Generic request: each system so far uses its own small RPC (ItemUseRpc, GmLineRpc); decide when M8 group 1 starts.
 - [ ] M7: 7.1 clock/weather, 7.2 music, 7.3 portal, 7.4 GM tools, 7.5 drops + loot, 7.6 Kiosk stands.
-  - [x] 7.3 portal (9b6d3fef4): the server looks at its bodies (3 m + 0.75, on entry, 3 s cooldown per PlayerKey), only that player
-    told; ZonePortalServerLookTests PASS. Batch walk-in proof and the owner's hand test (Thursday) to come.
+  - [x] 7.2 music: `MusicStateRpc` on arrival and on a GM change, the conductor on the shared clock, a client cannot change it; Core
+    `IMusicStateLink` (the layer fix); MusicStateSyncTests PASS. The owner's by-ear check on Thursday.
+  - [x] 7.3 portal (9b6d3fef4 + the body-list fix): the server looks at `BodyRoleTag.ServerBodies` (a real DOTS server body is never
+    in PlayerBodies.All: its PointAndClickPlayer is off), 3 m + 0.75, on entry, 3 s cooldown per PlayerKey, only that player told;
+    ZonePortalServerLookTests (real BodyRoleTags) PASS, B5 proves the real prefab body is listed. Walk-in proof: Thursday hand test.
   - [x] 7.1 clock/weather (aef8d246f): WorldStateSyncTests PASS in full (arrival, change, no resend, late joiner; the late joiner
     passed in the 7.4 run, 66/66). Owner's two-client sky check on Thursday.
-  - [ ] 7.4 GM tools: GM lines (a) and the page's command box + GM list (b) built, EditMode 66/66 (GmLineTests, GmTarget, page
-    routes and buttons; NGO's ControlPage 29, GmRoster 6, KnControlPage 8 unchanged). Left: the [GM] tag for observers, the gm
-    ledger line proof, the review summary.
+  - [x] 7.4 GM tools (f4221da6e + this commit): GM lines, the page's command box + GM list, the [GM] tag everyone sees
+    (`PlayerGmTag`), GmTarget by connection; EditMode (GmLine 3, GmTarget, page routes 4 + buttons, NGO's ControlPage 29 /
+    GmRoster 6 / KnControlPage 8 unchanged), PlayMode B5: a GM line on the real prefab gives +2 and writes one `gm` ledger line.
+    Review summary to the Master (HIGH). Left for later: GM window controls on DOTS, the other page controls, GM sight and toggles.
 - [ ] M8 group 1: wallet, inventory rest, loadouts, Flask refill.
 - [ ] M8 group 3: progression, skills, XP boosts, Serums mirror, Nova, Forge, crafting, restyle, weaves, library, Autobuff.
 - [ ] M8 group 2: storage, shopping, trade, Kiosk player side.

@@ -33,6 +33,7 @@ namespace KryticalNova.Player.Entities
                 AddComponent<PlayerPose>(e);
                 AddComponent<TeleportSeq>(e);
                 AddComponent<PlayerLook>(e);
+                AddComponent<PlayerGmTag>(e);
                 AddComponent(e, new MoveStats { WalkMmps = a.walkMmps, RunMmps = a.runMmps });
                 AddComponent<MoveRanks>(e);
                 AddComponent<VaultPlan>(e);
@@ -48,6 +49,7 @@ namespace KryticalNova.Player.Entities
                 AddComponent<WallGripOwed>(e);
                 AddComponent<WallGoal>(e);
                 AddComponent<OwnerFlux>(e);
+                AddComponent<OwnerProgress>(e);
                 AddBuffer<PathCorner>(e);
                 AddComponent<PathPlan>(e);
                 AddBuffer<ClientPlanCorner>(e);

@@ -13,15 +13,6 @@ namespace KryticalNova.Tests
     /// </summary>
     public class GmTargetEntityServerTests
     {
-        sealed class Body : IPlayerBody
-        {
-            public Transform Transform { get; set; }
-            public PlayerKey Owner { get; set; }
-            public bool IsLocal => false;
-            public bool IsJumping => false;
-            public void RebindToScene() { }
-        }
-
         sealed class ServerRole : INetRoleAdapter
         {
             public NetRoleKind Process => NetRoleKind.ServerBody;
@@ -35,14 +26,12 @@ namespace KryticalNova.Tests
 
         readonly List<GameObject> m_Made = new List<GameObject>();
         INetRoleAdapter m_OldRole;
-        IReadOnlyList<IPlayerBody> m_OldBodies;
         GmTarget.Saved m_OldTarget;
 
         [SetUp]
         public void SetUp()
         {
             m_OldRole = NetRole.Adapter;
-            m_OldBodies = PlayerBodies.All;
             m_OldTarget = GmTarget.Save();
             PlayerKeys.Reset();
             NetRole.Install(new ServerRole());
@@ -53,25 +42,26 @@ namespace KryticalNova.Tests
         public void TearDown()
         {
             NetRole.Install(m_OldRole);
-            PlayerBodies.Use(m_OldBodies);
             GmTarget.Restore(m_OldTarget);
             PlayerKeys.Reset();
             foreach (var go in m_Made) Object.DestroyImmediate(go);
             m_Made.Clear();
         }
 
-        Body Make(string name, ulong connection)
+        // a server body as the assembler marks it: GmTarget reads BodyRoleTag.ServerBodies
+        BodyRoleTag Make(string name, ulong connection)
         {
             var go = new GameObject(name);
             m_Made.Add(go);
-            return new Body { Transform = go.transform, Owner = PlayerKeys.Mint(connection) };
+            BodyRoleTag tag = go.AddComponent<BodyRoleTag>();
+            tag.Assign(NetRoleKind.ServerBody, PlayerKeys.Mint(connection), connection, false);
+            return tag;
         }
 
         [Test]
         public void ACommand_ActsOnThePickedConnectionsServerBody_AndNeverOnSomeoneElse()
         {
-            Body ace = Make("Ace", 1), bea = Make("Bea", 2);
-            PlayerBodies.Use(new List<IPlayerBody> { ace, bea });
+            BodyRoleTag ace = Make("Ace", 1), bea = Make("Bea", 2);
 
             Assert.IsFalse(GmTarget.TryGetPlayer(out _, out string error), "no pick: a server has no player of its own");
             StringAssert.Contains("gm.target", error);
@@ -79,11 +69,11 @@ namespace KryticalNova.Tests
             Assert.IsTrue(GmTarget.TrySetTarget(2, out error), error);
             Assert.AreEqual(2UL, GmTarget.ClientId);
             Assert.IsTrue(GmTarget.TryGetPlayer(out GameObject player, out error), error);
-            Assert.AreSame(bea.Transform.gameObject, player, "connection 2 is Bea's server body");
+            Assert.AreSame(bea.gameObject, player, "connection 2 is Bea's server body");
 
             Assert.IsFalse(GmTarget.TrySetTarget(9, out error), "nobody on connection 9");
             Assert.IsTrue(GmTarget.TryGetPlayer(out player, out _));
-            Assert.AreSame(bea.Transform.gameObject, player, "a failed pick keeps the last one");
+            Assert.AreSame(bea.gameObject, player, "a failed pick keeps the last one");
 
             var listed = GmTarget.ConnectedPlayers();
             Assert.AreEqual(2, listed.Count);

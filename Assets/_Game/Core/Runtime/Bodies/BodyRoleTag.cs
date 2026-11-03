@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace KryticalNova.Core
@@ -44,6 +45,32 @@ namespace KryticalNova.Core
         /// <summary>Raised when <see cref="IsLocal"/> changes (ownership settles after the body exists).</summary>
         public event Action<BodyRoleTag> LocalChanged;
 
+        private static readonly List<BodyRoleTag> ServerBodiesNow = new List<BodyRoleTag>();
+
+        /// <summary>
+        /// The server bodies of the entity netcode awake in this process (M7.3/M7.4, 2 Nov 2026): what the world's portals and the GM's
+        /// targeting look at. <see cref="PlayerBodies"/> does not list them: their <c>PointAndClickPlayer</c> is switched off (the ghost moves them).
+        /// </summary>
+        public static IReadOnlyList<BodyRoleTag> ServerBodies => ServerBodiesNow;
+
+        /// <summary>The awake server body of <paramref name="key"/>, or null.</summary>
+        public static BodyRoleTag ServerBodyOf(PlayerKey key)
+        {
+            if (key == PlayerKey.None) return null;
+            foreach (BodyRoleTag tag in ServerBodiesNow) if (tag != null && tag.Key == key) return tag;
+            return null;
+        }
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetStatics() => ServerBodiesNow.Clear();
+
+        private void OnEnable()
+        {
+            if (kind == NetRoleKind.ServerBody && !ServerBodiesNow.Contains(this)) ServerBodiesNow.Add(this);
+        }
+
+        private void OnDisable() => ServerBodiesNow.Remove(this);
+
         /// <summary>Fills the tag. Call right after AddComponent and before the body is activated.</summary>
         public void Assign(NetRoleKind roleKind, PlayerKey key, ulong connectionSerial, bool local)
         {
@@ -51,6 +78,7 @@ namespace KryticalNova.Core
             Key = key;
             ConnectionSerial = connectionSerial;
             isLocal = local;
+            if (isActiveAndEnabled) { OnDisable(); OnEnable(); }   // filled on an awake body (tests): the list follows
         }
 
         /// <summary>Changes the local flag and tells listeners (no event when nothing changed).</summary>

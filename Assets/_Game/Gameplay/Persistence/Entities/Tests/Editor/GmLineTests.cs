@@ -4,6 +4,8 @@ using KryticalNova.Core;
 using KryticalNova.Networking;
 using KryticalNova.Networking.Entities;
 using KryticalNova.Networking.Entities.Tests;
+using KryticalNova.Player.Entities;
+using KryticalNova.Player.Entities.Tests;
 using NUnit.Framework;
 using Unity.Collections;
 using Unity.Entities;
@@ -115,6 +117,47 @@ namespace KryticalNova.Persistence.Entities.Tests
                 Assert.AreEqual("You are not a GM on this server.", a.LastReply);
                 Assert.AreEqual(2, m_Ran.Count, "nothing more ran");
                 Assert.AreEqual(0, server.OverBudget, "within the account call limits");
+            }
+            finally
+            {
+                ServerAccounts.Forget(keyA.PlayerKey);
+            }
+        }
+
+        static byte TagOf(World world, int networkId)
+        {
+            var em = world.EntityManager;
+            using var query = em.CreateEntityQuery(ComponentType.ReadOnly<PlayerGhostTag>(), ComponentType.ReadOnly<GhostOwner>(), ComponentType.ReadOnly<PlayerGmTag>());
+            using var owners = query.ToComponentDataArray<GhostOwner>(Allocator.Temp);
+            using var tags = query.ToComponentDataArray<PlayerGmTag>(Allocator.Temp);
+            for (int i = 0; i < owners.Length; i++) if (owners[i].NetworkId == networkId) return tags[i].On;
+            return 255;   // no such ghost here
+        }
+
+        [Test]
+        public void EveryoneSeesTheGmTag_OfABoundGm_AndItGoesWhenTheGmIsTakenOff()
+        {
+            using var rig = PlayerRig.Create(2);
+            int idA = KnTestWorld.NetworkIdOf(rig.Clients[0]), idB = KnTestWorld.NetworkIdOf(rig.Clients[1]);
+            rig.Tw.Tick(5);
+            Assert.AreEqual(0, TagOf(rig.Clients[1], idA), "nobody is GM yet");
+
+            ConnectionPlayerKey keyA = ServerKeyOf(rig.Tw, rig.Clients[0]);
+            ServerAccounts.Remember(keyA.PlayerKey, "acct-ace", string.Empty);
+            try
+            {
+                GmRoster.SetAll(new[] { new GmEntry { name = "Ace", account = "acct-ace" } });
+                GmRoster.SignInBound(keyA.Serial, out _);
+                rig.Tw.TickUntil(() => TagOf(rig.Clients[1], idA) == 1 && TagOf(rig.Clients[0], idA) == 1, 120);
+                Assert.AreEqual(1, TagOf(rig.Server, idA), "the server's ghost of A says GM");
+                Assert.AreEqual(1, TagOf(rig.Clients[1], idA), "B sees A's tag");
+                Assert.AreEqual(1, TagOf(rig.Clients[0], idA), "A sees its own");
+                Assert.AreEqual(0, TagOf(rig.Clients[0], idB), "B is no GM");
+                Assert.AreEqual(1, rig.Clients[1].GetExistingSystemManaged<GmLineClientSystem>().TagsShown);
+
+                GmRoster.SetAll(Array.Empty<GmEntry>());
+                rig.Tw.TickUntil(() => TagOf(rig.Clients[1], idA) == 0, 120);
+                Assert.AreEqual(0, TagOf(rig.Clients[1], idA), "the tag goes with the GM rights");
             }
             finally
             {

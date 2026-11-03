@@ -14,7 +14,7 @@ namespace KryticalNova.Economy
     /// local copy decides.
     /// </summary>
     [DisallowMultipleComponent]
-    public sealed class PlayerWallet : NetworkBehaviour, ISaveParticipant, KryticalNova.Items.ICurrencyReceiver, IWallet
+    public sealed class PlayerWallet : NetworkBehaviour, ISaveParticipant, KryticalNova.Items.ICurrencyReceiver, IWallet, IWalletMirror
     {
         [SerializeField] private EconomySettings settings;
 
@@ -64,6 +64,9 @@ namespace KryticalNova.Economy
             creds = value;
             Changed?.Invoke();
         }
+
+        /// <summary>The entity netcode's owner view: the server's balance (NGO's OnNetCredsChanged on the owner).</summary>
+        public void MirrorCreds(long value) => Apply(value);
 
         private void Commit()
         {

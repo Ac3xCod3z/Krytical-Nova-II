@@ -44,11 +44,8 @@ namespace KryticalNova.DevTools
         /// <summary>The server body of the entity netcode's player on <paramref name="clientId"/>, or null.</summary>
         private static GameObject EntityBody(ulong clientId)
         {
-            PlayerKey key = PlayerKeys.Find(clientId);
-            if (key == PlayerKey.None) return null;
-            foreach (IPlayerBody body in PlayerBodies.All)
-                if (body != null && body.Owner == key && body.Transform != null && NetRole.IsServerBody(body.Transform)) return body.Transform.gameObject;
-            return null;
+            BodyRoleTag body = BodyRoleTag.ServerBodyOf(PlayerKeys.Find(clientId));
+            return body != null ? body.gameObject : null;
         }
 
         /// <summary>Who the commands act on, kept aside while a joined GM's line runs (<see cref="GmCommandRelay"/>).</summary>
@@ -149,9 +146,9 @@ namespace KryticalNova.DevTools
             var nm = Session;
             if (nm == null && EntityServer)
             {
-                foreach (IPlayerBody body in PlayerBodies.All)
-                    if (body != null && body.Transform != null && NetRole.IsServerBody(body.Transform) && PlayerKeys.TryGetConnection(body.Owner, out ulong id))
-                        result.Add((id, body.Transform.gameObject));
+                foreach (BodyRoleTag body in BodyRoleTag.ServerBodies)
+                    if (body != null && PlayerKeys.TryGetConnection(body.Key, out ulong id))
+                        result.Add((id, body.gameObject));
                 return result;
             }
             if (nm == null || !nm.IsServer) return result;

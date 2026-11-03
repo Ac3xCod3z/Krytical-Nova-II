@@ -35,7 +35,7 @@ namespace KryticalNova.Audio
     /// </summary>
     [DisallowMultipleComponent]
     [DefaultExecutionOrder(-45)]
-    public sealed class MusicConductor : NetworkBehaviour, IBeatClock
+    public sealed class MusicConductor : NetworkBehaviour, IBeatClock, IMusicStateLink
     {
         public static MusicConductor Instance { get; private set; }
 
@@ -55,17 +55,18 @@ namespace KryticalNova.Audio
         public ZoneMusic Music => music;
         public MusicState State => state;
 
-        /// <summary>True offline, on the server and on a host. Only these may change what plays.</summary>
-        public bool HasAuthority => !IsSpawned || IsServer;
+        /// <summary>True offline, on the server and on a host. Only these may change what plays (a client of the entity netcode never: M7.2).</summary>
+        public bool HasAuthority => (!IsSpawned || IsServer) && !MusicStateLink.RemoteAuthority;
 
-        /// <summary>Shared clock: server time when networked, local time offline.</summary>
-        public double Now => IsSpawned && NetworkManager != null ? NetClock.Now : Time.timeAsDouble;
+        /// <summary>Shared clock: server time when networked (either netcode), local time offline.</summary>
+        public double Now => (IsSpawned && NetworkManager != null) || NetClock.IsRunning ? NetClock.Now : Time.timeAsDouble;
 
         private void Awake()
         {
             if (Instance != null && Instance != this) return;
             Instance = this;
             BeatClock.Register(this);
+            MusicStateLink.Current = this;
         }
 
         private void OnEnable()
@@ -77,6 +78,7 @@ namespace KryticalNova.Audio
         public override void OnDestroy()
         {
             if (Instance == this) Instance = null;
+            if (ReferenceEquals(MusicStateLink.Current, this)) MusicStateLink.Current = null;
             BeatClock.Unregister(this);
             base.OnDestroy();
         }
@@ -183,6 +185,15 @@ namespace KryticalNova.Audio
             Write(next);
             return true;
         }
+
+        // The entity netcode (M7.2): the server reads what plays; a client takes the server's (as NGO's netState does).
+        bool IMusicStateLink.TryRead(out MusicSync sync)
+        {
+            sync = new MusicSync { Epoch = state.Epoch, Forced = state.Forced, Nudge = state.Nudge };
+            return true;
+        }
+
+        void IMusicStateLink.Apply(in MusicSync sync) => state = new MusicState { Epoch = sync.Epoch, Forced = sync.Forced, Nudge = sync.Nudge };
 
         private void Write(MusicState next)
         {

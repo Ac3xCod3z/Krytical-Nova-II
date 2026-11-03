@@ -3,6 +3,8 @@ using System.Text;
 using KryticalNova.Core;
 using KryticalNova.Networking;
 using KryticalNova.Networking.Entities;
+using KryticalNova.Player.Entities;
+using KryticalNova.Player.Entities.Presentation;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.NetCode;
@@ -43,8 +45,9 @@ namespace KryticalNova.Persistence.Entities
         /// <summary>The most a reply part carries (UTF-8 bytes; a FixedString512Bytes holds 509).</summary>
         public const int PartBytes = 500;
 
-        EntityQuery m_Lines, m_InGame;
+        EntityQuery m_Lines, m_InGame, m_Ghosts;
         readonly Dictionary<ulong, Entity> m_Connections = new Dictionary<ulong, Entity>();
+        readonly Dictionary<int, ulong> m_ByNetworkId = new Dictionary<int, ulong>();
         readonly HashSet<ulong> m_Known = new HashSet<ulong>();
         readonly List<ulong> m_Gone = new List<ulong>();
 
@@ -58,6 +61,7 @@ namespace KryticalNova.Persistence.Entities
             m_Lines = GetEntityQuery(ComponentType.ReadOnly<ReceiveRpcCommandRequest>(), ComponentType.ReadOnly<GmLineRpc>());
             m_InGame = GetEntityQuery(ComponentType.ReadOnly<NetworkId>(), ComponentType.ReadOnly<NetworkStreamInGame>(),
                 ComponentType.ReadOnly<ConnectionPlayerKey>());
+            m_Ghosts = GetEntityQuery(ComponentType.ReadOnly<PlayerGhostTag>(), ComponentType.ReadOnly<GhostOwner>(), ComponentType.ReadWrite<PlayerGmTag>());
             GmRoster.Granted += OnGranted;
             GmRoster.Revoked += OnRevoked;
         }
@@ -74,9 +78,15 @@ namespace KryticalNova.Persistence.Entities
         {
             var em = EntityManager;
             m_Connections.Clear();
+            m_ByNetworkId.Clear();
             using (var connections = m_InGame.ToEntityArray(Allocator.Temp))
             using (var keys = m_InGame.ToComponentDataArray<ConnectionPlayerKey>(Allocator.Temp))
-                for (int i = 0; i < connections.Length; i++) m_Connections[keys[i].Serial] = connections[i];
+            using (var ids = m_InGame.ToComponentDataArray<NetworkId>(Allocator.Temp))
+                for (int i = 0; i < connections.Length; i++)
+                {
+                    m_Connections[keys[i].Serial] = connections[i];
+                    m_ByNetworkId[ids[i].Value] = keys[i].Serial;
+                }
 
             // NGO's OnNetworkSpawn / OnNetworkDespawn of PlayerGm: a bound GM is GM again on every join; who left is forgotten
             m_Gone.Clear();
@@ -84,6 +94,7 @@ namespace KryticalNova.Persistence.Entities
             foreach (ulong id in m_Gone) { m_Known.Remove(id); GmRoster.Forget(id); }
             foreach (ulong id in m_Connections.Keys)
                 if (m_Known.Add(id)) GmRoster.SignInBound(id, out _);
+            ShowTags();
 
             if (m_Lines.IsEmpty) return;
             var received = m_Lines.ToComponentDataArray<ReceiveRpcCommandRequest>(Allocator.Temp);
@@ -92,6 +103,21 @@ namespace KryticalNova.Persistence.Entities
             for (int i = 0; i < lines.Length; i++) RunLine(received[i].SourceConnection, lines[i].Line.ToString());
             received.Dispose();
             lines.Dispose();
+        }
+
+        // The [GM] tag everyone sees (NGO: PlayerGm.ShowsTag from its network variable): each player's ghost says whether the roster has them.
+        void ShowTags()
+        {
+            if (m_Ghosts.IsEmpty) return;
+            var em = EntityManager;
+            using var ghosts = m_Ghosts.ToEntityArray(Allocator.Temp);
+            using var owners = m_Ghosts.ToComponentDataArray<GhostOwner>(Allocator.Temp);
+            using var tags = m_Ghosts.ToComponentDataArray<PlayerGmTag>(Allocator.Temp);
+            for (int i = 0; i < ghosts.Length; i++)
+            {
+                byte on = (byte)(m_ByNetworkId.TryGetValue(owners[i].NetworkId, out ulong id) && GmRoster.IsGm(id) ? 1 : 0);
+                if (tags[i].On != on) em.SetComponentData(ghosts[i], new PlayerGmTag { On = on });
+            }
         }
 
         void RunLine(Entity connection, string line)
@@ -209,8 +235,10 @@ namespace KryticalNova.Persistence.Entities
             }
         }
 
-        EntityQuery m_Replies, m_States;
+        EntityQuery m_Replies, m_States, m_Tags;
         readonly StringBuilder m_Answer = new StringBuilder();
+        readonly Dictionary<Entity, (byte on, UnityEngine.GameObject body)> m_Shown = new Dictionary<Entity, (byte, UnityEngine.GameObject)>();
+        readonly List<Entity> m_Gone = new List<Entity>();
 
         /// <summary>This world's link (tests send through it), answers handed on, and the last one (tests).</summary>
         public Link GmLink { get; private set; }
@@ -221,6 +249,7 @@ namespace KryticalNova.Persistence.Entities
         {
             m_Replies = GetEntityQuery(ComponentType.ReadOnly<ReceiveRpcCommandRequest>(), ComponentType.ReadOnly<GmReplyRpc>());
             m_States = GetEntityQuery(ComponentType.ReadOnly<ReceiveRpcCommandRequest>(), ComponentType.ReadOnly<GmStateRpc>());
+            m_Tags = GetEntityQuery(ComponentType.ReadOnly<PlayerGhostTag>(), ComponentType.ReadOnly<PlayerGmTag>());
             GmLink = new Link(World);
             PlayerGm.Remote = GmLink;
         }
@@ -233,6 +262,7 @@ namespace KryticalNova.Persistence.Entities
         protected override void OnUpdate()
         {
             var em = EntityManager;
+            ShowTags();
             if (!m_States.IsEmpty)
             {
                 using var states = m_States.ToComponentDataArray<GmStateRpc>(Allocator.Temp);
@@ -255,6 +285,30 @@ namespace KryticalNova.Persistence.Entities
                 Replies++;
                 PlayerGm.RaiseReply(LastReply);
             }
+        }
+
+        /// <summary>Players shown with the [GM] tag here (tests).</summary>
+        public int TagsShown { get; private set; }
+
+        // Each player's body takes its ghost's GM tag (the namecard shows "[GM] " from PlayerGm.ShowsTag); again when the body is new.
+        void ShowTags()
+        {
+            m_Gone.Clear();
+            foreach (Entity ghost in m_Shown.Keys) if (!EntityManager.Exists(ghost) || !EntityManager.HasComponent<PlayerGmTag>(ghost)) m_Gone.Add(ghost);
+            foreach (Entity ghost in m_Gone) m_Shown.Remove(ghost);
+            if (m_Tags.IsEmpty) { TagsShown = 0; return; }
+            using var ghosts = m_Tags.ToEntityArray(Allocator.Temp);
+            using var tags = m_Tags.ToComponentDataArray<PlayerGmTag>(Allocator.Temp);
+            int shown = 0;
+            for (int i = 0; i < ghosts.Length; i++)
+            {
+                if (tags[i].On != 0) shown++;
+                UnityEngine.GameObject body = GhostBodyRegistry.TryGetByGhost(World, ghosts[i], out GhostBodyEntry entry) ? entry.Body : null;
+                if (m_Shown.TryGetValue(ghosts[i], out var had) && had.on == tags[i].On && had.body == body) continue;
+                m_Shown[ghosts[i]] = (tags[i].On, body);
+                if (body != null && body.TryGetComponent(out PlayerGm gm)) gm.ShowTagFromServer(tags[i].On != 0);
+            }
+            TagsShown = shown;
         }
     }
 }

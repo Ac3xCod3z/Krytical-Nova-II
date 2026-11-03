@@ -67,7 +67,7 @@ namespace KryticalNova.World.Portals
         {
             if (!EntitySessionServer() || Time.time < nextServerLook) return;
             nextServerLook = Time.time + ServerLookInterval;
-            ServerLook(PlayerBodies.All, Time.time);
+            ServerLook(BodyRoleTag.ServerBodies, Time.time);
         }
 
         /// <summary>An entity-netcode session (NGO not listening) and this process runs its server.</summary>
@@ -81,16 +81,16 @@ namespace KryticalNova.World.Portals
         /// One look over the server bodies (entity netcode): a body that came inside the radius since the last look, and is not cooling down,
         /// is transferred and its player told. Bodies with no key are not connected players and are left alone (as NGO's trigger).
         /// </summary>
-        public void ServerLook(IReadOnlyList<IPlayerBody> bodies, float now)
+        public void ServerLook(IReadOnlyList<BodyRoleTag> bodies, float now)
         {
             seen.Clear();
             for (int i = 0; i < bodies.Count; i++)
             {
-                IPlayerBody body = bodies[i];
-                if (body == null || body.Transform == null || !NetRole.IsServerBody(body.Transform)) continue;
-                PlayerKey key = body.Owner;
+                BodyRoleTag body = bodies[i];
+                if (body == null || body.Kind != NetRoleKind.ServerBody) continue;
+                PlayerKey key = body.Key;
                 if (key == PlayerKey.None) continue;
-                Vector3 offset = body.Transform.position - transform.position;
+                Vector3 offset = body.transform.position - transform.position;
                 offset.y = 0f;
                 if (offset.magnitude > activationRadius + RadiusTolerance) continue;
                 seen.Add(key);
@@ -98,9 +98,9 @@ namespace KryticalNova.World.Portals
                 if (nextUseByKey.TryGetValue(key, out float allowedAt) && now < allowedAt) continue;
                 nextUseByKey[key] = now + cooldownSeconds;
                 ZoneTransferResult result = TransferHandler != null
-                    ? TransferHandler.TryTransfer(this, body.Transform.gameObject)
+                    ? TransferHandler.TryTransfer(this, body.gameObject)
                     : new ZoneTransferResult(false, sealedMessage);
-                if (!string.IsNullOrEmpty(result.Message)) OwnerMessages.TryTell(body.Transform, result.Message);
+                if (!string.IsNullOrEmpty(result.Message)) OwnerMessages.TryTell(body.transform, result.Message);
             }
             left.Clear();
             foreach (PlayerKey key in inside) if (!seen.Contains(key)) left.Add(key);

@@ -2321,7 +2321,9 @@ namespace KryticalNova.Player
 
         // A player's body as the world sees it (IPlayerBody, Core): World's portals, travel and rain use these.
         Transform IPlayerBody.Transform => transform;
-        PlayerKey IPlayerBody.Owner => IsSpawned && IsServer ? NetPlayerKeys.Of(OwnerClientId) : NetPlayerKeys.Find(OwnerClientId); // the server mints on first ask (host and test joins have no proof step); released on disconnect
+        PlayerKey IPlayerBody.Owner => IsSpawned && IsServer ? NetPlayerKeys.Of(OwnerClientId) // the server mints on first ask (host and test joins have no proof step); released on disconnect
+            : !IsSpawned && BodyRoleTag.Of(this) is { Kind: NetRoleKind.ServerBody } tag ? tag.Key   // a server body of the entity netcode: its own key (M7.3/M7.4)
+            : NetPlayerKeys.Find(OwnerClientId);
         bool IPlayerBody.IsLocal => IsSpawned && IsOwner;
         bool IPlayerBody.IsJumping => jumpMotor != null && jumpMotor.IsBusy;
 

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using KryticalNova.Core;
 using KryticalNova.World.Portals;
 using NUnit.Framework;
@@ -12,15 +13,6 @@ namespace KryticalNova.Tests
     /// </summary>
     public class ZonePortalServerLookTests
     {
-        sealed class Body : IPlayerBody
-        {
-            public Transform Transform { get; set; }
-            public PlayerKey Owner { get; set; }
-            public bool IsLocal => false;
-            public bool IsJumping => false;
-            public void RebindToScene() { }
-        }
-
         sealed class ServerRole : INetRoleAdapter
         {
             public NetRoleKind Process => NetRoleKind.ServerBody;
@@ -73,7 +65,13 @@ namespace KryticalNova.Tests
             return go;
         }
 
-        Body BodyAt(string name, Vector3 at, ulong key) => new Body { Transform = Make(name, at).transform, Owner = new PlayerKey(key) };
+        // a server body of the entity netcode as the assembler marks it (the portal reads BodyRoleTag.ServerBodies)
+        BodyRoleTag BodyAt(string name, Vector3 at, ulong key)
+        {
+            BodyRoleTag tag = Make(name, at).AddComponent<BodyRoleTag>();
+            tag.Assign(NetRoleKind.ServerBody, new PlayerKey(key), key, false);
+            return tag;
+        }
 
         [Test]
         public void ABodyThatWalksIn_IsToldOnce_PerEntry_AfterTheCooldown_AndOnlyThatPlayer()
@@ -81,12 +79,13 @@ namespace KryticalNova.Tests
             var a = BodyAt("A", new Vector3(10, 0, 0), 1);
             var b = BodyAt("B", new Vector3(0, 0, 20), 2);
             var keyless = BodyAt("NoKey", new Vector3(1, 0, 0), 0);
-            var bodies = new List<IPlayerBody> { a, b, keyless };
+            var bodies = new List<BodyRoleTag> { a, b, keyless };
+            Assert.IsTrue(BodyRoleTag.ServerBodies.Contains(a) && !BodyRoleTag.ServerBodies.Contains(null), "an awake server body is listed");
 
             m_Portal.ServerLook(bodies, 0f);
             Assert.AreEqual(0, m_Told.Lines.Count, "outside the radius, or no player key: nobody is told");
 
-            a.Transform.position = new Vector3(3.6f, 5f, 0);      // 3.6 m flat (inside 3 + 0.75), height does not count
+            a.transform.position = new Vector3(3.6f, 5f, 0);      // 3.6 m flat (inside 3 + 0.75), height does not count
             m_Portal.ServerLook(bodies, 1f);
             Assert.AreEqual(1, m_Told.Lines.Count, "A walked in");
             Assert.AreEqual("A", m_Told.Lines[0].body, "only the player who walked in is told");
@@ -96,18 +95,18 @@ namespace KryticalNova.Tests
             m_Portal.ServerLook(bodies, 10f);
             Assert.AreEqual(1, m_Told.Lines.Count, "standing inside is one entry");
 
-            a.Transform.position = new Vector3(10, 0, 0);          // out and back in within the cooldown
+            a.transform.position = new Vector3(10, 0, 0);          // out and back in within the cooldown
             m_Portal.ServerLook(bodies, 10.25f);
-            a.Transform.position = Vector3.zero;
+            a.transform.position = Vector3.zero;
             m_Portal.ServerLook(bodies, 10.5f);
             Assert.AreEqual(2, m_Told.Lines.Count, "a new entry after the 3 s cooldown (first use at 1 s)");
-            a.Transform.position = new Vector3(10, 0, 0);
+            a.transform.position = new Vector3(10, 0, 0);
             m_Portal.ServerLook(bodies, 10.75f);
-            a.Transform.position = Vector3.zero;
+            a.transform.position = Vector3.zero;
             m_Portal.ServerLook(bodies, 11f);
             Assert.AreEqual(2, m_Told.Lines.Count, "out and in again within 3 s: not told again");
 
-            b.Transform.position = new Vector3(0, 0, 1);
+            b.transform.position = new Vector3(0, 0, 1);
             m_Portal.ServerLook(bodies, 11.25f);
             Assert.AreEqual(3, m_Told.Lines.Count, "B's cooldown is its own");
             Assert.AreEqual("B", m_Told.Lines[2].body);
