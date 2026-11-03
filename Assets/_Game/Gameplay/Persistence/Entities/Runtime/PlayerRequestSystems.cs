@@ -447,6 +447,24 @@ namespace KryticalNova.Persistence.Entities
 
         uint m_KioskSeq;
 
+        public void GearWork(GearWorkOpKind op, short cell, short cell2, ushort alloy, ushort protection)
+        {
+            if (m_World == null || !m_World.IsCreated) return;
+            var em = m_World.EntityManager;
+            Entity rpc = em.CreateEntity();
+            em.AddComponentData(rpc, new GearWorkRpc { Op = (byte)op, Cell = cell, Cell2 = cell2, Alloy = alloy, Protection = protection });
+            em.AddComponent<SendRpcCommandRequest>(rpc);
+        }
+
+        public void Craft(ushort recipeId, ushort times)
+        {
+            if (m_World == null || !m_World.IsCreated || recipeId == 0) return;
+            var em = m_World.EntityManager;
+            Entity rpc = em.CreateEntity();
+            em.AddComponentData(rpc, new CraftRpc { Recipe = recipeId, Times = times });
+            em.AddComponent<SendRpcCommandRequest>(rpc);
+        }
+
         public void KioskOpen(string shopName, BodyKioskOffer[] offers, byte tier)
         {
             if (m_World == null || !m_World.IsCreated) return;

@@ -445,11 +445,16 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
             public void KioskCollect() => Ops.Add("KioskCollect");
             public void KioskBuy(uint standId, byte index, ushort itemId, ushort stackCount, ulong data, long unitPrice, ushort count) =>
                 Ops.Add($"KioskBuy {standId} {index} {itemId}x{stackCount}:{data} {unitPrice} {count}");
+            public void GearWork(GearWorkOpKind op, short cell, short cell2, ushort alloy, ushort protection) => Ops.Add($"GearWork {op} {cell} {cell2} {alloy} {protection}");
+            public void Craft(ushort recipeId, ushort times) => Ops.Add($"Craft {recipeId} {times}");
         }
 
         /// <summary>What the server bodies told their players (the message line) and sent their trade windows (view, notice, prompt).</summary>
-        sealed class Told : IOwnerMessages, ITradeOwnerLink, IKioskOwnerLink
+        sealed class Told : IOwnerMessages, ITradeOwnerLink, IKioskOwnerLink, IWorkshopOwnerLink
         {
+            public void GearWorked(Component part, byte kind, byte outcome, ItemStack before, ItemStack after) =>
+                Lines.Add((Body(part), $"forge {kind} {outcome} {before.itemId}"));
+            public void Crafted(Component part, ushort recipeId, int times) => Lines.Add((Body(part), $"crafted {recipeId} x{times}"));
             public void View(Component part, in BodyKioskView view) =>
                 Lines.Add((Body(part), $"kiosk {view.exists} {view.open} {view.shopName} till {view.till} shelf {view.shelf?.Length ?? 0}"));
             public readonly List<(GameObject body, string what)> Lines = new List<(GameObject, string)>();
@@ -1636,6 +1641,100 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
                 KryticalNova.Economy.KioskService.ServerForgetStands();
                 OwnerMessages.Current = oldMessages;
                 KioskOwnerLink.Current = oldLink;
+                PlayerKeys.Reset();
+            }
+        }
+
+        [UnityTest]
+        public IEnumerator B22_TheForgeAndTheFabricator_RunOnTheServerBody_AtTheirNpc_WithTheForgeLedgerLine_AndAViewOnlyAsks()
+        {
+            NetRole.Install(new BodyRoleNetRoleAdapter(null, () => NetRoleKind.ServerBody));
+            IOwnerMessages oldMessages = OwnerMessages.Current;
+            IWorkshopOwnerLink oldLink = WorkshopOwnerLink.Current;
+            var told = new Told();
+            OwnerMessages.Current = told;
+            WorkshopOwnerLink.Current = told;
+            try
+            {
+                PlayerKeys.Reset();
+                const string account = "d6e7f8091021324354657687a9b0c1d2", characterId = "a1000000000000000000000000000061";
+                GameObject body = Admitted(PlayerKeys.Mint(61).Value, account, characterId, "Forgewright");
+                GameObject view = Make(NetRoleKind.ClientView, true, new PlayerKey(61));
+                for (int i = 0; i < 30; i++) yield return null;
+                var inv = body.GetComponent<PlayerInventory>();
+                var wallet = body.GetComponent<KryticalNova.Economy.PlayerWallet>();
+                var forge = body.GetComponent<IBodyGearWork>();
+                var crafting = body.GetComponent<IBodyCrafting>();
+                Assert.IsNotNull(forge, "the body has its Forge");
+                Assert.IsNotNull(crafting, "and its Fabricator");
+                GearProgressionSettings settings = forge.GearSettings;
+                Assert.IsNotNull(settings, "with the Forge's numbers");
+
+                // a ladder piece and an Alloy NGO's Temper rule accepts on it (picked here, proven by the rule before the run)
+                AlloyGrade alloy = settings.temper.alloys[0];
+                ItemDefinition piece = null;
+                foreach (ItemDefinition item in inv.Catalog.Items)
+                    if (item != null && item.IsLadderGear && GearProgressionRules.TemperBlockedReason(settings, item, default, alloy, TemperProtection.None) == null)
+                    { piece = item; break; }
+                Assert.IsNotNull(piece, "a ladder piece Temper accepts with " + alloy.itemId);
+                inv.ServerGive(piece.itemId, 1);
+                inv.ServerGive(alloy.itemId, 2);
+                inv.ServerGive(9100, 8);
+                wallet.ServerSet(10_000_000);
+                int Cell(ushort id) { for (int i = 0; i < PlayerInventory.Capacity; i++) if (inv.Get(i).itemId == id) return i; return -1; }
+                int cell = Cell(piece.itemId);
+                long cost = GearProgressionRules.TemperCost(settings, piece, 0);
+                int alloys = inv.CountItem(alloy.itemId);
+
+                // no Armorer and no Fabricator in reach: refused, nothing moves
+                forge.RunGearWork(GearWorkOpKind.Temper, cell, 0, alloy.itemId, 0);
+                crafting.RunCraft(1, 2);
+                Assert.IsTrue(told.Any(body, "tell Visit an Armorer to work on gear."), "NGO's Forge reach: " + string.Join(" | ", told.To(body)));
+                Assert.IsTrue(told.Any(body, "tell Visit a Fabricator to craft."), "and the Fabricator's");
+                Assert.AreEqual(10_000_000, wallet.Creds, "no Creds spent");
+                Assert.AreEqual(alloys, inv.CountItem(alloy.itemId), "no Alloy used");
+
+                GameObject armorer = Npc(KryticalNova.NPC.NpcOffer.GearWork | KryticalNova.NPC.NpcOffer.Craft, body.transform.position + Vector3.right);
+                forge.RunGearWork(GearWorkOpKind.Temper, cell, 0, alloy.itemId, 0);
+                Assert.IsTrue(told.Any(body, $"forge 0 "), "a Temper ran and its result went to the owner: " + string.Join(" | ", told.To(body)));
+                Assert.AreEqual(10_000_000 - cost, wallet.Creds, "NGO's Temper price through the wallet");
+                Assert.AreEqual(alloys - 1, inv.CountItem(alloy.itemId), "one Alloy used");
+
+                // crafting: recipe 1 (four of 9100 make one 9101), twice
+                int made = inv.CountItem(9101), materials = inv.CountItem(9100);
+                crafting.RunCraft(1, 2);
+                Assert.AreEqual(materials - 8, inv.CountItem(9100), "the eight materials went");
+                Assert.AreEqual(made + 2, inv.CountItem(9101), "two were made");
+                Assert.IsTrue(told.Any(body, "crafted 1 x2"), "the owner is told what was made");
+
+                body.GetComponent<PlayerSaveAgent>().Save();
+                ServerSave.WaitForDisk();
+                List<LedgerEntry> forgeLines = ServerSave.ReadLedger(account, 0, 100).FindAll(l => l.kind == LedgerKinds.Forge);
+                Assert.AreEqual(1, forgeLines.Count, "one forge ledger line (NGO's only ledger line of the group)");
+
+                // the owner's view only asks, never works or crafts itself
+                var asked = new Asked();
+                view.GetComponent<BodyRoleTag>().Requests = asked;
+                var viewForge = view.GetComponent<IBodyGearWork>();
+                var viewCrafting = view.GetComponent<IBodyCrafting>();
+                Component forgePart = (Component)viewForge, craftPart = (Component)viewCrafting;
+                forgePart.GetType().GetMethod("RequestTemper").Invoke(forgePart, new object[] { 3, alloy.itemId, (ushort)0 });
+                craftPart.GetType().GetMethod("RequestCraft").Invoke(craftPart, new object[] { (ushort)1, 2 });
+                CollectionAssert.AreEqual(new[] { $"GearWork Temper 3 0 {alloy.itemId} 0", "Craft 1 2" }, asked.Ops, "sent to the server");
+                var viewInv = view.GetComponent<PlayerInventory>();
+                int viewHeld = viewInv.CountItem(9101);
+                viewForge.RunGearWork(GearWorkOpKind.Temper, 0, 0, alloy.itemId, 0);
+                viewCrafting.RunCraft(1, 1);
+                Assert.AreEqual(viewHeld, viewInv.CountItem(9101), "a view never crafts itself");
+                viewForge.MirrorGearWorked(0, 0, new ItemStack(piece.itemId, 1), new ItemStack(piece.itemId, 1));
+                viewCrafting.MirrorCrafted(1, 2);
+                body.GetComponent<PlayerSaveAgent>().OnServerLeaving();
+                Object.Destroy(armorer);
+            }
+            finally
+            {
+                OwnerMessages.Current = oldMessages;
+                WorkshopOwnerLink.Current = oldLink;
                 PlayerKeys.Reset();
             }
         }

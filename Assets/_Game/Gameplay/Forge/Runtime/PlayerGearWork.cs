@@ -42,7 +42,7 @@ namespace KryticalNova.Forge
     /// </summary>
     [DisallowMultipleComponent]
     [RequireComponent(typeof(PlayerInventory), typeof(PlayerItemSources))]
-    public sealed class PlayerGearWork : NetworkBehaviour
+    public sealed class PlayerGearWork : NetworkBehaviour, IBodyGearWork
     {
         private const float ReachPadding = 2.5f;
         private const string ReasonDefeated = "You can't work on gear while defeated.";
@@ -95,32 +95,74 @@ namespace KryticalNova.Forge
 
         // ------------------------------------------------------------------ requests (owner)
 
+        // ------------------------------------------------------------------ the entity netcode (M8 8.3.6)
+
+        private bool EntityView => KryticalNova.Core.BodyRoleTag.Of(this) is { Kind: KryticalNova.Core.NetRoleKind.ClientView };
+        private bool EntityServer => KryticalNova.Core.BodyRoleTag.Of(this) is { Kind: KryticalNova.Core.NetRoleKind.ServerBody };
+
+        // A client view of the entity netcode asks its server body; the window learns the outcome from MirrorGearWorked.
+        private bool AskServer(KryticalNova.Core.GearWorkOpKind op, int cell, int cell2 = 0, ushort alloy = 0, ushort protection = 0)
+        {
+            if (!(KryticalNova.Core.BodyRoleTag.RequestsOf(this) is KryticalNova.Core.IBodyRequests requests)) return false;
+            requests.GearWork(op, (short)cell, (short)cell2, alloy, protection);
+            return true;
+        }
+
+        GearProgressionSettings IBodyGearWork.GearSettings => settings;
+
+        /// <summary>A server body of the entity netcode runs its owner's request (NGO's RPC bodies, after the caller's Money limit).</summary>
+        public void RunGearWork(KryticalNova.Core.GearWorkOpKind op, int cell, int cell2, ushort alloy, ushort protection)
+        {
+            if (!EntityServer) return;
+            switch (op)
+            {
+                case KryticalNova.Core.GearWorkOpKind.Temper: ServerTemper(cell, alloy, protection); break;
+                case KryticalNova.Core.GearWorkOpKind.Fuse: ServerFuse(cell, cell2); break;
+                case KryticalNova.Core.GearWorkOpKind.Tune: ServerTune(cell); break;
+                case KryticalNova.Core.GearWorkOpKind.ResetTuning: ServerResetTuning(cell); break;
+                case KryticalNova.Core.GearWorkOpKind.Reforge: ServerReforge(cell); break;
+            }
+        }
+
+        /// <summary>The entity netcode's own view body: what became of the piece, and the burst on this player.</summary>
+        public void MirrorGearWorked(byte kind, byte outcome, ItemStack before, ItemStack after)
+        {
+            if (!KryticalNova.Core.BodyRoleTag.IsLocalClientView(this)) return;
+            Finished?.Invoke(new GearWorkResult { kind = (GearWorkKind)kind, outcome = (GearWorkOutcome)outcome, before = before, after = after });
+            Show((GearWorkOutcome)outcome, true);
+        }
+
         public void RequestTemper(int cell, ushort alloyItemId, ushort protectionItemId = 0)
         {
+            if (AskServer(KryticalNova.Core.GearWorkOpKind.Temper, cell, 0, alloyItemId, protectionItemId)) return;
             if (IsSpawned) TemperRpc((short)cell, alloyItemId, protectionItemId);
             else ServerTemper(cell, alloyItemId, protectionItemId);
         }
 
         public void RequestFuse(int targetCell, int materialCell)
         {
+            if (AskServer(KryticalNova.Core.GearWorkOpKind.Fuse, targetCell, materialCell)) return;
             if (IsSpawned) FuseRpc((short)targetCell, (short)materialCell);
             else ServerFuse(targetCell, materialCell);
         }
 
         public void RequestTune(int cell)
         {
+            if (AskServer(KryticalNova.Core.GearWorkOpKind.Tune, cell)) return;
             if (IsSpawned) TuneRpc((short)cell);
             else ServerTune(cell);
         }
 
         public void RequestResetTuning(int cell)
         {
+            if (AskServer(KryticalNova.Core.GearWorkOpKind.ResetTuning, cell)) return;
             if (IsSpawned) ResetTuningRpc((short)cell);
             else ServerResetTuning(cell);
         }
 
         public void RequestReforge(int cell)
         {
+            if (AskServer(KryticalNova.Core.GearWorkOpKind.Reforge, cell)) return;
             if (IsSpawned) ReforgeRpc((short)cell);
             else ServerReforge(cell);
         }
@@ -162,7 +204,8 @@ namespace KryticalNova.Forge
 
         // ------------------------------------------------------------------ server
 
-        private bool HasAuthority => !IsSpawned || IsServer;
+        // a client view of the entity netcode never works a piece itself (it would change its own mirror Pack)
+        private bool HasAuthority => (!IsSpawned || IsServer) && !EntityView;
 
         /// <summary>True when this player may use the forge now; otherwise they are told why not.</summary>
         private bool Ready()
@@ -362,6 +405,11 @@ namespace KryticalNova.Forge
                 $"{kind} {outcome}: {Recorded(before)} -> {(after.IsEmpty ? "broken" : Recorded(after))}");
             if (after.IsEmpty && line != null) line.With(before.itemId, -before.count, NameOf(before.itemId));
             KryticalNova.Economy.EconomyLedger.Keep(line);
+            if (EntityServer)
+            {
+                WorkshopOwnerLink.Current?.GearWorked(this, (byte)kind, (byte)outcome, before, after);   // the owner's window + everyone's burst
+                return;
+            }
             if (IsSpawned)
             {
                 FinishedRpc(result);
@@ -388,6 +436,7 @@ namespace KryticalNova.Forge
         private void Tell(string text)
         {
             if (string.IsNullOrEmpty(text)) return;
+            if (EntityServer) { KryticalNova.Core.OwnerMessages.TryTell(this, text); return; }   // its player's message line
             if (IsSpawned && !IsOwnedByServer) TellRpc(text);
             else ClientPresentationRegistry.Messages?.ShowMessage(text);
         }

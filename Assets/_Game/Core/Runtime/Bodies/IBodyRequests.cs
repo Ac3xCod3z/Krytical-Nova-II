@@ -1,5 +1,15 @@
 namespace KryticalNova.Core
 {
+    /// <summary>What a Forge request asks the server's body to do (NGO's <c>PlayerGearWork</c> RPCs; M8 8.3.6).</summary>
+    public enum GearWorkOpKind : byte
+    {
+        Temper = 1,
+        Fuse = 2,
+        Tune = 3,
+        ResetTuning = 4,
+        Reforge = 5,
+    }
+
     /// <summary>One stack put up in a Kiosk (NGO's <c>KioskOffer</c>, M7.6): the Pack cell, how many (0 = the whole stack), the price of one.</summary>
     public struct BodyKioskOffer
     {
@@ -128,5 +138,14 @@ namespace KryticalNova.Core
         /// the listing as the player saw it (<paramref name="itemId"/>, <paramref name="stackCount"/>, <paramref name="data"/>, <paramref name="unitPrice"/>).
         /// </summary>
         void KioskBuy(uint standId, byte index, ushort itemId, ushort stackCount, ulong data, long unitPrice, ushort count);
+
+        /// <summary>
+        /// Asks the server to work a piece at the Forge (M8 8.3.6, NGO's five RPCs): <paramref name="cell"/> the piece's Pack cell,
+        /// <paramref name="cell2"/> Fusion's material cell, <paramref name="alloy"/> and <paramref name="protection"/> Temper's items.
+        /// </summary>
+        void GearWork(GearWorkOpKind op, short cell, short cell2, ushort alloy, ushort protection);
+
+        /// <summary>Asks the server to make a recipe <paramref name="times"/> times at the Fabricator (M8 8.3.7, NGO's CraftRpc).</summary>
+        void Craft(ushort recipeId, ushort times);
     }
 }

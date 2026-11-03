@@ -1165,7 +1165,7 @@ checkpoints; the owner's Thursday hand-test list; owner questions). NGO rules ta
 - [ ] System 0: item-use guard (`EffectPorted`), owner message line (dd5171ca8), owner Creds/Renown/level mirror, generic request.
   - [x] Owner Creds / Renown / level (owner Q1, NGO's own paths): `OwnerProgress` owner-only ghost; PlayMode B6 PASS (real prefab).
   - [ ] Generic request: each system so far uses its own small RPC (ItemUseRpc, GmLineRpc); decide when M8 group 1 starts.
-- [ ] M7: 7.1 clock/weather, 7.2 music, 7.3 portal, 7.4 GM tools, 7.5 drops + loot, 7.6 Kiosk stands.
+- [x] M7: 7.1 clock/weather, 7.2 music, 7.3 portal, 7.4 GM tools, 7.5 drops + loot, 7.6 Kiosk stands.
   - [x] 7.2 music: `MusicStateRpc` on arrival and on a GM change, the conductor on the shared clock, a client cannot change it; Core
     `IMusicStateLink` (the layer fix); MusicStateSyncTests PASS. The owner's by-ear check on Thursday.
   - [x] 7.3 portal (9b6d3fef4 + the body-list fix): the server looks at `BodyRoleTag.ServerBodies` (a real DOTS server body is never
@@ -1199,7 +1199,12 @@ checkpoints; the owner's Thursday hand-test list; owner questions). NGO rules ta
     `skills` real, Skill Chips / Dossiers used again (LearnSkill); B14; save note approved.
   - [x] Movement ranks: Run / Jump bought on the server body (MovementUpgradeRpc, Money), `movement` real (Wallstride opens from them);
     B15; save note approved. (M8 group 3 core done.)
-- [ ] M8 group 2: storage, shopping, trade, Kiosk player side.
+  - [ ] 8.3.6 Forge + 8.3.7 crafting: the five Forge requests and the Fabricator's run NGO's PlayerGearWork / PlayerCrafting rules on
+    the server body at the Money limit (Armorer / Fabricator reach, prices through PlayerWallet GearWork / Crafting, the forge ledger
+    line), the result to the owner by PlayerKey, the Forge's burst to everyone (by the actor's NetworkId), a view never works or
+    crafts itself (Items IBodyGearWork / IBodyCrafting); no save key (gear state rides in the Pack). B22. Not ported: the Temper 120
+    server-wide announcement (chat, group 4). Review summary to the Master first.
+- [x] M8 group 2: storage, shopping, trade, Kiosk player side.
   - [x] 8.2.1 storage (Vault + Deep Vault): requests run NGO's PlayerStorage rules on the server body (Vaultkeeper range, Items limit,
     Creds through PlayerWallet VaultDeposit/VaultWithdraw at the Money limit), cells + Creds mirrored to the owner, `vault` + `deepvault`
     real together (Items IBodyStorage keeps Economy out of the network layer); B17; save note + HIGH review approved.
@@ -1212,10 +1217,10 @@ checkpoints; the owner's Thursday hand-test list; owner questions). NGO rules ta
     PlayerKey (EntityTradeOwnerLink), leaving = IServerLeaving (NGO's despawn + a pending request dies with its asker), Commit and
     SaveTogether unchanged, `trade` real (Items IBodyTrade); B19 (whole trade, both ledger lines, byte-equal), B20 (leave mid-trade,
     NetworkId reuse, pending request); kill test PASSED on SaveService --test (7802); save note + HIGH review approved.
-  - [ ] 7.6 + 8.2.4 Kiosk (stands and the player side): the server keeps NGO's KioskStand objects (not spawned; the record is the truth)
+  - [x] 7.6 + 8.2.4 Kiosk (stands and the player side): the server keeps NGO's KioskStand objects (not spawned; the record is the truth)
     and every player gets the stands as a list (shelf, sign, the doll's look; as 7.5's drops: no ghost, no spike S1) shown as pooled
     views from the body's stand prefab; open / close / collect / buy (by the stand's server id) run NGO's KioskService on the server body
     at the Money limit, the three SaveTogether(player, "kiosks") unchanged; the owner's own Kiosk by PlayerKey; a stand view is
     browsed in reach. B21 (open, buy, own-Kiosk refusal, collect, close; kiosk.open/buy/collect lines); service-store tests with
-    SaveService --test 28/28. No save key of its own. Review summary to the Master first.
+    SaveService --test 28/28. No save key of its own. HIGH review approved.
 - [ ] M8 group 4: chat, contacts, party, sponsor, Crew, emotes, pets, mounts, crate, Recall, housing check; duels and Cadence wait for M4.

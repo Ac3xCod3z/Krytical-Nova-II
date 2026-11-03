@@ -188,6 +188,8 @@ backflips' speed (80 % of the air). Added as M7/M8 systems land (each: what to c
   Creds go down, the owner is told and the till shows it after tax; collect, then close: the unsold stack comes back; relog the owner
   with a Kiosk open: the stand is still there and the arrival line says what sold. (Clicking a stand from far does not walk there on
   a DOTS view yet: walk up first.)
+- 8.3.6/8.3.7 (built 3 Nov): at the Armorer temper a piece (Creds and an Alloy go, the window shows the result, a second client sees
+  the burst), fuse, tune, reforge; at the Fabricator make Alloys; far from them: refused; relog: the tempered piece keeps its state.
 - 8.2.x/7.6: a Vault deposit and withdraw, a shop buy and sell, a trade with a second player, a Kiosk sale, each after a relog.
 - 8.4.x: chat say/tell, a contact, a party with Follow, founding a Crew, an emote and a mount seen from the second client.
 The list is kept current in this section as systems land.
@@ -196,6 +198,8 @@ Owner follow-ups (found while porting; not DOTS work):
 - `Persistence/Service~/KillTest/kill_test.py` (milestone 3 tool): a call outside the trade loop is not guarded against
   `ConnectionResetError` (3 Nov, 8.2.3: one run of two died there before its checks; the rerun passed). Guard every `call()` the
   killer thread can hit, or retry `read_all` / the ledger reads like the loop does.
+- DOTS view: clicking a Kiosk stand from far away does not walk there (7.6: in reach it opens, else "Move closer to browse it.").
+  Fix it with the shared click-to-interact walk on DOTS views (NPCs, drops, stands), or in M8 group 4 (master-6, 3 Nov).
 
 ## 9. Owner questions (real choices; recommendation first)
 

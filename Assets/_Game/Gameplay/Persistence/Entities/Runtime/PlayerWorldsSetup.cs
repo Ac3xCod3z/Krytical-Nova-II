@@ -93,6 +93,7 @@ namespace KryticalNova.Persistence.Entities
             KryticalNova.Core.OwnerMessages.Current = new EntityOwnerMessages();
             KryticalNova.Items.TradeOwnerLink.Current = new EntityTradeOwnerLink();   // the trade view, notice and prompt (M8 8.2.3)
             KryticalNova.Items.KioskOwnerLink.Current = new EntityKioskOwnerLink();   // the owner's own Kiosk (M7.6)
+            KryticalNova.Items.WorkshopOwnerLink.Current = new EntityWorkshopOwnerLink();   // Forge and Fabricator results (M8 8.3.6-7)
 #if UNITY_SERVER || UNITY_EDITOR
             KnPageRules.Commands = new KnPageGmTools();   // the page's command box and GM list (M7.4)
 #endif

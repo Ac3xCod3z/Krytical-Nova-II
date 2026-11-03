@@ -21,7 +21,7 @@ namespace KryticalNova.Crafting
     /// </summary>
     [DisallowMultipleComponent]
     [RequireComponent(typeof(PlayerInventory), typeof(PlayerItemSources))]
-    public sealed class PlayerCrafting : NetworkBehaviour
+    public sealed class PlayerCrafting : NetworkBehaviour, IBodyCrafting
     {
         private const float ReachPadding = 2.5f;
         private const string ReasonDefeated = "You can't craft while defeated.";
@@ -83,8 +83,30 @@ namespace KryticalNova.Crafting
 
         // ------------------------------------------------------------------ requests (owner)
 
+        // ------------------------------------------------------------------ the entity netcode (M8 8.3.7)
+
+        private bool EntityView => KryticalNova.Core.BodyRoleTag.Of(this) is { Kind: KryticalNova.Core.NetRoleKind.ClientView };
+        private bool EntityServer => KryticalNova.Core.BodyRoleTag.Of(this) is { Kind: KryticalNova.Core.NetRoleKind.ServerBody };
+
+        /// <summary>A server body of the entity netcode runs its owner's request (NGO's CraftRpc body, after the caller's Money limit).</summary>
+        public void RunCraft(ushort recipeId, int times)
+        {
+            if (EntityServer) ServerCraft(recipeId, times);
+        }
+
+        /// <summary>The entity netcode's own view body: what the server made.</summary>
+        public void MirrorCrafted(ushort recipeId, int times)
+        {
+            if (KryticalNova.Core.BodyRoleTag.IsLocalClientView(this)) Crafted?.Invoke(recipeId, times);
+        }
+
         public void RequestCraft(ushort recipeId, int times)
         {
+            if (KryticalNova.Core.BodyRoleTag.RequestsOf(this) is KryticalNova.Core.IBodyRequests requests)
+            {
+                requests.Craft(recipeId, (ushort)Mathf.Clamp(times, 1, ushort.MaxValue));
+                return;
+            }
             if (IsSpawned) CraftRpc(recipeId, (ushort)Mathf.Clamp(times, 1, ushort.MaxValue));
             else ServerCraft(recipeId, times);
         }
@@ -98,7 +120,8 @@ namespace KryticalNova.Crafting
 
         // ------------------------------------------------------------------ server
 
-        private bool HasAuthority => !IsSpawned || IsServer;
+        // a client view of the entity netcode never crafts itself (it would change its own mirror Pack)
+        private bool HasAuthority => (!IsSpawned || IsServer) && !EntityView;
 
         private void ServerCraft(ushort recipeId, int times)
         {
@@ -130,7 +153,8 @@ namespace KryticalNova.Crafting
             if (saveAgent != null) saveAgent.SaveSoon();
 
             Tell($"Crafted {LootRules.Label(result, made)}.");
-            if (IsSpawned) CraftedRpc(recipeId, (ushort)times);
+            if (EntityServer) WorkshopOwnerLink.Current?.Crafted(this, recipeId, times);
+            else if (IsSpawned) CraftedRpc(recipeId, (ushort)times);
             else Crafted?.Invoke(recipeId, times);
         }
 
@@ -142,6 +166,7 @@ namespace KryticalNova.Crafting
         private void Tell(string text)
         {
             if (string.IsNullOrEmpty(text)) return;
+            if (EntityServer) { KryticalNova.Core.OwnerMessages.TryTell(this, text); return; }   // its player's message line
             if (IsSpawned && !IsOwnedByServer) TellRpc(text);
             else if (KryticalNova.Core.BodyRoleTag.IsMine(this, !IsSpawned || IsOwner)) ClientPresentationRegistry.Messages?.ShowMessage(text);
         }
