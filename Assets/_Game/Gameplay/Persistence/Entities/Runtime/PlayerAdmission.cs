@@ -1,6 +1,7 @@
 using System;
 using KryticalNova.CharacterCreation;
 using KryticalNova.Core;
+using KryticalNova.Items;
 using KryticalNova.Player;
 using KryticalNova.Player.Entities;
 using KryticalNova.Player.Entities.Bodies;
@@ -63,12 +64,25 @@ namespace KryticalNova.Persistence.Entities
             var identity = body.GetComponent<PlayerIdentity>();
             if (identity == null || LookChanged == null) return;
             // The saved look may have won over the one sent; observers get what the body wears now, and every later change.
-            LookChanged(body, ghost, LookOf(identity));
-            identity.Changed += () => { if (body != null) LookChanged?.Invoke(body, ghost, LookOf(identity)); };
+            var equipment = body.GetComponent<PlayerEquipment>();
+            LookChanged(body, ghost, LookOf(identity, equipment));
+            Action changed = () => { if (body != null) LookChanged?.Invoke(body, ghost, LookOf(identity, equipment)); };
+            identity.Changed += changed;
+            if (equipment == null) return;
+            // what they wear, as NGO's equipment variables told observers (M8 8.1.2b): the text changes, observers fetch it once
+            equipment.SlotChanged += (_, __, ___) => changed();
+            equipment.LookChanged += _ => changed();
+            equipment.TemperChanged += _ => changed();
         }
 
-        public static string LookOf(PlayerIdentity identity) =>
-            identity != null && identity.HasIdentity ? RecipeText.EncodeLook(identity.CharacterName, identity.State.ToRecipe()) : string.Empty;
+        public static string LookOf(PlayerIdentity identity) => LookOf(identity, null);
+
+        /// <summary>The name, the recipe and (with <paramref name="equipment"/>) what the player wears.</summary>
+        public static string LookOf(PlayerIdentity identity, PlayerEquipment equipment) =>
+            identity != null && identity.HasIdentity
+                ? RecipeText.EncodeLook(identity.CharacterName, identity.State.ToRecipe(),
+                    equipment != null ? GearText.Encode(equipment.Loadout, equipment.Looks, equipment.Temper) : null)
+                : string.Empty;
 
         void ConfigurePlanner(GameObject body)
         {

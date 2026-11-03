@@ -16,6 +16,8 @@ namespace KryticalNova.Player.Entities.Bodies.Tests
 
     internal class PlayerEquipment : MonoBehaviour { }
 
+    internal class PlayerTrade : MonoBehaviour { }
+
     internal class Mystery : MonoBehaviour { }
 
     /// <summary>M3a-2b step 2: the role table and the assembler. Nothing here wakes a component up (Awake needs a built player: B1).</summary>
@@ -133,12 +135,14 @@ namespace KryticalNova.Player.Entities.Bodies.Tests
             GameObject go = Plain();
             go.AddComponent<PlayerInput>();         // the real prefab carries it; Unity does not auto-add a RequireComponent for fakes declared in another file
             go.AddComponent<PointAndClickPlayer>();
+            go.AddComponent<PlayerTrade>();
             go.AddComponent<PlayerEquipment>();
             go.AddComponent<Mystery>();
             BodyBuildReport report = PlayerBodyAssembler.Apply(go, BodyShape.ViewRemote);
             Assert.IsNull(go.GetComponent<PointAndClickPlayer>());
             Assert.IsNull(go.GetComponent<PlayerInput>());
-            Assert.IsNull(go.GetComponent<PlayerEquipment>());
+            Assert.IsNull(go.GetComponent<PlayerTrade>(), "a rule part a remote body does not need goes");
+            Assert.IsNotNull(go.GetComponent<PlayerEquipment>(), "the equipment stays: other players' gear is drawn from it (M8 8.1.2b)");
             Assert.IsNotNull(go.GetComponent<Mystery>());
             Assert.IsEmpty(report.Downgraded);
             Assert.Less(report.Stripped.IndexOf("PointAndClickPlayer"), report.Stripped.IndexOf("PlayerInput"));

@@ -1178,6 +1178,11 @@ checkpoints; the owner's Thursday hand-test list; owner questions). NGO rules ta
     GmRoster 6 / KnControlPage 8 unchanged), PlayMode B5: a GM line on the real prefab gives +2 and writes one `gm` ledger line.
     Review summary to the Master (HIGH). Left for later: GM window controls on DOTS, the other page controls, GM sight and toggles.
 - [ ] M8 group 1: wallet, inventory rest, loadouts, Flask refill.
+  - [x] 8.1.1 wallet: PlayerWallet is IRoleAwareBody, a view never earns/spends/sets (B6, real prefab).
+  - [x] 8.1.2 inventory rest: Move/Equip/Unequip/Destroy/Sort run on the server body by NGO's rules (PackOpRpc), worn pieces mirrored
+    to the owner, other players see the gear through the look text (GearText; PlayerEquipment kept on remote views); B7, B8, GearTextTests.
+  - [ ] 8.1.3 loadouts: requests + slot mirror + `loadouts` save real (B9: NGO text loads and saves back byte for byte); save note to the Master first.
+  - [ ] 8.1.4 Flask refill.
 - [ ] M8 group 3: progression, skills, XP boosts, Serums mirror, Nova, Forge, crafting, restyle, weaves, library, Autobuff.
 - [ ] M8 group 2: storage, shopping, trade, Kiosk player side.
 - [ ] M8 group 4: chat, contacts, party, sponsor, Crew, emotes, pets, mounts, crate, Recall, housing check; duels and Cadence wait for M4.

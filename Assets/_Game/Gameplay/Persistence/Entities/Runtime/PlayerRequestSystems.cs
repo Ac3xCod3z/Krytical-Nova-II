@@ -52,6 +52,49 @@ namespace KryticalNova.Persistence.Entities
     }
 
     /// <summary>A line the server says to one player (<see cref="OwnerMessages"/>): shown in the player's message area.</summary>
+    /// <summary>The owner asks the server's body to move, equip, unequip, destroy or sort (NGO's five Pack RPCs; M8 8.1.2).</summary>
+    public struct PackOpRpc : IRpcCommand
+    {
+        public byte Kind;
+        public byte FromContainer, FromIndex, ToContainer, ToIndex;
+    }
+
+    /// <summary>The owner asks the server's body to save, rename, delete or wear a loadout slot (NGO's four loadout RPCs; M8 8.1.3).</summary>
+    public struct LoadoutOpRpc : IRpcCommand
+    {
+        public byte Kind, Index;
+        public FixedString128Bytes Name;
+    }
+
+    /// <summary>One loadout slot to its owner (NGO's owner-only list): the name, and each slot's piece with its own state.</summary>
+    public struct LoadoutSlotRpc : IRpcCommand
+    {
+        public byte Index, Used;
+        public FixedString32Bytes Name;
+        public ushort Weapon, Armor, Gloves, Boots, Ring, Amulet, Cape, Pet;
+        public ulong WeaponData, ArmorData, GlovesData, BootsData, RingData, AmuletData, CapeData, PetData;
+
+        public static LoadoutSlotRpc Of(int index, in LoadoutEntry e) => new LoadoutSlotRpc
+        {
+            Index = (byte)index, Used = (byte)(e.used ? 1 : 0), Name = e.name,
+            Weapon = e.ids.weapon, Armor = e.ids.armor, Gloves = e.ids.gloves, Boots = e.ids.boots, Ring = e.ids.ring, Amulet = e.ids.amulet,
+            Cape = e.ids.cape, Pet = e.ids.pet,
+            WeaponData = e.data.weapon, ArmorData = e.data.armor, GlovesData = e.data.gloves, BootsData = e.data.boots, RingData = e.data.ring,
+            AmuletData = e.data.amulet, CapeData = e.data.cape, PetData = e.data.pet,
+        };
+
+        public LoadoutEntry Entry => new LoadoutEntry
+        {
+            used = Used != 0, name = Name,
+            ids = new EquipmentLoadout { weapon = Weapon, armor = Armor, gloves = Gloves, boots = Boots, ring = Ring, amulet = Amulet, cape = Cape, pet = Pet },
+            data = new EquipmentData
+            {
+                weapon = WeaponData, armor = ArmorData, gloves = GlovesData, boots = BootsData, ring = RingData, amulet = AmuletData, cape = CapeData,
+                pet = PetData,
+            },
+        };
+    }
+
     public struct ServerTellRpc : IRpcCommand
     {
         public FixedString512Bytes Text;
@@ -111,6 +154,26 @@ namespace KryticalNova.Persistence.Entities
             em.AddComponent<SendRpcCommandRequest>(rpc);
         }
 
+        public void PackOp(PackOpKind kind, byte fromContainer, byte fromIndex, byte toContainer, byte toIndex)
+        {
+            if (m_World == null || !m_World.IsCreated) return;
+            var em = m_World.EntityManager;
+            Entity rpc = em.CreateEntity();
+            em.AddComponentData(rpc, new PackOpRpc { Kind = (byte)kind, FromContainer = fromContainer, FromIndex = fromIndex, ToContainer = toContainer, ToIndex = toIndex });
+            em.AddComponent<SendRpcCommandRequest>(rpc);
+        }
+
+        public void LoadoutOp(LoadoutOpKind kind, byte index, string name)
+        {
+            if (m_World == null || !m_World.IsCreated) return;
+            name ??= string.Empty;
+            if (System.Text.Encoding.UTF8.GetByteCount(name) > FixedString128Bytes.UTF8MaxLengthInBytes) return;   // NGO's TextFits refuses it too
+            var em = m_World.EntityManager;
+            Entity rpc = em.CreateEntity();
+            em.AddComponentData(rpc, new LoadoutOpRpc { Kind = (byte)kind, Index = index, Name = new FixedString128Bytes(name) });
+            em.AddComponent<SendRpcCommandRequest>(rpc);
+        }
+
         public void CastSkill(string skillId)
         {
             if (m_World == null || !m_World.IsCreated || string.IsNullOrEmpty(skillId) || skillId.Length > FixedString64Bytes.UTF8MaxLengthInBytes) return;
@@ -131,17 +194,22 @@ namespace KryticalNova.Persistence.Entities
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     public partial class PlayerRequestServerSystem : SystemBase
     {
-        EntityQuery m_Uses, m_Casts;
+        EntityQuery m_Uses, m_Casts, m_PackOps, m_LoadoutOps;
 
         /// <summary>Requests run, refused, and dropped by the request limits (tests).</summary>
         public int Used { get; private set; }
         public int Refused { get; private set; }
         public int OverBudget { get; private set; }
+        /// <summary>Pack and loadout requests run (tests).</summary>
+        public int PackOps { get; private set; }
+        public int LoadoutOps { get; private set; }
 
         protected override void OnCreate()
         {
             m_Uses = GetEntityQuery(ComponentType.ReadOnly<ReceiveRpcCommandRequest>(), ComponentType.ReadOnly<ItemUseRpc>());
             m_Casts = GetEntityQuery(ComponentType.ReadOnly<ReceiveRpcCommandRequest>(), ComponentType.ReadOnly<SkillCastRpc>());
+            m_PackOps = GetEntityQuery(ComponentType.ReadOnly<ReceiveRpcCommandRequest>(), ComponentType.ReadOnly<PackOpRpc>());
+            m_LoadoutOps = GetEntityQuery(ComponentType.ReadOnly<ReceiveRpcCommandRequest>(), ComponentType.ReadOnly<LoadoutOpRpc>());
         }
 
         protected override void OnUpdate()
@@ -165,6 +233,29 @@ namespace KryticalNova.Persistence.Entities
                 received.Dispose();
                 casts.Dispose();
             }
+            if (!m_PackOps.IsEmpty)
+            {
+                var received = m_PackOps.ToComponentDataArray<ReceiveRpcCommandRequest>(Allocator.Temp);
+                var ops = m_PackOps.ToComponentDataArray<PackOpRpc>(Allocator.Temp);
+                em.DestroyEntity(m_PackOps);
+                for (int i = 0; i < ops.Length; i++) RunPackOp(received[i].SourceConnection, ops[i]);
+                received.Dispose();
+                ops.Dispose();
+            }
+            if (!m_LoadoutOps.IsEmpty)
+            {
+                var received = m_LoadoutOps.ToComponentDataArray<ReceiveRpcCommandRequest>(Allocator.Temp);
+                var ops = m_LoadoutOps.ToComponentDataArray<LoadoutOpRpc>(Allocator.Temp);
+                em.DestroyEntity(m_LoadoutOps);
+                for (int i = 0; i < ops.Length; i++)
+                    if (BodyOf(received[i].SourceConnection, CallKind.Items, out GameObject body) && body.TryGetComponent(out PlayerLoadouts loadouts))
+                    {
+                        loadouts.RunLoadoutOp((LoadoutOpKind)ops[i].Kind, ops[i].Index, ops[i].Name.ToString());
+                        LoadoutOps++;
+                    }
+                received.Dispose();
+                ops.Dispose();
+            }
         }
 
         /// <summary>The server body of the connection's player; false (dropped) when there is none or the request limit says no.</summary>
@@ -182,6 +273,19 @@ namespace KryticalNova.Persistence.Entities
             }
             body = entry.Body;
             return true;
+        }
+
+        // NGO's Move/QuickEquip/QuickUnequip/Destroy/Sort RPCs: the Items request limit, then the server body's own rules (refusals go to the
+        // owner's message line from the body); the Pack mirror sends what changed.
+        void RunPackOp(Entity connection, in PackOpRpc op)
+        {
+            if (!BodyOf(connection, CallKind.Items, out GameObject body)) return;
+            var inventory = body.GetComponent<PlayerInventory>();
+            if (inventory == null) return;
+            var from = new ItemLocation { container = (ItemContainer)op.FromContainer, index = op.FromIndex };
+            var to = new ItemLocation { container = (ItemContainer)op.ToContainer, index = op.ToIndex };
+            inventory.RunPackOp((PackOpKind)op.Kind, from, to);
+            PackOps++;
         }
 
         void UseItem(Entity connection, ushort itemId)
@@ -280,13 +384,15 @@ namespace KryticalNova.Persistence.Entities
         public float Interval = 0.1f;
 
         readonly Dictionary<Entity, ItemStack[]> m_Sent = new Dictionary<Entity, ItemStack[]>();
+        readonly Dictionary<Entity, LoadoutEntry[]> m_SentLoadouts = new Dictionary<Entity, LoadoutEntry[]>();
         readonly Dictionary<int, Entity> m_Connections = new Dictionary<int, Entity>();
         readonly List<Entity> m_Gone = new List<Entity>();
         EntityQuery m_InGame;
         float m_Next;
 
-        /// <summary>Cells sent (tests).</summary>
+        /// <summary>Cells and loadout slots sent (tests).</summary>
         public int CellsSent { get; private set; }
+        public int LoadoutSlotsSent { get; private set; }
 
         protected override void OnCreate() =>
             m_InGame = GetEntityQuery(ComponentType.ReadOnly<NetworkId>(), ComponentType.ReadOnly<NetworkStreamInGame>());
@@ -305,7 +411,7 @@ namespace KryticalNova.Persistence.Entities
 
             m_Gone.Clear();
             foreach (Entity ghost in m_Sent.Keys) if (!em.Exists(ghost)) m_Gone.Add(ghost);
-            foreach (Entity ghost in m_Gone) m_Sent.Remove(ghost);
+            foreach (Entity ghost in m_Gone) { m_Sent.Remove(ghost); m_SentLoadouts.Remove(ghost); }
 
             foreach (GhostBodyEntry entry in GhostBodyRegistry.Entries)
             {
@@ -315,7 +421,9 @@ namespace KryticalNova.Persistence.Entities
                 if (inventory == null) continue;
                 if (!m_Sent.TryGetValue(entry.Ghost, out ItemStack[] sent))
                 {
-                    sent = new ItemStack[PlayerInventory.Capacity];
+                    sent = new ItemStack[PlayerInventory.Capacity + WornCells];
+                    // every worn slot once on arrival, empty ones too (the view's prefab may wear its own starter pieces)
+                    for (int slot = 1; slot < WornCells; slot++) sent[PlayerInventory.Capacity + slot] = new ItemStack(ushort.MaxValue, 0, 0);
                     m_Sent[entry.Ghost] = sent;
                     Send(connection, new PackCellRpc { Index = PackCellRpc.ClearAll });
                 }
@@ -327,8 +435,37 @@ namespace KryticalNova.Persistence.Entities
                     Send(connection, new PackCellRpc { Index = (byte)i, ItemId = now.itemId, Count = now.count, Data = now.data });
                     CellsSent++;
                 }
+                // the loadout slots (NGO: the owner-only list), all ten on arrival, then each one that changed
+                if (entry.Body.TryGetComponent(out PlayerLoadouts loadouts))
+                {
+                    bool arriving = !m_SentLoadouts.TryGetValue(entry.Ghost, out LoadoutEntry[] had);
+                    if (arriving) m_SentLoadouts[entry.Ghost] = had = new LoadoutEntry[LoadoutRules.Slots];
+                    for (int i = 0; i < LoadoutRules.Slots; i++)
+                    {
+                        LoadoutEntry now = loadouts.Get(i);
+                        if (!arriving && now.Equals(had[i])) continue;
+                        had[i] = now;
+                        Entity slotRpc = em.CreateEntity();
+                        em.AddComponentData(slotRpc, LoadoutSlotRpc.Of(i, now));
+                        em.AddComponentData(slotRpc, new SendRpcCommandRequest { TargetConnection = connection });
+                        LoadoutSlotsSent++;
+                    }
+                }
+                // the worn pieces with their own state (NGO: the loadout and netEquippedData to the owner), after the Pack's cells
+                for (int slot = 1; slot < WornCells; slot++)
+                {
+                    ItemStack now = inventory.GetEquipped((EquipSlot)slot);
+                    int at = PlayerInventory.Capacity + slot;
+                    if (now.Equals(sent[at])) continue;
+                    sent[at] = now;
+                    Send(connection, new PackCellRpc { Index = (byte)at, ItemId = now.itemId, Count = now.count, Data = now.data });
+                    CellsSent++;
+                }
             }
         }
+
+        /// <summary>Cells after the Pack's: one per equipment slot (index Capacity + slot; slot 0 is None).</summary>
+        public const int WornCells = (int)EquipSlot.Pet + 1;
 
         void Send(Entity connection, PackCellRpc cell)
         {
@@ -346,7 +483,7 @@ namespace KryticalNova.Persistence.Entities
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     public partial class PlayerRequestClientSystem : SystemBase
     {
-        EntityQuery m_Replies, m_Cells, m_Tells;
+        EntityQuery m_Replies, m_Cells, m_Tells, m_Slots;
 
         /// <summary>Answers, cells and the server's lines applied (tests).</summary>
         public int Replies { get; private set; }
@@ -358,6 +495,7 @@ namespace KryticalNova.Persistence.Entities
             m_Replies = GetEntityQuery(ComponentType.ReadOnly<ReceiveRpcCommandRequest>(), ComponentType.ReadOnly<RequestReplyRpc>());
             m_Cells = GetEntityQuery(ComponentType.ReadOnly<ReceiveRpcCommandRequest>(), ComponentType.ReadOnly<PackCellRpc>());
             m_Tells = GetEntityQuery(ComponentType.ReadOnly<ReceiveRpcCommandRequest>(), ComponentType.ReadOnly<ServerTellRpc>());
+            m_Slots = GetEntityQuery(ComponentType.ReadOnly<ReceiveRpcCommandRequest>(), ComponentType.ReadOnly<LoadoutSlotRpc>());
         }
 
         protected override void OnUpdate()
@@ -385,10 +523,20 @@ namespace KryticalNova.Persistence.Entities
                     {
                         if (cell.Index == PackCellRpc.ClearAll)
                             for (int i = 0; i < PlayerInventory.Capacity; i++) inventory.MirrorCell(i, ItemStack.Empty);
+                        else if (cell.Index >= PlayerInventory.Capacity)
+                            inventory.MirrorWorn((EquipSlot)(cell.Index - PlayerInventory.Capacity), new ItemStack(cell.ItemId, cell.Count, cell.Data));
                         else inventory.MirrorCell(cell.Index, new ItemStack(cell.ItemId, cell.Count, cell.Data));
                         Cells++;
                     }
                 cells.Dispose();
+            }
+            if (!m_Slots.IsEmpty)
+            {
+                var slots = m_Slots.ToComponentDataArray<LoadoutSlotRpc>(Allocator.Temp);
+                em.DestroyEntity(m_Slots);
+                var loadouts = body != null ? body.GetComponent<PlayerLoadouts>() : null;
+                if (loadouts != null) foreach (LoadoutSlotRpc slot in slots) loadouts.MirrorEntry(slot.Index, slot.Entry);
+                slots.Dispose();
             }
             if (!m_Replies.IsEmpty)
             {

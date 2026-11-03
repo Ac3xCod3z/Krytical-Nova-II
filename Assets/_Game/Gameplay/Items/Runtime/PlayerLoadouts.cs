@@ -34,7 +34,10 @@ namespace KryticalNova.Items
 
         public PlayerInventory Inventory => inventory;
 
-        private bool Decides => !IsSpawned || IsServer;
+        // A client view of the entity netcode only shows the server's slots (MirrorEntry); its server body decides (M8 8.1.3).
+        private bool Decides => (!IsSpawned || IsServer) && !EntityView;
+        private bool EntityView => BodyRoleTag.Of(this) is { Kind: NetRoleKind.ClientView };
+        private bool EntityServer => BodyRoleTag.Of(this) is { Kind: NetRoleKind.ServerBody };
 
         private void Awake()
         {
@@ -70,7 +73,7 @@ namespace KryticalNova.Items
         public LoadoutEntry Get(int index)
         {
             if (index < 0 || index >= LoadoutRules.Slots) return default;
-            if (Decides) return entries[index];
+            if (Decides || EntityView) return entries[index];
             return index < netEntries.Count ? netEntries[index] : default;
         }
 
@@ -95,6 +98,7 @@ namespace KryticalNova.Items
         /// <summary>Owner: save what is worn now into a slot, under a name (empty: "Loadout N"). Overwrites the slot.</summary>
         public void RequestSave(int index, string name)
         {
+            if (AskServer(LoadoutOpKind.Save, index, name)) return;
             if (IsSpawned && !IsOwner) return;
             if (IsSpawned && !IsServer) SaveRpc((byte)Mathf.Clamp(index, 0, 255), Trim(name));
             else ServerSave(index, name);
@@ -102,6 +106,7 @@ namespace KryticalNova.Items
 
         public void RequestRename(int index, string name)
         {
+            if (AskServer(LoadoutOpKind.Rename, index, name)) return;
             if (IsSpawned && !IsOwner) return;
             if (IsSpawned && !IsServer) RenameRpc((byte)Mathf.Clamp(index, 0, 255), Trim(name));
             else ServerRename(index, name);
@@ -109,6 +114,7 @@ namespace KryticalNova.Items
 
         public void RequestDelete(int index)
         {
+            if (AskServer(LoadoutOpKind.Delete, index, null)) return;
             if (IsSpawned && !IsOwner) return;
             if (IsSpawned && !IsServer) DeleteRpc((byte)Mathf.Clamp(index, 0, 255));
             else ServerDelete(index);
@@ -116,9 +122,39 @@ namespace KryticalNova.Items
 
         public void RequestWear(int index)
         {
+            if (AskServer(LoadoutOpKind.Wear, index, null)) return;
             if (IsSpawned && !IsOwner) return;
             if (IsSpawned && !IsServer) WearRpc((byte)Mathf.Clamp(index, 0, 255));
             else ServerWear(index);
+        }
+
+        // The entity netcode's own view body: the server's body decides; the mirror shows the slots.
+        private bool AskServer(LoadoutOpKind kind, int index, string name)
+        {
+            if (!(BodyRoleTag.RequestsOf(this) is IBodyRequests requests)) return false;
+            requests.LoadoutOp(kind, (byte)Mathf.Clamp(index, 0, 255), Trim(name));
+            return true;
+        }
+
+        /// <summary>A server body of the entity netcode runs its owner's loadout request (NGO's RPC bodies, after the caller's request limit).</summary>
+        public void RunLoadoutOp(LoadoutOpKind kind, int index, string name)
+        {
+            if (!EntityServer) return;
+            switch (kind)
+            {
+                case LoadoutOpKind.Save: ServerSave(index, name); break;
+                case LoadoutOpKind.Rename: ServerRename(index, name); break;
+                case LoadoutOpKind.Delete: ServerDelete(index); break;
+                case LoadoutOpKind.Wear: ServerWear(index); break;
+            }
+        }
+
+        /// <summary>The entity netcode's own view body shows the server's slot (NGO's owner-only list).</summary>
+        public void MirrorEntry(int index, LoadoutEntry entry)
+        {
+            if (!BodyRoleTag.IsLocalClientView(this) || index < 0 || index >= LoadoutRules.Slots || entries[index].Equals(entry)) return;
+            entries[index] = entry;
+            Changed?.Invoke();
         }
 
         private static string Trim(string name) => name == null ? string.Empty : name.Length > MaxTypedName ? name.Substring(0, MaxTypedName) : name;
@@ -228,12 +264,13 @@ namespace KryticalNova.Items
 
         private void SaveNow()
         {
-            if (saveAgent != null && IsSpawned && IsServer) saveAgent.Save();
+            if (saveAgent != null && ((IsSpawned && IsServer) || EntityServer)) saveAgent.Save();
         }
 
         private void Tell(string text)
         {
             if (string.IsNullOrEmpty(text)) return;
+            if (EntityServer) { OwnerMessages.TryTell(this, text); return; }   // to its player's message line, never this machine's screen
             if (IsSpawned && !IsOwner) TellRpc(text);
             else ClientPresentationRegistry.Messages?.ShowMessage(text);
         }

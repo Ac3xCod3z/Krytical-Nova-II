@@ -198,6 +198,33 @@ namespace KryticalNova.Items
             }
         }
 
+        /// <summary>The Temper everyone sees (NGO's netTemper): from the worn pieces' state where it is known.</summary>
+        public EquipmentTemper Temper => hasItemData ? TemperOf(itemData) : hasObserved ? observedTemper : netTemper.Value;
+
+        // What an observer of the entity netcode was told (M8 8.1.2b): the body is never spawned, so netTemper never fills.
+        private bool hasObserved;
+        private EquipmentTemper observedTemper;
+
+        /// <summary>
+        /// Another player's body on a client of the entity netcode wears what the server says they wear: the loadout, the looks (weaves, dyes,
+        /// hidden helmet or cape) and the Temper, as NGO's three network variables carried them to observers.
+        /// </summary>
+        public void ApplyObserved(EquipmentLoadout loadout, EquipmentLooks seen, EquipmentTemper temper)
+        {
+            if (hasItemData) return;   // the server's own body and the owner's know the whole state
+            bool temperChanged = !hasObserved || !observedTemper.Equals(temper);
+            hasObserved = true;
+            observedTemper = temper;
+            ApplyLooks(seen);
+            Apply(loadout);
+            if (!temperChanged) return;
+            foreach (var slot in EquipSlots.All)
+            {
+                ApplyStats(slot, current[slot]);
+                TemperChanged?.Invoke(slot);
+            }
+        }
+
         private EquipmentTemper TemperOf(EquipmentData data)
         {
             var temper = default(EquipmentTemper);
@@ -252,7 +279,7 @@ namespace KryticalNova.Items
                 // Server and owner know the piece's whole state; an observer knows its Temper %, which is close enough
                 // for a mirror the server never reads.
                 ulong data = !def.IsLadderGear ? 0
-                    : hasItemData ? itemData[slot] : new GearItemState(netTemper.Value[slot], 0, 0).Pack();
+                    : hasItemData ? itemData[slot] : new GearItemState((hasObserved ? observedTemper : netTemper.Value)[slot], 0, 0).Pack();
                 GearStatResolver.Resolve(new ItemStack(itemId, 1, data), def, source, resolved, progression);
             }
             combatStats.SetSourceModifiers(source, resolved); // one recalculation per slot, also when emptied

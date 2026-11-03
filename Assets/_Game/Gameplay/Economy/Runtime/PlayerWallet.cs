@@ -14,7 +14,7 @@ namespace KryticalNova.Economy
     /// local copy decides.
     /// </summary>
     [DisallowMultipleComponent]
-    public sealed class PlayerWallet : NetworkBehaviour, ISaveParticipant, KryticalNova.Items.ICurrencyReceiver, IWallet, IWalletMirror
+    public sealed class PlayerWallet : NetworkBehaviour, ISaveParticipant, KryticalNova.Items.ICurrencyReceiver, IWallet, IWalletMirror, IRoleAwareBody
     {
         [SerializeField] private EconomySettings settings;
 
@@ -37,7 +37,9 @@ namespace KryticalNova.Economy
         /// <summary>How many more Creds fit.</summary>
         public long Room => Math.Max(0, Cap - creds);
 
-        private bool HasAuthority => !IsSpawned || IsServer;
+        // NGO's !IsSpawned || IsServer, through NetRole (M8 8.1.1; a ported part, so IRoleAwareBody: NetRole answers its body's role):
+        // a client view of the entity netcode only shows the server's balance (MirrorCreds); it never earns, spends or sets one.
+        private bool HasAuthority => NetRole.MayMutate(this);
 
         public override void OnNetworkSpawn()
         {

@@ -131,16 +131,31 @@ namespace KryticalNova.Persistence.Entities
         public static string EncodeLook(string name, in CharacterRecipe recipe) =>
             Uri.EscapeDataString(name ?? string.Empty) + "\n" + Encode(recipe);
 
-        public static bool TryDecodeLook(string text, out string name, out CharacterRecipe recipe)
+        /// <summary>The look with what the player wears on a third line (<see cref="GearText"/>, M8 8.1.2b).</summary>
+        public static string EncodeLook(string name, in CharacterRecipe recipe, string gear) =>
+            string.IsNullOrEmpty(gear) ? EncodeLook(name, recipe) : EncodeLook(name, recipe) + "\n" + gear;
+
+        public static bool TryDecodeLook(string text, out string name, out CharacterRecipe recipe) => TryDecodeLook(text, out name, out recipe, out _);
+
+        /// <summary>As the two-line look; <paramref name="gear"/> is the third line, or null for a look without one.</summary>
+        public static bool TryDecodeLook(string text, out string name, out CharacterRecipe recipe, out string gear)
         {
             name = null;
             recipe = default;
+            gear = null;
             if (string.IsNullOrEmpty(text)) return false;
             int line = text.IndexOf('\n');
             if (line < 0) return false;
             try { name = Uri.UnescapeDataString(text.Substring(0, line)); }
             catch (Exception) { return false; }
-            return TryDecode(text.Substring(line + 1), out recipe);
+            string rest = text.Substring(line + 1);
+            int second = rest.IndexOf('\n');
+            if (second >= 0)
+            {
+                gear = rest.Substring(second + 1);
+                rest = rest.Substring(0, second);
+            }
+            return TryDecode(rest, out recipe);
         }
     }
 }

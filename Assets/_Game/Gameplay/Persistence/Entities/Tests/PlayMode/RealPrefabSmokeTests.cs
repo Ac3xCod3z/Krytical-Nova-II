@@ -410,6 +410,184 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
             Assert.AreEqual(serverProgress.SkillPoints, viewProgress.SkillPoints);
             Assert.Greater(levelUps, 0, "a level gained on the server plays its level-up on the owner's game (NGO's path)");
             Assert.IsTrue(OwnerProgressBridge.Same(read.Value, OwnerProgressBridge.Read(view).Value), "the owner shows exactly what the server holds");
+
+            // 8.1.1: the owner's view wallet only shows; it never earns, spends or sets (NGO: only the server's does)
+            var viewWallet = view.GetComponent<KryticalNova.Economy.PlayerWallet>();
+            Assert.AreEqual(0, viewWallet.ServerEarn(500, KryticalNova.Wallet.CredsSource.Gm), "a view earns nothing");
+            Assert.IsFalse(viewWallet.ServerSpend(100, KryticalNova.Wallet.CredsSink.Gm), "a view spends nothing");
+            viewWallet.ServerSet(1);
+            Assert.AreEqual(1234, viewWallet.Creds, "the view still shows the server's balance");
+        }
+
+        sealed class Asked : IBodyRequests
+        {
+            public readonly List<string> Ops = new List<string>();
+            public void UseItem(ushort itemId) { }
+            public void CastSkill(string skillId) { }
+            public void PackOp(PackOpKind kind, byte fromContainer, byte fromIndex, byte toContainer, byte toIndex) =>
+                Ops.Add($"{kind} {fromContainer}:{fromIndex} {toContainer}:{toIndex}");
+            public void LoadoutOp(LoadoutOpKind kind, byte index, string name) => Ops.Add($"{kind} {index} {name}");
+        }
+
+        [UnityTest]
+        public IEnumerator B7_PackRequests_RunOnTheServerBody_AndTheOwnersBodyWearsWhatTheServersWears()
+        {
+            NetRole.Install(new BodyRoleNetRoleAdapter(null, () => NetRoleKind.ServerBody));
+            GameObject server = Make(NetRoleKind.ServerBody, false, new PlayerKey(7));
+            GameObject view = Make(NetRoleKind.ClientView, true, new PlayerKey(7));
+            yield return null;
+            var inv = server.GetComponent<PlayerInventory>();
+            var viewInv = view.GetComponent<PlayerInventory>();
+            Assert.IsNotNull(inv.Catalog, "the inventory has its catalog");
+
+            // a piece to wear: the starter one the server body wears, else the catalog's first starter piece put on it
+            EquipSlot slot = EquipSlot.None;
+            foreach (EquipSlot each in EquipSlots.All) if (inv.GetEquipped(each).itemId != 0) { slot = each; break; }
+            if (slot == EquipSlot.None)
+            {
+                ItemDefinition first = inv.Catalog.StarterEquipped.Count > 0 ? inv.Catalog.StarterEquipped[0] : null;
+                Assert.IsNotNull(first, "the catalog has a starter piece");
+                inv.ServerWear(new[] { new ItemStack(first.itemId, 1) }, out _, out _);
+                slot = first.equipSlot;
+            }
+            ushort piece = inv.GetEquipped(slot).itemId;
+            Assert.AreNotEqual(0, piece, "the server body wears a piece in " + slot);
+
+            // the owner's view asks: nothing changes here, the request goes to the server
+            var asked = new Asked();
+            view.GetComponent<BodyRoleTag>().Requests = asked;
+            viewInv.RequestQuickUnequip(slot);
+            viewInv.RequestSort();
+            CollectionAssert.AreEqual(new[] { $"QuickUnequip 1:{(byte)slot} 0:0", "Sort 0:0 0:0" }, asked.Ops, "the view sends its requests by place");
+
+            // the server body runs them with the game's rules
+            inv.RunPackOp(PackOpKind.QuickUnequip, ItemLocation.Equip(slot), default);
+            Assert.AreEqual(0, inv.GetEquipped(slot).itemId, "taken off on the server");
+            Assert.AreEqual(1, inv.CountItem(piece), "into the Pack");
+            int cell = -1;
+            for (int i = 0; i < PlayerInventory.Capacity; i++) if (inv.Get(i).itemId == piece) { cell = i; break; }
+            inv.RunPackOp(PackOpKind.QuickEquip, ItemLocation.Bag(cell), default);
+            Assert.AreEqual(piece, inv.GetEquipped(slot).itemId, "and on again");
+            Assert.AreEqual(0, inv.CountItem(piece));
+
+            // the mirror: the owner's body wears what the server's wears (and a view never runs a request itself)
+            viewInv.MirrorWorn(slot, ItemStack.Empty);
+            Assert.AreEqual(0, viewInv.GetEquipped(slot).itemId, "an empty slot mirrors empty");
+            viewInv.MirrorWorn(slot, inv.GetEquipped(slot));
+            Assert.AreEqual(piece, viewInv.GetEquipped(slot).itemId, "the owner's body wears the server's piece");
+            Assert.AreEqual(inv.GetEquipped(slot).data, viewInv.GetEquipped(slot).data, "with its own state");
+            viewInv.RunPackOp(PackOpKind.QuickUnequip, ItemLocation.Equip(slot), default);
+            Assert.AreEqual(piece, viewInv.GetEquipped(slot).itemId, "a view body never runs a Pack request itself");
+
+            // Destroy: NGO's rule on the server body (the item is gone, no ledger line: NGO writes none); the view only asks
+            inv.ServerGive(9001, 2);
+            int stimCell = -1;
+            for (int i = 0; i < PlayerInventory.Capacity; i++) if (inv.Get(i).itemId == 9001) { stimCell = i; break; }
+            Assert.GreaterOrEqual(stimCell, 0, "the server body holds the stims");
+            ItemStack stims = inv.Get(stimCell);
+            viewInv.MirrorCell(stimCell, stims);
+            asked.Ops.Clear();
+            viewInv.RequestDestroy(ItemLocation.Bag(stimCell));
+            Assert.AreEqual(new[] { $"Destroy 0:{stimCell} 0:0" }, asked.Ops.ToArray(), "the view asks the server");
+            Assert.AreEqual(stims, viewInv.Get(stimCell), "and destroys nothing itself");
+            viewInv.RunPackOp(PackOpKind.Destroy, ItemLocation.Bag(stimCell), default);
+            Assert.AreEqual(stims, viewInv.Get(stimCell), "a view never runs a Destroy");
+            int held = inv.CountItem(9001);
+            inv.RunPackOp(PackOpKind.Destroy, ItemLocation.Bag(stimCell), default);
+            Assert.AreEqual(held - stims.count, inv.CountItem(9001), "the server body destroyed that cell's stack");
+            Assert.IsTrue(inv.Get(stimCell).IsEmpty, "the cell is empty");
+        }
+
+        [UnityTest]
+        public IEnumerator B8_AnotherPlayer_SeesWhatTheServersBodyWears_ThroughTheLookText()
+        {
+            NetRole.Install(new BodyRoleNetRoleAdapter(null, () => NetRoleKind.ServerBody));
+            GameObject server = Make(NetRoleKind.ServerBody, false, new PlayerKey(8));
+            GameObject remote = Make(NetRoleKind.ClientView, false, new PlayerKey(8));
+            yield return null;
+            var equipment = server.GetComponent<PlayerEquipment>();
+            var inv = server.GetComponent<PlayerInventory>();
+            bool wears = false;
+            foreach (EquipSlot each in EquipSlots.All) if (equipment.Loadout[each] != 0) wears = true;
+            Assert.IsTrue(wears, "the server body wears its starter pieces (as in B7)");
+            EquipmentLooks looks = equipment.Looks;
+            looks.helmetHidden = !looks.helmetHidden;
+            equipment.ServerSetLooks(looks);
+
+            string gear = GearText.Encode(equipment.Loadout, equipment.Looks, equipment.Temper);
+            Assert.IsTrue(GearText.TryDecode(gear, out EquipmentLoadout loadout, out EquipmentLooks seen, out EquipmentTemper temper), gear);
+            var remoteEquipment = remote.GetComponent<PlayerEquipment>();
+            Assert.IsNotNull(remoteEquipment, "a remote view keeps its equipment (the look)");
+            remoteEquipment.ApplyObserved(loadout, seen, temper);
+            Assert.AreEqual(equipment.Loadout, remoteEquipment.Loadout, "the other player sees the same pieces");
+            Assert.AreEqual(equipment.Looks.helmetHidden, remoteEquipment.Looks.helmetHidden, "and the helmet hidden as the server has it");
+            Assert.AreEqual(equipment.Looks, remoteEquipment.Looks, "the looks exactly (dyes included)");
+            Assert.AreEqual(equipment.Temper, remoteEquipment.Temper, "and the Temper everyone sees");
+        }
+
+        [UnityTest]
+        public IEnumerator B9_Loadouts_RunOnTheServerBody_AreRealInTheSave_AndAnOldSaveLoadsAndSavesBackByteForByte()
+        {
+            NetRole.Install(new BodyRoleNetRoleAdapter(null, () => NetRoleKind.ServerBody));
+            Assert.IsFalse(SavePassthrough.Is("loadouts"), "the loadouts part is real now");
+
+            // a body that saved a loadout by NGO's own rules gives the save text in NGO's format
+            GameObject maker = Make(NetRoleKind.ServerBody, false, new PlayerKey(9));
+            GameObject view = Make(NetRoleKind.ClientView, true, new PlayerKey(9));
+            yield return null;
+            var makerLoadouts = maker.GetComponent<PlayerLoadouts>();
+            makerLoadouts.RunLoadoutOp(LoadoutOpKind.Save, 0, "Duel");
+            Assert.IsTrue(makerLoadouts.IsUsed(0), "the server body saved what it wears");
+            Assert.AreEqual("Duel", makerLoadouts.NameOf(0));
+            makerLoadouts.RunLoadoutOp(LoadoutOpKind.Rename, 0, "Arena");
+            Assert.AreEqual("Arena", makerLoadouts.NameOf(0), "renamed by the server's rules");
+            string ngoText = makerLoadouts.CaptureSave();
+
+            // the owner's view only asks, and shows the server's slots
+            var viewLoadouts = view.GetComponent<PlayerLoadouts>();
+            var asked = new Asked();
+            view.GetComponent<BodyRoleTag>().Requests = asked;
+            viewLoadouts.RequestSave(1, "Mine");
+            viewLoadouts.RequestDelete(0);
+            viewLoadouts.RequestWear(0);
+            CollectionAssert.AreEqual(new[] { "Save 1 Mine", "Delete 0 ", "Wear 0 " }, asked.Ops, "the view sends its requests");
+            Assert.IsFalse(viewLoadouts.IsUsed(1), "and changes nothing itself");
+            viewLoadouts.RunLoadoutOp(LoadoutOpKind.Save, 1, "Mine");
+            Assert.IsFalse(viewLoadouts.IsUsed(1), "a view never runs a loadout request");
+            viewLoadouts.MirrorEntry(0, makerLoadouts.Get(0));
+            Assert.AreEqual(makerLoadouts.Get(0), viewLoadouts.Get(0), "the owner's window shows the server's slot");
+            Assert.AreEqual("Arena", viewLoadouts.NameOf(0));
+
+            // an old save (NGO's text) loads into a fresh server body unchanged and saves back every byte
+            const string account = "9a8b7c6d5e4f30211203f4e5d6c7b8a9";
+            const string characterId = "c9d8e7f6a5b4c3d2e1f0a9b8c7d6e5f4";
+            GameObject body = Make(NetRoleKind.ServerBody, false, new PlayerKey(10));
+            yield return null;
+            CharacterRecipe recipe = AnyLegalRecipe(body.GetComponent<PlayerIdentity>().Database);
+            var stored = new AccountSave { accountId = account };
+            var character = new CharacterSave { characterId = characterId, name = "Kit" };
+            character.Set("loadouts", ngoText);
+            stored.characters.Add(character);
+            Assert.IsTrue(ServerSave.WriteAccount(stored));
+            ServerSave.WaitForDisk();
+            var context = new ServerBodyContext
+            {
+                Key = new PlayerKey(10), Serial = 10, NetworkId = 10, Account = account, CharacterId = characterId, Name = "Kit",
+                RecipeText = RecipeText.Encode(recipe),
+            };
+            Assert.IsNull(new PlayerAdmission().Begin(body, in context), "admitted");
+            var agent = body.GetComponent<PlayerSaveAgent>();
+            for (int i = 0; i < 30; i++) yield return null;
+            var loaded = body.GetComponent<PlayerLoadouts>();
+            Assert.AreEqual(makerLoadouts.Get(0), loaded.Get(0), "the saved loadout is on the server body");
+            agent.Save();
+            ServerSave.WaitForDisk();
+            Assert.AreEqual(ngoText, ServerSave.ReadAccountFrom(ServerSave.Store, account).Find(characterId).Get("loadouts"),
+                "the loadouts part saves back byte for byte (same format, no migration)");
+
+            loaded.RunLoadoutOp(LoadoutOpKind.Delete, 0, null);
+            Assert.IsFalse(loaded.IsUsed(0), "deleted by the server's rules");
+            agent.OnServerLeaving();
         }
 
         static CharacterRecipe AnyLegalRecipe(CharacterCreationDatabase database)

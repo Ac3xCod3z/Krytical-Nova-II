@@ -6,6 +6,7 @@
         "KryticalNova.CharacterCreation",
         "KryticalNova.Factions",
         "KryticalNova.Progression",
+        "KryticalNova.Items",
         "KryticalNova.Networking",
         "KryticalNova.Networking.Entities",
         "KryticalNova.Networking.Entities.Tests.Editor",

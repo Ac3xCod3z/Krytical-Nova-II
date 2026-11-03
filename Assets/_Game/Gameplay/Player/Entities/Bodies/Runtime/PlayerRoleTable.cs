@@ -75,8 +75,9 @@ namespace KryticalNova.Player.Entities.Bodies
             "PlayerRename", "KNEmeraldPlayerBridge", "TargetPositionModifier", "WeaponHitbox", "PlayerNightLight",
         };
 
-        /// <summary>Rule behaviours a remote body keeps because nameplates and targeting read them.</summary>
-        public static readonly string[] RemoteKeepsRules = { "CombatEntity", "FactionExtension" };
+        /// <summary>Rule behaviours a remote body keeps because nameplates and targeting read them, and its equipment: what the player
+        /// wears is drawn from it (M8 8.1.2b; it takes the server's gear through the look text, <c>PlayerEquipment.ApplyObserved</c>).</summary>
+        public static readonly string[] RemoteKeepsRules = { "CombatEntity", "FactionExtension", "PlayerEquipment" };
 
         /// <summary>Things every shape keeps.</summary>
         public static readonly string[] Infrastructure =

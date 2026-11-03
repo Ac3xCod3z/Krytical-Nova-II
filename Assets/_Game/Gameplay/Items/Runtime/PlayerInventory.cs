@@ -193,27 +193,76 @@ namespace KryticalNova.Items
 
         public void RequestMove(ItemLocation from, ItemLocation to)
         {
+            if (AskServer(PackOpKind.Move, from, to)) return;
             if (NetRole.IsNetworked(this)) MoveRpc(from, to); else ServerMove(from, to);
         }
 
         public void RequestQuickEquip(int bagIndex)
         {
+            if (AskServer(PackOpKind.QuickEquip, ItemLocation.Bag(bagIndex), default)) return;
             if (NetRole.IsNetworked(this)) QuickEquipRpc((byte)bagIndex); else ServerQuickEquip((byte)bagIndex);
         }
 
         public void RequestQuickUnequip(EquipSlot slot)
         {
+            if (AskServer(PackOpKind.QuickUnequip, ItemLocation.Equip(slot), default)) return;
             if (NetRole.IsNetworked(this)) QuickUnequipRpc(slot); else ServerQuickUnequip(slot);
         }
 
         public void RequestDestroy(ItemLocation at)
         {
+            if (AskServer(PackOpKind.Destroy, at, default)) return;
             if (NetRole.IsNetworked(this)) DestroyRpc(at); else ServerDestroy(at);
         }
 
         public void RequestSort()
         {
+            if (AskServer(PackOpKind.Sort, default, default)) return;
             if (NetRole.IsNetworked(this)) SortRpc(); else ServerSort();
+        }
+
+        // A server body of the entity netcode, read off its tag (the inventory is not IRoleAwareBody yet: NetRole answers Offline for it).
+        private bool EntityServerBody => BodyRoleTag.Of(this) is { Kind: NetRoleKind.ServerBody };
+
+        // The entity netcode's own view body (M8 8.1.2): the server's body runs it; the mirror shows what came of it.
+        private bool AskServer(PackOpKind kind, ItemLocation from, ItemLocation to)
+        {
+            if (!(BodyRoleTag.RequestsOf(this) is IBodyRequests requests)) return false;
+            requests.PackOp(kind, (byte)from.container, from.index, (byte)to.container, to.index);
+            return true;
+        }
+
+        /// <summary>
+        /// A server body of the entity netcode runs its owner's Pack request with the game's own rules (NGO's <c>MoveRpc</c> ... <c>SortRpc</c>
+        /// bodies, after the request limit the caller counted). Anywhere else it does nothing.
+        /// </summary>
+        public void RunPackOp(PackOpKind kind, ItemLocation from, ItemLocation to)
+        {
+            if (!EntityServerBody) return;
+            switch (kind)
+            {
+                case PackOpKind.Move: ServerMove(from, to); break;
+                case PackOpKind.QuickEquip: if (from.IsBag) ServerQuickEquip(from.index); break;
+                case PackOpKind.QuickUnequip: if (!from.IsBag) ServerQuickUnequip(from.Slot); break;
+                case PackOpKind.Destroy: ServerDestroy(from); break;
+                case PackOpKind.Sort: ServerSort(); break;
+            }
+        }
+
+        /// <summary>
+        /// The entity netcode's own view body wears what the server's body wears in <paramref name="slot"/> (the worn part of the Pack mirror,
+        /// as NGO's owner took the loadout and the worn data): the look and stats here follow.
+        /// </summary>
+        public void MirrorWorn(EquipSlot slot, ItemStack stack)
+        {
+            if (!BodyRoleTag.IsLocalClientView(this) || equipment == null || slot == EquipSlot.None) return;
+            EquipmentLoadout loadout = equipment.Loadout;
+            if (loadout[slot] == stack.itemId && equippedData[slot] == stack.data) return;
+            loadout[slot] = stack.itemId;
+            equippedData[slot] = stack.itemId != 0 ? stack.data : 0UL;
+            equipment.SetItemData(equippedData);
+            equipment.ServerSetLoadout(loadout);
+            Changed?.Invoke();
         }
 
         /// <summary>
@@ -741,7 +790,7 @@ namespace KryticalNova.Items
                     if (def != null && EquipSlots.IsValid(slot) && def.equipSlot == slot) worn[slot] = new ItemStack(item.stack.itemId, 1, item.stack.data);
                 }
 
-            if (NetRole.IsNetworked(this)) WriteNetCells();
+            if (NetRole.IsNetworked(this) && IsSpawned) WriteNetCells();   // NGO's list; the entity netcode mirrors cells itself
             SetEquippedData(worn.data);
             equipment.ServerSetLoadout(worn.ids);
             Changed?.Invoke();
@@ -756,7 +805,9 @@ namespace KryticalNova.Items
             {
                 if (!string.IsNullOrEmpty(reason))
                 {
-                    if (NetRole.IsNetworked(this) && !NetRole.IsOwnedByServer(this)) RequestFailedRpc(reason);
+                    // a server body of the entity netcode tells its player on the message line (NGO's RPC never runs on an unspawned body)
+                    if (EntityServerBody) { if (!OwnerMessages.TryTell(this, reason)) NotifyFailed(reason); }
+                    else if (NetRole.IsNetworked(this) && !NetRole.IsOwnedByServer(this)) RequestFailedRpc(reason);
                     else NotifyFailed(reason);
                 }
                 return;

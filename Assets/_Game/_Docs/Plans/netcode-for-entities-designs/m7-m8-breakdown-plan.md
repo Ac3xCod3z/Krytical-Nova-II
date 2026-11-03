@@ -26,6 +26,11 @@ the checkpoints, the owner's Thursday hand-test list and the owner questions.
 - **Every system that looks at player bodies gets one real-prefab test** (Master, 2 Nov 2026), not only fake bodies: 7.3 and 7.4 passed
   with fake `IPlayerBody`s while every real DOTS server body answered `Owner = None` (NGO's `OwnerClientId`), so both would have
   skipped every player. `RealPrefabSmokeTests` (PlayMode, MemorySaveStore) is where these go.
+- **Every port either marks its component `IRoleAwareBody` or reads the body's `BodyRoleTag` itself, and proves it with a real-prefab
+  test** (Master, 2 Nov 2026): on a DOTS body `NetRole` answers the body's role only for components marked `IRoleAwareBody`
+  (`BodyRoleNetRoleAdapter.Of`); every other component answers Offline, so `NetRole.MayMutate` / `IsServerBody` silently mean "offline"
+  there (8.1.1's wallet guard and 8.1.2's server-side Pack requests did nothing until PlayerWallet was marked and PlayerInventory read its
+  tag). Mark a component only when every `NetRole` call in it is right for both body shapes; otherwise read the tag at the new code.
 - The shared edge (built once, reused by all): requests from the owner's view body through `BodyRoleTag.Requests` (never the stub's
   local `ServerX`), answered by a reply RPC with the result or the refusal text; owner-only ghost fields for what the HUD shows; paged
   text RPCs (`GoInGamePages`/`KnRosterPages`) for big state; observers get small ghost fields. Guards: `IsSpawned && IsServer` code
