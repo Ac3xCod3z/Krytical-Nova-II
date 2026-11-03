@@ -190,6 +190,69 @@ namespace KryticalNova.Progression
             ReadNetState();
         }
 
+        /// <summary>A server body of the entity netcode buys its owner's ranks (NGO's UpgradeServerRpc body, after the caller's limit).</summary>
+        public int RunUpgrade(string skillId, int count)
+        {
+            if (!(BodyRoleTag.Of(this) is { Kind: NetRoleKind.ServerBody })) return 0;
+            var skill = GetSkill(skillId);
+            return skill != null ? TryUpgradeMultiple(skill, count) : 0;
+        }
+
+        /// <summary>
+        /// What the owner is told (NGO's netRanks and netUnlockedBooks): the rank of each available skill by index, and the unlocked books
+        /// as a mask of the first 64. The entity netcode reads it on the server body.
+        /// </summary>
+        public ulong ReadRanks(List<byte> ranks)
+        {
+            ranks.Clear();
+            ulong books = 0UL;
+            if (availableSkills == null) return books;
+            for (int i = 0; i < availableSkills.Length; i++)
+            {
+                var skill = availableSkills[i];
+                ranks.Add(skill != null ? (byte)Mathf.Clamp(GetRank(skill), 0, byte.MaxValue) : (byte)0);
+                if (skill != null && i < 64 && Unlocked(skill)) books |= 1UL << i;
+            }
+            return books;
+        }
+
+        // The entity netcode's own view: the server's ranks and books (M8 8.3.2), rebuilt as NGO's owner did (ReadNetState).
+        private readonly List<byte> mirroredRanks = new List<byte>();
+        private ulong mirroredBooks;
+
+        /// <summary>The entity netcode's own view body shows the server's rank of the skill at <paramref name="index"/>.</summary>
+        public void MirrorRank(int index, byte rank)
+        {
+            if (!BodyRoleTag.IsLocalClientView(this) || index < 0 || index >= 256) return;
+            while (mirroredRanks.Count <= index) mirroredRanks.Add(0);
+            if (mirroredRanks[index] == rank) return;
+            mirroredRanks[index] = rank;
+            RebuildFromMirror();
+        }
+
+        /// <summary>The entity netcode's own view body shows the server's unlocked books.</summary>
+        public void MirrorBooks(ulong books)
+        {
+            if (!BodyRoleTag.IsLocalClientView(this) || books == mirroredBooks) return;
+            mirroredBooks = books;
+            RebuildFromMirror();
+        }
+
+        private void RebuildFromMirror()
+        {
+            if (availableSkills == null) return;
+            learnedRanks.Clear();
+            unlockedDropSkills.Clear();
+            for (int i = 0; i < availableSkills.Length; i++)
+            {
+                var skill = availableSkills[i];
+                if (skill == null) continue;
+                if (i < mirroredRanks.Count && mirroredRanks[i] > 0) learnedRanks[skill.RankKey] = mirroredRanks[i];
+                if (i < 64 && (mirroredBooks & (1UL << i)) != 0) unlockedDropSkills.Add(skill.LockKey);
+            }
+            Changed?.Invoke();
+        }
+
         /// <summary>Server: publishes ranks and book unlocks to the owner.</summary>
         private void WriteNetState()
         {
@@ -480,6 +543,14 @@ namespace KryticalNova.Progression
         public int TryUpgradeMultiple(SkillDefinitionSO skill, int maxCount)
         {
             if (skill == null || maxCount <= 0 || progression == null) return 0;
+
+            // the entity netcode's own view: the owner's prediction goes to the server's body (M8 8.3.2), the ranks come back mirrored
+            if (BodyRoleTag.RequestsOf(this) is IBodyRequests requests)
+            {
+                int asked = CountAffordableRanks(skill, maxCount);
+                if (asked > 0) requests.UpgradeSkill(skill.skillId, (byte)Mathf.Min(asked, byte.MaxValue));
+                return asked;
+            }
 
             if (!HasAuthority)
             {

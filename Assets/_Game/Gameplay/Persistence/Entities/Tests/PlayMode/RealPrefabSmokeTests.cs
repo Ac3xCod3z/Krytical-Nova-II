@@ -430,6 +430,7 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
             public void LoadoutOp(LoadoutOpKind kind, byte index, string name) => Ops.Add($"{kind} {index} {name}");
             public void RefillFlask() => Ops.Add("RefillFlask");
             public void Allocate(byte attribute, short count) => Ops.Add($"Allocate {attribute} {count}");
+            public void UpgradeSkill(string skillId, byte count) => Ops.Add($"Upgrade {skillId} {count}");
         }
 
         [UnityTest]
@@ -817,6 +818,82 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
             viewBoosts.MirrorSeconds(index, left);
             Assert.AreEqual(left, viewBoosts.SecondsLeft(index), 0.01f, "the owner sees the server's clock");
             Assert.AreEqual(0f, viewBoosts.ServerCharacterBonus, "a view never gives the bonus");
+            agent.OnServerLeaving();
+        }
+
+        [UnityTest]
+        public IEnumerator B14_SkillRanks_AreBoughtOnTheServerBody_TheSaveIsReal_AndTheOwnerSeesThem()
+        {
+            NetRole.Install(new BodyRoleNetRoleAdapter(null, () => NetRoleKind.ServerBody));
+            Assert.IsFalse(SavePassthrough.Is("skills"), "the skills part is real now");
+            Assert.IsTrue(PlayerRequestServerSystem.EffectPorted(ItemUseEffect.LearnSkill), "and Skill Chips / Dossiers are used");
+
+            // a body that bought a rank by NGO's rules gives the save text in NGO's format
+            GameObject maker = Make(NetRoleKind.ServerBody, false, new PlayerKey(17));
+            GameObject view = Make(NetRoleKind.ClientView, true, new PlayerKey(17));
+            yield return null;
+            var makerSkills = maker.GetComponent<PlayerCombatSkills>();
+            var makerProgress = maker.GetComponent<PlayerCharacterProgression>();
+            makerProgress.SetLevel(makerProgress.MaxLevel);
+            makerProgress.AddSkillPoints(500);
+            SkillDefinitionSO skill = null;
+            int index = -1;
+            for (int i = 0; i < makerSkills.AvailableSkills.Count; i++)
+            {
+                SkillDefinitionSO each = makerSkills.AvailableSkills[i];
+                if (each == null || makerSkills.IsLocked(each) || makerSkills.GetRank(each) >= each.maxRank) continue;
+                skill = each;
+                index = i;
+                break;
+            }
+            Assert.IsNotNull(skill, "the body has a skill it can buy a rank of");
+            int rank = makerSkills.GetRank(skill);
+            Assert.AreEqual(1, makerSkills.RunUpgrade(skill.skillId, 1), "the server body buys one rank by NGO's rules");
+            Assert.AreEqual(rank + 1, makerSkills.GetRank(skill));
+            string ngoText = makerSkills.CaptureSave();
+
+            // the owner's view predicts and asks, changes nothing itself, and shows the server's rank
+            var viewSkills = view.GetComponent<PlayerCombatSkills>();
+            var asked = new Asked();
+            view.GetComponent<BodyRoleTag>().Requests = asked;
+            OwnerProgressBridge.Mirror(view, OwnerProgressBridge.Read(maker).Value);   // its points and level, as the owner has them
+            int viewRank = viewSkills.GetRank(skill);
+            int predicted = viewSkills.TryUpgradeMultiple(skill, 1);
+            Assert.AreEqual(1, predicted, "the owner's prediction");
+            CollectionAssert.AreEqual(new[] { $"Upgrade {skill.skillId} 1" }, asked.Ops, "sent to the server");
+            Assert.AreEqual(viewRank, viewSkills.GetRank(skill), "the view buys nothing itself");
+            Assert.AreEqual(0, viewSkills.RunUpgrade(skill.skillId, 1), "a view never upgrades");
+            var ranks = new List<byte>();
+            ulong books = makerSkills.ReadRanks(ranks);
+            for (int i = 0; i < ranks.Count; i++) viewSkills.MirrorRank(i, ranks[i]);
+            viewSkills.MirrorBooks(books);
+            Assert.AreEqual(makerSkills.GetRank(skill), viewSkills.GetRank(skill), "the owner sees the server's rank");
+
+            // an old save (NGO's text) loads into a fresh admitted server body and saves back every byte
+            const string account = "5f4e3d2c1b0a99887766554433221100";
+            const string characterId = "a0b1c2d3e4f5061728394a5b6c7d8e9f";
+            GameObject body = Make(NetRoleKind.ServerBody, false, new PlayerKey(18));
+            yield return null;
+            CharacterRecipe recipe = AnyLegalRecipe(body.GetComponent<PlayerIdentity>().Database);
+            var stored = new AccountSave { accountId = account };
+            var character = new CharacterSave { characterId = characterId, name = "Ranks" };
+            character.Set("skills", ngoText);
+            stored.characters.Add(character);
+            Assert.IsTrue(ServerSave.WriteAccount(stored));
+            ServerSave.WaitForDisk();
+            var context = new ServerBodyContext
+            {
+                Key = new PlayerKey(18), Serial = 18, NetworkId = 18, Account = account, CharacterId = characterId, Name = "Ranks",
+                RecipeText = RecipeText.Encode(recipe),
+            };
+            Assert.IsNull(new PlayerAdmission().Begin(body, in context), "admitted");
+            var agent = body.GetComponent<PlayerSaveAgent>();
+            for (int i = 0; i < 30; i++) yield return null;
+            Assert.AreEqual(rank + 1, body.GetComponent<PlayerCombatSkills>().GetRank(skill), "the saved rank is on the server body");
+            agent.Save();
+            ServerSave.WaitForDisk();
+            Assert.AreEqual(ngoText, ServerSave.ReadAccountFrom(ServerSave.Store, account).Find(characterId).Get("skills"),
+                "the skills part saves back byte for byte (same format, no migration)");
             agent.OnServerLeaving();
         }
 

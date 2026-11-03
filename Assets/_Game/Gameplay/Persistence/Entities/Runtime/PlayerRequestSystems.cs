@@ -114,6 +114,25 @@ namespace KryticalNova.Persistence.Entities
         public float Seconds;
     }
 
+    /// <summary>The owner buys ranks of a skill (NGO's <c>PlayerCombatSkills.UpgradeServerRpc</c>; M8 8.3.2).</summary>
+    public struct SkillUpgradeRpc : IRpcCommand
+    {
+        public FixedString64Bytes SkillId;
+        public byte Count;
+    }
+
+    /// <summary>One skill's rank to its owner (NGO's owner-only netRanks, by index of the available skills).</summary>
+    public struct SkillRankRpc : IRpcCommand
+    {
+        public byte Index, Rank;
+    }
+
+    /// <summary>The owner's unlocked books (NGO's netUnlockedBooks: a mask of the first 64 skills).</summary>
+    public struct SkillBooksRpc : IRpcCommand
+    {
+        public ulong Books;
+    }
+
     public struct ServerTellRpc : IRpcCommand
     {
         public FixedString512Bytes Text;
@@ -193,6 +212,16 @@ namespace KryticalNova.Persistence.Entities
             em.AddComponent<SendRpcCommandRequest>(rpc);
         }
 
+        public void UpgradeSkill(string skillId, byte count)
+        {
+            if (m_World == null || !m_World.IsCreated || count == 0 || string.IsNullOrEmpty(skillId)
+                || System.Text.Encoding.UTF8.GetByteCount(skillId) > FixedString64Bytes.UTF8MaxLengthInBytes) return;   // NGO's TextFits too
+            var em = m_World.EntityManager;
+            Entity rpc = em.CreateEntity();
+            em.AddComponentData(rpc, new SkillUpgradeRpc { SkillId = new FixedString64Bytes(skillId), Count = count });
+            em.AddComponent<SendRpcCommandRequest>(rpc);
+        }
+
         public void Allocate(byte attribute, short count)
         {
             if (m_World == null || !m_World.IsCreated || count <= 0) return;
@@ -231,7 +260,7 @@ namespace KryticalNova.Persistence.Entities
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     public partial class PlayerRequestServerSystem : SystemBase
     {
-        EntityQuery m_Uses, m_Casts, m_PackOps, m_LoadoutOps, m_Refills, m_Allocations;
+        EntityQuery m_Uses, m_Casts, m_PackOps, m_LoadoutOps, m_Refills, m_Allocations, m_Upgrades;
 
         /// <summary>Requests run, refused, and dropped by the request limits (tests).</summary>
         public int Used { get; private set; }
@@ -242,6 +271,7 @@ namespace KryticalNova.Persistence.Entities
         public int LoadoutOps { get; private set; }
         public int Refills { get; private set; }
         public int Allocations { get; private set; }
+        public int Upgrades { get; private set; }
 
         protected override void OnCreate()
         {
@@ -251,6 +281,7 @@ namespace KryticalNova.Persistence.Entities
             m_LoadoutOps = GetEntityQuery(ComponentType.ReadOnly<ReceiveRpcCommandRequest>(), ComponentType.ReadOnly<LoadoutOpRpc>());
             m_Refills = GetEntityQuery(ComponentType.ReadOnly<ReceiveRpcCommandRequest>(), ComponentType.ReadOnly<FlaskRefillRpc>());
             m_Allocations = GetEntityQuery(ComponentType.ReadOnly<ReceiveRpcCommandRequest>(), ComponentType.ReadOnly<AllocateRpc>());
+            m_Upgrades = GetEntityQuery(ComponentType.ReadOnly<ReceiveRpcCommandRequest>(), ComponentType.ReadOnly<SkillUpgradeRpc>());
         }
 
         protected override void OnUpdate()
@@ -282,6 +313,21 @@ namespace KryticalNova.Persistence.Entities
                 for (int i = 0; i < ops.Length; i++) RunPackOp(received[i].SourceConnection, ops[i]);
                 received.Dispose();
                 ops.Dispose();
+            }
+            if (!m_Upgrades.IsEmpty)
+            {
+                var received = m_Upgrades.ToComponentDataArray<ReceiveRpcCommandRequest>(Allocator.Temp);
+                var asks = m_Upgrades.ToComponentDataArray<SkillUpgradeRpc>(Allocator.Temp);
+                em.DestroyEntity(m_Upgrades);
+                // NGO: the Money limit, then the server body's own rules (unlocked, level, max rank, skill points)
+                for (int i = 0; i < asks.Length; i++)
+                    if (BodyOf(received[i].SourceConnection, CallKind.Money, out GameObject body) && body.TryGetComponent(out PlayerCombatSkills skills))
+                    {
+                        skills.RunUpgrade(asks[i].SkillId.ToString(), asks[i].Count);
+                        Upgrades++;
+                    }
+                received.Dispose();
+                asks.Dispose();
             }
             if (!m_Allocations.IsEmpty)
             {
@@ -407,7 +453,8 @@ namespace KryticalNova.Persistence.Entities
         /// </summary>
         public static bool EffectPorted(ItemUseEffect effect) => effect == ItemUseEffect.None || effect == ItemUseEffect.FluxFlask
             || effect == ItemUseEffect.FeedPet || effect == ItemUseEffect.Serum || effect == ItemUseEffect.Recall
-            || effect == ItemUseEffect.ExperienceBoost;   // M8 8.3.3: the "xpboosts" part is real (B13)
+            || effect == ItemUseEffect.ExperienceBoost    // M8 8.3.3: the "xpboosts" part is real (B13)
+            || effect == ItemUseEffect.LearnSkill;        // M8 8.3.2: the "skills" part is real (B14)
 
         void Cast(Entity connection, string skillId)
         {
@@ -456,6 +503,8 @@ namespace KryticalNova.Persistence.Entities
         readonly Dictionary<Entity, ItemStack[]> m_Sent = new Dictionary<Entity, ItemStack[]>();
         readonly Dictionary<Entity, LoadoutEntry[]> m_SentLoadouts = new Dictionary<Entity, LoadoutEntry[]>();
         readonly Dictionary<Entity, (float[] seconds, float nextSend)> m_SentClocks = new Dictionary<Entity, (float[], float)>();
+        readonly Dictionary<Entity, (List<byte> ranks, ulong books)> m_SentSkills = new Dictionary<Entity, (List<byte>, ulong)>();
+        readonly List<byte> m_Ranks = new List<byte>();
 
         /// <summary>NGO's PlayerExperienceBoosts.SendSeconds: a running clock is sent at most this often between uses and run-outs.</summary>
         public const float ClockSendSeconds = 15f;
@@ -468,6 +517,7 @@ namespace KryticalNova.Persistence.Entities
         public int CellsSent { get; private set; }
         public int LoadoutSlotsSent { get; private set; }
         public int ClocksSent { get; private set; }
+        public int SkillCellsSent { get; private set; }
 
         protected override void OnCreate() =>
             m_InGame = GetEntityQuery(ComponentType.ReadOnly<NetworkId>(), ComponentType.ReadOnly<NetworkStreamInGame>());
@@ -486,7 +536,7 @@ namespace KryticalNova.Persistence.Entities
 
             m_Gone.Clear();
             foreach (Entity ghost in m_Sent.Keys) if (!em.Exists(ghost)) m_Gone.Add(ghost);
-            foreach (Entity ghost in m_Gone) { m_Sent.Remove(ghost); m_SentLoadouts.Remove(ghost); m_SentClocks.Remove(ghost); }
+            foreach (Entity ghost in m_Gone) { m_Sent.Remove(ghost); m_SentLoadouts.Remove(ghost); m_SentClocks.Remove(ghost); m_SentSkills.Remove(ghost); }
 
             foreach (GhostBodyEntry entry in GhostBodyRegistry.Entries)
             {
@@ -525,6 +575,32 @@ namespace KryticalNova.Persistence.Entities
                         em.AddComponentData(slotRpc, new SendRpcCommandRequest { TargetConnection = connection });
                         LoadoutSlotsSent++;
                     }
+                }
+                // the skills' ranks and unlocked books (NGO: the owner-only netRanks and netUnlockedBooks), all on arrival, then changes
+                if (entry.Body.TryGetComponent(out PlayerCombatSkills combatSkills))
+                {
+                    ulong books = combatSkills.ReadRanks(m_Ranks);
+                    bool arriving = !m_SentSkills.TryGetValue(entry.Ghost, out var had);
+                    if (arriving) had = (new List<byte>(), ~books);
+                    for (int i = 0; i < m_Ranks.Count && i < 256; i++)
+                    {
+                        if (!arriving && i < had.ranks.Count && had.ranks[i] == m_Ranks[i]) continue;
+                        while (had.ranks.Count <= i) had.ranks.Add(0);
+                        had.ranks[i] = m_Ranks[i];
+                        Entity rankRpc = em.CreateEntity();
+                        em.AddComponentData(rankRpc, new SkillRankRpc { Index = (byte)i, Rank = m_Ranks[i] });
+                        em.AddComponentData(rankRpc, new SendRpcCommandRequest { TargetConnection = connection });
+                        SkillCellsSent++;
+                    }
+                    if (books != had.books)
+                    {
+                        had.books = books;
+                        Entity booksRpc = em.CreateEntity();
+                        em.AddComponentData(booksRpc, new SkillBooksRpc { Books = books });
+                        em.AddComponentData(booksRpc, new SendRpcCommandRequest { TargetConnection = connection });
+                        SkillCellsSent++;
+                    }
+                    m_SentSkills[entry.Ghost] = had;
                 }
                 // the XP boosters' clocks (NGO: the owner-only list; exact on a use or run-out, else every 15 s)
                 if (entry.Body.TryGetComponent(out PlayerExperienceBoosts boosts) && boosts.Count > 0)
@@ -582,7 +658,7 @@ namespace KryticalNova.Persistence.Entities
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     public partial class PlayerRequestClientSystem : SystemBase
     {
-        EntityQuery m_Replies, m_Cells, m_Tells, m_Slots, m_Clocks;
+        EntityQuery m_Replies, m_Cells, m_Tells, m_Slots, m_Clocks, m_SkillRanks, m_SkillBooks;
 
         /// <summary>Answers, cells and the server's lines applied (tests).</summary>
         public int Replies { get; private set; }
@@ -596,6 +672,8 @@ namespace KryticalNova.Persistence.Entities
             m_Tells = GetEntityQuery(ComponentType.ReadOnly<ReceiveRpcCommandRequest>(), ComponentType.ReadOnly<ServerTellRpc>());
             m_Slots = GetEntityQuery(ComponentType.ReadOnly<ReceiveRpcCommandRequest>(), ComponentType.ReadOnly<LoadoutSlotRpc>());
             m_Clocks = GetEntityQuery(ComponentType.ReadOnly<ReceiveRpcCommandRequest>(), ComponentType.ReadOnly<XpBoostClockRpc>());
+            m_SkillRanks = GetEntityQuery(ComponentType.ReadOnly<ReceiveRpcCommandRequest>(), ComponentType.ReadOnly<SkillRankRpc>());
+            m_SkillBooks = GetEntityQuery(ComponentType.ReadOnly<ReceiveRpcCommandRequest>(), ComponentType.ReadOnly<SkillBooksRpc>());
         }
 
         protected override void OnUpdate()
@@ -629,6 +707,21 @@ namespace KryticalNova.Persistence.Entities
                         Cells++;
                     }
                 cells.Dispose();
+            }
+            if (!m_SkillRanks.IsEmpty || !m_SkillBooks.IsEmpty)
+            {
+                var skills = body != null ? body.GetComponent<PlayerCombatSkills>() : null;
+                var ranks = m_SkillRanks.ToComponentDataArray<SkillRankRpc>(Allocator.Temp);
+                var bookSets = m_SkillBooks.ToComponentDataArray<SkillBooksRpc>(Allocator.Temp);
+                em.DestroyEntity(m_SkillRanks);
+                em.DestroyEntity(m_SkillBooks);
+                if (skills != null)
+                {
+                    foreach (SkillRankRpc rank in ranks) skills.MirrorRank(rank.Index, rank.Rank);
+                    foreach (SkillBooksRpc set in bookSets) skills.MirrorBooks(set.Books);
+                }
+                ranks.Dispose();
+                bookSets.Dispose();
             }
             if (!m_Clocks.IsEmpty)
             {

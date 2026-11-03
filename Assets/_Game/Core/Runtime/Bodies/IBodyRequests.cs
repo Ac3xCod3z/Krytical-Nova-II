@@ -47,5 +47,8 @@ namespace KryticalNova.Core
 
         /// <summary>Asks the server to put up to <paramref name="count"/> stat points into an attribute (M8 8.3.1, NGO's allocation RPC).</summary>
         void Allocate(byte attribute, short count);
+
+        /// <summary>Asks the server to buy up to <paramref name="count"/> ranks of a skill with skill points (M8 8.3.2, NGO's upgrade RPC).</summary>
+        void UpgradeSkill(string skillId, byte count);
     }
 }
