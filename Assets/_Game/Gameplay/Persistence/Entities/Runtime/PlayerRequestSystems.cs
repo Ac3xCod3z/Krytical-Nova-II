@@ -95,6 +95,11 @@ namespace KryticalNova.Persistence.Entities
         };
     }
 
+    /// <summary>The owner asks the server's body to refill its Flasks at the Apothecary in reach (NGO's <c>PlayerFlask.RefillRpc</c>).</summary>
+    public struct FlaskRefillRpc : IRpcCommand
+    {
+    }
+
     public struct ServerTellRpc : IRpcCommand
     {
         public FixedString512Bytes Text;
@@ -174,6 +179,15 @@ namespace KryticalNova.Persistence.Entities
             em.AddComponent<SendRpcCommandRequest>(rpc);
         }
 
+        public void RefillFlask()
+        {
+            if (m_World == null || !m_World.IsCreated) return;
+            var em = m_World.EntityManager;
+            Entity rpc = em.CreateEntity();
+            em.AddComponent<FlaskRefillRpc>(rpc);
+            em.AddComponent<SendRpcCommandRequest>(rpc);
+        }
+
         public void CastSkill(string skillId)
         {
             if (m_World == null || !m_World.IsCreated || string.IsNullOrEmpty(skillId) || skillId.Length > FixedString64Bytes.UTF8MaxLengthInBytes) return;
@@ -194,7 +208,7 @@ namespace KryticalNova.Persistence.Entities
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     public partial class PlayerRequestServerSystem : SystemBase
     {
-        EntityQuery m_Uses, m_Casts, m_PackOps, m_LoadoutOps;
+        EntityQuery m_Uses, m_Casts, m_PackOps, m_LoadoutOps, m_Refills;
 
         /// <summary>Requests run, refused, and dropped by the request limits (tests).</summary>
         public int Used { get; private set; }
@@ -203,6 +217,7 @@ namespace KryticalNova.Persistence.Entities
         /// <summary>Pack and loadout requests run (tests).</summary>
         public int PackOps { get; private set; }
         public int LoadoutOps { get; private set; }
+        public int Refills { get; private set; }
 
         protected override void OnCreate()
         {
@@ -210,6 +225,7 @@ namespace KryticalNova.Persistence.Entities
             m_Casts = GetEntityQuery(ComponentType.ReadOnly<ReceiveRpcCommandRequest>(), ComponentType.ReadOnly<SkillCastRpc>());
             m_PackOps = GetEntityQuery(ComponentType.ReadOnly<ReceiveRpcCommandRequest>(), ComponentType.ReadOnly<PackOpRpc>());
             m_LoadoutOps = GetEntityQuery(ComponentType.ReadOnly<ReceiveRpcCommandRequest>(), ComponentType.ReadOnly<LoadoutOpRpc>());
+            m_Refills = GetEntityQuery(ComponentType.ReadOnly<ReceiveRpcCommandRequest>(), ComponentType.ReadOnly<FlaskRefillRpc>());
         }
 
         protected override void OnUpdate()
@@ -241,6 +257,19 @@ namespace KryticalNova.Persistence.Entities
                 for (int i = 0; i < ops.Length; i++) RunPackOp(received[i].SourceConnection, ops[i]);
                 received.Dispose();
                 ops.Dispose();
+            }
+            if (!m_Refills.IsEmpty)
+            {
+                var received = m_Refills.ToComponentDataArray<ReceiveRpcCommandRequest>(Allocator.Temp);
+                em.DestroyEntity(m_Refills);
+                // NGO: the Items limit, then the server body's own rules (alive, an Apothecary in reach, the cost through the wallet, save)
+                for (int i = 0; i < received.Length; i++)
+                    if (BodyOf(received[i].SourceConnection, CallKind.Items, out GameObject body) && body.TryGetComponent(out PlayerFlask flask))
+                    {
+                        flask.RunRefill();
+                        Refills++;
+                    }
+                received.Dispose();
             }
             if (!m_LoadoutOps.IsEmpty)
             {

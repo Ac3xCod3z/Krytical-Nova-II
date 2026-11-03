@@ -427,6 +427,7 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
             public void PackOp(PackOpKind kind, byte fromContainer, byte fromIndex, byte toContainer, byte toIndex) =>
                 Ops.Add($"{kind} {fromContainer}:{fromIndex} {toContainer}:{toIndex}");
             public void LoadoutOp(LoadoutOpKind kind, byte index, string name) => Ops.Add($"{kind} {index} {name}");
+            public void RefillFlask() => Ops.Add("RefillFlask");
         }
 
         [UnityTest]
@@ -588,6 +589,77 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
             loaded.RunLoadoutOp(LoadoutOpKind.Delete, 0, null);
             Assert.IsFalse(loaded.IsUsed(0), "deleted by the server's rules");
             agent.OnServerLeaving();
+        }
+
+        [UnityTest]
+        public IEnumerator B10_AFlaskRefill_RunsOnTheServerBody_AtAnApothecary_ForCredsThroughTheWallet()
+        {
+            NetRole.Install(new BodyRoleNetRoleAdapter(null, () => NetRoleKind.ServerBody));
+            GameObject server = Make(NetRoleKind.ServerBody, false, new PlayerKey(11));
+            GameObject view = Make(NetRoleKind.ClientView, true, new PlayerKey(11));
+            yield return null;
+            var inv = server.GetComponent<PlayerInventory>();
+            var wallet = server.GetComponent<KryticalNova.Economy.PlayerWallet>();
+            var flask = server.GetComponent<PlayerFlask>();
+            Assert.IsNotNull(flask, "the server body has its Flask part");
+            ItemDefinition flaskItem = null;
+            foreach (ItemDefinition def in inv.Catalog.Items) if (def != null && def.useEffect == ItemUseEffect.FluxFlask) { flaskItem = def; break; }
+            Assert.IsNotNull(flaskItem, "the catalog has a Flux Flask");
+
+            // a Flask with two drinks used, and Creds for it
+            int cell = -1;
+            for (int i = 0; i < PlayerInventory.Capacity; i++) if (inv.Get(i).itemId == flaskItem.itemId) { cell = i; break; }
+            if (cell < 0)
+            {
+                Assert.AreEqual(1, inv.ServerGive(flaskItem.itemId, 1));
+                for (int i = 0; i < PlayerInventory.Capacity; i++) if (inv.Get(i).itemId == flaskItem.itemId) { cell = i; break; }
+            }
+            ItemStack held = inv.Get(cell);
+            inv.ServerSetCellData(cell, held, (held.data & ~0xFFUL) | 2UL);
+            wallet.ServerSet(1000);
+
+            // the view only asks
+            var asked = new Asked();
+            view.GetComponent<BodyRoleTag>().Requests = asked;
+            view.GetComponent<PlayerFlask>().RequestRefill();
+            CollectionAssert.AreEqual(new[] { "RefillFlask" }, asked.Ops, "the owner's view sends the refill to the server");
+
+            // no Apothecary in reach: refused, nothing spent
+            flask.RunRefill();
+            Assert.AreEqual(1000, wallet.Creds, "no Apothecary: nothing spent");
+            Assert.AreEqual(2, FlaskRules.Used(inv.Get(cell).data, 3), "and nothing refilled");
+
+            // an Apothecary beside the body: two drinks refilled at the settings' price, through the wallet (CredsSink.Vendor)
+            var definition = ScriptableObject.CreateInstance<KryticalNova.NPC.NpcDefinition>();
+            definition.offers = KryticalNova.NPC.NpcOffer.FlaskRefill;
+            var npcObject = new GameObject("Apothecary");
+            npcObject.SetActive(false);
+            var npc = npcObject.AddComponent<KryticalNova.NPC.NpcInteractable>();
+            typeof(KryticalNova.NPC.NpcInteractable).GetField("definition", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(npc, definition);
+            npcObject.transform.position = server.transform.position + new Vector3(1f, 0f, 0f);
+            npcObject.SetActive(true);
+            m_Made.Add(npcObject);
+
+            // too few Creds: refused, nothing spent, nothing refilled
+            var flaskSettings = (FlaskSettings)typeof(PlayerFlask).GetField("settings", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(flask);
+            long price = flaskSettings != null ? flaskSettings.refillPricePerCharge : 60;
+            Assert.Greater(price, 0, "a drink costs Creds");
+            wallet.ServerSet(price * 2 - 1);
+            flask.RunRefill();
+            Assert.AreEqual(price * 2 - 1, wallet.Creds, "too few Creds: nothing spent");
+            Assert.AreEqual(2, FlaskRules.Used(inv.Get(cell).data, 3), "and nothing refilled");
+
+            // enough: both drinks at the settings' price, through the wallet (CredsSink.Vendor), and a second click charges nothing
+            wallet.ServerSet(1000);
+            flask.RunRefill();
+            Assert.AreEqual(0, FlaskRules.Used(inv.Get(cell).data, 3), "both drinks refilled: the Flask is full");
+            Assert.AreEqual(1000 - price * 2, wallet.Creds, "Creds down by exactly two drinks at the settings' price");
+            long paid = 1000 - wallet.Creds;
+            flask.RunRefill();
+            Assert.AreEqual(1000 - paid, wallet.Creds, "a double click: nothing more spent");
+            view.GetComponent<PlayerFlask>().RunRefill();
+            Assert.AreEqual(1000 - paid, wallet.Creds, "a view never refills");
+            Object.Destroy(definition);
         }
 
         static CharacterRecipe AnyLegalRecipe(CharacterCreationDatabase database)

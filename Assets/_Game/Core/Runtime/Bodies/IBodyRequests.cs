@@ -41,5 +41,8 @@ namespace KryticalNova.Core
 
         /// <summary>Asks the server to save, rename, delete or wear a loadout slot (the name only for save and rename).</summary>
         void LoadoutOp(LoadoutOpKind kind, byte index, string name);
+
+        /// <summary>Asks the server to refill every Flask in the Pack at the Apothecary in reach (M8 8.1.4).</summary>
+        void RefillFlask();
     }
 }

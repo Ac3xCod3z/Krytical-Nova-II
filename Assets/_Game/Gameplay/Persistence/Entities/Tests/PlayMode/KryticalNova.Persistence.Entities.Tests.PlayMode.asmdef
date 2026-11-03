@@ -6,6 +6,7 @@
         "KryticalNova.CharacterCreation",
         "KryticalNova.Factions",
         "KryticalNova.Items",
+        "KryticalNova.NPC",
         "KryticalNova.Economy",
         "KryticalNova.Progression",
         "KryticalNova.Wallet",

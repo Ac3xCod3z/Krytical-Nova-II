@@ -34,7 +34,9 @@ namespace KryticalNova.Items
         public FlaskSettings Settings => settings;
         /// <summary>Drinks a full Flask holds.</summary>
         public int Charges => settings != null ? settings.charges : 3;
-        private bool Decides => !IsSpawned || IsServer;
+        // A client view of the entity netcode never drinks, flows or refills itself: its server body does (M8 8.1.4).
+        private bool Decides => (!IsSpawned || IsServer) && !(BodyRoleTag.Of(this) is { Kind: NetRoleKind.ClientView });
+        private bool EntityServer => BodyRoleTag.Of(this) is { Kind: NetRoleKind.ServerBody };
 
         private void Awake()
         {
@@ -82,6 +84,7 @@ namespace KryticalNova.Items
         /// <summary>Owner: asks the server to refill every Flask in the Pack at the Apothecary in reach.</summary>
         public void RequestRefill()
         {
+            if (BodyRoleTag.RequestsOf(this) is IBodyRequests requests) { requests.RefillFlask(); return; }   // the entity netcode's own view
             if (IsSpawned && IsOwner) RefillRpc();
             else if (!IsSpawned) Tell(ServerRefill());
         }
@@ -91,6 +94,12 @@ namespace KryticalNova.Items
         {
             if (!RpcBudget.Allow(this, CallKind.Items, nameof(RefillRpc))) return;
             Tell(ServerRefill());
+        }
+
+        /// <summary>A server body of the entity netcode refills for its owner (NGO's RefillRpc body, after the caller's request limit).</summary>
+        public void RunRefill()
+        {
+            if (EntityServer) Tell(ServerRefill());
         }
 
         /// <summary>Server: refills every Flask in the Pack for Creds. Returns what the player is told.</summary>
@@ -142,6 +151,7 @@ namespace KryticalNova.Items
         private void Tell(string text)
         {
             if (string.IsNullOrEmpty(text)) return;
+            if (EntityServer) { OwnerMessages.TryTell(this, text); return; }   // to its player's message line, never this machine's screen
             if (IsSpawned && !IsOwner) TellRpc(text);
             else ClientPresentationRegistry.Messages?.ShowMessage(text);
         }
