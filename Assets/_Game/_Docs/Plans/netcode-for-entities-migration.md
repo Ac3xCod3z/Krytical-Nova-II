@@ -1248,6 +1248,8 @@ checkpoints; the owner's Thursday hand-test list; owner questions). NGO rules ta
     SaveService --test 28/28. No save key of its own. HIGH review approved.
 - [ ] M8 group 4: chat, contacts, party, sponsor, Crew, emotes, pets, mounts, crate, Recall, housing check; duels and Cadence wait for M4.
   - [x] (order items 1-2) the owner message line (OwnerMessages, system 0) and mount / Mount Feed uses refused until Mounts (EffectPorted).
-  - [ ] Furnishing Crate: store and withdraw run NGO's PlayerCrate rules on the server body at the Money limit (furnishings only, the
+  - [x] Furnishing Crate: store and withdraw run NGO's PlayerCrate rules on the server body at the Money limit (furnishings only, the
     faction rule, the cap per kind), the server body saves as NGO's server did, the owner gets the Crate as text pages by version,
-    `crate` real (Items IBodyCrate). B27. Save note to the Master first.
+    `crate` real (Items IBodyCrate). B27. Save note + review approved.
+  - [ ] Chat: DESIGNED, not coded (netcode-for-entities-designs/m8g4-chat-design.md: NGO facts with file:line, the DOTS edge, the
+    IsGameMaster hazard on unspawned server bodies, the tests). Next to code.
