@@ -178,5 +178,8 @@ namespace KryticalNova.Core
         /// <paramref name="id"/> the gear line / colourway / pet, <paramref name="stage"/> the Morph's stage or the toggle (1 = shown).
         /// </summary>
         void WeaveOp(WeaveOpKind op, byte slot, ushort id, byte stage);
+
+        /// <summary>Asks the server to keep these eight Autoward cells (skill ids; M8 8.3.11, NGO's SetSlotsServerRpc).</summary>
+        void AutobuffSlots(string[] skillIds);
     }
 }

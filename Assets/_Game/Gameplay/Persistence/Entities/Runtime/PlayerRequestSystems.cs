@@ -476,6 +476,17 @@ namespace KryticalNova.Persistence.Entities
             }
         }
 
+        public void AutobuffSlots(string[] skillIds)
+        {
+            if (m_World == null || !m_World.IsCreated) return;
+            string text = AutobuffSlotsRpc.Join(skillIds);
+            if (System.Text.Encoding.UTF8.GetByteCount(text) > FixedString512Bytes.UTF8MaxLengthInBytes) return;   // NGO's 1024-char cap is looser; ids are short
+            var em = m_World.EntityManager;
+            Entity rpc = em.CreateEntity();
+            em.AddComponentData(rpc, new AutobuffSlotsRpc { Ids = new FixedString512Bytes(text) });
+            em.AddComponent<SendRpcCommandRequest>(rpc);
+        }
+
         public void WeaveOp(WeaveOpKind op, byte slot, ushort id, byte stage)
         {
             if (m_World == null || !m_World.IsCreated) return;
@@ -944,7 +955,8 @@ namespace KryticalNova.Persistence.Entities
         public static bool EffectPorted(ItemUseEffect effect) => effect == ItemUseEffect.None || effect == ItemUseEffect.FluxFlask
             || effect == ItemUseEffect.FeedPet || effect == ItemUseEffect.Serum || effect == ItemUseEffect.Recall
             || effect == ItemUseEffect.ExperienceBoost    // M8 8.3.3: the "xpboosts" part is real (B13)
-            || effect == ItemUseEffect.LearnSkill;        // M8 8.3.2: the "skills" part is real (B14)
+            || effect == ItemUseEffect.LearnSkill         // M8 8.3.2: the "skills" part is real (B14)
+            || effect == ItemUseEffect.AutobuffTime;      // M8 8.3.11: the "autobuff" part is real (B26)
 
         void Cast(Entity connection, string skillId)
         {

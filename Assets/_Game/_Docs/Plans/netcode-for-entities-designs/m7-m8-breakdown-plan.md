@@ -195,8 +195,10 @@ backflips' speed (80 % of the air). Added as M7/M8 systems land (each: what to c
 - 8.3.8 (built 3 Nov): at the Stylist change the hair, at the Reshaper the face, at the Coach the build (a pass goes each time): a second
   client sees the new look; relog: kept; far from them: refused.
 - 8.3.9/8.3.10 (built 3 Nov): at the Holoweaver weave a collected look over a worn piece (5,000 Creds), take it off, morph the pet;
-  at the Outfitter dye a piece (a Chroma Cell goes); hide the helmet and the cape; a second client sees all of it; pick up a new piece:
+  at the Outfitter dye a worn ladder piece (a Chroma Cell goes, the colour shows on both clients; not run in B25: master-6, 3 Nov); hide the helmet and the cape; a second client sees all of it; pick up a new piece:
   "New Weave" and it is in the library window; relog (and another character of the account): the library is still there.
+- 8.3.11 (built 3 Nov): use an Autobuff Pass (the Autoward window shows the days), set the eight cells, relog: both kept; (the cells
+  casting by themselves is NOT on DOTS yet: AutobuffCaster stays off until the ward cast is ported).
 - 8.2.x/7.6: a Vault deposit and withdraw, a shop buy and sell, a trade with a second player, a Kiosk sale, each after a relog.
 - 8.4.x: chat say/tell, a contact, a party with Follow, founding a Crew, an emote and a mount seen from the second client.
 The list is kept current in this section as systems land.

@@ -450,6 +450,7 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
             public void Craft(ushort recipeId, ushort times) => Ops.Add($"Craft {recipeId} {times}");
             public void Nova(NovaOpKind op, byte arg) => Ops.Add($"Nova {op} {arg}");
             public void WeaveOp(WeaveOpKind op, byte slot, ushort id, byte stage) => Ops.Add($"Weave {op} {slot} {id} {stage}");
+            public void AutobuffSlots(string[] skillIds) => Ops.Add("Autobuff " + string.Join("|", skillIds));
         }
 
         /// <summary>What the server bodies told their players (the message line) and sent their trade windows (view, notice, prompt).</summary>
@@ -2139,6 +2140,85 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
                 OwnerMessages.Current = oldMessages;
                 PlayerKeys.Reset();
             }
+        }
+
+        [UnityTest]
+        public IEnumerator B26_Autoward_RunsOnTheServerBody_APassExtendsTheLicence_TheCellsAreKept_AutobuffIsReal_AndTheViewMirrors()
+        {
+            NetRole.Install(new BodyRoleNetRoleAdapter(null, () => NetRoleKind.ServerBody));
+            Assert.IsFalse(SavePassthrough.Is("autobuff"), "the autobuff part is real now");
+            Assert.IsTrue(PlayerRequestServerSystem.EffectPorted(ItemUseEffect.AutobuffTime), "and the Pass is used again");
+            PlayerKeys.Reset();
+            const string account = "324354657687a9b0c1d2e3f405162738", characterId = "a1000000000000000000000000000101";
+            GameObject body = Admitted(PlayerKeys.Mint(101).Value, account, characterId, "Wardkeeper");
+            GameObject view = Make(NetRoleKind.ClientView, true, new PlayerKey(101));
+            for (int i = 0; i < 30; i++) yield return null;
+            var autobuff = body.GetComponent<IBodyAutobuff>();
+            var inv = body.GetComponent<PlayerInventory>();
+            Assert.IsNotNull(autobuff, "the server body keeps its Autoward now (it was stripped as automation)");
+
+            // an Autobuff Pass from the catalog, used on the server body by the inventory's own rules
+            ItemDefinition pass = null;
+            foreach (ItemDefinition item in inv.Catalog.Items) if (item != null && item.useEffect == ItemUseEffect.AutobuffTime) { pass = item; break; }
+            Assert.IsNotNull(pass, "an Autobuff Pass in the catalog");
+            inv.ServerGive(pass.itemId, 1);
+            int held = inv.CountItem(pass.itemId);
+            long before = autobuff.ExpiresUtc;
+            Assert.IsTrue(PlayerRequestServerSystem.UseOn(body, pass.itemId, out _), "the Pass is used");
+            Assert.AreEqual(held - 1, inv.CountItem(pass.itemId), "and taken");
+            Assert.Greater(autobuff.ExpiresUtc, System.Math.Max(before, System.DateTime.UtcNow.Ticks), "the licence runs into the future");
+
+            // the cells: the server body keeps what the owner sends (NGO's Sanitise: trimmed, no repeats)
+            autobuff.RunSetSlots(new[] { " Bulwark ", "Bulwark", "Haste" });
+            Assert.AreEqual("Bulwark", autobuff.SkillIds[0], "trimmed");
+            Assert.AreEqual(string.Empty, autobuff.SkillIds[1], "a repeat is dropped");
+            Assert.AreEqual("Haste", autobuff.SkillIds[2]);
+            Assert.AreEqual(8, autobuff.SkillIds.Length, "eight cells");
+
+            // the owner's view only asks, and shows the server's licence and cells
+            var asked = new Asked();
+            view.GetComponent<BodyRoleTag>().Requests = asked;
+            var viewAutobuff = view.GetComponent<IBodyAutobuff>();
+            Assert.IsNotNull(viewAutobuff, "the own view keeps it as a stub");
+            var viewPart = (Component)viewAutobuff;
+            viewPart.GetType().GetMethod("SaveSlots").Invoke(viewPart, new object[] { new[] { "Haste" } });
+            Assert.AreEqual(1, asked.Ops.Count, "sent to the server");
+            StringAssert.StartsWith("Autobuff Haste", asked.Ops[0]);
+            viewAutobuff.RunSetSlots(new[] { "Bulwark" });
+            Assert.AreEqual("Haste", viewAutobuff.SkillIds[0], "a view never keeps cells for the server");
+            viewAutobuff.MirrorState(autobuff.ExpiresUtc, autobuff.SkillIds);
+            Assert.AreEqual(autobuff.ExpiresUtc, viewAutobuff.ExpiresUtc, "the own view shows the server's licence");
+            Assert.AreEqual("Bulwark", viewAutobuff.SkillIds[0], "and cells");
+            Assert.AreEqual(AutobuffSlotsRpc.Join(autobuff.SkillIds), AutobuffSlotsRpc.Join(AutobuffSlotsRpc.Split(AutobuffSlotsRpc.Join(autobuff.SkillIds))), "the cells travel whole");
+
+            // NGO's text loads into a fresh admitted server body unchanged and saves back every byte
+            string text = null;
+            foreach (ISaveParticipant part in body.GetComponents<ISaveParticipant>()) if (part.SaveKey == "autobuff") text = part.CaptureSave();
+            Assert.IsNotNull(text);
+            const string account2 = "4354657687a9b0c1d2e3f40516273849", character2 = "a1000000000000000000000000000102";
+            GameObject other = Make(NetRoleKind.ServerBody, false, new PlayerKey(102));
+            yield return null;
+            CharacterRecipe recipe = AnyLegalRecipe(other.GetComponent<PlayerIdentity>().Database);
+            var stored = new AccountSave { accountId = account2 };
+            var character = new CharacterSave { characterId = character2, name = "Wardreturn" };
+            character.Set("autobuff", text);
+            stored.characters.Add(character);
+            Assert.IsTrue(ServerSave.WriteAccount(stored));
+            ServerSave.WaitForDisk();
+            var context = new ServerBodyContext
+            {
+                Key = new PlayerKey(102), Serial = 102, NetworkId = 102, Account = account2, CharacterId = character2, Name = "Wardreturn", RecipeText = RecipeText.Encode(recipe),
+            };
+            Assert.IsNull(new PlayerAdmission().Begin(other, in context), "admitted");
+            var agent = other.GetComponent<PlayerSaveAgent>();
+            for (int i = 0; i < 30; i++) yield return null;
+            Assert.AreEqual(autobuff.ExpiresUtc, other.GetComponent<IBodyAutobuff>().ExpiresUtc, "the saved licence is on the server body");
+            agent.Save();
+            ServerSave.WaitForDisk();
+            Assert.AreEqual(text, ServerSave.ReadAccountFrom(ServerSave.Store, account2).Find(character2).Get("autobuff"), "the autobuff part saves back byte for byte");
+            agent.OnServerLeaving();
+            body.GetComponent<PlayerSaveAgent>().OnServerLeaving();
+            PlayerKeys.Reset();
         }
 
         static CharacterRecipe AnyLegalRecipe(CharacterCreationDatabase database)

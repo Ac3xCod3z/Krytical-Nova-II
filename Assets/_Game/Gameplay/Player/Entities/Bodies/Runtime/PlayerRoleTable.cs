@@ -52,7 +52,7 @@ namespace KryticalNova.Player.Entities.Bodies
         /// <summary>Client automation: steers through the movement API, back in M3c.</summary>
         public static readonly string[] Automation =
         {
-            "PlayerAutopilot", "MagnetController", "AutopilotController", "PlayerAutobuff", "AutobuffCaster",
+            "PlayerAutopilot", "MagnetController", "AutopilotController", "AutobuffCaster",
         };
 
         /// <summary>Ported systems (they implement <see cref="IRoleAwareBody"/>).</summary>
@@ -72,6 +72,7 @@ namespace KryticalNova.Player.Entities.Bodies
             "PlayerCombatState", "PlayerSkillQueue", "PlayerShopping", "PlayerItemSources", "PlayerWeaveLibrary", "PlayerWeaves",
             "PlayerCrafting", "PlayerRestyle", "PlayerSponsor", "PlayerExperienceBoosts", "PlayerCrate", "PlayerHousing", "PlayerRecall",
             "PlayerFlask", "PlayerGm", "PlayerGmSight", "PlayerCadence", "PlayerLoadouts", "PlayerMounts", "MountFeeding", "MountRider",
+            "PlayerAutobuff",   // M8 8.3.11: the licence, the cells, the Pass use and the save run on the server body
             "PlayerRename", "KNEmeraldPlayerBridge", "TargetPositionModifier", "WeaponHitbox", "PlayerNightLight",
         };
 

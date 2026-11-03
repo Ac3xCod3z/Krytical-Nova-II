@@ -1217,11 +1217,15 @@ checkpoints; the owner's Thursday hand-test list; owner questions). NGO rules ta
     NGO's PlayerRestyle rules run there at the Money limit (NPC reach, Merge + the creator's validator, the pass from Pack or storage),
     everyone gets the new look through the look text; a view never restyles itself (CharacterCreation IRestyleRequests / IBodyRestyle).
     No save key (the look is real). B24. Review approved.
-  - [ ] 8.3.9 weaves / dye + 8.3.10 Weave Library (together: `weave` holds collectedOwned, whose collect writes `weaves`): the seven Weave
+  - [x] 8.3.9 weaves / dye + 8.3.10 Weave Library (together: `weave` holds collectedOwned, whose collect writes `weaves`): the seven Weave
     requests run NGO's PlayerWeaves rules on the server body (toggles at the Items limit, the rest at Money; Holoweaver / Outfitter reach,
     the Weave fee through PlayerWallet Appearance, dye Cells from Pack or storage), the own view wears the server's looks (MirrorLooks from
     the look text), the library goes to its owner as text pages by version; `weave` and `weaves` real together (Items IBodyWeaves /
-    IBodyWeaveLibrary). B25. Save note + review summary to the Master first.
+    IBodyWeaveLibrary). B25. Save note + HIGH review approved. Dye (a worn ladder piece in a colourway) is a Thursday hand test.
+  - [ ] 8.3.11 Autobuff: PlayerAutobuff moves from Automation to Rules (kept on the server body): the Autobuff Pass is used there again
+    (EffectPorted), the licence and the eight cells live there (the cells from the owner at the Account limit, as NGO), the owner's view
+    gets both, `autobuff` real. B26. NOT done: AutobuffCaster (the casting) stays off on the own view: NGO's TryCastWardsAtOnce ->
+    CastWardsServerRpc is NGO-only; on DOTS it needs the wards cast through SkillCastRpc (one per ward) first. Save note to the Master.
 - [x] M8 group 2: storage, shopping, trade, Kiosk player side.
   - [x] 8.2.1 storage (Vault + Deep Vault): requests run NGO's PlayerStorage rules on the server body (Vaultkeeper range, Items limit,
     Creds through PlayerWallet VaultDeposit/VaultWithdraw at the Money limit), cells + Creds mirrored to the owner, `vault` + `deepvault`

@@ -17,7 +17,7 @@ namespace KryticalNova.Autopilot
     /// would not. Both are saved with the character.
     /// </summary>
     [DisallowMultipleComponent]
-    public sealed class PlayerAutobuff : NetworkBehaviour, ISaveParticipant, IItemUseHandler
+    public sealed class PlayerAutobuff : NetworkBehaviour, ISaveParticipant, IItemUseHandler, IBodyAutobuff
     {
         private const int MaxSlotsJsonLength = 1024;
 
@@ -40,7 +40,27 @@ namespace KryticalNova.Autopilot
         public string[] SkillIds => skillIds;
         public string TimeLeftLine => AutobuffRules.TimeLeftLine(DateTime.UtcNow.Ticks, ExpiresUtc);
 
-        private bool Decides => !IsSpawned || IsServer;
+        // A client view of the entity netcode only shows the server's licence and cells (MirrorState); its server body decides (M8 8.3.11).
+        private bool Decides => (!IsSpawned || IsServer) && !EntityView;
+        private bool EntityView => KryticalNova.Core.BodyRoleTag.Of(this) is { Kind: KryticalNova.Core.NetRoleKind.ClientView };
+        private bool EntityServer => KryticalNova.Core.BodyRoleTag.Of(this) is { Kind: KryticalNova.Core.NetRoleKind.ServerBody };
+
+        /// <summary>A server body of the entity netcode keeps its owner's cells (NGO's SetSlotsServerRpc body, after the Account limit).</summary>
+        public void RunSetSlots(string[] ids)
+        {
+            if (!EntityServer) return;
+            skillIds = AutobuffRules.Sanitise(ids);
+            Changed?.Invoke();
+        }
+
+        /// <summary>The entity netcode's own view body: the server's licence and cells (NGO's netExpiresUtc and SlotsRpc).</summary>
+        public void MirrorState(long expires, string[] ids)
+        {
+            if (!KryticalNova.Core.BodyRoleTag.IsLocalClientView(this)) return;
+            expiresUtc = expires;
+            skillIds = AutobuffRules.Sanitise(ids);
+            Changed?.Invoke();
+        }
 
         public override void OnNetworkSpawn()
         {
@@ -68,6 +88,12 @@ namespace KryticalNova.Autopilot
         {
             if (IsSpawned && !IsOwner) return;
             skillIds = AutobuffRules.Sanitise(ids);
+            if (KryticalNova.Core.BodyRoleTag.RequestsOf(this) is KryticalNova.Core.IBodyRequests requests)
+            {
+                requests.AutobuffSlots(skillIds);   // the server body keeps them; the view shows them at once, as NGO's owner did
+                Changed?.Invoke();
+                return;
+            }
             if (IsSpawned && !IsServer) SetSlotsServerRpc(ToJson(skillIds));
             Changed?.Invoke();
         }
@@ -108,6 +134,7 @@ namespace KryticalNova.Autopilot
 
         private void Tell(string text)
         {
+            if (EntityServer) { KryticalNova.Core.OwnerMessages.TryTell(this, text); return; }   // its player's message line
             if (IsSpawned && !IsOwner) TellRpc(text);
             else if (KryticalNova.Core.BodyRoleTag.IsMine(this, !IsSpawned || IsOwner)) ClientPresentationRegistry.Messages?.ShowMessage(text);
         }
@@ -168,7 +195,7 @@ namespace KryticalNova.Autopilot
 
         public void RestoreSave(string json)
         {
-            if (string.IsNullOrEmpty(json)) return;
+            if (string.IsNullOrEmpty(json) || EntityView) return;
             AutobuffSave save = JsonUtility.FromJson<AutobuffSave>(json);
             expiresUtc = save.expiresUtc;
             skillIds = AutobuffRules.Sanitise(save.skills);

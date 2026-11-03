@@ -197,7 +197,7 @@ namespace KryticalNova.Tests
         public void Default_ThePortedPartsAreReal()
         {
             CollectionAssert.AreEquivalent(new[] { "look", "progression", "inventory", "serums", "wallet", "loadouts", "xpboosts", "skills", "movement", "vault",
-                "deepvault", "vendorWeek", "trade", "nova", "weave", "weaves" }, SavePassthrough.RealKeys.ToArray(), "each part goes real with the port that writes it (plan section 0)");
+                "deepvault", "vendorWeek", "trade", "nova", "weave", "weaves", "autobuff" }, SavePassthrough.RealKeys.ToArray(), "each part goes real with the port that writes it (plan section 0)");
             Assert.IsFalse(SavePassthrough.Is("look"));
             Assert.IsFalse(SavePassthrough.Is("progression"));
             Assert.IsFalse(SavePassthrough.Is("inventory"), "items are used on the server's body: the Pack is real (owner, 2 Nov, item 5)");
