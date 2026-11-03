@@ -20,7 +20,7 @@ namespace KryticalNova.Social
     /// Parties last for the session: nothing is saved.
     /// </summary>
     [DisallowMultipleComponent]
-    public sealed class PlayerParty : NetworkBehaviour, ISquadBuffTargets
+    public sealed class PlayerParty : NetworkBehaviour, ISquadBuffTargets, IBodyParty, IServerLeaving
     {
         private const ulong NoParty = 0;
 
@@ -60,6 +60,21 @@ namespace KryticalNova.Social
         // Owner only: the roster the server sent last, leader first. Empty when in no party.
         private readonly List<PartyMember> roster = new List<PartyMember>(PartyRules.MaxSize);
 
+        // The entity netcode (M8 8.4.3): its bodies are never network-spawned. The server body's Squad id is its group's; a view shows the
+        // id the server put on the ghost (every player's, as NGO's netPartyId was read by everyone).
+        private ulong shownPartyId;
+        private bool EntityView => BodyRoleTag.Of(this) is { Kind: NetRoleKind.ClientView };
+        private bool EntityServer => BodyRoleTag.Of(this) is { Kind: NetRoleKind.ServerBody };
+        private bool Decides => (IsSpawned && IsServer) || EntityServer;
+        private IBodyRequests Requests => BodyRoleTag.RequestsOf(this) is IBodyRequests requests ? requests : null;
+
+        private bool Ask(PartyOpKind op, string playerName = null, bool flag = false)
+        {
+            if (!(Requests is { } requests)) return false;
+            requests.PartyOp(op, playerName ?? string.Empty, flag);
+            return true;
+        }
+
         /// <summary>Raised on the owner's machine when its roster changes.</summary>
         public event Action Changed;
 
@@ -70,12 +85,13 @@ namespace KryticalNova.Social
         public int Level => progression != null ? progression.CurrentLevel : 1;
 
         /// <summary>0 when in no party. The same on every machine.</summary>
-        public ulong PartyId => IsSpawned ? netPartyId.Value : NoParty;
+        public ulong PartyId => EntityServer ? (group != null ? group.Id : NoParty) : EntityView ? shownPartyId : IsSpawned ? netPartyId.Value : NoParty;
         public bool InParty => PartyId != NoParty;
 
         /// <summary>The owner's view of its party, leader first. Empty on other machines and when in no party.</summary>
         public IReadOnlyList<PartyMember> Roster => roster;
-        public bool IsLeader => roster.Count > 0 && IsSpawned && roster[0].ObjectId == NetworkObjectId;
+        // the entity netcode sends each player its own row as ObjectId 0 (it has no network object id): the leader's row is then 0
+        public bool IsLeader => roster.Count > 0 && (IsSpawned || EntityView) && roster[0].ObjectId == (IsSpawned ? NetworkObjectId : 0UL);
 
         /// <summary>True on every peer while this player and <paramref name="other"/> are in the same party.</summary>
         public bool IsInPartyWith(PlayerParty other) => other != null && other != this && InParty && other.PartyId == PartyId;
@@ -105,40 +121,94 @@ namespace KryticalNova.Social
             base.OnNetworkDespawn();
         }
 
+        /// <summary>The entity netcode's server body leaves before its save: NGO's despawn.</summary>
+        public void OnServerLeaving()
+        {
+            if (!EntityServer || leaving) return;
+            leaving = true;
+            invitedBy = null;
+            Remove(this, $"{MemberName} left the game.", null);
+        }
+
+        /// <summary>A server body of the entity netcode runs its owner's request (NGO's RPC bodies, after the Social limit).</summary>
+        public void RunPartyOp(PartyOpKind op, string playerName, bool flag)
+        {
+            if (!EntityServer || leaving) return;
+            switch (op)
+            {
+                case PartyOpKind.InviteByName: if (!string.IsNullOrWhiteSpace(playerName)) ServerInviteByName(playerName.Trim()); break;
+                case PartyOpKind.Respond: ServerRespond(flag); break;
+                case PartyOpKind.Leave: ServerLeave(); break;
+                case PartyOpKind.Kick: if (!string.IsNullOrWhiteSpace(playerName)) ServerKick(playerName.Trim()); break;
+                case PartyOpKind.Promote: if (!string.IsNullOrWhiteSpace(playerName)) ServerPromote(playerName.Trim()); break;
+            }
+        }
+
+        public void MirrorPartyId(ulong partyId)
+        {
+            if (EntityView) shownPartyId = partyId;
+        }
+
+        /// <summary>The entity netcode's own view: the roster the server sent (NGO's owner RosterRpc).</summary>
+        public void MirrorRoster(BodyPartyMember[] members)
+        {
+            if (!BodyRoleTag.IsLocalClientView(this)) return;
+            roster.Clear();
+            if (members != null)
+                foreach (BodyPartyMember member in members) roster.Add(new PartyMember { ObjectId = member.id, Name = member.name ?? string.Empty, Level = member.level });
+            Changed?.Invoke();
+        }
+
+        public void MirrorInvite(string inviterName, float seconds)
+        {
+            if (BodyRoleTag.IsLocalClientView(this)) ClientPresentationRegistry.Party?.ShowInvite(inviterName, seconds);
+        }
+
+        public void MirrorInviteClosed()
+        {
+            if (BodyRoleTag.IsLocalClientView(this)) ClientPresentationRegistry.Party?.HideInvite();
+        }
+
         // ------------------------------------------------------------------ owner -> server
 
         /// <summary>Invite the player called <paramref name="playerName"/>, wherever they are. Call on the owner's machine.</summary>
         public void Invite(string playerName)
         {
+            if (!string.IsNullOrWhiteSpace(playerName) && Ask(PartyOpKind.InviteByName, playerName.Trim())) return;
             if (IsSpawned && IsOwner && !string.IsNullOrWhiteSpace(playerName)) InviteByNameRpc(playerName.Trim());
         }
 
         /// <summary>Invite the player <paramref name="target"/> (the one selected in the world).</summary>
         public void Invite(PlayerParty target)
         {
+            if (target != null && Ask(PartyOpKind.InviteByName, target.MemberName)) return;
             if (IsSpawned && IsOwner && target != null && target.IsSpawned) InviteRpc(target.NetworkObject);
         }
 
         /// <summary>Answer the invitation this player was sent.</summary>
         public void Respond(bool accept)
         {
+            if (Ask(PartyOpKind.Respond, null, accept)) return;
             if (IsSpawned && IsOwner) RespondRpc(accept);
         }
 
         public void Leave()
         {
+            if (Ask(PartyOpKind.Leave)) return;
             if (IsSpawned && IsOwner) LeaveRpc();
         }
 
         /// <summary>Leader only: remove the member called <paramref name="playerName"/>.</summary>
         public void Kick(string playerName)
         {
+            if (!string.IsNullOrWhiteSpace(playerName) && Ask(PartyOpKind.Kick, playerName.Trim())) return;
             if (IsSpawned && IsOwner && !string.IsNullOrWhiteSpace(playerName)) KickRpc(playerName.Trim());
         }
 
         /// <summary>Leader only: hand the party to the member called <paramref name="playerName"/>.</summary>
         public void Promote(string playerName)
         {
+            if (!string.IsNullOrWhiteSpace(playerName) && Ask(PartyOpKind.Promote, playerName.Trim())) return;
             if (IsSpawned && IsOwner && !string.IsNullOrWhiteSpace(playerName)) PromoteRpc(playerName.Trim());
         }
 
@@ -147,14 +217,30 @@ namespace KryticalNova.Social
         {
             if (!RpcBudget.Allow(this, CallKind.Social, nameof(InviteByNameRpc))) return;
             if (!RpcBudget.TextFits(this, nameof(InviteByNameRpc), playerName)) return;
+            ServerInviteByName(playerName);
+        }
+
+        private void ServerInviteByName(string playerName)
+        {
             Online.Clear();
             OnlineParty.Clear();
-            foreach (var client in NetworkManager.ConnectedClientsList)
+            if (EntityServer)
             {
-                if (client.PlayerObject == null || !client.PlayerObject.TryGetComponent(out PlayerParty other)) continue;
-                Online.Add(new ChatParticipant { ClientId = client.ClientId, Name = other.MemberName });
-                OnlineParty.Add(other);
+                // the entity netcode's server bodies, by PlayerKey (never a NetworkId; as chat's Name#id)
+                foreach (BodyRoleTag tag in BodyRoleTag.ServerBodies)
+                {
+                    if (tag == null || !tag.TryGetComponent(out PlayerParty other) || other.leaving) continue;
+                    Online.Add(new ChatParticipant { ClientId = tag.Key.Value, Name = other.MemberName });
+                    OnlineParty.Add(other);
+                }
             }
+            else
+                foreach (var client in NetworkManager.ConnectedClientsList)
+                {
+                    if (client.PlayerObject == null || !client.PlayerObject.TryGetComponent(out PlayerParty other)) continue;
+                    Online.Add(new ChatParticipant { ClientId = client.ClientId, Name = other.MemberName });
+                    OnlineParty.Add(other);
+                }
 
             ChatRouting.FindByName(playerName, Online, Found);
             if (Found.Count == 0) { Tell($"No player named '{ChatRouting.Clean(playerName)}' is online."); return; }
@@ -183,10 +269,16 @@ namespace KryticalNova.Social
         private void RespondRpc(bool accept)
         {
             if (!RpcBudget.Allow(this, CallKind.Social, nameof(RespondRpc))) return;
+            ServerRespond(accept);
+        }
+
+        private void ServerRespond(bool accept)
+        {
             PlayerParty from = invitedBy;
-            bool live = from != null && from.IsSpawned && !from.leaving && Time.time <= inviteExpires;
+            // (a server body of the entity netcode is never network-spawned: NGO's IsSpawned meant "still in the game")
+            bool live = from != null && (from.IsSpawned || from.EntityServer) && !from.leaving && Time.time <= inviteExpires;
             invitedBy = null;
-            InviteClosedRpc();
+            CloseInvite();
             if (!live) { Tell("There is no squad invitation to answer."); return; }
 
             if (!accept)
@@ -222,6 +314,11 @@ namespace KryticalNova.Social
         private void LeaveRpc()
         {
             if (!RpcBudget.Allow(this, CallKind.Social, nameof(LeaveRpc))) return;
+            ServerLeave();
+        }
+
+        private void ServerLeave()
+        {
             if (group == null) { Tell("You are not in a squad."); return; }
             Remove(this, $"{MemberName} left the squad.", "You left the squad.");
         }
@@ -231,6 +328,11 @@ namespace KryticalNova.Social
         {
             if (!RpcBudget.Allow(this, CallKind.Social, nameof(KickRpc))) return;
             if (!RpcBudget.TextFits(this, nameof(KickRpc), playerName)) return;
+            ServerKick(playerName);
+        }
+
+        private void ServerKick(string playerName)
+        {
             if (!TryLeadMember(playerName, out PlayerParty member)) return;
             Remove(member, $"{member.MemberName} was removed from the squad.", "You were removed from the squad.");
         }
@@ -240,6 +342,11 @@ namespace KryticalNova.Social
         {
             if (!RpcBudget.Allow(this, CallKind.Social, nameof(PromoteRpc))) return;
             if (!RpcBudget.TextFits(this, nameof(PromoteRpc), playerName)) return;
+            ServerPromote(playerName);
+        }
+
+        private void ServerPromote(string playerName)
+        {
             if (!TryLeadMember(playerName, out PlayerParty member)) return;
             group.Members.Remove(member);
             group.Members.Insert(0, member);
@@ -267,7 +374,8 @@ namespace KryticalNova.Social
             target.inviteExpires = Time.time + inviteSeconds;
             Tell($"You invited {target.MemberName} to your squad.");
             target.Tell($"{MemberName} invites you to a squad. Join with /join, refuse with /refuse.");
-            target.InvitePromptRpc(MemberName, inviteSeconds);
+            if (target.EntityServer) PartyOwnerLink.Current?.Invite(target, MemberName, inviteSeconds);   // its player's prompt (M8 8.4.3)
+            else target.InvitePromptRpc(MemberName, inviteSeconds);
         }
 
         /// <summary>Why <paramref name="candidate"/> cannot join this player's party (or the one they would found), or null.</summary>
@@ -361,6 +469,7 @@ namespace KryticalNova.Social
             }
             foreach (PlayerParty member in party.Members)
             {
+                if (member.EntityServer) { member.SendRoster(party); continue; }   // its id is its group's; the ghost carries it (M8 8.4.3)
                 member.netPartyId.Value = party.Id;
                 member.RosterRpc(members);
             }
@@ -368,9 +477,29 @@ namespace KryticalNova.Social
 
         private void PublishNone()
         {
-            if (leaving || !IsSpawned) return;
+            if (leaving || (!IsSpawned && !EntityServer)) return;
+            if (EntityServer) { SendRoster(null); return; }
             netPartyId.Value = NoParty;
             RosterRpc(Array.Empty<PartyMember>());
+        }
+
+        // The entity netcode: the roster to this player by PlayerKey; a member is known by its key, this player by 0 (IsLeader, "not me").
+        private void SendRoster(Group party)
+        {
+            var members = new BodyPartyMember[party != null ? party.Members.Count : 0];
+            for (int i = 0; i < members.Length; i++)
+            {
+                PlayerParty member = party.Members[i];
+                BodyRoleTag tag = BodyRoleTag.Of(member);
+                members[i] = new BodyPartyMember { id = member == this || tag == null ? 0UL : tag.Key.Value, name = member.MemberName, level = member.Level };
+            }
+            PartyOwnerLink.Current?.Roster(this, members);
+        }
+
+        private void CloseInvite()
+        {
+            if (EntityServer) PartyOwnerLink.Current?.InviteClosed(this);
+            else InviteClosedRpc();
         }
 
         private void Tell(string text)
@@ -419,7 +548,7 @@ namespace KryticalNova.Social
         /// </summary>
         public float ServerExperienceBoost()
         {
-            if (!IsSpawned || !IsServer || group == null) return 0f;
+            if (!Decides || group == null) return 0f;
             int together = 0;
             foreach (PlayerParty member in group.Members)
                 if (member.gameObject.scene == gameObject.scene) together++;
@@ -433,7 +562,7 @@ namespace KryticalNova.Social
         public void ServerGetMembers(List<PlayerParty> into)
         {
             into.Clear();
-            if (IsSpawned && IsServer && group != null) into.AddRange(group.Members);
+            if (Decides && group != null) into.AddRange(group.Members);
             else into.Add(this);
         }
 
@@ -447,7 +576,7 @@ namespace KryticalNova.Social
         public void ServerGetBuffTargets(List<PlayerCombatSkills> into)
         {
             into.Clear();
-            if (!IsSpawned || !IsServer || group == null) return;
+            if (!Decides || group == null) return;
             if (resources != null && !resources.IsAlive) return;
             float radius = BuffShareRadius;
             foreach (PlayerParty member in group.Members)

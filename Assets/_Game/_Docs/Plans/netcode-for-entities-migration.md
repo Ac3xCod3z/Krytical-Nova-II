@@ -1268,3 +1268,10 @@ checkpoints; the owner's Thursday hand-test list; owner questions). NGO rules ta
     to its owner as Social's view text in pages (ContactPageRpc, one Seq), prompts by ContactPromptRpc, Tell lines to chat, Notify to the
     message line (as NGO). SocialGate now refuses on DOTS too (a block stops a whisper). /contact works on a DOTS view (Items IBodyContacts /
     IContactsOwnerLink). No player save key. B29; ContactViewTextTests, TextPages test. Review approved (master-6, 3 Nov).
+  - [ ] 8.4.3a Squad (Party): the six requests go from the owner's view as PartyOpRpc (Social limit; a picked player by name) and NGO's
+    PlayerParty rules run on the server body (one faction, 10 levels, 5 players, the 30 s invitation, leader only, Sponsor exemption);
+    invite-by-name and its Name#id read the server bodies (PlayerKey); NGO's "still here" IsSpawned check accepts a DOTS server body; the
+    roster to its owner (PartyRosterRpc: PlayerKeys, the owner's own row 0 so IsLeader and "not me" still work), the invitation by
+    PartyInviteRpc; the Squad id to everyone as the PlayerPartyTag ghost field (remote views keep PlayerParty: minimap, namecards, hostile
+    tags); leaving = IServerLeaving (NGO's despawn). The Party chat channel and the Stance share now find the Squad on the server body.
+    The Squad frames read the own view's roster (PartyHudController gate). No save (NGO keeps Squads in memory). B30. Follow: next (8.4.3b).

@@ -36,6 +36,7 @@ namespace KryticalNova.Player.Entities
                 AddComponent<PlayerGmTag>(e);
                 AddComponent<PlayerLevelTag>(e);
                 AddComponent<PlayerNovaTag>(e);
+                AddComponent<PlayerPartyTag>(e);
                 AddComponent(e, new MoveStats { WalkMmps = a.walkMmps, RunMmps = a.runMmps });
                 AddComponent<MoveRanks>(e);
                 AddComponent<VaultPlan>(e);

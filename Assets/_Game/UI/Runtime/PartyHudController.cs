@@ -142,7 +142,7 @@ namespace KryticalNova.UI
         private void RefreshFrames()
         {
             PlayerParty mine = PlayerParty.Local;
-            IReadOnlyList<PartyMember> roster = mine != null && mine.IsSpawned ? mine.Roster : null;
+            IReadOnlyList<PartyMember> roster = mine != null && (mine.IsSpawned || BodyRoleTag.IsLocalClientView(mine)) ? mine.Roster : null;
             // While the layout is edited the editor shows the frame and puts its display back afterwards.
             bool editing = frames.ClassListContains(EditingClass);
             bool grouped = roster != null && roster.Count >= 2;

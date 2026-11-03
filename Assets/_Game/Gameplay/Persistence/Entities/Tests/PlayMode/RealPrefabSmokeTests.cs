@@ -46,6 +46,7 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
         ISaveStore m_OldStore;
         IChatOwnerLink m_OldChat;
         IContactsOwnerLink m_OldContacts;
+        IPartyOwnerLink m_OldParty;
 
         [SetUp]
         public void SetUp()
@@ -60,6 +61,7 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
             ServerSave.Store = new MemorySaveStore();
             m_OldChat = ChatOwnerLink.Current;
             m_OldContacts = ContactsOwnerLink.Current;
+            m_OldParty = PartyOwnerLink.Current;
             SavePassthrough.ResetToDefault();
         }
 
@@ -75,6 +77,7 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
             ServerSave.Store = m_OldStore;
             ChatOwnerLink.Current = m_OldChat;
             ContactsOwnerLink.Current = m_OldContacts;
+            PartyOwnerLink.Current = m_OldParty;
             LogAssert.ignoreFailingMessages = false;
         }
 
@@ -459,13 +462,20 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
             public void AutobuffSlots(string[] skillIds) => Ops.Add("Autobuff " + string.Join("|", skillIds));
             public void CrateOp(bool withdraw, ushort a, ushort count) => Ops.Add($"Crate {(withdraw ? "Withdraw" : "Store")} {a} {count}");
             public void ContactOp(ContactOpKind op, string a, string b, bool flag) => Ops.Add($"Contact {op} {a}|{b}|{flag}");
+            public void PartyOp(PartyOpKind op, string name, bool flag) => Ops.Add($"Party {op} {name}|{flag}");
             public void Chat(ChatChannel channel, string text, string whisperTarget, byte[] linkContainers, byte[] linkCells) =>
                 Ops.Add($"Chat {channel} {ChatLinks.Strip(text)}|{whisperTarget}|{linkContainers?.Length ?? 0}");
         }
 
         /// <summary>What the server bodies told their players (the message line) and sent their trade windows (view, notice, prompt).</summary>
-        sealed class Told : IOwnerMessages, ITradeOwnerLink, IKioskOwnerLink, IWorkshopOwnerLink, KryticalNova.Progression.INovaLink, IRestyleOwnerLink, IChatOwnerLink, IContactsOwnerLink
+        sealed class Told : IOwnerMessages, ITradeOwnerLink, IKioskOwnerLink, IWorkshopOwnerLink, KryticalNova.Progression.INovaLink, IRestyleOwnerLink, IChatOwnerLink, IContactsOwnerLink, IPartyOwnerLink
         {
+            // Squads (M8 8.4.3): "squad <id:name ...>" (0 = the player it went to), the invitation and its closing
+            public void Roster(Component part, BodyPartyMember[] members) =>
+                Lines.Add((Body(part), "squad " + string.Join(" ", System.Array.ConvertAll(members ?? new BodyPartyMember[0], m => m.id + ":" + m.name))));
+            public void Invite(Component part, string inviterName, float seconds) => Lines.Add((Body(part), $"squad invite {inviterName} {seconds:0}"));
+            public void InviteClosed(Component part) => Lines.Add((Body(part), "squad invite closed"));
+            public string LastRoster(GameObject body) => Lines.FindLast(l => l.body == body && l.what.StartsWith("squad ") && !l.what.StartsWith("squad invite")).what;
             // Contacts (M8 8.4.2): the last list each body was sent, and its prompts
             public readonly Dictionary<GameObject, string> LastView = new Dictionary<GameObject, string>();
             public void View(Component part, string viewText) { LastView[Body(part)] = viewText; Lines.Add((Body(part), "contacts view")); }
@@ -2587,6 +2597,113 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
                 Assert.AreEqual(told.LastView[a].Split('\n').Length, shownLines.Count, "the own view shows the server's list");
                 ((IBodyContacts)viewPart).MirrorPrompt(idC, "Corvane");   // no prompt window in the test: shown nowhere, no error
                 ((IBodyContacts)viewPart).MirrorClosePrompt(idC);
+
+                foreach (GameObject body in new[] { a, c }) { ServerLeaving.Notify(body); body.GetComponent<PlayerSaveAgent>().OnServerLeaving(); }
+                b.GetComponent<PlayerSaveAgent>().OnServerLeaving();
+            }
+            finally
+            {
+                OwnerMessages.Current = oldMessages;
+                PlayerKeys.Reset();
+            }
+        }
+
+        [UnityTest]
+        public IEnumerator B30_ASquad_RunsOnTheServerBodies_InviteJoinPromoteLeave_ThePartyChannelAndBuffShareWork_AndViewsShowTheIdAndRoster()
+        {
+            NetRole.Install(new BodyRoleNetRoleAdapter(null, () => NetRoleKind.ServerBody));
+            IOwnerMessages oldMessages = OwnerMessages.Current;
+            var told = new Told();
+            OwnerMessages.Current = told;
+            ChatOwnerLink.Current = told;
+            PartyOwnerLink.Current = told;
+            try
+            {
+                PlayerKeys.Reset();
+                GameObject a = Admitted(PlayerKeys.Mint(301).Value, "30a1000000000000000000000000000a", "c3010000000000000000000000000301", "Talwyn");
+                GameObject b = Admitted(PlayerKeys.Mint(302).Value, "30b1000000000000000000000000000b", "c3020000000000000000000000000302", "Brannoc");
+                GameObject c = Admitted(PlayerKeys.Mint(303).Value, "30c1000000000000000000000000000c", "c3030000000000000000000000000303", "Corvane");
+                for (int i = 0; i < 30; i++) yield return null;
+                var pa = a.GetComponent<IBodyParty>();
+                var pb = b.GetComponent<IBodyParty>();
+                var pc = c.GetComponent<IBodyParty>();
+                Assert.IsNotNull(pa, "the server body has its Squad");
+                Assert.AreEqual(a.GetComponent<PlayerIdentity>().Faction, b.GetComponent<PlayerIdentity>().Faction, "planned: one faction, one level");
+                ulong keyA = a.GetComponent<BodyRoleTag>().Key.Value, keyB = b.GetComponent<BodyRoleTag>().Key.Value;
+
+                // 1. A invites B by name: both told in chat, B gets the invitation
+                pa.RunPartyOp(PartyOpKind.InviteByName, "Brannoc", false);
+                Assert.IsTrue(told.Any(a, "system You invited Brannoc to your squad."), "NGO's line: " + string.Join(" | ", told.To(a)));
+                Assert.IsTrue(told.Any(b, "system Talwyn invites you to a squad."), "B is told");
+                Assert.IsTrue(told.Any(b, "squad invite Talwyn "), "and gets the invitation");
+
+                // 2. B joins (NGO's IsSpawned "still here" check passes for a DOTS server body): one Squad id, rosters with 0 = me
+                pb.RunPartyOp(PartyOpKind.Respond, "", true);
+                Assert.IsTrue(told.Any(b, "squad invite closed"), "the invitation closes");
+                Assert.IsTrue(told.Any(b, "system You joined Talwyn's squad."), "joined: " + string.Join(" | ", told.To(b)));
+                Assert.IsTrue(told.Any(a, "system Brannoc joined the squad."));
+                Assert.AreNotEqual(0UL, pa.PartyId, "a Squad id");
+                Assert.AreEqual(pa.PartyId, pb.PartyId, "the same on both");
+                Assert.AreEqual(0UL, pc.PartyId, "C is in none");
+                Assert.AreEqual($"squad 0:Talwyn {keyB}:Brannoc", told.LastRoster(a), "A's roster, A leads, A is 0");
+                Assert.AreEqual($"squad {keyA}:Talwyn 0:Brannoc", told.LastRoster(b), "B's roster, B is 0");
+                pc.RunPartyOp(PartyOpKind.Respond, "", true);
+                Assert.IsTrue(told.Any(c, "system There is no squad invitation to answer."), "NGO's rule");
+
+                // 3. the Party channel now reaches the Squad (chat reads PartyId), not C
+                a.GetComponent<IBodyChat>().RunSend(ChatChannel.Party, "to squad", "", null, null);
+                Assert.IsTrue(told.Any(b, "line Party Talwyn: to squad"), "B hears the Squad");
+                Assert.IsFalse(told.Any(c, "line Party"), "C does not");
+                c.GetComponent<IBodyChat>().RunSend(ChatChannel.Party, "anyone", "", null, null);
+                Assert.IsTrue(told.Any(c, "system You are not in a squad."), "NGO's refusal");
+
+                // 4. a Stance shared with the Squad finds B on the server body (NGO's IsSpawned && IsServer guard)
+                var targets = new List<PlayerCombatSkills>();
+                a.GetComponent<ISquadBuffTargets>().ServerGetBuffTargets(targets);
+                Assert.AreEqual(1, targets.Count, "B, in reach and alive");
+                Assert.AreSame(b.GetComponent<PlayerCombatSkills>(), targets[0]);
+
+                // 5. leader only; then A promotes B
+                pb.RunPartyOp(PartyOpKind.Kick, "Talwyn", false);
+                Assert.IsTrue(told.Any(b, "system Only the squad leader can do that."), "NGO's rule");
+                pa.RunPartyOp(PartyOpKind.Promote, "Brannoc", false);
+                Assert.IsTrue(told.Any(a, "system Brannoc now leads the squad."));
+                Assert.AreEqual($"squad 0:Brannoc {keyA}:Talwyn", told.LastRoster(b), "B leads now");
+
+                // 6. B leaves the game: A is told, the Squad of one is disbanded, A's roster is empty and its id 0
+                ServerLeaving.Notify(b);
+                Assert.IsTrue(told.Any(a, "system Brannoc left the game."), "NGO's despawn line");
+                Assert.IsTrue(told.Any(a, "system The squad was disbanded."));
+                Assert.AreEqual("squad ", told.LastRoster(a), "an empty roster");
+                Assert.AreEqual(0UL, pa.PartyId);
+
+                // 7. the views: the own view asks (by name for a picked player) and shows the roster; any view shows the ghost's id
+                var asked = new Asked();
+                GameObject view = Make(NetRoleKind.ClientView, true, new PlayerKey(keyA));
+                GameObject remote = Make(NetRoleKind.ClientView, false, new PlayerKey(keyB));
+                view.GetComponent<BodyRoleTag>().Requests = asked;
+                yield return null;
+                var viewPart = (Component)view.GetComponent<IBodyParty>();
+                var remotePart = (Component)remote.GetComponent<IBodyParty>();
+                Assert.IsNotNull(remotePart, "another player's view keeps PlayerParty (its Squad id is read by the minimap and namecards)");
+                Type type = viewPart.GetType();
+                type.GetMethod("Invite", new[] { typeof(string) }).Invoke(viewPart, new object[] { " Brannoc " });
+                type.GetMethod("Invite", new[] { type }).Invoke(viewPart, new object[] { remotePart });
+                type.GetMethod("Respond").Invoke(viewPart, new object[] { true });
+                type.GetMethod("Leave").Invoke(viewPart, null);
+                type.GetMethod("Promote").Invoke(viewPart, new object[] { "Corvane" });
+                string remoteName = (string)type.GetProperty("MemberName").GetValue(remotePart);
+                CollectionAssert.AreEqual(new[] { "Party InviteByName Brannoc|False", $"Party InviteByName {remoteName}|False", "Party Respond |True", "Party Leave |False",
+                    "Party Promote Corvane|False" }, asked.Ops, "sent to the server");
+                ((IBodyParty)viewPart).MirrorPartyId(7);
+                ((IBodyParty)remotePart).MirrorPartyId(7);
+                Assert.AreEqual(7UL, ((IBodyParty)viewPart).PartyId);
+                Assert.IsTrue((bool)type.GetMethod("IsInPartyWith").Invoke(viewPart, new object[] { remotePart }), "two views with one id are grouped (namecards, minimap)");
+                ((IBodyParty)viewPart).MirrorRoster(new[] { new BodyPartyMember { id = 0, name = "Talwyn", level = 1 }, new BodyPartyMember { id = keyB, name = "Brannoc", level = 1 } });
+                Assert.AreEqual(2, ((System.Collections.ICollection)type.GetProperty("Roster").GetValue(viewPart)).Count, "the own view shows the roster");
+                Assert.IsTrue((bool)type.GetProperty("IsLeader").GetValue(viewPart), "row 0 is this player: it leads");
+                ((IBodyParty)viewPart).MirrorInvite("Corvane", 30f);   // no Squad window in the test: shown nowhere, no error
+                ((IBodyParty)viewPart).MirrorInviteClosed();
 
                 foreach (GameObject body in new[] { a, c }) { ServerLeaving.Notify(body); body.GetComponent<PlayerSaveAgent>().OnServerLeaving(); }
                 b.GetComponent<PlayerSaveAgent>().OnServerLeaving();

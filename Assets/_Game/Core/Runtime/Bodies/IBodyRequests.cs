@@ -1,5 +1,15 @@
 namespace KryticalNova.Core
 {
+    /// <summary>What a Squad request asks the server's body to do (NGO's six <c>PlayerParty</c> RPCs; M8 8.4.3; a picked player goes by name).</summary>
+    public enum PartyOpKind : byte
+    {
+        InviteByName = 1,
+        Respond = 2,
+        Leave = 3,
+        Kick = 4,
+        Promote = 5,
+    }
+
     /// <summary>What a Contacts request asks the server's body to do (NGO's twelve <c>PlayerContacts</c> RPCs; M8 8.4.2; a picked player goes by name).</summary>
     public enum ContactOpKind : byte
     {
@@ -212,5 +222,8 @@ namespace KryticalNova.Core
 
         /// <summary>Asks the server to run a Contacts request (M8 8.4.2): <paramref name="a"/> a name or a character id, <paramref name="b"/> a note.</summary>
         void ContactOp(ContactOpKind op, string a, string b, bool flag);
+
+        /// <summary>Asks the server to run a Squad request (M8 8.4.3): invite, answer, leave, remove or promote by name.</summary>
+        void PartyOp(PartyOpKind op, string name, bool flag);
     }
 }

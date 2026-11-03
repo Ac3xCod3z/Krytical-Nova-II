@@ -486,6 +486,17 @@ namespace KryticalNova.Persistence.Entities
             em.AddComponent<SendRpcCommandRequest>(rpc);
         }
 
+        public void PartyOp(PartyOpKind op, string name, bool flag)
+        {
+            if (m_World == null || !m_World.IsCreated) return;
+            name ??= string.Empty;
+            if (System.Text.Encoding.UTF8.GetByteCount(name) > FixedString64Bytes.UTF8MaxLengthInBytes) return;   // NGO's TextFits refuses it too
+            var em = m_World.EntityManager;
+            Entity rpc = em.CreateEntity();
+            em.AddComponentData(rpc, new PartyOpRpc { Op = (byte)op, Flag = (byte)(flag ? 1 : 0), Name = new FixedString64Bytes(name) });
+            em.AddComponent<SendRpcCommandRequest>(rpc);
+        }
+
         public void ContactOp(ContactOpKind op, string a, string b, bool flag)
         {
             if (m_World == null || !m_World.IsCreated) return;

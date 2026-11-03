@@ -209,7 +209,9 @@ backflips' speed (80 % of the air). Added as M7/M8 systems land (each: what to c
   gets the prompt and accepts, both lists show each other online; set a favourite and a note; relog one: the other is told "went offline"
   then "is online", the note is kept; block from the second: the first's whispers and requests are refused "That player isn't accepting
   requests from you."; /contact add, /block, /unblock in chat.
-- 8.4.x: a party with Follow, founding a Crew, an emote and a mount seen from the second client.
+- 8.4.3a (built 3 Nov): two clients: invite the other (player menu and /invite name), accept the prompt: both see the Squad frames, the
+  other's namecard and minimap dot show the Squad; /p reaches only the Squad; promote, then leave: the Squad of one is disbanded.
+- 8.4.x: Follow, founding a Crew, an emote and a mount seen from the second client.
 The list is kept current in this section as systems land.
 
 Owner follow-ups (found while porting; not DOTS work):

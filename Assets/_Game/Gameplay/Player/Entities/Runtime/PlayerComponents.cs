@@ -159,6 +159,12 @@ namespace KryticalNova.Player.Entities
         [GhostField] public ulong Packed;
     }
 
+    /// <summary>The player's Squad id for everyone, 0 = none (NGO's netPartyId was read by everyone: the minimap, namecards; M8 8.4.3). Written by the server.</summary>
+    public struct PlayerPartyTag : IComponentData
+    {
+        [GhostField] public ulong Id;
+    }
+
     /// <summary>
     /// The player is a Game Master (M7.4): everyone sees the [GM] tag on their name, as NGO showed it from <c>PlayerGm</c>'s network variable.
     /// Written by the server from the GM roster; 1 = GM.
