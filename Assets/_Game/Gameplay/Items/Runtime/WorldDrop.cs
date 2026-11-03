@@ -188,10 +188,13 @@ namespace KryticalNova.Items
             // From the pool: a drop that was taken or cleared away is used again.
             WorldDrop drop = WorldDropPool.Take(prefab, ground, Quaternion.Euler(0f, Random.Range(0f, 360f), 0f));
             drop.stack = stack;
+            drop.isView = false;   // a pooled object may have shown a server's drop before
+            drop.viewHeldForMe = false;
             drop.heldUntil = 0;
             drop.faction = dropFaction;
             drop.earned = earned;
-            drop.reservedFor = reservedFor != null && reserveSeconds > 0f ? reservedFor.NetworkObjectId : Nobody;
+            drop.reservedFor = reservedFor != null && reserveSeconds > 0f ? HolderId(reservedFor) : Nobody;
+            drop.ServerId = ++s_NextServerId == 0 ? ++s_NextServerId : s_NextServerId;
             drop.reservedUntil = Time.time + Mathf.Max(0f, reserveSeconds);
             drop.holdSeconds = drop.reservedFor != Nobody ? reserveSeconds : 0f;
             drop.removeAt = Time.time + drop.despawnSeconds;
@@ -240,16 +243,84 @@ namespace KryticalNova.Items
             return false;
         }
 
+        /// <summary>
+        /// Who a hold is for: NGO's network object id, or (M7.5) a server body of the entity netcode by its PlayerKey (never spawned, so it
+        /// has no network object id; the top bit keeps the two apart). Nobody for anyone else.
+        /// </summary>
+        public static ulong HolderId(NetworkObject player)
+        {
+            if (player == null) return Nobody;
+            if (player.IsSpawned) return player.NetworkObjectId;
+            return KryticalNova.Core.BodyRoleTag.Of(player) is { Kind: KryticalNova.Core.NetRoleKind.ServerBody } tag && tag.Key.IsValid
+                ? (1UL << 63) | tag.Key.Value : Nobody;
+        }
+
+        private static uint s_NextServerId;
+
+        /// <summary>The server's own number for this drop (M7.5: what a client of the entity netcode names it by; never a network id).</summary>
+        public uint ServerId { get; private set; }
+
+        /// <summary>The drop on the ground with this server id, or null (taken, cleared away, or never).</summary>
+        public static WorldDrop FindById(uint id)
+        {
+            if (id == 0) return null;
+            for (int i = 0; i < ActiveDrops.Count; i++)
+                if (ActiveDrops[i] != null && ActiveDrops[i].ServerId == id && !ActiveDrops[i].Stack.IsEmpty) return ActiveDrops[i];
+            return null;
+        }
+
+        /// <summary>
+        /// A client of the entity netcode shows the server's drop (M7.5): this pooled copy carries the server's id, stack and hold, so the
+        /// loot HUD, the pickup key and the magnet read it as before; it decides nothing (the server's says when it goes).
+        /// </summary>
+        public static WorldDrop ShowAsView(WorldDrop prefab, uint serverId, ItemStack shown, Vector3 position, float heldSecondsLeft, bool heldForMe)
+        {
+            if (prefab == null || serverId == 0 || shown.IsEmpty) return null;
+            WorldDrop view = WorldDropPool.Take(prefab, position, Quaternion.Euler(0f, Random.Range(0f, 360f), 0f));
+            view.ServerId = serverId;
+            view.isView = true;
+            view.UpdateView(shown, heldSecondsLeft, heldForMe);
+            return view;
+        }
+
+        /// <summary>A view takes the server's new stack (a partial take) or hold.</summary>
+        public void UpdateView(ItemStack shown, float heldSecondsLeft, bool heldForMe)
+        {
+            if (!isView) return;
+            stack = shown;
+            heldUntil = 0;
+            // a hold shown here only counts down; whose it is is all the HUD needs (ViewHeldForMe)
+            reservedFor = heldSecondsLeft > 0f ? ViewHolder : Nobody;
+            reservedUntil = Time.time + Mathf.Max(0f, heldSecondsLeft);
+            holdSeconds = heldSecondsLeft;
+            viewHeldForMe = heldForMe && heldSecondsLeft > 0f;
+            removeAt = float.MaxValue;   // the server says when it goes
+            ApplyLook();
+        }
+
+        /// <summary>The server's drop is gone: the view goes back to the pool.</summary>
+        public void RemoveView()
+        {
+            if (isView) ServerRemove();
+        }
+
+        private const ulong ViewHolder = ulong.MaxValue - 1;
+        private bool isView;
+        private bool viewHeldForMe;
+
+        /// <summary>A view of the entity netcode: the server held it for this machine's player.</summary>
+        public bool ViewHeldForMe => isView && viewHeldForMe && IsHeld;
+
         /// <summary>True while the drop is held for a player other than this one.</summary>
         public bool IsReservedForAnother(NetworkObject player) =>
-            reservedFor != Nobody && (player == null || !player.IsSpawned || player.NetworkObjectId != reservedFor);
+            reservedFor != Nobody && (player == null || HolderId(player) != reservedFor);
 
         /// <summary>True while the drop is held for someone: nobody else can take it yet.</summary>
         public bool IsHeld => reservedFor != Nobody && HeldSecondsLeft > 0f;
 
         /// <summary>True while the drop is held for this player.</summary>
         public bool IsHeldFor(NetworkObject player) =>
-            IsHeld && player != null && player.IsSpawned && player.NetworkObjectId == reservedFor;
+            IsHeld && player != null && HolderId(player) == reservedFor;
 
         /// <summary>Seconds until anyone may take it; 0 when it is not held. The same on every machine.</summary>
         public float HeldSecondsLeft

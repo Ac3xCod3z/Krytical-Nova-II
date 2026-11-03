@@ -21,6 +21,9 @@ namespace KryticalNova.Items
         private const float DropForward = 0.9f;
 
         [SerializeField] private WorldDrop dropPrefab;
+
+        /// <summary>The prefab a drop is made from (a client of the entity netcode shows the server's drops with it).</summary>
+        public WorldDrop DropPrefab => dropPrefab;
         [Tooltip("Seconds an item this player drops is held for them before others may take it.")]
         [SerializeField, Min(0f)] private float dropReserveSeconds = 20f;
         [Tooltip("On: once the hold ends anyone may take it, whatever their faction. Off: only the dropper's faction, " +
@@ -57,6 +60,8 @@ namespace KryticalNova.Items
         public void RequestPickup(WorldDrop drop)
         {
             if (drop == null) return;
+            // the entity netcode's own view: the server's body picks it up, by the drop's server id (M7.5)
+            if (KryticalNova.Core.BodyRoleTag.RequestsOf(this) is KryticalNova.Core.IBodyRequests requests) { requests.Pickup(drop.ServerId); return; }
             if (!IsSpawned) ServerPickup(drop);
             else if (IsOwner && drop.IsSpawned) PickupRpc(drop.NetworkObject);
         }
@@ -86,6 +91,11 @@ namespace KryticalNova.Items
         /// <summary>Put an item from the Pack or a slot on the ground at this player's feet.</summary>
         public void RequestDrop(ItemLocation at)
         {
+            if (KryticalNova.Core.BodyRoleTag.RequestsOf(this) is KryticalNova.Core.IBodyRequests requests)
+            {
+                requests.DropItem((byte)at.container, at.index);
+                return;
+            }
             if (!IsSpawned) ServerDrop(at);
             else if (IsOwner) DropRpc(at);
         }
@@ -107,6 +117,23 @@ namespace KryticalNova.Items
         }
 
         // ------------------------------------------------------------------ server
+
+        private bool EntityServer => KryticalNova.Core.BodyRoleTag.Of(this) is { Kind: KryticalNova.Core.NetRoleKind.ServerBody };
+
+        /// <summary>A server body of the entity netcode picks up its owner's drop by server id (NGO's PickupRpc body, after the caller's limit).</summary>
+        public void RunPickup(uint dropId)
+        {
+            if (!EntityServer) return;
+            WorldDrop drop = WorldDrop.FindById(dropId);
+            if (drop == null) { Tell(LootRules.ReasonGone); return; }
+            ServerPickup(drop);
+        }
+
+        /// <summary>A server body of the entity netcode drops its owner's item (NGO's DropRpc body, after the caller's limit).</summary>
+        public void RunDrop(ItemLocation at)
+        {
+            if (EntityServer) ServerDrop(at);
+        }
 
         private void ServerPickup(WorldDrop drop)
         {
@@ -166,7 +193,8 @@ namespace KryticalNova.Items
         public WorldDrop ServerPlace(ItemStack stack, NetworkObject heldFor = null, float reserveSeconds = 0f, FactionId dropFaction = FactionId.None)
         {
             Vector3 feet = transform.position + transform.forward * DropForward;
-            return WorldDrop.ServerSpawn(dropPrefab, stack, feet, heldFor != null && heldFor.IsSpawned ? heldFor : null, reserveSeconds, dropFaction);
+            // the hold is for a spawned player or a server body of the entity netcode (WorldDrop.HolderId); anyone else holds nothing
+            return WorldDrop.ServerSpawn(dropPrefab, stack, feet, heldFor, reserveSeconds, dropFaction);
         }
 
         /// <summary>
@@ -175,8 +203,7 @@ namespace KryticalNova.Items
         /// </summary>
         public WorldDrop ServerPlaceAt(ItemStack stack, Vector3 position, NetworkObject heldFor = null)
         {
-            return WorldDrop.ServerSpawn(dropPrefab, stack, position, heldFor != null && heldFor.IsSpawned ? heldFor : null, dropReserveSeconds,
-                earned: true);
+            return WorldDrop.ServerSpawn(dropPrefab, stack, position, heldFor, dropReserveSeconds, earned: true);
         }
 
         // The kept ledger (online phase 4, milestone 3): what was picked up or dropped, tallied per save, so an item passed
@@ -201,6 +228,7 @@ namespace KryticalNova.Items
         private void Tell(string text)
         {
             if (string.IsNullOrEmpty(text)) return;
+            if (EntityServer) { KryticalNova.Core.OwnerMessages.TryTell(this, text); return; }   // its player's message line (M7.5)
             if (IsSpawned && !IsOwnedByServer) TellRpc(text);
             else if (KryticalNova.Core.BodyRoleTag.IsMine(this, !IsSpawned || IsOwner)) ClientPresentationRegistry.Messages?.ShowMessage(text);
         }

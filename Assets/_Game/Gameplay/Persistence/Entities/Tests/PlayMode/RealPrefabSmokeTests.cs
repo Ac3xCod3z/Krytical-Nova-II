@@ -6,6 +6,7 @@ using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.AI;
 using UnityEngine.TestTools;
+using Unity.Netcode;
 using KryticalNova.CharacterCreation;
 using KryticalNova.Core;
 using KryticalNova.Items;
@@ -432,6 +433,8 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
             public void Allocate(byte attribute, short count) => Ops.Add($"Allocate {attribute} {count}");
             public void UpgradeSkill(string skillId, byte count) => Ops.Add($"Upgrade {skillId} {count}");
             public void UpgradeMovement(byte skill, byte count) => Ops.Add($"Move {skill} {count}");
+            public void Pickup(uint dropId) => Ops.Add($"Pickup {dropId}");
+            public void DropItem(byte container, byte index) => Ops.Add($"Drop {container}:{index}");
         }
 
         [UnityTest]
@@ -951,6 +954,101 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
             Assert.AreEqual(ngoText, ServerSave.ReadAccountFrom(ServerSave.Store, account).Find(characterId).Get("movement"),
                 "the movement part saves back byte for byte (same format, no migration)");
             agent.OnServerLeaving();
+        }
+
+        GameObject Admitted(ulong key, string account, string characterId, string name)
+        {
+            GameObject body = Make(NetRoleKind.ServerBody, false, new PlayerKey(key));
+            CharacterRecipe recipe = AnyLegalRecipe(body.GetComponent<PlayerIdentity>().Database);
+            var stored = new AccountSave { accountId = account };
+            stored.characters.Add(new CharacterSave { characterId = characterId, name = name });
+            Assert.IsTrue(ServerSave.WriteAccount(stored));
+            ServerSave.WaitForDisk();
+            var context = new ServerBodyContext
+            {
+                Key = new PlayerKey(key), Serial = key, NetworkId = (int)key, Account = account, CharacterId = characterId, Name = name,
+                RecipeText = RecipeText.Encode(recipe),
+            };
+            Assert.IsNull(new PlayerAdmission().Begin(body, in context), name + " admitted");
+            return body;
+        }
+
+        [UnityTest]
+        public IEnumerator B16_ADrop_IsHeldForItsDropperByKey_ThenTakenOnce_WithTheDropAndLootLedgerLines()
+        {
+            NetRole.Install(new BodyRoleNetRoleAdapter(null, () => NetRoleKind.ServerBody));
+            PlayerKeys.Reset();
+            const string accountA = "11112222333344445555666677778888", accountB = "88887777666655554444333322221111";
+            GameObject a = Admitted(PlayerKeys.Mint(21).Value, accountA, "a0000000000000000000000000000001", "Dropper");
+            GameObject b = Admitted(PlayerKeys.Mint(22).Value, accountB, "b0000000000000000000000000000002", "Taker");
+            GameObject view = Make(NetRoleKind.ClientView, true, new PlayerKey(21));
+            for (int i = 0; i < 30; i++) yield return null;
+
+            var lootA = a.GetComponent<PlayerLoot>();
+            var lootB = b.GetComponent<PlayerLoot>();
+            var invA = a.GetComponent<PlayerInventory>();
+            var invB = b.GetComponent<PlayerInventory>();
+            typeof(PlayerLoot).GetField("dropReserveSeconds", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(lootA, 0.5f);
+            invA.ServerGive(9001, 3);
+            int cell = -1;
+            for (int i = 0; i < PlayerInventory.Capacity; i++) if (invA.Get(i).itemId == 9001) { cell = i; break; }
+            int heldA = invA.CountItem(9001), heldB = invB.CountItem(9001);
+            int stack = invA.Get(cell).count;
+
+            // the owner's view only asks
+            var asked = new Asked();
+            view.GetComponent<BodyRoleTag>().Requests = asked;
+            view.GetComponent<PlayerLoot>().RequestDrop(ItemLocation.Bag(cell));
+            CollectionAssert.AreEqual(new[] { $"Drop 0:{cell}" }, asked.Ops, "the view sends the drop to the server");
+
+            // the server body drops it: held for the dropper by key (NGO's NetworkObjectId hold is Nobody on a DOTS body)
+            int before = WorldDrop.Active.Count;
+            lootA.RunDrop(ItemLocation.Bag(cell));
+            Assert.AreEqual(heldA - stack, invA.CountItem(9001), "the stack left the dropper's Pack");
+            Assert.AreEqual(before + 1, WorldDrop.Active.Count, "and lies on the ground");
+            WorldDrop drop = WorldDrop.Active[WorldDrop.Active.Count - 1];
+            Assert.AreNotEqual(0u, drop.ServerId, "it has a server id");
+            Assert.AreSame(drop, WorldDrop.FindById(drop.ServerId));
+            Assert.IsTrue(drop.IsHeld, "held");
+            Assert.IsTrue(drop.IsHeldFor(a.GetComponent<NetworkObject>()), "for the dropper");
+            Assert.IsTrue(drop.IsReservedForAnother(b.GetComponent<NetworkObject>()), "not for anyone else");
+
+            lootB.RunPickup(drop.ServerId);
+            Assert.AreEqual(heldB, invB.CountItem(9001), "another player cannot take it while it is held");
+
+            yield return new WaitForSeconds(1f);   // the hold (0.5 s here; 20 s in the game) runs out
+            lootB.RunPickup(drop.ServerId);
+            Assert.AreEqual(heldB + stack, invB.CountItem(9001), "then they take the whole stack");
+            lootB.RunPickup(drop.ServerId);
+            Assert.AreEqual(heldB + stack, invB.CountItem(9001), "a second pickup gives nothing (no double)");
+            Assert.IsNull(WorldDrop.FindById(drop.ServerId), "the drop is gone");
+
+            List<LedgerEntry> droppedLines = ServerSave.ReadLedger(accountA, 0, 100).FindAll(l => l.kind == LedgerKinds.Drop);
+            List<LedgerEntry> lootLines = ServerSave.ReadLedger(accountB, 0, 100).FindAll(l => l.kind == LedgerKinds.Loot);
+            a.GetComponent<PlayerSaveAgent>().Save();
+            b.GetComponent<PlayerSaveAgent>().Save();
+            ServerSave.WaitForDisk();
+            droppedLines = ServerSave.ReadLedger(accountA, 0, 100).FindAll(l => l.kind == LedgerKinds.Drop);
+            lootLines = ServerSave.ReadLedger(accountB, 0, 100).FindAll(l => l.kind == LedgerKinds.Loot);
+            Assert.AreEqual(1, droppedLines.Count, "one drop line on the dropper");
+            Assert.AreEqual(-stack, droppedLines[0].items.Find(x => x.item == 9001).count, "with what was dropped");
+            Assert.AreEqual(1, lootLines.Count, "one loot line on the taker");
+            Assert.AreEqual(stack, lootLines[0].items.Find(x => x.item == 9001).count, "with what was taken");
+            // a client of the entity netcode shows a server's drop as a view: in the drop list, with its id, and its pickup goes to the server
+            var viewLoot = view.GetComponent<PlayerLoot>();
+            WorldDrop shown = WorldDrop.ShowAsView(viewLoot.DropPrefab, 4242, new ItemStack(9001, 2), view.transform.position, 5f, true);
+            Assert.IsNotNull(shown, "a view of the server's drop");
+            Assert.Contains(shown, (System.Collections.ICollection)WorldDrop.Active, "in the drop list the HUD and the pickup key read");
+            Assert.IsTrue(shown.ViewHeldForMe, "held for this player, as the server said");
+            asked.Ops.Clear();
+            viewLoot.RequestPickup(shown);
+            CollectionAssert.AreEqual(new[] { "Pickup 4242" }, asked.Ops, "the pickup goes to the server by its id");
+            shown.RemoveView();
+            Assert.IsNull(WorldDrop.FindById(4242), "the view went when the server said");
+
+            a.GetComponent<PlayerSaveAgent>().OnServerLeaving();
+            b.GetComponent<PlayerSaveAgent>().OnServerLeaving();
+            PlayerKeys.Reset();
         }
 
         static CharacterRecipe AnyLegalRecipe(CharacterCreationDatabase database)

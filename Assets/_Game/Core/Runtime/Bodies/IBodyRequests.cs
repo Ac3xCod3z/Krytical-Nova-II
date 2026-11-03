@@ -53,5 +53,11 @@ namespace KryticalNova.Core
 
         /// <summary>Asks the server to buy up to <paramref name="count"/> ranks of Run or Jump (its id as a number; NGO's movement upgrade RPC).</summary>
         void UpgradeMovement(byte skill, byte count);
+
+        /// <summary>Asks the server to pick up the drop with this server id (M7.5, NGO's pickup RPC).</summary>
+        void Pickup(uint dropId);
+
+        /// <summary>Asks the server to put an item from the Pack or a slot on the ground (NGO's drop RPC).</summary>
+        void DropItem(byte container, byte index);
     }
 }

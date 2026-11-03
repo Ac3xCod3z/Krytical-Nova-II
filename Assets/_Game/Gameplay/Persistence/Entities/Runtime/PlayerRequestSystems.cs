@@ -121,6 +121,18 @@ namespace KryticalNova.Persistence.Entities
         public byte Count;
     }
 
+    /// <summary>The owner picks up a drop by its server id (NGO's <c>PlayerLoot.PickupRpc</c>; M7.5).</summary>
+    public struct PickupRpc : IRpcCommand
+    {
+        public uint DropId;
+    }
+
+    /// <summary>The owner puts an item from the Pack or a slot on the ground (NGO's <c>PlayerLoot.DropRpc</c>).</summary>
+    public struct DropItemRpc : IRpcCommand
+    {
+        public byte Container, Index;
+    }
+
     /// <summary>The owner buys Run or Jump ranks (NGO's <c>PlayerMovementSkills.UpgradeServerRpc</c>).</summary>
     public struct MovementUpgradeRpc : IRpcCommand
     {
@@ -228,6 +240,24 @@ namespace KryticalNova.Persistence.Entities
             em.AddComponent<SendRpcCommandRequest>(rpc);
         }
 
+        public void Pickup(uint dropId)
+        {
+            if (m_World == null || !m_World.IsCreated || dropId == 0) return;
+            var em = m_World.EntityManager;
+            Entity rpc = em.CreateEntity();
+            em.AddComponentData(rpc, new PickupRpc { DropId = dropId });
+            em.AddComponent<SendRpcCommandRequest>(rpc);
+        }
+
+        public void DropItem(byte container, byte index)
+        {
+            if (m_World == null || !m_World.IsCreated) return;
+            var em = m_World.EntityManager;
+            Entity rpc = em.CreateEntity();
+            em.AddComponentData(rpc, new DropItemRpc { Container = container, Index = index });
+            em.AddComponent<SendRpcCommandRequest>(rpc);
+        }
+
         public void UpgradeMovement(byte skill, byte count)
         {
             if (m_World == null || !m_World.IsCreated || count == 0) return;
@@ -275,7 +305,7 @@ namespace KryticalNova.Persistence.Entities
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     public partial class PlayerRequestServerSystem : SystemBase
     {
-        EntityQuery m_Uses, m_Casts, m_PackOps, m_LoadoutOps, m_Refills, m_Allocations, m_Upgrades, m_MoveUpgrades;
+        EntityQuery m_Uses, m_Casts, m_PackOps, m_LoadoutOps, m_Refills, m_Allocations, m_Upgrades, m_MoveUpgrades, m_Pickups, m_Drops;
 
         /// <summary>Requests run, refused, and dropped by the request limits (tests).</summary>
         public int Used { get; private set; }
@@ -287,6 +317,8 @@ namespace KryticalNova.Persistence.Entities
         public int Refills { get; private set; }
         public int Allocations { get; private set; }
         public int Upgrades { get; private set; }
+        public int Pickups { get; private set; }
+        public int Drops { get; private set; }
 
         protected override void OnCreate()
         {
@@ -298,6 +330,8 @@ namespace KryticalNova.Persistence.Entities
             m_Allocations = GetEntityQuery(ComponentType.ReadOnly<ReceiveRpcCommandRequest>(), ComponentType.ReadOnly<AllocateRpc>());
             m_Upgrades = GetEntityQuery(ComponentType.ReadOnly<ReceiveRpcCommandRequest>(), ComponentType.ReadOnly<SkillUpgradeRpc>());
             m_MoveUpgrades = GetEntityQuery(ComponentType.ReadOnly<ReceiveRpcCommandRequest>(), ComponentType.ReadOnly<MovementUpgradeRpc>());
+            m_Pickups = GetEntityQuery(ComponentType.ReadOnly<ReceiveRpcCommandRequest>(), ComponentType.ReadOnly<PickupRpc>());
+            m_Drops = GetEntityQuery(ComponentType.ReadOnly<ReceiveRpcCommandRequest>(), ComponentType.ReadOnly<DropItemRpc>());
         }
 
         protected override void OnUpdate()
@@ -329,6 +363,35 @@ namespace KryticalNova.Persistence.Entities
                 for (int i = 0; i < ops.Length; i++) RunPackOp(received[i].SourceConnection, ops[i]);
                 received.Dispose();
                 ops.Dispose();
+            }
+            if (!m_Pickups.IsEmpty)
+            {
+                var received = m_Pickups.ToComponentDataArray<ReceiveRpcCommandRequest>(Allocator.Temp);
+                var asks = m_Pickups.ToComponentDataArray<PickupRpc>(Allocator.Temp);
+                em.DestroyEntity(m_Pickups);
+                // NGO: the Items limit, then PlayerLoot's own rules on the server body (alive, reach, hold, faction, Creds to the wallet, ledger)
+                for (int i = 0; i < asks.Length; i++)
+                    if (BodyOf(received[i].SourceConnection, CallKind.Items, out GameObject body) && body.TryGetComponent(out PlayerLoot loot))
+                    {
+                        loot.RunPickup(asks[i].DropId);
+                        Pickups++;
+                    }
+                received.Dispose();
+                asks.Dispose();
+            }
+            if (!m_Drops.IsEmpty)
+            {
+                var received = m_Drops.ToComponentDataArray<ReceiveRpcCommandRequest>(Allocator.Temp);
+                var asks = m_Drops.ToComponentDataArray<DropItemRpc>(Allocator.Temp);
+                em.DestroyEntity(m_Drops);
+                for (int i = 0; i < asks.Length; i++)
+                    if (BodyOf(received[i].SourceConnection, CallKind.Items, out GameObject body) && body.TryGetComponent(out PlayerLoot loot))
+                    {
+                        loot.RunDrop(new ItemLocation { container = (ItemContainer)asks[i].Container, index = asks[i].Index });
+                        Drops++;
+                    }
+                received.Dispose();
+                asks.Dispose();
             }
             if (!m_MoveUpgrades.IsEmpty)
             {
