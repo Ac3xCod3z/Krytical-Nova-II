@@ -36,7 +36,7 @@ namespace KryticalNova.Social
         private static string Named(string name, string usage, System.Action<PlayerContacts, string> act)
         {
             PlayerContacts mine = PlayerContacts.Local;
-            if (mine == null || !mine.IsSpawned) return Offline;
+            if (mine == null || (!mine.IsSpawned && KryticalNova.Core.BodyRoleTag.RequestsOf(mine) == null)) return Offline;   // a DOTS view asks (M8 8.4.2)
             if (name.Length == 0) return usage;
             act(mine, name);
             return null; // the server answers

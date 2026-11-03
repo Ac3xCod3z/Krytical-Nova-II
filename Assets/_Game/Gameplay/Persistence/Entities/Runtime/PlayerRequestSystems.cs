@@ -486,6 +486,19 @@ namespace KryticalNova.Persistence.Entities
             em.AddComponent<SendRpcCommandRequest>(rpc);
         }
 
+        public void ContactOp(ContactOpKind op, string a, string b, bool flag)
+        {
+            if (m_World == null || !m_World.IsCreated) return;
+            a ??= string.Empty;
+            b ??= string.Empty;
+            // NGO's TextFits refuses a longer text too (ids are 32, names at most 20, notes 60 characters)
+            if (System.Text.Encoding.UTF8.GetByteCount(a) > FixedString64Bytes.UTF8MaxLengthInBytes || System.Text.Encoding.UTF8.GetByteCount(b) > FixedString512Bytes.UTF8MaxLengthInBytes) return;
+            var em = m_World.EntityManager;
+            Entity rpc = em.CreateEntity();
+            em.AddComponentData(rpc, new ContactOpRpc { Op = (byte)op, Flag = (byte)(flag ? 1 : 0), A = new FixedString64Bytes(a), B = new FixedString512Bytes(b) });
+            em.AddComponent<SendRpcCommandRequest>(rpc);
+        }
+
         public void CrateOp(bool withdraw, ushort a, ushort count)
         {
             if (m_World == null || !m_World.IsCreated) return;

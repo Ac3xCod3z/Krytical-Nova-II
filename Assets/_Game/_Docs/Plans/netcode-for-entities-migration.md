@@ -1261,3 +1261,10 @@ checkpoints; the owner's Thursday hand-test list; owner questions). NGO rules ta
     /trade works on a DOTS view. Items IBodyChat / IChatOwnerLink. B28; ChatTextTests. Not in it: Party / Crew channel members (their
     ports), the block list (Contacts), other slash commands (each with its system), the Temper 120 announcement call site (Forge).
     Review approved (master-6, 3 Nov).
+  - [ ] 8.4.2 Contacts: the twelve requests go from the owner's view as ContactOpRpc (Social limit; a player picked in the world goes by name:
+    remote views carry no PlayerContacts, and the window already falls back to the name) and NGO's ContactsService runs unchanged on the
+    server body (books in the `contacts` world document, SaveWorld on every change, mutual, waits offline, one-sided silent blocks, the
+    neutral-ground rule); the server body arrives on load and leaves before its save (IServerLeaving) as NGO's spawn/despawn; the list goes
+    to its owner as Social's view text in pages (ContactPageRpc, one Seq), prompts by ContactPromptRpc, Tell lines to chat, Notify to the
+    message line (as NGO). SocialGate now refuses on DOTS too (a block stops a whisper). /contact works on a DOTS view (Items IBodyContacts /
+    IContactsOwnerLink). No player save key. B29; ContactViewTextTests, TextPages test.

@@ -1,5 +1,21 @@
 namespace KryticalNova.Core
 {
+    /// <summary>What a Contacts request asks the server's body to do (NGO's twelve <c>PlayerContacts</c> RPCs; M8 8.4.2; a picked player goes by name).</summary>
+    public enum ContactOpKind : byte
+    {
+        AddByName = 1,
+        Respond = 2,
+        Cancel = 3,
+        Remove = 4,
+        RemoveByName = 5,
+        Block = 6,
+        BlockByName = 7,
+        Unblock = 8,
+        UnblockByName = 9,
+        Favourite = 10,
+        Note = 11,
+    }
+
     /// <summary>What a Weave request asks the server's body to do (NGO's seven <c>PlayerWeaves</c> RPCs; M8 8.3.9).</summary>
     public enum WeaveOpKind : byte
     {
@@ -193,5 +209,8 @@ namespace KryticalNova.Core
         /// container <paramref name="linkContainers"/>[i], cell <paramref name="linkCells"/>[i] of this player's own Pack or worn gear (null: no links).
         /// </summary>
         void Chat(ChatChannel channel, string text, string whisperTarget, byte[] linkContainers, byte[] linkCells);
+
+        /// <summary>Asks the server to run a Contacts request (M8 8.4.2): <paramref name="a"/> a name or a character id, <paramref name="b"/> a note.</summary>
+        void ContactOp(ContactOpKind op, string a, string b, bool flag);
     }
 }

@@ -45,6 +45,7 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
         readonly List<GameObject> m_Made = new List<GameObject>();
         ISaveStore m_OldStore;
         IChatOwnerLink m_OldChat;
+        IContactsOwnerLink m_OldContacts;
 
         [SetUp]
         public void SetUp()
@@ -58,6 +59,7 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
             m_OldStore = ServerSave.Store;
             ServerSave.Store = new MemorySaveStore();
             m_OldChat = ChatOwnerLink.Current;
+            m_OldContacts = ContactsOwnerLink.Current;
             SavePassthrough.ResetToDefault();
         }
 
@@ -72,6 +74,7 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
             LocalPlayer.Set(null);
             ServerSave.Store = m_OldStore;
             ChatOwnerLink.Current = m_OldChat;
+            ContactsOwnerLink.Current = m_OldContacts;
             LogAssert.ignoreFailingMessages = false;
         }
 
@@ -455,13 +458,19 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
             public void WeaveOp(WeaveOpKind op, byte slot, ushort id, byte stage) => Ops.Add($"Weave {op} {slot} {id} {stage}");
             public void AutobuffSlots(string[] skillIds) => Ops.Add("Autobuff " + string.Join("|", skillIds));
             public void CrateOp(bool withdraw, ushort a, ushort count) => Ops.Add($"Crate {(withdraw ? "Withdraw" : "Store")} {a} {count}");
+            public void ContactOp(ContactOpKind op, string a, string b, bool flag) => Ops.Add($"Contact {op} {a}|{b}|{flag}");
             public void Chat(ChatChannel channel, string text, string whisperTarget, byte[] linkContainers, byte[] linkCells) =>
                 Ops.Add($"Chat {channel} {ChatLinks.Strip(text)}|{whisperTarget}|{linkContainers?.Length ?? 0}");
         }
 
         /// <summary>What the server bodies told their players (the message line) and sent their trade windows (view, notice, prompt).</summary>
-        sealed class Told : IOwnerMessages, ITradeOwnerLink, IKioskOwnerLink, IWorkshopOwnerLink, KryticalNova.Progression.INovaLink, IRestyleOwnerLink, IChatOwnerLink
+        sealed class Told : IOwnerMessages, ITradeOwnerLink, IKioskOwnerLink, IWorkshopOwnerLink, KryticalNova.Progression.INovaLink, IRestyleOwnerLink, IChatOwnerLink, IContactsOwnerLink
         {
+            // Contacts (M8 8.4.2): the last list each body was sent, and its prompts
+            public readonly Dictionary<GameObject, string> LastView = new Dictionary<GameObject, string>();
+            public void View(Component part, string viewText) { LastView[Body(part)] = viewText; Lines.Add((Body(part), "contacts view")); }
+            public void Prompt(Component part, string fromId, string fromName) => Lines.Add((Body(part), $"contact prompt {fromId} {fromName}"));
+            public void ClosePrompt(Component part, string fromId) => Lines.Add((Body(part), $"contact prompt closed {fromId}"));
             // chat (M8 8.4.1): "system <text>" for a System notice, else "<kind> <channel> [to ]<sender>: <text>"
             public bool Line(Component part, in BodyChatLine line)
             {
@@ -2469,6 +2478,121 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
                 KryticalNova.Networking.GmRoster.SetAll(Array.Empty<KryticalNova.Networking.GmEntry>());
                 KryticalNova.Networking.GmRoster.Forget(gmSerial);
                 KryticalNova.Networking.ServerAccounts.Forget(gmKey);
+                OwnerMessages.Current = oldMessages;
+                PlayerKeys.Reset();
+            }
+        }
+
+        /// <summary>The line of <paramref name="name"/> in a Contacts view text (kind, id, name, online, level, faction, class, favourite, seen, note), or null.</summary>
+        static string[] ContactLine(string viewText, string name)
+        {
+            if (string.IsNullOrEmpty(viewText)) return null;
+            foreach (string row in viewText.Split('\n'))
+            {
+                string[] f = row.Split('\t');
+                if (f.Length == 10 && f[2] == name) return f;
+            }
+            return null;
+        }
+
+        [UnityTest]
+        public IEnumerator B29_Contacts_RunOnTheServerBodies_AskAcceptNoteBlockLeave_TheBlockStopsAWhisper_TheBookIsSaved_AndTheViewOnlyAsks()
+        {
+            NetRole.Install(new BodyRoleNetRoleAdapter(null, () => NetRoleKind.ServerBody));
+            IOwnerMessages oldMessages = OwnerMessages.Current;
+            var told = new Told();
+            OwnerMessages.Current = told;
+            ChatOwnerLink.Current = told;
+            ContactsOwnerLink.Current = told;
+            try
+            {
+                PlayerKeys.Reset();
+                const string idA = "c2910000000000000000000000000291", idB = "c2920000000000000000000000000292", idC = "c2930000000000000000000000000293";
+                GameObject a = Admitted(PlayerKeys.Mint(291).Value, "29a1000000000000000000000000000a", idA, "Talwyn");
+                GameObject b = Admitted(PlayerKeys.Mint(292).Value, "29b1000000000000000000000000000b", idB, "Brannoc");
+                GameObject c = Admitted(PlayerKeys.Mint(293).Value, "29c1000000000000000000000000000c", idC, "Corvane");
+                for (int i = 0; i < 30; i++) yield return null;
+                var ca = a.GetComponent<IBodyContacts>();
+                var cb = b.GetComponent<IBodyContacts>();
+                var cc = c.GetComponent<IBodyContacts>();
+                Assert.IsNotNull(ca, "the server body has its Contacts");
+                Assert.IsTrue(told.LastView.ContainsKey(a) && told.LastView.ContainsKey(b), "each arrived (NGO's OnNetworkSpawn -> ServerArrived) and was sent its list");
+                Assert.AreEqual(a.GetComponent<PlayerIdentity>().Faction, b.GetComponent<PlayerIdentity>().Faction, "planned: one faction (no neutral ground needed)");
+
+                // 1. A asks B by name: both told in chat, B gets the prompt, A's list shows B as asked
+                ca.RunContactOp(ContactOpKind.AddByName, "Brannoc", "", false);
+                Assert.IsTrue(told.Any(a, "system You asked Brannoc to be a contact."), "NGO's line in A's chat: " + string.Join(" | ", told.To(a)));
+                Assert.IsTrue(told.Any(b, "system Talwyn wants to add you as a contact."), "B is told");
+                Assert.IsTrue(told.Any(b, $"contact prompt {idA} Talwyn"), "B gets the prompt");
+                Assert.AreEqual("2", ContactLine(told.LastView[a], "Brannoc")?[0], "A's list: B as Outgoing");
+                Assert.AreEqual("1", ContactLine(told.LastView[b], "Talwyn")?[0], "B's list: A as Incoming");
+
+                // 2. B accepts: the prompt closes, both are contacts and online
+                cb.RunContactOp(ContactOpKind.Respond, idA, "", true);
+                Assert.IsTrue(told.Any(b, $"contact prompt closed {idA}"), "NGO's RespondRpc closes the prompt");
+                Assert.IsTrue(told.Any(a, "system Brannoc accepted your contact request."), "A is told");
+                string[] lineB = ContactLine(told.LastView[a], "Brannoc");
+                Assert.AreEqual("0", lineB?[0], "A's list: B is a contact");
+                Assert.AreEqual("1", lineB[3], "and online");
+                Assert.AreEqual(idB, lineB[1]);
+
+                // 3. a favourite and a note (with a tab, kept through the text)
+                ca.RunContactOp(ContactOpKind.Favourite, idB, "", true);
+                ca.RunContactOp(ContactOpKind.Note, idB, "met\tat the docks", false);
+                lineB = ContactLine(told.LastView[a], "Brannoc");
+                Assert.AreEqual("1", lineB[7], "favourite");
+                Assert.AreEqual("met\\tat the docks", lineB[9], "the note, its tab escaped on the wire");
+
+                // 4. C blocks A by name: A's whisper to C is refused by the gate (Contacts fills SocialGate), C hears nothing
+                cc.RunContactOp(ContactOpKind.BlockByName, "Talwyn", "", false);
+                Assert.IsTrue(told.Any(c, "system Talwyn is blocked"), "NGO's line: " + string.Join(" | ", told.To(c)));
+                Assert.AreEqual("3", ContactLine(told.LastView[c], "Talwyn")?[0], "C's list: A blocked");
+                a.GetComponent<IBodyChat>().RunSend(ChatChannel.Whisper, "hey", "Corvane", null, null);
+                Assert.IsTrue(told.Any(a, "system That player isn't accepting requests from you."), "the block stops the whisper: " + string.Join(" | ", told.To(a)));
+                Assert.IsFalse(told.Any(c, "line Whisper Talwyn"), "C hears nothing");
+
+                // 5. an unknown name: NGO's notice on the message line (NotifyRpc)
+                ca.RunContactOp(ContactOpKind.AddByName, "Nobodyhere", "", false);
+                Assert.IsTrue(told.Any(a, "tell No character named 'Nobodyhere' is known here."), "NGO's Notify");
+
+                // 6. B leaves (before its save): A is told and sees B offline
+                ServerLeaving.Notify(b);
+                Assert.IsTrue(told.Any(a, "system Brannoc went offline."), "NGO's ServerLeft");
+                Assert.AreEqual("0", ContactLine(told.LastView[a], "Brannoc")[3], "B shows offline");
+
+                // 7. the books are a world document in the store (NGO's SaveWorld on every change)
+                ServerSave.WaitForDisk();
+                var store = (MemorySaveStore)ServerSave.Store;
+                bool saved = false;
+                foreach (string key in store.Keys(string.Empty))
+                    if (key.Contains("contacts") && store.TryRead(key, out string json) && json.Contains(idA) && json.Contains("met")) saved = true;
+                Assert.IsTrue(saved, "the contacts world document holds A's book with the note: " + string.Join(", ", store.Keys(string.Empty)));
+
+                // 8. the owner's view only asks (exact requests) and shows the server's list
+                var asked = new Asked();
+                GameObject view = Make(NetRoleKind.ClientView, true, new PlayerKey(a.GetComponent<BodyRoleTag>().Key.Value));
+                view.GetComponent<BodyRoleTag>().Requests = asked;
+                yield return null;
+                var viewPart = (Component)view.GetComponent<IBodyContacts>();
+                Assert.IsNotNull(viewPart, "the own view keeps its Contacts (the window reads it)");
+                Type type = viewPart.GetType();
+                type.GetMethod("Add", new[] { typeof(string) }).Invoke(viewPart, new object[] { " Brannoc " });
+                type.GetMethod("Respond").Invoke(viewPart, new object[] { idB, false });
+                type.GetMethod("SetNote").Invoke(viewPart, new object[] { idB, "line one\nline two" });
+                type.GetMethod("BlockByName").Invoke(viewPart, new object[] { "Corvane" });
+                CollectionAssert.AreEqual(new[] { "Contact AddByName Brannoc||False", $"Contact Respond {idB}||False", $"Contact Note {idB}|line one line two|False",
+                    "Contact BlockByName Corvane||False" }, asked.Ops, "sent to the server");
+                ((IBodyContacts)viewPart).MirrorView(told.LastView[a]);
+                var shownLines = (System.Collections.ICollection)type.GetProperty("Lines").GetValue(viewPart);
+                Assert.AreEqual(told.LastView[a].Split('\n').Length, shownLines.Count, "the own view shows the server's list");
+                ((IBodyContacts)viewPart).MirrorPrompt(idC, "Corvane");   // no prompt window in the test: shown nowhere, no error
+                ((IBodyContacts)viewPart).MirrorClosePrompt(idC);
+
+                foreach (GameObject body in new[] { a, c }) { ServerLeaving.Notify(body); body.GetComponent<PlayerSaveAgent>().OnServerLeaving(); }
+                b.GetComponent<PlayerSaveAgent>().OnServerLeaving();
+            }
+            finally
+            {
                 OwnerMessages.Current = oldMessages;
                 PlayerKeys.Reset();
             }

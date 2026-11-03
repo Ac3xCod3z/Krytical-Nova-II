@@ -62,6 +62,17 @@ namespace KryticalNova.Persistence.Entities.Tests
         }
 
         [Test]
+        public void TextPages_FitTheWire_AndJoinBackWhole()
+        {
+            string text = string.Concat(System.Linq.Enumerable.Repeat("Talwyn\t€ note \U0001F600\n", 120));
+            var pages = TextPages.Split(text);
+            Assert.Greater(pages.Count, 1, "a long list is several pages");
+            foreach (string page in pages) Assert.LessOrEqual(Encoding.UTF8.GetByteCount(page), TextPages.PageBytes, "each fits");
+            Assert.AreEqual(text, string.Concat(pages), "joined back, nothing lost or split");
+            CollectionAssert.AreEqual(new[] { string.Empty }, TextPages.Split(string.Empty), "an empty list is one empty page");
+        }
+
+        [Test]
         public void TheSend_KeepsNgosLinkLimit()
         {
             Assert.IsTrue(ChatText.TrySend(ChatChannel.General, "hi", "", null, null, out ChatSendRpc none));

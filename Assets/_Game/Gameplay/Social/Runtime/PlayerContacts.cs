@@ -19,7 +19,7 @@ namespace KryticalNova.Social
     /// whenever it changes (somebody came online, accepted, was removed), so the window only shows.
     /// </summary>
     [DisallowMultipleComponent]
-    public sealed class PlayerContacts : NetworkBehaviour
+    public sealed class PlayerContacts : NetworkBehaviour, IBodyContacts, IServerLeaving
     {
         private const string PromptPrefix = "contact:";
         private const float PromptSeconds = 30f;
@@ -60,6 +60,17 @@ namespace KryticalNova.Social
             return false;
         }
 
+        // A client view of the entity netcode only asks and shows; its server body is where ContactsService is reached (M8 8.4.2).
+        private bool EntityServer => BodyRoleTag.Of(this) is { Kind: NetRoleKind.ServerBody };
+        private IBodyRequests Requests => BodyRoleTag.RequestsOf(this) is IBodyRequests requests ? requests : null;
+
+        private bool Ask(ContactOpKind op, string a, string b = null, bool flag = false)
+        {
+            if (!(Requests is { } requests)) return false;
+            requests.ContactOp(op, a ?? string.Empty, b ?? string.Empty, flag);
+            return true;
+        }
+
         private void Awake()
         {
             identity = GetComponent<PlayerIdentity>();
@@ -90,6 +101,65 @@ namespace KryticalNova.Social
             base.OnNetworkDespawn();
         }
 
+        // The entity netcode's server body is never network-spawned: it arrives as NGO's server did on spawn, and leaves before its save.
+        private void Start()
+        {
+            if (!EntityServer || saveAgent == null) return;
+            saveAgent.Loaded += OnCharacterLoaded;
+            if (saveAgent.IsLoaded) OnCharacterLoaded();
+        }
+
+        public void OnServerLeaving()
+        {
+            if (!EntityServer || !arrived) return;
+            arrived = false;
+            ContactsService.ServerLeft(this);
+        }
+
+        public override void OnDestroy()
+        {
+            if (saveAgent != null) saveAgent.Loaded -= OnCharacterLoaded;
+            base.OnDestroy();
+        }
+
+        /// <summary>A server body of the entity netcode runs its owner's request (NGO's RPC bodies, after the Social limit).</summary>
+        public void RunContactOp(ContactOpKind op, string a, string b, bool flag)
+        {
+            if (!EntityServer || string.IsNullOrEmpty(a)) return;
+            switch (op)
+            {
+                case ContactOpKind.AddByName: ContactsService.ServerRequestByName(this, a); break;
+                case ContactOpKind.Respond: ServerClosePrompt(a); ContactsService.ServerRespond(this, a, flag); break;
+                case ContactOpKind.Cancel: ContactsService.ServerCancel(this, a); break;
+                case ContactOpKind.Remove: ContactsService.ServerRemove(this, a); break;
+                case ContactOpKind.RemoveByName: ContactsService.ServerRemoveByName(this, a); break;
+                case ContactOpKind.Block: ContactsService.ServerBlock(this, a); break;
+                case ContactOpKind.BlockByName: ContactsService.ServerBlockByName(this, a); break;
+                case ContactOpKind.Unblock: ContactsService.ServerUnblock(this, a); break;
+                case ContactOpKind.UnblockByName: ContactsService.ServerUnblockByName(this, a); break;
+                case ContactOpKind.Favourite: ContactsService.ServerSetFavourite(this, a, flag); break;
+                case ContactOpKind.Note: ContactsService.ServerSetNote(this, a, ContactRules.CleanNote(b)); break;
+            }
+        }
+
+        /// <summary>The entity netcode's own view: the list the server sent (NGO's owner ViewRpc).</summary>
+        public void MirrorView(string viewText)
+        {
+            if (!BodyRoleTag.IsLocalClientView(this) || !ContactViewText.TryDecode(viewText, out ContactView[] view)) return;
+            lines = view;
+            Changed?.Invoke();
+        }
+
+        public void MirrorPrompt(string fromId, string fromName)
+        {
+            if (BodyRoleTag.IsLocalClientView(this)) ShowPrompt(fromId, fromName);
+        }
+
+        public void MirrorClosePrompt(string fromId)
+        {
+            if (BodyRoleTag.IsLocalClientView(this)) ClientPresentationRegistry.Prompts?.Hide(PromptPrefix + fromId);
+        }
+
         private void OnCharacterLoaded()
         {
             if (arrived) return;
@@ -102,64 +172,76 @@ namespace KryticalNova.Social
         /// <summary>Ask the character called <paramref name="characterName"/> to be a contact, online or not.</summary>
         public void Add(string characterName)
         {
+            if (!string.IsNullOrWhiteSpace(characterName) && Ask(ContactOpKind.AddByName, characterName.Trim())) return;
             if (IsSpawned && IsOwner && !string.IsNullOrWhiteSpace(characterName)) AddByNameRpc(characterName.Trim());
         }
 
         /// <summary>Ask the player <paramref name="target"/> (the one selected in the world).</summary>
         public void Add(PlayerContacts target)
         {
+            if (target != null && Ask(ContactOpKind.AddByName, target.ContactName)) return;
             if (IsSpawned && IsOwner && target != null && target.IsSpawned) AddRpc(target.NetworkObject);
         }
 
         /// <summary>Answer a request from the character with this id.</summary>
         public void Respond(string characterId, bool accept)
         {
+            if (!string.IsNullOrEmpty(characterId) && Ask(ContactOpKind.Respond, characterId, null, accept)) return;
             if (IsSpawned && IsOwner && !string.IsNullOrEmpty(characterId)) RespondRpc(characterId, accept);
         }
 
         /// <summary>Take back a request sent to the character with this id.</summary>
         public void CancelRequest(string characterId)
         {
+            if (!string.IsNullOrEmpty(characterId) && Ask(ContactOpKind.Cancel, characterId)) return;
             if (IsSpawned && IsOwner && !string.IsNullOrEmpty(characterId)) CancelRpc(characterId);
         }
 
         public void Remove(string characterId)
         {
+            if (!string.IsNullOrEmpty(characterId) && Ask(ContactOpKind.Remove, characterId)) return;
             if (IsSpawned && IsOwner && !string.IsNullOrEmpty(characterId)) RemoveRpc(characterId);
         }
 
         public void RemoveByName(string characterName)
         {
+            if (!string.IsNullOrWhiteSpace(characterName) && Ask(ContactOpKind.RemoveByName, characterName.Trim())) return;
             if (IsSpawned && IsOwner && !string.IsNullOrWhiteSpace(characterName)) RemoveByNameRpc(characterName.Trim());
         }
 
         public void Block(string characterId)
         {
+            if (!string.IsNullOrEmpty(characterId) && Ask(ContactOpKind.Block, characterId)) return;
             if (IsSpawned && IsOwner && !string.IsNullOrEmpty(characterId)) BlockRpc(characterId);
         }
 
         public void BlockByName(string characterName)
         {
+            if (!string.IsNullOrWhiteSpace(characterName) && Ask(ContactOpKind.BlockByName, characterName.Trim())) return;
             if (IsSpawned && IsOwner && !string.IsNullOrWhiteSpace(characterName)) BlockByNameRpc(characterName.Trim());
         }
 
         public void Unblock(string characterId)
         {
+            if (!string.IsNullOrEmpty(characterId) && Ask(ContactOpKind.Unblock, characterId)) return;
             if (IsSpawned && IsOwner && !string.IsNullOrEmpty(characterId)) UnblockRpc(characterId);
         }
 
         public void UnblockByName(string characterName)
         {
+            if (!string.IsNullOrWhiteSpace(characterName) && Ask(ContactOpKind.UnblockByName, characterName.Trim())) return;
             if (IsSpawned && IsOwner && !string.IsNullOrWhiteSpace(characterName)) UnblockByNameRpc(characterName.Trim());
         }
 
         public void SetFavourite(string characterId, bool favourite)
         {
+            if (!string.IsNullOrEmpty(characterId) && Ask(ContactOpKind.Favourite, characterId, null, favourite)) return;
             if (IsSpawned && IsOwner && !string.IsNullOrEmpty(characterId)) FavouriteRpc(characterId, favourite);
         }
 
         public void SetNote(string characterId, string note)
         {
+            if (!string.IsNullOrEmpty(characterId) && Ask(ContactOpKind.Note, characterId, ContactRules.CleanNote(note))) return;
             if (IsSpawned && IsOwner && !string.IsNullOrEmpty(characterId)) NoteRpc(characterId, ContactRules.CleanNote(note));
         }
 
@@ -268,13 +350,16 @@ namespace KryticalNova.Social
         /// <summary>Server: a line in this player's chat log.</summary>
         public void Tell(string text)
         {
-            if (chat != null && IsSpawned && IsServer && !string.IsNullOrEmpty(text)) chat.ServerSystem(text);
+            // a server body of the entity netcode too: its player's chat log (M8 8.4.1)
+            if (chat != null && ((IsSpawned && IsServer) || EntityServer) && !string.IsNullOrEmpty(text)) chat.ServerSystem(text);
         }
 
         /// <summary>Server: a refusal, shown to this player as a notice.</summary>
         public void Notify(string text)
         {
-            if (string.IsNullOrEmpty(text) || !IsSpawned || !IsServer) return;
+            if (string.IsNullOrEmpty(text)) return;
+            if (EntityServer) { OwnerMessages.TryTell(this, text); return; }   // its player's message line, as NGO's NotifyRpc
+            if (!IsSpawned || !IsServer) return;
             if (IsOwnedByServer) ClientPresentationRegistry.Messages?.ShowMessage(text);
             else NotifyRpc(text);
         }
@@ -285,6 +370,7 @@ namespace KryticalNova.Social
         /// <summary>Server: sends the owner its list as it stands now.</summary>
         public void ServerPushView()
         {
+            if (EntityServer) { ContactsOwnerLink.Current?.View(this, ContactViewText.Encode(ContactsService.ServerView(CharacterId))); return; }
             if (IsSpawned && IsServer) ViewRpc(ContactsService.ServerView(CharacterId));
         }
 
@@ -298,16 +384,20 @@ namespace KryticalNova.Social
         /// <summary>Server: asks the owner, on screen, to answer a contact request.</summary>
         public void ServerPrompt(string fromId, string fromName)
         {
+            if (EntityServer) { ContactsOwnerLink.Current?.Prompt(this, fromId, fromName); return; }
             if (IsSpawned && IsServer) PromptRpc(fromId, fromName);
         }
 
         public void ServerClosePrompt(string fromId)
         {
+            if (EntityServer) { ContactsOwnerLink.Current?.ClosePrompt(this, fromId); return; }
             if (IsSpawned && IsServer) ClosePromptRpc(fromId);
         }
 
         [Rpc(SendTo.Owner, InvokePermission = RpcInvokePermission.Server)]
-        private void PromptRpc(string fromId, string fromName) =>
+        private void PromptRpc(string fromId, string fromName) => ShowPrompt(fromId, fromName);
+
+        private void ShowPrompt(string fromId, string fromName) =>
             ClientPresentationRegistry.Prompts?.Show(PromptPrefix + fromId, "CONTACT REQUEST", $"{fromName} wants to add you as a contact.",
                 PromptSeconds, accept => Respond(fromId, accept));
 

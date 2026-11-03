@@ -92,6 +92,7 @@ namespace KryticalNova.Persistence.Entities
             // what a server body says to its own player goes to that player's connection (M7/M8 system 0)
             KryticalNova.Core.OwnerMessages.Current = new EntityOwnerMessages();
             KryticalNova.Items.ChatOwnerLink.Current = new EntityChatOwnerLink();   // chat lines, announcements, System notices (M8 8.4.1)
+            KryticalNova.Items.ContactsOwnerLink.Current = new EntityContactsOwnerLink();   // the Contacts window and its prompts (M8 8.4.2)
             KryticalNova.Items.TradeOwnerLink.Current = new EntityTradeOwnerLink();   // the trade view, notice and prompt (M8 8.2.3)
             KryticalNova.Items.KioskOwnerLink.Current = new EntityKioskOwnerLink();   // the owner's own Kiosk (M7.6)
             KryticalNova.Items.WorkshopOwnerLink.Current = new EntityWorkshopOwnerLink();   // Forge and Fabricator results (M8 8.3.6-7)
