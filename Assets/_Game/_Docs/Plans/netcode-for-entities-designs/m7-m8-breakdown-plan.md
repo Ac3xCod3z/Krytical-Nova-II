@@ -57,6 +57,35 @@ the checkpoints, the owner's Thursday hand-test list and the owner questions.
 | 7.5 | Drops on the ground (section 1) + Loot (`M8-g12.md` 1.4) | drop ghost (pooled GameObject views first; Entities Graphics later), pickup request (5 m reach, 20 s holder hold by `PlayerKey`, 180 s life, 200 per zone), ledger `loot`/`drop` | 7.4 (`gm.drop`), Pack/wallet real (done); hostile loot after M5/M6 reward bridge (stub: player drops + `gm.drop` only) | world test (hold, reach, expiry, cap); ledger test; batch + GUI GIF (drop and pick up) | HIGH | M |
 | 7.6 | Kiosk stands (section 2; `M8-g12.md` 2.3) | stand ghost (spike S1: replicated buffer of up to 32 listings; settings allow 48: cap at 32 or page) + open/buy/collect requests; `kiosks` world document; SaveTogether x3 | 8.2.1 Storage (permits from the Vault), Creds mirror | `TransactionLedgerTests`, kill test (test DB), world tests; GUI GIF | HIGH | L |
 
+### 7.5 design (DOTS 10, 3 Nov 2026; to build next)
+
+NGO facts that decide it (M7.md section 1, M8-g12.md 1.4, re-read 3 Nov): `WorldDrop` holds a stack (`netStack`) and a hold
+(`netHold {holder = NetworkObjectId, until}`); `PlayerLoot.ServerPickup` / `ServerDrop` run the rules (alive, flat reach 1.5 + 3.5 + 1.5
+= 5 m, the dropper's / killer's 20 s hold, faction lock, Creds item 9040 to the wallet (`CredsSource.HostileKill`) never the Pack,
+partial take when full, ledger `loot` +count / `drop` -count through the save agent's tally, no SaveTogether). 180 s life, 200 per zone.
+**Found 3 Nov:** the hold is keyed by `NetworkObjectId` and only counts when the holder `IsSpawned` (WorldDrop.cs:194, 244-252); a DOTS
+server body is never spawned, so on DOTS every hold would be Nobody: anyone could take a drop at once. The port must key it by PlayerKey.
+
+Edge (pooled GameObject views first, as decided; no new ghost type, so no subscene/prefab baking):
+1. **Server keeps NGO's WorldDrop objects** in its own scene (the offline branch of `WorldDrop.ServerSpawn` already makes them when NGO is
+   not listening). Add a `PlayerKey heldForKey` beside `reservedFor` (the dropper's / killer's key from its `BodyRoleTag`), and make
+   `IsReservedForAnother` / `IsHeldFor` read it on a DOTS server (a small Core seam or a `BodyRoleTag`-based overload; NGO unchanged).
+   Each drop gets a server id (a counter; never a NetworkObjectId).
+2. **Drop list to clients** (Persistence.Entities, a server system like the Pack sync): `DropShownRpc {Id, ItemId, Count, Data?, Pos mm,
+   HeldUntil server time, HeldForMe byte}` to each in-game connection on arrival (all) and when one appears / its stack changes;
+   `DropGoneRpc {Id, TakerNetworkId}` when it goes (the fly-to-hand `TakenDropVisual` plays on the taker's body). Faction lock and
+   "held for me" are per connection (only what NGO's clients could see).
+3. **Client views**: a pooled `WorldDrop`-looking view per id (the prefab's visuals with its rules off), registered in a `DropView`
+   registry that the loot HUD / magnet / pet chatter read as they read `WorldDrop`'s static list today (or a small Core list they move to).
+4. **Requests**: `IBodyRequests.Pickup(uint dropId)` -> `PickupRpc {Id}` and `IBodyRequests.Drop(byte container, byte index)` ->
+   `DropRpc {...}`, both `CallKind.Items` through `BodyOf`, the server finds the drop by id and calls NGO's unchanged `ServerPickup` /
+   `ServerDrop` on the server body; words to the message line (`PlayerLoot.Tell` on a server body -> `OwnerMessages`); the Pack and the
+   owner's Creds follow through the existing Pack mirror and `OwnerProgress`.
+5. **gm.drop** works through 7.4 (GmTarget finds the GM's server body) and is the test spawner; hostile loot waits for M5/M6.
+Tests: EditMode rules (reach, hold by key, expiry, cap, Creds split); a real-prefab PlayMode test (B16): A drops, B is refused for 20 s,
+then takes it; the `drop` / `loot` ledger lines on the MemorySaveStore; a double pickup gives one stack; a pickup after despawn nothing;
+a KnTestWorld test that the drop list reaches both clients and the gone message removes it. HIGH: review summary to the Master.
+
 ## 3. M8 group 1 (`M8-g12.md` 1.1-1.5)
 
 | # | System | DOTS edge | Needs | Tests | Risk | Size |
