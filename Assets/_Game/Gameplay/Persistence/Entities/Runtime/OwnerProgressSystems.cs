@@ -62,6 +62,9 @@ namespace KryticalNova.Persistence.Entities
             {
                 if (!ReferenceEquals(entry.World, World) || !em.Exists(entry.Ghost) || !em.HasComponent<OwnerProgress>(entry.Ghost)) continue;
                 OwnerProgress? now = OwnerProgressBridge.Read(entry.Body);
+                // the level everyone sees on the nameplate (M8 8.3.1)
+                if (now.HasValue && em.HasComponent<PlayerLevelTag>(entry.Ghost) && em.GetComponentData<PlayerLevelTag>(entry.Ghost).Level != now.Value.Level)
+                    em.SetComponentData(entry.Ghost, new PlayerLevelTag { Level = (short)Mathf.Clamp(now.Value.Level, 0, short.MaxValue) });
                 if (!now.HasValue || OwnerProgressBridge.Same(now.Value, em.GetComponentData<OwnerProgress>(entry.Ghost))) continue;
                 em.SetComponentData(entry.Ghost, now.Value);
                 Writes++;
@@ -84,6 +87,9 @@ namespace KryticalNova.Persistence.Entities
             EntityManager em = EntityManager;
             foreach (GhostBodyEntry entry in GhostBodyRegistry.Entries)
             {
+                if (!entry.IsLocal && ReferenceEquals(entry.World, World) && entry.Body != null && em.Exists(entry.Ghost)
+                    && em.HasComponent<PlayerLevelTag>(entry.Ghost) && entry.Body.TryGetComponent(out PlayerCharacterProgression other))
+                    other.MirrorObservedLevel(em.GetComponentData<PlayerLevelTag>(entry.Ghost).Level);   // another player's nameplate level
                 if (!entry.IsLocal || !ReferenceEquals(entry.World, World) || entry.Body == null) continue;
                 if (!em.Exists(entry.Ghost) || !em.HasComponent<OwnerProgress>(entry.Ghost)) continue;
                 OwnerProgress p = em.GetComponentData<OwnerProgress>(entry.Ghost);

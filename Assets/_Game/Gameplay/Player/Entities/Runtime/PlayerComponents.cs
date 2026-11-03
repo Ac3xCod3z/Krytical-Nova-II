@@ -146,6 +146,12 @@ namespace KryticalNova.Player.Entities
         [GhostField] public uint Version;
     }
 
+    /// <summary>The player's level, for everyone (their nameplate; NGO's progression variable was read by everyone). Written by the server.</summary>
+    public struct PlayerLevelTag : IComponentData
+    {
+        [GhostField] public short Level;
+    }
+
     /// <summary>
     /// The player is a Game Master (M7.4): everyone sees the [GM] tag on their name, as NGO showed it from <c>PlayerGm</c>'s network variable.
     /// Written by the server from the GM roster; 1 = GM.

@@ -44,5 +44,8 @@ namespace KryticalNova.Core
 
         /// <summary>Asks the server to refill every Flask in the Pack at the Apothecary in reach (M8 8.1.4).</summary>
         void RefillFlask();
+
+        /// <summary>Asks the server to put up to <paramref name="count"/> stat points into an attribute (M8 8.3.1, NGO's allocation RPC).</summary>
+        void Allocate(byte attribute, short count);
     }
 }

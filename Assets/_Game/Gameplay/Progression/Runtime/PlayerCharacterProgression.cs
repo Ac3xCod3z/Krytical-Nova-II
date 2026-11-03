@@ -78,6 +78,24 @@ namespace KryticalNova.Progression
             if (!IsServer) ApplyReplicated(current, announceLevels: true);
         }
 
+        /// <summary>A server body of the entity netcode puts its owner's points in (NGO's AllocateServerRpc body, after the caller's limit).</summary>
+        public int RunAllocate(CharacterAttribute attribute, int count) =>
+            BodyRoleTag.Of(this) is { Kind: NetRoleKind.ServerBody } ? TryAllocateMultiple(attribute, count) : 0;
+
+        // Another player's body on a client of the entity netcode: only their level is told (their nameplate); the first is no level-up.
+        private bool levelObserved;
+
+        /// <summary>The entity netcode's view of another player: their level (NGO's network variable, read by everyone), level-ups after the first.</summary>
+        public void MirrorObservedLevel(int level)
+        {
+            if (level < FirstLevel || (levelObserved && level == currentLevel)) return;
+            ProgressionState state = Capture();
+            state.level = level;
+            bool first = !levelObserved;
+            levelObserved = true;
+            ApplyReplicated(state, announceLevels: !first);
+        }
+
         /// <summary>Everything the owner's windows show, as NGO's network variable carries it (the entity netcode reads it on the server).</summary>
         public ProgressionState State => Capture();
 
@@ -185,6 +203,15 @@ namespace KryticalNova.Progression
             if (index < 0 || index >= attributes.Length) return 0;
 
             int cost = statData.allocationCost;
+            // the entity netcode's own view: the owner's prediction (NGO's expected) goes to the server's body (M8 8.3.1)
+            if (BodyRoleTag.RequestsOf(this) is IBodyRequests requests)
+            {
+                int affordable = cost > 0 ? statPoints / cost : maxCount;
+                int expected = Mathf.Min(maxCount, affordable, statData.maximumAttributeValue - attributes[index]);
+                if (expected <= 0) return 0;
+                requests.Allocate((byte)attribute, (short)Mathf.Min(expected, short.MaxValue));
+                return expected;
+            }
             if (!HasAuthority)
             {
                 if (!IsOwner) return 0;

@@ -100,6 +100,13 @@ namespace KryticalNova.Persistence.Entities
     {
     }
 
+    /// <summary>The owner puts stat points into an attribute (NGO's <c>PlayerCharacterProgression.AllocateServerRpc</c>; M8 8.3.1).</summary>
+    public struct AllocateRpc : IRpcCommand
+    {
+        public byte Attribute;
+        public short Count;
+    }
+
     public struct ServerTellRpc : IRpcCommand
     {
         public FixedString512Bytes Text;
@@ -179,6 +186,15 @@ namespace KryticalNova.Persistence.Entities
             em.AddComponent<SendRpcCommandRequest>(rpc);
         }
 
+        public void Allocate(byte attribute, short count)
+        {
+            if (m_World == null || !m_World.IsCreated || count <= 0) return;
+            var em = m_World.EntityManager;
+            Entity rpc = em.CreateEntity();
+            em.AddComponentData(rpc, new AllocateRpc { Attribute = attribute, Count = count });
+            em.AddComponent<SendRpcCommandRequest>(rpc);
+        }
+
         public void RefillFlask()
         {
             if (m_World == null || !m_World.IsCreated) return;
@@ -208,7 +224,7 @@ namespace KryticalNova.Persistence.Entities
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     public partial class PlayerRequestServerSystem : SystemBase
     {
-        EntityQuery m_Uses, m_Casts, m_PackOps, m_LoadoutOps, m_Refills;
+        EntityQuery m_Uses, m_Casts, m_PackOps, m_LoadoutOps, m_Refills, m_Allocations;
 
         /// <summary>Requests run, refused, and dropped by the request limits (tests).</summary>
         public int Used { get; private set; }
@@ -218,6 +234,7 @@ namespace KryticalNova.Persistence.Entities
         public int PackOps { get; private set; }
         public int LoadoutOps { get; private set; }
         public int Refills { get; private set; }
+        public int Allocations { get; private set; }
 
         protected override void OnCreate()
         {
@@ -226,6 +243,7 @@ namespace KryticalNova.Persistence.Entities
             m_PackOps = GetEntityQuery(ComponentType.ReadOnly<ReceiveRpcCommandRequest>(), ComponentType.ReadOnly<PackOpRpc>());
             m_LoadoutOps = GetEntityQuery(ComponentType.ReadOnly<ReceiveRpcCommandRequest>(), ComponentType.ReadOnly<LoadoutOpRpc>());
             m_Refills = GetEntityQuery(ComponentType.ReadOnly<ReceiveRpcCommandRequest>(), ComponentType.ReadOnly<FlaskRefillRpc>());
+            m_Allocations = GetEntityQuery(ComponentType.ReadOnly<ReceiveRpcCommandRequest>(), ComponentType.ReadOnly<AllocateRpc>());
         }
 
         protected override void OnUpdate()
@@ -257,6 +275,21 @@ namespace KryticalNova.Persistence.Entities
                 for (int i = 0; i < ops.Length; i++) RunPackOp(received[i].SourceConnection, ops[i]);
                 received.Dispose();
                 ops.Dispose();
+            }
+            if (!m_Allocations.IsEmpty)
+            {
+                var received = m_Allocations.ToComponentDataArray<ReceiveRpcCommandRequest>(Allocator.Temp);
+                var asks = m_Allocations.ToComponentDataArray<AllocateRpc>(Allocator.Temp);
+                em.DestroyEntity(m_Allocations);
+                // NGO: the Money limit, then the server body's own rules (points held, the attribute's maximum)
+                for (int i = 0; i < asks.Length; i++)
+                    if (BodyOf(received[i].SourceConnection, CallKind.Money, out GameObject body) && body.TryGetComponent(out PlayerCharacterProgression progression))
+                    {
+                        progression.RunAllocate((CharacterAttribute)asks[i].Attribute, asks[i].Count);
+                        Allocations++;
+                    }
+                received.Dispose();
+                asks.Dispose();
             }
             if (!m_Refills.IsEmpty)
             {

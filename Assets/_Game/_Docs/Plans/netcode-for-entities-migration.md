@@ -1186,5 +1186,8 @@ checkpoints; the owner's Thursday hand-test list; owner questions). NGO rules ta
     through PlayerWallet / CredsSink.Vendor, no item ledger line as NGO); B10 (refused out of range and with too few Creds, exact
     price, Flask full, no double charge, a view never refills). Review summary to the Master (HIGH).
 - [ ] M8 group 3: progression, skills, XP boosts, Serums mirror, Nova, Forge, crafting, restyle, weaves, library, Autobuff.
+  - [x] 8.3.1 progression: stat points by AllocateRpc (Money limit) on the server body by NGO's rule (partial when short, never below
+    zero), the owner's windows by OwnerProgress, everyone's level on the nameplate (PlayerLevelTag; remote views keep their progression,
+    no level-up on first sight); B11 (real prefab).
 - [ ] M8 group 2: storage, shopping, trade, Kiosk player side.
 - [ ] M8 group 4: chat, contacts, party, sponsor, Crew, emotes, pets, mounts, crate, Recall, housing check; duels and Cadence wait for M4.

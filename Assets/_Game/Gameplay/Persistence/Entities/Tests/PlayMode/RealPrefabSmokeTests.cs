@@ -12,6 +12,7 @@ using KryticalNova.Items;
 using KryticalNova.Networking.Entities;
 using KryticalNova.Player;
 using KryticalNova.Player.Entities;
+using KryticalNova.Progression;
 using KryticalNova.Player.Entities.Bodies;
 using KryticalNova.Player.Entities.Presentation;
 using Object = UnityEngine.Object;
@@ -428,6 +429,7 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
                 Ops.Add($"{kind} {fromContainer}:{fromIndex} {toContainer}:{toIndex}");
             public void LoadoutOp(LoadoutOpKind kind, byte index, string name) => Ops.Add($"{kind} {index} {name}");
             public void RefillFlask() => Ops.Add("RefillFlask");
+            public void Allocate(byte attribute, short count) => Ops.Add($"Allocate {attribute} {count}");
         }
 
         [UnityTest]
@@ -660,6 +662,64 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
             view.GetComponent<PlayerFlask>().RunRefill();
             Assert.AreEqual(1000 - paid, wallet.Creds, "a view never refills");
             Object.Destroy(definition);
+        }
+
+        [UnityTest]
+        public IEnumerator B11_StatPoints_ArePutInByTheServerBody_AndOtherPlayersSeeTheLevel()
+        {
+            NetRole.Install(new BodyRoleNetRoleAdapter(null, () => NetRoleKind.ServerBody));
+            GameObject server = Make(NetRoleKind.ServerBody, false, new PlayerKey(12));
+            GameObject view = Make(NetRoleKind.ClientView, true, new PlayerKey(12));
+            GameObject remote = Make(NetRoleKind.ClientView, false, new PlayerKey(12));
+            yield return null;
+            var progress = server.GetComponent<PlayerCharacterProgression>();
+            progress.SetLevel(5);
+            progress.AddStatPoints(4);
+            int points = progress.StatPoints, strength = progress.State.strength;
+            Assert.GreaterOrEqual(points, 4, "the server body holds stat points");
+
+            // the owner's view predicts and asks; it changes nothing itself
+            var viewProgress = view.GetComponent<PlayerCharacterProgression>();
+            OwnerProgressBridge.Mirror(view, OwnerProgressBridge.Read(server).Value);
+            var asked = new Asked();
+            view.GetComponent<BodyRoleTag>().Requests = asked;
+            int predicted = viewProgress.TryAllocateMultiple(CharacterAttribute.Strength, 3);
+            Assert.AreEqual(3, predicted, "the owner's prediction (NGO's expected)");
+            CollectionAssert.AreEqual(new[] { $"Allocate {(byte)CharacterAttribute.Strength} 3" }, asked.Ops, "sent to the server");
+            Assert.AreEqual(points, viewProgress.StatPoints, "the view spends nothing itself");
+            Assert.AreEqual(0, viewProgress.RunAllocate(CharacterAttribute.Strength, 3), "a view never allocates");
+
+            // the server body allocates by its own rules
+            Assert.AreEqual(3, progress.RunAllocate(CharacterAttribute.Strength, 3));
+            Assert.AreEqual(strength + 3, progress.State.strength, "three points in Strength");
+            Assert.AreEqual(points - 3 * Mathf.Max(1, progress.AllocationCost), progress.StatPoints, "paid in points");
+
+            // more than the points pay for: NGO's rule puts in only what they pay for, never below zero; with none left, nothing at all
+            int cost = Mathf.Max(1, progress.AllocationCost);
+            int left = progress.StatPoints, vitality = progress.State.vitality;
+            int put = progress.RunAllocate(CharacterAttribute.Vitality, 1000);
+            Assert.LessOrEqual(put, left / cost, "never more than the points pay for");
+            Assert.AreEqual(vitality + put, progress.State.vitality);
+            Assert.AreEqual(left - put * cost, progress.StatPoints, "paid exactly");
+            Assert.GreaterOrEqual(progress.StatPoints, 0, "never below zero");
+            int agility = progress.State.agility, before = progress.StatPoints;
+            if (before < cost)
+            {
+                Assert.AreEqual(0, progress.RunAllocate(CharacterAttribute.Agility, 5), "no points: nothing put in");
+                Assert.AreEqual(agility, progress.State.agility);
+                Assert.AreEqual(before, progress.StatPoints, "and nothing spent");
+            }
+
+            // another player's body: the level for the nameplate, without a level-up on first sight, with one after
+            Assert.IsNotNull(remote.GetComponent<PlayerCharacterProgression>(), "a remote view keeps its progression (the nameplate's level)");
+            var remoteProgress = remote.GetComponent<PlayerCharacterProgression>();
+            int levelUps = 0;
+            remoteProgress.LevelGained += _ => levelUps++;
+            remoteProgress.MirrorObservedLevel(5);
+            Assert.AreEqual(5, remoteProgress.CurrentLevel, "the nameplate shows level 5");
+            Assert.AreEqual(0, levelUps, "first sight is no level-up");
+            remoteProgress.MirrorObservedLevel(6);
+            Assert.AreEqual(1, levelUps, "a level gained later shows as one");
         }
 
         static CharacterRecipe AnyLegalRecipe(CharacterCreationDatabase database)
