@@ -456,6 +456,15 @@ namespace KryticalNova.Persistence.Entities
             em.AddComponent<SendRpcCommandRequest>(rpc);
         }
 
+        public void Nova(NovaOpKind op, byte arg)
+        {
+            if (m_World == null || !m_World.IsCreated) return;
+            var em = m_World.EntityManager;
+            Entity rpc = em.CreateEntity();
+            em.AddComponentData(rpc, new NovaOpRpc { Op = (byte)op, Arg = arg });
+            em.AddComponent<SendRpcCommandRequest>(rpc);
+        }
+
         public void Craft(ushort recipeId, ushort times)
         {
             if (m_World == null || !m_World.IsCreated || recipeId == 0) return;

@@ -152,6 +152,13 @@ namespace KryticalNova.Player.Entities
         [GhostField] public short Level;
     }
 
+    /// <summary>The player's Nova (Ascension, Standings, the one worn, the Weave) for everyone: the halo and the title (NGO's netState was read
+    /// by everyone; M8 8.3.5). <c>NovaState.Packed</c>; written by the server.</summary>
+    public struct PlayerNovaTag : IComponentData
+    {
+        [GhostField] public ulong Packed;
+    }
+
     /// <summary>
     /// The player is a Game Master (M7.4): everyone sees the [GM] tag on their name, as NGO showed it from <c>PlayerGm</c>'s network variable.
     /// Written by the server from the GM roster; 1 = GM.

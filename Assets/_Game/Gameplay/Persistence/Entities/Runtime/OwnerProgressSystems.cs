@@ -85,6 +85,10 @@ namespace KryticalNova.Persistence.Entities
                 if (em.HasComponent<OwnerSerums>(entry.Ghost) && OwnerProgressBridge.ReadSerums(entry.Body) is OwnerSerums serums
                     && !OwnerProgressBridge.Same(serums, em.GetComponentData<OwnerSerums>(entry.Ghost)))
                     em.SetComponentData(entry.Ghost, serums);
+                // the Nova everyone sees: the halo and the Standing worn (M8 8.3.5)
+                if (em.HasComponent<PlayerNovaTag>(entry.Ghost) && entry.Body != null && entry.Body.TryGetComponent(out PlayerNova nova)
+                    && em.GetComponentData<PlayerNovaTag>(entry.Ghost).Packed != nova.State.Packed)
+                    em.SetComponentData(entry.Ghost, new PlayerNovaTag { Packed = nova.State.Packed });
                 // the level everyone sees on the nameplate (M8 8.3.1)
                 if (now.HasValue && em.HasComponent<PlayerLevelTag>(entry.Ghost) && em.GetComponentData<PlayerLevelTag>(entry.Ghost).Level != now.Value.Level)
                     em.SetComponentData(entry.Ghost, new PlayerLevelTag { Level = (short)Mathf.Clamp(now.Value.Level, 0, short.MaxValue) });
@@ -110,6 +114,10 @@ namespace KryticalNova.Persistence.Entities
             EntityManager em = EntityManager;
             foreach (GhostBodyEntry entry in GhostBodyRegistry.Entries)
             {
+                // everyone's Nova on every view, the own one too (M8 8.3.5)
+                if (ReferenceEquals(entry.World, World) && entry.Body != null && em.Exists(entry.Ghost) && em.HasComponent<PlayerNovaTag>(entry.Ghost)
+                    && entry.Body.TryGetComponent(out PlayerNova shownNova))
+                    shownNova.MirrorState(NovaState.FromPacked(em.GetComponentData<PlayerNovaTag>(entry.Ghost).Packed));
                 if (!entry.IsLocal && ReferenceEquals(entry.World, World) && entry.Body != null && em.Exists(entry.Ghost)
                     && em.HasComponent<PlayerLevelTag>(entry.Ghost) && entry.Body.TryGetComponent(out PlayerCharacterProgression other))
                     other.MirrorObservedLevel(em.GetComponentData<PlayerLevelTag>(entry.Ghost).Level);   // another player's nameplate level

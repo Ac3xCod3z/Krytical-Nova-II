@@ -33,6 +33,16 @@ namespace KryticalNova.Progression
         /// <summary>The Nova Weave: 0 shows the character's own Nova tier; otherwise the tier shown (never above its own).</summary>
         public byte woven;
 
+        /// <summary>The whole state in one number (the entity netcode's ghost field for everyone; M8 8.3.5).</summary>
+        public ulong Packed => ascension | (ulong)vanguard << 8 | (ulong)bulwark << 16 | (ulong)ironblood << 24 | (ulong)mindwell << 32
+                               | (ulong)worn << 40 | (ulong)woven << 48;
+
+        public static NovaState FromPacked(ulong p) => new NovaState
+        {
+            ascension = (byte)p, vanguard = (byte)(p >> 8), bulwark = (byte)(p >> 16), ironblood = (byte)(p >> 24), mindwell = (byte)(p >> 32),
+            worn = (byte)(p >> 40), woven = (byte)(p >> 48),
+        };
+
         public int Standing(StandingTrack track)
         {
             switch (track)

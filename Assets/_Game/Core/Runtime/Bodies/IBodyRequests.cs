@@ -1,5 +1,15 @@
 namespace KryticalNova.Core
 {
+    /// <summary>What a Herald request asks the server's body to do (NGO's <c>PlayerNova</c> RPCs; M8 8.3.5).</summary>
+    public enum NovaOpKind : byte
+    {
+        Ascend = 1,
+        BuyStanding = 2,
+        WearStanding = 3,
+        WearNone = 4,
+        Weave = 5,
+    }
+
     /// <summary>What a Forge request asks the server's body to do (NGO's <c>PlayerGearWork</c> RPCs; M8 8.3.6).</summary>
     public enum GearWorkOpKind : byte
     {
@@ -147,5 +157,8 @@ namespace KryticalNova.Core
 
         /// <summary>Asks the server to make a recipe <paramref name="times"/> times at the Fabricator (M8 8.3.7, NGO's CraftRpc).</summary>
         void Craft(ushort recipeId, ushort times);
+
+        /// <summary>Asks the server for an Ascension, a Standing, a Standing worn or the Nova Weave (M8 8.3.5): <paramref name="arg"/> the track or the tier.</summary>
+        void Nova(NovaOpKind op, byte arg);
     }
 }

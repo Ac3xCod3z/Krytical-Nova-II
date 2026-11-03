@@ -370,6 +370,10 @@ Remaining small M0 seams: `MapAnchor` in editor builders, fixed/paged RPC argume
 ## 22. Main drift log (keep current: files `main` changed since our base that our branch also touches)
 Base: `3ad5ba303` (main on 29 Oct 2026). Our branch touches 100 files so far (docs, Core/Networking/Persistence/Player/GameFeel/UI/World netcode edges, tools).
 - 29 Oct 2026: `main` is still at `3ad5ba303`: 0 new commits, 0 overlapping files.
+- 3 Nov 2026 (DOTS 11): `main` at `1f62da87a`, 102 commits and 222 files since the base, 86 of them also touched here (count only, not
+  yet sorted). Known effect: the clone fails two gear-asset tests that main fixed in `a78864ba0` ("Gear and icon tests match the Tripo
+  sets"): `IconAssetsTests.EveryRingAndAmuletOfTheLadder_WearsItsLooksLibraryIcon` (Amulet_CIVL_R45) and
+  `GearLadderTests.EverySetAboveCommonWearsItsOwnTheme` (Armor_SKTN_R45). Not DOTS faults; they pass once that commit is merged in.
 Check before every merge and weekly: `git diff --name-only 3ad5ba303 main` intersected with `git diff --name-only 3ad5ba303 dots/netcode-entities`; also list new `[Rpc]` / `NetworkVariable` lines added on main (those are new edges the DOTS branch must port).
 
 ## 23. M2a notes (29 Oct 2026, written without an Editor; nothing compiled or run yet)
@@ -1199,11 +1203,16 @@ checkpoints; the owner's Thursday hand-test list; owner questions). NGO rules ta
     `skills` real, Skill Chips / Dossiers used again (LearnSkill); B14; save note approved.
   - [x] Movement ranks: Run / Jump bought on the server body (MovementUpgradeRpc, Money), `movement` real (Wallstride opens from them);
     B15; save note approved. (M8 group 3 core done.)
-  - [ ] 8.3.6 Forge + 8.3.7 crafting: the five Forge requests and the Fabricator's run NGO's PlayerGearWork / PlayerCrafting rules on
+  - [x] 8.3.6 Forge + 8.3.7 crafting: the five Forge requests and the Fabricator's run NGO's PlayerGearWork / PlayerCrafting rules on
     the server body at the Money limit (Armorer / Fabricator reach, prices through PlayerWallet GearWork / Crafting, the forge ledger
     line), the result to the owner by PlayerKey, the Forge's burst to everyone (by the actor's NetworkId), a view never works or
     crafts itself (Items IBodyGearWork / IBodyCrafting); no save key (gear state rides in the Pack). B22. Not ported: the Temper 120
-    server-wide announcement (chat, group 4). Review summary to the Master first.
+    server-wide announcement (chat, group 4). HIGH review approved. B22 now also runs Fusion, Tuning (+ Renown), the Tuning reset and
+    Reforge until one success each, NGO's price checked on every attempt, one forge line per attempt (master-6).
+  - [ ] 8.3.5 Nova: Ascension, Standings, the Standing worn and the Nova Weave run NGO's PlayerNova rules on the server body at the Money
+    limit (Herald reach, Renown then Creds through PlayerWallet Herald / Appearance, Renown handed back on a Creds failure), the result
+    to the owner by PlayerKey, the moment to everyone; the Nova to every view as the PlayerNovaTag ghost field (halo, title; remote views
+    keep PlayerNova), `nova` real. B23. Save note + review summary to the Master first.
 - [x] M8 group 2: storage, shopping, trade, Kiosk player side.
   - [x] 8.2.1 storage (Vault + Deep Vault): requests run NGO's PlayerStorage rules on the server body (Vaultkeeper range, Items limit,
     Creds through PlayerWallet VaultDeposit/VaultWithdraw at the Money limit), cells + Creds mirrored to the owner, `vault` + `deepvault`

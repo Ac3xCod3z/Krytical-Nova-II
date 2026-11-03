@@ -45,6 +45,21 @@ namespace KryticalNova.Progression
     /// replicated to everyone, and every machine works out the stat bonuses and the Nova from it, the way worn gear
     /// does. Every number is in <see cref="NovaSettings"/>.
     /// </summary>
+    /// <summary>Server: how a server body's Herald result reaches its player and everyone's view of the moment (the entity netcode; M8 8.3.5).</summary>
+    public interface INovaLink
+    {
+        void Finished(Component part, in NovaWorkResult result);
+    }
+
+    /// <summary>The server's <see cref="INovaLink"/>; null where there is no entity netcode server.</summary>
+    public static class NovaLink
+    {
+        public static INovaLink Current;
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetStatics() => Current = null;
+    }
+
     [DisallowMultipleComponent]
     public sealed class PlayerNova : NetworkBehaviour, ISaveParticipant
     {
@@ -127,7 +142,53 @@ namespace KryticalNova.Progression
         /// <summary>How far above the crown the Nova reaches (metres): what a namecard has to clear. 0 with no Nova.</summary>
         public float NovaHeight => halo != null ? halo.TopAboveHead : 0f;
 
-        private bool HasAuthority => !IsSpawned || IsServer;
+        // A client view of the entity netcode (the own one and other players') only shows the server's Nova (MirrorState); it never decides.
+        private bool HasAuthority => (!IsSpawned || IsServer) && !EntityView;
+        private bool EntityView => KryticalNova.Core.BodyRoleTag.Of(this) is { Kind: KryticalNova.Core.NetRoleKind.ClientView };
+        private bool EntityServer => KryticalNova.Core.BodyRoleTag.Of(this) is { Kind: KryticalNova.Core.NetRoleKind.ServerBody };
+
+        private bool AskServer(KryticalNova.Core.NovaOpKind op, int arg)
+        {
+            if (!(KryticalNova.Core.BodyRoleTag.RequestsOf(this) is KryticalNova.Core.IBodyRequests requests)) return false;
+            requests.Nova(op, (byte)Mathf.Clamp(arg, 0, byte.MaxValue));
+            return true;
+        }
+
+        /// <summary>A server body of the entity netcode runs its owner's request (NGO's RPC bodies, after the caller's Money limit).</summary>
+        public void RunNovaOp(KryticalNova.Core.NovaOpKind op, byte arg)
+        {
+            if (!EntityServer) return;
+            switch (op)
+            {
+                case KryticalNova.Core.NovaOpKind.Ascend: ServerAscend(); break;
+                case KryticalNova.Core.NovaOpKind.BuyStanding: ServerBuyStanding((StandingTrack)arg); break;
+                case KryticalNova.Core.NovaOpKind.WearStanding: ServerWearStanding((StandingTrack)arg, true); break;
+                case KryticalNova.Core.NovaOpKind.WearNone: ServerWearStanding(default, false); break;
+                case KryticalNova.Core.NovaOpKind.Weave: ServerWeaveNova(arg); break;
+            }
+        }
+
+        /// <summary>The entity netcode's views (the own one and other players'): the server's Nova, from the ghost field everyone reads.</summary>
+        public void MirrorState(NovaState shown)
+        {
+            if (!EntityView || shown.Equals(state)) return;
+            Show(shown);
+        }
+
+        /// <summary>The own view: the server's outcome of a request, with the moment shown for this player (NGO's FinishedRpc + ShownRpc).</summary>
+        public void MirrorFinished(NovaWorkResult result)
+        {
+            if (!KryticalNova.Core.BodyRoleTag.IsLocalClientView(this)) return;
+            KryticalNova.Diagnostics.PerformanceLog.Mark("nova.work");
+            Finished?.Invoke(result);
+            Show(result, true);
+        }
+
+        /// <summary>Another player's view: the moment on their character (NGO's ShownRpc to everyone).</summary>
+        public void MirrorShown(NovaWorkResult result)
+        {
+            if (EntityView) Show(result, false);
+        }
 
         private void Awake()
         {
@@ -205,6 +266,7 @@ namespace KryticalNova.Progression
         /// <summary>One Ascension attempt.</summary>
         public void RequestAscend()
         {
+            if (AskServer(KryticalNova.Core.NovaOpKind.Ascend, 0)) return;
             if (IsSpawned) AscendRpc();
             else ServerAscend();
         }
@@ -212,6 +274,7 @@ namespace KryticalNova.Progression
         /// <summary>Buys the next level of a Standings track.</summary>
         public void RequestBuyStanding(StandingTrack track)
         {
+            if (AskServer(KryticalNova.Core.NovaOpKind.BuyStanding, (int)track)) return;
             if (IsSpawned) BuyStandingRpc(track);
             else ServerBuyStanding(track);
         }
@@ -219,6 +282,7 @@ namespace KryticalNova.Progression
         /// <summary>Wears the name of a track the character holds a level on. Free, and needs no Herald.</summary>
         public void RequestWearStanding(StandingTrack track)
         {
+            if (AskServer(KryticalNova.Core.NovaOpKind.WearStanding, (int)track)) return;
             if (IsSpawned) WearStandingRpc(track, true);
             else ServerWearStanding(track, true);
         }
@@ -226,6 +290,7 @@ namespace KryticalNova.Progression
         /// <summary>Wears no Standing.</summary>
         public void RequestWearNoStanding()
         {
+            if (AskServer(KryticalNova.Core.NovaOpKind.WearNone, 0)) return;
             if (IsSpawned) WearStandingRpc(default, false);
             else ServerWearStanding(default, false);
         }
@@ -236,6 +301,7 @@ namespace KryticalNova.Progression
         /// </summary>
         public void RequestWeaveNova(int tier)
         {
+            if (AskServer(KryticalNova.Core.NovaOpKind.Weave, tier)) return;
             if (IsSpawned) WeaveNovaRpc((byte)Mathf.Clamp(tier, 0, byte.MaxValue));
             else ServerWeaveNova(tier);
         }
@@ -378,6 +444,7 @@ namespace KryticalNova.Progression
 
         private void Finish(NovaWorkResult result)
         {
+            if (EntityServer) { NovaLink.Current?.Finished(this, result); return; }   // the owner's window, everyone's moment
             if (IsSpawned)
             {
                 FinishedRpc(result);
@@ -442,6 +509,7 @@ namespace KryticalNova.Progression
         private void Tell(string text)
         {
             if (string.IsNullOrEmpty(text)) return;
+            if (EntityServer) { KryticalNova.Core.OwnerMessages.TryTell(this, text); return; }   // its player's message line
             if (IsSpawned && !IsOwnedByServer) TellRpc(text);
             else ClientPresentationRegistry.Messages?.ShowMessage(text);
         }

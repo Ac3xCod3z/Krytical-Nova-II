@@ -190,6 +190,8 @@ backflips' speed (80 % of the air). Added as M7/M8 systems land (each: what to c
   a DOTS view yet: walk up first.)
 - 8.3.6/8.3.7 (built 3 Nov): at the Armorer temper a piece (Creds and an Alloy go, the window shows the result, a second client sees
   the burst), fuse, tune, reforge; at the Fabricator make Alloys; far from them: refused; relog: the tempered piece keeps its state.
+- 8.3.5 (built 3 Nov): at the Herald ascend (100 Renown and 500,000 Creds go; the halo reacts), buy a Vanguard Standing (it is worn: a
+  second client sees the title and the halo), weave a lower Nova; relog: all kept; far from the Herald: refused.
 - 8.2.x/7.6: a Vault deposit and withdraw, a shop buy and sell, a trade with a second player, a Kiosk sale, each after a relog.
 - 8.4.x: chat say/tell, a contact, a party with Follow, founding a Crew, an emote and a mount seen from the second client.
 The list is kept current in this section as systems land.

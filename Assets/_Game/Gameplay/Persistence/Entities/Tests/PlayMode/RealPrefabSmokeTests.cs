@@ -447,11 +447,14 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
                 Ops.Add($"KioskBuy {standId} {index} {itemId}x{stackCount}:{data} {unitPrice} {count}");
             public void GearWork(GearWorkOpKind op, short cell, short cell2, ushort alloy, ushort protection) => Ops.Add($"GearWork {op} {cell} {cell2} {alloy} {protection}");
             public void Craft(ushort recipeId, ushort times) => Ops.Add($"Craft {recipeId} {times}");
+            public void Nova(NovaOpKind op, byte arg) => Ops.Add($"Nova {op} {arg}");
         }
 
         /// <summary>What the server bodies told their players (the message line) and sent their trade windows (view, notice, prompt).</summary>
-        sealed class Told : IOwnerMessages, ITradeOwnerLink, IKioskOwnerLink, IWorkshopOwnerLink
+        sealed class Told : IOwnerMessages, ITradeOwnerLink, IKioskOwnerLink, IWorkshopOwnerLink, KryticalNova.Progression.INovaLink
         {
+            public void Finished(Component part, in KryticalNova.Progression.NovaWorkResult r) =>
+                Lines.Add((Body(part), $"nova {(int)r.kind} {(int)r.outcome} {r.before}->{r.after}"));
             public void GearWorked(Component part, byte kind, byte outcome, ItemStack before, ItemStack after) =>
                 Lines.Add((Body(part), $"forge {kind} {outcome} {before.itemId}"));
             public void Crafted(Component part, ushort recipeId, int times) => Lines.Add((Body(part), $"crafted {recipeId} x{times}"));
@@ -1670,17 +1673,41 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
                 GearProgressionSettings settings = forge.GearSettings;
                 Assert.IsNotNull(settings, "with the Forge's numbers");
 
-                // a ladder piece and an Alloy NGO's Temper rule accepts on it (picked here, proven by the rule before the run)
+                // a ladder piece every Forge rule accepts (Temper with the first Alloy, Fusion with its twin, Tuning, Reforge into something):
+                // picked here by NGO's own rules before anything runs
                 AlloyGrade alloy = settings.temper.alloys[0];
-                ItemDefinition piece = null;
+                var wearer = body.GetComponent<IGearWearer>();
+                var reforgeInto = new List<ushort>();
+                ItemDefinition piece = null, fusePiece = null, fuseMaterial = null, tunePiece = null, reforgePiece = null;
+                GearItemState fuseReady = default;
                 foreach (ItemDefinition item in inv.Catalog.Items)
-                    if (item != null && item.IsLadderGear && GearProgressionRules.TemperBlockedReason(settings, item, default, alloy, TemperProtection.None) == null)
-                    { piece = item; break; }
-                Assert.IsNotNull(piece, "a ladder piece Temper accepts with " + alloy.itemId);
+                {
+                    if (item == null || !item.IsLadderGear) continue;
+                    if (piece == null && GearProgressionRules.TemperBlockedReason(settings, item, default, alloy, TemperProtection.None) == null) piece = item;
+                    // Fusion (NGO's rule): a Rare or Epic tempered to the minimum, with an untouched Rare of the same kind at the material level
+                    if (fusePiece == null && (item.rarity == ItemRarity.Rare || item.rarity == ItemRarity.Epic))
+                    {
+                        GearItemState ready = default(GearItemState).WithTemper(item.rarity == ItemRarity.Epic ? settings.fusion.minTemperEpic : settings.fusion.minTemperRare);
+                        foreach (ItemDefinition m in inv.Catalog.Items)
+                            if (m != null && GearProgressionRules.FusionBlockedReason(settings, item, ready, m, default) == null)
+                            { fusePiece = item; fuseMaterial = m; fuseReady = ready; break; }
+                    }
+                    if (tunePiece == null && GearProgressionRules.TuneBlockedReason(settings, item, default) == null) tunePiece = item;
+                    if (reforgePiece == null && GearProgressionRules.ReforgeBlockedReason(settings, item, default) == null)
+                    {
+                        GearProgressionRules.CollectReforgeResults(inv.Gear, item, wearer.Faction, wearer.Body, reforgeInto);
+                        if (reforgeInto.Count > 0) reforgePiece = item;
+                    }
+                }
+                Assert.IsNotNull(piece, "a ladder piece Temper accepts with Alloy " + alloy.itemId);
+                Assert.IsNotNull(fusePiece, "a Rare or Epic Fusion accepts (tempered to the minimum) with a Rare material");
+                Assert.IsNotNull(tunePiece, "a ladder piece Tuning accepts");
+                Assert.IsNotNull(reforgePiece, "a ladder piece Reforge turns into another for this body");
                 inv.ServerGive(piece.itemId, 1);
                 inv.ServerGive(alloy.itemId, 2);
                 inv.ServerGive(9100, 8);
-                wallet.ServerSet(10_000_000);
+                long start = System.Math.Min(wallet.Cap, 2_000_000_000L);
+                wallet.ServerSet(start);
                 int Cell(ushort id) { for (int i = 0; i < PlayerInventory.Capacity; i++) if (inv.Get(i).itemId == id) return i; return -1; }
                 int cell = Cell(piece.itemId);
                 long cost = GearProgressionRules.TemperCost(settings, piece, 0);
@@ -1691,14 +1718,83 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
                 crafting.RunCraft(1, 2);
                 Assert.IsTrue(told.Any(body, "tell Visit an Armorer to work on gear."), "NGO's Forge reach: " + string.Join(" | ", told.To(body)));
                 Assert.IsTrue(told.Any(body, "tell Visit a Fabricator to craft."), "and the Fabricator's");
-                Assert.AreEqual(10_000_000, wallet.Creds, "no Creds spent");
+                Assert.AreEqual(start, wallet.Creds, "no Creds spent");
                 Assert.AreEqual(alloys, inv.CountItem(alloy.itemId), "no Alloy used");
 
                 GameObject armorer = Npc(KryticalNova.NPC.NpcOffer.GearWork | KryticalNova.NPC.NpcOffer.Craft, body.transform.position + Vector3.right);
                 forge.RunGearWork(GearWorkOpKind.Temper, cell, 0, alloy.itemId, 0);
                 Assert.IsTrue(told.Any(body, $"forge 0 "), "a Temper ran and its result went to the owner: " + string.Join(" | ", told.To(body)));
-                Assert.AreEqual(10_000_000 - cost, wallet.Creds, "NGO's Temper price through the wallet");
+                Assert.AreEqual(start - cost, wallet.Creds, "NGO's Temper price through the wallet");
                 Assert.AreEqual(alloys - 1, inv.CountItem(alloy.itemId), "one Alloy used");
+
+                // the other four, each until one succeeds (master-6, 3 Nov: they handle Creds): NGO's price on every attempt and a forge line each
+                var progression = body.GetComponent<PlayerCharacterProgression>();
+                int GiveOne(ushort id)
+                {
+                    var had = new HashSet<int>();
+                    for (int i = 0; i < PlayerInventory.Capacity; i++) if (inv.Get(i).itemId == id) had.Add(i);
+                    inv.ServerGive(id, 1);
+                    for (int i = 0; i < PlayerInventory.Capacity; i++) if (inv.Get(i).itemId == id && !had.Contains(i)) return i;
+                    return -1;
+                }
+                int Results(byte kind, GearWorkOutcome? outcome = null) =>
+                    told.To(body).FindAll(l => l.StartsWith($"forge {kind} ") && (outcome == null || l.StartsWith($"forge {kind} {(byte)outcome} "))).Count;
+
+                // Fusion: a fresh piece fused with its twin
+                int fuseTarget = GiveOne(fusePiece.itemId);
+                // tempered to Fusion's minimum the way NGO's GM command does it (PlayerGearWork.ServerSetState), so the test needs no lucky Tempers
+                Component forgePart = (Component)forge;
+                Assert.IsTrue((bool)forgePart.GetType().GetMethod("ServerSetState").Invoke(forgePart, new object[] { fuseTarget, fuseReady }), "the target is tempered");
+                for (int t = 0; t < 80 && Results(1, GearWorkOutcome.Success) == 0; t++)
+                {
+                    if (settings.fusion.catalystItemId != 0 && inv.CountItem(settings.fusion.catalystItemId) < 1) inv.ServerGive(settings.fusion.catalystItemId, 1);
+                    int material = GiveOne(fuseMaterial.itemId);
+                    long before = wallet.Creds;
+                    int stage = GearItemState.Of(inv.Get(fuseTarget)).Fusion;
+                    int ran = Results(1);
+                    forge.RunGearWork(GearWorkOpKind.Fuse, fuseTarget, material, 0, 0);
+                    Assert.AreEqual(ran + 1, Results(1), "every Fusion attempt finishes: " + string.Join(" | ", told.To(body)));
+                    Assert.AreEqual(before - GearProgressionRules.FusionCost(settings.fusion, stage + 1), wallet.Creds, "NGO's Fusion price, success or not");
+                }
+                Assert.AreEqual(1, Results(1, GearWorkOutcome.Success), "a Fusion succeeded");
+
+                // Tuning: Chips and Renown for the bracket, until one stage is won; then the reset takes the reset Chip, no Creds
+                int tuneTarget = GiveOne(tunePiece.itemId);
+                for (int t = 0; t < 80 && Results(2, GearWorkOutcome.Success) == 0; t++)
+                {
+                    int stage = GearItemState.Of(inv.Get(tuneTarget)).Tune;
+                    Assert.IsTrue(GearProgressionRules.TryGetBracket(settings.tuning, stage + 1, out TuningBracket bracket), "a Tuning bracket for stage " + (stage + 1));
+                    inv.ServerGive(bracket.chipItemId, bracket.chips);
+                    progression.AddRenown(bracket.renown);
+                    long before = wallet.Creds;
+                    int renown = progression.Renown;
+                    forge.RunGearWork(GearWorkOpKind.Tune, tuneTarget, 0, 0, 0);
+                    Assert.AreEqual(before - bracket.creds, wallet.Creds, "NGO's Tuning price");
+                    Assert.AreEqual(renown - bracket.renown, progression.Renown, "and its Renown");
+                }
+                Assert.AreEqual(1, Results(2, GearWorkOutcome.Success), "a Tuning stage was won");
+                Assert.Greater(GearItemState.Of(inv.Get(tuneTarget)).Tune, 0);
+                ushort resetChip = settings.tuning.resetChipItemId;
+                inv.ServerGive(resetChip, 1);
+                long beforeReset = wallet.Creds;
+                int chips = inv.CountItem(resetChip);
+                forge.RunGearWork(GearWorkOpKind.ResetTuning, tuneTarget, 0, 0, 0);
+                Assert.AreEqual(1, Results(3, GearWorkOutcome.Success), "the Tuning was reset");
+                Assert.AreEqual(0, GearItemState.Of(inv.Get(tuneTarget)).Tune, "to stage 0");
+                Assert.AreEqual(chips - 1, inv.CountItem(resetChip), "with one reset Chip");
+                Assert.AreEqual(beforeReset, wallet.Creds, "and no Creds (NGO's reset has no price)");
+
+                // Reforge: a fresh piece, until it becomes another Rare of its level
+                int reforgeTarget = GiveOne(reforgePiece.itemId);
+                for (int t = 0; t < 80 && Results(4, GearWorkOutcome.Success) == 0; t++)
+                {
+                    long before = wallet.Creds;
+                    forge.RunGearWork(GearWorkOpKind.Reforge, reforgeTarget, 0, 0, 0);
+                    Assert.AreEqual(before - GearProgressionRules.ReforgeCost(settings.reforge, reforgePiece.itemLevel), wallet.Creds, "NGO's Reforge price");
+                }
+                Assert.AreEqual(1, Results(4, GearWorkOutcome.Success), "a Reforge succeeded");
+                CollectionAssert.Contains(reforgeInto, inv.Get(reforgeTarget).itemId, "into one of NGO's choices");
+                int forgeResults = told.To(body).FindAll(l => l.StartsWith("forge ")).Count;
 
                 // crafting: recipe 1 (four of 9100 make one 9101), twice
                 int made = inv.CountItem(9101), materials = inv.CountItem(9100);
@@ -1710,15 +1806,15 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
                 body.GetComponent<PlayerSaveAgent>().Save();
                 ServerSave.WaitForDisk();
                 List<LedgerEntry> forgeLines = ServerSave.ReadLedger(account, 0, 100).FindAll(l => l.kind == LedgerKinds.Forge);
-                Assert.AreEqual(1, forgeLines.Count, "one forge ledger line (NGO's only ledger line of the group)");
+                Assert.AreEqual(forgeResults, forgeLines.Count, "one forge ledger line for every attempt that finished (NGO's only ledger line of the group)");
 
                 // the owner's view only asks, never works or crafts itself
                 var asked = new Asked();
                 view.GetComponent<BodyRoleTag>().Requests = asked;
                 var viewForge = view.GetComponent<IBodyGearWork>();
                 var viewCrafting = view.GetComponent<IBodyCrafting>();
-                Component forgePart = (Component)viewForge, craftPart = (Component)viewCrafting;
-                forgePart.GetType().GetMethod("RequestTemper").Invoke(forgePart, new object[] { 3, alloy.itemId, (ushort)0 });
+                Component viewForgePart = (Component)viewForge, craftPart = (Component)viewCrafting;
+                viewForgePart.GetType().GetMethod("RequestTemper").Invoke(viewForgePart, new object[] { 3, alloy.itemId, (ushort)0 });
                 craftPart.GetType().GetMethod("RequestCraft").Invoke(craftPart, new object[] { (ushort)1, 2 });
                 CollectionAssert.AreEqual(new[] { $"GearWork Temper 3 0 {alloy.itemId} 0", "Craft 1 2" }, asked.Ops, "sent to the server");
                 var viewInv = view.GetComponent<PlayerInventory>();
@@ -1735,6 +1831,107 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
             {
                 OwnerMessages.Current = oldMessages;
                 WorkshopOwnerLink.Current = oldLink;
+                PlayerKeys.Reset();
+            }
+        }
+
+        [UnityTest]
+        public IEnumerator B23_TheHerald_RunsOnTheServerBody_RenownAndCredsAsNgo_EveryoneSeesTheNova_AndNovaIsReal()
+        {
+            NetRole.Install(new BodyRoleNetRoleAdapter(null, () => NetRoleKind.ServerBody));
+            Assert.IsFalse(SavePassthrough.Is("nova"), "the nova part is real now");
+            IOwnerMessages oldMessages = OwnerMessages.Current;
+            KryticalNova.Progression.INovaLink oldLink = KryticalNova.Progression.NovaLink.Current;
+            var told = new Told();
+            OwnerMessages.Current = told;
+            KryticalNova.Progression.NovaLink.Current = told;
+            try
+            {
+                PlayerKeys.Reset();
+                const string account = "e7f8091021324354657687a9b0c1d2e3", characterId = "a1000000000000000000000000000071";
+                GameObject body = Admitted(PlayerKeys.Mint(71).Value, account, characterId, "Heraldine");
+                GameObject view = Make(NetRoleKind.ClientView, true, new PlayerKey(71));
+                GameObject remote = Make(NetRoleKind.ClientView, false, new PlayerKey(72));
+                for (int i = 0; i < 30; i++) yield return null;
+                var nova = body.GetComponent<KryticalNova.Progression.PlayerNova>();
+                var progression = body.GetComponent<PlayerCharacterProgression>();
+                var wallet = body.GetComponent<KryticalNova.Economy.PlayerWallet>();
+                Assert.IsNotNull(nova, "the body has its Nova");
+                var settings = nova.Settings;
+                Assert.IsNotNull(settings, "with its settings");
+                progression.AddRenown(settings.ascension.renownCost + KryticalNova.Progression.NovaRules.StandingCost(settings.standings, 0) + 100);
+                wallet.ServerSet(System.Math.Min(wallet.Cap, settings.ascension.credsCost * 3));
+                int renown = progression.Renown;
+                long creds = wallet.Creds;
+
+                // no Herald in reach: refused, nothing spent
+                nova.RunNovaOp(NovaOpKind.Ascend, 0);
+                Assert.IsTrue(told.Any(body, "tell Visit a Herald to do that."), "NGO's Herald reach: " + string.Join(" | ", told.To(body)));
+                Assert.AreEqual(renown, progression.Renown);
+                Assert.AreEqual(creds, wallet.Creds);
+
+                GameObject herald = Npc(KryticalNova.NPC.NpcOffer.Herald, body.transform.position + Vector3.right);
+                nova.RunNovaOp(NovaOpKind.Ascend, 0);
+                Assert.IsTrue(told.Any(body, "nova 0 "), "an Ascension ran and its result went to the owner: " + string.Join(" | ", told.To(body)));
+                Assert.AreEqual(renown - settings.ascension.renownCost, progression.Renown, "NGO's Renown price");
+                Assert.AreEqual(creds - settings.ascension.credsCost, wallet.Creds, "and Creds price, through the wallet");
+
+                int standingCost = KryticalNova.Progression.NovaRules.StandingCost(settings.standings, 0);
+                renown = progression.Renown;
+                nova.RunNovaOp(NovaOpKind.BuyStanding, (byte)KryticalNova.Progression.StandingTrack.Vanguard);
+                Assert.AreEqual(renown - standingCost, progression.Renown, "a Standing costs NGO's Renown");
+                Assert.AreEqual(1, nova.State.Standing(KryticalNova.Progression.StandingTrack.Vanguard), "the first Vanguard level");
+                Assert.IsTrue(nova.State.TryGetWorn(out var worn) && worn == KryticalNova.Progression.StandingTrack.Vanguard, "and it is worn");
+                Assert.IsTrue(KryticalNova.Progression.NovaState.FromPacked(nova.State.Packed).Equals(nova.State), "the ghost field carries the whole state");
+
+                // the views: the own one only asks; every view shows the server's Nova
+                var asked = new Asked();
+                view.GetComponent<BodyRoleTag>().Requests = asked;
+                var viewNova = view.GetComponent<KryticalNova.Progression.PlayerNova>();
+                viewNova.RequestAscend();
+                viewNova.RequestBuyStanding(KryticalNova.Progression.StandingTrack.Bulwark);
+                CollectionAssert.AreEqual(new[] { "Nova Ascend 0", "Nova BuyStanding 1" }, asked.Ops, "sent to the server");
+                viewNova.RunNovaOp(NovaOpKind.Ascend, 0);
+                Assert.AreEqual(0, viewNova.State.ascension, "a view never ascends itself");
+                viewNova.MirrorState(nova.State);
+                Assert.IsTrue(viewNova.State.Equals(nova.State), "the own view shows the server's Nova");
+                var remoteNova = remote.GetComponent<KryticalNova.Progression.PlayerNova>();
+                Assert.IsNotNull(remoteNova, "another player's view keeps its Nova (the halo and the title)");
+                remoteNova.MirrorState(nova.State);
+                Assert.IsTrue(remoteNova.State.Equals(nova.State), "and shows the server's");
+
+                string novaText = nova.CaptureSave();
+
+                // an old save (NGO's text) loads into a fresh admitted server body unchanged and saves back every byte
+                const string account2 = "f8091021324354657687a9b0c1d2e3f4", character2 = "a1000000000000000000000000000073";
+                GameObject other = Make(NetRoleKind.ServerBody, false, new PlayerKey(73));
+                yield return null;
+                CharacterRecipe recipe = AnyLegalRecipe(other.GetComponent<PlayerIdentity>().Database);
+                var stored = new AccountSave { accountId = account2 };
+                var character = new CharacterSave { characterId = character2, name = "Ascendant" };
+                character.Set("nova", novaText);
+                stored.characters.Add(character);
+                Assert.IsTrue(ServerSave.WriteAccount(stored));
+                ServerSave.WaitForDisk();
+                var context = new ServerBodyContext
+                {
+                    Key = new PlayerKey(73), Serial = 73, NetworkId = 73, Account = account2, CharacterId = character2, Name = "Ascendant", RecipeText = RecipeText.Encode(recipe),
+                };
+                Assert.IsNull(new PlayerAdmission().Begin(other, in context), "admitted");
+                var agent = other.GetComponent<PlayerSaveAgent>();
+                for (int i = 0; i < 30; i++) yield return null;
+                Assert.IsTrue(other.GetComponent<KryticalNova.Progression.PlayerNova>().State.Equals(nova.State), "the saved Nova is on the server body");
+                agent.Save();
+                ServerSave.WaitForDisk();
+                Assert.AreEqual(novaText, ServerSave.ReadAccountFrom(ServerSave.Store, account2).Find(character2).Get("nova"), "the nova part saves back byte for byte");
+                agent.OnServerLeaving();
+                body.GetComponent<PlayerSaveAgent>().OnServerLeaving();
+                Object.Destroy(herald);
+            }
+            finally
+            {
+                OwnerMessages.Current = oldMessages;
+                KryticalNova.Progression.NovaLink.Current = oldLink;
                 PlayerKeys.Reset();
             }
         }
