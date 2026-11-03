@@ -183,9 +183,19 @@ backflips' speed (80 % of the air). Added as M7/M8 systems land (each: what to c
   the second, accept; offer items and Creds, lock both, confirm both: the items and Creds swap; relog both: still swapped; start
   another and close one client mid-trade: the other is told it left, nothing moved; walk apart: cancelled. (/trade in chat waits for
   the chat port; selecting a player and the strip's Trade button find no PlayerTrade on a DOTS view: use the menu.)
+- 7.6 + 8.2.4 (built 3 Nov): two clients on a DOTS test server, in the town's trade zone: open a Kiosk (J) with two stacks; the
+  second client sees the stand with the owner's look, walks up and clicks it (browse opens in reach; far: "Move closer"), buys one:
+  Creds go down, the owner is told and the till shows it after tax; collect, then close: the unsold stack comes back; relog the owner
+  with a Kiosk open: the stand is still there and the arrival line says what sold. (Clicking a stand from far does not walk there on
+  a DOTS view yet: walk up first.)
 - 8.2.x/7.6: a Vault deposit and withdraw, a shop buy and sell, a trade with a second player, a Kiosk sale, each after a relog.
 - 8.4.x: chat say/tell, a contact, a party with Follow, founding a Crew, an emote and a mount seen from the second client.
 The list is kept current in this section as systems land.
+
+Owner follow-ups (found while porting; not DOTS work):
+- `Persistence/Service~/KillTest/kill_test.py` (milestone 3 tool): a call outside the trade loop is not guarded against
+  `ConnectionResetError` (3 Nov, 8.2.3: one run of two died there before its checks; the rerun passed). Guard every `call()` the
+  killer thread can hit, or retry `read_all` / the ledger reads like the loop does.
 
 ## 9. Owner questions (real choices; recommendation first)
 

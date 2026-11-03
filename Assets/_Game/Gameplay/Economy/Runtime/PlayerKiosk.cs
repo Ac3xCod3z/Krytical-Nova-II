@@ -46,7 +46,7 @@ namespace KryticalNova.Economy
     /// </summary>
     [DisallowMultipleComponent]
     [RequireComponent(typeof(PlayerInventory), typeof(PlayerItemSources))]
-    public sealed class PlayerKiosk : NetworkBehaviour
+    public sealed class PlayerKiosk : NetworkBehaviour, IBodyKiosk
     {
         [SerializeField] private EconomySettings settings;
         [SerializeField] private KioskStand standPrefab;
@@ -127,11 +127,88 @@ namespace KryticalNova.Economy
 
         private void OnCharacterLoaded() => KioskService.ServerOwnerArrived(this);
 
+        // ------------------------------------------------------------------ the entity netcode (M7.6 + 8.2.4)
+
+        private bool EntityServer => BodyRoleTag.Of(this) is { Kind: NetRoleKind.ServerBody };
+        private IBodyRequests Requests => BodyRoleTag.RequestsOf(this) is IBodyRequests requests ? requests : null;
+
+        /// <summary>True where the game is decided: NGO's server, or the entity netcode's server body.</summary>
+        public bool IsServerSide => (IsSpawned && IsServer) || EntityServer;
+
+        // The entity netcode's server body is never network-spawned: NGO's spawn hook (the scene's stands, the owner's arrival) runs here.
+        private void Start()
+        {
+            if (!EntityServer) return;
+            KioskService.ServerRestoreStands(standPrefab, UnityEngine.SceneManagement.SceneManager.GetActiveScene().name);
+            if (saveAgent == null) return;
+            saveAgent.Loaded += OnCharacterLoaded;
+            if (saveAgent.IsLoaded) OnCharacterLoaded();
+        }
+
+        public override void OnDestroy()
+        {
+            if (saveAgent != null) saveAgent.Loaded -= OnCharacterLoaded;
+            base.OnDestroy();
+        }
+
+        public void RunOpen(string shopName, BodyKioskOffer[] offers, int tier)
+        {
+            if (!EntityServer) return;
+            var kioskOffers = new KioskOffer[offers != null ? offers.Length : 0];
+            for (int i = 0; i < kioskOffers.Length; i++)
+                kioskOffers[i] = new KioskOffer { cell = offers[i].cell, count = offers[i].count, unitPrice = offers[i].unitPrice };
+            Answer(KioskService.ServerOpen(this, shopName ?? string.Empty, kioskOffers, tier));
+        }
+
+        public void RunClose()
+        {
+            if (EntityServer) Answer(KioskService.ServerClose(this));
+        }
+
+        public void RunCollect()
+        {
+            if (EntityServer) Answer(KioskService.ServerCollect(this));
+        }
+
+        public void RunBuy(uint standId, int index, BodyKioskListing expected, int count)
+        {
+            if (!EntityServer) return;
+            KioskStand stand = KioskStand.FindById(standId);
+            Answer(stand != null ? KioskService.ServerBuy(this, stand, index, new KioskListing(expected.stack, expected.unitPrice), count) : "That Kiosk has closed.");
+        }
+
+        /// <summary>The entity netcode's own view body shows the server's state of its own Kiosk (NGO's ViewRpc).</summary>
+        public void MirrorView(in BodyKioskView shown)
+        {
+            if (!BodyRoleTag.IsLocalClientView(this)) return;
+            var header = new KioskOwnerView
+            {
+                exists = shown.exists, open = shown.open, till = shown.till, expiresUtc = shown.expiresUtc,
+                soldCount = shown.soldCount, soldCreds = shown.soldCreds,
+            };
+            header.shopName.CopyFromTruncated(shown.shopName ?? string.Empty);
+            var listings = new KioskListing[shown.shelf != null ? shown.shelf.Length : 0];
+            for (int i = 0; i < listings.Length; i++) listings[i] = new KioskListing(shown.shelf[i].stack, shown.shelf[i].unitPrice);
+            view = header;
+            shelf = listings;
+            Changed?.Invoke();
+        }
+
+        public IKioskStand ShowStandView(uint serverId, Vector3 position, float yaw) => KioskStand.ShowAsView(standPrefab, serverId, position, yaw);
+
         // ------------------------------------------------------------------ owner -> server
 
         /// <summary>Open a Kiosk here with these Pack items. <paramref name="tier"/> is the index of the duration in the economy settings.</summary>
         public void RequestOpen(string shopName, KioskOffer[] offers, int tier)
         {
+            if (Requests is { } requests)
+            {
+                offers ??= Array.Empty<KioskOffer>();
+                var asked = new BodyKioskOffer[offers.Length];
+                for (int i = 0; i < offers.Length; i++) asked[i] = new BodyKioskOffer { cell = offers[i].cell, count = offers[i].count, unitPrice = offers[i].unitPrice };
+                requests.KioskOpen(shopName ?? string.Empty, asked, (byte)Mathf.Clamp(tier, 0, 255));
+                return;
+            }
             if (IsSpawned && IsOwner) OpenRpc(shopName ?? string.Empty, offers ?? Array.Empty<KioskOffer>(), (byte)Mathf.Clamp(tier, 0, 255));
             else if (!IsSpawned) ClientPresentationRegistry.Messages?.ShowMessage("Kiosks need an online session.");
         }
@@ -139,18 +216,27 @@ namespace KryticalNova.Economy
         /// <summary>Close the Kiosk and take back what is left.</summary>
         public void RequestClose()
         {
+            if (Requests is { } requests) { requests.KioskClose(); return; }
             if (IsSpawned && IsOwner) CloseRpc();
         }
 
         /// <summary>Take the till (and, of a closed Kiosk, the unsold items).</summary>
         public void RequestCollect()
         {
+            if (Requests is { } requests) { requests.KioskCollect(); return; }
             if (IsSpawned && IsOwner) CollectRpc();
         }
 
         /// <summary>Buy from another player's Kiosk: <paramref name="expected"/> is the listing as this machine shows it.</summary>
         public void RequestBuy(KioskStand stand, int index, KioskListing expected, int count)
         {
+            if (Requests is { } requests)
+            {
+                if (stand != null && stand.ServerId != 0)
+                    requests.KioskBuy(stand.ServerId, (byte)Mathf.Clamp(index, 0, 255), expected.stack.itemId, expected.stack.count, expected.stack.data, expected.unitPrice,
+                        (ushort)Mathf.Clamp(count, 1, ushort.MaxValue));
+                return;
+            }
             if (stand != null && stand.IsSpawned && IsSpawned && IsOwner)
                 BuyRpc(stand.NetworkObject, (byte)Mathf.Clamp(index, 0, 255), expected, (ushort)Mathf.Clamp(count, 1, ushort.MaxValue));
         }
@@ -195,6 +281,7 @@ namespace KryticalNova.Economy
         private void Answer(string refusal)
         {
             if (string.IsNullOrEmpty(refusal)) return;
+            if (EntityServer) { OwnerMessages.TryTell(this, refusal); return; }   // its player's message line (M7.6)
             if (IsOwnedByServer) ClientPresentationRegistry.Messages?.ShowMessage(refusal);
             else RefusedRpc(refusal);
         }
@@ -207,6 +294,7 @@ namespace KryticalNova.Economy
         /// <summary>Server: a line in this player's chat log.</summary>
         public void Tell(string text)
         {
+            if (EntityServer) { OwnerMessages.TryTell(this, text); return; }   // until chat is ported (group 4)
             if (chat != null && IsSpawned && IsServer && !string.IsNullOrEmpty(text)) chat.ServerSystem(text);
         }
 
@@ -225,7 +313,7 @@ namespace KryticalNova.Economy
         /// <summary>Server: sends the owner the state of their own Kiosk.</summary>
         public void ServerPushView()
         {
-            if (!IsSpawned || !IsServer) return;
+            if (!IsServerSide) return;
             KioskRecord record = KioskService.Find(CharacterId);
             var header = new KioskOwnerView();
             KioskListing[] listings = Array.Empty<KioskListing>();
@@ -239,6 +327,17 @@ namespace KryticalNova.Economy
                 header.soldCount = record.soldCount;
                 header.soldCreds = record.soldCreds;
                 listings = record.listings.ToArray();
+            }
+            if (EntityServer)
+            {
+                var shown = new BodyKioskListing[listings.Length];
+                for (int i = 0; i < shown.Length; i++) shown[i] = new BodyKioskListing(listings[i].stack, listings[i].unitPrice);
+                KioskOwnerLink.Current?.View(this, new BodyKioskView
+                {
+                    exists = header.exists, open = header.open, shopName = header.shopName.ToString(), till = header.till,
+                    expiresUtc = header.expiresUtc, soldCount = header.soldCount, soldCreds = header.soldCreds, shelf = shown,
+                });
+                return;
             }
             ViewRpc(header, listings);
         }

@@ -1,5 +1,13 @@
 namespace KryticalNova.Core
 {
+    /// <summary>One stack put up in a Kiosk (NGO's <c>KioskOffer</c>, M7.6): the Pack cell, how many (0 = the whole stack), the price of one.</summary>
+    public struct BodyKioskOffer
+    {
+        public short cell;
+        public ushort count;
+        public long unitPrice;
+    }
+
     /// <summary>What a trade request asks the server's body to do (NGO's <c>PlayerTrade</c> RPCs; M8 8.2.3).</summary>
     public enum TradeOpKind : byte
     {
@@ -105,5 +113,20 @@ namespace KryticalNova.Core
         /// <paramref name="b"/> the count, <paramref name="creds"/> the Creds, <paramref name="flag"/> accept or lock.
         /// </summary>
         void TradeOp(TradeOpKind op, string name, short a, ushort b, long creds, bool flag);
+
+        /// <summary>Asks the server to open a Kiosk where the player stands (M7.6, NGO's OpenRpc): its name, the stacks, the duration's index.</summary>
+        void KioskOpen(string shopName, BodyKioskOffer[] offers, byte tier);
+
+        /// <summary>Asks the server to close the player's Kiosk and take back what is left (NGO's CloseRpc).</summary>
+        void KioskClose();
+
+        /// <summary>Asks the server for the Kiosk's till (and of a closed Kiosk the unsold items; NGO's CollectRpc).</summary>
+        void KioskCollect();
+
+        /// <summary>
+        /// Asks the server to buy <paramref name="count"/> from listing <paramref name="index"/> of the stand with this server id (NGO's BuyRpc):
+        /// the listing as the player saw it (<paramref name="itemId"/>, <paramref name="stackCount"/>, <paramref name="data"/>, <paramref name="unitPrice"/>).
+        /// </summary>
+        void KioskBuy(uint standId, byte index, ushort itemId, ushort stackCount, ulong data, long unitPrice, ushort count);
     }
 }

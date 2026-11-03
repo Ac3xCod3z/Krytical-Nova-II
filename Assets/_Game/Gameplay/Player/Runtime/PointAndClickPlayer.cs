@@ -809,7 +809,20 @@ namespace KryticalNova.Player
                     Select(unit, WorldTargetKind.Friendly);
                     return;
                 }
-                if (ViewMode) { CommandMessage?.Invoke(NotYetNetworkedText); return; }
+                if (ViewMode)
+                {
+                    // a Kiosk stand on a client view is only browsed (M7.6): in reach it opens; buying is a request the server decides
+                    if (interactable is IEntityViewInteractable)
+                    {
+                        Vector3 offset = interactable.Position - transform.position;
+                        offset.y = 0f;
+                        if (offset.magnitude <= interactable.InteractRange + 0.5f) interactable.Interact(gameObject);
+                        else CommandMessage?.Invoke("Move closer to browse it.");
+                        return;
+                    }
+                    CommandMessage?.Invoke(NotYetNetworkedText);
+                    return;
+                }
 
                 ReplaceRoute();
                 EndTravel(false);

@@ -54,13 +54,25 @@ namespace KryticalNova.Economy
 
         private static KioskWorld World => ServerSave.World<KioskWorld>(WorldName);
 
-        private static bool InSession
+        private static bool NgoServer
         {
             get
             {
                 var network = NetworkManager.Singleton;
                 return network != null && network.IsListening && network.IsServer;
             }
+        }
+
+        // NGO's session, or the entity netcode's server process (M7.6: its stands are kept, not spawned).
+        private static bool InSession => NgoServer || EntityServer;
+        private static bool EntityServer => !NgoServer && NetRole.Process == NetRoleKind.ServerBody;
+
+        /// <summary>The entity netcode's server stopped (or a test ends): its kept stands go and the next start puts them back.</summary>
+        public static void ServerForgetStands()
+        {
+            foreach (KioskStand stand in Stands.Values) if (stand != null) stand.ServerRemoveKept();
+            Stands.Clear();
+            restoredScene = null;
         }
 
         /// <summary>The Kiosk of a character, open or waiting to be collected, or null.</summary>
@@ -80,9 +92,12 @@ namespace KryticalNova.Economy
             restoredScene = scene;
             Stands.Clear();
             // When this session ends its stands go with it: the next one puts them back.
-            NetworkManager network = NetworkManager.Singleton;
-            network.OnServerStopped -= OnServerStopped;
-            network.OnServerStopped += OnServerStopped;
+            NetworkManager network = NgoServer ? NetworkManager.Singleton : null;
+            if (network != null)
+            {
+                network.OnServerStopped -= OnServerStopped;
+                network.OnServerStopped += OnServerStopped;
+            }
             long now = DateTime.UtcNow.Ticks;
             bool changed = false;
             foreach (KioskRecord record in World.kiosks)
@@ -102,6 +117,11 @@ namespace KryticalNova.Economy
 
         private static void SpawnStand(KioskStand prefab, KioskRecord record)
         {
+            if (EntityServer)
+            {
+                Stands[record.ownerCharacterId] = KioskStand.ServerKeep(prefab, record);
+                return;
+            }
             KioskStand stand = UnityEngine.Object.Instantiate(prefab, record.position, Quaternion.Euler(0f, record.yaw, 0f));
             stand.ServerBind(record);
             stand.NetworkObject.Spawn(true);
@@ -113,6 +133,7 @@ namespace KryticalNova.Economy
             if (!Stands.TryGetValue(record.ownerCharacterId, out KioskStand stand)) return;
             Stands.Remove(record.ownerCharacterId);
             if (stand != null && stand.IsSpawned) stand.NetworkObject.Despawn(true);
+            else if (stand != null) stand.ServerRemoveKept();
         }
 
         private static PlayerKiosk OnlineOwner(KioskRecord record)
@@ -151,7 +172,7 @@ namespace KryticalNova.Economy
         /// <summary>Server: opens a Kiosk for a player where they stand. Returns why not (told to them), or null when it opened.</summary>
         public static string ServerOpen(PlayerKiosk owner, string shopName, KioskOffer[] offers, int tierIndex)
         {
-            if (!InSession || !owner.IsSpawned) return "Kiosks need an online session.";
+            if (!InSession || !owner.IsServerSide) return "Kiosks need an online session.";
             EconomySettings settings = owner.Settings;
             if (settings == null || owner.StandPrefab == null) return "Kiosks are not set up on this server.";
             string characterId = owner.CharacterId;
@@ -237,7 +258,7 @@ namespace KryticalNova.Economy
         {
             if (!InSession) return "Kiosks need an online session.";
             KioskRecord record = stand != null ? stand.Record : null;
-            if (record == null || !record.open || !stand.IsSpawned) return "That Kiosk has closed.";
+            if (record == null || !record.open || !stand.IsServerSide) return "That Kiosk has closed.";
             if (KioskRules.IsExpired(DateTime.UtcNow.Ticks, record.expiresUtc)) { ServerExpire(record); return "That Kiosk has closed."; }
             if (!buyer.IsAlive) return "You can't buy while defeated.";
             if (record.ownerCharacterId == buyer.CharacterId && !string.IsNullOrEmpty(buyer.CharacterId)) return "This is your own Kiosk.";

@@ -1207,9 +1207,15 @@ checkpoints; the owner's Thursday hand-test list; owner questions). NGO rules ta
     day, weekly limit, room first, Creds through PlayerWallet Vendor/Refund/VendorSale at the Money limit, shop.buy/shop.sell ledger lines,
     save at once), this week's limited purchases mirrored to the owner (VendorWeekRpc), `vendorWeek` real (Items IBodyShopping); B18.
     Save note + HIGH review approved.
-  - [ ] 8.2.3 trade: the nine requests run NGO's PlayerTrade rules on the server body (Money limit; asked by name: other players' views
+  - [x] 8.2.3 trade: the nine requests run NGO's PlayerTrade rules on the server body (Money limit; asked by name: other players' views
     carry no PlayerTrade, and names resolve to server bodies by PlayerKey, never a NetworkId), view / notice / prompt to the owner by
     PlayerKey (EntityTradeOwnerLink), leaving = IServerLeaving (NGO's despawn + a pending request dies with its asker), Commit and
     SaveTogether unchanged, `trade` real (Items IBodyTrade); B19 (whole trade, both ledger lines, byte-equal), B20 (leave mid-trade,
-    NetworkId reuse, pending request); kill test PASSED on SaveService --test (7802). Save note + review summary to the Master first.
+    NetworkId reuse, pending request); kill test PASSED on SaveService --test (7802); save note + HIGH review approved.
+  - [ ] 7.6 + 8.2.4 Kiosk (stands and the player side): the server keeps NGO's KioskStand objects (not spawned; the record is the truth)
+    and every player gets the stands as a list (shelf, sign, the doll's look; as 7.5's drops: no ghost, no spike S1) shown as pooled
+    views from the body's stand prefab; open / close / collect / buy (by the stand's server id) run NGO's KioskService on the server body
+    at the Money limit, the three SaveTogether(player, "kiosks") unchanged; the owner's own Kiosk by PlayerKey; a stand view is
+    browsed in reach. B21 (open, buy, own-Kiosk refusal, collect, close; kiosk.open/buy/collect lines); service-store tests with
+    SaveService --test 28/28. No save key of its own. Review summary to the Master first.
 - [ ] M8 group 4: chat, contacts, party, sponsor, Crew, emotes, pets, mounts, crate, Recall, housing check; duels and Cadence wait for M4.

@@ -445,6 +445,49 @@ namespace KryticalNova.Persistence.Entities
             em.AddComponent<SendRpcCommandRequest>(rpc);
         }
 
+        uint m_KioskSeq;
+
+        public void KioskOpen(string shopName, BodyKioskOffer[] offers, byte tier)
+        {
+            if (m_World == null || !m_World.IsCreated) return;
+            shopName ??= string.Empty;
+            offers ??= Array.Empty<BodyKioskOffer>();
+            // NGO's TextFits on the name; the Kiosk window never offers more stacks than the largest Kiosk holds
+            if (System.Text.Encoding.UTF8.GetByteCount(shopName) > FixedString64Bytes.UTF8MaxLengthInBytes || offers.Length > KioskRequestServerSystem.MostOffers) return;
+            var em = m_World.EntityManager;
+            uint seq = ++m_KioskSeq;
+            foreach (BodyKioskOffer offer in offers)
+            {
+                Entity line = em.CreateEntity();
+                em.AddComponentData(line, new KioskOfferRpc { Seq = seq, Cell = offer.cell, Count = offer.count, Price = offer.unitPrice });
+                em.AddComponent<SendRpcCommandRequest>(line);
+            }
+            Entity rpc = em.CreateEntity();
+            em.AddComponentData(rpc, new KioskOpenRpc { Seq = seq, Name = new FixedString64Bytes(shopName), Tier = tier, OfferCount = (byte)offers.Length });
+            em.AddComponent<SendRpcCommandRequest>(rpc);
+        }
+
+        public void KioskClose() => SendKioskClose(1);
+        public void KioskCollect() => SendKioskClose(0);
+
+        void SendKioskClose(byte close)
+        {
+            if (m_World == null || !m_World.IsCreated) return;
+            var em = m_World.EntityManager;
+            Entity rpc = em.CreateEntity();
+            em.AddComponentData(rpc, new KioskCloseRpc { Close = close });
+            em.AddComponent<SendRpcCommandRequest>(rpc);
+        }
+
+        public void KioskBuy(uint standId, byte index, ushort itemId, ushort stackCount, ulong data, long unitPrice, ushort count)
+        {
+            if (m_World == null || !m_World.IsCreated || standId == 0) return;
+            var em = m_World.EntityManager;
+            Entity rpc = em.CreateEntity();
+            em.AddComponentData(rpc, new KioskBuyRpc { StandId = standId, Index = index, ItemId = itemId, StackCount = stackCount, Data = data, Price = unitPrice, Count = count });
+            em.AddComponent<SendRpcCommandRequest>(rpc);
+        }
+
         public void TradeOp(TradeOpKind op, string name, short a, ushort b, long creds, bool flag)
         {
             if (m_World == null || !m_World.IsCreated) return;
@@ -753,14 +796,28 @@ namespace KryticalNova.Persistence.Entities
         /// <summary>The server body of the connection's player; false (dropped) when there is none or the request limit says no.</summary>
         bool BodyOf(Entity connection, CallKind kind, out GameObject body)
         {
+            if (TryBody(World, connection, kind, out body, out bool overBudget)) return true;
+            if (overBudget) OverBudget++;
+            return false;
+        }
+
+        /// <summary>
+        /// The server body of the player on <paramref name="connection"/> when its request limit <paramref name="kind"/> allows one more (NGO's
+        /// RpcBudget.Allow on the caller), for every request system of the entity netcode.
+        /// </summary>
+        public static bool TryBody(World server, Entity connection, CallKind kind, out GameObject body) => TryBody(server, connection, kind, out body, out _);
+
+        static bool TryBody(World server, Entity connection, CallKind kind, out GameObject body, out bool overBudget)
+        {
             body = null;
-            var em = EntityManager;
+            overBudget = false;
+            var em = server.EntityManager;
             if (connection == Entity.Null || !em.Exists(connection) || !em.HasComponent<NetworkId>(connection)) return false;
-            if (!GhostBodyRegistry.TryGetByNetworkId(World, em.GetComponentData<NetworkId>(connection).Value, out GhostBodyEntry entry) || entry.Body == null)
+            if (!GhostBodyRegistry.TryGetByNetworkId(server, em.GetComponentData<NetworkId>(connection).Value, out GhostBodyEntry entry) || entry.Body == null)
                 return false;
             if (entry.Key != PlayerKey.None && RpcBudget.Spend(entry.Key, kind, UnityEngine.Time.realtimeSinceStartup) != RpcBudget.SpendResult.Allowed)
             {
-                OverBudget++;
+                overBudget = true;
                 return false;
             }
             body = entry.Body;

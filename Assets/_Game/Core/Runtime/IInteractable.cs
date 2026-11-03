@@ -21,4 +21,12 @@ namespace KryticalNova.Core
     public interface IInstantInteractable : IInteractable
     {
     }
+
+    /// <summary>
+    /// An interactable that also works on a client view of the entity netcode (M7.6): using it only shows something (a Kiosk stand is
+    /// browsed), and whatever is then done is a request the server decides. Others say "not networked yet" on a view.
+    /// </summary>
+    public interface IEntityViewInteractable : IInteractable
+    {
+    }
 }

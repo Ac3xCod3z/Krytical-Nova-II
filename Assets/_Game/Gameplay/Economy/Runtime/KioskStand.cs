@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using KryticalNova.CharacterCreation;
 using KryticalNova.Core;
 using KryticalNova.Factions;
+using KryticalNova.Items;
 using Unity.Collections;
 using Unity.Netcode;
 using UnityEngine;
@@ -16,7 +17,7 @@ namespace KryticalNova.Economy
     /// <see cref="PlayerKiosk"/>.
     /// </summary>
     [DisallowMultipleComponent]
-    public sealed class KioskStand : NetworkBehaviour, IInstantInteractable
+    public sealed class KioskStand : NetworkBehaviour, IInstantInteractable, IEntityViewInteractable, IKioskStand, ILookCarrier
     {
         private const float ExpiryCheckSeconds = 5f;
         private const float PlateHeight = 2.35f;
@@ -73,12 +74,31 @@ namespace KryticalNova.Economy
         /// <summary>Raised on every machine when the shelf or the sign changes.</summary>
         public event Action Changed;
 
-        public string ShopName => netSign.Value.shopName.ToString();
-        public string OwnerName => netSign.Value.ownerName.ToString();
-        public FactionId Faction => netSign.Value.faction;
-        public long ExpiresUtc => netSign.Value.expiresUtc;
-        public int ListingCount => netListings != null ? netListings.Count : 0;
-        public KioskListing GetListing(int index) => index >= 0 && index < ListingCount ? netListings[index] : default;
+        // The entity netcode (M7.6): the server keeps the stand without spawning it (its record is the truth), and a client shows a view of
+        // it with the server's sign and shelf; NGO's network variables are not used by either.
+        private bool serverKept, isView;
+        private Sign viewSign;
+        private readonly List<KioskListing> viewListings = new List<KioskListing>();
+        private CharacterRecipe viewLook;
+        private static uint s_NextServerId;
+
+        /// <summary>The entity netcode's id of this stand (server-kept stands and their client views), 0 on NGO.</summary>
+        public uint ServerId { get; private set; }
+        /// <summary>Goes up whenever a server-kept stand's sign or shelf changes.</summary>
+        public int Version { get; private set; }
+        /// <summary>True where the game is decided: NGO's spawned server stand, or the entity netcode server's kept stand.</summary>
+        public bool IsServerSide => (IsSpawned && IsServer) || serverKept;
+        public bool IsView => isView;
+
+        private Sign CurrentSign => isView ? viewSign : serverKept ? SignOf(Record) : netSign.Value;
+
+        public string ShopName => CurrentSign.shopName.ToString();
+        public string OwnerName => CurrentSign.ownerName.ToString();
+        public FactionId Faction => CurrentSign.faction;
+        public long ExpiresUtc => CurrentSign.expiresUtc;
+        public int ListingCount => isView ? viewListings.Count : serverKept ? (Record != null ? Record.listings.Count : 0) : netListings != null ? netListings.Count : 0;
+        public KioskListing GetListing(int index) =>
+            index < 0 || index >= ListingCount ? default : isView ? viewListings[index] : serverKept ? Record.listings[index] : netListings[index];
 
         public string DisplayName => ShopName;
         public float InteractRange => interactRange;
@@ -100,8 +120,17 @@ namespace KryticalNova.Economy
                 writePerm: NetworkVariableWritePermission.Server);
         }
 
-        private void OnEnable() => ActiveStands.Add(this);
-        private void OnDisable() => ActiveStands.Remove(this);
+        private void OnEnable()
+        {
+            ActiveStands.Add(this);
+            if (serverKept) KioskStands.Add(this);
+        }
+
+        private void OnDisable()
+        {
+            ActiveStands.Remove(this);
+            KioskStands.Remove(this);
+        }
 
         public override void OnNetworkSpawn()
         {
@@ -132,9 +161,97 @@ namespace KryticalNova.Economy
         /// <summary>Server only, before the stand is spawned: what it sells for.</summary>
         public void ServerBind(KioskRecord record) => Record = record;
 
+        private static Sign SignOf(KioskRecord record)
+        {
+            var sign = new Sign();
+            if (record == null) return sign;
+            sign.faction = (FactionId)record.faction;
+            sign.expiresUtc = record.expiresUtc;
+            sign.shopName.CopyFromTruncated(record.shopName ?? string.Empty);
+            sign.ownerName.CopyFromTruncated(record.ownerName ?? string.Empty);
+            return sign;
+        }
+
+        /// <summary>The entity netcode's server: a stand for the record, kept here and not network-spawned (M7.6); clients get it as a list.</summary>
+        public static KioskStand ServerKeep(KioskStand prefab, KioskRecord record)
+        {
+            if (prefab == null || record == null) return null;
+            KioskStand stand = Instantiate(prefab, record.position, Quaternion.Euler(0f, record.yaw, 0f));
+            stand.Record = record;
+            stand.serverKept = true;
+            stand.ServerId = ++s_NextServerId == 0 ? ++s_NextServerId : s_NextServerId;
+            stand.Version = 1;
+            KioskStands.Add(stand);
+            stand.ShowLook();
+            return stand;
+        }
+
+        /// <summary>The entity netcode's server: its kept stand goes (closed, sold out, out of time).</summary>
+        public void ServerRemoveKept()
+        {
+            if (!serverKept) return;
+            KioskStands.Remove(this);
+            Destroy(gameObject);
+        }
+
+        /// <summary>The server-kept stand with this id, or null.</summary>
+        public static KioskStand FindById(uint id)
+        {
+            if (id == 0) return null;
+            for (int i = 0; i < ActiveStands.Count; i++)
+                if (ActiveStands[i] != null && ActiveStands[i].serverKept && ActiveStands[i].ServerId == id) return ActiveStands[i];
+            return null;
+        }
+
+        /// <summary>A client of the entity netcode: a view of the server's stand (not network-spawned), shown until the server says it went.</summary>
+        public static KioskStand ShowAsView(KioskStand prefab, uint serverId, Vector3 position, float yaw)
+        {
+            if (prefab == null || serverId == 0) return null;
+            KioskStand view = Instantiate(prefab, position, Quaternion.Euler(0f, yaw, 0f));
+            view.isView = true;
+            view.ServerId = serverId;
+            return view;
+        }
+
+        void IKioskStand.ApplyView(string shopName, string ownerName, byte faction, long expiresUtc, BodyKioskListing[] shelf)
+        {
+            if (!isView) return;
+            var sign = new Sign { faction = (FactionId)faction, expiresUtc = expiresUtc };
+            sign.shopName.CopyFromTruncated(shopName ?? string.Empty);
+            sign.ownerName.CopyFromTruncated(ownerName ?? string.Empty);
+            viewSign = sign;
+            viewListings.Clear();
+            if (shelf != null) foreach (BodyKioskListing listing in shelf) viewListings.Add(new KioskListing(listing.stack, listing.unitPrice));
+            Changed?.Invoke();
+        }
+
+        void IKioskStand.RemoveView()
+        {
+            if (isView) Destroy(gameObject);
+        }
+
+        float IKioskStand.Yaw => transform.eulerAngles.y;
+        byte IKioskStand.FactionByte => (byte)Faction;
+        BodyKioskListing IKioskStand.Listing(int index)
+        {
+            KioskListing listing = GetListing(index);
+            return new BodyKioskListing(listing.stack, listing.unitPrice);
+        }
+
+        bool ILookCarrier.HasLook => serverKept ? Record != null && !Record.look.IsEmpty : isView && !viewLook.IsEmpty;
+        CharacterRecipe ILookCarrier.Look => serverKept && Record != null ? Record.look : viewLook;
+
+        void ILookCarrier.ShowLook(in CharacterRecipe look)
+        {
+            if (!isView) return;
+            viewLook = look;
+            ShowLook();
+        }
+
         /// <summary>Server only: puts the record's sign, look and shelf where every machine reads them.</summary>
         public void Publish()
         {
+            if (serverKept) { Version++; Changed?.Invoke(); return; }   // the entity netcode's list sends what changed
             if (!IsSpawned || !IsServer || Record == null) return;
             var sign = new Sign { faction = (FactionId)Record.faction, expiresUtc = Record.expiresUtc };
             sign.shopName.CopyFromTruncated(Record.shopName ?? string.Empty);
@@ -152,7 +269,7 @@ namespace KryticalNova.Economy
 
         private void Update()
         {
-            if (!IsSpawned || !IsServer || Record == null || Time.unscaledTime < nextExpiryCheck) return;
+            if (!IsServerSide || Record == null || Time.unscaledTime < nextExpiryCheck) return;
             nextExpiryCheck = Time.unscaledTime + ExpiryCheckSeconds;
             if (KioskRules.IsExpired(DateTime.UtcNow.Ticks, Record.expiresUtc)) KioskService.ServerExpire(Record);
         }
@@ -169,7 +286,9 @@ namespace KryticalNova.Economy
         private void ShowLook()
         {
             if (Application.isBatchMode || dollModel == null) return;
-            CharacterNetState look = netLook.Value;
+            CharacterNetState look = isView ? (viewLook.IsEmpty ? default : CharacterNetState.From(OwnerName, viewLook))
+                : serverKept ? (Record == null || Record.look.IsEmpty ? default : CharacterNetState.From(Record.ownerName ?? string.Empty, Record.look))
+                : netLook.Value;
             if (doll == null)
             {
                 doll = CharacterDoll.Create(dollModel, dollAnchor != null ? dollAnchor : transform, dollIdle);

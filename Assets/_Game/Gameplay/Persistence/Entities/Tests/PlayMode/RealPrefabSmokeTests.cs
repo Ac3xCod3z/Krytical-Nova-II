@@ -440,11 +440,18 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
             public void ShopSell(ushort cell, ushort count, ushort itemId, ushort stackCount, ulong data, bool confirmed) =>
                 Ops.Add($"Sell {cell} {count} {itemId}x{stackCount}:{data} {confirmed}");
             public void TradeOp(TradeOpKind op, string name, short a, ushort b, long creds, bool flag) => Ops.Add($"Trade {op} {name} {a} {b} {creds} {flag}");
+            public void KioskOpen(string shopName, BodyKioskOffer[] offers, byte tier) => Ops.Add($"KioskOpen {shopName} {offers.Length} {tier}");
+            public void KioskClose() => Ops.Add("KioskClose");
+            public void KioskCollect() => Ops.Add("KioskCollect");
+            public void KioskBuy(uint standId, byte index, ushort itemId, ushort stackCount, ulong data, long unitPrice, ushort count) =>
+                Ops.Add($"KioskBuy {standId} {index} {itemId}x{stackCount}:{data} {unitPrice} {count}");
         }
 
         /// <summary>What the server bodies told their players (the message line) and sent their trade windows (view, notice, prompt).</summary>
-        sealed class Told : IOwnerMessages, ITradeOwnerLink
+        sealed class Told : IOwnerMessages, ITradeOwnerLink, IKioskOwnerLink
         {
+            public void View(Component part, in BodyKioskView view) =>
+                Lines.Add((Body(part), $"kiosk {view.exists} {view.open} {view.shopName} till {view.till} shelf {view.shelf?.Length ?? 0}"));
             public readonly List<(GameObject body, string what)> Lines = new List<(GameObject, string)>();
             public bool Tell(Component part, string text) { Lines.Add((Body(part), "tell " + text)); return true; }
             public void View(Component part, in BodyTradeView view) =>
@@ -1515,6 +1522,120 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
             {
                 OwnerMessages.Current = oldMessages;
                 TradeOwnerLink.Current = oldLink;
+                PlayerKeys.Reset();
+            }
+        }
+
+        [UnityTest]
+        public IEnumerator B21_AKiosk_OpensSellsCollectsAndCloses_OnTheServerBodies_WithItsLedgerLines_AndAViewOnlyAsksAndShowsTheStand()
+        {
+            NetRole.Install(new BodyRoleNetRoleAdapter(null, () => NetRoleKind.ServerBody));
+            IOwnerMessages oldMessages = OwnerMessages.Current;
+            IKioskOwnerLink oldLink = KioskOwnerLink.Current;
+            var told = new Told();
+            OwnerMessages.Current = told;
+            KioskOwnerLink.Current = told;
+            KryticalNova.Economy.KioskService.ServerForgetStands();
+            // a trade zone where Kiosks may open, around the bodies (World is not referenced by this test assembly)
+            var zoneObject = new GameObject("Kiosk zone");
+            zoneObject.AddComponent(System.Type.GetType("KryticalNova.World.TradeZone, KryticalNova.World", true));
+            m_Made.Add(zoneObject);
+            try
+            {
+                PlayerKeys.Reset();
+                const string accountO = "b4c5d6e7f8091021324354657687a9b0", accountB = "c5d6e7f8091021324354657687a9b0c1";
+                const string charO = "a1000000000000000000000000000051", charB = "b2000000000000000000000000000052";
+                GameObject owner = Admitted(PlayerKeys.Mint(51).Value, accountO, charO, "Marisol");
+                GameObject buyer = Admitted(PlayerKeys.Mint(52).Value, accountB, charB, "Tobias");
+                GameObject viewO = Make(NetRoleKind.ClientView, true, new PlayerKey(51));
+                for (int i = 0; i < 30; i++) yield return null;
+                var kioskO = owner.GetComponent<KryticalNova.Economy.PlayerKiosk>();
+                var kioskB = buyer.GetComponent<KryticalNova.Economy.PlayerKiosk>();
+                var invO = owner.GetComponent<PlayerInventory>();
+                var invB = buyer.GetComponent<PlayerInventory>();
+                var walletO = owner.GetComponent<KryticalNova.Economy.PlayerWallet>();
+                var walletB = buyer.GetComponent<KryticalNova.Economy.PlayerWallet>();
+                Assert.IsNotNull(kioskO, "the body has its Kiosk side");
+                Assert.IsNotNull(kioskO.StandPrefab, "and its stand prefab");
+                invO.ServerGive(9001, 3);
+                walletO.ServerSet(100);
+                walletB.ServerSet(1000);
+                int heldO = invO.CountItem(9001), heldB = invB.CountItem(9001);
+                int cell = -1;
+                for (int i = 0; i < PlayerInventory.Capacity; i++) if (invO.Get(i).itemId == 9001) { cell = i; break; }
+
+                // open: NGO's rules on the server body (saved character, alive, trade zone, price cap, free tier), a kept stand, the owner's view
+                kioskO.RunOpen("Marisol's Goods", new[] { new BodyKioskOffer { cell = (short)cell, count = 2, unitPrice = 50 } }, 0);
+                KryticalNova.Economy.KioskRecord record = KryticalNova.Economy.KioskService.Find(charO);
+                Assert.IsNotNull(record, "the Kiosk opened: " + string.Join(" | ", told.To(owner)));
+                Assert.IsTrue(record.open);
+                Assert.AreEqual(heldO - 2, invO.CountItem(9001), "the two listed left the Pack");
+                Assert.AreEqual(1, KioskStands.Server.Count, "the server keeps one stand (not network-spawned)");
+                IKioskStand stand = KioskStands.Server[0];
+                Assert.AreNotEqual(0u, stand.ServerId, "with a server id");
+                Assert.AreEqual(1, stand.ListingCount, "showing the listing");
+                Assert.IsTrue(told.Any(owner, "kiosk True True Marisol's Goods"), "the owner's window shows the open Kiosk");
+                int version = stand.Version;
+
+                // buy: the buyer's Creds through the wallet, the item to the Pack, the till after tax, both ledger sides, the owner told
+                kioskB.RunBuy(stand.ServerId, 0, new BodyKioskListing(record.listings[0].stack, 50), 1);
+                Assert.AreEqual(heldB + 1, invB.CountItem(9001), "the buyer has it");
+                Assert.AreEqual(950, walletB.Creds, "and paid 50");
+                long net = kioskO.Settings.AfterTax(50, out _);
+                Assert.AreEqual(net, record.till, "the till holds the price after tax");
+                Assert.Greater(stand.Version, version, "the stand's shelf changed (its list goes to the players)");
+                Assert.IsTrue(told.Any(owner, "tell Kiosk: Tobias bought"), "the online owner is told");
+                kioskO.RunBuy(stand.ServerId, 0, new BodyKioskListing(record.listings[0].stack, 50), 1);
+                Assert.IsTrue(told.Any(owner, "tell This is your own Kiosk."), "NGO's own-Kiosk rule");
+                ServerSave.WaitForDisk();
+                List<LedgerEntry> buys = ServerSave.ReadLedger(accountB, 0, 100).FindAll(l => l.kind == LedgerKinds.KioskBuy);
+                Assert.AreEqual(1, buys.Count, "one kiosk.buy line on the buyer (saved together with the Kiosks)");
+                Assert.AreEqual(1, buys[0].items.Find(x => x.item == 9001).count);
+                Assert.AreEqual(accountO, buys[0].otherAccount, "with the owner as the other side");
+
+                // collect, then close: the till to the wallet, the unsold item back to the Pack, the stand gone, the record forgotten
+                kioskO.RunCollect();
+                Assert.AreEqual(100 + net, walletO.Creds, "the till went to the owner's wallet");
+                kioskO.RunClose();
+                Assert.AreEqual(heldO - 1, invO.CountItem(9001), "the unsold one came back");
+                Assert.AreEqual(0, KioskStands.Server.Count, "the stand is gone");
+                Assert.IsNull(KryticalNova.Economy.KioskService.Find(charO), "a closed, empty Kiosk is forgotten");
+                owner.GetComponent<PlayerSaveAgent>().Save();
+                ServerSave.WaitForDisk();
+                List<LedgerEntry> ownerLines = ServerSave.ReadLedger(accountO, 0, 100);
+                Assert.AreEqual(1, ownerLines.FindAll(l => l.kind == LedgerKinds.KioskOpen).Count, "one kiosk.open line");
+                Assert.AreEqual(-2, ownerLines.Find(l => l.kind == LedgerKinds.KioskOpen).items.Find(x => x.item == 9001).count, "with the two listed");
+                Assert.IsTrue(ownerLines.Exists(l => l.kind == LedgerKinds.KioskCollect && l.items.Exists(x => x.item == 9001 && x.count == 1)),
+                    "and a kiosk.collect line with the unsold one back");
+
+                // the owner's view only asks; a stand view shows the server's sign and shelf and buys by the stand's server id
+                var asked = new Asked();
+                viewO.GetComponent<BodyRoleTag>().Requests = asked;
+                var viewKiosk = viewO.GetComponent<KryticalNova.Economy.PlayerKiosk>();
+                viewKiosk.RequestOpen("Stall", new[] { new KryticalNova.Economy.KioskOffer { cell = 4, count = 1, unitPrice = 9 } }, 0);
+                viewKiosk.RequestCollect();
+                IKioskStand standView = viewKiosk.ShowStandView(7, Vector3.forward, 0f);
+                Assert.IsNotNull(standView, "a stand view from the body's prefab");
+                standView.ApplyView("Tobias's Wares", "Tobias", 1, 0, new[] { new BodyKioskListing(new ItemStack(9001, 2), 50) });
+                var shownStand = (KryticalNova.Economy.KioskStand)standView;
+                Assert.AreEqual("Tobias's Wares", shownStand.ShopName, "the server's sign");
+                Assert.AreEqual(1, shownStand.ListingCount, "and shelf");
+                Assert.AreEqual(0, KioskStands.Server.Count, "a view is not a server stand");
+                viewKiosk.RequestBuy(shownStand, 0, shownStand.GetListing(0), 1);
+                CollectionAssert.AreEqual(new[] { "KioskOpen Stall 1 0", "KioskCollect", "KioskBuy 7 0 9001x2:0 50 1" }, asked.Ops, "sent to the server");
+                viewKiosk.MirrorView(new BodyKioskView { exists = true, open = true, shopName = "Stall", till = 12, shelf = new[] { new BodyKioskListing(new ItemStack(9001, 1), 9) } });
+                Assert.IsTrue(viewKiosk.View.exists, "the owner's window shows the server's Kiosk");
+                Assert.AreEqual(12, viewKiosk.View.till);
+                Assert.AreEqual(1, viewKiosk.Shelf.Count);
+                standView.RemoveView();
+                owner.GetComponent<PlayerSaveAgent>().OnServerLeaving();
+                buyer.GetComponent<PlayerSaveAgent>().OnServerLeaving();
+            }
+            finally
+            {
+                KryticalNova.Economy.KioskService.ServerForgetStands();
+                OwnerMessages.Current = oldMessages;
+                KioskOwnerLink.Current = oldLink;
                 PlayerKeys.Reset();
             }
         }
