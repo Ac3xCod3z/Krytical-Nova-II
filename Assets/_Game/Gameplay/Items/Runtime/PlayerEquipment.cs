@@ -90,6 +90,13 @@ namespace KryticalNova.Items
         public ushort GetDye(EquipSlot slot) => looks.GetDye(slot);
 
         /// <summary>Server (or offline) only: commit validated looks. The dyes are the worn pieces' own, whatever is passed.</summary>
+        /// <summary>The entity netcode's own view body: the server's looks (Weaves, Morph, the helmet and cape toggles; M8 8.3.9).</summary>
+        public void MirrorLooks(EquipmentLooks next)
+        {
+            if (!KryticalNova.Core.BodyRoleTag.IsLocalClientView(this) || next.Equals(looks)) return;
+            ApplyLooks(next);
+        }
+
         public void ServerSetLooks(EquipmentLooks next)
         {
             if (IsSpawned && !IsServer) return;

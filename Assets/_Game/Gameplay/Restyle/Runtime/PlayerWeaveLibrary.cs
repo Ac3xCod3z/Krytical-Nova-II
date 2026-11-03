@@ -21,7 +21,7 @@ namespace KryticalNova.Restyle
     /// </summary>
     [DisallowMultipleComponent]
     [RequireComponent(typeof(PlayerInventory), typeof(PlayerEquipment))]
-    public sealed class PlayerWeaveLibrary : NetworkBehaviour, ISaveParticipant
+    public sealed class PlayerWeaveLibrary : NetworkBehaviour, ISaveParticipant, IBodyWeaveLibrary
     {
         public const string LibrarySaveKey = "weaves";
 
@@ -61,7 +61,32 @@ namespace KryticalNova.Restyle
         /// <summary>The collected Morphs, as <see cref="MorphRules.Key"/>. Do not modify.</summary>
         public IReadOnlyCollection<uint> Morphs => morphs;
 
-        private bool HasAuthority => !IsSpawned || IsServer;
+        // A client view of the entity netcode only shows the server's library (MirrorLibrary; M8 8.3.10).
+        private bool HasAuthority => (!IsSpawned || IsServer) && !EntityView;
+        private bool EntityView => KryticalNova.Core.BodyRoleTag.Of(this) is { Kind: KryticalNova.Core.NetRoleKind.ClientView };
+        private bool EntityServer => KryticalNova.Core.BodyRoleTag.Of(this) is { Kind: KryticalNova.Core.NetRoleKind.ServerBody };
+
+        /// <summary>Goes up whenever a look is added or the library is replaced (the entity netcode sends the owner a new copy).</summary>
+        public int Version { get; private set; }
+        IReadOnlyCollection<ushort> IBodyWeaveLibrary.Lines => lines;
+        IReadOnlyCollection<uint> IBodyWeaveLibrary.Morphs => morphs;
+
+        private void Raise()
+        {
+            Version++;
+            Changed?.Invoke();
+        }
+
+        /// <summary>The entity netcode's own view body: the server's library, as NGO's owner pulled its network lists.</summary>
+        public void MirrorLibrary(ushort[] shownLines, uint[] shownMorphs)
+        {
+            if (!KryticalNova.Core.BodyRoleTag.IsLocalClientView(this)) return;
+            lines.Clear();
+            if (shownLines != null) foreach (ushort line in shownLines) lines.Add(line);
+            morphs.Clear();
+            if (shownMorphs != null) foreach (uint morph in shownMorphs) morphs.Add(morph);
+            Changed?.Invoke();
+        }
 
         private void Awake()
         {
@@ -140,7 +165,7 @@ namespace KryticalNova.Restyle
         {
             if (!HasAuthority || lineId == 0 || !lines.Add(lineId)) return false;
             if (IsSpawned) netLines.Add(lineId);
-            Changed?.Invoke();
+            Raise();
             if (saveAgent != null) saveAgent.SaveSoon();
             return true;
         }
@@ -178,7 +203,7 @@ namespace KryticalNova.Restyle
         {
             if (!HasAuthority || key == 0 || !morphs.Add(key)) return false;
             if (IsSpawned) netMorphs.Add(key);
-            Changed?.Invoke();
+            Raise();
             if (saveAgent != null) saveAgent.SaveSoon();
             return true;
         }
@@ -191,7 +216,7 @@ namespace KryticalNova.Restyle
             morphs.Clear();
             if (IsSpawned) netMorphs.Clear();
             if (IsSpawned) netLines.Clear();
-            Changed?.Invoke();
+            Raise();
             if (saveAgent != null) saveAgent.SaveSoon();
         }
 
@@ -200,6 +225,7 @@ namespace KryticalNova.Restyle
         private void Tell(string text)
         {
             if (string.IsNullOrEmpty(text)) return;
+            if (EntityServer) { KryticalNova.Core.OwnerMessages.TryTell(this, text); return; }   // its player's message line
             if (IsSpawned && !IsOwnedByServer) TellRpc(text);
             else if (KryticalNova.Core.BodyRoleTag.IsMine(this, !IsSpawned || IsOwner)) ClientPresentationRegistry.Messages?.ShowMessage(text);
         }
@@ -284,7 +310,7 @@ namespace KryticalNova.Restyle
                     if (morph != 0) added |= morphs.Add(morph);
             if (!added) return;
             if (IsSpawned && IsServer) WriteNetLines();
-            Changed?.Invoke();
+            Raise();
         }
     }
 }

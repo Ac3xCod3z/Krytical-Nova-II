@@ -26,7 +26,7 @@ namespace KryticalNova.Restyle
     [DisallowMultipleComponent]
     [RequireComponent(typeof(PlayerInventory), typeof(PlayerEquipment), typeof(PlayerWeaveLibrary))]
     [RequireComponent(typeof(PlayerItemSources))]
-    public sealed class PlayerWeaves : NetworkBehaviour, ISaveParticipant
+    public sealed class PlayerWeaves : NetworkBehaviour, ISaveParticipant, IBodyWeaves
     {
         public const string WeaveSaveKey = "weave";
         private const float ReachPadding = 2.5f;
@@ -119,6 +119,7 @@ namespace KryticalNova.Restyle
         /// <summary>Put a collected look over the piece worn in a slot.</summary>
         public void RequestWeave(EquipSlot slot, ushort lineId)
         {
+            if (AskServer(KryticalNova.Core.WeaveOpKind.Weave, (byte)slot, lineId, 0)) return;
             if (IsSpawned) WeaveRpc((byte)slot, lineId);
             else ServerWeave(slot, lineId);
         }
@@ -126,6 +127,7 @@ namespace KryticalNova.Restyle
         /// <summary>Show the worn piece in a slot as it is again.</summary>
         public void RequestClearWeave(EquipSlot slot)
         {
+            if (AskServer(KryticalNova.Core.WeaveOpKind.ClearWeave, (byte)slot, 0, 0)) return;
             if (IsSpawned) ClearWeaveRpc((byte)slot);
             else ServerClearWeave(slot);
         }
@@ -133,6 +135,7 @@ namespace KryticalNova.Restyle
         /// <summary>Put a collected Morph (a pet and one of its growth stages) over the pet that is out.</summary>
         public void RequestMorph(ushort petItemId, int stage)
         {
+            if (AskServer(KryticalNova.Core.WeaveOpKind.Morph, 0, petItemId, (byte)Mathf.Clamp(stage, 0, PetRules.LastStage))) return;
             if (IsSpawned) MorphRpc(petItemId, (byte)Mathf.Clamp(stage, 0, PetRules.LastStage));
             else ServerMorph(petItemId, stage);
         }
@@ -140,6 +143,7 @@ namespace KryticalNova.Restyle
         /// <summary>Show the pet that is out as it is again.</summary>
         public void RequestClearMorph()
         {
+            if (AskServer(KryticalNova.Core.WeaveOpKind.ClearMorph, 0, 0, 0)) return;
             if (IsSpawned) ClearMorphRpc();
             else ServerClearMorph();
         }
@@ -147,6 +151,7 @@ namespace KryticalNova.Restyle
         /// <summary>Dye the piece shown in a slot in a colourway; 0 gives it its own colours back.</summary>
         public void RequestDye(EquipSlot slot, ushort colourway)
         {
+            if (AskServer(KryticalNova.Core.WeaveOpKind.Dye, (byte)slot, colourway, 0)) return;
             if (IsSpawned) DyeRpc((byte)slot, colourway);
             else ServerDye(slot, colourway);
         }
@@ -154,6 +159,7 @@ namespace KryticalNova.Restyle
         /// <summary>Show or hide the helmet worn with the outfit (the Equipment page's toggle). Free, anywhere.</summary>
         public void RequestHelmetShown(bool shown)
         {
+            if (AskServer(KryticalNova.Core.WeaveOpKind.Helmet, 0, 0, (byte)(shown ? 1 : 0))) return;
             if (IsSpawned) HelmetRpc(shown);
             else ServerHelmet(shown);
         }
@@ -168,6 +174,7 @@ namespace KryticalNova.Restyle
         /// <summary>Show or hide the worn cape's look (the Equipment page's toggle, as the helmet's). Free, anywhere; the cape keeps its stats.</summary>
         public void RequestCapeShown(bool shown)
         {
+            if (AskServer(KryticalNova.Core.WeaveOpKind.Cape, 0, 0, (byte)(shown ? 1 : 0))) return;
             if (IsSpawned) CapeRpc(shown);
             else ServerCape(shown);
         }
@@ -216,7 +223,33 @@ namespace KryticalNova.Restyle
 
         // ------------------------------------------------------------------ server
 
-        private bool HasAuthority => !IsSpawned || IsServer;
+        // A client view of the entity netcode never weaves or dyes itself (it would spend its own mirror Pack / wallet); its server body does.
+        private bool HasAuthority => (!IsSpawned || IsServer) && !EntityView;
+        private bool EntityView => KryticalNova.Core.BodyRoleTag.Of(this) is { Kind: KryticalNova.Core.NetRoleKind.ClientView };
+        private bool EntityServer => KryticalNova.Core.BodyRoleTag.Of(this) is { Kind: KryticalNova.Core.NetRoleKind.ServerBody };
+
+        private bool AskServer(KryticalNova.Core.WeaveOpKind op, byte slot, ushort id, byte stage)
+        {
+            if (!(KryticalNova.Core.BodyRoleTag.RequestsOf(this) is KryticalNova.Core.IBodyRequests requests)) return false;
+            requests.WeaveOp(op, slot, id, stage);
+            return true;
+        }
+
+        /// <summary>A server body of the entity netcode runs its owner's request (NGO's RPC bodies, after the caller's limit; M8 8.3.9).</summary>
+        public void RunWeaveOp(KryticalNova.Core.WeaveOpKind op, byte slot, ushort id, byte stage)
+        {
+            if (!EntityServer) return;
+            switch (op)
+            {
+                case KryticalNova.Core.WeaveOpKind.Weave: ServerWeave((EquipSlot)slot, id); break;
+                case KryticalNova.Core.WeaveOpKind.ClearWeave: ServerClearWeave((EquipSlot)slot); break;
+                case KryticalNova.Core.WeaveOpKind.Dye: ServerDye((EquipSlot)slot, id); break;
+                case KryticalNova.Core.WeaveOpKind.Morph: ServerMorph(id, stage); break;
+                case KryticalNova.Core.WeaveOpKind.ClearMorph: ServerClearMorph(); break;
+                case KryticalNova.Core.WeaveOpKind.Helmet: ServerHelmet(stage != 0); break;
+                case KryticalNova.Core.WeaveOpKind.Cape: ServerCape(stage != 0); break;
+            }
+        }
 
         /// <summary>True when this player may use a service now; otherwise they are told why not.</summary>
         private bool Ready(NpcOffer offer, string where)
@@ -385,6 +418,7 @@ namespace KryticalNova.Restyle
         private void Tell(string text)
         {
             if (string.IsNullOrEmpty(text)) return;
+            if (EntityServer) { KryticalNova.Core.OwnerMessages.TryTell(this, text); return; }   // its player's message line
             if (IsSpawned && !IsOwnedByServer) TellRpc(text);
             else if (KryticalNova.Core.BodyRoleTag.IsMine(this, !IsSpawned || IsOwner)) ClientPresentationRegistry.Messages?.ShowMessage(text);
         }

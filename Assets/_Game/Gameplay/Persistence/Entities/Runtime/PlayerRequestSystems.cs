@@ -476,6 +476,15 @@ namespace KryticalNova.Persistence.Entities
             }
         }
 
+        public void WeaveOp(WeaveOpKind op, byte slot, ushort id, byte stage)
+        {
+            if (m_World == null || !m_World.IsCreated) return;
+            var em = m_World.EntityManager;
+            Entity rpc = em.CreateEntity();
+            em.AddComponentData(rpc, new WeaveOpRpc { Op = (byte)op, Slot = slot, Id = id, Stage = stage });
+            em.AddComponent<SendRpcCommandRequest>(rpc);
+        }
+
         public void Nova(NovaOpKind op, byte arg)
         {
             if (m_World == null || !m_World.IsCreated) return;

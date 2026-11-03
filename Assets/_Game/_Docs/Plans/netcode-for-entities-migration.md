@@ -1213,10 +1213,15 @@ checkpoints; the owner's Thursday hand-test list; owner questions). NGO rules ta
     limit (Herald reach, Renown then Creds through PlayerWallet Herald / Appearance, Renown handed back on a Creds failure), the result
     to the owner by PlayerKey, the moment to everyone; the Nova to every view as the PlayerNovaTag ghost field (halo, title; remote views
     keep PlayerNova), `nova` real. B23. Save note + HIGH review approved.
-  - [ ] 8.3.8 restyle (Stylist, Reshaper, Coach): the proposed look goes to the server body in pages of RecipeText (NGO sent it whole),
+  - [x] 8.3.8 restyle (Stylist, Reshaper, Coach): the proposed look goes to the server body in pages of RecipeText (NGO sent it whole),
     NGO's PlayerRestyle rules run there at the Money limit (NPC reach, Merge + the creator's validator, the pass from Pack or storage),
     everyone gets the new look through the look text; a view never restyles itself (CharacterCreation IRestyleRequests / IBodyRestyle).
-    No save key (the look is real). B24. Review summary to the Master first.
+    No save key (the look is real). B24. Review approved.
+  - [ ] 8.3.9 weaves / dye + 8.3.10 Weave Library (together: `weave` holds collectedOwned, whose collect writes `weaves`): the seven Weave
+    requests run NGO's PlayerWeaves rules on the server body (toggles at the Items limit, the rest at Money; Holoweaver / Outfitter reach,
+    the Weave fee through PlayerWallet Appearance, dye Cells from Pack or storage), the own view wears the server's looks (MirrorLooks from
+    the look text), the library goes to its owner as text pages by version; `weave` and `weaves` real together (Items IBodyWeaves /
+    IBodyWeaveLibrary). B25. Save note + review summary to the Master first.
 - [x] M8 group 2: storage, shopping, trade, Kiosk player side.
   - [x] 8.2.1 storage (Vault + Deep Vault): requests run NGO's PlayerStorage rules on the server body (Vaultkeeper range, Items limit,
     Creds through PlayerWallet VaultDeposit/VaultWithdraw at the Money limit), cells + Creds mirrored to the owner, `vault` + `deepvault`

@@ -1,5 +1,17 @@
 namespace KryticalNova.Core
 {
+    /// <summary>What a Weave request asks the server's body to do (NGO's seven <c>PlayerWeaves</c> RPCs; M8 8.3.9).</summary>
+    public enum WeaveOpKind : byte
+    {
+        Weave = 1,
+        ClearWeave = 2,
+        Dye = 3,
+        Morph = 4,
+        ClearMorph = 5,
+        Helmet = 6,
+        Cape = 7,
+    }
+
     /// <summary>What a Herald request asks the server's body to do (NGO's <c>PlayerNova</c> RPCs; M8 8.3.5).</summary>
     public enum NovaOpKind : byte
     {
@@ -160,5 +172,11 @@ namespace KryticalNova.Core
 
         /// <summary>Asks the server for an Ascension, a Standing, a Standing worn or the Nova Weave (M8 8.3.5): <paramref name="arg"/> the track or the tier.</summary>
         void Nova(NovaOpKind op, byte arg);
+
+        /// <summary>
+        /// Asks the server for a Weave, a dye, a Morph or the helmet / cape toggle (M8 8.3.9): <paramref name="slot"/> the equipment slot,
+        /// <paramref name="id"/> the gear line / colourway / pet, <paramref name="stage"/> the Morph's stage or the toggle (1 = shown).
+        /// </summary>
+        void WeaveOp(WeaveOpKind op, byte slot, ushort id, byte stage);
     }
 }

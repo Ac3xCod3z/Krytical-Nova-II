@@ -449,6 +449,7 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
             public void GearWork(GearWorkOpKind op, short cell, short cell2, ushort alloy, ushort protection) => Ops.Add($"GearWork {op} {cell} {cell2} {alloy} {protection}");
             public void Craft(ushort recipeId, ushort times) => Ops.Add($"Craft {recipeId} {times}");
             public void Nova(NovaOpKind op, byte arg) => Ops.Add($"Nova {op} {arg}");
+            public void WeaveOp(WeaveOpKind op, byte slot, ushort id, byte stage) => Ops.Add($"Weave {op} {slot} {id} {stage}");
         }
 
         /// <summary>What the server bodies told their players (the message line) and sent their trade windows (view, notice, prompt).</summary>
@@ -2004,6 +2005,138 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
             {
                 OwnerMessages.Current = oldMessages;
                 RestyleOwnerLink.Current = oldLink;
+                PlayerKeys.Reset();
+            }
+        }
+
+        [UnityTest]
+        public IEnumerator B25_WeavesAndTheLibrary_RunOnTheServerBody_TheFeeThroughTheWallet_BothSavePartsRealTogether_AndTheViewsMirror()
+        {
+            NetRole.Install(new BodyRoleNetRoleAdapter(null, () => NetRoleKind.ServerBody));
+            Assert.IsFalse(SavePassthrough.Is("weave"), "the weave part is real now");
+            Assert.IsFalse(SavePassthrough.Is("weaves"), "and the library's, in the same change");
+            IOwnerMessages oldMessages = OwnerMessages.Current;
+            var told = new Told();
+            OwnerMessages.Current = told;
+            try
+            {
+                PlayerKeys.Reset();
+                const string account = "1021324354657687a9b0c1d2e3f40516", characterId = "a1000000000000000000000000000091";
+                GameObject body = Admitted(PlayerKeys.Mint(91).Value, account, characterId, "Weaverly");
+                GameObject view = Make(NetRoleKind.ClientView, true, new PlayerKey(91));
+                for (int i = 0; i < 30; i++) yield return null;
+                var weaves = body.GetComponent<IBodyWeaves>();
+                var library = body.GetComponent<IBodyWeaveLibrary>();
+                var equipment = body.GetComponent<PlayerEquipment>();
+                var inv = body.GetComponent<PlayerInventory>();
+                var wallet = body.GetComponent<KryticalNova.Economy.PlayerWallet>();
+                var wearer = body.GetComponent<IGearWearer>();
+                Assert.IsNotNull(weaves, "the body has its Weaves");
+                Assert.IsNotNull(library, "and its library");
+
+                // the helmet toggle: free, anywhere (NGO's Items limit)
+                weaves.RunWeaveOp(WeaveOpKind.Helmet, 0, 0, 0);
+                Assert.IsTrue(equipment.Looks.helmetHidden, "the helmet is hidden");
+
+                // a Weave planned by NGO's own rule: a worn piece and another look it accepts over it
+                EquipSlot slot = default;
+                ItemDefinition look = null;
+                foreach (EquipSlot s in WeaveRules.WeaveSlots)
+                {
+                    ItemDefinition worn = equipment.GetDefinition(s);
+                    if (worn == null) continue;
+                    foreach (ItemDefinition item in inv.Catalog.Items)
+                    {
+                        ushort key = WeaveRules.KeyOf(item);
+                        if (key == 0 || key == WeaveRules.KeyOf(worn)) continue;
+                        if (WeaveRules.ApplyBlockedReason(inv.Gear, s, worn, item, true, wearer.Faction, wearer.Body) != null) continue;
+                        slot = s;
+                        look = item;
+                        break;
+                    }
+                    if (look != null) break;
+                }
+                Assert.IsNotNull(look, "a worn piece and a look NGO's Weave rule accepts over it");
+                ushort line = WeaveRules.KeyOf(look);
+
+                // earned: its look joins the library (NGO's Earned collect), the version goes up, the owner is told
+                int version = library.Version;
+                inv.ServerGive(look.itemId, 1, 0, earned: true);
+                Assert.IsTrue(System.Linq.Enumerable.Contains(library.Lines, line), "the look is in the library");
+                Assert.Greater(library.Version, version, "its version went up (the owner gets a new copy)");
+
+                wallet.ServerSet(100_000);
+                weaves.RunWeaveOp(WeaveOpKind.Weave, (byte)slot, line, 0);
+                Assert.IsTrue(told.Any(body, "tell Visit a Holoweaver to change a Weave."), "NGO's reach: " + string.Join(" | ", told.To(body)));
+                Assert.AreEqual(100_000, wallet.Creds, "no fee taken");
+
+                GameObject weaver = Npc(KryticalNova.NPC.NpcOffer.Holoweave, body.transform.position + Vector3.right);
+                string lookBefore = PlayerAdmission.LookOf(body.GetComponent<PlayerIdentity>(), equipment);
+                weaves.RunWeaveOp(WeaveOpKind.Weave, (byte)slot, line, 0);
+                Assert.AreEqual(look.itemId, equipment.Looks.GetWeave(slot), "woven: " + string.Join(" | ", told.To(body)));
+                Assert.AreEqual(100_000 - weaves.WeaveFee, wallet.Creds, "NGO's Weave fee through the wallet");
+                Assert.AreNotEqual(lookBefore, PlayerAdmission.LookOf(body.GetComponent<PlayerIdentity>(), equipment), "the look text everyone reads has the Weave");
+
+                // the library as pages of text reads back
+                string libraryText = WeaveLibraryText.Encode(library.Lines, library.Morphs);
+                Assert.IsTrue(WeaveLibraryText.TryDecode(libraryText, out ushort[] backLines, out uint[] backMorphs), "the library text reads back");
+                Assert.AreEqual(library.Lines.Count, backLines.Length);
+
+                // the views: the own view only asks, and shows the server's looks and library
+                var asked = new Asked();
+                view.GetComponent<BodyRoleTag>().Requests = asked;
+                var viewWeavesPart = (Component)view.GetComponent<IBodyWeaves>();
+                viewWeavesPart.GetType().GetMethod("RequestHelmetShown").Invoke(viewWeavesPart, new object[] { true });
+                viewWeavesPart.GetType().GetMethod("RequestWeave").Invoke(viewWeavesPart, new object[] { slot, line });
+                CollectionAssert.AreEqual(new[] { "Weave Helmet 0 0 1", $"Weave Weave {(byte)slot} {line} 0" }, asked.Ops, "sent to the server");
+                var viewEquipment = view.GetComponent<PlayerEquipment>();
+                ((IBodyWeaves)viewWeavesPart).RunWeaveOp(WeaveOpKind.Helmet, 0, 0, 0);
+                Assert.IsFalse(viewEquipment.Looks.helmetHidden, "a view never changes its looks itself");
+                viewEquipment.MirrorLooks(equipment.Looks);
+                Assert.AreEqual(look.itemId, viewEquipment.Looks.GetWeave(slot), "the own view wears the server's Weave");
+                var viewLibrary = view.GetComponent<IBodyWeaveLibrary>();
+                viewLibrary.MirrorLibrary(backLines, backMorphs);
+                Assert.AreEqual(library.Lines.Count, viewLibrary.Lines.Count, "and shows the server's library");
+
+                // both NGO texts load into a fresh admitted server body unchanged and save back every byte
+                string weaveText = null, weavesText = null;
+                foreach (ISaveParticipant part in body.GetComponents<ISaveParticipant>())
+                {
+                    if (part.SaveKey == "weave") weaveText = part.CaptureSave();
+                    if (part.SaveKey == "weaves") weavesText = part.CaptureSave();
+                }
+                Assert.IsNotNull(weaveText);
+                Assert.IsNotNull(weavesText);
+                const string account2 = "21324354657687a9b0c1d2e3f4051627", character2 = "a1000000000000000000000000000092";
+                GameObject other = Make(NetRoleKind.ServerBody, false, new PlayerKey(92));
+                yield return null;
+                CharacterRecipe recipe = AnyLegalRecipe(other.GetComponent<PlayerIdentity>().Database);
+                var stored = new AccountSave { accountId = account2 };
+                stored.Set("weaves", weavesText);
+                var character = new CharacterSave { characterId = character2, name = "Returnweave" };
+                character.Set("weave", weaveText);
+                stored.characters.Add(character);
+                Assert.IsTrue(ServerSave.WriteAccount(stored));
+                ServerSave.WaitForDisk();
+                var context = new ServerBodyContext
+                {
+                    Key = new PlayerKey(92), Serial = 92, NetworkId = 92, Account = account2, CharacterId = character2, Name = "Returnweave", RecipeText = RecipeText.Encode(recipe),
+                };
+                Assert.IsNull(new PlayerAdmission().Begin(other, in context), "admitted");
+                var agent = other.GetComponent<PlayerSaveAgent>();
+                for (int i = 0; i < 30; i++) yield return null;
+                agent.Save();
+                ServerSave.WaitForDisk();
+                AccountSave back = ServerSave.ReadAccountFrom(ServerSave.Store, account2);
+                Assert.AreEqual(weaveText, back.Find(character2).Get("weave"), "the weave part saves back byte for byte");
+                Assert.AreEqual(weavesText, back.Get("weaves"), "the library part saves back byte for byte");
+                agent.OnServerLeaving();
+                body.GetComponent<PlayerSaveAgent>().OnServerLeaving();
+                Object.Destroy(weaver);
+            }
+            finally
+            {
+                OwnerMessages.Current = oldMessages;
                 PlayerKeys.Reset();
             }
         }

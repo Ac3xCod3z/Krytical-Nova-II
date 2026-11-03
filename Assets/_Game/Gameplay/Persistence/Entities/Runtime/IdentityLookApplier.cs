@@ -32,6 +32,10 @@ namespace KryticalNova.Persistence.Entities
             if (gear != null && !BodyRoleTag.IsLocalClientView(body.transform) && body.TryGetComponent(out PlayerEquipment equipment)
                 && GearText.TryDecode(gear, out EquipmentLoadout loadout, out EquipmentLooks looks, out EquipmentTemper temper))
                 equipment.ApplyObserved(loadout, looks, temper);
+            // the own view wears its worn pieces from the Pack mirror; its Weaves, Morph and toggles come from here (M8 8.3.9)
+            else if (gear != null && BodyRoleTag.IsLocalClientView(body.transform) && body.TryGetComponent(out PlayerEquipment own)
+                && GearText.TryDecode(gear, out _, out EquipmentLooks ownLooks, out _))
+                own.MirrorLooks(ownLooks);
             Applied++;
         }
     }
