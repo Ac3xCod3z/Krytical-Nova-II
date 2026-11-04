@@ -123,7 +123,9 @@ namespace KryticalNova.Player.Entities.Editor
                 ghost.DefaultGhostMode = GhostMode.OwnerPredicted;
                 ghost.SupportedGhostModes = GhostModeMask.All;
                 ghost.OptimizationMode = GhostOptimizationMode.Dynamic;
-                if (root.GetComponent<PlayerGhostAuthoring>() == null) root.AddComponent<PlayerGhostAuthoring>(); // speeds keep their values
+                var player = root.GetComponent<PlayerGhostAuthoring>();
+                if (player == null) player = root.AddComponent<PlayerGhostAuthoring>(); // speeds keep their values
+                CopyMeleeClips(player);
                 PrefabUtility.SaveAsPrefabAsset(root, PrefabPath);
             }
             finally
@@ -135,6 +137,29 @@ namespace KryticalNova.Player.Entities.Editor
             var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(PrefabPath);
             StampPrefabId(prefab);
             return prefab;
+        }
+
+        /// <summary>
+        /// M4.4b: the ghost bakes its strike lengths from the very clips the NGO Player prefab's PlayerMeleeCombat swings, copied here
+        /// by field name (this assembly does not see the Combat one).
+        /// </summary>
+        static void CopyMeleeClips(PlayerGhostAuthoring player)
+        {
+            var melee = FindMeleeCombat(AssetDatabase.LoadAssetAtPath<GameObject>(PlayerPrefabPath));
+            if (melee == null) { Debug.LogError("[KnBuild] no PlayerMeleeCombat on " + PlayerPrefabPath); return; }
+            var from = new SerializedObject(melee);
+            player.combo1Clip = from.FindProperty("combo1Clip").objectReferenceValue as AnimationClip;
+            player.combo2Clip = from.FindProperty("combo2Clip").objectReferenceValue as AnimationClip;
+            player.combo3Clip = from.FindProperty("combo3Clip").objectReferenceValue as AnimationClip;
+        }
+
+        /// <summary>The NGO player's PlayerMeleeCombat, found by type name, or null.</summary>
+        public static MonoBehaviour FindMeleeCombat(GameObject ngoPlayer)
+        {
+            if (ngoPlayer == null) return null;
+            foreach (var c in ngoPlayer.GetComponentsInChildren<MonoBehaviour>(true))
+                if (c != null && c.GetType().Name == "PlayerMeleeCombat") return c;
+            return null;
         }
 
         // The ghost type is the prefab's asset GUID, kept in an internal field the save normally fills; make sure it is there.

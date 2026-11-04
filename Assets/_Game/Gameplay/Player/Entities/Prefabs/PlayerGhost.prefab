@@ -88,3 +88,6 @@ MonoBehaviour:
   walkMmps: 5000
   runMmps: 9000
   traceTicks: 0
+  combo1Clip: {fileID: 7400000, guid: e57fc394b88a4904b93ac216f138e34e, type: 3}
+  combo2Clip: {fileID: 7400000, guid: 0faafc763f001ca4d95fcc89fcc40111, type: 3}
+  combo3Clip: {fileID: 7400000, guid: f1449fb106a8289428aa593db4bedb1e, type: 3}

@@ -1,4 +1,5 @@
 using Unity.Entities;
+using Unity.Mathematics;
 using UnityEngine;
 
 namespace KryticalNova.Player.Entities
@@ -18,6 +19,8 @@ namespace KryticalNova.Player.Entities
         public int runMmps = 9000;
         [Tooltip("Length of the per-tick history ring kept for tests and the divergence log; 0 = none.")]
         public int traceTicks;
+        [Tooltip("The NGO Player prefab's PlayerMeleeCombat combo clips, the same assets (copied by Build Player Ghost Assets).")]
+        public AnimationClip combo1Clip, combo2Clip, combo3Clip;
 
         public int TraceTicks => traceTicks;
 
@@ -43,6 +46,12 @@ namespace KryticalNova.Player.Entities
                 AddComponent<PlayerMountTag>(e);
                 AddComponent<PlayerVitals>(e);
                 AddComponent<PositionHistory>(e);   // server only, never sent: the lag compensation ring (M4.3)
+                // M4.4b: the strike lengths come from the clips themselves, as NGO's GetStrikeDuration reads clip.length
+                DependsOn(a.combo1Clip);
+                DependsOn(a.combo2Clip);
+                DependsOn(a.combo3Clip);
+                if (a.combo1Clip != null && a.combo2Clip != null && a.combo3Clip != null)
+                    AddComponent(e, new MeleeTimingData { Value = MeleeTiming.Prefab(new int3(Micros(a.combo1Clip), Micros(a.combo2Clip), Micros(a.combo3Clip))) });
                 AddComponent(e, new MoveStats { WalkMmps = a.walkMmps, RunMmps = a.runMmps });
                 AddComponent<MoveRanks>(e);
                 AddComponent<VaultPlan>(e);
@@ -77,6 +86,9 @@ namespace KryticalNova.Player.Entities
                     for (int i = 0; i < a.traceTicks; i++) trace.Add(default);
                 }
             }
+
+            /// <summary>A clip's length in whole microseconds.</summary>
+            static int Micros(AnimationClip clip) => (int)math.round(clip.length * 1000000.0);
         }
     }
 }

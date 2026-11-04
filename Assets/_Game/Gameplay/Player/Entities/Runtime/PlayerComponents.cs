@@ -180,6 +180,15 @@ namespace KryticalNova.Player.Entities
         [GhostField] public int MaxHealthMilli;
     }
 
+    /// <summary>
+    /// The melee strike timing (M4.4b): NGO PlayerMeleeCombat's numbers with the lengths of the same three combo clips, baked on the
+    /// player ghost (a strike lasts clip length / strike speed, NGO GetStrikeDuration). Read by the server; never sent.
+    /// </summary>
+    public struct MeleeTimingData : IComponentData
+    {
+        public MeleeTiming Value;
+    }
+
     /// <summary>The selected mount's box (0 = none), ride phase, growth percent and fed, for everyone (NGO's MountNetState; M8 8.4.8). Written by the server.</summary>
     public struct PlayerMountTag : IComponentData
     {

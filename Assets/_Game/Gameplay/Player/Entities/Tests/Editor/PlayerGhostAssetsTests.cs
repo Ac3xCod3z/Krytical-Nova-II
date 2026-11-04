@@ -32,6 +32,34 @@ namespace KryticalNova.Player.Entities.Tests
         }
 
         [Test]
+        public void TheShippedGhost_SwingsTheNgoPlayersClips_WithItsNumbers()
+        {
+            // M4.4b: a strike lasts clip length / strike speed (NGO PlayerMeleeCombat.GetStrikeDuration), so the clips and every
+            // number MeleeTiming.Prefab carries must be the NGO Player prefab's own.
+            var player = AssetDatabase.LoadAssetAtPath<GameObject>(PlayerGhostAssetsBuilder.PrefabPath).GetComponent<PlayerGhostAuthoring>();
+            var melee = PlayerGhostAssetsBuilder.FindMeleeCombat(AssetDatabase.LoadAssetAtPath<GameObject>(PlayerGhostAssetsBuilder.PlayerPrefabPath));
+            Assert.IsNotNull(melee, "no PlayerMeleeCombat on " + PlayerGhostAssetsBuilder.PlayerPrefabPath);
+            var ngo = new SerializedObject(melee);
+            AnimationClip[] clips = { player.combo1Clip, player.combo2Clip, player.combo3Clip };
+            for (int i = 0; i < 3; i++)
+            {
+                Assert.IsNotNull(clips[i], "combo" + (i + 1) + "Clip: run Build Player Ghost Assets");
+                Assert.AreSame(ngo.FindProperty("combo" + (i + 1) + "Clip").objectReferenceValue, clips[i], "the same clip asset as NGO");
+                Assert.Greater(clips[i].length, 0.1f);
+            }
+
+            MeleeTiming t = MeleeTiming.Prefab(default);
+            int Milli(string field) => Mathf.RoundToInt(ngo.FindProperty(field).floatValue * 1000f);
+            Assert.AreEqual(new Unity.Mathematics.int3(Milli("strike1Speed"), Milli("strike2Speed"), Milli("strike3Speed")), t.SpeedMilli);
+            Assert.AreEqual(new Unity.Mathematics.int3(Milli("swing1Start"), Milli("swing2Start"), Milli("swing3Start")), t.WindowStartPermille);
+            Assert.AreEqual(new Unity.Mathematics.int3(Milli("swing1End"), Milli("swing2End"), Milli("swing3End")), t.WindowEndPermille);
+            Assert.AreEqual(Milli("postComboDelay") * 1000, t.PostComboMicros);
+            Assert.AreEqual(Milli("meleeStrikingRange"), t.ReachMm);
+            Assert.AreEqual(Milli("serverMaxValidationRange"), t.ValidationMm);
+            Assert.AreEqual(Milli("minCadenceTolerance"), t.MinCadencePermille);
+        }
+
+        [Test]
         public void TheShippedSubScene_HoldsTheShippedGhostPrefab()
         {
             var scene = AssetDatabase.LoadAssetAtPath<SceneAsset>(PlayerGhostAssetsBuilder.SubScenePath);
