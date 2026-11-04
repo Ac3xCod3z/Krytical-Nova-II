@@ -1,0 +1,111 @@
+using Unity.Collections;
+using Unity.Mathematics;
+using Unity.NetCode;
+
+namespace KryticalNova.Player.Entities
+{
+    /// <summary>
+    /// The three-step combo's numbers as the shipped Player prefab has them (NGO's PlayerMeleeCombat, Player.prefab:713-736; M4.4), in
+    /// whole units for the entity netcode. The clip lengths come from the three Grruzam katana clips (baked; this struct only carries them).
+    /// </summary>
+    public struct MeleeTiming
+    {
+        /// <summary>Each step's clip length (microseconds) and play speed (thousandths): a strike lasts length / speed.</summary>
+        public int3 ClipMicros, SpeedMilli;
+        /// <summary>Each step's swing window, as thousandths of its clip (the hit lands at the window's END: owner, 4 Nov 2026).</summary>
+        public int3 WindowStartPermille, WindowEndPermille;
+        /// <summary>Each step's damage multiplier, thousandths (NGO: 1.0 / 1.15 / 1.35).</summary>
+        public int3 StepMultiplierPermille;
+        public int PostComboMicros, ReachMm, ValidationMm, ReachSlackMm, MinCadencePermille, ArcHalfAngleCdeg;
+
+        /// <summary>The prefab's numbers (NGO file:line in M4-combat.md section 5), with the clip lengths given.</summary>
+        public static MeleeTiming Prefab(int3 clipMicros) => new MeleeTiming
+        {
+            ClipMicros = clipMicros,
+            SpeedMilli = new int3(1411, 1300, 1126),
+            WindowStartPermille = new int3(220, 100, 330),
+            WindowEndPermille = new int3(650, 300, 700),
+            StepMultiplierPermille = new int3(1000, 1150, 1350),
+            PostComboMicros = 250000,
+            ReachMm = 1600,
+            ValidationMm = 2700,
+            ReachSlackMm = 500,
+            MinCadencePermille = 700,
+            // NGO's blade hits what is under it in front; the arc stands in for it on a server with no animated blade (owner pick:
+            // target + nearby arc). Half of 120 degrees.
+            ArcHalfAngleCdeg = 6000,
+        };
+    }
+
+    /// <summary>The melee rules, pure (EditMode-tested): strike length, the hit moment, the combo order and cadence, who a swing hits.</summary>
+    public static class MeleeRules
+    {
+        static int Of(int3 v, int step) => step == 1 ? v.x : step == 2 ? v.y : v.z;
+
+        /// <summary>How long strike <paramref name="step"/> (1-3) lasts: its clip at its speed (NGO PlayerMeleeCombat:436-441).</summary>
+        public static int StrikeMicros(in MeleeTiming t, int step)
+        {
+            int speed = math.max(1, Of(t.SpeedMilli, step));
+            return (int)((long)Of(t.ClipMicros, step) * 1000 / speed);
+        }
+
+        /// <summary>When strike <paramref name="step"/> lands after it starts: the END of its swing window (NGO's EnsureTargetStruck point).</summary>
+        public static int HitAfterMicros(in MeleeTiming t, int step) =>
+            (int)((long)StrikeMicros(t, step) * Of(t.WindowEndPermille, step) / 1000);
+
+        /// <summary>The damage multiplier of a step, as a float for CombatMath's skill multiplier.</summary>
+        public static float StepMultiplier(in MeleeTiming t, int step) => Of(t.StepMultiplierPermille, step) / 1000f;
+
+        /// <summary>
+        /// The step that may start now: 1 after 3 (once the post-combo pause is over) or after nothing, otherwise the next; 0 when it is too
+        /// soon (a step may not start before 70 % of the last one, NGO:462-468; after step 3 the whole strike plus the pause).
+        /// </summary>
+        public static int NextStep(in MeleeTiming t, int lastStep, long sinceLastStartMicros)
+        {
+            if (lastStep < 1 || lastStep > 3) return 1;
+            int last = StrikeMicros(t, lastStep);
+            if (lastStep == 3) return sinceLastStartMicros >= last + t.PostComboMicros ? 1 : 0;
+            return sinceLastStartMicros * 1000 >= (long)last * t.MinCadencePermille ? lastStep + 1 : 0;
+        }
+
+        /// <summary>The server's check when a hit is applied (NGO:759-764): centre to centre within the validation range, ground plane.</summary>
+        public static bool WithinValidation(in MeleeTiming t, int3 attackerFeetMm, int3 targetFeetMm)
+        {
+            long dx = attackerFeetMm.x - targetFeetMm.x, dz = attackerFeetMm.z - targetFeetMm.z;
+            return dx * dx + dz * dz <= (long)t.ValidationMm * t.ValidationMm;
+        }
+
+        /// <summary>
+        /// A target in the arc in front of the attacker (its yaw, hundredths of a degree, 0 = +z) and within reach of its capsule. The
+        /// attacker's own target is tested by HitTestAtTick and the validation range; the arc picks the others the blade would have caught.
+        /// </summary>
+        public static bool InArc(in MeleeTiming t, int3 attackerFeetMm, int yawCdeg, int3 otherFeetMm, HitProxy proxy)
+        {
+            if (!PositionHistoryRules.WithinReach(attackerFeetMm, otherFeetMm, proxy, t.ReachMm)) return false;
+            float dx = otherFeetMm.x - attackerFeetMm.x, dz = otherFeetMm.z - attackerFeetMm.z;
+            if (dx * dx + dz * dz < 1f) return true;   // on top of the attacker
+            float yaw = math.radians(yawCdeg / 100f);
+            float2 facing = new float2(math.sin(yaw), math.cos(yaw));
+            float cos = math.dot(math.normalize(new float2(dx, dz)), facing);
+            return cos >= math.cos(math.radians(t.ArcHalfAngleCdeg / 100f));
+        }
+
+        /// <summary>
+        /// Who strike lands on, tested where the attacker saw them (<paramref name="seen"/>, its interpolation tick; lag compensation): the
+        /// target when its ring says it was within reach then and it is within validation now, and every other candidate in the arc then.
+        /// Indexes of <paramref name="others"/> that are hit go into <paramref name="hit"/>. False with nothing added when the claim is
+        /// older than the ring (refused).
+        /// </summary>
+        public static bool Resolve(in MeleeTiming t, int3 attackerFeetMm, int yawCdeg, NetworkTick now, NetworkTick seen, in PositionHistory target,
+            int3 targetNowMm, NativeArray<PositionHistory> others, HitProxy proxy, out bool targetHit, ref NativeList<int> hit)
+        {
+            targetHit = PositionHistoryRules.HitTestAtTick(in target, proxy, now, seen, attackerFeetMm, t.ReachMm, out bool refused)
+                && WithinValidation(in t, attackerFeetMm, targetNowMm);
+            if (refused) { targetHit = false; return false; }
+            NetworkTick at = PositionHistoryRules.TestTick(now, seen, out _);
+            for (int i = 0; i < others.Length; i++)
+                if (PositionHistoryRules.TryFeetAt(others[i], at, out int3 feet) && InArc(in t, attackerFeetMm, yawCdeg, feet, proxy)) hit.Add(i);
+            return true;
+        }
+    }
+}

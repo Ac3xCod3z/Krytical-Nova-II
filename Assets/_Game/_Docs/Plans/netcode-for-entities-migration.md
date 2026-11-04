@@ -169,6 +169,11 @@ prediction error p95 <= 0.05 m at 60 ms, tick p95 < 15 ms with 102 monsters (fro
     end of every server tick); HitTestAtTick tests an upright capsule (r 0.5, h 2 m, the prefab's) where the attacker saw the target;
     a claim older than the ring is refused, a future one is now, a tick with no sample cannot be hit. PositionHistoryTests (pure + the
     server world at 0 and 100 ms). EditMode 44/44, PlayMode 42/42. M4.2b (the dummy ghost: a new ghost prefab + anchor) waits for the owner.
+  - [x] M4.4a Melee rules, pure: MeleeTiming (the Player prefab's speeds 1.411/1.30/1.126, windows, post-combo 0.25 s, reach 1.6 m,
+    validation 2.7 m, step multipliers; the clip lengths are inputs, baked from the three katana clips next), MeleeRules (strike length,
+    hit at the window's END, combo 1-2-3 with NGO's 70 % cadence and the pause, the 2.7 m server check, the 120 degree arc, Resolve =
+    target + arc on the PositionHistory at the attacker's seen tick). MeleeRulesTests 4/4. Next: M4.4b bake the clip lengths, then
+    the melee input + MeleeResolveServerSystem.
 - [ ] **M5 Monster system prototype (new brain).** Section 6. P0 EditMode sim tests (no netcode), P1 ghost + view, P2 reward bridge.
 - [ ] **M6 Hostiles in full.** All roster species via `MonsterArchetype` from `HostileDefinition` (ids kept), level scaling, zones,
   sleep, respawn, loot/XP through managed reward bridge with ledger rules; nav grids for the zones; bot soak with 102 monsters.
