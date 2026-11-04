@@ -18,5 +18,14 @@ namespace KryticalNova.Core
 
         /// <summary>Put the body at a place at once (a respawn, a map change, a GM move).</summary>
         void Teleport(Vector3 position, Quaternion rotation);
+
+        /// <summary>
+        /// A jump to <paramref name="landing"/> the server orders (a Squad follower copying the member's jump; M8 8.4.3c): planned and paid as
+        /// the player's own jump click. False, with the reason, when it cannot be.
+        /// </summary>
+        bool JumpTo(Vector3 landing, out string reason);
+
+        /// <summary>The body is in a jump's flight now (its ghost's plan; NGO's PlayerJumpMotor.IsBusy, which never runs on a ServerBody).</summary>
+        bool Airborne { get; }
     }
 }

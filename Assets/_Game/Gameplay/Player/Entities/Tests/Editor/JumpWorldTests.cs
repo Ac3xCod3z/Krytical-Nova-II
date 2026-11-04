@@ -181,6 +181,39 @@ namespace KryticalNova.Player.Entities.Tests
             }
         }
 
+        [TestCase(0)]
+        [TestCase(100)]
+        public void AJumpTheServerOrders_IsPlannedAndPaidAsAClick_TheOwnerFliesIt_AndItsRefusalsHold(int delayMs)
+        {
+            // M8 8.4.3c: a Squad follower copies the member's jump (NGO's ServerJumpTo); no click of the owner's own
+            var (rig, cost) = Rig(delayMs);
+            using (rig)
+            {
+                rig.Tick(10);
+                var jump = rig.Server.GetExistingSystemManaged<PlayerJumpServerSystem>();
+                var goal = new int3(4000, 0, 3000);
+                Assert.IsTrue(jump.TryServerJump(rig.ServerGhosts[0], goal, out string why), "ordered: " + why);
+                Assert.IsFalse(jump.TryServerJump(rig.ServerGhosts[0], new int3(0, 0, 8000), out why), "a second one while it flies");
+                Assert.AreEqual("Finish this jump before choosing another destination.", why, "the click's own refusal");
+                int serverTop = 0;
+                for (int i = 0; i < 90; i++)
+                {
+                    rig.Tick();
+                    serverTop = math.max(serverTop, rig.ServerPose().YMm);
+                }
+                Assert.AreEqual(goal, rig.ServerPose().Mm, "the server lands on the planned point");
+                Assert.AreEqual(goal, rig.OwnerPose().Mm, "the owner flew it too (the server's plan, no click of its own)");
+                Assert.AreEqual(1400, serverTop, 5, "the planner's arc");
+                Assert.AreEqual(1, cost.PaidOnTicks.Count, "Flux taken once, at take-off");
+                Assert.AreEqual(1, jump.ServerJumps);
+                cost.CanPayNow = false;
+                rig.Tick(30);
+                Assert.IsFalse(jump.TryServerJump(rig.ServerGhosts[0], int3.zero, out why), "unpaid");
+                Assert.AreEqual("Not enough Flux.", why);
+                Assert.AreEqual(goal, rig.ServerPose().Mm, "never left");
+            }
+        }
+
         [Test]
         public void AJumpThatCannotBePaid_IsRefused_AndCostsNothing()
         {

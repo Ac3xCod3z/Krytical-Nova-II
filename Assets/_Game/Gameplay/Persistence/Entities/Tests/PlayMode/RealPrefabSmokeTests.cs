@@ -2728,6 +2728,10 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
             public void MoveTo(Vector3 point, bool run) => Moves.Add(point);
             public void Stop() => Stops++;
             public void Teleport(Vector3 position, Quaternion rotation) { }
+            public readonly List<Vector3> Jumps = new List<Vector3>();
+            public string Refuse;
+            public bool JumpTo(Vector3 landing, out string reason) { reason = Refuse; if (Refuse == null) Jumps.Add(landing); return Refuse == null; }
+            public bool Airborne { get; set; }
         }
 
         [UnityTest]
@@ -2798,6 +2802,81 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
                 Assert.AreEqual(1, asked.Ops.Count);
 
                 foreach (GameObject body in new[] { a, b, c }) { ServerLeaving.Notify(body); body.GetComponent<PlayerSaveAgent>().OnServerLeaving(); }
+            }
+            finally
+            {
+                OwnerMessages.Current = oldMessages;
+                PlayerKeys.Reset();
+            }
+        }
+
+        [UnityTest]
+        public IEnumerator B32_AFollower_CopiesTheMembersJump_WalksToItsTakeoffThenJumpsThroughTheGhost_AndARefusedJumpEndsTheFollow()
+        {
+            NetRole.Install(new BodyRoleNetRoleAdapter(null, () => NetRoleKind.ServerBody));
+            IOwnerMessages oldMessages = OwnerMessages.Current;
+            var told = new Told();
+            OwnerMessages.Current = told;
+            ChatOwnerLink.Current = told;
+            PartyOwnerLink.Current = told;
+            FollowOwnerLink.Current = told;
+            try
+            {
+                PlayerKeys.Reset();
+                GameObject a = Admitted(PlayerKeys.Mint(321).Value, "32a1000000000000000000000000000a", "c3210000000000000000000000000321", "Talwyn");
+                GameObject b = Admitted(PlayerKeys.Mint(322).Value, "32b1000000000000000000000000000b", "c3220000000000000000000000000322", "Brannoc");
+                for (int i = 0; i < 30; i++) yield return null;
+                // planned before the run: A at 0, B 4 m east (inside NGO's 5 m: A holds, so only the hop moves it)
+                a.transform.position = new Vector3(0f, 0.08f, 0f);
+                b.transform.position = new Vector3(4f, 0.08f, 0f);
+                var mover = new MoverSeen();
+                a.GetComponent<BodyRoleTag>().Mover = mover;
+                a.GetComponent<IBodyParty>().RunPartyOp(PartyOpKind.InviteByName, "Brannoc", false);
+                b.GetComponent<IBodyParty>().RunPartyOp(PartyOpKind.Respond, "", true);
+                a.GetComponent<IBodyFollow>().RunFollow("Brannoc");
+                Assert.IsTrue(told.Any(a, "system You are following Brannoc."), "following: " + string.Join(" | ", told.To(a)));
+                var leaderJump = b.GetComponent<PlayerJumpMotor>();
+                Assert.IsNotNull(leaderJump, "the member's server body has its jump motor (its ghost's jumps are reported there)");
+
+                // 1. B's ghost jumped (FollowServerSystem reports it): A walks to the take-off first
+                var takeoff = new Vector3(2f, 0.08f, 0f);
+                var landing = new Vector3(2f, 0.08f, 5f);
+                leaderJump.ReportGhostJump(takeoff, landing);
+                float until = Time.time + 1.5f;
+                while (!mover.Moves.Exists(m => Vector3.Distance(m, takeoff) < 0.01f) && Time.time < until) yield return null;
+                Assert.IsTrue(mover.Moves.Exists(m => Vector3.Distance(m, takeoff) < 0.01f), "A walks to the take-off: " + string.Join(", ", mover.Moves));
+                Assert.AreEqual(0, mover.Jumps.Count, "not yet a jump");
+
+                // 2. at the take-off, A jumps to the landing through its ghost (no stop first: a stop there is a placement)
+                a.transform.position = takeoff;
+                int stops = mover.Stops;
+                until = Time.time + 1.5f;
+                while (mover.Jumps.Count == 0 && Time.time < until) yield return null;
+                Assert.AreEqual(1, mover.Jumps.Count, "the copied jump");
+                Assert.AreEqual(landing, mover.Jumps[0], "to the member's landing");
+                Assert.AreEqual(stops, mover.Stops, "no stop before it (it would call the jump off)");
+                Assert.IsFalse(told.Any(a, "system You stopped following"), "still following");
+
+                // in the flight (the ghost's plan), A waits for the landing: no stop (a placement would call the jump off), no new walk
+                mover.Airborne = true;
+                int moves = mover.Moves.Count;
+                yield return new WaitForSeconds(1f);
+                Assert.AreEqual(stops, mover.Stops, "nothing stops it in the air (NGO waited on its jump motor)");
+                Assert.AreEqual(moves, mover.Moves.Count, "and nothing re-steers it");
+                mover.Airborne = false;
+
+                // 3. a jump the server refuses ends the Follow with NGO's line and the reason
+                mover.Refuse = "Not enough Flux.";
+                var takeoff2 = new Vector3(2f, 0.08f, 5f);
+                a.transform.position = takeoff2;
+                leaderJump.ReportGhostJump(takeoff2, new Vector3(2f, 0.08f, 10f));
+                until = Time.time + 1.5f;
+                while (!told.Any(a, "system You stopped following Brannoc:") && Time.time < until) yield return null;
+                Assert.IsTrue(told.Any(a, "system You stopped following Brannoc: you could not follow their jump. Not enough Flux."),
+                    "NGO's JumpRefused end: " + string.Join(" | ", told.To(a)));
+                Assert.AreEqual("following ", told.Lines.FindLast(l => l.body == a && l.what.StartsWith("following")).what);
+
+                foreach (GameObject body in new[] { a, b }) { ServerLeaving.Notify(body); body.GetComponent<PlayerSaveAgent>().OnServerLeaving(); }
             }
             finally
             {

@@ -40,6 +40,64 @@ namespace KryticalNova.Player.Entities
 
         public int Planned { get; private set; }
         public int Refused { get; private set; }
+
+        /// <summary>Jumps the server ordered itself (a Squad follower's copy; tests).</summary>
+        public int ServerJumps { get; private set; }
+
+        /// <summary>
+        /// A jump the server orders for <paramref name="ghost"/> (M8 8.4.3c: a Squad follower copying the member's jump, NGO's ServerJumpTo): the
+        /// same refusals, planner and Flux as a jump click, started now under the player's last click number (so the owner's own plan of that
+        /// click gives way to it, and a newer click of its own still wins). Main thread, outside the prediction: the server has no rollback.
+        /// </summary>
+        public bool TryServerJump(Entity ghost, int3 goalMm, out string why)
+        {
+            why = null;
+            var em = EntityManager;
+            if (!em.Exists(ghost) || !em.HasComponent<MotionPlan>(ghost) || !em.HasComponent<PlayerPose>(ghost)
+                || !TryClock(out NetworkTime nt, out PlayerMotionCurves curves, out int tickMicros)) { why = "You cannot jump now."; return false; }
+            var plan = em.GetComponentData<MotionPlan>(ghost);
+            var pose = em.GetComponentData<PlayerPose>(ghost);
+            int3 landing = default;
+            int apexY = 0;
+            if (JumpFlight.Active(plan, curves, nt.ServerTick, tickMicros)) why = "Finish this jump before choosing another destination.";
+            else if (JumpFlight.CoolingDown(plan, curves, nt.ServerTick, tickMicros)) why = "Let the landing settle before jumping again.";
+            else if (PlayerServerPlanSystem.InVault(em, ghost)) why = "over an obstacle";
+            else if (Planner == null) why = "Jump is not set up on this server.";
+            else if (Cost != null && !Cost.CanPay(ghost, out why)) { }
+            else if (!Planner.TryPlan(ghost, pose.Mm, goalMm, out landing, out apexY, out why)) { }
+            if (why != null) { LastRefusal = why; Refused++; return false; }
+            ushort seq = em.HasComponent<PlayerInput>(ghost) ? em.GetComponentData<PlayerInput>(ghost).ClickSeq : (ushort)0;
+            em.SetComponentData(ghost, JumpFlight.NewJump(seq, nt.ServerTick, pose.Mm, landing, apexY));
+            Planned++;
+            ServerJumps++;
+            return true;
+        }
+
+        /// <summary>The ghost is in a jump's flight now (main thread; a Squad follower waits for the landing, NGO's jump motor IsBusy).</summary>
+        public bool InFlight(Entity ghost)
+        {
+            var em = EntityManager;
+            return em.Exists(ghost) && em.HasComponent<MotionPlan>(ghost) && TryClock(out NetworkTime nt, out PlayerMotionCurves curves, out int tickMicros)
+                && JumpFlight.Active(em.GetComponentData<MotionPlan>(ghost), curves, nt.ServerTick, tickMicros);
+        }
+
+        bool TryClock(out NetworkTime nt, out PlayerMotionCurves curves, out int tickMicros)
+        {
+            var em = EntityManager;
+            nt = default;
+            curves = PlayerMotionCurves.Default;
+            tickMicros = PlayerMovement.TickMicros(30);
+            using var time = em.CreateEntityQuery(ComponentType.ReadOnly<NetworkTime>());
+            if (time.IsEmpty) return false;
+            nt = time.GetSingleton<NetworkTime>();
+            if (!nt.ServerTick.IsValid) return false;
+            using var curvesQuery = em.CreateEntityQuery(ComponentType.ReadOnly<PlayerMotionCurves>());
+            if (!curvesQuery.IsEmpty) curves = curvesQuery.GetSingleton<PlayerMotionCurves>();
+            using var rateQuery = em.CreateEntityQuery(ComponentType.ReadOnly<ClientServerTickRate>());
+            int hz = rateQuery.IsEmpty ? 30 : rateQuery.GetSingleton<ClientServerTickRate>().SimulationTickRate;
+            tickMicros = PlayerMovement.TickMicros(hz > 0 ? hz : 30);
+            return true;
+        }
         /// <summary>How many ticks before its own tick the server started the last jump (0 = the click came in time; tests and the scripted run).</summary>
         public int LastStartTicksBack { get; private set; }
 

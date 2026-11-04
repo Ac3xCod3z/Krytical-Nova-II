@@ -89,6 +89,19 @@ namespace KryticalNova.Persistence.Entities.Tests
         }
 
         [Test]
+        public void GhostJumps_AreNewJumpPlans_TheFirstSightOnlySetsTheMark()
+        {
+            var watch = new GhostJumpWatch();
+            var a = new PlayerKey(1);
+            Assert.IsFalse(watch.IsNewJump(a, true, 5, 100), "the first look: the jump it arrived in is not new");
+            Assert.IsFalse(watch.IsNewJump(a, true, 5, 100), "the same plan again");
+            Assert.IsTrue(watch.IsNewJump(a, true, 5, 160), "a new start under the same click number (a jump the server ordered)");
+            Assert.IsTrue(watch.IsNewJump(a, true, 6, 200), "a new click's jump");
+            Assert.IsFalse(watch.IsNewJump(a, false, 7, 0), "a walk is not a jump");
+            Assert.IsFalse(watch.IsNewJump(a, true, 7, 0), "no start tick: none");
+        }
+
+        [Test]
         public void TheSend_KeepsNgosLinkLimit()
         {
             Assert.IsTrue(ChatText.TrySend(ChatChannel.General, "hi", "", null, null, out ChatSendRpc none));

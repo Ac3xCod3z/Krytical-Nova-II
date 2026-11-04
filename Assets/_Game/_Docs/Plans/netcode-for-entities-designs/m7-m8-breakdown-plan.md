@@ -212,7 +212,9 @@ backflips' speed (80 % of the air). Added as M7/M8 systems land (each: what to c
 - 8.4.3a (built 3 Nov): two clients: invite the other (player menu and /invite name), accept the prompt: both see the Squad frames, the
   other's namecard and minimap dot show the Squad; /p reaches only the Squad; promote, then leave: the Squad of one is disbanded.
 - 8.4.3b (built 3 Nov): in a Squad, Follow the other (player menu / Squad frame): you walk 3.5 m behind as they move, set off again when
-  they get 5 m ahead; click the ground yourself: "You stopped following ..."; walk 60 m apart: it ends. (Jump copy: 8.4.3c.)
+  they get 5 m ahead; click the ground yourself: "You stopped following ..."; walk 60 m apart: it ends. 8.4.3c (built 3 Nov): the leader's jump
+  over a gap or onto a ledge: the follower walks to the take-off and jumps the same way (Flux goes), both clients see it; out of Flux: "could
+  not follow their jump."
 - 8.4.x: founding a Crew, an emote and a mount seen from the second client.
 The list is kept current in this section as systems land.
 

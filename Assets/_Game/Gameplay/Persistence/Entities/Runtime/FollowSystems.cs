@@ -42,6 +42,24 @@ namespace KryticalNova.Persistence.Entities
         public void Forget(PlayerKey key) => m_Seen.Remove(key);
     }
 
+    /// <summary>
+    /// The jumps players' ghosts start, seen on the server (plain C#): a jump plan with another number or start tick than the one seen last.
+    /// The first look at a player only sets the mark. What NGO's <c>PlayerJumpMotor.JumpStarted</c> told a Squad follower.
+    /// </summary>
+    public sealed class GhostJumpWatch
+    {
+        readonly Dictionary<PlayerKey, (ushort seq, uint start)> m_Seen = new Dictionary<PlayerKey, (ushort, uint)>();
+
+        public bool IsNewJump(PlayerKey key, bool isJump, ushort planSeq, uint startTick)
+        {
+            bool known = m_Seen.TryGetValue(key, out var seen);
+            m_Seen[key] = (planSeq, startTick);
+            return known && isJump && startTick != 0 && (seen.seq != planSeq || seen.start != startTick);
+        }
+
+        public void Forget(PlayerKey key) => m_Seen.Remove(key);
+    }
+
     /// <summary>Server: <see cref="IFollowOwnerLink"/> for the bodies of the entity netcode, to the player's connection by its PlayerKey.</summary>
     public sealed class EntityFollowOwnerLink : IFollowOwnerLink
     {
@@ -61,10 +79,12 @@ namespace KryticalNova.Persistence.Entities
     {
         EntityQuery m_Asks;
         readonly OwnClickWatch m_Clicks = new OwnClickWatch();
+        readonly GhostJumpWatch m_Jumps = new GhostJumpWatch();
 
         /// <summary>Requests run and own clicks passed on (tests).</summary>
         public int Ran { get; private set; }
         public int OwnClicks { get; private set; }
+        public int GhostJumps { get; private set; }
 
         protected override void OnCreate() =>
             m_Asks = GetEntityQuery(ComponentType.ReadOnly<ReceiveRpcCommandRequest>(), ComponentType.ReadOnly<FollowRpc>());
@@ -86,7 +106,18 @@ namespace KryticalNova.Persistence.Entities
             }
             foreach (GhostBodyEntry entry in GhostBodyRegistry.Entries)
             {
-                if (!ReferenceEquals(entry.World, World) || entry.Body == null || !em.Exists(entry.Ghost) || !em.HasComponent<PlayerInput>(entry.Ghost)) continue;
+                if (!ReferenceEquals(entry.World, World) || entry.Body == null || !em.Exists(entry.Ghost)) continue;
+                if (em.HasComponent<MotionPlan>(entry.Ghost))
+                {
+                    MotionPlan plan = em.GetComponentData<MotionPlan>(entry.Ghost);
+                    if (m_Jumps.IsNewJump(entry.Key, plan.Kind == MotionKind.Jump, plan.PlanSeq, plan.StartTick.IsValid ? plan.StartTick.SerializedData : 0)
+                        && entry.Body.TryGetComponent(out KryticalNova.Player.PlayerJumpMotor motor))
+                    {
+                        motor.ReportGhostJump(new Vector3(plan.FromXMm, plan.FromYMm, plan.FromZMm) * 0.001f, new Vector3(plan.ToXMm, plan.ToYMm, plan.ToZMm) * 0.001f);
+                        GhostJumps++;
+                    }
+                }
+                if (!em.HasComponent<PlayerInput>(entry.Ghost)) continue;
                 if (!m_Clicks.IsNewClick(entry.Key, em.GetComponentData<PlayerInput>(entry.Ghost).ClickSeq)) continue;
                 if (entry.Body.TryGetComponent(out IBodyFollow follow)) { follow.OwnMoveOrdered(); OwnClicks++; }
             }

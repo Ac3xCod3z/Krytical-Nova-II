@@ -1425,10 +1425,13 @@ namespace KryticalNova.Player
         {
             reason = null;
             if (IsSpawned && !IsServer) { reason = "Only the server may do this."; return false; }
-            if (ServerMover != null) { reason = NotYetNetworkedText; return false; } // a Squad follower copying a ghost's jump is M3c
+            if (ServerMover != null) return ServerMover.JumpTo(landing, out reason);   // the ghost jumps (M8 8.4.3c: a Squad follower's copy)
             if (jumpMotor == null) { reason = "Jump controller is missing."; return false; }
             return jumpMotor.TryJump(landing, raycastLayers, modelForwardOffset, out reason);
         }
+
+        /// <summary>A ServerBody's ghost is in a jump's flight (its jump motor never runs there; M8 8.4.3c). False on every other body.</summary>
+        public bool ServerAirborne => ServerMover is { } mover && mover.Airborne;
 
         public bool ServerMoveTo(Vector3 destinationPoint, bool payRun = true)
         {

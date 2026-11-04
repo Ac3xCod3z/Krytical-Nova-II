@@ -1281,3 +1281,10 @@ checkpoints; the owner's Thursday hand-test list; owner questions). NGO rules ta
     NGO's "still here" checks accept a DOTS server body; whom it follows to the owner by FollowingRpc (Items IBodyFollow / IFollowOwnerLink).
     B31 (refusals, the walk point, an own click ends it, the view asks and mirrors). The leader's jump copy is still refused (NGO's
     JumpRefused end): 8.4.3c next, a server-issued jump request + the leader's jump seen from its MotionPlan (master-6, 3 Nov).
+  - [ ] 8.4.3c Follow's jump copy: the member's jump on DOTS = a new jump plan on its ghost (GhostJumpWatch in FollowServerSystem ->
+    PlayerJumpMotor.ReportGhostJump, NGO's JumpStarted); the follower's copy = PointAndClickPlayer.ServerJumpTo -> ServerBodyMover.JumpTo ->
+    PlayerJumpServerSystem.TryServerJump (the click's refusals, planner and Flux, started now under the last click number so the owner flies
+    the server's plan); the follower waits for the landing by its ghost (IBodyMover.Airborne, NGO's jump motor IsBusy) and on DOTS skips the
+    stop before the jump (a stop is a placement, which calls a jump off). JumpWorldTests (0 / 100 ms: lands, owner flies it, Flux once, the
+    in-flight and unpaid refusals), GhostJumpWatch test, B32 (walk to the take-off, the jump to the landing, no stop or re-steer in the air,
+    a refused jump ends the Follow with NGO's line).

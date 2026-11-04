@@ -102,6 +102,9 @@ namespace KryticalNova.Social
             if (EntityServer) Listen();
         }
 
+        // NGO's jump motor is busy in a jump; a server body of the entity netcode jumps in its ghost (M8 8.4.3c)
+        private bool JumpBusy => (jump != null && jump.IsBusy) || (controls != null && controls.ServerAirborne);
+
         public override void OnDestroy()
         {
             if (controls != null) controls.MoveOrdered -= OnMoveOrdered;
@@ -253,7 +256,7 @@ namespace KryticalNova.Social
             // A copied jump in the air: wait for the landing (an abort leaves the follower at the take-off; the next look re-walks).
             if (jumpIsFollow)
             {
-                if (jump != null && jump.IsBusy) return;
+                if (JumpBusy) return;
                 jumpIsFollow = false;
             }
 
@@ -264,7 +267,7 @@ namespace KryticalNova.Social
                 sameSquad = present && party.IsInPartyWith(target),
                 followerAlive = entity == null || entity.IsAlive,
                 // A jump of the player's own is their move as much as a click is; a copied one is not.
-                followerOrdered = ordered || (jump != null && jump.IsBusy && !jumpIsFollow),
+                followerOrdered = ordered || (JumpBusy && !jumpIsFollow),
                 followerInCombat = fought || (melee != null && melee.IsAttacking) || (duel != null && duel.IsDuelling),
                 // While a jump of the member's waits to be copied, the member may be far across a river: not too far.
                 distance = present && hops.Count == 0 ? DistanceTo(target) : 0f,
@@ -306,7 +309,7 @@ namespace KryticalNova.Social
                 distanceToTakeoff = GroundDistance(hop.takeoff),
                 distanceToLanding = GroundDistance(hop.landing),
                 jumpReady = jump != null && jump.IsReady,
-                jumping = jump != null && jump.IsBusy,
+                jumping = JumpBusy,
             };
             switch (FollowRules.NextHop(facts, settings.followHopReach, settings.followHopMaxAge))
             {
@@ -318,7 +321,9 @@ namespace KryticalNova.Social
                     moving = moving || started;
                     return true;
                 case HopStep.Jump:
-                    if (moving) controls.ServerStopMoving();
+                    // (a server body of the entity netcode: the jump's plan drops the walk itself, and a stop there is a placement,
+                    // which would call the jump off on its first tick)
+                    if (moving && !EntityServer) controls.ServerStopMoving();
                     moving = false;
                     if (controls.ServerJumpTo(hop.landing, out string why))
                     {

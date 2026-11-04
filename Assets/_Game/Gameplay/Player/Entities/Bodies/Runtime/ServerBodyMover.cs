@@ -63,6 +63,19 @@ namespace KryticalNova.Player.Entities.Bodies
             Stops++;
         }
 
+        /// <summary>The ghost is in a jump's flight now.</summary>
+        public bool Airborne => IsLive && m_World.GetExistingSystemManaged<PlayerJumpServerSystem>() is { } jump && jump.InFlight(m_Ghost);
+
+        /// <summary>A jump the server orders: the jump system's own rules, plan and Flux (M8 8.4.3c).</summary>
+        public bool JumpTo(Vector3 landing, out string reason)
+        {
+            reason = "You cannot jump now.";
+            if (!IsLive) return false;
+            PlayerJumpServerSystem jump = m_World.GetExistingSystemManaged<PlayerJumpServerSystem>();
+            if (jump == null) { reason = "Jump is not set up on this server."; return false; }
+            return jump.TryServerJump(m_Ghost, PoseMath.Mm(landing), out reason);
+        }
+
         /// <summary>Places the ghost (its teleport number goes up, so every client snaps) and the body at once.</summary>
         public void Teleport(Vector3 position, Quaternion rotation)
         {

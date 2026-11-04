@@ -279,6 +279,12 @@ namespace KryticalNova.Player
             ownTakeoffWaits = true;
         }
 
+        /// <summary>
+        /// A server body of the entity netcode: its ghost started a jump (the motor never runs there). Raised as NGO's take-off raised it, so a
+        /// Squad follower copies it (M8 8.4.3c).
+        /// </summary>
+        public void ReportGhostJump(Vector3 takeoffFeet, Vector3 landingFeet) => JumpStarted?.Invoke(takeoffFeet, landingFeet);
+
         /// <summary>Starts the planned jump where it is simulated and shows it on every other machine.</summary>
         private void BeginJump()
         {
