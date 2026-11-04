@@ -1288,11 +1288,11 @@ checkpoints; the owner's Thursday hand-test list; owner questions). NGO rules ta
     stop before the jump (a stop is a placement, which calls a jump off). JumpWorldTests (0 / 100 ms: lands, owner flies it, Flux once, the
     in-flight and unpaid refusals), GhostJumpWatch test, B32 (walk to the take-off, the jump to the landing, no stop or re-steer in the air,
     a refused jump ends the Follow with NGO's line). 8.4.3b + c review approved (master-6, 3 Nov).
-  - [ ] 8.4.4 Sponsor / Recruit: the requests go from the owner's view as SponsorOpRpc (Social limit; a picked player by name) and NGO's
+  - [x] 8.4.4 Sponsor / Recruit: the requests go from the owner's view as SponsorOpRpc (Social limit; a picked player by name) and NGO's
     PlayerSponsor + SponsorService run on the server body (level 112, more than 5 levels below, 3 Recruits, one faction, 30 s answer, the
     `world/sponsors` document); the server body arrives on load and leaves before its save; NGO's "still here" check accepts a DOTS server
     body; the 5 s look, the bonus (NGO's owner-read netBoostOn = a server field sent with the view), the XP bonus, GM points and Tell run on
     the server body; the window as Social's view text in pages (SponsorPageRpc with points and bonus), the prompt by SponsorPromptRpc;
     `sponsor` real (NGO's `{"points":N,"nearSeconds":0.0}`, byte for byte). UI gates that hid ported features on a DOTS view fixed
     (Contacts window, Invite to Squad, Follow, Sponsor window and menu: BodyRoleTag.IsMine). B33; SponsorViewTextTests. Save note + review
-    summary to the Master (dots12-8.4.4-sponsor-review-summary.md).
+    summary to the Master (dots12-8.4.4-sponsor-review-summary.md). Save note + review approved (master-6, 3 Nov).
