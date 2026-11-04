@@ -114,7 +114,9 @@ namespace KryticalNova.Housing
         /// <summary>Where the player's feet are, in the world.</summary>
         public Vector3 Feet => transform.position - Vector3.up * (agent != null ? agent.baseOffset : 0f);
 
-        private bool HasAuthority => !IsSpawned || IsServer;
+        // The sandbox stays offline-only on the entity netcode (M8 8.4.11, D5 removed host mode): a DOTS body (a view, whose IsSpawned is
+        // false, or a server body) refuses it as NGO refuses a joined client, so a client never builds or saves a Hall of its own.
+        private bool HasAuthority => (!IsSpawned || IsServer) && KryticalNova.Core.BodyRoleTag.Of(this) == null;
 
         private void Awake()
         {

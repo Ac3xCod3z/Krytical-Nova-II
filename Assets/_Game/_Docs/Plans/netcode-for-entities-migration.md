@@ -1339,3 +1339,8 @@ checkpoints; the owner's Thursday hand-test list; owner questions). NGO rules ta
     the player's body, IsLocal from the registry) and NGO's lines to the message line. A view never decides (NGO's `!IsSpawned` let it
     channel itself). B39 (spawn spot planned in the test: Tag used through UseOn, aura, arrival through the ghost, a move stops it with
     the Tag back, the own view starts nothing). PlayMode B1-B39 40/40. Not in it: hit / fight stops (M4 combat), a Callout (Duel, M4).
+  - [x] 8.4.11 Housing check: the Hall sandbox stays offline-only (owner pick, D5). Found: NGO's guard `!IsSpawned || IsServer` read a
+    DOTS view (IsSpawned false) as offline, so a joined DOTS client could build and save a Hall of its own (LocalHomeAuthority ->
+    ServerSave.SaveWorld on the client). Now every DOTS body (view or server body) refuses with NGO's joined-client line; offline play is
+    unchanged. B40. PlayMode B1-B40 41/41. M8 group 4 is complete except what waits for M4-M6 (duels, Cadence, AutobuffCaster, hostile
+    loot, party / sponsor XP, pet growth extras, mount EXP).

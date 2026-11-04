@@ -3577,6 +3577,25 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
             }
         }
 
+        [UnityTest]
+        public IEnumerator B40_TheHallSandbox_StaysOfflineOnly_AViewAndAServerBodyRefuseIt_AsNgoRefusesAJoinedClient()
+        {
+            NetRole.Install(new BodyRoleNetRoleAdapter(null, () => NetRoleKind.ClientView));
+            GameObject view = Make(NetRoleKind.ClientView, true, new PlayerKey(401));
+            GameObject server = Make(NetRoleKind.ServerBody, false, new PlayerKey(402));
+            for (int i = 0; i < 5; i++) yield return null;
+            foreach (GameObject body in new[] { view, server })
+            {
+                Component housing = body.GetComponent("PlayerHousing");
+                if (housing == null) continue;   // a shape that strips it cannot enter at all
+                Type type = housing.GetType();
+                string reason = (string)type.GetMethod("Enter").Invoke(housing, null);
+                Assert.AreEqual(type.GetField("ReasonHostOnly").GetValue(null), reason, body.name + " refuses the sandbox (NGO's joined-client line)");
+                Assert.IsFalse((bool)type.GetProperty("InHome").GetValue(housing), body.name + " never builds a Hall");
+            }
+            Assert.IsNotNull(view.GetComponent("PlayerHousing"), "the own view keeps PlayerHousing (its windows ask it)");
+        }
+
         static CharacterRecipe AnyLegalRecipe(CharacterCreationDatabase database)
         {
             Assert.IsNotNull(database, "PlayerIdentity has its character database");
