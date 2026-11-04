@@ -244,7 +244,7 @@ namespace KryticalNova.UI
             addRow.style.display = tab == TabContacts || tab == TabBlocked ? DisplayStyle.Flex : DisplayStyle.None;
             addButton.text = tab == TabBlocked ? "BLOCK" : "ADD";
             list.Clear();
-            if (contacts == null || !contacts.IsSpawned)
+            if (contacts == null || !KryticalNova.Core.BodyRoleTag.IsMine(contacts, contacts.IsSpawned))
             {
                 helpLabel.text = "Contacts need an online session.";
                 return;

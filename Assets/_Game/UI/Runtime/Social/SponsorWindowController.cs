@@ -57,7 +57,7 @@ namespace KryticalNova.UI
 
             // No NPC opens it: the registry is how "/sponsor" and the GM tools ask for the window.
             NpcServices.Register(ServiceIds.Sponsor, NpcOffer.None, "SPONSOR", () => SetOpen(true));
-            PlayerMenuController.Register("Sponsor Request", 66, target => sponsor != null && sponsor.IsSpawned && !Linked(target.Name), target =>
+            PlayerMenuController.Register("Sponsor Request", 66, target => sponsor != null && BodyRoleTag.IsMine(sponsor, sponsor.IsSpawned) && !Linked(target.Name), target =>
             {
                 if (sponsor == null) return;
                 if (target.InSight && target.Player.TryGetComponent(out PlayerSponsor theirs)) sponsor.Request(theirs);
@@ -136,7 +136,7 @@ namespace KryticalNova.UI
         {
             if (!initialized || !open) return;
             list.Clear();
-            if (sponsor == null || !sponsor.IsSpawned)
+            if (sponsor == null || !BodyRoleTag.IsMine(sponsor, sponsor.IsSpawned))
             {
                 pointsLabel.text = string.Empty;
                 helpLabel.text = "Sponsoring needs an online session.";

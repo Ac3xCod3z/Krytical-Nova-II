@@ -20,7 +20,7 @@ namespace KryticalNova.Social
         private static string Sponsor(string name)
         {
             PlayerSponsor mine = PlayerSponsor.Local;
-            if (mine == null || !mine.IsSpawned) return Offline;
+            if (mine == null || (!mine.IsSpawned && KryticalNova.Core.BodyRoleTag.RequestsOf(mine) == null)) return Offline;   // a DOTS view asks (M8 8.4.4)
             if (name.Length > 0)
             {
                 mine.Request(name);

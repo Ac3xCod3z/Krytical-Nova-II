@@ -1,5 +1,13 @@
 namespace KryticalNova.Core
 {
+    /// <summary>What a Sponsor request asks the server's body to do (NGO's <c>PlayerSponsor</c> RPCs; M8 8.4.4; a picked player goes by name).</summary>
+    public enum SponsorOpKind : byte
+    {
+        RequestByName = 1,
+        Respond = 2,
+        End = 3,
+    }
+
     /// <summary>What a Squad request asks the server's body to do (NGO's six <c>PlayerParty</c> RPCs; M8 8.4.3; a picked player goes by name).</summary>
     public enum PartyOpKind : byte
     {
@@ -228,5 +236,8 @@ namespace KryticalNova.Core
 
         /// <summary>Asks the server to follow the Squad member of that name (M8 8.4.3b, NGO's FollowRpc / FollowByNameRpc).</summary>
         void Follow(string memberName);
+
+        /// <summary>Asks the server to run a Sponsor request (M8 8.4.4): ask by name, answer, or end the link with a character id.</summary>
+        void SponsorOp(SponsorOpKind op, string a, bool flag);
     }
 }

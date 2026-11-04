@@ -90,7 +90,7 @@ namespace KryticalNova.UI
             Instance = this;
 
             Register("Whisper", 10, _ => true, target => GetComponent<ChatWindowController>()?.BeginWhisper(target.Name));
-            Register("Invite to Squad", 20, target => PlayerParty.Local != null && PlayerParty.Local.IsSpawned && MayJoinMine(target), target =>
+            Register("Invite to Squad", 20, target => PlayerParty.Local != null && KryticalNova.Core.BodyRoleTag.IsMine(PlayerParty.Local, PlayerParty.Local.IsSpawned) && MayJoinMine(target), target =>
             {
                 PlayerParty mine = PlayerParty.Local;
                 if (mine == null) return;
@@ -177,7 +177,7 @@ namespace KryticalNova.UI
         private static bool InMySquad(PlayerMenuTarget target)
         {
             PlayerParty mine = PlayerParty.Local;
-            if (mine == null || !mine.IsSpawned || PlayerFollow.Local == null) return false;
+            if (mine == null || !KryticalNova.Core.BodyRoleTag.IsMine(mine, mine.IsSpawned) || PlayerFollow.Local == null) return false;
             foreach (PartyMember member in mine.Roster)
             {
                 if (member.ObjectId == mine.NetworkObjectId) continue;

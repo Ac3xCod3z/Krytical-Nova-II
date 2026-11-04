@@ -48,6 +48,7 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
         IContactsOwnerLink m_OldContacts;
         IPartyOwnerLink m_OldParty;
         IFollowOwnerLink m_OldFollow;
+        ISponsorOwnerLink m_OldSponsor;
 
         [SetUp]
         public void SetUp()
@@ -64,6 +65,7 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
             m_OldContacts = ContactsOwnerLink.Current;
             m_OldParty = PartyOwnerLink.Current;
             m_OldFollow = FollowOwnerLink.Current;
+            m_OldSponsor = SponsorOwnerLink.Current;
             SavePassthrough.ResetToDefault();
         }
 
@@ -81,6 +83,7 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
             ContactsOwnerLink.Current = m_OldContacts;
             PartyOwnerLink.Current = m_OldParty;
             FollowOwnerLink.Current = m_OldFollow;
+            SponsorOwnerLink.Current = m_OldSponsor;
             LogAssert.ignoreFailingMessages = false;
         }
 
@@ -467,13 +470,19 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
             public void ContactOp(ContactOpKind op, string a, string b, bool flag) => Ops.Add($"Contact {op} {a}|{b}|{flag}");
             public void PartyOp(PartyOpKind op, string name, bool flag) => Ops.Add($"Party {op} {name}|{flag}");
             public void Follow(string memberName) => Ops.Add("Follow " + memberName);
+            public void SponsorOp(SponsorOpKind op, string a, bool flag) => Ops.Add($"Sponsor {op} {a}|{flag}");
             public void Chat(ChatChannel channel, string text, string whisperTarget, byte[] linkContainers, byte[] linkCells) =>
                 Ops.Add($"Chat {channel} {ChatLinks.Strip(text)}|{whisperTarget}|{linkContainers?.Length ?? 0}");
         }
 
         /// <summary>What the server bodies told their players (the message line) and sent their trade windows (view, notice, prompt).</summary>
-        sealed class Told : IOwnerMessages, ITradeOwnerLink, IKioskOwnerLink, IWorkshopOwnerLink, KryticalNova.Progression.INovaLink, IRestyleOwnerLink, IChatOwnerLink, IContactsOwnerLink, IPartyOwnerLink, IFollowOwnerLink
+        sealed class Told : IOwnerMessages, ITradeOwnerLink, IKioskOwnerLink, IWorkshopOwnerLink, KryticalNova.Progression.INovaLink, IRestyleOwnerLink, IChatOwnerLink, IContactsOwnerLink, IPartyOwnerLink, IFollowOwnerLink, ISponsorOwnerLink
         {
+            // Sponsors (M8 8.4.4): the last view text, points and bonus each body was sent, and its prompts
+            public readonly Dictionary<GameObject, (string text, int points, bool boost)> LastSponsor = new Dictionary<GameObject, (string, int, bool)>();
+            public void View(Component part, string viewText, int points, bool boostOn) { LastSponsor[Body(part)] = (viewText, points, boostOn); Lines.Add((Body(part), "sponsor view")); }
+            public void Prompt(Component part, string fromName, bool theyWouldSponsor, float seconds) => Lines.Add((Body(part), $"sponsor prompt {fromName} {theyWouldSponsor}"));
+            public void ClosePrompt(Component part) => Lines.Add((Body(part), "sponsor prompt closed"));
             public void Following(Component part, string memberName) => Lines.Add((Body(part), "following " + memberName));
             // Squads (M8 8.4.3): "squad <id:name ...>" (0 = the player it went to), the invitation and its closing
             public void Roster(Component part, BodyPartyMember[] members) =>
@@ -2876,6 +2885,121 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
                     "NGO's JumpRefused end: " + string.Join(" | ", told.To(a)));
                 Assert.AreEqual("following ", told.Lines.FindLast(l => l.body == a && l.what.StartsWith("following")).what);
 
+                foreach (GameObject body in new[] { a, b }) { ServerLeaving.Notify(body); body.GetComponent<PlayerSaveAgent>().OnServerLeaving(); }
+            }
+            finally
+            {
+                OwnerMessages.Current = oldMessages;
+                PlayerKeys.Reset();
+            }
+        }
+
+        [UnityTest]
+        public IEnumerator B33_Sponsor_RunsOnTheServerBodies_AskAcceptBonusLeaveEnd_ThePointsSaveIsReal_AndTheViewOnlyAsks()
+        {
+            NetRole.Install(new BodyRoleNetRoleAdapter(null, () => NetRoleKind.ServerBody));
+            Assert.IsFalse(SavePassthrough.Is("sponsor"), "the sponsor part is real now");
+            IOwnerMessages oldMessages = OwnerMessages.Current;
+            var told = new Told();
+            OwnerMessages.Current = told;
+            ChatOwnerLink.Current = told;
+            SponsorOwnerLink.Current = told;
+            try
+            {
+                PlayerKeys.Reset();
+                const string idA = "c3310000000000000000000000000331", idB = "c3320000000000000000000000000332";
+                GameObject a = Admitted(PlayerKeys.Mint(331).Value, "33a1000000000000000000000000000a", idA, "Talwyn");
+                GameObject b = Admitted(PlayerKeys.Mint(332).Value, "33b1000000000000000000000000000b", idB, "Brannoc");
+                for (int i = 0; i < 30; i++) yield return null;
+                // planned before the run: NGO's Sponsor is level 112 and a Recruit more than 5 levels below, one faction, within 40 m
+                a.GetComponent<PlayerCharacterProgression>().SetLevel(112);
+                Assert.AreEqual(112, a.GetComponent<PlayerCharacterProgression>().CurrentLevel, "A is level 112 on its server body");
+                Assert.AreEqual(a.GetComponent<PlayerIdentity>().Faction, b.GetComponent<PlayerIdentity>().Faction);
+                var sa = a.GetComponent<IBodySponsor>();
+                var sb = b.GetComponent<IBodySponsor>();
+                Assert.IsNotNull(sa, "the server body has its Sponsor links");
+                Type type = ((Component)sa).GetType();
+
+                // 1. an unknown name: NGO's notice
+                sa.RunSponsorOp(SponsorOpKind.RequestByName, "Nobodyhere", false);
+                Assert.IsTrue(told.Any(a, "tell Nobodyhere is not online."), "NGO's Notify: " + string.Join(" | ", told.To(a)));
+
+                // 2. A (112) asks B (1) by name: B is offered A as its Sponsor
+                sa.RunSponsorOp(SponsorOpKind.RequestByName, "Brannoc", false);
+                Assert.IsTrue(told.Any(a, "system Sponsor request sent to Brannoc."), "NGO's line: " + string.Join(" | ", told.To(a)));
+                Assert.IsTrue(told.Any(b, "sponsor prompt Talwyn True"), "B is asked (A would sponsor)");
+
+                // 3. B accepts (NGO's "still here" check passes for a DOTS server body): one link, both views
+                sb.RunSponsorOp(SponsorOpKind.Respond, "", true);
+                Assert.IsTrue(told.Any(b, "sponsor prompt closed"), "the prompt closes");
+                Assert.IsTrue(told.Any(a, "system Brannoc is now your Recruit."), "linked: " + string.Join(" | ", told.To(a)));
+                Assert.IsTrue(told.Any(b, "system Talwyn is now your Sponsor."));
+                StringAssert.StartsWith(idB + "\tBrannoc\t1\t0\t1\t", told.LastSponsor[a].text, "A's window: its Recruit B, online");
+                StringAssert.StartsWith(idA + "\tTalwyn\t112\t1\t1\t", told.LastSponsor[b].text, "B's window: its Sponsor A, online");
+
+                // 4. near its Sponsor B's bonus goes on at the next look (every 5 s, NGO's Update on the server body), and kills would pay it
+                float until = Time.time + 7f;
+                while (!told.Any(b, "system Your Sponsor is near") && Time.time < until) yield return null;
+                Assert.IsTrue(told.Any(b, "system Your Sponsor is near: +"), "the bonus line: " + string.Join(" | ", told.To(b)));
+                Assert.IsTrue(told.LastSponsor[b].boost, "the owner's view is told the bonus is on");
+                object[] args = { false };
+                float bonus = (float)type.GetMethod("ServerExperienceBonus").Invoke(sb, args);
+                Assert.Greater(bonus, 0f, "the XP bonus on the server body (NGO's IsSpawned && IsServer guard)");
+
+                // 5. GM points; B leaves: A's window shows it offline; A ends the link by id
+                type.GetMethod("ServerSetPoints").Invoke(sa, new object[] { 1234 });
+                Assert.AreEqual(1234, told.LastSponsor[a].points, "the points reach the owner's window");
+                ServerLeaving.Notify(b);
+                StringAssert.StartsWith(idB + "\tBrannoc\t1\t0\t0\t", told.LastSponsor[a].text, "B offline in A's window");
+                sa.RunSponsorOp(SponsorOpKind.End, idB, false);
+                Assert.IsTrue(told.Any(a, "system Brannoc is no longer your Recruit."), "NGO's end line");
+
+                // 6. the save: A's part is NGO's text; it loads into a fresh admitted server body and saves back byte for byte
+                string text = null;
+                foreach (ISaveParticipant part in a.GetComponents<ISaveParticipant>()) if (part.SaveKey == "sponsor") text = part.CaptureSave();
+                Assert.AreEqual("{\"points\":1234,\"nearSeconds\":0.0}", text, "NGO's sponsor text (JsonUtility writes both fields)");
+                const string account2 = "33c1000000000000000000000000000c", character2 = "c3330000000000000000000000000333";
+                GameObject other = Make(NetRoleKind.ServerBody, false, new PlayerKey(333));
+                yield return null;
+                CharacterRecipe recipe = AnyLegalRecipe(other.GetComponent<PlayerIdentity>().Database);
+                var stored = new AccountSave { accountId = account2 };
+                var character = new CharacterSave { characterId = character2, name = "Sponsorback" };
+                character.Set("sponsor", text);
+                stored.characters.Add(character);
+                Assert.IsTrue(ServerSave.WriteAccount(stored));
+                ServerSave.WaitForDisk();
+                var context = new ServerBodyContext
+                {
+                    Key = new PlayerKey(333), Serial = 333, NetworkId = 333, Account = account2, CharacterId = character2, Name = "Sponsorback", RecipeText = RecipeText.Encode(recipe),
+                };
+                Assert.IsNull(new PlayerAdmission().Begin(other, in context), "admitted");
+                var agent = other.GetComponent<PlayerSaveAgent>();
+                for (int i = 0; i < 30; i++) yield return null;
+                Assert.AreEqual(1234, (int)type.GetProperty("Points").GetValue(other.GetComponent<IBodySponsor>()), "the saved points are on the server body");
+                agent.Save();
+                ServerSave.WaitForDisk();
+                Assert.AreEqual(text, ServerSave.ReadAccountFrom(ServerSave.Store, account2).Find(character2).Get("sponsor"), "the sponsor part saves back byte for byte");
+
+                // 7. the owner's view only asks and shows; it never loads a save of its own
+                var asked = new Asked();
+                GameObject view = Make(NetRoleKind.ClientView, true, new PlayerKey(a.GetComponent<BodyRoleTag>().Key.Value));
+                view.GetComponent<BodyRoleTag>().Requests = asked;
+                yield return null;
+                var viewPart = (Component)view.GetComponent<IBodySponsor>();
+                type.GetMethod("Request", new[] { typeof(string) }).Invoke(viewPart, new object[] { " Brannoc " });
+                type.GetMethod("Respond").Invoke(viewPart, new object[] { true });
+                type.GetMethod("End").Invoke(viewPart, new object[] { idB });
+                CollectionAssert.AreEqual(new[] { "Sponsor RequestByName Brannoc|False", "Sponsor Respond |True", $"Sponsor End {idB}|False" }, asked.Ops, "sent to the server");
+                ((IBodySponsor)viewPart).MirrorView(idB + "\tBrannoc\t1\t0\t1\t1", 77, true);
+                Assert.AreEqual(77, (int)type.GetProperty("Points").GetValue(viewPart), "the server's points");
+                Assert.IsTrue((bool)type.GetProperty("BoostOn").GetValue(viewPart), "the server's bonus");
+                Assert.AreEqual(1, ((System.Collections.ICollection)type.GetProperty("Lines").GetValue(viewPart)).Count, "the server's links");
+                ((ISaveParticipant)viewPart).RestoreSave("{\"points\":5}");
+                Assert.AreEqual(77, (int)type.GetProperty("Points").GetValue(viewPart), "a view never loads a save");
+                ((IBodySponsor)viewPart).MirrorPrompt("Corvane", true, 30f);   // no prompt window in the test: shown nowhere, no error
+                ((IBodySponsor)viewPart).MirrorClosePrompt();
+
+                agent.OnServerLeaving();
                 foreach (GameObject body in new[] { a, b }) { ServerLeaving.Notify(body); body.GetComponent<PlayerSaveAgent>().OnServerLeaving(); }
             }
             finally

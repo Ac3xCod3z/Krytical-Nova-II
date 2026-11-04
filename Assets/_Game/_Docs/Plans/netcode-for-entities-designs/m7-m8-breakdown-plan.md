@@ -215,6 +215,10 @@ backflips' speed (80 % of the air). Added as M7/M8 systems land (each: what to c
   they get 5 m ahead; click the ground yourself: "You stopped following ..."; walk 60 m apart: it ends. 8.4.3c (built 3 Nov): the leader's jump
   over a gap or onto a ledge: the follower walks to the take-off and jumps the same way (Flux goes), both clients see it; out of Flux: "could
   not follow their jump."
+- 8.4.4 (built 3 Nov): a level-112 character asks a low-level one (Sponsor window / player menu / /sponsor name): the prompt, accept:
+  both windows show the link; hunt near each other: "Your Sponsor is near: +10% kill XP." (kills pay it once M5/M6 land); walk 40 m
+  apart: the bonus goes off; relog the Sponsor: the points are kept; end the link from the window. Also open Contacts, the player menu's
+  Invite to Squad and Follow on a DOTS client (they were hidden there before 8.4.4).
 - 8.4.x: founding a Crew, an emote and a mount seen from the second client.
 The list is kept current in this section as systems land.
 
