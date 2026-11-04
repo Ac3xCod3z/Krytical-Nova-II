@@ -178,6 +178,9 @@ prediction error p95 <= 0.05 m at 60 ms, tick p95 < 15 ms with 102 monsters (fro
     Monoblade combo clips of the NGO Player prefab's PlayerMeleeCombat (copied by Build Player Ghost Assets), and its baker writes
     MeleeTimingData (server only) from their lengths. PlayerGhostAssetsTests checks the clips are the NGO ones and every MeleeTiming number
     equals the NGO prefab's. EditMode 140/140, PlayMode 42/42. Next: the melee input + MeleeResolveServerSystem.
+  - [x] M4.4c Attack data: PlayerInput.AttackGhostId + Attack / StopAttack events (NGO RequestAttackEntityServerRpc /
+    RequestCancelAttackServerRpc) and the predicted CombatState (Step, StepStartTick, NextStepEarliest, TargetGhostId; SwingHit server
+    only) on every player ghost. EditMode 141/141, PlayMode 42/42. Next: M4.4d PlayerMeleeStateSystem (start/advance on the press).
 - [ ] **M5 Monster system prototype (new brain).** Section 6. P0 EditMode sim tests (no netcode), P1 ghost + view, P2 reward bridge.
 - [ ] **M6 Hostiles in full.** All roster species via `MonsterArchetype` from `HostileDefinition` (ids kept), level scaling, zones,
   sleep, respawn, loot/XP through managed reward bridge with ledger rules; nav grids for the zones; bot soak with 102 monsters.

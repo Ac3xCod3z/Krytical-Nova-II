@@ -97,5 +97,17 @@ namespace KryticalNova.Player.Entities.Tests
             Assert.AreEqual(PositionHistoryRules.Ticks - 1, (int)(full.Samples[15].Tick - full.Samples[0].Tick), "one sample a tick, none skipped");
             Assert.AreNotEqual(full.Samples[0].FeetMm, full.Samples[15].FeetMm, "it walked meanwhile");
         }
+
+        [Test]
+        public void EveryPlayerGhost_CarriesAnIdleCombatState()
+        {
+            // M4.4c: the basic attack's state rides on the ghost from the start (nothing attacks yet)
+            using var rig = PlayerRig.Create(1, 0);
+            for (int i = 0; i < 10; i++) rig.Tick();
+            CombatState server = rig.Get<CombatState>(rig.Server, rig.ServerGhosts[0]);
+            Assert.AreEqual(0, server.Step);
+            Assert.AreEqual(0, server.TargetGhostId);
+            Assert.IsFalse(server.StepStartTick.IsValid);
+        }
     }
 }

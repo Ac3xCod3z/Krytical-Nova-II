@@ -73,6 +73,12 @@ namespace KryticalNova.Player.Entities
         public short NormalX, NormalY, NormalZ;
         public InputEvent Click;
         public InputEvent Stop;
+        /// <summary>The ghost id the owner attacks (M4.4c; 0 = none): NGO's RequestAttackEntityServerRpc target (PointAndClickPlayer:1881).</summary>
+        public int AttackGhostId;
+        /// <summary>The second click on a hostile: start the basic attack on <see cref="AttackGhostId"/> (NGO StartAttackTarget).</summary>
+        public InputEvent Attack;
+        /// <summary>The owner cancels the attack under way (NGO RequestCancelAttackServerRpc, PointAndClickPlayer:1872).</summary>
+        public InputEvent StopAttack;
     }
 
     /// <summary>
@@ -187,6 +193,24 @@ namespace KryticalNova.Player.Entities
     public struct MeleeTimingData : IComponentData
     {
         public MeleeTiming Value;
+    }
+
+    /// <summary>
+    /// The basic attack under way (M4.4c; ghosts-design.md 4.2, the cast fields come with the skills): predicted, so the owner shows the
+    /// strike on its press and the server confirms it. NGO keeps this in PlayerMeleeCombat (currentTarget, serverSwingStep, the
+    /// strike's start); here it is ticks.
+    /// </summary>
+    public struct CombatState : IComponentData
+    {
+        /// <summary>The combo step under way: 0 none, 1..3.</summary>
+        [GhostField] public byte Step;
+        [GhostField] public NetworkTick StepStartTick;
+        /// <summary>The first tick the next step may start (NGO minCadenceTolerance x the strike's length, PlayerMeleeCombat:462-468).</summary>
+        [GhostField] public NetworkTick NextStepEarliest;
+        /// <summary>The ghost id being attacked, 0 none (NGO currentTarget).</summary>
+        [GhostField] public int TargetGhostId;
+        /// <summary>Server only: the strike of this step has landed (NGO serverSwingHitTargets: one hit per target per swing).</summary>
+        public byte SwingHit;
     }
 
     /// <summary>The selected mount's box (0 = none), ride phase, growth percent and fed, for everyone (NGO's MountNetState; M8 8.4.8). Written by the server.</summary>
