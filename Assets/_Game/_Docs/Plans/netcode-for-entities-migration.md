@@ -1275,16 +1275,16 @@ checkpoints; the owner's Thursday hand-test list; owner questions). NGO rules ta
     PartyInviteRpc; the Squad id to everyone as the PlayerPartyTag ghost field (remote views keep PlayerParty: minimap, namecards, hostile
     tags); leaving = IServerLeaving (NGO's despawn). The Party chat channel and the Stance share now find the Squad on the server body.
     The Squad frames read the own view's roster (PartyHudController gate). No save (NGO keeps Squads in memory). B30. Review approved (master-6, 3 Nov).
-  - [ ] 8.4.3b Follow: the owner's view asks by name (FollowRpc at the Move limit; a picked member by name) and NGO's PlayerFollow runs on the
+  - [x] 8.4.3b Follow: the owner's view asks by name (FollowRpc at the Move limit; a picked member by name) and NGO's PlayerFollow runs on the
     server body (Squad only, 60 m, 3.5 m behind, set off at 5 m, every 0.4 s); its walk is PointAndClickPlayer.ServerMoveTo -> the ghost's
     ServerOrder (ServerBodyMover); NGO's MoveOrdered on DOTS = a new PlayerInput.ClickSeq on the ghost (OwnClickWatch in FollowServerSystem);
     NGO's "still here" checks accept a DOTS server body; whom it follows to the owner by FollowingRpc (Items IBodyFollow / IFollowOwnerLink).
     B31 (refusals, the walk point, an own click ends it, the view asks and mirrors). The leader's jump copy is still refused (NGO's
     JumpRefused end): 8.4.3c next, a server-issued jump request + the leader's jump seen from its MotionPlan (master-6, 3 Nov).
-  - [ ] 8.4.3c Follow's jump copy: the member's jump on DOTS = a new jump plan on its ghost (GhostJumpWatch in FollowServerSystem ->
+  - [x] 8.4.3c Follow's jump copy: the member's jump on DOTS = a new jump plan on its ghost (GhostJumpWatch in FollowServerSystem ->
     PlayerJumpMotor.ReportGhostJump, NGO's JumpStarted); the follower's copy = PointAndClickPlayer.ServerJumpTo -> ServerBodyMover.JumpTo ->
     PlayerJumpServerSystem.TryServerJump (the click's refusals, planner and Flux, started now under the last click number so the owner flies
     the server's plan); the follower waits for the landing by its ghost (IBodyMover.Airborne, NGO's jump motor IsBusy) and on DOTS skips the
     stop before the jump (a stop is a placement, which calls a jump off). JumpWorldTests (0 / 100 ms: lands, owner flies it, Flux once, the
     in-flight and unpaid refusals), GhostJumpWatch test, B32 (walk to the take-off, the jump to the landing, no stop or re-steer in the air,
-    a refused jump ends the Follow with NGO's line).
+    a refused jump ends the Follow with NGO's line). 8.4.3b + c review approved (master-6, 3 Nov).
