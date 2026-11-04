@@ -157,7 +157,11 @@ prediction error p95 <= 0.05 m at 60 ms, tick p95 < 15 ms with 102 monsters (fro
   - [x] M4.1a One damage formula (owner pick, 4 Nov): Core `CombatMath` (structs in, `DamageResult` out, Mathf's own max/clamp so it is
     the managed formula to the bit); `CombatCalculator` calls it. CombatMathTests (hand-worked strikes; 10 000 random strikes against a
     copy of the managed formula) + CombatCalculatorTests (each stat under its own name). Rules table + owner picks:
-    `netcode-for-entities-designs/m4-rules-tables/M4-combat.md`. Next: the hostility case table, then Vitals + the Combat Dummy ghost.
+    `netcode-for-entities-designs/m4-rules-tables/M4-combat.md`.
+  - [x] M4.1b One hostility rule: Factions `HostilityRules.IsHostile` (plain values: factions, both players, same member, duel,
+    neutral ground, The Scar, the PvP switch); `CombatHostility` calls it. HostilityRulesTests (all 1 024 cases against a copy of the
+    managed rule + the owner's rules); HostilityCheckTests + FactionRulesTests still green (16/16). Next: Vitals + the Combat Dummy ghost
+    (a second dummy that can die, owner pick).
 - [ ] **M5 Monster system prototype (new brain).** Section 6. P0 EditMode sim tests (no netcode), P1 ghost + view, P2 reward bridge.
 - [ ] **M6 Hostiles in full.** All roster species via `MonsterArchetype` from `HostileDefinition` (ids kept), level scaling, zones,
   sleep, respawn, loot/XP through managed reward bridge with ledger rules; nav grids for the zones; bot soak with 102 monsters.

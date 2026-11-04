@@ -32,11 +32,12 @@ namespace KryticalNova.Combat
             if (!(IsPlayer(attacker) && IsPlayer(target.Transform))) return true;
             bool neutralGround = TradeZone.CrossFactionAt(attacker.position) || TradeZone.CrossFactionAt(target.Transform.position);
             IFactionMember a = FactionRules.MemberOf(attacker), b = FactionRules.MemberOf(target.Transform);
-            // The Scar: the factions are at war there whatever cross-faction PvP is set to.
-            if (!neutralGround && ZoneRules.AlwaysOnPvp && a != null && b != null && !ReferenceEquals(a, b)
-                && a.Faction != FactionId.None && b.Faction != FactionId.None && a.Faction != b.Faction)
-                return true;
-            return FactionRules.AreHostile(a, b, neutralGround);
+            bool sameMember = a != null && ReferenceEquals(a, b);
+            bool duelling = a != null && b != null && !sameMember && (a.IsDuelling(b) || b.IsDuelling(a));
+            // The one rule (M4): the entity netcode asks the same HostilityRules with what its ghosts carry. The Scar: the factions are at
+            // war there whatever cross-faction PvP is set to.
+            return HostilityRules.IsHostile(a != null ? a.Faction : FactionId.None, b != null ? b.Faction : FactionId.None, true, sameMember,
+                duelling, neutralGround, ZoneRules.AlwaysOnPvp, FactionRules.CrossFactionPvp);
         }
     }
 }
