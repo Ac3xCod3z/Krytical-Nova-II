@@ -486,6 +486,16 @@ namespace KryticalNova.Persistence.Entities
             em.AddComponent<SendRpcCommandRequest>(rpc);
         }
 
+        public void Emote(bool stop, string key)
+        {
+            if (m_World == null || !m_World.IsCreated || string.IsNullOrEmpty(key)) return;
+            if (System.Text.Encoding.UTF8.GetByteCount(key) > FixedString64Bytes.UTF8MaxLengthInBytes) return;   // NGO's RPC carried a FixedString64Bytes
+            var em = m_World.EntityManager;
+            Entity rpc = em.CreateEntity();
+            em.AddComponentData(rpc, new EmoteRpc { Stop = (byte)(stop ? 1 : 0), Key = new FixedString64Bytes(key) });
+            em.AddComponent<SendRpcCommandRequest>(rpc);
+        }
+
         public void CrewOp(CrewOpKind op, string a, string b, byte b0, byte b1, byte b2, byte b3, bool flag)
         {
             if (m_World == null || !m_World.IsCreated) return;

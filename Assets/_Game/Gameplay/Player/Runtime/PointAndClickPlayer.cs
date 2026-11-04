@@ -1433,6 +1433,9 @@ namespace KryticalNova.Player
         /// <summary>A ServerBody's ghost is in a jump's flight (its jump motor never runs there; M8 8.4.3c). False on every other body.</summary>
         public bool ServerAirborne => ServerMover is { } mover && mover.Airborne;
 
+        /// <summary>A ServerBody's ghost is not standing still (walking, jumping, vaulting, on a wall or the water; M8 8.4.6). False on every other body.</summary>
+        public bool ServerBusy => ServerMover is { } mover && mover.Busy;
+
         public bool ServerMoveTo(Vector3 destinationPoint, bool payRun = true)
         {
             if (IsSpawned && !IsServer) return false;

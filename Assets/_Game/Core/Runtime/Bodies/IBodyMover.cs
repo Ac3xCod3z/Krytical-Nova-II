@@ -27,5 +27,8 @@ namespace KryticalNova.Core
 
         /// <summary>The body is in a jump's flight now (its ghost's plan; NGO's PlayerJumpMotor.IsBusy, which never runs on a ServerBody).</summary>
         bool Airborne { get; }
+
+        /// <summary>The body is not standing still: walking, in a jump or a vault, on a wall or the water (NGO's motor CanStartEmote; M8 8.4.6).</summary>
+        bool Busy { get; }
     }
 }

@@ -66,6 +66,22 @@ namespace KryticalNova.Player.Entities.Bodies
         /// <summary>The ghost is in a jump's flight now.</summary>
         public bool Airborne => IsLive && m_World.GetExistingSystemManaged<PlayerJumpServerSystem>() is { } jump && jump.InFlight(m_Ghost);
 
+        /// <summary>The ghost is not standing still: walking, in a jump or a vault, on a wall or the water.</summary>
+        public bool Busy
+        {
+            get
+            {
+                if (!IsLive) return false;
+                var em = m_World.EntityManager;
+                if (em.HasComponent<MoveState>(m_Ghost))
+                {
+                    MoveState move = em.GetComponentData<MoveState>(m_Ghost);
+                    if ((move.Flags & MoveFlags.Moving) != 0 || move.Wall != 0 || move.Water != 0) return true;
+                }
+                return PlayerServerPlanSystem.InVault(em, m_Ghost) || Airborne;
+            }
+        }
+
         /// <summary>A jump the server orders: the jump system's own rules, plan and Flux (M8 8.4.3c).</summary>
         public bool JumpTo(Vector3 landing, out string reason)
         {

@@ -475,6 +475,7 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
             public void Follow(string memberName) => Ops.Add("Follow " + memberName);
             public void SponsorOp(SponsorOpKind op, string a, bool flag) => Ops.Add($"Sponsor {op} {a}|{flag}");
             public void CrewOp(CrewOpKind op, string a, string b, byte b0, byte b1, byte b2, byte b3, bool flag) => Ops.Add($"Crew {op} {a}|{b}|{b0} {b1} {b2} {b3} {flag}");
+            public void Emote(bool stop, string key) => Ops.Add($"Emote {stop} {key}");
             public void Chat(ChatChannel channel, string text, string whisperTarget, byte[] linkContainers, byte[] linkCells) =>
                 Ops.Add($"Chat {channel} {ChatLinks.Strip(text)}|{whisperTarget}|{linkContainers?.Length ?? 0}");
         }
@@ -2750,6 +2751,7 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
             public string Refuse;
             public bool JumpTo(Vector3 landing, out string reason) { reason = Refuse; if (Refuse == null) Jumps.Add(landing); return Refuse == null; }
             public bool Airborne { get; set; }
+            public bool Busy { get; set; }
         }
 
         [UnityTest]
@@ -3138,6 +3140,102 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
             finally
             {
                 OwnerMessages.Current = oldMessages;
+                PlayerKeys.Reset();
+            }
+        }
+
+        [UnityTest]
+        public IEnumerator B35_Emotes_AreDecidedOnTheServerBody_ByItsGhostStandingStill_AStanceEndsWhenItMoves_AndEveryViewShowsTheServers()
+        {
+            NetRole.Install(new BodyRoleNetRoleAdapter(null, () => NetRoleKind.ServerBody));
+            try
+            {
+                PlayerKeys.Reset();
+                GameObject a = Admitted(PlayerKeys.Mint(351).Value, "35a1000000000000000000000000000a", "c3510000000000000000000000000351", "Talwyn");
+                for (int i = 0; i < 30; i++) yield return null;
+                var mover = new MoverSeen();
+                a.GetComponent<BodyRoleTag>().Mover = mover;
+                var emotes = a.GetComponent<IBodyEmotes>();
+                Assert.IsNotNull(emotes, "the server body has its emotes");
+                var part = (Component)emotes;
+                Type type = part.GetType();
+
+                // planned before the run: an emote and a stance NGO's wheel offers this body (EmoteCatalog.Collect)
+                object settings = type.GetProperty("Settings").GetValue(part);
+                Assert.IsNotNull(settings, "the prefab's emote wheel settings");
+                Type catalog = Type.GetType("KryticalNova.Social.EmoteCatalog, KryticalNova.Social");
+                Type entryType = Type.GetType("KryticalNova.Social.EmoteEntry, KryticalNova.Social");
+                object lists = Activator.CreateInstance(typeof(List<>).MakeGenericType(typeof(List<>).MakeGenericType(entryType)));
+                catalog.GetMethod("Collect").Invoke(null, new[] { settings, type.GetProperty("Body").GetValue(part), lists });
+                string emoteKey = null, stanceKey = null;
+                foreach (System.Collections.IEnumerable category in (System.Collections.IEnumerable)lists)
+                    foreach (object entry in category)
+                    {
+                        string key = (string)entryType.GetField("Key").GetValue(entry);
+                        if ((bool)entryType.GetField("Stance").GetValue(entry)) stanceKey ??= key; else emoteKey ??= key;
+                    }
+                Assert.IsNotNull(emoteKey, "an emote on the wheel");
+                Assert.IsNotNull(stanceKey, "a stance on the wheel");
+                float cooldown = (float)settings.GetType().GetField("cooldownSeconds").GetValue(settings);
+
+                // 1. the ghost is walking: refused (NGO: "Stand still"; the server body has no animation motor, its ghost decides)
+                mover.Busy = true;
+                emotes.RunEmote(false, emoteKey);
+                Assert.AreEqual(string.Empty, emotes.State.key, "not while it moves");
+
+                // 2. standing still: shown (serial up), and the cooldown holds the next one
+                mover.Busy = false;
+                emotes.RunEmote(false, emoteKey);
+                Assert.AreEqual(emoteKey, emotes.State.key, "played");
+                Assert.IsFalse(emotes.State.stance);
+                byte serial = emotes.State.serial;
+                emotes.RunEmote(false, stanceKey);
+                Assert.AreEqual(emoteKey, emotes.State.key, "NGO's cooldown");
+                yield return new WaitForSeconds(cooldown + 0.1f);
+
+                // 3. a stance; a stop names it or does nothing
+                emotes.RunEmote(false, stanceKey);
+                Assert.AreEqual(stanceKey, emotes.State.key, "the stance");
+                Assert.IsTrue(emotes.State.stance);
+                Assert.AreEqual((byte)(serial + 1), emotes.State.serial);
+                emotes.RunEmote(true, emoteKey);
+                Assert.AreEqual(stanceKey, emotes.State.key, "a stop of another key does nothing");
+                emotes.RunEmote(true, stanceKey);
+                Assert.AreEqual(string.Empty, emotes.State.key, "stopped");
+
+                // 4. a held stance ends when the ghost moves (NGO's OnEmoteEnded from the motor; the server body looks every 0.5 s)
+                yield return new WaitForSeconds(cooldown + 0.1f);
+                emotes.RunEmote(false, stanceKey);
+                Assert.AreEqual(stanceKey, emotes.State.key);
+                mover.Busy = true;
+                float until = Time.time + 1.5f;
+                while (emotes.State.key.Length > 0 && Time.time < until) yield return null;
+                Assert.AreEqual(string.Empty, emotes.State.key, "moving ended the stance");
+
+                // 5. the views: the own view asks (never plays on its own), another player's view keeps PlayerEmotes and shows the server's
+                var asked = new Asked();
+                GameObject view = Make(NetRoleKind.ClientView, true, new PlayerKey(a.GetComponent<BodyRoleTag>().Key.Value));
+                GameObject remote = Make(NetRoleKind.ClientView, false, new PlayerKey(352));
+                view.GetComponent<BodyRoleTag>().Requests = asked;
+                yield return null;
+                var viewPart = (Component)view.GetComponent<IBodyEmotes>();
+                type.GetMethod("RequestStop").Invoke(viewPart, new object[] { stanceKey });
+                type.GetMethod("RequestPlay").Invoke(viewPart, new object[] { emoteKey });
+                Assert.AreEqual("Emote True " + stanceKey, asked.Ops[0], "the stop is asked");
+                Assert.IsTrue(asked.Ops.Count == 1 || asked.Ops[1] == "Emote False " + emoteKey, "a play is asked (when its motor lets it): " + string.Join(" | ", asked.Ops));
+                Assert.AreEqual(string.Empty, ((IBodyEmotes)viewPart).State.key, "the view never plays it on its own");
+                var remoteEmotes = remote.GetComponent<IBodyEmotes>();
+                Assert.IsNotNull(remoteEmotes, "another player's view keeps PlayerEmotes (it plays the motion)");
+                remoteEmotes.MirrorState(new BodyEmoteState { key = stanceKey, serial = 4, stance = true });
+                Assert.AreEqual(stanceKey, remoteEmotes.State.key, "the server's stance on another player's view");
+                remoteEmotes.MirrorState(new BodyEmoteState { key = string.Empty, serial = 5 });
+                Assert.AreEqual(string.Empty, remoteEmotes.State.key, "and its end");
+
+                ServerLeaving.Notify(a);
+                a.GetComponent<PlayerSaveAgent>().OnServerLeaving();
+            }
+            finally
+            {
                 PlayerKeys.Reset();
             }
         }

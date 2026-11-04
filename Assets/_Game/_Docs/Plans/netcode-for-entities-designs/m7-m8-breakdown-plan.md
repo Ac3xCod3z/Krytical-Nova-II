@@ -223,7 +223,10 @@ backflips' speed (80 % of the air). Added as M7/M8 systems land (each: what to c
   [G] opens with you as Leader); far from her: refused; the second client sees your Crew tag on your namecard; invite them (player menu /
   /cinvite name), they accept the prompt: /g reaches both; set an officer, a title and the announcement; relog both: the Crew is still
   there and the announcement shows; leave, then disband.
-- 8.4.x: an emote and a mount seen from the second client.
+- 8.4.6 (built 3 Nov): two clients: play an emote from the wheel (the second client sees it once), hold a stance (the second client sees
+  it held; join with a third client meanwhile: it sees the stance, not old emotes), walk: the stance ends on both; try one while walking:
+  "Stand still to do that."
+- 8.4.x: a mount seen from the second client.
 The list is kept current in this section as systems land.
 
 Owner follow-ups (found while porting; not DOTS work):

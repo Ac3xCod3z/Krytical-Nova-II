@@ -42,7 +42,7 @@ namespace KryticalNova.Social
     /// arrives meanwhile sees it held. Which motions exist and how they are sorted is <see cref="EmoteWheelSettings"/>.
     /// </summary>
     [DisallowMultipleComponent]
-    public sealed class PlayerEmotes : NetworkBehaviour
+    public sealed class PlayerEmotes : NetworkBehaviour, IBodyEmotes
     {
         private const string ReasonDefeated = "You can't do that while defeated.";
         private const string ReasonBusy = "Stand still to do that.";
@@ -68,10 +68,53 @@ namespace KryticalNova.Social
         /// <summary>The body the character was made with: it only performs motions made for that body.</summary>
         public BodyType Body => identity != null ? identity.State.bodyType : BodyType.Masculine;
 
-        private bool HasAuthority => !IsSpawned || IsServer;
+        // A client view of the entity netcode only asks and plays what the server shows (M8 8.4.6).
+        private bool HasAuthority => (!IsSpawned || IsServer) && !EntityView;
+        private bool EntityView => BodyRoleTag.Of(this) is { Kind: NetRoleKind.ClientView };
+        private bool EntityServer => BodyRoleTag.Of(this) is { Kind: NetRoleKind.ServerBody };
+        private IBodyRequests Requests => BodyRoleTag.RequestsOf(this) is IBodyRequests requests ? requests : null;
+        private PointAndClickPlayer controls;
+        private EmoteNetState shownState;   // a view of the entity netcode: what the server shows
+        private bool shownOnce;
+
+        // What every machine knows of this character's emote: NGO's netState, the offline avatar's own, or (entity netcode) the server body's
+        // own and a view's copy of the server's.
+        private EmoteNetState Current => EntityView ? shownState : IsSpawned ? netState.Value : offlineState;
+
+        /// <summary>The server body of the entity netcode has no animation motor: standing still is its ghost's (not walking, jumping, on a wall).</summary>
+        private bool ServerBodyBusy => controls != null && controls.ServerBusy;
+
+        public BodyEmoteState State
+        {
+            get
+            {
+                EmoteNetState state = Current;
+                return new BodyEmoteState { key = state.key.ToString(), serial = state.serial, stance = state.stance };
+            }
+        }
+
+        /// <summary>A server body of the entity netcode runs its owner's play or stop (NGO's RPC bodies, after the Cosmetic limit).</summary>
+        public void RunEmote(bool stop, string key)
+        {
+            if (!EntityServer || string.IsNullOrEmpty(key)) return;
+            if (stop) ServerStop(key); else ServerPlay(key);
+        }
+
+        /// <summary>Any view of the entity netcode: the server's emote for this player (NGO's OnValueChanged; arriving late, only a held stance shows).</summary>
+        public void MirrorState(in BodyEmoteState state)
+        {
+            if (!EntityView) return;
+            var next = new EmoteNetState { key = new FixedString64Bytes(state.key ?? string.Empty), serial = state.serial, stance = state.stance };
+            if (shownOnce && next.Equals(shownState)) return;
+            bool first = !shownOnce;
+            shownOnce = true;
+            shownState = next;
+            if (!first || (next.stance && next.key.Length > 0)) Show(next);
+        }
 
         private void Awake()
         {
+            controls = GetComponent<PointAndClickPlayer>();
             motor = GetComponent<PlayerAnimancerMotor>();
             identity = GetComponent<PlayerIdentity>();
             resources = GetComponent<PlayerResources>();
@@ -111,9 +154,17 @@ namespace KryticalNova.Social
         /// </summary>
         private void Update()
         {
+            if (EntityServer)
+            {
+                // the server body's motor never runs: a held stance ends when its ghost moves or acts (NGO's OnEmoteEnded there)
+                if (Time.time < nextStanceCheck) return;
+                nextStanceCheck = Time.time + StanceCheckSeconds;
+                if (offlineState.stance && offlineState.key.Length > 0 && ServerBodyBusy) Publish(new EmoteNetState { serial = (byte)(offlineState.serial + 1) });
+                return;
+            }
             if (HasAuthority || Time.time < nextStanceCheck) return;
             nextStanceCheck = Time.time + StanceCheckSeconds;
-            EmoteNetState state = netState.Value;
+            EmoteNetState state = Current;
             if (!state.stance || state.key.Length == 0 || motor == null || motor.IsEmoting || !motor.CanStartEmote) return;
             Show(state);
         }
@@ -124,6 +175,7 @@ namespace KryticalNova.Social
         public string Blocked()
         {
             if (resources != null && !resources.IsAlive) return ReasonDefeated;
+            if (EntityServer) return ServerBodyBusy ? ReasonBusy : null;   // (M8 8.4.6: the ghost stands still)
             if (motor == null || !motor.CanStartEmote) return ReasonBusy;
             return null;
         }
@@ -140,6 +192,7 @@ namespace KryticalNova.Social
             }
             // Sheathing is the owner's to ask for, so every machine sees it happen the usual way.
             motor.RequestSetWeaponDraw(false);
+            if (Requests is { } requests) { requests.Emote(false, key); return; }   // the entity netcode's own view asks its server body
             if (IsSpawned) PlayRpc(new FixedString64Bytes(key));
             else ServerPlay(key);
         }
@@ -158,6 +211,7 @@ namespace KryticalNova.Social
         public void RequestStop(string key)
         {
             if (string.IsNullOrEmpty(key)) return;
+            if (Requests is { } requests) { requests.Emote(true, key); return; }
             if (IsSpawned) StopRpc(new FixedString64Bytes(key));
             else ServerStop(key);
         }

@@ -166,6 +166,14 @@ namespace KryticalNova.Player.Entities
         [GhostField] public ulong Id;
     }
 
+    /// <summary>The emote the player shows, for everyone: an empty key = none, the serial goes up on every change (NGO's netState; M8 8.4.6). Written by the server.</summary>
+    public struct PlayerEmoteTag : IComponentData
+    {
+        [GhostField] public FixedString64Bytes Key;
+        [GhostField] public byte Serial;
+        [GhostField] public byte Stance;
+    }
+
     /// <summary>The player's Crew tag for everyone, an empty name = none (NGO's netTag was read by everyone: the namecards; M8 8.4.5). Written by the server.</summary>
     public struct PlayerCrewTag : IComponentData
     {

@@ -261,5 +261,8 @@ namespace KryticalNova.Core
         /// <paramref name="b"/> a title or the announcement; <paramref name="b0"/>..<paramref name="b3"/> the symbol and colours.
         /// </summary>
         void CrewOp(CrewOpKind op, string a, string b, byte b0, byte b1, byte b2, byte b3, bool flag);
+
+        /// <summary>Asks the server to play, or (<paramref name="stop"/>) end, an emote by its key (M8 8.4.6, NGO's PlayRpc / StopRpc).</summary>
+        void Emote(bool stop, string key);
     }
 }
