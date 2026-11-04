@@ -486,6 +486,15 @@ namespace KryticalNova.Persistence.Entities
             em.AddComponent<SendRpcCommandRequest>(rpc);
         }
 
+        public void MountOp(MountOpKind op, int box)
+        {
+            if (m_World == null || !m_World.IsCreated) return;
+            var em = m_World.EntityManager;
+            Entity rpc = em.CreateEntity();
+            em.AddComponentData(rpc, new MountOpRpc { Op = (byte)op, Box = (byte)Mathf.Clamp(box, 0, 255) });
+            em.AddComponent<SendRpcCommandRequest>(rpc);
+        }
+
         public void PetTrick(int nameHash)
         {
             if (m_World == null || !m_World.IsCreated || nameHash == 0) return;
@@ -1050,13 +1059,14 @@ namespace KryticalNova.Persistence.Entities
         /// <summary>
         /// The item effects whose result this server saves (or that save nothing): HP/Flux stims, the Flask (its drinks are on the bottle),
         /// a pet's ration (its growth is on the pet item), a Serum (its part is real), Recall (a move). Every other effect writes a part that
-        /// is still passed through (Autopilot, Dossiers, XP boosts, Autobuff, mounts) or has its own flow (Name Change), so it waits for its port.
+        /// is still passed through (Autopilot, Dossiers) or has its own flow (Name Change), so it waits for its port.
         /// </summary>
         public static bool EffectPorted(ItemUseEffect effect) => effect == ItemUseEffect.None || effect == ItemUseEffect.FluxFlask
             || effect == ItemUseEffect.FeedPet || effect == ItemUseEffect.Serum || effect == ItemUseEffect.Recall
             || effect == ItemUseEffect.ExperienceBoost    // M8 8.3.3: the "xpboosts" part is real (B13)
             || effect == ItemUseEffect.LearnSkill         // M8 8.3.2: the "skills" part is real (B14)
-            || effect == ItemUseEffect.AutobuffTime;      // M8 8.3.11: the "autobuff" part is real (B26)
+            || effect == ItemUseEffect.AutobuffTime       // M8 8.3.11: the "autobuff" part is real (B26)
+            || effect == ItemUseEffect.RegisterMount || effect == ItemUseEffect.FeedMount;   // M8 8.4.8: the "mounts" part is real (B38)
 
         void Cast(Entity connection, string skillId)
         {

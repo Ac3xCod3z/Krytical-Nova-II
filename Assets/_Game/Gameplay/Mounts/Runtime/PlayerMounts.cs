@@ -22,7 +22,7 @@ namespace KryticalNova.Mounts
     /// speed and the look (<see cref="MountRider"/>). The owner alone also gets all four boxes (<see cref="MountBook"/>).
     /// </summary>
     [DisallowMultipleComponent]
-    public sealed class PlayerMounts : NetworkBehaviour, IItemUseHandler, ISaveParticipant
+    public sealed class PlayerMounts : NetworkBehaviour, IItemUseHandler, ISaveParticipant, IBodyMounts
     {
         // Mounts or dismounts from far too often are ignored: one press every this many seconds is plenty.
         private const float RidePressSeconds = 0.4f;
@@ -71,7 +71,15 @@ namespace KryticalNova.Mounts
         public MountCatalog Catalog => catalog;
         public MountSettings Settings => catalog != null ? catalog.Settings : null;
         private MountTuning Tuning => catalog != null ? catalog.Tuning : MountTuning.Default;
-        private bool HasAuthority => !IsSpawned || IsServer;
+        // A client view of the entity netcode only shows what the server decided (M8 8.4.8): NGO's !IsSpawned let it ride and drain itself.
+        private bool HasAuthority => (!IsSpawned || IsServer) && !EntityView;
+        private bool EntityView => BodyRoleTag.Of(this) is { Kind: NetRoleKind.ClientView };
+        private bool EntityServer => BodyRoleTag.Of(this) is { Kind: NetRoleKind.ServerBody };
+        private IBodyRequests Requests => BodyRoleTag.RequestsOf(this) is IBodyRequests requests ? requests : null;
+        // A DOTS server body has no motor: its ghost says when it is in a jump's flight (NGO's motor state Jumping).
+        private bool ServerBodyAirborne => EntityServer && BodyRoleTag.Of(this).Mover is { Airborne: true };
+        private MountBook viewBook;   // the own view of the entity netcode: the server's four boxes (NGO's netBook)
+        private bool bookDelivered;   // a server body of the entity netcode: its player has the latest boxes
 
         /// <summary>The selected mount, or null.</summary>
         public MountDefinition Selected => catalog != null ? catalog.Get(shown.selected) : null;
@@ -84,7 +92,7 @@ namespace KryticalNova.Mounts
         public int Stage => MountRules.Stage(GrowthPercent);
 
         /// <summary>All four boxes. Known to the owner and where the game is decided.</summary>
-        public MountBook Book => HasAuthority ? book : netBook.Value;
+        public MountBook Book => HasAuthority ? book : EntityView ? viewBook : netBook.Value;
         public bool Owns(int box) => Book.Owns(box);
         public MountState StateOf(int box) => Book.Get(box);
         public int GrowthOf(int box) => MountRules.GrowthPercent(StateOf(box), Tuning);
@@ -143,6 +151,8 @@ namespace KryticalNova.Mounts
         /// <summary>The owner's machine: makes an owned mount the selected one (from the Mount window).</summary>
         public void RequestSelect(int box)
         {
+            if (Requests is { } requests) { requests.MountOp(MountOpKind.Select, box); return; }   // the entity netcode's own view (M8 8.4.8)
+            if (EntityView) return;
             if (!IsSpawned) ServerSelect(box);
             else if (IsServer) ServerSelect(box);
             else SelectRpc((byte)box);
@@ -158,6 +168,8 @@ namespace KryticalNova.Mounts
         /// <summary>The owner's machine: the Ride key. Gets on the selected mount, or off it.</summary>
         public void RequestRide()
         {
+            if (Requests is { } requests) { requests.MountOp(MountOpKind.Ride, 0); return; }   // the entity netcode's own view (M8 8.4.8)
+            if (EntityView) return;
             if (!IsSpawned || IsServer) ServerToggleRide();
             else RideRpc();
         }
@@ -180,6 +192,7 @@ namespace KryticalNova.Mounts
             if (!mount.IsBuilt) return $"The {mount.displayName} cannot be ridden yet.";
             if (entity != null && !entity.IsAlive) return "You cannot ride while defeated.";
             if (motor != null && motor.CurrentState != CharacterAnimState.Locomotion) return "Finish what you are doing first.";
+            if (ServerBodyAirborne) return "Finish what you are doing first.";
             return null;
         }
 
@@ -232,6 +245,7 @@ namespace KryticalNova.Mounts
         private void Update()
         {
             if (!HasAuthority || catalog == null) return;
+            if (EntityServer && !bookDelivered) SendBook();
 
             if ((phase == RidePhase.GettingOn || phase == RidePhase.GettingOff) && Time.time >= phaseEnds)
             {
@@ -239,7 +253,7 @@ namespace KryticalNova.Mounts
                 Publish();
             }
             // A jump, a vault or a wall run takes the rider off: the mount has no clips for them.
-            if (phase == RidePhase.Riding && motor != null && motor.CurrentState == CharacterAnimState.Jumping) ServerDismountNow();
+            if (phase == RidePhase.Riding && ((motor != null && motor.CurrentState == CharacterAnimState.Jumping) || ServerBodyAirborne)) ServerDismountNow();
 
             if (phase != RidePhase.Riding || selected == 0) return;
             MountState before = book.Get(selected);
@@ -312,6 +326,7 @@ namespace KryticalNova.Mounts
             if (mount == null) return;
             Notify($"Your {mount.displayName} evolved: {mount.StageName(stage)} ({growth}% growth).", toast: false);
             if (IsSpawned) EvolvedRpc((byte)stage);
+            else if (EntityServer) MountOwnerLink.Current?.Evolved(this, stage);   // every machine (M8 8.4.8)
             else PresentEvolved(stage);
         }
 
@@ -411,7 +426,15 @@ namespace KryticalNova.Mounts
         {
             nextPublish = Time.time + (Settings != null ? Settings.hungerWriteSeconds : 10f);
             if (IsSpawned && IsServer) netBook.Value = book;
+            else if (EntityServer) SendBook();   // its own player's Mount window (M8 8.4.8)
             Changed?.Invoke();
+        }
+
+        // A server body of the entity netcode: the boxes to its own player; until its connection is there, again every frame (Update).
+        private void SendBook()
+        {
+            bookDelivered = MountOwnerLink.Current?.Book(this, book.owned, book.xp1, book.xp2, book.xp3, book.xp4,
+                book.hunger1, book.hunger2, book.hunger3, book.hunger4) == true;
         }
 
         /// <summary>Where the game is decided: tells every machine what the selected mount now gives and looks like.</summary>
@@ -506,11 +529,52 @@ namespace KryticalNova.Mounts
         {
             if (chat != null) chat.ServerSystem(text);
             if (!toast) return;
+            if (EntityServer) { OwnerMessages.TryTell(this, text); return; }   // its player's message line (M8 8.4.8)
             if (IsSpawned) ToastRpc(text);
             else ClientPresentationRegistry.Messages?.ShowMessage(text);
         }
 
         [Rpc(SendTo.Owner)]
         private void ToastRpc(string text) => ClientPresentationRegistry.Messages?.ShowMessage(text);
+
+        // ------------------------------------------------------------------ the entity netcode (IBodyMounts, M8 8.4.8)
+
+        public byte ShownSelected => shown.selected;
+        public byte ShownPhase => (byte)shown.phase;
+        public byte ShownGrowth => shown.growth;
+        public bool ShownFed => shown.fed;
+
+        /// <summary>Any view of the entity netcode: the server's mount for this player (NGO's netState change).</summary>
+        public void MirrorShown(byte selectedBox, byte ridePhase, byte growth, bool fed)
+        {
+            if (!EntityView) return;
+            var next = new MountNetState { selected = selectedBox, phase = (RidePhase)ridePhase, growth = growth, fed = fed };
+            if (next.Equals(shown)) return;
+            Show(next);
+        }
+
+        /// <summary>The own view of the entity netcode: the server's four boxes (NGO's netBook change).</summary>
+        public void MirrorBook(byte owned, uint xp1, uint xp2, uint xp3, uint xp4, uint hunger1, uint hunger2, uint hunger3, uint hunger4)
+        {
+            if (!EntityView) return;
+            var next = new MountBook { owned = owned, xp1 = xp1, xp2 = xp2, xp3 = xp3, xp4 = xp4, hunger1 = hunger1, hunger2 = hunger2, hunger3 = hunger3, hunger4 = hunger4 };
+            if (next.Equals(viewBook)) return;
+            viewBook = next;
+            Changed?.Invoke();
+        }
+
+        /// <summary>A server body of the entity netcode runs its owner's request (NGO's SelectRpc / RideRpc bodies).</summary>
+        public void RunMountOp(MountOpKind op, int box)
+        {
+            if (!EntityServer) return;
+            if (op == MountOpKind.Select) ServerSelect(box);
+            else if (op == MountOpKind.Ride) ServerToggleRide();
+        }
+
+        /// <summary>Any view of the entity netcode: the selected mount evolved (NGO's EvolvedRpc).</summary>
+        public void PlayEvolved(int stage)
+        {
+            if (EntityView) PresentEvolved(stage);
+        }
     }
 }

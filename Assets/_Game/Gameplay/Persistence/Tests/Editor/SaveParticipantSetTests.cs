@@ -197,24 +197,25 @@ namespace KryticalNova.Tests
         public void Default_ThePortedPartsAreReal()
         {
             CollectionAssert.AreEquivalent(new[] { "look", "progression", "inventory", "serums", "wallet", "loadouts", "xpboosts", "skills", "movement", "vault",
-                "deepvault", "vendorWeek", "trade", "nova", "weave", "weaves", "autobuff", "crate", "sponsor" }, SavePassthrough.RealKeys.ToArray(), "each part goes real with the port that writes it (plan section 0)");
+                "deepvault", "vendorWeek", "trade", "nova", "weave", "weaves", "autobuff", "crate", "sponsor", "mounts" }, SavePassthrough.RealKeys.ToArray(), "each part goes real with the port that writes it (plan section 0)");
             Assert.IsFalse(SavePassthrough.Is("look"));
             Assert.IsFalse(SavePassthrough.Is("progression"));
             Assert.IsFalse(SavePassthrough.Is("inventory"), "items are used on the server's body: the Pack is real (owner, 2 Nov, item 5)");
             Assert.IsFalse(SavePassthrough.Is("serums"));
             Assert.IsFalse(SavePassthrough.Is("wallet"));
-            Assert.IsTrue(SavePassthrough.Is("mounts"), "mounts are not ported yet (M8 group 4)");
+            Assert.IsFalse(SavePassthrough.Is("mounts"), "the mounts part is real (M8 8.4.8)");
+            Assert.IsTrue(SavePassthrough.Is("autopilot"), "the autopilot is not ported yet");
             Assert.IsTrue(SavePassthrough.Is("a key nobody knows"), "unknown keys are passed through: the safe side");
-            Assert.IsFalse(SavePassthrough.Never("mounts"));
+            Assert.IsFalse(SavePassthrough.Never("autopilot"));
         }
 
         [Test]
         public void MakeReal_FlipsOneKey_AndResetPutsItBack()
         {
-            SavePassthrough.MakeReal("mounts");
-            Assert.IsFalse(SavePassthrough.Is("mounts"));
+            SavePassthrough.MakeReal("autopilot");
+            Assert.IsFalse(SavePassthrough.Is("autopilot"));
             SavePassthrough.ResetToDefault();
-            Assert.IsTrue(SavePassthrough.Is("mounts"));
+            Assert.IsTrue(SavePassthrough.Is("autopilot"));
         }
 
         [Test]

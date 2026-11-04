@@ -228,7 +228,9 @@ backflips' speed (80 % of the air). Added as M7/M8 systems land (each: what to c
   "Stand still to do that."
 - 8.4.7 (built 3 Nov): with a pet out, the second client sees your pet (its stage look and glow), its tricks at the same moment as you,
   and a GM growth jump's evolution on both; let it starve: the toast and the glow goes on both; feed it: back.
-- 8.4.x: a mount seen from the second client.
+- 8.4.8 (built 3 Nov): add the Brambleback from its item, select it, press the Ride key: the second client sees you get on and ride,
+  faster than on foot; jump: you are off on both; GM growth jump: the evolution on both; let it starve, then Mount Feed; log out and in:
+  the mount is still in its box, not ridden.
 The list is kept current in this section as systems land.
 
 Owner follow-ups (found while porting; not DOTS work):

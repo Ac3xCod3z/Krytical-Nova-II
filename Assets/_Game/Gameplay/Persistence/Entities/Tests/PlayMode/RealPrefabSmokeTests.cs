@@ -51,6 +51,7 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
         ISponsorOwnerLink m_OldSponsor;
         ICrewOwnerLink m_OldCrew;
         IPetShowLink m_OldPet;
+        IMountOwnerLink m_OldMount;
 
         [SetUp]
         public void SetUp()
@@ -70,6 +71,7 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
             m_OldSponsor = SponsorOwnerLink.Current;
             m_OldCrew = CrewOwnerLink.Current;
             m_OldPet = PetShowLink.Current;
+            m_OldMount = MountOwnerLink.Current;
             SavePassthrough.ResetToDefault();
         }
 
@@ -90,6 +92,7 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
             SponsorOwnerLink.Current = m_OldSponsor;
             CrewOwnerLink.Current = m_OldCrew;
             PetShowLink.Current = m_OldPet;
+            MountOwnerLink.Current = m_OldMount;
             LogAssert.ignoreFailingMessages = false;
         }
 
@@ -482,14 +485,19 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
             public void CrewOp(CrewOpKind op, string a, string b, byte b0, byte b1, byte b2, byte b3, bool flag) => Ops.Add($"Crew {op} {a}|{b}|{b0} {b1} {b2} {b3} {flag}");
             public void Emote(bool stop, string key) => Ops.Add($"Emote {stop} {key}");
             public void PetTrick(int nameHash) => Ops.Add("PetTrick " + nameHash);
+            public void MountOp(MountOpKind op, int box) => Ops.Add($"MountOp {op} {box}");
             public void Chat(ChatChannel channel, string text, string whisperTarget, byte[] linkContainers, byte[] linkCells) =>
                 Ops.Add($"Chat {channel} {ChatLinks.Strip(text)}|{whisperTarget}|{linkContainers?.Length ?? 0}");
         }
 
         /// <summary>What the server bodies told their players (the message line) and sent their trade windows (view, notice, prompt).</summary>
-        sealed class Told : IOwnerMessages, ITradeOwnerLink, IKioskOwnerLink, IWorkshopOwnerLink, KryticalNova.Progression.INovaLink, IRestyleOwnerLink, IChatOwnerLink, IContactsOwnerLink, IPartyOwnerLink, IFollowOwnerLink, ISponsorOwnerLink, ICrewOwnerLink, IPetShowLink
+        sealed class Told : IOwnerMessages, ITradeOwnerLink, IKioskOwnerLink, IWorkshopOwnerLink, KryticalNova.Progression.INovaLink, IRestyleOwnerLink, IChatOwnerLink, IContactsOwnerLink, IPartyOwnerLink, IFollowOwnerLink, ISponsorOwnerLink, ICrewOwnerLink, IPetShowLink, IMountOwnerLink
         {
             public void Show(Component part, BodyPetShowKind kind, int value, bool toOwner) => Lines.Add((Body(part), $"pet show {kind} {value} {toOwner}"));
+            // Mounts (M8 8.4.8): "mount book <owned> <xp1> <hunger1>" to its own player, "mount evolved <stage>" to every machine
+            bool IMountOwnerLink.Book(Component part, byte owned, uint xp1, uint xp2, uint xp3, uint xp4, uint hunger1, uint hunger2, uint hunger3, uint hunger4)
+            { Lines.Add((Body(part), $"mount book {owned} {xp1} {hunger1}")); return true; }
+            void IMountOwnerLink.Evolved(Component part, int stage) => Lines.Add((Body(part), "mount evolved " + stage));
             // Crews (M8 8.4.5): the last window text each body was sent, and its invitations
             public readonly Dictionary<GameObject, string> LastCrew = new Dictionary<GameObject, string>();
             void ICrewOwnerLink.View(Component part, string viewText) { LastCrew[Body(part)] = viewText; Lines.Add((Body(part), "crew view")); }
@@ -3356,6 +3364,137 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
             Assert.AreEqual(70, pet.ShownGrowth, "the server's growth");
             Assert.IsTrue(pet.ShownFed);
             pet.PlayShown(BodyPetShowKind.Trick, 123);   // a trick passed on: played by the follower (no pet out here: nothing, no error)
+        }
+
+        [UnityTest]
+        public IEnumerator B38_Mounts_AreDecidedOnTheServerBody_TheItemsAreUsed_RideAndJumpOff_TheSaveIsReal_AndViewsOnlyShowAndAsk()
+        {
+            NetRole.Install(new BodyRoleNetRoleAdapter(null, () => NetRoleKind.ServerBody));
+            IOwnerMessages oldMessages = OwnerMessages.Current;
+            var told = new Told();
+            OwnerMessages.Current = told;
+            ChatOwnerLink.Current = told;
+            MountOwnerLink.Current = told;
+            try
+            {
+                PlayerKeys.Reset();
+                Assert.IsFalse(SavePassthrough.Is("mounts"), "the mounts part is real now");
+                GameObject a = Admitted(PlayerKeys.Mint(381).Value, "38a1000000000000000000000000000a", "c3810000000000000000000000000381", "Brannagh");
+                for (int i = 0; i < 30; i++) yield return null;
+                var mounts = a.GetComponent<IBodyMounts>();
+                Assert.IsNotNull(mounts, "the server body has its mounts");
+                var part = (Component)mounts;
+                Type type = part.GetType();
+                var inv = a.GetComponent<PlayerInventory>();
+
+                // planned before the run: the Brambleback (box 1, item 8101, the one built mount) and Mount Feed (item 9013), used as a click would
+                inv.ServerGive(8101, 1);
+                Assert.IsTrue(PlayerRequestServerSystem.UseOn(a, 8101, out RequestReplyRpc reply), "the mount item is used on the server body: " + reply.Text);
+                Assert.AreEqual(1, mounts.ShownSelected, "the Brambleback is in box 1 and selected");
+                Assert.IsTrue(told.Any(a, "mount book 1 "), "its player's Mount window gets the boxes: " + string.Join(" | ", told.To(a)));
+                Assert.IsTrue(told.Any(a, "tell The Brambleback is in your Mount window."), "NGO's toast on the message line");
+
+                // 1. the Ride key: getting on, then riding, faster than on foot
+                Component moves = a.GetComponent("PlayerMovementSkills");
+                MethodInfo speedFor = moves.GetType().GetMethod("SpeedFor");
+                float onFoot = (float)speedFor.Invoke(moves, new object[] { true });
+                mounts.RunMountOp(MountOpKind.Ride, 0);
+                Assert.AreEqual(1, mounts.ShownPhase, "getting on");
+                float until = Time.time + 8f;
+                while (mounts.ShownPhase != 2 && Time.time < until) yield return null;
+                Assert.AreEqual(2, mounts.ShownPhase, "riding once the mount-up clip is over");
+                Assert.Greater((float)speedFor.Invoke(moves, new object[] { true }), onFoot, "the ride speed is in the movement (MoveStats reads it)");
+
+                // 2. a jump takes the rider off at once (the ghost's flight: NGO's motor Jumping)
+                var tag = a.GetComponent<BodyRoleTag>();
+                IBodyMover oldMover = tag.Mover;
+                tag.Mover = new MoverSeen { Airborne = true };
+                yield return null;
+                yield return null;
+                Assert.AreEqual(0, mounts.ShownPhase, "off the mount in a jump");
+                yield return new WaitForSecondsRealtime(0.45f);
+                mounts.RunMountOp(MountOpKind.Ride, 0);
+                Assert.AreEqual(0, mounts.ShownPhase, "no getting on in a jump's flight");
+                Assert.IsTrue(told.Any(a, "tell Finish what you are doing first."), "and why");
+                tag.Mover = oldMover;
+
+                // 3. growth (GM): the evolution goes to every machine; hunger and Mount Feed
+                type.GetMethod("ServerSetGrowth").Invoke(part, new object[] { 60f });
+                Assert.AreEqual(60, mounts.ShownGrowth, 1, "the server's growth");
+                Assert.IsTrue(told.Any(a, "mount evolved "), "the evolution to every machine: " + string.Join(" | ", told.To(a)));
+                type.GetMethod("ServerSetHunger").Invoke(part, new object[] { 0f });
+                Assert.IsFalse(mounts.ShownFed, "starving");
+                inv.ServerGive(9013, 1);
+                Assert.IsTrue(PlayerRequestServerSystem.UseOn(a, 9013, out reply), "Mount Feed is used on the server body: " + reply.Text);
+                Assert.IsTrue(mounts.ShownFed, "fed again");
+                Assert.IsTrue(told.Any(a, "system Your Brambleback has eaten its fill."), "NGO's line in its chat");
+
+                // 4. the save: NGO's text; it loads into a fresh admitted server body and saves back byte for byte
+                string text = null;
+                foreach (ISaveParticipant p in a.GetComponents<ISaveParticipant>()) if (p.SaveKey == "mounts") text = p.CaptureSave();
+                StringAssert.StartsWith("{\"version\":1,\"selected\":1,\"mounts\":[{\"id\":1,\"xp\":", text, "NGO's mounts text");
+                const string account2 = "38c1000000000000000000000000000c", character2 = "c3880000000000000000000000000388";
+                GameObject other = Make(NetRoleKind.ServerBody, false, new PlayerKey(388));
+                yield return null;
+                CharacterRecipe recipe = AnyLegalRecipe(other.GetComponent<PlayerIdentity>().Database);
+                var stored = new AccountSave { accountId = account2 };
+                var character = new CharacterSave { characterId = character2, name = "Mountback" };
+                character.Set("mounts", text);
+                stored.characters.Add(character);
+                Assert.IsTrue(ServerSave.WriteAccount(stored));
+                ServerSave.WaitForDisk();
+                var context = new ServerBodyContext
+                {
+                    Key = new PlayerKey(388), Serial = 388, NetworkId = 388, Account = account2, CharacterId = character2, Name = "Mountback", RecipeText = RecipeText.Encode(recipe),
+                };
+                Assert.IsNull(new PlayerAdmission().Begin(other, in context), "admitted");
+                for (int i = 0; i < 30; i++) yield return null;
+                var otherMounts = other.GetComponent<IBodyMounts>();
+                Assert.AreEqual(1, otherMounts.ShownSelected, "the saved mount is selected on the server body");
+                Assert.AreEqual(0, otherMounts.ShownPhase, "nobody comes back in the saddle");
+                Assert.AreEqual(60, otherMounts.ShownGrowth, 1, "with its growth");
+                other.GetComponent<PlayerSaveAgent>().Save();
+                ServerSave.WaitForDisk();
+                Assert.AreEqual(text, ServerSave.ReadAccountFrom(ServerSave.Store, account2).Find(character2).Get("mounts"), "the mounts part saves back byte for byte");
+
+                // 5. the owner's view: never decides, shows the server's boxes and mount, asks for the select and the Ride key
+                var asked = new Asked();
+                GameObject view = Make(NetRoleKind.ClientView, true, new PlayerKey(tag.Key.Value));
+                view.GetComponent<BodyRoleTag>().Requests = asked;
+                yield return null;
+                var viewMounts = view.GetComponent<IBodyMounts>();
+                Type viewType = ((Component)viewMounts).GetType();
+                viewMounts.MirrorBook(1, 500, 0, 0, 0, 0, 0, 0, 0);
+                Assert.IsTrue((bool)viewType.GetMethod("Owns").Invoke(viewMounts, new object[] { 1 }), "the server's boxes on the own view");
+                viewMounts.MirrorShown(1, 2, 60, true);
+                Assert.AreEqual(2, viewMounts.ShownPhase, "the server's ride phase on the own view");
+                Assert.IsTrue((bool)viewType.GetProperty("IsMounted").GetValue(viewMounts));
+                viewMounts.RunMountOp(MountOpKind.Ride, 0);
+                Assert.AreEqual(2, viewMounts.ShownPhase, "a view never runs a request itself");
+                viewType.GetMethod("RequestRide").Invoke(viewMounts, null);
+                viewType.GetMethod("RequestSelect").Invoke(viewMounts, new object[] { 2 });
+                CollectionAssert.AreEqual(new[] { "MountOp Ride 0", "MountOp Select 2" }, asked.Ops, "it asks the server");
+                Assert.AreEqual(0, told.Lines.FindAll(l => l.body == view).Count, "and tells nobody");
+
+                // 6. another player's view keeps the mount and its rider (owner: others see it), from the ghost
+                GameObject remote = Make(NetRoleKind.ClientView, false, new PlayerKey(389));
+                yield return null;
+                var remoteMounts = remote.GetComponent<IBodyMounts>();
+                Assert.IsNotNull(remoteMounts, "another player's view keeps PlayerMounts");
+                Assert.IsNotNull(remote.GetComponent("MountRider"), "and MountRider, which draws the mount");
+                remoteMounts.MirrorShown(1, 2, 100, true);
+                for (int i = 0; i < 5; i++) yield return null;
+                Assert.AreEqual(1, remoteMounts.ShownSelected, "the server's mount on another player's view");
+                Assert.AreEqual(2, remoteMounts.ShownPhase);
+
+                ServerLeaving.Notify(a);
+                a.GetComponent<PlayerSaveAgent>().OnServerLeaving();
+            }
+            finally
+            {
+                OwnerMessages.Current = oldMessages;
+                PlayerKeys.Reset();
+            }
         }
 
         static CharacterRecipe AnyLegalRecipe(CharacterCreationDatabase database)

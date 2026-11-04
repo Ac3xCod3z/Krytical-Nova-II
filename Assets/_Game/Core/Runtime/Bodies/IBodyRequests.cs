@@ -267,5 +267,8 @@ namespace KryticalNova.Core
 
         /// <summary>Asks the server to pass a trick the own pet took on to everyone else (M8 8.4.7, NGO's ShareTrickRpc).</summary>
         void PetTrick(int nameHash);
+
+        /// <summary>Asks the server to select a mount's box, or to get on or off the selected mount (M8 8.4.8, NGO's SelectRpc / RideRpc).</summary>
+        void MountOp(MountOpKind op, int box);
     }
 }

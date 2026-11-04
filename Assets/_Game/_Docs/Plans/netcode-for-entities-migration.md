@@ -1321,3 +1321,15 @@ checkpoints; the owner's Thursday hand-test list; owner questions). NGO rules ta
     requires one): the look from the gear text's Pet slot, growth / fed from PlayerPetTag, tricks and evolutions from PetShownRpc. The
     empty Pack is inert there (EntityRemoteView: no starter kit, never mutates, mirrors, loads, uses or asks; no save agent). B37; B1's
     remote-body check follows the new rule. 8.4.7a + b review approved (master-6, 3 Nov).
+  - [x] 8.4.8 Mounts: NGO's PlayerMounts decides everything on the server body; the `mounts` part is real (SavePassthrough, NGO's
+    JsonUtility text, byte-equal resave in B38) and RegisterMount / FeedMount joined EffectPorted in the same change (refused before: no
+    item was ever lost). Select (Cosmetic) and the Ride key (Move) go from the owner's view as MountOpRpc; NGO's HasAuthority
+    (`!IsSpawned || IsServer`) let a DOTS view ride and drain itself: a view now only shows and asks. The selected mount, ride phase,
+    growth and fed reach every view as the PlayerMountTag ghost field (NGO's MountNetState; remote views keep PlayerMounts + MountRider:
+    others see the mount); the four boxes go to the owner only as MountBookRpc (NGO's owner-read netBook; re-sent until the connection is
+    there); evolutions to every machine (MountEvolvedRpc); toasts to the message line. A DOTS server body has no motor: a jump's flight
+    (IBodyMover.Airborne) takes the rider off and blocks getting on (NGO's motor Jumping). Ride speed reaches MoveStats through the
+    existing refresh. Core IBodyMounts / IMountOwnerLink (Mounts does not use Items). B38 (items used through UseOn, ride + speed, jump
+    off, growth + evolution, feed, save byte-equal, own view asks, remote view keeps the rider). EditMode 24/24, PlayMode B1-B38 39/39.
+    Save note + review: Nova (master-7) as DOTS 13, 3 Nov (dots13-8.4.8-mounts-review-summary.md). Not in it: EXP from kills (M5/M6),
+    the mounted hit proxy (M4), wall-run / vault dismounts beyond the jump flight (their ghost plans: M3c follow-up).

@@ -79,7 +79,7 @@ namespace KryticalNova.Player.Entities.Bodies
         /// <summary>Rule behaviours a remote body keeps because nameplates and targeting read them (the level too: M8 8.3.1, it takes the
         /// server's through <c>PlayerLevelTag</c>), and its equipment: what the player wears is drawn from it (M8 8.1.2b; it takes the server's
         /// gear through the look text, <c>PlayerEquipment.ApplyObserved</c>).</summary>
-        public static readonly string[] RemoteKeepsRules = { "CombatEntity", "FactionExtension", "PlayerEquipment", "PlayerCharacterProgression", "PlayerNova", "PlayerParty", "PlayerCrew", "PlayerEmotes", "PlayerInventory", "PlayerPet" };
+        public static readonly string[] RemoteKeepsRules = { "CombatEntity", "FactionExtension", "PlayerEquipment", "PlayerCharacterProgression", "PlayerNova", "PlayerParty", "PlayerCrew", "PlayerEmotes", "PlayerInventory", "PlayerPet", "PlayerMounts", "MountRider" };
 
         /// <summary>Things every shape keeps.</summary>
         public static readonly string[] Infrastructure =

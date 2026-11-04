@@ -173,6 +173,15 @@ namespace KryticalNova.Player.Entities
         [GhostField] public byte Fed;
     }
 
+    /// <summary>The selected mount's box (0 = none), ride phase, growth percent and fed, for everyone (NGO's MountNetState; M8 8.4.8). Written by the server.</summary>
+    public struct PlayerMountTag : IComponentData
+    {
+        [GhostField] public byte Selected;
+        [GhostField] public byte Phase;
+        [GhostField] public byte Growth;
+        [GhostField] public byte Fed;
+    }
+
     /// <summary>The emote the player shows, for everyone: an empty key = none, the serial goes up on every change (NGO's netState; M8 8.4.6). Written by the server.</summary>
     public struct PlayerEmoteTag : IComponentData
     {
