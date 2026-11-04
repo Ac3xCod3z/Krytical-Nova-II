@@ -3596,6 +3596,49 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
             Assert.IsNotNull(view.GetComponent("PlayerHousing"), "the own view keeps PlayerHousing (its windows ask it)");
         }
 
+        [UnityTest]
+        public IEnumerator B41_EveryPlayersHp_ReachesTheOtherPlayersViews_FromTheGhost_AndOnlyThere()
+        {
+            NetRole.Install(new BodyRoleNetRoleAdapter(null, () => NetRoleKind.ClientView));
+            Assert.AreEqual(12346, VitalsServerSystem.ToMilli(12.3456f), "thousandths, as OwnerFlux");
+            Assert.AreEqual(0, VitalsServerSystem.ToMilli(-3f), "never below 0");
+
+            // another player's view: NGO's client took the server's HP (netStandaloneHealth); a fall to 0 is its Died
+            GameObject remote = Make(NetRoleKind.ClientView, false, new PlayerKey(411));
+            yield return null;
+            var entity = remote.GetComponent<KryticalNova.Progression.CombatEntity>();
+            Assert.IsNotNull(entity, "another player's view keeps CombatEntity (nameplates, targeting)");
+            int changed = 0, died = 0;
+            entity.HealthChanged += () => changed++;
+            entity.Died += () => died++;
+            entity.MirrorHealth(300f, 500f);
+            Assert.AreEqual(300f, entity.CurrentHealth, 1e-3);
+            Assert.AreEqual(500f, entity.MaxHealth, 1e-3);
+            Assert.AreEqual(1, changed, "its nameplate is told");
+            entity.MirrorHealth(300f, 500f);
+            Assert.AreEqual(1, changed, "the same HP again changes nothing");
+            entity.MirrorHealth(0f, 500f);
+            Assert.IsFalse(entity.IsAlive);
+            Assert.AreEqual(1, died, "the fall to 0 is its death");
+
+            // a player already down when this view arrives is no new death
+            GameObject late = Make(NetRoleKind.ClientView, false, new PlayerKey(412));
+            yield return null;
+            var lateEntity = late.GetComponent<KryticalNova.Progression.CombatEntity>();
+            int lateDied = 0;
+            lateEntity.Died += () => lateDied++;
+            lateEntity.MirrorHealth(0f, 500f);
+            Assert.AreEqual(0, lateDied);
+
+            // the own view's HP is its PlayerResources' (OwnerFlux, M3): untouched
+            GameObject own = Make(NetRoleKind.ClientView, true, new PlayerKey(413));
+            yield return null;
+            var ownEntity = own.GetComponent<KryticalNova.Progression.CombatEntity>();
+            float hp = ownEntity.CurrentHealth;
+            ownEntity.MirrorHealth(1f, 2f);
+            Assert.AreEqual(hp, ownEntity.CurrentHealth, 1e-3, "the own view keeps its own");
+        }
+
         static CharacterRecipe AnyLegalRecipe(CharacterCreationDatabase database)
         {
             Assert.IsNotNull(database, "PlayerIdentity has its character database");

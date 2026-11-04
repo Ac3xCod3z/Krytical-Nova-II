@@ -388,6 +388,27 @@ namespace KryticalNova.Progression
         /// <summary>A training dummy: neither a player nor a Hostile. Its health is always infinite.</summary>
         public bool IsStrikeDummy => playerResources == null && !TryGetComponent(out IHostile _);
 
+        /// <summary>
+        /// Another player's view of the entity netcode (M4.2a): the server's HP for them, as NGO's client took netStandaloneHealth. A body with
+        /// PlayerResources (the own view, a server body) keeps its own; a server body or an offline one never takes it.
+        /// </summary>
+        public void MirrorHealth(float current, float max)
+        {
+            if (!initialized) InitializeEntity();
+            if (playerResources != null || KryticalNova.Core.BodyRoleTag.Of(this) is not { Kind: KryticalNova.Core.NetRoleKind.ClientView }) return;
+            float before = standaloneHealth;
+            if (mirrored && Mathf.Approximately(before, current) && Mathf.Approximately(maxHealthOverride, max)) return;
+            bool first = !mirrored;
+            mirrored = true;
+            maxHealthOverride = max;
+            standaloneHealth = current;
+            HealthChanged?.Invoke();
+            // as NGO's OnNetStandaloneHealthChanged; the first copy (a player already down when this view arrived) is no new death
+            if (!first && before > 0f && current <= 0f) Died?.Invoke();
+        }
+
+        private bool mirrored;   // another player's view of the entity netcode has had the server's HP once
+
         public bool SetInfiniteHealth(bool value)
         {
             if (!initialized) InitializeEntity();

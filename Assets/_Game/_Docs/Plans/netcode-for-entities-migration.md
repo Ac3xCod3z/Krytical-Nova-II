@@ -160,8 +160,11 @@ prediction error p95 <= 0.05 m at 60 ms, tick p95 < 15 ms with 102 monsters (fro
     `netcode-for-entities-designs/m4-rules-tables/M4-combat.md`.
   - [x] M4.1b One hostility rule: Factions `HostilityRules.IsHostile` (plain values: factions, both players, same member, duel,
     neutral ground, The Scar, the PvP switch); `CombatHostility` calls it. HostilityRulesTests (all 1 024 cases against a copy of the
-    managed rule + the owner's rules); HostilityCheckTests + FactionRulesTests still green (16/16). Next: Vitals + the Combat Dummy ghost
-    (a second dummy that can die, owner pick).
+    managed rule + the owner's rules); HostilityCheckTests + FactionRulesTests still green (16/16).
+  - [x] M4.2a Public HP: the PlayerVitals ghost field (HP and Max HP in thousandths, as OwnerFlux), written by the server from the body's
+    CombatEntity; another player's view takes it into its CombatEntity (CombatEntity.MirrorHealth = NGO's client netStandaloneHealth; a
+    fall to 0 is its Died, the first copy is no new death); the own view keeps OwnerFlux. B41. PlayMode B1-B41 42/42. Next: M4.2b the
+    Combat Dummy ghost (anchored, Vitals, infinite) + a second dummy that can die (owner pick).
 - [ ] **M5 Monster system prototype (new brain).** Section 6. P0 EditMode sim tests (no netcode), P1 ghost + view, P2 reward bridge.
 - [ ] **M6 Hostiles in full.** All roster species via `MonsterArchetype` from `HostileDefinition` (ids kept), level scaling, zones,
   sleep, respawn, loot/XP through managed reward bridge with ledger rules; nav grids for the zones; bot soak with 102 monsters.

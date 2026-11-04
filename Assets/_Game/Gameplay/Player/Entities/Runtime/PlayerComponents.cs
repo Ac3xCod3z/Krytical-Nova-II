@@ -173,6 +173,13 @@ namespace KryticalNova.Player.Entities
         [GhostField] public byte Fed;
     }
 
+    /// <summary>A player's HP and Max HP in thousandths, for everyone (NGO's PlayerResources netHealth / netMaxHealth; M4.2a). Written by the server.</summary>
+    public struct PlayerVitals : IComponentData
+    {
+        [GhostField] public int HealthMilli;
+        [GhostField] public int MaxHealthMilli;
+    }
+
     /// <summary>The selected mount's box (0 = none), ride phase, growth percent and fed, for everyone (NGO's MountNetState; M8 8.4.8). Written by the server.</summary>
     public struct PlayerMountTag : IComponentData
     {
