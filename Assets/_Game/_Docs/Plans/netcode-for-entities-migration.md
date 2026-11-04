@@ -1296,3 +1296,12 @@ checkpoints; the owner's Thursday hand-test list; owner questions). NGO rules ta
     `sponsor` real (NGO's `{"points":N,"nearSeconds":0.0}`, byte for byte). UI gates that hid ported features on a DOTS view fixed
     (Contacts window, Invite to Squad, Follow, Sponsor window and menu: BodyRoleTag.IsMine). B33; SponsorViewTextTests. Save note + review
     summary to the Master (dots12-8.4.4-sponsor-review-summary.md). Save note + review approved (master-6, 3 Nov).
+  - [ ] 8.4.5 Crew (design netcode-for-entities-designs/m8g4-crew-design.md; HIGH): the twelve requests go from the owner's view as
+    CrewOpRpc (Social limit; a picked player by name) and NGO's CrewService runs unchanged on the server body: founding at a Vaultkeeper
+    (CrewRegistry), level 30, 10,000,000 Creds through PlayerWallet (CrewSink.CrewFounding), the crew.found ledger line and
+    SaveTogether(founder, "crews") in one change; invites, ranks, titles, the announcement, the symbol, leave, expel, hand over, disband;
+    the server body arrives on load and leaves before its save; the window to its owner as Social's view text in pages, the invitation by
+    CrewPromptRpc; the tag everyone reads as the PlayerCrewTag ghost field (remote views keep PlayerCrew: namecards); the Crew chat channel
+    works (ServerSetGuild); the Crew window and /crew open on a DOTS view (BodyRoleTag.IsMine). No player save key. B34; CrewViewTextTests;
+    kill test PASSED on SaveService --test (7802) + service-store 15/15, service stopped. Review summary to the Master
+    (dots12-8.4.5-crew-review-summary.md).

@@ -26,7 +26,7 @@ namespace KryticalNova.Social
         private static bool TryGetMine(out PlayerCrew mine)
         {
             mine = PlayerCrew.Local;
-            return mine != null && mine.IsSpawned;
+            return mine != null && KryticalNova.Core.BodyRoleTag.IsMine(mine, mine.IsSpawned);   // the entity netcode's own view asks (M8 8.4.5)
         }
 
         private static string Invite(string name)

@@ -486,6 +486,22 @@ namespace KryticalNova.Persistence.Entities
             em.AddComponent<SendRpcCommandRequest>(rpc);
         }
 
+        public void CrewOp(CrewOpKind op, string a, string b, byte b0, byte b1, byte b2, byte b3, bool flag)
+        {
+            if (m_World == null || !m_World.IsCreated) return;
+            a ??= string.Empty;
+            b ??= string.Empty;
+            // NGO's TextFits refuses a longer text too (names at most 24, ids 32, titles 12, the announcement 160 characters)
+            if (System.Text.Encoding.UTF8.GetByteCount(a) > FixedString64Bytes.UTF8MaxLengthInBytes || System.Text.Encoding.UTF8.GetByteCount(b) > FixedString512Bytes.UTF8MaxLengthInBytes) return;
+            var em = m_World.EntityManager;
+            Entity rpc = em.CreateEntity();
+            em.AddComponentData(rpc, new CrewOpRpc
+            {
+                Op = (byte)op, Flag = (byte)(flag ? 1 : 0), B0 = b0, B1 = b1, B2 = b2, B3 = b3, A = new FixedString64Bytes(a), B = new FixedString512Bytes(b),
+            });
+            em.AddComponent<SendRpcCommandRequest>(rpc);
+        }
+
         public void SponsorOp(SponsorOpKind op, string a, bool flag)
         {
             if (m_World == null || !m_World.IsCreated) return;

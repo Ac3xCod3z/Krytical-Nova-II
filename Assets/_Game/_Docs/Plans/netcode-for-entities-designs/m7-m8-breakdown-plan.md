@@ -219,7 +219,11 @@ backflips' speed (80 % of the air). Added as M7/M8 systems land (each: what to c
   both windows show the link; hunt near each other: "Your Sponsor is near: +10% kill XP." (kills pay it once M5/M6 land); walk 40 m
   apart: the bonus goes off; relog the Sponsor: the points are kept; end the link from the window. Also open Contacts, the player menu's
   Invite to Squad and Follow on a DOTS client (they were hidden there before 8.4.4).
-- 8.4.x: founding a Crew, an emote and a mount seen from the second client.
+- 8.4.5 (built 3 Nov): at a Vaultkeeper found a Crew as a level-30 character with 10,000,000 Creds (the Creds go once; the Crew window
+  [G] opens with you as Leader); far from her: refused; the second client sees your Crew tag on your namecard; invite them (player menu /
+  /cinvite name), they accept the prompt: /g reaches both; set an officer, a title and the announcement; relog both: the Crew is still
+  there and the announcement shows; leave, then disband.
+- 8.4.x: an emote and a mount seen from the second client.
 The list is kept current in this section as systems land.
 
 Owner follow-ups (found while porting; not DOTS work):

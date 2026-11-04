@@ -1,3 +1,4 @@
+using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.NetCode;
@@ -163,6 +164,18 @@ namespace KryticalNova.Player.Entities
     public struct PlayerPartyTag : IComponentData
     {
         [GhostField] public ulong Id;
+    }
+
+    /// <summary>The player's Crew tag for everyone, an empty name = none (NGO's netTag was read by everyone: the namecards; M8 8.4.5). Written by the server.</summary>
+    public struct PlayerCrewTag : IComponentData
+    {
+        [GhostField] public FixedString32Bytes Crew;
+        [GhostField] public FixedString32Bytes Title;
+        [GhostField] public byte Rank;
+        [GhostField] public byte Symbol;
+        [GhostField] public byte Colour;
+        [GhostField] public byte TagColour;
+        [GhostField] public byte TagBackground;
     }
 
     /// <summary>

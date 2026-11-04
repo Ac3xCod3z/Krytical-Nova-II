@@ -49,6 +49,7 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
         IPartyOwnerLink m_OldParty;
         IFollowOwnerLink m_OldFollow;
         ISponsorOwnerLink m_OldSponsor;
+        ICrewOwnerLink m_OldCrew;
 
         [SetUp]
         public void SetUp()
@@ -66,6 +67,7 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
             m_OldParty = PartyOwnerLink.Current;
             m_OldFollow = FollowOwnerLink.Current;
             m_OldSponsor = SponsorOwnerLink.Current;
+            m_OldCrew = CrewOwnerLink.Current;
             SavePassthrough.ResetToDefault();
         }
 
@@ -84,6 +86,7 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
             PartyOwnerLink.Current = m_OldParty;
             FollowOwnerLink.Current = m_OldFollow;
             SponsorOwnerLink.Current = m_OldSponsor;
+            CrewOwnerLink.Current = m_OldCrew;
             LogAssert.ignoreFailingMessages = false;
         }
 
@@ -471,13 +474,19 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
             public void PartyOp(PartyOpKind op, string name, bool flag) => Ops.Add($"Party {op} {name}|{flag}");
             public void Follow(string memberName) => Ops.Add("Follow " + memberName);
             public void SponsorOp(SponsorOpKind op, string a, bool flag) => Ops.Add($"Sponsor {op} {a}|{flag}");
+            public void CrewOp(CrewOpKind op, string a, string b, byte b0, byte b1, byte b2, byte b3, bool flag) => Ops.Add($"Crew {op} {a}|{b}|{b0} {b1} {b2} {b3} {flag}");
             public void Chat(ChatChannel channel, string text, string whisperTarget, byte[] linkContainers, byte[] linkCells) =>
                 Ops.Add($"Chat {channel} {ChatLinks.Strip(text)}|{whisperTarget}|{linkContainers?.Length ?? 0}");
         }
 
         /// <summary>What the server bodies told their players (the message line) and sent their trade windows (view, notice, prompt).</summary>
-        sealed class Told : IOwnerMessages, ITradeOwnerLink, IKioskOwnerLink, IWorkshopOwnerLink, KryticalNova.Progression.INovaLink, IRestyleOwnerLink, IChatOwnerLink, IContactsOwnerLink, IPartyOwnerLink, IFollowOwnerLink, ISponsorOwnerLink
+        sealed class Told : IOwnerMessages, ITradeOwnerLink, IKioskOwnerLink, IWorkshopOwnerLink, KryticalNova.Progression.INovaLink, IRestyleOwnerLink, IChatOwnerLink, IContactsOwnerLink, IPartyOwnerLink, IFollowOwnerLink, ISponsorOwnerLink, ICrewOwnerLink
         {
+            // Crews (M8 8.4.5): the last window text each body was sent, and its invitations
+            public readonly Dictionary<GameObject, string> LastCrew = new Dictionary<GameObject, string>();
+            void ICrewOwnerLink.View(Component part, string viewText) { LastCrew[Body(part)] = viewText; Lines.Add((Body(part), "crew view")); }
+            public void Prompt(Component part, string inviterName, string crewName, float seconds) => Lines.Add((Body(part), $"crew prompt {inviterName} {crewName}"));
+            void ICrewOwnerLink.ClosePrompt(Component part) => Lines.Add((Body(part), "crew prompt closed"));
             // Sponsors (M8 8.4.4): the last view text, points and bonus each body was sent, and its prompts
             public readonly Dictionary<GameObject, (string text, int points, bool boost)> LastSponsor = new Dictionary<GameObject, (string, int, bool)>();
             public void View(Component part, string viewText, int points, bool boostOn) { LastSponsor[Body(part)] = (viewText, points, boostOn); Lines.Add((Body(part), "sponsor view")); }
@@ -3001,6 +3010,130 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
 
                 agent.OnServerLeaving();
                 foreach (GameObject body in new[] { a, b }) { ServerLeaving.Notify(body); body.GetComponent<PlayerSaveAgent>().OnServerLeaving(); }
+            }
+            finally
+            {
+                OwnerMessages.Current = oldMessages;
+                PlayerKeys.Reset();
+            }
+        }
+
+        [UnityTest]
+        public IEnumerator B34_ACrew_IsFoundedOnTheServerBody_ForItsCredsWithTheLedgerLineSavedTogether_ThenRunByNgosRules_TheTagReachesViews()
+        {
+            NetRole.Install(new BodyRoleNetRoleAdapter(null, () => NetRoleKind.ServerBody));
+            IOwnerMessages oldMessages = OwnerMessages.Current;
+            var told = new Told();
+            OwnerMessages.Current = told;
+            ChatOwnerLink.Current = told;
+            CrewOwnerLink.Current = told;
+            try
+            {
+                PlayerKeys.Reset();
+                const string accA = "34a1000000000000000000000000000a", idA = "c3410000000000000000000000000341", idB = "c3420000000000000000000000000342";
+                GameObject a = Admitted(PlayerKeys.Mint(341).Value, accA, idA, "Talwyn");
+                GameObject b = Admitted(PlayerKeys.Mint(342).Value, "34b1000000000000000000000000000b", idB, "Brannoc");
+                GameObject c = Admitted(PlayerKeys.Mint(343).Value, "34c1000000000000000000000000000c", "c3430000000000000000000000000343", "Corvane");
+                for (int i = 0; i < 30; i++) yield return null;
+                // planned before the run: NGO's founding asks level 30 and 10,000,000 Creds at a Vaultkeeper (CrewRegistry); one faction
+                foreach (GameObject body in new[] { a, c })
+                {
+                    body.GetComponent<PlayerCharacterProgression>().SetLevel(30);
+                    body.GetComponent<KryticalNova.Economy.PlayerWallet>().ServerEarn(10_000_500, KryticalNova.Wallet.CredsSource.Gm);
+                }
+                Assert.AreEqual(a.GetComponent<PlayerIdentity>().Faction, b.GetComponent<PlayerIdentity>().Faction);
+                var wallet = a.GetComponent<KryticalNova.Wallet.IWallet>();
+                var crewA = a.GetComponent<IBodyCrew>();
+                var crewB = b.GetComponent<IBodyCrew>();
+                var crewC = c.GetComponent<IBodyCrew>();
+                Assert.IsNotNull(crewA, "the server body has its Crew");
+
+                // 1. away from a Vaultkeeper: NGO's refusal, nothing paid
+                long creds = wallet.Creds;
+                crewA.RunCrewOp(CrewOpKind.Found, "Ironclad", "", 1, 2, 0, 0, false);
+                Assert.IsTrue(told.Any(a, "tell Crews are registered with a Vaultkeeper."), "NGO's reach: " + string.Join(" | ", told.To(a)));
+                Assert.AreEqual(creds, wallet.Creds, "nothing paid");
+
+                // 2. at the Vaultkeeper: founded for exactly NGO's price, one crew.found line, the founder and the Crews saved together
+                Npc(KryticalNova.NPC.NpcOffer.CrewRegistry, a.transform.position);
+                var store = (MemorySaveStore)ServerSave.Store;
+                ServerSave.WaitForDisk();
+                int batches = store.Batches;
+                int lines = ServerSave.ReadLedger(accA, 0, 100).FindAll(l => l.kind == LedgerKinds.CrewFound).Count;
+                crewA.RunCrewOp(CrewOpKind.Found, "Ironclad", "", 1, 2, 0, 0, false);
+                Assert.IsTrue(told.Any(a, "system You founded the Crew Ironclad"), "founded: " + string.Join(" | ", told.To(a)));
+                Assert.AreEqual(creds - 10_000_000, wallet.Creds, "the founding fee through the wallet (CredsSink.CrewFounding)");
+                ServerSave.WaitForDisk();
+                Assert.AreEqual(lines + 1, ServerSave.ReadLedger(accA, 0, 100).FindAll(l => l.kind == LedgerKinds.CrewFound).Count, "one crew.found ledger line");
+                Assert.Greater(store.Batches, batches, "SaveTogether wrote one batch");
+                bool saved = false;
+                foreach (string key in store.Keys(string.Empty))
+                    if (key.Contains("crews") && store.TryRead(key, out string json) && json.Contains("Ironclad")) saved = true;
+                Assert.IsTrue(saved, "the crews world document holds it: " + string.Join(", ", store.Keys(string.Empty)));
+                Assert.AreEqual("Ironclad", crewA.ShownTag.crew, "A's tag");
+                Assert.AreEqual(2, crewA.ShownTag.rank, "A leads (CrewRank.Leader)");
+                StringAssert.StartsWith("1\tIronclad\t1\t", told.LastCrew[a], "A's window: the Crew and its symbol");
+
+                // 3. the name is taken (any case): C is refused and pays nothing
+                long credsC = c.GetComponent<KryticalNova.Wallet.IWallet>().Creds;
+                crewC.RunCrewOp(CrewOpKind.Found, "ironclad", "", 0, 0, 0, 0, false);
+                Assert.IsTrue(told.Any(c, "tell There is already a Crew called Ironclad."), "NGO's name rule: " + string.Join(" | ", told.To(c)));
+                Assert.AreEqual(credsC, c.GetComponent<KryticalNova.Wallet.IWallet>().Creds, "nothing paid");
+
+                // 4. the Crew channel (chat's Guild reads the Crew name ServerShow set) reaches the Crew only
+                a.GetComponent<IBodyChat>().RunSend(ChatChannel.Guild, "crew talk", "", null, null);
+                Assert.IsTrue(told.Any(a, "line Guild Talwyn: crew talk"), "the Crew channel");
+                Assert.IsFalse(told.Any(b, "line Guild"), "B is not in it yet");
+
+                // 5. invite B by name -> the invitation -> accept: both windows, B's tag
+                crewA.RunCrewOp(CrewOpKind.InviteByName, "Brannoc", "", 0, 0, 0, 0, false);
+                Assert.IsTrue(told.Any(b, "crew prompt Talwyn Ironclad"), "B is invited: " + string.Join(" | ", told.To(b)));
+                crewB.RunCrewOp(CrewOpKind.Respond, "", "", 0, 0, 0, 0, true);
+                Assert.IsTrue(told.Any(b, "crew prompt closed"), "the invitation closes");
+                Assert.AreEqual("Ironclad", crewB.ShownTag.crew, "B is in the Crew");
+                Assert.AreEqual(3, told.LastCrew[a].Split('\n').Length, "A's window: the header and two members");
+
+                // 6. officer, title, announcement (Leader's rights)
+                crewA.RunCrewOp(CrewOpKind.Officer, idB, "", 0, 0, 0, 0, true);
+                Assert.AreEqual(1, crewB.ShownTag.rank, "B is an Officer");
+                crewA.RunCrewOp(CrewOpKind.Title, idB, "Scout", 0, 0, 0, 0, false);
+                Assert.AreEqual("Scout", crewB.ShownTag.title, "B's title");
+                crewA.RunCrewOp(CrewOpKind.Announcement, "", "Muster at dawn", 0, 0, 0, 0, false);
+                StringAssert.EndsWith("\tMuster at dawn", told.LastCrew[b].Split('\n')[0], "the announcement in B's window");
+
+                // 7. the views: the own view asks (exact requests), another player's view shows the tag from the ghost
+                var asked = new Asked();
+                GameObject view = Make(NetRoleKind.ClientView, true, new PlayerKey(a.GetComponent<BodyRoleTag>().Key.Value));
+                GameObject remote = Make(NetRoleKind.ClientView, false, new PlayerKey(b.GetComponent<BodyRoleTag>().Key.Value));
+                view.GetComponent<BodyRoleTag>().Requests = asked;
+                yield return null;
+                var viewPart = (Component)view.GetComponent<IBodyCrew>();
+                Type type = viewPart.GetType();
+                type.GetMethod("Found").Invoke(viewPart, new object[] { "Ashfall", 2, 3, 4, 5 });
+                type.GetMethod("Invite", new[] { typeof(string) }).Invoke(viewPart, new object[] { " Corvane " });
+                type.GetMethod("Respond").Invoke(viewPart, new object[] { true });
+                type.GetMethod("SetTitle").Invoke(viewPart, new object[] { idB, "Scout" });
+                type.GetMethod("SetAnnouncement").Invoke(viewPart, new object[] { "hi" });
+                type.GetMethod("Disband").Invoke(viewPart, null);
+                CollectionAssert.AreEqual(new[] { "Crew Found Ashfall||2 3 4 5 False", "Crew InviteByName Corvane||0 0 0 0 False", "Crew Respond ||0 0 0 0 True",
+                    $"Crew Title {idB}|Scout|0 0 0 0 False", "Crew Announcement |hi|0 0 0 0 False", "Crew Disband ||0 0 0 0 False" }, asked.Ops, "sent to the server");
+                ((IBodyCrew)viewPart).MirrorView(told.LastCrew[a]);
+                Assert.IsTrue((bool)type.GetProperty("InCrew").GetValue(viewPart), "the own view shows the server's Crew");
+                Assert.AreEqual(2, ((System.Collections.ICollection)type.GetProperty("Roster").GetValue(viewPart)).Count, "and its roster");
+                var remoteCrew = remote.GetComponent<IBodyCrew>();
+                Assert.IsNotNull(remoteCrew, "another player's view keeps PlayerCrew (its namecard reads the tag)");
+                remoteCrew.MirrorTag(crewB.ShownTag);
+                Assert.AreEqual("Ironclad", remoteCrew.ShownTag.crew, "the tag from the ghost");
+                Assert.AreEqual("Scout", remoteCrew.ShownTag.title);
+                Assert.AreEqual("Ironclad", CrewTagWire.To(CrewTagWire.From(crewB.ShownTag)).crew, "the ghost field carries it");
+
+                // 8. B leaves the Crew; A disbands it
+                crewB.RunCrewOp(CrewOpKind.Leave, "", "", 0, 0, 0, 0, false);
+                Assert.AreEqual(string.Empty, crewB.ShownTag.crew, "B is out");
+                crewA.RunCrewOp(CrewOpKind.Disband, "", "", 0, 0, 0, 0, false);
+                Assert.AreEqual(string.Empty, crewA.ShownTag.crew, "disbanded");
+
+                foreach (GameObject body in new[] { a, b, c }) { ServerLeaving.Notify(body); body.GetComponent<PlayerSaveAgent>().OnServerLeaving(); }
             }
             finally
             {

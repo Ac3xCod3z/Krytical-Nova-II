@@ -394,7 +394,7 @@ namespace KryticalNova.UI
             titleLabel.text = "CREW";
             countLabel.text = string.Empty;
             CrewSettings settings = crew != null ? crew.Settings : null;
-            bool online = crew != null && crew.IsSpawned;
+            bool online = crew != null && BodyRoleTag.IsMine(crew, crew.IsSpawned);
             SetDisplay(found, atRegistry && online && settings != null);
             if (!online) { noneText.text = "Crews need an online session."; helpLabel.text = string.Empty; return; }
 

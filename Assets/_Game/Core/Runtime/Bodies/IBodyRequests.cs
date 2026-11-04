@@ -1,5 +1,21 @@
 namespace KryticalNova.Core
 {
+    /// <summary>What a Crew request asks the server's body to do (NGO's twelve <c>PlayerCrew</c> RPCs; M8 8.4.5; a picked player goes by name).</summary>
+    public enum CrewOpKind : byte
+    {
+        Found = 1,
+        InviteByName = 2,
+        Respond = 3,
+        Leave = 4,
+        Expel = 5,
+        Officer = 6,
+        HandOver = 7,
+        Title = 8,
+        Announcement = 9,
+        Symbol = 10,
+        Disband = 11,
+    }
+
     /// <summary>What a Sponsor request asks the server's body to do (NGO's <c>PlayerSponsor</c> RPCs; M8 8.4.4; a picked player goes by name).</summary>
     public enum SponsorOpKind : byte
     {
@@ -239,5 +255,11 @@ namespace KryticalNova.Core
 
         /// <summary>Asks the server to run a Sponsor request (M8 8.4.4): ask by name, answer, or end the link with a character id.</summary>
         void SponsorOp(SponsorOpKind op, string a, bool flag);
+
+        /// <summary>
+        /// Asks the server to run a Crew request (M8 8.4.5): <paramref name="a"/> a Crew name, a player's name or a member id;
+        /// <paramref name="b"/> a title or the announcement; <paramref name="b0"/>..<paramref name="b3"/> the symbol and colours.
+        /// </summary>
+        void CrewOp(CrewOpKind op, string a, string b, byte b0, byte b1, byte b2, byte b3, bool flag);
     }
 }
