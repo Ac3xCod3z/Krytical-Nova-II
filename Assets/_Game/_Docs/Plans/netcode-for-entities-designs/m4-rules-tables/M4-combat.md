@@ -400,6 +400,20 @@ Owner->server RPCs: attack 1 + cancel 1 + melee report 1 (deleted) + cast 1 + wa
 8. **Infinite dummy.** The Combat Dummy never dies (owner, 24 Oct). Add a second dummy that can die for the death/respawn test, or test death with a second player?
 9. **Where the PvP switch lives:** a `MapRules` singleton ghost (design) or the existing `PlayerIdentity` field carried to clients; the first is cleaner and is what `ghosts-design.md:469` says. Only a confirmation.
 
+### Decided (4 Nov 2026)
+Owner's picks (multiple choice, all the recommended options):
+1. **One shared formula:** `CombatCalculator` rewritten once as a Burst static used by NGO and DOTS, with a parity (golden table) test.
+2. **Target + nearby arc:** the target, plus other hostiles in front within the weapon's reach on the history world (feels like today).
+3. **The hit lands at the end of the window** (today's guaranteed hit point; no feel change).
+8. **A second Combat Dummy that can die** (limited HP), for death / respawn tests and practice.
+
+Master's calls (Nova, by the recommendations; the owner may overrule):
+4. The shipped prefab swing numbers are the truth (1.411 / 1.30 / 1.126; step 3 window 0.33-0.70; post-combo 0.25 s); the blob is baked from the prefab.
+5. HP / Flux in thousandths, as the shipped `OwnerFlux`.
+6. The server walks the attacker in with the `ServerOrder` walk; the owner's view draws only the first strike on the click (NGO's rule); no client-predicted approach for now.
+7. No i-frames on a jump (rule parity with NGO).
+9. The PvP switch is a `MapRules` singleton ghost (as `ghosts-design.md:469`).
+
 ## 20. What could not be found or is unclear
 
 - **Clip lengths** of the three Katana combo clips (inside the Grruzam FBX): not read, so strike durations in seconds and ticks are unknown here. The bake must read them.
