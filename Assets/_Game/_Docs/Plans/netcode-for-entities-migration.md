@@ -165,6 +165,10 @@ prediction error p95 <= 0.05 m at 60 ms, tick p95 < 15 ms with 102 monsters (fro
     CombatEntity; another player's view takes it into its CombatEntity (CombatEntity.MirrorHealth = NGO's client netStandaloneHealth; a
     fall to 0 is its Died, the first copy is no new death); the own view keeps OwnerFlux. B41. PlayMode B1-B41 42/42. Next: M4.2b the
     Combat Dummy ghost (anchored, Vitals, infinite) + a second dummy that can die (owner pick).
+  - [x] M4.3 PositionHistory ring: server only, never sent; the last 16 server ticks of each player ghost's feet (PositionHistoryWriteSystem,
+    end of every server tick); HitTestAtTick tests an upright capsule (r 0.5, h 2 m, the prefab's) where the attacker saw the target;
+    a claim older than the ring is refused, a future one is now, a tick with no sample cannot be hit. PositionHistoryTests (pure + the
+    server world at 0 and 100 ms). EditMode 44/44, PlayMode 42/42. M4.2b (the dummy ghost: a new ghost prefab + anchor) waits for the owner.
 - [ ] **M5 Monster system prototype (new brain).** Section 6. P0 EditMode sim tests (no netcode), P1 ghost + view, P2 reward bridge.
 - [ ] **M6 Hostiles in full.** All roster species via `MonsterArchetype` from `HostileDefinition` (ids kept), level scaling, zones,
   sleep, respawn, loot/XP through managed reward bridge with ledger rules; nav grids for the zones; bot soak with 102 monsters.

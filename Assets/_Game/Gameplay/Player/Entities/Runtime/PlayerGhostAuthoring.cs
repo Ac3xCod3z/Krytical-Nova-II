@@ -42,6 +42,7 @@ namespace KryticalNova.Player.Entities
                 AddComponent<PlayerPetTag>(e);
                 AddComponent<PlayerMountTag>(e);
                 AddComponent<PlayerVitals>(e);
+                AddComponent<PositionHistory>(e);   // server only, never sent: the lag compensation ring (M4.3)
                 AddComponent(e, new MoveStats { WalkMmps = a.walkMmps, RunMmps = a.runMmps });
                 AddComponent<MoveRanks>(e);
                 AddComponent<VaultPlan>(e);
