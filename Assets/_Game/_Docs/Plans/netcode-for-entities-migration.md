@@ -1311,13 +1311,13 @@ checkpoints; the owner's Thursday hand-test list; owner questions). NGO rules ta
     wall, the water), and a held stance ends when the ghost moves (NGO's OnEmoteEnded); the emote to everyone as the PlayerEmoteTag ghost
     field (remote views keep PlayerEmotes and play it; arriving late only a held stance shows, as NGO). Items IBodyEmotes. B35. Not in it:
     "not striking or casting" (M4 combat). Review approved (master-6, 3 Nov).
-  - [ ] 8.4.7a Pets (server body + own view): NGO's PlayerPet decides hunger and growth on the server body (the state in the worn item's
+  - [x] 8.4.7a Pets (server body + own view): NGO's PlayerPet decides hunger and growth on the server body (the state in the worn item's
     data, the Pack being real); NGO's HasAuthority (`!IsSpawned || IsServer`) let a DOTS view drain hunger and write its own item: a view
     now only shows; growth and fed reach every view as the PlayerPetTag ghost field; evolutions (and later GM animations) go to every
     machine and the owner's tricks to everyone else by PetShownRpc (the owner's game takes the turns, PetTrickRpc at the Cosmetic limit and
     NGO's 1 s pace); the hunger toast goes to the message line. Items IBodyPet / IPetShowLink. B36. Growth from kills waits M5/M6; GM pet
     animations need a follower on the server body (none there).
-  - [ ] 8.4.7b Pets on other players' views (owner pick a, 3 Nov): remote views keep PlayerPet + an empty PlayerInventory (PlayerPet
+  - [x] 8.4.7b Pets on other players' views (owner pick a, 3 Nov): remote views keep PlayerPet + an empty PlayerInventory (PlayerPet
     requires one): the look from the gear text's Pet slot, growth / fed from PlayerPetTag, tricks and evolutions from PetShownRpc. The
     empty Pack is inert there (EntityRemoteView: no starter kit, never mutates, mirrors, loads, uses or asks; no save agent). B37; B1's
-    remote-body check follows the new rule.
+    remote-body check follows the new rule. 8.4.7a + b review approved (master-6, 3 Nov).
