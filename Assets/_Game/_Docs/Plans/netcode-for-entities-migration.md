@@ -1305,9 +1305,9 @@ checkpoints; the owner's Thursday hand-test list; owner questions). NGO rules ta
     works (ServerSetGuild); the Crew window and /crew open on a DOTS view (BodyRoleTag.IsMine). No player save key. B34; CrewViewTextTests;
     kill test PASSED on SaveService --test (7802) + service-store 15/15, service stopped. Review summary to the Master
     (dots12-8.4.5-crew-review-summary.md). Save note + HIGH review approved (master-6, 3 Nov).
-  - [ ] 8.4.6 Emotes: play / stop go from the owner's view as EmoteRpc (Cosmetic limit) and NGO's PlayerEmotes decides on the server body
+  - [x] 8.4.6 Emotes: play / stop go from the owner's view as EmoteRpc (Cosmetic limit) and NGO's PlayerEmotes decides on the server body
     (alive, the wheel's motion for the body, 1 s cooldown, a stop names the held one); NGO's "standing still" reads the animation motor,
     which a DOTS server body strips (every emote would be refused): there it is the ghost (IBodyMover.Busy: walking, a jump or vault, a
     wall, the water), and a held stance ends when the ghost moves (NGO's OnEmoteEnded); the emote to everyone as the PlayerEmoteTag ghost
     field (remote views keep PlayerEmotes and play it; arriving late only a held stance shows, as NGO). Items IBodyEmotes. B35. Not in it:
-    "not striking or casting" (M4 combat).
+    "not striking or casting" (M4 combat). Review approved (master-6, 3 Nov).
