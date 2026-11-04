@@ -138,7 +138,7 @@ namespace KryticalNova.Items
         private void Start()
         {
             // Offline avatar: nobody else will grant the starter kit.
-            if (NetRole.IsUnspawned(this)) GrantStarterLoadout();
+            if (NetRole.IsUnspawned(this) && !EntityRemoteView) GrantStarterLoadout();
         }
 
         private void OnDisable()
@@ -224,6 +224,10 @@ namespace KryticalNova.Items
         // A server body of the entity netcode, read off its tag (the inventory is not IRoleAwareBody yet: NetRole answers Offline for it).
         private bool EntityServerBody => BodyRoleTag.Of(this) is { Kind: NetRoleKind.ServerBody };
 
+        // Another player's view of the entity netcode keeps an empty Pack only because its pet needs one (owner pick 8.4.7b, 3 Nov): it never
+        // grants a starter kit, never changes, never mirrors and never asks anything (NetRole answers Offline for it, so NGO's guards would let it).
+        private bool EntityRemoteView => BodyRoleTag.Of(this) is { Kind: NetRoleKind.ClientView, IsLocal: false };
+
         // The entity netcode's own view body (M8 8.1.2): the server's body runs it; the mirror shows what came of it.
         private bool AskServer(PackOpKind kind, ItemLocation from, ItemLocation to)
         {
@@ -279,6 +283,7 @@ namespace KryticalNova.Items
                 NameChangeAsked?.Invoke(bagIndex);
                 return;
             }
+            if (EntityRemoteView) return;   // another player's view never uses anything
             // the entity netcode's own view body: the server uses it on its body, by the item's id (the two Packs are not the same array)
             if (BodyRoleTag.RequestsOf(this) is IBodyRequests requests)
             {
@@ -727,7 +732,7 @@ namespace KryticalNova.Items
             Mutate((ItemStack[] b, ref EquippedItems l, out string r) => { r = null; Array.Clear(b, 0, b.Length); return true; });
         }
 
-        private bool CanMutate() => NetRole.MayMutate(this);
+        private bool CanMutate() => NetRole.MayMutate(this) && !EntityRemoteView;
 
         // ---------------------------------------------------------------- saving
 

@@ -185,7 +185,9 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
             Assert.IsTrue(mine.GetComponent<PointAndClickPlayer>().ViewMode);
             Assert.IsFalse(ReferenceEquals(PlayerBodies.All, PointAndClickPlayer.Active), "the view mode never replaces the body list");
             Assert.IsNull(theirs.GetComponent<PointAndClickPlayer>());
-            Assert.IsNull(theirs.GetComponent<PlayerInventory>(), "no rule stub on another player's body");
+            // another player's body keeps only an empty, inert Pack for its pet (owner pick 8.4.7b, 3 Nov; B37 proves it never acts)
+            Assert.AreNotSame(theirs.GetComponent<PlayerInventory>(), PlayerInventory.Local, "another player's Pack is never this machine's own");
+            Assert.IsNull(theirs.GetComponent<PlayerSaveAgent>(), "no save agent on another player's body");
             Assert.IsNotNull(theirs.GetComponent<PlayerIdentity>(), "the look and the name card stay");
             AssertAgentsOff(mine);
             CollectionAssert.IsEmpty(LocalStaticsOn(theirs), "no X.Local points at another player's body");
@@ -3323,6 +3325,37 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
                 OwnerMessages.Current = oldMessages;
                 PlayerKeys.Reset();
             }
+        }
+
+        [UnityTest]
+        public IEnumerator B37_AnotherPlayersView_KeepsThePet_FromTheGearTextAndTheGhost_ItsEmptyPackNeverSavesMirrorsOrActs()
+        {
+            NetRole.Install(new BodyRoleNetRoleAdapter(null, () => NetRoleKind.ClientView));
+            GameObject remote = Make(NetRoleKind.ClientView, false, new PlayerKey(371));
+            for (int i = 0; i < 10; i++) yield return null;
+            var pet = remote.GetComponent<IBodyPet>();
+            var inv = remote.GetComponent<PlayerInventory>();
+            Assert.IsNotNull(pet, "another player's view keeps PlayerPet (owner pick 8.4.7b)");
+            Assert.IsNotNull(inv, "and the empty Pack it needs");
+            Assert.IsNull(remote.GetComponent<PlayerSaveAgent>(), "it has no save agent: nothing of it is ever saved");
+            int Held() { int n = 0; for (int i = 0; i < PlayerInventory.Capacity; i++) if (!inv.Get(i).IsEmpty) n++; return n; }
+            Assert.AreEqual(0, Held(), "no starter kit on another player's view");
+            Assert.AreNotSame(inv, PlayerInventory.Local, "never this machine's own Pack");
+
+            // never mirrors, never loads, never changes, never asks
+            inv.MirrorCell(0, new ItemStack { itemId = 9001, count = 3 });
+            ((ISaveParticipant)inv).RestoreSave("{\"pack\":[{\"index\":0,\"stack\":{\"itemId\":9001,\"count\":3,\"data\":0}}]}");
+            inv.ServerGive(9001, 2);
+            inv.UseItem(0);
+            inv.RunPackOp(PackOpKind.Sort, default, default);
+            Assert.AreEqual(0, Held(), "the empty Pack stays empty: " + inv.Get(0).itemId);
+            Assert.IsNull(BodyRoleTag.RequestsOf(inv), "and has nowhere to send a request");
+
+            // the pet: growth and fed from the ghost (PlayerPetTag) on another player's view
+            pet.MirrorShown(70, true);
+            Assert.AreEqual(70, pet.ShownGrowth, "the server's growth");
+            Assert.IsTrue(pet.ShownFed);
+            pet.PlayShown(BodyPetShowKind.Trick, 123);   // a trick passed on: played by the follower (no pet out here: nothing, no error)
         }
 
         static CharacterRecipe AnyLegalRecipe(CharacterCreationDatabase database)

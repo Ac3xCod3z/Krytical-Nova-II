@@ -1316,5 +1316,8 @@ checkpoints; the owner's Thursday hand-test list; owner questions). NGO rules ta
     now only shows; growth and fed reach every view as the PlayerPetTag ghost field; evolutions (and later GM animations) go to every
     machine and the owner's tricks to everyone else by PetShownRpc (the owner's game takes the turns, PetTrickRpc at the Cosmetic limit and
     NGO's 1 s pace); the hunger toast goes to the message line. Items IBodyPet / IPetShowLink. B36. Growth from kills waits M5/M6; GM pet
-    animations need a follower on the server body (none there). 8.4.7b (owner pick a): other players' views keep PlayerPet + an empty
-    PlayerInventory.
+    animations need a follower on the server body (none there).
+  - [ ] 8.4.7b Pets on other players' views (owner pick a, 3 Nov): remote views keep PlayerPet + an empty PlayerInventory (PlayerPet
+    requires one): the look from the gear text's Pet slot, growth / fed from PlayerPetTag, tricks and evolutions from PetShownRpc. The
+    empty Pack is inert there (EntityRemoteView: no starter kit, never mutates, mirrors, loads, uses or asks; no save agent). B37; B1's
+    remote-body check follows the new rule.

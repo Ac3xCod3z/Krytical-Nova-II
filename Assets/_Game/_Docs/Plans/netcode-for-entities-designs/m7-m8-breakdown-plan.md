@@ -226,6 +226,8 @@ backflips' speed (80 % of the air). Added as M7/M8 systems land (each: what to c
 - 8.4.6 (built 3 Nov): two clients: play an emote from the wheel (the second client sees it once), hold a stance (the second client sees
   it held; join with a third client meanwhile: it sees the stance, not old emotes), walk: the stance ends on both; try one while walking:
   "Stand still to do that."
+- 8.4.7 (built 3 Nov): with a pet out, the second client sees your pet (its stage look and glow), its tricks at the same moment as you,
+  and a GM growth jump's evolution on both; let it starve: the toast and the glow goes on both; feed it: back.
 - 8.4.x: a mount seen from the second client.
 The list is kept current in this section as systems land.
 
