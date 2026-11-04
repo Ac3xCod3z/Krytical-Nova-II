@@ -107,5 +107,48 @@ namespace KryticalNova.Player.Entities
                 if (PositionHistoryRules.TryFeetAt(others[i], at, out int3 feet) && InArc(in t, attackerFeetMm, yawCdeg, feet, proxy)) hit.Add(i);
             return true;
         }
+
+        /// <summary>A length in microseconds as whole ticks, rounded up (a strike never ends early).</summary>
+        public static int Ticks(int micros, int tickRate) => (int)(((long)micros * tickRate + 999999) / 1000000);
+
+        /// <summary>The owner's attack order (NGO StartAttackTarget, PlayerMeleeCombat:176): the target, the combo from its start.</summary>
+        public static void Begin(ref CombatState s, int targetGhostId)
+        {
+            if (s.TargetGhostId == targetGhostId && s.Step > 0) return; // the same target again: the combo under way goes on
+            s = new CombatState { TargetGhostId = targetGhostId };
+        }
+
+        /// <summary>The attack ends (NGO CancelAttack, PlayerMeleeCombat:222): no target, no step.</summary>
+        public static void Cancel(ref CombatState s) => s = default;
+
+        /// <summary>
+        /// One tick of NGO's ComboLoopRoutine (PlayerMeleeCombat:249-330): while the target lives, step 0 waits until it is within striking
+        /// range (the walk in is the server's), then strikes 1, 2 and 3 follow each other, each for its whole length; a target that has
+        /// left the reach after a strike is chased (back to step 0, the combo restarts at 1); after strike 3 the post-combo pause, then
+        /// the loop again. A dead or missing target ends the attack.
+        /// </summary>
+        public static void Tick(in MeleeTiming t, ref CombatState s, NetworkTick now, int tickRate, bool targetAlive, bool inStrikingRange, bool leftReach)
+        {
+            if (s.TargetGhostId == 0) return;
+            if (!targetAlive) { Cancel(ref s); return; }
+            if (s.Step > 0)
+            {
+                int length = StrikeMicros(t, s.Step) + (s.Step == 3 ? t.PostComboMicros : 0);
+                if (now.TicksSince(s.StepStartTick) < Ticks(length, tickRate)) return; // the strike (or the pause after 3) is under way
+                if (s.Step == 3 || leftReach) s.Step = 0; // the loop goes round: walk in again if need be, then strike 1
+                else { StartStep(in t, ref s, s.Step + 1, now, tickRate); return; }
+            }
+            if (inStrikingRange) StartStep(in t, ref s, 1, now, tickRate);
+        }
+
+        static void StartStep(in MeleeTiming t, ref CombatState s, int step, NetworkTick now, int tickRate)
+        {
+            s.Step = (byte)step;
+            s.StepStartTick = now;
+            var earliest = now;
+            earliest.Add((uint)Ticks((int)((long)StrikeMicros(t, step) * t.MinCadencePermille / 1000), tickRate));
+            s.NextStepEarliest = earliest;
+            s.SwingHit = 0;
+        }
     }
 }

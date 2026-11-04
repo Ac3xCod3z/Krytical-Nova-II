@@ -181,6 +181,9 @@ prediction error p95 <= 0.05 m at 60 ms, tick p95 < 15 ms with 102 monsters (fro
   - [x] M4.4c Attack data: PlayerInput.AttackGhostId + Attack / StopAttack events (NGO RequestAttackEntityServerRpc /
     RequestCancelAttackServerRpc) and the predicted CombatState (Step, StepStartTick, NextStepEarliest, TargetGhostId; SwingHit server
     only) on every player ghost. EditMode 141/141, PlayMode 42/42. Next: M4.4d PlayerMeleeStateSystem (start/advance on the press).
+  - [x] M4.4d-a The combo loop, pure: MeleeRules.Begin / Cancel / Tick = NGO ComboLoopRoutine (PlayerMeleeCombat:249-330) tick by tick:
+    wait for reach, strikes 1-2-3 each for its whole length, chase a target that left the reach (restart at 1), the 0.25 s pause after 3,
+    end with the target. EditMode 143/143, PlayMode 42/42. Next: M4.4d-b the predicted system that feeds it.
 - [ ] **M5 Monster system prototype (new brain).** Section 6. P0 EditMode sim tests (no netcode), P1 ghost + view, P2 reward bridge.
 - [ ] **M6 Hostiles in full.** All roster species via `MonsterArchetype` from `HostileDefinition` (ids kept), level scaling, zones,
   sleep, respawn, loot/XP through managed reward bridge with ledger rules; nav grids for the zones; bot soak with 102 monsters.

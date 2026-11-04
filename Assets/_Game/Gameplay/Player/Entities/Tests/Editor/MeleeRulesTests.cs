@@ -90,5 +90,66 @@ namespace KryticalNova.Player.Entities.Tests
             Assert.AreEqual(0, hit.Length);
             hit.Dispose();
         }
+
+        [Test]
+        public void TheComboLoop_GoesLikeNgos_StepByStep()
+        {
+            // NGO ComboLoopRoutine: wait for reach, 1 -> 2 -> 3 each for its whole length, the 0.25 s pause, then round again
+            MeleeTiming t = T;
+            const int rate = 30;
+            int s1 = MeleeRules.Ticks(MeleeRules.StrikeMicros(t, 1), rate), s2 = MeleeRules.Ticks(MeleeRules.StrikeMicros(t, 2), rate);
+            int s3p = MeleeRules.Ticks(MeleeRules.StrikeMicros(t, 3) + t.PostComboMicros, rate);
+            Assert.AreEqual(26, s1, "0.850 s at 30 Hz, rounded up");
+            var s = new CombatState();
+            MeleeRules.Begin(ref s, 7);
+            uint now = 100;
+            MeleeRules.Tick(t, ref s, new NetworkTick(now), rate, true, false, false);
+            Assert.AreEqual(0, s.Step, "out of range: the walk in, no swing");
+            MeleeRules.Tick(t, ref s, new NetworkTick(++now), rate, true, true, false);
+            Assert.AreEqual(1, s.Step, "in range: strike 1 at once");
+            Assert.AreEqual(now, s.StepStartTick.TickIndexForValidTick);
+            uint start = now;
+            for (now = start + 1; now < start + (uint)s1; now++)
+            {
+                MeleeRules.Tick(t, ref s, new NetworkTick(now), rate, true, true, false);
+                Assert.AreEqual(1, s.Step, "strike 1 runs its whole length");
+            }
+            MeleeRules.Tick(t, ref s, new NetworkTick(now), rate, true, true, false);
+            Assert.AreEqual(2, s.Step, "then strike 2 straight away");
+            start = now;
+            now = start + (uint)s2;
+            MeleeRules.Tick(t, ref s, new NetworkTick(now), rate, true, true, false);
+            Assert.AreEqual(3, s.Step);
+            start = now;
+            MeleeRules.Tick(t, ref s, new NetworkTick(start + (uint)s3p - 1), rate, true, true, false);
+            Assert.AreEqual(3, s.Step, "strike 3 and the pause after it");
+            MeleeRules.Tick(t, ref s, new NetworkTick(start + (uint)s3p), rate, true, true, false);
+            Assert.AreEqual(1, s.Step, "round again from strike 1");
+            Assert.AreEqual(7, s.TargetGhostId);
+        }
+
+        [Test]
+        public void TheCombo_ChasesATargetThatLeft_AndEndsWithItsTarget()
+        {
+            MeleeTiming t = T;
+            const int rate = 30;
+            var s = new CombatState();
+            MeleeRules.Begin(ref s, 7);
+            MeleeRules.Tick(t, ref s, new NetworkTick(100), rate, true, true, false);
+            uint end1 = 100 + (uint)MeleeRules.Ticks(MeleeRules.StrikeMicros(t, 1), rate);
+            MeleeRules.Tick(t, ref s, new NetworkTick(end1), rate, true, false, true);
+            Assert.AreEqual(0, s.Step, "it walked off after strike 1: chased, no strike 2 from where it stood");
+            Assert.AreEqual(7, s.TargetGhostId, "still the target");
+            MeleeRules.Tick(t, ref s, new NetworkTick(end1 + 5), rate, true, true, false);
+            Assert.AreEqual(1, s.Step, "caught up: the combo restarts at 1");
+
+            MeleeRules.Begin(ref s, 7);
+            Assert.AreEqual(1, s.Step, "the same target again keeps the combo under way");
+            MeleeRules.Tick(t, ref s, new NetworkTick(end1 + 6), rate, false, true, false);
+            Assert.AreEqual(0, s.TargetGhostId, "a dead target ends the attack");
+            MeleeRules.Begin(ref s, 9);
+            MeleeRules.Cancel(ref s);
+            Assert.AreEqual(0, s.TargetGhostId, "cancel ends it");
+        }
     }
 }
