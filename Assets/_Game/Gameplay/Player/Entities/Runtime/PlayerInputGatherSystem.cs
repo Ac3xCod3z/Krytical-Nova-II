@@ -7,7 +7,7 @@ using UnityEngine;
 
 namespace KryticalNova.Player.Entities
 {
-    public enum PlayerCommandKind : byte { None, Click, Stop }
+    public enum PlayerCommandKind : byte { None, Click, Stop, Attack, StopAttack }
 
     /// <summary>What the player asked for this frame, before it becomes a <see cref="PlayerInput"/>.</summary>
     public struct PlayerCommand
@@ -20,6 +20,8 @@ namespace KryticalNova.Player.Entities
         /// <summary>A click on a wall for Wallstride's wall walk (M3c), with the surface's normal in permille.</summary>
         public bool Wall;
         public int3 NormalPermille;
+        /// <summary>The attacked ghost of an <see cref="PlayerCommandKind.Attack"/> (M4.4d).</summary>
+        public int TargetGhostId;
     }
 
     /// <summary>
@@ -49,6 +51,11 @@ namespace KryticalNova.Player.Entities
             m_Queue.Enqueue(new PlayerCommand { Kind = PlayerCommandKind.Click, GoalMm = goalMm, Jump = true });
 
         public void Stop() => m_Queue.Enqueue(new PlayerCommand { Kind = PlayerCommandKind.Stop });
+
+        /// <summary>The second click on a hostile (M4.4d): attack the ghost <paramref name="ghostId"/>.</summary>
+        public void Attack(int ghostId) => m_Queue.Enqueue(new PlayerCommand { Kind = PlayerCommandKind.Attack, TargetGhostId = ghostId });
+
+        public void StopAttack() => m_Queue.Enqueue(new PlayerCommand { Kind = PlayerCommandKind.StopAttack });
 
         public void Clear() => m_Queue.Clear();
 
@@ -111,6 +118,8 @@ namespace KryticalNova.Player.Entities
         // So every input carries the newest click's fields until the next click; the event itself is set only once. The server
         // plans only on a new event, and the walk ignores a seq it already took.
         readonly Dictionary<Entity, PlayerInput> m_LastClick = new Dictionary<Entity, PlayerInput>();
+        // The newest attack's target, carried on every input for the same reason (M4.4d).
+        readonly Dictionary<Entity, int> m_LastAttack = new Dictionary<Entity, int>();
 
         protected override void OnUpdate()
         {
@@ -132,6 +141,13 @@ namespace KryticalNova.Player.Entities
                 {
                     if (cmd.Kind == PlayerCommandKind.Stop)
                         input.Stop.Set();
+                    else if (cmd.Kind == PlayerCommandKind.Attack)
+                    {
+                        input.Attack.Set();
+                        m_LastAttack[e] = cmd.TargetGhostId;
+                    }
+                    else if (cmd.Kind == PlayerCommandKind.StopAttack)
+                        input.StopAttack.Set();
                     else if (cmd.Kind == PlayerCommandKind.Click && WallPlanner != null && (cmd.Wall || OwnerOnWall(em, e)))
                         PlanWallClick(em, e, cmd, ref input);
                     else if (cmd.Kind == PlayerCommandKind.Click && cmd.Jump)
@@ -141,6 +157,7 @@ namespace KryticalNova.Player.Entities
                 }
                 if (input.Click.IsSet) m_LastClick[e] = input;
                 else if (m_LastClick.TryGetValue(e, out var last)) CarryClick(ref input, last);
+                if (m_LastAttack.TryGetValue(e, out int attacked)) input.AttackGhostId = attacked;
                 em.SetComponentData(e, input);
             }
         }

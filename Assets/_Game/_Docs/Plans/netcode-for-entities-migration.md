@@ -184,6 +184,10 @@ prediction error p95 <= 0.05 m at 60 ms, tick p95 < 15 ms with 102 monsters (fro
   - [x] M4.4d-a The combo loop, pure: MeleeRules.Begin / Cancel / Tick = NGO ComboLoopRoutine (PlayerMeleeCombat:249-330) tick by tick:
     wait for reach, strikes 1-2-3 each for its whole length, chase a target that left the reach (restart at 1), the 0.25 s pause after 3,
     end with the target. EditMode 143/143, PlayMode 42/42. Next: M4.4d-b the predicted system that feeds it.
+  - [x] M4.4d-b PlayerMeleeStateSystem (predicted, server + owner): the Attack / StopAttack press (target carried on every input)
+    starts or ends the combo, and each full tick MeleeRules.Tick runs against the target's place with NGO's reach (1.6 m, height
+    slack 1.2 m, chase past +0.5 m). Two-player test: the owner's attack starts strike 1 on both sides, Stop ends it. EditMode
+    144/144, PlayMode 42/42. Next: M4.4e MeleeResolveServerSystem (hit at the window's end; HostilityRules at start and hit).
 - [ ] **M5 Monster system prototype (new brain).** Section 6. P0 EditMode sim tests (no netcode), P1 ghost + view, P2 reward bridge.
 - [ ] **M6 Hostiles in full.** All roster species via `MonsterArchetype` from `HostileDefinition` (ids kept), level scaling, zones,
   sleep, respawn, loot/XP through managed reward bridge with ledger rules; nav grids for the zones; bot soak with 102 monsters.

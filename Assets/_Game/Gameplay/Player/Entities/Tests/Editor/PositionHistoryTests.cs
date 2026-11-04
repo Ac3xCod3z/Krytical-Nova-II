@@ -109,5 +109,31 @@ namespace KryticalNova.Player.Entities.Tests
             Assert.AreEqual(0, server.TargetGhostId);
             Assert.IsFalse(server.StepStartTick.IsValid);
         }
+
+        [Test]
+        public void TheOwnersAttack_StartsTheComboOnBothSides_AndStopEndsIt()
+        {
+            // M4.4d: player 0 attacks player 1 standing 1.2 m away (within NGO's 1.6 m): strike 1 at once, the owner predicting it
+            using var rig = PlayerRig.Create(2, 0, new[] { new int3(0, 0, 0), new int3(0, 0, 1200) });
+            int target = rig.Get<GhostInstance>(rig.Server, rig.ServerGhosts[1]).ghostId;
+            rig.Sources[0].Attack(target);
+            int steps = 0;
+            for (int i = 0; i < 20; i++)
+            {
+                rig.Tick();
+                if (rig.Get<CombatState>(rig.Server, rig.ServerGhosts[0]).Step > 0) steps++;
+            }
+            CombatState server = rig.Get<CombatState>(rig.Server, rig.ServerGhosts[0]);
+            Assert.AreEqual(target, server.TargetGhostId, "the server took the attack order");
+            Assert.Greater(steps, 0, "the combo started on the server");
+            CombatState owner = rig.Get<CombatState>(rig.Clients[0], rig.GhostIn(0, 0));
+            Assert.AreEqual(target, owner.TargetGhostId, "the owner predicts the same target");
+            Assert.Greater(owner.Step, 0, "and a strike under way");
+            Assert.AreEqual(0, rig.Get<CombatState>(rig.Server, rig.ServerGhosts[1]).TargetGhostId, "the target attacks nobody");
+
+            rig.Sources[0].StopAttack();
+            rig.Tick(10);
+            Assert.AreEqual(0, rig.Get<CombatState>(rig.Server, rig.ServerGhosts[0]).TargetGhostId, "stop ends the attack");
+        }
     }
 }

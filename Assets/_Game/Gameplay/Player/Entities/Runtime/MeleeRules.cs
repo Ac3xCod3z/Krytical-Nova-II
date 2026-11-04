@@ -108,6 +108,28 @@ namespace KryticalNova.Player.Entities
             return true;
         }
 
+        /// <summary>NGO ReachHeightSlack (PlayerMeleeCombat:631): height counts once it is more than a slope or a step.</summary>
+        public const int ReachHeightSlackMm = 1200;
+
+        // NGO ReachOffset (PlayerMeleeCombat:625): the way to the target as reach counts it
+        static long ReachSquared(int3 attackerMm, int3 targetMm)
+        {
+            int3 d = targetMm - attackerMm;
+            long y = math.max(0, math.abs(d.y) - ReachHeightSlackMm);
+            return (long)d.x * d.x + (long)d.z * d.z + y * y;
+        }
+
+        /// <summary>NGO IsWithinStrikingRange (PlayerMeleeCombat:607): within the striking range (1.6 m).</summary>
+        public static bool InStrikingRange(in MeleeTiming t, int3 attackerMm, int3 targetMm) =>
+            ReachSquared(attackerMm, targetMm) <= (long)t.ReachMm * t.ReachMm;
+
+        /// <summary>NGO HasLeftReach (PlayerMeleeCombat:614): further than the range plus the combo's reach slack (0.5 m).</summary>
+        public static bool LeftReach(in MeleeTiming t, int3 attackerMm, int3 targetMm)
+        {
+            long reach = t.ReachMm + t.ReachSlackMm;
+            return ReachSquared(attackerMm, targetMm) > reach * reach;
+        }
+
         /// <summary>A length in microseconds as whole ticks, rounded up (a strike never ends early).</summary>
         public static int Ticks(int micros, int tickRate) => (int)(((long)micros * tickRate + 999999) / 1000000);
 

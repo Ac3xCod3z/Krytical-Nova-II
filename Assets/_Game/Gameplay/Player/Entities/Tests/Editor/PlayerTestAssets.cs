@@ -61,6 +61,14 @@ namespace KryticalNova.Player.Entities.Tests
             ghost.SupportedGhostModes = GhostModeMask.All;
             var player = go.AddComponent<PlayerGhostAuthoring>();
             player.traceTicks = TraceTicks;
+            // the shipped ghost's combo clips, the NGO Player prefab's (M4.4d: the combo runs on their lengths)
+            var shipped = AssetDatabase.LoadAssetAtPath<GameObject>(KryticalNova.Player.Entities.Editor.PlayerGhostAssetsBuilder.PrefabPath)?.GetComponent<PlayerGhostAuthoring>();
+            if (shipped != null)
+            {
+                player.combo1Clip = shipped.combo1Clip;
+                player.combo2Clip = shipped.combo2Clip;
+                player.combo3Clip = shipped.combo3Clip;
+            }
             var path = Dir + "/PlayerGhostTest.prefab";
             var prefab = PrefabUtility.SaveAsPrefabAsset(go, path);
             Object.DestroyImmediate(go);
