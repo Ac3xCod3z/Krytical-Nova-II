@@ -154,6 +154,10 @@ prediction error p95 <= 0.05 m at 60 ms, tick p95 < 15 ms with 102 monsters (fro
   kill test and golden ledger on the test DB (review item 13).** `Vitals` ghost; melee = input + server window + Unity Physics history test (spike S5:
   confirm 6.6 API names/history depth); skills as inputs; hit moments from data ticks; HitEvent ring -> `ClientPresentationRegistry`;
   duels/PvP/`CombatHostility` as pure-data function; Combat Dummy as first ghost target.
+  - [x] M4.1a One damage formula (owner pick, 4 Nov): Core `CombatMath` (structs in, `DamageResult` out, Mathf's own max/clamp so it is
+    the managed formula to the bit); `CombatCalculator` calls it. CombatMathTests (hand-worked strikes; 10 000 random strikes against a
+    copy of the managed formula) + CombatCalculatorTests (each stat under its own name). Rules table + owner picks:
+    `netcode-for-entities-designs/m4-rules-tables/M4-combat.md`. Next: the hostility case table, then Vitals + the Combat Dummy ghost.
 - [ ] **M5 Monster system prototype (new brain).** Section 6. P0 EditMode sim tests (no netcode), P1 ghost + view, P2 reward bridge.
 - [ ] **M6 Hostiles in full.** All roster species via `MonsterArchetype` from `HostileDefinition` (ids kept), level scaling, zones,
   sleep, respawn, loot/XP through managed reward bridge with ledger rules; nav grids for the zones; bot soak with 102 monsters.

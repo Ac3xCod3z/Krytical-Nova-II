@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace KryticalNova.Progression
 {
-    /// <summary>Deterministic combat resolution pipeline using designer ScriptableObject tuning.</summary>
+    /// <summary>Deterministic combat resolution pipeline using designer ScriptableObject tuning; the formula itself is <see cref="CombatMath"/>.</summary>
     public static class CombatCalculator
     {
         /// <summary>Calculates a combat strike using live Random rolls.</summary>
@@ -56,81 +56,35 @@ namespace KryticalNova.Progression
             float shatterChance,
             float hitChanceModifier = 0f)
         {
-            DamageResult result = new DamageResult();
-            if (attacker == null || defender == null) return result;
+            if (attacker == null || defender == null) return new DamageResult();
 
             CombatStatTuningData tuning = attacker.TuningData != null ? attacker.TuningData : defender.TuningData;
-            float minHit = tuning != null ? tuning.minimumHitChance : 10f;
-            float maxHit = tuning != null ? tuning.maximumHitChance : 95f;
-            float baseCritMult = tuning != null ? tuning.baseCriticalMultiplier : 1.5f;
-
-            // 1. Hit & Evasion Roll
-            float attackerHit = attacker.GetStatValue(StatType.HitRate);
-            float defenderEvade = defender.GetStatValue(StatType.EvasionRate);
-            float rawHitChance = (attackerHit / Mathf.Max(1f, attackerHit + defenderEvade)) * 100f;
-            // The modifier is in percent points (a Hostile far above the attacker is harder to hit) and never
-            // takes the chance outside the limits.
-            float hitChance = Mathf.Clamp(rawHitChance + hitChanceModifier, minHit, maxHit);
-            result.HitChance = hitChance;
-
-            if (hitRoll > hitChance)
+            CombatTuning limits = tuning != null
+                ? new CombatTuning { MinHitChance = tuning.minimumHitChance, MaxHitChance = tuning.maximumHitChance, BaseCriticalMultiplier = tuning.baseCriticalMultiplier }
+                : CombatTuning.Default;
+            var strike = new CombatStrike
             {
-                result.IsEvaded = true;
-                return result;
-            }
-
-            // 2. Reactive Reflection Roll (Heavenly Repulsion)
-            if (defenderHasReflection && reflectRoll <= reflectionChance)
-            {
-                result.IsReflected = true;
-                result.DamageDealt = 0f;
-                result.ReflectedDamage = attacker.GetStatValue(StatType.AttackPower) * skillMultiplier;
-                return result;
-            }
-
-            // 3. Offensive Shield Shatter Roll (Heavenly Destruction)
-            if (attackerHasShieldShatter && shatterRoll <= shatterChance)
-            {
-                result.ShieldShattered = true;
-            }
-
-            // 4. Physical Attack Calculation
-            float rawAP = attacker.GetStatValue(StatType.AttackPower) * skillMultiplier;
-            float targetDP = defender.GetStatValue(StatType.DefensePower);
-            float physicalDamage = Mathf.Max(1f, rawAP - targetDP);
-            result.RawPhysicalDamage = rawAP;
-            result.MitigatedPhysicalDamage = physicalDamage;
-
-            // 5. Critical Damage Roll. Luck is intentionally excluded: it is a self-buff stat reserved for
-            //    gear enhancement / loot systems and must never influence combat resolution.
-            float critChance = attacker.GetStatValue(StatType.CriticalRate);
-            if (critRoll <= critChance)
-            {
-                result.IsCritical = true;
-                float critBonusMult = baseCritMult + (attacker.GetStatValue(StatType.CriticalDamagePercent) / 100f);
-                // Critical Defense (capes) trims the bonus part of the crit, never the base hit. 0 for everyone without it.
-                float critDefense = Mathf.Clamp(defender.GetStatValue(StatType.CriticalDefensePercent), 0f, 100f);
-                if (critDefense > 0f) critBonusMult = 1f + (Mathf.Max(1f, critBonusMult) - 1f) * (1f - critDefense / 100f);
-                physicalDamage *= critBonusMult;
-
-                // Acupressure Resistance mitigates fatal/critical trauma
-                float stunRes = defender.GetStatValue(StatType.AcupressureStunResistance);
-                if (stunRes > 0f)
-                {
-                    physicalDamage *= Mathf.Max(0.7f, 1f - (stunRes / 100f * 0.5f));
-                }
-
-                result.MitigatedPhysicalDamage = physicalDamage;
-            }
-
-            // 6. Elemental Attack Calculation (Bypasses Physical DP)
-            float eleAttack = attacker.GetStatValue(StatType.ElementalAttack);
-            float eleDefense = defender.GetStatValue(StatType.ElementalDefense);
-            float netElementalDamage = Mathf.Max(0f, eleAttack - eleDefense);
-            result.NetElementalDamage = netElementalDamage;
-
-            result.DamageDealt = physicalDamage + netElementalDamage;
-            return result;
+                SkillMultiplier = skillMultiplier, DefenderHasReflection = defenderHasReflection, ReflectionChance = reflectionChance,
+                AttackerHasShieldShatter = attackerHasShieldShatter, ShatterChance = shatterChance, HitChanceModifier = hitChanceModifier,
+            };
+            var rolls = new CombatRolls { Hit = hitRoll, Reflect = reflectRoll, Crit = critRoll, Shatter = shatterRoll };
+            // The one formula of the game (M4, owner 4 Nov 2026): the entity netcode's server calls the same CombatMath.
+            return CombatMath.Resolve(StatsOf(attacker), StatsOf(defender), limits, strike, rolls);
         }
+
+        /// <summary>The stats a strike reads from one side, as the formula takes them.</summary>
+        public static CombatStatBlock StatsOf(CharacterCombatStats stats) => new CombatStatBlock
+        {
+            AttackPower = stats.GetStatValue(StatType.AttackPower),
+            DefensePower = stats.GetStatValue(StatType.DefensePower),
+            HitRate = stats.GetStatValue(StatType.HitRate),
+            EvasionRate = stats.GetStatValue(StatType.EvasionRate),
+            CriticalRate = stats.GetStatValue(StatType.CriticalRate),
+            CriticalDamagePercent = stats.GetStatValue(StatType.CriticalDamagePercent),
+            CriticalDefensePercent = stats.GetStatValue(StatType.CriticalDefensePercent),
+            ElementalAttack = stats.GetStatValue(StatType.ElementalAttack),
+            ElementalDefense = stats.GetStatValue(StatType.ElementalDefense),
+            StunResistance = stats.GetStatValue(StatType.AcupressureStunResistance),
+        };
     }
 }
