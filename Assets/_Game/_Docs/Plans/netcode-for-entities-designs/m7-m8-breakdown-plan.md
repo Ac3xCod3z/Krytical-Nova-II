@@ -231,6 +231,8 @@ backflips' speed (80 % of the air). Added as M7/M8 systems land (each: what to c
 - 8.4.8 (built 3 Nov): add the Brambleback from its item, select it, press the Ride key: the second client sees you get on and ride,
   faster than on foot; jump: you are off on both; GM growth jump: the evolution on both; let it starve, then Mount Feed; log out and in:
   the mount is still in its box, not ridden.
+- 8.4.10 (built 4 Nov): use a Recall Tag: both clients see the aura, then the arrival in town; try again and walk: it stops on both and
+  the Tag is back in the Pack.
 The list is kept current in this section as systems land.
 
 Owner follow-ups (found while porting; not DOTS work):

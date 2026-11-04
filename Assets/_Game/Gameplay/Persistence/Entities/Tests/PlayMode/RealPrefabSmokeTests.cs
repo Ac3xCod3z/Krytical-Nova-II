@@ -52,6 +52,7 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
         ICrewOwnerLink m_OldCrew;
         IPetShowLink m_OldPet;
         IMountOwnerLink m_OldMount;
+        IRecallShowLink m_OldRecall;
 
         [SetUp]
         public void SetUp()
@@ -72,6 +73,7 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
             m_OldCrew = CrewOwnerLink.Current;
             m_OldPet = PetShowLink.Current;
             m_OldMount = MountOwnerLink.Current;
+            m_OldRecall = RecallShowLink.Current;
             SavePassthrough.ResetToDefault();
         }
 
@@ -93,6 +95,7 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
             CrewOwnerLink.Current = m_OldCrew;
             PetShowLink.Current = m_OldPet;
             MountOwnerLink.Current = m_OldMount;
+            RecallShowLink.Current = m_OldRecall;
             LogAssert.ignoreFailingMessages = false;
         }
 
@@ -491,8 +494,10 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
         }
 
         /// <summary>What the server bodies told their players (the message line) and sent their trade windows (view, notice, prompt).</summary>
-        sealed class Told : IOwnerMessages, ITradeOwnerLink, IKioskOwnerLink, IWorkshopOwnerLink, KryticalNova.Progression.INovaLink, IRestyleOwnerLink, IChatOwnerLink, IContactsOwnerLink, IPartyOwnerLink, IFollowOwnerLink, ISponsorOwnerLink, ICrewOwnerLink, IPetShowLink, IMountOwnerLink
+        sealed class Told : IOwnerMessages, ITradeOwnerLink, IKioskOwnerLink, IWorkshopOwnerLink, KryticalNova.Progression.INovaLink, IRestyleOwnerLink, IChatOwnerLink, IContactsOwnerLink, IPartyOwnerLink, IFollowOwnerLink, ISponsorOwnerLink, ICrewOwnerLink, IPetShowLink, IMountOwnerLink, IRecallShowLink
         {
+            // Recall (M8 8.4.10): "recall show <kind> <seconds>" to every machine
+            public void Show(Component part, RecallShowKind kind, float seconds) => Lines.Add((Body(part), $"recall show {kind} {seconds:0}"));
             public void Show(Component part, BodyPetShowKind kind, int value, bool toOwner) => Lines.Add((Body(part), $"pet show {kind} {value} {toOwner}"));
             // Mounts (M8 8.4.8): "mount book <owned> <xp1> <hunger1>" to its own player, "mount evolved <stage>" to every machine
             bool IMountOwnerLink.Book(Component part, byte owned, uint xp1, uint xp2, uint xp3, uint xp4, uint hunger1, uint hunger2, uint hunger3, uint hunger4)
@@ -2761,7 +2766,8 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
             public int Stops;
             public void MoveTo(Vector3 point, bool run) => Moves.Add(point);
             public void Stop() => Stops++;
-            public void Teleport(Vector3 position, Quaternion rotation) { }
+            public int Teleports;
+            public void Teleport(Vector3 position, Quaternion rotation) => Teleports++;
             public readonly List<Vector3> Jumps = new List<Vector3>();
             public string Refuse;
             public bool JumpTo(Vector3 landing, out string reason) { reason = Refuse; if (Refuse == null) Jumps.Add(landing); return Refuse == null; }
@@ -3492,6 +3498,80 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
             }
             finally
             {
+                OwnerMessages.Current = oldMessages;
+                PlayerKeys.Reset();
+            }
+        }
+
+        [UnityTest]
+        public IEnumerator B39_Recall_RunsOnTheServerBody_TheChannelAndArrivalGoToEveryMachine_AMoveStopsItWithTheTagBack_AndAViewNeverDecides()
+        {
+            NetRole.Install(new BodyRoleNetRoleAdapter(null, () => NetRoleKind.ServerBody));
+            IOwnerMessages oldMessages = OwnerMessages.Current;
+            var told = new Told();
+            OwnerMessages.Current = told;
+            ChatOwnerLink.Current = told;
+            RecallShowLink.Current = told;
+            GameObject town = null;
+            try
+            {
+                PlayerKeys.Reset();
+                GameObject a = Admitted(PlayerKeys.Mint(391).Value, "39a1000000000000000000000000000a", "c3910000000000000000000000000391", "Isolde");
+                for (int i = 0; i < 30; i++) yield return null;
+                // planned before the run: one town spot of this map (a spawn service and point made here, after the admission), the Recall Tag (item 9011)
+                town = new GameObject("B39 town");
+                town.transform.position = new Vector3(40f, 0f, 40f);
+                town.AddComponent<KryticalNova.Networking.PlayerSpawnService>();
+                town.AddComponent<KryticalNova.Networking.PlayerSpawnPoint>();
+                var tag = a.GetComponent<BodyRoleTag>();
+                IBodyMover oldMover = tag.Mover;
+                var mover = new MoverSeen();
+                tag.Mover = mover;
+                var inv = a.GetComponent<PlayerInventory>();
+                int Tags() { int n = 0; for (int i = 0; i < PlayerInventory.Capacity; i++) if (inv.Get(i).itemId == 9011) n += inv.Get(i).count; return n; }
+
+                // 1. used as a click would: the channel to every machine, NGO's line to its player; after the channel, the arrival through the ghost
+                inv.ServerGive(9011, 1);
+                Assert.IsTrue(PlayerRequestServerSystem.UseOn(a, 9011, out RequestReplyRpc reply), "the Recall Tag is used on the server body: " + reply.Text);
+                Assert.AreEqual(0, Tags(), "the Tag is spent");
+                Assert.IsTrue(told.Any(a, "recall show Begun "), "the aura to every machine: " + string.Join(" | ", told.To(a)));
+                Assert.IsTrue(told.Any(a, "tell Recalling to town in "), "NGO's line on the message line");
+                float until = Time.time + 8f;
+                while (!told.Any(a, "recall show Arrived") && Time.time < until) yield return null;
+                Assert.IsTrue(told.Any(a, "recall show Arrived"), "the arrival to every machine: " + string.Join(" | ", told.To(a)));
+                Assert.AreEqual(1, mover.Teleports, "placed on the town spot through its ghost");
+                Assert.IsTrue(told.Any(a, "tell Back in town."));
+
+                // 2. a move stops it: the aura ends and the Tag comes back
+                yield return null;
+                inv.ServerGive(9011, 1);
+                Assert.IsTrue(PlayerRequestServerSystem.UseOn(a, 9011, out reply), "used again: " + reply.Text);
+                yield return null;
+                a.transform.position += new Vector3(2f, 0f, 0f);
+                yield return null;
+                yield return null;
+                Assert.IsTrue(told.Any(a, "recall show Ended"), "the aura ends on every machine");
+                Assert.AreEqual(1, Tags(), "the Tag is back in the Pack");
+                Assert.IsTrue(told.Any(a, "tell ") && told.To(a).Exists(l => l.EndsWith("Your Recall Tag is back in your Pack.")), "and why: " + string.Join(" | ", told.To(a)));
+                Assert.AreEqual(1, mover.Teleports, "no trip");
+                tag.Mover = oldMover;
+
+                // 3. the own view never decides: a use there starts nothing (the Tag is used on its server body)
+                GameObject view = Make(NetRoleKind.ClientView, true, new PlayerKey(tag.Key.Value));
+                yield return null;
+                Component viewRecall = view.GetComponent("PlayerRecall");
+                Assert.IsNotNull(viewRecall, "the own view has PlayerRecall");
+                ((IItemUseHandler)viewRecall).ServerUse(default);
+                Assert.IsFalse((bool)viewRecall.GetType().GetProperty("Recalling").GetValue(viewRecall), "a view never channels itself");
+                Assert.AreEqual(0, told.Lines.FindAll(l => l.body == view).Count, "and tells nobody");
+                RecallShowLink.Play(view.transform, RecallShowKind.Begun, 5f, true);   // a show played on a view: no game feel here, no error
+
+                ServerLeaving.Notify(a);
+                a.GetComponent<PlayerSaveAgent>().OnServerLeaving();
+            }
+            finally
+            {
+                if (town != null) Object.Destroy(town);
                 OwnerMessages.Current = oldMessages;
                 PlayerKeys.Reset();
             }

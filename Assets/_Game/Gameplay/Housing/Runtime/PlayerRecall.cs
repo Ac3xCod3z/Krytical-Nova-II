@@ -39,7 +39,10 @@ namespace KryticalNova.Housing
         private ushort tagItemId;
         private bool hitDuringChannel;
 
-        private bool Decides => !IsSpawned || IsServer;
+        // A client view of the entity netcode never decides (M8 8.4.10): the Tag is used on its server body.
+        private bool Decides => (!IsSpawned || IsServer) && !EntityView;
+        private bool EntityView => KryticalNova.Core.BodyRoleTag.Of(this) is { Kind: KryticalNova.Core.NetRoleKind.ClientView };
+        private bool EntityServer => KryticalNova.Core.BodyRoleTag.Of(this) is { Kind: KryticalNova.Core.NetRoleKind.ServerBody };
         private bool IsLocal => KryticalNova.Core.BodyRoleTag.IsMine(this, !IsSpawned || IsOwner);
 
         /// <summary>True while this character is channelling a Recall (on the machine that decides).</summary>
@@ -143,6 +146,7 @@ namespace KryticalNova.Housing
         private void Present(bool begun, float seconds)
         {
             if (IsSpawned) ChannelRpc(begun, seconds);
+            else if (EntityServer) RecallShowLink.Current?.Show(this, begun ? RecallShowKind.Begun : RecallShowKind.Ended, seconds);   // every machine (M8 8.4.10)
             else ShowChannel(begun, seconds);
         }
 
@@ -160,6 +164,7 @@ namespace KryticalNova.Housing
         private void Arrived()
         {
             if (IsSpawned) ArrivedRpc();
+            else if (EntityServer) RecallShowLink.Current?.Show(this, RecallShowKind.Arrived, 0f);   // every machine (M8 8.4.10)
             else ClientPresentationRegistry.Feel?.Respawned(transform, true);
         }
 
@@ -168,6 +173,7 @@ namespace KryticalNova.Housing
 
         private void Tell(string text)
         {
+            if (EntityServer) { OwnerMessages.TryTell(this, text); return; }   // its player's message line (M8 8.4.10)
             if (IsSpawned && !IsOwner) TellRpc(text);
             else ClientPresentationRegistry.Messages?.ShowMessage(text);
         }

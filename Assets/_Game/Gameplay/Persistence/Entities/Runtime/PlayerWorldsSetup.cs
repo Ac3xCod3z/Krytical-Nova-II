@@ -99,6 +99,7 @@ namespace KryticalNova.Persistence.Entities
             KryticalNova.Items.CrewOwnerLink.Current = new EntityCrewOwnerLink();   // the Crew window and its invitation (M8 8.4.5)
             KryticalNova.Items.PetShowLink.Current = new EntityPetShowLink();   // pet tricks and evolutions to the other machines (M8 8.4.7)
             KryticalNova.Core.MountOwnerLink.Current = new EntityMountOwnerLink();   // the Mount window's boxes and evolutions (M8 8.4.8)
+            KryticalNova.Items.RecallShowLink.Current = new EntityRecallShowLink();   // the Recall aura and arrival to every machine (M8 8.4.10)
             KryticalNova.Items.TradeOwnerLink.Current = new EntityTradeOwnerLink();   // the trade view, notice and prompt (M8 8.2.3)
             KryticalNova.Items.KioskOwnerLink.Current = new EntityKioskOwnerLink();   // the owner's own Kiosk (M7.6)
             KryticalNova.Items.WorkshopOwnerLink.Current = new EntityWorkshopOwnerLink();   // Forge and Fabricator results (M8 8.3.6-7)

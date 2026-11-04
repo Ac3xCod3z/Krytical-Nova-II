@@ -1333,3 +1333,9 @@ checkpoints; the owner's Thursday hand-test list; owner questions). NGO rules ta
     off, growth + evolution, feed, save byte-equal, own view asks, remote view keeps the rider). EditMode 24/24, PlayMode B1-B38 39/39.
     Save note + review: Nova (master-7) as DOTS 13, 3 Nov (dots13-8.4.8-mounts-review-summary.md). Not in it: EXP from kills (M5/M6),
     the mounted hit proxy (M4), wall-run / vault dismounts beyond the jump flight (their ghost plans: M3c follow-up).
+  - [x] 8.4.10 Recall presentation: the server half already ran (the Tag used on the server body, the trip through NetworkPlacement to the
+    ghost); NGO's ChannelRpc / ArrivedRpc were never sent from a DOTS server body (IsSpawned false), so the aura and the arrival now go to
+    every in-game connection as RecallShownRpc (Items IRecallShowLink; RecallShowLink.Play = NGO's ShowChannel / ArrivedRpc bodies on
+    the player's body, IsLocal from the registry) and NGO's lines to the message line. A view never decides (NGO's `!IsSpawned` let it
+    channel itself). B39 (spawn spot planned in the test: Tag used through UseOn, aura, arrival through the ghost, a move stops it with
+    the Tag back, the own view starts nothing). PlayMode B1-B39 40/40. Not in it: hit / fight stops (M4 combat), a Callout (Duel, M4).
