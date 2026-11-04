@@ -25,7 +25,11 @@ namespace KryticalNova.Combat
         [SerializeField] private PlayerAnimancerMotor animancerMotor;
         [SerializeField] private WeaponHitbox weaponHitbox;
 
-        [Header("3-Part Strike Clips")]
+        [Header("Auto-attack per weapon class")]
+        [Tooltip("Each class's own combo (clips, speeds, windows, slash timing, pause). The class in hand picks its set; a class with no complete set uses the clips and numbers below.")]
+        [SerializeField] private AutoAttackSet[] classAutoAttacks = Array.Empty<AutoAttackSet>();
+
+        [Header("3-Part Strike Clips (when the class has no set)")]
         [SerializeField] private AnimationClip combo1Clip;
         [SerializeField] private AnimationClip combo2Clip;
         [SerializeField] private AnimationClip combo3Clip;
@@ -119,7 +123,7 @@ namespace KryticalNova.Combat
 
         public bool IsAttacking => isAttacking;
         public IDamageable CurrentTarget => currentTarget;
-        public float MeleeStrikingRange => meleeStrikingRange;
+        public float MeleeStrikingRange => StrikingRange;
         /// <summary>The pooled effects of a swing and of a hit, for whoever fills the pool before a fight.</summary>
         public GameObject SlashVfxPrefab => slashVfxPrefab;
         public GameObject HitVfxPrefab => hitVfxPrefab;
@@ -137,6 +141,81 @@ namespace KryticalNova.Combat
             wallRunMotor = GetComponent<PlayerWallRunMotor>();
             if (weaponHitbox == null) weaponHitbox = GetComponentInChildren<WeaponHitbox>(true);
             if (animancer == null) animancer = GetComponentInChildren<AnimancerComponent>();
+            classSource = GetComponent<IWeaponClassSource>();
+        }
+
+        // ------------------------------------------------------------------ the class's own auto-attack
+
+        private IWeaponClassSource classSource;
+
+        /// <summary>The combo set of the weapon class in hand, or null when it has none (then the fields on this component count).</summary>
+        public AutoAttackSet ActiveAutoAttack
+        {
+            get
+            {
+                WeaponClassId active = classSource != null ? classSource.ActiveClass : WeaponClassId.None;
+                if (active == WeaponClassId.None || classAutoAttacks == null) return null;
+                foreach (var set in classAutoAttacks)
+                    if (set != null && set.weaponClass == active && set.IsComplete) return set;
+                return null;
+            }
+        }
+
+        private AnimationClip ClipOf(int step)
+        {
+            var set = ActiveAutoAttack;
+            if (set != null) return set.StrikeOf(step).clip;
+            return step == 1 ? combo1Clip : step == 2 ? combo2Clip : combo3Clip;
+        }
+
+        private float SpeedOf(int step)
+        {
+            var set = ActiveAutoAttack;
+            if (set != null) return set.StrikeOf(step).speed;
+            return step == 1 ? strike1Speed : step == 2 ? strike2Speed : strike3Speed;
+        }
+
+        private float SwingStartOf(int step)
+        {
+            var set = ActiveAutoAttack;
+            if (set != null) return set.StrikeOf(step).swingStart;
+            return step == 1 ? swing1Start : step == 2 ? swing2Start : swing3Start;
+        }
+
+        private float SwingEndOf(int step)
+        {
+            var set = ActiveAutoAttack;
+            if (set != null) return set.StrikeOf(step).swingEnd;
+            return step == 1 ? swing1End : step == 2 ? swing2End : swing3End;
+        }
+
+        /// <summary>How close a strike starts from: the class's set, else the striking range below.</summary>
+        private float StrikingRange
+        {
+            get
+            {
+                var set = ActiveAutoAttack;
+                return set != null ? set.attackRange : meleeStrikingRange;
+            }
+        }
+
+        /// <summary>The server's range check on a hit: the class's set, else the validation range below.</summary>
+        private float ServerCheckRange
+        {
+            get
+            {
+                var set = ActiveAutoAttack;
+                return set != null ? set.serverCheckRange : serverMaxValidationRange;
+            }
+        }
+
+        private float PostComboDelay
+        {
+            get
+            {
+                var set = ActiveAutoAttack;
+                return set != null ? set.postComboDelay : postComboDelay;
+            }
         }
 
         // Hits are handled whether or not a network session is running: offline they apply locally,
@@ -300,27 +379,27 @@ namespace KryticalNova.Combat
                 if (animancerMotor != null) animancerMotor.SetAttackingState(true);
 
                 // Strike 1
-                yield return ExecuteStrikeStep(1, combo1Clip, swing1Start, swing1End, strike1Speed);
+                yield return ExecuteStrikeStep(1, ClipOf(1), SwingStartOf(1), SwingEndOf(1), SpeedOf(1));
                 if (currentTarget == null || !currentTarget.IsAlive) break;
                 // A target that walked off is chased, not swung at from where it used to stand.
                 if (HasLeftReach(currentTarget)) continue;
 
                 // Strike 2
                 FaceTarget(currentTarget.Transform.position);
-                yield return ExecuteStrikeStep(2, combo2Clip, swing2Start, swing2End, strike2Speed);
+                yield return ExecuteStrikeStep(2, ClipOf(2), SwingStartOf(2), SwingEndOf(2), SpeedOf(2));
                 if (currentTarget == null || !currentTarget.IsAlive) break;
                 if (HasLeftReach(currentTarget)) continue;
 
                 // Strike 3
                 FaceTarget(currentTarget.Transform.position);
-                yield return ExecuteStrikeStep(3, combo3Clip, swing3Start, swing3End, strike3Speed);
+                yield return ExecuteStrikeStep(3, ClipOf(3), SwingStartOf(3), SwingEndOf(3), SpeedOf(3));
                 if (currentTarget == null || !currentTarget.IsAlive) break;
                 if (HasLeftReach(currentTarget)) continue;
 
                 // Slight delay after the third hit before the combo restarts
-                if (postComboDelay > 0f)
+                if (PostComboDelay > 0f)
                 {
-                    yield return new WaitForSeconds(postComboDelay);
+                    yield return new WaitForSeconds(PostComboDelay);
                 }
             }
 
@@ -435,8 +514,8 @@ namespace KryticalNova.Combat
 
         private float GetStrikeDuration(int step)
         {
-            AnimationClip clip = step == 1 ? combo1Clip : step == 2 ? combo2Clip : combo3Clip;
-            float speed = step == 1 ? strike1Speed : step == 2 ? strike2Speed : strike3Speed;
+            AnimationClip clip = ClipOf(step);
+            float speed = SpeedOf(step);
             return clip != null ? clip.length / Mathf.Max(0.01f, speed) : 0f;
         }
 
@@ -524,8 +603,8 @@ namespace KryticalNova.Combat
         /// <summary>Plays one strike of the combo here, as the server sends it (or as the owner's game shows it first).</summary>
         private void ShowStrike(int step)
         {
-            AnimationClip clip = step == 1 ? combo1Clip : step == 2 ? combo2Clip : combo3Clip;
-            float speed = step == 1 ? strike1Speed : step == 2 ? strike2Speed : strike3Speed;
+            AnimationClip clip = ClipOf(step);
+            float speed = SpeedOf(step);
             if (clip != null && animancer != null)
             {
                 float duration = clip.length / Mathf.Max(0.01f, speed);
@@ -555,7 +634,7 @@ namespace KryticalNova.Combat
             Vector3 lastPosition = transform.position;
             Vector3 stoodAt = lastPosition;
             bool atRest = false;
-            float until = Time.time + duration + (step == 3 ? postComboDelay : 0f) + OwnerStrikeGrace;
+            float until = Time.time + duration + (step == 3 ? PostComboDelay : 0f) + OwnerStrikeGrace;
             while (Time.time < until)
             {
                 yield return null;
@@ -577,7 +656,12 @@ namespace KryticalNova.Combat
             if (animancerMotor != null) animancerMotor.SetAttackingState(false);
         }
 
-        private float GetSlashVfxTime(int step) => step == 1 ? slash1VfxTime : step == 2 ? slash2VfxTime : slash3VfxTime;
+        private float GetSlashVfxTime(int step)
+        {
+            var set = ActiveAutoAttack;
+            if (set != null) return set.StrikeOf(step).slashVfxTime;
+            return step == 1 ? slash1VfxTime : step == 2 ? slash2VfxTime : slash3VfxTime;
+        }
 
         private IEnumerator SpawnSlashVfxDelayed(int step, float delay)
         {
@@ -608,13 +692,13 @@ namespace KryticalNova.Combat
         private bool IsWithinStrikingRange(IDamageable target)
         {
             if (target == null) return false;
-            return ReachOffset(target).sqrMagnitude <= meleeStrikingRange * meleeStrikingRange;
+            return ReachOffset(target).sqrMagnitude <= StrikingRange * StrikingRange;
         }
 
         /// <summary>Mid-combo: the target is now further away than a strike can follow.</summary>
         private bool HasLeftReach(IDamageable target)
         {
-            float reach = meleeStrikingRange + ComboReachSlack;
+            float reach = StrikingRange + ComboReachSlack;
             return ReachOffset(target).sqrMagnitude > reach * reach;
         }
 
@@ -659,7 +743,7 @@ namespace KryticalNova.Combat
             fromTarget.y = 0f;
             if (fromTarget.sqrMagnitude < 0.0001f) return targetPos;
             float stoppingDistance = agent != null ? agent.stoppingDistance : 0f;
-            float ring = Mathf.Max(0.1f, meleeStrikingRange - approachInset - stoppingDistance);
+            float ring = Mathf.Max(0.1f, StrikingRange - approachInset - stoppingDistance);
             return targetPos + fromTarget.normalized * ring;
         }
 
@@ -737,9 +821,9 @@ namespace KryticalNova.Combat
                 return;
             }
             float reach = Vector3.Distance(transform.position, damageable.Transform.position);
-            if (reach > serverMaxValidationRange)
+            if (reach > ServerCheckRange)
             {
-                RpcBudget.Refuse(this, call, $"Reported hitting {damageable.EntityName} {reach:0.0} m away", $"Beyond melee reach ({serverMaxValidationRange:0.0} m)");
+                RpcBudget.Refuse(this, call, $"Reported hitting {damageable.EntityName} {reach:0.0} m away", $"Beyond melee reach ({ServerCheckRange:0.0} m)");
                 return;
             }
 
@@ -757,9 +841,9 @@ namespace KryticalNova.Combat
 
             // Server-authoritative distance anti-cheat validation
             float distance = Vector3.Distance(transform.position, target.Transform.position);
-            if (distance > serverMaxValidationRange)
+            if (distance > ServerCheckRange)
             {
-                OnCombatMessage?.Invoke($"Melee strike rejected: target out of reach ({distance:0.1}m > {serverMaxValidationRange:0.1}m).");
+                OnCombatMessage?.Invoke($"Melee strike rejected: target out of reach ({distance:0.1}m > {ServerCheckRange:0.1}m).");
                 return;
             }
 
