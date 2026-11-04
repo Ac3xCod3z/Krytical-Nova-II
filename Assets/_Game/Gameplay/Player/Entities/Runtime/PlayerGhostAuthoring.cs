@@ -39,6 +39,7 @@ namespace KryticalNova.Player.Entities
                 AddComponent<PlayerPartyTag>(e);
                 AddComponent<PlayerCrewTag>(e);
                 AddComponent<PlayerEmoteTag>(e);
+                AddComponent<PlayerPetTag>(e);
                 AddComponent(e, new MoveStats { WalkMmps = a.walkMmps, RunMmps = a.runMmps });
                 AddComponent<MoveRanks>(e);
                 AddComponent<VaultPlan>(e);

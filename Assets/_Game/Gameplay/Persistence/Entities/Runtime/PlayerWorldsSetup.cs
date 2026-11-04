@@ -97,6 +97,7 @@ namespace KryticalNova.Persistence.Entities
             KryticalNova.Items.FollowOwnerLink.Current = new EntityFollowOwnerLink();   // whom the owner follows (M8 8.4.3b)
             KryticalNova.Items.SponsorOwnerLink.Current = new EntitySponsorOwnerLink();   // the Sponsor window and its prompt (M8 8.4.4)
             KryticalNova.Items.CrewOwnerLink.Current = new EntityCrewOwnerLink();   // the Crew window and its invitation (M8 8.4.5)
+            KryticalNova.Items.PetShowLink.Current = new EntityPetShowLink();   // pet tricks and evolutions to the other machines (M8 8.4.7)
             KryticalNova.Items.TradeOwnerLink.Current = new EntityTradeOwnerLink();   // the trade view, notice and prompt (M8 8.2.3)
             KryticalNova.Items.KioskOwnerLink.Current = new EntityKioskOwnerLink();   // the owner's own Kiosk (M7.6)
             KryticalNova.Items.WorkshopOwnerLink.Current = new EntityWorkshopOwnerLink();   // Forge and Fabricator results (M8 8.3.6-7)

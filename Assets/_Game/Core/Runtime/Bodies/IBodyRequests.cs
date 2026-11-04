@@ -264,5 +264,8 @@ namespace KryticalNova.Core
 
         /// <summary>Asks the server to play, or (<paramref name="stop"/>) end, an emote by its key (M8 8.4.6, NGO's PlayRpc / StopRpc).</summary>
         void Emote(bool stop, string key);
+
+        /// <summary>Asks the server to pass a trick the own pet took on to everyone else (M8 8.4.7, NGO's ShareTrickRpc).</summary>
+        void PetTrick(int nameHash);
     }
 }

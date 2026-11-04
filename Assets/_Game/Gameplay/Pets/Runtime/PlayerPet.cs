@@ -44,7 +44,7 @@ namespace KryticalNova.Pets
     /// </summary>
     [DisallowMultipleComponent]
     [RequireComponent(typeof(PlayerInventory), typeof(PlayerEquipment))]
-    public sealed class PlayerPet : NetworkBehaviour, IItemUseHandler, IPetPresenter
+    public sealed class PlayerPet : NetworkBehaviour, IItemUseHandler, IPetPresenter, IBodyPet
     {
         private const string ReasonNoPet = "You have no pet out to feed.";
         private const string ReasonNotHungry = "Your pet is not hungry.";
@@ -112,7 +112,55 @@ namespace KryticalNova.Pets
         /// <summary>The pet's exact XP and hunger. Known to the owner and where the game is decided; empty elsewhere.</summary>
         public PetItemState State => pet == null ? default : HasAuthority ? state : PetItemState.Of(inventory.GetEquipped(EquipSlot.Pet));
 
-        private bool HasAuthority => !IsSpawned || IsServer;
+        // A client view of the entity netcode only shows what the server decided (M8 8.4.7): NGO's !IsSpawned let it drain hunger itself.
+        private bool HasAuthority => (!IsSpawned || IsServer) && !EntityView;
+        private bool EntityView => KryticalNova.Core.BodyRoleTag.Of(this) is { Kind: KryticalNova.Core.NetRoleKind.ClientView };
+        private bool EntityServer => KryticalNova.Core.BodyRoleTag.Of(this) is { Kind: KryticalNova.Core.NetRoleKind.ServerBody };
+        private KryticalNova.Core.IBodyRequests Requests =>
+            KryticalNova.Core.BodyRoleTag.RequestsOf(this) is KryticalNova.Core.IBodyRequests requests ? requests : null;
+        private PetNetState viewState;   // a view of the entity netcode: the server's growth and fed for this player's pet
+        // What every machine reads of the pet: NGO's netState, or a view's copy of the server's (entity netcode).
+        private PetNetState Replicated => EntityView ? viewState : netState.Value;
+
+        public byte ShownGrowth => EntityView ? viewState.growth : shown.growth;
+        public bool ShownFed => EntityView ? viewState.fed : shown.fed;
+
+        /// <summary>Any view of the entity netcode: the server's growth and fed for this player's pet (NGO's netState change).</summary>
+        public void MirrorShown(byte growth, bool fed)
+        {
+            if (!EntityView) return;
+            var next = new PetNetState { growth = growth, fed = fed };
+            if (next.Equals(viewState)) return;
+            viewState = next;
+            Show(next);
+        }
+
+        /// <summary>A server body of the entity netcode passes on its owner's trick to everyone else (NGO's ShareTrickRpc body).</summary>
+        public void RunTrick(int nameHash)
+        {
+            if (!EntityServer) return;
+            if (Time.unscaledTime < nextSharedTrick) return;
+            nextSharedTrick = Time.unscaledTime + SharedTrickSeconds;
+            KryticalNova.Items.PetShowLink.Current?.Show(this, BodyPetShowKind.Trick, nameHash, false);
+        }
+
+        /// <summary>Any view of the entity netcode: a show the server passed on (NGO's OthersPlayTrickRpc, PlayAnimationRpc, EvolvedRpc).</summary>
+        public void PlayShown(BodyPetShowKind kind, int value)
+        {
+            if (!EntityView) return;
+            if (kind == BodyPetShowKind.Evolved) PresentEvolved(value);
+            else if (follower != null) follower.PlayAnimation(value);
+        }
+
+        // The entity netcode's views: the own view's game takes the turns and asks the server to pass each on; another player's view only
+        // plays what it is told (NGO's OnNetworkSpawn did this for spawned players).
+        private void Start()
+        {
+            if (!EntityView || follower == null) return;
+            bool mine = KryticalNova.Core.BodyRoleTag.IsLocalClientView(this);
+            follower.LeadsTricks = mine;
+            if (mine) follower.TrickPlayed += ShareTrick;
+        }
         private PetTuning Tuning => catalog != null ? catalog.Tuning : PetTuning.Default;
         private PetSettings Settings => catalog != null ? catalog.Settings : null;
 
@@ -192,6 +240,7 @@ namespace KryticalNova.Pets
 
         private void ShareTrick(int nameHash)
         {
+            if (Requests is { } requests) { requests.PetTrick(nameHash); return; }   // the entity netcode's own view (M8 8.4.7)
             if (!IsSpawned || !IsOwner) return;
             if (IsServer) OthersPlayTrickRpc(nameHash);
             else ShareTrickRpc(nameHash);
@@ -265,7 +314,7 @@ namespace KryticalNova.Pets
             decides = HasAuthority;
             if (!decides)
             {
-                Show(netState.Value);
+                Show(Replicated);
                 return;
             }
             ItemStack worn = pet != null ? inventory.GetEquipped(EquipSlot.Pet) : ItemStack.Empty;
@@ -524,6 +573,7 @@ namespace KryticalNova.Pets
             string bonus = StatDisplay.FormatModifier(pet.stat, ModifierType.Flat, PetRules.StatBonus(pet.maxValue, growth, true));
             Notify($"Your {pet.displayName} evolved: {pet.StageName(stage)} ({growth}% growth, {bonus}).", toast: false);
             if (IsSpawned) EvolvedRpc((byte)stage);
+            else if (EntityServer) KryticalNova.Items.PetShowLink.Current?.Show(this, BodyPetShowKind.Evolved, stage, true);   // every machine (M8 8.4.7)
             else PresentEvolved(stage);
         }
 
@@ -551,7 +601,7 @@ namespace KryticalNova.Pets
         /// </summary>
         public bool ServerPlayAnimation(string animationName)
         {
-            if (pet == null || !HasAuthority || follower == null) return false;
+            if (pet == null || !HasAuthority || follower == null) return false;   // (a DOTS server body has no follower: GM animations wait for one)
             IReadOnlyList<string> names = follower.AnimationNames;
             for (int i = 0; i < names.Count; i++)
             {
@@ -611,6 +661,7 @@ namespace KryticalNova.Pets
         {
             if (chat != null) chat.ServerSystem(text);
             if (!toast) return;
+            if (EntityServer) { KryticalNova.Core.OwnerMessages.TryTell(this, text); return; }   // its player's message line (M8 8.4.7)
             if (IsSpawned) ToastRpc(text);
             else ClientPresentationRegistry.Messages?.ShowMessage(text);
         }

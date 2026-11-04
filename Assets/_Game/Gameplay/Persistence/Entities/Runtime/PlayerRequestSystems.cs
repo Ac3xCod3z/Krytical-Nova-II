@@ -486,6 +486,15 @@ namespace KryticalNova.Persistence.Entities
             em.AddComponent<SendRpcCommandRequest>(rpc);
         }
 
+        public void PetTrick(int nameHash)
+        {
+            if (m_World == null || !m_World.IsCreated || nameHash == 0) return;
+            var em = m_World.EntityManager;
+            Entity rpc = em.CreateEntity();
+            em.AddComponentData(rpc, new PetTrickRpc { NameHash = nameHash });
+            em.AddComponent<SendRpcCommandRequest>(rpc);
+        }
+
         public void Emote(bool stop, string key)
         {
             if (m_World == null || !m_World.IsCreated || string.IsNullOrEmpty(key)) return;

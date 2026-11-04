@@ -166,6 +166,13 @@ namespace KryticalNova.Player.Entities
         [GhostField] public ulong Id;
     }
 
+    /// <summary>The pet's growth percent and fed for everyone (NGO's PetNetState, read by everyone; M8 8.4.7). Written by the server.</summary>
+    public struct PlayerPetTag : IComponentData
+    {
+        [GhostField] public byte Growth;
+        [GhostField] public byte Fed;
+    }
+
     /// <summary>The emote the player shows, for everyone: an empty key = none, the serial goes up on every change (NGO's netState; M8 8.4.6). Written by the server.</summary>
     public struct PlayerEmoteTag : IComponentData
     {

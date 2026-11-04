@@ -50,6 +50,7 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
         IFollowOwnerLink m_OldFollow;
         ISponsorOwnerLink m_OldSponsor;
         ICrewOwnerLink m_OldCrew;
+        IPetShowLink m_OldPet;
 
         [SetUp]
         public void SetUp()
@@ -68,6 +69,7 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
             m_OldFollow = FollowOwnerLink.Current;
             m_OldSponsor = SponsorOwnerLink.Current;
             m_OldCrew = CrewOwnerLink.Current;
+            m_OldPet = PetShowLink.Current;
             SavePassthrough.ResetToDefault();
         }
 
@@ -87,6 +89,7 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
             FollowOwnerLink.Current = m_OldFollow;
             SponsorOwnerLink.Current = m_OldSponsor;
             CrewOwnerLink.Current = m_OldCrew;
+            PetShowLink.Current = m_OldPet;
             LogAssert.ignoreFailingMessages = false;
         }
 
@@ -476,13 +479,15 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
             public void SponsorOp(SponsorOpKind op, string a, bool flag) => Ops.Add($"Sponsor {op} {a}|{flag}");
             public void CrewOp(CrewOpKind op, string a, string b, byte b0, byte b1, byte b2, byte b3, bool flag) => Ops.Add($"Crew {op} {a}|{b}|{b0} {b1} {b2} {b3} {flag}");
             public void Emote(bool stop, string key) => Ops.Add($"Emote {stop} {key}");
+            public void PetTrick(int nameHash) => Ops.Add("PetTrick " + nameHash);
             public void Chat(ChatChannel channel, string text, string whisperTarget, byte[] linkContainers, byte[] linkCells) =>
                 Ops.Add($"Chat {channel} {ChatLinks.Strip(text)}|{whisperTarget}|{linkContainers?.Length ?? 0}");
         }
 
         /// <summary>What the server bodies told their players (the message line) and sent their trade windows (view, notice, prompt).</summary>
-        sealed class Told : IOwnerMessages, ITradeOwnerLink, IKioskOwnerLink, IWorkshopOwnerLink, KryticalNova.Progression.INovaLink, IRestyleOwnerLink, IChatOwnerLink, IContactsOwnerLink, IPartyOwnerLink, IFollowOwnerLink, ISponsorOwnerLink, ICrewOwnerLink
+        sealed class Told : IOwnerMessages, ITradeOwnerLink, IKioskOwnerLink, IWorkshopOwnerLink, KryticalNova.Progression.INovaLink, IRestyleOwnerLink, IChatOwnerLink, IContactsOwnerLink, IPartyOwnerLink, IFollowOwnerLink, ISponsorOwnerLink, ICrewOwnerLink, IPetShowLink
         {
+            public void Show(Component part, BodyPetShowKind kind, int value, bool toOwner) => Lines.Add((Body(part), $"pet show {kind} {value} {toOwner}"));
             // Crews (M8 8.4.5): the last window text each body was sent, and its invitations
             public readonly Dictionary<GameObject, string> LastCrew = new Dictionary<GameObject, string>();
             void ICrewOwnerLink.View(Component part, string viewText) { LastCrew[Body(part)] = viewText; Lines.Add((Body(part), "crew view")); }
@@ -3236,6 +3241,86 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
             }
             finally
             {
+                PlayerKeys.Reset();
+            }
+        }
+
+        [UnityTest]
+        public IEnumerator B36_ThePet_IsDecidedOnTheServerBody_ItsStateInTheRealItem_TricksAndEvolutionsArePassedOn_AndTheOwnViewOnlyShows()
+        {
+            NetRole.Install(new BodyRoleNetRoleAdapter(null, () => NetRoleKind.ServerBody));
+            IOwnerMessages oldMessages = OwnerMessages.Current;
+            var told = new Told();
+            OwnerMessages.Current = told;
+            ChatOwnerLink.Current = told;
+            PetShowLink.Current = told;
+            try
+            {
+                PlayerKeys.Reset();
+                GameObject a = Admitted(PlayerKeys.Mint(361).Value, "36a1000000000000000000000000000a", "c3610000000000000000000000000361", "Talwyn");
+                for (int i = 0; i < 30; i++) yield return null;
+                var pet = a.GetComponent<IBodyPet>();
+                Assert.IsNotNull(pet, "the server body has its pet");
+                var part = (Component)pet;
+                Type type = part.GetType();
+
+                // planned before the run: the first pet of the prefab's catalog, given and put out (the Pet slot)
+                object catalog = type.GetProperty("Catalog").GetValue(part);
+                object first = null;
+                foreach (object p in (System.Collections.IEnumerable)catalog.GetType().GetProperty("Pets").GetValue(catalog)) { if (p != null) { first = p; break; } }
+                Assert.IsNotNull(first, "a pet in the catalog");
+                FieldInfo idField = first.GetType().GetField("itemId");
+                ushort petItem = (ushort)(idField != null ? idField.GetValue(first) : first.GetType().GetProperty("itemId").GetValue(first));
+                var inv = a.GetComponent<PlayerInventory>();
+                inv.ServerGive(petItem, 1);
+                int cell = -1;
+                for (int i = 0; i < PlayerInventory.Capacity; i++) if (inv.Get(i).itemId == petItem) { cell = i; break; }
+                inv.RunPackOp(PackOpKind.QuickEquip, ItemLocation.Bag(cell), default);
+                yield return null;
+                Assert.IsNotNull(type.GetProperty("Pet").GetValue(part), "the pet is out on the server body");
+                ulong dataBefore = inv.GetEquipped(EquipSlot.Pet).data;
+
+                // 1. the GM's growth: on the server body, written into the worn (real) item, the evolution passed on to every machine
+                type.GetMethod("ServerSetGrowth").Invoke(part, new object[] { 60f });
+                Assert.AreEqual(60, pet.ShownGrowth, 1, "the server's growth");
+                Assert.AreNotEqual(dataBefore, inv.GetEquipped(EquipSlot.Pet).data, "the pet's state is in the item's data (the Pack is real)");
+                Assert.IsTrue(told.Any(a, "pet show Evolved "), "the evolution goes to every machine: " + string.Join(" | ", told.To(a)));
+                Assert.IsTrue(told.Lines.Exists(l => l.body == a && l.what.StartsWith("pet show Evolved") && l.what.EndsWith("True")), "its own player's too");
+                Assert.IsTrue(told.Any(a, "system Your "), "NGO's evolved line in its chat");
+
+                // 2. hunger: fed goes off on the server body
+                type.GetMethod("ServerSetHunger").Invoke(part, new object[] { 0f });
+                Assert.IsFalse(pet.ShownFed, "starving");
+
+                // 3. a trick the owner's game took goes to everyone else, at NGO's pace (1 s)
+                pet.RunTrick(77);
+                pet.RunTrick(78);
+                Assert.IsTrue(told.Any(a, "pet show Trick 77 False"), "passed on, not to its own player");
+                Assert.IsFalse(told.Any(a, "pet show Trick 78"), "the pace holds");
+                yield return new WaitForSeconds(1.1f);
+                pet.RunTrick(79);
+                Assert.IsTrue(told.Any(a, "pet show Trick 79 False"), "after a second, the next one");
+
+                // 4. the own view: never decides (NGO's !IsSpawned let it drain hunger itself), shows the server's, asks to share its tricks
+                var asked = new Asked();
+                GameObject view = Make(NetRoleKind.ClientView, true, new PlayerKey(a.GetComponent<BodyRoleTag>().Key.Value));
+                view.GetComponent<BodyRoleTag>().Requests = asked;
+                yield return null;
+                var viewPet = view.GetComponent<IBodyPet>();
+                viewPet.MirrorShown(40, true);
+                Assert.AreEqual(40, viewPet.ShownGrowth, "the server's growth on the own view");
+                Assert.IsTrue(viewPet.ShownFed);
+                viewPet.RunTrick(5);
+                Assert.AreEqual(0, told.Lines.FindAll(l => l.body == view).Count, "a view never passes a trick on itself");
+                type.GetMethod("ShareTrick", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(viewPet, new object[] { 55 });
+                CollectionAssert.AreEqual(new[] { "PetTrick 55" }, asked.Ops, "it asks the server");
+
+                ServerLeaving.Notify(a);
+                a.GetComponent<PlayerSaveAgent>().OnServerLeaving();
+            }
+            finally
+            {
+                OwnerMessages.Current = oldMessages;
                 PlayerKeys.Reset();
             }
         }
