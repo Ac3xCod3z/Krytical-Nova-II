@@ -943,6 +943,19 @@ namespace KryticalNova.Progression
         }
 
         /// <summary>
+        /// Another player's view body (M4.5c): their cast, as NGO's TriggerSkillCastClientRpc showed it on every other client: its copy of
+        /// the buff (looks only; the server's numbers count), the cast event and the cast itself, at <paramref name="target"/>.
+        /// </summary>
+        public void ShowCastSeen(string skillId, int rank, Transform target)
+        {
+            var skill = GetSkill(skillId);
+            if (skill == null) return;
+            if (!skill.IsAttack && buffManager != null) buffManager.ApplyBuff(skill, rank);
+            SkillCast?.Invoke(skill);
+            PresentCast(skill, rank, target);
+        }
+
+        /// <summary>
         /// The entity netcode's own view body: the server cast <paramref name="skillId"/> on its body (feel test item 5). This copy shows
         /// it as an NGO client did (<c>TriggerSkillCastClientRpc</c>): the cooldown, its copy of the buff (whose ticks change nothing
         /// here: the HP and Flux are the server's), the line and the cast.

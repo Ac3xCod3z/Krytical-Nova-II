@@ -1083,11 +1083,27 @@ namespace KryticalNova.Persistence.Entities
             if (skills.ServerTryCast(skill, target, out string reason))
             {
                 Used++;
+                RecordCast(body, skillId, (short)skills.GetRank(skill), skill.IsAttack ? targetGhostId : 0);
                 Reply(connection, new RequestReplyRpc { Kind = RequestReplyRpc.SkillCast, SkillId = new FixedString64Bytes(skillId), Rank = (short)skills.GetRank(skill) });
                 return;
             }
             Refused++;
             Reply(connection, new RequestReplyRpc { Kind = RequestReplyRpc.SkillRefused, SkillId = new FixedString64Bytes(skillId), Text = Fit(reason) });
+        }
+
+        // M4.5c: the cast on the caster's ghost for every other client (NGO TriggerSkillCastClientRpc)
+        void RecordCast(GameObject body, string skillId, short rank, int targetGhostId)
+        {
+            EntityManager em = EntityManager;
+            foreach (GhostBodyEntry e in GhostBodyRegistry.Entries)
+            {
+                if (!ReferenceEquals(e.World, World) || e.Body != body || !em.Exists(e.Ghost) || !em.HasBuffer<KryticalNova.Player.Entities.CastEvent>(e.Ghost)) continue;
+                var seq = em.GetComponentData<KryticalNova.Player.Entities.CastEventSeq>(e.Ghost);
+                KryticalNova.Player.Entities.CastEventRing.Append(em.GetBuffer<KryticalNova.Player.Entities.CastEvent>(e.Ghost), ref seq,
+                    new KryticalNova.Player.Entities.CastEvent { SkillId = new FixedString64Bytes(skillId), Rank = rank, TargetGhostId = targetGhostId });
+                em.SetComponentData(e.Ghost, seq);
+                return;
+            }
         }
 
         /// <summary>The server body of the player ghost <paramref name="ghostId"/> in this world, or null.</summary>

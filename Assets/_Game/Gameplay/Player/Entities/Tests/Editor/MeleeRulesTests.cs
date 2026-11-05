@@ -190,5 +190,23 @@ namespace KryticalNova.Player.Entities.Tests
             Assert.AreEqual(1, HitEventRing.Critical);
             Assert.AreEqual(2, HitEventRing.Evaded, "NGO's bits");
         }
+
+        [Test]
+        public void TheCastRing_KeepsTheNewestFour()
+        {
+            // M4.5c: a player's casts for the other clients (NGO TriggerSkillCastClientRpc as data on the ghost)
+            using var world = new Unity.Entities.World("cast ring");
+            var em = world.EntityManager;
+            var e = em.CreateEntity();
+            em.AddBuffer<CastEvent>(e);
+            var seq = new CastEventSeq();
+            for (int i = 1; i <= 6; i++)
+                CastEventRing.Append(em.GetBuffer<CastEvent>(e), ref seq, new CastEvent { SkillId = new Unity.Collections.FixedString64Bytes("skill" + i), Rank = 3 });
+            var ring = em.GetBuffer<CastEvent>(e);
+            Assert.AreEqual(CastEventRing.Capacity, ring.Length);
+            Assert.AreEqual(3u, ring[0].Seq);
+            Assert.AreEqual("skill6", ring[ring.Length - 1].SkillId.ToString());
+            Assert.AreEqual(6u, CastEventRing.Newest(ring));
+        }
     }
 }

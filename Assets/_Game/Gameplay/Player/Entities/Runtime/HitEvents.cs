@@ -47,4 +47,36 @@ namespace KryticalNova.Player.Entities
         /// <summary>The newest number in the ring, 0 when empty: a client meeting a ghost for the first time starts there (no replay).</summary>
         public static uint Newest(DynamicBuffer<HitEvent> ring) => ring.Length > 0 ? ring[ring.Length - 1].Seq : 0;
     }
+
+    /// <summary>A cast the server ran for this player (M4.5c): every other client plays it (NGO TriggerSkillCastClientRpc). Server-written.</summary>
+    [InternalBufferCapacity(CastEventRing.Capacity)]
+    public struct CastEvent : IBufferElementData
+    {
+        [GhostField] public uint Seq;
+        [GhostField] public Unity.Collections.FixedString64Bytes SkillId;
+        [GhostField] public short Rank;
+        /// <summary>The ghost it was cast at, 0 = none (a buff or an area attack).</summary>
+        [GhostField] public int TargetGhostId;
+    }
+
+    /// <summary>The caster's last cast number (server count).</summary>
+    public struct CastEventSeq : IComponentData
+    {
+        public uint Last;
+    }
+
+    /// <summary>The cast ring's rules, as <see cref="HitEventRing"/>'s.</summary>
+    public static class CastEventRing
+    {
+        public const int Capacity = 4;
+
+        public static void Append(DynamicBuffer<CastEvent> ring, ref CastEventSeq seq, CastEvent cast)
+        {
+            cast.Seq = ++seq.Last;
+            if (ring.Length >= Capacity) ring.RemoveAt(0);
+            ring.Add(cast);
+        }
+
+        public static uint Newest(DynamicBuffer<CastEvent> ring) => ring.Length > 0 ? ring[ring.Length - 1].Seq : 0;
+    }
 }

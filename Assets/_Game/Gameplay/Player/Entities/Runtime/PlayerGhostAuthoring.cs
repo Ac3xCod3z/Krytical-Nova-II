@@ -49,6 +49,8 @@ namespace KryticalNova.Player.Entities
                 AddComponent<CombatState>(e);       // the basic attack under way, predicted (M4.4c)
                 AddBuffer<HitEvent>(e);             // the attacker's landed hits, for every client's presentation (M4.4h)
                 AddComponent<HitEventSeq>(e);
+                AddBuffer<CastEvent>(e);            // the player's casts, for the other clients (M4.5c)
+                AddComponent<CastEventSeq>(e);
                 // M4.4b: the strike lengths come from the clips themselves, as NGO's GetStrikeDuration reads clip.length
                 DependsOn(a.combo1Clip);
                 DependsOn(a.combo2Clip);
