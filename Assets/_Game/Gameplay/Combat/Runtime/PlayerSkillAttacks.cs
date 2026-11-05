@@ -22,7 +22,6 @@ namespace KryticalNova.Combat
     public sealed class PlayerSkillAttacks : NetworkBehaviour, ISkillAttackExecutor
     {
         private const int SkillComboStep = 3; // skills hit with the finisher's impact feel
-        private const int MaxAreaColliders = 64;
         private const float ChargeHandoffSeconds = 0.75f;
         private const float ChannelCrossFade = 0.25f;
         private const float LiftSettleSpeed = 4f; // m/s the body returns to the ground if a cast ends off it
@@ -41,7 +40,8 @@ namespace KryticalNova.Combat
         [SerializeField, Min(1f)] private float impactRangeLeniency = 1.5f;
         [SerializeField] private LayerMask areaTargetLayers = ~0;
 
-        private static readonly Collider[] AreaColliders = new Collider[MaxAreaColliders];
+        // Grows when a crowd fills it (AreaOverlap): an area skill hits every target in range, no cap.
+        private static Collider[] areaColliders = new Collider[64];
         private readonly List<IDamageable> areaTargets = new List<IDamageable>();
         private readonly HashSet<Transform> areaSeen = new HashSet<Transform>();
 
@@ -274,11 +274,10 @@ namespace KryticalNova.Combat
         {
             areaTargets.Clear();
             areaSeen.Clear();
-            int count = Physics.OverlapSphereNonAlloc(transform.position, radius, AreaColliders, areaTargetLayers,
-                QueryTriggerInteraction.Collide);
+            int count = AreaOverlap.All(transform.position, radius, areaTargetLayers, QueryTriggerInteraction.Collide, ref areaColliders);
             for (int i = 0; i < count; i++)
             {
-                var victim = AreaColliders[i].GetComponentInParent<IDamageable>();
+                var victim = areaColliders[i].GetComponentInParent<IDamageable>();
                 if (victim == null || !victim.IsAlive || !areaSeen.Add(victim.Transform)) continue;
                 if (CombatHostility.IsHostile(transform, victim)) areaTargets.Add(victim);
             }

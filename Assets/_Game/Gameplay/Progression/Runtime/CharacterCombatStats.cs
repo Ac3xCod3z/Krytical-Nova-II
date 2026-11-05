@@ -167,7 +167,12 @@ namespace KryticalNova.Progression
         #endregion
 
         #region Calculated Stat Accessors
-        public float GetStatValue(StatType stat)
+        public float GetStatValue(StatType stat) => StatValue(stat, withBuffs: true);
+
+        /// <summary>The stat from everything but running buffs (gear, pets, mounts, titles...).</summary>
+        public float GetStatValueWithoutBuffs(StatType stat) => StatValue(stat, withBuffs: false);
+
+        private float StatValue(StatType stat, bool withBuffs)
         {
             float baseValue = GetBaseStatValue(stat);
             float flatSum = 0f;
@@ -177,7 +182,7 @@ namespace KryticalNova.Progression
             for (int i = 0; i < modifiers.Count; i++)
             {
                 var mod = modifiers[i];
-                if (mod.Stat != stat) continue;
+                if (mod.Stat != stat || (!withBuffs && mod.Source is ActiveBuff)) continue;
 
                 if (mod.ModType == ModifierType.Flat)
                     flatSum += mod.Value;

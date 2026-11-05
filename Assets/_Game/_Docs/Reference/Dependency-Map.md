@@ -20,7 +20,7 @@ script, which is then published to the link above. `--baseline` saves today's up
 ## Today
 
 <!-- map:summary -->
-Generated 30 Oct 2026, 07:38: 722 runtime scripts (135,683 lines) declaring 1020 types (186 MonoBehaviours, 65 NetworkBehaviours, 101 ScriptableObject classes); 133 test scripts; 4722 prefabs, 46 scenes and 2748 assets read. 206 system-to-system links, of which 0 run uphill, 0 pairs of systems use each other both ways, and 0 links would have to go for the systems to form a clean stack. The largest tangle, classes that all reach each other through some chain of uses, holds 10 classes from 1 systems (UI 10, ...).
+Generated 05 Nov 2026, 16:21: 724 runtime scripts (135,796 lines) declaring 1023 types (186 MonoBehaviours, 65 NetworkBehaviours, 101 ScriptableObject classes); 139 test scripts; 4723 prefabs, 46 scenes and 2748 assets read. 206 system-to-system links, of which 0 run uphill, 0 pairs of systems use each other both ways, and 0 links would have to go for the systems to form a clean stack. The largest tangle, classes that all reach each other through some chain of uses, holds 10 classes from 1 systems (UI 10, ...).
 <!-- /map:summary -->
 
 **Checked against the compiler.**
@@ -65,7 +65,7 @@ Checked against the 211 references the assemblies declare between systems: every
 | System | Layer | Scripts | Lines | Uses (types) | Used by (types) | Instability | Tests | Types touched by a test |
 |---|---|---|---|---|---|---|---|---|
 | Core | Foundation | 54 | 4,405 | 0 | 238 | 0.0 | 7 | 24 of 43 |
-| Networking | Infrastructure | 47 | 8,233 | 20 | 93 | 0.18 | 9 | 31 of 60 |
+| Networking | Infrastructure | 47 | 8,233 | 20 | 93 | 0.18 | 9 | 32 of 60 |
 | Rendering | Infrastructure | 17 | 3,589 | 3 | 28 | 0.1 | 1 | 2 of 21 |
 | Environment | Simulation | 6 | 834 | 0 | 2 | 0.0 | 0 | 0 of 6 |
 | Gameplay/Autopilot | Simulation | 11 | 1,423 | 41 | 13 | 0.76 | 3 | 6 of 12 |
@@ -78,20 +78,20 @@ Checked against the 211 references the assemblies declare between systems: every
 | Gameplay/Hostiles | Simulation | 23 | 2,870 | 41 | 29 | 0.59 | 4 | 10 of 23 |
 | Gameplay/Pets | Simulation | 12 | 1,445 | 33 | 32 | 0.51 | 4 | 13 of 19 |
 | Gameplay/Social | Simulation | 39 | 5,805 | 52 | 49 | 0.51 | 9 | 23 of 52 |
-| Gameplay/Combat | Simulation | 13 | 3,362 | 44 | 27 | 0.62 | 4 | 5 of 14 |
+| Gameplay/Combat | Simulation | 14 | 3,385 | 44 | 27 | 0.62 | 5 | 6 of 15 |
 | Gameplay/Persistence | Simulation | 10 | 3,161 | 63 | 14 | 0.82 | 14 | 7 of 14 |
-| Gameplay/Player | Simulation | 25 | 10,686 | 64 | 48 | 0.57 | 4 | 11 of 28 |
+| Gameplay/Player | Simulation | 26 | 10,745 | 64 | 48 | 0.57 | 5 | 13 of 30 |
 | Gameplay/CharacterCreation | Simulation | 26 | 3,173 | 27 | 76 | 0.26 | 10 | 25 of 29 |
 | Gameplay/Items | Simulation | 66 | 11,859 | 48 | 182 | 0.21 | 13 | 41 of 88 |
 | World | Simulation | 37 | 6,379 | 16 | 41 | 0.28 | 2 | 9 of 43 |
-| Gameplay/Progression | Simulation | 46 | 8,125 | 25 | 207 | 0.11 | 6 | 27 of 58 |
+| Gameplay/Progression | Simulation | 46 | 8,156 | 25 | 207 | 0.11 | 6 | 27 of 58 |
 | Gameplay/Wallet | Simulation | 3 | 132 | 0 | 18 | 0.0 | 0 | 2 of 2 |
 | Gameplay/NPC | Simulation | 3 | 290 | 5 | 17 | 0.23 | 1 | 1 of 4 |
 | Gameplay/Factions | Simulation | 6 | 169 | 0 | 25 | 0.0 | 0 | 1 of 3 |
 | GameFeel | Presentation | 30 | 5,526 | 54 | 2 | 0.96 | 4 | 17 of 38 |
 | UI | Presentation | 143 | 36,815 | 325 | 5 | 0.98 | 17 | 32 of 148 |
 | Audio | Presentation | 14 | 1,223 | 6 | 16 | 0.27 | 1 | 1 of 15 |
-| Tools | Tooling | 31 | 5,406 | 198 | 0 | 1.0 | 3 | 0 of 34 |
+| Tools | Tooling | 31 | 5,406 | 198 | 0 | 1.0 | 7 | 0 of 34 |
 <!-- /map:systems -->
 
 ## Links running uphill
@@ -131,12 +131,12 @@ Each row is the cheaper side of a loop: cut these references and the two systems
 | PlayerCharacterProgression | Gameplay/Progression | net | 28 | 12 | 239 | 0 | 41 |
 | StatType | Gameplay/Progression | enum | 27 | 8 | 329 | 7 | 0 |
 | CombatEntity | Gameplay/Progression | net | 27 | 11 | 196 | 0 | 13 |
-| WeaponClassId | Gameplay/Progression | enum | 26 | 8 | 308 | 8 | 0 |
+| WeaponClassId | Gameplay/Progression | enum | 26 | 8 | 329 | 8 | 0 |
 | CharacterRecipe | Gameplay/CharacterCreation | plain | 24 | 7 | 221 | 7 | 0 |
 | NpcOffer | Gameplay/NPC | enum | 24 | 9 | 211 | 1 | 0 |
 | HudTyping | UI | plain | 24 | 1 | 32 | 0 | 0 |
 | SaveScope | Core | enum | 23 | 10 | 243 | 0 | 0 |
-| SkillDefinitionSO | Gameplay/Progression | so | 22 | 8 | 213 | 7 | 0 |
+| SkillDefinitionSO | Gameplay/Progression | so | 22 | 8 | 248 | 7 | 0 |
 | KeyBindings | Core | plain | 22 | 4 | 176 | 2 | 0 |
 | ISaveParticipant | Core | interface | 21 | 10 | 242 | 0 | 0 |
 | ItemCatalog | Gameplay/Items | so | 21 | 8 | 217 | 7 | 0 |
@@ -196,7 +196,7 @@ Classes over 700 lines. Several of them also reach into three or more other syst
 | NetworkConnectionManager | Networking | 937 | Core | 15 |
 | CharacterCreatorController | UI | 935 | Gameplay/CharacterCreation, Gameplay/Factions, Gameplay/Items, Gameplay/Progression | 0 |
 | GmCommands | Tools | 910 | Core, Gameplay/Combat, Gameplay/Factions, Gameplay/Items, Gameplay/Player, Gameplay/Progression, Gameplay/Social, Networking, World | 0 |
-| PlayerJumpMotor | Gameplay/Player | 844 | Gameplay/Progression, Networking | 7 |
+| PlayerJumpMotor | Gameplay/Player | 846 | Gameplay/Progression, Networking | 7 |
 | CharacterSelectController | UI | 840 | Gameplay/CharacterCreation, Networking | 0 |
 | PlayerInventory | Gameplay/Items | 798 | Core, Gameplay/Factions, Gameplay/Progression, Networking | 74 |
 | PlayerVaultMotor | Gameplay/Player | 731 | Core, Gameplay/CharacterCreation, Gameplay/Factions, Gameplay/Progression, Networking | 3 |
@@ -315,7 +315,7 @@ Each ScriptableObject class, how many assets of it exist, and where they are wir
 Where tuning still lives in code, and other links the compiler cannot see:
 
 <!-- map:smells -->
-- **Gameplay numbers fixed in code:** 347 in 108 files. Most: `Gameplay/Crafting/Data/CraftingSettings.cs` (28), `Gameplay/Player/Runtime/PlayerWallRunMotor.cs` (17), `Gameplay/Player/Runtime/PlayerVaultMotor.cs` (15), `Gameplay/Player/Runtime/PointAndClickPlayer.cs` (15), `Gameplay/Items/Data/GearProgressionSettings.cs` (13), `Gameplay/Items/Runtime/WeaponPaintRules.cs` (11), `Gameplay/Player/Runtime/PlayerJumpMotor.cs` (10), `Gameplay/Player/Runtime/PlayerWallRunMotor.WallWalk.cs` (10).
+- **Gameplay numbers fixed in code:** 346 in 109 files. Most: `Gameplay/Crafting/Data/CraftingSettings.cs` (28), `Gameplay/Player/Runtime/PlayerWallRunMotor.cs` (17), `Gameplay/Player/Runtime/PlayerVaultMotor.cs` (15), `Gameplay/Player/Runtime/PointAndClickPlayer.cs` (15), `Gameplay/Items/Data/GearProgressionSettings.cs` (13), `Gameplay/Items/Runtime/WeaponPaintRules.cs` (11), `Gameplay/Player/Runtime/PlayerJumpMotor.cs` (10), `Gameplay/Player/Runtime/PlayerWallRunMotor.WallWalk.cs` (10).
 - **Settings fallbacks** (`settings != null ? settings.x : 8`): 96.
 - **Runtime writes to shared assets** (ScriptableObject or pipeline fields): 25 — `Rendering/Runtime/PipelineRebuilds.cs:60`, `Rendering/Runtime/PipelineRebuilds.cs:68`, `Rendering/Runtime/PipelineRebuilds.cs:104`, `Rendering/Runtime/PipelineRebuilds.cs:105`, `UI/Runtime/Settings/GraphicsSettingsApplier.cs:142`, `UI/Runtime/Settings/GraphicsSettingsApplier.cs:143`, `UI/Runtime/Settings/GraphicsSettingsApplier.cs:144`, `UI/Runtime/Settings/GraphicsSettingsApplier.cs:145`.
 - **Lookups by name** (Type.GetType, Find("..."), Resources.Load, SendMessage): 20.
@@ -345,7 +345,7 @@ first. The page lists the file and line behind each.
 | 11 | Hub | PlayerCadence.LocalPress (event) | Gameplay/Combat, GameFeel, UI | 3 | 2 | small |
 | 12 | Hub | RosterLink.NetworkPrefab (state) | Networking, Tools, UI | 3 | 2 | small |
 | 13 | Hub | ServerChat.Announce (state) | Core, Gameplay/Items, Gameplay/Social | 3 | 2 | small |
-| 14 | Design data | 347 gameplay numbers fixed in code | Gameplay/Autopilot, Gameplay/CharacterCreation, Gameplay/Combat, Gameplay/Crafting, Gameplay/Economy ... | 3 | 108 | large |
+| 14 | Design data | 346 gameplay numbers fixed in code | Gameplay/Autopilot, Gameplay/CharacterCreation, Gameplay/Combat, Gameplay/Crafting, Gameplay/Economy ... | 3 | 109 | large |
 | 15 | Hub | WorldEnvironmentNetwork.Instance (locator) | World, Tools | 3 | 10 | medium |
 | 16 | God class | PointAndClickPlayer (2146 lines) | Gameplay/Player | 3 | 33 | large |
 | 17 | Hub | NetworkConnectionManager.Instance (locator) | Networking, UI, World | 3 | 6 | medium |

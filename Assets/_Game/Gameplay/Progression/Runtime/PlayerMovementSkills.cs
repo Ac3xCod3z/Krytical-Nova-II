@@ -42,10 +42,20 @@ namespace KryticalNova.Progression
         public bool IsJumpSelected => selectedSkill == MovementSkillId.Jump && jumpRank > 0 && !IsRiding;
         /// <summary>On a mount: walking and running go at the mount's speeds (<see cref="SetRideSpeeds"/>).</summary>
         public bool IsRiding => rideWalkSpeed > 0f;
-        public float CurrentSpeed => BaseSpeed * (IsRiding ? 1f : StatSpeedMultiplier) * (gmState != null ? Mathf.Max(0.1f, gmState.SpeedMultiplier) : 1f);
-        /// <summary>What the Move Speed stat (Boots, the ranged Stance) multiplies walking and running by.</summary>
-        public float StatSpeedMultiplier => movementSettings == null || combatStats == null ? 1f
-            : movementSettings.StatSpeedMultiplier(combatStats.GetStatValue(StatType.MoveSpeedPercent));
+        /// <summary>
+        /// Metres a second now. On foot the Move Speed from gear and stats (Boots) stops at the top Run speed; the ranged
+        /// Stance's Move Speed and a GM's speed go on top (owner, 5 Nov 2026; MovementSettings.FootSpeed).
+        /// </summary>
+        public float CurrentSpeed
+        {
+            get
+            {
+                float gm = gmState != null ? Mathf.Max(0.1f, gmState.SpeedMultiplier) : 1f;
+                if (IsRiding || movementSettings == null || combatStats == null) return BaseSpeed * gm;
+                return movementSettings.FootSpeed(BaseSpeed, combatStats.GetStatValueWithoutBuffs(StatType.MoveSpeedPercent),
+                    combatStats.GetStatValue(StatType.MoveSpeedPercent), gm);
+            }
+        }
         private float BaseSpeed => IsRiding ? (IsRunning ? rideRunSpeed : rideWalkSpeed)
             : movementSettings == null ? 0f : IsRunning && runSkill != null && runSkill.TryGetRank(runRank, out var rank)
             ? Mathf.Max(movementSettings.walkSpeed, rank.runSpeed) : movementSettings.walkSpeed;
