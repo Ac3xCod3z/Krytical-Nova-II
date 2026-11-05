@@ -4836,6 +4836,67 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
             }
         }
 
+        [UnityTest]
+        public IEnumerator B56_AnNpcOnTheOwnView_IsWalkedToAndOpensOnArrival_AsNgosWalkToTalk()
+        {
+            // owner's hand test p2 (5 Nov 2026): a vendor did nothing on a DOTS view. Now NGO's walk-to-talk: in reach it opens at once,
+            // out of reach the ghost walks to the stand-off point (a ground click of the player's own) and it opens on arrival; its
+            // services are the ported server requests
+            NetRole.Install(new BodyRoleNetRoleAdapter(null, () => NetRoleKind.ClientView));
+            INpcDialogueSink oldDialogue = ClientPresentationRegistry.Dialogue;
+            var dialogue = new DialogueSeen();
+            ClientPresentationRegistry.RegisterDialogue(dialogue);
+            try
+            {
+                GameObject own = Make(NetRoleKind.ClientView, true, new PlayerKey(561));
+                var npcObject = new GameObject("B56 Apothecary");
+                m_Made.Add(npcObject);
+                npcObject.transform.position = own.transform.position + Vector3.right * 9f;
+                var npc = npcObject.AddComponent<KryticalNova.NPC.NpcInteractable>();
+                yield return null;
+                Assert.IsInstanceOf<IEntityViewInteractable>(npc, "an NPC works on a view");
+                var controls = own.GetComponent<PointAndClickPlayer>();
+                Assert.IsTrue(controls.ViewMode);
+                MethodInfo begin = typeof(PointAndClickPlayer).GetMethod("ViewBeginInteract", BindingFlags.NonPublic | BindingFlags.Instance);
+                Assert.IsNotNull(begin);
+
+                // out of reach: a walk to its stand-off point goes to the ghost, nothing opens yet
+                BodyClicks.Clear();
+                begin.Invoke(controls, new object[] { npc });
+                Assert.IsTrue(BodyClicks.TryTake(out BodyClicks.Click walk), "a walk is asked of the ghost");
+                Assert.Less(Vector3.Distance(walk.Point, npc.InteractPoint), 0.01f, "to the NPC's stand-off point");
+                yield return null;
+                Assert.AreEqual(0, dialogue.Shown, "not yet");
+
+                // the ghost brings the body there: it opens once, on arrival
+                own.transform.position = npc.Position + Vector3.left * 1f;
+                yield return null;
+                yield return null;
+                Assert.AreEqual(1, dialogue.Shown, "opened on arrival");
+                yield return null;
+                Assert.AreEqual(1, dialogue.Shown, "once");
+
+                // in reach: at once, no walk
+                BodyClicks.Clear();
+                begin.Invoke(controls, new object[] { npc });
+                Assert.AreEqual(2, dialogue.Shown, "opened at once");
+                Assert.IsFalse(BodyClicks.TryTake(out _), "no walk");
+            }
+            finally
+            {
+                BodyClicks.Clear();
+                if (oldDialogue != null) ClientPresentationRegistry.RegisterDialogue(oldDialogue);
+                else ClientPresentationRegistry.UnregisterDialogue(dialogue);
+            }
+        }
+
+        sealed class DialogueSeen : INpcDialogueSink
+        {
+            public int Shown;
+            public void ShowDialogue(INpcDialogueSource npc, Transform player) => Shown++;
+            public void HideDialogue() { }
+        }
+
         sealed class NumbersSeen : ICombatFeedbackSink
         {
             public int Shown;

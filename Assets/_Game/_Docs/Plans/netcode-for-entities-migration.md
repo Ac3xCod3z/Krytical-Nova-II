@@ -310,6 +310,11 @@ prediction error p95 <= 0.05 m at 60 ms, tick p95 < 15 ms with 102 monsters (fro
     serves the click, a skill's target, the walk-in, combo, hit test and arc (each body its own capsule), the hit ring and impacts;
     the ghost goes with its scene. Ghost assets rebuilt. Run 2 green (run 1: an added CapsuleCollider defaults to h 1 in the tests):
     EditMode 331/331, PlayMode 56/56 (B55). Follow-up: the Cadence dummy hold (PlayerCombatState is not on DOTS yet).
+  - [x] NPC vendors on a view (owner's hand test p2, 5 Nov: "vendors aren't networked yet"; Master's pick A, NGO's walk-to-talk): an
+    NPC (now IEntityViewInteractable) or a Kiosk stand clicked on a DOTS view opens at once in reach, otherwise the ghost walks to its
+    stand-off point (a ground click of the player's own) and it opens on arrival (NGO UpdatePendingInteract, now on views too); every
+    dialogue service already was a ported server request (Flask, shop, Vault, Craft, Forge, Restyle, Holoweave/Dye, Crew, Sponsor,
+    Kiosk, Herald). Run 1 green: EditMode 331/331, PlayMode 57/57 (B56). Next: Play DOTS here with test saves (HIGH, design first).
 - [ ] **M5 Monster system prototype (new brain).** Section 6. P0 EditMode sim tests (no netcode), P1 ghost + view, P2 reward bridge.
 - [ ] **M6 Hostiles in full.** All roster species via `MonsterArchetype` from `HostileDefinition` (ids kept), level scaling, zones,
   sleep, respawn, loot/XP through managed reward bridge with ledger rules; nav grids for the zones; bot soak with 102 monsters.

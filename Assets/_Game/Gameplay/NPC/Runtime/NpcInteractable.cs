@@ -10,7 +10,8 @@ namespace KryticalNova.NPC
     /// Interaction is client-side only for now: it turns toward the player and opens the dialogue panel.
     /// </summary>
     [DisallowMultipleComponent]
-    public sealed class NpcInteractable : MonoBehaviour, IInteractable, INpcDialogueSource
+    // IEntityViewInteractable: on a client view of the entity netcode it only opens the dialogue; its services are server requests
+    public sealed class NpcInteractable : MonoBehaviour, IEntityViewInteractable, INpcDialogueSource
     {
         private const float StandOffDistance = 1.6f;
         private const float NameplateHeight = 2.25f;

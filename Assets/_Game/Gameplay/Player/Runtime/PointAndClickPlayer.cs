@@ -533,11 +533,8 @@ namespace KryticalNova.Player
             if (IsSpawned && !IsOwner)
                 return;
 
-            if (!ViewMode)
-            {
-                UpdatePendingInteract();
-                UpdateTravel();
-            }
+            UpdatePendingInteract();   // a view's walk-to-talk opens on arrival too (ViewBeginInteract)
+            if (!ViewMode) UpdateTravel();
             ApplyScreenFraming(); // asked for by the HUD, not by input: it runs whatever the checks below say
 
             if (gameplayActions == null || !gameplayActions.enabled || !playerInput.inputIsActive
@@ -816,13 +813,14 @@ namespace KryticalNova.Player
                 }
                 if (ViewMode)
                 {
-                    // a Kiosk stand on a client view is only browsed (M7.6): in reach it opens; buying is a request the server decides
+                    // an NPC or a Kiosk stand on a client view only opens a window (M7.6; vendors, owner 5 Nov 2026): what is then done
+                    // there is a request the server decides
                     if (interactable is IEntityViewInteractable)
                     {
-                        Vector3 offset = interactable.Position - transform.position;
-                        offset.y = 0f;
-                        if (offset.magnitude <= interactable.InteractRange + 0.5f) interactable.Interact(gameObject);
-                        else CommandMessage?.Invoke("Move closer to browse it.");
+                        EndTravel(false);
+                        CancelAttack();
+                        ClientPresentationRegistry.Markers?.HideMoveMarker();
+                        ViewBeginInteract(interactable);
                         return;
                     }
                     CommandMessage?.Invoke(NotYetNetworkedText);
@@ -1239,6 +1237,26 @@ namespace KryticalNova.Player
             }
 
             ExecuteLocalMove(destination, out _);
+        }
+
+        /// <summary>
+        /// <see cref="BeginInteract"/> on a client view of the entity netcode: in range it opens at once; otherwise the ghost walks to the
+        /// stand-off point (a ground click of the player's own: the server walks it, the owner predicts it) and it opens on arrival
+        /// (<see cref="UpdatePendingInteract"/>), as NGO's walk-to-talk.
+        /// </summary>
+        private void ViewBeginInteract(IInteractable interactable)
+        {
+            if (IsWithinInteractRange(interactable))
+            {
+                interactable.Interact(gameObject);
+                return;
+            }
+
+            pendingInteract = interactable;
+            pendingInteractExpiry = Time.time + PendingInteractTimeout;
+            Vector3 destination = interactable.InteractPoint;
+            if (interactable is IInstantInteractable) destination = ShortOf(destination, InstantInteractStandOff);
+            BodyClicks.Ground(destination, movementSkills != null && movementSkills.IsRunning);
         }
 
         private void UpdatePendingInteract()
