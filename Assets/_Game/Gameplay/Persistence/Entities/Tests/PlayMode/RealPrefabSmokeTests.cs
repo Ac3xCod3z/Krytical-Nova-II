@@ -455,7 +455,7 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
             public void Restyle(byte service, in CharacterRecipe proposed) => Ops.Add($"Restyle {service} {proposed.height}");
             public readonly List<string> Ops = new List<string>();
             public void UseItem(ushort itemId) { }
-            public void CastSkill(string skillId) { }
+            public void CastSkill(string skillId, Transform target) { }
             public void PackOp(PackOpKind kind, byte fromContainer, byte fromIndex, byte toContainer, byte toIndex) =>
                 Ops.Add($"{kind} {fromContainer}:{fromIndex} {toContainer}:{toIndex}");
             public void LoadoutOp(LoadoutOpKind kind, byte index, string name) => Ops.Add($"{kind} {index} {name}");

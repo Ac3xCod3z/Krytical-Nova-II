@@ -718,12 +718,13 @@ namespace KryticalNova.Progression
             if (queue != null && queue.Queued != null) queue.Clear(); // this cast is the answer to whatever was waiting
             KryticalNova.Diagnostics.PerformanceLog.Mark("skill.cast", skill != null ? skill.skillId : null);
 
-            // the entity netcode's own view body: a buff (Heavenly Serenity, a ward) is cast by the server on its body, and this copy
-            // shows it when the server says so (feel test item 5); attacks come with the combat port
-            if (!skill.IsAttack && BodyRoleTag.RequestsOf(this) is IBodyRequests requests)
+            // the entity netcode's own view body: the server casts on its body (a buff, feel test item 5; an attack at its target, M4.5a:
+            // NGO's RequestCastSkillServerRpc), and this copy shows it when the server says so. Never cast here: the view's other
+            // bodies are stand-ins, a local cast would strike them with local damage.
+            if (BodyRoleTag.RequestsOf(this) is IBodyRequests requests)
             {
                 castRequestPendingUntil = Time.time + CastRequestTimeout;
-                requests.CastSkill(skill.skillId);
+                requests.CastSkill(skill.skillId, skill.IsAttack ? target : null);
                 return true;
             }
 

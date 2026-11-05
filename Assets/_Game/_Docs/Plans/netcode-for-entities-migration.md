@@ -216,6 +216,11 @@ prediction error p95 <= 0.05 m at 60 ms, tick p95 < 15 ms with 102 monsters (fro
   - [x] M4.4l The attacker's combat line on the DOTS view (NGO TellAttacker): PlayerMeleeCombat.HitLine holds NGO's words for both.
     EditMode 151/151, PlayMode 43/43. M4.4 BASIC ATTACK COMPLETE (server, prediction, click, swing, hits, numbers, lines). Owner GUI feel
     test due (morning list). Next: M4.5 skills (NGO rules first, M4-combat.md section 6).
+  - [x] M4.5a Attack skills cast by the server, NGO's way (and the hole closed: an attack skill on a DOTS view fell through to a local
+    offline cast against stand-in bodies): every skill on a view goes to the server (IBodyRequests.CastSkill(skill, target), SkillCastRpc
+    carries the target's ghost id); the server body runs NGO's ServerTryCast at the target's server body (range, Flux, cooldown, hits via
+    ResolveHit). EditMode 151/151, PlayMode 43/43; no new test (plumbing into NGO's own cast): proven in the owner's GUI test. Next: M4.5b
+    skill hits into the HitEvent ring + the cast shown to observers.
 - [ ] **M5 Monster system prototype (new brain).** Section 6. P0 EditMode sim tests (no netcode), P1 ghost + view, P2 reward bridge.
 - [ ] **M6 Hostiles in full.** All roster species via `MonsterArchetype` from `HostileDefinition` (ids kept), level scaling, zones,
   sleep, respawn, loot/XP through managed reward bridge with ledger rules; nav grids for the zones; bot soak with 102 monsters.

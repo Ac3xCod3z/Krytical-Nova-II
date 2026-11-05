@@ -22,6 +22,8 @@ namespace KryticalNova.Persistence.Entities
     public struct SkillCastRpc : IRpcCommand
     {
         public FixedString64Bytes SkillId;
+        /// <summary>The attacked ghost (M4.5a; 0 = none: a buff or an area attack).</summary>
+        public int TargetGhostId;
     }
 
     /// <summary>The server's answer to <see cref="ItemUseRpc"/> or <see cref="SkillCastRpc"/>, for the owner's own body to show.</summary>
@@ -720,12 +722,13 @@ namespace KryticalNova.Persistence.Entities
             em.AddComponent<SendRpcCommandRequest>(rpc);
         }
 
-        public void CastSkill(string skillId)
+        public void CastSkill(string skillId, Transform target)
         {
             if (m_World == null || !m_World.IsCreated || string.IsNullOrEmpty(skillId) || skillId.Length > FixedString64Bytes.UTF8MaxLengthInBytes) return;
             var em = m_World.EntityManager;
             Entity rpc = em.CreateEntity();
-            em.AddComponentData(rpc, new SkillCastRpc { SkillId = new FixedString64Bytes(skillId) });
+            int targetGhost = target != null ? KryticalNova.Player.Entities.Bodies.BodyClickSource.GhostIdOf(target) : 0;
+            em.AddComponentData(rpc, new SkillCastRpc { SkillId = new FixedString64Bytes(skillId), TargetGhostId = targetGhost });
             em.AddComponent<SendRpcCommandRequest>(rpc);
         }
     }
@@ -793,7 +796,7 @@ namespace KryticalNova.Persistence.Entities
                 var received = m_Casts.ToComponentDataArray<ReceiveRpcCommandRequest>(Allocator.Temp);
                 var casts = m_Casts.ToComponentDataArray<SkillCastRpc>(Allocator.Temp);
                 em.DestroyEntity(m_Casts);
-                for (int i = 0; i < casts.Length; i++) Cast(received[i].SourceConnection, casts[i].SkillId.ToString());
+                for (int i = 0; i < casts.Length; i++) Cast(received[i].SourceConnection, casts[i].SkillId.ToString(), casts[i].TargetGhostId);
                 received.Dispose();
                 casts.Dispose();
             }
@@ -1068,15 +1071,16 @@ namespace KryticalNova.Persistence.Entities
             || effect == ItemUseEffect.AutobuffTime       // M8 8.3.11: the "autobuff" part is real (B26)
             || effect == ItemUseEffect.RegisterMount || effect == ItemUseEffect.FeedMount;   // M8 8.4.8: the "mounts" part is real (B38)
 
-        void Cast(Entity connection, string skillId)
+        void Cast(Entity connection, string skillId, int targetGhostId)
         {
             if (!BodyOf(connection, CallKind.Combat, out GameObject body)) return;
             var skills = body.GetComponent<PlayerCombatSkills>();
             SkillDefinitionSO skill = skills != null ? skills.GetSkill(skillId) : null;
             if (skill == null) return;
-            string reason;
-            if (skill.IsAttack) reason = "Attacks are not networked yet on this server.";   // attacks come with the combat port
-            else if (skills.ServerTryCast(skill, null, out reason))
+            // M4.5a: an attack is cast by NGO's own server cast on this body at the target's server body (range, Flux, cooldown and the
+            // hits through ResolveHit decided here); an attack whose target is gone casts at nothing and is refused by CanCast
+            Transform target = skill.IsAttack && !skill.IsAreaAttack ? ServerBodyOf(targetGhostId) : null;
+            if (skills.ServerTryCast(skill, target, out string reason))
             {
                 Used++;
                 Reply(connection, new RequestReplyRpc { Kind = RequestReplyRpc.SkillCast, SkillId = new FixedString64Bytes(skillId), Rank = (short)skills.GetRank(skill) });
@@ -1084,6 +1088,18 @@ namespace KryticalNova.Persistence.Entities
             }
             Refused++;
             Reply(connection, new RequestReplyRpc { Kind = RequestReplyRpc.SkillRefused, SkillId = new FixedString64Bytes(skillId), Text = Fit(reason) });
+        }
+
+        /// <summary>The server body of the player ghost <paramref name="ghostId"/> in this world, or null.</summary>
+        Transform ServerBodyOf(int ghostId)
+        {
+            if (ghostId == 0) return null;
+            EntityManager em = EntityManager;
+            foreach (GhostBodyEntry e in GhostBodyRegistry.Entries)
+                if (ReferenceEquals(e.World, World) && e.Body != null && em.Exists(e.Ghost) && em.HasComponent<GhostInstance>(e.Ghost)
+                    && em.GetComponentData<GhostInstance>(e.Ghost).ghostId == ghostId)
+                    return e.Body.transform;
+            return null;
         }
 
         void Reply(Entity connection, RequestReplyRpc reply)

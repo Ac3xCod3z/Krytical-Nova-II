@@ -144,8 +144,11 @@ namespace KryticalNova.Core
         /// <summary>Asks the server to use one of the item (the first Pack cell that holds it, as NGO's hotbar does).</summary>
         void UseItem(ushort itemId);
 
-        /// <summary>Asks the server to cast a skill on the player's own body (a buff, Heavenly Serenity).</summary>
-        void CastSkill(string skillId);
+        /// <summary>
+        /// Asks the server to cast a skill: a buff on the player's own body (Heavenly Serenity), or an attack at <paramref name="target"/>
+        /// (M4.5a, NGO RequestCastSkillServerRpc(skillId, target); null for an area attack or a buff).
+        /// </summary>
+        void CastSkill(string skillId, UnityEngine.Transform target);
 
         /// <summary>
         /// Asks the server to move, equip, unequip, destroy or sort in the Pack, by cell as NGO's RPCs did (a place is a container and an index:
