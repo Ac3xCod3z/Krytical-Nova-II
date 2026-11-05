@@ -58,6 +58,7 @@ namespace KryticalNova.Player.Entities
                 AddComponent<DeathState>(e);        // how the player went down, for every view (M4 6b)
                 AddComponent<KnockPlan>(e);         // the dead body's travel to its landing (M4 6b-2)
                 AddComponent<DuelState>(e);         // the Callout's opponent, for every view (M4 8b)
+                AddComponent<PvpSwitch>(e);         // gm.pvp's switch, for every client (M4 8c)
                 AddBuffer<SkillHitEvent>(e);        // skill hits, for every view's VFX (M4 step 7)
                 AddComponent<SkillHitSeq>(e);
                 // M4.4b: the strike lengths come from the clips themselves, as NGO's GetStrikeDuration reads clip.length

@@ -98,6 +98,37 @@ namespace KryticalNova.Persistence.Entities
         }
     }
 
+    /// <summary>Server (M4 8c): the PvP switch (gm.pvp, FactionRules) on every player ghost, as NGO's netCrossFactionPvp on every player.</summary>
+    [WorldSystemFilter(WorldSystemFilterFlags.ServerSimulation)]
+    [UpdateInGroup(typeof(SimulationSystemGroup))]
+    public partial class PvpSwitchServerSystem : SystemBase
+    {
+        protected override void OnUpdate()
+        {
+            byte on = (byte)(KryticalNova.Factions.FactionRules.CrossFactionPvp ? 1 : 0);
+            foreach (var pvp in SystemAPI.Query<RefRW<PvpSwitch>>())
+                if (pvp.ValueRO.CrossFactionPvp != on) pvp.ValueRW.CrossFactionPvp = on;
+        }
+    }
+
+    /// <summary>Client (M4 8c): the server's PvP switch into this game's FactionRules when it changes (NGO OnNetCrossFactionPvpChanged).</summary>
+    [WorldSystemFilter(WorldSystemFilterFlags.ClientSimulation)]
+    [UpdateInGroup(typeof(SimulationSystemGroup))]
+    public partial class PvpSwitchClientSystem : SystemBase
+    {
+        int m_Seen = PvpSwitchWatch.Unseen;
+
+        protected override void OnUpdate()
+        {
+            foreach (var pvp in SystemAPI.Query<RefRO<PvpSwitch>>())
+            {
+                if (PvpSwitchWatch.Changed(ref m_Seen, pvp.ValueRO.CrossFactionPvp))
+                    KryticalNova.Factions.FactionRules.CrossFactionPvp = pvp.ValueRO.CrossFactionPvp != 0;
+                return;   // one ghost says it for all
+            }
+        }
+    }
+
     /// <summary>Client: the own view shows what its server told it about its Callout.</summary>
     [WorldSystemFilter(WorldSystemFilterFlags.ClientSimulation)]
     [UpdateInGroup(typeof(SimulationSystemGroup))]

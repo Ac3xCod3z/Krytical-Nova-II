@@ -273,6 +273,17 @@ namespace KryticalNova.Player.Entities.Tests
         }
 
         [Test]
+        public void ThePvpSwitch_IsTakenOnFirstSightAndOnEachChange_NeverAgainForTheSameValue()
+        {
+            // M4 8c: a host's shared switch is never set back by a snapshot that has not caught up with a GM's change
+            int seen = PvpSwitchWatch.Unseen;
+            Assert.IsTrue(PvpSwitchWatch.Changed(ref seen, 1), "first sight");
+            Assert.IsFalse(PvpSwitchWatch.Changed(ref seen, 1), "the same value: left alone");
+            Assert.IsTrue(PvpSwitchWatch.Changed(ref seen, 0), "gm.pvp off reached this game");
+            Assert.IsFalse(PvpSwitchWatch.Changed(ref seen, 0));
+        }
+
+        [Test]
         public void OffSolidGround_IsAJumpFromItsTakeOff_AWall_Water_AVaultLeg_NotTheCrouchNorTheGround()
         {
             // owner rule (5 Nov 2026) + answer: the crouch before take-off is a fall; from take-off on, a de-rez

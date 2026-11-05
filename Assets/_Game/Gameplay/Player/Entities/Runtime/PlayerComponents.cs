@@ -197,6 +197,29 @@ namespace KryticalNova.Player.Entities
         [GhostField] public int KillerGhostId;
     }
 
+    /// <summary>
+    /// The server's PvP switch between factions (gm.pvp; NGO PlayerIdentity.netCrossFactionPvp on every player), on every player ghost
+    /// (M4 8c): clients take it into FactionRules for namecards, targets and the Callout strip. Server-written.
+    /// </summary>
+    public struct PvpSwitch : IComponentData
+    {
+        [GhostField] public byte CrossFactionPvp;
+    }
+
+    /// <summary>A client applies the switch only when its ghost value changes (first sight included), never every frame: on a host the
+    /// server and the client share the switch, and an older snapshot must not set back a GM's change.</summary>
+    public static class PvpSwitchWatch
+    {
+        public const int Unseen = -1;
+
+        public static bool Changed(ref int seen, byte now)
+        {
+            if (seen == now) return false;
+            seen = now;
+            return true;
+        }
+    }
+
     /// <summary>A player's Callout opponent for everyone (M4 8b; NGO PlayerDuel.netOpponent): the opponent's ghost, 0 = none. Server-written.</summary>
     public struct DuelState : IComponentData
     {

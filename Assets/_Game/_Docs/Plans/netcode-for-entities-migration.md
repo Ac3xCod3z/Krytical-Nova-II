@@ -292,6 +292,10 @@ prediction error p95 <= 0.05 m at 60 ms, tick p95 < 15 ms with 102 monsters (fro
     player's too (it now keeps PlayerDuel, deciding nothing), mirrors it, so namecards and targets see the two as enemies and nobody
     else, and the own view knows its bout (Showdown letterbox; its prompt, countdown and result come by the owner link, 8a).
     EditMode 323/323, PlayMode 54/54 (B53). Next: M4.8c the PvP switch (gm.pvp) to clients.
+  - [x] M4.8c The PvP switch to clients: gm.pvp already set the server's FactionRules; now its value rides every player ghost (PvpSwitch,
+    NGO netCrossFactionPvp) and each client takes it when it changes (never set back on a host by an older snapshot), so namecards,
+    targets and the Callout strip agree with the server. EditMode 324/324, PlayMode 54/54. M4 step 8 complete.
+    Next: M4 s18 step 9, the Hostile -> player damage bridge (after M5's monster brain is decided), and step 10 the owner's feel checkpoint.
 - [ ] **M5 Monster system prototype (new brain).** Section 6. P0 EditMode sim tests (no netcode), P1 ghost + view, P2 reward bridge.
 - [ ] **M6 Hostiles in full.** All roster species via `MonsterArchetype` from `HostileDefinition` (ids kept), level scaling, zones,
   sleep, respawn, loot/XP through managed reward bridge with ledger rules; nav grids for the zones; bot soak with 102 monsters.
