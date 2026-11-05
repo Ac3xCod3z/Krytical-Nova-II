@@ -97,7 +97,7 @@ namespace KryticalNova.Player
 
         /// <summary>The duel exception of the faction rule: true while this player and <paramref name="other"/> duel each other.</summary>
         public bool IsDuelling(IFactionMember other) =>
-            duel != null && other is PlayerIdentity otherPlayer && duel.IsDuellingWith(otherPlayer.NetworkObject);
+            duel != null && other is PlayerIdentity otherPlayer && (duel.IsDuellingWith(otherPlayer.NetworkObject) || duel.IsDuellingWithBody(otherPlayer));
 
         private void Awake()
         {

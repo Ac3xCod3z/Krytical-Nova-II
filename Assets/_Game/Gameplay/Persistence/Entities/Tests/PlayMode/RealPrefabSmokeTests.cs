@@ -458,6 +458,7 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
             public void CastSkill(string skillId, Transform target) { }
             public void Charge(string skillId, Transform aimedAt, bool started, bool completed) { }
             public void CastWards(string skillIds) => Ops.Add("Wards " + skillIds);
+            public void DuelOp(DuelOpKind op, Transform target, bool accept) => Ops.Add($"Duel {op} {(target != null ? target.name : "-")} {accept}");
             public void PackOp(PackOpKind kind, byte fromContainer, byte fromIndex, byte toContainer, byte toIndex) =>
                 Ops.Add($"{kind} {fromContainer}:{fromIndex} {toContainer}:{toIndex}");
             public void LoadoutOp(LoadoutOpKind kind, byte index, string name) => Ops.Add($"{kind} {index} {name}");
@@ -496,7 +497,7 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
         }
 
         /// <summary>What the server bodies told their players (the message line) and sent their trade windows (view, notice, prompt).</summary>
-        sealed class Told : IOwnerMessages, ITradeOwnerLink, IKioskOwnerLink, IWorkshopOwnerLink, KryticalNova.Progression.INovaLink, IRestyleOwnerLink, IChatOwnerLink, IContactsOwnerLink, IPartyOwnerLink, IFollowOwnerLink, ISponsorOwnerLink, ICrewOwnerLink, IPetShowLink, IMountOwnerLink, IRecallShowLink
+        sealed class Told : IDuelOwnerLink, IOwnerMessages, ITradeOwnerLink, IKioskOwnerLink, IWorkshopOwnerLink, KryticalNova.Progression.INovaLink, IRestyleOwnerLink, IChatOwnerLink, IContactsOwnerLink, IPartyOwnerLink, IFollowOwnerLink, ISponsorOwnerLink, ICrewOwnerLink, IPetShowLink, IMountOwnerLink, IRecallShowLink
         {
             // Recall (M8 8.4.10): "recall show <kind> <seconds>" to every machine
             public void Show(Component part, RecallShowKind kind, float seconds) => Lines.Add((Body(part), $"recall show {kind} {seconds:0}"));
@@ -521,6 +522,7 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
                 Lines.Add((Body(part), "squad " + string.Join(" ", System.Array.ConvertAll(members ?? new BodyPartyMember[0], m => m.id + ":" + m.name))));
             public void Invite(Component part, string inviterName, float seconds) => Lines.Add((Body(part), $"squad invite {inviterName} {seconds:0}"));
             public void InviteClosed(Component part) => Lines.Add((Body(part), "squad invite closed"));
+            public void Show(Component part, DuelShowKind kind, string name, float seconds, bool won) => Lines.Add((Body(part), $"duel {kind} {name} {seconds:0} {won}"));
             public string LastRoster(GameObject body) => Lines.FindLast(l => l.body == body && l.what.StartsWith("squad ") && !l.what.StartsWith("squad invite")).what;
             // Contacts (M8 8.4.2): the last list each body was sent, and its prompts
             public readonly Dictionary<GameObject, string> LastView = new Dictionary<GameObject, string>();
@@ -4493,6 +4495,99 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
             }
             finally
             {
+                PlayerKeys.Reset();
+            }
+        }
+
+        [UnityTest]
+        public IEnumerator B52_ACallout_IsDecidedOnTheServerBodies_AskAnswerCountdownFightAndEveryEnd_AsNgo_AndTheViewOnlyAsks()
+        {
+            // M4 step 8a: NGO's PlayerDuel RPC bodies on server bodies; the owner told by the link; NGO's lines and numbers
+            NetRole.Install(new BodyRoleNetRoleAdapter(null, () => NetRoleKind.ServerBody));
+            IOwnerMessages oldMessages = OwnerMessages.Current;
+            var told = new Told();
+            OwnerMessages.Current = told;
+            ChatOwnerLink.Current = told;
+            DuelOwnerLink.Current = told;
+            try
+            {
+                PlayerKeys.Reset();
+                ulong keyA = PlayerKeys.Mint(521).Value;
+                GameObject a = Admitted(keyA, "52a1000000000000000000000000000a", "c5210000000000000000000000000521", "Talwyn");
+                GameObject b = Admitted(PlayerKeys.Mint(522).Value, "52b1000000000000000000000000000b", "c5220000000000000000000000000522", "Brannoc");
+                GameObject c = Admitted(PlayerKeys.Mint(523).Value, "52c1000000000000000000000000000c", "c5230000000000000000000000000523", "Corvane");
+                for (int i = 0; i < 30; i++) yield return null;
+                Assert.AreEqual(a.GetComponent<PlayerIdentity>().Faction, b.GetComponent<PlayerIdentity>().Faction, "planned: one faction (not enemies)");
+                var da = a.GetComponent<IBodyDuel>();
+                var db = b.GetComponent<IBodyDuel>();
+                var dc = c.GetComponent<IBodyDuel>();
+                Assert.IsNotNull(da, "the server body keeps PlayerDuel");
+                bool Hostile(GameObject x, GameObject y) => KryticalNova.Combat.CombatHostility.IsHostile(x.transform, y.GetComponent<CombatEntity>());
+                Assert.IsFalse(Hostile(a, b), "friends before");
+
+                // the ask: NGO's refusal and success lines, B's prompt with NGO's 30 s
+                da.RunDuelOp(DuelOpKind.Request, a.transform, false);
+                Assert.IsTrue(told.Any(a, "system Select another player to call out."), string.Join(" | ", told.To(a)));
+                da.RunDuelOp(DuelOpKind.Request, b.transform, false);
+                Assert.IsTrue(told.Any(a, "system You called out Brannoc."));
+                Assert.IsTrue(told.Any(b, "system Talwyn calls you out. Accept with /accept, refuse with /decline."));
+                Assert.IsTrue(told.Any(b, "duel Prompt Talwyn 30 False"), string.Join(" | ", told.To(b)));
+                dc.RunDuelOp(DuelOpKind.Request, b.transform, false);
+                Assert.IsTrue(told.Any(c, "system Brannoc is answering another request."));
+
+                // the answer: the countdown on both (NGO 3 s), then the bout; only the two are enemies
+                db.RunDuelOp(DuelOpKind.Respond, null, true);
+                Assert.IsTrue(told.Any(b, "duel PromptClosed"));
+                Assert.IsTrue(told.Any(a, "duel Countdown Brannoc 3"));
+                Assert.IsTrue(told.Any(b, "duel Countdown Talwyn 3"));
+                Assert.IsTrue(told.Any(a, "system Callout with Brannoc starts in 3..."));
+                yield return new WaitForSeconds(3.4f);
+                Assert.IsTrue(told.Any(a, "system The callout with Brannoc has begun. It ends when one of you falls."), string.Join(" | ", told.To(a)));
+                Assert.IsTrue(Hostile(a, b) && Hostile(b, a), "the two fight");
+                Assert.IsFalse(Hostile(a, c), "nobody else");
+
+                // A wins by the kill: both told, the win announced round the winner, friends again
+                b.GetComponent<CombatEntity>().Kill(new KillingBlow { Attacker = a.GetComponent<CharacterCombatStats>(), Direction = Vector3.forward });
+                Assert.IsTrue(told.Any(a, "duel Result Brannoc 0 True"));
+                Assert.IsTrue(told.Any(b, "duel Result Talwyn 0 False"));
+                Assert.IsTrue(told.Any(a, "system Talwyn won the callout against Brannoc."), string.Join(" | ", told.To(a)));
+                Assert.IsFalse(Hostile(a, b), "over");
+
+                // a forfeit, a third party's kill and a leaver end it as NGO's
+                var duelA = a.GetComponent<KryticalNova.Combat.PlayerDuel>();
+                var duelC = c.GetComponent<KryticalNova.Combat.PlayerDuel>();
+                Assert.IsTrue(duelA.ServerForceStart(duelC), "the GM start");
+                dc.RunDuelOp(DuelOpKind.Forfeit, null, false);
+                Assert.IsTrue(told.Any(a, "system Corvane forfeited."));
+                Assert.IsTrue(told.Any(a, "duel Result Corvane 0 True"));
+                Assert.IsTrue(duelA.ServerForceStart(duelC));
+                c.GetComponent<CombatEntity>().Kill(new KillingBlow { Direction = Vector3.forward });
+                Assert.IsTrue(told.Any(a, "system The callout was interrupted."), "killed by someone else: no winner");
+                c.GetComponent<PlayerResources>().RestoreAll();
+                c.GetComponent<PlayerDeathMotor>().ServerBodyTick(0.1f);
+                Assert.IsTrue(duelA.ServerForceStart(duelC));
+                ServerLeaving.Notify(c);
+                Assert.IsTrue(told.Any(a, "system Corvane left the game."), string.Join(" | ", told.To(a)));
+                da.RunDuelOp(DuelOpKind.Forfeit, null, false);
+                Assert.IsTrue(told.Any(a, "system You are not in a callout."));
+
+                // the own view only asks (NGO's owner RPCs)
+                var asked = new Asked();
+                GameObject view = Make(NetRoleKind.ClientView, true, new PlayerKey(keyA));
+                view.GetComponent<BodyRoleTag>().Requests = asked;
+                yield return null;
+                var viewDuel = view.GetComponent<KryticalNova.Combat.PlayerDuel>();
+                viewDuel.Request(b.GetComponent<KryticalNova.Combat.PlayerDuel>());
+                viewDuel.Respond(true);
+                viewDuel.Forfeit();
+                CollectionAssert.AreEqual(new[] { $"Duel Request {b.name} False", "Duel Respond - True", "Duel Forfeit - False" }, asked.Ops);
+
+                foreach (GameObject body in new[] { a, b }) { ServerLeaving.Notify(body); body.GetComponent<PlayerSaveAgent>().OnServerLeaving(); }
+            }
+            finally
+            {
+                OwnerMessages.Current = oldMessages;
+                DuelOwnerLink.Current = null;
                 PlayerKeys.Reset();
             }
         }

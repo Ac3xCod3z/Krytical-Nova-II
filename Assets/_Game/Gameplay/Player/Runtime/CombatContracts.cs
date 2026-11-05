@@ -26,6 +26,8 @@ namespace KryticalNova.Player
     public interface IDuelState
     {
         bool IsDuellingWith(NetworkObject other);
+        /// <summary>A body of the entity netcode (never NGO-spawned): the same question by the other player's body (M4 step 8).</summary>
+        bool IsDuellingWithBody(UnityEngine.Component other);
     }
 
     /// <summary>

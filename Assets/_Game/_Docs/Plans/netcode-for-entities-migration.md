@@ -283,6 +283,11 @@ prediction error p95 <= 0.05 m at 60 ms, tick p95 < 15 ms with 102 monsters (fro
     0.15 m or more above the ground, with NGO's roof rule; a knock on the ground follows the slope, never a gravity drop. EditMode
     323/323 (each case), PlayMode 52/52 (B51). The same fix for the NGO game is briefed for its own session (dots-mini-boss-13b-notes).
     Next: M4 step 8, PvP MapRules + DuelState (closes the Callout death).
+  - [x] M4.8a The Callout decided on the server body (NGO PlayerDuel's RPC bodies; the Squad port's pattern): the owner asks by
+    DuelOpRpc (call out a body, answer, forfeit) and is told by the owner link (prompt 30 s, countdown 3 s, cancel, result); the bout,
+    leash 60 m, the win by the kill (no XP, 6a), a forfeit, a third party's kill (no winner) and a leaver end it with NGO's lines and
+    the win announced within 40 m; the two are enemies between server bodies (IsDuellingWithBody). EditMode 323/323, PlayMode 53/53 (B52).
+    Next: M4.8b the Callout on every view (opponent on the ghost, UI), M4.8c the PvP switch to clients.
 - [ ] **M5 Monster system prototype (new brain).** Section 6. P0 EditMode sim tests (no netcode), P1 ghost + view, P2 reward bridge.
 - [ ] **M6 Hostiles in full.** All roster species via `MonsterArchetype` from `HostileDefinition` (ids kept), level scaling, zones,
   sleep, respawn, loot/XP through managed reward bridge with ledger rules; nav grids for the zones; bot soak with 102 monsters.

@@ -571,6 +571,19 @@ namespace KryticalNova.Persistence.Entities
             em.AddComponent<SendRpcCommandRequest>(rpc);
         }
 
+        public void DuelOp(DuelOpKind op, Transform target, bool accept)
+        {
+            if (m_World == null || !m_World.IsCreated) return;
+            var em = m_World.EntityManager;
+            Entity rpc = em.CreateEntity();
+            em.AddComponentData(rpc, new DuelOpRpc
+            {
+                Op = (byte)op, Accept = (byte)(accept ? 1 : 0),
+                TargetGhostId = target != null ? KryticalNova.Player.Entities.Bodies.BodyClickSource.GhostIdOf(target) : 0,
+            });
+            em.AddComponent<SendRpcCommandRequest>(rpc);
+        }
+
         public void PartyOp(PartyOpKind op, string name, bool flag)
         {
             if (m_World == null || !m_World.IsCreated) return;

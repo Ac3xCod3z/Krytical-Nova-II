@@ -34,6 +34,14 @@ namespace KryticalNova.Core
         Promote = 5,
     }
 
+    /// <summary>What a Callout request asks the server's body to do (NGO's three <c>PlayerDuel</c> owner RPCs; M4 step 8).</summary>
+    public enum DuelOpKind : byte
+    {
+        Request = 1,
+        Respond = 2,
+        Forfeit = 3,
+    }
+
     /// <summary>What a Contacts request asks the server's body to do (NGO's twelve <c>PlayerContacts</c> RPCs; M8 8.4.2; a picked player goes by name).</summary>
     public enum ContactOpKind : byte
     {
@@ -258,6 +266,9 @@ namespace KryticalNova.Core
 
         /// <summary>Asks the server to run a Squad request (M8 8.4.3): invite, answer, leave, remove or promote by name.</summary>
         void PartyOp(PartyOpKind op, string name, bool flag);
+
+        /// <summary>Asks the server to run a Callout request (M4 step 8): call out <paramref name="target"/>, answer, or forfeit.</summary>
+        void DuelOp(DuelOpKind op, UnityEngine.Transform target, bool accept);
 
         /// <summary>Asks the server to follow the Squad member of that name (M8 8.4.3b, NGO's FollowRpc / FollowByNameRpc).</summary>
         void Follow(string memberName);
