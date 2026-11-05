@@ -253,6 +253,12 @@ prediction error p95 <= 0.05 m at 60 ms, tick p95 < 15 ms with 102 monsters (fro
     one included, keeps its copy equal to it (BuffMirror.Reconcile): what NGO's cast / SquadBuff / BuffRemoved / ConsumeNextHit /
     SyncBuff messages did, early ends and late views included. The list is a view's one source of buffs (the cast reply and the Squad
     line no longer add a copy), so nothing fights on the bar. EditMode 314/314, PlayMode 46/46 (B45). Next: M4 step 6, death and respawn.
+  - [x] M4.6a Death and respawn decided on the server body (owner pick A: server side first, views next): the switched-off death motor
+    listens to the body's Killed and runs NGO's deciding half (pose, buffs cleared, walk stopped, NGO's chat lines, 8 s countdown at 8,
+    3, 2, 1, a map spawn point through the server place path, full HP and Flux; HP back early = up in place). Kills are never decided on a
+    view (CombatEntity.HasAuthority), so the Hostile XP loss runs once per death, and a player's kill costs none, as NGO. A dead player
+    walks, jumps and attacks no more. HIGH, reviewed. EditMode 314/314, PlayMode 47/47 (B46). Callout death waits for step 8.
+    Next: M4.6b the death on every view (fall, de-rez, lying, getting up, late joiner).
 - [ ] **M5 Monster system prototype (new brain).** Section 6. P0 EditMode sim tests (no netcode), P1 ghost + view, P2 reward bridge.
 - [ ] **M6 Hostiles in full.** All roster species via `MonsterArchetype` from `HostileDefinition` (ids kept), level scaling, zones,
   sleep, respawn, loot/XP through managed reward bridge with ledger rules; nav grids for the zones; bot soak with 102 monsters.

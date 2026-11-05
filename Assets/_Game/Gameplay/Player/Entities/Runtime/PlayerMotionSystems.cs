@@ -122,6 +122,8 @@ namespace KryticalNova.Player.Entities
             {
                 var input = em.GetComponentData<PlayerInput>(e);
                 if (!input.Click.IsSet || input.Jump == 0 || input.ClickSeq == 0) continue;
+                // a dead player jumps no more until it is up (M4 6a; NGO: its motors let go of the body)
+                if (em.HasComponent<PlayerVitals>(e) && em.GetComponentData<PlayerVitals>(e) is { MaxHealthMilli: > 0, HealthMilli: <= 0 }) continue;
                 var plan = em.GetComponentData<MotionPlan>(e);
                 if (plan.PlanSeq == input.ClickSeq && plan.Kind != MotionKind.None) continue;   // already taken
                 var pose = em.GetComponentData<PlayerPose>(e);

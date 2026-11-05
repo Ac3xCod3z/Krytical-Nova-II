@@ -55,7 +55,9 @@ namespace KryticalNova.Progression
         private KillingBlow pendingBlow;
         private bool hasPendingBlow;
 
-        private bool HasAuthority => !IsSpawned || IsServer;
+        // a view of the entity netcode (own or another player's) never decides: no Killed / AnyKilled there, so a kill is rewarded or
+        // punished once, on the server body (M4 6a)
+        private bool HasAuthority => (!IsSpawned || IsServer) && KryticalNova.Core.BodyRoleTag.Of(this) is not { Kind: KryticalNova.Core.NetRoleKind.ClientView };
 
         public string EntityName => entityName;
 

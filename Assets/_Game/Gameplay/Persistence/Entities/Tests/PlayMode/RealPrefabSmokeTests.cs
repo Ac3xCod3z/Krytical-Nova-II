@@ -4017,6 +4017,133 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
             }
         }
 
+        [UnityTest]
+        public IEnumerator B46_ADeathOnTheServerBody_CountsDownAndRespawns_AHostileTakesXpOnce_APlayerKillNone_AndAViewNeverDecides()
+        {
+            // M4 step 6a: NGO's PlayerDeathMotor where it decides, on a server body (the part stays switched off: the ghost moves bodies)
+            NetRole.Install(new BodyRoleNetRoleAdapter(null, () => NetRoleKind.ServerBody));
+            IOwnerMessages oldMessages = OwnerMessages.Current;
+            var told = new Told();
+            OwnerMessages.Current = told;
+            ChatOwnerLink.Current = told;
+            int deathsOfA = 0;
+            CombatEntity watched = null;
+            Action<CombatEntity, KillingBlow> count = (victim, blow) => { if (victim == watched) deathsOfA++; };
+            CombatEntity.AnyKilled += count;
+            ScriptableObject gaps = null;
+            try
+            {
+                PlayerKeys.Reset();
+                var spawn = new GameObject("B46 spawn service");
+                m_Made.Add(spawn);
+                spawn.AddComponent<KryticalNova.Networking.PlayerSpawnService>();
+                var point = new GameObject("B46 spawn point");
+                point.transform.SetParent(spawn.transform);
+                point.transform.position = new Vector3(20f, 0f, 0f);
+                point.AddComponent<KryticalNova.Networking.PlayerSpawnPoint>();
+
+                ulong keyA = PlayerKeys.Mint(461).Value;
+                GameObject a = Admitted(keyA, "46a1000000000000000000000000000a", "c4610000000000000000000000000461", "Talwyn");
+                GameObject b = Admitted(PlayerKeys.Mint(462).Value, "46b1000000000000000000000000000b", "c4620000000000000000000000000462", "Brannoc");
+                var mover = new MoverSeen();
+                a.GetComponent<BodyRoleTag>().Mover = mover;
+                for (int i = 0; i < 30; i++) yield return null;
+
+                var entity = a.GetComponent<CombatEntity>();
+                watched = entity;
+                var resources = a.GetComponent<PlayerResources>();
+                var progression = a.GetComponent<PlayerCharacterProgression>();
+                var death = a.GetComponent<PlayerDeathMotor>();
+                Assert.IsNotNull(death, "the server body keeps the death motor");
+                Assert.IsFalse(death.enabled, "switched off there: the ghost moves bodies");
+                int required = progression.ExperienceRequired;
+                Assert.Greater(required, 0, "planned: a level with an XP bar");
+                progression.SetExperience(required / 2);
+
+                // 1. killed by another player (a Callout's opponent, another faction): it falls, the countdown starts, no XP is lost
+                int xpBefore = progression.Experience;
+                entity.Kill(new KillingBlow { Attacker = b.GetComponent<CharacterCombatStats>(), Direction = Vector3.forward, IsCritical = true });
+                Assert.IsTrue(death.IsDead, "down");
+                Assert.IsFalse(entity.IsAlive);
+                Assert.AreEqual(1, deathsOfA, "one kill");
+                Assert.AreEqual(xpBefore, progression.Experience, "a player's kill costs no XP (NGO: only a Hostile's)");
+                Assert.AreNotEqual(0, death.ServerBodyPose, "a pose for the clients");
+                Assert.IsTrue(death.ServerBodyCritical);
+                Assert.AreEqual(b.transform, death.ServerBodyKiller);
+                entity.Kill(new KillingBlow { Direction = Vector3.forward });
+                Assert.AreEqual(1, deathsOfA, "the dead die once");
+                yield return null;   // NGO's chat lines go out in PlayerChat.LateUpdate
+                Assert.IsTrue(told.Any(a, "line Combat : Brannoc defeated you with a critical blow."), "NGO's line: " + string.Join(" | ", told.To(a)));
+                Assert.IsTrue(told.Any(b, "line Combat : You defeated Talwyn with a critical blow!"), "the killer's: " + string.Join(" | ", told.To(b)));
+                Assert.IsTrue(told.Any(a, "line Combat : Respawning in 8 seconds."));
+
+                // the clock: 3, 2, 1, then up on the map's spawn point (the server's place path), full HP and Flux
+                for (int i = 0; i < 18; i++) death.ServerBodyTick(0.5f);
+                yield return null;
+                foreach (string line in new[] { "Respawning in 3 seconds.", "Respawning in 2 seconds.", "Respawning in 1 second.", "You are back on your feet." })
+                    Assert.IsTrue(told.Any(a, "line Combat : " + line), line + ": " + string.Join(" | ", told.To(a)));
+                Assert.IsFalse(death.IsDead, "up");
+                Assert.AreEqual(resources.MaxHealth, resources.Health, 1e-3, "full HP");
+                Assert.AreEqual(1, mover.Teleports, "put on a spawn point");
+                Assert.AreEqual(0, death.ServerBodyPose);
+
+                // 2. killed by a Hostile: 5 % of the level's XP, once (NGO HostileKillRewards), never a level
+                var hostile = new GameObject("B46 hostile");
+                hostile.SetActive(false);   // its Awake never runs: only what the reward reads is needed
+                m_Made.Add(hostile);
+                Type hostileType = Type.GetType("KryticalNova.Hostiles.HostileNet, KryticalNova.Hostiles");
+                Type gapsType = Type.GetType("KryticalNova.Hostiles.LevelGapSettings, KryticalNova.Hostiles");
+                Type rulesType = Type.GetType("KryticalNova.Hostiles.LevelGapRules, KryticalNova.Hostiles");
+                Assert.IsNotNull(hostileType);
+                Assert.IsNotNull(gapsType);
+                Assert.IsNotNull(rulesType);
+                Component net = hostile.AddComponent(hostileType);
+                gaps = ScriptableObject.CreateInstance(gapsType);   // the code's 5 %, as LevelGapSettings.asset
+                hostileType.GetField("levelGap", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(net, gaps);
+                var hostileStats = hostile.GetComponent<CharacterCombatStats>();
+                if (hostileStats == null) hostileStats = hostile.AddComponent<CharacterCombatStats>();
+                int xpFull = progression.Experience;
+                int loss = (int)rulesType.GetMethod("DeathLoss").Invoke(null, new object[] { gaps, progression.ExperienceRequired, xpFull });
+                Assert.Greater(loss, 0, "planned: a loss to see");
+                entity.Kill(new KillingBlow { Attacker = hostileStats, Direction = Vector3.back });
+                Assert.AreEqual(2, deathsOfA);
+                Assert.AreEqual(xpFull - loss, progression.Experience, "the loss, once");
+                Assert.AreEqual(1, told.To(a).FindAll(l => l == $"system You lost {loss} XP for falling to a Hostile.").Count, "told once: " + string.Join(" | ", told.To(a)));
+
+                // 3. a view never decides a death: no Killed / AnyKilled there, so nothing is rewarded or taken twice
+                GameObject own = Make(NetRoleKind.ClientView, true, new PlayerKey(keyA));
+                GameObject theirs = Make(NetRoleKind.ClientView, false, new PlayerKey(keyA));
+                yield return null;
+                var ownEntity = own.GetComponent<CombatEntity>();
+                var theirEntity = theirs.GetComponent<CombatEntity>();
+                watched = ownEntity;
+                ownEntity.Kill(new KillingBlow { Attacker = hostileStats, Direction = Vector3.back });
+                theirEntity.MirrorHealth(500f, 500f);
+                theirEntity.MirrorHealth(0f, 500f);
+                watched = theirEntity;
+                theirEntity.Kill(new KillingBlow { Attacker = hostileStats, Direction = Vector3.back });
+                Assert.AreEqual(2, deathsOfA, "no kill decided on a view");
+                Assert.AreEqual(xpFull - loss, progression.Experience, "and no XP taken there");
+                watched = entity;
+
+                // 4. HP given back while down (a GM heal): up where it lies, no spawn point (NGO Update -> Revive(false))
+                Assert.IsTrue(death.IsDead);
+                resources.RestoreAll();
+                death.ServerBodyTick(0.1f);
+                Assert.IsFalse(death.IsDead, "up in place");
+                Assert.AreEqual(1, mover.Teleports, "not moved");
+
+                foreach (GameObject body in new[] { a, b }) { ServerLeaving.Notify(body); body.GetComponent<PlayerSaveAgent>().OnServerLeaving(); }
+            }
+            finally
+            {
+                CombatEntity.AnyKilled -= count;
+                if (gaps != null) Object.Destroy(gaps);
+                OwnerMessages.Current = oldMessages;
+                PlayerKeys.Reset();
+            }
+        }
+
         static void AssertSameBuffs(CharacterBuffManager server, CharacterBuffManager copy, string who)
         {
             Assert.AreEqual(server.ActiveBuffs.Count, copy.ActiveBuffs.Count, who + ": as many buffs");

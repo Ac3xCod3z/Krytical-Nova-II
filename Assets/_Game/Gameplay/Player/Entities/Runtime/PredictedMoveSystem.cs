@@ -20,6 +20,7 @@ namespace KryticalNova.Player.Entities
     public partial struct PredictedMoveSystem : ISystem
     {
         BufferLookup<PlayerMoveTrace> m_Traces;
+        ComponentLookup<PlayerVitals> m_Vitals;
 
         [BurstCompile]
         public void OnCreate(ref SystemState state)
@@ -27,6 +28,7 @@ namespace KryticalNova.Player.Entities
             state.RequireForUpdate<NetworkTime>();
             state.RequireForUpdate<PlayerGhostTag>();
             m_Traces = state.GetBufferLookup<PlayerMoveTrace>();
+            m_Vitals = state.GetComponentLookup<PlayerVitals>(true);
         }
 
         [BurstCompile(FloatMode = FloatMode.Deterministic, FloatPrecision = FloatPrecision.High)]
@@ -41,6 +43,7 @@ namespace KryticalNova.Player.Entities
             var cfg = SystemAPI.TryGetSingleton<PlayerMoveSettings>(out var set) ? set : PlayerMoveSettings.Default;
 
             m_Traces.Update(ref state);
+            m_Vitals.Update(ref state);
             new MoveJob
             {
                 TickMicros = PlayerMovement.TickMicros(simRate),
@@ -48,6 +51,7 @@ namespace KryticalNova.Player.Entities
                 First = nt.IsFirstTimeFullyPredictingTick,
                 Cfg = cfg,
                 Traces = m_Traces,
+                Vitals = m_Vitals,
             }.Schedule();
         }
 
@@ -60,6 +64,7 @@ namespace KryticalNova.Player.Entities
             public bool First;
             public PlayerMoveSettings Cfg;
             [NativeDisableParallelForRestriction] public BufferLookup<PlayerMoveTrace> Traces;
+            [ReadOnly] public ComponentLookup<PlayerVitals> Vitals;
 
             void Execute(Entity entity,
                 ref MoveState move, ref PlayerPose pose, ref PoseTilt tilt, ref LocalTransform transform, ref PlayerMoveDiag diag,
@@ -76,6 +81,12 @@ namespace KryticalNova.Player.Entities
                 // a jump click never starts a walk (PlayerMotionSystem flies it after this step)
                 PlayerInput walkInput = input;
                 if (walkInput.Jump != 0) walkInput.Click = default;
+                // a dead player walks and jumps no more until it is up (NGO: its agent is off, PointAndClickPlayer leads no walk)
+                if (Vitals.HasComponent(entity))
+                {
+                    PlayerVitals v = Vitals[entity];
+                    if (v.MaxHealthMilli > 0 && v.HealthMilli <= 0) { walkInput.Click = default; walkInput.Jump = 0; }
+                }
                 PlayerMovement.Step(ref move, ref pose, ref tilt, in walkInput, in order, in plan, serverCorners, in client, clientCorners,
                     in vault, in clientVault.Plan, in water, in clientWater.Plan,
                     in wall, serverLegs.AsNativeArray(), in clientWall.Plan, clientLegs.Reinterpret<WallCorner>().AsNativeArray(),

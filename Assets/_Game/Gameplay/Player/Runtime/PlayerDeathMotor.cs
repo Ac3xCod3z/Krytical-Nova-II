@@ -163,6 +163,8 @@ namespace KryticalNova.Player
                 warpAsset = Instantiate(warpTemplate);
                 warpAsset.name = warpTemplate.name + " (runtime)";
             }
+            // a server body of the entity netcode keeps this part switched off (the ghost moves bodies), so it listens from here (M4 6a)
+            if (ServerBody && combatEntity != null) combatEntity.Killed += RunServerBodyDeath;
         }
 
         private void OnEnable()
@@ -177,6 +179,7 @@ namespace KryticalNova.Player
 
         public override void OnDestroy()
         {
+            if (combatEntity != null) combatEntity.Killed -= RunServerBodyDeath;
             if (warpAsset != null) Destroy(warpAsset);
             base.OnDestroy();
         }
@@ -616,7 +619,86 @@ namespace KryticalNova.Player
         /// </summary>
         public void Respawn()
         {
+            if (ServerBody) { if (IsDead) ServerBodyRevive(true); return; }
             if (HasAuthority && IsDead) Revive(true);
+        }
+
+        // ------------------------------------------------------------------ a server body of the entity netcode (M4 step 6a)
+
+        private bool ServerBody => BodyRoleTag.Of(this) is { Kind: NetRoleKind.ServerBody };
+        private float serverBodyLeft;
+        private int serverBodyAnnounced;
+
+        /// <summary>How the server body went down (for the clients' presentation, M4 6b): alive, on its back, face down, or de-rezzed.</summary>
+        public byte ServerBodyPose { get; private set; }
+        /// <summary>The killing blow was a critical one.</summary>
+        public bool ServerBodyCritical { get; private set; }
+        /// <summary>The blow's flat direction, attacker to victim.</summary>
+        public Vector3 ServerBodyDirection { get; private set; }
+        /// <summary>Whoever struck the blow, or null (a GM kill).</summary>
+        public Transform ServerBodyKiller { get; private set; }
+        /// <summary>Deaths and returns so far: changes on each, so a client plays each once.</summary>
+        public int ServerBodyChanges { get; private set; }
+
+        /// <summary>
+        /// A server body of the entity netcode: NGO's OnKilled where it decides (the blow's side, de-rez or fall, buffs cleared, the walk
+        /// stopped, <see cref="Died"/>, the countdown started). The body's fall and the clips are the clients' (M4 6b): the ghost moves it.
+        /// </summary>
+        private void RunServerBodyDeath(KillingBlow blow)
+        {
+            if (!ServerBody || IsDead) return;
+            Vector3 direction = Flat(blow.Direction, -transform.forward);
+            bool offTheGround = agent != null && IsOffTheGround();
+            bool fromFront = Vector3.Dot(Flat(transform.forward, Vector3.forward), -direction) >= 0f;
+            if (buffManager != null) buffManager.ClearAllBuffs();
+            BodyRoleTag.Of(this).Mover?.Stop();   // the walk it was on ends where the body fell (NGO: the agent stops)
+
+            phase = Phase.Down;
+            critical = blow.IsCritical;
+            ServerBodyPose = (byte)(offTheGround ? Pose.Gone : fromFront ? Pose.OnBack : Pose.FaceDown);
+            ServerBodyCritical = blow.IsCritical;
+            ServerBodyDirection = direction;
+            ServerBodyKiller = blow.Attacker != null ? blow.Attacker.transform : null;
+            ServerBodyChanges++;
+
+            Died?.Invoke(blow);
+            serverBodyLeft = respawnDelay;
+            serverBodyAnnounced = Mathf.CeilToInt(serverBodyLeft);
+            RespawnCountdown?.Invoke(serverBodyAnnounced);
+        }
+
+        /// <summary>
+        /// A server body of the entity netcode, every frame (the entity netcode's death system): NGO's RespawnRoutine (the countdown at 3, 2
+        /// and 1, the respawn when it runs out) and its Update (HP given back early, as by a GM: up where it lies).
+        /// </summary>
+        public void ServerBodyTick(float deltaTime)
+        {
+            if (!ServerBody || !IsDead) return;
+            if (resources != null && resources.IsAlive) { ServerBodyRevive(false); return; }
+            serverBodyLeft -= deltaTime;
+            int whole = Mathf.CeilToInt(serverBodyLeft);
+            if (whole < serverBodyAnnounced && whole > 0 && whole <= 3) RespawnCountdown?.Invoke(whole);
+            serverBodyAnnounced = Mathf.Min(serverBodyAnnounced, whole);
+            if (serverBodyLeft <= 0f) ServerBodyRevive(true);
+        }
+
+        // NGO's Revive where it decides: a spawn point of the map (none: up where it fell), full HP and Flux, Respawned
+        private void ServerBodyRevive(bool atSpawnPoint)
+        {
+            BodyRoleTag tag = BodyRoleTag.Of(this);
+            if (atSpawnPoint && tag != null && tag.Mover != null)
+            {
+                var occupied = new List<Vector3>();
+                foreach (BodyRoleTag other in BodyRoleTag.ServerBodies)
+                    if (other != null && other != tag) occupied.Add(other.transform.position);
+                if (PlayerSpawnService.PickPoint(occupied, agent != null ? agent.baseOffset : 0f, out Vector3 position, out Quaternion rotation))
+                    tag.Mover.Teleport(position, rotation);   // the server's place path: the ghost is put there (TeleportSeq)
+            }
+            if (resources != null && !resources.IsAlive) resources.RestoreAll();
+            phase = Phase.None;
+            ServerBodyPose = (byte)Pose.Alive;
+            ServerBodyChanges++;
+            Respawned?.Invoke();
         }
 
         private void Revive(bool atSpawnPoint)

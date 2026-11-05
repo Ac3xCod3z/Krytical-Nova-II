@@ -55,6 +55,8 @@ namespace KryticalNova.Player.Entities
             {
                 ref CombatState s = ref combat.ValueRW;
                 PlayerInput i = input.ValueRO;
+                // a dead player swings no more (NGO PlayerDeathMotor.Begin: CancelAttack on every peer) and starts nothing until it is up
+                if (bodies.TryGetValue(ghost.ValueRO.ghostId, out Body self) && !self.Alive) { MeleeRules.Cancel(ref s); continue; }
                 // NGO PointAndClickPlayer: a walk click (ground, water, wall) or the stop calls the attack off (CancelAttack)
                 if (i.StopAttack.IsSet || i.Click.IsSet || i.Stop.IsSet) MeleeRules.Cancel(ref s);
                 if (i.Attack.IsSet && i.AttackGhostId != 0 && i.AttackGhostId != ghost.ValueRO.ghostId) MeleeRules.Begin(ref s, i.AttackGhostId);
