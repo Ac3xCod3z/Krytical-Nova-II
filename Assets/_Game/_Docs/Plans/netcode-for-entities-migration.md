@@ -242,6 +242,12 @@ prediction error p95 <= 0.05 m at 60 ms, tick p95 < 15 ms with 102 monsters (fro
     of that player (ShowSquadBuff = NGO SquadBuffClientRpc's body: the buff copy, the owner's line). EditMode 150/150, PlayMode 44/44 (B43).
     Found on the way: other players' views strip the combat parts, so casts, charges, swings, impacts and buffs seen by others play
     nothing yet. Next: M4.5h (owner pick A, copy NGO): remote views keep them, every deciding path guarded.
+  - [x] M4.5h Other players' views keep the combat parts, as NGO clients had them (owner pick A, 5 Nov): PlayerCombatSkills,
+    PlayerSkillAttacks, PlayerMeleeCombat and what they require (PlayerResources, CharacterBuffManager, CharacterCombatStats; the
+    NavMeshAgent stays, off). They decide nothing there (BodyRoleTag.IsRemoteClientView): PlayerResources is a mirror (no regen, heal,
+    refill, damage, reset), no skills authority, ExecuteCastInternal refuses, and the ghost's HP goes into PlayerResources
+    (CombatEntity.MirrorHealth). HIGH, reviewed by the Master. EditMode 232/232 (Player.Entities), PlayMode 45/45 (B44 on a real remote
+    view: casts, charges, swings, impacts and Squad buffs play; HP, Flux, casts, ranks never decided). Owner GUI checks c2, c5, c7, c8.
 - [ ] **M5 Monster system prototype (new brain).** Section 6. P0 EditMode sim tests (no netcode), P1 ghost + view, P2 reward bridge.
 - [ ] **M6 Hostiles in full.** All roster species via `MonsterArchetype` from `HostileDefinition` (ids kept), level scaling, zones,
   sleep, respawn, loot/XP through managed reward bridge with ledger rules; nav grids for the zones; bot soak with 102 monsters.

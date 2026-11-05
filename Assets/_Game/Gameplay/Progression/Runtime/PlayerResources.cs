@@ -66,7 +66,11 @@ namespace KryticalNova.Progression
             health = maxHealth;
             chi = maxChi;
             initialized = true;
+            // another player's view (M4.5h): a mirror from the start, its HP comes from the ghost (CombatEntity.MirrorHealth)
+            if (RemoteView) chiMirrored = true;
         }
+
+        private bool RemoteView => BodyRoleTag.IsRemoteClientView(this);
 
         private void Awake()
         {
@@ -232,10 +236,10 @@ namespace KryticalNova.Progression
             && amount >= 0f && (chi + ComparisonTolerance >= amount || HasInfiniteChi);
 
         /// <summary>True where this player's HP and Chi are decided (the server, or offline). Clients only mirror them.</summary>
-        public bool HasAuthority => !IsSpawned || IsServer;
+        public bool HasAuthority => (!IsSpawned || IsServer) && !RemoteView;
 
-        // An NGO client, or an entity-netcode client's own view body once its server's Flux has come (MirrorChi).
-        private bool IsMirror => (IsSpawned && !IsServer) || chiMirrored;
+        // An NGO client, an entity-netcode client's own view body once its server's Flux has come (MirrorChi), or another player's view.
+        private bool IsMirror => (IsSpawned && !IsServer) || chiMirrored || RemoteView;
         private bool chiMirrored;
 
         /// <summary>
@@ -288,6 +292,7 @@ namespace KryticalNova.Progression
         public void ApplyDamage(float amount, bool ignoreGodMode = false)
         {
             if (!isActiveAndEnabled || !IsAlive || !float.IsFinite(amount) || amount <= 0f) return;
+            if (RemoteView) return;   // another player's view: the server's hits come back through the ghost (M4.5h)
             if (!ignoreGodMode && gmState != null && gmState.GodMode) return;
             float before = health;
             health = Mathf.Max(0f, health - amount);
@@ -338,7 +343,7 @@ namespace KryticalNova.Progression
         /// <summary>Restores both resources; usable by future respawn systems and explicit playtest controls.</summary>
         public void RestoreAll()
         {
-            if (!initialized) return;
+            if (!initialized || RemoteView) return;
             health = maxHealth;
             chi = maxChi;
             SyncNetworkState();

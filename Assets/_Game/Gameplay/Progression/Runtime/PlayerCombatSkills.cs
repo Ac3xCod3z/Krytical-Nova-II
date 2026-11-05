@@ -77,7 +77,7 @@ namespace KryticalNova.Progression
         }
 
         /// <summary>True where this player's skills are decided (the server, or offline). Clients only mirror them.</summary>
-        public bool HasAuthority => !IsSpawned || IsServer;
+        public bool HasAuthority => (!IsSpawned || IsServer) && !BodyRoleTag.IsRemoteClientView(this);
 
         // NGO's "IsSpawned && IsServer": the NGO server, or a server body of the entity netcode (never network-spawned)
         private bool DecidesOnServer => (IsSpawned && IsServer) || BodyRoleTag.Of(this) is { Kind: NetRoleKind.ServerBody };
@@ -999,6 +999,8 @@ namespace KryticalNova.Progression
         {
             reason = string.Empty;
             if (skill == null) return false;
+            // another player's view shows casts, it never makes one (M4.5h): the Flux, the cooldown, the buff and the hits are the server's
+            if (BodyRoleTag.IsRemoteClientView(this)) return false;
 
             int rank = GetRank(skill);
             float chiCost = skill.GetChiCost(rank);

@@ -78,8 +78,12 @@ namespace KryticalNova.Player.Entities.Bodies
 
         /// <summary>Rule behaviours a remote body keeps because nameplates and targeting read them (the level too: M8 8.3.1, it takes the
         /// server's through <c>PlayerLevelTag</c>), and its equipment: what the player wears is drawn from it (M8 8.1.2b; it takes the server's
-        /// gear through the look text, <c>PlayerEquipment.ApplyObserved</c>).</summary>
-        public static readonly string[] RemoteKeepsRules = { "CombatEntity", "FactionExtension", "PlayerEquipment", "PlayerCharacterProgression", "PlayerNova", "PlayerParty", "PlayerCrew", "PlayerEmotes", "PlayerInventory", "PlayerPet", "PlayerMounts", "MountRider" };
+        /// gear through the look text, <c>PlayerEquipment.ApplyObserved</c>). M4.5h (owner pick A, 5 Nov 2026: copy NGO, whose clients had them): the
+        /// combat parts that play what others see, the casts, charges, swings, impacts and buffs (PlayerCombatSkills, PlayerSkillAttacks,
+        /// PlayerMeleeCombat) and what they require (PlayerResources, CharacterBuffManager, CharacterCombatStats; the NavMeshAgent stays, off).
+        /// On such a body they decide nothing: <c>BodyRoleTag.IsRemoteClientView</c> guards every path that would.</summary>
+        public static readonly string[] RemoteKeepsRules = { "CombatEntity", "FactionExtension", "PlayerEquipment", "PlayerCharacterProgression", "PlayerNova", "PlayerParty", "PlayerCrew", "PlayerEmotes", "PlayerInventory", "PlayerPet", "PlayerMounts", "MountRider",
+            "PlayerCombatSkills", "PlayerSkillAttacks", "PlayerMeleeCombat", "PlayerResources", "CharacterBuffManager", "CharacterCombatStats" };
 
         /// <summary>Things every shape keeps.</summary>
         public static readonly string[] Infrastructure =

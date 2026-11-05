@@ -99,6 +99,13 @@ namespace KryticalNova.Core
             return tag != null && tag.kind == NetRoleKind.ClientView && tag.isLocal;
         }
 
+        /// <summary>True for another player's ClientView body on this machine: it only shows, it never decides (M4.5h).</summary>
+        public static bool IsRemoteClientView(Component part)
+        {
+            BodyRoleTag tag = Of(part);
+            return tag != null && tag.kind == NetRoleKind.ClientView && !tag.isLocal;
+        }
+
         /// <summary>
         /// The one answer to "is this body this machine's own player?" (its view kicks, messages, death view, camera, panels; plan 52).
         /// A body of the entity netcode answers from its tag: only the local ClientView is mine, a ServerBody is nobody's on this machine.

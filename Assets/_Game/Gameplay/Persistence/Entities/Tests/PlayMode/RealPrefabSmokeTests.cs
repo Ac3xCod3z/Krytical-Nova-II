@@ -3785,6 +3785,168 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
             }
         }
 
+        [UnityTest]
+        public IEnumerator B44_AnotherPlayersView_KeepsTheCombatParts_PlaysCastsChargesSwingsImpactsAndBuffs_AndDecidesNothing()
+        {
+            // M4.5h (owner pick A, copy NGO): another player's view keeps the parts an NGO client had, so what M4.4k / M4.4h / M4.5c / M4.5f /
+            // M4.5g play reaches it; and on it they decide nothing (HP, Flux, casts, buffs, ranks are the server's)
+            NetRole.Install(new BodyRoleNetRoleAdapter(null, () => NetRoleKind.ServerBody));
+            IGameFeelSink oldFeel = ClientPresentationRegistry.Feel;
+            var feel = new FeelSeen();
+            ClientPresentationRegistry.RegisterFeel(feel);
+            try
+            {
+                PlayerKeys.Reset();
+                GameObject server = Admitted(PlayerKeys.Mint(441).Value, "44a1000000000000000000000000000a", "c4410000000000000000000000000441", "Talwyn");
+                GameObject remote = Make(NetRoleKind.ClientView, false, new PlayerKey(442));
+                GameObject struck = Make(NetRoleKind.ClientView, false, new PlayerKey(443));
+                for (int i = 0; i < 30; i++) yield return null;
+
+                // the parts, as an NGO client had them; the agent stays, switched off
+                foreach (string part in new[] { "PlayerCombatSkills", "PlayerSkillAttacks", "PlayerMeleeCombat", "PlayerResources", "CharacterBuffManager", "CharacterCombatStats" })
+                    Assert.IsNotNull(remote.GetComponent(part), part + " stays on another player's view");
+                AssertAgentsOff(remote);
+                CollectionAssert.IsEmpty(LocalStaticsOn(remote), "no X.Local points at another player's body");
+                var skills = remote.GetComponent<PlayerCombatSkills>();
+                var resources = remote.GetComponent<PlayerResources>();
+                var buffs = remote.GetComponent<CharacterBuffManager>();
+                var attacks = remote.GetComponent<KryticalNova.Combat.PlayerSkillAttacks>();
+                var melee = remote.GetComponent<KryticalNova.Combat.PlayerMeleeCombat>();
+                var entity = remote.GetComponent<CombatEntity>();
+                Assert.IsFalse(skills.HasAuthority, "never the skills' authority");
+                Assert.IsFalse(resources.HasAuthority, "never the pools' authority");
+                // in the game the faction comes with the look and PlayerWeaponClass.Refresh sets its skills; this bare view has the prefab's
+                skills.SetAvailableSkills(new List<SkillDefinitionSO>(server.GetComponent<PlayerCombatSkills>().AvailableSkills).ToArray());
+                SkillDefinitionSO buff = null, channeled = null;
+                foreach (SkillDefinitionSO s in skills.AvailableSkills)
+                {
+                    if (s == null || s.IsAttack) continue;
+                    if (s.executionType == SkillExecutionType.Channeled) channeled ??= s;
+                    else buff ??= s;
+                }
+                Assert.IsNotNull(buff, "planned: the faction has a buff");
+
+                // the ghost's HP goes into its PlayerResources (as the own view's OwnerFlux); a fall to 0 is its death
+                int died = 0;
+                entity.Died += () => died++;
+                entity.MirrorHealth(300f, 500f);
+                Assert.AreEqual(300f, entity.CurrentHealth, 1e-3);
+                Assert.AreEqual(300f, resources.Health, 1e-3);
+                Assert.AreEqual(500f, entity.MaxHealth, 1e-3);
+
+                // 1. a cast seen (M4.5c): the buff copy, the cast event and its presentation
+                int casts = 0;
+                skills.SkillCast += _ => casts++;
+                var lines = new List<string>();
+                skills.SkillMessage += lines.Add;
+                skills.ShowCastSeen(buff.skillId, 5, null);
+                Assert.AreEqual(1, casts, "the cast is played");
+                Assert.IsNotNull(buffs.GetBuff(buff.skillId), "its copy of the buff (looks)");
+                Assert.IsTrue(feel.Calls.Contains("cast " + buff.PresentationId), "the cast's presentation: " + string.Join(" | ", feel.Calls));
+
+                // 2. a charge seen (M4.5f)
+                attacks.ShowChargeSeen(buff.skillId, struck.transform, true, false);
+                attacks.ShowChargeSeen(buff.skillId, null, false, true);
+                Assert.IsTrue(feel.Calls.Contains("charge " + buff.PresentationId), "the charge starts: " + string.Join(" | ", feel.Calls));
+                Assert.IsTrue(feel.Calls.Contains("charged " + buff.PresentationId + " True"), "and ends");
+
+                // 3. a Squad buff seen (M4.5g): the copy, and no line (that is the receiver's own game)
+                skills.ShowSquadBuff(buff.skillId, 5, "Brannoc");
+                Assert.IsTrue(buffs.GetBuff(buff.skillId).FromSquadmate, "the copy says who gave it");
+                Assert.IsEmpty(lines, "no line on another player's view");
+
+                // 4. a swing seen (M4.4k): strike 1's clip plays on its rig
+                melee.ShowStrikeFromGhost(1);
+                object rig = typeof(KryticalNova.Combat.PlayerMeleeCombat).GetField("animancer", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(melee);
+                var clip = (AnimationClip)typeof(KryticalNova.Combat.PlayerMeleeCombat).GetField("combo1Clip", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(melee);
+                Assert.IsNotNull(rig, "the view's swing rig");
+                Assert.IsNotNull(clip, "the prefab's strike 1");
+                Assert.IsTrue((bool)rig.GetType().GetMethod("IsPlayingClip", new[] { typeof(AnimationClip) }).Invoke(rig, new object[] { clip }), "strike 1 plays");
+
+                // 5. an impact seen (M4.4h): its presentation on the struck body
+                melee.PreviewImpact(struck.transform, 2, true);
+                Assert.IsTrue(feel.Calls.Contains("hit " + struck.name + " 2 True"), "the impact: " + string.Join(" | ", feel.Calls));
+
+                // it decides nothing: no hit, heal, refill or reset of its own, no regeneration, no channel ticks, no Flux spent
+                float hp = resources.Health, chi = resources.Chi;
+                resources.ApplyDamage(50f);
+                resources.Heal(50f);
+                resources.RestoreChi(50f);
+                resources.RestoreAll();
+                entity.ResetHealth();
+                Assert.IsTrue(resources.TrySpendChi(0f));
+                if (channeled != null) buffs.ApplyBuff(channeled, channeled.maxRank);
+                else UnityEngine.Debug.Log("[B44] this faction has no channeled skill: its ticks are checked by the guards only");
+                yield return new WaitForSeconds(1.3f);
+                Assert.AreEqual(hp, resources.Health, 1e-3, "HP only from the ghost");
+                Assert.AreEqual(chi, resources.Chi, 1e-3, "Flux only from the server");
+                Assert.AreEqual(0, died);
+
+                // no cast, no ranks, no Squad share of its own
+                Assert.IsFalse(skills.ServerTryCast(buff, null, out _), "a cast is never made here");
+                Assert.IsFalse(skills.TryCastSkill(buff, out _), "nor asked for from here");
+                skills.GmSetAllRanksToMax();
+                Assert.AreEqual(0, skills.GetRank(buff), "ranks are the server's");
+                int given = 0;
+                skills.SquadBuffGiven += (id, rank, giver) => given++;
+                skills.ServerReceiveSquadBuff(buff.skillId, 5, "Brannoc");
+                Assert.AreEqual(0, given, "a Squad buff is received by the server body only");
+
+                // and the ghost still decides its HP: a fall to 0 is its death
+                entity.MirrorHealth(0f, 500f);
+                Assert.IsFalse(entity.IsAlive);
+                Assert.AreEqual(1, died);
+
+                ServerLeaving.Notify(server);
+                server.GetComponent<PlayerSaveAgent>().OnServerLeaving();
+            }
+            finally
+            {
+                if (oldFeel != null) ClientPresentationRegistry.RegisterFeel(oldFeel);
+                else ClientPresentationRegistry.UnregisterFeel(feel);
+                PlayerKeys.Reset();
+            }
+        }
+
+        /// <summary>The game-feel calls a body made (B44).</summary>
+        sealed class FeelSeen : IGameFeelSink
+        {
+            public readonly List<string> Calls = new List<string>();
+            public void Swing(Transform attacker, int comboStep, bool isLocalPlayer, float seconds = 0f) => Calls.Add($"swing {comboStep}");
+            public void Hit(in HitFeel hit) => Calls.Add($"hit {(hit.Target != null ? hit.Target.name : "")} {hit.ComboStep} {hit.IsCritical}");
+            public void Missed(Transform attacker, Vector3 point, bool skill, bool isLocalPlayer) { }
+            public void LocalPlayerDamaged(float fraction01) => Calls.Add("hurt");
+            public void MoveCommand(Vector3 point, Vector3 normal) { }
+            public void TargetSelected(Transform target, WorldTargetKind kind) { }
+            public void RunStarted(Transform actor, bool isLocalPlayer) { }
+            public void RunStopped(Transform actor) { }
+            public void RideWalk(Transform actor, bool walking) { }
+            public void JumpCharge(Transform actor, bool isLocalPlayer) { }
+            public void JumpTakeoff(Transform actor, bool isLocalPlayer) { }
+            public void WallStanding(Transform actor, bool onWall) { }
+            public void WaterStriding(Transform actor, bool onWater) { }
+            public void WaterSplash(Transform actor, Vector3 at, bool isLocalPlayer) { }
+            public void Landed(Transform actor, bool isLocalPlayer) { }
+            public void Airborne(Transform actor, bool airborne) { }
+            public void SkillCast(Transform caster, string skillId, bool isAttack, bool isLocalPlayer, float areaRadius = 0f, float areaSeconds = 0f) => Calls.Add("cast " + skillId);
+            public void ChargeStarted(Transform actor, string skillId, float seconds, bool isLocalPlayer) => Calls.Add("charge " + skillId);
+            public void ChargeEnded(Transform actor, string skillId, bool completed) => Calls.Add($"charged {skillId} {completed}");
+            public void SkillHit(Transform caster, string skillId, Vector3 point, int classSlot = 0) { }
+            public void BuffStarted(Transform actor, string skillId, float duration) { }
+            public void BuffEnded(Transform actor, string skillId) { }
+            public void Consumed(Transform actor, bool restoredHealth, bool restoredChi) { }
+            public void PetEvolved(Transform pet, Color glow, bool ownerIsLocalPlayer) { }
+            public void Death(in DeathFeel death) { }
+            public void BodyLanded(Transform actor, bool critical, bool involvesLocalPlayer) { }
+            public void Respawned(Transform actor, bool isLocalPlayer) { }
+            public void Disintegrate(in DeathFeel death) { }
+            public void SetDisintegrated(Transform actor, bool gone) { }
+            public void GearWorked(Transform actor, int outcome, bool isLocalPlayer) { }
+            public void NovaWorked(in NovaFeel moment) { }
+            public void LevelUp(Transform actor, bool isLocalPlayer) { }
+            public void PickedUp(Transform taker, Vector3 point, int rarity, bool isLocalPlayer) { }
+        }
+
         static CharacterRecipe AnyLegalRecipe(CharacterCreationDatabase database)
         {
             Assert.IsNotNull(database, "PlayerIdentity has its character database");

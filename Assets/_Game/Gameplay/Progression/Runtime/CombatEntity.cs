@@ -395,7 +395,18 @@ namespace KryticalNova.Progression
         public void MirrorHealth(float current, float max)
         {
             if (!initialized) InitializeEntity();
-            if (playerResources != null || KryticalNova.Core.BodyRoleTag.Of(this) is not { Kind: KryticalNova.Core.NetRoleKind.ClientView }) return;
+            if (playerResources != null)
+            {
+                // another player's view keeps PlayerResources (M4.5h): the ghost's HP goes into it, as the own view's OwnerFlux does
+                if (!KryticalNova.Core.BodyRoleTag.IsRemoteClientView(this)) return;
+                float had = playerResources.Health;
+                bool firstCopy = !mirrored;
+                mirrored = true;
+                playerResources.MirrorHealth(current, max);
+                if (!firstCopy && had > 0f && current <= 0f) Died?.Invoke();
+                return;
+            }
+            if (KryticalNova.Core.BodyRoleTag.Of(this) is not { Kind: KryticalNova.Core.NetRoleKind.ClientView }) return;
             float before = standaloneHealth;
             if (mirrored && Mathf.Approximately(before, current) && Mathf.Approximately(maxHealthOverride, max)) return;
             bool first = !mirrored;
