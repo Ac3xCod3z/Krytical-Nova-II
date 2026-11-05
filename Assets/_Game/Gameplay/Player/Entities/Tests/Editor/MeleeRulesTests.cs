@@ -210,6 +210,41 @@ namespace KryticalNova.Player.Entities.Tests
         }
 
         [Test]
+        public void TheKnock_GoesFromTheBodyToTheLanding_ThrowsACriticalBodyUp_DropsAnAirborneOne_AndTurnsOnlyToABlowFromTheFront()
+        {
+            // M4 6b-2: NGO's death warp as the ghost's plan (straight travel here; the game bakes the clip's own)
+            var curves = DeathKnockCurves.Default;   // 1.2 s, impact 0.5 s, lift 550 mm, turn 0.12 s
+            var plan = new KnockPlan
+            {
+                Seq = 1, Chain = KnockFlight.Chain(true, false), StartTick = new NetworkTick(100),
+                FromXMm = 0, FromYMm = 0, FromZMm = 0, ToXMm = 0, ToYMm = 0, ToZMm = 2000, FromYawCdeg = 0, YawCdeg = 18000,
+            };
+            Assert.AreEqual(new int3(0, 0, 0), KnockFlight.RootAt(plan, curves, 0));
+            Assert.AreEqual(new int3(0, 0, 1000), KnockFlight.RootAt(plan, curves, 600000), "half the clip, half the way");
+            Assert.AreEqual(new int3(0, 0, 2000), KnockFlight.RootAt(plan, curves, 1200000), "on the landing");
+            Assert.AreEqual(new int3(0, 0, 2000), KnockFlight.RootAt(plan, curves, 5000000), "and stays");
+            Assert.AreEqual(0, KnockFlight.YawAt(plan, curves, 0));
+            Assert.AreEqual(18000, KnockFlight.YawAt(plan, curves, 120000), "turned to the blow in 0.12 s");
+            Assert.IsTrue(KnockFlight.Moves(plan, curves, new NetworkTick(100 + 36), 33333), "moving within the clip");
+            Assert.IsFalse(KnockFlight.Moves(plan, curves, new NetworkTick(100 + 40), 33333), "done after it");
+            Assert.IsFalse(KnockFlight.Moves(default, curves, new NetworkTick(100), 33333), "no plan, no knock");
+
+            var behind = plan;
+            behind.Chain = KnockFlight.Chain(false, false);
+            Assert.AreEqual(18000, KnockFlight.YawAt(behind, curves, 0), "a blow from behind never turns the body");
+
+            var crit = plan;
+            crit.Chain = KnockFlight.Chain(true, true);
+            Assert.AreEqual(550, KnockFlight.RootAt(crit, curves, 250000).y, "the arc's top at half the impact time");
+            Assert.AreEqual(0, KnockFlight.RootAt(crit, curves, 500000).y, "down at the impact");
+
+            var air = plan;
+            air.FromYMm = 3000;
+            Assert.Less(KnockFlight.RootAt(air, curves, 300000).y, 3000, "falling");
+            Assert.AreEqual(0, KnockFlight.RootAt(air, curves, 1100000).y, "down before the clip ends");
+        }
+
+        [Test]
         public void ADeathState_IsAFallOnceAReturnOnce_AndALateViewLiesDown()
         {
             // M4 6b: NGO's DeathClientRpc / RevivedClientRpc once each, and a late joiner's netPose without the fall

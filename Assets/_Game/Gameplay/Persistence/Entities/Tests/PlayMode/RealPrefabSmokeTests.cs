@@ -4234,6 +4234,59 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
             }
         }
 
+        [UnityTest]
+        public IEnumerator B48_TheServerBodysDeath_PicksNgosChain_LandsAlongTheBlowWithinItsReach_AndFacesOnlyABlowFromTheFront()
+        {
+            // M4 6b-2: the knock's numbers come from the real body (FindLanding, Pick, the facing), and the prefab's chains bake
+            NetRole.Install(new BodyRoleNetRoleAdapter(null, () => NetRoleKind.ServerBody));
+            try
+            {
+                PlayerKeys.Reset();
+                GameObject a = Admitted(PlayerKeys.Mint(481).Value, "48a1000000000000000000000000000a", "c4810000000000000000000000000481", "Talwyn");
+                a.GetComponent<BodyRoleTag>().Mover = new MoverSeen();
+                for (int i = 0; i < 30; i++) yield return null;
+                var death = a.GetComponent<PlayerDeathMotor>();
+                var entity = a.GetComponent<CombatEntity>();
+                for (int chain = 0; chain < 4; chain++)
+                    Assert.IsTrue(death.TryReadKnockChain(chain, out _, out float length, out _) && length > 0f, "the prefab's chain " + chain + " is set up");
+
+                // a critical blow from the front: chain 2, thrown along the blow at most 5.5 m (NGO critDistance), turned to face it
+                Vector3 start = a.transform.position;
+                float startYaw = a.transform.eulerAngles.y;
+                Vector3 blow = -a.transform.forward;   // travelling toward the body's front: from the front
+                entity.Kill(new KillingBlow { Direction = blow, IsCritical = true });
+                Assert.IsTrue(death.IsDead);
+                Assert.AreEqual(2, death.ServerBodyChain, "critical, from the front");
+                Vector3 travel = death.ServerBodyLanding - start;
+                travel.y = 0f;
+                Assert.LessOrEqual(travel.magnitude, 5.5f + 0.01f, "within the critical reach");
+                if (travel.magnitude > 0.1f) Assert.Greater(Vector3.Dot(travel.normalized, blow.normalized), 0.99f, "along the blow");
+                Assert.AreEqual(Quaternion.LookRotation(-blow, Vector3.up).eulerAngles.y, death.ServerBodyFacing, 0.5f, "facing the blow");
+                if (death.ServerBodyPose != 3) Assert.IsTrue(death.ServerBodyKnocks, "a fall travels");
+
+                // up again; a plain blow from behind: chain 1, the facing kept
+                a.GetComponent<PlayerResources>().RestoreAll();
+                death.ServerBodyTick(0.1f);
+                Assert.IsFalse(death.IsDead);
+                entity.Kill(new KillingBlow { Direction = a.transform.forward, IsCritical = false });
+                Assert.AreEqual(1, death.ServerBodyChain, "plain, from behind");
+                Assert.AreEqual(a.transform.eulerAngles.y, death.ServerBodyFacing, 0.5f, "a blow from behind never turns the body");
+
+                // the knock's numbers bake from the prefab for the worlds
+                var curves = KryticalNova.Persistence.Entities.PlayerJumpFromSkills.KnockCurvesOf(Prefab());
+                Assert.IsTrue(curves.HasValue, "baked");
+                Assert.AreEqual(550, curves.Value.CritLiftMm, 1, "NGO's critLift");
+                Assert.Greater(curves.Value.LengthMicros(2), 0);
+
+                ServerLeaving.Notify(a);
+                a.GetComponent<PlayerSaveAgent>().OnServerLeaving();
+            }
+            finally
+            {
+                PlayerKeys.Reset();
+            }
+        }
+
         static void AssertSameBuffs(CharacterBuffManager server, CharacterBuffManager copy, string who)
         {
             Assert.AreEqual(server.ActiveBuffs.Count, copy.ActiveBuffs.Count, who + ": as many buffs");

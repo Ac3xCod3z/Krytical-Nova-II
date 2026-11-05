@@ -41,6 +41,43 @@ namespace KryticalNova.Persistence.Entities
             em.SetComponentData(holder, curves.Value);
         }
 
+        /// <summary>
+        /// The death knock's numbers (M4 6b-2) from a player prefab's or body's PlayerDeathMotor: each chain's travel, clip length and impact,
+        /// the critical lift and the turn. Null when a chain is not set up (the knock then uses straight numbers).
+        /// </summary>
+        public static DeathKnockCurves? KnockCurvesOf(GameObject player)
+        {
+            var death = player != null ? player.GetComponent<PlayerDeathMotor>() : null;
+            if (death == null) return null;
+            var curves = new DeathKnockCurves
+            {
+                CritLiftMm = (int)math.round(death.CritLift * 1000f),
+                TurnMicros = (int)math.round(death.TurnSeconds * 1e6f),
+            };
+            for (int chain = 0; chain < DeathKnockCurves.Chains; chain++)
+            {
+                if (!death.TryReadKnockChain(chain, out AnimationCurve travel, out float length, out float impact))
+                {
+                    Debug.LogWarning("[KnPlayer] " + player.name + " has a death chain without clips or travel: the ghost's knock uses straight numbers.");
+                    return null;
+                }
+                curves.Set(chain, share => travel.Evaluate(share * length), length, impact);
+            }
+            return curves;
+        }
+
+        /// <summary>Puts the knock's numbers in <paramref name="world"/> as its one <see cref="DeathKnockCurves"/> (replaces an older one).</summary>
+        public static void InstallKnockCurves(World world, GameObject player)
+        {
+            if (world == null || !world.IsCreated) return;
+            DeathKnockCurves? curves = KnockCurvesOf(player);
+            if (!curves.HasValue) return;
+            EntityManager em = world.EntityManager;
+            using var query = em.CreateEntityQuery(ComponentType.ReadWrite<DeathKnockCurves>());
+            Entity holder = query.CalculateEntityCount() > 0 ? query.GetSingletonEntity() : em.CreateEntity(typeof(DeathKnockCurves));
+            em.SetComponentData(holder, curves.Value);
+        }
+
         internal static GameObject BodyOf(World world, Entity ghost) =>
             GhostBodyRegistry.TryGetByGhost(world, ghost, out GhostBodyEntry entry) ? entry.Body : null;
     }

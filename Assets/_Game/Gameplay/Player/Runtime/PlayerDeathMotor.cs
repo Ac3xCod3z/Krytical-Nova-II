@@ -688,6 +688,30 @@ namespace KryticalNova.Player
         public Transform ServerBodyKiller { get; private set; }
         /// <summary>Deaths and returns so far: changes on each, so a client plays each once.</summary>
         public int ServerBodyChanges { get; private set; }
+        /// <summary>A fall (not a de-rez) with its travel worked out (M4 6b-2): the chain, the root's landing and the end facing.</summary>
+        public bool ServerBodyKnocks { get; private set; }
+        /// <summary>NGO's Pick: 0 front, 1 back, 2 critical front, 3 critical back.</summary>
+        public byte ServerBodyChain { get; private set; }
+        public Vector3 ServerBodyLanding { get; private set; }
+        public float ServerBodyFacing { get; private set; }
+
+        /// <summary>
+        /// One knockdown's numbers for the entity netcode's knock (M4 6b-2), in NGO's Pick order: 0 front, 1 back, 2 critical front,
+        /// 3 critical back. False when the chain is not set up.
+        /// </summary>
+        public bool TryReadKnockChain(int index, out AnimationCurve travel, out float lengthSeconds, out float impactSeconds)
+        {
+            DeathChain picked = index switch { 1 => back, 2 => critFront, 3 => critBack, _ => front };
+            travel = picked != null ? picked.travel : null;
+            lengthSeconds = picked != null && picked.fall != null ? picked.fall.length : 0f;
+            impactSeconds = picked != null ? picked.impactTime : 0f;
+            return picked != null && picked.IsReady;
+        }
+
+        /// <summary>A critical blow's extra height, metres.</summary>
+        public float CritLift => critLift;
+        /// <summary>The turn toward a blow from the front, seconds.</summary>
+        public float TurnSeconds => turnSeconds;
 
         /// <summary>
         /// A server body of the entity netcode: NGO's OnKilled where it decides (the blow's side, de-rez or fall, buffs cleared, the walk
@@ -701,6 +725,13 @@ namespace KryticalNova.Player
             bool fromFront = Vector3.Dot(Flat(transform.forward, Vector3.forward), -direction) >= 0f;
             if (buffManager != null) buffManager.ClearAllBuffs();
             BodyRoleTag.Of(this).Mover?.Stop();   // the walk it was on ends where the body fell (NGO: the agent stops)
+
+            // NGO's landing (FindLanding: the chain's distance, a critical blow's 5.5 m, short of walls and the walkable edge) and facing
+            DeathChain picked = Pick(fromFront, blow.IsCritical);
+            ServerBodyKnocks = !offTheGround && agent != null && picked.IsReady;
+            ServerBodyChain = (byte)(blow.IsCritical ? (fromFront ? 2 : 3) : (fromFront ? 0 : 1));
+            ServerBodyLanding = ServerBodyKnocks ? FindLanding(direction, blow.IsCritical ? critDistance : picked.distance) : transform.position;
+            ServerBodyFacing = fromFront ? Quaternion.LookRotation(-direction, Vector3.up).eulerAngles.y : transform.eulerAngles.y;
 
             phase = Phase.Down;
             critical = blow.IsCritical;

@@ -43,6 +43,24 @@ namespace KryticalNova.Persistence.Entities
                     DirZPermille = (short)math.clamp((int)math.round(direction.z * 1000f), -1000, 1000),
                     KillerGhostId = GhostIdOf(em, death.ServerBodyKiller),
                 });
+                // a fall: the body travels to NGO's landing on the ghost's own plan (M4 6b-2); a de-rez stays where it was
+                if (death.ServerBodyPose != 0 && death.ServerBodyKnocks && em.HasComponent<KnockPlan>(entry.Ghost) && em.HasComponent<PlayerPose>(entry.Ghost)
+                    && SystemAPI.TryGetSingleton(out NetworkTime time) && time.ServerTick.IsValid)
+                {
+                    PlayerPose pose = em.GetComponentData<PlayerPose>(entry.Ghost);
+                    KnockPlan knock = em.GetComponentData<KnockPlan>(entry.Ghost);
+                    Vector3 landing = death.ServerBodyLanding;
+                    em.SetComponentData(entry.Ghost, new KnockPlan
+                    {
+                        Seq = (byte)(knock.Seq == byte.MaxValue ? 1 : knock.Seq + 1),
+                        Chain = death.ServerBodyChain,
+                        StartTick = time.ServerTick,
+                        FromXMm = pose.XMm, FromYMm = pose.YMm, FromZMm = pose.ZMm,
+                        ToXMm = (int)math.round(landing.x * 1000f), ToYMm = (int)math.round(landing.y * 1000f), ToZMm = (int)math.round(landing.z * 1000f),
+                        FromYawCdeg = pose.YawCdeg,
+                        YawCdeg = ((int)math.round(death.ServerBodyFacing * 100f) % 36000 + 36000) % 36000,
+                    });
+                }
             }
         }
 

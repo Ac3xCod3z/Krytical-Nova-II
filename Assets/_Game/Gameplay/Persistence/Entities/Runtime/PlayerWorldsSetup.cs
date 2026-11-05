@@ -117,6 +117,7 @@ namespace KryticalNova.Persistence.Entities
             // walk numbers from the settings asset and the jump's curves from its clip, the same on server and client (prediction must agree)
             PlayerMoveFromSkills.InstallSettings(server, PlayerMoveFromSkills.SettingsOf((prefab ?? PlayerPrefab)()));
             PlayerJumpFromSkills.InstallCurves(server, (prefab ?? PlayerPrefab)());
+            PlayerJumpFromSkills.InstallKnockCurves(server, (prefab ?? PlayerPrefab)());   // the death knock's travel (M4 6b-2)
             var rules = new PlayerAdmission
             {
                 Planner = planner,
@@ -173,6 +174,7 @@ namespace KryticalNova.Persistence.Entities
                     if (body.GetComponent<KryticalNova.Player.TreeProxyAnchor>() == null) body.AddComponent<KryticalNova.Player.TreeProxyAnchor>();
                     PlayerMoveFromSkills.InstallSettings(client, PlayerMoveFromSkills.SettingsOf(body));
                     PlayerJumpFromSkills.InstallCurves(client, body);
+                    PlayerJumpFromSkills.InstallKnockCurves(client, body);
                     // the camera looks at the body from the first frame it is drawn (no frame off it, then a snap)
                     if (TakeCameraWhenBodyMade) body.GetComponent<KryticalNova.Player.PointAndClickPlayer>()?.TakeCameraNow();
                     ConfigurePlanner(planner, body);
@@ -184,6 +186,7 @@ namespace KryticalNova.Persistence.Entities
                 waterPlanner: new BodyWaterPlanner(client, planner, tellOwner: true, vaults: clientVaults), wallPlanner: new BodyWallPlanner(client, tellOwner: true));
             PlayerMoveFromSkills.InstallSettings(client, PlayerMoveFromSkills.SettingsOf((prefab ?? PlayerPrefab)()));
             PlayerJumpFromSkills.InstallCurves(client, (prefab ?? PlayerPrefab)());
+            PlayerJumpFromSkills.InstallKnockCurves(client, (prefab ?? PlayerPrefab)());
             KryticalNova.Player.Entities.Presentation.PlayerPresentationSetup.Install(client, factory, new BodyClickSource());
             var looks = client.GetExistingSystemManaged<PlayerLookClientSystem>();
             if (looks != null) looks.Applier = new IdentityLookApplier();

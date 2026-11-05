@@ -263,6 +263,11 @@ prediction error p95 <= 0.05 m at 60 ms, tick p95 < 15 ms with 102 monsters (fro
     direction, killer); every view (own and others) keeps the death motor on and plays NGO's knockdown or de-rez, the lying loop and the
     getting up once each, and a view that arrives while the player is down lays it there (or keeps it hidden). On a view the motor never
     warps, turns or respawns the body. EditMode 315/315, PlayMode 48/48 (B47). Next: M4.6b-2 the knock-back travel as a server MotionPlan.
+  - [x] M4.6b-2 The knock-back: at a fall the server body works out NGO's landing (FindLanding: the chain's distance, a critical
+    blow's 5.5 m, short of walls and the walkable edge) and facing, and the server writes the ghost's own KnockPlan (chain, start tick,
+    from, landing, yaws); DeathKnockSystem places the body on it on the server and the owner (the clip's baked travel, a critical
+    blow's 0.55 m arc, an airborne body's drop, the 0.12 s turn to a blow from the front), observers follow the ghost. Its own plan,
+    so the jump's MotionPlan is untouched. EditMode 316/316, PlayMode 49/49 (B48). M4 step 6 complete; owner GUI feel check of deaths.
 - [ ] **M5 Monster system prototype (new brain).** Section 6. P0 EditMode sim tests (no netcode), P1 ghost + view, P2 reward bridge.
 - [ ] **M6 Hostiles in full.** All roster species via `MonsterArchetype` from `HostileDefinition` (ids kept), level scaling, zones,
   sleep, respawn, loot/XP through managed reward bridge with ledger rules; nav grids for the zones; bot soak with 102 monsters.
