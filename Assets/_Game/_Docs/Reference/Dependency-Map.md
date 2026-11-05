@@ -20,7 +20,7 @@ script, which is then published to the link above. `--baseline` saves today's up
 ## Today
 
 <!-- map:summary -->
-Generated 05 Nov 2026, 16:15: 724 runtime scripts (135,765 lines) declaring 1023 types (186 MonoBehaviours, 65 NetworkBehaviours, 101 ScriptableObject classes); 139 test scripts; 4723 prefabs, 46 scenes and 2748 assets read. 206 system-to-system links, of which 0 run uphill, 0 pairs of systems use each other both ways, and 0 links would have to go for the systems to form a clean stack. The largest tangle, classes that all reach each other through some chain of uses, holds 10 classes from 1 systems (UI 10, ...).
+Generated 05 Nov 2026, 16:21: 724 runtime scripts (135,796 lines) declaring 1023 types (186 MonoBehaviours, 65 NetworkBehaviours, 101 ScriptableObject classes); 139 test scripts; 4723 prefabs, 46 scenes and 2748 assets read. 206 system-to-system links, of which 0 run uphill, 0 pairs of systems use each other both ways, and 0 links would have to go for the systems to form a clean stack. The largest tangle, classes that all reach each other through some chain of uses, holds 10 classes from 1 systems (UI 10, ...).
 <!-- /map:summary -->
 
 **Checked against the compiler.**
@@ -84,7 +84,7 @@ Checked against the 211 references the assemblies declare between systems: every
 | Gameplay/CharacterCreation | Simulation | 26 | 3,173 | 27 | 76 | 0.26 | 10 | 25 of 29 |
 | Gameplay/Items | Simulation | 66 | 11,859 | 48 | 182 | 0.21 | 13 | 41 of 88 |
 | World | Simulation | 37 | 6,379 | 16 | 41 | 0.28 | 2 | 9 of 43 |
-| Gameplay/Progression | Simulation | 46 | 8,125 | 25 | 207 | 0.11 | 6 | 27 of 58 |
+| Gameplay/Progression | Simulation | 46 | 8,156 | 25 | 207 | 0.11 | 6 | 27 of 58 |
 | Gameplay/Wallet | Simulation | 3 | 132 | 0 | 18 | 0.0 | 0 | 2 of 2 |
 | Gameplay/NPC | Simulation | 3 | 290 | 5 | 17 | 0.23 | 1 | 1 of 4 |
 | Gameplay/Factions | Simulation | 6 | 169 | 0 | 25 | 0.0 | 0 | 1 of 3 |
@@ -131,12 +131,12 @@ Each row is the cheaper side of a loop: cut these references and the two systems
 | PlayerCharacterProgression | Gameplay/Progression | net | 28 | 12 | 239 | 0 | 41 |
 | StatType | Gameplay/Progression | enum | 27 | 8 | 329 | 7 | 0 |
 | CombatEntity | Gameplay/Progression | net | 27 | 11 | 196 | 0 | 13 |
-| WeaponClassId | Gameplay/Progression | enum | 26 | 8 | 308 | 8 | 0 |
+| WeaponClassId | Gameplay/Progression | enum | 26 | 8 | 329 | 8 | 0 |
 | CharacterRecipe | Gameplay/CharacterCreation | plain | 24 | 7 | 221 | 7 | 0 |
 | NpcOffer | Gameplay/NPC | enum | 24 | 9 | 211 | 1 | 0 |
 | HudTyping | UI | plain | 24 | 1 | 32 | 0 | 0 |
 | SaveScope | Core | enum | 23 | 10 | 243 | 0 | 0 |
-| SkillDefinitionSO | Gameplay/Progression | so | 22 | 8 | 213 | 7 | 0 |
+| SkillDefinitionSO | Gameplay/Progression | so | 22 | 8 | 248 | 7 | 0 |
 | KeyBindings | Core | plain | 22 | 4 | 176 | 2 | 0 |
 | ISaveParticipant | Core | interface | 21 | 10 | 242 | 0 | 0 |
 | ItemCatalog | Gameplay/Items | so | 21 | 8 | 217 | 7 | 0 |
