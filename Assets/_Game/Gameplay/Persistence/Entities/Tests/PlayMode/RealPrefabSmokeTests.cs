@@ -3700,6 +3700,91 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
             public KryticalNova.Core.DamageResult TakeDamage(KryticalNova.Core.DamageResult damage, CharacterCombatStats attacker) { Taken++; return damage; }
         }
 
+        [UnityTest]
+        public IEnumerator B43_AStanceCastOnTheServerBody_ReachesTheSquad_NeverStacksLower_AndTheMembersOwnViewShowsNgosLine()
+        {
+            // M4.5g: NGO's ShareWithSquad / ServerReceiveSquadBuff ran only under IsSpawned && IsServer; a server body decides too,
+            // and the member's clients are told through the ghost (SquadBuffGiven -> the SquadBuffEvent ring)
+            NetRole.Install(new BodyRoleNetRoleAdapter(null, () => NetRoleKind.ServerBody));
+            IOwnerMessages oldMessages = OwnerMessages.Current;
+            var told = new Told();
+            OwnerMessages.Current = told;
+            ChatOwnerLink.Current = told;
+            PartyOwnerLink.Current = told;
+            try
+            {
+                PlayerKeys.Reset();
+                GameObject a = Admitted(PlayerKeys.Mint(431).Value, "43a1000000000000000000000000000a", "c4310000000000000000000000000431", "Talwyn");
+                GameObject b = Admitted(PlayerKeys.Mint(432).Value, "43b1000000000000000000000000000b", "c4320000000000000000000000000432", "Brannoc");
+                GameObject c = Admitted(PlayerKeys.Mint(433).Value, "43c1000000000000000000000000000c", "c4330000000000000000000000000433", "Corvane");
+                for (int i = 0; i < 30; i++) yield return null;
+                a.GetComponent<IBodyParty>().RunPartyOp(PartyOpKind.InviteByName, "Brannoc", false);
+                b.GetComponent<IBodyParty>().RunPartyOp(PartyOpKind.Respond, "", true);
+                Assert.AreNotEqual(0UL, b.GetComponent<IBodyParty>().PartyId, "planned: A and B are one Squad, C is in none");
+
+                var skillsA = a.GetComponent<PlayerCombatSkills>();
+                var skillsB = b.GetComponent<PlayerCombatSkills>();
+                var skillsC = c.GetComponent<PlayerCombatSkills>();
+                var givenB = new List<string>();
+                var givenC = new List<string>();
+                skillsB.SquadBuffGiven += (id, rank, giver) => givenB.Add($"{id} {rank} {giver}");
+                skillsC.SquadBuffGiven += (id, rank, giver) => givenC.Add($"{id} {rank} {giver}");
+                skillsA.GmSetAllRanksToMax();
+                a.GetComponent<PlayerGmState>().SetInfiniteChi(true);
+
+                // A casts a Stance of its kit (max rank, at or past the share rank 20) on its server body, as the Cast request does
+                SkillDefinitionSO stance = null;
+                var refused = new List<string>();
+                foreach (SkillDefinitionSO s in skillsA.AvailableSkills)
+                {
+                    if (s == null || !s.sharesWithSquad || s.IsAttack || !skillsA.IsInActiveKit(s)) continue;
+                    if (skillsA.ServerTryCast(s, null, out string reason)) { stance = s; break; }
+                    refused.Add($"{s.skillId}: {reason}");
+                }
+                Assert.IsNotNull(stance, "a shared Stance A can cast: " + string.Join(" | ", refused));
+                int rankA = skillsA.GetRank(stance);
+                Assert.GreaterOrEqual(rankA, skillsA.SquadShareRank, "planned: max rank is past the share rank");
+
+                // B (in reach, alive) is given it with the giver's name, and its clients are told; C is not
+                CollectionAssert.AreEqual(new[] { $"{stance.skillId} {rankA} Talwyn" }, givenB, "B's server body says it was given");
+                Assert.IsEmpty(givenC, "C is in no Squad");
+                ActiveBuff onB = b.GetComponent<CharacterBuffManager>().GetBuff(stance.skillId);
+                Assert.IsNotNull(onB, "B's server body has the Stance");
+                Assert.IsTrue(onB.FromSquadmate);
+                Assert.AreEqual("Talwyn", onB.Giver);
+                Assert.AreEqual(rankA, onB.Rank);
+                Assert.IsNull(c.GetComponent<CharacterBuffManager>().GetBuff(stance.skillId), "C has nothing");
+
+                // given again at a lower rank, it never stacks and keeps the higher one (SquadBuffRules.RankAfterRecast)
+                skillsB.ServerReceiveSquadBuff(stance.skillId, 1, "Corvane");
+                Assert.AreEqual($"{stance.skillId} {rankA} Corvane", givenB[givenB.Count - 1], "the higher rank stays");
+                Assert.AreEqual(rankA, b.GetComponent<CharacterBuffManager>().GetBuff(stance.skillId).Rank);
+
+                // B's own view: its copy of the buff and NGO's line (SquadBuffClientRpc's body, played by SquadBuffPresentSystem)
+                GameObject view = Make(NetRoleKind.ClientView, true, new PlayerKey(b.GetComponent<BodyRoleTag>().Key.Value));
+                yield return null;
+                var viewSkills = view.GetComponent<PlayerCombatSkills>();
+                // in the game the faction comes with the look and PlayerWeaponClass.Refresh sets its skills; this bare view has the prefab's
+                viewSkills.SetAvailableSkills(new List<SkillDefinitionSO>(skillsB.AvailableSkills).ToArray());
+                var lines = new List<string>();
+                viewSkills.SkillMessage += lines.Add;
+                viewSkills.ShowSquadBuff(stance.skillId, rankA, "Talwyn");
+                CollectionAssert.AreEqual(new[] { $"Talwyn gave you {stance.displayName} (Rank {rankA})." }, lines, "NGO's words on the own view");
+                ActiveBuff onView = view.GetComponent<CharacterBuffManager>().GetBuff(stance.skillId);
+                Assert.IsNotNull(onView, "the view's copy of the buff");
+                Assert.IsTrue(onView.FromSquadmate);
+                viewSkills.ShowSquadBuff(stance.skillId, rankA, "");
+                Assert.AreEqual($"A Squad member gave you {stance.displayName} (Rank {rankA}).", lines[lines.Count - 1], "NGO's words without a giver");
+
+                foreach (GameObject body in new[] { a, b, c }) { ServerLeaving.Notify(body); body.GetComponent<PlayerSaveAgent>().OnServerLeaving(); }
+            }
+            finally
+            {
+                OwnerMessages.Current = oldMessages;
+                PlayerKeys.Reset();
+            }
+        }
+
         static CharacterRecipe AnyLegalRecipe(CharacterCreationDatabase database)
         {
             Assert.IsNotNull(database, "PlayerIdentity has its character database");

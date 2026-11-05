@@ -72,6 +72,42 @@ namespace KryticalNova.Player.Entities
         [GhostField] public byte Phase;
     }
 
+    /// <summary>
+    /// A Squad member's Stance that reached this player (M4.5g): every client, the player's own included, plays it once (NGO
+    /// SquadBuffClientRpc, Everyone). Server-written.
+    /// </summary>
+    [InternalBufferCapacity(SquadBuffRing.Capacity)]
+    public struct SquadBuffEvent : IBufferElementData
+    {
+        [GhostField] public uint Seq;
+        [GhostField] public Unity.Collections.FixedString64Bytes SkillId;
+        /// <summary>The rank it has now (the higher of the two when it was running already).</summary>
+        [GhostField] public short Rank;
+        /// <summary>The giver's name (16 characters at most).</summary>
+        [GhostField] public Unity.Collections.FixedString32Bytes Giver;
+    }
+
+    /// <summary>The player's last Squad buff number (server count).</summary>
+    public struct SquadBuffSeq : IComponentData
+    {
+        public uint Last;
+    }
+
+    /// <summary>The Squad buff ring's rules, as <see cref="HitEventRing"/>'s.</summary>
+    public static class SquadBuffRing
+    {
+        public const int Capacity = 4;
+
+        public static void Append(DynamicBuffer<SquadBuffEvent> ring, ref SquadBuffSeq seq, SquadBuffEvent given)
+        {
+            given.Seq = ++seq.Last;
+            if (ring.Length >= Capacity) ring.RemoveAt(0);
+            ring.Add(given);
+        }
+
+        public static uint Newest(DynamicBuffer<SquadBuffEvent> ring) => ring.Length > 0 ? ring[ring.Length - 1].Seq : 0;
+    }
+
     /// <summary>The caster's last cast number (server count).</summary>
     public struct CastEventSeq : IComponentData
     {

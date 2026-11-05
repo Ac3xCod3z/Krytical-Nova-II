@@ -79,6 +79,15 @@ namespace KryticalNova.Progression
         /// <summary>True where this player's skills are decided (the server, or offline). Clients only mirror them.</summary>
         public bool HasAuthority => !IsSpawned || IsServer;
 
+        // NGO's "IsSpawned && IsServer": the NGO server, or a server body of the entity netcode (never network-spawned)
+        private bool DecidesOnServer => (IsSpawned && IsServer) || BodyRoleTag.Of(this) is { Kind: NetRoleKind.ServerBody };
+
+        /// <summary>
+        /// A server body of the entity netcode: a Squad member's Stance reached this player (skill, its rank now, the giver), for the
+        /// clients (M4.5g; NGO told them with SquadBuffClientRpc).
+        /// </summary>
+        public event Action<string, int, string> SquadBuffGiven;
+
         // The Squad's numbers for a shared Stance, for tooltips: the Squad settings when there is a Squad component.
         private const int DefaultShareRank = 20;
         private const float DefaultShareRadius = 20f;
@@ -1012,7 +1021,7 @@ namespace KryticalNova.Progression
             else if (buffManager != null)
             {
                 buffManager.ApplyBuff(skill, rank);
-                if (IsSpawned && IsServer && squad != null && SquadBuffRules.Shares(skill, rank, squad.BuffShareRank)) ShareWithSquad(skill, rank);
+                if (DecidesOnServer && squad != null && SquadBuffRules.Shares(skill, rank, squad.BuffShareRank)) ShareWithSquad(skill, rank);
             }
 
             SkillCast?.Invoke(skill);
@@ -1039,20 +1048,31 @@ namespace KryticalNova.Progression
         /// </summary>
         public void ServerReceiveSquadBuff(string skillId, int rank, string giver)
         {
-            if (!IsSpawned || !IsServer || buffManager == null || resources == null || !resources.IsAlive) return;
+            if (!DecidesOnServer || buffManager == null || resources == null || !resources.IsAlive) return;
             SkillDefinitionSO skill = GetSkill(skillId);
             if (skill == null || !buffManager.ApplyBuff(skill, rank, fromSquadmate: true, giver: giver)) return;
             ActiveBuff given = buffManager.GetBuff(skillId);
-            SquadBuffClientRpc(skillId, given != null ? given.Rank : rank, giver ?? string.Empty);
+            int rankNow = given != null ? given.Rank : rank;
+            if (IsSpawned) SquadBuffClientRpc(skillId, rankNow, giver ?? string.Empty);
+            else SquadBuffGiven?.Invoke(skillId, rankNow, giver ?? string.Empty);
         }
 
         [ClientRpc]
-        private void SquadBuffClientRpc(string skillId, int rank, string giver)
+        private void SquadBuffClientRpc(string skillId, int rank, string giver) => ShowSquadBuff(skillId, rank, giver, IsServer, IsOwner);
+
+        /// <summary>
+        /// A view body of the entity netcode (M4.5g): a Squad member's Stance reached this player, as NGO's SquadBuffClientRpc showed it on
+        /// every client: the copy of the buff, and the line on the player's own game.
+        /// </summary>
+        public void ShowSquadBuff(string skillId, int rank, string giver) =>
+            ShowSquadBuff(skillId, rank, giver, false, BodyRoleTag.IsLocalClientView(this));
+
+        private void ShowSquadBuff(string skillId, int rank, string giver, bool server, bool owner)
         {
             SkillDefinitionSO skill = GetSkill(skillId);
             if (skill == null) return;
-            if (!IsServer && buffManager != null) buffManager.ApplyBuff(skill, rank, fromSquadmate: true, giver: giver);
-            if (IsOwner) SkillMessage?.Invoke($"{(string.IsNullOrEmpty(giver) ? "A Squad member" : giver)} gave you {skill.displayName} (Rank {rank}).");
+            if (!server && buffManager != null) buffManager.ApplyBuff(skill, rank, fromSquadmate: true, giver: giver);
+            if (owner) SkillMessage?.Invoke($"{(string.IsNullOrEmpty(giver) ? "A Squad member" : giver)} gave you {skill.displayName} (Rank {rank}).");
             Changed?.Invoke();
         }
 

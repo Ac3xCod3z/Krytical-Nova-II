@@ -208,5 +208,27 @@ namespace KryticalNova.Player.Entities.Tests
             Assert.AreEqual("skill6", ring[ring.Length - 1].SkillId.ToString());
             Assert.AreEqual(6u, CastEventRing.Newest(ring));
         }
+
+        [Test]
+        public void TheSquadBuffRing_KeepsTheNewestFour_WithTheGiver()
+        {
+            // M4.5g: a Squad member's Stance given to this player, for every client (NGO SquadBuffClientRpc as data on the ghost)
+            using var world = new Unity.Entities.World("squad buff ring");
+            var em = world.EntityManager;
+            var e = em.CreateEntity();
+            em.AddBuffer<SquadBuffEvent>(e);
+            var seq = new SquadBuffSeq();
+            for (int i = 1; i <= 5; i++)
+                SquadBuffRing.Append(em.GetBuffer<SquadBuffEvent>(e), ref seq, new SquadBuffEvent
+                {
+                    SkillId = new Unity.Collections.FixedString64Bytes("stance" + i), Rank = 20, Giver = new Unity.Collections.FixedString32Bytes("Talwyn"),
+                });
+            var ring = em.GetBuffer<SquadBuffEvent>(e);
+            Assert.AreEqual(SquadBuffRing.Capacity, ring.Length);
+            Assert.AreEqual(2u, ring[0].Seq);
+            Assert.AreEqual("stance5", ring[ring.Length - 1].SkillId.ToString());
+            Assert.AreEqual("Talwyn", ring[ring.Length - 1].Giver.ToString());
+            Assert.AreEqual(5u, SquadBuffRing.Newest(ring));
+        }
     }
 }

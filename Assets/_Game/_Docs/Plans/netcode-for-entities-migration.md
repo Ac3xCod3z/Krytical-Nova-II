@@ -236,6 +236,12 @@ prediction error p95 <= 0.05 m at 60 ms, tick p95 < 15 ms with 102 monsters (fro
     which writes ChargeState on the caster's ghost; every other client plays each start and end once (ChargePresentSystem ->
     PlayerSkillAttacks.ShowChargeSeen, NGO ChargeStartedRpc/ChargeEndedRpc SendTo.NotOwner). EditMode 179/179, PlayMode 43/43.
     Next: a Stance shared with the Squad (NGO ShareWithSquad / SquadBuffClientRpc).
+  - [x] M4.5g A Stance shared with the Squad: NGO's ShareWithSquad / ServerReceiveSquadBuff now also run on a server body (NGO's
+    IsSpawned && IsServer guard, or a ServerBody tag); the receiver's server body raises SquadBuffGiven, SquadBuffRecordServerSystem
+    writes it on the receiver's ghost (SquadBuffEvent ring: skill, rank now, giver) and SquadBuffPresentSystem plays it once on every view
+    of that player (ShowSquadBuff = NGO SquadBuffClientRpc's body: the buff copy, the owner's line). EditMode 150/150, PlayMode 44/44 (B43).
+    Found on the way: other players' views strip the combat parts, so casts, charges, swings, impacts and buffs seen by others play
+    nothing yet. Next: M4.5h (owner pick A, copy NGO): remote views keep them, every deciding path guarded.
 - [ ] **M5 Monster system prototype (new brain).** Section 6. P0 EditMode sim tests (no netcode), P1 ghost + view, P2 reward bridge.
 - [ ] **M6 Hostiles in full.** All roster species via `MonsterArchetype` from `HostileDefinition` (ids kept), level scaling, zones,
   sleep, respawn, loot/XP through managed reward bridge with ledger rules; nav grids for the zones; bot soak with 102 monsters.
