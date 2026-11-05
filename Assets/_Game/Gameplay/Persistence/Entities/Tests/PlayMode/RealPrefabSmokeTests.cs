@@ -3668,6 +3668,30 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
             Assert.AreEqual(hostile, struck, "another player is struck exactly when NGO's hostility rule says so");
             if (!hostile) Assert.AreEqual(before, player.CurrentHealth, 1e-3, "a friend is never struck");
             Assert.IsFalse(KryticalNova.Combat.Entities.MeleeStrike.Apply(attacker, null, 1, 1f), "no target, nothing");
+
+            // M4.4f: the attack ORDER is checked as NGO's RequestAttackEntityServerRpc does (exists, alive, hostile)
+            Assert.IsTrue(KryticalNova.Combat.Entities.MeleeResolveServerSystem.AttackAllowed(attacker, foe), "a live foe may be attacked");
+            Assert.AreEqual(hostile, KryticalNova.Combat.Entities.MeleeResolveServerSystem.AttackAllowed(attacker, player), "a player only when hostile");
+            Assert.IsFalse(KryticalNova.Combat.Entities.MeleeResolveServerSystem.AttackAllowed(attacker, null), "no target");
+            // a Strike Dummy never runs out (owner, 24 Oct): a target that is down is a stand-in
+            var down = new DownTarget(foeObject.transform);
+            Assert.IsFalse(KryticalNova.Combat.Entities.MeleeResolveServerSystem.AttackAllowed(attacker, down), "a dead target cannot be attacked");
+            Assert.IsFalse(KryticalNova.Combat.Entities.MeleeStrike.Apply(attacker, down, 1, 1f), "nor struck");
+            Assert.AreEqual(0, down.Taken, "and takes nothing");
+        }
+
+        /// <summary>A target that is already down (B42).</summary>
+        sealed class DownTarget : IDamageable
+        {
+            public DownTarget(Transform at) { Transform = at; }
+            public int Taken;
+            public string EntityName => "Down";
+            public bool IsAlive => false;
+            public float CurrentHealth => 0f;
+            public float MaxHealth => 100f;
+            public Transform Transform { get; }
+            public CharacterCombatStats CombatStats => null;
+            public KryticalNova.Core.DamageResult TakeDamage(KryticalNova.Core.DamageResult damage, CharacterCombatStats attacker) { Taken++; return damage; }
         }
 
         static CharacterRecipe AnyLegalRecipe(CharacterCreationDatabase database)

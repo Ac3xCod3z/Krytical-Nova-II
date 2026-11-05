@@ -192,6 +192,9 @@ prediction error p95 <= 0.05 m at 60 ms, tick p95 < 15 ms with 102 monsters (fro
     (MeleeRules.HitDue), once per swing, target tested where the attacker saw it + 2.7 m now (Resolve on PositionHistory), applied as NGO's
     ExecuteAuthoritativeStrike (MeleeStrike: hostility, 1.0/1.15/1.35, ResolveHit, next-hit buffs). New assembly KryticalNova.Combat.Entities.
     B42 real prefab. EditMode 145/145, PlayMode 43/43. Next: hostility at the attack start, collateral arc hits, HitEvent ring to clients.
+  - [x] M4.4f The attack order checked like NGO's RequestAttackEntityServerRpc: the server drops (silently) any attack whose target is
+    gone, dead or not hostile (MeleeResolveServerSystem.AttackAllowed, CombatHostility on the bodies); the owner's predicted combo is rolled
+    back. B42 extended. EditMode 145/145, PlayMode 43/43. Next: collateral arc hits, HitEvent ring to clients, server walk-in.
 - [ ] **M5 Monster system prototype (new brain).** Section 6. P0 EditMode sim tests (no netcode), P1 ghost + view, P2 reward bridge.
 - [ ] **M6 Hostiles in full.** All roster species via `MonsterArchetype` from `HostileDefinition` (ids kept), level scaling, zones,
   sleep, respawn, loot/XP through managed reward bridge with ledger rules; nav grids for the zones; bot soak with 102 monsters.

@@ -22,6 +22,17 @@ namespace KryticalNova.Combat.Entities
         /// <summary>Strikes that landed (tests).</summary>
         public int Hits { get; private set; }
 
+        /// <summary>Attack orders dropped because the target is gone, dead or not hostile (tests).</summary>
+        public int Refused { get; private set; }
+
+        /// <summary>NGO RequestAttackEntityServerRpc's check (PointAndClickPlayer:1881-1895), on the bodies, with the same rule.</summary>
+        public static bool AttackAllowed(UnityEngine.GameObject attacker, IDamageable target) =>
+            attacker != null && target != null && target.IsAlive && CombatHostility.IsHostile(attacker.transform, target);
+
+        bool AttackAllowed(EntityManager em, GhostBodyEntry attacker, int targetGhostId) =>
+            TryFind(em, targetGhostId, out GhostBodyEntry target) && target.Body.TryGetComponent(out IDamageable damageable)
+            && AttackAllowed(attacker.Body, damageable);
+
         protected override void OnCreate() => RequireForUpdate<NetworkTime>();
 
         protected override void OnUpdate()
@@ -37,6 +48,16 @@ namespace KryticalNova.Combat.Entities
                 if (!ReferenceEquals(attacker.World, World) || attacker.Body == null || !em.Exists(attacker.Ghost)
                     || !em.HasComponent<CombatState>(attacker.Ghost) || !em.HasComponent<MeleeTimingData>(attacker.Ghost)) continue;
                 CombatState s = em.GetComponentData<CombatState>(attacker.Ghost);
+                if (s.TargetGhostId == 0) continue;
+                // NGO RequestAttackEntityServerRpc: the target must exist, be alive and hostile, else the order is silently dropped
+                // (the owner's predicted combo is then rolled back by the server's state)
+                if (!AttackAllowed(em, attacker, s.TargetGhostId))
+                {
+                    MeleeRules.Cancel(ref s);
+                    em.SetComponentData(attacker.Ghost, s);
+                    Refused++;
+                    continue;
+                }
                 MeleeTiming t = em.GetComponentData<MeleeTimingData>(attacker.Ghost).Value;
                 if (!MeleeRules.HitDue(t, s, now, rate)) continue;
                 s.SwingHit = 1;
