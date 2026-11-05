@@ -33,8 +33,6 @@ namespace KryticalNova.Player
         private const float MinimumLift = 0.001f;
         private const float BodyRadius = 0.3f;
         private const float ChestHeight = 0.9f;
-        /// <summary>Killed this far (m) above where it will land, the body is in the air and falls.</summary>
-        private const float AirborneHeight = 0.15f;
         /// <summary>How far below the body the ground is looked for when it dies high up (a wall, a tree).</summary>
         private const float FallProbe = 80f;
         private const int HeightCurveSteps = 24;
@@ -201,8 +199,9 @@ namespace KryticalNova.Player
             }
 
             Vector3 direction = Flat(blow.Direction, -transform.forward);
-            // In the air, on a wall, in a tree or on a roof: the body de-rezzes where it is instead of falling.
-            if (IsOffTheGround())
+            // Not on solid ground (a jump from take-off on, a wall, the water, a vault, a ledge) or on a roof: the body
+            // de-rezzes where it is instead of falling (owner, 5 Nov 2026).
+            if (DeRezzesHere() || IsOffTheGround())
             {
                 Disintegrate(blow, direction);
                 return;
@@ -247,13 +246,41 @@ namespace KryticalNova.Player
         }
 
         /// <summary>
-        /// Up a wall or a tree, in a jump or a vault, or standing on a roof: high off the ground with no walk down to
-        /// it. Decided where the death is decided, before the motors let go of the body.
+        /// Not on solid ground (DeathGroundRules): in a jump from take-off on (the crouch before it is a fall), on a wall
+        /// or in a tree, on the water, in a vault, or 0.15 m or more above the ground under the feet. Decided where the
+        /// death is decided, before the motors let go of the body.
+        /// </summary>
+        private bool DeRezzesHere()
+        {
+            var query = new DeathGroundQuery
+            {
+                JumpPressed = jumpMotor != null && jumpMotor.IsBusy,
+                JumpAirborne = jumpMotor != null && jumpMotor.IsAirborne,
+                OnWall = wallRunMotor != null && wallRunMotor.IsBusy,
+                InVault = vaultMotor != null && vaultMotor.IsBusy,
+                OnWater = waterMotor != null && waterMotor.IsBusy,
+                FeetAboveGround = FeetAboveGround(),
+            };
+            return DeathGroundRules.DeRezzes(query);
+        }
+
+        /// <summary>The feet's height over the solid or walkable ground right under them (0 when none is found).</summary>
+        private float FeetAboveGround()
+        {
+            Vector3 feet = transform.position - Vector3.up * agent.baseOffset;
+            int groundMask = LayerMask.GetMask(GroundLayerName);
+            float groundY = groundMask != 0 && Physics.Raycast(feet + Vector3.up * 0.3f, Vector3.down, out RaycastHit ground, FallProbe,
+                groundMask, QueryTriggerInteraction.Ignore) ? ground.point.y : float.NaN;
+            var filter = new NavMeshQueryFilter { agentTypeID = agent.agentTypeID, areaMask = agent.areaMask };
+            float walkableY = NavMesh.SamplePosition(feet, out NavMeshHit standing, StandingSampleRadius, filter) ? standing.position.y : float.NaN;
+            return DeathGroundRules.FeetAboveGround(feet.y, groundY, walkableY);
+        }
+
+        /// <summary>
+        /// Standing on a roof: high off the ground with no walk down to it (owner, 17 Oct 2026).
         /// </summary>
         private bool IsOffTheGround()
         {
-            if ((wallRunMotor != null && wallRunMotor.IsBusy) || (jumpMotor != null && jumpMotor.IsBusy) || (vaultMotor != null && vaultMotor.IsBusy))
-                return true;
             Vector3 feet = transform.position - Vector3.up * agent.baseOffset;
             int groundMask = LayerMask.GetMask(GroundLayerName);
             if (groundMask == 0 || !Physics.Raycast(feet + Vector3.up * 0.3f, Vector3.down, out RaycastHit ground, FallProbe, groundMask, QueryTriggerInteraction.Ignore))
@@ -368,12 +395,10 @@ namespace KryticalNova.Player
             if (meleeCombat != null) meleeCombat.CancelAttack();
             fallState = animancerMotor.PlayDeathClip(chain.fall, fallFadeIn);
 
-            // Killed in the air (a jump, a vault): the body drops to the ground under gravity while the clip plays,
-            // and the thud comes when it gets there.
-            float drop = transform.position.y - landing.y;
-            if (drop < AirborneHeight) drop = 0f;
-            AnimationCurve height = HeightCurve(crit ? critLift : 0f, drop, out float fallSeconds);
-            impactTime = Mathf.Max(chain.impactTime, fallSeconds);
+            // Only a body on solid ground falls (off it, it de-rezzes): the knock follows the slope to the landing,
+            // with no drop under gravity (owner, 5 Nov 2026).
+            AnimationCurve height = HeightCurve(crit ? critLift : 0f);
+            impactTime = chain.impactTime;
 
             if (HasAuthority)
             {
@@ -415,28 +440,13 @@ namespace KryticalNova.Player
         }
 
         /// <summary>
-        /// The root's height over the fall, relative to where it starts: an arc of <paramref name="lift"/> metres for
-        /// a thrown body, and for a body killed <paramref name="drop"/> metres up, the fall to the ground under
-        /// gravity (ending <paramref name="drop"/> lower, where the landing is).
+        /// The root's height over the fall on top of the slope to the landing: an arc of <paramref name="lift"/>
+        /// metres for a thrown body, flat otherwise.
         /// </summary>
-        private AnimationCurve HeightCurve(float lift, float drop, out float fallSeconds)
+        private AnimationCurve HeightCurve(float lift)
         {
             float length = chain.fall.length;
-            fallSeconds = 0f;
-            if (lift <= 0f && drop <= 0f) return AnimationCurve.Constant(0f, length, 0f);
-
-            float gravity = Physics.gravity.magnitude;
-            if (drop > 0f)
-            {
-                fallSeconds = Mathf.Sqrt(2f * drop / gravity);
-                // From very high up the body must still be down before the clip ends: it falls faster instead.
-                float latest = Mathf.Max(0.1f, length - 0.1f);
-                if (fallSeconds > latest)
-                {
-                    fallSeconds = latest;
-                    gravity = 2f * drop / (fallSeconds * fallSeconds);
-                }
-            }
+            if (lift <= 0f) return AnimationCurve.Constant(0f, length, 0f);
 
             float land = Mathf.Clamp(chain.impactTime, 0.1f, length);
             var keys = new Keyframe[HeightCurveSteps + 1];
@@ -449,7 +459,6 @@ namespace KryticalNova.Player
                     float u = t / land;
                     y += lift * 4f * u * (1f - u);
                 }
-                if (drop > 0f) y -= Mathf.Min(drop, 0.5f * gravity * t * t);
                 keys[i] = new Keyframe(t, y);
             }
             var curve = new AnimationCurve(keys);
@@ -459,8 +468,7 @@ namespace KryticalNova.Player
 
         /// <summary>
         /// Writes this death into the warp asset: one phase over the whole fall, travel along the ground following the
-        /// clip's own profile so it ends exactly on the landing, and the height curve (a thrown body's arc, an
-        /// airborne body's drop).
+        /// clip's own profile so it ends exactly on the landing, and the height curve (a thrown body's arc).
         /// </summary>
         private void ShapeWarp(AnimationCurve height)
         {
