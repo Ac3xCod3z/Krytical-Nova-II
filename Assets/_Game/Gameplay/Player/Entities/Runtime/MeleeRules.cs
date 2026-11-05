@@ -138,6 +138,26 @@ namespace KryticalNova.Player.Entities
             s.Step > 0 && s.SwingHit == 0 && s.TargetGhostId != 0
             && now.TicksSince(s.StepStartTick) >= Ticks(HitAfterMicros(t, s.Step), tickRate);
 
+        /// <summary>NGO approachInset (Player.prefab, 0.15 m): the walk in stops this far inside the striking range.</summary>
+        public const int ApproachInsetMm = 150;
+
+        /// <summary>NGO ApproachRepathInterval (0.1 s): how often the walk in is aimed again at a target that moves.</summary>
+        public const int ApproachRepathMicros = 100000;
+
+        /// <summary>
+        /// Where the server walks the attacker to (NGO ApproachPoint, PlayerMeleeCombat:656): on the attacker's side of the target, the
+        /// striking range less the inset away from it, on the ground plane; at the target itself when they stand on the same spot.
+        /// </summary>
+        public static int3 ApproachPointMm(in MeleeTiming t, int3 attackerMm, int3 targetMm)
+        {
+            int dx = attackerMm.x - targetMm.x, dz = attackerMm.z - targetMm.z;
+            long lengthSq = (long)dx * dx + (long)dz * dz;
+            if (lengthSq < 100) return targetMm; // under 1 cm (NGO: 0.0001 m squared)
+            int ring = math.max(100, t.ReachMm - ApproachInsetMm);
+            double length = math.sqrt((double)lengthSq);
+            return new int3(targetMm.x + (int)math.round(dx * ring / length), targetMm.y, targetMm.z + (int)math.round(dz * ring / length));
+        }
+
         /// <summary>A length in microseconds as whole ticks, rounded up (a strike never ends early).</summary>
         public static int Ticks(int micros, int tickRate) => (int)(((long)micros * tickRate + 999999) / 1000000);
 

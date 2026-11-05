@@ -135,5 +135,32 @@ namespace KryticalNova.Player.Entities.Tests
             rig.Tick(10);
             Assert.AreEqual(0, rig.Get<CombatState>(rig.Server, rig.ServerGhosts[0]).TargetGhostId, "stop ends the attack");
         }
+
+        [Test]
+        public void AnAttackOutOfReach_WalksIn_ThenStrikes()
+        {
+            // M4.4i: NGO's walk in: player 1 stands 6 m off; the server walks player 0 to 1.45 m from it, then strike 1 starts
+            using var rig = PlayerRig.Create(2, 0, new[] { new int3(0, 0, 0), new int3(0, 0, 6000) });
+            int target = rig.Get<GhostInstance>(rig.Server, rig.ServerGhosts[1]).ghostId;
+            rig.Sources[0].Attack(target);
+            bool struck = false;
+            for (int i = 0; i < 120 && !struck; i++)
+            {
+                rig.Tick();
+                struck = rig.Get<CombatState>(rig.Server, rig.ServerGhosts[0]).Step > 0;
+            }
+            Assert.IsTrue(struck, "walked in and struck within 4 s");
+            int z = rig.ServerPose(0).ZMm;
+            Assert.Greater(z, 6000 - 1600 - 50, "the strike starts within the 1.6 m striking range");
+            Assert.Less(z, 6000, "from its own side, short of the target");
+        }
+
+        [Test]
+        public void TheApproachPoint_IsNgos()
+        {
+            MeleeTiming t = MeleeTiming.Prefab(new int3(1000000, 1000000, 1000000));
+            Assert.AreEqual(new int3(0, 0, 4550), MeleeRules.ApproachPointMm(t, new int3(0, 0, 0), new int3(0, 0, 6000)), "1.6 - 0.15 m from the target, on the attacker's side");
+            Assert.AreEqual(new int3(5, 300, 7), MeleeRules.ApproachPointMm(t, new int3(5, 0, 7), new int3(5, 300, 7)), "on the same spot: the target itself");
+        }
     }
 }
