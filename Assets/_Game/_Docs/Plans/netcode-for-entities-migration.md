@@ -273,6 +273,11 @@ prediction error p95 <= 0.05 m at 60 ms, tick p95 < 15 ms with 102 monsters (fro
     casting on the view; area skills strike only bodies of their own world, never a view sharing the physics scene; a skill hit's VFX
     reaches every view (SkillHitEvent ring = NGO SkillHitVfxClientRpc); a server body presents no cast itself. EditMode 317/317,
     PlayMode 50/50 (B49). Next: area hits uncapped + every hit number delivered (owner, 5 Nov), then the de-rez rule.
+  - [x] M4.7b Every hit counts and shows (owner, 5 Nov: an area skill hits every body round the player, no cap): the area overlap grows
+    when a crowd fills it (NGO stopped at 64 colliders); each hit's number (and miss) goes to the attacker's own game by a reliable
+    message (HitNumberRpc = NGO DamageFeedbackRpc), so none is lost; the HitEvent ring (16, label 32 B cut on a whole character) takes
+    the server's queue 4 a tick for the impacts and the combat line. EditMode 322/322 (40 numbers through real worlds, every skill label
+    fits), PlayMode 51/51 (B50: 40 bodies with 80 colliders, all struck, 40 numbers). Next: the de-rez rule (owner, 5 Nov).
 - [ ] **M5 Monster system prototype (new brain).** Section 6. P0 EditMode sim tests (no netcode), P1 ghost + view, P2 reward bridge.
 - [ ] **M6 Hostiles in full.** All roster species via `MonsterArchetype` from `HostileDefinition` (ids kept), level scaling, zones,
   sleep, respawn, loot/XP through managed reward bridge with ledger rules; nav grids for the zones; bot soak with 102 monsters.

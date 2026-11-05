@@ -886,8 +886,26 @@ namespace KryticalNova.Combat
         // stays true there (no RPC on an unspawned object); the entity-netcode damage feedback comes with the combat milestone (plan 52).
         private bool AttackerIsHere => !IsSpawned || IsOwner;
 
+        /// <summary>
+        /// A server body of the entity netcode: a hit it dealt, for the attacker's own game (point, result, from a skill); sent there by a
+        /// reliable message, as NGO's DamageFeedbackRpc to the owner (M4 step 7, owner 5 Nov 2026: no number may be lost).
+        /// </summary>
+        public event Action<Vector3, DamageResult, bool> DamageShown;
+
+        /// <summary>The attacker's own view of the entity netcode: a hit's number (and the miss of an evaded blow), NGO DamageFeedbackRpc's body.</summary>
+        public void ShowDamageFeedback(Vector3 position, DamageResult result, bool fromSkill)
+        {
+            ClientPresentationRegistry.Feedback?.ShowCombatFeedback(position, result);
+            if (result.IsEvaded) ClientPresentationRegistry.Feel?.Missed(transform, position, fromSkill, true);
+        }
+
         private void ShowDamageToAttacker(Vector3 position, DamageResult result, bool fromSkill)
         {
+            if (KryticalNova.Core.BodyRoleTag.Of(this) is { Kind: KryticalNova.Core.NetRoleKind.ServerBody })
+            {
+                DamageShown?.Invoke(position, result, fromSkill);
+                return;
+            }
             if (AttackerIsHere)
             {
                 ClientPresentationRegistry.Feedback?.ShowCombatFeedback(position, result);

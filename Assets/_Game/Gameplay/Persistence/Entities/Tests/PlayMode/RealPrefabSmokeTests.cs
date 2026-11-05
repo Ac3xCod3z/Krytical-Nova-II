@@ -4384,6 +4384,83 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
             }
         }
 
+        [UnityTest]
+        public IEnumerator B50_AnAreaSkill_HitsEveryBodyInReach_FortyWithEightyColliders_AndEachHitIsANumberForTheAttacker()
+        {
+            // M4 step 7 (owner, 5 Nov 2026): no cap on an area skill (NGO's 64-collider buffer cut crowds), every hit's number told
+            NetRole.Install(new BodyRoleNetRoleAdapter(null, () => NetRoleKind.ServerBody));
+            ICombatFeedbackSink oldFeedback = ClientPresentationRegistry.Feedback;
+            var numbers = new NumbersSeen();
+            ClientPresentationRegistry.RegisterFeedback(numbers);
+            try
+            {
+                PlayerKeys.Reset();
+                ulong key = PlayerKeys.Mint(501).Value;
+                GameObject a = Admitted(key, "50a1000000000000000000000000000a", "c5010000000000000000000000000501", "Talwyn");
+                for (int i = 0; i < 30; i++) yield return null;
+                var skills = a.GetComponent<PlayerCombatSkills>();
+                skills.GmSetAllRanksToMax();
+                a.GetComponent<PlayerGmState>().SetInfiniteChi(true);
+                a.GetComponent<PlayerGmState>().SetNoCooldowns(true);
+                SkillDefinitionSO area = null;
+                foreach (SkillDefinitionSO s in skills.AvailableSkills)
+                    if (s != null && s.IsAreaAttack && skills.IsInActiveKit(s)) { area = s; break; }
+                Assert.IsNotNull(area, "planned: an area skill in the kit");
+                Assert.GreaterOrEqual(area.GetRange(skills.GetRank(area)), 3f, "planned: reach past the ring of bodies");
+
+                // 40 bodies round the player, 2 m out, each with two colliders: 80 colliders, more than NGO's 64
+                var bodies = new HashSet<Transform>();
+                for (int i = 0; i < 40; i++)
+                {
+                    var body = new GameObject("B50 dummy " + i);
+                    m_Made.Add(body);
+                    float angle = i * Mathf.PI * 2f / 40f;
+                    body.transform.position = a.transform.position + new Vector3(Mathf.Cos(angle), 0f, Mathf.Sin(angle)) * 2f;
+                    body.AddComponent<CapsuleCollider>();
+                    body.AddComponent<BoxCollider>().size = new Vector3(0.3f, 0.3f, 0.3f);
+                    body.AddComponent<CombatEntity>();
+                    bodies.Add(body.transform);
+                }
+                Physics.SyncTransforms();
+                yield return null;
+
+                var struck = new HashSet<Transform>();
+                int told = 0;
+                var melee = a.GetComponent<KryticalNova.Combat.PlayerMeleeCombat>();
+                melee.HitDealt += (target, result, step, fromSkill, label) => { if (target != null) struck.Add(target.Transform); };
+                melee.DamageShown += (position, result, fromSkill) => told++;
+                Assert.IsTrue(skills.ServerTryCast(area, null, out string why), "cast: " + why);
+                for (float t = 0f; t < 4f && struck.Count < 40; t += Time.deltaTime) yield return null;
+                Assert.AreEqual(40, struck.Count, "every body in reach is struck");
+                Assert.IsTrue(struck.SetEquals(bodies));
+                Assert.AreEqual(40, told, "one number for the attacker per hit");
+                Assert.AreEqual(0, numbers.Shown, "none drawn by the server body itself");
+
+                // the attacker's own view shows each number it is sent (HitNumberClientSystem -> ShowDamageFeedback)
+                GameObject own = Make(NetRoleKind.ClientView, true, new PlayerKey(key));
+                yield return null;
+                var ownMelee = own.GetComponent<KryticalNova.Combat.PlayerMeleeCombat>();
+                for (int i = 0; i < 40; i++) ownMelee.ShowDamageFeedback(Vector3.zero, new DamageResult { DamageDealt = 1f + i }, true);
+                Assert.AreEqual(40, numbers.Shown);
+
+                ServerLeaving.Notify(a);
+                a.GetComponent<PlayerSaveAgent>().OnServerLeaving();
+            }
+            finally
+            {
+                if (oldFeedback != null) ClientPresentationRegistry.RegisterFeedback(oldFeedback);
+                else ClientPresentationRegistry.UnregisterFeedback(numbers);
+                PlayerKeys.Reset();
+            }
+        }
+
+        sealed class NumbersSeen : ICombatFeedbackSink
+        {
+            public int Shown;
+            public void ShowCombatFeedback(Vector3 worldPosition, DamageResult result) => Shown++;
+            public void ShowFloatingText(Vector3 worldPosition, string text, string styleClass = "crit") { }
+        }
+
         static void AssertSameBuffs(CharacterBuffManager server, CharacterBuffManager copy, string who)
         {
             Assert.AreEqual(server.ActiveBuffs.Count, copy.ActiveBuffs.Count, who + ": as many buffs");

@@ -41,7 +41,8 @@ namespace KryticalNova.Combat
         [SerializeField, Min(1f)] private float impactRangeLeniency = 1.5f;
         [SerializeField] private LayerMask areaTargetLayers = ~0;
 
-        private static readonly Collider[] AreaColliders = new Collider[MaxAreaColliders];
+        // grown when a crowd fills it (owner, 5 Nov 2026: an area skill hits every body round the player, no cap; NGO stopped at 64 colliders)
+        private static Collider[] AreaColliders = new Collider[MaxAreaColliders];
         private readonly List<IDamageable> areaTargets = new List<IDamageable>();
         private readonly HashSet<Transform> areaSeen = new HashSet<Transform>();
 
@@ -278,6 +279,11 @@ namespace KryticalNova.Combat
             areaSeen.Clear();
             int count = Physics.OverlapSphereNonAlloc(transform.position, radius, AreaColliders, areaTargetLayers,
                 QueryTriggerInteraction.Collide);
+            while (count == AreaColliders.Length)
+            {
+                AreaColliders = new Collider[AreaColliders.Length * 2];
+                count = Physics.OverlapSphereNonAlloc(transform.position, radius, AreaColliders, areaTargetLayers, QueryTriggerInteraction.Collide);
+            }
             for (int i = 0; i < count; i++)
             {
                 var victim = AreaColliders[i].GetComponentInParent<IDamageable>();

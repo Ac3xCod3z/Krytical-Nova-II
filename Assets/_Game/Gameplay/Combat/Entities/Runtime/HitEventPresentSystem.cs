@@ -63,8 +63,7 @@ namespace KryticalNova.Combat.Entities
                     IsReflected = (hit.Flags & HitEventRing.Reflected) != 0,
                     ShieldShattered = (hit.Flags & HitEventRing.Shattered) != 0,
                 };
-                ClientPresentationRegistry.Feedback?.ShowCombatFeedback(target.position, result);
-                if (evaded) ClientPresentationRegistry.Feel?.Missed(attacker.Body.transform, target.position, (hit.Flags & HitEventRing.Skill) != 0, true);
+                // the number and the miss come by HitNumberRpc (reliable, M4 step 7): never from here, so none is shown twice
                 // the attacker's combat line (NGO TellAttacker / CombatMessageRpc), the same words through PlayerMeleeCombat.HitLine
                 // a skill hit's line carries NGO PlayerSkillAttacks' label (M4.5e); a strike's is the step's
                 bool skill = (hit.Flags & HitEventRing.Skill) != 0;

@@ -210,6 +210,51 @@ namespace KryticalNova.Player.Entities.Tests
         }
 
         [Test]
+        public void FortyHits_ComeThroughTheQueueAFewATick_AndAClientReadingEverySecondTickSeesEveryOne()
+        {
+            // M4 step 7 (owner, 5 Nov: an area skill hits every body, nothing may be lost): 4 a tick into a ring of 16
+            using var world = new Unity.Entities.World("hit queue");
+            var em = world.EntityManager;
+            var e = em.CreateEntity();
+            em.AddBuffer<HitEvent>(e);
+            var seq = new HitEventSeq();
+            var waiting = new System.Collections.Generic.Queue<HitEvent>();
+            for (int i = 1; i <= 40; i++) waiting.Enqueue(new HitEvent { TargetGhostId = i, DamageMilli = i * 1000 });
+            var seen = new System.Collections.Generic.HashSet<int>();
+            uint last = 0;
+            for (int tick = 0; tick < 40 && (waiting.Count > 0 || seen.Count < 40); tick++)
+            {
+                Assert.LessOrEqual(HitEventRing.Drain(waiting, em.GetBuffer<HitEvent>(e), ref seq), HitEventRing.PerTick);
+                if (tick % 2 != 1) continue;   // a snapshot every second tick
+                var ring = em.GetBuffer<HitEvent>(e);
+                for (int i = 0; i < ring.Length; i++)
+                {
+                    if (ring[i].Seq <= last) continue;
+                    Assert.AreEqual(last + 1, ring[i].Seq, "none skipped");
+                    last = ring[i].Seq;
+                    seen.Add(ring[i].TargetGhostId);
+                }
+            }
+            Assert.AreEqual(40, seen.Count, "every hit shown");
+            Assert.AreEqual(0, waiting.Count);
+        }
+
+        [Test]
+        public void ALongLabel_IsCutOnAWholeCharacter_AndAShortOneIsKept()
+        {
+            Assert.AreEqual("Lightning Flash (2/3)", HitEventRing.FitLabel("Lightning Flash (2/3)").ToString());
+            string cut = HitEventRing.FitLabel("A very long skill name that will not fit (3/3)").ToString();
+            Assert.IsTrue("A very long skill name that will not fit (3/3)".StartsWith(cut), "its start");
+            Assert.LessOrEqual(System.Text.Encoding.UTF8.GetByteCount(cut), 29);
+            string emoji = "Storm \U0001F525\U0001F525\U0001F525\U0001F525\U0001F525\U0001F525\U0001F525";
+            string cutEmoji = HitEventRing.FitLabel(emoji).ToString();
+            Assert.IsTrue(emoji.StartsWith(cutEmoji), "whole characters only: " + cutEmoji);
+            Assert.IsFalse(cutEmoji.Contains("\uFFFD"), "no broken character");
+            Assert.IsFalse(char.IsHighSurrogate(cutEmoji[cutEmoji.Length - 1]), "never half of a pair");
+            Assert.AreEqual(string.Empty, HitEventRing.FitLabel(null).ToString());
+        }
+
+        [Test]
         public void TheSkillHitRing_KeepsTheNewestSix()
         {
             // M4 step 7: NGO SkillHitVfxClientRpc as data on the attacker's ghost

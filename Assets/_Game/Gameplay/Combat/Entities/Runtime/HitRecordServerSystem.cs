@@ -20,6 +20,7 @@ namespace KryticalNova.Combat.Entities
     public partial class HitRecordServerSystem : SystemBase
     {
         readonly HashSet<PlayerMeleeCombat> m_Heard = new HashSet<PlayerMeleeCombat>();
+        readonly Dictionary<Entity, Queue<HitEvent>> m_Waiting = new Dictionary<Entity, Queue<HitEvent>>();
 
         /// <summary>Hits written (tests).</summary>
         public int Recorded { get; private set; }
@@ -35,6 +36,17 @@ namespace KryticalNova.Combat.Entities
                 melee.HitDealt += (target, result, step, fromSkill, label) => Record(ghost, melee, target, result, step, fromSkill, label);
             }
             m_Heard.RemoveWhere(m => m == null);
+            // every hit is applied when it lands; the ring shows a few a tick, the rest wait their turn (none is dropped)
+            List<Entity> gone = null;
+            foreach (var pair in m_Waiting)
+            {
+                if (!em.Exists(pair.Key) || !em.HasBuffer<HitEvent>(pair.Key) || !em.HasComponent<HitEventSeq>(pair.Key)) { (gone ??= new List<Entity>()).Add(pair.Key); continue; }
+                if (pair.Value.Count == 0) continue;
+                HitEventSeq seq = em.GetComponentData<HitEventSeq>(pair.Key);
+                HitEventRing.Drain(pair.Value, em.GetBuffer<HitEvent>(pair.Key), ref seq);
+                em.SetComponentData(pair.Key, seq);
+            }
+            if (gone != null) foreach (Entity e in gone) m_Waiting.Remove(e);
         }
 
         void Record(Entity attackerGhost, PlayerMeleeCombat attacker, IDamageable target, DamageResult result, int step, bool fromSkill, string label)
@@ -45,26 +57,17 @@ namespace KryticalNova.Combat.Entities
             int targetGhost = GhostIdOf(em, target != null ? target.Transform : null);
             if (targetGhost == 0) return;
             attacker.TryGetComponent(out CharacterCombatStats stats);
-            HitEventSeq seq = em.GetComponentData<HitEventSeq>(attackerGhost);
-            HitEventRing.Append(em.GetBuffer<HitEvent>(attackerGhost), ref seq, new HitEvent
+            if (!m_Waiting.TryGetValue(attackerGhost, out Queue<HitEvent> waiting)) m_Waiting[attackerGhost] = waiting = new Queue<HitEvent>();
+            waiting.Enqueue(new HitEvent
             {
                 TargetGhostId = targetGhost,
                 DamageMilli = Mathf.RoundToInt(result.DamageDealt * 1000f),
                 ReflectedMilli = Mathf.RoundToInt(result.ReflectedDamage * 1000f),
                 Flags = (byte)(MeleeStrike.FlagsOf(result, stats) | (fromSkill ? HitEventRing.Skill : 0)),
                 Step = (byte)math.clamp(step, 0, 3),
-                Label = fromSkill && !string.IsNullOrEmpty(label) ? Fit(label) : default,
+                Label = fromSkill && !string.IsNullOrEmpty(label) ? HitEventRing.FitLabel(label) : default,
             });
-            em.SetComponentData(attackerGhost, seq);
             Recorded++;
-        }
-
-        // a label longer than the field keeps its start (UTF-8 bytes)
-        static Unity.Collections.FixedString64Bytes Fit(string text)
-        {
-            var fixedText = new Unity.Collections.FixedString64Bytes();
-            foreach (char c in text) if (fixedText.Append(c) != Unity.Collections.FormatError.None) break;
-            return fixedText;
         }
 
         int GhostIdOf(EntityManager em, Transform body)
