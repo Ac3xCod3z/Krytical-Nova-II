@@ -28,6 +28,12 @@ namespace KryticalNova.Persistence.Entities
         public byte Phase;
     }
 
+    /// <summary>An Autoward volley (M4 step 7; NGO CastWardsServerRpc): the ward ids joined by '|'.</summary>
+    public struct WardsRpc : IRpcCommand
+    {
+        public FixedString512Bytes SkillIds;
+    }
+
     public struct SkillCastRpc : IRpcCommand
     {
         public FixedString64Bytes SkillId;
@@ -38,8 +44,10 @@ namespace KryticalNova.Persistence.Entities
     /// <summary>The server's answer to <see cref="ItemUseRpc"/> or <see cref="SkillCastRpc"/>, for the owner's own body to show.</summary>
     public struct RequestReplyRpc : IRpcCommand
     {
-        public const byte ItemUsed = 1, ItemRefused = 2, SkillCast = 3, SkillRefused = 4;
+        public const byte ItemUsed = 1, ItemRefused = 2, SkillCast = 3, SkillRefused = 4, WardCast = 5;
         public byte Kind;
+        /// <summary>A ward of a volley: 1 for the one shown as a cast (NGO WardCastClientRpc's shown, the first).</summary>
+        public byte Shown;
         /// <summary>Item used: it restored HP / Flux (the feel to play).</summary>
         public byte Health, Flux;
         /// <summary>Skill cast: which, at what rank.</summary>
@@ -745,6 +753,17 @@ namespace KryticalNova.Persistence.Entities
             em.AddComponent<SendRpcCommandRequest>(rpc);
         }
 
+        public void CastWards(string skillIds)
+        {
+            if (m_World == null || !m_World.IsCreated || string.IsNullOrEmpty(skillIds)) return;
+            var ids = new FixedString512Bytes();
+            if (ids.Append(skillIds) != FormatError.None) return;   // more than a volley holds: NGO's TextFits refused it too
+            var em = m_World.EntityManager;
+            Entity rpc = em.CreateEntity();
+            em.AddComponentData(rpc, new WardsRpc { SkillIds = ids });
+            em.AddComponent<SendRpcCommandRequest>(rpc);
+        }
+
         public void CastSkill(string skillId, Transform target)
         {
             if (m_World == null || !m_World.IsCreated || string.IsNullOrEmpty(skillId) || skillId.Length > FixedString64Bytes.UTF8MaxLengthInBytes) return;
@@ -766,7 +785,7 @@ namespace KryticalNova.Persistence.Entities
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     public partial class PlayerRequestServerSystem : SystemBase
     {
-        EntityQuery m_Charges, m_Uses, m_Casts, m_PackOps, m_LoadoutOps, m_Refills, m_Allocations, m_Upgrades, m_MoveUpgrades, m_Pickups, m_Drops, m_Storage, m_Buys, m_Sells, m_Trades;
+        EntityQuery m_Charges, m_Wards, m_Uses, m_Casts, m_PackOps, m_LoadoutOps, m_Refills, m_Allocations, m_Upgrades, m_MoveUpgrades, m_Pickups, m_Drops, m_Storage, m_Buys, m_Sells, m_Trades;
 
         /// <summary>Requests run, refused, and dropped by the request limits (tests).</summary>
         public int Used { get; private set; }
@@ -789,6 +808,7 @@ namespace KryticalNova.Persistence.Entities
             m_Uses = GetEntityQuery(ComponentType.ReadOnly<ReceiveRpcCommandRequest>(), ComponentType.ReadOnly<ItemUseRpc>());
             m_Casts = GetEntityQuery(ComponentType.ReadOnly<ReceiveRpcCommandRequest>(), ComponentType.ReadOnly<SkillCastRpc>());
             m_Charges = GetEntityQuery(ComponentType.ReadOnly<ReceiveRpcCommandRequest>(), ComponentType.ReadOnly<ChargeRpc>());
+            m_Wards = GetEntityQuery(ComponentType.ReadOnly<ReceiveRpcCommandRequest>(), ComponentType.ReadOnly<WardsRpc>());
             m_PackOps = GetEntityQuery(ComponentType.ReadOnly<ReceiveRpcCommandRequest>(), ComponentType.ReadOnly<PackOpRpc>());
             m_LoadoutOps = GetEntityQuery(ComponentType.ReadOnly<ReceiveRpcCommandRequest>(), ComponentType.ReadOnly<LoadoutOpRpc>());
             m_Refills = GetEntityQuery(ComponentType.ReadOnly<ReceiveRpcCommandRequest>(), ComponentType.ReadOnly<FlaskRefillRpc>());
@@ -814,6 +834,15 @@ namespace KryticalNova.Persistence.Entities
                 for (int i = 0; i < uses.Length; i++) UseItem(received[i].SourceConnection, uses[i].ItemId);
                 received.Dispose();
                 uses.Dispose();
+            }
+            if (!m_Wards.IsEmpty)
+            {
+                var received = m_Wards.ToComponentDataArray<ReceiveRpcCommandRequest>(Allocator.Temp);
+                var volleys = m_Wards.ToComponentDataArray<WardsRpc>(Allocator.Temp);
+                em.DestroyEntity(m_Wards);
+                for (int i = 0; i < volleys.Length; i++) Wards(received[i].SourceConnection, volleys[i].SkillIds.ToString());
+                received.Dispose();
+                volleys.Dispose();
             }
             if (!m_Charges.IsEmpty)
             {
@@ -1122,6 +1151,34 @@ namespace KryticalNova.Persistence.Entities
             }
             Refused++;
             Reply(connection, new RequestReplyRpc { Kind = RequestReplyRpc.SkillRefused, SkillId = new FixedString64Bytes(skillId), Text = Fit(reason) });
+        }
+
+        // M4 step 7: an Autoward volley (NGO CastWardsServerRpc -> ServerCastWards -> WardCastClientRpc, NotifyCastFailedClientRpc)
+        readonly List<SkillDefinitionSO> m_VolleyCast = new List<SkillDefinitionSO>();
+        void Wards(Entity connection, string skillIds)
+        {
+            if (!BodyOf(connection, CallKind.Combat, out GameObject body)) return;
+            var skills = body.GetComponent<PlayerCombatSkills>();
+            if (skills == null) return;
+            if (skills.RunWards(skillIds, m_VolleyCast) == 0)
+            {
+                Refused++;
+                Reply(connection, new RequestReplyRpc { Kind = RequestReplyRpc.SkillRefused, Text = Fit("No ward could be cast now.") });
+                return;
+            }
+            Used++;
+            for (int i = 0; i < m_VolleyCast.Count; i++)
+            {
+                SkillDefinitionSO ward = m_VolleyCast[i];
+                short rank = (short)skills.GetRank(ward);
+                // the others see the volley as one cast, the first (NGO shows it once); every ward's buff reaches them on the running list
+                if (i == 0) RecordCast(body, ward.skillId, rank, 0);
+                Reply(connection, new RequestReplyRpc
+                {
+                    Kind = RequestReplyRpc.WardCast, SkillId = new FixedString64Bytes(ward.skillId), Rank = rank, Shown = (byte)(i == 0 ? 1 : 0),
+                });
+            }
+            m_VolleyCast.Clear();
         }
 
         // M4.5f: the owner's charge on its ghost for every other client (NGO ChargeStartedRpc / ChargeEndedRpc, owner-invoked)
@@ -1624,6 +1681,9 @@ namespace KryticalNova.Persistence.Entities
                     break;
                 case RequestReplyRpc.SkillRefused:
                     body.GetComponent<PlayerCombatSkills>()?.ShowCastRefused(reply.Text.ToString());
+                    break;
+                case RequestReplyRpc.WardCast:
+                    body.GetComponent<PlayerCombatSkills>()?.ShowWardCast(reply.SkillId.ToString(), reply.Rank, reply.Shown != 0);
                     break;
             }
         }

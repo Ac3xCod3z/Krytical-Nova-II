@@ -153,6 +153,9 @@ namespace KryticalNova.Core
         /// <summary>A hold-to-charge started or ended on this player's own view (M4.5f, NGO ChargeStartedRpc / ChargeEndedRpc): the server tells the others.</summary>
         void Charge(string skillId, UnityEngine.Transform aimedAt, bool started, bool completed);
 
+        /// <summary>An Autoward volley from this player's own view (M4 step 7, NGO CastWardsServerRpc): the ward ids joined by '|', at most 16.</summary>
+        void CastWards(string skillIds);
+
         /// <summary>
         /// Asks the server to move, equip, unequip, destroy or sort in the Pack, by cell as NGO's RPCs did (a place is a container and an index:
         /// the Pack's cell, or an equipment slot); the server's body runs the game's rules and the mirror shows the result.

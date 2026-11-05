@@ -79,6 +79,8 @@ namespace KryticalNova.Progression
         /// <summary>True where this player's skills are decided (the server, or offline). Clients only mirror them.</summary>
         public bool HasAuthority => (!IsSpawned || IsServer) && !BodyRoleTag.IsRemoteClientView(this);
 
+        private bool OnServerBody => BodyRoleTag.Of(this) is { Kind: NetRoleKind.ServerBody };
+
         // NGO's "IsSpawned && IsServer": the NGO server, or a server body of the entity netcode (never network-spawned)
         private bool DecidesOnServer => (IsSpawned && IsServer) || BodyRoleTag.Of(this) is { Kind: NetRoleKind.ServerBody };
 
@@ -769,6 +771,15 @@ namespace KryticalNova.Progression
                     else if (string.IsNullOrEmpty(reason)) reason = why;
                 }
             if (ready.Count == 0) return 0;
+            // the entity netcode's own view body asks its server, as an NGO client did (M4 step 7): never cast here
+            if (BodyRoleTag.RequestsOf(this) is IBodyRequests requests)
+            {
+                var asked = new string[ready.Count];
+                for (int i = 0; i < ready.Count; i++) asked[i] = ready[i].skillId;
+                castRequestPendingUntil = Time.time + CastRequestTimeout;
+                requests.CastWards(string.Join(WardSeparator, asked));
+                return ready.Count;
+            }
             if (IsSpawned && !IsServer)
             {
                 var ids = new string[ready.Count];
@@ -808,19 +819,53 @@ namespace KryticalNova.Progression
             if (ServerCastWards(wards) == 0) NotifyCastFailedClientRpc("No ward could be cast now.");
         }
 
+        /// <summary>
+        /// A server body of the entity netcode: NGO's CastWardsServerRpc body (after the caller's budget) for a volley its view asked for:
+        /// the ids parsed as NGO did (no attacks, no repeats, at most 16), each ready ward cast. The ones cast go in <paramref name="cast"/>.
+        /// </summary>
+        public int RunWards(string skillIds, List<SkillDefinitionSO> cast)
+        {
+            cast?.Clear();
+            if (!(BodyRoleTag.Of(this) is { Kind: NetRoleKind.ServerBody })) return 0;
+            var wards = new List<SkillDefinitionSO>();
+            foreach (string id in (skillIds ?? string.Empty).Split(WardSeparator[0]))
+            {
+                SkillDefinitionSO ward = GetSkill(id);
+                if (ward != null && !ward.IsAttack && !wards.Contains(ward) && wards.Count < 16) wards.Add(ward);
+            }
+            return ServerCastWards(wards, cast);
+        }
+
+        /// <summary>
+        /// The entity netcode's own view body: a ward of its volley was cast by the server (NGO WardCastClientRpc): its cooldown and the cast
+        /// event, the cast shown for the first only. Its buff comes with the server's running list (M4.5i).
+        /// </summary>
+        public void ShowWardCast(string skillId, int rank, bool shown)
+        {
+            SkillDefinitionSO skill = GetSkill(skillId);
+            if (skill == null) return;
+            castRequestPendingUntil = 0f;
+            cooldownEndTimes[skill.RankKey] = Time.time + skill.cooldown;
+            SkillCast?.Invoke(skill);
+            Changed?.Invoke();
+            if (shown) PresentCast(skill, rank, null);
+        }
+
         // Where combat is decided: each ward that is still down and ready is cast; only the first is shown as a cast.
-        private int ServerCastWards(List<SkillDefinitionSO> wards)
+        private int ServerCastWards(List<SkillDefinitionSO> wards, List<SkillDefinitionSO> castOut = null)
         {
             int cast = 0;
             foreach (SkillDefinitionSO ward in wards)
             {
                 if (buffManager != null && buffManager.HasBuff(ward.skillId)) continue;
                 if (!WardReady(ward, out _) || !ExecuteCastInternal(ward, null, out _)) continue;
+                castOut?.Add(ward);
                 int rank = GetRank(ward);
                 if (IsSpawned) WardCastClientRpc(ward.skillId, rank, cast == 0);
                 else
                 {
-                    if (cast == 0) PresentCast(ward, rank, null);
+                    // a server body of the entity netcode shows nothing itself: the views play it from the ghost (M4 step 7)
+                    if (cast == 0 && !OnServerBody) PresentCast(ward, rank, null);
                     Changed?.Invoke();
                 }
                 cast++;
@@ -919,7 +964,7 @@ namespace KryticalNova.Progression
             if (!ExecuteCastInternal(skill, target, out reason)) return false;
             int rank = GetRank(skill);
             if (IsSpawned) TriggerSkillCastClientRpc(skill.skillId, rank, ToReference(target));
-            else PresentCast(skill, rank, target);
+            else if (!OnServerBody) PresentCast(skill, rank, target);   // a server body: the views play it from the ghost (M4 step 7)
             return true;
         }
 

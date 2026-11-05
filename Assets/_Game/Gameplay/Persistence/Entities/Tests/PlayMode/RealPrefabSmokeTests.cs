@@ -457,6 +457,7 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
             public void UseItem(ushort itemId) { }
             public void CastSkill(string skillId, Transform target) { }
             public void Charge(string skillId, Transform aimedAt, bool started, bool completed) { }
+            public void CastWards(string skillIds) => Ops.Add("Wards " + skillIds);
             public void PackOp(PackOpKind kind, byte fromContainer, byte fromIndex, byte toContainer, byte toIndex) =>
                 Ops.Add($"{kind} {fromContainer}:{fromIndex} {toContainer}:{toIndex}");
             public void LoadoutOp(LoadoutOpKind kind, byte index, string name) => Ops.Add($"{kind} {index} {name}");
@@ -4287,6 +4288,102 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
             }
         }
 
+        [UnityTest]
+        public IEnumerator B49_AWardVolley_IsAskedForAndCastOnTheServerBody_AreaSkillsNeverStrikeAView_AndEveryViewSeesTheSkillHit()
+        {
+            // M4 step 7: NGO's CastWardsServerRpc / WardCastClientRpc, the area overlap in this world only, SkillHitVfxClientRpc to everyone
+            NetRole.Install(new BodyRoleNetRoleAdapter(null, () => NetRoleKind.ServerBody));
+            IGameFeelSink oldFeel = ClientPresentationRegistry.Feel;
+            var feel = new FeelSeen();
+            ClientPresentationRegistry.RegisterFeel(feel);
+            try
+            {
+                PlayerKeys.Reset();
+                ulong key = PlayerKeys.Mint(491).Value;
+                GameObject a = Admitted(key, "49a1000000000000000000000000000a", "c4910000000000000000000000000491", "Talwyn");
+                for (int i = 0; i < 30; i++) yield return null;
+                var skills = a.GetComponent<PlayerCombatSkills>();
+                skills.GmSetAllRanksToMax();
+                a.GetComponent<PlayerGmState>().SetInfiniteChi(true);
+                a.GetComponent<PlayerGmState>().SetNoCooldowns(true);
+                var wards = new List<SkillDefinitionSO>();
+                SkillDefinitionSO strike = null;
+                foreach (SkillDefinitionSO s in skills.AvailableSkills)
+                {
+                    if (s == null || !skills.IsInActiveKit(s)) continue;
+                    if (s.IsAttack) { if (!s.IsAreaAttack && strike == null) strike = s; }
+                    else if (s.executionType != SkillExecutionType.Channeled && wards.Count < 2) wards.Add(s);
+                }
+                Assert.AreEqual(2, wards.Count, "planned: two wards in the kit");
+                Assert.IsNotNull(strike, "planned: a single-target attack in the kit");
+                string ids = wards[0].skillId + "|" + wards[1].skillId;
+
+                // 1. the server body casts the volley its view asked for (NGO's RPC body), each ward once; again with both up: none
+                var cast = new List<SkillDefinitionSO>();
+                Assert.AreEqual(2, skills.RunWards(ids + "|" + strike.skillId + "|" + wards[0].skillId, cast), "both wards; attacks and repeats are dropped");
+                CollectionAssert.AreEqual(wards, cast);
+                Assert.IsNotNull(a.GetComponent<CharacterBuffManager>().GetBuff(wards[0].skillId));
+                Assert.AreEqual(0, skills.RunWards(ids, cast), "already up: nothing to cast");
+
+                // 2. the own view asks instead of casting (an NGO client's CastWardsServerRpc), and shows the server's answer
+                GameObject own = Make(NetRoleKind.ClientView, true, new PlayerKey(key));
+                own.name = "B49 own";
+                var asked = new Asked();
+                own.GetComponent<BodyRoleTag>().Requests = asked;
+                yield return null;
+                var viewSkills = own.GetComponent<PlayerCombatSkills>();
+                viewSkills.SetAvailableSkills(new List<SkillDefinitionSO>(skills.AvailableSkills).ToArray());
+                for (int i = 0; i < viewSkills.AvailableSkills.Count; i++)
+                    viewSkills.MirrorRank(i, (byte)Mathf.Clamp(skills.GetRank(viewSkills.AvailableSkills[i]), 0, 255));
+                own.GetComponent<PlayerResources>().MirrorChi(100000f, 100000f);
+                Assert.AreEqual(2, viewSkills.TryCastWardsAtOnce(wards, out string why), "both asked for: " + why);
+                CollectionAssert.AreEqual(new[] { "Wards " + ids }, asked.Ops, "sent to the server");
+                Assert.IsFalse(viewSkills.IsOnCooldown(wards[0]), "nothing cast on the view itself");
+                Assert.IsNull(own.GetComponent<CharacterBuffManager>().GetBuff(wards[0].skillId), "and no buff of its own");
+                viewSkills.ShowWardCast(wards[0].skillId, 5, true);
+                viewSkills.ShowWardCast(wards[1].skillId, 5, false);
+                Assert.IsTrue(viewSkills.IsOnCooldown(wards[0]) && viewSkills.IsOnCooldown(wards[1]), "the server's cooldowns");
+                Assert.AreEqual(1, feel.Calls.FindAll(c => c.StartsWith("cast ")).Count, "the volley shown as one cast: " + string.Join(" | ", feel.Calls));
+
+                // 3. an area skill strikes bodies of its own world only: never a view sharing the physics scene
+                var dummyObject = new GameObject("B49 dummy");
+                m_Made.Add(dummyObject);
+                var dummy = dummyObject.AddComponent<CombatEntity>();
+                dummyObject.transform.position = a.transform.position + a.transform.forward * 1f;
+                yield return null;
+                Assert.IsTrue(KryticalNova.Combat.PlayerSkillAttacks.HitsHere(a.GetComponent<CombatEntity>()), "a server body");
+                Assert.IsTrue(KryticalNova.Combat.PlayerSkillAttacks.HitsHere(dummy), "a dummy (no view tag)");
+                Assert.IsFalse(KryticalNova.Combat.PlayerSkillAttacks.HitsHere(own.GetComponent<CombatEntity>()), "never a view");
+
+                // 4. a skill hit on the server body is told to every view (NGO SkillHitVfxClientRpc), not drawn on the server body
+                var landed = new List<string>();
+                a.GetComponent<KryticalNova.Combat.PlayerSkillAttacks>().SkillHitShown += (id, at) => landed.Add(id);
+                for (int attempt = 0; attempt < 6 && landed.Count == 0; attempt++)
+                {
+                    skills.ServerTryCast(strike, dummyObject.transform, out _);
+                    for (float t = 0f; t < 2f && landed.Count == 0; t += Time.deltaTime) yield return null;
+                }
+                Assert.IsNotEmpty(landed, "the hit landed on the dummy and was told");
+                Assert.AreEqual(strike.skillId, landed[0]);
+                Assert.IsFalse(feel.Calls.Exists(c => c.StartsWith("skillhit " + a.name)), "not drawn by the server body");
+                GameObject theirs = Make(NetRoleKind.ClientView, false, new PlayerKey(key));
+                theirs.name = "B49 theirs";
+                yield return null;
+                theirs.GetComponent<PlayerCombatSkills>().SetAvailableSkills(new List<SkillDefinitionSO>(skills.AvailableSkills).ToArray());
+                theirs.GetComponent<KryticalNova.Combat.PlayerSkillAttacks>().ShowSkillHitSeen(strike.skillId, dummyObject.transform.position);
+                Assert.IsTrue(feel.Calls.Contains($"skillhit B49 theirs {strike.PresentationId}"), "a view plays it: " + string.Join(" | ", feel.Calls));
+
+                ServerLeaving.Notify(a);
+                a.GetComponent<PlayerSaveAgent>().OnServerLeaving();
+            }
+            finally
+            {
+                if (oldFeel != null) ClientPresentationRegistry.RegisterFeel(oldFeel);
+                else ClientPresentationRegistry.UnregisterFeel(feel);
+                PlayerKeys.Reset();
+            }
+        }
+
         static void AssertSameBuffs(CharacterBuffManager server, CharacterBuffManager copy, string who)
         {
             Assert.AreEqual(server.ActiveBuffs.Count, copy.ActiveBuffs.Count, who + ": as many buffs");
@@ -4324,7 +4421,7 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
             public void SkillCast(Transform caster, string skillId, bool isAttack, bool isLocalPlayer, float areaRadius = 0f, float areaSeconds = 0f) => Calls.Add("cast " + skillId);
             public void ChargeStarted(Transform actor, string skillId, float seconds, bool isLocalPlayer) => Calls.Add("charge " + skillId);
             public void ChargeEnded(Transform actor, string skillId, bool completed) => Calls.Add($"charged {skillId} {completed}");
-            public void SkillHit(Transform caster, string skillId, Vector3 point, int classSlot = 0) { }
+            public void SkillHit(Transform caster, string skillId, Vector3 point, int classSlot = 0) => Calls.Add($"skillhit {caster.name} {skillId}");
             public void BuffStarted(Transform actor, string skillId, float duration) { }
             public void BuffEnded(Transform actor, string skillId) { }
             public void Consumed(Transform actor, bool restoredHealth, bool restoredChi) { }

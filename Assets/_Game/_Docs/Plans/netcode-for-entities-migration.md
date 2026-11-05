@@ -268,6 +268,11 @@ prediction error p95 <= 0.05 m at 60 ms, tick p95 < 15 ms with 102 monsters (fro
     from, landing, yaws); DeathKnockSystem places the body on it on the server and the owner (the clip's baked travel, a critical
     blow's 0.55 m arc, an airborne body's drop, the 0.12 s turn to a blow from the front), observers follow the ghost. Its own plan,
     so the jump's MotionPlan is untouched. EditMode 316/316, PlayMode 49/49 (B48). M4 step 6 complete; owner GUI feel check of deaths.
+  - [x] M4.7 The rest of the skills: multi-hit already ran NGO's way on the server body. Autoward volleys from a view now ask the
+    server (NGO CastWardsServerRpc -> RunWards; the owner's reply = WardCastClientRpc, shown once; refusal in NGO's words) instead of
+    casting on the view; area skills strike only bodies of their own world, never a view sharing the physics scene; a skill hit's VFX
+    reaches every view (SkillHitEvent ring = NGO SkillHitVfxClientRpc); a server body presents no cast itself. EditMode 317/317,
+    PlayMode 50/50 (B49). Next: area hits uncapped + every hit number delivered (owner, 5 Nov), then the de-rez rule.
 - [ ] **M5 Monster system prototype (new brain).** Section 6. P0 EditMode sim tests (no netcode), P1 ghost + view, P2 reward bridge.
 - [ ] **M6 Hostiles in full.** All roster species via `MonsterArchetype` from `HostileDefinition` (ids kept), level scaling, zones,
   sleep, respawn, loot/XP through managed reward bridge with ledger rules; nav grids for the zones; bot soak with 102 monsters.

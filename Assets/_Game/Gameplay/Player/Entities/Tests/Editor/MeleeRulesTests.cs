@@ -210,6 +210,24 @@ namespace KryticalNova.Player.Entities.Tests
         }
 
         [Test]
+        public void TheSkillHitRing_KeepsTheNewestSix()
+        {
+            // M4 step 7: NGO SkillHitVfxClientRpc as data on the attacker's ghost
+            using var world = new Unity.Entities.World("skill hit ring");
+            var em = world.EntityManager;
+            var e = em.CreateEntity();
+            em.AddBuffer<SkillHitEvent>(e);
+            var seq = new SkillHitSeq();
+            for (int i = 1; i <= 8; i++)
+                SkillHitRing.Append(em.GetBuffer<SkillHitEvent>(e), ref seq, new SkillHitEvent { SkillId = new FixedString64Bytes("hit" + i), XMm = i });
+            var ring = em.GetBuffer<SkillHitEvent>(e);
+            Assert.AreEqual(SkillHitRing.Capacity, ring.Length);
+            Assert.AreEqual(3u, ring[0].Seq);
+            Assert.AreEqual("hit8", ring[ring.Length - 1].SkillId.ToString());
+            Assert.AreEqual(8u, SkillHitRing.Newest(ring));
+        }
+
+        [Test]
         public void TheKnock_GoesFromTheBodyToTheLanding_ThrowsACriticalBodyUp_DropsAnAirborneOne_AndTurnsOnlyToABlowFromTheFront()
         {
             // M4 6b-2: NGO's death warp as the ghost's plan (straight travel here; the game bakes the clip's own)

@@ -146,6 +146,36 @@ namespace KryticalNova.Player.Entities
         }
     }
 
+    /// <summary>A skill hit the server made (M4 step 7): every view plays its VFX once (NGO SkillHitVfxClientRpc, Everyone). Server-written.</summary>
+    [InternalBufferCapacity(SkillHitRing.Capacity)]
+    public struct SkillHitEvent : IBufferElementData
+    {
+        [GhostField] public uint Seq;
+        [GhostField] public Unity.Collections.FixedString64Bytes SkillId;
+        [GhostField] public int XMm, YMm, ZMm;
+    }
+
+    /// <summary>The attacker's last skill hit number (server count).</summary>
+    public struct SkillHitSeq : IComponentData
+    {
+        public uint Last;
+    }
+
+    /// <summary>The skill hit ring's rules, as <see cref="HitEventRing"/>'s.</summary>
+    public static class SkillHitRing
+    {
+        public const int Capacity = 6;
+
+        public static void Append(DynamicBuffer<SkillHitEvent> ring, ref SkillHitSeq seq, SkillHitEvent hit)
+        {
+            hit.Seq = ++seq.Last;
+            if (ring.Length >= Capacity) ring.RemoveAt(0);
+            ring.Add(hit);
+        }
+
+        public static uint Newest(DynamicBuffer<SkillHitEvent> ring) => ring.Length > 0 ? ring[ring.Length - 1].Seq : 0;
+    }
+
     /// <summary>The caster's last cast number (server count).</summary>
     public struct CastEventSeq : IComponentData
     {

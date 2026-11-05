@@ -57,6 +57,8 @@ namespace KryticalNova.Player.Entities
                 AddBuffer<RunningBuff>(e);          // the server's running buffs, every view's copy kept equal (M4.5i)
                 AddComponent<DeathState>(e);        // how the player went down, for every view (M4 6b)
                 AddComponent<KnockPlan>(e);         // the dead body's travel to its landing (M4 6b-2)
+                AddBuffer<SkillHitEvent>(e);        // skill hits, for every view's VFX (M4 step 7)
+                AddComponent<SkillHitSeq>(e);
                 // M4.4b: the strike lengths come from the clips themselves, as NGO's GetStrikeDuration reads clip.length
                 DependsOn(a.combo1Clip);
                 DependsOn(a.combo2Clip);

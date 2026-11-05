@@ -266,6 +266,8 @@ namespace KryticalNova.Combat
             if (result.IsEvaded) return HitOutcome.Evaded;
             Vector3 position = victim.Transform.position + Vector3.up;
             if (IsSpawned) SkillHitVfxClientRpc(skill.skillId, position);
+            // a server body of the entity netcode: every view plays it from the ghost (M4 step 7), as NGO's ClientRpc to everyone
+            else if (KryticalNova.Core.BodyRoleTag.Of(this) is { Kind: KryticalNova.Core.NetRoleKind.ServerBody }) SkillHitShown?.Invoke(skill.skillId, position);
             else SpawnSkillHitVfxLocal(skill, position);
             return HitOutcome.Landed;
         }
@@ -279,9 +281,27 @@ namespace KryticalNova.Combat
             for (int i = 0; i < count; i++)
             {
                 var victim = AreaColliders[i].GetComponentInParent<IDamageable>();
-                if (victim == null || !victim.IsAlive || !areaSeen.Add(victim.Transform)) continue;
+                if (victim == null || !victim.IsAlive || !HitsHere(victim) || !areaSeen.Add(victim.Transform)) continue;
                 if (CombatHostility.IsHostile(transform, victim)) areaTargets.Add(victim);
             }
+        }
+
+        /// <summary>
+        /// An area skill strikes bodies of the world it is decided in (M4 step 7): never a view of the entity netcode, which shares the
+        /// physics scene with the server bodies on a host or in the Editor. Hostiles, dummies and NGO bodies have no view tag.
+        /// </summary>
+        public static bool HitsHere(IDamageable victim) =>
+            victim != null && !(victim.Transform != null && KryticalNova.Core.BodyRoleTag.Of(victim.Transform) is { Kind: KryticalNova.Core.NetRoleKind.ClientView });
+
+        /// <summary>A server body of the entity netcode: a skill hit landed here (skill id, point), for every view's VFX (M4 step 7).</summary>
+        public event System.Action<string, Vector3> SkillHitShown;
+
+        /// <summary>A view of the entity netcode: the skill hit the server body made, as NGO's SkillHitVfxClientRpc showed it everywhere.</summary>
+        public void ShowSkillHitSeen(string skillId, Vector3 position)
+        {
+            var skills = GetComponent<PlayerCombatSkills>();
+            var skill = skills != null ? skills.GetSkill(skillId) : null;
+            if (skill != null) SpawnSkillHitVfxLocal(skill, position);
         }
 
         /// <summary>A body this far above or below the reach of a skill is out of it (a player up a wall, in a tree).</summary>
