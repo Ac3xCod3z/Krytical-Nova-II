@@ -15,7 +15,8 @@ namespace KryticalNova.Combat.Entities
     /// the target is tested where the attacker saw it (the PositionHistory at the attacker's interpolation delay, M4.3) and within the
     /// server's check range now (<see cref="MeleeRules.Resolve"/>), then the body applies it as NGO does (<see cref="MeleeStrike"/>).
     /// One hit per swing, landed or not. Every other hostile in the swing's arc where the attacker saw it is struck too (M4.4g: NGO's
-    /// blade sweep strikes each hostile it touches). Players only for now: hostiles and the Combat Dummy come with their own ghosts.
+    /// blade sweep strikes each hostile it touches). Players, and the attackable ghosts that are not players (M4.2b: the Strike Dummy,
+    /// each with its own capsule; <see cref="CombatTargetRegistry"/>).
     /// </summary>
     [WorldSystemFilter(WorldSystemFilterFlags.ServerSimulation)]
     [UpdateInGroup(typeof(SimulationSystemGroup))]
@@ -33,8 +34,16 @@ namespace KryticalNova.Combat.Entities
             attacker != null && target != null && target.IsAlive && CombatHostility.IsHostile(attacker.transform, target);
 
         bool AttackAllowed(EntityManager em, GhostBodyEntry attacker, int targetGhostId) =>
-            TryFind(em, targetGhostId, out GhostBodyEntry target) && target.Body.TryGetComponent(out IDamageable damageable)
+            TryFind(em, targetGhostId, out Struck target) && target.Body.TryGetComponent(out IDamageable damageable)
             && AttackAllowed(attacker.Body, damageable);
+
+        /// <summary>A body a swing can strike: a player's, or a non-player target's (M4.2b), with its ghost and its capsule.</summary>
+        struct Struck
+        {
+            public GameObject Body;
+            public Entity Ghost;
+            public HitProxy Proxy;
+        }
 
         protected override void OnCreate() => RequireForUpdate<NetworkTime>();
 
@@ -65,50 +74,68 @@ namespace KryticalNova.Combat.Entities
                 s.SwingHit = 1;
                 em.SetComponentData(attacker.Ghost, s);
 
-                if (!TryFind(em, s.TargetGhostId, out GhostBodyEntry target) || !target.Body.TryGetComponent(out IDamageable damageable)) continue;
+                if (!TryFind(em, s.TargetGhostId, out Struck target) || !target.Body.TryGetComponent(out IDamageable damageable)) continue;
                 NetworkTick seen = now;
                 if (em.HasComponent<CommandDataInterpolationDelay>(attacker.Ghost))
                     seen.Subtract(em.GetComponentData<CommandDataInterpolationDelay>(attacker.Ghost).Delay);
                 PlayerPose me = em.GetComponentData<PlayerPose>(attacker.Ghost);
-                int3 them = em.GetComponentData<PlayerPose>(target.Ghost).Mm;
+                int3 them = FeetOf(em, target.Ghost);
                 // M4.4g: everyone else who could be under the blade (NGO's sweep strikes each hostile it touches, once per swing)
                 bystanders.Clear();
                 foreach (GhostBodyEntry e in GhostBodyRegistry.Entries)
-                    if (ReferenceEquals(e.World, World) && e != attacker && e != target && e.Body != null && em.Exists(e.Ghost)
+                    if (ReferenceEquals(e.World, World) && e != attacker && e.Ghost != target.Ghost && e.Body != null && em.Exists(e.Ghost)
                         && em.HasComponent<PositionHistory>(e.Ghost) && e.Body.TryGetComponent(out IDamageable _))
-                        bystanders.Add(e);
+                        bystanders.Add(new Struck { Body = e.Body, Ghost = e.Ghost, Proxy = HitProxy.Player });
+                foreach (CombatTargetEntry e in CombatTargetRegistry.Entries)
+                    if (ReferenceEquals(e.World, World) && e.Ghost != target.Ghost && em.Exists(e.Ghost) && em.HasComponent<PositionHistory>(e.Ghost)
+                        && em.HasComponent<CombatTarget>(e.Ghost) && e.Body.TryGetComponent(out IDamageable _))
+                        bystanders.Add(new Struck { Body = e.Body, Ghost = e.Ghost, Proxy = em.GetComponentData<CombatTarget>(e.Ghost).Proxy });
                 var rings = new NativeArray<PositionHistory>(bystanders.Count, Allocator.Temp);
-                for (int i = 0; i < bystanders.Count; i++) rings[i] = em.GetComponentData<PositionHistory>(bystanders[i].Ghost);
+                var proxies = new NativeArray<HitProxy>(bystanders.Count, Allocator.Temp);
+                for (int i = 0; i < bystanders.Count; i++)
+                {
+                    rings[i] = em.GetComponentData<PositionHistory>(bystanders[i].Ghost);
+                    proxies[i] = bystanders[i].Proxy;
+                }
                 collateral.Clear();
-                bool resolved = MeleeRules.Resolve(t, me.Mm, me.YawCdeg, now, seen, em.GetComponentData<PositionHistory>(target.Ghost), them, rings,
-                    HitProxy.Player, out bool targetHit, ref collateral);
+                bool resolved = MeleeRules.Resolve(t, me.Mm, me.YawCdeg, now, seen, em.GetComponentData<PositionHistory>(target.Ghost), them,
+                    target.Proxy, rings, proxies, HitProxy.Player, out bool targetHit, ref collateral);
                 rings.Dispose();
+                proxies.Dispose();
                 if (!resolved) continue;
                 float multiplier = MeleeRules.StepMultiplier(t, s.Step);
                 if (targetHit && MeleeStrike.Apply(attacker.Body, damageable, s.Step, multiplier)) Hits++;   // the ring is written by HitRecordServerSystem
                 // a friend in the arc is left alone: MeleeStrike asks the same hostility rule
                 for (int i = 0; i < collateral.Length; i++)
                 {
-                    GhostBodyEntry by = bystanders[collateral[i]];
+                    Struck by = bystanders[collateral[i]];
                     if (by.Body.TryGetComponent(out IDamageable other) && MeleeStrike.Apply(attacker.Body, other, s.Step, multiplier)) Collateral++;
                 }
             }
             collateral.Dispose();
         }
 
-        readonly System.Collections.Generic.List<GhostBodyEntry> bystanders = new System.Collections.Generic.List<GhostBodyEntry>();
+        readonly System.Collections.Generic.List<Struck> bystanders = new System.Collections.Generic.List<Struck>();
 
         /// <summary>Others struck by a swing at its target (tests).</summary>
         public int Collateral { get; private set; }
 
-        bool TryFind(EntityManager em, int ghostId, out GhostBodyEntry found)
+        bool TryFind(EntityManager em, int ghostId, out Struck found)
         {
             foreach (GhostBodyEntry e in GhostBodyRegistry.Entries)
                 if (ReferenceEquals(e.World, World) && e.Body != null && em.Exists(e.Ghost) && em.HasComponent<GhostInstance>(e.Ghost)
                     && em.HasComponent<PositionHistory>(e.Ghost) && em.GetComponentData<GhostInstance>(e.Ghost).ghostId == ghostId)
-                { found = e; return true; }
-            found = null;
+                { found = new Struck { Body = e.Body, Ghost = e.Ghost, Proxy = HitProxy.Player }; return true; }
+            foreach (CombatTargetEntry e in CombatTargetRegistry.Entries)
+                if (ReferenceEquals(e.World, World) && em.Exists(e.Ghost) && em.HasComponent<GhostInstance>(e.Ghost)
+                    && em.HasComponent<PositionHistory>(e.Ghost) && em.HasComponent<CombatTarget>(e.Ghost)
+                    && em.GetComponentData<GhostInstance>(e.Ghost).ghostId == ghostId)
+                { found = new Struck { Body = e.Body, Ghost = e.Ghost, Proxy = em.GetComponentData<CombatTarget>(e.Ghost).Proxy }; return true; }
+            found = default;
             return false;
         }
+
+        static int3 FeetOf(EntityManager em, Entity ghost) =>
+            em.HasComponent<PlayerPose>(ghost) ? em.GetComponentData<PlayerPose>(ghost).Mm : em.GetComponentData<CombatTarget>(ghost).FeetMm;
     }
 }

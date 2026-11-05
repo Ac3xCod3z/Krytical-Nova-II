@@ -109,6 +109,9 @@ namespace KryticalNova.Player.Entities
             if (!tick.IsValid) return;
             foreach (var (ring, pose) in SystemAPI.Query<RefRW<PositionHistory>, RefRO<PlayerPose>>())
                 PositionHistoryRules.Record(ref ring.ValueRW, tick, pose.ValueRO.Mm);
+            // the attackable ghosts that are not players (M4.2b): where the server wrote them this tick
+            foreach (var (ring, target) in SystemAPI.Query<RefRW<PositionHistory>, RefRO<CombatTarget>>())
+                PositionHistoryRules.Record(ref ring.ValueRW, tick, target.ValueRO.FeetMm);
         }
     }
 }

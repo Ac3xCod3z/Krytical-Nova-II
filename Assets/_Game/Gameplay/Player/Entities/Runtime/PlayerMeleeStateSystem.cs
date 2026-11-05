@@ -48,6 +48,9 @@ namespace KryticalNova.Player.Entities
                     FeetMm = pose.ValueRO.Mm,
                     Alive = vitals.ValueRO.MaxHealthMilli == 0 || vitals.ValueRO.HealthMilli > 0,
                 };
+            // the attackable ghosts that are not players (M4.2b: the Strike Dummy, whose HP refills: always alive)
+            foreach (var (ghost, target) in SystemAPI.Query<RefRO<GhostInstance>, RefRO<CombatTarget>>())
+                bodies[ghost.ValueRO.ghostId] = new Body { FeetMm = target.ValueRO.FeetMm, Alive = target.ValueRO.Alive };
 
             foreach (var (input, combat, timing, pose, ghost) in SystemAPI
                          .Query<RefRO<PlayerInput>, RefRW<CombatState>, RefRO<MeleeTimingData>, RefRO<PlayerPose>, RefRO<GhostInstance>>()

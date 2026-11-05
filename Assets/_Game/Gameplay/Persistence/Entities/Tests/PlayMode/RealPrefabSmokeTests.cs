@@ -4758,6 +4758,84 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
             }
         }
 
+        [UnityTest]
+        public IEnumerator B55_TheStrikeDummy_IsAlwaysAFoe_TakesStrikesAndSkills_RefillsNeverDies_AndAClientCopyTakesTheServersHp()
+        {
+            // M4.2b: NGO's Strike Dummy (Zone01's: capsule r 0.5 h 2, scale 0.8 / 1 / 0.8) struck by a real server body; the ghost side is
+            // StrikeDummyTests (EditMode)
+            NetRole.Install(new BodyRoleNetRoleAdapter(null, () => NetRoleKind.ServerBody));
+            int kills = 0;
+            Action<CombatEntity, KillingBlow> count = (victim, blow) => kills++;
+            CombatEntity.AnyKilled += count;
+            try
+            {
+                GameObject attacker = Make(NetRoleKind.ServerBody, false, new PlayerKey(551));
+                var dummyObject = new GameObject("B55 Combat Dummy");
+                m_Made.Add(dummyObject);
+                dummyObject.transform.position = attacker.transform.position + attacker.transform.forward * 1f;
+                dummyObject.transform.localScale = new Vector3(0.8f, 1f, 0.8f);
+                var capsule = dummyObject.AddComponent<CapsuleCollider>();   // Zone01's: r 0.5, h 2 (an added one defaults to h 1)
+                capsule.radius = 0.5f;
+                capsule.height = 2f;
+                var dummy = dummyObject.AddComponent<CombatEntity>();
+                yield return null;
+                Assert.IsTrue(KryticalNova.Combat.Entities.StrikeDummies.IsSceneDummy(dummy), "NGO's IsStrikeDummy, on no player body");
+                Assert.IsFalse(KryticalNova.Combat.Entities.StrikeDummies.IsSceneDummy(attacker.GetComponent<CombatEntity>()), "a player body is none");
+                Assert.IsTrue(dummy.InfiniteHealth, "always infinite");
+                KryticalNova.Combat.Entities.StrikeDummies.CapsuleOf(dummy, out int radius, out int height);
+                Assert.AreEqual(400, radius, "the scene capsule with its scale");
+                Assert.AreEqual(2000, height);
+
+                // always a foe (NGO CombatHostility: anything not player-vs-player), the order and the strikes land, numbers to the attacker
+                Assert.IsTrue(KryticalNova.Combat.Entities.MeleeResolveServerSystem.AttackAllowed(attacker, dummy), "may be attacked");
+                int told = 0;
+                attacker.GetComponent<KryticalNova.Combat.PlayerMeleeCombat>().HitDealt += (t, r, step, skill, label) => told++;
+                float full = dummy.CurrentHealth;
+                bool landed = false;
+                for (int i = 0; i < 20 && dummy.CurrentHealth >= full; i++)
+                    landed |= KryticalNova.Combat.Entities.MeleeStrike.Apply(attacker, dummy, 1 + i % 3, 1f + 0.15f * (i % 3));
+                Assert.IsTrue(landed, "struck");
+                Assert.Less(dummy.CurrentHealth, full, "HP taken");
+                Assert.Greater(told, 0, "each hit told to the attacker (its number)");
+                Assert.IsTrue(KryticalNova.Combat.PlayerSkillAttacks.HitsHere(dummy), "area skills include it");
+
+                // a lethal blow: full again, still alive, no death and no kill (no XP, no reward)
+                int died = 0;
+                dummy.Died += () => died++;
+                dummy.TakeDamage(new DamageResult { DamageDealt = 1e7f, RawPhysicalDamage = 1e7f, MitigatedPhysicalDamage = 1e7f },
+                    attacker.GetComponent<CharacterCombatStats>());
+                Assert.AreEqual(dummy.MaxHealth, dummy.CurrentHealth, 1e-3, "refilled");
+                Assert.IsTrue(dummy.IsAlive);
+                Assert.AreEqual(0, died, "never a death");
+                Assert.AreEqual(0, kills, "never a kill");
+
+                // a client's own copy takes the server's HP (NGO netStandaloneHealth); the first copy is no event, a copy never dies of it
+                var copyObject = new GameObject("B55 client copy");
+                m_Made.Add(copyObject);
+                var copy = copyObject.AddComponent<CombatEntity>();
+                yield return null;
+                int changed = 0, copyDied = 0;
+                copy.HealthChanged += () => changed++;
+                copy.Died += () => copyDied++;
+                copy.MirrorSceneHealth(4321f, 5000f);
+                Assert.AreEqual(4321f, copy.CurrentHealth, 1e-3);
+                Assert.AreEqual(5000f, copy.MaxHealth, 1e-3);
+                Assert.AreEqual(1, changed);
+                copy.MirrorSceneHealth(4321f, 5000f);
+                Assert.AreEqual(1, changed, "the same HP again changes nothing");
+                copy.MirrorSceneHealth(5000f, 5000f);
+                Assert.AreEqual(2, changed, "refilled");
+                Assert.AreEqual(0, copyDied);
+                float playerHp = attacker.GetComponent<CombatEntity>().CurrentHealth;
+                attacker.GetComponent<CombatEntity>().MirrorSceneHealth(1f, 5000f);
+                Assert.AreEqual(playerHp, attacker.GetComponent<CombatEntity>().CurrentHealth, 1e-3, "never on a player");
+            }
+            finally
+            {
+                CombatEntity.AnyKilled -= count;
+            }
+        }
+
         sealed class NumbersSeen : ICombatFeedbackSink
         {
             public int Shown;

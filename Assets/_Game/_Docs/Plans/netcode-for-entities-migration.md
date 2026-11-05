@@ -303,6 +303,13 @@ prediction error p95 <= 0.05 m at 60 ms, tick p95 < 15 ms with 102 monsters (fro
     HostileNet.ShowStrike's part). The hurt effect (NGO DamagedRpc) now reaches the hit player's own game for every hit, PvP too
     (it played on the server before). Review approved. Run 1: its tests green (HostileStrikeTests 3, B54); EditMode 329/331 and
     PlayMode 55/56 where the fails were M4.2b's test setup. Next: M4.2b the Strike Dummy, then the NPC vendors on a view.
+  - [x] M4.2b The Strike Dummy on DOTS (owner's hand test c4/m194; Master's pick A): the server spawns one static StrikeDummyGhost per
+    scene Strike Dummy (NGO IsStrikeDummy, never on a player body) carrying its place, capsule (scale counted: Zone01's r 0.4 h 2) and
+    HP from the server's scene copy, which decides as NGO (refill, never a death, no kill or XP, always hostile); each client links the
+    ghost to its own copy and mirrors HP (never the server's copy in Play DOTS here); one CombatTargetRegistry (M5 Hostiles reuse it)
+    serves the click, a skill's target, the walk-in, combo, hit test and arc (each body its own capsule), the hit ring and impacts;
+    the ghost goes with its scene. Ghost assets rebuilt. Run 2 green (run 1: an added CapsuleCollider defaults to h 1 in the tests):
+    EditMode 331/331, PlayMode 56/56 (B55). Follow-up: the Cadence dummy hold (PlayerCombatState is not on DOTS yet).
 - [ ] **M5 Monster system prototype (new brain).** Section 6. P0 EditMode sim tests (no netcode), P1 ghost + view, P2 reward bridge.
 - [ ] **M6 Hostiles in full.** All roster species via `MonsterArchetype` from `HostileDefinition` (ids kept), level scaling, zones,
   sleep, respawn, loot/XP through managed reward bridge with ledger rules; nav grids for the zones; bot soak with 102 monsters.

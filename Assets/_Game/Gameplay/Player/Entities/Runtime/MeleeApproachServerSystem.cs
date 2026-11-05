@@ -44,6 +44,9 @@ namespace KryticalNova.Player.Entities
             var places = new NativeHashMap<int, int3>(16, Allocator.Temp);
             foreach (var (ghost, pose) in SystemAPI.Query<RefRO<GhostInstance>, RefRO<PlayerPose>>().WithAll<PlayerGhostTag>())
                 places[ghost.ValueRO.ghostId] = pose.ValueRO.Mm;
+            // the attackable ghosts that are not players (M4.2b: the Strike Dummy)
+            foreach (var (ghost, target) in SystemAPI.Query<RefRO<GhostInstance>, RefRO<CombatTarget>>())
+                places[ghost.ValueRO.ghostId] = target.ValueRO.FeetMm;
 
             var orders = new NativeList<(Entity, int3)>(Allocator.Temp);
             foreach (var (combat, timing, pose, entity) in SystemAPI.Query<RefRO<CombatState>, RefRO<MeleeTimingData>, RefRO<PlayerPose>>()

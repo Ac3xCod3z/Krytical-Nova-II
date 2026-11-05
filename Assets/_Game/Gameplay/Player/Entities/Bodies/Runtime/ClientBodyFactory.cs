@@ -25,9 +25,13 @@ namespace KryticalNova.Player.Entities.Bodies
             return true;
         }
 
-        /// <summary>The ghost id of the player body <paramref name="body"/> belongs to, or 0.</summary>
+        /// <summary>
+        /// The ghost id of the player body <paramref name="body"/> belongs to, or of the attackable non-player ghost it stands for (M4.2b:
+        /// the Strike Dummy), or 0.
+        /// </summary>
         public static int GhostIdOf(Transform body)
         {
+            if (body == null) return 0;
             foreach (GhostBodyEntry entry in GhostBodyRegistry.Entries)
             {
                 if (entry.Body == null || entry.World == null || !entry.World.IsCreated) continue;
@@ -36,7 +40,7 @@ namespace KryticalNova.Player.Entities.Bodies
                 if (em.Exists(entry.Ghost) && em.HasComponent<Unity.NetCode.GhostInstance>(entry.Ghost))
                     return em.GetComponentData<Unity.NetCode.GhostInstance>(entry.Ghost).ghostId;
             }
-            return 0;
+            return CombatTargetRegistry.GhostIdOf(body);
         }
     }
 

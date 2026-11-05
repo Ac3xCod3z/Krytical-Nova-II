@@ -60,6 +60,21 @@ namespace KryticalNova.Player.Entities.Tests
         }
 
         [Test]
+        public void TheStrikeDummyGhostPrefab_IsAStaticInterpolatedGhostWithNoOwner()
+        {
+            // M4.2b: the server spawns one per scene dummy and writes its place and HP; nobody owns or predicts it
+            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(PlayerGhostAssetsBuilder.StrikeDummyPrefabPath);
+            Assert.IsNotNull(prefab, "no " + PlayerGhostAssetsBuilder.StrikeDummyPrefabPath + ": run Build Player Ghost Assets");
+            Assert.AreEqual(PlayerGhostAssetsBuilder.StrikeDummyGhostName, prefab.name, "the name is hashed into the ghost type");
+            var ghost = prefab.GetComponent<GhostAuthoringComponent>();
+            Assert.IsNotNull(ghost);
+            Assert.IsFalse(ghost.HasOwner);
+            Assert.AreEqual(GhostMode.Interpolated, ghost.DefaultGhostMode);
+            Assert.AreEqual(GhostOptimizationMode.Static, ghost.OptimizationMode);
+            Assert.IsNotNull(prefab.GetComponent<StrikeDummyGhostAuthoring>());
+        }
+
+        [Test]
         public void TheShippedSubScene_HoldsTheShippedGhostPrefab()
         {
             var scene = AssetDatabase.LoadAssetAtPath<SceneAsset>(PlayerGhostAssetsBuilder.SubScenePath);
@@ -67,6 +82,8 @@ namespace KryticalNova.Player.Entities.Tests
             string text = System.IO.File.ReadAllText(PlayerGhostAssetsBuilder.SubScenePath);
             string prefabGuid = AssetDatabase.AssetPathToGUID(PlayerGhostAssetsBuilder.PrefabPath);
             StringAssert.Contains("guid: " + prefabGuid, text, "the holder points at the shipped ghost prefab");
+            StringAssert.Contains("guid: " + AssetDatabase.AssetPathToGUID(PlayerGhostAssetsBuilder.StrikeDummyPrefabPath), text,
+                "and at the Strike Dummy's (M4.2b)");
         }
 
         [Test]
@@ -108,6 +125,10 @@ namespace KryticalNova.Player.Entities.Tests
                 Assert.AreNotEqual(Entity.Null, prefab, w.Name);
                 Assert.IsTrue(w.EntityManager.HasComponent<PlayerGhostTag>(prefab), w.Name + ": the prefab is the player ghost");
                 Assert.IsTrue(w.EntityManager.HasComponent<PlayerLook>(prefab), w.Name + ": with the look version of step 8");
+                Entity dummy = KnTestWorld.Singleton<StrikeDummyGhostPrefab>(w).Prefab;
+                Assert.AreNotEqual(Entity.Null, dummy, w.Name + ": the Strike Dummy ghost (M4.2b)");
+                Assert.IsTrue(w.EntityManager.HasComponent<CombatTarget>(dummy), w.Name + ": an attackable target");
+                Assert.IsTrue(w.EntityManager.HasComponent<PositionHistory>(dummy), w.Name + ": with a hit-test ring");
             }
         }
     }

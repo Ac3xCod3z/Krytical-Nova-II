@@ -20,6 +20,8 @@ namespace KryticalNova.Player.Entities.Editor
     {
         public const string PrefabFolder = "Assets/_Game/Gameplay/Player/Entities/Prefabs";
         public const string PrefabPath = PrefabFolder + "/PlayerGhost.prefab";
+        /// <summary>The Strike Dummy's ghost (M4.2b): static, interpolated, no owner.</summary>
+        public const string StrikeDummyPrefabPath = PrefabFolder + "/StrikeDummyGhost.prefab";
         public const string SceneFolder = "Assets/_Game/Gameplay/Player/Entities/Scenes";
         public const string SubScenePath = SceneFolder + "/PlayerGhostPrefabs.unity";
         /// <summary>
@@ -38,6 +40,7 @@ namespace KryticalNova.Player.Entities.Editor
 
         /// <summary>The ghost's name: netcode hashes it into the ghost type, so it never changes.</summary>
         public const string GhostName = "PlayerGhost";
+        public const string StrikeDummyGhostName = "StrikeDummyGhost";
 
         [MenuItem("Krytical Nova/Online/Entities/Build Player Ghost Assets")]
         public static void BuildMenu()
@@ -58,11 +61,12 @@ namespace KryticalNova.Player.Entities.Editor
             EnsureFolder(SceneFolder);
             EnsureFolder(ResourcesFolder);
             GameObject prefab = EnsurePrefab();
-            EnsureSubScene(prefab);
+            GameObject dummy = EnsureStrikeDummyPrefab();
+            EnsureSubScene(prefab, dummy);
             EnsureBakeScene();
             EnsureWorldAssets();
             AssetDatabase.SaveAssets();
-            Debug.Log("[KnBuild] player ghost assets: " + PrefabPath + ", " + SubScenePath + " (scene GUID " +
+            Debug.Log("[KnBuild] player ghost assets: " + PrefabPath + ", " + StrikeDummyPrefabPath + ", " + SubScenePath + " (scene GUID " +
                       AssetDatabase.AssetPathToGUID(SubScenePath) + "), " + BakeScenePath + " and " + WorldAssetsPath);
         }
 
@@ -135,7 +139,35 @@ namespace KryticalNova.Player.Entities.Editor
             }
             AssetDatabase.ImportAsset(PrefabPath);
             var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(PrefabPath);
-            StampPrefabId(prefab);
+            StampPrefabId(prefab, PrefabPath);
+            return prefab;
+        }
+
+        /// <summary>The Strike Dummy ghost: the server spawns one per scene dummy and writes its place and HP (M4.2b).</summary>
+        static GameObject EnsureStrikeDummyPrefab()
+        {
+            bool exists = File.Exists(StrikeDummyPrefabPath);
+            GameObject root = exists ? PrefabUtility.LoadPrefabContents(StrikeDummyPrefabPath) : new GameObject(StrikeDummyGhostName);
+            try
+            {
+                root.name = StrikeDummyGhostName;
+                var ghost = root.GetComponent<GhostAuthoringComponent>();
+                if (ghost == null) ghost = root.AddComponent<GhostAuthoringComponent>();
+                ghost.HasOwner = false;
+                ghost.DefaultGhostMode = GhostMode.Interpolated;
+                ghost.SupportedGhostModes = GhostModeMask.Interpolated;
+                ghost.OptimizationMode = GhostOptimizationMode.Static;
+                if (root.GetComponent<StrikeDummyGhostAuthoring>() == null) root.AddComponent<StrikeDummyGhostAuthoring>();
+                PrefabUtility.SaveAsPrefabAsset(root, StrikeDummyPrefabPath);
+            }
+            finally
+            {
+                if (exists) PrefabUtility.UnloadPrefabContents(root);
+                else Object.DestroyImmediate(root);
+            }
+            AssetDatabase.ImportAsset(StrikeDummyPrefabPath);
+            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(StrikeDummyPrefabPath);
+            StampPrefabId(prefab, StrikeDummyPrefabPath);
             return prefab;
         }
 
@@ -163,11 +195,11 @@ namespace KryticalNova.Player.Entities.Editor
         }
 
         // The ghost type is the prefab's asset GUID, kept in an internal field the save normally fills; make sure it is there.
-        static void StampPrefabId(GameObject prefab)
+        static void StampPrefabId(GameObject prefab, string path)
         {
             var so = new SerializedObject(prefab.GetComponent<GhostAuthoringComponent>());
             SerializedProperty id = so.FindProperty("prefabId");
-            string guid = AssetDatabase.AssetPathToGUID(PrefabPath);
+            string guid = AssetDatabase.AssetPathToGUID(path);
             if (id == null) return;
             // Netcode's OnValidate fills it in memory when the prefab loads, so "already right" here says nothing about the file:
             // write it and save every time (the baker throws on an empty id).
@@ -177,7 +209,7 @@ namespace KryticalNova.Player.Entities.Editor
             AssetDatabase.SaveAssetIfDirty(prefab);
         }
 
-        static void EnsureSubScene(GameObject prefab)
+        static void EnsureSubScene(GameObject prefab, GameObject strikeDummy)
         {
             // A batch run has nothing open worth keeping and cannot add a scene beside an untitled one: the subscene is the only scene.
             bool single = Application.isBatchMode;
@@ -196,6 +228,7 @@ namespace KryticalNova.Player.Entities.Editor
                     holder = go.AddComponent<PlayerGhostPrefabAuthoring>();
                 }
                 holder.prefab = prefab;
+                holder.strikeDummyPrefab = strikeDummy;
                 EditorUtility.SetDirty(holder);
                 if (!EditorSceneManager.SaveScene(scene, SubScenePath))
                     throw new IOException("the player ghost subscene could not be saved at " + SubScenePath);

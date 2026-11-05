@@ -54,6 +54,35 @@ namespace KryticalNova.Player.Entities.Tests
             Assert.IsTrue(MeleeRules.InArc(t, int3.zero, 9000, new int3(1500, 0, 0), p), "facing +x");
         }
 
+        [Test]
+        public void ASwing_TestsEachBodyWithItsOwnCapsule()
+        {
+            // M4.2b: the Strike Dummy is 0.4 m across (its scene capsule, scale 0.8), a player 0.5 m; reach 1.6 m + the radius
+            MeleeTiming t = T;
+            var now = new NetworkTick(119);
+            var dummy = new HitProxy { RadiusMm = 400, HeightMm = 2000 };
+            PositionHistory target = Standing(new int3(0, 0, 2050));
+            using var others = new NativeArray<PositionHistory>(new[] { Standing(new int3(300, 0, 2050)), Standing(new int3(-300, 0, 2050)) }, Allocator.Temp);
+            using var proxies = new NativeArray<HitProxy>(new[] { HitProxy.Player, dummy }, Allocator.Temp);
+            var hit = new NativeList<int>(Allocator.Temp);
+
+            Assert.IsTrue(MeleeRules.Resolve(t, int3.zero, 0, now, new NetworkTick(110), target, new int3(0, 0, 2050), HitProxy.Player, others, proxies,
+                HitProxy.Player, out bool targetHit, ref hit));
+            Assert.IsTrue(targetHit, "2.05 m: within 1.6 + 0.5");
+            CollectionAssert.AreEqual(new[] { 0 }, hit.AsArray().ToArray(), "the player-sized one is caught, the dummy-sized one is not");
+
+            hit.Clear();
+            Assert.IsTrue(MeleeRules.Resolve(t, int3.zero, 0, now, new NetworkTick(110), target, new int3(0, 0, 2050), dummy, others, proxies,
+                HitProxy.Player, out targetHit, ref hit));
+            Assert.IsFalse(targetHit, "a dummy at 2.05 m: beyond 1.6 + 0.4");
+
+            hit.Clear();
+            Assert.IsTrue(MeleeRules.Resolve(t, int3.zero, 0, now, new NetworkTick(110), target, new int3(0, 0, 2050), dummy, others, default,
+                HitProxy.Player, out _, ref hit));
+            CollectionAssert.AreEqual(new[] { 0, 1 }, hit.AsArray().ToArray(), "no list: every other body has the given capsule");
+            hit.Dispose();
+        }
+
         static PositionHistory Standing(int3 feet, uint from = 100, uint to = 120)
         {
             var ring = new PositionHistory();

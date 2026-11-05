@@ -422,6 +422,24 @@ namespace KryticalNova.Progression
 
         private bool mirrored;   // another player's view of the entity netcode has had the server's HP once
 
+        /// <summary>
+        /// An entity-netcode client's own copy of a scene target (the Strike Dummy, M4.2b): the server's HP from its ghost, as NGO's
+        /// clients took netStandaloneHealth / netMaxHealthOverride (OnNetStandaloneHealthChanged). Never on the server's copy.
+        /// </summary>
+        public void MirrorSceneHealth(float current, float max)
+        {
+            if (!initialized) InitializeEntity();
+            if (playerResources != null) return;
+            bool first = !mirrored;
+            if (!first && Mathf.Approximately(standaloneHealth, current) && Mathf.Approximately(maxHealthOverride, max)) return;
+            float before = standaloneHealth;
+            mirrored = true;
+            maxHealthOverride = max;
+            standaloneHealth = current;
+            HealthChanged?.Invoke();
+            if (!first && before > 0f && current <= 0f) Died?.Invoke();
+        }
+
         public bool SetInfiniteHealth(bool value)
         {
             if (!initialized) InitializeEntity();

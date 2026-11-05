@@ -83,7 +83,7 @@ namespace KryticalNova.Combat.Entities
                 if (ReferenceEquals(e.World, World) && e.Body != null && em.Exists(e.Ghost) && em.HasComponent<GhostInstance>(e.Ghost)
                     && em.GetComponentData<GhostInstance>(e.Ghost).ghostId == ghostId)
                     return e.Body.transform;
-            return null;
+            return CombatTargetRegistry.BodyOf(World, ghostId);   // this machine's copy of the Strike Dummy (M4.2b)
         }
     }
 }

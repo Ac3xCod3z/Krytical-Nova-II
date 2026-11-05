@@ -1235,7 +1235,7 @@ namespace KryticalNova.Persistence.Entities
                 if (ReferenceEquals(e.World, World) && e.Body != null && em.Exists(e.Ghost) && em.HasComponent<GhostInstance>(e.Ghost)
                     && em.GetComponentData<GhostInstance>(e.Ghost).ghostId == ghostId)
                     return e.Body.transform;
-            return null;
+            return CombatTargetRegistry.BodyOf(World, ghostId);   // an attackable ghost that is not a player (M4.2b: the Strike Dummy)
         }
 
         void Reply(Entity connection, RequestReplyRpc reply)

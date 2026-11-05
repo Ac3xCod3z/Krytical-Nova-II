@@ -97,14 +97,26 @@ namespace KryticalNova.Player.Entities
         /// older than the ring (refused).
         /// </summary>
         public static bool Resolve(in MeleeTiming t, int3 attackerFeetMm, int yawCdeg, NetworkTick now, NetworkTick seen, in PositionHistory target,
-            int3 targetNowMm, NativeArray<PositionHistory> others, HitProxy proxy, out bool targetHit, ref NativeList<int> hit)
+            int3 targetNowMm, NativeArray<PositionHistory> others, HitProxy proxy, out bool targetHit, ref NativeList<int> hit) =>
+            Resolve(in t, attackerFeetMm, yawCdeg, now, seen, in target, targetNowMm, proxy, others, default, proxy, out targetHit, ref hit);
+
+        /// <summary>
+        /// The same with each body's own capsule (M4.2b: a Strike Dummy is not a player's size): <paramref name="targetProxy"/> for the
+        /// target, <paramref name="otherProxies"/>[i] for each other (not created = <paramref name="otherProxy"/> for all).
+        /// </summary>
+        public static bool Resolve(in MeleeTiming t, int3 attackerFeetMm, int yawCdeg, NetworkTick now, NetworkTick seen, in PositionHistory target,
+            int3 targetNowMm, HitProxy targetProxy, NativeArray<PositionHistory> others, NativeArray<HitProxy> otherProxies, HitProxy otherProxy,
+            out bool targetHit, ref NativeList<int> hit)
         {
-            targetHit = PositionHistoryRules.HitTestAtTick(in target, proxy, now, seen, attackerFeetMm, t.ReachMm, out bool refused)
+            targetHit = PositionHistoryRules.HitTestAtTick(in target, targetProxy, now, seen, attackerFeetMm, t.ReachMm, out bool refused)
                 && WithinValidation(in t, attackerFeetMm, targetNowMm);
             if (refused) { targetHit = false; return false; }
             NetworkTick at = PositionHistoryRules.TestTick(now, seen, out _);
             for (int i = 0; i < others.Length; i++)
-                if (PositionHistoryRules.TryFeetAt(others[i], at, out int3 feet) && InArc(in t, attackerFeetMm, yawCdeg, feet, proxy)) hit.Add(i);
+            {
+                HitProxy p = otherProxies.IsCreated && i < otherProxies.Length ? otherProxies[i] : otherProxy;
+                if (PositionHistoryRules.TryFeetAt(others[i], at, out int3 feet) && InArc(in t, attackerFeetMm, yawCdeg, feet, p)) hit.Add(i);
+            }
             return true;
         }
 

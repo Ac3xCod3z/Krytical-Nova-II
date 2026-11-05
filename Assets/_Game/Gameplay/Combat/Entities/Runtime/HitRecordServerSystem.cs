@@ -77,7 +77,7 @@ namespace KryticalNova.Combat.Entities
                 if (ReferenceEquals(e.World, World) && e.Body != null && (body == e.Body.transform || body.IsChildOf(e.Body.transform))
                     && em.Exists(e.Ghost) && em.HasComponent<GhostInstance>(e.Ghost))
                     return em.GetComponentData<GhostInstance>(e.Ghost).ghostId;
-            return 0;
+            return CombatTargetRegistry.GhostIdOf(body);   // the Strike Dummy (M4.2b): its impact shows on every view
         }
     }
 }

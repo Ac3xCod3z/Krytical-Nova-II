@@ -149,6 +149,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: KryticalNova.Player.Entities::KryticalNova.Player.Entities.PlayerGhostPrefabAuthoring
   prefab: {fileID: 2612177200284804011, guid: 84594aa66f870304d9eba6cb1bf66198, type: 3}
+  strikeDummyPrefab: {fileID: 1459485579803482903, guid: c257eeaeacf11ce45abd51a9108c23dc, type: 3}
 --- !u!4 &369823226
 Transform:
   m_ObjectHideFlags: 0
