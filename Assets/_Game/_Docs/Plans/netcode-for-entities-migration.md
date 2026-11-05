@@ -227,6 +227,9 @@ prediction error p95 <= 0.05 m at 60 ms, tick p95 < 15 ms with 102 monsters (fro
   - [x] M4.5c Casts seen by the other players: the server writes each cast on the caster's ghost (CastEvent ring: skill, rank, target);
     every other client plays it once through PlayerCombatSkills.ShowCastSeen (NGO TriggerSkillCastClientRpc on another client: the buff's
     looks, SkillCast, PresentCast). EditMode 152/152, PlayMode 43/43. Next: the skill's own combat line, the skill queue walk in, charge.
+  - [x] M4.5d The skill queue walks in on a DOTS view: NGO's queue (out of reach / busy -> wait, walk to the ring, cast when Ready) used an
+    agent the view lacks and gave up; on a view it now walks to the same ring point as the player's own ghost walk (BodyClicks.Ground).
+    EditMode 179/179 (Combat tests included), PlayMode 43/43. To check in the GUI test: queuing a skill on another target while comboing.
 - [ ] **M5 Monster system prototype (new brain).** Section 6. P0 EditMode sim tests (no netcode), P1 ghost + view, P2 reward bridge.
 - [ ] **M6 Hostiles in full.** All roster species via `MonsterArchetype` from `HostileDefinition` (ids kept), level scaling, zones,
   sleep, respawn, loot/XP through managed reward bridge with ledger rules; nav grids for the zones; bot soak with 102 monsters.

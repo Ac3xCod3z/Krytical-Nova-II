@@ -59,6 +59,18 @@ namespace KryticalNova.Combat
         public event Action Changed;
 
         private bool Decides => !IsSpawned || IsServer;
+
+        /// <summary>
+        /// The walk in on the entity netcode's own view body (M4.5d), which steers no agent: the same ring point goes to the ghost as a
+        /// walk of the player's own (the server walks it and the owner predicts it, M3), the run as selected; the queue still casts the
+        /// moment its check is Ready, as NGO's ServerMoveTo walk in did.
+        /// </summary>
+        private bool ViewWalk(Vector3 ring)
+        {
+            var moves = GetComponent<KryticalNova.Progression.PlayerMovementSkills>();
+            KryticalNova.Core.BodyClicks.Ground(ring, moves != null && moves.IsRunning);
+            return true;
+        }
         private bool IsMine => KryticalNova.Core.BodyRoleTag.IsMine(this, !IsSpawned || IsOwner);
 
         private void Awake()
@@ -234,12 +246,12 @@ namespace KryticalNova.Combat
                         nextPath = Time.time + RepathSeconds;
                         Vector3 ring = RingPoint(target.position, skills.RangeOf(skill));
                         bool walking = IsWalking;
-                        if (walking && walked && (ring - orderedRing).sqrMagnitude < RingMoved * RingMoved)
+                        if ((walking || controls.ViewMode) && walked && (ring - orderedRing).sqrMagnitude < RingMoved * RingMoved)
                         {
                             // On its way to where it should stand: nothing to plan again.
                         }
                         // The first step is the order and is paid for as one; the rest only steer it.
-                        else if (controls.ServerMoveTo(ring, payRun: !paid))
+                        else if (controls.ViewMode ? ViewWalk(ring) : controls.ServerMoveTo(ring, payRun: !paid))
                         {
                             paid = true;
                             walked = walkedIn = true;
