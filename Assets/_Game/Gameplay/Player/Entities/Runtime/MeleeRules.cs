@@ -130,6 +130,14 @@ namespace KryticalNova.Player.Entities
             return ReachSquared(attackerMm, targetMm) > reach * reach;
         }
 
+        /// <summary>
+        /// True on the server tick the strike under way lands (M4.4e): the END of its swing window (NGO EnsureTargetStruck), once per
+        /// swing (NGO serverSwingHitTargets).
+        /// </summary>
+        public static bool HitDue(in MeleeTiming t, in CombatState s, NetworkTick now, int tickRate) =>
+            s.Step > 0 && s.SwingHit == 0 && s.TargetGhostId != 0
+            && now.TicksSince(s.StepStartTick) >= Ticks(HitAfterMicros(t, s.Step), tickRate);
+
         /// <summary>A length in microseconds as whole ticks, rounded up (a strike never ends early).</summary>
         public static int Ticks(int micros, int tickRate) => (int)(((long)micros * tickRate + 999999) / 1000000);
 

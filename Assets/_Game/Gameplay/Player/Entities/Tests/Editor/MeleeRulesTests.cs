@@ -151,5 +151,23 @@ namespace KryticalNova.Player.Entities.Tests
             MeleeRules.Cancel(ref s);
             Assert.AreEqual(0, s.TargetGhostId, "cancel ends it");
         }
+
+        [Test]
+        public void TheHit_IsDueAtTheWindowsEnd_OncePerSwing()
+        {
+            // NGO EnsureTargetStruck: the target is struck by the END of the swing window, once per swing
+            MeleeTiming t = T;
+            const int rate = 30;
+            var s = new CombatState();
+            MeleeRules.Begin(ref s, 7);
+            MeleeRules.Tick(t, ref s, new NetworkTick(100), rate, true, true, false);
+            int at = MeleeRules.Ticks(MeleeRules.HitAfterMicros(t, 1), rate);
+            Assert.AreEqual(17, at, "0.553 s of strike 1 at 30 Hz, rounded up");
+            Assert.IsFalse(MeleeRules.HitDue(t, s, new NetworkTick(100 + (uint)at - 1), rate), "not yet: the window is still open");
+            Assert.IsTrue(MeleeRules.HitDue(t, s, new NetworkTick(100 + (uint)at), rate), "the window's end");
+            s.SwingHit = 1;
+            Assert.IsFalse(MeleeRules.HitDue(t, s, new NetworkTick(100 + (uint)at + 1), rate), "once per swing");
+            Assert.IsFalse(MeleeRules.HitDue(t, default, new NetworkTick(200), rate), "no attack, no hit");
+        }
     }
 }

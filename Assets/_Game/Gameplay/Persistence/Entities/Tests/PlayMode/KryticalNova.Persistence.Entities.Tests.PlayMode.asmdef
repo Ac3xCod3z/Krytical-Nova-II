@@ -9,6 +9,8 @@
         "KryticalNova.NPC",
         "KryticalNova.Economy",
         "KryticalNova.Progression",
+        "KryticalNova.Combat",
+        "KryticalNova.Combat.Entities",
         "KryticalNova.Wallet",
         "KryticalNova.Networking",
         "KryticalNova.Networking.Entities",

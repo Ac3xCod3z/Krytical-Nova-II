@@ -3639,6 +3639,37 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
             Assert.AreEqual(hp, ownEntity.CurrentHealth, 1e-3, "the own view keeps its own");
         }
 
+        [UnityTest]
+        public IEnumerator B42_AStrike_LandsAsNgosServerStrike_OnAFoe_AndOnAPlayerOnlyWhenHostile()
+        {
+            // M4.4e: the entity side decides when and whether in reach; the server body applies the strike as NGO's
+            // ExecuteAuthoritativeStrike does (hostility, the step's multiplier, ResolveHit, next-hit buffs)
+            NetRole.Install(new BodyRoleNetRoleAdapter(null, () => NetRoleKind.ServerBody));
+            GameObject attacker = Make(NetRoleKind.ServerBody, false, new PlayerKey(421));
+            GameObject other = Make(NetRoleKind.ServerBody, false, new PlayerKey(422));
+            var foeObject = new GameObject("B42 foe");
+            m_Made.Add(foeObject);
+            var foe = foeObject.AddComponent<CombatEntity>();
+            yield return null;
+            Assert.IsNotNull(attacker.GetComponent<KryticalNova.Combat.PlayerMeleeCombat>(), "the server body keeps PlayerMeleeCombat");
+
+            Assert.IsTrue(foe.SetMaxHealthOverride(1000000f));
+            float full = foe.CurrentHealth;
+            bool landed = false;
+            for (int i = 0; i < 20 && foe.CurrentHealth >= full; i++)
+                landed |= KryticalNova.Combat.Entities.MeleeStrike.Apply(attacker, foe, 1 + i % 3, 1f + 0.15f * (i % 3));
+            Assert.IsTrue(landed, "a non-player is always a foe: the strike is resolved");
+            Assert.Less(foe.CurrentHealth, full, "NGO's ResolveHit took HP off it (an evasion now and then, never all 20)");
+
+            var player = other.GetComponent<CombatEntity>();
+            float before = player.CurrentHealth;
+            bool hostile = KryticalNova.Combat.CombatHostility.IsHostile(attacker.transform, player);
+            bool struck = KryticalNova.Combat.Entities.MeleeStrike.Apply(attacker, player, 1, 1f);
+            Assert.AreEqual(hostile, struck, "another player is struck exactly when NGO's hostility rule says so");
+            if (!hostile) Assert.AreEqual(before, player.CurrentHealth, 1e-3, "a friend is never struck");
+            Assert.IsFalse(KryticalNova.Combat.Entities.MeleeStrike.Apply(attacker, null, 1, 1f), "no target, nothing");
+        }
+
         static CharacterRecipe AnyLegalRecipe(CharacterCreationDatabase database)
         {
             Assert.IsNotNull(database, "PlayerIdentity has its character database");

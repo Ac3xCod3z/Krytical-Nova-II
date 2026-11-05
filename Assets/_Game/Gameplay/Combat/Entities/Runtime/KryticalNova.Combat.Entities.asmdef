@@ -1,0 +1,25 @@
+{
+    "name": "KryticalNova.Combat.Entities",
+    "rootNamespace": "KryticalNova.Combat.Entities",
+    "references": [
+        "KryticalNova.Runtime",
+        "KryticalNova.Combat",
+        "KryticalNova.Progression",
+        "Unity.Netcode.Runtime",
+        "KryticalNova.Player.Entities",
+        "KryticalNova.Player.Entities.Presentation",
+        "Unity.Entities",
+        "Unity.NetCode",
+        "Unity.Collections",
+        "Unity.Mathematics"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

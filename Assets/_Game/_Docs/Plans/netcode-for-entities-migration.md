@@ -188,6 +188,10 @@ prediction error p95 <= 0.05 m at 60 ms, tick p95 < 15 ms with 102 monsters (fro
     starts or ends the combo, and each full tick MeleeRules.Tick runs against the target's place with NGO's reach (1.6 m, height
     slack 1.2 m, chase past +0.5 m). Two-player test: the owner's attack starts strike 1 on both sides, Stop ends it. EditMode
     144/144, PlayMode 42/42. Next: M4.4e MeleeResolveServerSystem (hit at the window's end; HostilityRules at start and hit).
+  - [x] M4.4e The server lands the hit (HIGH, review dots-m4.4e-melee-hit-review-summary.md): MeleeResolveServerSystem at the window's end
+    (MeleeRules.HitDue), once per swing, target tested where the attacker saw it + 2.7 m now (Resolve on PositionHistory), applied as NGO's
+    ExecuteAuthoritativeStrike (MeleeStrike: hostility, 1.0/1.15/1.35, ResolveHit, next-hit buffs). New assembly KryticalNova.Combat.Entities.
+    B42 real prefab. EditMode 145/145, PlayMode 43/43. Next: hostility at the attack start, collateral arc hits, HitEvent ring to clients.
 - [ ] **M5 Monster system prototype (new brain).** Section 6. P0 EditMode sim tests (no netcode), P1 ghost + view, P2 reward bridge.
 - [ ] **M6 Hostiles in full.** All roster species via `MonsterArchetype` from `HostileDefinition` (ids kept), level scaling, zones,
   sleep, respawn, loot/XP through managed reward bridge with ledger rules; nav grids for the zones; bot soak with 102 monsters.
