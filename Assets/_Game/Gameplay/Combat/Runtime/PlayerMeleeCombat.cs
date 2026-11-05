@@ -506,6 +506,15 @@ namespace KryticalNova.Combat
             OnCombatMessage?.Invoke(message);
         }
 
+        /// <summary>
+        /// Plays strike <paramref name="step"/> on this body as NGO's PlayComboStrikeClientRpc does on a client (the clip at its speed, the
+        /// slash): the entity netcode calls it when a ghost's combo starts a strike (M4.4k), the server deciding as it always did.
+        /// </summary>
+        public void ShowStrikeFromGhost(int step)
+        {
+            if (step >= 1 && step <= 3) ShowStrike(step);
+        }
+
         [ClientRpc]
         private void PlayComboStrikeClientRpc(int step)
         {
