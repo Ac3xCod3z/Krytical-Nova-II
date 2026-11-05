@@ -4592,6 +4592,62 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
             }
         }
 
+        [UnityTest]
+        public IEnumerator B53_ACalloutsOpponent_ReachesEveryView_TheTwoAreEnemiesThereOnly_AndAnotherPlayersViewKeepsPlayerDuel()
+        {
+            // M4 8b: NGO's netOpponent (read by everyone) as the ghost's DuelState: the server body names the opponent, every view mirrors it
+            NetRole.Install(new BodyRoleNetRoleAdapter(null, () => NetRoleKind.ServerBody));
+            try
+            {
+                PlayerKeys.Reset();
+                ulong keyA = PlayerKeys.Mint(531).Value, keyB = PlayerKeys.Mint(532).Value;
+                GameObject a = Admitted(keyA, "53a1000000000000000000000000000a", "c5310000000000000000000000000531", "Talwyn");
+                GameObject b = Admitted(keyB, "53b1000000000000000000000000000b", "c5320000000000000000000000000532", "Brannoc");
+                for (int i = 0; i < 30; i++) yield return null;
+                var duelA = a.GetComponent<KryticalNova.Combat.PlayerDuel>();
+                var duelB = b.GetComponent<KryticalNova.Combat.PlayerDuel>();
+                Assert.IsNull(((IBodyDuel)duelA).OpponentBody, "nobody yet");
+                Assert.IsTrue(duelA.ServerForceStart(duelB));
+                Assert.AreEqual(b.transform, ((IBodyDuel)duelA).OpponentBody, "the server body names its opponent for the ghost");
+                Assert.AreEqual(a.transform, ((IBodyDuel)duelB).OpponentBody);
+
+                // the views: the own view of A and another player's view of B
+                GameObject own = Make(NetRoleKind.ClientView, true, new PlayerKey(keyA));
+                GameObject theirs = Make(NetRoleKind.ClientView, false, new PlayerKey(keyB));
+                GameObject third = Make(NetRoleKind.ClientView, false, new PlayerKey(533));
+                yield return null;
+                var ownDuel = own.GetComponent<KryticalNova.Combat.PlayerDuel>();
+                var theirDuel = theirs.GetComponent<KryticalNova.Combat.PlayerDuel>();
+                Assert.IsNotNull(theirDuel, "another player's view keeps PlayerDuel (its opponent colours namecards and targets)");
+                bool Hostile(GameObject x, GameObject y) => KryticalNova.Combat.CombatHostility.IsHostile(x.transform, y.GetComponent<CombatEntity>());
+                Assert.IsFalse(Hostile(own, theirs), "not enemies before");
+                int changes = 0;
+                ownDuel.Changed += () => changes++;
+                ((IBodyDuel)ownDuel).MirrorOpponent(theirs.transform);
+                ((IBodyDuel)theirDuel).MirrorOpponent(own.transform);
+                Assert.IsTrue(ownDuel.IsDuelling, "the own view knows its bout (the Showdown letterbox)");
+                Assert.AreEqual(1, changes, "told once");
+                ((IBodyDuel)ownDuel).MirrorOpponent(theirs.transform);
+                Assert.AreEqual(1, changes, "the same opponent again changes nothing");
+                Assert.IsTrue(Hostile(own, theirs) && Hostile(theirs, own), "the two are enemies on every view");
+                Assert.IsFalse(Hostile(own, third), "nobody else");
+
+                // over: the ghost names nobody
+                ((IBodyDuel)ownDuel).MirrorOpponent(null);
+                ((IBodyDuel)theirDuel).MirrorOpponent(null);
+                Assert.IsFalse(ownDuel.IsDuelling);
+                Assert.IsFalse(Hostile(own, theirs), "friends again");
+                Assert.IsTrue(duelA.ServerCancel("The callout was ended by the GM."));
+                Assert.IsNull(((IBodyDuel)duelA).OpponentBody);
+
+                foreach (GameObject body in new[] { a, b }) { ServerLeaving.Notify(body); body.GetComponent<PlayerSaveAgent>().OnServerLeaving(); }
+            }
+            finally
+            {
+                PlayerKeys.Reset();
+            }
+        }
+
         sealed class NumbersSeen : ICombatFeedbackSink
         {
             public int Shown;

@@ -197,6 +197,12 @@ namespace KryticalNova.Player.Entities
         [GhostField] public int KillerGhostId;
     }
 
+    /// <summary>A player's Callout opponent for everyone (M4 8b; NGO PlayerDuel.netOpponent): the opponent's ghost, 0 = none. Server-written.</summary>
+    public struct DuelState : IComponentData
+    {
+        [GhostField] public int OpponentGhostId;
+    }
+
     /// <summary>What a view does with a player's <see cref="DeathState"/> (M4 6b): a pure rule, so it is tested without a world.</summary>
     public enum DeathShow : byte { Nothing, LieDown, Fall, GetUp }
 

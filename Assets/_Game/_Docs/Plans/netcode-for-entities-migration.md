@@ -288,6 +288,10 @@ prediction error p95 <= 0.05 m at 60 ms, tick p95 < 15 ms with 102 monsters (fro
     leash 60 m, the win by the kill (no XP, 6a), a forfeit, a third party's kill (no winner) and a leaver end it with NGO's lines and
     the win announced within 40 m; the two are enemies between server bodies (IsDuellingWithBody). EditMode 323/323, PlayMode 53/53 (B52).
     Next: M4.8b the Callout on every view (opponent on the ghost, UI), M4.8c the PvP switch to clients.
+  - [x] M4.8b The Callout on every view: the server writes the opponent on the ghost (DuelState, NGO netOpponent); every view, another
+    player's too (it now keeps PlayerDuel, deciding nothing), mirrors it, so namecards and targets see the two as enemies and nobody
+    else, and the own view knows its bout (Showdown letterbox; its prompt, countdown and result come by the owner link, 8a).
+    EditMode 323/323, PlayMode 54/54 (B53). Next: M4.8c the PvP switch (gm.pvp) to clients.
 - [ ] **M5 Monster system prototype (new brain).** Section 6. P0 EditMode sim tests (no netcode), P1 ghost + view, P2 reward bridge.
 - [ ] **M6 Hostiles in full.** All roster species via `MonsterArchetype` from `HostileDefinition` (ids kept), level scaling, zones,
   sleep, respawn, loot/XP through managed reward bridge with ledger rules; nav grids for the zones; bot soak with 102 monsters.

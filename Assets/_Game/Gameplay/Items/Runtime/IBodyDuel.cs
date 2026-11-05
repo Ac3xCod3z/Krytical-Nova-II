@@ -20,6 +20,10 @@ namespace KryticalNova.Items
         void RunDuelOp(DuelOpKind op, Component target, bool accept);
         /// <summary>The own view: what the server told it (NGO's PromptRpc, PromptClosedRpc, ResultRpc, CountdownRpc, CountdownCancelledRpc).</summary>
         void MirrorShow(DuelShowKind kind, string name, float seconds, bool won);
+        /// <summary>The server body: the opponent's body while fighting, else null (for the ghost; NGO's netOpponent).</summary>
+        Component OpponentBody { get; }
+        /// <summary>Any view: the opponent the ghost names (null = none), as NGO's netOpponent reached every machine.</summary>
+        void MirrorOpponent(Component opponentBody);
     }
 
     /// <summary>The server's way to a player's own game for its Callout (the entity netcode sets it).</summary>

@@ -57,7 +57,20 @@ namespace KryticalNova.Combat
         public static PlayerDuel Local => LocalPlayer.Get<PlayerDuel>();
 
         public string DuelistName => identity != null ? identity.CharacterName : name;
-        public bool IsDuelling => IsSpawned && netOpponent.Value != NoOpponent;
+        public bool IsDuelling => (IsSpawned && netOpponent.Value != NoOpponent) || shownOpponent != null;
+
+        // a view of the entity netcode: the opponent its ghost names (M4 8b); it decides nothing with it
+        private GameObject shownOpponent;
+
+        public Component OpponentBody => EntityServer && opponent != null ? opponent.transform : null;
+
+        public void MirrorOpponent(Component opponentBody)
+        {
+            GameObject next = opponentBody != null ? opponentBody.gameObject : null;
+            if (BodyRoleTag.Of(this) is not { Kind: NetRoleKind.ClientView } || next == shownOpponent) return;
+            shownOpponent = next;
+            Changed?.Invoke();
+        }
         private bool Busy => opponent != null || startingWith != null;
         private bool Alive => combatEntity == null || combatEntity.IsAlive;
         // a server body of the entity netcode decides as NGO's server did (M4 step 8); it is never NGO-spawned
@@ -72,7 +85,7 @@ namespace KryticalNova.Combat
 
         /// <summary>A server body of the entity netcode: true while it duels the player of <paramref name="other"/>'s body.</summary>
         public bool IsDuellingWithBody(Component other) =>
-            EntityServer && opponent != null && other != null && opponent.gameObject == other.gameObject;
+            other != null && (EntityServer ? opponent != null && opponent.gameObject == other.gameObject : shownOpponent != null && shownOpponent == other.gameObject);
 
         private void Awake()
         {

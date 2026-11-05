@@ -83,7 +83,8 @@ namespace KryticalNova.Player.Entities.Bodies
         /// PlayerMeleeCombat) and what they require (PlayerResources, CharacterBuffManager, CharacterCombatStats; the NavMeshAgent stays, off).
         /// On such a body they decide nothing: <c>BodyRoleTag.IsRemoteClientView</c> guards every path that would.</summary>
         public static readonly string[] RemoteKeepsRules = { "CombatEntity", "FactionExtension", "PlayerEquipment", "PlayerCharacterProgression", "PlayerNova", "PlayerParty", "PlayerCrew", "PlayerEmotes", "PlayerInventory", "PlayerPet", "PlayerMounts", "MountRider",
-            "PlayerCombatSkills", "PlayerSkillAttacks", "PlayerMeleeCombat", "PlayerResources", "CharacterBuffManager", "CharacterCombatStats" };
+            "PlayerCombatSkills", "PlayerSkillAttacks", "PlayerMeleeCombat", "PlayerResources", "CharacterBuffManager", "CharacterCombatStats",
+            "PlayerDuel" };   // M4 8b: a Callout's opponent, read by every view's hostility (namecards, targets)
 
         /// <summary>Things every shape keeps.</summary>
         public static readonly string[] Infrastructure =
