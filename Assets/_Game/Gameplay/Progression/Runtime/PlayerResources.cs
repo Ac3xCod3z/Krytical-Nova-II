@@ -36,6 +36,11 @@ namespace KryticalNova.Progression
 
         public event Action Changed;
         public event Action Depleted;
+        /// <summary>
+        /// A real hit took this share of Max HP (0-1) on a body that is not network-spawned. On an entity-netcode server body the
+        /// network side carries it to the owner's game as NGO's DamagedRpc did (M4 step 9).
+        /// </summary>
+        public event Action<float> Hurt;
         public float Health => health;
         public float Chi => chi;
         public float MaxHealth => maxHealth;
@@ -304,7 +309,12 @@ namespace KryticalNova.Progression
             {
                 float fraction = lost / Mathf.Max(1f, maxHealth);
                 if (IsSpawned) DamagedRpc(fraction);
-                else ClientPresentationRegistry.Feel?.LocalPlayerDamaged(fraction);
+                else
+                {
+                    Hurt?.Invoke(fraction);
+                    // a server body is nobody's on this machine: the owner's own game shows it when the message arrives
+                    if (BodyRoleTag.IsMine(this, true)) ClientPresentationRegistry.Feel?.LocalPlayerDamaged(fraction);
+                }
             }
             if (health <= 0f) Depleted?.Invoke();
         }

@@ -296,6 +296,13 @@ prediction error p95 <= 0.05 m at 60 ms, tick p95 < 15 ms with 102 monsters (fro
     NGO netCrossFactionPvp) and each client takes it when it changes (never set back on a host by an older snapshot), so namecards,
     targets and the Callout strip agree with the server. EditMode 324/324, PlayMode 54/54. M4 step 8 complete.
     Next: M4 s18 step 9, the Hostile -> player damage bridge (after M5's monster brain is decided), and step 10 the owner's feel checkpoint.
+  - [x] M4.9 Hostile -> player damage, the player's side (M4 s18 step 9; Master's pick: a thin consumer now, M5's brain fills it): a
+    server queue of rolled Hostile blows (HostileStrike: target ghost, result, where the attacker stood, a stand-in attacker key) is
+    applied on the player's server body with NGO's TakeDamage (HostileBrainLink.Strike), never on a view or the dead; the stand-in
+    carries HostileNet so NGO's 5 % XP loss to a Hostile runs once per death; the hit player's game gets the number (reliable, NGO
+    HostileNet.ShowStrike's part). The hurt effect (NGO DamagedRpc) now reaches the hit player's own game for every hit, PvP too
+    (it played on the server before). Review approved. Run 1: its tests green (HostileStrikeTests 3, B54); EditMode 329/331 and
+    PlayMode 55/56 where the fails were M4.2b's test setup. Next: M4.2b the Strike Dummy, then the NPC vendors on a view.
 - [ ] **M5 Monster system prototype (new brain).** Section 6. P0 EditMode sim tests (no netcode), P1 ghost + view, P2 reward bridge.
 - [ ] **M6 Hostiles in full.** All roster species via `MonsterArchetype` from `HostileDefinition` (ids kept), level scaling, zones,
   sleep, respawn, loot/XP through managed reward bridge with ledger rules; nav grids for the zones; bot soak with 102 monsters.

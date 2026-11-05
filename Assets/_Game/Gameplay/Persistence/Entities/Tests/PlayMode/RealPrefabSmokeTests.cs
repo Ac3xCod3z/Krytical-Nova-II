@@ -4648,6 +4648,116 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
             }
         }
 
+        [UnityTest]
+        public IEnumerator B54_AHostilesBlow_LandsOnTheServerBody_HurtsOnlyTheOwnersGame_TakesXpOnDeath_AndNeverLandsOnAView()
+        {
+            // M4 step 9: NGO HostileBrainLink.Strike's TakeDamage on the player's server body, from the queue the attacker side fills
+            // (M5's monster brain); the hurt effect is for the owner's own game (NGO DamagedRpc), never played on the server
+            NetRole.Install(new BodyRoleNetRoleAdapter(null, () => NetRoleKind.ServerBody));
+            IOwnerMessages oldMessages = OwnerMessages.Current;
+            var told = new Told();
+            OwnerMessages.Current = told;
+            ChatOwnerLink.Current = told;
+            IGameFeelSink oldFeel = ClientPresentationRegistry.Feel;
+            var feel = new FeelSeen();
+            ClientPresentationRegistry.RegisterFeel(feel);
+            ScriptableObject gaps = null;
+            try
+            {
+                PlayerKeys.Reset();
+                ulong keyA = PlayerKeys.Mint(541).Value;
+                GameObject a = Admitted(keyA, "54a1000000000000000000000000000a", "c5410000000000000000000000000541", "Talwyn");
+                a.GetComponent<BodyRoleTag>().Mover = new MoverSeen();
+                for (int i = 0; i < 30; i++) yield return null;
+                var entity = a.GetComponent<CombatEntity>();
+                var resources = a.GetComponent<PlayerResources>();
+                var progression = a.GetComponent<PlayerCharacterProgression>();
+                var death = a.GetComponent<PlayerDeathMotor>();
+                var hurts = new List<float>();
+                resources.Hurt += hurts.Add;
+
+                // the stand-in attacker: what the player's side reads off a Hostile (B46's way)
+                var hostile = new GameObject("B54 hostile");
+                hostile.SetActive(false);
+                m_Made.Add(hostile);
+                Type hostileType = Type.GetType("KryticalNova.Hostiles.HostileNet, KryticalNova.Hostiles");
+                Type gapsType = Type.GetType("KryticalNova.Hostiles.LevelGapSettings, KryticalNova.Hostiles");
+                Type rulesType = Type.GetType("KryticalNova.Hostiles.LevelGapRules, KryticalNova.Hostiles");
+                Assert.IsNotNull(hostileType);
+                Assert.IsNotNull(gapsType);
+                Assert.IsNotNull(rulesType);
+                Component net = hostile.AddComponent(hostileType);
+                gaps = ScriptableObject.CreateInstance(gapsType);
+                hostileType.GetField("levelGap", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(net, gaps);
+                var hostileStats = hostile.GetComponent<CharacterCombatStats>();
+                if (hostileStats == null) hostileStats = hostile.AddComponent<CharacterCombatStats>();
+                KryticalNova.Combat.Entities.HostileAttackers.Set(54, hostileStats);
+                Assert.AreSame(hostileStats, KryticalNova.Combat.Entities.HostileAttackers.Of(54));
+
+                // 1. a blow: HP falls by what reached life, the owner's hurt effect is raised, nothing plays on this machine
+                float before = resources.Health;
+                Vector3 from = a.transform.position + Vector3.forward * 2f;
+                var blow = new KryticalNova.Combat.Entities.HostileStrike
+                {
+                    Result = new DamageResult { DamageDealt = 40f, RawPhysicalDamage = 40f, MitigatedPhysicalDamage = 40f },
+                    From = new Unity.Mathematics.float3(from.x, from.y, from.z),
+                    Attacker = 54,
+                };
+                Assert.IsTrue(KryticalNova.Combat.Entities.HostileStrikes.Apply(entity, blow, hostileStats), "lands");
+                Assert.AreEqual(before - 40f, resources.Health, 1e-3, "40 off");
+                Assert.AreEqual(1, hurts.Count, "the owner's hurt effect");
+                Assert.AreEqual(40f / resources.MaxHealth, hurts[0], 1e-4, "as NGO: the share of Max HP");
+                Assert.IsFalse(feel.Calls.Contains("hurt"), "a server body's hurt never plays here");
+                Assert.AreEqual(from, hostile.transform.position, "the stand-in stands where the Hostile stood");
+
+                // 2. evaded: it lands (the number says so) but takes nothing
+                var evaded = blow;
+                evaded.Result = new DamageResult { IsEvaded = true };
+                Assert.IsTrue(KryticalNova.Combat.Entities.HostileStrikes.Apply(entity, evaded, hostileStats));
+                Assert.AreEqual(before - 40f, resources.Health, 1e-3, "nothing taken");
+                Assert.AreEqual(1, hurts.Count, "no hurt");
+
+                // 3. a view never takes a blow: it only shows the server's HP
+                GameObject own = Make(NetRoleKind.ClientView, true, new PlayerKey(keyA));
+                yield return null;
+                var ownResources = own.GetComponent<PlayerResources>();
+                float ownBefore = ownResources.Health;
+                Assert.IsFalse(KryticalNova.Combat.Entities.HostileStrikes.Apply(own.GetComponent<CombatEntity>(), blow, hostileStats), "not on a view");
+                Assert.AreEqual(ownBefore, ownResources.Health, 1e-3);
+
+                // 4. the killing blow: down, 5 % of the level's XP lost once to a Hostile (NGO HostileKillRewards)
+                progression.SetExperience(progression.ExperienceRequired / 2);
+                int xpFull = progression.Experience;
+                int loss = (int)rulesType.GetMethod("DeathLoss").Invoke(null, new object[] { gaps, progression.ExperienceRequired, xpFull });
+                Assert.Greater(loss, 0, "planned: a loss to see");
+                var lethal = blow;
+                float rest = resources.Health + 10f;
+                lethal.Result = new DamageResult { DamageDealt = rest, RawPhysicalDamage = rest, MitigatedPhysicalDamage = rest, IsCritical = true };
+                Assert.IsTrue(KryticalNova.Combat.Entities.HostileStrikes.Apply(entity, lethal, hostileStats));
+                Assert.IsTrue(death.IsDead, "down");
+                Assert.AreEqual(hostile.transform, death.ServerBodyKiller, "the Hostile killed it");
+                Assert.AreEqual(xpFull - loss, progression.Experience, "the loss, once");
+                Assert.AreEqual(1, told.To(a).FindAll(l => l == $"system You lost {loss} XP for falling to a Hostile.").Count, "told once: " + string.Join(" | ", told.To(a)));
+
+                // 5. the dead take no more blows
+                Assert.IsFalse(KryticalNova.Combat.Entities.HostileStrikes.Apply(entity, blow, hostileStats), "not on the dead");
+                Assert.AreEqual(xpFull - loss, progression.Experience);
+
+                resources.Hurt -= hurts.Add;
+                ServerLeaving.Notify(a);
+                a.GetComponent<PlayerSaveAgent>().OnServerLeaving();
+            }
+            finally
+            {
+                KryticalNova.Combat.Entities.HostileAttackers.Set(54, null);
+                if (oldFeel != null) ClientPresentationRegistry.RegisterFeel(oldFeel);
+                else ClientPresentationRegistry.UnregisterFeel(feel);
+                if (gaps != null) Object.Destroy(gaps);
+                OwnerMessages.Current = oldMessages;
+                PlayerKeys.Reset();
+            }
+        }
+
         sealed class NumbersSeen : ICombatFeedbackSink
         {
             public int Shown;

@@ -25,7 +25,11 @@ namespace KryticalNova.Combat.Entities
     public static class HitNumbers
     {
         /// <summary>Server: sends one number to the player with <paramref name="networkId"/>. False when nobody has it.</summary>
-        public static bool Send(World server, int networkId, Vector3 position, DamageResult result, bool fromSkill)
+        public static bool Send(World server, int networkId, Vector3 position, DamageResult result, bool fromSkill) =>
+            SendTo(server, networkId, Of(position, result, fromSkill));
+
+        /// <summary>Server: sends one reliable message to the player with <paramref name="networkId"/>. False when nobody has it.</summary>
+        public static bool SendTo<T>(World server, int networkId, T message) where T : unmanaged, IRpcCommand
         {
             if (server == null || !server.IsCreated || networkId == 0) return false;
             EntityManager em = server.EntityManager;
@@ -36,7 +40,7 @@ namespace KryticalNova.Combat.Entities
             {
                 if (ids[i].Value != networkId) continue;
                 Entity rpc = em.CreateEntity();
-                em.AddComponentData(rpc, Of(position, result, fromSkill));
+                em.AddComponentData(rpc, message);
                 em.AddComponentData(rpc, new SendRpcCommandRequest { TargetConnection = connections[i] });
                 return true;
             }
