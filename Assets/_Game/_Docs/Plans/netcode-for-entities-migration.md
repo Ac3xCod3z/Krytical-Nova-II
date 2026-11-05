@@ -221,6 +221,9 @@ prediction error p95 <= 0.05 m at 60 ms, tick p95 < 15 ms with 102 monsters (fro
     carries the target's ghost id); the server body runs NGO's ServerTryCast at the target's server body (range, Flux, cooldown, hits via
     ResolveHit). EditMode 151/151, PlayMode 43/43; no new test (plumbing into NGO's own cast): proven in the owner's GUI test. Next: M4.5b
     skill hits into the HitEvent ring + the cast shown to observers.
+  - [x] M4.5b Skill hits on screen: PlayerMeleeCombat.HitDealt (step, from a skill) raised in NGO's ResolveHit; HitRecordServerSystem
+    writes every hit, strike or skill (Skill bit), into the attacker's ring from that one source. B42 checks the event. EditMode 151/151,
+    PlayMode 43/43. Next: the skill cast shown to observers (NGO TriggerSkillCastClientRpc), the skill's own combat line, the queue walk in.
 - [ ] **M5 Monster system prototype (new brain).** Section 6. P0 EditMode sim tests (no netcode), P1 ghost + view, P2 reward bridge.
 - [ ] **M6 Hostiles in full.** All roster species via `MonsterArchetype` from `HostileDefinition` (ids kept), level scaling, zones,
   sleep, respawn, loot/XP through managed reward bridge with ledger rules; nav grids for the zones; bot soak with 102 monsters.

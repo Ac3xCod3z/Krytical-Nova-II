@@ -3654,12 +3654,17 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
             Assert.IsNotNull(attacker.GetComponent<KryticalNova.Combat.PlayerMeleeCombat>(), "the server body keeps PlayerMeleeCombat");
 
             Assert.IsTrue(foe.SetMaxHealthOverride(1000000f));
+            int dealt = 0, lastStep = 0; bool lastSkill = true;
+            attacker.GetComponent<KryticalNova.Combat.PlayerMeleeCombat>().HitDealt += (t, r, step, skill) => { dealt++; lastStep = step; lastSkill = skill; };
             float full = foe.CurrentHealth;
             bool landed = false;
             for (int i = 0; i < 20 && foe.CurrentHealth >= full; i++)
                 landed |= KryticalNova.Combat.Entities.MeleeStrike.Apply(attacker, foe, 1 + i % 3, 1f + 0.15f * (i % 3));
             Assert.IsTrue(landed, "a non-player is always a foe: the strike is resolved");
             Assert.Less(foe.CurrentHealth, full, "NGO's ResolveHit took HP off it (an evasion now and then, never all 20)");
+            Assert.Greater(dealt, 0, "M4.5b: each resolved hit is told with its step (the hit ring's one source)");
+            Assert.IsFalse(lastSkill, "a basic strike is no skill");
+            Assert.That(lastStep, Is.InRange(1, 3));
 
             var player = other.GetComponent<CombatEntity>();
             float before = player.CurrentHealth;
