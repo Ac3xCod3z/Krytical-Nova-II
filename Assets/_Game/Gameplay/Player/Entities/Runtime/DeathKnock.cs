@@ -78,6 +78,23 @@ namespace KryticalNova.Player.Entities
         }
     }
 
+    /// <summary>
+    /// Owner rule (5 Nov 2026): a player who dies while not on solid ground de-rezzes where it is, never falls or is dropped: from the
+    /// jump's take-off on (the crouch before it, feet still down, is a fall), on a wall (Wallstride), on water (Waterstride), in a vault.
+    /// The server reads it from the ghost each tick; the body's own check adds a gap of 0.15 m or more above the ground (a ledge).
+    /// </summary>
+    public static class DeathGround
+    {
+        public static bool OffTheGround(in MotionPlan plan, in PlayerMotionCurves curves, NetworkTick tick, int tickMicros, in MoveState move, in VaultPlan vault)
+        {
+            if (move.Wall != 0 || move.Water != 0) return true;
+            if (VaultLeg.On(in vault, move.OrderSeq, move.ProgressMm)) return true;
+            if (plan.Kind != MotionKind.Jump || !JumpFlight.Active(in plan, in curves, tick, tickMicros)) return false;
+            long elapsed = JumpFlight.ElapsedMicros(in plan, tick, tickMicros);
+            return JumpFlight.TakenOff(in curves, elapsed) && !JumpFlight.Landed(in plan, in curves, elapsed);
+        }
+    }
+
     /// <summary>Where the dead body is at any tick of its knock: NGO's warp (travel profile, height curve, turn) as integers.</summary>
     public static class KnockFlight
     {
@@ -118,20 +135,9 @@ namespace KryticalNova.Player.Entities
                 from.z + (int)((long)(to.z - from.z) * share / 1000));
 
             double t = elapsedMicros / 1e6, lengthS = length / 1e6;
-            int drop = from.y - to.y;
-            if (drop >= AirborneMm)
-            {
-                // killed in the air: it falls to the landing under gravity, down before the clip ends (NGO HeightCurve)
-                double dropM = drop / 1000.0, gravity = 9.81;
-                double fall = math.sqrt(2.0 * dropM / gravity), latest = math.max(0.1, lengthS - 0.1);
-                if (fall > latest) gravity = 2.0 * dropM / (latest * latest);
-                root.y = from.y - (int)math.round(math.min(dropM, 0.5 * gravity * t * t) * 1000.0);
-            }
-            else
-            {
-                // on the ground: the small step to the landing's height goes with the travel (NGO snapped it at LieDown)
-                root.y = from.y + (int)((long)(to.y - from.y) * share / 1000);
-            }
+            // on the ground the height follows the travel (the slope to the landing); a body off the ground de-rezzes instead, so a
+            // player's knock never drops under gravity (owner, 5 Nov 2026)
+            root.y = from.y + (int)((long)(to.y - from.y) * share / 1000);
             if (IsCritical(plan.Chain))
             {
                 // a critical blow throws it up in an arc until it hits the ground

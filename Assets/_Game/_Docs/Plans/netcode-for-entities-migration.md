@@ -278,6 +278,11 @@ prediction error p95 <= 0.05 m at 60 ms, tick p95 < 15 ms with 102 monsters (fro
     message (HitNumberRpc = NGO DamageFeedbackRpc), so none is lost; the HitEvent ring (16, label 32 B cut on a whole character) takes
     the server's queue 4 a tick for the impacts and the combat line. EditMode 322/322 (40 numbers through real worlds, every skill label
     fits), PlayMode 51/51 (B50: 40 bodies with 80 colliders, all struck, 40 numbers). Next: the de-rez rule (owner, 5 Nov).
+  - [x] M4.6c Off solid ground, a death de-rezzes (owner rule, 5 Nov): the server reads it from the ghost every tick (DeathGround: a
+    jump from its take-off to its touchdown, not the crouch before it; a wall or a tree; water; a vault leg) and the body adds a gap of
+    0.15 m or more above the ground, with NGO's roof rule; a knock on the ground follows the slope, never a gravity drop. EditMode
+    323/323 (each case), PlayMode 52/52 (B51). The same fix for the NGO game is briefed for its own session (dots-mini-boss-13b-notes).
+    Next: M4 step 8, PvP MapRules + DuelState (closes the Callout death).
 - [ ] **M5 Monster system prototype (new brain).** Section 6. P0 EditMode sim tests (no netcode), P1 ghost + view, P2 reward bridge.
 - [ ] **M6 Hostiles in full.** All roster species via `MonsterArchetype` from `HostileDefinition` (ids kept), level scaling, zones,
   sleep, respawn, loot/XP through managed reward bridge with ledger rules; nav grids for the zones; bot soak with 102 monsters.

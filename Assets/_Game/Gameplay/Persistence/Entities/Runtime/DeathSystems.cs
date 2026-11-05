@@ -25,9 +25,18 @@ namespace KryticalNova.Persistence.Entities
         {
             float deltaTime = SystemAPI.Time.DeltaTime;
             EntityManager em = EntityManager;
+            bool timed = SystemAPI.TryGetSingleton(out NetworkTime now) && now.ServerTick.IsValid;
+            var curves = SystemAPI.TryGetSingleton(out PlayerMotionCurves c) ? c : PlayerMotionCurves.Default;
+            int tickMicros = PlayerMovement.TickMicros(SystemAPI.TryGetSingleton(out ClientServerTickRate rate) && rate.SimulationTickRate > 0
+                ? rate.SimulationTickRate : 30);
             foreach (GhostBodyEntry entry in GhostBodyRegistry.Entries)
             {
                 if (!ReferenceEquals(entry.World, World) || entry.Body == null || !entry.Body.TryGetComponent(out PlayerDeathMotor death)) continue;
+                // the owner's rule (5 Nov 2026): off solid ground, a death de-rezzes; read from the ghost the body follows
+                if (timed && em.Exists(entry.Ghost) && em.HasComponent<MotionPlan>(entry.Ghost) && em.HasComponent<MoveState>(entry.Ghost))
+                    death.ServerBodyOffGround = DeathGround.OffTheGround(em.GetComponentData<MotionPlan>(entry.Ghost), curves, now.ServerTick, tickMicros,
+                        em.GetComponentData<MoveState>(entry.Ghost),
+                        em.HasComponent<VaultPlan>(entry.Ghost) ? em.GetComponentData<VaultPlan>(entry.Ghost) : default);
                 death.ServerBodyTick(deltaTime);
                 if (m_Written.TryGetValue(death, out int written) && written == death.ServerBodyChanges) continue;
                 if (!em.Exists(entry.Ghost) || !em.HasComponent<DeathState>(entry.Ghost)) continue;

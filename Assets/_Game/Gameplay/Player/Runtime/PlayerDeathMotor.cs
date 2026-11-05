@@ -676,6 +676,23 @@ namespace KryticalNova.Player
 
         private bool ServerBody => BodyRoleTag.Of(this) is { Kind: NetRoleKind.ServerBody };
         private float serverBodyLeft;
+
+        /// <summary>
+        /// Set by the server every tick from the ghost (M4 6c, owner rule 5 Nov 2026): the body is off solid ground (a jump from its take-off,
+        /// a wall, water, a vault). A death then de-rezzes.
+        /// </summary>
+        public bool ServerBodyOffGround { get; set; }
+
+        /// <summary>How far the feet are above the ground found below them (0 when none is found): 0.15 m or more is off the ground.</summary>
+        public float FeetAboveGround()
+        {
+            if (agent == null) return 0f;
+            Vector3 feet = transform.position - Vector3.up * agent.baseOffset;
+            int groundMask = LayerMask.GetMask(GroundLayerName);
+            if (groundMask == 0 || !Physics.Raycast(feet + Vector3.up * 0.3f, Vector3.down, out RaycastHit ground, FallProbe, groundMask, QueryTriggerInteraction.Ignore))
+                return 0f;
+            return Mathf.Max(0f, feet.y - ground.point.y);
+        }
         private int serverBodyAnnounced;
 
         /// <summary>How the server body went down (for the clients' presentation, M4 6b): alive, on its back, face down, or de-rezzed.</summary>
@@ -721,7 +738,8 @@ namespace KryticalNova.Player
         {
             if (!ServerBody || IsDead) return;
             Vector3 direction = Flat(blow.Direction, -transform.forward);
-            bool offTheGround = agent != null && IsOffTheGround();
+            // not on solid ground (owner, 5 Nov 2026): de-rez, never a fall; NGO's roof rule stays
+            bool offTheGround = ServerBodyOffGround || (agent != null && (IsOffTheGround() || FeetAboveGround() >= AirborneHeight));
             bool fromFront = Vector3.Dot(Flat(transform.forward, Vector3.forward), -direction) >= 0f;
             if (buffManager != null) buffManager.ClearAllBuffs();
             BodyRoleTag.Of(this).Mover?.Stop();   // the walk it was on ends where the body fell (NGO: the agent stops)

@@ -4454,6 +4454,49 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
             }
         }
 
+        [UnityTest]
+        public IEnumerator B51_ADeathOffSolidGround_DeRezzesWithNoKnock_AndOnFlatGroundItFalls()
+        {
+            // owner rule (5 Nov 2026): not on solid ground (the server reads a jump from its take-off, a wall, water, a vault from the
+            // ghost: DeathGround, EditMode per case) = de-rez where it is, never a fall or a drop
+            NetRole.Install(new BodyRoleNetRoleAdapter(null, () => NetRoleKind.ServerBody));
+            try
+            {
+                PlayerKeys.Reset();
+                GameObject a = Admitted(PlayerKeys.Mint(511).Value, "51a1000000000000000000000000000a", "c5110000000000000000000000000511", "Talwyn");
+                a.GetComponent<BodyRoleTag>().Mover = new MoverSeen();
+                for (int i = 0; i < 30; i++) yield return null;
+                var death = a.GetComponent<PlayerDeathMotor>();
+                var entity = a.GetComponent<CombatEntity>();
+                Assert.Less(death.FeetAboveGround(), 0.15f, "planned: the body stands on the ground (or no ground layer here)");
+
+                // off solid ground (mid-jump, a wall, water, a vault: the ghost's word): gone where it is, no travel
+                death.ServerBodyOffGround = true;
+                entity.Kill(new KillingBlow { Direction = -a.transform.forward, IsCritical = true });
+                Assert.IsTrue(death.IsDead);
+                Assert.AreEqual(3, death.ServerBodyPose, "de-rezzed");
+                Assert.IsFalse(death.ServerBodyKnocks, "no knock, no drop");
+
+                a.GetComponent<PlayerResources>().RestoreAll();
+                death.ServerBodyTick(0.1f);
+                Assert.IsFalse(death.IsDead);
+
+                // on flat ground (and in the crouch before a jump's take-off): the fall
+                death.ServerBodyOffGround = false;
+                entity.Kill(new KillingBlow { Direction = -a.transform.forward, IsCritical = false });
+                Assert.IsTrue(death.IsDead);
+                Assert.AreNotEqual(3, death.ServerBodyPose, "a fall");
+                Assert.AreNotEqual(0, death.ServerBodyPose);
+
+                ServerLeaving.Notify(a);
+                a.GetComponent<PlayerSaveAgent>().OnServerLeaving();
+            }
+            finally
+            {
+                PlayerKeys.Reset();
+            }
+        }
+
         sealed class NumbersSeen : ICombatFeedbackSink
         {
             public int Shown;

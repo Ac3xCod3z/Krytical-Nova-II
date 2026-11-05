@@ -273,6 +273,29 @@ namespace KryticalNova.Player.Entities.Tests
         }
 
         [Test]
+        public void OffSolidGround_IsAJumpFromItsTakeOff_AWall_Water_AVaultLeg_NotTheCrouchNorTheGround()
+        {
+            // owner rule (5 Nov 2026) + answer: the crouch before take-off is a fall; from take-off on, a de-rez
+            var curves = PlayerMotionCurves.Default;
+            int tickMicros = 33333;
+            var press = new NetworkTick(1000);
+            var jump = new MotionPlan { Kind = MotionKind.Jump, PlanSeq = 5, StartTick = press };
+            NetworkTick At(long micros) { var t = press; t.Add((uint)(micros / tickMicros)); return t; }
+            Assert.IsFalse(DeathGround.OffTheGround(default, curves, At(0), tickMicros, default, default), "flat ground");
+            Assert.IsFalse(DeathGround.OffTheGround(jump, curves, press, tickMicros, default, default), "the press: feet still down");
+            Assert.IsFalse(DeathGround.OffTheGround(jump, curves, At(curves.TakeoffMicros - tickMicros), tickMicros, default, default), "the crouch");
+            Assert.IsTrue(DeathGround.OffTheGround(jump, curves, At(curves.TakeoffMicros + tickMicros), tickMicros, default, default), "just after take-off");
+            Assert.IsTrue(DeathGround.OffTheGround(jump, curves, At(curves.ApexMicros), tickMicros, default, default), "mid-jump");
+            Assert.IsFalse(DeathGround.OffTheGround(jump, curves, At(curves.LandMicros + 3 * tickMicros), tickMicros, default, default), "landed");
+            Assert.IsTrue(DeathGround.OffTheGround(default, curves, press, tickMicros, new MoveState { Wall = 1 }, default), "on a wall");
+            Assert.IsTrue(DeathGround.OffTheGround(default, curves, press, tickMicros, new MoveState { Wall = 2 }, default), "in a tree");
+            Assert.IsTrue(DeathGround.OffTheGround(default, curves, press, tickMicros, new MoveState { Water = 1 }, default), "on water");
+            var vault = new VaultPlan { Seq = 9, LegStartMm = 1000, LegLengthMm = 2000, AirMicros = 500000 };
+            Assert.IsTrue(DeathGround.OffTheGround(default, curves, press, tickMicros, new MoveState { OrderSeq = 9, ProgressMm = 1500 }, vault), "in the vault");
+            Assert.IsFalse(DeathGround.OffTheGround(default, curves, press, tickMicros, new MoveState { OrderSeq = 9, ProgressMm = 500 }, vault), "walking to it");
+        }
+
+        [Test]
         public void TheKnock_GoesFromTheBodyToTheLanding_ThrowsACriticalBodyUp_DropsAnAirborneOne_AndTurnsOnlyToABlowFromTheFront()
         {
             // M4 6b-2: NGO's death warp as the ghost's plan (straight travel here; the game bakes the clip's own)
@@ -301,10 +324,10 @@ namespace KryticalNova.Player.Entities.Tests
             Assert.AreEqual(550, KnockFlight.RootAt(crit, curves, 250000).y, "the arc's top at half the impact time");
             Assert.AreEqual(0, KnockFlight.RootAt(crit, curves, 500000).y, "down at the impact");
 
-            var air = plan;
-            air.FromYMm = 3000;
-            Assert.Less(KnockFlight.RootAt(air, curves, 300000).y, 3000, "falling");
-            Assert.AreEqual(0, KnockFlight.RootAt(air, curves, 1100000).y, "down before the clip ends");
+            var slope = plan;
+            slope.FromYMm = 3000;
+            Assert.AreEqual(1500, KnockFlight.RootAt(slope, curves, 600000).y, "the height follows the travel: no gravity drop (owner, 5 Nov)");
+            Assert.AreEqual(0, KnockFlight.RootAt(slope, curves, 1200000).y, "on the landing");
         }
 
         [Test]
