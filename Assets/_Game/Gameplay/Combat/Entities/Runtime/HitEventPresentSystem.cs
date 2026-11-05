@@ -66,9 +66,11 @@ namespace KryticalNova.Combat.Entities
                 ClientPresentationRegistry.Feedback?.ShowCombatFeedback(target.position, result);
                 if (evaded) ClientPresentationRegistry.Feel?.Missed(attacker.Body.transform, target.position, (hit.Flags & HitEventRing.Skill) != 0, true);
                 // the attacker's combat line (NGO TellAttacker / CombatMessageRpc), the same words through PlayerMeleeCombat.HitLine
-                // a skill's line names the skill on NGO's side (PlayerSkillAttacks); the ring does not carry it yet: strikes only
-                if ((hit.Flags & HitEventRing.Skill) == 0 && attacker.Body.TryGetComponent(out PlayerMeleeCombat own) && target.TryGetComponent(out IDamageable struck))
-                    own.ShowCombatLine(PlayerMeleeCombat.HitLine(hit.Step == 3 ? "Combo Finisher" : $"Strike {hit.Step}", struck.EntityName, result,
+                // a skill hit's line carries NGO PlayerSkillAttacks' label (M4.5e); a strike's is the step's
+                bool skill = (hit.Flags & HitEventRing.Skill) != 0;
+                string label = skill ? hit.Label.ToString() : hit.Step == 3 ? "Combo Finisher" : $"Strike {hit.Step}";
+                if (!string.IsNullOrEmpty(label) && attacker.Body.TryGetComponent(out PlayerMeleeCombat own) && target.TryGetComponent(out IDamageable struck))
+                    own.ShowCombatLine(PlayerMeleeCombat.HitLine(label, struck.EntityName, result,
                         struck.CurrentHealth, struck.MaxHealth));
             }
             if (!evaded && target != null && attacker.Body.TryGetComponent(out PlayerMeleeCombat melee))

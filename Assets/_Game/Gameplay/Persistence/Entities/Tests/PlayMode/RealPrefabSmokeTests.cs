@@ -3655,7 +3655,7 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
 
             Assert.IsTrue(foe.SetMaxHealthOverride(1000000f));
             int dealt = 0, lastStep = 0; bool lastSkill = true;
-            attacker.GetComponent<KryticalNova.Combat.PlayerMeleeCombat>().HitDealt += (t, r, step, skill) => { dealt++; lastStep = step; lastSkill = skill; };
+            attacker.GetComponent<KryticalNova.Combat.PlayerMeleeCombat>().HitDealt += (t, r, step, skill, label) => { dealt++; lastStep = step; lastSkill = skill; };
             float full = foe.CurrentHealth;
             bool landed = false;
             for (int i = 0; i < 20 && foe.CurrentHealth >= full; i++)

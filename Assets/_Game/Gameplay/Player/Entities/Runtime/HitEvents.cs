@@ -19,6 +19,8 @@ namespace KryticalNova.Player.Entities
         [GhostField] public byte Flags;
         /// <summary>The combo step (1-3).</summary>
         [GhostField] public byte Step;
+        /// <summary>A skill hit's label for the attacker's combat line (NGO PlayerSkillAttacks' label; M4.5e); empty for a basic strike.</summary>
+        [GhostField] public Unity.Collections.FixedString64Bytes Label;
     }
 
     /// <summary>The attacker's last hit number (server count); the ring holds the newest <see cref="HitEventRing.Capacity"/>.</summary>

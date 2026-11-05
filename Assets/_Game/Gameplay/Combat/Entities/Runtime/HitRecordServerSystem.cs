@@ -3,6 +3,7 @@ using KryticalNova.Core;
 using KryticalNova.Player.Entities;
 using KryticalNova.Player.Entities.Presentation;
 using KryticalNova.Progression;
+using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.NetCode;
@@ -31,12 +32,12 @@ namespace KryticalNova.Combat.Entities
                 if (!ReferenceEquals(entry.World, World) || entry.Body == null || !entry.Body.TryGetComponent(out PlayerMeleeCombat melee)
                     || !m_Heard.Add(melee)) continue;
                 Entity ghost = entry.Ghost;
-                melee.HitDealt += (target, result, step, fromSkill) => Record(ghost, melee, target, result, step, fromSkill);
+                melee.HitDealt += (target, result, step, fromSkill, label) => Record(ghost, melee, target, result, step, fromSkill, label);
             }
             m_Heard.RemoveWhere(m => m == null);
         }
 
-        void Record(Entity attackerGhost, PlayerMeleeCombat attacker, IDamageable target, DamageResult result, int step, bool fromSkill)
+        void Record(Entity attackerGhost, PlayerMeleeCombat attacker, IDamageable target, DamageResult result, int step, bool fromSkill, string label)
         {
             if (World == null || !World.IsCreated) return;
             EntityManager em = World.EntityManager;
@@ -52,9 +53,18 @@ namespace KryticalNova.Combat.Entities
                 ReflectedMilli = Mathf.RoundToInt(result.ReflectedDamage * 1000f),
                 Flags = (byte)(MeleeStrike.FlagsOf(result, stats) | (fromSkill ? HitEventRing.Skill : 0)),
                 Step = (byte)math.clamp(step, 0, 3),
+                Label = fromSkill && !string.IsNullOrEmpty(label) ? Fit(label) : default,
             });
             em.SetComponentData(attackerGhost, seq);
             Recorded++;
+        }
+
+        // a label longer than the field keeps its start (UTF-8 bytes)
+        static Unity.Collections.FixedString64Bytes Fit(string text)
+        {
+            var fixedText = new Unity.Collections.FixedString64Bytes();
+            foreach (char c in text) if (fixedText.Append(c) != Unity.Collections.FormatError.None) break;
+            return fixedText;
         }
 
         int GhostIdOf(EntityManager em, Transform body)

@@ -127,8 +127,8 @@ namespace KryticalNova.Combat
         public event Action<string> OnCombatMessage;
         /// <summary>Raised where a hit is resolved (server or offline), after the damage was applied. Feeds the combat log.</summary>
         public event Action<IDamageable, DamageResult> HitResolved;
-        /// <summary>As <see cref="HitResolved"/>, with the combo step and whether a skill dealt it (the entity netcode's hit ring, M4.5b).</summary>
-        public event Action<IDamageable, DamageResult, int, bool> HitDealt;
+        /// <summary>As <see cref="HitResolved"/>, with the combo step, whether a skill dealt it and its label (the entity netcode's hit ring, M4.5b/e).</summary>
+        public event Action<IDamageable, DamageResult, int, bool, string> HitDealt;
 
         private void Awake()
         {
@@ -837,7 +837,7 @@ namespace KryticalNova.Combat
 
             ShowDamageToAttacker(target.Transform.position, result, fromSkill);
             HitResolved?.Invoke(target, result);
-            HitDealt?.Invoke(target, result, comboStep, fromSkill);
+            HitDealt?.Invoke(target, result, comboStep, fromSkill, stepLabel);
 
             if (!result.IsEvaded)
             {

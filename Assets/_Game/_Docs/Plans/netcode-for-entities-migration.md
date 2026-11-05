@@ -230,6 +230,8 @@ prediction error p95 <= 0.05 m at 60 ms, tick p95 < 15 ms with 102 monsters (fro
   - [x] M4.5d The skill queue walks in on a DOTS view: NGO's queue (out of reach / busy -> wait, walk to the ring, cast when Ready) used an
     agent the view lacks and gave up; on a view it now walks to the same ring point as the player's own ghost walk (BodyClicks.Ground).
     EditMode 179/179 (Combat tests included), PlayMode 43/43. To check in the GUI test: queuing a skill on another target while comboing.
+  - [x] M4.5e The skill's combat line: HitDealt carries NGO's label, HitEvent.Label holds it for skill hits, and the attacker's view prints
+    NGO's words (HitLine). EditMode 179/179, PlayMode 43/43. Next: hold-to-charge shown to others (NGO ChargeStartedRpc/ChargeEndedRpc).
 - [ ] **M5 Monster system prototype (new brain).** Section 6. P0 EditMode sim tests (no netcode), P1 ghost + view, P2 reward bridge.
 - [ ] **M6 Hostiles in full.** All roster species via `MonsterArchetype` from `HostileDefinition` (ids kept), level scaling, zones,
   sleep, respawn, loot/XP through managed reward bridge with ledger rules; nav grids for the zones; bot soak with 102 monsters.
