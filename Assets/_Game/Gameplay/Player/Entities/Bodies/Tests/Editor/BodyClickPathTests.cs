@@ -1,6 +1,8 @@
 using System.Collections.Generic;
 using NUnit.Framework;
+using Unity.Entities;
 using Unity.Mathematics;
+using Unity.NetCode;
 using UnityEngine;
 using KryticalNova.Core;
 using KryticalNova.Player.Entities.Presentation;
@@ -46,6 +48,34 @@ namespace KryticalNova.Player.Entities.Bodies.Tests
                 Assert.AreEqual(rig.ServerPose(), rig.OwnerPose());
             }
             Assert.IsFalse(lines.Exists(l => l.StartsWith("[KnClick] refused")), "no click was refused: " + string.Join(" | ", lines));
+        }
+
+        [Test]
+        public void TheSecondClickOnAHostileBody_AttacksItsGhost_AndAGroundClickCallsItOff()
+        {
+            // M4.4j: PointAndClickPlayer in view mode puts the clicked body in BodyClicks.Attack; the click source finds its ghost
+            using var rig = PlayerRig.Create(2, 0, new[] { new int3(0, 0, 0), new int3(0, 0, 1200) });
+            rig.Clients[0].GetExistingSystemManaged<PlayerInputGatherSystem>().Source = new ClickCommandSource(new BodyClickSource());
+            var body = new GameObject("other player's view");
+            Entity view = rig.GhostIn(0, 1);
+            int ghostId = rig.Get<GhostInstance>(rig.Clients[0], view).ghostId;
+            GhostBodyRegistry.Register(rig.Clients[0], view, 0, default, body, false);
+            try
+            {
+                Assert.AreEqual(ghostId, BodyClickSource.GhostIdOf(body.transform), "the body's own ghost");
+                BodyClicks.Attack(body.transform);
+                rig.Tick(10);
+                Assert.AreEqual(ghostId, rig.Get<CombatState>(rig.Server, rig.ServerGhosts[0]).TargetGhostId, "the server attacks the clicked body's ghost");
+
+                BodyClicks.Ground(new Vector3(-3f, 0f, 0f), false);
+                rig.Tick(10);
+                Assert.AreEqual(0, rig.Get<CombatState>(rig.Server, rig.ServerGhosts[0]).TargetGhostId, "a ground click calls the attack off (NGO)");
+            }
+            finally
+            {
+                GhostBodyRegistry.Unregister(rig.Clients[0], view, out _);
+                Object.DestroyImmediate(body);
+            }
         }
     }
 }

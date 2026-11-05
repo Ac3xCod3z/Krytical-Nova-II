@@ -746,8 +746,13 @@ namespace KryticalNova.Player
                     return;
                 }
 
-                // ClientView: selecting is shown here; walking over and attacking are server rules not networked yet (M4).
-                if (ViewMode) { CommandMessage?.Invoke(NotYetNetworkedText); return; }
+                // ClientView: an attack goes to the ghost (M4.4j); walking over to a friend is not networked yet.
+                if (ViewMode)
+                {
+                    if (hostile && targetEntity.IsAlive) BodyClicks.Attack(targetEntity.Transform);
+                    else CommandMessage?.Invoke(NotYetNetworkedText);
+                    return;
+                }
 
                 // Second click on a friendly unit (another player): walk over to them.
                 if (!hostile)

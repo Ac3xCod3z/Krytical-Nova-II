@@ -21,6 +21,8 @@ namespace KryticalNova.Core
             /// <summary>A click on a wall for Wallstride's wall walk, with the surface's normal there.</summary>
             public bool Wall;
             public Vector3 Normal;
+            /// <summary>The second click on a hostile (M4.4j): attack this body. Null for every other click.</summary>
+            public Transform AttackTarget;
         }
 
         /// <summary>Most clicks kept between two takes.</summary>
@@ -97,6 +99,12 @@ namespace KryticalNova.Core
         }
 
         public static void Clear() => Pending.Clear();
+
+        /// <summary>The second click on a hostile <paramref name="target"/> (NGO's StartAttackTarget and RequestAttackEntityServerRpc).</summary>
+        public static void Attack(Transform target)
+        {
+            if (target != null) Add(new Click { AttackTarget = target });
+        }
 
         private static void Add(Click click)
         {

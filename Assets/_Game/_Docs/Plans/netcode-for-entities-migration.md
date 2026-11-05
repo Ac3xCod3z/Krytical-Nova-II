@@ -206,6 +206,9 @@ prediction error p95 <= 0.05 m at 60 ms, tick p95 < 15 ms with 102 monsters (fro
     (range - 0.15 m, on its own side) through ServerOrderRequest, re-aimed every 0.1 s when the target moved; the strike then starts by
     itself. Two-player rig test (6 m off: walks in, strikes inside 1.6 m). EditMode 148/148, PlayMode 43/43. M4.4 basic attack COMPLETE
     except the attacker's combat-log line; owner GUI feel test due (walk/run speed of the walk in, swing timing, numbers on screen).
+  - [x] M4.4j The real click: on a DOTS view the second click on a live hostile body attacks its ghost (BodyClicks.Attack -> BodyClickSource
+    finds the ghost -> PlayerCommandKind.Attack); a walk click or the stop calls the attack off (NGO CancelAttack). Rig test with a
+    registered body. EditMode 230/230 (wide filter), PlayMode 43/43. Before the owner's GUI test: M4.4k the swing animation on the views.
 - [ ] **M5 Monster system prototype (new brain).** Section 6. P0 EditMode sim tests (no netcode), P1 ghost + view, P2 reward bridge.
 - [ ] **M6 Hostiles in full.** All roster species via `MonsterArchetype` from `HostileDefinition` (ids kept), level scaling, zones,
   sleep, respawn, loot/XP through managed reward bridge with ledger rules; nav grids for the zones; bot soak with 102 monsters.

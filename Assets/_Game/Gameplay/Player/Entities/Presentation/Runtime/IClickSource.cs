@@ -18,6 +18,8 @@ namespace KryticalNova.Player.Entities.Presentation
         /// <summary>A click on a wall for Wallstride's wall walk (M3c), and the surface's normal there.</summary>
         public bool Wall;
         public Vector3 Normal;
+        /// <summary>An attack on this ghost (M4.4j; 0 = not an attack): the second click on a hostile body.</summary>
+        public int AttackGhostId;
     }
 
     /// <summary>
@@ -64,6 +66,7 @@ namespace KryticalNova.Player.Entities.Presentation
             command = default;
             if (m_Source == null || !m_Source.TryTake(out var click)) return false;
             if (click.Stop) { command.Kind = PlayerCommandKind.Stop; return true; }
+            if (click.AttackGhostId != 0) { command.Kind = PlayerCommandKind.Attack; command.TargetGhostId = click.AttackGhostId; return true; }
             command.Kind = PlayerCommandKind.Click;
             command.Run = click.Run && !click.Jump;
             command.Jump = click.Jump;

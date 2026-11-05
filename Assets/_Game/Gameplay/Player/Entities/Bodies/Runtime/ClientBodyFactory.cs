@@ -15,8 +15,28 @@ namespace KryticalNova.Player.Entities.Bodies
         {
             click = default;
             if (!BodyClicks.TryTake(out BodyClicks.Click taken)) return false;
+            if (taken.AttackTarget != null)
+            {
+                // the clicked body's ghost; a body that is no ghost's (gone meanwhile) is no attack
+                click = new WorldClick { AttackGhostId = GhostIdOf(taken.AttackTarget) };
+                return click.AttackGhostId != 0;
+            }
             click = new WorldClick { Point = taken.Point, Run = taken.Run, Stop = taken.Stop, Jump = taken.Jump, Wall = taken.Wall, Normal = taken.Normal };
             return true;
+        }
+
+        /// <summary>The ghost id of the player body <paramref name="body"/> belongs to, or 0.</summary>
+        public static int GhostIdOf(Transform body)
+        {
+            foreach (GhostBodyEntry entry in GhostBodyRegistry.Entries)
+            {
+                if (entry.Body == null || entry.World == null || !entry.World.IsCreated) continue;
+                if (body != entry.Body.transform && !body.IsChildOf(entry.Body.transform)) continue;
+                var em = entry.World.EntityManager;
+                if (em.Exists(entry.Ghost) && em.HasComponent<Unity.NetCode.GhostInstance>(entry.Ghost))
+                    return em.GetComponentData<Unity.NetCode.GhostInstance>(entry.Ghost).ghostId;
+            }
+            return 0;
         }
     }
 
