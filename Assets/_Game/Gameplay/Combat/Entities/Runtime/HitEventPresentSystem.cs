@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using KryticalNova.Core;
 using KryticalNova.Player.Entities;
 using KryticalNova.Player.Entities.Presentation;
+using KryticalNova.Progression;
 using Unity.Entities;
 using Unity.NetCode;
 using UnityEngine;
@@ -64,6 +65,10 @@ namespace KryticalNova.Combat.Entities
                 };
                 ClientPresentationRegistry.Feedback?.ShowCombatFeedback(target.position, result);
                 if (evaded) ClientPresentationRegistry.Feel?.Missed(attacker.Body.transform, target.position, (hit.Flags & HitEventRing.Skill) != 0, true);
+                // the attacker's combat line (NGO TellAttacker / CombatMessageRpc), the same words through PlayerMeleeCombat.HitLine
+                if (attacker.Body.TryGetComponent(out PlayerMeleeCombat own) && target.TryGetComponent(out IDamageable struck))
+                    own.ShowCombatLine(PlayerMeleeCombat.HitLine(hit.Step == 3 ? "Combo Finisher" : $"Strike {hit.Step}", struck.EntityName, result,
+                        struck.CurrentHealth, struck.MaxHealth));
             }
             if (!evaded && target != null && attacker.Body.TryGetComponent(out PlayerMeleeCombat melee))
                 melee.PreviewImpact(target, hit.Step, (hit.Flags & HitEventRing.Critical) != 0, (hit.Flags & HitEventRing.Reflected) != 0,

@@ -213,6 +213,9 @@ prediction error p95 <= 0.05 m at 60 ms, tick p95 < 15 ms with 102 monsters (fro
     ShowStrikeFromGhost = NGO PlayComboStrikeClientRpc's ShowStrike): the owner's from its predicted combo, the others' from the server's.
     New test assembly KryticalNova.Combat.Entities.Tests.Editor. EditMode 150/150, PlayMode 43/43. Next: the attacker's combat-log line;
     then the owner's GUI feel test of the basic attack.
+  - [x] M4.4l The attacker's combat line on the DOTS view (NGO TellAttacker): PlayerMeleeCombat.HitLine holds NGO's words for both.
+    EditMode 151/151, PlayMode 43/43. M4.4 BASIC ATTACK COMPLETE (server, prediction, click, swing, hits, numbers, lines). Owner GUI feel
+    test due (morning list). Next: M4.5 skills (NGO rules first, M4-combat.md section 6).
 - [ ] **M5 Monster system prototype (new brain).** Section 6. P0 EditMode sim tests (no netcode), P1 ghost + view, P2 reward bridge.
 - [ ] **M6 Hostiles in full.** All roster species via `MonsterArchetype` from `HostileDefinition` (ids kept), level scaling, zones,
   sleep, respawn, loot/XP through managed reward bridge with ledger rules; nav grids for the zones; bot soak with 102 monsters.

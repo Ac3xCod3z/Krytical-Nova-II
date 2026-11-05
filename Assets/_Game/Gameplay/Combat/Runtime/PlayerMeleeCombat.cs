@@ -850,14 +850,7 @@ namespace KryticalNova.Combat
                 else SpawnImpactVfxLocal(impactPos, toAttacker, comboStep, kind, target.Transform);
             }
 
-            if (result.IsEvaded)
-                TellAttacker($"{stepLabel} EVADED by {target.EntityName}!");
-            else if (result.IsReflected)
-                TellAttacker($"{stepLabel} REFLECTED by {target.EntityName}'s Backlash!");
-            else if (result.IsCritical)
-                TellAttacker($"CRITICAL {stepLabel} on {target.EntityName} for {result.DamageDealt:0} dmg! (HP: {target.CurrentHealth:0}/{target.MaxHealth:0})");
-            else
-                TellAttacker($"{stepLabel} hit {target.EntityName} for {result.DamageDealt:0} dmg! (HP: {target.CurrentHealth:0}/{target.MaxHealth:0})");
+            TellAttacker(HitLine(stepLabel, target.EntityName, result, target.CurrentHealth, target.MaxHealth));
             return true;
         }
 
@@ -918,6 +911,18 @@ namespace KryticalNova.Combat
             // The blow that met nothing is heard by the one who swung it, and by nobody else.
             if ((flags & EvadedBit) != 0) ClientPresentationRegistry.Feel?.Missed(transform, position, (flags & SkillBit) != 0, true);
         }
+
+        /// <summary>The attacker's combat line for one hit (the same words online, offline and on the entity netcode, M4.4l).</summary>
+        public static string HitLine(string stepLabel, string targetName, in DamageResult result, float targetHealth, float targetMaxHealth)
+        {
+            if (result.IsEvaded) return $"{stepLabel} EVADED by {targetName}!";
+            if (result.IsReflected) return $"{stepLabel} REFLECTED by {targetName}'s Backlash!";
+            if (result.IsCritical) return $"CRITICAL {stepLabel} on {targetName} for {result.DamageDealt:0} dmg! (HP: {targetHealth:0}/{targetMaxHealth:0})";
+            return $"{stepLabel} hit {targetName} for {result.DamageDealt:0} dmg! (HP: {targetHealth:0}/{targetMaxHealth:0})";
+        }
+
+        /// <summary>Shows a combat line to this player as NGO's TellAttacker does on the attacker's own game (the entity netcode, M4.4l).</summary>
+        public void ShowCombatLine(string message) => OnCombatMessage?.Invoke(message);
 
         private void TellAttacker(string message)
         {

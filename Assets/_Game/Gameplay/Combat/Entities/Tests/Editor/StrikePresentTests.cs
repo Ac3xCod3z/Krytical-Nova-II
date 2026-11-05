@@ -30,6 +30,17 @@ namespace KryticalNova.Combat.Entities.Tests
         }
 
         [Test]
+        public void TheCombatLine_HasNgosWords()
+        {
+            // M4.4l: the attacker's line on the entity netcode is NGO's TellAttacker text, from the one helper both use
+            var hit = new KryticalNova.Core.DamageResult { DamageDealt = 120.4f };
+            Assert.AreEqual("Strike 2 hit Tolan for 120 dmg! (HP: 380/500)", PlayerMeleeCombat.HitLine("Strike 2", "Tolan", hit, 380f, 500f));
+            hit.IsCritical = true;
+            Assert.AreEqual("CRITICAL Combo Finisher on Tolan for 120 dmg! (HP: 380/500)", PlayerMeleeCombat.HitLine("Combo Finisher", "Tolan", hit, 380f, 500f));
+            Assert.AreEqual("Strike 1 EVADED by Tolan!", PlayerMeleeCombat.HitLine("Strike 1", "Tolan", new KryticalNova.Core.DamageResult { IsEvaded = true }, 1f, 1f));
+        }
+
+        [Test]
         public void AStrike_IsShownOnce_OnTheAttackersOwnClient_AndOnTheOthers()
         {
             using var rig = PlayerRig.Create(2, 0, new[] { new int3(0, 0, 0), new int3(0, 0, 1200) });

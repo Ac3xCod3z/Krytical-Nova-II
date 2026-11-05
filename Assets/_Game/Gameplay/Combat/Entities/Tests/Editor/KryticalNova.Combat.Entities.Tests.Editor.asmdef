@@ -21,7 +21,9 @@
         "Unity.NetCode",
         "Unity.Transforms",
         "KryticalNova.Combat",
-        "KryticalNova.Combat.Entities"
+        "KryticalNova.Combat.Entities",
+        "KryticalNova.Progression",
+        "Unity.Netcode.Runtime"
     ],
     "includePlatforms": [
         "Editor"
