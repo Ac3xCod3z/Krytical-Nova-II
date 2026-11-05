@@ -108,6 +108,44 @@ namespace KryticalNova.Player.Entities
         public static uint Newest(DynamicBuffer<SquadBuffEvent> ring) => ring.Length > 0 ? ring[ring.Length - 1].Seq : 0;
     }
 
+    /// <summary>
+    /// One buff running on the player as the server has it (M4.5i, owner pick A): the whole list is rewritten when it changes, and every
+    /// view keeps its buff copy equal to it (BuffMirror). Server-written.
+    /// </summary>
+    [InternalBufferCapacity(RunningBuffs.Max)]
+    public struct RunningBuff : IBufferElementData
+    {
+        [GhostField] public Unity.Collections.FixedString64Bytes SkillId;
+        [GhostField] public short Rank;
+        /// <summary>The server tick it runs out on (<c>NetworkTick.SerializedData</c>).</summary>
+        [GhostField] public uint EndTick;
+        [GhostField] public byte FromSquad;
+        /// <summary>The Squad member who gave it (16 characters at most).</summary>
+        [GhostField] public Unity.Collections.FixedString32Bytes Giver;
+    }
+
+    /// <summary>The running list's clock: seconds left as an end tick and back.</summary>
+    public static class RunningBuffs
+    {
+        public const int Max = 16;
+
+        /// <summary>The tick <paramref name="seconds"/> after <paramref name="now"/> (rounded up: a buff never ends early).</summary>
+        public static uint EndTick(Unity.NetCode.NetworkTick now, float seconds, int tickRate)
+        {
+            var end = now;
+            end.Add((uint)Unity.Mathematics.math.max(0, (int)Unity.Mathematics.math.ceil(seconds * tickRate)));
+            return end.SerializedData;
+        }
+
+        /// <summary>Seconds from <paramref name="now"/> to <paramref name="endTick"/>; 0 or less = run out.</summary>
+        public static float SecondsLeft(Unity.NetCode.NetworkTick now, uint endTick, int tickRate)
+        {
+            var end = new Unity.NetCode.NetworkTick { SerializedData = endTick };
+            if (!end.IsValid || !now.IsValid || tickRate <= 0) return 0f;
+            return end.TicksSince(now) / (float)tickRate;
+        }
+    }
+
     /// <summary>The caster's last cast number (server count).</summary>
     public struct CastEventSeq : IComponentData
     {

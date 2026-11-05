@@ -3770,9 +3770,16 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
                 viewSkills.SkillMessage += lines.Add;
                 viewSkills.ShowSquadBuff(stance.skillId, rankA, "Talwyn");
                 CollectionAssert.AreEqual(new[] { $"Talwyn gave you {stance.displayName} (Rank {rankA})." }, lines, "NGO's words on the own view");
-                ActiveBuff onView = view.GetComponent<CharacterBuffManager>().GetBuff(stance.skillId);
+                // M4.5i: the copy comes with the server's running list, the one source of a view's buffs
+                var viewBuffs = view.GetComponent<CharacterBuffManager>();
+                Assert.IsNull(viewBuffs.GetBuff(stance.skillId), "the line adds no copy of its own");
+                var running = new List<RunningBuffEntry>();
+                BuffMirror.Capture(b.GetComponent<CharacterBuffManager>(), running);
+                BuffMirror.Reconcile(viewBuffs, running, viewSkills.GetSkill);
+                ActiveBuff onView = viewBuffs.GetBuff(stance.skillId);
                 Assert.IsNotNull(onView, "the view's copy of the buff");
                 Assert.IsTrue(onView.FromSquadmate);
+                Assert.AreEqual(rankA, onView.Rank);
                 viewSkills.ShowSquadBuff(stance.skillId, rankA, "");
                 Assert.AreEqual($"A Squad member gave you {stance.displayName} (Rank {rankA}).", lines[lines.Count - 1], "NGO's words without a giver");
 
@@ -3841,7 +3848,7 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
                 skills.SkillMessage += lines.Add;
                 skills.ShowCastSeen(buff.skillId, 5, null);
                 Assert.AreEqual(1, casts, "the cast is played");
-                Assert.IsNotNull(buffs.GetBuff(buff.skillId), "its copy of the buff (looks)");
+                Assert.IsNull(buffs.GetBuff(buff.skillId), "no copy from the cast itself: the running list brings it (M4.5i, B45)");
                 Assert.IsTrue(feel.Calls.Contains("cast " + buff.PresentationId), "the cast's presentation: " + string.Join(" | ", feel.Calls));
 
                 // 2. a charge seen (M4.5f)
@@ -3850,9 +3857,9 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
                 Assert.IsTrue(feel.Calls.Contains("charge " + buff.PresentationId), "the charge starts: " + string.Join(" | ", feel.Calls));
                 Assert.IsTrue(feel.Calls.Contains("charged " + buff.PresentationId + " True"), "and ends");
 
-                // 3. a Squad buff seen (M4.5g): the copy, and no line (that is the receiver's own game)
+                // 3. a Squad buff seen (M4.5g): no line (that is the receiver's own game), and no copy of its own (the running list's)
                 skills.ShowSquadBuff(buff.skillId, 5, "Brannoc");
-                Assert.IsTrue(buffs.GetBuff(buff.skillId).FromSquadmate, "the copy says who gave it");
+                Assert.IsNull(buffs.GetBuff(buff.skillId), "the copy is the running list's (M4.5i)");
                 Assert.IsEmpty(lines, "no line on another player's view");
 
                 // 4. a swing seen (M4.4k): strike 1's clip plays on its rig
@@ -3905,6 +3912,122 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
                 if (oldFeel != null) ClientPresentationRegistry.RegisterFeel(oldFeel);
                 else ClientPresentationRegistry.UnregisterFeel(feel);
                 PlayerKeys.Reset();
+            }
+        }
+
+        [UnityTest]
+        public IEnumerator B45_EveryViewsBuffs_FollowTheServersRunningList_EarlyEndsAndALateViewMatch_AndNoCopyFights()
+        {
+            // M4.5i (owner pick A): the server's running buffs are one list; every view (own, another player's, one that arrives later)
+            // keeps its copy equal to it, as NGO's cast / SquadBuff / BuffRemoved / ConsumeNextHit / SyncBuff messages did
+            NetRole.Install(new BodyRoleNetRoleAdapter(null, () => NetRoleKind.ServerBody));
+            try
+            {
+                PlayerKeys.Reset();
+                ulong key = PlayerKeys.Mint(451).Value;
+                GameObject server = Admitted(key, "45a1000000000000000000000000000a", "c4510000000000000000000000000451", "Talwyn");
+                GameObject own = Make(NetRoleKind.ClientView, true, new PlayerKey(key));
+                GameObject remote = Make(NetRoleKind.ClientView, false, new PlayerKey(key));
+                for (int i = 0; i < 30; i++) yield return null;
+
+                var serverBuffs = server.GetComponent<CharacterBuffManager>();
+                var serverSkills = server.GetComponent<PlayerCombatSkills>();
+                SkillDefinitionSO shield = null, oneHit = null, plain = null;
+                foreach (SkillDefinitionSO s in serverSkills.AvailableSkills)
+                {
+                    if (s == null || s.IsAttack || s.executionType == SkillExecutionType.Channeled) continue;
+                    if (s.isAbsorptionShield) shield ??= s;
+                    else if (s.consumedOnNextHit) oneHit ??= s;
+                    else plain ??= s;
+                }
+                Assert.IsNotNull(shield, "planned: a shield (Heavenly Shield) in the faction's skills");
+                Assert.IsNotNull(oneHit, "planned: a one-hit buff (Spiritual Rage)");
+                Assert.IsNotNull(plain, "planned: a plain buff");
+                SkillDefinitionSO[] kit = new List<SkillDefinitionSO>(serverSkills.AvailableSkills).ToArray();
+                var ownSkills = own.GetComponent<PlayerCombatSkills>();
+                var remoteSkills = remote.GetComponent<PlayerCombatSkills>();
+                ownSkills.SetAvailableSkills(kit);
+                remoteSkills.SetAvailableSkills(kit);
+                var ownBuffs = own.GetComponent<CharacterBuffManager>();
+                var remoteBuffs = remote.GetComponent<CharacterBuffManager>();
+                var running = new List<RunningBuffEntry>();
+                bool Sync(CharacterBuffManager copy, PlayerCombatSkills skills)
+                {
+                    BuffMirror.Capture(serverBuffs, running);   // what RunningBuffsServerSystem writes on the ghost
+                    return BuffMirror.Reconcile(copy, running, skills.GetSkill);   // what RunningBuffsPresentSystem does on each view
+                }
+
+                // 1. the server's buffs reach both views, ranks, Squad giver and clocks included
+                serverBuffs.ApplyBuff(shield, 5);
+                serverBuffs.ApplyBuff(oneHit, 5);
+                serverBuffs.ApplyBuff(plain, 5, -1f, true, "Brannoc");
+                Assert.IsTrue(Sync(ownBuffs, ownSkills));
+                Assert.IsTrue(Sync(remoteBuffs, remoteSkills));
+                AssertSameBuffs(serverBuffs, ownBuffs, "own view");
+                AssertSameBuffs(serverBuffs, remoteBuffs, "another player's view");
+
+                // the same list again changes nothing, and the own view's cast reply never touches the bar: no flicker
+                int barChanges = 0;
+                ownBuffs.BuffsChanged += () => barChanges++;
+                Assert.IsFalse(Sync(ownBuffs, ownSkills), "nothing to do");
+                ownSkills.ShowServerCast(plain.skillId, 5);
+                Assert.AreEqual(0, barChanges, "one source: the reply adds no second copy");
+
+                // 2. a one-hit buff spent on the server (NGO ConsumeNextHitBuffsClientRpc)
+                Assert.IsTrue(serverBuffs.ConsumeNextHitBuffs());
+                Sync(ownBuffs, ownSkills);
+                Sync(remoteBuffs, remoteSkills);
+                Assert.IsNull(ownBuffs.GetBuff(oneHit.skillId), "spent on the own view");
+                Assert.IsNull(remoteBuffs.GetBuff(oneHit.skillId), "and on another player's");
+                AssertSameBuffs(serverBuffs, remoteBuffs, "after the hit");
+
+                // 3. the shield broken on the server (NGO BuffRemovedClientRpc)
+                serverBuffs.AbsorbDamage(1e9f);
+                Assert.IsNull(serverBuffs.GetBuff(shield.skillId), "planned: the blow breaks the shield");
+                Sync(ownBuffs, ownSkills);
+                Sync(remoteBuffs, remoteSkills);
+                Assert.IsNull(ownBuffs.GetBuff(shield.skillId));
+                Assert.IsNull(remoteBuffs.GetBuff(shield.skillId));
+                AssertSameBuffs(serverBuffs, ownBuffs, "after the shield broke");
+
+                // 4. a view that arrives later gets what still runs, with its time left (NGO SyncBuffClientRpc)
+                yield return new WaitForSeconds(1f);
+                GameObject late = Make(NetRoleKind.ClientView, false, new PlayerKey(key));
+                yield return null;
+                var lateSkills = late.GetComponent<PlayerCombatSkills>();
+                lateSkills.SetAvailableSkills(kit);
+                var lateBuffs = late.GetComponent<CharacterBuffManager>();
+                Sync(lateBuffs, lateSkills);
+                AssertSameBuffs(serverBuffs, lateBuffs, "a late view");
+                Assert.Less(lateBuffs.GetBuff(plain.skillId).RemainingDuration, lateBuffs.GetBuff(plain.skillId).MaxDuration - 0.5f, "its time left, not a fresh one");
+
+                // 5. death clears them all on the server (PlayerDeathMotor's ClearAllBuffs): every copy follows
+                serverBuffs.ClearAllBuffs();
+                foreach (var (c, k) in new[] { (ownBuffs, ownSkills), (remoteBuffs, remoteSkills), (lateBuffs, lateSkills) }) Sync(c, k);
+                Assert.IsEmpty(ownBuffs.ActiveBuffs);
+                Assert.IsEmpty(remoteBuffs.ActiveBuffs);
+                Assert.IsEmpty(lateBuffs.ActiveBuffs);
+
+                ServerLeaving.Notify(server);
+                server.GetComponent<PlayerSaveAgent>().OnServerLeaving();
+            }
+            finally
+            {
+                PlayerKeys.Reset();
+            }
+        }
+
+        static void AssertSameBuffs(CharacterBuffManager server, CharacterBuffManager copy, string who)
+        {
+            Assert.AreEqual(server.ActiveBuffs.Count, copy.ActiveBuffs.Count, who + ": as many buffs");
+            foreach (ActiveBuff s in server.ActiveBuffs)
+            {
+                ActiveBuff c = copy.GetBuff(s.Skill.skillId);
+                Assert.IsNotNull(c, who + " has " + s.Skill.skillId);
+                Assert.AreEqual(s.Rank, c.Rank, who + ": rank of " + s.Skill.skillId);
+                Assert.AreEqual(s.FromSquadmate, c.FromSquadmate, who + ": from the Squad");
+                if (s.FromSquadmate) Assert.AreEqual(s.Giver, c.Giver, who + ": the giver");
+                Assert.AreEqual(s.RemainingDuration, c.RemainingDuration, 0.25f, who + ": time left of " + s.Skill.skillId);
             }
         }
 

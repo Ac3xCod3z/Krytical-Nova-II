@@ -210,6 +210,21 @@ namespace KryticalNova.Player.Entities.Tests
         }
 
         [Test]
+        public void ARunningBuffsClock_GoesToAnEndTick_AndBack()
+        {
+            // M4.5i: seconds left travel as the server tick the buff runs out on
+            var now = new Unity.NetCode.NetworkTick(1000);
+            uint end = RunningBuffs.EndTick(now, 64f, 30);
+            Assert.AreEqual(new Unity.NetCode.NetworkTick(1000u + 64u * 30u).SerializedData, end);
+            Assert.AreEqual(64f, RunningBuffs.SecondsLeft(now, end, 30), 1e-4);
+            var later = new Unity.NetCode.NetworkTick(1000u + 30u * 10u);
+            Assert.AreEqual(54f, RunningBuffs.SecondsLeft(later, end, 30), 1e-4, "ten seconds on");
+            Assert.LessOrEqual(RunningBuffs.SecondsLeft(new Unity.NetCode.NetworkTick(1000u + 64u * 30u + 5u), end, 30), 0f, "run out");
+            Assert.AreEqual(new Unity.NetCode.NetworkTick(1002u).SerializedData, RunningBuffs.EndTick(now, 0.04f, 30), "rounded up: never ends early");
+            Assert.AreEqual(0f, RunningBuffs.SecondsLeft(now, 0u, 30), "no tick, nothing left");
+        }
+
+        [Test]
         public void TheSquadBuffRing_KeepsTheNewestFour_WithTheGiver()
         {
             // M4.5g: a Squad member's Stance given to this player, for every client (NGO SquadBuffClientRpc as data on the ghost)

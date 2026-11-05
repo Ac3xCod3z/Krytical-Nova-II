@@ -952,22 +952,21 @@ namespace KryticalNova.Progression
         }
 
         /// <summary>
-        /// Another player's view body (M4.5c): their cast, as NGO's TriggerSkillCastClientRpc showed it on every other client: its copy of
-        /// the buff (looks only; the server's numbers count), the cast event and the cast itself, at <paramref name="target"/>.
+        /// Another player's view body (M4.5c): their cast, as NGO's TriggerSkillCastClientRpc showed it on every other client: the cast
+        /// event and the cast itself, at <paramref name="target"/>. Its copy of the buff comes with the server's running list (BuffMirror, M4.5i).
         /// </summary>
         public void ShowCastSeen(string skillId, int rank, Transform target)
         {
             var skill = GetSkill(skillId);
             if (skill == null) return;
-            if (!skill.IsAttack && buffManager != null) buffManager.ApplyBuff(skill, rank);
             SkillCast?.Invoke(skill);
             PresentCast(skill, rank, target);
         }
 
         /// <summary>
         /// The entity netcode's own view body: the server cast <paramref name="skillId"/> on its body (feel test item 5). This copy shows
-        /// it as an NGO client did (<c>TriggerSkillCastClientRpc</c>): the cooldown, its copy of the buff (whose ticks change nothing
-        /// here: the HP and Flux are the server's), the line and the cast.
+        /// it as an NGO client did (<c>TriggerSkillCastClientRpc</c>): the cooldown, the line and the cast. Its copy of the buff comes with
+        /// the server's running list (BuffMirror, M4.5i), the one source of a view's buffs, so the two never fight on the buff bar.
         /// </summary>
         public void ShowServerCast(string skillId, int rank)
         {
@@ -975,7 +974,6 @@ namespace KryticalNova.Progression
             if (skill == null) return;
             castRequestPendingUntil = 0f;
             cooldownEndTimes[skill.RankKey] = Time.time + skill.cooldown;
-            if (!skill.IsAttack && buffManager != null) buffManager.ApplyBuff(skill, rank);
             SkillCast?.Invoke(skill);
             SkillMessage?.Invoke($"Activated {skill.displayName} (Rank {rank})!");
             Changed?.Invoke();
@@ -1060,20 +1058,20 @@ namespace KryticalNova.Progression
         }
 
         [ClientRpc]
-        private void SquadBuffClientRpc(string skillId, int rank, string giver) => ShowSquadBuff(skillId, rank, giver, IsServer, IsOwner);
+        private void SquadBuffClientRpc(string skillId, int rank, string giver) => ShowSquadBuff(skillId, rank, giver, !IsServer, IsOwner);
 
         /// <summary>
         /// A view body of the entity netcode (M4.5g): a Squad member's Stance reached this player, as NGO's SquadBuffClientRpc showed it on
-        /// every client: the copy of the buff, and the line on the player's own game.
+        /// every client: the line on the player's own game. The copy of the buff comes with the server's running list (BuffMirror, M4.5i).
         /// </summary>
         public void ShowSquadBuff(string skillId, int rank, string giver) =>
             ShowSquadBuff(skillId, rank, giver, false, BodyRoleTag.IsLocalClientView(this));
 
-        private void ShowSquadBuff(string skillId, int rank, string giver, bool server, bool owner)
+        private void ShowSquadBuff(string skillId, int rank, string giver, bool copyBuff, bool owner)
         {
             SkillDefinitionSO skill = GetSkill(skillId);
             if (skill == null) return;
-            if (!server && buffManager != null) buffManager.ApplyBuff(skill, rank, fromSquadmate: true, giver: giver);
+            if (copyBuff && buffManager != null) buffManager.ApplyBuff(skill, rank, fromSquadmate: true, giver: giver);
             if (owner) SkillMessage?.Invoke($"{(string.IsNullOrEmpty(giver) ? "A Squad member" : giver)} gave you {skill.displayName} (Rank {rank}).");
             Changed?.Invoke();
         }

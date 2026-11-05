@@ -248,6 +248,11 @@ prediction error p95 <= 0.05 m at 60 ms, tick p95 < 15 ms with 102 monsters (fro
     refill, damage, reset), no skills authority, ExecuteCastInternal refuses, and the ghost's HP goes into PlayerResources
     (CombatEntity.MirrorHealth). HIGH, reviewed by the Master. EditMode 232/232 (Player.Entities), PlayMode 45/45 (B44 on a real remote
     view: casts, charges, swings, impacts and Squad buffs play; HP, Flux, casts, ranks never decided). Owner GUI checks c2, c5, c7, c8.
+  - [x] M4.5i Buffs on every view (owner pick A, 5 Nov: one list of running buffs): the server writes each player's running buffs
+    on its ghost (RunningBuff: skill, rank, end tick, from the Squad, giver; max 16) whenever its buffs change, and every view, the own
+    one included, keeps its copy equal to it (BuffMirror.Reconcile): what NGO's cast / SquadBuff / BuffRemoved / ConsumeNextHit /
+    SyncBuff messages did, early ends and late views included. The list is a view's one source of buffs (the cast reply and the Squad
+    line no longer add a copy), so nothing fights on the bar. EditMode 314/314, PlayMode 46/46 (B45). Next: M4 step 6, death and respawn.
 - [ ] **M5 Monster system prototype (new brain).** Section 6. P0 EditMode sim tests (no netcode), P1 ghost + view, P2 reward bridge.
 - [ ] **M6 Hostiles in full.** All roster species via `MonsterArchetype` from `HostileDefinition` (ids kept), level scaling, zones,
   sleep, respawn, loot/XP through managed reward bridge with ledger rules; nav grids for the zones; bot soak with 102 monsters.
