@@ -210,6 +210,18 @@ namespace KryticalNova.Player.Entities.Tests
         }
 
         [Test]
+        public void ADeathState_IsAFallOnceAReturnOnce_AndALateViewLiesDown()
+        {
+            // M4 6b: NGO's DeathClientRpc / RevivedClientRpc once each, and a late joiner's netPose without the fall
+            var down = new DeathState { Seq = 1, Pose = 2 };
+            Assert.AreEqual(DeathShow.LieDown, DeathStates.What(false, 0, down), "met already down: lying there");
+            Assert.AreEqual(DeathShow.Nothing, DeathStates.What(false, 0, default), "met alive: nothing");
+            Assert.AreEqual(DeathShow.Fall, DeathStates.What(true, 0, down), "a new death: the fall");
+            Assert.AreEqual(DeathShow.Nothing, DeathStates.What(true, 1, down), "the same one: once");
+            Assert.AreEqual(DeathShow.GetUp, DeathStates.What(true, 1, new DeathState { Seq = 2 }), "back on its feet");
+        }
+
+        [Test]
         public void ARunningBuffsClock_GoesToAnEndTick_AndBack()
         {
             // M4.5i: seconds left travel as the server tick the buff runs out on

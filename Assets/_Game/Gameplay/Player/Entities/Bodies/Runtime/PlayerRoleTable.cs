@@ -100,6 +100,12 @@ namespace KryticalNova.Player.Entities.Bodies
         private static readonly HashSet<string> RemoteKeepsSet = new HashSet<string>(RemoteKeepsRules);
         private static readonly HashSet<string> InfraSet = new HashSet<string>(Infrastructure);
 
+        /// <summary>
+        /// The death motor stays on, on every view (M4 6b): it plays the death the ghost shows (the fall, the de-rez, lying, getting up) on
+        /// its own clock, and on a view it never moves the root or decides anything. The server body keeps it switched off (M4 6a).
+        /// </summary>
+        public const string ViewShowsDeath = "PlayerDeathMotor";
+
         /// <summary>The shape of a body for a role (Offline has none: it is the scene avatar, never built here).</summary>
         public static BodyShape ShapeOf(NetRoleKind role, bool isLocal)
         {
@@ -126,6 +132,7 @@ namespace KryticalNova.Player.Entities.Bodies
                             ? PartAction.Strip : PartAction.Disable;
                     return PartAction.Keep;
                 case BodyShape.ViewLocal:
+                    if (typeName == ViewShowsDeath) return PartAction.Keep;
                     if (AutomationSet.Contains(typeName)) return PartAction.Disable;
                     if (MovementSet.Contains(typeName))
                     {
@@ -134,6 +141,7 @@ namespace KryticalNova.Player.Entities.Bodies
                     }
                     return PartAction.Keep;
                 default: // ViewRemote
+                    if (typeName == ViewShowsDeath) return PartAction.Keep;
                     if (MovementSet.Contains(typeName) || AutomationSet.Contains(typeName)) return PartAction.Strip;
                     if (typeName == "PlayerSaveAgent") return PartAction.Strip;
                     if (RulesSet.Contains(typeName)) return RemoteKeepsSet.Contains(typeName) ? PartAction.Keep : PartAction.Strip;

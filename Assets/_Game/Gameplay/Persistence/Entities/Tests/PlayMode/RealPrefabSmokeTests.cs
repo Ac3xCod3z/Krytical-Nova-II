@@ -4144,6 +4144,96 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
             }
         }
 
+        [UnityTest]
+        public IEnumerator B47_EveryView_PlaysTheDeathFromTheGhost_FallLieGetUp_ALateViewLiesDown_AndNoViewMovesTheBodyOrDecides()
+        {
+            // M4 step 6b: NGO's DeathClientRpc / DisintegrateClientRpc / RevivedClientRpc and the late joiner's netPose, played on every view
+            // from the ghost's DeathState (PlayerDeathPresentSystem); the motor stays on there and never warps, turns or respawns the body
+            NetRole.Install(new BodyRoleNetRoleAdapter(null, () => NetRoleKind.ClientView));
+            IGameFeelSink oldFeel = ClientPresentationRegistry.Feel;
+            var feel = new FeelSeen();
+            ClientPresentationRegistry.RegisterFeel(feel);
+            try
+            {
+                GameObject own = Make(NetRoleKind.ClientView, true, new PlayerKey(471));
+                GameObject theirs = Make(NetRoleKind.ClientView, false, new PlayerKey(472));
+                own.name = "B47 own";
+                theirs.name = "B47 theirs";
+                for (int i = 0; i < 30; i++) yield return null;
+
+                var chainType = typeof(PlayerDeathMotor).GetNestedType("DeathChain");
+                AnimationClip Clip(PlayerDeathMotor m, string chain, string which) =>
+                    (AnimationClip)chainType.GetField(which).GetValue(typeof(PlayerDeathMotor).GetField(chain, BindingFlags.NonPublic | BindingFlags.Instance).GetValue(m));
+                bool Playing(GameObject body, AnimationClip clip)
+                {
+                    object rig = typeof(PlayerAnimancerMotor).GetProperty("Animancer").GetValue(body.GetComponent<PlayerAnimancerMotor>());
+                    return (bool)rig.GetType().GetMethod("IsPlayingClip", new[] { typeof(AnimationClip) }).Invoke(rig, new object[] { clip });
+                }
+
+                foreach (GameObject view in new[] { own, theirs })
+                {
+                    var death = view.GetComponent<PlayerDeathMotor>();
+                    Assert.IsNotNull(death, view.name + " keeps the death motor");
+                    Assert.IsTrue(death.enabled, view.name + ": on, it plays the death on its own clock");
+                    bool mine = view == own;
+                    Vector3 at = view.transform.position;
+                    Quaternion facing = view.transform.rotation;
+
+                    // the fall: a critical blow from behind (face down), killed by the other view's player
+                    GameObject killer = mine ? theirs : own;
+                    death.ShowDeathFromGhost(2, true, Vector3.forward, killer.transform);
+                    Assert.IsTrue(death.IsDead, view.name + " is down");
+                    Assert.IsTrue(feel.Calls.Contains($"death {view.name} True {mine} {!mine}"), view.name + ": " + string.Join(" | ", feel.Calls));
+                    AnimationClip fall = Clip(death, "critBack", "fall");
+                    Assert.IsTrue(Playing(view, fall), view.name + ": the knockdown plays");
+                    death.ShowDeathFromGhost(2, true, Vector3.forward, killer.transform);
+                    Assert.AreEqual(1, feel.Calls.FindAll(c => c.StartsWith($"death {view.name} ")).Count, "once");
+
+                    // the clock lays it down; the body stays where the ghost has it (no warp, no turn on a view)
+                    yield return new WaitForSeconds(fall.length + 0.7f);
+                    Assert.IsTrue(Playing(view, Clip(death, "critBack", "loop")), view.name + ": lying there");
+                    Assert.AreEqual(at, view.transform.position, view.name + ": not moved by the view");
+                    Assert.AreEqual(facing, view.transform.rotation, view.name + ": not turned by the view");
+
+                    // a view never decides the respawn: only the ghost's return gets it up
+                    death.Respawn();
+                    Assert.IsTrue(death.IsDead, view.name + ": no respawn of its own");
+                    death.ShowRevivedFromGhost();
+                    Assert.IsFalse(death.IsDead, view.name + " is up");
+                    Assert.IsTrue(feel.Calls.Contains($"respawned {view.name} {mine}"), view.name + ": " + string.Join(" | ", feel.Calls));
+                }
+
+                // the de-rez (killed off the ground) on another player's view
+                var theirDeath = theirs.GetComponent<PlayerDeathMotor>();
+                theirDeath.ShowDeathFromGhost(3, false, Vector3.left, null);
+                Assert.IsTrue(theirDeath.IsDead);
+                Assert.IsTrue(feel.Calls.Contains("derez B47 theirs"), string.Join(" | ", feel.Calls));
+                theirDeath.ShowRevivedFromGhost();
+                Assert.IsTrue(feel.Calls.Contains("hidden B47 theirs False"), "back from the de-rez");
+
+                // views that arrive while the player is down: lying there without the fall, or gone
+                GameObject late = Make(NetRoleKind.ClientView, false, new PlayerKey(473));
+                GameObject lateGone = Make(NetRoleKind.ClientView, false, new PlayerKey(474));
+                late.name = "B47 late";
+                lateGone.name = "B47 late gone";
+                yield return null;
+                var lateDeath = late.GetComponent<PlayerDeathMotor>();
+                lateDeath.ShowLyingFromGhost(1);
+                Assert.IsTrue(lateDeath.IsDead);
+                Assert.IsTrue(Playing(late, Clip(lateDeath, "front", "loop")), "on its back, lying");
+                Assert.IsFalse(feel.Calls.Exists(c => c.StartsWith("death B47 late")), "no fall for a late view");
+                var goneDeath = lateGone.GetComponent<PlayerDeathMotor>();
+                goneDeath.ShowLyingFromGhost(3);
+                Assert.IsTrue(goneDeath.IsDead);
+                Assert.IsTrue(feel.Calls.Contains("hidden B47 late gone True"), "de-rezzed: not shown");
+            }
+            finally
+            {
+                if (oldFeel != null) ClientPresentationRegistry.RegisterFeel(oldFeel);
+                else ClientPresentationRegistry.UnregisterFeel(feel);
+            }
+        }
+
         static void AssertSameBuffs(CharacterBuffManager server, CharacterBuffManager copy, string who)
         {
             Assert.AreEqual(server.ActiveBuffs.Count, copy.ActiveBuffs.Count, who + ": as many buffs");
@@ -4186,11 +4276,11 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
             public void BuffEnded(Transform actor, string skillId) { }
             public void Consumed(Transform actor, bool restoredHealth, bool restoredChi) { }
             public void PetEvolved(Transform pet, Color glow, bool ownerIsLocalPlayer) { }
-            public void Death(in DeathFeel death) { }
+            public void Death(in DeathFeel death) => Calls.Add($"death {death.Target.name} {death.IsCritical} {death.VictimIsLocalPlayer} {death.KillerIsLocalPlayer}");
             public void BodyLanded(Transform actor, bool critical, bool involvesLocalPlayer) { }
-            public void Respawned(Transform actor, bool isLocalPlayer) { }
-            public void Disintegrate(in DeathFeel death) { }
-            public void SetDisintegrated(Transform actor, bool gone) { }
+            public void Respawned(Transform actor, bool isLocalPlayer) => Calls.Add($"respawned {actor.name} {isLocalPlayer}");
+            public void Disintegrate(in DeathFeel death) => Calls.Add($"derez {death.Target.name}");
+            public void SetDisintegrated(Transform actor, bool gone) => Calls.Add($"hidden {actor.name} {gone}");
             public void GearWorked(Transform actor, int outcome, bool isLocalPlayer) { }
             public void NovaWorked(in NovaFeel moment) { }
             public void LevelUp(Transform actor, bool isLocalPlayer) { }

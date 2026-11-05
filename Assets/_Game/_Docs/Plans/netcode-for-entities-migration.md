@@ -259,6 +259,10 @@ prediction error p95 <= 0.05 m at 60 ms, tick p95 < 15 ms with 102 monsters (fro
     view (CombatEntity.HasAuthority), so the Hostile XP loss runs once per death, and a player's kill costs none, as NGO. A dead player
     walks, jumps and attacks no more. HIGH, reviewed. EditMode 314/314, PlayMode 47/47 (B46). Callout death waits for step 8.
     Next: M4.6b the death on every view (fall, de-rez, lying, getting up, late joiner).
+  - [x] M4.6b-1 The death on every view, in place: the server writes each death and return on the ghost (DeathState: pose, crit, blow
+    direction, killer); every view (own and others) keeps the death motor on and plays NGO's knockdown or de-rez, the lying loop and the
+    getting up once each, and a view that arrives while the player is down lays it there (or keeps it hidden). On a view the motor never
+    warps, turns or respawns the body. EditMode 315/315, PlayMode 48/48 (B47). Next: M4.6b-2 the knock-back travel as a server MotionPlan.
 - [ ] **M5 Monster system prototype (new brain).** Section 6. P0 EditMode sim tests (no netcode), P1 ghost + view, P2 reward bridge.
 - [ ] **M6 Hostiles in full.** All roster species via `MonsterArchetype` from `HostileDefinition` (ids kept), level scaling, zones,
   sleep, respawn, loot/XP through managed reward bridge with ledger rules; nav grids for the zones; bot soak with 102 monsters.

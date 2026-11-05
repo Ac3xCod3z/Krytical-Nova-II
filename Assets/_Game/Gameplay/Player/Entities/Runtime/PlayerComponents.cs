@@ -179,6 +179,41 @@ namespace KryticalNova.Player.Entities
         [GhostField] public byte Fed;
     }
 
+    /// <summary>
+    /// How the player went down, for everyone (M4 6b; NGO's netPose plus DeathClientRpc / DisintegrateClientRpc / RevivedClientRpc):
+    /// written by the server from its body's death motor, played once per change on every view. Server-written.
+    /// </summary>
+    public struct DeathState : IComponentData
+    {
+        /// <summary>Bumped on every death and every return.</summary>
+        [GhostField] public byte Seq;
+        /// <summary>0 alive, 1 on its back, 2 face down, 3 de-rezzed (NGO PlayerDeathMotor.Pose).</summary>
+        [GhostField] public byte Pose;
+        [GhostField] public byte Critical;
+        /// <summary>The blow's flat direction, attacker to victim, in thousandths.</summary>
+        [GhostField] public short DirXPermille;
+        [GhostField] public short DirZPermille;
+        /// <summary>The killer's ghost, 0 = none (a Hostile, a GM kill).</summary>
+        [GhostField] public int KillerGhostId;
+    }
+
+    /// <summary>What a view does with a player's <see cref="DeathState"/> (M4 6b): a pure rule, so it is tested without a world.</summary>
+    public enum DeathShow : byte { Nothing, LieDown, Fall, GetUp }
+
+    public static class DeathStates
+    {
+        /// <summary>
+        /// The first look at a player (<paramref name="met"/> false) shows one already down lying there (NGO's late joiner), never the fall;
+        /// afterwards each new <see cref="DeathState.Seq"/> is a fall or a return.
+        /// </summary>
+        public static DeathShow What(bool met, byte seenSeq, in DeathState now)
+        {
+            if (!met) return now.Pose != 0 ? DeathShow.LieDown : DeathShow.Nothing;
+            if (now.Seq == seenSeq) return DeathShow.Nothing;
+            return now.Pose != 0 ? DeathShow.Fall : DeathShow.GetUp;
+        }
+    }
+
     /// <summary>A player's HP and Max HP in thousandths, for everyone (NGO's PlayerResources netHealth / netMaxHealth; M4.2a). Written by the server.</summary>
     public struct PlayerVitals : IComponentData
     {

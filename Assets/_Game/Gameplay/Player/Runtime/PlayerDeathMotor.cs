@@ -142,7 +142,9 @@ namespace KryticalNova.Player
         public event Action Respawned;
 
         public bool IsDead => phase != Phase.None;
-        private bool HasAuthority => !IsSpawned || IsServer;
+        // a view of the entity netcode only shows (M4 6b): it never moves the root, turns the body or decides a respawn
+        private bool HasAuthority => (!IsSpawned || IsServer) && !View;
+        private bool View => BodyRoleTag.Of(this) is { Kind: NetRoleKind.ClientView };
         private bool Ready => motionWarping != null && warpAsset != null && animancerMotor != null
             && front.IsReady && back.IsReady && critFront.IsReady && critBack.IsReady;
 
@@ -414,7 +416,8 @@ namespace KryticalNova.Player
         {
             if (actor.GetComponent<PlayerResources>() == null) return false;
             var netObject = actor.GetComponent<NetworkObject>();
-            return netObject == null || !netObject.IsSpawned || netObject.IsOwner;
+            // a body of the entity netcode answers from its tag (only the local view is mine), as BodyRoleTag.IsMine does everywhere
+            return BodyRoleTag.IsMine(actor, netObject == null || !netObject.IsSpawned || netObject.IsOwner);
         }
 
         /// <summary>
@@ -621,6 +624,52 @@ namespace KryticalNova.Player
         {
             if (ServerBody) { if (IsDead) ServerBodyRevive(true); return; }
             if (HasAuthority && IsDead) Revive(true);
+        }
+
+        // ------------------------------------------------------------------ a view of the entity netcode (M4 step 6b)
+
+        /// <summary>
+        /// A view (the player's own or another's): the server body went down as <paramref name="pose"/> (1 on its back, 2 face down, 3
+        /// de-rezzed). Plays NGO's death on this machine as DeathClientRpc / DisintegrateClientRpc did: the knockdown or the de-rez, the
+        /// combo stopped, the feel; the clock lays it down. The body is where the ghost puts it: no warp, no turn here.
+        /// </summary>
+        public void ShowDeathFromGhost(byte pose, bool crit, Vector3 direction, Transform killer)
+        {
+            if (!View || IsDead || animancerMotor == null || pose == (byte)Pose.Alive) return;
+            direction = Flat(direction, -transform.forward);
+            if (pose == (byte)Pose.Gone)
+            {
+                if (front.IsReady) BeginDisintegrate(direction, killer);
+                return;
+            }
+            bool fromFront = pose == (byte)Pose.OnBack;
+            if (!Pick(fromFront, crit).IsReady) return;
+            Begin(fromFront, crit, direction, transform.position, transform.eulerAngles.y, killer);
+        }
+
+        /// <summary>A view that arrives while the player is already down (NGO's late joiner): lying there without the fall, or gone.</summary>
+        public void ShowLyingFromGhost(byte pose)
+        {
+            if (!View || IsDead || pose == (byte)Pose.Alive) return;
+            if (pose == (byte)Pose.Gone)
+            {
+                phase = Phase.Down;
+                ClientPresentationRegistry.Feel?.SetDisintegrated(transform, true);
+                return;
+            }
+            if (animancerMotor == null) return;
+            chain = pose == (byte)Pose.OnBack ? front : back;
+            if (!chain.IsReady) return;
+            critical = false;
+            phase = Phase.Down;
+            animancerMotor.PlayDeathClip(chain.loop, 0f);
+        }
+
+        /// <summary>A view: the server put the player back on its feet (NGO RevivedClientRpc).</summary>
+        public void ShowRevivedFromGhost()
+        {
+            if (!View || !IsDead || animancerMotor == null) return;
+            GetUp();
         }
 
         // ------------------------------------------------------------------ a server body of the entity netcode (M4 step 6a)

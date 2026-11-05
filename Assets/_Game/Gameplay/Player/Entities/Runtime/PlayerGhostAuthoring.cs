@@ -55,6 +55,7 @@ namespace KryticalNova.Player.Entities
                 AddBuffer<SquadBuffEvent>(e);       // Squad members' Stances given to this player, for every client (M4.5g)
                 AddComponent<SquadBuffSeq>(e);
                 AddBuffer<RunningBuff>(e);          // the server's running buffs, every view's copy kept equal (M4.5i)
+                AddComponent<DeathState>(e);        // how the player went down, for every view (M4 6b)
                 // M4.4b: the strike lengths come from the clips themselves, as NGO's GetStrikeDuration reads clip.length
                 DependsOn(a.combo1Clip);
                 DependsOn(a.combo2Clip);
