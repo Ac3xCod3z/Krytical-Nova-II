@@ -1,6 +1,8 @@
 using KryticalNova.Player.Entities;
 using KryticalNova.Player.Entities.Presentation;
+using KryticalNova.Core;
 using KryticalNova.Progression;
+using UnityEngine;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
@@ -83,16 +85,41 @@ namespace KryticalNova.Combat.Entities
                 rings.Dispose();
                 if (!resolved) continue;
                 float multiplier = MeleeRules.StepMultiplier(t, s.Step);
-                if (targetHit && MeleeStrike.Apply(attacker.Body, damageable, s.Step, multiplier)) Hits++;
+                attacker.Body.TryGetComponent(out CharacterCombatStats stats);
+                if (targetHit && MeleeStrike.Apply(attacker.Body, damageable, s.Step, multiplier, out DamageResult landed))
+                {
+                    Hits++;
+                    Record(em, attacker.Ghost, s.TargetGhostId, s.Step, landed, stats);
+                }
                 // a friend in the arc is left alone: MeleeStrike asks the same hostility rule
                 for (int i = 0; i < collateral.Length; i++)
-                    if (bystanders[collateral[i]].Body.TryGetComponent(out IDamageable other) && MeleeStrike.Apply(attacker.Body, other, s.Step, multiplier))
-                        Collateral++;
+                {
+                    GhostBodyEntry by = bystanders[collateral[i]];
+                    if (!by.Body.TryGetComponent(out IDamageable other) || !MeleeStrike.Apply(attacker.Body, other, s.Step, multiplier, out DamageResult side)) continue;
+                    Collateral++;
+                    Record(em, attacker.Ghost, em.GetComponentData<GhostInstance>(by.Ghost).ghostId, s.Step, side, stats);
+                }
             }
             collateral.Dispose();
         }
 
         readonly System.Collections.Generic.List<GhostBodyEntry> bystanders = new System.Collections.Generic.List<GhostBodyEntry>();
+
+        // M4.4h: the hit on the attacker's ring, for every client's presentation (NGO DamageFeedbackRpc + SpawnImpactVfxClientRpc)
+        static void Record(EntityManager em, Entity attackerGhost, int targetGhostId, int step, in DamageResult result, CharacterCombatStats stats)
+        {
+            if (!em.HasBuffer<HitEvent>(attackerGhost) || !em.HasComponent<HitEventSeq>(attackerGhost)) return;
+            HitEventSeq seq = em.GetComponentData<HitEventSeq>(attackerGhost);
+            HitEventRing.Append(em.GetBuffer<HitEvent>(attackerGhost), ref seq, new HitEvent
+            {
+                TargetGhostId = targetGhostId,
+                DamageMilli = Mathf.RoundToInt(result.DamageDealt * 1000f),
+                ReflectedMilli = Mathf.RoundToInt(result.ReflectedDamage * 1000f),
+                Flags = MeleeStrike.FlagsOf(result, stats),
+                Step = (byte)step,
+            });
+            em.SetComponentData(attackerGhost, seq);
+        }
 
         /// <summary>Others struck by a swing at its target (tests).</summary>
         public int Collateral { get; private set; }

@@ -47,6 +47,8 @@ namespace KryticalNova.Player.Entities
                 AddComponent<PlayerVitals>(e);
                 AddComponent<PositionHistory>(e);   // server only, never sent: the lag compensation ring (M4.3)
                 AddComponent<CombatState>(e);       // the basic attack under way, predicted (M4.4c)
+                AddBuffer<HitEvent>(e);             // the attacker's landed hits, for every client's presentation (M4.4h)
+                AddComponent<HitEventSeq>(e);
                 // M4.4b: the strike lengths come from the clips themselves, as NGO's GetStrikeDuration reads clip.length
                 DependsOn(a.combo1Clip);
                 DependsOn(a.combo2Clip);

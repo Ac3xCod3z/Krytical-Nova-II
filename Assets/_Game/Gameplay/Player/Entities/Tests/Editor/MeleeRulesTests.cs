@@ -169,5 +169,26 @@ namespace KryticalNova.Player.Entities.Tests
             Assert.IsFalse(MeleeRules.HitDue(t, s, new NetworkTick(100 + (uint)at + 1), rate), "once per swing");
             Assert.IsFalse(MeleeRules.HitDue(t, default, new NetworkTick(200), rate), "no attack, no hit");
         }
+
+        [Test]
+        public void TheHitRing_KeepsTheNewest_NumberedOnce()
+        {
+            // M4.4h: the attacker's ring of landed hits (NGO DamageFeedbackRpc / SpawnImpactVfxClientRpc as data on the ghost)
+            using var world = new Unity.Entities.World("hit ring");
+            var em = world.EntityManager;
+            var e = em.CreateEntity();
+            em.AddBuffer<HitEvent>(e);
+            var seq = new HitEventSeq();
+            for (int i = 1; i <= HitEventRing.Capacity + 2; i++)
+                HitEventRing.Append(em.GetBuffer<HitEvent>(e), ref seq, new HitEvent { TargetGhostId = 7, DamageMilli = i * 1000, Step = (byte)(1 + i % 3) });
+            var ring = em.GetBuffer<HitEvent>(e);
+            Assert.AreEqual(HitEventRing.Capacity, ring.Length, "only the newest are kept");
+            Assert.AreEqual(3u, ring[0].Seq, "the two oldest dropped");
+            Assert.AreEqual((uint)(HitEventRing.Capacity + 2), HitEventRing.Newest(ring));
+            Assert.AreEqual((HitEventRing.Capacity + 2) * 1000, ring[ring.Length - 1].DamageMilli);
+            for (int i = 1; i < ring.Length; i++) Assert.AreEqual(ring[i - 1].Seq + 1, ring[i].Seq, "numbered one by one");
+            Assert.AreEqual(1, HitEventRing.Critical);
+            Assert.AreEqual(2, HitEventRing.Evaded, "NGO's bits");
+        }
     }
 }
