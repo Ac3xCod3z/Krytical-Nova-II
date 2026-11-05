@@ -61,6 +61,17 @@ namespace KryticalNova.Player.Entities
         [GhostField] public int TargetGhostId;
     }
 
+    /// <summary>The player's hold-to-charge as the others see it (M4.5f; NGO ChargeStartedRpc / ChargeEndedRpc). Server-written.</summary>
+    public struct ChargeState : IComponentData
+    {
+        /// <summary>Bumped on every start or end: a client plays each once.</summary>
+        [GhostField] public byte Seq;
+        [GhostField] public Unity.Collections.FixedString64Bytes SkillId;
+        [GhostField] public int AimGhostId;
+        /// <summary>1 started, 2 ended (charged), 3 ended (let go early).</summary>
+        [GhostField] public byte Phase;
+    }
+
     /// <summary>The caster's last cast number (server count).</summary>
     public struct CastEventSeq : IComponentData
     {

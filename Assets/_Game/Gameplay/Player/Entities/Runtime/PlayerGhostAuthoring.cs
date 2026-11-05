@@ -51,6 +51,7 @@ namespace KryticalNova.Player.Entities
                 AddComponent<HitEventSeq>(e);
                 AddBuffer<CastEvent>(e);            // the player's casts, for the other clients (M4.5c)
                 AddComponent<CastEventSeq>(e);
+                AddComponent<ChargeState>(e);       // a hold-to-charge, for the other clients (M4.5f)
                 // M4.4b: the strike lengths come from the clips themselves, as NGO's GetStrikeDuration reads clip.length
                 DependsOn(a.combo1Clip);
                 DependsOn(a.combo2Clip);

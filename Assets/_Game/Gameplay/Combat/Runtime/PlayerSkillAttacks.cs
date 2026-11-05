@@ -423,6 +423,7 @@ namespace KryticalNova.Combat
             // An area skill aims at nothing (23 Oct 2026).
             Transform target = !skill.IsAreaAttack && TryGetComponent(out PointAndClickPlayer click) ? click.SelectedTarget : null;
             PresentChargeStarted(skill, target != null ? target.position : (Vector3?)null);
+            if (KryticalNova.Core.BodyRoleTag.RequestsOf(this) is KryticalNova.Core.IBodyRequests requests) { requests.Charge(skill.skillId, target, true, false); return; }
             if (!IsSpawned) return;
             NetworkObject aimed = target != null ? target.GetComponentInParent<NetworkObject>() : null;
             if (aimed != null && aimed.IsSpawned) ChargeStartedRpc(skill.skillId, aimed, true);
@@ -432,7 +433,17 @@ namespace KryticalNova.Combat
         private void OnChargeEnded(SkillDefinitionSO skill, bool completed)
         {
             PresentChargeEnded(skill, completed);
+            if (KryticalNova.Core.BodyRoleTag.RequestsOf(this) is KryticalNova.Core.IBodyRequests requests) { requests.Charge(skill.skillId, null, false, completed); return; }
             if (IsSpawned) ChargeEndedRpc(skill.skillId, completed);
+        }
+
+        /// <summary>Another player's charge on the entity netcode (M4.5f), as NGO's ChargeStartedRpc / ChargeEndedRpc showed it.</summary>
+        public void ShowChargeSeen(string skillId, Transform aimedAt, bool started, bool completed)
+        {
+            var skill = GetComponent<PlayerCombatSkills>().GetSkill(skillId);
+            if (skill == null) return;
+            if (started) PresentChargeStarted(skill, aimedAt != null ? aimedAt.position : (Vector3?)null);
+            else PresentChargeEnded(skill, completed);
         }
 
         [Rpc(SendTo.NotOwner, InvokePermission = RpcInvokePermission.Owner)]

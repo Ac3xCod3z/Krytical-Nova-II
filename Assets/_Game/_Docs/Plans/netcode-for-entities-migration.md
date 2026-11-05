@@ -232,6 +232,10 @@ prediction error p95 <= 0.05 m at 60 ms, tick p95 < 15 ms with 102 monsters (fro
     EditMode 179/179 (Combat tests included), PlayMode 43/43. To check in the GUI test: queuing a skill on another target while comboing.
   - [x] M4.5e The skill's combat line: HitDealt carries NGO's label, HitEvent.Label holds it for skill hits, and the attacker's view prints
     NGO's words (HitLine). EditMode 179/179, PlayMode 43/43. Next: hold-to-charge shown to others (NGO ChargeStartedRpc/ChargeEndedRpc).
+  - [x] M4.5f Hold-to-charge seen by the other players: the owner's hotbar charge goes to the server (IBodyRequests.Charge, ChargeRpc),
+    which writes ChargeState on the caster's ghost; every other client plays each start and end once (ChargePresentSystem ->
+    PlayerSkillAttacks.ShowChargeSeen, NGO ChargeStartedRpc/ChargeEndedRpc SendTo.NotOwner). EditMode 179/179, PlayMode 43/43.
+    Next: a Stance shared with the Squad (NGO ShareWithSquad / SquadBuffClientRpc).
 - [ ] **M5 Monster system prototype (new brain).** Section 6. P0 EditMode sim tests (no netcode), P1 ghost + view, P2 reward bridge.
 - [ ] **M6 Hostiles in full.** All roster species via `MonsterArchetype` from `HostileDefinition` (ids kept), level scaling, zones,
   sleep, respawn, loot/XP through managed reward bridge with ledger rules; nav grids for the zones; bot soak with 102 monsters.

@@ -19,6 +19,15 @@ namespace KryticalNova.Persistence.Entities
     }
 
     /// <summary>The owner asks the server to cast a buff on the player's own body (Heavenly Serenity, a ward; feel test item 5).</summary>
+    /// <summary>The owner's hold-to-charge started or ended (M4.5f; NGO ChargeStartedRpc / ChargeEndedRpc).</summary>
+    public struct ChargeRpc : IRpcCommand
+    {
+        public FixedString64Bytes SkillId;
+        public int AimGhostId;
+        /// <summary>1 started, 2 ended charged, 3 let go early.</summary>
+        public byte Phase;
+    }
+
     public struct SkillCastRpc : IRpcCommand
     {
         public FixedString64Bytes SkillId;
@@ -722,6 +731,20 @@ namespace KryticalNova.Persistence.Entities
             em.AddComponent<SendRpcCommandRequest>(rpc);
         }
 
+        public void Charge(string skillId, Transform aimedAt, bool started, bool completed)
+        {
+            if (m_World == null || !m_World.IsCreated || string.IsNullOrEmpty(skillId) || skillId.Length > FixedString64Bytes.UTF8MaxLengthInBytes) return;
+            var em = m_World.EntityManager;
+            Entity rpc = em.CreateEntity();
+            em.AddComponentData(rpc, new ChargeRpc
+            {
+                SkillId = new FixedString64Bytes(skillId),
+                AimGhostId = aimedAt != null ? KryticalNova.Player.Entities.Bodies.BodyClickSource.GhostIdOf(aimedAt) : 0,
+                Phase = (byte)(started ? 1 : completed ? 2 : 3),
+            });
+            em.AddComponent<SendRpcCommandRequest>(rpc);
+        }
+
         public void CastSkill(string skillId, Transform target)
         {
             if (m_World == null || !m_World.IsCreated || string.IsNullOrEmpty(skillId) || skillId.Length > FixedString64Bytes.UTF8MaxLengthInBytes) return;
@@ -743,7 +766,7 @@ namespace KryticalNova.Persistence.Entities
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     public partial class PlayerRequestServerSystem : SystemBase
     {
-        EntityQuery m_Uses, m_Casts, m_PackOps, m_LoadoutOps, m_Refills, m_Allocations, m_Upgrades, m_MoveUpgrades, m_Pickups, m_Drops, m_Storage, m_Buys, m_Sells, m_Trades;
+        EntityQuery m_Charges, m_Uses, m_Casts, m_PackOps, m_LoadoutOps, m_Refills, m_Allocations, m_Upgrades, m_MoveUpgrades, m_Pickups, m_Drops, m_Storage, m_Buys, m_Sells, m_Trades;
 
         /// <summary>Requests run, refused, and dropped by the request limits (tests).</summary>
         public int Used { get; private set; }
@@ -765,6 +788,7 @@ namespace KryticalNova.Persistence.Entities
         {
             m_Uses = GetEntityQuery(ComponentType.ReadOnly<ReceiveRpcCommandRequest>(), ComponentType.ReadOnly<ItemUseRpc>());
             m_Casts = GetEntityQuery(ComponentType.ReadOnly<ReceiveRpcCommandRequest>(), ComponentType.ReadOnly<SkillCastRpc>());
+            m_Charges = GetEntityQuery(ComponentType.ReadOnly<ReceiveRpcCommandRequest>(), ComponentType.ReadOnly<ChargeRpc>());
             m_PackOps = GetEntityQuery(ComponentType.ReadOnly<ReceiveRpcCommandRequest>(), ComponentType.ReadOnly<PackOpRpc>());
             m_LoadoutOps = GetEntityQuery(ComponentType.ReadOnly<ReceiveRpcCommandRequest>(), ComponentType.ReadOnly<LoadoutOpRpc>());
             m_Refills = GetEntityQuery(ComponentType.ReadOnly<ReceiveRpcCommandRequest>(), ComponentType.ReadOnly<FlaskRefillRpc>());
@@ -790,6 +814,15 @@ namespace KryticalNova.Persistence.Entities
                 for (int i = 0; i < uses.Length; i++) UseItem(received[i].SourceConnection, uses[i].ItemId);
                 received.Dispose();
                 uses.Dispose();
+            }
+            if (!m_Charges.IsEmpty)
+            {
+                var received = m_Charges.ToComponentDataArray<ReceiveRpcCommandRequest>(Allocator.Temp);
+                var charges = m_Charges.ToComponentDataArray<ChargeRpc>(Allocator.Temp);
+                em.DestroyEntity(m_Charges);
+                for (int i = 0; i < charges.Length; i++) Charge(received[i].SourceConnection, charges[i]);
+                received.Dispose();
+                charges.Dispose();
             }
             if (!m_Casts.IsEmpty)
             {
@@ -1089,6 +1122,23 @@ namespace KryticalNova.Persistence.Entities
             }
             Refused++;
             Reply(connection, new RequestReplyRpc { Kind = RequestReplyRpc.SkillRefused, SkillId = new FixedString64Bytes(skillId), Text = Fit(reason) });
+        }
+
+        // M4.5f: the owner's charge on its ghost for every other client (NGO ChargeStartedRpc / ChargeEndedRpc, owner-invoked)
+        void Charge(Entity connection, ChargeRpc charge)
+        {
+            if (charge.Phase < 1 || charge.Phase > 3 || !BodyOf(connection, CallKind.Combat, out GameObject body)) return;
+            EntityManager em = EntityManager;
+            foreach (GhostBodyEntry e in GhostBodyRegistry.Entries)
+            {
+                if (!ReferenceEquals(e.World, World) || e.Body != body || !em.Exists(e.Ghost) || !em.HasComponent<KryticalNova.Player.Entities.ChargeState>(e.Ghost)) continue;
+                var state = em.GetComponentData<KryticalNova.Player.Entities.ChargeState>(e.Ghost);
+                em.SetComponentData(e.Ghost, new KryticalNova.Player.Entities.ChargeState
+                {
+                    Seq = (byte)(state.Seq + 1), SkillId = charge.SkillId, AimGhostId = charge.AimGhostId, Phase = charge.Phase,
+                });
+                return;
+            }
         }
 
         // M4.5c: the cast on the caster's ghost for every other client (NGO TriggerSkillCastClientRpc)
