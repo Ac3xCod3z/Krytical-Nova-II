@@ -12,7 +12,8 @@ namespace KryticalNova.Combat.Entities
     /// Server: the basic attack's hits (M4.4e). On the tick a strike's window ends (<see cref="MeleeRules.HitDue"/>, NGO EnsureTargetStruck),
     /// the target is tested where the attacker saw it (the PositionHistory at the attacker's interpolation delay, M4.3) and within the
     /// server's check range now (<see cref="MeleeRules.Resolve"/>), then the body applies it as NGO does (<see cref="MeleeStrike"/>).
-    /// One hit per swing, landed or not. Players only for now: hostiles and the Combat Dummy come with their own ghosts.
+    /// One hit per swing, landed or not. Every other hostile in the swing's arc where the attacker saw it is struck too (M4.4g: NGO's
+    /// blade sweep strikes each hostile it touches). Players only for now: hostiles and the Combat Dummy come with their own ghosts.
     /// </summary>
     [WorldSystemFilter(WorldSystemFilterFlags.ServerSimulation)]
     [UpdateInGroup(typeof(SimulationSystemGroup))]
@@ -41,7 +42,6 @@ namespace KryticalNova.Combat.Entities
             if (!now.IsValid) return;
             int rate = SystemAPI.TryGetSingleton<ClientServerTickRate>(out var r) && r.SimulationTickRate > 0 ? (int)r.SimulationTickRate : 30;
             EntityManager em = EntityManager;
-            var empty = new NativeArray<PositionHistory>(0, Allocator.Temp);
             var collateral = new NativeList<int>(Allocator.Temp);
             foreach (GhostBodyEntry attacker in GhostBodyRegistry.Entries)
             {
@@ -69,14 +69,33 @@ namespace KryticalNova.Combat.Entities
                     seen.Subtract(em.GetComponentData<CommandDataInterpolationDelay>(attacker.Ghost).Delay);
                 PlayerPose me = em.GetComponentData<PlayerPose>(attacker.Ghost);
                 int3 them = em.GetComponentData<PlayerPose>(target.Ghost).Mm;
+                // M4.4g: everyone else who could be under the blade (NGO's sweep strikes each hostile it touches, once per swing)
+                bystanders.Clear();
+                foreach (GhostBodyEntry e in GhostBodyRegistry.Entries)
+                    if (ReferenceEquals(e.World, World) && e != attacker && e != target && e.Body != null && em.Exists(e.Ghost)
+                        && em.HasComponent<PositionHistory>(e.Ghost) && e.Body.TryGetComponent(out IDamageable _))
+                        bystanders.Add(e);
+                var rings = new NativeArray<PositionHistory>(bystanders.Count, Allocator.Temp);
+                for (int i = 0; i < bystanders.Count; i++) rings[i] = em.GetComponentData<PositionHistory>(bystanders[i].Ghost);
                 collateral.Clear();
-                if (!MeleeRules.Resolve(t, me.Mm, me.YawCdeg, now, seen, em.GetComponentData<PositionHistory>(target.Ghost), them, empty,
-                        HitProxy.Player, out bool targetHit, ref collateral) || !targetHit) continue;
-                if (MeleeStrike.Apply(attacker.Body, damageable, s.Step, MeleeRules.StepMultiplier(t, s.Step))) Hits++;
+                bool resolved = MeleeRules.Resolve(t, me.Mm, me.YawCdeg, now, seen, em.GetComponentData<PositionHistory>(target.Ghost), them, rings,
+                    HitProxy.Player, out bool targetHit, ref collateral);
+                rings.Dispose();
+                if (!resolved) continue;
+                float multiplier = MeleeRules.StepMultiplier(t, s.Step);
+                if (targetHit && MeleeStrike.Apply(attacker.Body, damageable, s.Step, multiplier)) Hits++;
+                // a friend in the arc is left alone: MeleeStrike asks the same hostility rule
+                for (int i = 0; i < collateral.Length; i++)
+                    if (bystanders[collateral[i]].Body.TryGetComponent(out IDamageable other) && MeleeStrike.Apply(attacker.Body, other, s.Step, multiplier))
+                        Collateral++;
             }
-            empty.Dispose();
             collateral.Dispose();
         }
+
+        readonly System.Collections.Generic.List<GhostBodyEntry> bystanders = new System.Collections.Generic.List<GhostBodyEntry>();
+
+        /// <summary>Others struck by a swing at its target (tests).</summary>
+        public int Collateral { get; private set; }
 
         bool TryFind(EntityManager em, int ghostId, out GhostBodyEntry found)
         {

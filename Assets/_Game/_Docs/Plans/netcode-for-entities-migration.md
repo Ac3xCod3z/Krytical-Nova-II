@@ -195,6 +195,9 @@ prediction error p95 <= 0.05 m at 60 ms, tick p95 < 15 ms with 102 monsters (fro
   - [x] M4.4f The attack order checked like NGO's RequestAttackEntityServerRpc: the server drops (silently) any attack whose target is
     gone, dead or not hostile (MeleeResolveServerSystem.AttackAllowed, CombatHostility on the bodies); the owner's predicted combo is rolled
     back. B42 extended. EditMode 145/145, PlayMode 43/43. Next: collateral arc hits, HitEvent ring to clients, server walk-in.
+  - [x] M4.4g Collateral hits: every other player in the swing's arc where the attacker saw it is struck too when hostile (NGO's blade
+    sweep), friends left alone by the same rule; the arc rule is M4.4a-tested, this is the wiring. EditMode 145/145, PlayMode 43/43.
+    Next: the HitEvent ring (hits shown on clients), the server walk-in via ServerOrder.
 - [ ] **M5 Monster system prototype (new brain).** Section 6. P0 EditMode sim tests (no netcode), P1 ghost + view, P2 reward bridge.
 - [ ] **M6 Hostiles in full.** All roster species via `MonsterArchetype` from `HostileDefinition` (ids kept), level scaling, zones,
   sleep, respawn, loot/XP through managed reward bridge with ledger rules; nav grids for the zones; bot soak with 102 monsters.
