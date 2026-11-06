@@ -1549,6 +1549,10 @@ Port everything first, matching NGO's rules; then a performance phase that moves
 - hit resolution (melee and area skills: the target gathering, the shared formula, the hit and number records);
 - ghost relevancy and importance for 1000+ players in The Scar (what each connection gets, and how often);
 - the monster brain (section 6), already designed to run jobbed and Burst-compiled;
+- **the server's per-click path check (owner pick C, 6 Nov 2026):** players keep today's static NavMesh planners; only if The Scar
+  profiling shows the server's order checks on the main thread (estimate ~33 per tick at 1000 players, 1.5-10 ms, unmeasured),
+  move that check behind `IPathPlanner` (`NavWorldPathPlanner`, batched NavWorld jobs) with a corner-parity test against
+  `NavMeshPathPlanner`; the client's own plan stays as is (`m5-m6-brain-plan.md` 8c; spike results from M5.2);
 - mobile: thread budgets, Burst on ARM, the bodies' presentation cost.
 Rule until then (owner): no choice that blocks this later. Per-player state lives in components and ghost fields, not in new managed
 singletons; each step's notes mark an obvious hot path "job later".

@@ -411,6 +411,10 @@ Lore: NPC text and roles follow `Design/Lore-Bible.md` (Ronin stay hidden).
 
 ## 8c. NavWorld for players too? One nav system for everything? (owner follow-up, 6 Nov 2026)
 
+**OWNER PICK: C (CONFIRMED 6 Nov 2026).** Monsters and NPCs on NavWorld jobs now (M5.2 spike with its five checks, then
+M5.4); players unchanged; in the performance phase, if The Scar profiling shows it, the server's per-click check moves behind
+`IPathPlanner` into batched NavWorld jobs (migration plan s57).
+
 **Facts checked today**
 - **What NavWorld is in our Unity.** `Unity.AI.Navigation.LowLevel.NavWorld` ships **inside the engine** (`UnityEngine.AIModule.dll`
   of our 6000.6.3f1), not in a preview package; our `com.unity.ai.navigation` 2.0.15 does not hold it. The old
