@@ -6,6 +6,8 @@
         "KryticalNova.Brains",
         "KryticalNova.Hostiles",
         "KryticalNova.Hostiles.Entities",
+        "KryticalNova.Player.Entities",
+        "Unity.NetCode",
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner",
         "Unity.Burst",

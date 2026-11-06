@@ -5,6 +5,7 @@
         "KryticalNova.Runtime",
         "KryticalNova.Brains",
         "KryticalNova.Hostiles",
+        "KryticalNova.Player.Entities",
         "Unity.Burst",
         "Unity.Entities",
         "Unity.NetCode",

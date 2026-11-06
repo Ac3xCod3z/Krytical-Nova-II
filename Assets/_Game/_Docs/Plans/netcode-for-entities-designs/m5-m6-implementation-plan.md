@@ -282,7 +282,9 @@ Rows marked `[line: M5.0]` have the file but the line is filled in M5.0. "Test" 
   5 %/s; 6 kept, the lowest replaced; target = top threat when none, switch at > 110 % in reach / > 130 % out) and
   `HostileSenseScanSystem` (think ticks; AttacksOnSight in Idle/Patrol only; nearest living player in the ceil'd aggro radius, not on
   neutral ground nor ignored -> `HostileBrain.Saw` + target). `HostileTestWorld` (plain World) + ThreatTests, SightScanTests (4).
-  M5.3b2 (next): the archetype blob + bake, the player feeder (Player.Entities ghosts -> `SenseWorld.Players`), `HostileDecideSystem`
+  M5.3b2a **[done, 6 Nov]**: `HostilePlayerFeedSystem` (player ghosts -> `SenseWorld.Players`: ghost id, feet from the pose, Alive/Dead
+  as the melee rules, OnWall; runs only where `HostileBrainConfig` exists); Neutral and Ignored flags still to add (managed rules).
+  M5.3b2 (next): the archetype blob + bake, Neutral/Ignored in the feed, `HostileDecideSystem`
   (NextMode, notice, give-up clock, leash, patrol), `HostileAttackSystem` (windup/commit/resolve -> `PendingStrike`), the reaction,
   HostileBrain, score, determinism and GC tests.
 - **Create (Hostiles/Entities/Runtime):** `HostileEntities.asmdef`, `HostileComponents.cs` (2.2 minus ghost), `HostileRules.cs`
