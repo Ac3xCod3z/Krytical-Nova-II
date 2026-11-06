@@ -6,7 +6,7 @@ detailed component reference; this plan **changes** that design where the owner'
 NPC use, the numbers and the step list.
 
 Tags: **[code]** read in the NGO game or the clone with file:line; **[web]** from research, source in section 13; **[U]** not
-verified, must be checked before code; **to confirm** = recommended pick taken tonight, owner decides at the review.
+verified, must be checked before code; **to confirm** = was a working pick; the owner confirmed every pick (Q1-Q8 = A) on 6 Nov 2026.
 
 Owner's words (6 Nov 2026): learn how Emerald does it, then decide how we do it; the brain's framework must also run regular
 world NPCs later; monsters must be **smarter and respond faster** than Emerald ("it felt laggy"); research how others do mob AI
@@ -22,9 +22,9 @@ at scale and living-world NPCs.
 | D2 | One framework, two uses | **Brain core** (sense grid, think clock with AI LOD, moving and steering, paths, dice, debug) + **minds** on top: Monster mind now, Townsfolk mind later | Two separate systems |
 | D3 | How fast it thinks | **Engaged monsters think every tick (30 Hz)**; near 10 Hz; far awake 2 Hz; asleep 0. Sight aggro lands in **<= 0.15 s**, a hit turns it **the same tick**, an attack starts **the tick it is in reach and facing** | Emerald: sight scan once a second, attacks wait for the animator |
 | D4 | Paths | Straight line first; when blocked, a **budgeted path job on Unity's NavWorld** (Unity 6.5+, job-safe) after a one-day spike; fallback the baked grid of the old design | Emerald's NavMeshAgent per monster; 29 Oct default "NavMesh.CalculatePath queue" |
-| D5 | Attacks that feel fair and quick | Server starts the attack at once and sends **AttackStartTick** on the ghost; the client plays the clip **caught up** by the time already gone and shows the warning; the server lands the hit at the windup's end where the player *is*; every attack's **visible warning >= 0.35 s** (to confirm) | Emerald: swing starts after an animator change, an RPC tells clients, the hit comes from a clip event |
+| D5 | Attacks that feel fair and quick | Server starts the attack at once and sends **AttackStartTick** on the ghost; the client plays the clip **caught up** by the time already gone and shows the warning; the server lands the hit at the windup's end where the player *is*; every attack's **visible warning >= 0.35 s** | Emerald: swing starts after an animator change, an RPC tells clients, the hit comes from a clip event |
 | D6 | Threat | A **threat table** per monster (damage, heals on its foes, taunts); switches target only when another player beats the current one by **10 % in melee reach / 30 % out of it**; first-hit still holds the kill and the loot | Emerald: nearest target, sticky; no table |
-| D7 | Packs | **Attack slots** (Kingdoms of Amalur's stage manager): each player has a weighted ring of slots and an attack budget, so about 2-3 monsters swing at once and the rest wait just outside and rotate in, **assist** pulls same-zone neighbours within 6 m when one is hit; both per species switches (to confirm) | Emerald: no group play (off in the game) |
+| D7 | Packs | **Attack slots** (Kingdoms of Amalur's stage manager): each player has a weighted ring of slots and an attack budget, so about 2-3 monsters swing at once and the rest wait just outside and rotate in, **assist** pulls same-zone neighbours within 6 m when one is hit; both per species switches | Emerald: no group play (off in the game) |
 | D8 | Hit reactions | Monsters **flinch visually** but a flinch never cancels a swing already started; heavy hits or stuns can (poise) | Emerald: every hit blocks the next attack (stun-lock, "passive mobs") |
 | D9 | World NPCs | Same brain core. **Talk-to NPCs** (vendors, guards, quest givers) are server ghosts with a **schedule stack**; **ambient crowds** are client-only, grown from a seed, with AC Unity-style crowd LOD | All NPCs as server ghosts |
 | D10 | Budget | **< 0.3 ms per tick for Zone01's 102 monsters; < 2 ms per tick for 2,000 awake monsters** across worker threads (The Scar later) | Emerald: full Update + Animator + NavMeshAgent per monster on the server |
@@ -209,7 +209,7 @@ Reaction targets vs Emerald (server time, before network):
 - Leash: zone radius + 15 m (unchanged), plus "unreachable for 6 s". Return mode: runs home, cannot be damaged, heals to full,
   threat cleared, tag released (NGO rule). Players see it as "evade".
 
-### 3.6 Packs: tokens, surround, assist (D7, per species, to confirm)
+### 3.6 Packs: tokens, surround, assist (D7, per species)
 - **Attack slots (the Amalur stage manager)**: each player carries an 8-slot ring with a **grid capacity** (default 12) and an
   **attack capacity** (default 10, separate melee and ranged pools as Doom). A normal monster weighs 4 on the ring, a Bruiser 8;
   each ability has an attack cost (light 3, heavy 5). A monster must hold a slot and pay the attack cost to start a swing; the cost
@@ -250,7 +250,7 @@ Client (looks):
    swing and body agree (fixes L9). Heavy attacks show the "!" and Feel swing exactly as NGO `ShowAttack`.
 2. **Warning time the player gets** = windup - (half RTT + interpolation delay). With 0.25 s windups, ~50 ms half RTT and
    Netcode's default 2-tick interpolation (66 ms at 30 Hz) plus snapshot spacing, that is ~0.1 s, under the 200-300 ms a human
-   needs: too short to read. So: **every attack's visible warning >= 0.35 s** (to confirm) = data windups raised where needed
+   needs: too short to read. So: **every attack's visible warning >= 0.35 s** = data windups raised where needed
    (light 0.25 -> 0.40 s, heavy 0.55 s stays), *and* light attacks get a short pre-swing "tell" (head turn / weight shift) that
    the client plays from `Alert->Engage`. Responsive feel comes from the **monster starting at once**, not from short windups.
 3. Hit numbers come from `HostileStrikeRpc` (step 9, reliable) at T + windup on the server; the client shows the number when it
@@ -317,6 +317,9 @@ build (soak in M5.7 and M6.6).
 | 9.2 Player -> monster via an NGO adapter | Through M4's `CombatTarget` + `PositionHistory` + `MeleeResolveServerSystem` (already built) | M4 landed this |
 | 9.1 player damage via managed bridge | Through M4.9's `HostileStrike` queue (built) | M4.9 landed this |
 | (none) | Brains core shared with Townsfolk | owner's NPC ask |
+| 10 Rewards via a new ECS kill event | **Hidden server body per Hostile** (CombatEntity + HostileNet + `EcsHostileBrain : IHostileBrain`, no Emerald/Animator): health, tag, XP, loot, death penalty run in unchanged NGO code; the brain is ECS | port first, HIGH rules untouched; ECS vitals in the performance phase |
+
+**Build steps, files, components, tests and hand tests: `m5-m6-implementation-plan.md` (6 Nov 2026).**
 
 ---------------------------------------------------------------------------------------------------
 
@@ -366,21 +369,45 @@ Lore: NPC text and roles follow `Design/Lore-Bible.md` (Ronin stay hidden).
 
 ---------------------------------------------------------------------------------------------------
 
-## 8. Owner's questions (recommended first; tonight's working pick marked)
+## 8. Owner's questions: ANSWERED 6 Nov 2026, all option A (owner, typed to Nova)
 
-- **Q1 Brain style.** (A, working pick) modes + scores; (B) plain state machine as the 29 Oct design; (C) behaviour trees.
-- **Q2 Packs.** (A, working pick) attack slots (grid 12 / attack 10 per player) + waiting ring on all species, assist on for
+- **Q1 Brain style.** (A, **CONFIRMED by the owner 6 Nov**) modes + scores; (B) plain state machine as the 29 Oct design; (C) behaviour trees.
+- **Q2 Packs.** (A, **CONFIRMED by the owner 6 Nov**) attack slots (grid 12 / attack 10 per player) + waiting ring on all species, assist on for
   AttacksOnSight species only; (B) all on everywhere; (C) like Emerald, no group play.
-- **Q3 Warning time.** (A, working pick) every attack shows >= 0.35 s on screen (light windups 0.25 -> 0.40 s) + catch-up + tells;
+- **Q3 Warning time.** (A, **CONFIRMED by the owner 6 Nov**) every attack shows >= 0.35 s on screen (light windups 0.25 -> 0.40 s) + catch-up + tells;
   (B) keep today's windups, only catch-up; (C) longer for all (0.5 s light).
-- **Q4 Flinch.** (A, working pick) flinch is looks only, poise per species decides interrupts; (B) every hit interrupts (Emerald).
-- **Q5 Target switching.** (A, working pick) threat table with 10 %/30 % switch margins, first hit still owns the kill; (B) always
+- **Q4 Flinch.** (A, **CONFIRMED by the owner 6 Nov**) flinch is looks only, poise per species decides interrupts; (B) every hit interrupts (Emerald).
+- **Q5 Target switching.** (A, **CONFIRMED by the owner 6 Nov**) threat table with 10 %/30 % switch margins, first hit still owns the kill; (B) always
   the top threat; (C) first attacker until leash.
-- **Q6 Navigation.** (A, working pick) NavWorld after a one-day spike, grid fallback; (B) baked grid now; (C) main-thread
+- **Q6 Navigation.** (A, **CONFIRMED by the owner 6 Nov**) NavWorld after a one-day spike, grid fallback; (B) baked grid now; (C) main-thread
   CalculatePath queue (29 Oct default).
-- **Q7 World NPCs.** (A, working pick) talk-to NPCs as server ghosts, ambient crowds client-only; (B) everything server ghosts;
+- **Q7 World NPCs.** (A, **CONFIRMED by the owner 6 Nov**) talk-to NPCs as server ghosts, ambient crowds client-only; (B) everything server ghosts;
   (C) decide when the NPC work starts.
-- **Q8 Notice delay.** (A, working pick) 0.1 s default, per species 0-0.2 s; (B) 0 (instant); (C) 0.3 s (the 29 Oct "0.15-0.30 s").
+- **Q8 Notice delay.** (A, **CONFIRMED by the owner 6 Nov**) 0.1 s default, per species 0-0.2 s; (B) 0 (instant); (C) 0.3 s (the 29 Oct "0.15-0.30 s").
+
+## 8b. NavWorld: monsters and NPCs only, never players (owner's question, 6 Nov 2026)
+
+**Short answer: NavWorld changes nothing for players. It is for monsters and world NPCs only.**
+
+1. **What players use on DOTS today [code, clone]:** a click is planned **once per order** by `NavMeshPathPlanner`
+   (`Player/Entities/Runtime/PathPlanners.cs:107-131`): the static `NavMesh.SamplePosition` + `NavMesh.CalculatePath`, main thread,
+   on the client when the player clicks and again on the server when it checks the order (`PlayerInputGatherSystem.cs:73-88`,
+   `PlayerServerPlanSystem.cs:29`, installed in `PlayerWorldsSetup.cs:88,162`). The corners go into the order; the **predicted walk
+   never touches the NavMesh** ("it may use the NavMesh, which must never run inside the predicted loop", `PathPlanners.cs:10-11`).
+   Vault (`VaultPath.Plan`, `IVaultPlanner`), Waterstride (`BodyWaterPlanner`, `PlayerWaterFromSkills.cs:22-32`) and Wallstride
+   plan through the same `IPathPlanner` or their own raycast rules. No NavMeshAgent moves a DOTS player.
+2. **Why the earlier verdict was "no" for players** (`_Docs/Design/15_movement_wasd_controller_navworld.md`, 11 Oct 2026, section 2):
+   NavWorld only finds paths, it never moves anything; it would not make movement feel faster (the slowness then was the server
+   round trip, which DOTS prediction has since fixed); swapping it in meant rewriting the player mover and the jump/vault/death
+   motors; and nothing measured showed pathing costing frame time. The same doc already named the place it **would** earn its
+   keep: "our own Hostile mover ... path searches for hundreds of Hostiles spread over frames in jobs is exactly what it is for".
+   Both verdicts stand: players are not that case, monsters are.
+3. **Monsters and NPCs: yes, NavWorld fits.** They need hundreds of path searches spread over ticks inside Burst jobs on the server
+   (M5.2 spike, PathService M5.4). Players need one search per click, and a `CalculatePath` per click is cheap. Same baked NavMesh,
+   no bake change, nothing in the player code moves.
+4. **Later, only if measured:** in the performance phase (The Scar, 1,000+ players) the server's per-order check could become a
+   `NavWorldPathPlanner : IPathPlanner` behind the existing interface (one class, no player behaviour change), and NavWorld's
+   batched `MoveLocations` could check many players' moves at once. That is an option with a measurement gate, not part of M5/M6.
 
 ## 9. Risks
 - NavWorld in a Linux IL2CPP + Burst server build is unproven here (spike M5.2; fallback B).
