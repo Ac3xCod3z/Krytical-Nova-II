@@ -115,11 +115,22 @@ namespace KryticalNova.UI
             SetVisible(editBanner, false);
             ApplyPreferences();
             initialized = true;
+            // The document builds its tree afresh whenever the HUD is enabled again: the new panels start where their
+            // sheets put them, so the player's layout is put back on them (the first time, Start does it).
+            if (started) ApplyLayout();
         }
+
+        private bool started;
 
         private void Start()
         {
             if (!initialized) return;
+            started = true;
+            ApplyLayout();
+        }
+
+        private void ApplyLayout()
+        {
             CollectMovables();
             layout.LoadAndApply();
         }
