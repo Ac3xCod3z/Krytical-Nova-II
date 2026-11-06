@@ -42,11 +42,11 @@ namespace KryticalNova.Player.Entities.Bodies
             }
         }
 
-        /// <summary>A walk planned by the server's planner next tick. <paramref name="run"/> = run speed (the server has paid for it, or the stub does not charge yet).</summary>
-        public void MoveTo(Vector3 point, bool run)
+        /// <summary>A walk planned by the server's planner next tick: at run speed when <paramref name="run"/>; <paramref name="payRun"/> = Run's Flux taken then (refused without it).</summary>
+        public void MoveTo(Vector3 point, bool run, bool payRun)
         {
             if (!IsLive) return;
-            PlayerEntitiesSetup.IssueOrder(m_World.EntityManager, m_Ghost, PoseMath.Mm(point), run);
+            PlayerEntitiesSetup.IssueOrder(m_World.EntityManager, m_Ghost, PoseMath.Mm(point), run, run && payRun);
             Orders++;
         }
 

@@ -323,6 +323,14 @@ namespace KryticalNova.Progression
 
         private bool Select(MovementSkillId skill)
         {
+            // the entity netcode's own view: shown at once, the server body decides (NGO's SelectServerRpc); its answer comes back as MoveRanks
+            if (BodyRoleTag.RequestsOf(this) is IBodyRequests requests)
+            {
+                requests.SelectMovement((byte)skill);
+                selectedSkill = skill;
+                Commit();
+                return true;
+            }
             if (!HasAuthority)
             {
                 if (!IsOwner) return false;
@@ -347,6 +355,33 @@ namespace KryticalNova.Progression
             }
             // Nothing changed here, so nothing would be replicated: put the owner back on the real selection.
             if (!allowed) CorrectSelectionRpc(Capture());
+        }
+
+        /// <summary>Selection requests a server body of the entity netcode has answered (taken or refused): its owner's view re-reads the selection.</summary>
+        public int SelectAnswers { get; private set; }
+
+        /// <summary>
+        /// A server body of the entity netcode: its owner's selection (NGO's SelectServerRpc body, after the Move limit). A refusal leaves
+        /// the selection as it was; either way the answer reaches the owner (NGO's CorrectSelectionRpc), through <see cref="SelectAnswers"/>.
+        /// </summary>
+        public void RunSelect(MovementSkillId skill)
+        {
+            if (!(BodyRoleTag.Of(this) is { Kind: NetRoleKind.ServerBody })) return;
+            bool allowed = skill == MovementSkillId.None || (CanUse(skill) && resources != null && resources.IsAlive);
+            if (allowed && selectedSkill != skill)
+            {
+                selectedSkill = skill;
+                Commit();
+            }
+            SelectAnswers++;
+        }
+
+        /// <summary>An entity-netcode client's own view body: the selection its server has (on joining, and after each answered request).</summary>
+        public void MirrorSelection(MovementSkillId skill)
+        {
+            if (IsSpawned || selectedSkill == skill) return;
+            selectedSkill = skill;
+            Changed?.Invoke();
         }
 
         [Rpc(SendTo.Owner)]

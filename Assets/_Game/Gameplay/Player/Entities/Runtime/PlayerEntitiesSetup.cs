@@ -95,14 +95,15 @@ namespace KryticalNova.Player.Entities
 
         /// <summary>
         /// Server: walk the player to a point (skill walk-in, follow, housing, bench, guide). Planned by the server's planner next
-        /// tick; wins over a click. <paramref name="runPaid"/> only after the server has taken the Chi for running.
+        /// tick; wins over a click. <paramref name="runPaid"/> = run speed; <paramref name="chargeRun"/> = the planner takes Run's Flux for it
+        /// (refused without it, NGO ServerMoveTo); a free steering step of a paid walk runs without it.
         /// </summary>
-        public static void IssueOrder(EntityManager serverEm, Entity ghost, int3 goalMm, bool runPaid = false)
+        public static void IssueOrder(EntityManager serverEm, Entity ghost, int3 goalMm, bool runPaid = false, bool chargeRun = false)
         {
             serverEm.SetComponentData(ghost, new ServerOrderRequest
             {
                 GoalXMm = goalMm.x, GoalYMm = goalMm.y, GoalZMm = goalMm.z,
-                Flags = (byte)(runPaid ? OrderFlags.RunPaid : 0),
+                Flags = (byte)((runPaid ? OrderFlags.RunPaid : 0) | (runPaid && chargeRun ? OrderFlags.ChargeRun : 0)),
             });
             serverEm.SetComponentEnabled<ServerOrderRequest>(ghost, true);
         }

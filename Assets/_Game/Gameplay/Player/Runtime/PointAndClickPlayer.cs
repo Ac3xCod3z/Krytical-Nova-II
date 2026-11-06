@@ -1506,9 +1506,11 @@ namespace KryticalNova.Player
             IBodyMover mover = ServerMover;
             if (mover != null)
             {
-                // A ServerBody: the ghost walks (planned by the server's planner). Running is not charged yet (M3b moves the Flux cost).
+                // A ServerBody: the ghost walks (planned by the server's planner), at run speed while Run is selected; the server's planner
+                // takes Run's Flux for a paid destination and refuses it without (the NGO rule below)
                 if (buffManager != null && buffManager.IsChanneling) buffManager.InterruptChanneled();
-                mover.MoveTo(destinationPoint, payRun && movementSkills != null && movementSkills.IsRunning);
+                bool running = movementSkills != null && movementSkills.IsRunning;
+                mover.MoveTo(destinationPoint, running, payRun && running);
                 return true;
             }
             if (jumpMotor != null && jumpMotor.IsBusy) return false;

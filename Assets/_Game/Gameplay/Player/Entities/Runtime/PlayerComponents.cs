@@ -25,11 +25,13 @@ namespace KryticalNova.Player.Entities
     /// <summary><see cref="ServerOrder.Flags"/> bits.</summary>
     public static class OrderFlags
     {
-        /// <summary>The server already paid for running: the order moves at run speed.</summary>
+        /// <summary>The order moves at run speed (Run is selected; paid by <see cref="ChargeRun"/> or a free steering step of a paid walk).</summary>
         public const byte RunPaid = 1;
         /// <summary>The planned path was cut at <see cref="PlayerLimits.MaxCorners"/>; the goal is farther than the last corner.</summary>
         public const byte Truncated = 2;
         public const byte KeepFacing = 4;
+        /// <summary>Server request only: take Run's Flux for this destination when it is planned; without the Flux the order is refused (NGO ServerMoveTo).</summary>
+        public const byte ChargeRun = 8;
     }
 
     public static class PlayerLimits
@@ -350,6 +352,10 @@ namespace KryticalNova.Player.Entities
         [GhostField] public byte Jump;
         /// <summary>The character's level (Waterstride opens at 60, M3c: the owner checks it as the server does).</summary>
         [GhostField] public ushort Level;
+        /// <summary>The selected movement skill (MovementSkillId) as the server has it, and a number that changes with every answered selection
+        /// request (so a refused one still reaches the owner, NGO's CorrectSelectionRpc).</summary>
+        [GhostField] public byte Selected;
+        [GhostField] public byte SelectSeq;
     }
 
     /// <summary>

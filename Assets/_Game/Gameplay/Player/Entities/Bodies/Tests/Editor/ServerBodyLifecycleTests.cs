@@ -112,7 +112,7 @@ namespace KryticalNova.Player.Entities.Bodies.Tests
             uint tick0 = ServerTick(rig);
 
             SyncProbe.On = true;
-            body.GetComponent<BodyRoleTag>().Mover.MoveTo(new Vector3(6f, 0f, 0f), false);
+            body.GetComponent<BodyRoleTag>().Mover.MoveTo(new Vector3(6f, 0f, 0f), false, false);
             rig.Tick(45);
             int ticks = (int)(ServerTick(rig) - tick0);
 
@@ -154,7 +154,7 @@ namespace KryticalNova.Player.Entities.Bodies.Tests
             PlayerKey key = rig.KeyOf(0);
             GameObject body = rig.BodyOf(key);
             IBodyMover mover = body.GetComponent<BodyRoleTag>().Mover;
-            mover.MoveTo(new Vector3(20f, 0f, 0f), false);
+            mover.MoveTo(new Vector3(20f, 0f, 0f), false, false);
             rig.Tick(15);
             mover.Stop();
             rig.Tick(2);

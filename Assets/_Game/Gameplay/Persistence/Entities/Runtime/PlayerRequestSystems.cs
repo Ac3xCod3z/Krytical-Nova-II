@@ -252,6 +252,12 @@ namespace KryticalNova.Persistence.Entities
         public byte Skill, Count;
     }
 
+    /// <summary>The owner selects a movement skill, or none (NGO's <c>PlayerMovementSkills.SelectServerRpc</c>, Move limit).</summary>
+    public struct MovementSelectRpc : IRpcCommand
+    {
+        public byte Skill;
+    }
+
     /// <summary>One skill's rank to its owner (NGO's owner-only netRanks, by index of the available skills).</summary>
     public struct SkillRankRpc : IRpcCommand
     {
@@ -725,6 +731,15 @@ namespace KryticalNova.Persistence.Entities
             em.AddComponent<SendRpcCommandRequest>(rpc);
         }
 
+        public void SelectMovement(byte skill)
+        {
+            if (m_World == null || !m_World.IsCreated) return;
+            var em = m_World.EntityManager;
+            Entity rpc = em.CreateEntity();
+            em.AddComponentData(rpc, new MovementSelectRpc { Skill = skill });
+            em.AddComponent<SendRpcCommandRequest>(rpc);
+        }
+
         public void UpgradeMovement(byte skill, byte count)
         {
             if (m_World == null || !m_World.IsCreated || count == 0) return;
@@ -798,7 +813,7 @@ namespace KryticalNova.Persistence.Entities
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     public partial class PlayerRequestServerSystem : SystemBase
     {
-        EntityQuery m_Charges, m_Wards, m_Uses, m_Casts, m_PackOps, m_LoadoutOps, m_Refills, m_Allocations, m_Upgrades, m_MoveUpgrades, m_Pickups, m_Drops, m_Storage, m_Buys, m_Sells, m_Trades;
+        EntityQuery m_Charges, m_Wards, m_Uses, m_Casts, m_PackOps, m_LoadoutOps, m_Refills, m_Allocations, m_Upgrades, m_MoveUpgrades, m_MoveSelects, m_Pickups, m_Drops, m_Storage, m_Buys, m_Sells, m_Trades;
 
         /// <summary>Requests run, refused, and dropped by the request limits (tests).</summary>
         public int Used { get; private set; }
@@ -828,6 +843,7 @@ namespace KryticalNova.Persistence.Entities
             m_Allocations = GetEntityQuery(ComponentType.ReadOnly<ReceiveRpcCommandRequest>(), ComponentType.ReadOnly<AllocateRpc>());
             m_Upgrades = GetEntityQuery(ComponentType.ReadOnly<ReceiveRpcCommandRequest>(), ComponentType.ReadOnly<SkillUpgradeRpc>());
             m_MoveUpgrades = GetEntityQuery(ComponentType.ReadOnly<ReceiveRpcCommandRequest>(), ComponentType.ReadOnly<MovementUpgradeRpc>());
+            m_MoveSelects = GetEntityQuery(ComponentType.ReadOnly<ReceiveRpcCommandRequest>(), ComponentType.ReadOnly<MovementSelectRpc>());
             m_Pickups = GetEntityQuery(ComponentType.ReadOnly<ReceiveRpcCommandRequest>(), ComponentType.ReadOnly<PickupRpc>());
             m_Drops = GetEntityQuery(ComponentType.ReadOnly<ReceiveRpcCommandRequest>(), ComponentType.ReadOnly<DropItemRpc>());
             m_Storage = GetEntityQuery(ComponentType.ReadOnly<ReceiveRpcCommandRequest>(), ComponentType.ReadOnly<StorageOpRpc>());
@@ -971,6 +987,18 @@ namespace KryticalNova.Persistence.Entities
                         loot.RunDrop(new ItemLocation { container = (ItemContainer)asks[i].Container, index = asks[i].Index });
                         Drops++;
                     }
+                received.Dispose();
+                asks.Dispose();
+            }
+            if (!m_MoveSelects.IsEmpty)
+            {
+                // NGO SelectServerRpc: the Move limit, then the server body's own rule (its answer reaches the owner as MoveRanks)
+                var received = m_MoveSelects.ToComponentDataArray<ReceiveRpcCommandRequest>(Allocator.Temp);
+                var asks = m_MoveSelects.ToComponentDataArray<MovementSelectRpc>(Allocator.Temp);
+                em.DestroyEntity(m_MoveSelects);
+                for (int i = 0; i < asks.Length; i++)
+                    if (BodyOf(received[i].SourceConnection, CallKind.Move, out GameObject body) && body.TryGetComponent(out PlayerMovementSkills moves))
+                        moves.RunSelect((MovementSkillId)asks[i].Skill);
                 received.Dispose();
                 asks.Dispose();
             }

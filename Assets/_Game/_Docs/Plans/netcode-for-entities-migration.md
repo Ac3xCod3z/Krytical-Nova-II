@@ -1218,8 +1218,12 @@ Presentation (client):
 - [ ] Cadence (on-beat bonus) stays a local look plus a server-checked bonus window (no frame-rate advantage).
 
 Moved in from M3c (owner pick 31 Oct): skill walk-in and Squad follow (section 55 items 1 and 2), with their server gaps:
-- [ ] Run Flux charged once for a server-ordered run, as NGO's `ServerMoveTo` (refused without the Flux; later steering steps free)
-- [ ] the Run selection known on the server (a server order runs when Run is selected, at every step, not only the first)
+- [x] Run Flux charged once for a server-ordered run, as NGO's `ServerMoveTo` (refused without the Flux; later steering steps free).
+  DOTS 15, 6 Nov: IBodyMover.MoveTo(run, payRun); the planner pays a ChargeRun request once when planned and refuses it without
+  the Flux; a free steering step still runs (found: a Squad follower's free steps walked). EditMode 319 + PlayerGhostWorldTests, PlayMode 64/64 (B63).
+- [x] the Run selection known on the server (a server order runs when Run is selected, at every step, not only the first).
+  DOTS 15: the own view's selection goes to its server body (MovementSelectRpc, Move limit, NGO's SelectServerRpc rule) and is saved
+  there; the answer (taken or refused) comes back on MoveRanks (Selected + SelectSeq, NGO's CorrectSelectionRpc).
 
 The rest of M4 (plan section 4):
 - [ ] the Wallet vertical slice, one Trade with a disconnect mid-trade, the kill test, and the golden ledger on the TEST database only

@@ -322,6 +322,39 @@ namespace KryticalNova.Player.Entities.Tests
         }
 
         [Test]
+        public void APaidServerOrder_IsChargedOnce_RefusedWithoutTheFlux_AndAFreeSteeringStepRunsAtNoCost()
+        {
+            // NGO PointAndClickPlayer.ServerMoveTo: payRun && Run selected -> Run's Flux for the destination, refused without it (the walk
+            // under way goes on); a steering step of the same walk (follow's payRun: !moving) runs at run speed for free
+            using var rig = PlayerRig.Create(2, 100);
+            var cost = new FakeRunCost { Affordable = false };
+            var plan = rig.Server.GetExistingSystemManaged<PlayerServerPlanSystem>();
+            plan.RunCost = cost;
+            EntityManager em = rig.Server.EntityManager;
+
+            PlayerEntitiesSetup.IssueOrder(em, rig.ServerGhosts[0], new int3(20000, 0, 0), runPaid: true, chargeRun: true);
+            rig.Tick(120);
+            Assert.AreEqual(0, rig.ServerPose().XMm, "no Flux: the paid run order is refused");
+            Assert.AreEqual(0, cost.Paid);
+            Assert.AreEqual("Not enough Flux.", plan.LastCostRefusal);
+
+            cost.Affordable = true;
+            PlayerEntitiesSetup.IssueOrder(em, rig.ServerGhosts[0], new int3(20000, 0, 0), runPaid: true, chargeRun: true);
+            rig.Tick(4);
+            Assert.AreEqual(1, cost.Paid, "paid once, when planned");
+            Assert.AreEqual(0, rig.Get<ServerOrder>(rig.Server, rig.ServerGhosts[0]).Flags & OrderFlags.ChargeRun, "the charge is the request's, never the ghost's");
+            int asked = cost.Asked;
+            PlayerEntitiesSetup.IssueOrder(em, rig.ServerGhosts[0], new int3(20000, 0, 3000), runPaid: true);   // a steering step
+            rig.Tick(4);
+            Assert.AreNotEqual(0, rig.ServerMove().Flags & MoveFlags.Run, "it runs");
+            rig.Tick(200);
+            Assert.AreEqual(new int3(20000, 0, 3000), rig.ServerPose().Mm);
+            Assert.AreEqual(1, cost.Paid, "a steering step is free");
+            Assert.AreEqual(asked, cost.Asked, "and not asked about");
+            Assert.AreEqual(rig.ServerPose(), rig.OwnerPose());
+        }
+
+        [Test]
         public void ASpeedChangeMidWalk_ReachesTheOwner_AndBothWorldsEndEqual()
         {
             // what a GM speed, a mount or a new Run rank does: the server writes MoveStats (PlayerMoveStatsRefreshSystem in the game)

@@ -133,12 +133,23 @@ namespace KryticalNova.Player.Entities
                     var order = em.GetComponentData<ServerOrder>(e);
                     ushort seq = NextServerSeq(order.Seq);
                     var goal = new int3(r.GoalXMm, r.GoalYMm, r.GoalZMm);
+                    // NGO ServerMoveTo: a paid run takes Run's Flux for this destination; without it the order is refused (the walk under way
+                    // goes on); paid only once the route is planned (NGO gives the Flux back when SetPath fails)
+                    bool charge = (r.Flags & OrderFlags.ChargeRun) != 0 && RunCost != null;
+                    string orderCost = null;
+                    if (charge && !RunCost.CanPay(e, out orderCost))
+                    {
+                        LastCostRefusal = orderCost;
+                        Refused++;
+                        continue;
+                    }
                     if (TryWritePlan(em, e, pose, goal, seq, (r.Flags & OrderFlags.RunPaid) != 0, out bool truncated))
                     {
+                        if (charge) RunCost.Pay(e);
                         order.Seq = seq;
                         order.StartTick = nt.ServerTick;
                         order.GoalXMm = goal.x; order.GoalYMm = goal.y; order.GoalZMm = goal.z;
-                        order.Flags = (byte)(r.Flags | (truncated ? OrderFlags.Truncated : 0));
+                        order.Flags = (byte)((r.Flags & ~OrderFlags.ChargeRun) | (truncated ? OrderFlags.Truncated : 0));
                         em.SetComponentData(e, order);
                     }
                     else Refused++;

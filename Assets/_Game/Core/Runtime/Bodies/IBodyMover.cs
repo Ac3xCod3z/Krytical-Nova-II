@@ -10,8 +10,11 @@ namespace KryticalNova.Core
     /// </summary>
     public interface IBodyMover
     {
-        /// <summary>Walk or run to a point.</summary>
-        void MoveTo(Vector3 point, bool run);
+        /// <summary>
+        /// Walk or run to a point. <paramref name="run"/> = run speed (Run is selected); <paramref name="payRun"/> = the server takes Run's Flux for
+        /// this destination and refuses the walk without it (NGO ServerMoveTo; a later steering step of the same walk runs free).
+        /// </summary>
+        void MoveTo(Vector3 point, bool run, bool payRun);
 
         /// <summary>Stop where the body is.</summary>
         void Stop();

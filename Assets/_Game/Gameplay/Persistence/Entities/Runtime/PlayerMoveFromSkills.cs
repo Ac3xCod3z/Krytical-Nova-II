@@ -72,6 +72,8 @@ namespace KryticalNova.Persistence.Entities
             {
                 Run = (byte)Mathf.Clamp(skills.RunRank, 0, byte.MaxValue), Jump = (byte)Mathf.Clamp(skills.JumpRank, 0, byte.MaxValue),
                 Level = (ushort)Mathf.Clamp(progression != null ? progression.CurrentLevel : 0, 0, ushort.MaxValue),
+                Selected = (byte)skills.SelectedSkill,
+                SelectSeq = (byte)(skills.SelectAnswers & 0xff),
             };
         }
 
@@ -178,7 +180,8 @@ namespace KryticalNova.Persistence.Entities
                 {
                     MoveRanks? ranks = PlayerMoveFromSkills.RanksOf(entry.Body);
                     MoveRanks had = em.GetComponentData<MoveRanks>(entry.Ghost);
-                    if (ranks.HasValue && (had.Run != ranks.Value.Run || had.Jump != ranks.Value.Jump || had.Level != ranks.Value.Level))
+                    if (ranks.HasValue && (had.Run != ranks.Value.Run || had.Jump != ranks.Value.Jump || had.Level != ranks.Value.Level
+                        || had.Selected != ranks.Value.Selected || had.SelectSeq != ranks.Value.SelectSeq))
                     {
                         em.SetComponentData(entry.Ghost, ranks.Value);
                         RankWrites++;
@@ -220,6 +223,8 @@ namespace KryticalNova.Persistence.Entities
         /// <summary>Times the own body's ranks were set (tests).</summary>
         public int Mirrored { get; private set; }
 
+        readonly System.Collections.Generic.Dictionary<Entity, int> m_SelectionSeen = new System.Collections.Generic.Dictionary<Entity, int>();
+
         protected override void OnUpdate()
         {
             EntityManager em = EntityManager;
@@ -235,6 +240,13 @@ namespace KryticalNova.Persistence.Entities
                     {
                         skills.MirrorRanks(ranks.Run, ranks.Jump);
                         Mirrored++;
+                    }
+                    // the server's selection: on first sight (the saved one) and after every answered request (NGO's CorrectSelectionRpc)
+                    int answer = ranks.Selected | (ranks.SelectSeq << 8);
+                    if (!m_SelectionSeen.TryGetValue(entry.Ghost, out int seen) || seen != answer)
+                    {
+                        m_SelectionSeen[entry.Ghost] = answer;
+                        skills.MirrorSelection((MovementSkillId)ranks.Selected);
                     }
                 }
                 var resources = entry.Body.GetComponent<PlayerResources>();

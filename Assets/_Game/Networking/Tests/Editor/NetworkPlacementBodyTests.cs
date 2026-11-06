@@ -11,7 +11,7 @@ namespace KryticalNova.Networking.Tests
         {
             public int Teleports;
             public Vector3 At;
-            public void MoveTo(Vector3 point, bool run) { }
+            public void MoveTo(Vector3 point, bool run, bool payRun) { }
             public void Stop() { }
             public void Teleport(Vector3 position, Quaternion rotation) { Teleports++; At = position; }
             public bool JumpTo(Vector3 landing, out string reason) { reason = null; return false; }

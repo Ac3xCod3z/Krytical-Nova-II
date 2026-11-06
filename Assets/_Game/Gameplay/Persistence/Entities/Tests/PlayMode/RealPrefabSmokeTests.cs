@@ -490,6 +490,7 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
             public void SponsorOp(SponsorOpKind op, string a, bool flag) => Ops.Add($"Sponsor {op} {a}|{flag}");
             public void CrewOp(CrewOpKind op, string a, string b, byte b0, byte b1, byte b2, byte b3, bool flag) => Ops.Add($"Crew {op} {a}|{b}|{b0} {b1} {b2} {b3} {flag}");
             public void Emote(bool stop, string key) => Ops.Add($"Emote {stop} {key}");
+            public void SelectMovement(byte skill) => Ops.Add("SelectMovement " + skill);
             public void PetTrick(int nameHash) => Ops.Add("PetTrick " + nameHash);
             public void MountOp(MountOpKind op, int box) => Ops.Add($"MountOp {op} {box}");
             public void Chat(ChatChannel channel, string text, string whisperTarget, byte[] linkContainers, byte[] linkCells) =>
@@ -2767,8 +2768,9 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
         sealed class MoverSeen : IBodyMover
         {
             public readonly List<Vector3> Moves = new List<Vector3>();
+            public readonly List<string> Kinds = new List<string>();
             public int Stops;
-            public void MoveTo(Vector3 point, bool run) => Moves.Add(point);
+            public void MoveTo(Vector3 point, bool run, bool payRun) { Moves.Add(point); Kinds.Add((run ? "run" : "walk") + (payRun ? " paid" : " free")); }
             public void Stop() => Stops++;
             public int Teleports;
             public void Teleport(Vector3 position, Quaternion rotation) => Teleports++;
@@ -5113,6 +5115,52 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
             for (int i = 0; i < 10; i++) yield return null;
             Assert.AreEqual(walletText, second.GetComponent<KryticalNova.Economy.PlayerWallet>().CaptureSave(), "as it was saved");
             second.GetComponent<PlayerSaveAgent>().OnServerLeaving();
+        }
+
+        [UnityTest]
+        public IEnumerator B63_TheRunSelection_IsDecidedOnTheServerBody_ARefusalIsCorrectedOnTheView_AndServerWalksRunAndPayAsNgo()
+        {
+            // NGO PlayerMovementSkills.Select / SelectServerRpc / CorrectSelectionRpc and PointAndClickPlayer.ServerMoveTo (run = Run selected,
+            // pay = payRun && Run selected)
+            NetRole.Install(new BodyRoleNetRoleAdapter(null, () => NetRoleKind.ServerBody));
+            GameObject server = Make(NetRoleKind.ServerBody, false, new PlayerKey(631));
+            GameObject own = Make(NetRoleKind.ClientView, true, new PlayerKey(631));
+            yield return null;
+            var decides = server.GetComponent<PlayerMovementSkills>();
+            var shows = own.GetComponent<PlayerMovementSkills>();
+            var asked = new Asked();
+            own.GetComponent<BodyRoleTag>().Requests = asked;
+            decides.RestoreSave(JsonUtility.ToJson(new MovementSkillState { runRank = 0, jumpRank = 0 }));
+            shows.MirrorRanks(1, 0);   // the view believes Run is learned: the server knows better
+
+            Assert.IsTrue(shows.ToggleSelection(MovementSkillId.Run), "the view shows the selection at once");
+            Assert.IsTrue(shows.IsRunning);
+            Assert.Contains("SelectMovement " + (byte)MovementSkillId.Run, asked.Ops, "and asks its server body");
+
+            decides.RunSelect(MovementSkillId.Run);
+            Assert.IsFalse(decides.IsRunning, "Run not learned on the server: refused");
+            MoveRanks answer = PlayerMoveFromSkills.RanksOf(server).Value;
+            Assert.AreEqual((byte)MovementSkillId.None, answer.Selected);
+            Assert.AreEqual(1, answer.SelectSeq, "the refusal is an answer too (NGO's CorrectSelectionRpc)");
+            shows.MirrorSelection((MovementSkillId)answer.Selected);
+            Assert.IsFalse(shows.IsRunning, "the view is put back");
+
+            decides.RestoreSave(JsonUtility.ToJson(new MovementSkillState { runRank = 1, jumpRank = 0 }));
+            decides.RunSelect(MovementSkillId.Run);
+            Assert.IsTrue(decides.IsRunning, "learned: the server body runs");
+            Assert.AreEqual(MovementSkillId.Run, JsonUtility.FromJson<MovementSkillState>(decides.CaptureSave()).selected, "and the selection is saved");
+            Assert.AreEqual(2, PlayerMoveFromSkills.RanksOf(server).Value.SelectSeq);
+
+            var mover = new MoverSeen();
+            server.GetComponent<BodyRoleTag>().Mover = mover;
+            var controls = server.GetComponent<PointAndClickPlayer>();
+            Vector3 to = server.transform.position + Vector3.forward * 6f;
+            Assert.IsTrue(controls.ServerMoveTo(to));
+            Assert.IsTrue(controls.ServerMoveTo(to, payRun: false));
+            decides.RunSelect(MovementSkillId.None);
+            Assert.IsTrue(controls.ServerMoveTo(to));
+            Assert.AreEqual(new[] { "run paid", "run free", "walk free" }, mover.Kinds.ToArray(),
+                "a paid destination, a free steering step at run speed, a walk");
         }
 
         sealed class TextsSeen : ICombatFeedbackSink
