@@ -409,6 +409,64 @@ Lore: NPC text and roles follow `Design/Lore-Bible.md` (Ronin stay hidden).
    `NavWorldPathPlanner : IPathPlanner` behind the existing interface (one class, no player behaviour change), and NavWorld's
    batched `MoveLocations` could check many players' moves at once. That is an option with a measurement gate, not part of M5/M6.
 
+## 8c. NavWorld for players too? One nav system for everything? (owner follow-up, 6 Nov 2026)
+
+**Facts checked today**
+- **What NavWorld is in our Unity.** `Unity.AI.Navigation.LowLevel.NavWorld` ships **inside the engine** (`UnityEngine.AIModule.dll`
+  of our 6000.6.3f1), not in a preview package; our `com.unity.ai.navigation` 2.0.15 does not hold it. The old
+  `Experimental.AI.NavMeshQuery` is still in the same DLL beside it. Calls present: `GetDefaultWorld`, `MapLocation`,
+  `BeginFindPath/UpdateFindPath/EndFindPath/GetResultFromFindPath`, `GetPortalPoints`, `MoveLocation(s)`, `Raycast`,
+  `GetAreaCost/SetAreaCost`, `AddDependency`, node types (polygon or link). **No call** returns the straight path (corners), finds
+  the closest edge, or gives the triangulation. [code: names read from the DLL]
+- **It reads the same baked NavMesh, areas and NavMeshLinks** as the static `NavMesh` API. The bake and its times do not change.
+- **Our player side uses the NavMesh heavily** (clone, runtime code, tests excluded): `NavMesh.SamplePosition` 96 calls,
+  `CalculatePath` 17, `Raycast` 6, `FindClosestEdge` 2 (roof ledges `PlayerWallRunMotor.Ledges.cs:63`, `PointAndClickPlayer.cs:1689`),
+  `CalculateTriangulation` 1 (a Play-here debug), area masks in 43 places, and **roof-gap jumps are found from the path's corners**
+  ("a stretch of a NavMesh path that is a NavMeshLink", `PlayerWallRunMotor.Ledges.cs:142`; `PointAndClickPlayer.cs:178,1643`).
+  These sit in about 20 files: the DOTS planners and the NGO motors the DOTS planners call (vault, jump, Waterstride, Wallstride,
+  death, follow). Squad follow issues ordinary move orders (`PlayerFollow.cs:17`), so it follows the click planner.
+- **The earlier "no" for players** (`_Docs/Design/15_movement_wasd_controller_navworld.md`, 11 Oct, s2): NavWorld moves nothing;
+  movement felt slow because of the server round trip, not pathing; a switch meant rewriting the mover and the jump, vault and
+  death motors (the vault needs raycast, sample and path length, "which NavWorld has, and the straight path, which it has not");
+  nothing measured showed pathing costing frame time. It was a **cost/benefit no**, not "it cannot work".
+
+**1. Would NavWorld work for players?** Technically **yes, with work**: `MapLocation` replaces `SamplePosition`, `Raycast` exists,
+the path search exists and even marks link nodes (a cleaner way to find roof gaps). We would have to write the corner-making step
+(a funnel / string-pull) and a closest-edge search ourselves, then re-prove that every walk, vault, roof jump, Waterstride and
+Wallstride decision is the same as today (the owner's bar "movement must feel exactly like the NGO game", migration plan s51-s55).
+**Benefit today: none you would feel.** A player needs one path per click; the static call costs a fraction of a millisecond.
+
+**2. One system for all pathing?** It is already one system underneath: the same baked NavMesh, areas and links. "Two" is only two
+ways of asking it (one path per click on the main thread for players; hundreds of paths in background jobs for monsters).
+
+| Option | What | Cost | Gain | Risk |
+|---|---|---|---|---|
+| **A (recommended)** | Players keep today's static calls; monsters and NPCs use NavWorld in jobs (M5.2/M5.4) | none for players | monsters get jobbed paths now | low: player movement untouched |
+| B | Everything on NavWorld now: rewrite ~20 files of planners and motors, our own funnel + edge search, re-run the M3a-M3c movement acceptance | 2-3 weeks + feel re-approval | almost none today; one API style | **high**: every traversal rule can shift; also changes NGO motor code shared with the live game |
+| C (A, then measured) | A now; in the performance phase, if The Scar profiling shows the server's per-click checks on the main thread, move only the **server's** order check behind the existing `IPathPlanner` (`NavWorldPathPlanner`) into a batched job | ~1 week then | real at 1,000+ players | medium, contained to one class with a parity test |
+
+Why C matters later: The Scar with 1,000 players at about one click a second each is ~33 server path checks per 33 ms tick on the main
+thread; at a guessed 0.05-0.3 ms each that is 1.5-10 ms per tick [U, the spike measures it]. That is where batching in jobs pays.
+
+**Costs compared**
+- *CPU per path:* static `CalculatePath` = one main-thread call per path; NavWorld = the same search, but many at once spread over
+  worker threads, sliced over ticks. Per path about the same; the win is parallel and off the main thread [U: spike numbers].
+- *Memory:* same NavMesh data; NavWorld adds one `NavQueryBuffer` (node pool) per worker thread, tens of KB each.
+- *Bake/update:* unchanged (same bake). Runtime NavMesh changes must wait for running jobs (`AddDependency`).
+- *Burst/jobs:* NavWorld is made for jobs; the static calls are main thread only.
+- *Linux server:* both are engine code; the static calls already run on our Linux test server; NavWorld in a Linux IL2CPP+Burst
+  build is **not yet proven** (spike).
+- *Mobile:* both work; NavWorld helps there only if many paths are needed at once (monsters on a phone-hosted world: not planned).
+- *Player prediction:* the client predicts with its own plan and the server checks with its own. Today both call the same engine
+  function. With NavWorld both would run our funnel; that can be made identical (same code, integer corners), but it is one more
+  place where Windows and Linux could disagree and cause corrections.
+
+**What a short spike proves (1-2 days, M5.2, throwaway code):** (1) NavWorld path jobs run under Burst in the Editor and in a Linux
+IL2CPP+Burst server build; (2) our funnel's corners equal `CalculatePath`'s within 5 cm on 200 Zone01 pairs, including roof-gap
+links and area masks; (3) `MapLocation` lands where `SamplePosition` does for the click radius; (4) 1,000 batched searches vs 1,000
+static calls: time on the main thread and in total; (5) an Android IL2CPP build compiles the job (no device run). (1) and (4) decide
+monsters; (2)-(4) decide whether option C is open for players later. Option B is not recommended whatever the spike shows.
+
 ## 9. Risks
 - NavWorld in a Linux IL2CPP + Burst server build is unproven here (spike M5.2; fallback B).
 - Raising light windups changes fight balance (time to kill both ways): balance pass in M6.5 with the TTK GM tool.
