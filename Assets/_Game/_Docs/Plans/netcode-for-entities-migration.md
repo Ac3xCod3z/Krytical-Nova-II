@@ -343,6 +343,13 @@ prediction error p95 <= 0.05 m at 60 ms, tick p95 < 15 ms with 102 monsters (fro
   - [x] Cadence: the Strike Dummy hold by selection, as NGO: the own view's selection reaches its server body when it changes
     (CombatSelectionRpc, NGO SelectionRpc), so a struck dummy holds the fight while it stays selected OR within 30 m and ends when
     both have changed. Run 1 green: EditMode 333/333, PlayMode 61/61 (B60).
+  - [x] Shift and the emote sheathe, as NGO: Shift (ToggleWeapon, left/right Shift) draws/sheathes through the ghost (DOTS 14's batch,
+    the sheathe ends the attack). An emote while armed plays that same sheathe first and the motor's EmoteRoutine waits for it (3 s at
+    most): the server sheathes the asker's ghost in the emote request's own tick (EmoteServerSystem, MeleeRules.Sheathe) so the sheathe
+    and the emote reach every view in one snapshot, the client plays emotes after the weapon stance (EmoteClientSystem last in
+    presentation), and the own view asks for the sheathe at once (internal SheatheWeapon input). Found: without it the emote RPC ran
+    ticks before the view's input, so other views started the emote and the late sheathe cut it off. EditMode 458 (10 skipped),
+    PlayMode 62/62 (EmoteSheatheTests, BodyClickPathTests, B61). B49 can fail on a random evade (one cast before the cooldown): a test fix.
 - [ ] **M5 Monster system prototype (new brain).** Section 6. P0 EditMode sim tests (no netcode), P1 ghost + view, P2 reward bridge.
 - [ ] **M6 Hostiles in full.** All roster species via `MonsterArchetype` from `HostileDefinition` (ids kept), level scaling, zones,
   sleep, respawn, loot/XP through managed reward bridge with ledger rules; nav grids for the zones; bot soak with 102 monsters.
@@ -1533,3 +1540,15 @@ checkpoints; the owner's Thursday hand-test list; owner questions). NGO rules ta
     ServerSave.SaveWorld on the client). Now every DOTS body (view or server body) refuses with NGO's joined-client line; offline play is
     unchanged. B40. PlayMode B1-B40 41/41. M8 group 4 is complete except what waits for M4-M6 (duels, Cadence, AutobuffCaster, hostile
     loot, party / sponsor XP, pet growth extras, mount EXP).
+
+## 57. After the port: performance phase (owner, 5 Nov 2026, via the Master)
+
+Port everything first, matching NGO's rules; then a performance phase that moves the hot paths to jobs and Burst. The Scar will hold
+1000+ players in one place, and a mobile port is planned, which needs the work spread over the cores. Candidates:
+- player movement and prediction (the walk, jump and traversal systems, the server's input handling);
+- hit resolution (melee and area skills: the target gathering, the shared formula, the hit and number records);
+- ghost relevancy and importance for 1000+ players in The Scar (what each connection gets, and how often);
+- the monster brain (section 6), already designed to run jobbed and Burst-compiled;
+- mobile: thread budgets, Burst on ARM, the bodies' presentation cost.
+Rule until then (owner): no choice that blocks this later. Per-player state lives in components and ghost fields, not in new managed
+singletons; each step's notes mark an obvious hot path "job later".

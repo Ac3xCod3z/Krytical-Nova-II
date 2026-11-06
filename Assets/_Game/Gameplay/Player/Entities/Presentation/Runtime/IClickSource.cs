@@ -22,6 +22,8 @@ namespace KryticalNova.Player.Entities.Presentation
         public int AttackGhostId;
         /// <summary>The draw/sheathe key.</summary>
         public bool ToggleWeapon;
+        /// <summary>Put the weapon away (an emote): sheathes, never draws.</summary>
+        public bool SheatheWeapon;
     }
 
     /// <summary>
@@ -69,6 +71,7 @@ namespace KryticalNova.Player.Entities.Presentation
             if (m_Source == null || !m_Source.TryTake(out var click)) return false;
             if (click.Stop) { command.Kind = PlayerCommandKind.Stop; return true; }
             if (click.ToggleWeapon) { command.Kind = PlayerCommandKind.ToggleWeapon; return true; }
+            if (click.SheatheWeapon) { command.Kind = PlayerCommandKind.SheatheWeapon; return true; }
             if (click.AttackGhostId != 0) { command.Kind = PlayerCommandKind.Attack; command.TargetGhostId = click.AttackGhostId; return true; }
             command.Kind = PlayerCommandKind.Click;
             command.Run = click.Run && !click.Jump;

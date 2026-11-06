@@ -41,6 +41,9 @@ namespace KryticalNova.Persistence.Entities
                 for (int i = 0; i < asks.Length; i++)
                 {
                     if (!PlayerRequestServerSystem.TryBody(World, received[i].SourceConnection, CallKind.Cosmetic, out GameObject body) || !body.TryGetComponent(out IBodyEmotes emotes)) continue;
+                    // NGO PlayerEmotes.RequestPlay: the weapon is put away before the emote (Shift's own sheathe). Done here, in the emote's
+                    // tick, so every view gets the sheathe with the emote and plays it first (the motor's emote waits for it, 3 s at most).
+                    if (asks[i].Stop == 0) SheatheOn(received[i].SourceConnection);
                     emotes.RunEmote(asks[i].Stop != 0, asks[i].Key.ToString());
                     Ran++;
                 }
@@ -58,11 +61,26 @@ namespace KryticalNova.Persistence.Entities
                 Writes++;
             }
         }
+
+        /// <summary>The asker's ghost puts its weapon away now and its attack ends (nothing when it is sheathed already).</summary>
+        void SheatheOn(Entity connection)
+        {
+            EntityManager em = EntityManager;
+            if (!em.HasComponent<NetworkId>(connection)) return;
+            if (!GhostBodyRegistry.TryGetByNetworkId(World, em.GetComponentData<NetworkId>(connection).Value, out GhostBodyEntry entry)
+                || !em.Exists(entry.Ghost) || !em.HasComponent<CombatState>(entry.Ghost)) return;
+            var s = em.GetComponentData<CombatState>(entry.Ghost);
+            MeleeRules.Sheathe(ref s);
+            em.SetComponentData(entry.Ghost, s);
+        }
     }
 
-    /// <summary>Client: every view plays the emote the server shows for its player.</summary>
+    /// <summary>
+    /// Client: every view plays the emote the server shows for its player. Last in presentation: a sheathe that came with the emote
+    /// (the ghost's weapon, WeaponStancePresentSystem) starts first, so the emote waits for it as NGO's does instead of being cut short.
+    /// </summary>
     [WorldSystemFilter(WorldSystemFilterFlags.ClientSimulation)]
-    [UpdateInGroup(typeof(SimulationSystemGroup))]
+    [UpdateInGroup(typeof(PresentationSystemGroup), OrderLast = true)]
     public partial class EmoteClientSystem : SystemBase
     {
         protected override void OnUpdate()

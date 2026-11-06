@@ -81,6 +81,8 @@ namespace KryticalNova.Player.Entities
         public InputEvent StopAttack;
         /// <summary>The draw/sheathe key (NGO PointAndClickPlayer toggleWeaponAction -> RequestToggleWeaponDraw).</summary>
         public InputEvent ToggleWeapon;
+        /// <summary>Put the weapon away, never draw it (an emote: NGO PlayerEmotes.RequestPlay -> RequestSetWeaponDraw(false)).</summary>
+        public InputEvent SheatheWeapon;
     }
 
     /// <summary>

@@ -190,8 +190,10 @@ namespace KryticalNova.Social
                 ClientPresentationRegistry.Messages?.ShowMessage(blocked);
                 return;
             }
-            // Sheathing is the owner's to ask for, so every machine sees it happen the usual way.
-            motor.RequestSetWeaponDraw(false);
+            // Sheathing is the owner's to ask for, so every machine sees it happen the usual way (the entity netcode's view: its ghost
+            // sheathes and every view shows that; the view never sheathes on its own).
+            if (EntityView) { if (motor != null && motor.IsWeaponDrawn) BodyClicks.SheatheWeapon(); }
+            else motor.RequestSetWeaponDraw(false);
             if (Requests is { } requests) { requests.Emote(false, key); return; }   // the entity netcode's own view asks its server body
             if (IsSpawned) PlayRpc(new FixedString64Bytes(key));
             else ServerPlay(key);

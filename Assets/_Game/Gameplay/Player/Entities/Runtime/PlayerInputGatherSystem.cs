@@ -7,7 +7,7 @@ using UnityEngine;
 
 namespace KryticalNova.Player.Entities
 {
-    public enum PlayerCommandKind : byte { None, Click, Stop, Attack, StopAttack, ToggleWeapon }
+    public enum PlayerCommandKind : byte { None, Click, Stop, Attack, StopAttack, ToggleWeapon, SheatheWeapon }
 
     /// <summary>What the player asked for this frame, before it becomes a <see cref="PlayerInput"/>.</summary>
     public struct PlayerCommand
@@ -151,6 +151,8 @@ namespace KryticalNova.Player.Entities
                         input.StopAttack.Set();
                     else if (cmd.Kind == PlayerCommandKind.ToggleWeapon)
                         input.ToggleWeapon.Set();
+                    else if (cmd.Kind == PlayerCommandKind.SheatheWeapon)
+                        input.SheatheWeapon.Set();
                     else if (cmd.Kind == PlayerCommandKind.Click && WallPlanner != null && (cmd.Wall || OwnerOnWall(em, e)))
                         PlanWallClick(em, e, cmd, ref input);
                     else if (cmd.Kind == PlayerCommandKind.Click && cmd.Jump)

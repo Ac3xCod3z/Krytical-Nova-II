@@ -25,6 +25,8 @@ namespace KryticalNova.Core
             public Transform AttackTarget;
             /// <summary>The draw/sheathe key (no point).</summary>
             public bool ToggleWeapon;
+            /// <summary>Put the weapon away, never draw it (an emote, NGO PlayerEmotes.RequestPlay; no point).</summary>
+            public bool SheatheWeapon;
         }
 
         /// <summary>Most clicks kept between two takes.</summary>
@@ -104,6 +106,9 @@ namespace KryticalNova.Core
 
         /// <summary>The draw/sheathe key on a client view (NGO RequestToggleWeaponDraw): the ghost draws or sheathes.</summary>
         public static void ToggleWeapon() => Add(new Click { ToggleWeapon = true });
+
+        /// <summary>An emote on a client view puts the weapon away first (NGO RequestSetWeaponDraw(false)): the ghost sheathes, never draws.</summary>
+        public static void SheatheWeapon() => Add(new Click { SheatheWeapon = true });
 
         /// <summary>The second click on a hostile <paramref name="target"/> (NGO's StartAttackTarget and RequestAttackEntityServerRpc).</summary>
         public static void Attack(Transform target)

@@ -16,6 +16,7 @@ namespace KryticalNova.Player.Entities.Bodies
             click = default;
             if (!BodyClicks.TryTake(out BodyClicks.Click taken)) return false;
             if (taken.ToggleWeapon) { click = new WorldClick { ToggleWeapon = true }; return true; }
+            if (taken.SheatheWeapon) { click = new WorldClick { SheatheWeapon = true }; return true; }
             if (taken.AttackTarget != null)
             {
                 // the clicked body's ghost; a body that is no ghost's (gone meanwhile) is no attack

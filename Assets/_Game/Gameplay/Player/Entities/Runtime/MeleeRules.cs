@@ -198,6 +198,13 @@ namespace KryticalNova.Player.Entities
         public static void Toggle(ref CombatState s, NetworkTick now)
         {
             if (s.WeaponDrawn == 0) { Draw(ref s, now); return; }
+            Sheathe(ref s);
+        }
+
+        /// <summary>The weapon is put away (the key's sheathe half, an emote): the attack ends; nothing when it is sheathed already.</summary>
+        public static void Sheathe(ref CombatState s)
+        {
+            if (s.WeaponDrawn == 0) return;
             Cancel(ref s);
             s.WeaponDrawn = 0;
             s.DrawnTick = default;

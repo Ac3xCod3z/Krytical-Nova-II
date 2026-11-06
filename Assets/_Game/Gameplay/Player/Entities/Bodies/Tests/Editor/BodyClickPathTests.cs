@@ -77,5 +77,40 @@ namespace KryticalNova.Player.Entities.Bodies.Tests
                 Object.DestroyImmediate(body);
             }
         }
+
+        [Test]
+        public void AnEmotesSheathe_PutsTheGhostsWeaponAway_EndsTheAttack_AndNeverDrawsIt()
+        {
+            // NGO PlayerEmotes.RequestPlay:193-194: the owner puts the weapon away before the emote (RequestSetWeaponDraw(false))
+            using var rig = PlayerRig.Create(2, 0, new[] { new int3(0, 0, 0), new int3(0, 0, 1200) });
+            rig.Clients[0].GetExistingSystemManaged<PlayerInputGatherSystem>().Source = new ClickCommandSource(new BodyClickSource());
+            var body = new GameObject("other player's view");
+            Entity view = rig.GhostIn(0, 1);
+            GhostBodyRegistry.Register(rig.Clients[0], view, 0, default, body, false);
+            try
+            {
+                BodyClicks.SheatheWeapon();
+                rig.Tick(10);
+                Assert.AreEqual(0, rig.Get<CombatState>(rig.Server, rig.ServerGhosts[0]).WeaponDrawn, "sheathed already: the emote never draws it");
+
+                BodyClicks.Attack(body.transform);
+                rig.Tick(10);
+                CombatState drawn = rig.Get<CombatState>(rig.Server, rig.ServerGhosts[0]);
+                Assert.AreEqual(1, drawn.WeaponDrawn, "the attack drew the weapon");
+                Assert.AreNotEqual(0, drawn.TargetGhostId);
+
+                BodyClicks.SheatheWeapon();
+                rig.Tick(10);
+                CombatState after = rig.Get<CombatState>(rig.Server, rig.ServerGhosts[0]);
+                Assert.AreEqual(0, after.WeaponDrawn, "the emote put the weapon away on the server");
+                Assert.AreEqual(0, after.TargetGhostId, "and the attack ended");
+                Assert.AreEqual(0, rig.Get<CombatState>(rig.Clients[0], rig.GhostIn(0, 0)).WeaponDrawn, "the owner's ghost shows it sheathed");
+            }
+            finally
+            {
+                GhostBodyRegistry.Unregister(rig.Clients[0], view, out _);
+                Object.DestroyImmediate(body);
+            }
+        }
     }
 }

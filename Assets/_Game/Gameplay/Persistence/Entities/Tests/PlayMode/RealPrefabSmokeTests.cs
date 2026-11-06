@@ -5041,6 +5041,33 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
             Assert.IsFalse(fight.InCombat, "deselected and 40 m away: over");
         }
 
+        [UnityTest]
+        public IEnumerator B61_AnEmoteOnTheOwnView_AsksTheGhostToSheathe_AndTheViewNeverSheathesByItself()
+        {
+            // NGO PlayerEmotes.RequestPlay:193-194 (RequestSetWeaponDraw(false) before the emote): on a view the ghost sheathes
+            NetRole.Install(new BodyRoleNetRoleAdapter(null, () => NetRoleKind.ServerBody));
+            GameObject own = Make(NetRoleKind.ClientView, true, new PlayerKey(611));
+            yield return null;
+            var emotes = own.GetComponent<KryticalNova.Social.PlayerEmotes>();
+            var motor = own.GetComponent<PlayerAnimancerMotor>();
+            Assert.IsNotNull(emotes, "the own view keeps PlayerEmotes");
+            Assert.IsNotNull(motor);
+            Assert.IsNull(emotes.Blocked(), "planned: the view may start an emote here");
+            BodyClicks.Clear();
+            try
+            {
+                emotes.RequestPlay("b61");
+                Assert.AreEqual(0, BodyClicks.Count, "sheathed already: nothing asked");
+
+                motor.ShowWeaponStanceFromGhost(true, animate: false);
+                Assert.IsTrue(motor.IsWeaponDrawn);
+                emotes.RequestPlay("b61");
+                Assert.IsTrue(BodyClicks.TryTake(out BodyClicks.Click click) && click.SheatheWeapon, "the view asked its ghost to sheathe");
+                Assert.IsTrue(motor.IsWeaponDrawn, "the view never sheathes by itself: the ghost decides and every view shows it");
+            }
+            finally { BodyClicks.Clear(); }
+        }
+
         sealed class TextsSeen : ICombatFeedbackSink
         {
             public readonly List<string> Texts = new List<string>();
