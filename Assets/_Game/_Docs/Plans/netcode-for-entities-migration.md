@@ -340,6 +340,9 @@ prediction error p95 <= 0.05 m at 60 ms, tick p95 < 15 ms with 102 monsters (fro
     +6 %, combo 2 s); "ON CADENCE" and the COMBO / REDLINE steps come back to the owner's own view only (CadenceOwnerRpc; NGO
     EarnedRpc / ComboRpc). A view never judges. Run 1 green (after one compile fix): EditMode 333/333, PlayMode 60/60 (B59). Open:
     the beat's parity between server and client is proven only by the owner's GUI test; the dummy hold by selection (30 m works).
+  - [x] Cadence: the Strike Dummy hold by selection, as NGO: the own view's selection reaches its server body when it changes
+    (CombatSelectionRpc, NGO SelectionRpc), so a struck dummy holds the fight while it stays selected OR within 30 m and ends when
+    both have changed. Run 1 green: EditMode 333/333, PlayMode 61/61 (B60).
 - [ ] **M5 Monster system prototype (new brain).** Section 6. P0 EditMode sim tests (no netcode), P1 ghost + view, P2 reward bridge.
 - [ ] **M6 Hostiles in full.** All roster species via `MonsterArchetype` from `HostileDefinition` (ids kept), level scaling, zones,
   sleep, respawn, loot/XP through managed reward bridge with ledger rules; nav grids for the zones; bot soak with 102 monsters.

@@ -5010,6 +5010,37 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
             }
         }
 
+        [UnityTest]
+        public IEnumerator B60_AStruckDummy_HoldsTheFightWhileSelected_BeyondThirtyMetres_AndEndsWhenDeselectedAndFar()
+        {
+            // owner (5 Nov 2026): Cadence on the dummy exactly as NGO: the fight holds while the dummy stays selected OR within 30 m;
+            // the server body learns the owner's selection (NGO SelectionRpc) through ServerSetSelected
+            NetRole.Install(new BodyRoleNetRoleAdapter(null, () => NetRoleKind.ServerBody));
+            GameObject attacker = Make(NetRoleKind.ServerBody, false, new PlayerKey(601));
+            var dummyObject = new GameObject("B60 Combat Dummy");
+            m_Made.Add(dummyObject);
+            dummyObject.transform.position = attacker.transform.position + attacker.transform.forward * 1f;
+            var dummy = dummyObject.AddComponent<CombatEntity>();
+            yield return null;
+            var fight = attacker.GetComponent<KryticalNova.Combat.PlayerCombatState>();
+            // the blow's own 6 s linger shortened, so the dummy rule alone is seen
+            typeof(KryticalNova.Combat.PlayerCombatState).GetField("lingerSeconds", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(fight, 0.5f);
+            bool landed = false;
+            for (int i = 0; i < 20 && !landed; i++) landed = KryticalNova.Combat.Entities.MeleeStrike.Apply(attacker, dummy, 1, 1f);
+            Assert.IsTrue(landed);
+            fight.ServerSetSelected(dummyObject.transform);
+            for (float t = 0f; t < 0.4f; t += Time.deltaTime) yield return null;
+            Assert.IsTrue(fight.InCombat, "in a fight with the dummy");
+
+            dummyObject.transform.position = attacker.transform.position + Vector3.forward * 40f;   // 40 m off
+            for (float t = 0f; t < 1.2f; t += Time.deltaTime) yield return null;
+            Assert.IsTrue(fight.InCombat, "still selected: the fight holds beyond 30 m");
+
+            fight.ServerSetSelected(null);
+            for (float t = 0f; t < 1.2f; t += Time.deltaTime) yield return null;
+            Assert.IsFalse(fight.InCombat, "deselected and 40 m away: over");
+        }
+
         sealed class TextsSeen : ICombatFeedbackSink
         {
             public readonly List<string> Texts = new List<string>();

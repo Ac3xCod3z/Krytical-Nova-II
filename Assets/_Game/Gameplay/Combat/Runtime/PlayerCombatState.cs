@@ -204,6 +204,7 @@ namespace KryticalNova.Combat
         private void Update()
         {
             if (IsSpawned && IsOwner && !IsServer) SendSelection();
+            else if (!IsSpawned && KryticalNova.Core.BodyRoleTag.IsLocalClientView(this)) SendSelectionFromView();
             if (!Decides || Time.time < nextCheck) return;
             Look();
         }
@@ -240,8 +241,33 @@ namespace KryticalNova.Combat
                 Transform selected = body != null ? body.SelectedTarget : null;
                 return selected != null && selected.GetComponentInParent<CombatEntity>() == dummy;
             }
+            // a server body of the entity netcode: the owner's view said what it selected (SelectionFromView)
+            if (!IsSpawned) return serverSelected != null && serverSelected.GetComponentInParent<CombatEntity>() == dummy;
             var net = dummy.GetComponentInParent<NetworkObject>();
             return net != null && selectedId != 0 && net.NetworkObjectId == selectedId;
+        }
+
+        private Transform serverSelected;
+
+        /// <summary>
+        /// The own view of the entity netcode: its selection when it changes, for the server body (NGO SendSelection / SelectionRpc);
+        /// null = nothing selected.
+        /// </summary>
+        public event Action<Transform> SelectionFromView;
+
+        /// <summary>Server body: what the owner's view has selected (NGO SelectionRpc's body), the body it names on this server.</summary>
+        public void ServerSetSelected(Transform selected)
+        {
+            if (Decides) serverSelected = selected;
+        }
+
+        private void SendSelectionFromView()
+        {
+            Transform selected = body != null ? body.SelectedTarget : null;
+            if (selectionSent && selected == sentSelection) return;
+            selectionSent = true;
+            sentSelection = selected;
+            SelectionFromView?.Invoke(selected);
         }
 
         // Owner (a client): tells the server what is selected when it changes.
