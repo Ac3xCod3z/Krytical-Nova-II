@@ -105,7 +105,11 @@ namespace KryticalNova.Hostiles
         /// <summary>True while its zone sleeps: no brain, no animation, until a player comes near again.</summary>
         public bool Asleep => asleep;
 
-        private bool HasAuthority => !IsSpawned || IsServer;
+        private bool HasAuthority => (!IsSpawned || IsServer) && OverrideAllows;
+
+        // The entity netcode decides the Hostiles in this process (its worlds live, or HostileSpawner.AuthorityOverride): a body it does not
+        // allow never decides or wakes itself.
+        private static bool OverrideAllows => HostileSpawner.EntityNetcodeAllows;
 
         private void Awake()
         {
@@ -140,7 +144,7 @@ namespace KryticalNova.Hostiles
             get
             {
                 NetworkManager manager = NetworkManager.Singleton;
-                return manager == null || !manager.IsListening;
+                return (manager == null || !manager.IsListening) && OverrideAllows;
             }
         }
 

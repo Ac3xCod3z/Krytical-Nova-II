@@ -14,8 +14,17 @@ namespace KryticalNova.Hostiles
     {
         private const float NavMeshReach = 4f;
 
-        /// <summary>True on the server, the host, or with no session running.</summary>
-        public static bool HasAuthority
+        /// <summary>
+        /// True on the server, the host, or with no session running; never while the entity netcode's worlds are live (NGO is not
+        /// listening there, so every client would spawn Hostiles of its own); <see cref="AuthorityOverride"/> decides when set.
+        /// </summary>
+        public static bool HasAuthority => AuthorityOverride != null ? AuthorityOverride() : !KryticalNova.Core.EntityNetcodeWorlds.Live && NgoAuthority;
+
+        /// <summary>A Hostile body may decide here as far as the entity netcode is concerned (the override, else no live entity worlds).</summary>
+        internal static bool EntityNetcodeAllows => AuthorityOverride != null ? AuthorityOverride() : !KryticalNova.Core.EntityNetcodeWorlds.Live;
+
+        /// <summary>The Netcode for GameObjects rule: the server, the host, or no session running.</summary>
+        public static bool NgoAuthority
         {
             get
             {
@@ -23,6 +32,15 @@ namespace KryticalNova.Hostiles
                 return manager == null || !manager.IsListening || manager.IsServer;
             }
         }
+
+        /// <summary>
+        /// Who decides the Hostiles when the entity netcode runs this process (null: no Hostiles while its worlds are live, the NGO rule
+        /// otherwise). M5.5's server bodies set it (M5.0 seam). <see cref="HostileNet"/> follows it too.
+        /// </summary>
+        public static System.Func<bool> AuthorityOverride { get; set; }
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetStatics() => AuthorityOverride = null;
 
         /// <summary>Every Hostile species the session can spawn, by id.</summary>
         public static List<HostileNet> Species()

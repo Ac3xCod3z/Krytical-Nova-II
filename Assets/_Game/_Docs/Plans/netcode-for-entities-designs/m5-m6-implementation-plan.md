@@ -163,7 +163,10 @@ struct HostileGhost : IComponentData {                                  // ghost
 there already says "M5: Hostiles").
 
 ### 2.3 Managed seams added to NGO code (small, behaviour-neutral on main; land as `seams/` PRs per migration plan s13)
-- `HostileSpawner.AuthorityOverride` (`Func<bool>`, null on main): when set, `HasAuthority` (`HostileSpawner.cs:18-25`) returns it.
+- **[done, DOTS 15, 6 Nov]** `HostileSpawner.AuthorityOverride` (`Func<bool>`, null on main): when set, `HasAuthority` (`HostileSpawner.cs:18-25`) returns it.
+  As built: unset, `HasAuthority` = no live entity-netcode worlds (Core `EntityNetcodeWorlds.Live`, filled by `KnBootstrap` at runtime) and
+  the NGO rule; `HostileNet.HasAuthority`/`Offline` follow it (`HostileSpawner.EntityNetcodeAllows`), so no zone spawns and no body wakes
+  while DOTS worlds run, until M5.5 sets the override for its server bodies. `HostileAuthorityTests`.
   DOTS sets it to "this process has a server world", so **clients stop running offline NGO Hostiles** (today they do: NGO is
   not listening on DOTS, so `HasAuthority` is true everywhere).
 - `HostileStrikeRules.TryRoll(CombatEntity attacker, HostileDefinition def, int attackIndex, CombatEntity target, Transform attackerBody, out DamageResult)`

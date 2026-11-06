@@ -27,6 +27,18 @@ namespace KryticalNova.Networking.Entities
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void ResetStatics() => JoinCheckFactory = null;
 
+        // NGO code that must stand aside while these worlds run asks through Core (M5.0 seam: NGO's Hostile zones).
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterAssembliesLoaded)]
+        private static void PublishLiveWorlds() => KryticalNova.Core.EntityNetcodeWorlds.LiveProbe = AnyLiveWorld;
+
+        /// <summary>A client or server world of the entity netcode exists in this process.</summary>
+        public static bool AnyLiveWorld()
+        {
+            foreach (World w in ServerWorlds) if (w != null && w.IsCreated) return true;
+            foreach (World w in ClientWorlds) if (w != null && w.IsCreated) return true;
+            return false;
+        }
+
         public override bool Initialize(string defaultWorldName)
         {
             AutoConnectPort = 0; // never connect or listen by itself: we ask for it
