@@ -1,0 +1,32 @@
+{
+    "name": "KryticalNova.Hostiles.Entities.Tests.Editor",
+    "rootNamespace": "KryticalNova.Hostiles.Entities.Tests",
+    "references": [
+        "KryticalNova.Runtime",
+        "KryticalNova.Brains",
+        "KryticalNova.Hostiles",
+        "KryticalNova.Hostiles.Entities",
+        "UnityEngine.TestRunner",
+        "UnityEditor.TestRunner",
+        "Unity.Burst",
+        "Unity.Collections",
+        "Unity.Mathematics",
+        "Unity.Entities",
+        "Unity.Transforms"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "nunit.framework.dll"
+    ],
+    "autoReferenced": false,
+    "defineConstraints": [
+        "UNITY_INCLUDE_TESTS"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

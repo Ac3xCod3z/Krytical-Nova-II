@@ -258,6 +258,11 @@ Rows marked `[line: M5.0]` have the file but the line is filled in M5.0. "Test" 
 - **Owner hand test:** none (no visible change). **Done when:** tests green, dependency check 0/0, Linux server compile with Burst.
 
 ### M5.2 NavWorld spike (S, LOW, throwaway branch code; keep only the report)
+- **[done, DOTS 15, 6 Nov: report `m5-rules-tables/M5.2-navworld-spike.md`] Nova's pick: A** (NavWorld for monsters). **Gate before
+  M5.4:** the Linux proof (a tiny throwaway project, one Burst NavWorld job, built for Linux, run under WSL; a full-game IL2CPP Linux
+  build is for a bigger machine); if it fails, the baked grid (B). Links and heights: snap corners/heights to the detail mesh, or
+  fall back to `CalculatePath` across NavMeshLinks. The players' later option C stays blocked until link corners and heights match.
+  Real API names: `NavNode`, `NavQueryStatus`, `ContinueFindPath`; map monsters with a box >= 2 m tall.
 - In `C:\Users\dlaco\KN-worktrees\dots-spike` (the M1 throwaway project style) or a scratch folder in the clone not committed:
   one Burst `IJob` that maps two points with `NavWorld.MapLocation`, runs `BeginFindPath/ContinueFindPath/EndFindPath`, reads the
   corridor, turns it into corners with a simple funnel (string-pull over `GetPortalPoints`); 200 queries on Zone01's NavMesh
@@ -267,6 +272,12 @@ Rows marked `[line: M5.0]` have the file but the line is filled in M5.0. "Test" 
 - **Done when:** report + Nova's pick. No commit of spike code.
 
 ### M5.3 Monster mind P0 on one stand-in (L, MED)
+- **Split (DOTS 15):** M5.3a **[done, 6 Nov]** = `Hostiles/Entities` assembly (refs Core, Brains, Hostiles only for now),
+  `HostileComponents.cs` (brain, life, home, target, threat, cooldowns, `PendingStrike`), pure `HostileRules.cs` (H01 ceil'd aggro
+  radius, H04 speeds, Q8 notice ticks, reach/H07, facing, commit tick, Q5 switch, H14 leash, `NextMode` with the leash return healing
+  and Emerald's 5 s give-up not), `HostileBrainSettings` (+ asset; `giveUpSeconds` 5 = H14 parity instead of `unreachableSeconds` 6)
+  and `HostileBrainConfig`; `HostileRulesTests` (7). M5.3b = the blob, the player feeder for `SenseWorld` (Brains reads only
+  `SenseWorld.Players`), the scan/threat/decide/attack systems and the reaction tests below.
 - **Create (Hostiles/Entities/Runtime):** `HostileEntities.asmdef`, `HostileComponents.cs` (2.2 minus ghost), `HostileRules.cs`
   (pure: aggro radius, speeds, notice ticks, leash, reach, facing, commit tick, threat switch), `HostileScore.cs` (target and
   ability scoring over blob curves), `HostileArchetypeBlob.cs`, `HostileArchetypeBakeSystem.cs`, `HostileSenseScanSystem.cs`,
