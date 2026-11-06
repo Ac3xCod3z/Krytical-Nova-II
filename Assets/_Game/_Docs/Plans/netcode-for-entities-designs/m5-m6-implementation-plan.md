@@ -284,7 +284,11 @@ Rows marked `[line: M5.0]` have the file but the line is filled in M5.0. "Test" 
   neutral ground nor ignored -> `HostileBrain.Saw` + target). `HostileTestWorld` (plain World) + ThreatTests, SightScanTests (4).
   M5.3b2a **[done, 6 Nov]**: `HostilePlayerFeedSystem` (player ghosts -> `SenseWorld.Players`: ghost id, feet from the pose, Alive/Dead
   as the melee rules, OnWall; runs only where `HostileBrainConfig` exists); Neutral and Ignored flags still to add (managed rules).
-  M5.3b2 (next): the archetype blob + bake, Neutral/Ignored in the feed, `HostileDecideSystem`
+  M5.3b2b **[done, 6 Nov]**: `HostileDecideSystem` (NextMode on live state: notice ticks, Emerald's 5 s give-up beyond the
+  detection radius without a heal, the leash return that heals and clears threat at home, the next valid threat, `BrainMover` dest
+  for Engage/Return); Brains: a brain moving to a nearer tier thinks on that tick (sight reaction worst 4, mean 4 ticks; plan <= 6 / 4.5).
+  Tests: ReactionTests (SightAggro, HitTurnsSameTick), HostileBrainTests (Leash, GiveUp, NeutralGround).
+  M5.3b2c (next): the archetype blob + bake, Neutral/Ignored in the feed, patrol (wander within 8 m, pause 3-6 s)
   (NextMode, notice, give-up clock, leash, patrol), `HostileAttackSystem` (windup/commit/resolve -> `PendingStrike`), the reaction,
   HostileBrain, score, determinism and GC tests.
 - **Create (Hostiles/Entities/Runtime):** `HostileEntities.asmdef`, `HostileComponents.cs` (2.2 minus ghost), `HostileRules.cs`

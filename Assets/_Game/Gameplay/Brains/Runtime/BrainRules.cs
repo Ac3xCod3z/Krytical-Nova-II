@@ -30,6 +30,8 @@ namespace KryticalNova.Brains
             bool placed = clock.NextThinkTick != 0;
             if (!placed || wanted <= clock.Tier)
             {
+                // a player came nearer: think now, not on the slower tier's next tick ("up is immediate")
+                if (placed && wanted < clock.Tier) clock.NextThinkTick = now;
                 clock.Tier = wanted;
                 clock.TierSinceTick = 0;
             }
