@@ -17,6 +17,7 @@ MonoBehaviour:
   commitFraction: 0.6
   facingDegrees: 60
   minVisibleWarningSeconds: 0.35
+  attackCooldownSeconds: 0.35
   threatSwitchMelee: 1.1
   threatSwitchRanged: 1.3
   threatDecayAfterSeconds: 5

@@ -14,7 +14,7 @@ namespace KryticalNova.Hostiles.Entities.Tests
         public const int TickRate = 30;
         public readonly World World;
         public uint Tick;
-        readonly SystemHandle m_Sense, m_Clock, m_Threat, m_Scan, m_Decide;
+        readonly SystemHandle m_Sense, m_Clock, m_Threat, m_Scan, m_Decide, m_Attack;
         readonly EntityQuery m_TickQuery, m_SenseQuery;
 
         public HostileTestWorld()
@@ -33,6 +33,7 @@ namespace KryticalNova.Hostiles.Entities.Tests
             m_Threat = World.CreateSystem<HostileThreatSystem>();
             m_Scan = World.CreateSystem<HostileSenseScanSystem>();
             m_Decide = World.CreateSystem<HostileDecideSystem>();
+            m_Attack = World.CreateSystem<HostileAttackSystem>();
             m_TickQuery = em.CreateEntityQuery(typeof(BrainTick));
             m_SenseQuery = em.CreateEntityQuery(typeof(SenseWorld));
         }
@@ -43,7 +44,9 @@ namespace KryticalNova.Hostiles.Entities.Tests
         {
             EntityManager em = Em;
             Entity e = em.CreateEntity(typeof(BrainTag), typeof(BrainActive), typeof(BrainClock), typeof(LocalTransform), typeof(HostileBrain),
-                typeof(HostileTarget), typeof(HostileLife), typeof(HostileHome), typeof(BrainMover));
+                typeof(HostileTarget), typeof(HostileLife), typeof(HostileHome), typeof(BrainMover), typeof(BrainDice));
+            em.SetComponentData(e, new BrainDice { Rng = BrainDiceRules.Create(stableId, 77) });
+            em.AddBuffer<HostileAbilityRow>(e).Add(new HostileAbilityRow { WindupTicks = 12, RecoverTicks = 6, Range = range, Weight = 1f });
             em.SetComponentData(e, new HostileHome { Home = at, WanderRadius = 8f });
             em.AddBuffer<BrainEvent>(e);
             em.AddBuffer<ThreatEntry>(e);
@@ -76,11 +79,15 @@ namespace KryticalNova.Hostiles.Entities.Tests
                 m_Threat.Update(World.Unmanaged);
                 m_Scan.Update(World.Unmanaged);
                 m_Decide.Update(World.Unmanaged);
+                m_Attack.Update(World.Unmanaged);
             }
         }
 
         public HostileTarget Target(Entity e) => Em.GetComponentData<HostileTarget>(e);
         public HostileBrain Brain(Entity e) => Em.GetComponentData<HostileBrain>(e);
+
+        /// <summary>The swings resolved so far (the queue is the bridge's to empty in the game).</summary>
+        public int Strikes => Em.CreateEntityQuery(typeof(PendingStrike)).GetSingletonBuffer<PendingStrike>(true).Length;
 
         public void Dispose()
         {
@@ -291,6 +298,84 @@ namespace KryticalNova.Hostiles.Entities.Tests
             w.SetPlayers((new float3(2f, 0f, 0f), (byte)(Alive | SensedFlags.Neutral)), (new float3(3f, 0f, 0f), (byte)(Alive | SensedFlags.Neutral)));
             w.Step();
             Assert.AreEqual(HostileMode.Return, w.Brain(h).Mode, "nobody left: home");
+        }
+    }
+
+    public sealed class SwingTests
+    {
+        const byte Alive = SensedFlags.Alive;
+
+        // a FightsBack Hostile at the origin facing +z, engaged by a hit from a player 5 m ahead (out of reach)
+        static Entity Engaged(HostileTestWorld w)
+        {
+            Entity h = w.Hostile(float3.zero, HostileBehaviourKind.FightsBack);
+            w.SetPlayers((new float3(0f, 0f, 5f), Alive));
+            w.Hit(h, 100, 1f);
+            w.Step();
+            Assert.AreEqual(HostileMode.Engage, w.Brain(h).Mode);
+            Assert.AreEqual(HostilePhase.Approach, w.Brain(h).Phase, "5 m: out of reach");
+            return h;
+        }
+
+        [Test]
+        public void SwingStartsWhenInReach()
+        {
+            using var w = new HostileTestWorld();
+            Entity h = Engaged(w);
+            w.SetPlayers((new float3(0f, 0f, 1.5f), Alive));
+            w.Step();
+            Assert.AreEqual(HostilePhase.Windup, w.Brain(h).Phase);
+            Assert.AreEqual(w.Tick, w.Brain(h).AttackStartTick, "the swing starts on the tick the target is in reach");
+            w.Step(12);
+            Assert.AreEqual(1, w.Strikes, "it lands at the windup's end");
+        }
+
+        [Test]
+        public void DodgeBeforeCommit_Cancels()
+        {
+            using var w = new HostileTestWorld();
+            Entity h = Engaged(w);
+            w.SetPlayers((new float3(0f, 0f, 1.5f), Alive));
+            w.Step();
+            uint commit = w.Brain(h).CommitTick;
+            w.Step((int)(commit - 1 - w.Tick) - 1);
+            w.SetPlayers((new float3(0f, 0f, 4f), Alive));   // range 2 + slack 0.3 + 1 m < 4
+            w.Step();
+            Assert.AreEqual(commit - 1, w.Tick);
+            Assert.AreEqual(HostilePhase.Approach, w.Brain(h).Phase, "called off before the commit");
+            w.Step(20);
+            Assert.AreEqual(0, w.Strikes);
+        }
+
+        [Test]
+        public void DodgeAfterCommit_Misses()
+        {
+            using var w = new HostileTestWorld();
+            Entity h = Engaged(w);
+            w.SetPlayers((new float3(0f, 0f, 1.5f), Alive));
+            w.Step();
+            uint commit = w.Brain(h).CommitTick;
+            w.Step((int)(commit + 1 - w.Tick) - 1);
+            w.SetPlayers((new float3(0f, 0f, 4f), Alive));
+            w.Step();
+            Assert.AreEqual(commit + 1, w.Tick);
+            Assert.AreEqual(HostilePhase.Windup, w.Brain(h).Phase, "committed: the swing goes on");
+            w.Step(12);
+            Assert.AreEqual(0, w.Strikes, "and misses");
+            Assert.AreNotEqual(HostilePhase.Windup, w.Brain(h).Phase);
+        }
+
+        [Test]
+        public void FlinchNeverCancelsWindup()
+        {
+            using var w = new HostileTestWorld();
+            Entity h = Engaged(w);
+            w.SetPlayers((new float3(0f, 0f, 1.5f), Alive));
+            w.Step();
+            for (int i = 0; i < 10; i++) { w.Hit(h, 100, 1f); w.Step(); }
+            Assert.AreEqual(HostilePhase.Windup, w.Brain(h).Phase, "ten hits, still winding up");
+            w.Step(2);
+            Assert.AreEqual(1, w.Strikes, "the strike resolves at the windup's end");
         }
     }
 }

@@ -23,6 +23,8 @@ namespace KryticalNova.Hostiles.Entities
         public byte HealOnHome;
         /// <summary>1 on a think tick the sight scan found a player (AttacksOnSight): the decide step turns it into Alert.</summary>
         public byte Saw;
+        /// <summary>The tick the swing under way started (what every view plays from).</summary>
+        public uint AttackStartTick;
     }
 
     public static class HostileMode

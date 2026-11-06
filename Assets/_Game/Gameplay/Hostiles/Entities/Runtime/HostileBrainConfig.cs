@@ -11,6 +11,7 @@ namespace KryticalNova.Hostiles.Entities
         public float CommitFraction;
         public float FacingDegrees;
         public uint MinVisibleWarningTicks;
+        public uint AttackCooldownTicks;
         public float ThreatSwitchMelee, ThreatSwitchRanged;
         public uint ThreatDecayAfterTicks;
         public float ThreatDecayPerTick;
@@ -28,6 +29,7 @@ namespace KryticalNova.Hostiles.Entities
                 CommitFraction = s.commitFraction,
                 FacingDegrees = s.facingDegrees,
                 MinVisibleWarningTicks = Ticks(s.minVisibleWarningSeconds),
+                AttackCooldownTicks = Ticks(s.attackCooldownSeconds),
                 ThreatSwitchMelee = s.threatSwitchMelee,
                 ThreatSwitchRanged = s.threatSwitchRanged,
                 ThreatDecayAfterTicks = Ticks(s.threatDecayAfterSeconds),

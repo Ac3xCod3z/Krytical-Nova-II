@@ -288,7 +288,12 @@ Rows marked `[line: M5.0]` have the file but the line is filled in M5.0. "Test" 
   detection radius without a heal, the leash return that heals and clears threat at home, the next valid threat, `BrainMover` dest
   for Engage/Return); Brains: a brain moving to a nearer tier thinks on that tick (sight reaction worst 4, mean 4 ticks; plan <= 6 / 4.5).
   Tests: ReactionTests (SightAggro, HitTurnsSameTick), HostileBrainTests (Leash, GiveUp, NeutralGround).
-  M5.3b2c (next): the archetype blob + bake, Neutral/Ignored in the feed, patrol (wander within 8 m, pause 3-6 s)
+  M5.3b2c **[done, 6 Nov]**: `HostileAttackSystem` (Engage + in reach + facing + ready -> windup that tick, picked by weight with the
+  brain's dice; turns with the target; cancel before the commit when the target is beyond range + 0.3 + 1 m; resolve at the windup's end
+  -> `PendingStrike` queue, else a miss; recover, then `attackCooldownSeconds` 0.35 (new setting); hits never cancel). Attack rows sit in
+  a per-Hostile `HostileAbilityRow` buffer until the species bake fills them. SwingTests (4).
+  M5.3b2d (next): the archetype blob + bake (fills the ability rows from `HostileDefinition.attacks`), Neutral/Ignored in the feed,
+  patrol (wander within 8 m, pause 3-6 s), the score/dice test (45/40/15), determinism and GC over the whole mind
   (NextMode, notice, give-up clock, leash, patrol), `HostileAttackSystem` (windup/commit/resolve -> `PendingStrike`), the reaction,
   HostileBrain, score, determinism and GC tests.
 - **Create (Hostiles/Entities/Runtime):** `HostileEntities.asmdef`, `HostileComponents.cs` (2.2 minus ghost), `HostileRules.cs`

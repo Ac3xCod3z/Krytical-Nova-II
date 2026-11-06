@@ -20,6 +20,8 @@ namespace KryticalNova.Hostiles
         public float facingDegrees = 60f;
         [Tooltip("Shortest windup a player sees before a hit, seconds (Q3).")]
         public float minVisibleWarningSeconds = 0.35f;
+        [Tooltip("Seconds an attack waits after its recover before it can start again (Emerald's Type1AttackCooldown, NGO feel).")]
+        public float attackCooldownSeconds = 0.35f;
 
         [Header("Threat (Q5)")]
         [Tooltip("A challenger in reach takes the Hostile above this share of the current target's threat.")]
