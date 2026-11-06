@@ -278,6 +278,13 @@ Rows marked `[line: M5.0]` have the file but the line is filled in M5.0. "Test" 
   and Emerald's 5 s give-up not), `HostileBrainSettings` (+ asset; `giveUpSeconds` 5 = H14 parity instead of `unreachableSeconds` 6)
   and `HostileBrainConfig`; `HostileRulesTests` (7). M5.3b = the blob, the player feeder for `SenseWorld` (Brains reads only
   `SenseWorld.Players`), the scan/threat/decide/attack systems and the reaction tests below.
+  M5.3b1 **[done, 6 Nov]**: `HostileThreatSystem` (events -> threat: hit = damage, heal x0.5, taunt above the top; decay after 5 s at
+  5 %/s; 6 kept, the lowest replaced; target = top threat when none, switch at > 110 % in reach / > 130 % out) and
+  `HostileSenseScanSystem` (think ticks; AttacksOnSight in Idle/Patrol only; nearest living player in the ceil'd aggro radius, not on
+  neutral ground nor ignored -> `HostileBrain.Saw` + target). `HostileTestWorld` (plain World) + ThreatTests, SightScanTests (4).
+  M5.3b2 (next): the archetype blob + bake, the player feeder (Player.Entities ghosts -> `SenseWorld.Players`), `HostileDecideSystem`
+  (NextMode, notice, give-up clock, leash, patrol), `HostileAttackSystem` (windup/commit/resolve -> `PendingStrike`), the reaction,
+  HostileBrain, score, determinism and GC tests.
 - **Create (Hostiles/Entities/Runtime):** `HostileEntities.asmdef`, `HostileComponents.cs` (2.2 minus ghost), `HostileRules.cs`
   (pure: aggro radius, speeds, notice ticks, leash, reach, facing, commit tick, threat switch), `HostileScore.cs` (target and
   ability scoring over blob curves), `HostileArchetypeBlob.cs`, `HostileArchetypeBakeSystem.cs`, `HostileSenseScanSystem.cs`,

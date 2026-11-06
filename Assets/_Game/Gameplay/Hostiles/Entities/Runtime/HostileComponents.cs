@@ -21,6 +21,8 @@ namespace KryticalNova.Hostiles.Entities
         public uint NextScanTick;
         /// <summary>1 when the Hostile returns home because of the leash: it heals and clears its threat there (an Emerald give-up does not).</summary>
         public byte HealOnHome;
+        /// <summary>1 on a think tick the sight scan found a player (AttacksOnSight): the decide step turns it into Alert.</summary>
+        public byte Saw;
     }
 
     public static class HostileMode
