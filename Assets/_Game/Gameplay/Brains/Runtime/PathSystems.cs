@@ -1,17 +1,21 @@
 using System.Collections.Generic;
+using Unity.AI.Navigation.LowLevel;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
+using UnityEngine.AI;
 
 namespace KryticalNova.Brains
 {
     /// <summary>
     /// Serves the brains' path requests (M5.4, plan s4), last in the brain tick after the mind's systems: the queued ones by priority
     /// (fighting first), then the oldest, at most <see cref="BrainConfig.PathSearchesPerTick"/> a tick; the rest wait their turn. A
-    /// found path goes into the brain's <see cref="BrainWaypoint"/> buffer. The backend is the straight line (tests); the NavWorld
-    /// backend comes with M5.4b, after the Linux proof.
+    /// found path goes into the brain's <see cref="BrainWaypoint"/> buffer (its corners after the start, at most
+    /// <see cref="BrainConfig.MaxWaypoints"/>, the last always the end). The backend is the <see cref="PathBackend"/> singleton's: the
+    /// NavMesh through NavWorld (M5.4b: one Burst job a tick for the served searches, each within the node budget), or the straight
+    /// line when there is none (tests). The update itself is not Burst: it owns the NavWorld query buffer.
     /// </summary>
     [WorldSystemFilter(WorldSystemFilterFlags.ServerSimulation)]
     [UpdateInGroup(typeof(BrainSimulationGroup), OrderLast = true)]
@@ -36,13 +40,19 @@ namespace KryticalNova.Brains
             }
         }
 
+        NavPaths m_Nav;
+
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<BrainConfig>();
             state.RequireForUpdate<BrainTick>();
         }
 
-        [BurstCompile]
+        public void OnDestroy(ref SystemState state)
+        {
+            if (m_Nav.IsCreated) m_Nav.Dispose();
+        }
+
         public void OnUpdate(ref SystemState state)
         {
             BrainConfig c = SystemAPI.GetSingleton<BrainConfig>();
@@ -60,6 +70,11 @@ namespace KryticalNova.Brains
             var waypointsOf = SystemAPI.GetBufferLookup<BrainWaypoint>();
             var transformOf = SystemAPI.GetComponentLookup<LocalTransform>(true);
             int served = math.min(queued.Length, c.PathSearchesPerTick);
+            if (SystemAPI.TryGetSingleton(out PathBackend backend) && backend.Kind == PathBackendKind.NavWorld)
+            {
+                ServeOnNavMesh(ref state, queued, served, backend, c, now);
+                return;
+            }
             for (int i = 0; i < served; i++)
             {
                 Entity brain = queued[i].Brain;
@@ -70,13 +85,51 @@ namespace KryticalNova.Brains
                 path.ReadyTick = now;
             }
         }
+
+        void ServeOnNavMesh(ref SystemState state, NativeList<Request> queued, int served, in PathBackend backend, in BrainConfig c, uint now)
+        {
+            NavWorld world = NavWorld.GetDefaultWorld();
+            if (!m_Nav.IsCreated) m_Nav = NavPaths.Create(world, c.PathNodeBudget);
+            var pathOf = SystemAPI.GetComponentLookup<BrainPath>();
+            var waypointsOf = SystemAPI.GetBufferLookup<BrainWaypoint>();
+            var transformOf = SystemAPI.GetComponentLookup<LocalTransform>(true);
+            var starts = new NativeArray<float3>(served, Allocator.TempJob);
+            var ends = new NativeArray<float3>(served, Allocator.TempJob);
+            var corners = new NativeArray<float3>(served * NavPaths.MaxCorners, Allocator.TempJob);
+            var counts = new NativeArray<int>(served, Allocator.TempJob);
+            for (int i = 0; i < served; i++)
+            {
+                Entity brain = queued[i].Brain;
+                ends[i] = pathOf[brain].To;
+                starts[i] = transformOf.HasComponent(brain) ? transformOf[brain].Position : ends[i];
+            }
+            m_Nav.Search(world, backend, c.PathNodeBudget, starts, ends, corners, counts);
+            for (int i = 0; i < served; i++)
+            {
+                Entity brain = queued[i].Brain;
+                ref BrainPath path = ref pathOf.GetRefRW(brain).ValueRW;
+                DynamicBuffer<BrainWaypoint> waypoints = waypointsOf[brain];
+                waypoints.Clear();
+                int n = counts[i];
+                int from = i * NavPaths.MaxCorners;
+                // corner 0 is the start; keep the next ones up to the cap, the last one always the end
+                for (int k = 1; k < n && waypoints.Length < c.MaxWaypoints; k++)
+                    waypoints.Add(new BrainWaypoint { P = corners[from + k] });
+                if (n == 1) waypoints.Add(new BrainWaypoint { P = ends[i] });   // start and end on one spot
+                if (n > 1 && waypoints.Length == c.MaxWaypoints) waypoints[waypoints.Length - 1] = new BrainWaypoint { P = corners[from + n - 1] };
+                path.Status = n > 0 ? BrainPathStatus.Ready : BrainPathStatus.Failed;
+                path.ReadyTick = now;
+            }
+            starts.Dispose(); ends.Dispose(); corners.Dispose(); counts.Dispose();
+        }
     }
 
     /// <summary>
     /// Moves every brain toward its <see cref="BrainMover.Dest"/> (M5.4, plan s4), last in the brain tick: the straight line when nothing
     /// is in the way, else the path it asked the <see cref="PathServiceSystem"/> for (it waits while the request is queued or failed);
     /// seek and arrive within <see cref="PathRules.ArriveRadius"/>; kept <see cref="BrainConfig.SeparationRadius"/> from the other
-    /// brains (it never walks into one ahead and steps out of an overlap); turned toward its motion, or to <see cref="BrainMover.Yaw"/>
+    /// brains (it never walks into one ahead and steps out of an overlap); on the NavMesh (<see cref="PathBackend"/>) blocked by the
+    /// mesh's raycast and standing at the mesh's height; turned toward its motion, or to <see cref="BrainMover.Yaw"/>
     /// with <see cref="BrainMoverFlags.Face"/>, at the fight or idle turn rate. Brains without <see cref="BrainPath"/> and
     /// <see cref="BrainWaypoint"/> are not moved.
     /// </summary>
@@ -85,11 +138,23 @@ namespace KryticalNova.Brains
     [BurstCompile]
     public partial struct BrainMoveSystem : ISystem
     {
+        NavWorld m_World;
+
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<BrainConfig>();
             state.RequireForUpdate<SenseWorld>();
             state.RequireForUpdate<BrainTick>();
+            m_World = NavWorld.GetDefaultWorld();
+        }
+
+        /// <summary>The NavMesh's raycast: blocked when the mesh ends between the two points (a start off the mesh is not blocked).</summary>
+        static bool NavBlocked(NavWorld world, in PathBackend backend, float3 from, float3 to)
+        {
+            NavLocation start = world.MapLocation(from, backend.Extents, backend.AgentTypeId);
+            if (!world.IsValid(start)) return false;
+            world.Raycast(out NavMeshHit hit, start, to);
+            return hit.hit;
         }
 
         [BurstCompile]
@@ -100,6 +165,7 @@ namespace KryticalNova.Brains
             uint now = SystemAPI.GetSingleton<BrainTick>().Tick;
             NativeArray<PathTestWall> walls = SystemAPI.TryGetSingletonBuffer(out DynamicBuffer<PathTestWall> wallBuffer, true)
                 ? wallBuffer.AsNativeArray() : default;
+            bool onNavMesh = SystemAPI.TryGetSingleton(out PathBackend backend) && backend.Kind == PathBackendKind.NavWorld && m_World.IsValid();
             var transformOf = SystemAPI.GetComponentLookup<LocalTransform>(true);
             float dt = c.TickSeconds;
             float r = c.SeparationRadius;
@@ -121,7 +187,8 @@ namespace KryticalNova.Brains
                 float3 steer = at;
                 if ((m.Flags & BrainMoverFlags.Stop) == 0)
                 {
-                    if (!PathRules.StraightBlocked(at, m.Dest, walls))
+                    bool blocked = onNavMesh ? NavBlocked(m_World, backend, at, m.Dest) : PathRules.StraightBlocked(at, m.Dest, walls);
+                    if (!blocked)
                     {
                         steer = m.Dest;
                         if (p.Status != BrainPathStatus.None) { p.Status = BrainPathStatus.None; waypoints.Clear(); }
@@ -172,6 +239,12 @@ namespace KryticalNova.Brains
                 // the straight-line backend follows the slope to the steer point (NavWorld's MapLocation height in M5.4b)
                 float climb = reach > 1e-4f ? (steer.y - at.y) * math.saturate(math.length(v.xz * dt) / reach) : 0f;
                 float3 next = at + step + new float3(0f, climb, 0f);
+                if (onNavMesh)
+                {
+                    // on the NavMesh the ground's height is the mesh's under the new spot (off the mesh: the slope as above)
+                    NavLocation ground = m_World.MapLocation(next, backend.Extents, backend.AgentTypeId);
+                    if (m_World.IsValid(ground)) next.y = ground.position.y;
+                }
 
                 float yaw = PathRules.YawOf(t.Rotation);
                 float wanted = (m.Flags & BrainMoverFlags.Face) != 0 ? m.Yaw
