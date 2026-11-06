@@ -73,8 +73,10 @@ namespace KryticalNova.Hostiles.Entities
                     Damaged = damaged,
                     TargetValid = targetValid,
                     HasOtherThreat = other >= 0,
-                    BeyondLeash = home.ValueRO.ZoneRadius > 0f
-                                  && HostileRules.BeyondLeash(at, home.ValueRO.ZoneCentre, home.ValueRO.ZoneRadius, home.ValueRO.LeashRadius),
+                    // H14 parity: past the zone's leash, or the target on cross-faction neutral ground: Calm, home and heal
+                    BeyondLeash = (home.ValueRO.ZoneRadius > 0f
+                                   && HostileRules.BeyondLeash(at, home.ValueRO.ZoneCentre, home.ValueRO.ZoneRadius, home.ValueRO.LeashRadius))
+                                  || TargetOnNeutralGround(sense, aim.GhostId),
                     GaveUp = gaveUp,
                     AtHome = SenseQueries.FlatSq(at, home.ValueRO.Home) <= HomeReach * HomeReach,
                     Dead = killed,
@@ -145,6 +147,9 @@ namespace KryticalNova.Hostiles.Entities
             feet = s.Feet;
             return (s.Flags & SensedFlags.Alive) != 0 && (s.Flags & (SensedFlags.Neutral | SensedFlags.Dead)) == 0;
         }
+
+        static bool TargetOnNeutralGround(in SenseWorld sense, int ghostId) =>
+            ghostId != 0 && sense.ByGhostId.TryGetValue(ghostId, out int p) && (sense.Players[p].Flags & SensedFlags.Neutral) != 0;
 
         static int BestOther(in SenseWorld sense, DynamicBuffer<ThreatEntry> threat, int current)
         {

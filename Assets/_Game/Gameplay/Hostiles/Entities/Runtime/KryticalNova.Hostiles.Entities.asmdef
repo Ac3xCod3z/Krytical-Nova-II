@@ -6,6 +6,8 @@
         "KryticalNova.Brains",
         "KryticalNova.Hostiles",
         "KryticalNova.Player.Entities",
+        "KryticalNova.Player.Entities.Presentation",
+        "KryticalNova.World",
         "Unity.Burst",
         "Unity.Entities",
         "Unity.NetCode",

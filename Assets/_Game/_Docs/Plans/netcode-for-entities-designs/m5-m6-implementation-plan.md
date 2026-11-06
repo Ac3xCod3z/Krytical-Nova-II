@@ -292,7 +292,10 @@ Rows marked `[line: M5.0]` have the file but the line is filled in M5.0. "Test" 
   brain's dice; turns with the target; cancel before the commit when the target is beyond range + 0.3 + 1 m; resolve at the windup's end
   -> `PendingStrike` queue, else a miss; recover, then `attackCooldownSeconds` 0.35 (new setting); hits never cancel). Attack rows sit in
   a per-Hostile `HostileAbilityRow` buffer until the species bake fills them. SwingTests (4).
-  M5.3b2d (next): the archetype blob + bake (fills the ability rows from `HostileDefinition.attacks`), Neutral/Ignored in the feed,
+  Neutral/Ignored **[done 6 Nov]**: `HostileSenseFlagsServerSystem` (managed bridge: `TradeZone.CrossFactionAt`, `HostileIgnore` by the
+  server body; no test of its own: it needs a scene's zones); the decide step treats a target on neutral ground as the leash (H14 parity:
+  home, heal); a dead target gives way to the next threat. M5.3b2d (next): the archetype blob + bake (fills the ability rows from
+  `HostileDefinition.attacks`),
   patrol **[done 6 Nov: in HostileDecideSystem, pause `patrolPauseSeconds` (3, 6) by the brain's dice, a walk to a point within the
   wander radius, idle on arrival; `PatrolTests` 10,000 ticks]**. **[done 6 Nov]** the dice test (100,000 picks within 1 % of 45/40/15; `HostileRules.PickAbility`),
   determinism (50 Hostiles, 5 players, hits, 1,000 ticks) and no GC over the whole mind (`HostileScoreTests`, `HostileMindDeterminismTests`).

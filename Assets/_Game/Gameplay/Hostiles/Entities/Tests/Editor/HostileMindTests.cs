@@ -285,19 +285,32 @@ namespace KryticalNova.Hostiles.Entities.Tests
         }
 
         [Test]
-        public void NeutralGround_DropsTheTarget_ForTheNextThreatOrHome()
+        public void TargetOnNeutralGround_IsTheLeash_HomeAndHeal()
         {
+            // H14 parity (M5.0, Nova's A): the zone tick calms a Hostile whose target stands on cross-faction neutral ground
             using var w = new HostileTestWorld();
             Entity h = Engaged(w, float3.zero);
             w.SetPlayers((new float3(2f, 0f, 0f), (byte)(Alive | SensedFlags.Neutral)), (new float3(3f, 0f, 0f), Alive));
+            w.Step();
+            Assert.AreEqual(HostileMode.Return, w.Brain(h).Mode, "the target on neutral ground: home, whoever else is near");
+            Assert.AreEqual(1, w.Brain(h).HealOnHome, "and it heals there");
+        }
+
+        [Test]
+        public void ADeadTarget_GivesWayToTheNextThreat_OrHome()
+        {
+            using var w = new HostileTestWorld();
+            Entity h = Engaged(w, float3.zero);
+            w.SetPlayers((new float3(2f, 0f, 0f), SensedFlags.Dead), (new float3(3f, 0f, 0f), Alive));
             w.Hit(h, 101, 1f);
             w.Step();
             w.Step();
             Assert.AreEqual(HostileMode.Engage, w.Brain(h).Mode);
             Assert.AreEqual(101, w.Target(h).GhostId, "the next threat");
-            w.SetPlayers((new float3(2f, 0f, 0f), (byte)(Alive | SensedFlags.Neutral)), (new float3(3f, 0f, 0f), (byte)(Alive | SensedFlags.Neutral)));
+            w.SetPlayers((new float3(2f, 0f, 0f), SensedFlags.Dead), (new float3(3f, 0f, 0f), SensedFlags.Dead));
             w.Step();
             Assert.AreEqual(HostileMode.Return, w.Brain(h).Mode, "nobody left: home");
+            Assert.AreEqual(0, w.Brain(h).HealOnHome);
         }
     }
 
