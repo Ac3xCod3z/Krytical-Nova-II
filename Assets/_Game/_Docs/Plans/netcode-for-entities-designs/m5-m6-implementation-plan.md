@@ -342,13 +342,26 @@ Rows marked `[line: M5.0]` have the file but the line is filled in M5.0. "Test" 
   `PathServiceTests` (Budget, EngagedFirst, Failure) and `MoveTests` (Arrive, Separation, TurnRate). `BrainMover.Speed` is set by the
   species bake (M5.3b2d). M5.4b (after the Linux proof gate) = the NavWorld backend (MapLocation height, the funnel corners, node
   budget) behind a backend switch, its EditMode NavMesh test and the p99 < 0.2 ms timing.
-- **M5.4b [done in the Editor, 6 Nov; Linux run pending]:** `NavPaths.cs` (`PathBackend` singleton, `NavPathJob` = the spike's
+- **M5.4b [done, 6 Nov; Linux proof PASSED in WSL]:** `NavPaths.cs` (`PathBackend` singleton, `NavPathJob` = the spike's
   funnel + node budget; a corridor that stops short of the end polygon is no path: the probe found the job joining a partial corridor
   to the end, i.e. through walls), path service on the NavMesh, move system on the mesh's raycast and height; `NavProbe` (`-knnavprobe`,
   test lane / Editor): 200 seeded pairs on Zone01 vs `CalculatePath` per pair. Owner rule: PASS = none missed by NavWorld where Unity is
   complete, none where Unity is invalid, corners within 0.1 m (heights 0.5 m) where both complete; Unity partial (its own search cut
   short on 400-800 m paths) listed apart. Editor: PASS, 70/70 corners, 28 Unity cut short, NavWorld 1.3 ms/path incl. the long ones.
   Water: Not Walkable on the bake (ZoneTerrainGenerator), so no path crosses it. The Linux server run of the probe (WSL) is the gate's proof.
+  **Linux proof (6 Nov, WSL, test lane 7797/7798, no saves; Linux server build Mono, Burst off):** PASS, the same 200 pairs with every
+  row identical to the Editor's (points, corner counts, Unity statuses, verdicts):
+
+  | | Editor (Windows) | Linux server (WSL) |
+  | --- | --- | --- |
+  | both complete, corners within 0.1 m | 70 / 70 | 70 / 70 |
+  | on the 0.5 m height allowance only | 0 | 0 |
+  | neither found | 102 | 102 |
+  | missed by NavWorld / suspicious (Unity invalid) | 0 / 0 | 0 / 0 |
+  | Unity cut short (listed apart) | 28 | 28 |
+  | ms per path, NavWorld / CalculatePath | 1.31 / 0.76 | 1.17 / 0.44 (Mono, managed jobs) |
+
+  Not proven: Burst AOT and IL2CPP on Linux (Burst AOT for Linux players is still broken, migration plan s48); timing stays an Editor number.
 - **Create (Brains):** `PathServiceSystem.cs` (queue by priority: engaged first; budget `pathSearchesPerTick` x `pathNodeBudget`;
   results into `BrainWaypoint`), `IPathBackend` as a blob-free struct switch: `NavWorldBackend` (if M5.2 = A) or `NavGridBackend`
   (+ `Brains/Editor/NavGridBaker.cs` writing `Brains/Data/Assets/NavGrid_<map>.asset`, old design s7) ; `StraightLineBackend` for
