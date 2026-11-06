@@ -107,7 +107,7 @@ namespace KryticalNova.Hostiles.Entities
                 }
                 if (!inReach) continue;
                 if (!facing) { Face(ref m, at, feet); continue; }
-                int pick = Pick(abilities, now, ref dice.ValueRW.Rng);
+                int pick = HostileRules.PickAbility(abilities, now, ref dice.ValueRW.Rng);
                 if (pick < 0) continue;
                 HostileAbilityRow row = abilities[pick];
                 b.Ability = (byte)pick;
@@ -123,22 +123,6 @@ namespace KryticalNova.Hostiles.Entities
             float2 to = feet.xz - at.xz;
             if (math.lengthsq(to) > 1e-6f) m.Yaw = math.atan2(to.x, to.y);
             m.Flags |= BrainMoverFlags.Face;
-        }
-
-        /// <summary>A ready attack by weight (NGO's 45/40/15 dice when the weights are those), or -1.</summary>
-        static int Pick(DynamicBuffer<HostileAbilityRow> abilities, uint now, ref Random rng)
-        {
-            float total = 0f;
-            for (int i = 0; i < abilities.Length; i++) if (abilities[i].ReadyTick <= now) total += math.max(0f, abilities[i].Weight);
-            if (total <= 0f) return -1;
-            float roll = rng.NextFloat(total);
-            for (int i = 0; i < abilities.Length; i++)
-            {
-                if (abilities[i].ReadyTick > now) continue;
-                roll -= math.max(0f, abilities[i].Weight);
-                if (roll < 0f) return i;
-            }
-            return abilities.Length - 1;
         }
     }
 }

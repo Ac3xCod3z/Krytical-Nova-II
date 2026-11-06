@@ -66,6 +66,22 @@ namespace KryticalNova.Hostiles.Entities
             return math.lengthsq(position.xz - zoneCentre) > limit * limit;
         }
 
+        /// <summary>A ready attack by weight (NGO's 45/40/15 dice when the weights are those), or -1.</summary>
+        public static int PickAbility(Unity.Entities.DynamicBuffer<HostileAbilityRow> abilities, uint now, ref Random rng)
+        {
+            float total = 0f;
+            for (int i = 0; i < abilities.Length; i++) if (abilities[i].ReadyTick <= now) total += math.max(0f, abilities[i].Weight);
+            if (total <= 0f) return -1;
+            float roll = rng.NextFloat(total);
+            for (int i = 0; i < abilities.Length; i++)
+            {
+                if (abilities[i].ReadyTick > now) continue;
+                roll -= math.max(0f, abilities[i].Weight);
+                if (roll < 0f) return i;
+            }
+            return abilities.Length - 1;
+        }
+
         /// <summary>What decides the next mode this tick.</summary>
         public struct ModeInputs
         {

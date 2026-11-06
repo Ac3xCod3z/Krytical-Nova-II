@@ -293,7 +293,8 @@ Rows marked `[line: M5.0]` have the file but the line is filled in M5.0. "Test" 
   -> `PendingStrike` queue, else a miss; recover, then `attackCooldownSeconds` 0.35 (new setting); hits never cancel). Attack rows sit in
   a per-Hostile `HostileAbilityRow` buffer until the species bake fills them. SwingTests (4).
   M5.3b2d (next): the archetype blob + bake (fills the ability rows from `HostileDefinition.attacks`), Neutral/Ignored in the feed,
-  patrol (wander within 8 m, pause 3-6 s), the score/dice test (45/40/15), determinism and GC over the whole mind
+  patrol (wander within 8 m, pause 3-6 s). **[done 6 Nov]** the dice test (100,000 picks within 1 % of 45/40/15; `HostileRules.PickAbility`),
+  determinism (50 Hostiles, 5 players, hits, 1,000 ticks) and no GC over the whole mind (`HostileScoreTests`, `HostileMindDeterminismTests`).
   (NextMode, notice, give-up clock, leash, patrol), `HostileAttackSystem` (windup/commit/resolve -> `PendingStrike`), the reaction,
   HostileBrain, score, determinism and GC tests.
 - **Create (Hostiles/Entities/Runtime):** `HostileEntities.asmdef`, `HostileComponents.cs` (2.2 minus ghost), `HostileRules.cs`

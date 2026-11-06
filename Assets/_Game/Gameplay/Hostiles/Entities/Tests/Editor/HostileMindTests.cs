@@ -378,4 +378,72 @@ namespace KryticalNova.Hostiles.Entities.Tests
             Assert.AreEqual(1, w.Strikes, "the strike resolves at the windup's end");
         }
     }
+
+    public sealed class HostileScoreTests
+    {
+        [Test]
+        public void FlatCurves_EqualWeightedDice()
+        {
+            // NGO: three attacks weighted 45/40/15 (HostileAssetBuilder.cs:323-325)
+            using var world = new World("HostileScoreTests");
+            Entity e = world.EntityManager.CreateEntity();
+            DynamicBuffer<HostileAbilityRow> rows = world.EntityManager.AddBuffer<HostileAbilityRow>(e);
+            rows.Add(new HostileAbilityRow { Weight = 45f });
+            rows.Add(new HostileAbilityRow { Weight = 40f });
+            rows.Add(new HostileAbilityRow { Weight = 15f });
+            var rng = BrainDiceRules.Create(3, 99);
+            var counts = new int[3];
+            const int picks = 100000;
+            for (int i = 0; i < picks; i++) counts[HostileRules.PickAbility(rows, 1, ref rng)]++;
+            Assert.AreEqual(0.45, counts[0] / (double)picks, 0.01);
+            Assert.AreEqual(0.40, counts[1] / (double)picks, 0.01);
+            Assert.AreEqual(0.15, counts[2] / (double)picks, 0.01);
+            rows[0] = new HostileAbilityRow { Weight = 45f, ReadyTick = 10 };
+            for (int i = 0; i < 1000; i++) Assert.AreNotEqual(0, HostileRules.PickAbility(rows, 5, ref rng), "an attack on cooldown is never picked");
+        }
+    }
+
+    public sealed class HostileMindDeterminismTests
+    {
+        static (HostileBrain[] brains, int strikes) Run()
+        {
+            using var w = new HostileTestWorld();
+            var hostiles = new Entity[50];
+            for (int i = 0; i < hostiles.Length; i++)
+                hostiles[i] = w.Hostile(new float3((i % 10) * 6f, 0f, (i / 10) * 6f), (byte)(i % 2), (uint)(i + 1));
+            for (int t = 0; t < 1000; t++)
+            {
+                float3 a = new float3(math.sin(t * 0.02f) * 30f + 27f, 0f, 12f), b = new float3(t * 0.05f, 0f, math.cos(t * 0.03f) * 20f + 12f);
+                w.SetPlayers((a, SensedFlags.Alive), (b, SensedFlags.Alive), (new float3(5f, 0f, 30f), SensedFlags.Alive),
+                    (new float3(50f, 0f, -5f), SensedFlags.Alive), (new float3(-10f, 0f, 10f), SensedFlags.Alive));
+                if (t % 37 == 0) w.Hit(hostiles[t % hostiles.Length], 100 + t % 5, 10f);
+                w.Step();
+            }
+            var brains = new HostileBrain[hostiles.Length];
+            for (int i = 0; i < hostiles.Length; i++) brains[i] = w.Brain(hostiles[i]);
+            return (brains, w.Strikes);
+        }
+
+        [Test]
+        public void SameSeed_SameMind_1000Ticks()
+        {
+            var first = Run();
+            var second = Run();
+            CollectionAssert.AreEqual(first.brains, second.brains);
+            Assert.AreEqual(first.strikes, second.strikes);
+            Assert.Greater(first.strikes, 0, "the run had fights in it");
+        }
+
+        [Test]
+        public void TheMind_AllocatesNothing_1000Ticks()
+        {
+            using var w = new HostileTestWorld();
+            for (int i = 0; i < 100; i++) w.Hostile(new float3((i % 10) * 4f, 0f, (i / 10) * 4f), (byte)(i % 2), (uint)(i + 1));
+            w.SetPlayers((new float3(10f, 0f, 10f), SensedFlags.Alive), (new float3(30f, 0f, 30f), SensedFlags.Alive));
+            w.Step(100);   // warm-up
+            long before = System.GC.GetAllocatedBytesForCurrentThread();
+            w.Step(1000);
+            Assert.AreEqual(0, System.GC.GetAllocatedBytesForCurrentThread() - before, "a mind tick allocates nothing");
+        }
+    }
 }
