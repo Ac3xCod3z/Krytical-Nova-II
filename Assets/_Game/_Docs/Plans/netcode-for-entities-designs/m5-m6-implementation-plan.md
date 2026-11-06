@@ -335,6 +335,13 @@ Rows marked `[line: M5.0]` have the file but the line is filled in M5.0. "Test" 
 - **Owner hand test:** none yet (no ghost). **Done when:** tests green; Burst compile of every job in the server build.
 
 ### M5.4 PathService (M, MED)
+- **Split (DOTS 16, 6 Nov):** M5.4a (now, backend-free) = `PathRules.cs` (straight-line backend with test walls, repath rule, seek/arrive,
+  turn, tie-break), `PathSystems.cs` (`PathServiceSystem`: queued requests by priority then age, `pathSearchesPerTick` a tick;
+  `BrainMoveSystem`: straight line first, path when blocked, waits while queued/failed, separation 1.2 m with a two-step look-ahead,
+  fight/idle turn rate, all brains move from one snapshot), `BrainConfig` path/move numbers from `BrainSettings`; tests
+  `PathServiceTests` (Budget, EngagedFirst, Failure) and `MoveTests` (Arrive, Separation, TurnRate). `BrainMover.Speed` is set by the
+  species bake (M5.3b2d). M5.4b (after the Linux proof gate) = the NavWorld backend (MapLocation height, the funnel corners, node
+  budget) behind a backend switch, its EditMode NavMesh test and the p99 < 0.2 ms timing.
 - **Create (Brains):** `PathServiceSystem.cs` (queue by priority: engaged first; budget `pathSearchesPerTick` x `pathNodeBudget`;
   results into `BrainWaypoint`), `IPathBackend` as a blob-free struct switch: `NavWorldBackend` (if M5.2 = A) or `NavGridBackend`
   (+ `Brains/Editor/NavGridBaker.cs` writing `Brains/Data/Assets/NavGrid_<map>.asset`, old design s7) ; `StraightLineBackend` for

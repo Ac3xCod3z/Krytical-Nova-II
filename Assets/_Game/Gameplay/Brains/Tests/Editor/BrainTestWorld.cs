@@ -16,10 +16,12 @@ namespace KryticalNova.Brains.Tests
         public const int TickRate = 30;
         public readonly World World;
         public uint Tick;
-        readonly SystemHandle m_Sense, m_Clock;
+        readonly SystemHandle m_Sense, m_Clock, m_Path, m_Move;
+        readonly bool m_Movement;
         readonly EntityQuery m_TickQuery, m_SenseQuery, m_ConfigQuery;
 
-        public BrainTestWorld(uint worldSeed = 0x4B4E)
+        /// <param name="movement">Also the path service and the move system (M5.4), after the clock.</param>
+        public BrainTestWorld(uint worldSeed = 0x4B4E, bool movement = false)
         {
             World = new World("BrainTestWorld");
             var settings = ScriptableObject.CreateInstance<BrainSettings>();
@@ -30,6 +32,12 @@ namespace KryticalNova.Brains.Tests
             World.EntityManager.CreateSingleton(new BrainTick());
             m_Sense = World.CreateSystem<SenseBuildSystem>();
             m_Clock = World.CreateSystem<ThinkClockSystem>();
+            m_Movement = movement;
+            if (movement)
+            {
+                m_Path = World.CreateSystem<PathServiceSystem>();
+                m_Move = World.CreateSystem<BrainMoveSystem>();
+            }
             m_TickQuery = World.EntityManager.CreateEntityQuery(typeof(BrainTick));
             m_SenseQuery = World.EntityManager.CreateEntityQuery(typeof(SenseWorld));
             m_ConfigQuery = World.EntityManager.CreateEntityQuery(typeof(BrainConfig));
@@ -70,10 +78,27 @@ namespace KryticalNova.Brains.Tests
                 m_TickQuery.SetSingleton(new BrainTick { Tick = Tick });
                 m_Sense.Update(World.Unmanaged);
                 m_Clock.Update(World.Unmanaged);
+                if (m_Movement)
+                {
+                    m_Path.Update(World.Unmanaged);
+                    m_Move.Update(World.Unmanaged);
+                }
             }
         }
 
         public BrainClock Clock(Entity brain) => Em.GetComponentData<BrainClock>(brain);
+
+        /// <summary>A brain that moves (M5.4): <see cref="Brain"/> plus a mover heading for <paramref name="dest"/>, a path and waypoints.</summary>
+        public Entity Walker(float3 at, uint stableId, float3 dest, float speed, byte flags = 0)
+        {
+            Entity e = Brain(at, stableId);
+            Em.AddComponentData(e, new BrainMover { Dest = dest, Speed = speed, Flags = flags });
+            Em.AddComponentData(e, new BrainPath());
+            Em.AddBuffer<BrainWaypoint>(e);
+            return e;
+        }
+
+        public float3 Position(Entity brain) => Em.GetComponentData<LocalTransform>(brain).Position;
 
         public void Dispose()
         {
