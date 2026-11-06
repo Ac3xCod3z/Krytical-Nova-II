@@ -446,4 +446,34 @@ namespace KryticalNova.Hostiles.Entities.Tests
             Assert.AreEqual(0, System.GC.GetAllocatedBytesForCurrentThread() - before, "a mind tick allocates nothing");
         }
     }
+
+    public sealed class PatrolTests
+    {
+        [Test]
+        public void Patrol_StaysWithinWanderRadius_AndPausesThreeToSixSeconds()
+        {
+            using var w = new HostileTestWorld();
+            float3 home = new float3(10f, 0f, -4f);
+            Entity h = w.Hostile(home, HostileBehaviourKind.FightsBack);   // FightsBack: no sight scan in the way
+            w.SetPlayers((new float3(200f, 0f, 200f), SensedFlags.Alive));
+            int walks = 0;
+            uint idleSince = 0;
+            for (int t = 0; t < 10000; t++)
+            {
+                w.Step();
+                HostileBrain b = w.Brain(h);
+                BrainMover m = w.Em.GetComponentData<BrainMover>(h);
+                if (b.Mode == HostileMode.Patrol && b.ModeSinceTick == w.Tick)
+                {
+                    walks++;
+                    Assert.LessOrEqual(math.distance(m.Dest.xz, home.xz), 8f + 1e-3f, "within the wander radius of home");
+                    if (idleSince != 0)
+                        Assert.That(w.Tick - idleSince, Is.InRange(3 * HostileTestWorld.TickRate, 6 * HostileTestWorld.TickRate + 1), "the pause");
+                    w.Em.SetComponentData(h, LocalTransform.FromPosition(m.Dest));   // M5.4 moves it; here it arrives at once
+                }
+                if (b.Mode == HostileMode.Idle && b.ModeSinceTick == w.Tick) idleSince = w.Tick;
+            }
+            Assert.Greater(walks, 20, "it keeps wandering");
+        }
+    }
 }

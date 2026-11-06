@@ -17,6 +17,7 @@ namespace KryticalNova.Hostiles.Entities
         public float ThreatDecayPerTick;
         public float HealThreatFactor, TauntBonus;
         public uint GiveUpTicks;
+        public uint PatrolPauseMinTicks, PatrolPauseMaxTicks;
         public float AssistRadius;
 
         public static HostileBrainConfig From(HostileBrainSettings s, int tickRate)
@@ -37,6 +38,8 @@ namespace KryticalNova.Hostiles.Entities
                 HealThreatFactor = s.healThreatFactor,
                 TauntBonus = s.tauntBonus,
                 GiveUpTicks = Ticks(s.giveUpSeconds),
+                PatrolPauseMinTicks = Ticks(s.patrolPauseSeconds.x),
+                PatrolPauseMaxTicks = math.max(Ticks(s.patrolPauseSeconds.x), Ticks(s.patrolPauseSeconds.y)),
                 AssistRadius = s.assistRadius,
             };
         }

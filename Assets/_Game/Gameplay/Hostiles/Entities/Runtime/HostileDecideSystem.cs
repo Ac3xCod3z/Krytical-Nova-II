@@ -35,6 +35,7 @@ namespace KryticalNova.Hostiles.Entities
             uint now = SystemAPI.GetSingleton<BrainTick>().Tick;
             // job later (perf phase): an IJobEntity (the sense world is read-only here)
             BufferLookup<BrainEvent> eventsOf = SystemAPI.GetBufferLookup<BrainEvent>(true);
+            ComponentLookup<BrainDice> diceOf = SystemAPI.GetComponentLookup<BrainDice>();
             foreach (var (brain, target, mover, life, home, transform, threatBuffer, entity) in SystemAPI
                          .Query<RefRW<HostileBrain>, RefRW<HostileTarget>, RefRW<BrainMover>, RefRO<HostileLife>, RefRO<HostileHome>, RefRO<LocalTransform>,
                              DynamicBuffer<ThreatEntry>>()
@@ -81,6 +82,7 @@ namespace KryticalNova.Hostiles.Entities
 
                 if (next.Mode != b.Mode)
                 {
+                    b.PhaseEndTick = 0;   // a new mode starts its own clock (patrol pause, engage phases)
                     if (next.Mode == HostileMode.Alert) b.NoticeUntilTick = now + life.ValueRO.NoticeTicks;
                     if (next.Mode == HostileMode.Return) b.HealOnHome = (byte)(next.HealOnHome ? 1 : 0);
                     if (b.Mode == HostileMode.Return && next.Mode == HostileMode.Idle)
@@ -102,6 +104,32 @@ namespace KryticalNova.Hostiles.Entities
                 }
 
                 ref BrainMover m = ref mover.ValueRW;
+                // patrol: idle for a pause, then a walk to a point within the wander radius, then idle again on arrival
+                if (b.Mode == HostileMode.Idle || b.Mode == HostileMode.Patrol)
+                {
+                    if (b.Mode == HostileMode.Patrol && SenseQueries.FlatSq(at, m.Dest) <= HomeReach * HomeReach)
+                    {
+                        b.Mode = HostileMode.Idle;
+                        b.ModeSinceTick = now;
+                        b.PhaseEndTick = 0;
+                    }
+                    if (b.Mode == HostileMode.Idle && diceOf.HasComponent(entity))
+                    {
+                        RefRW<BrainDice> dice = diceOf.GetRefRW(entity);
+                        if (b.PhaseEndTick == 0)
+                            b.PhaseEndTick = now + dice.ValueRW.Rng.NextUInt(c.PatrolPauseMinTicks, c.PatrolPauseMaxTicks + 1);
+                        else if (now >= b.PhaseEndTick && home.ValueRO.WanderRadius > 0f)
+                        {
+                            float2 offset = dice.ValueRW.Rng.NextFloat2Direction() * math.sqrt(dice.ValueRW.Rng.NextFloat()) * home.ValueRO.WanderRadius;
+                            m.Dest = home.ValueRO.Home + new float3(offset.x, 0f, offset.y);
+                            m.Flags = 0;   // a walk
+                            b.Mode = HostileMode.Patrol;
+                            b.ModeSinceTick = now;
+                            b.PhaseEndTick = 0;
+                            continue;
+                        }
+                    }
+                }
                 if (b.Mode == HostileMode.Engage && aim.GhostId != 0) { m.Dest = aim.LastFeet; m.Flags = BrainMoverFlags.Run; }
                 else if (b.Mode == HostileMode.Return) { m.Dest = home.ValueRO.Home; m.Flags = BrainMoverFlags.Run; }
                 else if (b.Mode == HostileMode.Idle || b.Mode == HostileMode.Alert || b.Mode == HostileMode.Dead) m.Flags = BrainMoverFlags.Stop;

@@ -37,6 +37,10 @@ namespace KryticalNova.Hostiles
         [Tooltip("Extra share a taunt adds over the top threat.")]
         public float tauntBonus = 0.10f;
 
+        [Header("Patrol")]
+        [Tooltip("Seconds an idle Hostile waits before it wanders again: at least x, at most y (the prefabs' Emerald wait times).")]
+        public Vector2 patrolPauseSeconds = new Vector2(3f, 6f);
+
         [Header("Giving up (H14 parity)")]
         [Tooltip("Seconds the target may stand beyond the detection radius before the Hostile gives up (Emerald's chase limit; no heal).")]
         public float giveUpSeconds = 5f;

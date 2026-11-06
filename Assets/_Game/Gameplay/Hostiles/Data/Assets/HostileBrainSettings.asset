@@ -24,6 +24,7 @@ MonoBehaviour:
   threatDecayPerSecond: 0.05
   healThreatFactor: 0.5
   tauntBonus: 0.1
+  patrolPauseSeconds: {x: 3, y: 6}
   giveUpSeconds: 5
   slotRingRadius: 2
   waitRingRadius: {x: 3.5, y: 5}
