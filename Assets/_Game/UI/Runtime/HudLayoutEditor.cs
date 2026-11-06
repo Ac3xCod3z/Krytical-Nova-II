@@ -25,6 +25,10 @@ namespace KryticalNova.UI
         private const string WindowClass = "window";
         /// <summary>On a window that keeps itself on screen by its own means (Settings, which also puts itself back): it is not fitted here.</summary>
         public const string FitsItselfClass = "fits-itself";
+        /// <summary>The Hotbar, and the two panels it stands between while the player has not placed it.</summary>
+        public const string HotbarName = "hotbar-dock";
+        public const string ChatName = "chat-window";
+        public const string MinimapName = "minimap";
         /// <summary>Kept between a window and the screen's edge: a skin's frame and close button stand outside the window's own box.</summary>
         private const float WindowMargin = 20f;
         private const float MinScale = 0.5f;
@@ -210,6 +214,7 @@ namespace KryticalNova.UI
                 if (saved.TryGetValue(pair.Key, out Entry entry)) ApplyEntry(pair.Value, entry);
                 else ClearPlacement(pair.Value);
             }
+            PlaceHotbarDefault();
         }
 
         /// <summary>
@@ -223,6 +228,7 @@ namespace KryticalNova.UI
                 if (saved.ContainsKey(pair.Key)) ClampIntoView(pair.Value);
                 else if (!IsEditing && IsFittedWindow(pair.Value)) FitWindow(pair.Value);
             }
+            PlaceHotbarDefault();
         }
 
         public void ResetAll()
@@ -234,6 +240,7 @@ namespace KryticalNova.UI
                 ClearPlacement(element);
                 RefreshScaleLabel(element);
             }
+            PlaceHotbarDefault();
         }
 
         private void ResetElement(VisualElement element)
@@ -242,7 +249,49 @@ namespace KryticalNova.UI
             ClearPlacement(element);
             RefreshScaleLabel(element);
             Save();
+            PlaceHotbarDefault();
         }
+
+        // ------------------------------------------------------------------ the Hotbar's own place
+
+        /// <summary>
+        /// Where the middle of the Hotbar goes while the player has not placed it: halfway between the chat's right
+        /// edge and the minimap's left edge. A neighbour counts only while it stands in the lower half of the screen,
+        /// on its own side of the middle; otherwise that side's screen edge is used (with neither, the screen's middle).
+        /// </summary>
+        public static float HotbarDefaultCentre(Rect screen, Rect? chat, Rect? minimap)
+        {
+            float left = screen.xMin, right = screen.xMax;
+            if (chat is Rect c && StandsBelowMiddle(screen, c) && c.center.x < screen.center.x) left = c.xMax;
+            if (minimap is Rect m && StandsBelowMiddle(screen, m) && m.center.x > screen.center.x) right = m.xMin;
+            return right > left ? (left + right) * 0.5f : screen.center.x;
+        }
+
+        private static bool StandsBelowMiddle(Rect screen, Rect bounds) =>
+            bounds.width >= 1f && bounds.height >= 1f && bounds.center.y > screen.center.y;
+
+        /// <summary>
+        /// A Hotbar the player never placed stands centred between the chat and the minimap, and follows them when
+        /// they move or the screen changes. Its sheet keeps its height and the centring of its main bar; only its
+        /// left (the point it centres on) is set here. Nothing is saved: once the player places it, it is theirs.
+        /// </summary>
+        private void PlaceHotbarDefault()
+        {
+            if (!movables.TryGetValue(HotbarName, out VisualElement hotbar) || saved.ContainsKey(HotbarName) || hotbar == activeElement) return;
+            VisualElement parent = hotbar.hierarchy.parent;
+            if (parent == null || hotbar.panel == null || parent.layout.width < 1f) return;
+            float left = HotbarDefaultCentre(ScreenOf(hotbar), ShownBounds(ChatName), ShownBounds(MinimapName)) - parent.worldBound.x;
+            StyleLength current = hotbar.style.left;
+            if (current.keyword == StyleKeyword.Undefined && current.value.unit == LengthUnit.Pixel
+                && Mathf.Abs(current.value.value - left) < 0.5f) return;
+            hotbar.style.left = left;
+        }
+
+        private Rect? ShownBounds(string name) =>
+            movables.TryGetValue(name, out VisualElement element) && element.panel != null
+            && element.resolvedStyle.display != DisplayStyle.None
+                ? element.worldBound
+                : (Rect?)null;
 
         private void Save()
         {
@@ -884,11 +933,18 @@ namespace KryticalNova.UI
             // or one whose page grew) is drawn as large as fits. The size the player chose is kept, and comes back
             // when there is room for it.
             float own = Mathf.Max(0.01f, element.resolvedStyle.scale.value.x);
-            float chosen = saved.TryGetValue(element.name, out Entry entry) ? Mathf.Clamp(entry.scale, MinScale, MaxScale) : own;
+            bool placedByPlayer = saved.TryGetValue(element.name, out Entry entry);
+            float chosen = placedByPlayer ? Mathf.Clamp(entry.scale, MinScale, MaxScale) : own;
             Vector2 natural = bounds.size / own;
             Rect area = VisibleAreaOf(element);
             float scale = chosen * ScreenFit.ScaleToFit(area, natural * chosen);
-            Vector2 placed = ClampInto(area, bounds.position, natural * scale);
+            // From the place the player chose, never from where an earlier pull left the panel: while the HUD is
+            // still being built (the plain Hotbar is taller than the faction's, the screen not yet its size) a panel
+            // may be pulled in, and it must go back to its own place once there is room again.
+            Vector2 from = placedByPlayer
+                ? parent.LocalToWorld(new Vector2(entry.x * parent.layout.width, entry.y * parent.layout.height))
+                : bounds.position;
+            Vector2 placed = ClampInto(area, from, natural * scale);
             bool moved = Mathf.Abs(placed.x - bounds.x) >= 0.5f || Mathf.Abs(placed.y - bounds.y) >= 0.5f;
             bool resized = Mathf.Abs(scale - own) >= 0.004f;
             if (!moved && !resized) return;
@@ -903,6 +959,7 @@ namespace KryticalNova.UI
         private void OnPanelGeometry(VisualElement element)
         {
             if (element == activeElement) return;
+            if (element.name == HotbarName || element.name == ChatName || element.name == MinimapName) PlaceHotbarDefault();
             // Settings moves itself by a margin and puts itself back: a clamp here would leave it where a wide page pushed it.
             if (element.ClassListContains(FitsItselfClass)) return;
             if (saved.ContainsKey(element.name)) ClampIntoView(element);
