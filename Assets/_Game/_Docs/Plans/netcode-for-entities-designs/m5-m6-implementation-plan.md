@@ -166,7 +166,8 @@ there already says "M5: Hostiles").
 - `HostileSpawner.AuthorityOverride` (`Func<bool>`, null on main): when set, `HasAuthority` (`HostileSpawner.cs:18-25`) returns it.
   DOTS sets it to "this process has a server world", so **clients stop running offline NGO Hostiles** (today they do: NGO is
   not listening on DOTS, so `HasAuthority` is true everywhere).
-- `HostileStrikeRules.TryRoll(CombatEntity attacker, HostileDefinition def, int attackIndex, CombatEntity target, Vector3 attackerPos, out DamageResult)`:
+- `HostileStrikeRules.TryRoll(CombatEntity attacker, HostileDefinition def, int attackIndex, CombatEntity target, Transform attackerBody, out DamageResult)`
+  (M5.0: a Transform, not a Vector3: the wall ray skips the attacker's own colliders with `IsChildOf`):
   the guard + roll part of `HostileBrainLink.Strike` (NGO `HostileBrainLink.cs:237-286`: reach-above, `OnAWall`/`ReachesOnWall`,
   multiplier, reflection, `CombatCalculator.CalculateAttack`) moved into `KryticalNova.Hostiles` (no Emerald). `HostileBrainLink`
   calls it, so NGO behaviour is identical (its own tests prove it).
@@ -369,7 +370,7 @@ Rows marked `[line: M5.0]` have the file but the line is filled in M5.0. "Test" 
 
 ## 5. M6 steps
 
-### M6.1 All 11 species (M, MED)
+### M6.1 All 10 species (M5.0 count) (M, MED)
 - **Change:** `HostileDefinition` (new fields 1.4), `HostileAssetBuilder` table: light windups 0.25 -> 0.40 s (Q3), poise per
   species (normal 30, Bruisers 70), assist per behaviour, score profile (Bonewalker/Blightborn Brute, Wraith/Seraph Skirmisher,
   Gargoyle/Carapace/War Frame Brute, Hellion/Colossus Finisher) - **the profiles are a proposal for the owner at the hand test**.
