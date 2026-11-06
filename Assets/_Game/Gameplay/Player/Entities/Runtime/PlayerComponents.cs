@@ -222,6 +222,15 @@ namespace KryticalNova.Player.Entities
         }
     }
 
+    /// <summary>
+    /// A player is in a fight, for everyone (Cadence step 1; NGO PlayerCombatState.netInCombat): decided on the server body (a blow, an
+    /// attack, a Callout, a Hostile's threat, a hold, a struck Strike Dummy), mirrored on every view (the fight music, Cadence's beat).
+    /// </summary>
+    public struct CombatFlag : IComponentData
+    {
+        [GhostField] public byte InCombat;
+    }
+
     /// <summary>A player's Callout opponent for everyone (M4 8b; NGO PlayerDuel.netOpponent): the opponent's ghost, 0 = none. Server-written.</summary>
     public struct DuelState : IComponentData
     {

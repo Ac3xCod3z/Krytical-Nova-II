@@ -330,6 +330,11 @@ prediction error p95 <= 0.05 m at 60 ms, tick p95 < 15 ms with 102 monsters (fro
     prefab's equip window), every view plays the draw / snaps a late joiner. First-swing probe at 100 ms: the owner's strike 1 starts
     on the server's tick in reach and after the walk in (no restart), so the missing draw is the likely cause; the owner re-tests.
     Run 1 green: EditMode 456 (10 skipped), PlayMode 58/58. Next: Cadence on DOTS.
+  - [x] Cadence step 1 (owner: Cadence on the Strike Dummy as NGO): the fight is decided on the server body by NGO's PlayerCombatState
+    (a blow, an attack, a Callout, a Hostile's threat, a hold, a struck Strike Dummy held while selected or within 30 m) and reaches
+    every view as the ghost's CombatFlag (NGO netInCombat); a view mirrors it and never decides it, so the own view's fight music and
+    Cadence's beat start with the server's fight. Run 1 green: EditMode 333/333, PlayMode 59/59 (B58). Next: Cadence step 2, the
+    on-beat press judged on the server and COMBO / REDLINE back to the owner.
 - [ ] **M5 Monster system prototype (new brain).** Section 6. P0 EditMode sim tests (no netcode), P1 ghost + view, P2 reward bridge.
 - [ ] **M6 Hostiles in full.** All roster species via `MonsterArchetype` from `HostileDefinition` (ids kept), level scaling, zones,
   sleep, respawn, loot/XP through managed reward bridge with ledger rules; nav grids for the zones; bot soak with 102 monsters.

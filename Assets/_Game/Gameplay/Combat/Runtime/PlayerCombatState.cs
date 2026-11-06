@@ -86,7 +86,21 @@ namespace KryticalNova.Combat
         /// <summary>Raised on every machine when the player enters or leaves a fight.</summary>
         public event Action<bool> Changed;
 
-        private bool Decides => !IsSpawned || IsServer;
+        // a view of the entity netcode decides nothing: its fight is the server body's, mirrored (MirrorInCombat)
+        private bool Decides => (!IsSpawned || IsServer) && !KryticalNova.Core.BodyRoleTag.IsLocalClientView(this)
+                                && !KryticalNova.Core.BodyRoleTag.IsRemoteClientView(this);
+
+        /// <summary>
+        /// A view of the entity netcode: the server body's fight from the ghost (NGO netInCombat.OnValueChanged on a client), so the fight
+        /// music and Cadence's beat follow it here.
+        /// </summary>
+        public void MirrorInCombat(bool fighting)
+        {
+            if (Decides) return;
+            if (offlineInCombat == fighting) return;
+            offlineInCombat = fighting;
+            Changed?.Invoke(fighting);
+        }
 
         /// <summary>
         /// The rule itself: in a fight while attacking, duelling or held, and for <paramref name="linger"/> seconds

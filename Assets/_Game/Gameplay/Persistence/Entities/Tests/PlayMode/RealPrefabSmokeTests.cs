@@ -4924,6 +4924,44 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
             }
         }
 
+        [UnityTest]
+        public IEnumerator B58_AStruckStrikeDummy_PutsTheServerBodyInAFight_AndTheOwnViewHoldsTheMirroredFight()
+        {
+            // Cadence step 1 (owner, 5 Nov 2026: Cadence on the dummy as NGO): NGO PlayerCombatState decides on the server body (a landed
+            // blow on a Strike Dummy holds the fight while selected or within 30 m); the view only mirrors it (the fight music reads it)
+            NetRole.Install(new BodyRoleNetRoleAdapter(null, () => NetRoleKind.ServerBody));
+            GameObject attacker = Make(NetRoleKind.ServerBody, false, new PlayerKey(581));
+            var dummyObject = new GameObject("B58 Combat Dummy");
+            m_Made.Add(dummyObject);
+            dummyObject.transform.position = attacker.transform.position + attacker.transform.forward * 1f;
+            var dummy = dummyObject.AddComponent<CombatEntity>();
+            yield return null;
+            var fight = attacker.GetComponent<KryticalNova.Combat.PlayerCombatState>();
+            Assert.IsNotNull(fight, "the server body keeps PlayerCombatState");
+            Assert.IsFalse(fight.InCombat, "no fight yet");
+            bool landed = false;
+            for (int i = 0; i < 20 && !landed; i++) landed = KryticalNova.Combat.Entities.MeleeStrike.Apply(attacker, dummy, 1, 1f);
+            Assert.IsTrue(landed, "a blow on the dummy");
+            for (float t = 0f; t < 0.6f; t += Time.deltaTime) yield return null;
+            Assert.IsTrue(fight.InCombat, "the server body is in a fight (NGO's Blow and Dummy reasons)");
+
+            GameObject own = Make(NetRoleKind.ClientView, true, new PlayerKey(581));
+            yield return null;
+            var mirrored = own.GetComponent<KryticalNova.Combat.PlayerCombatState>();
+            Assert.IsNotNull(mirrored, "the own view keeps PlayerCombatState (the fight music reads it)");
+            int changes = 0;
+            mirrored.Changed += _ => changes++;
+            mirrored.MirrorInCombat(true);
+            Assert.IsTrue(mirrored.InCombat);
+            Assert.AreEqual(1, changes);
+            for (float t = 0f; t < 0.6f; t += Time.deltaTime) yield return null;
+            Assert.IsTrue(mirrored.InCombat, "the view never decides it away (its checks do not run there)");
+            mirrored.MirrorInCombat(false);
+            Assert.IsFalse(mirrored.InCombat, "the server's end of the fight");
+            fight.MirrorInCombat(false);
+            Assert.IsTrue(fight.InCombat, "the server body ignores a mirror: it decides");
+        }
+
         sealed class DialogueSeen : INpcDialogueSink
         {
             public int Shown;
