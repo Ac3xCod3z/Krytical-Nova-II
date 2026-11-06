@@ -713,15 +713,44 @@ namespace KryticalNova.Persistence.Entities
         public const double BatchTimeoutSeconds = 300;
 
         // Set by the menu or Batch, read on entering Play. Not reset at SubsystemRegistration on purpose: they must outlive the Play start.
-        static bool s_Requested, s_QuitAfter;
+        static bool s_Requested, s_QuitAfter, s_RequestedTestSaves;
         static int s_ExitCode = 1;
         static double s_BatchStarted;
 
         /// <summary>True while this Play session is a "Play DOTS here" one.</summary>
         public static bool Active { get; private set; }
 
+        /// <summary>True while this Play session saves to the test save service (<see cref="PlayHereTestSaves"/>).</summary>
+        public static bool TestSaves { get; private set; }
+
+        public const string TestSavesMenuPath = MenuPath + " (test saves)";
+
         [MenuItem(MenuPath)]
-        static void PlayHere() => Begin(quitAfter: false);
+        static void PlayHere()
+        {
+            s_RequestedTestSaves = false;
+            Begin(quitAfter: false);
+        }
+
+        /// <summary>
+        /// The same session saving to the TEST save service only (owner, 5 Nov 2026: relog tests): checked before Play starts, so a missing or
+        /// wrong service never starts a session at all.
+        /// </summary>
+        [MenuItem(TestSavesMenuPath)]
+        static void PlayHereWithTestSaves()
+        {
+            if (EditorApplication.isPlayingOrWillChangePlaymode) { Debug.LogWarning("[KnPlayHere] Stop Play first."); return; }
+            if (!PlayHereTestSaves.TryCheck(out string problem))
+            {
+                Debug.LogError("[KnPlayHere] Test saves not started: " + problem);
+                return;
+            }
+            s_RequestedTestSaves = true;
+            if (!Begin(quitAfter: false)) s_RequestedTestSaves = false;
+        }
+
+        [MenuItem(TestSavesMenuPath, true)]
+        static bool PlayHereWithTestSavesValid() => !EditorApplication.isPlayingOrWillChangePlaymode;
 
         [MenuItem(MenuPath, true)]
         static bool PlayHereValid() => !EditorApplication.isPlayingOrWillChangePlaymode;
@@ -789,6 +818,8 @@ namespace KryticalNova.Persistence.Entities
             if (change != PlayModeStateChange.EnteredEditMode) return;
             EditorApplication.playModeStateChanged -= OnPlayModeChanged;
             Active = false;
+            if (TestSaves) KnBootstrap.JoinCheckFactory = null;
+            TestSaves = false;
             if (s_QuitAfter) EditorApplication.Exit(s_ExitCode);
         }
 
@@ -805,7 +836,27 @@ namespace KryticalNova.Persistence.Entities
         {
             Active = s_Requested;
             s_Requested = false;
+            TestSaves = Active && s_RequestedTestSaves;
+            s_RequestedTestSaves = false;
             if (!Active) return;
+            if (TestSaves)
+            {
+                // before any scene object loads or saves: the test service, checked again; a refusal saves nothing anywhere and stops Play
+                if (PlayHereTestSaves.TryOpen(out ServiceSaveStore store, out string problem)) ServerSave.Store = store;
+                else
+                {
+                    ServerSave.Store = new RefusedSaveStore();
+                    Debug.LogError("[KnPlayHere] Test saves refused, nothing is saved and Play stops: " + problem);
+                    EditorApplication.isPlaying = false;
+                    Active = false;
+                    TestSaves = false;
+                    return;
+                }
+                EntityNetcodeSession.Owns = true;
+                Debug.Log("[KnPlayHere] Saves go to the TEST save service only (" + PlayHereTestSaves.Url + ", " + PlayHereTestSaves.TestDatabase +
+                    "). Netcode for GameObjects stays off.");
+                return;
+            }
             // before any scene object loads or saves (ServerSave resets its store at SubsystemRegistration, which ran already)
             ServerSave.Store = new MemorySaveStore();
             // Netcode for GameObjects stays off: no host on 7777, no player from the local profile, the offline avatar hidden
@@ -824,7 +875,21 @@ namespace KryticalNova.Persistence.Entities
                 StopPlay(1);
                 return;
             }
-            KnGoInGame.Source = new TesterGoInGame(new GoInGamePayload { CharacterId = string.Empty, Name = TesterName, RecipeText = recipeText });
+            string characterId = string.Empty;
+            if (TestSaves)
+            {
+                // the fixed test account joins (never proven), as its real "Tester" made once in the test database
+                KnBootstrap.JoinCheckFactory = () => new PlayHereTestJoinCheck();
+                characterId = TryTesterRecipe(out CharacterRecipe recipe, out problem) ? PlayHereTestSaves.EnsureTester(recipe, out problem) : null;
+                if (characterId == null)
+                {
+                    Debug.LogError("[KnPlayHere] Test saves: " + problem);
+                    EditorApplication.isPlaying = false;
+                    return;
+                }
+                Debug.Log("[KnPlayHere] Test saves: entering as the test account's Tester (" + characterId + ").");
+            }
+            KnGoInGame.Source = new TesterGoInGame(new GoInGamePayload { CharacterId = characterId, Name = TesterName, RecipeText = recipeText });
             string join = JoinRules.PayloadText(GameBuild.Version, true);
             // one camera change per proof run: KN_PLAYHERE_SPAWNCAM_FIX=0 measures without the spawn-camera fix
             s_OwnBody = null;
@@ -855,12 +920,20 @@ namespace KryticalNova.Persistence.Entities
         public static bool TryTesterLook(out string recipeText, out string problem)
         {
             recipeText = null;
+            if (!TryTesterRecipe(out CharacterRecipe recipe, out problem)) return false;
+            recipeText = RecipeText.Encode(recipe);
+            return true;
+        }
+
+        static bool TryTesterRecipe(out CharacterRecipe recipe, out string problem)
+        {
+            recipe = default;
             problem = null;
             GameObject prefab = PlayerWorldsSetup.PlayerPrefab();
             PlayerIdentity identity = prefab != null ? prefab.GetComponent<PlayerIdentity>() : null;
             CharacterCreationDatabase database = identity != null ? identity.Database : null;
             if (database == null || database.Lineages.Count == 0) { problem = "no player prefab with a character database (Build Player Ghost Assets)."; return false; }
-            recipeText = RecipeText.Encode(RecipeEdit.Default(database.Lineages[0], default(BodyType)));
+            recipe = RecipeEdit.Default(database.Lineages[0], default(BodyType));
             return true;
         }
 

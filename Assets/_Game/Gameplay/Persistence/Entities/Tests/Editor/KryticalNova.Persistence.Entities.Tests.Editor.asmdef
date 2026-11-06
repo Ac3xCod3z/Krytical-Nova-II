@@ -11,6 +11,7 @@
         "KryticalNova.Networking.Entities",
         "KryticalNova.Networking.Entities.Tests.Editor",
         "KryticalNova.Player.Entities.Tests.Editor",
+        "KryticalNova.Persistence",
         "KryticalNova.Persistence.Entities",
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner",

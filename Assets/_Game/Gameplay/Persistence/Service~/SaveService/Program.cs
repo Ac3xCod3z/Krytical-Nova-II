@@ -99,6 +99,8 @@ app.Use(async (context, next) =>
 app.MapGet("/health", async () => Results.Ok(new
 {
     ok = true, documents = await store.CountAsync(), bytes = await store.SizeAsync(), backup = test ? null : backup.Status(),
+    // which lane this is: the Editor's "Play DOTS here (test saves)" refuses any service that is not the tests' database
+    test, database = database.Database,
 }));
 
 // A copy now (the Server app's BACK UP NOW), as the nightly one.

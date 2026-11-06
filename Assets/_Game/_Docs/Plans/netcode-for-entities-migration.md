@@ -315,6 +315,13 @@ prediction error p95 <= 0.05 m at 60 ms, tick p95 < 15 ms with 102 monsters (fro
     stand-off point (a ground click of the player's own) and it opens on arrival (NGO UpdatePendingInteract, now on views too); every
     dialogue service already was a ported server request (Flask, shop, Vault, Craft, Forge, Restyle, Holoweave/Dye, Crew, Sponsor,
     Kiosk, Herald). Run 1 green: EditMode 331/331, PlayMode 57/57 (B56). Next: Play DOTS here with test saves (HIGH, design first).
+  - [x] Play DOTS here with TEST saves, stage A1 (owner: relog tests in Play DOTS here; HIGH, Master reviewed and approved): the menu
+    "Play DOTS here (test saves)" saves to the test save service only: exactly http://127.0.0.1:7802, and only when its /health says
+    test + krytical_nova_test (the clone's service now reports both), checked before Play and again before the scene loads; any refusal
+    keeps nothing (RefusedSaveStore) and stops Play, never a fallback. The fixed test account is hashed in its own domain (never a Unity
+    player's account); its real "Tester" is made once through the roster and entered by id; the service key only in the request header.
+    The plain Play DOTS here stays memory only. Relog = stop Play and start the mode again (A2, the in-Play Log Out -> lobby -> Enter,
+    comes later). EditMode Persistence.Entities green, the live test on the clone's SaveService --test green, PlayMode 57/57.
 - [ ] **M5 Monster system prototype (new brain).** Section 6. P0 EditMode sim tests (no netcode), P1 ghost + view, P2 reward bridge.
 - [ ] **M6 Hostiles in full.** All roster species via `MonsterArchetype` from `HostileDefinition` (ids kept), level scaling, zones,
   sleep, respawn, loot/XP through managed reward bridge with ledger rules; nav grids for the zones; bot soak with 102 monsters.
