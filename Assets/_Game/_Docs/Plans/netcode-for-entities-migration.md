@@ -335,6 +335,11 @@ prediction error p95 <= 0.05 m at 60 ms, tick p95 < 15 ms with 102 monsters (fro
     every view as the ghost's CombatFlag (NGO netInCombat); a view mirrors it and never decides it, so the own view's fight music and
     Cadence's beat start with the server's fight. Run 1 green: EditMode 333/333, PlayMode 59/59 (B58). Next: Cadence step 2, the
     on-beat press judged on the server and COMBO / REDLINE back to the owner.
+  - [x] Cadence step 2: the own view's skill-key press (its time on the shared clock, as the player heard the beat) goes to the
+    server body (CadencePressRpc, budget CallKind.Combat; NGO PressRpc), which judges it by NGO's rules (window 90 ms, kept 1.5 s,
+    +6 %, combo 2 s); "ON CADENCE" and the COMBO / REDLINE steps come back to the owner's own view only (CadenceOwnerRpc; NGO
+    EarnedRpc / ComboRpc). A view never judges. Run 1 green (after one compile fix): EditMode 333/333, PlayMode 60/60 (B59). Open:
+    the beat's parity between server and client is proven only by the owner's GUI test; the dummy hold by selection (30 m works).
 - [ ] **M5 Monster system prototype (new brain).** Section 6. P0 EditMode sim tests (no netcode), P1 ghost + view, P2 reward bridge.
 - [ ] **M6 Hostiles in full.** All roster species via `MonsterArchetype` from `HostileDefinition` (ids kept), level scaling, zones,
   sleep, respawn, loot/XP through managed reward bridge with ledger rules; nav grids for the zones; bot soak with 102 monsters.

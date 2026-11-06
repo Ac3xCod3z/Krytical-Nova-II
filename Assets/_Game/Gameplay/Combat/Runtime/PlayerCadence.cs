@@ -156,7 +156,34 @@ namespace KryticalNova.Combat
             ReadoutSentHere = false;
         }
 
-        private bool Decides => !IsSpawned || IsServer;
+        // a view of the entity netcode decides nothing (its presses go to the server body: PressFromView)
+        private bool Decides => (!IsSpawned || IsServer) && !KryticalNova.Core.BodyRoleTag.IsLocalClientView(this)
+                                && !KryticalNova.Core.BodyRoleTag.IsRemoteClientView(this);
+
+        /// <summary>A server body of the entity netcode: what NGO sent to the owner by RPC is raised here for the network side.</summary>
+        private bool OnServerBody => KryticalNova.Core.BodyRoleTag.Of(this) is { Kind: KryticalNova.Core.NetRoleKind.ServerBody };
+
+        /// <summary>The own view's press for the server body (Cadence step 2; NGO PressRpc): the skill and the press on the shared clock.</summary>
+        public event Action<string, double> PressFromView;
+
+        /// <summary>A server body's cast on Cadence, for its owner's game (NGO EarnedRpc).</summary>
+        public event Action<string> EarnedForOwner;
+
+        /// <summary>A server body's combo step and Redline, for its owner's game (NGO ComboRpc).</summary>
+        public event Action<int, bool> ComboForOwner;
+
+        /// <summary>Server body: a press sent by the owner's view (NGO PressRpc's body).</summary>
+        public void ServerNotePressFromView(string skillId, double pressedAt)
+        {
+            if (!Decides || string.IsNullOrEmpty(skillId)) return;
+            ServerNotePress(skillId, pressedAt);
+        }
+
+        /// <summary>The own view: the server's word that a cast was on Cadence (NGO EarnedRpc's body).</summary>
+        public void ShowEarnedFromServer(string skillId) { if (IsMine) ShowEarned(skillId); }
+
+        /// <summary>The own view: the server's combo step (NGO ComboRpc's body).</summary>
+        public void ShowComboFromServer(int step, bool redline) => ShowCombo(step, redline);
         private bool IsMine => KryticalNova.Core.BodyRoleTag.IsMine(this, !IsSpawned || IsOwner);
 
         private void Awake()
@@ -215,6 +242,7 @@ namespace KryticalNova.Combat
             if (LocalPress != null && clock.TryBeatAt(pressedAt, out _, out double error, out _))
                 LocalPress(error, CadenceRules.OnBeat(error, settings.WindowSeconds));
             if (Decides) ServerNotePress(skill.skillId, pressedAt);
+            else if (!IsSpawned) PressFromView?.Invoke(skill.skillId, pressedAt);   // a view of the entity netcode
             else PressRpc(skill.skillId, pressedAt);
         }
 
@@ -337,6 +365,7 @@ namespace KryticalNova.Combat
             if (Logging) Debug.Log($"[Cadence] {name}: {skill.displayName} cast on Cadence, +{settings.bonusPercent:0.#} % damage.");
             Mirror(press);
             if (IsSpawned && !IsOwnedByServer) EarnedRpc(skill.skillId);
+            else if (OnServerBody) EarnedForOwner?.Invoke(skill.skillId);
             else ShowEarned(skill.skillId);
             return settings.Multiplier;
         }
@@ -357,6 +386,7 @@ namespace KryticalNova.Combat
             if (Logging && (comboStep > 0 || was > 0)) Debug.Log($"[Cadence] {name}: combo {was} -> {comboStep}.");
             bool redline = redlineCharged && comboStep > 0;
             if (IsSpawned && !IsOwnedByServer) ComboRpc((byte)comboStep, redline);
+            else if (OnServerBody) ComboForOwner?.Invoke(comboStep, redline);
             else ShowCombo(comboStep, redline);
             return comboStep;
         }

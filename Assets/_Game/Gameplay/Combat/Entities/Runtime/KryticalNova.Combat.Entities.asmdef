@@ -3,6 +3,7 @@
     "rootNamespace": "KryticalNova.Combat.Entities",
     "references": [
         "KryticalNova.Runtime",
+        "KryticalNova.Networking",
         "KryticalNova.Combat",
         "KryticalNova.Progression",
         "Unity.Netcode.Runtime",

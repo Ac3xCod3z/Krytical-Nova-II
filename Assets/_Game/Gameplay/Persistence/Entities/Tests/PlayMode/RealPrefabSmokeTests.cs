@@ -4962,6 +4962,61 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
             Assert.IsTrue(fight.InCombat, "the server body ignores a mirror: it decides");
         }
 
+        [UnityTest]
+        public IEnumerator B59_ACadencePress_IsJudgedOnTheServerBody_NeverOnAView_AndTheServersWordsShowOnTheOwnView()
+        {
+            // Cadence step 2 (NGO PressRpc -> ServerNotePress on the server; EarnedRpc / ComboRpc to the owner)
+            NetRole.Install(new BodyRoleNetRoleAdapter(null, () => NetRoleKind.ServerBody));
+            ICombatFeedbackSink oldFeedback = ClientPresentationRegistry.Feedback;
+            var texts = new TextsSeen();
+            ClientPresentationRegistry.RegisterFeedback(texts);
+            try
+            {
+                GameObject server = Make(NetRoleKind.ServerBody, false, new PlayerKey(591));
+                GameObject own = Make(NetRoleKind.ClientView, true, new PlayerKey(591));
+                yield return null;
+                var judge = server.GetComponent<KryticalNova.Combat.PlayerCadence>();
+                var view = own.GetComponent<KryticalNova.Combat.PlayerCadence>();
+                Assert.IsNotNull(judge, "the server body keeps PlayerCadence");
+                Assert.IsNotNull(view, "the own view keeps PlayerCadence (the key and the words)");
+                SkillDefinitionSO attack = null;
+                foreach (SkillDefinitionSO s in server.GetComponent<PlayerCombatSkills>().AvailableSkills)
+                    if (s != null && s.IsAttack && !s.IsCharged) { attack = s; break; }
+                Assert.IsNotNull(attack, "planned: an attack skill to press");
+
+                string before = judge.LastPress, viewBefore = view.LastPress;
+                judge.ServerNotePressFromView(attack.skillId, 1.0);
+                Assert.AreNotEqual(before, judge.LastPress, "the server body judged it (here: no fight, no beat)");
+                view.ServerNotePressFromView(attack.skillId, 1.0);
+                Assert.AreEqual(viewBefore, view.LastPress, "a view never judges");
+
+                // the server's words on the own view: "ON CADENCE" and the combo step
+                int combos = 0;
+                System.Action<int, float, bool> count = (step, seconds, redline) => { if (step == 2 && redline) combos++; };
+                KryticalNova.Combat.PlayerCadence.LocalCombo += count;
+                try
+                {
+                    view.ShowEarnedFromServer(attack.skillId);
+                    view.ShowComboFromServer(2, true);
+                }
+                finally { KryticalNova.Combat.PlayerCadence.LocalCombo -= count; }
+                Assert.AreEqual(1, texts.Texts.FindAll(t => t == "ON CADENCE").Count, "ON CADENCE on the own view: " + string.Join(" | ", texts.Texts));
+                Assert.AreEqual(1, combos, "COMBO x2 with REDLINE held");
+            }
+            finally
+            {
+                if (oldFeedback != null) ClientPresentationRegistry.RegisterFeedback(oldFeedback);
+                else ClientPresentationRegistry.UnregisterFeedback(texts);
+            }
+        }
+
+        sealed class TextsSeen : ICombatFeedbackSink
+        {
+            public readonly List<string> Texts = new List<string>();
+            public void ShowCombatFeedback(Vector3 worldPosition, DamageResult result) { }
+            public void ShowFloatingText(Vector3 worldPosition, string text, string styleClass = "crit") => Texts.Add(text);
+        }
+
         sealed class DialogueSeen : INpcDialogueSink
         {
             public int Shown;
