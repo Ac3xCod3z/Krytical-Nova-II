@@ -236,53 +236,12 @@ namespace KryticalNova.Hostiles.Emerald
         /// </summary>
         public void Strike(CombatEntity target)
         {
-            if (!awake || target == null || !target.IsAlive || !entity.IsAlive) return;
-            // A player up a wall or in a tree, above what this species can reach: the swing meets nothing.
-            if (definition != null && target.transform.position.y - transform.position.y > definition.reachAbove) return;
-            // A player standing on a wall (walls as a second ground): only an attack that reaches there in a straight
-            // line, height included, with nothing in the way, lands. Melee species wait below.
-            if (OnAWall(target.transform) && !ReachesOnWall(target.transform)) return;
-            CharacterCombatStats mine = entity.CombatStats;
-            if (mine == null || target.CombatStats == null) return;
-
-            float multiplier = 1f;
+            if (!awake) return;
+            // the rules of the roll are HostileStrikeRules' (shared with the entity netcode's brain, M5 seam 2)
             int index = system.CombatComponent.CurrentAnimationIndex;
-            if (definition != null && index >= 0 && index < definition.attacks.Length)
-                multiplier = Mathf.Max(0.1f, definition.attacks[index].damageMultiplier);
-
-            float reflectChance = 0f;
-            var defenderBuffs = target.GetComponent<CharacterBuffManager>();
-            bool reflects = defenderBuffs != null && defenderBuffs.HasReflection(out reflectChance, out _);
-
-            DamageResult result = CombatCalculator.CalculateAttack(mine, target.CombatStats, multiplier, reflects, reflectChance);
-            target.TakeDamage(result, mine);
+            if (!HostileStrikeRules.TryRoll(entity, definition, index, target, transform, out DamageResult result)) return;
+            target.TakeDamage(result, entity.CombatStats);
             if (net != null) net.ReportStrike(target, result, index);
-        }
-
-        private const float WallReachSlack = 0.5f;
-        private const float EyeHeight = 1.2f;
-        private static readonly RaycastHit[] SightHits = new RaycastHit[16];
-
-        /// <summary>A body whose up is not the world's stands on a wall.</summary>
-        private static bool OnAWall(Transform body) => Vector3.Angle(body.up, Vector3.up) > 30f;
-
-        private bool ReachesOnWall(Transform target)
-        {
-            float reach = (definition != null ? definition.attackRange : 2f) + WallReachSlack;
-            Vector3 from = transform.position + Vector3.up * EyeHeight;
-            Vector3 to = target.position;
-            Vector3 way = to - from;
-            float distance = way.magnitude;
-            if (distance > reach + EyeHeight) return false;
-            if (distance < 1e-3f) return true;
-            int count = Physics.RaycastNonAlloc(from, way / distance, SightHits, distance, Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore);
-            for (int i = 0; i < count; i++)
-            {
-                Transform hit = SightHits[i].transform;
-                if (hit.IsChildOf(transform) || hit.IsChildOf(target)) continue;
-                return false; // the wall's corner, a ledge or another body is in the way
-            }
-            return true;
         }
     }
 }

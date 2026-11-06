@@ -169,7 +169,7 @@ there already says "M5: Hostiles").
   while DOTS worlds run, until M5.5 sets the override for its server bodies. `HostileAuthorityTests`.
   DOTS sets it to "this process has a server world", so **clients stop running offline NGO Hostiles** (today they do: NGO is
   not listening on DOTS, so `HasAuthority` is true everywhere).
-- `HostileStrikeRules.TryRoll(CombatEntity attacker, HostileDefinition def, int attackIndex, CombatEntity target, Transform attackerBody, out DamageResult)`
+- **[done, DOTS 15, 6 Nov: `Hostiles/Runtime/HostileStrikeRules.cs`, HostileBrainLink.Strike calls it; `HostileStrikeRulesTests`]** `HostileStrikeRules.TryRoll(CombatEntity attacker, HostileDefinition def, int attackIndex, CombatEntity target, Transform attackerBody, out DamageResult)`
   (M5.0: a Transform, not a Vector3: the wall ray skips the attacker's own colliders with `IsChildOf`):
   the guard + roll part of `HostileBrainLink.Strike` (NGO `HostileBrainLink.cs:237-286`: reach-above, `OnAWall`/`ReachesOnWall`,
   multiplier, reflection, `CombatCalculator.CalculateAttack`) moved into `KryticalNova.Hostiles` (no Emerald). `HostileBrainLink`
