@@ -57,6 +57,14 @@ namespace KryticalNova.Player.Entities.Tests
             Assert.AreEqual(Milli("meleeStrikingRange"), t.ReachMm);
             Assert.AreEqual(Milli("serverMaxValidationRange"), t.ValidationMm);
             Assert.AreEqual(Milli("minCadenceTolerance"), t.MinCadencePermille);
+
+            // the draw the first strike waits for (owner's hand test, 5 Nov 2026): the NGO motor's equip window
+            MonoBehaviour motor = null;
+            foreach (var c in AssetDatabase.LoadAssetAtPath<GameObject>(PlayerGhostAssetsBuilder.PlayerPrefabPath).GetComponentsInChildren<MonoBehaviour>(true))
+                if (c != null && c.GetType().Name == "PlayerAnimancerMotor") { motor = c; break; }
+            Assert.IsNotNull(motor, "the NGO player's PlayerAnimancerMotor");
+            Vector2 window = new SerializedObject(motor).FindProperty("equipWindow").vector2Value;
+            Assert.AreEqual(Mathf.RoundToInt((window.y - window.x) * 1000000f), t.DrawMicros, "the draw lasts NGO's equip window");
         }
 
         [Test]

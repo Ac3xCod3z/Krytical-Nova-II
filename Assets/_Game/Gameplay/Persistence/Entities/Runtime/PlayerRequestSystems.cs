@@ -1158,6 +1158,7 @@ namespace KryticalNova.Persistence.Entities
             if (skills.ServerTryCast(skill, target, out string reason))
             {
                 Used++;
+                if (skill.IsAttack) DrawOn(connection);   // NGO PlayerSkillAttacks draws the weapon for an attack skill
                 RecordCast(body, skillId, (short)skills.GetRank(skill), skill.IsAttack ? targetGhostId : 0);
                 Reply(connection, new RequestReplyRpc { Kind = RequestReplyRpc.SkillCast, SkillId = new FixedString64Bytes(skillId), Rank = (short)skills.GetRank(skill) });
                 return;
@@ -1227,6 +1228,19 @@ namespace KryticalNova.Persistence.Entities
         }
 
         /// <summary>The server body of the player ghost <paramref name="ghostId"/> in this world, or null.</summary>
+        /// <summary>The caster's ghost draws its weapon now (the owner's prediction takes it from the snapshot).</summary>
+        void DrawOn(Entity connection)
+        {
+            EntityManager em = EntityManager;
+            if (!em.HasComponent<NetworkId>(connection)) return;
+            int id = em.GetComponentData<NetworkId>(connection).Value;
+            if (!GhostBodyRegistry.TryGetByNetworkId(World, id, out GhostBodyEntry entry) || !em.Exists(entry.Ghost)
+                || !em.HasComponent<KryticalNova.Player.Entities.CombatState>(entry.Ghost)) return;
+            var s = em.GetComponentData<KryticalNova.Player.Entities.CombatState>(entry.Ghost);
+            KryticalNova.Player.Entities.MeleeRules.Draw(ref s, SystemAPI.GetSingleton<NetworkTime>().ServerTick);
+            em.SetComponentData(entry.Ghost, s);
+        }
+
         Transform ServerBodyOf(int ghostId)
         {
             if (ghostId == 0) return null;

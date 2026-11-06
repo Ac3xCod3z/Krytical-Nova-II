@@ -167,6 +167,9 @@ namespace KryticalNova.Player
         private float travelStalledFor;
         // First click on a unit selects it; a second click on the selected unit attacks / talks / walks to it.
         private Transform selectedTarget;
+        // Clicks away from the selected target: one walks and keeps it, a quick second one drops it.
+        private ClickAwayDeselect clickAway;
+        private float DeselectDoubleClickWindow => Movement != null ? Movement.deselectDoubleClickWindow : MovementSettings.DefaultDeselectDoubleClickWindow;
         // The move ordered last, where movement is decided: where it is to end, and where the path handed to the
         // agent ends (the same place, or the take-off point of a vault on the way).
         private const float SameRouteDistance = 0.3f;
@@ -593,7 +596,9 @@ namespace KryticalNova.Player
 
             if (!inputSuppressed && !WorldClicksParked && (resources == null || resources.IsAlive) && toggleWeaponAction.WasPressedThisFrame())
             {
-                animancerMotor?.RequestToggleWeaponDraw();
+                // a client view of the entity netcode: the ghost draws or sheathes (every view then shows it)
+                if (ViewMode) BodyClicks.ToggleWeapon();
+                else animancerMotor?.RequestToggleWeaponDraw();
             }
 
             if (!WorldClicksParked && !orbitHeldAction.IsPressed() && moveAction.WasPressedThisFrame()
@@ -840,7 +845,7 @@ namespace KryticalNova.Player
             if (!ViewMode && waterMotor != null && waterMotor.TryClick(ray, hit))
             {
                 CancelAttack();
-                if (selectedTarget != null) ClearSelection();
+                ClickAwayFromTarget();
                 pendingInteract = null;
                 EndTravel(false);
                 ClientPresentationRegistry.Markers?.ShowMoveMarker(transform, waterMotor.LastClickPoint, Vector3.up);
@@ -852,7 +857,7 @@ namespace KryticalNova.Player
                 && waterMotor.TryWaterUnderRay(ray, hit, out Vector3 waterSurface))
             {
                 CancelAttack();
-                if (selectedTarget != null) ClearSelection();
+                ClickAwayFromTarget();
                 pendingInteract = null;
                 EndTravel(false);
                 BodyClicks.Ground(waterSurface, movementSkills != null && movementSkills.IsRunning);
@@ -874,7 +879,7 @@ namespace KryticalNova.Player
                 && wallRunMotor.TryClimbClicked(hit.point, hit.normal, hit.collider, raycastLayers.value, modelForwardOffset))
             {
                 CancelAttack();
-                if (selectedTarget != null) ClearSelection();
+                ClickAwayFromTarget();
                 pendingInteract = null;
                 EndTravel(false);
                 return;
@@ -890,7 +895,7 @@ namespace KryticalNova.Player
                 && (wallRunMotor.WantsWallWalkClick(hit.point, hit.normal, onGround) || (!onGround && wallRunMotor.IsClimbableClick(hit.collider))))
             {
                 CancelAttack();
-                if (selectedTarget != null) ClearSelection();
+                ClickAwayFromTarget();
                 pendingInteract = null;
                 EndTravel(false);
                 BodyClicks.Wall(hit.point, hit.normal, movementSkills.IsRunning, movementSkills.IsJumpSelected);
@@ -902,9 +907,10 @@ namespace KryticalNova.Player
             if (!onGround && !walkableTop)
             { CommandMessage?.Invoke("Choose a walkable ground or platform surface."); return; }
 
-            // Clicking ground or platform stops an active attack and drops the selection (its ring fades out).
+            // Clicking ground or platform stops an active attack; the selection stays unless this is a quick double-click
+            // away (owner, 5 Nov 2026), and then its ring fades out.
             CancelAttack();
-            if (selectedTarget != null) ClearSelection();
+            ClickAwayFromTarget();
             // It replaces a walk-to-talk in progress. The vault planned for the old route is replaced when the new
             // route is planned, and kept if the new route is refused (ExecuteLocalMove, ServerMoveTo).
             pendingInteract = null;
@@ -1170,13 +1176,47 @@ namespace KryticalNova.Player
         {
             selectedTarget = unit;
             selectedKind = kind;
+            clickAway.Reset();
             ClientPresentationRegistry.Markers?.SetTarget(unit, kind);
         }
 
         private void ClearSelection()
         {
             selectedTarget = null;
+            clickAway.Reset();
             ClientPresentationRegistry.Markers?.ClearTarget();
+        }
+
+        /// <summary>A click away from the selected target (ground, water, a wall): it drops the target only as the second of a quick double-click.</summary>
+        private void ClickAwayFromTarget()
+        {
+            if (selectedTarget != null && clickAway.Clears(Time.unscaledTime, DeselectDoubleClickWindow)) ClearSelection();
+        }
+
+        /// <summary>
+        /// The deselect rule (owner, 5 Nov 2026): with anything selected (a Strike Dummy, a player, a Hostile, an NPC),
+        /// one click away walks there and keeps the target and its ring; a second click away within the window (a quick
+        /// double-click) drops it. Two clicks further apart are two single clicks, and a new selection starts afresh.
+        /// </summary>
+        public struct ClickAwayDeselect
+        {
+            private float lastClick;
+            private bool armed;
+
+            /// <summary>One click away at <paramref name="now"/>: true when it is the second of a double-click and the target goes.</summary>
+            public bool Clears(float now, float window)
+            {
+                if (armed && now - lastClick <= window)
+                {
+                    armed = false;
+                    return true;
+                }
+                armed = true;
+                lastClick = now;
+                return false;
+            }
+
+            public void Reset() => armed = false;
         }
 
         /// <summary>

@@ -4890,6 +4890,40 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
             }
         }
 
+        [UnityTest]
+        public IEnumerator B57_PlayDotsHereGivesTheTester_EverySkillAtMaxRank_OnTheServerBody()
+        {
+            // owner, 5 Nov 2026: "when taking me into test make sure I have all skills unlocked" (gm.skills.max on the server's body)
+            NetRole.Install(new BodyRoleNetRoleAdapter(null, () => NetRoleKind.ServerBody));
+            try
+            {
+                PlayerKeys.Reset();
+                GameObject a = Admitted(PlayerKeys.Mint(571).Value, "57a1000000000000000000000000000a", "c5710000000000000000000000000571", "Talwyn");
+                a.GetComponent<BodyRoleTag>().Mover = new MoverSeen();
+                for (int i = 0; i < 30; i++) yield return null;
+                var skills = a.GetComponent<PlayerCombatSkills>();
+                var movement = a.GetComponent<PlayerMovementSkills>();
+                Assert.Greater(skills.AvailableSkills.Count, 0, "planned: a skill list");
+                Assert.IsTrue(KryticalNova.Persistence.Entities.KnPlayHere.GiveEverySkill(a));
+                foreach (SkillDefinitionSO skill in skills.AvailableSkills)
+                    if (skill != null) Assert.AreEqual(skill.maxRank, skills.GetRank(skill), skill.skillId + " at its max rank");
+                Assert.Greater(movement.GetRank(MovementSkillId.Run), 0, "Run learned");
+                Assert.Greater(movement.GetRank(MovementSkillId.Jump), 0, "Jump learned");
+                int run = movement.GetRank(MovementSkillId.Run), jump = movement.GetRank(MovementSkillId.Jump);
+                movement.GmSetMaxRanks();
+                Assert.AreEqual(run, movement.GetRank(MovementSkillId.Run), "Run already at its max");
+                Assert.AreEqual(jump, movement.GetRank(MovementSkillId.Jump), "Jump already at its max");
+                Assert.IsFalse(KryticalNova.Persistence.Entities.KnPlayHere.GiveEverySkill(null), "nobody, nothing");
+
+                ServerLeaving.Notify(a);
+                a.GetComponent<PlayerSaveAgent>().OnServerLeaving();
+            }
+            finally
+            {
+                PlayerKeys.Reset();
+            }
+        }
+
         sealed class DialogueSeen : INpcDialogueSink
         {
             public int Shown;

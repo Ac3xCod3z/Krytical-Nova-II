@@ -118,7 +118,7 @@ namespace KryticalNova.Player.Entities.Tests
             int target = rig.Get<GhostInstance>(rig.Server, rig.ServerGhosts[1]).ghostId;
             rig.Sources[0].Attack(target);
             int steps = 0;
-            for (int i = 0; i < 20; i++)
+            for (int i = 0; i < 21 + 20; i++)   // the draw (0.68 s, 21 ticks) first
             {
                 rig.Tick();
                 if (rig.Get<CombatState>(rig.Server, rig.ServerGhosts[0]).Step > 0) steps++;

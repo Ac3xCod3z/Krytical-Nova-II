@@ -56,7 +56,7 @@ namespace KryticalNova.Combat.Entities.Tests
                 var ownShow = rig.Clients[0].GetExistingSystemManaged<StrikePresentSystem>();
                 var seenShow = rig.Clients[1].GetExistingSystemManaged<StrikePresentSystem>();
                 Assert.IsNotNull(ownShow, "the system runs in client worlds");
-                rig.Tick(20);   // inside strike 1 (26 ticks)
+                rig.Tick(21 + 20);   // the draw (21 ticks), then inside strike 1 (26 ticks)
                 Assert.AreEqual(1, ownShow.Shown, "strike 1 played once on the attacker's own client");
                 Assert.AreEqual(1, seenShow.Shown, "and once on the other player's");
                 rig.Tick(30);   // into strike 2

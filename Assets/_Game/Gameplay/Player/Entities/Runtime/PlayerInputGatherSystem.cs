@@ -7,7 +7,7 @@ using UnityEngine;
 
 namespace KryticalNova.Player.Entities
 {
-    public enum PlayerCommandKind : byte { None, Click, Stop, Attack, StopAttack }
+    public enum PlayerCommandKind : byte { None, Click, Stop, Attack, StopAttack, ToggleWeapon }
 
     /// <summary>What the player asked for this frame, before it becomes a <see cref="PlayerInput"/>.</summary>
     public struct PlayerCommand
@@ -56,6 +56,7 @@ namespace KryticalNova.Player.Entities
         public void Attack(int ghostId) => m_Queue.Enqueue(new PlayerCommand { Kind = PlayerCommandKind.Attack, TargetGhostId = ghostId });
 
         public void StopAttack() => m_Queue.Enqueue(new PlayerCommand { Kind = PlayerCommandKind.StopAttack });
+        public void ToggleWeapon() => m_Queue.Enqueue(new PlayerCommand { Kind = PlayerCommandKind.ToggleWeapon });
 
         public void Clear() => m_Queue.Clear();
 
@@ -148,6 +149,8 @@ namespace KryticalNova.Player.Entities
                     }
                     else if (cmd.Kind == PlayerCommandKind.StopAttack)
                         input.StopAttack.Set();
+                    else if (cmd.Kind == PlayerCommandKind.ToggleWeapon)
+                        input.ToggleWeapon.Set();
                     else if (cmd.Kind == PlayerCommandKind.Click && WallPlanner != null && (cmd.Wall || OwnerOnWall(em, e)))
                         PlanWallClick(em, e, cmd, ref input);
                     else if (cmd.Kind == PlayerCommandKind.Click && cmd.Jump)

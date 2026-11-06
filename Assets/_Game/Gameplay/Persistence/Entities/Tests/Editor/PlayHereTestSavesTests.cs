@@ -61,6 +61,8 @@ namespace KryticalNova.Persistence.Entities.Tests
         [Test, Explicit("needs SaveService --test running on 127.0.0.1:7802")]
         public void OnTheTestService_TheTesterIsMadeOnce_AndFoundAgain()
         {
+            // a filtered batch run names this test too: with no test service up it is skipped, never failed (the live run starts one)
+            if (!PlayHereTestSaves.TryCheck(out string missing)) Assert.Ignore(missing);
             Assert.IsTrue(PlayHereTestSaves.TryOpen(out ServiceSaveStore store, out string problem), problem);
             CharacterCreationDatabase oldDatabase = ServerRoster.Database;
             try

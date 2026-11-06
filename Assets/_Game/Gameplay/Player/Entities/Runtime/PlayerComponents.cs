@@ -79,6 +79,8 @@ namespace KryticalNova.Player.Entities
         public InputEvent Attack;
         /// <summary>The owner cancels the attack under way (NGO RequestCancelAttackServerRpc, PointAndClickPlayer:1872).</summary>
         public InputEvent StopAttack;
+        /// <summary>The draw/sheathe key (NGO PointAndClickPlayer toggleWeaponAction -> RequestToggleWeaponDraw).</summary>
+        public InputEvent ToggleWeapon;
     }
 
     /// <summary>
@@ -275,6 +277,10 @@ namespace KryticalNova.Player.Entities
         [GhostField] public int TargetGhostId;
         /// <summary>Server only: the strike of this step has landed (NGO serverSwingHitTargets: one hit per target per swing).</summary>
         public byte SwingHit;
+        /// <summary>The weapon is in the hand (NGO PlayerAnimancerMotor.isWeaponDrawn): drawn by an attack, an attack skill or the key.</summary>
+        [GhostField] public byte WeaponDrawn;
+        /// <summary>When the draw began: strike 1 waits for the draw (NGO's combo loop waits while Equipping).</summary>
+        [GhostField] public NetworkTick DrawnTick;
     }
 
     /// <summary>The selected mount's box (0 = none), ride phase, growth percent and fed, for everyone (NGO's MountNetState; M8 8.4.8). Written by the server.</summary>

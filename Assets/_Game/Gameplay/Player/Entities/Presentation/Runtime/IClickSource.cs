@@ -20,6 +20,8 @@ namespace KryticalNova.Player.Entities.Presentation
         public Vector3 Normal;
         /// <summary>An attack on this ghost (M4.4j; 0 = not an attack): the second click on a hostile body.</summary>
         public int AttackGhostId;
+        /// <summary>The draw/sheathe key.</summary>
+        public bool ToggleWeapon;
     }
 
     /// <summary>
@@ -66,6 +68,7 @@ namespace KryticalNova.Player.Entities.Presentation
             command = default;
             if (m_Source == null || !m_Source.TryTake(out var click)) return false;
             if (click.Stop) { command.Kind = PlayerCommandKind.Stop; return true; }
+            if (click.ToggleWeapon) { command.Kind = PlayerCommandKind.ToggleWeapon; return true; }
             if (click.AttackGhostId != 0) { command.Kind = PlayerCommandKind.Attack; command.TargetGhostId = click.AttackGhostId; return true; }
             command.Kind = PlayerCommandKind.Click;
             command.Run = click.Run && !click.Jump;

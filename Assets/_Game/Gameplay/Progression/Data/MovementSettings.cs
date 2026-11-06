@@ -61,6 +61,7 @@ namespace KryticalNova.Progression
         public const float DefaultFriendlyApproachDistance = 1.5f;
         public const float DefaultInteractStandOff = 0.9f;
         public const float DefaultPendingInteractTimeout = 20f;
+        public const float DefaultDeselectDoubleClickWindow = 0.5f;
 
         [Header("Click to travel (a map point, a thing to pick up, a friend)")]
         [Tooltip("How far round a map point a place to walk to is looked for (a map point is far coarser than a click on the ground).")]
@@ -77,6 +78,11 @@ namespace KryticalNova.Progression
         [Min(0f)] public float interactStandOff = DefaultInteractStandOff;
         [Tooltip("Seconds a walk to something to use (an NPC, a pick-up) is kept before it is given up.")]
         [Min(1f)] public float pendingInteractTimeout = DefaultPendingInteractTimeout;
+
+        [Header("Target selection")]
+        [Tooltip("A click away from the selected target walks and keeps it; a second click away within this many seconds " +
+                 "(a quick double-click) drops it and its ring (owner, 5 Nov 2026).")]
+        [Min(0.1f)] public float deselectDoubleClickWindow = DefaultDeselectDoubleClickWindow;
 
         /// <summary>What a Move Speed stat of <paramref name="percent"/> (100 = normal) multiplies speed by, within the limits.</summary>
         public float StatSpeedMultiplier(float percent) =>

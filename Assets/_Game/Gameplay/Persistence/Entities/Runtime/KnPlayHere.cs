@@ -52,6 +52,28 @@ namespace KryticalNova.Persistence.Entities
         public const string JumpVariable = "KN_PLAYHERE_JUMP";
 
         /// <summary>A scripted run (walk or jump) was asked for: it quits by itself.</summary>
+        /// <summary>The probes, watchers and Kn* lines (owner, 5 Nov 2026: they cost frame time and flood the console): off by hand.</summary>
+        public const string DiagnosticsVariable = "KN_PLAYHERE_DIAG";
+        const string DiagnosticsPref = "KryticalNova.KnPlayHere.Diagnostics";
+        public const string DiagnosticsMenuPath = "Krytical Nova/Online/Entities/Play DOTS here diagnostics";
+
+        /// <summary>
+        /// Diagnostics on: a scripted run (its judges read the probes), <see cref="DiagnosticsVariable"/>=1, or the menu toggle. Otherwise
+        /// no probe or watcher is attached and no per-frame line is written.
+        /// </summary>
+        public static bool Diagnostics => Scripted || Environment.GetEnvironmentVariable(DiagnosticsVariable) == "1"
+            || EditorPrefs.GetBool(DiagnosticsPref, false);
+
+        [MenuItem(DiagnosticsMenuPath)]
+        static void ToggleDiagnostics() => EditorPrefs.SetBool(DiagnosticsPref, !EditorPrefs.GetBool(DiagnosticsPref, false));
+
+        [MenuItem(DiagnosticsMenuPath, true)]
+        static bool ToggleDiagnosticsValid()
+        {
+            Menu.SetChecked(DiagnosticsMenuPath, EditorPrefs.GetBool(DiagnosticsPref, false));
+            return true;
+        }
+
         static bool Scripted => !string.IsNullOrEmpty(Environment.GetEnvironmentVariable(WalkVariable))
             || !string.IsNullOrEmpty(Environment.GetEnvironmentVariable(JumpVariable))
             || !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("KN_PLAYHERE_VAULT"))    // the scripted vaults (M3c)
@@ -761,6 +783,20 @@ namespace KryticalNova.Persistence.Entities
         /// <summary>The feel checkpoint's level: 60 opens every traversal (owner, 2 Nov: no Wallstride switch; a roof's ground click backflips with it on).</summary>
         const int FeelLevelOpen = 60;
 
+        /// <summary>
+        /// The GM Tools' "Unlock + Max All Skills" (gm.skills.max) on <paramref name="serverBody"/>: every skill of its list unlocked at
+        /// max rank and Run and Jump at theirs, on the server's own body (its truth reaches the view as every rank does).
+        /// </summary>
+        public static bool GiveEverySkill(GameObject serverBody)
+        {
+            var skills = serverBody != null ? serverBody.GetComponent<PlayerCombatSkills>() : null;
+            if (skills == null) return false;
+            skills.GmSetAllRanksToMax();
+            var movement = serverBody.GetComponent<PlayerMovementSkills>();
+            if (movement != null) movement.GmSetMaxRanks();
+            return true;
+        }
+
         static void SetFeelLevel(int level)
         {
             if (!Runner.TryServer(out GameObject body, out _)) return;
@@ -904,10 +940,14 @@ namespace KryticalNova.Persistence.Entities
             var runner = host.AddComponent<Runner>();
             runner.Walk = Environment.GetEnvironmentVariable(WalkVariable);
             runner.Jump = Environment.GetEnvironmentVariable(JumpVariable);
-            host.AddComponent<ScreenWatch>().CaptureFolder = Environment.GetEnvironmentVariable(CaptureVariable);
-            YawProbes.Attach(host);
-            host.AddComponent<SpawnCameraWatch>();
-            host.AddComponent<RenderWatch>();
+            if (Diagnostics)
+            {
+                host.AddComponent<ScreenWatch>().CaptureFolder = Environment.GetEnvironmentVariable(CaptureVariable);
+                YawProbes.Attach(host);
+                host.AddComponent<SpawnCameraWatch>();
+                host.AddComponent<RenderWatch>();
+            }
+            else Debug.Log("[KnPlayHere] Diagnostics off (menu " + DiagnosticsMenuPath + " or " + DiagnosticsVariable + "=1 turns them on).");
         }
 
         static void StopPlay(int exitCode)
@@ -968,7 +1008,7 @@ namespace KryticalNova.Persistence.Entities
             int m_Errors;
 
             // the per-click lines of both worlds ([KnClick] client / server / refused why=...) go to the Console
-            void OnEnable() { Application.logMessageReceived += Count; PlayerClickLog.Sink = Debug.Log; }
+            void OnEnable() { Application.logMessageReceived += Count; if (Diagnostics) PlayerClickLog.Sink = Debug.Log; }
             void OnDisable() { Application.logMessageReceived -= Count; PlayerClickLog.Sink = null; }
 
             // ---- click timing and frame rate (owner's feel test 30 Oct: "slow, laggy"; measured, not guessed) ----
@@ -991,6 +1031,7 @@ namespace KryticalNova.Persistence.Entities
 
             void Update()
             {
+                if (!Diagnostics) return;   // the fps, height, foot-IK, click and yaw lines
                 m_FpsFrames++;
                 m_WorstFrame = Mathf.Max(m_WorstFrame, Time.unscaledDeltaTime);
                 m_FpsSince += Time.unscaledDeltaTime;
@@ -1184,6 +1225,8 @@ namespace KryticalNova.Persistence.Entities
                 {
                     // the owner's feel checkpoint (M3c, 2 Nov): every traversal open by hand
                     SetFeelLevel(FeelLevelOpen);
+                    // owner, 5 Nov 2026: the Tester has every skill unlocked at max rank, decided on the server body
+                    if (TryServer(out GameObject server, out _) && GiveEverySkill(server)) Log("every skill unlocked at max rank (gm.skills.max)");
                     Log("no scripted tries: the owner clicks by hand");
                     yield break;
                 }

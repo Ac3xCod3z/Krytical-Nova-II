@@ -129,7 +129,7 @@ namespace KryticalNova.Player.Entities.Tests
             int s1 = MeleeRules.Ticks(MeleeRules.StrikeMicros(t, 1), rate), s2 = MeleeRules.Ticks(MeleeRules.StrikeMicros(t, 2), rate);
             int s3p = MeleeRules.Ticks(MeleeRules.StrikeMicros(t, 3) + t.PostComboMicros, rate);
             Assert.AreEqual(26, s1, "0.850 s at 30 Hz, rounded up");
-            var s = new CombatState();
+            var s = new CombatState { WeaponDrawn = 1 };   // drawn already: the draw wait has its own test
             MeleeRules.Begin(ref s, 7);
             uint now = 100;
             MeleeRules.Tick(t, ref s, new NetworkTick(now), rate, true, false, false);
@@ -158,11 +158,43 @@ namespace KryticalNova.Player.Entities.Tests
         }
 
         [Test]
+        public void StrikeOne_WaitsForTheDraw_TheStanceOutlivesTheAttack_AndTheKeyToggles()
+        {
+            // NGO: StartAttackTarget draws (PlayerMeleeCombat:189-191) and the combo loop waits while Equipping (:295-299), 0.68 s
+            MeleeTiming t = T;
+            const int rate = 30;
+            int draw = MeleeRules.Ticks(t.DrawMicros, rate);
+            Assert.AreEqual(21, draw, "0.68 s at 30 Hz, rounded up");
+            var s = new CombatState();
+            MeleeRules.Begin(ref s, 7);
+            MeleeRules.Tick(t, ref s, new NetworkTick(100), rate, true, false, false);
+            Assert.AreEqual(1, s.WeaponDrawn, "the order draws the weapon, during the walk in");
+            MeleeRules.Tick(t, ref s, new NetworkTick(100 + (uint)draw - 1), rate, true, true, false);
+            Assert.AreEqual(0, s.Step, "in reach, but the draw is still under way");
+            MeleeRules.Tick(t, ref s, new NetworkTick(100 + (uint)draw), rate, true, true, false);
+            Assert.AreEqual(1, s.Step, "strike 1 once drawn");
+
+            MeleeRules.Cancel(ref s);
+            Assert.AreEqual(1, s.WeaponDrawn, "the attack ends; the weapon stays in the hand");
+            MeleeRules.Begin(ref s, 9);
+            MeleeRules.Tick(t, ref s, new NetworkTick(300), rate, true, true, false);
+            Assert.AreEqual(1, s.Step, "drawn already: strike 1 at once");
+
+            MeleeRules.Toggle(ref s, new NetworkTick(400));
+            Assert.AreEqual(0, s.WeaponDrawn, "the key sheathes");
+            Assert.AreEqual(0, s.TargetGhostId, "and ends the attack");
+            MeleeRules.Toggle(ref s, new NetworkTick(410));
+            Assert.AreEqual(1, s.WeaponDrawn, "the key draws");
+            Assert.IsFalse(MeleeRules.DrawDone(t, s, new NetworkTick(410 + (uint)draw - 1), rate));
+            Assert.IsTrue(MeleeRules.DrawDone(t, s, new NetworkTick(410 + (uint)draw), rate));
+        }
+
+        [Test]
         public void TheCombo_ChasesATargetThatLeft_AndEndsWithItsTarget()
         {
             MeleeTiming t = T;
             const int rate = 30;
-            var s = new CombatState();
+            var s = new CombatState { WeaponDrawn = 1 };   // drawn already: the draw wait has its own test
             MeleeRules.Begin(ref s, 7);
             MeleeRules.Tick(t, ref s, new NetworkTick(100), rate, true, true, false);
             uint end1 = 100 + (uint)MeleeRules.Ticks(MeleeRules.StrikeMicros(t, 1), rate);
@@ -187,7 +219,7 @@ namespace KryticalNova.Player.Entities.Tests
             // NGO EnsureTargetStruck: the target is struck by the END of the swing window, once per swing
             MeleeTiming t = T;
             const int rate = 30;
-            var s = new CombatState();
+            var s = new CombatState { WeaponDrawn = 1 };   // drawn already: the draw wait has its own test
             MeleeRules.Begin(ref s, 7);
             MeleeRules.Tick(t, ref s, new NetworkTick(100), rate, true, true, false);
             int at = MeleeRules.Ticks(MeleeRules.HitAfterMicros(t, 1), rate);

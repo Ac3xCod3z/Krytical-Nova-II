@@ -509,6 +509,16 @@ namespace KryticalNova.Combat
         }
 
         /// <summary>
+        /// A view of the entity netcode (owner's hand test, 5 Nov 2026): the ghost's weapon stance, drawn by an attack, an attack skill or
+        /// the key; <paramref name="animate"/> plays the draw/sheathe, otherwise it snaps (first sight, a late joiner).
+        /// </summary>
+        public void ShowWeaponStance(bool drawn, bool animate)
+        {
+            if (animancerMotor == null) animancerMotor = GetComponent<PlayerAnimancerMotor>();
+            if (animancerMotor != null) animancerMotor.ShowWeaponStanceFromGhost(drawn, animate);
+        }
+
+        /// <summary>
         /// Plays strike <paramref name="step"/> on this body as NGO's PlayComboStrikeClientRpc does on a client (the clip at its speed, the
         /// slash): the entity netcode calls it when a ghost's combo starts a strike (M4.4k), the server deciding as it always did.
         /// </summary>

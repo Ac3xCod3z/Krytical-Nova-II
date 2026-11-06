@@ -659,6 +659,22 @@ namespace KryticalNova.Player
 
         #region Weapon Draw & Sheath
 
+        /// <summary>
+        /// A view of the entity netcode: the ghost's stance shown here only (no network call): <paramref name="animate"/> plays the draw or
+        /// sheathe clip (NGO PlayWeaponDrawClientRpc), otherwise it snaps (NGO HandleWeaponStanceChanged, a late joiner).
+        /// </summary>
+        public void ShowWeaponStanceFromGhost(bool drawn, bool animate)
+        {
+            if (presentedWeaponDrawn == drawn) return;
+            if (animate) { PlayWeaponDrawAnimation(drawn); return; }
+            if (IsWeaponDrawActionPlaying) return;
+            presentedWeaponDrawn = drawn;
+            AttachKatanaToSocket(drawn);
+            currentLocomotionClip = null;
+            if (currentState == CharacterAnimState.Locomotion) UpdateLocomotion();
+            OnWeaponStanceChanged?.Invoke(drawn);
+        }
+
         public void RequestToggleWeaponDraw()
         {
             RequestSetWeaponDraw(!presentedWeaponDrawn);

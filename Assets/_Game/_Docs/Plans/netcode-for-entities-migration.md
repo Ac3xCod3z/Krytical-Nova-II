@@ -322,6 +322,14 @@ prediction error p95 <= 0.05 m at 60 ms, tick p95 < 15 ms with 102 monsters (fro
     player's account); its real "Tester" is made once through the roster and entered by id; the service key only in the request header.
     The plain Play DOTS here stays memory only. Relog = stop Play and start the mode again (A2, the in-Play Log Out -> lobby -> Enter,
     comes later). EditMode Persistence.Entities green, the live test on the clone's SaveService --test green, PlayMode 57/57.
+  - [x] Owner's Play findings batch (5 Nov; Master's picks): (a) every Kn* probe, watcher and per-frame line of Play DOTS here is off
+    by hand (on for scripted runs, KN_PLAYHERE_DIAG=1 or the menu "Play DOTS here diagnostics"); (b) the Tester enters with every
+    skill at max rank on the server body (gm.skills.max, B57); (e) the target-ring rule of the live game (PR 196): a single click
+    away keeps the target, a quick double-click away drops it; (c, part 1) the weapon: drawn by the attack order (during the walk in),
+    an attack skill or the key (CombatState.WeaponDrawn on the ghost; the key on the own view), strike 1 waits NGO's draw (0.68 s, the
+    prefab's equip window), every view plays the draw / snaps a late joiner. First-swing probe at 100 ms: the owner's strike 1 starts
+    on the server's tick in reach and after the walk in (no restart), so the missing draw is the likely cause; the owner re-tests.
+    Run 1 green: EditMode 456 (10 skipped), PlayMode 58/58. Next: Cadence on DOTS.
 - [ ] **M5 Monster system prototype (new brain).** Section 6. P0 EditMode sim tests (no netcode), P1 ghost + view, P2 reward bridge.
 - [ ] **M6 Hostiles in full.** All roster species via `MonsterArchetype` from `HostileDefinition` (ids kept), level scaling, zones,
   sleep, respawn, loot/XP through managed reward bridge with ledger rules; nav grids for the zones; bot soak with 102 monsters.

@@ -17,6 +17,8 @@ namespace KryticalNova.Player.Entities
         /// <summary>Each step's damage multiplier, thousandths (NGO: 1.0 / 1.15 / 1.35).</summary>
         public int3 StepMultiplierPermille;
         public int PostComboMicros, ReachMm, ValidationMm, ReachSlackMm, MinCadencePermille, ArcHalfAngleCdeg;
+        /// <summary>The draw (NGO PlayerAnimancerMotor equipWindow 0-0.68 s, Player.prefab): strike 1 waits this long after it began.</summary>
+        public int DrawMicros;
 
         /// <summary>The prefab's numbers (NGO file:line in M4-combat.md section 5), with the clip lengths given.</summary>
         public static MeleeTiming Prefab(int3 clipMicros) => new MeleeTiming
@@ -34,6 +36,7 @@ namespace KryticalNova.Player.Entities
             // NGO's blade hits what is under it in front; the arc stands in for it on a server with no animated blade (owner pick:
             // target + nearby arc). Half of 120 degrees.
             ArcHalfAngleCdeg = 6000,
+            DrawMicros = 680000,
         };
     }
 
@@ -177,11 +180,32 @@ namespace KryticalNova.Player.Entities
         public static void Begin(ref CombatState s, int targetGhostId)
         {
             if (s.TargetGhostId == targetGhostId && s.Step > 0) return; // the same target again: the combo under way goes on
-            s = new CombatState { TargetGhostId = targetGhostId };
+            s = new CombatState { TargetGhostId = targetGhostId, WeaponDrawn = s.WeaponDrawn, DrawnTick = s.DrawnTick };
         }
 
-        /// <summary>The attack ends (NGO CancelAttack, PlayerMeleeCombat:222): no target, no step.</summary>
-        public static void Cancel(ref CombatState s) => s = default;
+        /// <summary>The attack ends (NGO CancelAttack, PlayerMeleeCombat:222): no target, no step; the weapon stays as it is.</summary>
+        public static void Cancel(ref CombatState s) => s = new CombatState { WeaponDrawn = s.WeaponDrawn, DrawnTick = s.DrawnTick };
+
+        /// <summary>Draws the weapon from <paramref name="now"/> (an attack, an attack skill, the key); nothing when it is already drawn.</summary>
+        public static void Draw(ref CombatState s, NetworkTick now)
+        {
+            if (s.WeaponDrawn != 0) return;
+            s.WeaponDrawn = 1;
+            s.DrawnTick = now;
+        }
+
+        /// <summary>The key (NGO RequestToggleWeaponDraw): drawn -> sheathed (the attack ends, NGO's key cannot swing), sheathed -> drawn.</summary>
+        public static void Toggle(ref CombatState s, NetworkTick now)
+        {
+            if (s.WeaponDrawn == 0) { Draw(ref s, now); return; }
+            Cancel(ref s);
+            s.WeaponDrawn = 0;
+            s.DrawnTick = default;
+        }
+
+        /// <summary>The draw has finished (or was never timed): strike 1 may start (NGO: the combo loop waits while Equipping).</summary>
+        public static bool DrawDone(in MeleeTiming t, in CombatState s, NetworkTick now, int tickRate) =>
+            s.WeaponDrawn != 0 && (!s.DrawnTick.IsValid || now.TicksSince(s.DrawnTick) >= Ticks(t.DrawMicros, tickRate));
 
         /// <summary>
         /// One tick of NGO's ComboLoopRoutine (PlayerMeleeCombat:249-330): while the target lives, step 0 waits until it is within striking
@@ -193,6 +217,7 @@ namespace KryticalNova.Player.Entities
         {
             if (s.TargetGhostId == 0) return;
             if (!targetAlive) { Cancel(ref s); return; }
+            Draw(ref s, now);   // NGO StartAttackTarget draws on the order, so the draw runs during the walk in
             if (s.Step > 0)
             {
                 int length = StrikeMicros(t, s.Step) + (s.Step == 3 ? t.PostComboMicros : 0);
@@ -200,7 +225,7 @@ namespace KryticalNova.Player.Entities
                 if (s.Step == 3 || leftReach) s.Step = 0; // the loop goes round: walk in again if need be, then strike 1
                 else { StartStep(in t, ref s, s.Step + 1, now, tickRate); return; }
             }
-            if (inStrikingRange) StartStep(in t, ref s, 1, now, tickRate);
+            if (inStrikingRange && DrawDone(in t, in s, now, tickRate)) StartStep(in t, ref s, 1, now, tickRate);
         }
 
         static void StartStep(in MeleeTiming t, ref CombatState s, int step, NetworkTick now, int tickRate)
