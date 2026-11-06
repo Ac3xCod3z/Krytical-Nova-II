@@ -16,11 +16,18 @@ namespace KryticalNova.CharacterCreation
         private static int activeSlot = -1;
         private static bool resolved;
 
+        /// <summary>
+        /// The characters character select lists for "here" instead of this PC's own, or null (the usual). Set only by "Play DOTS here
+        /// (test saves)" (A2): the test account's characters, read-only from the test save service.
+        /// </summary>
+        public static ICharacterStore HereStore { get; set; }
+
         // Enter Play Mode runs without a domain reload, so statics must be reset by hand.
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void ResetStatics()
         {
             store = null;
+            HereStore = null;
             active = null;
             activeSlot = -1;
             resolved = false;

@@ -12,7 +12,17 @@ namespace KryticalNova.Networking
     {
         public static bool Owns { get; set; }
 
+        /// <summary>
+        /// Set only by "Play DOTS here (test saves)" (A2): Log Out and Exit call it before their own save, so the server bodies leave the
+        /// normal way (saved, then let go) and the worlds stop before character select. Null everywhere else: leaving is unchanged.
+        /// </summary>
+        public static System.Action StopWorlds { get; set; }
+
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        static void ResetStatics() => Owns = false;
+        static void ResetStatics()
+        {
+            Owns = false;
+            StopWorlds = null;
+        }
     }
 }

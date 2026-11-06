@@ -46,7 +46,7 @@ namespace KryticalNova.UI.Menus
 
         private static ICharacterStore StoreFor(string key)
         {
-            if (!IsServerKey(key)) return Local;
+            if (!IsServerKey(key)) return CharacterSession.HereStore ?? Local;
             if (!Stores.TryGetValue(key, out ICharacterStore store))
             {
                 string profile = KryticalNova.Core.LocalProfile.Name();

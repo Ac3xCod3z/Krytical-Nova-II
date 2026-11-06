@@ -378,6 +378,8 @@ namespace KryticalNova.UI
             float darkAt = Time.unscaledTime + DarkenSeconds;
             while (Time.unscaledTime < darkAt) yield return null;
 
+            // "Play DOTS here (test saves)": its server bodies leave as a disconnect does (saved, let go), then its worlds stop.
+            EntityNetcodeSession.StopWorlds?.Invoke();
             // Where this machine decides the game (a host, or a game with no session) everything is written now.
             // A client's character is written by the server as the client leaves.
             ServerSave.FlushAll();

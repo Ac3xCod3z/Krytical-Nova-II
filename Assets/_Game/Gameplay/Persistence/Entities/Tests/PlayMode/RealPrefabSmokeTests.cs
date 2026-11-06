@@ -5068,6 +5068,53 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
             finally { BodyClicks.Clear(); }
         }
 
+        [UnityTest]
+        public IEnumerator B62_TestSavesLogOut_SavesEveryServerBodyBeforeTheWorldsStop_AndTheCharacterEntersAgain()
+        {
+            // A2 (Nova's condition 3): Log Out in "Play DOTS here (test saves)" = each server body leaves as a disconnect does (saved, let
+            // go), the store has everything, and only then do the worlds stop; Enter again loads what was saved
+            NetRole.Install(new BodyRoleNetRoleAdapter(null, () => NetRoleKind.ServerBody));
+            const string account = "62112233445566778899aabbccddeeff";
+            const string characterId = "62eeddccbbaa99887766554433221100";
+            GameObject first = Make(NetRoleKind.ServerBody, false, new PlayerKey(621));
+            yield return null;
+            CharacterRecipe recipe = AnyLegalRecipe(first.GetComponent<PlayerIdentity>().Database);
+            var stored = new AccountSave { accountId = account };
+            stored.characters.Add(new CharacterSave { characterId = characterId, name = "Relog" });
+            Assert.IsTrue(ServerSave.WriteAccount(stored));
+            ServerSave.WaitForDisk();
+            ServerBodyContext Context(int key) => new ServerBodyContext
+            {
+                Key = new PlayerKey((ulong)key), Serial = (ulong)key, NetworkId = key, Account = account, CharacterId = characterId, Name = "Relog",
+                RecipeText = RecipeText.Encode(recipe),
+            };
+            var rules = new PlayerAdmission();
+            Assert.IsNull(rules.Begin(first, Context(621)), "admitted");
+            for (int i = 0; i < 10; i++) yield return null;
+            var wallet = first.GetComponent<KryticalNova.Economy.PlayerWallet>();
+            wallet.ServerSet(621);
+            string walletText = wallet.CaptureSave();
+
+            string savedWhenStopped = null;
+            int stops = 0;
+            PlayHereLeave.LeaveAll(new[] { first }, ServerSave.Store, () =>
+            {
+                stops++;
+                savedWhenStopped = ServerSave.ReadAccountFrom(ServerSave.Store, account)?.Find(characterId)?.Get("wallet");
+            });
+            Assert.AreEqual(1, stops, "the worlds stop once");
+            Assert.AreEqual(walletText, savedWhenStopped, "the leave save was in the store BEFORE the worlds stopped");
+            Object.Destroy(first);
+            yield return null;
+
+            GameObject second = Make(NetRoleKind.ServerBody, false, new PlayerKey(622));
+            yield return null;
+            Assert.IsNull(rules.Begin(second, Context(622)), "the account was let go: the character enters again");
+            for (int i = 0; i < 10; i++) yield return null;
+            Assert.AreEqual(walletText, second.GetComponent<KryticalNova.Economy.PlayerWallet>().CaptureSave(), "as it was saved");
+            second.GetComponent<PlayerSaveAgent>().OnServerLeaving();
+        }
+
         sealed class TextsSeen : ICombatFeedbackSink
         {
             public readonly List<string> Texts = new List<string>();

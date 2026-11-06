@@ -88,6 +88,44 @@ namespace KryticalNova.Persistence.Entities.Tests
             }
         }
 
+        [Test, Explicit("needs SaveService --test running on 127.0.0.1:7802")]
+        public void OnTheTestService_TheLobbyListsTheTester_ReadOnly()
+        {
+            // A2 live: character select's "here" list in a test-saves session, read from the test service itself
+            if (!PlayHereTestSaves.TryCheck(out string missing)) Assert.Ignore(missing);
+            Assert.IsTrue(PlayHereTestSaves.TryOpen(out ServiceSaveStore store, out string problem), problem);
+            CharacterCreationDatabase oldDatabase = ServerRoster.Database;
+            try
+            {
+                ServerSave.Store = store;
+                var identity = PlayerWorldsSetup.PlayerPrefab()?.GetComponent<KryticalNova.Player.PlayerIdentity>();
+                Assert.IsNotNull(identity, "the player prefab's identity");
+                ServerRoster.Database = identity.Database;
+                Assert.IsTrue(KnPlayHereTestRecipe(out CharacterRecipe recipe), "a look");
+                string tester = PlayHereTestSaves.EnsureTester(recipe, out problem);
+                Assert.IsTrue(SaveKeys.IsId(tester), problem);
+                store.Flush();
+                string before = store.TryRead(ServerSave.AccountsPrefix + PlayHereTestSaves.Account, out string j) ? j : null;
+
+                var lobby = new PlayHereTestRosterStore(store, PlayHereTestSaves.Account);
+                CharacterRoster roster = lobby.Load();
+                bool listed = false;
+                for (int i = 0; i < CharacterRoster.SlotCount; i++)
+                    if (roster.IsUsed(i) && roster.Get(i).id == tester) listed = roster.Get(i).name == PlayHereTestSaves.TesterName;
+                Assert.IsTrue(listed, "the Tester is listed by its id and name");
+                UnityEngine.TestTools.LogAssert.Expect(UnityEngine.LogType.Warning, new System.Text.RegularExpressions.Regex("read-only"));
+                lobby.Save(new CharacterRoster());
+                store.Flush();
+                Assert.IsTrue(store.TryRead(ServerSave.AccountsPrefix + PlayHereTestSaves.Account, out string after));
+                Assert.AreEqual(before, after, "the lobby wrote nothing to the test service");
+            }
+            finally
+            {
+                ServerSave.Store = null;
+                ServerRoster.Database = oldDatabase;
+            }
+        }
+
         static bool KnPlayHereTestRecipe(out CharacterRecipe recipe)
         {
             recipe = default;
@@ -103,6 +141,75 @@ namespace KryticalNova.Persistence.Entities.Tests
             Assert.IsFalse(store.TryRead("accounts/" + PlayHereTestSaves.Account, out string json));
             Assert.IsNull(json);
             Assert.AreEqual(0, store.Keys("").Count);
+        }
+
+        // ---- A2: Log Out -> character select -> Enter in one Play (test saves only) ----
+
+        [Test]
+        public void TheRelogHooks_AreNullOutsideTheTestSavesMode()
+        {
+            // nothing sets them but KnPlayHere's test-saves start (cleared again on leaving Play): Log Out and the lobby are unchanged
+            Assert.IsNull(EntityNetcodeSession.StopWorlds, "Log Out leaves as before");
+            Assert.IsNull(CharacterSession.HereStore, "character select lists this PC's own characters as before");
+        }
+
+        [Test]
+        public void TheTestRoster_ListsTheTestAccountsCharacters_ReadOnly()
+        {
+            ISaveStore before = ServerSave.Store;
+            var memory = new MemorySaveStore();
+            ServerSave.Store = memory;
+            try
+            {
+                string account = PlayHereTestSaves.Account;
+                var saved = new AccountSave { accountId = account };
+                saved.characters.Add(new CharacterSave { characterId = "0123456789abcdef0123456789abcdef", name = "Tester", slot = 0, level = 12, savedUtc = 5 });
+                saved.characters.Add(new CharacterSave { characterId = "fedcba9876543210fedcba9876543210", name = "Second", slot = 2, savedUtc = 9 });
+                Assert.IsTrue(ServerSave.WriteAccount(saved));
+                ServerSave.WaitForDisk();
+                var keysBefore = new System.Collections.Generic.List<string>(memory.Keys(""));
+                string accountJson = memory.TryRead(ServerSave.AccountsPrefix + account, out string j) ? j : null;
+
+                var store = new PlayHereTestRosterStore(memory, account);
+                CharacterRoster roster = store.Load();
+                Assert.AreEqual("Tester", roster.Get(0)?.name);
+                Assert.AreEqual("0123456789abcdef0123456789abcdef", roster.Get(0).id);
+                Assert.AreEqual(12, roster.Get(0).level);
+                Assert.AreEqual("Second", roster.Get(2)?.name);
+                Assert.AreEqual(2, roster.lastPlayedSlot, "the newest save is the one chosen first");
+
+                store.Save(new CharacterRoster());
+                store.DeleteAll();
+                CollectionAssert.AreEquivalent(keysBefore, memory.Keys(""), "read-only: nothing written or deleted");
+                Assert.IsTrue(memory.TryRead(ServerSave.AccountsPrefix + account, out string after));
+                Assert.AreEqual(accountJson, after, "the account is byte for byte as it was");
+                Assert.AreEqual("Tester", store.Load().Get(0)?.name, "a save from the lobby changes nothing");
+            }
+            finally { ServerSave.Store = before; }
+        }
+
+        [Test]
+        public void TheTestRoster_ListsNothing_WhenTheStoreCannotBeRead()
+        {
+            Assert.AreEqual(0, CountUsed(new PlayHereTestRosterStore(new RefusedSaveStore(), PlayHereTestSaves.Account).Load()), "refused store");
+            UnityEngine.TestTools.LogAssert.Expect(UnityEngine.LogType.Error, new System.Text.RegularExpressions.Regex("could not be read"));
+            Assert.AreEqual(0, CountUsed(new PlayHereTestRosterStore(new ThrowingStore(), PlayHereTestSaves.Account).Load()), "a store that throws");
+            Assert.AreEqual(0, CountUsed(new PlayHereTestRosterStore(new MemorySaveStore(), PlayHereTestSaves.Account).Load()), "no account");
+        }
+
+        static int CountUsed(CharacterRoster roster)
+        {
+            int n = 0;
+            for (int i = 0; i < CharacterRoster.SlotCount; i++) if (roster.IsUsed(i)) n++;
+            return n;
+        }
+
+        sealed class ThrowingStore : ISaveStore
+        {
+            public bool TryRead(string key, out string json) => throw new System.IO.IOException("down");
+            public void Write(string key, string json) => throw new System.IO.IOException("down");
+            public void Delete(string key) => throw new System.IO.IOException("down");
+            public System.Collections.Generic.IReadOnlyList<string> Keys(string prefix) => throw new System.IO.IOException("down");
         }
     }
 }

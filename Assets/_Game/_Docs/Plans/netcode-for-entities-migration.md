@@ -322,6 +322,13 @@ prediction error p95 <= 0.05 m at 60 ms, tick p95 < 15 ms with 102 monsters (fro
     player's account); its real "Tester" is made once through the roster and entered by id; the service key only in the request header.
     The plain Play DOTS here stays memory only. Relog = stop Play and start the mode again (A2, the in-Play Log Out -> lobby -> Enter,
     comes later). EditMode Persistence.Entities green, the live test on the clone's SaveService --test green, PlayMode 57/57.
+  - [x] Play DOTS here with TEST saves, stage A2 (HIGH, Master reviewed and approved): Log Out inside one Play. In the test-saves mode
+    only, Log Out (and Exit) first lets every server body leave as a disconnect does (saved and let go), the test store sends everything,
+    then the worlds stop (EntityNetcodeSession.StopWorlds); character select lists the test account's characters read-only from the
+    test service (CharacterSession.HereStore; a store error lists nothing, never this PC's own or another server) and never lists or
+    joins another server; Enter starts the worlds again with the chosen character once the map has loaded. Both hooks are null in every
+    other session and cleared on leaving Play. EditMode 461 + the lobby test, PlayMode 63/63 (B62: the save is in the store before the
+    worlds stop), live on SaveService --test 7802 only 5/5.
   - [x] Owner's Play findings batch (5 Nov; Master's picks): (a) every Kn* probe, watcher and per-frame line of Play DOTS here is off
     by hand (on for scripted runs, KN_PLAYHERE_DIAG=1 or the menu "Play DOTS here diagnostics"); (b) the Tester enters with every
     skill at max rank on the server body (gm.skills.max, B57); (e) the target-ring rule of the live game (PR 196): a single click

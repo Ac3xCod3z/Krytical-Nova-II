@@ -145,6 +145,79 @@ namespace KryticalNova.Persistence.Entities
         }
     }
 
+    /// <summary>
+    /// A2 (Log Out in a test-saves session): every server body leaves the normal way first (<see cref="ServerLeaving.Notify"/>: its save is
+    /// written and its account let go, as a disconnect does), the store sends everything it holds, and only then
+    /// <paramref name="stopWorlds"/> runs. A second leave of the same body finds nothing to save.
+    /// </summary>
+    public static class PlayHereLeave
+    {
+        public static void LeaveAll(System.Collections.Generic.IEnumerable<GameObject> serverBodies, ISaveStore store, Action stopWorlds)
+        {
+            foreach (GameObject body in serverBodies)
+            {
+                if (body == null) continue;
+                try { ServerLeaving.Notify(body); }
+                catch (Exception e) { Debug.LogError("[KnPlayHere] a body's leaving rules threw on Log Out: " + e); }
+            }
+            ServerSave.WaitForDisk();
+            if (store is ServiceSaveStore service) service.Flush();
+            stopWorlds?.Invoke();
+        }
+    }
+
+    /// <summary>
+    /// Character select's "here" list in a test-saves session (A2): the test account's characters as <paramref name="store"/> holds them,
+    /// read-only. Nothing is ever written (a create, delete or rename here is refused with one warning); a store that cannot be read lists
+    /// nothing (never this PC's own characters, never another service).
+    /// </summary>
+    public sealed class PlayHereTestRosterStore : ICharacterStore
+    {
+        readonly ISaveStore m_Store;
+        readonly string m_Account;
+        bool m_Warned;
+
+        public PlayHereTestRosterStore(ISaveStore store, string account)
+        {
+            m_Store = store;
+            m_Account = account;
+        }
+
+        public CharacterRoster Load()
+        {
+            var roster = new CharacterRoster();
+            AccountSave saved;
+            try { saved = ServerSave.ReadAccountFrom(m_Store, m_Account); }
+            catch (Exception e) { Debug.LogError("[KnPlayHere] Test saves: the test account's characters could not be read: " + e.Message); return roster; }
+            if (saved?.characters == null) return roster;
+            ServerRoster.AssignSlots(saved);
+            long newest = long.MinValue;
+            foreach (CharacterSave character in saved.characters)
+            {
+                if (character == null || character.slot < 0 || character.slot >= CharacterRoster.SlotCount || string.IsNullOrEmpty(character.characterId)) continue;
+                KryticalNova.Player.PlayerIdentity.TryReadLook(character.Get(KryticalNova.Player.PlayerIdentity.LookSaveKey), out CharacterRecipe recipe);
+                roster.Set(character.slot, new CharacterProfile
+                {
+                    id = character.characterId, name = character.name, recipe = recipe, level = Mathf.Max(1, character.level),
+                    created = character.created, lastPlayed = character.savedUtc, worn = Array.Empty<WornPiece>(), mustRename = character.rename,
+                });
+                if (character.savedUtc > newest) { newest = character.savedUtc; roster.lastPlayedSlot = character.slot; }
+            }
+            return roster;
+        }
+
+        public void Save(CharacterRoster roster) => Refuse();
+        public void DeleteAll() => Refuse();
+
+        void Refuse()
+        {
+            if (m_Warned) return;
+            m_Warned = true;
+            Debug.LogWarning("[KnPlayHere] Test saves: this list is the test account's, read-only (the Tester is made by the menu; create, " +
+                             "delete and rename are not kept here).");
+        }
+    }
+
     /// <summary>The store of a refused test-saves session (Play stops at once): it reads nothing and keeps nothing, anywhere.</summary>
     public sealed class RefusedSaveStore : ISaveStore
     {

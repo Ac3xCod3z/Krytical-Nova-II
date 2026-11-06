@@ -854,7 +854,15 @@ namespace KryticalNova.Persistence.Entities
             if (change != PlayModeStateChange.EnteredEditMode) return;
             EditorApplication.playModeStateChanged -= OnPlayModeChanged;
             Active = false;
-            if (TestSaves) KnBootstrap.JoinCheckFactory = null;
+            if (TestSaves)
+            {
+                KnBootstrap.JoinCheckFactory = null;
+                // A2's hooks exist only during a test-saves Play: gone with it
+                EntityNetcodeSession.StopWorlds = null;
+                CharacterSession.HereStore = null;
+                SceneManager.sceneLoaded -= OnTestSceneLoaded;
+                s_AwaitingEnter = false;
+            }
             TestSaves = false;
             if (s_QuitAfter) EditorApplication.Exit(s_ExitCode);
         }
@@ -924,8 +932,61 @@ namespace KryticalNova.Persistence.Entities
                     return;
                 }
                 Debug.Log("[KnPlayHere] Test saves: entering as the test account's Tester (" + characterId + ").");
+                InstallTestRelog();
             }
-            KnGoInGame.Source = new TesterGoInGame(new GoInGamePayload { CharacterId = characterId, Name = TesterName, RecipeText = recipeText });
+            StartWorlds(new GoInGamePayload { CharacterId = characterId, Name = TesterName, RecipeText = recipeText });
+        }
+
+        static GameObject s_Host;
+        static bool s_AwaitingEnter;
+
+        /// <summary>
+        /// A2 (owner, 5 Nov 2026: relog inside one Play), test saves only: Log Out lets the server bodies leave the normal way and stops the
+        /// worlds (<see cref="EntityNetcodeSession.StopWorlds"/>), character select lists the test account's characters read-only
+        /// (<see cref="CharacterSession.HereStore"/>), and Enter on one starts the worlds again with it once the map has loaded.
+        /// </summary>
+        static void InstallTestRelog()
+        {
+            EntityNetcodeSession.StopWorlds = LeaveForSelect;
+            CharacterSession.HereStore = new PlayHereTestRosterStore(ServerSave.Store, PlayHereTestSaves.Account);
+            SceneManager.sceneLoaded -= OnTestSceneLoaded;
+            SceneManager.sceneLoaded += OnTestSceneLoaded;
+        }
+
+        static void LeaveForSelect()
+        {
+            var bodies = new List<GameObject>();
+            foreach (GhostBodyEntry entry in GhostBodyRegistry.Entries)
+                if (entry.Body != null && entry.World != null && entry.World.IsCreated && (entry.World.Flags & WorldFlags.GameServer) != 0)
+                    bodies.Add(entry.Body);
+            PlayHereLeave.LeaveAll(bodies, ServerSave.Store, () =>
+            {
+                KnBootstrap.Stop();
+                if (s_Host != null) UnityEngine.Object.Destroy(s_Host);
+                s_Host = null;
+                s_OwnBody = null;
+            });
+            s_AwaitingEnter = true;
+            Debug.Log($"[KnPlayHere] Test saves: logged out ({bodies.Count} server body saved and let go, worlds stopped). Character select lists the test account's characters.");
+        }
+
+        static void OnTestSceneLoaded(Scene scene, LoadSceneMode mode)
+        {
+            if (!TestSaves || !s_AwaitingEnter || scene.name != System.IO.Path.GetFileNameWithoutExtension(MapPath)) return;
+            s_AwaitingEnter = false;
+            if (!CharacterSession.TryGetActive(out CharacterProfile profile) || string.IsNullOrEmpty(profile.id))
+            {
+                Debug.LogError("[KnPlayHere] Test saves: no character of the test account was chosen; stop Play and start the mode again.");
+                return;
+            }
+            Debug.Log("[KnPlayHere] Test saves: entering again as " + profile.name + " (" + profile.id + ").");
+            StartWorlds(new GoInGamePayload { CharacterId = profile.id, Name = profile.name, RecipeText = RecipeText.Encode(profile.recipe) });
+        }
+
+        /// <summary>The server and client worlds on loopback with the game's hooks, entering as <paramref name="payload"/>, and the Runner.</summary>
+        static void StartWorlds(GoInGamePayload payload)
+        {
+            KnGoInGame.Source = new TesterGoInGame(payload);
             string join = JoinRules.PayloadText(GameBuild.Version, true);
             // one camera change per proof run: KN_PLAYHERE_SPAWNCAM_FIX=0 measures without the spawn-camera fix
             s_OwnBody = null;
@@ -935,6 +996,7 @@ namespace KryticalNova.Persistence.Entities
             Debug.Log($"[KnPlayHere] Entity-netcode server and client started on loopback {Port}. Click the ground to walk.");
             var host = new GameObject("KnPlayHere");
             UnityEngine.Object.DontDestroyOnLoad(host);
+            s_Host = host;
             if (Scripted)
                 Application.SetStackTraceLogType(LogType.Log, StackTraceLogType.None);   // scripted run: logging must not cause the spikes it measures
             var runner = host.AddComponent<Runner>();

@@ -65,6 +65,7 @@ namespace KryticalNova.UI.Menus
         // server, that server (owner, 24 Oct 2026: a test session must not open on a server left over from another test).
         private static string StartingServer()
         {
+            if (CharacterSession.HereStore != null) return ServerDirectory.HereKey;   // "Play DOTS here (test saves)": its own characters only
             if (EditorTestSession.JoinOnly && EditorTestSession.TryGetPort(out ushort port))
                 return "127.0.0.1:" + port;
             return ServerDirectory.LastKeyChosen;
@@ -539,6 +540,8 @@ namespace KryticalNova.UI.Menus
 
         private void EnterWith(ServerEntry entry)
         {
+            // "Play DOTS here (test saves)" never lists or joins another server (its saves are the test service's)
+            if (CharacterSession.HereStore != null && !entry.PlayHere) return;
             // Another server keeps other characters: show its roster and let the player choose there.
             failedKey = null; // chosen again: asked again
             if (entry.Key != MenuRoster.Key && (MenuRoster.OnServer || MenuRoster.IsServerKey(entry.Key)))
