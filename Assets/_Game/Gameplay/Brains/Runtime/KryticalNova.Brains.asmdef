@@ -1,0 +1,22 @@
+{
+    "name": "KryticalNova.Brains",
+    "rootNamespace": "KryticalNova.Brains",
+    "references": [
+        "KryticalNova.Runtime",
+        "Unity.Burst",
+        "Unity.Entities",
+        "Unity.NetCode",
+        "Unity.Collections",
+        "Unity.Mathematics",
+        "Unity.Transforms"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

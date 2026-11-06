@@ -231,6 +231,14 @@ Rows marked `[line: M5.0]` have the file but the line is filled in M5.0. "Test" 
 - **Owner hand test:** none. **Done when:** Nova signs the table (owner rule: table before code).
 
 ### M5.1 Brains core (M, LOW)
+- **[done, DOTS 15, 6 Nov]** As built: `Gameplay/Brains` (Core-only asmdef; Data asmref; `BrainSettings.asset`), `BrainConfig.From(settings,
+  tickRate)`, `BrainSimulationGroup` (server, after `PredictedSimulationSystemGroup`) with `BrainTickSystem` (NetworkTime -> `BrainTick`),
+  `SenseBuildSystem`, `ThinkClockSystem` (Burst ISystems); `BrainRules`, `Score`, `SenseQueries`, `BrainDiceRules` (pure). Deviations:
+  (1) Brains reads only `SenseWorld.Players`: the feeder from player ghosts (`PlayerPose`, vitals, wall, neutral ground) is M5.3's, in
+  Hostiles.Entities, since Brains references Core only; (2) the test world is a plain `World` ticked by hand through `BrainTick`, not
+  KnTestWorld; (3) a brain never scheduled takes its first tier at once (the hysteresis is for changes). Tests: 9 (clock, grid vs brute
+  force, curves, early-out, determinism, no allocations). Linux IL2CPP + Burst server build: not run (no build in this step; compile
+  checks with server defines). Job later: the clock's nearest-player query and the grid fill.
 - **Create:** `Brains/Runtime/` `KryticalNova.Brains.asmdef`, `BrainComponents.cs` (2.1), `BrainSimulationGroup.cs`,
   `SenseBuildSystem.cs`, `ThinkClockSystem.cs`, `BrainRules.cs`, `Score.cs`, `BrainDiceRules.cs`;
   `Brains/Data/BrainSettings.cs` + `KryticalNova.Brains.Data.asmref` + asset (via a menu builder in Hostiles.Entities.Editor or a
