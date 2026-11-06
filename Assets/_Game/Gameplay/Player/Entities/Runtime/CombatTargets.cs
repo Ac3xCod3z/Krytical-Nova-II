@@ -29,6 +29,8 @@ namespace KryticalNova.Player.Entities
     {
         /// <summary>NGO's Strike Dummy: a CombatEntity with no PlayerResources and no IHostile (CombatEntity.IsStrikeDummy).</summary>
         public const byte StrikeDummy = 1;
+        /// <summary>A Hostile (M5.5): its ghost also carries <c>HostileGhost</c>.</summary>
+        public const byte Hostile = 2;
     }
 
     /// <summary>The Strike Dummy ghost prefab, known to the world as a singleton (baked beside <see cref="PlayerGhostPrefab"/>).</summary>

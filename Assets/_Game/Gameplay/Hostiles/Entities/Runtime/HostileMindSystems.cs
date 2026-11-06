@@ -44,6 +44,8 @@ namespace KryticalNova.Hostiles.Entities
                     if (e.Kind == BrainEventKind.Damaged) Add(threat, e.GhostId, math.max(0f, e.Amount), now);
                     else if (e.Kind == BrainEventKind.Healed) Add(threat, e.GhostId, math.max(0f, e.Amount) * c.HealThreatFactor, now);
                     else if (e.Kind == BrainEventKind.Taunt) Add(threat, e.GhostId, Top(threat) * (1f + c.TauntBonus) - Of(threat, e.GhostId), now);
+                    // IHostileBrain.Aggro (M5.5c): fight this one now, whatever the threat so far (at least a point above the top)
+                    else if (e.Kind == BrainEventKind.Aggro) Add(threat, e.GhostId, math.max(1f, Top(threat) * (1f + c.TauntBonus)) - Of(threat, e.GhostId), now);
                 }
                 for (int i = 0; i < threat.Length; i++)
                 {

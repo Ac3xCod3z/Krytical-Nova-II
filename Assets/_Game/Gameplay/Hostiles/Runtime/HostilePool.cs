@@ -14,6 +14,14 @@ namespace KryticalNova.Hostiles
         private static readonly Dictionary<GameObject, Stack<HostileNet>> free = new Dictionary<GameObject, Stack<HostileNet>>();
         private static readonly Dictionary<HostileNet, GameObject> prefabOf = new Dictionary<HostileNet, GameObject>();
 
+        /// <summary>
+        /// The body a species prefab is made as here (null: the prefab itself). The entity netcode's server sets it to the hidden server
+        /// bodies of <see cref="HostileBodyCatalog"/> (M5.5d); the NGO game never does.
+        /// </summary>
+        public static System.Func<HostileNet, HostileNet> BodyOf { get; set; }
+
+        private static HostileNet Resolve(HostileNet prefab) => BodyOf != null && prefab != null ? BodyOf(prefab) ?? prefab : prefab;
+
         /// <summary>Hostiles made since Play started. Does not grow once the pools are warm.</summary>
         public static int Created { get; private set; }
 
@@ -36,6 +44,7 @@ namespace KryticalNova.Hostiles
             free.Clear();
             prefabOf.Clear();
             Created = 0;
+            BodyOf = null;
             NetworkManager.OnInstantiated -= RegisterHandlers;
             NetworkManager.OnInstantiated += RegisterHandlers;
         }
@@ -53,6 +62,7 @@ namespace KryticalNova.Hostiles
         /// <summary>A Hostile of this species at this place, from the pool when one is waiting. It is active.</summary>
         public static HostileNet Take(HostileNet prefab, Vector3 position, Quaternion rotation)
         {
+            prefab = Resolve(prefab);
             Stack<HostileNet> stack = StackOf(prefab.gameObject);
             while (stack.Count > 0)
             {
@@ -87,6 +97,7 @@ namespace KryticalNova.Hostiles
         public static void Prewarm(HostileNet prefab, int count)
         {
             if (prefab == null) return;
+            prefab = Resolve(prefab);
             Stack<HostileNet> stack = StackOf(prefab.gameObject);
             for (int i = stack.Count; i < count; i++)
             {

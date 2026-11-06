@@ -47,12 +47,21 @@ namespace KryticalNova.Hostiles.Entities
                 DynamicBuffer<ThreatEntry> threat = threatBuffer;
                 float3 at = transform.ValueRO.Position;
 
-                bool damaged = false, killed = false;
+                bool damaged = false, killed = false, calm = false;
                 for (int i = 0; i < events.Length; i++)
                 {
                     if (events[i].Tick != now) continue;
-                    if (events[i].Kind == BrainEventKind.Damaged && events[i].GhostId != 0) damaged = true;
+                    // a hit, or IHostileBrain.Aggro (M5.5c), engages the same tick
+                    if ((events[i].Kind == BrainEventKind.Damaged || events[i].Kind == BrainEventKind.Aggro) && events[i].GhostId != 0) damaged = true;
                     if (events[i].Kind == BrainEventKind.Killed) killed = true;
+                    if (events[i].Kind == BrainEventKind.Calm) calm = true;
+                }
+                // IHostileBrain.Calm (M5.5c, HostileBrainLink.cs:140-143): the fight is forgotten; it walks home, without the leash's heal
+                if (calm && !killed)
+                {
+                    threat.Clear();
+                    aim = default;
+                    b.Saw = 0;
                 }
 
                 bool targetValid = Valid(sense, aim.GhostId, out float3 feet);
@@ -97,6 +106,7 @@ namespace KryticalNova.Hostiles.Entities
                     b.ModeSinceTick = now;
                     b.UnreachableSinceTick = 0;
                 }
+                if (calm && b.Mode == HostileMode.Return) b.HealOnHome = 0;
                 // the target gone but another threat left: that one
                 if (b.Mode == HostileMode.Engage && !targetValid && other >= 0)
                 {

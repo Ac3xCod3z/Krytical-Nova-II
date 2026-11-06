@@ -66,6 +66,8 @@ namespace KryticalNova.Hostiles
         public bool IsAwake => awake;
         public Vector3 Centre => transform.position;
         public float Radius => definition != null ? definition.radius : 0f;
+        /// <summary>How far past <see cref="Radius"/> a chase may go before the Hostile gives up (the leash, H14); read by the entity brain (M5.5d).</summary>
+        public float LeashMetres => settings != null ? settings.leashMetres : 15f;
         public int Capacity => slots != null ? slots.Length : 0;
         public bool HasBruiser => bruiserPrefab != null;
 

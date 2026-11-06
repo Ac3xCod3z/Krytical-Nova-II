@@ -8,6 +8,7 @@
         "KryticalNova.Hostiles.Entities",
         "KryticalNova.Player.Entities",
         "Unity.NetCode",
+        "Unity.Netcode.Runtime",
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner",
         "Unity.Burst",
