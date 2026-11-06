@@ -174,6 +174,10 @@ there already says "M5: Hostiles").
   the guard + roll part of `HostileBrainLink.Strike` (NGO `HostileBrainLink.cs:237-286`: reach-above, `OnAWall`/`ReachesOnWall`,
   multiplier, reflection, `CombatCalculator.CalculateAttack`) moved into `KryticalNova.Hostiles` (no Emerald). `HostileBrainLink`
   calls it, so NGO behaviour is identical (its own tests prove it).
+- **[done, DOTS 15, 6 Nov; B70]** As built: `BindView(level)`, `ShowLevelFromGhost`, `ShowStateFromGhost(state, joining)`,
+  `ShowAttackFromGhost(index)`, `ShowHitFromGhost`, `ShowStrikeFromGhost(target, result, index, targetIsLocal)` (separate calls, the
+  view system dedupes by its ghost counters); `IsView` closes HasAuthority, the OnEnable revive and the Start wake. Left for M5.5 (they
+  need ghost fields): the kill-tag holder for `IsTaggedByAnother`, and `CombatEntity.Died` on the view for `HostileCorpse`.
 - `HostileNet` view mode: `HostileNet.BindView()` marks a client view (never authority, brain never woken, `Offline` false) and
   `HostileNet.PlayFromGhost(HostileAnimState, attackIndex, startedSecondsAgo, hitCounter)`; its `Active` list, `IHostile`
   surface, level/tag events keep feeding nameplates, minimap, Autopilot/Magnet, target ring unchanged.

@@ -105,7 +105,14 @@ namespace KryticalNova.Hostiles
         /// <summary>True while its zone sleeps: no brain, no animation, until a player comes near again.</summary>
         public bool Asleep => asleep;
 
-        private bool HasAuthority => (!IsSpawned || IsServer) && OverrideAllows;
+        private bool HasAuthority => (!IsSpawned || IsServer) && OverrideAllows && !IsView;
+
+        /// <summary>
+        /// A client view of the entity netcode (M5 seam 3, <see cref="BindView"/>): it only shows what its ghost says, never decides,
+        /// never wakes its brain, and stays in <see cref="Active"/> for the nameplates, minimap and Autopilot like an NGO client copy.
+        /// </summary>
+        public bool IsView { get; private set; }
+        private HostileAnimState shownAnim;
 
         // The entity netcode decides the Hostiles in this process (its worlds live, or HostileSpawner.AuthorityOverride): a body it does not
         // allow never decides or wakes itself.
@@ -127,7 +134,7 @@ namespace KryticalNova.Hostiles
             entity.Damaged += OnDamaged;
             // Taken from the pool with no session running: a new life starts here. On the network it starts
             // in OnNetworkSpawn, which follows.
-            if (setUp && Offline) Revive();
+            if (setUp && Offline && !IsView) Revive();
         }
 
         private void OnDisable()
@@ -151,7 +158,7 @@ namespace KryticalNova.Hostiles
         private void Start()
         {
             // A Hostile that is not on the network (offline play, an edit-mode test scene) decides for itself.
-            if (!IsSpawned && Offline) WakeWithAuthority();
+            if (!IsSpawned && Offline && !IsView) WakeWithAuthority();
         }
 
         public override void OnNetworkSpawn()
@@ -181,6 +188,77 @@ namespace KryticalNova.Hostiles
                 ApplyIdentity();
                 Play(netAnim.Value, default, true);
             }
+        }
+
+        // ------------------------------------------------------------------ a client view of the entity netcode (M5 seam 3)
+
+        /// <summary>
+        /// Makes this body a client view (before its Start): NGO's client branch of <see cref="OnNetworkSpawn"/>: the clips' events are off
+        /// (no brain hears them), it stands, takes the ghost's level and name, and shows a fresh life.
+        /// </summary>
+        public void BindView(int ghostLevel)
+        {
+            IsView = true;
+            if (animator != null)
+            {
+                animator.fireEvents = false;
+                Stand();
+            }
+            level = ghostLevel > 0 ? ghostLevel : 0;
+            ApplyIdentity();
+            shownAnim = default;
+            Play(shownAnim, default, true);
+            LevelChanged?.Invoke();
+        }
+
+        /// <summary>A view: the ghost's level (NGO's OnNetLevelChanged on a client).</summary>
+        public void ShowLevelFromGhost(int ghostLevel)
+        {
+            if (!IsView || ghostLevel == level) return;
+            level = ghostLevel;
+            LevelChanged?.Invoke();
+        }
+
+        /// <summary>A view: the ghost's animation state (NGO's OnNetAnimChanged on a client); <paramref name="joining"/> for a first sight.</summary>
+        public void ShowStateFromGhost(HostileAnimState state, bool joining = false)
+        {
+            if (!IsView) return;
+            Play(state, shownAnim, joining);
+            shownAnim = state;
+        }
+
+        /// <summary>A view: an attack its ghost started (NGO's AttackClientRpc body: the clip, a heavy one's "!", AttackStarted).</summary>
+        public void ShowAttackFromGhost(int attackIndex)
+        {
+            if (!IsView) return;
+            bool known = definition != null && attackIndex >= 0 && attackIndex < definition.attacks.Length;
+            if (animator != null)
+            {
+                animator.SetInteger(AttackIndexParam, Mathf.Clamp(attackIndex, 0, 254) + 1);
+                animator.SetTrigger(AttackParam);
+            }
+            ShowAttack(attackIndex, known ? definition.attacks[attackIndex].windupSeconds : 0f, known && definition.attacks[attackIndex].heavy);
+        }
+
+        /// <summary>A view: a flinch its ghost reported (NGO's HitClientRpc body).</summary>
+        public void ShowHitFromGhost(int hitIndex)
+        {
+            if (!IsView || animator == null) return;
+            animator.SetInteger(HitIndexParam, hitIndex);
+            animator.SetTrigger(HitParam);
+        }
+
+        /// <summary>
+        /// A view: a blow its ghost landed on <paramref name="target"/> (NGO's StrikeClientRpc body). <paramref name="targetIsLocal"/> says
+        /// whether it is this screen's own player (the number shows only there); NGO's own test of that reads its NetworkObject.
+        /// </summary>
+        public void ShowStrikeFromGhost(Transform target, in DamageResult result, int attackIndex, bool targetIsLocal)
+        {
+            if (!IsView || target == null) return;
+            bool heavy = definition != null && attackIndex >= 0 && attackIndex < definition.attacks.Length && definition.attacks[attackIndex].heavy;
+            byte flags = (byte)((result.IsCritical ? StrikeCritical : 0) | (result.IsEvaded ? StrikeEvaded : 0)
+                                | (result.IsReflected ? StrikeReflected : 0) | (heavy ? StrikeHeavy : 0));
+            ShowStrike(target, flags, result.DamageDealt, targetIsLocal);
         }
 
         public override void OnNetworkDespawn()
@@ -515,9 +593,13 @@ namespace KryticalNova.Hostiles
         /// <summary>The blow as this screen shows it: the comic hit of the game feel, and the number for the player it hit.</summary>
         private void ShowStrike(Transform target, byte flags, float damage)
         {
-            bool evaded = (flags & StrikeEvaded) != 0, critical = (flags & StrikeCritical) != 0, reflected = (flags & StrikeReflected) != 0;
             var targetObject = target.GetComponent<NetworkObject>();
-            bool targetIsLocal = targetObject == null || !targetObject.IsSpawned || targetObject.IsLocalPlayer;
+            ShowStrike(target, flags, damage, targetObject == null || !targetObject.IsSpawned || targetObject.IsLocalPlayer);
+        }
+
+        private void ShowStrike(Transform target, byte flags, float damage, bool targetIsLocal)
+        {
+            bool evaded = (flags & StrikeEvaded) != 0, critical = (flags & StrikeCritical) != 0, reflected = (flags & StrikeReflected) != 0;
             Vector3 toAttacker = transform.position - target.position;
             toAttacker.y = 0f;
             toAttacker = toAttacker.sqrMagnitude > 0.0001f ? toAttacker.normalized : -target.forward;
