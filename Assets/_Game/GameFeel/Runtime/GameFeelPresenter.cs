@@ -740,6 +740,56 @@ namespace KryticalNova.GameFeel
             if (isLocalPlayer) Play(landFeel, actor.position, 1f);
         }
 
+        [Header("Getting off a mount (owner, 7 Nov 2026: impact, weight, dust, lines, smear)")]
+        [Tooltip("The travel speed (m/s) at which the getting-off's feel is at its strongest; slower ones scale down.")]
+        [SerializeField, Min(1f)] private float dismountFullSpeed = 20f;
+        [Tooltip("How strong the take-off and touchdown are at a standstill, and how much more at full speed.")]
+        [SerializeField, Min(0f)] private float dismountBaseIntensity = 0.8f, dismountSpeedIntensity = 0.7f;
+        [Tooltip("The local player's own camera kick at the touchdown, at a standstill and at full speed.")]
+        [SerializeField, Range(0f, 1f)] private float dismountShakeStill = 0.45f, dismountShakeFull = 1f;
+        [Tooltip("The small puff as the rider stands up out of the landing or the roll.")]
+        [SerializeField, Range(0f, 1f)] private float dismountStandUpIntensity = 0.45f;
+
+        /// <summary>
+        /// The getting-off beats (MountRider fires them from the clip's measured times): a push burst and squash off the
+        /// saddle, movement lines and the smear through the flip, a heavy thud and dust ring at the touchdown (the camera
+        /// kick for the rider's own screen only), the run's dust trail along the roll (it hides the feet's slide), and a
+        /// settle puff at the stand-up. Faster dismounts hit harder.
+        /// </summary>
+        public void Dismount(in DismountFeel moment)
+        {
+            Transform actor = moment.Actor;
+            if (actor == null) return;
+            float pace = Mathf.Clamp01(moment.Speed / dismountFullSpeed);
+            float hit = dismountBaseIntensity + dismountSpeedIntensity * pace;
+            Vector3 feet = ActorAnchor.Feet(actor);
+            switch (moment.Beat)
+            {
+                case DismountBeat.TakeOff:
+                    PlayWorld(jumpWorldFeel, feet, Facing(actor), actor, hit);
+                    if (moment.IsLocalPlayer) Play(jumpFeel, actor.position, 1f);
+                    ActorVfx.For(actor).SetAirborne(true, airborneLoopVfx);
+                    break;
+                case DismountBeat.Touchdown:
+                    ActorVfx.Find(actor)?.SetAirborne(false, airborneLoopVfx);
+                    ActorSmear.Find(actor)?.Release();
+                    PlayWorld(bodyLandWorldFeel, feet, Facing(actor), actor, hit);
+                    if (moment.IsLocalPlayer) Play(bodyLandFeel, actor.position, Mathf.Lerp(dismountShakeStill, dismountShakeFull, pace));
+                    break;
+                case DismountBeat.RollStart:
+                    ActorVfx.For(actor).SetRunning(true, runLoopVfx);
+                    break;
+                case DismountBeat.RollEnd:
+                    // Up into the run: the run's own dust carries on (RunStopped ends it); else it settles here.
+                    if (!moment.EndsRunning) ActorVfx.Find(actor)?.SetRunning(false, runLoopVfx);
+                    break;
+                case DismountBeat.StandUp:
+                    ActorVfx.Find(actor)?.SetRunning(false, runLoopVfx);
+                    PlayWorld(landWorldFeel, feet, Facing(actor), actor, dismountStandUpIntensity);
+                    break;
+            }
+        }
+
         public void WallStanding(Transform actor, bool onWall)
         {
             if (actor == null) return;

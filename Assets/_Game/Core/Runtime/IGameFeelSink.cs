@@ -55,6 +55,37 @@ namespace KryticalNova.Core
         public bool IsLocalPlayer;
     }
 
+    /// <summary>The beats of getting off a mount, in order (owner, 7 Nov 2026: impact, weight, dust and lines).</summary>
+    public enum DismountBeat
+    {
+        /// <summary>The feet leave the saddle.</summary>
+        TakeOff,
+        /// <summary>The top of the flip.</summary>
+        Apex,
+        /// <summary>The first foot on the ground.</summary>
+        Touchdown,
+        /// <summary>The roll begins (running dismounts): the body slides on the ground from here.</summary>
+        RollStart,
+        /// <summary>The roll is over.</summary>
+        RollEnd,
+        /// <summary>Back on both feet, standing (the standing dismount, or a running one that ends standing).</summary>
+        StandUp,
+    }
+
+    /// <summary>One beat of a getting-off as every client sees it (from the replicated ride phase).</summary>
+    public struct DismountFeel
+    {
+        public Transform Actor;
+        public DismountBeat Beat;
+        /// <summary>Where the rider's feet are (the player's root on the ground).</summary>
+        public Vector3 Point;
+        /// <summary>Metres a second the body travels at the beat (0 for a standing dismount).</summary>
+        public float Speed;
+        /// <summary>The getting-off ends running (the roll comes up into the run).</summary>
+        public bool EndsRunning;
+        public bool IsLocalPlayer;
+    }
+
     /// <summary>
     /// Client-only "juice" (screen shake, hit flash, squash, dust, auras, trails, sounds). Implemented by the GameFeel
     /// assembly and registered in <see cref="ClientPresentationRegistry.Feel"/>; null on dedicated servers, so callers
@@ -89,6 +120,8 @@ namespace KryticalNova.Core
         /// </summary>
         void WaterSplash(Transform actor, Vector3 at, bool isLocalPlayer);
         void Landed(Transform actor, bool isLocalPlayer);
+        /// <summary>A beat of getting off a mount (take-off, apex, touchdown, roll, stand-up), on every peer.</summary>
+        void Dismount(in DismountFeel moment);
         /// <summary>The actor left the ground (true) or is back on it, including after an aborted jump (false).</summary>
         void Airborne(Transform actor, bool airborne);
 

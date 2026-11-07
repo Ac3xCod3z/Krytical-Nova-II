@@ -1,4 +1,5 @@
 using Animancer;
+using KryticalNova.Core;
 using KryticalNova.Player;
 using KryticalNova.Progression;
 using UnityEngine;
@@ -54,6 +55,10 @@ namespace KryticalNova.Mounts
         // The hand-over out of a getting-off: the origin's offset from rest when it began, and its clock (see HandOver).
         private Vector3 handOverFrom;
         private float handOverStart, handOverSeconds;
+        // The getting-off in play whose beats are still to be shown (see Beats), and which have been.
+        private MountTransition beats;
+        private int beatsFired;
+        private bool beatsEndRunning;
         private MountTransition transition; // the getting on or off in play (standing or running)
         private bool runningTransition;
         private float phaseStartedAt;
@@ -143,6 +148,10 @@ namespace KryticalNova.Mounts
                 runningTransition = mounts.IsRunningTransition;
                 transition = settings != null ? settings.Transition(on, runningTransition, mounts.DismountEndsRunning) : null;
                 if (mount.hopMountUp) { lift = Lift(phase, 0f); forward = Forward(0f); onGround = OnGround(on, 0f); }
+                // The getting-off's beats for the GameFeel layer (take-off, apex, touchdown, roll, stand-up).
+                beats = !on && mount.hopMountUp ? transition : null;
+                beatsFired = 0;
+                beatsEndRunning = runningTransition && mounts.DismountEndsRunning;
                 if (materialiser != null)
                 {
                     float delay = transition != null ? transition.effectDelay : 0f;
@@ -304,6 +313,42 @@ namespace KryticalNova.Mounts
             if (Time.time - handOverStart >= handOverSeconds) handOverSeconds = 0f;
         }
 
+        /// <summary>
+        /// The getting-off's beats at the times measured on its clip (MountTransition: leaves, apex, arrives, roll, stands),
+        /// reported to the GameFeel layer through Core (owner, 7 Nov 2026: dust, lines, smear, impact). Every machine shows
+        /// them: they follow the replicated phase. Runs on through the clip's tail after the rider is free.
+        /// </summary>
+        private void Beats()
+        {
+            if (beats == null) return;
+            float since = Time.time - phaseStartedAt;
+            Beat(DismountBeat.TakeOff, beats.leavesAt, since);
+            Beat(DismountBeat.Apex, beats.apexAt, since);
+            Beat(DismountBeat.Touchdown, beats.arrivesAt, since);
+            Beat(DismountBeat.RollStart, beats.rollStartsAt, since);
+            Beat(DismountBeat.RollEnd, beats.rollStartsAt > 0f ? beats.rollEndsAt : 0f, since);
+            Beat(DismountBeat.StandUp, beats.standsAt, since);
+            if (since > beats.seconds) beats = null;
+        }
+
+        private void Beat(DismountBeat beat, float at, float since)
+        {
+            int bit = 1 << (int)beat;
+            if (at <= 0f || since < at || (beatsFired & bit) != 0) return;
+            beatsFired |= bit;
+            IGameFeelSink feel = ClientPresentationRegistry.Feel;
+            if (feel == null || mounts == null) return;
+            feel.Dismount(new DismountFeel
+            {
+                Actor = mounts.transform,
+                Beat = beat,
+                Point = mounts.transform.position,
+                Speed = movement != null ? movement.CurrentSpeed : 0f,
+                EndsRunning = beatsEndRunning,
+                IsLocalPlayer = mounts.IsOwner,
+            });
+        }
+
         private void FinishHandOver()
         {
             if (handOverSeconds <= 0f) return;
@@ -350,7 +395,7 @@ namespace KryticalNova.Mounts
         /// into the idle, in step with it, instead of at once (see <see cref="HandOver"/>).</param>
         private void Clear(bool eased = false)
         {
-            if (!eased || !isActiveAndEnabled) FinishHandOver();
+            if (!eased || !isActiveAndEnabled) { FinishHandOver(); beats = null; }
             if (shownMount != null || riderLifted) motor?.SetSeated(null, null, null);
             if (isActiveAndEnabled) LetModelVanish();
             else DestroyModel();
@@ -428,6 +473,7 @@ namespace KryticalNova.Mounts
         private void Update()
         {
             HandOver();
+            Beats();
             // The rest of a getting-off clip after the rider is free: ends at its length, or as soon as the rider moves.
             if (tailEnds > 0f && (Time.time >= tailEnds || (motor != null && motor.IsTravelling)))
             {

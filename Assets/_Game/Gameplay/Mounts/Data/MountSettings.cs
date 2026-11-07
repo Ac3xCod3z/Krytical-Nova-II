@@ -109,6 +109,13 @@ namespace KryticalNova.Mounts
         [Min(0f)] public float leavesAt;
         [Tooltip("Seconds into the clip when the rider arrives: on the seat (getting on) or with the feet on the ground (getting off).")]
         [Min(0f)] public float arrivesAt;
+        [Header("Getting-off beats (owner, 7 Nov 2026: measured on the clips; the GameFeel layer shows them)")]
+        [Tooltip("Seconds into the clip at the top of the flip. 0 = no beat.")]
+        [Min(0f)] public float apexAt;
+        [Tooltip("Seconds into the clip when the roll begins: from the touchdown, where the planted feet first slide. 0 = no roll.")]
+        [Min(0f)] public float rollStartsAt;
+        [Tooltip("Seconds into the clip when the rider is up on both feet, standing. 0 = it ends running.")]
+        [Min(0f)] public float standsAt;
 
         private static Keyframe K(float t, float v) => new Keyframe(t, v);
 
@@ -134,7 +141,7 @@ namespace KryticalNova.Mounts
         public static MountTransition StandingOff() => new MountTransition
         {
             seconds = 1.7f, freeSeconds = 1.55f, stirrupsAt = 0f, effectDelay = 0.1f, effectSeconds = 0.5f,
-            leavesAt = 0.4f, arrivesAt = 1.02f,
+            leavesAt = 0.4f, arrivesAt = 1.02f, apexAt = 0.7f, standsAt = 1.53f,
         };
 
         /// <summary>The moving dismount, redone and owner-approved 7 Nov 2026: a sprung take-off from the saddle
@@ -144,14 +151,14 @@ namespace KryticalNova.Mounts
         public static MountTransition RunningOff() => new MountTransition
         {
             seconds = 2.0f, freeSeconds = 1.93f, stirrupsAt = 0f, effectDelay = 0.1f, effectSeconds = 0.5f, rollEndsAt = 1.76f,
-            leavesAt = 0.36f, arrivesAt = 0.98f,
+            leavesAt = 0.36f, arrivesAt = 0.98f, apexAt = 0.63f, rollStartsAt = 1.0f,
         };
 
         /// <summary>The same take-off, flip and roll, ending standing: 2.1 s, free at 1.98 s.</summary>
         public static MountTransition RunningOffToIdle() => new MountTransition
         {
             seconds = 2.1f, freeSeconds = 1.98f, stirrupsAt = 0f, effectDelay = 0.1f, effectSeconds = 0.5f, rollEndsAt = 1.76f,
-            leavesAt = 0.36f, arrivesAt = 0.98f,
+            leavesAt = 0.36f, arrivesAt = 0.98f, apexAt = 0.63f, rollStartsAt = 1.0f, standsAt = 1.97f,
         };
     }
 }

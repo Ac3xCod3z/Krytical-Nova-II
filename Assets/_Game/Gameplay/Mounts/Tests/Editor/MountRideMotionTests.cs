@@ -229,6 +229,24 @@ namespace KryticalNova.Tests
         }
 
         [Test]
+        public void EveryGettingOff_HasItsBeatsInOrderWithinTheClip([Values(false, true)] bool running, [Values(false, true)] bool endsRunning)
+        {
+            MountTransition t = settings.Transition(false, running, endsRunning);
+            Assert.Greater(t.apexAt, t.leavesAt, "the apex comes after the take-off");
+            Assert.Greater(t.arrivesAt, t.apexAt, "the touchdown comes after the apex");
+            if (running)
+            {
+                Assert.GreaterOrEqual(t.rollStartsAt, t.arrivesAt, "the roll starts at or after the touchdown");
+                Assert.Greater(t.rollEndsAt, t.rollStartsAt, "the roll ends after it starts");
+            }
+            else Assert.AreEqual(0f, t.rollStartsAt, "the standing dismount has no roll");
+            bool stands = !running || !endsRunning;
+            if (stands) Assert.Greater(t.standsAt, running ? t.rollEndsAt - 0.2f : t.arrivesAt, "the stand-up comes after the landing or the roll");
+            else Assert.AreEqual(0f, t.standsAt, "ending running there is no stand-up");
+            Assert.LessOrEqual(Mathf.Max(t.standsAt, t.rollEndsAt), t.seconds, "every beat is within the clip");
+        }
+
+        [Test]
         public void EveryHopTransition_SaysWhenTheFeetLeaveAndArrive([Values(false, true)] bool on, [Values(false, true)] bool running)
         {
             foreach (bool endsRunning in new[] { false, true })
