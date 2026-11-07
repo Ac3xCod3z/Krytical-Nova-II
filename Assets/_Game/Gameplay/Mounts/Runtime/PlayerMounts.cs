@@ -494,6 +494,7 @@ namespace KryticalNova.Mounts
         /// <summary>Every machine: the stats and the riding speed that follow from the selected mount.</summary>
         private void Show(MountNetState next)
         {
+            bool dismountStarts = next.phase == RidePhase.GettingOff && shown.phase != RidePhase.GettingOff;
             shown = next;
             MountDefinition mount = Selected;
 
@@ -516,7 +517,19 @@ namespace KryticalNova.Mounts
                 else if ((next.phase == RidePhase.GettingOn || next.phase == RidePhase.GettingOff) && !next.running)
                     movement.SetRideSpeeds(StandStillSpeed, StandStillSpeed);
                 // A running getting on or off keeps the on-foot speeds: the rider never stops (owner, 6 Nov 2026).
-                else movement.SetRideSpeeds(0f, 0f);
+                else
+                {
+                    movement.SetRideSpeeds(0f, 0f);
+                    // A running getting-off that ends standing (owner, 7 Nov 2026: "fluid"): reach the clicked spot as
+                    // the roll ends instead of arriving mid-flip and stalling while the clip plays on. Set once, as it
+                    // starts, on every machine (each walks its own copy of the path).
+                    if (dismountStarts && next.running && !next.endsRunning && settings != null)
+                    {
+                        float travel = MountRules.DismountTravelSpeed(false, PathLeft(), movement.CurrentSpeed,
+                            settings.getOffRunningToIdle.rollEndsAt);
+                        if (travel > StandStillSpeed && travel < movement.CurrentSpeed) movement.SetRideSpeeds(travel, travel);
+                    }
+                }
             }
             Changed?.Invoke();
         }

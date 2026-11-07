@@ -69,6 +69,19 @@ namespace KryticalNova.Tests
         }
 
         [Test]
+        public void RunningDismount_NeverStallsBeforeTheRollEnds()
+        {
+            // Ending running: the run speed the whole way.
+            Assert.AreEqual(28f, MountRules.DismountTravelSpeed(true, 60f, 28f, 1.76f), 0.001f);
+            // Ending standing, 20 m left: 20 / 1.76 = 11.36 m/s, so the body reaches the spot as the roll ends.
+            Assert.AreEqual(20f / 1.76f, MountRules.DismountTravelSpeed(false, 20f, 28f, 1.76f), 0.001f);
+            // Never faster than the run, even with a long path.
+            Assert.AreEqual(28f, MountRules.DismountTravelSpeed(false, 100f, 28f, 1.76f), 0.001f);
+            // No path left: no travel.
+            Assert.AreEqual(0f, MountRules.DismountTravelSpeed(false, 0f, 28f, 1.76f), 0.001f);
+        }
+
+        [Test]
         public void TheMount_IsSolidAsTheRiderLandsOnIt([Values(false, true)] bool running)
         {
             MountTransition on = settings.Transition(true, running);
