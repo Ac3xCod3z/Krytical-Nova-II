@@ -22,6 +22,7 @@
         "KryticalNova.Player.Entities.Presentation",
         "KryticalNova.Social",
         "KryticalNova.Hostiles",
+        "KryticalNova.Hostiles.Entities",
         "Unity.Netcode.Runtime",
         "Unity.Entities",
         "Unity.NetCode",

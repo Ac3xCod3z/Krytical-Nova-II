@@ -6,6 +6,7 @@
         "KryticalNova.Brains",
         "KryticalNova.Hostiles",
         "KryticalNova.Progression",
+        "KryticalNova.Combat.Entities",
         "KryticalNova.Networking.Entities",
         "KryticalNova.Player.Entities",
         "KryticalNova.Player.Entities.Presentation",
