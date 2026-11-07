@@ -122,6 +122,112 @@ namespace KryticalNova.Tests
             Assert.AreEqual(0f, LandingSoles(strider, stage), 0.01f, "soles within 1 cm of the ground");
         }
 
+        // Owner, 7 Nov 2026: the legs crossed at the end of the dismounts in game, though the clips keep them apart: the
+        // rider clips' avatar measured leg angles from the seat straddle. Played on the player's real avatar, every
+        // getting-off clip must keep the feet apart (along the hips) from the touchdown to its end.
+        [Test]
+        public void TheDismounts_NeverCrossTheLegsOnThePlayer(
+            [Values("Dismount", "DismountRun", "DismountRunIdle")] string take, [Values(0, 50, 100)] int percent)
+        {
+            var prefab = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Game/Gameplay/Player/Prefabs/Player.prefab");
+            AnimationClip clip = null;
+            foreach (Object o in UnityEditor.AssetDatabase.LoadAllAssetsAtPath($"Assets/_Game/Characters/Mounts/Rider/Animations/A_Rider_{take}_{percent}.fbx"))
+                if (o is AnimationClip c && !c.name.StartsWith("__preview__")) clip = c;
+            Assume.That(prefab != null && clip != null, "the player prefab and the rider clip are in the project");
+            GameObject player = Object.Instantiate(prefab);
+            UnityEditor.AnimationMode.StartAnimationMode();
+            try
+            {
+                Animator animator = null;
+                foreach (Animator a in player.GetComponentsInChildren<Animator>(true)) if (a.avatar != null && a.avatar.isHuman) { animator = a; break; }
+                Assert.NotNull(animator, "the player has a humanoid avatar");
+                const float Touchdown = 1.02f;   // the latest touchdown of the three (MountSettings.getOff.arrivesAt)
+                for (float t = Touchdown; t <= clip.length + 0.001f; t += 1f / 30f)
+                {
+                    UnityEditor.AnimationMode.BeginSampling();
+                    UnityEditor.AnimationMode.SampleAnimationClip(animator.gameObject, clip, Mathf.Min(t, clip.length));
+                    UnityEditor.AnimationMode.EndSampling();
+                    Vector3 side = animator.GetBoneTransform(HumanBodyBones.LeftUpperLeg).position
+                                   - animator.GetBoneTransform(HumanBodyBones.RightUpperLeg).position;
+                    side.y = 0f;
+                    float apart = Vector3.Dot(animator.GetBoneTransform(HumanBodyBones.LeftFoot).position
+                                              - animator.GetBoneTransform(HumanBodyBones.RightFoot).position, side.normalized);
+                    Assert.Greater(apart, 0.08f, $"{clip.name} at {t:F2} s: the feet are {apart * 100f:F0} cm apart (crossed or together)");
+                }
+            }
+            finally
+            {
+                UnityEditor.AnimationMode.StopAnimationMode();
+                Object.DestroyImmediate(player);
+            }
+        }
+
+        // Owner, 7 Nov 2026: at the stand-up the body dropped and the legs folded for a moment. The getting-off clip is keyed
+        // on the seat origin and the idle on the ground origin; the origin came down at once while the clip was still
+        // fading out. With the hand-over eased in step with the fade (MountRideMotion.HandOverShare), the hips never dip
+        // and the feet never go under the ground, through the whole fade into the player's own idle.
+        [Test]
+        public void TheHandOverIntoTheIdle_NeitherDropsTheBodyNorSinksTheFeet(
+            [Values("Dismount", "DismountRunIdle")] string take, [Values(0, 1, 2)] int stage)
+        {
+            int percent = new[] { 0, 50, 100 }[stage];
+            var prefab = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Game/Gameplay/Player/Prefabs/Player.prefab");
+            MountDefinition bramble = Def("Brambleback");
+            AnimationClip clip = null, idle = null;
+            foreach (Object o in UnityEditor.AssetDatabase.LoadAllAssetsAtPath($"Assets/_Game/Characters/Mounts/Rider/Animations/A_Rider_{take}_{percent}.fbx"))
+                if (o is AnimationClip c && !c.name.StartsWith("__preview__")) clip = c;
+            Assume.That(prefab != null && clip != null && bramble != null && bramble.IsBuilt, "the player, the clip and the Brambleback are in the project");
+            foreach (MonoBehaviour mb in prefab.GetComponentsInChildren<MonoBehaviour>(true))
+                if (mb != null && mb.GetType().Name == "PlayerAnimancerMotor")
+                    idle = new UnityEditor.SerializedObject(mb).FindProperty("idleClip").objectReferenceValue as AnimationClip;
+            Assume.That(idle != null, "the player motor has its idle clip");
+
+            float seat = bramble.Stage(stage).seat.y;
+            GameObject player = Object.Instantiate(prefab);
+            var graph = UnityEngine.Playables.PlayableGraph.Create("handover-test");
+            try
+            {
+                Animator animator = null;
+                foreach (Animator a in player.GetComponentsInChildren<Animator>(true)) if (a.avatar != null && a.avatar.isHuman) { animator = a; break; }
+                animator.applyRootMotion = false;
+                Transform rider = animator.transform;
+                Vector3 rest = rider.localPosition;
+                float ground = rider.position.y;
+                var output = UnityEngine.Animations.AnimationPlayableOutput.Create(graph, "o", animator);
+                var mixer = UnityEngine.Animations.AnimationMixerPlayable.Create(graph, 2);
+                var end = UnityEngine.Animations.AnimationClipPlayable.Create(graph, clip);
+                var start = UnityEngine.Animations.AnimationClipPlayable.Create(graph, idle);
+                UnityEngine.Playables.PlayableExtensions.SetTime(end, clip.length);
+                UnityEngine.Playables.PlayableExtensions.Pause(end);
+                UnityEngine.Playables.PlayableExtensions.Pause(start);
+                end.SetApplyFootIK(false); start.SetApplyFootIK(false);
+                graph.Connect(end, 0, mixer, 0); graph.Connect(start, 0, mixer, 1);
+                UnityEngine.Playables.PlayableOutputExtensions.SetSourcePlayable(output, mixer);
+
+                float hipsAtEnd = 0f;
+                for (int i = -1; i <= 10; i++)
+                {
+                    float w = i < 0 ? 0f : i / 10f;   // i = -1: the clip's last frame, still on the seat origin
+                    UnityEngine.Playables.PlayableExtensions.SetInputWeight(mixer, 0, 1f - w);
+                    UnityEngine.Playables.PlayableExtensions.SetInputWeight(mixer, 1, w);
+                    float share = i < 0 ? 1f : MountRideMotion.HandOverShare(w, 1f);
+                    rider.localPosition = rest + Vector3.up * (seat * share);
+                    graph.Evaluate(0f);
+                    float hips = animator.GetBoneTransform(HumanBodyBones.Hips).position.y - ground;
+                    if (i < 0) { hipsAtEnd = hips; continue; }
+                    float ankle = Mathf.Min(animator.GetBoneTransform(HumanBodyBones.LeftFoot).position.y,
+                                            animator.GetBoneTransform(HumanBodyBones.RightFoot).position.y) - ground;
+                    Assert.LessOrEqual(hipsAtEnd - hips, 0.10f, $"{clip.name}: the hips dip {(hipsAtEnd - hips) * 100f:F0} cm at fade {w:F1}");
+                    Assert.GreaterOrEqual(ankle, 0f, $"{clip.name}: an ankle is {ankle * 100f:F0} cm into the ground at fade {w:F1}");
+                }
+            }
+            finally
+            {
+                graph.Destroy();
+                Object.DestroyImmediate(player);
+            }
+        }
+
         [Test]
         public void EveryHopTransition_SaysWhenTheFeetLeaveAndArrive([Values(false, true)] bool on, [Values(false, true)] bool running)
         {

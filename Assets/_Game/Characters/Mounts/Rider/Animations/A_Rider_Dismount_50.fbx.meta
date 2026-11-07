@@ -597,7 +597,7 @@ ModelImporter:
     - name: thigh_l
       parentName: pelvis
       position: {x: 2.6412435, y: -0.29594544, z: 9.611527}
-      rotation: {x: 0.97409177, y: 0.07996241, z: 0.111766696, w: -0.17960915}
+      rotation: {x: 0.9834384, y: 0.010938584, z: 0.0078924885, w: -0.1807402}
       scale: {x: 0.9999974, y: 0.9999946, z: 0.9999992}
     - name: thigh_twist_01_l
       parentName: thigh_l
@@ -607,7 +607,7 @@ ModelImporter:
     - name: calf_l
       parentName: thigh_l
       position: {x: 44.661774, y: 0.007206917, z: -0.000008583069}
-      rotation: {x: 0.19529118, y: -0.15628193, z: 0.1981675, w: 0.9477168}
+      rotation: {x: 0.18948466, y: 0.026448775, z: 0.04276601, w: 0.9805953}
       scale: {x: 1.0000279, y: 0.9999951, z: 0.9999823}
     - name: calf_twist_01_l
       parentName: calf_l
@@ -617,7 +617,7 @@ ModelImporter:
     - name: foot_l
       parentName: calf_l
       position: {x: 36.018112, y: -0.00012779236, z: 0.000047683716}
-      rotation: {x: -0.14834657, y: -0.05112616, z: -0.06323885, w: 0.9855863}
+      rotation: {x: -0.32084954, y: -0.11441061, z: 0.0009096507, w: 0.94019413}
       scale: {x: 0.9999999, y: 0.99999446, z: 0.9999999}
     - name: ball_l
       parentName: foot_l
@@ -632,7 +632,7 @@ ModelImporter:
     - name: thigh_r
       parentName: pelvis
       position: {x: 2.641273, y: -0.29600713, z: -9.611959}
-      rotation: {x: 0.07648701, y: -0.9610391, z: 0.25142476, w: 0.08566847}
+      rotation: {x: 0.011486457, y: -0.96746254, z: 0.2526544, w: 0.0070756683}
       scale: {x: 0.99999666, y: 0.99999595, z: 0.9999954}
     - name: thigh_twist_01_r
       parentName: thigh_r
@@ -642,7 +642,7 @@ ModelImporter:
     - name: calf_r
       parentName: thigh_r
       position: {x: -44.661747, y: -0.007133007, z: 0.000015258789}
-      rotation: {x: 0.25700098, y: -0.11492647, z: 0.20269993, w: 0.93789935}
+      rotation: {x: 0.25278723, y: 0.034858957, z: 0.036233097, w: 0.96621466}
       scale: {x: 0.9999967, y: 0.99999577, z: 0.99999833}
     - name: calf_twist_01_r
       parentName: calf_r
@@ -652,7 +652,7 @@ ModelImporter:
     - name: foot_r
       parentName: calf_r
       position: {x: -36.01809, y: 0.00022315979, z: -0.000051021576}
-      rotation: {x: -0.30177674, y: -0.053889338, z: -0.04284689, w: 0.9508895}
+      rotation: {x: -0.45069128, y: -0.10747648, z: 0.01412065, w: 0.8860738}
       scale: {x: 0.99999535, y: 1.0000039, z: 0.9999977}
     - name: ball_r
       parentName: foot_r

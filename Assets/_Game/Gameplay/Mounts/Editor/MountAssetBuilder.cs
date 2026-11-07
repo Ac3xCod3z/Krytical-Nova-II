@@ -276,8 +276,97 @@ namespace KryticalNova.EditorTools
                 clip.lockRootPositionXZ = true;
                 clip.keepOriginalPositionXZ = true;
                 importer.clipAnimations = new[] { clip };
+                StandTheReferenceLegs(importer, path);
                 importer.SaveAndReimport();
             }
+        }
+
+        private const string PlayerPrefab = "Assets/_Game/Gameplay/Player/Prefabs/Player.prefab";
+        private static readonly string[][] LegChains =
+        {
+            new[] { "thigh_l", "calf_l", "foot_l", "ball_l" },
+            new[] { "thigh_r", "calf_r", "foot_r", "ball_r" },
+        };
+
+        /// <summary>
+        /// The avatar Unity makes for a rider clip reads its leg angles from the clip file's own pose, and that pose is
+        /// the seat straddle (each leg ~32 degrees out, knees bent). Measured from it, a normal standing stance counts as
+        /// legs pulled in, so on the player the feet crossed at the end of every getting-off (owner, 7 Nov 2026; it is also
+        /// why the riding legs once came out narrower). Here the leg bones of that reference pose are turned to the
+        /// player's own standing legs, so a rider clip's legs play on the player as they were keyed.
+        /// </summary>
+        public static bool StandTheReferenceLegs(ModelImporter importer, string riderPath)
+        {
+            HumanDescription description = importer.humanDescription;
+            if (description.skeleton == null || description.skeleton.Length == 0) return false; // not imported as Humanoid yet
+            var playerPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(PlayerPrefab);
+            Animator playerAnimator = playerPrefab != null
+                ? playerPrefab.GetComponentsInChildren<Animator>(true).FirstOrDefault(a => a.avatar != null && a.avatar.isHuman) : null;
+            var playerModel = playerAnimator != null
+                ? AssetDatabase.LoadAssetAtPath<GameObject>(AssetDatabase.GetAssetPath(playerAnimator.avatar)) : null;
+            var riderModel = AssetDatabase.LoadAssetAtPath<GameObject>(riderPath);
+            if (playerModel == null || riderModel == null) return false;
+
+            GameObject rider = Object.Instantiate(riderModel), player = Object.Instantiate(playerModel);
+            try
+            {
+                Pose(rider, description.skeleton);
+                Pose(player, AssetImporter.GetAtPath(AssetDatabase.GetAssetPath(playerModel)) is ModelImporter p
+                    ? p.humanDescription.skeleton : null);
+                Dictionary<string, Transform> r = Bones(rider), pl = Bones(player);
+                if (!HipsFrame(r, out Quaternion riderHips) || !HipsFrame(pl, out Quaternion playerHips)) return false;
+                Quaternion playerToRider = riderHips * Quaternion.Inverse(playerHips);
+                foreach (string[] chain in LegChains)
+                    for (int i = 0; i + 1 < chain.Length; i++)
+                    {
+                        if (!r.TryGetValue(chain[i], out Transform bone) || !r.TryGetValue(chain[i + 1], out Transform child)
+                            || !pl.TryGetValue(chain[i], out Transform pBone) || !pl.TryGetValue(chain[i + 1], out Transform pChild)) continue;
+                        Vector3 now = child.position - bone.position;
+                        Vector3 want = playerToRider * (pChild.position - pBone.position);
+                        if (now.sqrMagnitude < 1e-8f || want.sqrMagnitude < 1e-8f) continue;
+                        bone.rotation = Quaternion.FromToRotation(now, want) * bone.rotation;
+                    }
+                SkeletonBone[] skeleton = description.skeleton;
+                for (int i = 0; i < skeleton.Length; i++)
+                    if (r.TryGetValue(skeleton[i].name, out Transform t) && LegChains.Any(c => c.Contains(t.name)))
+                        skeleton[i].rotation = t.localRotation;
+                description.skeleton = skeleton;
+                importer.humanDescription = description;
+                return true;
+            }
+            finally
+            {
+                Object.DestroyImmediate(rider);
+                Object.DestroyImmediate(player);
+            }
+        }
+
+        private static void Pose(GameObject root, SkeletonBone[] skeleton)
+        {
+            if (skeleton == null) return;
+            Dictionary<string, Transform> bones = Bones(root);
+            foreach (SkeletonBone b in skeleton)
+                if (bones.TryGetValue(b.name, out Transform t) && t != root.transform) { t.localPosition = b.position; t.localRotation = b.rotation; }
+        }
+
+        private static Dictionary<string, Transform> Bones(GameObject root)
+        {
+            var map = new Dictionary<string, Transform>();
+            foreach (Transform t in root.GetComponentsInChildren<Transform>(true)) map[t.name] = t;
+            return map;
+        }
+
+        // The body's own frame from its hips: right along the hip joints, up from the pelvis to the first spine joint.
+        private static bool HipsFrame(Dictionary<string, Transform> bones, out Quaternion frame)
+        {
+            frame = Quaternion.identity;
+            if (!bones.TryGetValue("thigh_l", out Transform l) || !bones.TryGetValue("thigh_r", out Transform r)
+                || !bones.TryGetValue("pelvis", out Transform pelvis) || !bones.TryGetValue("spine_01", out Transform spine)) return false;
+            Vector3 right = r.position - l.position, up = spine.position - pelvis.position;
+            Vector3 forward = Vector3.Cross(right, up);
+            if (forward.sqrMagnitude < 1e-8f) return false;
+            frame = Quaternion.LookRotation(forward, Vector3.Cross(forward, right));
+            return true;
         }
 
         // ------------------------------------------------------------------ prefabs and definitions
