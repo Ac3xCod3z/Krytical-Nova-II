@@ -87,6 +87,41 @@ namespace KryticalNova.Tests
             Assert.AreEqual(0f, MountRideMotion.GroundDrop(0.5f, 0f), 0.001f);
         }
 
+        // Where the soles end, metres above the ground, after a getting-off on a built stage: the rider's origin is on the
+        // seat less the ground drop (all of it once the feet are down), and the clip puts the soles the keyed seat height
+        // below its origin (the stage's own seat when it was keyed on it).
+        private float LandingSoles(MountDefinition mount, int stage)
+        {
+            MountStageLook look = mount.Stage(stage);
+            MountTransition off = settings.Transition(false, false);
+            float keyed = look.clipSeatHeight > 0f ? look.clipSeatHeight : look.seat.y;
+            float drop = MountRideMotion.GroundDrop(look.seat.y, look.clipSeatHeight);
+            float origin = look.seat.y - drop * MountRideMotion.OnGround(false, off.arrivesAt, off.leavesAt, off.arrivesAt);
+            return origin - keyed;
+        }
+
+        private static MountDefinition Def(string key) => UnityEditor.AssetDatabase.LoadAssetAtPath<MountDefinition>(
+            $"Assets/_Game/Gameplay/Mounts/Data/Assets/MountDef_{key}.asset");
+
+        [Test]
+        public void TheBrambleback_HasNoGroundDrop([Values(0, 1, 2)] int stage)
+        {
+            MountDefinition bramble = Def("Brambleback");
+            Assume.That(bramble != null && bramble.IsBuilt, "the Brambleback is built (Items > 11. Build Mounts)");
+            MountStageLook look = bramble.Stage(stage);
+            Assert.AreEqual(0f, MountRideMotion.GroundDrop(look.seat.y, look.clipSeatHeight), 0.0001f);
+        }
+
+        [Test]
+        public void TheCircuitStrider_LandsWithItsSolesOnTheGround([Values(0, 1, 2)] int stage)
+        {
+            MountDefinition strider = Def("CircuitStrider");
+            Assume.That(strider != null && strider.IsBuilt, "the Circuit Strider is built (Items > 11. Build Mounts)");
+            Assert.That(strider.hopMountUp, "the Strider rides the shared summon hop");
+            Assert.Greater(strider.Stage(stage).clipSeatHeight, 0f, "its stages say which seat the shared clips were keyed on");
+            Assert.AreEqual(0f, LandingSoles(strider, stage), 0.01f, "soles within 1 cm of the ground");
+        }
+
         [Test]
         public void EveryHopTransition_SaysWhenTheFeetLeaveAndArrive([Values(false, true)] bool on, [Values(false, true)] bool running)
         {
