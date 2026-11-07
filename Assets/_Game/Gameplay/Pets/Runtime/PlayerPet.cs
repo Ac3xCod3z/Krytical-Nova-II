@@ -130,10 +130,32 @@ namespace KryticalNova.Pets
         {
             if (!EntityView) return;
             var next = new PetNetState { growth = growth, fed = fed };
-            if (next.Equals(viewState)) return;
-            viewState = next;
-            Show(next);
+            bool changedNow = !next.Equals(viewState);
+            if (changedNow)
+            {
+                viewState = next;
+                Show(next);
+                return;   // a held evolution waits one more frame: the new model is built by then
+            }
+            // an evolution told before this view showed its stage plays now, on the new model (owner's 2-player test, 6 Nov 2026,
+            // item 4: another player's ghost is interpolated, so its growth came after the server's "evolved" and the burst landed on
+            // the old model, which the new stage then replaced)
+            if (pendingEvolved >= 0 && EvolutionDue(pendingEvolved, PetRules.Stage(viewState.growth), Time.unscaledTime - pendingEvolvedSince))
+            {
+                int stage = pendingEvolved;
+                pendingEvolved = -1;
+                PresentEvolved(stage);
+            }
         }
+
+        private int pendingEvolved = -1;
+        private float pendingEvolvedSince;
+
+        /// <summary>The longest an evolution waits for its stage to be shown (s): then it plays on what is there.</summary>
+        public const float EvolutionWaitSeconds = 2f;
+
+        /// <summary>An evolution to <paramref name="stage"/> plays once the view shows that stage, or after <see cref="EvolutionWaitSeconds"/>.</summary>
+        public static bool EvolutionDue(int stage, int shownStage, float waited) => shownStage >= stage || waited >= EvolutionWaitSeconds;
 
         /// <summary>A server body of the entity netcode passes on its owner's trick to everyone else (NGO's ShareTrickRpc body).</summary>
         public void RunTrick(int nameHash)
@@ -148,7 +170,11 @@ namespace KryticalNova.Pets
         public void PlayShown(BodyPetShowKind kind, int value)
         {
             if (!EntityView) return;
-            if (kind == BodyPetShowKind.Evolved) PresentEvolved(value);
+            if (kind == BodyPetShowKind.Evolved)
+            {
+                if (EvolutionDue(value, PetRules.Stage(viewState.growth), 0f)) PresentEvolved(value);
+                else { pendingEvolved = value; pendingEvolvedSince = Time.unscaledTime; }   // played by MirrorShown once the stage shows
+            }
             else if (follower != null) follower.PlayAnimation(value);
         }
 

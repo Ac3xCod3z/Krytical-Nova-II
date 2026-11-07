@@ -42,7 +42,13 @@ namespace KryticalNova.Mounts
         private Vector3 seatOffset;
         private float lean, leanVelocity, bobAmount, bobVelocity;
 
-        private static bool DrawsNothing => Application.isBatchMode;
+        // A dedicated server, and a server body of the entity netcode (owner's 2-player test, 6 Nov 2026, item 5: on a host the
+        // hidden server body drew a second mount beside the rider's own view)
+        private bool DrawsNothing => DrawsNoMount(Application.isBatchMode, KryticalNova.Core.BodyRoleTag.Of(this)?.Kind);
+
+        /// <summary>No mount model on a dedicated server (batch mode) or on a server body of the entity netcode; every view draws one.</summary>
+        public static bool DrawsNoMount(bool batchMode, KryticalNova.Core.NetRoleKind? body) =>
+            batchMode || body == KryticalNova.Core.NetRoleKind.ServerBody;
 
         private void Awake()
         {

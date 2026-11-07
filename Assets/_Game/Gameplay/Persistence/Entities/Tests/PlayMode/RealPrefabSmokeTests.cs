@@ -652,6 +652,14 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
             Assert.AreEqual(equipment.Looks.helmetHidden, remoteEquipment.Looks.helmetHidden, "and the helmet hidden as the server has it");
             Assert.AreEqual(equipment.Looks, remoteEquipment.Looks, "the looks exactly (dyes included)");
             Assert.AreEqual(equipment.Temper, remoteEquipment.Temper, "and the Temper everyone sees");
+
+            // owner's 2-player test, 6 Nov 2026, item 3: the weapon's glow reads GetTemper, which read NGO's empty netTemper on a view
+            EquipmentTemper tempered = temper;
+            tempered.weapon = 7;
+            remoteEquipment.ApplyObserved(loadout, seen, tempered);
+            if (remoteEquipment.GetDefinition(EquipSlot.Weapon) is ItemDefinition weapon && weapon.IsLadderGear)
+                Assert.AreEqual(7, remoteEquipment.GetTemper(EquipSlot.Weapon), "the other player's weapon glows by the Temper it was told");
+            else Assert.Inconclusive("the starter weapon is not ladder gear: no glow to check");
         }
 
         [UnityTest]
@@ -3410,12 +3418,21 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
                 Component moves = a.GetComponent("PlayerMovementSkills");
                 MethodInfo speedFor = moves.GetType().GetMethod("SpeedFor");
                 float onFoot = (float)speedFor.Invoke(moves, new object[] { true });
+                int renderersOnFoot = a.GetComponentsInChildren<Renderer>(true).Length;
                 mounts.RunMountOp(MountOpKind.Ride, 0);
                 Assert.AreEqual(1, mounts.ShownPhase, "getting on");
                 float until = Time.time + 8f;
                 while (mounts.ShownPhase != 2 && Time.time < until) yield return null;
                 Assert.AreEqual(2, mounts.ShownPhase, "riding once the mount-up clip is over");
                 Assert.Greater((float)speedFor.Invoke(moves, new object[] { true }), onFoot, "the ride speed is in the movement (MoveStats reads it)");
+                // owner's 2-player test, 6 Nov 2026, item 5: on a host the hidden server body drew a second mount beside the own view
+                Assert.AreEqual(renderersOnFoot, a.GetComponentsInChildren<Renderer>(true).Length, "the server body draws no mount (only views draw it)");
+                // (batch mode draws nothing anyway: the rule itself, as a host's GUI runs it)
+                MethodInfo drawsNoMount = a.GetComponent("MountRider").GetType().GetMethod("DrawsNoMount");
+                bool NoMount(NetRoleKind? body) => (bool)drawsNoMount.Invoke(null, new object[] { false, body });
+                Assert.IsTrue(NoMount(NetRoleKind.ServerBody), "a host's server body draws no mount");
+                Assert.IsFalse(NoMount(NetRoleKind.ClientView), "every view does (own and others')");
+                Assert.IsFalse(NoMount(null), "and the NGO game's bodies");
 
                 // 2. a jump takes the rider off at once (the ghost's flight: NGO's motor Jumping)
                 var tag = a.GetComponent<BodyRoleTag>();

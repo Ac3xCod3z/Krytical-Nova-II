@@ -101,6 +101,10 @@ namespace KryticalNova.Player.Entities.Bodies.Tests
             Assert.AreEqual(PartAction.Keep, PlayerRoleTable.ActionFor(BodyShape.ViewRemote, "CombatEntity"));
             Assert.AreEqual(PartAction.Keep, PlayerRoleTable.ActionFor(BodyShape.ViewRemote, "PlayerIdentity"));
             Assert.AreEqual(PartAction.Keep, PlayerRoleTable.ActionFor(BodyShape.ViewRemote, "AnimancerComponent"));
+            // owner's 2-player test, 6 Nov 2026, item 2: another player's vault and Wallstride play through these, switched off
+            foreach (string motor in PlayerRoleTable.ViewShowsTraversal)
+                Assert.AreEqual(PartAction.Disable, PlayerRoleTable.ActionFor(BodyShape.ViewRemote, motor), motor);
+            Assert.AreEqual(PartAction.Strip, PlayerRoleTable.ActionFor(BodyShape.ViewRemote, "PlayerJumpMotor"), "a jump plays through PlayerJumpPresentation");
         }
 
         [Test]
@@ -247,6 +251,12 @@ namespace KryticalNova.Player.Entities.Bodies.Tests
             CollectionAssert.Contains(names, "CombatEntity");
             CollectionAssert.DoesNotContain(names, "PointAndClickPlayer");
             CollectionAssert.DoesNotContain(names, "PlayerSaveAgent");
+            foreach (string motor in PlayerRoleTable.ViewShowsTraversal)
+            {
+                var part = build.Body.GetComponentInChildren(Type.GetType("KryticalNova.Player." + motor + ", KryticalNova.Player"), true) as Behaviour;
+                Assert.IsNotNull(part, motor + " stays on another player's view (it plays the ghost's traversal)");
+                Assert.IsFalse(part.enabled, motor + " is switched off: it never moves the body or decides");
+            }
             var kept = new HashSet<string>(PlayerRoleTable.RemoteKeepsRules);
             foreach (Component c in build.Body.GetComponentsInChildren<Component>(true))
             {

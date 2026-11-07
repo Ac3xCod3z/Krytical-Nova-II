@@ -55,7 +55,9 @@ namespace KryticalNova.Items
         {
             var def = GetDefinition(slot);
             if (def == null || !def.IsLadderGear) return 0;
-            return hasItemData ? GearItemState.Unpack(itemData[slot]).Temper : netTemper.Value[slot];
+            // an observer of the entity netcode reads what it was told (owner's 2-player test, 6 Nov 2026, item 3: the temper glow
+            // was missing on the other player because this read NGO's never-filled netTemper)
+            return hasItemData ? GearItemState.Unpack(itemData[slot]).Temper : (hasObserved ? observedTemper : netTemper.Value)[slot];
         }
         public EquipmentLoadout Loadout => current;
         public ushort Get(EquipSlot slot) => current[slot];

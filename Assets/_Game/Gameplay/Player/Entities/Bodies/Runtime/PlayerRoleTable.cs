@@ -107,6 +107,14 @@ namespace KryticalNova.Player.Entities.Bodies
         /// </summary>
         public const string ViewShowsDeath = "PlayerDeathMotor";
 
+        /// <summary>
+        /// The traversal motors stay on another player's view too, switched off as on the own view (owner's 2-player test, 6 Nov 2026,
+        /// item 2: a vault went through the obstacle on the other screen): the ghost's vault, Wallstride phase and Waterstride play
+        /// through them (GhostJumpView reads their clips and styles); switched off, they never move the body or decide anything.
+        /// </summary>
+        public static readonly string[] ViewShowsTraversal = { "PlayerVaultMotor", "PlayerWallRunMotor", "PlayerWaterstrideMotor" };
+        private static readonly HashSet<string> ViewShowsTraversalSet = new HashSet<string>(ViewShowsTraversal);
+
         /// <summary>The shape of a body for a role (Offline has none: it is the scene avatar, never built here).</summary>
         public static BodyShape ShapeOf(NetRoleKind role, bool isLocal)
         {
@@ -143,6 +151,7 @@ namespace KryticalNova.Player.Entities.Bodies
                     return PartAction.Keep;
                 default: // ViewRemote
                     if (typeName == ViewShowsDeath) return PartAction.Keep;
+                    if (ViewShowsTraversalSet.Contains(typeName)) return PartAction.Disable;
                     if (MovementSet.Contains(typeName) || AutomationSet.Contains(typeName)) return PartAction.Strip;
                     if (typeName == "PlayerSaveAgent") return PartAction.Strip;
                     if (RulesSet.Contains(typeName)) return RemoteKeepsSet.Contains(typeName) ? PartAction.Keep : PartAction.Strip;
