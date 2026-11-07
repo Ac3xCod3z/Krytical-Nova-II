@@ -252,6 +252,35 @@ namespace KryticalNova.EditorTools
             Debug.Log($"[GameFeel] Jump charge and punch rebuilt on {PrefabPath}.");
         }
 
+        /// <summary>
+        /// Getting on and off a mount only (owner, 7 Nov 2026 retest): makes PFX_Dust_Short and puts the Ride Dust,
+        /// Ride Take-off and Ride Landing feels on the built prefab, leaving everything else in it as it is.
+        /// </summary>
+        [MenuItem("Krytical Nova/GameFeel/Rebuild Ride Feel")]
+        public static void RebuildRideFeel()
+        {
+            WeatherVfxBuilder.EnsureFolder(VfxFolder);
+            Make("FX_Cartoony_Jump_01", "PFX_Dust_Short", 0.9f, then: ShortLived);
+            AssetDatabase.SaveAssets();
+            using (var scope = new PrefabUtility.EditPrefabContentsScope(PrefabPath))
+            {
+                GameObject root = scope.prefabContentsRoot;
+                var presenter = root.GetComponent<GameFeelPresenter>();
+                Transform world = root.transform.Find("World");
+                if (presenter == null || world == null)
+                {
+                    Debug.LogError($"[GameFeel] {PrefabPath} is not a built game feel prefab. Run Build Game Feel first.");
+                    return;
+                }
+                Remove(world, new[] { "Ride Dust", "Ride Take-off", "Ride Landing" });
+                var so = new SerializedObject(presenter);
+                AddRideFeel(world.gameObject, so);
+                so.ApplyModifiedPropertiesWithoutUndo();
+            }
+            AssetDatabase.SaveAssets();
+            Debug.Log($"[GameFeel] Ride feel rebuilt on {PrefabPath}.");
+        }
+
         /// <summary>The CFXR electric crackle as a short one-shot at the feet, its glow dome and light taken down.</summary>
         private static void BuildJumpChargeVfx()
         {
