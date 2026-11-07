@@ -373,10 +373,13 @@ namespace KryticalNova.EditorTools
             definition.itemId = built ? row.ItemId : (ushort)0;
             // The mount's own rider clips are its first stage's (each stage has its own; these are the fallback).
             MountStageLook first = definition.stages[0];
-            definition.riderIdle = built ? first.riderIdle : null;
-            definition.riderWalk = built ? first.riderWalk : null;
-            definition.riderRun = built ? first.riderRun : null;
-            definition.riderIdleExtras = built ? first.riderIdleExtras : new AnimationClip[0];
+            // The shared riding set is every mount's (owner rule), built model or not: a mount whose model comes from
+            // elsewhere (the Circuit Strider) rides on it until it has transitions of its own.
+            bool sharedSet = first.riderIdle != null && first.riderIdle.name.StartsWith("Rider_Set");
+            definition.riderIdle = built || sharedSet ? first.riderIdle : null;
+            definition.riderWalk = built || sharedSet ? first.riderWalk : null;
+            definition.riderRun = built || sharedSet ? first.riderRun : null;
+            definition.riderIdleExtras = built || sharedSet ? first.riderIdleExtras : new AnimationClip[0];
             definition.mountUp = built ? first.mountUp : null;
             definition.dismount = built ? first.dismount : null;
             definition.mountUpRunning = built ? first.mountUpRunning : null;
