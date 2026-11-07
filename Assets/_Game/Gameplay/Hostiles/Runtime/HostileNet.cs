@@ -240,12 +240,34 @@ namespace KryticalNova.Hostiles
         {
             if (!IsView) return;
             bool known = definition != null && attackIndex >= 0 && attackIndex < definition.attacks.Length;
-            if (animator != null)
+            if (tellShown) tellShown = false;   // the clip is already running from the tell
+            else if (animator != null)
             {
                 animator.SetInteger(AttackIndexParam, Mathf.Clamp(attackIndex, 0, 254) + 1);
                 animator.SetTrigger(AttackParam);
             }
             ShowAttack(attackIndex, known ? definition.attacks[attackIndex].windupSeconds : 0f, known && definition.attacks[attackIndex].heavy);
+        }
+
+        private bool tellShown;
+        private float tellSpeedUntil;
+
+        /// <summary>
+        /// A view: the tell before a swing (Q3 option A): the attack clip starts now, slowed so that its hit frame still comes at the
+        /// windup's end (the tell plus the windup on screen instead of the windup alone). <paramref name="leadSeconds"/> is the brain's
+        /// minimum warning + latency; the tell is that minus the windup. A heavy swing (long enough) gets none.
+        /// </summary>
+        public void ShowTellFromGhost(int attackIndex, float leadSeconds)
+        {
+            if (!IsView || animator == null || definition == null || attackIndex < 0 || attackIndex >= definition.attacks.Length) return;
+            float windup = definition.attacks[attackIndex].windupSeconds;
+            float tell = leadSeconds - windup;
+            if (tell <= 0.01f || windup <= 0f) return;
+            animator.SetInteger(AttackIndexParam, Mathf.Clamp(attackIndex, 0, 254) + 1);
+            animator.SetTrigger(AttackParam);
+            animator.speed = windup / (windup + tell);
+            tellShown = true;
+            tellSpeedUntil = Time.time + windup + tell;
         }
 
         /// <summary>A view: a flinch its ghost reported (NGO's HitClientRpc body).</summary>
@@ -538,6 +560,12 @@ namespace KryticalNova.Hostiles
 
         private void Update()
         {
+            if (tellSpeedUntil > 0f && Time.time >= tellSpeedUntil)
+            {
+                tellSpeedUntil = 0f;
+                tellShown = false;
+                if (animator != null) animator.speed = 1f;
+            }
             if (setUp && !asleep && HasAuthority) TellThreat();
             if (!setUp || asleep || !IsSpawned || !IsServer || animator == null || Time.time < nextAnimSend) return;
             nextAnimSend = Time.time + AnimSendInterval;

@@ -34,7 +34,7 @@ namespace KryticalNova.Hostiles.Entities
 
     public static class HostilePhase
     {
-        public const byte Approach = 0, Windup = 1, Recover = 2, Wait = 3;
+        public const byte Approach = 0, Windup = 1, Recover = 2, Wait = 3, Tell = 4;
     }
 
     /// <summary>A Hostile's numbers for this life (from its species and level; the server body keeps health and rewards).</summary>

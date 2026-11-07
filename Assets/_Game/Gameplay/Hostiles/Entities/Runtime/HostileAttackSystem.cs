@@ -103,6 +103,16 @@ namespace KryticalNova.Hostiles.Entities
                     b.PhaseEndTick = now + used.RecoverTicks;
                     continue;
                 }
+                if (b.Phase == HostilePhase.Tell)
+                {
+                    // the tell (Q3 A): it turns with its target; a target that ran clear calls it off (a feint), else the windup starts
+                    if (sensed) Face(ref m, at, feet);
+                    float cancelTell = range + c.ReachSlack + CancelBeyond;
+                    if (!sensed || SenseQueries.FlatSq(feet, at) > cancelTell * cancelTell) { b.Phase = HostilePhase.Approach; continue; }
+                    if (now < b.PhaseEndTick) continue;
+                    StartWindup(ref b, abilities[b.Ability], now, c.CommitFraction);
+                    continue;
+                }
                 if (b.Phase == HostilePhase.Recover)
                 {
                     if (now < b.PhaseEndTick) continue;
@@ -127,11 +137,23 @@ namespace KryticalNova.Hostiles.Entities
                     slots[entity] = s;
                 }
                 b.Ability = (byte)pick;
-                b.Phase = HostilePhase.Windup;
-                b.AttackStartTick = now;
-                b.PhaseEndTick = now + row.WindupTicks;
-                b.CommitTick = HostileRules.CommitTick(now, row.WindupTicks, c.CommitFraction);
+                uint tell = HostileRules.TellTicks(row.WindupTicks, c.MinVisibleWarningTicks, c.WarningLatencyTicks);
+                if (tell > 0)
+                {
+                    b.Phase = HostilePhase.Tell;
+                    b.PhaseEndTick = now + tell;
+                    continue;
+                }
+                StartWindup(ref b, row, now, c.CommitFraction);
             }
+        }
+
+        static void StartWindup(ref HostileBrain b, in HostileAbilityRow row, uint now, float commitFraction)
+        {
+            b.Phase = HostilePhase.Windup;
+            b.AttackStartTick = now;
+            b.PhaseEndTick = now + row.WindupTicks;
+            b.CommitTick = HostileRules.CommitTick(now, row.WindupTicks, commitFraction);
         }
 
         static void Face(ref BrainMover m, float3 at, float3 feet)

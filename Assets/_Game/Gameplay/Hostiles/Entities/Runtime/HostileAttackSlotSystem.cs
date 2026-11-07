@@ -95,7 +95,7 @@ namespace KryticalNova.Hostiles.Entities
                     s = default;
                     continue;
                 }
-                bool swinging = b.Phase == HostilePhase.Windup || b.Phase == HostilePhase.Recover;
+                bool swinging = b.Phase == HostilePhase.Tell || b.Phase == HostilePhase.Windup || b.Phase == HostilePhase.Recover;
                 if (!swinging) s.Cost = 0;
                 if (!swinging && s.WaitingSinceTick == 0) s.WaitingSinceTick = now;
                 if (s.Cost > 0)

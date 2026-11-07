@@ -39,7 +39,7 @@ namespace KryticalNova.Hostiles.Entities
     public static class HostileGhostFlags
     {
         /// <summary>The first three are NGO's <c>HostileAnimState</c> bits.</summary>
-        public const byte InCombat = 1, Stunned = 2, Dead = 4, Asleep = 16, Heavy = 32;
+        public const byte InCombat = 1, Stunned = 2, Dead = 4, Asleep = 16, Heavy = 32, Tell = 64;
     }
 
     /// <summary>Server only: what the ghost writer remembers between ticks.</summary>
@@ -64,7 +64,9 @@ namespace KryticalNova.Hostiles.Entities
             byte flags = 0;
             if (brain.Mode == HostileMode.Engage) flags |= HostileGhostFlags.InCombat;
             if (brain.Mode == HostileMode.Dead) flags |= HostileGhostFlags.Dead;
-            bool attacking = brain.AttackStartTick != 0;
+            bool telling = brain.Phase == HostilePhase.Tell && brain.Mode == HostileMode.Engage;
+            if (telling) flags |= HostileGhostFlags.Tell;
+            bool attacking = brain.AttackStartTick != 0 || telling;
             return new HostileGhost
             {
                 Species = life.Species,

@@ -27,7 +27,10 @@ namespace KryticalNova.Hostiles.Entities
 
         static bool On => Enabled ?? Environment.GetEnvironmentVariable(EnableVariable) == "1";
 
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        // After SubsystemRegistration, where KnWorldHooks clears its hooks, and before the worlds are made (as PlayerWorldsSetup): at
+        // SubsystemRegistration the order between the two was not fixed, so the clear could come after and the brains never installed
+        // (7 Nov 2026 hand test: KN_DOTS_HOSTILES=1 gave no [Hostiles] line).
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterAssembliesLoaded)]
         static void Hook()
         {
             Enabled = null;

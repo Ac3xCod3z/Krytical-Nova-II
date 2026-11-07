@@ -103,7 +103,7 @@ namespace KryticalNova.Hostiles.Entities.Tests
         /// <summary>
         /// Q3 (owner, 6 Nov 2026): light windups 0.25 -> 0.40 s, heavy 0.55 s; NGO's Emerald strikes at the same moment (the clip's
         /// one attack event at the windup); the brain's windup ticks equal the seconds. The plan's "visible >= 0.35 s" holds for the
-        /// heavy swings; a light one shows 0.40 - 0.15 = 0.25 s, the rest is the pre-swing tell (brain plan s3.8; not built yet).
+        /// heavy swings; a light one shows 0.40 - 0.15 = 0.25 s of windup and the tell (Q3 option A, 7 Nov 2026) the rest.
         /// </summary>
         [Test]
         public void WarningAtLeast035()
@@ -120,8 +120,9 @@ namespace KryticalNova.Hostiles.Entities.Tests
                     HostileDefinition.Attack a = d.attacks[i];
                     string at = $"{d.name} attack {i + 1}";
                     Assert.AreEqual(a.heavy ? 0.55f : 0.40f, a.windupSeconds, 1e-5f, at + ": Q3 windup");
-                    if (a.heavy) Assert.GreaterOrEqual(a.windupSeconds - UnseenSeconds, 0.35f - 1e-5f, at + ": visible warning");
-                    else Assert.GreaterOrEqual(a.windupSeconds - UnseenSeconds, 0.25f - 1e-5f, at + ": visible before the tell");
+                    // Q3 option A: the tell fills a light swing up to 0.35 s on screen (HostileRules.TellTicks)
+                    uint tell = HostileRules.TellTicks(rows[i].WindupTicks, 11, 5);
+                    Assert.GreaterOrEqual((rows[i].WindupTicks + tell) / (float)TickRate - UnseenSeconds, 0.35f - 1e-4f, at + ": visible warning, the tell included");
                     Assert.AreEqual((uint)math.max(1, (int)math.ceil(a.windupSeconds * TickRate)), rows[i].WindupTicks, at + ": windup ticks");
                     AnimationEvent[] events = AnimationUtility.GetAnimationEvents(a.clip);
                     Assert.AreEqual(1, events.Length, at + ": one strike event on the clip");

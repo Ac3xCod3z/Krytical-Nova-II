@@ -332,6 +332,12 @@ namespace KryticalNova.Hostiles.Entities.Tests
             return h;
         }
 
+        /// <summary>Steps through a light swing's tell (Q3 option A) to the windup's first tick.</summary>
+        static void PastTheTell(HostileTestWorld w, Entity h)
+        {
+            for (int i = 0; i < 30 && w.Brain(h).Phase == HostilePhase.Tell; i++) w.Step();
+        }
+
         [Test]
         public void SwingStartsWhenInReach()
         {
@@ -339,8 +345,9 @@ namespace KryticalNova.Hostiles.Entities.Tests
             Entity h = Engaged(w);
             w.SetPlayers((new float3(0f, 0f, 1.5f), Alive));
             w.Step();
+            PastTheTell(w, h);   // Q3 option A: a light swing tells first (TellTests)
             Assert.AreEqual(HostilePhase.Windup, w.Brain(h).Phase);
-            Assert.AreEqual(w.Tick, w.Brain(h).AttackStartTick, "the swing starts on the tick the target is in reach");
+            Assert.AreEqual(w.Tick, w.Brain(h).AttackStartTick, "the windup starts on the tick the tell ends");
             w.Step(12);
             Assert.AreEqual(1, w.Strikes, "it lands at the windup's end");
         }
@@ -352,6 +359,7 @@ namespace KryticalNova.Hostiles.Entities.Tests
             Entity h = Engaged(w);
             w.SetPlayers((new float3(0f, 0f, 1.5f), Alive));
             w.Step();
+            PastTheTell(w, h);
             uint commit = w.Brain(h).CommitTick;
             w.Step((int)(commit - 1 - w.Tick) - 1);
             w.SetPlayers((new float3(0f, 0f, 4f), Alive));   // range 2 + slack 0.3 + 1 m < 4
@@ -369,6 +377,7 @@ namespace KryticalNova.Hostiles.Entities.Tests
             Entity h = Engaged(w);
             w.SetPlayers((new float3(0f, 0f, 1.5f), Alive));
             w.Step();
+            PastTheTell(w, h);
             uint commit = w.Brain(h).CommitTick;
             w.Step((int)(commit + 1 - w.Tick) - 1);
             w.SetPlayers((new float3(0f, 0f, 4f), Alive));
@@ -387,6 +396,7 @@ namespace KryticalNova.Hostiles.Entities.Tests
             Entity h = Engaged(w);
             w.SetPlayers((new float3(0f, 0f, 1.5f), Alive));
             w.Step();
+            PastTheTell(w, h);
             for (int i = 0; i < 10; i++) { w.Hit(h, 100, 1f); w.Step(); }
             Assert.AreEqual(HostilePhase.Windup, w.Brain(h).Phase, "ten hits, still winding up");
             w.Step(2);

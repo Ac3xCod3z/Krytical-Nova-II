@@ -458,6 +458,8 @@ Rows marked `[line: M5.0]` have the file but the line is filled in M5.0. "Test" 
 - **Owner hand test:** fight one of each species with `gm.hostile.spawn <id>`; note any that feel off. **Risk:** MED (balance: TTK
   changes; check with `gm.hostile.ttk` against NGO numbers in the step note).
 
+- **Score profiles DECIDED (owner, 7 Nov 2026, via Nova): keep the proposal** (Brute: Bonewalker, Blightborn, Blight Reaver, Gargoyle, Carapace Raider, War Frame; Skirmisher: Wraith, Seraph Unit; Finisher: Hellion, Colossus).
+
 ### M6.2 Zones on the server only (M, MED)
 - [x] **Built 7 Nov 2026 (DOTS 18, local commit):** the server bodies, zone home and leash came with M5.5; new: `HostileZone.PlayersOverride` (HostileEntitiesSetup fills it with the server world's player bodies, so zones wake, keep spawn clearance and leash on the DOTS server, where NGO has no connected players) and `EcsHostileBrain` ending the fight at once when it falls asleep (its Calm event is never read by a sleeping brain). ZoneSleepTests 1/1; B80 (a client zone spawns nothing; the server zone wakes at radius + 40 m, server bodies, 3 m clearance, sleep heals and drops the tag) and B81 (Blightborn level 4 back after 8.48 s, at the next 0.5 s zone tick) pass on a test zone made from Zone01's HZ_mob-nw on a NavMesh of its own (not the whole Zone01 scene). The client half of B80 (ghosts appear as the zone wakes) is the owner's Zone01 walk.
 - **Change:** nothing new in zones: `HostileZone` runs on the server world's process only (`AuthorityOverride`), spawns server

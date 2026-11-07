@@ -26,6 +26,13 @@ namespace KryticalNova.Hostiles.Entities
         /// <summary>H04: running speed x + y * level.</summary>
         public static float RunSpeed(float2 curveRun, int level) => curveRun.x + curveRun.y * level;
 
+        /// <summary>
+        /// Q3 option A (owner, 7 Nov 2026): the tell before a swing, in ticks, so the player sees at least the minimum warning on screen:
+        /// minimum + latency - windup, never below 0 (a light swing of 12 ticks: 11 + 5 - 12 = 4; a heavy one of 17: 0).
+        /// </summary>
+        public static uint TellTicks(uint windupTicks, uint minVisibleTicks, uint latencyTicks) =>
+            (uint)math.max(0, (int)(minVisibleTicks + latencyTicks) - (int)windupTicks);
+
         /// <summary>Q8: the notice delay in ticks (a species' own seconds, or the default when it has none, i.e. below 0).</summary>
         public static uint NoticeTicks(float speciesSeconds, float defaultSeconds, int tickRate) =>
             (uint)math.max(0, (int)math.ceil((speciesSeconds >= 0f ? speciesSeconds : defaultSeconds) * tickRate - 1e-4f));
