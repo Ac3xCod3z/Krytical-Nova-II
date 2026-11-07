@@ -783,9 +783,6 @@ namespace KryticalNova.Persistence.Entities
         /// <summary>The GUI Editor opened with <c>-executeMethod</c> straight into "Play DOTS here" by hand (the owner's feel checkpoint).</summary>
         public static void ByHand() => Begin(quitAfter: false);
 
-        /// <summary>The feel checkpoint's level: 60 opens every traversal (owner, 2 Nov: no Wallstride switch; a roof's ground click backflips with it on).</summary>
-        const int FeelLevelOpen = 60;
-
         /// <summary>
         /// The GM Tools' "Unlock + Max All Skills" (gm.skills.max) on <paramref name="serverBody"/>: every skill of its list unlocked at
         /// max rank and Run and Jump at theirs, on the server's own body (its truth reaches the view as every rank does).
@@ -800,13 +797,17 @@ namespace KryticalNova.Persistence.Entities
             return true;
         }
 
-        static void SetFeelLevel(int level)
+        /// <summary>
+        /// A test character as the owner wants every one (5-6 Nov 2026, findings item 20): the maximum level and every skill at max rank, on
+        /// its server body. False when it has no progression or could not be raised (yet).
+        /// </summary>
+        public static bool MakeTestReady(GameObject serverBody)
         {
-            if (!Runner.TryServer(out GameObject body, out _)) return;
-            var progression = body.GetComponent<PlayerCharacterProgression>();
-            if (progression == null) return;
-            progression.SetLevel(level);
-            Debug.Log($"[KnPlayHere] level {level}: Wallstride and Waterstride {(level >= FeelLevelOpen ? "on" : "off")}");
+            var progression = serverBody != null ? serverBody.GetComponent<PlayerCharacterProgression>() : null;
+            if (progression == null) return false;
+            if (progression.CurrentLevel < progression.MaxLevel) progression.SetLevel(progression.MaxLevel);
+            if (progression.CurrentLevel < progression.MaxLevel) return false;
+            return GiveEverySkill(serverBody);
         }
 
         /// <summary>
@@ -1327,10 +1328,9 @@ namespace KryticalNova.Persistence.Entities
                 }
                 if (!HasScriptedTries)
                 {
-                    // the owner's feel checkpoint (M3c, 2 Nov): every traversal open by hand
-                    SetFeelLevel(FeelLevelOpen);
-                    // owner, 5 Nov 2026: the Tester has every skill unlocked at max rank, decided on the server body
-                    if (TryServer(out GameObject server, out _) && GiveEverySkill(server)) Log("every skill unlocked at max rank (gm.skills.max)");
+                    // owner 5-6 Nov 2026 (findings item 20): the Tester AND everyone who joins this Play DOTS here (Player2) enter at the
+                    // maximum level (every traversal open) with every skill at max rank, decided on their server bodies
+                    StartCoroutine(MakeEveryoneTestReady());
                     Log("no scripted tries: the owner clicks by hand");
                     yield break;
                 }
@@ -3588,6 +3588,28 @@ namespace KryticalNova.Persistence.Entities
             }
 
             static void Log(string text) => Debug.Log("[KnPlayHere] " + text);
+
+            /// <summary>
+            /// Every server body of this Play DOTS here, once each as it appears (the Tester, Player2 joining, a body made again after a
+            /// relog): <see cref="MakeTestReady"/>. A look every second at a handful of bodies; Editor only.
+            /// </summary>
+            System.Collections.IEnumerator MakeEveryoneTestReady()
+            {
+                var ready = new HashSet<GameObject>();
+                var wait = new WaitForSeconds(1f);
+                while (true)
+                {
+                    ready.RemoveWhere(b => b == null);
+                    foreach (GameObject body in ServerBodies())
+                        if (body != null && !ready.Contains(body) && MakeTestReady(body))
+                        {
+                            ready.Add(body);
+                            var identity = body.GetComponent<KryticalNova.Player.PlayerIdentity>();
+                            Log($"{(identity != null ? identity.CharacterName : body.name)}: the maximum level and every skill at max rank (test character)");
+                        }
+                    yield return wait;
+                }
+            }
 
             Vector3 m_YawFrom;
             bool m_PlaceBisectStarted;

@@ -4934,6 +4934,18 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
                 Assert.AreEqual(jump, movement.GetRank(MovementSkillId.Jump), "Jump already at its max");
                 Assert.IsFalse(KryticalNova.Persistence.Entities.KnPlayHere.GiveEverySkill(null), "nobody, nothing");
 
+                // owner 5-6 Nov 2026 (findings item 20): every test character, the Tester and whoever joins Play DOTS here (Player2), enters at
+                // the MAXIMUM level (was 60) with every skill at max rank
+                var progression = a.GetComponent<PlayerCharacterProgression>();
+                Assert.Less(progression.CurrentLevel, progression.MaxLevel, "the case under test: not at the top yet");
+                Assert.IsTrue(KryticalNova.Persistence.Entities.KnPlayHere.MakeTestReady(a));
+                Assert.AreEqual(progression.MaxLevel, progression.CurrentLevel, "at the maximum level");
+                foreach (SkillDefinitionSO skill in skills.AvailableSkills)
+                    if (skill != null) Assert.AreEqual(skill.maxRank, skills.GetRank(skill), skill.skillId + " still at its max rank");
+                Assert.IsTrue(KryticalNova.Persistence.Entities.KnPlayHere.MakeTestReady(a), "again: no harm");
+                Assert.AreEqual(progression.MaxLevel, progression.CurrentLevel);
+                Assert.IsFalse(KryticalNova.Persistence.Entities.KnPlayHere.MakeTestReady(null));
+
                 ServerLeaving.Notify(a);
                 a.GetComponent<PlayerSaveAgent>().OnServerLeaving();
             }
