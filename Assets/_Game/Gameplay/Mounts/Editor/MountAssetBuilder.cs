@@ -14,8 +14,8 @@ namespace KryticalNova.EditorTools
     /// Builds the mounts from one table (owner, 25 Oct 2026): the import settings of every mount and rider file
     /// exported from Blender (Characters/Mounts), a prefab per growth stage, each mount's definition (box, two stats,
     /// three stage looks, rider clips), the item that registers it, the mount catalog and the mount settings.
-    /// Four boxes: the Brambleback is built; the Grave Trot, Stone Horn and Circuit Strider have a box and their two
-    /// stats but no art and no item yet. Re-runnable: what the table owns is rewritten; numbers tuned in the Inspector
+    /// Four boxes: the Brambleback and the Circuit Strider are built; the Grave Trot and Stone Horn have a box and their
+    /// two stats but no art and no item yet. Re-runnable: what the table owns is rewritten; numbers tuned in the Inspector
     /// (stat maximums, settings) are only filled in when missing. Menu Krytical Nova ▸ Items ▸ 11. Build Mounts.
     /// </summary>
     public static class MountAssetBuilder
@@ -44,6 +44,11 @@ namespace KryticalNova.EditorTools
             public float Yaw;
             /// <summary>Metres the rider sits further toward the head than the seat it was keyed on, per stage.</summary>
             public float[] SeatForward;
+            /// <summary>
+            /// HDR colour multiplied onto each stage's emission maps (T_&lt;Key&gt;_&lt;pct&gt;_&lt;Part&gt;_Emission.png: the eyes and
+            /// lights, owner 5 Nov 2026). Empty = white at intensity 1.
+            /// </summary>
+            public Color[] Emission;
         }
 
         // Stats (owner, 25 Oct 2026): two of the four main stats per mount, every mount a different pair, so each main stat
@@ -64,8 +69,15 @@ namespace KryticalNova.EditorTools
                 Description = "Not in the game yet.",
                 First = StatType.Strength, FirstMax = 50f, Second = StatType.Spirit, SecondMax = 50f },
             new Row { Box = 4, Key = "CircuitStrider", Name = "Circuit Strider",
-                Description = "Not in the game yet.",
-                First = StatType.Agility, FirstMax = 50f, Second = StatType.Vitality, SecondMax = 50f },
+                ItemId = 8102,
+                Description = "A robot hound of plated alloy and circuit light that carries its rider at a gallop; its plating grows as it does.",
+                ItemDescription = "Use it to add the Circuit Strider to your Mount window. Select it there and press the Ride key to ride.",
+                First = StatType.Agility, FirstMax = 50f, Second = StatType.Vitality, SecondMax = 50f,
+                StageNames = new[] { "Spark Pup", "Circuit Hound", "Prime Strider" },
+                SeatForward = new[] { 0f, 0f, 0f },
+                // Its eyes and light strips: cyan at 0 and 50 %, red at 100 % (the Tripo art); the glows follow them.
+                Glows = new[] { new Color(0.3f, 0.9f, 1f), new Color(0.25f, 0.8f, 1f), new Color(1f, 0.25f, 0.2f) },
+                Emission = new[] { new Color(2f, 2f, 2f), new Color(2f, 2f, 2f), new Color(2f, 2f, 2f) } },
         };
 
         [MenuItem("Krytical Nova/Items/11. Build Mounts")]
@@ -108,7 +120,7 @@ namespace KryticalNova.EditorTools
                     string model = $"{folder}/SK_{row.Key}_{percent}.fbx";
                     if (!File.Exists(model)) continue;
                     ConfigureTextures(folder);
-                    ConfigureModel(model, row.Key, percent);
+                    ConfigureModel(model, row, percent);
                     Avatar avatar = AssetDatabase.LoadAllAssetsAtPath(model).OfType<Avatar>().FirstOrDefault();
                     foreach (string clip in MountClips)
                     {
@@ -137,8 +149,9 @@ namespace KryticalNova.EditorTools
             }
         }
 
-        private static void ConfigureModel(string path, string key, int percent)
+        private static void ConfigureModel(string path, in Row row, int percent)
         {
+            string key = row.Key;
             if (!(AssetImporter.GetAtPath(path) is ModelImporter importer)) return;
             importer.animationType = ModelImporterAnimationType.Generic;
             importer.avatarSetup = ModelImporterAvatarSetup.CreateFromThisModel;
@@ -151,20 +164,24 @@ namespace KryticalNova.EditorTools
             importer.preserveHierarchy = true;
             importer.materialImportMode = ModelImporterMaterialImportMode.ImportStandard;
             importer.materialLocation = ModelImporterMaterialLocation.InPrefab;
-            // Each mesh's material is a URP Lit one beside the model, on the stage's own 2K texture.
+            // Each mesh's material is a URP Lit one beside the model, on the stage's own 2K texture, plus its emission map
+            // when the export wrote one (a mesh can carry two materials: the Strider's haunch and shoulder plates).
             string folder = Path.GetDirectoryName(path).Replace('\\', '/');
-            foreach (string part in new[] { "Body", "Saddle", "Armor" })
+            int stage = System.Array.IndexOf(StagePercents, percent);
+            Color glow = row.Emission != null && stage >= 0 && stage < row.Emission.Length ? row.Emission[stage] : Color.white;
+            foreach (string part in new[] { "Body", "Saddle", "Armor", "HaunchPlate", "Shoulder" })
             {
                 string texturePath = $"{folder}/T_{key}_{percent}_{part}.png";
                 var texture = AssetDatabase.LoadAssetAtPath<Texture2D>(texturePath);
                 if (texture == null) continue;
-                Material material = LitMaterial($"{folder}/M_{key}_{percent}_{part}.mat", texture);
+                var emission = AssetDatabase.LoadAssetAtPath<Texture2D>($"{folder}/T_{key}_{percent}_{part}_Emission.png");
+                Material material = LitMaterial($"{folder}/M_{key}_{percent}_{part}.mat", texture, emission, glow);
                 importer.AddRemap(new AssetImporter.SourceAssetIdentifier(typeof(Material), $"M_{key}_{percent}_{part}"), material);
             }
             importer.SaveAndReimport();
         }
 
-        private static Material LitMaterial(string path, Texture2D texture)
+        private static Material LitMaterial(string path, Texture2D texture, Texture2D emission, Color glow)
         {
             var material = AssetDatabase.LoadAssetAtPath<Material>(path);
             if (material == null)
@@ -175,6 +192,19 @@ namespace KryticalNova.EditorTools
             }
             material.SetTexture("_BaseMap", texture);
             material.SetColor("_BaseColor", Color.white);
+            if (emission != null)
+            {
+                material.SetTexture("_EmissionMap", emission);
+                material.SetColor("_EmissionColor", glow);
+                material.EnableKeyword("_EMISSION");
+                material.globalIlluminationFlags = MaterialGlobalIlluminationFlags.RealtimeEmissive;
+            }
+            else
+            {
+                material.SetTexture("_EmissionMap", null);
+                material.SetColor("_EmissionColor", Color.black);
+                material.DisableKeyword("_EMISSION");
+            }
             EditorUtility.SetDirty(material);
             return material;
         }
@@ -268,9 +298,21 @@ namespace KryticalNova.EditorTools
             return AssetDatabase.LoadAllAssetsAtPath(path).OfType<AnimationClip>().FirstOrDefault(c => !c.name.StartsWith("__preview__"));
         }
 
-        /// <summary>The rider's origin on each stage's seat, read from the export (Blender metres: x right, y back, z up).</summary>
-        private static Vector3 Seat(int percent)
+        /// <summary>
+        /// The mount's own seat file for a stage, RiderSeat_&lt;Key&gt;_&lt;pct&gt;.json beside its model (the Circuit Strider's,
+        /// written by its export), or null: then the shared rider files (keyed on the Brambleback) are used.
+        /// </summary>
+        private static string OwnSeatFile(in Row row, int percent)
         {
+            string json = $"{StageFolder(row, percent)}/RiderSeat_{row.Key}_{percent}.json";
+            return File.Exists(json) ? File.ReadAllText(json) : null;
+        }
+
+        /// <summary>The rider's origin on each stage's seat, read from the export (Blender metres: x right, y back, z up).</summary>
+        private static Vector3 Seat(in Row row, int percent)
+        {
+            string own = OwnSeatFile(row, percent);
+            if (own != null) return Ankle(own, "seat");
             string json = $"{RiderFolder}/seats_blender.json";
             if (!File.Exists(json)) return Vector3.zero;
             var match = System.Text.RegularExpressions.Regex.Match(File.ReadAllText(json),
@@ -287,12 +329,13 @@ namespace KryticalNova.EditorTools
         /// Where each stage's rider has their ankles on the stirrups (RiderSeat_&lt;pct&gt;.json, written by
         /// rider_clips_stage.py: Blender metres from the mount rig), in the mount model's space.
         /// </summary>
-        private static void Stirrups(int percent, out Vector3 left, out Vector3 right)
+        private static void Stirrups(in Row row, int percent, out Vector3 left, out Vector3 right)
         {
             left = right = Vector3.zero;
             string json = $"{RiderFolder}/RiderSeat_{percent}.json";
-            if (!File.Exists(json)) return;
-            string text = File.ReadAllText(json);
+            string text = OwnSeatFile(row, percent);
+            if (text == null && !File.Exists(json)) return;
+            text ??= File.ReadAllText(json);
             left = Ankle(text, "l");
             right = Ankle(text, "r");
         }
@@ -341,9 +384,9 @@ namespace KryticalNova.EditorTools
                 look.walk = ClipIn(folder + "Walk.fbx");
                 look.run = ClipIn(folder + "Run.fbx");
                 look.idleExtras = new[] { ClipIn(folder + "IdleSniff.fbx"), ClipIn(folder + "IdleLookAround.fbx") }.Where(c => c != null).ToArray();
-                look.seat = look.model != null ? Seat(percent) : Vector3.zero;
+                look.seat = look.model != null ? Seat(row, percent) : Vector3.zero;
                 if (look.model != null && row.SeatForward != null) look.seat.z += row.SeatForward[stage];
-                Stirrups(percent, out look.stirrupLeft, out look.stirrupRight);
+                Stirrups(row, percent, out look.stirrupLeft, out look.stirrupRight);
                 if (look.model == null) look.stirrupLeft = look.stirrupRight = Vector3.zero;
                 string rider = $"{RiderFolder}/A_Rider_";
                 look.riderIdle = ClipIn($"{rider}RideIdle_{percent}.fbx");

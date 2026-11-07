@@ -13,23 +13,24 @@ MonoBehaviour:
   m_Name: MountDef_CircuitStrider
   m_EditorClassIdentifier: KryticalNova.Mounts::KryticalNova.Mounts.MountDefinition
   mountId: 4
-  itemId: 0
+  itemId: 8102
   displayName: Circuit Strider
-  description: Not in the game yet.
+  description: A robot hound of plated alloy and circuit light that carries its rider at a gallop; its plating grows as it does.
   firstStat: 2
   firstMax: 50
   secondStat: 1
   secondMax: 50
   stages:
-  - name: 
-    model: {fileID: 0}
-    icon: {fileID: 0}
-    seat: {x: 0, y: 0, z: 0}
-    idle: {fileID: 0}
-    walk: {fileID: 0}
-    run: {fileID: 0}
-    idleExtras: []
-    glow: {r: 0, g: 0, b: 0, a: 0}
+  - name: Spark Pup
+    model: {fileID: 4257508704385737861, guid: 1cd3363768a69db4e98aad2285d01592, type: 3}
+    icon: {fileID: 21300000, guid: 0de93b49f25fcdd48aeac5adc1c631ac, type: 3}
+    seat: {x: 0.0000022523334, y: 0.21267158, z: -0.032872938}
+    idle: {fileID: -623603649343465320, guid: b8fe66e71dd2fe34a85a18f9f417a678, type: 3}
+    walk: {fileID: -623603649343465320, guid: d576a4d635a90d74197b0e2ec97cfd91, type: 3}
+    run: {fileID: -623603649343465320, guid: ec84ecd76c2b9624b8887707caf865b0, type: 3}
+    idleExtras:
+    - {fileID: -623603649343465320, guid: e8c39babe445eaa4d8c2072f2b5a1b1d, type: 3}
+    glow: {r: 0.3, g: 0.9, b: 1, a: 1}
     riderIdle: {fileID: -623603649343465320, guid: 6b730300fe0c98346bf8c1b6e19ab5d6, type: 3}
     riderWalk: {fileID: -623603649343465320, guid: aaeecb821d3e6574a969bbd9d208692f, type: 3}
     riderRun: {fileID: -623603649343465320, guid: 84f5de61198da7948b2de2f1efb726ab, type: 3}
@@ -38,9 +39,9 @@ MonoBehaviour:
     riderIdleExtras:
     - {fileID: -623603649343465320, guid: a0995c03289a09e4ca605423954d4f53, type: 3}
     - {fileID: -623603649343465320, guid: c5673a265ed54464bb3b981fd5d6110d, type: 3}
-    stirrupLeft: {x: 0, y: 0, z: 0}
-    stirrupRight: {x: 0, y: 0, z: 0}
-  - name: 
+    stirrupLeft: {x: -0.14708409, y: 0.44785452, z: 0.07967892}
+    stirrupRight: {x: 0.14708409, y: 0.4478542, z: 0.07967892}
+  - name: Circuit Hound
     model: {fileID: 0}
     icon: {fileID: 0}
     seat: {x: 0, y: 0, z: 0}
@@ -48,7 +49,7 @@ MonoBehaviour:
     walk: {fileID: 0}
     run: {fileID: 0}
     idleExtras: []
-    glow: {r: 0, g: 0, b: 0, a: 0}
+    glow: {r: 0.25, g: 0.8, b: 1, a: 1}
     riderIdle: {fileID: -623603649343465320, guid: c5baf4bc1aff0164c9880682a9fda88c, type: 3}
     riderWalk: {fileID: -623603649343465320, guid: 3cf8230829ebb7c49b959e62847a0706, type: 3}
     riderRun: {fileID: -623603649343465320, guid: 93965a0b17cc9ba43a0f3b7fef07934d, type: 3}
@@ -59,7 +60,7 @@ MonoBehaviour:
     - {fileID: -623603649343465320, guid: 71463b715c6fbc7419a25888861db5e5, type: 3}
     stirrupLeft: {x: 0, y: 0, z: 0}
     stirrupRight: {x: 0, y: 0, z: 0}
-  - name: 
+  - name: Prime Strider
     model: {fileID: 0}
     icon: {fileID: 0}
     seat: {x: 0, y: 0, z: 0}
@@ -67,7 +68,7 @@ MonoBehaviour:
     walk: {fileID: 0}
     run: {fileID: 0}
     idleExtras: []
-    glow: {r: 0, g: 0, b: 0, a: 0}
+    glow: {r: 1, g: 0.25, b: 0.2, a: 1}
     riderIdle: {fileID: -623603649343465320, guid: a77d19b4f98ddfc48a03a3c6b026af64, type: 3}
     riderWalk: {fileID: -623603649343465320, guid: 9c0e87220b3cd1f43aa32aea9535c2ef, type: 3}
     riderRun: {fileID: -623603649343465320, guid: d294e4f384f88ca4887dca08d6799ff7, type: 3}
@@ -78,9 +79,11 @@ MonoBehaviour:
     - {fileID: -623603649343465320, guid: 6c693e5828f6ff14c8217f125e4ba7e3, type: 3}
     stirrupLeft: {x: 0, y: 0, z: 0}
     stirrupRight: {x: 0, y: 0, z: 0}
-  riderIdle: {fileID: 0}
-  riderWalk: {fileID: 0}
-  riderRun: {fileID: 0}
-  riderIdleExtras: []
-  mountUp: {fileID: 0}
-  dismount: {fileID: 0}
+  riderIdle: {fileID: -623603649343465320, guid: 6b730300fe0c98346bf8c1b6e19ab5d6, type: 3}
+  riderWalk: {fileID: -623603649343465320, guid: aaeecb821d3e6574a969bbd9d208692f, type: 3}
+  riderRun: {fileID: -623603649343465320, guid: 84f5de61198da7948b2de2f1efb726ab, type: 3}
+  riderIdleExtras:
+  - {fileID: -623603649343465320, guid: a0995c03289a09e4ca605423954d4f53, type: 3}
+  - {fileID: -623603649343465320, guid: c5673a265ed54464bb3b981fd5d6110d, type: 3}
+  mountUp: {fileID: -623603649343465320, guid: 7f16c0b041a029943b27070c588517b0, type: 3}
+  dismount: {fileID: -623603649343465320, guid: ea4661891e8414b49b66d440b92b4b5d, type: 3}
