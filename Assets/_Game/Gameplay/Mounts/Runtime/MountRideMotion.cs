@@ -43,6 +43,14 @@ namespace KryticalNova.Mounts
         }
 
         /// <summary>
+        /// The share (1 to 0) of the seat offset the rider's origin still keeps <paramref name="seconds"/> into the hand-over
+        /// out of a getting-off lasting <paramref name="fadeSeconds"/>: linear, as the motor's cross-fade is, so at fade
+        /// weight w the origin is (1 - w) up and the body under both poses stays where the clip left it.
+        /// </summary>
+        public static float HandOverShare(float seconds, float fadeSeconds) =>
+            fadeSeconds > 0f ? 1f - Mathf.Clamp01(seconds / fadeSeconds) : 0f;
+
+        /// <summary>
         /// How far (metres) to lower the rider while their feet are on the ground: the stage's seat height less the seat
         /// height its getting-on/off clips were keyed on (0 when keyed on this seat, or when the stage says nothing).
         /// </summary>

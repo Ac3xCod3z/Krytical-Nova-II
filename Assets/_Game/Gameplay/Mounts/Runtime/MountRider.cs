@@ -51,6 +51,9 @@ namespace KryticalNova.Mounts
         // on it, and sits on this mount's own seat in the saddle (onGround 0). Owner, 7 Nov 2026.
         private float groundDrop;
         private float onGround;
+        // The hand-over out of a getting-off: the origin's offset from rest when it began, and its clock (see HandOver).
+        private Vector3 handOverFrom;
+        private float handOverStart, handOverSeconds;
         private MountTransition transition; // the getting on or off in play (standing or running)
         private bool runningTransition;
         private float phaseStartedAt;
@@ -100,7 +103,8 @@ namespace KryticalNova.Mounts
                         return;
                     }
                 }
-                Clear();
+                // The end of a hop getting-off hands over into the idle (owner, 7 Nov 2026: the snap at the stand-up).
+                Clear(eased: phase == RidePhase.OnFoot && shownPhase == RidePhase.GettingOff && mount != null && mount.hopMountUp);
                 return;
             }
             tailEnds = 0f;
@@ -237,6 +241,7 @@ namespace KryticalNova.Mounts
         private void LiftRider(Vector3 seat)
         {
             if (motor == null || motor.Animancer == null) return;
+            FinishHandOver(); // a new ride during the last hand-over: the rest position is the real one again first
             if (!riderLifted)
             {
                 rider = motor.Animancer.transform;
@@ -261,10 +266,21 @@ namespace KryticalNova.Mounts
             }
         }
 
-        private void LowerRider()
+        private void LowerRider(bool eased = false)
         {
             if (!riderLifted) return;
-            if (rider != null) { rider.localPosition = riderRest; rider.localRotation = riderRestRotation; }
+            if (rider != null)
+            {
+                rider.localRotation = riderRestRotation;
+                float fade = motor != null ? motor.LocomotionFadeSeconds : 0f;
+                handOverFrom = rider.localPosition - riderRest;
+                if (eased && fade > 0f && handOverFrom.sqrMagnitude > 1e-6f)
+                {
+                    handOverStart = Time.time;
+                    handOverSeconds = fade;
+                }
+                else rider.localPosition = riderRest;
+            }
             lean = bobAmount = 0f;
             lift = 1f;
             forward = 0f;
@@ -272,6 +288,27 @@ namespace KryticalNova.Mounts
             if (stirrups != null) stirrups.SetStirrups(null, default, default);
             if (footIK != null) footIK.enabled = footIKWasOn;
             riderLifted = false;
+        }
+
+        /// <summary>
+        /// The hand-over out of a getting-off (owner, 7 Nov 2026: the body dropped and the legs crossed for a moment as the
+        /// rider stood up). The getting-off clip is keyed with the rider's origin on the seat; the idle with it on the
+        /// ground. Moving the origin down at once left the clip, still fading out, a seat's height too low for the whole
+        /// fade. So the origin comes down over the same fade, in step with it: at fade weight w the origin is
+        /// (1 - w) of the way up, and the body stays where the clip left it.
+        /// </summary>
+        private void HandOver()
+        {
+            if (handOverSeconds <= 0f || rider == null) return;
+            rider.localPosition = riderRest + handOverFrom * MountRideMotion.HandOverShare(Time.time - handOverStart, handOverSeconds);
+            if (Time.time - handOverStart >= handOverSeconds) handOverSeconds = 0f;
+        }
+
+        private void FinishHandOver()
+        {
+            if (handOverSeconds <= 0f) return;
+            if (rider != null) rider.localPosition = riderRest;
+            handOverSeconds = 0f;
         }
 
         private void Seat(MountDefinition mount, RidePhase phase, AnimationClip extraIdle)
@@ -309,12 +346,15 @@ namespace KryticalNova.Mounts
             }
         }
 
-        private void Clear()
+        /// <param name="eased">The end of a getting-off: the rider's origin comes down from the seat over the motor's fade
+        /// into the idle, in step with it, instead of at once (see <see cref="HandOver"/>).</param>
+        private void Clear(bool eased = false)
         {
+            if (!eased || !isActiveAndEnabled) FinishHandOver();
             if (shownMount != null || riderLifted) motor?.SetSeated(null, null, null);
             if (isActiveAndEnabled) LetModelVanish();
             else DestroyModel();
-            LowerRider();
+            LowerRider(eased && isActiveAndEnabled);
             shownPhase = RidePhase.OnFoot;
             riderExtra = null;
             settleEnds = 0f;
@@ -387,11 +427,12 @@ namespace KryticalNova.Mounts
 
         private void Update()
         {
+            HandOver();
             // The rest of a getting-off clip after the rider is free: ends at its length, or as soon as the rider moves.
             if (tailEnds > 0f && (Time.time >= tailEnds || (motor != null && motor.IsTravelling)))
             {
                 tailEnds = 0f;
-                Clear();
+                Clear(eased: true);
             }
             if (shownMount == null) return;
             MountStageLook look = shownMount.Stage(shownStage);
