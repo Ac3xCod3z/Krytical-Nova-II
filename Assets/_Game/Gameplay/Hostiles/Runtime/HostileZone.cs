@@ -46,7 +46,17 @@ namespace KryticalNova.Hostiles
 
         // Enter Play Mode runs without a domain reload, so statics must be reset by hand.
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        private static void ResetStatics() => all.Clear();
+        private static void ResetStatics()
+        {
+            all.Clear();
+            PlayersOverride = null;
+        }
+
+        /// <summary>
+        /// Fills the list with the players the zones wake for, keep clear of and leash to, in place of NGO's connected players (M6.2: the
+        /// entity netcode's server fills it with its players' server bodies). Null: NGO's players, or the local one offline.
+        /// </summary>
+        public static System.Action<List<Transform>> PlayersOverride { get; set; }
 
         /// <summary>The Hostile Zone a point of the map lies in, or null. On every peer.</summary>
         public static HostileZone At(Vector3 point)
@@ -247,6 +257,7 @@ namespace KryticalNova.Hostiles
         private static List<Transform> Players()
         {
             players.Clear();
+            if (PlayersOverride != null) { PlayersOverride(players); return players; }
             NetworkManager manager = NetworkManager.Singleton;
             if (manager != null && manager.IsListening)
             {

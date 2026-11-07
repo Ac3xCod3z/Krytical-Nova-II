@@ -63,8 +63,30 @@ namespace KryticalNova.Hostiles.Entities
 
         public void SetAwake(bool awake)
         {
+            bool sleeps = m_Awake && !awake;
             m_Awake = awake;
+            if (sleeps) EndFight();
             Apply();
+        }
+
+        /// <summary>
+        /// Falling asleep ends the fight at once (M6.2, H15): NGO's HostileNet.SetAsleep calls Calm before it stops Emerald, and Emerald's
+        /// Calm clears at once; the entity brain's Calm is an event a sleeping brain would never read. It wakes fresh where it stands.
+        /// </summary>
+        void EndFight()
+        {
+            if (!Bound) return;
+            EntityManager em = m_World.EntityManager;
+            em.SetComponentData(m_Brain, default(HostileTarget));
+            em.GetBuffer<ThreatEntry>(m_Brain).Clear();
+            HostileBrain b = em.GetComponentData<HostileBrain>(m_Brain);
+            if (b.Mode == HostileMode.Dead) return;
+            b.Mode = HostileMode.Idle;
+            b.Phase = HostilePhase.Approach;
+            b.Saw = 0;
+            b.HealOnHome = 0;
+            b.UnreachableSinceTick = 0;
+            em.SetComponentData(m_Brain, b);
         }
 
         public void SetHome(Vector3 home, int wanderRadius)

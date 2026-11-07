@@ -61,8 +61,16 @@ namespace KryticalNova.Hostiles.Entities
             if (assets.bodies != null) HostilePool.BodyOf = species => assets.bodies.BodyOf(species);
             EcsHostileBrain.BodyOfGhost = ghost => BodyOf(server, ghost);
             EcsHostileBrain.GhostIdOfBody = body => GhostIdOf(server, body);
+            HostileZone.PlayersOverride = players => ServerPlayers(server, players);   // M6.2: zones wake for this world's players
             Debug.Log("[Hostiles] Entity brains installed in " + server.Name + " (" + tickRate + " Hz, server bodies " + (assets.bodies != null ? "on" : "MISSING") + ").");
             return true;
+        }
+
+        /// <summary>The server bodies of the players of <paramref name="world"/> (what NGO's zones read as connected players).</summary>
+        static void ServerPlayers(World world, System.Collections.Generic.List<Transform> players)
+        {
+            foreach (GhostBodyEntry e in GhostBodyRegistry.Entries)
+                if (ReferenceEquals(e.World, world) && e.Body != null) players.Add(e.Body.transform);
         }
 
         /// <summary>A player's server body by its ghost (GhostBodyRegistry), or an attackable non-player's.</summary>
