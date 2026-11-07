@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using KryticalNova.Brains;
 using KryticalNova.Combat.Entities;
 using KryticalNova.Core;
 using KryticalNova.Player.Entities.Presentation;
@@ -100,10 +101,17 @@ namespace KryticalNova.Hostiles.Entities
                 CombatEntity target = null;
                 foreach (GhostBodyEntry entry in GhostBodyRegistry.Entries)
                     if (ReferenceEquals(entry.World, World) && entry.Ghost == swing.Target && entry.Body != null) { target = entry.Body.GetComponent<CombatEntity>(); break; }
-                if (hostile == null || target == null) { Dropped++; continue; }
-                if (!HostileStrikeBridge.TryStrike(hostile, swing.Ability, target, swing.From, swing.Heavy != 0, swing.Target, out HostileStrike strike)) { Missed++; continue; }
-                if (HostileStrikes.Queue(World, strike)) Queued++;
-                else Dropped++;
+                string what;
+                if (hostile == null || target == null) { Dropped++; what = "dropped (a body gone)"; }
+                else if (!HostileStrikeBridge.TryStrike(hostile, swing.Ability, target, swing.From, swing.Heavy != 0, swing.Target, out HostileStrike strike)) { Missed++; what = "missed (NGO's rules)"; }
+                else if (HostileStrikes.Queue(World, strike)) { Queued++; what = $"hit for {strike.Result.DamageDealt:0.#}{(strike.Result.IsEvaded ? " (evaded)" : string.Empty)}"; }
+                else { Dropped++; what = "dropped (no blow queue)"; }
+                if (HostileBrainDiag.Enabled)   // M5.7's timing lines: off by default
+                {
+                    uint tick = SystemAPI.TryGetSingleton(out BrainTick bt) ? bt.Tick : 0;
+                    uint id = EntityManager.Exists(swing.Hostile) && EntityManager.HasComponent<BrainClock>(swing.Hostile) ? EntityManager.GetComponentData<BrainClock>(swing.Hostile).StableId : 0;
+                    HostileBrainDiag.Write(HostileBrainDiag.Resolve(tick, id, what));
+                }
             }
         }
     }
