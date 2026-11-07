@@ -32,6 +32,13 @@ namespace KryticalNova.Persistence.Entities
     }
 
     /// <summary>
+    /// On a CLIENT world that runs in the server's own process and is the host's (Play DOTS here, set by the Editor-only KnPlayHere): NGO's
+    /// host rule, its player is GM (<see cref="GmRoster.Host"/>). A built server never has one, so only bound accounts are GM there; a client
+    /// in another process is never seen by the server as this (findings item 9, 6 Nov 2026).
+    /// </summary>
+    public struct PlayHereHostTag : IComponentData { }
+
+    /// <summary>
     /// Server: GM rights and GM lines of the entity netcode's players, by NGO's rules (<c>PlayerGm</c>): a player whose proven account the owner
     /// bound to a GM is GM from the moment they come in (<see cref="GmRoster.SignInBound"/>) and stops being one when they leave; each line is
     /// limited as an account call, cut to 500 characters, refused with "You are not a GM on this server." for anyone else, and run by
@@ -94,6 +101,7 @@ namespace KryticalNova.Persistence.Entities
             foreach (ulong id in m_Gone) { m_Known.Remove(id); GmRoster.Forget(id); }
             foreach (ulong id in m_Connections.Keys)
                 if (m_Known.Add(id)) GmRoster.SignInBound(id, out _);
+            FindHost();
             ShowTags();
 
             if (m_Lines.IsEmpty) return;
@@ -103,6 +111,33 @@ namespace KryticalNova.Persistence.Entities
             for (int i = 0; i < lines.Length; i++) RunLine(received[i].SourceConnection, lines[i].Line.ToString());
             received.Dispose();
             lines.Dispose();
+        }
+
+        /// <summary>Times a host connection was made GM (tests).</summary>
+        public int HostsMade { get; private set; }
+
+        // NGO's host rule (GmRoster.IsGm: the host's own player is GM): the in-game connection of a client world in THIS process that carries
+        // PlayHereHostTag. Looked at only while there is no host in the game (a handful of worlds, not per player: no job needed).
+        void FindHost()
+        {
+            if (GmRoster.Host is ulong had && m_Connections.ContainsKey(had)) return;
+            if (GmRoster.Host.HasValue) GmRoster.SetHost(null);   // the host left
+            foreach (World world in World.All)
+            {
+                if (!world.IsCreated || !world.IsClient() || world.IsServer()) continue;
+                var em = world.EntityManager;
+                using var tag = em.CreateEntityQuery(ComponentType.ReadOnly<PlayHereHostTag>());
+                if (tag.IsEmpty) continue;
+                using var ids = em.CreateEntityQuery(ComponentType.ReadOnly<NetworkId>(), ComponentType.ReadOnly<NetworkStreamInGame>());
+                if (ids.CalculateEntityCount() != 1) continue;
+                if (!m_ByNetworkId.TryGetValue(ids.GetSingleton<NetworkId>().Value, out ulong serial)) continue;
+                GmRoster.SetHost(serial);
+                HostsMade++;
+                Entity connection = m_Connections[serial];
+                State(connection, true, GmRoster.HostName);
+                Send(connection, "You are GM (" + GmRoster.HostName + ": you host this game). F2 opens the GM console; gm.help lists the commands.");
+                return;
+            }
         }
 
         // The [GM] tag everyone sees (NGO: PlayerGm.ShowsTag from its network variable): each player's ghost says whether the roster has them.

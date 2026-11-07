@@ -46,6 +46,7 @@ namespace KryticalNova.Networking
         {
             Entries.Clear();
             Active.Clear();
+            host = null;
             loaded = false;
             Revoked = null;
             Granted = null;
@@ -111,11 +112,27 @@ namespace KryticalNova.Networking
         {
             NetworkManager network = NetworkManager.Singleton;
             if (network != null && network.IsHost && clientId == NetworkManager.ServerClientId) return true;
+            if (host.HasValue && host.Value == clientId) return true;
             return Active.ContainsKey(clientId);
         }
 
+        /// <summary>The GM name of the host's own player (NGO's <c>PlayerGm.GmName</c>).</summary>
+        public const string HostName = "Host";
+
+        private static ulong? host;
+
+        /// <summary>
+        /// The entity netcode's host: the connection of the client that runs in the server's own process (Play DOTS here, Editor only), GM
+        /// as NGO's host is; null when there is none (a built server: only bound accounts are GM there).
+        /// </summary>
+        public static ulong? Host => host;
+
+        /// <summary>Sets or clears <see cref="Host"/> (the entity netcode's server; findings item 9, 6 Nov 2026).</summary>
+        public static void SetHost(ulong? clientId) => host = clientId;
+
         /// <summary>The GM name a connection plays as, or null.</summary>
-        public static string NameOf(ulong clientId) => Active.TryGetValue(clientId, out string name) ? name : null;
+        public static string NameOf(ulong clientId) =>
+            Active.TryGetValue(clientId, out string name) ? name : host == clientId ? HostName : null;   // the host: logs, records and the page say "Host"
 
         /// <summary>True while a GM of that name is in the game.</summary>
         public static bool IsSignedIn(string name)
@@ -143,7 +160,11 @@ namespace KryticalNova.Networking
         }
 
         /// <summary>Forgets a connection that left.</summary>
-        public static void Forget(ulong clientId) => Active.Remove(clientId);
+        public static void Forget(ulong clientId)
+        {
+            Active.Remove(clientId);
+            if (host == clientId) host = null;
+        }
 
         private static void Sign(ulong clientId, string name)
         {

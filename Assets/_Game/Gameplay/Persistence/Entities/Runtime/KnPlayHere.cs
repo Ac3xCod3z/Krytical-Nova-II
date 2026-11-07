@@ -1032,6 +1032,9 @@ namespace KryticalNova.Persistence.Entities
             PlayerWorldsSetup.TakeCameraWhenBodyMade = Environment.GetEnvironmentVariable("KN_PLAYHERE_SPAWNCAM_FIX") != "0";
             Debug.Log("[KnPlayHere] spawn-camera fix " + (PlayerWorldsSetup.TakeCameraWhenBodyMade ? "on" : "OFF"));
             if (!KnBootstrap.StartPlayHere(Port, join)) { StopPlay(1); return; }
+            // NGO's host rule: this Editor's own player hosts the game, so it is GM (findings item 9; Play DOTS here only, never a build)
+            World playHereClient = KnBootstrap.ClientWorld;
+            if (playHereClient != null && playHereClient.IsCreated) playHereClient.EntityManager.CreateEntity(typeof(PlayHereHostTag));
             Debug.Log($"[KnPlayHere] Entity-netcode server and client started on loopback {Port}. Click the ground to walk.");
             var host = new GameObject("KnPlayHere");
             UnityEngine.Object.DontDestroyOnLoad(host);

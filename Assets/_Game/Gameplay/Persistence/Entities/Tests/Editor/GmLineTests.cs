@@ -34,6 +34,7 @@ namespace KryticalNova.Persistence.Entities.Tests
                 return line == "gm.help" ? new string('x', 1200) + " – end" : "ran " + line;
             };
             GmRoster.SetAll(Array.Empty<GmEntry>());
+            GmRoster.SetHost(null);
         }
 
         [TearDown]
@@ -41,6 +42,7 @@ namespace KryticalNova.Persistence.Entities.Tests
         {
             PlayerGm.CommandRunner = m_OldRunner;
             GmRoster.SetAll(Array.Empty<GmEntry>());
+            GmRoster.SetHost(null);
         }
 
         static ConnectionPlayerKey ServerKeyOf(KnTestWorld tw, World client)
@@ -122,6 +124,69 @@ namespace KryticalNova.Persistence.Entities.Tests
             {
                 ServerAccounts.Forget(keyA.PlayerKey);
             }
+        }
+
+        [Test]
+        public void ThePlayHereHost_IsGm_AsNgosHost_AndNoOneElseIs_AndWithoutTheMarkNobodyIs()
+        {
+            // findings item 9: a built server (no marked client world) and a client of another program stay account-only
+            using var tw = new KnTestWorld();
+            tw.CreateWorlds(2);
+            tw.Connect();
+            var a = tw.Clients[0].GetExistingSystemManaged<GmLineClientSystem>();
+            var b = tw.Clients[1].GetExistingSystemManaged<GmLineClientSystem>();
+            var server = tw.Server.GetExistingSystemManaged<GmLineServerSystem>();
+            tw.Tick(10);
+            ConnectionPlayerKey keyA = ServerKeyOf(tw, tw.Clients[0]), keyB = ServerKeyOf(tw, tw.Clients[1]);
+            Assert.IsNull(GmRoster.Host, "no marked client world: no host");
+            Assert.IsFalse(GmRoster.IsGm(keyA.Serial) || GmRoster.IsGm(keyB.Serial), "and nobody is GM");
+            b.GmLink.Send("gm.time 0");
+            tw.TickUntil(() => b.Replies > 0, 120);
+            Assert.AreEqual("You are not a GM on this server.", b.LastReply);
+
+            // Play DOTS here marks the Editor's own client world
+            tw.Clients[0].EntityManager.CreateEntity(typeof(PlayHereHostTag));
+            tw.TickUntil(() => a.GmLink.IsGm && a.Replies > 0, 120);
+            Assert.AreEqual(keyA.Serial, GmRoster.Host, "A's connection hosts");
+            Assert.IsTrue(a.GmLink.IsGm, "A is told it is GM");
+            Assert.AreEqual(GmRoster.HostName, a.GmLink.GmName);
+            StringAssert.StartsWith("You are GM (Host", a.LastReply);
+            Assert.AreEqual(1, server.HostsMade, "made host once");
+            tw.Tick(10);
+            Assert.AreEqual(1, server.HostsMade, "and not again every frame");
+
+            int r0 = a.Replies;
+            a.GmLink.Send("gm.time 0");
+            tw.TickUntil(() => a.Replies > r0, 120);
+            Assert.AreEqual("ran gm.time 0", a.LastReply, "the host's lines run");
+            Assert.AreEqual((keyA.Serial, "gm.time 0"), m_Ran[0]);
+
+            int b0 = b.Replies;
+            b.GmLink.Send("gm.time 0");
+            tw.TickUntil(() => b.Replies > b0, 120);
+            Assert.AreEqual("You are not a GM on this server.", b.LastReply, "the other client is not");
+            Assert.IsFalse(b.GmLink.IsGm);
+            Assert.AreEqual(1, m_Ran.Count);
+
+            GmRoster.SetAll(Array.Empty<GmEntry>());
+            tw.Tick(5);
+            Assert.IsTrue(GmRoster.IsGm(keyA.Serial), "the host is no bound account: an empty GM list keeps it");
+        }
+
+        [Test]
+        public void ForgettingTheHostsConnection_EndsIt()
+        {
+            GmRoster.SetHost(41);
+            Assert.IsTrue(GmRoster.IsGm(41));
+            Assert.IsFalse(GmRoster.IsGm(42));
+            // every GM line path that logs, tags or records the name (GmCommandRelay, ServerRecords, the control page) reads NameOf
+            Assert.AreEqual(GmRoster.HostName, GmRoster.NameOf(41), "the host is named, never null or empty");
+            Assert.IsNull(GmRoster.NameOf(42));
+            GmRoster.Forget(42);
+            Assert.AreEqual(41UL, GmRoster.Host, "another connection leaving changes nothing");
+            GmRoster.Forget(41);
+            Assert.IsNull(GmRoster.Host);
+            Assert.IsFalse(GmRoster.IsGm(41));
         }
 
         static byte TagOf(World world, int networkId)
