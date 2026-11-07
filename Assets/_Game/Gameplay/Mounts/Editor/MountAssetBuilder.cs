@@ -83,7 +83,10 @@ namespace KryticalNova.EditorTools
                 SeatForward = new[] { 0f, 0f, 0f },
                 // Its eyes and light strips: cyan at 0 and 50 %, red at 100 % (the Tripo art); the glows follow them.
                 Glows = new[] { new Color(0.3f, 0.9f, 1f), new Color(0.25f, 0.8f, 1f), new Color(1f, 0.25f, 0.2f) },
-                Emission = new[] { new Color(2f, 2f, 2f), new Color(2f, 2f, 2f), new Color(2f, 2f, 2f) } },
+                Emission = new[] { new Color(2f, 2f, 2f), new Color(2f, 2f, 2f), new Color(2f, 2f, 2f) },
+                // Owner, 7 Nov 2026: walk and run play at about 1.1x (they looked sped up). The game speed at each stage
+                // (MountSettings walk 6-9, run 20-34 m/s) / 1.1, from circuit-strider-2 with the long-stride re-key.
+                ClipSpeeds = new[] { new Vector2(5.45f, 18.2f), new Vector2(6.8f, 24.5f), new Vector2(8.2f, 30.9f) } },
         };
 
         [MenuItem("Krytical Nova/Items/11. Build Mounts")]
