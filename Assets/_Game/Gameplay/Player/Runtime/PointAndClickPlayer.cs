@@ -2109,7 +2109,7 @@ namespace KryticalNova.Player
 
         /// <summary>
         /// Set by a tool that takes the left button and Escape for itself (Arrange, while a Hall is furnished): a
-        /// click no longer walks or selects and Shift no longer draws the weapon. The camera is left alone, so the
+        /// click no longer walks or selects and the draw key no longer draws the weapon. The camera is left alone, so the
         /// right button still turns it and the wheel still zooms.
         /// </summary>
         public bool WorldClicksParked { get; set; }
