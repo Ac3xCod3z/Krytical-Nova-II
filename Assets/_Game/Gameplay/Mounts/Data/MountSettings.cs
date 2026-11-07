@@ -50,40 +50,81 @@ namespace KryticalNova.Mounts
         [Tooltip("How quickly the lean comes and goes, in seconds.")]
         [Min(0.01f)] public float leanEase = 0.25f;
 
-        [Header("Getting on: the summon hop (owner picks, 6 Nov 2026; Torrent's timing, checked on footage)")]
-        [Tooltip("Seconds from the Ride press until the rider has settled in the saddle (the hop clip's length).")]
-        [Min(0.1f)] public float mountUpSeconds = 1.0f;
-        [Tooltip("Seconds after the press when the rider can move. The settle after it is cut short by moving.")]
-        [Min(0.1f)] public float mountUpControlSeconds = 0.8f;
-        [Tooltip("Height of the rider through the hop, over the hop's time (0 to 1): 0 = standing on the ground, 1 = sitting " +
-                 "on the stage's seat, above 1 = higher than the seat. A short dip, a hop over the seat, a drop into it and a small settle.")]
-        public AnimationCurve mountUpLift = new AnimationCurve(
-            new Keyframe(0f, 0f), new Keyframe(0.13f, -0.05f), new Keyframe(0.47f, 1.12f),
-            new Keyframe(0.77f, 1f), new Keyframe(0.86f, 0.97f), new Keyframe(1f, 1f));
-        [Tooltip("When in the hop (0 to 1) the feet start going into the stirrups. They are fully in a quarter of a second later.")]
-        [Range(0f, 1f)] public float stirrupsAt = 0.77f;
+        [Header("Getting on and off (owner picks, 6 Nov 2026: Torrent's timing; a running version of each)")]
+        [Tooltip("Standing still (or walking: the rider stops first): the summon hop. Dip, hop with the leg over, drop into the seat, settle.")]
+        public MountTransition getOn = MountTransition.StandingOn();
+        [Tooltip("Running (the Run selection and moving): a forward hop off the stride, landing already riding. No stop.")]
+        public MountTransition getOnRunning = MountTransition.RunningOn();
+        [Tooltip("Standing still (or walking: the rider stops first): a front flip off the mount, a three-point landing, a rise to idle.")]
+        public MountTransition getOff = MountTransition.StandingOff();
+        [Tooltip("Running: a launch forward out of the saddle into a front flip, landing in a forward roll that comes up running.")]
+        public MountTransition getOffRunning = MountTransition.RunningOff();
 
-        [Header("Getting off (owner, 6 Nov 2026)")]
-        [Tooltip("Seconds from the Ride press until the rider stands on the ground and can move.")]
-        [Min(0.1f)] public float dismountSeconds = 0.65f;
-        [Tooltip("Height of the rider through getting off, over its time (0 to 1): 1 = on the seat, 0 = on the ground.")]
-        public AnimationCurve dismountLift = new AnimationCurve(
-            new Keyframe(0f, 1f), new Keyframe(0.25f, 1.06f), new Keyframe(0.75f, 0f), new Keyframe(1f, 0f));
-
-        [Header("Appear and vanish (the shared MountMaterialise effect; a mount's own asset may override the seconds)")]
-        [Tooltip("Seconds into getting on before the mount starts forming. With Materialise Seconds it is solid as the rider lands on the seat.")]
-        [Min(0f)] public float materialiseDelay = 0.12f;
-        [Tooltip("Seconds the mount takes to form, from nothing to solid.")]
-        [Min(0.05f)] public float materialiseSeconds = 0.65f;
-        [Tooltip("Seconds into getting off before the mount starts vanishing (as the leg swings over).")]
-        [Min(0f)] public float vanishDelay = 0.1f;
-        [Tooltip("Seconds the mount takes to vanish. Quieter than the appear: no flash.")]
-        [Min(0.05f)] public float vanishSeconds = 0.5f;
+        /// <summary>The getting-on or getting-off in play: on or off, standing or running.</summary>
+        public MountTransition Transition(bool gettingOn, bool running) =>
+            gettingOn ? (running ? getOnRunning : getOn) : (running ? getOffRunning : getOff);
 
         [Header("Idling")]
         [Tooltip("At rest the mount and its rider play one of their other idles (a sniff, a look round, a pat on the neck) every this many seconds. 0 = never.")]
         [Min(0f)] public float idleVarietySeconds = 9f;
 
         public MountTuning Tuning => new MountTuning(xpToFullGrowth, xpPerHostileKill, hungerDrainPercentPerMinute);
+    }
+    /// <summary>
+    /// One way of getting on or off a mount (owner, 6 Nov 2026): how long it takes, when the rider is free, how the
+    /// rider rises to (or drops from) the seat and arcs forward, and when the mount forms or vanishes. The clips are
+    /// keyed in place; the height and the forward arc come from these curves and are only drawn, on each machine:
+    /// the player's real position never changes. Curve time runs 0 to 1 over <see cref="seconds"/>.
+    /// </summary>
+    [System.Serializable]
+    public sealed class MountTransition
+    {
+        [Tooltip("Seconds the whole clip takes.")]
+        [Min(0.1f)] public float seconds = 1f;
+        [Tooltip("Seconds after the press when the rider is free: on the mount and able to ride, or on foot. The rest of the clip plays on unless the rider moves.")]
+        [Min(0.1f)] public float freeSeconds = 0.8f;
+        [Tooltip("Height of the rider over the clip: 0 = on the ground, 1 = on the stage's seat, above 1 = higher than the seat.")]
+        public AnimationCurve lift = AnimationCurve.Constant(0f, 1f, 1f);
+        [Tooltip("How far ahead of the player the rider is drawn over the clip, in metres (a visual arc only). 0 = on the player.")]
+        public AnimationCurve forward = AnimationCurve.Constant(0f, 1f, 0f);
+        [Tooltip("Getting on: when in the clip (0 to 1) the feet start going into the stirrups. Getting off: they come out at once.")]
+        [Range(0f, 1f)] public float stirrupsAt = 0.77f;
+        [Tooltip("Seconds into the clip before the mount starts forming (getting on) or vanishing (getting off).")]
+        [Min(0f)] public float effectDelay = 0.1f;
+        [Tooltip("Seconds the mount takes to form or to vanish. A mount's own materialise asset may override it.")]
+        [Min(0.05f)] public float effectSeconds = 0.5f;
+
+        private static Keyframe K(float t, float v) => new Keyframe(t, v);
+
+        /// <summary>The summon hop: 1.0 s, free at 0.8 s; the mount forms 0.12 to 0.77 s, solid as the rider lands.</summary>
+        public static MountTransition StandingOn() => new MountTransition
+        {
+            seconds = 1f, freeSeconds = 0.8f, stirrupsAt = 0.77f, effectDelay = 0.12f, effectSeconds = 0.65f,
+            lift = new AnimationCurve(K(0f, 0f), K(0.13f, -0.05f), K(0.47f, 1.12f), K(0.77f, 1f), K(0.86f, 0.97f), K(1f, 1f)),
+        };
+
+        /// <summary>The running hop: 0.8 s, on the seat and free at 0.55 s; the mount forms 0.05 to 0.55 s.</summary>
+        public static MountTransition RunningOn() => new MountTransition
+        {
+            seconds = 0.8f, freeSeconds = 0.55f, stirrupsAt = 0.6875f, effectDelay = 0.05f, effectSeconds = 0.5f,
+            lift = new AnimationCurve(K(0f, 0f), K(0.1f, 0.05f), K(0.44f, 1.08f), K(0.69f, 1f), K(0.8f, 0.97f), K(1f, 1f)),
+        };
+
+        /// <summary>The front flip: 1.0 s, free at 0.85 s; crouch, push, flip down through where the mount was, land at
+        /// 0.6 s; the mount vanishes top-down 0.1 to 0.6 s.</summary>
+        public static MountTransition StandingOff() => new MountTransition
+        {
+            seconds = 1f, freeSeconds = 0.85f, stirrupsAt = 0f, effectDelay = 0.1f, effectSeconds = 0.5f,
+            lift = new AnimationCurve(K(0f, 1f), K(0.15f, 0.95f), K(0.25f, 1.15f), K(0.42f, 1.35f), K(0.6f, 0f), K(1f, 0f)),
+        };
+
+        /// <summary>The launch flip: 1.0 s, free at 0.85 s; launch, flip on a forward arc, land about 1 m ahead at
+        /// 0.55 s and roll back onto the player by 0.85 s, coming up running; the mount vanishes 0.1 to 0.6 s.</summary>
+        public static MountTransition RunningOff() => new MountTransition
+        {
+            seconds = 1f, freeSeconds = 0.85f, stirrupsAt = 0f, effectDelay = 0.1f, effectSeconds = 0.5f,
+            lift = new AnimationCurve(K(0f, 1f), K(0.1f, 1.1f), K(0.3f, 1.4f), K(0.55f, 0f), K(1f, 0f)),
+            forward = new AnimationCurve(K(0f, 0f), K(0.55f, 1f), K(0.85f, 0f), K(1f, 0f)),
+        };
     }
 }

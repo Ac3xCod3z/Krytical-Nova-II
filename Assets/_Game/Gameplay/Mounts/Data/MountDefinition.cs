@@ -26,6 +26,8 @@ namespace KryticalNova.Mounts
         [Header("The rider on this stage (owner, 25 Oct 2026: each stage has its own straddle and stirrups)")]
         [Tooltip("Humanoid clips keyed on this stage's seat. Empty = the mount's own rider clips.")]
         public AnimationClip riderIdle, riderWalk, riderRun, mountUp, dismount;
+        [Tooltip("The running versions (owner, 6 Nov 2026): played when the Ride key is pressed while running. Empty = the standing ones.")]
+        public AnimationClip mountUpRunning, dismountRunning;
         public AnimationClip[] riderIdleExtras;
         [Tooltip("Where the rider's ankles go on this stage (the stirrup treads), in the mount model's own space. The game puts the feet there with IK, whatever the character's size. Zero = no stirrups.")]
         public Vector3 stirrupLeft, stirrupRight;
@@ -64,6 +66,9 @@ namespace KryticalNova.Mounts
         public AnimationClip[] riderIdleExtras = new AnimationClip[0];
         public AnimationClip mountUp;
         public AnimationClip dismount;
+        [Tooltip("Running versions of getting on and off (a forward hop; a launch flip into a roll). Empty = the standing ones.")]
+        public AnimationClip mountUpRunning;
+        public AnimationClip dismountRunning;
         [Tooltip("On when this mount's getting-on and getting-off clips are the summon-hop kind (owner, 6 Nov 2026): keyed " +
                  "in place, so the game lifts the rider from the ground to the stage's seat along the Mount Settings " +
                  "curves. Off = the older clips keyed on the seat (the rider is put on the seat at once).")]

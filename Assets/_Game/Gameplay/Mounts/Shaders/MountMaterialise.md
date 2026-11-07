@@ -68,6 +68,12 @@ nodes copied from other graphs in the project. Rerun the script after any change
 Reference demos: `Demo/Graphs/GRPH_Demo_FadeBurn.shadergraph` (Fade - Burn + Rim) and
 `GRPH_Demo_ChomperHologram.shadergraph` (Hologram + Glitch + Rim).
 
-## Timing (Mount Settings, owner picks 6 Nov 2026)
-Get on 1.0 s, control at 0.8 s. The mount forms from 0.12 s over 0.65 s (solid as the rider lands at 0.77 s). Get off
-in 0.65 s; the vanish starts at 0.1 s and lasts 0.5 s. A mount's own asset may override the two durations.
+## Timing (Mount Settings, four transitions; owner picks 6 Nov 2026)
+| Transition | Length | Rider free | Mount forms / vanishes |
+|---|---|---|---|
+| `getOn` (standing summon hop) | 1.0 s | 0.8 s | forms 0.12 → 0.77 s (solid as the rider lands) |
+| `getOnRunning` (running hop) | 0.8 s | 0.55 s | forms 0.05 → 0.55 s |
+| `getOff` (standing front flip, three-point landing) | 1.0 s | 0.85 s | vanishes top-down 0.10 → 0.60 s |
+| `getOffRunning` (launch flip, forward roll up running) | 1.0 s | 0.85 s | vanishes top-down 0.10 → 0.60 s |
+
+A mount's own asset may override the form and vanish seconds.

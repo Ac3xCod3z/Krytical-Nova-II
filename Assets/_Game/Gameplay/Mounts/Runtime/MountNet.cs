@@ -24,6 +24,9 @@ namespace KryticalNova.Mounts
         public byte growth;
         /// <summary>False when the selected mount is starving.</summary>
         public bool fed;
+        /// <summary>The getting on or off in play is the running kind (owner, 6 Nov 2026): the Ride key was pressed while
+        /// running, so the rider hops on (or launches off) without stopping.</summary>
+        public bool running;
 
         public void NetworkSerialize<T>(BufferSerializer<T> serializer) where T : IReaderWriter
         {
@@ -31,11 +34,13 @@ namespace KryticalNova.Mounts
             serializer.SerializeValue(ref phase);
             serializer.SerializeValue(ref growth);
             serializer.SerializeValue(ref fed);
+            serializer.SerializeValue(ref running);
         }
 
-        public bool Equals(MountNetState other) => selected == other.selected && phase == other.phase && growth == other.growth && fed == other.fed;
+        public bool Equals(MountNetState other) => selected == other.selected && phase == other.phase && growth == other.growth && fed == other.fed
+            && running == other.running;
         public override bool Equals(object obj) => obj is MountNetState other && Equals(other);
-        public override int GetHashCode() => HashCode.Combine(selected, (byte)phase, growth, fed);
+        public override int GetHashCode() => HashCode.Combine(selected, (byte)phase, growth, fed, running);
     }
 
     /// <summary>The owner's own copy of all four boxes: which are owned and each one's EXP and hunger, for the Mount window.</summary>

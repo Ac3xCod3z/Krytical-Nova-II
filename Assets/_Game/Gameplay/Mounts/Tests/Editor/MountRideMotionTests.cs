@@ -4,48 +4,84 @@ using UnityEngine;
 
 namespace KryticalNova.Tests
 {
-    /// <summary>The summon hop's lift (owner, 6 Nov 2026): ground at the press, over the seat mid-hop, on the seat at the end.</summary>
+    /// <summary>
+    /// The four ways on and off a mount (owner, 6 Nov 2026): a standing summon hop, a running hop, a standing front flip
+    /// and a running launch flip into a roll. The rider starts and ends where they should, the mount is solid as the rider
+    /// lands on it and gone as the rider lands off it, and only running picks the running kind.
+    /// </summary>
     public sealed class MountRideMotionTests
     {
+        private MountSettings settings;
+
+        [SetUp] public void Make() => settings = ScriptableObject.CreateInstance<MountSettings>();
+        [TearDown] public void Drop() => Object.DestroyImmediate(settings);
+
+        private static float LiftAt(MountTransition t, float seconds) => MountRideMotion.Lift(t.lift, seconds, t.seconds);
+
         [Test]
-        public void MountUp_StartsOnTheGround_EndsOnTheSeat()
+        public void GettingOn_StartsOnTheGround_EndsOnTheSeat_ClearingItOnTheWay([Values(false, true)] bool running)
         {
-            MountSettings settings = ScriptableObject.CreateInstance<MountSettings>();
-            Assert.AreEqual(0f, MountRideMotion.Lift(settings.mountUpLift, 0f, settings.mountUpSeconds), 0.001f);
-            Assert.AreEqual(1f, MountRideMotion.Lift(settings.mountUpLift, settings.mountUpSeconds, settings.mountUpSeconds), 0.001f);
-            Assert.Greater(MountRideMotion.Lift(settings.mountUpLift, 0.47f * settings.mountUpSeconds, settings.mountUpSeconds), 1f,
-                "the hop clears the seat before dropping into it");
-            Object.DestroyImmediate(settings);
+            MountTransition on = settings.Transition(true, running);
+            Assert.AreEqual(0f, LiftAt(on, 0f), 0.001f);
+            Assert.AreEqual(1f, LiftAt(on, on.seconds), 0.001f);
+            float highest = 0f;
+            for (float s = 0f; s <= on.seconds; s += 1f / 30f) highest = Mathf.Max(highest, LiftAt(on, s));
+            Assert.Greater(highest, 1f, "the hop clears the seat before dropping into it");
         }
 
         [Test]
-        public void Dismount_StartsOnTheSeat_EndsOnTheGround()
+        public void GettingOff_StartsOnTheSeat_EndsOnTheGround_AndOnThePlayer([Values(false, true)] bool running)
         {
-            MountSettings settings = ScriptableObject.CreateInstance<MountSettings>();
-            Assert.AreEqual(1f, MountRideMotion.Lift(settings.dismountLift, 0f, settings.dismountSeconds), 0.001f);
-            Assert.AreEqual(0f, MountRideMotion.Lift(settings.dismountLift, settings.dismountSeconds, settings.dismountSeconds), 0.001f);
-            Object.DestroyImmediate(settings);
+            MountTransition off = settings.Transition(false, running);
+            Assert.AreEqual(1f, LiftAt(off, 0f), 0.001f);
+            Assert.AreEqual(0f, LiftAt(off, off.freeSeconds), 0.001f, "on the ground by the time the rider is free");
+            Assert.AreEqual(0f, MountRideMotion.Ahead(off.forward, off.freeSeconds, off.seconds), 0.001f,
+                "back on the player's real position before the rider is free (no snap)");
         }
 
         [Test]
-        public void Lift_ClampsOutsideTheHop_AndSitsWithNoCurve()
+        public void RunningDismount_LaunchesAhead_StandingFlipDoesNot()
+        {
+            MountTransition run = settings.getOffRunning;
+            float ahead = 0f;
+            for (float s = 0f; s <= run.seconds; s += 1f / 30f) ahead = Mathf.Max(ahead, MountRideMotion.Ahead(run.forward, s, run.seconds));
+            Assert.Greater(ahead, 0.5f, "the launch arc carries the rider ahead of the player");
+            Assert.AreEqual(0f, MountRideMotion.Ahead(settings.getOff.forward, 0.5f, settings.getOff.seconds), 0.001f);
+        }
+
+        [Test]
+        public void TheMount_IsSolidAsTheRiderLandsOnIt([Values(false, true)] bool running)
+        {
+            MountTransition on = settings.Transition(true, running);
+            Assert.AreEqual(on.stirrupsAt * on.seconds, on.effectDelay + on.effectSeconds, 0.03f,
+                "the mount is solid as the rider lands on the seat (owner pick)");
+            Assert.LessOrEqual(on.freeSeconds, on.seconds);
+        }
+
+        [Test]
+        public void TheMount_IsGoneByTheTimeTheRiderIsFree([Values(false, true)] bool running)
+        {
+            MountTransition off = settings.Transition(false, running);
+            Assert.LessOrEqual(off.effectDelay + off.effectSeconds, off.freeSeconds);
+        }
+
+        [Test]
+        public void OnlyRunning_PicksTheRunningKind()
+        {
+            Assert.IsTrue(MountRules.IsRunningTransition(true, true));
+            Assert.IsFalse(MountRules.IsRunningTransition(true, false), "Run selected but standing still");
+            Assert.IsFalse(MountRules.IsRunningTransition(false, true), "walking: the rider stops");
+            Assert.IsFalse(MountRules.IsRunningTransition(false, false));
+        }
+
+        [Test]
+        public void Curves_ClampOutsideTheClip_AndDefaultWithNoCurve()
         {
             AnimationCurve curve = AnimationCurve.Linear(0f, 0f, 1f, 1f);
             Assert.AreEqual(0f, MountRideMotion.Lift(curve, -1f, 1f), 0.001f);
             Assert.AreEqual(1f, MountRideMotion.Lift(curve, 5f, 1f), 0.001f);
             Assert.AreEqual(1f, MountRideMotion.Lift(null, 0.3f, 1f), 0.001f);
-        }
-
-        [Test]
-        public void Materialise_IsSolidWhenTheRiderLands()
-        {
-            MountSettings settings = ScriptableObject.CreateInstance<MountSettings>();
-            float solid = settings.materialiseDelay + settings.materialiseSeconds;
-            float landing = settings.stirrupsAt * settings.mountUpSeconds;
-            Assert.AreEqual(landing, solid, 0.03f, "the mount is solid as the rider lands on the seat (owner pick Q2)");
-            Assert.LessOrEqual(settings.vanishDelay + settings.vanishSeconds, settings.dismountSeconds,
-                "the mount is gone before the rider is free");
-            Object.DestroyImmediate(settings);
+            Assert.AreEqual(0f, MountRideMotion.Ahead(null, 0.3f, 1f), 0.001f);
         }
     }
 }

@@ -104,5 +104,9 @@ namespace KryticalNova.Mounts
             double clamped = Math.Min(100.0, Math.Max(0.0, hungerPercent));
             return state.WithHungerDeficit((uint)Math.Round(MountState.FullHungerUnits * (100.0 - clamped) / 100.0));
         }
+
+        /// <summary>The Ride key pressed while running (the Run selection and moving) gets the running kind of getting
+        /// on or off, which never stops the rider; walking or standing gets the standing kind (owner, 6 Nov 2026).</summary>
+        public static bool IsRunningTransition(bool runSelected, bool travelling) => runSelected && travelling;
     }
 }

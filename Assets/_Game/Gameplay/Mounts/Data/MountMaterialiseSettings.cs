@@ -6,8 +6,8 @@ namespace KryticalNova.Mounts
     /// version (owner, 6 Nov 2026: the timing follows Elden Ring's Torrent, the look is our own, and every mount is
     /// "the same but a bit different"). Every mount uses the one shared <c>MountMaterialise</c> shader graph. This
     /// asset only picks that mount's colours, pattern, direction and particles, so a new mount needs a new asset,
-    /// never a new shader. The timings are shared and live in <see cref="MountSettings"/>; a mount can override them
-    /// here. <see cref="MountMaterialiser"/> applies the asset.
+    /// never a new shader. The timings are shared and live in <see cref="MountSettings"/> (one per way of getting on or off); a mount
+    /// can override the seconds here. <see cref="MountMaterialiser"/> applies the asset.
     /// </summary>
     [CreateAssetMenu(menuName = "Krytical Nova/Mounts/Mount Materialise Settings")]
     public sealed class MountMaterialiseSettings : ScriptableObject
@@ -70,10 +70,12 @@ namespace KryticalNova.Mounts
         [Tooltip("This mount vanishes in this many seconds instead of the shared time. 0 = shared.")]
         [Min(0f)] public float vanishSeconds;
 
-        public float AppearSeconds(MountSettings shared) =>
-            appearSeconds > 0f ? appearSeconds : shared != null ? shared.materialiseSeconds : 0.65f;
-
-        public float VanishSeconds(MountSettings shared) =>
-            vanishSeconds > 0f ? vanishSeconds : shared != null ? shared.vanishSeconds : 0.5f;
+        /// <summary>Seconds this mount takes to form (getting on) or vanish (getting off) in a transition: its own
+        /// override, or the transition's.</summary>
+        public float EffectSeconds(bool appearing, MountTransition transition)
+        {
+            float own = appearing ? appearSeconds : vanishSeconds;
+            return own > 0f ? own : transition != null ? transition.effectSeconds : 0.5f;
+        }
     }
 }

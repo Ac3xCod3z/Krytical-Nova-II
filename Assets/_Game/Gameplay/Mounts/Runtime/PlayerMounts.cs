@@ -51,6 +51,7 @@ namespace KryticalNova.Mounts
         private MountBook book;
         private int selected;
         private RidePhase phase;
+        private bool running; // the getting on or off in play is the running kind
         private float phaseEnds;
         private double hungerCarry;
         private float nextPublish;
@@ -77,6 +78,8 @@ namespace KryticalNova.Mounts
         public MountDefinition Selected => catalog != null ? catalog.Get(shown.selected) : null;
         public int SelectedId => shown.selected;
         public RidePhase Phase => shown.phase;
+        /// <summary>The getting on or off in play is the running kind: the Ride key was pressed while running.</summary>
+        public bool IsRunningTransition => shown.running;
         /// <summary>On the mount, getting on or getting off.</summary>
         public bool IsMounted => shown.phase != RidePhase.OnFoot;
         public int GrowthPercent => shown.selected != 0 ? shown.growth : 0;
@@ -210,6 +213,7 @@ namespace KryticalNova.Mounts
         {
             if (!HasAuthority || phase == RidePhase.OnFoot) return;
             phase = RidePhase.OnFoot;
+            running = false;
             PublishBook();
             Publish();
         }
@@ -217,14 +221,17 @@ namespace KryticalNova.Mounts
         private void BeginPhase(RidePhase next)
         {
             MountDefinition mount = catalog != null ? catalog.Get(selected) : null;
+            // Running (the Run selection and moving) gets the running kind: no stop (owner, 6 Nov 2026). Walking stops
+            // and gets the standing kind, as standing still does.
+            running = MountRules.IsRunningTransition(movement != null && movement.IsRunning, motor != null && motor.IsTravelling);
             AnimationClip clip = mount == null ? null : next == RidePhase.GettingOn ? mount.mountUp : next == RidePhase.GettingOff ? mount.dismount : null;
             phase = next;
             float seconds = clip != null ? clip.length : 0f;
-            // A summon hop frees the rider before its settle ends, and its getting-off is timed in Mount Settings
-            // (owner, 6 Nov 2026: on in 1.0 s with control at 0.8 s, off in 0.65 s).
+            // A summon-hop mount is timed by Mount Settings: the rider is free before the clip ends (its settle, landing
+            // or roll plays on). Older mounts take their clip's length.
             MountSettings settings = Settings;
             if (mount != null && mount.hopMountUp && settings != null)
-                seconds = next == RidePhase.GettingOn ? settings.mountUpControlSeconds : settings.dismountSeconds;
+                seconds = settings.Transition(next == RidePhase.GettingOn, running).freeSeconds;
             phaseEnds = Time.time + Mathf.Max(MinPhaseSeconds, seconds);
             if (next == RidePhase.GettingOff) PublishBook(); // what riding cost in hunger, before the ride ends
             Publish();
@@ -242,6 +249,7 @@ namespace KryticalNova.Mounts
             if ((phase == RidePhase.GettingOn || phase == RidePhase.GettingOff) && Time.time >= phaseEnds)
             {
                 phase = phase == RidePhase.GettingOn ? RidePhase.Riding : RidePhase.OnFoot;
+                running = false;
                 Publish();
             }
             // A jump, a vault or a wall run takes the rider off: the mount has no clips for them.
@@ -431,6 +439,7 @@ namespace KryticalNova.Mounts
                 phase = selected != 0 ? phase : RidePhase.OnFoot,
                 growth = (byte)(selected != 0 ? MountRules.GrowthPercent(state, Tuning) : 0),
                 fed = selected != 0 && state.IsFed,
+                running = selected != 0 && running && (phase == RidePhase.GettingOn || phase == RidePhase.GettingOff),
             };
             if (IsSpawned && IsServer) netState.Value = next;
             Show(next);
@@ -458,8 +467,9 @@ namespace KryticalNova.Mounts
                 if (next.phase == RidePhase.Riding && settings != null)
                     movement.SetRideSpeeds(MountRules.Speed(settings.walkSpeed.x, settings.walkSpeed.y, next.growth, next.fed),
                         MountRules.Speed(settings.runSpeed.x, settings.runSpeed.y, next.growth, next.fed));
-                else if (next.phase == RidePhase.GettingOn || next.phase == RidePhase.GettingOff)
+                else if ((next.phase == RidePhase.GettingOn || next.phase == RidePhase.GettingOff) && !next.running)
                     movement.SetRideSpeeds(StandStillSpeed, StandStillSpeed);
+                // A running getting on or off keeps the on-foot speeds: the rider never stops (owner, 6 Nov 2026).
                 else movement.SetRideSpeeds(0f, 0f);
             }
             Changed?.Invoke();
