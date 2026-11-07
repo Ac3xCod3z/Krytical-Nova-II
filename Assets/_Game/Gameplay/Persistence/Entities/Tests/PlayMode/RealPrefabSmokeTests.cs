@@ -5096,14 +5096,21 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
             var wallet = first.GetComponent<KryticalNova.Economy.PlayerWallet>();
             wallet.ServerSet(621);
             string walletText = wallet.CaptureSave();
+            // the relog spot (owner rule, 6 Nov 2026): where the body stands when it leaves
+            Vector3 stood = new Vector3(12.3f, 0.5f, -4.5f);
+            KryticalNova.Networking.NetworkPlacement.Place(first.transform, stood, first.transform.rotation);   // the game's way
 
             string savedWhenStopped = null;
+            Vector3 storedSpot = default;
             int stops = 0;
             PlayHereLeave.LeaveAll(new[] { first }, ServerSave.Store, () =>
             {
                 stops++;
-                savedWhenStopped = ServerSave.ReadAccountFrom(ServerSave.Store, account)?.Find(characterId)?.Get("wallet");
+                CharacterSave c = ServerSave.ReadAccountFrom(ServerSave.Store, account)?.Find(characterId);
+                savedWhenStopped = c?.Get("wallet");
+                if (c != null) storedSpot = new Vector3(c.x, c.y, c.z);
             });
+            Assert.Less(Vector3.Distance(stood, storedSpot), 0.11f, "the leave save holds where the body stood");
             Assert.AreEqual(1, stops, "the worlds stop once");
             Assert.AreEqual(walletText, savedWhenStopped, "the leave save was in the store BEFORE the worlds stopped");
             Object.Destroy(first);
@@ -5111,9 +5118,22 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
 
             GameObject second = Make(NetRoleKind.ServerBody, false, new PlayerKey(622));
             yield return null;
+            Vector3 spawnPoint = second.transform.position;
+            string askedMap = null, askedHere = null;
+            Vector3 askedAt = default;
+            // this scene has no NavMesh: the check stands in (its NavMesh / blocked parts: RelogAndMirrorReadyTests), the rest is real
+            rules.ReturnSpot = (map, here, at, offset) => { askedMap = map; askedHere = here; askedAt = at; return at; };
             Assert.IsNull(rules.Begin(second, Context(622)), "the account was let go: the character enters again");
+            // ServerBodyAdmission makes the ghost on the body's spot right after Begin: that is where every view starts
+            Vector3 whenGhostIsMade = second.transform.position;
             for (int i = 0; i < 10; i++) yield return null;
             Assert.AreEqual(walletText, second.GetComponent<KryticalNova.Economy.PlayerWallet>().CaptureSave(), "as it was saved");
+            Assert.IsNotNull(askedMap, "a spot was saved on leaving");
+            Assert.AreEqual(askedHere, askedMap, "on this map (its scene name)");
+            Assert.Less(Vector3.Distance(stood, askedAt), 0.11f, $"the load keeps the saved spot (the save right after the load must not write the spawn over it): {askedAt}");
+            CharacterSave afterEntry = ServerSave.ReadAccountFrom(ServerSave.Store, account)?.Find(characterId);
+            Assert.Less(Vector3.Distance(stood, new Vector3(afterEntry.x, afterEntry.y, afterEntry.z)), 0.11f, "nor in the store");
+            Assert.Less(Vector3.Distance(stood, whenGhostIsMade), 0.11f, $"the body is back there when its ghost is made, not on the spawn point {spawnPoint}");
             second.GetComponent<PlayerSaveAgent>().OnServerLeaving();
         }
 

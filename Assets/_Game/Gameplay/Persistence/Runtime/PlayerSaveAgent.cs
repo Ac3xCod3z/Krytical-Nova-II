@@ -45,6 +45,18 @@ namespace KryticalNova.Persistence
 
         /// <summary>True while this player's character is loaded from, and saved to, the store.</summary>
         public bool IsLoaded => character != null;
+
+        /// <summary>
+        /// Where the loaded character last stood (the map's scene name and the body's root, as saved on leaving); false when it never
+        /// saved a spot. A relog goes back there (owner, 6 Nov 2026) when <see cref="KryticalNova.Networking.PlayerSpawnService.TryReturnSpot"/> allows.
+        /// </summary>
+        public bool TryGetSavedSpot(out string map, out Vector3 at)
+        {
+            map = character != null ? character.map : null;
+            at = character != null ? new Vector3(character.x, character.y, character.z) : default;
+            return !string.IsNullOrEmpty(map);
+        }
+
         public string AccountId => accountId;
         public string CharacterId => character != null ? character.characterId : string.Empty;
         /// <summary>The account document while loaded (server / offline). Account-wide systems read and change it here.</summary>
@@ -220,6 +232,10 @@ namespace KryticalNova.Persistence
             if (!isNew && resources != null && resources.IsAlive) resources.RestoreAll();
 
             if (pendingAgreement != 0) RecordAgreement(pendingAgreement);
+            // The saved spot stays as it was until the player has stood somewhere (on leaving, a map change, or the next place time):
+            // this save right after the load ran while the body still stood on the spawn point and wrote that over it, so a relog
+            // could never go back (owner rule, 6 Nov 2026: a relog puts the player back where they stood; proven by B62, run 3).
+            nextPlace = Time.unscaledTime + PlaceSeconds;
             Save();
             Loaded?.Invoke();
         }

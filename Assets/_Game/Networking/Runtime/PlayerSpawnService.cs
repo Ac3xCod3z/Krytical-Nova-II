@@ -83,6 +83,47 @@ namespace KryticalNova.Networking
             return true;
         }
 
+        /// <summary>How far from the saved feet the NavMesh may be for a relog to go back there (m).</summary>
+        public const float ReturnSampleRadius = 1f;
+        /// <summary>The body a returning player needs free at the saved spot (m): CharacterController-sized.</summary>
+        public const float ReturnBodyRadius = 0.35f, ReturnBodyHeight = 1.8f;
+
+        /// <summary>
+        /// A relog puts the player back where they stood (owner, 6 Nov 2026, both games): the saved spot (<paramref name="savedRoot"/>, a
+        /// body root on <paramref name="savedMap"/>) when it is on this map (<paramref name="currentMap"/>), on the NavMesh within
+        /// <see cref="ReturnSampleRadius"/> and not blocked; then <paramref name="position"/> is the mesh point (the real ground height) plus
+        /// <paramref name="baseOffset"/>. False (the spawn point then) when the map differs or is gone (a dungeon / instance), the spot was
+        /// never saved, is off the NavMesh, or something solid stands there.
+        /// </summary>
+        public static bool TryReturnSpot(string savedMap, string currentMap, Vector3 savedRoot, float baseOffset, out Vector3 position) =>
+            TryReturnSpot(savedMap, currentMap, savedRoot, baseOffset, SampleNavMesh, IsBlocked, out position);
+
+        /// <summary><see cref="TryReturnSpot(string, string, Vector3, float, out Vector3)"/> with the NavMesh and the physics as functions (tests).</summary>
+        public static bool TryReturnSpot(string savedMap, string currentMap, Vector3 savedRoot, float baseOffset,
+            System.Func<Vector3, Vector3?> sample, System.Func<Vector3, bool> blocked, out Vector3 position)
+        {
+            position = default;
+            if (string.IsNullOrEmpty(savedMap) || !string.Equals(savedMap, currentMap, System.StringComparison.Ordinal)) return false;
+            Vector3? ground = sample?.Invoke(savedRoot - Vector3.up * baseOffset);
+            if (!ground.HasValue) return false;
+            if (blocked != null && blocked(ground.Value)) return false;
+            position = ground.Value + Vector3.up * baseOffset;
+            return true;
+        }
+
+        private static Vector3? SampleNavMesh(Vector3 feet) =>
+            NavMesh.SamplePosition(feet, out NavMeshHit hit, ReturnSampleRadius, NavMesh.AllAreas) ? hit.position : (Vector3?)null;
+
+        // Solid, non-trigger colliders in a body-sized capsule standing on the spot (other players' bodies do not count: they move away)
+        private static bool IsBlocked(Vector3 feet)
+        {
+            int players = LayerMask.NameToLayer("Player");
+            int mask = players >= 0 ? ~(1 << players) : ~0;
+            Vector3 bottom = feet + Vector3.up * (ReturnBodyRadius + 0.05f);
+            Vector3 top = feet + Vector3.up * (ReturnBodyHeight - ReturnBodyRadius);
+            return Physics.CheckCapsule(bottom, top, ReturnBodyRadius, mask, QueryTriggerInteraction.Ignore);
+        }
+
         /// <summary>
         /// Pure part of <see cref="PickPoint"/>: the index of the next point in turn (counting on from <paramref name="next"/>) with
         /// nobody of <paramref name="occupied"/> within <paramref name="radius"/> on the ground plane; the first one tried when all are

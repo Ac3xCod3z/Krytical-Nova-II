@@ -31,6 +31,14 @@ namespace KryticalNova.Persistence.Entities
         /// <summary>The look of a player changed (entry, a restyle): text for observers (<see cref="RecipeText.EncodeLook"/>).</summary>
         public Action<GameObject, Entity, string> LookChanged;
 
+        /// <summary>
+        /// The relog check (saved map, this map, saved root, base offset -> the spot, or null for the spawn point); the NavMesh and physics
+        /// one of <see cref="KryticalNova.Networking.PlayerSpawnService.TryReturnSpot(string, string, Vector3, float, out Vector3)"/> unless a
+        /// test sets another.
+        /// </summary>
+        public Func<string, string, Vector3, float, Vector3?> ReturnSpot = (map, here, at, offset) =>
+            KryticalNova.Networking.PlayerSpawnService.TryReturnSpot(map, here, at, offset, out Vector3 spot) ? spot : (Vector3?)null;
+
         public string Begin(GameObject body, in ServerBodyContext context)
         {
             var identity = body.GetComponent<PlayerIdentity>();
@@ -56,7 +64,27 @@ namespace KryticalNova.Persistence.Entities
             if (refusal != null) return refusal;
             var agent = body.GetComponent<PlayerSaveAgent>();
             if (saved && (agent == null || !agent.IsLoaded)) return NotLoadedText;
+            ReturnToSavedSpot(body, agent);
             return null;
+        }
+
+        /// <summary>
+        /// Owner, 6 Nov 2026 (both games): a relog puts the player back where they stood. The body was built on a spawn point (step 1 of
+        /// <see cref="ServerBodyAdmission"/>); it moves to the saved spot when <see cref="ReturnSpot"/> allows, before its ghost is made on
+        /// the body's spot, so every view starts there too. Otherwise it stays on the spawn point.
+        /// </summary>
+        void ReturnToSavedSpot(GameObject body, PlayerSaveAgent agent)
+        {
+            if (agent == null || ReturnSpot == null || !agent.TryGetSavedSpot(out string map, out Vector3 at)) return;
+            var navAgent = body.GetComponent<NavMeshAgent>();
+            float baseOffset = navAgent != null ? navAgent.baseOffset : Planner != null ? Planner.BaseOffsetM : 0f;
+            Vector3? spot = ReturnSpot(map, body.scene.name, at, baseOffset);
+            if (!spot.HasValue) return;
+            if (navAgent != null && navAgent.enabled && navAgent.isOnNavMesh) navAgent.Warp(spot.Value);
+            body.transform.position = spot.Value;
+            // the body's kinematic Rigidbody keeps its own position until physics syncs: moved with it, so nothing snaps it back
+            if (body.TryGetComponent(out Rigidbody rb)) rb.position = spot.Value;
+            Physics.SyncTransforms();
         }
 
         public void Admitted(GameObject body, Entity ghost, in ServerBodyContext context)
