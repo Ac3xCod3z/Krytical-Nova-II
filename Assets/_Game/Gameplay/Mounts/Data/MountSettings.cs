@@ -57,6 +57,10 @@ namespace KryticalNova.Mounts
         public MountTransition getOnRunning = MountTransition.RunningOn();
         [Tooltip("Standing still (or walking: the rider stops first): a front flip off the mount, a three-point landing, a rise to idle.")]
         public MountTransition getOff = MountTransition.StandingOff();
+        [Tooltip("Metres the rider rises above the seat in the middle of a getting-on's hop, at the 0 / 50 / 100 % stage, " +
+                 "before settling into the saddle (owner, 7 Nov 2026: every mount-up clears the seat). Scaled per mount by " +
+                 "MountDefinition.hopClearanceScale.")]
+        public Vector3 hopClearance = new Vector3(0.08f, 0.1f, 0.12f);
         [Tooltip("Running, with the path still going on: the game's take-off from the saddle, the game's front flip, a forward roll, up running.")]
         public MountTransition getOffRunning = MountTransition.RunningOff();
         [Tooltip("Running, with the clicked spot close: the same take-off, flip and roll, ending standing (idle).")]

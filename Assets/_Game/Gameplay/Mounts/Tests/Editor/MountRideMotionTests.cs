@@ -229,6 +229,16 @@ namespace KryticalNova.Tests
         }
 
         [Test]
+        public void TheMountUpHop_ClearsTheSeatThenSettlesIntoIt()
+        {
+            MountTransition on = settings.Transition(true, false);
+            Assert.AreEqual(0f, MountRideMotion.AirBump(on.leavesAt, on.leavesAt, on.arrivesAt), 0.001f, "nothing before the feet leave");
+            Assert.AreEqual(1f, MountRideMotion.AirBump((on.leavesAt + on.arrivesAt) / 2f, on.leavesAt, on.arrivesAt), 0.001f, "highest half way");
+            Assert.AreEqual(0f, MountRideMotion.AirBump(on.arrivesAt, on.leavesAt, on.arrivesAt), 0.001f, "in the saddle at the landing");
+            for (int stage = 0; stage < 3; stage++) Assert.Greater(settings.hopClearance[stage], 0f, "every stage clears the seat");
+        }
+
+        [Test]
         public void EveryGettingOff_HasItsBeatsInOrderWithinTheClip([Values(false, true)] bool running, [Values(false, true)] bool endsRunning)
         {
             MountTransition t = settings.Transition(false, running, endsRunning);

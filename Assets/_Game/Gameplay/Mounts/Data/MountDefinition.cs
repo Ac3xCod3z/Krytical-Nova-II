@@ -90,6 +90,8 @@ namespace KryticalNova.Mounts
         [Min(0f)] public float riderLeanScale = 1f;
         [Tooltip("Scales the code bob (Mount Settings) for this mount's stride.")]
         [Min(0f)] public float riderBobScale = 1f;
+        [Tooltip("Scales how far the rider clears the seat in the mount-up hop (Mount Settings hopClearance): above 1 for a tall saddle with a high back.")]
+        [Min(0f)] public float hopClearanceScale = 1f;
         [Tooltip("Moves the shared riding clips on this mount's seat, in metres (x out, y up, z forward), on top of each stage's seat.")]
         public Vector3 riderSeatNudge;
 

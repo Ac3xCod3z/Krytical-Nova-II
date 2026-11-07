@@ -52,6 +52,7 @@ namespace KryticalNova.Mounts
         // on it, and sits on this mount's own seat in the saddle (onGround 0). Owner, 7 Nov 2026.
         private float groundDrop;
         private float onGround;
+        private float airRise; // metres over the seat in the mount-up hop's air phase (MountSettings.hopClearance)
         // The hand-over out of a getting-off: the origin's offset from rest when it began, and its clock (see HandOver).
         private Vector3 handOverFrom;
         private float handOverStart, handOverSeconds;
@@ -438,7 +439,7 @@ namespace KryticalNova.Mounts
             float bob = bobAmount * Mathf.Max(0f, Mathf.Sin(phase * Mathf.PI * 2f));
             // Turn about the hips (the seat), forward about the mount's side-to-side axis.
             Quaternion turn = Quaternion.AngleAxis(lean, Vector3.right);
-            Vector3 seat = seatOffset * lift + Vector3.forward * forward + Vector3.down * (groundDrop * onGround);
+            Vector3 seat = seatOffset * lift + Vector3.forward * forward + Vector3.down * (groundDrop * onGround) + Vector3.up * airRise;
             Vector3 hips = riderRest + seat + Vector3.up * HipHeight;
             rider.localRotation = turn * riderRestRotation;
             rider.localPosition = hips + turn * (riderRest + seat - hips) + Vector3.up * bob;
@@ -451,10 +452,14 @@ namespace KryticalNova.Mounts
         {
             forward = 0f;
             onGround = 0f;
+            airRise = 0f;
             if (shownMount == null || !shownMount.hopMountUp || settings == null || transition == null) { lift = 1f; return; }
             float since = Time.time - phaseStartedAt;
             if (shownPhase == RidePhase.GettingOn || shownPhase == RidePhase.GettingOff)
                 onGround = OnGround(shownPhase == RidePhase.GettingOn, since);
+            if (shownPhase == RidePhase.GettingOn) // clear the seat in the air, then settle into it
+                airRise = settings.hopClearance[Mathf.Clamp(shownStage, 0, 2)] * shownMount.hopClearanceScale
+                          * MountRideMotion.AirBump(since, transition.leavesAt, transition.arrivesAt);
             switch (shownPhase)
             {
                 case RidePhase.GettingOn:
