@@ -729,7 +729,10 @@ namespace KryticalNova.UI
             {
                 HideTooltip();
                 // Shift + right-click shares the item into chat as a link (owner, 22 Oct 2026); a plain right-click uses it.
-                if (evt.shiftKey) { ShareInChat(loc); return; }
+                // The press itself would then move the focus off the chat line the link was just put in (a press on a cell that
+                // takes no focus blurs whatever had it), so the link seemed to do nothing; "Share in chat" in the menu runs on a later
+                // click and kept it (owner's 2-player test, 6 Nov 2026, item 7)
+                if (evt.shiftKey) { element.focusController?.IgnoreEvent(evt); ShareInChat(loc); return; }
                 lastActionElement = element;
                 QuickAction(loc);
                 return;
