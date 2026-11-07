@@ -104,7 +104,9 @@ namespace KryticalNova.UI
                 if (target.InSight && target.Player.TryGetComponent(out PlayerParty theirs)) mine.Follow(theirs);
                 else mine.Follow(target.Name);
             });
-            Register("Callout", 30, target => target.InSight && PlayerDuel.Local != null && PlayerDuel.Local.IsSpawned, target =>
+            // the entity netcode's own view counts as online too (owner's 2-player test, 6 Nov 2026, item 6: Callout was missing there)
+            Register("Callout", 30, target => target.InSight && PlayerDuel.Local != null
+                                              && KryticalNova.Core.BodyRoleTag.IsMine(PlayerDuel.Local, PlayerDuel.Local.IsSpawned), target =>
             {
                 if (target.Player.TryGetComponent(out PlayerDuel theirs)) PlayerDuel.Local.Request(theirs);
             });
@@ -178,13 +180,25 @@ namespace KryticalNova.UI
         {
             PlayerParty mine = PlayerParty.Local;
             if (mine == null || !KryticalNova.Core.BodyRoleTag.IsMine(mine, mine.IsSpawned) || PlayerFollow.Local == null) return false;
+            // the entity netcode has no network object ids: its roster's own row is 0, the others the server's player keys, which a
+            // client body does not know, so a member in sight is found by name there as well (owner's test, 6 Nov 2026, item 16b)
+            bool byIds = mine.IsSpawned;
             foreach (PartyMember member in mine.Roster)
-            {
-                if (member.ObjectId == mine.NetworkObjectId) continue;
-                if (target.InSight ? member.ObjectId == target.Player.NetworkObjectId
-                                   : string.Equals(member.Name, target.Name, StringComparison.OrdinalIgnoreCase)) return true;
-            }
+                if (IsOtherSquadMember(member, byIds, mine.NetworkObjectId, target.InSight && byIds ? target.Player.NetworkObjectId : 0UL, target.Name))
+                    return true;
             return false;
+        }
+
+        /// <summary>
+        /// Whether <paramref name="member"/> is the menu's target and not the local player: by network object id when
+        /// <paramref name="byIds"/> (Netcode for GameObjects; <paramref name="targetObjectId"/> 0 = the target is out of sight, then by
+        /// name), otherwise by name (the entity netcode: its own row is id 0).
+        /// </summary>
+        public static bool IsOtherSquadMember(PartyMember member, bool byIds, ulong mineObjectId, ulong targetObjectId, string targetName)
+        {
+            if (member.ObjectId == (byIds ? mineObjectId : 0UL)) return false;
+            if (byIds && targetObjectId != 0UL) return member.ObjectId == targetObjectId;
+            return string.Equals(member.Name, targetName, StringComparison.OrdinalIgnoreCase);
         }
 
         /// <summary>Opens the menu for a player at a point of the panel. Nothing happens for the local player or an empty name.</summary>

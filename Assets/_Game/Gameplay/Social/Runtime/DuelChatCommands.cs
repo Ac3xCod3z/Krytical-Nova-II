@@ -24,14 +24,15 @@ namespace KryticalNova.Social
         private static string Duel(string name)
         {
             PlayerDuel mine = PlayerDuel.Local;
-            if (mine == null || !mine.IsSpawned) return Offline;
+            if (mine == null || !KryticalNova.Core.BodyRoleTag.IsMine(mine, mine.IsSpawned)) return Offline;   // the entity netcode's own view too
 
             PlayerDuel target = null;
             if (name.Length > 0)
             {
                 foreach (var other in UnityEngine.Object.FindObjectsByType<PlayerDuel>(FindObjectsInactive.Exclude))
                 {
-                    if (other == mine || !other.IsSpawned) continue;
+                    // another player: NGO-spawned, or another player's body of the entity netcode (owner's test, 6 Nov 2026, item 6)
+                    if (other == mine || !(other.IsSpawned || KryticalNova.Core.BodyRoleTag.IsRemoteClientView(other))) continue;
                     if (string.Equals(other.DuelistName, name, StringComparison.OrdinalIgnoreCase)) { target = other; break; }
                 }
                 if (target == null) return $"No player named '{name}' is nearby.";
@@ -50,7 +51,7 @@ namespace KryticalNova.Social
         private static string Answer(bool accept)
         {
             PlayerDuel mine = PlayerDuel.Local;
-            if (mine == null || !mine.IsSpawned) return Offline;
+            if (mine == null || !KryticalNova.Core.BodyRoleTag.IsMine(mine, mine.IsSpawned)) return Offline;   // the entity netcode's own view too
             mine.Respond(accept);
             return null;
         }
@@ -58,7 +59,7 @@ namespace KryticalNova.Social
         private static string Forfeit()
         {
             PlayerDuel mine = PlayerDuel.Local;
-            if (mine == null || !mine.IsSpawned) return Offline;
+            if (mine == null || !KryticalNova.Core.BodyRoleTag.IsMine(mine, mine.IsSpawned)) return Offline;   // the entity netcode's own view too
             mine.Forfeit();
             return null;
         }

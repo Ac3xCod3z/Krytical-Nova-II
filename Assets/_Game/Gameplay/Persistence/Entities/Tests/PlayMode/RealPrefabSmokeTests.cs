@@ -5138,6 +5138,46 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
         }
 
         [UnityTest]
+        public IEnumerator B64_SquadAndCalloutChatCommands_WorkOnTheOwnView_AndCalloutFindsAnotherPlayersView()
+        {
+            // owner's 2-player test, 6 Nov 2026, items 6 and 16a: /follow and the Squad commands answered "Squads need an online
+            // session" and /callout found nobody, because they asked NGO's IsSpawned; the own view of the entity netcode counts as online
+            NetRole.Install(new BodyRoleNetRoleAdapter(null, () => NetRoleKind.ServerBody));
+            GameObject own = Make(NetRoleKind.ClientView, true, new PlayerKey(641));
+            GameObject theirs = Make(NetRoleKind.ClientView, false, new PlayerKey(642));
+            yield return null;
+            var asked = new Asked();
+            own.GetComponent<BodyRoleTag>().Requests = asked;
+            LocalPlayer.Set(own);
+            try
+            {
+                string Said(string line)
+                {
+                    KryticalNova.Social.ChatInput input = KryticalNova.Social.ChatCommands.Parse(line, ChatChannel.General, null, null);
+                    return input.Notice;
+                }
+
+                string follow = Said("/follow Vesper");
+                Assert.IsTrue(follow == null || !follow.Contains("online session"), "/follow on the own view: " + follow);
+                Assert.Contains("Follow Vesper", asked.Ops, "/follow asks the server body by name");
+
+                string promote = Said("/promote Vesper");
+                Assert.IsTrue(promote == null || !promote.Contains("online session"), "/promote on the own view: " + promote);
+
+                string accept = Said("/accept");
+                Assert.IsTrue(accept == null || !accept.Contains("online session"), "/accept on the own view: " + accept);
+                Assert.IsTrue(asked.Ops.Exists(op => op.StartsWith("Duel Respond", StringComparison.Ordinal)), "/accept answers through the server body");
+
+                string theirName = theirs.GetComponent<KryticalNova.Combat.PlayerDuel>().DuelistName;
+                Assume.That(!string.IsNullOrEmpty(theirName), "the other view has a duelist name");
+                string callout = Said("/callout " + theirName);
+                Assert.IsTrue(callout == null || !callout.Contains("No player named"), "/callout finds another player's view: " + callout);
+                Assert.IsTrue(asked.Ops.Exists(op => op.StartsWith("Duel Request " + theirs.name, StringComparison.Ordinal)), "and asks the server to call them out");
+            }
+            finally { LocalPlayer.Set(null); }
+        }
+
+        [UnityTest]
         public IEnumerator B63_TheRunSelection_IsDecidedOnTheServerBody_ARefusalIsCorrectedOnTheView_AndServerWalksRunAndPayAsNgo()
         {
             // NGO PlayerMovementSkills.Select / SelectServerRpc / CorrectSelectionRpc and PointAndClickPlayer.ServerMoveTo (run = Run selected,

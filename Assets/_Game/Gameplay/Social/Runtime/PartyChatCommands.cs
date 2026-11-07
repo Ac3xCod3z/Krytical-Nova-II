@@ -27,7 +27,8 @@ namespace KryticalNova.Social
         private static string Follow(string name)
         {
             PlayerFollow mine = PlayerFollow.Local;
-            if (mine == null || !mine.IsSpawned) return Offline;
+            // the entity netcode's own view is online too (owner's 2-player test, 6 Nov 2026, item 16a)
+            if (mine == null || !KryticalNova.Core.BodyRoleTag.IsMine(mine, mine.IsSpawned)) return Offline;
             if (name.Length > 0)
             {
                 mine.Follow(name);
@@ -90,7 +91,7 @@ namespace KryticalNova.Social
         private static bool TryGetMine(out PlayerParty mine)
         {
             mine = PlayerParty.Local;
-            return mine != null && mine.IsSpawned;
+            return mine != null && KryticalNova.Core.BodyRoleTag.IsMine(mine, mine.IsSpawned);   // the entity netcode's own view too
         }
     }
 }
