@@ -116,6 +116,9 @@ namespace KryticalNova.Mounts
         [Min(0f)] public float rollStartsAt;
         [Tooltip("Seconds into the clip when the rider is up on both feet, standing. 0 = it ends running.")]
         [Min(0f)] public float standsAt;
+        [Tooltip("Seconds into the clip when the planted feet stop sliding after the touchdown (measured: the roll's first stretch). " +
+                 "The dust under them runs from Roll Starts At to here. 0 = no slide.")]
+        [Min(0f)] public float slideEndsAt;
 
         private static Keyframe K(float t, float v) => new Keyframe(t, v);
 
@@ -151,14 +154,14 @@ namespace KryticalNova.Mounts
         public static MountTransition RunningOff() => new MountTransition
         {
             seconds = 2.0f, freeSeconds = 1.93f, stirrupsAt = 0f, effectDelay = 0.1f, effectSeconds = 0.5f, rollEndsAt = 1.76f,
-            leavesAt = 0.36f, arrivesAt = 0.98f, apexAt = 0.63f, rollStartsAt = 1.0f,
+            leavesAt = 0.36f, arrivesAt = 0.98f, apexAt = 0.63f, rollStartsAt = 1.0f, slideEndsAt = 1.23f,
         };
 
         /// <summary>The same take-off, flip and roll, ending standing: 2.1 s, free at 1.98 s.</summary>
         public static MountTransition RunningOffToIdle() => new MountTransition
         {
             seconds = 2.1f, freeSeconds = 1.98f, stirrupsAt = 0f, effectDelay = 0.1f, effectSeconds = 0.5f, rollEndsAt = 1.76f,
-            leavesAt = 0.36f, arrivesAt = 0.98f, apexAt = 0.63f, rollStartsAt = 1.0f, standsAt = 1.97f,
+            leavesAt = 0.36f, arrivesAt = 0.98f, apexAt = 0.63f, rollStartsAt = 1.0f, slideEndsAt = 1.23f, standsAt = 1.97f,
         };
     }
 }

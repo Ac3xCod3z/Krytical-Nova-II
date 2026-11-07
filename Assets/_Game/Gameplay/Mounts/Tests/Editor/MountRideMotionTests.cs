@@ -237,7 +237,8 @@ namespace KryticalNova.Tests
             if (running)
             {
                 Assert.GreaterOrEqual(t.rollStartsAt, t.arrivesAt, "the roll starts at or after the touchdown");
-                Assert.Greater(t.rollEndsAt, t.rollStartsAt, "the roll ends after it starts");
+                Assert.Greater(t.slideEndsAt, t.rollStartsAt, "the feet's slide window ends after it starts");
+                Assert.Greater(t.rollEndsAt, t.slideEndsAt, "the roll ends after the slide window");
             }
             else Assert.AreEqual(0f, t.rollStartsAt, "the standing dismount has no roll");
             bool stands = !running || !endsRunning;

@@ -70,6 +70,10 @@ namespace KryticalNova.Core
         RollEnd,
         /// <summary>Back on both feet, standing (the standing dismount, or a running one that ends standing).</summary>
         StandUp,
+        /// <summary>The roll's first stretch is over: the planted feet stop sliding (the dust under them ends).</summary>
+        SlideEnd,
+        /// <summary>The getting-off is over or was cut short: everything it started ends now, guaranteed.</summary>
+        Ended,
     }
 
     /// <summary>One beat of a getting-off as every client sees it (from the replicated ride phase).</summary>

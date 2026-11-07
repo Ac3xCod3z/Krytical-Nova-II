@@ -771,21 +771,32 @@ namespace KryticalNova.GameFeel
                     ActorVfx.For(actor).SetAirborne(true, airborneLoopVfx);
                     break;
                 case DismountBeat.Touchdown:
+                    // The lines and the smear end here, always (owner, retest: they stuck on after the roll).
                     ActorVfx.Find(actor)?.SetAirborne(false, airborneLoopVfx);
                     ActorSmear.Find(actor)?.Release();
-                    PlayWorld(bodyLandWorldFeel, feet, Facing(actor), actor, hit);
-                    if (moment.IsLocalPlayer) Play(bodyLandFeel, actor.position, Mathf.Lerp(dismountShakeStill, dismountShakeFull, pace));
+                    // The jump's own landing dust and thud: no death stars (owner, retest: "the stars are stupid").
+                    PlayWorld(landWorldFeel, feet, Facing(actor), actor, hit);
+                    if (moment.IsLocalPlayer) Play(landFeel, actor.position, Mathf.Lerp(dismountShakeStill, dismountShakeFull, pace));
                     break;
                 case DismountBeat.RollStart:
+                    // Dust under the planted feet for the measured slide window only (RollStart to SlideEnd).
                     ActorVfx.For(actor).SetRunning(true, runLoopVfx);
                     break;
+                case DismountBeat.SlideEnd:
+                    ActorVfx.Find(actor)?.SetRunning(false, runLoopVfx);
+                    break;
                 case DismountBeat.RollEnd:
-                    // Up into the run: the run's own dust carries on (RunStopped ends it); else it settles here.
-                    if (!moment.EndsRunning) ActorVfx.Find(actor)?.SetRunning(false, runLoopVfx);
+                    // The roll's exit slide: one short puff where the feet catch, not a trail.
+                    ActorVfx.Find(actor)?.SetRunning(false, runLoopVfx);
+                    PlayWorld(jumpChargeWorldFeel, feet, Facing(actor), actor, dismountStandUpIntensity);
                     break;
                 case DismountBeat.StandUp:
                     ActorVfx.Find(actor)?.SetRunning(false, runLoopVfx);
-                    PlayWorld(landWorldFeel, feet, Facing(actor), actor, dismountStandUpIntensity);
+                    break;
+                case DismountBeat.Ended:
+                    ActorVfx.Find(actor)?.SetAirborne(false, airborneLoopVfx);
+                    ActorVfx.Find(actor)?.SetRunning(false, runLoopVfx);
+                    ActorSmear.Find(actor)?.Release();
                     break;
             }
         }

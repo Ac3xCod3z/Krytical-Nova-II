@@ -149,9 +149,13 @@ namespace KryticalNova.Mounts
                 transition = settings != null ? settings.Transition(on, runningTransition, mounts.DismountEndsRunning) : null;
                 if (mount.hopMountUp) { lift = Lift(phase, 0f); forward = Forward(0f); onGround = OnGround(on, 0f); }
                 // The getting-off's beats for the GameFeel layer (take-off, apex, touchdown, roll, stand-up).
+                EndBeats(); // a getting-off cut short by this new phase ends its feel first
                 beats = !on && mount.hopMountUp ? transition : null;
                 beatsFired = 0;
                 beatsEndRunning = runningTransition && mounts.DismountEndsRunning;
+                // Owner, 7 Nov 2026 (retest): the mount slid along under the rider on the running getting-off, since the
+                // body keeps travelling (the fluid dismount). It stays where it stood while it vanishes there.
+                if (!on && model != null && isActiveAndEnabled) model.transform.SetParent(null, true);
                 if (materialiser != null)
                 {
                     float delay = transition != null ? transition.effectDelay : 0f;
@@ -326,9 +330,18 @@ namespace KryticalNova.Mounts
             Beat(DismountBeat.Apex, beats.apexAt, since);
             Beat(DismountBeat.Touchdown, beats.arrivesAt, since);
             Beat(DismountBeat.RollStart, beats.rollStartsAt, since);
+            Beat(DismountBeat.SlideEnd, beats.slideEndsAt, since);
             Beat(DismountBeat.RollEnd, beats.rollStartsAt > 0f ? beats.rollEndsAt : 0f, since);
             Beat(DismountBeat.StandUp, beats.standsAt, since);
-            if (since > beats.seconds) beats = null;
+            if (since > beats.seconds) EndBeats();
+        }
+
+        // The last beat, always: what the getting-off started (lines, smear, dust) ends, finished or cut short.
+        private void EndBeats()
+        {
+            if (beats == null) return;
+            Beat(DismountBeat.Ended, Mathf.Max(0.0001f, Time.time - phaseStartedAt), Time.time - phaseStartedAt);
+            beats = null;
         }
 
         private void Beat(DismountBeat beat, float at, float since)
@@ -395,7 +408,7 @@ namespace KryticalNova.Mounts
         /// into the idle, in step with it, instead of at once (see <see cref="HandOver"/>).</param>
         private void Clear(bool eased = false)
         {
-            if (!eased || !isActiveAndEnabled) { FinishHandOver(); beats = null; }
+            if (!eased || !isActiveAndEnabled) { FinishHandOver(); EndBeats(); }
             if (shownMount != null || riderLifted) motor?.SetSeated(null, null, null);
             if (isActiveAndEnabled) LetModelVanish();
             else DestroyModel();
