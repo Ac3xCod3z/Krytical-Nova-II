@@ -1859,6 +1859,10 @@ namespace KryticalNova.EditorTools.GM
         [ButtonGroup(Tabs + "/" + HostilesTab + "/Species"), EnableIf(nameof(IsReady)), LabelText("List"), PropertyOrder(1002)]
         private void ListHostiles() => Run("gm.hostile.list");
 
+        // the entity brain's Prowler stand-in (M5.5): a Bonewalker at level 4 that attacks on sight (gm.hostile.spawn prowler)
+        [ButtonGroup(Tabs + "/" + HostilesTab + "/Species"), EnableIf(nameof(IsReady)), LabelText("Spawn Prowler"), PropertyOrder(1002)]
+        private void SpawnProwler() => Run("gm.hostile.spawn prowler");
+
         [ButtonGroup(Tabs + "/" + HostilesTab + "/Species"), EnableIf(nameof(IsReady)), LabelText("Hits To Kill"), PropertyOrder(1003)]
         private void HostileTimeToKill() => Run($"gm.hostile.ttk {ChosenHostile}");
 

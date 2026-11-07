@@ -99,7 +99,9 @@ namespace KryticalNova.Hostiles.Entities
                 ReachAbove = species.reachAbove,
                 RadiusMm = Mathf.RoundToInt(species.bodySize.x * scale * 1000f),
                 HeightMm = Mathf.RoundToInt(species.bodySize.y * scale * 1000f),
-                Behaviour = species.behaviour == HostileBehaviour.AttacksOnSight ? HostileBehaviourKind.AttacksOnSight : HostileBehaviourKind.FightsBack,
+                // the GM's Prowler stand-in (M5.5): a FightsBack species made to attack on sight (HostileNet.GmAttacksOnSight)
+                Behaviour = species.behaviour == HostileBehaviour.AttacksOnSight || (TryGetComponent(out HostileNet net) && net.GmAttacksOnSight)
+                    ? HostileBehaviourKind.AttacksOnSight : HostileBehaviourKind.FightsBack,
                 Poise = 100,
                 NoticeTicks = HostileRules.NoticeTicks(-1f, noticeDefault, tickRate),
             });

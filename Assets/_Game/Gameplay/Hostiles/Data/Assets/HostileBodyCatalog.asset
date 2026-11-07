@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b69e380721422b84eae0942969fd0b67, type: 3}
+  m_Name: HostileBodyCatalog
+  m_EditorClassIdentifier: KryticalNova.Hostiles::KryticalNova.Hostiles.HostileBodyCatalog
+  entries:
+  - species: {fileID: 9032307965630102114, guid: 49e1fb9d51c8b9f4b9046cb93be2b11d, type: 3}
+    body: {fileID: 8288795039451464216, guid: 682984dee3a04d6459ec2b91c6d98892, type: 3}
+  - species: {fileID: 8545999445073815631, guid: 47cb11261d17e154b9362fe36513373e, type: 3}
+    body: {fileID: 4720212664313035549, guid: 30fbb3cb4a79cf44ebf5d7c16e79ad3e, type: 3}
+  - species: {fileID: 5219855029039017329, guid: 6dac6a83ed66c92419228a928b316638, type: 3}
+    body: {fileID: 8135798610812446636, guid: 2937eeab2c5043d468a0dd9a61a88740, type: 3}
+  - species: {fileID: 8603685105435458532, guid: e7014724f8730084ab4782dd9c6a6c52, type: 3}
+    body: {fileID: 3931452132268660976, guid: 9abdc37f5d42d384ea672f5a94e07e87, type: 3}
+  - species: {fileID: 6595211121603245871, guid: 3b4d1d05fb141e443ac7afa50cb0296b, type: 3}
+    body: {fileID: 41381080703698358, guid: 87d3fa7265e3de1429f70a201d139a61, type: 3}
+  - species: {fileID: 4772720479565604217, guid: 3f7c867f110e66143829caa6deaf475e, type: 3}
+    body: {fileID: 5715534420544994392, guid: fdbcbe21e115e28409c16e5304051e53, type: 3}
+  - species: {fileID: 7193274068591419942, guid: 282e23c8b5ed7e34db029137838f5c8b, type: 3}
+    body: {fileID: 7557363595020446888, guid: 7a072cb63bc7ef9429b3eb44c37de3ed, type: 3}
+  - species: {fileID: 1843217644261276650, guid: 3553b3909a0b8ae4d9846ef9e6eaf777, type: 3}
+    body: {fileID: 9062587644432113446, guid: 50adb6c401fc3cc4ba1522bd8010a913, type: 3}
+  - species: {fileID: 6196047574861375693, guid: 31693ff2d039ea14b8701fb976c47857, type: 3}
+    body: {fileID: 8806093174894967221, guid: 04c4dc9d04de9bb47873b82a8791775d, type: 3}
+  - species: {fileID: 7648130323698550539, guid: 03700e41cc32eea4db189db01dee8969, type: 3}
+    body: {fileID: 245311987064474233, guid: 065648fc9558a2942909b3ff46e6a99a, type: 3}

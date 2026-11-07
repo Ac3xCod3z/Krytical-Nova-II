@@ -1,0 +1,17 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 35a97c1958cabca498c0dd3edfea19b3, type: 3}
+  m_Name: HostileWorldAssets
+  m_EditorClassIdentifier: KryticalNova.Hostiles.Entities::KryticalNova.Hostiles.Entities.HostileWorldAssets
+  brain: {fileID: 11400000, guid: 6e49bfa3fc054d5ea124e7acd9d272f4, type: 2}
+  hostiles: {fileID: 11400000, guid: 5679bfb8ea794cab93e2a6b2e321f2ba, type: 2}
+  bodies: {fileID: 11400000, guid: d32d5506362994e44b2148989cceaafa, type: 2}

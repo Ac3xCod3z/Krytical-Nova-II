@@ -56,6 +56,7 @@ namespace KryticalNova.Hostiles.Entities.Editor
             EnsureHolder(prefab);
             BuildBodies();
             AssetDatabase.SaveAssets();
+            KeepBodiesOutOfNgoPrefabs();
             Debug.Log("[KnBuild] Hostile ghost assets: " + PrefabPath + " in " + PlayerGhostAssetsBuilder.SubScenePath);
         }
 
@@ -124,7 +125,36 @@ namespace KryticalNova.Hostiles.Entities.Editor
             Debug.Log($"[KnBuild] Hostile server bodies: {entries.Count} in {BodyFolder}, catalog {HostileBodyCatalog.AssetPath}");
         }
 
-        public const string ResourcesFolder = "Assets/_Game/Gameplay/Hostiles/Entities/Resources";
+        public const string NgoDefaultPrefabsPath = "Assets/DefaultNetworkPrefabs.asset";
+
+        /// <summary>
+        /// The server bodies carry a NetworkObject (HostileNet needs one) but are never spawned by NGO, and NGO adds every such prefab to its
+        /// default list when it is saved (7 Nov 2026: all ten were). There they would count as species of their own
+        /// (<see cref="HostileSpawner.Species"/> reads the NetworkManager's list): a view could be made of an invisible body. Taken out again.
+        /// </summary>
+        static void KeepBodiesOutOfNgoPrefabs()
+        {
+            Object list = AssetDatabase.LoadMainAssetAtPath(NgoDefaultPrefabsPath);
+            if (list == null) return;
+            var so = new SerializedObject(list);
+            SerializedProperty entries = so.FindProperty("List");
+            if (entries == null || !entries.isArray) { Debug.LogError("[KnBuild] " + NgoDefaultPrefabsPath + " has no List: the server bodies were not checked"); return; }
+            int removed = 0;
+            for (int i = entries.arraySize - 1; i >= 0; i--)
+            {
+                Object prefab = entries.GetArrayElementAtIndex(i).FindPropertyRelative("Prefab")?.objectReferenceValue;
+                string path = prefab != null ? AssetDatabase.GetAssetPath(prefab) : null;
+                if (path == null || !path.StartsWith(BodyFolder + "/", StringComparison.Ordinal)) continue;
+                entries.DeleteArrayElementAtIndex(i);
+                removed++;
+            }
+            if (removed == 0) return;
+            so.ApplyModifiedPropertiesWithoutUndo();
+            AssetDatabase.SaveAssetIfDirty(list);
+            Debug.Log($"[KnBuild] {removed} server bodies taken out of NGO's {NgoDefaultPrefabsPath} (never NGO-spawned)");
+        }
+
+        public const string ResourcesFolder ="Assets/_Game/Gameplay/Hostiles/Entities/Resources";
         public const string WorldAssetsPath = ResourcesFolder + "/" + HostileWorldAssets.ResourcePath + ".asset";
         const string HostileBrainSettingsPath = "Assets/_Game/Gameplay/Hostiles/Data/Assets/HostileBrainSettings.asset";
 

@@ -30,21 +30,4 @@ namespace KryticalNova.Hostiles.Entities
     {
         public Entity Prefab;
     }
-
-    /// <summary>In the player ghost subscene: makes the Hostile ghost prefab known as <see cref="HostileGhostPrefab"/>.</summary>
-    [DisallowMultipleComponent]
-    public sealed class HostileGhostPrefabAuthoring : MonoBehaviour
-    {
-        public GameObject prefab;
-
-        sealed class Baker : Baker<HostileGhostPrefabAuthoring>
-        {
-            public override void Bake(HostileGhostPrefabAuthoring a)
-            {
-                if (a.prefab == null) return;
-                Entity e = GetEntity(TransformUsageFlags.None);
-                AddComponent(e, new HostileGhostPrefab { Prefab = GetEntity(a.prefab, TransformUsageFlags.Dynamic) });
-            }
-        }
-    }
 }

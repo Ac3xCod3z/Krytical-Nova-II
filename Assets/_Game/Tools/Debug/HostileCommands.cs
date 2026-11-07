@@ -17,6 +17,9 @@ namespace KryticalNova.DevTools
     /// </summary>
     public static class HostileCommands
     {
+        /// <summary>gm.hostile.spawn prowler (M5.5 plan): the Bonewalker body at level 4, attacking on sight.</summary>
+        public const string ProwlerName = "prowler", ProwlerSpecies = "Bonewalker";
+        public const int ProwlerLevel = 4;
         private const int MaxSpawnCount = 50;
         private const float SpawnSpacing = 1.6f;
         private static bool frozen;
@@ -97,8 +100,11 @@ namespace KryticalNova.DevTools
             if (health.Length > 0 && !infinite &&
                 (!float.TryParse(health, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out maxHealth) || maxHealth < 1f))
                 return "Health is a number of 1 or more, or inf: gm.hostile.spawn Gargoyle 1 0 50000, gm.hostile.spawn Gargoyle 1 0 inf.";
-            HostileNet species = HostileSpawner.Find(idOrName);
-            if (species == null) return $"No Hostile species '{idOrName}'. gm.hostile.list shows them.";
+            // the entity brain's Prowler stand-in (M5.5, no species asset of its own yet): a Bonewalker at level 4 that attacks on sight
+            bool prowler = string.Equals((idOrName ?? string.Empty).Trim(), ProwlerName, StringComparison.OrdinalIgnoreCase);
+            HostileNet species = HostileSpawner.Find(prowler ? ProwlerSpecies : idOrName);
+            if (species == null) return prowler ? $"No {ProwlerSpecies} species for the Prowler stand-in." : $"No Hostile species '{idOrName}'. gm.hostile.list shows them.";
+            if (prowler && level <= 0) level = ProwlerLevel;
             HostileStatCurve curve = species.Curve;
             if (curve != null && level > curve.MaxLevel) return $"The highest Hostile level is {curve.MaxLevel}.";
 
@@ -119,12 +125,14 @@ namespace KryticalNova.DevTools
                 HostileNet hostile = HostileSpawner.Spawn(species, at, facing, level, true);
                 if (hostile == null) continue;
                 if (infinite || maxHealth > 0f) hostile.SetGmHealth(maxHealth, infinite);
+                if (prowler) hostile.SetGmAttacksOnSight(true);
                 made++;
             }
             if (made == 0) return "No walkable ground there.";
             int shownLevel = level > 0 ? level : species.Definition.level;
             string with = infinite ? ", which cannot die" : maxHealth > 0f ? $", with {maxHealth:0} health" : string.Empty;
-            return $"Spawned {made} {species.Definition.displayName} at level {shownLevel}{with}.";
+            string name = prowler ? $"Prowler stand-in ({species.Definition.displayName}, attacks on sight)" : species.Definition.displayName;
+            return $"Spawned {made} {name} at level {shownLevel}{with}.";
         }
 
         [Command("gm.hostile.clear", "Remove GM-spawned Hostiles: all of them, or those within [radius] metres.")]

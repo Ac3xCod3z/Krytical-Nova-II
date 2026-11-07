@@ -7,6 +7,8 @@
         "KryticalNova.Hostiles",
         "KryticalNova.Hostiles.Entities",
         "KryticalNova.Player.Entities",
+        "KryticalNova.Networking.Entities.Tests.Editor",
+        "Unity.Scenes",
         "Unity.NetCode",
         "Unity.Netcode.Runtime",
         "UnityEngine.TestRunner",

@@ -17,6 +17,40 @@ namespace KryticalNova.Hostiles.Entities.Tests
         }
 
         [Test]
+        public void TheGmsProwler_AFightsBackSpecies_AttacksOnSight_OnlyWhileTheSwitchIsOn()
+        {
+            // M5.5 plan: gm.hostile.spawn prowler = the Bonewalker body (a FightsBack species) at level 4, attacking on sight
+            using var w = new HostileTestWorld();
+            Entity h = w.Hostile(new float3(0f, 0f, 0f), HostileBehaviourKind.FightsBack);
+            var body = new GameObject("ProwlerBody");
+            var species = ScriptableObject.CreateInstance<HostileDefinition>();
+            species.behaviour = HostileBehaviour.FightsBack;
+            species.attacks = new HostileDefinition.Attack[0];
+            HostileSpawner.AuthorityOverride = () => true;
+            try
+            {
+                var net = body.AddComponent<HostileNet>();
+                var brain = body.AddComponent<EcsHostileBrain>();
+                brain.Bind(w.World, h);
+                brain.Configure(species, default);
+                Assert.AreEqual(HostileBehaviourKind.FightsBack, w.Em.GetComponentData<HostileLife>(h).Behaviour, "the species' own");
+                net.SetGmAttacksOnSight(true);
+                Assert.IsTrue(net.GmAttacksOnSight);
+                brain.Configure(species, default);
+                Assert.AreEqual(HostileBehaviourKind.AttacksOnSight, w.Em.GetComponentData<HostileLife>(h).Behaviour, "the GM's Prowler");
+                net.SetGmAttacksOnSight(false);
+                brain.Configure(species, default);
+                Assert.AreEqual(HostileBehaviourKind.FightsBack, w.Em.GetComponentData<HostileLife>(h).Behaviour, "off again");
+            }
+            finally
+            {
+                HostileSpawner.AuthorityOverride = null;
+                Object.DestroyImmediate(body);
+                Object.DestroyImmediate(species);
+            }
+        }
+
+        [Test]
         public void IHostileBrain_RoundTrip()
         {
             using var w = new HostileTestWorld();

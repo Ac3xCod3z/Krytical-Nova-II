@@ -132,3 +132,5 @@ __pycache__/
 # Player.Entities tests rebuild their ghost prefab and SubScene here at the first test
 /Assets/_Game/Gameplay/Player/Entities/Tests/Editor/Generated/
 /Assets/_Game/Gameplay/Player/Entities/Tests/Editor/Generated.meta
+/Assets/_Game/Gameplay/Hostiles/Entities/Tests/Editor/Generated/
+/Assets/_Game/Gameplay/Hostiles/Entities/Tests/Editor/Generated.meta

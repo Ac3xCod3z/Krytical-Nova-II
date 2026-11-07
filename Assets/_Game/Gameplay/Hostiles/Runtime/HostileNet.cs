@@ -304,6 +304,7 @@ namespace KryticalNova.Hostiles
             asleep = false;
             gmMaxHealth = 0f;
             gmInfinite = false;
+            gmAttacksOnSight = false;
             SetTag(null);
             Stand();
             ApplyNumbers();
@@ -393,6 +394,22 @@ namespace KryticalNova.Hostiles
             gmMaxHealth = Mathf.Max(0f, maxHealth);
             gmInfinite = infinite;
             if (setUp) ApplyHealth();
+        }
+
+        private bool gmAttacksOnSight;
+
+        /// <summary>
+        /// GM: this life attacks players on sight whatever its species does (the entity brain's Prowler stand-in, M5.5: a Bonewalker
+        /// that comes for you). Off again when the body goes back to the pool. NGO's Emerald brain does not read it.
+        /// </summary>
+        public bool GmAttacksOnSight => gmAttacksOnSight;
+
+        /// <summary>Server or offline, for GM tools: see <see cref="GmAttacksOnSight"/>; the brain is told at once.</summary>
+        public void SetGmAttacksOnSight(bool on)
+        {
+            if (!HasAuthority) return;
+            gmAttacksOnSight = on;
+            if (setUp && brain != null) brain.Configure(definition, stats);
         }
 
         private void ApplyIdentity()
