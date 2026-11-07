@@ -173,6 +173,19 @@ namespace KryticalNova.Player.Entities
             return new int3(targetMm.x + (int)math.round(dx * ring / length), targetMm.y, targetMm.z + (int)math.round(dz * ring / length));
         }
 
+        /// <summary>
+        /// NGO FaceTarget (PlayerMeleeCombat:698): the yaw, hundredths of a degree 0..35999 (0 = +z, as <see cref="InArc"/> reads it), that faces
+        /// from <paramref name="fromMm"/> toward <paramref name="toMm"/> on the ground plane; <paramref name="currentCdeg"/> when they stand
+        /// within 10 cm (NGO: 0.01 m squared).
+        /// </summary>
+        public static int YawTowardCdeg(int3 fromMm, int3 toMm, int currentCdeg)
+        {
+            long dx = toMm.x - fromMm.x, dz = toMm.z - fromMm.z;
+            if (dx * dx + dz * dz <= 100L * 100L) return currentCdeg;
+            int cdeg = (int)math.round(math.degrees(math.atan2((double)dx, (double)dz)) * 100.0);
+            return ((cdeg % 36000) + 36000) % 36000;
+        }
+
         /// <summary>A length in microseconds as whole ticks, rounded up (a strike never ends early).</summary>
         public static int Ticks(int micros, int tickRate) => (int)(((long)micros * tickRate + 999999) / 1000000);
 

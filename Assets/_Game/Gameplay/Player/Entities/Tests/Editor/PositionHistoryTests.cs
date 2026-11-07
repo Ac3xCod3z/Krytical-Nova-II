@@ -111,6 +111,27 @@ namespace KryticalNova.Player.Entities.Tests
         }
 
         [Test]
+        public void AStrikeStep_TurnsTheAttackerToFaceItsTarget_OnBothSides()
+        {
+            // owner's 2-player test, 6 Nov 2026, item 12 (NGO FaceTarget at each strike step): the target stands to the side (+x) of an
+            // attacker facing +z; once a strike starts, the attacker faces it on the server and in the owner's prediction
+            using var rig = PlayerRig.Create(2, 0, new[] { new int3(0, 0, 0), new int3(1200, 0, 0) });
+            Assert.AreEqual(0, rig.Get<PlayerPose>(rig.Server, rig.ServerGhosts[0]).YawCdeg, "the case under test: facing +z");
+            int target = rig.Get<GhostInstance>(rig.Server, rig.ServerGhosts[1]).ghostId;
+            rig.Sources[0].Attack(target);
+            bool struck = false;
+            for (int i = 0; i < 21 + 20 && !struck; i++)
+            {
+                rig.Tick();
+                struck = rig.Get<CombatState>(rig.Server, rig.ServerGhosts[0]).Step > 0;
+            }
+            Assert.IsTrue(struck, "a strike started");
+            rig.Tick(3);
+            Assert.AreEqual(9000, rig.Get<PlayerPose>(rig.Server, rig.ServerGhosts[0]).YawCdeg, "the server's attacker faces +x");
+            Assert.AreEqual(9000, rig.Get<PlayerPose>(rig.Clients[0], rig.GhostIn(0, 0)).YawCdeg, "the owner predicts the same facing");
+        }
+
+        [Test]
         public void TheOwnersAttack_StartsTheComboOnBothSides_AndStopEndsIt()
         {
             // M4.4d: player 0 attacks player 1 standing 1.2 m away (within NGO's 1.6 m): strike 1 at once, the owner predicting it

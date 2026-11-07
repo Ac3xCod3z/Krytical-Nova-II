@@ -14,6 +14,21 @@ namespace KryticalNova.Player.Entities.Tests
         static MeleeTiming T => MeleeTiming.Prefab(new int3(1200000, 1000000, 1500000));
 
         [Test]
+        public void YawToward_FacesTheTarget_OnTheGroundPlane_AsTheArcReadsIt()
+        {
+            // owner's 2-player test, 6 Nov 2026, item 12: NGO FaceTarget at each strike step; 0 = +z, 9000 = +x (MeleeRules.InArc)
+            Assert.AreEqual(0, MeleeRules.YawTowardCdeg(int3.zero, new int3(0, 0, 2000), 4500));
+            Assert.AreEqual(9000, MeleeRules.YawTowardCdeg(int3.zero, new int3(2000, 0, 0), 0));
+            Assert.AreEqual(18000, MeleeRules.YawTowardCdeg(int3.zero, new int3(0, 0, -2000), 0));
+            Assert.AreEqual(27000, MeleeRules.YawTowardCdeg(int3.zero, new int3(-2000, 0, 0), 0));
+            Assert.AreEqual(4500, MeleeRules.YawTowardCdeg(new int3(1000, 0, 1000), new int3(2000, 5000, 2000), 0), "height does not count");
+            Assert.AreEqual(1234, MeleeRules.YawTowardCdeg(int3.zero, new int3(50, 0, 50), 1234), "within 10 cm: as it was");
+            int yaw = MeleeRules.YawTowardCdeg(int3.zero, new int3(1500, 0, 800), 0);
+            float rad = math.radians(yaw / 100f);
+            Assert.AreEqual(1f, math.dot(math.normalize(new float2(1500, 800)), new float2(math.sin(rad), math.cos(rad))), 1e-3f, "dead ahead");
+        }
+
+        [Test]
         public void Strikes_LastTheirClipAtThePrefabsSpeed_AndLandAtTheWindowsEnd()
         {
             MeleeTiming t = T;

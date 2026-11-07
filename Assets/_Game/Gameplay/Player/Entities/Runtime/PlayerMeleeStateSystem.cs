@@ -53,7 +53,7 @@ namespace KryticalNova.Player.Entities
                 bodies[ghost.ValueRO.ghostId] = new Body { FeetMm = target.ValueRO.FeetMm, Alive = target.ValueRO.Alive };
 
             foreach (var (input, combat, timing, pose, ghost) in SystemAPI
-                         .Query<RefRO<PlayerInput>, RefRW<CombatState>, RefRO<MeleeTimingData>, RefRO<PlayerPose>, RefRO<GhostInstance>>()
+                         .Query<RefRO<PlayerInput>, RefRW<CombatState>, RefRO<MeleeTimingData>, RefRW<PlayerPose>, RefRO<GhostInstance>>()
                          .WithAll<Simulate, PlayerGhostTag>())
             {
                 ref CombatState s = ref combat.ValueRW;
@@ -72,6 +72,10 @@ namespace KryticalNova.Player.Entities
                 MeleeRules.Tick(timing.ValueRO.Value, ref s, nt.ServerTick, simRate, found && target.Alive,
                     found && MeleeRules.InStrikingRange(timing.ValueRO.Value, me, target.FeetMm),
                     found && MeleeRules.LeftReach(timing.ValueRO.Value, me, target.FeetMm));
+                // NGO FaceTarget at each strike step's start (PlayerMeleeCombat:293, 311, 317; owner's 2-player test, 6 Nov 2026, item 12:
+                // the bodies did not face the target while attacking). The same on the server and the owner's prediction.
+                if (found && s.Step > 0 && s.StepStartTick.IsValid && s.StepStartTick.Equals(nt.ServerTick))
+                    pose.ValueRW.YawCdeg = MeleeRules.YawTowardCdeg(me, target.FeetMm, pose.ValueRO.YawCdeg);
             }
             bodies.Dispose();
         }
