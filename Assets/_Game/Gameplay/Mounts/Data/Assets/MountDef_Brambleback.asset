@@ -92,3 +92,5 @@ MonoBehaviour:
   - {fileID: -623603649343465320, guid: c5673a265ed54464bb3b981fd5d6110d, type: 3}
   mountUp: {fileID: -623603649343465320, guid: 7f16c0b041a029943b27070c588517b0, type: 3}
   dismount: {fileID: -623603649343465320, guid: ea4661891e8414b49b66d440b92b4b5d, type: 3}
+  hopMountUp: 0
+  materialise: {fileID: 11400000, guid: 5d07293bf2e7b474b8d66a62e1295a75, type: 2}

@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ec9455bf8fb54daaa998f4fabdc804b7, type: 3}
+  m_Name: MountMaterialise_Brambleback
+  m_EditorClassIdentifier: KryticalNova.Mounts::KryticalNova.Mounts.MountMaterialiseSettings
+  material: {fileID: 2100000, guid: 06ec90e19c1a1d248b739978e671f6e2, type: 2}
+  edgeColorA: {r: 0.45, g: 2.4, b: 0.3, a: 1}
+  edgeColorB: {r: 2.4, g: 1.15, b: 0.12, a: 1}
+  burnWidth: 0.08
+  rimStrength: 1.2
+  noise: {fileID: 2800000, guid: c15b8bb595d9e1a47a4c61a4dc1b982e, type: 3}
+  noiseTiling: {x: 3, y: 3}
+  pattern: 0
+  patternUntil: 0.6
+  direction: 0
+  directionWeight: 0.45
+  inflate: 0.015
+  appearParticles: {fileID: 2991579243904634721, guid: 94bd16764f34b474eb53a7f1c330a82a, type: 3}
+  vanishParticles: {fileID: 7030844293724100393, guid: 35ba89eacb2a8aa4c9be4bade57a5e4e, type: 3}
+  particleLead: 0.05
+  particleSeconds: 2
+  appearSeconds: 0
+  vanishSeconds: 0
