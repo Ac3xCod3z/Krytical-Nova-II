@@ -21,6 +21,13 @@ namespace KryticalNova.EditorTools
         public const string MaterialPath = ShaderFolder + "/MountMaterialise.mat";
         public const string LookFolder = MountAssetBuilder.MountsRoot + "/Materialise";
         private const string BrambleKey = "Brambleback";
+        private const string StriderKey = "CircuitStrider";
+        private static string StriderDefinitionPath => MountAssetBuilder.MountsRoot + "/MountDef_CircuitStrider.asset";
+        // Circuit Strider (owner-approved research, 6 Nov 2026): cyan burning edge, red rim, circuit-trace noise, pixel motes.
+        private static readonly Color StriderEdge = new Color(0.2f, 2.6f, 3.2f);
+        private static readonly Color StriderRim = new Color(3.0f, 0.25f, 0.2f);
+        private static readonly Color Cyan = new Color(0.25f, 0.95f, 1f);
+        private static readonly Color Red = new Color(1f, 0.25f, 0.2f);
         private static string BrambleDefinitionPath => MountAssetBuilder.MountsRoot + "/MountDef_Brambleback.asset";
         private static string LookPath(string key) => $"{LookFolder}/MountMaterialise_{key}.asset";
         private const string PreviewDrive = "G:/My Drive/KryticalNova/AI Outputs/MountMaterialise";
@@ -72,7 +79,10 @@ namespace KryticalNova.EditorTools
             else Debug.LogWarning($"[Mounts] No Brambleback definition at {BrambleDefinitionPath}: its look was made but not given.");
 
             AssetDatabase.SaveAssets();
-            Debug.Log($"[Mounts] Materialise assets built: {MaterialPath}, {LookPath(BrambleKey)} (given to the Brambleback: {bramble != null}).");
+            bool strider = BuildCircuitStrider(material);
+            AssetDatabase.SaveAssets();
+            Debug.Log($"[Mounts] Materialise assets built: {MaterialPath}, {LookPath(BrambleKey)} (given to the Brambleback: {bramble != null}), " +
+                      $"{LookPath(StriderKey)} (given to the Circuit Strider: {strider}).");
         }
 
         // ------------------------------------------------------------------ assets
@@ -190,7 +200,10 @@ namespace KryticalNova.EditorTools
 
         // Appear: 40 leaves rise from a ring round the feet over 0.3 s and curl in. Vanish: 40 leaves shed from the
         // body and drift down. Both destroy themselves (the MountMaterialiser also removes them after Particle Seconds).
-        private static GameObject MakeParticles(string path, Material material, bool appear)
+        private static GameObject MakeParticles(string path, Material material, bool appear) =>
+            MakeParticles(path, material, appear, Moss, Amber, 0.08f, 0.16f);
+
+        private static GameObject MakeParticles(string path, Material material, bool appear, Color a, Color b, float minSize, float maxSize)
         {
             var root = new GameObject(Path.GetFileNameWithoutExtension(path));
             var ps = root.AddComponent<ParticleSystem>();
@@ -202,9 +215,9 @@ namespace KryticalNova.EditorTools
             main.playOnAwake = true;
             main.startLifetime = new ParticleSystem.MinMaxCurve(0.6f, 0.9f);
             main.startSpeed = appear ? new ParticleSystem.MinMaxCurve(1.2f, 2.4f) : new ParticleSystem.MinMaxCurve(0.2f, 0.8f);
-            main.startSize = new ParticleSystem.MinMaxCurve(0.08f, 0.16f);
+            main.startSize = new ParticleSystem.MinMaxCurve(minSize, maxSize);
             main.startRotation = new ParticleSystem.MinMaxCurve(0f, Mathf.PI * 2f);
-            main.startColor = new ParticleSystem.MinMaxGradient(Moss, Amber);
+            main.startColor = new ParticleSystem.MinMaxGradient(a, b);
             main.gravityModifier = appear ? -0.15f : 0.6f;
             main.simulationSpace = appear ? ParticleSystemSimulationSpace.Local : ParticleSystemSimulationSpace.World;
             main.stopAction = ParticleSystemStopAction.Destroy;
@@ -269,6 +282,68 @@ namespace KryticalNova.EditorTools
             GameObject prefab = PrefabUtility.SaveAsPrefabAsset(root, path);
             Object.DestroyImmediate(root);
             return prefab;
+        }
+
+        // ------------------------------------------------------------------ the Circuit Strider's look
+
+        /// <summary>The Circuit Strider's look: circuit-trace noise, cyan edge and red rim, square "pixel" motes. Its
+        /// scanline pattern is set but the graph does not draw scanlines yet (MountMaterialise.md).</summary>
+        private static bool BuildCircuitStrider(Material material)
+        {
+            Texture2D traces = MakeTexture($"{LookFolder}/CircuitStrider_Traces.png", 256, CircuitTraces, true, TextureWrapMode.Repeat);
+            Texture2D pixel = MakeTexture($"{LookFolder}/CircuitStrider_Pixel.png", 32, PixelShape, false, TextureWrapMode.Clamp);
+            Material pixelMaterial = MakeParticleMaterial($"{LookFolder}/CircuitStrider_Pixel.mat", pixel);
+            GameObject appear = MakeParticles($"{LookFolder}/CircuitStrider_Appear.prefab", pixelMaterial, true, Cyan, Red, 0.04f, 0.09f);
+            GameObject vanish = MakeParticles($"{LookFolder}/CircuitStrider_Vanish.prefab", pixelMaterial, false, Cyan, Red, 0.04f, 0.09f);
+
+            var look = LoadOrCreate<MountMaterialiseSettings>(LookPath(StriderKey));
+            look.material = material;
+            look.edgeColorA = StriderEdge;
+            look.edgeColorB = StriderRim;
+            look.burnWidth = 0.06f;
+            look.rimStrength = 1.6f;
+            look.noise = traces;
+            look.noiseTiling = new Vector2(4f, 4f);
+            look.pattern = MountMaterialiseSettings.Pattern.Scanlines;
+            look.direction = MountMaterialiseSettings.Direction.BottomUp;
+            look.directionWeight = 0.85f;   // owner, 6 Nov 2026: clearly from the feet up (as the Brambleback)
+            look.inflate = 0.01f;
+            look.appearParticles = appear;
+            look.vanishParticles = vanish;
+            look.particleLead = 0.05f;
+            look.particleSeconds = 2f;
+            EditorUtility.SetDirty(look);
+
+            var strider = AssetDatabase.LoadAssetAtPath<MountDefinition>(StriderDefinitionPath);
+            if (strider == null) { Debug.LogWarning($"[Mounts] No Circuit Strider definition at {StriderDefinitionPath}."); return false; }
+            strider.materialise = look;
+            EditorUtility.SetDirty(strider);
+            return true;
+        }
+
+        // Circuit traces: a grid of cells, each carrying a straight trace (across or down) with a pad at its end; the
+        // traces are dark, so the dissolve eats along them first. Wraps at the edges.
+        private static float CircuitTraces(float u, float v)
+        {
+            const int cells = 12;
+            float x = u * cells, y = v * cells;
+            int cx = Mathf.FloorToInt(x) % cells, cy = Mathf.FloorToInt(y) % cells;
+            float fx = x - Mathf.Floor(x), fy = y - Mathf.Floor(y);
+            float h = Hash(cx, cy);
+            float body = 0.55f + 0.35f * Hash(cy + 7, cx + 3);
+            bool across = h < 0.5f;
+            float line = across ? Mathf.Abs(fy - 0.5f) : Mathf.Abs(fx - 0.5f);
+            float trace = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01((line - 0.05f) / 0.05f));
+            float pad = Vector2.Distance(new Vector2(fx, fy), across ? new Vector2(0.85f, 0.5f) : new Vector2(0.5f, 0.85f));
+            float padMask = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01((pad - 0.08f) / 0.05f));
+            return body * Mathf.Min(trace, padMask);
+        }
+
+        // A square "pixel" with a one-texel soft edge (alpha only; the particles colour it).
+        private static float PixelShape(float u, float v)
+        {
+            float edge = Mathf.Min(Mathf.Min(u, 1f - u), Mathf.Min(v, 1f - v));
+            return Mathf.Clamp01((edge - 0.06f) / 0.06f);
         }
 
         // ------------------------------------------------------------------ review picture
