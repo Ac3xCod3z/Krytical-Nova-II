@@ -14,7 +14,7 @@ namespace KryticalNova.Hostiles.Entities.Tests
         public const int TickRate = 30;
         public readonly World World;
         public uint Tick;
-        readonly SystemHandle m_Sense, m_Clock, m_Threat, m_Scan, m_Decide, m_Attack;
+        readonly SystemHandle m_Sense, m_Clock, m_Threat, m_Scan, m_Decide, m_Slots, m_Attack;
         readonly EntityQuery m_TickQuery, m_SenseQuery;
 
         public HostileTestWorld()
@@ -33,6 +33,7 @@ namespace KryticalNova.Hostiles.Entities.Tests
             m_Threat = World.CreateSystem<HostileThreatSystem>();
             m_Scan = World.CreateSystem<HostileSenseScanSystem>();
             m_Decide = World.CreateSystem<HostileDecideSystem>();
+            m_Slots = World.CreateSystem<HostileAttackSlotSystem>();
             m_Attack = World.CreateSystem<HostileAttackSystem>();
             m_TickQuery = em.CreateEntityQuery(typeof(BrainTick));
             m_SenseQuery = em.CreateEntityQuery(typeof(SenseWorld));
@@ -44,7 +45,7 @@ namespace KryticalNova.Hostiles.Entities.Tests
         {
             EntityManager em = Em;
             Entity e = em.CreateEntity(typeof(BrainTag), typeof(BrainActive), typeof(BrainClock), typeof(LocalTransform), typeof(HostileBrain),
-                typeof(HostileTarget), typeof(HostileLife), typeof(HostileHome), typeof(BrainMover), typeof(BrainDice));
+                typeof(HostileTarget), typeof(HostileLife), typeof(HostileHome), typeof(BrainMover), typeof(BrainDice), typeof(HostileSlot));
             em.SetComponentData(e, new BrainDice { Rng = BrainDiceRules.Create(stableId, 77) });
             em.AddBuffer<HostileAbilityRow>(e).Add(new HostileAbilityRow { WindupTicks = 12, RecoverTicks = 6, Range = range, Weight = 1f });
             em.SetComponentData(e, new HostileHome { Home = at, WanderRadius = 8f });
@@ -79,6 +80,7 @@ namespace KryticalNova.Hostiles.Entities.Tests
                 m_Threat.Update(World.Unmanaged);
                 m_Scan.Update(World.Unmanaged);
                 m_Decide.Update(World.Unmanaged);
+                m_Slots.Update(World.Unmanaged);
                 m_Attack.Update(World.Unmanaged);
             }
         }
@@ -427,7 +429,9 @@ namespace KryticalNova.Hostiles.Entities.Tests
             for (int t = 0; t < 1000; t++)
             {
                 float3 a = new float3(math.sin(t * 0.02f) * 30f + 27f, 0f, 12f), b = new float3(t * 0.05f, 0f, math.cos(t * 0.03f) * 20f + 12f);
-                w.SetPlayers((a, SensedFlags.Alive), (b, SensedFlags.Alive), (new float3(5f, 0f, 30f), SensedFlags.Alive),
+                // player 102 stands 1.5 m from Hostile 41 (attacks on sight): real strikes every run (M6.5: the two runners pass at 0.6 m a tick, so
+                // their swings are cancelled or end behind them, and with attack slots their few lucky hits moved; brain plan s3.6)
+                w.SetPlayers((a, SensedFlags.Alive), (b, SensedFlags.Alive), (new float3(6f, 0f, 25.5f), SensedFlags.Alive),
                     (new float3(50f, 0f, -5f), SensedFlags.Alive), (new float3(-10f, 0f, 10f), SensedFlags.Alive));
                 if (t % 37 == 0) w.Hit(hostiles[t % hostiles.Length], 100 + t % 5, 10f);
                 w.Step();

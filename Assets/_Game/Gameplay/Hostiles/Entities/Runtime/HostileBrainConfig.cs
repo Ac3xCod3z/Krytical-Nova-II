@@ -19,6 +19,9 @@ namespace KryticalNova.Hostiles.Entities
         public uint GiveUpTicks;
         public uint PatrolPauseMinTicks, PatrolPauseMaxTicks;
         public float AssistRadius;
+        // the stage manager (M6.5)
+        public int GridCapacity, AttackCapacity, GridWeightNormal, GridWeightBruiser, AttackCostLight, AttackCostHeavy;
+        public float WaitRingMin, WaitRingMax;
 
         public static HostileBrainConfig From(HostileBrainSettings s, int tickRate)
         {
@@ -41,6 +44,14 @@ namespace KryticalNova.Hostiles.Entities
                 PatrolPauseMinTicks = Ticks(s.patrolPauseSeconds.x),
                 PatrolPauseMaxTicks = math.max(Ticks(s.patrolPauseSeconds.x), Ticks(s.patrolPauseSeconds.y)),
                 AssistRadius = s.assistRadius,
+                GridCapacity = s.gridCapacity,
+                AttackCapacity = s.attackCapacity,
+                GridWeightNormal = s.gridWeightNormal,
+                GridWeightBruiser = s.gridWeightBruiser,
+                AttackCostLight = s.attackCostLight,
+                AttackCostHeavy = s.attackCostHeavy,
+                WaitRingMin = s.waitRingRadius.x,
+                WaitRingMax = math.max(s.waitRingRadius.x, s.waitRingRadius.y),
             };
         }
     }

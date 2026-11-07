@@ -56,6 +56,9 @@ namespace KryticalNova.Hostiles.Entities
             SenseWorld sense = SystemAPI.GetSingleton<SenseWorld>();
             uint now = SystemAPI.GetSingleton<BrainTick>().Tick;
             DynamicBuffer<PendingStrike> strikes = SystemAPI.GetSingletonBuffer<PendingStrike>();
+            // the stage manager (M6.5): a Hostile with a HostileSlot starts a swing only holding a slot, and pays its attack cost
+            bool slotted = SystemAPI.TryGetSingleton(out HostileSlotBook book);
+            ComponentLookup<HostileSlot> slots = SystemAPI.GetComponentLookup<HostileSlot>();
             // job later (perf phase): an IJobEntity writing strikes through a parallel queue
             foreach (var (brain, target, mover, life, transform, dice, abilitiesBuffer, entity) in SystemAPI
                          .Query<RefRW<HostileBrain>, RefRW<HostileTarget>, RefRW<BrainMover>, RefRO<HostileLife>, RefRO<LocalTransform>, RefRW<BrainDice>,
@@ -107,9 +110,22 @@ namespace KryticalNova.Hostiles.Entities
                 }
                 if (!inReach) continue;
                 if (!facing) { Face(ref m, at, feet); continue; }
+                bool useSlot = slotted && slots.HasComponent(entity);
+                if (useSlot && slots[entity].Held == 0) continue;   // no slot of the target's ring: it waits
                 int pick = HostileRules.PickAbility(abilities, now, ref dice.ValueRW.Rng);
                 if (pick < 0) continue;
                 HostileAbilityRow row = abilities[pick];
+                if (useSlot)
+                {
+                    int cost = row.Heavy != 0 ? c.AttackCostHeavy : c.AttackCostLight;
+                    book.AttackUsed.TryGetValue(aim.GhostId, out int used);
+                    if (used + cost > c.AttackCapacity) continue;   // the player's attack budget is spent: wait for one to recover
+                    book.AttackUsed[aim.GhostId] = used + cost;
+                    HostileSlot s = slots[entity];
+                    s.Cost = (byte)cost;
+                    s.WaitingSinceTick = 0;
+                    slots[entity] = s;
+                }
                 b.Ability = (byte)pick;
                 b.Phase = HostilePhase.Windup;
                 b.AttackStartTick = now;

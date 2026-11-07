@@ -31,16 +31,20 @@ namespace KryticalNova.Hostiles.Entities
             HostileBrainConfig c = SystemAPI.GetSingleton<HostileBrainConfig>();
             SenseWorld sense = SystemAPI.GetSingleton<SenseWorld>();
             uint now = SystemAPI.GetSingleton<BrainTick>().Tick;
+            var calls = new NativeList<AssistCall>(8, Allocator.Temp);
             // job later (perf phase): an IJobEntity (the sense world is read-only here)
-            foreach (var (threatBuffer, events, target, life, transform) in SystemAPI
+            foreach (var (threatBuffer, events, target, life, transform, entity) in SystemAPI
                          .Query<DynamicBuffer<ThreatEntry>, DynamicBuffer<BrainEvent>, RefRW<HostileTarget>, RefRO<HostileLife>, RefRO<LocalTransform>>()
-                         .WithAll<BrainTag, BrainActive>())
+                         .WithAll<BrainTag, BrainActive>().WithEntityAccess())
             {
                 DynamicBuffer<ThreatEntry> threat = threatBuffer;   // a copy of the handle (the iteration variable cannot be written through)
                 for (int i = 0; i < events.Length; i++)
                 {
                     BrainEvent e = events[i];
                     if (e.Tick != now || e.GhostId == 0) continue;
+                    // M6.5 assist (owner Q2 A: AttacksOnSight species): a hit calls its kind nearby. Only a hit calls, so a call never chains.
+                    if (e.Kind == BrainEventKind.Damaged && life.ValueRO.Assist != 0 && life.ValueRO.Tier != (byte)HostileTier.Bruiser)
+                        calls.Add(new AssistCall { From = entity, GhostId = e.GhostId, Species = life.ValueRO.Species, At = transform.ValueRO.Position });
                     if (e.Kind == BrainEventKind.Damaged) Add(threat, e.GhostId, math.max(0f, e.Amount), now);
                     else if (e.Kind == BrainEventKind.Healed) Add(threat, e.GhostId, math.max(0f, e.Amount) * c.HealThreatFactor, now);
                     else if (e.Kind == BrainEventKind.Taunt) Add(threat, e.GhostId, Top(threat) * (1f + c.TauntBonus) - Of(threat, e.GhostId), now);
@@ -70,6 +74,41 @@ namespace KryticalNova.Hostiles.Entities
                     && HostileRules.InReach(transform.ValueRO.Position, sense.Players[p].Feet, life.ValueRO.AttackRange, c.ReachSlack, life.ValueRO.ReachAbove);
                 if (HostileRules.ShouldSwitch(Of(threat, aim.GhostId), challenger.Threat, inReach, c.ThreatSwitchMelee, c.ThreatSwitchRanged))
                     Aim(ref aim, challenger, sense);
+            }
+            if (calls.Length > 0) Assist(ref state, calls, c.AssistRadius, now);
+            calls.Dispose();
+        }
+
+        struct AssistCall
+        {
+            public Entity From;
+            public int GhostId;
+            public ushort Species;
+            public float3 At;
+        }
+
+        /// <summary>
+        /// M6.5 assist: the same species of the same zone within the assist radius, not yet in a fight and assisting itself, turns on the
+        /// hitter next tick (an Aggro event: a fight at once, as IHostileBrain.Aggro). Bruisers neither call nor answer (brain plan s3.6).
+        /// </summary>
+        void Assist(ref SystemState state, NativeList<AssistCall> calls, float radius, uint now)
+        {
+            ComponentLookup<HostileHome> homes = SystemAPI.GetComponentLookup<HostileHome>(true);
+            foreach (var (events, life, transform, brain, target, home, entity) in SystemAPI
+                         .Query<DynamicBuffer<BrainEvent>, RefRO<HostileLife>, RefRO<LocalTransform>, RefRO<HostileBrain>, RefRO<HostileTarget>, RefRO<HostileHome>>()
+                         .WithAll<BrainTag, BrainActive>().WithEntityAccess())
+            {
+                if (life.ValueRO.Assist == 0 || life.ValueRO.Tier == (byte)HostileTier.Bruiser) continue;
+                if (target.ValueRO.GhostId != 0 || brain.ValueRO.Mode == HostileMode.Engage || brain.ValueRO.Mode == HostileMode.Dead) continue;
+                for (int i = 0; i < calls.Length; i++)
+                {
+                    AssistCall call = calls[i];
+                    if (call.From == entity || call.Species != life.ValueRO.Species) continue;
+                    if (!homes.HasComponent(call.From) || !math.all(homes[call.From].ZoneCentre == home.ValueRO.ZoneCentre)) continue;
+                    if (SenseQueries.FlatSq(call.At, transform.ValueRO.Position) > radius * radius) continue;
+                    events.Add(new BrainEvent { Kind = BrainEventKind.Aggro, GhostId = call.GhostId, Tick = now + 1 });
+                    break;
+                }
             }
         }
 

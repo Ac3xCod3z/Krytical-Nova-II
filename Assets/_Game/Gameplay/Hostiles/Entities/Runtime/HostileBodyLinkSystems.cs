@@ -67,7 +67,7 @@ namespace KryticalNova.Hostiles.Entities
             em.AddComponent(e, new ComponentTypeSet(new ComponentType[]
             {
                 typeof(BrainTag), typeof(BrainActive), typeof(BrainClock), typeof(BrainDice), typeof(BrainMover), typeof(BrainPath),
-                typeof(HostileBrain), typeof(HostileTarget), typeof(HostileLife), typeof(HostileHome), typeof(HostileGhostSource),
+                typeof(HostileBrain), typeof(HostileTarget), typeof(HostileLife), typeof(HostileHome), typeof(HostileGhostSource), typeof(HostileSlot),
             }));
             em.AddBuffer<BrainEvent>(e);
             em.AddBuffer<BrainWaypoint>(e);
