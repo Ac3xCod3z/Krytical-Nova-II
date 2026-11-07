@@ -49,6 +49,12 @@ namespace KryticalNova.EditorTools
             /// lights, owner 5 Nov 2026). Empty = white at intensity 1.
             /// </summary>
             public Color[] Emission;
+            /// <summary>
+            /// Per stage, the ground speed (m/s) at which its walk (x) and run (y) clips match the ground at 1x; empty or zero =
+            /// MountSettings.clipMetresPerSecond. Read off the clip's own stride when it is keyed (owner, 7 Nov 2026: the
+            /// Strider looked sped up on the shared value).
+            /// </summary>
+            public Vector2[] ClipSpeeds;
         }
 
         // Stats (owner, 25 Oct 2026): two of the four main stats per mount, every mount a different pair, so each main stat
@@ -384,6 +390,7 @@ namespace KryticalNova.EditorTools
                 look.walk = ClipIn(folder + "Walk.fbx");
                 look.run = ClipIn(folder + "Run.fbx");
                 look.idleExtras = new[] { ClipIn(folder + "IdleSniff.fbx"), ClipIn(folder + "IdleLookAround.fbx") }.Where(c => c != null).ToArray();
+                look.clipMetresPerSecond = row.ClipSpeeds != null && stage < row.ClipSpeeds.Length ? row.ClipSpeeds[stage] : Vector2.zero;
                 look.seat = look.model != null ? Seat(row, percent) : Vector3.zero;
                 if (look.model != null && row.SeatForward != null) look.seat.z += row.SeatForward[stage];
                 Stirrups(row, percent, out look.stirrupLeft, out look.stirrupRight);
