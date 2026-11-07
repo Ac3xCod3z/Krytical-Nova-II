@@ -122,6 +122,46 @@ namespace KryticalNova.Tests
             Assert.AreEqual(0f, LandingSoles(strider, stage), 0.01f, "soles within 1 cm of the ground");
         }
 
+        // Owner, 7 Nov 2026: the legs crossed at the end of the dismounts in game, though the clips keep them apart: the
+        // rider clips' avatar measured leg angles from the seat straddle. Played on the player's real avatar, every
+        // getting-off clip must keep the feet apart (along the hips) from the touchdown to its end.
+        [Test]
+        public void TheDismounts_NeverCrossTheLegsOnThePlayer(
+            [Values("Dismount", "DismountRun", "DismountRunIdle")] string take, [Values(0, 50, 100)] int percent)
+        {
+            var prefab = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Game/Gameplay/Player/Prefabs/Player.prefab");
+            AnimationClip clip = null;
+            foreach (Object o in UnityEditor.AssetDatabase.LoadAllAssetsAtPath($"Assets/_Game/Characters/Mounts/Rider/Animations/A_Rider_{take}_{percent}.fbx"))
+                if (o is AnimationClip c && !c.name.StartsWith("__preview__")) clip = c;
+            Assume.That(prefab != null && clip != null, "the player prefab and the rider clip are in the project");
+            GameObject player = Object.Instantiate(prefab);
+            UnityEditor.AnimationMode.StartAnimationMode();
+            try
+            {
+                Animator animator = null;
+                foreach (Animator a in player.GetComponentsInChildren<Animator>(true)) if (a.avatar != null && a.avatar.isHuman) { animator = a; break; }
+                Assert.NotNull(animator, "the player has a humanoid avatar");
+                const float Touchdown = 1.02f;   // the latest touchdown of the three (MountSettings.getOff.arrivesAt)
+                for (float t = Touchdown; t <= clip.length + 0.001f; t += 1f / 30f)
+                {
+                    UnityEditor.AnimationMode.BeginSampling();
+                    UnityEditor.AnimationMode.SampleAnimationClip(animator.gameObject, clip, Mathf.Min(t, clip.length));
+                    UnityEditor.AnimationMode.EndSampling();
+                    Vector3 side = animator.GetBoneTransform(HumanBodyBones.LeftUpperLeg).position
+                                   - animator.GetBoneTransform(HumanBodyBones.RightUpperLeg).position;
+                    side.y = 0f;
+                    float apart = Vector3.Dot(animator.GetBoneTransform(HumanBodyBones.LeftFoot).position
+                                              - animator.GetBoneTransform(HumanBodyBones.RightFoot).position, side.normalized);
+                    Assert.Greater(apart, 0.08f, $"{clip.name} at {t:F2} s: the feet are {apart * 100f:F0} cm apart (crossed or together)");
+                }
+            }
+            finally
+            {
+                UnityEditor.AnimationMode.StopAnimationMode();
+                Object.DestroyImmediate(player);
+            }
+        }
+
         [Test]
         public void EveryHopTransition_SaysWhenTheFeetLeaveAndArrive([Values(false, true)] bool on, [Values(false, true)] bool running)
         {
