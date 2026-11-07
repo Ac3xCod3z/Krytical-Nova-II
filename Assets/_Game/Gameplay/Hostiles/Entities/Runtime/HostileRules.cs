@@ -33,6 +33,17 @@ namespace KryticalNova.Hostiles.Entities
         public static uint TellTicks(uint windupTicks, uint minVisibleTicks, uint latencyTicks) =>
             (uint)math.max(0, (int)(minVisibleTicks + latencyTicks) - (int)windupTicks);
 
+        /// <summary>
+        /// The tell of one attack (owner, 7 Nov 2026): its own warning when it has one, none when it is switched off, else the settings'
+        /// minimum (<paramref name="minVisibleTicks"/>), as <see cref="TellTicks(uint, uint, uint)"/>.
+        /// </summary>
+        public static uint TellTicks(in HostileAbilityRow row, uint minVisibleTicks, uint latencyTicks) => row.Warning switch
+        {
+            (byte)HostileDefinition.SwingWarning.Off => 0u,
+            (byte)HostileDefinition.SwingWarning.Own => TellTicks(row.WindupTicks, row.WarningTicks, latencyTicks),
+            _ => TellTicks(row.WindupTicks, minVisibleTicks, latencyTicks),
+        };
+
         /// <summary>Q8: the notice delay in ticks (a species' own seconds, or the default when it has none, i.e. below 0).</summary>
         public static uint NoticeTicks(float speciesSeconds, float defaultSeconds, int tickRate) =>
             (uint)math.max(0, (int)math.ceil((speciesSeconds >= 0f ? speciesSeconds : defaultSeconds) * tickRate - 1e-4f));

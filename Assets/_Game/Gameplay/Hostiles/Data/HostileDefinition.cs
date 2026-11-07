@@ -25,6 +25,22 @@ namespace KryticalNova.Hostiles
             public bool heavy;
             [Tooltip("How often this attack is picked against the others.")]
             [Range(1, 100)] public int weight;
+            [Tooltip("The warning players see before this swing lands. Default: the Hostile Brain Settings' minimum warning (empty = this). " +
+                     "Own: this attack's own seconds below. Off: no warning before this swing at all.")]
+            public SwingWarning warning;
+            [Tooltip("With Own: the least time players see this swing coming, in seconds (the settings' latency allowance is added).")]
+            [Min(0f)] public float warningSeconds;
+        }
+
+        /// <summary>
+        /// The warning before one attack (owner, 7 Nov 2026): the settings' minimum (the default, also what an attack saved before this had),
+        /// the attack's own length, or none. Boss telegraphs come later as their own value here.
+        /// </summary>
+        public enum SwingWarning : byte
+        {
+            Default = 0,
+            Own = 1,
+            Off = 2,
         }
 
         [Header("Identity")]

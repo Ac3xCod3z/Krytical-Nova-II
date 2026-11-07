@@ -18,6 +18,10 @@ namespace KryticalNova.Hostiles.Entities
         public float Range;
         public float Weight;
         public byte Heavy;
+        /// <summary>Its warning (owner, 7 Nov 2026): <see cref="HostileDefinition.SwingWarning"/> (0 = the settings' minimum, 1 = its own, 2 = none).</summary>
+        public byte Warning;
+        /// <summary>With an own warning: the least ticks a player sees it coming (the latency is added as for the default).</summary>
+        public uint WarningTicks;
         /// <summary>The tick it can start again (its recover plus the attack cooldown after its last swing).</summary>
         public uint ReadyTick;
     }
@@ -137,7 +141,7 @@ namespace KryticalNova.Hostiles.Entities
                     slots[entity] = s;
                 }
                 b.Ability = (byte)pick;
-                uint tell = HostileRules.TellTicks(row.WindupTicks, c.MinVisibleWarningTicks, c.WarningLatencyTicks);
+                uint tell = HostileRules.TellTicks(row, c.MinVisibleWarningTicks, c.WarningLatencyTicks);
                 if (tell > 0)
                 {
                     b.Phase = HostilePhase.Tell;

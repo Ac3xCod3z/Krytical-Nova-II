@@ -143,6 +143,8 @@ namespace KryticalNova.Hostiles.Entities
                     Range = species.attackRange,
                     Weight = attack.weight,
                     Heavy = (byte)(attack.heavy ? 1 : 0),
+                    Warning = (byte)attack.warning,
+                    WarningTicks = (uint)math.max(0, (int)math.ceil(attack.warningSeconds * tickRate - 1e-4f)),
                 });
             }
         }

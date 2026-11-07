@@ -92,18 +92,24 @@ namespace KryticalNova.Hostiles.Entities
             }
         }
 
-        static float s_TellSeconds = -1f;
+        static HostileBrainSettings s_Brain;
+        static bool s_BrainLooked;
 
-        /// <summary>The tell's length the client shows (the brain settings' minimum warning + latency, read once from the world assets).</summary>
-        static float TellSeconds
+        /// <summary>
+        /// How long before the hit the client shows attack <paramref name="attackIndex"/> of <paramref name="body"/> coming: the attack's own
+        /// warning or the brain settings' minimum, plus the latency (owner, 7 Nov 2026); settings read once from the world assets.
+        /// </summary>
+        static float TellSeconds(HostileNet body, int attackIndex)
         {
-            get
+            if (!s_BrainLooked)
             {
-                if (s_TellSeconds >= 0f) return s_TellSeconds;
+                s_BrainLooked = true;
                 var assets = UnityEngine.Resources.Load<HostileWorldAssets>(HostileWorldAssets.ResourcePath);
-                s_TellSeconds = assets != null && assets.hostiles != null ? assets.hostiles.minVisibleWarningSeconds + assets.hostiles.warningLatencySeconds : 0.5f;
-                return s_TellSeconds;
+                s_Brain = assets != null ? assets.hostiles : null;
             }
+            HostileDefinition species = body != null ? body.Definition : null;
+            if (s_Brain == null || species == null || attackIndex < 0 || attackIndex >= species.attacks.Length) return 0.5f;
+            return s_Brain.WarningLeadSeconds(species.attacks[attackIndex]);
         }
 
         static void Show(View view, in HostileGhost now)
@@ -113,7 +119,7 @@ namespace KryticalNova.Hostiles.Entities
             if (now.SpeedSteps != was.SpeedSteps || (now.Flags & 7) != (was.Flags & 7) || now.DeathIndex != was.DeathIndex)
                 view.Body.ShowStateFromGhost(StateOf(now));
             // Q3 A: the tell starts the swing early on screen (HostileNet slows the clip so its hit frame lands on time)
-            if ((now.Flags & HostileGhostFlags.Tell) != 0 && (was.Flags & HostileGhostFlags.Tell) == 0) view.Body.ShowTellFromGhost(now.AttackIndex, TellSeconds);
+            if ((now.Flags & HostileGhostFlags.Tell) != 0 && (was.Flags & HostileGhostFlags.Tell) == 0) view.Body.ShowTellFromGhost(now.AttackIndex, TellSeconds(view.Body, now.AttackIndex));
             // job later: start the clip at (interpolation tick - AttackStartTick) / tick rate into it (plan s4); today at once
             if (now.AttackStartTick != was.AttackStartTick && now.AttackStartTick != 0) view.Body.ShowAttackFromGhost(now.AttackIndex);
             if (now.HitCounter != was.HitCounter) view.Body.ShowHitFromGhost(1);
