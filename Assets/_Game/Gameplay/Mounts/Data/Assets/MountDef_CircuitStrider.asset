@@ -21,7 +21,7 @@ MonoBehaviour:
   secondStat: 1
   secondMax: 50
   stages:
-  - name: Spark Pup
+  - name: Circuit Strider
     model: {fileID: 4257508704385737861, guid: 1cd3363768a69db4e98aad2285d01592, type: 3}
     icon: {fileID: 21300000, guid: 0de93b49f25fcdd48aeac5adc1c631ac, type: 3}
     seat: {x: 0.0000022523334, y: 0.21267158, z: -0.032872938}
@@ -41,7 +41,7 @@ MonoBehaviour:
     - {fileID: -623603649343465320, guid: c5673a265ed54464bb3b981fd5d6110d, type: 3}
     stirrupLeft: {x: -0.14708409, y: 0.44785452, z: 0.07967892}
     stirrupRight: {x: 0.14708409, y: 0.4478542, z: 0.07967892}
-  - name: Circuit Hound
+  - name: Circuit Strider
     model: {fileID: 6150605030151480608, guid: e660d0d87518b8f40b6bc3c895dda6d1, type: 3}
     icon: {fileID: 21300000, guid: e11e7e36124c24d40a436301ba8a7154, type: 3}
     seat: {x: 0.0000022523334, y: 0.48048812, z: 0.07693033}
@@ -61,7 +61,7 @@ MonoBehaviour:
     - {fileID: -623603649343465320, guid: 71463b715c6fbc7419a25888861db5e5, type: 3}
     stirrupLeft: {x: -0.29551417, y: 0.76645416, z: 0.12673561}
     stirrupRight: {x: 0.29565778, y: 0.7657438, z: 0.12461204}
-  - name: Prime Strider
+  - name: Circuit Strider
     model: {fileID: 49735399657408408, guid: 3967200320dd53e4a9bf3bb0be04058c, type: 3}
     icon: {fileID: 21300000, guid: 8379aa66d12d2eb4480508d148cd213d, type: 3}
     seat: {x: 0.0000022523334, y: 0.6011707, z: -0.010389335}

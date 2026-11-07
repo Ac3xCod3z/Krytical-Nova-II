@@ -73,7 +73,7 @@ namespace KryticalNova.EditorTools
                 Description = "A robot hound of plated alloy and circuit light that carries its rider at a gallop; its plating grows as it does.",
                 ItemDescription = "Use it to add the Circuit Strider to your Mount window. Select it there and press the Ride key to ride.",
                 First = StatType.Agility, FirstMax = 50f, Second = StatType.Vitality, SecondMax = 50f,
-                StageNames = new[] { "Spark Pup", "Circuit Hound", "Prime Strider" },
+                StageNames = new[] { "Circuit Strider", "Circuit Strider", "Circuit Strider" }, // owner, 7 Nov 2026: one name at every stage
                 SeatForward = new[] { 0f, 0f, 0f },
                 // Its eyes and light strips: cyan at 0 and 50 %, red at 100 % (the Tripo art); the glows follow them.
                 Glows = new[] { new Color(0.3f, 0.9f, 1f), new Color(0.25f, 0.8f, 1f), new Color(1f, 0.25f, 0.2f) },
