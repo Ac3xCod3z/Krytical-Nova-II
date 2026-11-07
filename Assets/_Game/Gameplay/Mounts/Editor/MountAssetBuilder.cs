@@ -29,7 +29,8 @@ namespace KryticalNova.EditorTools
         private const string RiderFolder = MountModels + "/Rider/Animations";
         private static readonly int[] StagePercents = { 0, 50, 100 };
         private static readonly string[] MountClips = { "Walk", "Run", "IdleBreathe", "IdleSniff", "IdleLookAround" };
-        private static readonly string[] RiderLoops = { "Rider_RideIdle", "Rider_RideWalk", "Rider_RideGallop", "Rider_RideLookAround" };
+        private static readonly string[] RiderLoops = { "Rider_RideIdle", "Rider_RideWalk", "Rider_RideGallop", "Rider_RideLookAround",
+                                                        "Rider_SetIdle", "Rider_SetWalk", "Rider_SetRun", "Rider_SetLookAround" };
 
         private struct Row
         {
@@ -44,6 +45,9 @@ namespace KryticalNova.EditorTools
             public float Yaw;
             /// <summary>Metres the rider sits further toward the head than the seat it was keyed on, per stage.</summary>
             public float[] SeatForward;
+            /// <summary>Its getting-on and getting-off are the summon-hop clips keyed on its seats (owner, 6-7 Nov 2026):
+            /// A_Rider_MountUpHop/MountUpRun/DismountRun/DismountRunIdle_&lt;pct&gt;, and hopMountUp is on.</summary>
+            public bool SummonHop;
         }
 
         // Stats (owner, 25 Oct 2026): two of the four main stats per mount, every mount a different pair, so each main stat
@@ -56,6 +60,7 @@ namespace KryticalNova.EditorTools
                 First = StatType.Vitality, FirstMax = 50f, Second = StatType.Strength, SecondMax = 50f,
                 StageNames = new[] { "Sapling", "Thornhide", "Elder Bramble" },
                 SeatForward = new[] { 0f, 0f, 0.07f }, // owner, 25 Oct 2026: on the 100 % the rider sat too far back
+                SummonHop = true,
                 Glows = new[] { new Color(0.55f, 0.85f, 0.35f), new Color(0.35f, 0.9f, 0.45f), new Color(0.95f, 0.8f, 0.3f) } },
             new Row { Box = 2, Key = "GraveTrot", Name = "Grave Trot",
                 Description = "Not in the game yet.",
@@ -346,13 +351,21 @@ namespace KryticalNova.EditorTools
                 Stirrups(percent, out look.stirrupLeft, out look.stirrupRight);
                 if (look.model == null) look.stirrupLeft = look.stirrupRight = Vector3.zero;
                 string rider = $"{RiderFolder}/A_Rider_";
-                look.riderIdle = ClipIn($"{rider}RideIdle_{percent}.fbx");
-                look.riderWalk = ClipIn($"{rider}RideWalk_{percent}.fbx");
-                look.riderRun = ClipIn($"{rider}RideGallop_{percent}.fbx");
-                look.mountUp = ClipIn($"{rider}MountUp_{percent}.fbx");
+                // The shared riding set (owner, 7 Nov 2026): one set for every stage and mount, fitted in code
+                // (seat, stirrups, riderLeanScale / riderBobScale / riderSeatNudge). The per-stage clips are the fallback.
+                look.riderIdle = ClipIn($"{rider}SetIdle.fbx") ?? ClipIn($"{rider}RideIdle_{percent}.fbx");
+                look.riderWalk = ClipIn($"{rider}SetWalk.fbx") ?? ClipIn($"{rider}RideWalk_{percent}.fbx");
+                look.riderRun = ClipIn($"{rider}SetRun.fbx") ?? ClipIn($"{rider}RideGallop_{percent}.fbx");
+                AnimationClip setLook = ClipIn($"{rider}SetLookAround.fbx");
+                look.riderIdleExtras = setLook != null ? new[] { setLook }
+                    : new[] { ClipIn($"{rider}RideLookAround_{percent}.fbx"), ClipIn($"{rider}RidePatNeck_{percent}.fbx") }
+                        .Where(c => c != null).ToArray();
+                // The standing getting-off stays the older clip (owner: unchanged for now).
                 look.dismount = ClipIn($"{rider}Dismount_{percent}.fbx");
-                look.riderIdleExtras = new[] { ClipIn($"{rider}RideLookAround_{percent}.fbx"), ClipIn($"{rider}RidePatNeck_{percent}.fbx") }
-                    .Where(c => c != null).ToArray();
+                look.mountUp = (row.SummonHop ? ClipIn($"{rider}MountUpHop_{percent}.fbx") : null) ?? ClipIn($"{rider}MountUp_{percent}.fbx");
+                look.mountUpRunning = row.SummonHop ? ClipIn($"{rider}MountUpRun_{percent}.fbx") : null;
+                look.dismountRunning = row.SummonHop ? ClipIn($"{rider}DismountRun_{percent}.fbx") : null;
+                look.dismountRunningToIdle = row.SummonHop ? ClipIn($"{rider}DismountRunIdle_{percent}.fbx") : null;
                 definition.stages[stage] = look;
             }
 
@@ -360,12 +373,20 @@ namespace KryticalNova.EditorTools
             definition.itemId = built ? row.ItemId : (ushort)0;
             // The mount's own rider clips are its first stage's (each stage has its own; these are the fallback).
             MountStageLook first = definition.stages[0];
-            definition.riderIdle = built ? first.riderIdle : null;
-            definition.riderWalk = built ? first.riderWalk : null;
-            definition.riderRun = built ? first.riderRun : null;
-            definition.riderIdleExtras = built ? first.riderIdleExtras : new AnimationClip[0];
+            // The shared riding set is every mount's (owner rule), built model or not: a mount whose model comes from
+            // elsewhere (the Circuit Strider) rides on it until it has transitions of its own.
+            bool sharedSet = first.riderIdle != null && first.riderIdle.name.StartsWith("Rider_Set");
+            definition.riderIdle = built || sharedSet ? first.riderIdle : null;
+            definition.riderWalk = built || sharedSet ? first.riderWalk : null;
+            definition.riderRun = built || sharedSet ? first.riderRun : null;
+            definition.riderIdleExtras = built || sharedSet ? first.riderIdleExtras : new AnimationClip[0];
             definition.mountUp = built ? first.mountUp : null;
             definition.dismount = built ? first.dismount : null;
+            definition.mountUpRunning = built ? first.mountUpRunning : null;
+            definition.dismountRunning = built ? first.dismountRunning : null;
+            definition.dismountRunningToIdle = built ? first.dismountRunningToIdle : null;
+            // Only with every stage's hop clip in place, or a stage would be lifted along the hop curves by a seat clip.
+            definition.hopMountUp = built && row.SummonHop && definition.stages.All(s => s.mountUp != null && s.mountUp.name.StartsWith("Rider_MountUpHop"));
             EditorUtility.SetDirty(definition);
             return definition;
         }

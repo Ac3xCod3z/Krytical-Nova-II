@@ -50,10 +50,95 @@ namespace KryticalNova.Mounts
         [Tooltip("How quickly the lean comes and goes, in seconds.")]
         [Min(0.01f)] public float leanEase = 0.25f;
 
+        [Header("Getting on and off (owner picks, 6 Nov 2026: Torrent's timing; a running version of each)")]
+        [Tooltip("Standing still (or walking: the rider stops first): the summon hop. Dip, hop with the leg over, drop into the seat, settle.")]
+        public MountTransition getOn = MountTransition.StandingOn();
+        [Tooltip("Running (the Run selection and moving): a forward hop off the stride, landing already riding. No stop.")]
+        public MountTransition getOnRunning = MountTransition.RunningOn();
+        [Tooltip("Standing still (or walking: the rider stops first): a front flip off the mount, a three-point landing, a rise to idle.")]
+        public MountTransition getOff = MountTransition.StandingOff();
+        [Tooltip("Running, with the path still going on: the game's take-off from the saddle, the game's front flip, a forward roll, up running.")]
+        public MountTransition getOffRunning = MountTransition.RunningOff();
+        [Tooltip("Running, with the clicked spot close: the same take-off, flip and roll, ending standing (idle).")]
+        public MountTransition getOffRunningToIdle = MountTransition.RunningOffToIdle();
+        [Tooltip("Metres of path that must still be left to the clicked spot when the roll ends for the rider to come up " +
+                 "running; less, and the roll ends standing (owner, 7 Nov 2026).")]
+        [Min(0f)] public float rollIntoRunMinDistance = 4f;
+
+        /// <summary>The getting-on or getting-off in play: on or off, standing or running, and for a running
+        /// getting-off whether it ends running (path left) or standing.</summary>
+        public MountTransition Transition(bool gettingOn, bool running, bool endsRunning = true) =>
+            gettingOn ? (running ? getOnRunning : getOn) : (running ? (endsRunning ? getOffRunning : getOffRunningToIdle) : getOff);
+
         [Header("Idling")]
         [Tooltip("At rest the mount and its rider play one of their other idles (a sniff, a look round, a pat on the neck) every this many seconds. 0 = never.")]
         [Min(0f)] public float idleVarietySeconds = 9f;
 
         public MountTuning Tuning => new MountTuning(xpToFullGrowth, xpPerHostileKill, hungerDrainPercentPerMinute);
+    }
+    /// <summary>
+    /// One way of getting on or off a mount (owner, 6 Nov 2026): how long it takes, when the rider is free, how the
+    /// rider rises to (or drops from) the seat and arcs forward, and when the mount forms or vanishes. The clips are
+    /// keyed in place; the height and the forward arc come from these curves and are only drawn, on each machine:
+    /// the player's real position never changes. Curve time runs 0 to 1 over <see cref="seconds"/>.
+    /// </summary>
+    [System.Serializable]
+    public sealed class MountTransition
+    {
+        [Tooltip("Seconds the whole clip takes.")]
+        [Min(0.1f)] public float seconds = 1f;
+        [Tooltip("Seconds after the press when the rider is free: on the mount and able to ride, or on foot. The rest of the clip plays on unless the rider moves.")]
+        [Min(0.1f)] public float freeSeconds = 0.8f;
+        [Tooltip("Where the rider's origin is over the clip: 1 = on the stage's seat, 0 = on the ground. The Brambleback's clips are " +
+                 "keyed per stage from the ground to the seat (the seat is only 0.2-0.5 m above the feet, too little to scale a hop), " +
+                 "so this stays 1; it is here for a mount whose clips are keyed in place on the ground.")]
+        public AnimationCurve lift = AnimationCurve.Constant(0f, 1f, 1f);
+        [Tooltip("How far ahead of the player the rider is drawn over the clip, in metres (a visual arc only). 0 = on the player.")]
+        public AnimationCurve forward = AnimationCurve.Constant(0f, 1f, 0f);
+        [Tooltip("Getting on: when in the clip (0 to 1) the feet start going into the stirrups. Getting off: they come out at once.")]
+        [Range(0f, 1f)] public float stirrupsAt = 0.77f;
+        [Tooltip("Seconds into the clip before the mount starts forming (getting on) or vanishing (getting off).")]
+        [Min(0f)] public float effectDelay = 0.1f;
+        [Tooltip("Seconds the mount takes to form or to vanish. A mount's own materialise asset may override it.")]
+        [Min(0.05f)] public float effectSeconds = 0.5f;
+        [Tooltip("Running getting-off: seconds into the clip when the roll ends (the run-or-stand choice looks at the path left then).")]
+        [Min(0f)] public float rollEndsAt;
+
+        private static Keyframe K(float t, float v) => new Keyframe(t, v);
+
+        /// <summary>The summon hop: 1.0 s, free at 0.8 s; the mount forms 0.12 to 0.77 s, solid as the rider lands.</summary>
+        public static MountTransition StandingOn() => new MountTransition
+        {
+            seconds = 1f, freeSeconds = 0.8f, stirrupsAt = 0.77f, effectDelay = 0.12f, effectSeconds = 0.65f,
+        };
+
+        /// <summary>The running hop: 0.8 s, on the seat and free at 0.55 s; the mount forms 0.05 to 0.55 s.</summary>
+        public static MountTransition RunningOn() => new MountTransition
+        {
+            seconds = 0.8f, freeSeconds = 0.55f, stirrupsAt = 0.6875f, effectDelay = 0.05f, effectSeconds = 0.5f,
+        };
+
+        /// <summary>The standing dismount, owner-approved 7 Nov 2026: a front flip too. The game's take-off from the
+        /// saddle (0-0.40 s), the game's front flip about the body's centre (0.42-1.00 s), touchdown 1.02 s, settling into
+        /// idle (no roll); 1.70 s, free at 1.55 s. The mount vanishes top-down 0.1 to 0.6 s.</summary>
+        public static MountTransition StandingOff() => new MountTransition
+        {
+            seconds = 1.7f, freeSeconds = 1.55f, stirrupsAt = 0f, effectDelay = 0.1f, effectSeconds = 0.5f,
+        };
+
+        /// <summary>The moving dismount, redone and owner-approved 7 Nov 2026: a sprung take-off from the saddle
+        /// (0-0.36 s), the game's front flip about the body's centre (0.38-0.96 s), touchdown 0.98 s, a forward roll to
+        /// 1.76 s, up into the run; 2.0 s, free at 1.93 s. Everything is in the clip (no drawn arc). The mount vanishes
+        /// top-down 0.1 to 0.6 s.</summary>
+        public static MountTransition RunningOff() => new MountTransition
+        {
+            seconds = 2.0f, freeSeconds = 1.93f, stirrupsAt = 0f, effectDelay = 0.1f, effectSeconds = 0.5f, rollEndsAt = 1.76f,
+        };
+
+        /// <summary>The same take-off, flip and roll, ending standing: 2.1 s, free at 1.98 s.</summary>
+        public static MountTransition RunningOffToIdle() => new MountTransition
+        {
+            seconds = 2.1f, freeSeconds = 1.98f, stirrupsAt = 0f, effectDelay = 0.1f, effectSeconds = 0.5f, rollEndsAt = 1.76f,
+        };
     }
 }

@@ -8,6 +8,7 @@ using KryticalNova.Progression;
 using KryticalNova.Social;
 using Unity.Netcode;
 using UnityEngine;
+using UnityEngine.AI;
 
 namespace KryticalNova.Mounts
 {
@@ -51,6 +52,8 @@ namespace KryticalNova.Mounts
         private MountBook book;
         private int selected;
         private RidePhase phase;
+        private bool running; // the getting on or off in play is the running kind
+        private bool endsRunning = true; // a running getting-off comes up running (path left) or ends standing
         private float phaseEnds;
         private double hungerCarry;
         private float nextPublish;
@@ -77,6 +80,10 @@ namespace KryticalNova.Mounts
         public MountDefinition Selected => catalog != null ? catalog.Get(shown.selected) : null;
         public int SelectedId => shown.selected;
         public RidePhase Phase => shown.phase;
+        /// <summary>The getting on or off in play is the running kind: the Ride key was pressed while running.</summary>
+        public bool IsRunningTransition => shown.running;
+        /// <summary>A running getting-off ends running (the clicked spot is still far) rather than standing.</summary>
+        public bool DismountEndsRunning => shown.endsRunning;
         /// <summary>On the mount, getting on or getting off.</summary>
         public bool IsMounted => shown.phase != RidePhase.OnFoot;
         public int GrowthPercent => shown.selected != 0 ? shown.growth : 0;
@@ -210,6 +217,7 @@ namespace KryticalNova.Mounts
         {
             if (!HasAuthority || phase == RidePhase.OnFoot) return;
             phase = RidePhase.OnFoot;
+            running = false;
             PublishBook();
             Publish();
         }
@@ -217,11 +225,61 @@ namespace KryticalNova.Mounts
         private void BeginPhase(RidePhase next)
         {
             MountDefinition mount = catalog != null ? catalog.Get(selected) : null;
+            // Running (the Run selection and moving) gets the running kind: no stop (owner, 6 Nov 2026). Walking stops
+            // and gets the standing kind, as standing still does.
+            running = MountRules.IsRunningTransition(movement != null && movement.IsRunning, motor != null && motor.IsTravelling);
             AnimationClip clip = mount == null ? null : next == RidePhase.GettingOn ? mount.mountUp : next == RidePhase.GettingOff ? mount.dismount : null;
+            int stage = MountRules.Stage(MountRules.GrowthPercent(book.Get(selected), Tuning));
             phase = next;
-            phaseEnds = Time.time + Mathf.Max(MinPhaseSeconds, clip != null ? clip.length : 0f);
+            // A summon-hop mount is timed by Mount Settings: the rider is free before the clip ends (its settle, landing
+            // or roll plays on). Older mounts take their clip's length.
+            MountSettings settings = Settings;
+            endsRunning = true;
+            if (next == RidePhase.GettingOff && running && settings != null)
+            {
+                // Owner, 7 Nov 2026: up running when the clicked spot is still 4 m or more away as the roll ends. The
+                // rider goes at on-foot speed through the dismount (Show sets it), so that is the speed to reckon with.
+                float footSpeed = 0f;
+                if (movement != null) { movement.SetRideSpeeds(0f, 0f); footSpeed = movement.CurrentSpeed; }
+                endsRunning = MountRules.DismountEndsRunning(PathLeft(), footSpeed, settings.getOffRunning.rollEndsAt,
+                    settings.rollIntoRunMinDistance);
+            }
+            // Review, 7 Nov 2026: a running getting-off is timed by its own clip (run or stand ending), not the standing one.
+            if (mount != null)
+            {
+                AnimationClip own = null;
+                if (next == RidePhase.GettingOn && running) own = mount.RiderClip(stage, l => l.mountUpRunning, mount.mountUpRunning);
+                if (next == RidePhase.GettingOff && running)
+                {
+                    if (!endsRunning) own = mount.RiderClip(stage, l => l.dismountRunningToIdle, mount.dismountRunningToIdle);
+                    if (own == null) own = mount.RiderClip(stage, l => l.dismountRunning, mount.dismountRunning);
+                }
+                if (next == RidePhase.GettingOn && !running) own = mount.RiderClip(stage, l => l.mountUp, mount.mountUp);
+                if (next == RidePhase.GettingOff && !running) own = mount.RiderClip(stage, l => l.dismount, mount.dismount);
+                if (own != null) clip = own;
+            }
             if (next == RidePhase.GettingOff) PublishBook(); // what riding cost in hunger, before the ride ends
             Publish();
+            float seconds = clip != null ? clip.length : 0f;
+            if (mount != null && mount.hopMountUp && settings != null)
+            {
+                // Free the same time before the clip's end as the transition says (the settle, landing or roll plays on
+                // after, MountRider). For the new clips that is exactly freeSeconds; an older, longer clip (the standing
+                // dismount, left as it was) is not cut short.
+                MountTransition t = settings.Transition(next == RidePhase.GettingOn, running, endsRunning);
+                seconds = clip != null ? Mathf.Max(t.freeSeconds, clip.length - (t.seconds - t.freeSeconds)) : t.freeSeconds;
+            }
+            phaseEnds = Time.time + Mathf.Max(MinPhaseSeconds, seconds);
+        }
+
+        /// <summary>Metres of path left to the clicked spot (the server's own copy walks the player), 0 with no path.</summary>
+        private float PathLeft()
+        {
+            NavMeshAgent agent = GetComponent<NavMeshAgent>();
+            if (agent == null || !agent.isActiveAndEnabled || !agent.isOnNavMesh || !agent.hasPath) return 0f;
+            Vector3 straight = agent.destination - agent.nextPosition;
+            straight.y = 0f;
+            return Mathf.Max(agent.remainingDistance, straight.magnitude); // remainingDistance reads 0 just after SetPath
         }
 
         private void OnDied()
@@ -236,6 +294,7 @@ namespace KryticalNova.Mounts
             if ((phase == RidePhase.GettingOn || phase == RidePhase.GettingOff) && Time.time >= phaseEnds)
             {
                 phase = phase == RidePhase.GettingOn ? RidePhase.Riding : RidePhase.OnFoot;
+                running = false;
                 Publish();
             }
             // A jump, a vault or a wall run takes the rider off: the mount has no clips for them.
@@ -425,6 +484,8 @@ namespace KryticalNova.Mounts
                 phase = selected != 0 ? phase : RidePhase.OnFoot,
                 growth = (byte)(selected != 0 ? MountRules.GrowthPercent(state, Tuning) : 0),
                 fed = selected != 0 && state.IsFed,
+                running = selected != 0 && running && (phase == RidePhase.GettingOn || phase == RidePhase.GettingOff),
+                endsRunning = endsRunning,
             };
             if (IsSpawned && IsServer) netState.Value = next;
             Show(next);
@@ -433,6 +494,7 @@ namespace KryticalNova.Mounts
         /// <summary>Every machine: the stats and the riding speed that follow from the selected mount.</summary>
         private void Show(MountNetState next)
         {
+            bool dismountStarts = next.phase == RidePhase.GettingOff && shown.phase != RidePhase.GettingOff;
             shown = next;
             MountDefinition mount = Selected;
 
@@ -452,9 +514,22 @@ namespace KryticalNova.Mounts
                 if (next.phase == RidePhase.Riding && settings != null)
                     movement.SetRideSpeeds(MountRules.Speed(settings.walkSpeed.x, settings.walkSpeed.y, next.growth, next.fed),
                         MountRules.Speed(settings.runSpeed.x, settings.runSpeed.y, next.growth, next.fed));
-                else if (next.phase == RidePhase.GettingOn || next.phase == RidePhase.GettingOff)
+                else if ((next.phase == RidePhase.GettingOn || next.phase == RidePhase.GettingOff) && !next.running)
                     movement.SetRideSpeeds(StandStillSpeed, StandStillSpeed);
-                else movement.SetRideSpeeds(0f, 0f);
+                // A running getting on or off keeps the on-foot speeds: the rider never stops (owner, 6 Nov 2026).
+                else
+                {
+                    movement.SetRideSpeeds(0f, 0f);
+                    // A running getting-off that ends standing (owner, 7 Nov 2026: "fluid"): reach the clicked spot as
+                    // the roll ends instead of arriving mid-flip and stalling while the clip plays on. Set once, as it
+                    // starts, on every machine (each walks its own copy of the path).
+                    if (dismountStarts && next.running && !next.endsRunning && settings != null)
+                    {
+                        float travel = MountRules.DismountTravelSpeed(false, PathLeft(), movement.CurrentSpeed,
+                            settings.getOffRunningToIdle.rollEndsAt);
+                        if (travel > StandStillSpeed && travel < movement.CurrentSpeed) movement.SetRideSpeeds(travel, travel);
+                    }
+                }
             }
             Changed?.Invoke();
         }
