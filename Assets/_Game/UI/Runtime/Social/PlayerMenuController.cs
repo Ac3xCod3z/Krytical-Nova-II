@@ -24,7 +24,8 @@ namespace KryticalNova.UI
             Player = player;
         }
 
-        public bool InSight => Player != null && Player.IsSpawned;
+        // another player's view of the entity netcode is in sight too: it is never NGO-spawned (owner's hand test 7 Nov 2026: no Callout)
+        public bool InSight => Player != null && (Player.IsSpawned || KryticalNova.Core.BodyRoleTag.IsRemoteClientView(Player));
     }
 
     /// <summary>
@@ -104,6 +105,9 @@ namespace KryticalNova.UI
                 if (target.InSight && target.Player.TryGetComponent(out PlayerParty theirs)) mine.Follow(theirs);
                 else mine.Follow(target.Name);
             });
+            // the leader hands the Squad over (NGO had only /promote: the owner looked for it here, 7 Nov 2026); the server decides as for /promote
+            Register("Promote to Leader", 26, target => InMySquad(target) && PlayerParty.Local != null && PlayerParty.Local.IsLeader,
+                target => PlayerParty.Local.Promote(target.Name));
             // the entity netcode's own view counts as online too (owner's 2-player test, 6 Nov 2026, item 6: Callout was missing there)
             Register("Callout", 30, target => target.InSight && PlayerDuel.Local != null
                                               && KryticalNova.Core.BodyRoleTag.IsMine(PlayerDuel.Local, PlayerDuel.Local.IsSpawned), target =>

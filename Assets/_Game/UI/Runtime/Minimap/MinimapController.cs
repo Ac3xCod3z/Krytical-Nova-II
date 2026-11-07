@@ -317,6 +317,16 @@ namespace KryticalNova.UI
                     if (p == null || p.transform == player || !p.TryGetComponent(out PlayerParty other) || !squad.IsInPartyWith(other)) continue;
                     Place(Pooled(allyMarkers, allyCount++, "ally"), MapPixel(p.transform.position), AllyIconSize);
                 }
+                // the entity netcode's views of the other players have no live PointAndClickPlayer (the ghost moves them): the player
+                // bodies list has them (owner's hand test 7 Nov 2026: Squad members missing from each other's minimap)
+                IReadOnlyList<KryticalNova.Core.IPlayerBody> bodies = KryticalNova.Core.PlayerBodies.All;
+                for (int i = 0; i < bodies.Count; i++)
+                {
+                    Transform t = bodies[i]?.Transform;
+                    if (t == null || t == player || !t.TryGetComponent(out PlayerParty other) || !squad.IsInPartyWith(other)) continue;
+                    if (t.TryGetComponent(out PointAndClickPlayer seen) && seen.isActiveAndEnabled && Contains(players, seen)) continue;   // already placed
+                    Place(Pooled(allyMarkers, allyCount++, "ally"), MapPixel(t.position), AllyIconSize);
+                }
             }
             Hide(allyMarkers, allyCount);
 
@@ -418,6 +428,12 @@ namespace KryticalNova.UI
             Vector2 offset = px - playerPx;
             float maxDist = maskHalf - EdgeInset;
             return offset.magnitude > maxDist ? playerPx + offset.normalized * maxDist : px;
+        }
+
+        private static bool Contains(IReadOnlyList<PointAndClickPlayer> list, PointAndClickPlayer item)
+        {
+            for (int i = 0; i < list.Count; i++) if (list[i] == item) return true;
+            return false;
         }
 
         /// <summary>Where a player the GM is told of stands: their body when this game has it, else the place last sent.</summary>

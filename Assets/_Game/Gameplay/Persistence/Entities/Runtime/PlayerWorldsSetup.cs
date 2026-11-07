@@ -168,7 +168,9 @@ namespace KryticalNova.Persistence.Entities
                 {
                     // every view body shows the ghosts' jumps with its own clip (M3b)
                     if (body != null && body.GetComponent<GhostJumpView>() == null) body.AddComponent<GhostJumpView>();
-                    if (!request.IsLocal) return;
+                    // another player's view too picks walk or run from its ghost's walk speed: its run selection is the owner's only, so the
+                    // walk clip played at a run's speed (owner's hand test 7 Nov 2026, x3: the other player slid instead of running)
+                    if (!request.IsLocal) { DriveAnimationFromGhost(body); return; }
                     // items and buffs are used by the server on its body; this body asks (feel test item 5)
                     if (body.GetComponent<KryticalNova.Core.BodyRoleTag>() is KryticalNova.Core.BodyRoleTag tag) tag.Requests = new EntityBodyRequests(client);
                     // the owner's own body plans its climbs too: the trees near it (NGO WantsTreeProxies: the server and the owner)

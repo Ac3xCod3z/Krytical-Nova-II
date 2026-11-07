@@ -90,5 +90,30 @@ namespace KryticalNova.Persistence.Entities.Tests
             }
             finally { Object.DestroyImmediate(body); }
         }
+
+        [Test]
+        public void AnotherPlayersView_AlsoReadsItsGhostsSpeed_SoARunnerRuns()
+        {
+            // owner's hand test 7 Nov 2026, x3: another player's view chose walk or run from its run selection, which only the owner gets:
+            // a runner slid in the walk clip. The factory's every-body hook now drives a remote view from its ghost's walk speed too.
+            var world = new Unity.Entities.World("x3 client");
+            var body = new GameObject("remote view");
+            try
+            {
+                var motor = body.AddComponent<KryticalNova.Player.PlayerAnimancerMotor>();
+                var factory = PlayerWorldsSetup.InstallClient(world, () => null, loadGhostScene: false);
+                factory.BodyMade(body, new KryticalNova.Player.Entities.Presentation.PlayerBodyRequest { IsLocal = false });
+                Assert.IsNotNull(motor.ExternalSpeed, "a remote view animates at its ghost's speed");
+                var state = body.AddComponent<KryticalNova.Player.Entities.Presentation.PlayerPresentationState>();
+                state.State.Speed = 28f;
+                Assert.AreEqual(28f, motor.ExternalSpeed(), "a 28 m/s run reads as a run (the run clip from 2.5 m/s)");
+                Assert.IsTrue(KryticalNova.Player.PlayerAnimancerMotor.UsesRunClip(false, motor.ExternalSpeed(), false, 2.5f, 0.5f, 0f, 0.2f));
+            }
+            finally
+            {
+                Object.DestroyImmediate(body);
+                if (world.IsCreated) world.Dispose();
+            }
+        }
     }
 }

@@ -16,6 +16,8 @@
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner",
         "Unity.Netcode.Runtime",
+        "KryticalNova.UI",
+        "KryticalNova.Player.Entities.Bodies",
         "Unity.Collections",
         "KryticalNova.Player.Entities",
         "KryticalNova.Player.Entities.Presentation",

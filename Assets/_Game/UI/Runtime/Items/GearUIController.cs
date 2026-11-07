@@ -732,7 +732,8 @@ namespace KryticalNova.UI
                 // The press itself would then move the focus off the chat line the link was just put in (a press on a cell that
                 // takes no focus blurs whatever had it), so the link seemed to do nothing; "Share in chat" in the menu runs on a later
                 // click and kept it (owner's 2-player test, 6 Nov 2026, item 7)
-                if (evt.shiftKey) { element.focusController?.IgnoreEvent(evt); ShareInChat(loc); return; }
+                // Shift read from the keyboard too: a pointer event from the Input System UI module may carry no modifiers (owner's hand test 7 Nov 2026: the link never came)
+                if (evt.shiftKey || (Keyboard.current != null && Keyboard.current.shiftKey.isPressed)) { element.focusController?.IgnoreEvent(evt); ShareInChat(loc); return; }
                 lastActionElement = element;
                 QuickAction(loc);
                 return;

@@ -160,11 +160,13 @@ namespace KryticalNova.UI
         {
             PlayerDuel mine = PlayerDuel.Local;
             PlayerDuel other = null;
-            if (mine != null && mine.IsSpawned && !mine.IsDuelling && mine.TryGetComponent(out PointAndClickPlayer controls))
+            // the entity netcode's own view and the other players' views are never NGO-spawned (owner's hand test 7 Nov 2026: no strip, no Callout)
+            bool mineLive = mine != null && (mine.IsSpawned || KryticalNova.Core.BodyRoleTag.IsLocalClientView(mine));
+            if (mineLive && !mine.IsDuelling && mine.TryGetComponent(out PointAndClickPlayer controls))
             {
                 Transform selected = controls.SelectedTarget;
                 other = selected != null ? selected.GetComponentInParent<PlayerDuel>() : null;
-                if (other == mine || (other != null && !other.IsSpawned)) other = null;
+                if (other == mine || (other != null && !other.IsSpawned && !KryticalNova.Core.BodyRoleTag.IsRemoteClientView(other))) other = null;
                 if (other != null)
                 {
                     var entity = other.GetComponent<IDamageable>();

@@ -226,7 +226,21 @@ namespace KryticalNova.UI
             PlayerParty mine = PlayerParty.Local;
             Unity.Netcode.NetworkObject member = null;
             if (mine != null && mine.IsSpawned) mine.NetworkManager.SpawnManager.SpawnedObjects.TryGetValue(row.ObjectId, out member);
+            else if (mine != null) member = ViewNamed(row.MemberName);   // the entity netcode: rows carry no object ids, the view is found by name
             PlayerMenuController.Instance.Open(new PlayerMenuTarget(row.MemberName, member), panelPosition);
+        }
+
+        /// <summary>Another player's view on this machine by its character name (names are unique game-wide), or null.</summary>
+        private static Unity.Netcode.NetworkObject ViewNamed(string memberName)
+        {
+            IReadOnlyList<KryticalNova.Core.IPlayerBody> bodies = KryticalNova.Core.PlayerBodies.All;
+            for (int i = 0; i < bodies.Count; i++)
+            {
+                Transform t = bodies[i]?.Transform;
+                if (t != null && t.TryGetComponent(out PlayerIdentity identity)
+                    && string.Equals(identity.CharacterName, memberName, System.StringComparison.OrdinalIgnoreCase)) return identity.NetworkObject;
+            }
+            return null;
         }
 
         private static void Leave()
