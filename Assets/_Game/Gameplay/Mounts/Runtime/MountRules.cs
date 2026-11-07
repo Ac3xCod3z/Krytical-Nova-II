@@ -108,5 +108,14 @@ namespace KryticalNova.Mounts
         /// <summary>The Ride key pressed while running (the Run selection and moving) gets the running kind of getting
         /// on or off, which never stops the rider; walking or standing gets the standing kind (owner, 6 Nov 2026).</summary>
         public static bool IsRunningTransition(bool runSelected, bool travelling) => runSelected && travelling;
+
+        /// <summary>
+        /// A running getting-off comes up running when, by the time its roll ends, the clicked spot is still at least
+        /// <paramref name="minDistance"/> metres of path away; otherwise it ends standing (owner, 7 Nov 2026: 4 m). The
+        /// rider keeps the on-foot <paramref name="speed"/> through the dismount, so the path left then is the path left
+        /// at the press less what that speed covers by <paramref name="rollEndsAt"/>.
+        /// </summary>
+        public static bool DismountEndsRunning(float pathLeftAtPress, float speed, float rollEndsAt, float minDistance) =>
+            pathLeftAtPress - Math.Max(0f, speed) * Math.Max(0f, rollEndsAt) >= minDistance;
     }
 }

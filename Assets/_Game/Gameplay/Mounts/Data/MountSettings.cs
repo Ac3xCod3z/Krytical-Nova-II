@@ -57,12 +57,18 @@ namespace KryticalNova.Mounts
         public MountTransition getOnRunning = MountTransition.RunningOn();
         [Tooltip("Standing still (or walking: the rider stops first): a front flip off the mount, a three-point landing, a rise to idle.")]
         public MountTransition getOff = MountTransition.StandingOff();
-        [Tooltip("Running: a launch forward out of the saddle into a front flip, landing in a forward roll that comes up running.")]
+        [Tooltip("Running, with the path still going on: the game's take-off from the saddle, the game's front flip, a forward roll, up running.")]
         public MountTransition getOffRunning = MountTransition.RunningOff();
+        [Tooltip("Running, with the clicked spot close: the same take-off, flip and roll, ending standing (idle).")]
+        public MountTransition getOffRunningToIdle = MountTransition.RunningOffToIdle();
+        [Tooltip("Metres of path that must still be left to the clicked spot when the roll ends for the rider to come up " +
+                 "running; less, and the roll ends standing (owner, 7 Nov 2026).")]
+        [Min(0f)] public float rollIntoRunMinDistance = 4f;
 
-        /// <summary>The getting-on or getting-off in play: on or off, standing or running.</summary>
-        public MountTransition Transition(bool gettingOn, bool running) =>
-            gettingOn ? (running ? getOnRunning : getOn) : (running ? getOffRunning : getOff);
+        /// <summary>The getting-on or getting-off in play: on or off, standing or running, and for a running
+        /// getting-off whether it ends running (path left) or standing.</summary>
+        public MountTransition Transition(bool gettingOn, bool running, bool endsRunning = true) =>
+            gettingOn ? (running ? getOnRunning : getOn) : (running ? (endsRunning ? getOffRunning : getOffRunningToIdle) : getOff);
 
         [Header("Idling")]
         [Tooltip("At rest the mount and its rider play one of their other idles (a sniff, a look round, a pat on the neck) every this many seconds. 0 = never.")]
@@ -95,6 +101,8 @@ namespace KryticalNova.Mounts
         [Min(0f)] public float effectDelay = 0.1f;
         [Tooltip("Seconds the mount takes to form or to vanish. A mount's own materialise asset may override it.")]
         [Min(0.05f)] public float effectSeconds = 0.5f;
+        [Tooltip("Running getting-off: seconds into the clip when the roll ends (the run-or-stand choice looks at the path left then).")]
+        [Min(0f)] public float rollEndsAt;
 
         private static Keyframe K(float t, float v) => new Keyframe(t, v);
 
@@ -117,12 +125,18 @@ namespace KryticalNova.Mounts
             seconds = 1f, freeSeconds = 0.85f, stirrupsAt = 0f, effectDelay = 0.1f, effectSeconds = 0.5f,
         };
 
-        /// <summary>The launch flip: 1.0 s, free at 0.85 s; launch, flip on a forward arc, land about 1 m ahead at
-        /// 0.55 s and roll back onto the player by 0.85 s, coming up running; the mount vanishes 0.1 to 0.6 s.</summary>
+        /// <summary>The moving dismount, owner-approved 7 Nov 2026: the game's take-off from the saddle (0-0.47 s), the
+        /// game's front flip (0.49-0.97 s), touchdown 0.99 s, a forward roll to 1.77 s, up into the run; 2.02 s, free at
+        /// 1.95 s. Everything is in the clip (no drawn arc). The mount vanishes top-down 0.1 to 0.6 s.</summary>
         public static MountTransition RunningOff() => new MountTransition
         {
-            seconds = 1f, freeSeconds = 0.85f, stirrupsAt = 0f, effectDelay = 0.1f, effectSeconds = 0.5f,
-            forward = new AnimationCurve(K(0f, 0f), K(0.55f, 1f), K(0.85f, 0f), K(1f, 0f)),
+            seconds = 2.02f, freeSeconds = 1.95f, stirrupsAt = 0f, effectDelay = 0.1f, effectSeconds = 0.5f, rollEndsAt = 1.77f,
+        };
+
+        /// <summary>The same take-off, flip and roll, ending standing: 2.12 s, free at 2.0 s.</summary>
+        public static MountTransition RunningOffToIdle() => new MountTransition
+        {
+            seconds = 2.12f, freeSeconds = 2.0f, stirrupsAt = 0f, effectDelay = 0.1f, effectSeconds = 0.5f, rollEndsAt = 1.77f,
         };
     }
 }

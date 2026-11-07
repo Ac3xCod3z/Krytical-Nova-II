@@ -8,6 +8,7 @@ using KryticalNova.Progression;
 using KryticalNova.Social;
 using Unity.Netcode;
 using UnityEngine;
+using UnityEngine.AI;
 
 namespace KryticalNova.Mounts
 {
@@ -52,6 +53,7 @@ namespace KryticalNova.Mounts
         private int selected;
         private RidePhase phase;
         private bool running; // the getting on or off in play is the running kind
+        private bool endsRunning = true; // a running getting-off comes up running (path left) or ends standing
         private float phaseEnds;
         private double hungerCarry;
         private float nextPublish;
@@ -80,6 +82,8 @@ namespace KryticalNova.Mounts
         public RidePhase Phase => shown.phase;
         /// <summary>The getting on or off in play is the running kind: the Ride key was pressed while running.</summary>
         public bool IsRunningTransition => shown.running;
+        /// <summary>A running getting-off ends running (the clicked spot is still far) rather than standing.</summary>
+        public bool DismountEndsRunning => shown.endsRunning;
         /// <summary>On the mount, getting on or getting off.</summary>
         public bool IsMounted => shown.phase != RidePhase.OnFoot;
         public int GrowthPercent => shown.selected != 0 ? shown.growth : 0;
@@ -230,11 +234,31 @@ namespace KryticalNova.Mounts
             // A summon-hop mount is timed by Mount Settings: the rider is free before the clip ends (its settle, landing
             // or roll plays on). Older mounts take their clip's length.
             MountSettings settings = Settings;
-            if (mount != null && mount.hopMountUp && settings != null)
-                seconds = settings.Transition(next == RidePhase.GettingOn, running).freeSeconds;
-            phaseEnds = Time.time + Mathf.Max(MinPhaseSeconds, seconds);
+            endsRunning = true;
+            if (next == RidePhase.GettingOff && running && settings != null)
+            {
+                // Owner, 7 Nov 2026: up running when the clicked spot is still 4 m or more away as the roll ends. The
+                // rider goes at on-foot speed through the dismount (Show sets it), so that is the speed to reckon with.
+                float footSpeed = 0f;
+                if (movement != null) { movement.SetRideSpeeds(0f, 0f); footSpeed = movement.CurrentSpeed; }
+                endsRunning = MountRules.DismountEndsRunning(PathLeft(), footSpeed, settings.getOffRunning.rollEndsAt,
+                    settings.rollIntoRunMinDistance);
+            }
             if (next == RidePhase.GettingOff) PublishBook(); // what riding cost in hunger, before the ride ends
             Publish();
+            if (mount != null && mount.hopMountUp && settings != null)
+                seconds = settings.Transition(next == RidePhase.GettingOn, running, endsRunning).freeSeconds;
+            phaseEnds = Time.time + Mathf.Max(MinPhaseSeconds, seconds);
+        }
+
+        /// <summary>Metres of path left to the clicked spot (the server's own copy walks the player), 0 with no path.</summary>
+        private float PathLeft()
+        {
+            NavMeshAgent agent = GetComponent<NavMeshAgent>();
+            if (agent == null || !agent.isActiveAndEnabled || !agent.isOnNavMesh || !agent.hasPath) return 0f;
+            Vector3 straight = agent.destination - agent.nextPosition;
+            straight.y = 0f;
+            return Mathf.Max(agent.remainingDistance, straight.magnitude); // remainingDistance reads 0 just after SetPath
         }
 
         private void OnDied()
@@ -440,6 +464,7 @@ namespace KryticalNova.Mounts
                 growth = (byte)(selected != 0 ? MountRules.GrowthPercent(state, Tuning) : 0),
                 fed = selected != 0 && state.IsFed,
                 running = selected != 0 && running && (phase == RidePhase.GettingOn || phase == RidePhase.GettingOff),
+                endsRunning = endsRunning,
             };
             if (IsSpawned && IsServer) netState.Value = next;
             Show(next);

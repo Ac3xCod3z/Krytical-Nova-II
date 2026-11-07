@@ -103,7 +103,7 @@ namespace KryticalNova.Mounts
             {
                 bool on = phase == RidePhase.GettingOn;
                 runningTransition = mounts.IsRunningTransition;
-                transition = settings != null ? settings.Transition(on, runningTransition) : null;
+                transition = settings != null ? settings.Transition(on, runningTransition, mounts.DismountEndsRunning) : null;
                 if (mount.hopMountUp) { lift = Lift(phase, 0f); forward = Forward(0f); }
                 if (materialiser != null)
                 {
@@ -250,7 +250,10 @@ namespace KryticalNova.Mounts
                     motor.SetSeated(on, on, on);
                     break;
                 case RidePhase.GettingOff:
-                    AnimationClip off = runningTransition ? mount.RiderClip(stage, l => l.dismountRunning, mount.dismountRunning) : null;
+                    AnimationClip off = null;
+                    if (runningTransition && !mounts.DismountEndsRunning)
+                        off = mount.RiderClip(stage, l => l.dismountRunningToIdle, mount.dismountRunningToIdle);
+                    if (runningTransition && off == null) off = mount.RiderClip(stage, l => l.dismountRunning, mount.dismountRunning);
                     if (off == null) off = mount.RiderClip(stage, l => l.dismount, mount.dismount);
                     if (off == null) off = idle;
                     motor.SetSeated(off, off, off);
