@@ -48,8 +48,15 @@ namespace KryticalNova.Hostiles.Entities
         public int RadiusMm, HeightMm;
         /// <summary><see cref="HostileBehaviourKind"/>.</summary>
         public byte Behaviour;
+        /// <summary>0-100 from the species (M6.1): a hit staggers only above it; 100 = never.</summary>
         public byte Poise;
         public uint NoticeTicks;
+        /// <summary><see cref="HostileScoreProfile"/> of the species (M6.1; read by the attack choice from M6.5 on).</summary>
+        public byte Profile;
+        /// <summary>1 = joins a fight of its own kind nearby (M6.5's assist).</summary>
+        public byte Assist;
+        /// <summary>1 = runs away when nearly dead (no species yet).</summary>
+        public byte Flees;
     }
 
     public static class HostileBehaviourKind

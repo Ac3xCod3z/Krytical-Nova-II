@@ -75,14 +75,25 @@ namespace KryticalNova.EditorTools.Hostiles
             public string Idle, Walk, Run, TurnLeft, TurnRight, Stunned;
             public AttackRow[] Attacks;
             public string[] Hits, Deaths;
+            /// <summary>The entity brain's numbers (M6.1): poise 0-100 and how it picks its attacks.</summary>
+            public int Poise;
+            public HostileScoreProfile Profile;
         }
+
+        /// <summary>Q3 (owner, 6 Nov 2026): a light swing's windup, seconds.</summary>
+        public const float LightWindup = 0.40f;
+        /// <summary>A heavy swing's windup, seconds (unchanged by Q3).</summary>
+        public const float HeavyWindup = 0.55f;
+        /// <summary>Poise (0-100) of a normal species and of a Bruiser (implementation plan M6.1).</summary>
+        public const int PoiseNormal = 30, PoiseBruiser = 70;
 
         // The unarmed humanoid set every species uses until it has clips of its own.
         private static readonly AttackRow[] UnarmedAttacks =
         {
-            new AttackRow { Clip = Unarmed + "Attack-L1.FBX", Windup = 0.25f, Damage = 1f, Weight = 45 },
-            new AttackRow { Clip = Unarmed + "Attack-R1.FBX", Windup = 0.25f, Damage = 1f, Weight = 40 },
-            new AttackRow { Clip = Unarmed + "Attack-R3.FBX", Windup = 0.55f, Damage = 1.5f, Heavy = true, Weight = 15 },
+            // light windups 0.25 -> 0.40 s (owner's Q3, 6 Nov 2026: every swing readable on screen on the entity netcode); heavy stays
+            new AttackRow { Clip = Unarmed + "Attack-L1.FBX", Windup = LightWindup, Damage = 1f, Weight = 45 },
+            new AttackRow { Clip = Unarmed + "Attack-R1.FBX", Windup = LightWindup, Damage = 1f, Weight = 40 },
+            new AttackRow { Clip = Unarmed + "Attack-R3.FBX", Windup = HeavyWindup, Damage = 1.5f, Heavy = true, Weight = 15 },
         };
         private static readonly string[] UnarmedHits = { Unarmed + "GetHit-F1.FBX", Unarmed + "GetHit-F2.FBX" };
         private static readonly string[] HumanoidDeaths = { PlayerDeaths + "Death_Front.anim", PlayerDeaths + "Death_Back.anim" };
@@ -103,12 +114,12 @@ namespace KryticalNova.EditorTools.Hostiles
             Humanoid(3, "Blightborn", "Blightborn", 4, DarkFortress + "SM_Chr_Undead_01.prefab", spirit: KryticalNova.Core.SpiritKind.Living),
             Humanoid(4, "BlightReaver", "Blight Reaver", 7, DarkFortress + "SM_Chr_Undead_02.prefab", spirit: KryticalNova.Core.SpiritKind.Living),
             Humanoid(5, "Gargoyle", "Gargoyle", 10, DarkFantasy + "SM_Chr_Gargoyle_01.prefab"),
-            Humanoid(6, "Wraith", "Wraith", 13, DarkFortress + "SM_Chr_Wraith_01.prefab"),
-            Humanoid(7, "SeraphUnit", "Seraph Unit", 16, SciFiSpace + "SM_Chr_RobotFemale_01.prefab", spirit: KryticalNova.Core.SpiritKind.Unliving),
+            Humanoid(6, "Wraith", "Wraith", 13, DarkFortress + "SM_Chr_Wraith_01.prefab", profile: HostileScoreProfile.Skirmisher),
+            Humanoid(7, "SeraphUnit", "Seraph Unit", 16, SciFiSpace + "SM_Chr_RobotFemale_01.prefab", spirit: KryticalNova.Core.SpiritKind.Unliving, profile: HostileScoreProfile.Skirmisher),
             Humanoid(8, "CarapaceRaider", "Carapace Raider", 19, SciFiWorlds + "SM_Chr_ScifiWorlds_AlienArmor_01.prefab", spirit: KryticalNova.Core.SpiritKind.Living),
             Humanoid(9, "WarFrame", "War Frame", 22, SciFiSpace + "SM_Chr_BR_War_Robot_01.prefab", body: new Vector2(0.6f, 2.1f), range: 2.2f, spirit: KryticalNova.Core.SpiritKind.Unliving),
-            Humanoid(10, "Hellion", "Hellion", 12, DarkFantasy + "SM_Chr_Demon_Male_01.prefab", HostileTier.Bruiser, 1.3f, range: 2.4f),
-            Humanoid(11, "Colossus", "Colossus", 21, DarkFortress + "SM_Chr_Colossus_01.prefab", HostileTier.Bruiser, 1.3f, new Vector2(0.6f, 2.1f), 2.6f),
+            Humanoid(10, "Hellion", "Hellion", 12, DarkFantasy + "SM_Chr_Demon_Male_01.prefab", HostileTier.Bruiser, 1.3f, range: 2.4f, profile: HostileScoreProfile.Finisher),
+            Humanoid(11, "Colossus", "Colossus", 21, DarkFortress + "SM_Chr_Colossus_01.prefab", HostileTier.Bruiser, 1.3f, new Vector2(0.6f, 2.1f), 2.6f, profile: HostileScoreProfile.Finisher),
         };
 
         /// <summary>Species that were built once and are gone: their generated assets are removed.</summary>
@@ -120,8 +131,11 @@ namespace KryticalNova.EditorTools.Hostiles
 
         private static Species Humanoid(ushort id, string asset, string displayName, int level, string model,
             HostileTier tier = HostileTier.Normal, float scale = 1f, Vector2 body = default, float range = 1.8f,
-            KryticalNova.Core.SpiritKind spirit = KryticalNova.Core.SpiritKind.Creature) => new Species
+            KryticalNova.Core.SpiritKind spirit = KryticalNova.Core.SpiritKind.Creature,
+            HostileScoreProfile profile = HostileScoreProfile.Brute) => new Species
         {
+            Poise = tier == HostileTier.Bruiser ? PoiseBruiser : PoiseNormal,
+            Profile = profile,
             Spirit = spirit,
             Id = id, Asset = asset, DisplayName = displayName, Level = level, Tier = tier, Model = model, Scale = scale, Body = body,
             AnimSet = "Unarmed",
@@ -149,6 +163,53 @@ namespace KryticalNova.EditorTools.Hostiles
                 EditorUtility.SetDirty(definition);
             }
             AssetDatabase.SaveAssets();
+        }
+
+        /// <summary>
+        /// Writes only the entity brain's numbers of the roster (M6.1: poise, assist, flees, score profile, and the Q3 windups with the
+        /// attack event of each attack clip moved to its windup, so NGO's Emerald strikes at the same moment) into the species that are
+        /// built already. No prefab is made again and nothing else is touched.
+        /// </summary>
+        [MenuItem("Krytical Nova/Hostiles/Apply Brain Data")]
+        public static void ApplyBrainData()
+        {
+            int changed = 0;
+            foreach (Species species in Roster)
+            {
+                HostileDefinition definition = DefinitionOf(species.Asset);
+                if (definition == null) { Debug.LogWarning($"[Hostiles] {species.Asset} is not built: Build Hostiles first."); continue; }
+                WriteBrainData(species, definition);
+                for (int i = 0; i < definition.attacks.Length && i < species.Attacks.Length; i++)
+                {
+                    HostileDefinition.Attack attack = definition.attacks[i];
+                    if (attack.clip == null) continue;
+                    attack.windupSeconds = Mathf.Min(species.Attacks[i].Windup, attack.clip.length * 0.9f);
+                    definition.attacks[i] = attack;
+                    MoveAttackEvent(attack.clip, attack.windupSeconds);
+                }
+                EditorUtility.SetDirty(definition);
+                changed++;
+            }
+            AssetDatabase.SaveAssets();
+            Debug.Log($"[Hostiles] Brain data written into {changed} of {Roster.Length} species.");
+        }
+
+        private static void WriteBrainData(Species species, HostileDefinition definition)
+        {
+            definition.poise = species.Poise;
+            definition.assist = species.Behaviour == HostileBehaviour.AttacksOnSight;   // implementation plan s1.4: default = behaviour
+            definition.flees = false;
+            definition.scoreProfile = species.Profile;
+        }
+
+        /// <summary>Puts an attack clip's one strike event at <paramref name="time"/> (as <see cref="WriteClip"/> places it).</summary>
+        private static void MoveAttackEvent(AnimationClip clip, float time)
+        {
+            AnimationUtility.SetAnimationEvents(clip, new[]
+            {
+                new AnimationEvent { functionName = AttackEvent, time = Mathf.Min(time, clip.length * 0.9f), stringParameter = string.Empty }
+            });
+            EditorUtility.SetDirty(clip);
         }
 
         /// <summary>The prefab of a species by its asset name, or null before it is built.</summary>
@@ -308,6 +369,7 @@ namespace KryticalNova.EditorTools.Hostiles
             definition.model = model;
             definition.scale = species.Scale;
             if (species.Body != default) definition.bodySize = species.Body;
+            WriteBrainData(species, definition);
             definition.idle = definition.combatIdle = CopyClip(species.Idle, folder, species.AnimSet + "_Idle", true, -1f);
             definition.walk = CopyClip(species.Walk, folder, species.AnimSet + "_Walk", true, -1f);
             definition.run = CopyClip(species.Run, folder, species.AnimSet + "_Run", true, -1f);

@@ -102,8 +102,11 @@ namespace KryticalNova.Hostiles.Entities
                 // the GM's Prowler stand-in (M5.5): a FightsBack species made to attack on sight (HostileNet.GmAttacksOnSight)
                 Behaviour = species.behaviour == HostileBehaviour.AttacksOnSight || (TryGetComponent(out HostileNet net) && net.GmAttacksOnSight)
                     ? HostileBehaviourKind.AttacksOnSight : HostileBehaviourKind.FightsBack,
-                Poise = 100,
-                NoticeTicks = HostileRules.NoticeTicks(-1f, noticeDefault, tickRate),
+                Poise = (byte)Mathf.Clamp(species.poise, 0, 100),   // M6.1: the species' own (normal 30, Bruisers 70)
+                NoticeTicks = HostileRules.NoticeTicks(species.noticeSeconds, noticeDefault, tickRate),
+                Profile = (byte)species.scoreProfile,
+                Assist = (byte)(species.assist ? 1 : 0),
+                Flees = (byte)(species.flees ? 1 : 0),
             });
             // the species bake (M5.3b2d): one row per attack of the species
             DynamicBuffer<HostileAbilityRow> rows = em.GetBuffer<HostileAbilityRow>(m_Brain);

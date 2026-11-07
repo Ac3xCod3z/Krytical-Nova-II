@@ -17,10 +17,17 @@ MonoBehaviour:
   tier: 0
   level: 13
   behaviour: 1
+  spirit: 0
   isBossCandidate: 0
   healthMultiplier: 1
   attackRange: 1.8
+  reachAbove: 3
   lootTableId: 
+  noticeSeconds: -1
+  poise: 30
+  assist: 1
+  flees: 0
+  scoreProfile: 1
   model: {fileID: 5410729976943279606, guid: e11ce839d96dc92419d0914c5be330e4, type: 3}
   scale: 1
   bodySize: {x: 0.45, y: 1.8}
@@ -32,12 +39,12 @@ MonoBehaviour:
   turnRight: {fileID: 0}
   attacks:
   - clip: {fileID: 7400000, guid: 7d372a132a754c345898b19f2fa0bcc0, type: 2}
-    windupSeconds: 0.25
+    windupSeconds: 0.4
     damageMultiplier: 1
     heavy: 0
     weight: 45
   - clip: {fileID: 7400000, guid: e432543d60c1a1247a524fb8b7c07fd2, type: 2}
-    windupSeconds: 0.25
+    windupSeconds: 0.4
     damageMultiplier: 1
     heavy: 0
     weight: 40

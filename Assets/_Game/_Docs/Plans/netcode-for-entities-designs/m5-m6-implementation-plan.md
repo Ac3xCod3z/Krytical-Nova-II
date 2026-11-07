@@ -447,6 +447,7 @@ Rows marked `[line: M5.0]` have the file but the line is filled in M5.0. "Test" 
 ## 5. M6 steps
 
 ### M6.1 All 10 species (M5.0 count) (M, MED)
+- [x] **Built 7 Nov 2026 (DOTS 18, local commit):** `HostileDefinition` noticeSeconds/poise/assist/flees/scoreProfile; builder table + menu Hostiles > Apply Brain Data (windups 0.40/0.55, clip strike events moved, NGO Emerald hits at the same moment); `HostileLife` Poise/Profile/Assist/Flees from the species. RosterTests 3/3. TTK: unchanged per swing (a swing still lasts its clip; only the first hit lands 0.15 s later). Light swings show 0.40 - 0.15 = 0.25 s on screen: the 0.35 s needs the pre-swing tell (brain plan s3.8), not built: morning list.
 - **Change:** `HostileDefinition` (new fields 1.4), `HostileAssetBuilder` table: light windups 0.25 -> 0.40 s (Q3), poise per
   species (normal 30, Bruisers 70), assist per behaviour, score profile (Bonewalker/Blightborn Brute, Wraith/Seraph Skirmisher,
   Gargoyle/Carapace/War Frame Brute, Hellion/Colossus Finisher) - **the profiles are a proposal for the owner at the hand test**.

@@ -49,6 +49,18 @@ namespace KryticalNova.Hostiles
         [Tooltip("The loot table this species rolls on. Empty until drops are built.")]
         public string lootTableId;
 
+        [Header("Brain (entity netcode server)")]
+        [Tooltip("Seconds between noticing a player and turning on them. Below 0 = HostileBrainSettings' default.")]
+        public float noticeSeconds = -1f;
+        [Tooltip("How hard it is to stagger (0-100): a hit staggers it only when the hit's poise damage is above this. 100 = never.")]
+        [Range(0, 100)] public int poise = 30;
+        [Tooltip("Joins a fight of its own kind within the assist radius (HostileBrainSettings.assistRadius).")]
+        public bool assist;
+        [Tooltip("Runs away when nearly dead.")]
+        public bool flees;
+        [Tooltip("How it picks its attacks (proposal for the owner's hand test).")]
+        public HostileScoreProfile scoreProfile = HostileScoreProfile.Brute;
+
         [Header("Looks")]
         [Tooltip("The character model (a Synty prefab or FBX).")]
         public GameObject model;
