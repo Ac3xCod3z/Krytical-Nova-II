@@ -1285,7 +1285,7 @@ namespace KryticalNova.EditorTools.GM
 
         private static ValueDropdownList<string> MountChoices() => new ValueDropdownList<string>
         {
-            { "1  Brambleback", "brambleback" }, { "2  Grave Trot (no art yet)", "2" }, { "3  Stone Horn (no art yet)", "3" }, { "4  Circuit Strider (no art yet)", "4" },
+            { "1  Brambleback", "brambleback" }, { "2  Grave Trot (no art yet)", "2" }, { "3  Stone Horn (no art yet)", "3" }, { "4  Circuit Strider", "circuitstrider" },
         };
 
         [ButtonGroup(Tabs + "/" + MountsTab + "/Give"), EnableIf(nameof(IsReady)), LabelText("Give Mount Item"), PropertyOrder(861)]

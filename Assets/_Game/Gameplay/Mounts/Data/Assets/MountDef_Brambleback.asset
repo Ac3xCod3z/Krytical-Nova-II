@@ -31,6 +31,7 @@ MonoBehaviour:
     idleExtras:
     - {fileID: -623603649343465320, guid: c60650c13dc006e4b8b8ff34e4dab456, type: 3}
     - {fileID: -623603649343465320, guid: a308be2e881259e4ebb79a004651afa0, type: 3}
+    clipMetresPerSecond: {x: 0, y: 0}
     glow: {r: 0.55, g: 0.85, b: 0.35, a: 1}
     riderIdle: {fileID: -623603649343465320, guid: dc75123383dde424e9640734d56154a8, type: 3}
     riderWalk: {fileID: -623603649343465320, guid: e3d1efb8913552843b7c47849897d0d4, type: 3}
@@ -54,6 +55,7 @@ MonoBehaviour:
     idleExtras:
     - {fileID: -623603649343465320, guid: 569e21976e4d6f447ba93ba914477cbf, type: 3}
     - {fileID: -623603649343465320, guid: 24dabbc8b8307fd48befe080ae89af4c, type: 3}
+    clipMetresPerSecond: {x: 0, y: 0}
     glow: {r: 0.35, g: 0.9, b: 0.45, a: 1}
     riderIdle: {fileID: -623603649343465320, guid: dc75123383dde424e9640734d56154a8, type: 3}
     riderWalk: {fileID: -623603649343465320, guid: e3d1efb8913552843b7c47849897d0d4, type: 3}
@@ -77,6 +79,7 @@ MonoBehaviour:
     idleExtras:
     - {fileID: -623603649343465320, guid: da8ad07054b9fd5448dd6050db170d57, type: 3}
     - {fileID: -623603649343465320, guid: 18917a9eeb0551d4b9d1ace456e74eb8, type: 3}
+    clipMetresPerSecond: {x: 0, y: 0}
     glow: {r: 0.95, g: 0.8, b: 0.3, a: 1}
     riderIdle: {fileID: -623603649343465320, guid: dc75123383dde424e9640734d56154a8, type: 3}
     riderWalk: {fileID: -623603649343465320, guid: e3d1efb8913552843b7c47849897d0d4, type: 3}
