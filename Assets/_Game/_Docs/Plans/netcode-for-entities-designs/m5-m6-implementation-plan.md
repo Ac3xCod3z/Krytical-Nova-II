@@ -502,6 +502,26 @@ Rows marked `[line: M5.0]` have the file but the line is filled in M5.0. "Test" 
   asset only. **Risk:** MED (difficulty).
 
 ### M6.6 Soak and switch-off (M, MED)
+- [x] **Encyclopedia rows written 7 Nov 2026 (DOTS 18):** glossary Brain, Think tier, Attack slots, Threat list, Hostile server body, Notice time, Poise; row 40 and a Change log line (`01_Systems_Build_List.md`). Built and published at merge-back, not from this branch.
+- [ ] **Soak runbook (prepared 7 Nov 2026 by DOTS 18; not run: needs the owner and Burst).** Blocker first: Burst AOT does not run in any
+  player build since 30 Oct (Linux players crash in Netcode's GhostSpawnSystem without it; the Windows test client is built without it; two
+  builds on 7 Nov, settings-before-start and development, changed nothing: morning list "needs B, ILSpy"). Until that is solved the soak runs
+  on the **Windows** route the owner already uses: the Editor's Play DOTS here as server + client 1, and `Builds/WindowsTest/KnWindowsTest.exe
+  -knjoinhere` as client 2 (Burst off: if it crashes when a ghost spawns, that is the same blocker, and the soak waits). Never the real server or ports.
+  1. Gate: >= 25 GB free (Editor about 11 GB + the exe about 6 GB); no other Unity, Blender or UniMate; `KN_DOTS_HOSTILES=1` for the Editor.
+     Both characters enter fully levelled with every skill (test-players-fully-leveled; Play-here Runner already does this).
+  2. Stage 1, **102 = Zone01 full**: walk client 1 through Zone01's eight zones (each wakes); `gm.zone.list` must show every zone full
+     (12 x 8 + Bruisers). Settings ▸ performance log ON for both clients (PerformanceLogs/perf_*.txt beside the game, and the Editor's).
+  3. Stage 2, **300 = maxActiveHostiles**: `gm.zone.respawn 2`, then `gm.hostile.spawn <id> 50` six times around client 1 (ids 2-11 mixed);
+     `gm.hostile.stats` must stop at 300 alive (the cap) and the server must keep its tick.
+  4. Stage 3, **2,000 synthetic**: not available yet: M5.7's `BrainSoakScene` builder was never built (only M5.7 part 1, the [KnBrain] lines).
+     Do it with the EditMode brain run instead (`HostileMindDeterminismTests` style, 2,000 brains, 1,000 ticks), timed in the Editor: a later step.
+  5. **60 minutes** with both clients fighting (Autopilot on client 1, client 2 by hand), `gm.hostile.brain on` for the first 2 minutes only.
+  6. Pass: the server's tick p99 < 15 ms in its performance log; brains < 0.3 ms at 102 (no brain-only timer exists yet: read the
+     `[KnBrain]` timing lines and the frame time, or add a `PerformanceLog.Time("brains")` around BrainSimulationGroup first); memory flat over
+     the 60 minutes (the perf log's memory column within 5 %); no exception in either log; XP / drops / Creds credited as in NGO
+     (`gm.hostile.ttk`, the ledger). Screenshots of both clients at each stage and a GIF of a pulled Gargoyle zone (attack slots), into Drive.
+  7. Then the switch-off line of this step (Emerald never enabled on DOTS) and its Encyclopedia publish at merge-back.
 - 102 (Zone01 full), 300 (`maxActiveHostiles`), 2,000 synthetic (M5.7 scene) on the Linux test server, bot soak 60 min with two
   real clients; p99 whole-server tick < 15 ms (migration plan threshold), brains < 0.3 ms at 102; memory flat over 60 min.
 - Emerald parts: never enabled on DOTS (server bodies have none; views keep them disabled); removing Emerald files is a merge-back
