@@ -118,25 +118,27 @@ namespace KryticalNova.Mounts
             seconds = 0.8f, freeSeconds = 0.55f, stirrupsAt = 0.6875f, effectDelay = 0.05f, effectSeconds = 0.5f,
         };
 
-        /// <summary>The front flip: 1.0 s, free at 0.85 s; crouch, push, flip down through where the mount was, land at
-        /// 0.6 s; the mount vanishes top-down 0.1 to 0.6 s.</summary>
+        /// <summary>The standing dismount, owner-approved 7 Nov 2026: a front flip too. The game's take-off from the
+        /// saddle (0-0.40 s), the game's front flip about the body's centre (0.42-1.00 s), touchdown 1.02 s, settling into
+        /// idle (no roll); 1.70 s, free at 1.55 s. The mount vanishes top-down 0.1 to 0.6 s.</summary>
         public static MountTransition StandingOff() => new MountTransition
         {
-            seconds = 1f, freeSeconds = 0.85f, stirrupsAt = 0f, effectDelay = 0.1f, effectSeconds = 0.5f,
+            seconds = 1.7f, freeSeconds = 1.55f, stirrupsAt = 0f, effectDelay = 0.1f, effectSeconds = 0.5f,
         };
 
-        /// <summary>The moving dismount, owner-approved 7 Nov 2026: the game's take-off from the saddle (0-0.47 s), the
-        /// game's front flip (0.49-0.97 s), touchdown 0.99 s, a forward roll to 1.77 s, up into the run; 2.02 s, free at
-        /// 1.95 s. Everything is in the clip (no drawn arc). The mount vanishes top-down 0.1 to 0.6 s.</summary>
+        /// <summary>The moving dismount, redone and owner-approved 7 Nov 2026: a sprung take-off from the saddle
+        /// (0-0.36 s), the game's front flip about the body's centre (0.38-0.96 s), touchdown 0.98 s, a forward roll to
+        /// 1.76 s, up into the run; 2.0 s, free at 1.93 s. Everything is in the clip (no drawn arc). The mount vanishes
+        /// top-down 0.1 to 0.6 s.</summary>
         public static MountTransition RunningOff() => new MountTransition
         {
-            seconds = 2.02f, freeSeconds = 1.95f, stirrupsAt = 0f, effectDelay = 0.1f, effectSeconds = 0.5f, rollEndsAt = 1.77f,
+            seconds = 2.0f, freeSeconds = 1.93f, stirrupsAt = 0f, effectDelay = 0.1f, effectSeconds = 0.5f, rollEndsAt = 1.76f,
         };
 
-        /// <summary>The same take-off, flip and roll, ending standing: 2.12 s, free at 2.0 s.</summary>
+        /// <summary>The same take-off, flip and roll, ending standing: 2.1 s, free at 1.98 s.</summary>
         public static MountTransition RunningOffToIdle() => new MountTransition
         {
-            seconds = 2.12f, freeSeconds = 2.0f, stirrupsAt = 0f, effectDelay = 0.1f, effectSeconds = 0.5f, rollEndsAt = 1.77f,
+            seconds = 2.1f, freeSeconds = 1.98f, stirrupsAt = 0f, effectDelay = 0.1f, effectSeconds = 0.5f, rollEndsAt = 1.76f,
         };
     }
 }
