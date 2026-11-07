@@ -60,6 +60,7 @@ namespace KryticalNova.Mounts
         private MountTransition beats;
         private int beatsFired;
         private bool beatsEndRunning;
+        private bool beatsGettingOn; // the beats in play are a getting-on's (take-off, saddle landing)
         private MountTransition transition; // the getting on or off in play (standing or running)
         private bool runningTransition;
         private float phaseStartedAt;
@@ -149,9 +150,11 @@ namespace KryticalNova.Mounts
                 runningTransition = mounts.IsRunningTransition;
                 transition = settings != null ? settings.Transition(on, runningTransition, mounts.DismountEndsRunning) : null;
                 if (mount.hopMountUp) { lift = Lift(phase, 0f); forward = Forward(0f); onGround = OnGround(on, 0f); }
-                // The getting-off's beats for the GameFeel layer (take-off, apex, touchdown, roll, stand-up).
-                EndBeats(); // a getting-off cut short by this new phase ends its feel first
-                beats = !on && mount.hopMountUp ? transition : null;
+                // The beats for the GameFeel layer: getting off (take-off, apex, touchdown, roll, stand-up), and getting
+                // on (owner, 7 Nov 2026 retest: the push off the ground, the weight landing in the saddle).
+                EndBeats(); // a getting-on or off cut short by this new phase ends its feel first
+                beats = mount.hopMountUp ? transition : null;
+                beatsGettingOn = on;
                 beatsFired = 0;
                 beatsEndRunning = runningTransition && mounts.DismountEndsRunning;
                 // Owner, 7 Nov 2026 (retest): the mount slid along under the rider on the running getting-off, since the
@@ -359,6 +362,7 @@ namespace KryticalNova.Mounts
                 Point = mounts.transform.position,
                 Speed = movement != null ? movement.CurrentSpeed : 0f,
                 EndsRunning = beatsEndRunning,
+                GettingOn = beatsGettingOn,
                 IsLocalPlayer = mounts.IsOwner,
             });
         }
@@ -400,7 +404,7 @@ namespace KryticalNova.Mounts
                     break;
                 default:
                     motor.SetSeated(extraIdle != null ? extraIdle : idle, mount.RiderClip(stage, l => l.riderWalk, mount.riderWalk),
-                        mount.RiderClip(stage, l => l.riderRun, mount.riderRun));
+                        mount.RiderClip(stage, l => l.riderRun, mount.riderRun), inSaddle: true);
                     break;
             }
         }

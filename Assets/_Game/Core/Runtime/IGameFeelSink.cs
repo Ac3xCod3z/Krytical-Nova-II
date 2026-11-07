@@ -55,7 +55,11 @@ namespace KryticalNova.Core
         public bool IsLocalPlayer;
     }
 
-    /// <summary>The beats of getting off a mount, in order (owner, 7 Nov 2026: impact, weight, dust and lines).</summary>
+    /// <summary>
+    /// The beats of getting off a mount, in order (owner, 7 Nov 2026: impact, weight, dust and lines). Getting on uses
+    /// <see cref="TakeOff"/> (the push off the ground), <see cref="Touchdown"/> (the weight landing in the saddle, as the
+    /// mount finishes forming) and <see cref="Ended"/>.
+    /// </summary>
     public enum DismountBeat
     {
         /// <summary>The feet leave the saddle.</summary>
@@ -87,6 +91,8 @@ namespace KryticalNova.Core
         public float Speed;
         /// <summary>The getting-off ends running (the roll comes up into the run).</summary>
         public bool EndsRunning;
+        /// <summary>A getting-ON (the summon hop into the saddle), not a getting-off.</summary>
+        public bool GettingOn;
         public bool IsLocalPlayer;
     }
 
@@ -124,7 +130,7 @@ namespace KryticalNova.Core
         /// </summary>
         void WaterSplash(Transform actor, Vector3 at, bool isLocalPlayer);
         void Landed(Transform actor, bool isLocalPlayer);
-        /// <summary>A beat of getting off a mount (take-off, apex, touchdown, roll, stand-up), on every peer.</summary>
+        /// <summary>A beat of getting on or off a mount (take-off, apex, touchdown, roll, stand-up), on every peer.</summary>
         void Dismount(in DismountFeel moment);
         /// <summary>The actor left the ground (true) or is back on it, including after an aborted jump (false).</summary>
         void Airborne(Transform actor, bool airborne);

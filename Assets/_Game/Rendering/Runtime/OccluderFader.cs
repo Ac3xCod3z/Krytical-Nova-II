@@ -174,11 +174,17 @@ namespace KryticalNova.Rendering
                 Vector3 chest = target.position + Vector3.up * 1.2f;
                 Cast(eye, chest);
                 Cast(eye, target.position + Vector3.up * 1.8f);
+                // And back from the player to the camera (owner, 7 Nov 2026: after a fast dismount the camera sat
+                // inside a building and the screen went dark). A cast that starts inside a building's hollow mesh
+                // collider never hits it; the one from outside meets its outer wall, so the building round the
+                // camera fades as well.
+                CastBack(chest, eye);
                 if (fast)
                 {
                     // The camera travels with the player: where both will be half a look-ahead on, and a whole one.
                     Cast(eye + ahead * 0.5f, chest + ahead * 0.5f);
                     Cast(eye + ahead, chest + ahead);
+                    CastBack(chest + ahead, eye + ahead);
                 }
             }
 
@@ -238,6 +244,7 @@ namespace KryticalNova.Rendering
             return targetVelocity.sqrMagnitude >= FastSpeed * FastSpeed ? targetVelocity * LookAheadSeconds : Vector3.zero;
         }
 
+        /// <summary>The line of sight from the camera <paramref name="from"/> to the player <paramref name="aim"/>.</summary>
         private void Cast(Vector3 from, Vector3 aim)
         {
             Vector3 dir = aim - from;
@@ -246,7 +253,28 @@ namespace KryticalNova.Rendering
             Vector3 along = dir / (dist + CastRadius);
             int count = Physics.SphereCastNonAlloc(from, CastRadius, along, hits, dist,
                 occluderLayers, QueryTriggerInteraction.Ignore);
-            var sight = new Ray(from, along);
+            Mark(count, from, new Ray(from, along), dist);
+        }
+
+        /// <summary>
+        /// The same line walked from the player <paramref name="from"/> out to the camera <paramref name="eye"/>: it
+        /// meets the outer wall of a building the camera is inside. It stops at the camera, so nothing behind it fades.
+        /// </summary>
+        private void CastBack(Vector3 from, Vector3 eye)
+        {
+            Vector3 dir = eye - from;
+            float dist = dir.magnitude - CastRadius; // start clear of the player's own body
+            if (dist <= 0.1f) return;
+            Vector3 along = dir / (dist + CastRadius);
+            int count = Physics.SphereCastNonAlloc(from + along * CastRadius, CastRadius, along, hits, dist,
+                occluderLayers, QueryTriggerInteraction.Ignore);
+            // The pieces are picked along the camera's own line of sight, as for the cast from the camera.
+            Mark(count, eye, new Ray(eye, -along), dist);
+        }
+
+        /// <summary>Marks what the last cast's <paramref name="count"/> hits make "in the way" on this check.</summary>
+        private void Mark(int count, Vector3 from, Ray sight, float dist)
+        {
             for (int i = 0; i < count; i++)
             {
                 var col = hits[i].collider;

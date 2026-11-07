@@ -113,6 +113,12 @@ namespace KryticalNova.GameFeel
         [Tooltip("A jump's crouch, on every client: sparks at the feet and a slight squash.")]
         [SerializeField] private MMF_Player jumpChargeWorldFeel;
         [SerializeField] private MMF_Player landWorldFeel;
+        [Tooltip("Getting on or off a mount: one short grounded puff, gone in under half a second (owner, 7 Nov 2026 retest: no lingering puffs, no stars).")]
+        [SerializeField] private MMF_Player rideDustWorldFeel;
+        [Tooltip("Getting on or off a mount: the push off the saddle or the ground (short puff, stretch, the jump's smear).")]
+        [SerializeField] private MMF_Player rideTakeOffWorldFeel;
+        [Tooltip("Getting on or off a mount: the weight landing, on the ground or in the saddle (short puff and a squash).")]
+        [SerializeField] private MMF_Player rideLandWorldFeel;
         [Tooltip("Cast / hit bursts for skills the catalog has no entry for.")]
         [SerializeField] private MMF_Player attackCastWorldFeel;
         [SerializeField] private MMF_Player buffCastWorldFeel;
@@ -749,6 +755,10 @@ namespace KryticalNova.GameFeel
         [SerializeField, Range(0f, 1f)] private float dismountShakeStill = 0.45f, dismountShakeFull = 1f;
         [Tooltip("The small puff as the rider stands up out of the landing or the roll.")]
         [SerializeField, Range(0f, 1f)] private float dismountStandUpIntensity = 0.45f;
+        [Tooltip("Getting on: how strong the push off the ground and the weight landing in the saddle are.")]
+        [SerializeField, Range(0f, 1.5f)] private float mountUpTakeOffIntensity = 0.8f, mountUpLandIntensity = 0.9f;
+        [Tooltip("Getting on: the local player's own camera thud as the weight lands in the saddle.")]
+        [SerializeField, Range(0f, 1f)] private float mountUpShake = 0.3f;
 
         /// <summary>
         /// The getting-off beats (MountRider fires them from the clip's measured times): a push burst and squash off the
@@ -763,10 +773,15 @@ namespace KryticalNova.GameFeel
             float pace = Mathf.Clamp01(moment.Speed / dismountFullSpeed);
             float hit = dismountBaseIntensity + dismountSpeedIntensity * pace;
             Vector3 feet = ActorAnchor.Feet(actor);
+            if (moment.GettingOn)
+            {
+                MountUp(moment, actor, feet);
+                return;
+            }
             switch (moment.Beat)
             {
                 case DismountBeat.TakeOff:
-                    PlayWorld(jumpWorldFeel, feet, Facing(actor), actor, hit);
+                    PlayWorld(rideTakeOffWorldFeel != null ? rideTakeOffWorldFeel : jumpWorldFeel, feet, Facing(actor), actor, hit);
                     if (moment.IsLocalPlayer) Play(jumpFeel, actor.position, 1f);
                     ActorVfx.For(actor).SetAirborne(true, airborneLoopVfx);
                     break;
@@ -774,8 +789,9 @@ namespace KryticalNova.GameFeel
                     // The lines and the smear end here, always (owner, retest: they stuck on after the roll).
                     ActorVfx.Find(actor)?.SetAirborne(false, airborneLoopVfx);
                     ActorSmear.Find(actor)?.Release();
-                    // The jump's own landing dust and thud: no death stars (owner, retest: "the stars are stupid").
-                    PlayWorld(landWorldFeel, feet, Facing(actor), actor, hit);
+                    // One short grounded puff and a squash: no stars, nothing lingering (owner, retest: "the stars are
+                    // stupid"; puffs gone in 0.3-0.5 s).
+                    PlayWorld(rideLandWorldFeel != null ? rideLandWorldFeel : landWorldFeel, feet, Facing(actor), actor, hit);
                     if (moment.IsLocalPlayer) Play(landFeel, actor.position, Mathf.Lerp(dismountShakeStill, dismountShakeFull, pace));
                     break;
                 case DismountBeat.RollStart:
@@ -788,7 +804,7 @@ namespace KryticalNova.GameFeel
                 case DismountBeat.RollEnd:
                     // The roll's exit slide: one short puff where the feet catch, not a trail.
                     ActorVfx.Find(actor)?.SetRunning(false, runLoopVfx);
-                    PlayWorld(jumpChargeWorldFeel, feet, Facing(actor), actor, dismountStandUpIntensity);
+                    PlayWorld(rideDustWorldFeel, feet, Facing(actor), actor, dismountStandUpIntensity);
                     break;
                 case DismountBeat.StandUp:
                     ActorVfx.Find(actor)?.SetRunning(false, runLoopVfx);
@@ -796,6 +812,30 @@ namespace KryticalNova.GameFeel
                 case DismountBeat.Ended:
                     ActorVfx.Find(actor)?.SetAirborne(false, airborneLoopVfx);
                     ActorVfx.Find(actor)?.SetRunning(false, runLoopVfx);
+                    ActorSmear.Find(actor)?.Release();
+                    break;
+            }
+        }
+
+        /// <summary>
+        /// Getting on (owner, 7 Nov 2026 retest: the mount-up needs feel too): a push off the ground as the feet leave
+        /// it, and the weight landing in the saddle as the mount finishes forming under the rider (MountTransition's
+        /// arrivesAt is where its materialise ends). Short puffs only, no stars.
+        /// </summary>
+        private void MountUp(in DismountFeel moment, Transform actor, Vector3 feet)
+        {
+            switch (moment.Beat)
+            {
+                case DismountBeat.TakeOff:
+                    PlayWorld(rideTakeOffWorldFeel, feet, Facing(actor), actor, mountUpTakeOffIntensity);
+                    if (moment.IsLocalPlayer) Play(jumpFeel, actor.position, 1f);
+                    break;
+                case DismountBeat.Touchdown:
+                    ActorSmear.Find(actor)?.Release();
+                    PlayWorld(rideLandWorldFeel, feet, Facing(actor), actor, mountUpLandIntensity);
+                    if (moment.IsLocalPlayer) Play(landFeel, actor.position, mountUpShake);
+                    break;
+                case DismountBeat.Ended:
                     ActorSmear.Find(actor)?.Release();
                     break;
             }

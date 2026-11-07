@@ -203,6 +203,8 @@ namespace KryticalNova.Player
         // Riding (owner, 25 Oct 2026): the rider sits on a mount's seat. The base layer plays the seated clips the
         // mount system hands over; strikes, casts, draws and flinches play on the upper-body layer over the seat.
         private bool seated;
+        // In the saddle with the riding set (not a getting on or off): a drawn weapon is held as on foot.
+        private bool inSaddle;
         private AnimationClip seatedIdleClip, seatedWalkClip, seatedRunClip;
 
         /// <summary>The rider is on a mount (<see cref="SetSeated"/>). Every machine.</summary>
@@ -554,6 +556,7 @@ namespace KryticalNova.Player
         {
             stopState = null;
             slowerGaitTimer = 0f;
+            KeepSeatedHold();
             if (!IsMoving())
             {
                 PlayLocomotionClip(seatedIdleClip, locomotionFadeDuration);
@@ -564,6 +567,34 @@ namespace KryticalNova.Player
         }
 
         /// <summary>
+        /// Owner, 7 Nov 2026 (retest): in the saddle with the weapon out, both hands sat on the reins as if empty. The
+        /// upper body now plays the player's own drawn idle (the hold of the weapon on foot) over the riding legs, the
+        /// way a strike from the saddle does; it lets go when the weapon is sheathed or the rider gets off. A strike,
+        /// cast or draw on the upper body takes over while it plays and hands back to the hold.
+        /// </summary>
+        private void KeepSeatedHold()
+        {
+            if (!drawOnUpperBody || animancer == null) return;
+            AnimancerLayer layer = animancer.Layers[UpperBodyLayerIndex];
+            bool holding = layer.CurrentState != null && layer.CurrentState.Clip == drawnIdleClip && layer.TargetWeight > 0f;
+            bool hold = SeatedHoldWanted(seated, inSaddle, presentedWeaponDrawn, drawnIdleClip != null, currentState);
+            if (hold == holding) return;
+            if (!hold)
+            {
+                // Only the hold is let go here: a strike or draw playing on the layer ends by itself.
+                if (holding) layer.StartFade(0f, weaponDrawFadeDuration);
+                return;
+            }
+            AnimancerState state = layer.Play(drawnIdleClip, weaponDrawFadeDuration);
+            state.ApplyFootIK = false;
+            layer.StartFade(1f, weaponDrawFadeDuration);
+        }
+
+        /// <summary>Whether a seated rider's upper body holds the drawn weapon now (only between actions, in the saddle).</summary>
+        public static bool SeatedHoldWanted(bool seated, bool inSaddle, bool weaponDrawn, bool hasDrawnIdle, CharacterAnimState state) =>
+            seated && inSaddle && weaponDrawn && hasDrawnIdle && state == CharacterAnimState.Locomotion;
+
+        /// <summary>
         /// Sits the rider on a mount: from now on <paramref name="idle"/>, <paramref name="walk"/> and
         /// <paramref name="run"/> are its locomotion, with no stop clips and no foot IK, and combat clips
         /// (<see cref="PlayAction"/>) play on the upper body only. Null idle stands it up again. Every machine.
@@ -571,9 +602,12 @@ namespace KryticalNova.Player
         /// <summary>Seconds a locomotion clip takes to fade in over the last (the seated clip into the idle included).</summary>
         public float LocomotionFadeSeconds => locomotionFadeDuration;
 
-        public void SetSeated(AnimationClip idle, AnimationClip walk, AnimationClip run)
+        /// <param name="inSaddle">The riding set (idle, walk, run), not a getting on or off: with the weapon drawn, the
+        /// upper body holds it as on foot (<see cref="KeepSeatedHold"/>).</param>
+        public void SetSeated(AnimationClip idle, AnimationClip walk, AnimationClip run, bool inSaddle = false)
         {
             seated = idle != null;
+            this.inSaddle = seated && inSaddle;
             seatedIdleClip = idle;
             seatedWalkClip = walk != null ? walk : idle;
             seatedRunClip = run != null ? run : seatedWalkClip;
@@ -581,6 +615,7 @@ namespace KryticalNova.Player
             currentLocomotionClip = null;
             if (seated) EndEmote(true);
             if (!seated && currentState == CharacterAnimState.Attacking) FadeOutUpperBody();
+            KeepSeatedHold(); // a getting-off lets go of the hold; the riding set takes it up
             if (currentState == CharacterAnimState.Locomotion || currentState == CharacterAnimState.Attacking) UpdateLocomotion();
         }
 

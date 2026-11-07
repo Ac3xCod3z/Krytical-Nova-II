@@ -111,6 +111,8 @@ namespace KryticalNova.EditorTools
             Make("FX_Cartoony_Jump_01", "PFX_Dust_Land", 1.2f);
             Make("FX_Cartoony_Jump_Up_01", "PFX_Jump_Burst", 1.15f);
             Make("FX_Cartoony_Rings_01", "PFX_Land_Ring", 1.1f, then: GroundRings);
+            // Getting on and off a mount (owner, 7 Nov 2026 retest): one short grounded puff, gone in under half a second.
+            Make("FX_Cartoony_Jump_01", "PFX_Dust_Short", 0.9f, then: ShortLived);
             Make("FX_Cartoony_Sprint_01", "PFX_Run_Loop", 0.85f, loop: true);
             Make("FX_Trail_Dust_01", "PFX_Air_Loop", 0.6f, loop: true);
             BuildJumpChargeVfx();
@@ -1317,6 +1319,31 @@ namespace KryticalNova.EditorTools
                 new Keyframe(0f, 0.3f), new Keyframe(0.15f, 1f), new Keyframe(0.55f, 0.8f), new Keyframe(1f, 0f)));
         }
 
+        /// <summary>The longest a <see cref="ShortLived"/> effect shows, from its start to its last particle (seconds).</summary>
+        public const float ShortDustSeconds = 0.45f;
+
+        /// <summary>
+        /// A puff that is over in <see cref="ShortDustSeconds"/> (owner, 7 Nov 2026: "puffs linger"): every system emits
+        /// at once and no particle outlives the rest of that time.
+        /// </summary>
+        private static void ShortLived(GameObject root)
+        {
+            foreach (var ps in root.GetComponentsInChildren<ParticleSystem>(true))
+            {
+                var main = ps.main;
+                main.startDelay = 0f;
+                main.duration = Mathf.Min(main.duration, 0.1f);
+                ParticleSystem.MinMaxCurve life = main.startLifetime;
+                float longest = life.mode == ParticleSystemCurveMode.Constant ? life.constant
+                    : life.mode == ParticleSystemCurveMode.TwoConstants ? life.constantMax
+                    : main.startLifetimeMultiplier; // a curve: the multiplier is its top
+                float most = ShortDustSeconds - 0.1f;
+                if (longest > most) main.startLifetimeMultiplier *= most / longest;
+                var emission = ps.emission;
+                if (emission.rateOverTimeMultiplier > 0f) emission.rateOverTimeMultiplier = 0f; // bursts only
+            }
+        }
+
         /// <summary>Flat ground billboards (the landing shockwave) draw a crisp ring instead of the default soft dot.</summary>
         private static void GroundRings(GameObject root)
         {
@@ -1720,6 +1747,7 @@ namespace KryticalNova.EditorTools
                 so.FindProperty("runWorldFeel").objectReferenceValue = Smeared(World(world, RunStartPlayer, Dust("PFX_Dust_Run")), SmearKind.TakeOff);
                 so.FindProperty("jumpWorldFeel").objectReferenceValue = Smeared(World(world, "Jump", Dust("PFX_Dust_Jump"), Dust("PFX_Jump_Burst")), SmearKind.Jump);
                 so.FindProperty("landWorldFeel").objectReferenceValue = World(world, "Land", Dust("PFX_Dust_Land"), Dust("PFX_Land_Ring"));
+                AddRideFeel(world, so);
                 AddWaterStepFeel(root, world, so);
                 AddJumpPunch(root, world, so);
                 so.FindProperty("attackCastWorldFeel").objectReferenceValue = World(world, "Attack Skill", Slash());
@@ -1863,6 +1891,21 @@ namespace KryticalNova.EditorTools
                 Debug.Log($"[GameFeel] Smear put on {done} moment(s) of {PrefabPath}. Tune it in {SmearSettingsPath}.");
             }
             AssetDatabase.SaveAssets();
+        }
+
+        /// <summary>
+        /// Getting on and off a mount (owner, 7 Nov 2026 retest): short grounded puffs only, no stars; a stretch on the
+        /// push off, a squash on the weight landing (on the ground or in the saddle).
+        /// </summary>
+        private static void AddRideFeel(GameObject world, SerializedObject so)
+        {
+            so.FindProperty("rideDustWorldFeel").objectReferenceValue = World(world, "Ride Dust", Dust("PFX_Dust_Short"));
+            MMF_Player takeOff = Smeared(World(world, "Ride Take-off", Dust("PFX_Dust_Short")), SmearKind.Jump);
+            Squash(takeOff, "Push Stretch", -0.03f, 0.07f);
+            so.FindProperty("rideTakeOffWorldFeel").objectReferenceValue = takeOff;
+            MMF_Player land = World(world, "Ride Landing", Dust("PFX_Dust_Short"));
+            Squash(land, "Weight Squash", 0.045f, -0.08f);
+            so.FindProperty("rideLandWorldFeel").objectReferenceValue = land;
         }
 
         /// <summary>The player with exactly one smear feedback of this kind on it.</summary>
