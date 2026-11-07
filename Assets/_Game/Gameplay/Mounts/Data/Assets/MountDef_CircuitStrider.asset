@@ -13,88 +13,94 @@ MonoBehaviour:
   m_Name: MountDef_CircuitStrider
   m_EditorClassIdentifier: KryticalNova.Mounts::KryticalNova.Mounts.MountDefinition
   mountId: 4
-  itemId: 0
+  itemId: 8102
   displayName: Circuit Strider
-  description: Not in the game yet.
+  description: A robot hound of plated alloy and circuit light that carries its rider at a gallop; its plating grows as it does.
   firstStat: 2
   firstMax: 50
   secondStat: 1
   secondMax: 50
   stages:
-  - name: 
-    model: {fileID: 0}
-    icon: {fileID: 0}
-    seat: {x: 0, y: 0, z: 0}
-    idle: {fileID: 0}
-    walk: {fileID: 0}
-    run: {fileID: 0}
-    idleExtras: []
-    glow: {r: 0, g: 0, b: 0, a: 0}
+  - name: Circuit Strider
+    model: {fileID: 4257508704385737861, guid: 1cd3363768a69db4e98aad2285d01592, type: 3}
+    icon: {fileID: 21300000, guid: 0de93b49f25fcdd48aeac5adc1c631ac, type: 3}
+    seat: {x: 0.0000022523334, y: 0.21267158, z: -0.032872938}
+    idle: {fileID: -623603649343465320, guid: b8fe66e71dd2fe34a85a18f9f417a678, type: 3}
+    walk: {fileID: -623603649343465320, guid: d576a4d635a90d74197b0e2ec97cfd91, type: 3}
+    run: {fileID: -623603649343465320, guid: ec84ecd76c2b9624b8887707caf865b0, type: 3}
+    idleExtras:
+    - {fileID: -623603649343465320, guid: e8c39babe445eaa4d8c2072f2b5a1b1d, type: 3}
+    clipMetresPerSecond: {x: 5.45, y: 18.2}
+    glow: {r: 0.3, g: 0.9, b: 1, a: 1}
     riderIdle: {fileID: -623603649343465320, guid: dc75123383dde424e9640734d56154a8, type: 3}
     riderWalk: {fileID: -623603649343465320, guid: e3d1efb8913552843b7c47849897d0d4, type: 3}
     riderRun: {fileID: -623603649343465320, guid: c8b83f9687f7ded4e94a363af56f6f0a, type: 3}
-    mountUp: {fileID: -623603649343465320, guid: 7f16c0b041a029943b27070c588517b0, type: 3}
+    mountUp: {fileID: -623603649343465320, guid: 5e111664738d8a1458fe7ee36a62f7d4, type: 3}
     dismount: {fileID: -623603649343465320, guid: ea4661891e8414b49b66d440b92b4b5d, type: 3}
-    mountUpRunning: {fileID: 0}
-    dismountRunning: {fileID: 0}
-    dismountRunningToIdle: {fileID: 0}
+    mountUpRunning: {fileID: -623603649343465320, guid: 46f8446c0b17aa847bc371da6092e842, type: 3}
+    dismountRunning: {fileID: -623603649343465320, guid: c17eb25ff275d3b44b50e946281c7f4f, type: 3}
+    dismountRunningToIdle: {fileID: -623603649343465320, guid: 110979591eefe2b469ff5eb4cd849763, type: 3}
     riderIdleExtras:
     - {fileID: -623603649343465320, guid: f3b6bc83a3551c345b341cd17542b0a0, type: 3}
-    stirrupLeft: {x: 0, y: 0, z: 0}
-    stirrupRight: {x: 0, y: 0, z: 0}
-  - name: 
-    model: {fileID: 0}
-    icon: {fileID: 0}
-    seat: {x: 0, y: 0, z: 0}
-    idle: {fileID: 0}
-    walk: {fileID: 0}
-    run: {fileID: 0}
-    idleExtras: []
-    glow: {r: 0, g: 0, b: 0, a: 0}
+    stirrupLeft: {x: -0.14708409, y: 0.44785452, z: 0.07967892}
+    stirrupRight: {x: 0.14708409, y: 0.4478542, z: 0.07967892}
+  - name: Circuit Strider
+    model: {fileID: 6150605030151480608, guid: e660d0d87518b8f40b6bc3c895dda6d1, type: 3}
+    icon: {fileID: 21300000, guid: e11e7e36124c24d40a436301ba8a7154, type: 3}
+    seat: {x: 0.0000022523334, y: 0.48048812, z: 0.07693033}
+    idle: {fileID: -623603649343465320, guid: 3e93caa463738a9478bc269fa1a864c7, type: 3}
+    walk: {fileID: -623603649343465320, guid: 72c50bc0da23ff4438c7b918d9e70ef5, type: 3}
+    run: {fileID: -623603649343465320, guid: aeed2d1b1cb0f9f47ae9c4b0e15e3f12, type: 3}
+    idleExtras:
+    - {fileID: -623603649343465320, guid: 9a74d3d67934c1141b885f7dd122ef62, type: 3}
+    clipMetresPerSecond: {x: 6.8, y: 24.5}
+    glow: {r: 0.25, g: 0.8, b: 1, a: 1}
     riderIdle: {fileID: -623603649343465320, guid: dc75123383dde424e9640734d56154a8, type: 3}
     riderWalk: {fileID: -623603649343465320, guid: e3d1efb8913552843b7c47849897d0d4, type: 3}
     riderRun: {fileID: -623603649343465320, guid: c8b83f9687f7ded4e94a363af56f6f0a, type: 3}
-    mountUp: {fileID: -623603649343465320, guid: f3cf3d6ac66c9bc40a7493d82522735e, type: 3}
+    mountUp: {fileID: -623603649343465320, guid: 2a66e56562fd3f649985609b67468c48, type: 3}
     dismount: {fileID: -623603649343465320, guid: 93c7e763f6c0c424598efc8a940704b8, type: 3}
-    mountUpRunning: {fileID: 0}
-    dismountRunning: {fileID: 0}
-    dismountRunningToIdle: {fileID: 0}
+    mountUpRunning: {fileID: -623603649343465320, guid: 807da5cebf8544a4bbd98526c4b78117, type: 3}
+    dismountRunning: {fileID: -623603649343465320, guid: aee5e20c7ac117f4fb3fba163c95ba1d, type: 3}
+    dismountRunningToIdle: {fileID: -623603649343465320, guid: 934c48c23ba34784b86212c05f9ef918, type: 3}
     riderIdleExtras:
     - {fileID: -623603649343465320, guid: f3b6bc83a3551c345b341cd17542b0a0, type: 3}
-    stirrupLeft: {x: 0, y: 0, z: 0}
-    stirrupRight: {x: 0, y: 0, z: 0}
-  - name: 
-    model: {fileID: 0}
-    icon: {fileID: 0}
-    seat: {x: 0, y: 0, z: 0}
-    idle: {fileID: 0}
-    walk: {fileID: 0}
-    run: {fileID: 0}
-    idleExtras: []
-    glow: {r: 0, g: 0, b: 0, a: 0}
+    stirrupLeft: {x: -0.29551417, y: 0.76645416, z: 0.12673561}
+    stirrupRight: {x: 0.29565778, y: 0.7657438, z: 0.12461204}
+  - name: Circuit Strider
+    model: {fileID: 49735399657408408, guid: 3967200320dd53e4a9bf3bb0be04058c, type: 3}
+    icon: {fileID: 21300000, guid: 8379aa66d12d2eb4480508d148cd213d, type: 3}
+    seat: {x: 0.0000022523334, y: 0.6011707, z: -0.010389335}
+    idle: {fileID: -623603649343465320, guid: 961086152871a08479d953e0cae3e60a, type: 3}
+    walk: {fileID: -623603649343465320, guid: 5c87ad239052c7544b8099be331b6642, type: 3}
+    run: {fileID: -623603649343465320, guid: 0af4ac79650e5af418e8b0c4fedb701d, type: 3}
+    idleExtras:
+    - {fileID: -623603649343465320, guid: a61ec294ea4798a43b1c9e5c5b2ca7fb, type: 3}
+    clipMetresPerSecond: {x: 8.2, y: 30.9}
+    glow: {r: 1, g: 0.25, b: 0.2, a: 1}
     riderIdle: {fileID: -623603649343465320, guid: dc75123383dde424e9640734d56154a8, type: 3}
     riderWalk: {fileID: -623603649343465320, guid: e3d1efb8913552843b7c47849897d0d4, type: 3}
     riderRun: {fileID: -623603649343465320, guid: c8b83f9687f7ded4e94a363af56f6f0a, type: 3}
-    mountUp: {fileID: -623603649343465320, guid: 92120f9104f4d124c909b79de79cb82d, type: 3}
+    mountUp: {fileID: -623603649343465320, guid: 32e5a142b433d044996cdc78e98404d1, type: 3}
     dismount: {fileID: -623603649343465320, guid: 7fc9a520822d1a64898bff5129d8548d, type: 3}
-    mountUpRunning: {fileID: 0}
-    dismountRunning: {fileID: 0}
-    dismountRunningToIdle: {fileID: 0}
+    mountUpRunning: {fileID: -623603649343465320, guid: 32a15b498b0d8d944a5938369952f4c7, type: 3}
+    dismountRunning: {fileID: -623603649343465320, guid: b4369fd9b267e654d98b9dad31e4f5b3, type: 3}
+    dismountRunningToIdle: {fileID: -623603649343465320, guid: 77456089b9c714b4eae2ab705db4b874, type: 3}
     riderIdleExtras:
     - {fileID: -623603649343465320, guid: f3b6bc83a3551c345b341cd17542b0a0, type: 3}
-    stirrupLeft: {x: 0, y: 0, z: 0}
-    stirrupRight: {x: 0, y: 0, z: 0}
+    stirrupLeft: {x: -0.3648401, y: 0.92071724, z: -0.065532506}
+    stirrupRight: {x: 0.3462529, y: 0.9226427, z: -0.06455687}
   riderIdle: {fileID: -623603649343465320, guid: dc75123383dde424e9640734d56154a8, type: 3}
   riderWalk: {fileID: -623603649343465320, guid: e3d1efb8913552843b7c47849897d0d4, type: 3}
   riderRun: {fileID: -623603649343465320, guid: c8b83f9687f7ded4e94a363af56f6f0a, type: 3}
   riderIdleExtras:
   - {fileID: -623603649343465320, guid: f3b6bc83a3551c345b341cd17542b0a0, type: 3}
-  mountUp: {fileID: 0}
-  dismount: {fileID: 0}
-  mountUpRunning: {fileID: 0}
-  dismountRunning: {fileID: 0}
-  dismountRunningToIdle: {fileID: 0}
-  hopMountUp: 0
+  mountUp: {fileID: -623603649343465320, guid: 5e111664738d8a1458fe7ee36a62f7d4, type: 3}
+  dismount: {fileID: -623603649343465320, guid: ea4661891e8414b49b66d440b92b4b5d, type: 3}
+  mountUpRunning: {fileID: -623603649343465320, guid: 46f8446c0b17aa847bc371da6092e842, type: 3}
+  dismountRunning: {fileID: -623603649343465320, guid: c17eb25ff275d3b44b50e946281c7f4f, type: 3}
+  dismountRunningToIdle: {fileID: -623603649343465320, guid: 110979591eefe2b469ff5eb4cd849763, type: 3}
+  hopMountUp: 1
   riderLeanScale: 1
   riderBobScale: 1
   riderSeatNudge: {x: 0, y: 0, z: 0}

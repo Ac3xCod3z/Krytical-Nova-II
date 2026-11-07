@@ -20,6 +20,9 @@ namespace KryticalNova.Mounts
         public AnimationClip idle, walk, run;
         [Tooltip("Other idles played now and then at rest (a sniff, a look round).")]
         public AnimationClip[] idleExtras;
+        [Tooltip("The ground speed, in metres a second, at which this stage's walk clip (x) and run clip (y) look right " +
+                 "played at 1x (their own stride). Zero = MountSettings.clipMetresPerSecond, the value every mount shares.")]
+        public Vector2 clipMetresPerSecond;
         [Tooltip("Colour of the evolution moment's effect when this stage is reached.")]
         public Color glow;
 

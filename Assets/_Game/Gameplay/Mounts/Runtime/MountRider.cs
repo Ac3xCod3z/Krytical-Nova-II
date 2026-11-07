@@ -408,7 +408,10 @@ namespace KryticalNova.Mounts
             {
                 if (travelling)
                 {
-                    float reference = running ? settings.clipMetresPerSecond.y : settings.clipMetresPerSecond.x;
+                    // A stage keyed with its own stride says at what speed its clips match the ground; else the shared value.
+                    Vector2 clipSpeeds = look.clipMetresPerSecond.x > 0f && look.clipMetresPerSecond.y > 0f
+                        ? look.clipMetresPerSecond : settings.clipMetresPerSecond;
+                    float reference = running ? clipSpeeds.y : clipSpeeds.x;
                     float speed = movement != null ? movement.CurrentSpeed : reference;
                     state.Speed = Mathf.Clamp(speed / Mathf.Max(0.1f, reference), settings.clipPlaybackRange.x, settings.clipPlaybackRange.y);
                 }
