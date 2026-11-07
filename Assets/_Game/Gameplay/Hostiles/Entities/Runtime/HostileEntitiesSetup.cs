@@ -62,8 +62,16 @@ namespace KryticalNova.Hostiles.Entities
             EcsHostileBrain.BodyOfGhost = ghost => BodyOf(server, ghost);
             EcsHostileBrain.GhostIdOfBody = body => GhostIdOf(server, body);
             HostileZone.PlayersOverride = players => ServerPlayers(server, players);   // M6.2: zones wake for this world's players
+            if (assets.bodies != null) HostileSpawner.SpeciesOverride = () => SpeciesOf(assets.bodies);   // M6.3: gm.hostile.spawn / list
             Debug.Log("[Hostiles] Entity brains installed in " + server.Name + " (" + tickRate + " Hz, server bodies " + (assets.bodies != null ? "on" : "MISSING") + ").");
             return true;
+        }
+
+        /// <summary>The species prefabs of the server body catalog (what NGO's network prefab list gives the GM commands).</summary>
+        static System.Collections.Generic.IEnumerable<HostileNet> SpeciesOf(HostileBodyCatalog catalog)
+        {
+            foreach (HostileBodyCatalog.Entry e in catalog.entries)
+                if (e.species != null) yield return e.species;
         }
 
         /// <summary>The server bodies of the players of <paramref name="world"/> (what NGO's zones read as connected players).</summary>

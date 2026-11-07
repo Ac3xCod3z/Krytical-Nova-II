@@ -12,6 +12,7 @@
         "KryticalNova.Factions",
         "KryticalNova.Forge",
         "KryticalNova.Hostiles",
+        "KryticalNova.Hostiles.Entities",
         "KryticalNova.Housing",
         "KryticalNova.Items",
         "KryticalNova.NPC",

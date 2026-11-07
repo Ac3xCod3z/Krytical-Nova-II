@@ -1902,6 +1902,16 @@ namespace KryticalNova.EditorTools.GM
         [ButtonGroup(Tabs + "/" + HostilesTab + "/All"), EnableIf(nameof(IsReady)), LabelText("Counts"), PropertyOrder(1024)]
         private void HostileStats() => Run("gm.hostile.stats");
 
+        // the entity brain (M6.3): its [KnBrain] timing lines in the log, and who fights whom
+        [ButtonGroup(Tabs + "/" + HostilesTab + "/Brain"), EnableIf(nameof(IsReady)), LabelText("Brain Lines On"), PropertyOrder(1025)]
+        private void BrainLinesOn() => Run("gm.hostile.brain on");
+
+        [ButtonGroup(Tabs + "/" + HostilesTab + "/Brain"), EnableIf(nameof(IsReady)), LabelText("Brain Lines Off"), PropertyOrder(1026)]
+        private void BrainLinesOff() => Run("gm.hostile.brain off");
+
+        [ButtonGroup(Tabs + "/" + HostilesTab + "/Brain"), EnableIf(nameof(IsReady)), LabelText("Who Fights Whom"), PropertyOrder(1027)]
+        private void HostileSlots() => Run("gm.hostile.slots");
+
         [TabGroup(Tabs, HostilesTab), Title("Hostile Zones"), ShowInInspector, ValueDropdown(nameof(ZoneChoices)), EnableIf(nameof(IsReady)), LabelText("Zone"), PropertyOrder(1030)]
         private string hostileZone = string.Empty;
 

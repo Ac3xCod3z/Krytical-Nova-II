@@ -40,12 +40,29 @@ namespace KryticalNova.Hostiles
         public static System.Func<bool> AuthorityOverride { get; set; }
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        private static void ResetStatics() => AuthorityOverride = null;
+        private static void ResetStatics()
+        {
+            AuthorityOverride = null;
+            SpeciesOverride = null;
+        }
+
+        /// <summary>
+        /// The species the GM may spawn when NGO's prefab list is not the source (M6.3: the entity netcode's server has no
+        /// NetworkManager; HostileEntitiesSetup gives the species of the server body catalog). Null: NGO's network prefabs.
+        /// </summary>
+        public static System.Func<IEnumerable<HostileNet>> SpeciesOverride { get; set; }
 
         /// <summary>Every Hostile species the session can spawn, by id.</summary>
         public static List<HostileNet> Species()
         {
             var found = new List<HostileNet>();
+            if (SpeciesOverride != null)
+            {
+                foreach (HostileNet hostile in SpeciesOverride())
+                    if (hostile != null && hostile.Definition != null && !found.Contains(hostile)) found.Add(hostile);
+                found.Sort((a, b) => a.Definition.id.CompareTo(b.Definition.id));
+                return found;
+            }
             NetworkManager manager = NetworkManager.Singleton;
             if (manager == null) return found;
             foreach (NetworkPrefab entry in manager.NetworkConfig.Prefabs.Prefabs)

@@ -470,6 +470,7 @@ Rows marked `[line: M5.0]` have the file but the line is filled in M5.0. "Test" 
   the 12 GB rule.
 
 ### M6.3 GM commands and GM window tab (S, LOW)
+- [x] **Built 7 Nov 2026 (DOTS 18, local commit):** `HostileSpawner.SpeciesOverride` (the server body catalog's species, set by HostileEntitiesSetup: the DOTS server has no NetworkManager prefab list, so gm.hostile.spawn/list found nothing); `gm.hostile.brain [on|off]` ([KnBrain] lines) and `gm.hostile.slots` (who fights whom; the ring slots and attack cost join it with M6.5) in the console and the GM window's Hostiles tab. B82 runs list, spawn (level 12, server bodies), freeze (a frozen Hostile takes a hit and stands still), hp, info, kill, brain, slots, clear and zone sleep/clear/fill for the picked player's server body; GmHostileTests folded into B82 (PlayMode, real bodies). The ghost half of B82 (a GM client sees the frozen ghost) is the owner's window test.
 - **Change:** `HostileCommands` keep their names (they act on `HostileNet.Active` bodies, which still exist on the server);
   add `gm.hostile.brain <on|off>` diag and `gm.hostile.slots` (shows the stage manager per player) to commands **and** the GM
   window's Hostiles tab (owner rule: GM tools in the window too).

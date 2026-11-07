@@ -216,6 +216,39 @@ namespace KryticalNova.DevTools
             return frozen ? $"{count} Hostile(s) frozen." : $"{count} Hostile(s) released.";
         }
 
+        [Command("gm.hostile.brain", "The entity brain's timing lines ([KnBrain]: notice, swing start, resolve, with the server tick) in the log: gm.hostile.brain [on|off].")]
+        private static string BrainLines(string state = "")
+        {
+            if (!TryGetPlayer(out _, out var error)) return error;
+            if (!TryParseSwitch(state, KryticalNova.Hostiles.Entities.HostileBrainDiag.Enabled, out bool value)) return "Use gm.hostile.brain on or off.";
+            KryticalNova.Hostiles.Entities.HostileBrainDiag.On = value;
+            return value ? "[KnBrain] lines on: every notice, swing start and resolve goes to the log with its server tick." : "[KnBrain] lines off.";
+        }
+
+        [Command("gm.hostile.slots", "Who fights whom: for every player, the Hostiles that have them as their target and what each is doing.")]
+        private static string Slots()
+        {
+            if (!TryGetPlayer(out _, out var error)) return error;
+            var byTarget = new Dictionary<Transform, List<HostileNet>>();
+            foreach (HostileNet hostile in HostileNet.Active)
+            {
+                if (hostile == null || !hostile.Entity.IsAlive || hostile.Brain == null) continue;
+                Transform target = hostile.Brain.Target;
+                if (target == null) continue;
+                if (!byTarget.TryGetValue(target, out List<HostileNet> list)) byTarget[target] = list = new List<HostileNet>();
+                list.Add(hostile);
+            }
+            if (byTarget.Count == 0) return "No Hostile is fighting anyone.";
+            var sb = new StringBuilder();
+            foreach (KeyValuePair<Transform, List<HostileNet>> pair in byTarget)
+            {
+                sb.AppendLine($"{pair.Key.name}: {pair.Value.Count} Hostile(s)");
+                foreach (HostileNet hostile in pair.Value)
+                    sb.AppendLine($"   {Line(hostile)} · {Vector3.Distance(hostile.transform.position, pair.Key.position):0.#} m · {hostile.Brain.Describe()}");
+            }
+            return sb.ToString().TrimEnd();
+        }
+
         [Command("gm.hostile.ignore", "Hostiles never notice the targeted player by themselves: gm.hostile.ignore [on|off]. Hitting one still starts a fight.")]
         private static string Ignore(string state = "")
         {

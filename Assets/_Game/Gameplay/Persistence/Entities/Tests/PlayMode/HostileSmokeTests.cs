@@ -452,5 +452,122 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
             }
         }
 
+        // ------------------------------------------------------------------ M6.3 GM commands on the entity server
+
+        /// <summary>A Quantum Console command of HostileCommands, run as the console runs it (the methods are the console's, not public).</summary>
+        static string Gm(string method, params object[] args)
+        {
+            System.Reflection.MethodInfo m = typeof(KryticalNova.DevTools.HostileCommands).GetMethod(method,
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+            Assert.IsNotNull(m, "HostileCommands." + method);
+            return (string)m.Invoke(null, args);
+        }
+
+        static System.Collections.Generic.List<HostileNet> GmSpawned()
+        {
+            var list = new System.Collections.Generic.List<HostileNet>();
+            foreach (HostileNet h in HostileNet.Active) if (h != null && h.GmSpawned) list.Add(h);
+            return list;
+        }
+
+        [UnityTest]
+        public IEnumerator B82_TheGmCommands_RunOnTheEntityServer_ForThePickedPlayer_AndAFrozenHostileStandsStillTakingHits()
+        {
+            // H20: gm.hostile.* / gm.zone.* keep their names and act on HostileNet bodies; on the entity server the species come from the
+            // server body catalog (HostileSpawner.SpeciesOverride) and the player is the picked connection's server body (GmTarget, M7.4).
+            Begin();
+            UnityEngine.AI.NavMeshDataInstance ground = Ground();
+            HostileZone zone = null;
+            KryticalNova.DevTools.GmTarget.Saved oldTarget = KryticalNova.DevTools.GmTarget.Save();
+            try
+            {
+                UseServerBodies();
+                var catalog = UnityEditor.AssetDatabase.LoadAssetAtPath<HostileBodyCatalog>(HostileBodyCatalog.AssetPath);
+                HostileSpawner.SpeciesOverride = () =>
+                {
+                    var species = new System.Collections.Generic.List<HostileNet>();
+                    foreach (HostileBodyCatalog.Entry e in catalog.entries) species.Add(e.species);
+                    return species;
+                };
+                KryticalNova.Core.PlayerKeys.Reset();
+                KryticalNova.Core.PlayerKey key = KryticalNova.Core.PlayerKeys.Mint(821);
+                var prefab = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>(PlayerPrefabPath);
+                GameObject p = KryticalNova.Player.Entities.Bodies.PlayerBodyAssembler.Create(prefab, KryticalNova.Core.NetRoleKind.ServerBody,
+                    key, 821, false, ZoneCentre + new Vector3(40f, 0f, 0f), 0f);
+                m_Made.Add(p);
+                HostileZone.PlayersOverride = list => list.Add(p.transform);
+                Assert.IsTrue(KryticalNova.DevTools.GmTarget.TrySetTarget(821, out string error), error);
+                yield return Frames(5);
+
+                StringAssert.Contains("Bonewalker", Gm("List"), "gm.hostile.list: the catalog's species");
+                StringAssert.StartsWith("Spawned 3 Bonewalker at level 12", Gm("Spawn", "Bonewalker", 3, 12, ""));
+                System.Collections.Generic.List<HostileNet> made = GmSpawned();
+                Assert.AreEqual(3, made.Count, "three, GM-spawned");
+                foreach (HostileNet h in made)
+                {
+                    Assert.AreEqual(12, h.Level, "at the level asked");
+                    Assert.IsNotNull(h.GetComponent<KryticalNova.Hostiles.Entities.EcsHostileBrain>(), "server bodies");
+                }
+                yield return Frames(10);
+
+                // freeze: every brain stops; a frozen one takes a hit and stays where it stood, still frozen
+                StringAssert.EndsWith("frozen.", Gm("Freeze", "on"));
+                foreach (HostileNet h in made) Assert.IsTrue(h.Brain.Frozen, h.name + " frozen");
+                HostileNet struck = made[0];
+                Vector3 stood = struck.transform.position;
+                float hp = struck.Entity.CurrentHealth;
+                struck.Entity.TakeDamage(Hit(5f), p.GetComponent<CharacterCombatStats>());
+                yield return Frames(30);
+                Assert.AreEqual(hp - 5f, struck.Entity.CurrentHealth, 1e-3, "it takes the hit");
+                Assert.IsTrue(struck.Brain.Frozen, "and stays frozen");
+                Assert.Less(Vector3.Distance(stood, struck.transform.position), 0.01f, "standing still");
+                StringAssert.EndsWith("released.", Gm("Freeze", "off"));
+                foreach (HostileNet h in made) Assert.IsFalse(h.Brain.Frozen, h.name + " released");
+
+                // health, info, kill (the nearest), the brain lines, who fights whom
+                StringAssert.Contains("HP 10/", Gm("Health", "10"));
+                StringAssert.Contains("species 2", Gm("Info"));
+                StringAssert.StartsWith("Killed 1", Gm("Kill", 0f));
+                int dead = 0;
+                foreach (HostileNet h in made) if (!h.Entity.IsAlive) dead++;
+                Assert.AreEqual(1, dead, "one dead");
+                Gm("BrainLines", "on");
+                Assert.IsTrue(KryticalNova.Hostiles.Entities.HostileBrainDiag.Enabled, "gm.hostile.brain on");
+                Gm("BrainLines", "off");
+                Assert.IsFalse(KryticalNova.Hostiles.Entities.HostileBrainDiag.Enabled, "gm.hostile.brain off");
+                Assert.IsNotNull(Gm("Slots"), "gm.hostile.slots answers");
+                StringAssert.StartsWith("Removed ", Gm("Clear", 0f));
+                Assert.AreEqual(0, GmSpawned().Count, "gm.hostile.clear: every GM-spawned one gone");
+
+                // the zone commands: held awake, it fills; emptied; filled again at once; held asleep
+                zone = Zone();
+                zone.gameObject.SetActive(true);
+                yield return Frames(5);
+                string id = zone.Definition.id;
+                StringAssert.Contains("held awake", Gm("ZoneSleep", id, "off"));
+                yield return Until(() => zone.IsAwake && zone.Alive == zone.Capacity, 5f);
+                Assert.AreEqual(zone.Capacity, zone.Alive, "gm.zone.sleep off: awake and full");
+                StringAssert.Contains("emptied", Gm("ZoneClear", id, 60f));
+                Assert.AreEqual(0, zone.Alive, "gm.zone.clear: empty");
+                StringAssert.Contains($"{zone.Capacity} brought back", Gm("ZoneFill", id));
+                Assert.AreEqual(zone.Capacity, zone.Alive, "gm.zone.fill: back now");
+                StringAssert.Contains("held asleep", Gm("ZoneSleep", id, "on"));
+                yield return Until(() => !zone.IsAwake, 3f);
+                Assert.IsFalse(zone.IsAwake, "gm.zone.sleep on: asleep with a player inside");
+                Gm("ZoneSleep", id, "auto");
+            }
+            finally
+            {
+                Gm("Freeze", "off");
+                KryticalNova.DevTools.GmTarget.Restore(oldTarget);
+                KryticalNova.Hostiles.Entities.HostileBrainDiag.On = null;
+                HostileSpawner.SpeciesOverride = null;
+                foreach (HostileNet h in GmSpawned()) HostileSpawner.Remove(h);
+                EndZone(zone, ground);
+                KryticalNova.Core.PlayerKeys.Reset();
+                End();
+            }
+        }
+
     }
 }
