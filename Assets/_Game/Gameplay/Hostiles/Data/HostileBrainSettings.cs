@@ -59,14 +59,16 @@ namespace KryticalNova.Hostiles
         [Tooltip("Seconds the target may stand beyond the detection radius before the Hostile gives up (Emerald's chase limit; no heal).")]
         public float giveUpSeconds = 5f;
 
-        [Header("Attack slots (M6.5)")]
-        public float slotRingRadius = 2f;
+        [Header("Attack slots (M6.5; crowding by body size, owner pick A 7 Nov 2026)")]
+        [Tooltip("Metres between a fighting Hostile's body and the player's: it stands at the player's radius + its own radius + this.")]
+        public float slotStandGap = 0.2f;
+        [Tooltip("Share of the circle round a player the fighting Hostiles' arcs may fill (each arc as wide as its body seen from the player).")]
+        [Range(0.1f, 1f)] public float slotRingFill = 0.9f;
+        [Tooltip("A Bruiser's arc counts this many times its body's (their own tier).")]
+        [Min(1f)] public float bruiserArcFactor = 2f;
         public Vector2 waitRingRadius = new Vector2(3.5f, 5f);
-        public int gridCapacity = 12;
         public int attackCapacity = 10;
         public int rangedAttackCapacity = 6;
-        public int gridWeightNormal = 4;
-        public int gridWeightBruiser = 8;
         public int attackCostLight = 3;
         public int attackCostHeavy = 5;
         public float maxSlotWaitSeconds = 2f;

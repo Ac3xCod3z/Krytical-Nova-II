@@ -53,7 +53,8 @@ namespace KryticalNova.Hostiles.Entities.Tests
             em.AddBuffer<ThreatEntry>(e);
             em.SetComponentData(e, LocalTransform.FromPosition(at));
             em.SetComponentData(e, new BrainClock { StableId = stableId });
-            em.SetComponentData(e, new HostileLife { Behaviour = behaviour, AggroRadius = aggro, AttackRange = range, ReachAbove = 3f, NoticeTicks = 3 });
+            em.SetComponentData(e, new HostileLife { Behaviour = behaviour, AggroRadius = aggro, AttackRange = range, ReachAbove = 3f, NoticeTicks = 3,
+                RadiusMm = 450, HeightMm = 1800 });   // the species' default body (HostileDefinition.bodySize)
             return e;
         }
 

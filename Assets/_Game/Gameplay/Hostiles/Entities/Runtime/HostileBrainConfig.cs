@@ -21,7 +21,9 @@ namespace KryticalNova.Hostiles.Entities
         public uint PatrolPauseMinTicks, PatrolPauseMaxTicks;
         public float AssistRadius;
         // the stage manager (M6.5)
-        public int GridCapacity, AttackCapacity, GridWeightNormal, GridWeightBruiser, AttackCostLight, AttackCostHeavy;
+        public int AttackCapacity, AttackCostLight, AttackCostHeavy;
+        // crowding by body size (owner pick A, 7 Nov 2026): HostileRingRules
+        public float SlotStandGap, SlotRingFill, BruiserArcFactor, PlayerRadius;
         public float WaitRingMin, WaitRingMax;
 
         public static HostileBrainConfig From(HostileBrainSettings s, int tickRate)
@@ -46,10 +48,11 @@ namespace KryticalNova.Hostiles.Entities
                 PatrolPauseMinTicks = Ticks(s.patrolPauseSeconds.x),
                 PatrolPauseMaxTicks = math.max(Ticks(s.patrolPauseSeconds.x), Ticks(s.patrolPauseSeconds.y)),
                 AssistRadius = s.assistRadius,
-                GridCapacity = s.gridCapacity,
                 AttackCapacity = s.attackCapacity,
-                GridWeightNormal = s.gridWeightNormal,
-                GridWeightBruiser = s.gridWeightBruiser,
+                SlotStandGap = math.max(0f, s.slotStandGap),
+                SlotRingFill = math.saturate(s.slotRingFill),
+                BruiserArcFactor = math.max(1f, s.bruiserArcFactor),
+                PlayerRadius = KryticalNova.Player.Entities.HitProxy.Player.RadiusMm * 0.001f,   // the player's hit capsule (0.5 m)
                 AttackCostLight = s.attackCostLight,
                 AttackCostHeavy = s.attackCostHeavy,
                 WaitRingMin = s.waitRingRadius.x,

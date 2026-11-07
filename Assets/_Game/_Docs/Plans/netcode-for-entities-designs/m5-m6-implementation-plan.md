@@ -102,8 +102,9 @@ server movement/melee systems and `PositionHistoryWriteSystem`, before `GhostSen
 - **`HostileBrainSettings`** (`Hostiles/Data/HostileBrainSettings.cs`, asset in `Hostiles/Data/Assets/`): `noticeSecondsDefault`
   0.1, `reachSlack` 0.3 m, `commitFraction` 0.6, `facingDegrees` 60, `minVisibleWarningSeconds` 0.35, `threatSwitchMelee` 1.10,
   `threatSwitchRanged` 1.30, `threatDecayAfterSeconds` 5, `threatDecayPerSecond` 0.05, `healThreatFactor` 0.5, `tauntBonus` 0.10,
-  `slotRingRadius` 2.0 m, `waitRingRadius` [3.5,5] m, `gridCapacity` 12, `attackCapacity` 10, `rangedAttackCapacity` 6,
-  `gridWeightNormal` 4, `gridWeightBruiser` 8, `attackCostLight` 3, `attackCostHeavy` 5, `maxSlotWaitSeconds` 2,
+  `waitRingRadius` [3.5,5] m, `attackCapacity` 10, `rangedAttackCapacity` 6, crowding by body size (owner pick A, 7 Nov 2026;
+  replaced `slotRingRadius` 2 m, `gridCapacity` 12 and grid weights 4/8): `slotStandGap` 0.2 m, `slotRingFill` 0.9,
+  `bruiserArcFactor` 2 (HostileRingRules), per-attack `warning` Default/Own/Off (owner, 7 Nov 2026), `attackCostLight` 3, `attackCostHeavy` 5, `maxSlotWaitSeconds` 2,
   `assistRadius` 6 m, `unreachableSeconds` 6, `relevancyRadius` 150 m, `viewRadius` 45 m, `viewBudget` 32.
 - **`HostileDefinition`** (exists) gains per species: `noticeSeconds` (-1 = default), `poise` (0-100), `assist` (bool, default =
   behaviour == AttacksOnSight), `flees` (false), `scoreProfile` (enum: Brute/Skirmisher/Finisher, default Brute). `attacks[]`

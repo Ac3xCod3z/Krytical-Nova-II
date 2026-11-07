@@ -26,13 +26,12 @@ MonoBehaviour:
   tauntBonus: 0.1
   patrolPauseSeconds: {x: 3, y: 6}
   giveUpSeconds: 5
-  slotRingRadius: 2
+  slotStandGap: 0.2
+  slotRingFill: 0.9
+  bruiserArcFactor: 2
   waitRingRadius: {x: 3.5, y: 5}
-  gridCapacity: 12
   attackCapacity: 10
   rangedAttackCapacity: 6
-  gridWeightNormal: 4
-  gridWeightBruiser: 8
   attackCostLight: 3
   attackCostHeavy: 5
   maxSlotWaitSeconds: 2
