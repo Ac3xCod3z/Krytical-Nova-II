@@ -50,6 +50,8 @@ namespace KryticalNova.Mounts
         private bool runningTransition;
         private float phaseStartedAt;
         private float settleEnds;
+        private float tailEnds; // the getting-off clip still playing after the rider is free
+        private float phaseClipLength; // the getting-on or getting-off clip being played
 
         private static bool DrawsNothing => Application.isBatchMode;
 
@@ -79,14 +81,41 @@ namespace KryticalNova.Mounts
             RidePhase phase = mounts.Phase;
             if (mount == null || !mount.IsBuilt || phase == RidePhase.OnFoot)
             {
+                // Free before the getting-off clip has ended (review, 7 Nov 2026): the mount vanishes as usual, but the
+                // rider plays the rest of the clip (the landing settle / the roll's last frames) unless they move off.
+                if (phase == RidePhase.OnFoot && shownPhase == RidePhase.GettingOff && mount != null && mount.hopMountUp
+                    && transition != null && isActiveAndEnabled)
+                {
+                    float left = phaseStartedAt + Mathf.Max(transition.seconds, phaseClipLength) - Time.time;
+                    if (left > 0.02f)
+                    {
+                        LetModelVanish();
+                        shownPhase = RidePhase.OnFoot;
+                        tailEnds = Time.time + left;
+                        return;
+                    }
+                }
                 Clear();
                 return;
             }
+            tailEnds = 0f;
             int stage = mounts.Stage;
             bool rebuilt = mount != shownMount || stage != shownStage;
             RidePhase before = shownPhase;
             if (rebuilt) BuildModel(mount, stage);
             if (phase != before) BeginPhase(mount, before, phase);
+            else if (rebuilt && materialiser != null && transition != null
+                     && (phase == RidePhase.GettingOn || phase == RidePhase.GettingOff))
+            {
+                // An evolution mid-way: the new stage's model takes up the effect for the time that is left.
+                float since = Time.time - phaseStartedAt;
+                bool on = phase == RidePhase.GettingOn;
+                float seconds = mount.materialise != null ? mount.materialise.EffectSeconds(on, transition) : transition.effectSeconds;
+                float delay = Mathf.Max(0f, transition.effectDelay - since);
+                float left = Mathf.Max(0.05f, transition.effectDelay + seconds - Mathf.Max(since, transition.effectDelay));
+                if (on) materialiser.Appear(mount.materialise, delay, left);
+                else materialiser.Vanish(mount.materialise, delay, left, false);
+            }
             shownPhase = phase;
             // The hop's settle plays on into the ride; the riding clips take over when it ends (Hop).
             if (settleEnds > 0f && !rebuilt) return;
@@ -247,6 +276,7 @@ namespace KryticalNova.Mounts
                     AnimationClip on = runningTransition ? mount.RiderClip(stage, l => l.mountUpRunning, mount.mountUpRunning) : null;
                     if (on == null) on = mount.RiderClip(stage, l => l.mountUp, mount.mountUp);
                     if (on == null) on = idle;
+                    phaseClipLength = on != null ? on.length : 0f;
                     motor.SetSeated(on, on, on);
                     break;
                 case RidePhase.GettingOff:
@@ -256,6 +286,7 @@ namespace KryticalNova.Mounts
                     if (runningTransition && off == null) off = mount.RiderClip(stage, l => l.dismountRunning, mount.dismountRunning);
                     if (off == null) off = mount.RiderClip(stage, l => l.dismount, mount.dismount);
                     if (off == null) off = idle;
+                    phaseClipLength = off != null ? off.length : 0f;
                     motor.SetSeated(off, off, off);
                     break;
                 default:
@@ -340,6 +371,12 @@ namespace KryticalNova.Mounts
 
         private void Update()
         {
+            // The rest of a getting-off clip after the rider is free: ends at its length, or as soon as the rider moves.
+            if (tailEnds > 0f && (Time.time >= tailEnds || (motor != null && motor.IsTravelling)))
+            {
+                tailEnds = 0f;
+                Clear();
+            }
             if (shownMount == null) return;
             MountStageLook look = shownMount.Stage(shownStage);
             MountSettings settings = mounts.Settings;

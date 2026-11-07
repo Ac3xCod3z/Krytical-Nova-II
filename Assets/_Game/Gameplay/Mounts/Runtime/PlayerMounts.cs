@@ -229,8 +229,8 @@ namespace KryticalNova.Mounts
             // and gets the standing kind, as standing still does.
             running = MountRules.IsRunningTransition(movement != null && movement.IsRunning, motor != null && motor.IsTravelling);
             AnimationClip clip = mount == null ? null : next == RidePhase.GettingOn ? mount.mountUp : next == RidePhase.GettingOff ? mount.dismount : null;
+            int stage = MountRules.Stage(MountRules.GrowthPercent(book.Get(selected), Tuning));
             phase = next;
-            float seconds = clip != null ? clip.length : 0f;
             // A summon-hop mount is timed by Mount Settings: the rider is free before the clip ends (its settle, landing
             // or roll plays on). Older mounts take their clip's length.
             MountSettings settings = Settings;
@@ -244,10 +244,31 @@ namespace KryticalNova.Mounts
                 endsRunning = MountRules.DismountEndsRunning(PathLeft(), footSpeed, settings.getOffRunning.rollEndsAt,
                     settings.rollIntoRunMinDistance);
             }
+            // Review, 7 Nov 2026: a running getting-off is timed by its own clip (run or stand ending), not the standing one.
+            if (mount != null)
+            {
+                AnimationClip own = null;
+                if (next == RidePhase.GettingOn && running) own = mount.RiderClip(stage, l => l.mountUpRunning, mount.mountUpRunning);
+                if (next == RidePhase.GettingOff && running)
+                {
+                    if (!endsRunning) own = mount.RiderClip(stage, l => l.dismountRunningToIdle, mount.dismountRunningToIdle);
+                    if (own == null) own = mount.RiderClip(stage, l => l.dismountRunning, mount.dismountRunning);
+                }
+                if (next == RidePhase.GettingOn && !running) own = mount.RiderClip(stage, l => l.mountUp, mount.mountUp);
+                if (next == RidePhase.GettingOff && !running) own = mount.RiderClip(stage, l => l.dismount, mount.dismount);
+                if (own != null) clip = own;
+            }
             if (next == RidePhase.GettingOff) PublishBook(); // what riding cost in hunger, before the ride ends
             Publish();
+            float seconds = clip != null ? clip.length : 0f;
             if (mount != null && mount.hopMountUp && settings != null)
-                seconds = settings.Transition(next == RidePhase.GettingOn, running, endsRunning).freeSeconds;
+            {
+                // Free the same time before the clip's end as the transition says (the settle, landing or roll plays on
+                // after, MountRider). For the new clips that is exactly freeSeconds; an older, longer clip (the standing
+                // dismount, left as it was) is not cut short.
+                MountTransition t = settings.Transition(next == RidePhase.GettingOn, running, endsRunning);
+                seconds = clip != null ? Mathf.Max(t.freeSeconds, clip.length - (t.seconds - t.freeSeconds)) : t.freeSeconds;
+            }
             phaseEnds = Time.time + Mathf.Max(MinPhaseSeconds, seconds);
         }
 
