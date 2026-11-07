@@ -69,6 +69,38 @@ namespace KryticalNova.Tests
         }
 
         [Test]
+        public void AHigherSeat_LowersTheRiderOnlyWhileTheFeetAreOnTheGround()
+        {
+            // Getting on: on the ground until the feet leave, on the seat from arrival.
+            Assert.AreEqual(1f, MountRideMotion.OnGround(true, 0f, 0.2f, 0.77f), 0.001f);
+            Assert.AreEqual(1f, MountRideMotion.OnGround(true, 0.2f, 0.2f, 0.77f), 0.001f);
+            Assert.AreEqual(0f, MountRideMotion.OnGround(true, 0.77f, 0.2f, 0.77f), 0.001f);
+            // Getting off: in the saddle until the take-off, on the ground from touchdown, and after it.
+            Assert.AreEqual(0f, MountRideMotion.OnGround(false, 0.3f, 0.4f, 1.02f), 0.001f);
+            Assert.AreEqual(1f, MountRideMotion.OnGround(false, 1.02f, 0.4f, 1.02f), 0.001f);
+            Assert.AreEqual(1f, MountRideMotion.OnGround(false, 1.6f, 0.4f, 1.02f), 0.001f);
+            // No times: the seat throughout.
+            Assert.AreEqual(0f, MountRideMotion.OnGround(false, 1.6f, 0f, 0f), 0.001f);
+            // The Circuit Strider's 50 % seat (0.48 m) against the Brambleback's the clips were keyed on (0.34 m).
+            Assert.AreEqual(0.14f, MountRideMotion.GroundDrop(0.48f, 0.34f), 0.001f);
+            // Keyed on this seat (or no keyed seat given): no drop.
+            Assert.AreEqual(0f, MountRideMotion.GroundDrop(0.5f, 0f), 0.001f);
+        }
+
+        [Test]
+        public void EveryHopTransition_SaysWhenTheFeetLeaveAndArrive([Values(false, true)] bool on, [Values(false, true)] bool running)
+        {
+            foreach (bool endsRunning in new[] { false, true })
+            {
+                MountTransition t = settings.Transition(on, running, endsRunning);
+                Assert.Greater(t.arrivesAt, t.leavesAt, "the feet must leave before they arrive");
+                Assert.LessOrEqual(t.arrivesAt, t.seconds, "they arrive within the clip");
+                // Getting off, the feet are down before the rider is free, so the tail plays on the ground.
+                if (!on) Assert.LessOrEqual(t.arrivesAt, t.freeSeconds);
+            }
+        }
+
+        [Test]
         public void RunningDismount_NeverStallsBeforeTheRollEnds()
         {
             // Ending running: the run speed the whole way.
