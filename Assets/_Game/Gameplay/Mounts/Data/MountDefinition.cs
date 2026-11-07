@@ -29,6 +29,10 @@ namespace KryticalNova.Mounts
         [Header("The rider on this stage (owner, 25 Oct 2026: each stage has its own straddle and stirrups)")]
         [Tooltip("Humanoid clips keyed on this stage's seat. Empty = the mount's own rider clips.")]
         public AnimationClip riderIdle, riderWalk, riderRun, mountUp, dismount;
+        [Tooltip("The running versions (owner, 6 Nov 2026): played when the Ride key is pressed while running. Empty = the standing ones.")]
+        public AnimationClip mountUpRunning, dismountRunning;
+        [Tooltip("The running getting-off that ends standing (the clicked spot is close). Empty = the running one.")]
+        public AnimationClip dismountRunningToIdle;
         public AnimationClip[] riderIdleExtras;
         [Tooltip("Where the rider's ankles go on this stage (the stirrup treads), in the mount model's own space. The game puts the feet there with IK, whatever the character's size. Zero = no stirrups.")]
         public Vector3 stirrupLeft, stirrupRight;
@@ -67,6 +71,26 @@ namespace KryticalNova.Mounts
         public AnimationClip[] riderIdleExtras = new AnimationClip[0];
         public AnimationClip mountUp;
         public AnimationClip dismount;
+        [Tooltip("Running versions of getting on and off (a forward hop; a launch flip into a roll). Empty = the standing ones.")]
+        public AnimationClip mountUpRunning;
+        public AnimationClip dismountRunning;
+        public AnimationClip dismountRunningToIdle;
+        [Tooltip("On when this mount's getting-on and getting-off clips are the summon-hop kind (owner, 6 Nov 2026): keyed " +
+                 "in place, so the game lifts the rider from the ground to the stage's seat along the Mount Settings " +
+                 "curves. Off = the older clips keyed on the seat (the rider is put on the seat at once).")]
+        public bool hopMountUp;
+
+        [Header("Fitting the shared riding set to this mount (owner, 7 Nov 2026: one riding set, fitted in code)")]
+        [Tooltip("Scales the code lean (Mount Settings) for this mount: below 1 for a short, choppy mount, above 1 for a long, rocking one.")]
+        [Min(0f)] public float riderLeanScale = 1f;
+        [Tooltip("Scales the code bob (Mount Settings) for this mount's stride.")]
+        [Min(0f)] public float riderBobScale = 1f;
+        [Tooltip("Moves the shared riding clips on this mount's seat, in metres (x out, y up, z forward), on top of each stage's seat.")]
+        public Vector3 riderSeatNudge;
+
+        [Header("Appear and vanish")]
+        [Tooltip("This mount's look for the shared appear and vanish effect (colours, pattern, particles). Empty = it pops in and out.")]
+        public MountMaterialiseSettings materialise;
 
         /// <summary>True when the mount can be ridden: its first stage has a model and its rider clips exist.</summary>
         public bool IsBuilt => stages != null && stages.Length > 0 && stages[0].model != null && riderIdle != null;

@@ -104,5 +104,31 @@ namespace KryticalNova.Mounts
             double clamped = Math.Min(100.0, Math.Max(0.0, hungerPercent));
             return state.WithHungerDeficit((uint)Math.Round(MountState.FullHungerUnits * (100.0 - clamped) / 100.0));
         }
+
+        /// <summary>The Ride key pressed while running (the Run selection and moving) gets the running kind of getting
+        /// on or off, which never stops the rider; walking or standing gets the standing kind (owner, 6 Nov 2026).</summary>
+        public static bool IsRunningTransition(bool runSelected, bool travelling) => runSelected && travelling;
+
+        /// <summary>
+        /// A running getting-off comes up running when, by the time its roll ends, the clicked spot is still at least
+        /// <paramref name="minDistance"/> metres of path away; otherwise it ends standing (owner, 7 Nov 2026: 4 m). The
+        /// rider keeps the on-foot <paramref name="speed"/> through the dismount, so the path left then is the path left
+        /// at the press less what that speed covers by <paramref name="rollEndsAt"/>.
+        /// </summary>
+        public static bool DismountEndsRunning(float pathLeftAtPress, float speed, float rollEndsAt, float minDistance) =>
+            pathLeftAtPress - Math.Max(0f, speed) * Math.Max(0f, rollEndsAt) >= minDistance;
+
+        /// <summary>
+        /// How fast the body travels through a running getting-off (owner, 7 Nov 2026: "it should feel fluid", never a
+        /// stop before the flip or the roll). Ending running: the on-foot <paramref name="runSpeed"/> the whole way. Ending
+        /// standing: just fast enough to reach the clicked spot as the roll ends, so the body never arrives early and
+        /// stalls while the clip plays on; never faster than the run.
+        /// </summary>
+        public static float DismountTravelSpeed(bool endsRunning, float pathLeftAtPress, float runSpeed, float rollEndsAt)
+        {
+            float run = Math.Max(0f, runSpeed);
+            if (endsRunning || rollEndsAt <= 0f) return run;
+            return Math.Min(run, Math.Max(0f, pathLeftAtPress) / rollEndsAt);
+        }
     }
 }

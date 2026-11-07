@@ -32,14 +32,16 @@ MonoBehaviour:
     - {fileID: -623603649343465320, guid: c60650c13dc006e4b8b8ff34e4dab456, type: 3}
     - {fileID: -623603649343465320, guid: a308be2e881259e4ebb79a004651afa0, type: 3}
     glow: {r: 0.55, g: 0.85, b: 0.35, a: 1}
-    riderIdle: {fileID: -623603649343465320, guid: 6b730300fe0c98346bf8c1b6e19ab5d6, type: 3}
-    riderWalk: {fileID: -623603649343465320, guid: aaeecb821d3e6574a969bbd9d208692f, type: 3}
-    riderRun: {fileID: -623603649343465320, guid: 84f5de61198da7948b2de2f1efb726ab, type: 3}
-    mountUp: {fileID: -623603649343465320, guid: 7f16c0b041a029943b27070c588517b0, type: 3}
+    riderIdle: {fileID: -623603649343465320, guid: dc75123383dde424e9640734d56154a8, type: 3}
+    riderWalk: {fileID: -623603649343465320, guid: e3d1efb8913552843b7c47849897d0d4, type: 3}
+    riderRun: {fileID: -623603649343465320, guid: c8b83f9687f7ded4e94a363af56f6f0a, type: 3}
+    mountUp: {fileID: -623603649343465320, guid: 5e111664738d8a1458fe7ee36a62f7d4, type: 3}
     dismount: {fileID: -623603649343465320, guid: ea4661891e8414b49b66d440b92b4b5d, type: 3}
+    mountUpRunning: {fileID: -623603649343465320, guid: 46f8446c0b17aa847bc371da6092e842, type: 3}
+    dismountRunning: {fileID: -623603649343465320, guid: c17eb25ff275d3b44b50e946281c7f4f, type: 3}
+    dismountRunningToIdle: {fileID: -623603649343465320, guid: 110979591eefe2b469ff5eb4cd849763, type: 3}
     riderIdleExtras:
-    - {fileID: -623603649343465320, guid: a0995c03289a09e4ca605423954d4f53, type: 3}
-    - {fileID: -623603649343465320, guid: c5673a265ed54464bb3b981fd5d6110d, type: 3}
+    - {fileID: -623603649343465320, guid: f3b6bc83a3551c345b341cd17542b0a0, type: 3}
     stirrupLeft: {x: -0.4558351, y: 0.52562356, z: -0.05605054}
     stirrupRight: {x: 0.45583504, y: 0.5256217, z: -0.05604863}
   - name: Thornhide
@@ -53,14 +55,16 @@ MonoBehaviour:
     - {fileID: -623603649343465320, guid: 569e21976e4d6f447ba93ba914477cbf, type: 3}
     - {fileID: -623603649343465320, guid: 24dabbc8b8307fd48befe080ae89af4c, type: 3}
     glow: {r: 0.35, g: 0.9, b: 0.45, a: 1}
-    riderIdle: {fileID: -623603649343465320, guid: c5baf4bc1aff0164c9880682a9fda88c, type: 3}
-    riderWalk: {fileID: -623603649343465320, guid: 3cf8230829ebb7c49b959e62847a0706, type: 3}
-    riderRun: {fileID: -623603649343465320, guid: 93965a0b17cc9ba43a0f3b7fef07934d, type: 3}
-    mountUp: {fileID: -623603649343465320, guid: f3cf3d6ac66c9bc40a7493d82522735e, type: 3}
+    riderIdle: {fileID: -623603649343465320, guid: dc75123383dde424e9640734d56154a8, type: 3}
+    riderWalk: {fileID: -623603649343465320, guid: e3d1efb8913552843b7c47849897d0d4, type: 3}
+    riderRun: {fileID: -623603649343465320, guid: c8b83f9687f7ded4e94a363af56f6f0a, type: 3}
+    mountUp: {fileID: -623603649343465320, guid: 2a66e56562fd3f649985609b67468c48, type: 3}
     dismount: {fileID: -623603649343465320, guid: 93c7e763f6c0c424598efc8a940704b8, type: 3}
+    mountUpRunning: {fileID: -623603649343465320, guid: 807da5cebf8544a4bbd98526c4b78117, type: 3}
+    dismountRunning: {fileID: -623603649343465320, guid: aee5e20c7ac117f4fb3fba163c95ba1d, type: 3}
+    dismountRunningToIdle: {fileID: -623603649343465320, guid: 934c48c23ba34784b86212c05f9ef918, type: 3}
     riderIdleExtras:
-    - {fileID: -623603649343465320, guid: 572812d02e824c6499bbd45d7ec5e4a0, type: 3}
-    - {fileID: -623603649343465320, guid: 71463b715c6fbc7419a25888861db5e5, type: 3}
+    - {fileID: -623603649343465320, guid: f3b6bc83a3551c345b341cd17542b0a0, type: 3}
     stirrupLeft: {x: -0.47089154, y: 0.7893445, z: 0.019845009}
     stirrupRight: {x: 0.5474704, y: 0.86984986, z: 0.019785881}
   - name: Elder Bramble
@@ -74,21 +78,30 @@ MonoBehaviour:
     - {fileID: -623603649343465320, guid: da8ad07054b9fd5448dd6050db170d57, type: 3}
     - {fileID: -623603649343465320, guid: 18917a9eeb0551d4b9d1ace456e74eb8, type: 3}
     glow: {r: 0.95, g: 0.8, b: 0.3, a: 1}
-    riderIdle: {fileID: -623603649343465320, guid: a77d19b4f98ddfc48a03a3c6b026af64, type: 3}
-    riderWalk: {fileID: -623603649343465320, guid: 9c0e87220b3cd1f43aa32aea9535c2ef, type: 3}
-    riderRun: {fileID: -623603649343465320, guid: d294e4f384f88ca4887dca08d6799ff7, type: 3}
-    mountUp: {fileID: -623603649343465320, guid: 92120f9104f4d124c909b79de79cb82d, type: 3}
+    riderIdle: {fileID: -623603649343465320, guid: dc75123383dde424e9640734d56154a8, type: 3}
+    riderWalk: {fileID: -623603649343465320, guid: e3d1efb8913552843b7c47849897d0d4, type: 3}
+    riderRun: {fileID: -623603649343465320, guid: c8b83f9687f7ded4e94a363af56f6f0a, type: 3}
+    mountUp: {fileID: -623603649343465320, guid: 32e5a142b433d044996cdc78e98404d1, type: 3}
     dismount: {fileID: -623603649343465320, guid: 7fc9a520822d1a64898bff5129d8548d, type: 3}
+    mountUpRunning: {fileID: -623603649343465320, guid: 32a15b498b0d8d944a5938369952f4c7, type: 3}
+    dismountRunning: {fileID: -623603649343465320, guid: b4369fd9b267e654d98b9dad31e4f5b3, type: 3}
+    dismountRunningToIdle: {fileID: -623603649343465320, guid: 77456089b9c714b4eae2ab705db4b874, type: 3}
     riderIdleExtras:
-    - {fileID: -623603649343465320, guid: 2c309fcd18c89f942a0af411cee8c67a, type: 3}
-    - {fileID: -623603649343465320, guid: 6c693e5828f6ff14c8217f125e4ba7e3, type: 3}
+    - {fileID: -623603649343465320, guid: f3b6bc83a3551c345b341cd17542b0a0, type: 3}
     stirrupLeft: {x: -0.53074056, y: 0.90404654, z: -0.18241978}
     stirrupRight: {x: 0.5307421, y: 0.90404505, z: -0.18241978}
-  riderIdle: {fileID: -623603649343465320, guid: 6b730300fe0c98346bf8c1b6e19ab5d6, type: 3}
-  riderWalk: {fileID: -623603649343465320, guid: aaeecb821d3e6574a969bbd9d208692f, type: 3}
-  riderRun: {fileID: -623603649343465320, guid: 84f5de61198da7948b2de2f1efb726ab, type: 3}
+  riderIdle: {fileID: -623603649343465320, guid: dc75123383dde424e9640734d56154a8, type: 3}
+  riderWalk: {fileID: -623603649343465320, guid: e3d1efb8913552843b7c47849897d0d4, type: 3}
+  riderRun: {fileID: -623603649343465320, guid: c8b83f9687f7ded4e94a363af56f6f0a, type: 3}
   riderIdleExtras:
-  - {fileID: -623603649343465320, guid: a0995c03289a09e4ca605423954d4f53, type: 3}
-  - {fileID: -623603649343465320, guid: c5673a265ed54464bb3b981fd5d6110d, type: 3}
-  mountUp: {fileID: -623603649343465320, guid: 7f16c0b041a029943b27070c588517b0, type: 3}
+  - {fileID: -623603649343465320, guid: f3b6bc83a3551c345b341cd17542b0a0, type: 3}
+  mountUp: {fileID: -623603649343465320, guid: 5e111664738d8a1458fe7ee36a62f7d4, type: 3}
   dismount: {fileID: -623603649343465320, guid: ea4661891e8414b49b66d440b92b4b5d, type: 3}
+  mountUpRunning: {fileID: -623603649343465320, guid: 46f8446c0b17aa847bc371da6092e842, type: 3}
+  dismountRunning: {fileID: -623603649343465320, guid: c17eb25ff275d3b44b50e946281c7f4f, type: 3}
+  dismountRunningToIdle: {fileID: -623603649343465320, guid: 110979591eefe2b469ff5eb4cd849763, type: 3}
+  hopMountUp: 1
+  riderLeanScale: 1
+  riderBobScale: 1
+  riderSeatNudge: {x: 0, y: 0, z: 0}
+  materialise: {fileID: 11400000, guid: 5d07293bf2e7b474b8d66a62e1295a75, type: 2}
