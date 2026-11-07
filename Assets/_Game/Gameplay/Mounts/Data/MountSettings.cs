@@ -50,6 +50,36 @@ namespace KryticalNova.Mounts
         [Tooltip("How quickly the lean comes and goes, in seconds.")]
         [Min(0.01f)] public float leanEase = 0.25f;
 
+        [Header("Getting on: the summon hop (owner picks, 6 Nov 2026; Torrent's timing, checked on footage)")]
+        [Tooltip("Seconds from the Ride press until the rider has settled in the saddle (the hop clip's length).")]
+        [Min(0.1f)] public float mountUpSeconds = 1.0f;
+        [Tooltip("Seconds after the press when the rider can move. The settle after it is cut short by moving.")]
+        [Min(0.1f)] public float mountUpControlSeconds = 0.8f;
+        [Tooltip("Height of the rider through the hop, over the hop's time (0 to 1): 0 = standing on the ground, 1 = sitting " +
+                 "on the stage's seat, above 1 = higher than the seat. A short dip, a hop over the seat, a drop into it and a small settle.")]
+        public AnimationCurve mountUpLift = new AnimationCurve(
+            new Keyframe(0f, 0f), new Keyframe(0.13f, -0.05f), new Keyframe(0.47f, 1.12f),
+            new Keyframe(0.77f, 1f), new Keyframe(0.86f, 0.97f), new Keyframe(1f, 1f));
+        [Tooltip("When in the hop (0 to 1) the feet start going into the stirrups. They are fully in a quarter of a second later.")]
+        [Range(0f, 1f)] public float stirrupsAt = 0.77f;
+
+        [Header("Getting off (owner, 6 Nov 2026)")]
+        [Tooltip("Seconds from the Ride press until the rider stands on the ground and can move.")]
+        [Min(0.1f)] public float dismountSeconds = 0.65f;
+        [Tooltip("Height of the rider through getting off, over its time (0 to 1): 1 = on the seat, 0 = on the ground.")]
+        public AnimationCurve dismountLift = new AnimationCurve(
+            new Keyframe(0f, 1f), new Keyframe(0.25f, 1.06f), new Keyframe(0.75f, 0f), new Keyframe(1f, 0f));
+
+        [Header("Appear and vanish (the shared MountMaterialise effect; a mount's own asset may override the seconds)")]
+        [Tooltip("Seconds into getting on before the mount starts forming. With Materialise Seconds it is solid as the rider lands on the seat.")]
+        [Min(0f)] public float materialiseDelay = 0.12f;
+        [Tooltip("Seconds the mount takes to form, from nothing to solid.")]
+        [Min(0.05f)] public float materialiseSeconds = 0.65f;
+        [Tooltip("Seconds into getting off before the mount starts vanishing (as the leg swings over).")]
+        [Min(0f)] public float vanishDelay = 0.1f;
+        [Tooltip("Seconds the mount takes to vanish. Quieter than the appear: no flash.")]
+        [Min(0.05f)] public float vanishSeconds = 0.5f;
+
         [Header("Idling")]
         [Tooltip("At rest the mount and its rider play one of their other idles (a sniff, a look round, a pat on the neck) every this many seconds. 0 = never.")]
         [Min(0f)] public float idleVarietySeconds = 9f;

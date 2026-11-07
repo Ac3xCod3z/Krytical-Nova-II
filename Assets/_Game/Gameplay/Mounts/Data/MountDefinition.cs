@@ -64,6 +64,14 @@ namespace KryticalNova.Mounts
         public AnimationClip[] riderIdleExtras = new AnimationClip[0];
         public AnimationClip mountUp;
         public AnimationClip dismount;
+        [Tooltip("On when this mount's getting-on and getting-off clips are the summon-hop kind (owner, 6 Nov 2026): keyed " +
+                 "in place, so the game lifts the rider from the ground to the stage's seat along the Mount Settings " +
+                 "curves. Off = the older clips keyed on the seat (the rider is put on the seat at once).")]
+        public bool hopMountUp;
+
+        [Header("Appear and vanish")]
+        [Tooltip("This mount's look for the shared appear and vanish effect (colours, pattern, particles). Empty = it pops in and out.")]
+        public MountMaterialiseSettings materialise;
 
         /// <summary>True when the mount can be ridden: its first stage has a model and its rider clips exist.</summary>
         public bool IsBuilt => stages != null && stages.Length > 0 && stages[0].model != null && riderIdle != null;

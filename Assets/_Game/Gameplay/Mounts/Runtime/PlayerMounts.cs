@@ -219,7 +219,13 @@ namespace KryticalNova.Mounts
             MountDefinition mount = catalog != null ? catalog.Get(selected) : null;
             AnimationClip clip = mount == null ? null : next == RidePhase.GettingOn ? mount.mountUp : next == RidePhase.GettingOff ? mount.dismount : null;
             phase = next;
-            phaseEnds = Time.time + Mathf.Max(MinPhaseSeconds, clip != null ? clip.length : 0f);
+            float seconds = clip != null ? clip.length : 0f;
+            // A summon hop frees the rider before its settle ends, and its getting-off is timed in Mount Settings
+            // (owner, 6 Nov 2026: on in 1.0 s with control at 0.8 s, off in 0.65 s).
+            MountSettings settings = Settings;
+            if (mount != null && mount.hopMountUp && settings != null)
+                seconds = next == RidePhase.GettingOn ? settings.mountUpControlSeconds : settings.dismountSeconds;
+            phaseEnds = Time.time + Mathf.Max(MinPhaseSeconds, seconds);
             if (next == RidePhase.GettingOff) PublishBook(); // what riding cost in hunger, before the ride ends
             Publish();
         }
