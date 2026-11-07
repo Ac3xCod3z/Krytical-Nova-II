@@ -82,15 +82,30 @@ namespace KryticalNova.Tests
         {
             InputAction slot = Action("SkillCommands", "SlotR");
             slot.ApplyBindingOverride(0, "<Keyboard>/v");
-            // Draw / sheathe ships on both Shift keys; choosing one switches the other off.
             InputAction weapon = Action("PointAndClick", "ToggleWeapon");
             weapon.ApplyBindingOverride(0, "<Mouse>/backButton");
-            weapon.ApplyBindingOverride(1, string.Empty);
 
             Assert.IsFalse(KeyBindings.Clean(actions));
             Assert.AreEqual("<Keyboard>/v", slot.bindings[0].effectivePath);
             Assert.AreEqual("<Mouse>/backButton", weapon.bindings[0].effectivePath);
-            Assert.AreEqual(string.Empty, weapon.bindings[1].effectivePath);
+        }
+
+        [Test]
+        public void TheDrawKeyIsSpace_AndShiftIsOnlyTheClickModifier()
+        {
+            // The owner, 6 Nov 2026 (pick B): Shift as a click modifier also drew the weapon; draw / sheathe moves to Space (both games)
+            InputAction weapon = Action("PointAndClick", "ToggleWeapon");
+            Assert.AreEqual(1, weapon.bindings.Count, "one key");
+            Assert.AreEqual("<Keyboard>/space", weapon.bindings[0].path);
+            Assert.AreEqual("1a9467b2-3b6e-4229-afd6-e8661e98d14a", weapon.bindings[0].id.ToString(), "the same binding: a key a player chose for it still applies");
+            Assert.IsTrue(KeyBindings.IsAllowedPath("<Keyboard>/space"));
+            foreach (InputActionMap map in actions.actionMaps)
+                foreach (InputBinding binding in map.bindings)
+                {
+                    if (binding.path == "<Keyboard>/space") Assert.AreEqual("ToggleWeapon", binding.action, $"{map.name}/{binding.action} is on Space too");
+                    if (binding.path == "<Keyboard>/leftShift" || binding.path == "<Keyboard>/rightShift")
+                        Assert.AreNotEqual("ToggleWeapon", binding.action, "Shift no longer draws the weapon");
+                }
         }
     }
 }
