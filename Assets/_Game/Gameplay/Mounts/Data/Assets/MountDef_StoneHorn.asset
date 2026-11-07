@@ -103,5 +103,6 @@ MonoBehaviour:
   hopMountUp: 0
   riderLeanScale: 1
   riderBobScale: 1
+  hopClearanceScale: 1
   riderSeatNudge: {x: 0, y: 0, z: 0}
   materialise: {fileID: 0}
