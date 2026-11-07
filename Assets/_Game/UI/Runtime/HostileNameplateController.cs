@@ -115,6 +115,7 @@ namespace KryticalNova.UI
             for (int i = 0; i < hostiles.Count; i++)
             {
                 HostileNet hostile = hostiles[i];
+                if (hostile.IsServerBody) continue;   // the entity server's hidden body: its view has the plate (M6.4)
                 CombatEntity entity = hostile.Entity;
                 plates.TryGetValue(hostile, out Plate plate);
 

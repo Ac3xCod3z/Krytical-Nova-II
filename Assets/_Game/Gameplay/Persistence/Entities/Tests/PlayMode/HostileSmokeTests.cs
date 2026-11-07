@@ -569,5 +569,56 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
             }
         }
 
+        // ------------------------------------------------------------------ M6.4 consumers
+
+        [UnityTest]
+        public IEnumerator B83_WhatAPlayerSeesAndPicks_LeavesOutTheHiddenServerBody_AndTakesTheView()
+        {
+            // H22: nameplates, minimap, Autopilot, the pointer and spirits read HostileNet.Active / IHostile; in Play DOTS here the hidden
+            // server body and the client's view stand in one process, at one spot. The pool marks the body (HostilePool.BodyOf) and they skip it.
+            Begin();
+            UnityEngine.AI.NavMeshDataInstance ground = Ground();
+            HostileNet body = null, view = null;
+            try
+            {
+                var species = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>(SpeciesPath).GetComponent<HostileNet>();
+                UseServerBodies();
+                body = HostilePool.Take(species, ZoneCentre, Quaternion.identity);
+                Assert.IsTrue(body.IsServerBody, "taken through the server body catalog: the hidden body");
+                Assert.IsTrue(((KryticalNova.Core.IHiddenServerBody)body).IsHiddenServerBody, "and says so to Core (pointer, spirits)");
+                Assert.IsNotNull(body.GetComponent<KryticalNova.Hostiles.Entities.EcsHostileBrain>());
+                HostilePool.BodyOf = null;
+                view = HostilePool.Take(species, ZoneCentre, Quaternion.identity);
+                Assert.IsFalse(view.IsServerBody, "the species itself (NGO, or a client view): shown");
+                Assert.IsFalse(((KryticalNova.Core.IHiddenServerBody)view).IsHiddenServerBody);
+                yield return Frames(3);
+                CollectionAssert.Contains(HostileNet.Active, body, "the server's code still sees its body (zones, GM)");
+                CollectionAssert.Contains(HostileNet.Active, view);
+
+                // the pointer: a ray through both capsules picks the view, never the hidden body in front of it
+                Physics.SyncTransforms();
+                var pointerObject = new GameObject("M6.4 pointer");   // the client's own pointer (a server body has none)
+                m_Made.Add(pointerObject);
+                pointerObject.transform.position = ZoneCentre + new Vector3(0f, 0f, -6f);
+                var pointer = pointerObject.AddComponent<KryticalNova.Player.PointAndClickPlayer>();
+                body.transform.position = ZoneCentre + new Vector3(0f, 0f, -0.3f);   // a little nearer the camera than the view
+                Physics.SyncTransforms();
+                var pick = typeof(KryticalNova.Player.PointAndClickPlayer).GetMethod("TryPickPointerHit", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                Assert.IsNotNull(pick, "PointAndClickPlayer.TryPickPointerHit");
+                object[] args = { new Ray(ZoneCentre + new Vector3(0f, 1f, -10f), Vector3.forward), null };
+                Assert.IsTrue((bool)pick.Invoke(pointer, args), "the ray picks something");
+                var hit = (RaycastHit)args[1];
+                Assert.AreSame(view, hit.collider.GetComponentInParent<HostileNet>(), "the view, not the hidden body");
+            }
+            finally
+            {
+                HostilePool.BodyOf = null;
+                if (body != null) HostilePool.Return(body);
+                if (view != null) HostilePool.Return(view);
+                ground.Remove();
+                End();
+            }
+        }
+
     }
 }

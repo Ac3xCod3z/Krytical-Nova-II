@@ -270,7 +270,7 @@ namespace KryticalNova.Autopilot
         {
             int count = 0;
             foreach (HostileNet hostile in HostileNet.Active)
-                if (hostile.Entity.IsAlive && (hostile.transform.position - transform.position).sqrMagnitude <= metres * metres) count++;
+                if (!hostile.IsServerBody && hostile.Entity.IsAlive && (hostile.transform.position - transform.position).sqrMagnitude <= metres * metres) count++;
             return count;
         }
 
@@ -280,7 +280,7 @@ namespace KryticalNova.Autopilot
             float bestSqr = float.MaxValue;
             foreach (HostileNet hostile in HostileNet.Active)
             {
-                if (!hostile.Entity.IsAlive || !Allowed(hostile, preferences, level, centre, radius)) continue;
+                if (hostile.IsServerBody || !hostile.Entity.IsAlive || !Allowed(hostile, preferences, level, centre, radius)) continue;   // views only (M6.4)
                 float sqr = (hostile.transform.position - transform.position).sqrMagnitude;
                 if (sqr < bestSqr) { bestSqr = sqr; best = hostile; }
             }

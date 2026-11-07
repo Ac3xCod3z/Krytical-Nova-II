@@ -396,7 +396,7 @@ namespace KryticalNova.UI
             for (int i = 0; i < all.Count; i++)
             {
                 HostileNet hostile = all[i];
-                if (hostile == null || !hostile.isActiveAndEnabled || hostile.Entity == null || !hostile.Entity.IsAlive) continue;
+                if (hostile == null || hostile.IsServerBody || !hostile.isActiveAndEnabled || hostile.Entity == null || !hostile.Entity.IsAlive) continue;   // views only (M6.4)
                 Vector3 offset = hostile.transform.position - from;
                 float distance = offset.x * offset.x + offset.z * offset.z;
                 if (distance > reach) continue;

@@ -479,6 +479,7 @@ Rows marked `[line: M5.0]` have the file but the line is filled in M5.0. "Test" 
 - **Owner hand test:** run each command from the window once.
 
 ### M6.4 Consumers (M, MED)
+- [x] **Built 7 Nov 2026 (DOTS 18, local commit):** what broke: in Play DOTS here the hidden server body and the client view stand in one process and both are in `HostileNet.Active`. New `Core.IHiddenServerBody`; `HostileNet.IsServerBody` set by `HostilePool.Take` when the server body catalog stands in; nameplates, minimap, Autopilot (pick + count), the pointer's pick and spirits leave such a body out and take the view. B83 (marking, both in Active for the server's code, the pointer picks the view through the body in front). The rest of B83 (nameplate shows species/level/tag, minimap marker, Autopilot hunt) is the owner's 10-minute Zone01 test.
 - **Change:** none expected in UI: nameplates, minimap, Autopilot/Magnet, target ring, `IHostile` consumers read view-mode
   `HostileNet` (M5.5). Fix only what `graphify affected "HostileNet"` shows breaks (e.g. code that assumes `HasAuthority` on a
   view, or reads `Brain` on a client).

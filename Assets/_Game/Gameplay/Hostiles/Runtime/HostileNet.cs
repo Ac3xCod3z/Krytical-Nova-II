@@ -17,7 +17,7 @@ namespace KryticalNova.Hostiles
     /// </summary>
     [DisallowMultipleComponent]
     [RequireComponent(typeof(CombatEntity))]
-    public sealed class HostileNet : NetworkBehaviour, IHitChanceModifier, IHostile
+    public sealed class HostileNet : NetworkBehaviour, IHitChanceModifier, IHostile, KryticalNova.Core.IHiddenServerBody
     {
         // The parameters of the Animator Controller every Hostile is built with.
         private static readonly int SpeedParam = Animator.StringToHash("Speed");
@@ -112,6 +112,14 @@ namespace KryticalNova.Hostiles
         /// never wakes its brain, and stays in <see cref="Active"/> for the nameplates, minimap and Autopilot like an NGO client copy.
         /// </summary>
         public bool IsView { get; private set; }
+
+        /// <summary>
+        /// The entity server's hidden body of a Hostile (M6.4: taken from <see cref="HostilePool.BodyOf"/>'s server body prefab). It stays in
+        /// <see cref="Active"/> for the server's own code (zones, GM commands); what a player sees or picks leaves it out (its view stands there).
+        /// </summary>
+        public bool IsServerBody { get; internal set; }
+
+        bool KryticalNova.Core.IHiddenServerBody.IsHiddenServerBody => IsServerBody;
         private HostileAnimState shownAnim;
 
         // The entity netcode decides the Hostiles in this process (its worlds live, or HostileSpawner.AuthorityOverride): a body it does not

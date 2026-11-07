@@ -36,6 +36,8 @@ namespace KryticalNova.GameFeel
         public void Released(Transform body)
         {
             if (body == null || settings == null || !isActiveAndEnabled) return;
+            // the entity server's hidden body dies too (Play DOTS here): its view lets the spirit go (M6.4)
+            if (body.GetComponentInParent<KryticalNova.Core.IHiddenServerBody>() is { IsHiddenServerBody: true }) return;
             StartCoroutine(Release(body));
         }
 

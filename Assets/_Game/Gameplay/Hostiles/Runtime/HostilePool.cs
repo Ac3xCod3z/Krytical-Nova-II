@@ -62,17 +62,21 @@ namespace KryticalNova.Hostiles
         /// <summary>A Hostile of this species at this place, from the pool when one is waiting. It is active.</summary>
         public static HostileNet Take(HostileNet prefab, Vector3 position, Quaternion rotation)
         {
+            HostileNet species = prefab;
             prefab = Resolve(prefab);
+            bool serverBody = prefab != species;   // the entity server's hidden body in place of the species (M6.4)
             Stack<HostileNet> stack = StackOf(prefab.gameObject);
             while (stack.Count > 0)
             {
                 HostileNet waiting = stack.Pop();
                 if (waiting == null) continue; // its scene was unloaded
+                waiting.IsServerBody = serverBody;
                 waiting.transform.SetPositionAndRotation(position, rotation);
                 waiting.gameObject.SetActive(true);
                 return waiting;
             }
             HostileNet made = Object.Instantiate(prefab, position, rotation);
+            made.IsServerBody = serverBody;
             made.name = prefab.name;
             prefabOf[made] = prefab.gameObject;
             Created++;

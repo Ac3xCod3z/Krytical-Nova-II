@@ -651,6 +651,8 @@ namespace KryticalNova.Player
             {
                 Collider c = pointerHits[i].collider;
                 if (occluderFader != null && occluderFader.IsFaded(pointerHits[i])) continue;
+                // the entity server's hidden body of a Hostile (Play DOTS here): the click takes its view, which stands in the same spot (M6.4)
+                if (c.GetComponentInParent<KryticalNova.Core.IHiddenServerBody>() is { IsHiddenServerBody: true }) continue;
                 var damageable = c.GetComponentInParent<IDamageable>();
                 bool isOtherUnit = damageable != null && damageable.Transform != transform;
                 if (!isOtherUnit && (raycastLayers.value & (1 << c.gameObject.layer)) == 0) continue;
