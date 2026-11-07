@@ -42,13 +42,14 @@ MonoBehaviour:
     stirrupLeft: {x: -0.14708409, y: 0.44785452, z: 0.07967892}
     stirrupRight: {x: 0.14708409, y: 0.4478542, z: 0.07967892}
   - name: Circuit Hound
-    model: {fileID: 0}
-    icon: {fileID: 0}
-    seat: {x: 0, y: 0, z: 0}
-    idle: {fileID: 0}
-    walk: {fileID: 0}
-    run: {fileID: 0}
-    idleExtras: []
+    model: {fileID: 6150605030151480608, guid: e660d0d87518b8f40b6bc3c895dda6d1, type: 3}
+    icon: {fileID: 21300000, guid: e11e7e36124c24d40a436301ba8a7154, type: 3}
+    seat: {x: 0.0000022523334, y: 0.48048812, z: 0.07693033}
+    idle: {fileID: -623603649343465320, guid: 3e93caa463738a9478bc269fa1a864c7, type: 3}
+    walk: {fileID: -623603649343465320, guid: 72c50bc0da23ff4438c7b918d9e70ef5, type: 3}
+    run: {fileID: -623603649343465320, guid: aeed2d1b1cb0f9f47ae9c4b0e15e3f12, type: 3}
+    idleExtras:
+    - {fileID: -623603649343465320, guid: 9a74d3d67934c1141b885f7dd122ef62, type: 3}
     glow: {r: 0.25, g: 0.8, b: 1, a: 1}
     riderIdle: {fileID: -623603649343465320, guid: c5baf4bc1aff0164c9880682a9fda88c, type: 3}
     riderWalk: {fileID: -623603649343465320, guid: 3cf8230829ebb7c49b959e62847a0706, type: 3}
@@ -58,16 +59,17 @@ MonoBehaviour:
     riderIdleExtras:
     - {fileID: -623603649343465320, guid: 572812d02e824c6499bbd45d7ec5e4a0, type: 3}
     - {fileID: -623603649343465320, guid: 71463b715c6fbc7419a25888861db5e5, type: 3}
-    stirrupLeft: {x: 0, y: 0, z: 0}
-    stirrupRight: {x: 0, y: 0, z: 0}
+    stirrupLeft: {x: -0.29551417, y: 0.76645416, z: 0.12673561}
+    stirrupRight: {x: 0.29565778, y: 0.7657438, z: 0.12461204}
   - name: Prime Strider
-    model: {fileID: 0}
-    icon: {fileID: 0}
-    seat: {x: 0, y: 0, z: 0}
-    idle: {fileID: 0}
-    walk: {fileID: 0}
-    run: {fileID: 0}
-    idleExtras: []
+    model: {fileID: 49735399657408408, guid: 3967200320dd53e4a9bf3bb0be04058c, type: 3}
+    icon: {fileID: 21300000, guid: 8379aa66d12d2eb4480508d148cd213d, type: 3}
+    seat: {x: 0.0000022523334, y: 0.6011707, z: -0.010389335}
+    idle: {fileID: -623603649343465320, guid: 961086152871a08479d953e0cae3e60a, type: 3}
+    walk: {fileID: -623603649343465320, guid: 5c87ad239052c7544b8099be331b6642, type: 3}
+    run: {fileID: -623603649343465320, guid: 0af4ac79650e5af418e8b0c4fedb701d, type: 3}
+    idleExtras:
+    - {fileID: -623603649343465320, guid: a61ec294ea4798a43b1c9e5c5b2ca7fb, type: 3}
     glow: {r: 1, g: 0.25, b: 0.2, a: 1}
     riderIdle: {fileID: -623603649343465320, guid: a77d19b4f98ddfc48a03a3c6b026af64, type: 3}
     riderWalk: {fileID: -623603649343465320, guid: 9c0e87220b3cd1f43aa32aea9535c2ef, type: 3}
@@ -77,8 +79,8 @@ MonoBehaviour:
     riderIdleExtras:
     - {fileID: -623603649343465320, guid: 2c309fcd18c89f942a0af411cee8c67a, type: 3}
     - {fileID: -623603649343465320, guid: 6c693e5828f6ff14c8217f125e4ba7e3, type: 3}
-    stirrupLeft: {x: 0, y: 0, z: 0}
-    stirrupRight: {x: 0, y: 0, z: 0}
+    stirrupLeft: {x: -0.3648401, y: 0.92071724, z: -0.065532506}
+    stirrupRight: {x: 0.3462529, y: 0.9226427, z: -0.06455687}
   riderIdle: {fileID: -623603649343465320, guid: 6b730300fe0c98346bf8c1b6e19ab5d6, type: 3}
   riderWalk: {fileID: -623603649343465320, guid: aaeecb821d3e6574a969bbd9d208692f, type: 3}
   riderRun: {fileID: -623603649343465320, guid: 84f5de61198da7948b2de2f1efb726ab, type: 3}
