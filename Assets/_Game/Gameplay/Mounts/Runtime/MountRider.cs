@@ -163,10 +163,12 @@ namespace KryticalNova.Mounts
             return MountRideMotion.Lift(transition.lift, seconds, transition.seconds);
         }
 
-        /// <summary>How far ahead of the player the rider is drawn, in metres (only the running dismount arcs).</summary>
+        /// <summary>How much the rider's feet are on the ground (1) rather than off it or in the saddle (0), a time into
+        /// the getting on or off in play: eased over the air phase between the transition's leaves-at and arrives-at.</summary>
         private float OnGround(bool gettingOn, float seconds) =>
             transition == null ? 0f : MountRideMotion.OnGround(gettingOn, seconds, transition.leavesAt, transition.arrivesAt);
 
+        /// <summary>How far ahead of the player the rider is drawn, in metres (only the running dismount arcs).</summary>
         private float Forward(float seconds) =>
             transition == null ? 0f : MountRideMotion.Ahead(transition.forward, seconds, transition.seconds);
 
