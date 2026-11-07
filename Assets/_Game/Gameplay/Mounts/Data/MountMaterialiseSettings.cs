@@ -46,8 +46,9 @@ namespace KryticalNova.Mounts
 
         [Header("Direction")]
         public Direction direction = Direction.BottomUp;
-        [Tooltip("How much the direction leads the noise: 0 = noise only, 1 = a clean sweep. About 0.35.")]
-        [Range(0f, 1f)] public float directionWeight = 0.35f;
+        [Tooltip("How much the direction leads the noise: 0 = noise only, 1 = a clean sweep. About 0.85 (owner, 6 Nov 2026): " +
+                 "the body clearly forms from the feet up and vanishes from the top down; the noise only breaks up the edge.")]
+        [Range(0f, 1f)] public float directionWeight = 0.85f;
 
         [Header("Swell")]
         [Tooltip("How far the surface puffs out as it forms, in metres (1 to 2 cm).")]

@@ -55,6 +55,9 @@ nodes copied from other graphs in the project. Rerun the script after any change
 - The burn is built from plain nodes, not the AllIn1 **Fade - Burn** node: that node only takes a texture, so the
   world sweep cannot be mixed into its mask. Instead: `threshold = _Spawn × (1 + _BurnWidth)`, `ahead = threshold - mask`,
   Alpha = `ahead + 0.4999` (clip 0.5), edge = `1 - saturate(ahead / _BurnWidth)` × `_EdgeColorA` into Emission.
+- Height leads (owner, 6 Nov 2026: "clearly form from the feet up"): `_DirectionWeight` 0.85, so the mask is 85 % the
+  sweep and 15 % the noise, which only breaks up the rising edge. The vanish runs the same mask backwards, so the
+  mount dissolves from the top down and the hooves go last (quieter than the appear, no flash).
 - Rim (AllIn1) × `(1 - _Spawn)` × `_RimStrength`, coloured `_EdgeColorB`, between `_RimMin` and `_RimMax`.
 - Swell: object position + object normal × `_Inflate` × `saturate((0.2 - _Spawn) / 0.2)`.
 - **Not wired yet:** the scanline / glitch pattern (`_PatternMode`, `_PatternUntil` exist as properties). It is only

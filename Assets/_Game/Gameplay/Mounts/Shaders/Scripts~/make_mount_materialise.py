@@ -229,7 +229,7 @@ def build():
     rim_max = prop("Vector1", "_RimMax", 1.0)
     fade_tex = prop("Texture2D", "_FadeTex", texture_value(), m_DefaultType=2)
     fade_tiling = prop("Vector2", "_FadeTiling", {"x": 2.0, "y": 2.0, "z": 0.0, "w": 0.0})
-    direction_weight = prop("Vector1", "_DirectionWeight", 0.35)
+    direction_weight = prop("Vector1", "_DirectionWeight", 0.85)  # height leads, noise breaks the edge (owner, 6 Nov)
     sweep_origin = prop("Vector3", "_SweepOrigin", vec4(0, 0, 0))
     sweep_axis = prop("Vector3", "_SweepAxis", vec4(0, 1, 0))
     sweep_length = prop("Vector1", "_SweepLength", 2.0)

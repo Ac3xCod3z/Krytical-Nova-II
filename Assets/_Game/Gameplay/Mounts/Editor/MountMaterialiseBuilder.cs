@@ -55,7 +55,7 @@ namespace KryticalNova.EditorTools
             look.noiseTiling = new Vector2(3f, 3f);
             look.pattern = MountMaterialiseSettings.Pattern.None;
             look.direction = MountMaterialiseSettings.Direction.BottomUp;
-            look.directionWeight = 0.45f;
+            look.directionWeight = 0.85f; // owner, 6 Nov 2026: clearly from the feet up; the veins only break up the edge
             look.inflate = 0.015f;
             look.appearParticles = appear;
             look.vanishParticles = vanish;

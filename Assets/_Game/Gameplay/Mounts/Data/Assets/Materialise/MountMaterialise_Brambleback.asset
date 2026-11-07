@@ -22,7 +22,7 @@ MonoBehaviour:
   pattern: 0
   patternUntil: 0.6
   direction: 0
-  directionWeight: 0.45
+  directionWeight: 0.85
   inflate: 0.015
   appearParticles: {fileID: 2991579243904634721, guid: 94bd16764f34b474eb53a7f1c330a82a, type: 3}
   vanishParticles: {fileID: 7030844293724100393, guid: 35ba89eacb2a8aa4c9be4bade57a5e4e, type: 3}

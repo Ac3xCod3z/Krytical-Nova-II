@@ -68,7 +68,7 @@ Material:
     m_Ints: []
     m_Floats:
     - _BurnWidth: 0.08
-    - _DirectionWeight: 0.35
+    - _DirectionWeight: 0.85
     - _Inflate: 0.015
     - _Metallic: 0
     - _PatternMode: 0
