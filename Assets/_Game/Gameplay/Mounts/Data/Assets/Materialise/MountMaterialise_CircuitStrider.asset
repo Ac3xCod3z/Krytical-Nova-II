@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ec9455bf8fb54daaa998f4fabdc804b7, type: 3}
+  m_Name: MountMaterialise_CircuitStrider
+  m_EditorClassIdentifier: KryticalNova.Mounts::KryticalNova.Mounts.MountMaterialiseSettings
+  material: {fileID: 2100000, guid: 06ec90e19c1a1d248b739978e671f6e2, type: 2}
+  edgeColorA: {r: 0.2, g: 2.6, b: 3.2, a: 1}
+  edgeColorB: {r: 3, g: 0.25, b: 0.2, a: 1}
+  burnWidth: 0.06
+  rimStrength: 1.6
+  noise: {fileID: 2800000, guid: bb938c42d9cd3674d9dc489202cdff30, type: 3}
+  noiseTiling: {x: 4, y: 4}
+  pattern: 1
+  patternUntil: 0.6
+  direction: 0
+  directionWeight: 0.85
+  inflate: 0.01
+  appearParticles: {fileID: 6312984850434044788, guid: 9ac902b36cd94f148b0fca9c83bb8761, type: 3}
+  vanishParticles: {fileID: 4455942605677296234, guid: cc911644982d6ed4cb312b70501f691e, type: 3}
+  particleLead: 0.05
+  particleSeconds: 2
+  appearSeconds: 0
+  vanishSeconds: 0

@@ -30,14 +30,16 @@ MonoBehaviour:
     run: {fileID: 0}
     idleExtras: []
     glow: {r: 0, g: 0, b: 0, a: 0}
-    riderIdle: {fileID: -623603649343465320, guid: 6b730300fe0c98346bf8c1b6e19ab5d6, type: 3}
-    riderWalk: {fileID: -623603649343465320, guid: aaeecb821d3e6574a969bbd9d208692f, type: 3}
-    riderRun: {fileID: -623603649343465320, guid: 84f5de61198da7948b2de2f1efb726ab, type: 3}
+    riderIdle: {fileID: -623603649343465320, guid: dc75123383dde424e9640734d56154a8, type: 3}
+    riderWalk: {fileID: -623603649343465320, guid: e3d1efb8913552843b7c47849897d0d4, type: 3}
+    riderRun: {fileID: -623603649343465320, guid: c8b83f9687f7ded4e94a363af56f6f0a, type: 3}
     mountUp: {fileID: -623603649343465320, guid: 7f16c0b041a029943b27070c588517b0, type: 3}
     dismount: {fileID: -623603649343465320, guid: ea4661891e8414b49b66d440b92b4b5d, type: 3}
+    mountUpRunning: {fileID: 0}
+    dismountRunning: {fileID: 0}
+    dismountRunningToIdle: {fileID: 0}
     riderIdleExtras:
-    - {fileID: -623603649343465320, guid: a0995c03289a09e4ca605423954d4f53, type: 3}
-    - {fileID: -623603649343465320, guid: c5673a265ed54464bb3b981fd5d6110d, type: 3}
+    - {fileID: -623603649343465320, guid: f3b6bc83a3551c345b341cd17542b0a0, type: 3}
     stirrupLeft: {x: 0, y: 0, z: 0}
     stirrupRight: {x: 0, y: 0, z: 0}
   - name: 
@@ -49,14 +51,16 @@ MonoBehaviour:
     run: {fileID: 0}
     idleExtras: []
     glow: {r: 0, g: 0, b: 0, a: 0}
-    riderIdle: {fileID: -623603649343465320, guid: c5baf4bc1aff0164c9880682a9fda88c, type: 3}
-    riderWalk: {fileID: -623603649343465320, guid: 3cf8230829ebb7c49b959e62847a0706, type: 3}
-    riderRun: {fileID: -623603649343465320, guid: 93965a0b17cc9ba43a0f3b7fef07934d, type: 3}
+    riderIdle: {fileID: -623603649343465320, guid: dc75123383dde424e9640734d56154a8, type: 3}
+    riderWalk: {fileID: -623603649343465320, guid: e3d1efb8913552843b7c47849897d0d4, type: 3}
+    riderRun: {fileID: -623603649343465320, guid: c8b83f9687f7ded4e94a363af56f6f0a, type: 3}
     mountUp: {fileID: -623603649343465320, guid: f3cf3d6ac66c9bc40a7493d82522735e, type: 3}
     dismount: {fileID: -623603649343465320, guid: 93c7e763f6c0c424598efc8a940704b8, type: 3}
+    mountUpRunning: {fileID: 0}
+    dismountRunning: {fileID: 0}
+    dismountRunningToIdle: {fileID: 0}
     riderIdleExtras:
-    - {fileID: -623603649343465320, guid: 572812d02e824c6499bbd45d7ec5e4a0, type: 3}
-    - {fileID: -623603649343465320, guid: 71463b715c6fbc7419a25888861db5e5, type: 3}
+    - {fileID: -623603649343465320, guid: f3b6bc83a3551c345b341cd17542b0a0, type: 3}
     stirrupLeft: {x: 0, y: 0, z: 0}
     stirrupRight: {x: 0, y: 0, z: 0}
   - name: 
@@ -68,19 +72,30 @@ MonoBehaviour:
     run: {fileID: 0}
     idleExtras: []
     glow: {r: 0, g: 0, b: 0, a: 0}
-    riderIdle: {fileID: -623603649343465320, guid: a77d19b4f98ddfc48a03a3c6b026af64, type: 3}
-    riderWalk: {fileID: -623603649343465320, guid: 9c0e87220b3cd1f43aa32aea9535c2ef, type: 3}
-    riderRun: {fileID: -623603649343465320, guid: d294e4f384f88ca4887dca08d6799ff7, type: 3}
+    riderIdle: {fileID: -623603649343465320, guid: dc75123383dde424e9640734d56154a8, type: 3}
+    riderWalk: {fileID: -623603649343465320, guid: e3d1efb8913552843b7c47849897d0d4, type: 3}
+    riderRun: {fileID: -623603649343465320, guid: c8b83f9687f7ded4e94a363af56f6f0a, type: 3}
     mountUp: {fileID: -623603649343465320, guid: 92120f9104f4d124c909b79de79cb82d, type: 3}
     dismount: {fileID: -623603649343465320, guid: 7fc9a520822d1a64898bff5129d8548d, type: 3}
+    mountUpRunning: {fileID: 0}
+    dismountRunning: {fileID: 0}
+    dismountRunningToIdle: {fileID: 0}
     riderIdleExtras:
-    - {fileID: -623603649343465320, guid: 2c309fcd18c89f942a0af411cee8c67a, type: 3}
-    - {fileID: -623603649343465320, guid: 6c693e5828f6ff14c8217f125e4ba7e3, type: 3}
+    - {fileID: -623603649343465320, guid: f3b6bc83a3551c345b341cd17542b0a0, type: 3}
     stirrupLeft: {x: 0, y: 0, z: 0}
     stirrupRight: {x: 0, y: 0, z: 0}
-  riderIdle: {fileID: 0}
-  riderWalk: {fileID: 0}
-  riderRun: {fileID: 0}
-  riderIdleExtras: []
+  riderIdle: {fileID: -623603649343465320, guid: dc75123383dde424e9640734d56154a8, type: 3}
+  riderWalk: {fileID: -623603649343465320, guid: e3d1efb8913552843b7c47849897d0d4, type: 3}
+  riderRun: {fileID: -623603649343465320, guid: c8b83f9687f7ded4e94a363af56f6f0a, type: 3}
+  riderIdleExtras:
+  - {fileID: -623603649343465320, guid: f3b6bc83a3551c345b341cd17542b0a0, type: 3}
   mountUp: {fileID: 0}
   dismount: {fileID: 0}
+  mountUpRunning: {fileID: 0}
+  dismountRunning: {fileID: 0}
+  dismountRunningToIdle: {fileID: 0}
+  hopMountUp: 0
+  riderLeanScale: 1
+  riderBobScale: 1
+  riderSeatNudge: {x: 0, y: 0, z: 0}
+  materialise: {fileID: 11400000, guid: 5e36a5dfa8ab4e245ad442510066df44, type: 2}
