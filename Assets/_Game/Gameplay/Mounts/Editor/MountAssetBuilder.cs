@@ -327,7 +327,12 @@ namespace KryticalNova.EditorTools
         private static Vector3 Seat(in Row row, int percent)
         {
             string own = OwnSeatFile(row, percent);
-            if (own != null) return Ankle(own, "seat");
+            return own != null ? Ankle(own, "seat") : SharedSeat(percent);
+        }
+
+        /// <summary>The seat the shared rider clips were keyed on (the Brambleback's, seats_blender.json), for a stage.</summary>
+        private static Vector3 SharedSeat(int percent)
+        {
             string json = $"{RiderFolder}/seats_blender.json";
             if (!File.Exists(json)) return Vector3.zero;
             var match = System.Text.RegularExpressions.Regex.Match(File.ReadAllText(json),
@@ -401,6 +406,10 @@ namespace KryticalNova.EditorTools
                 look.idleExtras = new[] { ClipIn(folder + "IdleSniff.fbx"), ClipIn(folder + "IdleLookAround.fbx") }.Where(c => c != null).ToArray();
                 look.clipMetresPerSecond = row.ClipSpeeds != null && stage < row.ClipSpeeds.Length ? row.ClipSpeeds[stage] : Vector2.zero;
                 look.seat = look.model != null ? Seat(row, percent) : Vector3.zero;
+                // A mount with its own seats riding the shared summon-hop clips (keyed on the Brambleback's seats): the
+                // game lowers the rider by the difference while the feet are on the ground (owner, 7 Nov 2026).
+                look.clipSeatHeight = look.model != null && row.SummonHop && OwnSeatFile(row, percent) != null
+                    ? SharedSeat(percent).y : 0f;
                 if (look.model != null && row.SeatForward != null) look.seat.z += row.SeatForward[stage];
                 Stirrups(row, percent, out look.stirrupLeft, out look.stirrupRight);
                 if (look.model == null) look.stirrupLeft = look.stirrupRight = Vector3.zero;

@@ -69,6 +69,73 @@ namespace KryticalNova.Tests
         }
 
         [Test]
+        public void AHigherSeat_LowersTheRiderOnlyWhileTheFeetAreOnTheGround()
+        {
+            // Getting on: on the ground until the feet leave, on the seat from arrival.
+            Assert.AreEqual(1f, MountRideMotion.OnGround(true, 0f, 0.2f, 0.77f), 0.001f);
+            Assert.AreEqual(1f, MountRideMotion.OnGround(true, 0.2f, 0.2f, 0.77f), 0.001f);
+            Assert.AreEqual(0f, MountRideMotion.OnGround(true, 0.77f, 0.2f, 0.77f), 0.001f);
+            // Getting off: in the saddle until the take-off, on the ground from touchdown, and after it.
+            Assert.AreEqual(0f, MountRideMotion.OnGround(false, 0.3f, 0.4f, 1.02f), 0.001f);
+            Assert.AreEqual(1f, MountRideMotion.OnGround(false, 1.02f, 0.4f, 1.02f), 0.001f);
+            Assert.AreEqual(1f, MountRideMotion.OnGround(false, 1.6f, 0.4f, 1.02f), 0.001f);
+            // No times: the seat throughout.
+            Assert.AreEqual(0f, MountRideMotion.OnGround(false, 1.6f, 0f, 0f), 0.001f);
+            // The Circuit Strider's 50 % seat (0.48 m) against the Brambleback's the clips were keyed on (0.34 m).
+            Assert.AreEqual(0.14f, MountRideMotion.GroundDrop(0.48f, 0.34f), 0.001f);
+            // Keyed on this seat (or no keyed seat given): no drop.
+            Assert.AreEqual(0f, MountRideMotion.GroundDrop(0.5f, 0f), 0.001f);
+        }
+
+        // Where the soles end, metres above the ground, after a getting-off on a built stage: the rider's origin is on the
+        // seat less the ground drop (all of it once the feet are down), and the clip puts the soles the keyed seat height
+        // below its origin (the stage's own seat when it was keyed on it).
+        private float LandingSoles(MountDefinition mount, int stage)
+        {
+            MountStageLook look = mount.Stage(stage);
+            MountTransition off = settings.Transition(false, false);
+            float keyed = look.clipSeatHeight > 0f ? look.clipSeatHeight : look.seat.y;
+            float drop = MountRideMotion.GroundDrop(look.seat.y, look.clipSeatHeight);
+            float origin = look.seat.y - drop * MountRideMotion.OnGround(false, off.arrivesAt, off.leavesAt, off.arrivesAt);
+            return origin - keyed;
+        }
+
+        private static MountDefinition Def(string key) => UnityEditor.AssetDatabase.LoadAssetAtPath<MountDefinition>(
+            $"Assets/_Game/Gameplay/Mounts/Data/Assets/MountDef_{key}.asset");
+
+        [Test]
+        public void TheBrambleback_HasNoGroundDrop([Values(0, 1, 2)] int stage)
+        {
+            MountDefinition bramble = Def("Brambleback");
+            Assume.That(bramble != null && bramble.IsBuilt, "the Brambleback is built (Items > 11. Build Mounts)");
+            MountStageLook look = bramble.Stage(stage);
+            Assert.AreEqual(0f, MountRideMotion.GroundDrop(look.seat.y, look.clipSeatHeight), 0.0001f);
+        }
+
+        [Test]
+        public void TheCircuitStrider_LandsWithItsSolesOnTheGround([Values(0, 1, 2)] int stage)
+        {
+            MountDefinition strider = Def("CircuitStrider");
+            Assume.That(strider != null && strider.IsBuilt, "the Circuit Strider is built (Items > 11. Build Mounts)");
+            Assert.That(strider.hopMountUp, "the Strider rides the shared summon hop");
+            Assert.Greater(strider.Stage(stage).clipSeatHeight, 0f, "its stages say which seat the shared clips were keyed on");
+            Assert.AreEqual(0f, LandingSoles(strider, stage), 0.01f, "soles within 1 cm of the ground");
+        }
+
+        [Test]
+        public void EveryHopTransition_SaysWhenTheFeetLeaveAndArrive([Values(false, true)] bool on, [Values(false, true)] bool running)
+        {
+            foreach (bool endsRunning in new[] { false, true })
+            {
+                MountTransition t = settings.Transition(on, running, endsRunning);
+                Assert.Greater(t.arrivesAt, t.leavesAt, "the feet must leave before they arrive");
+                Assert.LessOrEqual(t.arrivesAt, t.seconds, "they arrive within the clip");
+                // Getting off, the feet are down before the rider is free, so the tail plays on the ground.
+                if (!on) Assert.LessOrEqual(t.arrivesAt, t.freeSeconds);
+            }
+        }
+
+        [Test]
         public void RunningDismount_NeverStallsBeforeTheRollEnds()
         {
             // Ending running: the run speed the whole way.

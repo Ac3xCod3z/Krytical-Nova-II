@@ -46,6 +46,11 @@ namespace KryticalNova.Mounts
         // getting on or off began, and until when the hop's settle plays on after the rider is free to move.
         private float lift = 1f;
         private float forward; // metres the rider is drawn ahead of the player (the running dismount's arc)
+        // A seat higher (or lower) than the one the getting-on/off clips were keyed on (the Circuit Strider's against the
+        // Brambleback's): the rider is lowered by groundDrop while the feet are on the ground (onGround 1), so they stand
+        // on it, and sits on this mount's own seat in the saddle (onGround 0). Owner, 7 Nov 2026.
+        private float groundDrop;
+        private float onGround;
         private MountTransition transition; // the getting on or off in play (standing or running)
         private bool runningTransition;
         private float phaseStartedAt;
@@ -133,7 +138,7 @@ namespace KryticalNova.Mounts
                 bool on = phase == RidePhase.GettingOn;
                 runningTransition = mounts.IsRunningTransition;
                 transition = settings != null ? settings.Transition(on, runningTransition, mounts.DismountEndsRunning) : null;
-                if (mount.hopMountUp) { lift = Lift(phase, 0f); forward = Forward(0f); }
+                if (mount.hopMountUp) { lift = Lift(phase, 0f); forward = Forward(0f); onGround = OnGround(on, 0f); }
                 if (materialiser != null)
                 {
                     float delay = transition != null ? transition.effectDelay : 0f;
@@ -159,6 +164,9 @@ namespace KryticalNova.Mounts
         }
 
         /// <summary>How far ahead of the player the rider is drawn, in metres (only the running dismount arcs).</summary>
+        private float OnGround(bool gettingOn, float seconds) =>
+            transition == null ? 0f : MountRideMotion.OnGround(gettingOn, seconds, transition.leavesAt, transition.arrivesAt);
+
         private float Forward(float seconds) =>
             transition == null ? 0f : MountRideMotion.Ahead(transition.forward, seconds, transition.seconds);
 
@@ -240,7 +248,9 @@ namespace KryticalNova.Mounts
                 riderLifted = true;
             }
             seatOffset = seat + (shownMount != null ? shownMount.riderSeatNudge : Vector3.zero);
-            rider.localPosition = riderRest + seatOffset * lift;
+            groundDrop = shownMount != null && shownMount.hopMountUp
+                ? MountRideMotion.GroundDrop(seatOffset.y, shownMount.Stage(shownStage).clipSeatHeight) : 0f;
+            rider.localPosition = riderRest + seatOffset * lift + Vector3.down * (groundDrop * onGround);
             if (stirrups != null && model != null && shownMount != null)
             {
                 MountStageLook look = shownMount.Stage(shownStage);
@@ -256,6 +266,7 @@ namespace KryticalNova.Mounts
             lean = bobAmount = 0f;
             lift = 1f;
             forward = 0f;
+            onGround = groundDrop = 0f;
             if (stirrups != null) stirrups.SetStirrups(null, default, default);
             if (footIK != null) footIK.enabled = footIKWasOn;
             riderLifted = false;
@@ -327,7 +338,7 @@ namespace KryticalNova.Mounts
             float bob = bobAmount * Mathf.Max(0f, Mathf.Sin(phase * Mathf.PI * 2f));
             // Turn about the hips (the seat), forward about the mount's side-to-side axis.
             Quaternion turn = Quaternion.AngleAxis(lean, Vector3.right);
-            Vector3 seat = seatOffset * lift + Vector3.forward * forward;
+            Vector3 seat = seatOffset * lift + Vector3.forward * forward + Vector3.down * (groundDrop * onGround);
             Vector3 hips = riderRest + seat + Vector3.up * HipHeight;
             rider.localRotation = turn * riderRestRotation;
             rider.localPosition = hips + turn * (riderRest + seat - hips) + Vector3.up * bob;
@@ -339,8 +350,11 @@ namespace KryticalNova.Mounts
         private void Hop(MountSettings settings, bool travelling)
         {
             forward = 0f;
+            onGround = 0f;
             if (shownMount == null || !shownMount.hopMountUp || settings == null || transition == null) { lift = 1f; return; }
             float since = Time.time - phaseStartedAt;
+            if (shownPhase == RidePhase.GettingOn || shownPhase == RidePhase.GettingOff)
+                onGround = OnGround(shownPhase == RidePhase.GettingOn, since);
             switch (shownPhase)
             {
                 case RidePhase.GettingOn:

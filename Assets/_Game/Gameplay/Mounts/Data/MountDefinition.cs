@@ -16,6 +16,11 @@ namespace KryticalNova.Mounts
         public Sprite icon;
         [Tooltip("Where the rider stands (feet level) on this stage, in the mount model's own space, in metres: the seat socket.")]
         public Vector3 seat;
+        [Tooltip("The seat height (metres) the rider's getting-on and getting-off clips were keyed on, when they were keyed on " +
+                 "another mount's seat (the shared summon hop is keyed on the Brambleback's). While the rider's feet are on " +
+                 "the ground the rider is lowered by the difference, so a higher seat never leaves them standing in the air. " +
+                 "Zero = keyed on this seat.")]
+        public float clipSeatHeight;
         [Tooltip("The mount's own clips at this stage.")]
         public AnimationClip idle, walk, run;
         [Tooltip("Other idles played now and then at rest (a sniff, a look round).")]

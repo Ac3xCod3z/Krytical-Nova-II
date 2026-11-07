@@ -103,19 +103,29 @@ namespace KryticalNova.Mounts
         [Min(0.05f)] public float effectSeconds = 0.5f;
         [Tooltip("Running getting-off: seconds into the clip when the roll ends (the run-or-stand choice looks at the path left then).")]
         [Min(0f)] public float rollEndsAt;
+        [Tooltip("Seconds into the clip when the rider's feet leave where they started: the ground (getting on) or the " +
+                 "saddle (getting off). With Arrives At, says when a mount whose seat differs from the clip's keyed seat " +
+                 "moves the rider between the two (MountStageLook.clipSeatHeight). Both zero = never.")]
+        [Min(0f)] public float leavesAt;
+        [Tooltip("Seconds into the clip when the rider arrives: on the seat (getting on) or with the feet on the ground (getting off).")]
+        [Min(0f)] public float arrivesAt;
 
         private static Keyframe K(float t, float v) => new Keyframe(t, v);
 
-        /// <summary>The summon hop: 1.0 s, free at 0.8 s; the mount forms 0.12 to 0.77 s, solid as the rider lands.</summary>
+        /// <summary>The summon hop: 1.0 s, free at 0.8 s; the mount forms 0.12 to 0.77 s, solid as the rider lands. The
+        /// crouch ends and the feet leave the ground at 0.2 s; on the seat at 0.77 s.</summary>
         public static MountTransition StandingOn() => new MountTransition
         {
             seconds = 1f, freeSeconds = 0.8f, stirrupsAt = 0.77f, effectDelay = 0.12f, effectSeconds = 0.65f,
+            leavesAt = 0.2f, arrivesAt = 0.77f,
         };
 
-        /// <summary>The running hop: 0.8 s, on the seat and free at 0.55 s; the mount forms 0.05 to 0.55 s.</summary>
+        /// <summary>The running hop: 0.8 s, on the seat and free at 0.55 s; the mount forms 0.05 to 0.55 s. Off the
+        /// ground at 0.1 s.</summary>
         public static MountTransition RunningOn() => new MountTransition
         {
             seconds = 0.8f, freeSeconds = 0.55f, stirrupsAt = 0.6875f, effectDelay = 0.05f, effectSeconds = 0.5f,
+            leavesAt = 0.1f, arrivesAt = 0.55f,
         };
 
         /// <summary>The standing dismount, owner-approved 7 Nov 2026: a front flip too. The game's take-off from the
@@ -124,6 +134,7 @@ namespace KryticalNova.Mounts
         public static MountTransition StandingOff() => new MountTransition
         {
             seconds = 1.7f, freeSeconds = 1.55f, stirrupsAt = 0f, effectDelay = 0.1f, effectSeconds = 0.5f,
+            leavesAt = 0.4f, arrivesAt = 1.02f,
         };
 
         /// <summary>The moving dismount, redone and owner-approved 7 Nov 2026: a sprung take-off from the saddle
@@ -133,12 +144,14 @@ namespace KryticalNova.Mounts
         public static MountTransition RunningOff() => new MountTransition
         {
             seconds = 2.0f, freeSeconds = 1.93f, stirrupsAt = 0f, effectDelay = 0.1f, effectSeconds = 0.5f, rollEndsAt = 1.76f,
+            leavesAt = 0.36f, arrivesAt = 0.98f,
         };
 
         /// <summary>The same take-off, flip and roll, ending standing: 2.1 s, free at 1.98 s.</summary>
         public static MountTransition RunningOffToIdle() => new MountTransition
         {
             seconds = 2.1f, freeSeconds = 1.98f, stirrupsAt = 0f, effectDelay = 0.1f, effectSeconds = 0.5f, rollEndsAt = 1.76f,
+            leavesAt = 0.36f, arrivesAt = 0.98f,
         };
     }
 }

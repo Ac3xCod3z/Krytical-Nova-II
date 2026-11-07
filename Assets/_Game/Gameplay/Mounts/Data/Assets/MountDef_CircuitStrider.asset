@@ -25,6 +25,7 @@ MonoBehaviour:
     model: {fileID: 4257508704385737861, guid: 1cd3363768a69db4e98aad2285d01592, type: 3}
     icon: {fileID: 21300000, guid: 0de93b49f25fcdd48aeac5adc1c631ac, type: 3}
     seat: {x: 0.0000022523334, y: 0.21267158, z: -0.032872938}
+    clipSeatHeight: 0.2124
     idle: {fileID: -623603649343465320, guid: b8fe66e71dd2fe34a85a18f9f417a678, type: 3}
     walk: {fileID: -623603649343465320, guid: d576a4d635a90d74197b0e2ec97cfd91, type: 3}
     run: {fileID: -623603649343465320, guid: ec84ecd76c2b9624b8887707caf865b0, type: 3}
@@ -48,6 +49,7 @@ MonoBehaviour:
     model: {fileID: 6150605030151480608, guid: e660d0d87518b8f40b6bc3c895dda6d1, type: 3}
     icon: {fileID: 21300000, guid: e11e7e36124c24d40a436301ba8a7154, type: 3}
     seat: {x: 0.0000022523334, y: 0.48048812, z: 0.07693033}
+    clipSeatHeight: 0.3384
     idle: {fileID: -623603649343465320, guid: 3e93caa463738a9478bc269fa1a864c7, type: 3}
     walk: {fileID: -623603649343465320, guid: 72c50bc0da23ff4438c7b918d9e70ef5, type: 3}
     run: {fileID: -623603649343465320, guid: aeed2d1b1cb0f9f47ae9c4b0e15e3f12, type: 3}
@@ -71,6 +73,7 @@ MonoBehaviour:
     model: {fileID: 49735399657408408, guid: 3967200320dd53e4a9bf3bb0be04058c, type: 3}
     icon: {fileID: 21300000, guid: 8379aa66d12d2eb4480508d148cd213d, type: 3}
     seat: {x: 0.0000022523334, y: 0.6011707, z: -0.010389335}
+    clipSeatHeight: 0.503
     idle: {fileID: -623603649343465320, guid: 961086152871a08479d953e0cae3e60a, type: 3}
     walk: {fileID: -623603649343465320, guid: 5c87ad239052c7544b8099be331b6642, type: 3}
     run: {fileID: -623603649343465320, guid: 0af4ac79650e5af418e8b0c4fedb701d, type: 3}

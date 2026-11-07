@@ -28,5 +28,25 @@ namespace KryticalNova.Mounts
             float t = length > 0f ? Mathf.Clamp01(seconds / length) : 1f;
             return curve.Evaluate(t);
         }
+
+        /// <summary>
+        /// How much of the getting on or off still has (getting on) or already has (getting off) the rider's feet on the
+        /// ground, 1 to 0, <paramref name="seconds"/> into the clip: getting on, 1 until the feet leave at
+        /// <paramref name="leavesAt"/>, easing to 0 by the seat at <paramref name="arrivesAt"/>; getting off, 0 until the
+        /// rider leaves the saddle, easing to 1 by the touchdown. No times (arrives not after leaves): 0, the seat throughout.
+        /// </summary>
+        public static float OnGround(bool gettingOn, float seconds, float leavesAt, float arrivesAt)
+        {
+            if (arrivesAt <= leavesAt) return 0f;
+            float k = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01((seconds - leavesAt) / (arrivesAt - leavesAt)));
+            return gettingOn ? 1f - k : k;
+        }
+
+        /// <summary>
+        /// How far (metres) to lower the rider while their feet are on the ground: the stage's seat height less the seat
+        /// height its getting-on/off clips were keyed on (0 when keyed on this seat, or when the stage says nothing).
+        /// </summary>
+        public static float GroundDrop(float seatHeight, float clipSeatHeight) =>
+            clipSeatHeight > 0f ? seatHeight - clipSeatHeight : 0f;
     }
 }
