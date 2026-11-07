@@ -1105,6 +1105,12 @@ namespace KryticalNova.Player
             warpedJumpState.ApplyFootIK = false; // airborne: nothing to plant the feet on
         }
 
+        /// <summary>Changes the speed of the warped action playing now (the roof-edge flip fitted to the fall it learns of late); none: nothing.</summary>
+        public void SetWarpedActionSpeed(float speed)
+        {
+            if (!warpedJumpActive && warpedJumpState != null && speed > 0f) warpedJumpState.Speed = speed;
+        }
+
         /// <summary>Seconds left of the warped action playing now at its speed (0 when none, or a warped jump's chain).</summary>
         public float WarpedActionSecondsLeft => !warpedJumpActive && warpedJumpState != null && warpedJumpState.Speed > 0f && warpedJumpState.Clip != null
             ? Mathf.Max(0f, (warpedJumpState.Clip.length - warpedJumpState.Time) / warpedJumpState.Speed) : 0f;

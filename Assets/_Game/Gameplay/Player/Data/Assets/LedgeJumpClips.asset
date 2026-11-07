@@ -12,9 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ee9d0563a529ece4aaef0575148bde3b, type: 3}
   m_Name: LedgeJumpClips
   m_EditorClassIdentifier: KryticalNova.Player::KryticalNova.Player.LedgeJumpClips
-  edgeDrop:
-    masculine: {fileID: 7400000, guid: 628df53896aac0843a25d76aba0d1239, type: 2}
-    feminine: {fileID: 7400000, guid: b3cde8ce66a5db440a9ec7d9fe01332a, type: 2}
+  edgeDrop: {fileID: -623603649343465320, guid: f909fe37c3d2b3647b3cca10f922158f, type: 3}
+  edgeDropFreefall: {fileID: -623603649343465320, guid: 10af1c7032c4dab49be8a0e8d3665033, type: 3}
   gap:
     masculine: {fileID: 0}
     feminine: {fileID: 0}

@@ -1110,19 +1110,38 @@ namespace KryticalNova.Player
                         ? ledgeJumpClips.For(pose.Phase == WallRunPhase.LedgeJump ? LedgeJumpKind.EdgeDrop : LedgeJumpKind.Gap,
                             identity != null ? identity.State.bodyType : KryticalNova.CharacterCreation.BodyType.Masculine)
                         : null;
-                    // the take-off and the flip fill most of the air (the jump and its fall), the fall loop the rest (owner, 2 Nov: the flip
-                    // looked good; the body must not walk before the ground)
-                    Play(jumpClip != null ? jumpClip : animancerMotor.WarpedJumpClip(0), pose.Duration * RouteFlipShare, fallbackAirborne: true);
+                    landingShown = false;
+                    roofFlipShown = pose.Phase == WallRunPhase.LedgeJump && jumpClip != null;
+                    if (roofFlipShown)
+                    {
+                        // owner v4, 7 Nov 2026: the roof flip at its own speed (fitted to the rise it played ~3x too fast); the fall leg
+                        // speeds up what is left of it only when it would not end before the landing (RouteFallTimeline)
+                        roofFreefallClip = ledgeJumpClips.Freefall;   // one for every body (owner, 7 Nov 2026)
+                        Play(jumpClip, 0f, fallbackAirborne: true);
+                    }
+                    // a gap: the take-off and the jump fill most of the air (the jump and its fall), the fall loop the rest (owner, 2 Nov:
+                    // the body must not walk before the ground)
+                    else Play(jumpClip != null ? jumpClip : animancerMotor.WarpedJumpClip(0), pose.Duration * RouteFlipShare, fallbackAirborne: true);
                     if (feel != null) { feel.JumpTakeoff(transform, Mine()); feel.Airborne(transform, true); }
                     break;
                 case WallRunPhase.RouteFall:
-                    // NGO's fall loop until the ground, once the flip has played out
                     if (fallRoutine != null) StopCoroutine(fallRoutine);
-                    fallRoutine = StartCoroutine(FallLoopAfterFlip(animancerMotor.WarpedActionSecondsLeft));
+                    if (roofFlipShown && before == WallRunPhase.LedgeJump)
+                    {
+                        // off a roof's edge: flip -> freefall -> fall loop -> landing, by the time left to touchdown (this leg's length)
+                        RouteFallTimeline plan = RouteFallTimeline.Plan(animancerMotor.WarpedActionSecondsLeft, pose.Duration, roofFreefallClip != null, settings);
+                        animancerMotor.SetWarpedActionSpeed(plan.FlipSpeed);
+                        fallRoutine = StartCoroutine(RoofFallPhases(plan));
+                    }
+                    // NGO's fall loop until the ground, once the jump has played out
+                    else fallRoutine = StartCoroutine(FallLoopAfterFlip(animancerMotor.WarpedActionSecondsLeft));
                     break;
                 case WallRunPhase.RouteLand:
                     if (fallRoutine != null) { StopCoroutine(fallRoutine); fallRoutine = null; }
-                    Play(animancerMotor.WarpedJumpClip(3), 0f, fallbackAirborne: false);   // NGO's landing clip at its own speed, in place
+                    // NGO's landing clip at its own speed, in place; not again when the roof drop already started it on its lead
+                    if (!landingShown) Play(animancerMotor.WarpedJumpClip(3), 0f, fallbackAirborne: false);
+                    landingShown = false;
+                    roofFlipShown = false;
                     if (feel != null) { feel.Airborne(transform, false); feel.Landed(transform, Mine()); }
                     break;
                 default:
@@ -1149,13 +1168,45 @@ namespace KryticalNova.Player
             else animancerMotor.PlayJumpAirborne();
         }
 
+        // the roof-edge drop on show (owner v4): its flip, the body's freefall clip, and whether its landing has already started
+        private bool roofFlipShown, landingShown;
+        private AnimationClip roofFreefallClip;
+
+        /// <summary>The roof-edge drop after its flip, on <paramref name="plan"/>'s clock from the fall leg's start (presentation only).</summary>
+        private System.Collections.IEnumerator RoofFallPhases(RouteFallTimeline plan)
+        {
+            float started = Time.time;
+            float freefallFade = settings != null ? settings.routeFreefallToLoopFade : 0.25f;
+            float landFade = settings != null ? settings.routeFallToLandFade : 0.08f;
+            if (plan.FreefallAt >= 0f)
+            {
+                while (Time.time - started < plan.FreefallAt) yield return null;
+                if (shownPhase != WallRunPhase.RouteFall) yield break;
+                Play(roofFreefallClip, 0f, fallbackAirborne: true, fade: 0f);   // the flip's last pose is the freefall's first
+            }
+            if (plan.LoopAt >= 0f)
+            {
+                while (Time.time - started < plan.LoopAt) yield return null;
+                if (shownPhase != WallRunPhase.RouteFall) yield break;
+                AnimationClip loop = animancerMotor.WarpedJumpClip(2);
+                if (loop != null) Play(loop, 0f, fallbackAirborne: true, fade: freefallFade);
+                else animancerMotor.PlayJumpAirborne();
+            }
+            while (Time.time - started < plan.LandAt) yield return null;
+            fallRoutine = null;
+            if (shownPhase != WallRunPhase.RouteFall) yield break;
+            Play(animancerMotor.WarpedJumpClip(3), 0f, fallbackAirborne: false, fade: landFade);   // its feet meet the ground at touchdown
+            landingShown = true;
+        }
+
         /// <summary>Plays a clip over the body (fitted to <paramref name="seconds"/> when given), or the jump's airborne pose.</summary>
-        private void Play(AnimationClip clip, float seconds, bool fallbackAirborne, float speed = 1f)
+        private void Play(AnimationClip clip, float seconds, bool fallbackAirborne, float speed = 1f, float fade = -1f)
         {
             if (clip != null)
             {
                 float rate = seconds > MinimumDuration ? clip.length / seconds : speed;
-                animancerMotor.PlayWarpedAction(clip, 0f, rate, (IsSpawned && !IsServer) || ghostMine == false ? RemoteFade : fadeIn);
+                float blend = fade >= 0f ? fade : (IsSpawned && !IsServer) || ghostMine == false ? RemoteFade : fadeIn;
+                animancerMotor.PlayWarpedAction(clip, 0f, rate, blend);
                 playingAction = true;
             }
             else if (fallbackAirborne) animancerMotor.PlayJumpAirborne();

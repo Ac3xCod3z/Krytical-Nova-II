@@ -36,12 +36,19 @@ namespace KryticalNova.Player
             }
         }
 
-        [Tooltip("Off a roof's edge with no walk down (owner, 2 Nov: the Synty Sporty backflip).")]
-        public BodyClips edgeDrop;
+        [Tooltip("Off a roof's edge with no walk down: our roof flip, a 3/4 backward turn that ends lying flat, ONE clip for every body " +
+                 "(owner v4, 7 Nov 2026: no masculine / feminine versions; was the Synty Sporty backflip). Played at its own speed. Empty: the normal jump.")]
+        public AnimationClip edgeDrop;
+        [Tooltip("After the roof-edge flip on a tall drop: the freefall loop, lying flat, one clip for every body (owner v4, 7 Nov 2026). " +
+                 "Empty: no freefall, the fall loop follows the flip.")]
+        public AnimationClip edgeDropFreefall;
         [Tooltip("Across a gap or down a drop between roofs. Empty: the normal jump (owner, 2 Nov).")]
         public BodyClips gap;
 
-        /// <summary>The clip for a kind and a body type; null = the game's own jump clip.</summary>
-        public AnimationClip For(LedgeJumpKind kind, BodyType body) => (kind == LedgeJumpKind.EdgeDrop ? edgeDrop : gap).For(body);
+        /// <summary>The clip for a kind and a body type (the edge drop has one for every body); null = the game's own jump clip.</summary>
+        public AnimationClip For(LedgeJumpKind kind, BodyType body) => kind == LedgeJumpKind.EdgeDrop ? edgeDrop : gap.For(body);
+
+        /// <summary>The roof-edge drop's freefall loop (every body); null = none (the fall loop follows the flip).</summary>
+        public AnimationClip Freefall => edgeDropFreefall;
     }
 }

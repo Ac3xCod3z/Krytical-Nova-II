@@ -91,6 +91,20 @@ namespace KryticalNova.Player
         [Tooltip("Killed on a surface: the body is pushed this far out from it before it falls.")]
         [Min(0f)] public float deathPushOff = 0.6f;
 
+        [Header("Off a roof's edge: flip, freefall, fall, landing (owner v4, 7 Nov 2026; presentation only)")]
+        [Tooltip("The most the roof-edge flip may speed up on a short drop, so it still ends before the landing.")]
+        [Range(1f, 2f)] public float routeFlipMaxSpeedUp = 1.25f;
+        [Tooltip("A freefall window shorter than this (seconds) is skipped: the flip goes straight on to the fall loop.")]
+        [Min(0f)] public float routeFreefallMinSeconds = 0.12f;
+        [Tooltip("The fall loop takes over this long (seconds) before touchdown.")]
+        [Min(0f)] public float routeFallLoopLead = 0.40f;
+        [Tooltip("Freefall (lying flat) into the fall loop (upright): the blend, seconds. Also used when the freefall is skipped.")]
+        [Min(0f)] public float routeFreefallToLoopFade = 0.25f;
+        [Tooltip("The landing starts this long (seconds) before touchdown: its feet meet the ground on its frame 4 of 30.")]
+        [Min(0f)] public float routeLandLead = 0.133f;
+        [Tooltip("Fall loop into the landing: the blend, seconds.")]
+        [Min(0f)] public float routeFallToLandFade = 0.08f;
+
         [Header("Trees (TreeProxyField)")]
         [Tooltip("A tree is solid, and can be climbed, only within this many metres of a player. Farther trees have no collider " +
                  "at all. Always nearer than where trees turn into their far picture (WorldLodSettings), so a tree that can be " +

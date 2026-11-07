@@ -46,6 +46,12 @@ MonoBehaviour:
   dropGravity: 14
   maxDropDistance: 25
   deathPushOff: 0.6
+  routeFlipMaxSpeedUp: 1.25
+  routeFreefallMinSeconds: 0.12
+  routeFallLoopLead: 0.4
+  routeFreefallToLoopFade: 0.25
+  routeLandLead: 0.133
+  routeFallToLandFade: 0.08
   treeProxyRadius: 35
   treeProxyRefresh: 0.25
   treeProxyCap: 512
