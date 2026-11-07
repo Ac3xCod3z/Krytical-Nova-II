@@ -519,9 +519,23 @@ namespace KryticalNova.UI.Menus
         private void ShowServer()
         {
             if (serversPrompt == null) return;
-            ServerEntry last = ServerDirectory.Last;
+            ServerEntry last = EnterTarget(CharacterSession.HereStore != null, ServerDirectory.Entries, ServerDirectory.Last);
             MenuUi.SetText(serversPrompt, "Label_Action", last != null ? "Server: " + last.Name : "Servers");
             FetchRosterWhenListed();
+        }
+
+        /// <summary>
+        /// The entry Enter joins: the server played last (NGO), except in "Play DOTS here (test saves)" (<paramref name="hereOnly"/>), whose
+        /// characters are the test service's: there always "Play here", never the last real server (owner's r9, 6 Nov 2026: Enter opened
+        /// the Servers window on Nova / This PC, both off).
+        /// </summary>
+        public static ServerEntry EnterTarget(bool hereOnly, System.Collections.Generic.IReadOnlyList<ServerEntry> entries, ServerEntry last)
+        {
+            if (!hereOnly) return last;
+            if (entries != null)
+                foreach (ServerEntry entry in entries)
+                    if (entry != null && entry.PlayHere) return entry;
+            return null;
         }
 
         private IEnumerator OpenServersNextFrame(string note)
@@ -533,6 +547,13 @@ namespace KryticalNova.UI.Menus
         /// <summary>Opens the Servers window; JOIN there enters the world with the selected character on that server.</summary>
         private void OpenServers(string note)
         {
+            // "Play DOTS here (test saves)" never lists other servers (its saves are the test service's)
+            if (CharacterSession.HereStore != null)
+            {
+                Debug.LogWarning("[Menus] Play DOTS here (test saves): no server list here; Enter goes back in with the chosen test character." +
+                                 (string.IsNullOrEmpty(note) ? "" : " (" + note + ")"));
+                return;
+            }
             MenuServers servers = MenuServers.For(MenuSettings.Current);
             if (servers == null) return;
             servers.Open(EnterWith, note); // the window makes its own opening sound
@@ -617,7 +638,7 @@ namespace KryticalNova.UI.Menus
             if (roster.IsUsed(selected))
             {
                 // Enter joins the server played last; with none yet, or one that cannot be joined now, the list opens.
-                ServerEntry last = ServerDirectory.Last;
+                ServerEntry last = EnterTarget(CharacterSession.HereStore != null, ServerDirectory.Entries, ServerDirectory.Last);
                 if (last == null || !last.CanJoin) OpenServers(last == null ? null
                     : last.Status == ServerEntry.State.Off ? $"{last.Name} is not answering. It may be off, or not reachable from here." : last.Note);
                 else EnterWith(last);

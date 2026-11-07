@@ -146,23 +146,45 @@ namespace KryticalNova.Persistence.Entities
     }
 
     /// <summary>
-    /// A2 (Log Out in a test-saves session): every server body leaves the normal way first (<see cref="ServerLeaving.Notify"/>: its save is
-    /// written and its account let go, as a disconnect does), the store sends everything it holds, and only then
-    /// <paramref name="stopWorlds"/> runs. A second leave of the same body finds nothing to save.
+    /// A2 (Log Out in a test-saves session) and r7 (Stop in one): every server body leaves the normal way first
+    /// (<see cref="ServerLeaving.Notify"/>: its save is written and its account let go, as a disconnect does), the store sends everything it
+    /// holds (waiting at most the given seconds), and only then <c>stopWorlds</c> runs. A second leave of the same body finds nothing to
+    /// save (PlayerSaveAgent.SaveAndRelease returns once the character is let go).
     /// </summary>
     public static class PlayHereLeave
     {
-        public static void LeaveAll(System.Collections.Generic.IEnumerable<GameObject> serverBodies, ISaveStore store, Action stopWorlds)
+        /// <summary>The longest a Stop waits for the test save service: Stop never hangs the Editor (Nova's review, 6 Nov 2026).</summary>
+        public const float StopSeconds = 5f;
+
+        /// <summary>r7: the stop-time save runs only when Play is being left in a test-saves session that has not logged out already.</summary>
+        public static bool SavesOnStop(bool exitingPlay, bool testSaves, bool loggedOut) => exitingPlay && testSaves && !loggedOut;
+
+        /// <summary>True when the store took every save in time.</summary>
+        public static bool LeaveAll(System.Collections.Generic.IEnumerable<GameObject> serverBodies, ISaveStore store, Action stopWorlds,
+            float seconds = 15f)
+        {
+            Func<float, bool> sendAll = store is ServiceSaveStore service
+                ? service.Flush
+                : (Func<float, bool>)(_ => { ServerSave.WaitForDisk(); return true; });
+            return LeaveAll(serverBodies, sendAll, stopWorlds, seconds);
+        }
+
+        /// <summary><see cref="LeaveAll(System.Collections.Generic.IEnumerable{GameObject}, ISaveStore, Action, float)"/> with the store's send-all as a function (tests).</summary>
+        public static bool LeaveAll(System.Collections.Generic.IEnumerable<GameObject> serverBodies, Func<float, bool> sendAll, Action stopWorlds,
+            float seconds)
         {
             foreach (GameObject body in serverBodies)
             {
                 if (body == null) continue;
                 try { ServerLeaving.Notify(body); }
-                catch (Exception e) { Debug.LogError("[KnPlayHere] a body's leaving rules threw on Log Out: " + e); }
+                catch (Exception e) { Debug.LogError("[KnPlayHere] a body's leaving rules threw while leaving: " + e); }
             }
-            ServerSave.WaitForDisk();
-            if (store is ServiceSaveStore service) service.Flush();
+            bool sent = sendAll == null || sendAll(seconds);
+            if (!sent)
+                Debug.LogWarning($"[KnPlayHere] Test saves: the test save service did not take every save within {seconds:0.#} s; gave up waiting " +
+                                 "(what is left is sent again while the Editor runs, and may be lost if it closes).");
             stopWorlds?.Invoke();
+            return sent;
         }
     }
 

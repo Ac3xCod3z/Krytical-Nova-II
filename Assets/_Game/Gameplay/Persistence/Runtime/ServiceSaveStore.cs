@@ -301,8 +301,11 @@ namespace KryticalNova.Persistence
             }
         }
 
-        /// <summary>Waits until the service has every write handed over (at most <paramref name="seconds"/>).</summary>
-        public void Flush(float seconds = 15f)
+        /// <summary>
+        /// Waits until the service has every write handed over (at most <paramref name="seconds"/>); false when time ran out first
+        /// (what is left stays in line and is sent again).
+        /// </summary>
+        public bool Flush(float seconds = 15f)
         {
             DateTime until = DateTime.UtcNow.AddSeconds(seconds);
             lock (gate)
@@ -310,6 +313,7 @@ namespace KryticalNova.Persistence
                 if (writer == null && batches.Count > 0) SendWaiting();
                 while ((batches.Count > 0 || sending) && DateTime.UtcNow < until)
                     Monitor.Wait(gate, 100);
+                return batches.Count == 0 && !sending;
             }
         }
 

@@ -851,6 +851,12 @@ namespace KryticalNova.Persistence.Entities
 
         static void OnPlayModeChanged(PlayModeStateChange change)
         {
+            if (PlayHereLeave.SavesOnStop(change == PlayModeStateChange.ExitingPlayMode, TestSaves, s_AwaitingEnter))
+            {
+                try { SaveOnStop(); }
+                catch (Exception e) { Debug.LogError("[KnPlayHere] Test saves: the stop-time save threw: " + e); }
+                return;
+            }
             if (change != PlayModeStateChange.EnteredEditMode) return;
             EditorApplication.playModeStateChanged -= OnPlayModeChanged;
             Active = false;
@@ -953,12 +959,33 @@ namespace KryticalNova.Persistence.Entities
             SceneManager.sceneLoaded += OnTestSceneLoaded;
         }
 
-        static void LeaveForSelect()
+        static List<GameObject> ServerBodies()
         {
             var bodies = new List<GameObject>();
             foreach (GhostBodyEntry entry in GhostBodyRegistry.Entries)
                 if (entry.Body != null && entry.World != null && entry.World.IsCreated && (entry.World.Flags & WorldFlags.GameServer) != 0)
                     bodies.Add(entry.Body);
+            return bodies;
+        }
+
+        /// <summary>
+        /// r7 (owner, 6 Nov 2026: a Stim used, Play stopped, the count was back): a test-saves Stop saves as NGO's leaving does
+        /// (PlayerSaveAgent.OnNetworkDespawn -> SaveAndRelease, then ServerSave's quit flush waits for the store). Runs on ExitingPlayMode,
+        /// before any world or object is torn down: every server body's normal leave save, then the service has it all. The teardown that
+        /// follows finds nothing left to save. Not after Log Out (those bodies are saved and gone already).
+        /// </summary>
+        static void SaveOnStop()
+        {
+            List<GameObject> bodies = ServerBodies();
+            bool sent = PlayHereLeave.LeaveAll(bodies, ServerSave.Store, null, PlayHereLeave.StopSeconds);
+            s_AwaitingEnter = true;   // saved and let go: nothing more to save on this Stop
+            Debug.Log($"[KnPlayHere] Test saves: Play stopped ({bodies.Count} server body saved and let go before the worlds stop" +
+                      (sent ? ")." : "; the service had not taken all of it in time)."));
+        }
+
+        static void LeaveForSelect()
+        {
+            List<GameObject> bodies = ServerBodies();
             PlayHereLeave.LeaveAll(bodies, ServerSave.Store, () =>
             {
                 KnBootstrap.Stop();

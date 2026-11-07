@@ -12,6 +12,32 @@ namespace KryticalNova.Persistence.Entities.Tests
     public sealed class PlayHereTestSavesTests
     {
         [Test]
+        public void TheStopSave_RunsOnlyWhenLeavingPlayInTestSaves_AndNotAfterLogOut()
+        {
+            Assert.IsTrue(PlayHereLeave.SavesOnStop(exitingPlay: true, testSaves: true, loggedOut: false), "test saves, Stop: saved (owner's r7)");
+            Assert.IsFalse(PlayHereLeave.SavesOnStop(true, false, false), "plain Play DOTS here (memory saves) and every other Play: no effect");
+            Assert.IsFalse(PlayHereLeave.SavesOnStop(true, true, true), "after Log Out the bodies are saved and gone: no second save");
+            Assert.IsFalse(PlayHereLeave.SavesOnStop(false, true, false), "any other Play-mode change: nothing");
+        }
+
+        [Test]
+        public void TheStopSave_WaitsAtMostItsSeconds_ThenGivesUpAndSaysSo_AndStillGoesOn()
+        {
+            float askedSeconds = -1f;
+            bool stopped = false;
+            UnityEngine.TestTools.LogAssert.Expect(UnityEngine.LogType.Warning,
+                new System.Text.RegularExpressions.Regex(@"did not take every save within 5 s; gave up waiting"));
+            bool sent = PlayHereLeave.LeaveAll(new UnityEngine.GameObject[0], s => { askedSeconds = s; return false; }, () => stopped = true,
+                PlayHereLeave.StopSeconds);
+            Assert.IsFalse(sent);
+            Assert.AreEqual(5f, askedSeconds, "the store is asked to wait 5 s at most (Stop never hangs the Editor)");
+            Assert.IsTrue(stopped, "giving up never blocks what follows");
+
+            bool sentInTime = PlayHereLeave.LeaveAll(new UnityEngine.GameObject[0], s => true, null, PlayHereLeave.StopSeconds);
+            Assert.IsTrue(sentInTime, "in time: no warning (an unexpected log fails the test)");
+        }
+
+        [Test]
         public void OnlyTheTestServicesAddress_IsAccepted()
         {
             Assert.IsNull(PlayHereTestSaves.UrlProblem("http://127.0.0.1:7802"));
