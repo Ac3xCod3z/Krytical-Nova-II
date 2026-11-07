@@ -13,6 +13,7 @@ using KryticalNova.Player.Entities;
 using KryticalNova.Player.Entities.Presentation;
 using KryticalNova.Progression;
 using Unity.Entities;
+using Unity.NetCode;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -41,6 +42,8 @@ namespace KryticalNova.Persistence.Entities
         public const string MenuPath = "Krytical Nova/Online/Entities/Play DOTS here";
         public const string MapPath = "Assets/_Game/Scenes/World/Towns/Zone01_StarterTown.unity";
         public const string WalkVariable = "KN_PLAYHERE_WALK";
+        /// <summary>"1": the r7 item probe's log lines (scripted test-lane runs only).</summary>
+        public const string ItemProbeVariable = "KN_PLAYHERE_ITEMPROBE";
 
         /// <summary>
         /// The own body, held from the moment the tester entered (run 3e, 31 Oct: the bisect switched PlayerInventory off, whose
@@ -858,6 +861,7 @@ namespace KryticalNova.Persistence.Entities
                 return;
             }
             if (change != PlayModeStateChange.EnteredEditMode) return;
+            PlayerRequestServerSystem.ItemProbe = null;
             EditorApplication.playModeStateChanged -= OnPlayModeChanged;
             Active = false;
             if (TestSaves)
@@ -963,10 +967,16 @@ namespace KryticalNova.Persistence.Entities
         {
             var bodies = new List<GameObject>();
             foreach (GhostBodyEntry entry in GhostBodyRegistry.Entries)
-                if (entry.Body != null && entry.World != null && entry.World.IsCreated && (entry.World.Flags & WorldFlags.GameServer) != 0)
-                    bodies.Add(entry.Body);
+                if (IsServerBody(entry)) bodies.Add(entry.Body);
             return bodies;
         }
+
+        /// <summary>
+        /// A server world's body. Netcode's own test (r7, 6 Nov 2026): WorldFlags.GameServer shares its Live and Game bits with every game
+        /// world, so <c>(Flags &amp; GameServer) != 0</c> took the client's own view body too.
+        /// </summary>
+        public static bool IsServerBody(GhostBodyEntry entry) =>
+            entry != null && entry.Body != null && entry.World != null && entry.World.IsCreated && entry.World.IsServer();
 
         /// <summary>
         /// r7 (owner, 6 Nov 2026: a Stim used, Play stopped, the count was back): a test-saves Stop saves as NGO's leaving does
@@ -1014,6 +1024,8 @@ namespace KryticalNova.Persistence.Entities
         static void StartWorlds(GoInGamePayload payload)
         {
             KnGoInGame.Source = new TesterGoInGame(payload);
+            // r7 probe (test lane, scripted runs only; off by default: the owner dislikes debug-log stutter)
+            PlayerRequestServerSystem.ItemProbe = Environment.GetEnvironmentVariable(ItemProbeVariable) == "1" ? s => Debug.Log("[KnItemProbe] " + s) : null;
             string join = JoinRules.PayloadText(GameBuild.Version, true);
             // one camera change per proof run: KN_PLAYHERE_SPAWNCAM_FIX=0 measures without the spawn-camera fix
             s_OwnBody = null;
@@ -2382,6 +2394,19 @@ namespace KryticalNova.Persistence.Entities
                 Log($"auto: a click directly on the wall (the core case): {(onIt ? "PASS" : "FAIL")}; wall walks {plans.WallWalks - walks0}, on the wall {em.GetComponentData<MoveState>(ghost).Wall}");
             }
 
+            /// <summary>r7 probe: the cells where the server's Pack and the own view's differ ("same" when none).</summary>
+            static string PackDiff(PlayerInventory server, PlayerInventory own)
+            {
+                var differ = new List<string>();
+                for (int i = 0; i < PlayerInventory.Capacity; i++)
+                {
+                    ItemStack s = server.Get(i), o = own.Get(i);
+                    if (s.itemId != o.itemId || s.count != o.count)
+                        differ.Add($"cell {i}: server {s.itemId} x{s.count}, own {o.itemId} x{o.count}");
+                }
+                return differ.Count == 0 ? "same" : differ.Count + " cell(s) DIFFER: " + string.Join("; ", differ);
+            }
+
             /// <summary>Items used by the server on its body (env KN_PLAYHERE_ITEMS=1; owner, 2 Nov, feel test item 5).</summary>
             static bool ItemsRun => Environment.GetEnvironmentVariable("KN_PLAYHERE_ITEMS") == "1";
 
@@ -2399,10 +2424,39 @@ namespace KryticalNova.Persistence.Entities
                 var ownResources = OwnBody != null ? OwnBody.GetComponent<PlayerResources>() : null;
                 if (inventory == null || resources == null || own == null || ownResources == null)
                 { tally.Tried++; Log("items: FAIL; a body has no inventory or resources"); yield break; }
-                const ushort Stim = 9001, Flask = 9012;
+                const ushort Stim = 9001, Flask = 9012, FluxStim = 9002;
+                bool probe = PlayerRequestServerSystem.ItemProbe != null;
+                Action<ushort, bool, bool> usedHere = (id, h, f) => PlayerRequestServerSystem.ItemProbe?.Invoke(
+                    $"server: item {id} used on the server body, frame {Time.frameCount}, from " +
+                    new System.Diagnostics.StackTrace(1, false).ToString().Replace(Environment.NewLine, " <- "));
+                if (probe)
+                {
+                    // r7 probe: which bodies the Stop / Log Out save would take, and whether the own Pack is the server's on arrival
+                    var picked = new List<string>();
+                    foreach (GameObject b in ServerBodies())
+                        foreach (GhostBodyEntry e in GhostBodyRegistry.Entries)
+                            if (e.Body == b) picked.Add($"'{b.name}' in '{e.World.Name}' (IsServer {e.World.IsServer()}, IsClient {e.World.IsClient()})");
+                    Log("probe: the save would take " + picked.Count + " body/bodies: " + string.Join("; ", picked));
+                    Log("probe: Pack on arrival: " + PackDiff(inventory, own));
+                    inventory.ItemUsed += usedHere;
+                }
                 inventory.ServerGive(Stim, 3);
                 if (inventory.CountItem(Flask) == 0) inventory.ServerGive(Flask, 1);
                 yield return new WaitForSeconds(1.2f);   // the Pack's cells reach the owner
+                if (probe)
+                {
+                    // the owner's r7 case: ONE Flux Stim asked by the own view (Flux run down first, a use at full Flux is refused)
+                    inventory.ServerGive(FluxStim, 5);
+                    if (resources.Chi > resources.MaxChi * 0.2f) resources.TrySpendChi(resources.Chi - resources.MaxChi * 0.2f);
+                    yield return new WaitForSeconds(1.2f);
+                    int fluxServer0 = inventory.CountItem(FluxStim), fluxOwn0 = own.CountItem(FluxStim);
+                    own.UseItem(FluxStim);
+                    yield return new WaitForSeconds(2f);
+                    Log($"probe: ONE Flux Stim asked: server {fluxServer0} -> {inventory.CountItem(FluxStim)}, own view {fluxOwn0} -> {own.CountItem(FluxStim)} " +
+                        $"({(inventory.CountItem(FluxStim) == fluxServer0 - 1 && own.CountItem(FluxStim) == fluxOwn0 - 1 ? "one each: as asked" : "NOT one")})");
+                    Log("probe: Pack after the use: " + PackDiff(inventory, own));
+                    yield return new WaitForSeconds(1.2f);   // past the shared use cooldown
+                }
 
                 // an HP stim, asked by the owner's own body
                 tally.Tried++;
@@ -2443,6 +2497,7 @@ namespace KryticalNova.Persistence.Entities
                 // test B3 saves a Pack on the real prefab, loads it into a fresh server body and saves it back byte for byte
                 Log($"items: the Pack after this run: {inventory.CountItem(Stim)} stims, the Flask's drinks used {bottle & 0xFF} (a relog of a saved " +
                     "character keeps them: PlayMode B3; this tester has no account, so nothing is saved here)");
+                if (probe) inventory.ItemUsed -= usedHere;
                 resources.RestoreAll();
             }
 

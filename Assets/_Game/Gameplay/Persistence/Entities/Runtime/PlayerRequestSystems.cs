@@ -70,6 +70,26 @@ namespace KryticalNova.Persistence.Entities
         public ulong Data;
     }
 
+    /// <summary>
+    /// The owner's game -> the server, once for each own body it builds (r7, 6 Nov 2026): the body exists now, so every own-view mirror
+    /// (Pack, loadouts, skill ranks, clocks, storage, shop weeks) is sent again in full. What the server sent on arrival came before the
+    /// body and was dropped (NGO gives a spawning object its whole state at once).
+    /// </summary>
+    public struct MirrorReadyRpc : IRpcCommand { }
+
+    /// <summary>True once for each new own body (null never counts): when <see cref="MirrorReadyRpc"/> is sent.</summary>
+    public sealed class OwnBodyWatch
+    {
+        object m_Last;
+
+        public bool IsNew(object body)
+        {
+            if (body == null || ReferenceEquals(body, m_Last)) return false;
+            m_Last = body;
+            return true;
+        }
+    }
+
     /// <summary>A line the server says to one player (<see cref="OwnerMessages"/>): shown in the player's message area.</summary>
     /// <summary>The owner asks the server's body to move, equip, unequip, destroy or sort (NGO's five Pack RPCs; M8 8.1.2).</summary>
     public struct PackOpRpc : IRpcCommand
@@ -403,6 +423,8 @@ namespace KryticalNova.Persistence.Entities
         public void UseItem(ushort itemId)
         {
             if (m_World == null || !m_World.IsCreated || itemId == 0) return;
+            PlayerRequestServerSystem.ItemProbe?.Invoke($"client: asks to use {itemId}, frame {UnityEngine.Time.frameCount}, from " +
+                                                        new System.Diagnostics.StackTrace(1, false).ToString().Replace(Environment.NewLine, " <- "));
             var em = m_World.EntityManager;
             Entity rpc = em.CreateEntity();
             em.AddComponentData(rpc, new ItemUseRpc { ItemId = itemId });
@@ -1119,10 +1141,25 @@ namespace KryticalNova.Persistence.Entities
             PackOps++;
         }
 
+        /// <summary>
+        /// r7 probe (6 Nov 2026, test lane only): null (off) unless "Play DOTS here" sets it for a scripted run (KN_PLAYHERE_ITEMPROBE=1).
+        /// Each item request the server takes, each one the own view sends, and Pack cells the own view could not take.
+        /// </summary>
+        public static Action<string> ItemProbe;
+
         void UseItem(Entity connection, ushort itemId)
         {
-            if (!BodyOf(connection, CallKind.Items, out GameObject body)) return;
+            if (!BodyOf(connection, CallKind.Items, out GameObject body))
+            {
+                ItemProbe?.Invoke($"server: use of {itemId} refused before the Pack (no body or over the request limit), frame {UnityEngine.Time.frameCount}");
+                return;
+            }
+            var probed = ItemProbe != null ? body.GetComponent<PlayerInventory>() : null;
+            int before = probed != null ? probed.CountItem(itemId) : -1;
             if (UseOn(body, itemId, out RequestReplyRpc reply)) Used++; else Refused++;
+            if (probed != null)
+                ItemProbe?.Invoke($"server: use of {itemId} on '{body.name}' frame {UnityEngine.Time.frameCount}: {before} -> {probed.CountItem(itemId)}" +
+                                  (reply.Kind == RequestReplyRpc.ItemRefused ? " (refused: " + reply.Text + ")" : string.Empty));
             if (reply.Kind != 0) Reply(connection, reply);
         }
 
@@ -1329,12 +1366,66 @@ namespace KryticalNova.Persistence.Entities
         public int SkillCellsSent { get; private set; }
         public int StorageCellsSent { get; private set; }
         public int WeeksSent { get; private set; }
+        /// <summary>Own-body readies honoured (<see cref="MirrorReadyRpc"/>; tests).</summary>
+        public int ReadiesHeard { get; private set; }
+        /// <summary>Readies ignored: a repeat for the same body, or from a connection with no body on this server (tests).</summary>
+        public int ReadiesIgnored { get; private set; }
 
-        protected override void OnCreate() =>
+        EntityQuery m_Ready;
+        // the ghosts whose mirrors were sent again already: a client cannot make the server resend everything in a loop (Nova's review)
+        readonly HashSet<Entity> m_Readied = new HashSet<Entity>();
+
+        protected override void OnCreate()
+        {
             m_InGame = GetEntityQuery(ComponentType.ReadOnly<NetworkId>(), ComponentType.ReadOnly<NetworkStreamInGame>());
+            m_Ready = GetEntityQuery(ComponentType.ReadOnly<ReceiveRpcCommandRequest>(), ComponentType.ReadOnly<MirrorReadyRpc>());
+        }
+
+        /// <summary>Forgets what was sent to <paramref name="ghost"/>'s owner: the next look sends all of it again, with ClearAll first.</summary>
+        public void ForgetSent(Entity ghost)
+        {
+            m_Sent.Remove(ghost);
+            m_SentLoadouts.Remove(ghost);
+            m_SentClocks.Remove(ghost);
+            m_SentSkills.Remove(ghost);
+            m_SentWeeks.Remove(ghost);
+            m_StorageGone.Clear();
+            foreach (var k in m_SentStorage.Keys) if (k.Item1 == ghost) m_StorageGone.Add(k);
+            foreach (var k in m_StorageGone) m_SentStorage.Remove(k);
+        }
+
+        // r7: the owner's own body exists now; everything sent before it was dropped there (MirrorReadyRpc)
+        void HearReadies()
+        {
+            if (m_Ready.IsEmpty) return;
+            var em = EntityManager;
+            var received = m_Ready.ToComponentDataArray<ReceiveRpcCommandRequest>(Allocator.Temp);
+            em.DestroyEntity(m_Ready);
+            m_Readied.RemoveWhere(ghost => !em.Exists(ghost));
+            foreach (ReceiveRpcCommandRequest r in received)
+            {
+                bool honoured = false;
+                if (r.SourceConnection != Entity.Null && em.Exists(r.SourceConnection) && em.HasComponent<NetworkId>(r.SourceConnection))
+                {
+                    // only the sender's OWN body (found by its connection's id), once per body spawn
+                    int id = em.GetComponentData<NetworkId>(r.SourceConnection).Value;
+                    foreach (GhostBodyEntry entry in GhostBodyRegistry.Entries)
+                        if (ReferenceEquals(entry.World, World) && entry.NetworkId == id && em.Exists(entry.Ghost) && m_Readied.Add(entry.Ghost))
+                        {
+                            ForgetSent(entry.Ghost);
+                            honoured = true;
+                            PlayerRequestServerSystem.ItemProbe?.Invoke($"server: own body ready for player {id}: every mirror sent again");
+                        }
+                }
+                if (honoured) { ReadiesHeard++; m_Next = 0f; }   // at once, not at the next look
+                else ReadiesIgnored++;
+            }
+            received.Dispose();
+        }
 
         protected override void OnUpdate()
         {
+            HearReadies();
             if (UnityEngine.Time.realtimeSinceStartup < m_Next) return;
             m_Next = UnityEngine.Time.realtimeSinceStartup + Interval;
             var em = EntityManager;
@@ -1538,6 +1629,10 @@ namespace KryticalNova.Persistence.Entities
         public int Replies { get; private set; }
         public int Cells { get; private set; }
         public int Tells { get; private set; }
+        /// <summary>Own-body readies sent (<see cref="MirrorReadyRpc"/>; tests).</summary>
+        public int ReadiesSent { get; private set; }
+
+        readonly OwnBodyWatch m_OwnBody = new OwnBodyWatch();
 
         protected override void OnCreate()
         {
@@ -1577,6 +1672,14 @@ namespace KryticalNova.Persistence.Entities
                 tells.Dispose();
             }
             GameObject body = LocalBody();
+            if (m_OwnBody.IsNew(body))
+            {
+                // r7: the mirrors sent before this body existed were dropped below: the server sends them all again
+                Entity ready = em.CreateEntity();
+                em.AddComponent<MirrorReadyRpc>(ready);
+                em.AddComponent<SendRpcCommandRequest>(ready);
+                ReadiesSent++;
+            }
             if (!m_Cells.IsEmpty)
             {
                 var cells = m_Cells.ToComponentDataArray<PackCellRpc>(Allocator.Temp);
@@ -1592,6 +1695,11 @@ namespace KryticalNova.Persistence.Entities
                         else inventory.MirrorCell(cell.Index, new ItemStack(cell.ItemId, cell.Count, cell.Data));
                         Cells++;
                     }
+                else PlayerRequestServerSystem.ItemProbe?.Invoke($"client: {cells.Length} Pack cell(s) DROPPED, no own body yet (frame {UnityEngine.Time.frameCount})");
+                if (inventory != null && PlayerRequestServerSystem.ItemProbe != null)
+                    foreach (PackCellRpc cell in cells)
+                        if (cell.Index == PackCellRpc.ClearAll || cell.Index < PlayerInventory.Capacity && cell.ItemId != 0 && cell.ItemId < 10000)
+                            PlayerRequestServerSystem.ItemProbe($"client: Pack cell {(cell.Index == PackCellRpc.ClearAll ? "CLEAR ALL" : cell.Index + " = " + cell.ItemId + " x" + cell.Count)} taken");
                 cells.Dispose();
             }
             if (!m_StorageCells.IsEmpty || !m_StorageCreds.IsEmpty)
