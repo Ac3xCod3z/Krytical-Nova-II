@@ -83,7 +83,9 @@ namespace KryticalNova.Mounts
         [Min(0.1f)] public float seconds = 1f;
         [Tooltip("Seconds after the press when the rider is free: on the mount and able to ride, or on foot. The rest of the clip plays on unless the rider moves.")]
         [Min(0.1f)] public float freeSeconds = 0.8f;
-        [Tooltip("Height of the rider over the clip: 0 = on the ground, 1 = on the stage's seat, above 1 = higher than the seat.")]
+        [Tooltip("Where the rider's origin is over the clip: 1 = on the stage's seat, 0 = on the ground. The Brambleback's clips are " +
+                 "keyed per stage from the ground to the seat (the seat is only 0.2-0.5 m above the feet, too little to scale a hop), " +
+                 "so this stays 1; it is here for a mount whose clips are keyed in place on the ground.")]
         public AnimationCurve lift = AnimationCurve.Constant(0f, 1f, 1f);
         [Tooltip("How far ahead of the player the rider is drawn over the clip, in metres (a visual arc only). 0 = on the player.")]
         public AnimationCurve forward = AnimationCurve.Constant(0f, 1f, 0f);
@@ -100,14 +102,12 @@ namespace KryticalNova.Mounts
         public static MountTransition StandingOn() => new MountTransition
         {
             seconds = 1f, freeSeconds = 0.8f, stirrupsAt = 0.77f, effectDelay = 0.12f, effectSeconds = 0.65f,
-            lift = new AnimationCurve(K(0f, 0f), K(0.13f, -0.05f), K(0.47f, 1.12f), K(0.77f, 1f), K(0.86f, 0.97f), K(1f, 1f)),
         };
 
         /// <summary>The running hop: 0.8 s, on the seat and free at 0.55 s; the mount forms 0.05 to 0.55 s.</summary>
         public static MountTransition RunningOn() => new MountTransition
         {
             seconds = 0.8f, freeSeconds = 0.55f, stirrupsAt = 0.6875f, effectDelay = 0.05f, effectSeconds = 0.5f,
-            lift = new AnimationCurve(K(0f, 0f), K(0.1f, 0.05f), K(0.44f, 1.08f), K(0.69f, 1f), K(0.8f, 0.97f), K(1f, 1f)),
         };
 
         /// <summary>The front flip: 1.0 s, free at 0.85 s; crouch, push, flip down through where the mount was, land at
@@ -115,7 +115,6 @@ namespace KryticalNova.Mounts
         public static MountTransition StandingOff() => new MountTransition
         {
             seconds = 1f, freeSeconds = 0.85f, stirrupsAt = 0f, effectDelay = 0.1f, effectSeconds = 0.5f,
-            lift = new AnimationCurve(K(0f, 1f), K(0.15f, 0.95f), K(0.25f, 1.15f), K(0.42f, 1.35f), K(0.6f, 0f), K(1f, 0f)),
         };
 
         /// <summary>The launch flip: 1.0 s, free at 0.85 s; launch, flip on a forward arc, land about 1 m ahead at
@@ -123,7 +122,6 @@ namespace KryticalNova.Mounts
         public static MountTransition RunningOff() => new MountTransition
         {
             seconds = 1f, freeSeconds = 0.85f, stirrupsAt = 0f, effectDelay = 0.1f, effectSeconds = 0.5f,
-            lift = new AnimationCurve(K(0f, 1f), K(0.1f, 1.1f), K(0.3f, 1.4f), K(0.55f, 0f), K(1f, 0f)),
             forward = new AnimationCurve(K(0f, 0f), K(0.55f, 1f), K(0.85f, 0f), K(1f, 0f)),
         };
     }

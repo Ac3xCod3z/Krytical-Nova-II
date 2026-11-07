@@ -19,22 +19,18 @@ namespace KryticalNova.Tests
         private static float LiftAt(MountTransition t, float seconds) => MountRideMotion.Lift(t.lift, seconds, t.seconds);
 
         [Test]
-        public void GettingOn_StartsOnTheGround_EndsOnTheSeat_ClearingItOnTheWay([Values(false, true)] bool running)
+        public void TheClipCarriesTheHeight_TheCodeKeepsTheRiderOnTheSeat([Values(true, false)] bool on, [Values(false, true)] bool running)
         {
-            MountTransition on = settings.Transition(true, running);
-            Assert.AreEqual(0f, LiftAt(on, 0f), 0.001f);
-            Assert.AreEqual(1f, LiftAt(on, on.seconds), 0.001f);
-            float highest = 0f;
-            for (float s = 0f; s <= on.seconds; s += 1f / 30f) highest = Mathf.Max(highest, LiftAt(on, s));
-            Assert.Greater(highest, 1f, "the hop clears the seat before dropping into it");
+            // The Brambleback's seat is only 0.2-0.5 m above the rider's feet, so the hops and flips are keyed per stage
+            // from the ground to the seat; the code's lift stays on the seat the whole way.
+            MountTransition t = settings.Transition(on, running);
+            for (float s = 0f; s <= t.seconds; s += 1f / 30f) Assert.AreEqual(1f, LiftAt(t, s), 0.001f);
         }
 
         [Test]
-        public void GettingOff_StartsOnTheSeat_EndsOnTheGround_AndOnThePlayer([Values(false, true)] bool running)
+        public void GettingOff_IsBackOnThePlayer_BeforeTheRiderIsFree([Values(false, true)] bool running)
         {
             MountTransition off = settings.Transition(false, running);
-            Assert.AreEqual(1f, LiftAt(off, 0f), 0.001f);
-            Assert.AreEqual(0f, LiftAt(off, off.freeSeconds), 0.001f, "on the ground by the time the rider is free");
             Assert.AreEqual(0f, MountRideMotion.Ahead(off.forward, off.freeSeconds, off.seconds), 0.001f,
                 "back on the player's real position before the rider is free (no snap)");
         }
