@@ -29,6 +29,7 @@ MonoBehaviour:
     walk: {fileID: 0}
     run: {fileID: 0}
     idleExtras: []
+    clipMetresPerSecond: {x: 0, y: 0}
     glow: {r: 0, g: 0, b: 0, a: 0}
     riderIdle: {fileID: -623603649343465320, guid: dc75123383dde424e9640734d56154a8, type: 3}
     riderWalk: {fileID: -623603649343465320, guid: e3d1efb8913552843b7c47849897d0d4, type: 3}
@@ -50,6 +51,7 @@ MonoBehaviour:
     walk: {fileID: 0}
     run: {fileID: 0}
     idleExtras: []
+    clipMetresPerSecond: {x: 0, y: 0}
     glow: {r: 0, g: 0, b: 0, a: 0}
     riderIdle: {fileID: -623603649343465320, guid: dc75123383dde424e9640734d56154a8, type: 3}
     riderWalk: {fileID: -623603649343465320, guid: e3d1efb8913552843b7c47849897d0d4, type: 3}
@@ -71,6 +73,7 @@ MonoBehaviour:
     walk: {fileID: 0}
     run: {fileID: 0}
     idleExtras: []
+    clipMetresPerSecond: {x: 0, y: 0}
     glow: {r: 0, g: 0, b: 0, a: 0}
     riderIdle: {fileID: -623603649343465320, guid: dc75123383dde424e9640734d56154a8, type: 3}
     riderWalk: {fileID: -623603649343465320, guid: e3d1efb8913552843b7c47849897d0d4, type: 3}
