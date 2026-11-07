@@ -287,8 +287,11 @@ namespace KryticalNova.GameFeel
             }
         }
 
-        public void SetAirborne(bool value, GameObject loopPrefab)
+        /// <param name="endWithin">Turning it off: seconds within which every trail particle already in the air is gone
+        /// (owner, 7 Nov 2026: nothing lingers after a dismount's touchdown). Below zero, they live out their time.</param>
+        public void SetAirborne(bool value, GameObject loopPrefab, float endWithin = -1f)
         {
+            if (!value && endWithin >= 0f && airLoop != null) CutShort(airLoop, endWithin);
             airborne = value;
             SetLoop(ref airLoop, airborne, loopPrefab, AirLoopHeight);
             RefreshRunLoop(); // no dust while the feet are off the ground
@@ -359,6 +362,23 @@ namespace KryticalNova.GameFeel
             if (runLoopSystems == null || Time.time < nextDustCheck) return;
             nextDustCheck = Time.time + DustCheckSeconds;
             GroundSurfaces.Tint(runLoopSystems, GroundSurfaces.DustAt(ActorAnchor.Feet(transform), transform));
+        }
+
+        private static ParticleSystem.Particle[] cutBuffer;
+
+        /// <summary>Every particle of <paramref name="loop"/> alive now dies within <paramref name="seconds"/>.</summary>
+        private static void CutShort(GameObject loop, float seconds)
+        {
+            foreach (var ps in loop.GetComponentsInChildren<ParticleSystem>())
+            {
+                int count = ps.particleCount;
+                if (count == 0) continue;
+                if (cutBuffer == null || cutBuffer.Length < count) cutBuffer = new ParticleSystem.Particle[Mathf.NextPowerOfTwo(count)];
+                count = ps.GetParticles(cutBuffer, count);
+                for (int i = 0; i < count; i++)
+                    if (cutBuffer[i].remainingLifetime > seconds) cutBuffer[i].remainingLifetime = seconds;
+                ps.SetParticles(cutBuffer, count);
+            }
         }
 
         private void SetLoop(ref GameObject loop, bool on, GameObject prefab, Vector3 aboveSoles)

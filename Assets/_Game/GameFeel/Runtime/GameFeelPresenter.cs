@@ -755,6 +755,8 @@ namespace KryticalNova.GameFeel
         [SerializeField, Range(0f, 1f)] private float dismountShakeStill = 0.45f, dismountShakeFull = 1f;
         [Tooltip("The small puff as the rider stands up out of the landing or the roll.")]
         [SerializeField, Range(0f, 1f)] private float dismountStandUpIntensity = 0.45f;
+        [Tooltip("Seconds after a dismount's touchdown within which the flip's air trail is gone (owner, 7 Nov 2026: nothing lingers).")]
+        [SerializeField, Range(0f, 1f)] private float dismountTrailEnd = 0.25f;
         [Tooltip("Getting on: how strong the push off the ground and the weight landing in the saddle are.")]
         [SerializeField, Range(0f, 1.5f)] private float mountUpTakeOffIntensity = 0.8f, mountUpLandIntensity = 0.9f;
         [Tooltip("Getting on: the local player's own camera thud as the weight lands in the saddle.")]
@@ -786,8 +788,9 @@ namespace KryticalNova.GameFeel
                     ActorVfx.For(actor).SetAirborne(true, airborneLoopVfx);
                     break;
                 case DismountBeat.Touchdown:
-                    // The lines and the smear end here, always (owner, retest: they stuck on after the roll).
-                    ActorVfx.Find(actor)?.SetAirborne(false, airborneLoopVfx);
+                    // The lines and the smear end here, always (owner, retest: they stuck on after the roll), and the
+                    // flip's trail is gone within dismountTrailEnd of the touchdown (owner: nothing lingers).
+                    ActorVfx.Find(actor)?.SetAirborne(false, airborneLoopVfx, dismountTrailEnd);
                     ActorSmear.Find(actor)?.Release();
                     // One short grounded puff and a squash: no stars, nothing lingering (owner, retest: "the stars are
                     // stupid"; puffs gone in 0.3-0.5 s).
@@ -810,7 +813,7 @@ namespace KryticalNova.GameFeel
                     ActorVfx.Find(actor)?.SetRunning(false, runLoopVfx);
                     break;
                 case DismountBeat.Ended:
-                    ActorVfx.Find(actor)?.SetAirborne(false, airborneLoopVfx);
+                    ActorVfx.Find(actor)?.SetAirborne(false, airborneLoopVfx, dismountTrailEnd);
                     ActorVfx.Find(actor)?.SetRunning(false, runLoopVfx);
                     ActorSmear.Find(actor)?.Release();
                     break;
