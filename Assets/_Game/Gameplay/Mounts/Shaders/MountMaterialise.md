@@ -48,6 +48,20 @@ rider. Cast Shadows on, so the shadow dissolves with the body.
 8. Base Color, Normal, Metallic, Smoothness and Occlusion come from the copied URP Lit properties. Emission = the
    copied emission plus the effect terms above.
 
+## As built (6 Nov 2026)
+The graph is written by `Scripts~/make_mount_materialise.py` (no hand-built graphs): URP Lit target and blocks from
+`GRPH_Standard`, the AllIn1 **Rim** sub-graph and the alpha-clip block from `GRPH_Demo_FadeBurn`, and plain math
+nodes copied from other graphs in the project. Rerun the script after any change; it keeps the .meta.
+- The burn is built from plain nodes, not the AllIn1 **Fade - Burn** node: that node only takes a texture, so the
+  world sweep cannot be mixed into its mask. Instead: `threshold = _Spawn × (1 + _BurnWidth)`, `ahead = threshold - mask`,
+  Alpha = `ahead + 0.4999` (clip 0.5), edge = `1 - saturate(ahead / _BurnWidth)` × `_EdgeColorA` into Emission.
+- Rim (AllIn1) × `(1 - _Spawn)` × `_RimStrength`, coloured `_EdgeColorB`, between `_RimMin` and `_RimMax`.
+- Swell: object position + object normal × `_Inflate` × `saturate((0.2 - _Spawn) / 0.2)`.
+- **Not wired yet:** the scanline / glitch pattern (`_PatternMode`, `_PatternUntil` exist as properties). It is only
+  needed for the Circuit Strider, and is added with its assets.
+- `Editor/MountMaterialiseBuilder.cs` makes `MountMaterialise.mat` and the Brambleback's look (leaf-vein noise, leaf
+  particles, `MountMaterialise_Brambleback.asset`), and renders a review picture at `_Spawn` 0 / 0.25 / 0.5 / 0.75 / 1.
+
 Reference demos: `Demo/Graphs/GRPH_Demo_FadeBurn.shadergraph` (Fade - Burn + Rim) and
 `GRPH_Demo_ChomperHologram.shadergraph` (Hologram + Glitch + Rim).
 
