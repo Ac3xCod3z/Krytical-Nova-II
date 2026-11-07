@@ -210,8 +210,8 @@ namespace KryticalNova.Mounts
                 if (stirrups == null) stirrups = rider.gameObject.AddComponent<StirrupIK>();
                 riderLifted = true;
             }
-            seatOffset = seat;
-            rider.localPosition = riderRest + seat * lift;
+            seatOffset = seat + (shownMount != null ? shownMount.riderSeatNudge : Vector3.zero);
+            rider.localPosition = riderRest + seatOffset * lift;
             if (stirrups != null && model != null && shownMount != null)
             {
                 MountStageLook look = shownMount.Stage(shownStage);
@@ -283,8 +283,10 @@ namespace KryticalNova.Mounts
         private void LeanAndBob(MountSettings settings, bool travelling, bool running)
         {
             if (!riderLifted || rider == null || settings == null) return;
-            float wantLean = !travelling ? 0f : running ? settings.gallopLean : settings.walkLean;
-            float wantBob = !travelling ? 0f : running ? settings.gallopBob : settings.walkBob;
+            float leanScale = shownMount != null ? shownMount.riderLeanScale : 1f;
+            float bobScale = shownMount != null ? shownMount.riderBobScale : 1f;
+            float wantLean = (!travelling ? 0f : running ? settings.gallopLean : settings.walkLean) * leanScale;
+            float wantBob = (!travelling ? 0f : running ? settings.gallopBob : settings.walkBob) * bobScale;
             lean = Mathf.SmoothDamp(lean, wantLean, ref leanVelocity, settings.leanEase);
             bobAmount = Mathf.SmoothDamp(bobAmount, wantBob, ref bobVelocity, settings.leanEase);
             // The bob follows the mount's own clip: it rises at the push of each stride.
