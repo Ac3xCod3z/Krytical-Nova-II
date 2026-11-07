@@ -748,11 +748,21 @@ namespace KryticalNova.Player
                     return;
                 }
 
-                // ClientView: an attack goes to the ghost (M4.4j); walking over to a friend is not networked yet.
+                // ClientView: an attack goes to the ghost (M4.4j); a friend is walked to as NGO does (owner's 2-player test, 6 Nov 2026,
+                // item 1: the second click said "Not networked yet"): the same spot, sent to the ghost as a ground click
                 if (ViewMode)
                 {
-                    if (hostile && targetEntity.IsAlive) BodyClicks.Attack(targetEntity.Transform);
-                    else CommandMessage?.Invoke(NotYetNetworkedText);
+                    if (!hostile)
+                    {
+                        // the ground click calls an attack off on the ghost (PlayerMeleeStateSystem, M4.4j), as NGO's CancelAttack
+                        if (TryFriendlyApproachPoint(transform.position, targetEntity.Transform.position, FriendlyApproachDistance, out Vector3 spot))
+                        {
+                            ClientPresentationRegistry.Markers?.HideMoveMarker();
+                            BodyClicks.Ground(spot, movementSkills != null && movementSkills.IsRunning);
+                        }
+                    }
+                    else if (targetEntity.IsAlive) BodyClicks.Attack(targetEntity.Transform);
+                    else CommandMessage?.Invoke($"{targetEntity.EntityName} is defeated.");
                     return;
                 }
 
@@ -1235,15 +1245,22 @@ namespace KryticalNova.Player
             ClientPresentationRegistry.Markers?.SetTarget(selectedTarget, kind);
         }
 
+        /// <summary>
+        /// Where a walk to another unit ends (NGO's WalkToUnit, shared by both games): <paramref name="distance"/> short of it on the
+        /// line from it to <paramref name="from"/> (ground plane); already that close: nowhere to go (false).
+        /// </summary>
+        public static bool TryFriendlyApproachPoint(Vector3 from, Vector3 unit, float distance, out Vector3 destination)
+        {
+            Vector3 fromUnit = from - unit;
+            fromUnit.y = 0f;
+            destination = fromUnit.sqrMagnitude > distance * distance ? unit + fromUnit.normalized * distance : from;
+            return (destination - from).sqrMagnitude >= 0.01f;
+        }
+
         /// <summary>Walks to just short of another unit (friendly player) without interacting.</summary>
         private void WalkToUnit(Transform unit)
         {
-            Vector3 fromUnit = transform.position - unit.position;
-            fromUnit.y = 0f;
-            Vector3 destination = fromUnit.sqrMagnitude > FriendlyApproachDistance * FriendlyApproachDistance
-                ? unit.position + fromUnit.normalized * FriendlyApproachDistance
-                : transform.position;
-            if ((destination - transform.position).sqrMagnitude < 0.01f) return;
+            if (!TryFriendlyApproachPoint(transform.position, unit.position, FriendlyApproachDistance, out Vector3 destination)) return;
 
             ClientPresentationRegistry.Markers?.HideMoveMarker();
             if (IsSpawned && !IsServer)
@@ -2336,7 +2353,7 @@ namespace KryticalNova.Player
 
         /// <summary>
         /// Set by a tool that takes the left button and Escape for itself (Arrange, while a Hall is furnished): a
-        /// click no longer walks or selects and Shift no longer draws the weapon. The camera is left alone, so the
+        /// click no longer walks or selects and the draw key no longer draws the weapon. The camera is left alone, so the
         /// right button still turns it and the wheel still zooms.
         /// </summary>
         public bool WorldClicksParked { get; set; }

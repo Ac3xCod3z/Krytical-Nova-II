@@ -543,18 +543,7 @@
                 {
                     "name": "",
                     "id": "1a9467b2-3b6e-4229-afd6-e8661e98d14a",
-                    "path": "<Keyboard>/leftShift",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "Keyboard&Mouse",
-                    "action": "ToggleWeapon",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
-                    "id": "ce87ec51-5403-4bbd-8d60-75487737e181",
-                    "path": "<Keyboard>/rightShift",
+                    "path": "<Keyboard>/space",
                     "interactions": "",
                     "processors": "",
                     "groups": "Keyboard&Mouse",
