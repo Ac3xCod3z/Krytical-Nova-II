@@ -137,12 +137,91 @@ namespace KryticalNova.Persistence.Entities
                 log($"cadence: {(chain ? "PASS" : "FAIL")}: presses judged on the beat or off it on the server {(cadence != null ? cadence.PressesOn + cadence.PressesOff : 0)}, " +
                     $"LocalPress here {localPresses}; first broken link: {FirstBroken(server, client, ghost, body, own)}");
                 verdict(chain);
+                // item 4 (owner 8 Nov 2026): the test monsters outside Concord fight back and crowd the NGO way; one Prowler takes a click
+                if (Environment.GetEnvironmentVariable("KN_PLAYHERE_TEST_MOBS") == "1")
+                {
+                    IEnumerator mobs = Mobs(server, client, ghost, body, own, log, click, teleport);
+                    while (mobs.MoveNext()) yield return mobs.Current;
+                }
             }
             finally
             {
                 PlayerCadence.LocalPress -= heard;
                 PlayerCadence.Logging = false;
             }
+        }
+
+        /// <summary>
+        /// The test monsters at mob-ne (150, 150), outside Concord: the Tester stands 10 m away; each second the Hostiles' distances to
+        /// the body, how many stand within 4 m, the closest two (no stacking) and the body's HP (they hit back); then ONE click on one
+        /// Prowler view (it must select it) and the attack click (strikes must land).
+        /// </summary>
+        static IEnumerator Mobs(World server, World client, Entity ghost, GameObject body, GameObject own, Action<string> log,
+            Func<Vector3, string> click, Action<Vector3> teleport)
+        {
+            EntityManager em = server.EntityManager;
+            Vector3 spot = new Vector3(150f, 0f, 140f);
+            if (UnityEngine.AI.NavMesh.SamplePosition(spot, out UnityEngine.AI.NavMeshHit nh, 20f, UnityEngine.AI.NavMesh.AllAreas)) spot = nh.position;
+            teleport(spot);
+            yield return new WaitForSeconds(1f);
+            int hp0 = Hp(em, ghost), lowest = hp0;
+            log($"mobs: at {body.transform.position} (outside Concord), HP {hp0}; " + MobRing(em, ghost));
+            for (int s = 1; s <= 8; s++)
+            {
+                yield return new WaitForSeconds(1f);
+                lowest = Math.Min(lowest, Hp(em, ghost));
+                log($"mobs: t {s} s, HP {Hp(em, ghost)}; " + MobRing(em, ghost));
+            }
+            log($"mobs: {(lowest < hp0 ? "PASS" : "FAIL")}: they fought back (HP {hp0} -> lowest {lowest})");
+            GameObject prowler = NearestView(client, body.transform.position);
+            if (prowler == null) { log("mobs: click FAIL: no Hostile view near the body on the client"); yield break; }
+            int hits0 = Hits(server);
+            log("mobs: click 1 on one Prowler: " + click(prowler.transform.position + Vector3.up));
+            yield return new WaitForSeconds(0.3f);
+            string picked = Selected(own);
+            log($"mobs: select {(picked == prowler.name ? "PASS" : "FAIL")}: own view selected '{picked}' (clicked '{prowler.name}')");
+            log("mobs: click 2 (attack): " + click(prowler.transform.position + Vector3.up));
+            yield return new WaitForSeconds(4f);
+            log($"mobs: strike {(Hits(server) > hits0 ? "PASS" : "FAIL")}: strikes landed {Hits(server) - hits0}; {Melee(server, ghost)}");
+        }
+
+        static int Hp(EntityManager em, Entity ghost) => em.HasComponent<PlayerVitals>(ghost) ? em.GetComponentData<PlayerVitals>(ghost).HealthMilli / 1000 : -1;
+
+        static string MobRing(EntityManager em, Entity ghost)
+        {
+            Vector3 me = (Vector3)(Unity.Mathematics.float3)em.GetComponentData<PlayerPose>(ghost).Mm * 0.001f;
+            var mobs = new System.Collections.Generic.List<Vector3>();
+            using (var q = em.CreateEntityQuery(typeof(CombatTarget)))
+            using (var all = q.ToComponentDataArray<CombatTarget>(Unity.Collections.Allocator.Temp))
+                foreach (CombatTarget c in all)
+                    if (c.Kind == CombatTargetKinds.Hostile) mobs.Add((Vector3)(Unity.Mathematics.float3)c.FeetMm * 0.001f);
+            float closestPair = float.MaxValue;
+            int near = 0;
+            var d = new System.Text.StringBuilder();
+            for (int i = 0; i < mobs.Count; i++)
+            {
+                float m = Vector3.Distance(Flat(mobs[i]), Flat(me));
+                if (m <= 4f) near++;
+                d.Append(m.ToString("F1")).Append(' ');
+                for (int j = i + 1; j < mobs.Count; j++) closestPair = Mathf.Min(closestPair, Vector3.Distance(Flat(mobs[i]), Flat(mobs[j])));
+            }
+            return $"{mobs.Count} Hostiles, {near} within 4 m, closest two {(mobs.Count > 1 ? closestPair.ToString("F2") : "-")} m apart; distances {d}";
+        }
+
+        static GameObject NearestView(World client, Vector3 from)
+        {
+            if (client == null) return null;
+            EntityManager em = client.EntityManager;
+            GameObject best = null;
+            float bestD = 40f;
+            foreach (CombatTargetEntry e in CombatTargetRegistry.Entries)
+            {
+                if (!ReferenceEquals(e.World, client) || e.Body == null || !em.Exists(e.Ghost) || !em.HasComponent<CombatTarget>(e.Ghost)) continue;
+                if (em.GetComponentData<CombatTarget>(e.Ghost).Kind != CombatTargetKinds.Hostile) continue;
+                float dist = Vector3.Distance(e.Body.transform.position, from);
+                if (dist < bestD) { best = e.Body; bestD = dist; }
+            }
+            return best;
         }
 
         /// <summary>The fight music's own line (CombatMusicPlayer.Report, Presentation: read by name, never referenced from here).</summary>
