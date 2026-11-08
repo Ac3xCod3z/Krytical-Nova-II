@@ -325,9 +325,10 @@ namespace KryticalNova.Networking
             {
                 // Written into the file as the owner left it: command-line overrides of this run are not saved.
                 var onDisk = new ServerLaunchOptions { ServerFolder = ServerFolder };
-                if (File.Exists(file)) JsonUtility.FromJsonOverwrite(File.ReadAllText(file), onDisk);
+                string old = File.Exists(file) ? File.ReadAllText(file) : null;
+                if (old != null) JsonUtility.FromJsonOverwrite(old, onDisk);
                 onDisk.pagePassword = pagePassword;
-                File.WriteAllText(file, JsonUtility.ToJson(onDisk, true));
+                File.WriteAllText(file, SettingsKeepKeys.Merge(old, JsonUtility.ToJson(onDisk, true))); // keys of other programs stay
             }
             catch (Exception e)
             {
@@ -361,10 +362,11 @@ namespace KryticalNova.Networking
             try
             {
                 var onDisk = new ServerLaunchOptions { ServerFolder = ServerFolder };
-                if (File.Exists(file)) JsonUtility.FromJsonOverwrite(File.ReadAllText(file), onDisk);
+                string old = File.Exists(file) ? File.ReadAllText(file) : null;
+                if (old != null) JsonUtility.FromJsonOverwrite(old, onDisk);
                 else onDisk.pagePassword = pagePassword; // the file went missing: the page keeps its password
                 change(onDisk);
-                File.WriteAllText(file, JsonUtility.ToJson(onDisk, true));
+                File.WriteAllText(file, SettingsKeepKeys.Merge(old, JsonUtility.ToJson(onDisk, true))); // keys of other programs stay
                 return true;
             }
             catch (Exception e)
