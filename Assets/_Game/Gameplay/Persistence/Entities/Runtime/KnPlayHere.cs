@@ -90,6 +90,7 @@ namespace KryticalNova.Persistence.Entities
             || Environment.GetEnvironmentVariable("KN_PLAYHERE_FIXES") == "1"                   // the owner's feel-test fixes 1-3 (2 Nov)
             || Environment.GetEnvironmentVariable("KN_PLAYHERE_ACROSS") == "1"                  // across the water when quicker (item 4)
             || Environment.GetEnvironmentVariable("KN_PLAYHERE_ITEMS") == "1"                   // items used by the server (item 5)
+            || Environment.GetEnvironmentVariable("KN_PLAYHERE_MOUNT") == "1"                   // the mount and rider proof (8 Nov)
             || Environment.GetEnvironmentVariable("KN_PLAYHERE_ROOFS") == "1"                   // roof to roof (item 8)
             || KnCadenceProbe.On;                                                               // the Cadence probe (owner x6, 7 Nov)
         /// <summary>A folder: the scripted run saves a Game-view picture there every 0.1 s (proof for the owner, GUI Editor only).</summary>
@@ -1502,6 +1503,7 @@ namespace KryticalNova.Persistence.Entities
                 if (FixesRun) yield return Fixes(body, ghost, walls);
                 if (AcrossRun) yield return Acrosses(body, ghost, waters);
                 if (ItemsRun) yield return Items(body, ghost, walls);
+                if (MountRun) yield return Mounts(body, ghost, walls);
                 if (RoofsRun) yield return RoofJumps(body, ghost, walls);
                 if (KnCadenceProbe.On)
                 {
@@ -1557,7 +1559,7 @@ namespace KryticalNova.Persistence.Entities
                 }
             }
 
-            bool HasScriptedTries => !string.IsNullOrEmpty(Walk) || !string.IsNullOrEmpty(Jump) || VaultCount > 0 || WaterRun || WallRun || ClimbRun || TreeRun || CatchRun || AutoRun || LedgeRun || FixesRun || AcrossRun || ItemsRun || RoofsRun || KnCadenceProbe.On;
+            bool HasScriptedTries => !string.IsNullOrEmpty(Walk) || !string.IsNullOrEmpty(Jump) || VaultCount > 0 || WaterRun || WallRun || ClimbRun || TreeRun || CatchRun || AutoRun || LedgeRun || FixesRun || AcrossRun || ItemsRun || MountRun || RoofsRun || KnCadenceProbe.On;
 
             /// <summary>Which scripted parts are on, for the log's first lines (a part that should run and is not listed shows at once).</summary>
             string ScriptedParts()
@@ -1576,6 +1578,7 @@ namespace KryticalNova.Persistence.Entities
                 if (FixesRun) on.Add("the feel-test fixes 1-3");
                 if (AcrossRun) on.Add("across the water when quicker");
                 if (ItemsRun) on.Add("items used by the server");
+                if (MountRun) on.Add("mount and rider");
                 if (RoofsRun) on.Add("roof to roof");
                 if (KnCadenceProbe.On) on.Add("the Cadence probe");
                 return on.Count > 0 ? string.Join(", ", on) : "none (by hand)";
@@ -2618,6 +2621,57 @@ namespace KryticalNova.Persistence.Entities
                     "character keeps them: PlayMode B3; this tester has no account, so nothing is saved here)");
                 if (probe) inventory.ItemUsed -= usedHere;
                 resources.RestoreAll();
+            }
+
+            /// <summary>The mount and rider proof (env KN_PLAYHERE_MOUNT=1; 8 Nov 2026): Brambleback learned from the Pack, summoned,
+            /// ridden walking and running, then a standing and a running dismount. The [KnMount] lines show phase, running and feel beats.</summary>
+            static bool MountRun => Environment.GetEnvironmentVariable("KN_PLAYHERE_MOUNT") == "1";
+
+            IEnumerator Mounts(GameObject body, Entity ghost, VaultTally tally)
+            {
+                var inventory = body.GetComponent<PlayerInventory>();
+                var own = OwnBody != null ? OwnBody.GetComponent<PlayerInventory>() : null;
+                if (!body.TryGetComponent(out IBodyMounts mounts) || inventory == null || own == null || !(GmRoster.Host is ulong host) || PlayerGm.CommandRunner == null)
+                { tally.Tried++; Log("mount: FAIL; no mounts, Pack or GM commands"); yield break; }
+                OwnBody.TryGetComponent(out IBodyMounts ownMounts);
+                var before = new HashSet<ushort>();
+                for (int i = 0; i < PlayerInventory.Capacity; i++) before.Add(inventory.Get(i).itemId);
+                Log("mount: 'gm.mount.give 1' -> " + PlayerGm.CommandRunner(host, "gm.mount.give 1"));
+                ushort item = 0;
+                for (int i = 0; i < PlayerInventory.Capacity; i++) if (!before.Contains(inventory.Get(i).itemId)) item = inventory.Get(i).itemId;
+                yield return new WaitForSeconds(1.2f);
+                if (item != 0) own.UseItem(item);   // learned from the Pack, as the owner does
+                yield return new WaitForSeconds(1.5f);
+                mounts.RunMountOp(MountOpKind.Select, 1);
+                yield return new WaitForSeconds(1f);
+                string Shown() => $"server phase {mounts.ShownPhase} sel {mounts.ShownSelected} running {mounts.ShownRunning}; own view phase {ownMounts?.ShownPhase} running {ownMounts?.ShownRunning}";
+                Vector3 Ground(Vector3 d) { Vector3 p = body.transform.position + d; p.y = Physics.Raycast(new Vector3(p.x, 500f, p.z), Vector3.down, out RaycastHit h, 1000f) ? h.point.y : p.y; return p; }
+
+                // 1 standing mount-up, walk, run, standing dismount
+                tally.Tried++;
+                mounts.RunMountOp(MountOpKind.Ride, 0);
+                yield return new WaitForSeconds(0.3f); Log("mount: standing mount-up started: " + Shown());
+                yield return new WaitForSeconds(2.5f); bool seated = mounts.ShownPhase == 2 && ownMounts?.ShownPhase == 2; Log("mount: seated: " + Shown());
+                BodyClicks.Ground(Ground(body.transform.forward * 12f), false); yield return new WaitForSeconds(3f); Log("mount: ride walk done: " + Shown());
+                BodyClicks.Ground(Ground(-body.transform.forward * 20f), true); yield return new WaitForSeconds(3f); Log("mount: ride run done: " + Shown());
+                yield return new WaitForSeconds(1.5f);
+                mounts.RunMountOp(MountOpKind.Ride, 0);
+                yield return new WaitForSeconds(0.3f); Log("mount: standing dismount started: " + Shown());
+                yield return new WaitForSeconds(3f); bool off1 = mounts.ShownPhase == 0; Log("mount: standing dismount ended: " + Shown());
+                if (seated && off1) tally.Passed++;
+
+                // 2 running mount-up and running dismount
+                tally.Tried++;
+                BodyClicks.Ground(Ground(body.transform.forward * 40f), true); yield return new WaitForSeconds(0.8f);
+                mounts.RunMountOp(MountOpKind.Ride, 0);
+                yield return new WaitForSeconds(0.2f); bool runUp = mounts.ShownRunning && ownMounts != null && ownMounts.ShownRunning; Log("mount: running mount-up started: " + Shown());
+                yield return new WaitForSeconds(2.5f);
+                BodyClicks.Ground(Ground(body.transform.forward * 40f), true); yield return new WaitForSeconds(0.8f);
+                mounts.RunMountOp(MountOpKind.Ride, 0);
+                yield return new WaitForSeconds(0.2f); bool runOff = mounts.ShownRunning && ownMounts != null && ownMounts.ShownRunning; Log("mount: running dismount started: " + Shown());
+                yield return new WaitForSeconds(3.5f); Log("mount: running dismount ended: " + Shown());
+                if (runUp && runOff && mounts.ShownPhase == 0) tally.Passed++;
+                Log($"mount: standing {(seated && off1 ? "PASS" : "FAIL")}, running up {(runUp ? "PASS" : "FAIL")}, running off {(runOff ? "PASS" : "FAIL")}");
             }
 
             /// <summary>The owner's feel-test fixes 1-3 (env KN_PLAYHERE_FIXES=1; `m3c-wallstride-design.md` section 9).</summary>
