@@ -372,6 +372,54 @@
     "weatherwounds_audiohero/Weather Wounds/WindMoaningAmbRu SDT2046301.mp3"
    ],
    "note": "should be very faint sound"
+  },
+  "Ride Push-off": {
+   "picks": [
+    "bt25_ultimatesfxforgames_softwarebundle/Clothing, Fabric & Materials/FL_GFX_Clothing_Fabric_Material_Foley_Take_Off_02.wav"
+   ],
+   "note": "mount sound audition 7-8 Nov 2026 (artifact 8SHt5Xx7erDS6ppTVLsRkS)"
+  },
+  "Ride Roll Skid": {
+   "picks": [
+    "bt25_ultimatesfxforgames_softwarebundle/Clothing, Fabric & Materials/FL_GFX_Clothing_Fabric_Material_Foley_Put_In_a_Backpack_01.wav"
+   ],
+   "note": "mount sound audition 7-8 Nov 2026 (artifact 8SHt5Xx7erDS6ppTVLsRkS)"
+  },
+  "Ride Saddle Land": {
+   "picks": [
+    "bt25_ultimatesfxforgames_softwarebundle/Clothing, Fabric & Materials/FL_GFX_Clothing_Fabric_Material_Foley_Bag_Open.wav"
+   ],
+   "note": "mount sound audition 7-8 Nov 2026 (artifact 8SHt5Xx7erDS6ppTVLsRkS)"
+  },
+  "Ride Shockwave": {
+   "picks": [
+    "explosionzone/Explosions Zone/ExploLowFireDest SDT2021805.wav"
+   ],
+   "note": "mount sound audition 7-8 Nov 2026 (artifact 8SHt5Xx7erDS6ppTVLsRkS)"
+  },
+  "Ride Summon_Brambleback": {
+   "picks": [
+    "layer:boar22.12-3+boar20.21"
+   ],
+   "note": "mount sound audition 7-8 Nov 2026 (artifact 8SHt5Xx7erDS6ppTVLsRkS)"
+  },
+  "Ride Summon_Strider": {
+   "picks": [
+    "layer:doublebark2.14-4+robotmorph"
+   ],
+   "note": "mount sound audition 7-8 Nov 2026 (artifact 8SHt5Xx7erDS6ppTVLsRkS)"
+  },
+  "Ride Vanish_Brambleback": {
+   "picks": [
+    "layer:dirthit+leaves"
+   ],
+   "note": "mount sound audition 7-8 Nov 2026 (artifact 8SHt5Xx7erDS6ppTVLsRkS)"
+  },
+  "Ride Vanish_Strider": {
+   "picks": [
+    "glitchdominion_audiohero/Glitch Dominion/Computer-Glitch-Space-Computer-Digital-Processing-Glitch_COMM-1052.wav"
+   ],
+   "note": "mount sound audition 7-8 Nov 2026 (artifact 8SHt5Xx7erDS6ppTVLsRkS)"
   }
  },
  "bake": {
@@ -1096,6 +1144,117 @@
    {
     "path": "weatherwounds_audiohero/Weather Wounds/WindMoaningAmbRu SDT2046301.mp3",
     "start": 8
+   }
+  ],
+  "Ride Push-off": [
+   {
+    "path": "bt25_ultimatesfxforgames_softwarebundle/Clothing, Fabric & Materials/FL_GFX_Clothing_Fabric_Material_Foley_Take_Off_02.wav"
+   },
+   {
+    "path": "bt25_ultimatesfxforgames_softwarebundle/Clothing, Fabric & Materials/FL_GFX_Clothing_Fabric_Material_Foley_Take_Off_02.wav",
+    "pitch": 1.5,
+    "tilt": 1.0
+   },
+   {
+    "path": "bt25_ultimatesfxforgames_softwarebundle/Clothing, Fabric & Materials/FL_GFX_Clothing_Fabric_Material_Foley_Take_Off_02.wav",
+    "pitch": -1.5,
+    "tilt": -1.0
+   }
+  ],
+  "Ride Roll Skid": [
+   {
+    "path": "bt25_ultimatesfxforgames_softwarebundle/Clothing, Fabric & Materials/FL_GFX_Clothing_Fabric_Material_Foley_Put_In_a_Backpack_01.wav",
+    "max_seconds": 1.0
+   },
+   {
+    "path": "bt25_ultimatesfxforgames_softwarebundle/Clothing, Fabric & Materials/FL_GFX_Clothing_Fabric_Material_Foley_Put_In_a_Backpack_01.wav",
+    "max_seconds": 1.0,
+    "pitch": 1.5,
+    "tilt": 1.0
+   },
+   {
+    "path": "bt25_ultimatesfxforgames_softwarebundle/Clothing, Fabric & Materials/FL_GFX_Clothing_Fabric_Material_Foley_Put_In_a_Backpack_01.wav",
+    "max_seconds": 1.0,
+    "pitch": -1.5,
+    "tilt": -1.0
+   }
+  ],
+  "Ride Saddle Land": [
+   {
+    "path": "bt25_ultimatesfxforgames_softwarebundle/Clothing, Fabric & Materials/FL_GFX_Clothing_Fabric_Material_Foley_Bag_Open.wav"
+   },
+   {
+    "path": "bt25_ultimatesfxforgames_softwarebundle/Clothing, Fabric & Materials/FL_GFX_Clothing_Fabric_Material_Foley_Bag_Open.wav",
+    "pitch": 1.5,
+    "tilt": 1.0
+   },
+   {
+    "path": "bt25_ultimatesfxforgames_softwarebundle/Clothing, Fabric & Materials/FL_GFX_Clothing_Fabric_Material_Foley_Bag_Open.wav",
+    "pitch": -1.5,
+    "tilt": -1.0
+   }
+  ],
+  "Ride Shockwave": [
+   {
+    "path": "explosionzone/Explosions Zone/ExploLowFireDest SDT2021805.wav",
+    "max_seconds": 1.2
+   }
+  ],
+  "Ride Summon_Brambleback": [
+   {
+    "layers": [
+     {
+      "path": "questsandopenworlds_audiohero/Quests & Open Worlds/Boar IN02_64.wav",
+      "start": 22.12,
+      "max_seconds": 0.35,
+      "pitch": -3
+     },
+     {
+      "path": "questsandopenworlds_audiohero/Quests & Open Worlds/Boar IN02_64.wav",
+      "start": 20.21,
+      "max_seconds": 0.6,
+      "delay": 0.15,
+      "gain": 0.8
+     }
+    ]
+   }
+  ],
+  "Ride Summon_Strider": [
+   {
+    "layers": [
+     {
+      "path": "animals_hugemammals_audiohero/Animals Small Mammals/DogSmall2Barking.wav",
+      "start": 2.14,
+      "max_seconds": 0.62,
+      "pitch": -4
+     },
+     {
+      "path": "mechanical_audiohero/Mechanical/RobotMorphMechanic MM043701.wav",
+      "max_seconds": 0.8,
+      "gain": 0.5
+     }
+    ]
+   }
+  ],
+  "Ride Vanish_Brambleback": [
+   {
+    "layers": [
+     {
+      "path": "bt25_ultimatesfxforgames_softwarebundle/Cozy Mechanics/FL_GFX_Cozy_Mechanic_Dig_Stack_Drop_01.wav"
+     },
+     {
+      "path": "weatherwounds_audiohero/Weather Wounds/SNOW-ON-LEAVES_6EXT8-11198.mp3",
+      "start": 33.4,
+      "max_seconds": 1.0,
+      "gain": 0.9
+     }
+    ]
+   }
+  ],
+  "Ride Vanish_Strider": [
+   {
+    "path": "glitchdominion_audiohero/Glitch Dominion/Computer-Glitch-Space-Computer-Digital-Processing-Glitch_COMM-1052.wav",
+    "max_seconds": 1.2
    }
   ]
  }
