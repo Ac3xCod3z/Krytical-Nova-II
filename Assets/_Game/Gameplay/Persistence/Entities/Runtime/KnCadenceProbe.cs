@@ -62,6 +62,7 @@ namespace KryticalNova.Persistence.Entities
                 yield return new WaitForSeconds(2f);
                 log($"cadence: at {near}: server body {body.transform.position} ({Vector3.Distance(body.transform.position, dummy.transform.position):F1} m from the dummy), own view {own.transform.position} ({Vector3.Distance(own.transform.position, dummy.transform.position):F1} m)");
 
+                StrikePresentSystem.Trace = true;   // [KnStrike] frame lines for the rest of this run
                 int slot = AttackSlot(own, log);
                 // 1) the known case: no strike yet, so no fight anywhere, no beat heard here, and a press is never sent
                 log("cadence: KNOWN CASE (no strike yet): " + Snapshot(server, client, ghost, body, own));
@@ -72,10 +73,10 @@ namespace KryticalNova.Persistence.Entities
                 log($"cadence: known case {(knownOk ? "READ AS EXPECTED" : "UNEXPECTED")}: presses sent {Pressed(client) - sent0}, own view in a fight {InFight(own)}");
 
                 // 2) the owner's double-click on the dummy (select, then attack), through the real click path
-                log("cadence: click 1 (select): " + click(Centre(dummy)));
+                log($"cadence: click 1 (select) at frame {Time.frameCount}: " + click(Centre(dummy)));
                 yield return new WaitForSeconds(0.3f);
                 string second = click(Centre(dummy));
-                log("cadence: click 2 (attack): " + second);
+                log($"cadence: click 2 (attack) at frame {Time.frameCount}: " + second);
                 if (second.StartsWith("off screen") || second.StartsWith("no "))
                 {
                     // the camera faces away after the teleport: the second click's own order (NGO StartAttackTarget), no selection
@@ -183,9 +184,12 @@ namespace KryticalNova.Persistence.Entities
                 yield return new WaitForSeconds(1f);
                 lowest = Math.Min(lowest, Hp(em, ghost));
                 log($"mobs: t {s} s, HP {Hp(em, ghost)}, me {body.transform.position}; " + MobRing(em, ghost));
+                log($"mobs: t {s} s brains: " + BrainTrace(server));
             }
             log("mobs: bodies after 8 s: " + HostileBodies(server));
             log($"mobs: {(lowest < hp0 ? "PASS" : "FAIL")}: they fought back (HP {hp0} -> lowest {lowest})");
+            IEnumerator whatIfs = WhatIfs(server, ghost, body, log, teleport);
+            while (whatIfs.MoveNext()) yield return whatIfs.Current;
             GameObject prowler = NearestView(client, body.transform.position);
             if (prowler == null) { log("mobs: click FAIL: no Hostile view near the body on the client"); yield break; }
             int hits0 = Hits(server);
@@ -196,6 +200,88 @@ namespace KryticalNova.Persistence.Entities
             log("mobs: click 2 (attack): " + click(prowler.transform.position + Vector3.up));
             yield return new WaitForSeconds(4f);
             log($"mobs: strike {(Hits(server) > hits0 ? "PASS" : "FAIL")}: strikes landed {Hits(server) - hits0}; {Melee(server, ghost)}");
+        }
+
+        /// <summary>
+        /// Probe 12 (owner, 8 Nov 2026: several what-ifs in one run): (1) the NavMesh under the Tester and brains #1-#3 (SamplePosition hit and
+        /// distance) and whether the straight line to each brain's goal is blocked on it (the move system's own test); (2) the GM Prowlers'
+        /// server bodies: NavMeshAgent / CharacterController / Rigidbody / root motion; (3) a second spot outside Concord where the NavMesh
+        /// is found, the Tester there and 3 Prowlers 8 m away, their distances each second. (The "forced straight-line move" is read from
+        /// the move system's inputs, speed, path status and the NavMesh raycast: the decide step rewrites a brain's goal every tick.)
+        /// </summary>
+        static IEnumerator WhatIfs(World server, Entity ghost, GameObject body, Action<string> log, Action<Vector3> teleport)
+        {
+            EntityManager em = server.EntityManager;
+            log("whatif nav: Tester " + NavAt(body.transform.position));
+            using (EntityQuery q = em.CreateEntityQuery(ComponentType.ReadOnly<KryticalNova.Brains.BrainClock>(), ComponentType.ReadOnly<KryticalNova.Brains.BrainMover>(),
+                       ComponentType.ReadOnly<Unity.Transforms.LocalTransform>()))
+            using (var clocks = q.ToComponentDataArray<KryticalNova.Brains.BrainClock>(Unity.Collections.Allocator.Temp))
+            using (var movers = q.ToComponentDataArray<KryticalNova.Brains.BrainMover>(Unity.Collections.Allocator.Temp))
+            using (var places = q.ToComponentDataArray<Unity.Transforms.LocalTransform>(Unity.Collections.Allocator.Temp))
+                for (int i = 0; i < clocks.Length; i++)
+                {
+                    if (clocks[i].StableId < 1 || clocks[i].StableId > 3) continue;
+                    Vector3 at = places[i].Position, dest = movers[i].Dest;
+                    bool blocked = UnityEngine.AI.NavMesh.Raycast(at, dest, out UnityEngine.AI.NavMeshHit rh, UnityEngine.AI.NavMesh.AllAreas);
+                    log($"whatif nav: brain #{clocks[i].StableId} {NavAt(at)}; straight line to its goal {dest} {(blocked ? $"BLOCKED at {rh.position}" : "clear")} on the NavMesh");
+                }
+
+            // (2) the GM Prowlers' server bodies (read by name: Persistence does not reference Hostiles)
+            Type net = Type.GetType("KryticalNova.Hostiles.HostileNet, KryticalNova.Hostiles");
+            if (net?.GetProperty("Active", BindingFlags.Public | BindingFlags.Static)?.GetValue(null) is IList list)
+            {
+                int shown = 0;
+                foreach (object o in list)
+                {
+                    if (!(o is Component c) || !(net.GetProperty("GmSpawned")?.GetValue(c) is bool gm) || !gm || shown++ >= 2) continue;
+                    var agent = c.GetComponent<UnityEngine.AI.NavMeshAgent>();
+                    var cc = c.GetComponent<CharacterController>();
+                    var rb = c.GetComponent<Rigidbody>();
+                    var anim = c.GetComponent<Animator>();
+                    log($"whatif body: '{c.name}' at {c.transform.position}: NavMeshAgent {(agent == null ? "none" : $"enabled {agent.enabled}, on mesh {agent.isOnNavMesh}, velocity {agent.velocity}")}, " +
+                        $"CharacterController {(cc == null ? "none" : $"enabled {cc.enabled}")}, Rigidbody {(rb == null ? "none" : $"kinematic {rb.isKinematic}, velocity {rb.linearVelocity}")}, " +
+                        $"Animator {(anim == null ? "none" : $"enabled {anim.enabled}, root motion {anim.applyRootMotion}")}");
+                }
+            }
+
+            // (3) a second spot outside Concord (|x| or |z| beyond 110) with NavMesh under it: the first that answers
+            Vector3[] candidates = { new Vector3(-150f, 0f, 140f), new Vector3(140f, 0f, -150f), new Vector3(-150f, 0f, -150f), new Vector3(0f, 0f, 180f),
+                                     new Vector3(0f, 0f, -180f), new Vector3(180f, 0f, 0f), new Vector3(-180f, 0f, 0f) };
+            Vector3 alt = Vector3.zero;
+            bool found = false;
+            foreach (Vector3 cand in candidates)
+                if (UnityEngine.AI.NavMesh.SamplePosition(cand + Vector3.up * 2f, out UnityEngine.AI.NavMeshHit h, 4f, UnityEngine.AI.NavMesh.AllAreas)
+                    && UnityEngine.AI.NavMesh.SamplePosition(cand + new Vector3(0f, 2f, 8f), out _, 4f, UnityEngine.AI.NavMesh.AllAreas))
+                { alt = h.position; found = true; break; }
+            if (!found) { log("whatif spot 2: no candidate had NavMesh under it"); yield break; }
+            teleport(alt);
+            if (em.HasComponent<CombatState>(ghost))
+            {
+                CombatState c = em.GetComponentData<CombatState>(ghost);
+                c.TargetGhostId = 0;
+                c.Step = 0;
+                em.SetComponentData(ghost, c);
+            }
+            PlayerEntitiesSetup.IssueOrder(em, ghost, new Unity.Mathematics.int3(Mathf.RoundToInt(alt.x * 1000f), Mathf.RoundToInt(alt.y * 1000f), Mathf.RoundToInt(alt.z * 1000f)));
+            yield return new WaitForSeconds(0.5f);
+            string answer = KryticalNova.Networking.GmRoster.Host is ulong host && KryticalNova.Networking.PlayerGm.CommandRunner != null
+                ? KryticalNova.Networking.PlayerGm.CommandRunner(host, $"gm.hostile.spawn prowler 3 0 inf {alt.x.ToString("F1", System.Globalization.CultureInfo.InvariantCulture)},{(alt.z + 8f).ToString("F1", System.Globalization.CultureInfo.InvariantCulture)}")
+                : "no GM command runner";
+            log($"whatif spot 2: Tester at {body.transform.position} ({NavAt(alt)}); 3 Prowlers 8 m north: {answer}");
+            int hp0 = Hp(em, ghost), lowest = hp0;
+            for (int s = 1; s <= 6; s++)
+            {
+                yield return new WaitForSeconds(1f);
+                lowest = Math.Min(lowest, Hp(em, ghost));
+                log($"whatif spot 2: t {s} s, HP {Hp(em, ghost)}; " + MobRing(em, ghost));
+            }
+            log($"whatif spot 2: {(lowest < hp0 ? "PASS" : "FAIL")}: they fought back there (HP {hp0} -> lowest {lowest}); brains: " + BrainTrace(server));
+        }
+
+        static string NavAt(Vector3 p)
+        {
+            if (!UnityEngine.AI.NavMesh.SamplePosition(p, out UnityEngine.AI.NavMeshHit h, 5f, UnityEngine.AI.NavMesh.AllAreas)) return $"{p}: NO NavMesh within 5 m";
+            return $"{p}: NavMesh at {h.position}, {Vector3.Distance(p, h.position):F2} m away (vertical {h.position.y - p.y:F2})";
         }
 
         /// <summary>
@@ -273,6 +359,59 @@ namespace KryticalNova.Persistence.Entities
                 foreach (CombatTarget ct in targets) kinds[(int)ct.Kind] = kinds.TryGetValue((int)ct.Kind, out int n) ? n + 1 : 1;
                 sb.Append($"CombatTargets incl. disabled/prefab {targets.Length} by kind:");
                 foreach (var kv in kinds) sb.Append($" {kv.Key}={kv.Value}");
+            }
+            return sb.ToString();
+        }
+
+        /// <summary>
+        /// Probe 11 (8 Nov 2026): after the first notice at tick 779 no brain changed again. Per second: the brain tick and the netcode's,
+        /// how often the decide system and the brain group ran (their LastSystemVersion), and brains #1-#3 (mode, phase, notice end, phase
+        /// end, think tier / next think tick, mover flags, place).
+        /// </summary>
+        static string BrainTrace(World server)
+        {
+            var sb = new System.Text.StringBuilder();
+            EntityManager em = server.EntityManager;
+            using (EntityQuery q = em.CreateEntityQuery(ComponentType.ReadOnly<KryticalNova.Brains.BrainTick>()))
+                sb.Append($"BrainTick {(q.TryGetSingleton(out KryticalNova.Brains.BrainTick bt) ? bt.Tick.ToString() : "none")}; ");
+            using (EntityQuery q = em.CreateEntityQuery(ComponentType.ReadOnly<NetworkTime>()))
+                sb.Append($"ServerTick {(q.TryGetSingleton(out NetworkTime nt) && nt.ServerTick.IsValid ? nt.ServerTick.TickIndexForValidTick.ToString() : "invalid")}; ");
+            SystemHandle decide = server.GetExistingSystem<KryticalNova.Hostiles.Entities.HostileDecideSystem>();
+            SystemHandle group = server.GetExistingSystem<KryticalNova.Brains.BrainSimulationGroup>();
+            sb.Append($"decide ran v{(decide != SystemHandle.Null ? server.Unmanaged.ResolveSystemStateRef(decide).LastSystemVersion.ToString() : "missing")}, ");
+            sb.Append($"brain group v{(group != SystemHandle.Null ? server.Unmanaged.ResolveSystemStateRef(group).LastSystemVersion.ToString() : "missing")}; ");
+            using (EntityQuery q = em.CreateEntityQuery(ComponentType.ReadOnly<KryticalNova.Hostiles.Entities.HostileBrain>(),
+                       ComponentType.ReadOnly<KryticalNova.Brains.BrainClock>(), ComponentType.ReadOnly<KryticalNova.Brains.BrainMover>(),
+                       ComponentType.ReadOnly<Unity.Transforms.LocalTransform>()))
+            using (var brains = q.ToComponentDataArray<KryticalNova.Hostiles.Entities.HostileBrain>(Unity.Collections.Allocator.Temp))
+            using (var clocks = q.ToComponentDataArray<KryticalNova.Brains.BrainClock>(Unity.Collections.Allocator.Temp))
+            using (var movers = q.ToComponentDataArray<KryticalNova.Brains.BrainMover>(Unity.Collections.Allocator.Temp))
+            using (var places = q.ToComponentDataArray<Unity.Transforms.LocalTransform>(Unity.Collections.Allocator.Temp))
+            using (var ents = q.ToEntityArray(Unity.Collections.Allocator.Temp))
+            {
+                var tiers = new int[4];
+                for (int i = 0; i < clocks.Length; i++) tiers[Mathf.Min(3, (int)clocks[i].Tier)]++;
+                sb.Append($"tiers 0:{tiers[0]} 1:{tiers[1]} 2:{tiers[2]} 3:{tiers[3]}; ");
+                for (int i = 0; i < brains.Length; i++)
+                {
+                    if (clocks[i].StableId < 1 || clocks[i].StableId > 3) continue;
+                    var b = brains[i];
+                    sb.Append($"#{clocks[i].StableId} mode {b.Mode} phase {b.Phase} noticeUntil {b.NoticeUntilTick} phaseEnd {b.PhaseEndTick} " +
+                              $"tier {clocks[i].Tier} nextThink {clocks[i].NextThinkTick} mover flags {movers[i].Flags} speed {movers[i].Speed:F2} " +
+                              $"dest {movers[i].Dest} at {places[i].Position}");
+                    // probe 12: Engage, Run and a goal 7 m away, yet no step: its speeds, its path and the NavMesh under it
+                    Entity e = ents[i];
+                    if (em.HasComponent<KryticalNova.Hostiles.Entities.HostileLife>(e))
+                    {
+                        var life = em.GetComponentData<KryticalNova.Hostiles.Entities.HostileLife>(e);
+                        sb.Append($" life walk {life.Walk:F2} run {life.Run:F2}");
+                    }
+                    if (em.HasComponent<KryticalNova.Brains.BrainPath>(e))
+                        sb.Append($" path {em.GetComponentData<KryticalNova.Brains.BrainPath>(e).Status}");
+                    else sb.Append(" NO BrainPath");
+                    sb.Append(em.HasBuffer<KryticalNova.Brains.BrainWaypoint>(e) ? $" waypoints {em.GetBuffer<KryticalNova.Brains.BrainWaypoint>(e).Length}" : " NO waypoints");
+                    sb.Append($" active {em.IsComponentEnabled<KryticalNova.Brains.BrainActive>(e)}; ");
+                }
             }
             return sb.ToString();
         }
@@ -395,6 +534,7 @@ namespace KryticalNova.Persistence.Entities
             var bar = own.GetComponent<PlayerSkillHotbar>();
             if (bar == null || slot < 0 || s_PressSlot == null) { log($"cadence: cannot press (hotbar {bar != null}, slot {slot}, PressSlot found {s_PressSlot != null})"); return; }
             s_PressSlot.Invoke(bar, new object[] { slot });
+            log($"cadence: skill press on slot {slot} at frame {Time.frameCount}");   // stray hit: which VFX is whose
         }
 
         /// <summary>The server's melee state of the body (CombatState: the target ghost the attack is on, the step, the weapon).</summary>

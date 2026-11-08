@@ -504,4 +504,18 @@ namespace KryticalNova.Hostiles.Entities.Tests
             Assert.Greater(walks, 20, "it keeps wandering");
         }
     }
+
+    /// <summary>8 Nov 2026 probe-x6-12: every brain stood still (speed 0.00 though Engage and Run): the step speed comes from the mover's flags.</summary>
+    public sealed class MoveSpeedTests
+    {
+        [Test]
+        public void StopStands_RunRuns_AnythingElseWalks_AsEmeraldMovedNgosHostiles()
+        {
+            Assert.AreEqual(0f, HostileMoveSpeedSystem.SpeedFor(BrainMoverFlags.Stop, 1.8f, 4.2f), "Stop");
+            Assert.AreEqual(0f, HostileMoveSpeedSystem.SpeedFor((byte)(BrainMoverFlags.Stop | BrainMoverFlags.Face), 1.8f, 4.2f), "Stop and face");
+            Assert.AreEqual(4.2f, HostileMoveSpeedSystem.SpeedFor(BrainMoverFlags.Run, 1.8f, 4.2f), "a chase or the way home: run");
+            Assert.AreEqual(1.8f, HostileMoveSpeedSystem.SpeedFor(0, 1.8f, 4.2f), "a patrol walk");
+            Assert.AreEqual(1.8f, HostileMoveSpeedSystem.SpeedFor(BrainMoverFlags.Face, 1.8f, 4.2f), "facing while walking");
+        }
+    }
 }

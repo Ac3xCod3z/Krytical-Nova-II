@@ -26,6 +26,9 @@ namespace KryticalNova.Combat.Entities
         /// <summary>Strikes played here (tests).</summary>
         public int Shown { get; private set; }
 
+        /// <summary>A "[KnStrike]" line with the frame for each strike drawn (the Play DOTS here probe: which VFX is whose, 8 Nov 2026).</summary>
+        public static bool Trace;
+
         /// <summary>True when (<paramref name="step"/>, <paramref name="start"/>) is a strike not yet played (pure).</summary>
         public static bool IsNewStrike(byte lastStep, NetworkTick lastStart, byte step, NetworkTick start) =>
             step > 0 && start.IsValid && (step != lastStep || !lastStart.IsValid || start != lastStart);
@@ -46,6 +49,7 @@ namespace KryticalNova.Combat.Entities
                 m_Last[entry.Ghost] = new Last { Step = s.Step, Start = s.StepStartTick };
                 if (entry.Body.TryGetComponent(out PlayerMeleeCombat melee)) melee.ShowStrikeFromGhost(s.Step);
                 Shown++;
+                if (Trace) UnityEngine.Debug.Log($"[KnStrike] frame {UnityEngine.Time.frameCount}: strike {s.Step} drawn on '{entry.Body.name}' (start tick {s.StepStartTick.ToFixedString()})");
             }
         }
     }

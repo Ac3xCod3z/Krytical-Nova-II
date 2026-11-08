@@ -4,6 +4,7 @@
     "references": [
         "KryticalNova.Runtime",
         "KryticalNova.Brains",
+        "KryticalNova.Hostiles.Entities",
         "KryticalNova.Combat",
         "KryticalNova.Combat.Entities",
         "KryticalNova.CharacterCreation",
