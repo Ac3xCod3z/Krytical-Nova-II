@@ -811,6 +811,8 @@ namespace KryticalNova.GameFeel
                     break;
                 case DismountBeat.TakeOff:
                     PlayWorld(rideTakeOffWorldFeel != null ? rideTakeOffWorldFeel : jumpWorldFeel, feet, Facing(actor), actor, hit);
+                    // The push kicks up dust at the mount's own feet as it takes the weight and stops (owner VFX pick b).
+                    if (moment.Mount != null) PlayWorld(rideDustWorldFeel, moment.Mount.position, Facing(actor), moment.Mount, hit);
                     if (moment.IsLocalPlayer)
                     {
                         Play(jumpFeel, actor.position, Mathf.Lerp(0.7f, 1.3f, pace)); // the kick grows with speed
