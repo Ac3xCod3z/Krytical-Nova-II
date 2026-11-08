@@ -38,7 +38,7 @@ MonoBehaviour:
     pulseShake: 0.07
     pulseSeconds: 0.45
     pulseParticles: {fileID: 7030844293724100393, guid: 35ba89eacb2a8aa4c9be4bade57a5e4e, type: 3}
-    pulseParticleScale: 0.55
+    pulseParticleScale: 0.9
     riderIdle: {fileID: -623603649343465320, guid: dc75123383dde424e9640734d56154a8, type: 3}
     riderWalk: {fileID: -623603649343465320, guid: e3d1efb8913552843b7c47849897d0d4, type: 3}
     riderRun: {fileID: -623603649343465320, guid: c8b83f9687f7ded4e94a363af56f6f0a, type: 3}
@@ -68,7 +68,7 @@ MonoBehaviour:
     pulseShake: 0.08
     pulseSeconds: 0.45
     pulseParticles: {fileID: 7030844293724100393, guid: 35ba89eacb2a8aa4c9be4bade57a5e4e, type: 3}
-    pulseParticleScale: 0.6
+    pulseParticleScale: 1
     riderIdle: {fileID: -623603649343465320, guid: dc75123383dde424e9640734d56154a8, type: 3}
     riderWalk: {fileID: -623603649343465320, guid: e3d1efb8913552843b7c47849897d0d4, type: 3}
     riderRun: {fileID: -623603649343465320, guid: c8b83f9687f7ded4e94a363af56f6f0a, type: 3}
@@ -98,7 +98,7 @@ MonoBehaviour:
     pulseShake: 0.09
     pulseSeconds: 0.45
     pulseParticles: {fileID: 7030844293724100393, guid: 35ba89eacb2a8aa4c9be4bade57a5e4e, type: 3}
-    pulseParticleScale: 0.65
+    pulseParticleScale: 1.1
     riderIdle: {fileID: -623603649343465320, guid: dc75123383dde424e9640734d56154a8, type: 3}
     riderWalk: {fileID: -623603649343465320, guid: e3d1efb8913552843b7c47849897d0d4, type: 3}
     riderRun: {fileID: -623603649343465320, guid: c8b83f9687f7ded4e94a363af56f6f0a, type: 3}
