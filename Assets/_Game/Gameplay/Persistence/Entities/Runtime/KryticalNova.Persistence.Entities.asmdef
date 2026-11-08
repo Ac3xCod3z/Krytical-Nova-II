@@ -3,6 +3,7 @@
     "rootNamespace": "KryticalNova.Persistence.Entities",
     "references": [
         "KryticalNova.Runtime",
+        "KryticalNova.Brains",
         "KryticalNova.Combat",
         "KryticalNova.Combat.Entities",
         "KryticalNova.CharacterCreation",

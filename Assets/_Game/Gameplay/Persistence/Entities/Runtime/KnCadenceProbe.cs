@@ -239,6 +239,31 @@ namespace KryticalNova.Persistence.Entities
                 sb.Append($"link system: Enabled {sys.Enabled}, would run {sys.ShouldRunSystem()}, updates {Read("Updates")}, links {Read("Links")}, " +
                           $"unlinks {Read("Unlinks")}, linked now {linkedNow}; ");
             }
+            // probe 9: the linked brains never moved: how many are switched on (BrainActive is enableable: a plain query counts the on ones)
+            Type active = null;
+            foreach (Assembly a in AppDomain.CurrentDomain.GetAssemblies()) { active = a.GetType("KryticalNova.Brains.BrainActive"); if (active != null) break; }
+            if (active != null)
+            {
+                using EntityQuery on = server.EntityManager.CreateEntityQuery(ComponentType.ReadOnly(active));
+                var types = new Unity.Collections.FixedList32Bytes<ComponentType> { ComponentType.ReadOnly(active) };
+                using EntityQuery any = new EntityQueryBuilder(Unity.Collections.Allocator.Temp).WithAll(ref types)
+                    .WithOptions(EntityQueryOptions.IgnoreComponentEnabledState).Build(server.EntityManager);
+                sb.Append($"brains awake {on.CalculateEntityCount()} of {any.CalculateEntityCount()}; ");
+            }
+            // what the brains sense of the players this tick (HostileSenseFlagsServerSystem: Neutral on cross-faction ground, Ignored by a GM)
+            using (EntityQuery sq = server.EntityManager.CreateEntityQuery(ComponentType.ReadOnly<KryticalNova.Brains.SenseWorld>()))
+                if (sq.TryGetSingleton(out KryticalNova.Brains.SenseWorld sense) && sense.Players.IsCreated)
+                {
+                    sb.Append($"sensed players {sense.Players.Length}:");
+                    foreach (KryticalNova.Brains.SensedPlayer p in sense.Players)
+                        sb.Append($" [ghost id {p.GhostId} feet {p.Feet} flags {p.Flags}" +
+                                  $"{((p.Flags & KryticalNova.Brains.SensedFlags.Alive) != 0 ? " alive" : "")}" +
+                                  $"{((p.Flags & KryticalNova.Brains.SensedFlags.Neutral) != 0 ? " NEUTRAL" : "")}" +
+                                  $"{((p.Flags & KryticalNova.Brains.SensedFlags.Ignored) != 0 ? " IGNORED" : "")}" +
+                                  $"{((p.Flags & KryticalNova.Brains.SensedFlags.Dead) != 0 ? " DEAD" : "")}]");
+                    sb.Append("; ");
+                }
+                else sb.Append("no SenseWorld; ");
             // every CombatTarget, the disabled and prefab ones too, by kind
             using (EntityQuery all = new EntityQueryBuilder(Unity.Collections.Allocator.Temp).WithAll<CombatTarget>()
                        .WithOptions(EntityQueryOptions.IncludeDisabledEntities | EntityQueryOptions.IncludePrefab).Build(server.EntityManager))
