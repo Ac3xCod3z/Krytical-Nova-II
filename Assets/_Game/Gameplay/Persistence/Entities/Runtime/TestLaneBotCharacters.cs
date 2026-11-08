@@ -1,5 +1,6 @@
 using System;
 using KryticalNova.CharacterCreation;
+using KryticalNova.Core;
 
 namespace KryticalNova.Persistence.Entities
 {
@@ -8,7 +9,8 @@ namespace KryticalNova.Persistence.Entities
     /// accounts are real ids with no character on the server's roster, and the entity netcode cannot create one yet. On a test-lane
     /// server (<c>KN_TEST_LANE</c>, with development bots on) a bot's character is found by its name in its account, or made through
     /// the game's own roster create (<see cref="ServerRoster.Handle"/>: name and look rules, a free slot, one save), so the bot is then
-    /// loaded and saved like any player, in the test database. Compiled out of every other build: there <see cref="Ensure"/> hands
+    /// loaded and saved like any player, in the test database. The same for a signed-in player that sends no character id (the entity
+    /// test client, which has no character select yet). Compiled out of every other build: there <see cref="Ensure"/> hands
     /// back the id it was given and touches nothing.
     /// </summary>
     public static class TestLaneBotCharacters
@@ -36,7 +38,12 @@ namespace KryticalNova.Persistence.Entities
         {
             refusal = null;
 #if KN_TEST_LANE
-            if (IsBot == null || !IsBot(account)) return characterId;
+            bool bot = IsBot != null && IsBot(account);
+            // The entity test client (KnJoinHere -knsignin, DOTS builds 8 Nov 2026) signs in for real but has no character select yet:
+            // a proven account that sends no character id is treated like a bot here (its character found by name, or made once), on a
+            // test-lane server only, in the test database. Anyone who sends a character id keeps it.
+            bool signedInWithoutCharacter = !bot && SaveKeys.IsId(account) && string.IsNullOrEmpty(characterId);
+            if (!bot && !signedInWithoutCharacter) return characterId;
             AccountSave saved = ServerSave.ReadAccountFrom(ServerSave.Store, account);
             if (saved?.characters != null)
                 foreach (CharacterSave c in saved.characters)
@@ -44,7 +51,7 @@ namespace KryticalNova.Persistence.Entities
             RosterReply made = ServerRoster.Handle(account, null, new RosterRequest { op = RosterRequest.Create, name = name, recipe = recipe });
             if (made == null || !made.ok || string.IsNullOrEmpty(made.characterId))
             {
-                refusal = "The test server could not make this bot's character: " + (made?.message ?? "no answer");
+                refusal = "The test server could not make this " + (bot ? "bot's" : "test player's") + " character: " + (made?.message ?? "no answer");
                 return null;
             }
             return made.characterId;

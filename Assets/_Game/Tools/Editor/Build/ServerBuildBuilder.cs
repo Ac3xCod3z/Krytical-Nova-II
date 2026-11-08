@@ -240,7 +240,13 @@ namespace KryticalNova.EditorTools
             "  \"saveService\": \"http://127.0.0.1:7802\",\n" +
             "  \"serverName\": \"Krytical Nova ENTITY TEST\",\n" +
             "  \"plainTransport\": true,\n" +
-            "  \"serverList\": []\n" +
+            "  \"serverList\": [],\n" +
+            // The keys the NGO settings loader adds when missing (ServerLaunchOptions.Load): present, so a build that still rewrites
+            // the file never does, and no map server (Transit Row) is started beside this test server by the app.
+            "  \"mapServers\": [],\n" +
+            "  \"ledgerDays\": 90,\n" +
+            "  \"recordMonths\": 6,\n" +
+            "  \"callLimits\": {}\n" +
             "}\n";
 
         /// <summary>What sets a build apart from the NGO server's own (null = the NGO server exactly as before).</summary>

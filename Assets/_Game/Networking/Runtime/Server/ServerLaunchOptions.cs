@@ -148,6 +148,14 @@ namespace KryticalNova.Networking
             }
         }
 
+        /// <summary>True in the entity server (KN_ENTITIES_SERVER): <see cref="Load"/> never writes the settings file there.</summary>
+        public const bool EntityServerReadsOnly =
+#if KN_ENTITIES_SERVER
+            true;
+#else
+            false;
+#endif
+
         /// <summary>Reads this server's options once, logs them, and keeps them as <see cref="Current"/>.</summary>
         public static ServerLaunchOptions LoadForThisServer()
         {
@@ -175,8 +183,11 @@ namespace KryticalNova.Networking
                     JsonUtility.FromJsonOverwrite(text, options);
                     options.ServerFolder = serverFolder;
                     notes.Add("settings from " + file);
+                    // The entity server (KN_ENTITIES_SERVER) only reads this file: its own keys (plainTransport, netcode, ...) are not
+                    // fields here, so a rewrite would drop them (DOTS builds, 8 Nov 2026: plainTransport vanished and it would not start).
+                    if (EntityServerReadsOnly) { }
                     // A file from before the speed limits gains them, at their defaults, for the owner to tune.
-                    if (!text.Contains("\"callLimits\""))
+                    else if (!text.Contains("\"callLimits\""))
                     {
                         File.WriteAllText(file, JsonUtility.ToJson(options, true));
                         notes.Add("added the request speed limits (callLimits) to the settings file");
@@ -194,7 +205,7 @@ namespace KryticalNova.Networking
                         notes.Add("added mapServers (the other maps' servers the Server app starts) to the settings file");
                     }
                 }
-                else
+                else if (!EntityServerReadsOnly)
                 {
                     File.WriteAllText(file, JsonUtility.ToJson(options, true));
                     notes.Add("no settings file: wrote one with the defaults at " + file);
