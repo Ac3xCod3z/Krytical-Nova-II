@@ -28,6 +28,13 @@ namespace KryticalNova.Persistence.Entities
     {
         public const string Flag = "-knjoinhere";
         public const string Host = "127.0.0.1";
+        /// <summary>
+        /// <c>-knjoinhost &lt;IPv4&gt;</c>: join a dedicated entity test server instead of the Editor (DOTS builds, 8 Nov 2026). With
+        /// <c>-knsignin</c> the client signs in to Unity (the PC's kept session, else anonymously) and sends the token, so a release
+        /// server, which lets in only proven players, takes it. The real server's ports are refused either way.
+        /// </summary>
+        public const string HostFlag = "-knjoinhost";
+        public const string SignInFlag = "-knsignin";
         /// <summary>The port Play DOTS here listens on (<c>KnPlayHere.Port</c>, the test lane's).</summary>
         public const ushort DefaultPort = 7797;
         public const string DefaultName = "Player2"; // letters and digits only: the server refuses a name with a space (PlayerIdentity)
@@ -82,6 +89,8 @@ namespace KryticalNova.Persistence.Entities
         public sealed class Options
         {
             public ushort Port = DefaultPort;
+            public string Host = KnJoinHere.Host;
+            public bool SignIn;
             public string Name = DefaultName;
             /// <summary>The low-memory look (<see cref="LowMemoryEarly"/>), on unless <c>-knfullmem</c> is on the line.</summary>
             public bool LowMemory = true;
@@ -93,6 +102,7 @@ namespace KryticalNova.Persistence.Entities
                 if (args == null || Array.FindIndex(args, a => string.Equals(a, Flag, StringComparison.OrdinalIgnoreCase)) < 0) return null;
                 var o = new Options();
                 if (Array.FindIndex(args, a => string.Equals(a, FullMemoryFlag, StringComparison.OrdinalIgnoreCase)) >= 0) o.LowMemory = false;
+                if (Array.FindIndex(args, a => string.Equals(a, SignInFlag, StringComparison.OrdinalIgnoreCase)) >= 0) o.SignIn = true;
                 for (int i = 0; i < args.Length - 1; i++)
                 {
                     string value = args[i + 1];
@@ -100,6 +110,10 @@ namespace KryticalNova.Persistence.Entities
                     {
                         case "-knjoinport":
                             if (!ushort.TryParse(value, NumberStyles.None, CultureInfo.InvariantCulture, out o.Port) || o.Port == 0) o.Error = "-knjoinport is not a port";
+                            break;
+                        case HostFlag:
+                            if (System.Net.IPAddress.TryParse(value, out System.Net.IPAddress ip) && ip.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork) o.Host = ip.ToString();
+                            else o.Error = HostFlag + " is not an IPv4 address";
                             break;
                         case "-knjoinname":
                             if (!string.IsNullOrWhiteSpace(value)) o.Name = value.Trim();
@@ -159,7 +173,8 @@ namespace KryticalNova.Persistence.Entities
             Options o = m_Options;
             // the owner clicks between this window and the Editor: the connection must not stall while this one is not in front
             Application.runInBackground = true;
-            Debug.Log($"[KnJoinHere] Joining Play DOTS here at {Host}:{o.Port} as \"{o.Name}\" (plain UDP, unsaved, saves to memory only).");
+            Debug.Log($"[KnJoinHere] Joining {(o.Host == Host ? "Play DOTS here" : "the entity server")} at {o.Host}:{o.Port} as \"{o.Name}\" " +
+                      $"(plain UDP, {(o.SignIn ? "signed in to Unity" : "no sign-in")}, saves to memory only on this side).");
 
             if (SceneManager.GetActiveScene().name != Map)
             {
@@ -176,8 +191,17 @@ namespace KryticalNova.Persistence.Entities
 
             if (!TryLook(out string recipeText, out string lookProblem)) { Debug.LogError("[KnJoinHere] Refused: " + lookProblem); yield break; }
             KnGoInGame.Source = new JoinHereGoInGame(new GoInGamePayload { CharacterId = string.Empty, Name = o.Name, RecipeText = recipeText });
-            string join = JoinRules.PayloadText(GameBuild.Version, false);
-            if (!KnBootstrap.StartClient(Host, o.Port, join, encrypted: false)) { Debug.LogError("[KnJoinHere] Refused: could not start the client world."); yield break; }
+            string token = string.Empty;
+            if (o.SignIn)
+            {
+                var signIn = UnityAccount.JoinTokenAsync();
+                while (!signIn.IsCompleted) yield return null;
+                token = signIn.Status == System.Threading.Tasks.TaskStatus.RanToCompletion ? signIn.Result : null;
+                if (string.IsNullOrEmpty(token)) { Debug.LogError("[KnJoinHere] Refused: could not sign in to Unity (internet? Unity services?)."); yield break; }
+                Debug.Log("[KnJoinHere] Signed in to Unity as player " + UnityAccount.PlayerNow + ".");
+            }
+            string join = JoinRules.PayloadText(GameBuild.Version, false, token);
+            if (!KnBootstrap.StartClient(o.Host, o.Port, join, encrypted: false)) { Debug.LogError("[KnJoinHere] Refused: could not start the client world."); yield break; }
 
             // let in = this client's own body appeared (the server built its ServerBody and ghost)
             float started = Time.realtimeSinceStartup;

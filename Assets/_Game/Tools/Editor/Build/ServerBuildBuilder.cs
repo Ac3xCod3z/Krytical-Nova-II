@@ -156,7 +156,102 @@ namespace KryticalNova.EditorTools
 
         private static string BackendName(ScriptingImplementation backend) => backend == ScriptingImplementation.IL2CPP ? "IL2CPP" : "Mono";
 
-        private static bool BuildAsIs(Os os, string intoFolder, ScriptingImplementation backend)
+        // ------------------------------------------------------------------ the entity server (DOTS, 8 Nov 2026)
+
+        /// <summary>
+        /// The Netcode for Entities dedicated server (DOTS port), a NEW build beside the NGO one (owner, 8 Nov 2026): its own folder
+        /// <c>Builds/EntityServer</c> (with its own save service copy and its own Krytical Nova Server app), never the NGO server's
+        /// <c>Builds/Server</c>. Started by <c>KnBootstrap</c> / <c>KnServerEntry</c> (port, page port, save service, stop signals).
+        /// </summary>
+        public const string EntityBuildRoot = "EntityServer";
+        /// <summary>
+        /// <c>KN_ENTITIES_SERVER</c>: Netcode for GameObjects' server parts stay off (NetworkConnectionManager, ServerLifetime,
+        /// ServerControlPage). <c>KN_TEST_LANE</c>: the server refuses the real server's ports (7777, 7778, 7801, 8090) until the
+        /// cutover makes it the real one.
+        /// </summary>
+        public static readonly string[] EntityDefines = { "KN_ENTITIES_SERVER", "KN_TEST_LANE" };
+        /// <summary>The test-lane ports the entity server gets in its first settings file (free of the real, test, measure and Play DOTS ports).</summary>
+        public const int EntityTestPort = 7799, EntityTestPagePort = 8099;
+        /// <summary>Marks the settings of an entity server, so the Krytical Nova Server app beside it runs it the entity way.</summary>
+        public const string EntityNetcodeKey = "netcode";
+
+        public static string EntityRootFolder => Path.Combine(RealBuildsFolder(), EntityBuildRoot).Replace('\\', '/');
+        public static string EntityOutputFolder => $"{EntityRootFolder}/{ExeName}";
+        public static string EntityReportPath => $"{EntityRootFolder}/BuildReport-Windows.txt";
+
+        /// <summary>The entity server's scenes: the map (it boots there) and the scene that bakes the player ghost subscene into the build.</summary>
+        public static string[] EntityScenes() => new[] { KnLinuxTestBuild.MapScenePath, KnLinuxTestBuild.GhostBakeScenePath };
+
+        [MenuItem("Krytical Nova/Build/Entity Server (Windows, test lane)", priority = 55)]
+        private static void MenuEntityServer()
+        {
+            if (EditorApplication.isPlayingOrWillChangePlaymode) { EditorUtility.DisplayDialog("Entity Server", "Stop Play first.", "OK"); return; }
+            string busy = FolderBusy(EntityOutputFolder);
+            if (busy != null) { EditorUtility.DisplayDialog("Entity Server", busy, "OK"); return; }
+            BuildEntityServer();
+        }
+
+        /// <summary>Batch: <c>-executeMethod KryticalNova.EditorTools.ServerBuildBuilder.BuildEntityServerBatch</c> (exits 0 when built, 1 when not).</summary>
+        public static void BuildEntityServerBatch()
+        {
+            bool ok = false;
+            try { ok = BuildEntityServer(); }
+            catch (Exception e) { Debug.LogError("[Build] Entity server build threw " + e); }
+            if (Application.isBatchMode) EditorApplication.Exit(ok ? 0 : 1);
+        }
+
+        /// <summary>
+        /// Builds the entity server (Windows, Mono, Burst AOT on, not development) into <see cref="EntityOutputFolder"/>, with the save
+        /// service and the Krytical Nova Server app beside it and a test-lane <c>server-settings.json</c> when it has none yet.
+        /// </summary>
+        public static bool BuildEntityServer()
+        {
+            foreach (string needed in new[] { KnLinuxTestBuild.WorldAssetsPath, KnLinuxTestBuild.GhostBakeScenePath, KnLinuxTestBuild.MapScenePath })
+                if (AssetDatabase.LoadMainAssetAtPath(needed) == null)
+                {
+                    Debug.LogError($"[Build] Entity server: {needed} is missing (Krytical Nova ▸ Online ▸ Entities ▸ Build Player Ghost Assets makes the ghost assets).");
+                    return false;
+                }
+            Directory.CreateDirectory(EntityRootFolder);
+            var entity = new Variant
+            {
+                Label = "Entity server (Windows, test lane)", ExtraDefines = EntityDefines, Scenes = EntityScenes(), BurstOn = true,
+                ReportPath = EntityReportPath, Title = "Krytical Nova ENTITY TEST Server", Entity = true,
+            };
+            bool ok = ReleasePublisher.WithVersion(ReleasePublisher.LastReleaseBuild(), () => BuildAsIs(Os.Windows, EntityOutputFolder, ScriptingImplementation.Mono2x, entity));
+            if (!ok) return false;
+            string settings = Path.Combine(EntityOutputFolder, SettingsFileName);
+            if (!File.Exists(settings))
+            {
+                File.WriteAllText(settings, EntityTestSettingsJson());
+                Debug.Log($"[Build] Entity server: wrote test-lane settings ({settings}: port {EntityTestPort}, page {EntityTestPagePort}, TEST save service 7802).");
+            }
+            return true;
+        }
+
+        /// <summary>The entity server's first settings: test ports, the TEST save service (krytical_nova_test), never listed, plain UDP.</summary>
+        public static string EntityTestSettingsJson() =>
+            "{\n" +
+            $"  \"{EntityNetcodeKey}\": \"entities\",\n" +
+            $"  \"port\": {EntityTestPort},\n" +
+            $"  \"pagePort\": {EntityTestPagePort},\n" +
+            "  \"maxPlayers\": 20,\n" +
+            "  \"map\": \"Zone01_StarterTown\",\n" +
+            "  \"saveService\": \"http://127.0.0.1:7802\",\n" +
+            "  \"serverName\": \"Krytical Nova ENTITY TEST\",\n" +
+            "  \"plainTransport\": true,\n" +
+            "  \"serverList\": []\n" +
+            "}\n";
+
+        /// <summary>What sets a build apart from the NGO server's own (null = the NGO server exactly as before).</summary>
+        private sealed class Variant
+        {
+            public string Label, ReportPath, Title;
+            public string[] ExtraDefines, Scenes;
+            public bool BurstOn, Entity;
+        }
+
+        private static bool BuildAsIs(Os os, string intoFolder, ScriptingImplementation backend, Variant variant = null)
         {
             string missing = ModuleMissing(os, backend);
             if (missing != null)
@@ -167,7 +262,7 @@ namespace KryticalNova.EditorTools
 
             // The development scenes (the Cadence arena) never ship, on a server either. The maps are in its build list:
             // a server runs one and never changes it, so it has no use for the game's Addressable bundles.
-            string[] scenes = BuildSceneOrder.ShippedForServer();
+            string[] scenes = variant?.Scenes ?? BuildSceneOrder.ShippedForServer();
             if (scenes.Length == 0)
             {
                 Debug.LogError("[Build] There are no scenes to build.");
@@ -194,7 +289,7 @@ namespace KryticalNova.EditorTools
             string exe = folder + "/" + ExeName + (os == Os.Windows ? ".exe" : ".x86_64");
             BuildTarget targetWas = EditorUserBuildSettings.activeBuildTarget;
 
-            BuildReport report;
+            BuildReport report = null;
             // The server's backend is set for this build: a client publish can leave IL2CPP in the checkout's ProjectSettings when
             // its Unity is stopped before it saves the put-back value, and the Server target can fall back to Standalone's.
             ScriptingImplementation backendWas = PlayerSettings.GetScriptingBackend(NamedBuildTarget.Server);
@@ -205,9 +300,20 @@ namespace KryticalNova.EditorTools
             var addressables = UnityEditor.AddressableAssets.AddressableAssetSettingsDefaultObject.Settings;
             var bundlesWere = addressables != null ? addressables.BuildAddressablesWithPlayerBuild : default;
             if (addressables != null) addressables.BuildAddressablesWithPlayerBuild = UnityEditor.AddressableAssets.Settings.AddressableAssetSettings.PlayerBuildOption.DoNotBuildWithPlayer;
+            // Burst's own settings file, stated outright for a Burst build and put back afterwards (KnWindowsTestBuild, KnLinuxTestBuild).
+            string burstPath = Path.GetFullPath(KnWindowsTestBuild.BurstSettingsPath);
+            string burstWas = variant != null && variant.BurstOn && File.Exists(burstPath) ? File.ReadAllText(burstPath) : null;
             try
             {
                 IsBuilding = true;
+                if (variant != null && variant.BurstOn)
+                {
+                    File.WriteAllText(burstPath, KnWindowsTestBuild.BurstOnJson);
+                    // Burst reads the Editor's own subtarget, not BuildPlayerOptions.subtarget (KnLinuxTestBuild, 30 Oct 2026); the
+                    // finally below puts the Editor back on Player.
+                    EditorUserBuildSettings.standaloneBuildSubtarget = StandaloneBuildSubtarget.Server;
+                }
+                BurstAotMarker.ClearStaleMarker();   // an earlier Burst-off build's leftover would stop Burst AOT for good (8 Nov 2026)
                 report = BuildPipeline.BuildPlayer(new BuildPlayerOptions
                 {
                     scenes = scenes,
@@ -219,12 +325,22 @@ namespace KryticalNova.EditorTools
                     // (It clears the player build's cache, Library/PlayerDataCache; the map bundles' Library/BuildCache was
                     // seen to survive it, 31 Oct 2026.) LZ4, not LZ4HC: a server is unpacked on this PC, never downloaded,
                     // and LZ4HC cost 1.5 to 2 minutes a build (owner's pick, 31 Oct 2026).
-                    options = BuildOptions.CompressWithLz4 | BuildOptions.CleanBuildCache
+                    options = BuildOptions.CompressWithLz4 | BuildOptions.CleanBuildCache,
+                    extraScriptingDefines = variant?.ExtraDefines,
                 });
             }
             finally
             {
                 IsBuilding = false;
+                if (variant != null && variant.BurstOn)
+                {
+                    try
+                    {
+                        if (burstWas != null) File.WriteAllText(burstPath, burstWas);
+                        else if (File.Exists(burstPath)) File.Delete(burstPath);
+                    }
+                    catch (Exception e) { Debug.LogError($"[Build] Could not put back {KnWindowsTestBuild.BurstSettingsPath} ({e.Message}): remove it by hand."); }
+                }
                 if (addressables != null) addressables.BuildAddressablesWithPlayerBuild = bundlesWere;
                 if (backendWas != backend) PlayerSettings.SetScriptingBackend(NamedBuildTarget.Server, backendWas);
                 // Put back after the build, and even when it failed: the settings are the owner's, never the build's.
@@ -245,14 +361,38 @@ namespace KryticalNova.EditorTools
                 }
             }
 
-            TestBuildBuilder.WriteSizeReport(report, scenes, $"Dedicated server ({os})", $"Scripting backend: {backendUsed}, Dedicated Server target", ReportPath(os));
+            string reportPath = variant?.ReportPath ?? ReportPath(os);
+            string label = variant?.Label ?? $"Dedicated server ({os})";
+            if (report == null)
+            {
+                Debug.LogError($"[Build] {label}: no build report (the build threw before it ran).");
+                return false;
+            }
+            TestBuildBuilder.WriteSizeReport(report, scenes, label, $"Scripting backend: {backendUsed}, Dedicated Server target" +
+                (variant?.ExtraDefines != null ? ", defines " + string.Join(" ", variant.ExtraDefines) : ""), reportPath);
             bool ok = report.summary.result == BuildResult.Succeeded;
-            if (ok) AddBesideTheServer(os, folder);
+            if (ok) AddBesideTheServer(os, folder, variant?.Title ?? "Krytical Nova Server");
             if (ok && os == Os.Windows) BuildSaveService(folder);
             if (ok && os == Os.Windows) BuildServerApp(folder, shortcuts: intoFolder == null);
-            if (ok) Debug.Log($"[Build] Dedicated server ({os}, {backendUsed}) written to {folder} ({TestBuildBuilder.Megabytes(report.summary.totalSize)}). Sizes: {ReportPath(os)}");
-            else Debug.LogError($"[Build] Dedicated server ({os}) {report.summary.result}: {report.summary.totalErrors} errors. See {ReportPath(os)}");
+            if (ok && variant != null && variant.Entity) EntityShortcut(folder);
+            if (ok && variant != null && variant.BurstOn)
+            {
+                string plugins = Path.Combine(folder, ExeName + "_Data", "Plugins");
+                bool hasBurst = File.Exists(Path.Combine(plugins, "x86_64", "lib_burst_generated.dll")) || File.Exists(Path.Combine(plugins, "lib_burst_generated.dll"));
+                if (hasBurst) Debug.Log($"[Build] {label}: Burst AOT built (lib_burst_generated.dll).");
+                else { Debug.LogError($"[Build] {label} FAILED: Burst AOT was asked for but lib_burst_generated.dll is not in {plugins}."); ok = false; }
+            }
+            if (ok) Debug.Log($"[Build] {label} ({backendUsed}) written to {folder} ({TestBuildBuilder.Megabytes(report.summary.totalSize)}). Sizes: {reportPath}");
+            else Debug.LogError($"[Build] {label} {report.summary.result}: {report.summary.totalErrors} errors. See {reportPath}");
             return ok;
+        }
+
+        /// <summary>The entity server's app gets its own desktop shortcut (never the NGO server's "Krytical Nova Server" one).</summary>
+        private static void EntityShortcut(string serverFolder)
+        {
+            string exe = Path.Combine(Path.GetFullPath(Path.Combine(serverFolder, "..")), ServerAppName + ".exe");
+            if (!File.Exists(exe)) return;
+            MakeShortcut(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), "Krytical Nova ENTITY Server (TEST).lnk"), exe);
         }
     
         /// <summary>The control page's files and fonts, and the start script.</summary>
@@ -381,7 +521,7 @@ namespace KryticalNova.EditorTools
             }
         }
 
-        private static void AddBesideTheServer(Os os, string folder)
+        private static void AddBesideTheServer(Os os, string folder, string title)
         {
             string page = Path.Combine(folder, "ControlPage");
             Directory.CreateDirectory(Path.Combine(page, "fonts"));
@@ -396,7 +536,7 @@ namespace KryticalNova.EditorTools
                     "@echo off\r\n" +
                     "rem Starts the Krytical Nova server with its log in this window. Type commands here (gm.help).\r\n" +
                     "rem Closing this window stops the server safely: everyone is saved first.\r\n" +
-                    "title Krytical Nova Server\r\n" +
+                    "title " + title + "\r\n" +
                     "cd /d \"%~dp0\"\r\n" +
                     // Online phase 4: the save service this server is set to use starts first: the real one (port 7801) or
                     // the tests' (7802, --test). A second copy finds its port taken and closes. None when it saves to files.

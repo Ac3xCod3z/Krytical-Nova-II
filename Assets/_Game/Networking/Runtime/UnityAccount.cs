@@ -162,6 +162,18 @@ namespace KryticalNova.Networking
         }
 
         /// <summary>
+        /// The Unity sign-in token this game sends with a join (the server checks it against Unity's keys), after signing in the
+        /// usual way (the PC's kept session, else anonymously). Null when Unity's services could not be reached. Used by the entity
+        /// test client (KnJoinHere -knsignin, DOTS 8 Nov 2026), which has no NetworkManager of its own.
+        /// </summary>
+        public static async Task<string> JoinTokenAsync()
+        {
+            if (!await NetworkConnectionManager.SignInAsync()) return null;
+            try { return AuthenticationService.Instance.IsSignedIn ? AuthenticationService.Instance.AccessToken : null; }
+            catch (Exception e) { Debug.LogWarning($"[Account] No sign-in token: {e.Message}"); return null; }
+        }
+
+        /// <summary>
         /// Signs out of the account on this PC (owner, 20 Oct 2026: brothers share a PC, each with an account of his own).
         /// The next sign-in may be any account; its own characters come with it. Nothing is lost: the characters stay with
         /// the account that was signed out.

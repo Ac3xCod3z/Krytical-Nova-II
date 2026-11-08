@@ -59,6 +59,8 @@ namespace KryticalNova.ServerApp
             public int Online;
             public string State = "STOPPED";
             public bool Stopping;
+            /// <summary>An entity server has no gm.restart: RESTART stops it and this starts it again when it has ended.</summary>
+            public bool StartAgain;
         }
 
         private readonly FontFamily display;
@@ -99,7 +101,8 @@ namespace KryticalNova.ServerApp
             serverFolder = FindServerFolder(root);
             settings = Settings.Load(serverFolder);
 
-            Text = "Krytical Nova Server";
+            // An entity server (DOTS, 8 Nov 2026) is a test version beside the NGO one: its window says so.
+            Text = settings.Entities ? "Krytical Nova Server - ENTITY TEST (Netcode for Entities)" : "Krytical Nova Server";
             Icon = Icon.ExtractAssociatedIcon(Application.ExecutablePath);
             ClientSize = new Size(1080, 700);
             MinimumSize = new Size(900, 600);
@@ -112,7 +115,7 @@ namespace KryticalNova.ServerApp
             string listedMap = string.IsNullOrWhiteSpace(settings.Map) ? ConcordMap : settings.Map;
             AddServer(new GameServer
             {
-                Title = listedMap == ConcordMap ? "CONCORD" : "SERVER", Map = listedMap, Port = settings.Port, PagePort = settings.PagePort,
+                Title = settings.Entities ? "ENTITY TEST" : listedMap == ConcordMap ? "CONCORD" : "SERVER", Map = listedMap, Port = settings.Port, PagePort = settings.PagePort,
                 Process = new Hosted("Server", serverExe, "-logFile -", folder),
             });
             // Each map's server: the same server, its own map and ports, never in the server list (online phase 5).
@@ -409,6 +412,15 @@ namespace KryticalNova.ServerApp
         {
             if (!server.Process.Running) { StartServer(server); return; }
             if (!Ask($"Restart {Called(server)}? Everyone on it is saved first, and they are told to join again in a minute.")) return;
+            if (settings.Entities)
+            {
+                server.StartAgain = true;
+                server.Stopping = true;
+                server.State = "RESTARTING";
+                EntityStop(server);
+                Invalidate();
+                return;
+            }
             server.Process.Send("gm.restart 0 \"The server is restarting. Join again in a minute.\"");
             server.State = "RESTARTING";
             Invalidate();
@@ -421,9 +433,36 @@ namespace KryticalNova.ServerApp
             if (!forClosing && !Ask($"Stop {Called(server)}? Everyone on it is saved first.")) return;
             server.Stopping = true;
             server.State = "STOPPING";
-            server.Process.Send("gm.shutdown 0 \"The server is closing.\"");
+            if (settings.Entities) EntityStop(server);
+            else
+            {
+                server.Process.Send("gm.shutdown 0 \"The server is closing.\"");
+                Task.Run(() => server.Process.StopWithin(90000));
+            }
             Invalidate();
-            Task.Run(() => server.Process.StopWithin(90000));
+        }
+
+        /// <summary>
+        /// The entity server reads no console commands: its safe stop is POST /stop on its page (this machine only, header X-KN-Key =
+        /// the save service key; KnServerPage). It saves everyone, closes the connections and quits; a server still there after 90 s
+        /// is ended.
+        /// </summary>
+        private void EntityStop(GameServer server)
+        {
+            Task.Run(async () =>
+            {
+                string said;
+                try
+                {
+                    var request = new HttpRequestMessage(HttpMethod.Post, $"http://127.0.0.1:{server.PagePort}/stop");
+                    request.Headers.Add("X-KN-Key", ServiceKey());
+                    using (HttpResponseMessage response = await http.SendAsync(request))
+                        said = "Stop asked (page answered " + (int)response.StatusCode + ").";
+                }
+                catch (Exception e) { said = "The page did not take the stop (" + e.GetType().Name + "): the server is ended in 90 s."; }
+                BeginInvoke((Action)(() => server.Process.Note(said)));
+                server.Process.StopWithin(90000);
+            });
         }
 
         private static string Called(GameServer server) => server.IsMap ? $"the {server.Title} server" : "the server";
@@ -431,6 +470,14 @@ namespace KryticalNova.ServerApp
         private void ServerEnded(GameServer server, int code)
         {
             server.Online = 0;
+            if (server.StartAgain && !closingAfterStop)
+            {
+                server.StartAgain = false;
+                server.Stopping = false;
+                server.Process.Note("--- restarting ---");
+                Task.Delay(1500).ContinueWith(_ => BeginInvoke((Action)(() => StartServer(server))));
+                return;
+            }
             if (code == RestartExitCode && !server.Stopping && !closingAfterStop)
             {
                 server.State = "RESTARTING";
@@ -458,7 +505,11 @@ namespace KryticalNova.ServerApp
             if (e.CloseReason == CloseReason.WindowsShutDown)
             {
                 foreach (GameServer server in servers)
-                    if (server.Process.Running) server.Process.Send("gm.shutdown 0 \"The server PC is shutting down.\"");
+                    if (server.Process.Running)
+                    {
+                        if (settings.Entities) EntityStop(server);
+                        else server.Process.Send("gm.shutdown 0 \"The server PC is shutting down.\"");
+                    }
                 foreach (GameServer server in servers) server.Process.StopWithin(20000);
                 saves.Kill();
                 return;
@@ -488,6 +539,12 @@ namespace KryticalNova.ServerApp
         {
             string line = server.Command.Text.Trim();
             if (line.Length == 0) return;
+            if (settings.Entities)
+            {
+                server.Process.Note("> " + line + "   (the entity server takes no console commands yet: use the GM window in the game, or STOP here)");
+                server.Command.Clear();
+                return;
+            }
             if (!server.Process.Send(line)) server.Process.Note("The server is not running.");
             else server.Process.Note("> " + line);
             server.Command.Clear();
@@ -499,7 +556,7 @@ namespace KryticalNova.ServerApp
         {
             bool database = settings.UsesSaves && !settings.TestSaves && saves.Running;
             Hosted server = Listed.Process;
-            if (server.Running) { server.Send("gm.backup"); server.Note("> gm.backup"); Task.Delay(4000).ContinueWith(_ => BeginInvoke((Action)RefreshBackups)); }
+            if (server.Running && !settings.Entities) { server.Send("gm.backup"); server.Note("> gm.backup"); Task.Delay(4000).ContinueWith(_ => BeginInvoke((Action)RefreshBackups)); }
             if (database) Task.Run(DatabaseCopyNow);
             if (!server.Running && !database)
                 MessageBox.Show(this, "Backups are made by the running server and the save service: press START first.", "Back up", MessageBoxButtons.OK, MessageBoxIcon.Information);
@@ -572,7 +629,7 @@ namespace KryticalNova.ServerApp
                 {
                     Match m = Regex.Match(line, @"Online: (\d+)");
                     if (m.Success) counted.Online = int.Parse(m.Groups[1].Value);
-                    if (line.Contains("is listening on port") && counted.Process.Running) counted.State = "ONLINE";
+                    if ((line.Contains("is listening on port") || line.Contains("[KnServer] listening on UDP")) && counted.Process.Running) counted.State = "ONLINE";
                 }
             }
             if (sb.Length == 0) return;
@@ -797,6 +854,10 @@ namespace KryticalNova.ServerApp
         [DataMember(Name = "saveService")] public string SaveService = "";
         [DataMember(Name = "map")] public string Map = "";
         [DataMember(Name = "mapServers")] public List<MapServer> MapServers = new List<MapServer>();
+        /// <summary>"entities" for the Netcode for Entities server (written by ServerBuildBuilder.BuildEntityServer); empty = the NGO server.</summary>
+        [DataMember(Name = "netcode")] public string Netcode = "";
+
+        public bool Entities => string.Equals((Netcode ?? "").Trim(), "entities", StringComparison.OrdinalIgnoreCase);
 
         /// <summary>One map's server (online phase 5): started beside the listed one, never in the server list.</summary>
         [DataContract]
