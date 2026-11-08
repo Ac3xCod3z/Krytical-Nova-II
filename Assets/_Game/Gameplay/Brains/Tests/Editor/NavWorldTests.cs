@@ -23,6 +23,10 @@ namespace KryticalNova.Brains.Tests
         [OneTimeSetUp]
         public void OpenMap() => EditorSceneManager.OpenScene(Map, OpenSceneMode.Single);
 
+        /// <summary>The town closed again: its dummies and objects never reach the tests after this one (8 Nov 2026: StrikeDummyTests).</summary>
+        [OneTimeTearDown]
+        public void CloseMap() => EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+
         [Test]
         public void Zone01_NavWorldPaths_MatchCalculatePath()
         {

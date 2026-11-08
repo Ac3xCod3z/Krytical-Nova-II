@@ -25,6 +25,10 @@ namespace KryticalNova.Combat.Entities.Tests
         {
             string guid = AssetDatabase.AssetPathToGUID(GhostSubScenePath);
             Assert.IsFalse(string.IsNullOrEmpty(guid), "no ghost subscene: run Build Player Ghost Assets");
+            // the server ghosts every dummy in the open scene: one another test left behind (8 Nov 2026: NavWorldTests left Zone01 open)
+            // fails here by name, never as a wrong ghost count
+            foreach (CombatEntity left in Object.FindObjectsByType<CombatEntity>(FindObjectsInactive.Exclude, FindObjectsSortMode.None))
+                Assert.IsFalse(StrikeDummies.IsSceneDummy(left), $"another test left the dummy '{left.name}' in the open scene ({left.gameObject.scene.path}): a test that opens a scene closes it in its teardown");
             var go = new GameObject("M4.2b dummy");
             go.transform.position = new Vector3(3f, 0f, 4f);
             go.transform.localScale = new Vector3(0.8f, 1f, 0.8f);
