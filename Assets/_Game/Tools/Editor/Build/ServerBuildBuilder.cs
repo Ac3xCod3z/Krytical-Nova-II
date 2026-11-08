@@ -204,7 +204,14 @@ namespace KryticalNova.EditorTools
         /// Builds the entity server (Windows, Mono, Burst AOT on, not development) into <see cref="EntityOutputFolder"/>, with the save
         /// service and the Krytical Nova Server app beside it and a test-lane <c>server-settings.json</c> when it has none yet.
         /// </summary>
-        public static bool BuildEntityServer()
+        public static bool BuildEntityServer() => BuildEntityServer(ScriptingImplementation.Mono2x);
+
+        /// <summary>
+        /// <see cref="BuildEntityServer()"/> with the backend named (the DOTS channel's final server is IL2CPP + Burst, owner 8 Nov 2026). For
+        /// IL2CPP the Server target's stripping is Minimal (the game's assemblies stay whole: Odin, Netcode and the page find types by
+        /// reflection) and its compiler Release, both put back afterwards, as the release client does.
+        /// </summary>
+        public static bool BuildEntityServer(ScriptingImplementation backend)
         {
             foreach (string needed in new[] { KnLinuxTestBuild.WorldAssetsPath, KnLinuxTestBuild.GhostBakeScenePath, KnLinuxTestBuild.MapScenePath })
                 if (AssetDatabase.LoadMainAssetAtPath(needed) == null)
@@ -218,7 +225,23 @@ namespace KryticalNova.EditorTools
                 Label = "Entity server (Windows, test lane)", ExtraDefines = EntityDefines, Scenes = EntityScenes(), BurstOn = true,
                 ReportPath = EntityReportPath, Title = "Krytical Nova ENTITY TEST Server", Entity = true,
             };
-            bool ok = ReleasePublisher.WithVersion(ReleasePublisher.LastReleaseBuild(), () => BuildAsIs(Os.Windows, EntityOutputFolder, ScriptingImplementation.Mono2x, entity));
+            ManagedStrippingLevel strippingWas = PlayerSettings.GetManagedStrippingLevel(NamedBuildTarget.Server);
+            Il2CppCompilerConfiguration compilerWas = PlayerSettings.GetIl2CppCompilerConfiguration(NamedBuildTarget.Server);
+            bool ok;
+            try
+            {
+                if (backend == ScriptingImplementation.IL2CPP)
+                {
+                    PlayerSettings.SetManagedStrippingLevel(NamedBuildTarget.Server, ManagedStrippingLevel.Minimal);
+                    PlayerSettings.SetIl2CppCompilerConfiguration(NamedBuildTarget.Server, Il2CppCompilerConfiguration.Release);
+                }
+                ok = ReleasePublisher.WithVersion(ReleasePublisher.LastReleaseBuild(), () => BuildAsIs(Os.Windows, EntityOutputFolder, backend, entity));
+            }
+            finally
+            {
+                PlayerSettings.SetManagedStrippingLevel(NamedBuildTarget.Server, strippingWas);
+                PlayerSettings.SetIl2CppCompilerConfiguration(NamedBuildTarget.Server, compilerWas);
+            }
             if (!ok) return false;
             string settings = Path.Combine(EntityOutputFolder, SettingsFileName);
             if (!File.Exists(settings))
