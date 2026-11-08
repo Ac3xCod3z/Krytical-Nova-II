@@ -342,7 +342,8 @@ namespace KryticalNova.Mounts
 
         private void Kick(MountSettings tuning, float down, float back)
         {
-            kickSpeed += new Vector2(MountRideMotion.KickVelocity(down, tuning.kickHz), MountRideMotion.KickVelocity(back, tuning.kickHz));
+            kickSpeed += new Vector2(MountRideMotion.KickVelocity(down, tuning.kickHz, tuning.kickDamping),
+                MountRideMotion.KickVelocity(back, tuning.kickHz, tuning.kickDamping));
         }
 
         // Moves the model by the change in the spring's offset only, so it works on the player (riding) and in the world

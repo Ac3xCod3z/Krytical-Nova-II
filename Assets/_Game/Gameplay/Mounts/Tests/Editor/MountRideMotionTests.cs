@@ -325,13 +325,13 @@ namespace KryticalNova.Tests
         [Test]
         public void TheMountsBody_GivesUnderAKick_ThenSettles()
         {
-            float x = 0f, v = MountRideMotion.KickVelocity(0.07f, settings.kickHz), peak = 0f;
+            float x = 0f, v = MountRideMotion.KickVelocity(0.07f, settings.kickHz, settings.kickDamping), peak = 0f;
             for (int i = 0; i < 60; i++) // one second at 60 fps
             {
                 MountRideMotion.SpringStep(ref x, ref v, settings.kickHz, settings.kickDamping, 1f / 60f);
                 peak = Mathf.Max(peak, x);
             }
-            Assert.That(peak, Is.InRange(0.03f, 0.08f), "it gives about as far as asked, never more");
+            Assert.That(peak, Is.InRange(0.06f, 0.075f), "it gives as far as asked (0.07 m), never much more");
             Assert.Less(Mathf.Abs(x), 0.005f, "and is back in place within a second");
         }
 
