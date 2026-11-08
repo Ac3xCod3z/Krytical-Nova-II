@@ -2660,8 +2660,12 @@ namespace KryticalNova.Persistence.Entities
                 yield return new WaitForSeconds(3f); bool off1 = mounts.ShownPhase == 0; Log("mount: standing dismount ended: " + Shown());
                 if (seated && off1) tally.Passed++;
 
-                // 2 running mount-up and running dismount
+                // 2 running mount-up and running dismount: Run selected on the own view, as the owner does
                 tally.Tried++;
+                var ownMove = OwnBody.GetComponent<PlayerMovementSkills>();
+                if (ownMove != null && !ownMove.IsRunning) ownMove.ToggleSelection(MovementSkillId.Run);
+                yield return new WaitForSeconds(0.8f);
+                Log($"mount: Run selected: own view {ownMove?.IsRunning}, server body {body.GetComponent<PlayerMovementSkills>()?.IsRunning}");
                 BodyClicks.Ground(Ground(body.transform.forward * 40f), true); yield return new WaitForSeconds(0.8f);
                 mounts.RunMountOp(MountOpKind.Ride, 0);
                 yield return new WaitForSeconds(0.2f); bool runUp = mounts.ShownRunning && ownMounts != null && ownMounts.ShownRunning; Log("mount: running mount-up started: " + Shown());

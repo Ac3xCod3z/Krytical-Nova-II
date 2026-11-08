@@ -240,7 +240,9 @@ namespace KryticalNova.Mounts
             MountDefinition mount = catalog != null ? catalog.Get(selected) : null;
             // Running (the Run selection and moving) gets the running kind: no stop (owner, 6 Nov 2026). Walking stops
             // and gets the standing kind, as standing still does.
-            running = MountRules.IsRunningTransition(movement != null && movement.IsRunning, motor != null && motor.IsTravelling);
+            // the entity server body's motor never moves (the ghost does): its mover says whether it travels (DOTS port of NGO's motor.IsTravelling)
+            bool travelling = EntityServer && BodyRoleTag.Of(this).Mover is IBodyMover mover ? mover.Busy && !mover.Airborne : motor != null && motor.IsTravelling;
+            running = MountRules.IsRunningTransition(movement != null && movement.IsRunning, travelling);
             AnimationClip clip = mount == null ? null : next == RidePhase.GettingOn ? mount.mountUp : next == RidePhase.GettingOff ? mount.dismount : null;
             int stage = MountRules.Stage(MountRules.GrowthPercent(book.Get(selected), Tuning));
             phase = next;
