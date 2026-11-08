@@ -111,15 +111,30 @@ namespace KryticalNova.Player.Entities
             int3 targetNowMm, HitProxy targetProxy, NativeArray<PositionHistory> others, NativeArray<HitProxy> otherProxies, HitProxy otherProxy,
             out bool targetHit, ref NativeList<int> hit)
         {
-            targetHit = PositionHistoryRules.HitTestAtTick(in target, targetProxy, now, seen, attackerFeetMm, t.ReachMm, out bool refused)
-                && WithinValidation(in t, attackerFeetMm, targetNowMm);
+            targetHit = PositionHistoryRules.HitTestAtTick(in target, targetProxy, now, seen, attackerFeetMm, t.ReachMm, out bool refused);
             if (refused) { targetHit = false; return false; }
             NetworkTick at = PositionHistoryRules.TestTick(now, seen, out _);
+            // A claim for this very tick (no view delay: "Play DOTS here", owner retest 8 Nov 2026: every strike on the dummy missed) finds
+            // no sample yet, as the ring is written at the tick's end: the target is where it stands now.
+            if (!targetHit && at.Equals(now) && !PositionHistoryRules.TryFeetAt(in target, at, out _))
+                targetHit = PositionHistoryRules.WithinReach(attackerFeetMm, targetNowMm, targetProxy, t.ReachMm);
+            targetHit = targetHit && WithinValidation(in t, attackerFeetMm, targetNowMm);
             for (int i = 0; i < others.Length; i++)
             {
                 HitProxy p = otherProxies.IsCreated && i < otherProxies.Length ? otherProxies[i] : otherProxy;
-                if (PositionHistoryRules.TryFeetAt(others[i], at, out int3 feet) && InArc(in t, attackerFeetMm, yawCdeg, feet, p)) hit.Add(i);
+                if (FeetForTest(others[i], at, now, out int3 feet) && InArc(in t, attackerFeetMm, yawCdeg, feet, p)) hit.Add(i);
             }
+            return true;
+        }
+
+        /// <summary>Where a ghost stood on the tested tick; for this very tick (not written yet) its newest sample, one tick old.</summary>
+        static bool FeetForTest(in PositionHistory ring, NetworkTick at, NetworkTick now, out int3 feet)
+        {
+            if (PositionHistoryRules.TryFeetAt(in ring, at, out feet)) return true;
+            if (!at.Equals(now) || ring.Samples.Length == 0) return false;
+            PositionSample newest = ring.Samples[ring.Samples.Length - 1];
+            if (now.TickIndexForValidTick - newest.Tick > 1) return false;   // gone for longer than a tick: not there
+            feet = newest.FeetMm;
             return true;
         }
 

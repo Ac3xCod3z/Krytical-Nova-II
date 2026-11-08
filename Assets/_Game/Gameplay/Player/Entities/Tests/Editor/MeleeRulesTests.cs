@@ -106,6 +106,20 @@ namespace KryticalNova.Player.Entities.Tests
         }
 
         [Test]
+        public void ASwingSeenOnThisVeryTick_Lands_ThoughTheRingHasNoSampleOfItYet()
+        {
+            // owner retest 8 Nov 2026 (probe-x6-3: "seen 0 ticks back ... target hit False" on every strike at the dummy, 1.45 m away)
+            var now = new NetworkTick(120);
+            PositionHistory target = Standing(new int3(0, 0, 1400));   // samples 100-119: the ring is written at the tick's end
+            using var others = new NativeArray<PositionHistory>(new[] { Standing(new int3(500, 0, 1300)) }, Allocator.Temp);
+            var hit = new NativeList<int>(Allocator.Temp);
+            Assert.IsTrue(MeleeRules.Resolve(T, int3.zero, 0, now, now, target, new int3(0, 0, 1400), others, HitProxy.Player, out bool targetHit, ref hit));
+            Assert.IsTrue(targetHit, "the target where it stands now");
+            CollectionAssert.AreEqual(new[] { 0 }, hit.AsArray().ToArray(), "the other in the arc at its newest sample");
+            hit.Dispose();
+        }
+
+        [Test]
         public void ASwing_LandsOnTheTargetAndTheOthersInTheArc_WhereTheAttackerSawThem()
         {
             MeleeTiming t = T;
