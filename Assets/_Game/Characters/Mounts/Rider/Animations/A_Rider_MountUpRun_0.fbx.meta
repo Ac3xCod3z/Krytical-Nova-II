@@ -18,7 +18,7 @@ ModelImporter:
     removeConstantScaleCurves: 0
     motionNodeName: 
     animationImportErrors: 
-    animationImportWarnings: "\nClip 'Scene' has import animation warnings that might lower retargeting quality:\nNote: Activate translation DOF on avatar to improve retargeting quality.\n\t'upperarm_l' has translation animation that will be discarded.\n\t'upperarm_r' has translation animation that will be discarded.\n\t'lowerarm_r' has translation animation that will be discarded.\n\t'index_01_r' has translation animation that will be discarded.\n\t'index_03_r' has translation animation that will be discarded.\n\t'middle_01_r' has translation animation that will be discarded.\n\t'middle_02_r' has translation animation that will be discarded.\n\t'ring_01_r' has translation animation that will be discarded.\n\t'ring_02_r' has translation animation that will be discarded.\n\t'pinky_02_r' has translation animation that will be discarded.\n\t'thumb_03_r' has translation animation that will be discarded.\n"
+    animationImportWarnings: "\nClip 'Scene' has import animation warnings that might lower retargeting quality:\nNote: Activate translation DOF on avatar to improve retargeting quality.\n\t'upperarm_l' has translation animation that will be discarded.\n\t'index_02_l' has translation animation that will be discarded.\n\t'upperarm_r' has translation animation that will be discarded.\n\t'lowerarm_r' has translation animation that will be discarded.\n\t'index_02_r' has translation animation that will be discarded.\n\t'middle_01_r' has translation animation that will be discarded.\n\t'thumb_02_r' has translation animation that will be discarded.\n"
     animationRetargetingWarnings: 
     animationDoRetargetingWarnings: 0
     importAnimatedCustomProperties: 0
@@ -589,7 +589,7 @@ ModelImporter:
     - name: thigh_l
       parentName: pelvis
       position: {x: 2.6412482, y: -0.2960871, z: 9.611509}
-      rotation: {x: 0.998979, y: 0.00974798, z: 0.009305625, w: -0.043122906}
+      rotation: {x: 0.9989789, y: 0.009747847, z: 0.009305595, w: -0.04312293}
       scale: {x: 0.99999607, y: 0.99999297, z: 0.9999871}
     - name: thigh_twist_01_l
       parentName: thigh_l
@@ -599,7 +599,7 @@ ModelImporter:
     - name: calf_l
       parentName: thigh_l
       position: {x: 44.661755, y: 0.0072683096, z: 0.0000013113022}
-      rotation: {x: 0.05553603, y: 0.0071102194, z: 0.049784224, w: 0.99718946}
+      rotation: {x: 0.055536047, y: 0.007110334, z: 0.049784277, w: 0.9971894}
       scale: {x: 0.99993503, y: 1.0000743, z: 0.9999974}
     - name: calf_twist_01_l
       parentName: calf_l
@@ -609,7 +609,7 @@ ModelImporter:
     - name: foot_l
       parentName: calf_l
       position: {x: 36.01811, y: -0.00015091896, z: 0.000024676323}
-      rotation: {x: -0.060116723, y: -0.09869333, z: -0.03068137, w: 0.9928264}
+      rotation: {x: -0.060156666, y: -0.09866917, z: -0.030281615, w: 0.9928387}
       scale: {x: 0.9998993, y: 1.0001047, z: 0.9999957}
     - name: ball_l
       parentName: foot_l
@@ -634,7 +634,7 @@ ModelImporter:
     - name: calf_r
       parentName: thigh_r
       position: {x: -44.66172, y: -0.007289648, z: 0.000017046928}
-      rotation: {x: 0.0035345913, y: 0.011929265, z: 0.048854142, w: 0.99872845}
+      rotation: {x: 0.0035345473, y: 0.011929276, z: 0.04885399, w: 0.99872845}
       scale: {x: 0.99997574, y: 1.0000434, z: 0.99999076}
     - name: calf_twist_01_r
       parentName: calf_r
@@ -644,7 +644,7 @@ ModelImporter:
     - name: foot_r
       parentName: calf_r
       position: {x: -36.018078, y: 0.00022411346, z: -0.000053286552}
-      rotation: {x: 0.29103342, y: -0.7875665, z: 0.07962507, w: 0.53730667}
+      rotation: {x: 0.29097918, y: -0.7875857, z: 0.079667516, w: 0.5373016}
       scale: {x: 0.9998682, y: 1.0001459, z: 0.9999819}
     - name: ball_r
       parentName: foot_r
