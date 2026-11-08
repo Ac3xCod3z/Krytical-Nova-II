@@ -51,7 +51,14 @@ namespace KryticalNova.Core
 
         // Enter Play Mode runs without a domain reload, so statics must be reset by hand.
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        private static void ResetStatics() => source = null;
+        private static void ResetStatics() { source = null; EndReason = null; }
+
+        /// <summary>
+        /// The server's own words when it last turned this client away or sent it off (a refusal, a GM, a full server), for a netcode
+        /// whose reason is not NGO's <c>DisconnectReason</c>: the entity client fills it when the refusal arrives, the session-ended panel
+        /// reads and clears it (DOTS builds 8 Nov 2026). Null = none.
+        /// </summary>
+        public static string EndReason;
 
         /// <summary>Networking hands over what answers for the running session (null puts the offline answers back).</summary>
         public static void Use(INetSessionSource newSource) => source = newSource;

@@ -172,6 +172,8 @@ namespace KryticalNova.UI
                 // The server's own words when it gave any (a GM sent them away, a shutdown, a full server).
                 NetworkManager network = NetworkManager.Singleton;
                 string reason = network != null ? network.DisconnectReason : null;
+                if (string.IsNullOrWhiteSpace(reason)) reason = NetSession.EndReason;   // the entity netcode's (DOTS builds 8 Nov 2026)
+                NetSession.EndReason = null;
                 endedNote.text = string.IsNullOrWhiteSpace(reason)
                     ? "The server closed, or the connection was lost. Your progress is kept on the server."
                     : reason + " Your progress is kept on the server.";

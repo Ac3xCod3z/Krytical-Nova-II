@@ -71,6 +71,11 @@ namespace KryticalNova.Networking.Entities
             while (KnPlayerRefusals.TryDequeue(out PlayerKey key, out string reason))
             {
                 Entity connection = FindConnection(key);
+#if UNITY_SERVER
+                UnityEngine.Debug.Log(connection == Entity.Null
+                    ? "[KnJoin] a refusal had no connection left to go to (the player had already gone)."
+                    : $"[KnJoin] connection {connection.Index}: refusal sent; closing it in {DisconnectTicks} ticks.");
+#endif
                 if (connection == Entity.Null) continue;
                 Entity rpc = EntityManager.CreateEntity();
                 EntityManager.AddComponentData(rpc, new JoinRefusedRpc { Reason = (byte)KnRefuseReason.Refused, Detail = KnFixed.Text512(reason) });

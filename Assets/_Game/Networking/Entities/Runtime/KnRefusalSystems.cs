@@ -59,6 +59,7 @@ namespace KryticalNova.Networking.Entities
             refusals.Dispose();
             EntityManager.DestroyEntity(m_Refused);
             var value = new KnJoinRefusal { Reason = last.Reason, Detail = last.Detail };
+            KryticalNova.Core.NetSession.EndReason = last.Detail.ToString();   // the session-ended panel says it, as NGO's DisconnectReason
             if (m_Stored.IsEmpty) EntityManager.CreateSingleton(value);
             else m_Stored.SetSingleton(value);
         }

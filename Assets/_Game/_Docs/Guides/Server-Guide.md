@@ -888,7 +888,8 @@ allow UDP 7799 for `KryticalNovaServer.exe` in `Builds\EntityServer`).
    purpose; you are in Concord within a few seconds. On this test server every character enters at the maximum level
    with every skill at max rank (as in Play DOTS here). Character names are unique on the whole server: a name another
    account already has is refused with "Someone already has a character with that name" (the plain **Tester** is
-   taken in the test database), so pick a name of your own.
+   taken in the test database), so pick a name of your own. A refusal shows at once in the game's **Session ended**
+   panel with the server's own words; a server that does not answer at all shows a note after 40 s.
 4. Play, then close the client window.
 5. Press **STOP** in the app and answer **Yes** (or close the app: it stops the server safely first).
 
@@ -900,10 +901,12 @@ GIF and the logs are in `G:\My Drive\KryticalNova\AI Outputs\DOTS-overnight-2026
 `r3-*` files there): join in 1.1 s, no prototype strip, level 112 (maximum) with every skill, "1 player(s) on" in the
 tab, timed backup, STOP saves everyone and backs up, exit code 0.
 
-The server's log shows each join as `[KnJoin]` lines (connection arrived, request whole, accepted or refused and why,
-connection closed), so a join that does not get in always says where it stopped. A few lines "Expected server to always
-update once per frame when in sleep mode" still appear when the server does something heavy (start, a join, a backup);
-they are harmless.
+The server's log shows each join as `[KnJoin]` lines (connection arrived, request whole, accepted, the character's
+go-in-game request, how long the game's admission took, let in or refused and why, refusal sent, connection closed),
+so a join that does not get in always says where it stopped. Netcode's note "Expected server to always update once per
+frame when in sleep mode" (a slow frame: start, a join, a backup; harmless) is kept out of the tab's log and counted
+in its top line instead ("N slow frame note(s) hidden"). Relog tested the same night (`r4-relog-*`): walk, leave,
+STOP and start the server again, rejoin: the character stands where it stood.
 
 If Norton freezes the new exe, it is the usual Norton exclusion for the `Builds` folder of the DOTS clone (section 2,
 "Norton and Windows Firewall").

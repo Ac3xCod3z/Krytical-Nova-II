@@ -57,6 +57,8 @@ namespace KryticalNova.ServerApp
             public readonly TextBox Command = new TextBox();
             public long Seen;
             public int Online;
+            /// <summary>Netcode for Entities' sleep-mode notes hidden from the log since this start (a slow frame each; harmless).</summary>
+            public int SlowFrames;
             public string State = "STOPPED";
             public bool Stopping;
             /// <summary>An entity server has no gm.restart: RESTART stops it and this starts it again when it has ended.</summary>
@@ -403,6 +405,7 @@ namespace KryticalNova.ServerApp
             }
             server.Stopping = false;
             server.Online = 0;
+            server.SlowFrames = 0;
             server.State = "STARTING";
             if (!server.Process.Start(out string problem)) { server.Process.Note("Could not start the server: " + problem); server.State = "STOPPED"; }
             Invalidate();
@@ -624,6 +627,7 @@ namespace KryticalNova.ServerApp
             foreach (string line in fresh)
             {
                 if (Noise(line)) continue;
+                if (counted != null && SleepModeNote(line)) { counted.SlowFrames++; continue; } // counted in the tab's top line instead
                 sb.AppendLine(line);
                 if (counted != null)
                 {
@@ -641,6 +645,10 @@ namespace KryticalNova.ServerApp
         // Unity's start-up chatter that is no problem (the control page hides the same).
         private static readonly Regex NoisePattern = new Regex(@"memorysetup|serialization layout|Did you #if UNITY_EDITOR|referenced script|UnloadTime|Unloading \d+|shader|IMGUI module|Unknown managed type", RegexOptions.IgnoreCase);
         private static bool Noise(string line) => NoisePattern.IsMatch(line);
+
+        // The entity server's "Expected server to always update once per frame when in sleep mode. Ran N steps" (Netcode for Entities):
+        // a frame that took longer than a tick (start, a join, a backup). Harmless; hidden and counted (Nova's pick, DOTS builds 8 Nov 2026).
+        private static bool SleepModeNote(string line) => line.IndexOf("Expected server to always update once per frame when in sleep mode", StringComparison.Ordinal) >= 0;
 
         private async Task<bool> Answers()
         {
@@ -719,7 +727,8 @@ namespace KryticalNova.ServerApp
                 string what = server.IsMap
                     ? $"map server of {server.Map}: never in the server list (players see one server)"
                     : $"the listed server{(servers.Count > 1 ? " (the one players see)" : "")}  ·  saves: {(settings.UsesSaves ? "the save database" : "files")}";
-                server.Info.Text = $"{server.State}  ·  {server.Online} player(s) on  ·  {up}  ·  port {server.Port}\n" +
+                string slow = server.SlowFrames > 0 ? $"  ·  {server.SlowFrames} slow frame note(s) hidden" : "";
+                server.Info.Text = $"{server.State}  ·  {server.Online} player(s) on  ·  {up}  ·  port {server.Port}{slow}\n" +
                                    $"Control page: http://localhost:{server.PagePort}  ·  {what}  ·  {serverFolder}";
             }
             long documents = Number(lastHealth, "documents"), bytes = Number(lastHealth, "bytes");

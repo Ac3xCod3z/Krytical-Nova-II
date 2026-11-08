@@ -205,11 +205,29 @@ namespace KryticalNova.Persistence.Entities
 
             // let in = this client's own body appeared (the server built its ServerBody and ghost)
             float started = Time.realtimeSinceStartup;
+            string lastState = null;
             while (LocalPlayer.Object == null)
             {
+                string state = ConnectionState();
+                if (state != lastState)
+                {
+                    Debug.Log($"[KnJoinHere] {(Time.realtimeSinceStartup - started).ToString("F1", CultureInfo.InvariantCulture)} s: {state}");
+                    lastState = state;
+                }
+                // a refusal ends the wait at once, as NGO's join does (NetworkConnectionManager.JoinChosenServer: the disconnect ends
+                // the wait, its reason is read, the client shuts down and the reason is shown; DOTS builds 8 Nov 2026)
+                string refused = RefusalDetail();
+                if (refused != null)
+                {
+                    Debug.LogError($"[KnJoinHere] Refused by the server after {(Time.realtimeSinceStartup - started).ToString("F1", CultureInfo.InvariantCulture)} s: {refused}");
+                    KnBootstrap.Stop();   // the game's own session-ended panel shows the reason (NetSession.EndReason)
+                    yield break;
+                }
                 if (Time.realtimeSinceStartup - started > AdmitTimeoutSeconds)
                 {
-                    Debug.LogError($"[KnJoinHere] Refused: not let in within {AdmitTimeoutSeconds} s{RefusalText()}. Is Play DOTS here running in the Editor?");
+                    Debug.LogError($"[KnJoinHere] Refused: not let in within {AdmitTimeoutSeconds} s{RefusalText()}. Is the server running?");
+                    KnBootstrap.Stop();
+                    m_Shown = $"No answer from {o.Host}:{o.Port} within {AdmitTimeoutSeconds} s.\nIs the server running?";
                     yield break;
                 }
                 yield return null;
@@ -218,6 +236,38 @@ namespace KryticalNova.Persistence.Entities
 
             while (LocalPlayer.Object != null) yield return null;
             Debug.LogWarning("[KnJoinHere] The server let this player go" + RefusalText() + " (Play DOTS here stopped?).");
+        }
+
+        // What the player is told when the server never answered (the game's session-ended panel covers a refusal or a send-off).
+        string m_Shown;
+
+        void OnGUI()
+        {
+            if (m_Shown == null) return;
+            var style = new GUIStyle(GUI.skin.box) { fontSize = 18, wordWrap = true, alignment = TextAnchor.MiddleCenter };
+            float w = Mathf.Min(620f, Screen.width - 40f), h = 150f;
+            GUI.Box(new Rect((Screen.width - w) / 2f, (Screen.height - h) / 2f, w, h), m_Shown + "\n\nClose this window to quit.", style);
+        }
+
+        // Where this client's connection is, for the join log: no world, no connection, connecting (state), or let in with a NetworkId.
+        static string ConnectionState()
+        {
+            World client = null;
+            foreach (World w in World.All)
+                if (w.IsCreated && w.Name == KnBootstrap.ClientWorldName) { client = w; break; }
+            if (client == null) return "no client world";
+            using var connections = client.EntityManager.CreateEntityQuery(ComponentType.ReadOnly<Unity.NetCode.NetworkStreamConnection>());
+            if (connections.IsEmpty) return "no connection";
+            using var ids = client.EntityManager.CreateEntityQuery(ComponentType.ReadOnly<Unity.NetCode.NetworkId>());
+            if (!ids.IsEmpty) return "approved (NetworkId " + ids.GetSingleton<Unity.NetCode.NetworkId>().Value + "), waiting for the server to make the body";
+            return "connected, waiting for approval";
+        }
+
+        // The server's own words when it turned this client away; null when none arrived.
+        static string RefusalDetail()
+        {
+            string text = RefusalText();
+            return text.Length == 0 ? null : text.Substring(" (server: ".Length, text.Length - " (server: ".Length - 1);
         }
 
         // The database's first lineage in its default look: valid by construction (the server checks it again).

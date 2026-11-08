@@ -79,17 +79,26 @@ namespace KryticalNova.Networking.Entities
             foreach (Entity connection in m_Gone) m_Pending.Remove(connection);
         }
 
+        // One log line per admission step on a dedicated server, beside KnApprovalAssembler's (DOTS builds 8 Nov 2026).
+        [System.Diagnostics.Conditional("UNITY_SERVER")]
+        private static void Step(string line) => Debug.Log("[KnJoin] " + line);
+
         private void Take(Entity connection, in GoInGameRequest request)
         {
-            if (connection == Entity.Null || !EntityManager.Exists(connection) || !EntityManager.HasComponent<ConnectionPlayerKey>(connection)) return;
+            if (connection == Entity.Null || !EntityManager.Exists(connection) || !EntityManager.HasComponent<ConnectionPlayerKey>(connection))
+            {
+                Step($"a go-in-game request from connection {connection.Index} was dropped: it has no player key (gone, or not approved).");
+                return;
+            }
             ConnectionPlayerKey owner = EntityManager.GetComponentData<ConnectionPlayerKey>(connection);
-            if (!PlayerKeys.IsAlive(owner.PlayerKey)) return;                       // the key died: nobody is there to answer
+            if (!PlayerKeys.IsAlive(owner.PlayerKey)) { Step($"connection {connection.Index}: go-in-game dropped, its player key died."); return; }
             if (EntityManager.HasComponent<KnAdmissionDone>(connection)) return;    // decided already: a repeat changes nothing
 
             if (!m_Pending.TryGetValue(connection, out Pending pending))
             {
                 pending = new Pending { CharacterId = request.CharacterId.ToString(), Name = request.Name.ToString() };
                 m_Pending[connection] = pending;
+                Step($"connection {connection.Index}: go-in-game request for \"{pending.Name}\" arrived ({request.PageCount} page(s)).");
             }
             else if (pending.CharacterId != request.CharacterId.ToString() || pending.Name != request.Name.ToString())
             {
@@ -115,12 +124,14 @@ namespace KryticalNova.Networking.Entities
             if (Admission == null) refusal = NotReadyText;
             else
             {
+                var took = System.Diagnostics.Stopwatch.StartNew();
                 try { refusal = Admission.Admit(admission); }
                 catch (System.Exception e)
                 {
                     Debug.LogError("[KnServer] admission threw for " + owner.PlayerKey + ": " + e);
                     refusal = FailedText;
                 }
+                Step($"connection {connection.Index}: the game's admission took {took.ElapsedMilliseconds} ms.");
             }
             Decide(connection, owner, refusal);
         }
@@ -130,6 +141,7 @@ namespace KryticalNova.Networking.Entities
         {
             m_Pending.Remove(connection);
             EntityManager.AddComponent<KnAdmissionDone>(connection);
+            Step($"connection {connection.Index}: the game " + (refusal == null ? "let the player in." : "refused the player: " + refusal));
             if (refusal == null)
             {
                 Admitted++;
