@@ -424,7 +424,7 @@ namespace KryticalNova.Publisher
         private string ClientArgs()
         {
             if (settings.IsLocal) return $"--endpoint {settings.LocalEndpoint} --bucket kn-game --key-file \"{StandInKeys}\"";
-            return $"--endpoint {settings.r2Endpoint} --bucket {settings.r2Bucket} --key-file \"{settings.r2KeyFile}\"";
+            return $"--endpoint \"{settings.r2Endpoint}\" --bucket \"{settings.r2Bucket}\" --key-file \"{settings.r2KeyFile}\"";
         }
 
         private bool TargetReady()

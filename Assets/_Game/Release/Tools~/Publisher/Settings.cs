@@ -19,7 +19,7 @@ namespace KryticalNova.Publisher
         [DataMember(Order = 1)] public string target = "local";
         [DataMember(Order = 2)] public string python = "python";
         /// <summary>Where Browse starts: the folder Publish to Test stages into.</summary>
-        [DataMember(Order = 3)] public string storeFolder = @"C:\Users\dlaco\Krytical Nova II\Builds\Release\Store";
+        [DataMember(Order = 3)] public string storeFolder = "";
 
         // The local stand-in (fake_r2.py): a test port far from the game's 7777/7778, the save service's 7801/7802 and the page's 8090.
         [DataMember(Order = 10)] public int localPort = 7920;
@@ -51,6 +51,9 @@ namespace KryticalNova.Publisher
                 settings = new Settings();
                 settings.Save(folder);
             }
+            // The app lives in <project>\Builds\Publisher; Publish to Test stages into <project>\Builds\Release\Store.
+            if (string.IsNullOrWhiteSpace(settings.storeFolder))
+                settings.storeFolder = Path.GetFullPath(Path.Combine(folder, "..", "Release", "Store"));
             if (string.IsNullOrWhiteSpace(settings.localFolder))
                 settings.localFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "KryticalNova-LocalCDN");
             return settings;
