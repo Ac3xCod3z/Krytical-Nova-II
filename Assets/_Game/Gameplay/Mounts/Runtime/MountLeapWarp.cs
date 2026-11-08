@@ -9,14 +9,17 @@ namespace KryticalNova.Mounts
     /// AddComponent had null UnityEvents, so Play threw after it had started, the warp never ended and Stop threw every
     /// frame - the body flew off, the roll never came and the ride locked). Made here with everything the vendor
     /// component expects from its inspector: its events, what it moves, no play-rate scaling, no Animator play.
+    /// It moves the stand-in of a <see cref="MountLeapSpace"/> (the player's own space), never the body itself.
     /// </summary>
     public static class MountLeapWarp
     {
-        public static MotionWarping Create(Transform parent, Transform warped)
+        public static MotionWarping Create(Transform root, Transform body, out MountLeapSpace space)
         {
-            if (parent == null || warped == null) return null;
+            space = null;
+            if (root == null || body == null) return null;
             var holder = new GameObject("Mount Leap Warp");
-            holder.transform.SetParent(parent, false);
+            holder.transform.SetParent(root, false);
+            space = MountLeapSpace.Create(holder, root, body);
             var warp = holder.AddComponent<MotionWarping>();
             warp.onWarpStarted = new UnityEvent();
             warp.onWarpEnded = new UnityEvent();
@@ -26,30 +29,31 @@ namespace KryticalNova.Mounts
             if (target == null)
             {
                 Debug.LogError("[Mounts] The Motion Warping package changed (no transformToWarp): the leap is off.");
-                Object.Destroy(holder);
+                Destroy(holder);
+                space = null;
                 return null;
             }
-            target.SetValue(warp, warped);
+            target.SetValue(warp, space.Stand);
             type.GetField("scalePlayRate", Private)?.SetValue(warp, false);
             type.GetField("playAnimator", Private)?.SetValue(warp, false);
             return warp;
         }
 
-        /// <summary>
-        /// The leap's landing: a warp point that follows <paramref name="mark"/> (so a running body is caught). Its
-        /// position and rotation are in the MARK'S OWN space - the vendor reads a point with a transform as
-        /// transform.TransformPoint(position) and transform.rotation * rotation. Owner, 7 Nov 2026 (leap proof run):
-        /// the mark's world position was passed there, so the target lay as far again from the world's origin as the
-        /// player (~11 m standing at z -12, ~63 m running) and faced backwards; the body flew there and snapped back.
-        /// </summary>
-        public static Kinemation.MotionWarping.Runtime.Utility.WarpPoint LandingPoint(Transform mark)
+        private static void Destroy(GameObject go)
         {
-            return new Kinemation.MotionWarping.Runtime.Utility.WarpPoint
-            {
-                transform = mark,
-                position = Vector3.zero,
-                rotation = Quaternion.identity,
-            };
+            if (Application.isPlaying) Object.Destroy(go);
+            else Object.DestroyImmediate(go);
+        }
+
+        /// <summary>
+        /// A warp point at a world pose (the leap's points are taken into the still leap space first, so they are
+        /// fixed there). Owner, 7 Nov 2026 (leap proof run): a point that FOLLOWS a transform is read by the vendor in
+        /// that transform's own space (transform.TransformPoint(position), transform.rotation * rotation); the mark's
+        /// world position was passed there and the body flew ~11 m / ~63 m. The leap uses only fixed points now.
+        /// </summary>
+        public static Kinemation.MotionWarping.Runtime.Utility.WarpPoint At(Vector3 position, Quaternion rotation)
+        {
+            return new Kinemation.MotionWarping.Runtime.Utility.WarpPoint { transform = null, position = position, rotation = rotation };
         }
     }
 }

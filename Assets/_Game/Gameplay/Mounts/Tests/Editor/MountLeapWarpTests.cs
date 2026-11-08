@@ -1,5 +1,4 @@
 using Kinemation.MotionWarping.Runtime.Core;
-using Kinemation.MotionWarping.Runtime.Utility;
 using KryticalNova.Mounts;
 using NUnit.Framework;
 using UnityEditor;
@@ -8,8 +7,9 @@ using UnityEngine;
 namespace KryticalNova.Tests
 {
     /// <summary>
-    /// Owner, 7 Nov 2026 (retest 3): the leap's warp component, made in code, threw on Play (null UnityEvents), kept
-    /// "running" and threw on every Stop: the body flew off, the roll never came and the ride locked.
+    /// The leap off a mount (owner, 7-8 Nov 2026): the warp made in code must play and stop (null UnityEvents locked the
+    /// ride), and the body must stay in the player's own space - it flew ~11 m / ~63 m when a point was given in the
+    /// wrong space, and fell 6.6 m behind a running player while the warp held it on world points.
     /// </summary>
     public sealed class MountLeapWarpTests
     {
@@ -22,19 +22,19 @@ namespace KryticalNova.Tests
             if (asset == null) Assert.Inconclusive("the jump's warp asset is not at " + JumpWarpPath);
             var player = new GameObject("Player");
             var body = new GameObject("Body");
-            var mark = new GameObject("Landing");
             try
             {
                 body.transform.SetParent(player.transform, false);
-                mark.transform.SetParent(player.transform, false);
-                MotionWarping warp = MountLeapWarp.Create(player.transform, body.transform);
+                MotionWarping warp = MountLeapWarp.Create(player.transform, body.transform, out MountLeapSpace space);
                 Assert.IsNotNull(warp);
+                Assert.IsNotNull(space, "the warp works in the player's own space");
                 Assert.IsNotNull(warp.onWarpStarted, "the events the vendor component invokes are there");
                 Assert.IsNotNull(warp.onWarpEnded);
+                space.Begin();
                 Assert.DoesNotThrow(() => warp.Play(asset, new[]
                 {
-                    new WarpPoint { position = Vector3.up * 2f + Vector3.forward, rotation = Quaternion.identity },
-                    MountLeapWarp.LandingPoint(mark.transform),
+                    MountLeapWarp.At(space.SpacePoint(Vector3.up * 2f + Vector3.forward), Quaternion.identity),
+                    MountLeapWarp.At(space.SpacePoint(Vector3.zero), Quaternion.identity),
                 }));
                 Assert.IsTrue(warp.IsActive(), "it is warping");
                 Assert.DoesNotThrow(() => warp.Stop());
@@ -47,28 +47,35 @@ namespace KryticalNova.Tests
         }
 
         /// <summary>
-        /// Owner, 7 Nov 2026 (leap proof run): the body flew ~11 m (standing) / ~63 m (running) and snapped back - the
-        /// landing point was given in world space where the vendor reads it in the mark's own space. The landing must
-        /// be the mark itself wherever the player stands and however it faces, and follow it as the player runs.
+        /// Wherever the root is (far from the origin, turned round) and however far it runs on during the leap, the body
+        /// is where the stand-in is in the leap space - relative to the root - never left behind on a world point.
         /// </summary>
         [Test]
-        public void TheLandingPoint_IsTheMark_FarFromTheOrigin_TurnedRound_AndRunning()
+        public void TheBody_FollowsTheStandIn_RelativeToTheRoot_FarFromTheOrigin_TurnedRound_AndRunning()
         {
             var player = new GameObject("Player");
-            var mark = new GameObject("Landing");
+            var body = new GameObject("Body");
             try
             {
                 player.transform.SetPositionAndRotation(new Vector3(30f, 2f, -60f), Quaternion.Euler(0f, 180f, 0f));
-                mark.transform.SetParent(player.transform, false);
-                mark.transform.localPosition = new Vector3(0.01f, -1f, -0.06f);
-                mark.transform.localRotation = Quaternion.Euler(0f, 5f, 0f);
+                body.transform.SetParent(player.transform, false);
+                body.transform.localPosition = new Vector3(0.01f, -0.5f, -0.37f); // on the seat
+                MountLeapWarp.Create(player.transform, body.transform, out MountLeapSpace space);
+                space.Begin();
 
-                WarpPoint landing = MountLeapWarp.LandingPoint(mark.transform);
-                AssertNear(mark.transform.position, landing.GetPosition(), "lands on the mark");
-                Assert.Less(Quaternion.Angle(mark.transform.rotation, landing.GetRotation()), 0.01f, "faces as the mark");
+                // The warp lifts the stand-in 1 m over the seat; meanwhile the player runs 40 m on.
+                Vector3 apex = space.SpacePoint(body.transform.position + Vector3.up);
+                space.Stand.position = apex;
+                player.transform.position += player.transform.forward * 40f;
+                space.Follow();
+                AssertNear(new Vector3(0.01f, 0.5f, -0.37f), body.transform.localPosition, "over the seat, carried on with the root");
 
-                player.transform.position += new Vector3(0f, 0f, -40f); // ran on
-                AssertNear(mark.transform.position, landing.GetPosition(), "and follows it");
+                // It lands on the rider's rest under the root.
+                Vector3 restLocal = new Vector3(0.01f, -1f, -0.06f);
+                space.Stand.position = space.SpacePoint(player.transform.TransformPoint(restLocal));
+                space.Follow();
+                AssertNear(restLocal, body.transform.localPosition, "on the rest");
+                Assert.Less(Quaternion.Angle(body.transform.localRotation, Quaternion.identity), 0.01f, "facing as the root");
             }
             finally
             {

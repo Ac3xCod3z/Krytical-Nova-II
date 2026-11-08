@@ -88,6 +88,7 @@ namespace KryticalNova.Mounts
         private PlayerJumpMotor jumpMotor;
         private Kinemation.MotionWarping.Runtime.Core.MotionWarping leapWarp;
         private Transform leapMark;
+        private MountLeapSpace leapSpace;
         private bool leaping, leapLanded, leapRolling;
         private AnimationClip leapRollClip;
         private float leapRollFrom;
@@ -103,21 +104,21 @@ namespace KryticalNova.Mounts
             leaping = true;
             leapLanded = leapRolling = false;
 
-            // Where it lands: the rider's own rest under the root (it follows the root, so a running body is caught).
+            // In the player's own space (MountLeapSpace): a running root carries the body on, so the points need no travel.
+            leapSpace.Begin();
+            // Where it lands: the rider's own rest under the root.
             leapMark.localPosition = riderRest;
             leapMark.localRotation = riderRestRotation;
-            Quaternion facing = transform.rotation * riderRestRotation;
-            // The apex: over the seat and part of the way to where the body will be, the seat's height plus a rise.
-            float flight = transition.arrivesAt;
-            Vector3 travel = movement != null && runningTransition ? transform.forward * movement.CurrentSpeed * flight * 0.5f : Vector3.zero;
-            Vector3 apex = rider.position + travel + Vector3.up * (settings != null ? settings.leapApexAboveSeat : 0.7f);
+            Quaternion facing = leapSpace.SpaceRotation(transform.rotation * riderRestRotation);
+            // The apex: over the seat, the seat's height plus a rise.
+            Vector3 apex = leapSpace.SpacePoint(rider.position + Vector3.up * (settings != null ? settings.leapApexAboveSeat : 0.7f));
 
             try
             {
                 leapWarp.Play(jumpMotor.WarpAsset, new[]
                 {
-                    new Kinemation.MotionWarping.Runtime.Utility.WarpPoint { position = apex, rotation = facing },
-                    MountLeapWarp.LandingPoint(leapMark), // in the mark's own space (it faces as the rider at rest)
+                    MountLeapWarp.At(apex, facing),
+                    MountLeapWarp.At(leapSpace.SpacePoint(leapMark.position), leapSpace.SpaceRotation(leapMark.rotation)),
                 });
             }
             catch (System.Exception e)
@@ -125,10 +126,11 @@ namespace KryticalNova.Mounts
                 // Never a half-started warp: stop it and play the baked dismount instead.
                 Debug.LogException(e);
                 try { leapWarp.Stop(); } catch (System.Exception) { }
+                leapSpace.End();
                 leaping = false;
                 return false;
             }
-            if (!leapWarp.IsActive()) { leaping = false; return false; }
+            if (!leapWarp.IsActive()) { leapSpace.End(); leaping = false; return false; }
             motor.PlayWarpedJump();
             return true;
         }
@@ -136,7 +138,7 @@ namespace KryticalNova.Mounts
         private bool EnsureLeapWarp()
         {
             if (leapWarp != null) return true;
-            leapWarp = MountLeapWarp.Create(transform, rider);
+            leapWarp = MountLeapWarp.Create(transform, rider, out leapSpace);
             if (leapWarp == null) return false;
             leapMark = new GameObject("Mount Leap Landing").transform;
             leapMark.SetParent(transform, false);
@@ -176,6 +178,7 @@ namespace KryticalNova.Mounts
             {
                 try { leapWarp.Stop(); } catch (System.Exception e) { Debug.LogException(e); }
             }
+            if (leapSpace != null) leapSpace.End(); // the body is the motor's again
             if (leapRolling) motor.EndWarpedAction(0.2f, mounts != null && mounts.DismountEndsRunning ? 1f : 0f);
             else if (cutShort) motor.ResetJumpAnimation();
             leapRolling = false;
