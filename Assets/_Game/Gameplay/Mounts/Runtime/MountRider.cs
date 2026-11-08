@@ -76,6 +76,98 @@ namespace KryticalNova.Mounts
             motor = GetComponent<PlayerAnimancerMotor>();
             movement = GetComponent<PlayerMovementSkills>();
             agent = GetComponent<NavMeshAgent>();
+            jumpMotor = GetComponent<PlayerJumpMotor>();
+        }
+
+        // ------------------------------------------------------------------ the leap off (owner, 7 Nov 2026 retest 2)
+        // The game's own jump: its clip chain (a crouch on the saddle, the take-off, the flip, the landing) on the motor,
+        // and the jump's Motion Warping asset moving the rider's body (not the player's root) from the seat over an apex
+        // to a mark under the root, so it lands where the body is, standing or running. Every machine plays it from
+        // the replicated phase. A running leap hands into its clip's roll at the touchdown; a standing one into the
+        // jump's own landing and the idle.
+        private PlayerJumpMotor jumpMotor;
+        private Kinemation.MotionWarping.Runtime.Core.MotionWarping leapWarp;
+        private Transform leapMark;
+        private bool leaping, leapLanded, leapRolling;
+        private AnimationClip leapRollClip;
+        private float leapRollFrom;
+
+        private bool StartLeap(AnimationClip bakedClip)
+        {
+            if (motor == null || !motor.HasWarpedJump || jumpMotor == null || jumpMotor.WarpAsset == null || rider == null) return false;
+            if (!EnsureLeapWarp()) return false;
+            MountSettings settings = mounts.Settings;
+            MountTransition baked = settings != null ? settings.Transition(false, runningTransition, mounts.DismountEndsRunning) : null;
+            leapRollClip = runningTransition ? bakedClip : null;
+            leapRollFrom = baked != null ? baked.rollStartsAt : 0f;
+            leaping = true;
+            leapLanded = leapRolling = false;
+
+            // Where it lands: the rider's own rest under the root (it follows the root, so a running body is caught).
+            leapMark.localPosition = riderRest;
+            leapMark.localRotation = riderRestRotation;
+            Quaternion facing = transform.rotation * riderRestRotation;
+            // The apex: over the seat and part of the way to where the body will be, the seat's height plus a rise.
+            float flight = transition.arrivesAt;
+            Vector3 travel = movement != null && runningTransition ? transform.forward * movement.CurrentSpeed * flight * 0.5f : Vector3.zero;
+            Vector3 apex = rider.position + travel + Vector3.up * (settings != null ? settings.leapApexAboveSeat : 0.7f);
+
+            motor.PlayWarpedJump();
+            leapWarp.Play(jumpMotor.WarpAsset, new[]
+            {
+                new Kinemation.MotionWarping.Runtime.Utility.WarpPoint { position = apex, rotation = facing },
+                new Kinemation.MotionWarping.Runtime.Utility.WarpPoint { transform = leapMark, position = leapMark.position, rotation = facing },
+            });
+            return true;
+        }
+
+        private bool EnsureLeapWarp()
+        {
+            if (leapWarp != null) return true;
+            var holder = new GameObject("Mount Leap Warp");
+            holder.transform.SetParent(transform, false);
+            leapMark = new GameObject("Mount Leap Landing").transform;
+            leapMark.SetParent(transform, false);
+            leapWarp = holder.AddComponent<Kinemation.MotionWarping.Runtime.Core.MotionWarping>();
+            // The vendor component keeps what it moves in private fields: set them as its own inspector would.
+            const System.Reflection.BindingFlags Private = System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic;
+            var type = typeof(Kinemation.MotionWarping.Runtime.Core.MotionWarping);
+            var target = type.GetField("transformToWarp", Private);
+            if (target == null) { Debug.LogError("[Mounts] The Motion Warping package changed: no transformToWarp. The leap is off."); Destroy(holder); leapWarp = null; return false; }
+            target.SetValue(leapWarp, rider);
+            type.GetField("scalePlayRate", Private)?.SetValue(leapWarp, false);
+            type.GetField("playAnimator", Private)?.SetValue(leapWarp, false);
+            return true;
+        }
+
+        private void Leap()
+        {
+            if (!leaping || transition == null) return;
+            float since = Time.time - phaseStartedAt;
+            if (!leapLanded && since >= transition.arrivesAt)
+            {
+                leapLanded = true;
+                if (leapRollClip != null)
+                {
+                    // The roll of the baked clip, from its own touchdown: the body keeps going (PlayerMounts drives it).
+                    motor.PlayWarpedAction(leapRollClip, leapRollFrom, 1f, 0.08f);
+                    leapRolling = true;
+                }
+                else motor.PlayWarpedJumpRecovery();
+            }
+            if (leapRolling && since >= transition.seconds - 0.1f) EndLeap(false);
+        }
+
+        // The leap is over (its roll ran out) or was cut short: the warp stops and the motor goes back to its own feet.
+        private void EndLeap(bool cutShort)
+        {
+            if (!leaping) return;
+            leaping = false;
+            if (leapWarp != null && leapWarp.IsActive()) leapWarp.Stop();
+            if (leapRolling) motor.EndWarpedAction(0.2f, mounts != null && mounts.DismountEndsRunning ? 1f : 0f);
+            else if (cutShort) motor.ResetJumpAnimation();
+            leapRolling = false;
+            if (rider != null && riderLifted) rider.localPosition = riderRest + seatOffset * lift;
         }
 
         private void OnEnable()
@@ -148,11 +240,12 @@ namespace KryticalNova.Mounts
             {
                 bool on = phase == RidePhase.GettingOn;
                 runningTransition = mounts.IsRunningTransition;
-                transition = settings != null ? settings.Transition(on, runningTransition, mounts.DismountEndsRunning) : null;
+                transition = mounts.TransitionInPlay(on, runningTransition, mounts.DismountEndsRunning);
                 if (mount.hopMountUp) { lift = Lift(phase, 0f); forward = Forward(0f); onGround = OnGround(on, 0f); }
                 // The beats for the GameFeel layer: getting off (take-off, apex, touchdown, roll, stand-up), and getting
                 // on (owner, 7 Nov 2026 retest: the push off the ground, the weight landing in the saddle).
                 EndBeats(); // a getting-on or off cut short by this new phase ends its feel first
+                EndLeap(true);
                 beats = mount.hopMountUp ? transition : null;
                 beatsGettingOn = on;
                 beatsFired = 0;
@@ -439,6 +532,7 @@ namespace KryticalNova.Mounts
                     if (off == null) off = mount.RiderClip(stage, l => l.dismount, mount.dismount);
                     if (off == null) off = idle;
                     phaseClipLength = off != null ? off.length : 0f;
+                    if (transition != null && transition.leap && StartLeap(off)) { phaseClipLength = transition.seconds; break; }
                     motor.SetSeated(off, off, off);
                     break;
                 default:
@@ -452,6 +546,7 @@ namespace KryticalNova.Mounts
         /// into the idle, in step with it, instead of at once (see <see cref="HandOver"/>).</param>
         private void Clear(bool eased = false)
         {
+            EndLeap(!leapLanded);
             if (!eased || !isActiveAndEnabled) { FinishHandOver(); EndBeats(); }
             float standFade = eased && mounts != null && mounts.Settings != null ? mounts.Settings.standHandOverSeconds : 0f;
             if (shownMount != null || riderLifted) motor?.SetSeated(null, null, null, standFade: standFade);
@@ -485,6 +580,7 @@ namespace KryticalNova.Mounts
             Quaternion turn = Quaternion.AngleAxis(lean, Vector3.right);
             Vector3 seat = seatOffset * lift + Vector3.forward * forward + Vector3.down * (groundDrop * onGround) + Vector3.up * airRise;
             Vector3 hips = riderRest + seat + Vector3.up * HipHeight;
+            if (leaping) return; // the leap's warp moves the rider
             rider.localRotation = turn * riderRestRotation;
             rider.localPosition = hips + turn * (riderRest + seat - hips) + Vector3.up * bob;
         }
@@ -545,6 +641,7 @@ namespace KryticalNova.Mounts
             HandOver();
             Beats();
             SpringModel();
+            Leap();
             // The rest of a getting-off clip after the rider is free: ends at its length, or as soon as the rider moves.
             if (tailEnds > 0f && (Time.time >= tailEnds || (motor != null && motor.IsTravelling)))
             {

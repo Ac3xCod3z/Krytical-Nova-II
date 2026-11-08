@@ -241,7 +241,7 @@ namespace KryticalNova.Mounts
                 // rider goes at on-foot speed through the dismount (Show sets it), so that is the speed to reckon with.
                 float footSpeed = 0f;
                 if (movement != null) { movement.SetRideSpeeds(0f, 0f); footSpeed = movement.CurrentSpeed; }
-                MountTransition roll = settings.getOffRunning;
+                MountTransition roll = TransitionInPlay(false, true, true);
                 endsRunning = MountRules.DismountEndsRunning(PathLeft(), footSpeed, roll.rollStartsAt, roll.rollEndsAt,
                     settings.rollSpeedScale, settings.rollIntoRunMinDistance);
             }
@@ -267,13 +267,30 @@ namespace KryticalNova.Mounts
                 // Free the same time before the clip's end as the transition says (the settle, landing or roll plays on
                 // after, MountRider). For the new clips that is exactly freeSeconds; an older, longer clip (the standing
                 // dismount, left as it was) is not cut short.
-                MountTransition t = settings.Transition(next == RidePhase.GettingOn, running, endsRunning);
-                seconds = clip != null ? Mathf.Max(t.freeSeconds, clip.length - (t.seconds - t.freeSeconds)) : t.freeSeconds;
+                MountTransition t = TransitionInPlay(next == RidePhase.GettingOn, running, endsRunning);
+                seconds = clip != null && !t.leap ? Mathf.Max(t.freeSeconds, clip.length - (t.seconds - t.freeSeconds)) : t.freeSeconds;
             }
             phaseEnds = Time.time + Mathf.Max(MinPhaseSeconds, seconds);
         }
 
         /// <summary>Metres of path left to the clicked spot (the server's own copy walks the player), 0 with no path.</summary>
+        /// <summary>
+        /// The getting on or off as it plays: the settings' transition, or for a getting-off the leap built from the
+        /// game's own jump (MountSettings.leapWithJump). Every machine and every user of the timing asks here.
+        /// </summary>
+        public MountTransition TransitionInPlay(bool gettingOn, bool running, bool endsRunning)
+        {
+            MountSettings settings = Settings;
+            if (settings == null) return null;
+            MountTransition t = settings.Transition(gettingOn, running, endsRunning);
+            if (gettingOn || !settings.leapWithJump || t == null) return t;
+            if (jumpMotor == null) jumpMotor = GetComponent<KryticalNova.Player.PlayerJumpMotor>();
+            if (jumpMotor == null || !jumpMotor.TryGetWarpTimes(out float takeoff, out float apex, out float land)) return t;
+            return t.WithLeap(takeoff, apex, land, settings.leapStandRecoverSeconds);
+        }
+
+        private KryticalNova.Player.PlayerJumpMotor jumpMotor;
+
         private float PathLeft()
         {
             NavMeshAgent agent = GetComponent<NavMeshAgent>();
@@ -295,7 +312,7 @@ namespace KryticalNova.Mounts
         {
             MountSettings settings = Settings;
             if (movement == null || settings == null || shown.phase != RidePhase.GettingOff || !shown.running || dismountRunSpeed <= 0f) return;
-            MountTransition roll = shown.endsRunning ? settings.getOffRunning : settings.getOffRunningToIdle;
+            MountTransition roll = TransitionInPlay(false, true, shown.endsRunning);
             float share = MountRules.DismountSpeedShare(Time.time - dismountStartedAt, shown.endsRunning, roll.rollStartsAt,
                 roll.rollEndsAt, settings.rollSpeedScale, settings.rollSlideSeconds);
             float speed = Mathf.Max(StandStillSpeed, dismountRunSpeed * dismountScale * share);
@@ -543,7 +560,7 @@ namespace KryticalNova.Mounts
                     // the path), and driven each frame by DriveDismountSpeed.
                     if (dismountStarts && next.running && settings != null)
                     {
-                        MountTransition roll = next.endsRunning ? settings.getOffRunning : settings.getOffRunningToIdle;
+                        MountTransition roll = TransitionInPlay(false, true, next.endsRunning);
                         dismountStartedAt = Time.time;
                         dismountRunSpeed = movement.CurrentSpeed;
                         dismountScale = next.endsRunning ? 1f : MountRules.DismountStandingScale(PathLeft(), dismountRunSpeed,

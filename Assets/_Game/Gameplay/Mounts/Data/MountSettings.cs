@@ -65,6 +65,15 @@ namespace KryticalNova.Mounts
                  "the seat together (owner, 7 Nov 2026 retest 2: the hand-over must not be noticeable).")]
         [Range(0.1f, 1f)] public float standHandOverSeconds = 0.45f;
 
+        [Header("The leap off (owner pick, 7 Nov 2026 retest 2: the game's own jump, Motion-Warped off the mount's back)")]
+        [Tooltip("Getting off plays the game's jump chain (crouch on the saddle, take-off, flip, landing) and Motion-Warps the " +
+                 "rider from the seat to the ground. Off = the baked dismount clips as before.")]
+        public bool leapWithJump = true;
+        [Tooltip("Metres the leap's apex rises above the seat.")]
+        [Range(0f, 2f)] public float leapApexAboveSeat = 0.7f;
+        [Tooltip("Standing: seconds after the leap's landing before the rider is free (the jump's own landing plays on into the idle).")]
+        [Range(0.1f, 1.5f)] public float leapStandRecoverSeconds = 0.5f;
+
         [Header("Getting on and off (owner picks, 6 Nov 2026: Torrent's timing; a running version of each)")]
         [Tooltip("Standing still (or walking: the rider stops first): the summon hop. Dip, hop with the leg over, drop into the seat, settle.")]
         public MountTransition getOn = MountTransition.StandingOn();
@@ -145,6 +154,42 @@ namespace KryticalNova.Mounts
         [Min(0f)] public float slideEndsAt;
 
         private static Keyframe K(float t, float v) => new Keyframe(t, v);
+
+        /// <summary>This getting-off is the leap (the jump chain, Motion-Warped): set on the runtime copy only.</summary>
+        [System.NonSerialized] public bool leap;
+
+        /// <summary>
+        /// The getting-off as the leap plays it (owner, 7 Nov 2026 retest 2): the feet leave the saddle at the jump's
+        /// take-off, the apex and landing are the jump's, and the mount vanishes just after the push-off. A running one
+        /// then plays this clip's roll from its touchdown, every later beat shifted by the same time; a standing one is
+        /// free <paramref name="recover"/> seconds after the landing. A copy: the settings stay as they are.
+        /// </summary>
+        public MountTransition WithLeap(float takeoff, float apex, float land, float recover)
+        {
+            var leapt = (MountTransition)MemberwiseClone();
+            leapt.leap = true;
+            leapt.leavesAt = takeoff;
+            leapt.apexAt = apex;
+            leapt.effectDelay = takeoff + VanishAfterPushOff;
+            if (rollStartsAt > 0f)
+            {
+                float shift = land - arrivesAt;
+                leapt.rollStartsAt = rollStartsAt + shift;
+                leapt.slideEndsAt = slideEndsAt > 0f ? slideEndsAt + shift : 0f;
+                leapt.rollEndsAt = rollEndsAt + shift;
+                leapt.standsAt = standsAt > 0f ? standsAt + shift : 0f;
+                leapt.seconds = seconds + shift;
+                leapt.freeSeconds = freeSeconds + shift;
+            }
+            else
+            {
+                leapt.standsAt = land + recover;
+                leapt.freeSeconds = land + recover;
+                leapt.seconds = land + recover + 0.15f;
+            }
+            leapt.arrivesAt = land;
+            return leapt;
+        }
 
         /// <summary>
         /// Getting off, the mount starts vanishing this long after the rider's feet leave the saddle (owner, 7 Nov 2026
