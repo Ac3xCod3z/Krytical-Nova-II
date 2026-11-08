@@ -60,10 +60,19 @@ namespace KryticalNova.Hostiles
         }
 
         /// <summary>A Hostile of this species at this place, from the pool when one is waiting. It is active.</summary>
-        public static HostileNet Take(HostileNet prefab, Vector3 position, Quaternion rotation)
+        public static HostileNet Take(HostileNet prefab, Vector3 position, Quaternion rotation) => Take(prefab, position, rotation, view: false);
+
+        /// <summary>
+        /// The same for a client's view of a ghost: always the species itself, never the entity server's hidden body. <see cref="BodyOf"/> is
+        /// one static, so in "Play DOTS here" (server and client in one process) the views resolved to hidden server bodies, and the click
+        /// skipped them (PointAndClickPlayer.TryPickPointerHit): a single Prowler could not be selected (owner, 8 Nov 2026).
+        /// </summary>
+        public static HostileNet TakeView(HostileNet prefab, Vector3 position, Quaternion rotation) => Take(prefab, position, rotation, view: true);
+
+        private static HostileNet Take(HostileNet prefab, Vector3 position, Quaternion rotation, bool view)
         {
             HostileNet species = prefab;
-            prefab = Resolve(prefab);
+            if (!view) prefab = Resolve(prefab);
             bool serverBody = prefab != species;   // the entity server's hidden body in place of the species (M6.4)
             Stack<HostileNet> stack = StackOf(prefab.gameObject);
             while (stack.Count > 0)

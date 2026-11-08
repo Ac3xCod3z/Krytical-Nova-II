@@ -80,7 +80,7 @@ namespace KryticalNova.Hostiles.Entities
                 {
                     HostileNet prefab = SpeciesOf(ghost.Species);
                     if (prefab == null) continue;
-                    HostileNet body = HostilePool.Take(prefab, place.Position, place.Rotation);
+                    HostileNet body = HostilePool.TakeView(prefab, place.Position, place.Rotation);
                     body.BindView(ghost.Level);
                     body.ShowStateFromGhost(StateOf(ghost), joining: true);
                     view = new View { Body = body, Shown = ghost };

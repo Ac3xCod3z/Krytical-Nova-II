@@ -1462,7 +1462,9 @@ namespace KryticalNova.Persistence.Entities
             /// </summary>
             public const string TestMobsVariable = "KN_PLAYHERE_TEST_MOBS";
             static bool TestMobs => Environment.GetEnvironmentVariable(TestMobsVariable) == "1";
-            public static readonly string[] TestMobLines = { "gm.hostile.spawn prowler 5 0 inf here", "gm.hostile.spawn colossus 1 0 inf here" };
+            // owner 8 Nov 2026: outside Concord (cross-faction neutral ground, 220 m square at the origin: no Hostile picks a player there, NGO
+            // HostileZone.CallBackStrays), at Zone01's mob-ne Hostile Zone centre (150, 150) from the scene; gm.tpxyz 150 0 146 goes there
+            public static readonly string[] TestMobLines = { "gm.hostile.spawn prowler 5 0 inf 150,150", "gm.hostile.spawn colossus 1 0 inf 150,154" };
             /// <summary>What the test monsters' lines answered (the scripted check reads it).</summary>
             public static string TestMobAnswers { get; private set; } = "";
 

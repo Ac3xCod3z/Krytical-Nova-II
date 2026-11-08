@@ -90,7 +90,7 @@ namespace KryticalNova.DevTools
 
         [Command("gm.hostile.spawn", "Spawn Hostiles under the mouse cursor (or beside you): gm.hostile.spawn <id|name> [count] [level] [health] [here]. " +
                                      "Level 0 is the species' own. Health is a number (that much instead of the species') or inf (it cannot die: " +
-                                     "a blow that would kill it fills it up again). 'here' puts them beside you whatever the cursor is on. Outside any Hostile Zone.")]
+                                     "a blow that would kill it fills it up again). 'here' puts them beside you whatever the cursor is on; 'x,z' at that place. Outside any Hostile Zone.")]
         private static string Spawn(string idOrName, int count = 1, int level = 0, string health = "", string where = "")
         {
             if (!TryGetPlayer(out var player, out var error)) return error;
@@ -111,6 +111,8 @@ namespace KryticalNova.DevTools
             Vector3 centre = player.transform.position + player.transform.forward * 4f;
             Camera cam = Camera.main;
             bool besideYou = string.Equals((where ?? string.Empty).Trim(), "here", StringComparison.OrdinalIgnoreCase);
+            // "x,z": at that place on the ground (owner, 8 Nov 2026: the Play DOTS here test monsters stand outside Concord's neutral ground)
+            if (TryPlace(where, out Vector3 placed)) { centre = placed; besideYou = true; }
             if (!besideYou && cam != null && Mouse.current != null &&
                 Physics.Raycast(cam.ScreenPointToRay(Mouse.current.position.ReadValue()), out RaycastHit hit, 2000f, ~0, QueryTriggerInteraction.Ignore))
                 centre = hit.point;
@@ -134,6 +136,18 @@ namespace KryticalNova.DevTools
             string with = infinite ? ", which cannot die" : maxHealth > 0f ? $", with {maxHealth:0} health" : string.Empty;
             string name = prowler ? $"Prowler stand-in ({species.Definition.displayName}, attacks on sight)" : species.Definition.displayName;
             return $"Spawned {made} {name} at level {shownLevel}{with}.";
+        }
+
+        static bool TryPlace(string where, out Vector3 place)
+        {
+            place = default;
+            string[] xz = (where ?? string.Empty).Split(',');
+            var inv = System.Globalization.CultureInfo.InvariantCulture;
+            if (xz.Length != 2 || !float.TryParse(xz[0], System.Globalization.NumberStyles.Float, inv, out float x)
+                || !float.TryParse(xz[1], System.Globalization.NumberStyles.Float, inv, out float z)) return false;
+            if (!UnityEngine.AI.NavMesh.SamplePosition(new Vector3(x, 0f, z), out UnityEngine.AI.NavMeshHit hit, 50f, UnityEngine.AI.NavMesh.AllAreas)) return false;
+            place = hit.position;
+            return true;
         }
 
         [Command("gm.hostile.clear", "Remove GM-spawned Hostiles: all of them, or those within [radius] metres.")]
