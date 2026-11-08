@@ -123,6 +123,14 @@ namespace KryticalNova.GameFeel
         [SerializeField] private MMF_Player rideCrouchWorldFeel;
         [Tooltip("A running getting-off's touchdown: a flat shockwave on the ground, gone in 0.3 s (owner feel pick 5).")]
         [SerializeField] private MMF_Player rideShockwaveWorldFeel;
+        [Tooltip("Getting on: the thump and creak of the weight landing in the saddle (sound only).")]
+        [SerializeField] private MMF_Player rideSaddleLandWorldFeel;
+        [Tooltip("A running getting-off's roll: the skid on the ground (sound only).")]
+        [SerializeField] private MMF_Player rideRollSkidWorldFeel;
+        [Tooltip("The mount forming as it is summoned: its own voice, by the mount's sound set (sound only).")]
+        [SerializeField] private MMF_Player rideSummonWorldFeel;
+        [Tooltip("The mount vanishing as the rider leaves it: its own sound, by the mount's sound set (sound only).")]
+        [SerializeField] private MMF_Player rideVanishWorldFeel;
         [Tooltip("The rider's own screen as a getting on or off launches: a short FOV punch, stronger with speed (owner feel pick 4).")]
         [SerializeField] private MMF_Player rideLaunchFeel;
         [Tooltip("A getting-off counts as running for the shockwave from this many metres a second.")]
@@ -790,6 +798,9 @@ namespace KryticalNova.GameFeel
             }
             switch (moment.Beat)
             {
+                case DismountBeat.MountShows:
+                    PlayVoiced(rideVanishWorldFeel, moment.MountVoice, moment.Actor.position, actor);
+                    break;
                 case DismountBeat.Crouch:
                     PlayWorld(rideCrouchWorldFeel, feet, Facing(actor), actor, hit);
                     break;
@@ -816,6 +827,7 @@ namespace KryticalNova.GameFeel
                 case DismountBeat.RollStart:
                     // Dust under the planted feet for the measured slide window only (RollStart to SlideEnd).
                     ActorVfx.For(actor).SetRunning(true, runLoopVfx);
+                    PlayWorld(rideRollSkidWorldFeel, feet, Facing(actor), actor, hit);
                     break;
                 case DismountBeat.SlideEnd:
                     ActorVfx.Find(actor)?.SetRunning(false, runLoopVfx);
@@ -845,6 +857,9 @@ namespace KryticalNova.GameFeel
         {
             switch (moment.Beat)
             {
+                case DismountBeat.MountShows:
+                    PlayVoiced(rideSummonWorldFeel, moment.MountVoice, actor.position, actor);
+                    break;
                 case DismountBeat.Crouch:
                     PlayWorld(rideCrouchWorldFeel, feet, Facing(actor), actor, mountUpTakeOffIntensity);
                     break;
@@ -855,6 +870,7 @@ namespace KryticalNova.GameFeel
                 case DismountBeat.Touchdown:
                     ActorSmear.Find(actor)?.Release();
                     PlayWorld(rideLandWorldFeel, feet, Facing(actor), actor, mountUpLandIntensity);
+                    PlayWorld(rideSaddleLandWorldFeel, feet, Facing(actor), actor, 1f);
                     if (moment.IsLocalPlayer) Play(landFeel, actor.position, mountUpShake);
                     break;
                 case DismountBeat.Ended:
@@ -1300,6 +1316,16 @@ namespace KryticalNova.GameFeel
         /// <param name="tint">The colour of the moment, for the effects that take one (<see cref="MMF_PooledVfx.TintWithMoment"/>).</param>
         /// <param name="ramp">The colour ramp of the moment, for the comic effects that take one (<see cref="MMF_PooledVfx.RampWithMoment"/>).</param>
         /// <param name="onlyIfReady">Its effects are left out when no copy lies ready in the pool, instead of being created (<see cref="MMF_PooledVfx.OnlyIfReady"/>).</param>
+        /// <summary>A world feel whose sounds use the set of this name (a mount's own voice); no such set: silent.</summary>
+        private static void PlayVoiced(MMF_Player player, string set, Vector3 position, Transform target)
+        {
+            if (player == null) return;
+            var feedbacks = player.FeedbacksList;
+            for (int i = 0; i < feedbacks.Count; i++)
+                if (feedbacks[i] is MMF_VariedSound sound) sound.UseSet(set);
+            PlayWorld(player, position, Quaternion.identity, target, 1f);
+        }
+
         private static void PlayWorld(MMF_Player player, Vector3 position, Quaternion rotation, Transform target, float intensity = 1f,
             Color? tint = null, ComicRamp? ramp = null, bool onlyIfReady = false)
         {

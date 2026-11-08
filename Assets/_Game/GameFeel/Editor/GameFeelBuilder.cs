@@ -273,7 +273,8 @@ namespace KryticalNova.EditorTools
                     Debug.LogError($"[GameFeel] {PrefabPath} is not a built game feel prefab. Run Build Game Feel first.");
                     return;
                 }
-                Remove(world, new[] { "Ride Dust", "Ride Take-off", "Ride Landing", "Ride Crouch", "Ride Shockwave" });
+                Remove(world, new[] { "Ride Dust", "Ride Take-off", "Ride Landing", "Ride Crouch", "Ride Shockwave", "Ride Saddle Land",
+                    "Ride Roll Skid", "Ride Summon", "Ride Vanish" });
                 Remove(root.transform, new[] { "Ride Launch" });
                 var so = new SerializedObject(presenter);
                 AddRideFeel(world.gameObject, so);
@@ -1937,11 +1938,18 @@ namespace KryticalNova.EditorTools
             so.FindProperty("rideDustWorldFeel").objectReferenceValue = World(world, "Ride Dust", Dust("PFX_Dust_Short"));
             MMF_Player takeOff = Smeared(World(world, "Ride Take-off", Dust("PFX_Dust_Short")), SmearKind.Jump);
             Squash(takeOff, "Push Stretch", -0.03f, 0.07f);
+            Sound(takeOff, "Ride Push-off");
             so.FindProperty("rideTakeOffWorldFeel").objectReferenceValue = takeOff;
             MMF_Player land = World(world, "Ride Landing", Dust("PFX_Dust_Short"));
             Squash(land, "Weight Squash", 0.045f, -0.08f);
             so.FindProperty("rideLandWorldFeel").objectReferenceValue = land;
-            so.FindProperty("rideShockwaveWorldFeel").objectReferenceValue = World(world, "Ride Shockwave", Dust("PFX_Ring_Short"));
+            MMF_Player shockwave = World(world, "Ride Shockwave", Dust("PFX_Ring_Short"));
+            Sound(shockwave, "Ride Shockwave");
+            so.FindProperty("rideShockwaveWorldFeel").objectReferenceValue = shockwave;
+            // The sounds of their own (owner's picks, 8 Nov 2026): the saddle, the roll, and each mount's own summon and vanish.
+            foreach ((string field, string name) in new[] { ("rideSaddleLandWorldFeel", "Ride Saddle Land"), ("rideRollSkidWorldFeel", "Ride Roll Skid"),
+                         ("rideSummonWorldFeel", "Ride Summon"), ("rideVanishWorldFeel", "Ride Vanish") })
+                so.FindProperty(field).objectReferenceValue = Player(world, name, p => Sound(p, name));
             MMF_Player crouch = World(world, "Ride Crouch");
             Squash(crouch, "Crouch Squash", 0.035f, -0.07f);
             so.FindProperty("rideCrouchWorldFeel").objectReferenceValue = crouch;

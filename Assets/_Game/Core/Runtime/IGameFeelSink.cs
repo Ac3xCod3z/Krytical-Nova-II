@@ -80,6 +80,8 @@ namespace KryticalNova.Core
         Ended,
         /// <summary>A moment before the feet leave (the saddle or the ground): the rider crouches into the push.</summary>
         Crouch,
+        /// <summary>The mount begins to form (getting on, its summon) or to vanish (getting off): its own voice.</summary>
+        MountShows,
     }
 
     /// <summary>One beat of a getting-off as every client sees it (from the replicated ride phase).</summary>
@@ -96,6 +98,11 @@ namespace KryticalNova.Core
         /// <summary>A getting-ON (the summon hop into the saddle), not a getting-off.</summary>
         public bool GettingOn;
         public bool IsLocalPlayer;
+        /// <summary>
+        /// The mount's own sound set (MountDefinition.soundSet, e.g. "Brambleback"): its summon and vanish are the clips
+        /// of that set. Empty: the mount has no voice of its own and is silent there.
+        /// </summary>
+        public string MountVoice;
     }
 
     /// <summary>

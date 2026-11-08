@@ -470,6 +470,7 @@ namespace KryticalNova.Mounts
             float since = Time.time - phaseStartedAt;
             MountSettings tuning = mounts != null ? mounts.Settings : null;
             float lead = tuning != null ? tuning.crouchLead : 0f;
+            Beat(DismountBeat.MountShows, Mathf.Max(0.0001f, beats.effectDelay), since); // as the mount forms or vanishes
             if (lead > 0f && beats.leavesAt > lead) Beat(DismountBeat.Crouch, beats.leavesAt - lead, since);
             Beat(DismountBeat.TakeOff, beats.leavesAt, since);
             Beat(DismountBeat.Apex, beats.apexAt, since);
@@ -510,6 +511,7 @@ namespace KryticalNova.Mounts
                 EndsRunning = beatsEndRunning,
                 GettingOn = beatsGettingOn,
                 IsLocalPlayer = mounts.IsOwner,
+                MountVoice = shownMount != null ? shownMount.soundSet : null,
             });
         }
 

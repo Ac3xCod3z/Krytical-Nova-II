@@ -98,6 +98,10 @@ namespace KryticalNova.Mounts
         [Header("Appear and vanish")]
         [Tooltip("This mount's look for the shared appear and vanish effect (colours, pattern, particles). Empty = it pops in and out.")]
         public MountMaterialiseSettings materialise;
+        [Tooltip("This mount's own voice as it is summoned and as it vanishes: the set of clips SFX_RideSummon_<set>_nn and " +
+                 "SFX_RideVanish_<set>_nn in Audio/SFX/Mounts (e.g. Brambleback). A new mount = its own files and its set name here. " +
+                 "Empty = silent there.")]
+        public string soundSet;
 
         /// <summary>True when the mount can be ridden: its first stage has a model and its rider clips exist.</summary>
         public bool IsBuilt => stages != null && stages.Length > 0 && stages[0].model != null && riderIdle != null;

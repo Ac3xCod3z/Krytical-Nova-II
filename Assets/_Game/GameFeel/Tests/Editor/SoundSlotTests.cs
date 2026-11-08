@@ -94,5 +94,32 @@ namespace KryticalNova.Tests
                 Assert.AreEqual(AudioClipLoadType.Streaming, importer.defaultSampleSettings.loadType, importer.assetPath + " should stream");
             }
         }
+
+        /// <summary>
+        /// Owner, 8 Nov 2026: every mount is summoned and vanishes with its own voice, as data (MountDefinition.soundSet ->
+        /// SFX_RideSummon_&lt;set&gt;_nn / SFX_RideVanish_&lt;set&gt;_nn). A mount that names a set has both, and no set holds
+        /// another mount's clips.
+        /// </summary>
+        [Test]
+        public void EveryMountThatNamesASoundSet_HasItsOwnSummonAndVanish()
+        {
+            int named = 0;
+            foreach (string guid in AssetDatabase.FindAssets("t:MountDefinition"))
+            {
+                var mount = AssetDatabase.LoadAssetAtPath<ScriptableObject>(AssetDatabase.GUIDToAssetPath(guid));
+                string set = mount != null ? new SerializedObject(mount).FindProperty("soundSet")?.stringValue : null;
+                if (string.IsNullOrEmpty(set)) continue;
+                named++;
+                foreach (string slot in new[] { "Ride Summon", "Ride Vanish" })
+                {
+                    MMF_VariedSound.KeyedSet[] sets = GameFeelBuilder.MountSoundSets(slot);
+                    MMF_VariedSound.KeyedSet own = sets.FirstOrDefault(s => s.Key == set);
+                    Assert.IsNotNull(own.Clips, $"{mount.name}: no {slot} set '{set}'");
+                    Assert.IsNotEmpty(own.Clips, $"{mount.name}: {slot} set '{set}' is empty");
+                    Assert.IsTrue(own.Clips.All(c => c.name.Contains("_" + set + "_")), $"{slot} set '{set}' holds another set's clip");
+                }
+            }
+            Assert.GreaterOrEqual(named, 2, "the Brambleback and the Circuit Strider name their sound sets");
+        }
     }
 }

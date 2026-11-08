@@ -112,3 +112,4 @@ MonoBehaviour:
   hopClearanceScale: 1
   riderSeatNudge: {x: 0, y: 0, z: 0}
   materialise: {fileID: 11400000, guid: 5d07293bf2e7b474b8d66a62e1295a75, type: 2}
+  soundSet: Brambleback

@@ -109,3 +109,4 @@ MonoBehaviour:
   hopClearanceScale: 1
   riderSeatNudge: {x: 0, y: 0, z: 0}
   materialise: {fileID: 11400000, guid: 5e36a5dfa8ab4e245ad442510066df44, type: 2}
+  soundSet: Strider

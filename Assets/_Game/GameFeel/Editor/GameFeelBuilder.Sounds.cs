@@ -37,9 +37,13 @@ namespace KryticalNova.EditorTools
             public readonly int Voices;
             /// <summary>Cut off when its player is stopped (a charge let go early).</summary>
             public readonly bool StopsWithPlayer;
+            /// <summary>One set per mount (<c>SFX_&lt;Slot&gt;_&lt;Set&gt;_nn</c>, MountDefinition.soundSet): a mount without its own set is silent.</summary>
+            public readonly bool PerMount;
 
-            public SoundSpec(string folder, SoundChannel channel, float volume, float lowest, float highest, int voices, bool stopsWithPlayer = false)
+            public SoundSpec(string folder, SoundChannel channel, float volume, float lowest, float highest, int voices, bool stopsWithPlayer = false,
+                bool perMount = false)
             {
+                PerMount = perMount;
                 Folder = folder;
                 Channel = channel;
                 Volume = volume;
@@ -56,6 +60,8 @@ namespace KryticalNova.EditorTools
             new SoundSpec("Movement", SoundChannel.Effects, volume, lowest, highest, voices);
         private static SoundSpec Moment(float volume, float lowest = -0.5f, float highest = 0.5f, int voices = 1) =>
             new SoundSpec("Moments", SoundChannel.Effects, volume, lowest, highest, voices);
+        private static SoundSpec Riding(float volume, float lowest, float highest, int voices = 2, bool perMount = false) =>
+            new SoundSpec("Mounts", SoundChannel.Effects, volume, lowest, highest, voices, perMount: perMount);
         private static SoundSpec Interface(float volume, float lowest, float highest, int voices = 2) =>
             new SoundSpec("Interface", SoundChannel.Interface, volume, lowest, highest, voices);
 
@@ -99,6 +105,14 @@ namespace KryticalNova.EditorTools
             ["Nova Held"] = Moment(0.50f),
             ["Standing Rank"] = Moment(0.50f),
 
+            // ---- getting on and off a mount (owner's picks, 8 Nov 2026; volumes and pitches from the bake, PR 204)
+            ["Ride Push-off"] = Riding(0.45f, -2f, 2f),
+            ["Ride Saddle Land"] = Riding(0.50f, -2f, 1f),
+            ["Ride Roll Skid"] = Riding(0.45f, -2f, 2f),
+            ["Ride Shockwave"] = Riding(0.45f, -1f, 1f),
+            ["Ride Summon"] = Riding(0.55f, -1f, 1f, perMount: true),
+            ["Ride Vanish"] = Riding(0.50f, -1f, 1f, perMount: true),
+
             // ---- the interface: quiet, and the ones under the pointer all the time barely there (owner, 10 Oct 2026)
             ["Click Tick"] = Interface(0.25f, -3f, 3f, 3),
             ["Select"] = Interface(0.35f, -1f, 1f),
@@ -137,6 +151,19 @@ namespace KryticalNova.EditorTools
                 .OrderBy(path => path, System.StringComparer.Ordinal)
                 .Select(AssetDatabase.LoadAssetAtPath<AudioClip>)
                 .Where(clip => clip != null)
+                .ToArray();
+        }
+
+        /// <summary>A per-mount slot's sets: every <c>SFX_&lt;Slot&gt;_&lt;Set&gt;_nn</c> in its folder, grouped by set.</summary>
+        public static MMF_VariedSound.KeyedSet[] MountSoundSets(string slot)
+        {
+            var name = new Regex("^SFX_" + Regex.Escape(SoundFileKey(slot)) + @"_([A-Za-z]+)_\d+$");
+            return SoundClips(slot)
+                .Select(clip => (clip, match: name.Match(clip.name)))
+                .Where(pair => pair.match.Success)
+                .GroupBy(pair => pair.match.Groups[1].Value)
+                .OrderBy(group => group.Key, System.StringComparer.Ordinal)
+                .Select(group => new MMF_VariedSound.KeyedSet { Key = group.Key, Clips = group.Select(pair => pair.clip).ToArray() })
                 .ToArray();
         }
 
@@ -215,6 +242,15 @@ namespace KryticalNova.EditorTools
             sound.HegemonySfx = SoundClips(slot, SoundFactions[0]);
             sound.NullSfx = SoundClips(slot, SoundFactions[1]);
             sound.CovenantSfx = SoundClips(slot, SoundFactions[2]);
+            if (spec.PerMount)
+            {
+                sound.KeyedSfx = MountSoundSets(slot);
+                sound.RandomSfx = System.Array.Empty<AudioClip>();
+                sound.HegemonySfx = sound.NullSfx = sound.CovenantSfx = System.Array.Empty<AudioClip>();
+                clips = sound.KeyedSfx.SelectMany(set => set.Clips).ToArray();
+                sound.Label = clips.Length > 0 ? slot : slot + UnassignedSuffix;
+            }
+            else sound.KeyedSfx = System.Array.Empty<MMF_VariedSound.KeyedSet>();
             // Its own audio sources, on the feel prefab: nothing else in the scene is needed for it to be heard.
             sound.PlayMethod = MMF_Sound.PlayMethods.Pool;
             sound.PoolSize = spec.Voices;
