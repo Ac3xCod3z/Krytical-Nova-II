@@ -743,6 +743,44 @@ namespace KryticalNova.Persistence.Entities
         static int s_ExitCode = 1;
         static double s_BatchStarted;
 
+        // Probe 4 (8 Nov 2026) stalled: another session's edit landed while the GUI Editor was starting, Unity recompiled AFTER Batch had
+        // asked for Play, and the domain reload wiped the statics above (the request and the watchdog). Play then started as the saved
+        // character with no time limit. The request is kept in SessionState (lives for this Editor process) and put back after a reload.
+        const string RequestKey = "KnPlayHere.Requested", QuitAfterKey = "KnPlayHere.QuitAfter", TestSavesKey = "KnPlayHere.RequestedTestSaves",
+            BatchStartKey = "KnPlayHere.BatchStarted";
+
+        static void KeepRequest()
+        {
+            SessionState.SetBool(RequestKey, s_Requested);
+            SessionState.SetBool(QuitAfterKey, s_QuitAfter);
+            SessionState.SetBool(TestSavesKey, s_RequestedTestSaves);
+        }
+
+        [InitializeOnLoadMethod]
+        static void RestoreAfterReload()
+        {
+            float batchStart = SessionState.GetFloat(BatchStartKey, -1f);
+            if (batchStart >= 0f)
+            {
+                s_BatchStarted = batchStart;
+                EditorApplication.update -= BatchWatchdog;
+                EditorApplication.update += BatchWatchdog;
+            }
+            if (!SessionState.GetBool(RequestKey, false) || EditorApplication.isPlaying) return;
+            s_Requested = true;
+            s_QuitAfter = SessionState.GetBool(QuitAfterKey, false);
+            s_RequestedTestSaves = SessionState.GetBool(TestSavesKey, false);
+            s_ExitCode = 1;
+            EditorApplication.playModeStateChanged -= OnPlayModeChanged;
+            EditorApplication.playModeStateChanged += OnPlayModeChanged;
+            Debug.Log("[KnPlayHere] a script reload came between the Play request and Play: the request was put back.");
+            // the Play request itself normally survives the reload; if it did not, ask again once the Editor is idle
+            EditorApplication.delayCall += () =>
+            {
+                if (s_Requested && !EditorApplication.isPlayingOrWillChangePlaymode) EditorApplication.isPlaying = true;
+            };
+        }
+
         /// <summary>True while this Play session is a "Play DOTS here" one.</summary>
         public static bool Active { get; private set; }
 
@@ -809,6 +847,7 @@ namespace KryticalNova.Persistence.Entities
                 return;
             }
             s_BatchStarted = EditorApplication.timeSinceStartup;
+            SessionState.SetFloat(BatchStartKey, (float)s_BatchStarted);   // the watchdog outlives a script reload too
             EditorApplication.update += BatchWatchdog;
             if (!Begin(quitAfter: true)) EditorApplication.Exit(2);
         }
@@ -833,6 +872,7 @@ namespace KryticalNova.Persistence.Entities
             s_Requested = true;
             s_QuitAfter = quitAfter;
             s_ExitCode = 1;
+            KeepRequest();
             EditorApplication.playModeStateChanged -= OnPlayModeChanged;
             EditorApplication.playModeStateChanged += OnPlayModeChanged;
             EditorApplication.isPlaying = true;
@@ -879,6 +919,7 @@ namespace KryticalNova.Persistence.Entities
             s_Requested = false;
             TestSaves = Active && s_RequestedTestSaves;
             s_RequestedTestSaves = false;
+            KeepRequest();   // used up: a later reload must not request it again
             if (!Active) return;
             if (TestSaves)
             {
