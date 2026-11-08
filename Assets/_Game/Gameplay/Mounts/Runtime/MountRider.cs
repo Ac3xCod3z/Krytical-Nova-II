@@ -147,6 +147,8 @@ namespace KryticalNova.Mounts
             if (!leapLanded && since >= transition.arrivesAt)
             {
                 leapLanded = true;
+                // On the ground now: the motor is no longer seated, so what follows the landing is the on-foot idle or run.
+                motor.SetSeated(null, null, null);
                 if (leapRollClip != null)
                 {
                     // The roll of the baked clip, from its own touchdown: the body keeps going (PlayerMounts drives it).
@@ -167,7 +169,8 @@ namespace KryticalNova.Mounts
             if (leapRolling) motor.EndWarpedAction(0.2f, mounts != null && mounts.DismountEndsRunning ? 1f : 0f);
             else if (cutShort) motor.ResetJumpAnimation();
             leapRolling = false;
-            if (rider != null && riderLifted) rider.localPosition = riderRest + seatOffset * lift;
+            // Landed: the body is on the ground under the root; cut short in the air: back to the seat it left.
+            if (rider != null && riderLifted) rider.localPosition = leapLanded ? riderRest : riderRest + seatOffset * lift;
         }
 
         private void OnEnable()
