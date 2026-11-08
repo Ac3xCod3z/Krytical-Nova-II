@@ -299,6 +299,28 @@ namespace KryticalNova.Tests
             Assert.LessOrEqual(off.effectDelay + off.effectSeconds, off.freeSeconds);
         }
 
+        /// <summary>Owner, 7 Nov 2026 (retest 2): the leap off plays the jump's own timing; the roll and stand keep their lengths.</summary>
+        [Test]
+        public void TheLeap_TakesTheJumpsTiming_AndShiftsTheRollAfterIt([Values(false, true)] bool running)
+        {
+            const float takeoff = 0.45f, apex = 0.8f, land = 1.2f, recover = 0.5f;
+            MountTransition baked = settings.Transition(false, running, true);
+            MountTransition leap = baked.WithLeap(takeoff, apex, land, recover);
+            Assert.IsTrue(leap.leap);
+            Assert.IsFalse(baked.leap, "the settings stay as they are");
+            Assert.AreEqual(takeoff, leap.leavesAt, 1e-4f);
+            Assert.AreEqual(apex, leap.apexAt, 1e-4f);
+            Assert.AreEqual(land, leap.arrivesAt, 1e-4f);
+            Assert.Greater(leap.effectDelay, leap.leavesAt, "the mount vanishes after the push-off");
+            if (running)
+            {
+                Assert.AreEqual(baked.rollEndsAt - baked.rollStartsAt, leap.rollEndsAt - leap.rollStartsAt, 1e-4f, "the roll keeps its length");
+                Assert.AreEqual(land - baked.arrivesAt, leap.rollStartsAt - baked.rollStartsAt, 1e-4f, "and starts after the leap's touchdown");
+            }
+            else Assert.AreEqual(land + recover, leap.freeSeconds, 1e-4f);
+            Assert.LessOrEqual(leap.freeSeconds, leap.seconds);
+        }
+
         /// <summary>Owner, 7 Nov 2026 (retest 2): the mount takes the weight of the push-off and the landing, then settles.</summary>
         [Test]
         public void TheMountsBody_GivesUnderAKick_ThenSettles()
