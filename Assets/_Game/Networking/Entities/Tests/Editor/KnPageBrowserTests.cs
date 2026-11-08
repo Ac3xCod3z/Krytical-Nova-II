@@ -95,7 +95,7 @@ namespace KryticalNova.Networking.Entities.Tests
             Name = "N", Players = 2, MaxPlayers = 100, Map = "Zone01", Build = "1.0",
             PlayerRows = new[]
             {
-                new KnPlayerRow { Key = 7, NetworkId = 1, Name = "Ace", PingMs = 30, Map = "Zone01" },
+                new KnPlayerRow { Key = 7, NetworkId = 1, Name = "Ace", PingMs = 30, Map = "Zone01", Level = 42, Faction = "Hegemony" },
                 new KnPlayerRow { Key = 8, NetworkId = 2, Name = "Bo", PingMs = 40, Map = "Zone01" },
             },
         };
@@ -244,6 +244,7 @@ namespace KryticalNova.Networking.Entities.Tests
             StringAssert.Contains("\"shutdownIn\":-1", json);
             StringAssert.Contains("\"stopping\":false", json);
             StringAssert.Contains("\"id\":\"7\",\"name\":\"Ace\"", json);
+            StringAssert.Contains("\"level\":42,\"faction\":\"Hegemony\"", json, "the page's list shows the real level and faction");
             StringAssert.Contains("\"gm\":\"Ace\"", json);
             StringAssert.Contains("\"ping\":40", json);
             StringAssert.Contains("\"addresses\":[\"192.168.1.20\"]", json);

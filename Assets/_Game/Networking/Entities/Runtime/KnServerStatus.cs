@@ -17,6 +17,9 @@ namespace KryticalNova.Networking.Entities
         /// <summary>Round trip in milliseconds; -1 when not measured yet.</summary>
         public int PingMs = -1;
         public string Map = string.Empty;
+        /// <summary>The character's level and faction name (NGO ServerControlPage:183-187 read them with ServerHooks.Describe); 0 and empty until known.</summary>
+        public int Level;
+        public string Faction = string.Empty;
     }
 
     /// <summary>
@@ -124,6 +127,9 @@ namespace KryticalNova.Networking.Entities
         /// <summary>The character name of a player, filled by the Player system later (empty before a character is chosen). Main thread only.</summary>
         public static System.Func<KryticalNova.Core.PlayerKey, string> NameOf;
 
+        /// <summary>The level and faction of a player (filled by the Player side from the server body, as NGO's page read them). Main thread only.</summary>
+        public static System.Func<KryticalNova.Core.PlayerKey, (int level, string faction)> FactsOf;
+
         public static KnStatusSnapshot Current => s_Current;
 
         public static void Publish(KnStatusSnapshot snapshot) => s_Current = snapshot ?? new KnStatusSnapshot();
@@ -137,6 +143,7 @@ namespace KryticalNova.Networking.Entities
             Role = "main";
             MaxPlayers = 100;
             NameOf = null;
+            FactsOf = null;
         }
     }
 
@@ -179,6 +186,8 @@ namespace KryticalNova.Networking.Entities
                     Key = keys[i].Key,
                     NetworkId = ids[i].Value,
                     Name = KnServerStatus.NameOf?.Invoke(keys[i].PlayerKey) ?? string.Empty,
+                    Level = KnServerStatus.FactsOf?.Invoke(keys[i].PlayerKey).level ?? 0,
+                    Faction = KnServerStatus.FactsOf?.Invoke(keys[i].PlayerKey).faction ?? string.Empty,
                     PingMs = rtt > 0f ? (int)rtt : -1,
                     Map = KnServerStatus.Map,
                 };

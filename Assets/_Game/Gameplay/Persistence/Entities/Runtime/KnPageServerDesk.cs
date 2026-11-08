@@ -22,6 +22,15 @@ namespace KryticalNova.Persistence.Entities
         /// <summary>Now, for the bans (tests put their own).</summary>
         public Func<DateTime> UtcNow = () => DateTime.UtcNow;
 
+        /// <summary>The character name of a server body (NGO's page: ServerHooks.Describe); null when the player has none yet.</summary>
+        public static string CharacterOf(PlayerKey key) =>
+            GhostBodyRegistry.TryGetServerBody(key, out GameObject body) && ServerHooks.Describe(body) is { Found: true } facts ? facts.Character : null;
+
+        /// <summary>The level and faction of a server body (NGO ServerControlPage:183-187); 0 and empty when unknown.</summary>
+        public static (int level, string faction) FactsOf(PlayerKey key) =>
+            GhostBodyRegistry.TryGetServerBody(key, out GameObject body) && ServerHooks.Describe(body) is { Found: true } facts
+                ? (facts.Level, facts.Faction ?? string.Empty) : (0, string.Empty);
+
         public string Save()
         {
             if (ServerHooks.Saves == null) return "Saves are not ready yet.";

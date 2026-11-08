@@ -108,6 +108,8 @@ namespace KryticalNova.Persistence.Entities
             KryticalNova.CharacterCreation.RestyleOwnerLink.Current = new EntityRestyleOwnerLink();   // a finished restyle (M8 8.3.8)
 #if UNITY_SERVER || UNITY_EDITOR
             KnPageRules.Commands = new KnPageGmTools();   // the page's command box and GM list (M7.4)
+            KnServerStatus.NameOf = KnPageServerDesk.CharacterOf;   // the page's player list: name, level and faction of the server body (8 Nov 2026)
+            KnServerStatus.FactsOf = KnPageServerDesk.FactsOf;
             KnPageDesk.Desk = new KnPageServerDesk();     // the rest of NGO's control page: save, announce, bans, log, flags (8 Nov 2026)
             KnPageBrowser.Host = new KnPageBrowserHost(); // the browser page and its password login (8 Nov 2026)
 #endif

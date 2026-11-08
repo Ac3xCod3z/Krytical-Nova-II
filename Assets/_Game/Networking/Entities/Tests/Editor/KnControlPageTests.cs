@@ -170,6 +170,7 @@ namespace KryticalNova.Networking.Entities.Tests
             tw.CreateWorlds(2);
             KnServerStatus.Map = "Zone01";
             KnServerStatus.NameOf = key => "player-" + key.Value;
+            KnServerStatus.FactsOf = key => ((int)(key.Value % 100) + 1, "Hegemony");   // level and faction of a server body (the control page's list)
             tw.Connect();
             Assert.GreaterOrEqual(tw.TickUntil(() => KnServerStatus.Current.PlayerRows.Length == 2, 200), 0, "the snapshot never listed both players");
             var keys = KnTestQueries.ServerKeys(tw).Select(k => k.key).OrderBy(k => k).ToArray();
@@ -177,6 +178,8 @@ namespace KryticalNova.Networking.Entities.Tests
             CollectionAssert.AreEqual(keys, rows.Select(r => r.Key).ToArray());
             Assert.AreEqual("player-" + keys[0], rows[0].Name);
             Assert.AreEqual("Zone01", rows[0].Map);
+            Assert.AreEqual((int)(keys[0] % 100) + 1, rows[0].Level, "the level reaches the row");
+            Assert.AreEqual("Hegemony", rows[0].Faction, "and the faction");
             Assert.AreEqual(2, KnServerStatus.Current.Players);
         }
 

@@ -273,10 +273,11 @@ namespace KryticalNova.Networking.Entities
             {
                 KnPlayerRow r = s.PlayerRows[i];
                 if (i > 0) sb.Append(',');
-                // the entity server's list has no level or faction yet: the page shows 0 and nothing
+                // level and faction as NGO's page showed them (ServerControlPage:183-187), read from the server body into the row
                 sb.Append("{\"id\":").Append(ControlPageRules.Json(r.Key.ToString(CultureInfo.InvariantCulture)))
                   .Append(",\"name\":").Append(ControlPageRules.Json(r.Name))
-                  .Append(",\"level\":0,\"faction\":\"\"")
+                  .Append(",\"level\":").Append(r.Level.ToString(CultureInfo.InvariantCulture))
+                  .Append(",\"faction\":").Append(ControlPageRules.Json(r.Faction ?? string.Empty))
                   .Append(",\"map\":").Append(ControlPageRules.Json(r.Map))
                   .Append(",\"gm\":").Append(ControlPageRules.Json(host.GmNameOf(r.Key) ?? string.Empty))
                   .Append(",\"ping\":").Append(r.PingMs.ToString(CultureInfo.InvariantCulture))
