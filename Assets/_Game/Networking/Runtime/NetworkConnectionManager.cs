@@ -72,6 +72,12 @@ namespace KryticalNova.Networking
 #elif UNITY_SERVER
             StartDedicatedServer();
 #else
+            if (JoinFlow.Target != null && EntityServerLink.IsEntityServer(JoinFlow.Target))
+            {
+                // Character select chose a server of the entity netcode: the entity client joins it (EntityServerLink).
+                StartCoroutine(JoinEntityServer(JoinFlow.Target));
+                return;
+            }
             if (EntityNetcodeSession.Owns)
             {
                 // "Play DOTS here": the entity netcode runs this session; Netcode for GameObjects must not host, join or bind a port.
@@ -156,6 +162,31 @@ namespace KryticalNova.Networking
             JoinFlow.Fail(reason);
             // As when a player leaves the world: the session objects outlive scene changes and the next world brings
             // its own, so these go before character select loads.
+            if (nm != null) Destroy(nm.gameObject);
+            if (nm == null || gameObject != nm.gameObject) Destroy(gameObject);
+        }
+
+        /// <summary>
+        /// <see cref="JoinChosenServer"/> for a server of the entity netcode: the same loading screen, the same outcome (in, or back
+        /// to character select with the reason). The entity side signs in, sends the proof and the chosen character, and reads the
+        /// server's refusal (DOTS front end, 8 Nov 2026).
+        /// </summary>
+        private System.Collections.IEnumerator JoinEntityServer(ServerListing server)
+        {
+            yield return null; // every Start in the scene has run
+            string reason = null;
+            bool done = false;
+            yield return EntityServerLink.Join(server, why => { reason = why; done = true; });
+            if (!done) reason = $"Could not start joining {server.name}.";
+            if (reason == null)
+            {
+                Debug.Log($"[Network] Joined {server.name} (entity netcode, {server.address}:{server.port}).");
+                JoinFlow.Joined();
+                yield break;
+            }
+            Debug.Log($"[Network] Joining {server.name} (entity netcode, {server.address}:{server.port}) failed: {reason}");
+            JoinFlow.Fail(reason);
+            NetworkManager nm = NetworkManager.Singleton;
             if (nm != null) Destroy(nm.gameObject);
             if (nm == null || gameObject != nm.gameObject) Destroy(gameObject);
         }

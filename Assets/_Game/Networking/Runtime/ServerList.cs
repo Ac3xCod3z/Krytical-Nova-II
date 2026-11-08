@@ -21,6 +21,8 @@ namespace KryticalNova.Networking
         public string relay = "";
         [Tooltip("Set by the server for its own entry: which PC runs it (ThisMachine.Id), so that PC joins and starts it locally.")]
         public string machine = "";
+        /// <summary>A server of the entity netcode (DOTS, 8 Nov 2026): joined and asked through <see cref="EntityServerLink"/>.</summary>
+        public bool entities;
 
         public int StatusPort => statusPort > 0 ? statusPort : port + 1;
         public bool IsAuto => string.Equals((address ?? "").Trim(), AutoAddress, StringComparison.OrdinalIgnoreCase);
@@ -28,9 +30,9 @@ namespace KryticalNova.Networking
         /// <summary>True when this PC runs the server: it is asked and joined on this PC itself.</summary>
         public bool OnThisMachine => !string.IsNullOrEmpty(machine) && machine == ThisMachine.Id;
         /// <summary>Stays the same when the server's public address changes, so LAST PLAYED keeps pointing at it.</summary>
-        public string Key => !string.IsNullOrEmpty(machine) ? "pc:" + machine + ":" + port : (address ?? "").Trim().ToLowerInvariant() + ":" + port;
+        public string Key => entities ? "entities:" + (address ?? "").Trim().ToLowerInvariant() + ":" + port : !string.IsNullOrEmpty(machine) ? "pc:" + machine + ":" + port : (address ?? "").Trim().ToLowerInvariant() + ":" + port;
 
-        public ServerListing Copy() => new ServerListing { name = name, address = address, port = port, statusPort = statusPort, relay = relay, machine = machine };
+        public ServerListing Copy() => new ServerListing { name = name, address = address, port = port, statusPort = statusPort, relay = relay, machine = machine, entities = entities };
 
         /// <summary>A Relay join code as Unity hands them out: a few letters and digits.</summary>
         public static bool IsRelayCode(string code)

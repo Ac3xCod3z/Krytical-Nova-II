@@ -35,6 +35,7 @@ namespace KryticalNova.Networking
         }
 
         static bool s_Joining;
+        static bool s_EntityJoin;
         static Func<bool> s_WorldReady;
 
         /// <summary>Why the last join failed, for character select to say; cleared once read.</summary>
@@ -51,6 +52,7 @@ namespace KryticalNova.Networking
         {
             Target = null;
             s_Joining = false;
+            s_EntityJoin = false;
             s_WorldReady = null;
             LastFailure = null;
             Started = null;
@@ -63,6 +65,10 @@ namespace KryticalNova.Networking
             Target = server != null ? server.Copy() : null;
             s_Joining = Target != null;
             LastFailure = null;
+            // A server of the entity netcode runs the world: Netcode for GameObjects stays off from the scene's first frame
+            // (no host, the offline avatar hidden), as in "Play DOTS here" (DOTS front end, 8 Nov 2026).
+            s_EntityJoin = EntityServerLink.IsEntityServer(Target);
+            if (s_EntityJoin) EntityNetcodeSession.Owns = true;
             if (s_Joining) Started?.Invoke(Target.name);
         }
 
@@ -80,6 +86,8 @@ namespace KryticalNova.Networking
         public static void Fail(string reason)
         {
             s_Joining = false;
+            if (s_EntityJoin) EntityNetcodeSession.Owns = false; // back on character select: the next join decides again
+            s_EntityJoin = false;
             s_WorldReady = null;
             Target = null;
             LastFailure = reason;

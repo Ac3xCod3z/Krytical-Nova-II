@@ -911,9 +911,35 @@ STOP and start the server again, rejoin: the character stands where it stood.
 If Norton freezes the new exe, it is the usual Norton exclusion for the `Builds` folder of the DOTS clone (section 2,
 "Norton and Windows Firewall").
 
-**Not yet:** the real game (Title, sign in, character select, launcher, Publish to Test) cannot join the entity server
-yet; that is the next piece of work and gets its own session. There is no server list entry, and no control page GM
-tools beyond the status page on 8099.
+### 13a. Testing the DOTS game the normal way (Launcher, DOTS channel)
+
+Since 8 Nov 2026 the real game joins the entity server: Title, Unity sign-in, character select, Enter. It comes through
+its **own Launcher channel, `dots`**; the brothers' `live` line and your `test` line are never touched.
+
+**The launcher:** `C:\Users\dlaco\Krytical Nova II DOTS\Builds\Release-DOTS\DOTS Test Launcher\Krytical Nova Launcher.exe`
+(its `launcher.json` says `{"channel":"dots"}`). Keep it in that folder, apart from your normal launcher.
+
+**Your test steps:**
+
+1. Double-click **Krytical Nova ENTITY Server (TEST)** on the desktop; wait for **ONLINE** and **SAVES OK** on the
+   **ENTITY TEST** tab.
+2. Open the DOTS Test Launcher (folder above) and press **PLAY** (the first time it downloads the game).
+3. The Title screen signs you in to Unity as usual. Go on to character select.
+4. Press **S** (Servers): the list shows **Entity test server (this PC)** and **Play here (no server)** only. Pick the
+   entity test server. Character select now shows that server's characters (your test characters in
+   `krytical_nova_test`); make one if the list is empty.
+5. Pick a character and press **Enter World**. The loading screen stays up until your character stands in Concord.
+   A refusal (another build, a name problem, a ban) takes you back to character select with the server's own words;
+   no answer within 20 s says the server did not answer.
+6. Play, then **Log Out** or **Exit** from the menu.
+7. Press **STOP** in the server app and answer **Yes**.
+
+**Publish a new DOTS build** (a session does this; it never promotes): in the DOTS clone, batch Unity with
+`-executeMethod KryticalNova.EditorTools.DotsChannelPublisher.RunInBatch`, started through `explorer.exe` (it needs your
+profile for the signing key and the UGS sign-in). Stop the entity server first: the publish rebuilds it with the same
+build number, because a game joins only a server of its own build. It builds the game as a release with Burst, runs the
+bundle check (maps must match their scenes), uploads under the `dots` badge only, and writes the launcher above. Its log
+is `Builds\Release-DOTS\release-log.txt`.
 
 ## For developers
 

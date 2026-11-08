@@ -90,6 +90,10 @@ namespace KryticalNova.EditorTools
             public string Title = "Windows test build";
             /// <summary>The test build packs every asset into one compressed file; a release keeps them apart for small patches.</summary>
             public BuildOptions Options = BuildOptions.CompressWithLz4HC;
+            /// <summary>Defines for this build only, never written into the player settings (the DOTS channel's KN_ENTITIES_CLIENT).</summary>
+            public string[] ExtraDefines;
+            /// <summary>Scenes listed after the shipped ones (the DOTS channel's ghost bake scene: listed so it is baked, never loaded).</summary>
+            public string[] ExtraScenes;
         }
 
         /// <summary>The game's exe name in any of its builds.</summary>
@@ -147,6 +151,12 @@ namespace KryticalNova.EditorTools
         private static bool BuildWith(ScriptingImplementation backend, Output output)
         {
             string[] scenes = BuildSceneOrder.Shipped();
+            if (output.ExtraScenes != null && output.ExtraScenes.Length > 0)
+            {
+                var all = new System.Collections.Generic.List<string>(scenes);
+                foreach (string extra in output.ExtraScenes) if (!all.Contains(extra)) all.Add(extra);
+                scenes = all.ToArray();
+            }
             if (scenes.Length == 0)
             {
                 Debug.LogError("[Build] There are no scenes to build.");
@@ -169,7 +179,8 @@ namespace KryticalNova.EditorTools
                 targetGroup = BuildTargetGroup.Standalone,
                 target = BuildTarget.StandaloneWindows64,
                 subtarget = (int)StandaloneBuildSubtarget.Player,
-                options = output.Options
+                options = output.Options,
+                extraScriptingDefines = output.ExtraDefines,
             };
             // The maps' bundles are built with the game: what the maps share goes in one bundle first, never a copy in each
             // (searched again only when the maps or their groups changed since the last search).

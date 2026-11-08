@@ -44,6 +44,14 @@ namespace KryticalNova.Networking
             if (Busy) { done(null, "Still waiting for the server's last answer."); yield break; }
             if (UnityAccount.Changing) { done(null, AccountChanged); yield break; }
             if (server == null) { done(null, "Choose a server first."); yield break; }
+            if (EntityServerLink.IsEntityServer(server))
+            {
+                // a server of the entity netcode answers through its own short client world (KnRosterClient)
+                Busy = true;
+                try { yield return EntityServerLink.AskRoster(server, request, done); }
+                finally { Busy = false; }
+                yield break;
+            }
             if (NetworkPrefab == null) { done(null, "This screen cannot reach servers (its network setup is missing)."); yield break; }
             if (NetworkManager.Singleton != null) { done(null, "A game session is still closing. Try again in a moment."); yield break; }
             string packed = RosterWire.Pack(request);

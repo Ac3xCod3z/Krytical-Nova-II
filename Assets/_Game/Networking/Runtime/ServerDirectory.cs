@@ -141,6 +141,11 @@ namespace KryticalNova.Networking
         private static void Build(ServerListFile published)
         {
             entries.Clear();
+#if KN_ENTITIES_CLIENT
+            // The DOTS test client (its own Launcher channel) never lists or contacts the owner's real servers: they speak
+            // Netcode for GameObjects, and their ports are the real lane's.
+            published = null;
+#endif
             if (published != null)
                 foreach (ServerListing listing in published.servers)
                 {
@@ -149,6 +154,17 @@ namespace KryticalNova.Networking
                     if (!ServerListing.IsRelayCode(listing.relay)) listing.relay = "";
                     entries.Add(new ServerEntry { Listing = listing, Name = listing.name, Note = Where(listing) });
                 }
+#if KN_ENTITIES_CLIENT
+            if (EntityServerLink.Available)   // the DOTS test client is a release build, but its one server is this PC's test lane
+#else
+            if (EntityServerLink.Available && Development)
+#endif
+            {
+                // The ENTITY TEST server on this PC (Builds\EntityServer, DOTS front end 8 Nov 2026)
+                var entity = new ServerListing { name = "Entity test server (this PC)", address = "127.0.0.1", port = EntityServerLink.TestPort, entities = true };
+                entries.Add(new ServerEntry { Listing = entity, Name = entity.name, Note = "the DOTS server started with ENTITY TEST" });
+            }
+#if !KN_ENTITIES_CLIENT
             if (Development)
             {
                 // An Editor test session moves every local session to its own port: this line follows it.
@@ -157,6 +173,9 @@ namespace KryticalNova.Networking
                 entries.Add(new ServerEntry { Listing = local, Name = local.name, Note = "a server started on this PC" });
                 entries.Add(new ServerEntry { Name = "Play here (no server)", Note = Application.isEditor ? "the Editor hosts, as before" : "offline, as before", Status = ServerEntry.State.Here });
             }
+#else
+            entries.Add(new ServerEntry { Name = "Play here (no server)", Note = "offline, as before", Status = ServerEntry.State.Here });
+#endif
             Changed?.Invoke();
         }
 
