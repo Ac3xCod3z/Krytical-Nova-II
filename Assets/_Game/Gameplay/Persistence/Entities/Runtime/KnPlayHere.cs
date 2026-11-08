@@ -557,6 +557,44 @@ namespace KryticalNova.Persistence.Entities
             Vector3 m_LastAnchor = new Vector3(float.NaN, 0f, 0f), m_LastPet = new Vector3(float.NaN, 0f, 0f);
             float m_NextShot;
             int m_Shot;
+            RenderTexture m_ShotFull, m_ShotSmall;
+            bool m_ShotFallback;
+
+            /// <summary>
+            /// The capture of the probe (8 Nov 2026: the run drew ~8 fps because <c>ScreenCapture.CaptureScreenshot</c> read back and PNG-encoded the whole
+            /// 1920x1080 frame on the main thread, a shot per frame): a GPU copy into a render texture, a shrink, an asynchronous read-back, a small JPEG,
+            /// the file written on a worker thread. The shot keeps the frame in its name (f0000_&lt;frame&gt;.jpg).
+            /// </summary>
+            void CaptureCheaply()
+            {
+                string path = System.IO.Path.Combine(CaptureFolder, $"f{m_Shot++:D4}_{Time.frameCount}");
+                if (m_ShotFallback) { ScreenCapture.CaptureScreenshot(path + ".png"); m_NextShot = Time.realtimeSinceStartup + 0.5f; return; }
+                try
+                {
+                    int w = Screen.width, h = Screen.height;
+                    if (m_ShotFull == null || m_ShotFull.width != w || m_ShotFull.height != h)
+                    {
+                        if (m_ShotFull != null) UnityEngine.Object.Destroy(m_ShotFull);
+                        m_ShotFull = new RenderTexture(w, h, 0, RenderTextureFormat.ARGB32);
+                    }
+                    if (m_ShotSmall == null) m_ShotSmall = new RenderTexture(960, 540, 0, RenderTextureFormat.ARGB32);
+                    ScreenCapture.CaptureScreenshotIntoRenderTexture(m_ShotFull);
+                    Graphics.Blit(m_ShotFull, m_ShotSmall, new Vector2(1f, -1f), new Vector2(0f, 1f));   // the copy is upside down
+                    UnityEngine.Rendering.AsyncGPUReadback.Request(m_ShotSmall, 0, TextureFormat.RGBA32, request =>
+                    {
+                        if (request.hasError) return;
+                        var jpg = ImageConversion.EncodeNativeArrayToJPG(request.GetData<byte>(), UnityEngine.Experimental.Rendering.GraphicsFormat.R8G8B8A8_UNorm, 960, 540, 0, 80);
+                        byte[] bytes = jpg.ToArray();
+                        jpg.Dispose();
+                        System.Threading.Tasks.Task.Run(() => System.IO.File.WriteAllBytes(path + ".jpg", bytes));
+                    });
+                }
+                catch (Exception e)
+                {
+                    Debug.LogWarning("[KnPlayHere] cheap capture failed, back to the plain screenshot every 0.5 s: " + e.Message);
+                    m_ShotFallback = true;
+                }
+            }
             MonoBehaviour m_Pet;
             Vector3 m_LastBody, m_LastCam;
             Quaternion m_LastCamRot = Quaternion.identity;
@@ -729,7 +767,7 @@ namespace KryticalNova.Persistence.Entities
                 {
                     m_NextShot = Time.realtimeSinceStartup + 0.1f;
                     System.IO.Directory.CreateDirectory(CaptureFolder);
-                    ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(CaptureFolder, $"f{m_Shot++:D4}_{Time.frameCount}.png"));
+                    CaptureCheaply();
                 }
             }
         }
