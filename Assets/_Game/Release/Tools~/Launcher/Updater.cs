@@ -56,6 +56,9 @@ namespace KryticalNova.Release
         // query parameters of its own, so none are added.
         private string Url(string path) => config.source.Replace("{channel}", config.channel).Replace("{path}", path);
 
+        // A packed file: from the separate files address when launcher.json names one (own CDN), else like the list.
+        private string FileUrl(string path) => config.files == null ? Url(path) : config.files.Replace("{channel}", config.channel).Replace("{path}", path);
+
         // ------------------------------------------------------------------ check
 
         public async Task<UpdatePlan> Check(bool repair, CancellationToken cancel)
@@ -234,7 +237,7 @@ namespace KryticalNova.Release
         private async Task DownloadOnce(UpdateFile file, string target, IProgress<long> progress, CancellationToken cancel)
         {
             string part = target + ".part";
-            using (HttpResponseMessage response = await Http.GetAsync(Url(UpdateManifest.PackedPath(file.sha256)), HttpCompletionOption.ResponseHeadersRead, cancel).ConfigureAwait(false))
+            using (HttpResponseMessage response = await Http.GetAsync(FileUrl(UpdateManifest.PackedPath(file.sha256)), HttpCompletionOption.ResponseHeadersRead, cancel).ConfigureAwait(false))
             {
                 response.EnsureSuccessStatusCode();
                 using (Stream body = await response.Content.ReadAsStreamAsync().ConfigureAwait(false))

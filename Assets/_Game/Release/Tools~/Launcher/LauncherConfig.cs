@@ -19,6 +19,13 @@ namespace KryticalNova.Release
 
         [DataMember(Order = 1, EmitDefaultValue = false)] public string channel;
         [DataMember(Order = 2, EmitDefaultValue = false)] public string source;
+        /// <summary>
+        /// Optional (own CDN, 8 Nov 2026): where the packed files are, when they are not under the line's own address. On our
+        /// own bucket the lines are <c>test/</c>, <c>live/</c>, <c>dots/</c> and the files sit once in <c>files/</c> beside
+        /// them, so this is e.g. <c>http://127.0.0.1:7920/pub/{path}</c> (the local stand-in) or <c>https://cdn.&lt;domain&gt;/{path}</c>.
+        /// Left out: files come from <see cref="source"/>, as on Unity's Cloud Content Delivery.
+        /// </summary>
+        [DataMember(Order = 3, EmitDefaultValue = false)] public string files;
 
         public static LauncherConfig Load(string folder)
         {
@@ -40,6 +47,7 @@ namespace KryticalNova.Release
             if (string.IsNullOrWhiteSpace(config.source)) config.source = BuiltIn("UpdateSource.txt");
             config.channel = config.channel.Trim().ToLowerInvariant();
             config.source = config.source.Trim();
+            config.files = string.IsNullOrWhiteSpace(config.files) ? null : config.files.Trim();
             return config;
         }
 
