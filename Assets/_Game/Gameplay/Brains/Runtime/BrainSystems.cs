@@ -14,7 +14,48 @@ namespace KryticalNova.Brains
     [WorldSystemFilter(WorldSystemFilterFlags.ServerSimulation)]
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     [UpdateAfter(typeof(PredictedSimulationSystemGroup))]
-    public partial class BrainSimulationGroup : ComponentSystemGroup { }
+    public partial class BrainSimulationGroup : ComponentSystemGroup
+    {
+        BrainTimeWindow m_Window;
+
+        /// <summary>
+        /// The brains' whole tick, timed only while the performance log records (M6.6 soak pass line "brains &lt; 0.3 ms at 102"): one
+        /// "brains" line a second with its ticks, mean and longest tick, the number being the longest in microseconds.
+        /// </summary>
+        protected override void OnUpdate()
+        {
+            if (!KryticalNova.Diagnostics.PerformanceLog.IsRecording) { base.OnUpdate(); return; }
+            long start = System.Diagnostics.Stopwatch.GetTimestamp();
+            base.OnUpdate();
+            long end = System.Diagnostics.Stopwatch.GetTimestamp();
+            if (m_Window.Add(start, end, System.Diagnostics.Stopwatch.Frequency, out int ticks, out double meanMs, out double maxMs))
+                KryticalNova.Diagnostics.PerformanceLog.Mark("brains", $"{ticks} ticks, mean {meanMs:F3} ms, longest {maxMs:F3} ms", (long)(maxMs * 1000.0));
+        }
+    }
+
+    /// <summary>The brain tick times of one second, summed up when the second is over (pure, tested).</summary>
+    public struct BrainTimeWindow
+    {
+        long m_Since;
+        int m_Ticks;
+        double m_SumMs, m_MaxMs;
+
+        /// <summary>Adds one tick that ran from <paramref name="start"/> to <paramref name="end"/>; true (with the second's numbers) once a second has passed.</summary>
+        public bool Add(long start, long end, long frequency, out int ticks, out double meanMs, out double maxMs)
+        {
+            if (m_Ticks == 0) m_Since = start;
+            double ms = (end - start) * 1000.0 / frequency;
+            m_Ticks++;
+            m_SumMs += ms;
+            if (ms > m_MaxMs) m_MaxMs = ms;
+            ticks = m_Ticks;
+            meanMs = m_SumMs / m_Ticks;
+            maxMs = m_MaxMs;
+            if (end - m_Since < frequency) return false;
+            this = default;
+            return true;
+        }
+    }
 
     /// <summary>Copies the server tick into <see cref="BrainTick"/> (tests set it themselves; ticks start at 1).</summary>
     [WorldSystemFilter(WorldSystemFilterFlags.ServerSimulation)]

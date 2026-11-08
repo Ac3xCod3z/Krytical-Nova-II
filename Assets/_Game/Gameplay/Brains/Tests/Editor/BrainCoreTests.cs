@@ -210,4 +210,28 @@ namespace KryticalNova.Brains.Tests
             Assert.AreEqual(0, GC.GetAllocatedBytesForCurrentThread() - before, "the Brain's tick allocates nothing");
         }
     }
+
+    /// <summary>M6.6: the "brains" performance-log line sums up one second of brain ticks.</summary>
+    public sealed class BrainTimeWindowTests
+    {
+        [Test]
+        public void OneLineASecond_WithItsTicksMeanAndLongest_ThenANewSecond()
+        {
+            const long f = 1000000;   // one tick of the clock = 1 microsecond
+            var w = new BrainTimeWindow();
+            int lines = 0, ticks = 0;
+            double mean = 0, max = 0;
+            // 30 ticks a second, each 0.1 ms but the 10th 0.5 ms
+            for (int i = 0; i < 60; i++)
+            {
+                long start = i * f / 30;
+                long length = i % 30 == 9 ? 500 : 100;
+                if (w.Add(start, start + length, f, out int t, out double m, out double x)) { lines++; ticks = t; mean = m; max = x; }
+            }
+            Assert.AreEqual(1, lines, "one line in 60 ticks at 30 a second (the next is due on tick 61)");
+            Assert.AreEqual(31, ticks, "the ticks up to the one that ended past the second");
+            Assert.AreEqual(0.5, max, 1e-9, "the longest");
+            Assert.AreEqual((30 * 0.1 + 0.5) / 31, mean, 1e-9);
+        }
+    }
 }
