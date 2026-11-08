@@ -109,6 +109,7 @@ namespace KryticalNova.EditorTools
             ["Ride Push-off"] = Riding(0.45f, -2f, 2f),
             ["Ride Saddle Land"] = Riding(0.50f, -2f, 1f),
             ["Ride Roll Skid"] = Riding(0.45f, -2f, 2f),
+            ["Ride Touchdown"] = Riding(0.55f, -2f, 1f), // the boot impact of a getting-off (owner round 2: the heavy mix)
             ["Ride Shockwave"] = Riding(0.45f, -1f, 1f),
             ["Ride Summon"] = Riding(0.55f, -1f, 1f, perMount: true),
             ["Ride Vanish"] = Riding(0.50f, -1f, 1f, perMount: true),

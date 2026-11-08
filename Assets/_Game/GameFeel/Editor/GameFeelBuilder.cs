@@ -274,7 +274,7 @@ namespace KryticalNova.EditorTools
                     return;
                 }
                 Remove(world, new[] { "Ride Dust", "Ride Take-off", "Ride Landing", "Ride Crouch", "Ride Shockwave", "Ride Saddle Land",
-                    "Ride Roll Skid", "Ride Summon", "Ride Vanish" });
+                    "Ride Roll Skid", "Ride Touchdown", "Ride Summon", "Ride Vanish" });
                 Remove(root.transform, new[] { "Ride Launch" });
                 var so = new SerializedObject(presenter);
                 AddRideFeel(world.gameObject, so);
@@ -1947,7 +1947,7 @@ namespace KryticalNova.EditorTools
             Sound(shockwave, "Ride Shockwave");
             so.FindProperty("rideShockwaveWorldFeel").objectReferenceValue = shockwave;
             // The sounds of their own (owner's picks, 8 Nov 2026): the saddle, the roll, and each mount's own summon and vanish.
-            foreach ((string field, string name) in new[] { ("rideSaddleLandWorldFeel", "Ride Saddle Land"), ("rideRollSkidWorldFeel", "Ride Roll Skid"),
+            foreach ((string field, string name) in new[] { ("rideSaddleLandWorldFeel", "Ride Saddle Land"), ("rideRollSkidWorldFeel", "Ride Roll Skid"), ("rideTouchdownWorldFeel", "Ride Touchdown"),
                          ("rideSummonWorldFeel", "Ride Summon"), ("rideVanishWorldFeel", "Ride Vanish") })
                 so.FindProperty(field).objectReferenceValue = Player(world, name, p => Sound(p, name));
             MMF_Player crouch = World(world, "Ride Crouch");

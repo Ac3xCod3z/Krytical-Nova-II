@@ -47,7 +47,11 @@ namespace KryticalNova.Tests
                 string where = $"{sound.Label} on {player.name} ({prefab})";
                 seen.Add(sound.Label);
                 Assert.IsInstanceOf<MMF_VariedSound>(sound, where + " is not a varied sound");
-                Assert.IsTrue(sound.RandomSfx != null && sound.RandomSfx.Length > 0 && sound.RandomSfx.All(clip => clip != null), where + " has no clips");
+                var varied = (MMF_VariedSound)sound;
+                bool perMount = varied.KeyedSfx != null && varied.KeyedSfx.Length > 0; // a mount's own voice: one set per mount
+                Assert.IsTrue(perMount
+                    ? varied.KeyedSfx.All(set => set.Clips != null && set.Clips.Length > 0 && set.Clips.All(clip => clip != null))
+                    : sound.RandomSfx != null && sound.RandomSfx.Length > 0 && sound.RandomSfx.All(clip => clip != null), where + " has no clips");
                 Assert.AreEqual(MMF_Sound.PlayMethods.Pool, sound.PlayMethod, where + " needs something else in the scene to be heard");
                 Assert.IsNotNull(sound.SfxAudioMixerGroup, where + " plays past the mixer: no slider governs it");
                 Assert.LessOrEqual(sound.MaxVolume, GameFeelBuilder.LoudestSlot + 0.001f, where + " is louder than any slot may be");
