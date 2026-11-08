@@ -10,7 +10,7 @@ foreach ($step in 'Client','Server','Upload') {
   $log = "$proj\Builds\dots-$($step.ToLower()).log"
   $a = "-batchmode -projectPath `"$proj`" -buildTarget Win64 -job-worker-count 3 -executeMethod KryticalNova.EditorTools.DotsChannelPublisher.$($step)Batch -logFile `"$log`" -EnableCacheServer -cacheServerEndpoint 127.0.0.1:10443 -cacheServerEnableDownload true -cacheServerEnableUpload true -cacheServerWaitForConnection 10000 -cacheServerEnableImportResultCaching"
   $t = Get-Date; S "$step : started"
-  $p = Start-Process -FilePath $unity -ArgumentList $a -WorkingDirectory $proj -WindowStyle Hidden -PassThru -Wait
+  $p = Start-Process -FilePath $unity -ArgumentList $a -WorkingDirectory $proj -NoNewWindow -PassThru -Wait
   S ("$step : exit {0} after {1:N1} min" -f $p.ExitCode, ((Get-Date)-$t).TotalMinutes)
   if ($p.ExitCode -ne 0) { S "STOPPED at $step"; exit 1 }
 }
