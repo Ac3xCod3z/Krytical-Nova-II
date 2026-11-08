@@ -171,14 +171,16 @@ namespace KryticalNova.Tests
             string folder = Path.Combine(Path.GetTempPath(), "kn-records-" + Guid.NewGuid().ToString("N"));
             try
             {
-                var time = new DateTime(2026, 10, 18, 9, 5, 0);
+                // this month (the files roll over by their real write time, so a fixed date fails once its month is past)
+                DateTime now = DateTime.Now;
+                var time = new DateTime(now.Year, now.Month, now.Day, 9, 5, 0);
                 ServerRecords.WriteFile(folder, RecordKind.Gm, "Server window: gm.ban Bob 3d \"spam\nmore\"", time);
                 ServerRecords.WriteFile(folder, RecordKind.Economy, "Trade: one", time);
                 ServerRecords.WriteFile(folder, RecordKind.Economy, "Trade: two", time);
                 ServerRecords.WriteFile(folder, RecordKind.Access, "Joined: Bob", time);
                 string[] gm = File.ReadAllLines(Path.Combine(folder, "gm.log"));
                 Assert.AreEqual(1, gm.Length, "a line break inside a reason stays on the line");
-                Assert.AreEqual("2026-10-18 09:05:00  Server window: gm.ban Bob 3d \"spam more\"", gm[0]);
+                Assert.AreEqual(time.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture) + " 09:05:00  Server window: gm.ban Bob 3d \"spam more\"", gm[0]);
                 Assert.AreEqual(2, File.ReadAllLines(Path.Combine(folder, "economy.log")).Length);
                 Assert.AreEqual(1, File.ReadAllLines(Path.Combine(folder, "access.log")).Length);
             }
