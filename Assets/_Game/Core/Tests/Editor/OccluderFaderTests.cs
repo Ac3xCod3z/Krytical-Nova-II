@@ -57,6 +57,50 @@ namespace KryticalNova.Tests
             }
         }
 
+        /// <summary>
+        /// Owner, 7 Nov 2026: after a fast dismount the camera sat inside a building and the screen went dark. A cast
+        /// from inside a building's hollow mesh collider never meets it; the building round the camera must still be
+        /// counted as in the way.
+        /// </summary>
+        [Test]
+        public void ABuildingTheCameraIsInsideIsInTheWay()
+        {
+            GameObject building = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            var player = new GameObject("Player");
+            var eye = new GameObject("Camera");
+            try
+            {
+                // A hollow building (a mesh collider, not a box) 10 m across, the camera in the middle of it, the
+                // player standing 4 m outside its wall.
+                Object.DestroyImmediate(building.GetComponent<BoxCollider>());
+                var hull = building.AddComponent<MeshCollider>();
+                hull.sharedMesh = building.GetComponent<MeshFilter>().sharedMesh;
+                hull.convex = false;
+                building.transform.localScale = Vector3.one * 10f;
+                building.transform.position = new Vector3(0f, 3f, 0f);
+                player.transform.position = new Vector3(0f, 0f, 9f);
+                eye.transform.position = new Vector3(0f, 3f, 1f);
+                Physics.SyncTransforms();
+
+                var fader = eye.AddComponent<OccluderFader>();
+                fader.Configure(player.transform, Shader.Find("Universal Render Pipeline/Lit"));
+                typeof(OccluderFader).GetMethod("Awake", Flags).Invoke(fader, null);
+                typeof(OccluderFader).GetMethod("LateUpdate", Flags).Invoke(fader, null);
+
+                var active = (System.Collections.IList)typeof(OccluderFader).GetField("active", Flags).GetValue(fader);
+                Assert.AreEqual(1, active.Count, "the building round the camera is in the way of the player");
+            }
+            finally
+            {
+                Object.DestroyImmediate(building);
+                Object.DestroyImmediate(player);
+                Object.DestroyImmediate(eye);
+            }
+        }
+
+        private const System.Reflection.BindingFlags Flags =
+            System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic;
+
         [Test]
         public void NoMoreThanAFewDozenPiecesAreEverFadedAtOnce() =>
             Assert.LessOrEqual(OccluderFader.MostFadedRenderers, 64, "the limit is what keeps a fade from becoming a second drawing of the world");

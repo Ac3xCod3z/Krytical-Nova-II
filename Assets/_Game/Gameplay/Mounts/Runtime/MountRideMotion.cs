@@ -43,10 +43,53 @@ namespace KryticalNova.Mounts
         }
 
         /// <summary>
+        /// The extra rise over the seat during a getting-on's air phase, 0 to 1: a sine over leaves-to-arrives, highest
+        /// half way and back to 0 as the rider lands in the saddle (owner, 7 Nov 2026: clear the seat, then settle in).
+        /// </summary>
+        public static float AirBump(float seconds, float leavesAt, float arrivesAt)
+        {
+            if (arrivesAt <= leavesAt) return 0f;
+            float k = Mathf.Clamp01((seconds - leavesAt) / (arrivesAt - leavesAt));
+            return Mathf.Sin(k * Mathf.PI);
+        }
+
+        /// <summary>
         /// The share (1 to 0) of the seat offset the rider's origin still keeps <paramref name="seconds"/> into the hand-over
         /// out of a getting-off lasting <paramref name="fadeSeconds"/>: linear, as the motor's cross-fade is, so at fade
         /// weight w the origin is (1 - w) up and the body under both poses stays where the clip left it.
         /// </summary>
+        /// <summary>
+        /// One step of a damped spring pulling <paramref name="x"/> back to 0 (the mount's body after a push-off or a
+        /// landing in the saddle): <paramref name="hz"/> cycles a second, <paramref name="damping"/> the damping ratio
+        /// (below 1). The exact solution over the step, so the swing is the same at any frame rate.
+        /// </summary>
+        public static void SpringStep(ref float x, ref float v, float hz, float damping, float dt)
+        {
+            if (dt <= 0f) return;
+            float w = 2f * Mathf.PI * Mathf.Max(0.01f, hz);
+            float z = Mathf.Clamp(damping, 0f, 0.99f);
+            float a = z * w, wd = w * Mathf.Sqrt(1f - z * z);
+            float e = Mathf.Exp(-a * dt), c = Mathf.Cos(wd * dt), sn = Mathf.Sin(wd * dt);
+            float nx = e * (x * c + (v + a * x) / wd * sn);
+            float nv = e * (v * c - (a * v + w * w * x) / wd * sn);
+            x = nx;
+            v = nv;
+        }
+
+        /// <summary>
+        /// The kick that makes a damped spring of <paramref name="hz"/> swing out to <paramref name="metres"/> at its
+        /// first peak (the damping eats part of the swing, so it is worked back in).
+        /// </summary>
+        public static float KickVelocity(float metres, float hz, float damping)
+        {
+            float w = 2f * Mathf.PI * Mathf.Max(0.01f, hz);
+            float z = Mathf.Clamp(damping, 0f, 0.99f);
+            float wd = w * Mathf.Sqrt(1f - z * z);
+            float tPeak = Mathf.Atan2(wd, z * w) / wd;               // x(t) = v0/wd * e^(-z w t) * sin(wd t)
+            float share = Mathf.Exp(-z * w * tPeak) * Mathf.Sin(wd * tPeak) / wd;
+            return share > 1e-6f ? metres / share : 0f;
+        }
+
         public static float HandOverShare(float seconds, float fadeSeconds) =>
             fadeSeconds > 0f ? 1f - Mathf.Clamp01(seconds / fadeSeconds) : 0f;
 

@@ -34,6 +34,11 @@ MonoBehaviour:
     - {fileID: -623603649343465320, guid: a308be2e881259e4ebb79a004651afa0, type: 3}
     clipMetresPerSecond: {x: 0, y: 0}
     glow: {r: 0.55, g: 0.85, b: 0.35, a: 1}
+    pulseGlow: 0
+    pulseShake: 0.07
+    pulseSeconds: 0.45
+    pulseParticles: {fileID: 7030844293724100393, guid: 35ba89eacb2a8aa4c9be4bade57a5e4e, type: 3}
+    pulseParticleScale: 0.9
     riderIdle: {fileID: -623603649343465320, guid: dc75123383dde424e9640734d56154a8, type: 3}
     riderWalk: {fileID: -623603649343465320, guid: e3d1efb8913552843b7c47849897d0d4, type: 3}
     riderRun: {fileID: -623603649343465320, guid: c8b83f9687f7ded4e94a363af56f6f0a, type: 3}
@@ -59,6 +64,11 @@ MonoBehaviour:
     - {fileID: -623603649343465320, guid: 24dabbc8b8307fd48befe080ae89af4c, type: 3}
     clipMetresPerSecond: {x: 0, y: 0}
     glow: {r: 0.35, g: 0.9, b: 0.45, a: 1}
+    pulseGlow: 0
+    pulseShake: 0.08
+    pulseSeconds: 0.45
+    pulseParticles: {fileID: 7030844293724100393, guid: 35ba89eacb2a8aa4c9be4bade57a5e4e, type: 3}
+    pulseParticleScale: 1
     riderIdle: {fileID: -623603649343465320, guid: dc75123383dde424e9640734d56154a8, type: 3}
     riderWalk: {fileID: -623603649343465320, guid: e3d1efb8913552843b7c47849897d0d4, type: 3}
     riderRun: {fileID: -623603649343465320, guid: c8b83f9687f7ded4e94a363af56f6f0a, type: 3}
@@ -84,6 +94,11 @@ MonoBehaviour:
     - {fileID: -623603649343465320, guid: 18917a9eeb0551d4b9d1ace456e74eb8, type: 3}
     clipMetresPerSecond: {x: 0, y: 0}
     glow: {r: 0.95, g: 0.8, b: 0.3, a: 1}
+    pulseGlow: 0
+    pulseShake: 0.09
+    pulseSeconds: 0.45
+    pulseParticles: {fileID: 7030844293724100393, guid: 35ba89eacb2a8aa4c9be4bade57a5e4e, type: 3}
+    pulseParticleScale: 1.1
     riderIdle: {fileID: -623603649343465320, guid: dc75123383dde424e9640734d56154a8, type: 3}
     riderWalk: {fileID: -623603649343465320, guid: e3d1efb8913552843b7c47849897d0d4, type: 3}
     riderRun: {fileID: -623603649343465320, guid: c8b83f9687f7ded4e94a363af56f6f0a, type: 3}
@@ -109,5 +124,7 @@ MonoBehaviour:
   hopMountUp: 1
   riderLeanScale: 1
   riderBobScale: 1
+  hopClearanceScale: 1
   riderSeatNudge: {x: 0, y: 0, z: 0}
   materialise: {fileID: 11400000, guid: 5d07293bf2e7b474b8d66a62e1295a75, type: 2}
+  soundSet: Brambleback

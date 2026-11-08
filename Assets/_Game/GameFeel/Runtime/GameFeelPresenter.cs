@@ -113,6 +113,34 @@ namespace KryticalNova.GameFeel
         [Tooltip("A jump's crouch, on every client: sparks at the feet and a slight squash.")]
         [SerializeField] private MMF_Player jumpChargeWorldFeel;
         [SerializeField] private MMF_Player landWorldFeel;
+        [Tooltip("Getting on or off a mount: one short grounded puff, gone in under half a second (owner, 7 Nov 2026 retest: no lingering puffs, no stars).")]
+        [SerializeField] private MMF_Player rideDustWorldFeel;
+        [Tooltip("Getting on or off a mount: the push off the saddle or the ground (short puff, stretch, the jump's smear).")]
+        [SerializeField] private MMF_Player rideTakeOffWorldFeel;
+        [Tooltip("Getting on or off a mount: the weight landing, on the ground or in the saddle (short puff and a squash).")]
+        [SerializeField] private MMF_Player rideLandWorldFeel;
+        [Tooltip("Getting on or off a mount: the crouch into the push a moment before the feet leave (a squash, no particles).")]
+        [SerializeField] private MMF_Player rideCrouchWorldFeel;
+        [Tooltip("A running getting-off's touchdown: a flat shockwave on the ground, gone in 0.3 s (owner feel pick 5).")]
+        [SerializeField] private MMF_Player rideShockwaveWorldFeel;
+        [Tooltip("Getting on: the thump and creak of the weight landing in the saddle (sound only).")]
+        [SerializeField] private MMF_Player rideSaddleLandWorldFeel;
+        [Tooltip("A running getting-off's roll: the skid on the ground (sound only).")]
+        [SerializeField] private MMF_Player rideRollSkidWorldFeel;
+        [Tooltip("A getting-off's touchdown: the boot impact on the ground, standing or running (sound only).")]
+        [SerializeField] private MMF_Player rideTouchdownWorldFeel;
+        [Tooltip("A getting-off's scuffs and slide marks on the ground (a few dark streaks that fade in 1-2 s).")]
+        [SerializeField] private MMF_Player rideScuffWorldFeel;
+        [Tooltip("The mount forming as it is summoned: its own voice, by the mount's sound set (sound only).")]
+        [SerializeField] private MMF_Player rideSummonWorldFeel;
+        [Tooltip("The mount vanishing as the rider leaves it: its own sound, by the mount's sound set (sound only).")]
+        [SerializeField] private MMF_Player rideVanishWorldFeel;
+        [Tooltip("The rider's own screen as a getting on or off launches: a short FOV punch, stronger with speed (owner feel pick 4).")]
+        [SerializeField] private MMF_Player rideLaunchFeel;
+        [Tooltip("The running getting-off's roll hitting the ground: the rider's own camera punch, against the touchdown's (owner final test, 8 Nov 2026).")]
+        [SerializeField, Min(0f)] private float rollImpactKick = 1.4f;
+        [Tooltip("A getting-off counts as running for the shockwave from this many metres a second.")]
+        [SerializeField, Min(0f)] private float shockwaveFromSpeed = 3f;
         [Tooltip("Cast / hit bursts for skills the catalog has no entry for.")]
         [SerializeField] private MMF_Player attackCastWorldFeel;
         [SerializeField] private MMF_Player buffCastWorldFeel;
@@ -740,6 +768,148 @@ namespace KryticalNova.GameFeel
             if (isLocalPlayer) Play(landFeel, actor.position, 1f);
         }
 
+        [Header("Getting off a mount (owner, 7 Nov 2026: impact, weight, dust, lines, smear)")]
+        [Tooltip("The travel speed (m/s) at which the getting-off's feel is at its strongest; slower ones scale down.")]
+        [SerializeField, Min(1f)] private float dismountFullSpeed = 20f;
+        [Tooltip("How strong the take-off and touchdown are at a standstill, and how much more at full speed.")]
+        [SerializeField, Min(0f)] private float dismountBaseIntensity = 0.8f, dismountSpeedIntensity = 0.7f;
+        [Tooltip("The local player's own camera kick at the touchdown, at a standstill and at full speed.")]
+        [SerializeField, Range(0f, 1f)] private float dismountShakeStill = 0.45f, dismountShakeFull = 1f;
+        [Tooltip("The small puff as the rider stands up out of the landing or the roll.")]
+        [SerializeField, Range(0f, 1f)] private float dismountStandUpIntensity = 0.45f;
+        [Tooltip("Seconds after a dismount's touchdown within which the flip's air trail is gone (owner, 7 Nov 2026: nothing lingers).")]
+        [SerializeField, Range(0f, 1f)] private float dismountTrailEnd = 0.25f;
+        [Tooltip("Getting on: how strong the push off the ground and the weight landing in the saddle are.")]
+        [SerializeField, Range(0f, 1.5f)] private float mountUpTakeOffIntensity = 0.8f, mountUpLandIntensity = 0.9f;
+        [Tooltip("Getting on: the local player's own camera thud as the weight lands in the saddle.")]
+        [SerializeField, Range(0f, 1f)] private float mountUpShake = 0.3f;
+
+        /// <summary>
+        /// The getting-off beats (MountRider fires them from the clip's measured times): a push burst and squash off the
+        /// saddle, movement lines and the smear through the flip, a heavy thud and dust ring at the touchdown (the camera
+        /// kick for the rider's own screen only), the run's dust trail along the roll (it hides the feet's slide), and a
+        /// settle puff at the stand-up. Faster dismounts hit harder.
+        /// </summary>
+        public void Dismount(in DismountFeel moment)
+        {
+            Transform actor = moment.Actor;
+            if (actor == null) return;
+            float pace = Mathf.Clamp01(moment.Speed / dismountFullSpeed);
+            float hit = dismountBaseIntensity + dismountSpeedIntensity * pace;
+            Vector3 feet = ActorAnchor.Feet(actor);
+            if (moment.GettingOn)
+            {
+                MountUp(moment, actor, feet);
+                return;
+            }
+            // A running getting-off keeps the run's own effects (wind lines, dust, smear) on through it: the motor holds
+            // them (owner retest 4, 8 Nov 2026), so the beats here leave them alone; a standing one has none to keep.
+            bool running = moment.Speed >= shockwaveFromSpeed || moment.EndsRunning;
+            switch (moment.Beat)
+            {
+                case DismountBeat.MountShows:
+                    PlayVoiced(rideVanishWorldFeel, moment.MountVoice, moment.Actor.position, actor);
+                    break;
+                case DismountBeat.Crouch:
+                    PlayWorld(rideCrouchWorldFeel, feet, Facing(actor), actor, hit);
+                    break;
+                case DismountBeat.TakeOff:
+                    PlayWorld(rideTakeOffWorldFeel != null ? rideTakeOffWorldFeel : jumpWorldFeel, feet, Facing(actor), actor, hit);
+                    // The push kicks up dust at the mount's own feet as it takes the weight and stops (owner VFX pick b).
+                    if (moment.Mount != null) PlayWorld(rideDustWorldFeel, moment.Mount.position, Facing(actor), moment.Mount, hit);
+                    if (moment.IsLocalPlayer)
+                    {
+                        Play(jumpFeel, actor.position, Mathf.Lerp(0.7f, 1.3f, pace)); // the kick grows with speed
+                        Play(rideLaunchFeel, actor.position, Mathf.Lerp(0.5f, 1f, pace));
+                    }
+                    ActorVfx.For(actor).SetAirborne(true, airborneLoopVfx);
+                    break;
+                case DismountBeat.Touchdown:
+                    // The lines and the smear end here, always (owner, retest: they stuck on after the roll), and the
+                    // flip's trail is gone within dismountTrailEnd of the touchdown (owner: nothing lingers).
+                    ActorVfx.Find(actor)?.SetAirborne(false, airborneLoopVfx, dismountTrailEnd);
+                    if (!running) ActorSmear.Find(actor)?.Release();
+                    // One short grounded puff and a squash: no stars, nothing lingering (owner, retest: "the stars are
+                    // stupid"; puffs gone in 0.3-0.5 s).
+                    PlayWorld(rideLandWorldFeel != null ? rideLandWorldFeel : landWorldFeel, feet, Facing(actor), actor, hit);
+                    PlayWorld(rideTouchdownWorldFeel, feet, Facing(actor), actor, hit);
+                    PlayWorld(rideScuffWorldFeel, feet, Facing(actor), null, hit); // left on the ground where the feet hit
+                    if (moment.Speed >= shockwaveFromSpeed) PlayWorld(rideShockwaveWorldFeel, feet, Facing(actor), actor, hit);
+                    if (moment.IsLocalPlayer) Play(landFeel, actor.position, Mathf.Lerp(dismountShakeStill, dismountShakeFull, pace));
+                    break;
+                case DismountBeat.RollStart:
+                    // Dust under the planted feet for the measured slide window only (RollStart to SlideEnd).
+                    ActorVfx.For(actor).SetRunning(true, runLoopVfx);
+                    PlayWorld(rideRollSkidWorldFeel, feet, Facing(actor), actor, hit);
+                    // The body hits the ground as the roll begins: a screen punch on the rider's own screen.
+                    if (moment.IsLocalPlayer) Play(landFeel, actor.position, rollImpactKick * Mathf.Lerp(dismountShakeStill, dismountShakeFull, pace));
+                    PlayWorld(rideScuffWorldFeel, feet, Facing(actor), null, hit); // the slide's marks begin
+                    break;
+                case DismountBeat.SlideEnd:
+                    if (!running) ActorVfx.Find(actor)?.SetRunning(false, runLoopVfx);
+                    PlayWorld(rideScuffWorldFeel, feet, Facing(actor), null, hit); // the slide's marks along its way
+                    break;
+                case DismountBeat.RollEnd:
+                    // The roll's exit slide: one short puff where the feet catch, not a trail.
+                    if (!running) ActorVfx.Find(actor)?.SetRunning(false, runLoopVfx);
+                    PlayWorld(rideDustWorldFeel, feet, Facing(actor), actor, dismountStandUpIntensity);
+                    PlayWorld(rideScuffWorldFeel, feet, Facing(actor), null, hit); // and end where the feet catch
+                    break;
+                case DismountBeat.StandUp:
+                    if (!running) ActorVfx.Find(actor)?.SetRunning(false, runLoopVfx);
+                    break;
+                case DismountBeat.Ended:
+                    // The flip's lines always end; the run's dust and smear end with the run itself (the motor reports
+                    // the stop when there is nowhere left to run).
+                    ActorVfx.Find(actor)?.SetAirborne(false, airborneLoopVfx, dismountTrailEnd);
+                    if (!running)
+                    {
+                        ActorVfx.Find(actor)?.SetRunning(false, runLoopVfx);
+                        ActorSmear.Find(actor)?.Release();
+                    }
+                    break;
+            }
+        }
+
+        /// <summary>
+        /// Getting on (owner, 7 Nov 2026 retest: the mount-up needs feel too): a push off the ground as the feet leave
+        /// it, and the weight landing in the saddle as the mount finishes forming under the rider (MountTransition's
+        /// arrivesAt is where its materialise ends). Short puffs only, no stars.
+        /// </summary>
+        private void MountUp(in DismountFeel moment, Transform actor, Vector3 feet)
+        {
+            switch (moment.Beat)
+            {
+                case DismountBeat.MountShows:
+                    PlayVoiced(rideSummonWorldFeel, moment.MountVoice, actor.position, actor);
+                    break;
+                case DismountBeat.Crouch:
+                    PlayWorld(rideCrouchWorldFeel, feet, Facing(actor), actor, mountUpTakeOffIntensity);
+                    break;
+                case DismountBeat.TakeOff:
+                    PlayWorld(rideTakeOffWorldFeel, feet, Facing(actor), actor, mountUpTakeOffIntensity);
+                    if (moment.IsLocalPlayer) { Play(jumpFeel, actor.position, 1f); Play(rideLaunchFeel, actor.position, 0.6f); }
+                    break;
+                case DismountBeat.Touchdown:
+                    ActorSmear.Find(actor)?.Release();
+                    PlayWorld(rideLandWorldFeel, feet, Facing(actor), actor, mountUpLandIntensity);
+                    // The mount's pulse as the weight lands (owner VFX pick d): its lights flare, its body shudders - its
+                    // stage's own data (an organic mount shakes off dust instead of glowing).
+                    if (moment.Mount != null && (moment.PulseGlow > 0f || moment.PulseShake > 0f))
+                    {
+                        MountPulse.Play(moment.Mount, moment.PulseGlow, moment.PulseShake, moment.PulseSeconds, moment.PulseColor,
+                            moment.PulseParticles, moment.PulseParticleScale);
+                        if (moment.PulseShake > 0f) PlayWorld(rideDustWorldFeel, moment.Mount.position, Facing(actor), actor, 1f);
+                    }
+                    PlayWorld(rideSaddleLandWorldFeel, feet, Facing(actor), actor, 1f);
+                    if (moment.IsLocalPlayer) Play(landFeel, actor.position, mountUpShake);
+                    break;
+                case DismountBeat.Ended:
+                    ActorSmear.Find(actor)?.Release();
+                    break;
+            }
+        }
+
         public void WallStanding(Transform actor, bool onWall)
         {
             if (actor == null) return;
@@ -1177,6 +1347,16 @@ namespace KryticalNova.GameFeel
         /// <param name="tint">The colour of the moment, for the effects that take one (<see cref="MMF_PooledVfx.TintWithMoment"/>).</param>
         /// <param name="ramp">The colour ramp of the moment, for the comic effects that take one (<see cref="MMF_PooledVfx.RampWithMoment"/>).</param>
         /// <param name="onlyIfReady">Its effects are left out when no copy lies ready in the pool, instead of being created (<see cref="MMF_PooledVfx.OnlyIfReady"/>).</param>
+        /// <summary>A world feel whose sounds use the set of this name (a mount's own voice); no such set: silent.</summary>
+        private static void PlayVoiced(MMF_Player player, string set, Vector3 position, Transform target)
+        {
+            if (player == null) return;
+            var feedbacks = player.FeedbacksList;
+            for (int i = 0; i < feedbacks.Count; i++)
+                if (feedbacks[i] is MMF_VariedSound sound) sound.UseSet(set);
+            PlayWorld(player, position, Quaternion.identity, target, 1f);
+        }
+
         private static void PlayWorld(MMF_Player player, Vector3 position, Quaternion rotation, Transform target, float intensity = 1f,
             Color? tint = null, ComicRamp? ramp = null, bool onlyIfReady = false)
         {

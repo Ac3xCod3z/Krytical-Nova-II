@@ -18,6 +18,7 @@
         "KryticalNova.Networking",
         "KryticalNova.Persistence",
         "KryticalNova.Mounts",
+        "MotionWarping.Runtime",
         "KryticalNova.Pets",
         "KryticalNova.Player",
         "KryticalNova.Progression",

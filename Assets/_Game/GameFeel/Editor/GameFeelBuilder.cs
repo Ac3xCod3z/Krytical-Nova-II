@@ -111,6 +111,8 @@ namespace KryticalNova.EditorTools
             Make("FX_Cartoony_Jump_01", "PFX_Dust_Land", 1.2f);
             Make("FX_Cartoony_Jump_Up_01", "PFX_Jump_Burst", 1.15f);
             Make("FX_Cartoony_Rings_01", "PFX_Land_Ring", 1.1f, then: GroundRings);
+            // Getting on and off a mount (owner, 7 Nov 2026 retest): one short grounded puff, gone in under half a second.
+            Make("FX_Cartoony_Jump_01", "PFX_Dust_Short", 0.9f, then: ShortLived);
             Make("FX_Cartoony_Sprint_01", "PFX_Run_Loop", 0.85f, loop: true);
             Make("FX_Trail_Dust_01", "PFX_Air_Loop", 0.6f, loop: true);
             BuildJumpChargeVfx();
@@ -137,6 +139,7 @@ namespace KryticalNova.EditorTools
             BuildForgeVfx();
             BuildNovaVfx();
             BuildAreaRing();
+            BuildGroundScuff();
             BuildBladeTrail();
             UseUrpMaterials($"{GameplayVfxFolder}/FX_ComicSlash.prefab");
         }
@@ -248,6 +251,40 @@ namespace KryticalNova.EditorTools
             }
             AssetDatabase.SaveAssets();
             Debug.Log($"[GameFeel] Jump charge and punch rebuilt on {PrefabPath}.");
+        }
+
+        /// <summary>
+        /// Getting on and off a mount only (owner, 7 Nov 2026 retest): makes PFX_Dust_Short and puts the Ride Dust,
+        /// Ride Take-off and Ride Landing feels on the built prefab, leaving everything else in it as it is.
+        /// </summary>
+        [MenuItem("Krytical Nova/GameFeel/Rebuild Ride Feel")]
+        public static void RebuildRideFeel()
+        {
+            WeatherVfxBuilder.EnsureFolder(VfxFolder);
+            Make("FX_Cartoony_Jump_01", "PFX_Dust_Short", 0.9f, then: ShortLived);
+            Make("FX_Cartoony_Rings_01", "PFX_Ring_Short", 1.0f, then: r => { GroundRings(r); GoneWithin(r, RideShockwaveSeconds); });
+            BuildGroundScuff();
+            AssetDatabase.SaveAssets();
+            using (var scope = new PrefabUtility.EditPrefabContentsScope(PrefabPath))
+            {
+                GameObject root = scope.prefabContentsRoot;
+                var presenter = root.GetComponent<GameFeelPresenter>();
+                Transform world = root.transform.Find("World");
+                if (presenter == null || world == null)
+                {
+                    Debug.LogError($"[GameFeel] {PrefabPath} is not a built game feel prefab. Run Build Game Feel first.");
+                    return;
+                }
+                Remove(world, new[] { "Ride Dust", "Ride Take-off", "Ride Landing", "Ride Crouch", "Ride Shockwave", "Ride Saddle Land",
+                    "Ride Roll Skid", "Ride Touchdown", "Ride Summon", "Ride Vanish", "Ride Scuff" });
+                Remove(root.transform, new[] { "Ride Launch" });
+                var so = new SerializedObject(presenter);
+                AddRideFeel(world.gameObject, so);
+                AddRideLaunch(root, so);
+                so.ApplyModifiedPropertiesWithoutUndo();
+            }
+            AssetDatabase.SaveAssets();
+            Debug.Log($"[GameFeel] Ride feel rebuilt on {PrefabPath}.");
         }
 
         /// <summary>The CFXR electric crackle as a short one-shot at the feet, its glow dome and light taken down.</summary>
@@ -1317,6 +1354,34 @@ namespace KryticalNova.EditorTools
                 new Keyframe(0f, 0.3f), new Keyframe(0.15f, 1f), new Keyframe(0.55f, 0.8f), new Keyframe(1f, 0f)));
         }
 
+        /// <summary>The longest a <see cref="ShortLived"/> effect shows, from its start to its last particle (seconds).</summary>
+        public const float ShortDustSeconds = 0.45f;
+
+        /// <summary>
+        /// A puff that is over in <see cref="ShortDustSeconds"/> (owner, 7 Nov 2026: "puffs linger"): every system emits
+        /// at once and no particle outlives the rest of that time.
+        /// </summary>
+        private static void ShortLived(GameObject root) => GoneWithin(root, ShortDustSeconds);
+
+        /// <summary>Every system emits at once and the last particle is gone <paramref name="seconds"/> after the start.</summary>
+        private static void GoneWithin(GameObject root, float seconds)
+        {
+            foreach (var ps in root.GetComponentsInChildren<ParticleSystem>(true))
+            {
+                var main = ps.main;
+                main.startDelay = 0f;
+                main.duration = Mathf.Min(main.duration, 0.1f);
+                ParticleSystem.MinMaxCurve life = main.startLifetime;
+                float longest = life.mode == ParticleSystemCurveMode.Constant ? life.constant
+                    : life.mode == ParticleSystemCurveMode.TwoConstants ? life.constantMax
+                    : main.startLifetimeMultiplier; // a curve: the multiplier is its top
+                float most = Mathf.Max(0.05f, seconds - 0.1f);
+                if (longest > most) main.startLifetimeMultiplier *= most / longest;
+                var emission = ps.emission;
+                if (emission.rateOverTimeMultiplier > 0f) emission.rateOverTimeMultiplier = 0f; // bursts only
+            }
+        }
+
         /// <summary>Flat ground billboards (the landing shockwave) draw a crisp ring instead of the default soft dot.</summary>
         private static void GroundRings(GameObject root)
         {
@@ -1720,6 +1785,7 @@ namespace KryticalNova.EditorTools
                 so.FindProperty("runWorldFeel").objectReferenceValue = Smeared(World(world, RunStartPlayer, Dust("PFX_Dust_Run")), SmearKind.TakeOff);
                 so.FindProperty("jumpWorldFeel").objectReferenceValue = Smeared(World(world, "Jump", Dust("PFX_Dust_Jump"), Dust("PFX_Jump_Burst")), SmearKind.Jump);
                 so.FindProperty("landWorldFeel").objectReferenceValue = World(world, "Land", Dust("PFX_Dust_Land"), Dust("PFX_Land_Ring"));
+                AddRideFeel(world, so);
                 AddWaterStepFeel(root, world, so);
                 AddJumpPunch(root, world, so);
                 so.FindProperty("attackCastWorldFeel").objectReferenceValue = World(world, "Attack Skill", Slash());
@@ -1863,6 +1929,60 @@ namespace KryticalNova.EditorTools
                 Debug.Log($"[GameFeel] Smear put on {done} moment(s) of {PrefabPath}. Tune it in {SmearSettingsPath}.");
             }
             AssetDatabase.SaveAssets();
+        }
+
+        /// <summary>
+        /// Getting on and off a mount (owner, 7 Nov 2026 retest): short grounded puffs only, no stars; a stretch on the
+        /// push off, a squash on the weight landing (on the ground or in the saddle).
+        /// </summary>
+        private static void AddRideFeel(GameObject world, SerializedObject so)
+        {
+            so.FindProperty("rideDustWorldFeel").objectReferenceValue = World(world, "Ride Dust", Dust("PFX_Dust_Short"));
+            MMF_Player takeOff = Smeared(World(world, "Ride Take-off", Dust("PFX_Dust_Short")), SmearKind.Jump);
+            Squash(takeOff, "Push Stretch", -0.03f, 0.07f);
+            Sound(takeOff, "Ride Push-off");
+            so.FindProperty("rideTakeOffWorldFeel").objectReferenceValue = takeOff;
+            MMF_Player land = World(world, "Ride Landing", Dust("PFX_Dust_Short"));
+            Squash(land, "Weight Squash", 0.045f, -0.08f);
+            so.FindProperty("rideLandWorldFeel").objectReferenceValue = land;
+            MMF_Player shockwave = World(world, "Ride Shockwave", Dust("PFX_Ring_Short"));
+            Sound(shockwave, "Ride Shockwave");
+            so.FindProperty("rideShockwaveWorldFeel").objectReferenceValue = shockwave;
+            // The sounds of their own (owner's picks, 8 Nov 2026): the saddle, the roll, and each mount's own summon and vanish.
+            foreach ((string field, string name) in new[] { ("rideSaddleLandWorldFeel", "Ride Saddle Land"), ("rideRollSkidWorldFeel", "Ride Roll Skid"), ("rideTouchdownWorldFeel", "Ride Touchdown"),
+                         ("rideSummonWorldFeel", "Ride Summon"), ("rideVanishWorldFeel", "Ride Vanish") })
+                so.FindProperty(field).objectReferenceValue = Player(world, name, p => Sound(p, name));
+            // Scuffs and slide marks on the ground, fading (owner VFX pick c).
+            so.FindProperty("rideScuffWorldFeel").objectReferenceValue = World(world, "Ride Scuff", new Fx(GroundScuffVfx, ground: true));
+            MMF_Player crouch = World(world, "Ride Crouch");
+            Squash(crouch, "Crouch Squash", 0.035f, -0.07f);
+            so.FindProperty("rideCrouchWorldFeel").objectReferenceValue = crouch;
+        }
+
+        /// <summary>Seconds the running dismount's ground shockwave lasts (owner, 7 Nov 2026: gone in 0.3 s).</summary>
+        public const float RideShockwaveSeconds = 0.3f;
+
+        /// <summary>Degrees the view widens at a getting on or off's launch, at full speed (owner retest 4: clearly seen).</summary>
+        public const float RideLaunchFovDegrees = 10f;
+        /// <summary>The launch's camera kick (Cinemachine impulse velocity): up and back, short and hard (owner retest 5).</summary>
+        public static readonly Vector3 RideLaunchKick = new Vector3(0f, 1.1f, -0.75f);
+
+        /// <summary>The rider's own screen as a getting on or off launches: a short FOV punch and a camera kick (owner feel pick 4).</summary>
+        private static void AddRideLaunch(GameObject root, SerializedObject so)
+        {
+            so.FindProperty("rideLaunchFeel").objectReferenceValue = Player(root, "Ride Launch", p =>
+            {
+                var fov = p.AddFeedback(typeof(MMF_CameraFieldOfView)) as MMF_CameraFieldOfView;
+                fov.Label = "Launch FOV Punch";
+                // Owner retest 4 (8 Nov 2026): not seen at +4 deg over 0.3 s - now a clear widening.
+                fov.Duration = 0.45f;
+                fov.RelativeFieldOfView = true;
+                fov.RemapFieldOfViewZero = 0f;
+                fov.RemapFieldOfViewOne = RideLaunchFovDegrees;
+                fov.ShakeFieldOfView = new AnimationCurve(new Keyframe(0f, 0f), new Keyframe(0.2f, 1f), new Keyframe(1f, 0f));
+                // And the camera kicks up and back with the push (owner retest 5: clearly felt - short and punchy).
+                Impulse(p, RideLaunchKick, 0.14f);
+            });
         }
 
         /// <summary>The player with exactly one smear feedback of this kind on it.</summary>

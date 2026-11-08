@@ -391,6 +391,20 @@ namespace KryticalNova.Player
         private bool UseWarpedJump => warpAsset != null && motionWarping != null && presentation.SupportsWarpedJump
             && warpAsset.warpPhases != null && warpAsset.warpPhases.Count == 2 && warpAsset.rootY != null;
 
+        /// <summary>The jump's warp (the leap off a mount plays the same chain and warp: owner, 7 Nov 2026 retest 2).</summary>
+        public MotionWarpingAsset WarpAsset => warpAsset;
+
+        /// <summary>The jump chain's take-off, apex and landing, in seconds from the start of its crouch.</summary>
+        public bool TryGetWarpTimes(out float takeoff, out float apex, out float land)
+        {
+            takeoff = apex = land = 0f;
+            if (warpAsset == null || warpAsset.warpPhases == null || warpAsset.warpPhases.Count < 2) return false;
+            takeoff = warpAsset.warpPhases[0].startTime;
+            apex = warpAsset.warpPhases[0].endTime;
+            land = warpAsset.warpPhases[1].endTime;
+            return apex > takeoff && land > apex;
+        }
+
         private bool ReadWarpPhases()
         {
             warpTakeoffTime = warpAsset.warpPhases[0].startTime;

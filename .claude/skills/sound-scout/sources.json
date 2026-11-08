@@ -451,6 +451,74 @@
   "slot": "Standing Rank",
   "from": "buttonmasters/Button Masters/ButtonModeSwitchEn MM013503.wav"
  },
+ "SFX/Mounts/SFX_RidePushoff_01.wav": {
+  "slot": "Ride Push-off",
+  "from": "bt25_ultimatesfxforgames_softwarebundle/Clothing, Fabric & Materials/FL_GFX_Clothing_Fabric_Material_Foley_Take_Off_02.wav"
+ },
+ "SFX/Mounts/SFX_RidePushoff_02.wav": {
+  "slot": "Ride Push-off",
+  "from": "bt25_ultimatesfxforgames_softwarebundle/Clothing, Fabric & Materials/FL_GFX_Clothing_Fabric_Material_Foley_Take_Off_02.wav pitch +1.5 tilt +1"
+ },
+ "SFX/Mounts/SFX_RidePushoff_03.wav": {
+  "slot": "Ride Push-off",
+  "from": "bt25_ultimatesfxforgames_softwarebundle/Clothing, Fabric & Materials/FL_GFX_Clothing_Fabric_Material_Foley_Take_Off_02.wav pitch -1.5 tilt -1"
+ },
+ "SFX/Mounts/SFX_RideRollSkid_01.wav": {
+  "slot": "Ride Roll Skid",
+  "from": "bt25_ultimatesfxforgames_softwarebundle/Clothing, Fabric & Materials/FL_GFX_Clothing_Fabric_Material_Foley_Put_In_a_Backpack_01.wav"
+ },
+ "SFX/Mounts/SFX_RideRollSkid_02.wav": {
+  "slot": "Ride Roll Skid",
+  "from": "bt25_ultimatesfxforgames_softwarebundle/Clothing, Fabric & Materials/FL_GFX_Clothing_Fabric_Material_Foley_Put_In_a_Backpack_01.wav pitch +1.5 tilt +1"
+ },
+ "SFX/Mounts/SFX_RideRollSkid_03.wav": {
+  "slot": "Ride Roll Skid",
+  "from": "bt25_ultimatesfxforgames_softwarebundle/Clothing, Fabric & Materials/FL_GFX_Clothing_Fabric_Material_Foley_Put_In_a_Backpack_01.wav pitch -1.5 tilt -1"
+ },
+ "SFX/Mounts/SFX_RideSaddleLand_01.wav": {
+  "slot": "Ride Saddle Land",
+  "from": "bt25_ultimatesfxforgames_softwarebundle/Clothing, Fabric & Materials/FL_GFX_Clothing_Fabric_Material_Foley_Bag_Open.wav"
+ },
+ "SFX/Mounts/SFX_RideSaddleLand_02.wav": {
+  "slot": "Ride Saddle Land",
+  "from": "bt25_ultimatesfxforgames_softwarebundle/Clothing, Fabric & Materials/FL_GFX_Clothing_Fabric_Material_Foley_Bag_Open.wav pitch +1.5 tilt +1"
+ },
+ "SFX/Mounts/SFX_RideSaddleLand_03.wav": {
+  "slot": "Ride Saddle Land",
+  "from": "bt25_ultimatesfxforgames_softwarebundle/Clothing, Fabric & Materials/FL_GFX_Clothing_Fabric_Material_Foley_Bag_Open.wav pitch -1.5 tilt -1"
+ },
+ "SFX/Mounts/SFX_RideShockwave_01.wav": {
+  "slot": "Ride Shockwave",
+  "from": "explosionzone/Explosions Zone/ExploLowFireDest SDT2021805.wav"
+ },
+ "SFX/Mounts/SFX_RideSummon_Brambleback_01.wav": {
+  "slot": "Ride Summon",
+  "from": "Boar IN02_64.wav + Boar IN02_64.wav"
+ },
+ "SFX/Mounts/SFX_RideSummon_Strider_01.wav": {
+  "slot": "Ride Summon",
+  "from": "DogSmall2Barking.wav + RobotMorphMechanic MM043701.wav"
+ },
+ "SFX/Mounts/SFX_RideTouchdown_01.wav": {
+  "slot": "Ride Touchdown",
+  "from": "FoleyFootsteps-Miscella_121_B06B-01731.wav + FL_GFX_Cozy_Mechanic_Dig_Stack_Drop_05.wav + FL_GFX_Home_Fx_Door_Small_06.wav"
+ },
+ "SFX/Mounts/SFX_RideTouchdown_02.wav": {
+  "slot": "Ride Touchdown",
+  "from": "FoleyFootsteps-Miscella_121_B06B-01731.wav + FL_GFX_Cozy_Mechanic_Dig_Stack_Drop_05.wav + FL_GFX_Home_Fx_Door_Small_06.wav"
+ },
+ "SFX/Mounts/SFX_RideTouchdown_03.wav": {
+  "slot": "Ride Touchdown",
+  "from": "FoleyFootsteps-Miscella_121_B06B-01731.wav + FL_GFX_Cozy_Mechanic_Dig_Stack_Drop_05.wav + FL_GFX_Home_Fx_Door_Small_06.wav"
+ },
+ "SFX/Mounts/SFX_RideVanish_Brambleback_01.wav": {
+  "slot": "Ride Vanish",
+  "from": "FL_GFX_Cozy_Mechanic_Dig_Stack_Drop_01.wav + SNOW-ON-LEAVES_6EXT8-11198.mp3"
+ },
+ "SFX/Mounts/SFX_RideVanish_Strider_01.wav": {
+  "slot": "Ride Vanish",
+  "from": "glitchdominion_audiohero/Glitch Dominion/Computer-Glitch-Space-Computer-Digital-Processing-Glitch_COMM-1052.wav"
+ },
  "SFX/Movement/SFX_BodyThud_01.wav": {
   "slot": "Body Thud",
   "from": "bt25_ultimatesfxforgames_softwarebundle/Cozy Mechanics/FL_GFX_Cozy_Mechanic_Dig_Stack_Drop_05.wav"

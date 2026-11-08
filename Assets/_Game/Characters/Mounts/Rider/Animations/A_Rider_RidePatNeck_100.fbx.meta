@@ -607,7 +607,7 @@ ModelImporter:
     - name: calf_l
       parentName: thigh_l
       position: {x: 44.66166, y: 0.0073976517, z: -0.000042915344}
-      rotation: {x: 0.18399449, y: 0.023014572, z: 0.044714198, w: 0.98164004}
+      rotation: {x: 0.18399449, y: 0.02301456, z: 0.04471372, w: 0.98164004}
       scale: {x: 0.99999756, y: 1.0000045, z: 0.9999992}
     - name: calf_twist_01_l
       parentName: calf_l
@@ -617,7 +617,7 @@ ModelImporter:
     - name: foot_l
       parentName: calf_l
       position: {x: 36.018085, y: -0.00025844574, z: 0.000060068443}
-      rotation: {x: -0.32650703, y: -0.018412253, z: -0.037011117, w: 0.94429046}
+      rotation: {x: -0.32650724, y: -0.0184122, z: -0.037010495, w: 0.94429034}
       scale: {x: 0.9999983, y: 0.99999577, z: 0.9999956}
     - name: ball_l
       parentName: foot_l
@@ -632,7 +632,7 @@ ModelImporter:
     - name: thigh_r
       parentName: pelvis
       position: {x: 2.6412196, y: -0.2960157, z: -9.611951}
-      rotation: {x: 0.010584743, y: -0.99040014, z: 0.13757087, w: 0.008355738}
+      rotation: {x: 0.010584801, y: -0.99040014, z: 0.13757092, w: 0.008355796}
       scale: {x: 1.0000005, y: 0.9999943, z: 0.99999887}
     - name: thigh_twist_01_r
       parentName: thigh_r
@@ -642,7 +642,7 @@ ModelImporter:
     - name: calf_r
       parentName: thigh_r
       position: {x: -44.66168, y: -0.0072612762, z: 0.00004720688}
-      rotation: {x: 0.18402524, y: 0.022369508, z: 0.04503918, w: 0.98163426}
+      rotation: {x: 0.18402529, y: 0.022369515, z: 0.045038477, w: 0.9816343}
       scale: {x: 0.9999918, y: 1.0000141, z: 0.999987}
     - name: calf_twist_01_r
       parentName: calf_r
@@ -652,7 +652,7 @@ ModelImporter:
     - name: foot_r
       parentName: calf_r
       position: {x: -36.01808, y: 0.00018405914, z: 0.0000018104911}
-      rotation: {x: -0.33897293, y: 0.025300225, z: -0.05188933, w: 0.9390234}
+      rotation: {x: -0.33897418, y: 0.025299959, z: -0.051888157, w: 0.93902296}
       scale: {x: 0.9999999, y: 0.99999964, z: 0.9999973}
     - name: ball_r
       parentName: foot_r

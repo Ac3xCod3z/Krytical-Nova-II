@@ -31,7 +31,14 @@ namespace KryticalNova.GameFeel
             public GameObject Instance;
             public Vector3 BaseScale;
             public float EndTime;
+            public Vector3 Local;   // where it hangs on the root, standing
+            public bool OnBody;     // chest or head height: it rises with the body (a mount's seat)
         }
+
+        // Above this many metres over the soles an effect hangs on the body, not on the ground.
+        private const float BodyHeight = 0.5f;
+        private KryticalNova.Player.PlayerAnimancerMotor bodyMotor;
+        private bool bodyMotorLooked;
 
         private readonly Dictionary<string, Aura> auras = new Dictionary<string, Aura>();
         private readonly List<string> auraIds = new List<string>(); // iteration order without allocating
@@ -131,7 +138,8 @@ namespace KryticalNova.GameFeel
             if (pool == null || prefab == null) return;
             var instance = pool.SpawnAttached(prefab, transform, Local(aboveSoles), Quaternion.identity);
             if (instance == null) return;
-            auras[skillId] = new Aura { Instance = instance, BaseScale = instance.transform.localScale, EndTime = Time.time + duration };
+            auras[skillId] = new Aura { Instance = instance, BaseScale = instance.transform.localScale, EndTime = Time.time + duration,
+                                        Local = Local(aboveSoles), OnBody = aboveSoles.y > BodyHeight };
             auraIds.Add(skillId);
         }
 
@@ -165,7 +173,8 @@ namespace KryticalNova.GameFeel
             if (pool == null || prefab == null) return;
             var instance = pool.SpawnAttached(prefab, transform, Local(aboveSoles), Quaternion.identity);
             if (instance == null) return;
-            var charge = new Aura { Instance = instance, BaseScale = instance.transform.localScale };
+            var charge = new Aura { Instance = instance, BaseScale = instance.transform.localScale,
+                                    Local = Local(aboveSoles), OnBody = aboveSoles.y > BodyHeight };
             instance.transform.localScale = charge.BaseScale * ChargeStartScale;
             charges.Add(charge);
         }
@@ -287,8 +296,11 @@ namespace KryticalNova.GameFeel
             }
         }
 
-        public void SetAirborne(bool value, GameObject loopPrefab)
+        /// <param name="endWithin">Turning it off: seconds within which every trail particle already in the air is gone
+        /// (owner, 7 Nov 2026: nothing lingers after a dismount's touchdown). Below zero, they live out their time.</param>
+        public void SetAirborne(bool value, GameObject loopPrefab, float endWithin = -1f)
         {
+            if (!value && endWithin >= 0f && airLoop != null) CutShort(airLoop, endWithin);
             airborne = value;
             SetLoop(ref airLoop, airborne, loopPrefab, AirLoopHeight);
             RefreshRunLoop(); // no dust while the feet are off the ground
@@ -359,6 +371,23 @@ namespace KryticalNova.GameFeel
             if (runLoopSystems == null || Time.time < nextDustCheck) return;
             nextDustCheck = Time.time + DustCheckSeconds;
             GroundSurfaces.Tint(runLoopSystems, GroundSurfaces.DustAt(ActorAnchor.Feet(transform), transform));
+        }
+
+        private static ParticleSystem.Particle[] cutBuffer;
+
+        /// <summary>Every particle of <paramref name="loop"/> alive now dies within <paramref name="seconds"/>.</summary>
+        private static void CutShort(GameObject loop, float seconds)
+        {
+            foreach (var ps in loop.GetComponentsInChildren<ParticleSystem>())
+            {
+                int count = ps.particleCount;
+                if (count == 0) continue;
+                if (cutBuffer == null || cutBuffer.Length < count) cutBuffer = new ParticleSystem.Particle[Mathf.NextPowerOfTwo(count)];
+                count = ps.GetParticles(cutBuffer, count);
+                for (int i = 0; i < count; i++)
+                    if (cutBuffer[i].remainingLifetime > seconds) cutBuffer[i].remainingLifetime = seconds;
+                ps.SetParticles(cutBuffer, count);
+            }
         }
 
         private void SetLoop(ref GameObject loop, bool on, GameObject prefab, Vector3 aboveSoles)
@@ -463,6 +492,21 @@ namespace KryticalNova.GameFeel
                     : 1f;
                 aura.Instance.transform.localScale = aura.BaseScale * pulse;
             }
+        }
+
+        /// <summary>Effects hung on the body follow it up onto a mount's seat and down again.</summary>
+        private void LateUpdate()
+        {
+            if (auraIds.Count == 0 && charges.Count == 0) return;
+            if (!bodyMotorLooked) { bodyMotorLooked = true; bodyMotor = GetComponent<KryticalNova.Player.PlayerAnimancerMotor>(); }
+            Vector3 lift = bodyMotor != null ? bodyMotor.BodyLift : Vector3.zero;
+            for (int i = 0; i < auraIds.Count; i++)
+            {
+                Aura aura = auras[auraIds[i]];
+                if (aura.OnBody && aura.Instance != null) aura.Instance.transform.localPosition = aura.Local + lift;
+            }
+            for (int i = 0; i < charges.Count; i++)
+                if (charges[i].OnBody && charges[i].Instance != null) charges[i].Instance.transform.localPosition = charges[i].Local + lift;
         }
 
         // The character is being deactivated or destroyed: its children cannot be re-parented right now, so the

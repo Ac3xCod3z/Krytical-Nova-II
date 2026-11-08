@@ -10,7 +10,8 @@
         "KryticalNova.Social",
         "Unity.Netcode.Runtime",
         "Unity.Collections",
-        "Kybernetik.Animancer"
+        "Kybernetik.Animancer",
+        "MotionWarping.Runtime"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
