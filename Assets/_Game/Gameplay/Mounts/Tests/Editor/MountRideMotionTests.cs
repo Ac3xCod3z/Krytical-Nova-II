@@ -299,6 +299,41 @@ namespace KryticalNova.Tests
             Assert.LessOrEqual(off.effectDelay + off.effectSeconds, off.freeSeconds);
         }
 
+        /// <summary>Owner, 7 Nov 2026 (retest 2): the roll covers less ground, then the run or a slight slide to a stop.</summary>
+        [Test]
+        public void TheRoll_IsSlower_ThenRunsOn_OrSlidesToAStop()
+        {
+            const float start = 1.0f, end = 1.76f, k = 0.55f, slide = 0.3f;
+            Assert.AreEqual(1f, MountRules.DismountSpeedShare(0.5f, true, start, end, k, slide), 1e-4f, "take-off and flip at the run");
+            Assert.AreEqual(k, MountRules.DismountSpeedShare(1.3f, true, start, end, k, slide), 1e-4f, "the roll is slowed");
+            Assert.AreEqual(1f, MountRules.DismountSpeedShare(1.9f, true, start, end, k, slide), 1e-4f, "ending running: back to the run");
+            float mid = MountRules.DismountSpeedShare(end + slide / 2f, false, start, end, k, slide);
+            Assert.That(mid, Is.GreaterThan(0f).And.LessThan(k), "ending standing: a slide easing down");
+            Assert.AreEqual(0f, MountRules.DismountSpeedShare(end + slide + 0.01f, false, start, end, k, slide), 1e-4f, "then still");
+        }
+
+        [Test]
+        public void TheStandingEnding_StopsOnTheClickedSpot()
+        {
+            const float start = 1.0f, end = 1.76f, k = 0.55f, slide = 0.3f, run = 10f, path = 12f;
+            float scale = MountRules.DismountStandingScale(path, run, start, end, k, slide);
+            // Integrate the profile at 1 ms steps: the body covers the path, give or take a step.
+            float covered = 0f;
+            for (float t = 0f; t < end + slide + 0.1f; t += 0.001f)
+                covered += run * scale * MountRules.DismountSpeedShare(t, false, start, end, k, slide) * 0.001f;
+            Assert.AreEqual(path, covered, 0.05f);
+            Assert.LessOrEqual(MountRules.DismountStandingScale(1000f, run, start, end, k, slide), MountRules.DismountMostSpeedUp);
+        }
+
+        [Test]
+        public void TheRunOrStandChoice_UsesTheSlowerRoll()
+        {
+            // At 10 m/s: 10 m to the roll's start and 4.18 m through the slowed roll (14.18 m in all; 17.6 m unslowed).
+            Assert.AreEqual(14.18f, MountRules.DismountReachToRollEnd(10f, 1.0f, 1.76f, 0.55f), 0.01f);
+            Assert.IsTrue(MountRules.DismountEndsRunning(18.5f, 10f, 1.0f, 1.76f, 0.55f, 4f), "4.3 m left as the roll ends: up running");
+            Assert.IsFalse(MountRules.DismountEndsRunning(17f, 10f, 1.0f, 1.76f, 0.55f, 4f), "2.8 m left: ends standing");
+        }
+
         /// <summary>Owner, 7 Nov 2026 (retest 2): the leap starts before the mount disintegrates.</summary>
         [Test]
         public void TheMount_StartsVanishingOnlyAfterThePushOff([Values(false, true)] bool running, [Values(true, false)] bool endsRunning)

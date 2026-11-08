@@ -119,6 +119,51 @@ namespace KryticalNova.Mounts
             pathLeftAtPress - Math.Max(0f, speed) * Math.Max(0f, rollEndsAt) >= minDistance;
 
         /// <summary>
+        /// Owner, 7 Nov 2026 (retest 2): through a running getting-off the body goes at the run through the take-off and
+        /// the flip, at <paramref name="rollScale"/> of it through the roll (less ground), then either back to the run
+        /// (ending running) or into a slight slide that eases to a stop over <paramref name="slideSeconds"/> (ending
+        /// standing). Returns the share of the run speed at <paramref name="t"/> seconds into the getting-off.
+        /// </summary>
+        public static float DismountSpeedShare(float t, bool endsRunning, float rollStartsAt, float rollEndsAt, float rollScale, float slideSeconds)
+        {
+            float k = Math.Max(0f, Math.Min(1f, rollScale));
+            if (rollStartsAt <= 0f || t < rollStartsAt) return 1f;
+            if (t < rollEndsAt) return k;
+            if (endsRunning) return 1f;
+            if (slideSeconds <= 0f) return 0f;
+            float s = (t - rollEndsAt) / slideSeconds;
+            return s >= 1f ? 0f : k * (1f - s);
+        }
+
+        /// <summary>Metres covered at <paramref name="speed"/> from the press to the end of the roll (with the slowed roll).</summary>
+        public static float DismountReachToRollEnd(float speed, float rollStartsAt, float rollEndsAt, float rollScale) =>
+            Math.Max(0f, speed) * (Math.Max(0f, rollStartsAt) + Math.Max(0f, rollEndsAt - rollStartsAt) * Math.Max(0f, Math.Min(1f, rollScale)));
+
+        /// <summary>Metres a getting-off that ends standing covers at <paramref name="speed"/>, the slide included.</summary>
+        public static float DismountReachStanding(float speed, float rollStartsAt, float rollEndsAt, float rollScale, float slideSeconds) =>
+            DismountReachToRollEnd(speed, rollStartsAt, rollEndsAt, rollScale)
+            + Math.Max(0f, speed) * Math.Max(0f, Math.Min(1f, rollScale)) * Math.Max(0f, slideSeconds) * 0.5f;
+
+        /// <summary>The run-or-stand choice with the slowed roll: up running when the clicked spot is still
+        /// <paramref name="minDistance"/> or more away as the roll ends.</summary>
+        public static bool DismountEndsRunning(float pathLeftAtPress, float speed, float rollStartsAt, float rollEndsAt, float rollScale, float minDistance) =>
+            pathLeftAtPress - DismountReachToRollEnd(speed, rollStartsAt, rollEndsAt, rollScale) >= minDistance;
+
+        /// <summary>The most a getting-off that ends standing may speed its whole profile up to reach the clicked spot.</summary>
+        public const float DismountMostSpeedUp = 1.25f;
+
+        /// <summary>
+        /// Ending standing: the factor on the run speed that makes the profile (run, slowed roll, slide) end exactly on
+        /// the clicked spot, so the body neither stalls early nor walks on afterwards; at most <see cref="DismountMostSpeedUp"/>.
+        /// </summary>
+        public static float DismountStandingScale(float pathLeftAtPress, float speed, float rollStartsAt, float rollEndsAt, float rollScale, float slideSeconds)
+        {
+            float reach = DismountReachStanding(speed, rollStartsAt, rollEndsAt, rollScale, slideSeconds);
+            if (reach <= 0f) return 0f;
+            return Math.Min(DismountMostSpeedUp, Math.Max(0f, pathLeftAtPress) / reach);
+        }
+
+        /// <summary>
         /// How fast the body travels through a running getting-off (owner, 7 Nov 2026: "it should feel fluid", never a
         /// stop before the flip or the roll). Ending running: the on-foot <paramref name="runSpeed"/> the whole way. Ending
         /// standing: just fast enough to reach the clicked spot as the roll ends, so the body never arrives early and

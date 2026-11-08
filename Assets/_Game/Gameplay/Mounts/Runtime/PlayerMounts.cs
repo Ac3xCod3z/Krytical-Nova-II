@@ -241,8 +241,9 @@ namespace KryticalNova.Mounts
                 // rider goes at on-foot speed through the dismount (Show sets it), so that is the speed to reckon with.
                 float footSpeed = 0f;
                 if (movement != null) { movement.SetRideSpeeds(0f, 0f); footSpeed = movement.CurrentSpeed; }
-                endsRunning = MountRules.DismountEndsRunning(PathLeft(), footSpeed, settings.getOffRunning.rollEndsAt,
-                    settings.rollIntoRunMinDistance);
+                MountTransition roll = settings.getOffRunning;
+                endsRunning = MountRules.DismountEndsRunning(PathLeft(), footSpeed, roll.rollStartsAt, roll.rollEndsAt,
+                    settings.rollSpeedScale, settings.rollIntoRunMinDistance);
             }
             // Review, 7 Nov 2026: a running getting-off is timed by its own clip (run or stand ending), not the standing one.
             if (mount != null)
@@ -287,8 +288,25 @@ namespace KryticalNova.Mounts
             if (HasAuthority) ServerDismountNow();
         }
 
+        // A running getting-off's travel on every machine: the speed profile of MountRules.DismountSpeedShare.
+        private float dismountStartedAt, dismountRunSpeed, dismountScale, dismountSpeedSet = -1f;
+
+        private void DriveDismountSpeed()
+        {
+            MountSettings settings = Settings;
+            if (movement == null || settings == null || shown.phase != RidePhase.GettingOff || !shown.running || dismountRunSpeed <= 0f) return;
+            MountTransition roll = shown.endsRunning ? settings.getOffRunning : settings.getOffRunningToIdle;
+            float share = MountRules.DismountSpeedShare(Time.time - dismountStartedAt, shown.endsRunning, roll.rollStartsAt,
+                roll.rollEndsAt, settings.rollSpeedScale, settings.rollSlideSeconds);
+            float speed = Mathf.Max(StandStillSpeed, dismountRunSpeed * dismountScale * share);
+            if (Mathf.Abs(speed - dismountSpeedSet) < 0.05f) return; // only real changes reach the movement listeners
+            dismountSpeedSet = speed;
+            movement.SetRideSpeeds(speed, speed);
+        }
+
         private void Update()
         {
+            DriveDismountSpeed();
             if (!HasAuthority || catalog == null) return;
 
             if ((phase == RidePhase.GettingOn || phase == RidePhase.GettingOff) && Time.time >= phaseEnds)
@@ -520,14 +538,18 @@ namespace KryticalNova.Mounts
                 else
                 {
                     movement.SetRideSpeeds(0f, 0f);
-                    // A running getting-off that ends standing (owner, 7 Nov 2026: "fluid"): reach the clicked spot as
-                    // the roll ends instead of arriving mid-flip and stalling while the clip plays on. Set once, as it
-                    // starts, on every machine (each walks its own copy of the path).
-                    if (dismountStarts && next.running && !next.endsRunning && settings != null)
+                    // A running getting-off (owner, 7 Nov 2026: "fluid"; retest 2: a shorter roll, then the run or a
+                    // slight slide to a stop). Planned once as it starts, on every machine (each walks its own copy of
+                    // the path), and driven each frame by DriveDismountSpeed.
+                    if (dismountStarts && next.running && settings != null)
                     {
-                        float travel = MountRules.DismountTravelSpeed(false, PathLeft(), movement.CurrentSpeed,
-                            settings.getOffRunningToIdle.rollEndsAt);
-                        if (travel > StandStillSpeed && travel < movement.CurrentSpeed) movement.SetRideSpeeds(travel, travel);
+                        MountTransition roll = next.endsRunning ? settings.getOffRunning : settings.getOffRunningToIdle;
+                        dismountStartedAt = Time.time;
+                        dismountRunSpeed = movement.CurrentSpeed;
+                        dismountScale = next.endsRunning ? 1f : MountRules.DismountStandingScale(PathLeft(), dismountRunSpeed,
+                            roll.rollStartsAt, roll.rollEndsAt, settings.rollSpeedScale, settings.rollSlideSeconds);
+                        dismountSpeedSet = -1f;
+                        DriveDismountSpeed();
                     }
                 }
             }

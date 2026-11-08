@@ -68,6 +68,11 @@ namespace KryticalNova.Mounts
         [Tooltip("Metres of path that must still be left to the clicked spot when the roll ends for the rider to come up " +
                  "running; less, and the roll ends standing (owner, 7 Nov 2026).")]
         [Min(0f)] public float rollIntoRunMinDistance = 4f;
+        [Tooltip("Running getting-off: the share of the run speed the body keeps through the roll (owner, 7 Nov 2026 retest 2: " +
+                 "the roll covered too much ground). 1 = the full run.")]
+        [Range(0.1f, 1f)] public float rollSpeedScale = 0.55f;
+        [Tooltip("Running getting-off that ends standing: seconds of a slight slide after the roll, the speed easing to a stop.")]
+        [Min(0f)] public float rollSlideSeconds = 0.3f;
 
         /// <summary>The getting-on or getting-off in play: on or off, standing or running, and for a running
         /// getting-off whether it ends running (path left) or standing.</summary>
