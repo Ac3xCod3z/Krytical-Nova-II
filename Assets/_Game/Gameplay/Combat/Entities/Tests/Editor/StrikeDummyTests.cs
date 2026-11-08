@@ -93,6 +93,38 @@ namespace KryticalNova.Combat.Entities.Tests
         }
 
         [Test]
+        public void AnotherSystemsTarget_InTheSharedRegistry_IsNeverTakenForALostDummy()
+        {
+            // 8 Nov 2026 probe 7: the dummy system took every Hostile entry of CombatTargetRegistry for a lost dummy and destroyed its ghost
+            // each frame (9,122 links, 9,104 undone): monsters could not be clicked, hit by the basic attack or fight back
+            string guid = AssetDatabase.AssetPathToGUID(GhostSubScenePath);
+            Assert.IsFalse(string.IsNullOrEmpty(guid), "no ghost subscene: run Build Player Ghost Assets");
+            var body = new GameObject("a Hostile's body (not a dummy)");
+            try
+            {
+                using var tw = new KnTestWorld();
+                tw.CreateWorlds(1);
+                tw.LoadSubScene(new Unity.Entities.Hash128(guid));
+                tw.Connect();
+                EntityManager em = tw.Server.EntityManager;
+                Entity prefab = KnTestWorld.Singleton<StrikeDummyGhostPrefab>(tw.Server).Prefab;
+                Entity ghost = em.Instantiate(prefab);   // any CombatTarget ghost will do: the kind says whose it is
+                em.SetComponentData(ghost, new CombatTarget { Kind = CombatTargetKinds.Hostile, FeetMm = new int3(9000, 0, 9000) });
+                CombatTargetRegistry.Register(tw.Server, ghost, body);
+                try
+                {
+                    tw.Tick(90);   // three of the dummy system's scans
+                    Assert.IsTrue(em.Exists(ghost), "the Hostile's ghost is still there");
+                    Assert.AreSame(body.transform, CombatTargetRegistry.BodyOf(tw.Server, em.GetComponentData<Unity.NetCode.GhostInstance>(ghost).ghostId),
+                        "and still registered to its body");
+                    Assert.AreEqual(0, tw.Server.GetExistingSystemManaged<StrikeDummyServerSystem>().Spawned, "no dummy in the scene, none made");
+                }
+                finally { CombatTargetRegistry.Unregister(tw.Server, ghost); }
+            }
+            finally { Object.DestroyImmediate(body); }
+        }
+
+        [Test]
         public void OnlyAStandaloneSceneEntity_IsADummy_AndItsCapsuleCountsItsScale()
         {
             var go = new GameObject("dummy");

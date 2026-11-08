@@ -163,6 +163,17 @@ namespace KryticalNova.Persistence.Entities
             Vector3 spot = new Vector3(150f, 0f, 140f);
             if (UnityEngine.AI.NavMesh.SamplePosition(spot, out UnityEngine.AI.NavMeshHit nh, 20f, UnityEngine.AI.NavMesh.AllAreas)) spot = nh.position;
             teleport(spot);
+            // probe 8: the body still had the dummy as its attack target and ran back to it (to x -72) at once: the attack is dropped and
+            // the body told to stand where it landed, as a player who clicks the ground there
+            if (em.HasComponent<CombatState>(ghost))
+            {
+                CombatState c = em.GetComponentData<CombatState>(ghost);
+                c.TargetGhostId = 0;
+                c.Step = 0;
+                em.SetComponentData(ghost, c);
+            }
+            PlayerEntitiesSetup.IssueOrder(em, ghost,
+                new Unity.Mathematics.int3(Mathf.RoundToInt(spot.x * 1000f), Mathf.RoundToInt(spot.y * 1000f), Mathf.RoundToInt(spot.z * 1000f)));
             yield return new WaitForSeconds(1f);
             int hp0 = Hp(em, ghost), lowest = hp0;
             log($"mobs: at {body.transform.position} (outside Concord), HP {hp0}; " + MobRing(em, ghost));
@@ -171,8 +182,9 @@ namespace KryticalNova.Persistence.Entities
             {
                 yield return new WaitForSeconds(1f);
                 lowest = Math.Min(lowest, Hp(em, ghost));
-                log($"mobs: t {s} s, HP {Hp(em, ghost)}; " + MobRing(em, ghost));
+                log($"mobs: t {s} s, HP {Hp(em, ghost)}, me {body.transform.position}; " + MobRing(em, ghost));
             }
+            log("mobs: bodies after 8 s: " + HostileBodies(server));
             log($"mobs: {(lowest < hp0 ? "PASS" : "FAIL")}: they fought back (HP {hp0} -> lowest {lowest})");
             GameObject prowler = NearestView(client, body.transform.position);
             if (prowler == null) { log("mobs: click FAIL: no Hostile view near the body on the client"); yield break; }
@@ -212,6 +224,30 @@ namespace KryticalNova.Persistence.Entities
                 if (t == null) { sb.Append($"{name}: type not found; "); continue; }
                 using (EntityQuery q = server.EntityManager.CreateEntityQuery(ComponentType.ReadOnly(t)))
                     sb.Append($"{t.Name} in {server.Name}: {q.CalculateEntityCount()}; ");
+            }
+            // the link system itself: there, on, would run, how often it ran, links made and undone, linked now
+            Type linkType = Type.GetType("KryticalNova.Hostiles.Entities.HostileBodyLinkServerSystem, KryticalNova.Hostiles.Entities");
+            SystemHandle handle = linkType != null ? server.GetExistingSystem(linkType) : default;
+            if (linkType == null) sb.Append("link system: type not found; ");
+            else if (handle == SystemHandle.Null) sb.Append("link system: NOT in the server world; ");
+            else
+            {
+                object link = server.GetExistingSystemManaged(linkType);
+                var sys = (ComponentSystemBase)link;
+                object Read(string p) => linkType.GetProperty(p)?.GetValue(link);
+                int linkedNow = Read("Linked") is ICollection c2 ? c2.Count : -1;
+                sb.Append($"link system: Enabled {sys.Enabled}, would run {sys.ShouldRunSystem()}, updates {Read("Updates")}, links {Read("Links")}, " +
+                          $"unlinks {Read("Unlinks")}, linked now {linkedNow}; ");
+            }
+            // every CombatTarget, the disabled and prefab ones too, by kind
+            using (EntityQuery all = new EntityQueryBuilder(Unity.Collections.Allocator.Temp).WithAll<CombatTarget>()
+                       .WithOptions(EntityQueryOptions.IncludeDisabledEntities | EntityQueryOptions.IncludePrefab).Build(server.EntityManager))
+            using (var targets = all.ToComponentDataArray<CombatTarget>(Unity.Collections.Allocator.Temp))
+            {
+                var kinds = new System.Collections.Generic.SortedDictionary<int, int>();
+                foreach (CombatTarget ct in targets) kinds[(int)ct.Kind] = kinds.TryGetValue((int)ct.Kind, out int n) ? n + 1 : 1;
+                sb.Append($"CombatTargets incl. disabled/prefab {targets.Length} by kind:");
+                foreach (var kv in kinds) sb.Append($" {kv.Key}={kv.Value}");
             }
             return sb.ToString();
         }

@@ -68,10 +68,15 @@ namespace KryticalNova.Combat.Entities
                     if (StrikeDummies.IsSceneDummy(dummy) && CombatTargetRegistry.Of(World, dummy.gameObject) == null) Spawn(em, prefab, dummy);
             }
 
+            // Only the Strike Dummies' own entries and ghosts. The registry is shared with the Hostiles (HostileBodyLinkServerSystem): until
+            // 8 Nov 2026 this system took every Hostile entry for a lost dummy and destroyed its ghost each frame (probe 7: 9,122 links,
+            // 9,104 undone, no Hostile target), so monsters could not be clicked, struck by the basic attack or fight back.
             var gone = new List<Entity>();
             foreach (CombatTargetEntry entry in CombatTargetRegistry.Entries)
             {
                 if (!ReferenceEquals(entry.World, World)) continue;
+                if (em.Exists(entry.Ghost) && em.HasComponent<CombatTarget>(entry.Ghost) &&
+                    em.GetComponentData<CombatTarget>(entry.Ghost).Kind != CombatTargetKinds.StrikeDummy) continue;   // not ours
                 if (!em.Exists(entry.Ghost) || !em.HasComponent<CombatTarget>(entry.Ghost)) { gone.Add(entry.Ghost); continue; }
                 if (!entry.Body.TryGetComponent(out CombatEntity dummy) || !StrikeDummies.IsSceneDummy(dummy)) { gone.Add(entry.Ghost); continue; }
                 CombatTarget target = em.GetComponentData<CombatTarget>(entry.Ghost);
@@ -88,7 +93,7 @@ namespace KryticalNova.Combat.Entities
             // the registry drops the entries of an object destroyed with its scene: their ghosts go too
             using var all = GetEntityQuery(ComponentType.ReadOnly<CombatTarget>(), ComponentType.ReadOnly<GhostInstance>()).ToEntityArray(Allocator.Temp);
             foreach (Entity ghost in all)
-                if (!Linked(ghost)) em.DestroyEntity(ghost);
+                if (em.GetComponentData<CombatTarget>(ghost).Kind == CombatTargetKinds.StrikeDummy && !Linked(ghost)) em.DestroyEntity(ghost);
         }
 
         bool Linked(Entity ghost)

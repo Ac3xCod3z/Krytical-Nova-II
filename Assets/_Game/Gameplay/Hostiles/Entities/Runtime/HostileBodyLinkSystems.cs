@@ -30,6 +30,11 @@ namespace KryticalNova.Hostiles.Entities
         /// <summary>Every linked body and its ghost (read by <see cref="HostileBodySyncServerSystem"/>).</summary>
         public IReadOnlyDictionary<EcsHostileBrain, Entity> Linked => m_Linked;
 
+        /// <summary>Diagnostics (probe 6, 8 Nov 2026: bodies stood on the server, no Hostile target): updates run, links made, links undone.</summary>
+        public int Updates { get; private set; }
+        public int Links { get; private set; }
+        public int Unlinks { get; private set; }
+
         protected override void OnCreate()
         {
             RequireForUpdate<HostileGhostPrefab>();
@@ -39,6 +44,7 @@ namespace KryticalNova.Hostiles.Entities
         protected override void OnUpdate()
         {
             EntityManager em = EntityManager;
+            Updates++;
             foreach (KeyValuePair<EcsHostileBrain, Entity> pair in m_Linked)
                 if (pair.Key == null || !pair.Key.isActiveAndEnabled || !em.Exists(pair.Value)) m_Gone.Add(pair.Key);
             foreach (EcsHostileBrain body in m_Gone)
@@ -48,6 +54,7 @@ namespace KryticalNova.Hostiles.Entities
                 if (em.Exists(ghost)) em.DestroyEntity(ghost);
                 if (body != null) body.Unbind();
                 m_Linked.Remove(body);
+                Unlinks++;
             }
             m_Gone.Clear();
 
@@ -57,6 +64,7 @@ namespace KryticalNova.Hostiles.Entities
             {
                 if (hostile == null || hostile.IsView || !hostile.TryGetComponent(out EcsHostileBrain brain) || m_Linked.ContainsKey(brain)) continue;
                 m_Linked[brain] = Link(em, prefab, config, hostile, brain);
+                Links++;
             }
         }
 
