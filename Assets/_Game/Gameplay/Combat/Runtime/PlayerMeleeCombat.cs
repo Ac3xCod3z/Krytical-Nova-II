@@ -122,6 +122,9 @@ namespace KryticalNova.Combat
         private readonly HashSet<Transform> serverSwingHitTargets = new HashSet<Transform>();
 
         public bool IsAttacking => isAttacking;
+
+        /// <summary>A strike is being held on this body (the ghost-driven view's, where <see cref="IsAttacking"/> is never set): a skill that ends must not hand the body to idle under it.</summary>
+        public bool StrikeShown => ownerStrikeRoutine != null;
         public IDamageable CurrentTarget => currentTarget;
         public float MeleeStrikingRange => StrikingRange;
         /// <summary>The pooled effects of a swing and of a hit, for whoever fills the pool before a fight.</summary>

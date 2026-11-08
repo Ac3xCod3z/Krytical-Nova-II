@@ -407,7 +407,7 @@ namespace KryticalNova.Combat
         /// <summary>Hands the body back to locomotion unless the basic combo is about to take over again.</summary>
         private void ReleaseBody()
         {
-            if (animancerMotor != null && !melee.IsAttacking) animancerMotor.SetAttackingState(false);
+            if (animancerMotor != null && !melee.IsAttacking && !melee.StrikeShown) animancerMotor.SetAttackingState(false);   // a ghost's strike on show keeps the body (DOTS views never set IsAttacking: owner's strike 3, 8 Nov 2026)
         }
 
         [ClientRpc]
