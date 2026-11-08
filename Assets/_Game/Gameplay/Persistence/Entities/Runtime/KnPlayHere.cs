@@ -1331,6 +1331,9 @@ namespace KryticalNova.Persistence.Entities
                         : $"the join's door {(door.IsOpen ? "opened by " + door.OpenedBy : "NEVER opened")} after {door.WaitedSeconds:F1} s with the body and the camera " +
                           $"ready (worst frame meanwhile {door.WorstFrameMs:F0} ms); the click waited {Time.realtimeSinceStartup - waitStart:F1} s more for it");
                 }
+                // the scripted fight checks need a fight-ready Tester too (8 Nov 2026: the Cadence probe's skill press was refused at
+                // level 1, "Learn Perimeter Cut with a skill point first"); the traversal tries keep their own ranks
+                if (HasScriptedTries && (KnCadenceProbe.On || TestMobs)) StartCoroutine(MakeEveryoneTestReady());
                 if (!HasScriptedTries)
                 {
                     // owner 5-6 Nov 2026 (findings item 20): the Tester AND everyone who joins this Play DOTS here (Player2) enter at the
