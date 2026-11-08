@@ -148,6 +148,13 @@ namespace KryticalNova.Networking
         public static string Publish(ServerLaunchOptions options, out bool ok)
         {
             ok = false;
+#if KN_TEST_LANE
+            const bool testLane = true;
+#else
+            const bool testLane = false;
+#endif
+            string refusal = ControlPageRules.PublishRefusal(testLane, options.serverList != null ? options.serverList.Length : 0);
+            if (refusal != null) return refusal;
             lock (PublishGate)
             {
                 string address = PublicAddress, relay = options.UsesRelay ? RelayCode : string.Empty;

@@ -11,6 +11,15 @@ namespace KryticalNova.Tests
     /// <summary>The control page's rules (online phase 1, chunk 3): who may reach it, how requests are read, the lock.</summary>
     public sealed class ControlPageTests
     {
+        [Test]
+        public void Publish_RefusesATestBuild_AndAnEmptyList()
+        {
+            Assert.IsNotNull(ControlPageRules.PublishRefusal(true, 3), "a test-lane build never publishes");
+            Assert.IsNotNull(ControlPageRules.PublishRefusal(false, 0), "an empty list never replaces the live one");
+            Assert.IsNotNull(ControlPageRules.PublishRefusal(true, 0));
+            Assert.IsNull(ControlPageRules.PublishRefusal(false, 2), "the live build with servers may publish");
+        }
+
         [TestCase("127.0.0.1", true)]
         [TestCase("192.168.1.20", true)]
         [TestCase("10.0.0.5", true)]

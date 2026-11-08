@@ -85,6 +85,17 @@ namespace KryticalNova.Networking
         }
 
         /// <summary>
+        /// Why the server list must not be published now, or null when it may be: never from a test-lane build (it would put the test servers over
+        /// the live list), never with no server in it (an empty list would wipe the live one).
+        /// </summary>
+        public static string PublishRefusal(bool testLane, int serverCount)
+        {
+            if (testLane) return "This is a test build: it never publishes the server list (the live list would be overwritten).";
+            if (serverCount <= 0) return "The list has no server in it: not published (an empty list would wipe the live one).";
+            return null;
+        }
+
+        /// <summary>
         /// True when a request failed only because the other side hung up before the answer (a browser tab closed or
         /// reloading, a phone going to sleep): the connection was aborted or reset. Not worth a line in the log, which it
         /// once flooded; any other failure is.
