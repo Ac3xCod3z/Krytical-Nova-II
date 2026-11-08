@@ -48,7 +48,7 @@ namespace KryticalNova.Player.Entities
             foreach (var (ghost, target) in SystemAPI.Query<RefRO<GhostInstance>, RefRO<CombatTarget>>())
                 places[ghost.ValueRO.ghostId] = target.ValueRO.FeetMm;
 
-            var orders = new NativeList<(Entity, int3)>(Allocator.Temp);
+            var orders = new NativeList<(Entity, int3, bool)>(Allocator.Temp);
             foreach (var (combat, timing, pose, entity) in SystemAPI.Query<RefRO<CombatState>, RefRO<MeleeTimingData>, RefRO<PlayerPose>>()
                          .WithAll<PlayerGhostTag>().WithEntityAccess())
             {
@@ -69,11 +69,19 @@ namespace KryticalNova.Player.Entities
                     if (!due || !moved) continue;
                 }
                 m_Aims[entity] = new Aim { At = now, GoalMm = goal };
-                orders.Add((entity, goal));
+                orders.Add((entity, goal, RunSelected(ref state, entity)));
             }
-            foreach (var (entity, goal) in orders) PlayerEntitiesSetup.IssueOrder(state.EntityManager, entity, goal);
+            // NGO ComboLoopRoutine sets the agent's destination at the agent's speed, which PointAndClickPlayer keeps at
+            // movementSkills.CurrentSpeed: the walk in runs when Run is selected, and no Chi is charged (no destination click)
+            foreach (var (entity, goal, run) in orders) PlayerEntitiesSetup.IssueOrder(state.EntityManager, entity, goal, runPaid: run, chargeRun: false);
             orders.Dispose();
             places.Dispose();
         }
+
+        /// <summary>MovementSkillId.Run (1) is the server's selection (<see cref="MoveRanks.Selected"/>).</summary>
+        public const byte RunSkill = 1;
+
+        static bool RunSelected(ref SystemState state, Entity entity) =>
+            state.EntityManager.HasComponent<MoveRanks>(entity) && state.EntityManager.GetComponentData<MoveRanks>(entity).Selected == RunSkill;
     }
 }
