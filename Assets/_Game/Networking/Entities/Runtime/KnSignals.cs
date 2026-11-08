@@ -27,6 +27,9 @@ namespace KryticalNova.Networking.Entities
         /// <summary>Called when the process is about to quit, so a waiting console handler returns.</summary>
         public static void NotifyStopped() => s_Stopped.Set();
 
+        /// <summary>True once <see cref="NotifyStopped"/> let the console handler go (tests: the stop itself must never do it).</summary>
+        public static bool ConsoleReleased => s_Stopped.IsSet;
+
         /// <summary>Installs the handlers once. Returns a line to log.</summary>
         public static string Install()
         {

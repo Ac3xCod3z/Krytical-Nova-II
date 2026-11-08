@@ -281,6 +281,7 @@ namespace KryticalNova.Networking.Entities.Tests
             tw.Tick(30);
             Assert.AreEqual(1, quits, "quit happens once");
             Assert.AreEqual("save,quit:0", string.Join(",", events));
+            Assert.IsFalse(KnSignals.ConsoleReleased, "the stop must not release the closing console's handler thread: Windows would end the process under the main thread's shutdown");
             Assert.AreEqual(0, connectedAtQuit, "everybody had been sent away before the quit");
             Assert.AreEqual(0, KnTestWorld.Count<NetworkId>(tw.Server));
             Assert.AreEqual(0, PlayerKeys.Count, "every player's key was released as they left");

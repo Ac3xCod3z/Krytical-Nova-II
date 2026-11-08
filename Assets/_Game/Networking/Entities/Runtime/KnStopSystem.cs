@@ -93,7 +93,8 @@ namespace KryticalNova.Networking.Entities
 
         void IKnStopActions.Quit(int exitCode)
         {
-            KnSignals.NotifyStopped(); // lets a closing Windows console go
+            // The closing Windows console's handler thread stays parked here on purpose (KnSignals): returning it before the process has ended
+            // let Windows call ExitProcess while this thread was still shutting the worlds down (crash 0xe06d7363 on window close, 8 Nov 2026).
             if (QuitOverride != null) QuitOverride(exitCode);
             else Application.Quit(exitCode);
         }
