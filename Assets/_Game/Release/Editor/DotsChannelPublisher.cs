@@ -60,7 +60,11 @@ namespace KryticalNova.EditorTools
             if (busy != null) return Fail("the entity server is running; stop it first (it is rebuilt to match): " + busy);
             string leak = ServerLeakProblem();
             if (leak != null) return Fail(leak);
-            int build = LastBuild() + 1;
+            // -dotsreuse (client-only mode, owner 8 Nov 2026): rebuild the game as the LAST build number; the entity server of that number is
+            // kept as it is (checked: its dots-build.txt), so the two still match.
+            bool reuse = Array.IndexOf(Environment.GetCommandLineArgs(), "-dotsreuse") >= 0;
+            int build = reuse ? LastBuild() : LastBuild() + 1;
+            if (reuse && (build <= 0 || ServerBuildNumber() != build)) return Fail($"client-only mode: the entity server is not build {build} (rebuild both instead)");
             File.WriteAllText(PendingPath, build + "\n");
 
             bool built = WithBurst(() =>
@@ -78,9 +82,16 @@ namespace KryticalNova.EditorTools
             BundleAuditGate.Result audit = BundleAuditGate.Audit(GameFolder, Root, build);
             Log(audit.Report.TrimEnd());
             if (!audit.Ok) return Fail("the bundle audit found maps that differ from their scenes; nothing will be uploaded");
-            File.AppendAllText(PendingPath, "client\n");
+            File.AppendAllText(PendingPath, reuse ? "client\nserver\n" : "client\n");
+            if (reuse) Log($"Client-only mode: the entity server stays build {build}.");
             return true;
         }
+
+        static string ServerBuildFile => ServerBuildBuilder.EntityOutputFolder + "/dots-build.txt";
+
+        /// <summary>The DOTS build number the entity server was last built as (written by the server step), or 0.</summary>
+        static int ServerBuildNumber() =>
+            File.Exists(ServerBuildFile) && int.TryParse(File.ReadAllText(ServerBuildFile).Trim(), out int n) ? n : 0;
 
         static bool Server()
         {
@@ -91,6 +102,7 @@ namespace KryticalNova.EditorTools
             bool ok = ReleasePublisher.WithVersion(build, () => ServerBuildBuilder.BuildEntityServer(ScriptingImplementation.IL2CPP));
             if (!ok) return Fail("the entity server did not build (" + ServerBuildBuilder.EntityReportPath + ")");
             Log($"Entity server built as build {build}: IL2CPP, Burst AOT on.");
+            File.WriteAllText(ServerBuildFile, build + "\n");
             File.AppendAllText(PendingPath, "server\n");
             return true;
         }
