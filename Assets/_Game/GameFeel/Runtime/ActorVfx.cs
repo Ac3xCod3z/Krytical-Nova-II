@@ -31,7 +31,14 @@ namespace KryticalNova.GameFeel
             public GameObject Instance;
             public Vector3 BaseScale;
             public float EndTime;
+            public Vector3 Local;   // where it hangs on the root, standing
+            public bool OnBody;     // chest or head height: it rises with the body (a mount's seat)
         }
+
+        // Above this many metres over the soles an effect hangs on the body, not on the ground.
+        private const float BodyHeight = 0.5f;
+        private KryticalNova.Player.PlayerAnimancerMotor bodyMotor;
+        private bool bodyMotorLooked;
 
         private readonly Dictionary<string, Aura> auras = new Dictionary<string, Aura>();
         private readonly List<string> auraIds = new List<string>(); // iteration order without allocating
@@ -131,7 +138,8 @@ namespace KryticalNova.GameFeel
             if (pool == null || prefab == null) return;
             var instance = pool.SpawnAttached(prefab, transform, Local(aboveSoles), Quaternion.identity);
             if (instance == null) return;
-            auras[skillId] = new Aura { Instance = instance, BaseScale = instance.transform.localScale, EndTime = Time.time + duration };
+            auras[skillId] = new Aura { Instance = instance, BaseScale = instance.transform.localScale, EndTime = Time.time + duration,
+                                        Local = Local(aboveSoles), OnBody = aboveSoles.y > BodyHeight };
             auraIds.Add(skillId);
         }
 
@@ -165,7 +173,8 @@ namespace KryticalNova.GameFeel
             if (pool == null || prefab == null) return;
             var instance = pool.SpawnAttached(prefab, transform, Local(aboveSoles), Quaternion.identity);
             if (instance == null) return;
-            var charge = new Aura { Instance = instance, BaseScale = instance.transform.localScale };
+            var charge = new Aura { Instance = instance, BaseScale = instance.transform.localScale,
+                                    Local = Local(aboveSoles), OnBody = aboveSoles.y > BodyHeight };
             instance.transform.localScale = charge.BaseScale * ChargeStartScale;
             charges.Add(charge);
         }
@@ -483,6 +492,21 @@ namespace KryticalNova.GameFeel
                     : 1f;
                 aura.Instance.transform.localScale = aura.BaseScale * pulse;
             }
+        }
+
+        /// <summary>Effects hung on the body follow it up onto a mount's seat and down again.</summary>
+        private void LateUpdate()
+        {
+            if (auraIds.Count == 0 && charges.Count == 0) return;
+            if (!bodyMotorLooked) { bodyMotorLooked = true; bodyMotor = GetComponent<KryticalNova.Player.PlayerAnimancerMotor>(); }
+            Vector3 lift = bodyMotor != null ? bodyMotor.BodyLift : Vector3.zero;
+            for (int i = 0; i < auraIds.Count; i++)
+            {
+                Aura aura = auras[auraIds[i]];
+                if (aura.OnBody && aura.Instance != null) aura.Instance.transform.localPosition = aura.Local + lift;
+            }
+            for (int i = 0; i < charges.Count; i++)
+                if (charges[i].OnBody && charges[i].Instance != null) charges[i].Instance.transform.localPosition = charges[i].Local + lift;
         }
 
         // The character is being deactivated or destroyed: its children cannot be re-parented right now, so the

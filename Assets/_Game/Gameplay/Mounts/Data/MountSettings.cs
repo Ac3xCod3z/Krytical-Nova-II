@@ -126,6 +126,12 @@ namespace KryticalNova.Mounts
 
         private static Keyframe K(float t, float v) => new Keyframe(t, v);
 
+        /// <summary>
+        /// Getting off, the mount starts vanishing this long after the rider's feet leave the saddle (owner, 7 Nov 2026
+        /// retest: the leap comes first, the vanish follows the push-off, so both read smoothly).
+        /// </summary>
+        public const float VanishAfterPushOff = 0.04f;
+
         /// <summary>The summon hop: 1.0 s, free at 0.8 s; the mount forms 0.12 to 0.77 s, solid as the rider lands. The
         /// crouch ends and the feet leave the ground at 0.2 s; on the seat at 0.77 s.</summary>
         public static MountTransition StandingOn() => new MountTransition
@@ -144,27 +150,27 @@ namespace KryticalNova.Mounts
 
         /// <summary>The standing dismount, owner-approved 7 Nov 2026: a front flip too. The game's take-off from the
         /// saddle (0-0.40 s), the game's front flip about the body's centre (0.42-1.00 s), touchdown 1.02 s, settling into
-        /// idle (no roll); 1.70 s, free at 1.55 s. The mount vanishes top-down 0.1 to 0.6 s.</summary>
+        /// idle (no roll); 1.70 s, free at 1.55 s. The mount vanishes top-down from just after the push-off.</summary>
         public static MountTransition StandingOff() => new MountTransition
         {
-            seconds = 1.7f, freeSeconds = 1.55f, stirrupsAt = 0f, effectDelay = 0.1f, effectSeconds = 0.5f,
+            seconds = 1.7f, freeSeconds = 1.55f, stirrupsAt = 0f, effectDelay = 0.4f + VanishAfterPushOff, effectSeconds = 0.5f,
             leavesAt = 0.4f, arrivesAt = 1.02f, apexAt = 0.7f, standsAt = 1.53f,
         };
 
         /// <summary>The moving dismount, redone and owner-approved 7 Nov 2026: a sprung take-off from the saddle
         /// (0-0.36 s), the game's front flip about the body's centre (0.38-0.96 s), touchdown 0.98 s, a forward roll to
         /// 1.76 s, up into the run; 2.0 s, free at 1.93 s. Everything is in the clip (no drawn arc). The mount vanishes
-        /// top-down 0.1 to 0.6 s.</summary>
+        /// top-down from just after the push-off.</summary>
         public static MountTransition RunningOff() => new MountTransition
         {
-            seconds = 2.0f, freeSeconds = 1.93f, stirrupsAt = 0f, effectDelay = 0.1f, effectSeconds = 0.5f, rollEndsAt = 1.76f,
+            seconds = 2.0f, freeSeconds = 1.93f, stirrupsAt = 0f, effectDelay = 0.36f + VanishAfterPushOff, effectSeconds = 0.5f, rollEndsAt = 1.76f,
             leavesAt = 0.36f, arrivesAt = 0.98f, apexAt = 0.63f, rollStartsAt = 1.0f, slideEndsAt = 1.23f,
         };
 
         /// <summary>The same take-off, flip and roll, ending standing: 2.1 s, free at 1.98 s.</summary>
         public static MountTransition RunningOffToIdle() => new MountTransition
         {
-            seconds = 2.1f, freeSeconds = 1.98f, stirrupsAt = 0f, effectDelay = 0.1f, effectSeconds = 0.5f, rollEndsAt = 1.76f,
+            seconds = 2.1f, freeSeconds = 1.98f, stirrupsAt = 0f, effectDelay = 0.36f + VanishAfterPushOff, effectSeconds = 0.5f, rollEndsAt = 1.76f,
             leavesAt = 0.36f, arrivesAt = 0.98f, apexAt = 0.63f, rollStartsAt = 1.0f, slideEndsAt = 1.23f, standsAt = 1.97f,
         };
     }

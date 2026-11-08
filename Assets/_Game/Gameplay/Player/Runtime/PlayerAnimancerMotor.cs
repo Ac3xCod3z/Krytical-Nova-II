@@ -171,7 +171,7 @@ namespace KryticalNova.Player
         private CharacterAnimState currentState = CharacterAnimState.Locomotion;
         private AnimationClip currentLocomotionClip;
         private AnimancerState currentLocomotionState;
-        private AvatarMask upperBodyMask;
+        private AvatarMask upperBodyMask, seatedUpperMask;
         private bool drawOnUpperBody;
         private AnimancerState stopState;
         private Vector2 stopWindow;
@@ -209,6 +209,12 @@ namespace KryticalNova.Player
 
         /// <summary>The rider is on a mount (<see cref="SetSeated"/>). Every machine.</summary>
         public bool IsSeated => seated;
+
+        /// <summary>
+        /// How far the drawn body is raised off its place under the root (the mount's seat), in the root's space; zero on
+        /// foot. Set by whatever raises it (MountRider); effects hung on the body (a buff over the head) add it.
+        /// </summary>
+        public Vector3 BodyLift { get; set; }
 
         public bool IsWeaponDrawn => presentedWeaponDrawn;
         /// <summary>The Animancer that drives the character's humanoid rig (the prefab has more than one).</summary>
@@ -281,6 +287,7 @@ namespace KryticalNova.Player
         public override void OnDestroy()
         {
             if (upperBodyMask != null) Destroy(upperBodyMask);
+            if (seatedUpperMask != null) Destroy(seatedUpperMask);
             base.OnDestroy();
         }
 
@@ -289,18 +296,30 @@ namespace KryticalNova.Player
         {
             if (!drawOnUpperBodyLayer || animancer == null || animancer.Animator == null || !animancer.Animator.isHuman) return;
 
-            upperBodyMask = new AvatarMask { name = "Upper Body (runtime)" };
+            upperBodyMask = UpperMask("Upper Body (runtime)", withSpine: true);
+            seatedUpperMask = UpperMask("Seated Upper Body (runtime)", withSpine: false);
+            animancer.Layers[UpperBodyLayerIndex].Mask = seated ? seatedUpperMask : upperBodyMask;
+            drawOnUpperBody = true;
+        }
+
+        /// <summary>
+        /// Head, arms, fingers and hand IK, with or without the spine (Body). Seated, the spine and hips stay the riding
+        /// clip's (owner, 7 Nov 2026 retest 2: with the weapon out the rider hunched forward, and a charge's guard pose
+        /// twisted the body on the saddle).
+        /// </summary>
+        private static AvatarMask UpperMask(string name, bool withSpine)
+        {
+            var mask = new AvatarMask { name = name };
             for (int i = 0; i < (int)AvatarMaskBodyPart.LastBodyPart; i++)
             {
                 var part = (AvatarMaskBodyPart)i;
-                bool upper = part == AvatarMaskBodyPart.Body || part == AvatarMaskBodyPart.Head
+                bool upper = (withSpine && part == AvatarMaskBodyPart.Body) || part == AvatarMaskBodyPart.Head
                     || part == AvatarMaskBodyPart.LeftArm || part == AvatarMaskBodyPart.RightArm
                     || part == AvatarMaskBodyPart.LeftFingers || part == AvatarMaskBodyPart.RightFingers
                     || part == AvatarMaskBodyPart.LeftHandIK || part == AvatarMaskBodyPart.RightHandIK;
-                upperBodyMask.SetHumanoidBodyPartActive(part, upper);
+                mask.SetHumanoidBodyPartActive(part, upper);
             }
-            animancer.Layers[UpperBodyLayerIndex].Mask = upperBodyMask;
-            drawOnUpperBody = true;
+            return mask;
         }
 
         private void Update()
@@ -606,8 +625,11 @@ namespace KryticalNova.Player
         /// upper body holds it as on foot (<see cref="KeepSeatedHold"/>).</param>
         public void SetSeated(AnimationClip idle, AnimationClip walk, AnimationClip run, bool inSaddle = false)
         {
+            bool wasSeated = seated;
             seated = idle != null;
             this.inSaddle = seated && inSaddle;
+            if (seated != wasSeated && drawOnUpperBody && animancer != null)
+                animancer.Layers[UpperBodyLayerIndex].Mask = seated ? seatedUpperMask : upperBodyMask;
             seatedIdleClip = idle;
             seatedWalkClip = walk != null ? walk : idle;
             seatedRunClip = run != null ? run : seatedWalkClip;

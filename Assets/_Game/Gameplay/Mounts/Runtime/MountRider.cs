@@ -492,6 +492,14 @@ namespace KryticalNova.Mounts
 
         // ------------------------------------------------------------------ every frame: the mount's gait and idles
 
+        // What the rest of the game sees of the lift: effects hung on the body (a buff's aura over the head) rise with it
+        // (owner, 7 Nov 2026 retest 2: the Redline aura sat inside the rider on a mount).
+        private void LateUpdate()
+        {
+            if (motor == null) return;
+            motor.BodyLift = rider != null && (riderLifted || handOverSeconds > 0f) ? rider.localPosition - riderRest : Vector3.zero;
+        }
+
         private void Update()
         {
             HandOver();

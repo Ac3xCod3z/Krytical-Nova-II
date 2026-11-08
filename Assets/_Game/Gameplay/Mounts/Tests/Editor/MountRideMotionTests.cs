@@ -299,6 +299,14 @@ namespace KryticalNova.Tests
             Assert.LessOrEqual(off.effectDelay + off.effectSeconds, off.freeSeconds);
         }
 
+        /// <summary>Owner, 7 Nov 2026 (retest 2): the leap starts before the mount disintegrates.</summary>
+        [Test]
+        public void TheMount_StartsVanishingOnlyAfterThePushOff([Values(false, true)] bool running, [Values(true, false)] bool endsRunning)
+        {
+            MountTransition off = settings.Transition(false, running, endsRunning);
+            Assert.Greater(off.effectDelay, off.leavesAt, "the feet leave the saddle before the mount starts to vanish");
+        }
+
         [Test]
         public void OnlyRunning_PicksTheRunningKind()
         {

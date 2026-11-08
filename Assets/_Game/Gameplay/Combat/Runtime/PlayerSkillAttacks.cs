@@ -419,8 +419,9 @@ namespace KryticalNova.Combat
         {
             // A charged skill turns the body to the target it is aimed at as it starts (owner, 22 Oct 2026: "always turn
             // to face whoever or whatever you strike"), here and, through the call, on the server, whose facing everyone sees.
-            // An area skill aims at nothing (23 Oct 2026).
-            Transform target = !skill.IsAreaAttack && TryGetComponent(out PointAndClickPlayer click) ? click.SelectedTarget : null;
+            // An area skill aims at nothing (23 Oct 2026), and neither does a self-buff (owner, 7 Nov 2026 retest 2:
+            // charging Redline on a mount snapped the body and the mount round to whatever was selected).
+            Transform target = skill.IsAttack && !skill.IsAreaAttack && TryGetComponent(out PointAndClickPlayer click) ? click.SelectedTarget : null;
             PresentChargeStarted(skill, target != null ? target.position : (Vector3?)null);
             if (!IsSpawned) return;
             NetworkObject aimed = target != null ? target.GetComponentInParent<NetworkObject>() : null;
