@@ -166,6 +166,7 @@ namespace KryticalNova.Persistence.Entities
             yield return new WaitForSeconds(1f);
             int hp0 = Hp(em, ghost), lowest = hp0;
             log($"mobs: at {body.transform.position} (outside Concord), HP {hp0}; " + MobRing(em, ghost));
+            log("mobs: bodies: " + HostileBodies(server));
             for (int s = 1; s <= 8; s++)
             {
                 yield return new WaitForSeconds(1f);
@@ -183,6 +184,36 @@ namespace KryticalNova.Persistence.Entities
             log("mobs: click 2 (attack): " + click(prowler.transform.position + Vector3.up));
             yield return new WaitForSeconds(4f);
             log($"mobs: strike {(Hits(server) > hits0 ? "PASS" : "FAIL")}: strikes landed {Hits(server) - hits0}; {Melee(server, ghost)}");
+        }
+
+        /// <summary>
+        /// Probe 5 (8 Nov 2026): the GM spawn said 6 were made, the server held 0 Hostile targets. Where the bodies are: HostileNet.Active
+        /// (each one's name, active, server body / view, has the entity brain, place), whether the server world holds the ghost prefab
+        /// and brain config singletons the link system needs. Read by name: Persistence does not reference Hostiles.
+        /// </summary>
+        static string HostileBodies(World server)
+        {
+            var sb = new System.Text.StringBuilder();
+            Type net = Type.GetType("KryticalNova.Hostiles.HostileNet, KryticalNova.Hostiles");
+            Type brain = Type.GetType("KryticalNova.Hostiles.Entities.EcsHostileBrain, KryticalNova.Hostiles.Entities");
+            if (net?.GetProperty("Active", BindingFlags.Public | BindingFlags.Static)?.GetValue(null) is IList list)
+            {
+                sb.Append($"HostileNet.Active {list.Count}: ");
+                foreach (object o in list)
+                    if (o is Component c)
+                        sb.Append($"[{c.name} on {c.gameObject.activeInHierarchy} serverBody {net.GetProperty("IsServerBody")?.GetValue(c)} view " +
+                                  $"{net.GetProperty("IsView")?.GetValue(c)} brain {(brain != null && c.GetComponent(brain) != null)} at {c.transform.position}] ");
+            }
+            else sb.Append("HostileNet.Active not readable; ");
+            foreach (string name in new[] { "KryticalNova.Hostiles.Entities.HostileGhostPrefab", "KryticalNova.Brains.BrainConfig" })
+            {
+                Type t = null;
+                foreach (Assembly a in AppDomain.CurrentDomain.GetAssemblies()) { t = a.GetType(name); if (t != null) break; }
+                if (t == null) { sb.Append($"{name}: type not found; "); continue; }
+                using (EntityQuery q = server.EntityManager.CreateEntityQuery(ComponentType.ReadOnly(t)))
+                    sb.Append($"{t.Name} in {server.Name}: {q.CalculateEntityCount()}; ");
+            }
+            return sb.ToString();
         }
 
         static int Hp(EntityManager em, Entity ghost) => em.HasComponent<PlayerVitals>(ghost) ? em.GetComponentData<PlayerVitals>(ghost).HealthMilli / 1000 : -1;
