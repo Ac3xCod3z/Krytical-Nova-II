@@ -88,10 +88,10 @@ namespace KryticalNova.DevTools
             return sb.ToString().TrimEnd();
         }
 
-        [Command("gm.hostile.spawn", "Spawn Hostiles under the mouse cursor (or beside you): gm.hostile.spawn <id|name> [count] [level] [health]. " +
+        [Command("gm.hostile.spawn", "Spawn Hostiles under the mouse cursor (or beside you): gm.hostile.spawn <id|name> [count] [level] [health] [here]. " +
                                      "Level 0 is the species' own. Health is a number (that much instead of the species') or inf (it cannot die: " +
-                                     "a blow that would kill it fills it up again). Outside any Hostile Zone.")]
-        private static string Spawn(string idOrName, int count = 1, int level = 0, string health = "")
+                                     "a blow that would kill it fills it up again). 'here' puts them beside you whatever the cursor is on. Outside any Hostile Zone.")]
+        private static string Spawn(string idOrName, int count = 1, int level = 0, string health = "", string where = "")
         {
             if (!TryGetPlayer(out var player, out var error)) return error;
             health = (health ?? string.Empty).Trim().ToLowerInvariant();
@@ -110,7 +110,8 @@ namespace KryticalNova.DevTools
 
             Vector3 centre = player.transform.position + player.transform.forward * 4f;
             Camera cam = Camera.main;
-            if (cam != null && Mouse.current != null &&
+            bool besideYou = string.Equals((where ?? string.Empty).Trim(), "here", StringComparison.OrdinalIgnoreCase);
+            if (!besideYou && cam != null && Mouse.current != null &&
                 Physics.Raycast(cam.ScreenPointToRay(Mouse.current.position.ReadValue()), out RaycastHit hit, 2000f, ~0, QueryTriggerInteraction.Ignore))
                 centre = hit.point;
 

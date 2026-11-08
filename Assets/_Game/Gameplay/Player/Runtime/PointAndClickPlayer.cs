@@ -374,6 +374,7 @@ namespace KryticalNova.Player
             if (orbitCamera == null) return null;
             var cameraTarget = transform.Find("Camera Target");
             Transform targetTransform = cameraTarget != null ? cameraTarget : transform;
+            if (CameraDiag) Debug.Log($"[KnCam] frame {Time.frameCount}: the camera now tracks {name} ({BodyTag?.Kind})", this);
             cameraTrackingTarget = targetTransform;
             var cinemachineCamera = orbitCamera.GetComponent<CinemachineCamera>();
             if (cinemachineCamera != null)
@@ -383,8 +384,21 @@ namespace KryticalNova.Player
             return cinemachineCamera;
         }
 
+        /// <summary>
+        /// Whether this body may take the player's own camera: in the entity netcode only the local client view (the hidden server body and
+        /// other players' views are never NGO-spawned either, and took it on Start/OnEnable: owner's x5, 8 Nov 2026); an NGO body as before.
+        /// </summary>
+        private bool MayTakeCamera => BodyTag == null || (BodyTag.Kind == NetRoleKind.ClientView && BodyTag.IsLocal);
+
+        private static readonly bool CameraDiag = System.Environment.GetEnvironmentVariable("KN_PLAYHERE_DIAG") == "1";
+
         private void SetupLocalCamera()
         {
+            if (!MayTakeCamera)
+            {
+                if (CameraDiag) Debug.Log($"[KnCam] {name} ({BodyTag?.Kind}) did not take the camera", this);
+                return;
+            }
             PointOrbitCameraAtThisBody();
 
             // Fade props that block the view of this (local) player.
@@ -2252,6 +2266,7 @@ namespace KryticalNova.Player
 
         private void StartCameraEase(float yaw, float pitch)
         {
+            if (CameraDiag) Debug.Log($"[KnCam] frame {Time.frameCount}: wall ease to yaw {yaw:0} pitch {pitch:0} on {name} (up {transform.up})", this);
             cameraTargetYaw = yaw;
             cameraTargetPitch = Mathf.Clamp(pitch, minimumPitch, maximumPitch);
             cameraYawSpeed = cameraPitchSpeed = 0f;

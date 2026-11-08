@@ -82,5 +82,30 @@ namespace KryticalNova.Tests
             PlayerKeys.Release(2);   // Bea left
             Assert.IsFalse(GmTarget.TryGetPlayer(out _, out _), "the picked player left: no one, not someone else");
         }
+
+        [Test]
+        public void PlayDotsHere_WithNoPick_ActsOnTheHostsOwnBody_AndABuiltServerStillNeedsAPick()
+        {
+            BodyRoleTag host = Make("Host", 1);
+            Make("Guest", 2);
+            ulong? hostWas = KryticalNova.Networking.GmRoster.Host;
+            try
+            {
+                KryticalNova.Networking.GmRoster.SetHost(null);   // a built server: never a host
+                Assert.IsFalse(GmTarget.TryGetPlayer(out _, out _), "no host, no pick: nobody");
+
+                KryticalNova.Networking.GmRoster.SetHost(1);      // Play DOTS here: the Editor's own client is the host
+                Assert.IsTrue(GmTarget.TryGetPlayer(out GameObject player, out string error), error);
+                Assert.AreSame(host.gameObject, player, "the window's buttons act on the host's own body");
+
+                Assert.IsTrue(GmTarget.TrySetTarget(2, out error), error);
+                Assert.IsTrue(GmTarget.TryGetPlayer(out player, out _));
+                Assert.AreEqual("Guest", player.name, "a pick still wins");
+            }
+            finally
+            {
+                KryticalNova.Networking.GmRoster.SetHost(hostWas);
+            }
+        }
     }
 }

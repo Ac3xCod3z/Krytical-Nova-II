@@ -121,10 +121,13 @@ namespace KryticalNova.DevTools
             }
             if (nm == null && EntityServer)
             {
-                // a server of the entity netcode has no player of its own: only a picked player (a GM's line picks its own)
+                // a server of the entity netcode has no player of its own: only a picked player (a GM's line picks its own), or, with no
+                // pick, the Play DOTS here host's own (GmRoster.Host: only the Editor's in-process host sets it, never a built server), so
+                // the GM Tools window works there without a gm.target first (owner, 8 Nov 2026)
                 GameObject body = hasTarget ? EntityBody(targetClientId) : null;
                 if (body != null) { player = body; return true; }
                 hasTarget = false;
+                if (KryticalNova.Networking.GmRoster.Host is ulong host && EntityBody(host) is GameObject own) { player = own; return true; }
                 error = "No local player on this server. Pick one with gm.target <clientId> (see gm.players).";
                 return false;
             }

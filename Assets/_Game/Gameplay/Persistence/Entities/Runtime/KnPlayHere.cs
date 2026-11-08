@@ -90,7 +90,8 @@ namespace KryticalNova.Persistence.Entities
             || Environment.GetEnvironmentVariable("KN_PLAYHERE_FIXES") == "1"                   // the owner's feel-test fixes 1-3 (2 Nov)
             || Environment.GetEnvironmentVariable("KN_PLAYHERE_ACROSS") == "1"                  // across the water when quicker (item 4)
             || Environment.GetEnvironmentVariable("KN_PLAYHERE_ITEMS") == "1"                   // items used by the server (item 5)
-            || Environment.GetEnvironmentVariable("KN_PLAYHERE_ROOFS") == "1";                  // roof to roof (item 8)
+            || Environment.GetEnvironmentVariable("KN_PLAYHERE_ROOFS") == "1"                   // roof to roof (item 8)
+            || KnCadenceProbe.On;                                                               // the Cadence probe (owner x6, 7 Nov)
         /// <summary>A folder: the scripted run saves a Game-view picture there every 0.1 s (proof for the owner, GUI Editor only).</summary>
         public const string CaptureVariable = "KN_PLAYHERE_CAPTURE";
 
@@ -1106,6 +1107,9 @@ namespace KryticalNova.Persistence.Entities
         }
 
         /// <summary>Waits for the tester to enter, gives it the top movement ranks, and (scripted) walks then runs the points.</summary>
+        /// <summary>What the test monsters' GM lines answered this session (the Cadence probe's check reads it).</summary>
+        internal static string TestMobAnswersNow => Runner.TestMobAnswers;
+
         sealed class Runner : MonoBehaviour
         {
             public string Walk;
@@ -1305,6 +1309,7 @@ namespace KryticalNova.Persistence.Entities
                 Log($"Netcode for GameObjects {(ngoUp ? "IS RUNNING (wrong)" : "off")}; the local player is '{OwnBody.name}' ({(role != null ? role.Kind.ToString() : "no role")})");
                 if (ngoUp) Debug.LogError("[KnPlayHere] Netcode for GameObjects is running beside the entity netcode.");
                 Log("scripted parts: " + ScriptedParts());
+                if (TestMobs) StartCoroutine(SpawnTestMobs());
                 if (HasScriptedTries)
                 {
                     // The camera's first move onto the body that just entered is the spawn, not a click (GUI run 1, 31 Oct: 3.9 m in
@@ -1428,6 +1433,14 @@ namespace KryticalNova.Persistence.Entities
                 if (AcrossRun) yield return Acrosses(body, ghost, waters);
                 if (ItemsRun) yield return Items(body, ghost, walls);
                 if (RoofsRun) yield return RoofJumps(body, ghost, walls);
+                if (KnCadenceProbe.On)
+                {
+                    walls.Tried++;
+                    EntityManager cadenceEm = KnBootstrap.ServerWorld.EntityManager;
+                    float cadenceOffset = body.GetComponent<UnityEngine.AI.NavMeshAgent>() is UnityEngine.AI.NavMeshAgent cadenceAgent ? cadenceAgent.baseOffset : 0f;
+                    yield return KnCadenceProbe.Run(KnBootstrap.ServerWorld, ghost, body, OwnBody, Log, at => PressAt(OwnBody, at),
+                        at => Teleport(cadenceEm, ghost, at + Vector3.up * cadenceOffset), ok => { if (ok) walls.Passed++; });
+                }
                 Log($"done: {arrived} of {tries} arrived, {landed} of {jumpPoints.Count} jumps passed, low-rank refusals {(lowRank.Ok ? "match" : "DIFFER")}, " +
                     $"{vaults.Passed} of {vaults.Tried} vaults passed, {waters.Passed} of {waters.Tried} Waterstride tries passed, " +
                     $"{walls.Passed} of {walls.Tried} wall walk tries passed, " +
@@ -1442,7 +1455,37 @@ namespace KryticalNova.Persistence.Entities
             /// the walk, the jumps and the vaults, so a run of Waterstride or the wall walk alone never started). Every gate reads this; a new
             /// scripted part is added here, and to <see cref="Scripted"/>, which reads the same variables before the runner exists.
             /// </summary>
-            bool HasScriptedTries => !string.IsNullOrEmpty(Walk) || !string.IsNullOrEmpty(Jump) || VaultCount > 0 || WaterRun || WallRun || ClimbRun || TreeRun || CatchRun || AutoRun || LedgeRun || FixesRun || AcrossRun || ItemsRun || RoofsRun;
+            /// <summary>
+            /// The owner's monster check ready at once (owner, 8 Nov 2026: "set me up with the monsters in the town square already"): five
+            /// Prowlers that attack on sight and one Colossus (a Bruiser) beside the Tester as Play starts, unkillable, through the same
+            /// gm.hostile.spawn the GM console runs (as the host). Env <see cref="TestMobsVariable"/>=1; by hand or scripted.
+            /// </summary>
+            public const string TestMobsVariable = "KN_PLAYHERE_TEST_MOBS";
+            static bool TestMobs => Environment.GetEnvironmentVariable(TestMobsVariable) == "1";
+            public static readonly string[] TestMobLines = { "gm.hostile.spawn prowler 5 0 inf here", "gm.hostile.spawn colossus 1 0 inf here" };
+            /// <summary>What the test monsters' lines answered (the scripted check reads it).</summary>
+            public static string TestMobAnswers { get; private set; } = "";
+
+            IEnumerator SpawnTestMobs()
+            {
+                TestMobAnswers = "";
+                float waitStart = Time.realtimeSinceStartup;
+                while (!KryticalNova.Networking.GmRoster.Host.HasValue && Time.realtimeSinceStartup - waitStart < 30f) yield return null;
+                if (!(KryticalNova.Networking.GmRoster.Host is ulong host) || KryticalNova.Networking.PlayerGm.CommandRunner == null)
+                {
+                    Log($"test monsters: NOT spawned (host known {KryticalNova.Networking.GmRoster.Host.HasValue}, GM commands ready {KryticalNova.Networking.PlayerGm.CommandRunner != null})");
+                    yield break;
+                }
+                yield return new WaitForSeconds(1f);   // the body stands on the ground first
+                foreach (string line in TestMobLines)
+                {
+                    string answer = KryticalNova.Networking.PlayerGm.CommandRunner(host, line);
+                    TestMobAnswers += answer + " ";
+                    Log($"test monsters: '{line}' -> {answer}");
+                }
+            }
+
+            bool HasScriptedTries => !string.IsNullOrEmpty(Walk) || !string.IsNullOrEmpty(Jump) || VaultCount > 0 || WaterRun || WallRun || ClimbRun || TreeRun || CatchRun || AutoRun || LedgeRun || FixesRun || AcrossRun || ItemsRun || RoofsRun || KnCadenceProbe.On;
 
             /// <summary>Which scripted parts are on, for the log's first lines (a part that should run and is not listed shows at once).</summary>
             string ScriptedParts()
@@ -1462,6 +1505,7 @@ namespace KryticalNova.Persistence.Entities
                 if (AcrossRun) on.Add("across the water when quicker");
                 if (ItemsRun) on.Add("items used by the server");
                 if (RoofsRun) on.Add("roof to roof");
+                if (KnCadenceProbe.On) on.Add("the Cadence probe");
                 return on.Count > 0 ? string.Join(", ", on) : "none (by hand)";
             }
 
