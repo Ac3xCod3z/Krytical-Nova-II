@@ -309,6 +309,8 @@ namespace KryticalNova.Mounts
 
         private float PathLeft()
         {
+            // the entity server body: the ghost walks, not the agent (DOTS port of NGO's agent remainingDistance)
+            if (EntityServer && BodyRoleTag.Of(this).Mover is IBodyMover mover) return mover.PathLeft;
             NavMeshAgent agent = GetComponent<NavMeshAgent>();
             if (agent == null || !agent.isActiveAndEnabled || !agent.isOnNavMesh || !agent.hasPath) return 0f;
             Vector3 straight = agent.destination - agent.nextPosition;

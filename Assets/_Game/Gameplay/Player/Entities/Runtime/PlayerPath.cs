@@ -28,6 +28,10 @@ namespace KryticalNova.Player.Entities
             return (int)ISqrt(dx * dx + dy * dy + dz * dz);
         }
 
+        /// <summary>What is left of a walk <paramref name="progressMm"/> along it (0 at or past the end).</summary>
+        public static int LeftMm(int3 start, NativeArray<int3> corners, int count, int progressMm) =>
+            math.max(0, LengthMm(start, corners, count) - math.max(0, progressMm));
+
         /// <summary>Total length of start, corners[1], corners[2] ... corners[count-1].</summary>
         public static int LengthMm(int3 start, NativeArray<int3> corners, int count)
         {

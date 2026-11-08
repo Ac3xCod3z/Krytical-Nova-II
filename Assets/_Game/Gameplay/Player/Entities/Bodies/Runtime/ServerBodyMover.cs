@@ -66,6 +66,26 @@ namespace KryticalNova.Player.Entities.Bodies
         /// <summary>The ghost is in a jump's flight now.</summary>
         public bool Airborne => IsLive && m_World.GetExistingSystemManaged<PlayerJumpServerSystem>() is { } jump && jump.InFlight(m_Ghost);
 
+        /// <summary>Metres left of the ghost's walk along the server's planned path (0 standing or without a plan for this order).</summary>
+        public float PathLeft
+        {
+            get
+            {
+                if (!IsLive) return 0f;
+                var em = m_World.EntityManager;
+                if (!em.HasComponent<MoveState>(m_Ghost) || !em.HasComponent<PathPlan>(m_Ghost) || !em.HasBuffer<PathCorner>(m_Ghost)) return 0f;
+                MoveState move = em.GetComponentData<MoveState>(m_Ghost);
+                PathPlan plan = em.GetComponentData<PathPlan>(m_Ghost);
+                if ((move.Flags & MoveFlags.Moving) == 0 || plan.Seq != move.OrderSeq || plan.Count < 2) return 0f;
+                DynamicBuffer<PathCorner> buffer = em.GetBuffer<PathCorner>(m_Ghost);
+                using var corners = new Unity.Collections.NativeArray<Unity.Mathematics.int3>(buffer.Length, Unity.Collections.Allocator.Temp);
+                var c = corners;
+                for (int i = 0; i < buffer.Length; i++) c[i] = new Unity.Mathematics.int3(buffer[i].XMm, buffer[i].YMm, buffer[i].ZMm);
+                var start = new Unity.Mathematics.int3(move.StartXMm, move.StartYMm, move.StartZMm);
+                return PlayerPath.LeftMm(start, corners, plan.Count, move.ProgressMm) / 1000f;
+            }
+        }
+
         /// <summary>The ghost is not standing still: walking, in a jump or a vault, on a wall or the water.</summary>
         public bool Busy
         {

@@ -481,5 +481,15 @@ namespace KryticalNova.Player.Entities.Tests
                 if (total > 0) Assert.AreEqual(pts[n - 1], w.Pose.Mm, "round " + round);
             }
         }
+    
+        [Test]
+        public void LeftMm_IsLengthMinusProgress_NeverBelowZero()
+        {
+            using var corners = new NativeArray<int3>(new[] { new int3(0, 0, 0), new int3(3000, 0, 0), new int3(3000, 0, 4000) }, Allocator.Temp);
+            int3 start = int3.zero;
+            Assert.AreEqual(7000, PlayerPath.LeftMm(start, corners, 3, 0));
+            Assert.AreEqual(4500, PlayerPath.LeftMm(start, corners, 3, 2500));
+            Assert.AreEqual(0, PlayerPath.LeftMm(start, corners, 3, 9000));
+        }
     }
 }
