@@ -20,6 +20,9 @@ namespace KryticalNova.DevTools
         {
             if (!GmTarget.HasAuthority(out string error)) return error;
             NetworkManager network = NetworkManager.Singleton;
+#if UNITY_SERVER || UNITY_EDITOR
+            if (OnEntityServer(network)) return KickEntity(who);
+#endif
             if (network == null || !network.IsServer) return "No session is running here.";
             if (!TryFind(who, out ulong clientId, out string name)) return $"No connected player called \"{who}\". Try gm.players.";
             if (clientId == NetworkManager.ServerClientId) return "That is the host's own player: the host cannot be sent away.";
@@ -36,6 +39,11 @@ namespace KryticalNova.DevTools
         private static string Ban(string who, string length = "forever", string reason = "")
         {
             if (!GmTarget.HasAuthority(out string error)) return error;
+#if UNITY_SERVER || UNITY_EDITOR
+            // the entity netcode's server (8 Nov 2026): NGO's BanPlayer needs NGO listening; the page's desk runs its steps there
+            if (OnEntityServer(NetworkManager.Singleton) && KryticalNova.Networking.Entities.KnPageDesk.Desk != null)
+                return KryticalNova.Networking.Entities.KnPageDesk.Desk.Ban(who, 0, length, reason, GmCommandRelay.RunningFor);
+#endif
             return ServerBans.BanPlayer(who, length, reason, GmCommandRelay.RunningFor);
         }
 
@@ -97,6 +105,27 @@ namespace KryticalNova.DevTools
         }
 
         // A client id, or a character's name (whole, any case).
+#if UNITY_SERVER || UNITY_EDITOR
+        // A server of the entity netcode: NGO is not listening and the players are its server bodies (GmTarget.ConnectedPlayers).
+        private static bool OnEntityServer(NetworkManager network) =>
+            (network == null || !network.IsListening) && KryticalNova.Core.BodyRoleTag.ServerBodies.Count > 0;
+
+        // NGO's gm.kick on the entity netcode's server: the player found as NGO's TryFind does, sent away by its PlayerKey through the
+        // page's kick (KnKickSystem closes the connection and saves as any leave does). The Play DOTS here host's own player is not sent away.
+        private static string KickEntity(string who)
+        {
+            if (!TryFind(who, out ulong clientId, out string name)) return $"No connected player called \"{who}\". Try gm.players.";
+            if (GmRoster.Host.HasValue && GmRoster.Host.Value == clientId) return "That is the host's own player: the host cannot be sent away.";
+            foreach (KryticalNova.Core.BodyRoleTag tag in KryticalNova.Core.BodyRoleTag.ServerBodies)
+                if (tag != null && KryticalNova.Core.PlayerKeys.TryGetConnection(tag.Key, out ulong id) && id == clientId)
+                {
+                    KryticalNova.Networking.Entities.KnKickRequests.Request(tag.Key.Value);
+                    return $"Removed {name} (connection {clientId}).";
+                }
+            return $"No connected player called \"{who}\". Try gm.players.";
+        }
+#endif
+
         private static bool TryFind(string who, out ulong clientId, out string name)
         {
             clientId = 0;

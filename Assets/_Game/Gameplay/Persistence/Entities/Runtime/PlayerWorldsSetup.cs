@@ -108,6 +108,7 @@ namespace KryticalNova.Persistence.Entities
             KryticalNova.CharacterCreation.RestyleOwnerLink.Current = new EntityRestyleOwnerLink();   // a finished restyle (M8 8.3.8)
 #if UNITY_SERVER || UNITY_EDITOR
             KnPageRules.Commands = new KnPageGmTools();   // the page's command box and GM list (M7.4)
+            KnPageDesk.Desk = new KnPageServerDesk();     // the rest of NGO's control page: save, announce, bans, log, flags (8 Nov 2026)
 #endif
             var serverVaults = new BodyVaultPlanner(server);
             PlayerEntitiesSetup.Install(server, planner, runCost: new BodyRunCost(server), clickBudget: new BudgetClickLimit(server),

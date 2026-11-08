@@ -17,6 +17,7 @@
         "KryticalNova.Items",
         "KryticalNova.NPC",
         "KryticalNova.Networking",
+        "KryticalNova.Networking.Entities",
         "KryticalNova.Persistence",
         "KryticalNova.Pets",
         "KryticalNova.Mounts",

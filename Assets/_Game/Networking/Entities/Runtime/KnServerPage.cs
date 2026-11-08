@@ -84,6 +84,13 @@ namespace KryticalNova.Networking.Entities
                     return new Reply(403, null, string.Empty, false);
                 return Tools(method, path, body);
             }
+            if (KnPageDesk.Handles(path))
+            {
+                // the rest of NGO's control page (8 Nov 2026 port): save, announce, bans, log, flags; the owner's, as the GM tools
+                if (!fromLoopback || string.IsNullOrEmpty(expectedKey) || !ControlPageRules.SecretEquals(givenKey, expectedKey))
+                    return new Reply(403, null, string.Empty, false);
+                return KnPageDesk.Handle(method, path, query, body);
+            }
             if (path == PlayersPath || path == KickPath)
             {
                 // The player list and the kick are the server owner's: this machine only, and the same key as the stop endpoint.
