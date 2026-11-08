@@ -313,7 +313,9 @@ namespace KryticalNova.Player
             for (int i = 0; i < (int)AvatarMaskBodyPart.LastBodyPart; i++)
             {
                 var part = (AvatarMaskBodyPart)i;
-                bool upper = (withSpine && part == AvatarMaskBodyPart.Body) || part == AvatarMaskBodyPart.Head
+                // Seated, the head stays the riding clip's too (owner, retest 3: with the weapon drawn the head always faced
+                // left; the drawn idle turns its head to make up for its own spine twist, which the seat leaves out).
+                bool upper = (withSpine && (part == AvatarMaskBodyPart.Body || part == AvatarMaskBodyPart.Head))
                     || part == AvatarMaskBodyPart.LeftArm || part == AvatarMaskBodyPart.RightArm
                     || part == AvatarMaskBodyPart.LeftFingers || part == AvatarMaskBodyPart.RightFingers
                     || part == AvatarMaskBodyPart.LeftHandIK || part == AvatarMaskBodyPart.RightHandIK;
