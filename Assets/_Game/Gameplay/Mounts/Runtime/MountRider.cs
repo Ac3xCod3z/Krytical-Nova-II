@@ -182,8 +182,11 @@ namespace KryticalNova.Mounts
             if (leapRolling) motor.EndWarpedAction(0.2f, mounts != null && mounts.DismountEndsRunning ? 1f : 0f);
             else if (cutShort) motor.ResetJumpAnimation();
             leapRolling = false;
-            // Landed: the body is on the ground under the root; cut short in the air: back to the seat it left.
-            if (rider != null && riderLifted) rider.localPosition = leapLanded ? riderRest : riderRest + seatOffset * lift;
+            // Landed: the body is on the ground under the root and stays there - lowered now, or the riding motion puts
+            // it back on the seat until the phase ends (leap proof run 2: a 0.5 m pop at the running roll's end).
+            // Cut short in the air: back to the seat it left.
+            if (leapLanded) LowerRider();
+            else if (rider != null && riderLifted) rider.localPosition = riderRest + seatOffset * lift;
         }
 
         private void OnEnable()

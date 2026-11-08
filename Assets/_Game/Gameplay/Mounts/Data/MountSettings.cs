@@ -67,10 +67,9 @@ namespace KryticalNova.Mounts
 
         [Header("The leap off (owner pick, 7 Nov 2026 retest 2: the game's own jump, Motion-Warped off the mount's back)")]
         [Tooltip("Getting off plays the game's jump chain (crouch on the saddle, take-off, flip, landing) and Motion-Warps the " +
-                 "rider from the seat to the ground. Off = the baked dismount clips as before. OFF until fixed (owner retest 3, " +
-                 "7 Nov 2026: the standing leap flew away and snapped back, the running one froze in the take-off pose and " +
-                 "locked the player).")]
-        public bool leapWithJump = false;
+                 "rider from the seat to the ground, in the player's own space (MountLeapSpace). Off = the baked dismount clips. " +
+                 "Back ON 8 Nov 2026 after headless proof run 2: both leaps land on the player and end in Locomotion.")]
+        public bool leapWithJump = true;
         [Tooltip("Metres the leap's apex rises above the seat.")]
         [Range(0f, 2f)] public float leapApexAboveSeat = 0.7f;
         [Tooltip("Standing: seconds after the leap's landing before the rider is free (the jump's own landing plays on into the idle).")]
