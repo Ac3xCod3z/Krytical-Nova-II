@@ -517,11 +517,13 @@ Rows marked `[line: M5.0]` have the file but the line is filled in M5.0. "Test" 
      (12 x 8 + Bruisers). Settings ▸ performance log ON for both clients (PerformanceLogs/perf_*.txt beside the game, and the Editor's).
   3. Stage 2, **300 = maxActiveHostiles**: `gm.zone.respawn 2`, then `gm.hostile.spawn <id> 50` six times around client 1 (ids 2-11 mixed);
      `gm.hostile.stats` must stop at 300 alive (the cap) and the server must keep its tick.
-  4. Stage 3, **2,000 synthetic**: not available yet: M5.7's `BrainSoakScene` builder was never built (only M5.7 part 1, the [KnBrain] lines).
-     Do it with the EditMode brain run instead (`HostileMindDeterminismTests` style, 2,000 brains, 1,000 ticks), timed in the Editor: a later step.
+  4. Stage 3, **2,000 synthetic**: M5.7's `BrainSoakScene` builder was never built, so it is the EditMode brain run instead.
+     [x] **Built and measured 7 Nov 2026 (DOTS 19):** `HostileSoakTimingTests` (2,000 brains on a 225 m grid, 200 players walking lanes through
+     them, 1,000 ticks, every mind tick timed): Editor (safety checks on) mind tick **p50 1.34 ms, p99 3.13 ms, max 9.39 ms**, 917 strikes. The
+     plan's < 2 ms p99 at 2,000 is a player-build number (Burst AOT, worker threads): re-measure once Burst runs in builds (item 10).
   5. **60 minutes** with both clients fighting (Autopilot on client 1, client 2 by hand), `gm.hostile.brain on` for the first 2 minutes only.
   6. Pass: the server's tick p99 < 15 ms in its performance log; brains < 0.3 ms at 102 (no brain-only timer exists yet: read the
-     `[KnBrain]` timing lines and the frame time, or add a `PerformanceLog.Time("brains")` around BrainSimulationGroup first); memory flat over
+     the performance log's "brains" line, built 7 Nov 2026 by DOTS 19: one a second while the log records, with ticks, mean and longest ms); memory flat over
      the 60 minutes (the perf log's memory column within 5 %); no exception in either log; XP / drops / Creds credited as in NGO
      (`gm.hostile.ttk`, the ledger). Screenshots of both clients at each stage and a GIF of a pulled Gargoyle zone (attack slots), into Drive.
   7. Then the switch-off line of this step (Emerald never enabled on DOTS) and its Encyclopedia publish at merge-back.
