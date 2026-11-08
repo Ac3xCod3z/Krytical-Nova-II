@@ -370,6 +370,24 @@ prediction error p95 <= 0.05 m at 60 ms, tick p95 < 15 ms with 102 monsters (fro
 - [ ] **M9 Scale & Linux parity.** Delete `SpatialInterestManager`; distance importance (48 m tiles), relevancy, per-type send
   rates, war-map crowd preset; thin-client bots (many per process) replace MeasureBot; Linux IL2CPP server on WSL2/cloud test
   VM passes the parity checklist (section 8); soak with balanced ledger.
+- [ ] **M9b LOCAL LINUX TEST BOX in WSL2 + Server app REMOTE MODE (owner decision, 7 Nov 2026).** Comes right after the Windows
+  entity dedicated server build works and BEFORE anything is created on Hetzner or Cloudflare. Test database and test ports only,
+  never the real server, `krytical_nova`, 7777/7778/7801/8090.
+  1. The **Linux entity server build** (needs the Burst fix, item 10) running in WSL2 with the save service (`SaveService --test`,
+     port 7802, `krytical_nova_test`) on test ports, set up by the Linux plan's `Networking/Deploy~/box` scripts as a stand-in
+     Hetzner box (systemd units, `kn-stop.sh`, firewall rules as far as WSL2 allows). Real pace about 2-3 h after Burst works.
+     Needs: a BUILD (Linux server, IL2CPP or Mono with Burst; about 16-17 GB free), the owner's OK for the build.
+  2. The **Windows Server app's remote mode** (Linux plan section "remote mode", steps R1-R6: ssh tunnel supervisor, server tabs over
+     the tunnel, save service tab, read-only database tab, deploy tab wrapping `Deploy~/deploy.sh` / `smoke-test.sh`, self-test) pointed
+     at the WSL2 box: the same tabs, logs and STOP button as for a real box. NOT BUILT YET (designed only; the plan said 5-8 days, real
+     pace about 6-10 h of code). Code needs no owner; the self-test runs beside the measure server only.
+  3. **End to end**: a client (the Windows test client, or the Launcher build) joins the WSL2 server, plays, saves; a clean STOP from
+     the Server app (save first, then disconnect, exit 0); then the kill test (`Persistence/Service~/KillTest/kill_test.py`, test DB
+     only). Real pace about 1-2 h. Needs: the OWNER at the PC for the play part; a client BUILD with Burst.
+  4. Optional: a local stand-in for the **Cloudflare R2 download path** (MinIO in WSL2, S3 API) so Publish to Test's upload and the
+     Launcher's download are tested too (the own-cdn plan's stage 1). Real pace about 2-3 h; no owner needed except one look at the
+     Launcher updating; a client BUILD.
+  Total about 11-18 h of work plus 2-3 builds and about 1-2 h of the owner's time. Code-only until the mounts are approved.
 - [ ] **M10 Compare, merge, cut over** (section 9) on the owner's go-ahead.
 
 ## 5. Spikes that must be proven early (from the ghosts design)
