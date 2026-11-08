@@ -127,7 +127,7 @@ prediction error p95 <= 0.05 m at 60 ms, tick p95 < 15 ms with 102 monsters (fro
   - [x] Seam (commit af8161224): Core gets `RosterWire` (pack/unpack of the roster text), `IServerRoster` + `RosterLookup.Current` (the slot Persistence fills; `ServerHooks.Roster` now forwards to it) and `ServerCertificates` (authority certificate, server name, default folder, read cert + key); the NGO `ServerEncryption` and `RosterLink` forward to them. No behaviour change on NGO.
   - [x] Roster path: `KnRosterReply : IApprovalRpcCommand` pages (<= 480 chars, <= 16 pages), `KnRosterPages` (split + assembler, any order), `KnRosterAnswer` (rules, no ECS), the join check's `Question` verdict (same proof and ban check, no ticket, no place), the assembler answers it and closes; client `KnRosterClientSystem`, `KnRosterQuery` (owns the short-lived world, `Task` result, destroys the world), `KnRosterClient.Ask` (one at a time, hidden pump). Front-end use: see the class comment of `KnRosterClient`. UI not edited.
   - [x] Transport: `KnDriverConstructor : INetworkStreamDriverConstructor` (plain UDP / DTLS with our authority / Unity Relay, chosen per world through `KnTransport.Assign`), `KnTransportPlanner` (pure rules), `KnServerSettings.connectionMode` + `plainTransport` (`-connectionmode`, `-plaintransport`), `KnServerEntry.PrepareTransport`, `KnBootstrap.StartClient(.., encrypted)` and `StartClientRelay`.
-  - [x] Server page: `GET /players` and `POST /kick?player=<PlayerKey>` (loopback + the save-service key, like `/stop`), `KnPlayerRow` rows in the status snapshot (key, id, name via `KnServerStatus.NameOf`, ping, map; no account, no address), `KnKickRequests` + `KnKickSystem` (main thread closes the connection). Bans, GMs, announce, save, log and the flags list of the NGO control page are NOT ported yet (they need the systems they read; see section 28).
+  - [x] Server page: `GET /players` and `POST /kick?player=<PlayerKey>` (loopback + the save-service key, like `/stop`), `KnPlayerRow` rows in the status snapshot (key, id, name via `KnServerStatus.NameOf`, ping, map; no account, no address), `KnKickRequests` + `KnKickSystem` (main thread closes the connection). Bans, GMs, announce, save, log and the flags list of the NGO control page were ported 8 Nov 2026 (dots-ports: KnPageDesk, KnPageBrowser with NGO's login, KnShutdown; EditMode 35/35); still open there: timed backups, ServerReach notes and the ControlPage folder copy (builds session's files).
   - [x] Travel ticket: `WorldServiceTicketCheck` (`POST world/redeem` of the world service in the save service, polled, fail closed, account must match, arrival kept in `KnArrivals`), `KnHttpTicketTransport`, `KnServerEntry.BuildTicketCheck`.
   - [x] Tests (Tests/Editor): `KnRosterTests`, `KnTransportTests`, `KnControlPageTests`, `KnWorldTicketTests`, plus the three roster tests in `KnJoinCheckTests`.
   - [x] `compile_check.py`: optional Entities / Netcode source-generator and package-DLL support (not run yet; usage in its docstring).
@@ -1267,7 +1267,8 @@ which do not run on a DOTS client. They take two server gaps with them: Run Flux
 (`PointAndClickPlayer.ServerMoveTo` mover branch), and the server body does not know the Run selection (DOTS sends Run per click).
 
 1. Skill walk-in (the `ServerOrder` walk exists: `PlayerEntitiesSetup` "walk the player to a point")
-- [ ] FIRST (owner, 31 Oct): the "NGO rules" table for this system (rule, NGO file:line, numbers, the scene data it needs: layers,
+- [x] DONE 8 Nov 2026 (dots-ports): the view asks (SkillQueueRpc), the server body runs NGO's PlayerSkillQueue.ServerRun by IBodyMover and casts through the SkillCastRpc path; PlayMode B67. Owner hand test due.
+- [x] FIRST (owner, 31 Oct): the "NGO rules" table for this system (rule, NGO file:line, numbers, the scene data it needs: layers,
   colliders, markers, NavMesh; the DOTS equivalent and whether the DOTS server/client body has it), before design or code
 - [ ] a skill clicked out of range walks the player into range by the server's order, at the Run or walk speed the click would use (Flux for
   Run as a click), and the skill starts on arrival; a new click or another order cancels it; the owner sees it start from the order's tick
@@ -1431,8 +1432,7 @@ checkpoints; the owner's Thursday hand-test list; owner questions). NGO rules ta
   - [x] 8.3.6 Forge + 8.3.7 crafting: the five Forge requests and the Fabricator's run NGO's PlayerGearWork / PlayerCrafting rules on
     the server body at the Money limit (Armorer / Fabricator reach, prices through PlayerWallet GearWork / Crafting, the forge ledger
     line), the result to the owner by PlayerKey, the Forge's burst to everyone (by the actor's NetworkId), a view never works or
-    crafts itself (Items IBodyGearWork / IBodyCrafting); no save key (gear state rides in the Pack). B22. Not ported: the Temper 120
-    server-wide announcement (chat, group 4). HIGH review approved. B22 now also runs Fusion, Tuning (+ Renown), the Tuning reset and
+    crafts itself (Items IBodyGearWork / IBodyCrafting); no save key (gear state rides in the Pack). B22. Temper 120 server-wide announcement: already wired through chat (8.4.1), proven 8 Nov 2026 by B66 (dots-ports). HIGH review approved. B22 now also runs Fusion, Tuning (+ Renown), the Tuning reset and
     Reforge until one success each, NGO's price checked on every attempt, one forge line per attempt (master-6).
   - [x] 8.3.5 Nova: Ascension, Standings, the Standing worn and the Nova Weave run NGO's PlayerNova rules on the server body at the Money
     limit (Herald reach, Renown then Creds through PlayerWallet Herald / Appearance, Renown handed back on a Creds failure), the result
@@ -1452,6 +1452,8 @@ checkpoints; the owner's Thursday hand-test list; owner questions). NGO rules ta
     gets both, `autobuff` real. B26. NOT done: AutobuffCaster (the casting) stays off on the own view: NGO's TryCastWardsAtOnce ->
     CastWardsServerRpc is NGO-only; on DOTS it needs the wards cast through SkillCastRpc (one per ward) first: goes WITH M4 combat
     (master-6, 3 Nov). Save note + review approved.
+    **AutobuffCaster DONE 8 Nov 2026** (dots-ports): kept on the own view (PlayerRoleTable.OwnHandAutoward); a press asks for the volley
+    (M4.7 WardsRpc). PlayMode B65 (+ B26, B49) pass.
 - [x] M8 group 2: storage, shopping, trade, Kiosk player side.
   - [x] 8.2.1 storage (Vault + Deep Vault): requests run NGO's PlayerStorage rules on the server body (Vaultkeeper range, Items limit,
     Creds through PlayerWallet VaultDeposit/VaultWithdraw at the Money limit), cells + Creds mirrored to the owner, `vault` + `deepvault`
