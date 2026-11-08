@@ -1,6 +1,19 @@
 # Unity issue note: Burst AOT stopped compiling for Linux player builds
 
-Written 30 Oct 2026 for a report to Unity. Status: **open, built-player test (B3) parked** (owner's pick). Plan: `Plans/netcode-for-entities-migration.md` sections 46-48.
+Written 30 Oct 2026 for a report to Unity. Status: **cause found 8 Nov 2026 (below), fix in our builders; proof build pending.**
+
+## Cause (found 8 Nov 2026)
+
+Read with ILSpy from Unity 6000.6.3f1's own `Tools/BuildPipeline/PlayerBuildProgramLibrary.dll`
+(`PlayerBuildProgramBase.SetupGenerateNativePluginsForAssembliesArgs`): when Bee makes the build plan it lists what the LAST build left in
+`Library/Bee/artifacts/<Platform>PlayerBuildProgram/AsyncPluginsFromLinker`. If that folder holds only `no_plugins_were_generated.txt`, it plans
+no copy of `lib_burst_generated`, so no step needs the "Running Burst Compiler" node (it is in the plan, only `all_tundra_nodes` lists it), so
+it never runs and the marker is never replaced. A build with Burst switched off (our `EnableBurstCompilation: false` builds) writes that
+marker. In the DOTS clone the Linux marker is dated 30 Oct 09:00, the hour Linux builds lost Burst; the Windows one 6 Nov 10:08. Checked:
+`UNITY_BURST_DEBUG=1` Windows build 8 Nov, "Build Finished, Result: Success", no `lib_burst_generated.dll`, no line from the AOT step.
+Fix: `Tools/Editor/Build/BurstAotMarker.ClearStaleMarker()` removes a marker-only folder before every Burst-on build (`KnWindowsTestBuild`,
+`KnLinuxTestBuild`). Worth reporting to Unity: a Burst-off build disables Burst AOT for every later build of that Library, silently.
+Earlier status: open, built-player test (B3) parked (owner's pick). Plan: `Plans/netcode-for-entities-migration.md` sections 46-48.
 
 ## Versions
 

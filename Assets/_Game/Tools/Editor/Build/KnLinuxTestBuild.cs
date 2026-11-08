@@ -146,6 +146,7 @@ namespace KryticalNova.EditorTools
             try
             {
                 File.WriteAllText(burstPath, burstOff ? BurstOffJson : BurstOnJson);
+                if (!burstOff) BurstAotMarker.ClearStaleMarker();   // a Burst-off build's leftover stops Burst for good (8 Nov 2026)
                 // the maps are in the build list (as on the NGO server); the game's Addressable bundles are not needed here
                 if (addressables != null)
                     addressables.BuildAddressablesWithPlayerBuild = UnityEditor.AddressableAssets.Settings.AddressableAssetSettings.PlayerBuildOption.DoNotBuildWithPlayer;
