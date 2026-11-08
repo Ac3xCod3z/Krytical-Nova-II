@@ -135,6 +135,23 @@ namespace KryticalNova.Networking.Entities.Tests
             return (cookie, body.Substring(c, body.IndexOf('"', c) - c));
         }
 
+        // 8 Nov 2026: the socket writer left out Reply.ExtraHeaders, so the browser never got the login's cookie and the dashboard fell
+        // back to the sign-in screen at its first call. The text that goes on the wire must carry them.
+        [Test]
+        public void TheHeadOnTheWire_CarriesTheLoginCookieAndTheSecurityHeaders()
+        {
+            KnPageRules.Reply login = Route(Req("POST", "/api/login", "{\"password\":\"" + Password + "\"}"));
+            string head = KnServerPage.HeadOf(login, login.Body.Length);
+            StringAssert.StartsWith("HTTP/1.1 200 OK\r\n", head);
+            StringAssert.Contains("\r\nSet-Cookie: " + KnPageBrowser.CookieName + "=", head);
+            StringAssert.Contains("HttpOnly", head);
+            StringAssert.Contains("\r\nContent-Security-Policy: ", head);
+            StringAssert.EndsWith("\r\n\r\n", head);
+            Assert.AreEqual(1, head.Split(new[] { "\r\n\r\n" }, StringSplitOptions.None).Length - 1, "one blank line, at the end");
+            // and a reply without extra headers still makes a whole head
+            StringAssert.EndsWith("\r\n\r\n", KnServerPage.HeadOf(new KnPageRules.Reply(404, null, string.Empty, false), 0));
+        }
+
         [Test]
         public void WrongPassword_IsRefused_AndFiveWrongLockTheAddress_EvenForTheRightOne()
         {

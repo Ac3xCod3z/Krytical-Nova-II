@@ -394,16 +394,24 @@ namespace KryticalNova.Networking.Entities
             KnPageTrace.Write("handle: closed");
         }
 
+        /// <summary>
+        /// The status line and headers of a reply, ending with the blank line. Includes <see cref="KnPageRules.Reply.ExtraHeaders"/>: the
+        /// login's <c>Set-Cookie</c> and the page's security headers (8 Nov 2026: they were never written, so the browser kept no
+        /// cookie, the page's first call after login got 401 and it fell back to the sign-in screen).
+        /// </summary>
+        public static string HeadOf(KnPageRules.Reply reply, int bodyLength) =>
+            "HTTP/1.1 " + reply.Status + " " + KnPageRules.ReasonPhrase(reply.Status) + "\r\n" +
+            (reply.ContentType != null ? "Content-Type: " + reply.ContentType + "\r\n" : string.Empty) +
+            "Content-Length: " + bodyLength + "\r\n" +
+            (reply.Status == 405 ? "Allow: GET, HEAD, POST\r\n" : string.Empty) +
+            (reply.ExtraHeaders ?? string.Empty) +
+            "Cache-Control: no-store\r\n" +
+            "Connection: close\r\n\r\n";
+
         private static void Write(NetworkStream stream, KnPageRules.Reply reply, bool headOnly)
         {
             byte[] body = reply.Bytes ?? Encoding.UTF8.GetBytes(reply.Body);
-            string head = "HTTP/1.1 " + reply.Status + " " + KnPageRules.ReasonPhrase(reply.Status) + "\r\n" +
-                          (reply.ContentType != null ? "Content-Type: " + reply.ContentType + "\r\n" : string.Empty) +
-                          "Content-Length: " + body.Length + "\r\n" +
-                          (reply.Status == 405 ? "Allow: GET, HEAD, POST\r\n" : string.Empty) +
-                          "Cache-Control: no-store\r\n" +
-                          "Connection: close\r\n\r\n";
-            byte[] headBytes = Encoding.ASCII.GetBytes(head);
+            byte[] headBytes = Encoding.ASCII.GetBytes(HeadOf(reply, body.Length));
             stream.Write(headBytes, 0, headBytes.Length);
             if (body.Length > 0 && !headOnly) stream.Write(body, 0, body.Length);
             stream.Flush();
