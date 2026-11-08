@@ -29,9 +29,16 @@ namespace KryticalNova.Networking.Entities
             public readonly Func<string> Work;
             /// <summary>The work's answer is JSON already (the GM list); otherwise it is text, sent as <c>{"answer":"..."}</c>.</summary>
             public readonly bool WorkIsJson;
+            /// <summary>Not null: the body as bytes (a file of the browser page), sent instead of <see cref="Body"/>.</summary>
+            public readonly byte[] Bytes;
+            /// <summary>Extra header lines of the browser page (cookie, security headers), each ending in CRLF; null = none.</summary>
+            public readonly string ExtraHeaders;
 
-            public Reply(int status, string contentType, string body, bool beginStop, ulong kickKey = 0, Func<string> work = null, bool workIsJson = false)
+            public Reply(int status, string contentType, string body, bool beginStop, ulong kickKey = 0, Func<string> work = null, bool workIsJson = false,
+                byte[] bytes = null, string extraHeaders = null)
             {
+                Bytes = bytes;
+                ExtraHeaders = extraHeaders;
                 Status = status;
                 ContentType = contentType;
                 Body = body ?? string.Empty;
@@ -75,26 +82,28 @@ namespace KryticalNova.Networking.Entities
         public const string KickPath = "/kick";
 
         public static Reply Handle(string method, string path, bool fromLoopback, string givenKey, string expectedKey,
-            KnStatusSnapshot status, StopEndpointRules stop, bool serverAlreadyStopping, string query = null, string body = null)
+            KnStatusSnapshot status, StopEndpointRules stop, bool serverAlreadyStopping, string query = null, string body = null, bool authorized = false)
         {
+            // authorized: the browser page (KnPageBrowser) already proved the caller by password and session; the owner's check is not asked again
+            bool owner = authorized || (fromLoopback && !string.IsNullOrEmpty(expectedKey) && ControlPageRules.SecretEquals(givenKey, expectedKey));
             if (path == CommandPath || path == GmPath || path.StartsWith(GmPath + "/", StringComparison.Ordinal))
             {
                 // The owner's, like the player list: this machine only, and the same key as the stop endpoint.
-                if (!fromLoopback || string.IsNullOrEmpty(expectedKey) || !ControlPageRules.SecretEquals(givenKey, expectedKey))
+                if (!owner)
                     return new Reply(403, null, string.Empty, false);
                 return Tools(method, path, body);
             }
             if (KnPageDesk.Handles(path))
             {
                 // the rest of NGO's control page (8 Nov 2026 port): save, announce, bans, log, flags; the owner's, as the GM tools
-                if (!fromLoopback || string.IsNullOrEmpty(expectedKey) || !ControlPageRules.SecretEquals(givenKey, expectedKey))
+                if (!owner)
                     return new Reply(403, null, string.Empty, false);
                 return KnPageDesk.Handle(method, path, query, body);
             }
             if (path == PlayersPath || path == KickPath)
             {
                 // The player list and the kick are the server owner's: this machine only, and the same key as the stop endpoint.
-                if (!fromLoopback || string.IsNullOrEmpty(expectedKey) || !ControlPageRules.SecretEquals(givenKey, expectedKey))
+                if (!owner)
                     return new Reply(403, null, string.Empty, false);
                 if (path == PlayersPath)
                     return method == "GET" || method == "HEAD"
@@ -178,9 +187,11 @@ namespace KryticalNova.Networking.Entities
                 case 200: return "OK";
                 case 202: return "Accepted";
                 case 400: return "Bad Request";
+                case 401: return "Unauthorized";
                 case 403: return "Forbidden";
                 case 404: return "Not Found";
                 case 405: return "Method Not Allowed";
+                case 429: return "Too Many Requests";
                 case 503: return "Service Unavailable";
                 case 504: return "Gateway Timeout";
                 default: return "Error";
@@ -354,8 +365,12 @@ namespace KryticalNova.Networking.Entities
                     KnPageTrace.Write("handle: status taken, null=" + (status == null));
                     bool stopping = KnStopRequests.Stopping;
                     KnPageTrace.Write("handle: stopping=" + stopping);
+                    IPAddress remoteAddress = (client.Client.RemoteEndPoint as IPEndPoint)?.Address ?? IPAddress.Loopback;
                     KnPageRules.Reply reply = request == null
                         ? new KnPageRules.Reply(400, null, string.Empty, false)
+                        : KnPageBrowser.Wants(request)
+                        // the browser page (8 Nov 2026 port of ServerControlPage): files, password login, session buttons
+                        ? KnPageBrowser.Route(KnPageBrowser.Shared, KnPageBrowser.Host, request, remoteAddress, status, m_Stop, stopping)
                         : KnPageRules.Handle(request.Method, request.Path, loopback, request.Header(StopEndpointRules.KeyHeader), m_Key,
                             status, m_Stop, stopping, request.Query, request.Body);
                     if (reply.Work != null) reply = KnPageWork.Run(reply);   // waits for the game's thread (a command, a GM button)
@@ -381,7 +396,7 @@ namespace KryticalNova.Networking.Entities
 
         private static void Write(NetworkStream stream, KnPageRules.Reply reply, bool headOnly)
         {
-            byte[] body = Encoding.UTF8.GetBytes(reply.Body);
+            byte[] body = reply.Bytes ?? Encoding.UTF8.GetBytes(reply.Body);
             string head = "HTTP/1.1 " + reply.Status + " " + KnPageRules.ReasonPhrase(reply.Status) + "\r\n" +
                           (reply.ContentType != null ? "Content-Type: " + reply.ContentType + "\r\n" : string.Empty) +
                           "Content-Length: " + body.Length + "\r\n" +

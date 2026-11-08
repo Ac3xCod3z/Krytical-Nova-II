@@ -39,6 +39,7 @@ namespace KryticalNova.Persistence.Entities.Tests
             m_Announce = ServerHooks.Announce;
             PlayerKeys.Reset();
             KnKickRequests.Reset();
+            KnPlayerRefusals.Clear();
             KnPageDesk.PageLog.Reset();
         }
 
@@ -115,7 +116,7 @@ namespace KryticalNova.Persistence.Entities.Tests
             PlayerKey key = PlayerKeys.Mint(7);
             StringAssert.Contains("has no proven account to ban", desk.Ban(string.Empty, key.Value, "3d", "cheating", KnPageDesk.From));
             StringAssert.DoesNotContain("banned", desk.Ban(string.Empty, key.Value, "3y", "cheating", KnPageDesk.From), "a nonsense length is refused (NGO's words)");
-            Assert.AreEqual(0, KnKickRequests.Pending, "nobody sent away yet");
+            Assert.AreEqual(0, KnPlayerRefusals.Count, "nobody sent away yet");
 
             ServerAccounts.Remember(key, Account, string.Empty);
             try
@@ -126,7 +127,11 @@ namespace KryticalNova.Persistence.Entities.Tests
                 Assert.IsTrue(ServerBans.IsBanned(Account, DateTime.UtcNow, out BanEntry ban), "on the list the join check reads");
                 Assert.AreEqual("cheating", ban.reason);
                 Assert.AreEqual(KnPageDesk.From, ban.by);
-                Assert.AreEqual(1, KnKickRequests.Pending, "sent away through the kick");
+                Assert.AreEqual(1, KnPlayerRefusals.Count, "sent away with a refusal message");
+                Assert.IsTrue(KnPlayerRefusals.TryDequeue(out PlayerKey sent, out string words));
+                Assert.AreEqual(key, sent);
+                StringAssert.StartsWith("This account is banned from this server for", words, "NGO's words (ServerBans.Refusal): why and how long");
+                StringAssert.EndsWith(": cheating", words);
                 StringAssert.Contains("\"account\":\"" + Account + "\"", desk.BansJson());
 
                 StringAssert.Contains("is no longer banned", desk.Unban(Account));
@@ -140,7 +145,7 @@ namespace KryticalNova.Persistence.Entities.Tests
             StringAssert.StartsWith("Account " + Account + " is banned", offline);
             StringAssert.EndsWith("they will be turned away when they try to join.", offline);
             Assert.IsTrue(ServerBans.IsBanned(Account, DateTime.UtcNow, out _));
-            Assert.AreEqual(1, KnKickRequests.Pending, "nobody else sent away");
+            Assert.AreEqual(0, KnPlayerRefusals.Count, "nobody else sent away");
             StringAssert.Contains("Nobody on or saved here is called", desk.Ban("Nobody", 0, "3d", "", KnPageDesk.From));
             StringAssert.Contains("is no longer banned", desk.Unban(Account));
 

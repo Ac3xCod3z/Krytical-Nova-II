@@ -21,7 +21,7 @@ namespace KryticalNova.DevTools
             if (!GmTarget.HasAuthority(out string error)) return error;
             NetworkManager network = NetworkManager.Singleton;
 #if UNITY_SERVER || UNITY_EDITOR
-            if (OnEntityServer(network)) return KickEntity(who);
+            if (OnEntityServer(network)) return KickEntity(who, reason);
 #endif
             if (network == null || !network.IsServer) return "No session is running here.";
             if (!TryFind(who, out ulong clientId, out string name)) return $"No connected player called \"{who}\". Try gm.players.";
@@ -112,14 +112,16 @@ namespace KryticalNova.DevTools
 
         // NGO's gm.kick on the entity netcode's server: the player found as NGO's TryFind does, sent away by its PlayerKey through the
         // page's kick (KnKickSystem closes the connection and saves as any leave does). The Play DOTS here host's own player is not sent away.
-        private static string KickEntity(string who)
+        private static string KickEntity(string who, string reason)
         {
             if (!TryFind(who, out ulong clientId, out string name)) return $"No connected player called \"{who}\". Try gm.players.";
             if (GmRoster.Host.HasValue && GmRoster.Host.Value == clientId) return "That is the host's own player: the host cannot be sent away.";
             foreach (KryticalNova.Core.BodyRoleTag tag in KryticalNova.Core.BodyRoleTag.ServerBodies)
                 if (tag != null && KryticalNova.Core.PlayerKeys.TryGetConnection(tag.Key, out ulong id) && id == clientId)
                 {
-                    KryticalNova.Networking.Entities.KnKickRequests.Request(tag.Key.Value);
+                    // NGO's words reach the player before the connection closes (the refusal message, then the disconnect)
+                    string told = string.IsNullOrWhiteSpace(reason) ? "A GM removed you from the server." : "A GM removed you from the server: " + reason.Trim();
+                    KryticalNova.Networking.Entities.KnPlayerRefusals.Enqueue(tag.Key, told);
                     return $"Removed {name} (connection {clientId}).";
                 }
             return $"No connected player called \"{who}\". Try gm.players.";

@@ -52,8 +52,10 @@ namespace KryticalNova.Persistence.Entities
                 return $"{(character.Length > 0 ? character : "That player")} has no proven account to ban (they joined without Unity sign-in). Kick sends them away.";
             GmEntry gm = GmRoster.FindByAccount(entry.Account);
             if (gm != null) return $"That account is GM {gm.name}: unbind or remove the GM on the control page first.";
-            ServerBans.Ban(entry.Account, character, from, reason, span, UtcNow());
-            KnKickRequests.Request(playerKey);   // sent away now (KnKickSystem closes the connection; the join check refuses them after)
+            DateTime now = UtcNow();
+            BanEntry ban = ServerBans.Ban(entry.Account, character, from, reason, span, now);
+            // sent away now with NGO's words (ServerBans.Refusal: why and how long), then the join check refuses them
+            KnPlayerRefusals.Enqueue(key, ServerBans.Refusal(ban, now));
             string name = character.Length == 0 ? "Account " + entry.Account : $"{character} (account {entry.Account})";
             return $"{name} is banned {ServerBans.Describe(span)} and was sent away.";
         }
