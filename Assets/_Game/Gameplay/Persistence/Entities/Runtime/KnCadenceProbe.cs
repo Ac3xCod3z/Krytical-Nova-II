@@ -256,6 +256,16 @@ namespace KryticalNova.Persistence.Entities
                 log($"fps: window {w + 1}: capture {(cap ? "on" : "OFF")}, traces {(traces ? "on" : "OFF")}: {(Time.frameCount - f0) / dt:F1} fps over {dt:F1} s, worst frame {worst * 1000f:F0} ms");
             }
             KnPlayHere.CaptureEnabled = true;
+            // window 4 (run 6): the Editor brought to the front if Windows allows it, then 6 s profiled: frame timing (main, render, GPU) and
+            // the busiest markers of the player loop, summed per frame, each as milliseconds per frame
+            TryFocusEditor(log);
+            { float until = Time.realtimeSinceStartup + 1.5f; while (Time.realtimeSinceStartup < until) yield return null; }
+            log($"fps: focused now {Application.isFocused}");
+            IEnumerator profile = ProfileWindow(log);
+            while (profile.MoveNext()) yield return profile.Current;
+            // stacking (run 6): the Tester walks to the biggest cluster of monsters and stands there; every second the closest pairs
+            IEnumerator stack = StackWindow(server, body, log, teleport);
+            while (stack.MoveNext()) yield return stack.Current;
             IEnumerator whatIfs = WhatIfs(server, ghost, body, log, teleport);
             while (whatIfs.MoveNext()) yield return whatIfs.Current;
         }
@@ -521,6 +531,81 @@ namespace KryticalNova.Persistence.Entities
             }
             sb.Append($"| near me {sim.Count}, closest pair simulated {Closest(sim):F2} m, drawn {Closest(drawn):F2} m");
             return sb.ToString();
+        }
+
+        [System.Runtime.InteropServices.DllImport("user32.dll")] static extern bool SetForegroundWindow(IntPtr hWnd);
+
+        static void TryFocusEditor(Action<string> log)
+        {
+            try
+            {
+                var p = System.Diagnostics.Process.GetCurrentProcess();
+                bool ok = SetForegroundWindow(p.MainWindowHandle);
+                log($"fps: asked Windows to bring the Editor to the front: {ok} (focused before {Application.isFocused})");
+            }
+            catch (Exception e) { log("fps: could not focus the Editor: " + e.Message); }
+        }
+
+        static IEnumerator ProfileWindow(Action<string> log)
+        {
+            var recorders = new System.Collections.Generic.List<(string name, Unity.Profiling.ProfilerRecorder rec)>();
+            var handles = new System.Collections.Generic.List<Unity.Profiling.LowLevel.Unsafe.ProfilerRecorderHandle>();
+            Unity.Profiling.LowLevel.Unsafe.ProfilerRecorderHandle.GetAvailable(handles);
+            foreach (var h in handles)
+            {
+                var d = Unity.Profiling.LowLevel.Unsafe.ProfilerRecorderHandle.GetDescription(h);
+                if (d.UnitType != Unity.Profiling.ProfilerMarkerDataUnit.TimeNanoseconds) continue;
+                recorders.Add((d.Name, Unity.Profiling.ProfilerRecorder.StartNew(d.Category, d.Name, 1, Unity.Profiling.ProfilerRecorderOptions.Default | Unity.Profiling.ProfilerRecorderOptions.SumAllSamplesInFrame)));
+            }
+            var sums = new double[recorders.Count];
+            var timings = new FrameTiming[1];
+            double cpu = 0, main = 0, render = 0, gpu = 0; int tn = 0, frames = 0;
+            float t0 = Time.realtimeSinceStartup;
+            yield return null;
+            while (Time.realtimeSinceStartup - t0 < 6f)
+            {
+                FrameTimingManager.CaptureFrameTimings();
+                if (FrameTimingManager.GetLatestTimings(1, timings) > 0)
+                { cpu += timings[0].cpuFrameTime; main += timings[0].cpuMainThreadFrameTime; render += timings[0].cpuRenderThreadFrameTime; gpu += timings[0].gpuFrameTime; tn++; }
+                for (int i = 0; i < recorders.Count; i++) if (recorders[i].rec.Valid) sums[i] += recorders[i].rec.LastValue;
+                frames++;
+                yield return null;
+            }
+            float dt = Time.realtimeSinceStartup - t0;
+            var order = new System.Collections.Generic.List<int>();
+            for (int i = 0; i < recorders.Count; i++) order.Add(i);
+            order.Sort((x, y) => sums[y].CompareTo(sums[x]));
+            var sb = new System.Text.StringBuilder();
+            for (int k = 0; k < Math.Min(30, order.Count); k++) sb.Append($"{recorders[order[k]].name} {sums[order[k]] / frames / 1e6:F2} ms; ");
+            foreach (var r in recorders) r.rec.Dispose();
+            log($"fps: window 4 (profiled, focused {Application.isFocused}): {frames / dt:F1} fps; frame timing over {tn} frames: cpu {(tn > 0 ? cpu / tn : 0):F1} ms, main thread {(tn > 0 ? main / tn : 0):F1} ms, render thread {(tn > 0 ? render / tn : 0):F1} ms, GPU {(tn > 0 ? gpu / tn : 0):F1} ms");
+            log("fps: busiest markers per frame (nested ones overlap): " + sb);
+        }
+
+        static IEnumerator StackWindow(World server, GameObject body, Action<string> log, Action<Vector3> teleport)
+        {
+            EntityManager em = server.EntityManager;
+            // the monster with the most others within 8 m, and where those stand on average
+            Vector3 best = Vector3.zero; int bestN = -1;
+            using (EntityQuery q = em.CreateEntityQuery(ComponentType.ReadOnly<KryticalNova.Hostiles.Entities.HostileLife>(), ComponentType.ReadOnly<Unity.Transforms.LocalTransform>()))
+            using (var places = q.ToComponentDataArray<Unity.Transforms.LocalTransform>(Unity.Collections.Allocator.Temp))
+            {
+                for (int i = 0; i < places.Length; i++)
+                {
+                    Vector3 c = Vector3.zero; int n = 0;
+                    for (int j = 0; j < places.Length; j++) if (Vector3.Distance(places[i].Position, places[j].Position) < 8f) { c += (Vector3)places[j].Position; n++; }
+                    if (n > bestN) { bestN = n; best = c / n; }
+                }
+            }
+            Vector3 spot = best + new Vector3(7f, 0f, 0f);   // 7 m from the middle of the cluster: inside aggro, outside the pile
+            if (UnityEngine.AI.NavMesh.SamplePosition(spot, out UnityEngine.AI.NavMeshHit nh, 10f, UnityEngine.AI.NavMesh.AllAreas)) spot = nh.position;
+            log($"stack: cluster of {bestN} monsters around {best}; the Tester stands at {spot}");
+            teleport(spot);
+            for (int s = 1; s <= 10; s++)
+            {
+                { IEnumerator hold = Hold(1f); while (hold.MoveNext()) yield return hold.Current; }
+                log($"stack: t {s} s: " + Stacking(server, body));
+            }
         }
 
         static int Hp(EntityManager em, Entity ghost) => em.HasComponent<PlayerVitals>(ghost) ? em.GetComponentData<PlayerVitals>(ghost).HealthMilli / 1000 : -1;
