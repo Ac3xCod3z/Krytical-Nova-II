@@ -594,9 +594,13 @@ namespace KryticalNova.Publisher
 
         private void Note(string line)
         {
-            Directory.CreateDirectory(selfTest.Folder);
             report.AppendLine(DateTime.Now.ToString("HH:mm:ss ") + line);
-            File.WriteAllText(Path.Combine(selfTest.Folder, "report.txt"), report.ToString());
+            try
+            {
+                Directory.CreateDirectory(selfTest.Folder);
+                File.WriteAllText(Path.Combine(selfTest.Folder, "report.txt"), report.ToString());
+            }
+            catch (Exception e) { Say("FAILED to write the self-test report: " + e.Message); }
             Say("[self-test] " + line);
         }
 
