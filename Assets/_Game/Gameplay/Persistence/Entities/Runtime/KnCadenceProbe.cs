@@ -64,6 +64,7 @@ namespace KryticalNova.Persistence.Entities
 
                 StrikePresentSystem.Trace = true;   // [KnStrike] frame lines for the rest of this run
                 PlayerMeleeCombat.TraceSlash = true;   // [KnSlash]: the frame of each slash and what the body plays then
+                KryticalNova.Player.PlayerAnimancerMotor.TraceCalls = true;   // [KnPlayCall]: each clip the body is told to play (strike 3 hunt)
                 int slot = AttackSlot(own, log);
                 // 1) the known case: no strike yet, so no fight anywhere, no beat heard here, and a press is never sent
                 log("cadence: KNOWN CASE (no strike yet): " + Snapshot(server, client, ghost, body, own));
@@ -235,9 +236,26 @@ namespace KryticalNova.Persistence.Entities
                 lowest = Math.Min(lowest, Hp(em, ghost));
                 log($"mobs: t {s} s, HP {Hp(em, ghost)}, blows taken {s_Blows} ({s_Taken:F0} damage), me {body.transform.position}; " + MobRing(em, ghost));
                 log($"mobs: t {s} s brains: " + BrainTrace(server));
+                log($"mobs: t {s} s stacking: " + Stacking(server, body));
             }
             log("mobs: bodies after 8 s: " + HostileBodies(server));
             log($"mobs: {(s_Blows > 0 ? "PASS" : "FAIL")}: they fought back ({s_Blows} blows, {s_Taken:F0} damage; HP {hp0} -> lowest {lowest}, kept alive)");
+            // the owner's "why is the fps still so low" (8 Nov 2026): three 6 s stretches standing still, frames counted in real time
+            log($"fps: settings: targetFrameRate {Application.targetFrameRate}, vSyncCount {QualitySettings.vSyncCount}, runInBackground {Application.runInBackground}, " +
+                $"focused {Application.isFocused}, screen {Screen.width}x{Screen.height}, GPU '{SystemInfo.graphicsDeviceName}' ({SystemInfo.graphicsDeviceType}), " +
+                $"worlds {World.All.Count}, fixed dt {Time.fixedDeltaTime * 1000f:F1} ms, quality '{QualitySettings.names[QualitySettings.GetQualityLevel()]}'");
+            for (int w = 0; w < 3; w++)
+            {
+                bool cap = w >= 1, traces = w >= 2;
+                KnPlayHere.CaptureEnabled = cap;
+                StrikePresentSystem.Trace = traces; PlayerMeleeCombat.TraceSlash = traces; KryticalNova.Player.PlayerAnimancerMotor.TraceCalls = traces;
+                yield return null;
+                int f0 = Time.frameCount; float t0 = Time.realtimeSinceStartup, worst = 0f;
+                while (Time.realtimeSinceStartup - t0 < 6f) { worst = Mathf.Max(worst, Time.unscaledDeltaTime); { IEnumerator hold = Hold(0.0f); while (hold.MoveNext()) { } } yield return null; }
+                float dt = Time.realtimeSinceStartup - t0;
+                log($"fps: window {w + 1}: capture {(cap ? "on" : "OFF")}, traces {(traces ? "on" : "OFF")}: {(Time.frameCount - f0) / dt:F1} fps over {dt:F1} s, worst frame {worst * 1000f:F0} ms");
+            }
+            KnPlayHere.CaptureEnabled = true;
             IEnumerator whatIfs = WhatIfs(server, ghost, body, log, teleport);
             while (whatIfs.MoveNext()) yield return whatIfs.Current;
         }
@@ -453,6 +471,55 @@ namespace KryticalNova.Persistence.Entities
                     sb.Append($" active {em.IsComponentEnabled<KryticalNova.Brains.BrainActive>(e)}; ");
                 }
             }
+            return sb.ToString();
+        }
+
+        /// <summary>
+        /// Stacking probe (owner, 8 Nov 2026: four Bonewalkers inside each other on the player): per Hostile within 12 m of the body, the species radius,
+        /// its slot (Placed/Held), the brain's goal and flags, the simulated position and the drawn body's, the closest pair of simulated and of drawn.
+        /// </summary>
+        static string Stacking(World server, GameObject body)
+        {
+            var sb = new System.Text.StringBuilder();
+            EntityManager em = server.EntityManager;
+            Vector3 me = body.transform.position;
+            var views = new System.Collections.Generic.List<Component>();
+            Type net = Type.GetType("KryticalNova.Hostiles.HostileNet, KryticalNova.Hostiles");
+            if (net?.GetProperty("Active", BindingFlags.Public | BindingFlags.Static)?.GetValue(null) is IList list)
+                foreach (object o in list)
+                    if (o is Component c && net.GetProperty("IsView")?.GetValue(c) is bool v && v) views.Add(c);
+            var sim = new System.Collections.Generic.List<Vector3>();
+            var drawn = new System.Collections.Generic.List<Vector3>();
+            using (EntityQuery q = em.CreateEntityQuery(ComponentType.ReadOnly<KryticalNova.Hostiles.Entities.HostileLife>(), ComponentType.ReadOnly<KryticalNova.Brains.BrainMover>(),
+                       ComponentType.ReadOnly<Unity.Transforms.LocalTransform>()))
+            using (var lives = q.ToComponentDataArray<KryticalNova.Hostiles.Entities.HostileLife>(Unity.Collections.Allocator.Temp))
+            using (var movers = q.ToComponentDataArray<KryticalNova.Brains.BrainMover>(Unity.Collections.Allocator.Temp))
+            using (var places = q.ToComponentDataArray<Unity.Transforms.LocalTransform>(Unity.Collections.Allocator.Temp))
+            using (var ents = q.ToEntityArray(Unity.Collections.Allocator.Temp))
+            {
+                sb.Append($"{ents.Length} hostiles with life+mover; ");
+                for (int i = 0; i < ents.Length; i++)
+                {
+                    Vector3 at = places[i].Position;
+                    if (Vector3.Distance(at, me) > 12f) continue;
+                    string slot = em.HasComponent<KryticalNova.Hostiles.Entities.HostileSlot>(ents[i])
+                        ? $"slot placed {em.GetComponentData<KryticalNova.Hostiles.Entities.HostileSlot>(ents[i]).Placed} held {em.GetComponentData<KryticalNova.Hostiles.Entities.HostileSlot>(ents[i]).Held}" : "NO HostileSlot";
+                    Component view = null; float best = 3f;
+                    foreach (Component c in views) { float d = Vector3.Distance(c.transform.position, at); if (d < best) { best = d; view = c; } }
+                    sim.Add(at);
+                    if (view != null) drawn.Add(view.transform.position);
+                    sb.Append($"[species {lives[i].Species} radius {lives[i].RadiusMm} mm, {slot}, {(em.HasComponent<KryticalNova.Brains.BrainTag>(ents[i]) ? "tag" : "NO BrainTag")}, " +
+                              $"goal {movers[i].Dest} flags {movers[i].Flags}, sim {at}, drawn {(view != null ? view.transform.position.ToString() : "none within 3 m")}, " +
+                              $"{Vector3.Distance(at, me):F2} m from me] ");
+                }
+            }
+            float Closest(System.Collections.Generic.List<Vector3> pts)
+            {
+                float m = float.MaxValue;
+                for (int i = 0; i < pts.Count; i++) for (int j = i + 1; j < pts.Count; j++) m = Mathf.Min(m, Vector3.Distance(pts[i], pts[j]));
+                return m == float.MaxValue ? -1f : m;
+            }
+            sb.Append($"| near me {sim.Count}, closest pair simulated {Closest(sim):F2} m, drawn {Closest(drawn):F2} m");
             return sb.ToString();
         }
 

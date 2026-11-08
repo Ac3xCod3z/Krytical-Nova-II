@@ -696,9 +696,12 @@ namespace KryticalNova.Combat
         private IEnumerator TraceStrikeFrames(int step, AnimationClip clip)
         {
             var layer = animancerMotor != null ? animancerMotor.ActionLayer : animancer != null ? animancer.Layers[0] : null;
-            for (int i = 0; i < 12 && layer != null; i++)
+            AnimancerState previous = null;
+            for (int i = 0; i < 90 && layer != null; i++)
             {
                 AnimancerState cur = layer.CurrentState;
+                if (i >= 12 && cur == previous) { yield return null; continue; }   // later frames only when the layer's clip changes
+                previous = cur;
                 AnimancerState mine = null;
                 if (animancer != null && clip != null) animancer.States.TryGet(clip, out mine);
                 Debug.Log($"[KnStrikeFrame] frame {Time.frameCount} +{i}: strike {step} '{name}' strikeState " +

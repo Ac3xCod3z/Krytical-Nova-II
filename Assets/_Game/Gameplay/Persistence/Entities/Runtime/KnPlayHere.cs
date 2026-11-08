@@ -546,6 +546,9 @@ namespace KryticalNova.Persistence.Entities
             static readonly bool s_RenderTrace = Environment.GetEnvironmentVariable("KN_PLAYHERE_RENDER_TRACE") == "1";
         }
 
+        /// <summary>Probe: the screen capture can be switched off for a stretch (the fps comparison of the Mobs part).</summary>
+        public static bool CaptureEnabled = true;
+
         sealed class ScreenWatch : MonoBehaviour
         {
             public string CaptureFolder;
@@ -763,7 +766,7 @@ namespace KryticalNova.Persistence.Entities
                     m_LastPet = at;
                 }
                 m_LastProjection = cam.projectionMatrix;
-                if (!string.IsNullOrEmpty(CaptureFolder) && Time.realtimeSinceStartup >= m_NextShot)
+                if (CaptureEnabled && !string.IsNullOrEmpty(CaptureFolder) && Time.realtimeSinceStartup >= m_NextShot)
                 {
                     m_NextShot = Time.realtimeSinceStartup + 0.1f;
                     System.IO.Directory.CreateDirectory(CaptureFolder);

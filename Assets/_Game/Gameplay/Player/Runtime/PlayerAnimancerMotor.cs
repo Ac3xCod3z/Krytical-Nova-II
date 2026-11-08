@@ -572,6 +572,7 @@ namespace KryticalNova.Player
                 AnimationClip stopClip = GetStopClip(currentLocomotionClip, out stopWindow);
                 if (stopClip != null)
                 {
+                    TracePlay("stop clip", stopClip);
                     stopState = animancer.Layers[0].Play(stopClip, stopFadeDuration);
                     stopState.Time = Mathf.Clamp(stopWindow.x, 0f, stopClip.length);
                     stopState.Speed = stopPlaybackSpeed;
@@ -604,6 +605,7 @@ namespace KryticalNova.Player
             if (clip == null || clip == currentLocomotionClip) return;
             if (pendingFade > 0f) { fade = pendingFade; pendingFade = 0f; }
             currentLocomotionClip = clip;
+            TracePlay("locomotion", clip);
             currentLocomotionState = animancer.Layers[0].Play(clip, fade);
             currentLocomotionState.ApplyFootIK = locomotionFootIK && !seated; // a seated rider's feet are in the stirrups
             currentLocomotionState.Speed = 1f;
@@ -687,8 +689,20 @@ namespace KryticalNova.Player
         /// Plays a strike, cast or channel clip. On foot the whole body plays it (as before); seated only the upper
         /// body does, so the rider stays in the saddle while the arm swings the weapon (owner, 25 Oct 2026).
         /// </summary>
+        /// <summary>Probe: a "[KnPlayCall]" line (frame, what, clip, the caller) for each clip this body is told to play (owner's stray slash, strike 3).</summary>
+        public static bool TraceCalls;
+
+        private void TracePlay(string what, AnimationClip clip)
+        {
+            if (!TraceCalls) return;
+            var frames = new System.Diagnostics.StackTrace(2, false);
+            string caller = frames.FrameCount > 0 ? frames.GetFrame(0).GetMethod().Name : "?";
+            Debug.Log($"[KnPlayCall] frame {Time.frameCount}: '{name}' {what} '{(clip != null ? clip.name : "null")}' state {currentState} called by {caller}");
+        }
+
         public AnimancerState PlayAction(AnimationClip clip, float fade)
         {
+            TracePlay("action (strike/cast)", clip);
             if (animancer == null || clip == null) return null;
             if (!seated || !drawOnUpperBody) return animancer.Play(clip, fade);
             AnimancerState state = animancer.Layers[UpperBodyLayerIndex].Play(clip, fade);
@@ -882,6 +896,7 @@ namespace KryticalNova.Player
                 float startTime = Mathf.Clamp(window.x, 0f, clip.length);
                 float endTime = window.y > startTime ? Mathf.Min(window.y, clip.length) : clip.length;
 
+                TracePlay("weapon draw/sheathe", clip);
                 var state = drawOnUpperBody
                     ? animancer.Layers[UpperBodyLayerIndex].Play(clip, weaponDrawFadeDuration)
                     : animancer.Play(clip, weaponDrawFadeDuration);
@@ -1301,6 +1316,7 @@ namespace KryticalNova.Player
             {
                 hitHoldsBody = true;
                 stopState = null;
+                TracePlay("hit reaction", clip);
                 AnimancerState state = animancer.Layers[0].Play(clip, hitFadeIn);
                 state.Time = 0f;
                 state.Speed = 1f;
