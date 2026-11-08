@@ -107,9 +107,10 @@ namespace KryticalNova.Persistence.Entities
             {
                 if (!ReferenceEquals(entry.World, World) || entry.Body == null || !em.Exists(entry.Ghost) || !em.HasComponent<PlayerMountTag>(entry.Ghost)
                     || !entry.Body.TryGetComponent(out IBodyMounts mounts)) continue;
-                var now = new PlayerMountTag { Selected = mounts.ShownSelected, Phase = mounts.ShownPhase, Growth = mounts.ShownGrowth, Fed = (byte)(mounts.ShownFed ? 1 : 0) };
+                var now = new PlayerMountTag { Selected = mounts.ShownSelected, Phase = mounts.ShownPhase, Growth = mounts.ShownGrowth, Fed = (byte)(mounts.ShownFed ? 1 : 0),
+                    Running = (byte)(mounts.ShownRunning ? 1 : 0), EndsRunning = (byte)(mounts.ShownEndsRunning ? 1 : 0) };
                 PlayerMountTag had = em.GetComponentData<PlayerMountTag>(entry.Ghost);
-                if (had.Selected == now.Selected && had.Phase == now.Phase && had.Growth == now.Growth && had.Fed == now.Fed) continue;
+                if (had.Selected == now.Selected && had.Phase == now.Phase && had.Growth == now.Growth && had.Fed == now.Fed && had.Running == now.Running && had.EndsRunning == now.EndsRunning) continue;
                 em.SetComponentData(entry.Ghost, now);
                 Writes++;
             }
@@ -139,7 +140,7 @@ namespace KryticalNova.Persistence.Entities
                 if (entry.IsLocal) own = mounts;
                 if (!em.Exists(entry.Ghost) || !em.HasComponent<PlayerMountTag>(entry.Ghost)) continue;
                 PlayerMountTag tag = em.GetComponentData<PlayerMountTag>(entry.Ghost);
-                mounts.MirrorShown(tag.Selected, tag.Phase, tag.Growth, tag.Fed != 0);
+                mounts.MirrorShown(tag.Selected, tag.Phase, tag.Growth, tag.Fed != 0, tag.Running != 0, tag.EndsRunning != 0);
             }
             if (!m_Books.IsEmpty)
             {

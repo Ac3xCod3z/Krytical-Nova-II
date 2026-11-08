@@ -554,6 +554,8 @@ namespace KryticalNova.Mounts
         private void Show(MountNetState next)
         {
             bool dismountStarts = next.phase == RidePhase.GettingOff && shown.phase != RidePhase.GettingOff;
+            if (next.phase != shown.phase || next.selected != shown.selected)
+                Debug.Log($"[KnMount] {name} {(EntityServer ? "server" : EntityView ? "view" : "ngo")}: box {next.selected} {shown.phase} -> {next.phase} running={next.running} endsRunning={next.endsRunning}");
             shown = next;
             MountDefinition mount = Selected;
 
@@ -658,12 +660,14 @@ namespace KryticalNova.Mounts
         public byte ShownPhase => (byte)shown.phase;
         public byte ShownGrowth => shown.growth;
         public bool ShownFed => shown.fed;
+        public bool ShownRunning => shown.running;
+        public bool ShownEndsRunning => shown.endsRunning;
 
         /// <summary>Any view of the entity netcode: the server's mount for this player (NGO's netState change).</summary>
-        public void MirrorShown(byte selectedBox, byte ridePhase, byte growth, bool fed)
+        public void MirrorShown(byte selectedBox, byte ridePhase, byte growth, bool fed, bool running = false, bool endsRunning = true)
         {
             if (!EntityView) return;
-            var next = new MountNetState { selected = selectedBox, phase = (RidePhase)ridePhase, growth = growth, fed = fed };
+            var next = new MountNetState { selected = selectedBox, phase = (RidePhase)ridePhase, growth = growth, fed = fed, running = running, endsRunning = endsRunning };
             if (next.Equals(shown)) return;
             Show(next);
         }

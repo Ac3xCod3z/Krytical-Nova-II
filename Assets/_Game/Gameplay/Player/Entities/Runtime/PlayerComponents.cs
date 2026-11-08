@@ -303,6 +303,10 @@ namespace KryticalNova.Player.Entities
         [GhostField] public byte Phase;
         [GhostField] public byte Growth;
         [GhostField] public byte Fed;
+        /// <summary>1 = the getting on or off in play is the running kind (NGO's MountNetState.running).</summary>
+        [GhostField] public byte Running;
+        /// <summary>1 = a running getting-off comes up running (NGO's MountNetState.endsRunning).</summary>
+        [GhostField] public byte EndsRunning;
     }
 
     /// <summary>The emote the player shows, for everyone: an empty key = none, the serial goes up on every change (NGO's netState; M8 8.4.6). Written by the server.</summary>

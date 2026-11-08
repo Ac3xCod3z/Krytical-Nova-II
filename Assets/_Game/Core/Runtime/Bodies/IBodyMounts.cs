@@ -21,8 +21,11 @@ namespace KryticalNova.Core
         byte ShownPhase { get; }
         byte ShownGrowth { get; }
         bool ShownFed { get; }
+        /// <summary>The getting on or off in play is the running kind, and a running getting-off ends running (NGO's netState.running / endsRunning).</summary>
+        bool ShownRunning { get; }
+        bool ShownEndsRunning { get; }
         /// <summary>Any view: what the server gives this player's mount (NGO's netState, read by everyone).</summary>
-        void MirrorShown(byte selected, byte phase, byte growth, bool fed);
+        void MirrorShown(byte selected, byte phase, byte growth, bool fed, bool running = false, bool endsRunning = true);
         /// <summary>The owner's view: the four boxes (NGO's netBook, read by the owner): owned bits, then each box's EXP and hunger.</summary>
         void MirrorBook(byte owned, uint xp1, uint xp2, uint xp3, uint xp4, uint hunger1, uint hunger2, uint hunger3, uint hunger4);
         /// <summary>The server body: a request of its owner (NGO's SelectRpc / RideRpc bodies, after the call limit).</summary>

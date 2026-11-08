@@ -594,6 +594,7 @@ namespace KryticalNova.Mounts
             if (tuning != null && beat == DismountBeat.Touchdown && beatsGettingOn) Kick(tuning, tuning.saddleDip, 0f);
             IGameFeelSink feel = ClientPresentationRegistry.Feel;
             if (feel == null || mounts == null) return;
+            Debug.Log($"[KnMount] {mounts.name} feel {beat} gettingOn={beatsGettingOn} endsRunning={beatsEndRunning} local={KryticalNova.Core.BodyRoleTag.IsMine(mounts, !mounts.IsSpawned || mounts.IsOwner)}");
             MountStageLook look = shownMount != null ? shownMount.Stage(shownStage) : default;
             feel.Dismount(new DismountFeel
             {
@@ -603,7 +604,7 @@ namespace KryticalNova.Mounts
                 Speed = movement != null ? movement.CurrentSpeed : 0f,
                 EndsRunning = beatsEndRunning,
                 GettingOn = beatsGettingOn,
-                IsLocalPlayer = mounts.IsOwner,
+                IsLocalPlayer = KryticalNova.Core.BodyRoleTag.IsMine(mounts, !mounts.IsSpawned || mounts.IsOwner), // DOTS views are never IsOwner
                 MountVoice = shownMount != null ? shownMount.soundSet : null,
                 Mount = model != null ? model.transform : null,
                 PulseGlow = look.pulseGlow,
