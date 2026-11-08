@@ -240,8 +240,37 @@ namespace KryticalNova.Mounts
             ForgetModel();
         }
 
+        // The mount's body springing back after a kick: metres down (x) and back (y), their speeds, and what was applied.
+        private Vector2 kick, kickSpeed;
+        private Vector3 kickApplied;
+
+        private void Kick(MountSettings tuning, float down, float back)
+        {
+            kickSpeed += new Vector2(MountRideMotion.KickVelocity(down, tuning.kickHz), MountRideMotion.KickVelocity(back, tuning.kickHz));
+        }
+
+        // Moves the model by the change in the spring's offset only, so it works on the player (riding) and in the world
+        // (vanishing where it stood) alike.
+        private void SpringModel()
+        {
+            if (model == null) { kick = kickSpeed = Vector2.zero; kickApplied = Vector3.zero; return; }
+            if (kickSpeed == Vector2.zero && kick == Vector2.zero && kickApplied == Vector3.zero) return;
+            MountSettings tuning = mounts != null ? mounts.Settings : null;
+            float hz = tuning != null ? tuning.kickHz : 6f, damping = tuning != null ? tuning.kickDamping : 0.35f;
+            float dt = Time.deltaTime;
+            MountRideMotion.SpringStep(ref kick.x, ref kickSpeed.x, hz, damping, dt);
+            MountRideMotion.SpringStep(ref kick.y, ref kickSpeed.y, hz, damping, dt);
+            if (kick.sqrMagnitude < 1e-8f && kickSpeed.sqrMagnitude < 1e-6f) kick = kickSpeed = Vector2.zero;
+            Transform body = model.transform;
+            Vector3 offset = -body.up * kick.x - body.forward * kick.y;
+            body.position += offset - kickApplied;
+            kickApplied = offset;
+        }
+
         private void ForgetModel()
         {
+            kick = kickSpeed = Vector2.zero;
+            kickApplied = Vector3.zero;
             model = null;
             materialiser = null;
             mountAnimancer = null;
@@ -330,6 +359,9 @@ namespace KryticalNova.Mounts
         {
             if (beats == null) return;
             float since = Time.time - phaseStartedAt;
+            MountSettings tuning = mounts != null ? mounts.Settings : null;
+            float lead = tuning != null ? tuning.crouchLead : 0f;
+            if (lead > 0f && beats.leavesAt > lead) Beat(DismountBeat.Crouch, beats.leavesAt - lead, since);
             Beat(DismountBeat.TakeOff, beats.leavesAt, since);
             Beat(DismountBeat.Apex, beats.apexAt, since);
             Beat(DismountBeat.Touchdown, beats.arrivesAt, since);
@@ -353,6 +385,11 @@ namespace KryticalNova.Mounts
             int bit = 1 << (int)beat;
             if (at <= 0f || since < at || (beatsFired & bit) != 0) return;
             beatsFired |= bit;
+            // The mount takes the weight (owner, 7 Nov 2026 retest 2): shoved down and back by the push-off, giving under
+            // the rider landing in the saddle.
+            MountSettings tuning = mounts != null ? mounts.Settings : null;
+            if (tuning != null && beat == DismountBeat.TakeOff && !beatsGettingOn) Kick(tuning, tuning.pushOffDip, tuning.pushOffBack);
+            if (tuning != null && beat == DismountBeat.Touchdown && beatsGettingOn) Kick(tuning, tuning.saddleDip, 0f);
             IGameFeelSink feel = ClientPresentationRegistry.Feel;
             if (feel == null || mounts == null) return;
             feel.Dismount(new DismountFeel
@@ -504,6 +541,7 @@ namespace KryticalNova.Mounts
         {
             HandOver();
             Beats();
+            SpringModel();
             // The rest of a getting-off clip after the rider is free: ends at its length, or as soon as the rider moves.
             if (tailEnds > 0f && (Time.time >= tailEnds || (motor != null && motor.IsTravelling)))
             {

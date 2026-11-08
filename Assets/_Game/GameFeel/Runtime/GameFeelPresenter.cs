@@ -119,6 +119,8 @@ namespace KryticalNova.GameFeel
         [SerializeField] private MMF_Player rideTakeOffWorldFeel;
         [Tooltip("Getting on or off a mount: the weight landing, on the ground or in the saddle (short puff and a squash).")]
         [SerializeField] private MMF_Player rideLandWorldFeel;
+        [Tooltip("Getting on or off a mount: the crouch into the push a moment before the feet leave (a squash, no particles).")]
+        [SerializeField] private MMF_Player rideCrouchWorldFeel;
         [Tooltip("Cast / hit bursts for skills the catalog has no entry for.")]
         [SerializeField] private MMF_Player attackCastWorldFeel;
         [SerializeField] private MMF_Player buffCastWorldFeel;
@@ -782,6 +784,9 @@ namespace KryticalNova.GameFeel
             }
             switch (moment.Beat)
             {
+                case DismountBeat.Crouch:
+                    PlayWorld(rideCrouchWorldFeel, feet, Facing(actor), actor, hit);
+                    break;
                 case DismountBeat.TakeOff:
                     PlayWorld(rideTakeOffWorldFeel != null ? rideTakeOffWorldFeel : jumpWorldFeel, feet, Facing(actor), actor, hit);
                     if (moment.IsLocalPlayer) Play(jumpFeel, actor.position, 1f);
@@ -829,6 +834,9 @@ namespace KryticalNova.GameFeel
         {
             switch (moment.Beat)
             {
+                case DismountBeat.Crouch:
+                    PlayWorld(rideCrouchWorldFeel, feet, Facing(actor), actor, mountUpTakeOffIntensity);
+                    break;
                 case DismountBeat.TakeOff:
                     PlayWorld(rideTakeOffWorldFeel, feet, Facing(actor), actor, mountUpTakeOffIntensity);
                     if (moment.IsLocalPlayer) Play(jumpFeel, actor.position, 1f);

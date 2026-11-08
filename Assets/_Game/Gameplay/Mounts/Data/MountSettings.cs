@@ -50,6 +50,18 @@ namespace KryticalNova.Mounts
         [Tooltip("How quickly the lean comes and goes, in seconds.")]
         [Min(0.01f)] public float leanEase = 0.25f;
 
+        [Header("Getting on and off: weight (owner picks, 7 Nov 2026 retest 2: the mount reacts, a crouch before the leap)")]
+        [Tooltip("Getting off: metres the mount's body is shoved down by the rider's push-off, and back (away from the leap).")]
+        [Range(0f, 0.3f)] public float pushOffDip = 0.07f;
+        [Range(0f, 0.3f)] public float pushOffBack = 0.05f;
+        [Tooltip("Getting on: metres the mount's body gives under the rider landing in the saddle, before it settles.")]
+        [Range(0f, 0.3f)] public float saddleDip = 0.06f;
+        [Tooltip("How fast the mount's body springs back (cycles a second) and how quickly the spring dies down (0 = rings, 1 = no bounce).")]
+        [Range(1f, 15f)] public float kickHz = 6f;
+        [Range(0.05f, 1f)] public float kickDamping = 0.35f;
+        [Tooltip("Seconds before the feet leave (the saddle or the ground) that the rider crouches into the push.")]
+        [Range(0f, 0.3f)] public float crouchLead = 0.1f;
+
         [Header("Getting on and off (owner picks, 6 Nov 2026: Torrent's timing; a running version of each)")]
         [Tooltip("Standing still (or walking: the rider stops first): the summon hop. Dip, hop with the leg over, drop into the seat, settle.")]
         public MountTransition getOn = MountTransition.StandingOn();

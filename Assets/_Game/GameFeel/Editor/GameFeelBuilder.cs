@@ -272,7 +272,7 @@ namespace KryticalNova.EditorTools
                     Debug.LogError($"[GameFeel] {PrefabPath} is not a built game feel prefab. Run Build Game Feel first.");
                     return;
                 }
-                Remove(world, new[] { "Ride Dust", "Ride Take-off", "Ride Landing" });
+                Remove(world, new[] { "Ride Dust", "Ride Take-off", "Ride Landing", "Ride Crouch" });
                 var so = new SerializedObject(presenter);
                 AddRideFeel(world.gameObject, so);
                 so.ApplyModifiedPropertiesWithoutUndo();
@@ -1935,6 +1935,9 @@ namespace KryticalNova.EditorTools
             MMF_Player land = World(world, "Ride Landing", Dust("PFX_Dust_Short"));
             Squash(land, "Weight Squash", 0.045f, -0.08f);
             so.FindProperty("rideLandWorldFeel").objectReferenceValue = land;
+            MMF_Player crouch = World(world, "Ride Crouch");
+            Squash(crouch, "Crouch Squash", 0.035f, -0.07f);
+            so.FindProperty("rideCrouchWorldFeel").objectReferenceValue = crouch;
         }
 
         /// <summary>The player with exactly one smear feedback of this kind on it.</summary>

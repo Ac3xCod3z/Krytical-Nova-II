@@ -58,6 +58,22 @@ namespace KryticalNova.Mounts
         /// out of a getting-off lasting <paramref name="fadeSeconds"/>: linear, as the motor's cross-fade is, so at fade
         /// weight w the origin is (1 - w) up and the body under both poses stays where the clip left it.
         /// </summary>
+        /// <summary>
+        /// One step of a damped spring pulling <paramref name="x"/> back to 0 (the mount's body after a push-off or a
+        /// landing in the saddle): <paramref name="hz"/> cycles a second, <paramref name="damping"/> the damping ratio.
+        /// Semi-implicit, so it stays stable at any frame time a game sees.
+        /// </summary>
+        public static void SpringStep(ref float x, ref float v, float hz, float damping, float dt)
+        {
+            if (dt <= 0f) return;
+            float w = 2f * Mathf.PI * Mathf.Max(0.01f, hz);
+            v += (-w * w * x - 2f * Mathf.Clamp01(damping) * w * v) * dt;
+            x += v * dt;
+        }
+
+        /// <summary>The kick that makes a spring of <paramref name="hz"/> swing out to about <paramref name="metres"/>.</summary>
+        public static float KickVelocity(float metres, float hz) => metres * 2f * Mathf.PI * Mathf.Max(0.01f, hz);
+
         public static float HandOverShare(float seconds, float fadeSeconds) =>
             fadeSeconds > 0f ? 1f - Mathf.Clamp01(seconds / fadeSeconds) : 0f;
 

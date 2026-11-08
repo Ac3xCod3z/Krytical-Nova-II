@@ -299,6 +299,20 @@ namespace KryticalNova.Tests
             Assert.LessOrEqual(off.effectDelay + off.effectSeconds, off.freeSeconds);
         }
 
+        /// <summary>Owner, 7 Nov 2026 (retest 2): the mount takes the weight of the push-off and the landing, then settles.</summary>
+        [Test]
+        public void TheMountsBody_GivesUnderAKick_ThenSettles()
+        {
+            float x = 0f, v = MountRideMotion.KickVelocity(0.07f, settings.kickHz), peak = 0f;
+            for (int i = 0; i < 60; i++) // one second at 60 fps
+            {
+                MountRideMotion.SpringStep(ref x, ref v, settings.kickHz, settings.kickDamping, 1f / 60f);
+                peak = Mathf.Max(peak, x);
+            }
+            Assert.That(peak, Is.InRange(0.03f, 0.08f), "it gives about as far as asked, never more");
+            Assert.Less(Mathf.Abs(x), 0.005f, "and is back in place within a second");
+        }
+
         /// <summary>Owner, 7 Nov 2026 (retest 2): the roll covers less ground, then the run or a slight slide to a stop.</summary>
         [Test]
         public void TheRoll_IsSlower_ThenRunsOn_OrSlidesToAStop()

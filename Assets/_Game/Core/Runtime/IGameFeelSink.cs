@@ -78,6 +78,8 @@ namespace KryticalNova.Core
         SlideEnd,
         /// <summary>The getting-off is over or was cut short: everything it started ends now, guaranteed.</summary>
         Ended,
+        /// <summary>A moment before the feet leave (the saddle or the ground): the rider crouches into the push.</summary>
+        Crouch,
     }
 
     /// <summary>One beat of a getting-off as every client sees it (from the replicated ride phase).</summary>
