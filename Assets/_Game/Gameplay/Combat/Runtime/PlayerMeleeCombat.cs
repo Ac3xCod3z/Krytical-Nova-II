@@ -312,6 +312,7 @@ namespace KryticalNova.Combat
                 StopCoroutine(ownerStrikeRoutine);
                 ownerStrikeRoutine = null;
             }
+            StopPendingSlash();
 
             isAttacking = false;
             if (weaponHitbox != null)
@@ -678,8 +679,15 @@ namespace KryticalNova.Combat
                 }
                 Vector3 moved = position - stoodAt;
                 if (wallRunMotor == null || !wallRunMotor.IsOnWall) moved.y = 0f;
-                if (moved.sqrMagnitude > OwnerStrikeBreakDistance * OwnerStrikeBreakDistance) break;
+                if (moved.sqrMagnitude > OwnerStrikeBreakDistance * OwnerStrikeBreakDistance)
+                {
+                    // the server walks the body on: the strike is broken off, so the slash still waiting for it never fires on the idle (owner, 8 Nov 2026)
+                    if (TraceSlash) Debug.Log($"[KnStrikeEnd] frame {Time.frameCount}: strike {step} on '{name}' broken off: the body moved {moved.magnitude:F2} m after coming to rest");
+                    StopPendingSlash();
+                    break;
+                }
             }
+            if (TraceSlash && Time.time >= until) Debug.Log($"[KnStrikeEnd] frame {Time.frameCount}: strike {step} on '{name}' ran its time out");
             ownerStrikeRoutine = null;
             if (animancerMotor != null) animancerMotor.SetAttackingState(false);
         }
@@ -702,6 +710,12 @@ namespace KryticalNova.Combat
         }
 
         private Coroutine pendingSlashVfx;
+
+        private void StopPendingSlash()
+        {
+            if (pendingSlashVfx != null) StopCoroutine(pendingSlashVfx);
+            pendingSlashVfx = null;
+        }
 
         private float GetSlashVfxTime(int step)
         {

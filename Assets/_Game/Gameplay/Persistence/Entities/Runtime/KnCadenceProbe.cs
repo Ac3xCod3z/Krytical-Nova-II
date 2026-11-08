@@ -211,6 +211,14 @@ namespace KryticalNova.Persistence.Entities
                     Camera cam = Camera.main;
                     log($"mobs: click setup: camera {(cam != null ? cam.transform.position.ToString() : "none")}, own view {own.transform.position}, server body {body.transform.position}, " +
                         $"'{prowler.name}' at {prowler.transform.position}");
+                    // probe 17 (real fps): the camera still trailed the teleport and the click went off screen (y -35): wait, up to 5 s, until the
+                    // Prowler is inside the picture (the shot needs it there anyway)
+                    for (float waited = 0f; waited < 5f && cam != null; waited += 0.2f)
+                    {
+                        Vector3 sp = cam.WorldToScreenPoint(prowler.transform.position + Vector3.up);
+                        if (sp.z > 0f && sp.x > 100f && sp.x < cam.pixelWidth - 100f && sp.y > 100f && sp.y < cam.pixelHeight - 100f) break;
+                        IEnumerator wait = Hold(0.2f); while (wait.MoveNext()) yield return wait.Current;
+                    }
                     int hits0 = Hits(server);
                     log($"mobs: click 1 on one Prowler at frame {Time.frameCount}: " + click(prowler.transform.position + Vector3.up));
                     { IEnumerator hold = Hold(0.3f); while (hold.MoveNext()) yield return hold.Current; }
