@@ -139,6 +139,7 @@ namespace KryticalNova.EditorTools
             BuildForgeVfx();
             BuildNovaVfx();
             BuildAreaRing();
+            BuildGroundScuff();
             BuildBladeTrail();
             UseUrpMaterials($"{GameplayVfxFolder}/FX_ComicSlash.prefab");
         }
@@ -262,6 +263,7 @@ namespace KryticalNova.EditorTools
             WeatherVfxBuilder.EnsureFolder(VfxFolder);
             Make("FX_Cartoony_Jump_01", "PFX_Dust_Short", 0.9f, then: ShortLived);
             Make("FX_Cartoony_Rings_01", "PFX_Ring_Short", 1.0f, then: r => { GroundRings(r); GoneWithin(r, RideShockwaveSeconds); });
+            BuildGroundScuff();
             AssetDatabase.SaveAssets();
             using (var scope = new PrefabUtility.EditPrefabContentsScope(PrefabPath))
             {
@@ -274,7 +276,7 @@ namespace KryticalNova.EditorTools
                     return;
                 }
                 Remove(world, new[] { "Ride Dust", "Ride Take-off", "Ride Landing", "Ride Crouch", "Ride Shockwave", "Ride Saddle Land",
-                    "Ride Roll Skid", "Ride Touchdown", "Ride Summon", "Ride Vanish" });
+                    "Ride Roll Skid", "Ride Touchdown", "Ride Summon", "Ride Vanish", "Ride Scuff" });
                 Remove(root.transform, new[] { "Ride Launch" });
                 var so = new SerializedObject(presenter);
                 AddRideFeel(world.gameObject, so);
@@ -1950,6 +1952,8 @@ namespace KryticalNova.EditorTools
             foreach ((string field, string name) in new[] { ("rideSaddleLandWorldFeel", "Ride Saddle Land"), ("rideRollSkidWorldFeel", "Ride Roll Skid"), ("rideTouchdownWorldFeel", "Ride Touchdown"),
                          ("rideSummonWorldFeel", "Ride Summon"), ("rideVanishWorldFeel", "Ride Vanish") })
                 so.FindProperty(field).objectReferenceValue = Player(world, name, p => Sound(p, name));
+            // Scuffs and slide marks on the ground, fading (owner VFX pick c).
+            so.FindProperty("rideScuffWorldFeel").objectReferenceValue = World(world, "Ride Scuff", new Fx(GroundScuffVfx, ground: true));
             MMF_Player crouch = World(world, "Ride Crouch");
             Squash(crouch, "Crouch Squash", 0.035f, -0.07f);
             so.FindProperty("rideCrouchWorldFeel").objectReferenceValue = crouch;

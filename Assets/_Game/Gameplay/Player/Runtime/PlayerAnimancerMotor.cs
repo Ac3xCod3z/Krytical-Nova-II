@@ -223,6 +223,14 @@ namespace KryticalNova.Player
         /// </summary>
         public bool HoldRunEffects { get; set; }
 
+        /// <summary>
+        /// Landed but still in the jump's own landing (a mount's leap): the feet are planted on the ground by the foot
+        /// grounding, though the state is still Jumping (owner retest 4, 8 Nov 2026: the ankles sat ~10 cm in the ground
+        /// through the stand-up). Set by the leap at its touchdown; it clears itself as the motor leaves the jump. The
+        /// on-foot jump is untouched.
+        /// </summary>
+        public bool PlantFeetOnLanding { get; set; }
+
         public bool IsWeaponDrawn => presentedWeaponDrawn;
         /// <summary>The Animancer that drives the character's humanoid rig (the prefab has more than one).</summary>
         public AnimancerComponent Animancer => animancer;
@@ -333,6 +341,7 @@ namespace KryticalNova.Player
 
         private void Update()
         {
+            if (PlantFeetOnLanding && currentState != CharacterAnimState.Jumping) PlantFeetOnLanding = false; // the landing is over
             UpdateSpeed();
             if (warpedJumpActive) AdvanceWarpedJump();
 

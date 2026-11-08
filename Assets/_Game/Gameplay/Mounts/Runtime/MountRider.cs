@@ -190,6 +190,7 @@ namespace KryticalNova.Mounts
                 {
                     // Standing: the jump's own landing on a grounded body with its feet planted, as any jump lands.
                     LowerRider();
+                    motor.PlantFeetOnLanding = true;
                     motor.PlayWarpedJumpRecovery();
                 }
             }

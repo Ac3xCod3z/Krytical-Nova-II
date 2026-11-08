@@ -129,6 +129,8 @@ namespace KryticalNova.GameFeel
         [SerializeField] private MMF_Player rideRollSkidWorldFeel;
         [Tooltip("A getting-off's touchdown: the boot impact on the ground, standing or running (sound only).")]
         [SerializeField] private MMF_Player rideTouchdownWorldFeel;
+        [Tooltip("A getting-off's scuffs and slide marks on the ground (a few dark streaks that fade in 1-2 s).")]
+        [SerializeField] private MMF_Player rideScuffWorldFeel;
         [Tooltip("The mount forming as it is summoned: its own voice, by the mount's sound set (sound only).")]
         [SerializeField] private MMF_Player rideSummonWorldFeel;
         [Tooltip("The mount vanishing as the rider leaves it: its own sound, by the mount's sound set (sound only).")]
@@ -829,6 +831,7 @@ namespace KryticalNova.GameFeel
                     // stupid"; puffs gone in 0.3-0.5 s).
                     PlayWorld(rideLandWorldFeel != null ? rideLandWorldFeel : landWorldFeel, feet, Facing(actor), actor, hit);
                     PlayWorld(rideTouchdownWorldFeel, feet, Facing(actor), actor, hit);
+                    PlayWorld(rideScuffWorldFeel, feet, Facing(actor), null, hit); // left on the ground where the feet hit
                     if (moment.Speed >= shockwaveFromSpeed) PlayWorld(rideShockwaveWorldFeel, feet, Facing(actor), actor, hit);
                     if (moment.IsLocalPlayer) Play(landFeel, actor.position, Mathf.Lerp(dismountShakeStill, dismountShakeFull, pace));
                     break;
@@ -836,14 +839,17 @@ namespace KryticalNova.GameFeel
                     // Dust under the planted feet for the measured slide window only (RollStart to SlideEnd).
                     ActorVfx.For(actor).SetRunning(true, runLoopVfx);
                     PlayWorld(rideRollSkidWorldFeel, feet, Facing(actor), actor, hit);
+                    PlayWorld(rideScuffWorldFeel, feet, Facing(actor), null, hit); // the slide's marks begin
                     break;
                 case DismountBeat.SlideEnd:
                     if (!running) ActorVfx.Find(actor)?.SetRunning(false, runLoopVfx);
+                    PlayWorld(rideScuffWorldFeel, feet, Facing(actor), null, hit); // the slide's marks along its way
                     break;
                 case DismountBeat.RollEnd:
                     // The roll's exit slide: one short puff where the feet catch, not a trail.
                     if (!running) ActorVfx.Find(actor)?.SetRunning(false, runLoopVfx);
                     PlayWorld(rideDustWorldFeel, feet, Facing(actor), actor, dismountStandUpIntensity);
+                    PlayWorld(rideScuffWorldFeel, feet, Facing(actor), null, hit); // and end where the feet catch
                     break;
                 case DismountBeat.StandUp:
                     if (!running) ActorVfx.Find(actor)?.SetRunning(false, runLoopVfx);
