@@ -63,7 +63,8 @@ def main_folder():
     return os.path.normpath(first)
 
 
-PROJECTS = os.path.normpath(arg("--projects", main_folder()))
+# a checkout with Unity's own generated projects (the DOTS clone) uses them: the main folder's may be older and miss a vendor reference
+PROJECTS = os.path.normpath(arg("--projects", CHECKOUT if os.path.exists(os.path.join(CHECKOUT, "KryticalNova.Runtime.csproj")) else main_folder()))
 ECS_LIB = os.path.normpath(arg("--ecs-library", CHECKOUT if os.path.isdir(os.path.join(CHECKOUT, "Library", "ScriptAssemblies")) else PROJECTS))
 GAME = os.path.join(CHECKOUT, "Assets", "_Game")
 OUT = os.path.join(CHECKOUT, "Temp", "compile-check")
