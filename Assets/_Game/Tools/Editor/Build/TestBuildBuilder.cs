@@ -174,6 +174,7 @@ namespace KryticalNova.EditorTools
             // The maps' bundles are built with the game: what the maps share goes in one bundle first, never a copy in each
             // (searched again only when the maps or their groups changed since the last search).
             Debug.Log(MapAddressables.IsolateSharedWhenChanged());
+            BurstAotMarker.ClearStaleMarker();   // an earlier Burst-off build's leftover would stop Burst AOT for good (8 Nov 2026)
             BuildReport report = BuildPipeline.BuildPlayer(options);
             WriteSizeReport(report, scenes, output.Title, "Scripting backend: " + BackendName(backend), output.ReportPath);
 
