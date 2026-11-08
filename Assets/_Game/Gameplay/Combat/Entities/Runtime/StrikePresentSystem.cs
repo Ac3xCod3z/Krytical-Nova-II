@@ -29,9 +29,11 @@ namespace KryticalNova.Combat.Entities
         /// <summary>A "[KnStrike]" line with the frame for each strike drawn (the Play DOTS here probe: which VFX is whose, 8 Nov 2026).</summary>
         public static bool Trace;
 
-        /// <summary>True when (<paramref name="step"/>, <paramref name="start"/>) is a strike not yet played (pure).</summary>
+        /// <summary>True when (<paramref name="step"/>, <paramref name="start"/>) is a strike not yet played (pure). Only the step counts: a predicted ghost
+        /// re-decides its start tick on every rollback, and each change replayed the strike from 0 (owner's stray slash, 8 Nov 2026); a real restart of
+        /// the same step goes through step 0, which clears the memory.</summary>
         public static bool IsNewStrike(byte lastStep, NetworkTick lastStart, byte step, NetworkTick start) =>
-            step > 0 && start.IsValid && (step != lastStep || !lastStart.IsValid || start != lastStart);
+            step > 0 && start.IsValid && (step != lastStep || !lastStart.IsValid);
 
         protected override void OnUpdate()
         {

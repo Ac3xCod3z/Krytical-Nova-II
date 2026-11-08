@@ -25,7 +25,7 @@ namespace KryticalNova.Combat.Entities.Tests
             Assert.IsTrue(StrikePresentSystem.IsNewStrike(0, NetworkTick.Invalid, 1, t100), "the first strike");
             Assert.IsFalse(StrikePresentSystem.IsNewStrike(1, t100, 1, t100), "the same strike again (a re-prediction)");
             Assert.IsTrue(StrikePresentSystem.IsNewStrike(1, t100, 2, new NetworkTick(126)), "the next step");
-            Assert.IsTrue(StrikePresentSystem.IsNewStrike(1, t100, 1, new NetworkTick(190)), "strike 1 of the next round");
+            Assert.IsFalse(StrikePresentSystem.IsNewStrike(1, t100, 1, new NetworkTick(103)), "the same step with a re-decided start tick (a rollback): not a new strike");
             Assert.IsFalse(StrikePresentSystem.IsNewStrike(1, t100, 0, NetworkTick.Invalid), "no strike");
         }
 

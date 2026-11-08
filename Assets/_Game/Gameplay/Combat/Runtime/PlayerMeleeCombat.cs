@@ -641,9 +641,11 @@ namespace KryticalNova.Combat
                 }
 
                 PlayStrikeState(clip, speed);
+                if (TraceSlash) StartCoroutine(TraceStrikeFrames(step, clip));
 
                 // Clients don't run the swing windows, so time the slash the same way the server does.
-                StartCoroutine(SpawnSlashVfxDelayed(step, clip.length * GetSlashVfxTime(step) / Mathf.Max(0.01f, speed)));
+                if (pendingSlashVfx != null) StopCoroutine(pendingSlashVfx); // a restarted strike must not leave the old slash to fire
+                pendingSlashVfx = StartCoroutine(SpawnSlashVfxDelayed(step, clip.length * GetSlashVfxTime(step) / Mathf.Max(0.01f, speed)));
             }
         }
 
@@ -681,6 +683,25 @@ namespace KryticalNova.Combat
             ownerStrikeRoutine = null;
             if (animancerMotor != null) animancerMotor.SetAttackingState(false);
         }
+
+        /// <summary>Probe: 12 "[KnStrikeFrame]" lines after a strike is drawn (what plays, how far, at what weight), to find what holds the swing.</summary>
+        private IEnumerator TraceStrikeFrames(int step, AnimationClip clip)
+        {
+            var layer = animancerMotor != null ? animancerMotor.ActionLayer : animancer != null ? animancer.Layers[0] : null;
+            for (int i = 0; i < 12 && layer != null; i++)
+            {
+                AnimancerState cur = layer.CurrentState;
+                AnimancerState mine = null;
+                if (animancer != null && clip != null) animancer.States.TryGet(clip, out mine);
+                Debug.Log($"[KnStrikeFrame] frame {Time.frameCount} +{i}: strike {step} '{name}' strikeState " +
+                          (mine == null ? "none" : $"play={mine.IsPlaying} spd={mine.Speed:F2} t={mine.Time:F3} n={mine.NormalizedTime:F2} w={mine.Weight:F2}/{mine.EffectiveWeight:F2}") +
+                          $"; layer0 current '{(cur?.Clip != null ? cur.Clip.name : "none")}' n={(cur != null ? cur.NormalizedTime : -1f):F2} w={(cur != null ? cur.Weight : -1f):F2}; " +
+                          $"layerW={layer.Weight:F2} timeScale={Time.timeScale:F2}");
+                yield return null;
+            }
+        }
+
+        private Coroutine pendingSlashVfx;
 
         private float GetSlashVfxTime(int step)
         {
