@@ -261,6 +261,7 @@ namespace KryticalNova.EditorTools
         {
             WeatherVfxBuilder.EnsureFolder(VfxFolder);
             Make("FX_Cartoony_Jump_01", "PFX_Dust_Short", 0.9f, then: ShortLived);
+            Make("FX_Cartoony_Rings_01", "PFX_Ring_Short", 1.0f, then: r => { GroundRings(r); GoneWithin(r, RideShockwaveSeconds); });
             AssetDatabase.SaveAssets();
             using (var scope = new PrefabUtility.EditPrefabContentsScope(PrefabPath))
             {
@@ -272,9 +273,11 @@ namespace KryticalNova.EditorTools
                     Debug.LogError($"[GameFeel] {PrefabPath} is not a built game feel prefab. Run Build Game Feel first.");
                     return;
                 }
-                Remove(world, new[] { "Ride Dust", "Ride Take-off", "Ride Landing", "Ride Crouch" });
+                Remove(world, new[] { "Ride Dust", "Ride Take-off", "Ride Landing", "Ride Crouch", "Ride Shockwave" });
+                Remove(root.transform, new[] { "Ride Launch" });
                 var so = new SerializedObject(presenter);
                 AddRideFeel(world.gameObject, so);
+                AddRideLaunch(root, so);
                 so.ApplyModifiedPropertiesWithoutUndo();
             }
             AssetDatabase.SaveAssets();
@@ -1355,7 +1358,10 @@ namespace KryticalNova.EditorTools
         /// A puff that is over in <see cref="ShortDustSeconds"/> (owner, 7 Nov 2026: "puffs linger"): every system emits
         /// at once and no particle outlives the rest of that time.
         /// </summary>
-        private static void ShortLived(GameObject root)
+        private static void ShortLived(GameObject root) => GoneWithin(root, ShortDustSeconds);
+
+        /// <summary>Every system emits at once and the last particle is gone <paramref name="seconds"/> after the start.</summary>
+        private static void GoneWithin(GameObject root, float seconds)
         {
             foreach (var ps in root.GetComponentsInChildren<ParticleSystem>(true))
             {
@@ -1366,7 +1372,7 @@ namespace KryticalNova.EditorTools
                 float longest = life.mode == ParticleSystemCurveMode.Constant ? life.constant
                     : life.mode == ParticleSystemCurveMode.TwoConstants ? life.constantMax
                     : main.startLifetimeMultiplier; // a curve: the multiplier is its top
-                float most = ShortDustSeconds - 0.1f;
+                float most = Mathf.Max(0.05f, seconds - 0.1f);
                 if (longest > most) main.startLifetimeMultiplier *= most / longest;
                 var emission = ps.emission;
                 if (emission.rateOverTimeMultiplier > 0f) emission.rateOverTimeMultiplier = 0f; // bursts only
@@ -1935,9 +1941,28 @@ namespace KryticalNova.EditorTools
             MMF_Player land = World(world, "Ride Landing", Dust("PFX_Dust_Short"));
             Squash(land, "Weight Squash", 0.045f, -0.08f);
             so.FindProperty("rideLandWorldFeel").objectReferenceValue = land;
+            so.FindProperty("rideShockwaveWorldFeel").objectReferenceValue = World(world, "Ride Shockwave", Dust("PFX_Ring_Short"));
             MMF_Player crouch = World(world, "Ride Crouch");
             Squash(crouch, "Crouch Squash", 0.035f, -0.07f);
             so.FindProperty("rideCrouchWorldFeel").objectReferenceValue = crouch;
+        }
+
+        /// <summary>Seconds the running dismount's ground shockwave lasts (owner, 7 Nov 2026: gone in 0.3 s).</summary>
+        public const float RideShockwaveSeconds = 0.3f;
+
+        /// <summary>The rider's own screen as a getting on or off launches: a short FOV punch (owner feel pick 4).</summary>
+        private static void AddRideLaunch(GameObject root, SerializedObject so)
+        {
+            so.FindProperty("rideLaunchFeel").objectReferenceValue = Player(root, "Ride Launch", p =>
+            {
+                var fov = p.AddFeedback(typeof(MMF_CameraFieldOfView)) as MMF_CameraFieldOfView;
+                fov.Label = "Launch FOV Punch";
+                fov.Duration = 0.3f;
+                fov.RelativeFieldOfView = true;
+                fov.RemapFieldOfViewZero = 0f;
+                fov.RemapFieldOfViewOne = 4f;
+                fov.ShakeFieldOfView = new AnimationCurve(new Keyframe(0f, 0f), new Keyframe(0.25f, 1f), new Keyframe(1f, 0f));
+            });
         }
 
         /// <summary>The player with exactly one smear feedback of this kind on it.</summary>

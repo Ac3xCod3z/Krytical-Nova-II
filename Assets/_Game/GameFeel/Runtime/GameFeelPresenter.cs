@@ -121,6 +121,12 @@ namespace KryticalNova.GameFeel
         [SerializeField] private MMF_Player rideLandWorldFeel;
         [Tooltip("Getting on or off a mount: the crouch into the push a moment before the feet leave (a squash, no particles).")]
         [SerializeField] private MMF_Player rideCrouchWorldFeel;
+        [Tooltip("A running getting-off's touchdown: a flat shockwave on the ground, gone in 0.3 s (owner feel pick 5).")]
+        [SerializeField] private MMF_Player rideShockwaveWorldFeel;
+        [Tooltip("The rider's own screen as a getting on or off launches: a short FOV punch, stronger with speed (owner feel pick 4).")]
+        [SerializeField] private MMF_Player rideLaunchFeel;
+        [Tooltip("A getting-off counts as running for the shockwave from this many metres a second.")]
+        [SerializeField, Min(0f)] private float shockwaveFromSpeed = 3f;
         [Tooltip("Cast / hit bursts for skills the catalog has no entry for.")]
         [SerializeField] private MMF_Player attackCastWorldFeel;
         [SerializeField] private MMF_Player buffCastWorldFeel;
@@ -789,7 +795,11 @@ namespace KryticalNova.GameFeel
                     break;
                 case DismountBeat.TakeOff:
                     PlayWorld(rideTakeOffWorldFeel != null ? rideTakeOffWorldFeel : jumpWorldFeel, feet, Facing(actor), actor, hit);
-                    if (moment.IsLocalPlayer) Play(jumpFeel, actor.position, 1f);
+                    if (moment.IsLocalPlayer)
+                    {
+                        Play(jumpFeel, actor.position, Mathf.Lerp(0.7f, 1.3f, pace)); // the kick grows with speed
+                        Play(rideLaunchFeel, actor.position, Mathf.Lerp(0.5f, 1f, pace));
+                    }
                     ActorVfx.For(actor).SetAirborne(true, airborneLoopVfx);
                     break;
                 case DismountBeat.Touchdown:
@@ -800,6 +810,7 @@ namespace KryticalNova.GameFeel
                     // One short grounded puff and a squash: no stars, nothing lingering (owner, retest: "the stars are
                     // stupid"; puffs gone in 0.3-0.5 s).
                     PlayWorld(rideLandWorldFeel != null ? rideLandWorldFeel : landWorldFeel, feet, Facing(actor), actor, hit);
+                    if (moment.Speed >= shockwaveFromSpeed) PlayWorld(rideShockwaveWorldFeel, feet, Facing(actor), actor, hit);
                     if (moment.IsLocalPlayer) Play(landFeel, actor.position, Mathf.Lerp(dismountShakeStill, dismountShakeFull, pace));
                     break;
                 case DismountBeat.RollStart:
@@ -839,7 +850,7 @@ namespace KryticalNova.GameFeel
                     break;
                 case DismountBeat.TakeOff:
                     PlayWorld(rideTakeOffWorldFeel, feet, Facing(actor), actor, mountUpTakeOffIntensity);
-                    if (moment.IsLocalPlayer) Play(jumpFeel, actor.position, 1f);
+                    if (moment.IsLocalPlayer) { Play(jumpFeel, actor.position, 1f); Play(rideLaunchFeel, actor.position, 0.6f); }
                     break;
                 case DismountBeat.Touchdown:
                     ActorSmear.Find(actor)?.Release();
