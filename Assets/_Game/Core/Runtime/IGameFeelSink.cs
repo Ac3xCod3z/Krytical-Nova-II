@@ -56,6 +56,66 @@ namespace KryticalNova.Core
     }
 
     /// <summary>
+    /// The beats of getting off a mount, in order (owner, 7 Nov 2026: impact, weight, dust and lines). Getting on uses
+    /// <see cref="TakeOff"/> (the push off the ground), <see cref="Touchdown"/> (the weight landing in the saddle, as the
+    /// mount finishes forming) and <see cref="Ended"/>.
+    /// </summary>
+    public enum DismountBeat
+    {
+        /// <summary>The feet leave the saddle.</summary>
+        TakeOff,
+        /// <summary>The top of the flip.</summary>
+        Apex,
+        /// <summary>The first foot on the ground.</summary>
+        Touchdown,
+        /// <summary>The roll begins (running dismounts): the body slides on the ground from here.</summary>
+        RollStart,
+        /// <summary>The roll is over.</summary>
+        RollEnd,
+        /// <summary>Back on both feet, standing (the standing dismount, or a running one that ends standing).</summary>
+        StandUp,
+        /// <summary>The roll's first stretch is over: the planted feet stop sliding (the dust under them ends).</summary>
+        SlideEnd,
+        /// <summary>The getting-off is over or was cut short: everything it started ends now, guaranteed.</summary>
+        Ended,
+        /// <summary>A moment before the feet leave (the saddle or the ground): the rider crouches into the push.</summary>
+        Crouch,
+        /// <summary>The mount begins to form (getting on, its summon) or to vanish (getting off): its own voice.</summary>
+        MountShows,
+    }
+
+    /// <summary>One beat of a getting-off as every client sees it (from the replicated ride phase).</summary>
+    public struct DismountFeel
+    {
+        public Transform Actor;
+        public DismountBeat Beat;
+        /// <summary>Where the rider's feet are (the player's root on the ground).</summary>
+        public Vector3 Point;
+        /// <summary>Metres a second the body travels at the beat (0 for a standing dismount).</summary>
+        public float Speed;
+        /// <summary>The getting-off ends running (the roll comes up into the run).</summary>
+        public bool EndsRunning;
+        /// <summary>A getting-ON (the summon hop into the saddle), not a getting-off.</summary>
+        public bool GettingOn;
+        public bool IsLocalPlayer;
+        /// <summary>
+        /// The mount's own sound set (MountDefinition.soundSet, e.g. "Brambleback"): its summon and vanish are the clips
+        /// of that set. Empty: the mount has no voice of its own and is silent there.
+        /// </summary>
+        public string MountVoice;
+        /// <summary>The mount's model (null when none is drawn): its pulse plays on it.</summary>
+        public Transform Mount;
+        /// <summary>The mount's pulse as the rider lands in the saddle (its stage's data): how many times brighter its
+        /// lights flare, how far its body shudders (metres) and for how long (seconds, 0 = a default).</summary>
+        public float PulseGlow, PulseShake, PulseSeconds;
+        /// <summary>The pulse's light colour (the stage's glow) and what it sheds (a stage's own particles, e.g. the
+        /// Brambleback's leaves; null = none), at this scale.</summary>
+        public Color PulseColor;
+        public GameObject PulseParticles;
+        public float PulseParticleScale;
+    }
+
+    /// <summary>
     /// Client-only "juice" (screen shake, hit flash, squash, dust, auras, trails, sounds). Implemented by the GameFeel
     /// assembly and registered in <see cref="ClientPresentationRegistry.Feel"/>; null on dedicated servers, so callers
     /// null-check. Gameplay code only reports moments; it never decides how they look or feel. Skills are named by
@@ -89,6 +149,8 @@ namespace KryticalNova.Core
         /// </summary>
         void WaterSplash(Transform actor, Vector3 at, bool isLocalPlayer);
         void Landed(Transform actor, bool isLocalPlayer);
+        /// <summary>A beat of getting on or off a mount (take-off, apex, touchdown, roll, stand-up), on every peer.</summary>
+        void Dismount(in DismountFeel moment);
         /// <summary>The actor left the ground (true) or is back on it, including after an aborted jump (false).</summary>
         void Airborne(Transform actor, bool airborne);
 

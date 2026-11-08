@@ -21,6 +21,19 @@ namespace KryticalNova.GameFeel
         public AudioClip[] NullSfx;
         public AudioClip[] CovenantSfx;
 
+        /// <summary>A named set of clips (a mount's own voice: SFX_&lt;Slot&gt;_&lt;Key&gt;_nn).</summary>
+        [System.Serializable]
+        public struct KeyedSet
+        {
+            public string Key;
+            public AudioClip[] Clips;
+        }
+
+        [MMFInspectorGroup("Keyed Sets", true, 31)]
+        [Tooltip("Sets chosen by name before a play (a mount's summon and vanish: one set per mount). With sets, a name " +
+                 "that has none plays nothing - never another mount's voice.")]
+        public KeyedSet[] KeyedSfx;
+
         [Tooltip("Slowest and fastest a clip may be played to make it last the time asked for.")]
         public Vector2 FitPitch = new Vector2(0.5f, 2f);
 
@@ -28,15 +41,26 @@ namespace KryticalNova.GameFeel
         private AudioClip[] lastSet;
         private int faction;
         private float fitSeconds;
+        private string setKey;
 
         /// <summary>Which faction's clips the next plays use (1 Hegemony, 2 Null, 3 Covenant; anything else: Random Sfx).</summary>
         public void UseFaction(int factionId) => faction = factionId;
+
+        /// <summary>Which keyed set the next plays use (a mount's sound set).</summary>
+        public void UseSet(string key) => setKey = key;
 
         /// <summary>The next plays are slowed or sped so the clip lasts this long (0: as recorded, within the pitch range).</summary>
         public void LastFor(float seconds) => fitSeconds = seconds;
 
         private AudioClip[] Clips()
         {
+            if (KeyedSfx != null && KeyedSfx.Length > 0)
+            {
+                for (int i = 0; i < KeyedSfx.Length; i++)
+                    if (!string.IsNullOrEmpty(setKey) && string.Equals(KeyedSfx[i].Key, setKey, System.StringComparison.OrdinalIgnoreCase))
+                        return KeyedSfx[i].Clips;
+                return null;
+            }
             AudioClip[] own = faction == 1 ? HegemonySfx : faction == 2 ? NullSfx : faction == 3 ? CovenantSfx : null;
             return own != null && own.Length > 0 ? own : RandomSfx;
         }
@@ -45,6 +69,7 @@ namespace KryticalNova.GameFeel
         {
             if (!Active || !FeedbackTypeAuthorized) return;
             AudioClip[] clips = Sfx != null ? null : Clips();
+            if (Sfx == null && (clips == null || clips.Length == 0) && KeyedSfx != null && KeyedSfx.Length > 0) return; // no set of its own: silent
             AudioClip clip = Sfx;
             if (clips != null && clips.Length > 0)
             {

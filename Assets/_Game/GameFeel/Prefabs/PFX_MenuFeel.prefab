@@ -415,6 +415,7 @@ MonoBehaviour:
         HegemonySfx: []
         NullSfx: []
         CovenantSfx: []
+        KeyedSfx: []
         FitPitch: {x: 0.5, y: 2}
 --- !u!1 &729597864040757204
 GameObject:
@@ -812,6 +813,7 @@ MonoBehaviour:
         HegemonySfx: []
         NullSfx: []
         CovenantSfx: []
+        KeyedSfx: []
         FitPitch: {x: 0.5, y: 2}
 --- !u!1 &1042235530589574237
 GameObject:
@@ -1209,6 +1211,7 @@ MonoBehaviour:
         HegemonySfx: []
         NullSfx: []
         CovenantSfx: []
+        KeyedSfx: []
         FitPitch: {x: 0.5, y: 2}
 --- !u!1 &1798071834834719891
 GameObject:
@@ -1606,6 +1609,7 @@ MonoBehaviour:
         HegemonySfx: []
         NullSfx: []
         CovenantSfx: []
+        KeyedSfx: []
         FitPitch: {x: 0.5, y: 2}
 --- !u!1 &3018698206567306713
 GameObject:
@@ -2003,6 +2007,7 @@ MonoBehaviour:
         HegemonySfx: []
         NullSfx: []
         CovenantSfx: []
+        KeyedSfx: []
         FitPitch: {x: 0.5, y: 2}
 --- !u!1 &3387469479467893756
 GameObject:
@@ -2401,6 +2406,7 @@ MonoBehaviour:
         HegemonySfx: []
         NullSfx: []
         CovenantSfx: []
+        KeyedSfx: []
         FitPitch: {x: 0.5, y: 2}
 --- !u!1 &3792639498916313020
 GameObject:
@@ -2881,6 +2887,7 @@ MonoBehaviour:
         HegemonySfx: []
         NullSfx: []
         CovenantSfx: []
+        KeyedSfx: []
         FitPitch: {x: 0.5, y: 2}
 --- !u!1 &5381553062925280669
 GameObject:
@@ -3296,6 +3303,7 @@ MonoBehaviour:
         HegemonySfx: []
         NullSfx: []
         CovenantSfx: []
+        KeyedSfx: []
         FitPitch: {x: 0.5, y: 2}
 --- !u!1 &5791917729296109903
 GameObject:
@@ -3737,6 +3745,7 @@ MonoBehaviour:
         HegemonySfx: []
         NullSfx: []
         CovenantSfx: []
+        KeyedSfx: []
         FitPitch: {x: 0.5, y: 2}
 --- !u!1 &5844629976210799272
 GameObject:
@@ -4134,6 +4143,7 @@ MonoBehaviour:
         HegemonySfx: []
         NullSfx: []
         CovenantSfx: []
+        KeyedSfx: []
         FitPitch: {x: 0.5, y: 2}
 --- !u!1 &6802499326076575371
 GameObject:
@@ -4531,4 +4541,5 @@ MonoBehaviour:
         HegemonySfx: []
         NullSfx: []
         CovenantSfx: []
+        KeyedSfx: []
         FitPitch: {x: 0.5, y: 2}

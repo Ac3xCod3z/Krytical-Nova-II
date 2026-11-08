@@ -114,7 +114,8 @@ namespace KryticalNova.Player
             float dt = Time.deltaTime;
             // In the air, or lying dead: there is nothing to plant the feet on.
             bool grounded = motor == null
-                || (motor.CurrentState != CharacterAnimState.Jumping && motor.CurrentState != CharacterAnimState.Dead);
+                || (motor.CurrentState != CharacterAnimState.Jumping && motor.CurrentState != CharacterAnimState.Dead)
+                || (motor.CurrentState == CharacterAnimState.Jumping && motor.PlantFeetOnLanding); // a leap that has landed
             masterWeight = settle ? (grounded ? 1f : 0f) : Mathf.MoveTowards(masterWeight, grounded ? 1f : 0f, weightBlendSpeed * dt);
 
             if (masterWeight <= 0f)

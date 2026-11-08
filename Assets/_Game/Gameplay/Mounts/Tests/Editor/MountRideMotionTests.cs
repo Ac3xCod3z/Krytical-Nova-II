@@ -229,6 +229,35 @@ namespace KryticalNova.Tests
         }
 
         [Test]
+        public void TheMountUpHop_ClearsTheSeatThenSettlesIntoIt()
+        {
+            MountTransition on = settings.Transition(true, false);
+            Assert.AreEqual(0f, MountRideMotion.AirBump(on.leavesAt, on.leavesAt, on.arrivesAt), 0.001f, "nothing before the feet leave");
+            Assert.AreEqual(1f, MountRideMotion.AirBump((on.leavesAt + on.arrivesAt) / 2f, on.leavesAt, on.arrivesAt), 0.001f, "highest half way");
+            Assert.AreEqual(0f, MountRideMotion.AirBump(on.arrivesAt, on.leavesAt, on.arrivesAt), 0.001f, "in the saddle at the landing");
+            for (int stage = 0; stage < 3; stage++) Assert.Greater(settings.hopClearance[stage], 0f, "every stage clears the seat");
+        }
+
+        [Test]
+        public void EveryGettingOff_HasItsBeatsInOrderWithinTheClip([Values(false, true)] bool running, [Values(false, true)] bool endsRunning)
+        {
+            MountTransition t = settings.Transition(false, running, endsRunning);
+            Assert.Greater(t.apexAt, t.leavesAt, "the apex comes after the take-off");
+            Assert.Greater(t.arrivesAt, t.apexAt, "the touchdown comes after the apex");
+            if (running)
+            {
+                Assert.GreaterOrEqual(t.rollStartsAt, t.arrivesAt, "the roll starts at or after the touchdown");
+                Assert.Greater(t.slideEndsAt, t.rollStartsAt, "the feet's slide window ends after it starts");
+                Assert.Greater(t.rollEndsAt, t.slideEndsAt, "the roll ends after the slide window");
+            }
+            else Assert.AreEqual(0f, t.rollStartsAt, "the standing dismount has no roll");
+            bool stands = !running || !endsRunning;
+            if (stands) Assert.Greater(t.standsAt, running ? t.rollEndsAt - 0.2f : t.arrivesAt, "the stand-up comes after the landing or the roll");
+            else Assert.AreEqual(0f, t.standsAt, "ending running there is no stand-up");
+            Assert.LessOrEqual(Mathf.Max(t.standsAt, t.rollEndsAt), t.seconds, "every beat is within the clip");
+        }
+
+        [Test]
         public void EveryHopTransition_SaysWhenTheFeetLeaveAndArrive([Values(false, true)] bool on, [Values(false, true)] bool running)
         {
             foreach (bool endsRunning in new[] { false, true })
@@ -268,6 +297,86 @@ namespace KryticalNova.Tests
         {
             MountTransition off = settings.Transition(false, running, endsRunning);
             Assert.LessOrEqual(off.effectDelay + off.effectSeconds, off.freeSeconds);
+        }
+
+        /// <summary>Owner, 7 Nov 2026 (retest 2): the leap off plays the jump's own timing; the roll and stand keep their lengths.</summary>
+        [Test]
+        public void TheLeap_TakesTheJumpsTiming_AndShiftsTheRollAfterIt([Values(false, true)] bool running)
+        {
+            const float takeoff = 0.45f, apex = 0.8f, land = 1.2f, recover = 0.5f;
+            MountTransition baked = settings.Transition(false, running, true);
+            MountTransition leap = baked.WithLeap(takeoff, apex, land, recover);
+            Assert.IsTrue(leap.leap);
+            Assert.IsFalse(baked.leap, "the settings stay as they are");
+            Assert.AreEqual(takeoff, leap.leavesAt, 1e-4f);
+            Assert.AreEqual(apex, leap.apexAt, 1e-4f);
+            Assert.AreEqual(land, leap.arrivesAt, 1e-4f);
+            // Owner retest 4 (8 Nov 2026): the vanish started while the rider still sat on the mount; it starts AS the feet leave.
+            Assert.AreEqual(leap.leavesAt, leap.effectDelay, 1e-4f, "the mount vanishes as the feet leave it");
+            if (running)
+            {
+                Assert.AreEqual(baked.rollEndsAt - baked.rollStartsAt, leap.rollEndsAt - leap.rollStartsAt, 1e-4f, "the roll keeps its length");
+                Assert.AreEqual(land - baked.arrivesAt, leap.rollStartsAt - baked.rollStartsAt, 1e-4f, "and starts after the leap's touchdown");
+            }
+            else Assert.AreEqual(land + recover, leap.freeSeconds, 1e-4f);
+            Assert.LessOrEqual(leap.freeSeconds, leap.seconds);
+        }
+
+        /// <summary>Owner, 7 Nov 2026 (retest 2): the mount takes the weight of the push-off and the landing, then settles.</summary>
+        [Test]
+        public void TheMountsBody_GivesUnderAKick_ThenSettles()
+        {
+            float x = 0f, v = MountRideMotion.KickVelocity(0.07f, settings.kickHz, settings.kickDamping), peak = 0f;
+            for (int i = 0; i < 60; i++) // one second at 60 fps
+            {
+                MountRideMotion.SpringStep(ref x, ref v, settings.kickHz, settings.kickDamping, 1f / 60f);
+                peak = Mathf.Max(peak, x);
+            }
+            Assert.That(peak, Is.InRange(0.06f, 0.075f), "it gives as far as asked (0.07 m), never much more");
+            Assert.Less(Mathf.Abs(x), 0.005f, "and is back in place within a second");
+        }
+
+        /// <summary>Owner, 7 Nov 2026 (retest 2): the roll covers less ground, then the run or a slight slide to a stop.</summary>
+        [Test]
+        public void TheRoll_IsSlower_ThenRunsOn_OrSlidesToAStop()
+        {
+            const float start = 1.0f, end = 1.76f, k = 0.55f, slide = 0.3f;
+            Assert.AreEqual(1f, MountRules.DismountSpeedShare(0.5f, true, start, end, k, slide), 1e-4f, "take-off and flip at the run");
+            Assert.AreEqual(k, MountRules.DismountSpeedShare(1.3f, true, start, end, k, slide), 1e-4f, "the roll is slowed");
+            Assert.AreEqual(1f, MountRules.DismountSpeedShare(1.9f, true, start, end, k, slide), 1e-4f, "ending running: back to the run");
+            float mid = MountRules.DismountSpeedShare(end + slide / 2f, false, start, end, k, slide);
+            Assert.That(mid, Is.GreaterThan(0f).And.LessThan(k), "ending standing: a slide easing down");
+            Assert.AreEqual(0f, MountRules.DismountSpeedShare(end + slide + 0.01f, false, start, end, k, slide), 1e-4f, "then still");
+        }
+
+        [Test]
+        public void TheStandingEnding_StopsOnTheClickedSpot()
+        {
+            const float start = 1.0f, end = 1.76f, k = 0.55f, slide = 0.3f, run = 10f, path = 12f;
+            float scale = MountRules.DismountStandingScale(path, run, start, end, k, slide);
+            // Integrate the profile at 1 ms steps: the body covers the path, give or take a step.
+            float covered = 0f;
+            for (float t = 0f; t < end + slide + 0.1f; t += 0.001f)
+                covered += run * scale * MountRules.DismountSpeedShare(t, false, start, end, k, slide) * 0.001f;
+            Assert.AreEqual(path, covered, 0.05f);
+            Assert.LessOrEqual(MountRules.DismountStandingScale(1000f, run, start, end, k, slide), MountRules.DismountMostSpeedUp);
+        }
+
+        [Test]
+        public void TheRunOrStandChoice_UsesTheSlowerRoll()
+        {
+            // At 10 m/s: 10 m to the roll's start and 4.18 m through the slowed roll (14.18 m in all; 17.6 m unslowed).
+            Assert.AreEqual(14.18f, MountRules.DismountReachToRollEnd(10f, 1.0f, 1.76f, 0.55f), 0.01f);
+            Assert.IsTrue(MountRules.DismountEndsRunning(18.5f, 10f, 1.0f, 1.76f, 0.55f, 4f), "4.3 m left as the roll ends: up running");
+            Assert.IsFalse(MountRules.DismountEndsRunning(17f, 10f, 1.0f, 1.76f, 0.55f, 4f), "2.8 m left: ends standing");
+        }
+
+        /// <summary>Owner, 7 Nov 2026 (retest 2): the leap starts before the mount disintegrates.</summary>
+        [Test]
+        public void TheMount_StartsVanishingOnlyAfterThePushOff([Values(false, true)] bool running, [Values(true, false)] bool endsRunning)
+        {
+            MountTransition off = settings.Transition(false, running, endsRunning);
+            Assert.Greater(off.effectDelay, off.leavesAt, "the feet leave the saddle before the mount starts to vanish");
         }
 
         [Test]

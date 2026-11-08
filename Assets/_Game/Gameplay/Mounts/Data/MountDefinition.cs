@@ -30,6 +30,17 @@ namespace KryticalNova.Mounts
         public Vector2 clipMetresPerSecond;
         [Tooltip("Colour of the evolution moment's effect when this stage is reached.")]
         public Color glow;
+        [Tooltip("The pulse as the rider lands in the saddle (owner VFX pick d): how many times brighter its lights " +
+                 "(emission) flare for a moment. 0 = no flare (an organic mount: it shakes instead).")]
+        [Min(0f)] public float pulseGlow;
+        [Tooltip("The same pulse: how far its body shudders, in metres (a shake-off, with dust at its feet). 0 = none.")]
+        [Min(0f)] public float pulseShake;
+        [Tooltip("Seconds the pulse lasts. 0 = 0.4 s.")]
+        [Min(0f)] public float pulseSeconds;
+        [Tooltip("What the pulse sheds off the body (owner retest 5: the Brambleback's leaves and dust). Empty = nothing.")]
+        public GameObject pulseParticles;
+        [Tooltip("Size of what it sheds, against the prefab as made.")]
+        [Min(0f)] public float pulseParticleScale;
 
         [Header("The rider on this stage (owner, 25 Oct 2026: each stage has its own straddle and stirrups)")]
         [Tooltip("Humanoid clips keyed on this stage's seat. Empty = the mount's own rider clips.")]
@@ -90,12 +101,18 @@ namespace KryticalNova.Mounts
         [Min(0f)] public float riderLeanScale = 1f;
         [Tooltip("Scales the code bob (Mount Settings) for this mount's stride.")]
         [Min(0f)] public float riderBobScale = 1f;
+        [Tooltip("Scales how far the rider clears the seat in the mount-up hop (Mount Settings hopClearance): above 1 for a tall saddle with a high back.")]
+        [Min(0f)] public float hopClearanceScale = 1f;
         [Tooltip("Moves the shared riding clips on this mount's seat, in metres (x out, y up, z forward), on top of each stage's seat.")]
         public Vector3 riderSeatNudge;
 
         [Header("Appear and vanish")]
         [Tooltip("This mount's look for the shared appear and vanish effect (colours, pattern, particles). Empty = it pops in and out.")]
         public MountMaterialiseSettings materialise;
+        [Tooltip("This mount's own voice as it is summoned and as it vanishes: the set of clips SFX_RideSummon_<set>_nn and " +
+                 "SFX_RideVanish_<set>_nn in Audio/SFX/Mounts (e.g. Brambleback). A new mount = its own files and its set name here. " +
+                 "Empty = silent there.")]
+        public string soundSet;
 
         /// <summary>True when the mount can be ridden: its first stage has a model and its rider clips exist.</summary>
         public bool IsBuilt => stages != null && stages.Length > 0 && stages[0].model != null && riderIdle != null;

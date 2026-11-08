@@ -5300,6 +5300,7 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
             public void RunStarted(Transform actor, bool isLocalPlayer) { }
             public void RunStopped(Transform actor) { }
             public void RideWalk(Transform actor, bool walking) { }
+            public void Dismount(in DismountFeel moment) { }
             public void JumpCharge(Transform actor, bool isLocalPlayer) { }
             public void JumpTakeoff(Transform actor, bool isLocalPlayer) { }
             public void WallStanding(Transform actor, bool onWall) { }
