@@ -216,6 +216,13 @@ namespace KryticalNova.Player
         /// </summary>
         public Vector3 BodyLift { get; set; }
 
+        /// <summary>
+        /// A running getting-off (a mount's leap or roll) holds the run's own effects on through it - the wind lines, the
+        /// dust and the smear - though the legs play the leap, not the run (owner retest 4, 8 Nov 2026). Let go, a run
+        /// still going on carries them on; a stop ends them as usual.
+        /// </summary>
+        public bool HoldRunEffects { get; set; }
+
         public bool IsWeaponDrawn => presentedWeaponDrawn;
         /// <summary>The Animancer that drives the character's humanoid rig (the prefab has more than one).</summary>
         public AnimancerComponent Animancer => animancer;
@@ -355,7 +362,7 @@ namespace KryticalNova.Player
             bool legsFollowMovement = currentState == CharacterAnimState.Locomotion || (drawOnUpperBody && IsWeaponDrawActionPlaying)
                 || (seated && currentState == CharacterAnimState.Attacking);
             // On a mount its gallop is the run (the speed effects) and its walk kicks up dust only (owner, 25 Oct 2026).
-            bool running = legsFollowMovement && currentLocomotionClip != null
+            bool running = HoldRunEffects || legsFollowMovement && currentLocomotionClip != null
                 && (currentLocomotionClip == runClip || currentLocomotionClip == drawnRunClip
                     || (seated && currentLocomotionClip == seatedRunClip && seatedRunClip != seatedWalkClip));
             bool rideWalking = legsFollowMovement && seated && !running && currentLocomotionClip != null

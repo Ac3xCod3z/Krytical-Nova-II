@@ -311,7 +311,8 @@ namespace KryticalNova.Tests
             Assert.AreEqual(takeoff, leap.leavesAt, 1e-4f);
             Assert.AreEqual(apex, leap.apexAt, 1e-4f);
             Assert.AreEqual(land, leap.arrivesAt, 1e-4f);
-            Assert.Greater(leap.effectDelay, leap.leavesAt, "the mount vanishes after the push-off");
+            // Owner retest 4 (8 Nov 2026): the vanish started while the rider still sat on the mount; it starts AS the feet leave.
+            Assert.AreEqual(leap.leavesAt, leap.effectDelay, 1e-4f, "the mount vanishes as the feet leave it");
             if (running)
             {
                 Assert.AreEqual(baked.rollEndsAt - baked.rollStartsAt, leap.rollEndsAt - leap.rollStartsAt, 1e-4f, "the roll keeps its length");

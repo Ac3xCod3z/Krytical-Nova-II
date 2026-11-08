@@ -286,7 +286,8 @@ namespace KryticalNova.Mounts
             if (gettingOn || !settings.leapWithJump || t == null) return t;
             if (jumpMotor == null) jumpMotor = GetComponent<KryticalNova.Player.PlayerJumpMotor>();
             if (jumpMotor == null || !jumpMotor.TryGetWarpTimes(out float takeoff, out float apex, out float land)) return t;
-            return t.WithLeap(takeoff, apex, land, settings.leapStandRecoverSeconds);
+            // The feet leave the saddle a moment into the jump's rise (measured: MountSettings.leapFeetLeaveAfter).
+            return t.WithLeap(Mathf.Min(takeoff + settings.leapFeetLeaveAfter, apex), apex, land, settings.leapStandRecoverSeconds);
         }
 
         private KryticalNova.Player.PlayerJumpMotor jumpMotor;

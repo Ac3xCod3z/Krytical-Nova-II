@@ -798,6 +798,9 @@ namespace KryticalNova.GameFeel
                 MountUp(moment, actor, feet);
                 return;
             }
+            // A running getting-off keeps the run's own effects (wind lines, dust, smear) on through it: the motor holds
+            // them (owner retest 4, 8 Nov 2026), so the beats here leave them alone; a standing one has none to keep.
+            bool running = moment.Speed >= shockwaveFromSpeed || moment.EndsRunning;
             switch (moment.Beat)
             {
                 case DismountBeat.MountShows:
@@ -819,7 +822,7 @@ namespace KryticalNova.GameFeel
                     // The lines and the smear end here, always (owner, retest: they stuck on after the roll), and the
                     // flip's trail is gone within dismountTrailEnd of the touchdown (owner: nothing lingers).
                     ActorVfx.Find(actor)?.SetAirborne(false, airborneLoopVfx, dismountTrailEnd);
-                    ActorSmear.Find(actor)?.Release();
+                    if (!running) ActorSmear.Find(actor)?.Release();
                     // One short grounded puff and a squash: no stars, nothing lingering (owner, retest: "the stars are
                     // stupid"; puffs gone in 0.3-0.5 s).
                     PlayWorld(rideLandWorldFeel != null ? rideLandWorldFeel : landWorldFeel, feet, Facing(actor), actor, hit);
@@ -833,20 +836,25 @@ namespace KryticalNova.GameFeel
                     PlayWorld(rideRollSkidWorldFeel, feet, Facing(actor), actor, hit);
                     break;
                 case DismountBeat.SlideEnd:
-                    ActorVfx.Find(actor)?.SetRunning(false, runLoopVfx);
+                    if (!running) ActorVfx.Find(actor)?.SetRunning(false, runLoopVfx);
                     break;
                 case DismountBeat.RollEnd:
                     // The roll's exit slide: one short puff where the feet catch, not a trail.
-                    ActorVfx.Find(actor)?.SetRunning(false, runLoopVfx);
+                    if (!running) ActorVfx.Find(actor)?.SetRunning(false, runLoopVfx);
                     PlayWorld(rideDustWorldFeel, feet, Facing(actor), actor, dismountStandUpIntensity);
                     break;
                 case DismountBeat.StandUp:
-                    ActorVfx.Find(actor)?.SetRunning(false, runLoopVfx);
+                    if (!running) ActorVfx.Find(actor)?.SetRunning(false, runLoopVfx);
                     break;
                 case DismountBeat.Ended:
+                    // The flip's lines always end; the run's dust and smear end with the run itself (the motor reports
+                    // the stop when there is nowhere left to run).
                     ActorVfx.Find(actor)?.SetAirborne(false, airborneLoopVfx, dismountTrailEnd);
-                    ActorVfx.Find(actor)?.SetRunning(false, runLoopVfx);
-                    ActorSmear.Find(actor)?.Release();
+                    if (!running)
+                    {
+                        ActorVfx.Find(actor)?.SetRunning(false, runLoopVfx);
+                        ActorSmear.Find(actor)?.Release();
+                    }
                     break;
             }
         }
@@ -873,6 +881,13 @@ namespace KryticalNova.GameFeel
                 case DismountBeat.Touchdown:
                     ActorSmear.Find(actor)?.Release();
                     PlayWorld(rideLandWorldFeel, feet, Facing(actor), actor, mountUpLandIntensity);
+                    // The mount's pulse as the weight lands (owner VFX pick d): its lights flare, its body shudders - its
+                    // stage's own data (an organic mount shakes off dust instead of glowing).
+                    if (moment.Mount != null && (moment.PulseGlow > 0f || moment.PulseShake > 0f))
+                    {
+                        MountPulse.Play(moment.Mount, moment.PulseGlow, moment.PulseShake, moment.PulseSeconds);
+                        if (moment.PulseShake > 0f) PlayWorld(rideDustWorldFeel, moment.Mount.position, Facing(actor), actor, 1f);
+                    }
                     PlayWorld(rideSaddleLandWorldFeel, feet, Facing(actor), actor, 1f);
                     if (moment.IsLocalPlayer) Play(landFeel, actor.position, mountUpShake);
                     break;

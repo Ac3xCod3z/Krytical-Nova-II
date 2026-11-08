@@ -30,6 +30,13 @@ namespace KryticalNova.Mounts
         public Vector2 clipMetresPerSecond;
         [Tooltip("Colour of the evolution moment's effect when this stage is reached.")]
         public Color glow;
+        [Tooltip("The pulse as the rider lands in the saddle (owner VFX pick d): how many times brighter its lights " +
+                 "(emission) flare for a moment. 0 = no flare (an organic mount: it shakes instead).")]
+        [Min(0f)] public float pulseGlow;
+        [Tooltip("The same pulse: how far its body shudders, in metres (a shake-off, with dust at its feet). 0 = none.")]
+        [Min(0f)] public float pulseShake;
+        [Tooltip("Seconds the pulse lasts. 0 = 0.4 s.")]
+        [Min(0f)] public float pulseSeconds;
 
         [Header("The rider on this stage (owner, 25 Oct 2026: each stage has its own straddle and stirrups)")]
         [Tooltip("Humanoid clips keyed on this stage's seat. Empty = the mount's own rider clips.")]

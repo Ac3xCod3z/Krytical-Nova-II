@@ -1958,18 +1958,24 @@ namespace KryticalNova.EditorTools
         /// <summary>Seconds the running dismount's ground shockwave lasts (owner, 7 Nov 2026: gone in 0.3 s).</summary>
         public const float RideShockwaveSeconds = 0.3f;
 
-        /// <summary>The rider's own screen as a getting on or off launches: a short FOV punch (owner feel pick 4).</summary>
+        /// <summary>Degrees the view widens at a getting on or off's launch, at full speed (owner retest 4: clearly seen).</summary>
+        public const float RideLaunchFovDegrees = 10f;
+
+        /// <summary>The rider's own screen as a getting on or off launches: a short FOV punch and a camera kick (owner feel pick 4).</summary>
         private static void AddRideLaunch(GameObject root, SerializedObject so)
         {
             so.FindProperty("rideLaunchFeel").objectReferenceValue = Player(root, "Ride Launch", p =>
             {
                 var fov = p.AddFeedback(typeof(MMF_CameraFieldOfView)) as MMF_CameraFieldOfView;
                 fov.Label = "Launch FOV Punch";
-                fov.Duration = 0.3f;
+                // Owner retest 4 (8 Nov 2026): not seen at +4 deg over 0.3 s - now a clear widening.
+                fov.Duration = 0.45f;
                 fov.RelativeFieldOfView = true;
                 fov.RemapFieldOfViewZero = 0f;
-                fov.RemapFieldOfViewOne = 4f;
-                fov.ShakeFieldOfView = new AnimationCurve(new Keyframe(0f, 0f), new Keyframe(0.25f, 1f), new Keyframe(1f, 0f));
+                fov.RemapFieldOfViewOne = RideLaunchFovDegrees;
+                fov.ShakeFieldOfView = new AnimationCurve(new Keyframe(0f, 0f), new Keyframe(0.2f, 1f), new Keyframe(1f, 0f));
+                // And the camera kicks up and back with the push (the take-off had only a sound before).
+                Impulse(p, new Vector3(0f, 0.35f, -0.25f), 0.22f);
             });
         }
 

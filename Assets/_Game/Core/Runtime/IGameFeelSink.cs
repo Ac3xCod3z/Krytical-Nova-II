@@ -103,6 +103,11 @@ namespace KryticalNova.Core
         /// of that set. Empty: the mount has no voice of its own and is silent there.
         /// </summary>
         public string MountVoice;
+        /// <summary>The mount's model (null when none is drawn): its pulse plays on it.</summary>
+        public Transform Mount;
+        /// <summary>The mount's pulse as the rider lands in the saddle (its stage's data): how many times brighter its
+        /// lights flare, how far its body shudders (metres) and for how long (seconds, 0 = a default).</summary>
+        public float PulseGlow, PulseShake, PulseSeconds;
     }
 
     /// <summary>

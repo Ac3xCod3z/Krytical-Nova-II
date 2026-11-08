@@ -68,7 +68,16 @@ namespace KryticalNova.Mounts
         private float tailEnds; // the getting-off clip still playing after the rider is free
         private float phaseClipLength; // the getting-on or getting-off clip being played
 
-        private static bool DrawsNothing => Application.isBatchMode;
+        private static bool DrawsNothing => Application.isBatchMode && !DrawInBatchMode;
+
+        /// <summary>A headless proof run draws the mount anyway (its timing is measured on it). Off in the game.</summary>
+        public static bool DrawInBatchMode;
+
+        /// <summary>
+        /// Getting off with beats: the mount is carried on with the player until the feet leave it, then stops where it
+        /// is, takes the push and vanishes (owner retest 4, 8 Nov 2026: one moment, not three).
+        /// </summary>
+        private bool modelCarried;
 
         private void Awake()
         {
@@ -92,6 +101,9 @@ namespace KryticalNova.Mounts
         private bool leaping, leapLanded, leapRolling;
         private AnimationClip leapRollClip;
         private float leapRollFrom;
+        // The baked getting-off whose roll the running leap plays, and how much later its touchdown comes in the leap.
+        private MountTransition leapBaked;
+        private float leapShift;
 
         private bool StartLeap(AnimationClip bakedClip)
         {
@@ -101,6 +113,8 @@ namespace KryticalNova.Mounts
             MountTransition baked = settings != null ? settings.Transition(false, runningTransition, mounts.DismountEndsRunning) : null;
             leapRollClip = runningTransition ? bakedClip : null;
             leapRollFrom = baked != null ? baked.rollStartsAt : 0f;
+            leapBaked = baked;
+            leapShift = baked != null && transition != null ? transition.arrivesAt - baked.arrivesAt : 0f;
             leaping = true;
             leapLanded = leapRolling = false;
 
@@ -156,7 +170,15 @@ namespace KryticalNova.Mounts
             if (!leapLanded && since >= transition.arrivesAt)
             {
                 leapLanded = true;
-                // On the ground now: the motor is no longer seated, so what follows the landing is the on-foot idle or run.
+                // On the ground: the warp's work is done. It stops here, before its height curve dips on past the landing
+                // (owner retest 4, 8 Nov 2026: the feet sank into the ground through the stand-up), and the body is the
+                // motor's again.
+                if (leapWarp != null && leapWarp.IsActive())
+                {
+                    try { leapWarp.Stop(); } catch (System.Exception e) { Debug.LogException(e); }
+                }
+                if (leapSpace != null) leapSpace.End();
+                // The motor is no longer seated, so what follows the landing is the on-foot idle or run.
                 motor.SetSeated(null, null, null);
                 if (leapRollClip != null)
                 {
@@ -164,9 +186,28 @@ namespace KryticalNova.Mounts
                     motor.PlayWarpedAction(leapRollClip, leapRollFrom, 1f, 0.08f);
                     leapRolling = true;
                 }
-                else motor.PlayWarpedJumpRecovery();
+                else
+                {
+                    // Standing: the jump's own landing on a grounded body with its feet planted, as any jump lands.
+                    LowerRider();
+                    motor.PlayWarpedJumpRecovery();
+                }
             }
+            if (leapRolling) RollHeight(since);
             if (leapRolling && since >= transition.seconds - 0.1f) EndLeap(false);
+        }
+
+        // The baked clip's roll is keyed with the rider's origin on the seat (as the whole baked getting-off is): on the
+        // ground the body is placed as the baked getting-off places it at the same moment of its clip - the seat's height
+        // by the lift curve, less the ground drop - not at the rest (owner retest 4: the roll sank into the road).
+        private void RollHeight(float since)
+        {
+            if (leapBaked == null || rider == null) return;
+            float t = since - leapShift; // the same moment of the baked clip
+            float bakedLift = MountRideMotion.Lift(leapBaked.lift, t, leapBaked.seconds);
+            float bakedOnGround = MountRideMotion.OnGround(false, t, leapBaked.leavesAt, leapBaked.arrivesAt);
+            rider.localRotation = riderRestRotation;
+            rider.localPosition = riderRest + Vector3.up * (seatOffset.y * bakedLift - groundDrop * bakedOnGround);
         }
 
         // The leap is over (its roll ran out) or was cut short: the warp stops and the motor goes back to its own feet.
@@ -181,11 +222,12 @@ namespace KryticalNova.Mounts
             if (leapSpace != null) leapSpace.End(); // the body is the motor's again
             if (leapRolling) motor.EndWarpedAction(0.2f, mounts != null && mounts.DismountEndsRunning ? 1f : 0f);
             else if (cutShort) motor.ResetJumpAnimation();
+            bool rolled = leapRolling;
             leapRolling = false;
-            // Landed: the body is on the ground under the root and stays there - lowered now, or the riding motion puts
-            // it back on the seat until the phase ends (leap proof run 2: a 0.5 m pop at the running roll's end).
-            // Cut short in the air: back to the seat it left.
-            if (leapLanded) LowerRider();
+            // Landed: the body is on the ground under the root and stays there. After the roll it comes down from the
+            // roll's height in step with the motor's fade (eased; never a pop: leap proof run 2 showed one at the roll's
+            // end). Cut short in the air: back to the seat it left.
+            if (leapLanded) LowerRider(eased: rolled && isActiveAndEnabled);
             else if (rider != null && riderLifted) rider.localPosition = riderRest + seatOffset * lift;
         }
 
@@ -270,8 +312,12 @@ namespace KryticalNova.Mounts
                 beatsFired = 0;
                 beatsEndRunning = runningTransition && mounts.DismountEndsRunning;
                 // Owner, 7 Nov 2026 (retest): the mount slid along under the rider on the running getting-off, since the
-                // body keeps travelling (the fluid dismount). It stays where it stood while it vanishes there.
-                if (!on && model != null && isActiveAndEnabled) model.transform.SetParent(null, true);
+                // body keeps travelling (the fluid dismount). It stays where it stood while it vanishes there - from the
+                // push-off when the getting-off has beats (ReleaseModel), at once otherwise.
+                modelCarried = !on && beats != null && model != null;
+                if (!on && !modelCarried && model != null && isActiveAndEnabled) model.transform.SetParent(null, true);
+                // A running getting-off keeps the run's own effects (wind lines, dust, smear) on through it (retest 4).
+                if (motor != null) motor.HoldRunEffects = !on && runningTransition;
                 if (materialiser != null)
                 {
                     float delay = transition != null ? transition.effectDelay : 0f;
@@ -504,10 +550,12 @@ namespace KryticalNova.Mounts
             // The mount takes the weight (owner, 7 Nov 2026 retest 2): shoved down and back by the push-off, giving under
             // the rider landing in the saddle.
             MountSettings tuning = mounts != null ? mounts.Settings : null;
+            if (!beatsGettingOn && (beat == DismountBeat.TakeOff || beat == DismountBeat.Ended)) ReleaseModel();
             if (tuning != null && beat == DismountBeat.TakeOff && !beatsGettingOn) Kick(tuning, tuning.pushOffDip, tuning.pushOffBack);
             if (tuning != null && beat == DismountBeat.Touchdown && beatsGettingOn) Kick(tuning, tuning.saddleDip, 0f);
             IGameFeelSink feel = ClientPresentationRegistry.Feel;
             if (feel == null || mounts == null) return;
+            MountStageLook look = shownMount != null ? shownMount.Stage(shownStage) : default;
             feel.Dismount(new DismountFeel
             {
                 Actor = mounts.transform,
@@ -518,7 +566,19 @@ namespace KryticalNova.Mounts
                 GettingOn = beatsGettingOn,
                 IsLocalPlayer = mounts.IsOwner,
                 MountVoice = shownMount != null ? shownMount.soundSet : null,
+                Mount = model != null ? model.transform : null,
+                PulseGlow = look.pulseGlow,
+                PulseShake = look.pulseShake,
+                PulseSeconds = look.pulseSeconds,
             });
+        }
+
+        // The feet have left the mount: it stops where it is (out of the player) and vanishes there.
+        private void ReleaseModel()
+        {
+            if (!modelCarried) return;
+            modelCarried = false;
+            if (model != null && isActiveAndEnabled) model.transform.SetParent(null, true);
         }
 
         private void FinishHandOver()
@@ -569,6 +629,8 @@ namespace KryticalNova.Mounts
         private void Clear(bool eased = false)
         {
             EndLeap(!leapLanded);
+            ReleaseModel();
+            if (motor != null) motor.HoldRunEffects = false; // a run still going on is the motor's own again
             if (!eased || !isActiveAndEnabled) { FinishHandOver(); EndBeats(); }
             float standFade = eased && mounts != null && mounts.Settings != null ? mounts.Settings.standHandOverSeconds : 0f;
             if (shownMount != null || riderLifted) motor?.SetSeated(null, null, null, standFade: standFade);
@@ -685,7 +747,9 @@ namespace KryticalNova.Mounts
             LeanAndBob(settings, travelling, running);
 
             if (mountAnimancer == null) return;
-            AnimationClip clip = travelling ? (running && look.run != null ? look.run : look.walk) : look.idle;
+            bool carriedRunning = modelCarried && runningTransition && shownPhase == RidePhase.GettingOff;
+            AnimationClip clip = carriedRunning && look.run != null ? look.run
+                : travelling ? (running && look.run != null ? look.run : look.walk) : look.idle;
             if (!travelling && mountClip != null && mountClip != look.idle && mountClip != look.walk && mountClip != look.run
                 && Time.time < varietyEnds)
                 clip = mountClip; // an other idle still playing

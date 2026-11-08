@@ -72,6 +72,10 @@ namespace KryticalNova.Mounts
         public bool leapWithJump = true;
         [Tooltip("Metres the leap's apex rises above the seat.")]
         [Range(0f, 2f)] public float leapApexAboveSeat = 0.7f;
+        [Tooltip("Seconds after the jump's rise begins (its first warp phase) that the feet visibly leave the saddle. The " +
+                 "push-off beat, the mount's stop and recoil and its vanish all happen then (owner retest 4, 8 Nov 2026: the " +
+                 "vanish started while the rider still sat on the mount).")]
+        [Range(0f, 0.6f)] public float leapFeetLeaveAfter = 0.1f;
         [Tooltip("Standing: seconds after the leap's landing before the rider is free (the jump's own landing plays on into the idle).")]
         [Range(0.1f, 1.5f)] public float leapStandRecoverSeconds = 0.5f;
 
@@ -161,7 +165,7 @@ namespace KryticalNova.Mounts
 
         /// <summary>
         /// The getting-off as the leap plays it (owner, 7 Nov 2026 retest 2): the feet leave the saddle at the jump's
-        /// take-off, the apex and landing are the jump's, and the mount vanishes just after the push-off. A running one
+        /// take-off, the apex and landing are the jump's, and the mount vanishes as the feet leave it (retest 4). A running one
         /// then plays this clip's roll from its touchdown, every later beat shifted by the same time; a standing one is
         /// free <paramref name="recover"/> seconds after the landing. A copy: the settings stay as they are.
         /// </summary>
@@ -171,7 +175,7 @@ namespace KryticalNova.Mounts
             leapt.leap = true;
             leapt.leavesAt = takeoff;
             leapt.apexAt = apex;
-            leapt.effectDelay = takeoff + VanishAfterPushOff;
+            leapt.effectDelay = takeoff; // the vanish starts as the feet leave it (owner retest 4)
             if (rollStartsAt > 0f)
             {
                 float shift = land - arrivesAt;
