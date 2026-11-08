@@ -43,7 +43,7 @@ namespace KryticalNova.Player.Entities.Bodies.Tests
             new PlayerBodyRequest { NetworkId = id, Key = PlayerKey.None, IsLocal = local, Position = new Vector3(1f, 0f, 2f), YawDegrees = 90f };
 
         [Test]
-        public void TheFactory_MakesALocalBodyWithInputAndBanner_AndARemoteOneWithout()
+        public void TheFactory_MakesALocalBodyWithInput_AndARemoteOneWithout_AndNoPrototypeBanner()
         {
             int released = 0;
             var factory = new ClientBodyFactory(m_View) { BeforeLocalBody = () => released++ };
@@ -56,7 +56,7 @@ namespace KryticalNova.Player.Entities.Bodies.Tests
                 Assert.IsTrue(mineTag.IsLocal);
                 Assert.IsNotNull(mine.GetComponent<PlayerInput>());
                 Assert.IsNotNull(mine.GetComponent<PointAndClickPlayer>());
-                Assert.IsNotNull(mine.GetComponent<NotYetNetworkedBanner>());
+                Assert.IsNull(mine.GetComponent<NotYetNetworkedBanner>(), "the prototype banner is off since M7/M8 networked gear, skills and the wallet");
                 Assert.AreEqual(1, released, "the offline avatar is put away once, before the local body wakes");
 
                 BodyRoleTag theirTag = theirs.GetComponent<BodyRoleTag>();

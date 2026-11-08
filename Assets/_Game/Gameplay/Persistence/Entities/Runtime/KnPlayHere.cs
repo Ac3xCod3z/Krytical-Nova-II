@@ -788,28 +788,13 @@ namespace KryticalNova.Persistence.Entities
         /// The GM Tools' "Unlock + Max All Skills" (gm.skills.max) on <paramref name="serverBody"/>: every skill of its list unlocked at
         /// max rank and Run and Jump at theirs, on the server's own body (its truth reaches the view as every rank does).
         /// </summary>
-        public static bool GiveEverySkill(GameObject serverBody)
-        {
-            var skills = serverBody != null ? serverBody.GetComponent<PlayerCombatSkills>() : null;
-            if (skills == null) return false;
-            skills.GmSetAllRanksToMax();
-            var movement = serverBody.GetComponent<PlayerMovementSkills>();
-            if (movement != null) movement.GmSetMaxRanks();
-            return true;
-        }
+        public static bool GiveEverySkill(GameObject serverBody) => TestCharacterKit.GiveEverySkill(serverBody);   // one copy with the entity test server
 
         /// <summary>
         /// A test character as the owner wants every one (5-6 Nov 2026, findings item 20): the maximum level and every skill at max rank, on
         /// its server body. False when it has no progression or could not be raised (yet).
         /// </summary>
-        public static bool MakeTestReady(GameObject serverBody)
-        {
-            var progression = serverBody != null ? serverBody.GetComponent<PlayerCharacterProgression>() : null;
-            if (progression == null) return false;
-            if (progression.CurrentLevel < progression.MaxLevel) progression.SetLevel(progression.MaxLevel);
-            if (progression.CurrentLevel < progression.MaxLevel) return false;
-            return GiveEverySkill(serverBody);
-        }
+        public static bool MakeTestReady(GameObject serverBody) => TestCharacterKit.MakeTestReady(serverBody);   // one copy with the entity test server
 
         /// <summary>
         /// Batch: <c>Unity -batchmode -projectPath ... -executeMethod KryticalNova.Persistence.Entities.KnPlayHere.Batch</c> with

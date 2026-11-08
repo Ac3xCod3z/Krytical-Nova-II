@@ -62,8 +62,11 @@ namespace KryticalNova.Player.Entities.Bodies
         /// <summary>A body was made (the game configures its planner from the local body's agent, asks for looks).</summary>
         public Action<GameObject, PlayerBodyRequest> BodyMade;
 
-        /// <summary>The local body shows the "not yet networked" banner (decision D2).</summary>
-        public bool ShowBanner = true;
+        /// <summary>
+        /// The local body shows the "not yet networked" banner (decision D2, 29 Oct 2026). Off since 8 Nov 2026: gear, skills, the
+        /// wallet, storage, trade and their saves were ported in M7/M8 (migration plan section 56), so the banner was no longer true.
+        /// </summary>
+        public bool ShowBanner;
 
         public int Made { get; private set; }
         public int Unmade { get; private set; }

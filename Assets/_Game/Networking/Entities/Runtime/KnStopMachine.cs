@@ -83,7 +83,11 @@ namespace KryticalNova.Networking.Entities
 
         public Phase Current { get; private set; } = Phase.Running;
         public string Reason { get; private set; }
-        public int ExitCode => 0;
+        /// <summary>
+        /// The process's exit code at the end of the stop: 0, or 3 for a restart (the start script and the Krytical Nova Server app start
+        /// the server again on 3, NGO ServerLifetime.RestartExitCode). Settable since 8 Nov 2026 so a restart need not override the quit.
+        /// </summary>
+        public int ExitCode { get; set; }
 
         public KnStopMachine(IKnStopActions actions)
         {

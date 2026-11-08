@@ -111,6 +111,9 @@ namespace KryticalNova.Persistence.Entities
             KnPageDesk.Desk = new KnPageServerDesk();     // the rest of NGO's control page: save, announce, bans, log, flags (8 Nov 2026)
             KnPageBrowser.Host = new KnPageBrowserHost(); // the browser page and its password login (8 Nov 2026)
 #endif
+#if UNITY_SERVER
+            KnServerRoutine.Begin();                      // reach notes and timed backups, as NGO's ServerLifetime (8 Nov 2026)
+#endif
             var serverVaults = new BodyVaultPlanner(server);
             PlayerEntitiesSetup.Install(server, planner, runCost: new BodyRunCost(server), clickBudget: new BudgetClickLimit(server),
                 jumpPlanner: new BodyJumpPlanner(server), jumpCost: new BodyJumpCost(server), vaultPlanner: serverVaults,

@@ -15,7 +15,10 @@ namespace KryticalNova.Persistence
 #if UNITY_EDITOR
         [UnityEditor.InitializeOnLoadMethod]   // EditMode tests of bans see the saves too
 #endif
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        // After every SubsystemRegistration reset: Core's ServerShutdown clears its Handler there, and Unity runs the methods of one load
+        // type in no set order across assemblies. In the entity server build (8 Nov 2026) the reset ran after this, so the stop path found
+        // no handler and saved nothing ("Nothing is registered to save").
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterAssembliesLoaded)]
         private static void Register()
         {
             var hooks = new ServerSaveHooks();

@@ -65,6 +65,12 @@ namespace KryticalNova.Persistence.Entities
             var agent = body.GetComponent<PlayerSaveAgent>();
             if (saved && (agent == null || !agent.IsLoaded)) return NotLoadedText;
             ReturnToSavedSpot(body, agent);
+#if KN_TEST_LANE
+            // the dedicated entity TEST server (test-lane build only): every character enters fight-ready, as in Play DOTS here
+            // (owner, 5-6 Nov 2026: test characters at the maximum level with every skill; DOTS builds 8 Nov 2026)
+            bool ready = TestCharacterKit.MakeTestReady(body);
+            Debug.Log($"[KnServer] Test lane: {context.Name} " + (ready ? "enters at the maximum level with every skill at max rank." : "could not be made fight-ready (no progression yet)."));
+#endif
             return null;
         }
 

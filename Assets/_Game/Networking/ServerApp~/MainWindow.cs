@@ -655,6 +655,19 @@ namespace KryticalNova.ServerApp
 
         private async Task Check()
         {
+            // The entity server prints no "Online: N" lines: its page's status has the player count (KnServerPage, "players").
+            if (settings.Entities)
+                foreach (GameServer server in servers)
+                {
+                    if (!server.Process.Running || server.PagePort <= 0) continue;
+                    try
+                    {
+                        string status = await http.GetStringAsync($"http://127.0.0.1:{server.PagePort}/status");
+                        Match players = Regex.Match(status, @"""players""\s*:\s*(\d+)");
+                        if (players.Success) server.Online = int.Parse(players.Groups[1].Value);
+                    }
+                    catch (Exception) { /* not listening yet, or stopping */ }
+                }
             // The save service and its database, through the service's own health check.
             string health = "", savesNow, databaseNow;
             if (!settings.UsesSaves) savesNow = "FILES";

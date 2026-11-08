@@ -34,9 +34,17 @@ namespace KryticalNova.Networking
 
         private static void ApplyHeadlessSettings()
         {
-            Debug.Log($"[DedicatedServerOptimizer] Initializing Headless Server Environment (Target Tick Rate: {TargetServerTickRate} Hz)");
             QualitySettings.vSyncCount = 0;
+#if KN_ENTITIES_SERVER
+            // The entity server: Netcode for Entities paces the frames itself (ClientServerTickRate, sleep mode, KnNetDefaults). A
+            // targetFrameRate beside it made Netcode warn every few frames ("Expected server to always update once per frame when in
+            // sleep mode", DOTS builds 8 Nov 2026), so none is set.
+            Application.targetFrameRate = -1;
+            Debug.Log("[DedicatedServerOptimizer] Initializing Headless Server Environment (frames paced by Netcode for Entities)");
+#else
+            Debug.Log($"[DedicatedServerOptimizer] Initializing Headless Server Environment (Target Tick Rate: {TargetServerTickRate} Hz)");
             Application.targetFrameRate = TargetServerTickRate;
+#endif
             AudioListener.pause = true;
             AudioListener.volume = 0f;
         }
