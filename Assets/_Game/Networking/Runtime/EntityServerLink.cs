@@ -22,6 +22,11 @@ namespace KryticalNova.Networking
 
         /// <summary>The entity test server on this PC (Builds\EntityServer, the ENTITY TEST lane): never a real-server port.</summary>
         public const int TestPort = 7799;
+        /// <summary>
+        /// Its page port, which also answers the game's UDP status question (KnServerPage, ServerStatusProtocol). The menus ask there:
+        /// the game port + 1 (7800) has nobody answering, so the server showed OFF and the join was refused (smoke 8 Nov 2026).
+        /// </summary>
+        public const int TestStatusPort = 8099;
 
         public static bool Available => Join != null && AskRoster != null;
 

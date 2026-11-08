@@ -161,7 +161,7 @@ namespace KryticalNova.Networking
 #endif
             {
                 // The ENTITY TEST server on this PC (Builds\EntityServer, DOTS front end 8 Nov 2026)
-                var entity = new ServerListing { name = "Entity test server (this PC)", address = "127.0.0.1", port = EntityServerLink.TestPort, entities = true };
+                var entity = new ServerListing { name = "Entity test server (this PC)", address = "127.0.0.1", port = EntityServerLink.TestPort, statusPort = EntityServerLink.TestStatusPort, entities = true };
                 entries.Add(new ServerEntry { Listing = entity, Name = entity.name, Note = "the DOTS server started with ENTITY TEST" });
             }
 #if !KN_ENTITIES_CLIENT
