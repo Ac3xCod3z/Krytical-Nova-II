@@ -106,7 +106,7 @@ namespace KryticalNova.Player.Entities.Presentation
                         fromAhead = true;
                     }
                     else if (PlayerMovement.PoseAheadWithClick(in move, em.GetComponentData<PlayerPose>(e),
-                            em.HasComponent<PlayerInput>(e) ? em.GetComponentData<PlayerInput>(e) : default, in stats, em.GetComponentData<PathPlan>(e), serverCorners,
+                            AheadInput(em, e, nt.ServerTick), in stats, em.GetComponentData<PathPlan>(e), serverCorners,
                             em.GetComponentData<ClientPlanHeader>(e), clientCorners, in serverVault, in clientVault, in moveCfg, tickMicros, elapsedMicros,
                             out int3 aheadMm, out int aheadYaw))
                     {
@@ -242,6 +242,14 @@ namespace KryticalNova.Player.Entities.Presentation
         /// starts on the tick being predicted, so in the rest of the press's tick it reads 0: the clip starts on the press frame, as
         /// NGO's did, and is held at its start for less than a tick (GUI run predict-1, 31 Oct: it began 1-2 frames after the press).
         /// </summary>
+        /// <summary>The owner's input for the drawn-ahead pose: a walk click past its own tick is no longer pending (PlayerMovement.ClickPendingAt).</summary>
+        static PlayerInput AheadInput(EntityManager em, Entity e, NetworkTick now)
+        {
+            PlayerInput input = em.HasComponent<PlayerInput>(e) ? em.GetComponentData<PlayerInput>(e) : default;
+            if (!PlayerMovement.ClickPendingAt(input.ClickTick, now.IsValid ? now.SerializedData : 0u)) input.ClickSeq = 0;
+            return input;
+        }
+
         static long JumpClock(in MotionPlan plan, in NetworkTime nt, bool predicted, int elapsedMicros, int tickMicros)
         {
             if (plan.Kind == MotionKind.None || !plan.StartTick.IsValid) return -1;

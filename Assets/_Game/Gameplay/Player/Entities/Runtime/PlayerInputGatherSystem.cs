@@ -251,6 +251,7 @@ namespace KryticalNova.Player.Entities
 
                 input.Click.Set();
                 input.ClickSeq = header.Seq;
+                input.ClickTick = m_Tick.IsValid ? m_Tick.SerializedData : 0u;   // a walk click is pending only in its own tick (PlayerMovement.ClickPendingAt)
                 input.Run = (byte)(cmd.Run ? 1 : 0);
                 input.PressPermille = m_PressPermille;
                 input.GoalXMm = cmd.GoalMm.x;
@@ -287,6 +288,7 @@ namespace KryticalNova.Player.Entities
 
                 input.Click.Set();
                 input.ClickSeq = header.Seq;
+                input.ClickTick = m_Tick.IsValid ? m_Tick.SerializedData : 0u;   // a walk click is pending only in its own tick (PlayerMovement.ClickPendingAt)
                 input.Run = (byte)(cmd.Run ? 1 : 0);
                 input.PressPermille = m_PressPermille;
                 input.GoalXMm = cmd.GoalMm.x;

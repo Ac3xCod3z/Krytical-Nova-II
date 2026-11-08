@@ -438,6 +438,14 @@ namespace KryticalNova.Player.Entities
         /// Turns <paramref name="fromCdeg"/> toward <paramref name="toCdeg"/> the short way by at most <paramref name="maxStepCdeg"/>
         /// (0 = all the way). Integer, 0..35999 in and out.
         /// </summary>
+        /// <summary>
+        /// A walk click is drawn ahead (<see cref="PoseAheadWithClick"/>) only in the tick it was pressed in (<paramref name="clickTick"/>,
+        /// the tick's serialized data; 0 = not stamped: as before). After that tick the prediction has taken it, or a server order has
+        /// overridden it (the attack's walk-in, a travel). Drawing it ahead again pulled the body toward the click on every frame and
+        /// snapped it back on every tick (owner, 8 Nov 2026: the body and the camera jittered on every attack click).
+        /// </summary>
+        public static bool ClickPendingAt(uint clickTick, uint nowTick) => clickTick == 0 || nowTick == 0 || clickTick == nowTick;
+
         public static int TurnToward(int fromCdeg, int toCdeg, int maxStepCdeg)
         {
             int delta = ((toCdeg - fromCdeg) % 36000 + 54000) % 36000 - 18000; // -18000..17999, the short way

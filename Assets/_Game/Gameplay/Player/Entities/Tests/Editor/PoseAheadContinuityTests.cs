@@ -14,6 +14,17 @@ namespace KryticalNova.Player.Entities.Tests
     /// </summary>
     public class PoseAheadContinuityTests
     {
+        // owner, 8 Nov 2026: an attack click's walk, overridden by the server's walk-in, stayed "pending" and pulled the drawn body
+        // toward the click on every frame (KnYaw: follow input 239-258 around a pose of 260 on every partial tick)
+        [Test]
+        public void AWalkClick_IsPendingOnlyInItsOwnTick()
+        {
+            Assert.That(PlayerMovement.ClickPendingAt(4200u, 4200u), Is.True, "its own tick");
+            Assert.That(PlayerMovement.ClickPendingAt(4200u, 4201u), Is.False, "a tick later: taken or overridden");
+            Assert.That(PlayerMovement.ClickPendingAt(0u, 4201u), Is.True, "not stamped: as before");
+            Assert.That(PlayerMovement.ClickPendingAt(4200u, 0u), Is.True, "no clock: as before");
+        }
+
         [TestCase(0)]
         [TestCase(100)]
         public void TheOwnersDrawnTarget_NeverJumps_ThroughAFullSpeedRun(int delayMs)

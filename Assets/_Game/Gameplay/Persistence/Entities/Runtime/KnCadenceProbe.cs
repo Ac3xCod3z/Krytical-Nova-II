@@ -1,3 +1,4 @@
+#if UNITY_EDITOR   // a Play DOTS here probe: KnPlayHere is Editor-only (the server build failed on it)
 using System;
 using System.Collections;
 using System.Reflection;
@@ -231,7 +232,28 @@ namespace KryticalNova.Persistence.Entities
             var em = server.EntityManager;
             if (!em.Exists(ghost) || !em.HasComponent<CombatState>(ghost)) return "server melee state: none";
             CombatState c = em.GetComponentData<CombatState>(ghost);
-            return $"server melee state: target ghost {c.TargetGhostId}, step {c.Step}, weapon drawn {c.WeaponDrawn}";
+            string where = "";
+            if (em.HasComponent<MeleeTimingData>(ghost) && em.HasComponent<PlayerPose>(ghost))
+            {
+                MeleeTiming t = em.GetComponentData<MeleeTimingData>(ghost).Value;
+                var me = em.GetComponentData<PlayerPose>(ghost).Mm;
+                string them = "target ghost not found on the server";
+                using (var q = em.CreateEntityQuery(typeof(GhostInstance)))
+                using (var all = q.ToEntityArray(Unity.Collections.Allocator.Temp))
+                    foreach (Entity e in all)
+                    {
+                        if (em.GetComponentData<GhostInstance>(e).ghostId != c.TargetGhostId) continue;
+                        bool isTarget = em.HasComponent<CombatTarget>(e), isPlayer = em.HasComponent<PlayerPose>(e);
+                        var feet = isTarget ? em.GetComponentData<CombatTarget>(e).FeetMm : isPlayer ? em.GetComponentData<PlayerPose>(e).Mm : default;
+                        string kind = isTarget ? $"CombatTarget kind {em.GetComponentData<CombatTarget>(e).Kind}" : isPlayer ? "player" : "other";
+                        them = $"target {kind} at {feet} mm, in striking range {MeleeRules.InStrikingRange(t, me, feet)}";
+                        break;
+                    }
+                var rs = server.GetExistingSystemManaged<MeleeResolveServerSystem>();
+                where = $"; reach {t.ReachMm} mm, me {me} mm, {them}; resolve: hits {rs?.Hits}, refused {rs?.Refused}, unresolved {rs?.Unresolved}, " +
+                        $"missed {rs?.Missed}, not applied {rs?.NotApplied}; last: {rs?.LastVerdict}";
+            }
+            return $"server melee state: target ghost {c.TargetGhostId}, step {c.Step}, weapon drawn {c.WeaponDrawn}{where}";
         }
 
         static Vector3 Flat(Vector3 v) => new Vector3(v.x, 0f, v.z);
@@ -289,3 +311,4 @@ namespace KryticalNova.Persistence.Entities
         }
     }
 }
+#endif

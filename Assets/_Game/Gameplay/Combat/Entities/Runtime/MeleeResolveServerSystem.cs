@@ -29,6 +29,13 @@ namespace KryticalNova.Combat.Entities
         /// <summary>Attack orders dropped because the target is gone, dead or not hostile (tests).</summary>
         public int Refused { get; private set; }
 
+        /// <summary>Due swings whose claim was older than the ring (Resolve refused), whose target test failed, whose hit the body
+        /// refused (MeleeStrike.Apply false); the numbers of the last due swing (diagnostics, KnCadenceProbe).</summary>
+        public int Unresolved { get; private set; }
+        public int Missed { get; private set; }
+        public int NotApplied { get; private set; }
+        public string LastVerdict { get; private set; } = "no swing due yet";
+
         /// <summary>NGO RequestAttackEntityServerRpc's check (PointAndClickPlayer:1881-1895), on the bodies, with the same rule.</summary>
         public static bool AttackAllowed(UnityEngine.GameObject attacker, IDamageable target) =>
             attacker != null && target != null && target.IsAlive && CombatHostility.IsHostile(attacker.transform, target);
@@ -102,9 +109,13 @@ namespace KryticalNova.Combat.Entities
                     target.Proxy, rings, proxies, HitProxy.Player, out bool targetHit, ref collateral);
                 rings.Dispose();
                 proxies.Dispose();
-                if (!resolved) continue;
+                PositionHistory targetRing = em.GetComponentData<PositionHistory>(target.Ghost);
+                LastVerdict = $"step {s.Step}: me {me.Mm}, target now {them}, seen {now.TicksSince(seen)} ticks back, target ring " +
+                              $"{targetRing.Samples.Length} samples, resolved {resolved}, target hit {targetHit}, reach {t.ReachMm} mm";
+                if (!resolved) { Unresolved++; continue; }
+                if (!targetHit) Missed++;
                 float multiplier = MeleeRules.StepMultiplier(t, s.Step);
-                if (targetHit && MeleeStrike.Apply(attacker.Body, damageable, s.Step, multiplier)) Hits++;   // the ring is written by HitRecordServerSystem
+                if (targetHit) { if (MeleeStrike.Apply(attacker.Body, damageable, s.Step, multiplier)) Hits++; else NotApplied++; }   // the ring is written by HitRecordServerSystem
                 // a friend in the arc is left alone: MeleeStrike asks the same hostility rule
                 for (int i = 0; i < collateral.Length; i++)
                 {
