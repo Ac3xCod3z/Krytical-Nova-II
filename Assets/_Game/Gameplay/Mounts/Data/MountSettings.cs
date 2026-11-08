@@ -76,6 +76,9 @@ namespace KryticalNova.Mounts
                  "push-off beat, the mount's stop and recoil and its vanish all happen then (owner retest 4, 8 Nov 2026: the " +
                  "vanish started while the rider still sat on the mount).")]
         [Range(0f, 0.6f)] public float leapFeetLeaveAfter = 0.1f;
+        [Tooltip("Metres the rider first rises out of the saddle before crouching and jumping off; the crouch never dips " +
+                 "below the seat into the mount (owner retest 5, 8 Nov 2026: get up, crouch, jump off cleanly).")]
+        [Range(0f, 0.4f)] public float leapSaddleRise = 0.12f;
         [Tooltip("Standing: seconds after the leap's landing before the rider is free (the jump's own landing plays on into the idle).")]
         [Range(0.1f, 1.5f)] public float leapStandRecoverSeconds = 0.5f;
 

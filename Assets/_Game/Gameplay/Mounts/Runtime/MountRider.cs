@@ -104,6 +104,7 @@ namespace KryticalNova.Mounts
         // The baked getting-off whose roll the running leap plays, and how much later its touchdown comes in the leap.
         private MountTransition leapBaked;
         private float leapShift;
+        private float leapSeatY; // the body's height on the seat, under the root, as the leap began
 
         private bool StartLeap(AnimationClip bakedClip)
         {
@@ -114,6 +115,7 @@ namespace KryticalNova.Mounts
             leapRollClip = runningTransition ? bakedClip : null;
             leapRollFrom = baked != null ? baked.rollStartsAt : 0f;
             leapBaked = baked;
+            leapSeatY = transform.InverseTransformPoint(rider.position).y;
             leapShift = baked != null && transition != null ? transition.arrivesAt - baked.arrivesAt : 0f;
             leaping = true;
             leapLanded = leapRolling = false;
@@ -167,6 +169,7 @@ namespace KryticalNova.Mounts
             if (!leaping || transition == null) return;
             float since = Time.time - phaseStartedAt;
             if (since > transition.seconds + LeapGiveUpSeconds) { EndLeap(true); return; } // never a stuck rider
+            SaddleRise(since);
             if (!leapLanded && since >= transition.arrivesAt)
             {
                 leapLanded = true;
@@ -196,6 +199,22 @@ namespace KryticalNova.Mounts
             }
             if (leapRolling) RollHeight(since);
             if (leapRolling && since >= transition.seconds - 0.1f) EndLeap(false);
+        }
+
+        // Owner retest 5: up out of the saddle first, then the crouch, then the jump - never a dip down into the mount.
+        // Until the apex the body stays at least at its seat height, lifted by leapSaddleRise (in by the push-off's
+        // first half, out again by the apex, where the jump's own rise has taken over).
+        private void SaddleRise(float since)
+        {
+            if (leapSpace == null || !leapSpace.Following) return;
+            MountSettings settings = mounts.Settings;
+            float rise = settings != null ? settings.leapSaddleRise : 0f;
+            float leaves = Mathf.Max(0.01f, transition.leavesAt), apex = Mathf.Max(leaves + 0.01f, transition.apexAt);
+            if (since >= apex) { leapSpace.Floor = float.NegativeInfinity; leapSpace.Lift = 0f; return; }
+            leapSpace.Floor = leapSeatY;
+            float up = Mathf.SmoothStep(0f, 1f, since / (leaves * 0.5f));
+            float down = since <= leaves ? 0f : Mathf.SmoothStep(0f, 1f, (since - leaves) / (apex - leaves));
+            leapSpace.Lift = rise * up * (1f - down);
         }
 
         // The baked clip's roll is keyed with the rider's origin on the seat (as the whole baked getting-off is): on the
@@ -571,6 +590,9 @@ namespace KryticalNova.Mounts
                 PulseGlow = look.pulseGlow,
                 PulseShake = look.pulseShake,
                 PulseSeconds = look.pulseSeconds,
+                PulseColor = look.glow,
+                PulseParticles = look.pulseParticles,
+                PulseParticleScale = look.pulseParticleScale > 0f ? look.pulseParticleScale : 1f,
             });
         }
 

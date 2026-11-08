@@ -1964,6 +1964,8 @@ namespace KryticalNova.EditorTools
 
         /// <summary>Degrees the view widens at a getting on or off's launch, at full speed (owner retest 4: clearly seen).</summary>
         public const float RideLaunchFovDegrees = 10f;
+        /// <summary>The launch's camera kick (Cinemachine impulse velocity): up and back, short and hard (owner retest 5).</summary>
+        public static readonly Vector3 RideLaunchKick = new Vector3(0f, 1.1f, -0.75f);
 
         /// <summary>The rider's own screen as a getting on or off launches: a short FOV punch and a camera kick (owner feel pick 4).</summary>
         private static void AddRideLaunch(GameObject root, SerializedObject so)
@@ -1978,8 +1980,8 @@ namespace KryticalNova.EditorTools
                 fov.RemapFieldOfViewZero = 0f;
                 fov.RemapFieldOfViewOne = RideLaunchFovDegrees;
                 fov.ShakeFieldOfView = new AnimationCurve(new Keyframe(0f, 0f), new Keyframe(0.2f, 1f), new Keyframe(1f, 0f));
-                // And the camera kicks up and back with the push (the take-off had only a sound before).
-                Impulse(p, new Vector3(0f, 0.35f, -0.25f), 0.22f);
+                // And the camera kicks up and back with the push (owner retest 5: clearly felt - short and punchy).
+                Impulse(p, RideLaunchKick, 0.14f);
             });
         }
 

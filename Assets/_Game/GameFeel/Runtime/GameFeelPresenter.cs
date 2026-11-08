@@ -893,7 +893,8 @@ namespace KryticalNova.GameFeel
                     // stage's own data (an organic mount shakes off dust instead of glowing).
                     if (moment.Mount != null && (moment.PulseGlow > 0f || moment.PulseShake > 0f))
                     {
-                        MountPulse.Play(moment.Mount, moment.PulseGlow, moment.PulseShake, moment.PulseSeconds);
+                        MountPulse.Play(moment.Mount, moment.PulseGlow, moment.PulseShake, moment.PulseSeconds, moment.PulseColor,
+                            moment.PulseParticles, moment.PulseParticleScale);
                         if (moment.PulseShake > 0f) PlayWorld(rideDustWorldFeel, moment.Mount.position, Facing(actor), actor, 1f);
                     }
                     PlayWorld(rideSaddleLandWorldFeel, feet, Facing(actor), actor, 1f);

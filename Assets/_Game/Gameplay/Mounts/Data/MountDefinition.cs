@@ -37,6 +37,10 @@ namespace KryticalNova.Mounts
         [Min(0f)] public float pulseShake;
         [Tooltip("Seconds the pulse lasts. 0 = 0.4 s.")]
         [Min(0f)] public float pulseSeconds;
+        [Tooltip("What the pulse sheds off the body (owner retest 5: the Brambleback's leaves and dust). Empty = nothing.")]
+        public GameObject pulseParticles;
+        [Tooltip("Size of what it sheds, against the prefab as made.")]
+        [Min(0f)] public float pulseParticleScale;
 
         [Header("The rider on this stage (owner, 25 Oct 2026: each stage has its own straddle and stirrups)")]
         [Tooltip("Humanoid clips keyed on this stage's seat. Empty = the mount's own rider clips.")]

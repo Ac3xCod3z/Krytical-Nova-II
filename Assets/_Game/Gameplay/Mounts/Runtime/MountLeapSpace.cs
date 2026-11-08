@@ -31,9 +31,15 @@ namespace KryticalNova.Mounts
             return leap;
         }
 
+        /// <summary>Under the root: the body's height never goes below this (the seat, while it gets up), and is lifted by
+        /// this much on top (metres). Off: negative infinity and 0.</summary>
+        public float Floor = float.NegativeInfinity, Lift;
+
         /// <summary>The leap starts: the space is put where the root is, the stand-in where the body is.</summary>
         public void Begin()
         {
+            Floor = float.NegativeInfinity;
+            Lift = 0f;
             space.SetPositionAndRotation(root.position, root.rotation);
             stand.SetPositionAndRotation(body.position, body.rotation);
             following = true;
@@ -48,8 +54,9 @@ namespace KryticalNova.Mounts
         /// <summary>The body takes the stand-in's pose, relative to the root.</summary>
         public void Follow()
         {
-            body.SetPositionAndRotation(root.TransformPoint(space.InverseTransformPoint(stand.position)),
-                root.rotation * (Quaternion.Inverse(space.rotation) * stand.rotation));
+            Vector3 local = space.InverseTransformPoint(stand.position);
+            local.y = Mathf.Max(local.y, Floor) + Lift;
+            body.SetPositionAndRotation(root.TransformPoint(local), root.rotation * (Quaternion.Inverse(space.rotation) * stand.rotation));
         }
 
         private void LateUpdate()

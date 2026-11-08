@@ -108,6 +108,11 @@ namespace KryticalNova.Core
         /// <summary>The mount's pulse as the rider lands in the saddle (its stage's data): how many times brighter its
         /// lights flare, how far its body shudders (metres) and for how long (seconds, 0 = a default).</summary>
         public float PulseGlow, PulseShake, PulseSeconds;
+        /// <summary>The pulse's light colour (the stage's glow) and what it sheds (a stage's own particles, e.g. the
+        /// Brambleback's leaves; null = none), at this scale.</summary>
+        public Color PulseColor;
+        public GameObject PulseParticles;
+        public float PulseParticleScale;
     }
 
     /// <summary>

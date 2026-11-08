@@ -83,6 +83,30 @@ namespace KryticalNova.Tests
             }
         }
 
+        /// <summary>Owner retest 5: getting up out of the saddle never dips the body below the seat, and lifts it first.</summary>
+        [Test]
+        public void GettingUp_NeverDipsBelowTheSeat_AndLiftsFirst()
+        {
+            var player = new GameObject("Player");
+            var body = new GameObject("Body");
+            try
+            {
+                body.transform.SetParent(player.transform, false);
+                body.transform.localPosition = new Vector3(0f, -0.4f, 0f); // on the seat
+                MountLeapWarp.Create(player.transform, body.transform, out MountLeapSpace space);
+                space.Begin();
+                space.Floor = -0.4f;
+                space.Lift = 0.12f;
+                space.Stand.position += Vector3.down * 0.2f; // the jump's crouch dips the stand-in 20 cm
+                space.Follow();
+                Assert.AreEqual(-0.28f, body.transform.localPosition.y, 1e-3f, "held at the seat, lifted on top");
+            }
+            finally
+            {
+                Object.DestroyImmediate(player);
+            }
+        }
+
         private static void AssertNear(Vector3 expected, Vector3 actual, string what)
         {
             Assert.Less(Vector3.Distance(expected, actual), 0.001f, what + ": expected " + expected + ", got " + actual);
