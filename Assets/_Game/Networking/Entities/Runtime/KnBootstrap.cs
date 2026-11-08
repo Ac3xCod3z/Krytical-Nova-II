@@ -52,8 +52,19 @@ namespace KryticalNova.Networking.Entities
         }
 
 #if UNITY_SERVER
+#if UNITY_STANDALONE_WIN
+        // Windows' default timer is 15.6 ms, so Netcode for Entities' sleep between ticks overshoots and it catches up with 2-4 steps
+        // ("Expected server to always update once per frame when in sleep mode", DOTS builds 8 Nov 2026). 1 ms for this process's life.
+        [System.Runtime.InteropServices.DllImport("winmm.dll")]
+        private static extern uint timeBeginPeriod(uint milliseconds);
+#endif
+
         private static void StartDedicatedServer()
         {
+#if UNITY_STANDALONE_WIN
+            try { Debug.Log("[KnServer] Timer resolution 1 ms for the tick sleep: " + (timeBeginPeriod(1) == 0 ? "set." : "refused by Windows.")); }
+            catch (Exception e) { Debug.LogWarning("[KnServer] Timer resolution not set (" + e.GetType().Name + "): ticks may bunch up."); }
+#endif
             KnServerSettings settings = KnServerSettings.LoadForThisServer();
 #if KN_TEST_LANE
             // A test-lane build (the B3 Linux gate) refuses to start on anything of the real server's (plan section 43).

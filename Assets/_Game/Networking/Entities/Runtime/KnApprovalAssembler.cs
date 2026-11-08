@@ -53,10 +53,20 @@ namespace KryticalNova.Networking.Entities
             public bool Complete;
             public string Payload;
             public bool Decided;
+            public bool LoggedWaiting;
         }
 
         private readonly Dictionary<Entity, Entry> m_Entries = new Dictionary<Entity, Entry>();
         private readonly List<Entity> m_Keys = new List<Entity>();
+
+        // One log line per join step on a dedicated server (DOTS builds, 8 Nov 2026: a join that never got in left no line at all, so
+        // nobody could tell whether the connection, the request, the check or the answer stalled). Never the payload or the account.
+        private readonly HashSet<Entity> m_SeenConnections = new HashSet<Entity>();
+        private readonly List<Entity> m_GoneConnections = new List<Entity>();
+        private EntityQuery m_Connections;
+
+        [System.Diagnostics.Conditional("UNITY_SERVER")]
+        private static void Step(string line) => UnityEngine.Debug.Log("[KnJoin] " + line);
         private EntityQuery m_Chunks;
         private EntityQuery m_Limits;
         private EntityQuery m_Stopping;
@@ -71,7 +81,35 @@ namespace KryticalNova.Networking.Entities
             m_Limits = GetEntityQuery(ComponentType.ReadOnly<KnApprovalLimits>());
             m_Stopping = GetEntityQuery(ComponentType.ReadOnly<KnServerStopping>());
             m_Approved = GetEntityQuery(ComponentType.ReadOnly<ConnectionApproved>());
+            m_Connections = GetEntityQuery(ComponentType.ReadOnly<NetworkStreamConnection>());
             JoinCheck = KnBootstrap.JoinCheckFactory?.Invoke() ?? new AcceptAllJoinCheck();
+            Step($"approval ready in {World.Name}: check {JoinCheck.GetType().Name}" + (KnBootstrap.JoinCheckFactory == null ? " (no factory set: accepts all)" : "") + ".");
+        }
+
+        [System.Diagnostics.Conditional("UNITY_SERVER")]
+        private void LogConnections()
+        {
+            var connections = m_Connections.ToEntityArray(Allocator.Temp);
+            for (int i = 0; i < connections.Length; i++)
+            {
+                if (!m_SeenConnections.Add(connections[i])) continue;
+                var stream = EntityManager.GetComponentData<NetworkStreamConnection>(connections[i]);
+                Step($"connection {connections[i].Index} arrived ({stream.CurrentState}); waiting for its join request.");
+            }
+            m_GoneConnections.Clear();
+            foreach (Entity seen in m_SeenConnections)
+            {
+                if (EntityManager.Exists(seen) && EntityManager.HasComponent<NetworkStreamConnection>(seen)) continue;
+                m_GoneConnections.Add(seen);
+            }
+            for (int i = 0; i < m_GoneConnections.Count; i++)
+            {
+                Entity gone = m_GoneConnections[i];
+                m_SeenConnections.Remove(gone);
+                bool decided = m_Entries.TryGetValue(gone, out Entry e) && e.Decided;
+                Step($"connection {gone.Index} closed" + (decided ? "." : (e == null ? " before any join request arrived." : " before it was decided.")));
+            }
+            connections.Dispose();
         }
 
         protected override void OnUpdate()
@@ -80,6 +118,7 @@ namespace KryticalNova.Networking.Entities
             double now = World.Time.ElapsedTime;
             bool stopping = !m_Stopping.IsEmpty;
             var ecb = new EntityCommandBuffer(Allocator.Temp);
+            LogConnections();
 
             if (!m_Chunks.IsEmpty)
             {
@@ -118,7 +157,18 @@ namespace KryticalNova.Networking.Entities
                 else if (now - entry.FirstSeen > limits.MaxSeconds)
                     Refuse(ecb, connection, entry, KnRefuseReason.TimedOut, "The join took too long.");
                 else if (entry.Complete)
-                    Apply(ecb, connection, entry, JoinCheck.Poll(connection, entry.Payload));
+                {
+                    KnJoinVerdict verdict = JoinCheck.Poll(connection, entry.Payload);
+                    if (verdict.Status == KnJoinStatus.Accepted || verdict.Status == KnJoinStatus.Question || verdict.Status == KnJoinStatus.Refused)
+                        Step($"connection {connection.Index}: {verdict.Status} after {now - entry.FirstSeen:0.0} s" +
+                             (verdict.Status == KnJoinStatus.Refused ? $" ({verdict.Reason}: {verdict.Detail})" : verdict.Status == KnJoinStatus.Accepted ? (verdict.Proven ? ", proven." : ", not proven.") : "."));
+                    else if (!entry.LoggedWaiting)
+                    {
+                        entry.LoggedWaiting = true;
+                        Step($"connection {connection.Index}: the check is working on it ({verdict.Status}).");
+                    }
+                    Apply(ecb, connection, entry, verdict);
+                }
             }
 
             ecb.Playback(EntityManager);
@@ -153,6 +203,7 @@ namespace KryticalNova.Networking.Entities
                 {
                     entry.Complete = true;
                     entry.Payload = KnApprovalChunks.Join(entry.Parts);
+                    Step($"connection {connection.Index}: join request whole ({entry.Parts.Length} part(s), {entry.Bytes} bytes); checking it.");
                 }
             }
         }
@@ -213,6 +264,7 @@ namespace KryticalNova.Networking.Entities
 
         private void Refuse(EntityCommandBuffer ecb, Entity connection, Entry entry, KnRefuseReason reason, string detail)
         {
+            if (!entry.Decided) Step($"connection {connection.Index}: refused ({reason}: {detail}).");
             entry.Decided = true;
             JoinCheck.Forget(connection);
             Entity rpc = ecb.CreateEntity();

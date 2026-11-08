@@ -884,14 +884,26 @@ allow UDP 7799 for `KryticalNovaServer.exe` in `Builds\EntityServer`).
 1. Double-click **Krytical Nova ENTITY Server (TEST)** on the desktop.
 2. Wait until the **ENTITY TEST** tab says **ONLINE** (and **SAVES OK**).
 3. Double-click `Builds\EntityServer\Start Entity Test Client.bat` (it runs the client with the words above, as
-   **Tester**; open it in Notepad to change the name or add `-knfullmem`). A small window with low graphics opens on
-   purpose; you are in Concord within a few seconds. The new character starts at level 1.
+   **EntityTester**; open it in Notepad to change the name or add `-knfullmem`). A small window with low graphics opens on
+   purpose; you are in Concord within a few seconds. On this test server every character enters at the maximum level
+   with every skill at max rank (as in Play DOTS here). Character names are unique on the whole server: a name another
+   account already has is refused with "Someone already has a character with that name" (the plain **Tester** is
+   taken in the test database), so pick a name of your own.
 4. Play, then close the client window.
 5. Press **STOP** in the app and answer **Yes** (or close the app: it stops the server safely first).
 
-On this server the tab's player count stays at 0 for now; `http://localhost:8099/status` shows the real count
-(`"players"`). Tested 8 Nov 2026 night: sign-in, join in 1.9 s, walking, client closed, STOP (exit code 0). Pictures and a
-GIF are in `G:\My Drive\KryticalNova\AI Outputs\DOTS-overnight-2026-11-08\builds\`.
+The tab's player count is read from the server's status page (`http://localhost:8099/status`). STOP saves every player
+and the world first, then sends everyone away and quits (exit code 0). Like the normal server it backs the saves up a
+minute after it starts, every `backupHours` (6 by default) and when it stops. Tested 8 Nov 2026 night: sign-in, join in
+1.9 s, walking, client closed, STOP (exit code 0); the save service's kill test passed on the TEST database. Pictures, a
+GIF and the logs are in `G:\My Drive\KryticalNova\AI Outputs\DOTS-overnight-2026-11-08\builds\`. Round 2 (same night,
+`r3-*` files there): join in 1.1 s, no prototype strip, level 112 (maximum) with every skill, "1 player(s) on" in the
+tab, timed backup, STOP saves everyone and backs up, exit code 0.
+
+The server's log shows each join as `[KnJoin]` lines (connection arrived, request whole, accepted or refused and why,
+connection closed), so a join that does not get in always says where it stopped. A few lines "Expected server to always
+update once per frame when in sleep mode" still appear when the server does something heavy (start, a join, a backup);
+they are harmless.
 
 If Norton freezes the new exe, it is the usual Norton exclusion for the `Builds` folder of the DOTS clone (section 2,
 "Norton and Windows Firewall").
