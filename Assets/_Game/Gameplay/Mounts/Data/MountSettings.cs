@@ -61,6 +61,9 @@ namespace KryticalNova.Mounts
         [Range(0.05f, 1f)] public float kickDamping = 0.35f;
         [Tooltip("Seconds before the feet leave (the saddle or the ground) that the rider crouches into the push.")]
         [Range(0f, 0.3f)] public float crouchLead = 0.1f;
+        [Tooltip("Seconds a getting-off hands over into the on-foot idle: the clip fades out and the body comes down from " +
+                 "the seat together (owner, 7 Nov 2026 retest 2: the hand-over must not be noticeable).")]
+        [Range(0.1f, 1f)] public float standHandOverSeconds = 0.45f;
 
         [Header("Getting on and off (owner picks, 6 Nov 2026: Torrent's timing; a running version of each)")]
         [Tooltip("Standing still (or walking: the rider stops first): the summon hop. Dip, hop with the leg over, drop into the seat, settle.")]

@@ -318,7 +318,9 @@ namespace KryticalNova.Mounts
             if (rider != null)
             {
                 rider.localRotation = riderRestRotation;
-                float fade = motor != null ? motor.LocomotionFadeSeconds : 0f;
+                // In step with the motor's fade into the idle (the same seconds: MountSettings.standHandOverSeconds).
+                float fade = eased && mounts != null && mounts.Settings != null ? mounts.Settings.standHandOverSeconds
+                    : motor != null ? motor.LocomotionFadeSeconds : 0f;
                 handOverFrom = rider.localPosition - riderRest;
                 if (eased && fade > 0f && handOverFrom.sqrMagnitude > 1e-6f)
                 {
@@ -451,7 +453,8 @@ namespace KryticalNova.Mounts
         private void Clear(bool eased = false)
         {
             if (!eased || !isActiveAndEnabled) { FinishHandOver(); EndBeats(); }
-            if (shownMount != null || riderLifted) motor?.SetSeated(null, null, null);
+            float standFade = eased && mounts != null && mounts.Settings != null ? mounts.Settings.standHandOverSeconds : 0f;
+            if (shownMount != null || riderLifted) motor?.SetSeated(null, null, null, standFade: standFade);
             if (isActiveAndEnabled) LetModelVanish();
             else DestroyModel();
             LowerRider(eased && isActiveAndEnabled);

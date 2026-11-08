@@ -561,9 +561,13 @@ namespace KryticalNova.Player
             PlayLocomotionClip(targetIdle, locomotionFadeDuration);
         }
 
+        // A one-off fade for the next locomotion clip (SetSeated's standFade), used once.
+        private float pendingFade;
+
         private void PlayLocomotionClip(AnimationClip clip, float fade)
         {
             if (clip == null || clip == currentLocomotionClip) return;
+            if (pendingFade > 0f) { fade = pendingFade; pendingFade = 0f; }
             currentLocomotionClip = clip;
             currentLocomotionState = animancer.Layers[0].Play(clip, fade);
             currentLocomotionState.ApplyFootIK = locomotionFootIK && !seated; // a seated rider's feet are in the stirrups
@@ -623,8 +627,11 @@ namespace KryticalNova.Player
 
         /// <param name="inSaddle">The riding set (idle, walk, run), not a getting on or off: with the weapon drawn, the
         /// upper body holds it as on foot (<see cref="KeepSeatedHold"/>).</param>
-        public void SetSeated(AnimationClip idle, AnimationClip walk, AnimationClip run, bool inSaddle = false)
+        /// <param name="standFade">Standing up (null <paramref name="idle"/>): seconds the first on-foot clip fades in over,
+        /// instead of the usual locomotion fade (a getting-off hands over into the idle more slowly). 0 = the usual.</param>
+        public void SetSeated(AnimationClip idle, AnimationClip walk, AnimationClip run, bool inSaddle = false, float standFade = 0f)
         {
+            pendingFade = idle == null && standFade > 0f ? standFade : 0f;
             bool wasSeated = seated;
             seated = idle != null;
             this.inSaddle = seated && inSaddle;
