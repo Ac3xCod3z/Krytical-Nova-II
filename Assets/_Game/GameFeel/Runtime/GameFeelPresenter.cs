@@ -137,6 +137,8 @@ namespace KryticalNova.GameFeel
         [SerializeField] private MMF_Player rideVanishWorldFeel;
         [Tooltip("The rider's own screen as a getting on or off launches: a short FOV punch, stronger with speed (owner feel pick 4).")]
         [SerializeField] private MMF_Player rideLaunchFeel;
+        [Tooltip("The running getting-off's roll hitting the ground: the rider's own camera punch, against the touchdown's (owner final test, 8 Nov 2026).")]
+        [SerializeField, Min(0f)] private float rollImpactKick = 1.4f;
         [Tooltip("A getting-off counts as running for the shockwave from this many metres a second.")]
         [SerializeField, Min(0f)] private float shockwaveFromSpeed = 3f;
         [Tooltip("Cast / hit bursts for skills the catalog has no entry for.")]
@@ -839,6 +841,8 @@ namespace KryticalNova.GameFeel
                     // Dust under the planted feet for the measured slide window only (RollStart to SlideEnd).
                     ActorVfx.For(actor).SetRunning(true, runLoopVfx);
                     PlayWorld(rideRollSkidWorldFeel, feet, Facing(actor), actor, hit);
+                    // The body hits the ground as the roll begins: a screen punch on the rider's own screen.
+                    if (moment.IsLocalPlayer) Play(landFeel, actor.position, rollImpactKick * Mathf.Lerp(dismountShakeStill, dismountShakeFull, pace));
                     PlayWorld(rideScuffWorldFeel, feet, Facing(actor), null, hit); // the slide's marks begin
                     break;
                 case DismountBeat.SlideEnd:

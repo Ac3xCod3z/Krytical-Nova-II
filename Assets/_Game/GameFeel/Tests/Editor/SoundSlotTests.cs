@@ -75,6 +75,26 @@ namespace KryticalNova.Tests
                 Assert.IsTrue(mixer.GetFloat(parameter, out _), parameter + " is not exposed: its slider would do nothing");
         }
 
+        /// <summary>
+        /// Owner final test (8 Nov 2026): every mount sound (summon, vanish, push-off, saddle, touchdown, roll skid,
+        /// shockwave) plays through the Sfx group, so the Settings Effects slider (SfxVolume) governs it.
+        /// </summary>
+        [Test]
+        public void EveryMountSound_AnswersToTheEffectsSlider()
+        {
+            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(GameFeelBuilder.PrefabPath);
+            int ride = 0;
+            foreach (var player in prefab.GetComponentsInChildren<MMF_Player>(true))
+                foreach (MMF_Sound sound in player.FeedbacksList.OfType<MMF_Sound>())
+                {
+                    if (sound.Label == null || !sound.Label.StartsWith("Ride ")) continue;
+                    ride++;
+                    Assert.IsNotNull(sound.SfxAudioMixerGroup, sound.Label + " plays past the mixer");
+                    Assert.AreEqual("Sfx", sound.SfxAudioMixerGroup.name, sound.Label + " should answer to the Effects slider");
+                }
+            Assert.GreaterOrEqual(ride, 7, "push-off, saddle land, touchdown, roll skid, shockwave, summon, vanish");
+        }
+
         [Test]
         public void ADeath_SoundsOfEachFaction()
         {
