@@ -112,38 +112,45 @@ namespace KryticalNova.Mounts
             Vector3 travel = movement != null && runningTransition ? transform.forward * movement.CurrentSpeed * flight * 0.5f : Vector3.zero;
             Vector3 apex = rider.position + travel + Vector3.up * (settings != null ? settings.leapApexAboveSeat : 0.7f);
 
-            motor.PlayWarpedJump();
-            leapWarp.Play(jumpMotor.WarpAsset, new[]
+            try
             {
-                new Kinemation.MotionWarping.Runtime.Utility.WarpPoint { position = apex, rotation = facing },
-                new Kinemation.MotionWarping.Runtime.Utility.WarpPoint { transform = leapMark, position = leapMark.position, rotation = facing },
-            });
+                leapWarp.Play(jumpMotor.WarpAsset, new[]
+                {
+                    new Kinemation.MotionWarping.Runtime.Utility.WarpPoint { position = apex, rotation = facing },
+                    new Kinemation.MotionWarping.Runtime.Utility.WarpPoint { transform = leapMark, position = leapMark.position, rotation = facing },
+                });
+            }
+            catch (System.Exception e)
+            {
+                // Never a half-started warp: stop it and play the baked dismount instead.
+                Debug.LogException(e);
+                try { leapWarp.Stop(); } catch (System.Exception) { }
+                leaping = false;
+                return false;
+            }
+            if (!leapWarp.IsActive()) { leaping = false; return false; }
+            motor.PlayWarpedJump();
             return true;
         }
 
         private bool EnsureLeapWarp()
         {
             if (leapWarp != null) return true;
-            var holder = new GameObject("Mount Leap Warp");
-            holder.transform.SetParent(transform, false);
+            leapWarp = MountLeapWarp.Create(transform, rider);
+            if (leapWarp == null) return false;
             leapMark = new GameObject("Mount Leap Landing").transform;
             leapMark.SetParent(transform, false);
-            leapWarp = holder.AddComponent<Kinemation.MotionWarping.Runtime.Core.MotionWarping>();
-            // The vendor component keeps what it moves in private fields: set them as its own inspector would.
-            const System.Reflection.BindingFlags Private = System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic;
-            var type = typeof(Kinemation.MotionWarping.Runtime.Core.MotionWarping);
-            var target = type.GetField("transformToWarp", Private);
-            if (target == null) { Debug.LogError("[Mounts] The Motion Warping package changed: no transformToWarp. The leap is off."); Destroy(holder); leapWarp = null; return false; }
-            target.SetValue(leapWarp, rider);
-            type.GetField("scalePlayRate", Private)?.SetValue(leapWarp, false);
-            type.GetField("playAnimator", Private)?.SetValue(leapWarp, false);
             return true;
         }
+
+        /// <summary>Seconds past the getting-off's end after which a leap still running is ended anyway.</summary>
+        public const float LeapGiveUpSeconds = 0.5f;
 
         private void Leap()
         {
             if (!leaping || transition == null) return;
             float since = Time.time - phaseStartedAt;
+            if (since > transition.seconds + LeapGiveUpSeconds) { EndLeap(true); return; } // never a stuck rider
             if (!leapLanded && since >= transition.arrivesAt)
             {
                 leapLanded = true;
@@ -165,7 +172,10 @@ namespace KryticalNova.Mounts
         {
             if (!leaping) return;
             leaping = false;
-            if (leapWarp != null && leapWarp.IsActive()) leapWarp.Stop();
+            if (leapWarp != null && leapWarp.IsActive())
+            {
+                try { leapWarp.Stop(); } catch (System.Exception e) { Debug.LogException(e); }
+            }
             if (leapRolling) motor.EndWarpedAction(0.2f, mounts != null && mounts.DismountEndsRunning ? 1f : 0f);
             else if (cutShort) motor.ResetJumpAnimation();
             leapRolling = false;
