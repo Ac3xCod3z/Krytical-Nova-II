@@ -68,10 +68,15 @@ namespace KryticalNova.Mounts
         private float tailEnds; // the getting-off clip still playing after the rider is free
         private float phaseClipLength; // the getting-on or getting-off clip being played
 
+#if UNITY_EDITOR
         private static bool DrawsNothing => Application.isBatchMode && !DrawInBatchMode;
 
-        /// <summary>A headless proof run draws the mount anyway (its timing is measured on it). Off in the game.</summary>
+        /// <summary>A headless proof run draws the mount anyway (its timing is measured on it). Editor only; the proof
+        /// driver turns it off again when it ends.</summary>
         public static bool DrawInBatchMode;
+#else
+        private static bool DrawsNothing => Application.isBatchMode;
+#endif
 
         /// <summary>
         /// Getting off with beats: the mount is carried on with the player until the feet leave it, then stops where it
@@ -193,8 +198,10 @@ namespace KryticalNova.Mounts
                 {
                     // Standing: the jump's own landing on a grounded body with its feet planted, as any jump lands.
                     LowerRider();
-                    motor.PlantFeetOnLanding = true;
                     motor.PlayWarpedJumpRecovery();
+                    // Set once the recovery has begun (still Jumping): a recovery that ended at once leaves Jumping, and
+                    // the motor clears the flag itself on its next frame (review, 8 Nov 2026).
+                    motor.PlantFeetOnLanding = true;
                 }
             }
             if (leapRolling) RollHeight(since);
@@ -571,6 +578,10 @@ namespace KryticalNova.Mounts
             // the rider landing in the saddle.
             MountSettings tuning = mounts != null ? mounts.Settings : null;
             if (!beatsGettingOn && (beat == DismountBeat.TakeOff || beat == DismountBeat.Ended)) ReleaseModel();
+            // A running getting-off that ends standing (stop and slide): the run's lines end as the slide does (review).
+            if (!beatsGettingOn && !beatsEndRunning && motor != null
+                && (beat == DismountBeat.SlideEnd || beat == DismountBeat.RollEnd || beat == DismountBeat.StandUp))
+                motor.HoldRunEffects = false;
             if (tuning != null && beat == DismountBeat.TakeOff && !beatsGettingOn) Kick(tuning, tuning.pushOffDip, tuning.pushOffBack);
             if (tuning != null && beat == DismountBeat.Touchdown && beatsGettingOn) Kick(tuning, tuning.saddleDip, 0f);
             IGameFeelSink feel = ClientPresentationRegistry.Feel;
