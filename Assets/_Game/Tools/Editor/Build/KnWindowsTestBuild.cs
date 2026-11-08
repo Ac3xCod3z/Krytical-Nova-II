@@ -30,7 +30,7 @@ namespace KryticalNova.EditorTools
         /// </summary>
         public const string BurstSettingsPath = "ProjectSettings/BurstAotSettings_StandaloneWindows.json";
         const string BurstOffJson = "{\n    \"MonoBehaviour\": {\n        \"Version\": 4,\n        \"EnableBurstCompilation\": false\n    }\n}\n";
-        const string BurstOnJson = "{\n    \"MonoBehaviour\": {\n        \"Version\": 4,\n        \"EnableBurstCompilation\": true,\n        \"EnableOptimisations\": true,\n        \"EnableSafetyChecks\": false,\n        \"EnableDebugInAllBuilds\": false,\n        \"CpuMinTargetX32\": 0,\n        \"CpuMaxTargetX32\": 0,\n        \"CpuMinTargetX64\": 0,\n        \"CpuMaxTargetX64\": 0,\n        \"OptimizeFor\": 0\n    }\n}\n";
+        internal const string BurstOnJson = "{\n    \"MonoBehaviour\": {\n        \"Version\": 4,\n        \"EnableBurstCompilation\": true,\n        \"EnableOptimisations\": true,\n        \"EnableSafetyChecks\": false,\n        \"EnableDebugInAllBuilds\": false,\n        \"CpuMinTargetX32\": 0,\n        \"CpuMaxTargetX32\": 0,\n        \"CpuMinTargetX64\": 0,\n        \"CpuMaxTargetX64\": 0,\n        \"OptimizeFor\": 0\n    }\n}\n";
 
         /// <summary>
         /// <c>KN_WINJOIN_BURST=1</c>: this client with Burst AOT on (owner, 6 Nov 2026: a Linux player without Burst crashed in Netcode's
