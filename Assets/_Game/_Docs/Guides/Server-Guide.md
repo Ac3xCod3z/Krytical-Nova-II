@@ -44,6 +44,7 @@ every server step (online phase 1, `Plans/online-phase-01-dedicated-server.md`).
 | A server per map, one name | Transit Row's server runs beside Concord's in the app (a tab each); players still see one server, Nova (section 2b) | Built 20 Oct 2026; travelling between them is phase 5, milestone 3; the router's two new ports still to do |
 | 6. The move to the old PC | A zip, an install step and a step-by-step guide | Not yet |
 | 7. Measuring | How many players and Hostiles one PC carries | Not yet |
+| The entity server (test) | The DOTS port as a test version beside the normal server, with its own app, port 7799 and the test database (section 13) | Built 8 Nov 2026; the real game cannot join it yet |
 
 ## Words used here
 
@@ -827,6 +828,78 @@ Server"; tell the two apart by the port the window prints. Every test goes like 
 - **Step 6:** the zip, an install step (firewall rules, the Norton note) and moving it to the old PC by external SSD.
 - **Step 7:** measuring how much one PC carries.
 
+## 13. The entity server (DOTS test version, 8 Nov 2026)
+
+This is the game ported to **Netcode for Entities** (the DOTS clone at `C:\Users\dlaco\Krytical Nova II DOTS`), built as a
+**new test version beside the normal server**. The normal server (`Builds\Server` in the main project, the desktop
+shortcut **Krytical Nova Server**, ports 7777 and 7778, page 8090, the real saves) is not touched and keeps running for
+the brothers. Leave it alone while you test this one.
+
+**Where it is:** `C:\Users\dlaco\Krytical Nova II DOTS\Builds\EntityServer\`
+
+| Name | What it is |
+| --- | --- |
+| `Krytical Nova Server.exe` | The Server app, its own copy |
+| `KryticalNovaServer\` | The entity server itself (built with Burst) |
+| `SaveService\` | Its own copy of the save service |
+
+The desktop shortcut is **Krytical Nova ENTITY Server (TEST)**.
+
+**Its settings** are in `Builds\EntityServer\KryticalNovaServer\server-settings.json`:
+
+| Setting | Value | Means |
+| --- | --- | --- |
+| `port` / `pagePort` | 7799 / 8099 | Its own game port and status page, never the normal server's |
+| `saveService` | `http://127.0.0.1:7802` | The **TEST** save service and the **TEST** database `krytical_nova_test`, never the real saves |
+| `netcode` | `entities` | Tells the Server app this is the entity server |
+| `plainTransport` | `true` | No encryption on the test lane |
+| `mapServers` | `[]` | No map servers beside it |
+
+It is a test-lane build: it refuses the real server's ports 7777, 7778, 7801 and 8090 by itself.
+
+**The Server app in that folder:** its window title says **Krytical Nova Server - ENTITY TEST (Netcode for Entities)**.
+The first tab is **ENTITY TEST**, then **SAVE SERVICE** and **DATABASE**. It starts the TEST save service, then the
+server. **STOP** and **RESTART** work by asking the server's page to stop: the entity server saves and quits (exit code
+0). The command box does not take GM commands on this server yet (it says so); use the GM window in the game.
+
+**Build it:** in the DOTS clone's Editor, **Krytical Nova ▸ Build ▸ Entity Server (Windows, test lane)** (about 10
+minutes). From a script: `-executeMethod KryticalNova.EditorTools.ServerBuildBuilder.BuildEntityServerBatch`. It keeps the
+settings file across rebuilds. Stop the entity server first.
+
+**The test client:** `C:\Users\dlaco\Krytical Nova II DOTS\Builds\WindowsTest\KnWindowsTest.exe` (built with Burst:
+**Krytical Nova ▸ Online ▸ Entities ▸ Build Windows Join-Here Client**, with `KN_WINJOIN_BURST=1`). It is **not the normal
+game and not the launcher**: it has no title screen or character select yet. Start it with these words after the exe:
+
+```
+-knjoinhere -knjoinhost 127.0.0.1 -knjoinport 7799 -knsignin -knjoinname <Name>
+```
+
+The name is letters and digits only. It signs in to Unity by itself (this PC's kept sign-in), joins the entity server,
+and the first time makes a test character with that name in the test database; next time it loads the same character.
+To join from another PC on the house network, use this PC's address instead of `127.0.0.1` (and Windows Firewall must
+allow UDP 7799 for `KryticalNovaServer.exe` in `Builds\EntityServer`).
+
+**Your test steps:**
+
+1. Double-click **Krytical Nova ENTITY Server (TEST)** on the desktop.
+2. Wait until the **ENTITY TEST** tab says **ONLINE** (and **SAVES OK**).
+3. Double-click `Builds\EntityServer\Start Entity Test Client.bat` (it runs the client with the words above, as
+   **Tester**; open it in Notepad to change the name or add `-knfullmem`). A small window with low graphics opens on
+   purpose; you are in Concord within a few seconds. The new character starts at level 1.
+4. Play, then close the client window.
+5. Press **STOP** in the app and answer **Yes** (or close the app: it stops the server safely first).
+
+On this server the tab's player count stays at 0 for now; `http://localhost:8099/status` shows the real count
+(`"players"`). Tested 8 Nov 2026 night: sign-in, join in 1.9 s, walking, client closed, STOP (exit code 0). Pictures and a
+GIF are in `G:\My Drive\KryticalNova\AI Outputs\DOTS-overnight-2026-11-08\builds\`.
+
+If Norton freezes the new exe, it is the usual Norton exclusion for the `Builds` folder of the DOTS clone (section 2,
+"Norton and Windows Firewall").
+
+**Not yet:** the real game (Title, sign in, character select, launcher, Publish to Test) cannot join the entity server
+yet; that is the next piece of work and gets its own session. There is no server list entry, and no control page GM
+tools beyond the status page on 8099.
+
 ## For developers
 
 | Piece | Where | What it does |
@@ -936,3 +1009,4 @@ Things learned the hard way:
   makes no backups and keeps its records in `MapServers\<map>`. Ports 7779 and 7780 to forward for it.
 - 29 Oct 2026: `POST /stop` on the status port (127.0.0.1, save service key) and a SIGTERM catcher for Linux, so a service manager stops the server with a save.
 - 1 Nov 2026: a publish builds the server in its own checkout (`KN-worktrees/build-server`, Server subtarget) after the game; packed with LZ4; the backend (Mono) set for the build and named truthfully in the report; `publish-test.ps1 -ServerOnly` rebuilds only the server (section 1).
+- 8 Nov 2026: the entity server (DOTS, Netcode for Entities) as a test version beside the normal server: `Builds\EntityServer`, port 7799, page 8099, the test save service and database, its own Server app and desktop shortcut, a join-here test client (section 13).
