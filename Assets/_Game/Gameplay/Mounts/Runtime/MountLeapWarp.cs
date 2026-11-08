@@ -34,5 +34,22 @@ namespace KryticalNova.Mounts
             type.GetField("playAnimator", Private)?.SetValue(warp, false);
             return warp;
         }
+
+        /// <summary>
+        /// The leap's landing: a warp point that follows <paramref name="mark"/> (so a running body is caught). Its
+        /// position and rotation are in the MARK'S OWN space - the vendor reads a point with a transform as
+        /// transform.TransformPoint(position) and transform.rotation * rotation. Owner, 7 Nov 2026 (leap proof run):
+        /// the mark's world position was passed there, so the target lay as far again from the world's origin as the
+        /// player (~11 m standing at z -12, ~63 m running) and faced backwards; the body flew there and snapped back.
+        /// </summary>
+        public static Kinemation.MotionWarping.Runtime.Utility.WarpPoint LandingPoint(Transform mark)
+        {
+            return new Kinemation.MotionWarping.Runtime.Utility.WarpPoint
+            {
+                transform = mark,
+                position = Vector3.zero,
+                rotation = Quaternion.identity,
+            };
+        }
     }
 }

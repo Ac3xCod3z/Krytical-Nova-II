@@ -117,7 +117,7 @@ namespace KryticalNova.Mounts
                 leapWarp.Play(jumpMotor.WarpAsset, new[]
                 {
                     new Kinemation.MotionWarping.Runtime.Utility.WarpPoint { position = apex, rotation = facing },
-                    new Kinemation.MotionWarping.Runtime.Utility.WarpPoint { transform = leapMark, position = leapMark.position, rotation = facing },
+                    MountLeapWarp.LandingPoint(leapMark), // in the mark's own space (it faces as the rider at rest)
                 });
             }
             catch (System.Exception e)
