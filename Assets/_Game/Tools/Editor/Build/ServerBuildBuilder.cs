@@ -208,6 +208,7 @@ namespace KryticalNova.EditorTools
             try
             {
                 IsBuilding = true;
+                BurstAotMarker.ClearStaleMarker();   // an earlier Burst-off build's leftover would stop Burst AOT for good (8 Nov 2026)
                 report = BuildPipeline.BuildPlayer(new BuildPlayerOptions
                 {
                     scenes = scenes,
