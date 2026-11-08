@@ -499,6 +499,18 @@
   "slot": "Ride Summon",
   "from": "DogSmall2Barking.wav + RobotMorphMechanic MM043701.wav"
  },
+ "SFX/Mounts/SFX_RideTouchdown_01.wav": {
+  "slot": "Ride Touchdown",
+  "from": "FoleyFootsteps-Miscella_121_B06B-01731.wav + FL_GFX_Cozy_Mechanic_Dig_Stack_Drop_05.wav + FL_GFX_Home_Fx_Door_Small_06.wav"
+ },
+ "SFX/Mounts/SFX_RideTouchdown_02.wav": {
+  "slot": "Ride Touchdown",
+  "from": "FoleyFootsteps-Miscella_121_B06B-01731.wav + FL_GFX_Cozy_Mechanic_Dig_Stack_Drop_05.wav + FL_GFX_Home_Fx_Door_Small_06.wav"
+ },
+ "SFX/Mounts/SFX_RideTouchdown_03.wav": {
+  "slot": "Ride Touchdown",
+  "from": "FoleyFootsteps-Miscella_121_B06B-01731.wav + FL_GFX_Cozy_Mechanic_Dig_Stack_Drop_05.wav + FL_GFX_Home_Fx_Door_Small_06.wav"
+ },
  "SFX/Mounts/SFX_RideVanish_Brambleback_01.wav": {
   "slot": "Ride Vanish",
   "from": "FL_GFX_Cozy_Mechanic_Dig_Stack_Drop_01.wav + SNOW-ON-LEAVES_6EXT8-11198.mp3"

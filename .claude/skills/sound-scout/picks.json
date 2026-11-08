@@ -420,6 +420,12 @@
     "glitchdominion_audiohero/Glitch Dominion/Computer-Glitch-Space-Computer-Digital-Processing-Glitch_COMM-1052.wav"
    ],
    "note": "mount sound audition 7-8 Nov 2026 (artifact 8SHt5Xx7erDS6ppTVLsRkS)"
+  },
+  "Ride Touchdown": {
+   "picks": [
+    "layer:step7.58+bodythud+sub"
+   ],
+   "note": "mount sound audition round 2, 8 Nov 2026 (artifact 8SHt5Xx7erDS6ppTVLsRkS)"
   }
  },
  "bake": {
@@ -1255,6 +1261,63 @@
    {
     "path": "glitchdominion_audiohero/Glitch Dominion/Computer-Glitch-Space-Computer-Digital-Processing-Glitch_COMM-1052.wav",
     "max_seconds": 1.2
+   }
+  ],
+  "Ride Touchdown": [
+   {
+    "layers": [
+     {
+      "path": "adventureawaits_audiohero/Adventure Awaits/FoleyFootsteps-Miscella_121_B06B-01731.wav",
+      "start": 7.58,
+      "max_seconds": 0.3
+     },
+     {
+      "path": "bt25_ultimatesfxforgames_softwarebundle/Cozy Mechanics/FL_GFX_Cozy_Mechanic_Dig_Stack_Drop_05.wav",
+      "gain": 0.6
+     },
+     {
+      "path": "bt25_ultimatesfxforgames_softwarebundle/Doors/FL_GFX_Home_Fx_Door_Small_06.wav",
+      "gain": 0.6
+     }
+    ]
+   },
+   {
+    "layers": [
+     {
+      "path": "adventureawaits_audiohero/Adventure Awaits/FoleyFootsteps-Miscella_121_B06B-01731.wav",
+      "start": 7.58,
+      "max_seconds": 0.3
+     },
+     {
+      "path": "bt25_ultimatesfxforgames_softwarebundle/Cozy Mechanics/FL_GFX_Cozy_Mechanic_Dig_Stack_Drop_05.wav",
+      "gain": 0.6
+     },
+     {
+      "path": "bt25_ultimatesfxforgames_softwarebundle/Doors/FL_GFX_Home_Fx_Door_Small_06.wav",
+      "gain": 0.6
+     }
+    ],
+    "pitch": 1.5,
+    "tilt": 1.0
+   },
+   {
+    "layers": [
+     {
+      "path": "adventureawaits_audiohero/Adventure Awaits/FoleyFootsteps-Miscella_121_B06B-01731.wav",
+      "start": 7.58,
+      "max_seconds": 0.3
+     },
+     {
+      "path": "bt25_ultimatesfxforgames_softwarebundle/Cozy Mechanics/FL_GFX_Cozy_Mechanic_Dig_Stack_Drop_05.wav",
+      "gain": 0.6
+     },
+     {
+      "path": "bt25_ultimatesfxforgames_softwarebundle/Doors/FL_GFX_Home_Fx_Door_Small_06.wav",
+      "gain": 0.6
+     }
+    ],
+    "pitch": -1.5,
+    "tilt": -1.0
    }
   ]
  }
