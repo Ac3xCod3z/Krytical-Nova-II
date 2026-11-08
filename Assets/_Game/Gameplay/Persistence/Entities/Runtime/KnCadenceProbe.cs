@@ -63,6 +63,7 @@ namespace KryticalNova.Persistence.Entities
                 log($"cadence: at {near}: server body {body.transform.position} ({Vector3.Distance(body.transform.position, dummy.transform.position):F1} m from the dummy), own view {own.transform.position} ({Vector3.Distance(own.transform.position, dummy.transform.position):F1} m)");
 
                 StrikePresentSystem.Trace = true;   // [KnStrike] frame lines for the rest of this run
+                PlayerMeleeCombat.TraceSlash = true;   // [KnSlash]: the frame of each slash and what the body plays then
                 int slot = AttackSlot(own, log);
                 // 1) the known case: no strike yet, so no fight anywhere, no beat heard here, and a press is never sent
                 log("cadence: KNOWN CASE (no strike yet): " + Snapshot(server, client, ghost, body, own));
@@ -157,10 +158,31 @@ namespace KryticalNova.Persistence.Entities
         /// the body, how many stand within 4 m, the closest two (no stacking) and the body's HP (they hit back); then ONE click on one
         /// Prowler view (it must select it) and the attack click (strikes must land).
         /// </summary>
+        // Probe only (owner, 8 Nov 2026): the Tester cannot die in the mobs part, so the click and the slash sheet are never cut short;
+        // every blow it takes is still counted. Its server body is topped up whenever it falls under 60 %. Never in the game.
+        static CombatEntity s_Life;
+        static float s_Taken;
+        static int s_Blows;
+        static void OnTesterHit(KryticalNova.Core.DamageResult r, CharacterCombatStats by) { if (!r.IsEvaded) { s_Taken += r.DamageDealt; s_Blows++; } }
+
+        static IEnumerator Hold(float seconds)
+        {
+            float end = Time.time + seconds;
+            while (Time.time < end)
+            {
+                if (s_Life != null && s_Life.IsAlive && s_Life.CurrentHealth < s_Life.MaxHealth * 0.6f) s_Life.ResetHealth();
+                yield return null;
+            }
+        }
+
         static IEnumerator Mobs(World server, World client, Entity ghost, GameObject body, GameObject own, Action<string> log,
             Func<Vector3, string> click, Action<Vector3> teleport)
         {
             EntityManager em = server.EntityManager;
+            s_Life = body.GetComponent<CombatEntity>();
+            s_Taken = 0f; s_Blows = 0;
+            if (s_Life != null) { s_Life.Damaged -= OnTesterHit; s_Life.Damaged += OnTesterHit; s_Life.ResetHealth(); }
+            log($"mobs: the Tester is kept alive for the probe (topped up under 60 %; blows still counted): {(s_Life != null ? "on" : "NO CombatEntity on the server body")}");
             Vector3 spot = new Vector3(150f, 0f, 140f);
             if (UnityEngine.AI.NavMesh.SamplePosition(spot, out UnityEngine.AI.NavMeshHit nh, 20f, UnityEngine.AI.NavMesh.AllAreas)) spot = nh.position;
             teleport(spot);
@@ -175,31 +197,41 @@ namespace KryticalNova.Persistence.Entities
             }
             PlayerEntitiesSetup.IssueOrder(em, ghost,
                 new Unity.Mathematics.int3(Mathf.RoundToInt(spot.x * 1000f), Mathf.RoundToInt(spot.y * 1000f), Mathf.RoundToInt(spot.z * 1000f)));
-            yield return new WaitForSeconds(1f);
+            { IEnumerator hold = Hold(1f); while (hold.MoveNext()) yield return hold.Current; }
             int hp0 = Hp(em, ghost), lowest = hp0;
             log($"mobs: at {body.transform.position} (outside Concord), HP {hp0}; " + MobRing(em, ghost));
             log("mobs: bodies: " + HostileBodies(server));
+            // probe 13: clicked after the 8 s the Tester was nearly dead and the camera elsewhere ("off screen"): the click comes first now,
+            // with where the camera, the own view and the Prowler stand
+            {
+                GameObject prowler = NearestView(client, body.transform.position);
+                if (prowler == null) log("mobs: click FAIL: no Hostile view near the body on the client");
+                else
+                {
+                    Camera cam = Camera.main;
+                    log($"mobs: click setup: camera {(cam != null ? cam.transform.position.ToString() : "none")}, own view {own.transform.position}, server body {body.transform.position}, " +
+                        $"'{prowler.name}' at {prowler.transform.position}");
+                    int hits0 = Hits(server);
+                    log($"mobs: click 1 on one Prowler at frame {Time.frameCount}: " + click(prowler.transform.position + Vector3.up));
+                    { IEnumerator hold = Hold(0.3f); while (hold.MoveNext()) yield return hold.Current; }
+                    string picked = Selected(own);
+                    log($"mobs: select {(picked == prowler.name ? "PASS" : "FAIL")}: own view selected '{picked}' (clicked '{prowler.name}')");
+                    log($"mobs: click 2 (attack) at frame {Time.frameCount}: " + click(prowler.transform.position + Vector3.up));
+                    { IEnumerator hold = Hold(3f); while (hold.MoveNext()) yield return hold.Current; }
+                    log($"mobs: strike {(Hits(server) > hits0 ? "PASS" : "FAIL")}: strikes landed {Hits(server) - hits0}; {Melee(server, ghost)}");
+                }
+            }
             for (int s = 1; s <= 8; s++)
             {
-                yield return new WaitForSeconds(1f);
+                { IEnumerator hold = Hold(1f); while (hold.MoveNext()) yield return hold.Current; }
                 lowest = Math.Min(lowest, Hp(em, ghost));
-                log($"mobs: t {s} s, HP {Hp(em, ghost)}, me {body.transform.position}; " + MobRing(em, ghost));
+                log($"mobs: t {s} s, HP {Hp(em, ghost)}, blows taken {s_Blows} ({s_Taken:F0} damage), me {body.transform.position}; " + MobRing(em, ghost));
                 log($"mobs: t {s} s brains: " + BrainTrace(server));
             }
             log("mobs: bodies after 8 s: " + HostileBodies(server));
-            log($"mobs: {(lowest < hp0 ? "PASS" : "FAIL")}: they fought back (HP {hp0} -> lowest {lowest})");
+            log($"mobs: {(s_Blows > 0 ? "PASS" : "FAIL")}: they fought back ({s_Blows} blows, {s_Taken:F0} damage; HP {hp0} -> lowest {lowest}, kept alive)");
             IEnumerator whatIfs = WhatIfs(server, ghost, body, log, teleport);
             while (whatIfs.MoveNext()) yield return whatIfs.Current;
-            GameObject prowler = NearestView(client, body.transform.position);
-            if (prowler == null) { log("mobs: click FAIL: no Hostile view near the body on the client"); yield break; }
-            int hits0 = Hits(server);
-            log("mobs: click 1 on one Prowler: " + click(prowler.transform.position + Vector3.up));
-            yield return new WaitForSeconds(0.3f);
-            string picked = Selected(own);
-            log($"mobs: select {(picked == prowler.name ? "PASS" : "FAIL")}: own view selected '{picked}' (clicked '{prowler.name}')");
-            log("mobs: click 2 (attack): " + click(prowler.transform.position + Vector3.up));
-            yield return new WaitForSeconds(4f);
-            log($"mobs: strike {(Hits(server) > hits0 ? "PASS" : "FAIL")}: strikes landed {Hits(server) - hits0}; {Melee(server, ghost)}");
         }
 
         /// <summary>
@@ -263,7 +295,7 @@ namespace KryticalNova.Persistence.Entities
                 em.SetComponentData(ghost, c);
             }
             PlayerEntitiesSetup.IssueOrder(em, ghost, new Unity.Mathematics.int3(Mathf.RoundToInt(alt.x * 1000f), Mathf.RoundToInt(alt.y * 1000f), Mathf.RoundToInt(alt.z * 1000f)));
-            yield return new WaitForSeconds(0.5f);
+            { IEnumerator hold = Hold(0.5f); while (hold.MoveNext()) yield return hold.Current; }
             string answer = KryticalNova.Networking.GmRoster.Host is ulong host && KryticalNova.Networking.PlayerGm.CommandRunner != null
                 ? KryticalNova.Networking.PlayerGm.CommandRunner(host, $"gm.hostile.spawn prowler 3 0 inf {alt.x.ToString("F1", System.Globalization.CultureInfo.InvariantCulture)},{(alt.z + 8f).ToString("F1", System.Globalization.CultureInfo.InvariantCulture)}")
                 : "no GM command runner";
@@ -271,9 +303,9 @@ namespace KryticalNova.Persistence.Entities
             int hp0 = Hp(em, ghost), lowest = hp0;
             for (int s = 1; s <= 6; s++)
             {
-                yield return new WaitForSeconds(1f);
+                { IEnumerator hold = Hold(1f); while (hold.MoveNext()) yield return hold.Current; }
                 lowest = Math.Min(lowest, Hp(em, ghost));
-                log($"whatif spot 2: t {s} s, HP {Hp(em, ghost)}; " + MobRing(em, ghost));
+                log($"whatif spot 2: t {s} s, HP {Hp(em, ghost)}, blows taken {s_Blows} ({s_Taken:F0} damage); " + MobRing(em, ghost));
             }
             log($"whatif spot 2: {(lowest < hp0 ? "PASS" : "FAIL")}: they fought back there (HP {hp0} -> lowest {lowest}); brains: " + BrainTrace(server));
         }

@@ -603,8 +603,13 @@ namespace KryticalNova.Combat
         /// </summary>
         public void ShowStrikeFromGhost(int step)
         {
-            if (step >= 1 && step <= 3) ShowStrike(step);
+            // the ghost drives every view (NGO's IsOwner is false here): the strike holds the attack pose as the owner's did, or the
+            // locomotion motor (arrive, stop clip, idle) played over strike 1 while its slash still fired (owner's stray slash, 8 Nov 2026)
+            if (step >= 1 && step <= 3) ShowStrike(step, holdPose: true);
         }
+
+        /// <summary>A "[KnSlash]" line for each slash spawned: the frame and what the body plays then (the Play DOTS here probe).</summary>
+        public static bool TraceSlash;
 
         [ClientRpc]
         private void PlayComboStrikeClientRpc(int step)
@@ -622,14 +627,14 @@ namespace KryticalNova.Combat
         }
 
         /// <summary>Plays one strike of the combo here, as the server sends it (or as the owner's game shows it first).</summary>
-        private void ShowStrike(int step)
+        private void ShowStrike(int step, bool holdPose = false)
         {
             AnimationClip clip = ClipOf(step);
             float speed = SpeedOf(step);
             if (clip != null && animancer != null)
             {
                 float duration = clip.length / Mathf.Max(0.01f, speed);
-                if (IsOwner)
+                if (IsOwner || holdPose)
                 {
                     if (ownerStrikeRoutine != null) StopCoroutine(ownerStrikeRoutine);
                     ownerStrikeRoutine = StartCoroutine(OwnerStrikeRoutine(step, duration));
@@ -708,6 +713,12 @@ namespace KryticalNova.Combat
                 : pool.TrySpawn(slashVfxPrefab, position, facing * stepRotation);
             if (instance != null) instance.transform.localScale = Vector3.one * slashVfxScale;
             ClientPresentationRegistry.Feel?.Swing(transform, step, IsLocalPlayerPresentation);
+            if (TraceSlash)
+            {
+                AnimancerState playing = animancerMotor != null ? animancerMotor.ActionLayer?.CurrentState : animancer != null ? animancer.States.Current : null;
+                Debug.Log($"[KnSlash] frame {Time.frameCount}: strike {step} slash on '{name}'; the body plays '{(playing?.Clip != null ? playing.Clip.name : "nothing")}' " +
+                          $"at {(playing != null ? playing.NormalizedTime : -1f):F2} (strike clip '{ClipOf(step)?.name}')");
+            }
         }
 
         private bool IsWithinStrikingRange(IDamageable target)
