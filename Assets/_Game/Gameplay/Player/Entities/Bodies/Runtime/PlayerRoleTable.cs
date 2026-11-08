@@ -108,6 +108,13 @@ namespace KryticalNova.Player.Entities.Bodies
         public const string ViewShowsDeath = "PlayerDeathMotor";
 
         /// <summary>
+        /// The Autoward key stays on the own view (8 Nov 2026 port, NGO AutobuffCaster): it is the owner's hand, as on an NGO client. A press
+        /// asks the server for the volley (PlayerCombatSkills.TryCastWardsAtOnce -> IBodyRequests.CastWards, M4.7) and casts nothing here;
+        /// the server body and other players' views still strip it.
+        /// </summary>
+        public const string OwnHandAutoward = "AutobuffCaster";
+
+        /// <summary>
         /// The traversal motors stay on another player's view too, switched off as on the own view (owner's 2-player test, 6 Nov 2026,
         /// item 2: a vault went through the obstacle on the other screen): the ghost's vault, Wallstride phase and Waterstride play
         /// through them (GhostJumpView reads their clips and styles); switched off, they never move the body or decide anything.
@@ -141,7 +148,7 @@ namespace KryticalNova.Player.Entities.Bodies
                             ? PartAction.Strip : PartAction.Disable;
                     return PartAction.Keep;
                 case BodyShape.ViewLocal:
-                    if (typeName == ViewShowsDeath) return PartAction.Keep;
+                    if (typeName == ViewShowsDeath || typeName == OwnHandAutoward) return PartAction.Keep;
                     if (AutomationSet.Contains(typeName)) return PartAction.Disable;
                     if (MovementSet.Contains(typeName))
                     {

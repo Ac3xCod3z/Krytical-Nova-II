@@ -41,10 +41,24 @@ namespace KryticalNova.Persistence.Entities
         public int TargetGhostId;
     }
 
+    /// <summary>
+    /// An attack skill waiting for reach on the server (8 Nov 2026 port of NGO PlayerSkillQueue's QueueServerRpc / ClearServerRpc):
+    /// <see cref="Begin"/> walks the server body in and casts on arrival; the clears let go (halt: the walk stops where the body stands).
+    /// </summary>
+    public struct SkillQueueRpc : IRpcCommand
+    {
+        public const byte Begin = 1, Clear = 2, ClearHalt = 3;
+        public byte Op;
+        public FixedString64Bytes SkillId;
+        /// <summary>The attacked ghost (0 = none: an area attack).</summary>
+        public int TargetGhostId;
+    }
+
     /// <summary>The server's answer to <see cref="ItemUseRpc"/> or <see cref="SkillCastRpc"/>, for the owner's own body to show.</summary>
     public struct RequestReplyRpc : IRpcCommand
     {
-        public const byte ItemUsed = 1, ItemRefused = 2, SkillCast = 3, SkillRefused = 4, WardCast = 5;
+        /// <summary><see cref="QueueEnded"/>: the waiting skill was cast or let go (NGO PlayerSkillQueue.EndedRpc; Text = why, or empty).</summary>
+        public const byte ItemUsed = 1, ItemRefused = 2, SkillCast = 3, SkillRefused = 4, WardCast = 5, QueueEnded = 6;
         public byte Kind;
         /// <summary>A ward of a volley: 1 for the one shown as a cast (NGO WardCastClientRpc's shown, the first).</summary>
         public byte Shown;
@@ -823,6 +837,27 @@ namespace KryticalNova.Persistence.Entities
             em.AddComponentData(rpc, new SkillCastRpc { SkillId = new FixedString64Bytes(skillId), TargetGhostId = targetGhost });
             em.AddComponent<SendRpcCommandRequest>(rpc);
         }
+
+        public void QueueSkill(string skillId, Transform target)
+        {
+            if (m_World == null || !m_World.IsCreated || string.IsNullOrEmpty(skillId) || skillId.Length > FixedString64Bytes.UTF8MaxLengthInBytes) return;
+            int targetGhost = target != null ? KryticalNova.Player.Entities.Bodies.BodyClickSource.GhostIdOf(target) : 0;
+            SendQueue(new SkillQueueRpc { Op = SkillQueueRpc.Begin, SkillId = new FixedString64Bytes(skillId), TargetGhostId = targetGhost });
+        }
+
+        public void ClearSkillQueue(bool halt)
+        {
+            if (m_World == null || !m_World.IsCreated) return;
+            SendQueue(new SkillQueueRpc { Op = halt ? SkillQueueRpc.ClearHalt : SkillQueueRpc.Clear });
+        }
+
+        void SendQueue(SkillQueueRpc ask)
+        {
+            var em = m_World.EntityManager;
+            Entity rpc = em.CreateEntity();
+            em.AddComponentData(rpc, ask);
+            em.AddComponent<SendRpcCommandRequest>(rpc);
+        }
     }
 
     /// <summary>
@@ -835,6 +870,7 @@ namespace KryticalNova.Persistence.Entities
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     public partial class PlayerRequestServerSystem : SystemBase
     {
+        EntityQuery m_Queues;
         EntityQuery m_Charges, m_Wards, m_Uses, m_Casts, m_PackOps, m_LoadoutOps, m_Refills, m_Allocations, m_Upgrades, m_MoveUpgrades, m_MoveSelects, m_Pickups, m_Drops, m_Storage, m_Buys, m_Sells, m_Trades;
 
         /// <summary>Requests run, refused, and dropped by the request limits (tests).</summary>
@@ -857,6 +893,7 @@ namespace KryticalNova.Persistence.Entities
         {
             m_Uses = GetEntityQuery(ComponentType.ReadOnly<ReceiveRpcCommandRequest>(), ComponentType.ReadOnly<ItemUseRpc>());
             m_Casts = GetEntityQuery(ComponentType.ReadOnly<ReceiveRpcCommandRequest>(), ComponentType.ReadOnly<SkillCastRpc>());
+            m_Queues = GetEntityQuery(ComponentType.ReadOnly<ReceiveRpcCommandRequest>(), ComponentType.ReadOnly<SkillQueueRpc>());
             m_Charges = GetEntityQuery(ComponentType.ReadOnly<ReceiveRpcCommandRequest>(), ComponentType.ReadOnly<ChargeRpc>());
             m_Wards = GetEntityQuery(ComponentType.ReadOnly<ReceiveRpcCommandRequest>(), ComponentType.ReadOnly<WardsRpc>());
             m_PackOps = GetEntityQuery(ComponentType.ReadOnly<ReceiveRpcCommandRequest>(), ComponentType.ReadOnly<PackOpRpc>());
@@ -877,6 +914,16 @@ namespace KryticalNova.Persistence.Entities
         protected override void OnUpdate()
         {
             var em = EntityManager;
+            FinishQueued();
+            if (!m_Queues.IsEmpty)
+            {
+                var received = m_Queues.ToComponentDataArray<ReceiveRpcCommandRequest>(Allocator.Temp);
+                var asks = m_Queues.ToComponentDataArray<SkillQueueRpc>(Allocator.Temp);
+                em.DestroyEntity(m_Queues);
+                for (int i = 0; i < asks.Length; i++) Queue(received[i].SourceConnection, asks[i]);
+                received.Dispose();
+                asks.Dispose();
+            }
             if (!m_Uses.IsEmpty)
             {
                 var received = m_Uses.ToComponentDataArray<ReceiveRpcCommandRequest>(Allocator.Temp);
@@ -1210,6 +1257,56 @@ namespace KryticalNova.Persistence.Entities
             || effect == ItemUseEffect.LearnSkill         // M8 8.3.2: the "skills" part is real (B14)
             || effect == ItemUseEffect.AutobuffTime       // M8 8.3.11: the "autobuff" part is real (B26)
             || effect == ItemUseEffect.RegisterMount || effect == ItemUseEffect.FeedMount;   // M8 8.4.8: the "mounts" part is real (B38)
+
+        // 8 Nov 2026 port of NGO PlayerSkillQueue (QueueServerRpc, ClearServerRpc, EndedRpc): the server body's own queue runs NGO's
+        // ServerRun (walk in by the server's orders, cast on arrival); its cast and its end are finished here on the next update, as a cast
+        // asked by SkillCastRpc is (the reply, the cast event for the others, the weapon drawn)
+        readonly List<(Entity connection, GameObject body, string skillId, short rank, int targetGhostId, bool attack)> m_QueuedCasts =
+            new List<(Entity, GameObject, string, short, int, bool)>();
+        readonly List<(Entity connection, string said)> m_QueueEnds = new List<(Entity, string)>();
+
+        /// <summary>Skill queues begun on server bodies (tests).</summary>
+        public int QueuesBegun { get; private set; }
+
+        void Queue(Entity connection, SkillQueueRpc ask)
+        {
+            if (!BodyOf(connection, CallKind.Combat, out GameObject body)) return;
+            var queue = body.GetComponent<KryticalNova.Combat.PlayerSkillQueue>();
+            if (queue == null) return;
+            if (ask.Op != SkillQueueRpc.Begin) { queue.ServerClearFor(ask.Op == SkillQueueRpc.ClearHalt); return; }
+            var skills = body.GetComponent<PlayerCombatSkills>();
+            string skillId = ask.SkillId.ToString();
+            SkillDefinitionSO skill = skills != null ? skills.GetSkill(skillId) : null;
+            Transform target = skill != null && skill.IsAttack && !skill.IsAreaAttack ? ServerBodyOf(ask.TargetGhostId) : null;
+            int targetGhostId = ask.TargetGhostId;
+            if (queue.ServerQueueFor(skillId, target,
+                    (s, t) =>
+                    {
+                        if (!skills.ServerTryCast(s, t, out string reason)) return string.IsNullOrEmpty(reason) ? s.displayName + " could not be cast." : reason;
+                        m_QueuedCasts.Add((connection, body, s.skillId, (short)skills.GetRank(s), s.IsAttack ? targetGhostId : 0, s.IsAttack));
+                        return null;
+                    },
+                    said => m_QueueEnds.Add((connection, said))))
+                QueuesBegun++;
+        }
+
+        void FinishQueued()
+        {
+            if (m_QueuedCasts.Count == 0 && m_QueueEnds.Count == 0) return;
+            EntityManager em = EntityManager;
+            foreach (var c in m_QueuedCasts)
+            {
+                if (!em.Exists(c.connection) || c.body == null) continue;
+                Used++;
+                if (c.attack) DrawOn(c.connection);
+                RecordCast(c.body, c.skillId, c.rank, c.targetGhostId);
+                Reply(c.connection, new RequestReplyRpc { Kind = RequestReplyRpc.SkillCast, SkillId = new FixedString64Bytes(c.skillId), Rank = c.rank });
+            }
+            m_QueuedCasts.Clear();
+            foreach (var e in m_QueueEnds)
+                if (em.Exists(e.connection)) Reply(e.connection, new RequestReplyRpc { Kind = RequestReplyRpc.QueueEnded, Text = Fit(e.said) });
+            m_QueueEnds.Clear();
+        }
 
         void Cast(Entity connection, string skillId, int targetGhostId)
         {
@@ -1847,6 +1944,9 @@ namespace KryticalNova.Persistence.Entities
                     break;
                 case RequestReplyRpc.WardCast:
                     body.GetComponent<PlayerCombatSkills>()?.ShowWardCast(reply.SkillId.ToString(), reply.Rank, reply.Shown != 0);
+                    break;
+                case RequestReplyRpc.QueueEnded:
+                    body.GetComponent<KryticalNova.Combat.PlayerSkillQueue>()?.ShowServerEnded(reply.Text.ToString());
                     break;
             }
         }

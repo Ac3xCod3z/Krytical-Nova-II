@@ -458,6 +458,8 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
             public void CastSkill(string skillId, Transform target) { }
             public void Charge(string skillId, Transform aimedAt, bool started, bool completed) { }
             public void CastWards(string skillIds) => Ops.Add("Wards " + skillIds);
+            public void QueueSkill(string skillId, Transform target) => Ops.Add("Queue " + skillId + " " + (target != null ? target.name : "-"));
+            public void ClearSkillQueue(bool halt) => Ops.Add("Unqueue " + halt);
             public void DuelOp(DuelOpKind op, Transform target, bool accept) => Ops.Add($"Duel {op} {(target != null ? target.name : "-")} {accept}");
             public void PackOp(PackOpKind kind, byte fromContainer, byte fromIndex, byte toContainer, byte toIndex) =>
                 Ops.Add($"{kind} {fromContainer}:{fromIndex} {toContainer}:{toIndex}");
@@ -5164,6 +5166,273 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
             Assert.Less(Vector3.Distance(stood, new Vector3(afterEntry.x, afterEntry.y, afterEntry.z)), 0.11f, "nor in the store");
             Assert.Less(Vector3.Distance(stood, whenGhostIsMade), 0.11f, $"the body is back there when its ghost is made, not on the spawn point {spawnPoint}");
             second.GetComponent<PlayerSaveAgent>().OnServerLeaving();
+        }
+
+        [UnityTest]
+        public IEnumerator B65_TheAutowardKey_StaysOnTheOwnView_APressAsksTheServerForTheVolley_AndNothingIsCastOnTheView()
+        {
+            // 8 Nov 2026 port of NGO's AutobuffCaster: the owner's hand. A press with a running licence asks the server for every slotted
+            // ward that is down (IBodyRequests.CastWards, M4.7); without a licence or cells it says NGO's words and asks nothing.
+            NetRole.Install(new BodyRoleNetRoleAdapter(null, () => NetRoleKind.ServerBody));
+            try
+            {
+                PlayerKeys.Reset();
+                ulong key = PlayerKeys.Mint(651).Value;
+                GameObject a = Admitted(key, "65a1000000000000000000000000000a", "c6510000000000000000000000000651", "Wardkeeper");
+                for (int i = 0; i < 30; i++) yield return null;
+                var skills = a.GetComponent<PlayerCombatSkills>();
+                skills.GmSetAllRanksToMax();
+                var wards = new List<SkillDefinitionSO>();
+                foreach (SkillDefinitionSO s in skills.AvailableSkills)
+                    if (s != null && skills.IsInActiveKit(s) && !s.IsAttack && s.executionType != SkillExecutionType.Channeled && wards.Count < 2) wards.Add(s);
+                Assert.AreEqual(2, wards.Count, "planned: two wards in the kit");
+                Assert.IsNull(a.GetComponent<IHotbarAutobuff>(), "the server body has no Autoward key (stripped)");
+
+                GameObject own = Make(NetRoleKind.ClientView, true, new PlayerKey(key));
+                own.name = "B65 own";
+                var asked = new Asked();
+                own.GetComponent<BodyRoleTag>().Requests = asked;
+                yield return null;
+                var tile = own.GetComponent<IHotbarAutobuff>();
+                Assert.IsNotNull(tile, "the own view keeps the Autoward key");
+                Assert.IsTrue(((Behaviour)tile).enabled, "switched on: it is the owner's hand, as on an NGO client");
+                Assert.AreEqual(own.GetComponent<PlayerInventory>(), PlayerInventory.Local, "the own view is the local player");
+                var viewSkills = own.GetComponent<PlayerCombatSkills>();
+                viewSkills.SetAvailableSkills(new List<SkillDefinitionSO>(skills.AvailableSkills).ToArray());
+                for (int i = 0; i < viewSkills.AvailableSkills.Count; i++)
+                    viewSkills.MirrorRank(i, (byte)Mathf.Clamp(skills.GetRank(viewSkills.AvailableSkills[i]), 0, 255));
+                own.GetComponent<PlayerResources>().MirrorChi(100000f, 100000f);
+                var lines = new List<string>();
+                Action<string> heard = lines.Add;
+                viewSkills.SkillMessage += heard;
+                var licence = own.GetComponent<IBodyAutobuff>();
+
+                // no licence: NGO's words, nothing asked
+                licence.MirrorState(0, new[] { wards[0].skillId, wards[1].skillId });
+                Assert.IsFalse(tile.Press(), "an expired Autoward does nothing");
+                CollectionAssert.Contains(lines, "Autoward has expired. Use an Autoward Pass.");
+                // a licence, no cells
+                long running = DateTime.UtcNow.AddDays(3).Ticks;
+                licence.MirrorState(running, new string[0]);
+                Assert.IsFalse(tile.Press());
+                CollectionAssert.Contains(lines, "Put ward skills into Autoward in the Autopilot window.");
+                CollectionAssert.IsEmpty(asked.Ops, "nothing asked yet");
+
+                // a licence and two cells: one press, one volley of both, asked of the server; nothing cast on the view
+                licence.MirrorState(running, new[] { wards[0].skillId, wards[1].skillId });
+                Assert.AreEqual(2, tile.SlottedCount);
+                Assert.IsTrue(tile.Press(), "pressed");
+                CollectionAssert.AreEqual(new[] { "Wards " + wards[0].skillId + "|" + wards[1].skillId }, asked.Ops, "one volley sent to the server");
+                Assert.IsFalse(viewSkills.IsOnCooldown(wards[0]), "nothing cast on the view itself");
+                Assert.IsNull(own.GetComponent<CharacterBuffManager>().GetBuff(wards[0].skillId), "and no buff of its own");
+
+                // the server's answer (B49's path) puts both on cooldown on the view
+                viewSkills.ShowWardCast(wards[0].skillId, 5, true);
+                viewSkills.ShowWardCast(wards[1].skillId, 5, false);
+                Assert.IsTrue(viewSkills.IsOnCooldown(wards[0]) && viewSkills.IsOnCooldown(wards[1]), "the server's cooldowns");
+                viewSkills.SkillMessage -= heard;
+
+                // another player's view has no Autoward key
+                GameObject theirs = Make(NetRoleKind.ClientView, false, new PlayerKey(key));
+                yield return null;
+                Assert.IsNull(theirs.GetComponent<IHotbarAutobuff>(), "another player's view strips it");
+                ServerLeaving.Notify(a);
+                a.GetComponent<PlayerSaveAgent>().OnServerLeaving();
+            }
+            finally { PlayerKeys.Reset(); }
+        }
+
+        [UnityTest]
+        public IEnumerator B66_ATemperToTheTop_IsAnnouncedToEveryPlayerOnTheServer_AsOneChatLineAndToast()
+        {
+            // 8 Nov 2026 port check of NGO PlayerGearWork:223-228: a Temper success that reaches announceFrom (120) is news for every
+            // player on the server (PlayerChat.ServerAnnounce, Temper, System) in NGO's words; a Temper below it is not.
+            NetRole.Install(new BodyRoleNetRoleAdapter(null, () => NetRoleKind.ServerBody));
+            IOwnerMessages oldMessages = OwnerMessages.Current;
+            IWorkshopOwnerLink oldLink = WorkshopOwnerLink.Current;
+            var told = new Told();
+            OwnerMessages.Current = told;
+            ChatOwnerLink.Current = told;
+            WorkshopOwnerLink.Current = told;
+            GameObject armorer = null;
+            try
+            {
+                PlayerKeys.Reset();
+                GameObject body = Admitted(PlayerKeys.Mint(661).Value, "66a1000000000000000000000000000a", "c6610000000000000000000000000661", "Forgewright");
+                GameObject far = Admitted(PlayerKeys.Mint(662).Value, "66b1000000000000000000000000000b", "c6620000000000000000000000000662", "Farwalker");
+                for (int i = 0; i < 30; i++) yield return null;
+                far.transform.position = body.transform.position + new Vector3(300f, 0f, 300f);   // announcements reach the whole server
+                var inv = body.GetComponent<PlayerInventory>();
+                var wallet = body.GetComponent<KryticalNova.Economy.PlayerWallet>();
+                var forge = body.GetComponent<IBodyGearWork>();
+                GearProgressionSettings settings = forge.GearSettings;
+                int top = settings.temper.announceFrom;
+                Assert.AreEqual(120, top, "NGO's number: 120 is announced");
+                AlloyGrade alloy = default;
+                foreach (AlloyGrade g in settings.temper.alloys) if (!g.prime) { alloy = g; break; }
+                Assert.AreNotEqual(0, alloy.itemId, "an ordinary Alloy");
+                GearItemState below = default(GearItemState).WithTemper(top - 1);
+                ItemDefinition piece = null;
+                foreach (ItemDefinition item in inv.Catalog.Items)
+                    if (item != null && item.IsLadderGear && GearProgressionRules.TemperBlockedReason(settings, item, below, alloy, TemperProtection.None) == null) { piece = item; break; }
+                Assert.IsNotNull(piece, "a ladder piece the Alloy tempers at " + (top - 1) + "%");
+                inv.ServerGive(alloy.itemId, 50);
+                wallet.ServerSet(Math.Min(wallet.Cap, 2_000_000_000L));
+                armorer = Npc(KryticalNova.NPC.NpcOffer.GearWork, body.transform.position + Vector3.right);
+                Component forgePart = (Component)forge;
+                MethodInfo setState = forgePart.GetType().GetMethod("ServerSetState");
+                string announced = GearProgressionRules.TemperAnnouncement("Forgewright", piece.displayName, top);
+                int Heard(GameObject who) => told.To(who).FindAll(l => l.StartsWith("announce System") && l.EndsWith(announced)).Count;
+                int Cell() { for (int i = 0; i < PlayerInventory.Capacity; i++) if (inv.Get(i).itemId == piece.itemId) return i; return -1; }
+
+                // a success below the top is not news
+                inv.ServerGive(piece.itemId, 1);
+                for (int t = 0; t < 60 && (Cell() < 0 || GearItemState.Of(inv.Get(Cell())).Temper == 0); t++)
+                {
+                    if (Cell() < 0) inv.ServerGive(piece.itemId, 1);
+                    forge.RunGearWork(GearWorkOpKind.Temper, Cell(), 0, alloy.itemId, 0);
+                }
+                Assert.Greater(GearItemState.Of(inv.Get(Cell())).Temper, 0, "a low Temper succeeded");
+                Assert.IsFalse(told.To(body).Exists(l => l.StartsWith("announce ")) || told.To(far).Exists(l => l.StartsWith("announce ")),
+                    "and was not announced: " + string.Join(" | ", told.To(body)));
+
+                // from 119 % until one success reaches 120 % (a fail or a break puts a piece back at 119 %)
+                bool reached = false;
+                for (int t = 0; t < 300 && !reached; t++)
+                {
+                    if (Cell() < 0) inv.ServerGive(piece.itemId, 1);
+                    Assert.IsTrue((bool)setState.Invoke(forgePart, new object[] { Cell(), below }), "set to " + (top - 1) + "% (NGO's GM way)");
+                    forge.RunGearWork(GearWorkOpKind.Temper, Cell(), 0, alloy.itemId, 0);
+                    reached = Cell() >= 0 && GearItemState.Of(inv.Get(Cell())).Temper >= top;
+                }
+                Assert.IsTrue(reached, "a Temper reached " + top + "%");
+                Assert.AreEqual(1, Heard(body), "the forger is told once: " + string.Join(" | ", told.To(body)));
+                Assert.AreEqual(1, Heard(far), "and so is a player far away: " + string.Join(" | ", told.To(far)));
+                ServerLeaving.Notify(body);
+                ServerLeaving.Notify(far);
+                body.GetComponent<PlayerSaveAgent>().OnServerLeaving();
+                far.GetComponent<PlayerSaveAgent>().OnServerLeaving();
+            }
+            finally
+            {
+                if (armorer != null) Object.Destroy(armorer);
+                OwnerMessages.Current = oldMessages;
+                WorkshopOwnerLink.Current = oldLink;
+                PlayerKeys.Reset();
+            }
+        }
+
+        [UnityTest]
+        public IEnumerator B67_ASkillOutOfReach_WaitsOnTheServerBody_WalksToNgosRingByTheServersOrder_CastsOnArrival_AndTheViewOnlyAsks()
+        {
+            // 8 Nov 2026 port of NGO PlayerSkillQueue (M3c list item 1): the own view asks (QueueSkill / ClearSkillQueue); the server body
+            // runs NGO's ServerRun: the ring point (range - 0.3 m, on its own side) by IBodyMover, Run paid once as a click, re-aimed when the
+            // target moves, the cast the moment it is in reach, NGO's words when the target gets away; a clear stops the walk.
+            NetRole.Install(new BodyRoleNetRoleAdapter(null, () => NetRoleKind.ServerBody));
+            var mover = new MoverSeen();
+            try
+            {
+                PlayerKeys.Reset();
+                ulong key = PlayerKeys.Mint(671).Value;
+                GameObject a = Admitted(key, "67a1000000000000000000000000000a", "c6710000000000000000000000000671", "Ringwalker");
+                for (int i = 0; i < 30; i++) yield return null;
+                var tag = a.GetComponent<BodyRoleTag>();
+                tag.Mover = mover;
+                var skills = a.GetComponent<PlayerCombatSkills>();
+                skills.GmSetAllRanksToMax();
+                a.GetComponent<PlayerGmState>().SetInfiniteChi(true);
+                a.GetComponent<PlayerGmState>().SetNoCooldowns(true);
+                SkillDefinitionSO strike = null;
+                foreach (SkillDefinitionSO s in skills.AvailableSkills)
+                    if (s != null && skills.IsInActiveKit(s) && s.IsAttack && !s.IsAreaAttack && !s.IsCharged && skills.RangeOf(s) < 12f) { strike = s; break; }
+                Assert.IsNotNull(strike, "planned: a single-target attack in the kit");
+                float range = skills.RangeOf(strike);
+                float ringRadius = Mathf.Max(0.5f, range - 0.3f);   // NGO's LeastRing and ringInset
+                var queue = a.GetComponent<KryticalNova.Combat.PlayerSkillQueue>();
+                Assert.IsNotNull(queue, "the server body keeps the queue");
+
+                var dummyObject = new GameObject("B67 dummy");
+                m_Made.Add(dummyObject);
+                dummyObject.AddComponent<CombatEntity>();
+                Vector3 start = a.transform.position;
+                dummyObject.transform.position = start + Vector3.forward * (range + 5f);
+                yield return null;
+
+                var casts = new List<string>();
+                var ends = new List<string>();
+                Func<SkillDefinitionSO, Transform, string> cast = (s, t) => { casts.Add(s.skillId + " at " + (t != null ? t.name : "-")); return null; };
+                Assert.IsTrue(queue.ServerQueueFor(strike.skillId, dummyObject.transform, cast, ends.Add), "taken");
+                for (int i = 0; i < 3; i++) yield return null;
+                Assert.AreEqual(1, mover.Moves.Count, "one walk ordered: " + string.Join(" | ", mover.Kinds));
+                Vector3 ring = mover.Moves[0];
+                Vector3 flat = ring - dummyObject.transform.position; flat.y = 0f;
+                Assert.AreEqual(ringRadius, flat.magnitude, 0.05f, "to NGO's ring round the target");
+                Assert.Greater(Vector3.Dot(flat.normalized, (start - dummyObject.transform.position).normalized), 0.99f, "on the walker's own side");
+                Assert.AreEqual(mover.Kinds[0].StartsWith("run") ? "run paid" : "walk free", mover.Kinds[0], "the first step is the order: Run paid once as a click, a walk free");
+                CollectionAssert.IsEmpty(casts, "not cast out of reach");
+                Assert.IsTrue(queue.ServerWaiting);
+
+                // the walk under way to the same ring: nothing planned again; the target moves 3 m: re-aimed, the later step free
+                mover.Busy = true;
+                for (float t = 0f; t < 0.4f; t += Time.deltaTime) yield return null;
+                Assert.AreEqual(1, mover.Moves.Count, "a target standing still is walked to once");
+                dummyObject.transform.position += Vector3.right * 3f;
+                for (float t = 0f; t < 0.4f && mover.Moves.Count < 2; t += Time.deltaTime) yield return null;
+                Assert.AreEqual(2, mover.Moves.Count, "re-aimed at the moved target");
+                StringAssert.EndsWith(" free", mover.Kinds[1], "only the first step is paid");
+
+                // arrival: in reach, the walk stops and the skill is cast through the server's cast path; the owner is told it ended
+                int stops = mover.Stops;
+                a.transform.position = mover.Moves[1];
+                mover.Busy = false;
+                for (float t = 0f; t < 1f && casts.Count == 0; t += Time.deltaTime) yield return null;
+                CollectionAssert.AreEqual(new[] { strike.skillId + " at B67 dummy" }, casts, "cast on arrival");
+                CollectionAssert.AreEqual(new[] { string.Empty }, ends, "ended quietly");
+                Assert.Greater(mover.Stops, stops, "the walk stops at the cast");
+                Assert.IsFalse(queue.ServerWaiting);
+
+                // a clear (Escape / another skill) stops the walk the queue started where the body stands
+                a.transform.position = start;
+                dummyObject.transform.position = start + Vector3.forward * (range + 5f);
+                ends.Clear();
+                Assert.IsTrue(queue.ServerQueueFor(strike.skillId, dummyObject.transform, cast, ends.Add));
+                for (int i = 0; i < 3; i++) yield return null;
+                stops = mover.Stops;
+                queue.ServerClearFor(halt: true);
+                Assert.IsFalse(queue.ServerWaiting, "let go");
+                Assert.Greater(mover.Stops, stops, "halted");
+                CollectionAssert.IsEmpty(ends, "a clear tells nothing (NGO ClearServerRpc)");
+
+                // the target gets away (more than 1.5 x 20 m): NGO's words
+                Assert.IsTrue(queue.ServerQueueFor(strike.skillId, dummyObject.transform, cast, ends.Add));
+                yield return null;
+                dummyObject.transform.position = start + Vector3.forward * 40f;
+                for (float t = 0f; t < 1f && ends.Count == 0; t += Time.deltaTime) yield return null;
+                CollectionAssert.AreEqual(new[] { strike.displayName + " was not cast: the target got away." }, ends);
+
+                // the own view only asks, and shows the server's end
+                GameObject own = Make(NetRoleKind.ClientView, true, new PlayerKey(key));
+                own.name = "B67 own";
+                var asked = new Asked();
+                own.GetComponent<BodyRoleTag>().Requests = asked;
+                yield return null;
+                own.transform.position = start;
+                dummyObject.transform.position = start + Vector3.forward * (range + 5f);
+                var viewQueue = own.GetComponent<KryticalNova.Combat.PlayerSkillQueue>();
+                Assert.IsTrue(viewQueue.Offer(strike, dummyObject.transform, true), "kept by the view's queue");
+                Assert.AreEqual(strike, viewQueue.Queued);
+                Assert.IsFalse(viewQueue.ServerWaiting, "the view never walks or casts itself");
+                viewQueue.Clear();
+                Assert.IsNull(viewQueue.Queued);
+                Assert.IsTrue(viewQueue.Offer(strike, dummyObject.transform, true));
+                viewQueue.ShowServerEnded("Bolt was not cast: no way into range.");
+                Assert.IsNull(viewQueue.Queued, "the server's end clears it");
+                CollectionAssert.AreEqual(new[] { "Queue " + strike.skillId + " B67 dummy", "Unqueue True", "Queue " + strike.skillId + " B67 dummy" }, asked.Ops,
+                    "sent to the server");
+                ServerLeaving.Notify(a);
+                a.GetComponent<PlayerSaveAgent>().OnServerLeaving();
+            }
+            finally { PlayerKeys.Reset(); }
         }
 
         [UnityTest]

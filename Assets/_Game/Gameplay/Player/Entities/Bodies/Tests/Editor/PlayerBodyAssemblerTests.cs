@@ -92,6 +92,9 @@ namespace KryticalNova.Player.Entities.Bodies.Tests
             Assert.AreEqual(PartAction.Keep, PlayerRoleTable.ActionFor(BodyShape.ViewLocal, "PlayerInput"));
             Assert.AreEqual(PartAction.Disable, PlayerRoleTable.ActionFor(BodyShape.ViewLocal, "NavMeshAgent"));
             Assert.AreEqual(PartAction.Disable, PlayerRoleTable.ActionFor(BodyShape.ViewLocal, "PlayerAutopilot"));
+            Assert.AreEqual(PartAction.Keep, PlayerRoleTable.ActionFor(BodyShape.ViewLocal, "AutobuffCaster"), "the Autoward key is the owner's hand (8 Nov port)");
+            Assert.AreEqual(PartAction.Strip, PlayerRoleTable.ActionFor(BodyShape.Server, "AutobuffCaster"));
+            Assert.AreEqual(PartAction.Strip, PlayerRoleTable.ActionFor(BodyShape.ViewRemote, "AutobuffCaster"));
             Assert.AreEqual(PartAction.Strip, PlayerRoleTable.ActionFor(BodyShape.ViewLocal, "PlayerMoveAnticipation"));
             Assert.AreEqual(PartAction.Keep, PlayerRoleTable.ActionFor(BodyShape.ViewLocal, "PlayerWallet"));
 

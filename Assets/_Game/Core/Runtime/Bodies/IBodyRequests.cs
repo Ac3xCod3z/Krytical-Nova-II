@@ -165,6 +165,18 @@ namespace KryticalNova.Core
         void CastWards(string skillIds);
 
         /// <summary>
+        /// An attack skill that could not be cast at the press waits on the server (8 Nov 2026 port of NGO PlayerSkillQueue.QueueServerRpc):
+        /// the server body walks into reach by its own order and casts it the moment it can. <paramref name="target"/> may be null (area).
+        /// </summary>
+        void QueueSkill(string skillId, UnityEngine.Transform target);
+
+        /// <summary>
+        /// The owner lets go of the waiting skill (NGO ClearServerRpc). <paramref name="halt"/>: the walk the queue started stops where the body
+        /// stands (Escape, another skill); without it the owner's own new move order has already replaced the walk (NGO OnMoveOrdered).
+        /// </summary>
+        void ClearSkillQueue(bool halt);
+
+        /// <summary>
         /// Asks the server to move, equip, unequip, destroy or sort in the Pack, by cell as NGO's RPCs did (a place is a container and an index:
         /// the Pack's cell, or an equipment slot); the server's body runs the game's rules and the mirror shows the result.
         /// </summary>

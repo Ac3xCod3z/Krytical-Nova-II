@@ -112,6 +112,15 @@ namespace KryticalNova.Combat
             if (!IsMine || skill == null || !skill.IsAttack || skill.IsCharged) return false; // a charge is held, not queued
             if (!CanWaitFor(skill, target, outOfReach, approachRange)) return false;
 
+            // the entity netcode's own view body (8 Nov 2026 port): the server walks its body in and casts, as NGO's QueueServerRpc
+            if (KryticalNova.Core.BodyRoleTag.RequestsOf(this) is KryticalNova.Core.IBodyRequests requests)
+            {
+                SetQueued(skill);
+                selectionAtQueue = controls != null ? controls.SelectedTarget : null;
+                requests.QueueSkill(skill.skillId, target);
+                return true;
+            }
+
             NetworkObjectReference reference = default;
             if (IsSpawned && target != null)
             {
@@ -131,7 +140,8 @@ namespace KryticalNova.Combat
         {
             if (!IsMine || queued == null) return;
             SetQueued(null);
-            if (Decides) ServerStop(halt: true);
+            if (KryticalNova.Core.BodyRoleTag.RequestsOf(this) is KryticalNova.Core.IBodyRequests requests) requests.ClearSkillQueue(halt: true);
+            else if (Decides) ServerStop(halt: true);
             else ClearServerRpc();
         }
 
@@ -182,6 +192,13 @@ namespace KryticalNova.Combat
         // The player's own move order (a click on the ground, a stop): the queue gives way to it.
         private void OnMoveOrdered()
         {
+            // the own view: its click is the new order, the server lets go without stopping it (NGO ServerStop(), no halt)
+            if (queued != null && run == null && KryticalNova.Core.BodyRoleTag.RequestsOf(this) is KryticalNova.Core.IBodyRequests requests)
+            {
+                SetQueued(null);
+                requests.ClearSkillQueue(halt: false);
+                return;
+            }
             if (!Decides || run == null) return;
             ServerStop();
             Ended(string.Empty);
@@ -228,7 +245,12 @@ namespace KryticalNova.Combat
                 {
                     if (walked && controls != null) controls.ServerStopMoving();
                     cast = true;
-                    if (!skills.ServerTryCast(skill, target, out reason)) said = reason;
+                    if (serverCast != null)
+                    {
+                        string why = serverCast(skill, target);   // a server body of the entity netcode: the cast path of SkillCastRpc
+                        if (!string.IsNullOrEmpty(why)) said = why;
+                    }
+                    else if (!skills.ServerTryCast(skill, target, out reason)) said = reason;
                     break;
                 }
                 if (check == CastCheck.Refused) { said = reason; break; }
@@ -286,7 +308,9 @@ namespace KryticalNova.Combat
         }
 
         private bool IsWalking => agent != null && agent.isActiveAndEnabled && agent.isOnNavMesh && agent.hasPath
-                                  && agent.velocity.sqrMagnitude > WalkingSpeed * WalkingSpeed;
+                                  && agent.velocity.sqrMagnitude > WalkingSpeed * WalkingSpeed
+                                  // a server body of the entity netcode steers no agent: its ghost walks the order
+                                  || (serverCast != null && KryticalNova.Core.BodyRoleTag.Of(this) is { } tag && tag.Mover != null && tag.Mover.Busy);
 
         private float FlatDistance(Vector3 point)
         {
@@ -299,6 +323,14 @@ namespace KryticalNova.Combat
 
         private void Ended(string said)
         {
+            if (serverEnded != null)
+            {
+                Action<string> tell = serverEnded;
+                serverEnded = null;
+                serverCast = null;
+                tell(said ?? string.Empty);
+                return;
+            }
             if (IsSpawned) EndedRpc(said ?? string.Empty);
             else ShowEnded(said);
         }
@@ -311,5 +343,47 @@ namespace KryticalNova.Combat
             SetQueued(null);
             if (!string.IsNullOrEmpty(said)) skills.Announce(said);
         }
+
+        // ------------------------------------------------------------------ the entity netcode (8 Nov 2026 port of the walk in)
+
+        // A server body's queue: how its cast goes out (the SkillCastRpc path: reply, cast event, weapon drawn; null on success or the
+        // reason) and how its owner is told it ended. Null = NGO's own ServerTryCast and EndedRpc.
+        private Func<SkillDefinitionSO, Transform, string> serverCast;
+        private Action<string> serverEnded;
+
+        /// <summary>
+        /// A server body of the entity netcode: NGO's QueueServerRpc body for a skill its own view asked to wait (after the caller's budget).
+        /// NGO's ServerRun then walks in by the server's orders (IBodyMover, Run paid once as a click) and casts through <paramref name="cast"/>;
+        /// <paramref name="ended"/> tells the owner (empty: cast or let go quietly). False when refused at once (told as ended).
+        /// </summary>
+        public bool ServerQueueFor(string skillId, Transform target, Func<SkillDefinitionSO, Transform, string> cast, Action<string> ended)
+        {
+            if (!(KryticalNova.Core.BodyRoleTag.Of(this) is { Kind: KryticalNova.Core.NetRoleKind.ServerBody })) return false;
+            SkillDefinitionSO skill = skills != null ? skills.GetSkill(skillId) : null;
+            if (skill == null || !skill.IsAttack || skill.IsCharged || cast == null) { ended?.Invoke(string.Empty); return false; }
+            ServerStop();                 // any earlier run first, without telling (NGO); set before the run starts: it may cast at once
+            serverCast = cast;
+            serverEnded = ended;
+            ServerBegin(skill, target);
+            return true;
+        }
+
+        /// <summary>A server body of the entity netcode: NGO's ClearServerRpc (halt) or the owner's own move order (no halt).</summary>
+        public void ServerClearFor(bool halt)
+        {
+            if (!(KryticalNova.Core.BodyRoleTag.Of(this) is { Kind: KryticalNova.Core.NetRoleKind.ServerBody })) return;
+            ServerStop(halt);
+            serverCast = null;
+            serverEnded = null;
+        }
+
+        /// <summary>The own view of the entity netcode: the server's queue ended (NGO EndedRpc).</summary>
+        public void ShowServerEnded(string said)
+        {
+            if (KryticalNova.Core.BodyRoleTag.RequestsOf(this) != null) ShowEnded(said);
+        }
+
+        /// <summary>The server body is walking in or waiting to cast now (tests).</summary>
+        public bool ServerWaiting => run != null;
     }
 }
