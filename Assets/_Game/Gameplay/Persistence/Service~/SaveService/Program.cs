@@ -10,7 +10,8 @@
 // - A batch (a player's save, a trade: several documents and ledger lines) is one transaction, all or none; a batch sent
 //   again after its answer was lost is recognised by its id and not applied twice (milestone 3).
 // - It listens on this PC only (http://127.0.0.1:7801) until the save service moves beside the servers on a private
-//   network. With --test it serves the tests' own database (krytical_nova_test) on port 7802 instead.
+//   network; it refuses to start on a public or every-address one (ListenAddress, Linux plan item 10). With --test it
+//   serves the tests' own database (krytical_nova_test) on port 7802 instead.
 // - Milestone 6: it backs the database up every night at 4 AM into Documents\KryticalNova-Backups\database and Google Drive,
 //   keeping 14 days (NightlyBackup). --backup-now makes one copy and stops; --restore-drill [file] puts the newest copy
 //   (or that one) into the practice database and checks it, then stops; --restore-real [file] puts it back into
@@ -24,7 +25,10 @@ using System.Text.Json;
 using KryticalNova.SaveService;
 using Npgsql;
 
-string secrets = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "KryticalNova-Secrets");
+// KN_SECRETS_DIR (a Linux server: /etc/kn) replaces the Documents folder; unset, nothing changes.
+string secrets = Environment.GetEnvironmentVariable("KN_SECRETS_DIR") is { Length: > 0 } secretsOverride
+    ? secretsOverride
+    : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "KryticalNova-Secrets");
 string databaseFile = Path.Combine(secrets, "save-service.json");
 string keyFile = Path.Combine(secrets, "save-service-key.txt");
 
@@ -59,7 +63,12 @@ if (args.Contains("--restore-real"))
     int at = Array.IndexOf(args, "--restore-real");
     string? file = at + 1 < args.Length && !args[at + 1].StartsWith("--") ? args[at + 1] : null;
     bool running;
-    try { using var probe = new System.Net.Sockets.TcpClient(); probe.Connect("127.0.0.1", 7801); running = true; }
+    // The port to probe follows --urls=... when given (a Linux server may listen on another address); default 127.0.0.1:7801.
+    string probeHost = "127.0.0.1"; int probePort = 7801;
+    string? urlsArg = args.FirstOrDefault(a => a.StartsWith("--urls=", StringComparison.Ordinal))?[7..];
+    if (urlsArg != null && Uri.TryCreate(urlsArg.Split(';')[0].Replace("0.0.0.0", "127.0.0.1").Replace("+", "127.0.0.1").Replace("*", "127.0.0.1"), UriKind.Absolute, out Uri? served))
+    { probeHost = served.Host; probePort = served.Port; }
+    try { using var probe = new System.Net.Sockets.TcpClient(); probe.Connect(probeHost, probePort); running = true; }
     catch (System.Net.Sockets.SocketException) { running = false; }
     return await backup.RestoreRealAsync(file, running);
 }
@@ -70,6 +79,17 @@ if (args.Contains("--backup-now"))
     return made.Contains("FAILED") ? 1 : 0;
 }
 
+// Never where the internet can reach it (Linux plan item 10): a public or every-address --urls / ASPNETCORE_URLS is
+// refused before the database is opened.
+var builder = WebApplication.CreateSlimBuilder(args);
+string listenOn = builder.Configuration["urls"] ?? urls;
+if (ListenAddress.Refusal(listenOn) is { } refused)
+{
+    Console.Error.WriteLine(refused);
+    return 1;
+}
+builder.WebHost.UseUrls(listenOn);
+
 var connection = new NpgsqlConnectionStringBuilder
 {
     Host = database.Host, Port = database.Port, Database = database.Database, Username = database.User, Password = database.Password,
@@ -78,8 +98,6 @@ var connection = new NpgsqlConnectionStringBuilder
 var store = new DocumentStore(NpgsqlDataSource.Create(connection.ConnectionString));
 await store.PrepareAsync();
 
-var builder = WebApplication.CreateSlimBuilder(args);
-builder.WebHost.UseUrls(builder.Configuration["urls"] ?? urls);
 builder.Logging.SetMinimumLevel(LogLevel.Warning);
 var app = builder.Build();
 
@@ -203,7 +221,7 @@ app.MapPost("/world/ticket", (TicketRequest request) => Results.Ok(world.Issue(r
 app.MapPost("/world/redeem", (RedeemRequest request) => Results.Ok(world.Redeem(request)));
 
 Console.WriteLine($"Krytical Nova save service: database {database.Database} on {database.Host}:{database.Port}, " +
-                  $"listening on {builder.Configuration["urls"] ?? urls}{(test ? " (TEST saves)" : "")}.");
+                  $"listening on {listenOn}{(test ? " (TEST saves)" : "")}.");
 if (!test) _ = backup.RunAsync(app.Lifetime.ApplicationStopping);
 await app.RunAsync();
 return 0;

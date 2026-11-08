@@ -197,7 +197,9 @@ namespace KryticalNova.Tests
             {
                 bool hasHeadgear = entry.partIds.Any(id => database.Parts.TryGet(id, out var part)
                     && (part.region == BodyRegion.AttachmentHead || part.region == BodyRegion.AttachmentFace));
-                if (entry.pack != "FANT_SKTN") Assert.IsFalse(hasHeadgear, entry.name);
+                // a Tripo set (its parts are SK_KRYT_*) brings its own helmet, which the Helmet toggle hides
+                bool tripoSet = entry.partIds.Any(id => database.Parts.TryGet(id, out var part) && part.name.StartsWith("SK_KRYT_"));
+                if (entry.pack != "FANT_SKTN" && !tripoSet) Assert.IsFalse(hasHeadgear, entry.name);
             }
             // A skeleton armor that has a helm wears the helm of its own variant.
             var skeletonArmor = dictionary.Entries.First(e => e.pack == "FANT_SKTN" && e.slot == EquipSlot.Armor

@@ -14,8 +14,8 @@ namespace KryticalNova.EditorTools
     /// Builds the mounts from one table (owner, 25 Oct 2026): the import settings of every mount and rider file
     /// exported from Blender (Characters/Mounts), a prefab per growth stage, each mount's definition (box, two stats,
     /// three stage looks, rider clips), the item that registers it, the mount catalog and the mount settings.
-    /// Four boxes: the Brambleback is built; the Grave Trot, Stone Horn and Circuit Strider have a box and their two
-    /// stats but no art and no item yet. Re-runnable: what the table owns is rewritten; numbers tuned in the Inspector
+    /// Four boxes: the Brambleback and the Circuit Strider are built; the Grave Trot and Stone Horn have a box and their
+    /// two stats but no art and no item yet. Re-runnable: what the table owns is rewritten; numbers tuned in the Inspector
     /// (stat maximums, settings) are only filled in when missing. Menu Krytical Nova ▸ Items ▸ 11. Build Mounts.
     /// </summary>
     public static class MountAssetBuilder
@@ -29,7 +29,8 @@ namespace KryticalNova.EditorTools
         private const string RiderFolder = MountModels + "/Rider/Animations";
         private static readonly int[] StagePercents = { 0, 50, 100 };
         private static readonly string[] MountClips = { "Walk", "Run", "IdleBreathe", "IdleSniff", "IdleLookAround" };
-        private static readonly string[] RiderLoops = { "Rider_RideIdle", "Rider_RideWalk", "Rider_RideGallop", "Rider_RideLookAround" };
+        private static readonly string[] RiderLoops = { "Rider_RideIdle", "Rider_RideWalk", "Rider_RideGallop", "Rider_RideLookAround",
+                                                        "Rider_SetIdle", "Rider_SetWalk", "Rider_SetRun", "Rider_SetLookAround" };
 
         private struct Row
         {
@@ -44,6 +45,20 @@ namespace KryticalNova.EditorTools
             public float Yaw;
             /// <summary>Metres the rider sits further toward the head than the seat it was keyed on, per stage.</summary>
             public float[] SeatForward;
+            /// <summary>
+            /// HDR colour multiplied onto each stage's emission maps (T_&lt;Key&gt;_&lt;pct&gt;_&lt;Part&gt;_Emission.png: the eyes and
+            /// lights, owner 5 Nov 2026). Empty = white at intensity 1.
+            /// </summary>
+            public Color[] Emission;
+            /// <summary>
+            /// Per stage, the ground speed (m/s) at which its walk (x) and run (y) clips match the ground at 1x; empty or zero =
+            /// MountSettings.clipMetresPerSecond. Read off the clip's own stride when it is keyed (owner, 7 Nov 2026: the
+            /// Strider looked sped up on the shared value).
+            /// </summary>
+            public Vector2[] ClipSpeeds;
+            /// <summary>Its getting-on and getting-off are the summon-hop clips keyed on its seats (owner, 6-7 Nov 2026):
+            /// A_Rider_MountUpHop/MountUpRun/DismountRun/DismountRunIdle_&lt;pct&gt;, and hopMountUp is on.</summary>
+            public bool SummonHop;
         }
 
         // Stats (owner, 25 Oct 2026): two of the four main stats per mount, every mount a different pair, so each main stat
@@ -56,6 +71,7 @@ namespace KryticalNova.EditorTools
                 First = StatType.Vitality, FirstMax = 50f, Second = StatType.Strength, SecondMax = 50f,
                 StageNames = new[] { "Sapling", "Thornhide", "Elder Bramble" },
                 SeatForward = new[] { 0f, 0f, 0.07f }, // owner, 25 Oct 2026: on the 100 % the rider sat too far back
+                SummonHop = true,
                 Glows = new[] { new Color(0.55f, 0.85f, 0.35f), new Color(0.35f, 0.9f, 0.45f), new Color(0.95f, 0.8f, 0.3f) } },
             new Row { Box = 2, Key = "GraveTrot", Name = "Grave Trot",
                 Description = "Not in the game yet.",
@@ -64,8 +80,19 @@ namespace KryticalNova.EditorTools
                 Description = "Not in the game yet.",
                 First = StatType.Strength, FirstMax = 50f, Second = StatType.Spirit, SecondMax = 50f },
             new Row { Box = 4, Key = "CircuitStrider", Name = "Circuit Strider",
-                Description = "Not in the game yet.",
-                First = StatType.Agility, FirstMax = 50f, Second = StatType.Vitality, SecondMax = 50f },
+                ItemId = 8102,
+                Description = "A robot hound of plated alloy and circuit light that carries its rider at a gallop; its plating grows as it does.",
+                ItemDescription = "Use it to add the Circuit Strider to your Mount window. Select it there and press the Ride key to ride.",
+                First = StatType.Agility, FirstMax = 50f, Second = StatType.Vitality, SecondMax = 50f,
+                StageNames = new[] { "Circuit Strider", "Circuit Strider", "Circuit Strider" }, // owner, 7 Nov 2026: one name at every stage
+                SeatForward = new[] { 0f, 0f, 0f },
+                SummonHop = true, // the shared summon hop (rider-anims, PR 199): the code lifts the rider to this mount's own seats
+                // Its eyes and light strips: cyan at 0 and 50 %, red at 100 % (the Tripo art); the glows follow them.
+                Glows = new[] { new Color(0.3f, 0.9f, 1f), new Color(0.25f, 0.8f, 1f), new Color(1f, 0.25f, 0.2f) },
+                Emission = new[] { new Color(2f, 2f, 2f), new Color(2f, 2f, 2f), new Color(2f, 2f, 2f) },
+                // Owner, 7 Nov 2026: walk and run play at about 1.1x (they looked sped up). The game speed at each stage
+                // (MountSettings walk 6-9, run 20-34 m/s) / 1.1, from circuit-strider-2 with the long-stride re-key.
+                ClipSpeeds = new[] { new Vector2(5.45f, 18.2f), new Vector2(6.8f, 24.5f), new Vector2(8.2f, 30.9f) } },
         };
 
         [MenuItem("Krytical Nova/Items/11. Build Mounts")]
@@ -108,7 +135,7 @@ namespace KryticalNova.EditorTools
                     string model = $"{folder}/SK_{row.Key}_{percent}.fbx";
                     if (!File.Exists(model)) continue;
                     ConfigureTextures(folder);
-                    ConfigureModel(model, row.Key, percent);
+                    ConfigureModel(model, row, percent);
                     Avatar avatar = AssetDatabase.LoadAllAssetsAtPath(model).OfType<Avatar>().FirstOrDefault();
                     foreach (string clip in MountClips)
                     {
@@ -137,8 +164,9 @@ namespace KryticalNova.EditorTools
             }
         }
 
-        private static void ConfigureModel(string path, string key, int percent)
+        private static void ConfigureModel(string path, in Row row, int percent)
         {
+            string key = row.Key;
             if (!(AssetImporter.GetAtPath(path) is ModelImporter importer)) return;
             importer.animationType = ModelImporterAnimationType.Generic;
             importer.avatarSetup = ModelImporterAvatarSetup.CreateFromThisModel;
@@ -151,20 +179,24 @@ namespace KryticalNova.EditorTools
             importer.preserveHierarchy = true;
             importer.materialImportMode = ModelImporterMaterialImportMode.ImportStandard;
             importer.materialLocation = ModelImporterMaterialLocation.InPrefab;
-            // Each mesh's material is a URP Lit one beside the model, on the stage's own 2K texture.
+            // Each mesh's material is a URP Lit one beside the model, on the stage's own 2K texture, plus its emission map
+            // when the export wrote one (a mesh can carry two materials: the Strider's haunch and shoulder plates).
             string folder = Path.GetDirectoryName(path).Replace('\\', '/');
-            foreach (string part in new[] { "Body", "Saddle", "Armor" })
+            int stage = System.Array.IndexOf(StagePercents, percent);
+            Color glow = row.Emission != null && stage >= 0 && stage < row.Emission.Length ? row.Emission[stage] : Color.white;
+            foreach (string part in new[] { "Body", "Saddle", "Armor", "HaunchPlate", "Shoulder" })
             {
                 string texturePath = $"{folder}/T_{key}_{percent}_{part}.png";
                 var texture = AssetDatabase.LoadAssetAtPath<Texture2D>(texturePath);
                 if (texture == null) continue;
-                Material material = LitMaterial($"{folder}/M_{key}_{percent}_{part}.mat", texture);
+                var emission = AssetDatabase.LoadAssetAtPath<Texture2D>($"{folder}/T_{key}_{percent}_{part}_Emission.png");
+                Material material = LitMaterial($"{folder}/M_{key}_{percent}_{part}.mat", texture, emission, glow);
                 importer.AddRemap(new AssetImporter.SourceAssetIdentifier(typeof(Material), $"M_{key}_{percent}_{part}"), material);
             }
             importer.SaveAndReimport();
         }
 
-        private static Material LitMaterial(string path, Texture2D texture)
+        private static Material LitMaterial(string path, Texture2D texture, Texture2D emission, Color glow)
         {
             var material = AssetDatabase.LoadAssetAtPath<Material>(path);
             if (material == null)
@@ -175,6 +207,19 @@ namespace KryticalNova.EditorTools
             }
             material.SetTexture("_BaseMap", texture);
             material.SetColor("_BaseColor", Color.white);
+            if (emission != null)
+            {
+                material.SetTexture("_EmissionMap", emission);
+                material.SetColor("_EmissionColor", glow);
+                material.EnableKeyword("_EMISSION");
+                material.globalIlluminationFlags = MaterialGlobalIlluminationFlags.RealtimeEmissive;
+            }
+            else
+            {
+                material.SetTexture("_EmissionMap", null);
+                material.SetColor("_EmissionColor", Color.black);
+                material.DisableKeyword("_EMISSION");
+            }
             EditorUtility.SetDirty(material);
             return material;
         }
@@ -231,8 +276,97 @@ namespace KryticalNova.EditorTools
                 clip.lockRootPositionXZ = true;
                 clip.keepOriginalPositionXZ = true;
                 importer.clipAnimations = new[] { clip };
+                StandTheReferenceLegs(importer, path);
                 importer.SaveAndReimport();
             }
+        }
+
+        private const string PlayerPrefab = "Assets/_Game/Gameplay/Player/Prefabs/Player.prefab";
+        private static readonly string[][] LegChains =
+        {
+            new[] { "thigh_l", "calf_l", "foot_l", "ball_l" },
+            new[] { "thigh_r", "calf_r", "foot_r", "ball_r" },
+        };
+
+        /// <summary>
+        /// The avatar Unity makes for a rider clip reads its leg angles from the clip file's own pose, and that pose is
+        /// the seat straddle (each leg ~32 degrees out, knees bent). Measured from it, a normal standing stance counts as
+        /// legs pulled in, so on the player the feet crossed at the end of every getting-off (owner, 7 Nov 2026; it is also
+        /// why the riding legs once came out narrower). Here the leg bones of that reference pose are turned to the
+        /// player's own standing legs, so a rider clip's legs play on the player as they were keyed.
+        /// </summary>
+        public static bool StandTheReferenceLegs(ModelImporter importer, string riderPath)
+        {
+            HumanDescription description = importer.humanDescription;
+            if (description.skeleton == null || description.skeleton.Length == 0) return false; // not imported as Humanoid yet
+            var playerPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(PlayerPrefab);
+            Animator playerAnimator = playerPrefab != null
+                ? playerPrefab.GetComponentsInChildren<Animator>(true).FirstOrDefault(a => a.avatar != null && a.avatar.isHuman) : null;
+            var playerModel = playerAnimator != null
+                ? AssetDatabase.LoadAssetAtPath<GameObject>(AssetDatabase.GetAssetPath(playerAnimator.avatar)) : null;
+            var riderModel = AssetDatabase.LoadAssetAtPath<GameObject>(riderPath);
+            if (playerModel == null || riderModel == null) return false;
+
+            GameObject rider = Object.Instantiate(riderModel), player = Object.Instantiate(playerModel);
+            try
+            {
+                Pose(rider, description.skeleton);
+                Pose(player, AssetImporter.GetAtPath(AssetDatabase.GetAssetPath(playerModel)) is ModelImporter p
+                    ? p.humanDescription.skeleton : null);
+                Dictionary<string, Transform> r = Bones(rider), pl = Bones(player);
+                if (!HipsFrame(r, out Quaternion riderHips) || !HipsFrame(pl, out Quaternion playerHips)) return false;
+                Quaternion playerToRider = riderHips * Quaternion.Inverse(playerHips);
+                foreach (string[] chain in LegChains)
+                    for (int i = 0; i + 1 < chain.Length; i++)
+                    {
+                        if (!r.TryGetValue(chain[i], out Transform bone) || !r.TryGetValue(chain[i + 1], out Transform child)
+                            || !pl.TryGetValue(chain[i], out Transform pBone) || !pl.TryGetValue(chain[i + 1], out Transform pChild)) continue;
+                        Vector3 now = child.position - bone.position;
+                        Vector3 want = playerToRider * (pChild.position - pBone.position);
+                        if (now.sqrMagnitude < 1e-8f || want.sqrMagnitude < 1e-8f) continue;
+                        bone.rotation = Quaternion.FromToRotation(now, want) * bone.rotation;
+                    }
+                SkeletonBone[] skeleton = description.skeleton;
+                for (int i = 0; i < skeleton.Length; i++)
+                    if (r.TryGetValue(skeleton[i].name, out Transform t) && LegChains.Any(c => c.Contains(t.name)))
+                        skeleton[i].rotation = t.localRotation;
+                description.skeleton = skeleton;
+                importer.humanDescription = description;
+                return true;
+            }
+            finally
+            {
+                Object.DestroyImmediate(rider);
+                Object.DestroyImmediate(player);
+            }
+        }
+
+        private static void Pose(GameObject root, SkeletonBone[] skeleton)
+        {
+            if (skeleton == null) return;
+            Dictionary<string, Transform> bones = Bones(root);
+            foreach (SkeletonBone b in skeleton)
+                if (bones.TryGetValue(b.name, out Transform t) && t != root.transform) { t.localPosition = b.position; t.localRotation = b.rotation; }
+        }
+
+        private static Dictionary<string, Transform> Bones(GameObject root)
+        {
+            var map = new Dictionary<string, Transform>();
+            foreach (Transform t in root.GetComponentsInChildren<Transform>(true)) map[t.name] = t;
+            return map;
+        }
+
+        // The body's own frame from its hips: right along the hip joints, up from the pelvis to the first spine joint.
+        private static bool HipsFrame(Dictionary<string, Transform> bones, out Quaternion frame)
+        {
+            frame = Quaternion.identity;
+            if (!bones.TryGetValue("thigh_l", out Transform l) || !bones.TryGetValue("thigh_r", out Transform r)
+                || !bones.TryGetValue("pelvis", out Transform pelvis) || !bones.TryGetValue("spine_01", out Transform spine)) return false;
+            Vector3 right = r.position - l.position, up = spine.position - pelvis.position;
+            Vector3 forward = Vector3.Cross(right, up);
+            if (forward.sqrMagnitude < 1e-8f) return false;
+            frame = Quaternion.LookRotation(forward, Vector3.Cross(forward, right));
+            return true;
         }
 
         // ------------------------------------------------------------------ prefabs and definitions
@@ -268,8 +402,25 @@ namespace KryticalNova.EditorTools
             return AssetDatabase.LoadAllAssetsAtPath(path).OfType<AnimationClip>().FirstOrDefault(c => !c.name.StartsWith("__preview__"));
         }
 
+        /// <summary>
+        /// The mount's own seat file for a stage, RiderSeat_&lt;Key&gt;_&lt;pct&gt;.json beside its model (the Circuit Strider's,
+        /// written by its export), or null: then the shared rider files (keyed on the Brambleback) are used.
+        /// </summary>
+        private static string OwnSeatFile(in Row row, int percent)
+        {
+            string json = $"{StageFolder(row, percent)}/RiderSeat_{row.Key}_{percent}.json";
+            return File.Exists(json) ? File.ReadAllText(json) : null;
+        }
+
         /// <summary>The rider's origin on each stage's seat, read from the export (Blender metres: x right, y back, z up).</summary>
-        private static Vector3 Seat(int percent)
+        private static Vector3 Seat(in Row row, int percent)
+        {
+            string own = OwnSeatFile(row, percent);
+            return own != null ? Ankle(own, "seat") : SharedSeat(percent);
+        }
+
+        /// <summary>The seat the shared rider clips were keyed on (the Brambleback's, seats_blender.json), for a stage.</summary>
+        private static Vector3 SharedSeat(int percent)
         {
             string json = $"{RiderFolder}/seats_blender.json";
             if (!File.Exists(json)) return Vector3.zero;
@@ -287,12 +438,13 @@ namespace KryticalNova.EditorTools
         /// Where each stage's rider has their ankles on the stirrups (RiderSeat_&lt;pct&gt;.json, written by
         /// rider_clips_stage.py: Blender metres from the mount rig), in the mount model's space.
         /// </summary>
-        private static void Stirrups(int percent, out Vector3 left, out Vector3 right)
+        private static void Stirrups(in Row row, int percent, out Vector3 left, out Vector3 right)
         {
             left = right = Vector3.zero;
             string json = $"{RiderFolder}/RiderSeat_{percent}.json";
-            if (!File.Exists(json)) return;
-            string text = File.ReadAllText(json);
+            string text = OwnSeatFile(row, percent);
+            if (text == null && !File.Exists(json)) return;
+            text ??= File.ReadAllText(json);
             left = Ankle(text, "l");
             right = Ankle(text, "r");
         }
@@ -341,18 +493,31 @@ namespace KryticalNova.EditorTools
                 look.walk = ClipIn(folder + "Walk.fbx");
                 look.run = ClipIn(folder + "Run.fbx");
                 look.idleExtras = new[] { ClipIn(folder + "IdleSniff.fbx"), ClipIn(folder + "IdleLookAround.fbx") }.Where(c => c != null).ToArray();
-                look.seat = look.model != null ? Seat(percent) : Vector3.zero;
+                look.clipMetresPerSecond = row.ClipSpeeds != null && stage < row.ClipSpeeds.Length ? row.ClipSpeeds[stage] : Vector2.zero;
+                look.seat = look.model != null ? Seat(row, percent) : Vector3.zero;
+                // A mount with its own seats riding the shared summon-hop clips (keyed on the Brambleback's seats): the
+                // game lowers the rider by the difference while the feet are on the ground (owner, 7 Nov 2026).
+                look.clipSeatHeight = look.model != null && row.SummonHop && OwnSeatFile(row, percent) != null
+                    ? SharedSeat(percent).y : 0f;
                 if (look.model != null && row.SeatForward != null) look.seat.z += row.SeatForward[stage];
-                Stirrups(percent, out look.stirrupLeft, out look.stirrupRight);
+                Stirrups(row, percent, out look.stirrupLeft, out look.stirrupRight);
                 if (look.model == null) look.stirrupLeft = look.stirrupRight = Vector3.zero;
                 string rider = $"{RiderFolder}/A_Rider_";
-                look.riderIdle = ClipIn($"{rider}RideIdle_{percent}.fbx");
-                look.riderWalk = ClipIn($"{rider}RideWalk_{percent}.fbx");
-                look.riderRun = ClipIn($"{rider}RideGallop_{percent}.fbx");
-                look.mountUp = ClipIn($"{rider}MountUp_{percent}.fbx");
+                // The shared riding set (owner, 7 Nov 2026): one set for every stage and mount, fitted in code
+                // (seat, stirrups, riderLeanScale / riderBobScale / riderSeatNudge). The per-stage clips are the fallback.
+                look.riderIdle = ClipIn($"{rider}SetIdle.fbx") ?? ClipIn($"{rider}RideIdle_{percent}.fbx");
+                look.riderWalk = ClipIn($"{rider}SetWalk.fbx") ?? ClipIn($"{rider}RideWalk_{percent}.fbx");
+                look.riderRun = ClipIn($"{rider}SetRun.fbx") ?? ClipIn($"{rider}RideGallop_{percent}.fbx");
+                AnimationClip setLook = ClipIn($"{rider}SetLookAround.fbx");
+                look.riderIdleExtras = setLook != null ? new[] { setLook }
+                    : new[] { ClipIn($"{rider}RideLookAround_{percent}.fbx"), ClipIn($"{rider}RidePatNeck_{percent}.fbx") }
+                        .Where(c => c != null).ToArray();
+                // The standing getting-off stays the older clip (owner: unchanged for now).
                 look.dismount = ClipIn($"{rider}Dismount_{percent}.fbx");
-                look.riderIdleExtras = new[] { ClipIn($"{rider}RideLookAround_{percent}.fbx"), ClipIn($"{rider}RidePatNeck_{percent}.fbx") }
-                    .Where(c => c != null).ToArray();
+                look.mountUp = (row.SummonHop ? ClipIn($"{rider}MountUpHop_{percent}.fbx") : null) ?? ClipIn($"{rider}MountUp_{percent}.fbx");
+                look.mountUpRunning = row.SummonHop ? ClipIn($"{rider}MountUpRun_{percent}.fbx") : null;
+                look.dismountRunning = row.SummonHop ? ClipIn($"{rider}DismountRun_{percent}.fbx") : null;
+                look.dismountRunningToIdle = row.SummonHop ? ClipIn($"{rider}DismountRunIdle_{percent}.fbx") : null;
                 definition.stages[stage] = look;
             }
 
@@ -360,12 +525,20 @@ namespace KryticalNova.EditorTools
             definition.itemId = built ? row.ItemId : (ushort)0;
             // The mount's own rider clips are its first stage's (each stage has its own; these are the fallback).
             MountStageLook first = definition.stages[0];
-            definition.riderIdle = built ? first.riderIdle : null;
-            definition.riderWalk = built ? first.riderWalk : null;
-            definition.riderRun = built ? first.riderRun : null;
-            definition.riderIdleExtras = built ? first.riderIdleExtras : new AnimationClip[0];
+            // The shared riding set is every mount's (owner rule), built model or not: a mount whose model comes from
+            // elsewhere (the Circuit Strider) rides on it until it has transitions of its own.
+            bool sharedSet = first.riderIdle != null && first.riderIdle.name.StartsWith("Rider_Set");
+            definition.riderIdle = built || sharedSet ? first.riderIdle : null;
+            definition.riderWalk = built || sharedSet ? first.riderWalk : null;
+            definition.riderRun = built || sharedSet ? first.riderRun : null;
+            definition.riderIdleExtras = built || sharedSet ? first.riderIdleExtras : new AnimationClip[0];
             definition.mountUp = built ? first.mountUp : null;
             definition.dismount = built ? first.dismount : null;
+            definition.mountUpRunning = built ? first.mountUpRunning : null;
+            definition.dismountRunning = built ? first.dismountRunning : null;
+            definition.dismountRunningToIdle = built ? first.dismountRunningToIdle : null;
+            // Only with every stage's hop clip in place, or a stage would be lifted along the hop curves by a seat clip.
+            definition.hopMountUp = built && row.SummonHop && definition.stages.All(s => s.mountUp != null && s.mountUp.name.StartsWith("Rider_MountUpHop"));
             EditorUtility.SetDirty(definition);
             return definition;
         }

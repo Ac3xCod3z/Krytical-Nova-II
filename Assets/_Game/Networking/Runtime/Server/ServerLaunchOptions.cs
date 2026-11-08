@@ -33,6 +33,8 @@ namespace KryticalNova.Networking
         public string connectionMode = "direct";
         [Tooltip("The control page's port, on the home network only. 0 switches the page off.")]
         public int pagePort = 8090;
+        [Tooltip("Where the control page listens. 0.0.0.0: every address of this PC, so a phone on the home Wi-Fi reaches it. 127.0.0.1: this machine only (a rented machine; reached through an SSH tunnel). Only this machine or a home-network address is taken.")]
+        public string pageAddress = AllAddresses;
         [Tooltip("The control page's password. Only ever in this file; when empty the server makes one and writes it here.")]
         public string pagePassword = "";
         [Tooltip("Hours between backups of the save folder; 0 backs up only at start and stop.")]
@@ -43,6 +45,8 @@ namespace KryticalNova.Networking
         public GmEntry[] gameMasters = new GmEntry[0];
         [Tooltip("The UDP port where the server tells the Servers window it is on, its players and build. 0: the game port + 1. Forward it with the game port.")]
         public int statusPort;
+        [Tooltip("The address players on the internet reach this server at (an IPv4 like 203.0.113.10), handed out in the server list and by the world service. Empty: the server asks an address service at start (this PC behind its router). Set it on a rented machine; a private or local address is not taken.")]
+        public string publicAddress = "";
         [Tooltip("The servers players see in the game's Servers window. Kept on the control page; Publish List uploads them.")]
         public ServerListing[] serverList = new ServerListing[0];
         [Tooltip("Where Publish List uploads servers.json: the Cloud Content Delivery bucket, project and environment.")]
@@ -63,6 +67,8 @@ namespace KryticalNova.Networking
         public string saveService = "";
         [Tooltip("The save service's key. Empty: Documents/KryticalNova-Secrets/save-service-key.txt of the Windows user running the server. Never shared.")]
         public string saveServiceKeyFile = "";
+        [Tooltip("Where the server's performance logs (server_*.csv) go. Empty: PerformanceLogs beside the server, as before. A rented machine names a folder outside the build (the cloud test box: /var/log/kn/performance), so a new build keeps them. A relative path is from the server's folder.")]
+        public string performanceLogFolder = "";
         [Tooltip("Online phase 4: days the ledger (every trade, sale, shop deal, Vault move and loot, one line each) is kept; older lines are dropped once a day.")]
         public int ledgerDays = 90;
         [Tooltip("Months of the record files (gm.log, economy.log, access.log, flags.log) kept: a new file each month, the oldest dropped.")]
@@ -99,6 +105,11 @@ namespace KryticalNova.Networking
         /// <summary>The save service's key file in use.</summary>
         public string SaveServiceKeyFile => !string.IsNullOrWhiteSpace(saveServiceKeyFile) ? saveServiceKeyFile
             : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "KryticalNova-Secrets", "save-service-key.txt");
+
+        /// <summary>The folder of the server's performance logs as a full path (Linux plan item 6).</summary>
+        public string PerformanceLogFolderPath => string.IsNullOrWhiteSpace(performanceLogFolder)
+            ? Path.Combine(ServerFolder, "PerformanceLogs")
+            : Path.GetFullPath(Path.IsPathRooted(performanceLogFolder) ? performanceLogFolder : Path.Combine(ServerFolder, performanceLogFolder));
 
         /// <summary>The status port in use.</summary>
         public int StatusPort => statusPort > 0 ? statusPort : port + 1;
@@ -202,7 +213,7 @@ namespace KryticalNova.Networking
             return options;
         }
 
-        /// <summary>Command-line overrides: -name, -port, -maxPlayers, -saveFolder, -map, -mode, -pagePort, -backupHours, -backupsKept, -role.</summary>
+        /// <summary>Command-line overrides: -name, -port, -maxPlayers, -saveFolder, -map, -mode, -pagePort, -backupHours, -backupsKept, -role, -publicAddress, -pageAddress.</summary>
         public void ApplyArguments(string[] args, List<string> notes)
         {
             if (args == null) return;
@@ -224,6 +235,8 @@ namespace KryticalNova.Networking
                         break;
                     case "-backupskept": backupsKept = Int(value, backupsKept, key, notes); break;
                     case "-role": role = string.Equals(value.Trim(), MapRole, StringComparison.OrdinalIgnoreCase) ? MapRole : MainRole; break;
+                    case "-publicaddress": publicAddress = value; break;
+                    case "-pageaddress": pageAddress = value; break;
                     default: continue;
                 }
                 notes.Add($"{key} from the command line");
@@ -245,9 +258,28 @@ namespace KryticalNova.Networking
             // A map server is reached by its address and port, which the game is given when it travels (online phase 5).
             if (IsMapServer && connectionMode != Direct) { notes.Add("a map server takes players directly: direct"); connectionMode = Direct; }
             mapServers ??= new MapServerEntry[0];
+            // Players are never handed this PC's own or a home-network address (Linux plan item 2): such a setting is dropped
+            // and the address service is asked instead, as when the setting is empty.
+            publicAddress = (publicAddress ?? string.Empty).Trim();
+            if (publicAddress.Length > 0 && !ControlPageRules.IsPublicIPv4(publicAddress))
+            {
+                notes.Add($"publicAddress \"{publicAddress}\" is not a public IPv4 address players can reach: not used, the address service is asked instead");
+                publicAddress = string.Empty;
+            }
+            else if (publicAddress.Length > 0) notes.Add($"public address {publicAddress} (from the settings)");
+            // The control page never listens where the internet reaches it (Linux plan item 10): anything but every address,
+            // this machine or a home-network address falls back to this machine only.
+            pageAddress = string.IsNullOrWhiteSpace(pageAddress) ? AllAddresses : pageAddress.Trim();
+            if (!ControlPageRules.IsPageAddress(pageAddress))
+            {
+                notes.Add($"pageAddress \"{pageAddress}\" is not this machine or a home-network address: the control page listens on {ThisMachineOnly} only");
+                pageAddress = ThisMachineOnly;
+            }
         }
 
         public const string Direct = "direct";
+        /// <summary>The control page on every address of this PC (the default) or on this machine only.</summary>
+        public const string AllAddresses = "0.0.0.0", ThisMachineOnly = "127.0.0.1";
         public const string Relay = "relay";
 
         /// <summary>True in Relay mode: players come through Unity Relay with a join code instead of to this PC's port.</summary>

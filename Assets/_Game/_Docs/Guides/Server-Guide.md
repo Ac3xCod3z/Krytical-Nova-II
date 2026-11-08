@@ -3,7 +3,7 @@
 A running guide to the game's own server, in plain words. It says what works **today**, and it is updated after
 every server step (online phase 1, `Plans/online-phase-01-dedicated-server.md`).
 
-**Last updated:** 20 Oct 2026, a server per map behind one name: Transit Row's server beside Concord's (phase 5, milestone 1).
+**Last updated:** 1 Nov 2026, a publish builds the server in a checkout of its own (section 1).
 
 ## In one minute
 
@@ -71,6 +71,11 @@ every server step (online phase 1, `Plans/online-phase-01-dedicated-server.md`).
    app and its shortcuts, for a server already built.
 3. A size report is written to `Builds/Server/BuildReport-Windows.txt`. Its "116 errors" are shader messages from
    the GI pack: a server draws nothing, so they do no harm.
+
+**With a publish** (1 Nov 2026) the server is built in its own checkout, `C:\Users\dlaco\KN-worktrees\build-server`, which
+stays on the Server subtarget, right after the game (Release Guide, section 1a-4); to rebuild only the server of the last
+release from a script, run `Assets\_Game\Release\Publish~\publish-test.ps1 -ServerOnly`. The server is packed with LZ4 and
+built with Mono; the report's second line names the backend it really used.
 
 A rebuild replaces the server's folder but **keeps your `server-settings.json`**, and never touches the saves (they
 live beside the folder, not in it). **Stop the server before you build:** while it runs from that folder the build
@@ -316,12 +321,15 @@ default (and makes the page password). Close the server, edit it with Notepad, s
 | `map` | Zone01_StarterTown | The map the server opens with. A name the build does not have falls back to Zone01. |
 | `connectionMode` | direct | `direct`: players come to this PC's address through the router's forwarded ports. `relay`: through Unity Relay, no router work. Switch it on the control page (How players reach it). |
 | `pagePort` | 8090 | The control page's port. 0 switches the page off. |
+| `performanceLogFolder` | empty | Where the performance logs (`server_*.csv`) go. Empty: `PerformanceLogs` beside the server. The cloud test box uses `/var/log/kn/performance`, outside the build, so a new build keeps them. |
+| `pageAddress` | 0.0.0.0 | Where the control page listens. `0.0.0.0` (every address of this PC) keeps it reachable from a phone on the home Wi-Fi. `127.0.0.1` is this machine only: the cloud test box uses it (its `deploy.sh` writes it) and is reached through an SSH tunnel. Only this machine or a home-network address is taken; anything else falls back to `127.0.0.1` (the server's first log line says so). |
 | `pagePassword` | made for you | The control page's password. Only ever in this file. Empty makes a new one at the next start. |
 | `backupHours` | 6 | Hours between backups. 0 backs up only at start and stop. |
 | `backupsKept` | 10 | How many backups are kept; the oldest go first. |
 | `gameMasters` | none | Up to three GMs, each a name and the account it is bound to. Set them on the control page (Add GM, then Bind). |
 | `carryOverOldSaves` | true | The characters a game played before Unity sign-in move once to its proven account. Switch off before anyone else plays. |
 | `statusPort` | 0 (= game port + 1, so 7778) | Where the server tells the Servers window it is on, its players and its build. |
+| `publicAddress` | empty | The address players on the internet reach this server at (an IPv4 like 203.0.113.10). Leave it empty on this PC: the server asks an address service at start, as before. Set it on a rented machine (the cloud test box's `deploy.sh` fills it in). A local or home-network address is not taken (the server's first log line says so). |
 | `serverList` | none | The servers players see. Set them on the control page and press PUBLISH LIST. |
 | `listBucket`, `cloudProjectId`, `cloudEnvironment` | krytical-nova-servers, this project, production | Where PUBLISH LIST uploads the list. Leave them. |
 | `ugsPath` | empty (`%LOCALAPPDATA%\KryticalNova\tools\ugs.exe`) | Unity's command-line tool on this PC, for PUBLISH LIST. |
@@ -343,6 +351,7 @@ broke is left as it is while the server uses the defaults (the window says so).
 | `-saveFolder "<path>"` | `-saveFolder "D:\KN Saves"` |
 | `-map <scene>` | `-map EldersReach_Aldhavn` |
 | `-pagePort <number>` | `-pagePort 8091` |
+| `-pageAddress <address>` | `-pageAddress 127.0.0.1` |
 | `-backupHours <hours>` | `-backupHours 1` |
 | `-backupsKept <number>` | `-backupsKept 20` |
 | `-role map` | the app adds it for each map server (section 2b); never needed by hand |
@@ -746,7 +755,9 @@ Each comes with the same two ways out as the game menu (character select or exit
 The control page's header has a **load** chip, for example *"3 players · 30 fps · 2.1 ms average · 4.0 ms 95% · 6.2 ms
 worst · 0 slow"*. The server runs 30 game ticks a second, so each tick has 33 ms; the chip shows how much of that the
 server actually works. It keeps up while frames stay under 33 ms (**0 slow**); it turns amber when one did not. The same
-numbers go every 5 seconds into `PerformanceLogs/server_*.csv` beside the server (open it with Excel).
+numbers go every 5 seconds into `PerformanceLogs/server_*.csv` beside the server (open it with Excel; another folder:
+`performanceLogFolder` in the settings). A server running for days starts a new file each day, and the newest 30 files of
+each server are kept.
 
 **Measuring how many players a server holds** uses test players ("bots") and a separate measure server, never yours:
 menu **Krytical Nova ▸ Online ▸ Measure**:
@@ -755,7 +766,7 @@ menu **Krytical Nova ▸ Online ▸ Measure**:
 | --- | --- |
 | 1. Build Bot Client | A test copy of the game (latest release number) in `Builds/Bots/Client` |
 | 2. Build Measure Server, 3. Start Measure Server | Its own server in `Builds/Bots/MeasureServer`: port 7790, control page http://localhost:8091, its own save, no server list |
-| 4. Add 5 Bots | Five more bots with no window; each makes a character ("Botkari") and joins |
+| 4. Add 5 Bots | Five more bots with no window, each signed in as a player of its own (`-profile bot01` and so on); each asks the server for its character, makes one there the first time ("Botkari"; "Botkari1" when the name is taken) and joins |
 | 5. Equip Bots | Level 60, every skill, Autopilot time, through the measure server's GM commands |
 | 6. Stop All Bots, 7. Stop Measure Server | Ends the test |
 
@@ -775,6 +786,7 @@ server is on the old PC and the bots run here (owner, 17 Oct 2026).
 | Not sure which port it really uses | | In PowerShell: `Get-NetUDPEndpoint -OwningProcess (Get-Process KryticalNovaServer).Id` |
 | "A Krytical Nova server is already running on this PC … This copy stops." | You started the server a second time (two windows) | Close that window with a key; the first server is fine. Its window or control page is the one to use. |
 | "Could not listen on port …" or "The control page could not open port …" | Something else uses that port | Close the other program, or change `port` / `pagePort`. |
+| The save service stops at once: "listens on this machine or a private network only" | Its `--urls`, or an `ASPNETCORE_URLS` / `DOTNET_URLS` setting on the PC, names a public address or every address (`0.0.0.0`, `*`, `+`) | Remove that setting: the service listens on `127.0.0.1` by itself. It never opens itself to the internet (Linux plan item 10). |
 | The window says "could not read server-settings.json" | A typo broke the file (a missing comma or quote) | Fix it, or delete it and start once to get a fresh one (a new page password too). |
 | "Player turned away … the server is full" | `maxPlayers` reached | Raise `maxPlayers`. |
 | The build says "The server … is still running, or a file in it is open" | The server (or a window showing a file in its folder) is open | Stop the server, close that window, build again. |
@@ -923,3 +935,4 @@ Things learned the hard way:
   Concord's in the app, a tab each; it is never in the server list, always direct, saves only through the save service,
   makes no backups and keeps its records in `MapServers\<map>`. Ports 7779 and 7780 to forward for it.
 - 29 Oct 2026: `POST /stop` on the status port (127.0.0.1, save service key) and a SIGTERM catcher for Linux, so a service manager stops the server with a save.
+- 1 Nov 2026: a publish builds the server in its own checkout (`KN-worktrees/build-server`, Server subtarget) after the game; packed with LZ4; the backend (Mono) set for the build and named truthfully in the report; `publish-test.ps1 -ServerOnly` rebuilds only the server (section 1).

@@ -11,10 +11,15 @@ Read `Assets/_Game/_Docs/ProjectOrganization.md` before creating, moving, or gen
 - Code goes in the system's `Runtime/`, `Editor/`, `Data/` or `Tests/` folder and must be covered by an
   asmdef/asmref. Namespace: `KryticalNova.<System>[.<Sub>]`.
 - Vendor packages live untouched in `Assets/_ThirdParty/<Vendor>/`. Exceptions pinned at the root:
-  `Synty/`, `DownloadCache/`, `QuickDestruction/`, `FastScriptReload/`, `Plugins/`, `Resources/`, `TextMesh Pro/`, `DefaultNetworkPrefabs.asset`.
+  `Synty/`, `DownloadCache/`, `QuickDestruction/`, `FastScriptReload/`, `Plugins/`, `Resources/`, `TextMesh Pro/`, `Unity Cloud/`, `DefaultNetworkPrefabs.asset`.
 - Editor builders that create assets must write into the owning system's folder (path constants).
 - Move assets through Unity (`AssetDatabase.MoveAsset`) or together with their `.meta`; then grep for old path literals.
 - Validate with menu **Krytical Nova ▸ Project ▸ Validate Project Organization**.
+
+## Code review (mandatory, owner 30 Oct 2026)
+
+Every PR is reviewed against `Assets/_Game/_Docs/Guides/Review-Rules.md` at its risk level before it goes in, and
+`kn_check.py --quick` (in `Tools/Editor/Architecture/Scripts~`) runs on every change. Checks warn rather than block.
 
 ## Dependencies between systems (mandatory, owner 19 Oct 2026: before writing any code)
 

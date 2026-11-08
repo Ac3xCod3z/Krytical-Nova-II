@@ -15,7 +15,7 @@ MonoBehaviour:
   itemId: 0
   displayName: Scrap Sentinel Servos
   description: 
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 69fea0f25b369a449be7840cd9de8b38, type: 3}
   sharesIconOf: {fileID: 0}
   rarity: 2
   equipSlot: 3

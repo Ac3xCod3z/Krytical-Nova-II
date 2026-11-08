@@ -187,6 +187,16 @@ namespace KryticalNova.Tests
 
         // ---------------------------------------------------------------- colour themes
 
+        /// <summary>A painted set (Hollow Warden) keeps its Tripo paint and is dyed by region, so it paints no swatch cell.</summary>
+        private static bool WearsPaint(ItemDefinition item)
+        {
+            if (item.partCatalog == null || item.appearancePartIds == null) return false;
+            foreach (ushort id in item.appearancePartIds)
+                if (item.partCatalog.TryGet(id, out var part)
+                    && System.IO.File.Exists($"Assets/_Game/Characters/Shared/SidekickParts/Resources/Meshes/PartPaint/{part.name}_Paint.asset")) return true;
+            return false;
+        }
+
         [Test]
         public void EverySetAboveCommonWearsItsOwnTheme()
         {
@@ -215,7 +225,7 @@ namespace KryticalNova.Tests
                         var item = catalog.Get(entry.itemId);
                         Assert.AreEqual(id, item.colorTheme, $"{item.name}: bake the gear ladder");
                         Assert.AreEqual(themes, item.colorThemes, item.name);
-                        Assert.IsNotEmpty(item.colorCells, $"{item.name} paints no colour cell");
+                        if (!WearsPaint(item)) Assert.IsNotEmpty(item.colorCells, $"{item.name} paints no colour cell");
                     }
             }
         }

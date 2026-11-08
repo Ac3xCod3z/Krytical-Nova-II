@@ -51,6 +51,8 @@ Assets/
 ├── QuickDestruction/     RipVertices Quick Destruction hard-codes Assets/QuickDestruction/... (bake output, icons)
 ├── FastScriptReload/     Fast Script Reload (hot reload in Play mode). Cannot be moved out of the root
 ├── _Recovery/            Unity crash-recovery scenes (Unity-generated)
+├── Unity Cloud/          com.unity.cloud.common (via deep-linking) hard-codes Assets/Unity Cloud/Editor/...;
+│                         its app settings live in Unity Cloud/Resources
 └── DefaultNetworkPrefabs.asset   Netcode for GameObjects regenerates it at this path
 ```
 

@@ -205,6 +205,7 @@ namespace KryticalNova.EditorTools
             EditorUtility.SetDirty(dictionary);
             AssetDatabase.SaveAssets();
 
+            GearLookIconFiller.Fill();
             GearStatBaker.Bake();
             if (set.weapons != null && set.weapons.Length > 0)
             {

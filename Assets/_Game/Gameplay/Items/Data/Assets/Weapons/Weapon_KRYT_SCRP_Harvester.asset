@@ -15,7 +15,7 @@ MonoBehaviour:
   itemId: 0
   displayName: Scrap Sentinel Harvester
   description: Harvester look.
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 591a93ea101f56847934df9b20eb8afe, type: 3}
   sharesIconOf: {fileID: 0}
   rarity: 2
   equipSlot: 1

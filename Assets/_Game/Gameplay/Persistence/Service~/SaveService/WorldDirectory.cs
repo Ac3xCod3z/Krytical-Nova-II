@@ -1,7 +1,8 @@
 // The world service (online phase 5, milestone 2), inside the save service: who is where, and travel tickets.
 //
-// - Presence: every map server reports every few seconds which map it runs, on which port, and which accounts it holds.
-//   A server silent for longer than Silence is gone. The players' own saves and locks stay in the database; presence
+// - Presence: every map server reports every few seconds which map it runs, on which port, and which accounts it holds,
+//   and the address players on the internet reach it at when it knows it. An address that is local, private or not an
+//   IPv4 is never kept, so players are never sent to one (Linux plan item 2). A server silent for longer than Silence is gone. The players' own saves and locks stay in the database; presence
 //   is kept in memory only (it is rebuilt by the next reports when the service restarts).
 // - Tickets: the server a player is on asks for a ticket to another map. The service gives a random, unguessable
 //   ticket, good for TicketLife and for one use, and the address of that map's server. The destination server
@@ -11,6 +12,8 @@
 // No game rule lives here (owner, 18 Oct 2026: the service never learns the game's rules): which portal leads where and
 // who may use it are decided by the map servers.
 
+using System.Net;
+using System.Net.Sockets;
 using System.Security.Cryptography;
 
 namespace KryticalNova.SaveService
@@ -38,8 +41,23 @@ namespace KryticalNova.SaveService
             if (string.IsNullOrWhiteSpace(report.Server) || string.IsNullOrWhiteSpace(report.Map)) return "server and map";
             if (report.Port < 1 || report.Port > 65535) return "port";
             if ((report.Players?.Count ?? 0) > MaxPlayersPerReport) return "too many players";
-            lock (gate) servers[report.Server] = new Seen(report, now());
+            report = report with { Address = IsPublicIPv4(report.Address) ? report.Address!.Trim() : null };
+            lock (gate) servers[report.Server!] = new Seen(report, now());
             return null;
+        }
+
+        /// <summary>
+        /// True for an IPv4 address players on the internet can reach: not loopback, not 10/8, 172.16/12, 192.168/16,
+        /// 169.254/16, 100.64/10 (a provider's shared range), 0/8, multicast or reserved. The game checks the same
+        /// (ControlPageRules.IsPublicIPv4).
+        /// </summary>
+        public static bool IsPublicIPv4(string? text)
+        {
+            if (string.IsNullOrWhiteSpace(text) || !IPAddress.TryParse(text.Trim(), out IPAddress? address)
+                || address.AddressFamily != AddressFamily.InterNetwork || IPAddress.IsLoopback(address)) return false;
+            byte[] b = address.GetAddressBytes();
+            return b[0] != 0 && b[0] != 10 && b[0] < 224 && !(b[0] == 172 && b[1] >= 16 && b[1] <= 31) && !(b[0] == 192 && b[1] == 168)
+                   && !(b[0] == 169 && b[1] == 254) && !(b[0] == 100 && b[1] >= 64 && b[1] <= 127);
         }
 
         /// <summary>A map server that stops says so at once (it would otherwise count as alive until Silence).</summary>
@@ -57,7 +75,7 @@ namespace KryticalNova.SaveService
                 var list = new List<ServerView>();
                 foreach (Seen seen in servers.Values)
                     list.Add(new ServerView(seen.Report.Server!, seen.Report.Map!, seen.Report.Name ?? "", seen.Report.Port,
-                                            seen.Report.Players?.Count ?? 0, (int)(now() - seen.At).TotalSeconds));
+                                            seen.Report.Players?.Count ?? 0, (int)(now() - seen.At).TotalSeconds, seen.Report.Address));
                 list.Sort((a, b) => string.CompareOrdinal(a.Map, b.Map));
                 return list;
             }
@@ -79,7 +97,7 @@ namespace KryticalNova.SaveService
 
         /// <summary>
         /// A ticket for a player to another map: only the server the player is on may ask, and only for a map whose server
-        /// is alive. The answer carries the ticket and that server's port.
+        /// is alive. The answer carries the ticket, that server's port and its public address (null when it reported none).
         /// </summary>
         public TicketAnswer Issue(TicketRequest request)
         {
@@ -102,7 +120,7 @@ namespace KryticalNova.SaveService
                 string name = Convert.ToHexString(RandomNumberGenerator.GetBytes(32)).ToLowerInvariant();
                 tickets[name] = new Ticket(request.Account, request.Character ?? "", request.From, to.Report.Server!, request.ToMap,
                                            request.Arrival ?? "", now() + TicketLife);
-                return new TicketAnswer(true, null, name, to.Report.Server!, to.Report.Map!, to.Report.Port, (int)TicketLife.TotalSeconds);
+                return new TicketAnswer(true, null, name, to.Report.Server!, to.Report.Map!, to.Report.Port, (int)TicketLife.TotalSeconds, to.Report.Address);
             }
         }
 
@@ -132,14 +150,14 @@ namespace KryticalNova.SaveService
     }
 
     public sealed record PresentPlayer(string? Account, string? Character);
-    public sealed record PresenceReport(string? Server, string? Map, string? Name, int Port, List<PresentPlayer>? Players);
+    public sealed record PresenceReport(string? Server, string? Map, string? Name, int Port, List<PresentPlayer>? Players, string? Address = null);
     public sealed record GoneRequest(string? Server);
-    public sealed record ServerView(string Server, string Map, string Name, int Port, int Players, int SecondsAgo);
+    public sealed record ServerView(string Server, string Map, string Name, int Port, int Players, int SecondsAgo, string? Address);
     public sealed record WhereAnswer(string Server, string Map, string Character);
     public sealed record TicketRequest(string? Account, string? Character, string? From, string? ToMap, string? Arrival);
-    public sealed record TicketAnswer(bool Granted, string? Refused, string? Ticket, string? Server, string? Map, int Port, int Seconds)
+    public sealed record TicketAnswer(bool Granted, string? Refused, string? Ticket, string? Server, string? Map, int Port, int Seconds, string? Address)
     {
-        public static TicketAnswer No(string why) => new TicketAnswer(false, why, null, null, null, 0, 0);
+        public static TicketAnswer No(string why) => new TicketAnswer(false, why, null, null, null, 0, 0, null);
     }
     public sealed record RedeemRequest(string? Ticket, string? Server);
     public sealed record RedeemAnswer(bool Granted, string? Refused, string? Account, string? Character, string? From, string? Map, string? Arrival)

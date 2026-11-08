@@ -1,0 +1,8 @@
+[Unit]
+Description=Krytical Nova nightly copy of the TEST database (kn-backup.sh)
+After=postgresql.service
+Requires=postgresql.service
+
+[Service]
+Type=oneshot
+ExecStart=/opt/kn/kn-backup.sh

@@ -4,7 +4,7 @@ service's /world/... calls. Two pretend map servers (Concord and Transit Row) re
 server they are on to the other map, and only that server may redeem it, once, within its 30 seconds.
 
 TEST database only: it starts its own save service with --test (port 7802, krytical_nova_test) and refuses to run if
-something already listens there. The world service keeps nothing in the database.
+something already listens there. First it checks that the service will not start on every address (Linux plan item 10). The world service keeps nothing in the database.
 
     python world_test.py <SaveService.dll or SaveService.exe>
 
@@ -51,9 +51,12 @@ def check(what, ok):
         failures.append(what)
 
 
-def report(server, world_map, name, port, players):
-    return call('POST', '/world/presence', {'server': server, 'map': world_map, 'name': name, 'port': port,
-                                            'players': [{'account': a, 'character': c} for a, c in players]})
+def report(server, world_map, name, port, players, address=None):
+    body = {'server': server, 'map': world_map, 'name': name, 'port': port,
+            'players': [{'account': a, 'character': c} for a, c in players]}
+    if address is not None:
+        body['address'] = address
+    return call('POST', '/world/presence', body)
 
 
 def main():
@@ -61,6 +64,14 @@ def main():
         print('Something already listens on 7802 (a test save service?). Stop it first; this test starts its own.')
         return 2
     command = ['dotnet', SERVICE, '--test'] if SERVICE.endswith('.dll') else [SERVICE, '--test']
+    # Linux plan item 10: told to listen on every address, the service stops at once and never opens the port. The
+    # address goes before --test: .NET reads a bare --test followed by another argument as --test=<that argument>.
+    try:
+        refused = subprocess.run(command[:-1] + ['--urls=http://0.0.0.0:7802', '--test'], stdout=subprocess.DEVNULL,
+                                 stderr=subprocess.PIPE, timeout=60)
+        refused_ok = refused.returncode == 1 and b'private network only' in refused.stderr and not listening()
+    except subprocess.TimeoutExpired:
+        refused_ok = False
     service = subprocess.Popen(command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     try:
         for _ in range(60):
@@ -76,13 +87,15 @@ def main():
                 pass
             time.sleep(0.5)
         print('World service test')
+        check('the service refuses to listen on every address', refused_ok)
 
         status, _ = call('GET', '/world/servers', key='not-the-key')
         check('a call without the service key is refused', status == 401)
 
-        status, answer = report(CONCORD, 'Zone01_StarterTown', 'Concord', 7790, [('acct-ash', 'Ash')])
+        # Concord names a local address (never handed out), Transit Row a public one (Linux plan item 2).
+        status, answer = report(CONCORD, 'Zone01_StarterTown', 'Concord', 7790, [('acct-ash', 'Ash')], '127.0.0.1')
         check('Concord reports', status == 200)
-        status, _ = report(TRANSIT, 'MeridianSprawl_Z1_TransitRow', 'Transit Row', 7792, [])
+        status, _ = report(TRANSIT, 'MeridianSprawl_Z1_TransitRow', 'Transit Row', 7792, [], '203.0.113.20')
         check('Transit Row reports', status == 200)
         status, _ = report('', 'x', 'x', 7790, [])
         check('a report without a server is refused', status == 400)
@@ -90,6 +103,9 @@ def main():
         status, servers = call('GET', '/world/servers')
         check('both map servers are listed', status == 200 and sorted(s['map'] for s in servers) ==
               ['MeridianSprawl_Z1_TransitRow', 'Zone01_StarterTown'])
+        addresses = {s['map']: s.get('address') for s in servers}
+        check('a public address is kept, a local one never', addresses.get('MeridianSprawl_Z1_TransitRow') == '203.0.113.20'
+              and addresses.get('Zone01_StarterTown') is None)
         status, where = call('GET', '/world/where?account=acct-ash')
         check('Ash is on Concord', status == 200 and where['server'] == CONCORD and where['character'] == 'Ash')
         status, _ = call('GET', '/world/where?account=acct-nobody')
@@ -103,8 +119,8 @@ def main():
 
         _, ticket = call('POST', '/world/ticket', {'account': 'acct-ash', 'character': 'Ash', 'from': CONCORD,
                                                    'toMap': 'MeridianSprawl_Z1_TransitRow', 'arrival': 'portal-south'})
-        check('a ticket to Transit Row is granted with its port', ticket['granted'] and ticket['port'] == 7792 and
-              ticket['server'] == TRANSIT and len(ticket['ticket']) == 64)
+        check('a ticket to Transit Row is granted with its port and address', ticket['granted'] and ticket['port'] == 7792 and
+              ticket.get('address') == '203.0.113.20' and ticket['server'] == TRANSIT and len(ticket['ticket']) == 64)
 
         _, redeemed = call('POST', '/world/redeem', {'ticket': ticket['ticket'], 'server': CONCORD})
         check('another server cannot redeem it', not redeemed['granted'])

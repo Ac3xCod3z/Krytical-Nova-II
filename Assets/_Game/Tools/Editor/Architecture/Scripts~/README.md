@@ -72,4 +72,40 @@ Systems, Hubs, Design data, Tests and How to read.
 - `template.html`: the page, in the Encyclopedia's comic look. The data goes in at `/*__DATA__*/null`.
 - `baseline.json`: the ratchet, written by `--baseline`: the uphill links, the two-way pairs and the scripts that
   assets hold.
-- `compile_check.py`, `run_editmode_tests.py`: see above.
+- `compile_check.py`, `run_editmode_tests.py`: see above; `run_batch_checks.py`: the Editor checks, below.
+- `kn_check.py`, `organization_check.py`, `known-findings.json`, `known-test-failures.json`: the gate, below.
+- `own_tree.py`: runs a batch Unity in its own job object and stops only that tree when the PC runs low on memory:
+  below 2 GB free for 15 s it asks Unity to quit and forces it only after 60 s (FORCED), below 1 GB it forces at once;
+  `run_editmode_tests.py` uses it.
+
+## The gate before a commit: kn_check
+
+```bash
+python "Assets/_Game/Tools/Editor/Architecture/Scripts~/kn_check.py"
+```
+
+`--quick` (the default, under 2 minutes, Unity can stay closed) runs the checks whose files changed against
+`origin/main` and names each one that failed (`--all` runs all four whatever changed):
+the file-path rules of Validate Project Organization (`organization_check.py`, a Python copy of
+`ProjectOrganizationRules`), `dependency_map.py --check` (the report it rewrites is put back), `compile_check.py` and
+`compile_check.py --server`. `--only organization,dependencies` runs some of them. Findings that were there before a
+check joined the gate are in `known-findings.json` with their reason: they do not fail it, a new one does, and so does
+a listed one that has gone (take it off the list). When all four pass, `Logs/kn-check-stamp.json` records the git tree
+of the files at that moment, and `--stamp-ok` says whether the files are still the same. Every run also prints the
+change's risk level from `risk-tiers.json` (high, medium or low, and what that level needs before the PR goes in, as in
+`_Docs/Guides/Review-Rules.md`); `--risk` prints only that.
+
+`--full` (a heavy Unity job: in a slot, with the checkout closed in the Editor) adds `tests`: the EditMode tests of
+every system the change reaches, meaning the changed systems and every system that uses them (`--all`: every test
+assembly). Tests that already failed on main are in `known-test-failures.json` with their reason. The check passes when
+exactly those fail among the tests that ran; a new failure fails it, and so does a listed test that now passes.
+`--full` then adds `editor`: `run_batch_checks.py` runs Validate Project Organization and Check Icons in a batch Unity
+(`Tools/Editor/Checks/BatchChecks.cs`, no dialog, results in `Logs/batch-checks.txt`). It runs when anything under
+`Assets/` outside the docs changed, and its known errors are in `known-findings.json` (`organization_unity`, `icons`).
+
+`kn_commit_hook.py` is a Claude Code `PreToolUse` hook for Bash (switched on in `.claude/settings.json` only with
+the Master's OK). On `git commit` or `gh pr create` in a checkout of this project it asks `kn_check.py --state` (about
+2 seconds) whether the last passing run still matches the files. It says nothing when it does; otherwise the session
+gets one warning line with the reason and the line to run. It refuses the command only for a high-risk change whose
+last full run failed on exactly these files. `kn_check` keeps that last run in `Logs/kn-check-last.json`. The plan is
+`_Docs/Plans/code-evals-and-checks-plan.md`.

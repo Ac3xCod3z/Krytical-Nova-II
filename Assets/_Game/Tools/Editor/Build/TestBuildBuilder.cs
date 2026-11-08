@@ -114,6 +114,9 @@ namespace KryticalNova.EditorTools
                 }
             }
 
+            // A game is a Player build, whatever a server build left behind in this checkout (ClientBuildGuard). Checked before the
+            // backend is switched: a batch run that has to start again ends here, and must not leave IL2CPP in ProjectSettings.
+            ClientBuildGuard.Prepare(output.Title);
             NamedBuildTarget standalone = NamedBuildTarget.Standalone;
             ScriptingImplementation backendWas = PlayerSettings.GetScriptingBackend(standalone);
             // The project's own backend: nothing is set and nothing has to be put back, so ProjectSettings is not written.
@@ -165,14 +168,17 @@ namespace KryticalNova.EditorTools
                 locationPathName = folder + "/" + ExeName,
                 targetGroup = BuildTargetGroup.Standalone,
                 target = BuildTarget.StandaloneWindows64,
+                subtarget = (int)StandaloneBuildSubtarget.Player,
                 options = output.Options
             };
-            // The maps' bundles are built with the game: what the maps share goes in one bundle first, never a copy in each.
-            Debug.Log(MapAddressables.IsolateShared());
+            // The maps' bundles are built with the game: what the maps share goes in one bundle first, never a copy in each
+            // (searched again only when the maps or their groups changed since the last search).
+            Debug.Log(MapAddressables.IsolateSharedWhenChanged());
             BuildReport report = BuildPipeline.BuildPlayer(options);
             WriteSizeReport(report, scenes, output.Title, "Scripting backend: " + BackendName(backend), output.ReportPath);
 
             bool ok = report.summary.result == BuildResult.Succeeded;
+            if (ok) ClientBuildGuard.RecordBuilt();
             if (ok) Debug.Log($"[Build] {output.Title} ({BackendName(backend)}) written to {folder} ({Megabytes(report.summary.totalSize)}). Sizes: {output.ReportPath}");
             else Debug.LogError($"[Build] {output.Title} {report.summary.result}: {report.summary.totalErrors} errors. See {output.ReportPath}");
             return ok;

@@ -42,19 +42,26 @@ namespace KryticalNova.Progression
         public bool IsJumpSelected => selectedSkill == MovementSkillId.Jump && jumpRank > 0 && !IsRiding;
         /// <summary>On a mount: walking and running go at the mount's speeds (<see cref="SetRideSpeeds"/>).</summary>
         public bool IsRiding => rideWalkSpeed > 0f;
+        /// <summary>
+        /// Metres a second now. On foot the Move Speed from gear and stats (Boots) stops at the top Run speed; the ranged
+        /// Stance's Move Speed and a GM's speed go on top (owner, 5 Nov 2026; MovementSettings.FootSpeed).
+        /// </summary>
         public float CurrentSpeed => SpeedFor(IsRunning);
         /// <summary>
-        /// What walking (<paramref name="running"/> false) or running would go at now, in metres a second: the Run rank (walking speed
-        /// without one), the mount, the Move Speed stat and a GM's speed, by the same rules as <see cref="CurrentSpeed"/>. The entity
-        /// netcode sends both to the player's ghost, which picks one per click.
+        /// What walking (<paramref name="running"/> false) or running would go at now, in metres a second, by the same rules as
+        /// <see cref="CurrentSpeed"/> (the Run rank, the mount, MovementSettings.FootSpeed, a GM's speed). The entity netcode sends
+        /// both to the player's ghost, which picks one per click.
         /// </summary>
-        public float SpeedFor(bool running) =>
-            BaseSpeedFor(running) * (IsRiding ? 1f : StatSpeedMultiplier) * (gmState != null ? Mathf.Max(0.1f, gmState.SpeedMultiplier) : 1f);
-        /// <summary>What the Move Speed stat (Boots, the ranged Stance) multiplies walking and running by.</summary>
-        public float StatSpeedMultiplier => movementSettings == null || combatStats == null ? 1f
-            : movementSettings.StatSpeedMultiplier(combatStats.GetStatValue(StatType.MoveSpeedPercent));
+        public float SpeedFor(bool running)
+        {
+            float gm = gmState != null ? Mathf.Max(0.1f, gmState.SpeedMultiplier) : 1f;
+            float baseSpeed = BaseSpeedFor(running);
+            if (IsRiding || movementSettings == null || combatStats == null) return baseSpeed * gm;
+            return movementSettings.FootSpeed(baseSpeed, combatStats.GetStatValueWithoutBuffs(StatType.MoveSpeedPercent),
+                combatStats.GetStatValue(StatType.MoveSpeedPercent), gm);
+        }
         private float BaseSpeedFor(bool running) => IsRiding ? (running ? rideRunSpeed : rideWalkSpeed)
-            : movementSettings == null ? 0f : running && runRank > 0 && runSkill != null && runSkill.TryGetRank(runRank, out var rank)
+            : movementSettings == null ? 0f : running && runSkill != null && runSkill.TryGetRank(runRank, out var rank)
             ? Mathf.Max(movementSettings.walkSpeed, rank.runSpeed) : movementSettings.walkSpeed;
 
         private float rideWalkSpeed, rideRunSpeed;

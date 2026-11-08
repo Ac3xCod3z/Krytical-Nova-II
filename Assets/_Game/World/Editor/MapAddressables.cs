@@ -1,6 +1,8 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 using UnityEditor;
 using UnityEditor.AddressableAssets;
@@ -26,9 +28,19 @@ namespace KryticalNova.EditorTools
         /// <summary>What two or more maps share, in one bundle (ProjectOrganization section 10's planned World_Common).</summary>
         public const string CommonGroup = "World_Common";
         private const string IsolationGroup = "Duplicate Asset Isolation"; // the name the package's own fix gives its group
+        /// <summary>
+        /// What <see cref="IsolateShared"/> last saw and moved, per checkout (Library is never committed): line 1 the
+        /// fingerprint of the maps and the groups before it ran, line 2 after it ran, then the GUIDs it moved into
+        /// <see cref="CommonGroup"/>.
+        /// </summary>
+        public const string IsolationStampPath = "Library/KryticalNova-MapIsolation.stamp";
 
         [MenuItem("Krytical Nova/World/Make Maps Addressable")]
         public static void MakeAll() => Debug.Log(Apply());
+
+        /// <summary>The full search, whatever the stamp says (a build skips it while nothing it reads has changed).</summary>
+        [MenuItem("Krytical Nova/World/Isolate Shared Map Assets (Full Search)")]
+        public static void IsolateSharedMenu() => Debug.Log(IsolateShared());
 
         /// <summary>Every map scene that exists: Concord (Zone01) and the World Atlas maps.</summary>
         public static List<string> MapScenePaths()
@@ -84,13 +96,21 @@ namespace KryticalNova.EditorTools
         public static string IsolateShared()
         {
             AddressableAssetSettings settings = EnsureSettings();
+            return IsolateShared(settings, Fingerprint(settings));
+        }
+
+        // The search itself, given the fingerprint of what it is about to read (worked out once by the caller).
+        private static string IsolateShared(AddressableAssetSettings settings, string fingerprint)
+        {
             var rule = new UnityEditor.AddressableAssets.Build.AnalyzeRules.CheckBundleDupeDependencies();
             rule.FixIssues(settings);
+            var movedGuids = new List<string>();
             AddressableAssetGroup found = settings.FindGroup(IsolationGroup);
             AddressableAssetGroup common = settings.FindGroup(CommonGroup);
             int moved = 0;
             if (found != null)
             {
+                movedGuids.AddRange(found.entries.Select(e => e.guid));
                 if (common == null)
                 {
                     found.Name = CommonGroup;
@@ -110,7 +130,81 @@ namespace KryticalNova.EditorTools
                 AssetDatabase.SaveAssets();
             }
             int total = common != null ? common.entries.Count : 0;
+            // Nothing moved: the groups are as they were, so the fingerprint after is the one before (no second pass).
+            WriteIsolationStamp(fingerprint, moved == 0 ? fingerprint : Fingerprint(settings), movedGuids);
             return $"[Maps] {moved} more asset(s) shared by two or more maps moved into {CommonGroup} ({total} in all): no map bundle carries its own copy.";
+        }
+
+        /// <summary>
+        /// Before a game build (31 Oct 2026, owner's pick): <see cref="IsolateShared"/>'s full search took about 6 minutes of
+        /// every publish and found nothing new when the maps had not changed, so it runs only when the maps, what they use or
+        /// the Addressables groups differ from what the last search saw (<see cref="IsolationStampPath"/>). Two states count
+        /// as seen: the groups as the search found them, which is what a build checkout has again after it is reset to the
+        /// commit before each publish (the reset undoes moves that were never committed, so the assets that search moved are
+        /// moved again here), and the groups as the search left them, which is what the project you work in keeps, so a test
+        /// build there does not search again either. A wrong skip only leaves copies in map bundles (a bigger download);
+        /// nothing breaks. The menu Isolate Shared Map Assets (Full Search) always searches.
+        /// </summary>
+        public static string IsolateSharedWhenChanged()
+        {
+            AddressableAssetSettings settings = EnsureSettings();
+            string[] stamp = File.Exists(IsolationStampPath) ? File.ReadAllLines(IsolationStampPath) : Array.Empty<string>();
+            string fingerprint = Fingerprint(settings);
+            if (stamp.Length < 2 || (stamp[0] != fingerprint && stamp[1] != fingerprint)) return IsolateShared(settings, fingerprint);
+
+            AddressableAssetGroup common = settings.FindGroup(CommonGroup);
+            if (common == null) return IsolateShared(settings, fingerprint);
+            int again = 0;
+            foreach (string guid in stamp.Skip(2).Where(g => g.Length > 0))
+            {
+                if (string.IsNullOrEmpty(AssetDatabase.GUIDToAssetPath(guid))) continue;
+                AddressableAssetEntry entry = settings.FindAssetEntry(guid);
+                if (entry != null && entry.parentGroup == common) continue;
+                settings.CreateOrMoveEntry(guid, common, false, false);
+                again++;
+            }
+            if (again > 0)
+            {
+                settings.SetDirty(AddressableAssetSettings.ModificationEvent.BatchModification, null, true, true);
+                AssetDatabase.SaveAssets();
+            }
+            return $"[Maps] The maps and their groups are as the last search saw them: search skipped ({again} asset(s) it had moved moved into " +
+                   $"{CommonGroup} again, {common.entries.Count} in all). Full search: Krytical Nova ▸ World ▸ Isolate Shared Map Assets (Full Search).";
+        }
+
+        // What the search reads: each map scene (its import hash), every asset the maps use (by path, so a newly shared one
+        // counts), the Addressables settings and every group file. A change to any of them makes the next build search again.
+        private static string Fingerprint(AddressableAssetSettings settings)
+        {
+            List<string> scenes = MapScenePaths();
+            var text = new StringBuilder();
+            foreach (string scene in scenes) text.Append(scene).Append('=').Append(AssetDatabase.GetAssetDependencyHash(scene)).Append('\n');
+            foreach (string used in AssetDatabase.GetDependencies(scenes.ToArray(), true).OrderBy(p => p, StringComparer.Ordinal)) text.Append(used).Append('\n');
+            var files = new List<string> { AssetDatabase.GetAssetPath(settings) };
+            files.AddRange(settings.groups.Where(g => g != null).Select(g => AssetDatabase.GetAssetPath(g)));
+            using (var sha = SHA256.Create())
+            {
+                foreach (string file in files.Where(File.Exists).OrderBy(p => p, StringComparer.Ordinal))
+                    text.Append(file).Append('=').Append(Convert.ToBase64String(sha.ComputeHash(File.ReadAllBytes(file)))).Append('\n');
+                return Convert.ToBase64String(sha.ComputeHash(Encoding.UTF8.GetBytes(text.ToString())));
+            }
+        }
+
+        // Before: a build checkout is reset to the same commit next time, so it matches again, and the moved GUIDs are put
+        // back by IsolateSharedWhenChanged. After: the project you work in keeps the moves, so it matches there.
+        private static void WriteIsolationStamp(string before, string after, List<string> movedGuids)
+        {
+            var guids = new List<string>();
+            if (File.Exists(IsolationStampPath))
+            {
+                string[] was = File.ReadAllLines(IsolationStampPath);
+                // Moves the last search made that this one did not need (they are in the groups now) are kept, in case the
+                // checkout is reset to a commit without them.
+                guids.AddRange(was.Skip(2).Where(g => g.Length > 0 && !movedGuids.Contains(g)));
+            }
+            guids.AddRange(movedGuids);
+            Directory.CreateDirectory(Path.GetDirectoryName(IsolationStampPath));
+            File.WriteAllLines(IsolationStampPath, new[] { before, after }.Concat(guids.Distinct()));
         }
 
         private static AddressableAssetSettings EnsureSettings()
@@ -137,7 +231,7 @@ namespace KryticalNova.EditorTools
         private static bool StoreProbeLightingWithScenes()
         {
             // The setting's own class is internal to the render pipeline: it is set in the URP global settings asset.
-            Object global = GraphicsSettings.GetSettingsForRenderPipeline<UnityEngine.Rendering.Universal.UniversalRenderPipeline>();
+            UnityEngine.Object global = GraphicsSettings.GetSettingsForRenderPipeline<UnityEngine.Rendering.Universal.UniversalRenderPipeline>();
             if (global == null) return false;
             var serialized = new SerializedObject(global);
             SerializedProperty property = serialized.GetIterator();

@@ -160,9 +160,12 @@ namespace KryticalNova.EditorTools
         /// <summary>
         /// Build, stage, sign and (when CCD is set up) upload to the test line, then build the server of the same
         /// number. A line per step in the release log. <paramref name="buildGame"/> false re-stages the game already
-        /// in Builds/Release/Game (for tests: its version is the one it was built with).
+        /// in Builds/Release/Game (for tests: its version is the one it was built with). <paramref name="buildServer"/> false
+        /// leaves the server to the server checkout (the background publish, <see cref="BackgroundPublisher"/>): a server build
+        /// in this Library would switch it to the Server subtarget and back, and a Unity stopped in between leaves the next
+        /// client build to clear its content cache and rebuild every map (build 14, 31 Oct 2026).
         /// </summary>
-        public static bool Publish(bool buildGame = true)
+        public static bool Publish(bool buildGame = true, bool buildServer = true)
         {
             Directory.CreateDirectory(Root);
             Log("--- Publish to Test " + DateTime.Now);
@@ -176,6 +179,11 @@ namespace KryticalNova.EditorTools
                     return Fail("the game did not build (see " + output.ReportPath + ")");
             }
             if (!Directory.Exists(GameFolder)) return Fail("there is no release build in " + GameFolder);
+
+            // The gate: no map bundle may carry more switched-off components or inactive objects than its scene (build 13, 31 Oct 2026).
+            BundleAuditGate.Result audit = BundleAuditGate.Audit(GameFolder, Root, build);
+            Log(audit.Report.TrimEnd());
+            if (!audit.Ok) return Fail("the bundle audit found maps that differ from their scenes (listed above); nothing was staged or uploaded");
 
             string launcher = Path.GetFullPath(ToolsFolder + "/Launcher/" + LauncherName);
             string news = File.Exists(NewsPath) ? $" --news \"{Path.GetFullPath(NewsPath)}\"" : "";
@@ -193,7 +201,8 @@ namespace KryticalNova.EditorTools
                 return Fail("the upload to Cloud Content Delivery failed");
             Log("Uploaded build " + version + " to the TEST line.");
             Debug.Log($"[Release] Build {version} is on the TEST line. Check it with your test launcher, then Krytical Nova ▸ Release ▸ Promote Test to Live.");
-            BuildMatchingServer();
+            if (buildServer) BuildMatchingServer();
+            else Log("Server: built next in its own checkout (" + BackgroundPublisher.ServerCheckoutFolder + ").");
             return true;
         }
 
@@ -225,6 +234,9 @@ namespace KryticalNova.EditorTools
         public static string Promote()
         {
             Settings settings = Settings.Load();
+            // The gate again, read-only: the staged bundles are the ones that passed the audit.
+            string unsafeReason = BundleAuditGate.VerifyStaged(Root, StoreFolder + "/manifest.json");
+            if (unsafeReason != null) { Log("Promote refused: " + unsafeReason); return "Not promoted: " + unsafeReason; }
             if (!RunUgs($"ccd badges list -b {settings.bucketName} -n test -j -e {settings.environment} -p {settings.projectId}", out string list))
                 return "Could not read the TEST line: see " + LogPath;
             Match release = Regex.Match(list, "\"(?:releasenum|releaseNum|ReleaseNum)\"\\s*:\\s*(\\d+)");

@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Text;
 using UnityEditor;
 using UnityEngine;
 using Debug = UnityEngine.Debug;
@@ -14,6 +15,11 @@ namespace KryticalNova.EditorTools
     /// That Unity is started from this Editor, so it runs as the owner and finds the signing key and the UGS login. It
     /// publishes the commit this folder is on: work that is not committed is not in it. Every publish needs the Unity
     /// Accelerator (the local cache server): without it the publish does not start.
+    /// <para>The matching server is built afterwards in a checkout of its own (<see cref="ServerCheckoutFolder"/>, 31 Oct
+    /// 2026), opened on the Server subtarget and never switched: the game's Library keeps the Player subtarget, its
+    /// scripts and its map-bundle cache, and the server's keeps its own. Two Unity never run at once: the game's Unity queues
+    /// the server before it quits (<see cref="QueueServerAfterExit"/>), so the server is built even when the Editor that
+    /// started the publish has been closed.</para>
     /// </summary>
     [InitializeOnLoad]
     public static class BackgroundPublisher
@@ -22,6 +28,15 @@ namespace KryticalNova.EditorTools
         public const string BatchLogPath = ReleasePublisher.Root + "/background-publish.log";
         private const string LockPath = ReleasePublisher.Root + "/background-publish.lock";
         private const string ResultPath = ReleasePublisher.Root + "/background-publish.result";
+        private const string RestartedMarker = ReleasePublisher.Root + "/background-publish.restarted";
+        private const string RestartResult = "RESTART";
+        /// <summary>In the result of a publish that reached the test line: its server is built next.</summary>
+        private const string UploadedResult = "uploaded to TEST";
+        /// <summary>The third line of the lock file while the server step runs.</summary>
+        private const string ServerPhase = "server";
+        public const string ServerLogPath = ReleasePublisher.Root + "/server-only.log";
+        /// <summary>On the game's batch Unity of a script that builds the server itself (publish-test.ps1): nothing is queued.</summary>
+        public const string ServerByScriptFlag = "-knServerStepByScript";
         private const string Menu = "Krytical Nova/Release/";
 
         private static double s_NextCheck;
@@ -35,7 +50,17 @@ namespace KryticalNova.EditorTools
         public static string CheckoutFolder =>
             Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "KN-worktrees", "build");
 
+        /// <summary>The server checkout: builds the dedicated server only, with a Library of its own on the Server subtarget.</summary>
+        public static string ServerCheckoutFolder =>
+            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "KN-worktrees", "build-server");
+
         private static string ProjectFolder => Path.GetFullPath(".");
+
+        /// <summary>True in the server checkout (ServerBuildBuilder leaves it on the Server subtarget).</summary>
+        public static bool InServerCheckout => SameFolder(ProjectFolder, ServerCheckoutFolder);
+
+        private static bool SameFolder(string a, string b) =>
+            string.Equals(Path.GetFullPath(a).TrimEnd('\\', '/'), Path.GetFullPath(b).TrimEnd('\\', '/'), StringComparison.OrdinalIgnoreCase);
 
         // ------------------------------------------------------------------ the Accelerator
 
@@ -80,8 +105,8 @@ namespace KryticalNova.EditorTools
 
         private static string CheckoutProblem()
         {
-            if (string.Equals(ProjectFolder.TrimEnd('\\', '/'), CheckoutFolder, StringComparison.OrdinalIgnoreCase))
-                return "This Editor is the build checkout. Publish from the folder you work in.";
+            if (SameFolder(ProjectFolder, CheckoutFolder) || InServerCheckout)
+                return "This Editor is a build checkout. Publish from the folder you work in.";
             if (!Directory.Exists(Path.Combine(CheckoutFolder, "Assets")))
                 return "There is no build checkout at " + CheckoutFolder + ". The Release Guide (section 1a) says how to make it.";
             return null;
@@ -98,29 +123,94 @@ namespace KryticalNova.EditorTools
         /// <summary>Moves the build checkout to <paramref name="commit"/> and starts the batch Unity there. Null when it started, otherwise why not.</summary>
         public static string Start(string commit)
         {
-            // The checkout is for building only: whatever a build left changed in it is thrown away.
-            if (!Git(CheckoutFolder, "checkout --force --detach " + commit, out string moved)) return "The build checkout could not move to " + commit + ":\n" + moved;
+            string ready = PrepareCheckout(CheckoutFolder, commit);
+            if (ready != null) return ready;
+            if (File.Exists(ResultPath)) File.Delete(ResultPath);
+            string started = StartUnity(CheckoutFolder, commit, "KryticalNova.EditorTools.BackgroundPublisher.RunInBatch", BatchLogPath, "", null);
+            if (started == null) Debug.Log($"[Release] Publishing commit {commit.Substring(0, 9)} in the background. Keep working: the console says when it is done. Log: {BatchLogPath}");
+            return started;
+        }
 
-            string builds = Path.Combine(CheckoutFolder, "Builds");
+        /// <summary>
+        /// The server step, queued by the game's batch Unity just before it quits, so it runs whether or not the Editor that
+        /// started the publish is still open. The server checkout (made the first time) is moved to <paramref name="commit"/>,
+        /// then a hidden PowerShell waits for this Unity to exit and runs a batch Unity there, opened on the Server subtarget
+        /// (ServerBuildBatch.BuildWindows), below normal priority. The lock names that PowerShell while it waits and builds,
+        /// so no second publish starts meanwhile, and the Editor, when open, reports the server when it ends. Null when it
+        /// was queued, otherwise why not.
+        /// </summary>
+        public static string QueueServerAfterExit(string commit)
+        {
+            string busy = ServerBuildBuilder.FolderBusy(ServerBuildBuilder.OutputFolder(ServerBuildBuilder.Os.Windows));
+            if (busy != null) return busy;
+            if (!Directory.Exists(Path.Combine(ServerCheckoutFolder, "Assets")))
+            {
+                // A git worktree of this project: the first server build imports its Library (through the Accelerator).
+                Directory.CreateDirectory(Path.GetDirectoryName(ServerCheckoutFolder));
+                if (!Git(ProjectFolder, $"worktree add --detach {Quote(ServerCheckoutFolder)} {commit}", out string made))
+                    return "The server checkout could not be made at " + ServerCheckoutFolder + ":\n" + made;
+            }
+            string ready = PrepareCheckout(ServerCheckoutFolder, commit);
+            if (ready != null) return ready;
+            if (File.Exists(ServerBuildBatch.ResultPath)) File.Delete(ServerBuildBatch.ResultPath);
+
+            int me = Process.GetCurrentProcess().Id;
+            string unity = UnityArguments(ServerCheckoutFolder, "KryticalNova.EditorTools.ServerBuildBatch.BuildWindows", ServerLogPath, "-standaloneBuildSubtarget Server");
+            string script = $"Wait-Process -Id {me} -ErrorAction SilentlyContinue; " +
+                            $"$p = Start-Process -FilePath {PsQuote(EditorApplication.applicationPath)} -ArgumentList {PsQuote(unity)} " +
+                            $"-WorkingDirectory {PsQuote(ServerCheckoutFolder)} -WindowStyle Hidden -PassThru; " +
+                            "try { $p.PriorityClass = 'BelowNormal' } catch {}; $p.WaitForExit()";
+            var info = new ProcessStartInfo("powershell.exe",
+                    "-NoProfile -NonInteractive -WindowStyle Hidden -EncodedCommand " + Convert.ToBase64String(Encoding.Unicode.GetBytes(script)))
+                { UseShellExecute = false, CreateNoWindow = true, WorkingDirectory = ServerCheckoutFolder };
+            Process waiter;
+            try
+            {
+                waiter = Process.Start(info);
+            }
+            catch (Exception e)
+            {
+                return "PowerShell did not start: " + e.Message;
+            }
+            File.WriteAllText(LockPath, waiter.Id + "\n" + commit + "\n" + ServerPhase + "\n" + DateTime.Now.ToString("s"));
+            File.AppendAllText(ReleasePublisher.LogPath, $"Background server of {commit} queued in {ServerCheckoutFolder}: PowerShell process {waiter.Id} waits for Unity process {me} to quit, then builds it {DateTime.Now}{Environment.NewLine}");
+            return null;
+        }
+
+        private static string PsQuote(string text) => "'" + text.Replace("'", "''") + "'";
+
+        // The checkout is for building only: whatever a build left changed in it is thrown away. Its Builds folder is this project's.
+        private static string PrepareCheckout(string checkout, string commit)
+        {
+            if (!Git(checkout, "checkout --force --detach " + commit, out string moved)) return "The checkout " + checkout + " could not move to " + commit + ":\n" + moved;
+
+            string builds = Path.Combine(checkout, "Builds");
             if (!Directory.Exists(builds))
             {
-                if (!Run("cmd.exe", $"/c mklink /J \"{builds}\" \"{Path.GetFullPath("Builds")}\"", CheckoutFolder, out string linked)) return "Could not link the Builds folder:\n" + linked;
+                // To the main project's Builds by its real path (never a link to a link: Norton's exclusions name real paths).
+                if (!Run("cmd.exe", $"/c mklink /J \"{builds}\" \"{ServerBuildBuilder.RealBuildsFolder()}\"", checkout, out string linked)) return "Could not link the Builds folder:\n" + linked;
             }
             else if ((new DirectoryInfo(builds).Attributes & FileAttributes.ReparsePoint) == 0)
-                return builds + " is a folder of its own, not a link to " + Path.GetFullPath("Builds") + ". Move it away, then publish again.";
+                return builds + " is a folder of its own, not a link to " + ServerBuildBuilder.RealBuildsFolder() + ". Move it away, then publish again.";
+            return null;
+        }
 
-            Directory.CreateDirectory(ReleasePublisher.Root);
-            if (File.Exists(ResultPath)) File.Delete(ResultPath);
-            string arguments = string.Join(" ",
-                "-batchmode", "-projectPath", Quote(CheckoutFolder), "-buildTarget", "Win64",
-                "-executeMethod", "KryticalNova.EditorTools.BackgroundPublisher.RunInBatch",
-                "-logFile", Quote(Path.GetFullPath(BatchLogPath)),
+        private static string UnityArguments(string checkout, string method, string logPath, string extra) =>
+            string.Join(" ",
+                "-batchmode", "-projectPath", Quote(checkout), "-buildTarget", "Win64", extra,
+                "-executeMethod", method,
+                "-logFile", Quote(Path.GetFullPath(logPath)),
                 "-EnableCacheServer", "-cacheServerEndpoint", AcceleratorEndpoint,
                 "-cacheServerEnableDownload", "true", "-cacheServerEnableUpload", "true", "-cacheServerWaitForConnection", "10000",
                 // Since Unity 6.5 only textures and shaders are shared unless this is on: with it the build checkout gets
                 // every import result another Editor already made. No importer of ours reads files it does not declare.
                 "-cacheServerEnableImportResultCaching");
-            var info = new ProcessStartInfo(EditorApplication.applicationPath, arguments) { UseShellExecute = false, CreateNoWindow = true, WorkingDirectory = CheckoutFolder };
+
+        private static string StartUnity(string checkout, string commit, string method, string logPath, string extra, string phase)
+        {
+            Directory.CreateDirectory(ReleasePublisher.Root);
+            string arguments = UnityArguments(checkout, method, logPath, extra);
+            var info = new ProcessStartInfo(EditorApplication.applicationPath, arguments) { UseShellExecute = false, CreateNoWindow = true, WorkingDirectory = checkout };
             // As ReleasePublisher.Run: the user's folders are handed over by name, for the signing key and the UGS login.
             foreach (string name in new[] { "APPDATA", "LOCALAPPDATA", "USERPROFILE", "HOMEDRIVE", "HOMEPATH", "USERNAME", "TEMP", "TMP" })
             {
@@ -138,9 +228,8 @@ namespace KryticalNova.EditorTools
             {
                 return "Unity did not start: " + e.Message;
             }
-            File.WriteAllText(LockPath, process.Id + "\n" + commit + "\n" + DateTime.Now.ToString("s"));
-            File.AppendAllText(ReleasePublisher.LogPath, $"Background publish of {commit} started in {CheckoutFolder} (Unity process {process.Id}) {DateTime.Now}{Environment.NewLine}");
-            Debug.Log($"[Release] Publishing commit {commit.Substring(0, 9)} in the background (Unity process {process.Id}). Keep working: the console says when it is done. Log: {BatchLogPath}");
+            File.WriteAllText(LockPath, process.Id + "\n" + commit + "\n" + (phase ?? "") + "\n" + DateTime.Now.ToString("s"));
+            File.AppendAllText(ReleasePublisher.LogPath, $"Background {phase ?? "publish"} of {commit} started in {checkout} (Unity process {process.Id}) {DateTime.Now}{Environment.NewLine}");
             return null;
         }
 
@@ -151,7 +240,10 @@ namespace KryticalNova.EditorTools
             try
             {
                 Process process = Process.GetProcessById(id);
-                return process.HasExited || !process.ProcessName.StartsWith("Unity", StringComparison.OrdinalIgnoreCase) ? null : process;
+                // The game's Unity, or the PowerShell that waits for it and then runs the server's (QueueServerAfterExit).
+                bool ours = process.ProcessName.StartsWith("Unity", StringComparison.OrdinalIgnoreCase) ||
+                            process.ProcessName.StartsWith("powershell", StringComparison.OrdinalIgnoreCase);
+                return process.HasExited || !ours ? null : process;
             }
             catch (ArgumentException)
             {
@@ -165,9 +257,34 @@ namespace KryticalNova.EditorTools
             if (EditorApplication.timeSinceStartup < s_NextCheck) return;
             s_NextCheck = EditorApplication.timeSinceStartup + 5;
             if (!File.Exists(LockPath) || RunningPublish() != null) return;
-            string result = File.Exists(ResultPath) ? File.ReadAllText(ResultPath).Trim() : "FAILED: Unity quit without saying how it went. See " + BatchLogPath;
+            string[] lockLines = File.ReadAllLines(LockPath);
             File.Delete(LockPath);
-            if (result.StartsWith("OK")) Debug.Log("[Release] Background publish done: " + result + ". Check it with your test launcher, then Krytical Nova ▸ Release ▸ Promote Test to Live.");
+            if (lockLines.Length > 2 && lockLines[2] == ServerPhase)
+            {
+                // The game's Unity queued the server before it quit: its own result first, then the server's.
+                if (File.Exists(ResultPath)) Debug.Log("[Release] Background publish done: " + File.ReadAllText(ResultPath).Trim() + ". Check it with your test launcher, then Krytical Nova ▸ Release ▸ Promote Test to Live.");
+                if (File.Exists(RestartedMarker)) File.Delete(RestartedMarker);
+                string built = File.Exists(ServerBuildBatch.ResultPath) ? File.ReadAllText(ServerBuildBatch.ResultPath).Trim() : "FAILED: Unity quit without saying how it went. See " + ServerLogPath;
+                if (built.StartsWith("OK")) Debug.Log("[Release] The matching server is built for build " + ReleasePublisher.LastReleaseBuild() + ".");
+                else Debug.LogError("[Release] The matching server did not build (" + built + "). Until it is rebuilt (Krytical Nova ▸ Build ▸ Dedicated Server (Windows)), players on the new build are told the server runs another build.");
+                return;
+            }
+            string result = File.Exists(ResultPath) ? File.ReadAllText(ResultPath).Trim() : "FAILED: Unity quit without saying how it went. See " + BatchLogPath;
+            if (result.StartsWith(RestartResult) && lockLines.Length > 1 && !File.Exists(RestartedMarker))
+            {
+                // Once only: the marker is removed when a publish ends any other way.
+                File.WriteAllText(RestartedMarker, lockLines[1]);
+                string again = Start(lockLines[1]);
+                if (again == null) { Debug.Log("[Release] The checkout's subtarget was corrected: publishing again in a fresh Unity."); return; }
+                result = "FAILED: " + again;
+            }
+            if (File.Exists(RestartedMarker)) File.Delete(RestartedMarker);
+            if (result.StartsWith("OK"))
+            {
+                Debug.Log("[Release] Background publish done: " + result + ". Check it with your test launcher, then Krytical Nova ▸ Release ▸ Promote Test to Live.");
+                // A publish that reached TEST queued its server before it quit; reaching this means it could not (the result says why).
+                if (result.Contains(UploadedResult)) Debug.LogWarning("[Release] The matching server was not built: " + result + " Use Krytical Nova ▸ Build ▸ Dedicated Server (Windows).");
+            }
             else Debug.LogError("[Release] Background publish " + result + " Details: " + ReleasePublisher.LogPath);
         }
 
@@ -179,6 +296,15 @@ namespace KryticalNova.EditorTools
             int code = 1;
             try
             {
+                // A game is a Player build, and this Editor's scripts must be compiled as the game's. If the subtarget had to be
+                // corrected (a server build left it on Server) this run stops here, before anything is built, and the Editor that
+                // started it runs it again in a freshly compiled Unity (WatchRunningPublish); two Unity cannot share the project.
+                if (ClientBuildGuard.EnsurePlayer("Publish to Test"))
+                {
+                    Finish(RestartResult + ": the subtarget was corrected; the publish starts again in a fresh Unity.");
+                    code = ClientBuildGuard.RestartExitCode;
+                    return;
+                }
                 string problem = AcceleratorProblem();
                 if (problem != null)
                 {
@@ -186,8 +312,17 @@ namespace KryticalNova.EditorTools
                     code = 2;
                     return;
                 }
-                bool ok = ReleasePublisher.Publish();
-                Finish(ok ? "OK, build " + ReleasePublisher.LastReleaseBuild() : "FAILED: see " + ReleasePublisher.LogPath + ".");
+                // The server is built afterwards in its own checkout, never in this Library: queued here, to run when this
+                // Unity has quit (QueueServerAfterExit), unless a script builds it itself.
+                bool ok = ReleasePublisher.Publish(buildServer: false);
+                bool uploaded = ok && ReleasePublisher.Settings.Load().HasBucket;
+                string result = ok ? "OK, build " + ReleasePublisher.LastReleaseBuild() + (uploaded ? ", " + UploadedResult : ", staged only") : "FAILED: see " + ReleasePublisher.LogPath + ".";
+                if (uploaded && Array.IndexOf(Environment.GetCommandLineArgs(), ServerByScriptFlag) < 0)
+                {
+                    string queued = Git(ProjectFolder, "rev-parse HEAD", out string head) ? QueueServerAfterExit(head.Trim()) : "the commit could not be read: " + head;
+                    result += queued == null ? "; the server is built next in " + ServerCheckoutFolder : "; the server was NOT queued: " + queued;
+                }
+                Finish(result);
                 code = ok ? 0 : 1;
             }
             catch (Exception e)

@@ -77,6 +77,38 @@ namespace KryticalNova.Tests
         }
 
         [Test]
+        public void APublicAddressIsKeptAndALocalOneIsNeverHandedOut()
+        {
+            File.WriteAllText(Path.Combine(serverFolder, ServerLaunchOptions.FileName), "{ \"publicAddress\": \" 203.0.113.10 \" }");
+            Assert.AreEqual("203.0.113.10", ServerLaunchOptions.Load(serverFolder, new string[0], out _).publicAddress, "a rented machine's address, trimmed");
+            Assert.AreEqual("198.51.100.7", ServerLaunchOptions.Load(serverFolder, new[] { "Server.exe", "-publicAddress", "198.51.100.7" }, out _).publicAddress,
+                "the command line wins");
+            foreach (string local in new[] { "127.0.0.1", "10.0.0.5", "172.20.1.1", "192.168.1.20", "169.254.3.3", "100.100.1.1", "0.0.0.0", "239.1.1.1", "::1", "nova.example", "" })
+            {
+                ServerLaunchOptions options = ServerLaunchOptions.Load(serverFolder, new[] { "Server.exe", "-publicAddress", local }, out string report);
+                Assert.AreEqual(string.Empty, options.publicAddress, $"{local} is never handed to players (Linux plan item 2)");
+                if (local.Length > 0) StringAssert.Contains("not a public IPv4", report);
+            }
+        }
+
+        [Test]
+        public void TheControlPageNeverListensWhereTheInternetReachesIt()
+        {
+            File.WriteAllText(Path.Combine(serverFolder, ServerLaunchOptions.FileName), "{ }");
+            Assert.AreEqual("0.0.0.0", ServerLaunchOptions.Load(serverFolder, new string[0], out _).pageAddress, "every address by default (the phone on the Wi-Fi)");
+            File.WriteAllText(Path.Combine(serverFolder, ServerLaunchOptions.FileName), "{ \"pageAddress\": \" 127.0.0.1 \" }");
+            Assert.AreEqual("127.0.0.1", ServerLaunchOptions.Load(serverFolder, new string[0], out _).pageAddress, "a rented machine: this machine only, trimmed");
+            Assert.AreEqual("192.168.1.20", ServerLaunchOptions.Load(serverFolder, new[] { "Server.exe", "-pageAddress", "192.168.1.20" }, out _).pageAddress,
+                "the command line wins; a home-network address is taken");
+            foreach (string outside in new[] { "203.0.113.10", "100.100.1.1", "239.1.1.1", "::", "nova.example" })
+            {
+                ServerLaunchOptions options = ServerLaunchOptions.Load(serverFolder, new[] { "Server.exe", "-pageAddress", outside }, out string report);
+                Assert.AreEqual("127.0.0.1", options.pageAddress, $"{outside} falls back to this machine only (Linux plan item 10)");
+                StringAssert.Contains("not this machine or a home-network address", report);
+            }
+        }
+
+        [Test]
         public void BackupsAreNamedByTimeAndOnlyTheNewestAreKept()
         {
             Assert.AreEqual("save_2026-10-16_14-05-09_start.zip", ServerBackups.FileNameFor(new DateTime(2026, 10, 16, 14, 5, 9), "start"));

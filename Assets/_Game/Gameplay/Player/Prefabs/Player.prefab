@@ -710,6 +710,16 @@ MonoBehaviour:
   animancer: {fileID: 7017166246596092312}
   animancerMotor: {fileID: 8773836844876603563}
   weaponHitbox: {fileID: 8761730606348085326}
+  classAutoAttacks:
+  - {fileID: 11400000, guid: 39db5acf4d724a1ca23f8bc87fd4a980, type: 2}
+  - {fileID: 11400000, guid: a84f535723bb4be8b39f8bdea84f45fd, type: 2}
+  - {fileID: 11400000, guid: e81ba82e99e94978810e9f062fe0b81c, type: 2}
+  - {fileID: 11400000, guid: 7a6596f13e024599a24a4c04fd22194d, type: 2}
+  - {fileID: 11400000, guid: 468c2efad71043058b1de69ee6c82db4, type: 2}
+  - {fileID: 11400000, guid: 04690ae8452c4be9858e405f8f669076, type: 2}
+  - {fileID: 11400000, guid: 222343d111a34d1d93f5789e9b1931e3, type: 2}
+  - {fileID: 11400000, guid: acd02ca2e5c941fe9abd12b50b5045f1, type: 2}
+  - {fileID: 11400000, guid: 5963af36208e4c78ae1be125f88b45c9, type: 2}
   combo1Clip: {fileID: 7400000, guid: e57fc394b88a4904b93ac216f138e34e, type: 3}
   combo2Clip: {fileID: 7400000, guid: 0faafc763f001ca4d95fcc89fcc40111, type: 3}
   combo3Clip: {fileID: 7400000, guid: f1449fb106a8289428aa593db4bedb1e, type: 3}

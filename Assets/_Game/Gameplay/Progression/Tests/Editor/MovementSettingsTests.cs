@@ -70,5 +70,18 @@ namespace KryticalNova.Progression.Tests
             Assert.AreEqual(settings.maxStatSpeedMultiplier, settings.StatSpeedMultiplier(400f), 1e-5f);
             Assert.AreEqual(settings.minStatSpeedMultiplier, settings.StatSpeedMultiplier(0f), 1e-5f);
         }
+
+        // Owner, 5 Nov 2026: Boots never take Run past 28 m/s; the ranged Stance and a GM's speed may.
+        [Test]
+        public void BootsStopAtTheTopRunSpeed_TheRangedStanceAndAGmGoPastIt()
+        {
+            const float topRun = 28f;
+            Assert.AreEqual(28f, settings.FootSpeed(topRun, 140f, 140f, 1f), 1e-4f, "+40 % boots");
+            Assert.AreEqual(26.11f, settings.FootSpeed(26.11f, 100f, 100f, 1f), 1e-4f, "no boots: the rank's own speed");
+            Assert.AreEqual(28f, settings.FootSpeed(26.11f, 140f, 140f, 1f), 1e-4f, "a lower rank with boots stops at 28 too");
+            Assert.Greater(settings.FootSpeed(topRun, 140f, 150f, 1f), 28f, "+40 % boots and the ranged Stance");
+            Assert.Greater(settings.FootSpeed(topRun, 140f, 140f, 1.5f), 28f, "+40 % boots and gm.speed");
+            Assert.AreEqual(5f * 1.4f, settings.FootSpeed(5f, 140f, 140f, 1f), 1e-4f, "walking keeps the whole boost");
+        }
     }
 }

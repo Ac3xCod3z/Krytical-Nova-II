@@ -16,22 +16,25 @@ namespace KryticalNova.Networking
     /// How hard the server works (online phase 1, chunk 7: measuring how many players a server holds). The server runs
     /// 30 frames a second, one game tick each; a frame's time is mostly waiting, so what is measured is the busy part
     /// of each frame (from the first update to the last). Every five seconds a line goes into
-    /// <c>PerformanceLogs/server_*.csv</c> beside the server: players, frames, busy milliseconds (average, 95th
-    /// percentile, worst), frames that overran a tick (more than 33.3 ms) and memory. The control page shows the last
-    /// line. A server keeps up while its busy time stays under a tick; the player count where it stops is its cap.
+    /// <c>PerformanceLogs/server_*.csv</c> beside the server (or the settings' <c>performanceLogFolder</c>): players,
+    /// frames, busy milliseconds (average, 95th percentile, worst), frames that overran a tick (more than 33.3 ms) and
+    /// memory. The control page shows the last line. A server keeps up while its busy time stays under a tick; the player count where it stops is its cap.
+    /// A server that runs for days starts a new file each day, and only the newest <see cref="KeepFiles"/> of its own map
+    /// are kept (Linux plan item 6: a box never fills its disk with logs).
     /// Only in a server build.
     /// </summary>
     public static class ServerPerformanceLog
     {
         public const float WindowSeconds = 5f;
         public const float TickMilliseconds = 1000f / 30f;
-        private const string FolderName = "PerformanceLogs";
+        public const int KeepFiles = 30;
 
         private static readonly Stopwatch Clock = new Stopwatch();
         private static readonly List<float> Busy = new List<float>(256);
         private static float windowStart = -1f;
         private static int frames;
         private static StreamWriter file;
+        private static DateTime fileDay;
 
         /// <summary>The last window, for the control page ("30 fps · 12.3 ms average · 21.0 ms worst · 0 slow").</summary>
         public static string Summary { get; private set; } = "measuring...";
@@ -114,6 +117,7 @@ namespace KryticalNova.Networking
 
             try
             {
+                if (file != null && DateTime.Now.Date != fileDay) Close(); // a new file each day
                 if (file == null) Open();
                 file?.WriteLine(string.Join(",",
                     DateTime.Now.ToString("HH:mm:ss", CultureInfo.InvariantCulture), players.ToString(CultureInfo.InvariantCulture),
@@ -135,14 +139,33 @@ namespace KryticalNova.Networking
         private static void Open()
         {
             ServerLaunchOptions options = ServerLaunchOptions.LoadForThisServer();
-            string folder = Path.Combine(options.ServerFolder, FolderName);
+            string folder = options.PerformanceLogFolderPath;
             Directory.CreateDirectory(folder);
             // Map servers share the folder (online phase 5): each file says its map.
             string map = options.IsMapServer ? "_" + options.map : string.Empty;
+            foreach (string old in ToDelete(Directory.GetFiles(folder, "server_*.csv"), map, KeepFiles - 1))
+                try { File.Delete(old); } catch (Exception) { /* in use or gone: the next start tries again */ }
+            fileDay = DateTime.Now.Date;
             string path = Path.Combine(folder, $"server_{DateTime.Now:yyyyMMdd_HHmmss}{map}.csv");
             file = new StreamWriter(path, false);
             file.WriteLine("time,players,fps,busy_avg_ms,busy_p95_ms,busy_worst_ms,slow_frames,frames,managed_mb,reserved_mb,late_hits,gone_targets,worst_ping_ms");
             Debug.Log("[Server] Performance log: " + path);
+        }
+
+        /// <summary>
+        /// The oldest logs of one server (its map suffix, empty for the listed server) beyond the newest <paramref name="keep"/>.
+        /// Another map's logs in the same folder are never counted or touched.
+        /// </summary>
+        public static List<string> ToDelete(IEnumerable<string> files, string map, int keep)
+        {
+            var own = new List<string>();
+            foreach (string path in files)
+            {
+                string name = Path.GetFileNameWithoutExtension(path); // server_yyyyMMdd_HHmmss[_map]
+                if (name.Length == "server_yyyyMMdd_HHmmss".Length + map.Length && name.EndsWith(map, StringComparison.Ordinal)) own.Add(path);
+            }
+            own.Sort(StringComparer.Ordinal); // the name carries the start time
+            return own.GetRange(0, Math.Max(0, own.Count - Math.Max(0, keep)));
         }
 
         private static void Close()

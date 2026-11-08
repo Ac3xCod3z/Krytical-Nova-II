@@ -1,0 +1,27 @@
+#cloud-config
+# Minimal first boot: an admin user with the owner's key, SSH locked to keys, security updates. Everything else is
+# box/box-setup.sh, sent over SSH by create.sh, so the same script also proves itself on WSL2.
+# @@SSH_PUBKEY@@ and @@ADMIN_USER@@ are filled in by create.sh.
+users:
+  - name: @@ADMIN_USER@@
+    groups: [sudo]
+    shell: /bin/bash
+    sudo: "ALL=(ALL) NOPASSWD:ALL"
+    lock_passwd: true
+    ssh_authorized_keys:
+      - @@SSH_PUBKEY@@
+disable_root: true
+ssh_pwauth: false
+package_update: true
+package_upgrade: true
+packages: [unattended-upgrades, fail2ban, ufw, jq]
+write_files:
+  - path: /etc/ssh/sshd_config.d/99-kn.conf
+    permissions: "0644"
+    content: |
+      PasswordAuthentication no
+      PermitRootLogin no
+      KbdInteractiveAuthentication no
+runcmd:
+  - systemctl restart ssh
+  - touch /var/lib/kn-cloud-init-done

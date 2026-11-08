@@ -40,6 +40,30 @@ namespace KryticalNova.Networking
             return false;
         }
 
+        /// <summary>
+        /// True for an IPv4 address players on the internet can reach: not this PC, not the home network (above), not the
+        /// carrier's shared range 100.64/10 (behind a provider's NAT, or Tailscale), not 0/8, multicast or reserved
+        /// (224 and up). The address a server hands out to players (Linux plan item 2) must be one of these.
+        /// </summary>
+        public static bool IsPublicIPv4(string text)
+        {
+            if (string.IsNullOrWhiteSpace(text) || !IPAddress.TryParse(text.Trim(), out IPAddress address)
+                || address.AddressFamily != AddressFamily.InterNetwork || IsHomeNetwork(address)) return false;
+            byte[] b = address.GetAddressBytes();
+            return b[0] != 0 && b[0] < 224 && !(b[0] == 100 && b[1] >= 64 && b[1] <= 127);
+        }
+
+        /// <summary>
+        /// Where the control page may listen (Linux plan item 10): 0.0.0.0 (every address of this PC; the home-network check
+        /// still turns callers from the internet away) or one IPv4 address of this machine or the home network (above).
+        /// </summary>
+        public static bool IsPageAddress(string text)
+        {
+            if (string.IsNullOrWhiteSpace(text) || !IPAddress.TryParse(text.Trim(), out IPAddress address)
+                || address.AddressFamily != AddressFamily.InterNetwork) return false;
+            return address.Equals(IPAddress.Any) || IsHomeNetwork(address);
+        }
+
         /// <summary>This PC's addresses on the home network, for "How to connect"; 127.0.0.1 when none is found.</summary>
         public static List<string> HomeAddresses()
         {

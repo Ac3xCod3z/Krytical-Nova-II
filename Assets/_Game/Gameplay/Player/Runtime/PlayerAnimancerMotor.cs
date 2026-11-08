@@ -585,6 +585,9 @@ namespace KryticalNova.Player
         /// <paramref name="run"/> are its locomotion, with no stop clips and no foot IK, and combat clips
         /// (<see cref="PlayAction"/>) play on the upper body only. Null idle stands it up again. Every machine.
         /// </summary>
+        /// <summary>Seconds a locomotion clip takes to fade in over the last (the seated clip into the idle included).</summary>
+        public float LocomotionFadeSeconds => locomotionFadeDuration;
+
         public void SetSeated(AnimationClip idle, AnimationClip walk, AnimationClip run)
         {
             seated = idle != null;

@@ -15,7 +15,7 @@ MonoBehaviour:
   itemId: 0
   displayName: Scrap Sentinel Stabilizers
   description: 
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: ab4d395f1a0606b4e8e48f9f5f3d1b8b, type: 3}
   sharesIconOf: {fileID: 0}
   rarity: 2
   equipSlot: 4

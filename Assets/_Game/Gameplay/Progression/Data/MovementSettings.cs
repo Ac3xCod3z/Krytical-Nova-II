@@ -42,6 +42,9 @@ namespace KryticalNova.Progression
         [Range(0.1f, 1f)] public float minStatSpeedMultiplier = 0.5f;
         [Tooltip("...and never by more than this, so a fast Run rank with Boots and a Stance stays playable.")]
         [Range(1f, 3f)] public float maxStatSpeedMultiplier = 1.5f;
+        [Tooltip("Owner, 5 Nov 2026: Move Speed from gear and stats never takes a body on foot past this (m/s, the top " +
+                 "Run rank). A buff's Move Speed (the ranged Stance) and a GM's speed still go past it.")]
+        [Min(MinimumPositive)] public float maxRunSpeed = 28f;
 
         [Header("A move that makes no headway")]
         [Tooltip("A move order under way that gains less than the distance below in this many seconds has stalled: " +
@@ -87,6 +90,19 @@ namespace KryticalNova.Progression
         /// <summary>What a Move Speed stat of <paramref name="percent"/> (100 = normal) multiplies speed by, within the limits.</summary>
         public float StatSpeedMultiplier(float percent) =>
             Mathf.Clamp(percent / 100f, minStatSpeedMultiplier, Mathf.Max(minStatSpeedMultiplier, maxStatSpeedMultiplier));
+
+        /// <summary>
+        /// Speed on foot: <paramref name="baseSpeed"/> (walk, or the Run rank) times the Move Speed from gear and stats
+        /// (<paramref name="statPercent"/>), never past <see cref="maxRunSpeed"/>; then what buffs add to the stat
+        /// (<paramref name="withBuffsPercent"/> is the stat with them) and the GM's multiplier go on top, uncapped.
+        /// </summary>
+        public float FootSpeed(float baseSpeed, float statPercent, float withBuffsPercent, float gmMultiplier)
+        {
+            float statMultiplier = StatSpeedMultiplier(statPercent);
+            float capped = Mathf.Min(baseSpeed * statMultiplier, Mathf.Max(baseSpeed, maxRunSpeed));
+            float buffMultiplier = StatSpeedMultiplier(withBuffsPercent) / statMultiplier;
+            return capped * buffMultiplier * Mathf.Max(0.1f, gmMultiplier);
+        }
 
         /// <summary>Distance before the destination where the agent starts easing off.</summary>
         public float ArrivalRadius(float speed) =>

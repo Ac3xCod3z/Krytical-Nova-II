@@ -15,7 +15,7 @@ MonoBehaviour:
   itemId: 0
   displayName: Hollow Warden Greaves
   description: 
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 62e61e46db8e4fd47954162bd630f5a0, type: 3}
   sharesIconOf: {fileID: 0}
   rarity: 2
   equipSlot: 4
