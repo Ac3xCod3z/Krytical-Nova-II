@@ -32,7 +32,13 @@ namespace KryticalNova.DevTools
             Targets.Clear();
             RunningFor = Host;
             PlayerGm.CommandRunner = RunFor;
+            // a connection id is reused after a leave: a new GM session starts with no pick (owner, 8 Nov 2026: item.give went to another player)
+            GmRoster.Granted -= OnGranted; GmRoster.Granted += OnGranted;
+            GmRoster.Revoked -= ForgetPick; GmRoster.Revoked += ForgetPick;
         }
+
+        private static void ForgetPick(ulong clientId) => Targets.Remove(clientId);
+        private static void OnGranted(ulong clientId, string name) => ForgetPick(clientId);
 
         private static string RunFor(ulong clientId, string line)
         {
@@ -47,7 +53,10 @@ namespace KryticalNova.DevTools
             }
             finally
             {
-                Targets[clientId] = GmTarget.Save(); // "gm.target self" leaves no pick: their own player next time
+                GmTarget.Saved after = GmTarget.Save();
+                // acting on themselves keeps no pick, so nothing stale can outlive this connection; a real pick of someone else is kept
+                if (after.HasTarget && after.ClientId != clientId) Targets[clientId] = after;
+                else Targets.Remove(clientId);
                 GmTarget.Restore(server);
             }
             ServerRecords.Write(RecordKind.Gm, $"GM {GmRoster.NameOf(clientId) ?? "?"} as {ServerRecords.Who(clientId)}: {line} -> {ServerRecords.Short(answer)}");
