@@ -140,6 +140,15 @@ namespace KryticalNova.Persistence.Entities
         static Options s_Options;
         Options m_Options;
 
+#if UNITY_EDITOR
+        /// <summary>-executeMethod for a visible Editor: opens the map and enters Play; with KN_JOINHERE_ARGS set it joins as a client only.</summary>
+        public static void EditorPlay()
+        {
+            UnityEditor.SceneManagement.EditorSceneManager.OpenScene(KnPlayHere.MapPath);
+            UnityEditor.EditorApplication.EnterPlaymode();
+        }
+#endif
+
         /// <summary>The command line; in the Editor the env KN_JOINHERE_ARGS instead (8 Nov 2026: the Editor as the 2nd client of the entity test server).</summary>
         static string[] Arguments()
         {
