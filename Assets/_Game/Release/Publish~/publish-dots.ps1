@@ -34,7 +34,10 @@ foreach ($step in $steps) {
   $a = "-batchmode -projectPath `"$proj`" -buildTarget Win64 -job-worker-count 3 -executeMethod KryticalNova.EditorTools.DotsChannelPublisher.$($step)Batch $(if ($ClientOnly) { '-dotsreuse' }) -logFile `"$log`" -EnableCacheServer -cacheServerEndpoint 127.0.0.1:10443 -cacheServerEnableDownload true -cacheServerEnableUpload true -cacheServerWaitForConnection 10000 -cacheServerEnableImportResultCaching"
   $t = Get-Date; S "$step : started"
   Set-Content -Path $cleanMark -Value 'running'
-  $p = Start-Process -FilePath $unity -ArgumentList $a -WorkingDirectory $proj -NoNewWindow -PassThru -Wait
+  # Wait for Unity itself only: Start-Process -Wait also waits for every descendant, and an orphaned compiler server
+  # (VBCSCompiler) held the runner after the server step had ended (build 3, 8 Nov 2026).
+  $p = Start-Process -FilePath $unity -ArgumentList $a -WorkingDirectory $proj -NoNewWindow -PassThru
+  $p.WaitForExit()
   S ("$step : exit {0} after {1:N1} min" -f $p.ExitCode, ((Get-Date)-$t).TotalMinutes)
   if ($p.ExitCode -ne 0) { S "STOPPED at $step"; exit 1 }
   Set-Content -Path $cleanMark -Value 'clean'
