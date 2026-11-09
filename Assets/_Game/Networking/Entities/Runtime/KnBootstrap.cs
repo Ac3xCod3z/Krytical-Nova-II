@@ -61,6 +61,7 @@ namespace KryticalNova.Networking.Entities
 
         private static void StartDedicatedServer()
         {
+            ServerLogFile.Start();   // the text log as a file too: Drive, else PerformanceLogs\ (owner, 8 Nov 2026)
 #if UNITY_STANDALONE_WIN
             try { Debug.Log("[KnServer] Timer resolution 1 ms for the tick sleep: " + (timeBeginPeriod(1) == 0 ? "set." : "refused by Windows.")); }
             catch (Exception e) { Debug.LogWarning("[KnServer] Timer resolution not set (" + e.GetType().Name + "): ticks may bunch up."); }
