@@ -144,6 +144,7 @@ namespace KryticalNova.Persistence.Entities
         /// <summary>-executeMethod for a visible Editor: opens the map and enters Play; with KN_JOINHERE_ARGS set it joins as a client only.</summary>
         public static void EditorPlay()
         {
+            UnityEditor.EditorPrefs.SetBool(KryticalNova.Diagnostics.PerformanceLog.EditorPrefKey, true);   // the performance log on (owner: read real fps first)
             UnityEditor.SceneManagement.EditorSceneManager.OpenScene(KnPlayHere.MapPath);
             UnityEditor.EditorApplication.EnterPlaymode();
         }
