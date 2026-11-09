@@ -82,6 +82,7 @@ namespace KryticalNova.EditorTools.GM
         private static GameObject RemoteTargetPlayer()
         {
             var own = KryticalNova.Networking.PlayerGm.Local;
+            if (own == null) return null;   // the entity netcode client has no NGO PlayerGm (GM sight not ported): nothing to show, no throw per repaint
             ulong id = GmRemoteLines.RemoteTarget ?? own.OwnerClientId;
             foreach (var gm in FindObjectsByType<KryticalNova.Networking.PlayerGm>())
                 if (gm.IsSpawned && gm.OwnerClientId == id) return gm.gameObject;
@@ -211,6 +212,7 @@ namespace KryticalNova.EditorTools.GM
             players.Sort((a, b) => a.OwnerClientId.CompareTo(b.OwnerClientId));
             if (players.Count == 0) return;
 
+            if (KryticalNova.Networking.PlayerGm.Local == null) return;
             ulong own = KryticalNova.Networking.PlayerGm.Local.OwnerClientId;
             ulong target = GmRemoteLines.RemoteTarget ?? own;
             var labels = new string[players.Count];

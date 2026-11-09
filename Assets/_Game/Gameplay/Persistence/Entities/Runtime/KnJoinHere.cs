@@ -10,6 +10,7 @@ using KryticalNova.Player;
 using KryticalNova.Player.Entities;
 using Unity.Collections;
 using Unity.Entities;
+using Unity.NetCode;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -255,8 +256,21 @@ namespace KryticalNova.Persistence.Entities
             }
             Debug.Log($"[KnJoinHere] Joined after {(Time.realtimeSinceStartup - started).ToString("F1", CultureInfo.InvariantCulture)} s. Click the ground to walk.");
 
-            while (LocalPlayer.Object != null) yield return null;
-            Debug.LogWarning("[KnJoinHere] The server let this player go" + RefusalText() + " (Play DOTS here stopped?).");
+            // the real reason of a drop (owner, 8 Nov 2026: a 33 s Editor freeze read as "Play DOTS here stopped?"): Netcode's own
+            // disconnect reason (ConnectionState is a cleanup component, so it outlives the connection), the server's words, the longest frame
+            float worstFrame = 0f;
+            while (LocalPlayer.Object != null)
+            {
+                WatchConnection();
+                worstFrame = Mathf.Max(worstFrame, Time.unscaledDeltaTime);
+                yield return null;
+            }
+            WatchConnection();
+            string why = s_LastReason ?? "no Netcode reason seen";
+            string server = RefusalText();
+            string ended = string.IsNullOrEmpty(NetSession.EndReason) ? "" : $", session end: {NetSession.EndReason}";
+            Debug.LogWarning($"[KnJoinHere] The server let this player go: Netcode reason {why}{server}{ended}; the longest frame while in was " +
+                             $"{(worstFrame * 1000f).ToString("F0", CultureInfo.InvariantCulture)} ms (over the timeout = the server timed this client out).");
         }
 
         // What the player is told when the server never answered (the game's session-ended panel covers a refusal or a send-off).
@@ -306,6 +320,27 @@ namespace KryticalNova.Persistence.Entities
         }
 
         // What the server said when it turned this client away, if anything arrived.
+        static string s_LastReason;
+
+        /// <summary>Puts Netcode's ConnectionState on the client's connection and keeps its disconnect reason once it is set.</summary>
+        static void WatchConnection()
+        {
+            foreach (World w in World.All)
+            {
+                if (!w.IsCreated || w.Name != KnBootstrap.ClientWorldName) continue;
+                EntityManager em = w.EntityManager;
+                using var q = em.CreateEntityQuery(ComponentType.ReadOnly<NetworkStreamConnection>());
+                using var connections = q.ToEntityArray(Allocator.Temp);
+                foreach (Entity c in connections)
+                {
+                    if (!em.HasComponent<Unity.NetCode.ConnectionState>(c)) { em.AddComponentData(c, new Unity.NetCode.ConnectionState()); continue; }
+                    Unity.NetCode.ConnectionState state = em.GetComponentData<Unity.NetCode.ConnectionState>(c);
+                    if (state.CurrentState == Unity.NetCode.ConnectionState.State.Disconnected) s_LastReason = state.DisconnectReason.ToString();
+                }
+                return;
+            }
+        }
+
         static string RefusalText()
         {
             World client = null;
