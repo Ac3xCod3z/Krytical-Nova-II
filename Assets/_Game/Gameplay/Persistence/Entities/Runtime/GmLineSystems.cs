@@ -296,6 +296,9 @@ namespace KryticalNova.Persistence.Entities
 
         protected override void OnUpdate()
         {
+            // re-bound every frame: after a relog in the same process the static could be left null by the old world's teardown,
+            // and the GM's lines then ran locally (owner, 8 Nov 2026: "No network session is running." after a relog)
+            if (PlayerGm.Remote == null) PlayerGm.Remote = GmLink;
             var em = EntityManager;
             ShowTags();
             if (!m_States.IsEmpty)

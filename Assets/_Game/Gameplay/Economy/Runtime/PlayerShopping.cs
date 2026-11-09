@@ -140,7 +140,10 @@ namespace KryticalNova.Economy
         // ------------------------------------------------------------------ what the window reads
 
         /// <summary>What this NPC sells, or null when it has no shop.</summary>
-        public VendorStock StockOf(NpcInteractable npc) => npc != null && vendors != null ? vendors.For(npc.Definition) : null;
+        // by reference, else by the definition's name: in a build the player prefab's catalog and an Addressable map scene can hold two
+        // copies of the same NpcDefinition, so the reference never matches (owner, 8 Nov 2026: every vendor "nothing for sale" on DOTS)
+        public VendorStock StockOf(NpcInteractable npc) =>
+            npc != null && vendors != null && npc.Definition != null ? vendors.For(npc.Definition) ?? vendors.For(npc.Definition.name) : null;
 
         /// <summary>The vendor this player stands by (the nearest, when there are two), or null.</summary>
         public NpcInteractable VendorInReach() => NpcInteractable.NearestOffering(NpcOffer.Shop, transform.position, ReachPadding);
