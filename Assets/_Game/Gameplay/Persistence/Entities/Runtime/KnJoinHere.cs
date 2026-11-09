@@ -1,4 +1,4 @@
-#if KN_JOIN_HERE
+#if KN_JOIN_HERE || UNITY_EDITOR
 using System;
 using System.Collections;
 using System.Globalization;
@@ -140,10 +140,21 @@ namespace KryticalNova.Persistence.Entities
         static Options s_Options;
         Options m_Options;
 
+        /// <summary>The command line; in the Editor the env KN_JOINHERE_ARGS instead (8 Nov 2026: the Editor as the 2nd client of the entity test server).</summary>
+        static string[] Arguments()
+        {
+#if UNITY_EDITOR
+            string env = Environment.GetEnvironmentVariable("KN_JOINHERE_ARGS");
+            return string.IsNullOrWhiteSpace(env) ? null : env.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+#else
+            return Environment.GetCommandLineArgs();
+#endif
+        }
+
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         static void BeforeScene()
         {
-            s_Options = Options.Parse(Environment.GetCommandLineArgs());
+            s_Options = Options.Parse(Arguments());
             if (s_Options == null) return;
             // before any scene object loads or saves: memory only, and Netcode for GameObjects stays off (no host on 7777, the offline
             // avatar hidden). Also for a refusal, so the build never hosts or saves on its way out.
@@ -200,7 +211,7 @@ namespace KryticalNova.Persistence.Entities
                 if (string.IsNullOrEmpty(token)) { Debug.LogError("[KnJoinHere] Refused: could not sign in to Unity (internet? Unity services?)."); yield break; }
                 Debug.Log("[KnJoinHere] Signed in to Unity as player " + UnityAccount.PlayerNow + ".");
             }
-            string join = JoinRules.PayloadText(GameBuild.Version, false, token);
+            string join = JoinRules.PayloadText(GameBuild.Version, Application.isEditor, token);   // an Editor may join any build (JoinRules)
             if (!KnBootstrap.StartClient(o.Host, o.Port, join, encrypted: false)) { Debug.LogError("[KnJoinHere] Refused: could not start the client world."); yield break; }
 
             // let in = this client's own body appeared (the server built its ServerBody and ghost)
