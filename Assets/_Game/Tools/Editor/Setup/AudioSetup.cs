@@ -138,15 +138,18 @@ namespace KryticalNova.EditorTools
         /// How the game's clips are imported, by what they are: a weather loop streams from disk; thunder and the
         /// long one-shots stay packed in memory; a short effect is unpacked on load. Returns how many changed.
         /// </summary>
-        public static int ApplyImportSettings()
+        public static int ApplyImportSettings() => ApplyImportSettings(AudioFolder);
+
+        /// <summary>The same rule, for one folder only: a setup step that bakes into one folder must not rewrite the import settings of every other clip (10 Nov 2026: Setup > Ambience changed 89 voice and effect .meta files).</summary>
+        public static int ApplyImportSettings(string folder)
         {
-            if (!AssetDatabase.IsValidFolder(AudioFolder)) return 0;
+            if (!AssetDatabase.IsValidFolder(folder)) return 0;
             int changed = 0;
             var paths = new System.Collections.Generic.SortedSet<string>();
-            foreach (string guid in AssetDatabase.FindAssets("t:AudioClip", new[] { AudioFolder }))
+            foreach (string guid in AssetDatabase.FindAssets("t:AudioClip", new[] { folder }))
                 paths.Add(AssetDatabase.GUIDToAssetPath(guid));
             // A music file whose import failed is no AudioClip to FindAssets: find it on disk as well.
-            foreach (string file in System.IO.Directory.GetFiles(AudioFolder, "MUS_*.ogg", System.IO.SearchOption.AllDirectories))
+            foreach (string file in System.IO.Directory.GetFiles(folder, "MUS_*.ogg", System.IO.SearchOption.AllDirectories))
                 paths.Add(file.Replace('\\', '/'));
             foreach (string path in paths)
             {

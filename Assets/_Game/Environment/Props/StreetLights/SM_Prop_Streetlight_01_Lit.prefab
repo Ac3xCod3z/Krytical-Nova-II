@@ -356,3 +356,6 @@ MonoBehaviour:
   clearAirBrightness: 0.04
   fogBrightness: 0.22
   checkInterval: 0.5
+  occlusionRange: 25
+  glowRadius: 4
+  glowStrength: 0.12

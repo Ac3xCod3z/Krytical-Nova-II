@@ -12,7 +12,8 @@
      "start": 0,
      "seconds": 176.95,
      "lufs": -26,
-     "when": "day"
+     "when": "day",
+     "area": "town"
     },
     {
      "name": "Concord_Park",
@@ -22,7 +23,8 @@
      "start": 0,
      "seconds": 175.55,
      "lufs": -26,
-     "when": "day"
+     "when": "day",
+     "area": "town"
     },
     {
      "name": "Concord_NightGarden",
@@ -32,7 +34,8 @@
      "start": 0,
      "seconds": 175.86,
      "lufs": -28,
-     "when": "night"
+     "when": "night",
+     "area": "town"
     },
     {
      "name": "Concord_NightCicadas",
@@ -42,7 +45,52 @@
      "start": 40,
      "seconds": 126.95,
      "lufs": -28,
-     "when": "night"
+     "when": "night",
+     "area": "town"
+    },
+    {
+     "name": "Fields_Birds",
+     "file": "AMB_Fields_Birds.ogg",
+     "volume": 0.6,
+     "source": "dolbyatmosvol2_audiohero/Dolby Atmos Vol 2/AMBBird_Forest Lake Morning Birdsong_DLBATM002.wav",
+     "start": 5,
+     "seconds": 115.95,
+     "lufs": -28,
+     "when": "day",
+     "area": "fields"
+    },
+    {
+     "name": "Fields_Insects",
+     "file": "AMB_Fields_Insects.ogg",
+     "volume": 0.5,
+     "source": "omniverse/Omniverse/CricketsCicadas-NightCric-2_B05-02952.wav",
+     "start": 2,
+     "seconds": 91.95,
+     "lufs": -30,
+     "when": "night",
+     "area": "fields"
+    },
+    {
+     "name": "Concord_Wind",
+     "file": "AMB_Concord_Wind.ogg",
+     "volume": 0.6,
+     "source": "bt25_ultimatesfxforgames_softwarebundle/Ambience Space & Planet/FL_GFX_Ambience_Space_Planet_29.wav",
+     "start": 0,
+     "seconds": 28.95,
+     "lufs": -26,
+     "when": "always",
+     "area": "concord"
+    },
+    {
+     "name": "Concord_Thrusters",
+     "file": "AMB_Concord_Thrusters.ogg",
+     "volume": 0.5,
+     "source": "bt25_ultimatesfxforgames_softwarebundle/Ambience Space & Planet/FL_GFX_Ambience_Space_Planet_23.wav",
+     "start": 0,
+     "seconds": 28.95,
+     "lufs": -27,
+     "when": "always",
+     "area": "concord"
     }
    ],
    "points": [

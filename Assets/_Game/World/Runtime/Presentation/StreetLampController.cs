@@ -34,6 +34,10 @@ namespace KryticalNova.World
         [Tooltip("How bright the glow in the mist is, relative to the lamp's light.")]
         [SerializeField] private float glowStrength = 0.12f; // the owner's pick of 16 Oct 2026 (option C)
 
+        // Share of the glow taken away in full fog.
+        private const float FogGlowCut = 0.9f;
+        // Share of the cone's fog brightness kept: glow, cones and the fog's own light add up, and at the old 0.22 a fogged plaza went white (proved 10 Nov: 0.09 keeps a warm pool).
+        private const float FogConeShare = 0.4f;
         // The glow's Unity light: this small, it lights nothing in the scene (the lamp's own light is baked).
         private const float GlowLightRange = 0.05f;
         // VolumetricFog2's point-light falloff divides the range by 25 (PointLightManager).
@@ -45,8 +49,17 @@ namespace KryticalNova.World
         private FogPointLight glow;
         private static Camera viewer;
 
+        /// <summary>Every lamp in the loaded maps, for the warm pools of real light round the player (H).</summary>
+        public static readonly System.Collections.Generic.List<StreetLampController> All = new System.Collections.Generic.List<StreetLampController>(128);
+        /// <summary>Where this lamp's light sits.</summary>
+        public Vector3 LampPosition => cone != null ? cone.transform.position : transform.position;
+        /// <summary>The lamp's own colour.</summary>
+        public Color LampColor { get { Light l = cone != null ? cone.GetComponent<Light>() : null; return l != null ? l.color : new Color(1f, 0.78f, 0.5f); } }
+        private void OnDestroy() => All.Remove(this);
+
         private void OnEnable()
         {
+            if (!All.Contains(this)) All.Add(this);
 #if UNITY_SERVER
             enabled = false;
 #else
@@ -67,11 +80,18 @@ namespace KryticalNova.World
             if (cone.enabled != on) cone.enabled = on;
             bool ultra = on && VolumetricQualityRuntime.Quality == VolumetricQuality.Ultra;
             SetGlow(ultra);
+            // In fog weather every lamp's glow lights the whole fog bank (dozens overlap in a plaza and it washes out white-peach, seen 10 Nov 2026
+            // at 22:00 in WP_Fog), so the glow gives way to the fog's own lighting as the fog comes in.
+            if (glow != null && glow.gameObject.activeSelf)
+            {
+                float want = glowStrength * (1f - FogGlowCut * VolumetricAtmosphereDriver.FogAmount);
+                if (Mathf.Abs(glow.intensity - want) > 0.003f) glow.intensity = want;
+            }
             if (!on) return;
             if (appliedQuality != VolumetricQualityRuntime.Version) ApplyQuality();
             SetOcclusion(ultra && NearCamera());
 
-            float brightness = Mathf.Lerp(clearAirBrightness, fogBrightness, VolumetricAtmosphereDriver.FogAmount);
+            float brightness = Mathf.Lerp(clearAirBrightness, fogBrightness * FogConeShare, VolumetricAtmosphereDriver.FogAmount);
             if (Mathf.Abs(brightness - appliedBrightness) > 0.02f)
             {
                 appliedBrightness = brightness;

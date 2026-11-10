@@ -35,7 +35,7 @@ namespace KryticalNova.EditorTools
             public List<PointRow> points = new List<PointRow>();
         }
 
-        [Serializable] private sealed class BedRow { public string name, file, when; public float volume = 1f; }
+        [Serializable] private sealed class BedRow { public string name, file, when, area; public float volume = 1f; }
 
         [Serializable]
         private sealed class PointRow
@@ -49,16 +49,20 @@ namespace KryticalNova.EditorTools
         public static string AssetPath(string zone) => $"{MusicSetup.DataFolder}/ZoneAmbience_{zone}.asset";
 
         [MenuItem("Krytical Nova/Setup/Ambience", priority = 15)]
-        public static string BuildAll()
+        public static string BuildAll() => Build(null);
+
+        /// <summary>Builds the zones of the manifest, or only the one named (so a run for one zone never opens or rewrites another zone's scene).</summary>
+        public static string Build(string onlyZone)
         {
             if (!File.Exists(ManifestPath)) return $"No {ManifestPath}: bake with the music-gen skill's ambience_bake.py first.";
             var manifest = JsonUtility.FromJson<Manifest>(File.ReadAllText(ManifestPath));
             AssetDatabase.Refresh();
-            AudioSetup.ApplyImportSettings();
+            AudioSetup.ApplyImportSettings(AmbienceFolder);   // only the AMB_ loops, never the rest of Audio
             if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return "Cancelled.";
             string back = EditorSceneManager.GetActiveScene().path;
             var report = new List<string>();
-            foreach (ZoneRow zone in manifest.zones) report.Add(BuildZone(zone));
+            foreach (ZoneRow zone in manifest.zones)
+                if (string.IsNullOrEmpty(onlyZone) || zone.name.StartsWith(onlyZone)) report.Add(BuildZone(zone));
             if (!string.IsNullOrEmpty(back)) EditorSceneManager.OpenScene(back, OpenSceneMode.Single);
             string all = string.Join(" | ", report);
             Debug.Log("[Ambience] " + all);
@@ -79,14 +83,17 @@ namespace KryticalNova.EditorTools
             {
                 AudioClip clip = Clip(row.file);
                 if (clip == null) continue;
-                beds.Add(new ZoneAmbience.Bed { clip = clip, volume = row.volume, when = When(row.when) });
+                beds.Add(new ZoneAmbience.Bed { clip = clip, volume = row.volume, when = When(row.when), area = Area(row.area) });
             }
             asset.beds = beds.ToArray();
             EditorUtility.SetDirty(asset);
             AssetDatabase.SaveAssets();
 
-            // The scene: the player and the emitters.
+            // The scene: the player and the emitters. A zone with no points whose scene already names this asset has nothing to
+            // change there, and opening and saving the scene would only re-serialise it.
             if (AssetDatabase.LoadAssetAtPath<SceneAsset>(zone.scene) == null) return $"{zone.name}: no scene at {zone.scene}";
+            if (zone.points.Count == 0 && File.Exists(zone.scene) && File.ReadAllText(zone.scene).Contains(AssetDatabase.AssetPathToGUID(AssetPath(zone.name))))
+                return $"{zone.name}: {beds.Count} bed(s), scene left alone";
             Scene scene = EditorSceneManager.OpenScene(zone.scene, OpenSceneMode.Single);
             GameObject root = null;
             foreach (GameObject go in scene.GetRootGameObjects())
@@ -187,6 +194,17 @@ namespace KryticalNova.EditorTools
             var clip = AssetDatabase.LoadAssetAtPath<AudioClip>($"{AmbienceFolder}/{file}");
             if (clip == null) Debug.LogWarning($"[Ambience] No clip at {AmbienceFolder}/{file}.");
             return clip;
+        }
+
+        private static AmbienceArea Area(string area)
+        {
+            switch ((area ?? "").ToLowerInvariant())
+            {
+                case "town": return AmbienceArea.Town;
+                case "fields": return AmbienceArea.Fields;
+                case "concord": return AmbienceArea.Concord;
+                default: return AmbienceArea.Anywhere;
+            }
         }
 
         private static AmbienceTime When(string when)

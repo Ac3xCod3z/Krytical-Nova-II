@@ -12,6 +12,9 @@ namespace KryticalNova.Audio
     /// night with the sun's height, so dawn and dusk blend. Sounds on things in the zone (water, signs, a fallen
     /// rail bridge) are 3D emitters placed in the scene beside it (<see cref="AmbienceEmitter"/>), not listed here.
     /// </summary>
+    /// <summary>Where in the zone a bed plays: everywhere, or only while the player stands in the town streets, the fields or Sky Concord.</summary>
+    public enum AmbienceArea { Anywhere, Town, Fields, Concord }
+
     [CreateAssetMenu(menuName = "Krytical Nova/Audio/Zone Ambience")]
     public sealed class ZoneAmbience : ScriptableObject
     {
@@ -21,6 +24,8 @@ namespace KryticalNova.Audio
             public AudioClip clip;
             [Range(0f, 1f)] public float volume;
             public AmbienceTime when;
+            [Tooltip("Where in the zone it plays; it fades in and out as the player crosses between the parts.")]
+            public AmbienceArea area;
         }
 
         public Bed[] beds = new Bed[0];

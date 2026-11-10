@@ -128,6 +128,12 @@ namespace KryticalNova.Rendering
 
         public void Set(in GlowHaloLook value) => look = value;
 
+        /// <summary>Moves the glow's zone on every renderer already added (a rim that follows a light round a turning body).</summary>
+        public void SetZone(in GlowZone zone)
+        {
+            for (int i = 0; i < sources.Count; i++) { var s = sources[i]; s.zone = zone; sources[i] = s; }
+        }
+
         /// <summary>
         /// Adds a model's outline to this halo: its meshes, skinned or not. Particles, trails and lines are effects
         /// riding on the model and cast no halo. <paramref name="zone"/> says which part of the model glows, in the

@@ -19,6 +19,8 @@ namespace KryticalNova.Audio
 
         private AudioSource[] sources;
         private float fade;
+        private float[] areaWeight;
+        private const float AreaFadeSeconds = 2.5f;
 
         /// <summary>0 at night, 1 in daylight, between the two in twilight.</summary>
         public static float Daylight(float sunHeight, float dawnHeight, float twilight) =>
@@ -32,6 +34,7 @@ namespace KryticalNova.Audio
                 return;
             }
             sources = new AudioSource[ambience.beds.Length];
+            areaWeight = new float[sources.Length];
             for (int i = 0; i < sources.Length; i++)
             {
                 ZoneAmbience.Bed bed = ambience.beds[i];
@@ -69,7 +72,11 @@ namespace KryticalNova.Audio
                 if (source == null) continue;
                 ZoneAmbience.Bed bed = ambience.beds[i];
                 float when = bed.when == AmbienceTime.Day ? day : bed.when == AmbienceTime.Night ? 1f - day : 1f;
-                float volume = bed.volume * when * fade;
+                // A bed tied to a part of the zone swells in as the player enters it and fades as they leave.
+                float target = bed.area == AmbienceArea.Anywhere || (int)bed.area - 1 == (int)PlaceNow.Area ? 1f : 0f;
+                if (fade < 1f && target > 0f && areaWeight[i] <= 0f) areaWeight[i] = target;   // the zone's first seconds: no cross-swell from silence
+                areaWeight[i] = Mathf.MoveTowards(areaWeight[i], target, Time.unscaledDeltaTime / AreaFadeSeconds);
+                float volume = bed.volume * when * fade * areaWeight[i];
                 source.volume = volume;
                 if (volume > 0.0005f)
                 {

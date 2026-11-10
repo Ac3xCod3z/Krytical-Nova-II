@@ -25,21 +25,60 @@ Material:
     m_TexEnvs: []
     m_Ints: []
     m_Floats:
+    - _BodyContrast: 0.8
+    - _BodyHaze: 0.08
+    - _BodyHazeHeight: 0.35
+    - _BodyHorizonHaze: 0.6
+    - _BodyInkLift: 0.4
+    - _BodyRimGlow: 2.5
+    - _BodySaturation: 0.75
     - _CirrusScale: 2
+    - _CirrusStrength: 0
     - _CirrusThreshold: 0.55
     - _CloudAmbientLift: 0.35
     - _CloudHorizonFade: 0.16
     - _CloudLightContrast: 2.5
     - _CloudLightOffset: 0.025
+    - _HaloIntensity: 0.6
+    - _HaloMoon: 0.45
+    - _HaloWidth: 1.5
     - _HorizonFogHeight: 0.18
     - _MoonBrightness: 2
     - _MoonCrescent: 0.55
+    - _MoonDarkAlpha: 0.95
+    - _MoonEarthshine: 0.015
+    - _MoonGlare: 0.2
+    - _MoonGlareRadius: 0.45
+    - _MoonHalo: 0.3
+    - _MoonHaloPower: 90
+    - _RainbowIntensity: 1
+    - _RainbowSecondary: 0.35
+    - _RainbowWidth: 1
     - _SilverLining: 1.2
     - _StarBrightness: 2.5
     - _StarChance: 0.07
     - _StarDensity: 160
     - _StarSize: 0.12
     - _StarTwinkle: 0.5
-    m_Colors: []
+    - _SunGlare: 0.55
+    - _SunGlareHDR: 0.8
+    - _SunGlareRadius: 0.4
+    - _SunRayStart: 0.52
+    - _SunRayVisibility: 0.3
+    - _SunShimmerAmount: 0.03
+    - _SunShimmerGlow: 0.3
+    - _SunShimmerScale: 5
+    - _SunShimmerSpeed: 0.09
+    - _SunsetFlatten: 0.15
+    - _SunsetGrade: 0.85
+    - _SunsetHeight: 0.28
+    - _ToonBandSoftness: 0.14
+    - _ToonBands: 3
+    - _ToonEdge: 0.65
+    - _WarmHaze: 0.4
+    - _WarmHazeHeight: 0.2
+    m_Colors:
+    - _MoonDisc: {r: 0.495, g: 0.5, b: 0.23, a: 0.209}
+    - _WarmHazeColor: {r: 1, g: 0.8, b: 0.62, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1

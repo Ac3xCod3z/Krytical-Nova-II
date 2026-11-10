@@ -28,5 +28,5 @@ MonoBehaviour:
   - text: Keep your weapon down inside the walls. Out there, do what you have to.
     clip: {fileID: 8300000, guid: d6d84b713a0cbbb4d95b2decad2df87c, type: 3}
   services: Standard leveling Contracts, and Transit to level-appropriate battles and Runs.
-  offers: 0
+  offers: 8192
   interactRange: 3

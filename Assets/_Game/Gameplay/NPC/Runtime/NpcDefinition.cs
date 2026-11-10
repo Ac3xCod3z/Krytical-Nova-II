@@ -56,6 +56,8 @@ namespace KryticalNova.NPC
         Craft = 1 << 11,
         /// <summary>Refilling the Flux Flasks in the Pack, for Creds (the Apothecary).</summary>
         FlaskRefill = 1 << 12,
+        /// <summary>Temporary (owner, 9 Nov 2026): the Marshal's trip up to the Concord 040 preview above Zone01 and back.</summary>
+        SkyLift = 1 << 13,
     }
 
     /// <summary>Static data for one town NPC. Shops, quests and crafting hook in by role later.</summary>

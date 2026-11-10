@@ -141,8 +141,8 @@ MonoBehaviour:
     m_NumAlphaKeys: 2
   moonColor:
     serializedVersion: 2
-    key0: {r: 0.55, g: 0.65, b: 1, a: 1}
-    key1: {r: 0.55, g: 0.65, b: 1, a: 1}
+    key0: {r: 0.58675003, g: 0.65674996, b: 0.90175, a: 1}
+    key1: {r: 0.58675003, g: 0.65674996, b: 0.90175, a: 1}
     key2: {r: 0, g: 0, b: 0, a: 0}
     key3: {r: 0, g: 0, b: 0, a: 0}
     key4: {r: 0, g: 0, b: 0, a: 0}
@@ -243,7 +243,7 @@ MonoBehaviour:
     m_Curve:
     - serializedVersion: 3
       time: 0
-      value: 0.75
+      value: 1.0875001
       inSlope: -0.7500001
       outSlope: -0.7500001
       tangentMode: 0
@@ -252,7 +252,7 @@ MonoBehaviour:
       outWeight: 0.33333334
     - serializedVersion: 3
       time: 0.2
-      value: 0.59999996
+      value: 0.87
       inSlope: -8.946428
       outSlope: -8.946428
       tangentMode: 0
@@ -279,7 +279,7 @@ MonoBehaviour:
       outWeight: 0.33333334
     - serializedVersion: 3
       time: 0.8
-      value: 0.59999996
+      value: 0.87
       inSlope: 8.946423
       outSlope: 8.946423
       tangentMode: 0
@@ -288,7 +288,7 @@ MonoBehaviour:
       outWeight: 0.33333334
     - serializedVersion: 3
       time: 1
-      value: 0.75
+      value: 1.0875001
       inSlope: 0.7500002
       outSlope: 0.7500002
       tangentMode: 0
@@ -663,12 +663,12 @@ MonoBehaviour:
     m_RotationOrder: 4
   ambientSky:
     serializedVersion: 2
-    key0: {r: 0.16, g: 0.2, b: 0.38, a: 1}
+    key0: {r: 0.26475, g: 0.30675, b: 0.49575, a: 1}
     key1: {r: 0.55, g: 0.45, b: 0.5, a: 1}
     key2: {r: 0.62, g: 0.72, b: 0.88, a: 0}
     key3: {r: 0.62, g: 0.72, b: 0.88, a: 0}
     key4: {r: 0.55, g: 0.4, b: 0.48, a: 0}
-    key5: {r: 0.16, g: 0.2, b: 0.38, a: 0}
+    key5: {r: 0.26475, g: 0.30675, b: 0.49575, a: 0}
     key6: {r: 0, g: 0, b: 0, a: 0}
     key7: {r: 0, g: 0, b: 0, a: 0}
     ctime0: 0
@@ -693,12 +693,12 @@ MonoBehaviour:
     m_NumAlphaKeys: 2
   ambientEquator:
     serializedVersion: 2
-    key0: {r: 0.1, g: 0.12, b: 0.24, a: 1}
+    key0: {r: 0.17536001, g: 0.19776, b: 0.33216, a: 1}
     key1: {r: 0.55, g: 0.4, b: 0.35, a: 1}
     key2: {r: 0.55, g: 0.6, b: 0.65, a: 0}
     key3: {r: 0.55, g: 0.6, b: 0.65, a: 0}
     key4: {r: 0.55, g: 0.36, b: 0.36, a: 0}
-    key5: {r: 0.1, g: 0.12, b: 0.24, a: 0}
+    key5: {r: 0.17536001, g: 0.19776, b: 0.33216, a: 0}
     key6: {r: 0, g: 0, b: 0, a: 0}
     key7: {r: 0, g: 0, b: 0, a: 0}
     ctime0: 0
@@ -723,10 +723,10 @@ MonoBehaviour:
     m_NumAlphaKeys: 2
   ambientGround:
     serializedVersion: 2
-    key0: {r: 0.05, g: 0.06, b: 0.1, a: 1}
+    key0: {r: 0.09702, g: 0.10962, b: 0.16002, a: 1}
     key1: {r: 0.32, g: 0.3, b: 0.28, a: 1}
     key2: {r: 0.32, g: 0.3, b: 0.28, a: 0}
-    key3: {r: 0.05, g: 0.06, b: 0.1, a: 0}
+    key3: {r: 0.09702, g: 0.10962, b: 0.16002, a: 0}
     key4: {r: 0, g: 0, b: 0, a: 0}
     key5: {r: 0, g: 0, b: 0, a: 0}
     key6: {r: 0, g: 0, b: 0, a: 0}
@@ -843,7 +843,7 @@ MonoBehaviour:
     m_NumAlphaKeys: 2
   postColorFilter:
     serializedVersion: 2
-    key0: {r: 0.8, g: 0.85, b: 1, a: 1}
+    key0: {r: 0.825875, g: 0.853375, b: 0.935875, a: 1}
     key1: {r: 0.85, g: 0.88, b: 1, a: 1}
     key2: {r: 1, g: 0.94, b: 0.88, a: 0}
     key3: {r: 1, g: 1, b: 1, a: 0}

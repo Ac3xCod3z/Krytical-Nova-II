@@ -71,6 +71,10 @@ namespace KryticalNova.World
 
         /// <summary>Called by <see cref="EnvironmentPresenter"/> every presented frame.</summary>
         /// <param name="nightHaze">Thin ground haze for moonlit nights, 0-1 share of the ground mist (not fog weather).</param>
+        private static Vector2 publishedWind;
+        /// <summary>The weather's wind (m/s, world XZ): the ground mist drifts with it.</summary>
+        public static void PublishWind(Vector2 wind) => publishedWind = wind;
+
         public static void Publish(Color fogColor, float volumetricFog, float rain, float timeOfDay01, float nightHaze = 0f)
         {
             publishedNightHaze = nightHaze;
@@ -113,11 +117,23 @@ namespace KryticalNova.World
             weatherWeight = Mathf.Lerp(weatherWeight, weatherTarget, k);
 
             Apply(ref ground, groundTarget, k, false);
+            DriftWithWind(ref ground, k);
             for (int i = 0; i < water.Length; i++) Apply(ref water[i], waterTarget, k, true);
 
             // Only fog weather thickens the air town-wide. Water mist is local to the lakes and rivers, so it must not
             // brighten every lamp cone in the city at dusk. Neither must the thin night haze.
             FogAmount = Mathf.Min(ground.Weight, weatherWeight);
+        }
+
+        /// <summary>The mist slides along the wind (a gust moves it faster) instead of sitting still.</summary>
+        private void DriftWithWind(ref Layer layer, float k)
+        {
+            if (layer.Fog == null || layer.Profile == null || layer.Weight <= 0f) return;
+            Vector3 target = new Vector3(publishedWind.x, 0f, publishedWind.y) * 0.006f;
+            Vector3 now = Vector3.Lerp(layer.Profile.windDirection, target, k);
+            if ((now - layer.Profile.windDirection).sqrMagnitude < 1e-8f) return;
+            layer.Profile.windDirection = now;
+            layer.Fog.UpdateMaterialProperties();
         }
 
         /// <summary>How finely and at what resolution the mist is drawn, from the player's fog quality.</summary>

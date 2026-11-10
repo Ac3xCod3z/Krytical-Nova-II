@@ -3,6 +3,7 @@ using KryticalNova.Rendering;
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
+using VolumetricFogAndMist2;
 
 namespace KryticalNova.World
 {
@@ -155,6 +156,34 @@ namespace KryticalNova.World
         /// <summary>The presented (smoothed) time of day, 0-1, for other client presentation (street lamps).</summary>
         public static float PresentedTimeOfDay01 { get; private set; } = 0.5f;
 
+        /// <summary>Night brightness slider, 0-1 (Settings). 0.5 = the designed night; 0 darker, 1 about +0.8 EV brighter.</summary>
+        public static float NightBrightness
+        {
+            get { if (nightBrightness < 0f) nightBrightness = PlayerPrefs.GetFloat("kn.night.brightness", 0.5f); return nightBrightness; }
+            set { nightBrightness = Mathf.Clamp01(value); PlayerPrefs.SetFloat("kn.night.brightness", nightBrightness); }
+        }
+        private static float nightBrightness = -1f;
+        /// <summary>Night exposure: EV added by post at full night, before the slider (G).</summary>
+        private const float NightExposureEv = 0.6f, NightExposureSliderEv = 0.8f;
+        private Light playerGlow;   // retired: the soft light under the player was unwanted (owner, 10 Nov)
+        private Vector3 lastKeyDir = Vector3.up;
+        private Material rimMaterial;
+        private readonly System.Collections.Generic.List<Renderer> rimRenderers = new System.Collections.Generic.List<Renderer>();
+        private float rimRefresh;
+        private const int LampPoolSize = 6;
+        private const float LampPoolRange = 12f, LampPoolReach = 28f;
+        private Light[] lampPool;
+        private Light moonFill;
+        private float fillWeight;
+        private float poolTimer;
+        private AtmosphereLife atmosphere;
+        private FogVoid playerVoid;
+        // J: the zone's mood, eased as the player crosses from one place to the next (grade tint, saturation, EV, fog share).
+        private Color moodTint = Color.white;
+        private float moodSat, moodEv, moodFog = 1f;
+        private Transform playerAnchor;
+        private float anchorTimer;
+
         /// <summary>Forces the rainbow strength (0-1); negative restores natural behaviour.</summary>
         public void SetRainbowOverride(float strength01) => gmRainbow = strength01;
         /// <summary>The forced moon phase, or negative when the moon follows the world clock.</summary>
@@ -230,6 +259,14 @@ namespace KryticalNova.World
 
         private void OnDisable()
         {
+            // The client-only lights and the rim leave with the presenter (Play stops, the map unloads).
+            DetachRim();
+            if (atmosphere != null) { atmosphere.Dispose(); atmosphere = null; }
+            if (playerVoid != null) { Destroy(playerVoid.gameObject); playerVoid = null; }
+            if (playerGlow != null) DestroyLight(playerGlow);
+            if (lampPool != null) for (int i = 0; i < lampPool.Length; i++) if (lampPool[i] != null) DestroyLight(lampPool[i]);
+            if (moonFill != null) DestroyLight(moonFill);
+            playerGlow = null; lampPool = null; moonFill = null; playerAnchor = null;
             ComicStyleRuntime.Reset();
             SunShaftRuntime.Reset();
             if (flare != null) flare.intensity = 0f;
@@ -321,6 +358,7 @@ namespace KryticalNova.World
             Vector3 moonDir = dc.MoonDirection(t);
             bool useMoon = sunDir.y < dc.lightSwapElevation;
             Vector3 keyDir = useMoon ? moonDir : sunDir;
+            lastKeyDir = keyDir;
             float sunVisible = Smooth(sunDir.y, -0.02f, 0.06f);
             float moonVisible = Smooth(moonDir.y, -0.02f, 0.06f);
 
@@ -512,13 +550,188 @@ namespace KryticalNova.World
             // ---- post
             if (colorAdjustments != null)
             {
-                colorAdjustments.saturation.value = w.saturation;
+                colorAdjustments.saturation.value = w.saturation + moodSat;
                 colorAdjustments.contrast.value = w.contrast;
-                colorAdjustments.colorFilter.value = dc.postColorFilter.Evaluate(t);
+                colorAdjustments.colorFilter.value = dc.postColorFilter.Evaluate(t) * moodTint;
+                // G: night exposure. Play has post that the edit preview does not, so midnight read darker there.
+                colorAdjustments.postExposure.overrideState = true;
+                colorAdjustments.postExposure.value = moodEv + night * (NightExposureEv - 0.5f * NightExposureSliderEv + NightBrightness * NightExposureSliderEv);
+            }
+            // E: the character shader reads this to strengthen its rim at night.
+            Shader.SetGlobalFloat(Ids.NightAmount, night * (0.6f + 0.8f * NightBrightness));
+            if (Application.isPlaying)
+            {
+                UpdatePlayerGlow(night, dt);
+                UpdateAtmosphere(sunDir, w, night, dt);
             }
         }
 
         // ---------------------------------------------------------------- helpers
+
+        /// <summary>J, K, L: the zone mood, the air motes and the light shafts (client only; see <see cref="AtmosphereLife"/>).</summary>
+        private void UpdateAtmosphere(Vector3 sunDir, WeatherBlend w, float night, float dt)
+        {
+            if (playerAnchor == null) return;
+            if (atmosphere == null) atmosphere = new AtmosphereLife();
+            atmosphere.Update(playerAnchor, sunDir, night, w.wind, w.rain, dt);
+            VolumetricAtmosphereDriver.PublishWind(w.wind);
+            // The mist parts around the player: a soft void that walks with them.
+            if (playerVoid == null)
+            {
+                var vg = new GameObject("FogVoid (player)") { hideFlags = HideFlags.DontSave };
+                playerVoid = vg.AddComponent<FogVoid>();
+                playerVoid.roundness = 1f; playerVoid.falloff = 0.9f;
+            }
+            playerVoid.transform.position = playerAnchor.position + Vector3.up * 1f;
+            playerVoid.transform.localScale = new Vector3(4.5f, 3f, 4.5f);
+            float day = Mathf.Clamp01(sunDir.y * 3f);
+            Color tint; float sat, ev, fog;
+            switch (atmosphere.CurrentZone)
+            {
+                case AtmosphereLife.Zone.Concord: tint = new Color(0.98f, 1f, 1.03f); sat = 4f; ev = 0.2f * day; fog = 0.35f; break;   // above the clouds: high-key, thin haze
+                case AtmosphereLife.Zone.Fields:  tint = new Color(0.98f, 1.03f, 0.97f); sat = 10f; ev = FieldsNightLiftEv * night; fog = 1f; break;          // fresh green
+                default:                          tint = Color.Lerp(Color.white, new Color(1.05f, 1f, 0.93f), day); sat = 6f; ev = 0f; fog = 1.15f; break;   // warm town, a little street haze
+            }
+            float k = 1f - Mathf.Exp(-dt / 1.5f);
+            moodTint = Color.Lerp(moodTint, tint, k);
+            moodSat = Mathf.Lerp(moodSat, sat, k);
+            moodEv = Mathf.Lerp(moodEv, ev, k);
+            moodFog = Mathf.Lerp(moodFog, fog, k);
+            RenderSettings.fogDensity *= moodFog;
+            UpdateMoonFill(night, atmosphere.CurrentZone == AtmosphereLife.Zone.Fields, dt);
+        }
+
+        private const float MoonFillIntensity = 2.0f;
+        /// <summary>Extra exposure (EV) in the fields at night, so the ground reads at mid distance: only the moon lights them.</summary>
+        private const float FieldsNightLiftEv = 0.4f;
+
+        /// <summary>
+        /// Moon fill for the fields (owner, 10 Nov 2026: the fields at night were pitch black). One soft unshadowed cool light from the side
+        /// away from the moon, so the ground and grass model with a readable dark side while the moon's own light and shadows stay the key.
+        /// It rides the night brightness slider, fades in with the fields zone and is gone by day.
+        /// </summary>
+        private void UpdateMoonFill(float night, bool inFields, float dt)
+        {
+            fillWeight = Mathf.MoveTowards(fillWeight, inFields ? 1f : 0f, dt / 2f);
+            float amount = night * fillWeight * MoonFillIntensity * (0.5f + NightBrightness) * (1f - 0.15f * VolumetricAtmosphereDriver.FogAmount);
+            if (moonFill == null)
+            {
+                if (amount <= 0.001f) return;
+                var g = new GameObject("MoonFill") { hideFlags = HideFlags.DontSave };
+                moonFill = g.AddComponent<Light>();
+                moonFill.type = LightType.Directional; moonFill.shadows = LightShadows.None;
+                moonFill.color = new Color(0.55f, 0.66f, 0.95f);
+            }
+            float yaw = keyLight != null ? keyLight.transform.eulerAngles.y + 150f : 0f;
+            moonFill.transform.rotation = Quaternion.Euler(52f, yaw, 0f);
+            moonFill.intensity = amount;
+            if (moonFill.enabled != amount > 0.001f) moonFill.enabled = amount > 0.001f;
+        }
+
+        private static readonly System.Collections.Generic.List<Renderer> RimScratch = new System.Collections.Generic.List<Renderer>();
+
+        /// <summary>Adds the lit-rim pass to every mesh of the character that lacks it (skinned and plain; effects are skipped).</summary>
+        private void AttachRim(Transform model)
+        {
+            if (rimRenderers == null) return;
+            model.GetComponentsInChildren(false, RimScratch);
+            foreach (var r in RimScratch)
+            {
+                if (!(r is SkinnedMeshRenderer) && !(r is MeshRenderer)) continue;
+                var mats = r.sharedMaterials;
+                if (mats.Length == 0 || System.Array.IndexOf(mats, rimMaterial) >= 0) continue;
+                var more = new Material[mats.Length + 1];
+                mats.CopyTo(more, 0);
+                more[mats.Length] = rimMaterial;
+                r.sharedMaterials = more;
+                if (!rimRenderers.Contains(r)) rimRenderers.Add(r);
+            }
+            RimScratch.Clear();
+        }
+
+        private void DetachRim()
+        {
+            if (rimRenderers == null) return;
+            foreach (var r in rimRenderers)
+            {
+                if (r == null || rimMaterial == null) continue;
+                var mats = new System.Collections.Generic.List<Material>(r.sharedMaterials);
+                if (mats.Remove(rimMaterial)) r.sharedMaterials = mats.ToArray();
+            }
+            rimRenderers.Clear();
+        }
+
+        private static void DestroyLight(Light l)
+        {
+            if (Application.isPlaying) Destroy(l.gameObject); else DestroyImmediate(l.gameObject);
+        }
+
+        /// <summary>F: one soft unshadowed point light on the LOCAL player, up at dusk, down at dawn. Client presentation only.</summary>
+        private void UpdatePlayerGlow(float night, float dt)
+        {
+            anchorTimer -= dt;
+            if (playerAnchor == null && anchorTimer <= 0f)
+            {
+                anchorTimer = 1f;
+                var go = GameObject.Find("Player (you)");
+                if (go != null) playerAnchor = go.transform;
+            }
+            if (playerAnchor == null) return;
+            // E: a lit rim (owner, 10 Nov 2026): the moon catching the edges of the local character that face it, drawn by KN/LitRim as one
+            // extra additive pass on each of the character's meshes (it only adds light). The shader reads _KN_NightAmount, so it is gone by
+            // day and follows the night brightness slider. Checked once a second so a gear change's new meshes get it too.
+            rimRefresh -= dt;
+            if (rimRefresh <= 0f)
+            {
+                rimRefresh = 1f;
+                if (rimMaterial == null) rimMaterial = Resources.Load<Material>("KN/LitRim");
+                if (rimMaterial != null) AttachRim(playerAnchor);
+            }
+            UpdateLampPools(night, dt);
+        }
+
+        /// <summary>H: the few lamps nearest the player get a real warm light (no shadows); the rest keep their baked pool and glow.</summary>
+        private void UpdateLampPools(float night, float dt)
+        {
+            poolTimer -= dt;
+            if (poolTimer > 0f) return;
+            if (lampPool == null) lampPool = new Light[LampPoolSize];
+            poolTimer = 0.4f;
+            var lamps = StreetLampController.All;
+            Vector3 me = playerAnchor.position;
+            for (int slot = 0; slot < LampPoolSize; slot++)
+            {
+                StreetLampController best = null;
+                float bestD = LampPoolReach * LampPoolReach;
+                for (int i = 0; i < lamps.Count; i++)
+                {
+                    var l = lamps[i];
+                    if (l == null) continue;
+                    float d = (l.LampPosition - me).sqrMagnitude;
+                    if (d >= bestD) continue;
+                    bool taken = false;
+                    for (int k = 0; k < slot; k++) if (lampPool[k] != null && (lampPool[k].transform.position - l.LampPosition).sqrMagnitude < 0.01f) { taken = true; break; }
+                    if (taken) continue;
+                    bestD = d; best = l;
+                }
+                if (lampPool[slot] == null)
+                {
+                    var g = new GameObject("LampPool " + slot) { hideFlags = HideFlags.DontSave };
+                    var li = g.AddComponent<Light>();
+                    li.type = LightType.Spot; li.range = LampPoolRange; li.spotAngle = 118f; li.innerSpotAngle = 25f; li.shadows = LightShadows.None;
+                    g.transform.rotation = Quaternion.Euler(90f, 0f, 0f);
+                    li.renderMode = LightRenderMode.ForcePixel;
+                    lampPool[slot] = li;
+                }
+                Light light = lampPool[slot];
+                bool on = best != null && night > 0.02f;
+                if (light.enabled != on) light.enabled = on;
+                if (!on) continue;
+                light.transform.position = best.LampPosition + Vector3.down * 0.15f;
+                light.color = new Color(1f, 0.66f, 0.32f);   // warm amber
+                light.intensity = 11f * night * (1f - 0.85f * VolumetricAtmosphereDriver.FogAmount) * (1f - Mathf.Clamp01(bestD / (LampPoolReach * LampPoolReach)) * 0.6f);
+            }
+        }
 
         private const string DayScenario = "Day", NightScenario = "Night";
         private float appliedNightBlend = -1f;
@@ -691,6 +904,7 @@ namespace KryticalNova.World
             public static readonly int CloudWind = Shader.PropertyToID("_KN_CloudWind");
             public static readonly int CloudLightDir = Shader.PropertyToID("_KN_CloudLightDir");
             public static readonly int CloudShadow = Shader.PropertyToID("_KN_CloudShadow");
+            public static readonly int NightAmount = Shader.PropertyToID("_KN_NightAmount");
             public static readonly int CloudLit = Shader.PropertyToID("_KN_CloudLit");
             public static readonly int CloudShade = Shader.PropertyToID("_KN_CloudShade");
             public static readonly int CloudExtra = Shader.PropertyToID("_KN_CloudExtra");

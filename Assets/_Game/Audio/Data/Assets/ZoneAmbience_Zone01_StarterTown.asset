@@ -16,15 +16,35 @@ MonoBehaviour:
   - clip: {fileID: 8300000, guid: ad931c89f54afd946ab759ed58e939a4, type: 3}
     volume: 0.7
     when: 1
+    area: 1
   - clip: {fileID: 8300000, guid: eb4bf455010b23d46b67dacf15b34e68, type: 3}
     volume: 0.6
     when: 1
+    area: 1
   - clip: {fileID: 8300000, guid: 5292acdf2fea9eb4f8174b83bf0c42cc, type: 3}
     volume: 0.7
     when: 2
+    area: 1
   - clip: {fileID: 8300000, guid: 55b8df7545d2ec344b86f23f9a9cb6db, type: 3}
     volume: 0.55
     when: 2
+    area: 1
+  - clip: {fileID: 8300000, guid: 8f9d6f7f8eeb5ec42b3f8468d54ed3f0, type: 3}
+    volume: 0.6
+    when: 1
+    area: 2
+  - clip: {fileID: 8300000, guid: d70ab1b1204878f4aac07dadf73ee841, type: 3}
+    volume: 0.5
+    when: 2
+    area: 2
+  - clip: {fileID: 8300000, guid: ae23a2fe30942914aaa358ac6ec0d26f, type: 3}
+    volume: 0.6
+    when: 0
+    area: 3
+  - clip: {fileID: 8300000, guid: 7860529bc7f516e4895a166dd291f3f8, type: 3}
+    volume: 0.5
+    when: 0
+    area: 3
   dawnHeight: 0
   twilight: 0.15
   fadeInSeconds: 4

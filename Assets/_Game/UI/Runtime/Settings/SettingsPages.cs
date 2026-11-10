@@ -324,6 +324,11 @@ namespace KryticalNova.UI
                 SettingsRows.Choice(interfaceOptions, "Menu theme", MenuThemeNames,
                     () => (int)HudPreferences.MenuTheme, index => HudPreferences.MenuTheme = (MenuTheme)index);
 
+                SettingsRows.Header(interfaceOptions, "NIGHT");
+                SettingsRows.Slider(interfaceOptions, "Night brightness", 0f, 1f,
+                    () => KryticalNova.World.EnvironmentPresenter.NightBrightness,
+                    value => KryticalNova.World.EnvironmentPresenter.NightBrightness = (float)Math.Round(value * 20f) / 20f);
+
                 SettingsRows.Header(interfaceOptions, "CHAT");
                 SettingsRows.Slider(interfaceOptions, "Chat text size", HudPreferences.MinChatTextScale, HudPreferences.MaxChatTextScale,
                     () => HudPreferences.ChatTextScale, value => HudPreferences.ChatTextScale = (float)Math.Round(value * 20f) / 20f);

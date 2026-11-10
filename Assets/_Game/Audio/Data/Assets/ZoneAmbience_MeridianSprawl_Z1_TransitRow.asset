@@ -16,12 +16,15 @@ MonoBehaviour:
   - clip: {fileID: 8300000, guid: 3e87ac65637743b4990f98e916845602, type: 3}
     volume: 0.6
     when: 0
+    area: 0
   - clip: {fileID: 8300000, guid: 50a7496f9c887624c92d8ad917295279, type: 3}
     volume: 0.6
     when: 1
+    area: 0
   - clip: {fileID: 8300000, guid: ff89bc949df03d545a9328e299501e95, type: 3}
     volume: 0.65
     when: 2
+    area: 0
   dawnHeight: 0
   twilight: 0.15
   fadeInSeconds: 4

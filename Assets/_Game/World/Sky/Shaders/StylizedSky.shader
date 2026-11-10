@@ -75,8 +75,16 @@ Shader "Skybox/KryticalNova/Stylized Sky"
         _CirrusThreshold("Cirrus Threshold", Range(0, 1)) = 0.55
         _CirrusStrength("Cirrus Streaks Strength (0 = off)", Range(0, 1)) = 0
 
+        [Header(Toon Clouds (owner option A, 9 Nov 2026))]
+        _ToonBands("Toon Light Bands (0 = smooth painted)", Range(0, 5)) = 3
+        _ToonBandSoftness("Toon Band Edge Softness", Range(0.01, 0.5)) = 0.14
+        _ToonEdge("Toon Silhouette Crispness (0 = soft)", Range(0, 1)) = 0.65
+
         [Header(Horizon)]
         _HorizonFogHeight("Horizon Fog Height", Range(0.01, 0.6)) = 0.18
+        _WarmHaze("Warm Horizon Haze (by day)", Range(0, 1)) = 0.4
+        _WarmHazeHeight("Warm Haze Height", Range(0.02, 0.6)) = 0.2
+        _WarmHazeColor("Warm Haze Colour", Color) = (1, 0.8, 0.62, 1)
     }
 
     SubShader
@@ -147,6 +155,12 @@ Shader "Skybox/KryticalNova/Stylized Sky"
                 float _HaloWidth;
                 float _HaloMoon;
                 float _HorizonFogHeight;
+                float _ToonBands;
+                float _ToonBandSoftness;
+                float _ToonEdge;
+                float _WarmHaze;
+                float _WarmHazeHeight;
+                float4 _WarmHazeColor;
             CBUFFER_END
 
             // Globals from EnvironmentPresenter
@@ -387,6 +401,18 @@ Shader "Skybox/KryticalNova/Stylized Sky"
                     cirrus = smoothstep(_CirrusThreshold, _CirrusThreshold + 0.3, c) * _KN_CloudExtra.x * horizonFade * _CirrusStrength;
                 #endif
 
+                    // Toon (owner option A): the light steps in a few soft-edged bands and the silhouette firms up, on the
+                    // whole weather-driven field. ALU only, no extra samples.
+                    if (_ToonBands >= 0.5)
+                    {
+                        // banded from a calmer tone: the core depth darkens the belly, so overcast keeps shaded masses, not speckle
+                        half tone = saturate(lerp(light, 1.0h - cloud.y, 0.55h));
+                        half x = tone * _ToonBands;
+                        half stepped = (floor(x) + smoothstep(0.5h - _ToonBandSoftness, 0.5h + _ToonBandSoftness, frac(x))) / _ToonBands;
+                        light = lerp(_CloudAmbientLift, 1.0h, min(stepped, 1.0h));
+                    }
+                    dens = lerp(dens, smoothstep(0.12h, 0.5h, dens), _ToonEdge);
+
                     cloudAlpha = dens * _KN_CloudParams.y * horizonFade;
                     cloudColor = lerp(_KN_CloudShade.rgb, _KN_CloudLit.rgb, light);
                     cloudColor *= 1.0 - _KN_CloudParams.w * smoothstep(0.25, 1.0, cloud.y);
@@ -528,6 +554,12 @@ Shader "Skybox/KryticalNova/Stylized Sky"
                 sky *= lerp(1.0, rainbowScale, bowMask);
                 sky += bow * bowMask * (0.35 + dot(sky, half3(0.299, 0.587, 0.114)));
                 sky += _KN_SkyParams.z * 0.15 * half3(0.75, 0.82, 1.0);
+
+                // --- warm horizon haze by day (owner option A): a luminance-kept warm tint in a low band
+                half warmBand = 1.0h - saturate(max(d.y, 0.0) / _WarmHazeHeight);
+                half day = saturate(dot(_KN_SunColor.rgb, half3(0.333h, 0.333h, 0.333h)) * 1.5h);
+                half3 warm = _WarmHazeColor.rgb * dot(sky, half3(0.3h, 0.55h, 0.15h)) * 1.2h;
+                sky = lerp(sky, warm, _WarmHaze * warmBand * warmBand * day);
 
                 // --- horizon meets distance fog without a seam
                 half fogBand = 1.0 - saturate(max(d.y, 0.0) / _HorizonFogHeight);
