@@ -1001,7 +1001,7 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
             // (c) the ledger line
             List<LedgerEntry> lines = ServerSave.ReadLedger(account, 0, 100).FindAll(l => l.kind == LedgerKinds.NameChanged);
             Assert.AreEqual(1, lines.Count);
-            Assert.AreEqual("Ace > Zephyr", lines[0].note);
+            Assert.AreEqual("Ace > Zephyr", lines[0].name);   // LedgerEntry.For keeps the text in name
             Assert.AreEqual(characterId, ServerRoster.Names().Holder("zephyr").character);
             Assert.IsNull(ServerRoster.Names().Holder("ace"), "the old name is free");
             body.GetComponent<PlayerSaveAgent>().OnServerLeaving();
