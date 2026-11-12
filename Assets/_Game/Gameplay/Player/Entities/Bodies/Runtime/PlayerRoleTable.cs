@@ -77,7 +77,8 @@ namespace KryticalNova.Player.Entities.Bodies
             "PlayerCrafting", "PlayerRestyle", "PlayerSponsor", "PlayerExperienceBoosts", "PlayerCrate", "PlayerHousing", "PlayerRecall",
             "PlayerFlask", "PlayerGm", "PlayerGmSight", "PlayerAutopilot", "PlayerCadence", "PlayerLoadouts", "PlayerMounts", "MountFeeding", "MountRider",
             "PlayerAutobuff",   // M8 8.3.11: the licence, the cells, the Pass use and the save run on the server body
-            "PlayerRename", "KNEmeraldPlayerBridge", "TargetPositionModifier", "WeaponHitbox", "PlayerNightLight",
+            "PlayerRename",     // wave 2, 12 Nov 2026: decides on the server body; the own view only asks (RenameSystems); stripped on other views
+            "KNEmeraldPlayerBridge", "TargetPositionModifier", "WeaponHitbox", "PlayerNightLight",
         };
 
         /// <summary>Rule behaviours a remote body keeps because nameplates and targeting read them (the level too: M8 8.3.1, it takes the
