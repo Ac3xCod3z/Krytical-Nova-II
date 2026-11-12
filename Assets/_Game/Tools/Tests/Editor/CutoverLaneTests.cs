@@ -90,8 +90,8 @@ namespace KryticalNova.Tests
             Assert.IsTrue(nova.entities);
             Assert.IsTrue(nova.IsAuto, "the server fills in its public address when it publishes");
             Assert.AreEqual(7777, nova.port);
-            Assert.AreEqual(8090, nova.statusPort, "the entity server answers the game's status question on its page port, not on game port + 1");
-            Assert.AreEqual(8090, options.statusPort, "an auto entry takes the server's own status port");
+            Assert.AreEqual(7778, nova.statusPort, "the status question is answered on 7778 (already forwarded by the router), never on the page's port");
+            Assert.AreEqual(7778, options.statusPort, "an auto entry takes the server's own status port");
             Assert.IsEmpty(options.mapServers, "Transit Row is left out");
         }
 

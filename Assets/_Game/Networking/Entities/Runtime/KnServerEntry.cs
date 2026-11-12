@@ -153,14 +153,14 @@ namespace KryticalNova.Networking.Entities
             string key = settings.ReadStopKey();
             s_Page?.Dispose();
             s_Page = new KnServerPage(key);
-            if (!s_Page.Start(settings.PagePort, listenOnAllAddresses: true, udpStatus: true, out string problem))
+            if (!s_Page.Start(settings.PagePort, listenOnAllAddresses: true, udpStatus: true, out string problem, udpPort: settings.statusPort))
             {
                 Debug.LogWarning("[KnServer] " + problem + ": the status and stop endpoint are off, joining still works.");
                 s_Page = null;
                 return;
             }
             if (problem != null) Debug.LogWarning("[KnServer] " + problem);
-            Debug.Log($"[KnServer] Page: GET http://this-machine:{s_Page.TcpPort}/status (anyone), POST /stop " +
+            Debug.Log($"[KnServer] Page: status for the server list on UDP {s_Page.UdpPort}, GET http://this-machine:{s_Page.TcpPort}/status (anyone), POST /stop " +
                       (key.Length > 0 ? "(this machine only, needs the save service key)." : "(off: this server has no save service key)."));
         }
 #endif

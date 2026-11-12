@@ -258,6 +258,8 @@ namespace KryticalNova.Networking.Entities
 
         /// <summary>The port the TCP listener is bound to (useful when 0 was asked for).</summary>
         public int TcpPort { get; private set; }
+        /// <summary>The UDP port the status answer listens on (0 until it starts).</summary>
+        public int UdpPort { get; private set; }
 
         /// <param name="stopKey">The save service key. Empty = <c>POST /stop</c> is refused with 403 (no key, no stop).</param>
         public KnServerPage(string stopKey)
@@ -265,8 +267,12 @@ namespace KryticalNova.Networking.Entities
             m_Key = stopKey ?? string.Empty;
         }
 
-        /// <summary>Starts listening. Port 0 picks a free one. False with <paramref name="problem"/> when the port cannot be opened.</summary>
-        public bool Start(int port, bool listenOnAllAddresses, bool udpStatus, out string problem)
+        /// <summary>
+        /// Starts listening. Port 0 picks a free one. False with <paramref name="problem"/> when the port cannot be opened. The game's UDP
+        /// status question is answered on <paramref name="udpPort"/>, or on the page's own port when that is 0 (the test lane). The real
+        /// server names 7778 (cutover, 12 Nov 2026): the router already forwards it, and the page's port is never opened to the internet.
+        /// </summary>
+        public bool Start(int port, bool listenOnAllAddresses, bool udpStatus, out string problem, int udpPort = 0)
         {
             problem = null;
             try
@@ -292,13 +298,14 @@ namespace KryticalNova.Networking.Entities
             {
                 try
                 {
-                    m_Udp = new UdpClient(new IPEndPoint(IPAddress.Any, TcpPort));
+                    UdpPort = udpPort > 0 ? udpPort : TcpPort;
+                    m_Udp = new UdpClient(new IPEndPoint(IPAddress.Any, UdpPort));
                     new Thread(UdpLoop) { IsBackground = true, Name = "KN server status" }.Start();
                 }
                 catch (SocketException e)
                 {
                     m_Udp = null;
-                    problem = $"the UDP status answer on {TcpPort} could not start ({e.Message}); the page still works";
+                    problem = $"the UDP status answer on {UdpPort} could not start ({e.Message}); the page still works";
                 }
             }
             return true;

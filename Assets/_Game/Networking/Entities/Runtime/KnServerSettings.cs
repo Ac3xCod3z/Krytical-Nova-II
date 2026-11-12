@@ -19,6 +19,8 @@ namespace KryticalNova.Networking.Entities
         // JsonUtility field names: the same keys as server-settings.json.
         public int port = DefaultPort;
         public int pagePort = 8090;
+        /// <summary>The UDP port that answers the game's status question (the server list). 0 = the page port (the test lane); the real server names 7778.</summary>
+        public int statusPort;
         public int maxPlayers = 100;
         public string map = "Zone01_StarterTown";
         public string saveService = "";

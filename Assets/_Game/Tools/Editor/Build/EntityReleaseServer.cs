@@ -21,6 +21,8 @@ namespace KryticalNova.EditorTools
         public static readonly string[] Defines = { "KN_ENTITIES_SERVER", SkyLiftLink.OffDefine };
 
         public const int GamePort = 7777, PagePort = 8090;
+        /// <summary>The UDP port that answers the server list's status question: 7778, which the router already forwards (never the page's port).</summary>
+        public const int StatusPort = 7778;
         public const string SaveService = "http://127.0.0.1:7801";
         public const string ListName = "Nova";
 
@@ -47,7 +49,7 @@ namespace KryticalNova.EditorTools
                 && !string.IsNullOrWhiteSpace(options.serverList[0].name) ? options.serverList[0].name : ListName;
             options.port = GamePort;
             options.pagePort = PagePort;
-            options.statusPort = PagePort;                       // the entity server answers the game's UDP status on its page port (KnServerEntry)
+            options.statusPort = StatusPort;                     // the entity server answers the game's UDP status here (KnServerEntry, KnServerPage.Start)
             options.saveService = SaveService;
             options.saveServiceKeyFile = string.Empty;           // the owner's secrets folder, as the NGO server
             options.pagePassword = string.Empty;                 // not carried: the entity page has no password of this file
@@ -59,7 +61,7 @@ namespace KryticalNova.EditorTools
             options.role = ServerLaunchOptions.MainRole;
             options.serverList = new[]
             {
-                new ServerListing { name = listed, address = ServerListing.AutoAddress, port = GamePort, statusPort = PagePort, entities = true },
+                new ServerListing { name = listed, address = ServerListing.AutoAddress, port = GamePort, statusPort = StatusPort, entities = true },
             };
             string json = JsonUtility.ToJson(options, true);
             // The keys the entity server and the app read that are not fields of the options: "netcode" marks it for the Server app.
