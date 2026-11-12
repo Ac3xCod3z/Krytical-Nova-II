@@ -494,6 +494,18 @@ the same change as what it describes, so it always agrees with the saves.
 
 To look at or go back from the database: **Copy the Save Database into Files...** writes it into an empty folder.
 
+**When a save is refused (12 Nov 2026).** The save service refuses a save of a document that something else changed since
+this server read it (another server, a tool). That save is not written: the other copy stays, that once. The server then
+reads the service's version of every part of that account or world document and **sends its whole copy with its next
+save**, ledger lines included, so the database holds the server's copy in every part again. A player who had already
+left is sent again at once, as the save was, but only while no other server holds that account. The log says
+`was changed elsewhere` for the refusal and `sent again as it was` for a player who had left. A Name Change whose save is
+refused is undone while the player is still in the game; if the player has left, it is finished instead (the new name is
+kept, with one ledger line).
+**Known limit:** the save service takes at most 500 writes, deletes and ledger lines in one save (`Program.cs`). A world
+document with more entries than that (a names list of thousands) cannot be sent whole yet. The owner decides whether to
+split such a save or raise the limit.
+
 ## 6. Join the server
 
 **From the game (step 4):** on character select, **Enter World** joins the server played last, while the loading
