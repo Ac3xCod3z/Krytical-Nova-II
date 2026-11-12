@@ -1249,13 +1249,14 @@ namespace KryticalNova.Persistence.Entities
         /// <summary>
         /// The item effects whose result this server saves (or that save nothing): HP/Flux stims, the Flask (its drinks are on the bottle),
         /// a pet's ration (its growth is on the pet item), a Serum (its part is real), Recall (a move). Every other effect writes a part that
-        /// is still passed through (Autopilot, Dossiers) or has its own flow (Name Change), so it waits for its port.
+        /// is still passed through (Dossiers) or has its own flow (Name Change), so it waits for its port.
         /// </summary>
         public static bool EffectPorted(ItemUseEffect effect) => effect == ItemUseEffect.None || effect == ItemUseEffect.FluxFlask
             || effect == ItemUseEffect.FeedPet || effect == ItemUseEffect.Serum || effect == ItemUseEffect.Recall
             || effect == ItemUseEffect.ExperienceBoost    // M8 8.3.3: the "xpboosts" part is real (B13)
             || effect == ItemUseEffect.LearnSkill         // M8 8.3.2: the "skills" part is real (B14)
             || effect == ItemUseEffect.AutobuffTime       // M8 8.3.11: the "autobuff" part is real (B26)
+            || effect == ItemUseEffect.AutopilotTime      // wave 2, 12 Nov 2026: the "autopilot" part is real
             || effect == ItemUseEffect.RegisterMount || effect == ItemUseEffect.FeedMount;   // M8 8.4.8: the "mounts" part is real (B38)
 
         // 8 Nov 2026 port of NGO PlayerSkillQueue (QueueServerRpc, ClearServerRpc, EndedRpc): the server body's own queue runs NGO's

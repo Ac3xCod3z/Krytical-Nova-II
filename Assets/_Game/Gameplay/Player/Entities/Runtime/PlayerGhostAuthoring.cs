@@ -37,6 +37,7 @@ namespace KryticalNova.Player.Entities
                 AddComponent<TeleportSeq>(e);
                 AddComponent<PlayerLook>(e);
                 AddComponent<PlayerGmTag>(e);
+                AddComponent<AutopilotTag>(e);
                 AddComponent<PlayerLevelTag>(e);
                 AddComponent<PlayerNovaTag>(e);
                 AddComponent<PlayerPartyTag>(e);

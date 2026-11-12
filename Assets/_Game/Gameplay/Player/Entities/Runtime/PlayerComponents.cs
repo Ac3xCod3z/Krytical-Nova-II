@@ -338,6 +338,15 @@ namespace KryticalNova.Player.Entities
         [GhostField] public byte On;
     }
 
+    /// <summary>
+    /// The player hunts on Autopilot (wave 2, 12 Nov 2026): everyone sees AUTO on their name, as NGO showed it from <c>PlayerAutopilot</c>'s network
+    /// variable. Written by the server from the server body's Autopilot; 1 = on.
+    /// </summary>
+    public struct AutopilotTag : IComponentData
+    {
+        [GhostField] public byte On;
+    }
+
     /// <summary>Walk and run speed in mm/s, written by the server (rank, mount, gear), never recomputed by the client in the loop.</summary>
     public struct MoveStats : IComponentData
     {

@@ -66,7 +66,26 @@ namespace KryticalNova.Autopilot
         public static event Action<PlayerAutopilot, string> ServerTold;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        private static void ResetStatics() { Link = null; ServerTold = null; warnedBadSave = false; }
+        private static void ResetStatics() { Link = null; ServerTold = null; warnedBadSave = false; RemoteAutoBodies.Clear(); }
+
+        // Other players' bodies carry no PlayerAutopilot on the entity netcode; the ghost's AutopilotTag says who hunts, kept here for the namecard.
+        private static readonly System.Collections.Generic.HashSet<GameObject> RemoteAutoBodies = new System.Collections.Generic.HashSet<GameObject>();
+
+        /// <summary>Entity client: this other player's body hunts on Autopilot (or stopped).</summary>
+        public static void SetRemoteAuto(GameObject body, bool on)
+        {
+            if (body == null) return;
+            if (on) RemoteAutoBodies.Add(body); else RemoteAutoBodies.Remove(body);
+        }
+
+        public static void ClearRemoteAuto() => RemoteAutoBodies.Clear();
+
+        /// <summary>True when the body of this part is another player's, hunting on Autopilot (the entity netcode's AUTO tag).</summary>
+        public static bool RemoteAuto(Component part)
+        {
+            BodyRoleTag tag = part != null ? BodyRoleTag.Of(part) : null;
+            return tag != null && RemoteAutoBodies.Contains(tag.gameObject);
+        }
 
         private NetRoleKind Role => BodyRoleTag.Of(this) is BodyRoleTag tag ? tag.Kind : NetRoleKind.Offline;
         private bool IsClientView => !IsSpawned && Role == NetRoleKind.ClientView;

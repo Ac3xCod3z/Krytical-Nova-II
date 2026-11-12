@@ -115,6 +115,25 @@ namespace KryticalNova.Autopilot.Tests
             Assert.AreEqual(40f, m_Autopilot.Preferences.huntRadius, "bad text changed nothing");
         }
 
+        [Test]
+        public void AnotherPlayersAutoTagIsKeptPerBody_ForTheNamecard()
+        {
+            var other = new GameObject("other player's view");
+            try
+            {
+                other.AddComponent<BodyRoleTag>().Assign(NetRoleKind.ClientView, default, 9, false);
+                Assert.IsFalse(PlayerAutopilot.RemoteAuto(other.GetComponent<BodyRoleTag>()));
+                PlayerAutopilot.SetRemoteAuto(other, true);
+                Assert.IsTrue(PlayerAutopilot.RemoteAuto(other.GetComponent<BodyRoleTag>()));
+                PlayerAutopilot.SetRemoteAuto(other, false);
+                Assert.IsFalse(PlayerAutopilot.RemoteAuto(other.GetComponent<BodyRoleTag>()));
+                PlayerAutopilot.SetRemoteAuto(other, true);
+                PlayerAutopilot.ClearRemoteAuto();
+                Assert.IsFalse(PlayerAutopilot.RemoteAuto(other.GetComponent<BodyRoleTag>()));
+            }
+            finally { Object.DestroyImmediate(other); }
+        }
+
         // ------------------------------------------------------------------ the Pass
 
         [Test]

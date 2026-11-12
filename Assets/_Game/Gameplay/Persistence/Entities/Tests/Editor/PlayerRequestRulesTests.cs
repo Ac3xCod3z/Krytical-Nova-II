@@ -14,7 +14,7 @@ namespace KryticalNova.Persistence.Entities.Tests
         public void OnlyEffectsWhoseResultIsSaved_AreUsed_EveryOtherWaitsForItsPort()
         {
             var ported = new[] { ItemUseEffect.None, ItemUseEffect.FluxFlask, ItemUseEffect.FeedPet, ItemUseEffect.Serum, ItemUseEffect.Recall,
-                ItemUseEffect.ExperienceBoost, ItemUseEffect.LearnSkill, ItemUseEffect.AutobuffTime,   // M8 8.3.3 / 8.3.2 / 8.3.11: xpboosts, skills, autobuff real
+                ItemUseEffect.ExperienceBoost, ItemUseEffect.LearnSkill, ItemUseEffect.AutobuffTime, ItemUseEffect.AutopilotTime,   // M8 8.3.3 / 8.3.2 / 8.3.11: xpboosts, skills, autobuff real
                 ItemUseEffect.RegisterMount, ItemUseEffect.FeedMount };   // M8 8.4.8: mounts real
             foreach (ItemUseEffect effect in Enum.GetValues(typeof(ItemUseEffect)))
                 Assert.AreEqual(Array.IndexOf(ported, effect) >= 0, PlayerRequestServerSystem.EffectPorted(effect), effect.ToString());
@@ -23,6 +23,7 @@ namespace KryticalNova.Persistence.Entities.Tests
             Assert.IsTrue(PlayerRequestServerSystem.EffectPorted(ItemUseEffect.ExperienceBoost), "xpboosts is real now (M8 8.3.3)");
             Assert.IsTrue(PlayerRequestServerSystem.EffectPorted(ItemUseEffect.LearnSkill), "skills is real now (M8 8.3.2)");
             Assert.IsTrue(PlayerRequestServerSystem.EffectPorted(ItemUseEffect.AutobuffTime), "autobuff is real now (M8 8.3.11)");
+            Assert.IsTrue(PlayerRequestServerSystem.EffectPorted(ItemUseEffect.AutopilotTime), "autopilot is real now (wave 2)");
         }
     }
 }

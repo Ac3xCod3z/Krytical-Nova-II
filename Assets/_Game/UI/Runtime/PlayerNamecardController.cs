@@ -272,7 +272,7 @@ namespace KryticalNova.UI
             string name = card.Identity != null ? card.Identity.CharacterName : view.name;
             if (card.Gm != null && card.Gm.ShowsTag) name = KryticalNova.Networking.PlayerGm.Tag + name; // a Game Master says so
             // A character hunting on Autopilot says so, to everyone who can read its name.
-            bool auto = card.Autopilot != null && card.Autopilot.IsOn;
+            bool auto = card.Autopilot != null ? card.Autopilot.IsOn : KryticalNova.Autopilot.PlayerAutopilot.RemoteAuto(card.Identity);   // another player on the entity netcode: the ghost's tag
             int level = card.Progression != null ? card.Progression.CurrentLevel : 1;
             if (name != card.NameSource || auto != card.Auto || level != card.Level || card.NameText == null)
             {
@@ -359,7 +359,7 @@ namespace KryticalNova.UI
             int level = card.Progression != null ? card.Progression.CurrentLevel : 1;
             string nameText = name + "   Lv " + level;
             // A character hunting on Autopilot says so, to everyone who can read its name.
-            if (card.Autopilot != null && card.Autopilot.IsOn) nameText += "   AUTO";
+            if (card.Autopilot != null ? card.Autopilot.IsOn : KryticalNova.Autopilot.PlayerAutopilot.RemoteAuto(card.Identity)) nameText += "   AUTO";
             if (nameText != card.NameText) card.Name.text = card.NameText = nameText;
 
             string standing = card.Nova != null ? card.Nova.WornStanding ?? string.Empty : string.Empty;
