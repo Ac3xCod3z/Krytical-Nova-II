@@ -99,6 +99,10 @@ var store = new DocumentStore(NpgsqlDataSource.Create(connection.ConnectionStrin
 await store.PrepareAsync();
 
 builder.Logging.SetMinimumLevel(LogLevel.Warning);
+// The most writes + deletes + ledger lines one /batch takes (owner, 12 Nov 2026: raised from 500 so a whole world document,
+// such as a names list of thousands, is saved in one change). appsettings.json "MaxBatchItems"; 10000 when the line is missing.
+int maxBatchItems = builder.Configuration.GetValue<int?>("MaxBatchItems") ?? 10000;
+if (maxBatchItems < 1) maxBatchItems = 10000;
 var app = builder.Build();
 
 // The key on every request, compared in constant time.
@@ -149,7 +153,8 @@ app.MapPost("/batch", async (BatchRequest request) =>
     List<WriteRequest> writes = request.Writes ?? new List<WriteRequest>();
     List<string> deletes = request.Deletes ?? new List<string>();
     List<JsonElement> ledger = request.Ledger ?? new List<JsonElement>();
-    if (writes.Count + deletes.Count + ledger.Count > 500) return Results.BadRequest(new { error = "too many in one batch" });
+    int items = writes.Count + deletes.Count + ledger.Count;
+    if (items > maxBatchItems) return Results.BadRequest(new { error = $"too many in one batch: {items} items, the most is {maxBatchItems} (MaxBatchItems)" });
     foreach (WriteRequest write in writes)
         if (!SaveKeyRules.IsValid(write.Key)) return Results.BadRequest(new { error = "not a save key: " + write.Key });
     foreach (string key in deletes)
