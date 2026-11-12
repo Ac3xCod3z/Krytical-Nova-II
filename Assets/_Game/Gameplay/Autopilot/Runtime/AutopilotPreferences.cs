@@ -75,6 +75,21 @@ namespace KryticalNova.Autopilot
             return preferences;
         }
 
+        /// <summary>
+        /// Like <see cref="FromJson"/>, but only when the text really is preferences: false (and nothing made) for null, empty or malformed JSON, so a
+        /// save that cannot be read leaves the current choices as they are instead of resetting them to the defaults.
+        /// </summary>
+        public static bool TryFromJson(string json, AutopilotSettings settings, out AutopilotPreferences preferences)
+        {
+            preferences = null;
+            if (string.IsNullOrWhiteSpace(json)) return false;
+            try { preferences = JsonUtility.FromJson<AutopilotPreferences>(json); }
+            catch (ArgumentException) { preferences = null; }
+            if (preferences == null) return false;
+            preferences.Sanitise(settings);
+            return true;
+        }
+
         public void Sanitise(AutopilotSettings settings)
         {
             Vector2 radius = settings != null ? settings.huntRadius : new Vector2(10f, 40f);

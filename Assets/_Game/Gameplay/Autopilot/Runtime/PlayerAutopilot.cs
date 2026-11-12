@@ -48,6 +48,30 @@ namespace KryticalNova.Autopilot
 
         public static PlayerAutopilot Local => LocalPlayer.Get<PlayerAutopilot>();
 
+        /// <summary>
+        /// The entity netcode's way for the owner's view to ask the server. The server alone decides on/off, the time left and the Pass: a view that
+        /// keeps steering after the server said off gains nothing the server would not give a hand, because every step it takes (an attack order, a
+        /// pickup, an item use, a Hotbar press) is checked by the server exactly as when a hand does it.
+        /// </summary>
+        public interface IOwnerLink
+        {
+            void SetOn(bool value);
+            void SendPreferences(string json);
+        }
+
+        /// <summary>Filled by the entity client; null elsewhere.</summary>
+        public static IOwnerLink Link;
+
+        /// <summary>Entity server body: a message for the owner, raised instead of shown here. The server system sends it.</summary>
+        public static event Action<PlayerAutopilot, string> ServerTold;
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetStatics() { Link = null; ServerTold = null; warnedBadSave = false; }
+
+        private NetRoleKind Role => BodyRoleTag.Of(this) is BodyRoleTag tag ? tag.Kind : NetRoleKind.Offline;
+        private bool IsClientView => !IsSpawned && Role == NetRoleKind.ClientView;
+        private bool IsServerBodyOfEntities => !IsSpawned && Role == NetRoleKind.ServerBody;
+
         public AutopilotSettings Settings => settings;
         public bool IsOn => IsSpawned ? netOn.Value : on;
         /// <summary>When the Autopilot time ends, UTC ticks. On the owner's client it is the server's word.</summary>
@@ -65,7 +89,8 @@ namespace KryticalNova.Autopilot
         /// <summary>The Hostile Zone the player stands in, or null.</summary>
         public HostileZone CurrentZone => HostileZone.At(transform.position);
 
-        private bool Decides => !IsSpawned || IsServer;
+        // Only where the game is decided: the NGO server, the offline avatar and the entity server's body; never a view of the entity netcode.
+        private bool Decides => IsSpawned ? IsServer : Role != NetRoleKind.ClientView;
 
         private void Awake() => entity = GetComponent<CombatEntity>();
 
@@ -108,6 +133,7 @@ namespace KryticalNova.Autopilot
         public void RequestSetOn(bool value)
         {
             if (IsSpawned && !IsOwner) return;
+            if (IsClientView) { if (BodyRoleTag.IsLocalClientView(this)) Link?.SetOn(value); return; }
             if (IsSpawned && !IsServer) SetOnServerRpc(value);
             else ServerSetOn(value, value ? null : "Autopilot off.");
         }
@@ -124,8 +150,10 @@ namespace KryticalNova.Autopilot
         {
             if (changed == null || (IsSpawned && !IsOwner)) return;
             changed.Sanitise(settings);
+            if (IsClientView && !BodyRoleTag.IsLocalClientView(this)) return;
             preferences = changed;
-            if (IsSpawned && !IsServer) SetPreferencesServerRpc(changed.ToJson());
+            if (IsClientView) Link?.SendPreferences(changed.ToJson());
+            else if (IsSpawned && !IsServer) SetPreferencesServerRpc(changed.ToJson());
             Changed?.Invoke();
         }
 
@@ -137,6 +165,29 @@ namespace KryticalNova.Autopilot
             if (json == null || json.Length > MaxPreferencesLength) return;
             preferences = AutopilotPreferences.FromJson(json, settings);
         }
+
+        /// <summary>Entity server: the owner's choices (at most <see cref="MaxPreferencesLength"/> characters, brought inside their limits). Bad text changes nothing.</summary>
+        public bool ServerSetPreferences(string json)
+        {
+            if (!Decides || json == null || json.Length > MaxPreferencesLength) return false;
+            if (!AutopilotPreferences.TryFromJson(json, settings, out AutopilotPreferences kept)) return false;
+            preferences = kept;
+            return true;
+        }
+
+        /// <summary>The owner's view takes what the server says: on or off, where it was switched on, the time and the choices. The server's word, never its own.</summary>
+        public void ApplyServerState(bool isOn, Vector3 where, long expires, string preferencesJson)
+        {
+            if (!IsClientView) return;
+            on = isOn;
+            anchor = where;
+            expiresUtc = expires;
+            if (AutopilotPreferences.TryFromJson(preferencesJson, settings, out AutopilotPreferences fromServer)) preferences = fromServer;
+            Changed?.Invoke();
+        }
+
+        /// <summary>What the entity server sends the owner (and what a test compares): on, anchor, expiry, choices.</summary>
+        public (bool on, Vector3 anchor, long expiresUtc, string preferences) StateForOwner() => (on, anchor, expiresUtc, preferences.ToJson());
 
         [Rpc(SendTo.Owner)]
         private void PreferencesRpc(string json)
@@ -206,6 +257,7 @@ namespace KryticalNova.Autopilot
 
         private void Tell(string text)
         {
+            if (IsServerBodyOfEntities) { ServerTold?.Invoke(this, text); return; }   // the entity server says it to the owner by its own message
             if (IsSpawned && !IsOwner) TellRpc(text);
             else if (KryticalNova.Core.BodyRoleTag.IsMine(this, !IsSpawned || IsOwner)) ClientPresentationRegistry.Messages?.ShowMessage(text);
         }
@@ -281,13 +333,39 @@ namespace KryticalNova.Autopilot
 
         public string CaptureSave() => JsonUtility.ToJson(new AutopilotSave { expiresUtc = expiresUtc, preferences = preferences.ToJson() });
 
+        private static bool warnedBadSave;
+
+        /// <summary>The part's text as time and choices; false for text that cannot be read (null, empty, malformed).</summary>
+        public static bool TryParseSave(string json, out long expires, out string preferencesJson)
+        {
+            expires = 0;
+            preferencesJson = null;
+            if (string.IsNullOrWhiteSpace(json)) return false;
+            try
+            {
+                AutopilotSave save = JsonUtility.FromJson<AutopilotSave>(json);
+                expires = save.expiresUtc;
+                preferencesJson = save.preferences;
+                return true;
+            }
+            catch (ArgumentException) { return false; }
+        }
+
+        /// <summary>
+        /// Loads the part. Text that cannot be read keeps the current time and choices and logs once; it never resets them (save rule: never let a
+        /// load reset a save it cannot read). A part without choices keeps the current choices.
+        /// </summary>
         public void RestoreSave(string json)
         {
             if (string.IsNullOrEmpty(json)) return;
-            AutopilotSave save = JsonUtility.FromJson<AutopilotSave>(json);
+            if (!TryParseSave(json, out long expires, out string preferencesText))
+            {
+                if (!warnedBadSave) { warnedBadSave = true; Debug.LogWarning("[Autopilot] The saved Autopilot part could not be read: the current time and choices are kept."); }
+                return;
+            }
             // Hours from the old Autopilot Chip are not carried over (owner, 17 Oct 2026: no players yet).
-            expiresUtc = save.expiresUtc;
-            preferences = AutopilotPreferences.FromJson(save.preferences, settings);
+            expiresUtc = expires;
+            if (AutopilotPreferences.TryFromJson(preferencesText, settings, out AutopilotPreferences loaded)) preferences = loaded;
             if (IsSpawned && IsServer)
             {
                 netExpiresUtc.Value = expiresUtc;
