@@ -57,6 +57,9 @@ namespace KryticalNova.EditorTools
                 var b = p2.GetComponent<PlayerParty>();
                 if (a == null || b == null) { r.Log("squad: FAIL; a server body has no PlayerParty"); yield break; }
                 string nameA = a.MemberName, nameB = b.MemberName;
+                // run 2 (12 Nov): the whole copy ran (reported, queued, walked to the take-off) and the bot's jump was refused "Learn Jump first.":
+                // the Player2 bot has no skills; a test player enters with every skill (owner, 5 Nov)
+                r.Log($"squad: Player2 made test-ready (every skill, Jump at its top rank): {KnPlayHere.MakeTestReady(p2)}");
                 // run 1 (12 Nov): at the combat spot both players had no HP by the first jump (the zone's Hostiles), which ends a Follow;
                 // the Squad and the Follow are proven where the Tester starts (the town), the kill at the combat spot afterwards
                 Vector3 at = Ground(r.Body.transform.position);
