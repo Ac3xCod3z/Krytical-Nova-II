@@ -119,7 +119,11 @@ namespace KryticalNova.Persistence.Entities
                     if (m_Jumps.IsNewJump(entry.Key, plan.Kind == MotionKind.Jump, plan.PlanSeq, plan.StartTick.IsValid ? plan.StartTick.SerializedData : 0)
                         && entry.Body.TryGetComponent(out KryticalNova.Player.PlayerJumpMotor motor))
                     {
-                        motor.ReportGhostJump(new Vector3(plan.FromXMm, plan.FromYMm, plan.FromZMm) * 0.001f, new Vector3(plan.ToXMm, plan.ToYMm, plan.ToZMm) * 0.001f);
+                        // A plan's points are the body's own (its feet plus the NavMeshAgent's base offset, PlayerJumpFromSkills); a follower
+                        // needs the ground points, as NGO's JumpStarted gave them. Cause of "Follow does not copy the leader's jump" (owner,
+                        // 8 Nov 2026; two-bot run 3, 12 Nov): the landing 1 m above the ground was refused "Choose a walkable landing surface."
+                        Vector3 lift = Vector3.up * (entry.Body.TryGetComponent(out UnityEngine.AI.NavMeshAgent agent) ? agent.baseOffset : 0f);
+                        motor.ReportGhostJump(new Vector3(plan.FromXMm, plan.FromYMm, plan.FromZMm) * 0.001f - lift, new Vector3(plan.ToXMm, plan.ToYMm, plan.ToZMm) * 0.001f - lift);
                         Debug.Log($"[KnFollow] server: new jump of {entry.Body.name} (seq {plan.PlanSeq}) reported to its followers.");
                         GhostJumps++;
                     }
