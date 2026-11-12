@@ -306,18 +306,21 @@ namespace KryticalNova.Progression
         }
 
         /// <summary>Skill points the learned Run and Jump ranks cost: each rank's own <c>skillPointCost</c> (a Memory Wipe, wave 3b).</summary>
-        public long SpentOnRanks() => SpentOn(runSkill, runRank) + SpentOn(jumpSkill, jumpRank);
+        public long SpentOnRanks() => CanClear ? SpentOn(runSkill, runRank) + SpentOn(jumpSkill, jumpRank) : 0;
+
+        /// <summary>True when <see cref="ClearRanks"/> will really clear Run and Jump: only then are their points counted.</summary>
+        public bool CanClear => HasAuthority && isActiveAndEnabled;
 
         private static long SpentOn(MovementSkillData skill, int rank) =>
             skill == null ? 0 : ProgressionResetRules.MovementRankCost(rank, k => skill.TryGetRank(k, out MovementSkillRank r) ? r.skillPointCost : 0);
 
         /// <summary>True when Run or Jump is learned.</summary>
-        public bool HasLearnedRanks => runRank > 0 || jumpRank > 0;
+        public bool HasLearnedRanks => CanClear && (runRank > 0 || jumpRank > 0);
 
         /// <summary>Authority: Run and Jump back to 0 (a new character's ranks) and the character walks. Points are handed back by the caller.</summary>
         public void ClearRanks()
         {
-            if (!HasAuthority || !isActiveAndEnabled) return;
+            if (!CanClear) return;
             runRank = 0;
             jumpRank = 0;
             selectedSkill = MovementSkillId.None;

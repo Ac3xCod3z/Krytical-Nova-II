@@ -77,6 +77,7 @@ namespace KryticalNova.Player.Entities.Bodies
             "PlayerCrafting", "PlayerRestyle", "PlayerSponsor", "PlayerExperienceBoosts", "PlayerCrate", "PlayerHousing", "PlayerRecall",
             "PlayerFlask", "PlayerGm", "PlayerGmSight", "PlayerAutopilot", "PlayerCadence", "PlayerLoadouts", "PlayerMounts", "MountFeeding", "MountRider",
             "PlayerAutobuff",   // M8 8.3.11: the licence, the cells, the Pass use and the save run on the server body
+            "PlayerMemoryWipe", // wave 3b, 12 Nov 2026: decides on the server body; a local stub on the own view; stripped on other views
             "PlayerRename",     // wave 2, 12 Nov 2026: decides on the server body; the own view only asks (RenameSystems); stripped on other views
             "KNEmeraldPlayerBridge", "TargetPositionModifier", "WeaponHitbox", "PlayerNightLight",
         };

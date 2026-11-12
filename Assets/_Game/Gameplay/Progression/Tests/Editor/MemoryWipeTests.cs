@@ -132,6 +132,37 @@ namespace KryticalNova.Tests
         }
 
         [Test]
+        public void DisabledMovement_IsNotHandedBack_AndRunAndJumpStay()
+        {
+            var run = ScriptableObject.CreateInstance<MovementSkillData>();
+            run.skillId = MovementSkillId.Run;
+            run.ranks = new[] { new MovementSkillRank { requiredCharacterLevel = 1, skillPointCost = 3 }, new MovementSkillRank { requiredCharacterLevel = 1, skillPointCost = 4 } };
+            var jump = ScriptableObject.CreateInstance<MovementSkillData>();
+            jump.skillId = MovementSkillId.Jump;
+            jump.ranks = new[] { new MovementSkillRank { requiredCharacterLevel = 1, skillPointCost = 5 } };
+            var movement = go.AddComponent<PlayerMovementSkills>(); // no movement settings: it switches itself off (PMS Awake)
+            var serialized = new SerializedObject(movement);
+            serialized.FindProperty("runSkill").objectReferenceValue = run;
+            serialized.FindProperty("jumpSkill").objectReferenceValue = jump;
+            serialized.ApplyModifiedPropertiesWithoutUndo();
+            movement.MirrorRanks(2, 1);
+            Assert.IsFalse(movement.enabled);
+            Assert.IsFalse(movement.CanClear);
+
+            progression.SetLevel(10);
+            skills.TryUpgradeMultiple(ward, 2);
+            long combat = skills.SpentOnRanks();
+            int before = progression.SkillPoints;
+            Assert.AreEqual(combat, wipe.SpentOnRanks, "the hand-back is combat only");
+            wipe.ServerUse(Wipe);
+            Assert.AreEqual(before + combat, progression.SkillPoints);
+            Assert.AreEqual(2, movement.GetRank(MovementSkillId.Run), "Run untouched");
+            Assert.AreEqual(1, movement.GetRank(MovementSkillId.Jump), "Jump untouched");
+            Object.DestroyImmediate(run);
+            Object.DestroyImmediate(jump);
+        }
+
+        [Test]
         public void SpentOnRanks_CountsASharedRankOnce()
         {
             progression.SetLevel(10);

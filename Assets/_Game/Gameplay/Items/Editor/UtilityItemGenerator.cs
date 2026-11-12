@@ -87,7 +87,7 @@ namespace KryticalNova.EditorTools
 
             // Points placed again (owner, 12 Nov 2026, wave 3b): drops from any Hostile, the Apothecary, gm.resets. Icons: the Icon Library.
             new Row { Id = RespecChipId, Asset = "Respec_Chip", Name = "Respec Chip", Glyph = "RESPEC", Rarity = ItemRarity.Rare,
-                Description = "Hands back every stat point you placed, so you can place them again. Points a GM gave are not handed back.",
+                Description = "Hands back every stat point you placed, so you can place them again.",
                 Stack = 99, Effect = ItemUseEffect.Respec, Cooldown = 1f },
             new Row { Id = MemoryWipeId, Asset = "Memory_Wipe", Name = "Memory Wipe", Glyph = "WIPE", Rarity = ItemRarity.Rare,
                 Description = "Puts every skill back to rank 0, Run and Jump too, and hands back every skill point they cost, so you can place them again. Skill Chip skills stay unlocked. Not while casting, jumping or walking.",

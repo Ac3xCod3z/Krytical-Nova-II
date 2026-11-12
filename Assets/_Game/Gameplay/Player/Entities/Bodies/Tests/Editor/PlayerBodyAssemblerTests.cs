@@ -103,6 +103,9 @@ namespace KryticalNova.Player.Entities.Bodies.Tests
             Assert.AreEqual(PartAction.Keep, PlayerRoleTable.ActionFor(BodyShape.Server, "PlayerRename"), "Name Change (wave 2): the server body alone decides");
             Assert.AreEqual(PartAction.Keep, PlayerRoleTable.ActionFor(BodyShape.ViewLocal, "PlayerRename"), "the own view only asks (Link) and hears the answer");
             Assert.AreEqual(PartAction.Strip, PlayerRoleTable.ActionFor(BodyShape.ViewRemote, "PlayerRename"), "nothing of it on another player's view");
+            Assert.AreEqual(PartAction.Keep, PlayerRoleTable.ActionFor(BodyShape.Server, "PlayerMemoryWipe"), "Memory Wipe (wave 3b): the server body decides");
+            Assert.AreEqual(PartAction.Keep, PlayerRoleTable.ActionFor(BodyShape.ViewLocal, "PlayerMemoryWipe"), "a local stub on the own view");
+            Assert.AreEqual(PartAction.Strip, PlayerRoleTable.ActionFor(BodyShape.ViewRemote, "PlayerMemoryWipe"), "nothing of it on another player's view");
             Assert.AreEqual(PartAction.Keep, PlayerRoleTable.ActionFor(BodyShape.ViewLocal, "AutobuffCaster"), "the Autoward key is the owner's hand (8 Nov port)");
             Assert.AreEqual(PartAction.Strip, PlayerRoleTable.ActionFor(BodyShape.Server, "AutobuffCaster"));
             Assert.AreEqual(PartAction.Strip, PlayerRoleTable.ActionFor(BodyShape.ViewRemote, "AutobuffCaster"));
