@@ -895,16 +895,27 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
             Assert.IsTrue(OwnerProgressBridge.Same(refunded, OwnerProgressBridge.Read(view).Value), "the owner shows exactly what the server holds");
         }
 
-        /// <summary>A store that counts the changes it is given; everything else is a MemorySaveStore's.</summary>
-        sealed class CountingStore : IBatchSaveStore, ILedgerStore
+        /// <summary>A store that counts the changes it is given and tells each one's word itself; with <see cref="Refuse"/> it refuses them
+        /// whole, as the save service does on a version conflict (later, as from its writer thread). Everything else is a MemorySaveStore's.</summary>
+        sealed class CountingStore : IBatchSaveStore, ILedgerStore, ISaveResultStore
         {
             readonly MemorySaveStore m_Inner = new MemorySaveStore();
             public readonly List<SaveBatch> Batches = new List<SaveBatch>();
+            public bool Refuse;
+            public readonly List<SaveBatch> Waiting = new List<SaveBatch>();
             public int WithKeys(string prefix) => Batches.FindAll(b => b.Writes.Exists(w => w.Key.StartsWith(prefix, StringComparison.Ordinal))).Count;
             public void WriteBatch(SaveBatch batch)
             {
                 Batches.Add(batch);
+                if (Refuse) { Waiting.Add(batch); return; }
                 m_Inner.WriteBatch(batch);
+                batch.Done?.Invoke(true);
+            }
+            /// <summary>The refused changes' word, sent the way the save service's thread sends it.</summary>
+            public void TellRefused()
+            {
+                foreach (SaveBatch batch in Waiting) System.Threading.Tasks.Task.Run(() => batch.Done?.Invoke(false)).Wait();
+                Waiting.Clear();
             }
             public bool TryReadMany(IReadOnlyList<string> keys, IDictionary<string, string> found) => m_Inner.TryReadMany(keys, found);
             public bool TryRead(string key, out string json) => m_Inner.TryRead(key, out json);
@@ -993,6 +1004,51 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
             Assert.AreEqual("Ace > Zephyr", lines[0].note);
             Assert.AreEqual(characterId, ServerRoster.Names().Holder("zephyr").character);
             Assert.IsNull(ServerRoster.Names().Holder("ace"), "the old name is free");
+            body.GetComponent<PlayerSaveAgent>().OnServerLeaving();
+            PlayerKeys.Reset();
+        }
+
+        [UnityTest]
+        public IEnumerator B70_NameChange_ARefusedSave_IsUndone()
+        {
+            // Owner, 12 Nov 2026: a rename whose save is refused is undone: the pass goes back to its cell, the old name comes back on the
+            // character and in the names list, and the player is told to try again.
+            NetRole.Install(new BodyRoleNetRoleAdapter(null, () => NetRoleKind.ServerBody));
+            var store = new CountingStore();
+            ServerSave.Store = store;
+            const string account = "4a2b3c4d5e6f708192a3b4c5d6e7f804", characterId = "e1c2d3e4f5a60718293a4b5c6d7e8f94";
+            GameObject body = null;
+            int cell = -1;
+            yield return RenameBody(7, account, characterId, (b, c) => { body = b; cell = c; });
+            var inventory = body.GetComponent<PlayerInventory>();
+            var rename = body.GetComponent<PlayerRename>();
+            var identity = body.GetComponent<PlayerIdentity>();
+            int held = inventory.CountItem(NameChangePass);
+
+            store.Refuse = true;
+            string refusal = "none yet", kept = null;
+            int answers = 0;
+            rename.ServerRenameAsked(cell, "Zephyr", (r, c) => { refusal = r; kept = c; answers++; });
+            Assert.AreEqual(0, answers, "the answer waits for the save's word");
+            Assert.AreEqual("Zephyr", identity.CharacterName, "renamed while the save is out");
+            Assert.AreEqual(PlayerRename.ReasonStillSaving, rename.ServerRenameAsked(cell, "Quill", out _), "one rename at a time");
+
+            store.Refuse = false;
+            store.TellRefused();
+            for (int i = 0; i < 3; i++) yield return null;   // the word is acted on in the body's Update, on the main thread
+            Assert.AreEqual(1, answers, "answered once");
+            Assert.AreEqual(PlayerRename.ReasonSaveRefused, refusal, "the player is told to try again");
+            Assert.IsNull(kept);
+            Assert.AreEqual("Ace", identity.CharacterName, "the old name is back on the character");
+            Assert.AreEqual(held, inventory.CountItem(NameChangePass), "the pass is back");
+            Assert.AreEqual(NameChangePass, inventory.Get(cell).itemId, "in its own cell");
+            Assert.IsNull(ServerRoster.Names().Holder("zephyr"), "the new name is free again");
+            Assert.AreEqual(characterId, ServerRoster.Names().Holder("ace")?.character, "the old name is held again");
+            Assert.AreEqual(0, ServerSave.ReadLedger(account, 0, 100).FindAll(l => l.kind == LedgerKinds.NameChanged).Count,
+                "the refused change carried its ledger line: none is kept");
+
+            Assert.IsNull(rename.ServerRenameAsked(cell, "Zephyr", out string clean), "trying again works");
+            Assert.AreEqual("Zephyr", clean);
             body.GetComponent<PlayerSaveAgent>().OnServerLeaving();
             PlayerKeys.Reset();
         }

@@ -115,6 +115,64 @@ namespace KryticalNova.Tests
         }
 
         [Test]
+        public void ARefusedRenamesPass_GoesBackToItsCell_OrTheFirstFreeOne()
+        {
+            var pass = new ItemStack(9036, 1);
+            var pack = new ItemStack[4];
+            Assert.IsTrue(PlayerRename.PutBack(pack, 2, pass));
+            Assert.AreEqual(9036, pack[2].itemId, "its own empty cell");
+
+            pack = new ItemStack[4];
+            pack[2] = new ItemStack(9036, 3);
+            Assert.IsTrue(PlayerRename.PutBack(pack, 2, pass));
+            Assert.AreEqual(4, pack[2].count, "onto the stack it came from");
+
+            pack = new ItemStack[4];
+            pack[0] = new ItemStack(9001, 1);
+            pack[2] = new ItemStack(9001, 1);
+            Assert.IsTrue(PlayerRename.PutBack(pack, 2, pass));
+            Assert.AreEqual(9036, pack[1].itemId, "the first free cell when its own holds something else");
+
+            pack = new[] { new ItemStack(9001, 1), new ItemStack(9002, 1) };
+            Assert.IsFalse(PlayerRename.PutBack(pack, 0, pass), "a full Pack has no room");
+            Assert.IsFalse(PlayerRename.PutBack(new ItemStack[2], -1, ItemStack.Empty), "nothing to put back");
+        }
+
+        sealed class RefusingStore : IBatchSaveStore, ISaveResultStore
+        {
+            public void WriteBatch(SaveBatch batch) => batch.Done?.Invoke(false);
+            public bool TryReadMany(System.Collections.Generic.IReadOnlyList<string> keys, System.Collections.Generic.IDictionary<string, string> found) => true;
+            public bool TryRead(string key, out string json) { json = null; return false; }
+            public void Write(string key, string json) { }
+            public void Delete(string key) { }
+            public System.Collections.Generic.IReadOnlyList<string> Keys(string prefix) => new string[0];
+        }
+
+        [Test]
+        public void ASaveTogether_TellsWhetherItWasWritten()
+        {
+            ISaveStore before = ServerSave.Store;
+            try
+            {
+                bool? word = null;
+                ServerSave.Store = new MemorySaveStore();
+                ServerSave.WriteTogether(null, written => word = written, ServerRoster.NamesDocument);
+                Assert.AreEqual(true, word, "a store that has written when it returns: written");
+                word = null;
+                ServerSave.Store = new RefusingStore();
+                var account = new AccountSave { accountId = "5a2b3c4d5e6f708192a3b4c5d6e7f805" };
+                account.characters.Add(new CharacterSave { characterId = "f1c2d3e4f5a60718293a4b5c6d7e8f95", name = "Ace" });
+                bool sent = ServerSave.WriteTogether(new[] { account }, written => word = written);
+                Assume.That(sent, "the account was handed to the store");
+                Assert.AreEqual(false, word, "a store that refuses says so");
+            }
+            finally
+            {
+                ServerSave.Store = before;
+            }
+        }
+
+        [Test]
         public void TheServersAnswer_ReachesTheDialog()
         {
             string renamed = null, refused = null;

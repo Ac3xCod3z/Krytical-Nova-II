@@ -24,7 +24,8 @@ namespace KryticalNova.Persistence.Entities
     /// Server: the Name Change Pass on the entity netcode (wave 2, 12 Nov 2026). An ask is proven (its connection's body, the Account call
     /// limit, as NGO) and handed to that server body's <see cref="PlayerRename.ServerRenameAsked"/>, which alone decides with NGO's rules: the
     /// name against every other name in the game (the "names" world document), the Pack cell read by the server at the take, then the
-    /// rename, the ledger line and one save of the account and the names list together. Only the cell index and the wished name come from
+    /// rename, the ledger line and one save of the account and the names list together; the answer waits for that save's word, and a
+    /// refused save is undone (owner, 12 Nov 2026). Only the cell index and the wished name come from
     /// the ask. Other players' name plates follow through the look text (PlayerIdentity.ServerRename raises Changed).
     /// <para>Limit, kept as written (lead's condition 5): one map server only (the single main thread serialises two asks for one name).
     /// When map servers come back, the save service must own the name check.</para>
@@ -44,26 +45,39 @@ namespace KryticalNova.Persistence.Entities
             m_Asks = GetEntityQuery(ComponentType.ReadOnly<ReceiveRpcCommandRequest>(), ComponentType.ReadOnly<RenameRpc>());
         }
 
+        // Answers waiting to be sent: a rename is answered after its save's word (owner, 12 Nov 2026: a refused save is undone).
+        readonly System.Collections.Generic.List<(Entity connection, string refusal, string clean)> m_Answers =
+            new System.Collections.Generic.List<(Entity, string, string)>();
+
         protected override void OnUpdate()
         {
-            if (m_Asks.IsEmpty) return;
             var em = EntityManager;
-            using var received = m_Asks.ToComponentDataArray<ReceiveRpcCommandRequest>(Allocator.Temp);
-            using var asks = m_Asks.ToComponentDataArray<RenameRpc>(Allocator.Temp);
-            em.DestroyEntity(m_Asks);
-            for (int i = 0; i < asks.Length; i++)
+            if (!m_Asks.IsEmpty)
             {
-                if (!PlayerRequestServerSystem.TryBody(World, received[i].SourceConnection, CallKind.Account, out GameObject body)
-                    || !body.TryGetComponent(out PlayerRename rename)) continue;   // over the limit or no body: dropped, as NGO's budget does
-                Asked++;
-                string refusal = rename.ServerRenameAsked(asks[i].BagIndex, asks[i].Name.ToString(), out string clean);
+                using var received = m_Asks.ToComponentDataArray<ReceiveRpcCommandRequest>(Allocator.Temp);
+                using var asks = m_Asks.ToComponentDataArray<RenameRpc>(Allocator.Temp);
+                em.DestroyEntity(m_Asks);
+                for (int i = 0; i < asks.Length; i++)
+                {
+                    if (!PlayerRequestServerSystem.TryBody(World, received[i].SourceConnection, CallKind.Account, out GameObject body)
+                        || !body.TryGetComponent(out PlayerRename rename)) continue;   // over the limit or no body: dropped, as NGO's budget does
+                    Asked++;
+                    Entity connection = received[i].SourceConnection;
+                    rename.ServerRenameAsked(asks[i].BagIndex, asks[i].Name.ToString(), (refusal, clean) => m_Answers.Add((connection, refusal, clean)));
+                }
+            }
+            if (m_Answers.Count == 0) return;
+            foreach ((Entity connection, string refusal, string clean) in m_Answers)
+            {
+                if (!em.Exists(connection)) continue;   // the player left before the save's word
                 var reply = new RenameReplyRpc { Taken = (byte)(refusal == null ? 1 : 0) };
                 reply.Text.CopyFromTruncated(refusal ?? clean ?? string.Empty);
                 if (refusal == null) Taken++;
                 Entity rpc = em.CreateEntity();
                 em.AddComponentData(rpc, reply);
-                em.AddComponentData(rpc, new SendRpcCommandRequest { TargetConnection = received[i].SourceConnection });
+                em.AddComponentData(rpc, new SendRpcCommandRequest { TargetConnection = connection });
             }
+            m_Answers.Clear();
         }
     }
 

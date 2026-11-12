@@ -337,11 +337,13 @@ namespace KryticalNova.Persistence
             if (Store is IBatchSaveStore whole)
             {
                 whole.WriteBatch(batch);
+                if (!(Store is ISaveResultStore)) batch.Done?.Invoke(true);   // written when it returns
                 return;
             }
             foreach (KeyValuePair<string, string> write in batch.Writes) Store.Write(write.Key, write.Value);
             foreach (string key in batch.Deletes) Store.Delete(key);
             if (batch.Ledger.Count > 0) Debug.LogWarning($"[Save] This store keeps no ledger: {batch.Ledger.Count} line(s) were not kept.");
+            batch.Done?.Invoke(true);
         }
 
         // ------------------------------------------------------------------ changes saved together, and the ledger (online phase 4, milestone 3)
@@ -419,7 +421,13 @@ namespace KryticalNova.Persistence
         /// <para>Any economy action that changes more than one player or world document saves this way (owner, 18 Oct 2026:
         /// the economy will be reworked; the rework keeps this).</para>
         /// </summary>
-        public static void SaveTogether(IReadOnlyList<PlayerSaveAgent> players, params string[] worlds)
+        public static void SaveTogether(IReadOnlyList<PlayerSaveAgent> players, params string[] worlds) => SaveTogether(players, null, worlds);
+
+        /// <summary>
+        /// The same, and <paramref name="told"/> is told whether the change was written or refused whole (owner, 12 Nov 2026: a Name
+        /// Change whose save is refused is undone). It may be told on the save service's own thread. Without authority it is not told.
+        /// </summary>
+        public static void SaveTogether(IReadOnlyList<PlayerSaveAgent> players, Action<bool> told, params string[] worlds)
         {
             if (!HasAuthority) return;
             var accounts = new List<AccountSave>();
@@ -430,17 +438,20 @@ namespace KryticalNova.Persistence
                     agent.CaptureForSave();
                     accounts.Add(agent.Account);
                 }
-            WriteTogether(accounts, worlds);
+            WriteTogether(accounts, told, worlds);
         }
 
         /// <summary>
         /// The accounts' changes, their waiting ledger lines and the world documents that changed, as one change: what
         /// <see cref="SaveTogether"/> writes once the players' state is gathered. True when anything was written.
         /// </summary>
-        public static bool WriteTogether(IReadOnlyList<AccountSave> accountsToWrite, params string[] worlds)
+        public static bool WriteTogether(IReadOnlyList<AccountSave> accountsToWrite, params string[] worlds) => WriteTogether(accountsToWrite, null, worlds);
+
+        /// <summary>The same, telling <paramref name="told"/> whether it was written (see <see cref="SaveBatch.Done"/>); nothing to write is written.</summary>
+        public static bool WriteTogether(IReadOnlyList<AccountSave> accountsToWrite, Action<bool> told, params string[] worlds)
         {
             if (!HasAuthority) return false;
-            var batch = new SaveBatch();
+            var batch = new SaveBatch { Done = told };
             var written = new List<Action>();
             var accounts = new HashSet<string>(StringComparer.Ordinal);
             if (accountsToWrite != null)
@@ -455,7 +466,7 @@ namespace KryticalNova.Persistence
                 Action done = CollectWorld(name, batch);
                 if (done != null) written.Add(done);
             }
-            if (batch.IsEmpty) return false;
+            if (batch.IsEmpty) { told?.Invoke(true); return false; }
             Send(batch);
             foreach (Action done in written) done();
             return true;
@@ -463,7 +474,11 @@ namespace KryticalNova.Persistence
 
         /// <summary>The same for one player and world documents (a Kiosk sale: the buyer and the Kiosks).</summary>
         public static void SaveTogether(PlayerSaveAgent player, params string[] worlds) =>
-            SaveTogether(player != null ? new[] { player } : Array.Empty<PlayerSaveAgent>(), worlds);
+            SaveTogether(player != null ? new[] { player } : Array.Empty<PlayerSaveAgent>(), null, worlds);
+
+        /// <summary>One player and world documents, telling <paramref name="told"/> whether the change was written (see the list form).</summary>
+        public static void SaveTogether(PlayerSaveAgent player, Action<bool> told, params string[] worlds) =>
+            SaveTogether(player != null ? new[] { player } : Array.Empty<PlayerSaveAgent>(), told, worlds);
 
         /// <summary>The ledger lines of an account (null: every account) since <paramref name="sinceUtc"/>, newest first.</summary>
         public static List<LedgerEntry> ReadLedger(string accountId, long sinceUtc, int limit)

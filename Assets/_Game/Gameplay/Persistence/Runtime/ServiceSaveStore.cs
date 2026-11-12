@@ -24,7 +24,7 @@ namespace KryticalNova.Persistence
     /// <para>Accounts are locked (<see cref="TryLock"/>): one server at a time holds a player's account, and renews the hold
     /// every minute; a server that stops (crashes) lets it run out, so the player can join elsewhere.</para>
     /// </summary>
-    public sealed class ServiceSaveStore : IBatchSaveStore, ILedgerStore, IDisposable
+    public sealed class ServiceSaveStore : IBatchSaveStore, ILedgerStore, ISaveResultStore, IDisposable
     {
         public const int LockSeconds = 180;
         private const int RenewMilliseconds = 60000;
@@ -36,6 +36,14 @@ namespace KryticalNova.Persistence
             public readonly List<KeyValuePair<string, string>> Writes = new List<KeyValuePair<string, string>>();
             public readonly List<string> Deletes = new List<string>();
             public readonly List<string> Ledger = new List<string>();
+            public Action<bool> Done;   // the caller's SaveBatch.Done: told on the writer thread
+        }
+
+        private static void Tell(Batch batch, bool written)
+        {
+            if (batch.Done == null) return;
+            try { batch.Done(written); }
+            catch (Exception e) { Debug.LogException(e); }
         }
 
         private readonly HttpClient http;
@@ -173,7 +181,8 @@ namespace KryticalNova.Persistence
                 if (SaveKeys.IsValid(key)) batch.Deletes.Add(key);
             foreach (LedgerEntry line in change.Ledger)
                 if (line != null) batch.Ledger.Add(JsonUtility.ToJson(line));
-            if (batch.Writes.Count == 0 && batch.Deletes.Count == 0 && batch.Ledger.Count == 0) return;
+            batch.Done = change.Done;
+            if (batch.Writes.Count == 0 && batch.Deletes.Count == 0 && batch.Ledger.Count == 0) { Tell(batch, true); return; }
 
             lock (gate)
             {
@@ -259,6 +268,7 @@ namespace KryticalNova.Persistence
                 for (int i = 0; i < batch.Ledger.Count; i++) text.Append(i > 0 ? "," : "").Append(batch.Ledger[i]);
                 body = text.Append("]}").ToString();
             }
+            bool? word = null;
             try
             {
                 using HttpResponseMessage response = Send(HttpMethod.Post, "batch", body);
@@ -268,6 +278,7 @@ namespace KryticalNova.Persistence
                     BatchAnswer refused = JsonUtility.FromJson<BatchAnswer>(answer);
                     Debug.LogError($"[Save] '{refused.conflict}' was changed elsewhere (it is at version {refused.conflictVersion}): this save of " +
                                    $"{batch.Writes.Count + batch.Deletes.Count} document(s) was not written, so the newer one stays.");
+                    word = false;
                 }
                 else
                 {
@@ -278,6 +289,7 @@ namespace KryticalNova.Persistence
                         foreach (KeyVersion written in done.versions ?? new List<KeyVersion>()) versions[written.key] = written.version;
                         foreach (string key in batch.Deletes) versions.Remove(key);
                     }
+                    word = true;
                 }
                 lock (gate)
                 {
@@ -287,6 +299,7 @@ namespace KryticalNova.Persistence
                     sending = false;
                     Monitor.PulseAll(gate);
                 }
+                if (word.HasValue) Tell(batch, word.Value);
             }
             catch (Exception e)
             {

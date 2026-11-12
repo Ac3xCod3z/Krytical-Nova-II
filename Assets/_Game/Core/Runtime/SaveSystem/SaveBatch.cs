@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 
 namespace KryticalNova.Core
@@ -16,5 +17,17 @@ namespace KryticalNova.Core
         public bool IsEmpty => Writes.Count == 0 && Deletes.Count == 0 && Ledger.Count == 0;
 
         public void Write(string key, string json) => Writes.Add(new KeyValuePair<string, string>(key, json ?? string.Empty));
+
+        /// <summary>
+        /// Told once whether the change was written (true) or refused whole (false: the save service's version conflict). May be called
+        /// on the store's own thread: a listener only notes the answer and acts on the main thread. Null: nobody asks (every other save).
+        /// </summary>
+        public Action<bool> Done;
     }
+
+    /// <summary>
+    /// A store that tells <see cref="SaveBatch.Done"/> itself, once it knows (the save service, from its writer thread). For any other
+    /// store a change is written when <c>WriteBatch</c> returns, and the caller says so.
+    /// </summary>
+    public interface ISaveResultStore { }
 }

@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using KryticalNova.CharacterCreation;
 using KryticalNova.Core;
 using KryticalNova.Items;
@@ -29,6 +30,8 @@ namespace KryticalNova.Persistence
         public const string ReasonNoPass = "There is no Name Change Pass in that Pack cell any more.";
         public const string ReasonNoSaves = "This game does not keep characters: names change on a server.";
         public const string ReasonNotReady = "Your character is not ready yet.";
+        public const string ReasonSaveRefused = "Your new name could not be saved, so nothing changed and your pass is back. Try again.";
+        public const string ReasonStillSaving = "Your last name change is still being saved. Try again in a moment.";
 
         private PlayerInventory inventory;
         private PlayerIdentity identity;
@@ -90,16 +93,19 @@ namespace KryticalNova.Persistence
                 if (Link != null && bagIndex >= 0 && bagIndex <= byte.MaxValue) Link.Rename((byte)bagIndex, name ?? string.Empty);
                 else Answer(ReasonNotReady, null);
             }
-            else Answer(ServerRename(bagIndex, name, out string clean), clean);
+            else ServerRename(bagIndex, name, Answer);
         }
 
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
         private void RenameRpc(byte bagIndex, FixedString64Bytes name)
         {
             if (!RpcBudget.Allow(this, CallKind.Account, nameof(RenameRpc))) return;
-            string refusal = ServerRename(bagIndex, name.ToString(), out string clean);
-            if (refusal == null) RenamedRpc(new FixedString64Bytes(clean));
-            else RefusedRpc(new FixedString128Bytes(refusal));
+            ServerRename(bagIndex, name.ToString(), (refusal, clean) =>
+            {
+                if (!IsSpawned) return;
+                if (refusal == null) RenamedRpc(new FixedString64Bytes(clean));
+                else RefusedRpc(new FixedString128Bytes(refusal));
+            });
         }
 
         [Rpc(SendTo.Owner)]
@@ -125,13 +131,43 @@ namespace KryticalNova.Persistence
 
         /// <summary>
         /// Entity server: an ask from this body's owner (the server system has proven the connection and its call budget). Only a
-        /// server body decides; anything else refuses. Null when it is done (with the name as kept); otherwise why not.
+        /// server body decides; anything else refuses. <paramref name="answer"/> is told (refusal, name as kept) once: at once for a
+        /// refusal, after the save for a rename (a refused save undoes it and answers <see cref="ReasonSaveRefused"/>).
+        /// </summary>
+        public void ServerRenameAsked(int bagIndex, string wanted, Action<string, string> answer)
+        {
+            if (!(BodyRoleTag.Of(this) is BodyRoleTag tag) || tag.Kind != NetRoleKind.ServerBody) { answer?.Invoke(ReasonNotReady, null); return; }
+            ServerRename(bagIndex, wanted, answer);
+        }
+
+        /// <summary>
+        /// The same, answered now when it can be (a refusal, or a store that has written by the time it returns). Null with the name
+        /// in <paramref name="clean"/> also while the save is still out; its final word then comes only through the other form.
         /// </summary>
         public string ServerRenameAsked(int bagIndex, string wanted, out string clean)
         {
-            clean = null;
-            if (!(BodyRoleTag.Of(this) is BodyRoleTag tag) || tag.Kind != NetRoleKind.ServerBody) return ReasonNotReady;
-            return ServerRename(bagIndex, wanted, out clean);
+            string refusal = null, kept = null;
+            bool told = false;
+            ServerRenameAsked(bagIndex, wanted, (r, c) => { refusal = r; kept = c; told = true; });
+            clean = told ? kept : pendingClean;
+            return told ? refusal : null;
+        }
+
+        /// <summary>
+        /// Puts a pass back after a refused save (owner, 12 Nov 2026): into its own cell when that is empty or holds its stack,
+        /// else into the first empty cell. False when the Pack has no room.
+        /// </summary>
+        public static bool PutBack(ItemStack[] pack, int cell, ItemStack pass)
+        {
+            if (pack == null || pass.IsEmpty) return false;
+            if (cell >= 0 && cell < pack.Length)
+            {
+                if (pack[cell].IsEmpty) { pack[cell] = pass; return true; }
+                if (pack[cell].StacksWith(pass)) { pack[cell] = pack[cell].WithCount(pack[cell].count + pass.count); return true; }
+            }
+            for (int i = 0; i < pack.Length; i++)
+                if (pack[i].IsEmpty) { pack[i] = pass; return true; }
+            return false;
         }
 
         /// <summary>
@@ -160,41 +196,85 @@ namespace KryticalNova.Persistence
             return null;
         }
 
-        /// <summary>Renames the character, spending the pass. Null when it is done (with the name as kept); otherwise why not.</summary>
-        private string ServerRename(int bagIndex, string wanted, out string clean)
+        // A rename whose save is out (owner, 12 Nov 2026: a refused save is undone). Told by the store, maybe on its own thread.
+        private Action<string, string> pendingAnswer;
+        private string pendingOld, pendingClean, pendingAccount, pendingCharacter;
+        private ItemStack pendingPass;
+        private int pendingCell, saveWord;   // saveWord: 0 waiting, 1 written, 2 refused
+
+        private void Update()
         {
-            clean = null;
-            if (inventory == null || identity == null || !identity.HasIdentity) return ReasonNotReady;
-            if (!ServerSave.HasAuthority) return ReasonNoSaves;
+            if (pendingAnswer != null && Volatile.Read(ref saveWord) != 0) FinishSave();
+        }
+
+        /// <summary>Renames the character, spending the pass; <paramref name="answer"/> gets (refusal, name as kept) once.</summary>
+        private void ServerRename(int bagIndex, string wanted, Action<string, string> answer)
+        {
+            answer ??= (_, __) => { };
+            if (inventory == null || identity == null || !identity.HasIdentity) { answer(ReasonNotReady, null); return; }
+            if (!ServerSave.HasAuthority) { answer(ReasonNoSaves, null); return; }
+            if (pendingAnswer != null) { answer(ReasonStillSaving, null); return; }
             string old = identity.CharacterName;
             string account = identity.AccountId, character = identity.CharacterId;
             NameIndex names = ServerRoster.Names();
-            string refusal = CheckName(wanted, old, character, names, out clean);
-            if (refusal != null) return refusal;
+            string refusal = CheckName(wanted, old, character, names, out string clean);
+            if (refusal != null) { answer(refusal, null); return; }
 
             ItemStack stack = inventory.Get(bagIndex);
             var pass = stack.IsEmpty ? null : inventory.Catalog?.Get(stack.itemId) as ItemDefinition;
             refusal = CheckPassCell(bagIndex, stack, pass);
-            if (refusal != null) return refusal;
-            if (!inventory.ServerTakeFromCell(bagIndex, 1, out _)) return ReasonNoPass;
+            if (refusal != null) { answer(refusal, null); return; }
+            if (!inventory.ServerTakeFromCell(bagIndex, 1, out ItemStack taken)) { answer(ReasonNoPass, null); return; }
 
             identity.ServerRename(clean);
+            ServerRecords.Write(RecordKind.Access, $"Character {old} ({character}) renamed {clean} with a {pass.displayName} (account {account})");
             if (SaveKeys.IsId(account) && SaveKeys.IsId(character))
             {
                 names.Drop(old, account, character);
                 names.Put(clean, account, character);
                 ServerSave.Ledger(LedgerEntry.For(LedgerKinds.NameChanged, account, character, old + " > " + clean));
-                if (saveAgent != null) ServerSave.SaveTogether(saveAgent, ServerRoster.NamesDocument);
-                // NGO's behaviour, kept (wave 2, 12 Nov 2026, lead's condition 1): the save is handed over as one change and its result
-                // is not waited for; the pass stays spent and the name stays changed in memory whatever the save does (the save service
-                // keeps a failed change and sends it again; a version conflict is refused and logged by the store). No rollback.
-                Debug.Log(saveAgent != null
-                    ? $"[Rename] {old} > {clean} ({character}, account {account}): the pass is spent and the name changed; saved with the names list as one change. If that save does not go through, nothing is undone."
-                    : $"[Rename] {old} > {clean} ({character}, account {account}): the pass is spent and the name changed, but this body has no save agent: nothing is saved now (NGO's behaviour): the names list holds the new name in memory only until a later change saves it.");
+                if (saveAgent != null)
+                {
+                    // The answer waits for the save's word: written, the name is taken; refused, everything is undone (FinishSave).
+                    pendingAnswer = answer;
+                    pendingOld = old; pendingClean = clean; pendingAccount = account; pendingCharacter = character;
+                    pendingPass = taken; pendingCell = bagIndex;
+                    Volatile.Write(ref saveWord, 0);
+                    ServerSave.SaveTogether(saveAgent, written => Volatile.Write(ref saveWord, written ? 1 : 2), ServerRoster.NamesDocument);
+                    if (Volatile.Read(ref saveWord) != 0) FinishSave();   // a store that has written when it returns
+                    return;
+                }
+                Debug.LogWarning($"[Rename] {old} > {clean} ({character}, account {account}): this body has no save agent: nothing is saved now; the names list holds the new name in memory only until a later change saves it.");
             }
             else Debug.LogWarning($"[Rename] {old} > {clean}: not a saved character (account or character id is not a real id): the name changed in memory only, nothing was saved.");
-            ServerRecords.Write(RecordKind.Access, $"Character {old} ({character}) renamed {clean} with a {pass.displayName} (account {account})");
-            return null;
+            answer(null, clean);
+        }
+
+        // Main thread: the save's word on the rename that waits for it.
+        private void FinishSave()
+        {
+            Action<string, string> answer = pendingAnswer;
+            pendingAnswer = null;
+            if (Volatile.Read(ref saveWord) == 1)
+            {
+                Debug.Log($"[Rename] {pendingOld} > {pendingClean} ({pendingCharacter}, account {pendingAccount}): saved with the names list as one change.");
+                answer(null, pendingClean);
+                return;
+            }
+            // Refused whole (owner, 12 Nov 2026): undo it. The pass goes back, the old name comes back on the character and in the
+            // names list, and the player is told to try again. The refused change carried the ledger line too, so none was kept.
+            ItemStack pass = pendingPass;
+            int cell = pendingCell;
+            bool back = inventory != null && inventory.ServerChangePack(pack => PutBack(pack, cell, pass));
+            if (!back) Debug.LogError($"[Rename] {pendingOld} ({pendingCharacter}): the pass could not be put back (the Pack is full): give it by hand.");
+            if (identity != null) identity.ServerRename(pendingOld);
+            NameIndex names = ServerRoster.Names();
+            names.Drop(pendingClean, pendingAccount, pendingCharacter);
+            names.Put(pendingOld, pendingAccount, pendingCharacter);
+            Debug.LogWarning($"[Rename] {pendingOld} > {pendingClean} ({pendingCharacter}, account {pendingAccount}): the save was refused, so the rename is undone (pass back: {back}).");
+            ServerRecords.Write(RecordKind.Access, $"Character {pendingOld} ({pendingCharacter}) rename to {pendingClean} undone: its save was refused (account {pendingAccount})");
+            if (saveAgent != null) ServerSave.SaveTogether(saveAgent, ServerRoster.NamesDocument);
+            answer(ReasonSaveRefused, null);
         }
     }
 }
