@@ -618,8 +618,14 @@ namespace KryticalNova.Pets
 
         // ------------------------------------------------------------------ animations
 
-        /// <summary>The animations the pet that is out can play, by name. Empty for a pet whose model has none.</summary>
-        public IReadOnlyList<string> AnimationNames => pet != null && follower != null ? follower.AnimationNames : Array.Empty<string>();
+        /// <summary>The animations the pet that is out can play, by name. Empty for a pet whose model has none.
+        /// A body with no model of the pet (the entity netcode's server body: no follower) reads the shown stage's list from the pet data.</summary>
+        public IReadOnlyList<string> AnimationNames => pet == null ? Array.Empty<string>()
+            : follower != null ? follower.AnimationNames : DataAnimationNames(ShownPet, ShownStage);
+
+        /// <summary>The animations a pet's stage plays, as the pet builder wrote them from that stage's model; empty without any.</summary>
+        public static IReadOnlyList<string> DataAnimationNames(PetDefinition shown, int stage) =>
+            shown != null && shown.Stage(stage).animations is string[] names ? names : Array.Empty<string>();
 
         /// <summary>
         /// Server only (GM): the pet plays one of its animations now, on every machine. False when it has no
@@ -627,7 +633,17 @@ namespace KryticalNova.Pets
         /// </summary>
         public bool ServerPlayAnimation(string animationName)
         {
-            if (pet == null || !HasAuthority || follower == null) return false;   // (a DOTS server body has no follower: GM animations wait for one)
+            if (pet == null || !HasAuthority) return false;
+            if (follower == null)
+            {
+                // A server body of the entity netcode has no model of the pet (wave 3, 12 Nov 2026): the names come from the pet data and
+                // every machine plays it through the pet show (NGO's PlayAnimationRpc went to Everyone, the owner included).
+                if (!EntityServer || KryticalNova.Items.PetShowLink.Current == null) return false;
+                string found = FindAnimation(DataAnimationNames(ShownPet, ShownStage), animationName);
+                if (found == null) return false;
+                KryticalNova.Items.PetShowLink.Current.Show(this, BodyPetShowKind.Animation, Animator.StringToHash(found), true);
+                return true;
+            }
             IReadOnlyList<string> names = follower.AnimationNames;
             for (int i = 0; i < names.Count; i++)
             {
@@ -638,6 +654,15 @@ namespace KryticalNova.Pets
                 return true;
             }
             return false;
+        }
+
+        /// <summary>The name in <paramref name="names"/> that matches, whatever its capitals; null when none does.</summary>
+        public static string FindAnimation(IReadOnlyList<string> names, string animationName)
+        {
+            if (names == null) return null;
+            for (int i = 0; i < names.Count; i++)
+                if (string.Equals(names[i], animationName, StringComparison.OrdinalIgnoreCase)) return names[i];
+            return null;
         }
 
         [Rpc(SendTo.Everyone)]

@@ -25,6 +25,13 @@ MonoBehaviour:
     glow: {r: 0.3529412, g: 0.84705883, b: 0.7764706, a: 1}
     glowStrength: 0
     footEffect: {fileID: 0}
+    animations:
+    - CrackCry
+    - HopSpin
+    - Tantrum
+    - TideCall
+    - VictoryBounce
+    - WobbleNap
   - name: 
     model: {fileID: 4142792073563568587, guid: b61e20acf66c461f9f8b2ec3829a293a, type: 3}
     icon: {fileID: 21300000, guid: 7af6ac7b600a5d74c956b3486f6bd6ed, type: 3}
@@ -32,6 +39,10 @@ MonoBehaviour:
     glow: {r: 0.3529412, g: 0.84705883, b: 0.7764706, a: 1}
     glowStrength: 0.3
     footEffect: {fileID: 0}
+    animations:
+    - Ram
+    - SwimFlip
+    - TideCall
   - name: 
     model: {fileID: 2639337082324404009, guid: 89dcdfc34d7e48b2a3ef813327520995, type: 3}
     icon: {fileID: 21300000, guid: b9d2a092a8c4a4f4db3bd60a814152ca, type: 3}
@@ -39,6 +50,11 @@ MonoBehaviour:
     glow: {r: 0.3529412, g: 0.84705883, b: 0.7764706, a: 1}
     glowStrength: 0.5
     footEffect: {fileID: 0}
+    animations:
+    - Ram
+    - SwimFlip
+    - TideCall
+    - ShellSpin
   - name: 
     model: {fileID: 3664925530557616973, guid: 237c816e954b41b0832839eb1e36c69b, type: 3}
     icon: {fileID: 21300000, guid: 14468f3db4b694745ac9806f1bf6f53f, type: 3}
@@ -46,6 +62,12 @@ MonoBehaviour:
     glow: {r: 0.24705882, g: 0.654902, b: 0.8392157, a: 1}
     glowStrength: 0.75
     footEffect: {fileID: 0}
+    animations:
+    - Ram
+    - SwimFlip
+    - TideCall
+    - ShellSpin
+    - Undertow
   - name: Apex
     model: {fileID: 3435682751848569900, guid: f257a86de1be43b09494d5ab647b4279, type: 3}
     icon: {fileID: 21300000, guid: 4db11c7bb4964474db7558470550cef0, type: 3}
@@ -53,6 +75,13 @@ MonoBehaviour:
     glow: {r: 0.24705882, g: 0.654902, b: 0.8392157, a: 1}
     glowStrength: 1
     footEffect: {fileID: 0}
+    animations:
+    - Ram
+    - SwimFlip
+    - TideCall
+    - ShellSpin
+    - Undertow
+    - Maelstrom
   chatter: {fileID: 11400000, guid: 4c61681394ba4d84ba1d7ba615e88809, type: 2}
   bobs: 1
   footEffect: {fileID: 0}

@@ -119,6 +119,18 @@ namespace KryticalNova.EditorTools
         /// that follows loses its own trigger, so it is only ever reached through the one before it. A model that
         /// lacks either state is left alone. Safe to run again: it finds the work done.
         /// </summary>
+        private static string[] TriggerNames(string modelPath)
+        {
+            var model = string.IsNullOrEmpty(modelPath) ? null : AssetDatabase.LoadAssetAtPath<GameObject>(modelPath);
+            var animator = model != null ? model.GetComponentInChildren<Animator>(true) : null;
+            var controller = animator != null ? animator.runtimeAnimatorController as AnimatorController : null;
+            if (controller == null) return new string[0];
+            var names = new List<string>();
+            foreach (AnimatorControllerParameter parameter in controller.parameters)
+                if (parameter.type == AnimatorControllerParameterType.Trigger) names.Add(parameter.name);
+            return names.ToArray();
+        }
+
         private static void JoinAnimations(string modelPath, in Row row)
         {
             var model = string.IsNullOrEmpty(modelPath) ? null : AssetDatabase.LoadAssetAtPath<GameObject>(modelPath);
@@ -719,6 +731,9 @@ namespace KryticalNova.EditorTools
                     look.glow = ColorBible.Hex(row.Glow[stage]);
                     look.glowStrength = StageGlow[stage];
                 }
+                // What it can play, for a server with no model of it (gm.pet.anims on the entity netcode): the triggers of this stage's model.
+                bool ownModel = stage > 0 && row.StageModels != null && stage - 1 < row.StageModels.Length && !string.IsNullOrEmpty(row.StageModels[stage - 1]);
+                look.animations = TriggerNames(ownModel ? row.StageModels[stage - 1] : row.Model);
                 definition.stages[stage] = look;
             }
             EditorUtility.SetDirty(definition);

@@ -101,6 +101,9 @@ namespace KryticalNova.Pets
         [Range(0f, 1f)] public float glowStrength;
         [Tooltip("What this stage stands on instead of the pet's own foot effect (the Kitsune Spirit's two largest forms stand on fire, not on clouds). Worn the same way: one under each foot bone. Empty = the pet's own.")]
         public GameObject footEffect;
+        [Tooltip("The animations this stage's model can play (its Animator's triggers, in order), written by the pet builder. A server " +
+                 "with no model of the pet (the entity netcode) reads them here for gm.pet.anims / gm.pet.anim.")]
+        public string[] animations;
     }
 
     /// <summary>
