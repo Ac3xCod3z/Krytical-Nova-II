@@ -285,6 +285,10 @@ namespace KryticalNova.Player
             current = state; // here only the name changes: the look and the kit stay as they are
             if (combatEntity != null) combatEntity.SetEntityName(cleanName);
             if (IsSpawned) netState.Value = state; // the other games apply it
+            // Entity netcode (wave 2, 12 Nov 2026): no network variable; listeners (the look text observers fetch, so other players'
+            // name plates) learn of the new name here. None of them saves or spends (PlayerAdmission, PlayerSaveAgent.TryLoad: loaded
+            // already, PlayerHotbarMemory.Load: same character, UI refreshes).
+            else Changed?.Invoke();
         }
 
         private void Apply(CharacterNetState state, bool grantKit = true)
