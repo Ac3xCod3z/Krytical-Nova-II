@@ -29,7 +29,7 @@ namespace KryticalNova.DevTools
             return boosts != null && boosts.Settings != null;
         }
 
-        [Command("gm.boosters", "Give the targeted player n of each XP booster (1 unless told): Field (character XP), Companion (pet XP), Tandem (both). " +
+        [Command("gm.boosters", "Give the targeted player n of each XP booster (1 unless told): Field (character XP), Companion (pet XP), Rider (mount XP), Convoy (all three). " +
                                 "They are Nova Store stock; this is how they are had until the store is built.")]
         private static string Boosters(int count = 1)
         {
@@ -54,7 +54,7 @@ namespace KryticalNova.DevTools
                 text.Append($"{KryticalNova.Progression.PlayerExperienceBoosts.Describe(boosts.BoosterAt(i))}: {KryticalNova.Progression.PlayerExperienceBoosts.FormatTime(left)}. ");
             }
             if (text.Length == 0) return "No XP boost is running.";
-            return text + $"Together: character XP +{boosts.ServerCharacterBonus * 100f:0}%, pet XP +{boosts.ServerPetBonus * 100f:0}%.";
+            return text + $"Together: character XP +{boosts.ServerCharacterBonus * 100f:0}%, pet XP +{boosts.ServerPetBonus * 100f:0}%, mount XP +{boosts.ServerMountBonus * 100f:0}%.";
         }
 
         [Command("gm.boost.clear", "End every XP boost the targeted player has running.")]

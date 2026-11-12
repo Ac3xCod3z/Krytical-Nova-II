@@ -49,6 +49,17 @@ namespace KryticalNova.Tests
         }
 
         [Test]
+        public void APetsKill_IsWorthMoreWithCompanionAndConvoy()
+        {
+            // A pet's kill is 4 units (PetRulesTests): Companion x2, Convoy x1.5, both x2.5.
+            Assert.AreEqual(4u, ExperienceBoostRules.Boosted(4u, ExperienceBoostRules.PetBonus(Four, new[] { 0f, 0f, 0f, 0f })));
+            Assert.AreEqual(8u, ExperienceBoostRules.Boosted(4u, ExperienceBoostRules.PetBonus(Four, new[] { 0f, 10f, 0f, 0f })));
+            Assert.AreEqual(6u, ExperienceBoostRules.Boosted(4u, ExperienceBoostRules.PetBonus(Four, new[] { 0f, 0f, 10f, 0f })));
+            Assert.AreEqual(10u, ExperienceBoostRules.Boosted(4u, ExperienceBoostRules.PetBonus(Four, new[] { 0f, 10f, 10f, 0f })));
+            Assert.AreEqual(4u, ExperienceBoostRules.Boosted(4u, ExperienceBoostRules.PetBonus(Four, new[] { 0f, 0f, 0f, 10f })), "Rider: not the pet");
+        }
+
+        [Test]
         public void TheConvoyBooster_IsDescribedWithAllThreeShares()
         {
             Assert.AreEqual("+50% character XP, +50% pet XP, +50% mount XP", PlayerExperienceBoosts.Describe(Four[2]));

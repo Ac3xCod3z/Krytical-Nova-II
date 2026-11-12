@@ -1005,15 +1005,16 @@ MonoBehaviour:
         lines:
         - A booster is an item. {mouse:right} Right-click it in your Pack to start it.
       - kind: 2
-        heading: The three boosters
+        heading: The four boosters
         lines:
         - Field Booster | Character XP +{fact:boost.field}%
         - Companion Booster | Pet XP +{fact:boost.companion}%
-        - Tandem Booster | Character XP and pet XP +{fact:boost.tandem}% each
+        - Rider Booster | Mount XP +{fact:boost.rider}%
+        - Convoy Booster | Character, pet and mount XP +{fact:boost.tandem}% each
       - kind: 2
         heading: How they add up
         lines:
-        - 'Two different boosters | Their bonuses add: Field and Tandem together pay your character double'
+        - 'Two different boosters | Their bonuses add: Field and Convoy together pay your character double'
         - The same booster again | Adds another {fact:boost.minutes} minutes to its clock, up to {fact:boost.maxHours} hours
         - With a Squad or a Sponsor | The booster adds on top of that boost
         - The clock | Only runs while you are in the game
@@ -1022,6 +1023,7 @@ MonoBehaviour:
         lines:
         - What is running is listed down the right side of your screen, each with a clock of the time it has left.
         - The pet's share needs the pet out and fed.
+        - The mount's share goes to your selected mount.
   - title: Other players
     topics:
     - id: namecards-and-emotes
@@ -1625,6 +1627,9 @@ MonoBehaviour:
   - name: boost.tandem
     source: {fileID: 11400000, guid: 17ceb8aaeafdb4244b0f8397f8e9d3b0, type: 2}
     field: boosters[2].characterPercent
+  - name: boost.rider
+    source: {fileID: 11400000, guid: 17ceb8aaeafdb4244b0f8397f8e9d3b0, type: 2}
+    field: boosters[3].mountPercent
   - name: boost.maxHours
     source: {fileID: 11400000, guid: 17ceb8aaeafdb4244b0f8397f8e9d3b0, type: 2}
     field: boosterMaxHours

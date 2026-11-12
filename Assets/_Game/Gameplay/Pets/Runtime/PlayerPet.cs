@@ -546,7 +546,7 @@ namespace KryticalNova.Pets
         public void ServerCreditHostileKill()
         {
             if (pet == null || !HasAuthority) return;
-            // An XP booster for the pet (Companion, Tandem) raises what a kill is worth to it.
+            // An XP booster for the pet (Companion, Convoy) raises what a kill is worth to it.
             float bonus = TryGetComponent(out KryticalNova.Progression.PlayerExperienceBoosts boosts) ? boosts.ServerPetBonus : 0f;
             AddXpUnits(KryticalNova.Progression.ExperienceBoostRules.Boosted(Tuning.KillXp, bonus));
         }

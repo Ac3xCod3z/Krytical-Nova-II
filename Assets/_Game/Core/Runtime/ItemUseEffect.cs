@@ -15,7 +15,7 @@ namespace KryticalNova.Core
         AutopilotTime = 3,
         /// <summary>Unlocks the skill it teaches, to be learned with skill points (a Dossier).</summary>
         LearnSkill = 4,
-        /// <summary>Adds time to one of the character's XP boosts (a Field, Companion or Tandem Booster).</summary>
+        /// <summary>Adds time to one of the character's XP boosts (a Field, Companion, Rider or Convoy Booster).</summary>
         ExperienceBoost = 5,
         /// <summary>Takes the character back to town after a short channel (a Recall Tag).</summary>
         Recall = 6,

@@ -161,7 +161,7 @@ namespace KryticalNova.UI
                     ? $"Your Sponsor is near: kills pay +{bonus}% XP{more}.{squad}"
                     : $"Hunt within {settings.rangeMetres:0} m of your Sponsor for +{bonus}% kill XP{more}.{squad} The link ends when you are within {settings.levelGap} levels of them.";
             else if (sponsors)
-                helpLabel.text = $"You earn {settings.pointsPerMinute} Sponsor points for each minute spent within {settings.rangeMetres:0} m of a Recruit. You may Squad with your Recruits whatever their level; what you kill there pays XP to no one. A Recruit who closes to within {settings.levelGap} levels of you has caught up, and the link ends.";
+                helpLabel.text = $"You earn {settings.pointsPerMinute} Sponsor points for each minute spent within {settings.rangeMetres:0} m of a Recruit. You may Squad with your Recruits whatever their level; what you kill there pays your Recruits within {settings.rangeMetres:0} m, never you. A Recruit who closes to within {settings.levelGap} levels of you has caught up, and the link ends.";
             else
                 helpLabel.text = $"A level {settings.sponsorMinLevel} character can sponsor up to {settings.maxRecruits} characters of its faction who are more than {settings.levelGap} levels below it. The Recruit earns +{bonus}% kill XP while the Sponsor is near{more}.";
         }

@@ -1721,7 +1721,7 @@ namespace KryticalNova.EditorTools.GM
         private void GiveSkillChips() => Run("gm.chips");
 
         [TabGroup(Tabs, ItemsTab), Title("XP Boosters (Nova Store stock)"), Button(ButtonStyle.CompactBox, Expanded = true), EnableIf(nameof(IsReady)), PropertyOrder(545.6f)]
-        [InfoBox("That many of each: Field (character XP x1.5), Companion (pet XP x2), Tandem (both x1.5), an hour each. They add up, and using one again adds its hour. Use them from the Pack.")]
+        [InfoBox("That many of each: Field (character XP x1.5), Companion (pet XP x2), Rider (mount XP x2), Convoy (all three x1.5), an hour each. They add up, and using one again adds its hour. Use them from the Pack.")]
         private void GiveXpBoosters([MinValue(1)] int ofEach = 1) => Run($"gm.boosters {ofEach}");
 
         [ButtonGroup(Tabs + "/" + ItemsTab + "/Boosters"), EnableIf(nameof(IsReady)), LabelText("What Is Running"), PropertyOrder(545.61f)]

@@ -161,10 +161,12 @@ namespace KryticalNova.EditorTools
             ZenithDossier(CraftItemIds.ZenithWarbow, "Warbow", "Skyfall"),
 
             // XP boosters (Nova Store stock; what each adds and for how long is EconomySettings.boosters). Names are a
-            // first pick (11 Oct 2026).
+            // first pick (11 Oct 2026); Tandem became the Convoy Booster and the Rider Booster came (owner, 12 Nov 2026):
+            // the asset name Booster_Tandem and the id 9502 stay.
             Booster(9500, "Booster_Field", "Field Booster", "Field XP", "the XP of your Hostile kills"),
             Booster(9501, "Booster_Companion", "Companion Booster", "Pet XP", "the XP your pet earns from your Hostile kills"),
-            Booster(9502, "Booster_Tandem", "Tandem Booster", "Both XP", "the XP of your Hostile kills, and your pet's"),
+            Booster(9502, "Booster_Tandem", "Convoy Booster", "All XP", "the XP of your Hostile kills, your pet's and your mount's"),
+            Booster(9503, "Booster_Rider", "Rider Booster", "Mount XP", "the XP your mount earns from your Hostile kills"),
 
             // The forge (_Docs/Reference/12Sky/02_Gear_System_Spec.md). Ids are named in GearMaterialIds, which the
             // settings asset reads; what each one does is decided there, not here.
