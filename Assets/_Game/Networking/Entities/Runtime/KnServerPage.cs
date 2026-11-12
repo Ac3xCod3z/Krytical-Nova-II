@@ -282,6 +282,11 @@ namespace KryticalNova.Networking.Entities
                 return false;
             }
             m_Running = true;
+            // The page closes as the game starts to quit, before the engine shuts down: a request thread still starting when IL2CPP
+            // aborts every managed thread on exit is aborted outside the try of its start, an unhandled C++ exception (0xe06d7363
+            // from GameAssembly, a crash dump on every stop: the Server app asks for /status every 400 ms; 12 Nov 2026).
+            Application.quitting -= Dispose;
+            Application.quitting += Dispose;
             new Thread(AcceptLoop) { IsBackground = true, Name = "KN server page" }.Start();
             if (udpStatus && TcpPort > 0)
             {
@@ -301,6 +306,7 @@ namespace KryticalNova.Networking.Entities
 
         public void Dispose()
         {
+            Application.quitting -= Dispose;
             m_Running = false;
             try { m_Tcp?.Stop(); } catch (Exception) { /* closing anyway */ }
             UdpClient closing = m_Udp;
@@ -326,6 +332,7 @@ namespace KryticalNova.Networking.Entities
                     Thread.Sleep(failures < 5 ? 50 : 1000);
                     continue;
                 }
+                if (!m_Running) { client.Close(); return; } // closing: no new request thread
                 KnPageTrace.Write("accepted");
                 if (accepted++ < 3) Debug.Log("[KnServer] Page request accepted.");
                 if (Interlocked.Increment(ref m_Active) > MaxConcurrentRequests)
