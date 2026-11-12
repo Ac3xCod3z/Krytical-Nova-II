@@ -55,7 +55,7 @@ namespace KryticalNova.DevTools
             if (!line.StartsWith("gm.target ", System.StringComparison.OrdinalIgnoreCase)) return;
             string who = line.Substring("gm.target ".Length).Trim();
             if (who.Equals("self", System.StringComparison.OrdinalIgnoreCase) || who.Equals("me", System.StringComparison.OrdinalIgnoreCase)) RemoteTarget = null;
-            else if (ulong.TryParse(who, out ulong id)) RemoteTarget = PlayerGm.Local != null && PlayerGm.Local.IsSpawned && id == PlayerGm.Local.OwnerClientId ? (ulong?)null : id;
+            else if (ulong.TryParse(who, out ulong id)) RemoteTarget = (PlayerGm.Local != null && PlayerGm.Local.IsSpawned && id == PlayerGm.Local.OwnerClientId) || id == KryticalNova.Player.PlayerGmSight.SelfId ? (ulong?)null : id;
         }
 
         [Command(Sent, "Sent to the server: the answer follows from there.")]

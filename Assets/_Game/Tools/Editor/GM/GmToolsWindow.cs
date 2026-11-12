@@ -82,12 +82,17 @@ namespace KryticalNova.EditorTools.GM
         private static GameObject RemoteTargetPlayer()
         {
             var own = KryticalNova.Networking.PlayerGm.Local;
-            if (own == null) return null;   // the entity netcode client has no NGO PlayerGm (GM sight not ported): nothing to show, no throw per repaint
+            // The entity netcode client has no NGO PlayerGm: the buttons read the player this machine controls (the commands run on the
+            // server on the one picked); another player's numbers are not on a client, as for a far player in NGO (DOTS wave 1, 12 Nov 2026).
+            if (own == null) return IsEntityClient ? LocalPlayer_Object() : null;
             ulong id = GmRemoteLines.RemoteTarget ?? own.OwnerClientId;
             foreach (var gm in FindObjectsByType<KryticalNova.Networking.PlayerGm>())
                 if (gm.IsSpawned && gm.OwnerClientId == id) return gm.gameObject;
             return own.gameObject;
         }
+        /// <summary>A joined GM on the entity netcode: the GM link is there, NGO's PlayerGm is not.</summary>
+        private static bool IsEntityClient => KryticalNova.Networking.PlayerGm.Local == null && KryticalNova.Networking.PlayerGm.Remote != null;
+        private static GameObject LocalPlayer_Object() => KryticalNova.Core.LocalPlayer.Object;
         private static PlayerInventory LocalInventory => LocalPlayer != null ? LocalPlayer.GetComponent<PlayerInventory>() : null;
         private static PlayerGmState TargetGm => LocalPlayer != null ? LocalPlayer.GetComponent<PlayerGmState>() : null;
         private static PlayerCharacterProgression Progression => LocalPlayer != null ? LocalPlayer.GetComponent<PlayerCharacterProgression>() : null;
@@ -206,6 +211,7 @@ namespace KryticalNova.EditorTools.GM
         private void DrawRemoteTargetPicker()
         {
             ListenForServerAnswers();
+            if (IsEntityClient) { DrawEntityTargetPicker(); return; }
             var players = new List<KryticalNova.Networking.PlayerGm>();
             foreach (var gm in FindObjectsByType<KryticalNova.Networking.PlayerGm>())
                 if (gm.IsSpawned) players.Add(gm);
@@ -228,6 +234,39 @@ namespace KryticalNova.EditorTools.GM
             int picked = EditorGUILayout.Popup("Target player", selected, labels);
             if (picked != selected && picked >= 0)
                 Run(players[picked].OwnerClientId == own ? "gm.target self" : $"gm.target {players[picked].OwnerClientId}");
+            EditorGUILayout.LabelField("You are GM on the server: every button runs there, on the player picked.", EditorStyles.miniLabel);
+        }
+
+        /// <summary>
+        /// A joined GM on the entity netcode (DOTS wave 1): the players are the ones GM sight lists (everyone on the map, serial and name; the
+        /// GM's own marked), else the players of a server running in this process. The pick runs the same <c>gm.target</c> lines as NGO's.
+        /// </summary>
+        private void DrawEntityTargetPicker()
+        {
+            var rows = new List<(ulong id, string name)>();
+            if (PlayerGmSight.Active)
+                foreach (GmSeenPlayer seen in PlayerGmSight.Seen) rows.Add((seen.ClientId, seen.NameText));
+            else
+                foreach (var (id, player) in GmTarget.ConnectedPlayers())
+                    rows.Add((id, player.TryGetComponent(out PlayerIdentity identity) ? identity.CharacterName : player.name));
+            if (rows.Count == 0)
+            {
+                EditorGUILayout.LabelField("No players listed here yet: gm.seeall on lists everyone on the map.", EditorStyles.miniLabel);
+                return;
+            }
+            rows.Sort((a, b) => a.id.CompareTo(b.id));
+            ulong own = PlayerGmSight.SelfId;
+            ulong target = GmRemoteLines.RemoteTarget ?? own;
+            var labels = new string[rows.Count];
+            int selected = -1;
+            for (int i = 0; i < rows.Count; i++)
+            {
+                labels[i] = $"Client {rows[i].id}  {rows[i].name}" + (rows[i].id == own ? " (you)" : string.Empty);
+                if (rows[i].id == target) selected = i;
+            }
+            int picked = EditorGUILayout.Popup("Target player", selected, labels);
+            if (picked != selected && picked >= 0)
+                Run(rows[picked].id == own ? "gm.target self" : $"gm.target {rows[picked].id}");
             EditorGUILayout.LabelField("You are GM on the server: every button runs there, on the player picked.", EditorStyles.miniLabel);
         }
 
@@ -561,7 +600,8 @@ namespace KryticalNova.EditorTools.GM
         [TabGroup(Tabs, CheatsTab), ShowInInspector, ToggleLeft, EnableIf(nameof(IsReady)), LabelText("See every player on the map"), PropertyOrder(200.5f)]
         private bool SeeAll
         {
-            get => LocalPlayer != null && LocalPlayer.TryGetComponent(out KryticalNova.Player.PlayerGmSight sight) && sight.SeeAll;
+            get => IsEntityClient ? PlayerGmSight.Active   // the entity netcode: the server is sending the list
+                : LocalPlayer != null && LocalPlayer.TryGetComponent(out KryticalNova.Player.PlayerGmSight sight) && sight.SeeAll;
             set { if (value != SeeAll) Run($"gm.seeall {(value ? "true" : "false")}"); }
         }
 
