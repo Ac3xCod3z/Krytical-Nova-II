@@ -895,6 +895,108 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
             Assert.IsTrue(OwnerProgressBridge.Same(refunded, OwnerProgressBridge.Read(view).Value), "the owner shows exactly what the server holds");
         }
 
+        /// <summary>A store that counts the changes it is given; everything else is a MemorySaveStore's.</summary>
+        sealed class CountingStore : IBatchSaveStore, ILedgerStore
+        {
+            readonly MemorySaveStore m_Inner = new MemorySaveStore();
+            public readonly List<SaveBatch> Batches = new List<SaveBatch>();
+            public int WithKeys(string prefix) => Batches.FindAll(b => b.Writes.Exists(w => w.Key.StartsWith(prefix, StringComparison.Ordinal))).Count;
+            public void WriteBatch(SaveBatch batch)
+            {
+                Batches.Add(batch);
+                m_Inner.WriteBatch(batch);
+            }
+            public bool TryReadMany(IReadOnlyList<string> keys, IDictionary<string, string> found) => m_Inner.TryReadMany(keys, found);
+            public bool TryRead(string key, out string json) => m_Inner.TryRead(key, out json);
+            public void Write(string key, string json) => m_Inner.Write(key, json);
+            public void Delete(string key) => m_Inner.Delete(key);
+            public IReadOnlyList<string> Keys(string prefix) => m_Inner.Keys(prefix);
+            public List<LedgerEntry> ReadLedger(string account, long sinceUtc, int limit) => m_Inner.ReadLedger(account, sinceUtc, limit);
+            public int PruneLedger(long beforeUtc) => m_Inner.PruneLedger(beforeUtc);
+        }
+
+        const ushort NameChangePass = 9036;
+
+        // An admitted server body named Ace holding one Name Change Pass, and the cell it is in.
+        IEnumerator RenameBody(ulong serial, string account, string characterId, Action<GameObject, int> ready)
+        {
+            PlayerKeys.Reset();
+            PlayerKey key = PlayerKeys.Mint(serial);
+            GameObject body = PlayerBodyAssembler.Create(Prefab(), NetRoleKind.ServerBody, key, serial, false, new Vector3(0f, 0.08f, 0f), 0f);
+            m_Made.Add(body);
+            yield return null;
+            CharacterRecipe recipe = AnyLegalRecipe(body.GetComponent<PlayerIdentity>().Database);
+            var stored = new AccountSave { accountId = account };
+            stored.characters.Add(new CharacterSave { characterId = characterId, name = "Ace" });
+            Assert.IsTrue(ServerSave.WriteAccount(stored));
+            ServerSave.WaitForDisk();
+            var context = new ServerBodyContext
+            {
+                Key = key, Serial = serial, NetworkId = (int)serial, Account = account, CharacterId = characterId, Name = "Ace",
+                RecipeText = RecipeText.Encode(recipe),
+            };
+            Assert.IsNull(new PlayerAdmission().Begin(body, in context), "admitted");
+            for (int i = 0; i < 10; i++) yield return null;
+            var inventory = body.GetComponent<PlayerInventory>();
+            Assume.That(inventory.Catalog != null && inventory.Catalog.Get(NameChangePass) != null, "the catalog has the Name Change Pass");
+            Assert.AreEqual(1, inventory.ServerGive(NameChangePass, 1));
+            int cell = -1;
+            for (int i = 0; i < PlayerInventory.Capacity && cell < 0; i++) if (inventory.Get(i).itemId == NameChangePass) cell = i;
+            Assert.GreaterOrEqual(cell, 0, "the pass is in the Pack");
+            ready(body, cell);
+        }
+
+        [UnityTest]
+        public IEnumerator B69_NameChange_OnePassOneSaveOneLedgerLine_AndTheNamePlatesSignal()
+        {
+            // Wave 2, 12 Nov 2026 (the lead's HIGH review): a refusal leaves the Pack as it was, a rename takes exactly one pass, saves once
+            // with the names list, writes "old > new", and PlayerIdentity.ServerRename raises Changed on a body with no NGO variable.
+            NetRole.Install(new BodyRoleNetRoleAdapter(null, () => NetRoleKind.ServerBody));
+            var store = new CountingStore();
+            ServerSave.Store = store;
+            const string account = "2a2b3c4d5e6f708192a3b4c5d6e7f802", characterId = "c1c2d3e4f5a60718293a4b5c6d7e8f92";
+            GameObject body = null;
+            int cell = -1;
+            yield return RenameBody(6, account, characterId, (b, c) => { body = b; cell = c; });
+            var inventory = body.GetComponent<PlayerInventory>();
+            var rename = body.GetComponent<PlayerRename>();
+            var identity = body.GetComponent<PlayerIdentity>();
+            string namesKeys = ServerSave.WorldPrefix + ServerRoster.NamesDocument;
+            ServerRoster.Names().Put("Tolan", "3a2b3c4d5e6f708192a3b4c5d6e7f803", "d1c2d3e4f5a60718293a4b5c6d7e8f93");
+
+            // (a) refusals leave the Pack unchanged
+            int held = inventory.CountItem(NameChangePass);
+            int namesBefore = store.WithKeys(namesKeys);
+            Assert.AreEqual(CharacterNameRules.ReasonTakenInGame, rename.ServerRenameAsked(cell, "Tolan", out _));
+            Assert.AreEqual(CharacterNameRules.ReasonTooShort, rename.ServerRenameAsked(cell, "Ab", out _));
+            Assert.AreEqual(PlayerRename.ReasonNoPass, rename.ServerRenameAsked(cell == 0 ? 1 : 0, "Zephyr", out _), "another cell holds no pass");
+            Assert.AreEqual(held, inventory.CountItem(NameChangePass), "no refusal spends the pass");
+            Assert.AreEqual(namesBefore, store.WithKeys(namesKeys), "and none saves the names list");
+
+            // (d) the name plates' signal
+            int changed = 0;
+            identity.Changed += () => changed++;
+            int batches = store.Batches.Count;
+            Assert.IsNull(rename.ServerRenameAsked(cell, "Zephyr", out string clean));
+            Assert.AreEqual("Zephyr", clean);
+            Assert.AreEqual("Zephyr", identity.CharacterName);
+            Assert.GreaterOrEqual(changed, 1, "ServerRename raised Changed (no NGO network variable here)");
+            // (a) exactly one pass
+            Assert.AreEqual(held - 1, inventory.CountItem(NameChangePass), "exactly one pass taken");
+            // (b) exactly one SaveTogether with the names list
+            Assert.AreEqual(namesBefore + 1, store.WithKeys(namesKeys), "one change carried the names list");
+            Assert.AreEqual(batches + 1, store.Batches.Count, "and it was the only change");
+            Assert.IsTrue(store.Batches[store.Batches.Count - 1].Writes.Exists(w => w.Key.Contains(account)), "the account's document in the same change");
+            // (c) the ledger line
+            List<LedgerEntry> lines = ServerSave.ReadLedger(account, 0, 100).FindAll(l => l.kind == LedgerKinds.NameChanged);
+            Assert.AreEqual(1, lines.Count);
+            Assert.AreEqual("Ace > Zephyr", lines[0].note);
+            Assert.AreEqual(characterId, ServerRoster.Names().Holder("zephyr").character);
+            Assert.IsNull(ServerRoster.Names().Holder("ace"), "the old name is free");
+            body.GetComponent<PlayerSaveAgent>().OnServerLeaving();
+            PlayerKeys.Reset();
+        }
+
         [UnityTest]
         public IEnumerator B12_TheOwnersStatSheet_ShowsTheSerumsTheServerBodyTook()
         {
