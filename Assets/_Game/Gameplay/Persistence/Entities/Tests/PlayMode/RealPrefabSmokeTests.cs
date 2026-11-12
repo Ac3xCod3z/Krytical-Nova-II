@@ -859,6 +859,43 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
         }
 
         [UnityTest]
+        public IEnumerator B68_StatReset_TheOwnerSeesTheRefundedPoints()
+        {
+            // Wave 2, 12 Nov 2026 (Respec, option A): NGO never built the Respec Chip or the Memory Wipe as items; its only respec is the
+            // GM's gm.resetstats, which calls PlayerCharacterProgression.ResetAllocations on the server body (GmCommands.cs:221-227). The
+            // owner then sees the refunded points through OwnerProgressServerSystem (it writes the ghost when Read differs) and the mirror.
+            NetRole.Install(new BodyRoleNetRoleAdapter(null, () => NetRoleKind.ServerBody));
+            GameObject server = Make(NetRoleKind.ServerBody, false, new PlayerKey(68));
+            GameObject view = Make(NetRoleKind.ClientView, true, new PlayerKey(68));
+            yield return null;
+            var progress = server.GetComponent<PlayerCharacterProgression>();
+            progress.SetLevel(10);
+            int cost = Mathf.Max(1, progress.AllocationCost);
+            int strength = progress.State.strength, vitality = progress.State.vitality;
+            int put = progress.RunAllocate(CharacterAttribute.Strength, 2) + progress.RunAllocate(CharacterAttribute.Vitality, 1);
+            Assume.That(put, Is.EqualTo(3), "level 10 pays for three points");
+            int afterSpend = progress.StatPoints, skillPoints = progress.SkillPoints, level = progress.CurrentLevel;
+            OwnerProgress spent = OwnerProgressBridge.Read(server).Value;
+            OwnerProgressBridge.Mirror(view, spent);
+
+            progress.ResetAllocations();   // what gm.resetstats runs
+
+            OwnerProgress refunded = OwnerProgressBridge.Read(server).Value;
+            Assert.IsFalse(OwnerProgressBridge.Same(spent, refunded), "the server system sees a change and writes the owner's ghost");
+            Assert.AreEqual(afterSpend + 3 * cost, refunded.StatPoints, "every placed point back, times its cost");
+            Assert.AreEqual(strength, refunded.Strength, "Strength back to its starting value");
+            Assert.AreEqual(vitality, refunded.Vitality, "Vitality back to its starting value");
+            Assert.AreEqual(skillPoints, refunded.SkillPoints, "skill points untouched");
+            Assert.AreEqual(level, refunded.Level, "level untouched");
+
+            OwnerProgressBridge.Mirror(view, refunded);
+            var viewProgress = view.GetComponent<PlayerCharacterProgression>();
+            Assert.AreEqual(refunded.StatPoints, viewProgress.StatPoints, "the owner's Character window shows the refunded points");
+            Assert.AreEqual(strength, viewProgress.State.strength);
+            Assert.IsTrue(OwnerProgressBridge.Same(refunded, OwnerProgressBridge.Read(view).Value), "the owner shows exactly what the server holds");
+        }
+
+        [UnityTest]
         public IEnumerator B12_TheOwnersStatSheet_ShowsTheSerumsTheServerBodyTook()
         {
             NetRole.Install(new BodyRoleNetRoleAdapter(null, () => NetRoleKind.ServerBody));
