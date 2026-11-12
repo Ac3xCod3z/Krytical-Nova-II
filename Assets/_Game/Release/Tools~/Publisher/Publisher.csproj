@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Krytical Nova Publisher (owner, 8 Nov 2026): pushes game updates without opening Unity. Upload a staged release to a
+       line (test or dots), see what every line holds, promote test to live, roll back. Talks to the own CDN through
+       kn_publish.py (the S3 tool, copied beside the exe), today the local stand-in bucket, later Cloudflare R2.
+       Windows Forms on .NET Framework 4.7.2, like the launcher and the Server app. Built by "Build Publisher.bat". -->
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net472</TargetFramework>
+    <LangVersion>9.0</LangVersion>
+    <AssemblyName>Krytical Nova Publisher</AssemblyName>
+    <RootNamespace>KryticalNova.Publisher</RootNamespace>
+    <Deterministic>true</Deterministic>
+    <Product>Krytical Nova Publisher</Product>
+    <Company>Ascension Studios</Company>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <DebugType>none</DebugType>
+    <ApplicationIcon>Publisher.ico</ApplicationIcon>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.Web.Extensions" />
+    <EmbeddedResource Include="..\..\..\UI\Travel\Fonts\Bangers.ttf" LogicalName="Bangers.ttf" />
+    <EmbeddedResource Include="..\Launcher\Logo.png" LogicalName="Logo.png" />
+    <!-- The one S3 tool, so the app and the Editor never disagree about the bucket layout. -->
+    <None Include="..\KnPublish\kn_publish.py" Link="KnPublish\kn_publish.py" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\KnPublish\fake_r2.py" Link="KnPublish\fake_r2.py" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+</Project>
