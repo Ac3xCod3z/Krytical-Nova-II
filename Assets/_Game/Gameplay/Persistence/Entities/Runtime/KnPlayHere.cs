@@ -92,6 +92,7 @@ namespace KryticalNova.Persistence.Entities
             || Environment.GetEnvironmentVariable("KN_PLAYHERE_ITEMS") == "1"                   // items used by the server (item 5)
             || Environment.GetEnvironmentVariable("KN_PLAYHERE_MOUNT") == "1"                   // the mount and rider proof (8 Nov)
             || Environment.GetEnvironmentVariable("KN_PLAYHERE_ROOFS") == "1"                   // roof to roof (item 8)
+            || KnCombatProbe.On                                                                 // the cutover's combat proof (12 Nov)
             || KnCadenceProbe.On;                                                               // the Cadence probe (owner x6, 7 Nov)
         /// <summary>A folder: the scripted run saves a Game-view picture there every 0.1 s (proof for the owner, GUI Editor only).</summary>
         public const string CaptureVariable = "KN_PLAYHERE_CAPTURE";
@@ -1505,6 +1506,13 @@ namespace KryticalNova.Persistence.Entities
                 if (ItemsRun) yield return Items(body, ghost, walls);
                 if (MountRun) yield return Mounts(body, ghost, walls);
                 if (RoofsRun) yield return RoofJumps(body, ghost, walls);
+                if (KnCombatProbe.On)
+                {
+                    walls.Tried++;
+                    EntityManager combatEm = KnBootstrap.ServerWorld.EntityManager;
+                    float combatOffset = body.GetComponent<UnityEngine.AI.NavMeshAgent>() is UnityEngine.AI.NavMeshAgent combatAgent ? combatAgent.baseOffset : 0f;
+                    yield return KnCombatProbe.Run(body, OwnBody, Log, at => Teleport(combatEm, ghost, at + Vector3.up * combatOffset), ok => { if (ok) walls.Passed++; });
+                }
                 if (KnCadenceProbe.On)
                 {
                     walls.Tried++;
@@ -1559,7 +1567,7 @@ namespace KryticalNova.Persistence.Entities
                 }
             }
 
-            bool HasScriptedTries => !string.IsNullOrEmpty(Walk) || !string.IsNullOrEmpty(Jump) || VaultCount > 0 || WaterRun || WallRun || ClimbRun || TreeRun || CatchRun || AutoRun || LedgeRun || FixesRun || AcrossRun || ItemsRun || MountRun || RoofsRun || KnCadenceProbe.On;
+            bool HasScriptedTries => !string.IsNullOrEmpty(Walk) || !string.IsNullOrEmpty(Jump) || VaultCount > 0 || WaterRun || WallRun || ClimbRun || TreeRun || CatchRun || AutoRun || LedgeRun || FixesRun || AcrossRun || ItemsRun || MountRun || RoofsRun || KnCombatProbe.On || KnCadenceProbe.On;
 
             /// <summary>Which scripted parts are on, for the log's first lines (a part that should run and is not listed shows at once).</summary>
             string ScriptedParts()
@@ -1579,6 +1587,7 @@ namespace KryticalNova.Persistence.Entities
                 if (AcrossRun) on.Add("across the water when quicker");
                 if (ItemsRun) on.Add("items used by the server");
                 if (MountRun) on.Add("mount and rider");
+                if (KnCombatProbe.On) on.Add("combat to a kill");
                 if (RoofsRun) on.Add("roof to roof");
                 if (KnCadenceProbe.On) on.Add("the Cadence probe");
                 return on.Count > 0 ? string.Join(", ", on) : "none (by hand)";
