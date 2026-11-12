@@ -140,14 +140,17 @@ namespace KryticalNova.Tests
             var jump = ScriptableObject.CreateInstance<MovementSkillData>();
             jump.skillId = MovementSkillId.Jump;
             jump.ranks = new[] { new MovementSkillRank { requiredCharacterLevel = 1, skillPointCost = 5 } };
-            var movement = go.AddComponent<PlayerMovementSkills>(); // no movement settings: it switches itself off (PMS Awake)
+            var movement = go.AddComponent<PlayerMovementSkills>();
             var serialized = new SerializedObject(movement);
             serialized.FindProperty("runSkill").objectReferenceValue = run;
             serialized.FindProperty("jumpSkill").objectReferenceValue = jump;
             serialized.ApplyModifiedPropertiesWithoutUndo();
             movement.MirrorRanks(2, 1);
-            Assert.IsFalse(movement.enabled);
+            Assert.IsTrue(movement.CanClear);
+            Assert.AreEqual(12, movement.SpentOnRanks(), "switched on: Run 3 + 4 and Jump 5 count");
+            movement.enabled = false; // what PMS Awake does on bad data (an EditMode test runs no Awake)
             Assert.IsFalse(movement.CanClear);
+            Assert.AreEqual(0, movement.SpentOnRanks());
 
             progression.SetLevel(10);
             skills.TryUpgradeMultiple(ward, 2);
