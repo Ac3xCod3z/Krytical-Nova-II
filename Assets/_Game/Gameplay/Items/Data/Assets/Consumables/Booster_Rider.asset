@@ -15,7 +15,7 @@ MonoBehaviour:
   itemId: 9503
   displayName: Rider Booster
   description: Raises the XP your mount earns from your Hostile kills for a time. Using another adds its time; different boosters add up. From the Nova Store.
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 1ad0420718283fb479678e6fade7c901, type: 3}
   sharesIconOf: {fileID: 0}
   rarity: 2
   equipSlot: 0

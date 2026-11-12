@@ -4903,3 +4903,8 @@ MonoBehaviour:
     set: Fantasy/Berry and Seed
     number: 13
     chosen: 1
+  - kind: 2
+    target: Booster_Rider
+    set: Cyberpunk/Energy
+    number: 5
+    chosen: 1
