@@ -85,6 +85,14 @@ namespace KryticalNova.EditorTools
                 Description = "Gives your character a new name, unique in the whole game. Use it and type the name: once the server takes it, the pass is used and you go back to character select, so the server knows you by your new name when you come back in.",
                 Stack = 99, Effect = ItemUseEffect.NameChange },
 
+            // Points placed again (owner, 12 Nov 2026, wave 3b): drops from any Hostile, the Apothecary, gm.resets. Icons: the Icon Library.
+            new Row { Id = RespecChipId, Asset = "Respec_Chip", Name = "Respec Chip", Glyph = "RESPEC", Rarity = ItemRarity.Rare,
+                Description = "Hands back every stat point you placed, so you can place them again. Points a GM gave are not handed back.",
+                Stack = 99, Effect = ItemUseEffect.Respec, Cooldown = 1f },
+            new Row { Id = MemoryWipeId, Asset = "Memory_Wipe", Name = "Memory Wipe", Glyph = "WIPE", Rarity = ItemRarity.Rare,
+                Description = "Puts every skill back to rank 0, Run and Jump too, and hands back every skill point they cost, so you can place them again. Skill Chip skills stay unlocked. Not while casting, jumping or walking.",
+                Stack = 99, Effect = ItemUseEffect.MemoryWipe, Cooldown = 1f },
+
             // Pets (design: _Docs/Design/12_pet_evolution_system.md).
             new Row { Id = PetRationId, Asset = "Pet_Ration", Name = "Pet Ration", Glyph = "FOOD", Rarity = ItemRarity.Common,
                 Description = "Feeds the pet you have out: its hunger goes back to 100%. A starving pet gives no bonus and earns no XP.",
@@ -305,6 +313,7 @@ namespace KryticalNova.EditorTools
         public const ushort MountFeedId = 9013;
         public const ushort RecallTagId = 9011;
         public const ushort NameChangePassId = 9036;
+        public const ushort RespecChipId = 9037, MemoryWipeId = 9038;
         public const ushort FluxFlaskId = 9012;
         public const ushort KioskPermit14Id = 9020;
         public const ushort KioskPermit30Id = 9021;
@@ -349,7 +358,8 @@ namespace KryticalNova.EditorTools
             var items = catalog.Items.Where(i => i != null).Concat(made).Distinct().OrderBy(i => i.itemId).ToList();
             catalog.SetContents(items, catalog.StarterEquipped.ToList(), bag);
             EditorUtility.SetDirty(catalog);
-            int drops = AddPassDrop(byAsset, "Pass_Autobuff3") + AddPassDrop(byAsset, "Pass_Autopilot3");
+            int drops = AddPassDrop(byAsset, "Pass_Autobuff3") + AddPassDrop(byAsset, "Pass_Autopilot3")
+                + AddDrop(byAsset, "Respec_Chip", ResetDropChance, 0) + AddDrop(byAsset, "Memory_Wipe", ResetDropChance, 0);
             AssetDatabase.SaveAssets();
             Debug.Log($"[Items] {made.Count} utility items registered in {CatalogPath}; {drops} drop row(s) added.");
         }
@@ -359,14 +369,21 @@ namespace KryticalNova.EditorTools
         private const int PassDropLevel = 10;
 
         /// <summary>A 3-day Pass (Autobuff, Autopilot) joins the Hostile drop table (its chance may have been tuned since: a row that is there is left).</summary>
-        private static int AddPassDrop(Dictionary<string, ItemDefinition> byAsset, string asset)
+        private static int AddPassDrop(Dictionary<string, ItemDefinition> byAsset, string asset) =>
+            AddDrop(byAsset, asset, PassDropChance, PassDropLevel);
+
+        /// <summary>A Respec Chip / Memory Wipe falls from a Hostile of any level (wave 3b; first pick, tuned on the asset after).</summary>
+        private const float ResetDropChance = 0.05f;
+
+        /// <summary>An item joins the Hostile drop table once (its chance may have been tuned since: a row that is there is left).</summary>
+        private static int AddDrop(Dictionary<string, ItemDefinition> byAsset, string asset, float chancePercent, int minLevel)
         {
             if (!byAsset.TryGetValue(asset, out ItemDefinition pass) || pass == null) return 0;
             var hostiles = AssetDatabase.LoadAssetAtPath<KryticalNova.Hostiles.HostileSettings>(HostileSettingsPath);
             if (hostiles == null) { Debug.LogWarning($"[Items] No Hostile settings at {HostileSettingsPath}: the {asset} drop was not added."); return 0; }
             var rows = new List<KryticalNova.Hostiles.MaterialDrop>(hostiles.materialDrops ?? System.Array.Empty<KryticalNova.Hostiles.MaterialDrop>());
             if (rows.Exists(row => row.item == pass)) return 0;
-            rows.Add(new KryticalNova.Hostiles.MaterialDrop { item = pass, chancePercent = PassDropChance, minLevel = PassDropLevel });
+            rows.Add(new KryticalNova.Hostiles.MaterialDrop { item = pass, chancePercent = chancePercent, minLevel = minLevel });
             hostiles.materialDrops = rows.ToArray();
             EditorUtility.SetDirty(hostiles);
             return 1;
