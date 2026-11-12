@@ -91,6 +91,9 @@ namespace KryticalNova.Persistence.Entities
         /// </summary>
         public const string TwoBotVariable = "KN_PLAYHERE_TWOBOT";
 
+        /// <summary>Batch only: =1 runs the scripted session on the TEST save service, as the "(test saves)" menu does (cutover, 12 Nov 2026).</summary>
+        public const string BatchTestSavesVariable = "KN_PLAYHERE_TESTSAVES";
+
         sealed class BotGoInGame : IKnGoInGameSource
         {
             readonly GoInGamePayload m_Payload;
@@ -103,8 +106,18 @@ namespace KryticalNova.Persistence.Entities
         {
             KnDevBots.Enabled = true;   // reset by KnDevBots on every Play
             if (!KnJoinHere.TryLook(out string look, out string problem)) { log("two players: bot: FAIL; " + problem); return null; }
-            World bot = KnDevBots.CreateThinClient(Unity.Networking.Transport.NetworkEndpoint.LoopbackIpv4.WithPort(Port), 2, GameBuild.Version);
+            // Run 1 (12 Nov 2026): a thin client connects in its OnCreate to the address of ClientServerBootstrap.ClientWorld, so its
+            // driver was bound before KnApprovalSetupSystem ran (approval refused) and its own connect request threw. The own client
+            // world is hidden from that list while the bot world is made; the bot then connects by its own request, approval first.
+            var clientWorlds = new List<World>(ClientServerBootstrap.ClientWorlds);
+            World bot;
+            ClientServerBootstrap.ClientWorlds.Clear();
+            try { bot = KnDevBots.CreateThinClient(Unity.Networking.Transport.NetworkEndpoint.LoopbackIpv4.WithPort(Port), 2, GameBuild.Version); }
+            finally { ClientServerBootstrap.ClientWorlds.AddRange(clientWorlds); }
             if (bot == null) { log("two players: bot: FAIL; no thin-client world"); return null; }
+            // Run 1: without the server's ghost prefabs netcode disconnected the bot ("errors while processing the ghost prefabs").
+            // The ghost subscene streams in during the world's first update, before its connect system runs.
+            if (!KryticalNova.Player.Entities.PlayerWorldAssets.LoadGhostScene(bot)) { log("two players: bot: FAIL; no ghost subscene"); bot.Dispose(); return null; }
             KnClientGoInGameSystem goIn = bot.GetExistingSystemManaged<KnClientGoInGameSystem>();
             if (goIn == null) { log("two players: bot: FAIL; the thin client has no go-in-game system"); bot.Dispose(); return null; }
             goIn.Source = new BotGoInGame(new GoInGamePayload { CharacterId = string.Empty, Name = "Player2", RecipeText = look });
@@ -937,6 +950,18 @@ namespace KryticalNova.Persistence.Entities
                 Debug.LogError("[KnPlayHere] " + WalkVariable + " and " + JumpVariable + " are not set: nothing to walk or jump.");
                 EditorApplication.Exit(2);
                 return;
+            }
+            s_RequestedTestSaves = false;
+            if (Environment.GetEnvironmentVariable(BatchTestSavesVariable) == "1")
+            {
+                // the same check as the "(test saves)" menu, before Play: a missing or wrong service starts nothing
+                if (!PlayHereTestSaves.TryCheck(out string problem))
+                {
+                    Debug.LogError("[KnPlayHere] Test saves not started: " + problem);
+                    EditorApplication.Exit(2);
+                    return;
+                }
+                s_RequestedTestSaves = true;
             }
             s_BatchStarted = EditorApplication.timeSinceStartup;
             SessionState.SetFloat(BatchStartKey, (float)s_BatchStarted);   // the watchdog outlives a script reload too

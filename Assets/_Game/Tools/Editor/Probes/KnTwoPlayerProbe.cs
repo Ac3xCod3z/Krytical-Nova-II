@@ -8,6 +8,7 @@ using KryticalNova.Economy;
 using KryticalNova.Items;
 using KryticalNova.Networking;
 using KryticalNova.NPC;
+using KryticalNova.Persistence;
 using KryticalNova.Persistence.Entities;
 using UnityEditor;
 using UnityEngine;
@@ -87,6 +88,21 @@ namespace KryticalNova.EditorTools
 
         // ------------------------------------------------------------------ in Play
 
+        /// <summary>The Pack and worn items kept in the store for <paramref name="body"/>'s character equal its live inventory.</summary>
+        static bool SavedPackMatches(GameObject body, PlayerInventory inv, Action<string> log, string who)
+        {
+            var agent = body.GetComponent<PlayerSaveAgent>();
+            if (agent == null || string.IsNullOrEmpty(agent.AccountId)) { log($"two: save: {who}: no account bound (not saved)"); return false; }
+            AccountSave kept = ServerSave.ReadAccountFrom(ServerSave.Store, agent.AccountId);
+            CharacterSave character = kept?.Find(agent.CharacterId);
+            string json = character?.Get(inv.SaveKey);
+            string live = inv.CaptureSave();
+            bool same = json != null && json == live;
+            log($"two: save: {who} account {agent.AccountId.Substring(0, Math.Min(8, agent.AccountId.Length))}.. character '{character?.name}' " +
+                $"saved {(character != null ? new DateTime(character.savedUtc, DateTimeKind.Utc).ToString("HH:mm:ss") : "-")}: Pack {(json == null ? "NOT FOUND" : same ? "equals the live Pack" : "DIFFERS from the live Pack")}");
+            return same;
+        }
+
         static IEnumerator Run(KnPlayHere.TwoPlayerRun r)
         {
             bool tradeOk = false, vendorsOk = false, buyOk = false, gmOk = false;
@@ -151,6 +167,40 @@ namespace KryticalNova.EditorTools
                     int hostNow = hostInv.CountItem(item.itemId), p2Now = p2Inv.CountItem(item.itemId);
                     tradeOk = p2Now == p2Had + item.count && hostNow == hostHad - item.count;
                     r.Log($"two: trade: item {item.itemId}: Tester {hostHad} -> {hostNow}, Player2 {p2Had} -> {p2Now}, still trading {hostTrade.IsTrading}: {(tradeOk ? "PASS" : "FAIL")}");
+
+                    // the other way (cutover, 12 Nov 2026): Player2 asks the Tester by name and gives the same item back; the own view accepts
+                    int back = -1;
+                    for (int i = 0; i < PlayerInventory.Capacity && back < 0; i++) if (p2Inv.Get(i).itemId == item.itemId && !p2Inv.Get(i).IsEmpty) back = i;
+                    if (!tradeOk || back < 0) { r.Log($"two: trade back: FAIL; the first trade {(tradeOk ? "passed" : "failed")}, Player2's cell {back}"); tradeOk = false; }
+                    else
+                    {
+                        int backCount = p2Inv.Get(back).count;
+                        int hostBefore = hostInv.CountItem(item.itemId), p2Before = p2Inv.CountItem(item.itemId);
+                        p2Trade.RunTradeOp(TradeOpKind.RequestByName, hostTrade.TraderName, 0, 0, 0, false);
+                        yield return new WaitForSeconds(1.5f);
+                        r.Log($"two: trade back: after Player2's ask: Tester trading {hostTrade.IsTrading}, Player2 trading {p2Trade.IsTrading}");
+                        ownTrade.Respond(true);
+                        yield return new WaitForSeconds(1.5f);
+                        p2Trade.RunTradeOp(TradeOpKind.Offer, null, (short)back, (ushort)backCount, 0, false);
+                        yield return new WaitForSeconds(1.5f);
+                        p2Trade.RunTradeOp(TradeOpKind.Lock, null, 0, 0, 0, true);
+                        ownTrade.SetLocked(true);
+                        yield return new WaitForSeconds(1.5f);
+                        p2Trade.RunTradeOp(TradeOpKind.Confirm, null, 0, 0, 0, false);
+                        ownTrade.Confirm();
+                        yield return new WaitForSeconds(2.5f);
+                        int hostAfter = hostInv.CountItem(item.itemId), p2After = p2Inv.CountItem(item.itemId);
+                        bool backOk = hostAfter == hostBefore + backCount && p2After == p2Before - backCount;
+                        r.Log($"two: trade back: item {item.itemId} x{backCount}: Tester {hostBefore} -> {hostAfter}, Player2 {p2Before} -> {p2After}, still trading {hostTrade.IsTrading}: {(backOk ? "PASS" : "FAIL")}");
+                        tradeOk = backOk;
+                    }
+
+                    // both saves after the trades (a trade saves both players in one change: ServerSave.SaveTogether)
+                    yield return new WaitForSeconds(2f);
+                    bool hostSaved = SavedPackMatches(r.Body, hostInv, r.Log, "Tester");
+                    bool p2Saved = SavedPackMatches(p2, p2Inv, r.Log, "Player2");
+                    r.Log($"two: saves after the trades ({ServerSave.Store?.GetType().Name}): Tester {(hostSaved ? "PASS" : "FAIL")}, Player2 {(p2Saved ? "PASS" : "FAIL")}");
+                    tradeOk = tradeOk && hostSaved && p2Saved;
                 }
 
                 // 3) the vendors' shelves from the own view, then one buy at the nearest
