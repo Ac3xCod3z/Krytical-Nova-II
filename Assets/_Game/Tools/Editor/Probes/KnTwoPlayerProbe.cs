@@ -105,7 +105,7 @@ namespace KryticalNova.EditorTools
 
         static IEnumerator Run(KnPlayHere.TwoPlayerRun r)
         {
-            bool tradeOk = false, vendorsOk = false, buyOk = false, gmOk = false;
+            bool tradeOk = false, vendorsOk = false, buyOk = false, gmOk = false, squad = false;
             try
             {
                 GameObject p2 = null;
@@ -120,6 +120,8 @@ namespace KryticalNova.EditorTools
                 var hostTrade = r.Body.GetComponent<PlayerTrade>();
                 var p2Trade = p2.GetComponent<PlayerTrade>();
                 r.Log($"two: Player2 joined: '{p2Trade?.TraderName}' ({p2.name}); the Tester '{hostTrade?.TraderName}'");
+                // the port waves' Squad proof instead (KN_PLAYHERE_SQUAD=1): Squad ids and the minimap rule, Follow's jump copy, a Squad's kill
+                if (KnSquadProbe.On) { squad = true; yield return KnSquadProbe.Run(r, p2); yield break; }
                 r.Put(p2, r.Body.transform.position + r.Body.transform.right * 2f);
                 yield return new WaitForSeconds(2f);
 
@@ -244,8 +246,8 @@ namespace KryticalNova.EditorTools
             finally
             {
                 EditorPrefs.SetBool(KnJoinHere.MppmJoinPref, false);
-                r.Log($"two: GM default target {(gmOk ? "PASS" : "FAIL")}, trade {(tradeOk ? "PASS" : "FAIL")}, vendors {(vendorsOk ? "PASS" : "FAIL")}, buy {(buyOk ? "PASS" : "FAIL")}");
-                r.Verdict(gmOk && tradeOk && vendorsOk && buyOk);
+                if (!squad) r.Log($"two: GM default target {(gmOk ? "PASS" : "FAIL")}, trade {(tradeOk ? "PASS" : "FAIL")}, vendors {(vendorsOk ? "PASS" : "FAIL")}, buy {(buyOk ? "PASS" : "FAIL")}");
+                if (!squad) r.Verdict(gmOk && tradeOk && vendorsOk && buyOk);
             }
         }
     }

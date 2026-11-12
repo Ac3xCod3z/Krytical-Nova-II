@@ -212,7 +212,7 @@ namespace KryticalNova.Player.Entities.Bodies.Tests
             Assert.AreEqual(new PlayerKey(3), build.Tag.Key);
             Assert.AreEqual(3UL, build.Tag.ConnectionSerial);
             string[] names = Names(body);
-            foreach (string gone in new[] { "AnimancerComponent", "Animator", "PlayerAnimancerMotor", "EquipmentVisualBinder", "NetworkTransform", "PlayerMoveAnticipation", "PlayerAutopilot", "CharacterLook" })
+            foreach (string gone in new[] { "AnimancerComponent", "Animator", "PlayerAnimancerMotor", "EquipmentVisualBinder", "NetworkTransform", "PlayerMoveAnticipation", "CharacterLook" })   // PlayerAutopilot stays since wave 2 (12 Nov 2026): the server body decides it
                 CollectionAssert.DoesNotContain(names, gone, gone + " must be stripped on a server body");
             CollectionAssert.Contains(names, "PointAndClickPlayer");
             CollectionAssert.Contains(names, "NavMeshAgent");

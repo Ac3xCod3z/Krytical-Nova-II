@@ -133,6 +133,8 @@ namespace KryticalNova.Persistence.Entities
             public Action<GameObject, Vector3> Put;
             public Func<List<GameObject>> ServerBodies;
             public Action<bool> Verdict;
+            /// <summary>Jump plans the server has made so far, and jumps it has reported to Squad followers (the Squad probe, 12 Nov 2026).</summary>
+            public Func<int> JumpPlans, FollowJumps;
         }
 
         /// <summary>Set by Tooling (KnTwoPlayerProbe); null = no probe.</summary>
@@ -1593,7 +1595,9 @@ namespace KryticalNova.Persistence.Entities
                     World twoBot = Environment.GetEnvironmentVariable(TwoBotVariable) == "1" ? StartPlayerTwoBot(Log) : null;
                     if (TwoPlayerProbe == null) Log("two players: FAIL; no probe registered (Tools' KnTwoPlayerProbe)");
                     else yield return TwoPlayerProbe(new TwoPlayerRun { Own = OwnBody, Body = body, Log = Log, Put = PutBody,
-                        ServerBodies = ServerBodies, Verdict = ok => { if (ok) walls.Passed++; } });
+                        ServerBodies = ServerBodies, Verdict = ok => { if (ok) walls.Passed++; },
+                        JumpPlans = () => KnBootstrap.ServerWorld.GetExistingSystemManaged<PlayerJumpServerSystem>()?.Planned ?? 0,
+                        FollowJumps = () => KnBootstrap.ServerWorld.GetExistingSystemManaged<FollowServerSystem>()?.GhostJumps ?? 0 });
                     // the bot world stays until Play stops (disposing a world the player loop still updates is unsafe); it saves nothing
                     KnDevBots.Enabled = false;
                 }
