@@ -15,7 +15,7 @@ MonoBehaviour:
   itemId: 9038
   displayName: Memory Wipe
   description: Puts every skill back to rank 0, Run and Jump too, and hands back every skill point they cost, so you can place them again. Skill Chip skills stay unlocked. Not while casting, jumping or walking.
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: b91fe0c1c7e1aae479aeaa09eac77fc3, type: 3}
   sharesIconOf: {fileID: 0}
   rarity: 2
   equipSlot: 0

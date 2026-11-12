@@ -15,7 +15,7 @@ MonoBehaviour:
   itemId: 9037
   displayName: Respec Chip
   description: Hands back every stat point you placed, so you can place them again.
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 41ff8de38d1b99b429b177f224b4fa4c, type: 3}
   sharesIconOf: {fileID: 0}
   rarity: 2
   equipSlot: 0
