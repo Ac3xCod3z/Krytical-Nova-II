@@ -108,6 +108,29 @@ namespace KryticalNova.Tests
             Assert.AreEqual("{\"v\":3}", ReadFresh());
         }
 
+        // Owner, 12 Nov 2026: a batch the service refuses for good (400: above its MaxBatchItems, 10,000) is told false once and
+        // leaves the line; the batch behind it is written, not blocked by the old retry of the 400 for ever.
+        [Test]
+        public void ABatchAboveTheLimit_IsRefusedOnce_AndTheNextIsWritten()
+        {
+            int told = 0;
+            bool? big = null;
+            var tooMany = new SaveBatch { Done = w => { told++; big = w; } };
+            for (int i = 0; i <= 10000; i++) tooMany.Write(key + "/p" + i, "{}");   // 10,001 items
+            UnityEngine.TestTools.LogAssert.Expect(UnityEngine.LogType.Error, new System.Text.RegularExpressions.Regex("refused this save .* for good"));
+            a.WriteBatch(tooMany);
+            bool? small = null;
+            var next = new SaveBatch { Done = w => small = w };
+            next.Write(key, "{\"v\":1}");
+            a.WriteBatch(next);
+            Assert.IsTrue(a.Flush(60f), "the line empties");
+            Assert.AreEqual(false, big, "the too-big batch is refused");
+            Assert.AreEqual(1, told, "and told once, never sent again");
+            Assert.AreEqual(true, small, "the batch behind it is written");
+            Assert.AreEqual("{\"v\":1}", ReadFresh());
+            Assert.IsEmpty(b.Keys(key + "/"), "nothing of the refused batch was written");
+        }
+
         [Test]
         public void AConflictOnADeletedDocument_MakesItNewNextTime()
         {

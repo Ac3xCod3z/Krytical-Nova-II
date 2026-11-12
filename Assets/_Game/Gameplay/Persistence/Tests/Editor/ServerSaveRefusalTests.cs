@@ -221,10 +221,9 @@ namespace KryticalNova.Tests
             Assert.AreEqual(1, server.ReadLedger(account, 0, 50).Count(l => l.kind == LedgerKinds.NameChanged));
         }
 
-        // Found by its first run (12 Nov 2026): the service takes at most 500 writes + deletes + lines in one batch (Program.cs:152),
-        // so a names list of 5,000 can never be saved whole on the service, refused or not, and the store retries the 400 for ever.
-        // That is older than A2 and needs the owner's pick (split the world document's change, or raise the limit): kept, not run.
-        [Test, Ignore("The save service takes at most 500 items a batch (Program.cs:152): a 5,000-entry world document cannot be saved whole. Owner's pick pending.")]
+        // Found by its first run (12 Nov 2026): the service took at most 500 items a batch, so a names list of 5,000 could never be
+        // saved whole. Owner's pick: the limit is the service's MaxBatchItems (10,000), and a 400 is final, not retried for ever.
+        [Test]
         public void AWholeNamesResend_FitsTheServiceRequest()
         {
             NameIndex names = ServerSave.World<NameIndex>(world);
