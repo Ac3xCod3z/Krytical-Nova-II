@@ -151,11 +151,23 @@ namespace KryticalNova.Persistence.Entities
         }
 #endif
 
+#if UNITY_EDITOR
+        /// <summary>Shared by the main Editor and its MPPM clones (EditorPrefs are per user): true = a clone's Play joins as Player2.</summary>
+        public const string MppmJoinPref = "KryticalNova.KnJoinHere.MppmJoinAsPlayer2";
+
+        /// <summary>This Editor is a Multiplayer Play Mode virtual player (its project lives under the main one's Library/VP).</summary>
+        public static bool IsMppmClone => Application.dataPath.Replace("\\", "/").Contains("/Library/VP/");
+#endif
+
         /// <summary>The command line; in the Editor the env KN_JOINHERE_ARGS instead (8 Nov 2026: the Editor as the 2nd client of the entity test server).</summary>
         static string[] Arguments()
         {
 #if UNITY_EDITOR
             string env = Environment.GetEnvironmentVariable("KN_JOINHERE_ARGS");
+            // a Multiplayer Play Mode clone joins the main Editor's Play DOTS here as Player2 while the main Editor asks for it (the shared
+            // EditorPrefs flag, set by the two-player run; cutover 12 Nov 2026): no sign-in, so never the owner's account
+            if (string.IsNullOrWhiteSpace(env) && IsMppmClone && UnityEditor.EditorPrefs.GetBool(MppmJoinPref, false))
+                env = "-knjoinhere -knjoinport 7797 -knjoinname Player2";
             return string.IsNullOrWhiteSpace(env) ? null : env.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
 #else
             return Environment.GetCommandLineArgs();

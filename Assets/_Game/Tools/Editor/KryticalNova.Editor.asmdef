@@ -18,6 +18,7 @@
         "KryticalNova.NPC",
         "KryticalNova.Networking",
         "KryticalNova.Persistence",
+        "KryticalNova.Persistence.Entities",
         "KryticalNova.Pets",
         "KryticalNova.Player",
         "KryticalNova.Progression",

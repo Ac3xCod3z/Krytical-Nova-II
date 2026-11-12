@@ -77,6 +77,27 @@ namespace KryticalNova.Persistence.Entities
             return true;
         }
 
+        /// <summary>
+        /// The cutover's two-player proof (12 Nov 2026; env <see cref="TwoPlayersVariable"/>=1, Player2 joining from the MPPM clone): Trade
+        /// from the own view, the vendors' shelves and a buy, and a GM line's default target. The probe itself is Tooling's (it needs Economy,
+        /// which this system may not use): it registers <see cref="TwoPlayerProbe"/>.
+        /// </summary>
+        public const string TwoPlayersVariable = "KN_PLAYHERE_TWO";
+        static bool TwoPlayersOn => Environment.GetEnvironmentVariable(TwoPlayersVariable) == "1";
+
+        /// <summary>What the two-player probe is handed: the own view, its server body, the log, a server-side move of any body, every server body.</summary>
+        public sealed class TwoPlayerRun
+        {
+            public GameObject Own, Body;
+            public Action<string> Log;
+            public Action<GameObject, Vector3> Put;
+            public Func<List<GameObject>> ServerBodies;
+            public Action<bool> Verdict;
+        }
+
+        /// <summary>Set by Tooling (KnTwoPlayerProbe); null = no probe.</summary>
+        public static Func<TwoPlayerRun, IEnumerator> TwoPlayerProbe;
+
         static bool Scripted => !string.IsNullOrEmpty(Environment.GetEnvironmentVariable(WalkVariable))
             || !string.IsNullOrEmpty(Environment.GetEnvironmentVariable(JumpVariable))
             || !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("KN_PLAYHERE_VAULT"))    // the scripted vaults (M3c)
@@ -93,6 +114,7 @@ namespace KryticalNova.Persistence.Entities
             || Environment.GetEnvironmentVariable("KN_PLAYHERE_MOUNT") == "1"                   // the mount and rider proof (8 Nov)
             || Environment.GetEnvironmentVariable("KN_PLAYHERE_ROOFS") == "1"                   // roof to roof (item 8)
             || KnCombatProbe.On                                                                 // the cutover's combat proof (12 Nov)
+            || Environment.GetEnvironmentVariable(TwoPlayersVariable) == "1"                    // Trade, vendors, GM target with Player2 (12 Nov)
             || KnCadenceProbe.On;                                                               // the Cadence probe (owner x6, 7 Nov)
         /// <summary>A folder: the scripted run saves a Game-view picture there every 0.1 s (proof for the owner, GUI Editor only).</summary>
         public const string CaptureVariable = "KN_PLAYHERE_CAPTURE";
@@ -1506,6 +1528,20 @@ namespace KryticalNova.Persistence.Entities
                 if (ItemsRun) yield return Items(body, ghost, walls);
                 if (MountRun) yield return Mounts(body, ghost, walls);
                 if (RoofsRun) yield return RoofJumps(body, ghost, walls);
+                if (TwoPlayersOn)
+                {
+                    walls.Tried++;
+                    EntityManager twoEm = KnBootstrap.ServerWorld.EntityManager;
+                    float twoOffset = body.GetComponent<UnityEngine.AI.NavMeshAgent>() is UnityEngine.AI.NavMeshAgent twoAgent ? twoAgent.baseOffset : 0f;
+                    void PutBody(GameObject who, Vector3 at)
+                    {
+                        foreach (GhostBodyEntry e in GhostBodyRegistry.Entries)
+                            if (IsServerBody(e) && e.Body == who) Teleport(twoEm, e.Ghost, at + Vector3.up * twoOffset);
+                    }
+                    if (TwoPlayerProbe == null) Log("two players: FAIL; no probe registered (Tools' KnTwoPlayerProbe)");
+                    else yield return TwoPlayerProbe(new TwoPlayerRun { Own = OwnBody, Body = body, Log = Log, Put = PutBody,
+                        ServerBodies = ServerBodies, Verdict = ok => { if (ok) walls.Passed++; } });
+                }
                 if (KnCombatProbe.On)
                 {
                     walls.Tried++;
@@ -1567,7 +1603,7 @@ namespace KryticalNova.Persistence.Entities
                 }
             }
 
-            bool HasScriptedTries => !string.IsNullOrEmpty(Walk) || !string.IsNullOrEmpty(Jump) || VaultCount > 0 || WaterRun || WallRun || ClimbRun || TreeRun || CatchRun || AutoRun || LedgeRun || FixesRun || AcrossRun || ItemsRun || MountRun || RoofsRun || KnCombatProbe.On || KnCadenceProbe.On;
+            bool HasScriptedTries => !string.IsNullOrEmpty(Walk) || !string.IsNullOrEmpty(Jump) || VaultCount > 0 || WaterRun || WallRun || ClimbRun || TreeRun || CatchRun || AutoRun || LedgeRun || FixesRun || AcrossRun || ItemsRun || MountRun || RoofsRun || KnCombatProbe.On || TwoPlayersOn || KnCadenceProbe.On;
 
             /// <summary>Which scripted parts are on, for the log's first lines (a part that should run and is not listed shows at once).</summary>
             string ScriptedParts()
@@ -1588,6 +1624,7 @@ namespace KryticalNova.Persistence.Entities
                 if (ItemsRun) on.Add("items used by the server");
                 if (MountRun) on.Add("mount and rider");
                 if (KnCombatProbe.On) on.Add("combat to a kill");
+                if (TwoPlayersOn) on.Add("two players: Trade, vendors, GM target");
                 if (RoofsRun) on.Add("roof to roof");
                 if (KnCadenceProbe.On) on.Add("the Cadence probe");
                 return on.Count > 0 ? string.Join(", ", on) : "none (by hand)";
