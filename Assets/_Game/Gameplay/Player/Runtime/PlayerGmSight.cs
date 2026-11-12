@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using KryticalNova.Core;
 using KryticalNova.Factions;
 using KryticalNova.Networking;
 using Unity.Collections;
@@ -15,6 +16,9 @@ namespace KryticalNova.Player
         public FixedString64Bytes Name;
         public FactionId Faction;
         public Vector3 Position;
+
+        /// <summary>The name as text (for code that does not reference Unity.Collections).</summary>
+        public string NameText => Name.ToString();
 
         public void NetworkSerialize<T>(BufferSerializer<T> serializer) where T : IReaderWriter
         {
@@ -34,8 +38,8 @@ namespace KryticalNova.Player
     [DisallowMultipleComponent]
     public sealed class PlayerGmSight : NetworkBehaviour
     {
-        private const float SendEvery = 1f;
-        private const float FreshFor = 3.5f;
+        private const float SendEvery = GmSightRules.SendEvery;
+        private const float FreshFor = GmSightRules.FreshFor;
 
         private readonly NetworkVariable<bool> seeAll = new NetworkVariable<bool>(
             true, NetworkVariableReadPermission.Owner, NetworkVariableWritePermission.Server);
@@ -45,6 +49,23 @@ namespace KryticalNova.Player
         private float nextSend;
         private PlayerGm gm;
 
+        // The entity netcode's feed (DOTS cutover wave 1): the list arrives from GmSightClientSystem, not from an NGO rpc.
+        private static bool entityFeed;
+        private static ulong entitySelf = ulong.MaxValue;
+
+        /// <summary>This machine's own connection id as the entity netcode's feed last said (else <see cref="ulong.MaxValue"/>): the maps skip that marker.</summary>
+        public static ulong SelfId => entityFeed ? entitySelf : ulong.MaxValue;
+
+        /// <summary>The entity netcode's client hands on the list the server sent (a GM whose sight is on); <paramref name="self"/> is this machine's own id.</summary>
+        public static void FeedFromEntities(IReadOnlyList<GmSeenPlayer> players, ulong self)
+        {
+            seen.Clear();
+            if (players != null) for (int i = 0; i < players.Count; i++) seen.Add(players[i]);
+            entityFeed = true;
+            entitySelf = self;
+            receivedAt = Time.unscaledTime;
+        }
+
         /// <summary>This machine's own player's sight, while it is in a session.</summary>
         public static PlayerGmSight Local { get; private set; }
 
@@ -52,13 +73,25 @@ namespace KryticalNova.Player
         public static IReadOnlyList<GmSeenPlayer> Seen => seen;
 
         /// <summary>This machine's player is a GM seeing everyone, and the list is fresh.</summary>
-        public static bool Active => Local != null && Local.seeAll.Value && Time.unscaledTime - receivedAt < FreshFor;
+        public static bool Active => ((Local != null && Local.seeAll.Value) || entityFeed) && Time.unscaledTime - receivedAt < FreshFor;
 
         /// <summary>Whether this GM is sent everyone on the map (server: set by <c>gm.seeall</c>).</summary>
         public bool SeeAll
         {
-            get => seeAll.Value;
-            set { if (IsServer) seeAll.Value = value; }
+            get => EntityServerSerial(out ulong serial) ? GmSightRules.SeeAll(serial) : seeAll.Value;
+            set
+            {
+                if (EntityServerSerial(out ulong serial)) GmSightRules.Set(serial, value);   // the entity server's body: the switch is kept per connection
+                else if (IsServer) seeAll.Value = value;
+            }
+        }
+
+        // On the entity server this behaviour is an offline-style stub (PlayerRoleTable.Rules): the body says whose it is.
+        private bool EntityServerSerial(out ulong serial)
+        {
+            BodyRoleTag tag = BodyRoleTag.Of(this);
+            serial = tag != null ? tag.ConnectionSerial : 0UL;
+            return tag != null && tag.Kind == NetRoleKind.ServerBody;
         }
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
@@ -67,6 +100,8 @@ namespace KryticalNova.Player
             Local = null;
             seen.Clear();
             receivedAt = -100f;
+            entityFeed = false;
+            entitySelf = ulong.MaxValue;
         }
 
         private void Awake() => gm = GetComponent<PlayerGm>();
@@ -117,11 +152,6 @@ namespace KryticalNova.Player
             receivedAt = Time.unscaledTime;
         }
 
-        private static FixedString64Bytes Fit(string name)
-        {
-            name ??= string.Empty;
-            if (name.Length > 30) name = name.Substring(0, 30);
-            return new FixedString64Bytes(name);
-        }
+        private static FixedString64Bytes Fit(string name) => GmSightRules.Fit(name);
     }
 }

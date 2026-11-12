@@ -334,7 +334,8 @@ namespace KryticalNova.UI
             int gmSeenCount = 0;
             if (PlayerGmSight.Active)
             {
-                ulong self = player.TryGetComponent(out PointAndClickPlayer own2) ? own2.OwnerClientId : ulong.MaxValue;
+                ulong self = PlayerGmSight.SelfId != ulong.MaxValue ? PlayerGmSight.SelfId   // the entity netcode's feed names this game's own id
+                    : player.TryGetComponent(out PointAndClickPlayer own2) ? own2.OwnerClientId : ulong.MaxValue;
                 IReadOnlyList<GmSeenPlayer> everyone = PlayerGmSight.Seen;
                 for (int i = 0; i < everyone.Count; i++)
                 {
