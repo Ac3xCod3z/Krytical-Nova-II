@@ -14,8 +14,8 @@ namespace KryticalNova.Hostiles.Entities
     /// <summary>
     /// Puts the Hostiles' entity brains into a server world (M5.5d): the Brain and mind settings as singletons, the NavWorld path backend,
     /// the server bodies in place of the species prefabs (<see cref="HostilePool.BodyOf"/>), this process deciding the Hostiles
-    /// (<see cref="HostileSpawner.AuthorityOverride"/>) and the brain's player lookups. OFF until the clients can see Hostiles (M5.5e):
-    /// a test turns it on with <see cref="Enabled"/>, a run with <c>KN_DOTS_HOSTILES=1</c>. Never touches a client world.
+    /// (<see cref="HostileSpawner.AuthorityOverride"/>) and the brain's player lookups. ON in a built server, OFF in the Editor
+    /// (<see cref="IsOn"/>): a test turns it on with <see cref="Enabled"/>, a run with <c>KN_DOTS_HOSTILES=1</c> (<c>0</c> switches a build off). Never touches a client world.
     /// </summary>
     public static class HostileEntitiesSetup
     {
@@ -25,7 +25,12 @@ namespace KryticalNova.Hostiles.Entities
         /// <summary>Install on every new server world (null: from <see cref="EnableVariable"/>).</summary>
         public static bool? Enabled;
 
-        static bool On => Enabled ?? Environment.GetEnvironmentVariable(EnableVariable) == "1";
+        // A built server has its monsters by default (cutover, 12 Nov 2026: build 3 had none, so no zone woke and every gm.hostile.spawn
+        // failed); KN_DOTS_HOSTILES=0 switches them off there. The Editor keeps them off unless KN_DOTS_HOSTILES=1, so tests stay as they were.
+        static bool On => Enabled ?? IsOn(Application.isEditor, Environment.GetEnvironmentVariable(EnableVariable));
+
+        /// <summary>The switch: <paramref name="variable"/> "1" or "0" decides; unset, a built server is on and the Editor off.</summary>
+        public static bool IsOn(bool editor, string variable) => variable == "1" || (variable != "0" && !editor);
 
         // After SubsystemRegistration, where KnWorldHooks clears its hooks, and before the worlds are made (as PlayerWorldsSetup): at
         // SubsystemRegistration the order between the two was not fixed, so the clear could come after and the brains never installed

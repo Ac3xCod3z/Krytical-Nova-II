@@ -131,7 +131,7 @@ namespace KryticalNova.DevTools
                 if (prowler) hostile.SetGmAttacksOnSight(true);
                 made++;
             }
-            if (made == 0) return "No walkable ground there.";
+            if (made == 0) return HostileSpawner.HasAuthority ? "No walkable ground there." : "Hostiles are off on this server (no monster brains installed), so none can be spawned.";
             int shownLevel = level > 0 ? level : species.Definition.level;
             string with = infinite ? ", which cannot die" : maxHealth > 0f ? $", with {maxHealth:0} health" : string.Empty;
             string name = prowler ? $"Prowler stand-in ({species.Definition.displayName}, attacks on sight)" : species.Definition.displayName;
