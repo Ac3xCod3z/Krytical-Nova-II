@@ -12,7 +12,7 @@ namespace KryticalNova.Progression
     /// </summary>
     [DefaultExecutionOrder(InitializationOrder)]
     [DisallowMultipleComponent]
-    public sealed class PlayerCharacterProgression : NetworkBehaviour, ISaveParticipant
+    public sealed class PlayerCharacterProgression : NetworkBehaviour, ISaveParticipant, IItemUseHandler
     {
         private const int InitializationOrder = -200;
         private const int AttributeCount = 4;
@@ -341,6 +341,33 @@ namespace KryticalNova.Progression
 
         /// <summary>Skill points this character's level has earned (the start plus every level's reward).</summary>
         public int SkillPointsEarnedByLevel => ProgressionResetRules.EarnedSkillPoints(progressionData, currentLevel);
+
+        // ---------------- a Respec Chip is used (IItemUseHandler, server; wave 3b, owner 12 Nov 2026) ----------------
+
+        public ItemUseEffect Effect => ItemUseEffect.Respec;
+
+        /// <summary>The stat points a Respec Chip hands back now: what was placed, capped at what the level earned.</summary>
+        public int RespecHandBack => ProgressionResetRules.Capped(StatPointsPlaced, statPoints, StatPointsEarnedByLevel);
+
+        public string UseBlockedReason(UsedItem item)
+        {
+            if (statData == null || StatPointsPlaced <= 0) return ProgressionResetRules.ReasonNoStatsPlaced;
+            return RespecHandBack <= 0 ? ProgressionResetRules.ReasonOnlyGiven : null;
+        }
+
+        public void ServerUse(UsedItem item)
+        {
+            if (!HasAuthority || !isActiveAndEnabled || statData == null) return;
+            int placed = StatPointsPlaced, handBack = RespecHandBack;
+            if (handBack <= 0)
+            {
+                Debug.LogError($"[Respec] {name}: the chip was used with nothing to hand back (check and use disagree).", this);
+                return;
+            }
+            string trimmed = ProgressionResetRules.TrimLine("Respec", name, handBack, placed);
+            if (trimmed != null) Debug.Log(trimmed, this);
+            ApplyStatRefund(handBack);
+        }
 
         // Attributes back to their starting values and handBack stat points added. Authority only.
         private void ApplyStatRefund(int handBack)
