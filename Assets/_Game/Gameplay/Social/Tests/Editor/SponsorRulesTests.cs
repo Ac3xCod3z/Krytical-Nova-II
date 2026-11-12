@@ -110,5 +110,15 @@ namespace KryticalNova.Tests
             near = 200f;
             Assert.AreEqual(0, SponsorRules.PointsDue(ref near, 0), "no points are set");
         }
+
+        [Test]
+        public void TheSponsorRange_Is500Metres_InTheAsset()
+        {
+            // Owner, 12 Nov 2026: one range for the Recruit bonus, the Sponsor points and a Sponsor-held kill.
+            const string path = "Assets/_Game/Gameplay/Social/Data/Assets/SponsorSettings.asset";
+            var settings = UnityEditor.AssetDatabase.LoadAssetAtPath<SponsorSettings>(path);
+            Assert.NotNull(settings, path);
+            Assert.AreEqual(500f, settings.rangeMetres, 0.001f);
+        }
     }
 }

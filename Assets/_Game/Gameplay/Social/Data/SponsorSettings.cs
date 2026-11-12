@@ -26,15 +26,17 @@ namespace KryticalNova.Social
         public float[] experienceBonusSteps = { 0.1f, 0.15f, 0.2f };
         [Tooltip("On: in the Sponsor's Squad the bonus adds to the Squad boost. Off, and always outside the Sponsor's Squad: the larger of the two counts.")]
         public bool addsToSquadBoost = true;
-        [Tooltip("How close the two must be, in metres, in the same map, both alive.")]
-        [Min(1f)] public float rangeMetres = 40f;
+        [Tooltip("How close a Sponsor and a Recruit must be, in metres, in the same map, both alive. One range for all three Sponsor rules: " +
+                 "the Recruit's XP bonus, the Sponsor's points per minute, and a Hostile the Sponsor holds paying its Recruits. " +
+                 "500 m (owner, 12 Nov 2026): zones are about 2,400 m across, so they can hunt the same area without standing together.")]
+        [Min(1f)] public float rangeMetres = 500f;
         [Tooltip("Sponsor points the Sponsor earns for each full minute spent near a Recruit, however many are near.")]
         [Min(0)] public int pointsPerMinute = 250;
         [Tooltip("Seconds between two looks at who is near whom.")]
         [Range(1f, 30f)] public float checkSeconds = 5f;
 
         [Header("A Sponsor in a Squad with one of its Recruits")]
-        [Tooltip("The Sponsor is there to help, not to hunt: a Hostile it holds pays XP to no one, and one this many levels or more below the Sponsor drops nothing either.")]
+        [Tooltip("The Sponsor is there to help, not to hunt: a Hostile it holds pays its XP to its Recruits near it (never to the Sponsor), and one this many levels or more below the Sponsor drops nothing either.")]
         [Min(0)] public int sponsorNoDropLevels = 5;
 
         /// <summary>The bonus with one Recruit, and the most it can be.</summary>

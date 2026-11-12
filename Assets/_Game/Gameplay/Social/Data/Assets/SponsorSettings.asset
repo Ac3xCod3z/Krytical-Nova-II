@@ -21,7 +21,7 @@ MonoBehaviour:
   - 0.15
   - 0.2
   addsToSquadBoost: 1
-  rangeMetres: 40
+  rangeMetres: 500
   pointsPerMinute: 250
   checkSeconds: 5
   sponsorNoDropLevels: 5
