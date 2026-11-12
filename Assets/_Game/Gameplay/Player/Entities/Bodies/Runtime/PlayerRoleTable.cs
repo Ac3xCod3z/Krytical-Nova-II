@@ -49,10 +49,14 @@ namespace KryticalNova.Player.Entities.Bodies
             "PlayerJumpMotor", "PlayerVaultMotor", "PlayerWallRunMotor", "PlayerWaterstrideMotor", "PlayerDeathMotor",
         };
 
-        /// <summary>Client automation: steers through the movement API, back in M3c.</summary>
+        /// <summary>
+        /// Client automation: steers through the movement API. Only the owner's own view keeps the two hunting controllers (<see cref="OwnHandHunt"/>);
+        /// the server body and other players' views never carry them. The state they act on, <c>PlayerAutopilot</c>, is a rule behaviour (the server
+        /// alone decides on/off, the time and the Pass; wave 2, 12 Nov 2026).
+        /// </summary>
         public static readonly string[] Automation =
         {
-            "PlayerAutopilot", "MagnetController", "AutopilotController", "AutobuffCaster",
+            "MagnetController", "AutopilotController", "AutobuffCaster",
         };
 
         /// <summary>Ported systems (they implement <see cref="IRoleAwareBody"/>).</summary>
@@ -71,7 +75,7 @@ namespace KryticalNova.Player.Entities.Bodies
             "PlayerCrew", "PlayerGearWork", "PlayerNova", "PlayerEmotes", "PlayerFollow", "PlayerSerums", "FactionExtension",
             "PlayerCombatState", "PlayerSkillQueue", "PlayerShopping", "PlayerItemSources", "PlayerWeaveLibrary", "PlayerWeaves",
             "PlayerCrafting", "PlayerRestyle", "PlayerSponsor", "PlayerExperienceBoosts", "PlayerCrate", "PlayerHousing", "PlayerRecall",
-            "PlayerFlask", "PlayerGm", "PlayerGmSight", "PlayerCadence", "PlayerLoadouts", "PlayerMounts", "MountFeeding", "MountRider",
+            "PlayerFlask", "PlayerGm", "PlayerGmSight", "PlayerAutopilot", "PlayerCadence", "PlayerLoadouts", "PlayerMounts", "MountFeeding", "MountRider",
             "PlayerAutobuff",   // M8 8.3.11: the licence, the cells, the Pass use and the save run on the server body
             "PlayerRename", "KNEmeraldPlayerBridge", "TargetPositionModifier", "WeaponHitbox", "PlayerNightLight",
         };
@@ -115,6 +119,12 @@ namespace KryticalNova.Player.Entities.Bodies
         public const string OwnHandAutoward = "AutobuffCaster";
 
         /// <summary>
+        /// Autopilot's hunting controllers stay on the own view only (wave 2, 12 Nov 2026): they press the buttons a hand could (attack order, walk,
+        /// pickup, item use, Hotbar) and the server checks each as it does a hand's. Never on the server body or another player's view.
+        /// </summary>
+        public static bool OwnHandHunt(string typeName) => typeName == "AutopilotController" || typeName == "MagnetController";
+
+        /// <summary>
         /// The traversal motors stay on another player's view too, switched off as on the own view (owner's 2-player test, 6 Nov 2026,
         /// item 2: a vault went through the obstacle on the other screen): the ghost's vault, Wallstride phase and Waterstride play
         /// through them (GhostJumpView reads their clips and styles); switched off, they never move the body or decide anything.
@@ -148,7 +158,7 @@ namespace KryticalNova.Player.Entities.Bodies
                             ? PartAction.Strip : PartAction.Disable;
                     return PartAction.Keep;
                 case BodyShape.ViewLocal:
-                    if (typeName == ViewShowsDeath || typeName == OwnHandAutoward) return PartAction.Keep;
+                    if (typeName == ViewShowsDeath || typeName == OwnHandAutoward || OwnHandHunt(typeName)) return PartAction.Keep;
                     if (AutomationSet.Contains(typeName)) return PartAction.Disable;
                     if (MovementSet.Contains(typeName))
                     {

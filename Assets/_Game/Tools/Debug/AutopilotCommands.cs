@@ -1,3 +1,4 @@
+using KryticalNova.Core;
 using KryticalNova.Autopilot;
 using QFSW.QC;
 using UnityEngine;
@@ -114,7 +115,13 @@ namespace KryticalNova.DevTools
         {
             if (!GmTarget.TryGetPlayer(out GameObject player, out string error)) return error;
             var magnet = player.GetComponent<MagnetController>();
-            return magnet != null ? magnet.Describe() : NoAutopilot;
+            if (magnet != null) return magnet.Describe();
+            // The entity netcode: Magnet runs on a player's own game (their own view), never on the server's body, so a GM line run on the server has nothing to
+            // describe; only the player's own game could (wave 2, 12 Nov 2026). Said plainly instead of "no Autopilot".
+            BodyRoleTag tag = player.GetComponent<BodyRoleTag>();
+            if (tag != null && tag.Kind == NetRoleKind.ServerBody)
+                return "Magnet runs on each player's own game on this server, so it cannot be described from here: gm.magnet.test describes only your own player, and only in your own game.";
+            return NoAutopilot;
         }
     }
 }

@@ -91,7 +91,15 @@ namespace KryticalNova.Player.Entities.Bodies.Tests
             Assert.AreEqual(PartAction.Keep, PlayerRoleTable.ActionFor(BodyShape.ViewLocal, "PointAndClickPlayer"));
             Assert.AreEqual(PartAction.Keep, PlayerRoleTable.ActionFor(BodyShape.ViewLocal, "PlayerInput"));
             Assert.AreEqual(PartAction.Disable, PlayerRoleTable.ActionFor(BodyShape.ViewLocal, "NavMeshAgent"));
-            Assert.AreEqual(PartAction.Disable, PlayerRoleTable.ActionFor(BodyShape.ViewLocal, "PlayerAutopilot"));
+            Assert.AreEqual(PartAction.Keep, PlayerRoleTable.ActionFor(BodyShape.ViewLocal, "PlayerAutopilot"), "the state the owner's view shows (wave 2)");
+            Assert.AreEqual(PartAction.Keep, PlayerRoleTable.ActionFor(BodyShape.Server, "PlayerAutopilot"), "the server alone decides: its body keeps the rule");
+            Assert.AreEqual(PartAction.Strip, PlayerRoleTable.ActionFor(BodyShape.ViewRemote, "PlayerAutopilot"), "nothing of it on another player's view");
+            foreach (string hunt in new[] { "AutopilotController", "MagnetController" })
+            {
+                Assert.AreEqual(PartAction.Keep, PlayerRoleTable.ActionFor(BodyShape.ViewLocal, hunt), hunt + ": the owner's hand");
+                Assert.AreEqual(PartAction.Strip, PlayerRoleTable.ActionFor(BodyShape.Server, hunt), hunt + ": never on the server body (no client code on the server)");
+                Assert.AreEqual(PartAction.Strip, PlayerRoleTable.ActionFor(BodyShape.ViewRemote, hunt), hunt + ": never on another player's view");
+            }
             Assert.AreEqual(PartAction.Keep, PlayerRoleTable.ActionFor(BodyShape.ViewLocal, "AutobuffCaster"), "the Autoward key is the owner's hand (8 Nov port)");
             Assert.AreEqual(PartAction.Strip, PlayerRoleTable.ActionFor(BodyShape.Server, "AutobuffCaster"));
             Assert.AreEqual(PartAction.Strip, PlayerRoleTable.ActionFor(BodyShape.ViewRemote, "AutobuffCaster"));
@@ -240,7 +248,7 @@ namespace KryticalNova.Player.Entities.Bodies.Tests
             CollectionAssert.DoesNotContain(names, "PlayerMoveAnticipation");
             Assert.IsTrue(build.Tag.IsLocal);
             foreach (Behaviour b in build.Body.GetComponentsInChildren<Behaviour>(true))
-                if (b != null && (b.GetType().Name == "NavMeshAgent" || b.GetType().Name == "PlayerAutopilot"))
+                if (b != null && b.GetType().Name == "NavMeshAgent")
                     Assert.IsFalse(b.enabled, b.GetType().Name + " must be off on the local view");
         }
 
