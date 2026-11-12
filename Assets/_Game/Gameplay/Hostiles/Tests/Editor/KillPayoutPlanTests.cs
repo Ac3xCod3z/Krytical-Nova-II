@@ -25,6 +25,10 @@ namespace KryticalNova.Hostiles.Tests
         private static PayoutMember M(int level, bool sameMap = true, bool escort = false) =>
             new PayoutMember { Level = level, SameMap = sameMap, IsEscort = escort };
 
+        /// <summary>A Recruit of the holder, near (within 500 m) or beyond.</summary>
+        private static PayoutMember R(int level, bool near) =>
+            new PayoutMember { Level = level, SameMap = true, IsRecruitOfHolder = true, WithinSponsorRange = near };
+
         private Payout Of(int index)
         {
             foreach (Payout p in paid) if (p.Index == index) return p;
@@ -88,6 +92,64 @@ namespace KryticalNova.Hostiles.Tests
             Assert.IsFalse(Of(1).SquadBoost);
             Assert.AreEqual(0, Of(0).Gap, "the Sponsor does not carry its Recruits down");
             Assert.AreEqual(-4, Of(2).Gap);
+        }
+
+        // ------------------------------------------------------------ a kill the escorting Sponsor holds (owner pick A, 12 Nov 2026)
+
+        [Test]
+        public void ASponsorsKill_PaysItsNearRecruit_ByOwnGap_NeverTheSponsor_AndNoSponsorBonus()
+        {
+            var squad = new[] { M(90, escort: true), R(48, near: true) };
+            Assert.AreEqual(PayoutOutcome.EscortPaysRecruits, KillPayoutPlan.Plan(50, gaps, squad, 0, paid));
+            Assert.IsFalse(IsPaid(0), "the Sponsor is paid nothing");
+            Assert.AreEqual(2, Of(1).Gap, "the Recruit by its own gap");
+            Assert.IsTrue(Of(1).SquadBoost);
+            Assert.IsFalse(Of(1).SponsorBonus, "no Sponsor bonus on a kill the Sponsor made");
+        }
+
+        [Test]
+        public void TwoRecruitsNear_AreEachPaidOnce()
+        {
+            var squad = new[] { R(50, near: true), M(95, escort: true), R(52, near: true) };
+            KillPayoutPlan.Plan(50, gaps, squad, 1, paid);
+            Assert.AreEqual(2, paid.Count);
+            Assert.AreEqual(1, paid.FindAll(p => p.Index == 0).Count);
+            Assert.AreEqual(1, paid.FindAll(p => p.Index == 2).Count);
+            Assert.AreEqual(0, Of(0).Gap);
+            Assert.AreEqual(-2, Of(2).Gap);
+        }
+
+        [Test]
+        public void OneRecruitNear_OneBeyond500m_TheFarOneIsPaidAsAnotherMember_WithTheSponsorAsHighest()
+        {
+            // Hostile 50, Sponsor 80 (gap -30): the near Recruit is paid by its own gap; the far one (gap 0) is 30 worse than the
+            // Sponsor, so it takes the Sponsor's gap: grey.
+            var squad = new[] { M(80, escort: true), R(50, near: true), R(50, near: false) };
+            Assert.AreEqual(PayoutOutcome.EscortPaysRecruits, KillPayoutPlan.Plan(50, gaps, squad, 0, paid));
+            Assert.AreEqual(0, Of(1).Gap);
+            Assert.AreEqual(-30, Of(2).Gap);
+            Assert.AreEqual(0f, LevelGapRules.ExperiencePercent(gaps, Of(2).Gap), "the far Recruit is in the low band");
+        }
+
+        [Test]
+        public void AMateWhoIsNoRecruit_WithTheSponsor30LevelsAbove_GetsTheLowBand()
+        {
+            var squad = new[] { M(80, escort: true), R(50, near: true), M(50) };
+            KillPayoutPlan.Plan(50, gaps, squad, 0, paid);
+            Assert.AreEqual(-30, Of(2).Gap, "counted against the Sponsor's level");
+            Assert.AreEqual(0f, LevelGapRules.ExperiencePercent(gaps, Of(2).Gap));
+            Assert.IsFalse(Of(2).SponsorBonus);
+            Assert.AreEqual(0, Of(1).Gap, "the Recruit keeps its own gap");
+        }
+
+        [Test]
+        public void NoRecruitNear_PaysNoRecruitBonus_AndTheOthersByTheSponsorsGapAtBest()
+        {
+            var squad = new[] { M(80, escort: true), R(50, near: false), M(78) };
+            Assert.AreEqual(PayoutOutcome.EscortNoRecruitNear, KillPayoutPlan.Plan(50, gaps, squad, 0, paid));
+            Assert.IsFalse(IsPaid(0));
+            Assert.AreEqual(-30, Of(1).Gap);
+            Assert.AreEqual(-28, Of(2).Gap, "2 levels below the Sponsor: own gap");
         }
 
         [Test]

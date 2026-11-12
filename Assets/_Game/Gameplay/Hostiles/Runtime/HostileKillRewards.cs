@@ -76,28 +76,40 @@ namespace KryticalNova.Hostiles
 
             // Who is paid, by which gap, is KillPayoutPlan (tested without a scene). "Same map" is the same scene: it holds with one
             // map server; map servers will need a map id (port list).
+            var holderSponsor = credited.GetComponent<PlayerSponsor>();
+            float sponsorRange = holderSponsor != null && holderSponsor.Settings != null ? holderSponsor.Settings.rangeMetres : 0f;
             records.Clear();
             foreach (PlayerParty member in members)
+            {
+                var memberSponsor = member.GetComponent<PlayerSponsor>();
+                bool recruit = holderSponsor != null && holderSponsor.ServerSponsors(memberSponsor);
                 records.Add(new PayoutMember
                 {
                     Level = member.Level,
                     SameMap = member.gameObject.scene == hostile.gameObject.scene,
                     IsEscort = escorts.Contains(member),
+                    IsRecruitOfHolder = recruit,
+                    WithinSponsorRange = recruit && holderSponsor.IsNear(memberSponsor, sponsorRange),
                 });
+            }
             PayoutOutcome outcome = KillPayoutPlan.Plan(hostile.Level, gaps, records, party != null ? members.IndexOf(party) : -1, payouts);
 
-            if (outcome == PayoutOutcome.EscortPaysNoXp)
+            if (outcome == PayoutOutcome.EscortPaysRecruits || outcome == PayoutOutcome.EscortNoRecruitNear)
             {
-                // What the Sponsor holds pays XP to no one, and far enough below it drops nothing either.
-                var sponsor = credited.GetComponent<PlayerSponsor>();
-                if (sponsor != null && sponsor.Settings != null
-                    && SponsorRules.SponsorDropsNothing(hostile.Level, credited.CurrentLevel, sponsor.Settings.sponsorNoDropLevels))
+                // What the Sponsor holds pays it nothing (owner pick A, 12 Nov 2026): its Recruits near it are paid as for their own
+                // kill, the rest of the Squad by the Sponsor's gap at best; far enough below it, it drops nothing either (as before).
+                if (holderSponsor != null && holderSponsor.Settings != null
+                    && SponsorRules.SponsorDropsNothing(hostile.Level, credited.CurrentLevel, holderSponsor.Settings.sponsorNoDropLevels))
                 {
                     dropPercent = 0f;
                     gearDrops = false;
                 }
                 var chat = credited.GetComponent<PlayerChat>();
-                if (chat != null) chat.ServerCombatNotice("A Sponsor's kill pays no XP: let your Recruit strike first.");
+                if (chat != null)
+                    chat.ServerCombatNotice(outcome == PayoutOutcome.EscortPaysRecruits
+                        ? "Your Recruit earned this kill's XP."
+                        : $"Your Recruits must be within {sponsorRange:0} m to earn your kill's XP.");
+                PayAll(members, payouts, hostile, stats, gaps);
             }
             else if (outcome == PayoutOutcome.Solo)
             {
@@ -105,14 +117,7 @@ namespace KryticalNova.Hostiles
             }
             else
             {
-                foreach (Payout payout in payouts)
-                {
-                    PlayerParty member = members[payout.Index];
-                    var progression = member.GetComponent<PlayerCharacterProgression>();
-                    if (progression == null) continue;
-                    // An escort is paid by its own gap and with no boost: the Squad's is for those it helps.
-                    Pay(progression, hostile, stats, gaps, payout.Gap, payout.SquadBoost ? member.ServerExperienceBoost() : 0f);
-                }
+                PayAll(members, payouts, hostile, stats, gaps);
             }
 
             Rewarded?.Invoke(new HostileKill
@@ -137,12 +142,26 @@ namespace KryticalNova.Hostiles
             return Mathf.Max(1, Mathf.RoundToInt(amount)); // a kill that pays at all pays at least 1
         }
 
-        private static void Pay(PlayerCharacterProgression player, HostileNet hostile, in HostileStats stats, LevelGapSettings gaps, int gap, float squadBoost)
+        private static void PayAll(List<PlayerParty> members, List<Payout> plan, HostileNet hostile, in HostileStats stats, LevelGapSettings gaps)
+        {
+            foreach (Payout payout in plan)
+            {
+                PlayerParty member = members[payout.Index];
+                var progression = member.GetComponent<PlayerCharacterProgression>();
+                if (progression == null) continue;
+                // An escort is paid by its own gap and with no boost: the Squad's is for those it helps.
+                Pay(progression, hostile, stats, gaps, payout.Gap, payout.SquadBoost ? member.ServerExperienceBoost() : 0f, payout.SponsorBonus);
+            }
+        }
+
+        private static void Pay(PlayerCharacterProgression player, HostileNet hostile, in HostileStats stats, LevelGapSettings gaps, int gap, float squadBoost,
+            bool sponsorBonusAllowed = true)
         {
             // A Recruit hunting near its Sponsor is paid the Sponsor's bonus: on top of the Squad's in the Sponsor's
-            // own Squad, instead of it anywhere else, when it is the larger.
+            // own Squad, instead of it anywhere else, when it is the larger. Never on a kill the Sponsor itself holds.
             bool inSponsorSquad = false;
-            float sponsorBonus = player.TryGetComponent(out PlayerSponsor sponsor) ? sponsor.ServerExperienceBonus(out inSponsorSquad) : 0f;
+            PlayerSponsor sponsor = null;
+            float sponsorBonus = sponsorBonusAllowed && player.TryGetComponent(out sponsor) ? sponsor.ServerExperienceBonus(out inSponsorSquad) : 0f;
             bool adds = inSponsorSquad && sponsor.Settings != null && sponsor.Settings.addsToSquadBoost;
             float boost = SponsorRules.ExperienceBoost(squadBoost, sponsorBonus, adds);
             // XP boosters add to whatever the Squad and the Sponsor give.
