@@ -21,6 +21,7 @@ namespace KryticalNova.Persistence.Entities.Tests
         {
             PlayerKeys.Reset();
             GmRoster.SetAll(Array.Empty<GmEntry>());
+            GmRoster.SetHost(null);   // static, shared with GmLineTests: no host left from an earlier test
             m_Saved.Clear();
             m_SaveError = null;
             m_Tools = new KnPageGmTools { Save = list => { m_Saved.Add(list); return m_SaveError; } };
@@ -30,6 +31,7 @@ namespace KryticalNova.Persistence.Entities.Tests
         public void TearDown()
         {
             GmRoster.SetAll(Array.Empty<GmEntry>());
+            GmRoster.SetHost(null);
             PlayerKeys.Reset();
         }
 

@@ -17,10 +17,14 @@ namespace KryticalNova.Tests
         private static GmEntry Ash() => new GmEntry { name = "Ash", account = AshAccount };
         private static GmEntry Bo() => new GmEntry { name = "Bo" };
 
+        // GmRoster is static and shared with the entity-world tests (GmLineTests): every test starts and ends with no GM, no host and
+        // no signed-in connection, so the order of a full run never changes a result (12 Nov 2026).
         [SetUp]
+        [TearDown]
         public void Clear()
         {
             GmRoster.SetAll(new GmEntry[0]);
+            GmRoster.SetHost(null);
             for (ulong id = 0; id < 10; id++)
             {
                 GmRoster.Forget(id);

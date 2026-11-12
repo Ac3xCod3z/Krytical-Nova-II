@@ -36,6 +36,7 @@ namespace KryticalNova.Tests
             PlayerKeys.Reset();
             NetRole.Install(new ServerRole());
             GmTarget.TargetSelf();
+            KryticalNova.Networking.GmRoster.SetHost(null);   // static, shared with the entity-world tests: start with no host
         }
 
         [TearDown]
@@ -44,6 +45,7 @@ namespace KryticalNova.Tests
             NetRole.Install(m_OldRole);
             GmTarget.Restore(m_OldTarget);
             PlayerKeys.Reset();
+            KryticalNova.Networking.GmRoster.SetHost(null);   // and leave none behind for the next test (12 Nov 2026 order effect)
             foreach (var go in m_Made) Object.DestroyImmediate(go);
             m_Made.Clear();
         }
