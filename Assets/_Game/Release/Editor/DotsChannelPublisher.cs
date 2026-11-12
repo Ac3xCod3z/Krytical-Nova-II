@@ -136,18 +136,21 @@ namespace KryticalNova.EditorTools
         /// list, and the Editor on the Player subtarget (a Server subtarget makes headless switch-offs; TestBuildBuilder's ClientBuildGuard
         /// forces Player again). Else what is wrong.
         /// </summary>
-        public static string ServerLeakProblem()
+        public static string ServerLeakProblem() => ServerLeakProblem(Defines);
+
+        /// <summary><see cref="ServerLeakProblem()"/> for a client build with its own list of defines (the cutover's carries the Sky Lift switch too).</summary>
+        public static string ServerLeakProblem(string[] clientDefines)
         {
             string standalone = PlayerSettings.GetScriptingDefineSymbols(NamedBuildTarget.Standalone) ?? string.Empty;
             foreach (string define in ServerOnlyDefines)
             {
                 if (Array.IndexOf(standalone.Split(';'), define) >= 0) return $"the Standalone defines hold the server-only {define}";
-                if (Array.IndexOf(Defines, define) >= 0) return $"the DOTS client's own defines hold the server-only {define}";
+                if (Array.IndexOf(clientDefines, define) >= 0) return $"the DOTS client's own defines hold the server-only {define}";
             }
             return null;
         }
 
-        static bool WithBurst(Func<bool> work)
+        internal static bool WithBurst(Func<bool> work)
         {
             string burstPath = Path.Combine(Path.GetDirectoryName(Application.dataPath) ?? ".", KnWindowsTestBuild.BurstSettingsPath);
             string burstWas = File.Exists(burstPath) ? File.ReadAllText(burstPath) : null;

@@ -119,6 +119,10 @@ namespace KryticalNova.Networking.Entities
             }
             Debug.Log("[KnServer] " + transportLine);
 
+            // Unity's sign-in keys are fetched now, as the NGO server does at start (NetworkConnectionManager): the first player no longer pays
+            // for the fetch inside the join, and a fetch that fails logs its reason here, before anyone is turned away "could not prove who you
+            // are" (build 3 launcher smoke, 8 Nov 2026: fixed by a restart). Not awaited.
+            _ = UnityKeys.EnsureAsync();
             KnBootstrap.Listen(server, (ushort)settings.port);
             Debug.Log($"[KnServer] listening on UDP {settings.port}, role {settings.role}, map {settings.map}, max {settings.maxPlayers} players, " +
                       (settings.UsesSaveService ? "saving through the save service." : "saving to files."));

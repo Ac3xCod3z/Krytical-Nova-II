@@ -252,6 +252,83 @@ namespace KryticalNova.EditorTools
             return true;
         }
 
+        // ------------------------------------------------------------------ the release lane (cutover, 12 Nov 2026)
+
+        [MenuItem("Krytical Nova/Build/Entity Server (Windows, RELEASE lane)", priority = 56)]
+        private static void MenuEntityServerRelease()
+        {
+            if (EditorApplication.isPlayingOrWillChangePlaymode) { EditorUtility.DisplayDialog("Entity Server (release)", "Stop Play first.", "OK"); return; }
+            string busy = FolderBusy(EntityReleaseServer.OutputFolder);
+            if (busy != null) { EditorUtility.DisplayDialog("Entity Server (release)", busy, "OK"); return; }
+            BuildEntityServerRelease(ScriptingImplementation.IL2CPP);
+        }
+
+        /// <summary>
+        /// The entity server as the REAL server (<see cref="EntityReleaseServer"/>): no <c>KN_TEST_LANE</c>, the Sky Lift off, into
+        /// <c>Builds/Server/Windows</c> of this project, with its real-lane settings (written only when the folder has none, so a rebuild keeps
+        /// the owner's), the NGO server's certificate copied beside it, the save service and the Server app. Never builds into the NGO
+        /// server's folder (<c>Builds/Server</c> of the MAIN project). The app's shortcuts are not touched here.
+        /// </summary>
+        public static bool BuildEntityServerRelease(ScriptingImplementation backend)
+        {
+            foreach (string needed in new[] { KnLinuxTestBuild.WorldAssetsPath, KnLinuxTestBuild.GhostBakeScenePath, KnLinuxTestBuild.MapScenePath })
+                if (AssetDatabase.LoadMainAssetAtPath(needed) == null)
+                {
+                    Debug.LogError($"[Build] Entity server (release): {needed} is missing (Krytical Nova ▸ Online ▸ Entities ▸ Build Player Ghost Assets makes the ghost assets).");
+                    return false;
+                }
+            string folder = EntityReleaseServer.OutputFolder;
+            if (!string.IsNullOrEmpty(MainBuildsGuard(folder))) { Debug.LogError("[Build] " + MainBuildsGuard(folder)); return false; }
+            Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(folder)) ?? ".");
+            var entity = new Variant
+            {
+                Label = "Entity server (Windows, release lane)", ExtraDefines = EntityReleaseServer.Defines, Scenes = EntityScenes(), BurstOn = true,
+                ReportPath = EntityReleaseServer.ReportPath, Title = "Krytical Nova Server", Entity = true, Release = true,
+            };
+            ManagedStrippingLevel strippingWas = PlayerSettings.GetManagedStrippingLevel(NamedBuildTarget.Server);
+            Il2CppCompilerConfiguration compilerWas = PlayerSettings.GetIl2CppCompilerConfiguration(NamedBuildTarget.Server);
+            bool ok;
+            try
+            {
+                if (backend == ScriptingImplementation.IL2CPP)
+                {
+                    PlayerSettings.SetManagedStrippingLevel(NamedBuildTarget.Server, ManagedStrippingLevel.Minimal);
+                    PlayerSettings.SetIl2CppCompilerConfiguration(NamedBuildTarget.Server, Il2CppCompilerConfiguration.Release);
+                }
+                // the build number is the caller's (ReleasePublisher.WithVersion around this call), never LastReleaseBuild() again
+                ok = BuildAsIs(Os.Windows, folder, backend, entity);
+            }
+            finally
+            {
+                PlayerSettings.SetManagedStrippingLevel(NamedBuildTarget.Server, strippingWas);
+                PlayerSettings.SetIl2CppCompilerConfiguration(NamedBuildTarget.Server, compilerWas);
+            }
+            if (!ok) return false;
+            string settings = Path.Combine(folder, SettingsFileName);
+            if (!File.Exists(settings))
+            {
+                File.WriteAllText(settings, EntityReleaseServer.SettingsJson(EntityReleaseServer.ReadNgoSettings()));
+                Debug.Log($"[Build] Entity server (release): wrote real-lane settings ({settings}: port {EntityReleaseServer.GamePort}, page {EntityReleaseServer.PagePort}, save service {EntityReleaseServer.SaveService}, DTLS, list entry \"{EntityReleaseServer.ListName}\"; GMs and secrets carried, not printed).");
+            }
+            if (!EntityReleaseServer.CopyCertificates(Path.Combine(EntityReleaseServer.NgoWindowsFolder, "certificates"), EntityReleaseServer.CertificatesFolder, out string problem))
+            {
+                Debug.LogError("[Build] Entity server (release): " + problem + ". The server would not start without encryption; fix it before step 9.");
+                return false;
+            }
+            Debug.Log($"[Build] Entity server (release): certificate and key copied beside the build ({EntityReleaseServer.CertificatesFolder}); never into the repository.");
+            return true;
+        }
+
+        /// <summary>Null when <paramref name="folder"/> is not inside the MAIN project's <c>Builds/Server</c> (the NGO server's, never written); else why not.</summary>
+        public static string MainBuildsGuard(string folder)
+        {
+            string ngo = Path.GetFullPath(Path.Combine(EntityReleaseServer.NgoWindowsFolder, ".."));
+            string target = Path.GetFullPath(folder);
+            return target.StartsWith(ngo + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase) || string.Equals(target, ngo, StringComparison.OrdinalIgnoreCase)
+                ? $"refusing to build into {target}: it is the NGO server's folder, which is never written"
+                : null;
+        }
+
         /// <summary>The entity server's first settings: test ports, the TEST save service (krytical_nova_test), never listed, plain UDP.</summary>
         public static string EntityTestSettingsJson() =>
             "{\n" +
@@ -277,7 +354,7 @@ namespace KryticalNova.EditorTools
         {
             public string Label, ReportPath, Title;
             public string[] ExtraDefines, Scenes;
-            public bool BurstOn, Entity;
+            public bool BurstOn, Entity, Release;
         }
 
         private static bool BuildAsIs(Os os, string intoFolder, ScriptingImplementation backend, Variant variant = null)
@@ -403,7 +480,7 @@ namespace KryticalNova.EditorTools
             if (ok) AddBesideTheServer(os, folder, variant?.Title ?? "Krytical Nova Server");
             if (ok && os == Os.Windows) BuildSaveService(folder);
             if (ok && os == Os.Windows) BuildServerApp(folder, shortcuts: intoFolder == null);
-            if (ok && variant != null && variant.Entity) EntityShortcut(folder);
+            if (ok && variant != null && variant.Entity && !variant.Release) EntityShortcut(folder);
             if (ok && variant != null && variant.BurstOn)
             {
                 string plugins = Path.Combine(folder, ExeName + "_Data", "Plugins");

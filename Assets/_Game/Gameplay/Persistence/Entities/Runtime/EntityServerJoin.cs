@@ -17,7 +17,7 @@ namespace KryticalNova.Persistence.Entities
     /// in once this player's own body stands in the world, a refusal ends the wait at once with the server's words, no answer within
     /// <see cref="JoinTimeoutSeconds"/> (NGO's 20 s) is "did not answer". The chosen character goes with the go-in-game request
     /// (<see cref="CharacterSessionGoInGame"/>). The roster questions of character select go through <see cref="KnRosterClient"/>.
-    /// Plain UDP to this PC's own test server (loopback has no certificate), DTLS to any other address.
+    /// Plain UDP only to this PC's own test server (<see cref="EntityListRules.IsTestLaneListing"/>), DTLS to every other server, the owner's own PC included.
     /// </summary>
     public static class EntityServerJoin
     {
@@ -31,8 +31,8 @@ namespace KryticalNova.Persistence.Entities
             EntityServerLink.AskRoster = AskRoster;
         }
 
-        static bool Encrypted(ServerListing server) => !(server.address == "127.0.0.1" || server.OnThisMachine);
-        static string Address(ServerListing server) => server.OnThisMachine ? "127.0.0.1" : server.address;
+        static bool Encrypted(ServerListing server) => EntityListRules.Encrypted(server);
+        static string Address(ServerListing server) => EntityListRules.JoinAddress(server);
 
         static IEnumerator Token(Action<string> got)
         {

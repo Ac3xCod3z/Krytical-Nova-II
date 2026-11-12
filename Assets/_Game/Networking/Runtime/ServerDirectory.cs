@@ -55,6 +55,14 @@ namespace KryticalNova.Networking
         /// <summary>The Editor and test builds: they may play without a server and see a server on this PC.</summary>
         public static bool Development => !GameBuild.IsRelease;
 
+        /// <summary>True in the game built for the entity netcode (KN_ENTITIES_CLIENT).</summary>
+        public const bool EntitiesClient =
+#if KN_ENTITIES_CLIENT
+            true;
+#else
+            false;
+#endif
+
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void ResetStatics()
         {
@@ -141,24 +149,16 @@ namespace KryticalNova.Networking
         private static void Build(ServerListFile published)
         {
             entries.Clear();
-#if KN_ENTITIES_CLIENT
-            // The DOTS test client (its own Launcher channel) never lists or contacts the owner's real servers: they speak
-            // Netcode for GameObjects, and their ports are the real lane's.
-            published = null;
-#endif
             if (published != null)
                 foreach (ServerListing listing in published.servers)
                 {
                     if (listing == null || ServerListFile.Problem(listing.name, listing.address, listing.port) != null) continue;
+                    if (!EntityListRules.Shows(listing, EntitiesClient)) continue;   // the entity game lists entity servers only (cutover, 12 Nov 2026)
                     if (entries.Count >= ServerListFile.MaxServers) break;
                     if (!ServerListing.IsRelayCode(listing.relay)) listing.relay = "";
                     entries.Add(new ServerEntry { Listing = listing, Name = listing.name, Note = Where(listing) });
                 }
-#if KN_ENTITIES_CLIENT
-            if (EntityServerLink.Available)   // the DOTS test client is a release build, but its one server is this PC's test lane
-#else
-            if (EntityServerLink.Available && Development)
-#endif
+            if (EntityListRules.ShowsTestEntry(EntityServerLink.Available, Development))   // development builds only (cutover, 12 Nov 2026)
             {
                 // The ENTITY TEST server on this PC (Builds\EntityServer, DOTS front end 8 Nov 2026)
                 var entity = new ServerListing { name = "Entity test server (this PC)", address = "127.0.0.1", port = EntityServerLink.TestPort, statusPort = EntityServerLink.TestStatusPort, entities = true };

@@ -34,6 +34,7 @@ namespace KryticalNova.Persistence.Entities
         {
             if (m_Requests.IsEmpty) return;
             var em = EntityManager;
+            if (!SkyLiftLink.Enabled) { em.DestroyEntity(m_Requests); return; }   // switched off in this build (KN_SKY_LIFT_OFF)
             using var received = m_Requests.ToComponentDataArray<ReceiveRpcCommandRequest>(Allocator.Temp);
             using var asks = m_Requests.ToComponentDataArray<SkyLiftRpc>(Allocator.Temp);
             em.DestroyEntity(m_Requests);
@@ -70,7 +71,7 @@ namespace KryticalNova.Persistence.Entities
                 em.AddComponentData(rpc, new SkyLiftRpc { Down = (byte)(down ? 1 : 0) });
                 em.AddComponent<SendRpcCommandRequest>(rpc);
             };
-            SkyLiftLink.Requester = m_Requester;
+            if (SkyLiftLink.Enabled) SkyLiftLink.Requester = m_Requester;
         }
 
         protected override void OnDestroy()

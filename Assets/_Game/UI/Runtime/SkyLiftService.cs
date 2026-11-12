@@ -16,7 +16,11 @@ namespace KryticalNova.UI
         private const float PreviewHeight = 100f;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
-        private static void Register() => NpcServices.Register(Id, NpcOffer.SkyLift, "SKY LIFT (CONCORD 040)", Ride);
+        private static void Register()
+        {
+            if (!SkyLiftLink.Enabled) return;   // switched off in this build (KN_SKY_LIFT_OFF): the Marshal shows no Sky Lift button
+            NpcServices.Register(Id, NpcOffer.SkyLift, "SKY LIFT (CONCORD 040)", Ride);
+        }
 
         private static void Ride()
         {

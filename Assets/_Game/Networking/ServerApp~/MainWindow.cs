@@ -103,8 +103,9 @@ namespace KryticalNova.ServerApp
             serverFolder = FindServerFolder(root);
             settings = Settings.Load(serverFolder);
 
-            // An entity server (DOTS, 8 Nov 2026) is a test version beside the NGO one: its window says so.
-            Text = settings.Entities ? "Krytical Nova Server - ENTITY TEST (Netcode for Entities)" : "Krytical Nova Server";
+            // An entity server on the TEST lane (DOTS, 8 Nov 2026: the TEST save service, 7802) is a test version beside the real one: its
+            // window says so. The release lane's server (the real save service, cutover 12 Nov 2026) is the game's server: no TEST in its title.
+            Text = settings.EntitiesTestLane ? "Krytical Nova Server - ENTITY TEST (Netcode for Entities)" : "Krytical Nova Server";
             Icon = Icon.ExtractAssociatedIcon(Application.ExecutablePath);
             ClientSize = new Size(1080, 700);
             MinimumSize = new Size(900, 600);
@@ -117,7 +118,7 @@ namespace KryticalNova.ServerApp
             string listedMap = string.IsNullOrWhiteSpace(settings.Map) ? ConcordMap : settings.Map;
             AddServer(new GameServer
             {
-                Title = settings.Entities ? "ENTITY TEST" : listedMap == ConcordMap ? "CONCORD" : "SERVER", Map = listedMap, Port = settings.Port, PagePort = settings.PagePort,
+                Title = settings.EntitiesTestLane ? "ENTITY TEST" : listedMap == ConcordMap ? "CONCORD" : "SERVER", Map = listedMap, Port = settings.Port, PagePort = settings.PagePort,
                 Process = new Hosted("Server", serverExe, "-logFile -", folder),
             });
             // Each map's server: the same server, its own map and ports, never in the server list (online phase 5).
@@ -881,6 +882,9 @@ namespace KryticalNova.ServerApp
         [DataMember(Name = "netcode")] public string Netcode = "";
 
         public bool Entities => string.Equals((Netcode ?? "").Trim(), "entities", StringComparison.OrdinalIgnoreCase);
+
+        /// <summary>The entity server of the test lane (it saves through the TEST save service); the release lane's is not.</summary>
+        public bool EntitiesTestLane => Entities && TestSaves;
 
         /// <summary>One map's server (online phase 5): started beside the listed one, never in the server list.</summary>
         [DataContract]
