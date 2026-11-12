@@ -13,6 +13,8 @@ namespace KryticalNova.Progression
         [Range(0, 500)] public int characterPercent;
         [Tooltip("Added to the XP of the pet's Hostile kills while it runs, in percent (100 = x2).")]
         [Range(0, 500)] public int petPercent;
+        [Tooltip("Added to the XP the selected mount earns from the character's Hostile kills while it runs, in percent (100 = x2).")]
+        [Range(0, 500)] public int mountPercent;
         [Tooltip("Minutes one of it runs for. Using another adds as many.")]
         [Min(1)] public int minutes;
     }

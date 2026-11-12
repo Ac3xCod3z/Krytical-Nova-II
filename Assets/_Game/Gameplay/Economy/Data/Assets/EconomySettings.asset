@@ -58,14 +58,22 @@ MonoBehaviour:
   - itemId: 9500
     characterPercent: 50
     petPercent: 0
+    mountPercent: 0
     minutes: 60
   - itemId: 9501
     characterPercent: 0
     petPercent: 100
+    mountPercent: 0
     minutes: 60
   - itemId: 9502
     characterPercent: 50
     petPercent: 50
+    mountPercent: 50
+    minutes: 60
+  - itemId: 9503
+    characterPercent: 0
+    petPercent: 0
+    mountPercent: 100
     minutes: 60
   boosterMaxHours: 24
   boosterTimeRunsOnlyOnline: 1

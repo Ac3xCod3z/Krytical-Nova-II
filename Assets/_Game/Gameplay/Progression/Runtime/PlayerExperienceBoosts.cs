@@ -6,10 +6,10 @@ using UnityEngine;
 namespace KryticalNova.Progression
 {
     /// <summary>
-    /// The XP boosters a character has running (the Field, Companion and Tandem Boosters of the Nova Store: which
-    /// items, how much and for how long is <see cref="EconomySettings.boosters"/>). Using one adds its time to its
-    /// own clock; while a clock has time left its share is added to the XP of every Hostile kill, the character's,
-    /// the pet's or both. Boosters that run together add up, and they add to the Squad and Sponsor boosts.
+    /// The XP boosters a character has running (the Field, Companion, Rider and Convoy Boosters of the Nova Store:
+    /// which items, how much and for how long is <see cref="EconomySettings.boosters"/>). Using one adds its time to its
+    /// own clock; while a clock has time left its share is added to the XP of every Hostile kill: the character's, the
+    /// pet's, the mount's, or all three. Boosters that run together add up, and they add to the Squad and Sponsor boosts.
     /// The server keeps the clocks and saves them with the character; the owner is told the time left, for the HUD.
     /// </summary>
     [DisallowMultipleComponent]
@@ -61,6 +61,8 @@ namespace KryticalNova.Progression
         public float ServerCharacterBonus => Decides ? ExperienceBoostRules.CharacterBonus(Boosters, seconds) : 0f;
         /// <summary>Server: the share added to the kill XP of this character's pet right now.</summary>
         public float ServerPetBonus => Decides ? ExperienceBoostRules.PetBonus(Boosters, seconds) : 0f;
+        /// <summary>Server: the share added to the kill XP of this character's selected mount right now.</summary>
+        public float ServerMountBonus => Decides ? ExperienceBoostRules.MountBonus(Boosters, seconds) : 0f;
 
         private void Awake()
         {
@@ -216,12 +218,14 @@ namespace KryticalNova.Progression
             return $"{Describe(booster)} for {booster.minutes} min." + (left > 0f ? $" Running: {FormatTime(left)} left." : string.Empty);
         }
 
-        /// <summary>What a booster adds, as a player reads it: "+50% character XP, +50% pet XP".</summary>
+        /// <summary>What a booster adds, as a player reads it: "+50% character XP, +50% pet XP, +50% mount XP".</summary>
         public static string Describe(in ExperienceBooster booster)
         {
-            if (booster.characterPercent > 0 && booster.petPercent > 0)
-                return $"+{booster.characterPercent}% character XP, +{booster.petPercent}% pet XP";
-            return booster.petPercent > 0 ? $"+{booster.petPercent}% pet XP" : $"+{booster.characterPercent}% character XP";
+            var parts = new System.Collections.Generic.List<string>(3);
+            if (booster.characterPercent > 0) parts.Add($"+{booster.characterPercent}% character XP");
+            if (booster.petPercent > 0) parts.Add($"+{booster.petPercent}% pet XP");
+            if (booster.mountPercent > 0) parts.Add($"+{booster.mountPercent}% mount XP");
+            return parts.Count > 0 ? string.Join(", ", parts) : "+0% XP";
         }
 
         /// <summary>Time as "1 h 05 min" or "12 min".</summary>

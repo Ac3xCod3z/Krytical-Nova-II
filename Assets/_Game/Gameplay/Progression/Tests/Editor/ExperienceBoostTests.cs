@@ -9,7 +9,8 @@ using KryticalNova.Core;
 namespace KryticalNova.Tests
 {
     /// <summary>
-    /// The XP boosters as the owner set them (11 Oct 2026): character x1.5, pet x2, both x1.5, an hour each; those
+    /// The XP boosters as the owner set them (11 Oct 2026; Rider and Convoy 12 Nov 2026): Field character x1.5, Companion pet x2,
+    /// Rider mount x2, Convoy all three x1.5, an hour each; those
     /// that run together add up, and the same one used again adds its hour. And the nine Zenith Dossiers: one for
     /// each weapon class's Zenith technique, each unlocking that technique alone.
     /// </summary>
@@ -26,6 +27,34 @@ namespace KryticalNova.Tests
             new ExperienceBooster { itemId = 9501, characterPercent = 0, petPercent = 100, minutes = 60 },
             new ExperienceBooster { itemId = 9502, characterPercent = 50, petPercent = 50, minutes = 60 },
         };
+
+        private static readonly ExperienceBooster[] Four =
+        {
+            new ExperienceBooster { itemId = 9500, characterPercent = 50, petPercent = 0, mountPercent = 0, minutes = 60 },
+            new ExperienceBooster { itemId = 9501, characterPercent = 0, petPercent = 100, mountPercent = 0, minutes = 60 },
+            new ExperienceBooster { itemId = 9502, characterPercent = 50, petPercent = 50, mountPercent = 50, minutes = 60 },
+            new ExperienceBooster { itemId = 9503, characterPercent = 0, petPercent = 0, mountPercent = 100, minutes = 60 },
+        };
+
+        [Test]
+        public void MountKillXp_ReadsRiderAndConvoy_AndNothingElse()
+        {
+            Assert.AreEqual(0f, ExperienceBoostRules.MountBonus(Four, new[] { 0f, 0f, 0f, 0f }), Tolerance, "none: x1");
+            Assert.AreEqual(0.5f, ExperienceBoostRules.MountBonus(Four, new[] { 0f, 0f, 10f, 0f }), Tolerance, "Convoy: x1.5");
+            Assert.AreEqual(1f, ExperienceBoostRules.MountBonus(Four, new[] { 0f, 0f, 0f, 10f }), Tolerance, "Rider: x2");
+            Assert.AreEqual(1.5f, ExperienceBoostRules.MountBonus(Four, new[] { 0f, 0f, 10f, 10f }), Tolerance, "Rider + Convoy: x2.5, added");
+            Assert.AreEqual(0f, ExperienceBoostRules.MountBonus(Four, new[] { 10f, 10f, 0f, 0f }), Tolerance, "Field and Companion: no mount share");
+            Assert.AreEqual(0f, ExperienceBoostRules.CharacterBonus(Four, new[] { 0f, 0f, 0f, 10f }), Tolerance, "Rider: no character share");
+            Assert.AreEqual(0f, ExperienceBoostRules.PetBonus(Four, new[] { 0f, 0f, 0f, 10f }), Tolerance, "Rider: no pet share");
+        }
+
+        [Test]
+        public void TheConvoyBooster_IsDescribedWithAllThreeShares()
+        {
+            Assert.AreEqual("+50% character XP, +50% pet XP, +50% mount XP", PlayerExperienceBoosts.Describe(Four[2]));
+            Assert.AreEqual("+100% mount XP", PlayerExperienceBoosts.Describe(Four[3]));
+            Assert.AreEqual("+50% character XP", PlayerExperienceBoosts.Describe(Four[0]));
+        }
 
         [Test]
         public void EachBoosterAlone_GivesItsOwnShare()
@@ -65,19 +94,24 @@ namespace KryticalNova.Tests
         }
 
         [Test]
-        public void TheSettings_HoldTheThreeBoosters_AndEachHasItsItem()
+        public void TheSettings_HoldTheFourBoosters_AndEachHasItsItem()
         {
             var settings = AssetDatabase.LoadAssetAtPath<EconomySettings>(SettingsPath);
             var catalog = AssetDatabase.LoadAssetAtPath<ItemCatalog>(CatalogPath);
             Assert.NotNull(settings, SettingsPath);
             Assert.NotNull(catalog, CatalogPath);
-            Assert.AreEqual(3, settings.boosters.Length, "Field, Companion, Tandem");
+            Assert.AreEqual(4, settings.boosters.Length, "Field, Companion, Convoy (Booster_Tandem), Rider");
+            Assert.AreEqual(9502, settings.boosters[2].itemId);
+            Assert.AreEqual(50, settings.boosters[2].mountPercent, "Convoy: mount x1.5 (owner, 12 Nov 2026)");
+            Assert.AreEqual(9503, settings.boosters[3].itemId);
+            Assert.AreEqual(100, settings.boosters[3].mountPercent, "Rider: mount x2 (owner, 12 Nov 2026)");
+            Assert.AreEqual(0, settings.boosters[3].characterPercent + settings.boosters[3].petPercent, "Rider: mount only");
             foreach (ExperienceBooster booster in settings.boosters)
             {
                 ItemDefinition item = catalog.Get(booster.itemId);
                 Assert.NotNull(item, $"item {booster.itemId} is in the catalog (Items > 5. Generate Utility Items)");
                 Assert.AreEqual(ItemUseEffect.ExperienceBoost, item.useEffect, item.displayName);
-                Assert.Greater(booster.characterPercent + booster.petPercent, 0, item.displayName + " adds something");
+                Assert.Greater(booster.characterPercent + booster.petPercent + booster.mountPercent, 0, item.displayName + " adds something");
                 Assert.AreEqual(60, booster.minutes, item.displayName + " runs an hour (owner, 11 Oct 2026)");
             }
         }

@@ -118,9 +118,10 @@ namespace KryticalNova.Economy
         [Tooltip("The boosters. Those that run together add up (+50 % and +50 % is x2), and they add to the Squad and Sponsor boosts.")]
         public ExperienceBooster[] boosters =
         {
-            new ExperienceBooster { itemId = 9500, characterPercent = 50, petPercent = 0, minutes = 60 },
-            new ExperienceBooster { itemId = 9501, characterPercent = 0, petPercent = 100, minutes = 60 },
-            new ExperienceBooster { itemId = 9502, characterPercent = 50, petPercent = 50, minutes = 60 },
+            new ExperienceBooster { itemId = 9500, characterPercent = 50, petPercent = 0, mountPercent = 0, minutes = 60 },    // Field
+            new ExperienceBooster { itemId = 9501, characterPercent = 0, petPercent = 100, mountPercent = 0, minutes = 60 },   // Companion
+            new ExperienceBooster { itemId = 9502, characterPercent = 50, petPercent = 50, mountPercent = 50, minutes = 60 },  // Convoy (Booster_Tandem)
+            new ExperienceBooster { itemId = 9503, characterPercent = 0, petPercent = 0, mountPercent = 100, minutes = 60 },   // Rider (owner, 12 Nov 2026)
         };
         [Tooltip("The most hours of one booster a character may hold: one more than that is refused, not wasted.")]
         [Min(1)] public int boosterMaxHours = 24;

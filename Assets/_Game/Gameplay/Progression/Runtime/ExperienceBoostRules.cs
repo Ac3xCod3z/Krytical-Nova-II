@@ -9,17 +9,23 @@ namespace KryticalNova.Progression
     public static class ExperienceBoostRules
     {
         /// <summary>The share added to a character's XP (0.5 = +50 %) by every booster that still has time.</summary>
-        public static float CharacterBonus(ExperienceBooster[] boosters, float[] secondsLeft) => Bonus(boosters, secondsLeft, pet: false);
+        public static float CharacterBonus(ExperienceBooster[] boosters, float[] secondsLeft) => Bonus(boosters, secondsLeft, Share.Character);
 
         /// <summary>The share added to a pet's XP by every booster that still has time.</summary>
-        public static float PetBonus(ExperienceBooster[] boosters, float[] secondsLeft) => Bonus(boosters, secondsLeft, pet: true);
+        public static float PetBonus(ExperienceBooster[] boosters, float[] secondsLeft) => Bonus(boosters, secondsLeft, Share.Pet);
 
-        private static float Bonus(ExperienceBooster[] boosters, float[] secondsLeft, bool pet)
+        /// <summary>The share added to the kill XP of a character's selected mount by every booster that still has time (Rider, Convoy).</summary>
+        public static float MountBonus(ExperienceBooster[] boosters, float[] secondsLeft) => Bonus(boosters, secondsLeft, Share.Mount);
+
+        private enum Share { Character, Pet, Mount }
+
+        private static float Bonus(ExperienceBooster[] boosters, float[] secondsLeft, Share share)
         {
             if (boosters == null || secondsLeft == null) return 0f;
             int percent = 0;
             for (int i = 0; i < boosters.Length && i < secondsLeft.Length; i++)
-                if (secondsLeft[i] > 0f) percent += pet ? boosters[i].petPercent : boosters[i].characterPercent;
+                if (secondsLeft[i] > 0f)
+                    percent += share == Share.Pet ? boosters[i].petPercent : share == Share.Mount ? boosters[i].mountPercent : boosters[i].characterPercent;
             return percent > 0 ? percent / 100f : 0f;
         }
 
