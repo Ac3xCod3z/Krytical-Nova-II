@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using KryticalNova.CharacterCreation;
 using KryticalNova.Core;
@@ -63,6 +64,7 @@ namespace KryticalNova.Persistence
             Link = null;
             Renamed = null;
             Refused = null;
+            LeftRenames.Clear();
         }
 
         private void Awake()
@@ -80,7 +82,14 @@ namespace KryticalNova.Persistence
         public override void OnNetworkDespawn()
         {
             if (owned == this) owned = null;
+            LeaveWithSaveOut();
             base.OnNetworkDespawn();
+        }
+
+        public override void OnDestroy()
+        {
+            LeaveWithSaveOut();
+            base.OnDestroy();
         }
 
         /// <summary>Asks for the new name, spending the Name Change Pass in that Pack cell.</summary>
@@ -200,11 +209,83 @@ namespace KryticalNova.Persistence
         private Action<string, string> pendingAnswer;
         private string pendingOld, pendingClean, pendingAccount, pendingCharacter;
         private ItemStack pendingPass;
-        private int pendingCell, saveWord;   // saveWord: 0 waiting, 1 written, 2 refused
+        private int pendingCell;
+        private LeftRename pendingWord;   // the save's word (0 waiting, 1 written, 2 refused); kept on if the player leaves
 
         private void Update()
         {
-            if (pendingAnswer != null && Volatile.Read(ref saveWord) != 0) FinishSave();
+            if (pendingAnswer != null && pendingWord.Word != 0) FinishSave();
+            if (LeftRenames.Count > 0) ServerFinishLeftRenames();
+        }
+
+        /// <summary>
+        /// A rename whose save was still out when its player left (note a; lead and owner, 12 Nov 2026). It is never undone: when the
+        /// answer comes back refused, the rename is finished forward (<see cref="FinishLeftRenames"/>); written, nothing more is done.
+        /// </summary>
+        public sealed class LeftRename
+        {
+            public readonly string Old, Clean, Account, Character;
+            private int word;
+            public LeftRename(string old, string clean, string account, string character) { Old = old; Clean = clean; Account = account; Character = character; }
+            /// <summary>0 waiting, 1 written, 2 refused. Set by the store, maybe on its own thread.</summary>
+            public int Word => Volatile.Read(ref word);
+            public void Tell(bool written) => Volatile.Write(ref word, written ? 1 : 2);
+        }
+
+        private static readonly List<LeftRename> LeftRenames = new List<LeftRename>();   // main thread only
+
+        /// <summary>Renames whose player left with the save still out (tests and the drain's callers).</summary>
+        public static int LeftRenamesWaiting => LeftRenames.Count;
+
+        /// <summary>Keeps a rename whose player left until its save's word comes (main thread).</summary>
+        public static void KeepLeftRename(LeftRename rename) { if (rename != null) LeftRenames.Add(rename); }
+
+        // The body goes while its rename's save is out: its word is then finished by the drain, not by this body.
+        private void LeaveWithSaveOut()
+        {
+            if (pendingAnswer == null) return;
+            pendingAnswer = null;   // the asker is gone: no answer
+            KeepLeftRename(pendingWord);
+            pendingWord = null;
+        }
+
+        /// <summary>Server, main thread: finishes the renames of players who left (RenameServerSystem and every PlayerRename call it).</summary>
+        public static int ServerFinishLeftRenames() =>
+            FinishLeftRenames(ServerRoster.Names, () => ServerSave.SaveWorldWhole(ServerRoster.NamesDocument), ServerSave.Ledger);
+
+        /// <summary>
+        /// The drain (tests give their own names list, names save and ledger): a refused answer keeps the new name in the names list,
+        /// saves the names document again, writes the name.change line again (the refused change carried the first) and one records
+        /// line; a written answer needs nothing; no answer yet stays kept. The order of the player's own leave save does not matter.
+        /// Returns how many were finished forward.
+        /// </summary>
+        public static int FinishLeftRenames(Func<NameIndex> names, Action saveNames, Action<LedgerEntry> ledger)
+        {
+            int forward = 0;
+            for (int i = LeftRenames.Count - 1; i >= 0; i--)
+            {
+                LeftRename left = LeftRenames[i];
+                int word = left.Word;
+                if (word == 0) continue;
+                LeftRenames.RemoveAt(i);
+                if (word == 1)
+                {
+                    Debug.Log($"[Rename] {left.Old} > {left.Clean} ({left.Character}, account {left.Account}): saved after its player left.");
+                    continue;
+                }
+                NameIndex index = names?.Invoke();
+                if (index != null)
+                {
+                    index.Drop(left.Old, left.Account, left.Character);
+                    index.Put(left.Clean, left.Account, left.Character);
+                }
+                saveNames?.Invoke();
+                ledger?.Invoke(LedgerEntry.For(LedgerKinds.NameChanged, left.Account, left.Character, left.Old + " > " + left.Clean));
+                Debug.LogWarning($"[Rename] {left.Old} > {left.Clean} ({left.Character}, account {left.Account}): its save was refused after its player left: finished forward (names list saved again, ledger line again).");
+                ServerRecords.Write(RecordKind.Access, $"Character {left.Old} ({left.Character}) rename to {left.Clean}: rename of a player who had left completed after a refused save (account {left.Account})");
+                forward++;
+            }
+            return forward;
         }
 
         /// <summary>Renames the character, spending the pass; <paramref name="answer"/> gets (refusal, name as kept) once.</summary>
@@ -239,9 +320,9 @@ namespace KryticalNova.Persistence
                     pendingAnswer = answer;
                     pendingOld = old; pendingClean = clean; pendingAccount = account; pendingCharacter = character;
                     pendingPass = taken; pendingCell = bagIndex;
-                    Volatile.Write(ref saveWord, 0);
-                    ServerSave.SaveTogether(saveAgent, written => Volatile.Write(ref saveWord, written ? 1 : 2), ServerRoster.NamesDocument);
-                    if (Volatile.Read(ref saveWord) != 0) FinishSave();   // a store that has written when it returns
+                    var word = pendingWord = new LeftRename(old, clean, account, character);
+                    ServerSave.SaveTogether(saveAgent, written => word.Tell(written), ServerRoster.NamesDocument);
+                    if (word.Word != 0) FinishSave();   // a store that has written when it returns
                     return;
                 }
                 Debug.LogWarning($"[Rename] {old} > {clean} ({character}, account {account}): this body has no save agent: nothing is saved now; the names list holds the new name in memory only until a later change saves it.");
@@ -255,7 +336,9 @@ namespace KryticalNova.Persistence
         {
             Action<string, string> answer = pendingAnswer;
             pendingAnswer = null;
-            if (Volatile.Read(ref saveWord) == 1)
+            int saveWord = pendingWord.Word;
+            pendingWord = null;
+            if (saveWord == 1)
             {
                 Debug.Log($"[Rename] {pendingOld} > {pendingClean} ({pendingCharacter}, account {pendingAccount}): saved with the names list as one change.");
                 answer(null, pendingClean);

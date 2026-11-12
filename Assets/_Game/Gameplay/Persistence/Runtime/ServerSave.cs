@@ -472,6 +472,20 @@ namespace KryticalNova.Persistence
             return true;
         }
 
+        /// <summary>
+        /// Saves a world document again in full, every entry, also those this server counts as written (a refused change still
+        /// marks them written): a rename finished forward after a refused save (PlayerRename, note a).
+        /// </summary>
+        public static void SaveWorldWhole(string name, Action<bool> told = null)
+        {
+            if (!HasAuthority) return;
+            string key = WorldPrefix + name;
+            LastWritten.Remove(key);
+            if (WorldEntryKeys.TryGetValue(key, out HashSet<string> present))
+                foreach (string entryKey in present) LastWritten.Remove(entryKey);
+            WriteTogether(null, told, name);
+        }
+
         /// <summary>The same for one player and world documents (a Kiosk sale: the buyer and the Kiosks).</summary>
         public static void SaveTogether(PlayerSaveAgent player, params string[] worlds) =>
             SaveTogether(player != null ? new[] { player } : Array.Empty<PlayerSaveAgent>(), null, worlds);

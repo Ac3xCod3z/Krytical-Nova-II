@@ -52,6 +52,7 @@ namespace KryticalNova.Persistence.Entities
         protected override void OnUpdate()
         {
             var em = EntityManager;
+            if (PlayerRename.LeftRenamesWaiting > 0) PlayerRename.ServerFinishLeftRenames();   // renames of players who left (note a)
             if (!m_Asks.IsEmpty)
             {
                 using var received = m_Asks.ToComponentDataArray<ReceiveRpcCommandRequest>(Allocator.Temp);
