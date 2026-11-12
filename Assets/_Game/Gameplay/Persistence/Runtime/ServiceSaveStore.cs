@@ -280,6 +280,12 @@ namespace KryticalNova.Persistence
                     // next save makes it new), so the next save of the document is written instead of being refused for ever.
                     if (!string.IsNullOrEmpty(refused.conflict))
                         lock (gate) versions[refused.conflict] = refused.conflictVersion > 0 ? refused.conflictVersion : 0;
+                    // A2 (lead, 12 Nov 2026): every key of the refused batch, not only the one the service names, takes the service's
+                    // version before the word is told, so the whole copy the next save sends is written in one try.
+                    var carried = new List<string>(batch.Writes.Count + batch.Deletes.Count);
+                    foreach (KeyValuePair<string, string> write in batch.Writes) carried.Add(write.Key);
+                    carried.AddRange(batch.Deletes);
+                    RefreshVersions(carried);
                     Debug.LogError($"[Save] '{refused.conflict}' was changed elsewhere (it is at version {refused.conflictVersion}): this save of " +
                                    $"{batch.Writes.Count + batch.Deletes.Count} document(s) was not written, so the newer one stays. The next save of it builds on the service's version.");
                     word = false;
@@ -317,6 +323,30 @@ namespace KryticalNova.Persistence
                 }
                 Debug.LogError($"[Save] Could not save to the save service: {e.GetBaseException().Message}. It is kept and sent again.");
                 Thread.Sleep(1000);
+            }
+        }
+
+        // The service's versions of these keys (gone: 0), versions only. Writer thread, outside the gate. On a failure the versions
+        // stay as they are (the named key already has fix A's version) and it is said, never silently.
+        private void RefreshVersions(List<string> keys)
+        {
+            if (keys == null || keys.Count == 0) return;
+            try
+            {
+                var body = new StringBuilder("{\"keys\":[");
+                for (int i = 0; i < keys.Count; i++) body.Append(i > 0 ? "," : "").Append(Quote(keys[i]));
+                using HttpResponseMessage response = Send(HttpMethod.Post, "read", body.Append("]}").ToString());
+                response.EnsureSuccessStatusCode();
+                DocList list = JsonUtility.FromJson<DocList>("{\"docs\":" + Text(response) + "}");
+                lock (gate)
+                {
+                    foreach (string key in keys) versions[key] = 0;
+                    foreach (Doc doc in list.docs ?? new List<Doc>()) versions[doc.key] = doc.version;
+                }
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"[Save] Could not refresh the versions of {keys.Count} document(s) after a refused save ({e.GetBaseException().Message}): the next save may be refused again.");
             }
         }
 

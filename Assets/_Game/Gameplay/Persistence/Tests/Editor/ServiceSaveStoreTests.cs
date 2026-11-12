@@ -132,6 +132,43 @@ namespace KryticalNova.Tests
             Assert.AreEqual("{\"v\":3}", ReadFresh());
         }
 
+        // A2 (lead, 12 Nov 2026): one refusal refreshes the versions of every key of the batch, so the next save is written in one try.
+        [Test]
+        public void AfterAConflict_EveryKeyOfTheBatchIsRefreshed()
+        {
+            string second = key + "-two";
+            try
+            {
+                var both = new SaveBatch();
+                both.Write(key, "{\"v\":1}");
+                both.Write(second, "{\"v\":1}");
+                a.WriteBatch(both);
+                a.Flush();
+                Assert.IsTrue(b.TryRead(key, out _));
+                Assert.IsTrue(b.TryRead(second, out _));
+                b.Write(key, "{\"v\":\"elsewhere\"}");
+                b.Write(second, "{\"v\":\"elsewhere\"}");
+                b.Flush();
+                UnityEngine.TestTools.LogAssert.Expect(UnityEngine.LogType.Error, new System.Text.RegularExpressions.Regex("was changed elsewhere"));
+                bool? first = null;
+                var one = new SaveBatch { Done = w => first = w };
+                one.Write(key, "{\"v\":2}");
+                one.Write(second, "{\"v\":2}");
+                a.WriteBatch(one);
+                a.Flush();
+                Assert.AreEqual(false, first);
+                bool? again = null;
+                var two = new SaveBatch { Done = w => again = w };
+                two.Write(key, "{\"v\":3}");
+                two.Write(second, "{\"v\":3}");
+                a.WriteBatch(two);
+                a.Flush();
+                Assert.AreEqual(true, again, "both keys took the service's version at the one refusal");
+                Assert.AreEqual("{\"v\":3}", ReadFresh());
+            }
+            finally { a.Delete(second); a.Flush(); }
+        }
+
         private string ReadFresh()
         {
             var fresh = new ServiceSaveStore(Url, File.ReadAllText(KeyFile).Trim(), "test-reader");
