@@ -295,6 +295,9 @@ namespace KryticalNova.Persistence
                     }
                     word = true;
                 }
+                // told before the batch leaves the line: a Flush that returns has every word of what it waited for
+                // (12 Nov 2026: the first run of the conflict tests read "not told yet" right after Flush)
+                if (word.HasValue) Tell(batch, word.Value);
                 lock (gate)
                 {
                     batches.Dequeue();
@@ -303,7 +306,6 @@ namespace KryticalNova.Persistence
                     sending = false;
                     Monitor.PulseAll(gate);
                 }
-                if (word.HasValue) Tell(batch, word.Value);
             }
             catch (Exception e)
             {
