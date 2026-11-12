@@ -502,9 +502,15 @@ left is sent again at once, as the save was, but only while no other server hold
 `was changed elsewhere` for the refusal and `sent again as it was` for a player who had left. A Name Change whose save is
 refused is undone while the player is still in the game; if the player has left, it is finished instead (the new name is
 kept, with one ledger line).
-**Known limit:** the save service takes at most 500 writes, deletes and ledger lines in one save (`Program.cs`). A world
-document with more entries than that (a names list of thousands) cannot be sent whole yet. The owner decides whether to
-split such a save or raise the limit.
+**The most one save may carry:** 10,000 writes, deletes and ledger lines together (owner, 12 Nov 2026). The number is
+`"MaxBatchItems"` in the save service's `appsettings.json` beside `SaveService.exe`; without that line it is 10,000 too.
+A whole names list of 10,000 is about 2.3 MB of request, far under the web server's own 30 MB request limit, so that
+limit is left as it is. Reads still ask at most 500 documents at a time (the game splits bigger reads by itself).
+**What a too-big save does:** the service answers 400 ("too many in one batch: N items, the most is 10000"). The game
+takes that as final: the log says `refused this save ... for good` with the service's words, that save is not sent
+again as it is, and the saves behind it go on. As with any refused save, the next save of that document sends it
+whole again. (Before 12 Nov 2026 the game sent such a save again for ever and every save behind it waited.) A save
+with no answer, or answered 401 / 403, is still kept and sent again.
 
 ## 6. Join the server
 
