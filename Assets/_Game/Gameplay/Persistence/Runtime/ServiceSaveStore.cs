@@ -244,9 +244,26 @@ namespace KryticalNova.Persistence
             while (batches.Count > 0 && DateTime.UtcNow < until) SendNext();
         }
 
+        private const int ReadLimit = 500;
+        private readonly HashSet<string> refreshFirst = new HashSet<string>(StringComparer.Ordinal);
+
+        /// <summary>
+        /// A2: the service's versions of these keys are read before the next batch is sent (on the writer thread): a document sent
+        /// again whole after a refusal also carries parts the refused batch did not, and another writer may have changed those too.
+        /// </summary>
+        public void RefreshBeforeNext(IEnumerable<string> keys)
+        {
+            if (keys == null) return;
+            lock (gate) foreach (string key in keys) if (SaveKeys.IsValid(key)) refreshFirst.Add(key);
+        }
+
         // Sends the oldest batch with the versions this store knows (0: the document must be new).
         private void SendNext()
         {
+            List<string> refresh = null;
+            lock (gate)
+                if (refreshFirst.Count > 0) { refresh = new List<string>(refreshFirst); refreshFirst.Clear(); }
+            if (refresh != null) RefreshVersions(refresh);
             Batch batch;
             string body;
             lock (gate)
@@ -333,15 +350,19 @@ namespace KryticalNova.Persistence
             if (keys == null || keys.Count == 0) return;
             try
             {
-                var body = new StringBuilder("{\"keys\":[");
-                for (int i = 0; i < keys.Count; i++) body.Append(i > 0 ? "," : "").Append(Quote(keys[i]));
-                using HttpResponseMessage response = Send(HttpMethod.Post, "read", body.Append("]}").ToString());
-                response.EnsureSuccessStatusCode();
-                DocList list = JsonUtility.FromJson<DocList>("{\"docs\":" + Text(response) + "}");
-                lock (gate)
+                for (int start = 0; start < keys.Count; start += ReadLimit)   // the service reads at most 500 keys a call
                 {
-                    foreach (string key in keys) versions[key] = 0;
-                    foreach (Doc doc in list.docs ?? new List<Doc>()) versions[doc.key] = doc.version;
+                    int end = Math.Min(keys.Count, start + ReadLimit);
+                    var body = new StringBuilder("{\"keys\":[");
+                    for (int i = start; i < end; i++) body.Append(i > start ? "," : "").Append(Quote(keys[i]));
+                    using HttpResponseMessage response = Send(HttpMethod.Post, "read", body.Append("]}").ToString());
+                    response.EnsureSuccessStatusCode();
+                    DocList list = JsonUtility.FromJson<DocList>("{\"docs\":" + Text(response) + "}");
+                    lock (gate)
+                    {
+                        for (int i = start; i < end; i++) versions[keys[i]] = 0;
+                        foreach (Doc doc in list.docs ?? new List<Doc>()) versions[doc.key] = doc.version;
+                    }
                 }
             }
             catch (Exception e)

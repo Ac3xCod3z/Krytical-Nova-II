@@ -53,6 +53,7 @@ namespace KryticalNova.Persistence.Entities
         {
             var em = EntityManager;
             if (PlayerRename.LeftRenamesWaiting > 0) PlayerRename.ServerFinishLeftRenames();   // renames of players who left (note a)
+            if (ServerSave.HasRefusals) ServerSave.ApplyRefusals();   // A2: a refused save is handled even while nobody saves
             if (!m_Asks.IsEmpty)
             {
                 using var received = m_Asks.ToComponentDataArray<ReceiveRpcCommandRequest>(Allocator.Temp);

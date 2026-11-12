@@ -225,8 +225,11 @@ namespace KryticalNova.Persistence
         public sealed class LeftRename
         {
             public readonly string Old, Clean, Account, Character;
+            /// <summary>The name.change line the rename wrote (A2: kept, so an undo takes it out and a finish writes no second one).</summary>
+            public readonly LedgerEntry Line;
             private int word;
-            public LeftRename(string old, string clean, string account, string character) { Old = old; Clean = clean; Account = account; Character = character; }
+            public LeftRename(string old, string clean, string account, string character, LedgerEntry line = null)
+            { Old = old; Clean = clean; Account = account; Character = character; Line = line; }
             /// <summary>0 waiting, 1 written, 2 refused. Set by the store, maybe on its own thread.</summary>
             public int Word => Volatile.Read(ref word);
             public void Tell(bool written) => Volatile.Write(ref word, written ? 1 : 2);
@@ -250,8 +253,11 @@ namespace KryticalNova.Persistence
         }
 
         /// <summary>Server, main thread: finishes the renames of players who left (RenameServerSystem and every PlayerRename call it).</summary>
-        public static int ServerFinishLeftRenames() =>
-            FinishLeftRenames(ServerRoster.Names, () => ServerSave.SaveWorldWhole(ServerRoster.NamesDocument), ServerSave.Ledger);
+        public static int ServerFinishLeftRenames()
+        {
+            ServerSave.ApplyRefusals();   // first: a refused line is then waiting again (or on its way again with its account)
+            return FinishLeftRenames(ServerRoster.Names, () => ServerSave.SaveWorldWhole(ServerRoster.NamesDocument), ServerSave.Ledger, ServerSave.IsLedgerWaiting);
+        }
 
         /// <summary>
         /// The drain (tests give their own names list, names save and ledger): a refused answer keeps the new name in the names list,
@@ -259,7 +265,7 @@ namespace KryticalNova.Persistence
         /// line; a written answer needs nothing; no answer yet stays kept. The order of the player's own leave save does not matter.
         /// Returns how many were finished forward.
         /// </summary>
-        public static int FinishLeftRenames(Func<NameIndex> names, Action saveNames, Action<LedgerEntry> ledger)
+        public static int FinishLeftRenames(Func<NameIndex> names, Action saveNames, Action<LedgerEntry> ledger, Func<LedgerEntry, bool> waiting = null)
         {
             int forward = 0;
             for (int i = LeftRenames.Count - 1; i >= 0; i--)
@@ -280,7 +286,9 @@ namespace KryticalNova.Persistence
                     index.Put(left.Clean, left.Account, left.Character);
                 }
                 saveNames?.Invoke();
-                ledger?.Invoke(LedgerEntry.For(LedgerKinds.NameChanged, left.Account, left.Character, left.Old + " > " + left.Clean));
+                // One line only (A2): the first is written again with its refused change; a new one only when it is not on its way.
+                LedgerEntry line = left.Line ?? LedgerEntry.For(LedgerKinds.NameChanged, left.Account, left.Character, left.Old + " > " + left.Clean);
+                if (waiting == null || !waiting(line)) ledger?.Invoke(line);
                 Debug.LogWarning($"[Rename] {left.Old} > {left.Clean} ({left.Character}, account {left.Account}): its save was refused after its player left: finished forward (names list saved again, ledger line again).");
                 ServerRecords.Write(RecordKind.Access, $"Character {left.Old} ({left.Character}) rename to {left.Clean}: rename of a player who had left completed after a refused save (account {left.Account})");
                 forward++;
@@ -313,14 +321,15 @@ namespace KryticalNova.Persistence
             {
                 names.Drop(old, account, character);
                 names.Put(clean, account, character);
-                ServerSave.Ledger(LedgerEntry.For(LedgerKinds.NameChanged, account, character, old + " > " + clean));
+                LedgerEntry line = LedgerEntry.For(LedgerKinds.NameChanged, account, character, old + " > " + clean);
+                ServerSave.Ledger(line);
                 if (saveAgent != null)
                 {
                     // The answer waits for the save's word: written, the name is taken; refused, everything is undone (FinishSave).
                     pendingAnswer = answer;
                     pendingOld = old; pendingClean = clean; pendingAccount = account; pendingCharacter = character;
                     pendingPass = taken; pendingCell = bagIndex;
-                    var word = pendingWord = new LeftRename(old, clean, account, character);
+                    var word = pendingWord = new LeftRename(old, clean, account, character, line);
                     ServerSave.SaveTogether(saveAgent, written => word.Tell(written), ServerRoster.NamesDocument);
                     if (word.Word != 0) FinishSave();   // a store that has written when it returns
                     return;
@@ -337,6 +346,7 @@ namespace KryticalNova.Persistence
             Action<string, string> answer = pendingAnswer;
             pendingAnswer = null;
             int saveWord = pendingWord.Word;
+            LedgerEntry pendingLine = pendingWord.Line;
             pendingWord = null;
             if (saveWord == 1)
             {
@@ -356,6 +366,9 @@ namespace KryticalNova.Persistence
             names.Put(pendingOld, pendingAccount, pendingCharacter);
             Debug.LogWarning($"[Rename] {pendingOld} > {pendingClean} ({pendingCharacter}, account {pendingAccount}): the save was refused, so the rename is undone (pass back: {back}).");
             ServerRecords.Write(RecordKind.Access, $"Character {pendingOld} ({pendingCharacter}) rename to {pendingClean} undone: its save was refused (account {pendingAccount})");
+            // A2: the refused change's line is waiting again after ApplyRefusals; an undone rename keeps none.
+            ServerSave.ApplyRefusals();
+            ServerSave.Unledger(pendingLine);
             if (saveAgent != null) ServerSave.SaveTogether(saveAgent, ServerRoster.NamesDocument);
             answer(ReasonSaveRefused, null);
         }

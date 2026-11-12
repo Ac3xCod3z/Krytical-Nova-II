@@ -29,7 +29,7 @@ namespace KryticalNova.Tests
             m_Lines = new List<LedgerEntry>();
         }
 
-        int Drain() => PlayerRename.FinishLeftRenames(() => m_Names, () => m_Saves++, line => m_Lines.Add(line));
+        int Drain(System.Func<LedgerEntry, bool> waiting = null) => PlayerRename.FinishLeftRenames(() => m_Names, () => m_Saves++, line => m_Lines.Add(line), waiting);
 
         [Test]
         public void LeftThenRefused_FinishesTheRenameForward()
@@ -46,6 +46,20 @@ namespace KryticalNova.Tests
             Assert.AreEqual(LedgerKinds.NameChanged, m_Lines[0].kind);
             Assert.AreEqual(0, PlayerRename.LeftRenamesWaiting);
             Assert.AreEqual(0, Drain(), "done once");
+            Assert.AreEqual(1, m_Saves);
+        }
+
+        // A2: the refused change's line is on its way again with its account: no second line.
+        [Test]
+        public void LeftThenRefused_WithItsLineOnItsWayAgain_WritesNoSecondLine()
+        {
+            LedgerEntry first = LedgerEntry.For(LedgerKinds.NameChanged, Account, Character, "Oldname > Newname");
+            var left = new PlayerRename.LeftRename("Oldname", "Newname", Account, Character, first);
+            PlayerRename.KeepLeftRename(left);
+            left.Tell(false);
+            LogAssert.Expect(LogType.Warning, new System.Text.RegularExpressions.Regex("finished forward"));
+            Assert.AreEqual(1, Drain(line => ReferenceEquals(line, first)));
+            Assert.AreEqual(0, m_Lines.Count, "the first line goes again; none is added");
             Assert.AreEqual(1, m_Saves);
         }
 

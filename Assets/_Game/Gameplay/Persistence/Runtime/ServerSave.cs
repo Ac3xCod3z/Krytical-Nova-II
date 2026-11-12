@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using KryticalNova.Core;
@@ -42,6 +43,7 @@ namespace KryticalNova.Persistence
             PartKeysOf.Clear();
             PendingLedger.Clear();
             WorldEntryKeys.Clear();
+            ForgetRefusals();
             if (!quitHooked)
             {
                 quitHooked = true;
@@ -62,6 +64,7 @@ namespace KryticalNova.Persistence
                 WorldDocuments.Clear();
                 LastWritten.Clear();
                 WorldEntryKeys.Clear();
+                ForgetRefusals();
             }
         }
 
@@ -179,6 +182,7 @@ namespace KryticalNova.Persistence
         public static AccountSave LoadAccount(string accountId)
         {
             PartKeysOf[accountId] = new HashSet<string>(StringComparer.Ordinal);
+            LetGoOf.Remove(accountId);
             return ReadAccount(Store, accountId, live: true);
         }
 
@@ -291,17 +295,19 @@ namespace KryticalNova.Persistence
         /// </summary>
         public static bool WriteAccount(AccountSave account)
         {
+            ApplyRefusals();
             var batch = new SaveBatch();
-            Action written = Collect(account, batch);
+            var carried = new Carried();
+            Action written = Collect(account, batch, carried);
             if (written == null || batch.IsEmpty) return false;
-            Send(batch);
+            Send(batch, carried);
             written();
             return true;
         }
 
         // Puts what changed in the account (and its waiting ledger lines) into the batch; returns what to remember once the
         // batch is handed to the store, or null for an account that cannot be saved.
-        private static Action Collect(AccountSave account, SaveBatch batch)
+        private static Action Collect(AccountSave account, SaveBatch batch, Carried carried)
         {
             if (account == null || !SaveKeys.IsId(account.accountId)) return null;
             string id = account.accountId;
@@ -318,9 +324,11 @@ namespace KryticalNova.Persistence
             Changed(AccountsPrefix + id, headerJson, writes, null); // the header last: files read it last
             batch.Writes.AddRange(writes);
             batch.Deletes.AddRange(deletes);
+            carried?.Account(id, writes, deletes);
             if (PendingLedger.TryGetValue(id, out List<LedgerEntry> lines))
             {
                 batch.Ledger.AddRange(lines);
+                carried?.Ledger.AddRange(lines);
                 PendingLedger.Remove(id);
             }
             return () =>
@@ -331,11 +339,21 @@ namespace KryticalNova.Persistence
             };
         }
 
-        // One change to the store: whole where it can (the save service, files through their journal).
-        private static void Send(SaveBatch batch)
+        // One change to the store: whole where it can (the save service, files through their journal). With a store that can
+        // refuse (the save service), what the batch carried is kept for a refusal (A2): the writer thread only queues it.
+        private static void Send(SaveBatch batch, Carried carried = null)
         {
             if (Store is IBatchSaveStore whole)
             {
+                if (carried != null && Store is ISaveResultStore)
+                {
+                    Action<bool> told = batch.Done;
+                    batch.Done = written =>
+                    {
+                        if (!written) Refused.Enqueue(carried);   // first, so whoever is told already finds it queued
+                        told?.Invoke(written);
+                    };
+                }
                 whole.WriteBatch(batch);
                 if (!(Store is ISaveResultStore)) batch.Done?.Invoke(true);   // written when it returns
                 return;
@@ -364,7 +382,9 @@ namespace KryticalNova.Persistence
             {
                 var batch = new SaveBatch();
                 batch.Ledger.Add(line);
-                Send(batch);
+                var carried = new Carried();
+                carried.Ledger.Add(line);
+                Send(batch, carried);
                 return;
             }
             if (!PendingLedger.TryGetValue(line.account, out List<LedgerEntry> lines)) PendingLedger[line.account] = lines = new List<LedgerEntry>();
@@ -451,23 +471,25 @@ namespace KryticalNova.Persistence
         public static bool WriteTogether(IReadOnlyList<AccountSave> accountsToWrite, Action<bool> told, params string[] worlds)
         {
             if (!HasAuthority) return false;
+            ApplyRefusals();
             var batch = new SaveBatch { Done = told };
+            var carried = new Carried();
             var written = new List<Action>();
             var accounts = new HashSet<string>(StringComparer.Ordinal);
             if (accountsToWrite != null)
                 foreach (AccountSave account in accountsToWrite)
                 {
                     if (account == null || !accounts.Add(account.accountId)) continue;
-                    Action done = Collect(account, batch);
+                    Action done = Collect(account, batch, carried);
                     if (done != null) written.Add(done);
                 }
             foreach (string name in worlds ?? Array.Empty<string>())
             {
-                Action done = CollectWorld(name, batch);
+                Action done = CollectWorld(name, batch, carried);
                 if (done != null) written.Add(done);
             }
             if (batch.IsEmpty) { told?.Invoke(true); return false; }
-            Send(batch);
+            Send(batch, carried);
             foreach (Action done in written) done();
             return true;
         }
@@ -479,10 +501,7 @@ namespace KryticalNova.Persistence
         public static void SaveWorldWhole(string name, Action<bool> told = null)
         {
             if (!HasAuthority) return;
-            string key = WorldPrefix + name;
-            LastWritten.Remove(key);
-            if (WorldEntryKeys.TryGetValue(key, out HashSet<string> present))
-                foreach (string entryKey in present) LastWritten.Remove(entryKey);
+            ForgetWorld(WorldPrefix + name);
             WriteTogether(null, told, name);
         }
 
@@ -858,16 +877,18 @@ namespace KryticalNova.Persistence
         public static void SaveWorld(string name)
         {
             if (!HasAuthority) return;
+            ApplyRefusals();
             var batch = new SaveBatch();
-            Action written = CollectWorld(name, batch);
+            var carried = new Carried();
+            Action written = CollectWorld(name, batch, carried);
             if (written == null || batch.IsEmpty) return;
-            Send(batch);
+            Send(batch, carried);
             written();
         }
 
         // Puts what changed in a world document into the batch; returns what to remember once the batch is handed to the
         // store, or null when the document is not loaded.
-        private static Action CollectWorld(string name, SaveBatch batch)
+        private static Action CollectWorld(string name, SaveBatch batch, Carried carried)
         {
             string key = WorldPrefix + name;
             if (!WorldDocuments.TryGetValue(key, out object document)) return null;
@@ -876,6 +897,7 @@ namespace KryticalNova.Persistence
                 string json = SaveVersions.Stamped(JsonUtility.ToJson(document), document);
                 if (LastWritten.TryGetValue(key, out string last) && last == json) return () => { };
                 batch.Write(key, json);
+                carried?.World(key, null);
                 return () => LastWritten[key] = json;
             }
 
@@ -910,6 +932,7 @@ namespace KryticalNova.Persistence
             }
             batch.Writes.AddRange(writes);
             batch.Deletes.AddRange(deletes);
+            carried?.World(key, deletes);
             bool headerChanged = lastHeader != headerJson;
             if (headerChanged) batch.Write(key, headerJson); // the header last: files read it last
             return () =>
@@ -940,28 +963,32 @@ namespace KryticalNova.Persistence
         public static void FlushAll()
         {
             if (!HasAuthority) return;
+            ApplyRefusals();
             using var timed = KryticalNova.Diagnostics.PerformanceLog.Time("save.all");
             for (int i = Agents.Count - 1; i >= 0; i--)
                 if (Agents[i] != null) Agents[i].Save();
             var worlds = new SaveBatch();
+            var worldsCarried = new Carried();
             var worldsWritten = new List<Action>();
             foreach (string key in new List<string>(WorldDocuments.Keys))
             {
-                Action done = CollectWorld(key.Substring(WorldPrefix.Length), worlds);
+                Action done = CollectWorld(key.Substring(WorldPrefix.Length), worlds, worldsCarried);
                 if (done != null) worldsWritten.Add(done);
             }
             if (!worlds.IsEmpty)
             {
-                Send(worlds);
+                Send(worlds, worldsCarried);
                 foreach (Action done in worldsWritten) done();
             }
             // Ledger lines of accounts no longer in the world (one that left before its line's save): kept, never dropped.
             if (PendingLedger.Count > 0)
             {
                 var left = new SaveBatch();
+                var leftCarried = new Carried();
                 foreach (List<LedgerEntry> lines in PendingLedger.Values) left.Ledger.AddRange(lines);
+                leftCarried.Ledger.AddRange(left.Ledger);
                 PendingLedger.Clear();
-                Send(left);
+                Send(left, leftCarried);
             }
             WaitForDisk();
         }
@@ -1019,6 +1046,7 @@ namespace KryticalNova.Persistence
                 return false;
             }
             BoundAccounts[accountId] = agent;
+            LetGoOf.Remove(accountId);
             if (!Agents.Contains(agent)) Agents.Add(agent);
             return true;
         }
@@ -1029,8 +1057,178 @@ namespace KryticalNova.Persistence
             if (!string.IsNullOrEmpty(accountId) && BoundAccounts.TryGetValue(accountId, out PlayerSaveAgent holder) && holder == agent)
             {
                 BoundAccounts.Remove(accountId);
+                LetGo(accountId);
                 (store as ServiceSaveStore)?.Unlock(AccountsPrefix + accountId);
             }
+        }
+
+        // ------------------------------------------------------------------ a refused save (A2, lead and owner, 12 Nov 2026)
+
+        // What one batch carried: its accounts (with their own writes and deletes), its world documents (with their deletes) and its
+        // ledger lines. Built on the main thread; after a refusal only read on the main thread again.
+        private sealed class Carried
+        {
+            public readonly Dictionary<string, KeyValuePair<List<KeyValuePair<string, string>>, List<string>>> Accounts =
+                new Dictionary<string, KeyValuePair<List<KeyValuePair<string, string>>, List<string>>>(StringComparer.Ordinal);
+            public readonly Dictionary<string, List<string>> Worlds = new Dictionary<string, List<string>>(StringComparer.Ordinal);
+            public readonly List<LedgerEntry> Ledger = new List<LedgerEntry>();
+
+            public void Account(string id, List<KeyValuePair<string, string>> writes, List<string> deletes) =>
+                Accounts[id] = new KeyValuePair<List<KeyValuePair<string, string>>, List<string>>(
+                    new List<KeyValuePair<string, string>>(writes), new List<string>(deletes));
+
+            public void World(string key, List<string> deletes)
+            {
+                if (!Worlds.TryGetValue(key, out List<string> all)) Worlds[key] = all = new List<string>();
+                if (deletes != null) all.AddRange(deletes);
+            }
+        }
+
+        // Refused batches, queued by the store's writer thread (nothing else of ServerSave is touched there).
+        private static readonly ConcurrentQueue<Carried> Refused = new ConcurrentQueue<Carried>();
+        // Accounts this server has let go of (left the world): a refused save of theirs is sent again at once.
+        private static readonly HashSet<string> LetGoOf = new HashSet<string>(StringComparer.Ordinal);
+        // Ids of ledger lines a refusal put on their way again (waiting or in a resend): a finished rename writes no second one.
+        private static readonly HashSet<string> LedgerAgain = new HashSet<string>(StringComparer.Ordinal);
+
+        /// <summary>True when a refused save waits for <see cref="ApplyRefusals"/>.</summary>
+        public static bool HasRefusals => !Refused.IsEmpty;
+
+        /// <summary>This server lets go of the account (the player left; tests): a refused save of it is sent again at once.</summary>
+        public static void LetGo(string accountId)
+        {
+            if (!string.IsNullOrEmpty(accountId) && !BoundAccounts.ContainsKey(accountId)) LetGoOf.Add(accountId);
+        }
+
+        private static void ForgetRefusals()
+        {
+            while (Refused.TryDequeue(out _)) { }
+            LetGoOf.Clear();
+            LedgerAgain.Clear();
+        }
+
+        /// <summary>
+        /// Main thread: what refused batches carried is forgotten, so the next save sends the server's whole copy of each account and
+        /// world document (header and every part), refused deletes again, and their ledger lines with it. An account this server has
+        /// let go of is sent again at once instead, as it was: its own writes and deletes that nothing newer has replaced since, and its
+        /// lines. Run first by every save, and by the server's update while one waits. Never a loop: once per call.
+        /// </summary>
+        public static void ApplyRefusals()
+        {
+            if (Refused.IsEmpty || !HasAuthority) return;
+            if (LedgerAgain.Count > 4096) LedgerAgain.Clear();
+            while (Refused.TryDequeue(out Carried carried))
+            {
+                var resends = new Dictionary<string, SaveBatch>(StringComparer.Ordinal);
+                foreach (KeyValuePair<string, KeyValuePair<List<KeyValuePair<string, string>>, List<string>>> account in carried.Accounts)
+                {
+                    string id = account.Key;
+                    if (LetGoOf.Contains(id) && !BoundAccounts.ContainsKey(id))
+                    {
+                        var again = new SaveBatch();
+                        foreach (KeyValuePair<string, string> write in account.Value.Key)
+                            if (LastWritten.TryGetValue(write.Key, out string last) && last == write.Value) again.Write(write.Key, write.Value);
+                        foreach (string key in account.Value.Value)
+                            if (!LastWritten.ContainsKey(key)) again.Deletes.Add(key);
+                        resends[id] = again;
+                    }
+                    ForgetAccount(id);
+                    if (!PartKeysOf.TryGetValue(id, out HashSet<string> present)) PartKeysOf[id] = present = new HashSet<string>(StringComparer.Ordinal);
+                    foreach (string key in account.Value.Value) present.Add(key);   // the next save deletes it again
+                    var whole = new List<string>(present) { AccountsPrefix + id };
+                    (store as ServiceSaveStore)?.RefreshBeforeNext(whole);   // every part goes next: each needs the service's version
+                }
+                foreach (KeyValuePair<string, List<string>> world in carried.Worlds)
+                {
+                    ForgetWorld(world.Key);
+                    if (!WorldEntryKeys.TryGetValue(world.Key, out HashSet<string> present)) WorldEntryKeys[world.Key] = present = new HashSet<string>(StringComparer.Ordinal);
+                    foreach (string key in world.Value) present.Add(key);
+                    (store as ServiceSaveStore)?.RefreshBeforeNext(new List<string>(present) { world.Key });
+                }
+
+                // The lines describe changes still in this server's memory: they go with the resend, never apart from it.
+                var front = new Dictionary<string, List<LedgerEntry>>(StringComparer.Ordinal);
+                SaveBatch loose = null;
+                foreach (LedgerEntry line in carried.Ledger)
+                {
+                    if (line == null) continue;
+                    if (!string.IsNullOrEmpty(line.id)) LedgerAgain.Add(line.id);
+                    if (resends.TryGetValue(line.account, out SaveBatch again)) again.Ledger.Add(line);
+                    else if (BoundAccounts.ContainsKey(line.account) || (PartKeysOf.ContainsKey(line.account) && !LetGoOf.Contains(line.account)))
+                    {
+                        if (!front.TryGetValue(line.account, out List<LedgerEntry> lines)) front[line.account] = lines = new List<LedgerEntry>();
+                        lines.Add(line);
+                    }
+                    else (loose ??= new SaveBatch()).Ledger.Add(line);
+                }
+                foreach (KeyValuePair<string, List<LedgerEntry>> lines in front)
+                {
+                    if (PendingLedger.TryGetValue(lines.Key, out List<LedgerEntry> waiting)) lines.Value.AddRange(waiting);
+                    PendingLedger[lines.Key] = lines.Value;
+                }
+
+                foreach (KeyValuePair<string, SaveBatch> again in resends)
+                {
+                    if (again.Value.IsEmpty) continue;
+                    string id = again.Key;
+                    var service = store as ServiceSaveStore;
+                    // With the save service, only while no other server holds the account: never over another server's newer saves.
+                    if (service != null && !service.TryLock(AccountsPrefix + id, out string heldBy))
+                    {
+                        Debug.LogError($"[Save] Account {id}: its refused save was not sent again: {heldBy} holds the account now, so its saves stay ({again.Value.Ledger.Count} ledger line(s) not kept).");
+                        continue;
+                    }
+                    var carriedAgain = new Carried();
+                    carriedAgain.Account(id, again.Value.Writes, again.Value.Deletes);
+                    carriedAgain.Ledger.AddRange(again.Value.Ledger);
+                    Debug.LogWarning($"[Save] Account {id} had left when its save was refused: sent again as it was ({again.Value.Writes.Count} part(s), {again.Value.Deletes.Count} delete(s), {again.Value.Ledger.Count} ledger line(s)).");
+                    Send(again.Value, carriedAgain);
+                    foreach (KeyValuePair<string, string> write in again.Value.Writes) LastWritten[write.Key] = write.Value;   // sent: a refusal of it can send it again
+                    foreach (string key in again.Value.Deletes) LastWritten.Remove(key);
+                    service?.Unlock(AccountsPrefix + id);
+                }
+                if (loose != null)
+                {
+                    var carriedLoose = new Carried();
+                    carriedLoose.Ledger.AddRange(loose.Ledger);
+                    Send(loose, carriedLoose);
+                }
+            }
+        }
+
+        /// <summary>Takes a waiting ledger line out again (a Name Change undone after its save was refused). True when it was waiting.</summary>
+        public static bool Unledger(LedgerEntry line)
+        {
+            if (line == null || string.IsNullOrEmpty(line.account) || !PendingLedger.TryGetValue(line.account, out List<LedgerEntry> lines)) return false;
+            int at = lines.IndexOf(line);
+            if (at < 0 && !string.IsNullOrEmpty(line.id)) at = lines.FindIndex(l => l != null && l.id == line.id);
+            if (at < 0) return false;
+            lines.RemoveAt(at);
+            if (lines.Count == 0) PendingLedger.Remove(line.account);
+            if (!string.IsNullOrEmpty(line.id)) LedgerAgain.Remove(line.id);
+            return true;
+        }
+
+        /// <summary>True when the line waits for a save, or a refusal put it on its way again (so a second one would be a double).</summary>
+        public static bool IsLedgerWaiting(LedgerEntry line)
+        {
+            if (line == null) return false;
+            if (!string.IsNullOrEmpty(line.id) && LedgerAgain.Contains(line.id)) return true;
+            return !string.IsNullOrEmpty(line.account) && PendingLedger.TryGetValue(line.account, out List<LedgerEntry> lines) && lines.Contains(line);
+        }
+
+        private static void ForgetAccount(string id)
+        {
+            LastWritten.Remove(AccountsPrefix + id);
+            if (PartKeysOf.TryGetValue(id, out HashSet<string> present))
+                foreach (string key in present) LastWritten.Remove(key);
+        }
+
+        private static void ForgetWorld(string key)
+        {
+            LastWritten.Remove(key);
+            if (WorldEntryKeys.TryGetValue(key, out HashSet<string> present))
+                foreach (string entryKey in present) LastWritten.Remove(entryKey);
         }
     }
 }
