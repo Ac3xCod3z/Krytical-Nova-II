@@ -38,6 +38,16 @@ namespace KryticalNova.EditorTools
             return at;
         }
 
+        static string Alive(GameObject body) => body.TryGetComponent(out CombatEntity e) ? e.IsAlive.ToString() : "?";
+
+        // the server body's own follow target (private: the public state is the owner's view's)
+        static string FollowTarget(GameObject body)
+        {
+            var follow = body.GetComponent<PlayerFollow>();
+            var target = follow != null ? typeof(PlayerFollow).GetField("target", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)?.GetValue(follow) as PlayerParty : null;
+            return target != null ? target.MemberName : "nobody";
+        }
+
         public static IEnumerator Run(KnPlayHere.TwoPlayerRun r, GameObject p2)
         {
             bool squadOk = false, dotsOk = false, followOk = false, killOk = false;
@@ -47,7 +57,9 @@ namespace KryticalNova.EditorTools
                 var b = p2.GetComponent<PlayerParty>();
                 if (a == null || b == null) { r.Log("squad: FAIL; a server body has no PlayerParty"); yield break; }
                 string nameA = a.MemberName, nameB = b.MemberName;
-                Vector3 at = Ground(Spot);
+                // run 1 (12 Nov): at the combat spot both players had no HP by the first jump (the zone's Hostiles), which ends a Follow;
+                // the Squad and the Follow are proven where the Tester starts (the town), the kill at the combat spot afterwards
+                Vector3 at = Ground(r.Body.transform.position);
                 r.Put(r.Body, at);
                 r.Put(p2, at + new Vector3(2f, 0f, 0f));
                 yield return new WaitForSeconds(2.5f);
@@ -91,6 +103,7 @@ namespace KryticalNova.EditorTools
                     Vector3 to = Ground(from + new Vector3(i == 0 ? 6f : -6f, 0f, 0f));
                     string why = click != null ? click.ViewJumpRefusal(to) : "no PointAndClickPlayer on the own view";
                     int planned0 = r.JumpPlans(), seen0 = r.FollowJumps();
+                    r.Log($"squad: jump {i + 1}: before: Tester alive {Alive(r.Body)}, Player2 alive {Alive(p2)}, Player2's server body follows '{FollowTarget(p2)}'");
                     r.Log($"squad: jump {i + 1}: the Tester at {from:F1} clicks a jump to {to:F1}; own rules: {why ?? "allowed"}; Player2 at {p2.transform.position:F1}");
                     if (why == null) BodyClicks.Jump(to);
                     yield return new WaitForSeconds(7f);
@@ -116,7 +129,8 @@ namespace KryticalNova.EditorTools
                 pa.SetLevel(Level);
                 pb.SetLevel(Level);
                 yield return new WaitForSeconds(1f);
-                Vector3 here = r.Body.transform.position;
+                Vector3 here = Ground(Spot);
+                r.Put(r.Body, here);
                 r.Put(p2, here + new Vector3(2f, 0f, 0f));
                 yield return new WaitForSeconds(1.5f);
                 int xa0 = pa.Experience, xb0 = pb.Experience, la0 = pa.CurrentLevel, lb0 = pb.CurrentLevel;
