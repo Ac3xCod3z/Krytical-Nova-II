@@ -66,6 +66,24 @@ namespace KryticalNova.Player.Entities.Bodies
         /// <summary>The ghost is in a jump's flight now.</summary>
         public bool Airborne => IsLive && m_World.GetExistingSystemManaged<PlayerJumpServerSystem>() is { } jump && jump.InFlight(m_Ghost);
 
+        /// <summary>A jump's flight, a vault or a wall (NGO's motor state Jumping; wave 3, 12 Nov 2026): what takes a rider off.</summary>
+        public bool InJumpingMove
+        {
+            get
+            {
+                if (!IsLive) return false;
+                var em = m_World.EntityManager;
+                byte wall = em.HasComponent<MoveState>(m_Ghost) ? em.GetComponentData<MoveState>(m_Ghost).Wall : (byte)0;
+                return JumpingMove(Airborne, PlayerServerPlanSystem.InVault(em, m_Ghost), wall);
+            }
+        }
+
+        /// <summary>
+        /// NGO's rule for "the motor is Jumping" on a body without a motor: a jump's flight, a vault, or any wall state (Wall 1 on a wall,
+        /// 2 perched: NGO's wall motor played its Jumping clips from the plant on). Water alone is not one.
+        /// </summary>
+        public static bool JumpingMove(bool airborne, bool vault, byte wall) => airborne || vault || wall != 0;
+
         /// <summary>Metres left of the ghost's walk along the server's planned path (0 standing or without a plan for this order).</summary>
         public float PathLeft
         {

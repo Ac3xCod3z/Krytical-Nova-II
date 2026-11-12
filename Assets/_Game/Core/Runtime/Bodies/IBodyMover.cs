@@ -31,6 +31,12 @@ namespace KryticalNova.Core
         /// <summary>The body is in a jump's flight now (its ghost's plan; NGO's PlayerJumpMotor.IsBusy, which never runs on a ServerBody).</summary>
         bool Airborne { get; }
 
+        /// <summary>
+        /// The body is in a move NGO's motor played as Jumping: a jump's flight, a vault, or on a wall (Wallstride, its roof routes and
+        /// flip included). Waterstride is not one (NGO's water motor never set Jumping). A rider in one is taken off at once (PlayerMounts).
+        /// </summary>
+        bool InJumpingMove => Airborne;
+
         /// <summary>The body is not standing still: walking, in a jump or a vault, on a wall or the water (NGO's motor CanStartEmote; M8 8.4.6).</summary>
         bool Busy { get; }
         /// <summary>Metres left of the walk being made, 0 standing (NGO's agent remainingDistance; feeds a running dismount's ending).</summary>
