@@ -45,6 +45,14 @@ namespace KryticalNova.Persistence.Entities.Tests
             GmRoster.SetHost(null);
         }
 
+        // The request budget (RpcBudget) is one table for the whole process, by player key, and test worlds hand out the same keys: in a full
+        // run the lines of earlier tests used up these players' account calls, the GM line was dropped unanswered and the wait ran out
+        // (12 Nov 2026: 2 of these tests failed in the full run and passed alone). Each test that sends lines starts with a full budget.
+        static void FreshBudget(KnTestWorld tw)
+        {
+            foreach (World client in tw.Clients) RpcBudget.Forget(ServerKeyOf(tw, client).PlayerKey);
+        }
+
         static ConnectionPlayerKey ServerKeyOf(KnTestWorld tw, World client)
         {
             int networkId = KnTestWorld.NetworkIdOf(client);
@@ -69,6 +77,7 @@ namespace KryticalNova.Persistence.Entities.Tests
             Assert.IsNotNull(a, "the client world has the GM link");
             Assert.IsNotNull(server, "the server world has the GM lines");
             tw.Tick(5);
+            FreshBudget(tw);
 
             a.GmLink.Send("gm.time 0");
             tw.TickUntil(() => a.Replies > 0, 120);
@@ -137,6 +146,7 @@ namespace KryticalNova.Persistence.Entities.Tests
             var b = tw.Clients[1].GetExistingSystemManaged<GmLineClientSystem>();
             var server = tw.Server.GetExistingSystemManaged<GmLineServerSystem>();
             tw.Tick(10);
+            FreshBudget(tw);
             ConnectionPlayerKey keyA = ServerKeyOf(tw, tw.Clients[0]), keyB = ServerKeyOf(tw, tw.Clients[1]);
             Assert.IsNull(GmRoster.Host, "no marked client world: no host");
             Assert.IsFalse(GmRoster.IsGm(keyA.Serial) || GmRoster.IsGm(keyB.Serial), "and nobody is GM");
