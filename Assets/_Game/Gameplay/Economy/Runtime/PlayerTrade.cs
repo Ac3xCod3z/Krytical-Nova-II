@@ -118,6 +118,20 @@ namespace KryticalNova.Economy
         private bool HasAuthority => (!IsSpawned || IsServer) && !EntityView;
         private bool EntityView => BodyRoleTag.Of(this) is { Kind: NetRoleKind.ClientView };
         private bool EntityServer => BodyRoleTag.Of(this) is { Kind: NetRoleKind.ServerBody };
+        /// <summary>
+        /// The entity netcode's own view with no request link yet: say so instead of running the server's rules here, where they stop
+        /// silently (owner, hand test 8 Nov 2026: Trade did nothing, no message).
+        /// </summary>
+        private bool NoLinkOnEntityView()
+        {
+            if (!EntityView) return false;
+            Debug.LogWarning($"[KnTrade] {TraderName}: no request link on this view (RequestsOf null), the trade was not sent");
+            ShowLocal("Trade is not ready yet. Try again in a moment.");
+            return true;
+        }
+
+        private static void ShowLocal(string text) => ClientPresentationRegistry.Messages?.ShowMessage(text);
+
         private IBodyRequests Requests => BodyRoleTag.RequestsOf(this) is IBodyRequests requests ? requests : null;
         private int MaxLines => settings != null ? settings.tradeSlots : 12;
         private float Range => settings != null ? settings.tradeRange : 6f;
@@ -169,6 +183,7 @@ namespace KryticalNova.Economy
         /// <summary>A server body of the entity netcode runs its owner's request (NGO's RPC bodies, after the caller's Money limit).</summary>
         public void RunTradeOp(TradeOpKind op, string name, short a, ushort b, long creds, bool flag)
         {
+            Debug.Log($"[KnTrade] server: {TraderName} {op} '{name}' a={a} b={b} creds={creds} flag={flag}{(EntityServer ? "" : " IGNORED: not a server body")}{(leaving ? " IGNORED: leaving" : "")}");
             if (!EntityServer || leaving) return;
             switch (op)
             {
@@ -238,7 +253,8 @@ namespace KryticalNova.Economy
         public void Request(PlayerTrade target)
         {
             if (target == null) return;
-            if (Requests is { } requests) { requests.TradeOp(TradeOpKind.RequestByName, target.TraderName, 0, 0, 0, false); return; }
+            if (Requests is { } requests) { Debug.Log($"[KnTrade] {TraderName}: asks {target.TraderName} (sent to the server)"); requests.TradeOp(TradeOpKind.RequestByName, target.TraderName, 0, 0, 0, false); return; }
+            if (NoLinkOnEntityView()) return;
             if (!IsSpawned) ServerRequest(target);
             else if (IsOwner && target.IsSpawned) RequestRpc(target.NetworkObject);
         }
@@ -246,7 +262,14 @@ namespace KryticalNova.Economy
         /// <summary>Ask the player called <paramref name="playerName"/> to trade.</summary>
         public void Request(string playerName)
         {
-            if (Requests is { } requests) { if (!string.IsNullOrWhiteSpace(playerName)) requests.TradeOp(TradeOpKind.RequestByName, playerName.Trim(), 0, 0, 0, false); return; }
+            if (Requests is { } requests)
+            {
+                if (string.IsNullOrWhiteSpace(playerName)) { Debug.LogWarning($"[KnTrade] {TraderName}: trade asked with no name"); ShowLocal("Pick a player to trade with."); return; }
+                Debug.Log($"[KnTrade] {TraderName}: asks '{playerName.Trim()}' (sent to the server)");
+                requests.TradeOp(TradeOpKind.RequestByName, playerName.Trim(), 0, 0, 0, false);
+                return;
+            }
+            if (NoLinkOnEntityView()) return;
             if (IsSpawned && IsOwner && !string.IsNullOrWhiteSpace(playerName)) RequestByNameRpc(playerName.Trim());
         }
 
@@ -828,6 +851,7 @@ namespace KryticalNova.Economy
         private void Tell(string text)
         {
             if (leaving || string.IsNullOrEmpty(text)) return;
+            if (EntityServer) Debug.Log($"[KnTrade] server tells {TraderName}: {text} (by {(chat != null && chat.isActiveAndEnabled ? "chat" : "message line")})");
             // a server body of the entity netcode: its player's chat log as NGO (M8 8.4.1); the message line only without chat
             if (EntityServer && (chat == null || !chat.isActiveAndEnabled)) { OwnerMessages.TryTell(this, text); return; }
             if (chat != null && chat.isActiveAndEnabled) chat.ServerSystem(text);
