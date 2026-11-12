@@ -125,7 +125,7 @@ namespace KryticalNova.DevTools
             return string.Join("\n", new[]
             {
                 "TARGET       gm.players · gm.target <clientId|self>   (host: aim every command below at a connected player)",
-                "PROGRESSION  gm.level <n> · gm.maxlevel · gm.xp <n> · gm.statpoints <n> · gm.skillpoints <n> · gm.attr <str|vit|agi|spi> <n> · gm.resetstats",
+                "PROGRESSION  gm.level <n> · gm.maxlevel · gm.xp <n> · gm.statpoints <n> · gm.skillpoints <n> · gm.attr <str|vit|agi|spi> <n> · gm.resetstats · gm.resets [n]",
                 "STATS        gm.stats · gm.setstat <StatType> <value> · gm.clearstats",
                 "VITALS       gm.heal · gm.fillchi · gm.damage <n> · gm.hitme [n] [normal|heavy|crit] [front|back|left|right] · gm.spendchi <n> · gm.kill",
                 "SKILLS       gm.skillpoints <n> · gm.skills.max · gm.skills · gm.dropskills <true|false> · gm.unlockskill <#|id> · gm.lockskill <#|id>   (# = its number in gm.skills)",
@@ -224,6 +224,20 @@ namespace KryticalNova.DevTools
             if (!TryGet<PlayerCharacterProgression>(out var prog, out var error)) return error;
             prog.ResetAllocations();
             return $"Attributes reset · {prog.StatPoints} stat points.";
+        }
+
+        // UtilityItemGenerator.RespecChipId / MemoryWipeId (wave 3b, owner 12 Nov 2026).
+        private const ushort RespecChipId = 9037, MemoryWipeId = 9038;
+
+        [Command("gm.resets", "Give the targeted player n Respec Chips and n Memory Wipes (1 unless told).")]
+        private static string Resets(int count = 1)
+        {
+            if (!TryGet<PlayerInventory>(out var inventory, out var error)) return error;
+            count = Math.Max(1, count);
+            int chips = inventory.ServerGive(RespecChipId, count, earned: true);
+            int wipes = inventory.ServerGive(MemoryWipeId, count, earned: true);
+            return chips == count && wipes == count ? $"Gave {count} Respec Chip(s) and {count} Memory Wipe(s)."
+                : $"Gave {chips} Respec Chip(s) and {wipes} Memory Wipe(s) of {count}: the Pack is full, or the items are missing (run Krytical Nova/Items/5. Generate Utility Items).";
         }
 
         private static bool TryParseAttribute(string text, out CharacterAttribute attribute)

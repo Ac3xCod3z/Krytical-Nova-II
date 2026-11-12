@@ -446,6 +446,9 @@ namespace KryticalNova.EditorTools.GM
         [TabGroup(Tabs, PlayerTab), Button("Refund All Allocated Points"), EnableIf(nameof(IsReady)), PropertyOrder(8)]
         private void ResetAllocations() => Run("gm.resetstats");
 
+        [TabGroup(Tabs, PlayerTab), Button("Give Respec Chip + Memory Wipe"), EnableIf(nameof(IsReady)), PropertyOrder(8)]
+        private void GiveResetItems() => Run("gm.resets 1");
+
         [ButtonGroup(Tabs + "/" + PlayerTab + "/Vitals"), EnableIf(nameof(IsReady)), PropertyOrder(9)]
         private void Heal() => Run("gm.heal");
 
