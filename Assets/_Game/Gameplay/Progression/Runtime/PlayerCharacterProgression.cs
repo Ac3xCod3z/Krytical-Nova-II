@@ -329,14 +329,25 @@ namespace KryticalNova.Progression
         public void ResetAllocations()
         {
             if (!HasAuthority || !isActiveAndEnabled || statData == null) return;
-            int cost = Mathf.Max(1, statData.allocationCost);
+            ApplyStatRefund(StatPointsPlaced);
+        }
+
+        /// <summary>Stat points placed above the lineage's starting values (what <see cref="ResetAllocations"/> hands back).</summary>
+        public int StatPointsPlaced => statData == null ? 0
+            : ProgressionResetRules.StatPointsPlaced(attributes, index => statData.GetStartingValue((CharacterAttribute)index), statData.allocationCost);
+
+        /// <summary>Stat points this character's level has earned (the start plus every level's reward).</summary>
+        public int StatPointsEarnedByLevel => ProgressionResetRules.EarnedStatPoints(progressionData, currentLevel);
+
+        /// <summary>Skill points this character's level has earned (the start plus every level's reward).</summary>
+        public int SkillPointsEarnedByLevel => ProgressionResetRules.EarnedSkillPoints(progressionData, currentLevel);
+
+        // Attributes back to their starting values and handBack stat points added. Authority only.
+        private void ApplyStatRefund(int handBack)
+        {
             for (int index = 0; index < attributes.Length; index++)
-            {
-                int starting = statData.GetStartingValue((CharacterAttribute)index);
-                int spent = Mathf.Max(0, attributes[index] - starting);
-                statPoints = SaturatingAdd(statPoints, spent * cost);
-                attributes[index] = starting;
-            }
+                attributes[index] = statData.GetStartingValue((CharacterAttribute)index);
+            statPoints = SaturatingAdd(statPoints, Mathf.Max(0, handBack));
             Commit();
         }
 

@@ -29,6 +29,10 @@ namespace KryticalNova.Core
         RegisterMount = 10,
         /// <summary>Feeds the selected mount (Mount Feed).</summary>
         FeedMount = 11,
+        /// <summary>Hands back every stat point placed, to be placed again (a Respec Chip; owner, 12 Nov 2026).</summary>
+        Respec = 12,
+        /// <summary>Hands back every skill point placed, Run and Jump too; Skill Chip skills stay unlocked (a Memory Wipe; owner, 12 Nov 2026).</summary>
+        MemoryWipe = 13,
     }
 
     /// <summary>
