@@ -79,7 +79,65 @@ namespace KryticalNova.Tests
             var fresh = new ServiceSaveStore(Url, File.ReadAllText(KeyFile).Trim(), "test-reader");
             Assert.IsTrue(fresh.TryRead(key, out string kept));
             fresh.Dispose();
-            Assert.AreEqual("{\"v\":2}", kept, "the newer save stays");
+            Assert.AreEqual("{\"v\":2}", kept, "the newer save stays (B's next save would now be written: it took the service's version)");
+        }
+
+        // Save fix A (owner pick): a refused save stays refused, and the store takes the service's version, so the next one is written.
+        [Test]
+        public void AfterAConflict_TheNextSaveIsWritten()
+        {
+            a.Write(key, "{\"v\":1}");
+            a.Flush();                                    // A knows version 1
+            Assert.IsTrue(b.TryRead(key, out _));
+            b.Write(key, "{\"v\":\"elsewhere\"}");      // changed behind A's back
+            b.Flush();
+            UnityEngine.TestTools.LogAssert.Expect(UnityEngine.LogType.Error, new System.Text.RegularExpressions.Regex("was changed elsewhere"));
+            bool? first = null;
+            var one = new SaveBatch { Done = w => first = w };
+            one.Write(key, "{\"v\":2}");
+            a.WriteBatch(one);
+            a.Flush();
+            Assert.AreEqual(false, first, "the refused save stays refused (the rename undo depends on it)");
+            Assert.AreEqual("{\"v\":\"elsewhere\"}", ReadFresh(), "the service's copy wins this once");
+            bool? second = null;
+            var two = new SaveBatch { Done = w => second = w };
+            two.Write(key, "{\"v\":3}");
+            a.WriteBatch(two);
+            a.Flush();
+            Assert.AreEqual(true, second, "the next save builds on the service's version");
+            Assert.AreEqual("{\"v\":3}", ReadFresh());
+        }
+
+        [Test]
+        public void AConflictOnADeletedDocument_MakesItNewNextTime()
+        {
+            a.Write(key, "{\"v\":1}");
+            a.Flush();
+            Assert.IsTrue(b.TryRead(key, out _));
+            b.Delete(key);                                // gone behind A's back
+            b.Flush();
+            UnityEngine.TestTools.LogAssert.Expect(UnityEngine.LogType.Error, new System.Text.RegularExpressions.Regex("was changed elsewhere"));
+            bool? first = null;
+            var one = new SaveBatch { Done = w => first = w };
+            one.Write(key, "{\"v\":2}");
+            a.WriteBatch(one);
+            a.Flush();
+            Assert.AreEqual(false, first);
+            bool? second = null;
+            var two = new SaveBatch { Done = w => second = w };
+            two.Write(key, "{\"v\":3}");
+            a.WriteBatch(two);
+            a.Flush();
+            Assert.AreEqual(true, second, "version 0 from the service: the next save makes it new");
+            Assert.AreEqual("{\"v\":3}", ReadFresh());
+        }
+
+        private string ReadFresh()
+        {
+            var fresh = new ServiceSaveStore(Url, File.ReadAllText(KeyFile).Trim(), "test-reader");
+            fresh.TryRead(key, out string kept);
+            fresh.Dispose();
+            return kept;
         }
 
         [Test]

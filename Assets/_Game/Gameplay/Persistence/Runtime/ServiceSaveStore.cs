@@ -276,8 +276,12 @@ namespace KryticalNova.Persistence
                 if (response.StatusCode == HttpStatusCode.Conflict)
                 {
                     BatchAnswer refused = JsonUtility.FromJson<BatchAnswer>(answer);
+                    // Save fix A (owner pick): the service's copy wins this once, and the store takes its version (0: gone, the
+                    // next save makes it new), so the next save of the document is written instead of being refused for ever.
+                    if (!string.IsNullOrEmpty(refused.conflict))
+                        lock (gate) versions[refused.conflict] = refused.conflictVersion > 0 ? refused.conflictVersion : 0;
                     Debug.LogError($"[Save] '{refused.conflict}' was changed elsewhere (it is at version {refused.conflictVersion}): this save of " +
-                                   $"{batch.Writes.Count + batch.Deletes.Count} document(s) was not written, so the newer one stays.");
+                                   $"{batch.Writes.Count + batch.Deletes.Count} document(s) was not written, so the newer one stays. The next save of it builds on the service's version.");
                     word = false;
                 }
                 else
