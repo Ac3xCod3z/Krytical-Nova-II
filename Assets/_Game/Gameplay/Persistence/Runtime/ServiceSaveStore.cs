@@ -307,6 +307,16 @@ namespace KryticalNova.Persistence
                                    $"{batch.Writes.Count + batch.Deletes.Count} document(s) was not written, so the newer one stays. The next save of it builds on the service's version.");
                     word = false;
                 }
+                else if (response.StatusCode == HttpStatusCode.BadRequest || response.StatusCode == HttpStatusCode.RequestEntityTooLarge)
+                {
+                    // Owner, 12 Nov 2026: a batch the service will never take (too many items, too big, a bad key) is FINAL. It is
+                    // told false once and leaves the line, so the saves behind it go on; it is never sent again as it is.
+                    // With A2 the refusal un-marks what it carried, so the next save sends the document again.
+                    Debug.LogError($"[Save] The save service refused this save of {batch.Writes.Count} write(s), {batch.Deletes.Count} delete(s) and " +
+                                   $"{batch.Ledger.Count} ledger line(s) for good ({(int)response.StatusCode}: {answer}). It is not sent again as it is; " +
+                                   "the next save sends the document again.");
+                    word = false;
+                }
                 else
                 {
                     response.EnsureSuccessStatusCode();
