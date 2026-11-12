@@ -116,6 +116,7 @@ namespace KryticalNova.EditorTools
             new Row("KryticalNova.Social.PlayerFollow", ("settings", SquadSettingsPath)),
             // Serums: what a character has taken, and the stats that stay.
             new Row("KryticalNova.Progression.PlayerSerums", ("settings", SerumSettingsPath)),
+            new Row("KryticalNova.Progression.PlayerMemoryWipe"), // a Memory Wipe is used (wave 3b, owner 12 Nov 2026)
             // Wallstride: running up walls and into trees (level 60, Run and Jump at rank 20).
             new Row("KryticalNova.Player.PlayerWallRunMotor", ("settings", WallstrideSettingsPath),
                 // In-place copies of their own (WallstrideClipCopies): the originals carry travel the climb must not.

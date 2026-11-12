@@ -1258,7 +1258,8 @@ namespace KryticalNova.Persistence.Entities
             || effect == ItemUseEffect.AutobuffTime       // M8 8.3.11: the "autobuff" part is real (B26)
             || effect == ItemUseEffect.AutopilotTime      // wave 2, 12 Nov 2026: the "autopilot" part is real
             || effect == ItemUseEffect.RegisterMount || effect == ItemUseEffect.FeedMount    // M8 8.4.8: the "mounts" part is real (B38)
-            || effect == ItemUseEffect.Respec;            // wave 3b, 12 Nov 2026: the "progression" part is real
+            || effect == ItemUseEffect.Respec             // wave 3b, 12 Nov 2026: the "progression" part is real
+            || effect == ItemUseEffect.MemoryWipe;        // wave 3b: the "skills", "movement" and "progression" parts are real
         // NameChange stays out on purpose (wave 2, 12 Nov 2026): the pass is never "used" through this path (the client opens the name
         // dialog instead, PlayerInventory.RequestUse); it is spent only by its own door, RenameRpc (RenameSystems.cs).
 

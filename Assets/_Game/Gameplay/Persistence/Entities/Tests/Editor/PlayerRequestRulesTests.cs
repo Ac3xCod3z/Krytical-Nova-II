@@ -16,7 +16,7 @@ namespace KryticalNova.Persistence.Entities.Tests
             var ported = new[] { ItemUseEffect.None, ItemUseEffect.FluxFlask, ItemUseEffect.FeedPet, ItemUseEffect.Serum, ItemUseEffect.Recall,
                 ItemUseEffect.ExperienceBoost, ItemUseEffect.LearnSkill, ItemUseEffect.AutobuffTime, ItemUseEffect.AutopilotTime,   // M8 8.3.3 / 8.3.2 / 8.3.11: xpboosts, skills, autobuff real
                 ItemUseEffect.RegisterMount, ItemUseEffect.FeedMount,      // M8 8.4.8: mounts real
-                ItemUseEffect.Respec };   // wave 3b: progression real
+                ItemUseEffect.Respec, ItemUseEffect.MemoryWipe };   // wave 3b: progression, skills, movement real
             foreach (ItemUseEffect effect in Enum.GetValues(typeof(ItemUseEffect)))
                 Assert.AreEqual(Array.IndexOf(ported, effect) >= 0, PlayerRequestServerSystem.EffectPorted(effect), effect.ToString());
             Assert.IsTrue(PlayerRequestServerSystem.EffectPorted(ItemUseEffect.RegisterMount), "mounts is real now (M8 8.4.8)");

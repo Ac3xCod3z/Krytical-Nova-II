@@ -305,6 +305,25 @@ namespace KryticalNova.Progression
             TryUpgradeMultiple(skill, count);
         }
 
+        /// <summary>Skill points the learned Run and Jump ranks cost: each rank's own <c>skillPointCost</c> (a Memory Wipe, wave 3b).</summary>
+        public long SpentOnRanks() => SpentOn(runSkill, runRank) + SpentOn(jumpSkill, jumpRank);
+
+        private static long SpentOn(MovementSkillData skill, int rank) =>
+            skill == null ? 0 : ProgressionResetRules.MovementRankCost(rank, k => skill.TryGetRank(k, out MovementSkillRank r) ? r.skillPointCost : 0);
+
+        /// <summary>True when Run or Jump is learned.</summary>
+        public bool HasLearnedRanks => runRank > 0 || jumpRank > 0;
+
+        /// <summary>Authority: Run and Jump back to 0 (a new character's ranks) and the character walks. Points are handed back by the caller.</summary>
+        public void ClearRanks()
+        {
+            if (!HasAuthority || !isActiveAndEnabled) return;
+            runRank = 0;
+            jumpRank = 0;
+            selectedSkill = MovementSkillId.None;
+            Commit();
+        }
+
         /// <summary>GM: learns Run and Jump at their top ranks, ignoring level and skill points. Authority only.</summary>
         public void GmSetMaxRanks()
         {

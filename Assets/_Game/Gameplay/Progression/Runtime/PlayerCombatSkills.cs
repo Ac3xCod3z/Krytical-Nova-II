@@ -498,6 +498,63 @@ namespace KryticalNova.Progression
             Commit();
         }
 
+        // ---------------- a Memory Wipe (wave 3b, owner 12 Nov 2026; the item's handler is PlayerMemoryWipe) ----------------
+
+        /// <summary>
+        /// Skill points the learned combat ranks cost: per rank key once (the skills of one slot share it), the sum of
+        /// <see cref="SkillDefinitionSO.GetSkillPointCostForRank"/> for every rank below it, the spend's own cost.
+        /// </summary>
+        public long SpentOnRanks()
+        {
+            long sum = 0;
+            foreach (KeyValuePair<string, SkillDefinitionSO> priced in PricedRankKeys())
+                if (learnedRanks.TryGetValue(priced.Key, out int rank) && rank > 0)
+                    sum += ProgressionResetRules.CombatRankCost(rank, priced.Value.GetSkillPointCostForRank);
+            return sum;
+        }
+
+        /// <summary>True when any combat rank is learned.</summary>
+        public bool HasLearnedRanks
+        {
+            get
+            {
+                foreach (int rank in learnedRanks.Values) if (rank > 0) return true;
+                return false;
+            }
+        }
+
+        /// <summary>True while a cast is under way or asked for (a Memory Wipe waits for it).</summary>
+        public bool CastBusy
+        {
+            get
+            {
+                EnsureComponents();
+                return Time.time < castRequestPendingUntil || (attackExecutor != null && attackExecutor.IsCasting);
+            }
+        }
+
+        /// <summary>
+        /// Authority: every priced combat rank back to 0 (a new character's rank). Skill Chip unlocks stay. The points are handed
+        /// back by the caller.
+        /// </summary>
+        public void ClearRanks()
+        {
+            if (!HasAuthority) return;
+            foreach (KeyValuePair<string, SkillDefinitionSO> priced in PricedRankKeys()) learnedRanks.Remove(priced.Key);
+            SkillMessage?.Invoke("Every skill rank is back to 0. Skill Chip skills stay unlocked.");
+            Commit();
+        }
+
+        // Each rank key once, with the first skill that names it (sharers cost the same: ProgressionResetRulesTests).
+        private Dictionary<string, SkillDefinitionSO> PricedRankKeys()
+        {
+            var keys = new Dictionary<string, SkillDefinitionSO>();
+            if (availableSkills == null) return keys;
+            foreach (SkillDefinitionSO skill in availableSkills)
+                if (skill != null && !keys.ContainsKey(skill.RankKey)) keys.Add(skill.RankKey, skill);
+            return keys;
+        }
+
         /// <summary>GM: unlocks every book skill and puts every skill at its top rank, ignoring level and skill points.</summary>
         public void GmSetAllRanksToMax()
         {
