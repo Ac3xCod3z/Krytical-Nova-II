@@ -119,6 +119,7 @@ A vendor sells from a shelf and buys what the player carries. Two are open, the 
 | | Flux Flask (and its refill, 60 a drink, from the Apothecary's dialogue) | 600 |
 | | Pet Ration | 50 |
 | | Mount Feed | 50 (placeholder; owner, 25 Oct 2026) |
+| | Respec Chip, Memory Wipe | 5,000 each (placeholder; wave 3b, owner 12 Nov 2026). Both also drop from a Hostile of any level at 0.05 % each (`HostileSettings.materialDrops`, level gap applies) |
 | Armorer (`VS_Armorer`) | Alumite (+3 %) | 500 |
 | | Iridion (+6 %) | 1,500 |
 | | Fusion Catalyst, Tuning Chip | 10,000 |

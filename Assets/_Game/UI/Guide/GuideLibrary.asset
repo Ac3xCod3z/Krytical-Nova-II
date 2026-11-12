@@ -320,7 +320,7 @@ MonoBehaviour:
       - kind: 4
         heading: 
         lines:
-        - 'Points you spend stay spent: there is no way to take them back yet. Unspent points are shown on your plate.'
+        - 'A Respec Chip hands back every stat point you placed, to place again. Hostiles drop it rarely and the Apothecary sells it. Unspent points are shown on your plate.'
     - id: levels
       title: Levels, XP and death
       summary: Killing Hostiles earns XP. Each level makes you stronger, gives stat and skill points, and lets you wear better gear. The cap is level 112.
@@ -421,6 +421,7 @@ MonoBehaviour:
         - Click a skill to read it beside the tree. Skill points left are shown at the top.
         - Press <b>+1</b>, <b>+5</b> or <b>+10</b> on its card to put ranks into it.
         - Drag the skill from the tree onto the Hotbar if it is not there yet.
+        - A Memory Wipe puts every skill back to rank 0, Run and Jump too, and hands back every skill point they cost, to place again. Skill Chip skills stay unlocked. Hostiles drop it rarely and the Apothecary sells it; not while casting, jumping or walking.
       - kind: 4
         heading: 
         lines:
