@@ -187,12 +187,13 @@ One bench, at the Fabricator (who stands at the Elder hall, and takes stat reset
 | --- | --- |
 | Who | A Sponsor is level 112 (the cap; Prime 1 and up once Prime levels exist). A Recruit is of the same faction and **more than 5 levels below** the Sponsor. A Sponsor has up to 3 Recruits; a Recruit has one Sponsor; nobody is both. |
 | Asking | "Sponsor Request" in a player's menu, `/sponsor name`, or the name box of the Sponsor window (opened by `/sponsor` or the SPONSOR button in Contacts). Either may ask; their levels decide who sponsors. The other answers on screen within 30 s. Both must be online; a block refuses it like every other request. |
-| The bonus | While the Sponsor is within 40 m in the same map and both are alive, the Recruit's Hostile kills pay a bonus (owner, 11 Oct 2026): +10 %; in the Sponsor's Squad +15 % with two of that Sponsor's Recruits in the Squad and near the Sponsor, +20 % with three. In the Sponsor's Squad it adds to the Squad boost (best case +40 %: three Recruits in a full Squad); anywhere else the larger of the two counts. The kill line says "Sponsor +10%", and a System line says when it goes on and off. |
-| The Sponsor in a Squad | A Sponsor may Squad with its Recruits whatever their level, and others may join (the level rule leaves the Sponsor out, both ways; the others must still be within 10 levels of each other). It is there to help, not to hunt: a Hostile the Sponsor hits first pays XP to no one, and one 5 or more levels below the Sponsor drops nothing; the Sponsor gets no Squad boost; its Recruits are paid by their own level gap, not the Sponsor's. A member who is not a Recruit gets the Squad boost only. |
-| Sponsor points | 250 for each full minute the Sponsor spends near a Recruit, however many are near. Stored and shown; nothing spends them yet. |
+| The bonus | While the Sponsor is within 500 m (`rangeMetres`; owner, 12 Nov 2026: zones are about 2,400 m across; it was 40 m) in the same map and both are alive, the Recruit's Hostile kills pay a bonus (owner, 11 Oct 2026): +10 %; in the Sponsor's Squad +15 % with two of that Sponsor's Recruits in the Squad and near the Sponsor, +20 % with three. In the Sponsor's Squad it adds to the Squad boost (best case +40 %: three Recruits in a full Squad); anywhere else the larger of the two counts. The kill line says "Sponsor +10%", and a System line says when it goes on and off. |
+| The Sponsor in a Squad | A Sponsor may Squad with its Recruits whatever their level, and others may join (the level rule leaves the Sponsor out, both ways; the others must still be within 10 levels of each other). It is there to help, not to hunt: a Hostile 5 or more levels below the Sponsor that it hits first drops nothing; the Sponsor gets no Squad boost; its Recruits are paid by their own level gap, not the Sponsor's. A member who is not a Recruit gets the Squad boost only. |
+| A kill the Sponsor holds | Owner's pick A, 12 Nov 2026 (DOTS game; before, such a kill paid XP to no one). The Sponsor is paid nothing. Each of its Recruits within 500 m of it (alive, same map) is paid once, by their own level gap, with the Squad boost, as for their own kill. Every other Squad member in the map (a mate who is not its Recruit, or a Recruit further than 500 m) is paid by the Squad's rule with the Sponsor's level counted as the Squad's highest: a member 6 or more levels below a far higher Sponsor is paid at the Sponsor's band, down to nothing. No Sponsor bonus is added on such a kill; XP boosters still add. With no Recruit within 500 m the others are still paid that way and the Sponsor reads "Your Recruits must be within 500 m to earn your kill's XP." The Squad itself has no distance rule: a member anywhere in the map counts. `KillPayoutPlan`. |
+| Sponsor points | 250 for each full minute the Sponsor spends within 500 m of a Recruit, however many are near. Stored and shown; nothing spends them yet. |
 | Ending | Either ends it in the window. **It ends itself when the Recruit is within 5 levels of the Sponsor** (owner's rule, 11 Oct 2026). |
 | Kept | Links are the world document `world/sponsors`, so they outlive both logging out; the points are the character's. |
-| Numbers | `SponsorSettings`: `sponsorMinLevel`, `levelGap`, `maxRecruits`, `experienceBonusSteps`, `addsToSquadBoost`, `sponsorNoDropLevels`, `rangeMetres`, `pointsPerMinute`, `requestSeconds`, `checkSeconds`; the Squad boost is `SquadSettings.maxExperienceBoost` (0.2). The bonus steps are the owner's, the 250 is from the reference. |
+| Numbers | `SponsorSettings`: `sponsorMinLevel`, `levelGap`, `maxRecruits`, `experienceBonusSteps`, `addsToSquadBoost`, `sponsorNoDropLevels`, `rangeMetres` (500: one range for the bonus, the points and a kill the Sponsor holds), `pointsPerMinute`, `requestSeconds`, `checkSeconds`; the Squad boost is `SquadSettings.maxExperienceBoost` (0.2). The bonus steps are the owner's, the 250 is from the reference. |
 
 ## Contacts (row 29)
 
@@ -383,23 +384,24 @@ Twelve Sky 2's Elixirs: a consumable that raises a stat for good, each kind a li
 - **GM**: `gm.serums [count]` gives some of each; `gm.serum <kind> <taken>` sets a count; `gm.serum` lists them.
 - **Not built**: any source (GM only); the Expansion tier's own items; TS2's take-ten and take-all items. In a Kiosk a Serum is capped like any stackable item (`kioskStackablePriceCap`).
 
-## XP boosters (Nova Store stock; built 11 Oct 2026)
+## XP boosters (Nova Store stock; built 11 Oct 2026, four since 12 Nov 2026)
 
-Three items, used from the Pack. Each has a clock of its own; while a clock has time left its share is added to the XP of every Hostile kill.
+Four items, used from the Pack (the Rider Booster and the mount's share are in the DOTS game only, 12 Nov 2026). Each has a clock of its own; while a clock has time left its share is added to the XP of every Hostile kill.
 
 | Item | Adds | One lasts |
 | --- | --- | --- |
 | Field Booster (9500) | +50 % character XP (x1.5) | 60 min |
 | Companion Booster (9501) | +100 % pet XP (x2) | 60 min |
-| Tandem Booster (9502) | +50 % character XP and +50 % pet XP (x1.5 each) | 60 min |
+| Convoy Booster (9502; was the Tandem Booster, the item `Booster_Tandem` keeps its name) | +50 % character XP, +50 % pet XP and +50 % mount XP (x1.5 each) | 60 min |
+| Rider Booster (9503) | +100 % mount XP (x2): what your selected mount earns from your Hostile kills | 60 min |
 
-- **They add up** (owner, 11 Oct 2026): Field and Tandem together are character XP x2.0, Companion and Tandem pet XP x2.5; never multiplied with each other. They also add to the Squad and Sponsor boosts: a kill pays the Hostile's XP x level gap x (1 + Squad or Sponsor boost + boosters) x the server rate.
+- **They add up** (owner, 11 Oct 2026): Field and Convoy together are character XP x2.0, Companion and Convoy pet XP x2.5, Rider and Convoy mount XP x2.5; never multiplied with each other. They also add to the Squad and Sponsor boosts: a kill pays the Hostile's XP x level gap x (1 + Squad or Sponsor boost + boosters) x the server rate.
 - **The same one again adds its hour** to what is left, up to `boosterMaxHours` (24) of that booster; one more than that is refused and stays in the Pack.
-- **Numbers** (`EconomySettings.boosters`: item, character %, pet %, minutes; `boosterMaxHours`; `boosterTimeRunsOnlyOnline`, on: a clock runs only while the character is in the game, which is my pick). The names, the 24 hour limit and the icons are my picks too.
-- **Code**: `Gameplay/Progression/Runtime/PlayerExperienceBoosts` (the clocks, saved with the character under `xpboosts` by item id, the time left told to the owner; the `IItemUseHandler` for `ItemUseEffect.ExperienceBoost`) and `ExperienceBoostRules` (the sums). Character XP: `HostileKillRewards.Pay`. Pet XP: `PlayerPet.ServerCreditHostileKill` (a pet's kill XP had no multiplier before).
+- **Numbers** (`EconomySettings.boosters`: item, character %, pet %, mount %, minutes; `boosterMaxHours`; `boosterTimeRunsOnlyOnline`, on: a clock runs only while the character is in the game, which is my pick). The names, the 24 hour limit and the icons are my picks too.
+- **Code**: `Gameplay/Progression/Runtime/PlayerExperienceBoosts` (the clocks, saved with the character under `xpboosts` by item id, the time left told to the owner; the `IItemUseHandler` for `ItemUseEffect.ExperienceBoost`) and `ExperienceBoostRules` (the sums). Character XP: `HostileKillRewards.Pay`. Pet XP: `PlayerPet.ServerCreditHostileKill` (a pet's kill XP had no multiplier before). Mount XP: `PlayerMounts` through `MountRules.KillXpUnits` with `ServerMountBonus` (12 Nov 2026; a mount's kill XP read no booster before).
 - **Shown**: a badge for each running booster after the buffs (its icon and the time left; what it adds in the badge's tooltip), the item's tooltip (what one adds, for how long, and the time running), and the combat log line of a kill ("· Booster +100%").
 - **Sold nowhere yet**: they are Nova Store stock (row 32). Until the store is built: `gm.boosters [n]` gives n of each, `gm.boost` prints what runs, `gm.boost.clear` ends them; the GM Tools window has the same three buttons on its Items tab.
-- **Verified** with a second client (11 Oct 2026): a level-50 Hostile paid a level-50 character 104 XP with no booster, 156 with Field, 208 with Field and Tandem; a pet's kill was worth 4 units, 8 with Companion, 10 with Companion and Tandem; a second Field made 2 h; the clocks came back after leaving and entering the game.
+- **Verified** with a second client (11 Oct 2026): a level-50 Hostile paid a level-50 character 104 XP with no booster, 156 with Field, 208 with Field and Tandem (now Convoy); a pet's kill was worth 4 units, 8 with Companion, 10 with Companion and Tandem; a second Field made 2 h; the clocks came back after leaving and entering the game.
 
 ## The ticker: news for the whole server
 
