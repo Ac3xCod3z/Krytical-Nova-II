@@ -33,6 +33,10 @@ namespace KryticalNova.Mounts
     /// </summary>
     public static class MountRules
     {
+        /// <summary>EXP units a Hostile kill gives the selected mount, with the XP boosters' mount share added (Rider, Convoy).</summary>
+        public static uint KillXpUnits(in MountTuning tuning, float boosterBonus) =>
+            KryticalNova.Progression.ExperienceBoostRules.Boosted(tuning.KillXp, boosterBonus);
+
         /// <summary>Boxes in the Mount window: the four mounts of the game.</summary>
         public const int Slots = 4;
         public const int GrowthSteps = 100;

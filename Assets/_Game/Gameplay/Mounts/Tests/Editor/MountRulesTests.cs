@@ -35,6 +35,16 @@ namespace KryticalNova.Tests
         }
 
         [Test]
+        public void AKill_IsWorthMoreToTheMount_WithRiderAndConvoy()
+        {
+            // A kill is 4 units; the boosters' mount shares add (Convoy +50 %, Rider +100 %), owner 12 Nov 2026.
+            Assert.AreEqual(4u, MountRules.KillXpUnits(Tuning, 0f), "none");
+            Assert.AreEqual(6u, MountRules.KillXpUnits(Tuning, 0.5f), "Convoy");
+            Assert.AreEqual(8u, MountRules.KillXpUnits(Tuning, 1f), "Rider");
+            Assert.AreEqual(10u, MountRules.KillXpUnits(Tuning, 1.5f), "Rider + Convoy");
+        }
+
+        [Test]
         public void StarvingMount_EarnsNothing_GivesNothing_RidesSlowest()
         {
             MountState starving = MountRules.WithHunger(AtGrowth(60f), 0f);

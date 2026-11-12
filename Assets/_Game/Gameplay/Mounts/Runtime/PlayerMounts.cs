@@ -383,7 +383,9 @@ namespace KryticalNova.Mounts
         private void OnHostileKill(HostileKill kill)
         {
             if (!HasAuthority || selected == 0 || kill.Credited == null || kill.Credited.gameObject != gameObject) return;
-            AddXpUnits(Tuning.KillXp);
+            // The Rider and Convoy Boosters raise what a kill is worth to the selected mount (owner, 12 Nov 2026).
+            float bonus = TryGetComponent(out KryticalNova.Progression.PlayerExperienceBoosts boosts) ? boosts.ServerMountBonus : 0f;
+            AddXpUnits(MountRules.KillXpUnits(Tuning, bonus));
         }
 
         /// <summary>Server only (GM): adds EXP to the selected mount as the design counts it.</summary>
