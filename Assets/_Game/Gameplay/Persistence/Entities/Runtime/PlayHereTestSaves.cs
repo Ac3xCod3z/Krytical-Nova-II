@@ -252,7 +252,18 @@ namespace KryticalNova.Persistence.Entities
     /// <summary>The join check of a test-saves session: the one local client joins as the fixed test account (never proven).</summary>
     public sealed class PlayHereTestJoinCheck : IKnJoinCheck
     {
-        public KnJoinVerdict Poll(Entity connection, string payload) => KnJoinVerdict.AcceptAs(PlayHereTestSaves.Account, string.Empty, false);
+        public KnJoinVerdict Poll(Entity connection, string payload)
+        {
+            // the cutover's in-Editor Player2 (12 Nov 2026, KnPlayHere.TwoBotVariable): a dev-bot thin client joins as its own bot account
+            // (unsaved, never the Tester's), and only while this Play turned bots on
+            if (KnDevBots.Enabled && KryticalNova.Networking.JoinRules.TryReadText(payload, out _, out _, out string token, out _, out _, out _)
+                && KnDevBots.TryAccount(token, out string bot))
+            {
+                KnDevBots.RememberBot(bot);
+                return KnJoinVerdict.AcceptAs(bot, string.Empty, false);
+            }
+            return KnJoinVerdict.AcceptAs(PlayHereTestSaves.Account, string.Empty, false);
+        }
         public void Forget(Entity connection) { }
     }
 }

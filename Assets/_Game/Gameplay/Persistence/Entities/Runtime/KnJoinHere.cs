@@ -318,7 +318,7 @@ namespace KryticalNova.Persistence.Entities
         }
 
         // The database's first lineage in its default look: valid by construction (the server checks it again).
-        static bool TryLook(out string recipeText, out string problem)
+        internal static bool TryLook(out string recipeText, out string problem)
         {
             recipeText = null;
             problem = null;

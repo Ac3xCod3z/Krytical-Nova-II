@@ -85,6 +85,33 @@ namespace KryticalNova.Persistence.Entities
         public const string TwoPlayersVariable = "KN_PLAYHERE_TWO";
         static bool TwoPlayersOn => Environment.GetEnvironmentVariable(TwoPlayersVariable) == "1";
 
+        /// <summary>
+        /// With <see cref="TwoPlayersVariable"/>: Player2 is a windowless dev-bot thin client inside this Editor (cutover lead's option C,
+        /// 12 Nov 2026: the MPPM clone needed ~20 GB free). It joins as its own unsaved bot account (<see cref="PlayHereTestJoinCheck"/>).
+        /// </summary>
+        public const string TwoBotVariable = "KN_PLAYHERE_TWOBOT";
+
+        sealed class BotGoInGame : IKnGoInGameSource
+        {
+            readonly GoInGamePayload m_Payload;
+            public BotGoInGame(GoInGamePayload payload) => m_Payload = payload;
+            public bool TryGet(World clientWorld, out GoInGamePayload payload) { payload = m_Payload; return true; }
+        }
+
+        /// <summary>The Player2 bot world joining this Play on loopback, or null with the reason logged.</summary>
+        static World StartPlayerTwoBot(Action<string> log)
+        {
+            KnDevBots.Enabled = true;   // reset by KnDevBots on every Play
+            if (!KnJoinHere.TryLook(out string look, out string problem)) { log("two players: bot: FAIL; " + problem); return null; }
+            World bot = KnDevBots.CreateThinClient(Unity.Networking.Transport.NetworkEndpoint.LoopbackIpv4.WithPort(Port), 2, GameBuild.Version);
+            if (bot == null) { log("two players: bot: FAIL; no thin-client world"); return null; }
+            KnClientGoInGameSystem goIn = bot.GetExistingSystemManaged<KnClientGoInGameSystem>();
+            if (goIn == null) { log("two players: bot: FAIL; the thin client has no go-in-game system"); bot.Dispose(); return null; }
+            goIn.Source = new BotGoInGame(new GoInGamePayload { CharacterId = string.Empty, Name = "Player2", RecipeText = look });
+            log($"two players: bot world '{bot.Name}' joining loopback {Port} as Player2 (dev-bot 2)");
+            return bot;
+        }
+
         /// <summary>What the two-player probe is handed: the own view, its server body, the log, a server-side move of any body, every server body.</summary>
         public sealed class TwoPlayerRun
         {
@@ -1538,9 +1565,12 @@ namespace KryticalNova.Persistence.Entities
                         foreach (GhostBodyEntry e in GhostBodyRegistry.Entries)
                             if (IsServerBody(e) && e.Body == who) Teleport(twoEm, e.Ghost, at + Vector3.up * twoOffset);
                     }
+                    World twoBot = Environment.GetEnvironmentVariable(TwoBotVariable) == "1" ? StartPlayerTwoBot(Log) : null;
                     if (TwoPlayerProbe == null) Log("two players: FAIL; no probe registered (Tools' KnTwoPlayerProbe)");
                     else yield return TwoPlayerProbe(new TwoPlayerRun { Own = OwnBody, Body = body, Log = Log, Put = PutBody,
                         ServerBodies = ServerBodies, Verdict = ok => { if (ok) walls.Passed++; } });
+                    // the bot world stays until Play stops (disposing a world the player loop still updates is unsafe); it saves nothing
+                    KnDevBots.Enabled = false;
                 }
                 if (KnCombatProbe.On)
                 {
