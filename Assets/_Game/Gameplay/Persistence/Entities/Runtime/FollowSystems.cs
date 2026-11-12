@@ -57,6 +57,9 @@ namespace KryticalNova.Persistence.Entities
             return known && isJump && startTick != 0 && (seen.seq != planSeq || seen.start != startTick);
         }
 
+        /// <summary>Whether this player's plan has been looked at before (the first look only sets the mark).</summary>
+        public bool Knows(PlayerKey key) => m_Seen.ContainsKey(key);
+
         public void Forget(PlayerKey key) => m_Seen.Remove(key);
     }
 
@@ -110,10 +113,14 @@ namespace KryticalNova.Persistence.Entities
                 if (em.HasComponent<MotionPlan>(entry.Ghost))
                 {
                     MotionPlan plan = em.GetComponentData<MotionPlan>(entry.Ghost);
+                    // [KnFollow] (wave 1, 12 Nov 2026): a jump that is the first plan ever seen of a player only sets the mark and is not copied
+                    if (plan.Kind == MotionKind.Jump && !m_Jumps.Knows(entry.Key))
+                        Debug.Log($"[KnFollow] server: {entry.Body.name}'s first plan seen is a jump (seq {plan.PlanSeq}): mark set, not reported to followers.");
                     if (m_Jumps.IsNewJump(entry.Key, plan.Kind == MotionKind.Jump, plan.PlanSeq, plan.StartTick.IsValid ? plan.StartTick.SerializedData : 0)
                         && entry.Body.TryGetComponent(out KryticalNova.Player.PlayerJumpMotor motor))
                     {
                         motor.ReportGhostJump(new Vector3(plan.FromXMm, plan.FromYMm, plan.FromZMm) * 0.001f, new Vector3(plan.ToXMm, plan.ToYMm, plan.ToZMm) * 0.001f);
+                        Debug.Log($"[KnFollow] server: new jump of {entry.Body.name} (seq {plan.PlanSeq}) reported to its followers.");
                         GhostJumps++;
                     }
                 }

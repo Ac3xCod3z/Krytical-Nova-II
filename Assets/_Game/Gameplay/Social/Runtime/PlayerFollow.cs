@@ -234,8 +234,21 @@ namespace KryticalNova.Social
 
         private void OnMoveOrdered() => ordered = true;
 
-        private void OnLeaderJump(Vector3 takeoff, Vector3 landing) =>
+        private void OnLeaderJump(Vector3 takeoff, Vector3 landing)
+        {
             FollowRules.Enqueue(hops, new FollowHop { takeoff = takeoff, landing = landing, at = Time.time }, settings != null ? settings.followHopQueue : 4);
+            Debug.Log($"[KnFollow] {name}: {targetName}'s jump queued ({hops.Count} waiting), take-off {takeoff:F1}, landing {landing:F1}.");
+        }
+
+        // [KnFollow] (wave 1, 12 Nov 2026): one line per hop decision that differs from the last one, so a test's log says why a jump was not copied
+        private HopStep lastHopStep = (HopStep)byte.MaxValue;
+
+        private void LogHop(HopStep step, in HopFacts facts)
+        {
+            if (step == lastHopStep && step != HopStep.Drop && step != HopStep.Jump) return;
+            lastHopStep = step;
+            Debug.Log($"[KnFollow] {name}: hop {step}: age {facts.age:F1} s, to take-off {facts.distanceToTakeoff:F1} m, to landing {facts.distanceToLanding:F1} m, jump ready {facts.jumpReady}, jumping {facts.jumping}, {hops.Count} waiting.");
+        }
 
         private void Unwatch()
         {
@@ -311,7 +324,9 @@ namespace KryticalNova.Social
                 jumpReady = jump != null && jump.IsReady,
                 jumping = JumpBusy,
             };
-            switch (FollowRules.NextHop(facts, settings.followHopReach, settings.followHopMaxAge))
+            HopStep step = FollowRules.NextHop(facts, settings.followHopReach, settings.followHopMaxAge);
+            LogHop(step, facts);
+            switch (step)
             {
                 case HopStep.Drop:
                     hops.RemoveAt(0);
@@ -329,9 +344,11 @@ namespace KryticalNova.Social
                     {
                         jumpIsFollow = true;
                         hops.RemoveAt(0);
+                        Debug.Log($"[KnFollow] {name}: jump started to {hop.landing:F1}.");
                     }
                     else
                     {
+                        Debug.Log($"[KnFollow] {name}: jump refused: {why}. The follow ends.");
                         hops.Clear();
                         ServerEnd(FollowEnd.JumpRefused, why);
                     }
