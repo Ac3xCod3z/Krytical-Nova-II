@@ -7,6 +7,7 @@
         "KryticalNova.Brains",
         "KryticalNova.Player.Entities",
         "KryticalNova.Player.Entities.Editor",
+        "KryticalNova.Networking.Entities",
         "Unity.Entities",
         "Unity.Collections",
         "Unity.Entities.Hybrid",
