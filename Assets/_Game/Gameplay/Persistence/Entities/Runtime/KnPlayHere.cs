@@ -1478,7 +1478,8 @@ namespace KryticalNova.Persistence.Entities
                 }
                 // the scripted fight checks need a fight-ready Tester too (8 Nov 2026: the Cadence probe's skill press was refused at
                 // level 1, "Learn Perimeter Cut with a skill point first"); the traversal tries keep their own ranks
-                if (HasScriptedTries && (KnCadenceProbe.On || TestMobs)) StartCoroutine(MakeEveryoneTestReady());
+                // the two-player proofs too (12 Nov 2026: the Player2 bot had no skills, so its copied jump was refused "Learn Jump first.")
+                if (HasScriptedTries && (KnCadenceProbe.On || TestMobs || TwoPlayersOn)) StartCoroutine(MakeEveryoneTestReady());
                 if (!HasScriptedTries)
                 {
                     // owner 5-6 Nov 2026 (findings item 20): the Tester AND everyone who joins this Play DOTS here (Player2) enter at the
