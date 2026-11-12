@@ -26,8 +26,8 @@ namespace KryticalNova.Persistence.Entities
         public static bool On => Environment.GetEnvironmentVariable(Variable) == "1";
 
         static readonly Vector3 Spot = new Vector3(150f, 0f, 146f);   // gm.tpxyz 150 0 146, KnPlayHere.TestMobLines
-        const string SpawnLine = "gm.hostile.spawn colossus 1 40 300 150,152";
-        const float FightSeconds = 60f;
+        const string SpawnLine = "gm.hostile.spawn colossus 1 40 100 150,152";
+        const float FightSeconds = 90f;
 
         public static IEnumerator Run(GameObject body, GameObject own, Action<string> log, Action<Vector3> teleport, Action<bool> verdict)
         {
@@ -65,7 +65,7 @@ namespace KryticalNova.Persistence.Entities
             while (Time.realtimeSinceStartup - start < FightSeconds)
             {
                 if (progression.Experience != xp0 || progression.CurrentLevel != level0) { killed = true; break; }
-                GameObject view = NearestHostileView(own.transform.position);
+                GameObject view = NearestHostileView(own.transform.position, "Colossus");   // run 1: the zone's level-13 Wraiths were nearer
                 if (view != null) { KryticalNova.Core.BodyClicks.Attack(view.transform); attacked = true; }
                 log($"combat: t {Time.realtimeSinceStartup - start:0} s: monster view {(view != null ? view.name + " " + Vector3.Distance(view.transform.position, own.transform.position).ToString("0.0") + " m" : "none")}, " +
                     $"XP {progression.Experience}, Tester HP {CurrentHealth(body)}");
@@ -90,7 +90,7 @@ namespace KryticalNova.Persistence.Entities
         static string CurrentHealth(GameObject body) =>
             body.TryGetComponent(out CombatEntity combat) ? combat.CurrentHealth.ToString("0") : "?";
 
-        static GameObject NearestHostileView(Vector3 from)
+        static GameObject NearestHostileView(Vector3 from, string named)
         {
             World client = null;
             foreach (World w in World.All) if (w.IsClient() && !w.IsThinClient()) { client = w; break; }
@@ -101,7 +101,8 @@ namespace KryticalNova.Persistence.Entities
             foreach (CombatTargetEntry e in CombatTargetRegistry.Entries)
             {
                 if (!ReferenceEquals(e.World, client) || e.Body == null || !em.Exists(e.Ghost) || !em.HasComponent<CombatTarget>(e.Ghost)) continue;
-                if (em.GetComponentData<CombatTarget>(e.Ghost).Kind != CombatTargetKinds.Hostile) continue;
+                if (em.GetComponentData<CombatTarget>(e.Ghost).Kind != CombatTargetKinds.Hostile || !e.Body.activeInHierarchy) continue;
+                if (named != null && e.Body.name.IndexOf(named, StringComparison.OrdinalIgnoreCase) < 0) continue;
                 float dist = Vector3.Distance(e.Body.transform.position, from);
                 if (dist < bestD) { best = e.Body; bestD = dist; }
             }

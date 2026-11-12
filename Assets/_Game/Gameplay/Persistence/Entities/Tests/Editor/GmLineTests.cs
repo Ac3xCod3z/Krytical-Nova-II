@@ -173,6 +173,31 @@ namespace KryticalNova.Persistence.Entities.Tests
             Assert.IsTrue(GmRoster.IsGm(keyA.Serial), "the host is no bound account: an empty GM list keeps it");
         }
 
+        // owner, 8 Nov 2026: after a relog in the same process the GM's lines ran locally ("No network session is running."): the link was
+        // left null. 0ddbe3334 re-binds it every frame; a relog (old worlds gone, new ones made) must leave the new world's link in place.
+        [Test]
+        public void AfterARelog_TheGmLink_IsTheNewWorlds_EvenWhenSomethingClearedIt()
+        {
+            using (var first = new KnTestWorld())
+            {
+                first.CreateWorlds(1);
+                first.Connect();
+                first.Tick(3);
+                Assert.AreSame(first.Clients[0].GetExistingSystemManaged<GmLineClientSystem>().GmLink, PlayerGm.Remote, "bound in the first session");
+            }
+            using var tw = new KnTestWorld();
+            tw.CreateWorlds(1);
+            tw.Connect();
+            var client = tw.Clients[0].GetExistingSystemManaged<GmLineClientSystem>();
+            PlayerGm.Remote = null;   // what the owner's relog left
+            tw.Tick(3);
+            Assert.AreSame(client.GmLink, PlayerGm.Remote, "the new session's link is bound again");
+            client.GmLink.Send("gm.time 0");
+            tw.TickUntil(() => client.Replies > 0, 120);
+            Assert.AreEqual("You are not a GM on this server.", client.LastReply, "the line went to the server, not run here");
+            Assert.AreEqual(0, m_Ran.Count);
+        }
+
         [Test]
         public void ForgettingTheHostsConnection_EndsIt()
         {

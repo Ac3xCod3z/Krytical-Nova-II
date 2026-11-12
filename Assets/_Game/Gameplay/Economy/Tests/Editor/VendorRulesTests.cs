@@ -77,6 +77,25 @@ namespace KryticalNova.Tests
             return item;
         }
 
+        // ---------------------------------------------------------------- which shelf
+
+        // owner, 8 Nov 2026: every vendor said "nothing for sale" on DOTS: in a build the map's NPC and the catalog can hold two copies of
+        // the same NpcDefinition, so the reference never matched (0ddbe3334: PlayerShopping.StockOf falls back to the name).
+        [Test]
+        public void ACopyOfTheVendorsDefinition_FindsItsShelf_ByName()
+        {
+            NpcDefinition vendor = Make<NpcDefinition>();
+            vendor.name = "Npc_Apothecary";
+            stock.vendor = vendor;
+            NpcDefinition copy = Object.Instantiate(vendor);
+            made.Add(copy);
+            copy.name = vendor.name;
+            Assert.AreSame(stock, catalog.For(vendor));
+            Assert.IsNull(catalog.For(copy), "by reference a copy finds nothing (the bug)");
+            Assert.AreSame(stock, catalog.For(copy) ?? catalog.For(copy.name), "StockOf's fallback: by name");
+            Assert.IsNull(catalog.For("Npc_Nobody"));
+        }
+
         // ---------------------------------------------------------------- what a vendor asks
 
         [Test]
