@@ -1,6 +1,7 @@
 using System;
 using System.Globalization;
 using System.IO;
+using System.Text.RegularExpressions;
 using UnityEngine;
 
 namespace KryticalNova.Networking.Entities
@@ -44,6 +45,13 @@ namespace KryticalNova.Networking.Entities
         /// <summary>The most seconds the stop waits for the players' connections to close before it force-closes them and quits (default <see cref="KnNetDefaults.StopGraceSeconds"/>).</summary>
         public float stopGraceSeconds = KnNetDefaults.StopGraceSeconds;
 
+        /// <summary>
+        /// The file's <c>relevancy</c> key (wave 4): the switch for relevancy that needs no build. Null = the key is not in the file, so
+        /// the settings asset in the build decides; false = off (every client gets every player and monster, as before relevancy);
+        /// true = on. Read from the file's text (<see cref="ReadSwitch"/>): JsonUtility cannot tell "absent" from false.
+        /// </summary>
+        [NonSerialized] public bool? Relevancy;
+
         /// <summary>"main" or "map" (<c>-role</c> on the command line only, as in the NGO server).</summary>
         [NonSerialized] public string role = "main";
 
@@ -82,10 +90,27 @@ namespace KryticalNova.Networking.Entities
             {
                 try { JsonUtility.FromJsonOverwrite(json, s); }
                 catch (Exception e) { Debug.LogWarning($"[KnServer] server-settings.json could not be read ({e.Message}); using defaults."); }
+                s.Relevancy = ReadSwitch(json, "relevancy");
             }
             s.ApplyArguments(args);
             s.Clamp();
             return s;
+        }
+
+        /// <summary>
+        /// A true / false key of the file that may also be absent: null when <paramref name="key"/> is not there (or holds something
+        /// else, with a warning), otherwise its value. <c>"relevancy": false</c> and <c>"relevancy": "false"</c> both count.
+        /// </summary>
+        public static bool? ReadSwitch(string json, string key)
+        {
+            if (string.IsNullOrWhiteSpace(json)) return null;
+            Match m = Regex.Match(json, "\"" + Regex.Escape(key) + "\"\\s*:\\s*(\"?)([A-Za-z0-9]+)\\1", RegexOptions.CultureInvariant);
+            if (!m.Success) return null;
+            string value = m.Groups[2].Value;
+            if (string.Equals(value, "true", StringComparison.OrdinalIgnoreCase)) return true;
+            if (string.Equals(value, "false", StringComparison.OrdinalIgnoreCase)) return false;
+            Debug.LogWarning($"[KnServer] {FileName}: \"{key}\" must be true or false, not \"{value}\"; ignored.");
+            return null;
         }
 
         /// <summary>The file beside the exe (the folder above <c>Application.dataPath</c>) and <c>Environment.GetCommandLineArgs()</c>.</summary>

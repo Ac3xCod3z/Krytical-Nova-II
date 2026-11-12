@@ -1,6 +1,7 @@
 using KryticalNova.Core;
 using KryticalNova.Items;
 using KryticalNova.Networking;
+using KryticalNova.Networking.Entities;
 using KryticalNova.Player.Entities;
 using KryticalNova.Player.Entities.Presentation;
 using Unity.Collections;
@@ -49,14 +50,22 @@ namespace KryticalNova.Persistence.Entities
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     public partial class DuelServerSystem : SystemBase
     {
-        EntityQuery m_Asks;
+        /// <summary>The Callout's own entries in a connection's <see cref="AlwaysRelevantGhost"/> list (wave 4 relevancy).</summary>
+        public const byte AlwaysRelevantReason = 1;
 
-        protected override void OnCreate() =>
+        EntityQuery m_Asks, m_AlwaysLists;
+        readonly System.Collections.Generic.Dictionary<int, int> m_OpponentOf = new System.Collections.Generic.Dictionary<int, int>();
+
+        protected override void OnCreate()
+        {
             m_Asks = GetEntityQuery(ComponentType.ReadOnly<ReceiveRpcCommandRequest>(), ComponentType.ReadOnly<DuelOpRpc>());
+            m_AlwaysLists = GetEntityQuery(ComponentType.ReadOnly<NetworkId>(), ComponentType.ReadOnly<AlwaysRelevantGhost>());
+        }
 
         protected override void OnUpdate()
         {
             EntityManager em = EntityManager;
+            m_OpponentOf.Clear();
             // every player's opponent on its ghost (NGO netOpponent, read by everyone)
             foreach (GhostBodyEntry entry in GhostBodyRegistry.Entries)
             {
@@ -65,7 +74,9 @@ namespace KryticalNova.Persistence.Entities
                 int opponent = GhostIdOf(em, body.OpponentBody);
                 if (em.GetComponentData<DuelState>(entry.Ghost).OpponentGhostId != opponent)
                     em.SetComponentData(entry.Ghost, new DuelState { OpponentGhostId = opponent });
+                if (opponent != 0) m_OpponentOf[entry.NetworkId] = opponent;
             }
+            KeepOpponentsRelevant(em);
             if (m_Asks.IsEmpty) return;
             using var received = m_Asks.ToComponentDataArray<ReceiveRpcCommandRequest>(Allocator.Temp);
             using var asks = m_Asks.ToComponentDataArray<DuelOpRpc>(Allocator.Temp);
@@ -75,6 +86,24 @@ namespace KryticalNova.Persistence.Entities
                 if (!PlayerRequestServerSystem.TryBody(World, received[i].SourceConnection, CallKind.Social, out GameObject body)
                     || !body.TryGetComponent(out IBodyDuel duel)) continue;
                 duel.RunDuelOp((DuelOpKind)asks[i].Op, BodyOf(em, asks[i].TargetGhostId), asks[i].Accept != 0);
+            }
+        }
+
+        /// <summary>
+        /// Relevancy (wave 4): a Callout's two players are sent each other however far apart they are, so a Callout never ends in a
+        /// missing body. Each connection's always-relevant list holds one entry of the Callout's: the opponent's ghost, gone when the
+        /// Callout is over. No connection has the list while relevancy is off, and then this does nothing.
+        /// </summary>
+        void KeepOpponentsRelevant(EntityManager em)
+        {
+            if (m_AlwaysLists.IsEmpty) return;
+            using var connections = m_AlwaysLists.ToEntityArray(Allocator.Temp);
+            using var ids = m_AlwaysLists.ToComponentDataArray<NetworkId>(Allocator.Temp);
+            for (int i = 0; i < connections.Length; i++)
+            {
+                m_OpponentOf.TryGetValue(ids[i].Value, out int opponent);
+                if (AlwaysRelevantGhosts.IsOnly(em.GetBuffer<AlwaysRelevantGhost>(connections[i], true), AlwaysRelevantReason, opponent)) continue;
+                AlwaysRelevantGhosts.SetOnly(em.GetBuffer<AlwaysRelevantGhost>(connections[i]), AlwaysRelevantReason, opponent);
             }
         }
 

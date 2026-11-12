@@ -16,9 +16,11 @@ namespace KryticalNova.Networking.Entities
     {
         /// <summary>
         /// Installs relevancy into <paramref name="server"/> from <paramref name="settings"/> (null = the asset in Resources) and
-        /// says what it did in the log. False: it is off (switched off, or the asset is missing, which is an error line).
+        /// says what it did in the log. <paramref name="serverSwitch"/> is the server's own <c>relevancy</c> key
+        /// (<see cref="KnServerSettings.Relevancy"/>): null = the asset's <see cref="RelevancySettings.enabled"/> decides, false = off,
+        /// true = on. False is returned when it is off (switched off, or the asset is missing, which is an error line).
         /// </summary>
-        public static bool Install(World server, RelevancySettings settings = null)
+        public static bool Install(World server, RelevancySettings settings = null, bool? serverSwitch = null)
         {
             settings ??= RelevancySettings.Load();
             if (settings == null)
@@ -26,15 +28,24 @@ namespace KryticalNova.Networking.Entities
                 Debug.LogError("[Relevancy] off: Resources/" + RelevancySettings.ResourcePath + " is missing, so every client gets every player and monster.");
                 return false;
             }
-            if (!settings.enabled)
+            if (!IsOn(settings.enabled, serverSwitch))
             {
-                Debug.Log("[Relevancy] off (the settings asset): every client gets every player and monster.");
+                Debug.Log("[Relevancy] off (" + (serverSwitch.HasValue ? KnServerSettings.FileName : "the settings asset") + "): every client gets every player and monster.");
                 return false;
             }
             InstallImportance(server, settings);
-            Debug.Log($"[Relevancy] importance on: tiles of {settings.importanceTileSize} m around each player are sent first.");
+            EntityManager em = server.EntityManager;
+            RelevancyConfig config = RelevancyConfig.From(settings);
+            using (EntityQuery q = em.CreateEntityQuery(ComponentType.ReadOnly<RelevancyConfig>()))
+                if (q.IsEmpty) em.CreateSingleton(config);
+            Debug.Log($"[Relevancy] on{(serverSwitch.HasValue ? " (" + KnServerSettings.FileName + ")" : string.Empty)}: players {config.PlayerRadius:0} m, " +
+                      $"monsters {config.ObjectRadius:0} m, gone {config.LeaveMargin:0} m past that, a fill every {config.FillIntervalTicks} ticks, " +
+                      $"importance tiles of {settings.importanceTileSize} m.");
             return true;
         }
+
+        /// <summary>The switch rule: the server's own key wins when it is there; else the asset.</summary>
+        public static bool IsOn(bool assetEnabled, bool? serverSwitch) => serverSwitch ?? assetEnabled;
 
         /// <summary>
         /// The package's distance importance (Netcode for Entities 6.6.0, manual "Importance scaling"): the server sorts its ghosts
