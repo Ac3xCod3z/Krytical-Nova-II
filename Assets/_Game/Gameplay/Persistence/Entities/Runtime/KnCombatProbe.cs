@@ -27,7 +27,7 @@ namespace KryticalNova.Persistence.Entities
 
         static readonly Vector3 Spot = new Vector3(150f, 0f, 146f);   // gm.tpxyz 150 0 146, KnPlayHere.TestMobLines
         const string SpawnLine = "gm.hostile.spawn colossus 1 40 100 150,152";
-        const float FightSeconds = 90f;
+        const float FightSeconds = 40f;
 
         public static IEnumerator Run(GameObject body, GameObject own, Action<string> log, Action<Vector3> teleport, Action<bool> verdict)
         {
@@ -68,13 +68,22 @@ namespace KryticalNova.Persistence.Entities
                 GameObject view = NearestHostileView(own.transform.position, "Colossus");   // run 1: the zone's level-13 Wraiths were nearer
                 if (view != null) { KryticalNova.Core.BodyClicks.Attack(view.transform); attacked = true; }
                 log($"combat: t {Time.realtimeSinceStartup - start:0} s: monster view {(view != null ? view.name + " " + Vector3.Distance(view.transform.position, own.transform.position).ToString("0.0") + " m" : "none")}, " +
-                    $"XP {progression.Experience}, Tester HP {CurrentHealth(body)}");
+                    $"XP {progression.Experience}, Tester HP {CurrentHealth(body)}; Colossus " + ColossusHealth(view));
                 yield return new WaitForSeconds(2f);
+            }
+            bool killedByGm = false;
+            if (!killed)
+            {
+                // option A (cutover lead, 12 Nov 2026): the real kill -> reward path, so XP and the drop are seen live even if strikes did not finish it
+                Gm("gm.hostile.kill 8");
+                yield return new WaitForSeconds(1f);
+                killedByGm = progression.Experience != xp0 || progression.CurrentLevel != level0;
+                log("combat: after the GM kill: Colossus " + ColossusHealth(NearestHostileView(own.transform.position, "Colossus")));
             }
             yield return new WaitForSeconds(2f);   // the drops fall and reach the views
             int drops = WorldDrop.Active.Count - drops0;
             int gained = progression.CurrentLevel == level0 ? progression.Experience - xp0 : -1;
-            log($"combat: after {Time.realtimeSinceStartup - start:0} s: attacked {attacked}, killed {killed}, XP {xp0} -> {progression.Experience} " +
+            log($"combat: after {Time.realtimeSinceStartup - start:0} s: attacked {attacked}, killed by strikes {killed}, by the GM kill {killedByGm}, XP {xp0} -> {progression.Experience} " +
                 $"(level {level0} -> {progression.CurrentLevel}{(gained >= 0 ? ", +" + gained : "")}), new drops {drops}");
             foreach (WorldDrop d in WorldDrop.Active)
                 if (d != null && Vector3.Distance(d.transform.position, at) < 30f) log($"combat: drop {d.name} at {d.transform.position}");
@@ -82,9 +91,38 @@ namespace KryticalNova.Persistence.Entities
             Gm("gm.droprate 1");
             Gm("gm.god false");
             Gm("gm.hostile.clear 40");
-            bool pass = spawned && killed && drops > 0;
-            log($"combat: spawn {(spawned ? "PASS" : "FAIL")}, kill with XP {(killed ? "PASS" : "FAIL")}, drop {(drops > 0 ? "PASS" : "FAIL")}");
+            bool pass = spawned && (killed || killedByGm) && drops > 0;
+            log($"combat: spawn {(spawned ? "PASS" : "FAIL")}, kill by strikes {(killed ? "PASS" : "FAIL")}, kill reward XP {(killed || killedByGm ? "PASS" : "FAIL")}, drop {(drops > 0 ? "PASS" : "FAIL")}");
             verdict(pass);
+        }
+
+        // The Colossus' health three ways: the server body's own (HostileNet.Active by reflection: Hostiles is not referenced here), the
+        // replicated ghost's CombatTarget (what the bars read), and the client view's CombatEntity (what the hit line reads: "HP 515/515").
+        static string ColossusHealth(GameObject view)
+        {
+            string server = "none";
+            Type net = Type.GetType("KryticalNova.Hostiles.HostileNet, KryticalNova.Hostiles");
+            if (net?.GetProperty("Active", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static)?.GetValue(null) is IEnumerable all)
+                foreach (object o in all)
+                    if (o is Component c && c != null && c.name.IndexOf("Colossus", StringComparison.OrdinalIgnoreCase) >= 0
+                        && c.TryGetComponent(out CombatEntity ce) && !ReferenceEquals(c.gameObject, view))
+                        server = $"{ce.CurrentHealth:0}/{ce.MaxHealth:0}{(ce.InfiniteHealth ? " inf" : "")}";
+            string ghost = "none", shown = "none";
+            if (view != null)
+            {
+                foreach (World w in World.All)
+                {
+                    if (!w.IsClient() || w.IsThinClient()) continue;
+                    CombatTargetEntry e = CombatTargetRegistry.Of(w, view);
+                    if (e != null && w.EntityManager.Exists(e.Ghost) && w.EntityManager.HasComponent<CombatTarget>(e.Ghost))
+                    {
+                        CombatTarget t = w.EntityManager.GetComponentData<CombatTarget>(e.Ghost);
+                        ghost = $"{t.HealthMilli / 1000}/{t.MaxHealthMilli / 1000}";
+                    }
+                }
+                if (view.TryGetComponent(out CombatEntity v)) shown = $"{v.CurrentHealth:0}/{v.MaxHealth:0}";
+            }
+            return $"server {server}, ghost {ghost}, view {shown}";
         }
 
         static string CurrentHealth(GameObject body) =>
