@@ -35,6 +35,8 @@ namespace KryticalNova.Hostiles
 
         private static readonly List<PlayerParty> members = new List<PlayerParty>(PartyRules.MaxSize);
         private static readonly List<PlayerParty> escorts = new List<PlayerParty>(PartyRules.MaxSize);
+        private static readonly List<PayoutMember> records = new List<PayoutMember>(PartyRules.MaxSize);
+        private static readonly List<Payout> payouts = new List<Payout>(PartyRules.MaxSize);
 
         // Enter Play Mode runs without a domain reload, so statics must be reset by hand.
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
@@ -72,7 +74,19 @@ namespace KryticalNova.Hostiles
             float dropPercent = LevelGapRules.DropPercent(gaps, creditedGap);
             bool gearDrops = LevelGapRules.GearDrops(gaps, creditedGap);
 
-            if (party != null && escorts.Contains(party))
+            // Who is paid, by which gap, is KillPayoutPlan (tested without a scene). "Same map" is the same scene: it holds with one
+            // map server; map servers will need a map id (port list).
+            records.Clear();
+            foreach (PlayerParty member in members)
+                records.Add(new PayoutMember
+                {
+                    Level = member.Level,
+                    SameMap = member.gameObject.scene == hostile.gameObject.scene,
+                    IsEscort = escorts.Contains(member),
+                });
+            PayoutOutcome outcome = KillPayoutPlan.Plan(hostile.Level, gaps, records, party != null ? members.IndexOf(party) : -1, payouts);
+
+            if (outcome == PayoutOutcome.EscortPaysNoXp)
             {
                 // What the Sponsor holds pays XP to no one, and far enough below it drops nothing either.
                 var sponsor = credited.GetComponent<PlayerSponsor>();
@@ -85,27 +99,19 @@ namespace KryticalNova.Hostiles
                 var chat = credited.GetComponent<PlayerChat>();
                 if (chat != null) chat.ServerCombatNotice("A Sponsor's kill pays no XP: let your Recruit strike first.");
             }
-            else if (members.Count <= 1)
+            else if (outcome == PayoutOutcome.Solo)
             {
                 Pay(credited, hostile, stats, gaps, creditedGap, 0f);
             }
             else
             {
-                // The gap of the Squad's highest member here is the worst one; a far lower member is paid by it.
-                // A Sponsor does not count: its Recruits are paid by their own gap.
-                int highestGap = int.MaxValue;
-                foreach (PlayerParty member in members)
-                    if (member.gameObject.scene == hostile.gameObject.scene && !escorts.Contains(member))
-                        highestGap = Mathf.Min(highestGap, LevelGapRules.Gap(hostile.Level, member.Level));
-                foreach (PlayerParty member in members)
+                foreach (Payout payout in payouts)
                 {
-                    if (member.gameObject.scene != hostile.gameObject.scene) continue; // only members in the map of the kill
+                    PlayerParty member = members[payout.Index];
                     var progression = member.GetComponent<PlayerCharacterProgression>();
                     if (progression == null) continue;
-                    int ownGap = LevelGapRules.Gap(hostile.Level, member.Level);
-                    // The Sponsor is paid by its own gap and with no boost: the Squad's is for those it helps.
-                    if (escorts.Contains(member)) Pay(progression, hostile, stats, gaps, ownGap, 0f);
-                    else Pay(progression, hostile, stats, gaps, LevelGapRules.SquadGap(gaps, ownGap, highestGap), member.ServerExperienceBoost());
+                    // An escort is paid by its own gap and with no boost: the Squad's is for those it helps.
+                    Pay(progression, hostile, stats, gaps, payout.Gap, payout.SquadBoost ? member.ServerExperienceBoost() : 0f);
                 }
             }
 
