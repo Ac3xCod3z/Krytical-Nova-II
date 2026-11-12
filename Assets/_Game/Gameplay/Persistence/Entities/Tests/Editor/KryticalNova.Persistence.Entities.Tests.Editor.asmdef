@@ -7,6 +7,7 @@
         "KryticalNova.Factions",
         "KryticalNova.Progression",
         "KryticalNova.Items",
+        "KryticalNova.Autopilot",
         "KryticalNova.Networking",
         "KryticalNova.Networking.Entities",
         "KryticalNova.Networking.Entities.Tests.Editor",

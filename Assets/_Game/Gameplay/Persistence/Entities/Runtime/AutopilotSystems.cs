@@ -18,10 +18,10 @@ namespace KryticalNova.Persistence.Entities
         public byte On;
     }
 
-    /// <summary>The owner's Autopilot choices (NGO's <c>SetPreferencesServerRpc</c>): JSON of at most 4096 characters; the server brings them inside their limits.</summary>
+    /// <summary>The owner's Autopilot choices (NGO's <c>SetPreferencesServerRpc</c>): JSON of at most 1018 bytes in two halves (about 515 at its largest, so one packet); the server brings them inside their limits.</summary>
     public struct AutopilotPrefsRpc : IRpcCommand
     {
-        public FixedString4096Bytes Json;
+        public FixedString512Bytes Json, JsonMore;   // two halves: 1018 B in all, the RPC stays under the 1300 B packet
     }
 
     /// <summary>The server's word to the owner (NGO's netOn, netExpiresUtc, netAnchor and PreferencesRpc): on or off, where, until when, and the choices.</summary>
@@ -30,7 +30,38 @@ namespace KryticalNova.Persistence.Entities
         public byte On;
         public float3 Anchor;
         public long ExpiresUtc;
-        public FixedString4096Bytes Preferences;
+        public FixedString512Bytes Preferences, PreferencesMore;   // two halves, as AutopilotPrefsRpc
+    }
+
+    /// <summary>
+    /// The preferences JSON in two FixedString512Bytes halves (Unity.Collections has no 1 KB string): at most <see cref="MaxBytes"/>
+    /// bytes, split on a character boundary. The largest real preferences are about 515 B.
+    /// </summary>
+    public static class AutopilotRpcText
+    {
+        public static int MaxBytes => 2 * FixedString512Bytes.UTF8MaxLengthInBytes;
+
+        public static bool TrySplit(string text, out FixedString512Bytes first, out FixedString512Bytes second)
+        {
+            first = default; second = default;
+            text ??= "";
+            if (System.Text.Encoding.UTF8.GetByteCount(text) > MaxBytes) return false;
+            int cut = 0, bytes = 0;
+            while (cut < text.Length)
+            {
+                int step = char.IsHighSurrogate(text[cut]) && cut + 1 < text.Length ? 2 : 1;
+                int size = System.Text.Encoding.UTF8.GetByteCount(text.Substring(cut, step));
+                if (bytes + size > FixedString512Bytes.UTF8MaxLengthInBytes) break;
+                bytes += size; cut += step;
+            }
+            string rest = text.Substring(cut);
+            if (System.Text.Encoding.UTF8.GetByteCount(rest) > FixedString512Bytes.UTF8MaxLengthInBytes) return false;
+            first = new FixedString512Bytes(text.Substring(0, cut));
+            second = new FixedString512Bytes(rest);
+            return true;
+        }
+
+        public static string Join(in FixedString512Bytes first, in FixedString512Bytes second) => first.ToString() + second.ToString();
     }
 
     /// <summary>A message for the owner from Autopilot (NGO's <c>TellRpc</c>): why it did not start, why it stopped, a Pass used.</summary>
@@ -94,7 +125,7 @@ namespace KryticalNova.Persistence.Entities
                 for (int i = 0; i < asks.Length; i++)
                     if (PlayerRequestServerSystem.TryBody(World, received[i].SourceConnection, CallKind.Account, out GameObject body) && body.TryGetComponent(out PlayerAutopilot autopilot))
                     {
-                        autopilot.ServerSetPreferences(asks[i].Json.ToString());
+                        autopilot.ServerSetPreferences(AutopilotRpcText.Join(asks[i].Json, asks[i].JsonMore));
                         Asked++;
                     }
             }
@@ -114,13 +145,17 @@ namespace KryticalNova.Persistence.Entities
                 if (connection == Entity.Null) continue;
                 string key = state.on + "|" + state.anchor + "|" + state.expiresUtc + "|" + state.preferences;
                 if (m_Told.TryGetValue(entry.Ghost, out string told) && told == key) continue;
+                if (!AutopilotRpcText.TrySplit(state.preferences, out FixedString512Bytes prefs, out FixedString512Bytes prefsMore))
+                {
+                    Debug.LogError($"[Autopilot] preferences of {System.Text.Encoding.UTF8.GetByteCount(state.preferences ?? "")} B do not fit the state RPC ({AutopilotRpcText.MaxBytes} B): not sent.");
+                    continue;
+                }
                 m_Told[entry.Ghost] = key;
-                if (System.Text.Encoding.UTF8.GetByteCount(state.preferences) > FixedString4096Bytes.UTF8MaxLengthInBytes) continue;
                 Entity rpc = em.CreateEntity();
                 em.AddComponentData(rpc, new AutopilotStateRpc
                 {
                     On = (byte)(state.on ? 1 : 0), Anchor = new float3(state.anchor.x, state.anchor.y, state.anchor.z), ExpiresUtc = state.expiresUtc,
-                    Preferences = new FixedString4096Bytes(state.preferences),
+                    Preferences = prefs, PreferencesMore = prefsMore,
                 });
                 em.AddComponentData(rpc, new SendRpcCommandRequest { TargetConnection = connection });
                 StatesSent++;
@@ -176,10 +211,12 @@ namespace KryticalNova.Persistence.Entities
 
             public void SendPreferences(string json)
             {
-                if (m_World == null || !m_World.IsCreated || string.IsNullOrEmpty(json) || json.Length > 4000) return;
+                if (m_World == null || !m_World.IsCreated || string.IsNullOrEmpty(json)) return;
+                if (!AutopilotRpcText.TrySplit(json, out FixedString512Bytes half, out FixedString512Bytes more))
+                { Debug.LogError($"[Autopilot] preferences of {System.Text.Encoding.UTF8.GetByteCount(json)} B do not fit the RPC ({AutopilotRpcText.MaxBytes} B): not sent."); return; }
                 var em = m_World.EntityManager;
                 Entity rpc = em.CreateEntity();
-                em.AddComponentData(rpc, new AutopilotPrefsRpc { Json = new FixedString4096Bytes(json) });
+                em.AddComponentData(rpc, new AutopilotPrefsRpc { Json = half, JsonMore = more });
                 em.AddComponent<SendRpcCommandRequest>(rpc);
             }
         }
@@ -226,7 +263,7 @@ namespace KryticalNova.Persistence.Entities
                 if (entry.IsLocal && m_HasPending && entry.Body.TryGetComponent(out PlayerAutopilot own))
                 {
                     AutopilotStateRpc s = m_Pending;
-                    own.ApplyServerState(s.On != 0, new Vector3(s.Anchor.x, s.Anchor.y, s.Anchor.z), s.ExpiresUtc, s.Preferences.ToString());
+                    own.ApplyServerState(s.On != 0, new Vector3(s.Anchor.x, s.Anchor.y, s.Anchor.z), s.ExpiresUtc, AutopilotRpcText.Join(s.Preferences, s.PreferencesMore));
                     m_HasPending = false;   // the own view may arrive after the word: it is kept until a view takes it
                 }
                 if (!entry.IsLocal && em.Exists(entry.Ghost) && em.HasComponent<AutopilotTag>(entry.Ghost))
