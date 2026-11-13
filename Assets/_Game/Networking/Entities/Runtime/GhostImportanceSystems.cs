@@ -98,6 +98,8 @@ namespace KryticalNova.Networking.Entities
             if (!m_Bare.IsEmpty) state.EntityManager.AddComponent<GhostConnectionPosition>(m_Bare);
 
             var places = new NativeHashMap<int, float3>(64, state.WorldUpdateAllocator);
+            // ONE owner = ONE ghost today (the player's body; pinned by OneOwnedGhostLintTests): TryAdd keeps the first owned ghost
+            // found. The day a pet, mount or stand becomes an owned ghost, this must take the BODY's place, picked on purpose.
             foreach (var (owner, transform) in SystemAPI.Query<RefRO<GhostOwner>, RefRO<LocalTransform>>())
                 places.TryAdd(owner.ValueRO.NetworkId, transform.ValueRO.Position);
             foreach (var (id, place) in SystemAPI.Query<RefRO<NetworkId>, RefRW<GhostConnectionPosition>>())

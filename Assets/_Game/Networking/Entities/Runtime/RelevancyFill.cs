@@ -163,6 +163,8 @@ namespace KryticalNova.Networking.Entities
                 mine.Clear();
 
                 // its own ghosts: always, and its place
+                // ONE owner = ONE ghost today (the player's body; pinned by OneOwnedGhostLintTests): the place is the first owned
+                // ghost found. The day a pet, mount or stand becomes an owned ghost, the place must be the BODY's, picked on purpose.
                 bool hasPlace = false;
                 float2 place = default;
                 if (owned.TryGetFirstValue(id, out int ownIndex, out NativeParallelMultiHashMapIterator<int> ownIt))
