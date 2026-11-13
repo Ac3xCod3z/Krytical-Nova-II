@@ -306,6 +306,14 @@ namespace KryticalNova.EditorTools.World
         /// </summary>
         private static void GiveRealColliders()
         {
+            // The slim (Concord040SlimBuilder) carries its own simplified collision, one mesh per grid cell, and its meshes are
+            // read-only FBX: the per-chunk colliders and the one-off vertex edits below must never come back over it.
+            var built = AssetDatabase.LoadAssetAtPath<GameObject>(PrefabPath);
+            if (built != null && built.transform.Find(Concord040SlimBuilder.CollisionGroup) != null)
+            {
+                Debug.Log("[Concord040] Slim prefab: keeping its own collision.");
+                return;
+            }
             ShortenBooths();
             MoveMarshalBooth();
             ShrinkLamps();
