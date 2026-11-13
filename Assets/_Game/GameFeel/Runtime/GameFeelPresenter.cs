@@ -479,6 +479,11 @@ namespace KryticalNova.GameFeel
             {
                 // The hit with a look of its own: its own screen feedback, and both fighters hold their pose.
                 Play(pvpCritFeel, hit.Point, hit.AttackerIsLocalPlayer ? 1f : looks.pvpCritVictimStrength);
+                // In a Callout the same crit also frames the screen: ink, then the flash (numbers in HitLookSettings).
+                if (looks.calloutImpactFrame && (InCallout(hit.Attacker) || InCallout(hit.Target)))
+                    BeautifyVignettePulse.Instance?.PulseInkThenFlash(looks.calloutInkSeconds, looks.calloutFlashSeconds, looks.calloutFrameReach,
+                        looks.calloutInkColour, looks.calloutFlashColour, looks.calloutFrameDots * KryticalNova.Core.Accessibility.FlashScale,
+                        (hit.AttackerIsLocalPlayer ? 1f : looks.pvpCritVictimStrength) * KryticalNova.Core.Accessibility.FlashScale);
                 HitStop(hit.Attacker, looks.pvpCritStopSeconds);
                 HitStop(hit.Target, looks.pvpCritStopSeconds);
             }
@@ -489,6 +494,13 @@ namespace KryticalNova.GameFeel
                 HitStop(hit.Attacker, stop);
                 HitStop(hit.Target, stop);
             }
+        }
+
+        // A fighter in a Callout (build 17 item 10.3: impact frames play only there).
+        private static bool InCallout(Transform fighter)
+        {
+            var state = fighter != null ? fighter.GetComponentInParent<KryticalNova.Combat.PlayerCombatState>() : null;
+            return state != null && state.InCallout;
         }
 
         // ------------------------------------------------------------------ hit looks

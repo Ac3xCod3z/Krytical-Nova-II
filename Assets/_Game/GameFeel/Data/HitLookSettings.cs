@@ -112,6 +112,20 @@ namespace KryticalNova.GameFeel
         [Tooltip("One attacker shows this at most once in this many seconds (a three-hit skill can land three critical hits).")]
         [Min(0f)] public float pvpCritGapSeconds = 0.3f;
 
+        [Header("In a Callout: the impact frame on top of it (build 17, item 10.3; owner pick: ink and flash together)")]
+        [Tooltip("A critical hit between the two fighters of a Callout also frames the whole screen: ink first, then a flash.")]
+        public bool calloutImpactFrame = true;
+        [Tooltip("Seconds the ink frame holds (about 3 frames at 60 fps).")]
+        [Range(0f, 0.2f)] public float calloutInkSeconds = 0.05f;
+        [Tooltip("Seconds the flash takes to fade after the ink.")]
+        [Range(0.02f, 0.5f)] public float calloutFlashSeconds = 0.12f;
+        [Tooltip("How far in from the corners the frame reaches (squared screen distance, 0.5 = the whole screen).")]
+        [Range(0f, 0.5f)] public float calloutFrameReach = 0.5f;
+        public Color calloutInkColour = Hex("14122B");
+        public Color calloutFlashColour = new Color(0.96f, 0.93f, 0.87f, 1f);
+        [Tooltip("Opacity of the comic dots in the frame.")]
+        [Range(0f, 1f)] public float calloutFrameDots = 0.7f;
+
         [Header("Colours of the factions (looks that speak in the attacker's faction's colours; a level gained)")]
         public ComicRamp hegemony = new ComicRamp(Color.white, Hex("4FE3F0"), Hex("1F6ECC"), Hex("14122B"));
         public ComicRamp nullFaction = new ComicRamp(Color.white, Hex("D8343C"), Hex("7A4FE0"), Hex("14122B"));
