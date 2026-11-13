@@ -23,7 +23,7 @@
     },
     {
       "title": "Bigger Moments",
-      "body": "Levelling up raises a pillar of light in your faction's colour with a LEVEL banner, and your mount's evolutions get the milestone banner too. Callouts open with a letterbox, and a crit in a Callout lands with a comic impact frame."
+      "body": "Levelling up raises a pillar of light in your faction's colour with a LEVEL banner, and your mount's evolutions get the milestone banner too. Callouts open with a letterbox."
     },
     {
       "title": "Aegis, Guard and Squad Stances",
@@ -38,7 +38,7 @@
         "Block: Defense gives a chance to block a hit (up to 40 % of hits), taking 70 % off it. The number reads BLOCKED.",
         "Percentage Stims: restore a share of your HP or Flux (or both, with the Dual Stims), sold at the Apothecary.",
         "Level up: a pillar of light in your faction's colour, rays, a ground ring and a LEVEL banner on your screen.",
-        "Callouts open with a letterbox, and the HUD slides out of the way for the bout. A crit in a Callout lands with a comic impact frame.",
+        "Callouts open with a letterbox, and the HUD slides out of the way for the bout.",
         "Seven more Instructors: every weapon class of every faction now has its own in the Training Yard.",
         "The Deck (P) can be moved and placed in the HUD layout editor, and keeps its place. Its bars now change colour with the music, with falling peak caps and a beat pulse (or pick Faction Glow or Classic).",
         "Crossfire, the hourly faction war, now keeps time on the server: from level 10 you are called 10 minutes before nightfall, with a banner and a countdown on your HUD. The battleground itself opens in a later build.",
