@@ -65,6 +65,9 @@ namespace KryticalNova.EditorTools
             bool reuse = Array.IndexOf(Environment.GetCommandLineArgs(), "-dotsreuse") >= 0;
             int build = reuse ? LastBuild() : LastBuild() + 1;
             if (reuse && (build <= 0 || ServerBuildNumber() != build)) return Fail($"client-only mode: the entity server is not build {build} (rebuild both instead)");
+            // The news gate first (12 Nov 2026: build 16 went live with no news): no long build for news that would be refused.
+            string news = LauncherNewsGate.FileProblem(build);
+            if (news != null) return Fail("no launcher news for build " + build + ": " + news);
             File.WriteAllText(PendingPath, build + "\n");
 
             bool built = WithBurst(() =>
@@ -112,11 +115,15 @@ namespace KryticalNova.EditorTools
             int build = PendingBuild("client", "server");
             if (build <= 0) return Fail("the client and server steps did not both pass for this publish");
             ReleasePublisher.Settings settings = ReleasePublisher.Settings.Load();
+            string news = LauncherNewsGate.FileProblem(build);
+            if (news != null) return Fail("no launcher news for build " + build + ": " + news);
             if (!ReleasePublisher.BuildTools(settings)) return Fail("the launcher or the release tool did not build");
             string launcher = Path.GetFullPath(ReleasePublisher.ToolsFolder + "/Launcher/" + ReleasePublisher.LauncherName);
-            if (!ReleasePublisher.RunTool($"stage --game \"{Path.GetFullPath(GameFolder)}\" --launcher \"{launcher}\" --out \"{Path.GetFullPath(StoreFolder)}\" --version \"v{ReleasePublisher.BaseVersion()}\" --build {build}", out string staged))
+            if (!ReleasePublisher.RunTool($"stage --game \"{Path.GetFullPath(GameFolder)}\" --launcher \"{launcher}\" --out \"{Path.GetFullPath(StoreFolder)}\" --version \"v{ReleasePublisher.BaseVersion()}\" --build {build}{LauncherNewsGate.StageArgument()}", out string staged))
                 return Fail("staging failed: " + staged);
             Log(staged.Trim());
+            string stagedNews = LauncherNewsGate.StagedProblem(staged, build);
+            if (stagedNews != null) return Fail(stagedNews + "; nothing will be uploaded");
             if (!settings.HasBucket) return Fail("Cloud Content Delivery is not set up");
             if (!ReleasePublisher.RunUgs($"ccd entries sync \"{Path.GetFullPath(StoreFolder)}\" -b {settings.bucketName} -x -r -u {Channel} -n \"DOTS build {build}\" -e {settings.environment} -p {settings.projectId}", out string synced))
                 return Fail("the upload to Cloud Content Delivery failed: " + synced);

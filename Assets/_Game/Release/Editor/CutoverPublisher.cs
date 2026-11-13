@@ -12,7 +12,7 @@ namespace KryticalNova.EditorTools
     /// The cutover publish (12 Nov 2026): the DOTS game and the RELEASE server of the entity netcode built ONCE with ONE build number and
     /// uploaded to the owner's <c>test</c> channel (never <c>live</c>: that is promoted by hand after his test). Three fresh Unity runs, as
     /// <see cref="DotsChannelPublisher"/> (a server built in the client's process crashed Netcode's type manager): <see cref="ClientBatch"/>
-    /// (release client, <c>KN_ENTITIES_CLIENT</c>, the Sky Lift on since build 16, server-define leak check, bundle audit), <see cref="ServerBatch"/>
+    /// (release client, <c>KN_ENTITIES_CLIENT</c>, the Sky Lift on since build 16, the news gate <see cref="LauncherNewsGate"/>, server-define leak check, bundle audit), <see cref="ServerBatch"/>
     /// (<see cref="EntityReleaseServer"/>: no <c>KN_TEST_LANE</c>), <see cref="UploadBatch"/> (stage, verify the audit, upload, never promote).
     /// The number continues the REAL store's numbering (the main project's <c>Builds/Release/Store</c>, read only) and is never below the
     /// one staged here, so the owner's launcher on <c>test</c> sees the build as newer. This project's own store keeps the staged files;
@@ -91,6 +91,9 @@ namespace KryticalNova.EditorTools
             int real = RealStoreLast();
             if (real <= 0) return Fail("the real store's manifest could not be read (" + RealStoreManifest + "): the build number cannot continue its numbering");
             int build = NextBuild(real, StagedHere());
+            // The news gate first (12 Nov 2026: build 16 went live with no news): no long build for news that would be refused.
+            string news = LauncherNewsGate.FileProblem(build);
+            if (news != null) return Fail("no launcher news for build " + build + ": " + news);
             File.WriteAllText(PendingPath, build + "\n");
 
             bool built = DotsChannelPublisher.WithBurst(() =>
@@ -137,11 +140,15 @@ namespace KryticalNova.EditorTools
             if (!File.Exists(ServerBuildFile) || File.ReadAllText(ServerBuildFile).Trim() != build.ToString())
                 return Fail($"the release server in {EntityReleaseServer.OutputFolder} is not build {build}: the game would be told the server runs another build");
             ReleasePublisher.Settings settings = ReleasePublisher.Settings.Load();
+            string news = LauncherNewsGate.FileProblem(build);
+            if (news != null) return Fail("no launcher news for build " + build + ": " + news);
             if (!ReleasePublisher.BuildTools(settings)) return Fail("the launcher or the release tool did not build");
             string launcher = Path.GetFullPath(ReleasePublisher.ToolsFolder + "/Launcher/" + ReleasePublisher.LauncherName);
-            if (!ReleasePublisher.RunTool($"stage --game \"{Path.GetFullPath(GameFolder)}\" --launcher \"{launcher}\" --out \"{Path.GetFullPath(StoreFolder)}\" --version \"v{ReleasePublisher.BaseVersion()}\" --build {build}", out string staged))
+            if (!ReleasePublisher.RunTool($"stage --game \"{Path.GetFullPath(GameFolder)}\" --launcher \"{launcher}\" --out \"{Path.GetFullPath(StoreFolder)}\" --version \"v{ReleasePublisher.BaseVersion()}\" --build {build}{LauncherNewsGate.StageArgument()}", out string staged))
                 return Fail("staging failed: " + staged);
             Log(staged.Trim());
+            string stagedNews = LauncherNewsGate.StagedProblem(staged, build);
+            if (stagedNews != null) return Fail(stagedNews + "; nothing will be uploaded");
             // The gate again, read-only: the staged bundles are the ones that passed the audit.
             string unsafeReason = BundleAuditGate.VerifyStaged(Root, StoreFolder + "/manifest.json");
             if (unsafeReason != null) return Fail("the staged release is not the audited one: " + unsafeReason);

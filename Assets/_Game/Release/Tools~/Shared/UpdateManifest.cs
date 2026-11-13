@@ -151,6 +151,11 @@ namespace KryticalNova.Release
         [DataMember(Order = 2)] public List<NewsRelease> history = new List<NewsRelease>();
         /// <summary>This release's patch notes: the whole breakdown, where <see cref="items"/> are the highlights.</summary>
         [DataMember(Order = 3, EmitDefaultValue = false)] public List<PatchNotesSection> patchNotes;
+        /// <summary>
+        /// The build this news was written for (owner, 12 Nov 2026: builds 15 and 16 went live with none). <c>stage</c> refuses news of
+        /// another build, so the news must be rewritten for every build; the old news moves into <see cref="history"/>.
+        /// </summary>
+        [DataMember(Order = 4, EmitDefaultValue = false)] public int build;
 
         public static LauncherNews FromFile(string file)
         {
