@@ -37,10 +37,14 @@ namespace KryticalNova.Persistence.Entities
         {
             var motor = Vault;
             var animancer = Animancer;
-            if (motor == null || animancer == null || airSeconds <= 0f || !motor.TryStyleOf((VaultHeight)heightClass, out VaultStyle style) || style.clip == null) return;
+            if (motor == null || animancer == null || airSeconds <= 0f) return;
+            // a rider in the saddle flips over (day list 15.2): the mount presentation picks the clip's height class
+            if (motor.ShownHeightOverride >= 0) heightClass = (byte)motor.ShownHeightOverride;
+            if (!motor.TryStyleOf((VaultHeight)heightClass, out VaultStyle style) || style.clip == null) return;
             float window = Mathf.Max(0.05f, style.window.y - style.window.x);
             float speed = window / airSeconds;
             animancer.PlayWarpedAction(style.clip, style.window.x + elapsedSeconds * speed, speed, motor.FadeIn);
+            motor.ShowGhostVaultBegan(elapsedSeconds, airSeconds);
             var feel = KryticalNova.Core.ClientPresentationRegistry.Feel;
             if (feel != null)
             {
@@ -81,6 +85,7 @@ namespace KryticalNova.Persistence.Entities
             var motor = Vault;
             var animancer = Animancer;
             if (animancer != null) animancer.EndWarpedAction(motor != null ? motor.FadeOut : 0.15f, speedMps);
+            if (motor != null) motor.ShowGhostVaultEnded();
             var feel = KryticalNova.Core.ClientPresentationRegistry.Feel;
             if (feel != null)
             {

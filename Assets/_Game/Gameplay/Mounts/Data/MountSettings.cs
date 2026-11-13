@@ -83,6 +83,17 @@ namespace KryticalNova.Mounts
         [Tooltip("Standing: seconds after the leap's landing before the rider is free (the jump's own landing plays on into the idle).")]
         [Range(0.1f, 1.5f)] public float leapStandRecoverSeconds = 0.5f;
 
+        [Header("The mounted vault (owner, 13 Nov 2026, day list 15.2: the mount dissolves, the rider flips over, it re-forms under them)")]
+        [Tooltip("Riding into a vault keeps the rider mounted: the mount dissolves as the feet leave it, the rider flips over the " +
+                 "obstacle and lands back in the saddle as the mount re-forms. Off = the rider vaults on the seat as before.")]
+        public bool vaultMounted = true;
+        [Tooltip("Share of the vault's air time over which the rider leaves the seat and the mount dissolves.")]
+        [Range(0.05f, 0.45f)] public float vaultLeaveShare = 0.2f;
+        [Tooltip("Share of the vault's air time, before the touchdown, over which the mount re-forms and the rider settles into the saddle.")]
+        [Range(0.05f, 0.45f)] public float vaultLandShare = 0.3f;
+        [Tooltip("The rider's vault clip while mounted, whatever the obstacle's height: 2 = the tall style (the front flip).")]
+        [Range(0, 2)] public int vaultRiderHeightClass = 2;
+
         [Header("Getting on and off (owner picks, 6 Nov 2026: Torrent's timing; a running version of each)")]
         [Tooltip("Standing still (or walking: the rider stops first): the summon hop. Dip, hop with the leg over, drop into the seat, settle.")]
         public MountTransition getOn = MountTransition.StandingOn();

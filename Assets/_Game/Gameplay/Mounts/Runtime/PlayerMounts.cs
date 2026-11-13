@@ -81,7 +81,10 @@ namespace KryticalNova.Mounts
         private IBodyRequests Requests => BodyRoleTag.RequestsOf(this) is IBodyRequests requests ? requests : null;
         // A DOTS server body has no motor: its ghost says when it is in what NGO's motor played as Jumping (a jump's flight, a vault,
         // a wall: wave 3, 12 Nov 2026; Waterstride is not one, as in NGO).
-        private bool ServerBodyAirborne => EntityServer && BodyRoleTag.Of(this).Mover is { InJumpingMove: true };
+        // A vault no longer takes the rider off (day list 15.2, owner 13 Nov 2026): the server keeps them mounted throughout and
+        // every view plays the mount's dissolve, the rider's flip and the saddle landing (MountRider).
+        private bool ServerBodyAirborne => EntityServer && BodyRoleTag.Of(this).Mover is IBodyMover m
+            && MountRules.AirborneTakesRiderOff(m.InJumpingMove, m.InVault);
         private MountBook viewBook;   // the own view of the entity netcode: the server's four boxes (NGO's netBook)
         private bool bookDelivered;   // a server body of the entity netcode: its player has the latest boxes
 

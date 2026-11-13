@@ -68,6 +68,9 @@ namespace KryticalNova.Mounts
         /// <summary>True while the mount is forming or vanishing.</summary>
         public bool IsBusy => enabled && look != null;
 
+        /// <summary>True once a vanish has finished and the model is hidden.</summary>
+        public bool IsGone => gone;
+
         /// <summary>Form the mount: invisible now, forming from <paramref name="delay"/> seconds for <paramref name="seconds"/>.</summary>
         public void Appear(MountMaterialiseSettings settings, float delay, float seconds) =>
             Begin(settings, true, delay, seconds, false);
@@ -82,6 +85,9 @@ namespace KryticalNova.Mounts
             // Restore any swap still in place before a new one: it is rebuilt from the originals.
             Restore();
             renderers = GetComponentsInChildren<Renderer>(true);
+            // Forming again after a finished vanish (the mounted vault, 13 Nov 2026): the vanish hid the renderers and the
+            // dissolve only drives _Spawn, so they are shown again here (at _Spawn 0 nothing shows until the forming starts).
+            if (appear && gone) SetVisible(true);
             look = settings;
             appearing = appear;
             destroyWhenDone = destroy;

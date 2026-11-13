@@ -99,6 +99,95 @@ namespace KryticalNova.Mounts
             movement = GetComponent<PlayerMovementSkills>();
             agent = GetComponent<NavMeshAgent>();
             jumpMotor = GetComponent<PlayerJumpMotor>();
+            vaultMotor = GetComponent<PlayerVaultMotor>();
+        }
+
+        // ------------------------------------------------------------------ the mounted vault (owner, 13 Nov 2026, day list 15.2)
+        // Riding into a vault: the server keeps the rider mounted (PlayerMounts). The mount is let go where it stands and dissolves
+        // as the feet leave it, the rider flips over the obstacle (the vault clip of MountSettings.vaultRiderHeightClass, played by
+        // the ghost's view), and before the touchdown the mount re-forms under them, so they land back in the saddle.
+        private PlayerVaultMotor vaultMotor;
+        private bool vaultRiding, vaultReformed;
+        private float vaultStartedAt, vaultAir;
+
+        /// <summary>A mounted vault is being shown on this body (tests and the proof run).</summary>
+        public bool IsVaultRiding => vaultRiding;
+
+        private bool VaultsMounted => mounts != null && mounts.Settings != null && mounts.Settings.vaultMounted
+            && shownPhase == RidePhase.Riding && shownMount != null && !leaping;
+
+        private void OnGhostVaultBegan(float elapsed, float air)
+        {
+            if (!VaultsMounted || air <= 0f) return;
+            MountSettings settings = mounts.Settings;
+            vaultRiding = true;
+            vaultReformed = false;
+            vaultAir = air;
+            vaultStartedAt = Time.time - Mathf.Max(0f, elapsed);
+            settleEnds = 0f;
+            if (stirrups != null) stirrups.SetWeight(0f); // the feet leave the stirrups for the flip
+            if (model != null && materialiser != null)
+            {
+                // Let go where it stands (never carried over the obstacle) and dissolved as the feet leave it.
+                Kick(settings, settings.pushOffDip, settings.pushOffBack);
+                model.transform.SetParent(null, true);
+                materialiser.Vanish(shownMount.materialise, 0f, Mathf.Max(0.05f, air * settings.vaultLeaveShare), false);
+            }
+            Debug.Log($"[KnMount] {mounts.name} vault ride began air={air:0.00}s elapsed={elapsed:0.00}s mount={(shownMount != null ? shownMount.displayName : "-")}");
+        }
+
+        // Every frame of a mounted vault: the rider's height between the ground pose and the seat, and the mount's re-forming.
+        private void VaultRide()
+        {
+            if (!vaultRiding) return;
+            MountSettings settings = mounts.Settings;
+            if (settings == null || shownPhase != RidePhase.Riding) { EndVaultRide(false); return; }
+            float since = Time.time - vaultStartedAt;
+            float t = since / Mathf.Max(0.05f, vaultAir);
+            lift = MountRules.VaultSeatLift(t, settings.vaultLeaveShare, settings.vaultLandShare);
+            if (!vaultReformed && t >= 1f - settings.vaultLandShare) Reform(Mathf.Max(0.05f, vaultAir * (1f - t)));
+            // never a stuck rider: the landing that never came ends the ride a moment after the air time
+            if (t > 1f + 0.5f / Mathf.Max(0.05f, vaultAir)) EndVaultRide(true);
+        }
+
+        // The mount forms again under the rider, back on the player where it rides, over the seconds left before the touchdown.
+        private void Reform(float seconds)
+        {
+            vaultReformed = true;
+            if (model == null || materialiser == null) return;
+            model.transform.SetParent(transform, false);
+            model.transform.localPosition = new Vector3(0f, -FeetHeight, 0f);
+            model.transform.localRotation = Quaternion.identity;
+            kick = kickSpeed = Vector2.zero;
+            kickApplied = Vector3.zero;
+            materialiser.Appear(shownMount != null ? shownMount.materialise : null, 0f, seconds);
+        }
+
+        // The re-formed mount is drawn: on the player again, not gone, its renderers on (the proof run's check).
+        private bool MountShown()
+        {
+            if (model == null || model.transform.parent != transform || (materialiser != null && materialiser.IsGone)) return false;
+            foreach (Renderer r in model.GetComponentsInChildren<Renderer>())
+                if (r.enabled && !(r is ParticleSystemRenderer)) return true;
+            return false;
+        }
+
+        private void OnGhostVaultEnded()
+        {
+            if (vaultRiding) EndVaultRide(true);
+        }
+
+        // The touchdown: in the saddle again, the feet in the stirrups and the mount taking the weight.
+        private void EndVaultRide(bool landed)
+        {
+            if (!vaultRiding) return;
+            vaultRiding = false;
+            if (!vaultReformed) Reform(0.05f);
+            lift = 1f;
+            if (stirrups != null && shownPhase == RidePhase.Riding) stirrups.SetWeight(1f);
+            MountSettings settings = mounts != null ? mounts.Settings : null;
+            if (landed && settings != null) Kick(settings, settings.saddleDip, 0f);
+            Debug.Log($"[KnMount] {(mounts != null ? mounts.name : "-")} vault ride ended landed={landed} inSaddle={shownPhase == RidePhase.Riding} mountShown={MountShown()}");
         }
 
         // ------------------------------------------------------------------ the leap off (owner, 7 Nov 2026 retest 2)
@@ -269,12 +358,23 @@ namespace KryticalNova.Mounts
         private void OnEnable()
         {
             mounts.Changed += Apply;
+            if (vaultMotor != null)
+            {
+                vaultMotor.GhostVaultBegan += OnGhostVaultBegan;
+                vaultMotor.GhostVaultEnded += OnGhostVaultEnded;
+            }
             Apply();
         }
 
         private void OnDisable()
         {
             mounts.Changed -= Apply;
+            if (vaultMotor != null)
+            {
+                vaultMotor.GhostVaultBegan -= OnGhostVaultBegan;
+                vaultMotor.GhostVaultEnded -= OnGhostVaultEnded;
+                vaultMotor.ShownHeightOverride = -1;
+            }
             Clear();
         }
 
@@ -342,6 +442,7 @@ namespace KryticalNova.Mounts
                 // on (owner, 7 Nov 2026 retest: the push off the ground, the weight landing in the saddle).
                 EndBeats(); // a getting-on or off cut short by this new phase ends its feel first
                 EndLeap(true);
+                vaultRiding = false; // a mounted vault cut short: the getting on or off takes the model from here
                 beats = mount.hopMountUp ? transition : null;
                 beatsGettingOn = on;
                 beatsFired = 0;
@@ -672,6 +773,7 @@ namespace KryticalNova.Mounts
         private void Clear(bool eased = false)
         {
             EndLeap(!leapLanded);
+            vaultRiding = false; // the model is let go below wherever it is (on the player or dissolving where it stood)
             ReleaseModel();
             if (motor != null) motor.HoldRunEffects = false; // a run still going on is the motor's own again
             if (!eased || !isActiveAndEnabled) { FinishHandOver(); EndBeats(); }
@@ -775,6 +877,9 @@ namespace KryticalNova.Mounts
                 tailEnds = 0f;
                 Clear(eased: true);
             }
+            // In the saddle the vault's clip is the flip (presentation only; the server's plan never reads it).
+            if (vaultMotor != null)
+                vaultMotor.ShownHeightOverride = VaultsMounted || vaultRiding ? mounts.Settings.vaultRiderHeightClass : -1;
             if (shownMount == null) return;
             MountStageLook look = shownMount.Stage(shownStage);
             MountSettings settings = mounts.Settings;
@@ -782,6 +887,7 @@ namespace KryticalNova.Mounts
             bool running = travelling && movement != null && movement.IsRunning;
 
             Hop(settings, travelling);
+            VaultRide(); // after the hop: a mounted vault owns the rider's height while it lasts
 
             // The rider's other idle has run its course: back to the plain one.
             if (riderExtra != null && (Time.time >= varietyEnds || travelling || shownPhase != RidePhase.Riding))
