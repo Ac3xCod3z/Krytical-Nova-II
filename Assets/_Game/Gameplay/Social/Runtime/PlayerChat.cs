@@ -190,7 +190,7 @@ namespace KryticalNova.Social
                     ShowAnnounced(line.announcement, line.channel, line.sender ?? string.Empty, line.text ?? string.Empty, line.highlight ?? string.Empty, line.rarity);
                     break;
                 case BodyChatKind.Combat:
-                    ShowCombatLine(line.outgoing, line.sender ?? string.Empty, line.damage, line.reflected, line.flags);
+                    ShowCombatLine(line.outgoing, line.sender ?? string.Empty, line.damage, line.reflected, line.flags, line.elemental);
                     break;
             }
         }
@@ -584,11 +584,11 @@ namespace KryticalNova.Social
                 ToOwner(new BodyChatLine
                 {
                     kind = BodyChatKind.Combat, channel = ChatChannel.Combat, outgoing = outgoing, sender = other ?? string.Empty,
-                    damage = result.DamageDealt, reflected = result.ReflectedDamage, flags = flags,
+                    damage = result.DamageDealt, reflected = result.ReflectedDamage, elemental = ElementalPart(result), flags = flags,
                 });
                 return;
             }
-            if (!IsSpawned) ShowCombatLine(outgoing, other, result.DamageDealt, result.ReflectedDamage, flags);
+            if (!IsSpawned) ShowCombatLine(outgoing, other, result.DamageDealt, result.ReflectedDamage, flags, ElementalPart(result));
             else CombatLineRpc(outgoing, other ?? string.Empty, result.DamageDealt, result.ReflectedDamage, flags);
         }
 
@@ -596,22 +596,50 @@ namespace KryticalNova.Social
         private void CombatLineRpc(bool outgoing, string other, float damage, float reflected, byte flags) =>
             ShowCombatLine(outgoing, other, damage, reflected, flags);
 
-        // A miss and an evade are the same roll: the attacker reads it as a miss, the defender as an evade.
-        private static void ShowCombatLine(bool outgoing, string other, float damage, float reflected, byte flags)
+        /// <summary>The elemental part of a hit's damage, as the server rolled it (CombatMath step 6); none for a miss or a reflected blow.</summary>
+        public static float ElementalPart(in DamageResult result) =>
+            result.IsEvaded || result.IsReflected ? 0f : Mathf.Max(0f, result.NetElementalDamage);
+
+        private static void ShowCombatLine(bool outgoing, string other, float damage, float reflected, byte flags, float elemental = 0f)
+        {
+            string text = CombatLineText(outgoing, other, damage, reflected, flags, elemental);
+            var line = new ChatLine
+            {
+                Channel = ChatChannel.Combat, Sender = string.Empty, Text = text,
+                CombatSide = outgoing ? ChatCombatSide.Out : ChatCombatSide.In,
+            };
+            ClientPresentationRegistry.Chat?.Add(line);
+            LineShown?.Invoke(line);
+        }
+
+        /// <summary>
+        /// The words of one hit in the Combat log. A miss and an evade are the same roll: the attacker reads it as a miss, the defender as an
+        /// evade. A hit with an elemental part says it in brackets (build 17, item 4.1): "You hit Bob for 1,200 (+340 ele dmg)." The
+        /// first number is the whole hit, the elemental part included (CombatMath: physical + elemental).
+        /// </summary>
+        public static string CombatLineText(bool outgoing, string other, float damage, float reflected, byte flags, float elemental)
         {
             bool critical = (flags & CriticalBit) != 0;
             string text;
+            string amount = Amount(damage) + ElementalBracket(elemental);
             if ((flags & EvadedBit) != 0)
                 text = outgoing ? $"Your attack missed {other}." : $"You evaded {other}'s attack.";
             else if ((flags & ReflectedBit) != 0)
-                text = outgoing ? $"{other} reflected your attack: {reflected:0} damage back to you." : $"You reflected {other}'s attack.";
+                text = outgoing ? $"{other} reflected your attack: {Amount(reflected)} damage back to you." : $"You reflected {other}'s attack.";
             else if (outgoing)
-                text = critical ? $"You critically hit {other} for {damage:0}." : $"You hit {other} for {damage:0}.";
+                text = critical ? $"You critically hit {other} for {amount}." : $"You hit {other} for {amount}.";
             else
-                text = critical ? $"{other} critically hits you for {damage:0}." : $"{other} hits you for {damage:0}.";
+                text = critical ? $"{other} critically hits you for {amount}." : $"{other} hits you for {amount}.";
 
             if ((flags & ShatteredBit) != 0) text += outgoing ? " Their shield shatters." : " Your shield shatters.";
-            Show(ChatChannel.Combat, string.Empty, text, false);
+            return text;
         }
+
+        private static string Amount(float value) =>
+            Mathf.Round(value).ToString("#,0", System.Globalization.CultureInfo.InvariantCulture);
+
+        // Shown only when the elemental part rounds to at least 1.
+        private static string ElementalBracket(float elemental) =>
+            Mathf.Round(elemental) >= 1f ? $" (+{Amount(elemental)} ele dmg)" : string.Empty;
     }
 }
