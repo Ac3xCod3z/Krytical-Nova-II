@@ -158,6 +158,13 @@ namespace KryticalNova.Brains
                     }
                     text.AppendLine(FormattableString.Invariant(
                         $"{q} {P(starts[q])} {P(ends[q])} ours {counts[q]} unity {unity} {theirs.Length} {verdict}"));
+                    // a pair whose corners differ shows both lists, so a reader can tell a harmless extra waypoint on the same
+                    // corridor from a corner on another NavMesh data (12 Nov 2026: Zone01 with the Concord sky deck above the town)
+                    if (verdict.StartsWith("CORNERS-DIFFER", StringComparison.Ordinal))
+                    {
+                        for (int i = 0; i < counts[q]; i++) text.AppendLine(FormattableString.Invariant($"    ours {i} {P(corners[q * NavPaths.MaxCorners + i])}"));
+                        for (int i = 0; i < theirs.Length; i++) text.AppendLine(FormattableString.Invariant($"    unity {i} {P(theirs[i])}"));
+                    }
                 }
                 report.CalculatePathMsPerPath = made > 0 ? unityMs / made : 0;
             }
