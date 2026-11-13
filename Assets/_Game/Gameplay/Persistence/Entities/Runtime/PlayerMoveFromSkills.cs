@@ -38,6 +38,8 @@ namespace KryticalNova.Persistence.Entities
             StopMm = Mm(s.stoppingDistance),
             MaxClickRangeMm = 0,
             TurnCdegPerSecond = Mathf.RoundToInt(s.turnSpeed * 100f),
+            PersonalRadiusMm = Mm(s.personalSpaceRadius),
+            SlideOutMmps = Mm(s.slideOutSpeed),
         };
 
         /// <summary>Puts the baked settings in <paramref name="world"/> as its one <see cref="PlayerMoveSettings"/> (replaces an older one).</summary>

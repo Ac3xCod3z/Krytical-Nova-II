@@ -46,6 +46,13 @@ namespace KryticalNova.Progression
                  "Run rank). A buff's Move Speed (the ranged Stance) and a GM's speed still go past it.")]
         [Min(MinimumPositive)] public float maxRunSpeed = 28f;
 
+        [Header("Players standing inside each other (build 17, item 11.1; owner pick C)")]
+        [Tooltip("A player's own circle (metres). Players walk through each other, but when two stand still closer than two of these, the one " +
+                 "who stopped last slides out on the server. 0 = off. PROPOSED.")]
+        [Min(0f)] public float personalSpaceRadius = 0.4f;
+        [Tooltip("How fast that player slides out (metres a second). PROPOSED.")]
+        [Min(0.1f)] public float slideOutSpeed = 1.5f;
+
         [Header("A move that makes no headway")]
         [Tooltip("A move order under way that gains less than the distance below in this many seconds has stalled: " +
                  "the way is planned again once, and if that stalls too the character stops where it is.")]
