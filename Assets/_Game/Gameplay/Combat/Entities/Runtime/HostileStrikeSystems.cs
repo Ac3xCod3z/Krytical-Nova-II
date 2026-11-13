@@ -139,6 +139,17 @@ namespace KryticalNova.Combat.Entities
         {
             m_Queue = EntityManager.CreateEntity(typeof(HostileStrikeQueue));
             EntityManager.AddBuffer<HostileStrike>(m_Queue);
+            CombatEntity.AnyKilled += OnAnyKilled;
+        }
+
+        protected override void OnDestroy() => CombatEntity.AnyKilled -= OnAnyKilled;
+
+        /// <summary>A player who died starts a fresh dodge streak when they come back (review of #241).</summary>
+        void OnAnyKilled(CombatEntity victim, KillingBlow blow)
+        {
+            if (victim == null || m_Streaks.Count == 0) return;
+            foreach (GhostBodyEntry entry in GhostBodyRegistry.Entries)
+                if (ReferenceEquals(entry.World, World) && entry.Body == victim.gameObject) { m_Streaks.Remove(entry.Ghost); return; }
         }
 
         protected override void OnUpdate()
@@ -200,8 +211,8 @@ namespace KryticalNova.Combat.Entities
             if (!em.Exists(ghost) || !em.HasBuffer<DodgeEvent>(ghost) || !em.HasComponent<DodgeSeq>(ghost)) return;   // a ghost not re-baked yet
             bool attacking = em.HasComponent<CombatState>(ghost) && IsAttacking(em.GetComponentData<CombatState>(ghost));
             CombatStatTuningData tuning = hit.Body.TryGetComponent(out CharacterCombatStats own) ? own.TuningData : null;
-            int forCounter = tuning != null ? tuning.dodgesForCounter : 2;
-            float streakSeconds = tuning != null ? tuning.dodgeStreakSeconds : 3f;
+            int forCounter = tuning != null ? tuning.dodgesForCounter : CombatStatTuningData.DefaultDodgesForCounter;
+            float streakSeconds = tuning != null ? tuning.dodgeStreakSeconds : CombatStatTuningData.DefaultDodgeStreakSeconds;
             DodgeMove move = DodgeRules.OnEvaded(ref streak, strike.Height, attacking, (float)World.Time.ElapsedTime, forCounter, streakSeconds, out bool counter);
             m_Streaks[ghost] = streak;
             if (move == DodgeMove.None) return;
@@ -210,7 +221,7 @@ namespace KryticalNova.Combat.Entities
             DodgeRing.Append(em.GetBuffer<DodgeEvent>(ghost), ref seq, new DodgeEvent { Tick = tick, Move = (byte)move, Counter = (byte)(counter ? 1 : 0) });
             em.SetComponentData(ghost, seq);
             Dodges++;
-            if (counter && Counter(hit.Body, HostileAttackers.Of(strike.Attacker), tuning != null ? tuning.counterDamageMultiplier : 1.25f)) Counters++;
+            if (counter && Counter(hit.Body, HostileAttackers.Of(strike.Attacker), tuning != null ? tuning.counterDamageMultiplier : CombatStatTuningData.DefaultCounterDamageMultiplier)) Counters++;
         }
 
         /// <summary>The counter-attack: the player's own hit on the Hostile that swung, a little harder. False when it could not land.</summary>

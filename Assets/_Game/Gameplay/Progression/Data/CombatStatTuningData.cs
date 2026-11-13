@@ -94,11 +94,15 @@ namespace KryticalNova.Progression
 
         [Header("Dodges (build 17 item 11.2, PROPOSED numbers)")]
         [Tooltip("Dodges in a row that earn the automatic counter-attack.")]
-        [Range(1, 5)] public int dodgesForCounter = 2;
+        [Range(1, 5)] public int dodgesForCounter = DefaultDodgesForCounter;
         [Tooltip("The counter-attack's damage, times a normal hit (a bit more).")]
-        [Range(1f, 3f)] public float counterDamageMultiplier = 1.25f;
+        [Range(1f, 3f)] public float counterDamageMultiplier = DefaultCounterDamageMultiplier;
         [Tooltip("A dodge streak ends when this many seconds pass without another dodge.")]
-        [Min(0.1f)] public float dodgeStreakSeconds = 3f;
+        [Min(0.1f)] public float dodgeStreakSeconds = DefaultDodgeStreakSeconds;
+
+        /// <summary>The dodge numbers' defaults, also used where a body has no tuning asset (one place for them).</summary>
+        public const int DefaultDodgesForCounter = 2;
+        public const float DefaultCounterDamageMultiplier = 1.25f, DefaultDodgeStreakSeconds = 3f;
 
         [Header("How a hit is shown")]
         [Tooltip("A hit is shown as Elemental (its own colours on every screen) when at least this share of its damage is the Elemental part. Looks only: no damage depends on it.")]
