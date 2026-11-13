@@ -14,7 +14,8 @@ namespace KryticalNova.UI
     /// when Cadence ends the minimap comes back. M still opens the full map. In a Callout the chat fades too, and comes
     /// back while the player types (Enter). It reads the same beat as the 3D Beat Ring (<see cref="CombatBeat"/>,
     /// <see cref="PlayerCadence.LocalPress"/>) and decides nothing. The Beat Ring setting in Audio switches the arc.
-    /// The device's body waits for the owner's pick (click-wheel or square pad); until then it is a plain screen.
+    /// The body is the owner's pick A (13 Nov 2026): a click-wheel music player, small screen on top, round wheel below.
+    /// The 3D Beat Ring is retired (<c>BeatRingSettings.retired</c>); the Beat Ring setting in Audio switches this arc.
     /// Puts itself on the HUD at run time, as the Mount window does.
     /// </summary>
     [DisallowMultipleComponent]
@@ -24,6 +25,8 @@ namespace KryticalNova.UI
         private const float LiveAbove = 0.01f;
         private const float FlashSeconds = 0.09f, LitSeconds = 0.45f, ChatFadeSeconds = 0.25f;
         private const float DeviceWidth = 134f, DeviceHeight = 186f, DeviceRadius = 18f;
+        private const float WheelSize = 82f, WheelCentre = 28f, BarMaxHeight = 18f;
+        private readonly VisualElement[] bars = new VisualElement[12];
         // today's Beat Ring colours (BeatRingSettings: low, mid, high), by the combo step reached on the beat
         private static readonly Color StepLow = new Color(0.25f, 0.85f, 1f), StepMid = new Color(1f, 0.72f, 0.18f), StepHigh = new Color(1f, 0.22f, 0.16f);
 
@@ -106,18 +109,114 @@ namespace KryticalNova.UI
             title.style.fontSize = 11;
             title.style.unityFontStyleAndWeight = FontStyle.Bold;
             title.style.color = new Color(0.9f, 0.93f, 0.97f);
-            title.style.whiteSpace = WhiteSpace.Normal;
+            title.style.whiteSpace = WhiteSpace.NoWrap;   // one line: the wheel sits under the screen
+            title.style.overflow = Overflow.Hidden;
+            title.style.textOverflow = TextOverflow.Ellipsis;
             pack = new Label { name = "mini-deck-pack", pickingMode = PickingMode.Ignore };
             pack.style.fontSize = 8;
             pack.style.color = new Color(0.54f, 0.59f, 0.7f);
             screen.Add(now);
             screen.Add(title);
             screen.Add(pack);
+            screen.Add(BuildBars());
             deck.Add(screen);
+            deck.Add(BuildWheel());
 
             arc = new MiniDeckArc { name = "mini-deck-arc", CornerRadius = DeviceRadius };
             deck.Add(arc);
             minimap.Add(deck);
+        }
+
+        // The Deck's bars in the screen, in today's beat colours; they bounce with the beat (no spectrum read here).
+        private VisualElement BuildBars()
+        {
+            var row = new VisualElement { name = "mini-deck-bars", pickingMode = PickingMode.Ignore };
+            var rs = row.style;
+            rs.flexDirection = FlexDirection.Row;
+            rs.alignItems = Align.FlexEnd;
+            rs.height = BarMaxHeight;
+            rs.marginTop = 4f;
+            for (int i = 0; i < bars.Length; i++)
+            {
+                var bar = new VisualElement { pickingMode = PickingMode.Ignore };
+                bar.style.flexGrow = 1f;
+                bar.style.marginRight = i < bars.Length - 1 ? 1.5f : 0f;
+                bar.style.height = 3f;
+                bar.style.borderTopLeftRadius = bar.style.borderTopRightRadius = 1f;
+                bar.style.backgroundColor = StepLow;
+                bars[i] = bar;
+                row.Add(bar);
+            }
+            return row;
+        }
+
+        /// <summary>
+        /// The owner's pick (13 Nov 2026, A): an old-school click-wheel under the screen, reading MENU / back / skip / play like the
+        /// Deck window's buttons. It is a look only: the Deck (P) is where the music is chosen.
+        /// </summary>
+        private VisualElement BuildWheel()
+        {
+            var wheel = new VisualElement { name = "mini-deck-wheel", pickingMode = PickingMode.Ignore };
+            wheel.AddToClassList("mini-deck-wheel");
+            var ws = wheel.style;
+            ws.position = Position.Absolute;
+            ws.width = ws.height = WheelSize;
+            ws.left = (DeviceWidth - 4f - WheelSize) * 0.5f;
+            ws.bottom = 10f;
+            Round(ws, WheelSize * 0.5f);
+            ws.backgroundColor = new Color(0.1f, 0.13f, 0.21f, 1f);
+            Border(ws, 1.5f, new Color(0.18f, 0.23f, 0.35f));
+            wheel.Add(WheelLabel("MENU", 0f, -1f, 7));
+            wheel.Add(WheelLabel("⏮", -1f, 0f, 9));
+            wheel.Add(WheelLabel("⏭", 1f, 0f, 9));
+            wheel.Add(WheelLabel("⏯", 0f, 1f, 9));
+            var centre = new VisualElement { name = "mini-deck-wheel-centre", pickingMode = PickingMode.Ignore };
+            var cs = centre.style;
+            cs.position = Position.Absolute;
+            cs.width = cs.height = WheelCentre;
+            cs.left = cs.top = (WheelSize - WheelCentre) * 0.5f - 1.5f;
+            Round(cs, WheelCentre * 0.5f);
+            cs.backgroundColor = new Color(0.055f, 0.07f, 0.12f, 1f);
+            Border(cs, 1.5f, new Color(0.18f, 0.23f, 0.35f));
+            wheel.Add(centre);
+            return wheel;
+        }
+
+        private static Label WheelLabel(string text, float x, float y, int size)
+        {
+            var label = new Label(text) { pickingMode = PickingMode.Ignore };
+            var s = label.style;
+            s.position = Position.Absolute;
+            s.width = s.height = 22f;
+            float c = WheelSize * 0.5f - 1.5f - 11f, reach = WheelSize * 0.5f - 13f;
+            s.left = c + x * reach;
+            s.top = c + y * reach;
+            s.unityTextAlign = TextAnchor.MiddleCenter;
+            s.fontSize = size;
+            s.color = new Color(0.9f, 0.93f, 0.97f, 0.85f);
+            s.paddingLeft = s.paddingRight = s.paddingTop = s.paddingBottom = 0f;
+            s.marginLeft = s.marginRight = s.marginTop = s.marginBottom = 0f;
+            return label;
+        }
+
+        private static void Round(IStyle s, float r) =>
+            s.borderTopLeftRadius = s.borderTopRightRadius = s.borderBottomLeftRadius = s.borderBottomRightRadius = r;
+
+        private static void Border(IStyle s, float width, Color colour)
+        {
+            s.borderLeftWidth = s.borderRightWidth = s.borderTopWidth = s.borderBottomWidth = width;
+            s.borderLeftColor = s.borderRightColor = s.borderTopColor = s.borderBottomColor = colour;
+        }
+
+        private void UpdateBars(float pulse)
+        {
+            float t = Time.unscaledTime;
+            for (int i = 0; i < bars.Length; i++)
+            {
+                float level = 0.25f + 0.75f * Mathf.Abs(Mathf.Sin(t * (2.1f + i * 0.37f) + i)) * (0.55f + 0.45f * pulse);
+                bars[i].style.height = 3f + level * (BarMaxHeight - 3f);
+                bars[i].style.backgroundColor = level < 0.5f ? StepLow : level < 0.8f ? StepMid : StepHigh;
+            }
         }
 
         private void OnPress(double error, bool onBeat)
@@ -139,6 +238,7 @@ namespace KryticalNova.UI
             if (title.text != name) title.text = name;
             string bpm = track != null && CombatBeat.BeatSeconds > 0 ? $"{Mathf.RoundToInt((float)(60.0 / CombatBeat.BeatSeconds))} BPM" : string.Empty;
             if (pack.text != bpm) pack.text = bpm;
+            UpdateBars(CombatBeat.HasBeat ? MiniDeckBeat.NotchFlash(CombatBeat.Phase01, (float)CombatBeat.BeatSeconds, 0.12f) : 0f);
 
             bool arcOn = AudioPreferences.BeatRing && CombatBeat.HasBeat;
             arc.visible = arcOn;
