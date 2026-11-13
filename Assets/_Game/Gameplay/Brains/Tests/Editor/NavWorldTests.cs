@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using NUnit.Framework;
 using Unity.AI.Navigation.LowLevel;
@@ -34,6 +35,50 @@ namespace KryticalNova.Brains.Tests
             NavProbe.Write(r, Path.GetFullPath("Logs"));
             Assert.AreEqual(NavProbe.Pairs, r.Pairs, "pairs on the mesh");
             Assert.IsTrue(r.Passed, NavProbe.Summary(r));
+        }
+
+        /// <summary>
+        /// The pinned pair (owner, 12 Nov 2026). On this pair NavWorld and CalculatePath agree on the first 22 corners and then take
+        /// neighbouring corridors to the end: NavWorld's route was 5.9 m (4 %) longer on a path of about 640 m, all of it on town
+        /// ground. That is accepted as it is; this test fails the day NavWorld's route is more than 5 % longer than Unity's, or leaves
+        /// the ground for a NavMesh above the map (the Concord 040 sky deck stands 300 m over this spot).
+        /// </summary>
+        [Test]
+        public void Zone01_ThePinnedPair_NavWorldsRouteIsAtMostFivePercentLonger_AndStaysOnTheGround()
+        {
+            Assert.IsTrue(NavMesh.SamplePosition(new Vector3(74.75f, 0.40f, 105.25f), out NavMeshHit from, 1f, NavMesh.AllAreas), "the start is on the mesh");
+            Assert.IsTrue(NavMesh.SamplePosition(new Vector3(320.00f, 3.73f, 435.50f), out NavMeshHit to, 1f, NavMesh.AllAreas), "the end is on the mesh");
+
+            var path = new NavMeshPath();
+            Assert.IsTrue(NavMesh.CalculatePath(from.position, to.position, NavMesh.AllAreas, path) && path.status == NavMeshPathStatus.PathComplete, "Unity's path is complete");
+            float unity = 0f;
+            for (int i = 0; i + 1 < path.corners.Length; i++) unity += Vector3.Distance(path.corners[i], path.corners[i + 1]);
+
+            var starts = new NativeArray<float3>(1, Allocator.TempJob);
+            var ends = new NativeArray<float3>(1, Allocator.TempJob);
+            var corners = new NativeArray<float3>(NavPaths.MaxCorners, Allocator.TempJob);
+            var counts = new NativeArray<int>(1, Allocator.TempJob);
+            NavWorld world = NavWorld.GetDefaultWorld();
+            NavPaths nav = NavPaths.Create(world, NavProbe.ProbeNodeBudget);
+            try
+            {
+                starts[0] = from.position; ends[0] = to.position;
+                nav.Search(world, Backend, NavProbe.ProbeNodeBudget, starts, ends, corners, counts);
+                Assert.Greater(counts[0], 1, "NavWorld has a path");
+                float ours = 0f;
+                for (int i = 0; i < counts[0]; i++)
+                {
+                    Assert.LessOrEqual(corners[i].y, NavProbe.MaxPairHeight, $"corner {i} at {corners[i]} is not on the town's ground");
+                    if (i + 1 < counts[0]) ours += math.distance(corners[i], corners[i + 1]);
+                }
+                Assert.LessOrEqual(math.distance(corners[counts[0] - 1].xz, ((float3)to.position).xz), NavProbe.MatchMetres, "NavWorld's path ends at the end");
+                Assert.LessOrEqual(ours, unity * 1.05f, $"NavWorld's route is {ours:F1} m, Unity's {unity:F1} m: more than 5 % longer");
+                Debug.Log(FormattableString.Invariant($"[NavWorldTests] the pinned pair: NavWorld {ours:F1} m in {counts[0]} corners, Unity {unity:F1} m in {path.corners.Length} corners"));
+            }
+            finally
+            {
+                nav.Dispose(); starts.Dispose(); ends.Dispose(); corners.Dispose(); counts.Dispose();
+            }
         }
 
         [Test]

@@ -32,6 +32,11 @@ namespace KryticalNova.Brains
         public const float MatchMetres = 0.1f;
         /// <summary>Corner heights may differ this much: NavWorld stands on the polygon, CalculatePath on the detail mesh (M5.2 check 3).</summary>
         public const float HeightMetres = 0.5f;
+        /// <summary>
+        /// The pairs are drawn from mesh vertices at or under this height (12 Nov 2026): the map's own ground. No map's ground reaches
+        /// it; a sky deck's NavMesh above it is left out of the draw, so the same seed gives the same pairs with or without the deck.
+        /// </summary>
+        public const float MaxPairHeight = 200f;
         /// <summary>No node budget in the probe (CalculatePath has none): the game's own budget is a design choice, not a difference.</summary>
         public const int ProbeNodeBudget = 65536;
 
@@ -105,7 +110,15 @@ namespace KryticalNova.Brains
 
             // the pairs: points of the mesh itself (its vertices, settled with SamplePosition) from a fixed seed
             var rng = new Unity.Mathematics.Random(Seed);
-            Vector3[] vertices = mesh.vertices;
+            // ground only: a second NavMesh high above the map (the Concord 040 sky deck, 300 m over Zone01) would put its
+            // vertices into the draw, change every pair after the first of them and make most pairs ground-to-deck, with no path
+            Vector3[] vertices = Array.FindAll(mesh.vertices, v => v.y <= MaxPairHeight);
+            if (vertices.Length == 0)
+            {
+                text.AppendLine(FormattableString.Invariant($"no NavMesh vertex at or under {MaxPairHeight} m"));
+                report.Text = text.ToString();
+                return report;
+            }
             var starts = new NativeArray<float3>(Pairs, Allocator.TempJob);
             var ends = new NativeArray<float3>(Pairs, Allocator.TempJob);
             int made = 0;
