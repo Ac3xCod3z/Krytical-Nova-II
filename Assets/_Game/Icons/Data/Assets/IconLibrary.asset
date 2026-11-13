@@ -4918,3 +4918,48 @@ MonoBehaviour:
     set: Cyberpunk/Implant 1
     number: 28
     chosen: 1
+  - kind: 2
+    target: Stim_HP_30
+    set: Cyberpunk/Medicine
+    number: 1
+    chosen: 0
+  - kind: 2
+    target: Stim_HP_60
+    set: Cyberpunk/Medicine
+    number: 2
+    chosen: 0
+  - kind: 2
+    target: Stim_HP_90
+    set: Cyberpunk/Medicine
+    number: 5
+    chosen: 0
+  - kind: 2
+    target: Stim_Flux_30
+    set: Cyberpunk/Medicine
+    number: 9
+    chosen: 0
+  - kind: 2
+    target: Stim_Flux_60
+    set: Cyberpunk/Medicine
+    number: 12
+    chosen: 0
+  - kind: 2
+    target: Stim_Flux_90
+    set: Cyberpunk/Medicine
+    number: 13
+    chosen: 0
+  - kind: 2
+    target: Stim_Dual_30
+    set: Cyberpunk/Medicine
+    number: 14
+    chosen: 0
+  - kind: 2
+    target: Stim_Dual_60
+    set: Cyberpunk/Medicine
+    number: 16
+    chosen: 0
+  - kind: 2
+    target: Stim_Dual_90
+    set: Cyberpunk/Medicine
+    number: 19
+    chosen: 0

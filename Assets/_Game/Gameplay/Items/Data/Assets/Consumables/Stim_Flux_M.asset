@@ -30,6 +30,8 @@ MonoBehaviour:
   statModifiers: []
   restoreHealth: 0
   restoreChi: 900
+  restoreHealthPercent: 0
+  restoreChiPercent: 0
   useEffect: 0
   useCooldown: 0.5
   usableFromHotbar: 1
