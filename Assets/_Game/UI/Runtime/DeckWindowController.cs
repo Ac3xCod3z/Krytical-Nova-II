@@ -20,14 +20,14 @@ namespace KryticalNova.UI
     [RequireComponent(typeof(UIDocument))]
     public sealed class DeckWindowController : MonoBehaviour
     {
-        private const float WindowWidth = 380f;
+        private const float WindowWidth = 320f;
         /// <summary>The Deck window's name: the key of its place in the HUD layout editor.</summary>
         public const string WindowName = "deck-window";
 
         [SerializeField] private DeckLibrary library;
         [SerializeField] private StyleSheet style;
 
-        private VisualElement root, window, progressFill, listBox, art;
+        private VisualElement root, window, progressFill, listBox, art, wheel;
         private Label title, pack, timeLabel, lengthLabel, artLetter, device;
         private Button playButton, shuffleButton, repeatButton;
         private Slider volumeSlider;
@@ -128,6 +128,14 @@ namespace KryticalNova.UI
             header.Add(close);
             window.Add(header);
 
+            // Build 17, day list 2 (owner pick A, 13 Nov 2026): the Deck is the Mini Deck grown up, a click-wheel player. Its screen
+            // holds what plays, the bars and the track list; the round wheel below carries the buttons, play in a circle at its centre.
+            var screen = Row("deck-screen");
+            window.Add(screen);
+            var nowPlaying = new Label("NOW PLAYING") { pickingMode = PickingMode.Ignore };
+            nowPlaying.AddToClassList("deck-now-playing");
+            screen.Add(nowPlaying);
+
             var now = Row("deck-now");
             art = new VisualElement();
             art.AddToClassList("deck-art");
@@ -144,7 +152,7 @@ namespace KryticalNova.UI
             names.Add(title);
             names.Add(pack);
             now.Add(names);
-            window.Add(now);
+            screen.Add(now);
 
             var visual = Row("deck-visualiser");
             barLevel = new float[library.bars];
@@ -168,7 +176,7 @@ namespace KryticalNova.UI
                 }
                 visual.Add(slot);
             }
-            window.Add(visual);
+            screen.Add(visual);
 
             var progress = new VisualElement();
             progress.AddToClassList("deck-progress");
@@ -176,7 +184,7 @@ namespace KryticalNova.UI
             progressFill.AddToClassList("deck-progress-fill");
             progress.Add(progressFill);
             progress.RegisterCallback<PointerDownEvent>(e => DeckPlayer.Instance?.Seek(e.localPosition.x / Mathf.Max(1f, progress.resolvedStyle.width)));
-            window.Add(progress);
+            screen.Add(progress);
             var times = Row("deck-times");
             timeLabel = new Label("0:00");
             lengthLabel = new Label("0:00");
@@ -184,25 +192,25 @@ namespace KryticalNova.UI
             lengthLabel.AddToClassList("deck-time");
             times.Add(timeLabel);
             times.Add(lengthLabel);
-            window.Add(times);
+            screen.Add(times);
 
-            var buttons = Row("deck-buttons");
-            shuffleButton = Button(buttons, "SHUFFLE", "deck-small", () => { var d = DeckPlayer.Instance; if (d != null) d.Shuffle = !d.Shuffle; shownIndex = -2; });
-            Button(buttons, "◀◀", "deck-skip", () => DeckPlayer.Instance?.Previous());
-            playButton = Button(buttons, "▶", "deck-play", () => DeckPlayer.Instance?.PlayPause());
-            Button(buttons, "▶▶", "deck-skip", () => DeckPlayer.Instance?.Next());
-            repeatButton = Button(buttons, "REPEAT", "deck-small", () =>
+            // The wheel: shuffle on top, back left, skip right, repeat below, play in the centre circle.
+            var buttons = Row("deck-wheel");
+            shuffleButton = Button(buttons, "SHUFFLE", "deck-wheel-top", () => { var d = DeckPlayer.Instance; if (d != null) d.Shuffle = !d.Shuffle; shownIndex = -2; });
+            Button(buttons, "◀◀", "deck-wheel-left", () => DeckPlayer.Instance?.Previous());
+            Button(buttons, "▶▶", "deck-wheel-right", () => DeckPlayer.Instance?.Next());
+            repeatButton = Button(buttons, "REPEAT", "deck-wheel-bottom", () =>
             {
                 var d = DeckPlayer.Instance;
                 if (d != null) d.RepeatMode = (DeckPlayer.Repeat)(((int)d.RepeatMode + 1) % 3);
                 shownIndex = -2;
             });
-            window.Add(buttons);
+            playButton = Button(buttons, "▶", "deck-play", () => DeckPlayer.Instance?.PlayPause());
+            wheel = buttons;
 
             volumeSlider = new Slider("VOLUME", 0f, 1f) { value = deck.Volume };
             volumeSlider.AddToClassList("deck-volume");
             volumeSlider.RegisterValueChangedCallback(e => { if (DeckPlayer.Instance != null) DeckPlayer.Instance.Volume = e.newValue; });
-            window.Add(volumeSlider);
 
             var scroll = new ScrollView(ScrollViewMode.Vertical) { horizontalScrollerVisibility = ScrollerVisibility.Hidden };
             scroll.AddToClassList("deck-list");
@@ -225,7 +233,9 @@ namespace KryticalNova.UI
                 listBox.Add(row);
                 rows.Add(row);
             }
-            window.Add(scroll);
+            screen.Add(scroll);
+            window.Add(buttons);
+            window.Add(volumeSlider);
 
             var foot = new Label("Plays for you alone. In a fight it steps aside for the fight's music, and comes back after.");
             foot.AddToClassList("deck-foot");
@@ -327,6 +337,8 @@ namespace KryticalNova.UI
                 float s = 1f + pulse * library.beatPulseScale;
                 art.style.scale = new Scale(new Vector3(s, s, 1f));
                 playButton.style.scale = new Scale(new Vector3(s, s, 1f));
+                // the wheel's rim lights on the beat, as the Mini Deck's arc does
+                wheel.EnableInClassList("deck-wheel--beat", pulse > 0.5f);
             }
         }
 
