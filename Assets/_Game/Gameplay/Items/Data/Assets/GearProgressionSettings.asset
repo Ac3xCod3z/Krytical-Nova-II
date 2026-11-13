@@ -263,7 +263,7 @@ MonoBehaviour:
     failDropsFromStage: 13
     effects:
     - slot: 1
-      stat: 10
+      stat: 11
       kind: 1
       value: 1
     - slot: 1

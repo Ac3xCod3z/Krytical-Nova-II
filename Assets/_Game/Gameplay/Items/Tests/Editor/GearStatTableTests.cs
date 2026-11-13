@@ -25,6 +25,30 @@ namespace KryticalNova.Tests
             return float.NaN;
         }
 
+        // Build 17 item 7.2: crit comes from rings only; an Epic Lv112 ring gives +20, other rarities and levels less.
+        [TestCase(ItemRarity.Epic, 112, 20f)]
+        [TestCase(ItemRarity.Rare, 112, 15f)]
+        [TestCase(ItemRarity.Uncommon, 112, 10f)]
+        [TestCase(ItemRarity.Common, 112, 5f)]
+        [TestCase(ItemRarity.Epic, 56, 10f)]
+        [TestCase(ItemRarity.Epic, 150, 20f)]
+        public void RingsCarryTheirBaseCrit(ItemRarity rarity, int level, float crit)
+        {
+            table.Resolve(EquipSlot.Ring, rarity, level, primary, secondary, out _);
+            Assert.AreEqual(crit, Value(secondary, StatType.CriticalRate), 0.001f);
+        }
+
+        [Test]
+        public void NoOtherSlotGivesCrit()
+        {
+            foreach (EquipSlot slot in new[] { EquipSlot.Weapon, EquipSlot.Armor, EquipSlot.Gloves, EquipSlot.Boots, EquipSlot.Amulet, EquipSlot.Cape })
+            {
+                table.Resolve(slot, ItemRarity.Epic, 112, primary, secondary, out _);
+                Assert.IsNaN(Value(primary, StatType.CriticalRate), slot.ToString());
+                Assert.IsNaN(Value(secondary, StatType.CriticalRate), slot.ToString());
+            }
+        }
+
         [Test]
         public void WeaponAttackIsLevelTimesSlopeTimesRarity()
         {
