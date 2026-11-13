@@ -230,6 +230,8 @@ namespace KryticalNova.Persistence
             }
             // Max HP and Flux come from the level and gear that were just put back.
             if (!isNew && resources != null && resources.IsAlive) resources.RestoreAll();
+            // Build 17, item 2.4: a brand-new character gets its one-off gifts (the starting Creds), saved by the Save() below.
+            if (isNew) foreach (INewCharacterGrant grant in GetComponents<INewCharacterGrant>()) grant.ServerGrantNewCharacter();
 
             if (pendingAgreement != 0) RecordAgreement(pendingAgreement);
             // The saved spot stays as it was until the player has stood somewhere (on leaving, a map change, or the next place time):

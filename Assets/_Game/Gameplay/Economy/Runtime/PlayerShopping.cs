@@ -26,7 +26,7 @@ namespace KryticalNova.Economy
     /// </summary>
     [DisallowMultipleComponent]
     [RequireComponent(typeof(PlayerInventory))]
-    public sealed class PlayerShopping : NetworkBehaviour, ISaveParticipant, IBodyShopping
+    public sealed class PlayerShopping : NetworkBehaviour, ISaveParticipant, IBodyShopping, INewCharacterGrant
     {
         // Beyond the vendor's own range: the player may have taken a step since the dialogue.
         private const float ReachPadding = 2.5f;
@@ -247,6 +247,22 @@ namespace KryticalNova.Economy
             bought.Clear();
             PushBought();
         }
+
+        /// <summary>
+        /// Build 17, item 2.4: a brand-new character's starting Creds (<see cref="EconomySettings.startingCreds"/>), once, through the
+        /// wallet's own tally (<see cref="CredsSource.StarterKit"/>). Called by the save agent only for a character with no save.
+        /// </summary>
+        public void ServerGrantNewCharacter()
+        {
+            if (wallet == null) wallet = GetComponent<PlayerWallet>();
+            long amount = StartingCreds(settings);
+            if (wallet == null || amount <= 0) return;
+            long added = wallet.ServerEarn(amount, CredsSource.StarterKit);
+            if (added > 0) ServerRecords.Write(RecordKind.Economy, $"Starter: {ServerRecords.Who(this)} began with {added} Creds.");
+        }
+
+        /// <summary>The starting Creds the settings name; none without settings.</summary>
+        public static long StartingCreds(EconomySettings economy) => economy != null ? System.Math.Max(0L, economy.startingCreds) : 0L;
 
         /// <summary>What a vendor pays for one of an item. 0 = it will not buy it.</summary>
         public long SellValue(ItemDefinition item) => VendorRules.SellValue(vendors, settings, item);

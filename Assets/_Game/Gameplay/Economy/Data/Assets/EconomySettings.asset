@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: EconomySettings
   m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Economy.EconomySettings
   walletCap: 999999999999
+  startingCreds: 2500
   tradeCredsPerTrade: 5000000
   tradeCredsPerDay: 20000000
   tradeSlots: 12
