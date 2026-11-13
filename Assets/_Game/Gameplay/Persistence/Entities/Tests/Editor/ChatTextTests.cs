@@ -39,10 +39,11 @@ namespace KryticalNova.Persistence.Entities.Tests
             Assert.AreEqual(AnnouncementKind.Drop, a.announcement);
             Assert.AreEqual("Talwyn|Storm Edge", a.highlight);
             Assert.AreEqual(4, a.rarity);
-            BodyChatLine c = ChatText.Line(ChatText.Line(new BodyChatLine { kind = BodyChatKind.Combat, outgoing = true, sender = "Rat", damage = 12.5f, reflected = 3f, flags = 5 }));
+            BodyChatLine c = ChatText.Line(ChatText.Line(new BodyChatLine { kind = BodyChatKind.Combat, outgoing = true, sender = "Rat", damage = 12.5f, reflected = 3f, elemental = 4.5f, flags = 5 }));
             Assert.AreEqual(BodyChatKind.Combat, c.kind);
             Assert.AreEqual(12.5f, c.damage);
             Assert.AreEqual(3f, c.reflected);
+            Assert.AreEqual(4.5f, c.elemental, "the elemental part rides along (build 17, item 4.1)");
             Assert.AreEqual(5, c.flags);
             Assert.AreEqual("Rat", c.sender);
         }
