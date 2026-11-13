@@ -99,7 +99,7 @@ namespace KryticalNova.Progression
             if (skill.hasDeadlyBlowBoost)
             {
                 float deadly = skill.GetDeadlyBlowBonus(rank);
-                return $"+{deadly:0.#}% Critical (mult) · {dur:0}s duration · {chi:0} Flux";
+                return $"+{deadly:0.#}% Critical (added) · {dur:0}s duration · {chi:0} Flux";
             }
             if (skill.hasLuckBoost)
             {
