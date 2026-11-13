@@ -285,7 +285,11 @@ namespace KryticalNova.Player
             LastDecision = "no room to land";
             if (!FindLanding(groundY, near, across, thickness, style, layers, out Vector3 landing)) return false;
             LastDecision = "something is in the way above the obstacle";
-            if (!IsCrossingClear(near, across, groundY + top, thickness, layers)) return false;
+            if (!IsCrossingClear(near, across, groundY + top, thickness, layers))
+            {
+                LastDecision += $" ({LastBlocker})"; // which collider, for the proof logs
+                return false;
+            }
 
             // Worth it only when it really is the shorter way, and the rest of the way is walkable from the landing.
             LastDecision = "no way on from the landing";
@@ -579,8 +583,32 @@ namespace KryticalNova.Player
             Vector3 centre = near + across * (thickness * 0.5f);
             centre.y = topY + clearance + BodyHeight * 0.5f;
             var halfExtents = new Vector3(agent.radius * 0.7f, BodyHeight * 0.5f, thickness * 0.5f + 0.2f);
-            return !Physics.CheckBox(centre, halfExtents, Quaternion.LookRotation(across, Vector3.up), layers, QueryTriggerInteraction.Ignore);
+            int count = Physics.OverlapBoxNonAlloc(centre, halfExtents, crossingHits, Quaternion.LookRotation(across, Vector3.up), layers, QueryTriggerInteraction.Ignore);
+            for (int i = 0; i < count; i++)
+            {
+                // Characters never block a crossing, as they are never vaulted (FindObstacle): a rider's own mount model, a pet or another
+                // player's body passing by. In a host Editor the server shares the client views' physics (day list 15.2: the mounted
+                // vault was refused here by the rider's own mount model).
+                Collider hit = crossingHits[i];
+                if (!BlocksCrossing(hit)) continue;
+                LastBlocker = hit.name;
+                return false;
+            }
+            return true;
         }
+
+        /// <summary>
+        /// Whether a collider over the obstacle stops the crossing: everything does (walls, roofs, branches, any static geometry) except a
+        /// character, i.e. anything under a NavMeshAgent or an <see cref="IDamageable"/> (a player body, a rider's mount, a pet, a Hostile).
+        /// The same on a dedicated server and in a host Editor.
+        /// </summary>
+        public static bool BlocksCrossing(Collider hit) =>
+            hit != null && hit.GetComponentInParent<NavMeshAgent>() == null && hit.GetComponentInParent<IDamageable>() == null;
+
+        private readonly Collider[] crossingHits = new Collider[16];
+
+        /// <summary>The collider that last stopped a crossing ("something is in the way above the obstacle"), for the proof logs.</summary>
+        public string LastBlocker { get; private set; }
 
         private static float Flat(Vector3 a, Vector3 b)
         {

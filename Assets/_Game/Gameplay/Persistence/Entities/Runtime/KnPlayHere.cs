@@ -140,6 +140,9 @@ namespace KryticalNova.Persistence.Entities
         /// <summary>Set by Tooling (KnTwoPlayerProbe); null = no probe.</summary>
         public static Func<TwoPlayerRun, IEnumerator> TwoPlayerProbe;
 
+        /// <summary>Set by a Tooling probe for one-client media captures (build 17: the owner's GIFs); run after the scripted parts. Null = none.</summary>
+        public static Func<TwoPlayerRun, IEnumerator> MediaProbe;
+
         static bool Scripted => !string.IsNullOrEmpty(Environment.GetEnvironmentVariable(WalkVariable))
             || !string.IsNullOrEmpty(Environment.GetEnvironmentVariable(JumpVariable))
             || !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("KN_PLAYHERE_VAULT"))    // the scripted vaults (M3c)
@@ -1584,6 +1587,7 @@ namespace KryticalNova.Persistence.Entities
                 if (ItemsRun) yield return Items(body, ghost, walls);
                 if (MountRun) yield return Mounts(body, ghost, walls);
                 if (MountVaultRun) yield return MountVaults(body, ghost, walls);
+                if (MediaProbe != null) yield return MediaProbe(new TwoPlayerRun { Own = OwnBody, Body = body, Log = Log });
                 if (RoofsRun) yield return RoofJumps(body, ghost, walls);
                 if (TwoPlayersOn)
                 {
@@ -1709,15 +1713,17 @@ namespace KryticalNova.Persistence.Entities
             /// Lines up a vault over the <paramref name="index"/>-th nearest spawn planter: walks to 3.5 m in front of it (from where the
             /// body stands), then checks with the server's own planners that a click 6 m past it vaults.
             /// </summary>
-            IEnumerator ApproachPlanter(Entity ghost, int index, PlanterApproach result, bool shortClick = false)
+            IEnumerator ApproachPlanter(Entity ghost, int index, PlanterApproach result, bool shortClick = false, Vector3? sortFrom = null)
             {
                 World server = KnBootstrap.ServerWorld;
                 var plans = server.GetExistingSystemManaged<PlayerServerPlanSystem>();
                 Vector3 from = ServerPosition(ghost);
+                // the planters are counted from here (the mounted vault: from the spawn, so an index names the same planter every time)
+                Vector3 order = sortFrom ?? from;
                 var hedges = new List<Transform>();
                 foreach (Transform t in UnityEngine.Object.FindObjectsByType<Transform>(FindObjectsSortMode.None))
                     if (t.name.StartsWith("SM_Env_Hedge", StringComparison.Ordinal)) hedges.Add(t);
-                hedges.Sort((a, b) => Flat(a.position - from).CompareTo(Flat(b.position - from)));
+                hedges.Sort((a, b) => Flat(a.position - order).CompareTo(Flat(b.position - order)));
                 if (index >= hedges.Count) { result.Why = "no planter left"; yield break; }
                 Vector3 middle = hedges[index].GetComponentInChildren<Renderer>() is Renderer r ? r.bounds.center : hedges[index].position;
                 Vector3 way = middle - from;
@@ -2817,6 +2823,18 @@ namespace KryticalNova.Persistence.Entities
                 Application.logMessageReceived += hear;
                 try
                 {
+                    // the spot first, on foot (the instrument before the mount): the 4 planters nearest the spawn, as VaultSpawnPlanterTests
+                    // counts them, each asked of the server's own planner from its approach; the first that vaults is the mounted spot
+                    Vector3 spawn = ServerPosition(ghost);
+                    int spot = -1;
+                    for (int i = 0; i < 4 && spot < 0; i++)
+                    {
+                        var control = new PlanterApproach();
+                        yield return ApproachPlanter(ghost, i, control, sortFrom: spawn);
+                        Log($"mount vault spot {i + 1} (on foot): {(control.Ready ? "the planner vaults" : "refused")}; {control.Why}; body at {ServerPosition(ghost)}");
+                        if (control.Ready) spot = i;
+                    }
+                    if (spot < 0) { tally.Tried++; Log("mount vault: FAIL; none of the 4 spawn planters vaults on foot from its approach"); yield break; }
                     foreach (int box in new[] { 1, 4 })
                     {
                         tally.Tried++;
@@ -2835,9 +2853,10 @@ namespace KryticalNova.Persistence.Entities
                         if (mounts.ShownPhase != 2) { Log($"mount vault {box}: FAIL; not riding (server phase {mounts.ShownPhase})"); continue; }
 
                         var approach = new PlanterApproach();
-                        yield return ApproachPlanter(ghost, 0, approach);
-                        if (!approach.Ready) { Log($"mount vault {box}: FAIL; {approach.Why}"); continue; }
+                        yield return ApproachPlanter(ghost, spot, approach, sortFrom: spawn);
+                        if (!approach.Ready) { Log($"mount vault {box}: FAIL; {approach.Why}; body at {ServerPosition(ghost)}"); mounts.RunMountOp(MountOpKind.Ride, 0); yield return new WaitForSeconds(3.5f); continue; }
                         int vaults0 = plans.Vaults, began0 = began, landed0 = landedInSaddle;
+                        int frame0 = Time.frameCount;
                         string at = DateTime.Now.ToString("HH:mm:ss.fff", CultureInfo.InvariantCulture);
                         BodyClicks.Ground(approach.Goal, false);
                         float clicked = Time.realtimeSinceStartup;
@@ -2860,7 +2879,7 @@ namespace KryticalNova.Persistence.Entities
                         if (ok) tally.Passed++;
                         Log($"mount vault {box} clicked at {at}: {(ok ? "PASS" : "FAIL")}; {approach.Why}; server {(planned ? "planned the vault" : "planned NO vault")}; " +
                             $"own view {(wasInVault ? "vaulted" : "never vaulted")}; server phase {(offInVault ? "LEFT Riding in the vault" : "Riding throughout")}; " +
-                            $"after the landing server {mounts.ShownPhase} own view {ownMounts?.ShownPhase}; mounted vault shown {began - began0}x, landed in the saddle {landedInSaddle - landed0}x");
+                            $"after the landing server {mounts.ShownPhase} own view {ownMounts?.ShownPhase}; mounted vault shown {began - began0}x, landed in the saddle {landedInSaddle - landed0}x; frames {frame0}-{Time.frameCount}");
                         mounts.RunMountOp(MountOpKind.Ride, 0);   // off for the next mount
                         yield return new WaitForSeconds(3.5f);
                     }
