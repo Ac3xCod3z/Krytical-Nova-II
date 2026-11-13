@@ -54,5 +54,23 @@ namespace KryticalNova.UI.Tests
         [TestCase(0.5f, 0f)]
         public void TheNotchFlashesOnTheBeat(float phase, float flash) =>
             Assert.AreEqual(flash, MiniDeckBeat.NotchFlash(phase, 0.6f, 0.09f), 0.05f);
+
+        [Test]
+        public void TheMinimapAndTheDeckNeverShowTogether()
+        {
+            float map = 1f, deck = 0f;
+            for (int i = 0; i < 40; i++)
+            {
+                (map, deck) = MiniDeckBeat.SwapStep(true, map, deck, 0.1f);
+                Assert.IsTrue(map <= 0f || deck <= 0f, "the Deck fades in only once the minimap is gone");
+            }
+            Assert.AreEqual(0f, map); Assert.AreEqual(1f, deck);
+            for (int i = 0; i < 40; i++)
+            {
+                (map, deck) = MiniDeckBeat.SwapStep(false, map, deck, 0.1f);
+                Assert.IsTrue(map <= 0f || deck <= 0f, "the minimap fades back in only once the Deck is gone");
+            }
+            Assert.AreEqual(1f, map); Assert.AreEqual(0f, deck);
+        }
     }
 }

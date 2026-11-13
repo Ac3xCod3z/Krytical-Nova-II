@@ -64,5 +64,22 @@ namespace KryticalNova.UI.Hud
             radius = Mathf.Clamp(radius, 0f, Mathf.Min(width, height) * 0.5f);
             side = Mathf.Max(0f, height * 2f / 3f - radius);
         }
+
+        /// <summary>Owner 13 Nov 2026 (3.3): one step of the minimap / Mini Deck swap. The one going away fades out first;
+        /// the other fades in only once it is gone, so the two never show at once.</summary>
+        public static (float map, float deck) SwapStep(bool deckOn, float map, float deck, float step)
+        {
+            if (deckOn)
+            {
+                if (map > 0f) map = UnityEngine.Mathf.MoveTowards(map, 0f, step);
+                else deck = UnityEngine.Mathf.MoveTowards(deck, 1f, step);
+            }
+            else
+            {
+                if (deck > 0f) deck = UnityEngine.Mathf.MoveTowards(deck, 0f, step);
+                else map = UnityEngine.Mathf.MoveTowards(map, 1f, step);
+            }
+            return (map, deck);
+        }
     }
 }
