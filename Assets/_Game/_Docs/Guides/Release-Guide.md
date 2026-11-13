@@ -209,14 +209,23 @@ so the Sentis package no longer adds and removes `SENTIS_ANALYTICS_ENABLED` each
 take turns (each flip recompiled every script, 60 to 80 s). `define_guard.py` (beside `kn_check.py`) warns when the define
 lines differ from the committed ones or a recent Unity log says "Define symbols changed"; kn_check and compile_check print it.
 
-## 1b. The launcher's news (before a build meant for LIVE)
+## 1b. The launcher's news (before EVERY build)
+
+**The news gate (owner, 12 Nov 2026, after builds 15 and 16 went live with no news):** every build carries its own news
+and full patch notes, "baked into EVERY single build going forward". Every publish (Publish to Test, the cutover publish,
+the DOTS channel publish) checks `launcher-news.json` before it builds anything and again before it stages, always
+passes it to the release tool, and reads the STAGED line back: it stops, and uploads nothing, when the file is missing,
+has no headlines, has no patch notes, its `"build"` is not the build being made, or the staged line says `news=0` or
+`patchNotes=0`. The release tool refuses the same on its own. There is no switch to skip it (`LauncherNewsGate`, tests
+`LauncherNewsGateTests`). So before each publish: write this build's news (steps below) and set `"build"` to the build
+number the publish will make (the cutover: one above the last one staged).
 
 The launcher's paper panel shows **WHAT'S NEW!**: up to **four** headlines, each opening to a few lines on what changed
 when clicked, with the build and its date under the title. **PAST NEWS** at the bottom lists the news of earlier
 releases, newest first, each with its dates. The news travels inside the signed update list, so nobody else can put
 news on a player's launcher.
 
-It is written in `Assets/_Game/Release/Tools~/launcher-news.json` before a build that is meant to go LIVE:
+It is written in `Assets/_Game/Release/Tools~/launcher-news.json` before every build:
 
 1. Look at everything that changed since the last LIVE release (the build list's Change log since that date, the pull
    requests merged since) and pick the **four most exciting things for a player**. Plain words, what it does for them.
@@ -229,6 +238,7 @@ It is written in `Assets/_Game/Release/Tools~/launcher-news.json` before a build
    Fixes). At most 16 headings, 200 lines and 400 characters a line. The launcher shows them under **PATCH NOTES** on
    the news sheet, scrolled with the wheel; when the release moves to `history`, its `patchNotes` go with it and stay
    readable from its past news page.
+3c. Set `"build"` to the number of the build this news goes out with.
 4. Commit it (a publish builds a commit). The Publish box lists the headlines it will carry; the release tool refuses
    news that breaks the limits, before anything is uploaded.
 
