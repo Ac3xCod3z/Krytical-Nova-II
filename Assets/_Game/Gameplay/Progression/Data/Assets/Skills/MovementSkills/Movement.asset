@@ -21,3 +21,5 @@ MonoBehaviour:
   arrivalMinRadius: 1.5
   arrivalMaxRadius: 8
   arrivalMinSpeedFactor: 0.55
+  personalSpaceRadius: 0.4
+  slideOutSpeed: 1.5
