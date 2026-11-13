@@ -554,6 +554,14 @@ namespace KryticalNova.EditorTools
             Place(yard, "SM_Prop_Streetlight_01", y.xMax - 6f, y.yMin + 1f, 0f, 0f, 1f, alignToBounds: false);
             SpawnNpc(npcRoot, "TrainerBlade", new Vector2(y.xMin + 12f, y.yMax - 6f), 180f);
             SpawnNpc(npcRoot, "TrainerFist", new Vector2(y.xMin + 22f, y.yMax - 6f), 180f);
+            // build 17, item 12.2: the other seven Instructors, two rows in the yard (the watch station stands in the NW corner)
+            SpawnNpc(npcRoot, "TrainerGlaive", new Vector2(y.xMin + 17f, y.yMax - 6f), 180f);
+            SpawnNpc(npcRoot, "TrainerCarbine", new Vector2(y.xMin + 30f, y.yMax - 6f), 180f);
+            SpawnNpc(npcRoot, "TrainerHarvester", new Vector2(y.xMin + 4f, y.yMax - 11f), 180f);
+            SpawnNpc(npcRoot, "TrainerArcCaster", new Vector2(y.xMin + 11f, y.yMax - 11f), 180f);
+            SpawnNpc(npcRoot, "TrainerLongaxe", new Vector2(y.xMin + 18f, y.yMax - 11f), 180f);
+            SpawnNpc(npcRoot, "TrainerClaymore", new Vector2(y.xMin + 25f, y.yMax - 11f), 180f);
+            SpawnNpc(npcRoot, "TrainerWarbow", new Vector2(y.xMin + 32f, y.yMax - 11f), 180f);
 
             // SE Exchange square: the Trader's bank, booth and ATMs, and the Agent's kiosk, facing the mid ring road.
             var ex = Group(parent, "SE Exchange Square");
