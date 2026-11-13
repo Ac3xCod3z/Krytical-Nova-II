@@ -20,7 +20,7 @@ script, which is then published to the link above. `--baseline` saves today's up
 ## Today
 
 <!-- map:summary -->
-Generated 12 Nov 2026, 21:42: 1007 runtime scripts (186,703 lines) declaring 1870 types (209 MonoBehaviours, 65 NetworkBehaviours, 111 ScriptableObject classes); 298 test scripts; 4748 prefabs, 52 scenes and 6443 assets read. 215 system-to-system links, of which 0 run uphill, 0 pairs of systems use each other both ways, and 4 links would have to go for the systems to form a clean stack. The largest tangle, classes that all reach each other through some chain of uses, holds 10 classes from 1 systems (UI 10, ...).
+Generated 13 Nov 2026, 01:08: 1007 runtime scripts (186,734 lines) declaring 1870 types (209 MonoBehaviours, 65 NetworkBehaviours, 111 ScriptableObject classes); 300 test scripts; 4746 prefabs, 48 scenes and 2770 assets read. 215 system-to-system links, of which 0 run uphill, 0 pairs of systems use each other both ways, and 4 links would have to go for the systems to form a clean stack. The largest tangle, classes that all reach each other through some chain of uses, holds 10 classes from 1 systems (UI 10, ...).
 <!-- /map:summary -->
 
 **Checked against the compiler.**
@@ -75,7 +75,7 @@ Checked against the 219 references the assemblies declare between systems: every
 | Gameplay/Restyle | Simulation | 3 | 952 | 50 | 5 | 0.91 | 0 | 0 of 3 |
 | Gameplay/Economy | Simulation | 23 | 4,609 | 83 | 46 | 0.64 | 9 | 24 of 37 |
 | Gameplay/Autopilot | Simulation | 11 | 1,562 | 46 | 14 | 0.77 | 4 | 7 of 12 |
-| Gameplay/Social | Simulation | 42 | 6,771 | 81 | 49 | 0.62 | 12 | 33 of 55 |
+| Gameplay/Social | Simulation | 42 | 6,775 | 81 | 49 | 0.62 | 12 | 33 of 55 |
 | Gameplay/Persistence | Simulation | 66 | 19,379 | 413 | 14 | 0.97 | 49 | 56 of 249 |
 | Gameplay/Hostiles | Simulation | 52 | 5,997 | 79 | 34 | 0.7 | 23 | 58 of 76 |
 | Gameplay/Pets | Simulation | 12 | 1,550 | 40 | 32 | 0.56 | 6 | 14 of 19 |
@@ -84,7 +84,7 @@ Checked against the 219 references the assemblies declare between systems: every
 | Gameplay/CharacterCreation | Simulation | 28 | 3,232 | 27 | 90 | 0.23 | 11 | 26 of 30 |
 | Gameplay/Items | Simulation | 84 | 12,871 | 65 | 297 | 0.18 | 13 | 70 of 109 |
 | World | Simulation | 40 | 7,240 | 21 | 43 | 0.33 | 4 | 14 of 49 |
-| Gameplay/Progression | Simulation | 49 | 9,042 | 36 | 237 | 0.13 | 10 | 50 of 63 |
+| Gameplay/Progression | Simulation | 49 | 9,069 | 36 | 237 | 0.13 | 11 | 51 of 63 |
 | Gameplay/Wallet | Simulation | 4 | 144 | 0 | 21 | 0.0 | 0 | 2 of 2 |
 | Gameplay/NPC | Simulation | 3 | 293 | 5 | 17 | 0.23 | 1 | 3 of 4 |
 | Gameplay/Factions | Simulation | 7 | 197 | 0 | 28 | 0.0 | 0 | 2 of 4 |
@@ -92,7 +92,7 @@ Checked against the 219 references the assemblies declare between systems: every
 | GameFeel | Presentation | 31 | 5,920 | 57 | 2 | 0.97 | 6 | 19 of 39 |
 | UI | Presentation | 144 | 37,029 | 331 | 5 | 0.99 | 21 | 43 of 150 |
 | Audio | Presentation | 14 | 1,246 | 10 | 16 | 0.38 | 1 | 1 of 15 |
-| Tools | Tooling | 31 | 5,570 | 206 | 0 | 1.0 | 9 | 2 of 34 |
+| Tools | Tooling | 31 | 5,570 | 206 | 0 | 1.0 | 10 | 2 of 34 |
 <!-- /map:systems -->
 
 ## Links running uphill
@@ -137,13 +137,13 @@ Each row is the cheaper side of a loop: cut these references and the two systems
 | PlayerResources | Gameplay/Progression | net | 41 | 14 | 329 | 3 | 41 |
 | PointAndClickPlayer | Gameplay/Player | net | 40 | 9 | 236 | 5 | 41 |
 | CharacterRecipe | Gameplay/CharacterCreation | plain | 38 | 7 | 310 | 12 | 0 |
-| CharacterCombatStats | Gameplay/Progression | mono | 36 | 14 | 359 | 4 | 61 |
+| CharacterCombatStats | Gameplay/Progression | mono | 36 | 14 | 359 | 5 | 61 |
 | CombatEntity | Gameplay/Progression | net | 36 | 12 | 287 | 3 | 23 |
 | PlayerCharacterProgression | Gameplay/Progression | net | 35 | 12 | 360 | 4 | 41 |
 | PlayerKey | Core | plain | 34 | 6 | 513 | 28 | 0 |
 | IBodyRequests | Core | interface | 31 | 14 | 454 | 1 | 0 |
 | WeaponClassId | Gameplay/Progression | enum | 29 | 10 | 458 | 10 | 0 |
-| StatType | Gameplay/Progression | enum | 27 | 8 | 452 | 8 | 0 |
+| StatType | Gameplay/Progression | enum | 27 | 8 | 452 | 9 | 0 |
 | DamageResult | Core | plain | 26 | 11 | 379 | 9 | 0 |
 <!-- /map:ripple -->
 
@@ -200,7 +200,7 @@ Classes over 700 lines. Several of them also reach into three or more other syst
 | GearUIController | UI | 1632 | Core, Gameplay/CharacterCreation, Gameplay/Economy, Gameplay/Items, Gameplay/Pets, Gameplay/Player, Gameplay/Progression, Gameplay/Restyle, Gameplay/Wallet | 21 |
 | GameFeelPresenter | GameFeel | 1419 | Core, Gameplay/Combat, Gameplay/Factions, Gameplay/Items, Gameplay/Pets, Gameplay/Player, Gameplay/Progression, Networking, UI | 1 |
 | ServerSave | Gameplay/Persistence | 1217 | Core, Networking | 22 |
-| PlayerCombatSkills | Gameplay/Progression | 1206 | Core, Networking | 25 |
+| PlayerCombatSkills | Gameplay/Progression | 1208 | Core, Networking | 25 |
 | PlayerMeleeCombat | Gameplay/Combat | 1166 | Core, Gameplay/Player, Gameplay/Progression, Networking | 16 |
 | PetFollower | Gameplay/Items | 1056 | Rendering | 5 |
 | HudLayoutEditor | UI | 1021 | - | 12 |
