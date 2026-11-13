@@ -1225,10 +1225,11 @@ namespace KryticalNova.EditorTools
             so.FindProperty("levelUpWorldFeel").objectReferenceValue = World(world, "Level Up",
                 AtFeet("PFX_LevelUp"), ComicAt("PFX_Mark_LevelUp", 0.2f, ramped: true), ComicAt("PFX_Word_LevelUp", 2.35f, ramped: true));
             // Build 17 item 2.5: the own big level-up (pet-evolution level and more): a pillar of light, rays, a ring over the ground and
-            // sparkles, from the Nova tier's pieces. Others keep the lighter levelUpWorldFeel. The look is the owner's pick (GIF options).
+            // sparkles, from the Nova tier's pieces. Others keep the lighter levelUpWorldFeel. Owner pick (13 Nov 2026): in the player's
+            // faction colour, so every piece takes the moment's tint (the presenter passes the faction's fill colour).
             so.FindProperty("levelUpOwnWorldFeel").objectReferenceValue = World(world, "Level Up Own",
-                new Fx("PFX_Nova_Column", Feet, follow: true), new Fx("PFX_Nova_Rays", Feet, follow: true),
-                new Fx("PFX_Nova_Shockwave", ground: true), new Fx("PFX_Nova_Sparkles", Chest, follow: true));
+                new Fx("PFX_Nova_Column", Feet, follow: true, tint: true), new Fx("PFX_Nova_Rays", Feet, follow: true, tint: true),
+                new Fx("PFX_Nova_Shockwave", ground: true, tint: true), new Fx("PFX_Nova_Sparkles", Chest, follow: true, tint: true));
             so.FindProperty("pickupWorldFeel").objectReferenceValue = World(world, "Pick Up", ComicAt("PFX_Mark_Pickup", 0.25f));
             // Over the finder's head (the presenter plays these at their feet, and the puff at the drop).
             so.FindProperty("rarePickupWorldFeel").objectReferenceValue = World(world, "Pick Up Rare", ComicAt("PFX_Word_RareFind", 2.3f));
