@@ -20,7 +20,7 @@ script, which is then published to the link above. `--baseline` saves today's up
 ## Today
 
 <!-- map:summary -->
-Generated 12 Nov 2026, 20:01: 1007 runtime scripts (186,627 lines) declaring 1870 types (209 MonoBehaviours, 65 NetworkBehaviours, 111 ScriptableObject classes); 295 test scripts; 4748 prefabs, 52 scenes and 6443 assets read. 215 system-to-system links, of which 0 run uphill, 0 pairs of systems use each other both ways, and 4 links would have to go for the systems to form a clean stack. The largest tangle, classes that all reach each other through some chain of uses, holds 10 classes from 1 systems (UI 10, ...).
+Generated 12 Nov 2026, 21:42: 1007 runtime scripts (186,703 lines) declaring 1870 types (209 MonoBehaviours, 65 NetworkBehaviours, 111 ScriptableObject classes); 298 test scripts; 4748 prefabs, 52 scenes and 6443 assets read. 215 system-to-system links, of which 0 run uphill, 0 pairs of systems use each other both ways, and 4 links would have to go for the systems to form a clean stack. The largest tangle, classes that all reach each other through some chain of uses, holds 10 classes from 1 systems (UI 10, ...).
 <!-- /map:summary -->
 
 **Checked against the compiler.**
@@ -64,8 +64,8 @@ Checked against the 219 references the assemblies declare between systems: every
 <!-- map:systems -->
 | System | Layer | Scripts | Lines | Uses (types) | Used by (types) | Instability | Tests | Types touched by a test |
 |---|---|---|---|---|---|---|---|---|
-| Core | Foundation | 77 | 6,668 | 0 | 439 | 0.0 | 9 | 61 of 74 |
-| Networking | Infrastructure | 100 | 15,057 | 44 | 143 | 0.24 | 37 | 114 of 174 |
+| Core | Foundation | 77 | 6,671 | 0 | 439 | 0.0 | 9 | 61 of 74 |
+| Networking | Infrastructure | 100 | 15,067 | 44 | 143 | 0.24 | 39 | 114 of 174 |
 | Rendering | Infrastructure | 17 | 3,623 | 3 | 28 | 0.1 | 1 | 2 of 21 |
 | Environment | Simulation | 6 | 834 | 0 | 2 | 0.0 | 0 | 0 of 6 |
 | Gameplay/Crafting | Simulation | 3 | 426 | 25 | 9 | 0.74 | 1 | 4 of 6 |
@@ -76,7 +76,7 @@ Checked against the 219 references the assemblies declare between systems: every
 | Gameplay/Economy | Simulation | 23 | 4,609 | 83 | 46 | 0.64 | 9 | 24 of 37 |
 | Gameplay/Autopilot | Simulation | 11 | 1,562 | 46 | 14 | 0.77 | 4 | 7 of 12 |
 | Gameplay/Social | Simulation | 42 | 6,771 | 81 | 49 | 0.62 | 12 | 33 of 55 |
-| Gameplay/Persistence | Simulation | 66 | 19,336 | 413 | 14 | 0.97 | 48 | 56 of 249 |
+| Gameplay/Persistence | Simulation | 66 | 19,379 | 413 | 14 | 0.97 | 49 | 56 of 249 |
 | Gameplay/Hostiles | Simulation | 52 | 5,997 | 79 | 34 | 0.7 | 23 | 58 of 76 |
 | Gameplay/Pets | Simulation | 12 | 1,550 | 40 | 32 | 0.56 | 6 | 14 of 19 |
 | Gameplay/Combat | Simulation | 32 | 5,655 | 89 | 41 | 0.68 | 11 | 30 of 55 |
@@ -88,7 +88,7 @@ Checked against the 219 references the assemblies declare between systems: every
 | Gameplay/Wallet | Simulation | 4 | 144 | 0 | 21 | 0.0 | 0 | 2 of 2 |
 | Gameplay/NPC | Simulation | 3 | 293 | 5 | 17 | 0.23 | 1 | 3 of 4 |
 | Gameplay/Factions | Simulation | 7 | 197 | 0 | 28 | 0.0 | 0 | 2 of 4 |
-| Gameplay/Brains | Simulation | 10 | 1,492 | 1 | 29 | 0.03 | 4 | 34 of 39 |
+| Gameplay/Brains | Simulation | 10 | 1,512 | 1 | 29 | 0.03 | 4 | 34 of 39 |
 | GameFeel | Presentation | 31 | 5,920 | 57 | 2 | 0.97 | 6 | 19 of 39 |
 | UI | Presentation | 144 | 37,029 | 331 | 5 | 0.99 | 21 | 43 of 150 |
 | Audio | Presentation | 14 | 1,246 | 10 | 16 | 0.38 | 1 | 1 of 15 |
@@ -342,7 +342,7 @@ Each ScriptableObject class, how many assets of it exist, and where they are wir
 Where tuning still lives in code, and other links the compiler cannot see:
 
 <!-- map:smells -->
-- **Gameplay numbers fixed in code:** 454 in 154 files. Most: `Gameplay/Crafting/Data/CraftingSettings.cs` (28), `Gameplay/Player/Entities/Runtime/WallWalk.cs` (20), `Gameplay/Player/Runtime/PlayerWallRunMotor.cs` (18), `Gameplay/Player/Runtime/PlayerVaultMotor.cs` (15), `Gameplay/Player/Runtime/PointAndClickPlayer.cs` (15), `Gameplay/Items/Data/GearProgressionSettings.cs` (13), `Gameplay/Items/Runtime/WeaponPaintRules.cs` (11), `Gameplay/Player/Runtime/PlayerWallRunMotor.WallWalk.cs` (10).
+- **Gameplay numbers fixed in code:** 455 in 154 files. Most: `Gameplay/Crafting/Data/CraftingSettings.cs` (28), `Gameplay/Player/Entities/Runtime/WallWalk.cs` (20), `Gameplay/Player/Runtime/PlayerWallRunMotor.cs` (18), `Gameplay/Player/Runtime/PlayerVaultMotor.cs` (15), `Gameplay/Player/Runtime/PointAndClickPlayer.cs` (15), `Gameplay/Items/Data/GearProgressionSettings.cs` (13), `Gameplay/Items/Runtime/WeaponPaintRules.cs` (11), `Gameplay/Player/Runtime/PlayerWallRunMotor.WallWalk.cs` (10).
 - **Settings fallbacks** (`settings != null ? settings.x : 8`): 108.
 - **Runtime writes to shared assets** (ScriptableObject or pipeline fields): 25 — `Rendering/Runtime/PipelineRebuilds.cs:60`, `Rendering/Runtime/PipelineRebuilds.cs:68`, `Rendering/Runtime/PipelineRebuilds.cs:104`, `Rendering/Runtime/PipelineRebuilds.cs:105`, `UI/Runtime/Settings/GraphicsSettingsApplier.cs:142`, `UI/Runtime/Settings/GraphicsSettingsApplier.cs:143`, `UI/Runtime/Settings/GraphicsSettingsApplier.cs:144`, `UI/Runtime/Settings/GraphicsSettingsApplier.cs:145`.
 - **Lookups by name** (Type.GetType, Find("..."), Resources.Load, SendMessage): 38.
