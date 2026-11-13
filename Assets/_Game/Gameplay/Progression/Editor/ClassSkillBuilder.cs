@@ -256,7 +256,7 @@ namespace KryticalNova.EditorTools
                     "Raises a barrier worth 111% - 150% of your HP and raises Defense by 2% - 50% while it lasts. Physical " +
                     "damage hits the barrier first; once it breaks, damage reaches your HP. Elemental damage goes straight through it."),
                 ["HeavenlyBlow"] = ("Killer Instinct",
-                    "Sharpens your eye for the fatal opening, raising your Critical chance by 12% - 75%."),
+                    "Sharpens your eye for the fatal opening, adding 2% - 25% to your Critical chance."),
                 ["GarudasPrayer"] = ("Hot Streak",
                     "Fortune runs your way: Luck is raised by 13% - 100% (500 Luck becomes 1000 at max rank). " +
                     "Luck improves your odds at the Armorer's forge."),
