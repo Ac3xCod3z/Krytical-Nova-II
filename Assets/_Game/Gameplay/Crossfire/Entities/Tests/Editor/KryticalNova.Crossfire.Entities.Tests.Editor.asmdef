@@ -1,0 +1,34 @@
+{
+    "name": "KryticalNova.Crossfire.Entities.Tests.Editor",
+    "rootNamespace": "KryticalNova.Crossfire.Entities.Tests",
+    "references": [
+        "KryticalNova.Runtime",
+        "KryticalNova.Crossfire",
+        "KryticalNova.Crossfire.Entities",
+        "KryticalNova.World",
+        "KryticalNova.Networking.Entities",
+        "KryticalNova.Networking.Entities.Tests.Editor",
+        "UnityEngine.TestRunner",
+        "UnityEditor.TestRunner",
+        "Unity.Collections",
+        "Unity.Entities",
+        "Unity.NetCode",
+        "Unity.Networking.Transport",
+        "Unity.Netcode.Runtime"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "nunit.framework.dll"
+    ],
+    "autoReferenced": false,
+    "defineConstraints": [
+        "UNITY_INCLUDE_TESTS"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
