@@ -17,6 +17,20 @@ namespace KryticalNova.Player.Entities
         bool TryPlan(int3 startMm, int3 goalMm, NativeList<int3> cornersMm);
     }
 
+    /// <summary>
+    /// The walkable surface the walk is planned on, for a short straight step that is not a walk (build 17 item 11.1: a standing player
+    /// sliding out of another). Managed, main thread, server only. The server's path planner implements it when it plans on the NavMesh.
+    /// </summary>
+    public interface IWalkableSurface
+    {
+        /// <summary>
+        /// How far along the straight step from <paramref name="fromMm"/> to <paramref name="toMm"/> a body gets before the edge of the
+        /// walkable surface (a wall, a drop): <paramref name="reachedMm"/> is <paramref name="toMm"/> when nothing is in the way, else the
+        /// edge. False when the start is not on the surface at all (the step is not taken).
+        /// </summary>
+        bool TryClampStep(int3 fromMm, int3 toMm, out int3 reachedMm);
+    }
+
     /// <summary>A vault the planner found (M3c): where it takes off and lands (the pose's height, mm) and its leg's numbers.</summary>
     public struct VaultSplice
     {
@@ -109,7 +123,7 @@ namespace KryticalNova.Player.Entities
     /// agent. The goal is moved onto the mesh first; corners come back as millimetres lifted by <see cref="BaseOffsetM"/>
     /// (the old agent's base offset), so the loop never queries the ground. Main thread only.
     /// </summary>
-    public sealed class NavMeshPathPlanner : IPathPlanner
+    public sealed class NavMeshPathPlanner : IPathPlanner, IWalkableSurface
     {
         public int AgentTypeId;
         public int AreaMask = NavMesh.AllAreas;
@@ -135,6 +149,22 @@ namespace KryticalNova.Player.Entities
             cornersMm.Add(startMm);
             for (int i = 1; i < corners.Length; i++)
                 cornersMm.Add(ToMm(corners[i] + Vector3.up * BaseOffsetM));
+            return true;
+        }
+
+        /// <summary>The step on the same NavMesh, filter and base offset the walk is planned with: NavMesh.Raycast stops at its edge.</summary>
+        public bool TryClampStep(int3 fromMm, int3 toMm, out int3 reachedMm)
+        {
+            reachedMm = fromMm;
+            var filter = new NavMeshQueryFilter { agentTypeID = AgentTypeId, areaMask = AreaMask };
+            Vector3 from = ToMeters(fromMm) - Vector3.up * BaseOffsetM;
+            if (!NavMesh.SamplePosition(from, out NavMeshHit start, 0.5f, filter)) return false;
+            Vector3 to = ToMeters(toMm) - Vector3.up * BaseOffsetM;
+            to.y = start.position.y;
+            if (!NavMesh.Raycast(start.position, to, out NavMeshHit edge, filter)) { reachedMm = new int3(toMm.x, fromMm.y, toMm.z); return true; }
+            int3 hit = ToMm(edge.position);
+            // the edge is measured from where the body stands on the mesh; keep the part of the step that was walkable
+            reachedMm = new int3(fromMm.x + (hit.x - ToMm(start.position).x), fromMm.y, fromMm.z + (hit.z - ToMm(start.position).z));
             return true;
         }
 

@@ -86,6 +86,31 @@ namespace KryticalNova.Social
         }
 
         /// <summary>
+        /// Build 17 item 15.3: true when the motion <paramref name="key"/> names may be done from a mount's saddle (it plays on the
+        /// upper body over the riding legs). Never a stance; an emote when <see cref="EmoteWheelSettings.mountedAllowed"/> lists its
+        /// group or the motion itself, and <see cref="EmoteWheelSettings.mountedRefused"/> does not list the motion.
+        /// </summary>
+        public static bool AllowedMounted(EmoteWheelSettings settings, string key)
+        {
+            if (settings == null || string.IsNullOrEmpty(key)) return false;
+            int first = key.IndexOf(Separator);
+            int second = first < 0 ? -1 : key.IndexOf(Separator, first + 1);
+            if (second < 0 || key.Substring(0, first) != EmoteKind) return false;
+            string group = key.Substring(first + 1, second - first - 1);
+            string motion = key.Substring(first + 1);   // "Group/Name"
+            if (Lists(settings.mountedRefused, motion)) return false;
+            return Lists(settings.mountedAllowed, group) || Lists(settings.mountedAllowed, motion);
+        }
+
+        private static bool Lists(string[] list, string entry)
+        {
+            if (list == null) return false;
+            foreach (string listed in list)
+                if (string.Equals(listed, entry, StringComparison.Ordinal)) return true;
+            return false;
+        }
+
+        /// <summary>
         /// The wheel for one body type: for each category, its motions in the order of the category's groups, emotes
         /// before stances within a group. Only motions performed for that body are listed.
         /// </summary>

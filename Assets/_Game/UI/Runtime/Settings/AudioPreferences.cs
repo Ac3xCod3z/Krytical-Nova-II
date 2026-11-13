@@ -111,7 +111,7 @@ namespace KryticalNova.UI
             Changed?.Invoke();
         }
 
-        /// <summary>The Beat Ring round the pet in a fight, which shows the fight music's beat (on unless switched off).</summary>
+        /// <summary>The beat arc on the Mini Deck in a fight (build 17; was the 3D Beat Ring round the pet), on unless switched off. The key keeps its old name.</summary>
         public static bool BeatRing
         {
             get => PlayerPrefs.GetInt(Prefix + "beatRing", 1) != 0;

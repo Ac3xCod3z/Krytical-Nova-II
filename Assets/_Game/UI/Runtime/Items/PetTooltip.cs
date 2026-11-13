@@ -82,11 +82,14 @@ namespace KryticalNova.UI
                    (state.IsFed ? string.Empty : "\nFeed it a Pet Ration: a starving pet gives no bonus and earns no XP.");
         }
 
-        public static void BuildPips(VisualElement host)
+        public static void BuildPips(VisualElement host) => BuildPips(host, PetRules.StageCount);
+
+        /// <summary>One pip per stage: a pet's four, a mount's three (build 17 item 15.1).</summary>
+        public static void BuildPips(VisualElement host, int count)
         {
             if (host == null) return;
             host.Clear();
-            for (int i = 0; i < PetRules.StageCount; i++)
+            for (int i = 0; i < count; i++)
             {
                 var pip = new VisualElement { pickingMode = PickingMode.Ignore };
                 pip.AddToClassList(PipClass);

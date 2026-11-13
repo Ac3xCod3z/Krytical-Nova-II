@@ -40,7 +40,7 @@ namespace KryticalNova.UI
                 () => AudioPreferences.BeatOffset, value => AudioPreferences.BeatOffset = value, out VisualElement beat,
                 amount => (amount > 0f ? "+" : "") + Mathf.RoundToInt(amount) + " ms");
             beat.tooltip = "If the beat seems to come before you hear it, move this later (+); if after, earlier (-). Wireless headsets often need +100 or more.";
-            SettingsRows.Toggle(page, "Beat Ring round your pet in a fight",
+            SettingsRows.Toggle(page, "Beat arc on the Mini Deck in a fight",
                 () => AudioPreferences.BeatRing, value => AudioPreferences.BeatRing = value);
             SettingsRows.Toggle(page, "COMBO counter when skills land on the beat",
                 () => AudioPreferences.ComboMeter, value => AudioPreferences.ComboMeter = value);
