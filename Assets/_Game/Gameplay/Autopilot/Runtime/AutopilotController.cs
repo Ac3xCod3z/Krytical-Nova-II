@@ -171,7 +171,7 @@ namespace KryticalNova.Autopilot
                 if (cell.IsEmpty) continue;
                 ItemDefinition item = catalog.Get(cell.itemId);
                 if (item == null) continue;
-                float score = (health ? item.restoreHealth : 0f) + (flux ? item.restoreChi : 0f);
+                float score = (health ? item.HealthRestoredAt(resources.MaxHealth) : 0f) + (flux ? item.ChiRestoredAt(resources.MaxChi) : 0f);
                 if (score <= 0f) continue;
                 if (score > biggestScore) { biggestScore = score; biggest = item; }
                 if (score >= missing && score < enoughScore) { enoughScore = score; enough = item; }

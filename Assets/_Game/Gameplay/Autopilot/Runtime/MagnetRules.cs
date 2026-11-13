@@ -25,6 +25,6 @@ namespace KryticalNova.Autopilot
         }
 
         public static bool IsGear(ItemDefinition item) => item.equipSlot != EquipSlot.None;
-        public static bool IsStim(ItemDefinition item) => item.restoreHealth > 0f || item.restoreChi > 0f;
+        public static bool IsStim(ItemDefinition item) => item.RestoresHealth || item.RestoresChi;
     }
 }

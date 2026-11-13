@@ -28,7 +28,7 @@ namespace KryticalNova.Tests
             foreach (string guid in AssetDatabase.FindAssets("t:ItemDefinition", new[] { "Assets/_Game/Gameplay/Items/Data/Assets/Consumables" }))
             {
                 var def = AssetDatabase.LoadAssetAtPath<ItemDefinition>(AssetDatabase.GUIDToAssetPath(guid));
-                if (def == null || def.useEffect != ItemUseEffect.None || (def.restoreHealth <= 0f && def.restoreChi <= 0f)) continue;
+                if (def == null || def.useEffect != ItemUseEffect.None || (!def.RestoresHealth && !def.RestoresChi)) continue;
                 found++;
                 Assert.LessOrEqual(def.useCooldown, 0.5f, def.displayName);
             }
