@@ -311,8 +311,11 @@ namespace KryticalNova.Tests
             Assert.AreEqual(35f * 1.5f, Total(boots, new GearItemState(50, 0, 0), StatType.EvasionRate), 0.01f, "Boots: Evasion");
 
             ItemDefinition ring = Gear(EquipSlot.Ring, ItemRarity.Rare, 45);
-            Assert.AreEqual(6f, Total(ring, new GearItemState(120, 0, 0), StatType.CriticalRate) - Total(ring, default, StatType.CriticalRate), 0.001f,
-                "Ring: Critical (Temper adds 6 on top of the ring's own base crit)");
+            float ringBase = Total(ring, default, StatType.CriticalRate);
+            Assert.Greater(ringBase, 0f, "a ladder ring carries its rarity base crit (kept, owner 13 Nov 2026)");
+            Assert.AreEqual(ringBase * 1.2f, Total(ring, new GearItemState(120, 0, 0), StatType.CriticalRate) - ringBase, 0.001f,
+                "Ring: Critical (owner pick A: 1 % of Temper adds 1 % of the ring's own base crit, on top of it)");
+            Assert.AreEqual(ringBase * 0.3f, Total(ring, new GearItemState(30, 0, 0), StatType.CriticalRate) - ringBase, 0.001f, "30 %: +30 % of the base");
 
             ItemDefinition amulet = Gear(EquipSlot.Amulet, ItemRarity.Uncommon, 40);
             float baked = GearStatResolver.Total(amulet, StatType.Luck);

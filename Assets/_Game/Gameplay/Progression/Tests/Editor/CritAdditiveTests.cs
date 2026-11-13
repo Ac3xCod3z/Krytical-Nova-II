@@ -6,8 +6,8 @@ using UnityEngine;
 namespace KryticalNova.Progression.Tests
 {
     /// <summary>
-    /// Build 17, item 7.1 (owner, 13 Nov 2026): Redline and Killer Instinct ADD to the crit rate (base + gear), never multiply it, and the
-    /// total is capped by <see cref="CombatStatTuningData.maxCriticalRate"/>.
+    /// Build 17, item 7.1 (owner, 13 Nov 2026): Redline and Killer Instinct ADD to the crit rate (base + gear), never multiply it. There is
+    /// no 75 % cap (owner, 13 Nov 2026): the total only stops at 100, a chance's own end.
     /// </summary>
     public sealed class CritAdditiveTests
     {
@@ -64,7 +64,7 @@ namespace KryticalNova.Progression.Tests
         }
 
         [Test]
-        public void TheCapHolds()
+        public void NoCapBut100()
         {
             var tuning = AssetDatabase.LoadAssetAtPath<CombatStatTuningData>(TuningPath);
             var stats = new GameObject("CritAdditiveTests.cap").AddComponent<CharacterCombatStats>();
@@ -72,7 +72,10 @@ namespace KryticalNova.Progression.Tests
             {
                 stats.TuningData = tuning;
                 stats.SetSourceModifiers(stats, new List<StatModifier> { new StatModifier(StatType.CriticalRate, ModifierType.Flat, 500f, stats) });
-                Assert.AreEqual(tuning.maxCriticalRate, stats.GetStatValue(StatType.CriticalRate), 1e-3);
+                Assert.AreEqual(100f, tuning.maxCriticalRate, "the owner set no cap (13 Nov 2026)");
+                Assert.AreEqual(100f, stats.GetStatValue(StatType.CriticalRate), 1e-3);
+                stats.SetSourceModifiers(stats, new List<StatModifier> { new StatModifier(StatType.CriticalRate, ModifierType.Flat, 70f, stats) });
+                Assert.AreEqual(tuning.baselineCriticalRate + 70f, stats.GetStatValue(StatType.CriticalRate), 1e-3, "85 stays 85: no 75 cap");
             }
             finally { Object.DestroyImmediate(stats.gameObject); }
             Assert.AreEqual(40f, CharacterCombatStats.CapCritical(40f, 75f));

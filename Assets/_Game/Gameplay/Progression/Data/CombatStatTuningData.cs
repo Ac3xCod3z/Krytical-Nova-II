@@ -45,9 +45,9 @@ namespace KryticalNova.Progression
         [Tooltip("Base critical damage multiplier before bonus critical damage % (e.g. 1.5 for 150% damage).")]
         [Min(1f)] public float baseCriticalMultiplier = 1.5f;
 
-        [Tooltip("The most a player's critical chance can be, everything added (base, gear, Redline, Killer Instinct), in percent " +
-                 "(build 17, item 7.1: crit buffs add, so the total is capped here).")]
-        [Range(0f, 100f)] public float maxCriticalRate = 75f;
+        [Tooltip("The most a player's critical chance can be, everything added (base, gear, Redline, Killer Instinct), in percent. " +
+                 "100 = no cap but the chance itself (owner, 13 Nov 2026: there is no 75 % cap).")]
+        [Range(0f, 100f)] public float maxCriticalRate = 100f;
 
         [Tooltip("Baseline movement speed percentage.")]
         [Min(0f)] public float baselineMoveSpeedPercent = 100f;

@@ -11,7 +11,7 @@
     },
     {
       "title": "Crits Reworked",
-      "body": "Crit buffs add to your crit chance instead of multiplying it, up to a 75 % cap. Crit chance on gear now comes from rings, and weapon Tuning raises Critical Damage instead. On the Cadence beat, a Redline three-hit crits with all three hits."
+      "body": "Crit buffs add to your crit chance instead of multiplying it, with no cap. Crit chance on gear now comes from rings, and Tempering a ring adds on top of its own crit, and weapon Tuning raises Critical Damage instead. On the Cadence beat, a Redline three-hit crits with all three hits."
     },
     {
       "title": "Stims When You Need Them",
@@ -52,7 +52,7 @@
       "lines": [
         "Defense cuts every hit by a share instead of a flat amount: more Defense always helps, with diminishing returns and never full immunity.",
         "Crit resistance: Defense, Evasion and capes lower the crit chance of hits against you (up to 60 %). Evasion also takes part of a crit's extra damage and adds a little Backlash.",
-        "Crit chance on gear comes from rings only (Common +5 up to Legendary +25 at level 112). Weapon Tuning now gives +1 % Critical Damage a stage instead of crit chance.",
+        "Crit chance on gear comes from rings only (Common +5 up to Legendary +25 at level 112), and each 1 % of a ring's Temper adds 1 % of that crit (a Legendary ring at 120 % gives +30 more). Weapon Tuning now gives +1 % Critical Damage a stage instead of crit chance.",
         "Holoweave keeps one Weave per weapon class and one per gear set; switching keeps each look. Weaves you already had carry over to the piece you wear.",
         "Names can't contain GM as a part of their own (Magma is still fine).",
         "Players no longer stand inside each other: if you stop on top of someone, you step aside. Walking through each other still works.",
@@ -64,7 +64,7 @@
         "Every item tooltip says what a vendor pays for it.",
         "Skills you have not learned yet show as ??? until you learn them (the level they open at is shown).",
         "Aegis also raises Defense (up to +50 %); every class's Guard ward also raises Elemental Attack (up to +10 %).",
-        "Crit buffs add to your crit chance instead of multiplying it (Killer Instinct up to +25), with a 75 % cap.",
+        "Crit buffs add to your crit chance instead of multiplying it (Killer Instinct up to +25), with no cap.",
         "Cadence combos: on the beat, one-hit and two-hit skills can't crit; a Redline three-hit on the beat crits with all three hits.",
         "Shared Stances give Squad mates half their strength.",
         "Stims can be used at any time, also during a charge; each kind has its own short cooldown.",
