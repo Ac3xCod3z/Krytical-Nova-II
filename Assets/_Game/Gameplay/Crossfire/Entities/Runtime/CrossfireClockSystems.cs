@@ -55,10 +55,13 @@ namespace KryticalNova.Crossfire.Entities
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         static void ResetStatics() => ClockSource = null;
 
-        /// <summary>The settings (tests put their own); the Resources asset otherwise.</summary>
-        public CrossfireSettings Settings;
-        /// <summary>The clock (tests put their own); <see cref="NetClock.Now"/> otherwise.</summary>
-        public Func<double> Clock;
+        /// <summary>The settings (tests put their own); the Resources asset otherwise. A change starts the fixed cycle anew.</summary>
+        public CrossfireSettings Settings { get => m_Settings; set { m_Settings = value; m_Origin = double.NaN; } }
+        /// <summary>The clock (tests put their own); <see cref="NetClock.Now"/> otherwise. A change starts the fixed cycle anew, so a
+        /// cycle is never measured from a time on another clock.</summary>
+        public Func<double> Clock { get => m_Clock; set { m_Clock = value; m_Origin = double.NaN; } }
+        CrossfireSettings m_Settings;
+        Func<double> m_Clock;
         public float Interval = 0.25f;
 
         CrossfireOverride m_Override = CrossfireOverride.None;
