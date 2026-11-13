@@ -34,7 +34,15 @@ namespace KryticalNova.Audio
         public static DeckPlayer Ensure(DeckLibrary from)
         {
             if (instance != null) return instance;
-            if (from == null || Application.isBatchMode) return null;
+            if (Application.isBatchMode) return null;
+            return Create(from);
+        }
+
+        /// <summary>Makes the Deck (also in batch mode, for tests). <see cref="Ensure"/> is the game's way in.</summary>
+        internal static DeckPlayer Create(DeckLibrary from)
+        {
+            if (instance != null) return instance;
+            if (from == null) return null;
             var go = new GameObject("[Deck]");
             DontDestroyOnLoad(go);
             instance = go.AddComponent<DeckPlayer>();
@@ -88,6 +96,22 @@ namespace KryticalNova.Audio
             index = all.FindIndex(t => t.name == last);
             if (index < 0 && all.Count > 0) index = 0;
             if (index >= 0) source.clip = all[index].clip;
+        }
+
+        /// <summary>
+        /// The session ended (Log Out, a failed join, back to the menus): the Deck stops and is gone, so nothing of this
+        /// character's Deck (playing, the track it was on, a fight's duck) reaches the next one. The next world makes a
+        /// fresh Deck from this machine's kept choices (volume, shuffle, repeat, last track), stopped until asked.
+        /// </summary>
+        public static void EndSession()
+        {
+            DeckPlayer deck = instance;
+            if (deck == null) return;
+            instance = null;
+            deck.playing = false;
+            if (deck.source != null) deck.source.Stop();
+            if (UnityEngine.Application.isPlaying) Destroy(deck.gameObject);
+            else DestroyImmediate(deck.gameObject);
         }
 
         private void OnDestroy()
