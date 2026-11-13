@@ -5,6 +5,8 @@
 
 .deck {
     position: absolute;
+    right: 24px;
+    top: 90px;
     flex-direction: column;
     padding: 14px 16px 12px 16px;
     background-color: rgb(14, 18, 30);
