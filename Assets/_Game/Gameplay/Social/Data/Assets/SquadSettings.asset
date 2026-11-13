@@ -17,3 +17,4 @@ MonoBehaviour:
   followResumeDistance: 5
   followMaxDistance: 60
   followRepathSeconds: 0.4
+  sharedBuffPercent: 50

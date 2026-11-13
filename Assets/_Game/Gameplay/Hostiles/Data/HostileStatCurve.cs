@@ -80,6 +80,10 @@ namespace KryticalNova.Hostiles
         [Range(0f, 1f)] public float credsSpread = 0.2f;
         [Tooltip("Chance that a kill drops Creds at all.")]
         [Range(0f, 1f)] public float credsDropChance = 0.7f;
+        [Tooltip("Level-1 Hostiles only (build 17, owner: new players earn faster): their Creds times this. Later levels unchanged.")]
+        [Min(1f)] public float levelOneCredsBonus = 1.15f;
+        [Tooltip("Level-1 Hostiles only (build 17, proposed): their XP times this (1.2 turns the 2 XP a level-1 kill gave into 3; 1.1 rounds back to 2). Later levels unchanged.")]
+        [Min(1f)] public float levelOneExperienceBonus = 1.2f;
 
         [Header("Behaviour")]
         [Tooltip("Aggro radius of attack-on-sight Hostiles, metres: base (x), plus one metre per this many levels (y), never above (z).")]
@@ -175,8 +179,9 @@ namespace KryticalNova.Hostiles
                 HitRate = Mathf.Round(hitRate),
                 Evasion = Mathf.Round(evasion),
                 CriticalRate = criticalRate,
-                Experience = Mathf.Max(1, Mathf.RoundToInt(ExperienceToNext(level) / Mathf.Max(1f, killsPerLevel.x + killsPerLevel.y * level) * m.experience)),
-                Creds = Mathf.RoundToInt((creds.x + creds.y * level * player.GearRarity) * m.creds),
+                Experience = Mathf.Max(1, Mathf.RoundToInt(ExperienceToNext(level) / Mathf.Max(1f, killsPerLevel.x + killsPerLevel.y * level) * m.experience
+                    * (level == 1 ? levelOneExperienceBonus : 1f))),
+                Creds = Mathf.RoundToInt((creds.x + creds.y * level * player.GearRarity) * m.creds * (level == 1 ? levelOneCredsBonus : 1f)),
                 AggroRadius = Mathf.Min(aggroRadius.z, aggroRadius.x + (aggroRadius.y > 0f ? level / aggroRadius.y : 0f)),
                 WalkSpeed = walkSpeed,
                 RunSpeed = runSpeed.x + runSpeed.y * level,

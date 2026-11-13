@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::KryticalNova.Progression.SkillDefinitionSO
   skillId: HeavenlyShield
   displayName: Aegis
-  description: Raises a barrier worth 111% - 150% of your HP. Physical damage hits the barrier first; once it breaks, damage reaches your HP. Elemental damage goes straight through it.
+  description: Raises a barrier worth 111% - 150% of your HP and raises Defense by 2% - 50% while it lasts. Physical damage hits the barrier first; once it breaks, damage reaches your HP. Elemental damage goes straight through it.
   category: 1
   weaponClass: 0
   classSlot: 0
@@ -63,7 +63,11 @@ MonoBehaviour:
   maxDestructionChance: 20
   dispelBuffChance: 50
   statModifiers: []
-  rankScaledModifiers: []
+  rankScaledModifiers:
+  - statType: 5
+    modifierType: 1
+    minValue: 2
+    maxValue: 50
   consumedOnNextHit: 0
   minDamagePercent: 0
   maxDamagePercent: 0

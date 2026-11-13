@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using KryticalNova.Combat;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -7,7 +8,9 @@ namespace KryticalNova.UI.Hud
     /// <summary>
     /// The Showdown (owner, 22 Oct 2026): a Callout played like a film. When this player's Callout starts counting
     /// down, black bars slide in from the top and the bottom of the screen and a big 3 · 2 · 1 punches in the middle;
-    /// on the start "CALLOUT!" slams in and the bars settle a little thinner, and they stay for the whole bout. They
+    /// on the start "CALLOUT!" slams in and the bars keep their countdown height for the whole bout (owner, build 17:
+    /// no pull-back at the start). The player status frame and the Hotbar ease away from the bars with them, on the
+    /// same curve, as an offset on top of the player's saved layout that is never saved. They
     /// slide away only when the bout ends: a player won, or someone left it (forfeit, walked off, left the game). A
     /// countdown called off slides them straight away. The bars are drawn behind the rest of the HUD, so the Hotbar,
     /// the target frames and the Callout's own panels always stay on top of them; the chat and the minimap dim while
@@ -16,7 +19,7 @@ namespace KryticalNova.UI.Hud
     public sealed class ShowdownLetterbox
     {
         private const float CountdownShare = 0.11f;  // each bar's height during the 3 · 2 · 1, as a share of the screen
-        private const float BoutShare = 0.07f;       // and during the bout
+        private const float HudSlideShare = 0.025f;  // how far the status frame and Hotbar ease away from the bars, at full bar height
         private const float SlideInSeconds = 0.18f;  // smoothing of the bars (a critically damped spring)
         private const float SlideOutSeconds = 0.28f;
         private const float PunchSeconds = 0.3f;
@@ -33,6 +36,7 @@ namespace KryticalNova.UI.Hud
         private int shownNumber;
         private float countPunchAt = -10f, titleAt = -10f;
         private bool wasDuelling;
+        private readonly HudSlide slide = new HudSlide();
 
         public ShowdownLetterbox(VisualElement root)
         {
@@ -62,6 +66,7 @@ namespace KryticalNova.UI.Hud
             PlayerDuel.LocalCountdownStarted -= OnCountdown;
             PlayerDuel.LocalCountdownCancelled -= OnCancelled;
             layer.RemoveFromHierarchy();
+            slide.Release();
             Dim(false);
         }
 
@@ -107,7 +112,7 @@ namespace KryticalNova.UI.Hud
             if (duelling && !wasDuelling)
             {
                 phase = Phase.Bout;
-                target = BoutShare;
+                target = CountdownShare;
                 share = Mathf.Max(share, CountdownShare * 1.15f); // a small punch on the bars as it starts
                 layer.style.display = DisplayStyle.Flex;
                 titleAt = now;
@@ -151,6 +156,8 @@ namespace KryticalNova.UI.Hud
                                      Mathf.Infinity, Time.unscaledDeltaTime);
             top.style.height = Length.Percent(share * 100f);
             bottom.style.height = Length.Percent(share * 100f);
+            bool editing = HudLayoutEditor.Current != null && HudLayoutEditor.Current.IsEditing;
+            slide.Apply(root, HudSlide.Offset(share, CountdownShare, HudSlideShare, editing));
             if (phase == Phase.Leaving && share < 0.002f) Hide();
         }
 
@@ -162,6 +169,7 @@ namespace KryticalNova.UI.Hud
             count.style.opacity = 0f;
             title.style.opacity = 0f;
             layer.style.display = DisplayStyle.None;
+            slide.Release();
             Dim(false);
         }
 
@@ -177,6 +185,55 @@ namespace KryticalNova.UI.Hud
             const float c1 = 1.70158f, c3 = c1 + 1f;
             float u = t - 1f;
             return 1f + c3 * u * u * u + c1 * u * u;
+        }
+    }
+
+    /// <summary>
+    /// Eases the player status frame and the Hotbar away from the Showdown bars: a panel in the top half of the
+    /// screen moves down with the top bar, one in the bottom half up with the bottom bar. It is drawn with inline
+    /// margins, which the layout editor never reads or writes, so the player's saved place (left / top / translate /
+    /// scale, <see cref="HudPreferences.LayoutJson"/>) is untouched; while the layout editor is open the offset is
+    /// nothing, so a panel moved during a bout is saved where it really is.
+    /// </summary>
+    public sealed class HudSlide
+    {
+        public static readonly string[] Panels = { "summary", "hotbar-dock" };
+        private readonly List<VisualElement> moved = new List<VisualElement>(2);
+
+        /// <summary>The offset as a share of the screen height: follows the bars' height, nothing while editing.</summary>
+        public static float Offset(float barShare, float fullBarShare, float slideShare, bool editing)
+        {
+            if (editing || fullBarShare <= 0f || barShare <= 0f) return 0f;
+            return slideShare * Mathf.Clamp(barShare / fullBarShare, 0f, 1.2f);
+        }
+
+        /// <summary>+1 moves down (a panel above the middle), -1 up.</summary>
+        public static float Direction(float centreY, float screenHeight) => centreY < screenHeight * 0.5f ? 1f : -1f;
+
+        public void Apply(VisualElement root, float offsetShare)
+        {
+            if (offsetShare <= 0f) { Release(); return; }
+            VisualElement tree = root.panel?.visualTree ?? root;
+            float height = tree.layout.height;
+            if (!(height > 1f)) return;
+            foreach (string name in Panels)
+            {
+                VisualElement panel = tree.Q(name);
+                if (panel == null) continue;
+                if (!moved.Contains(panel)) moved.Add(panel);
+                float px = offsetShare * height * Direction(panel.worldBound.center.y, height);
+                // Down by px whether the panel is anchored by its top or its bottom.
+                panel.style.marginTop = px;
+                panel.style.marginBottom = -px;
+            }
+        }
+
+        /// <summary>Gives every panel back its own margins: exactly the saved spot again.</summary>
+        public void Release()
+        {
+            foreach (VisualElement panel in moved)
+                panel.style.marginTop = panel.style.marginBottom = StyleKeyword.Null;
+            moved.Clear();
         }
     }
 }

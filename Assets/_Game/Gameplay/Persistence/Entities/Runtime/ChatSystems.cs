@@ -26,7 +26,7 @@ namespace KryticalNova.Persistence.Entities
     public struct ChatLineRpc : IRpcCommand
     {
         public byte Kind, Channel, Outgoing, Announcement, Rarity, Flags, LinkCount;
-        public float Damage, Reflected;
+        public float Damage, Reflected, Elemental;
         public ushort L0, L1, L2;
         public ulong D0, D1, D2;
         public FixedString64Bytes Sender;
@@ -93,7 +93,7 @@ namespace KryticalNova.Persistence.Entities
             var rpc = new ChatLineRpc
             {
                 Kind = (byte)line.kind, Channel = (byte)line.channel, Outgoing = (byte)(line.outgoing ? 1 : 0), Announcement = (byte)line.announcement,
-                Rarity = line.rarity, Flags = line.flags, Damage = line.damage, Reflected = line.reflected,
+                Rarity = line.rarity, Flags = line.flags, Damage = line.damage, Reflected = line.reflected, Elemental = line.elemental,
                 Sender = Name(line.sender), Highlight = Highlight(line.highlight), Text = Text(line.text),
             };
             int links = line.linkItems != null && line.linkData != null && line.linkData.Length == line.linkItems.Length ? Math.Min(line.linkItems.Length, ChatLinks.Max) : 0;
@@ -109,7 +109,7 @@ namespace KryticalNova.Persistence.Entities
             var line = new BodyChatLine
             {
                 kind = (BodyChatKind)rpc.Kind, channel = (ChatChannel)rpc.Channel, outgoing = rpc.Outgoing != 0, announcement = (AnnouncementKind)rpc.Announcement,
-                rarity = rpc.Rarity, flags = rpc.Flags, damage = rpc.Damage, reflected = rpc.Reflected,
+                rarity = rpc.Rarity, flags = rpc.Flags, damage = rpc.Damage, reflected = rpc.Reflected, elemental = rpc.Elemental,
                 sender = rpc.Sender.ToString(), highlight = rpc.Highlight.ToString(), text = rpc.Text.ToString(),
             };
             int links = Math.Min((int)rpc.LinkCount, ChatLinks.Max);

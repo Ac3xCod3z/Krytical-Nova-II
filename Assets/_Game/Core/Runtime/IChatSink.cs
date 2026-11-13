@@ -22,6 +22,9 @@ namespace KryticalNova.Core
     }
 
     /// <summary>One line for the chat window.</summary>
+    /// <summary>Which side of a hit a Combat log line is (its colour: <c>chat-line--combat-out</c> / <c>--combat-in</c>).</summary>
+    public enum ChatCombatSide : byte { None = 0, Out = 1, In = 2 }
+
     public struct ChatLine
     {
         public ChatChannel Channel;
@@ -30,6 +33,11 @@ namespace KryticalNova.Core
         public string Text;
         /// <summary>True for a whisper this player sent (shown as "To Name").</summary>
         public bool Outgoing;
+        /// <summary>
+        /// A hit in the Combat log (build 17, item 4.2): <see cref="ChatCombatSide.Out"/> this player's own hit, <see cref="ChatCombatSide.In"/> a
+        /// hit on this player; <see cref="ChatCombatSide.None"/> for every other line (a notice, a death, the way back).
+        /// </summary>
+        public ChatCombatSide CombatSide;
         /// <summary>
         /// The items linked in the line (owner, 22 Oct 2026: share an item into chat), or null. Link <c>i</c> sits in
         /// <see cref="Text"/> where <see cref="ChatLinks.Marker"/>(i) is; the server put each one there from the

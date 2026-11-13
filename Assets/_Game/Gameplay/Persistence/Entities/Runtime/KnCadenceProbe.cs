@@ -801,8 +801,8 @@ namespace KryticalNova.Persistence.Entities
         {
             var fight = body.GetComponent<PlayerCombatState>();
             if (fight == null || !fight.InCombat) return "the server body is not in a fight (strike or dummy rule)";
-            if (GhostFlag(server, body) != "1") return "the server ghost's CombatFlag is not set";
-            if (GhostFlag(client, own) != "1") return "the client ghost's CombatFlag is not set (replication)";
+            if (GhostFlag(server, body) is "0" or "no flag") return "the server ghost's CombatFlag is not set";
+            if (GhostFlag(client, own) is "0" or "no flag") return "the client ghost's CombatFlag is not set (replication)";
             if (!InFight(own)) return "the own view did not mirror the fight";
             if (!ReferenceEquals(KryticalNova.Core.LocalPlayer.Object, own)) return "LocalPlayer is not the own view (the fight music reads LocalPlayer)";
             IBeatClock clock = BeatClock.Current;

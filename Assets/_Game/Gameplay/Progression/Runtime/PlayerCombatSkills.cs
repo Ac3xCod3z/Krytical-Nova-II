@@ -97,6 +97,8 @@ namespace KryticalNova.Progression
         public int SquadShareRank => squad != null ? squad.BuffShareRank : DefaultShareRank;
         /// <summary>Metres within which a shared Stance reaches a Squad member.</summary>
         public float SquadShareRadius => squad != null ? squad.BuffShareRadius : DefaultShareRadius;
+        /// <summary>How much of a shared Stance a Squad member gets, in percent (build 17, item 7.4).</summary>
+        public float SquadSharePercent => squad != null ? squad.BuffSharePercent : SquadBuffRules.DefaultSharePercent;
 
         private void Awake()
         {

@@ -45,6 +45,10 @@ namespace KryticalNova.Progression
         [Tooltip("Base critical damage multiplier before bonus critical damage % (e.g. 1.5 for 150% damage).")]
         [Min(1f)] public float baseCriticalMultiplier = 1.5f;
 
+        [Tooltip("The most a player's critical chance can be, everything added (base, gear, Redline, Killer Instinct), in percent " +
+                 "(build 17, item 7.1: crit buffs add, so the total is capped here).")]
+        [Range(0f, 100f)] public float maxCriticalRate = 75f;
+
         [Tooltip("Baseline movement speed percentage.")]
         [Min(0f)] public float baselineMoveSpeedPercent = 100f;
 
@@ -66,6 +70,14 @@ namespace KryticalNova.Progression
 
         [Tooltip("Maximum hit chance percentage cap.")]
         [Range(50f, 100f)] public float maximumHitChance = 95f;
+
+        [Header("Dodges (build 17 item 11.2, PROPOSED numbers)")]
+        [Tooltip("Dodges in a row that earn the automatic counter-attack.")]
+        [Range(1, 5)] public int dodgesForCounter = 2;
+        [Tooltip("The counter-attack's damage, times a normal hit (a bit more).")]
+        [Range(1f, 3f)] public float counterDamageMultiplier = 1.25f;
+        [Tooltip("A dodge streak ends when this many seconds pass without another dodge.")]
+        [Min(0.1f)] public float dodgeStreakSeconds = 3f;
 
         [Header("How a hit is shown")]
         [Tooltip("A hit is shown as Elemental (its own colours on every screen) when at least this share of its damage is the Elemental part. Looks only: no damage depends on it.")]
