@@ -1090,6 +1090,11 @@ namespace KryticalNova.UI
             // A Flask says how many drinks it has left: they travel with the bottle.
             if (def.useEffect == ItemUseEffect.FluxFlask && inventory != null && inventory.TryGetComponent(out PlayerFlask flask))
                 tipDesc.text = def.description + "\n" + flask.TooltipLine(itemStack);
+            // Build 17, item 5.4 (owner, 13 Nov 2026): what a vendor pays for it, from the same rule the sale uses
+            // (VendorRules.SellValue through PlayerShopping); nothing for an item no vendor buys.
+            PlayerShopping shop = PlayerShopping.Local;
+            string sells = SellLine(shop != null ? shop.SellValue(def) : 0, itemStack.IsEmpty ? 1 : itemStack.count);
+            if (sells != null) tipDesc.text = string.IsNullOrEmpty(tipDesc.text) ? sells : tipDesc.text + "\n" + sells;
             // A pet's stage, growth, hunger and bonus are a block of their own; the line under it says what it grows.
             string petLine = tipPet.Show(def, itemStack.IsEmpty ? new ItemStack(def.itemId, 1) : itemStack);
             // What the piece gives is a strip a line; how far it has been worked on stays a paragraph under them.
@@ -1104,6 +1109,17 @@ namespace KryticalNova.UI
             tooltip.BringToFront();
             // Beside the cell, on whichever side has room, and never off the screen (see FloatingFit).
             if (above) tooltipFit.Above(element.worldBound); else tooltipFit.Beside(element.worldBound);
+        }
+
+        /// <summary>
+        /// The tooltip's sell line (build 17, item 5.4): "Sells for 120 Creds", or "Sells for 12 Creds each (240 Creds for 20)" for a
+        /// stack. Null when no vendor buys it (<paramref name="unit"/> 0), so the line is hidden.
+        /// </summary>
+        public static string SellLine(long unit, int count)
+        {
+            if (unit <= 0) return null;
+            if (count <= 1 || !VendorRules.TryTotal(unit, count, out long total)) return $"Sells for {WalletRules.FormatCreds(unit)}";
+            return $"Sells for {WalletRules.FormatCreds(unit)} each ({WalletRules.FormatCreds(total)} for {count})";
         }
 
         private void HideTooltip() => SetDisplay(tooltip, false);
