@@ -142,7 +142,7 @@ namespace KryticalNova.EditorTools.Economy
                 foreach ((string itemPath, long price) in shelf.Listings)
                 {
                     var item = AssetDatabase.LoadAssetAtPath<ItemDefinition>(itemPath);
-                    if (item == null) { Debug.LogError($"[Vendors] {shelf.Asset}: no item at {itemPath}."); continue; }
+                    if (item == null) { MissingItem(shelf.Asset, itemPath); continue; }
                     if (stock.TryGetListed(item, out _)) continue; // its price may have been tuned
                     stock.listings.Add(new VendorListing { item = item, price = price });
                     added++;
@@ -151,7 +151,7 @@ namespace KryticalNova.EditorTools.Economy
                     foreach ((string itemPath, long price) in shelf.Rotation)
                     {
                         var item = AssetDatabase.LoadAssetAtPath<ItemDefinition>(itemPath);
-                        if (item == null) { Debug.LogError($"[Vendors] {shelf.Asset}: no item at {itemPath}."); continue; }
+                        if (item == null) { MissingItem(shelf.Asset, itemPath); continue; }
                         if (stock.rotation.Exists(listing => listing.item == item)) continue; // its price may have been tuned
                         stock.rotation.Add(new VendorListing { item = item, price = price });
                         added++;
@@ -178,6 +178,11 @@ namespace KryticalNova.EditorTools.Economy
             AssetDatabase.SaveAssets();
             Debug.Log($"[Vendors] {catalog.stocks.Count} vendor(s) stocked, {added} listing(s) added. Prices are placeholders: tune them on the assets in {Folder}.");
         }
+
+        // An item the shelf names that is not made yet (the % Stims before Krytical Nova > Items > 5 has run) is left off
+        // the shelf with a warning, so the shelf can be built in any order; running this again after the items exist adds it.
+        private static void MissingItem(string shelf, string itemPath) =>
+            Debug.LogWarning($"[Vendors] {shelf}: no item at {itemPath} yet, left off the shelf. Make it first (Krytical Nova > Items > 5 for the Stims), then run this again.");
 
         private static void EnsureFolder(string folder)
         {
