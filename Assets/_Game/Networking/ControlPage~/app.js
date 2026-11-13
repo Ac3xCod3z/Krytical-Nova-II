@@ -554,6 +554,22 @@ $("commandForm").addEventListener("submit", async (event) => {
   }
 });
 
+// Crossfire (the hourly war): the same gm.crossfire lines as the GM window, through the command route
+document.querySelectorAll("[data-crossfire]").forEach((button) => {
+  button.addEventListener("click", async () => {
+    const line = "gm.crossfire " + button.dataset.crossfire;
+    button.disabled = true;
+    try {
+      const data = await call("/api/command", { line: line });
+      $("crossfireAnswer").textContent = data.answer;
+    } catch (e) {
+      $("crossfireAnswer").textContent = e.message;
+    } finally {
+      button.disabled = false;
+    }
+  });
+});
+
 // ---------------------------------------------------------------- start
 
 (async () => {
