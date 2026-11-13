@@ -11,7 +11,10 @@ namespace KryticalNova.Core
         public const string ArrivalMarker = "Concord040_Arrival";
         public const string ReturnMarker = "Concord040_Return";
 
-        /// <summary>The define that switches the Sky Lift off in a build (cutover, 12 Nov 2026: Sky Concord is unfinished and unreachable). Nothing is deleted.</summary>
+        /// <summary>
+        /// The define that switches the Sky Lift off in a build. Build 15 (the cutover) was made with it; since build 16 no build sets
+        /// it (owner, 12 Nov 2026: Concord 040 is slimmed and in). It stays as the switch: add it to a build's defines to close the lift again.
+        /// </summary>
         public const string OffDefine = "KN_SKY_LIFT_OFF";
 
         /// <summary>False in a build made with <see cref="OffDefine"/>: no Sky Lift button at the Marshal, no client request, the server refuses a ride.</summary>

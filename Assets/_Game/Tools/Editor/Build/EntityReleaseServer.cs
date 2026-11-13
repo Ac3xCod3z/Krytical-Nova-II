@@ -10,15 +10,15 @@ namespace KryticalNova.EditorTools
     /// The release lane of the entity server (cutover, 12 Nov 2026): the DOTS server as the REAL server of this PC. Its build differs from
     /// the test lane's (<see cref="ServerBuildBuilder.EntityDefines"/>) in four ways, all stated here and tested without a build:
     /// no <c>KN_TEST_LANE</c> (so it may use 7777 / 8090 / the real save service, publishes the server list and does not hand every
-    /// character the maximum level); the Sky Lift off (<see cref="SkyLiftLink.OffDefine"/>); real-lane first settings (port 7777, page 8090,
+    /// character the maximum level); the Sky Lift ON since build 16 (owner, 12 Nov 2026: <see cref="SkyLiftLink.OffDefine"/> is no longer set); real-lane first settings (port 7777, page 8090,
     /// the real save service 7801, DTLS, a list entry marked <c>entities</c>, no map servers, the real GMs carried over); and its own
     /// folder <c>Builds/Server/Windows</c> in the DOTS clone. The NGO server's folder is read for its certificate and GMs and never written.
     /// Secrets (the certificate's key, GM passwords, the page password) are copied or carried and never printed.
     /// </summary>
     public static class EntityReleaseServer
     {
-        /// <summary>The release server's defines: the entity server and the Sky Lift off. Never <c>KN_TEST_LANE</c>.</summary>
-        public static readonly string[] Defines = { "KN_ENTITIES_SERVER", SkyLiftLink.OffDefine };
+        /// <summary>The release server's defines: the entity server. Never <c>KN_TEST_LANE</c>; no <see cref="SkyLiftLink.OffDefine"/> since build 16 (the Sky Lift is on).</summary>
+        public static readonly string[] Defines = { "KN_ENTITIES_SERVER" };
 
         public const int GamePort = 7777, PagePort = 8090;
         /// <summary>The UDP port that answers the server list's status question: 7778, which the router already forwards (never the page's port).</summary>

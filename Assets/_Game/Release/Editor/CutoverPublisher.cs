@@ -12,7 +12,7 @@ namespace KryticalNova.EditorTools
     /// The cutover publish (12 Nov 2026): the DOTS game and the RELEASE server of the entity netcode built ONCE with ONE build number and
     /// uploaded to the owner's <c>test</c> channel (never <c>live</c>: that is promoted by hand after his test). Three fresh Unity runs, as
     /// <see cref="DotsChannelPublisher"/> (a server built in the client's process crashed Netcode's type manager): <see cref="ClientBatch"/>
-    /// (release client, <c>KN_ENTITIES_CLIENT</c> + <c>KN_SKY_LIFT_OFF</c>, server-define leak check, bundle audit), <see cref="ServerBatch"/>
+    /// (release client, <c>KN_ENTITIES_CLIENT</c>, the Sky Lift on since build 16, server-define leak check, bundle audit), <see cref="ServerBatch"/>
     /// (<see cref="EntityReleaseServer"/>: no <c>KN_TEST_LANE</c>), <see cref="UploadBatch"/> (stage, verify the audit, upload, never promote).
     /// The number continues the REAL store's numbering (the main project's <c>Builds/Release/Store</c>, read only) and is never below the
     /// one staged here, so the owner's launcher on <c>test</c> sees the build as newer. This project's own store keeps the staged files;
@@ -28,8 +28,8 @@ namespace KryticalNova.EditorTools
         public const string LogPath = Root + "/release-log.txt";
         /// <summary>The build number the running publish is on, and which steps passed ("client", "server").</summary>
         public const string PendingPath = Root + "/pending.txt";
-        /// <summary>The client's defines: the entity netcode game, the Sky Lift off. No server define (checked).</summary>
-        public static readonly string[] Defines = { "KN_ENTITIES_CLIENT", SkyLiftLink.OffDefine };
+        /// <summary>The client's defines: the entity netcode game. No server define (checked); no <see cref="SkyLiftLink.OffDefine"/> since build 16 (owner, 12 Nov 2026: the Sky Lift is on).</summary>
+        public static readonly string[] Defines = { "KN_ENTITIES_CLIENT" };
 
         // ------------------------------------------------------------------ rules (pure, tested)
 

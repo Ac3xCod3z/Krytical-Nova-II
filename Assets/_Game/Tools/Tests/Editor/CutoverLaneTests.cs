@@ -49,11 +49,11 @@ namespace KryticalNova.Tests
         }
 
         [Test]
-        public void TheSkyLiftIsOffInTheReleaseServerAndTheCutoverClient_NotInTheTestLane()
+        public void TheSkyLiftIsOnInEveryLane_SinceBuild16()
         {
             Assert.AreEqual("KN_SKY_LIFT_OFF", SkyLiftLink.OffDefine);
-            CollectionAssert.Contains(EntityReleaseServer.Defines, SkyLiftLink.OffDefine);
-            CollectionAssert.Contains(CutoverPublisher.Defines, SkyLiftLink.OffDefine);
+            CollectionAssert.DoesNotContain(EntityReleaseServer.Defines, SkyLiftLink.OffDefine, "the release server lets players ride (owner, 12 Nov 2026)");
+            CollectionAssert.DoesNotContain(CutoverPublisher.Defines, SkyLiftLink.OffDefine, "the client shows the Sky Lift button at the Marshal");
             CollectionAssert.DoesNotContain(ServerBuildBuilder.EntityDefines, SkyLiftLink.OffDefine);
             Assert.IsTrue(SkyLiftLink.Enabled, "the Editor and development builds keep the Sky Lift");
         }
