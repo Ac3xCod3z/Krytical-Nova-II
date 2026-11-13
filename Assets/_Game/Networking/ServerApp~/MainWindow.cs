@@ -633,12 +633,13 @@ namespace KryticalNova.ServerApp
                 if (counted != null && SleepModeNote(line)) { counted.SlowFrames++; counted.SkipTrace = true; continue; } // counted in the tab's top line instead
                 if (counted != null && counted.SkipTrace)
                 {
-                    // The note's stack trace (a player build prints one under every warning) is hidden with the note, up to the
-                    // blank line that ends it (owner, 13 Nov 2026: the traces filled the log).
+                    // A player build prints a stack trace under every log line. It is hidden up to the blank line that ends it,
+                    // except under errors and exceptions (owner, 13 Nov 2026: the traces filled the log).
                     if (line.Trim().Length == 0) { counted.SkipTrace = false; continue; }
                     if (StackFrame(line)) continue;
                     counted.SkipTrace = false;
                 }
+                if (counted != null && !StackFrame(line) && line.Trim().Length > 0) counted.SkipTrace = !ErrorLine(line);
                 sb.AppendLine(line);
                 if (counted != null)
                 {
@@ -662,7 +663,7 @@ namespace KryticalNova.ServerApp
         }
 
         // Unity's start-up chatter that is no problem (the control page hides the same).
-        private static readonly Regex NoisePattern = new Regex(@"memorysetup|serialization layout|Did you #if UNITY_EDITOR|referenced script|UnloadTime|Unloading \d+|shader|IMGUI module|Unknown managed type|^Unknown arg: -\s*$|UnityMemory\] Configuration Parameters", RegexOptions.IgnoreCase);
+        private static readonly Regex NoisePattern = new Regex(@"memorysetup|serialization layout|Did you #if UNITY_EDITOR|referenced script|UnloadTime|Unloading \d+|shader|IMGUI module|Unknown managed type|^Unknown arg: -\s*$|UnityMemory] Configuration Parameters|[KnServer] Page request accepted", RegexOptions.IgnoreCase);
         // "Unknown arg: -" is Unity's memory setup meeting the "-" of the "-logFile -" this app starts the server with (the log to the app); harmless.
         private static bool Noise(string line) => NoisePattern.IsMatch(line);
 
@@ -671,6 +672,8 @@ namespace KryticalNova.ServerApp
         // One frame of a Unity stack trace: "Namespace.Type:Method(Args)", maybe with " (at file:line)".
         private static readonly Regex StackFramePattern = new Regex(@"^\s*[\w\.`<>\[\]\+/]+:[\w\.`<>\[\]\+|]+\s*\(.*\)\s*$");
         private static bool StackFrame(string line) => StackFramePattern.IsMatch(line);
+        // A line whose stack trace stays visible: errors and exceptions.
+        private static bool ErrorLine(string line) => line.IndexOf("exception", StringComparison.OrdinalIgnoreCase) >= 0 || line.IndexOf("error", StringComparison.OrdinalIgnoreCase) >= 0;
 
         private static bool SleepModeNote(string line) => line.IndexOf("Expected server to always update once per frame when in sleep mode", StringComparison.Ordinal) >= 0;
 
