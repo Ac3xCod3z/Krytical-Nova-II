@@ -34,6 +34,7 @@
         "KryticalNova.GameFeel",
         "QFSW.QC",
         "Unity.Entities",
+        "Unity.Collections",
         "Unity.Netcode.Runtime",
         "Unity.InputSystem",
         "Unity.Cinemachine",
