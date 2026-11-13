@@ -629,7 +629,7 @@ namespace KryticalNova.ServerApp
             var sb = new StringBuilder();
             foreach (string line in fresh)
             {
-                if (Noise(line)) continue;
+                if (Noise(line)) { if (counted != null) counted.SkipTrace = true; continue; } // its stack trace goes with it
                 if (counted != null && SleepModeNote(line)) { counted.SlowFrames++; counted.SkipTrace = true; continue; } // counted in the tab's top line instead
                 if (counted != null && counted.SkipTrace)
                 {
