@@ -225,6 +225,13 @@ namespace KryticalNova.GameFeel
         [Range(0f, 0.3f)] [SerializeField] private float levelUpStopSeconds = 0.12f;
         [Tooltip("Levels gained within this many seconds are one moment.")]
         [Min(0f)] [SerializeField] private float levelUpRepeatSeconds = 1f;
+        [Header("Callout crit impact frame (build 17 item 10.3; look is the owner's pick)")]
+        [Tooltip("A: Ink (dark frame, white speed lines) / B: Flash (white frame, dark lines) / Off.")]
+        [SerializeField] private ImpactFrameStyle impactFrameStyle = ImpactFrameStyle.Ink;
+        [Tooltip("Rendered frames the impact frame holds (2-4 is the anime look).")]
+        [Range(1, 6)] [SerializeField] private int impactFrameFrames = 3;
+        [Tooltip("How strong the frame is on the screen of the one who was crit (the crit's own screen is 1).")]
+        [Range(0f, 1f)] [SerializeField] private float impactFrameVictimStrength = 0.5f;
 
         [Header("Kill confirm (the local player's own kills)")]
         [Tooltip("How much of the kill confirm a normal kill gets; a critical kill gets all of it.")]
@@ -479,6 +486,8 @@ namespace KryticalNova.GameFeel
             {
                 // The hit with a look of its own: its own screen feedback, and both fighters hold their pose.
                 Play(pvpCritFeel, hit.Point, hit.AttackerIsLocalPlayer ? 1f : looks.pvpCritVictimStrength);
+                if (InCallout(hit.Attacker) || InCallout(hit.Target))
+                    ImpactFrame.Show(impactFrameStyle, impactFrameFrames, hit.AttackerIsLocalPlayer ? 1f : impactFrameVictimStrength);
                 HitStop(hit.Attacker, looks.pvpCritStopSeconds);
                 HitStop(hit.Target, looks.pvpCritStopSeconds);
             }
@@ -489,6 +498,13 @@ namespace KryticalNova.GameFeel
                 HitStop(hit.Attacker, stop);
                 HitStop(hit.Target, stop);
             }
+        }
+
+        // A fighter in a Callout (build 17 item 10.3: impact frames play only there).
+        private static bool InCallout(Transform fighter)
+        {
+            var state = fighter != null ? fighter.GetComponentInParent<KryticalNova.Combat.PlayerCombatState>() : null;
+            return state != null && state.InCallout;
         }
 
         // ------------------------------------------------------------------ hit looks
