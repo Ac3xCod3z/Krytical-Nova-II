@@ -1277,7 +1277,9 @@ namespace KryticalNova.GameFeel
             ComicRamp? ramp = looks != null ? looks.Ramp(FactionOf(actor)) : (ComicRamp?)null;
             PlayWorld(levelUpWorldFeel, ActorAnchor.Feet(actor), Facing(actor), actor, 1f, null, ramp);
             if (!isLocalPlayer) return;
-            PlayWorld(levelUpOwnWorldFeel, ActorAnchor.Feet(actor), Quaternion.identity, actor, 1f, null, ramp);
+            // Owner pick (build 17, 2.5): the pillar, rays, ring and sparkles in the player's faction colour.
+            Color? factionTint = ramp.HasValue ? ramp.Value.fill : (Color?)null;
+            PlayWorld(levelUpOwnWorldFeel, ActorAnchor.Feet(actor), Quaternion.identity, actor, 1f, factionTint, ramp);
             Play(levelUpFeel, actor.position, 1f);
             HitStop(actor, levelUpStopSeconds);
         }
