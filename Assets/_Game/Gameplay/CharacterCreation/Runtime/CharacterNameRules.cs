@@ -22,6 +22,7 @@ namespace KryticalNova.CharacterCreation
         public const string ReasonRepeats = "Too many repeated letters or digits.";
         public const string ReasonReserved = "That name is reserved.";
         public const string ReasonNotAllowed = "That name is not allowed.";
+        public const string ReasonNoGm = "Names can't contain GM.";
         public const string ReasonTaken = "You already have a character with that name.";
         public const string ReasonTakenInGame = "Someone already has a character with that name. Try another.";
         public const string ReasonMustRename = "Another character took this name first. Choose a new name to play it again.";
@@ -46,12 +47,33 @@ namespace KryticalNova.CharacterCreation
             return char.ToUpperInvariant(trimmed[0]) + (trimmed.Length > 1 ? trimmed.Substring(1).ToLowerInvariant() : string.Empty);
         }
 
+        /// <summary>
+        /// True when the name holds "GM" once case, digits, spaces and symbols are ignored (owner, 13 Nov 2026: nobody may pass for
+        /// one of the game's GMs): "GMBob", "g.m.Bob", "BobGM", "G_M", "[GM]", "G1M". Checked on the raw text before the
+        /// letters-only rule, so a dotted "G.M." gets this reason rather than the symbols one. Names that merely contain the two
+        /// letters in a row ("Magma", "Ogma", "Dogma") are refused too: that is the rule as the owner wrote it.
+        /// </summary>
+        public static bool LooksLikeGm(string raw)
+        {
+            if (string.IsNullOrEmpty(raw)) return false;
+            bool lastWasG = false;
+            foreach (char ch in raw)
+            {
+                if (!char.IsLetter(ch)) continue; // digits, spaces and symbols never break a G..M pair
+                char c = char.ToLowerInvariant(ch);
+                if (lastWasG && c == 'm') return true;
+                lastWasG = c == 'g';
+            }
+            return false;
+        }
+
         /// <summary>Checks a name and returns its normalised form. <paramref name="reason"/> is user-facing.</summary>
         public static bool Validate(string raw, out string normalized, out string reason)
         {
             normalized = Normalize(raw);
             reason = null;
             if (normalized.Length == 0) { reason = ReasonEmpty; return false; }
+            if (LooksLikeGm(raw)) { reason = ReasonNoGm; return false; }
             foreach (char c in normalized)
                 if (!((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9'))) { reason = ReasonLettersOnly; return false; }
             if (!(normalized[0] >= 'A' && normalized[0] <= 'Z')) { reason = ReasonLetterFirst; return false; }
