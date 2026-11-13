@@ -3,12 +3,25 @@
 A running guide to the game's own server, in plain words. It says what works **today**, and it is updated after
 every server step (online phase 1, `Plans/online-phase-01-dedicated-server.md`).
 
-**Last updated:** 1 Nov 2026, a publish builds the server in a checkout of its own (section 1).
+**Last updated:** 12 Nov 2026, build 16: the real server is now the DOTS (Netcode for Entities) server (section 13).
+
+> **Read this first (build 16, 12 Nov 2026).** Since build 16 the server that runs the game is the **DOTS server**, and
+> `main` on GitHub is the DOTS game. **Section 13 is the main story**: where it lives, how to start and stop it, the
+> relevancy switch, publishing, promoting and rolling back. Sections 1 to 12 were written for the Netcode for
+> GameObjects (NGO) server, which is now the **rollback copy**; most of them still hold, because the DOTS server keeps
+> the same settings file, control page, GMs, bans, backups and save service (the save service, the Norton and firewall
+> notes, the control page, GMs, bans, section 9 and section 11 apply as written). What differs: the server's
+> folder (`Krytical Nova II DOTS\Builds\Server\Windows`, not the NGO project's `Builds\Server`), it is built by the
+> cutover publisher and not by the **Build > Dedicated Server** menu of sections 1 and 2, and it runs **Concord's server only**
+> (`mapServers` is empty), so the Transit Row tab of section 2b is the NGO story. Where a section says "NGO"
+> or names an NGO class, read it as history.
 
 ## In one minute
 
 - The **server** is the game running on its own, with no window of the game, no picture and no player of its own. It
   holds the world, decides everything (fights, drops, trades, saves) and players join it.
+- (Build 16 on: the server is the **DOTS server**, section 13; the lines below describe the same window, settings, saves and
+  control page, which it keeps.)
 - You **build** it from the Unity Editor with one menu. You get a folder with `KryticalNovaServer.exe` and
   `Start Server.bat` in it.
 - You **start** it by opening the **Krytical Nova Server** app (the KN logo on your desktop and in the Start menu).
@@ -44,7 +57,11 @@ every server step (online phase 1, `Plans/online-phase-01-dedicated-server.md`).
 | A server per map, one name | Transit Row's server runs beside Concord's in the app (a tab each); players still see one server, Nova (section 2b) | Built 20 Oct 2026; travelling between them is phase 5, milestone 3; the router's two new ports still to do |
 | 6. The move to the old PC | A zip, an install step and a step-by-step guide | Not yet |
 | 7. Measuring | How many players and Hostiles one PC carries | Not yet |
-| The entity server (test) | The DOTS port as a test version beside the normal server, with its own app, port 7799 and the test database (section 13) | Built 8 Nov 2026; the real game cannot join it yet |
+| The entity server (test) | The DOTS port as a test version beside the normal server, with its own app, port 7799 and the test database (section 13e) | Built 8 Nov 2026; kept as the **test lane** |
+| **The DOTS server is the real server** | Build 16 on `Builds\Server\Windows` of the DOTS clone: UDP 7777 with DTLS, page 8090, the real save service on 7801, relevancy off (section 13) | **Live since 12 Nov 2026, 22:56**; players get it from release 18 |
+| Promote and roll back | One click per promote (`promote-live.bat <release>`); the live badge is release 18, the rollback is release 13 (the NGO build 14) (section 13c) | Built 12 Nov 2026 |
+| Relevancy (who is sent what) | Players and monsters farther than 150 m are not sent to a game; one key in `server-settings.json` switches it on (section 13b) | Built, **shipped off**; the owner switches it on |
+| Soak tooling | Many bots on a test-lane server and a result page (section 13d) | Built; the test lane only; first use still to do |
 
 ## Words used here
 
@@ -337,6 +354,7 @@ default (and makes the page password). Close the server, edit it with Notepad, s
 | `saveService` | empty | The save service this server saves through (`http://127.0.0.1:7801` for your real saves). Empty: the save folder. |
 | `ledgerDays` | 90 | Days the ledger (below) is kept; older lines are dropped once a day. Added to an older file by itself. |
 | `recordMonths` | 6 | Months of `gm.log`, `economy.log`, `access.log` and `flags.log` kept. |
+| `relevancy` | absent (the DOTS server only; section 13b) | `true` or `false`: switches relevancy on or off for one start, no rebuild. Absent means the settings asset's own value, which ships off. |
 | `mapServers` | Transit Row on 7779, page 8092 | The other maps' servers the app starts beside this one (section 2b): each a `name` (its tab), a `map`, a `port` (its status port is the next one) and a `pagePort`. Added to an older file by itself. |
 
 A mistake is forgiven: a port that is not a port becomes 7777, a player limit of 0 becomes 1, and a file Notepad
@@ -846,12 +864,95 @@ Server"; tell the two apart by the port the window prints. Every test goes like 
 - **Step 6:** the zip, an install step (firewall rules, the Norton note) and moving it to the old PC by external SSD.
 - **Step 7:** measuring how much one PC carries.
 
-## 13. The entity server (DOTS test version, 8 Nov 2026)
+## 13. The DOTS server (build 16, 12 Nov 2026): the real server
 
-This is the game ported to **Netcode for Entities** (the DOTS clone at `C:\Users\dlaco\Krytical Nova II DOTS`), built as a
-**new test version beside the normal server**. The normal server (`Builds\Server` in the main project, the desktop
-shortcut **Krytical Nova Server**, ports 7777 and 7778, page 8090, the real saves) is not touched and keeps running for
-the brothers. Leave it alone while you test this one.
+The game is ported to **Netcode for Entities** and, since the night of 12 Nov 2026, **this is the server the brothers play
+on**. `main` on GitHub is the DOTS game (it was moved by a fast-forward to commit `ba8afeff3`; the NGO game before it is the tag
+`last-ngo-2026-11-12`). Everything from here to 13d is the **release lane**; the test lane is section 13e.
+
+| | The release server (real) | The test lane (13e) |
+| --- | --- | --- |
+| Folder | `C:\Users\dlaco\Krytical Nova II DOTS\Builds\Server\Windows` | `...\Builds\EntityServer` |
+| Desktop shortcut | **Krytical Nova Server** | **Krytical Nova ENTITY Server (TEST)** |
+| Game port / page | UDP **7777** (DTLS, encrypted) / **8090** | 7799 (plain) / 8099 |
+| Saves | the real save service on **7801**, database `krytical_nova` | the test save service on 7802, `krytical_nova_test` |
+| Who joins | players of the live Launcher | the Launcher's `dots` channel, the join-here client |
+
+The old NGO server keeps its own folder in the main project (its shortcut is renamed **Krytical Nova Server (NGO, rollback)**
+where the shortcuts were switched); never run both at once, they want the same ports.
+
+**What is in build 16:** the whole DOTS port as of 12 Nov (waves 1 to 3b: GM sight and the GM window, Autopilot, Name Change
+with its undo, dismounting, `gm.pet.anim`, the Follow jump copy, the save fixes and the save limit, the 500 m Sponsor range,
+the Rider and Convoy Boosters, the Respec Chip and the Memory Wipe), the fix that stops a closed save connection's writer
+thread, relevancy (shipped off), the soak tooling (test lane only), the slimmed **Concord 040** with the Sky Lift on, and the
+navigation probe on town ground. The build list (`01_Systems_Build_List.md`, row 40 and its change log) has each one.
+
+### 13a. Start and stop
+
+1. **Start:** double-click **Krytical Nova Server** (the Server app of this folder: the same window as section 2, one SERVER tab,
+   then SAVE SERVICE and DATABASE; no map-server tabs). It starts the real save service on 7801, waits for it, then the
+   server. Start it **by double-click**, never from a tool's terminal: a server started from a terminal cannot reach Unity's
+   sign-in keys. The server fetches those keys at start and says `[Server] Unity's sign-in keys could not be fetched` in the
+   first minute if it failed; restart it by double-click if you see that.
+2. **Look at it** without touching it: `http://127.0.0.1:8090/status` (players, build, up time) or the control page of section 3.
+3. **Stop:** **STOP** in the app (answer Yes), or close the app; the server saves everyone, backs up, tells the players and
+   quits. Stopping the server never stops the database. Closing the app stops the save service it started.
+4. **A new build while it runs:** the publish refuses to build the client while the release server runs, so stop the server
+   first. A full publish took about **73 minutes** of live downtime on 12 Nov (client 49, server 11, upload 5, the rest the checks).
+5. The log of every start is kept (Drive, `ServerLogs`): `server_<date>_<time>.log`. A healthy start says DTLS on, the save
+   service answering, relevancy off (or on), the brains installed and the first backup.
+
+**One thing that fails on every start:** uploading the server list from this IL2CPP server. Until it is fixed, after each start
+run `Assets\_Game\Release\Publish~\upload-server-list-once.bat` **through explorer**, which uploads the list by hand.
+
+### 13b. Relevancy: who is sent what (shipped off)
+
+Without relevancy the server sends every game every player and monster on the map. **Relevancy** sends a game only those within
+**150 m** of its own character (players and monsters alike; your own character and a Callout opponent are always sent, and a
+Recall in progress is shown with its seconds left when its owner walks into view). It is built and tested and ships **off**.
+
+- **The switch** is one key in `server-settings.json` beside the server: `"relevancy": true` (on), `"relevancy": false` (off),
+  or no key at all (the settings asset's own value, which ships off). It is read **at start**, so restart the server. The log
+  says `[Relevancy] on: players 150 m, ...` or `[Relevancy] off (server-settings.json)` / `off (the settings asset)`.
+- **The numbers** (150 m) are in the `RelevancySettings` asset inside the build, not in the file.
+- **Before the owner switches it on:** two things are still open (hand-over note of the relevancy coder): world tests with real
+  ghosts, and an audit that a game forgets what it remembers about a monster or player that went out of range. Then a two-bot run,
+  then the switch for the owner's pop-in check, watching the `relevancy` line of the performance log. Switch it off again by the
+  same key if anything looks wrong: off is exactly the world before relevancy.
+
+### 13c. Publish, promote and roll back
+
+- **Publish** (a session does this; it never promotes): `publish-cutover.bat` (in `Assets\_Game\Release\Publish~`), started
+  **through explorer** because it needs the owner's Windows profile (signing key, Unity sign-in). It builds the client with
+  Burst, the release server (same build number, no test defines), checks that every map matches its scene, and uploads under
+  the **`test`** badge only. Progress is in `Builds\Release-Cutover\publish-status.txt`, the record in `release-log.txt`.
+- **Promote:** `Builds\Release-Cutover\promote-live.bat <release>` through explorer. It moves the Cloud Content Delivery **live**
+  badge to that release; players' Launchers update from it. The **live badge is release 18** (build 16, since 23:04 on 12 Nov).
+- **Roll back (players):** promote **release 13** (the NGO build 14): `promote-live.bat 13`, or by hand
+  `ugs ccd badges create 13 live ...`.
+- **Roll back (server):** stop the server, then copy the saved build-15 server folder back over
+  `Builds\Server\Windows` (the copy is in `Documents\KryticalNova-Backups\cutover-2026-11-12\build15-server`, 1,819 files).
+  For the NGO game itself, start the NGO server from the main project's `Builds\Server` and promote release 13. Test an NGO
+  rollback on a copy of the saves first: the NGO game has not read a build 16 save yet.
+- **Never** promote, push to `main` or run the real server from a session's terminal: the owner (or the Master on the owner's
+  word) clicks. Each production deploy needs the owner's yes.
+
+### 13d. Soak tooling (test lane only)
+
+Built in build 16, **first use still to do**. A test-lane server (setting `devBots` or the `KN_DEV_BOTS` variable; the release
+lane refuses it) takes thin bot clients from the **bot build** (`KnBotHost`); `soak_run.py` and the **Krytical Nova > Soak**
+menu check the gates (free RAM, nothing else running), start the server, ramp the bots up, equip them, stop everything with a
+job object and write a result page; `-knbrainsoak` fills a **soak layout** with monsters (**Plan Soak Spot** picks the spot). The
+server's performance log (`PerformanceLogs\server_*.csv`) gained columns: tick p50 / p99, brains, relevancy, private MB,
+entities, ghosts and bytes out. Run it only on the test lane and the test database, never on the real server; the first run is a
+one-bot check of the instrument before any ramp.
+
+## 13e. The entity test server (the test lane, 8 Nov 2026)
+
+This is the **test lane**: the DOTS game's server built with the test defines, on its own ports and the test database. It
+was the only DOTS server until build 16 and stays the place for tests and the soak (sections 13d and 13e). It is **not the
+real server**: the real one is the release server of sections 13 to 13c. Leave the real server alone while you test here
+(the test lane refuses the real ports 7777, 7778, 7801 and 8090 by itself).
 
 **Where it is:** `C:\Users\dlaco\Krytical Nova II DOTS\Builds\EntityServer\`
 
@@ -929,9 +1030,9 @@ STOP and start the server again, rejoin: the character stands where it stood.
 If Norton freezes the new exe, it is the usual Norton exclusion for the `Builds` folder of the DOTS clone (section 2,
 "Norton and Windows Firewall").
 
-### 13a. Testing the DOTS game the normal way (Launcher, DOTS channel)
+### 13f. Testing the DOTS game through the Launcher's `dots` channel (8 Nov 2026)
 
-Since 8 Nov 2026 the real game joins the entity server: Title, Unity sign-in, character select, Enter. It comes through
+Since 8 Nov 2026 the real game joins the entity test server: Title, Unity sign-in, character select, Enter. It comes through
 its **own Launcher channel, `dots`**; the brothers' `live` line and your `test` line are never touched.
 
 **The launcher:** `C:\Users\dlaco\Krytical Nova II DOTS\Builds\Release-DOTS\DOTS Test Launcher\Krytical Nova Launcher.exe`
@@ -1069,3 +1170,8 @@ Things learned the hard way:
 - 29 Oct 2026: `POST /stop` on the status port (127.0.0.1, save service key) and a SIGTERM catcher for Linux, so a service manager stops the server with a save.
 - 1 Nov 2026: a publish builds the server in its own checkout (`KN-worktrees/build-server`, Server subtarget) after the game; packed with LZ4; the backend (Mono) set for the build and named truthfully in the report; `publish-test.ps1 -ServerOnly` rebuilds only the server (section 1).
 - 8 Nov 2026: the entity server (DOTS, Netcode for Entities) as a test version beside the normal server: `Builds\EntityServer`, port 7799, page 8099, the test save service and database, its own Server app and desktop shortcut, a join-here test client (section 13).
+- 12 Nov 2026: **build 16, the DOTS server is the real server** (section 13): `main` is the DOTS game; the release lane
+  (`Builds\Server\Windows` of the DOTS clone, UDP 7777 with DTLS, page 8090, the real save service); start and stop, the
+  `relevancy` key (shipped off), publish, promote (live badge release 18) and rollback (release 13, the NGO build 14); the
+  soak tooling on the test lane; the entity test server moved to 13e. Sections 1 to 12 stay as the NGO-era story, with a
+  note at the top.
