@@ -108,6 +108,8 @@ namespace KryticalNova.EditorTools
                     def.statModifiers = new List<ItemStatModifier>();
                     def.restoreHealth = 0f;
                     def.restoreChi = 0f;
+                    def.restoreHealthPercent = 0f;
+                    def.restoreChiPercent = 0f;
                     def.usableFromHotbar = false;
                     // The look: copied, so the game never follows a reference to a template.
                     def.partCatalog = look.partCatalog;
