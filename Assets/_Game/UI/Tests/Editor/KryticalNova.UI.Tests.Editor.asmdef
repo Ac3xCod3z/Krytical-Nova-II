@@ -14,6 +14,7 @@
         "KryticalNova.Hostiles",
         "KryticalNova.Housing",
         "KryticalNova.Items",
+        "KryticalNova.Mounts",
         "KryticalNova.NPC",
         "KryticalNova.Networking",
         "KryticalNova.Persistence",
