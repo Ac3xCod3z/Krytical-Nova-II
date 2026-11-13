@@ -3,41 +3,55 @@
   "items": [
     {
       "title": "A Better Start in Nova",
-      "body": "Level 1 Hostiles pay a little more Creds and XP, and every new character starts with 5 stat points to place. The first steps in the starter town go quicker."
+      "body": "New characters begin with a starter kit: 20 HP Stims, 20 Flux Stims and 2,500 Creds, plus 5 stat points to place. Level 1 Hostiles pay a little more Creds and XP, and every weapon class now has its own Instructor in the Training Yard."
     },
     {
-      "title": "Your Elemental Damage, Shown",
-      "body": "The combat log now shows the elemental part of every hit, as in \"You hit Bob for 1,200 (+340 ele dmg)\", and your own hits stand out in bright, bold text."
+      "title": "Defense Means Something Now",
+      "body": "Defense cuts every hit by a share, can block a hit outright for 70 % less damage, and resists crits. Evasion softens the crits that do land. Every build now has something it beats."
+    },
+    {
+      "title": "Crits Reworked",
+      "body": "Crit buffs add to your crit chance instead of multiplying it, up to a 75 % cap. Crit chance on gear now comes from rings, and weapon Tuning raises Critical Damage instead. On the Cadence beat, a Redline three-hit crits with all three hits."
     },
     {
       "title": "Stims When You Need Them",
       "body": "Stims can be used at any time, even during a charge, with a short cooldown per kind. New percentage Stims restore a share of your HP or Flux, from the Apothecary."
     },
     {
-      "title": "Crits Reworked",
-      "body": "Crit buffs now add to your crit chance instead of multiplying it, up to a 75 % cap. On the Cadence beat, one- and two-hit skills can't crit, and a Redline three-hit crits with all three hits."
+      "title": "Holoweave Remembers",
+      "body": "Holoweave keeps a look for each weapon class and each gear set. Switch weapons or armour and each one wears its own Weave again. Your Weaves carry over."
+    },
+    {
+      "title": "Bigger Moments",
+      "body": "Levelling up raises a pillar of light in your faction's colour with a LEVEL banner. Callouts open with a letterbox, and a crit in a Callout lands with a comic impact frame."
     },
     {
       "title": "Aegis, Guard and Squad Stances",
       "body": "Aegis now also raises Defense, and its shield counts down live hit by hit. Every class's Guard ward also raises Elemental Attack. Shared Stances give Squad mates half their strength."
-    },
-    {
-      "title": "Concord Downloads on Its Own",
-      "body": "Concord, the sky city at the top of the Sky Lift, is now a download of its own beside the starter town. An update to the town no longer downloads all of Concord again, so patches are smaller. Concord itself looks and plays as before."
     }
   ],
   "patchNotes": [
     {
       "heading": "New",
       "lines": [
+        "Starter kit: every new character begins with 20 small HP Stims, 20 small Flux Stims and 2,500 Creds.",
+        "Block: Defense gives a chance to block a hit (up to 40 % of hits), taking 70 % off it. The number reads BLOCKED.",
         "Percentage Stims: restore a share of your HP or Flux (or both, with the Dual Stims), sold at the Apothecary.",
-        "Callouts open with a letterbox, and the HUD slides out of the way for the bout.",
-        "The Deck (P) can be moved and placed in the HUD layout editor, and keeps its place."
+        "Level up: a pillar of light in your faction's colour, rays, a ground ring and a LEVEL banner on your screen.",
+        "Callouts open with a letterbox, and the HUD slides out of the way for the bout. A crit in a Callout lands with a comic impact frame.",
+        "Seven more Instructors: every weapon class of every faction now has its own in the Training Yard.",
+        "The Deck (P) can be moved and placed in the HUD layout editor, and keeps its place. Its bars now change colour with the music, with falling peak caps and a beat pulse (or pick Faction Glow or Classic)."
       ]
     },
     {
       "heading": "Changed",
       "lines": [
+        "Defense cuts every hit by a share instead of a flat amount: more Defense always helps, with diminishing returns and never full immunity.",
+        "Crit resistance: Defense, Evasion and capes lower the crit chance of hits against you (up to 60 %). Evasion also takes part of a crit's extra damage and adds a little Backlash.",
+        "Crit chance on gear comes from rings only (Common +5 up to Legendary +25 at level 112). Weapon Tuning now gives +1 % Critical Damage a stage instead of crit chance.",
+        "Holoweave keeps one Weave per weapon class and one per gear set; switching keeps each look. Weaves you already had carry over to the piece you wear.",
+        "Names can't contain GM as a part of their own (Magma is still fine).",
+        "Players no longer stand inside each other: if you stop on top of someone, you step aside. Walking through each other still works.",
         "Concord (the Sky Lift's sky city) is now its own file beside the starter town's, so an update to the town no longer downloads Concord again. Nothing in Concord changed.",
         "Level 1 Hostiles pay more: 5 Creds and 3 XP a kill (was 4 and 2).",
         "New characters start with 5 stat points to place.",
@@ -56,7 +70,8 @@
       "heading": "Fixed",
       "lines": [
         "The Aegis shield now counts down hit by hit, on your screen and on everyone else's.",
-        "Logging out while the Deck was playing no longer keeps the music going into your next character."
+        "Logging out while the Deck was playing no longer keeps the music going into your next character.",
+        "Logging in no longer plays a level-up for every level from 1; only a real level gained shows the moment."
       ]
     }
   ],
