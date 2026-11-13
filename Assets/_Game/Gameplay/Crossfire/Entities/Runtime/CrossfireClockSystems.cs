@@ -96,6 +96,9 @@ namespace KryticalNova.Crossfire.Entities
 
         double NowSeconds => Clock != null ? Clock() : NetClock.Now;
 
+        /// <summary>The clock's time now (the same one its phases are in).</summary>
+        public double Now => NowSeconds;
+
         CrossfireSettings Config => Settings != null ? Settings : CrossfireSettings.Instance;
 
         /// <summary>When the wars fall: nightfall on the world clock, or a fixed cycle from this server's start.</summary>
