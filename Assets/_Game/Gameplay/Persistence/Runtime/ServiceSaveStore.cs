@@ -61,6 +61,11 @@ namespace KryticalNova.Persistence
         private Thread writer;
         private bool sending;
         private bool closed;
+        // Set just before the connection is disposed: from then on nothing is sent, the writer thread leaves and nobody waits.
+        private volatile bool disposed;
+
+        /// <summary>True while the store's own writer thread lives (it leaves when idle for a while, and when the store is disposed).</summary>
+        public bool WriterRunning { get { lock (gate) return writer != null; } }
 
         /// <param name="baseUrl">The service, for example http://127.0.0.1:7801.</param>
         /// <param name="key">The service key (save-service-key.txt).</param>
@@ -184,6 +189,13 @@ namespace KryticalNova.Persistence
             batch.Done = change.Done;
             if (batch.Writes.Count == 0 && batch.Deletes.Count == 0 && batch.Ledger.Count == 0) { Tell(batch, true); return; }
 
+            if (disposed)
+            {
+                Debug.LogError($"[Save] A save of {batch.Writes.Count} write(s), {batch.Deletes.Count} delete(s) and {batch.Ledger.Count} ledger line(s) " +
+                               "was handed to a save store that is already closed: it is not written.");
+                Tell(batch, false);
+                return;
+            }
             lock (gate)
             {
                 foreach (KeyValuePair<string, string> write in batch.Writes) Hold(write.Key, write.Value);
@@ -216,14 +228,15 @@ namespace KryticalNova.Persistence
             }
         }
 
-        // The store's own thread: sends the batches in order, and stops when idle for a while.
+        // The store's own thread: sends the batches in order, and stops when idle for a while, or at once when the store is
+        // disposed (12 Nov 2026: a disposed store's thread kept a batch and tried it every second for ever).
         private void WriteWaiting()
         {
             while (true)
             {
                 lock (gate)
                 {
-                    while (batches.Count == 0)
+                    while (batches.Count == 0 && !disposed)
                     {
                         if (!Monitor.Wait(gate, IdleMilliseconds) && batches.Count == 0)
                         {
@@ -231,6 +244,12 @@ namespace KryticalNova.Persistence
                             Monitor.PulseAll(gate);
                             return;
                         }
+                    }
+                    if (disposed)
+                    {
+                        writer = null;
+                        Monitor.PulseAll(gate);
+                        return;
                     }
                 }
                 SendNext();
@@ -241,7 +260,7 @@ namespace KryticalNova.Persistence
         private void SendWaiting()
         {
             DateTime until = DateTime.UtcNow.AddSeconds(15);
-            while (batches.Count > 0 && DateTime.UtcNow < until) SendNext();
+            while (batches.Count > 0 && !disposed && DateTime.UtcNow < until) SendNext();
         }
 
         private const int ReadLimit = 500;
@@ -263,12 +282,12 @@ namespace KryticalNova.Persistence
             List<string> refresh = null;
             lock (gate)
                 if (refreshFirst.Count > 0) { refresh = new List<string>(refreshFirst); refreshFirst.Clear(); }
-            if (refresh != null) RefreshVersions(refresh);
+            if (refresh != null && !disposed) RefreshVersions(refresh);
             Batch batch;
             string body;
             lock (gate)
             {
-                if (batches.Count == 0) return;
+                if (batches.Count == 0 || disposed) return;
                 batch = batches.Peek();
                 sending = true;
                 var text = new StringBuilder(256).Append("{\"id\":").Append(Quote(batch.Id)).Append(",\"writes\":[");
@@ -348,6 +367,9 @@ namespace KryticalNova.Persistence
                     sending = false;
                     Monitor.PulseAll(gate);
                 }
+                // The store was disposed under this send: its connection is gone, nothing is sent again, and Dispose has said
+                // what was left. No line and no wait here.
+                if (disposed) return;
                 Debug.LogError($"[Save] Could not save to the save service: {e.GetBaseException().Message}. It is kept and sent again.");
                 Thread.Sleep(1000);
             }
@@ -377,13 +399,14 @@ namespace KryticalNova.Persistence
             }
             catch (Exception e)
             {
+                if (disposed) return;   // the store closed under the read: there is no next save
                 Debug.LogError($"[Save] Could not refresh the versions of {keys.Count} document(s) after a refused save ({e.GetBaseException().Message}): the next save may be refused again.");
             }
         }
 
         /// <summary>
         /// Waits until the service has every write handed over (at most <paramref name="seconds"/>); false when time ran out first
-        /// (what is left stays in line and is sent again).
+        /// (what is left stays in line and is sent again). On a disposed store it does not wait: false when anything was left.
         /// </summary>
         public bool Flush(float seconds = 15f)
         {
@@ -391,7 +414,7 @@ namespace KryticalNova.Persistence
             lock (gate)
             {
                 if (writer == null && batches.Count > 0) SendWaiting();
-                while ((batches.Count > 0 || sending) && DateTime.UtcNow < until)
+                while ((batches.Count > 0 || sending) && !disposed && DateTime.UtcNow < until)
                     Monitor.Wait(gate, 100);
                 return batches.Count == 0 && !sending;
             }
@@ -505,10 +528,21 @@ namespace KryticalNova.Persistence
             }
         }
 
-        public void Dispose()
+        public void Dispose() => Close(15f);
+
+        /// <summary>
+        /// Closes the store: waits up to <paramref name="flushSeconds"/> for the service to take what is in line (15 s for
+        /// <see cref="Dispose"/>), lets the accounts go and closes the connection. Saves the service did not take in that time are
+        /// lost with the store: that is said ONCE, with how many, and the writer thread ends. A second call does nothing.
+        /// </summary>
+        public void Close(float flushSeconds)
         {
-            lock (gate) closed = true;
-            Flush();
+            lock (gate)
+            {
+                if (closed) return;
+                closed = true;
+            }
+            Flush(flushSeconds);
             renew.Dispose();
             health.Dispose();
             string[] owners;
@@ -523,7 +557,16 @@ namespace KryticalNova.Persistence
                 try { Send(HttpMethod.Post, "unlock", LockBody(owner, 0)).Dispose(); }
                 catch (Exception) { /* it runs out by itself */ }
             }
+            int left;
+            lock (gate)
+            {
+                disposed = true;            // before the connection goes: a send that fails from here on is silent
+                left = batches.Count;
+                Monitor.PulseAll(gate);     // the writer thread and anybody in Flush leave
+            }
             http.Dispose();
+            if (left > 0)
+                Debug.LogError($"[Save] The save store closed with {left} save(s) the save service had not confirmed: they are not sent again.");
         }
 
         // ------------------------------------------------------------------ health, for the control page
