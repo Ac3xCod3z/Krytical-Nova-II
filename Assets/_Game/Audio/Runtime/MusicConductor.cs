@@ -139,6 +139,7 @@ namespace KryticalNova.Audio
         float IBeatClock.Live01 => CombatBeat.Live01;
         double IBeatClock.ClockLagSeconds => CombatBeat.ClockLagSeconds;
         bool IBeatClock.CalloutsOnly => music != null && music.calloutsOnly;
+        bool IBeatClock.RealTargetsOnly => music != null && music.realTargetsOnly;
 
         bool IBeatClock.TryBeatAt(double at, out ScriptableObject track, out double errorSeconds, out double beats)
         {

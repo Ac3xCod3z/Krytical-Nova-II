@@ -146,7 +146,7 @@ namespace KryticalNova.Audio
         {
             PlayerCombatState local = LocalPlayer.Get<PlayerCombatState>();
             ZoneMusic music = conductor != null ? conductor.Music : null;
-            return local != null && local.InFightFor(music != null && music.calloutsOnly);
+            return local != null && local.InFightFor(music != null && music.calloutsOnly, music != null && music.realTargetsOnly);
         }
 
         /// <summary>Books the track on the audio clock so that it sounds, to the sample, where the shared clock has it.</summary>
