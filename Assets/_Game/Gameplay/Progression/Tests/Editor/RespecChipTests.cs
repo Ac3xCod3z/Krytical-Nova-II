@@ -37,6 +37,8 @@ namespace KryticalNova.Tests
             serialized.FindProperty("statData").objectReferenceValue = stats;
             serialized.ApplyModifiedPropertiesWithoutUndo();
             go.SetActive(true);
+            // An EditMode test runs no Awake: the starting points and attributes are set by calling it, as other tests here do.
+            typeof(PlayerCharacterProgression).GetMethod("Awake", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic).Invoke(progression, null);
         }
 
         [TearDown]

@@ -58,6 +58,10 @@ namespace KryticalNova.Tests
             skills = go.AddComponent<PlayerCombatSkills>();
             wipe = go.AddComponent<PlayerMemoryWipe>();
             go.SetActive(true);
+            // An EditMode test runs no Awake: the starting points and attributes are set by calling it, as other tests here do.
+            typeof(PlayerCharacterProgression).GetMethod("Awake", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic).Invoke(progression, null);
+            // Nor OnEnable: the skills part finds its progression in EnsureComponents, which TryUpgradeMultiple does not call itself.
+            typeof(PlayerCombatSkills).GetMethod("EnsureComponents", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic).Invoke(skills, null);
             skills.SetAvailableSkills(new[] { strike, ward, chipSkill });
         }
 
