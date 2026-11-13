@@ -67,7 +67,8 @@ namespace KryticalNova.Networking.Entities.Tests
             Assert.AreEqual(1, lists.CalculateEntityCount(), "the connection carries its list: the fill ran past the gather");
             using var connections = lists.ToEntityArray(Allocator.Temp);
             using var ids = lists.ToComponentDataArray<NetworkId>(Allocator.Temp);
-            AlwaysRelevantGhosts.SetOnly(em.GetBuffer<AlwaysRelevantGhost>(connections[0]), 1, 77);
+            // reason 200 is the test's own: reason 1 is the Callout's, whose server system takes it off again before the fill
+            AlwaysRelevantGhosts.SetOnly(em.GetBuffer<AlwaysRelevantGhost>(connections[0]), 200, 77);
             tw.Tick(1);
             Assert.IsTrue(relevancy.GhostRelevancySet.ContainsKey(new RelevantGhostForConnection(ids[0].Value, 77)));
             foreach (string line in tw.Interesting) StringAssert.DoesNotContain("previously scheduled job", line);

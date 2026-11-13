@@ -12,6 +12,9 @@ namespace KryticalNova.Networking.Entities.Tests
     /// </summary>
     public class RelevancySwitchTests
     {
+        /// <summary>A filler's reason no system of the game uses (1 is the Callout's).</summary>
+        const byte TestReason = 200;
+
         static RelevancySettings Settings(bool enabled)
         {
             var s = ScriptableObject.CreateInstance<RelevancySettings>();
@@ -83,10 +86,12 @@ namespace KryticalNova.Networking.Entities.Tests
             using EntityQuery lists = em.CreateEntityQuery(ComponentType.ReadOnly<NetworkId>(), ComponentType.ReadWrite<AlwaysRelevantGhost>(), ComponentType.ReadOnly<BecameRelevantGhost>());
             Assert.AreEqual(2, lists.CalculateEntityCount(), "every in-game connection carries the two lists");
 
-            // a filler (the Callout) names a ghost: the fill takes it up in that tick, not after the interval
+            // a filler names a ghost: the fill takes it up in that tick, not after the interval. The reason is the test's own:
+            // reason 1 is the Callout's, and its server system (alive in this world) takes a reason-1 entry off again in the
+            // same tick, before the fill, when no Callout runs.
             using var connections = lists.ToEntityArray(Allocator.Temp);
             using var ids = lists.ToComponentDataArray<NetworkId>(Allocator.Temp);
-            AlwaysRelevantGhosts.SetOnly(em.GetBuffer<AlwaysRelevantGhost>(connections[0]), 1, 77);
+            AlwaysRelevantGhosts.SetOnly(em.GetBuffer<AlwaysRelevantGhost>(connections[0]), TestReason, 77);
             tw.Tick(1);
             Assert.IsTrue(relevancy.GhostRelevancySet.ContainsKey(new RelevantGhostForConnection(ids[0].Value, 77)));
             Assert.IsFalse(relevancy.GhostRelevancySet.ContainsKey(new RelevantGhostForConnection(ids[1].Value, 77)), "only for the connection that named it");
@@ -94,7 +99,7 @@ namespace KryticalNova.Networking.Entities.Tests
             tw.Tick(1);
             Assert.AreEqual(0, em.GetBuffer<BecameRelevantGhost>(connections[0], true).Length);
 
-            AlwaysRelevantGhosts.SetOnly(em.GetBuffer<AlwaysRelevantGhost>(connections[0]), 1, 0);
+            AlwaysRelevantGhosts.SetOnly(em.GetBuffer<AlwaysRelevantGhost>(connections[0]), TestReason, 0);
             tw.Tick(1);
             Assert.AreEqual(0, relevancy.GhostRelevancySet.Count(), "taken off: gone from the set in that tick");
 
