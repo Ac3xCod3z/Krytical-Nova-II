@@ -16,6 +16,8 @@ namespace KryticalNova.Wallet
         /// <summary>Not paid by anything yet: selling to an NPC.</summary>
         VendorSale = 6,
         Refund = 7,
+        /// <summary>A brand-new character's starting Creds (build 17, item 2.4; EconomySettings.startingCreds).</summary>
+        StarterKit = 8,
     }
 
     /// <summary>Where Creds leave a wallet to. Append only.</summary>

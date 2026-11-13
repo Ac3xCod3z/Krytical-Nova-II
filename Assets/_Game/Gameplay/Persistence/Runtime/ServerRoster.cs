@@ -161,6 +161,7 @@ namespace KryticalNova.Persistence
                 {
                     characterId = Guid.NewGuid().ToString("N"), name = name, faction = (int)recipe.faction, level = 1,
                     slot = slot, created = now, savedUtc = now,
+                    starterPending = true, // build 17, item 2.4: the first load gives the starter kit
                 };
                 character.Set(PlayerIdentity.LookSaveKey, PlayerIdentity.LookJson(recipe));
                 saved.characters.Add(character);
