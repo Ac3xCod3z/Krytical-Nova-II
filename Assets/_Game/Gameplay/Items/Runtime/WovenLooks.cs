@@ -12,8 +12,10 @@ namespace KryticalNova.Items
     [Serializable]
     public struct WovenLook
     {
-        public const byte KindClass = 1, KindLine = 2;
-        /// <summary><see cref="KindClass"/> (key = the weapon class) or <see cref="KindLine"/> (key = the gear line).</summary>
+        public const byte KindClass = 1, KindLine = 2, KindItem = 3;
+        /// <summary><see cref="KindClass"/> (key = the weapon class), <see cref="KindLine"/> (key = the gear line) or, for a piece with
+        /// neither (lineId 0, no class: about 221 pieces today), <see cref="KindItem"/> (key = the piece's own item id), so its Weave is
+        /// never dropped (Master, 13 Nov 2026).</summary>
         public byte kind;
         public ushort key;
         /// <summary>The item that stands for the look shown.</summary>
@@ -31,7 +33,8 @@ namespace KryticalNova.Items
     /// <summary>The pure rules of kept Weaves (build 17 item 6).</summary>
     public static class WovenLooks
     {
-        /// <summary>The key a worn piece's Weave is kept under: its weapon class, or its gear line. False when it takes no Weave.</summary>
+        /// <summary>The key a worn piece's Weave is kept under: its weapon class, its gear line, or else its own item id. False when it
+        /// takes no Weave.</summary>
         public static bool TryKeyFor(ItemDefinition worn, out byte kind, out ushort key)
         {
             kind = 0;
@@ -39,15 +42,23 @@ namespace KryticalNova.Items
             if (worn == null || !WeaveRules.IsWeaveSlot(worn.equipSlot)) return false;
             if (worn.equipSlot == EquipSlot.Weapon)
             {
-                if (worn.weaponClass == 0) return false;
+                if (worn.weaponClass == 0) return ByItem(worn, out kind, out key);
                 kind = WovenLook.KindClass;
                 key = (ushort)worn.weaponClass;
                 return true;
             }
-            if (worn.lineId == 0) return false;
+            if (worn.lineId == 0) return ByItem(worn, out kind, out key);
             kind = WovenLook.KindLine;
             key = worn.lineId;
             return true;
+        }
+
+        // The fallback key: the exact piece (it has no class and no line to share a Weave with).
+        private static bool ByItem(ItemDefinition worn, out byte kind, out ushort key)
+        {
+            kind = WovenLook.KindItem;
+            key = worn.itemId;
+            return key != 0;
         }
 
         /// <summary>The look item kept for what is worn, or 0.</summary>

@@ -75,6 +75,28 @@ namespace KryticalNova.Tests
         }
 
         [Test]
+        public void APieceWithNoLineKeepsItsWeaveByItsOwnId()
+        {
+            var woven = new List<WovenLook>();
+            ItemDefinition oddCape = Item(4321, EquipSlot.Cape, 0);
+            ItemDefinition otherOdd = Item(4322, EquipSlot.Cape, 0);
+            Assert.IsTrue(WovenLooks.TryKeyFor(oddCape, out byte kind, out ushort key), "still weavable");
+            Assert.AreEqual(WovenLook.KindItem, kind);
+            Assert.AreEqual(4321, key);
+            WovenLooks.Set(woven, kind, key, 12001);
+            Assert.AreEqual(12001, WovenLooks.WeaveFor(woven, oddCape), "kept");
+            Assert.AreEqual(0, WovenLooks.WeaveFor(woven, otherOdd), "never spreads to another piece");
+
+            // an old slot Weave on such a piece is bound by its item, not dropped
+            var unbound = new List<UnboundWeave> { new UnboundWeave { slot = EquipSlot.Cape, item = 12001 } };
+            var woven2 = new List<WovenLook>();
+            ItemDefinition capeLook = Item(12001, EquipSlot.Cape, 3);
+            WovenLooks.Bind(unbound, woven2, s => s == EquipSlot.Cape ? oddCape : null, id => id == 12001 ? capeLook : null);
+            Assert.AreEqual(0, unbound.Count);
+            Assert.AreEqual(12001, WovenLooks.WeaveFor(woven2, oddCape));
+        }
+
+        [Test]
         public void AnUnreadableSaveIsRefusedNeverReset()
         {
             Assert.Throws<FormatException>(() => WeaveSaveSteps.Migrate("not json", 1));
