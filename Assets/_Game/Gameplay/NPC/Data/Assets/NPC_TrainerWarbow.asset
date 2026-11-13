@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1a27028f02e4d244eb12188002cec6a8, type: 3}
+  m_Name: NPC_TrainerWarbow
+  m_EditorClassIdentifier: KryticalNova.NPC::KryticalNova.NPC.NpcDefinition
+  role: 2
+  displayName: Sylwen
+  title: "Warbow Instructor \xB7 Combat Skills"
+  greeting: Listen to the wind before you loose. Nova tells you where the arrow wants to go.
+  lines: []
+  services: Covenant Instructor for the Warbow. Learn and upgrade your combat skills. Your Level 1 and 30 skills are learned here with skill points; the deeper ones (Level 60 and 80) come as Skill Chips from Hostiles and other players.
+  offers: 0
+  interactRange: 3
