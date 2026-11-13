@@ -69,6 +69,29 @@ namespace KryticalNova.Tests
             Assert.IsTrue(CharacterNameRules.Validate(raw, out _, out string reason), reason);
         }
 
+        [TestCase("xGM")]
+        [TestCase("GMx")]
+        [TestCase("Bob1GM2")]
+        [TestCase("G.M")]
+        public void MoreGmFormsAreRefused(string raw)
+        {
+            Assert.IsFalse(CharacterNameRules.Validate(raw, out _, out string reason));
+            Assert.AreEqual(CharacterNameRules.ReasonNoGm, reason);
+        }
+
+        [TestCase("Sigma")]
+        [TestCase("Stigma")]
+        public void GmBuriedInAWordIsAllowed(string raw) =>
+            Assert.IsTrue(CharacterNameRules.Validate(raw, out _, out string reason), reason);
+
+        [Test]
+        public void ASavedNameWithGmStillGetsInAtAdmission()
+        {
+            Assert.IsTrue(CharacterNameRules.Validate("Bobgm", out string name, out string reason, newName: false), reason);
+            Assert.AreEqual("Bobgm", name);
+            Assert.IsFalse(CharacterNameRules.Validate("Bobgm", out _, out _), "a new name with it is refused");
+        }
+
         [Test]
         public void LengthLimitsAreInclusive()
         {

@@ -200,7 +200,7 @@ namespace KryticalNova.Player
             if (IsSpawned && !IsServer) return;
             if (HasIdentity || state.IsEmpty) return;
 
-            if (!CharacterNameRules.Validate(state.name.ToString(), out string cleanName, out string nameReason))
+            if (!CharacterNameRules.Validate(state.name.ToString(), out string cleanName, out string nameReason, newName: false)) // saved name: no GM rule
             {
                 Debug.LogWarning($"[PlayerIdentity] Rejected a character name ({nameReason}); keeping the default look.", this);
                 return;

@@ -76,12 +76,18 @@ namespace KryticalNova.CharacterCreation
         }
 
         /// <summary>Checks a name and returns its normalised form. <paramref name="reason"/> is user-facing.</summary>
-        public static bool Validate(string raw, out string normalized, out string reason)
+        public static bool Validate(string raw, out string normalized, out string reason) => Validate(raw, out normalized, out reason, newName: true);
+
+        /// <summary>
+        /// As <see cref="Validate(string, out string, out string)"/>; <paramref name="newName"/> false for a name already saved (admission
+        /// on every join): the GM rule (build 17, item 1) is for new names only, so a character named before it still gets in.
+        /// </summary>
+        public static bool Validate(string raw, out string normalized, out string reason, bool newName)
         {
             normalized = Normalize(raw);
             reason = null;
             if (normalized.Length == 0) { reason = ReasonEmpty; return false; }
-            if (LooksLikeGm(raw)) { reason = ReasonNoGm; return false; }
+            if (newName && LooksLikeGm(raw)) { reason = ReasonNoGm; return false; }
             foreach (char c in normalized)
                 if (!((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9'))) { reason = ReasonLettersOnly; return false; }
             if (!(normalized[0] >= 'A' && normalized[0] <= 'Z')) { reason = ReasonLetterFirst; return false; }
