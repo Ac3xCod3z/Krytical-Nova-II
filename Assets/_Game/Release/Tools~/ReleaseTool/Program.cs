@@ -16,9 +16,9 @@ namespace KryticalNova.Release
     /// account only (DPAPI), never in the project; the public half is written to the file, which the launcher builds in.</item>
     /// <item><c>export-key &lt;file&gt;</c> / <c>import-key &lt;file&gt;</c>: a backup of the private key, for a USB stick kept
     /// apart. Without the key no update can ever be signed again, and every launcher would have to be replaced by hand.</item>
-    /// <item><c>stage --game &lt;dir&gt; --launcher &lt;exe&gt; --out &lt;dir&gt; [--version x] [--news &lt;file&gt;]</c>: hashes the build,
+    /// <item><c>stage --game &lt;dir&gt; --launcher &lt;exe&gt; --out &lt;dir&gt; [--version x] [--build n] --news &lt;file&gt;</c>: hashes the build,
     /// compresses the files the store does not have yet into <c>out/files</c>, writes and signs <c>out/manifest.json</c>
-    /// with the launcher's news in it (<see cref="LauncherNews"/>).</item>
+    /// with the launcher's news in it (<see cref="LauncherNews"/>). Refuses without news, headlines and patch notes written for this build.</item>
     /// <item><c>verify --out &lt;dir&gt; --pub &lt;file&gt;</c>: checks the signature and that every file the list names is there.</item>
     /// </list>
     /// </summary>
@@ -56,7 +56,7 @@ namespace KryticalNova.Release
         private static int Usage()
         {
             Console.Error.WriteLine("ReleaseTool keygen --pub <file> [--force] | export-key <file> | import-key <file> | public-key |");
-            Console.Error.WriteLine("            stage --game <dir> --launcher <exe> --out <dir> [--version <text>] [--build <n>] [--news <file>] | verify --out <dir> --pub <file>");
+            Console.Error.WriteLine("            stage --game <dir> --launcher <exe> --out <dir> [--version <text>] [--build <n>] --news <file> | verify --out <dir> --pub <file>");
             return 2;
         }
 
@@ -152,14 +152,15 @@ namespace KryticalNova.Release
             if (!Directory.Exists(gameDir)) throw new DirectoryNotFoundException(gameDir);
             if (!File.Exists(launcherExe)) throw new FileNotFoundException(launcherExe);
             // The news is checked before anything is packed: news the launcher cannot lay out stops the release.
-            LauncherNews news = null;
-            if (!string.IsNullOrWhiteSpace(newsFile))
-            {
-                if (!File.Exists(newsFile)) throw new FileNotFoundException("No news file at " + newsFile);
-                news = LauncherNews.FromFile(newsFile);
-                string problem = news.Problem();
-                if (problem != null) throw new InvalidDataException(problem + " (" + newsFile + ")");
-            }
+            // Every release carries its own news and patch notes (owner, 12 Nov 2026): no --news, no headlines, no patch notes, or news
+            // written for another build, and nothing is staged.
+            if (string.IsNullOrWhiteSpace(newsFile)) throw new ArgumentException("stage needs --news: every build goes out with its launcher news and patch notes.");
+            if (!File.Exists(newsFile)) throw new FileNotFoundException("No news file at " + newsFile);
+            LauncherNews news = LauncherNews.FromFile(newsFile);
+            string problem = news.Problem();
+            if (problem != null) throw new InvalidDataException(problem + " (" + newsFile + ")");
+            if (news.items.Count == 0) throw new InvalidDataException("The news has no headlines (" + newsFile + ").");
+            if (news.patchNotes.Sum(s => s.lines?.Count ?? 0) == 0) throw new InvalidDataException("The news has no patch notes (" + newsFile + ").");
             ECParameters keyParams = LoadKey();
 
             Directory.CreateDirectory(Path.Combine(outDir, "files"));
@@ -168,6 +169,7 @@ namespace KryticalNova.Release
             // The build number the game was built with, when given (the game and its server compare it); else the next one.
             int build = int.TryParse(buildArg, out int asked) && asked > 0 ? asked : previous + 1;
             if (build <= previous) throw new InvalidOperationException($"Build {build} is not newer than the build already staged ({previous}).");
+            if (news.build != build) throw new InvalidDataException($"The news was written for build {news.build}, not build {build}: write this build's news and set \"build\": {build} (" + newsFile + ").");
             var manifest = new UpdateManifest
             {
                 build = build,
@@ -189,10 +191,10 @@ namespace KryticalNova.Release
             }
             if (manifest.gameExe.Length == 0) throw new InvalidDataException("The build has no game exe at its top.");
             manifest.launcher = Pack(launcherExe, Path.GetFileName(launcherExe), outDir, ref added, ref addedBytes);
-            if (news != null && news.items.Count > 0) manifest.news = LauncherNews.Clean(news.items);
-            if (news != null && news.history.Count > 0)
+            manifest.news = LauncherNews.Clean(news.items);
+            if (news.history.Count > 0)
                 manifest.newsHistory = news.history.Select(r => new NewsRelease { label = r.label.Trim(), items = LauncherNews.Clean(r.items), patchNotes = LauncherNews.Clean(r.patchNotes) }).ToList();
-            if (news != null) manifest.patchNotes = LauncherNews.Clean(news.patchNotes);
+            manifest.patchNotes = LauncherNews.Clean(news.patchNotes);
 
             byte[] bytes = manifest.ToBytes();
             string signature;
