@@ -337,6 +337,12 @@ namespace KryticalNova.Networking.Entities
                 if (became.Length > 0) became.Clear();
 
             // gather
+            // The jobs this system depends on (whoever still writes LocalTransform, GhostOwner or GhostInstance this tick: the
+            // teleport job, the brains' movers) are finished first. IJobEntity.Run() does NOT do that: the code the package
+            // generates for Run only hands the job its type handles and runs it with an empty dependency, so without this line the
+            // safety system refuses the gather every tick ("the previously scheduled job TeleportJob writes to LocalTransform")
+            // and the set is never filled. This completes this system's own input dependency, nothing else.
+            state.CompleteDependency();
             var ghosts = new NativeList<RelevancyGhost>(256, state.WorldUpdateAllocator);
             var signature = new NativeReference<uint>(state.WorldUpdateAllocator);
             new GatherOwnedGhostsJob { Out = ghosts, Signature = signature }.Run();
