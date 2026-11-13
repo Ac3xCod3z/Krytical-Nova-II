@@ -62,6 +62,7 @@ namespace KryticalNova.Tests
         [Test]
         public void DisposedWithASaveInLine_AndTheServiceGone_TheWriterEnds_AndSaysItOnce()
         {
+            LogAssert.ignoreFailingMessages = true;   // set in the test itself: the flag set in SetUp did not hold for the test body (full run, 12 Nov 2026)
             var store = new ServiceSaveStore(NobodyThere, "no-key", "test-dispose");
             bool? told = null;
             var batch = new SaveBatch();
@@ -91,6 +92,7 @@ namespace KryticalNova.Tests
         [Test]
         public void ASaveHandedToAClosedStore_IsRefusedOnce_NotQueued()
         {
+            LogAssert.ignoreFailingMessages = true;   // set in the test itself: the flag set in SetUp did not hold for the test body (full run, 12 Nov 2026)
             var store = new ServiceSaveStore(NobodyThere, "no-key", "test-dispose");
             store.Close(0.1f);
             Assert.AreEqual(0, Lines().Count(l => l.Contains("closed with")), "nothing was in line: nothing to say");
@@ -110,6 +112,7 @@ namespace KryticalNova.Tests
         [Test]
         public void AClosedIdleStore_IsSilent()
         {
+            LogAssert.ignoreFailingMessages = true;   // set in the test itself: the flag set in SetUp did not hold for the test body (full run, 12 Nov 2026)
             var store = new ServiceSaveStore(NobodyThere, "no-key", "test-dispose");
             store.Dispose();
             Assert.IsFalse(store.WriterRunning);
