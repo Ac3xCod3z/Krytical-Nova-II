@@ -1,3 +1,0 @@
-time,players,fps,busy_avg_ms,busy_p95_ms,busy_worst_ms,slow_frames,frames,managed_mb,reserved_mb,late_hits,gone_targets,worst_ping_ms
-21:43:38,0,17.0,14.05,31.51,555.41,3,85,222,3830,0,0,0
-21:43:43,0,29.9,1.19,1.07,51.01,1,150,227,3830,0,0,0
