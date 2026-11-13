@@ -367,6 +367,18 @@ namespace KryticalNova.Tests
             StringAssert.StartsWith(ComicFolder, AssetDatabase.GetAssetPath(effect), what);
         }
 
+        [Test]
+        public void TheCalloutCritFrame_IsInkThenFlash_InTheHitLookSettings()
+        {
+            var looks = AssetDatabase.LoadAssetAtPath<HitLookSettings>(SettingsPath);
+            Assert.IsNotNull(looks, SettingsPath);
+            Assert.IsTrue(looks.calloutImpactFrame, "owner pick (10.3): ink and flash together");
+            Assert.Greater(looks.calloutInkSeconds, 0f);
+            Assert.Greater(looks.calloutFlashSeconds, 0f);
+            Assert.Less(looks.calloutInkColour.grayscale, looks.calloutFlashColour.grayscale, "the ink is dark, the flash light");
+            Assert.IsNull(System.Type.GetType("KryticalNova.GameFeel.ImpactFrame, KryticalNova.GameFeel"), "no second drawer beside the crit feel");
+        }
+
         private static float Distance(Color a, Color b)
         {
             float r = a.r - b.r, g = a.g - b.g, bl = a.b - b.b;
