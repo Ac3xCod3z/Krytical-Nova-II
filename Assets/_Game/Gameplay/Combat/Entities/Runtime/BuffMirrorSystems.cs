@@ -48,7 +48,7 @@ namespace KryticalNova.Combat.Entities
                     {
                         SkillId = new FixedString64Bytes(b.SkillId), Rank = (short)Mathf.Clamp(b.Rank, 0, short.MaxValue),
                         EndTick = RunningBuffs.EndTick(time.ServerTick, b.Remaining, rate), FromSquad = (byte)(b.FromSquad ? 1 : 0),
-                        Giver = Fit(b.Giver),
+                        Giver = Fit(b.Giver), Shield = b.Shield,
                     });
                 Written++;
             }
@@ -103,7 +103,7 @@ namespace KryticalNova.Combat.Entities
                     m_Running.Add(new RunningBuffEntry
                     {
                         SkillId = skillId, Rank = b.Rank, Remaining = RunningBuffs.SecondsLeft(time.ServerTick, b.EndTick, rate),
-                        FromSquad = b.FromSquad != 0, Giver = b.Giver.ToString(),
+                        FromSquad = b.FromSquad != 0, Giver = b.Giver.ToString(), Shield = b.Shield,
                     });
                 }
                 BuffMirror.Reconcile(copy, m_Running, skills.GetSkill);
@@ -118,7 +118,7 @@ namespace KryticalNova.Combat.Entities
             {
                 int hash = 17 + list.Length;
                 foreach (RunningBuff b in list)
-                    hash = hash * 31 + b.SkillId.GetHashCode() * 7 + b.Rank * 13 + (int)b.EndTick * 3 + b.FromSquad + b.Giver.GetHashCode();
+                    hash = hash * 31 + b.SkillId.GetHashCode() * 7 + b.Rank * 13 + (int)b.EndTick * 3 + b.FromSquad + b.Giver.GetHashCode() + b.Shield * 17;
                 return hash;
             }
         }
