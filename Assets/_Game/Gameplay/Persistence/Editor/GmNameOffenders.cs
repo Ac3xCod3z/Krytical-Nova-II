@@ -10,7 +10,7 @@ using UnityEngine;
 namespace KryticalNova.EditorTools
 {
     /// <summary>
-    /// Owner, 13 Nov 2026 (build 17, item 1): names may not contain "GM" (<see cref="CharacterNameRules.LooksLikeGm"/>). The rule
+    /// Owner, 13 Nov 2026 (build 17, item 1): "GM" may not stand as its own part of a name (pick B) (<see cref="CharacterNameRules.LooksLikeGm"/>). The rule
     /// stops new names; characters made before it keep theirs until the owner decides, so this lists them. It only reads a save
     /// folder (a server's, an unzipped backup, or "Copy the Save Database into Files" of the TEST database first); it never changes a
     /// save and never talks to a database itself.

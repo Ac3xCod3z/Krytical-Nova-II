@@ -20,10 +20,9 @@ namespace KryticalNova.Tests
             foreach (KeyValuePair<string, string> doc in ServerSave.SplitDocuments(account)) memory.Write(doc.Key, doc.Value);
 
             List<string> found = GmNameOffenders.Find(memory);
-            Assert.AreEqual(2, found.Count, string.Join("\n", found));
+            Assert.AreEqual(1, found.Count, string.Join("\n", found)); // Magma stays allowed (pick B)
             StringAssert.StartsWith("Gmbob (", found[0]);
-            StringAssert.StartsWith("Magma (", found[1]);
-            StringAssert.Contains("2 saved character(s)", GmNameOffenders.Report(found));
+            StringAssert.Contains("1 saved character(s)", GmNameOffenders.Report(found));
         }
     }
 }

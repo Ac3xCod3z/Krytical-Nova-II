@@ -36,7 +36,7 @@ namespace KryticalNova.Tests
             Assert.AreEqual(expected, reason);
         }
 
-        // Owner, 13 Nov 2026: no name may pass for a GM (case, digits, spaces and symbols ignored).
+        // Owner, 13 Nov 2026: no name may pass for a GM (pick B: GM as its own part, not inside a word).
         [TestCase("GMBob")]
         [TestCase("g.m.Bob")]
         [TestCase("BobGM")]
@@ -46,8 +46,8 @@ namespace KryticalNova.Tests
         [TestCase("G1M")]
         [TestCase("G M Ace")]
         [TestCase("Ace9g9m")]
-        [TestCase("Magma")] // contains "gm": refused, as the owner's rule is written
-        [TestCase("Ogma")]
+        [TestCase("Ace9GMx")]
+        [TestCase("BobGMx")]
         public void GmNamesAreRefusedWithTheirOwnReason(string raw)
         {
             Assert.IsFalse(CharacterNameRules.Validate(raw, out _, out string reason));
@@ -55,6 +55,11 @@ namespace KryticalNova.Tests
             Assert.AreEqual("Names can't contain GM.", CharacterNameRules.ReasonNoGm);
         }
 
+        [TestCase("Magma")]   // owner pick B: GM inside a word is allowed
+        [TestCase("Ogma")]
+        [TestCase("Dogma")]
+        [TestCase("Sigmar")]
+        [TestCase("MAGMA")]   // all capitals: no case to set GM off
         [TestCase("Gamma")]   // G and M apart, a letter between: allowed
         [TestCase("Mog")]     // M before G: allowed
         [TestCase("Gideon")]

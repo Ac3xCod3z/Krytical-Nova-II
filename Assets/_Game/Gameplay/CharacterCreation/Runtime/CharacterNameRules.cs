@@ -48,21 +48,29 @@ namespace KryticalNova.CharacterCreation
         }
 
         /// <summary>
-        /// True when the name holds "GM" once case, digits, spaces and symbols are ignored (owner, 13 Nov 2026: nobody may pass for
-        /// one of the game's GMs): "GMBob", "g.m.Bob", "BobGM", "G_M", "[GM]", "G1M". Checked on the raw text before the
-        /// letters-only rule, so a dotted "G.M." gets this reason rather than the symbols one. Names that merely contain the two
-        /// letters in a row ("Magma", "Ogma", "Dogma") are refused too: that is the rule as the owner wrote it.
+        /// True when "GM" stands as its own part of the name (owner, 13 Nov 2026, pick B: nobody may pass for one of the game's
+        /// GMs, but a word like "Magma" stays allowed). A G followed by an M (digits, spaces and symbols between them ignored) counts
+        /// when it starts or ends the letters ("GMBob", "BobGM"), when anything but a letter sits between the two or beside them
+        /// ("g.m.Bob", "G_M", "[GM]", "G1M", "Ace9GMx"), or when both are capitals set off by small letters ("BobGMx"). Checked on the
+        /// raw text, before the letters-only rule, so a dotted "G.M." gets this reason rather than the symbols one.
         /// </summary>
         public static bool LooksLikeGm(string raw)
         {
             if (string.IsNullOrEmpty(raw)) return false;
-            bool lastWasG = false;
-            foreach (char ch in raw)
+            string text = raw.Trim();
+            var letters = new System.Collections.Generic.List<int>(text.Length); // positions of the letters in text
+            for (int k = 0; k < text.Length; k++) if (char.IsLetter(text[k])) letters.Add(k);
+            for (int n = 0; n + 1 < letters.Count; n++)
             {
-                if (!char.IsLetter(ch)) continue; // digits, spaces and symbols never break a G..M pair
-                char c = char.ToLowerInvariant(ch);
-                if (lastWasG && c == 'm') return true;
-                lastWasG = c == 'g';
+                int g = letters[n], m = letters[n + 1];
+                if (char.ToLowerInvariant(text[g]) != 'g' || char.ToLowerInvariant(text[m]) != 'm') continue;
+                bool first = n == 0, last = n + 1 == letters.Count - 1;
+                if (first || last) return true;
+                if (m != g + 1) return true;                         // a digit or symbol between G and M
+                if (letters[n - 1] != g - 1) return true;            // ... or just before the G
+                if (letters[n + 2] != m + 1) return true;            // ... or just after the M
+                bool capitals = char.IsUpper(text[g]) && char.IsUpper(text[m]);
+                if (capitals && (char.IsLower(text[g - 1]) || char.IsLower(text[m + 1]))) return true; // "BobGMx"
             }
             return false;
         }
