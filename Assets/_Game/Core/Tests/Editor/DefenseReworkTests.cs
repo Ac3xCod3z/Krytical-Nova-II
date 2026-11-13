@@ -28,7 +28,7 @@ namespace KryticalNova.Tests
         {
             Assert.AreEqual(500f, CombatMath.Resolve(Attacker, Defender(800f), Item8, Plain(), Clean).DamageDealt, 0.01f);
             Assert.AreEqual(1000f / 3f, CombatMath.Resolve(Attacker, Defender(1600f), Item8, Plain(), Clean).DamageDealt, 0.01f);
-            Assert.Greater(CombatMath.Resolve(Attacker, Defender(1e6f), Item8, Plain(), Clean).DamageDealt, 1f, "no immunity");
+            Assert.GreaterOrEqual(CombatMath.Resolve(Attacker, Defender(1e6f), Item8, Plain(), Clean).DamageDealt, 1f, "no immunity: at least the 1-damage floor");
             // a skill keeps its multiplier through Defense (the old subtraction let Defense matter only against plain hits)
             Assert.AreEqual(1500f, CombatMath.Resolve(Attacker, Defender(800f), Item8, Plain(3f), Clean).DamageDealt, 0.01f);
         }
