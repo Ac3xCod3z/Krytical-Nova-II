@@ -42,7 +42,8 @@ namespace KryticalNova.Items
         private readonly ItemStack[] scratch = new ItemStack[Capacity];
         private PlayerEquipment equipment;
         private PlayerResources resources;
-        private float nextUseTime;
+        // Build 17 item 5.1: each item kind has its own use cooldown (its useCooldown), so an HP Stim never waits on a Flux Stim.
+        private readonly Dictionary<ushort, float> nextUseTimeOf = new Dictionary<ushort, float>();
         private bool starterGranted;
         private bool starterKitGranted;
         // The weapon handed out before the character is known; the starter kit replaces it with the Discipline's.
@@ -571,15 +572,15 @@ namespace KryticalNova.Items
             });
             if (used == null) return;
 
-            nextUseTime = Time.time + used.useCooldown;
-            if (used.restoreHealth > 0f) resources.Heal(used.restoreHealth);
-            if (used.restoreChi > 0f) resources.RestoreChi(used.restoreChi);
+            nextUseTimeOf[used.itemId] = Time.time + used.useCooldown;
+            if (used.RestoresHealth) resources.Heal(used.HealthRestoredAt(resources.MaxHealth));
+            if (used.RestoresChi) resources.RestoreChi(used.ChiRestoredAt(resources.MaxChi));
             if (used.useEffect != ItemUseEffect.None) HandlerFor(used.useEffect)?.ServerUse(new UsedItem(used.itemId, used.displayName));
-            ItemUsed?.Invoke(used.itemId, used.restoreHealth > 0f, used.restoreChi > 0f);
+            ItemUsed?.Invoke(used.itemId, used.RestoresHealth, used.RestoresChi);
 
-            if (used.restoreHealth <= 0f && used.restoreChi <= 0f) return; // the effect's own system presents it
-            if (NetRole.IsNetworked(this)) ItemUsedRpc(used.restoreHealth > 0f, used.restoreChi > 0f);
-            else PresentItemUsed(used.restoreHealth > 0f, used.restoreChi > 0f);
+            if (!used.RestoresHealth && !used.RestoresChi) return; // the effect's own system presents it
+            if (NetRole.IsNetworked(this)) ItemUsedRpc(used.RestoresHealth, used.RestoresChi);
+            else PresentItemUsed(used.RestoresHealth, used.RestoresChi);
         }
 
         private IItemUseHandler HandlerFor(ItemUseEffect effect)
@@ -600,14 +601,14 @@ namespace KryticalNova.Items
         private string UseBlockedReason(ItemDefinition def)
         {
             if (resources == null || !resources.IsAlive) return ReasonDefeated;
-            if (Time.time < nextUseTime) return ReasonUseCooldown;
+            if (InventoryRules.OnUseCooldown(nextUseTimeOf, def.itemId, Time.time)) return ReasonUseCooldown;
             if (def.useEffect != ItemUseEffect.None)
             {
                 IItemUseHandler handler = HandlerFor(def.useEffect);
                 return handler == null ? InventoryRules.ReasonNotUsable : handler.UseBlockedReason(new UsedItem(def.itemId, def.displayName));
             }
-            bool healthUseful = def.restoreHealth > 0f && resources.Health < resources.MaxHealth;
-            bool chiUseful = def.restoreChi > 0f && resources.Chi < resources.MaxChi;
+            bool healthUseful = def.RestoresHealth && resources.Health < resources.MaxHealth;
+            bool chiUseful = def.RestoresChi && resources.Chi < resources.MaxChi;
             return healthUseful || chiUseful ? null : ReasonAlreadyFull;
         }
 

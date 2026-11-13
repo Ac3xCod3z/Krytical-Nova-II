@@ -230,6 +230,14 @@ namespace KryticalNova.Persistence
             }
             // Max HP and Flux come from the level and gear that were just put back.
             if (!isNew && resources != null && resources.IsAlive) resources.RestoreAll();
+            // Build 17, item 2.4: a brand-new character gets its one-off gifts (the starting Creds) once. On a server the roster wrote
+            // the save at creation, so "no save" never happens there: its starterPending flag says the kit is owed. The gift and the
+            // cleared flag go out in the one Save() below, so a crash before it gives nothing and a relog after it gives nothing again.
+            if (CharacterSave.TakesStarter(isNew, character))
+            {
+                foreach (INewCharacterGrant grant in GetComponents<INewCharacterGrant>()) grant.ServerGrantNewCharacter();
+                character.starterPending = false;
+            }
 
             if (pendingAgreement != 0) RecordAgreement(pendingAgreement);
             // The saved spot stays as it was until the player has stood somewhere (on leaving, a map change, or the next place time):

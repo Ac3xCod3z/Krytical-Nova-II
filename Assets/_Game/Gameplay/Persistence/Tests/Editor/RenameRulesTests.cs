@@ -60,6 +60,9 @@ namespace KryticalNova.Tests
             Assert.AreEqual(CharacterNameRules.ReasonTooLong, PlayerRename.CheckName("Abcdefghijklmnopq", "Ace", Me, names, out _));
             Assert.AreEqual(CharacterNameRules.ReasonRepeats, PlayerRename.CheckName("Aaab", "Ace", Me, names, out _));
             Assert.AreEqual(CharacterNameRules.ReasonReserved, PlayerRename.CheckName("Admin", "Ace", Me, names, out _));
+            Assert.AreEqual(CharacterNameRules.ReasonNoGm, PlayerRename.CheckName("GMBob", "Ace", Me, names, out _));
+            Assert.AreEqual(CharacterNameRules.ReasonNoGm, PlayerRename.CheckName("g.m.Bob", "Ace", Me, names, out _));
+            Assert.AreEqual(CharacterNameRules.ReasonNoGm, PlayerRename.CheckName("BobGM", "Ace", Me, names, out _));
         }
 
         [Test]

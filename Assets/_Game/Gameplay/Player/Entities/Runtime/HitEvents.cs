@@ -47,7 +47,7 @@ namespace KryticalNova.Player.Entities
         public const int PerTick = 4;
 
         // NGO PlayerMeleeCombat's bits (ImpactKind / ShowDamageToAttacker), the same values
-        public const byte Critical = 1, Evaded = 2, Reflected = 4, Shattered = 8, Elemental = 16, Skill = 32;
+        public const byte Critical = 1, Evaded = 2, Reflected = 4, Shattered = 8, Elemental = 16, Skill = 32, Blocked = 64; // Blocked: build 17 item 8
 
         /// <summary>Server: numbers and appends <paramref name="hit"/>, dropping the oldest when full.</summary>
         public static void Append(DynamicBuffer<HitEvent> ring, ref HitEventSeq seq, HitEvent hit)
@@ -161,6 +161,8 @@ namespace KryticalNova.Player.Entities
         [GhostField] public byte FromSquad;
         /// <summary>The Squad member who gave it (16 characters at most).</summary>
         [GhostField] public Unity.Collections.FixedString32Bytes Giver;
+        /// <summary>Build 17 item 9.2: an absorption shield's HP left (whole), -1 for a buff that is no shield.</summary>
+        [GhostField] public int Shield;
     }
 
     /// <summary>The running list's clock: seconds left as an end tick and back.</summary>
@@ -234,5 +236,46 @@ namespace KryticalNova.Player.Entities
         }
 
         public static uint Newest(DynamicBuffer<CastEvent> ring) => ring.Length > 0 ? ring[ring.Length - 1].Seq : 0;
+    }
+}
+
+namespace KryticalNova.Player.Entities
+{
+    /// <summary>
+    /// A dodge the server decided for this player (build 17 item 11.2): an evaded Hostile attack read high or low, and after the set number in
+    /// a row the counter-attack. A one-off moment, so a ring entry with its tick: every view, the player's own included, plays each once (the
+    /// clip is presentation; the counter's damage is a server hit on the attacker's HitEvent ring like any other). Server-written.
+    /// </summary>
+    [InternalBufferCapacity(DodgeRing.Capacity)]
+    public struct DodgeEvent : IBufferElementData
+    {
+        [GhostField] public uint Seq;
+        /// <summary>The server tick of the dodge (<c>NetworkTick.SerializedData</c>).</summary>
+        [GhostField] public uint Tick;
+        /// <summary><c>KryticalNova.Combat.DodgeMove</c>: 1 jump over, 2 sidestep right, 3 sidestep left.</summary>
+        [GhostField] public byte Move;
+        /// <summary>1 = this dodge ends in the counter-attack.</summary>
+        [GhostField] public byte Counter;
+    }
+
+    /// <summary>The player's last dodge number (server count).</summary>
+    public struct DodgeSeq : IComponentData
+    {
+        public uint Last;
+    }
+
+    /// <summary>The dodge ring's rules, as <see cref="HitEventRing"/>'s.</summary>
+    public static class DodgeRing
+    {
+        public const int Capacity = 4;
+
+        public static void Append(DynamicBuffer<DodgeEvent> ring, ref DodgeSeq seq, DodgeEvent dodge)
+        {
+            dodge.Seq = ++seq.Last;
+            if (ring.Length >= Capacity) ring.RemoveAt(0);
+            ring.Add(dodge);
+        }
+
+        public static uint Newest(DynamicBuffer<DodgeEvent> ring) => ring.Length > 0 ? ring[ring.Length - 1].Seq : 0;
     }
 }

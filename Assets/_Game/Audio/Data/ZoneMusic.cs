@@ -22,6 +22,9 @@ namespace KryticalNova.Audio
         [Tooltip("On: the fight music, and Cadence with it, only while the player stands in a Callout (owner, 19 Oct 2026: " +
                  "the town tries it in Callouts first). Off: in every fight (the test arena).")]
         public bool calloutsOnly;
+        [Tooltip("On: the fight music, and Cadence with it, only in a fight with a real target: a Hostile, a Callout opponent, a Strike " +
+                 "Dummy, a blow that landed on someone (owner, 13 Nov 2026: a swing at air or an area skill on nothing in town plays no music).")]
+        public bool realTargetsOnly;
 
         [Header("Out of a fight")]
         [Tooltip("Played out of a fight, round and round, on each player's own game (no shared clock, no beat). " +

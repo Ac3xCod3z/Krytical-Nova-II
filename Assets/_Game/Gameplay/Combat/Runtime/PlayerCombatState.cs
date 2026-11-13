@@ -56,7 +56,9 @@ namespace KryticalNova.Combat
         private PlayerCombatSkills skills;
         private PlayerDuel duel;
         private bool offlineInCombat; // the unspawned avatar keeps its own
+        private bool mirroredRealFight; // a view of the entity netcode: the server body's real fight, from the ghost
         private float lastAct = float.NegativeInfinity;
+        private float lastRealAct = float.NegativeInfinity; // a blow that landed on, or came from, someone
         private float lastThreat = float.NegativeInfinity;
         private readonly HashSet<object> holders = new HashSet<object>();
         private float nextCheck;
@@ -80,6 +82,26 @@ namespace KryticalNova.Combat
         /// </summary>
         public bool InFightFor(bool calloutsOnly) => InCombat && (!calloutsOnly || InCallout);
 
+        /// <summary>
+        /// As <see cref="InFightFor(bool)"/>, and where the zone keeps the fight music for real fights (<paramref name="realTargetsOnly"/>,
+        /// owner 13 Nov 2026: in town a swing at air or an area skill on nothing plays no fight music) only a fight with someone:
+        /// see <see cref="InRealFight"/>.
+        /// </summary>
+        public bool InFightFor(bool calloutsOnly, bool realTargetsOnly) => InFightFor(calloutsOnly) && (!realTargetsOnly || InRealFight);
+
+        /// <summary>
+        /// True while the fight has a real target (build 17, item 3.1): a Callout, a Hostile after the player, a struck Strike Dummy, ground
+        /// held as a fight, or a blow that landed on someone or came from someone a few seconds ago. Not a swing at air, not a skill cast at
+        /// nothing. Decided where the fight is (server body or offline); a view of the entity netcode is told it with the fight.
+        /// </summary>
+        public bool InRealFight => Decides ? InCombat && RealReasons(Reasons, Time.time, lastRealAct, lingerSeconds) != CombatReasons.None
+            : IsSpawned ? InCombat : mirroredRealFight && InCombat; // NGO rollback copy: no second flag, any fight counts
+
+        /// <summary>The reasons that make a fight a real one: everything but a blow with no one at the other end and a combo on nothing.</summary>
+        public static CombatReasons RealReasons(CombatReasons reasons, float now, float lastRealAct, float linger) =>
+            (reasons & (CombatReasons.Callout | CombatReasons.Hostile | CombatReasons.Held | CombatReasons.Dummy))
+            | (now - lastRealAct < linger ? CombatReasons.Blow : CombatReasons.None);
+
         /// <summary>Why, where the fight is decided (server or offline). None on a client, which is only told that.</summary>
         public CombatReasons Reasons { get; private set; }
 
@@ -94,9 +116,13 @@ namespace KryticalNova.Combat
         /// A view of the entity netcode: the server body's fight from the ghost (NGO netInCombat.OnValueChanged on a client), so the fight
         /// music and Cadence's beat follow it here.
         /// </summary>
-        public void MirrorInCombat(bool fighting)
+        public void MirrorInCombat(bool fighting) => MirrorInCombat(fighting, fighting);
+
+        /// <summary>As <see cref="MirrorInCombat(bool)"/>, with whether the fight has a real target (<see cref="InRealFight"/>).</summary>
+        public void MirrorInCombat(bool fighting, bool realFight)
         {
             if (Decides) return;
+            mirroredRealFight = realFight;
             if (offlineInCombat == fighting) return;
             offlineInCombat = fighting;
             Changed?.Invoke(fighting);
@@ -149,6 +175,7 @@ namespace KryticalNova.Combat
             else if (netInCombat.Value) Changed?.Invoke(true); // joined while this player was fighting
             lastAct = float.NegativeInfinity;
             lastThreat = float.NegativeInfinity;
+            lastRealAct = float.NegativeInfinity;
             holders.Clear();
             Reasons = CombatReasons.None;
             dummy = null;
@@ -164,19 +191,21 @@ namespace KryticalNova.Combat
 
         private void OnNetChanged(bool previous, bool current) => Changed?.Invoke(current);
 
-        private void OnDamaged(DamageResult result, CharacterCombatStats attacker) => Note();
+        private void OnDamaged(DamageResult result, CharacterCombatStats attacker) => Note(real: attacker != null);
         private void OnHitResolved(IDamageable target, DamageResult result)
         {
             if (Decides && target is CombatEntity struck && struck.IsStrikeDummy) dummy = struck;
-            Note();
+            Note(real: target != null);
         }
-        private void OnSkillCast(SkillDefinitionSO skill) { if (skill != null && skill.IsAttack) Note(); }
+        // an attack skill cast is a fight's act, but not a real fight until it lands on someone (HitResolved)
+        private void OnSkillCast(SkillDefinitionSO skill) { if (skill != null && skill.IsAttack) Note(real: false); }
 
-        /// <summary>An act of a fight just happened: the player is in one from now.</summary>
-        private void Note()
+        /// <summary>An act of a fight just happened: the player is in one from now. <paramref name="real"/>: someone was at the other end.</summary>
+        private void Note(bool real)
         {
             if (!Decides) return;
             lastAct = Time.time;
+            if (real) lastRealAct = Time.time;
             Look();
         }
 

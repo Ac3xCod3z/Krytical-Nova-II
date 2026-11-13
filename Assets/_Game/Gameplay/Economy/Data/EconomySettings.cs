@@ -49,6 +49,8 @@ namespace KryticalNova.Economy
         [Header("Wallet")]
         [Tooltip("The most Creds one character can carry. The Vault and Deep Vault each hold as much again.")]
         [Min(0)] public long walletCap = 999_999_999_999;
+        [Tooltip("Creds a brand-new character starts with, given once through the wallet (owner, 13 Nov 2026, build 17 item 2.4).")]
+        [Min(0)] public long startingCreds = 2_500;
 
         [Header("Trade (player to player)")]
         [Tooltip("The most Creds one side may put into a single trade.")]

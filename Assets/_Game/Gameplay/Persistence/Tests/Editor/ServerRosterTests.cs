@@ -98,6 +98,9 @@ namespace KryticalNova.Tests
         {
             Assert.AreEqual(CharacterNameRules.ReasonLettersOnly, Create(Ash, "To lan").message);
             Assert.AreEqual(CharacterNameRules.ReasonTooShort, Create(Ash, "Al").message);
+            Assert.AreEqual(CharacterNameRules.ReasonNoGm, Create(Ash, "GMBob").message);
+            Assert.AreEqual(CharacterNameRules.ReasonNoGm, Create(Ash, "g.m.Bob").message);
+            Assert.AreEqual(CharacterNameRules.ReasonNoGm, Create(Ash, "BobGM").message);
             Assert.IsTrue(Create(Ash, "Arin").ok);
             Assert.IsTrue(Create(Ash, "Brin").ok);
             Assert.IsTrue(Create(Ash, "Corin").ok);
@@ -165,6 +168,8 @@ namespace KryticalNova.Tests
                 PlayerSaveAgent.NotOnRoster(ServerSave.ReadAccountFrom(memory, Bo).Find(boTolan.id), "Tolan"));
             RosterReply taken = ServerRoster.Handle(Bo, "", new RosterRequest { op = RosterRequest.Rename, characterId = boTolan.id, name = "Rhea" });
             Assert.IsFalse(taken.ok);
+            RosterReply gm = ServerRoster.Handle(Bo, "", new RosterRequest { op = RosterRequest.Rename, characterId = boTolan.id, name = "[GM]Tolan" });
+            Assert.AreEqual(CharacterNameRules.ReasonNoGm, gm.message, "the forced rename refuses GM names too");
             RosterReply renamed = ServerRoster.Handle(Bo, "", new RosterRequest { op = RosterRequest.Rename, characterId = boTolan.id, name = "Torvald" });
             Assert.IsTrue(renamed.ok, renamed.message);
             RosterCharacter torvald = renamed.characters.Find(c => c.id == boTolan.id);

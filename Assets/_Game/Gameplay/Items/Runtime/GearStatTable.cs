@@ -82,6 +82,11 @@ namespace KryticalNova.Items
         public float hitRatePerLevel = 2.5f;
         [Tooltip("Gloves carry this share of the weapon's Hit Rate.")]
         [Range(0f, 1f)] public float glovesHitShare = 0.4f;
+        [Tooltip("Build 17 item 7.2 (owner): crit comes from rings only. A ring's Critical Rate at the top level, by rarity "
+            + "(Common, Uncommon, Rare, Epic, Legendary); lower levels get their share of it. PROPOSED: 5 / 10 / 15 / 20 / 25.")]
+        public float[] ringCriticalAtTop = { 5f, 10f, 15f, 20f, 25f };
+        [Tooltip("The level a ring gives the whole ringCriticalAtTop (Epic Lv112 ring = +20).")]
+        [Min(1)] public int ringCriticalTopLevel = 112;
 
         [Header("Secondary stats")]
         public LadderRow[] ladder = Array.Empty<LadderRow>();
@@ -89,6 +94,14 @@ namespace KryticalNova.Items
 
         [Header("Exact values (owner's tables)")]
         public Override[] overrides = Array.Empty<Override>();
+
+        /// <summary>Build 17 item 7.2: a ring's base Critical Rate: its rarity's top value times its share of the top level.</summary>
+        public float RingCriticalAt(ItemRarity rarity, int level)
+        {
+            int index = (int)rarity;
+            if (ringCriticalAtTop == null || index < 0 || index >= ringCriticalAtTop.Length) return 0f;
+            return ringCriticalAtTop[index] * Mathf.Clamp01(level / (float)Mathf.Max(1, ringCriticalTopLevel));
+        }
 
         public float MultiplierOf(ItemRarity rarity)
         {
@@ -149,6 +162,9 @@ namespace KryticalNova.Items
                     AddEvasion(secondary, slot, rarity, level);
                     break;
                 case EquipSlot.Ring:
+                    Add(primary, slot, rarity, level, StatType.DefensePower, level * secondaryDefensePerLevel * multiplier);
+                    Add(secondary, slot, rarity, level, StatType.CriticalRate, RingCriticalAt(rarity, level));
+                    break;
                 case EquipSlot.Amulet:
                 case EquipSlot.Cape:
                     Add(primary, slot, rarity, level, StatType.DefensePower, level * secondaryDefensePerLevel * multiplier);

@@ -188,7 +188,15 @@ namespace KryticalNova.Progression
             if (characterAction.WasPressedThisFrame()) CharacterWindowRequested?.Invoke();
             if (skillsAction.WasPressedThisFrame()) SkillsWindowRequested?.Invoke();
 
-            if (chargingSlot != NoSlot) { UpdateCharge(); return; }
+            if (chargingSlot != NoSlot)
+            {
+                // Build 17 item 5.1: a Stim on the hotbar is used even while a charged skill fills; the charge keeps filling.
+                for (int index = 0; index < SlotCount; index++)
+                    if (index != chargingSlot && slots[index].itemType == HotbarItemType.Item && slotActions[index].WasPressedThisFrame())
+                    { ActivateSlot(index); break; }
+                UpdateCharge();
+                return;
+            }
 
             for (int index = 0; index < SlotCount; index++)
             {

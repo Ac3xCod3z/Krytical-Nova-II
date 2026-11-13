@@ -37,7 +37,7 @@ namespace KryticalNova.Combat.Entities
             bool elemental = result.DamageDealt > 0f && result.NetElementalDamage >= result.DamageDealt * share;
             return (byte)((result.IsCritical ? HitEventRing.Critical : 0) | (result.IsEvaded ? HitEventRing.Evaded : 0)
                 | (result.IsReflected ? HitEventRing.Reflected : 0) | (result.ShieldShattered ? HitEventRing.Shattered : 0)
-                | (elemental ? HitEventRing.Elemental : 0));
+                | (elemental ? HitEventRing.Elemental : 0) | (result.IsBlocked ? HitEventRing.Blocked : 0));
         }
     }
 }

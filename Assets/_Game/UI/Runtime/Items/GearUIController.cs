@@ -687,7 +687,7 @@ namespace KryticalNova.UI
             glyph.text = show ? def.placeholderGlyph : string.Empty;
             foreach (var c in GlyphToneClasses) glyph.RemoveFromClassList(c);
             if (!show || !def.IsConsumable) return;
-            int tone = def.restoreHealth > 0f && def.restoreChi > 0f ? 2 : def.restoreChi > 0f ? 1 : 0;
+            int tone = def.RestoresHealth && def.RestoresChi ? 2 : def.RestoresChi ? 1 : 0;
             glyph.AddToClassList(GlyphToneClasses[tone]);
         }
 
@@ -1090,6 +1090,11 @@ namespace KryticalNova.UI
             // A Flask says how many drinks it has left: they travel with the bottle.
             if (def.useEffect == ItemUseEffect.FluxFlask && inventory != null && inventory.TryGetComponent(out PlayerFlask flask))
                 tipDesc.text = def.description + "\n" + flask.TooltipLine(itemStack);
+            // Build 17, item 5.4 (owner, 13 Nov 2026): what a vendor pays for it, from the same rule the sale uses
+            // (VendorRules.SellValue through PlayerShopping); nothing for an item no vendor buys.
+            PlayerShopping shop = PlayerShopping.Local;
+            string sells = SellLine(shop != null ? shop.SellValue(def) : 0, itemStack.IsEmpty ? 1 : itemStack.count);
+            if (sells != null) tipDesc.text = string.IsNullOrEmpty(tipDesc.text) ? sells : tipDesc.text + "\n" + sells;
             // A pet's stage, growth, hunger and bonus are a block of their own; the line under it says what it grows.
             string petLine = tipPet.Show(def, itemStack.IsEmpty ? new ItemStack(def.itemId, 1) : itemStack);
             // What the piece gives is a strip a line; how far it has been worked on stays a paragraph under them.
@@ -1104,6 +1109,17 @@ namespace KryticalNova.UI
             tooltip.BringToFront();
             // Beside the cell, on whichever side has room, and never off the screen (see FloatingFit).
             if (above) tooltipFit.Above(element.worldBound); else tooltipFit.Beside(element.worldBound);
+        }
+
+        /// <summary>
+        /// The tooltip's sell line (build 17, item 5.4): "Sells for 120 Creds", or "Sells for 12 Creds each (240 Creds for 20)" for a
+        /// stack. Null when no vendor buys it (<paramref name="unit"/> 0), so the line is hidden.
+        /// </summary>
+        public static string SellLine(long unit, int count)
+        {
+            if (unit <= 0) return null;
+            if (count <= 1 || !VendorRules.TryTotal(unit, count, out long total)) return $"Sells for {WalletRules.FormatCreds(unit)}";
+            return $"Sells for {WalletRules.FormatCreds(unit)} each ({WalletRules.FormatCreds(total)} for {count})";
         }
 
         private void HideTooltip() => SetDisplay(tooltip, false);
@@ -1354,6 +1370,8 @@ namespace KryticalNova.UI
             {
                 if (def.restoreHealth > 0f) sb.AppendLine($"Restores {def.restoreHealth:0} HP");
                 if (def.restoreChi > 0f) sb.AppendLine($"Restores {def.restoreChi:0} Flux");
+                if (def.restoreHealthPercent > 0f) sb.AppendLine($"Restores {def.restoreHealthPercent:0} % of max HP");
+                if (def.restoreChiPercent > 0f) sb.AppendLine($"Restores {def.restoreChiPercent:0} % of max Flux");
                 if (def.useEffect == ItemUseEffect.Serum) AppendSerum(sb, def);
                 return sb.ToString().TrimEnd();
             }

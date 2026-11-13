@@ -60,6 +60,33 @@ MonoBehaviour:
   - item: {fileID: 11400000, guid: 269d49262dc794d4fb54ec37de8ae19c, type: 2}
     price: 5000
     weeklyLimit: 0
+  - item: {fileID: 11400000, guid: caf575dcf7ea59d4db63a0bf7701ab1c, type: 2}
+    price: 250
+    weeklyLimit: 0
+  - item: {fileID: 11400000, guid: b53e2630d0174f14986a30adb2e6b0b6, type: 2}
+    price: 600
+    weeklyLimit: 0
+  - item: {fileID: 11400000, guid: a5b0219f53fed6f4fa3e9fbc7ea890ef, type: 2}
+    price: 1500
+    weeklyLimit: 0
+  - item: {fileID: 11400000, guid: 3b0813d05f6c4984a8e5dd7fdb28489e, type: 2}
+    price: 250
+    weeklyLimit: 0
+  - item: {fileID: 11400000, guid: 536ada5e8face714da25c9a5781c5c9f, type: 2}
+    price: 600
+    weeklyLimit: 0
+  - item: {fileID: 11400000, guid: 495257a729ea38343b63e8f53c8c8f60, type: 2}
+    price: 1500
+    weeklyLimit: 0
+  - item: {fileID: 11400000, guid: d118549d419a0a34bb72b60912b4bd24, type: 2}
+    price: 600
+    weeklyLimit: 0
+  - item: {fileID: 11400000, guid: 06dd816ff1af0c9468d2ac1437c086f8, type: 2}
+    price: 1500
+    weeklyLimit: 0
+  - item: {fileID: 11400000, guid: b451aa1dc9b9e054baaa212d231a607a, type: 2}
+    price: 3500
+    weeklyLimit: 0
   rotation: []
   sellsLadderGear: 0
   gearRarity: 0

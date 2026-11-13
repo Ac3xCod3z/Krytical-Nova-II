@@ -30,7 +30,8 @@ namespace KryticalNova.GameFeel
         private float baseRing, baseInnerRing;
         private Color baseColor;
         private float elapsed = -1f, duration, reach, dotOpacity;
-        private Color pulseColor;
+        private Color pulseColor, secondColor;
+        private float split = 2f; // share of the pulse before it turns to the second colour; past 1 = one colour
         private AnimationCurve curve;
 
         private void OnEnable()
@@ -62,8 +63,25 @@ namespace KryticalNova.GameFeel
             duration = Mathf.Max(0.01f, seconds);
             reach = Mathf.Clamp(tintReach, 0f, CornerDistance);
             pulseColor = color;
+            secondColor = color;
+            split = 2f;
             curve = shape;
             elapsed = 0f;
+        }
+
+        /// <summary>
+        /// Build 17, item 10.3: the Callout crit's impact frame, ink then flash in one pulse. The wash comes in fully
+        /// at once in <paramref name="ink"/> for <paramref name="inkSeconds"/>, then turns to <paramref name="flash"/>
+        /// and fades out over <paramref name="flashSeconds"/>. <paramref name="strength"/> scales how far it reaches.
+        /// </summary>
+        public void PulseInkThenFlash(float inkSeconds, float flashSeconds, float tintReach, Color ink, Color flash, float dots, float strength)
+        {
+            float total = Mathf.Max(0.02f, inkSeconds + flashSeconds);
+            float hold = Mathf.Clamp01(inkSeconds / total);
+            var shape = new AnimationCurve(new Keyframe(0f, 1f), new Keyframe(Mathf.Max(0.001f, hold), 1f), new Keyframe(1f, 0f));
+            Pulse(total, tintReach * Mathf.Clamp01(strength), ink, shape, dots);
+            secondColor = flash;
+            split = hold;
         }
 
         private void Update()
@@ -76,8 +94,9 @@ namespace KryticalNova.GameFeel
             beautify.vignettingOuterRing.Override(1f - OuterDistance);
             float inner = CornerDistance - reach * Mathf.Clamp01(k);
             beautify.vignettingInnerRing.Override(1f - inner);
-            beautify.vignettingColor.Override(Color.Lerp(baseColor, pulseColor, k));
-            Shader.SetGlobalColor(HurtDotColorId, pulseColor);
+            Color now = t < split ? pulseColor : secondColor;
+            beautify.vignettingColor.Override(Color.Lerp(baseColor, now, k));
+            Shader.SetGlobalColor(HurtDotColorId, t < split ? secondColor : pulseColor); // ink frame: light dots; flash: dark dots
             Shader.SetGlobalVector(HurtDotsId, new Vector4(inner, OuterDistance, dotOpacity * Mathf.Clamp01(k * 3f), 0f));
             if (t >= 1f) Restore();
         }
