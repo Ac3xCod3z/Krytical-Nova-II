@@ -161,6 +161,8 @@ namespace KryticalNova.Player.Entities
         [GhostField] public byte FromSquad;
         /// <summary>The Squad member who gave it (16 characters at most).</summary>
         [GhostField] public Unity.Collections.FixedString32Bytes Giver;
+        /// <summary>Build 17 item 9.2: an absorption shield's HP left (whole), -1 for a buff that is no shield.</summary>
+        [GhostField] public int Shield;
     }
 
     /// <summary>The running list's clock: seconds left as an end tick and back.</summary>

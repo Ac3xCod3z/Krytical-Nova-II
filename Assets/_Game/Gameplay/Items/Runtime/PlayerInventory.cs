@@ -42,7 +42,8 @@ namespace KryticalNova.Items
         private readonly ItemStack[] scratch = new ItemStack[Capacity];
         private PlayerEquipment equipment;
         private PlayerResources resources;
-        private float nextUseTime;
+        // Build 17 item 5.1: each item kind has its own use cooldown (its useCooldown), so an HP Stim never waits on a Flux Stim.
+        private readonly Dictionary<ushort, float> nextUseTimeOf = new Dictionary<ushort, float>();
         private bool starterGranted;
         private bool starterKitGranted;
         // The weapon handed out before the character is known; the starter kit replaces it with the Discipline's.
@@ -571,7 +572,7 @@ namespace KryticalNova.Items
             });
             if (used == null) return;
 
-            nextUseTime = Time.time + used.useCooldown;
+            nextUseTimeOf[used.itemId] = Time.time + used.useCooldown;
             if (used.restoreHealth > 0f) resources.Heal(used.restoreHealth);
             if (used.restoreChi > 0f) resources.RestoreChi(used.restoreChi);
             if (used.useEffect != ItemUseEffect.None) HandlerFor(used.useEffect)?.ServerUse(new UsedItem(used.itemId, used.displayName));
@@ -600,7 +601,7 @@ namespace KryticalNova.Items
         private string UseBlockedReason(ItemDefinition def)
         {
             if (resources == null || !resources.IsAlive) return ReasonDefeated;
-            if (Time.time < nextUseTime) return ReasonUseCooldown;
+            if (InventoryRules.OnUseCooldown(nextUseTimeOf, def.itemId, Time.time)) return ReasonUseCooldown;
             if (def.useEffect != ItemUseEffect.None)
             {
                 IItemUseHandler handler = HandlerFor(def.useEffect);

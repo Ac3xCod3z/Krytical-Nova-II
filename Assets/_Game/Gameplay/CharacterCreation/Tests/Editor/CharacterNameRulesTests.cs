@@ -36,6 +36,62 @@ namespace KryticalNova.Tests
             Assert.AreEqual(expected, reason);
         }
 
+        // Owner, 13 Nov 2026: no name may pass for a GM (pick B: GM as its own part, not inside a word).
+        [TestCase("GMBob")]
+        [TestCase("g.m.Bob")]
+        [TestCase("BobGM")]
+        [TestCase("bobgm")]
+        [TestCase("G_M")]
+        [TestCase("[GM]")]
+        [TestCase("G1M")]
+        [TestCase("G M Ace")]
+        [TestCase("Ace9g9m")]
+        [TestCase("Ace9GMx")]
+        [TestCase("BobGMx")]
+        public void GmNamesAreRefusedWithTheirOwnReason(string raw)
+        {
+            Assert.IsFalse(CharacterNameRules.Validate(raw, out _, out string reason));
+            Assert.AreEqual(CharacterNameRules.ReasonNoGm, reason);
+            Assert.AreEqual("Names can't contain GM.", CharacterNameRules.ReasonNoGm);
+        }
+
+        [TestCase("Magma")]   // owner pick B: GM inside a word is allowed
+        [TestCase("Ogma")]
+        [TestCase("Dogma")]
+        [TestCase("Sigmar")]
+        [TestCase("MAGMA")]   // all capitals: no case to set GM off
+        [TestCase("Gamma")]   // G and M apart, a letter between: allowed
+        [TestCase("Mog")]     // M before G: allowed
+        [TestCase("Gideon")]
+        [TestCase("Emberg")]
+        public void NamesWithGAndMApartAreAllowed(string raw)
+        {
+            Assert.IsTrue(CharacterNameRules.Validate(raw, out _, out string reason), reason);
+        }
+
+        [TestCase("xGM")]
+        [TestCase("GMx")]
+        [TestCase("Bob1GM2")]
+        [TestCase("G.M")]
+        public void MoreGmFormsAreRefused(string raw)
+        {
+            Assert.IsFalse(CharacterNameRules.Validate(raw, out _, out string reason));
+            Assert.AreEqual(CharacterNameRules.ReasonNoGm, reason);
+        }
+
+        [TestCase("Sigma")]
+        [TestCase("Stigma")]
+        public void GmBuriedInAWordIsAllowed(string raw) =>
+            Assert.IsTrue(CharacterNameRules.Validate(raw, out _, out string reason), reason);
+
+        [Test]
+        public void ASavedNameWithGmStillGetsInAtAdmission()
+        {
+            Assert.IsTrue(CharacterNameRules.Validate("Bobgm", out string name, out string reason, newName: false), reason);
+            Assert.AreEqual("Bobgm", name);
+            Assert.IsFalse(CharacterNameRules.Validate("Bobgm", out _, out _), "a new name with it is refused");
+        }
+
         [Test]
         public void LengthLimitsAreInclusive()
         {

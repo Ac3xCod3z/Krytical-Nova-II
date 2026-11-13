@@ -24,6 +24,7 @@ MonoBehaviour:
   chiPerLevel: 10
   baselineCriticalRate: 15
   baseCriticalMultiplier: 1.5
+  maxCriticalRate: 75
   baselineMoveSpeedPercent: 100
   baselineElementalAttack: 0
   baselineElementalDefense: 0

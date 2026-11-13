@@ -28,6 +28,8 @@ namespace KryticalNova.Items
         public byte rarity;
         /// <summary>Combat: the damage numbers and NGO's flag bits (critical, evaded, reflected, shattered).</summary>
         public float damage, reflected;
+        /// <summary>Combat: the elemental part of <see cref="damage"/> (build 17, item 4.1), shown in brackets; 0 = none.</summary>
+        public float elemental;
         public byte flags;
         /// <summary>Line: the linked items (at most <see cref="ChatLinks.Max"/>), or null.</summary>
         public ushort[] linkItems;

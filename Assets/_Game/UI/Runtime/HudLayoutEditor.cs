@@ -101,7 +101,8 @@ namespace KryticalNova.UI
             { "world-map", "WORLD MAP" },
             { "party-frames", "SQUAD" },
             { "milestone-banner", "MILESTONE BANNER" },
-            { "arrange-window", "FURNISHING CRATE" }
+            { "arrange-window", "FURNISHING CRATE" },
+            { "deck-window", "THE DECK" }
         };
 
         // What a panel shows while it is being placed, when it has nothing to show by itself: a window that only
@@ -180,6 +181,26 @@ namespace KryticalNova.UI
                     if (watched.Add(element)) element.RegisterCallback<GeometryChangedEvent>(_ => OnPanelGeometry(element));
                 });
             }
+        }
+
+        /// <summary>
+        /// A panel built after the HUD was collected (the Deck window): it joins the movables and takes the place the
+        /// player saved for it, if any.
+        /// </summary>
+        public void Adopt(VisualElement element)
+        {
+            if (element == null || string.IsNullOrEmpty(element.name)) return;
+            movables[element.name] = element;
+            if (watched.Add(element)) element.RegisterCallback<GeometryChangedEvent>(_ => OnPanelGeometry(element));
+            if (saved.TryGetValue(element.name, out Entry entry)) ApplyEntry(element, entry);
+        }
+
+        /// <summary>The panel is gone (its controller was switched off): the layout no longer holds on to it.</summary>
+        public void Forget(VisualElement element)
+        {
+            if (element == null || string.IsNullOrEmpty(element.name)) return;
+            if (movables.TryGetValue(element.name, out VisualElement known) && known == element) movables.Remove(element.name);
+            watched.Remove(element);
         }
 
         /// <summary>The layout of the HUD on screen. Windows that place themselves ask it whether the player already has.</summary>

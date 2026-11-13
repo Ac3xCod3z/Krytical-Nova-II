@@ -160,5 +160,38 @@ namespace KryticalNova.Hostiles.Tests
             Assert.AreEqual(12f, curve.Evaluate(112).AggroRadius, 0.01f);
             Assert.AreEqual(4.2f + 0.006f * 50, curve.Evaluate(50).RunSpeed, 0.001f);
         }
+
+        // Build 17 items 2.1 / 2.2: level-1 Hostiles pay at least 15 % more Creds and 20 % more XP (proposed: 1.1 would round 2 XP back to 2); later levels unchanged.
+        [Test]
+        public void LevelOneHostilesPayTheNewPlayerBonusAndLaterLevelsDoNot()
+        {
+            Assert.AreEqual(1.15f, curve.levelOneCredsBonus, 1e-6f);
+            Assert.AreEqual(1.2f, curve.levelOneExperienceBonus, 1e-6f);
+            HostileStats one = curve.Evaluate(1), two = curve.Evaluate(2), ten = curve.Evaluate(10);
+
+            curve.levelOneCredsBonus = 1f;
+            curve.levelOneExperienceBonus = 1f;
+            HostileStats oneBefore = curve.Evaluate(1), twoBefore = curve.Evaluate(2), tenBefore = curve.Evaluate(10);
+
+            Assert.GreaterOrEqual(one.Creds, oneBefore.Creds * 1.15f - 0.5f, "level 1 Creds +15 %");
+            Assert.Greater(one.Creds, oneBefore.Creds);
+            Assert.GreaterOrEqual(one.Experience, oneBefore.Experience);
+            Assert.AreEqual(5, one.Creds, "default curve: 4 Creds became 5 at level 1");
+            Assert.AreEqual(twoBefore.Creds, two.Creds);
+            Assert.AreEqual(twoBefore.Experience, two.Experience);
+            Assert.AreEqual(tenBefore.Creds, ten.Creds);
+            Assert.AreEqual(tenBefore.Experience, ten.Experience);
+        }
+
+        // The shipped asset with the shipped progression: a level-1 kill pays 5 Creds (was 4) and 3 XP (was 2).
+        [Test]
+        public void TheShippedCurvePaysTheNewLevelOneNumbers()
+        {
+            var shipped = UnityEditor.AssetDatabase.LoadAssetAtPath<HostileStatCurve>("Assets/_Game/Gameplay/Hostiles/Data/Assets/HostileStatCurve.asset");
+            Assert.IsNotNull(shipped);
+            HostileStats one = shipped.Evaluate(1);
+            Assert.AreEqual(5, one.Creds);
+            Assert.AreEqual(3, one.Experience);
+        }
     }
 }
