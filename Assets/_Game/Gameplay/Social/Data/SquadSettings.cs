@@ -36,6 +36,9 @@ namespace KryticalNova.Social
         [Min(1)] public int buffShareRank = 20;
         [Tooltip("Metres from the caster within which a Squad member is given the caster's Stance (owner, 16 Oct 2026).")]
         [Min(1f)] public float buffShareRadius = 20f;
+        [Tooltip("How much of a shared Stance a Squad member gets, in percent of what the caster gets (owner, 13 Nov 2026, build 17 " +
+                 "item 7.4; 50 proposed). The caster always gets all of it.")]
+        [Range(0f, 100f)] public float sharedBuffPercent = 50f;
 
         private void OnValidate()
         {

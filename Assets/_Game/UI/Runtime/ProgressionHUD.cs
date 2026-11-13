@@ -1585,7 +1585,7 @@ namespace KryticalNova.UI
         private static string DescribeSkillStats(SkillDefinitionSO skill, int rank) => SkillKinds.Describe(skill, rank);
 
         private string SquadLine(SkillDefinitionSO skill, int rank) => combatSkills == null ? string.Empty
-            : SquadBuffRules.TooltipLine(skill, rank, combatSkills.SquadShareRank, combatSkills.SquadShareRadius);
+            : SquadBuffRules.TooltipLine(skill, rank, combatSkills.SquadShareRank, combatSkills.SquadShareRadius, combatSkills.SquadSharePercent);
 
         /// <summary>Rebuilds the buff badges when the set of buffs changes; timers tick in <see cref="RefreshBuffTimers"/>.</summary>
         private void RefreshBuffs()
@@ -1602,7 +1602,7 @@ namespace KryticalNova.UI
                 var buff = buffs[i];
                 var badge = new VisualElement();
                 badge.AddToClassList("buff-badge");
-                badge.tooltip = buff.FromSquadmate && !string.IsNullOrEmpty(buff.Giver) ? $"{buff.Skill.displayName} (from {buff.Giver})" : buff.Skill.displayName;
+                badge.tooltip = buff.FromSquadmate && !string.IsNullOrEmpty(buff.Giver) ? $"{buff.Skill.displayName} (shared, from {buff.Giver})" : buff.Skill.displayName;
 
                 if (buff.Skill.isAbsorptionShield)
                     badge.AddToClassList("shield-badge");
