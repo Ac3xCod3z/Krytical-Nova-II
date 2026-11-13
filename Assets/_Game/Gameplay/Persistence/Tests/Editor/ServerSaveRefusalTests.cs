@@ -48,11 +48,17 @@ namespace KryticalNova.Tests
         public void TearDown()
         {
             if (server == null) return;
-            server.Flush();
-            foreach (string key in server.Keys(ServerSave.AccountsPrefix + account).Concat(server.Keys(ServerSave.WorldPrefix + world)).ToList()) server.Delete(key);
-            server.Flush();
+            // Everything this test left goes in ONE change, and the wait is long enough for it. Before (12 Nov 2026) each key was a
+            // save of its own: after the 5,000-name test that was 5,000 trips, more than the 15 s Flush and the 15 s of the store's
+            // own close together, so the store was disposed with saves still in line.
+            bool empty = server.Flush(60f);
+            var clean = new SaveBatch();
+            clean.Deletes.AddRange(server.Keys(ServerSave.AccountsPrefix + account).Concat(server.Keys(ServerSave.WorldPrefix + world)));
+            server.WriteBatch(clean);
+            empty &= server.Flush(60f);
             ServerSave.Store = previousStore;   // disposes the test store
             other?.Dispose();
+            Assert.IsTrue(empty, "the test store was closed with saves still in line: the save service did not take them in 60 s");
         }
 
         private string Part(string name) => ServerSave.CharacterPartKey(account, character, name);
