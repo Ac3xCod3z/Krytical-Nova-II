@@ -74,5 +74,31 @@ namespace KryticalNova.Combat.Tests
             Assert.IsFalse(PlayerCombatState.DummyHolds(selected: false, distance: 30f, leaveMetres: 30f));
             Assert.IsFalse(PlayerCombatState.DummyHolds(selected: false, distance: 45f, leaveMetres: 30f));
         }
+
+        // Build 17, item 3.1 (owner, 13 Nov 2026): in town only a fight with a real target plays the fight music.
+        [Test]
+        public void ASwingAtAirOrASkillOnNothingIsNoRealFight()
+        {
+            CombatReasons reasons = Why(100f, lastAct: 99f, attacking: true); // cast and combo, nothing struck
+            Assert.AreNotEqual(CombatReasons.None, reasons, "it still counts as a fight (pets, Recall)");
+            Assert.AreEqual(CombatReasons.None, PlayerCombatState.RealReasons(reasons, 100f, Never, Linger));
+        }
+
+        [Test]
+        public void ALandedBlowAHostileACalloutOrADummyIsARealFight()
+        {
+            Assert.AreEqual(CombatReasons.Blow, PlayerCombatState.RealReasons(Why(100f, lastAct: 99f), 100f, 99f, Linger));
+            Assert.AreEqual(CombatReasons.Hostile, PlayerCombatState.RealReasons(Why(100f, lastThreat: 99f), 100f, Never, Linger));
+            Assert.AreEqual(CombatReasons.Callout, PlayerCombatState.RealReasons(Why(100f, duelling: true), 100f, Never, Linger));
+            Assert.AreEqual(CombatReasons.Dummy, PlayerCombatState.RealReasons(CombatReasons.Dummy, 100f, Never, Linger));
+            Assert.AreEqual(CombatReasons.Held, PlayerCombatState.RealReasons(Why(100f, held: true), 100f, Never, Linger));
+        }
+
+        [Test]
+        public void ARealBlowLingersLikeAnyBlow()
+        {
+            Assert.AreEqual(CombatReasons.Blow, PlayerCombatState.RealReasons(CombatReasons.Blow, 105.9f, 100f, Linger));
+            Assert.AreEqual(CombatReasons.None, PlayerCombatState.RealReasons(CombatReasons.Blow, 106f, 100f, Linger));
+        }
     }
 }
