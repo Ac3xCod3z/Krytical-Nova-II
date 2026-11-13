@@ -1,5 +1,6 @@
 using KryticalNova.Networking;
 using System;
+using System.Collections.Generic;
 using KryticalNova.Core;
 using KryticalNova.Economy;
 using KryticalNova.Items;
@@ -16,7 +17,8 @@ namespace KryticalNova.Restyle
     /// <summary>
     /// What a character shows in place of what it wears, and the two services that change it: the Holoweaver puts
     /// a collected look (a Weave) over the piece in a slot, the Outfitter dyes an outfit piece in another colourway.
-    /// Both stay with the slot when the piece in it changes. The owner asks; the server checks that the player
+    /// A Weave is kept per weapon class / per gear line (build 17 item 6, <see cref="WovenLooks"/>): it holds through weapon switches,
+    /// gear swaps and re-logs and never spreads to another class or set; a dye stays with its piece. The owner asks; the server checks that the player
     /// stands by the right NPC, runs <see cref="WeaveRules"/>, takes the cost and writes the result into
     /// <see cref="PlayerEquipment"/>, which shows it to everyone. A Weave costs Creds; a dye uses up one Chroma
     /// Cell a piece, from the Pack or from what is stored. Both costs are in <see cref="EconomySettings"/>.
@@ -26,7 +28,7 @@ namespace KryticalNova.Restyle
     [DisallowMultipleComponent]
     [RequireComponent(typeof(PlayerInventory), typeof(PlayerEquipment), typeof(PlayerWeaveLibrary))]
     [RequireComponent(typeof(PlayerItemSources))]
-    public sealed class PlayerWeaves : NetworkBehaviour, ISaveParticipant, IBodyWeaves
+    public sealed class PlayerWeaves : NetworkBehaviour, ISaveParticipant, IBodyWeaves, IMigratingSave
     {
         public const string WeaveSaveKey = "weave";
         private const float ReachPadding = 2.5f;
@@ -48,6 +50,9 @@ namespace KryticalNova.Restyle
         private IGearWearer wearer;
         // This character's gear from before looks were collected has been added to the library.
         private bool collectedOwned;
+        // Build 17 item 6: the Weaves kept by key (server body only), and old slot Weaves waiting for their piece.
+        private readonly List<WovenLook> woven = new List<WovenLook>();
+        private readonly List<UnboundWeave> unbound = new List<UnboundWeave>();
 
         /// <summary>GM switch: both services work anywhere until the session ends.</summary>
         public static bool GmAnywhere;
@@ -107,11 +112,33 @@ namespace KryticalNova.Restyle
         private void OnEnable()
         {
             if (saveAgent != null) saveAgent.Loaded += OnLoaded;
+            if (equipment != null) equipment.SlotChanged += OnSlotChanged;
         }
 
         private void OnDisable()
         {
             if (saveAgent != null) saveAgent.Loaded -= OnLoaded;
+            if (equipment != null) equipment.SlotChanged -= OnSlotChanged;
+        }
+
+        // A piece came or went: the slots show the Weaves kept for what is worn now.
+        private void OnSlotChanged(EquipSlot slot, ushort before, ushort after)
+        {
+            if (!HasAuthority || !WeaveRules.IsWeaveSlot(slot)) return;
+            if (ShowKept() && saveAgent != null) saveAgent.SaveSoon();
+        }
+
+        /// <summary>Binds waiting old Weaves and writes the kept Weave of each worn piece into the looks. True when an old Weave was bound.</summary>
+        private bool ShowKept()
+        {
+            ItemCatalog catalog = inventory.Catalog;
+            bool bound = unbound.Count > 0 && catalog != null
+                && WovenLooks.Bind(unbound, woven, equipment.GetDefinition, catalog.Get);
+            EquipmentLooks looks = equipment.Looks;
+            EquipmentLooks shown = looks;
+            foreach (EquipSlot slot in WeaveRules.WeaveSlots) shown.SetWeave(slot, WovenLooks.WeaveFor(woven, equipment.GetDefinition(slot)));
+            if (!shown.Equals(looks)) equipment.ServerSetLooks(shown);
+            return bound;
         }
 
         // ------------------------------------------------------------------ requests (owner)
@@ -304,7 +331,9 @@ namespace KryticalNova.Restyle
             if (WeaveRules.KeyOf(worn) == lineId) { ServerClearWeave(slot); return; }
             EquipmentLooks looks = equipment.Looks;
             if (looks.GetWeave(slot) == weave.itemId) { Tell("That Weave is already on."); return; }
+            if (!WovenLooks.TryKeyFor(worn, out byte kind, out ushort key)) { Tell(WeaveRules.ReasonNotAWeave); return; }
             if (!Pay(WeaveFee)) return;
+            WovenLooks.Set(woven, kind, key, weave.itemId);
             looks.SetWeave(slot, weave.itemId);
             Commit(looks);
             Tell($"{weave.displayName} woven over your {SlotName(slot)}.");
@@ -316,6 +345,7 @@ namespace KryticalNova.Restyle
             EquipmentLooks looks = equipment.Looks;
             if (!WeaveRules.IsWeaveSlot(slot) || looks.GetWeave(slot) == 0) { Tell("There is no Weave on that slot."); return; }
             if (!Pay(WeaveClearFee)) return;
+            if (WovenLooks.TryKeyFor(equipment.GetDefinition(slot), out byte kind, out ushort key)) WovenLooks.Set(woven, kind, key, 0);
             looks.SetWeave(slot, 0);
             Commit(looks);
             Tell($"The Weave is off your {SlotName(slot)}.");
@@ -388,7 +418,11 @@ namespace KryticalNova.Restyle
         /// <summary>GM: writes looks without a fee or an NPC. Server (or offline) only.</summary>
         public void ServerSetLooks(EquipmentLooks looks)
         {
-            if (HasAuthority) Commit(looks);
+            if (!HasAuthority) return;
+            // what the GM shows on a worn piece is kept for it, as a paid Weave would be
+            foreach (EquipSlot slot in WeaveRules.WeaveSlots)
+                if (WovenLooks.TryKeyFor(equipment.GetDefinition(slot), out byte kind, out ushort key)) WovenLooks.Set(woven, kind, key, looks.GetWeave(slot));
+            Commit(looks);
         }
 
         /// <summary>GM: takes the dye off every worn piece. Server (or offline) only.</summary>
@@ -407,7 +441,10 @@ namespace KryticalNova.Restyle
 
         private void OnLoaded()
         {
-            if (!HasAuthority || collectedOwned) return;
+            if (!HasAuthority) return;
+            // the worn pieces are back now: old Weaves find their piece and every slot shows its kept Weave
+            if (ShowKept() && saveAgent != null) saveAgent.SaveSoon();
+            if (collectedOwned) return;
             collectedOwned = true;
             library.ServerCollectOwned();
             if (saveAgent != null) saveAgent.SaveSoon();
@@ -428,33 +465,38 @@ namespace KryticalNova.Restyle
 
         // ------------------------------------------------------------------ saving
 
-        [Serializable]
-        private sealed class WeaveSave
-        {
-            public EquipmentLooks looks;
-            public bool collectedOwned;
-        }
-
         public string SaveKey => WeaveSaveKey;
         public SaveScope SaveScope => SaveScope.Character;
 
-        public string CaptureSave() => JsonUtility.ToJson(new WeaveSave { looks = equipment.Looks, collectedOwned = collectedOwned });
+        public int SaveVersion => WeaveSaveSteps.Version;
+        public string Migrate(string json, int from) => WeaveSaveSteps.Migrate(json, from);
+
+        public string CaptureSave()
+        {
+            var save = new WeaveSaveSteps.V2 { looks = equipment.Looks, collectedOwned = collectedOwned };
+            save.woven.AddRange(woven);
+            save.unbound.AddRange(unbound);
+            return JsonUtility.ToJson(save);
+        }
 
         /// <summary>Puts the Weaves back; one the game no longer has is dropped. A dye is not here: it is on its piece.</summary>
         public void RestoreSave(string json)
         {
             if (!HasAuthority || string.IsNullOrEmpty(json)) return;
-            var save = JsonUtility.FromJson<WeaveSave>(json);
+            var save = JsonUtility.FromJson<WeaveSaveSteps.V2>(json);
             if (save == null) return;
             collectedOwned = save.collectedOwned;
 
             EquipmentLooks looks = save.looks;
             ItemCatalog catalog = inventory.Catalog;
-            foreach (EquipSlot slot in WeaveRules.WeaveSlots)
-            {
-                ushort weave = looks.GetWeave(slot);
-                if (weave != 0 && (catalog == null || WeaveRules.KeyOf(catalog.Get(weave)) == 0)) looks.SetWeave(slot, 0);
-            }
+            woven.Clear();
+            unbound.Clear();
+            if (save.woven != null)
+                foreach (WovenLook w in save.woven)
+                    if (catalog != null && WeaveRules.KeyOf(catalog.Get(w.item)) != 0) woven.Add(w);
+            if (save.unbound != null) unbound.AddRange(save.unbound);
+            // the slots show what is kept for the pieces worn (worked out again once they are all back, OnLoaded)
+            foreach (EquipSlot slot in WeaveRules.WeaveSlots) looks.SetWeave(slot, WovenLooks.WeaveFor(woven, equipment.GetDefinition(slot)));
             if (looks.pet != 0 && (pet == null || pet.Catalog == null || pet.Catalog.Get(looks.pet) == null || looks.petStage > PetRules.LastStage))
                 looks.SetMorph(0, 0);
             equipment.ServerSetLooks(looks);
