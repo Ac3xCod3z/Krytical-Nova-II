@@ -94,7 +94,7 @@ namespace KryticalNova.GameFeel
         private void LateUpdate()
         {
             if (settings == null || material == null || Application.isBatchMode) return;
-            float live = AudioPreferences.BeatRing ? CombatBeat.Live01 : 0f;
+            float live = AudioPreferences.BeatRing && !settings.retired ? CombatBeat.Live01 : 0f;   // retired: the Mini Deck shows the beat
             float dt = Time.unscaledDeltaTime;
             burst = Mathf.Min(burst, KryticalNova.Core.Accessibility.FlashScale); // Settings ▸ Accessibility
             caught = Mathf.Min(caught, KryticalNova.Core.Accessibility.FlashScale);
