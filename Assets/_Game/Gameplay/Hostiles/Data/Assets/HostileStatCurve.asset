@@ -35,6 +35,8 @@ MonoBehaviour:
   creds: {x: 3, y: 1.1}
   credsSpread: 0.2
   credsDropChance: 0.7
+  levelOneCredsBonus: 1.15
+  levelOneExperienceBonus: 1.2
   aggroRadius: {x: 8, y: 28, z: 12}
   walkSpeed: 1.8
   runSpeed: {x: 4.2, y: 0.006}
