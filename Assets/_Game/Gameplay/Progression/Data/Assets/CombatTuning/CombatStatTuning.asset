@@ -24,9 +24,20 @@ MonoBehaviour:
   chiPerLevel: 10
   baselineCriticalRate: 15
   baseCriticalMultiplier: 1.5
+  maxCriticalRate: 75
   baselineMoveSpeedPercent: 100
   baselineElementalAttack: 0
   baselineElementalDefense: 0
   baselineStunResistance: 0
   minimumHitChance: 10
   maximumHitChance: 95
+  defenseK: 200
+  defenseKPerLevel: 12
+  defensePenetration: 0
+  blockCap: 40
+  blockCut: 70
+  critResistFromDefense: 35
+  critResistFromEvasion: 25
+  critResistCap: 60
+  evasionCritDamageCut: 30
+  evasionBacklashBonus: 5

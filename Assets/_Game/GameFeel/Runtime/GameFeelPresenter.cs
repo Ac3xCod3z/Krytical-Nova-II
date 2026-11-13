@@ -172,6 +172,9 @@ namespace KryticalNova.GameFeel
         [SerializeField] private MMF_Player standingWorldFeel;
         [Tooltip("Anyone gained a level: on the character, in its faction's colours.")]
         [SerializeField] private MMF_Player levelUpWorldFeel;
+        [Tooltip("Build 17 item 2.5: the own big level-up, in the world: a pillar of light, rays, a ground ring, sparkles (faction colours). "
+            + "Others see only levelUpWorldFeel, the lighter one.")]
+        [SerializeField] private MMF_Player levelUpOwnWorldFeel;
         [Tooltip("Anyone took a drop off the ground: where it lay. One for Common and Uncommon, one for Rare, one for Epic and better.")]
         [SerializeField] private MMF_Player pickupWorldFeel;
         [SerializeField] private MMF_Player rarePickupWorldFeel;
@@ -218,6 +221,10 @@ namespace KryticalNova.GameFeel
         [SerializeField] private Vector2 killStopSeconds = new Vector2(0.12f, 0.22f);
         [Tooltip("The local player's own pose holds this long as a new Nova tier lands: the beat before everything bursts.")]
         [Range(0f, 0.3f)] [SerializeField] private float novaTierStopSeconds = 0.14f;
+        [Tooltip("Build 17 item 2.5: the local player's pose holds this long as a level lands.")]
+        [Range(0f, 0.3f)] [SerializeField] private float levelUpStopSeconds = 0.12f;
+        [Tooltip("Levels gained within this many seconds are one moment.")]
+        [Min(0f)] [SerializeField] private float levelUpRepeatSeconds = 1f;
 
         [Header("Kill confirm (the local player's own kills)")]
         [Tooltip("How much of the kill confirm a normal kill gets; a critical kill gets all of it.")]
@@ -472,6 +479,11 @@ namespace KryticalNova.GameFeel
             {
                 // The hit with a look of its own: its own screen feedback, and both fighters hold their pose.
                 Play(pvpCritFeel, hit.Point, hit.AttackerIsLocalPlayer ? 1f : looks.pvpCritVictimStrength);
+                // In a Callout the same crit also frames the screen: ink, then the flash (numbers in HitLookSettings).
+                if (looks.calloutImpactFrame && (InCallout(hit.Attacker) || InCallout(hit.Target)))
+                    BeautifyVignettePulse.Instance?.PulseInkThenFlash(looks.calloutInkSeconds, looks.calloutFlashSeconds, looks.calloutFrameReach,
+                        looks.calloutInkColour, looks.calloutFlashColour, looks.calloutFrameDots * KryticalNova.Core.Accessibility.FlashScale,
+                        (hit.AttackerIsLocalPlayer ? 1f : looks.pvpCritVictimStrength) * KryticalNova.Core.Accessibility.FlashScale);
                 HitStop(hit.Attacker, looks.pvpCritStopSeconds);
                 HitStop(hit.Target, looks.pvpCritStopSeconds);
             }
@@ -482,6 +494,13 @@ namespace KryticalNova.GameFeel
                 HitStop(hit.Attacker, stop);
                 HitStop(hit.Target, stop);
             }
+        }
+
+        // A fighter in a Callout (build 17 item 10.3: impact frames play only there).
+        private static bool InCallout(Transform fighter)
+        {
+            var state = fighter != null ? fighter.GetComponentInParent<KryticalNova.Combat.PlayerCombatState>() : null;
+            return state != null && state.InCallout;
         }
 
         // ------------------------------------------------------------------ hit looks
@@ -1264,12 +1283,17 @@ namespace KryticalNova.GameFeel
             ActorVfx vfx = ActorVfx.For(actor);
             if (vfx != null)
             {
-                if (Time.time - vfx.LastLevelUpTime < 1f) return;
+                if (Time.time - vfx.LastLevelUpTime < levelUpRepeatSeconds) return;
                 vfx.LastLevelUpTime = Time.time;
             }
             ComicRamp? ramp = looks != null ? looks.Ramp(FactionOf(actor)) : (ComicRamp?)null;
             PlayWorld(levelUpWorldFeel, ActorAnchor.Feet(actor), Facing(actor), actor, 1f, null, ramp);
-            if (isLocalPlayer) Play(levelUpFeel, actor.position, 1f);
+            if (!isLocalPlayer) return;
+            // Owner pick (build 17, 2.5): the pillar, rays, ring and sparkles in the player's faction colour.
+            Color? factionTint = ramp.HasValue ? ramp.Value.fill : (Color?)null;
+            PlayWorld(levelUpOwnWorldFeel, ActorAnchor.Feet(actor), Quaternion.identity, actor, 1f, factionTint, ramp);
+            Play(levelUpFeel, actor.position, 1f);
+            HitStop(actor, levelUpStopSeconds);
         }
 
         public void PickedUp(Transform taker, Vector3 point, int rarity, bool isLocalPlayer)

@@ -54,7 +54,7 @@ namespace KryticalNova.Combat.Entities
             ReflectedMilli = Mathf.RoundToInt(result.ReflectedDamage * 1000f),
             Flags = (byte)((result.IsCritical ? HitEventRing.Critical : 0) | (result.IsEvaded ? HitEventRing.Evaded : 0)
                 | (result.IsReflected ? HitEventRing.Reflected : 0) | (result.ShieldShattered ? HitEventRing.Shattered : 0)
-                | (fromSkill ? HitEventRing.Skill : 0)),
+                | (fromSkill ? HitEventRing.Skill : 0) | (result.IsBlocked ? HitEventRing.Blocked : 0)),
         };
 
         public static DamageResult ResultOf(in HitNumberRpc hit) => new DamageResult
@@ -65,6 +65,7 @@ namespace KryticalNova.Combat.Entities
             IsEvaded = (hit.Flags & HitEventRing.Evaded) != 0,
             IsReflected = (hit.Flags & HitEventRing.Reflected) != 0,
             ShieldShattered = (hit.Flags & HitEventRing.Shattered) != 0,
+            IsBlocked = (hit.Flags & HitEventRing.Blocked) != 0,
         };
     }
 

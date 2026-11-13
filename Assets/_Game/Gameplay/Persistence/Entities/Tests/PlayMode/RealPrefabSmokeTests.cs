@@ -439,7 +439,11 @@ namespace KryticalNova.Persistence.Entities.Tests.Play
             Assert.AreEqual(7, viewProgress.CurrentLevel, "the Character window's level is the server's");
             Assert.AreEqual(serverProgress.Renown, viewProgress.Renown, "and its Renown");
             Assert.AreEqual(serverProgress.SkillPoints, viewProgress.SkillPoints);
-            Assert.Greater(levelUps, 0, "a level gained on the server plays its level-up on the owner's game (NGO's path)");
+            Assert.AreEqual(0, levelUps, "build 17 2.5: the first state after joining is no level-up");
+            serverProgress.SetLevel(8);
+            read = OwnerProgressBridge.Read(server);
+            OwnerProgressBridge.Mirror(view, read.Value);
+            Assert.AreEqual(1, levelUps, "a level gained on the server plays its level-up on the owner's game (NGO's path)");
             Assert.IsTrue(OwnerProgressBridge.Same(read.Value, OwnerProgressBridge.Read(view).Value), "the owner shows exactly what the server holds");
 
             // 8.1.1: the owner's view wallet only shows; it never earns, spends or sets (NGO: only the server's does)

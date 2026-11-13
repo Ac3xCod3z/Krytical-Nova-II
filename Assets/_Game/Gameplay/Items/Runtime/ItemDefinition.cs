@@ -89,6 +89,10 @@ namespace KryticalNova.Items
         [Header("Consumable (used from the bag; one is removed per use)")]
         [Min(0f)] public float restoreHealth;
         [Min(0f)] public float restoreChi;
+        [Tooltip("Build 17 item 5.2: also restores this percent of max HP (the % Stims). Adds to restoreHealth.")]
+        [Range(0f, 100f)] public float restoreHealthPercent;
+        [Tooltip("Build 17 item 5.2: also restores this percent of max Flux (the % Stims). Adds to restoreChi.")]
+        [Range(0f, 100f)] public float restoreChiPercent;
         [Tooltip("What using this item does besides restoring HP / Flux. Carried out by the system that owns the effect.")]
         public ItemUseEffect useEffect;
         [Tooltip("Seconds before this player can use another consumable.")]
@@ -162,7 +166,15 @@ namespace KryticalNova.Items
         public bool IsEquippable => equipSlot != EquipSlot.None;
         public bool IsStackable => maxStack > 1;
         /// <summary>Used up from the Pack: it restores something, or it has a use effect.</summary>
-        public bool IsConsumable => restoreHealth > 0f || restoreChi > 0f || useEffect != ItemUseEffect.None;
+        public bool IsConsumable => RestoresHealth || RestoresChi || useEffect != ItemUseEffect.None;
+        /// <summary>It gives HP back: a flat amount, a percent of max HP, or both.</summary>
+        public bool RestoresHealth => restoreHealth > 0f || restoreHealthPercent > 0f;
+        /// <summary>It gives Flux back: a flat amount, a percent of max Flux, or both.</summary>
+        public bool RestoresChi => restoreChi > 0f || restoreChiPercent > 0f;
+        /// <summary>The HP one use gives a character with this max HP.</summary>
+        public float HealthRestoredAt(float maxHealth) => restoreHealth + Mathf.Max(0f, maxHealth) * restoreHealthPercent / 100f;
+        /// <summary>The Flux one use gives a character with this max Flux.</summary>
+        public float ChiRestoredAt(float maxChi) => restoreChi + Mathf.Max(0f, maxChi) * restoreChiPercent / 100f;
         /// <summary>Only usable items can go on the hotbar, and only when flagged for it.</summary>
         public bool IsHotbarUsable => usableFromHotbar && IsConsumable;
     }

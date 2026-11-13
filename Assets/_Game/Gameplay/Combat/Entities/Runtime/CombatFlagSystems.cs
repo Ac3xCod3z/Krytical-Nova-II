@@ -14,6 +14,18 @@ namespace KryticalNova.Combat.Entities
         public int GhostId;
     }
 
+    /// <summary>
+    /// What <see cref="CombatFlag.InCombat"/> carries (build 17, item 3.1): bit 1 in a fight (as before), bit 2 the fight has a real target
+    /// (<see cref="PlayerCombatState.InRealFight"/>), which the town's fight music waits for.
+    /// </summary>
+    public static class CombatFlagBits
+    {
+        public const byte InFight = 1, Real = 2;
+        public static byte Of(bool fighting, bool real) => (byte)((fighting ? InFight : 0) | (fighting && real ? Real : 0));
+        public static bool Fighting(byte bits) => (bits & InFight) != 0;
+        public static bool RealFight(byte bits) => (bits & Real) != 0;
+    }
+
     public static class CombatSelection
     {
         /// <summary>The ghost a selected body stands for in <paramref name="world"/>: a player's or an attackable target's, else 0.</summary>
@@ -75,7 +87,7 @@ namespace KryticalNova.Combat.Entities
             {
                 if (!ReferenceEquals(entry.World, World) || entry.Body == null || !em.Exists(entry.Ghost) || !em.HasComponent<CombatFlag>(entry.Ghost)
                     || !entry.Body.TryGetComponent(out PlayerCombatState state)) continue;
-                byte now = (byte)(state.InCombat ? 1 : 0);
+                byte now = CombatFlagBits.Of(state.InCombat, state.InRealFight);
                 if (em.GetComponentData<CombatFlag>(entry.Ghost).InCombat != now) em.SetComponentData(entry.Ghost, new CombatFlag { InCombat = now });
             }
         }
@@ -107,7 +119,8 @@ namespace KryticalNova.Combat.Entities
             {
                 if (!ReferenceEquals(entry.World, World) || entry.Body == null || !em.Exists(entry.Ghost) || !em.HasComponent<CombatFlag>(entry.Ghost)
                     || !entry.Body.TryGetComponent(out PlayerCombatState state)) continue;
-                state.MirrorInCombat(em.GetComponentData<CombatFlag>(entry.Ghost).InCombat != 0);
+                byte bits = em.GetComponentData<CombatFlag>(entry.Ghost).InCombat;
+                state.MirrorInCombat(CombatFlagBits.Fighting(bits), CombatFlagBits.RealFight(bits));
             }
         }
 

@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: KryticalNova.Runtime::KryticalNova.Progression.SkillDefinitionSO
   skillId: Harvester_Guard
   displayName: Null Shell
-  description: Hardens your guard, raising Elemental Defense.
+  description: Hardens your guard, raising Elemental Defense, and sharpens your strikes, raising Elemental Attack.
   category: 2
   weaponClass: 4
   classSlot: 10
@@ -65,6 +65,10 @@ MonoBehaviour:
   statModifiers: []
   rankScaledModifiers:
   - statType: 13
+    modifierType: 1
+    minValue: 1
+    maxValue: 10
+  - statType: 12
     modifierType: 1
     minValue: 1
     maxValue: 10

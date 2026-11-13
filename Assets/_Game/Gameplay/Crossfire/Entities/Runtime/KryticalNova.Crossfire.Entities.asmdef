@@ -1,0 +1,26 @@
+{
+    "name": "KryticalNova.Crossfire.Entities",
+    "rootNamespace": "KryticalNova.Crossfire.Entities",
+    "references": [
+        "KryticalNova.Runtime",
+        "KryticalNova.Crossfire",
+        "KryticalNova.World",
+        "KryticalNova.Networking.Entities",
+        "KryticalNova.Player.Entities",
+        "Unity.Entities",
+        "Unity.NetCode",
+        "Unity.Collections",
+        "Unity.Mathematics",
+        "Unity.Transforms",
+        "Unity.Netcode.Runtime"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

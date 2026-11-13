@@ -29,6 +29,9 @@ MonoBehaviour:
     modType: 0
     value: 99
   secondaryStats:
+  - stat: 10
+    modType: 0
+    value: 19
   - stat: 2
     modType: 0
     value: 26

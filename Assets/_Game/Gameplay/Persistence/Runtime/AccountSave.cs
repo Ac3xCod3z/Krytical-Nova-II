@@ -59,6 +59,14 @@ namespace KryticalNova.Persistence
         public long created;
         /// <summary>Another character took this name first when names became unique: it is renamed before it plays again.</summary>
         public bool rename;
+        /// <summary>
+        /// Build 17, item 2.4: the starter kit is still owed. The server's roster sets it when it makes the character (it writes the
+        /// save right then, so the first load never finds "no save"); the first load grants the kit and clears it in the same save.
+        /// A character made before build 17 has it false and never gets the kit.
+        /// </summary>
+        public bool starterPending;
+        /// <summary>True when this load gives the starter kit: a character with no save yet (files, the Editor) or one the roster made.</summary>
+        public static bool TakesStarter(bool isNew, CharacterSave character) => isNew || (character != null && character.starterPending);
         public List<SavePart> parts = new List<SavePart>();
 
         public string Get(string key) => SaveParts.Get(parts, key);

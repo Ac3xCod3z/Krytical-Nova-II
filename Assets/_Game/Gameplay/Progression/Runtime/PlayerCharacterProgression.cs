@@ -100,7 +100,17 @@ namespace KryticalNova.Progression
         public ProgressionState State => Capture();
 
         /// <summary>The entity netcode's owner view: the server's progression, with its level-ups (NGO's OnNetStateChanged on a client).</summary>
-        public void MirrorState(ProgressionState state) => ApplyReplicated(state, announceLevels: true);
+        public void MirrorState(ProgressionState state)
+        {
+            // Build 17 item 2.5: the first state after joining is the character as it is, no level-up (a level-37 character used to
+            // play 36 level-ups at login); every later rise is one.
+            if (state.level < FirstLevel) return;
+            bool first = !ownStateSeen;
+            ownStateSeen = true;
+            ApplyReplicated(state, announceLevels: !first);
+        }
+
+        private bool ownStateSeen;
 
         private ProgressionState Capture()
         {

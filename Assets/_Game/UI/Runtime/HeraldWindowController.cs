@@ -69,6 +69,13 @@ namespace KryticalNova.UI
         private TrackCard[] cards = new TrackCard[0];
         private Tab tab = Tab.Ascension;
         private PlayerNova nova;
+        // Build 17 item 2.5: the character's own level-up banner ("LEVEL UP / LEVEL 37") in the same milestone column.
+        private KryticalNova.Progression.PlayerCharacterProgression levels;
+        private int pendingLevel;
+        private float pendingLevelAt;
+        // levels that land together show one banner, for the last of them
+        private const float LevelBannerGatherSeconds = 0.15f;
+        private static readonly Color LevelBannerColour = new Color(1f, 0.87f, 0.51f);
         private readonly ServicePanelPlacement placement = new ServicePanelPlacement();
         private bool initialized;
         // Open at the Herald, as against merely shown: the layout editor shows the window to have it placed.
@@ -152,6 +159,8 @@ namespace KryticalNova.UI
             PlayerInventory.LocalChanged -= Close;
             NpcServices.Unregister(ServiceIds.Herald);
             Bind(null);
+            if (levels != null) levels.LevelGained -= OnOwnLevelGained;
+            levels = null;
         }
 
         private void Bind(PlayerNova next)
@@ -247,10 +256,24 @@ namespace KryticalNova.UI
             if (!initialized) return;
             float now = Time.unscaledTime;
             TickBanner(now);
+            if (pendingLevel > 0 && now >= pendingLevelAt)
+            {
+                int level = pendingLevel;
+                pendingLevel = 0;
+                ShowBanner("LEVEL UP", LevelBannerTitle(level), "New stat and skill points to place", 0, 0, false, LevelBannerColour, BannerSeconds);
+            }
             // Polled: the local player object changes when a session starts, and the banner needs it with the window shut.
             if (now >= nextRebind)
             {
                 nextRebind = now + RebindSeconds;
+                var ownLevels = KryticalNova.Core.LocalPlayer.Get<KryticalNova.Progression.PlayerCharacterProgression>();
+                if (ownLevels != levels)
+                {
+                    if (levels != null) levels.LevelGained -= OnOwnLevelGained;
+                    levels = ownLevels;
+                    pendingLevel = 0;
+                    if (levels != null) levels.LevelGained += OnOwnLevelGained;
+                }
                 PlayerNova local = PlayerNova.Local;
                 if (local != nova)
                 {
@@ -580,6 +603,15 @@ namespace KryticalNova.UI
         /// The banner comes up with its pips empty; they fill one after another, and the last (the one just earned)
         /// lands bigger and settles.
         /// </summary>
+        private void OnOwnLevelGained(int level)
+        {
+            pendingLevel = Mathf.Max(pendingLevel, level);
+            pendingLevelAt = Time.unscaledTime + LevelBannerGatherSeconds;
+        }
+
+        /// <summary>The banner title of a level reached: "LEVEL 37".</summary>
+        public static string LevelBannerTitle(int level) => "LEVEL " + level;
+
         private void ShowBanner(string eyebrow, string title, string detail, int filled, int total, bool small, Color colour, float seconds)
         {
             if (banner == null) return;

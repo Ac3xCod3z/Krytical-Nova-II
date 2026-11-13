@@ -138,8 +138,10 @@ namespace KryticalNova.EditorTools
                     description: "Zenith technique. A leaping strike that crashes down on every enemy around you. Hold the key to keep striking."),
 
                 Buff("AzureWall", "Firewall", 20, 9, 88, 66, 180, ClipAzureWall, 1.2f,
-                    "Hardens your guard, raising Elemental Defense.",
-                    new RankScaledModifier(StatType.ElementalDefense, ModifierType.PercentAdd, 1f, 10f)),
+                    "Hardens your guard, raising Elemental Defense, and sharpens your strikes, raising Elemental Attack.",
+                    new RankScaledModifier(StatType.ElementalDefense, ModifierType.PercentAdd, 1f, 10f),
+                    // build 17, item 9.3 (owner, 13 Nov 2026): Guard also gives +10 % Elemental Attack at its top rank
+                    new RankScaledModifier(StatType.ElementalAttack, ModifierType.PercentAdd, 1f, 10f)),
                 Buff("LightningFlash", "Overclock", 28, 17, 353, 64, 180, ClipLightningFlash, 1.8f,
                     "Quickens the blade, raising all damage you deal.",
                     new RankScaledModifier(StatType.AttackPower, ModifierType.PercentAdd, 2f, 20f)),

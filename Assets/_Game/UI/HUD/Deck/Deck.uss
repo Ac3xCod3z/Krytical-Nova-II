@@ -5,6 +5,8 @@
 
 .deck {
     position: absolute;
+    right: 24px;
+    top: 90px;
     flex-direction: column;
     padding: 14px 16px 12px 16px;
     background-color: rgb(14, 18, 30);
@@ -113,3 +115,32 @@
 .kn-faction-covenant .deck-on { background-color: rgba(255, 180, 60, 0.35); }
 .kn-faction-covenant .deck-row { border-bottom-width: 1px; border-color: rgba(0, 0, 0, 0.35); border-radius: 0; }
 .kn-faction-covenant .deck-row--now { background-color: rgba(255, 180, 60, 0.18); }
+
+/* ---------------------------------------------------------------- build 17 (5.5c): the lively looks
+   DeckLibrary.look: Classic keeps everything above as it was; Beat Colours and Faction Glow add these. The bars sit in
+   slots (a bar from the bottom plus its falling peak cap); the code colours the bars and pulses the cover and play
+   button on the beat. */
+.deck-bar-slot { height: 100%; flex-direction: column; justify-content: flex-end; }
+.deck-bar-cap { position: absolute; left: 0; right: 0; height: 2px; border-radius: 1px; background-color: rgb(255, 255, 255); opacity: 0.85; }
+
+.deck--lively .deck-visualiser {
+    height: 64px; padding: 6px 6px 0 6px; border-radius: 8px;
+    background-color: rgba(0, 0, 0, 0.35);
+    border-bottom-width: 2px; border-color: rgba(80, 200, 255, 0.5);
+}
+.deck--lively .deck-art { border-width: 2px; border-color: rgba(255, 255, 255, 0.55); }
+.deck--lively .deck-title { font-size: 16px; letter-spacing: 1px; }
+.deck--lively .deck-progress { height: 8px; border-radius: 4px; }
+.deck--lively .deck-row--now { border-left-width: 3px; border-color: rgb(80, 200, 255); }
+.deck--lively .deck-play { border-width: 3px; border-color: rgba(255, 255, 255, 0.6); }
+
+/* Faction touches for the lively looks */
+.kn-faction-hegemony .deck--lively .deck-art { background-color: rgb(20, 90, 200); border-color: rgb(140, 220, 255); }
+.kn-faction-null .deck--lively .deck-visualiser { border-color: rgba(160, 70, 240, 0.7); background-color: rgba(30, 0, 40, 0.6); border-radius: 0; }
+.kn-faction-null .deck--lively .deck-bar-cap { background-color: rgb(120, 240, 160); border-radius: 0; }
+.kn-faction-null .deck--lively .deck-row--now { border-color: rgb(160, 70, 240); }
+.kn-faction-null .deck--lively .deck-play { border-color: rgb(160, 70, 240); }
+.kn-faction-covenant .deck--lively .deck-visualiser { border-color: rgba(255, 180, 60, 0.6); background-color: rgba(30, 20, 10, 0.55); border-radius: 4px; }
+.kn-faction-covenant .deck--lively .deck-bar-cap { background-color: rgb(255, 230, 170); }
+.kn-faction-covenant .deck--lively .deck-row--now { border-color: rgb(255, 180, 60); }
+.kn-faction-covenant .deck--lively .deck-play { border-color: rgb(255, 230, 170); }
