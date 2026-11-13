@@ -24,3 +24,4 @@ MonoBehaviour:
   minLevel: 10
   bracketSize: 10
   bracketCount: 10
+  bannerSeconds: 6

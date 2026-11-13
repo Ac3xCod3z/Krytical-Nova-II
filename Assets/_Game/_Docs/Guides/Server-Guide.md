@@ -645,9 +645,15 @@ and `gm.backup` belong to the server only).
 | `gm.shutdown cancel` | Calls off a countdown (shutdown or restart). | `gm.shutdown cancel` |
 | `gm.backup` | Saves everyone and backs up now. Do it before an update. | `gm.backup` |
 | `gm.target <connection>` | Points the other GM commands (give items, levels, teleport) at that player. | `gm.target 1` |
+| `gm.crossfire status` | Crossfire, the hourly war: which step it is in (Gap, Call, Muster, War, End) and how long until the next. | `gm.crossfire status` |
+| `gm.crossfire start` | Starts a Crossfire now: everyone called goes straight to the Muster (gates shut), then the war. | `gm.crossfire start` |
+| `gm.crossfire skip` | Jumps the running Crossfire to its next step now (for example opens the gates early). | `gm.crossfire skip` |
+| `gm.crossfire end` | Ends the war now and sends everyone back; a war only called is called off. The next one comes at the next nightfall. | `gm.crossfire end` |
 
 In the Editor's **GM Tools** window the Social tab has the same under **Server**: Kick Player, Ban Player, Unban Player,
-List Bans, Shutdown Server, Restart Server, Cancel Shutdown, Back Up Saves Now.
+List Bans, Shutdown Server, Restart Server, Cancel Shutdown, Back Up Saves Now. Crossfire's buttons (Status, Start, Skip,
+End) are in the World tab's **Crossfire** box and on the control page's Crossfire panel. When a Crossfire comes and how long
+each step lasts is `Gameplay/Crossfire/Resources/CrossfireSettings.asset` (a rebuild; not a `server-settings.json` key).
 
 ## 7b. Game Masters (GMs)
 
