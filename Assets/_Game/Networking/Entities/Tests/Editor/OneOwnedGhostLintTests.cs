@@ -23,7 +23,8 @@ namespace KryticalNova.Networking.Entities.Tests
             string root = Path.Combine(Path.GetDirectoryName(Application.dataPath) ?? string.Empty, GameFolder);
             var owned = new List<string>();
             foreach (string file in Directory.EnumerateFiles(root, "*.prefab", SearchOption.AllDirectories))
-                if (HasOwner(file)) owned.Add(file.Substring(root.Length - GameFolder.Length).Replace('\\', '/'));
+                // a test's own ghost prefab (Player/Entities/Tests/Editor/Generated/PlayerGhostTest.prefab) is never spawned by the game
+                if (!file.Replace('\\', '/').Contains("/Tests/") && HasOwner(file)) owned.Add(file.Substring(root.Length - GameFolder.Length).Replace('\\', '/'));
 
             CollectionAssert.Contains(owned, PlayerGhost, "the player ghost has an owner (its connection): relevancy finds a connection's place by it");
             string[] others = owned.Where(p => p != PlayerGhost).ToArray();
