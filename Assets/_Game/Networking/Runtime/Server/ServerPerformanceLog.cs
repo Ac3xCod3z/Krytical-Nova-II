@@ -51,6 +51,7 @@ namespace KryticalNova.Networking
         private static void Install()
         {
             if (ServerSingleCopy.AnotherCopyRuns) return; // a second copy on this PC writes no log of its own
+            KryticalNova.Diagnostics.PerformanceLog.GaugesOn = true; // higher systems publish their numbers downward for the CSV (wave 4)
             PlayerLoopSystem loop = PlayerLoop.GetCurrentPlayerLoop();
             for (int i = 0; i < loop.subSystemList.Length; i++)
             {
@@ -102,8 +103,19 @@ namespace KryticalNova.Networking
             float p95 = Busy.Count > 0 ? Busy[Mathf.Min(Busy.Count - 1, (int)(Busy.Count * 0.95f))] : 0f;
             float worst = Busy.Count > 0 ? Busy[Busy.Count - 1] : 0f;
             float fps = seconds > 0f ? frames / seconds : 0f;
+            float p50 = ServerPerformanceColumns.Percentile(Busy, 0.50f);
+            float p99 = ServerPerformanceColumns.Percentile(Busy, 0.99f);
             NetworkManager network = NetworkManager.Singleton;
-            int players = network != null && network.IsServer ? network.ConnectedClientsIds.Count : 0;
+            // the entity server publishes its own count (KnServerGaugeSystem); the NGO server counts its NetworkManager's clients
+            bool entityPlayers = KryticalNova.Diagnostics.PerformanceLog.TryGauge(KryticalNova.Diagnostics.PerformanceLog.GaugeNames.Players, out double gaugePlayers);
+            int players = entityPlayers ? (int)gaugePlayers : network != null && network.IsServer ? network.ConnectedClientsIds.Count : 0;
+            bool hasBrains = KryticalNova.Diagnostics.PerformanceLog.TryGauge(KryticalNova.Diagnostics.PerformanceLog.GaugeNames.BrainsMs, out double brains);
+            bool hasRelevancy = KryticalNova.Diagnostics.PerformanceLog.TryGauge(KryticalNova.Diagnostics.PerformanceLog.GaugeNames.RelevancyMs, out double relevancy);
+            bool hasEntities = KryticalNova.Diagnostics.PerformanceLog.TryGauge(KryticalNova.Diagnostics.PerformanceLog.GaugeNames.Entities, out double entities);
+            bool hasGhosts = KryticalNova.Diagnostics.PerformanceLog.TryGauge(KryticalNova.Diagnostics.PerformanceLog.GaugeNames.Ghosts, out double ghosts);
+            long privateMb;
+            try { using (Process self = Process.GetCurrentProcess()) privateMb = self.PrivateMemorySize64 / (1024 * 1024); }
+            catch (Exception) { privateMb = -1; }
             long memory = GC.GetTotalMemory(false) / (1024 * 1024);
             long reserved = UnityEngine.Profiling.Profiler.GetTotalReservedMemoryLong() / (1024 * 1024);
             // Lag beside the load (owner, 18 Oct 2026): late hits from everyone at once point at the server, from one player at their line.
@@ -126,7 +138,12 @@ namespace KryticalNova.Networking
                     slow.ToString(CultureInfo.InvariantCulture), Busy.Count.ToString(CultureInfo.InvariantCulture),
                     memory.ToString(CultureInfo.InvariantCulture), reserved.ToString(CultureInfo.InvariantCulture),
                     lateHits.ToString(CultureInfo.InvariantCulture), goneTargets.ToString(CultureInfo.InvariantCulture),
-                    worstPing.ToString(CultureInfo.InvariantCulture)));
+                    worstPing.ToString(CultureInfo.InvariantCulture),
+                    // wave 4 soak columns (ServerPerformanceColumns.Names); bytes out stays blank until the transport says it
+                    p50.ToString("0.00", CultureInfo.InvariantCulture), p99.ToString("0.00", CultureInfo.InvariantCulture),
+                    ServerPerformanceColumns.Cell(hasBrains, brains, "0.000"), ServerPerformanceColumns.Cell(hasRelevancy, relevancy, "0.000"),
+                    ServerPerformanceColumns.Cell(privateMb >= 0, privateMb, "0"), ServerPerformanceColumns.Cell(hasEntities, entities, "0"),
+                    ServerPerformanceColumns.Cell(hasGhosts, ghosts, "0"), string.Empty));
                 file?.Flush();
             }
             catch (Exception e)
@@ -148,7 +165,7 @@ namespace KryticalNova.Networking
             fileDay = DateTime.Now.Date;
             string path = Path.Combine(folder, $"server_{DateTime.Now:yyyyMMdd_HHmmss}{map}.csv");
             file = new StreamWriter(path, false);
-            file.WriteLine("time,players,fps,busy_avg_ms,busy_p95_ms,busy_worst_ms,slow_frames,frames,managed_mb,reserved_mb,late_hits,gone_targets,worst_ping_ms");
+            file.WriteLine(ServerPerformanceColumns.Header);
             Debug.Log("[Server] Performance log: " + path);
         }
 

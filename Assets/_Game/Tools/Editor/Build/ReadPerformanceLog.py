@@ -3,6 +3,8 @@
     python ReadPerformanceLog.py                      the newest log of the Windows test build
     python ReadPerformanceLog.py <file or folder>     that log, or the newest in that folder
     python ReadPerformanceLog.py <file> --all         every slow frame, not only the worst
+    python ReadPerformanceLog.py <server_*.csv> --server   a server CSV (ServerPerformanceLog): players, tick p50 / p95 / p99,
+                                                      brains, private RAM, entities, ghosts over the run (wave 4 soak)
 
 The game writes one log a run into PerformanceLogs beside its exe (PerformanceLogRecorder.cs). Lines are
 tab-separated and start with their kind: S a second of play, F a slow frame, E something the game did,
@@ -202,7 +204,32 @@ def print_sections(sections, seconds, changes):
     print('   KB/frame is the memory the scripts were handed, which the collections are for: the first section holds the game starting up)')
 
 
+def read_server(path):
+    """Rows of a server CSV as dicts by column name (ServerPerformanceColumns.Names); blank cells stay ''."""
+    import csv
+    with open(path, newline='', encoding='utf-8-sig') as f:
+        return list(csv.DictReader(f))
+
+
+def print_server(path):
+    rows = read_server(path)
+    print(os.path.abspath(path), len(rows), 'windows of 5 s')
+    if not rows:
+        return
+    for key in ('players', 'busy_p95_ms', 'tick_p50_ms', 'tick_p99_ms', 'busy_worst_ms', 'slow_frames', 'brains_ms', 'relevancy_ms',
+                'private_mb', 'entities', 'ghosts', 'bytes_out_per_s'):
+        values = [number(r.get(key) or '') for r in rows if (r.get(key) or '').strip()]
+        values = [v for v in values if v is not None]
+        if not values:
+            print('  %-16s (not in this log)' % key)
+            continue
+        print('  %-16s first %10.2f   last %10.2f   max %10.2f' % (key, values[0], values[-1], max(values)))
+
+
 def main():
+    if '--server' in sys.argv:
+        print_server([a for a in sys.argv[1:] if not a.startswith('--')][0])
+        return
     arguments = [a for a in sys.argv[1:] if not a.startswith('--')]
     show_all = '--all' in sys.argv
     target = arguments[0] if arguments else BUILD_LOGS

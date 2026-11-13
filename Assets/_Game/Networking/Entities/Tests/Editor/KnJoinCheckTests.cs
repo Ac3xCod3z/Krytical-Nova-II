@@ -420,6 +420,12 @@ namespace KryticalNova.Networking.Entities.Tests
             Assert.IsEmpty(problems, "bot code outside #if KN_DEV_BOTS || UNITY_EDITOR:\n" + string.Join("\n", problems));
             Assert.IsTrue(System.IO.File.ReadAllText(System.IO.Path.Combine(folder, "KnDevBots.cs")).TrimStart().StartsWith("#if KN_DEV_BOTS || UNITY_EDITOR", StringComparison.Ordinal),
                 "KnDevBots.cs must be wrapped whole in #if KN_DEV_BOTS || UNITY_EDITOR");
+            // the soak's bot host (wave 4): wrapped whole for the test lane, and it boots only in a build, never in the Editor
+            string host = System.IO.File.ReadAllText(System.IO.Path.Combine(UnityEngine.Application.dataPath, "_Game", "Gameplay", "Persistence", "Entities", "Runtime", "KnBotHost.cs"));
+            Assert.IsTrue(host.TrimStart().StartsWith("#if (KN_TEST_LANE && KN_DEV_BOTS) || UNITY_EDITOR", StringComparison.Ordinal),
+                "KnBotHost.cs must be wrapped whole in #if (KN_TEST_LANE && KN_DEV_BOTS) || UNITY_EDITOR");
+            Assert.Less(host.IndexOf("#if !UNITY_EDITOR", StringComparison.Ordinal), host.IndexOf("static void Boot()", StringComparison.Ordinal));
+            Assert.Greater(host.IndexOf("#if !UNITY_EDITOR", StringComparison.Ordinal), 0, "the host's boot sits inside #if !UNITY_EDITOR");
         }
     }
 }

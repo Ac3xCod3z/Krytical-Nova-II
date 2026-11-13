@@ -93,8 +93,46 @@ namespace KryticalNova.Diagnostics
             }
         }
 
+        // ------------------------------------------------------------------ gauges (wave 4 soak, 12 Nov 2026)
+
+        /// <summary>
+        /// On while the server's own CSV (Networking's <c>ServerPerformanceLog</c>) is written: systems higher up (Brains, relevancy, the
+        /// entity side) then publish their latest numbers here, downward, and the CSV reads them by name. Off = one test and return.
+        /// Main thread only.
+        /// </summary>
+        public static bool GaugesOn { get; set; }
+
+        private static readonly System.Collections.Generic.Dictionary<string, double> Gauges = new System.Collections.Generic.Dictionary<string, double>();
+
+        /// <summary>The latest value of <paramref name="name"/> (e.g. <see cref="GaugeNames.BrainsMs"/>); kept only while <see cref="GaugesOn"/>.</summary>
+        public static void SetGauge(string name, double value)
+        {
+            if (!GaugesOn || string.IsNullOrEmpty(name)) return;
+            Gauges[name] = value;
+        }
+
+        /// <summary>The latest value published as <paramref name="name"/>; false when nobody published it.</summary>
+        public static bool TryGauge(string name, out double value) => Gauges.TryGetValue(name ?? string.Empty, out value);
+
+        /// <summary>The gauge names the server CSV reads.</summary>
+        public static class GaugeNames
+        {
+            public const string BrainsMs = "brains_ms";        // the longest brain tick of the last second (Brains)
+            public const string RelevancyMs = "relevancy_ms";  // the relevancy fill's time (relevancy, when it lands)
+            public const string Players = "players";           // players in game, read from the entity side
+            public const string Entities = "entities";         // entities in the server world
+            public const string Ghosts = "ghosts";             // ghosts the server world sends
+        }
+
+        internal static void ResetGauges()
+        {
+            Gauges.Clear();
+            GaugesOn = false;
+        }
+
         internal static void Reset()
         {
+            ResetGauges();
             Markers.Clear();
             IsRecording = false;
             FilePath = null;
