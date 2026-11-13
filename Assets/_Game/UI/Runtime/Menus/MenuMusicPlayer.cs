@@ -102,6 +102,9 @@ namespace KryticalNova.UI.Menus
             {
                 if (lastScene == FrontEnd.TitleScene && scene != FrontEnd.TitleScene) LeaveTitle();
                 if (scene != FrontEnd.FactionSelectScene) focus = FactionId.None;
+                // Safety net (build 17 item 5.5a): any way into the menus (title, character select / create, faction) ends the Deck;
+                // the loading page is left alone, as map-to-map travel passes it.
+                if (FrontEnd.PageOf(scene) < FrontEnd.PageOf(FrontEnd.LoadingScene)) KryticalNova.Audio.DeckPlayer.EndSession();
                 lastScene = scene;
             }
 

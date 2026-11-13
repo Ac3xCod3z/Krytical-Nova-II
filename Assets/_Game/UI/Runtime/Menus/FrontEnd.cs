@@ -66,6 +66,9 @@ namespace KryticalNova.UI.Menus
         /// <summary>Go to another front-end scene by a turn of the page.</summary>
         public static void Go(string scene)
         {
+            // Every way back to the menus ends the session's own music (build 17: the Deck kept playing into the next
+            // character after Log Out).
+            KryticalNova.Audio.DeckPlayer.EndSession();
             var transition = MenuTransition.Current;
             if (transition != null) transition.LoadScene(scene);
             else SceneManager.LoadScene(scene);

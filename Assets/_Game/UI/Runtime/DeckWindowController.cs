@@ -21,6 +21,8 @@ namespace KryticalNova.UI
     public sealed class DeckWindowController : MonoBehaviour
     {
         private const float WindowWidth = 380f;
+        /// <summary>The Deck window's name: the key of its place in the HUD layout editor.</summary>
+        public const string WindowName = "deck-window";
 
         [SerializeField] private DeckLibrary library;
         [SerializeField] private StyleSheet style;
@@ -44,10 +46,13 @@ namespace KryticalNova.UI
             if (!Application.isPlaying) return;
             root = GetComponent<UIDocument>().rootVisualElement;
             if (root != null && style != null && !root.styleSheets.Contains(style)) root.styleSheets.Add(style);
+            HudLayoutEditor.RegisterPreview(WindowName, Preview);
         }
 
         private void OnDisable()
         {
+            HudLayoutEditor.UnregisterPreview(WindowName);
+            HudLayoutEditor.Current?.Forget(window);
             window?.RemoveFromHierarchy();
             window = null;
             bars.Clear();
@@ -57,6 +62,8 @@ namespace KryticalNova.UI
         private void Update()
         {
             if (root == null || library == null) return;
+            // Built at once (shut), so the HUD layout editor can list and place it before it was ever opened.
+            if (window == null) { DeckPlayer deck = DeckPlayer.Ensure(library); if (deck != null) Build(deck); }
             if (!HudTyping.IsTyping(root) && KeyBindings.Pressed(KeyBindings.Deck)) SetOpen(!IsOpen);
             if (IsOpen) Refresh();
         }
@@ -96,8 +103,9 @@ namespace KryticalNova.UI
 
         private void Build(DeckPlayer deck)
         {
-            window = new VisualElement { name = "deck" };
+            window = new VisualElement { name = WindowName };
             window.AddToClassList("deck");
+            window.AddToClassList(HudLayoutEditor.MovableClass);
             window.AddToClassList("blocks-world");
             window.style.width = WindowWidth;
             window.style.display = DisplayStyle.None;
@@ -206,9 +214,17 @@ namespace KryticalNova.UI
             window.Add(foot);
 
             root.Add(window);
-            window.style.position = Position.Absolute;
-            window.style.right = 24f;
-            window.style.top = 90f;
+            // Its default place (right 24, top 90) is in Deck.uss, so the layout editor's RESET gives it back.
+            HudLayoutEditor.Current?.Adopt(window);
+        }
+
+        // In the layout editor the Deck shows itself to be placed, and goes away again after if it was shut.
+        private bool openedForLayout;
+        private void Preview(bool on)
+        {
+            if (window == null) return;
+            if (on && !IsOpen) { window.style.display = DisplayStyle.Flex; openedForLayout = true; }
+            else if (!on && openedForLayout) { openedForLayout = false; window.style.display = DisplayStyle.None; }
         }
 
         private static VisualElement Row(string cls)
