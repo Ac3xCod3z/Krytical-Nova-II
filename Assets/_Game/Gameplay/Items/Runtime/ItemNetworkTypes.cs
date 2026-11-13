@@ -222,8 +222,8 @@ namespace KryticalNova.Items
 
     /// <summary>
     /// What a character shows in place of what it wears, for the slots that have a look. The Weave of a slot is
-    /// the item whose look is shown there (0 = the worn piece's own) and stays with the slot when the piece in it
-    /// changes. The dye of an outfit slot is the colourway of the piece worn in it (a <c>GearThemeLibrary</c> id,
+    /// the item whose look is shown there (0 = the worn piece's own), worked out by the server from the Weaves kept per weapon class / gear line (build 17, WovenLooks);
+    /// it changes with the piece worn. The dye of an outfit slot is the colourway of the piece worn in it (a <c>GearThemeLibrary</c> id,
     /// 0 = its own colours): it belongs to the piece (<see cref="GearItemState.Dye"/>) and is only repeated here,
     /// by the server, so that everyone can draw it. Readable by everyone: it is how others see the character.
     /// The pet slot has a look too, a Morph: the pet (<see cref="pet"/>, an item id) and the growth stage
