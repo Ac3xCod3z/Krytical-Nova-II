@@ -19,9 +19,11 @@ namespace KryticalNova.Hostiles.Entities.Tests
         public void TwoThousandBrains_TwoHundredPlayers_ATimedThousandTicks()
         {
             using var w = new HostileTestWorld();
-            // 2,000 on a 45 x 45 grid 5 m apart (225 m square), half attack on sight, half fight back
+            // 2,000 on a 45 x 45 grid 5 m apart (225 m square), half attack on sight, half fight back: the same layout as the test-lane
+            // server's -knbrainsoak (SoakLayout, wave 4), centred so the points are the ones this test always used (0 .. 220 m)
+            var layout = SoakLayout.Build(new float2(110f, 110f), Hostiles);
             for (int i = 0; i < Hostiles; i++)
-                w.Hostile(new float3((i % 45) * 5f, 0f, (i / 45) * 5f), (byte)(i % 2), (uint)(i + 1));
+                w.Hostile(layout[i].Position, (byte)(layout[i].Aggressive ? 0 : 1), (uint)(i + 1));
             var players = new (float3, byte)[Players];
             var ms = new double[Ticks];
             int strikesBefore = 0;
