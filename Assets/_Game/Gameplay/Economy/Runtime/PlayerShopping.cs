@@ -255,6 +255,16 @@ namespace KryticalNova.Economy
         public void ServerGrantNewCharacter()
         {
             if (wallet == null) wallet = GetComponent<PlayerWallet>();
+            if (inventory == null) inventory = GetComponent<PlayerInventory>();
+            // The starter bag's items (the Pack's first contents) get their ledger line like every other item movement.
+            ItemCatalog catalog = inventory != null ? inventory.Catalog : null;
+            if (catalog != null)
+            {
+                LedgerEntry line = EconomyLedger.Line(this, LedgerKinds.Starter, note: "starter kit");
+                foreach (var s in catalog.StarterBag)
+                    if (s.item != null && s.count > 0) line = line.Item(catalog, new ItemStack(s.item.itemId, (ushort)s.count), 1);
+                EconomyLedger.Keep(line);
+            }
             long amount = StartingCreds(settings);
             if (wallet == null || amount <= 0) return;
             long added = wallet.ServerEarn(amount, CredsSource.StarterKit);

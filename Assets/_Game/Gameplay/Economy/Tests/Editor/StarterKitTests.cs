@@ -51,5 +51,35 @@ namespace KryticalNova.Tests
             Assert.IsTrue(typeof(INewCharacterGrant).IsAssignableFrom(typeof(PlayerShopping)));
             Assert.AreEqual(8, (int)CredsSource.StarterKit, "CredsSource is append-only");
         }
+            [Test]
+        public void OnAServer_TheRosterMadeCharacterTakesTheKitOnce_AndAnOldOneNever()
+        {
+            // The roster writes the save at creation, so its first load is not "new": the pending flag carries the kit.
+            var made = new KryticalNova.Persistence.CharacterSave { characterId = "a", starterPending = true };
+            Assert.IsTrue(KryticalNova.Persistence.CharacterSave.TakesStarter(false, made), "a roster-made character gets the kit");
+
+            // The flag is saved: the round trip through the save's JSON keeps it.
+            string json = UnityEngine.JsonUtility.ToJson(made);
+            var back = UnityEngine.JsonUtility.FromJson<KryticalNova.Persistence.CharacterSave>(json);
+            Assert.IsTrue(back.starterPending);
+
+            // Given: the agent clears it in the same save as the Creds, so a relog never takes it again.
+            back.starterPending = false;
+            back = UnityEngine.JsonUtility.FromJson<KryticalNova.Persistence.CharacterSave>(UnityEngine.JsonUtility.ToJson(back));
+            Assert.IsFalse(KryticalNova.Persistence.CharacterSave.TakesStarter(false, back), "a relog after the kit");
+
+            // A character saved before build 17 has no flag in its JSON: it never gets the kit.
+            var old = UnityEngine.JsonUtility.FromJson<KryticalNova.Persistence.CharacterSave>("{\"characterId\":\"b\",\"level\":40}");
+            Assert.IsFalse(KryticalNova.Persistence.CharacterSave.TakesStarter(false, old), "an old character");
+
+            // Files and the Editor: no save at all is a new character.
+            Assert.IsTrue(KryticalNova.Persistence.CharacterSave.TakesStarter(true, null));
+        }
+
+        [Test]
+        public void TheStarterKitHasItsOwnLedgerKind()
+        {
+            Assert.AreEqual("starter", LedgerKinds.Starter);
+        }
     }
 }
