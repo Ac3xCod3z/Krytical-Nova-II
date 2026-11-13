@@ -2,15 +2,81 @@
   "build": 17,
   "items": [
     {
-      "title": "Concord Downloads on Its Own",
-      "body": "Concord, the sky city at the top of the Sky Lift, is now a download of its own beside the starter town. An update to the town no longer downloads all of Concord again, so patches are smaller. Concord itself looks and plays as before."
+      "title": "A Better Start in Nova",
+      "body": "New characters begin with a starter kit: 20 HP Stims, 20 Flux Stims and 2,500 Creds, plus 5 stat points to place. Level 1 Hostiles pay a little more Creds and XP, and every weapon class now has its own Instructor in the Training Yard."
+    },
+    {
+      "title": "Defense Means Something Now",
+      "body": "Defense cuts every hit by a share, can block a hit outright for 70 % less damage, and resists crits. Evasion softens the crits that do land. Every build now has something it beats."
+    },
+    {
+      "title": "Crits Reworked",
+      "body": "Crit buffs add to your crit chance instead of multiplying it, up to a 75 % cap. Crit chance on gear now comes from rings, and weapon Tuning raises Critical Damage instead. On the Cadence beat, a Redline three-hit crits with all three hits."
+    },
+    {
+      "title": "Stims When You Need Them",
+      "body": "Stims can be used at any time, even during a charge, with a short cooldown per kind. New percentage Stims restore a share of your HP or Flux, from the Apothecary."
+    },
+    {
+      "title": "Holoweave Remembers",
+      "body": "Holoweave keeps a look for each weapon class and each gear set. Switch weapons or armour and each one wears its own Weave again. Your Weaves carry over."
+    },
+    {
+      "title": "Bigger Moments",
+      "body": "Levelling up raises a pillar of light in your faction's colour with a LEVEL banner, and your mount's evolutions get the milestone banner too. Callouts open with a letterbox, and a crit in a Callout lands with a comic impact frame."
+    },
+    {
+      "title": "Aegis, Guard and Squad Stances",
+      "body": "Aegis now also raises Defense, and its shield counts down live hit by hit. Every class's Guard ward also raises Elemental Attack. Shared Stances give Squad mates half their strength."
     }
   ],
   "patchNotes": [
     {
+      "heading": "New",
+      "lines": [
+        "Starter kit: every new character begins with 20 small HP Stims, 20 small Flux Stims and 2,500 Creds.",
+        "Block: Defense gives a chance to block a hit (up to 40 % of hits), taking 70 % off it. The number reads BLOCKED.",
+        "Percentage Stims: restore a share of your HP or Flux (or both, with the Dual Stims), sold at the Apothecary.",
+        "Level up: a pillar of light in your faction's colour, rays, a ground ring and a LEVEL banner on your screen.",
+        "Callouts open with a letterbox, and the HUD slides out of the way for the bout. A crit in a Callout lands with a comic impact frame.",
+        "Seven more Instructors: every weapon class of every faction now has its own in the Training Yard.",
+        "The Deck (P) can be moved and placed in the HUD layout editor, and keeps its place. Its bars now change colour with the music, with falling peak caps and a beat pulse (or pick Faction Glow or Classic).",
+        "Crossfire, the hourly faction war, now keeps time on the server: from level 10 you are called 10 minutes before nightfall, with a banner and a countdown on your HUD. The battleground itself opens in a later build.",
+        "Mini Deck: in every fight the minimap gives way to a small click-wheel player with the Deck's music and the Cadence beat, and comes back when the fight ends (M still opens the full map). In a Callout the chat fades too; Enter brings it back.",
+        "Mount milestones: when your mount evolves, the same milestone banner as a pet's shows its new stage.",
+        "Emotes from the saddle: waves, cheers, points, salutes, beckons, laughs and taunts play while riding; the others say you can't do that while riding."
+      ]
+    },
+    {
       "heading": "Changed",
       "lines": [
-        "Concord (the Sky Lift's sky city) is now its own file beside the starter town's, so an update to the town no longer downloads Concord again. Nothing in Concord changed."
+        "Defense cuts every hit by a share instead of a flat amount: more Defense always helps, with diminishing returns and never full immunity.",
+        "Crit resistance: Defense, Evasion and capes lower the crit chance of hits against you (up to 60 %). Evasion also takes part of a crit's extra damage and adds a little Backlash.",
+        "Crit chance on gear comes from rings only (Common +5 up to Legendary +25 at level 112). Weapon Tuning now gives +1 % Critical Damage a stage instead of crit chance.",
+        "Holoweave keeps one Weave per weapon class and one per gear set; switching keeps each look. Weaves you already had carry over to the piece you wear.",
+        "Names can't contain GM as a part of their own (Magma is still fine).",
+        "Players no longer stand inside each other: if you stop on top of someone, you step aside. Walking through each other still works.",
+        "Concord (the Sky Lift's sky city) is now its own file beside the starter town's, so an update to the town no longer downloads Concord again. Nothing in Concord changed.",
+        "Level 1 Hostiles pay more: 5 Creds and 3 XP a kill (was 4 and 2).",
+        "New characters start with 5 stat points to place.",
+        "In town, the fight music only starts for a real fight (a Hostile, a Callout, the Strike Dummy), not for swinging at air.",
+        "The combat log shows the elemental part of a hit, and your own hits stand out in bright, bold text.",
+        "Every item tooltip says what a vendor pays for it.",
+        "Skills you have not learned yet show as ??? until you learn them (the level they open at is shown).",
+        "Aegis also raises Defense (up to +50 %); every class's Guard ward also raises Elemental Attack (up to +10 %).",
+        "Crit buffs add to your crit chance instead of multiplying it (Killer Instinct up to +25), with a 75 % cap.",
+        "Cadence combos: on the beat, one-hit and two-hit skills can't crit; a Redline three-hit on the beat crits with all three hits.",
+        "Shared Stances give Squad mates half their strength.",
+        "Stims can be used at any time, also during a charge; each kind has its own short cooldown.",
+        "The Cadence beat ring around you is gone: the beat now lives on the Mini Deck. Its arc can be switched off in Settings > Audio (Beat arc on the Mini Deck in a fight)."
+      ]
+    },
+    {
+      "heading": "Fixed",
+      "lines": [
+        "The Aegis shield now counts down hit by hit, on your screen and on everyone else's.",
+        "Logging out while the Deck was playing no longer keeps the music going into your next character.",
+        "Logging in no longer plays a level-up for every level from 1; only a real level gained shows the moment."
       ]
     }
   ],
