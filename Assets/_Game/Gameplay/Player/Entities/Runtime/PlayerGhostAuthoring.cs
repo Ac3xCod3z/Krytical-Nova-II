@@ -63,6 +63,8 @@ namespace KryticalNova.Player.Entities
                 AddComponent<CombatFlag>(e);        // in a fight, for every view (Cadence step 1)
                 AddBuffer<SkillHitEvent>(e);        // skill hits, for every view's VFX (M4 step 7)
                 AddComponent<SkillHitSeq>(e);
+                AddBuffer<DodgeEvent>(e);           // the server's dodges and counters, for every view's clip (build 17 item 11.2)
+                AddComponent<DodgeSeq>(e);
                 // M4.4b: the strike lengths come from the clips themselves, as NGO's GetStrikeDuration reads clip.length
                 DependsOn(a.combo1Clip);
                 DependsOn(a.combo2Clip);

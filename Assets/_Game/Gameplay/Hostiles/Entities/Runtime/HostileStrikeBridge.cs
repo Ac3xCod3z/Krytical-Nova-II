@@ -53,7 +53,8 @@ namespace KryticalNova.Hostiles.Entities
             if (!HostileStrikeRules.TryRoll(hostile.Entity, hostile.Definition, ability, target, hostile.transform, out DamageResult result)) return false;
             int key = AttackerKey(hostile);
             HostileAttackers.Set(key, hostile.Entity.CombatStats);
-            strike = new HostileStrike { Target = targetGhost, Result = result, From = new float3(from.x, from.y, from.z), Attacker = key, Heavy = heavy };
+            strike = new HostileStrike { Target = targetGhost, Result = result, From = new float3(from.x, from.y, from.z), Attacker = key, Heavy = heavy,
+                Height = hostile.Definition != null ? hostile.Definition.HeightOf(ability) : KryticalNova.Combat.AttackHeight.Any };
             return true;
         }
     }
