@@ -114,6 +114,33 @@ namespace KryticalNova.Mounts
         public static bool IsRunningTransition(bool runSelected, bool travelling) => runSelected && travelling;
 
         /// <summary>
+        /// The server takes a rider off at once in a jump's flight or on a wall (the mount has no clips for them), but never in a
+        /// vault: the rider goes over mounted and lands back in the saddle (owner, 13 Nov 2026, day list 15.2).
+        /// </summary>
+        public static bool AirborneTakesRiderOff(bool inJumpingMove, bool inVault) => inJumpingMove && !inVault;
+
+        /// <summary>
+        /// The mounted vault's shape over its air time t (0..1): how much the mount is shown (1 whole, 0 gone) and how high the rider
+        /// is between the ground pose (0) and the seat (1). The mount dissolves as the feet leave it and re-forms before the touchdown;
+        /// the rider leaves the seat over the take-off and settles back into it over the landing.
+        /// </summary>
+        public static float VaultSeatLift(float t, float leaveShare, float landShare)
+        {
+            t = Math.Clamp(t, 0f, 1f);
+            leaveShare = Math.Clamp(leaveShare, 0.01f, 0.49f);
+            landShare = Math.Clamp(landShare, 0.01f, 0.49f);
+            if (t <= leaveShare) return 1f - Smooth(t / leaveShare);
+            if (t >= 1f - landShare) return Smooth((t - (1f - landShare)) / landShare);
+            return 0f;
+        }
+
+        static float Smooth(float x)
+        {
+            x = Math.Clamp(x, 0f, 1f);
+            return x * x * (3f - 2f * x);
+        }
+
+        /// <summary>
         /// A running getting-off comes up running when, by the time its roll ends, the clicked spot is still at least
         /// <paramref name="minDistance"/> metres of path away; otherwise it ends standing (owner, 7 Nov 2026: 4 m). The
         /// rider keeps the on-foot <paramref name="speed"/> through the dismount, so the path left then is the path left

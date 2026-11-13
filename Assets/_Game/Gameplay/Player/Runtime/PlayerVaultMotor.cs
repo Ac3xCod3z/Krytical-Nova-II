@@ -149,6 +149,29 @@ namespace KryticalNova.Player
         /// <summary>Why the last move did or did not get a vault (for tuning the limits).</summary>
         public string LastDecision { get; private set; } = string.Empty;
 
+        // ------------------------------------------------------------------ the mounted vault (entity netcode views; day list 15.2)
+
+        /// <summary>
+        /// A vault the ghost's view began on this body: (seconds already into it, its whole air time). The mount presentation
+        /// (MountRider) dissolves the mount and re-forms it under the rider for the landing. Every view; never sent.
+        /// </summary>
+        public event Action<float, float> GhostVaultBegan;
+        /// <summary>The vault shown on this body has landed.</summary>
+        public event Action GhostVaultEnded;
+
+        /// <summary>
+        /// A vault clip's height class the view plays instead of the obstacle's own while it is set (0-2; -1 = the obstacle's): the
+        /// mount presentation sets it while the rider is in the saddle (the front flip, MountSettings.vaultRiderHeightClass).
+        /// Presentation only: the server's plan, timing and landing never read it.
+        /// </summary>
+        public int ShownHeightOverride { get; set; } = -1;
+
+        /// <summary>The ghost's view began a vault on this body (GhostJumpView): tells the mount presentation.</summary>
+        public void ShowGhostVaultBegan(float elapsedSeconds, float airSeconds) => GhostVaultBegan?.Invoke(elapsedSeconds, airSeconds);
+
+        /// <summary>The ghost's view ended the vault on this body (GhostJumpView).</summary>
+        public void ShowGhostVaultEnded() => GhostVaultEnded?.Invoke();
+
         private bool Ready => warpTemplate != null && motionWarping != null && animancerMotor != null
             && animations != null && animations.IsUsable && traversal != null && warpTemplate.animation != null;
 
