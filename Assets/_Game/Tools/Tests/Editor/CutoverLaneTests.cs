@@ -30,6 +30,25 @@ namespace KryticalNova.Tests
         }
 
         [Test]
+        public void SoakBots_OnlyInTheTestLane()
+        {
+            CollectionAssert.Contains(ServerBuildBuilder.EntityDefines, "KN_DEV_BOTS", "the soak's test-lane server takes bot tokens");
+            CollectionAssert.DoesNotContain(EntityReleaseServer.Defines, "KN_DEV_BOTS", "the real server never compiles bots in");
+            CollectionAssert.Contains(DotsChannelPublisher.ServerOnlyDefines, "KN_DEV_BOTS", "the leak gate keeps bots out of clients");
+            StringAssert.Contains("\"devBots\": true", ServerBuildBuilder.EntityTestSettingsJson());
+            StringAssert.DoesNotContain("devBots", EntityReleaseServer.SettingsJson(null));
+            StringAssert.DoesNotContain("devBots", EntityReleaseServer.SettingsJson(NgoSettings));
+        }
+
+        [Test]
+        public void TheBrainSoakSwitch_IsTestLaneOnly()
+        {
+            string path = Path.Combine(Application.dataPath, "_Game", "Gameplay", "Hostiles", "Entities", "Runtime", "BrainSoakServer.cs");
+            Assert.IsTrue(File.ReadAllText(path).TrimStart().StartsWith("#if KN_TEST_LANE", StringComparison.Ordinal),
+                "-knbrainsoak is wrapped whole in #if KN_TEST_LANE, so the release server has no such switch");
+        }
+
+        [Test]
         public void TheSkyLiftIsOffInTheReleaseServerAndTheCutoverClient_NotInTheTestLane()
         {
             Assert.AreEqual("KN_SKY_LIFT_OFF", SkyLiftLink.OffDefine);

@@ -167,9 +167,10 @@ namespace KryticalNova.EditorTools
         /// <summary>
         /// <c>KN_ENTITIES_SERVER</c>: Netcode for GameObjects' server parts stay off (NetworkConnectionManager, ServerLifetime,
         /// ServerControlPage). <c>KN_TEST_LANE</c>: the server refuses the real server's ports (7777, 7778, 7801, 8090) until the
-        /// cutover makes it the real one.
+        /// cutover makes it the real one. <c>KN_DEV_BOTS</c> (wave 4 soak, 12 Nov 2026): the test-lane server takes development bot
+        /// tokens when its settings say <c>devBots</c>; the RELEASE lane (<see cref="EntityReleaseServer.Defines"/>) never has it.
         /// </summary>
-        public static readonly string[] EntityDefines = { "KN_ENTITIES_SERVER", "KN_TEST_LANE" };
+        public static readonly string[] EntityDefines = { "KN_ENTITIES_SERVER", "KN_TEST_LANE", "KN_DEV_BOTS" };
         /// <summary>The test-lane ports the entity server gets in its first settings file (free of the real, test, measure and Play DOTS ports).</summary>
         public const int EntityTestPort = 7799, EntityTestPagePort = 8099;
         /// <summary>Marks the settings of an entity server, so the Krytical Nova Server app beside it runs it the entity way.</summary>
@@ -340,6 +341,8 @@ namespace KryticalNova.EditorTools
             "  \"saveService\": \"http://127.0.0.1:7802\",\n" +
             "  \"serverName\": \"Krytical Nova ENTITY TEST\",\n" +
             "  \"plainTransport\": true,\n" +
+            // soak bots (wave 4): test lane only, test database only; the release lane's settings never carry the key
+            "  \"devBots\": true,\n" +
             "  \"serverList\": [],\n" +
             // The keys the NGO settings loader adds when missing (ServerLaunchOptions.Load): present, so a build that still rewrites
             // the file never does, and no map server (Transit Row) is started beside this test server by the app.
