@@ -39,8 +39,6 @@ namespace KryticalNova.UI
         private PlayerDuel shownTarget;
         // The Showdown: the black bars of a Callout (see ShowdownLetterbox).
         private Hud.ShowdownLetterbox letterbox;
-        // Crossfire's call banner and timers (build 17, Crossfire step 5b), in the same HUD document.
-        private Hud.CrossfireBanner crossfire;
         private float nextTargetRefresh;
         private float requestStarted;
         private float requestEnds;
@@ -77,8 +75,6 @@ namespace KryticalNova.UI
             SetVisible(result, false);
             letterbox?.Dispose();
             letterbox = new Hud.ShowdownLetterbox(root);
-            crossfire?.Dispose();
-            crossfire = new Hud.CrossfireBanner(root);
             ClientPresentationRegistry.RegisterDuel(this);
         }
 
@@ -87,14 +83,11 @@ namespace KryticalNova.UI
             ClientPresentationRegistry.UnregisterDuel(this);
             letterbox?.Dispose();
             letterbox = null;
-            crossfire?.Dispose();
-            crossfire = null;
         }
 
         private void Update()
         {
             letterbox?.Tick();
-            crossfire?.Tick();
             if (request == null) return;
             float now = Time.unscaledTime;
 

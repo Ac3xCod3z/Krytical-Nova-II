@@ -20,7 +20,7 @@ namespace KryticalNova.Crossfire
         [Header("Phases (Call > Muster > War > End > Gap)")]
         [Tooltip("Call: minutes before the war that eligible players are told it is coming.")]
         [Min(0f)] public float callMinutes = 10f;
-        [Tooltip("The call is repeated this often, in seconds.")]
+        [Tooltip("The call announcement is repeated this often, in seconds, until the gates open.")]
         [Min(5f)] public float callRepeatSeconds = 60f;
         [Tooltip("The last minutes of the Call in which the Muster Yards take players in (the join window).")]
         [Min(0f)] public float joinWindowMinutes = 3f;
@@ -39,9 +39,11 @@ namespace KryticalNova.Crossfire
         [Tooltip("Brackets in all; the last one takes every level above it (X: 100-112).")]
         [Min(1)] public int bracketCount = 10;
 
-        [Header("HUD (this player's screen only)")]
-        [Tooltip("Seconds the big Crossfire banner stays up each time: every call (repeated each Call Repeat Seconds) and the first seconds of the Muster, the War and the End. Between them only the small timer shows.")]
-        [Min(1f)] public float bannerSeconds = 6f;
+        [Header("Announcements (the top-of-screen news every player gets, as GM broadcasts)")]
+        [Tooltip("The call, sent when the Call starts and again every Call Repeat Seconds until the gates open. {time}: how long until the gates open; {level}: the lowest level called.")]
+        [TextArea] public string callText = "Crossfire! The war starts in {time}. Level {level} and up: get to your Muster Yard.";
+        [Tooltip("Sent once when the gates close after a war.")]
+        [TextArea] public string gatesClosedText = "Crossfire is over: the gates are closed.";
 
         /// <summary>Where the one asset lives: <c>Gameplay/Crossfire/Resources/CrossfireSettings.asset</c>.</summary>
         public const string ResourcePath = "CrossfireSettings";

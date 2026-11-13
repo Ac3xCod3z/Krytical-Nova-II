@@ -76,6 +76,10 @@ namespace KryticalNova.Crossfire.Entities
         public bool UsingFixedCycle { get; private set; }
         /// <summary>States sent (tests).</summary>
         public int Sends { get; private set; }
+        /// <summary>Announcements made (tests).</summary>
+        public int Announced { get; private set; }
+
+        CrossfireCaller m_Caller;
 
         /// <summary>The server world's clock system, null when this process runs no server.</summary>
         public static CrossfireClockServerSystem Find()
@@ -158,6 +162,16 @@ namespace KryticalNova.Crossfire.Entities
             return true;
         }
 
+        /// <summary>The call and the gates-closed line, through the game's announcement system (<see cref="ServerChat.Announce"/>).</summary>
+        void Announce(double now)
+        {
+            CrossfireSettings s = Config;
+            string line = m_Caller.Next(Current, now, Current.Now.WarStart + (s != null ? s.musterSeconds : 0), s);
+            if (string.IsNullOrEmpty(line)) return;
+            ServerChat.Announce?.Invoke(AnnouncementKind.Crossfire, line, null, 0);
+            Announced++;
+        }
+
         protected override void OnUpdate()
         {
             double tick = SystemAPI.Time.ElapsedTime;
@@ -166,6 +180,7 @@ namespace KryticalNova.Crossfire.Entities
             Current = Work(NowSeconds);
             CrossfireView.Server = Current;
             if (!Current.Known) return;
+            Announce(NowSeconds);
             CrossfireStateRpc message = CrossfireStateRpc.Of(Current);
             EntityManager em = EntityManager;
             m_Gone.Clear();

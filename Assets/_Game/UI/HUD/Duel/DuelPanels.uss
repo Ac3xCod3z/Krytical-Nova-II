@@ -107,35 +107,3 @@
 
 .duel-result--win .duel-result-title { color: rgb(114, 222, 196); }
 .duel-result--lose .duel-result-title { color: rgb(240, 58, 46); }
-
-/* ------------------------------------------------------------------ Crossfire (build 17, step 5b): the call banner and timers.
-   Small strip at the top while a war is called or runs; .crossfire-banner--big while the banner is up. Skinned by .panel. */
-
-.crossfire-banner {
-    position: absolute;
-    top: 12px;
-    left: 50%;
-    translate: -50% 0;
-    min-width: 220px;
-    align-items: center;
-    padding: 6px 14px 8px 14px;
-}
-
-.crossfire-banner--big {
-    top: 84px;
-    min-width: 380px;
-    padding: 12px 22px 14px 22px;
-}
-
-.crossfire-banner-heading {
-    font-size: 20px;
-    margin: 2px 0 4px 0;
-    -unity-text-align: middle-center;
-    color: rgb(255, 255, 255);
-}
-
-.crossfire-banner-timer {
-    font-size: 13px;
-    -unity-text-align: middle-center;
-    color: rgb(226, 236, 242);
-}

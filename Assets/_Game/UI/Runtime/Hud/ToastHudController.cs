@@ -159,6 +159,7 @@ namespace KryticalNova.UI
             {
                 case AnnouncementKind.Temper: return "TEMPERING";
                 case AnnouncementKind.Drop: return (shown.Rarity >= 4 ? "LEGENDARY" : "EPIC") + " FIND";
+                case AnnouncementKind.Crossfire: return "CROSSFIRE";
                 // gm.say speaks as "GM"; the GM's own /gm carries their name, as its chat line does.
                 default:
                     return string.IsNullOrEmpty(shown.Sender) || shown.Sender == "GM" ? "GM" : $"GM · {shown.Sender.ToUpperInvariant()}";

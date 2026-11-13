@@ -24,4 +24,6 @@ MonoBehaviour:
   minLevel: 10
   bracketSize: 10
   bracketCount: 10
-  bannerSeconds: 6
+  callText: 'Crossfire! The war starts in {time}. Level {level} and up: get to your
+    Muster Yard.'
+  gatesClosedText: 'Crossfire is over: the gates are closed.'
