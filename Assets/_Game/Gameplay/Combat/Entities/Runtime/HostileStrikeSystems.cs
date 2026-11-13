@@ -66,7 +66,7 @@ namespace KryticalNova.Combat.Entities
 
     public static class HostileStrikes
     {
-        public const byte Critical = 1, Evaded = 2, Reflected = 4, Heavy = 8;
+        public const byte Critical = 1, Evaded = 2, Reflected = 4, Heavy = 8, Blocked = 16; // Blocked: build 17 item 8
 
         /// <summary>Server: queues one blow for the next update. False when the world has no queue.</summary>
         public static bool Queue(World server, in HostileStrike strike)
@@ -97,7 +97,7 @@ namespace KryticalNova.Combat.Entities
         {
             DamageMilli = Mathf.RoundToInt(result.DamageDealt * 1000f),
             Flags = (byte)((result.IsCritical ? Critical : 0) | (result.IsEvaded ? Evaded : 0) | (result.IsReflected ? Reflected : 0)
-                | (heavy ? Heavy : 0)),
+                | (heavy ? Heavy : 0) | (result.IsBlocked ? Blocked : 0)),
         };
 
         /// <summary>The number as NGO HostileNet.ShowStrike builds it for the hit player.</summary>
@@ -111,6 +111,7 @@ namespace KryticalNova.Combat.Entities
                 IsCritical = (strike.Flags & Critical) != 0,
                 IsEvaded = (strike.Flags & Evaded) != 0,
                 IsReflected = reflected,
+                IsBlocked = (strike.Flags & Blocked) != 0,
                 ReflectedDamage = reflected ? damage : 0f,
             };
         }

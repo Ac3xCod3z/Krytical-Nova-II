@@ -38,8 +38,19 @@ namespace KryticalNova.Progression
                 reflectionChance,
                 attackerHasShieldShatter,
                 shatterChance,
-                hitChanceModifier);
+                hitChanceModifier,
+                Random.Range(0f, 100f));
         }
+
+        /// <summary>The formula's numbers from the tuning asset (build 17, item 8 included).</summary>
+        public static CombatTuning Limits(CombatStatTuningData tuning) => new CombatTuning
+        {
+            MinHitChance = tuning.minimumHitChance, MaxHitChance = tuning.maximumHitChance, BaseCriticalMultiplier = tuning.baseCriticalMultiplier,
+            DefenseK = tuning.defenseK, DefenseKPerLevel = tuning.defenseKPerLevel, DefensePenetration = tuning.defensePenetration,
+            BlockCap = tuning.blockCap, BlockCut = tuning.blockCut,
+            ResistFromDefense = tuning.critResistFromDefense, ResistFromEvasion = tuning.critResistFromEvasion, ResistCap = tuning.critResistCap,
+            EvasionCritDamageCut = tuning.evasionCritDamageCut, EvasionBacklashBonus = tuning.evasionBacklashBonus,
+        };
 
         /// <summary>Calculates a combat strike with explicitly provided dice rolls for deterministic tests.</summary>
         public static DamageResult CalculateAttackInternal(
@@ -54,20 +65,21 @@ namespace KryticalNova.Progression
             float reflectionChance,
             bool attackerHasShieldShatter,
             float shatterChance,
-            float hitChanceModifier = 0f)
+            float hitChanceModifier = 0f,
+            float blockRoll = 100f)
         {
             if (attacker == null || defender == null) return new DamageResult();
 
             CombatStatTuningData tuning = attacker.TuningData != null ? attacker.TuningData : defender.TuningData;
             CombatTuning limits = tuning != null
-                ? new CombatTuning { MinHitChance = tuning.minimumHitChance, MaxHitChance = tuning.maximumHitChance, BaseCriticalMultiplier = tuning.baseCriticalMultiplier }
+                ? Limits(tuning)
                 : CombatTuning.Default;
             var strike = new CombatStrike
             {
                 SkillMultiplier = skillMultiplier, DefenderHasReflection = defenderHasReflection, ReflectionChance = reflectionChance,
                 AttackerHasShieldShatter = attackerHasShieldShatter, ShatterChance = shatterChance, HitChanceModifier = hitChanceModifier,
             };
-            var rolls = new CombatRolls { Hit = hitRoll, Reflect = reflectRoll, Crit = critRoll, Shatter = shatterRoll };
+            var rolls = new CombatRolls { Hit = hitRoll, Reflect = reflectRoll, Crit = critRoll, Shatter = shatterRoll, Block = blockRoll };
             // The one formula of the game (M4, owner 4 Nov 2026): the entity netcode's server calls the same CombatMath.
             return CombatMath.Resolve(StatsOf(attacker), StatsOf(defender), limits, strike, rolls);
         }
@@ -85,6 +97,7 @@ namespace KryticalNova.Progression
             ElementalAttack = stats.GetStatValue(StatType.ElementalAttack),
             ElementalDefense = stats.GetStatValue(StatType.ElementalDefense),
             StunResistance = stats.GetStatValue(StatType.AcupressureStunResistance),
+            Level = stats.Progression != null ? stats.Progression.CurrentLevel : 1,
         };
     }
 }

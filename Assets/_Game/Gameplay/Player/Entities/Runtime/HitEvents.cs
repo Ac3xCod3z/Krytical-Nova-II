@@ -47,7 +47,7 @@ namespace KryticalNova.Player.Entities
         public const int PerTick = 4;
 
         // NGO PlayerMeleeCombat's bits (ImpactKind / ShowDamageToAttacker), the same values
-        public const byte Critical = 1, Evaded = 2, Reflected = 4, Shattered = 8, Elemental = 16, Skill = 32;
+        public const byte Critical = 1, Evaded = 2, Reflected = 4, Shattered = 8, Elemental = 16, Skill = 32, Blocked = 64; // Blocked: build 17 item 8
 
         /// <summary>Server: numbers and appends <paramref name="hit"/>, dropping the oldest when full.</summary>
         public static void Append(DynamicBuffer<HitEvent> ring, ref HitEventSeq seq, HitEvent hit)
