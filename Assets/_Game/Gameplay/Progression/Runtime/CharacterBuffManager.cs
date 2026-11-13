@@ -119,6 +119,14 @@ namespace KryticalNova.Progression
 
         /// <param name="remaining">Seconds left when joining a buff already running elsewhere; negative = a fresh, full-length buff.</param>
         /// <param name="fromSquadmate">Given by a Squad member's cast (a shared Stance), named by <paramref name="giver"/>.</param>
+        // The Squad's share for a buff given by a member: this body's Squad settings (kept on the server body and every view, so the
+        // numbers shown match the server's).
+        private float SharePercent()
+        {
+            var squad = GetComponent<ISquadBuffTargets>();
+            return squad != null ? squad.BuffSharePercent : SquadBuffRules.DefaultSharePercent;
+        }
+
         public bool ApplyBuff(SkillDefinitionSO skill, int rank = 1, float remaining = -1f, bool fromSquadmate = false, string giver = null)
         {
             EnsureComponents();
@@ -133,9 +141,11 @@ namespace KryticalNova.Progression
             }
 
             float duration = skill.GetDuration(rank);
-            float shieldCapacity = skill.isAbsorptionShield ? skill.GetShieldMultiplier(rank) * combatStats.GetStatValue(StatType.MaxHP) : 0f;
-            float reflectChance = skill.GetReflectionChance(rank);
-            float shatterChance = skill.GetDestructionChance(rank);
+            // Build 17, item 7.4: a buff a Squad member gave is worth only the Squad's share of it here; the caster's own is whole.
+            float share = SharePercent();
+            float shieldCapacity = skill.isAbsorptionShield ? SquadBuffRules.Scaled(skill.GetShieldMultiplier(rank) * combatStats.GetStatValue(StatType.MaxHP), fromSquadmate, share) : 0f;
+            float reflectChance = SquadBuffRules.Scaled(skill.GetReflectionChance(rank), fromSquadmate, share);
+            float shatterChance = SquadBuffRules.Scaled(skill.GetDestructionChance(rank), fromSquadmate, share);
             float dispelChance = skill.dispelBuffChance;
 
             // Check if buff of this skillId already active: refresh it
@@ -164,7 +174,7 @@ namespace KryticalNova.Progression
             {
                 foreach (var modPayload in modifiers)
                 {
-                    var mod = new StatModifier(modPayload.statType, modPayload.modifierType, modPayload.value, newBuff);
+                    var mod = new StatModifier(modPayload.statType, modPayload.modifierType, SquadBuffRules.Scaled(modPayload.value, fromSquadmate, share), newBuff);
                     newBuff.AppliedModifiers.Add(mod);
                     combatStats.AddModifier(mod);
                 }
