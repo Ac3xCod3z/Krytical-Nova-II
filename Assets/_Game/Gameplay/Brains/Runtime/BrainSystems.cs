@@ -24,12 +24,47 @@ namespace KryticalNova.Brains
         /// </summary>
         protected override void OnUpdate()
         {
-            if (!KryticalNova.Diagnostics.PerformanceLog.IsRecording) { base.OnUpdate(); return; }
+            // also timed while the server CSV wants gauges (wave 4 soak: a batch-mode server records no performance log)
+            if (!KryticalNova.Diagnostics.PerformanceLog.IsRecording && !KryticalNova.Diagnostics.PerformanceLog.GaugesOn && !BrainTickSamples.On) { base.OnUpdate(); return; }
             long start = System.Diagnostics.Stopwatch.GetTimestamp();
             base.OnUpdate();
             long end = System.Diagnostics.Stopwatch.GetTimestamp();
+            if (BrainTickSamples.On) BrainTickSamples.Add((end - start) * 1000.0 / System.Diagnostics.Stopwatch.Frequency);
             if (m_Window.Add(start, end, System.Diagnostics.Stopwatch.Frequency, out int ticks, out double meanMs, out double maxMs))
-                KryticalNova.Diagnostics.PerformanceLog.Mark("brains", $"{ticks} ticks, mean {meanMs:F3} ms, longest {maxMs:F3} ms", (long)(maxMs * 1000.0));
+            {
+                KryticalNova.Diagnostics.PerformanceLog.SetGauge(KryticalNova.Diagnostics.PerformanceLog.GaugeNames.BrainsMs, maxMs);
+                if (KryticalNova.Diagnostics.PerformanceLog.IsRecording)
+                    KryticalNova.Diagnostics.PerformanceLog.Mark("brains", $"{ticks} ticks, mean {meanMs:F3} ms, longest {maxMs:F3} ms", (long)(maxMs * 1000.0));
+            }
+        }
+    }
+
+    /// <summary>
+    /// Every brain tick's time while <see cref="On"/> (wave 4 brain soak: the test-lane server's <c>-knbrainsoak</c> reads p50 / p99 / max
+    /// from it every 10 s and clears it). Off = nothing kept. Main thread only.
+    /// </summary>
+    public static class BrainTickSamples
+    {
+        public static bool On;
+        static readonly System.Collections.Generic.List<double> Samples = new System.Collections.Generic.List<double>(512);
+
+        [UnityEngine.RuntimeInitializeOnLoadMethod(UnityEngine.RuntimeInitializeLoadType.SubsystemRegistration)]
+        static void ResetStatics() { On = false; Samples.Clear(); }
+
+        public static void Add(double ms) { if (On) Samples.Add(ms); }
+
+        /// <summary>The kept ticks' p50 / p99 / max and count, then forgets them; false when none were kept.</summary>
+        public static bool TakeSummary(out double p50, out double p99, out double max, out int count)
+        {
+            count = Samples.Count;
+            p50 = p99 = max = 0;
+            if (count == 0) return false;
+            Samples.Sort();
+            p50 = Samples[count / 2];
+            p99 = Samples[System.Math.Min(count - 1, (int)(count * 0.99))];
+            max = Samples[count - 1];
+            Samples.Clear();
+            return true;
         }
     }
 
