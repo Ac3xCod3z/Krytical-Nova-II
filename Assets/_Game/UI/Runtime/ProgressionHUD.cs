@@ -1221,10 +1221,34 @@ namespace KryticalNova.UI
             card.Q<Label>($"{id}-requirement").text = requirement;
         }
 
+        /// <summary>What a hidden skill's tile is called (build 17, item 12.1).</summary>
+        public const string HiddenSkillName = "???";
+
+        /// <summary>True for a skill whose tile hides its name and icon: not learned and above the level-1 set.
+        /// <paramref name="canLearn"/>: the player could learn it now (its card holds the learn button), so it is shown.</summary>
+        public static bool IsHiddenSkill(bool learned, int requiredLevel, bool canLearn) => !learned && !canLearn && requiredLevel > 1;
+
+        public static string HiddenSkillTooltip(int requiredLevel) => $"???  ·  An unknown skill. Opens at level {requiredLevel}.";
+
         private void AddCombatNode(SkillDefinitionSO skill, float column, int row, VisualElement card)
         {
             int rank = combatSkills.GetRank(skill);
             bool learned = rank > 0, locked = combatSkills.IsLocked(skill) && !learned;
+            bool canLearn = !locked && combatSkills.CanUpgrade(skill, out _);
+            if (IsHiddenSkill(learned, skill.requiredCharacterLevel, canLearn))
+            {
+                // Build 17, item 12.1 (owner, 13 Nov 2026): a skill past the level-1 set stays a mystery until it is learned: no icon, no
+                // name and no card, only the level it opens at. One the player can learn right now shows, or its learn button would be
+                // out of reach.
+                treeNodes.Add(new SkillTreeView.Node
+                {
+                    Key = skill.skillId, Name = HiddenSkillName, Icon = null, Column = column, Row = row,
+                    Rank = $"LV {skill.requiredCharacterLevel}", Learned = false, Locked = true,
+                    TooLow = progression != null && progression.CurrentLevel < skill.requiredCharacterLevel,
+                    Tooltip = HiddenSkillTooltip(skill.requiredCharacterLevel), Card = null,
+                });
+                return;
+            }
             treeNodes.Add(new SkillTreeView.Node
             {
                 Key = skill.skillId, Name = skill.displayName, Icon = skill.icon, Column = column, Row = row,
