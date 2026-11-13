@@ -16,31 +16,51 @@ namespace KryticalNova.Player.Entities
     [WorldSystemFilter(WorldSystemFilterFlags.ServerSimulation)]
     [UpdateInGroup(typeof(PredictedSimulationSystemGroup))]
     [UpdateAfter(typeof(PredictedMoveSystem))]
-    public partial struct PlayerSeparationSystem : ISystem
+    public partial class PlayerSeparationSystem : SystemBase
     {
         NativeHashMap<Entity, uint> m_StoodSince;
+        /// <summary>The part of a millimetre each sliding player has not moved yet (the pose is whole mm; a step may not be).</summary>
+        NativeHashMap<Entity, double2> m_Carry;
+        PlayerServerPlanSystem m_Plans;
 
-        public void OnCreate(ref SystemState state)
+        /// <summary>Slides made; pairs the walkable surface kept from sliding either way (tests, diagnostics).</summary>
+        public int Slides { get; private set; }
+        public int Blocked { get; private set; }
+
+        protected override void OnCreate()
         {
-            state.RequireForUpdate<NetworkTime>();
-            state.RequireForUpdate<PlayerMoveSettings>();
+            RequireForUpdate<NetworkTime>();
+            RequireForUpdate<PlayerMoveSettings>();
             m_StoodSince = new NativeHashMap<Entity, uint>(64, Allocator.Persistent);
+            m_Carry = new NativeHashMap<Entity, double2>(16, Allocator.Persistent);
         }
 
-        public void OnDestroy(ref SystemState state)
+        protected override void OnDestroy()
         {
             if (m_StoodSince.IsCreated) m_StoodSince.Dispose();
+            if (m_Carry.IsCreated) m_Carry.Dispose();
         }
 
-        public void OnUpdate(ref SystemState state)
+        /// <summary>The server's tick rate: the world's own, else NetCode's default (never a number of ours).</summary>
+        public static int TickRateOf(bool found, ClientServerTickRate rate)
+        {
+            if (!found) rate = default;
+            rate.ResolveDefaults();
+            return rate.SimulationTickRate;
+        }
+
+        protected override void OnUpdate()
         {
             PlayerMoveSettings cfg = SystemAPI.GetSingleton<PlayerMoveSettings>();
             if (cfg.PersonalRadiusMm <= 0 || cfg.SlideOutMmps <= 0) return;
             NetworkTime time = SystemAPI.GetSingleton<NetworkTime>();
             if (!time.ServerTick.IsValid) return;
             uint tick = time.ServerTick.TickIndexForValidTick;
-            int tickRate = SystemAPI.TryGetSingleton(out ClientServerTickRate rate) && rate.SimulationTickRate > 0 ? rate.SimulationTickRate : 60;
-            int stepMm = math.max(1, cfg.SlideOutMmps / tickRate);
+            int tickRate = TickRateOf(SystemAPI.TryGetSingleton(out ClientServerTickRate rate), rate);
+            double stepMm = PlayerSeparation.StepMm(cfg.SlideOutMmps, tickRate);
+            m_Plans ??= World.GetExistingSystemManaged<PlayerServerPlanSystem>();
+            // the walkable surface the server's walk is planned on (NavMeshPathPlanner); none = a flat test world, nothing to clamp to
+            IWalkableSurface surface = m_Plans != null ? m_Plans.Planner as IWalkableSurface : null;
 
             var standing = new NativeList<PlayerSeparation.Body>(16, Allocator.Temp);
             var seen = new NativeHashSet<Entity>(16, Allocator.Temp);
@@ -54,30 +74,55 @@ namespace KryticalNova.Player.Entities
                     PlayerVitals v = SystemAPI.GetComponent<PlayerVitals>(entity);
                     still = v.MaxHealthMilli <= 0 || v.HealthMilli > 0; // a fallen body is left where it fell
                 }
-                if (!still) { m_StoodSince.Remove(entity); continue; }
+                if (!still) { m_StoodSince.Remove(entity); m_Carry.Remove(entity); continue; }
                 if (!m_StoodSince.TryGetValue(entity, out uint since)) { since = tick; m_StoodSince[entity] = tick; }
                 standing.Add(new PlayerSeparation.Body { Entity = entity, XMm = pose.ValueRO.XMm, YMm = pose.ValueRO.YMm, ZMm = pose.ValueRO.ZMm, StoodSince = since });
             }
             // players who left the world: forget them
             NativeArray<Entity> keys = m_StoodSince.GetKeyArray(Allocator.Temp);
-            for (int k = 0; k < keys.Length; k++) if (!seen.Contains(keys[k])) m_StoodSince.Remove(keys[k]);
+            for (int k = 0; k < keys.Length; k++) if (!seen.Contains(keys[k])) { m_StoodSince.Remove(keys[k]); m_Carry.Remove(keys[k]); }
 
             // every standing pair (a town square holds tens of players; a grid comes with The Scar's crowds)
             for (int i = 0; i < standing.Length; i++)
             for (int j = i + 1; j < standing.Length; j++)
             {
-                if (!PlayerSeparation.SlideOut(standing[i], standing[j], cfg.PersonalRadiusMm, stepMm, out int which, out int2 moveMm)) continue;
-                int at = which == 0 ? i : j;
-                PlayerSeparation.Body b = standing[at];
-                b.XMm += moveMm.x;
-                b.ZMm += moveMm.y;
-                standing[at] = b;
-                RefRW<PlayerPose> pose = SystemAPI.GetComponentRW<PlayerPose>(b.Entity);
-                pose.ValueRW.XMm = b.XMm;
-                pose.ValueRW.ZMm = b.ZMm;
-                RefRW<LocalTransform> transform = SystemAPI.GetComponentRW<LocalTransform>(b.Entity);
-                transform.ValueRW.Position = new float3(b.XMm, pose.ValueRO.YMm, b.ZMm) * 0.001f;
+                if (!PlayerSeparation.SlideOut(standing[i], standing[j], cfg.PersonalRadiusMm, stepMm, out int which, out double2 away)) continue;
+                // the one who stopped last slides; when the edge of the walkable surface (a wall) stops it, the other steps aside instead
+                if (TrySlide(standing, which == 0 ? i : j, away, surface)) continue;
+                if (TrySlide(standing, which == 0 ? j : i, -away, surface)) continue;
+                Blocked++;
             }
+        }
+
+        bool TrySlide(NativeList<PlayerSeparation.Body> standing, int at, double2 moveMm, IWalkableSurface surface)
+        {
+            PlayerSeparation.Body b = standing[at];
+            m_Carry.TryGetValue(b.Entity, out double2 carry);
+            int2 whole = PlayerSeparation.Carry(ref carry, moveMm);
+            if (whole.x == 0 && whole.y == 0) { m_Carry[b.Entity] = carry; return true; }   // under a millimetre this tick: kept for the next
+            var from = new int3(b.XMm, b.YMm, b.ZMm);
+            var to = new int3(b.XMm + whole.x, b.YMm, b.ZMm + whole.y);
+            if (surface != null)
+            {
+                if (!surface.TryClampStep(from, to, out int3 reached) || (reached.x == from.x && reached.z == from.z))
+                {
+                    m_Carry.Remove(b.Entity);
+                    return false;
+                }
+                if (reached.x != to.x || reached.z != to.z) carry = double2.zero;   // stopped at the edge: no leftover pushes it on
+                to = new int3(reached.x, b.YMm, reached.z);
+            }
+            m_Carry[b.Entity] = carry;
+            b.XMm = to.x;
+            b.ZMm = to.z;
+            standing[at] = b;
+            RefRW<PlayerPose> pose = SystemAPI.GetComponentRW<PlayerPose>(b.Entity);
+            pose.ValueRW.XMm = b.XMm;
+            pose.ValueRW.ZMm = b.ZMm;
+            RefRW<LocalTransform> transform = SystemAPI.GetComponentRW<LocalTransform>(b.Entity);
+            transform.ValueRW.Position = new float3(b.XMm, pose.ValueRO.YMm, b.ZMm) * 0.001f;
+            Slides++;
+            return true;
         }
     }
 
@@ -101,8 +146,17 @@ namespace KryticalNova.Player.Entities
         /// </summary>
         public static bool SlideOut(in Body a, in Body b, int radiusMm, int stepMm, out int which, out int2 moveMm)
         {
-            which = 0;
             moveMm = int2.zero;
+            if (!SlideOut(a, b, radiusMm, (double)stepMm, out which, out double2 move)) return false;
+            moveMm = new int2((int)math.round(move.x), (int)math.round(move.y));
+            return moveMm.x != 0 || moveMm.y != 0;
+        }
+
+        /// <summary>As above, in fractions of a millimetre: the system keeps what a tick cannot move yet (<see cref="Carry"/>).</summary>
+        public static bool SlideOut(in Body a, in Body b, int radiusMm, double stepMm, out int which, out double2 moveMm)
+        {
+            which = 0;
+            moveMm = double2.zero;
             if (math.abs(a.YMm - b.YMm) > 1500) return false;
             long dx = (long)b.XMm - a.XMm, dz = (long)b.ZMm - a.ZMm;
             long apart = 2L * radiusMm;
@@ -125,9 +179,22 @@ namespace KryticalNova.Player.Entities
                 away = new double2(dx / d, dz / d);     // from a toward b
                 if (!bMoves) away = -away;             // a moves away from b
             }
-            double step = math.min((double)stepMm, apart - d);
-            moveMm = new int2((int)math.round(away.x * step), (int)math.round(away.y * step));
-            return moveMm.x != 0 || moveMm.y != 0;
+            double step = math.min(stepMm, apart - d);
+            if (step <= 0) return false;
+            moveMm = away * step;
+            return true;
+        }
+
+        /// <summary>One tick's slide in mm at <paramref name="slideMmps"/>, fractional (1500 mm/s at 45 ticks is 33.3 mm).</summary>
+        public static double StepMm(int slideMmps, int tickRate) => tickRate > 0 ? (double)slideMmps / tickRate : 0;
+
+        /// <summary>Adds <paramref name="moveMm"/> to what was left over; returns the whole millimetres to move now and keeps the rest.</summary>
+        public static int2 Carry(ref double2 carry, double2 moveMm)
+        {
+            double2 total = carry + moveMm;
+            var whole = new int2((int)math.trunc(total.x), (int)math.trunc(total.y));
+            carry = total - new double2(whole.x, whole.y);
+            return whole;
         }
     }
 }

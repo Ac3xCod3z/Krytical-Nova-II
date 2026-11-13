@@ -71,5 +71,39 @@ namespace KryticalNova.Tests
             Assert.IsFalse(PlayerSeparation.IsStanding(new MoveState { Water = 1 }));
             Assert.IsFalse(PlayerSeparation.IsStanding(new MoveState { Wall = 1 }));
         }
+
+        [Test]
+        public void TheStep_IsFractional_AndTheLeftoverIsKeptForTheNextTick()
+        {
+            Assert.AreEqual(1500.0 / 45.0, PlayerSeparation.StepMm(1500, 45), 1e-9, "33.3 mm, not 33");
+            Assert.AreEqual(0.0, PlayerSeparation.StepMm(1500, 0));
+            double2 carry = double2.zero;
+            int moved = 0;
+            for (int t = 0; t < 45; t++) moved += PlayerSeparation.Carry(ref carry, new double2(1500.0 / 45.0, 0)).x;
+            Assert.AreEqual(1500, moved, 1, "one second of sliding moves the full 1.5 m, nothing lost to rounding");
+            double2 slow = double2.zero;
+            Assert.AreEqual(0, PlayerSeparation.Carry(ref slow, new double2(0.4, 0)).x, "under a millimetre: kept");
+            Assert.AreEqual(0, PlayerSeparation.Carry(ref slow, new double2(0.4, 0)).x);
+            Assert.AreEqual(1, PlayerSeparation.Carry(ref slow, new double2(0.4, 0)).x, "the third tick moves the millimetre");
+        }
+
+        [Test]
+        public void TheTickRate_IsTheWorldsOwn_ElseNetCodesDefault()
+        {
+            Assert.AreEqual(30, PlayerSeparationSystem.TickRateOf(true, new Unity.NetCode.ClientServerTickRate { SimulationTickRate = 30 }));
+            var netcodeDefault = new Unity.NetCode.ClientServerTickRate();
+            netcodeDefault.ResolveDefaults();
+            Assert.AreEqual(netcodeDefault.SimulationTickRate, PlayerSeparationSystem.TickRateOf(false, default));
+        }
+
+        [Test]
+        public void TheFractionalSlide_StopsAtTouching()
+        {
+            var a = new PlayerSeparation.Body { Entity = new Entity { Index = 1 }, StoodSince = 1 };
+            var b = new PlayerSeparation.Body { Entity = new Entity { Index = 2 }, XMm = 790, StoodSince = 2 };
+            Assert.IsTrue(PlayerSeparation.SlideOut(a, b, 400, 33.3, out int which, out double2 move));
+            Assert.AreEqual(1, which);
+            Assert.AreEqual(10.0, move.x, 1e-6, "only the 10 mm left to touching");
+        }
     }
 }
