@@ -163,6 +163,15 @@ namespace KryticalNova.Mounts
             materialiser.Appear(shownMount != null ? shownMount.materialise : null, 0f, seconds);
         }
 
+        // The re-formed mount is drawn: on the player again, not gone, its renderers on (the proof run's check).
+        private bool MountShown()
+        {
+            if (model == null || model.transform.parent != transform || (materialiser != null && materialiser.IsGone)) return false;
+            foreach (Renderer r in model.GetComponentsInChildren<Renderer>())
+                if (r.enabled && !(r is ParticleSystemRenderer)) return true;
+            return false;
+        }
+
         private void OnGhostVaultEnded()
         {
             if (vaultRiding) EndVaultRide(true);
@@ -178,7 +187,7 @@ namespace KryticalNova.Mounts
             if (stirrups != null && shownPhase == RidePhase.Riding) stirrups.SetWeight(1f);
             MountSettings settings = mounts != null ? mounts.Settings : null;
             if (landed && settings != null) Kick(settings, settings.saddleDip, 0f);
-            Debug.Log($"[KnMount] {(mounts != null ? mounts.name : "-")} vault ride ended landed={landed} inSaddle={shownPhase == RidePhase.Riding}");
+            Debug.Log($"[KnMount] {(mounts != null ? mounts.name : "-")} vault ride ended landed={landed} inSaddle={shownPhase == RidePhase.Riding} mountShown={MountShown()}");
         }
 
         // ------------------------------------------------------------------ the leap off (owner, 7 Nov 2026 retest 2)

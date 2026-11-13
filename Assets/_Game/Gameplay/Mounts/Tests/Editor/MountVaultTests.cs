@@ -1,6 +1,8 @@
 using KryticalNova.Mounts;
+using System.Reflection;
 using NUnit.Framework;
 using UnityEngine;
+using UnityEngine.TestTools;
 
 namespace KryticalNova.Tests
 {
@@ -59,6 +61,38 @@ namespace KryticalNova.Tests
                 Assert.Less(settings.vaultLeaveShare + settings.vaultLandShare, 1f, "the dissolve and the re-forming never overlap");
             }
             finally { Object.DestroyImmediate(settings); }
+        }
+
+        // Owner, 13 Nov 2026 (#253 v1): the mount dissolved for the flip and never came back. A finished vanish hides the
+        // renderers and the dissolve only drives _Spawn, so the forming again has to show them.
+        [Test]
+        public void Reform_AfterAFinishedVanish_ShowsTheMountAgain()
+        {
+            var look = ScriptableObject.CreateInstance<MountMaterialiseSettings>();
+            look.material = new Material(Shader.Find("Hidden/InternalErrorShader"));
+            var mount = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            bool ignored = LogAssert.ignoreFailingMessages;
+            LogAssert.ignoreFailingMessages = true; // Destroy of the dissolve copies is refused in edit mode; harmless here
+            try
+            {
+                var materialiser = mount.AddComponent<MountMaterialiser>();
+                var renderer = mount.GetComponent<Renderer>();
+                materialiser.Vanish(look, 0f, 0.1f, false);
+                typeof(MountMaterialiser).GetMethod("Finish", BindingFlags.Instance | BindingFlags.NonPublic).Invoke(materialiser, null);
+                Assert.IsTrue(materialiser.IsGone, "the vanish has finished");
+                Assert.IsFalse(renderer.enabled, "a vanished mount is hidden");
+
+                materialiser.Appear(look, 0f, 0.3f);
+                Assert.IsFalse(materialiser.IsGone);
+                Assert.IsTrue(renderer.enabled, "the re-forming mount is drawn (its dissolve shows it growing back)");
+            }
+            finally
+            {
+                LogAssert.ignoreFailingMessages = ignored;
+                Object.DestroyImmediate(mount);
+                Object.DestroyImmediate(look.material);
+                Object.DestroyImmediate(look);
+            }
         }
     }
 }

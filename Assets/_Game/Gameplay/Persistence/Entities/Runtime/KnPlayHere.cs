@@ -2800,7 +2800,7 @@ namespace KryticalNova.Persistence.Entities
             /// For each built mount (Brambleback box 1, Circuit Strider box 4): learned, selected, ridden, then a vault over the spawn
             /// planter (the spot VaultSpawnPlanterTests proves in edit mode). Pass: the server planned the vault, the server phase stayed
             /// Riding (2) on every frame of it, the own view showed the mounted vault ([KnMount] vault ride began / ended landed=True
-            /// inSaddle=True) and the rider is still Riding after the landing.
+            /// inSaddle=True mountShown=True: the re-formed mount drawn under the rider) and the rider is still Riding after the landing.
             /// </summary>
             IEnumerator MountVaults(GameObject body, Entity ghost, VaultTally tally)
             {
@@ -2818,7 +2818,8 @@ namespace KryticalNova.Persistence.Entities
                 {
                     if (!line.StartsWith("[KnMount]", StringComparison.Ordinal)) return;
                     if (line.Contains("vault ride began")) began++;
-                    if (line.Contains("vault ride ended landed=True inSaddle=True")) landedInSaddle++;
+                    // the owner, 13 Nov 2026: the mount must be seen re-formed under the rider, not only the rider in the seat
+                    if (line.Contains("vault ride ended landed=True inSaddle=True mountShown=True")) landedInSaddle++;
                 };
                 Application.logMessageReceived += hear;
                 try
