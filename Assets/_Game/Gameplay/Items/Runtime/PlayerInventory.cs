@@ -573,14 +573,14 @@ namespace KryticalNova.Items
             if (used == null) return;
 
             nextUseTimeOf[used.itemId] = Time.time + used.useCooldown;
-            if (used.restoreHealth > 0f) resources.Heal(used.restoreHealth);
-            if (used.restoreChi > 0f) resources.RestoreChi(used.restoreChi);
+            if (used.RestoresHealth) resources.Heal(used.HealthRestoredAt(resources.MaxHealth));
+            if (used.RestoresChi) resources.RestoreChi(used.ChiRestoredAt(resources.MaxChi));
             if (used.useEffect != ItemUseEffect.None) HandlerFor(used.useEffect)?.ServerUse(new UsedItem(used.itemId, used.displayName));
-            ItemUsed?.Invoke(used.itemId, used.restoreHealth > 0f, used.restoreChi > 0f);
+            ItemUsed?.Invoke(used.itemId, used.RestoresHealth, used.RestoresChi);
 
-            if (used.restoreHealth <= 0f && used.restoreChi <= 0f) return; // the effect's own system presents it
-            if (NetRole.IsNetworked(this)) ItemUsedRpc(used.restoreHealth > 0f, used.restoreChi > 0f);
-            else PresentItemUsed(used.restoreHealth > 0f, used.restoreChi > 0f);
+            if (!used.RestoresHealth && !used.RestoresChi) return; // the effect's own system presents it
+            if (NetRole.IsNetworked(this)) ItemUsedRpc(used.RestoresHealth, used.RestoresChi);
+            else PresentItemUsed(used.RestoresHealth, used.RestoresChi);
         }
 
         private IItemUseHandler HandlerFor(ItemUseEffect effect)
@@ -607,8 +607,8 @@ namespace KryticalNova.Items
                 IItemUseHandler handler = HandlerFor(def.useEffect);
                 return handler == null ? InventoryRules.ReasonNotUsable : handler.UseBlockedReason(new UsedItem(def.itemId, def.displayName));
             }
-            bool healthUseful = def.restoreHealth > 0f && resources.Health < resources.MaxHealth;
-            bool chiUseful = def.restoreChi > 0f && resources.Chi < resources.MaxChi;
+            bool healthUseful = def.RestoresHealth && resources.Health < resources.MaxHealth;
+            bool chiUseful = def.RestoresChi && resources.Chi < resources.MaxChi;
             return healthUseful || chiUseful ? null : ReasonAlreadyFull;
         }
 

@@ -687,7 +687,7 @@ namespace KryticalNova.UI
             glyph.text = show ? def.placeholderGlyph : string.Empty;
             foreach (var c in GlyphToneClasses) glyph.RemoveFromClassList(c);
             if (!show || !def.IsConsumable) return;
-            int tone = def.restoreHealth > 0f && def.restoreChi > 0f ? 2 : def.restoreChi > 0f ? 1 : 0;
+            int tone = def.RestoresHealth && def.RestoresChi ? 2 : def.RestoresChi ? 1 : 0;
             glyph.AddToClassList(GlyphToneClasses[tone]);
         }
 
@@ -1370,6 +1370,8 @@ namespace KryticalNova.UI
             {
                 if (def.restoreHealth > 0f) sb.AppendLine($"Restores {def.restoreHealth:0} HP");
                 if (def.restoreChi > 0f) sb.AppendLine($"Restores {def.restoreChi:0} Flux");
+                if (def.restoreHealthPercent > 0f) sb.AppendLine($"Restores {def.restoreHealthPercent:0} % of max HP");
+                if (def.restoreChiPercent > 0f) sb.AppendLine($"Restores {def.restoreChiPercent:0} % of max Flux");
                 if (def.useEffect == ItemUseEffect.Serum) AppendSerum(sb, def);
                 return sb.ToString().TrimEnd();
             }
