@@ -268,7 +268,8 @@ namespace KryticalNova.Items
         [Header("What one stage gives, by slot")]
         public GearSlotEffect[] effects =
         {
-            new GearSlotEffect(EquipSlot.Weapon, StatType.CriticalRate, GearEffectKind.Flat, 1f),
+            // Build 17 item 7.2: weapons give no crit; a Tuning stage gives Critical Damage instead (PROPOSED).
+            new GearSlotEffect(EquipSlot.Weapon, StatType.CriticalDamagePercent, GearEffectKind.Flat, 1f),
             new GearSlotEffect(EquipSlot.Weapon, StatType.Spirit, GearEffectKind.Flat, 5f),
             new GearSlotEffect(EquipSlot.Armor, StatType.MaxHP, GearEffectKind.Flat, 400f),
             new GearSlotEffect(EquipSlot.Armor, StatType.Spirit, GearEffectKind.Flat, 5f),
