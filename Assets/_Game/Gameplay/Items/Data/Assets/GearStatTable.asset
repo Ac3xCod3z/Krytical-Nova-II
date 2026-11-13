@@ -46,6 +46,13 @@ MonoBehaviour:
   evasionFromLevel: 5
   hitRatePerLevel: 2.5
   glovesHitShare: 0.4
+  ringCriticalAtTop:
+  - 5
+  - 10
+  - 15
+  - 20
+  - 25
+  ringCriticalTopLevel: 112
   ladder:
   - rarity: 1
     slot: 1
