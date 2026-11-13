@@ -172,6 +172,9 @@ namespace KryticalNova.EditorTools
             Settings settings = Settings.Load();
             if (!BuildTools(settings)) return Fail("the launcher or the release tool did not build");
             int build = LastReleaseBuild() + 1;
+            // The news gate (12 Nov 2026): every build carries this build's news and patch notes, checked before anything is built.
+            string newsProblem = LauncherNewsGate.FileProblem(build);
+            if (newsProblem != null) return Fail("no launcher news for build " + build + ": " + newsProblem);
             if (buildGame)
             {
                 var output = new TestBuildBuilder.Output { Folder = GameFolder, ReportPath = Root + "/BuildReport.txt", Title = "Release build", Options = BuildOptions.None };
@@ -186,10 +189,11 @@ namespace KryticalNova.EditorTools
             if (!audit.Ok) return Fail("the bundle audit found maps that differ from their scenes (listed above); nothing was staged or uploaded");
 
             string launcher = Path.GetFullPath(ToolsFolder + "/Launcher/" + LauncherName);
-            string news = File.Exists(NewsPath) ? $" --news \"{Path.GetFullPath(NewsPath)}\"" : "";
-            if (!RunTool($"stage --game \"{Path.GetFullPath(GameFolder)}\" --launcher \"{launcher}\" --out \"{Path.GetFullPath(StoreFolder)}\" --version \"v{BaseVersion()}\" --build {build}{news}", out string staged))
+            if (!RunTool($"stage --game \"{Path.GetFullPath(GameFolder)}\" --launcher \"{launcher}\" --out \"{Path.GetFullPath(StoreFolder)}\" --version \"v{BaseVersion()}\" --build {build}{LauncherNewsGate.StageArgument()}", out string staged))
                 return Fail("staging failed");
             Log(staged.Trim());
+            string stagedNews = LauncherNewsGate.StagedProblem(staged, build);
+            if (stagedNews != null) return Fail(stagedNews + "; nothing was uploaded");
             if (!settings.HasBucket)
             {
                 Log("Cloud Content Delivery is not set up: the release is staged in " + StoreFolder + " only.");
