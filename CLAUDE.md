@@ -1,6 +1,26 @@
 # Krytical Nova II
 
-Unity 6 (6000.6) URP multiplayer (Netcode for GameObjects) project.
+Unity 6 (6000.6) URP multiplayer (**Netcode for Entities**, DOTS) project. Since build 16 (12 Nov 2026) `main` is the DOTS
+game; the Netcode for GameObjects (NGO) game it replaced is kept at the tag `last-ngo-2026-11-12` as the rollback copy.
+
+## Netcode for Entities (mandatory, owner 12 Nov 2026: main became the DOTS game)
+
+Read `Assets/_Game/_Docs/Plans/netcode-for-entities-migration.md` and `Plans/netcode-for-entities-designs/ghosts-design.md`
+(the ten rules) before writing anything networked; `_Docs/Guides/Server-Guide.md` section 13 is how the server runs.
+
+- **The server decides, observers only present.** The owner's game predicts only what it can undo (movement, the start of
+  a cast or swing); it never predicts a hit, damage, loot, XP, a trade or a kill. Everything not owned is an interpolated
+  ghost and no game rule runs on it. A one-off moment is a ring entry with a tick, never a bool that flips.
+- **New code goes in the DOTS game only** (owner rule, 12 Nov 2026). The NGO code still in the tree is the rollback copy; do
+  not extend it.
+- **Systems live in `<System>/Entities/`** (`Runtime`, `Editor`, `Tests`, own asmdefs `KryticalNova.<System>.Entities`) in
+  the layer of their system; the dependency rules below hold for them too.
+- **Tests run in a `KnTestWorld`** (a server world and client worlds in EditMode). Every system of every assembly runs in its
+  server world; a test that needs an always-relevant entry uses its own reason number, never 1 (the Callout's).
+- **Relevancy** (`RelevancySettings`, 150 m) ships OFF; the switch is the `relevancy` key of `server-settings.json`, no
+  rebuild. One owned ghost per connection (`PlayerGhost` only; a lint test pins it).
+- **Burst:** player and server builds are made with Burst (`BurstAotMarker` removes the "no plugins" note before a build);
+  a build made once with Burst off makes every later build skip it.
 
 ## Project organization (mandatory)
 
@@ -48,7 +68,7 @@ Read `Assets/_Game/_Docs/Reference/12Sky/README.md` before naming anything a pla
 - **After every task that lands, update the Encyclopedia of Nova** (owner, 15 Oct 2026): in `01_Systems_Build_List.md` the system's Status and columns, "What is left", a glossary row with a plain "What it is for" for every new term (a system says what it does, an item what using it does; nothing vague), and a line in its Change log; then run `Assets/_Game/_Docs/Encyclopedia~/build_encyclopedia.py` and publish the result to the Encyclopedia artifact (`_Docs/Encyclopedia~/README.md` has the link and the steps). A new doc under `_Docs` joins its Library by itself.
 - `02_Gear_System_Spec.md` is the gear layer (ladder, stats, Tempering, Fusion, Tuning, Slotting); `04_Weapon_Classes.md` is the nine weapon classes and their skills. Keep their "as built" sections current.
 - `05_Economy_And_Social.md` is saving, Creds, pickup, Vault, Trade, Kiosks, Contacts and Crews as built, with every tunable number and who may deal with whom. Keep it current; new numbers go in `EconomySettings` / `CrewSettings`, never in code.
-- A new player-side system adds a row to `PlayerSystemsSetup`; a prefab the server spawns adds its path to `GameplayPrefabsSetup.SpawnedPrefabs` (unregistered prefabs never appear on clients). Test networked features with a second client, not only as host.
+- A new player-side system adds a row to `PlayerSystemsSetup` and says in `PlayerRoleTable` (Bodies) what it is on a server body and on the owner's own view (kept, stripped or a stub); a thing the server sends to clients is a **ghost**: an authored ghost prefab plus a holder in the ghost subscene, made by the system's `Entities/Editor` builder (`PlayerGhostAssetsBuilder`, `HostileEntitiesAssetsBuilder`: safe to rerun; the prefab's name and GUID are the ghost type and never change), then re-baked and the re-bake checked for no diff (a ghost no builder lists never appears on clients). `GameplayPrefabsSetup.SpawnedPrefabs` and `DefaultNetworkPrefabs.asset` belong to the NGO rollback copy only. Test networked features with a second client, not only as host.
 - A new skill, or a new item that has no model, gets its icon through the icon library (**Krytical Nova ▸ Icons ▸ Icon Library**), never by hand: every skill has an icon of its own and no icon is used twice. The one exception is the Skill Chips (owner, 11 Oct 2026): all chips of attack skills show one picture and all chips of buffs another (`ItemDefinition.sharesIconOf`; the library holds the two). **Krytical Nova ▸ Icons ▸ Check Icons** must come back clean. The look of those icons is `IconTreatmentSettings` (`Design/Rendering-Bible.md` 6g).
 - `Assets/_Game/_Docs/Design/Lore-Bible.md` is the story canon (the owner's Core Lore Bible). Read it before writing any story, quest, NPC or flavour text. Its Fixed Canon list is never contradicted, rumor is kept apart from history, and the Ronin stay hidden until their expansion; `11_factions_lore.md` is how the factions look and work in the game.
 - Build only what is asked for: these docs describe many systems that are deliberately not built yet.
