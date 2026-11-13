@@ -216,6 +216,8 @@ namespace KryticalNova.Combat
             int comboStep = cadence != null && skill.IsAttack ? cadence.ServerCombo(kind, pressedOnCadence, charged) : 0;
             if (RedlineRules.SavedForTheChain(comboStep)) charged = false; // this cast does not touch it
             bool holding = RedlineRules.HoldsForEveryHit(kind, charged, pressedOnCadence && single != null && cadence.AppliesTo(single));
+            // build 17, item 7.3: the combo crit rule, decided once for the cast and asked before every hit
+            CritMode crit = CritRules.ModeFor(kind, pressedOnCadence, holding);
 
             for (int i = 0; i < hits; i++)
             {
@@ -233,7 +235,7 @@ namespace KryticalNova.Combat
                     CollectAreaTargets(range);
                     foreach (var victim in areaTargets)
                     {
-                        HitOutcome one = ResolveSkillHit(skill, victim, perHit, label, CadenceFor(victim, onCadence));
+                        HitOutcome one = ResolveSkillHit(skill, victim, perHit, label, CadenceFor(victim, onCadence), crit: CritRules.ModeFor(kind, i, hits, pressedOnCadence, false));
                         if (one > outcome) outcome = one;
                     }
                 }
@@ -241,7 +243,7 @@ namespace KryticalNova.Combat
                          && FlatDistance(single.Transform.position) <= (range + rangeTolerance) * impactRangeLeniency
                          && WithinHeight(single.Transform.position, range))
                 {
-                    outcome = ResolveSkillHit(skill, single, perHit, label, CadenceFor(single, onCadence), forceCrit: holding);
+                    outcome = ResolveSkillHit(skill, single, perHit, label, CadenceFor(single, onCadence), crit: holding ? crit : CritRules.ModeFor(kind, i, hits, pressedOnCadence, false));
                 }
 
                 if (charged && RedlineRules.AfterHit(kind, holding, outcome, i, hits) == ChargeStep.Spend)
@@ -258,10 +260,11 @@ namespace KryticalNova.Combat
             onCadence > 1f && cadence != null && cadence.AppliesTo(victim) ? onCadence : 1f;
 
         private HitOutcome ResolveSkillHit(SkillDefinitionSO skill, IDamageable victim, float multiplier, string label, float damageScale = 1f,
-            bool forceCrit = false)
+            CritMode crit = CritMode.Roll)
         {
-            if (!melee.ResolveHit(victim, multiplier, SkillComboStep, label, out var result, skill.canCrit, fromSkill: true,
-                    damageScale: damageScale, forceCrit: forceCrit))
+            bool canCrit = skill.canCrit && crit != CritMode.Never;
+            if (!melee.ResolveHit(victim, multiplier, SkillComboStep, label, out var result, canCrit, fromSkill: true,
+                    damageScale: damageScale, forceCrit: crit == CritMode.Always))
                 return HitOutcome.None;
             if (result.IsEvaded) return HitOutcome.Evaded;
             Vector3 position = victim.Transform.position + Vector3.up;
