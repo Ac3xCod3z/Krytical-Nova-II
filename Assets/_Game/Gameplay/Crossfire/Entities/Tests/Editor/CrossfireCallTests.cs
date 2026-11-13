@@ -46,6 +46,7 @@ namespace KryticalNova.Crossfire.Entities.Tests
             clock.Settings = m_Settings;
             clock.Clock = () => m_Now;
             clock.Interval = 0f;   // every tick, so each 5-second step is looked at
+            m_Heard.Clear();       // what the world said under the Resources settings before these were put in is not this test's
             return clock;
         }
 
