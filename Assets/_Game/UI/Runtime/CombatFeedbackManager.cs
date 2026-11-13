@@ -137,6 +137,13 @@ namespace KryticalNova.UI
                 label.text = Mathf.RoundToInt(result.DamageDealt).ToString();
             }
 
+            if (result.IsBlocked && !result.IsEvaded && !result.IsReflected)
+            {
+                // Build 17, item 8: the defender blocked; the hit landed for less.
+                label.text = "BLOCKED " + label.text;
+                label.AddToClassList("blocked");
+            }
+
             if (result.ShieldShattered)
             {
                 label.text += "\n[SHATTER]";
