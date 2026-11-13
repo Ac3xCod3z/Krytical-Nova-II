@@ -69,7 +69,7 @@ MonoBehaviour:
   DefaultGhostMode: 0
   SupportedGhostModes: 1
   OptimizationMode: 0
-  Importance: 1
+  Importance: 60
   MaxSendRate: 0
   SingleWorldHostInterpolationSmoothing: 1
   prefabId: 4602c55b041d9cf408643112b142adc9

@@ -1,4 +1,5 @@
 using System.IO;
+using KryticalNova.Networking.Entities;
 using Unity.Entities.Serialization;
 using Unity.NetCode;
 using Unity.Scenes;
@@ -127,6 +128,7 @@ namespace KryticalNova.Player.Entities.Editor
                 ghost.DefaultGhostMode = GhostMode.OwnerPredicted;
                 ghost.SupportedGhostModes = GhostModeMask.All;
                 ghost.OptimizationMode = GhostOptimizationMode.Dynamic;
+                ghost.Importance = Importance(ghost.Importance, s => s.importancePlayer);
                 var player = root.GetComponent<PlayerGhostAuthoring>();
                 if (player == null) player = root.AddComponent<PlayerGhostAuthoring>(); // speeds keep their values
                 CopyMeleeClips(player);
@@ -143,6 +145,22 @@ namespace KryticalNova.Player.Entities.Editor
             return prefab;
         }
 
+        /// <summary>
+        /// A ghost kind's importance (how often it is sent compared with the others) from the relevancy settings; the prefab's own
+        /// value stays, with an error line, when the asset is missing. Changing it changes the baked ghost: client and server are
+        /// then built together.
+        /// </summary>
+        public static int Importance(int current, System.Func<RelevancySettings, int> pick)
+        {
+            RelevancySettings settings = RelevancySettings.Load();
+            if (settings == null)
+            {
+                Debug.LogError("[KnBuild] Resources/" + RelevancySettings.ResourcePath + " is missing: the ghost keeps importance " + current + ".");
+                return current;
+            }
+            return Mathf.Max(1, pick(settings));
+        }
+
         /// <summary>The Strike Dummy ghost: the server spawns one per scene dummy and writes its place and HP (M4.2b).</summary>
         static GameObject EnsureStrikeDummyPrefab()
         {
@@ -157,6 +175,7 @@ namespace KryticalNova.Player.Entities.Editor
                 ghost.DefaultGhostMode = GhostMode.Interpolated;
                 ghost.SupportedGhostModes = GhostModeMask.Interpolated;
                 ghost.OptimizationMode = GhostOptimizationMode.Static;
+                ghost.Importance = Importance(ghost.Importance, s => s.importanceDummy);
                 if (root.GetComponent<StrikeDummyGhostAuthoring>() == null) root.AddComponent<StrikeDummyGhostAuthoring>();
                 PrefabUtility.SaveAsPrefabAsset(root, StrikeDummyPrefabPath);
             }

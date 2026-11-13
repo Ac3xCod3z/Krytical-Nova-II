@@ -73,6 +73,7 @@ namespace KryticalNova.Hostiles.Entities.Editor
                 ghost.DefaultGhostMode = GhostMode.Interpolated;
                 ghost.SupportedGhostModes = GhostModeMask.Interpolated;
                 ghost.OptimizationMode = GhostOptimizationMode.Dynamic;   // they walk
+                ghost.Importance = PlayerGhostAssetsBuilder.Importance(ghost.Importance, s => s.importanceHostile);
                 if (root.GetComponent<HostileGhostAuthoring>() == null) root.AddComponent<HostileGhostAuthoring>();
                 PrefabUtility.SaveAsPrefabAsset(root, PrefabPath);
             }

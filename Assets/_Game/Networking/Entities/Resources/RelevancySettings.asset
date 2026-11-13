@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7865a9f3ded24648a1446c7fe7e5016d, type: 3}
+  m_Name: RelevancySettings
+  m_EditorClassIdentifier: KryticalNova.Networking.Entities::KryticalNova.Networking.Entities.RelevancySettings
+  enabled: 0
+  playerRadius: 150
+  objectRadius: 150
+  leaveMargin: 16
+  fillIntervalTicks: 6
+  importanceTileSize: 48
+  importancePlayer: 100
+  importanceHostile: 60
+  importanceDummy: 10

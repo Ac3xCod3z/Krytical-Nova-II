@@ -3,6 +3,7 @@
     "rootNamespace": "KryticalNova.Player.Entities.Editor",
     "references": [
         "KryticalNova.Player.Entities",
+        "KryticalNova.Networking.Entities",
         "Unity.Entities",
         "Unity.Entities.Hybrid",
         "Unity.Scenes",
