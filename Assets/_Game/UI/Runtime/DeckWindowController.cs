@@ -34,7 +34,8 @@ namespace KryticalNova.UI
         private readonly List<VisualElement> bars = new List<VisualElement>();
         private readonly List<VisualElement> rows = new List<VisualElement>();
         private float[] spectrum = new float[512];
-        private float[] barLevel;
+        private float[] barLevel, peakLevel;
+        private readonly List<VisualElement> caps = new List<VisualElement>();
         private int shownIndex = -2;
         private bool shownPlaying, shownFight;
         private string heldEmote; // the stance the Deck's opening played, let go of when it closes
@@ -56,6 +57,7 @@ namespace KryticalNova.UI
             window?.RemoveFromHierarchy();
             window = null;
             bars.Clear();
+            caps.Clear();
             rows.Clear();
         }
 
@@ -107,6 +109,10 @@ namespace KryticalNova.UI
             window.AddToClassList("deck");
             window.AddToClassList(HudLayoutEditor.MovableClass);
             window.AddToClassList("blocks-world");
+            bool lively = library.look != DeckLibrary.Look.Classic;
+            window.EnableInClassList("deck--lively", lively);
+            window.EnableInClassList("deck--beat-colours", library.look == DeckLibrary.Look.BeatColours);
+            window.EnableInClassList("deck--faction-glow", library.look == DeckLibrary.Look.FactionGlow);
             window.style.width = WindowWidth;
             window.style.display = DisplayStyle.None;
 
@@ -142,13 +148,25 @@ namespace KryticalNova.UI
 
             var visual = Row("deck-visualiser");
             barLevel = new float[library.bars];
+            peakLevel = new float[library.bars];
             for (int i = 0; i < library.bars; i++)
             {
+                // A slot holds the bar (grows from the bottom) and, in the lively looks, its falling peak cap.
+                var slot = new VisualElement { pickingMode = PickingMode.Ignore };
+                slot.AddToClassList("deck-bar-slot");
                 var bar = new VisualElement { pickingMode = PickingMode.Ignore };
                 bar.AddToClassList("deck-bar");
                 if (i % 2 == 1) bar.AddToClassList("deck-bar--alt");
-                visual.Add(bar);
+                slot.Add(bar);
                 bars.Add(bar);
+                if (lively)
+                {
+                    var cap = new VisualElement { pickingMode = PickingMode.Ignore };
+                    cap.AddToClassList("deck-bar-cap");
+                    slot.Add(cap);
+                    caps.Add(cap);
+                }
+                visual.Add(slot);
             }
             window.Add(visual);
 
@@ -288,6 +306,27 @@ namespace KryticalNova.UI
                 float level = Mathf.Clamp01(Mathf.Sqrt(sum / (to - from)) * library.barGain);
                 barLevel[b] = level > barLevel[b] ? level : Mathf.MoveTowards(barLevel[b], level, Time.unscaledDeltaTime * 1.8f);
                 bars[b].style.height = Length.Percent(6f + barLevel[b] * 94f);
+                if (caps.Count == n)
+                {
+                    peakLevel[b] = DeckLook.Peak(peakLevel[b], barLevel[b], library.peakFallPerSecond, Time.unscaledDeltaTime);
+                    caps[b].style.bottom = Length.Percent(6f + peakLevel[b] * 94f);
+                }
+                if (library.look == DeckLibrary.Look.BeatColours)
+                    bars[b].style.backgroundColor = DeckLook.BeatColour(barLevel[b], library.lowColour, library.midColour, library.highColour);
+                else if (library.look == DeckLibrary.Look.FactionGlow)
+                    bars[b].style.opacity = Mathf.Lerp(library.glowFloor, 1f, barLevel[b]);
+            }
+
+            // The beat pulse: the cover square and the play button swell on each beat of the track (its BPM, not listening).
+            if (library.look != DeckLibrary.Look.Classic)
+            {
+                MusicTrack track = deck.Current;
+                float pulse = deck.IsPlaying && !deck.InFight && track != null
+                    ? BeatMath.Pulse(BeatMath.Phase01(deck.Seconds, track.firstBeatSeconds, track.BeatSeconds), library.beatPulseSharpness)
+                    : 0f;
+                float s = 1f + pulse * library.beatPulseScale;
+                art.style.scale = new Scale(new Vector3(s, s, 1f));
+                playButton.style.scale = new Scale(new Vector3(s, s, 1f));
             }
         }
 
