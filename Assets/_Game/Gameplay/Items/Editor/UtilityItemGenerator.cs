@@ -44,6 +44,8 @@ namespace KryticalNova.EditorTools
             public ItemRarity Rarity;
             public ushort Stack, Starter;
             public float Health, Flux;
+            /// <summary>Percent of max HP / Flux one use gives back (build 17 item 5.2, the % Stims).</summary>
+            public float HealthPercent, FluxPercent;
             public bool Hotbar;
             public ItemUseEffect Effect;
             /// <summary>Seconds before the next consumable can be used. 0 = the item's usual one.</summary>
@@ -70,6 +72,17 @@ namespace KryticalNova.EditorTools
             Stim(9007, "Stim_Flux_L", "Flux Stim (L)", "FLUX L", ItemRarity.Uncommon, 0f, StimAmountL),
             Stim(9008, "Stim_Dual_M", "Dual Stim (M)", "DUAL M", ItemRarity.Uncommon, StimAmountM, StimAmountM / 3f),
             Stim(9009, "Stim_Dual_L", "Dual Stim (L)", "DUAL L", ItemRarity.Rare, StimAmountL, StimAmountL / 3f),
+            // Build 17 item 5.2 (owner): % Stims at the Apothecary, 30 / 60 / 90 % of max; mixed = the same % of both (proposed).
+            // Each has an icon of its own (Icon Library), so no IconOf.
+            PercentStim(9041, "Stim_HP_30", "HP Stim 30%", "HP 30%", ItemRarity.Common, 30f, 0f),
+            PercentStim(9042, "Stim_HP_60", "HP Stim 60%", "HP 60%", ItemRarity.Uncommon, 60f, 0f),
+            PercentStim(9043, "Stim_HP_90", "HP Stim 90%", "HP 90%", ItemRarity.Rare, 90f, 0f),
+            PercentStim(9044, "Stim_Flux_30", "Flux Stim 30%", "FLUX 30%", ItemRarity.Common, 0f, 30f),
+            PercentStim(9045, "Stim_Flux_60", "Flux Stim 60%", "FLUX 60%", ItemRarity.Uncommon, 0f, 60f),
+            PercentStim(9046, "Stim_Flux_90", "Flux Stim 90%", "FLUX 90%", ItemRarity.Rare, 0f, 90f),
+            PercentStim(9047, "Stim_Dual_30", "Dual Stim 30%", "DUAL 30%", ItemRarity.Uncommon, 30f, 30f),
+            PercentStim(9048, "Stim_Dual_60", "Dual Stim 60%", "DUAL 60%", ItemRarity.Rare, 60f, 60f),
+            PercentStim(9049, "Stim_Dual_90", "Dual Stim 90%", "DUAL 90%", ItemRarity.Epic, 90f, 90f),
 
             // Twelve Sky's Calabash as a Flux reservoir (owner, 15 Oct 2026): kept and refilled, never stacked, since
             // each bottle carries the drinks it has used. What a drink gives is FlaskSettings.
@@ -243,6 +256,11 @@ namespace KryticalNova.EditorTools
         private static Row Stim(ushort id, string asset, string name, string glyph, ItemRarity rarity, float health, float flux) =>
             new Row { Id = id, Asset = asset, Name = name, Glyph = glyph, Rarity = rarity, Stack = StimStack, Health = health, Flux = flux, Hotbar = true, Cooldown = StimCooldown,
                 Description = health > 0f && flux > 0f ? $"Restores {health:0} HP and {flux:0} Flux." : health > 0f ? $"Restores {health:0} HP." : $"Restores {flux:0} Flux." };
+        private static Row PercentStim(ushort id, string asset, string name, string glyph, ItemRarity rarity, float healthPercent, float fluxPercent) =>
+            new Row { Id = id, Asset = asset, Name = name, Glyph = glyph, Rarity = rarity, Stack = StimStack, HealthPercent = healthPercent,
+                FluxPercent = fluxPercent, Hotbar = true, Cooldown = StimCooldown,
+                Description = healthPercent > 0f && fluxPercent > 0f ? $"Restores {healthPercent:0} % of your max HP and Flux."
+                    : healthPercent > 0f ? $"Restores {healthPercent:0} % of your max HP." : $"Restores {fluxPercent:0} % of your max Flux." };
         // A method, not a table: the rows above are built before any field declared after them.
         private static string Numeral(int page) => page == 1 ? "I" : page == 2 ? "II" : page == 3 ? "III" : "IV";
 
@@ -406,6 +424,8 @@ namespace KryticalNova.EditorTools
                 def.maxStack = row.Stack;
                 def.restoreHealth = row.Health;
                 def.restoreChi = row.Flux;
+                def.restoreHealthPercent = row.HealthPercent;
+                def.restoreChiPercent = row.FluxPercent;
                 if (row.Cooldown > 0f) def.useCooldown = row.Cooldown;
             }
 
