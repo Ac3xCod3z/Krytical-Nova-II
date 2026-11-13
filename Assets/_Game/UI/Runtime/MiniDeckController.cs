@@ -23,7 +23,7 @@ namespace KryticalNova.UI
     public sealed class MiniDeckController : MonoBehaviour
     {
         private const float LiveAbove = 0.01f;
-        private const float FlashSeconds = 0.09f, LitSeconds = 0.45f, ChatFadeSeconds = 0.25f;
+        private const float FlashSeconds = 0.09f, LitSeconds = 0.45f, ChatFadeSeconds = 0.25f, SwapFadeSeconds = 0.2f;
         private const float DeviceWidth = 134f, DeviceHeight = 186f, DeviceRadius = 18f;
         private const float WheelSize = 82f, WheelCentre = 28f, BarMaxHeight = 18f;
         private readonly VisualElement[] bars = new VisualElement[12];
@@ -35,6 +35,8 @@ namespace KryticalNova.UI
         private Label title, pack;
         private bool shown, chatFaded;
         private float lit, chatOpacity = 1f;
+        // Owner 13 Nov 2026 (3.3): never both at once - the minimap fades out, then the Mini Deck fades in, and back.
+        private float mapOpacity = 1f, deckOpacity;
         private int step;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
@@ -231,6 +233,7 @@ namespace KryticalNova.UI
             if (deck == null) return;
             bool live = CombatBeat.Live01 > LiveAbove;
             if (live != shown) Show(live);
+            UpdateSwap();
             UpdateChat(live);
             if (!live) return;
             MusicTrack track = CombatBeat.Track;
@@ -257,10 +260,25 @@ namespace KryticalNova.UI
         {
             shown = on;
             if (minimap == null || deck == null) return;
-            foreach (VisualElement child in minimap.Children())
-                if (child != deck) child.style.visibility = on ? Visibility.Hidden : StyleKeyword.Null;
-            deck.style.display = on ? DisplayStyle.Flex : DisplayStyle.None;
             if (!on) { lit = 0f; step = 0; }
+            UpdateSwap();
+        }
+
+        // One fades fully out before the other fades in (MiniDeckBeat.SwapStep), so they never overlap.
+        private void UpdateSwap()
+        {
+            if (minimap == null || deck == null) return;
+            float delta = Time.unscaledDeltaTime / SwapFadeSeconds;
+            (mapOpacity, deckOpacity) = MiniDeckBeat.SwapStep(shown, mapOpacity, deckOpacity, delta);
+            bool mapGone = mapOpacity <= 0f;
+            foreach (VisualElement child in minimap.Children())
+            {
+                if (child == deck) continue;
+                child.style.visibility = mapGone ? Visibility.Hidden : StyleKeyword.Null;
+                child.style.opacity = mapOpacity >= 1f ? StyleKeyword.Null : new StyleFloat(mapOpacity);
+            }
+            deck.style.display = deckOpacity > 0f ? DisplayStyle.Flex : DisplayStyle.None;
+            deck.style.opacity = deckOpacity >= 1f ? StyleKeyword.Null : new StyleFloat(deckOpacity);
         }
 
         // In a Callout the chat fades, and comes back while the player types in it.
