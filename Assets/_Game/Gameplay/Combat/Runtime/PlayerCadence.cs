@@ -268,7 +268,7 @@ namespace KryticalNova.Combat
             double error = 0.0, beats = 0.0;
             ScriptableObject track = null;
             bool hasBeat = clock != null && clock.TryBeatAt(pressedAt, out track, out error, out beats);
-            bool inFight = combat != null && combat.InFightFor(clock != null && clock.CalloutsOnly);
+            bool inFight = combat != null && combat.InFightFor(clock != null && clock.CalloutsOnly, clock != null && clock.RealTargetsOnly);
             CadenceVerdict verdict = CadenceRules.Judge(settings, inFight, hasBeat, now, pressedAt, error);
 
             var press = new CadencePress

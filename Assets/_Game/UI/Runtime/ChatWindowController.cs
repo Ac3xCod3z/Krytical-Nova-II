@@ -51,6 +51,12 @@ namespace KryticalNova.UI
         }
 
         private static readonly string[] ChannelNames = { "GENERAL", "FACTION", "CREW", "WHISPER", "GM", "SYSTEM", "COMBAT", "SQUAD" };
+        /// <summary>Build 17, item 4.2: a hit in the Combat log in its own colour, this player's own hits apart from hits on them.</summary>
+        public const string CombatOutClass = "chat-line--combat-out", CombatInClass = "chat-line--combat-in";
+
+        public static string CombatSideClass(ChatCombatSide side) =>
+            side == ChatCombatSide.Out ? CombatOutClass : side == ChatCombatSide.In ? CombatInClass : null;
+
         private static readonly string[] LineClasses =
         {
             "chat-line--general", "chat-line--faction", "chat-line--guild", "chat-line--whisper",
@@ -228,6 +234,8 @@ namespace KryticalNova.UI
             VisualElement shown = line.HasLinks ? LinkedLine(text, line) : PlainLine(ChatLinks.Strip(text));
             shown.AddToClassList(LineClass);
             shown.AddToClassList(LineClasses[(int)line.Channel]);
+            string side = CombatSideClass(line.CombatSide);
+            if (side != null) shown.AddToClassList(side);
             float size = LineSize();
             if (size > 0f) shown.style.fontSize = size;
             log.Add(shown);

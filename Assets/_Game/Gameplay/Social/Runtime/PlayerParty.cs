@@ -570,6 +570,7 @@ namespace KryticalNova.Social
 
         public int BuffShareRank => settings != null ? settings.buffShareRank : 20;
         public float BuffShareRadius => settings != null ? settings.buffShareRadius : 20f;
+        public float BuffSharePercent => settings != null ? settings.sharedBuffPercent : SquadBuffRules.DefaultSharePercent;
         public string BuffGiverName => MemberName;
 
         /// <summary>Server: the other living members in this map within the share radius (SquadBuffRules).</summary>

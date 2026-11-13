@@ -31,7 +31,7 @@ MonoBehaviour:
   restoreHealth: 300
   restoreChi: 100
   useEffect: 0
-  useCooldown: 1
+  useCooldown: 0.5
   usableFromHotbar: 1
   placeholderGlyph: HP+FLUX
   appearancePartIds: 
