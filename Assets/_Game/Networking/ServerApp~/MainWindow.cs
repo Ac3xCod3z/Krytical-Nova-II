@@ -59,6 +59,8 @@ namespace KryticalNova.ServerApp
             public int Online;
             /// <summary>Netcode for Entities' sleep-mode notes hidden from the log since this start (a slow frame each; harmless).</summary>
             public int SlowFrames;
+            /// <summary>True while the stack trace under a hidden slow-frame note is still coming in (hidden with the note).</summary>
+            public bool SkipTrace;
             public string State = "STOPPED";
             public bool Stopping;
             /// <summary>An entity server has no gm.restart: RESTART stops it and this starts it again when it has ended.</summary>
@@ -627,8 +629,17 @@ namespace KryticalNova.ServerApp
             var sb = new StringBuilder();
             foreach (string line in fresh)
             {
-                if (Noise(line)) continue;
-                if (counted != null && SleepModeNote(line)) { counted.SlowFrames++; continue; } // counted in the tab's top line instead
+                if (Noise(line)) { if (counted != null) counted.SkipTrace = true; continue; } // its stack trace goes with it
+                if (counted != null && SleepModeNote(line)) { counted.SlowFrames++; counted.SkipTrace = true; continue; } // counted in the tab's top line instead
+                if (counted != null && counted.SkipTrace)
+                {
+                    // A player build prints a stack trace under every log line. It is hidden up to the blank line that ends it,
+                    // except under errors and exceptions (owner, 13 Nov 2026: the traces filled the log).
+                    if (line.Trim().Length == 0) { counted.SkipTrace = false; continue; }
+                    if (StackFrame(line)) continue;
+                    counted.SkipTrace = false;
+                }
+                if (counted != null && !StackFrame(line) && line.Trim().Length > 0) counted.SkipTrace = !ErrorLine(line);
                 sb.AppendLine(line);
                 if (counted != null)
                 {
@@ -639,17 +650,31 @@ namespace KryticalNova.ServerApp
             }
             if (sb.Length == 0) return;
             into.AppendText(sb.ToString());
-            if (into.Lines.Length > Hosted.MaxLines) { into.Select(0, into.GetFirstCharIndexFromLine(into.Lines.Length - Hosted.MaxLines)); into.SelectedText = ""; }
+            if (into.Lines.Length > Hosted.MaxLines)
+            {
+                // A read-only RichTextBox plays the Windows error sound when its text is cut (owner, 13 Nov 2026: it chimed
+                // all the time once the log was full), so it is opened for the cut only.
+                into.ReadOnly = false;
+                into.Select(0, into.GetFirstCharIndexFromLine(into.Lines.Length - Hosted.MaxLines));
+                into.SelectedText = "";
+                into.ReadOnly = true;
+            }
             if (atEnd) { into.SelectionStart = into.TextLength; into.ScrollToCaret(); }
         }
 
         // Unity's start-up chatter that is no problem (the control page hides the same).
-        private static readonly Regex NoisePattern = new Regex(@"memorysetup|serialization layout|Did you #if UNITY_EDITOR|referenced script|UnloadTime|Unloading \d+|shader|IMGUI module|Unknown managed type|^Unknown arg: -\s*$|UnityMemory\] Configuration Parameters", RegexOptions.IgnoreCase);
+        private static readonly Regex NoisePattern = new Regex(@"memorysetup|serialization layout|Did you #if UNITY_EDITOR|referenced script|UnloadTime|Unloading \d+|shader|IMGUI module|Unknown managed type|^Unknown arg: -\s*$|UnityMemory\] Configuration Parameters|\[KnServer\] Page request accepted", RegexOptions.IgnoreCase);
         // "Unknown arg: -" is Unity's memory setup meeting the "-" of the "-logFile -" this app starts the server with (the log to the app); harmless.
         private static bool Noise(string line) => NoisePattern.IsMatch(line);
 
         // The entity server's "Expected server to always update once per frame when in sleep mode. Ran N steps" (Netcode for Entities):
         // a frame that took longer than a tick (start, a join, a backup). Harmless; hidden and counted (Nova's pick, DOTS builds 8 Nov 2026).
+        // One frame of a Unity stack trace: "Namespace.Type:Method(Args)", maybe with " (at file:line)".
+        private static readonly Regex StackFramePattern = new Regex(@"^\s*[\w\.`<>\[\]\+/]+:[\w\.`<>\[\]\+|]+\s*\(.*\)\s*$");
+        private static bool StackFrame(string line) => StackFramePattern.IsMatch(line);
+        // A line whose stack trace stays visible: errors and exceptions.
+        private static bool ErrorLine(string line) => line.IndexOf("exception", StringComparison.OrdinalIgnoreCase) >= 0 || line.IndexOf("error", StringComparison.OrdinalIgnoreCase) >= 0;
+
         private static bool SleepModeNote(string line) => line.IndexOf("Expected server to always update once per frame when in sleep mode", StringComparison.Ordinal) >= 0;
 
         private async Task<bool> Answers()
