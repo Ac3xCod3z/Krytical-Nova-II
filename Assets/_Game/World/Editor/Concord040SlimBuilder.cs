@@ -68,6 +68,47 @@ namespace KryticalNova.EditorTools.World
             EditorApplication.Exit(code);
         }
 
+        /// <summary>
+        /// The NavMesh rebake on the slim collision (owner, 12 Nov 2026, before build 16): Zone01's Concord NavMeshSurface bakes again
+        /// with its own settings, and the result is written over the existing Concord040_NavMesh asset, so the scene keeps its
+        /// reference and is not saved. Measured before and after. Batch: -executeMethod ...Concord040SlimBuilder.RebakeBatch.
+        /// </summary>
+        public static void RebakeBatch()
+        {
+            int code = 0;
+            string outDir = Environment.GetEnvironmentVariable("KN_C40_OUT") ?? "Logs/Concord040Slim";
+            Directory.CreateDirectory(outDir);
+            try
+            {
+                Measure("BEFORE", outDir, false);
+                EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Single);
+                var root = GameObject.Find(RootName);
+                var surface = root != null ? root.GetComponent<Unity.AI.Navigation.NavMeshSurface>() : null;
+                var asset = AssetDatabase.LoadAssetAtPath<NavMeshData>(Folder + "/Concord040_NavMesh.asset");
+                if (surface == null || asset == null || surface.navMeshData != asset) { Log("FAIL no Concord NavMeshSurface using Concord040_NavMesh.asset"); code = 2; }
+                else
+                {
+                    Physics.SyncTransforms();
+                    surface.BuildNavMesh();                       // a new in-memory NavMeshData from the slim collision
+                    var fresh = surface.navMeshData;
+                    if (fresh == null || fresh == asset) { Log("FAIL bake produced nothing"); code = 2; }
+                    else
+                    {
+                        surface.RemoveData();
+                        EditorUtility.CopySerialized(fresh, asset);  // same asset, same GUID: the scene's reference stays
+                        asset.name = "Concord040_NavMesh";
+                        EditorUtility.SetDirty(asset);
+                        AssetDatabase.SaveAssets();
+                        Log("NavMesh rebaked into Concord040_NavMesh.asset (scene not saved)");
+                        Measure("AFTER", outDir, true);
+                    }
+                }
+            }
+            catch (Exception e) { Log("FAIL " + e); code = 1; }
+            File.WriteAllText(Path.Combine(outDir, "report.txt"), Report.ToString());
+            EditorApplication.Exit(code);
+        }
+
         // ---------------------------------------------------------------- build
 
         public static bool Build()
@@ -350,7 +391,9 @@ namespace KryticalNova.EditorTools.World
             {
                 Vector3 a = arrival.transform.position;
                 bool hit = Physics.Raycast(a + Vector3.up * 1f, Vector3.down, out var ah, 3f, ~0, QueryTriggerInteraction.Ignore);
-                Log($"{tag}: Sky Lift arrival {root.InverseTransformPoint(a)}: ground {(hit ? $"{(ah.point.y - a.y) * 100:0.0} cm off, on {ah.collider.name}" : "NONE")}");
+                bool onNav = NavMesh.SamplePosition(a, out var nh, 0.5f, NavMesh.AllAreas);
+                Log($"{tag}: Sky Lift arrival {root.InverseTransformPoint(a)}: ground {(hit ? $"{(ah.point.y - a.y) * 100:0.0} cm off, on {ah.collider.name}" : "NONE")}; " +
+                    $"NavMesh {(onNav ? $"{Vector3.Distance(nh.position, a) * 100:0.0} cm away" : "NONE within 0.5 m")}");
             }
 
             // 3) capsule walk along NavMesh paths (r 0.3, h 1.8, steps up to 0.45 m)
