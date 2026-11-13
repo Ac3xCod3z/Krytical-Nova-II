@@ -275,5 +275,9 @@ namespace KryticalNova.Items
             bag[to] = worn;
             return true;
         }
+
+        /// <summary>True while an item kind is still on its own use cooldown (build 17 item 5.1: per kind, never shared).</summary>
+        public static bool OnUseCooldown(System.Collections.Generic.IReadOnlyDictionary<ushort, float> nextUseTimeOf, ushort itemId, float now) =>
+            nextUseTimeOf != null && nextUseTimeOf.TryGetValue(itemId, out float at) && now < at;
     }
 }

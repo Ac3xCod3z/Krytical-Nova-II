@@ -31,7 +31,7 @@ MonoBehaviour:
   restoreHealth: 2400
   restoreChi: 800
   useEffect: 0
-  useCooldown: 1
+  useCooldown: 0.5
   usableFromHotbar: 1
   placeholderGlyph: DUAL L
   appearancePartIds: 
