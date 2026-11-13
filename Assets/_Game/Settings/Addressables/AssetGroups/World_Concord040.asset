@@ -1,0 +1,1918 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: World_Concord040
+  m_EditorClassIdentifier: Unity.Addressables.Editor::UnityEditor.AddressableAssets.Settings.AddressableAssetGroup
+  m_GroupName: World_Concord040
+  m_GUID: 028d98fed6ab18a48b83f2fc30da97ca
+  m_SerializeEntries:
+  - m_GUID: 00a892ad7af95744da981203a0fa1cf9
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_197.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 01126e096c75e5946bea87adb7b1816a
+    m_Address: Assets/_Game/World/Zones/Concord040/Meshes/Glass_-4_4_1097.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 01530375813fde54196a3e442a9556a9
+    m_Address: Assets/_Game/World/Zones/Concord040/Meshes/Glass_-3_4_1094.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 01e6537c42d7f284caab16d001a2413e
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_041.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 024993483aa03cc4daab318036fb7fca
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_140.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 0259daa8313bba442842d9f25b189959
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_079.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 034872ff7223d9d49af525f9baae16e7
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_211.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 036bfb7e6ca682f45bcbc9e5da79cb29
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_295.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 03ecb656673a38f4eb8fd0a635030419
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_011.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 044761eafd8a9a54783155dbf029e27e
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_280.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 0491c3312a34071429d12c356d63a642
+    m_Address: Assets/_Game/World/Zones/Concord040/Meshes/Glass_-5_-3_1122.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 04c111bcfb24bbd47a6d9bf8ac02a872
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_106.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 04d25ee7be6c828408f930529378089b
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_273.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 05240bf012049614081b08471e19b0f5
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_052.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 0529fa7bbc1628046b3c7c9d4f9ced00
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_233.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 0545a47cdcfa90c4d8be8fdca2382f41
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_095.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 06999fd32db17a54fa47ffdc922c2483
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_050.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 0769f2bc04eb7024a99c598bdb87821c
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_147.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 07e7daf73cd052f41aa093d8ad6409a5
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_100.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 084570eb38222d7499904ad27b171c73
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_283.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 091b19719dfd8344bb2c806277711ce6
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_243.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 09391751c7a40b64b80dbbcae3fe6b0d
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_025.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 09a0d9e0e5a65c549b4e80563ec331c6
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_014.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 09ef4d67ca126bb4482d4c92871b3425
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_097.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 09fb56a9f8c2f3b4ca902ffcae1d0fd9
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_065.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 0ad336ace2a58584fa18601736dd539a
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_000.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 0b7c8983fb4458740b0aaebe14434ad8
+    m_Address: Assets/_Game/World/Zones/Concord040/Meshes/Glass_1_2_2724.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 0c20f77c3444c1d46afca2fa09487b46
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_116.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 0c6ad1b95a75e674bb69e4dc7b647a21
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_162.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 0cf75d82adde85b4ea880ecc05ae2912
+    m_Address: Assets/_Game/World/Zones/Concord040/Meshes/DoorRight_0_2_3668.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 0d3001377ab9e964b888eedb815a8e7d
+    m_Address: Assets/_Game/World/Zones/Concord040/Textures/tex_56c7717056e7.png
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 0dfef5f2d78f0244d808f7b9546381f0
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_276.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 0fa75bbdc4debc74a9bc996dd66487ce
+    m_Address: Assets/_Game/World/Zones/Concord040/Meshes/Glass_-2_2_2720.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 106ed36c64a73ba49b24c5a2bc06514e
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_124.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 10f484772cb6f7b43be7115261705925
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_166.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 111094f347eab5a41b81998f206232cc
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_028.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 1187f8b323141d146bf35dc817a74c53
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_260.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 139da91d26c075b41b60bda99c139813
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_154.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 14da5c5c91509fa49b0e0ff6185dc9cd
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_019.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 14f7a425ec50ead4c9e0bf49b25c89f6
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_185.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 1788d63891acec34fa1ca282e6f02bda
+    m_Address: Assets/_Game/World/Zones/Concord040/Slim/Concord040_Collision.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 181912b4e445073408c15ec133e1bb91
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_251.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 183370f63a75ae54b8c814285eefcaba
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_182.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 18c460056590eb74fadf97626c6a9999
+    m_Address: Assets/_Game/World/Zones/Concord040/Meshes/Glass_3_-2_2634.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 18e144f68999bca43bae114609ce23a6
+    m_Address: Assets/_Game/World/Zones/Concord040/Meshes/Glass_-5_-2_1119.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 19a8315df05b7de4db8777e6df080320
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_204.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 19d53bb81051d6f4fa0dc8c6c0e22407
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_163.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 1a82c13d7c69bf84da6a367a33753e80
+    m_Address: Assets/_Game/World/Zones/Concord040/Meshes/Glass_0_-5_1034.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 1aa1540b57b1b2c4495f0fc95b730e01
+    m_Address: Assets/_Game/World/Zones/Concord040/Meshes/Glass_3_-5_1043.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 1cbb1adf6d5ca284f8f182db78bc3071
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_205.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 1e13f2356ae7c07438a9a1e15616d449
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_223.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 1ef51534522245443945971719f46641
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_203.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 1fd3280ca5fb2114fb15e415ea2223a4
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_228.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 21eb9da090564c64aa86f1d00c9371b1
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_242.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 220a8b70bff605e4ab765c7f55d1b334
+    m_Address: Assets/_Game/World/Zones/Concord040/Meshes/Glass_2_-3_2414.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 22244325968f3d149a344c20051508b2
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_198.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 226a3c0566194054396ae137acd96e76
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_282.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 2343eb808a0fb72449744ca2af8b1579
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_075.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 23cc780c7c5ab5444b16aafcaa58d09c
+    m_Address: Assets/_Game/World/Zones/Concord040/Meshes/Glass_-5_3_1104.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 240aa40aceedba84d80ec3235aeba190
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_200.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 24224bd9a81740e4fb72c0cf09efe9d7
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_208.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 244b1014c876d3f42a1ad71484b1ad06
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_267.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 24b7d923d4bd07443a4800ddd2c088c8
+    m_Address: Assets/_Game/World/Zones/Concord040/Meshes/Glass_-1_-5_1031.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 24dc96dfde2004246948d7189448f1fb
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_272.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 25d44bd8a806b0344a9441c7c456fcbb
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_007.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 25edd6217829a24408ef242335054af4
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_103.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 26447ef321c69ff4487b1c95996b522d
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_042.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 26e091c3410c4b24ab59f21a4af2bc1f
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_016.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 272dc18c850886d428ca16924f2bf5ca
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_018.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 27c6665e4eb2d7849bb7d3040ba6d7b4
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_054.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 28182c8e45604184cb7bae6b8e6c4318
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_179.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 2898339671fd544449ebc92ad9a0577c
+    m_Address: Assets/_Game/World/Zones/Concord040/Meshes/Glass_-5_-4_1125.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 29b82df11eadb8b468ca0c6b9ee0d155
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_188.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 2af55a800c4099b44ae53fe6cc237dd4
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_089.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 2afa9e28e4275c0449bb3abdede41b66
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_111.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 2b147dacd37f439459c0219ebb085226
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_241.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 2c1574747a35fff4287cb6415f27a086
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_155.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 2c193417cef1f6d4f82577d1cf1fd277
+    m_Address: Assets/_Game/World/Zones/Concord040/Meshes/Glass_2_1_2418.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 2d25bc146d580844eb2146f5262c1595
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_170.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 2dc31dd79b1d5e04db4b2c6b302adaf9
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_191.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 2dd059b44cd71f841b7429f51b119f51
+    m_Address: Assets/_Game/World/Zones/Concord040/Meshes/Glass_-1_2_2711.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 2e35f22e8810ab1488ee7bbe05063270
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_144.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 30ea61fbbde189b4dae0d384b4e08942
+    m_Address: Assets/_Game/World/Zones/Concord040/Meshes/Glass_4_-2_1056.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 311ced2346e2a8142b0f410bc85f10d8
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_259.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 315091e7d2965f946a04361a64aa7719
+    m_Address: Assets/_Game/World/Zones/Concord040/Meshes/Glass_2_-2_2415.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 315465ed79e3ea541b2afd162158f130
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_068.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 316f60b3b3cbe9d4db7bd41a5385db7e
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_159.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 3198acc3fb6e4404a9298dfdcf42987e
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_123.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 32964393d1d59dd4fa34d0d42a22f07d
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_227.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 36469816ec39e0b4abbd4506f5f8f59c
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_212.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 365dc70ebc1001d41935dd949a6b2e57
+    m_Address: Assets/_Game/World/Zones/Concord040/Meshes/Glass_-5_0_1113.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 3660a86684c1d66489d1bbe06ce7d118
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_101.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 36923918cd0850544b818aba979af2af
+    m_Address: Assets/_Game/World/Zones/Concord040/Meshes/Glass_4_4_1073.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 36d403139524ee243ab9c603228dea25
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_076.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 376ec6db751243446ade1fefea40d065
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_286.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 377b865ea309e474d9eaf5845f79318c
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_094.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 3836a0b9a19748e419b0d593a45fea02
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_210.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 384e6e2c0510e954ca9bc5fb9d20456b
+    m_Address: Assets/_Game/World/Zones/Concord040/Meshes/Glass_4_1_1065.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 3ca23ccf8a1a2784983adce47b3eb44e
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_049.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 3d25da8cb0e23a04b8dcff1fa0c583e3
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_081.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 3ddb8b91464b005448bc17966c6f9af2
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_112.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 3e353cad5ef83cb499efdda50a81fc89
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_187.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 3f629329d9c6e3145ab81733d09ef616
+    m_Address: Assets/_Game/World/Zones/Concord040/Meshes/Glass_2_-1_2416.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 3f77a95cec5364c4c906e880e6a3fab5
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_151.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 3fbde3b35bbb219469454a14144a6144
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_156.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 40364de1cbbd13340ae73e3675465cbc
+    m_Address: Assets/_Game/World/Zones/Concord040/Meshes/Glass_4_-5_1046.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 41163db57288d254489dd54ec3d64926
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_120.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 411903666cbeca040b742b3e53b2059a
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_067.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 412a3645b08801443a73cdb44c3ea736
+    m_Address: Assets/_Game/World/Zones/Concord040/Meshes/Glass_-2_3_2721.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 41957c8dad0c05549a88c53624196878
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_126.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 41adf0d0d277b0a47a3b8755745fc9a8
+    m_Address: Assets/_Game/World/Zones/Concord040/Textures/metal_smooth_005.png
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 420cf2c6d30da0e41b2748c2f7ace5c9
+    m_Address: Assets/_Game/World/Zones/Concord040/Meshes/Glass_0_2_2712.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 421d2caebb0ecef4da3babdd2053b01f
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_145.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 423bf55941b4f73498a33823e39e2f16
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_240.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 428cc1dcacbd8e240a2836391a773e15
+    m_Address: Assets/_Game/World/Zones/Concord040/Meshes/Glass_0_0_2922.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 43dfcba569f92a14593a188c31706775
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_258.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 44236cffc15dd4f428377773d3a0454a
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_022.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 442752ac05584c341ac0001fee64ee3f
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_256.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 44d5cddac1177e4458c0ec577762bfc4
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_066.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 4549bd0a5df0b9e4d8e7ac077023dd76
+    m_Address: Assets/_Game/World/Zones/Concord040/Thrusters/Thruster.shader
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 470039e3480aaa34fb992d9c59ab845f
+    m_Address: Assets/_Game/World/Zones/Concord040/Meshes/Glass_2_3_2420.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 47a8ac7b18e2c5045a06e5164e9965e1
+    m_Address: Assets/_Game/World/Zones/Concord040/Thrusters/Thruster_High.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 47d80ad32ae84b7409cbc73080108ef2
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_130.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 485655aa5e2fa5c40b9a816c1ced47e2
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_275.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 4a8bf8a1af607d945bf3125a124665c6
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_231.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 4b771c2c37066ae43b47aa68a7dbcc2f
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_091.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 4c46c37e09436974d94ced26b2988f13
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_009.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 4e828206965bc9e43ae80247c52e0552
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_189.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 4ee699505befec24da809b777b4b161b
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_149.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 50341e4da6b814b4bb87dd618cc88e76
+    m_Address: Assets/_Game/World/Zones/Concord040/Meshes/Glass_0_4_1085.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 516fa6684dc1fd849b34e276bf496c6d
+    m_Address: Assets/_Game/World/Zones/Concord040/Thrusters/ThrusterCone.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 52da9261c0015b34aa91f16cfb6223d0
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_250.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 52e5301efd766bb458496fca4754862b
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_269.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 53b86ba73445ec14682d42a5ad806c1c
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_207.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 541b59b7b6b08344e8ce16bbf3b2f906
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_105.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 54c6746982aafbd4c865524c70298fdc
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_084.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 54e0949b58ec2df419678c7528ff8e43
+    m_Address: Assets/_Game/World/Zones/Concord040/Textures/tex_ce99668126bd.png
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 57433e4d4edda77498d5f39f1ba380a4
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_281.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 58933155f51967e4d823fc890c4b1c8e
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_043.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5951ec875d3c518449ffcdbe38fbc342
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_110.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5a95508966c9f424bbb61a661bddfd01
+    m_Address: Assets/_Game/World/Zones/Concord040/Meshes/Glass_3_0_2636.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5ac390644a91a794797cf67d20a1f0b3
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_008.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5acee3d29d6af2640aa995d56fcfd63a
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_160.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5af24461785ab3048a3fbe629fb8e5b0
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_285.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5b7f0420786c2a4428df668db101ca45
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_125.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5b9435025353e4c4b8cf56d24ac3831a
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_224.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5cf95b538cf606541945247e5de132bd
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_225.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 60521dde01c68d9459e1618f975f9124
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_109.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 60656b7f65f925e459630f59b08599de
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_135.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6074b07dff190284fb4378dea93ffffa
+    m_Address: Assets/_Game/World/Zones/Concord040/Meshes/Glass_2_4_1079.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 60e997e3e8b9d9e46a38c075f1478190
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_180.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6269e41015165fc46a68db9b61297902
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_236.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 62a1f6bb5806db14ab0236e96c86e05c
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_061.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 62a59d44b114e314b99112c76c3de4c7
+    m_Address: Assets/_Game/World/Zones/Concord040/Meshes/Glass_4_-4_1050.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 63490741ffacc0943af73c57c0ee055a
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_059.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 638467902422e2b42997a8ef952f0ff9
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_078.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 63af446c76abe3f40b31ecba46cca392
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_244.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 63cd923daeb4ba849a4a8b380db84201
+    m_Address: Assets/_Game/World/Zones/Concord040/Meshes/DoorLeft_-1_2_3667.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 64a5bf4f072c1024f9e48389c53c76bc
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_020.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 654ea108e07fb704e89c2e8984147560
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_082.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 656423215108e944a834b3a7281d0286
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_012.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6744bddd529c9724eb6797c61ae15717
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_131.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 67899238e4bc51e49a8113b5c4c7ce64
+    m_Address: Assets/_Game/World/Zones/Concord040/Slim/Concord040_Parts.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 67c11bda033a1ed488cbe6bbc25ced1b
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_193.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 67e729abdfe25374b872063cdc716387
+    m_Address: Assets/_Game/World/Zones/Concord040/Meshes/Glass_4_-1_1059.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6899e91debe3f8a4389cb08941eda73d
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_027.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 69119a11f5ba5d34191a9de6acb2dc8f
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_083.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 69cbb31467b637a4dac603a84453435b
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_279.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 69dc510558074554d8ddb2f9860eba81
+    m_Address: Assets/_Game/World/Zones/Concord040/Meshes/Glass_2_0_2417.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6a130eaa5770b5744a67158f976247c3
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_086.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6a4237c2aeab6f44f948cfa9aa10ca71
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_035.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6a89d2a7d35e053449933f0f316ec463
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_107.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6ac4a7a4a3660014892552fcde902250
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_237.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 703b7d1e00a0adb41b3df731dfa99865
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_206.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 729d9525dd671d24893a211edf3c6c26
+    m_Address: Assets/_Game/World/Zones/Concord040/Meshes/Glass_3_-3_2633.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 737fee940d9a8bb45a53fece17bd5d6f
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_252.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 73ec8129c5898b749ba4c5366c955f71
+    m_Address: Assets/_Game/World/Zones/Concord040/Meshes/Glass_4_2_1068.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 741e82904aa58674d83eaeb6c5106cea
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_222.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 742a7c6ee6b6cc149900a85973a6812f
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_153.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 74937ff30ebf8114bae79da5c3e3111d
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_248.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 750fc0f62484f774e8e1486bc76697f9
+    m_Address: Assets/_Game/World/Zones/Concord040/Meshes/Glass_2_-5_1040.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 77446e3f6c9742647901ecfb6ad111fb
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_265.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 77f5461f4b4fa4f48b49a415187fd041
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_292.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 79190308523011340ba6df386ba44b84
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_093.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 79f5220d0ecad9b48bf198d5e88eea7f
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_129.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7a8b072f498701d4789e0183d27f9541
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_262.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7acb12f495ad1e14385e24ce4c183e05
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_165.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7b7294cd99d2fb84f9fb72aeca6f6484
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_044.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7c1c8899a4287464d8bc329d93171a55
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_278.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7ca9a2888c672354fb2dda93b08fb1ab
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_134.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7e071d72c9440e1468acb06e8cd8014a
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_057.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7edd3cf4a38679c448827d519b8a432f
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_017.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7f07b0043beecaa4cbcebe601318de3a
+    m_Address: Assets/_Game/World/Zones/Concord040/Meshes/Glass_3_4_1077.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7f92de4215864324aac9b3683e844f2c
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_172.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8051509e856d67c4a936f0233c949a4b
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_238.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 807932dee36282d4fa0264cf1509d228
+    m_Address: Assets/_Game/World/Zones/Concord040/Textures/tex_a0f8475e2c3a.png
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 80f5cc27b71d57b40b9ba02559f4abdb
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_062.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 815692880f22d974cb33c0b7db8ba462
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_010.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8173266a3768f5d44a9e3e2e5cacd717
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_060.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8256e984b189105449faa57cefa2be61
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_113.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 83f6700489300cd46a027869316374ec
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_277.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 846997a09e4b4814a98bc90d3bf0ee56
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_255.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 848f60cba5abe6c4c8e8cf33481ef9de
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_201.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 84e8c32d00439a0448ca63ae8a5e4e71
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_232.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 84fe0753b7423d346b50dc022282c258
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_004.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 852849ed6c4ea0945ad00f9bb73c0fed
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_148.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 870542a525debff48b5a81b6b8f14287
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_046.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 87ba46a2ba840cd4b82cd37d5b9f126c
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_226.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8a28284c7ffe8514ba0d2fa1afa7b7e1
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_218.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8c485067f379ee04ba69d42cefb3a205
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_005.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8c5778fc39c8d9c4187dae9a697c2318
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_257.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8d529fa2e26dfe14d8d85f43cd8d0bbb
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_263.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8ef7cbbff1440d14386637d0e8e4cbc7
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_288.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8f0eb117fe39495438ab9ccf60b4a17f
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_209.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8fbf4e74cd53a9e47a38228ebb808a98
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_294.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9136b1057d85e6645a8a3dd8aa94a62b
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_164.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9161a61a5dabbdb4cb6671284b1d7e38
+    m_Address: Assets/_Game/World/Zones/Concord040/Meshes/Glass_2_2_2419.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 918a5dd98035e2a4b8a025f0d3c48bf1
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_293.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 919119c627d95194a90535e5a44c7ac3
+    m_Address: Assets/_Game/World/Zones/Concord040/Meshes/Glass_-5_2_1107.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 91c7ac295bb949140bd8dcb72679aa72
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_143.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 91f4193ac4667f046ad8533cb2760832
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_190.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 927176a650db85443aa6afc532532d4e
+    m_Address: Assets/_Game/World/Zones/Concord040/Meshes/Glass_3_2_2637.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9307e233d9d38f1459092f73aa46f524
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_150.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 941d9c363955eff4dbbeb948f9a95aae
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_108.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9436260a11be0294e91abb4853d1d3a7
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_058.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 95169aff9175bdd4bbd7de5fd0fb20cc
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_152.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 95d180b9bbf107449bf38f06aca2c129
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_045.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 968410e2c2366284191cf10351a52f1b
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_183.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9831aaa55be52d44cb64cd251e25d4e9
+    m_Address: Assets/_Game/World/Zones/Concord040/Meshes/Glass_-1_4_1088.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 987e677906de8214587b387a251648a0
+    m_Address: Assets/_Game/World/Zones/Concord040/Meshes/Glass_1_3_2725.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 98ac4cebd2b799947b4f46af23fa8b44
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_090.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 991c131a0eb4b414ab07731f5bc46347
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_133.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 99b888e38ea3f014ba1053f08b2ec52a
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_167.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 99f130e26fd881443a012ba8e46bbea2
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_195.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9aedb6a2fb706b14b9ddb98a456025ec
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_274.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9b32bda909df7c44e81ea0a0e1613259
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_114.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9c91639ae34d1d941b3b2216ca3e7e10
+    m_Address: Assets/_Game/World/Zones/Concord040/Meshes/Glass_-3_-5_1025.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9c9dc9ba910b8f1499bf4125076ff01e
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_176.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9cceb119e83d0b44c885988baabdbb05
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_021.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9d48a6d51a25ea942bd33f48a36c01a8
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_102.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9d48c71ed139d2f44b1ab1fa400f54c5
+    m_Address: Assets/_Game/World/Zones/Concord040/Thrusters/ThrusterCard.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9efc6dd34f4f2314a9e6454c194fe288
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_031.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a056ff8d1fb025541812895d730118e5
+    m_Address: Assets/_Game/World/Zones/Concord040/Meshes/Glass_-2_1_3454.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a0c12e13cbf2c334aac713a875249476
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_216.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a39620c827f270644a853a5ab4a5a25e
+    m_Address: Assets/_Game/World/Zones/Concord040/Slim/Concord040_Chunks.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a3eadccc65180d840aa324cd7c7ca621
+    m_Address: Assets/_Game/World/Zones/Concord040/Thrusters/Thruster_Card.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a4807055efb7e1746ab9d571502a55c3
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_039.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a489227145951964ca2f2d92f79b19d8
+    m_Address: Assets/_Game/World/Zones/Concord040/Meshes/Glass_-1_1_3453.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a5145461d89e0c3438daa4d742231649
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_136.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a86122ad6743048459077d7893bd88f8
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_032.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a8d072b578122d24a92bd21825722116
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_171.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: aa83fec3e65f31e4aaba99d034177cb7
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_184.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: abaf5769455ef454ab9334ea4e29f4b0
+    m_Address: Assets/_Game/World/Zones/Concord040/Meshes/Glass_4_0_1062.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: abcafc4b243f4b648847b0173ca9bd7f
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_291.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ac3767a8c2cc81d4c9d62829b0184f64
+    m_Address: Assets/_Game/World/Zones/Concord040/Meshes/Glass_1_4_1082.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: acea5d156d49b1d4085a99245de439f1
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_199.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ad5e77f1e4233b144b1829ad800217e0
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_063.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: aece132605b8e67489f03672bfef52ed
+    m_Address: Assets/_Game/World/Zones/Concord040/Meshes/Glass_4_3_1071.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: aece9244006255741a21d728710b4b04
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_073.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: af04ac56f3361e64fbaeeec5fbc701a6
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_051.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: af7c974c6617d8a429ac69dce69dff5f
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_099.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: af8a3381b73c67d4e9d9878face08072
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_139.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: af8bcd20743eceb42b1dbc3c8c7e5c75
+    m_Address: Assets/_Game/World/Zones/Concord040/Meshes/Glass_3_1_2639.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b1a2d302da0711949badde287872615a
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_137.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b1f7abdec7bbef748a36bd624afa2b89
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_247.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b2b6f4720c523e444b1134cf3a8be8d5
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_087.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b562f20100825ab46adfe68d597eed84
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_001.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b5e4bc68dd330c549baf5dcc8d20fd4f
+    m_Address: Assets/_Game/World/Zones/Concord040/Meshes/Glass_3_-1_2635.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b609ad5d2f80ff9479df16cc0cc63aa5
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_142.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b68af47c274bbd74f91d2d0d5430efa4
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_178.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b690b2bee9202234996b49e31183e288
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_220.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b6d19ebee9e60ec43b16912be74a2815
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_085.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b7b3bd5f994594e40a49a326964c2ec2
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_056.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b8af3cedf1ffa7b4bbeeee8e12def1c5
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_202.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b8ec6f42174092c4eacea638fa6cf5d7
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_006.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b91d0b1cbf299144f91b5d08ed853f14
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_174.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b9b5f472a21c2554397ef0ea65f5a6ec
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_055.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ba1fc05479b97f34c93168a6d58e4fb5
+    m_Address: Assets/_Game/World/Zones/Concord040/Meshes/Glass_-5_1_1110.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ba3223862374f3147b159d0e2c25f6c9
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_104.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: bbb0e2deb7135774aab4a7b2f2aedc04
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_169.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: bbc77f8024ac10a41a54af0e6724d111
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_181.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: bc2bd16688d50fd4d98985bd0c862acf
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_268.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: bcd17f2d202a9024f9ea43cce7dafccd
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_034.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: bd4d7264805abab498e915a40368a539
+    m_Address: Assets/_Game/World/Zones/Concord040/Meshes/Glass_-3_-3_2750.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: be455bac713277647b8c513ad2bf80e5
+    m_Address: Assets/_Game/World/Zones/Concord040/Meshes/Glass_1_1_3472.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: be4aa8155b7f86941ab0e9095623d07b
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_270.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: bf08c3d1672b67c4d93c73c5182ea14b
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_038.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c1b37c495d69a4d43be49c254c3e3af8
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_161.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c1f535e0e1cfb4346a995e2b7c5603fe
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_069.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c1f5cc7490a16ca4a89d7776a747dcf1
+    m_Address: Assets/_Game/World/Zones/Concord040/Textures/tex_9acbadaf3227.png
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c32b3fe908c57f949a5edb7cb318275d
+    m_Address: Assets/_Game/World/Zones/Concord040/Meshes/Glass_-2_4_1091.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c32d8dc15a7597d48950a39629890ffb
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_284.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c3f6afaf5df5b064abd927619b0d3ce1
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_290.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c488aed041cf78a4c91b60463d3fe101
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_098.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c790369ded88f594e9a05d0cb6a204c6
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_264.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c849b2af57c6e9944af294884ee9fbf3
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_047.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c910812f9c4d9f94ca7835745f6ac027
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_122.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c9927ae5e246f7143855ad8ba5e6840c
+    m_Address: Assets/_Game/World/Zones/Concord040/Textures/tex_8861d09bf326.png
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: cb3007de37fcefe4296ed3b0633a43df
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_266.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: cbb4ffa5a20131d409b56789a06498d2
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_138.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: cbea21a40db04e84a8f89f45028bdf80
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_141.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: cbfcf2d1e7752c840b84780797c6e0fa
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_121.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: cc4933e6ff9bdbf409e25730374c2c8b
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_117.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: cc68ff6a204d1344c9e728c59b75b234
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_080.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ccf3e5e0404e44e4982ecdd91d2fdb5b
+    m_Address: Assets/_Game/World/Zones/Concord040/Meshes/Glass_-5_-1_1116.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: cd1ce6810ee939a49acad83cfe84a182
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_249.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: cd26fe061fde8c349b3409a2c0e0ab33
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_215.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: cdd788896ca3161429517c671a7db5be
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_196.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: cdf503e89899f7042956ee60c77d3126
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_074.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: cf07e024c21b91941ace3c10dbd51816
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_118.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: cff1d0ccf694abd48b9f2fdd2f7e8e5e
+    m_Address: Assets/_Game/World/Zones/Concord040/Textures/metal_smooth_006.png
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d00d108a2b7d74b498dc518821aaf542
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_119.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d03cf5ae080074647b7b5e22566eabb3
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_092.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d1063185befa43642a48239f4af8dd00
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_287.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d1d56d47f920e7340a98801419ff1249
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_088.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d25388feb5eeb584fae7ebfe47212e9b
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_037.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d33154cf53d59164d9ffcea3d6e5907f
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_254.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d34c2e90721efe44bafa433fe6a459da
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_221.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d34fdab6edfcd444197e263c3a680a3b
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_173.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d50e3ee79dc42d64c88d1216dd43972c
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_003.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d591528187104b54aa20d077e537a88b
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_146.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d5ccdeb9a3712824eae3fd7474c4baea
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_217.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d77660c5aef831d4fa77bb9b51c7f3ee
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_077.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d84dea69d06b18e4d9235f22baf84039
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_053.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d8ce10ecb83533042a238959047e745a
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_158.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d97541c423f666b43ab2be05ddd10dcc
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_127.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: da46e30732d1af94f91e7cdbdb04a78a
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_132.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: db50bfc8cf6231f4aa68ba7a96ec1d0f
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_186.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: dbd32f6cd9eb4324ca2468407a773fd3
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_219.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: dcba001f5ec4a7b49905f9b3f112bead
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_157.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: dd366089e8821804eb8f7fdfdc82d841
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_229.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ddbd81e05b6b69c4abe1beea26c44fd7
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_177.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ddfe7bb5264d758459b3fe41faab4085
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_015.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: de321aa2acc945148a58bbf773ffc69a
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_040.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: defc731c08c47d348a2295fd44688b1f
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_002.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e0b7a299cc6e2da4f9eb0952c859ac07
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_245.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e1f06b6de721fee48834b78b23b640f4
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_194.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e213b372aa079e54aa57d407565385df
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_175.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e282a7dd898cbd149af82527c35daffe
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_192.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e311911276be1084bbf22f2beefc6a9c
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_115.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e41780fe65fde8e4b8ee20c08fa50aff
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_024.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e512ea27f08016240842f0571ece6b07
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_013.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e51d6f1f14a5e474fb81274b04f7bcac
+    m_Address: Assets/_Game/World/Zones/Concord040/Meshes/Glass_4_-3_1053.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e5fd551286a071e4385f81b991f63962
+    m_Address: Assets/_Game/World/Zones/Concord040/Meshes/Glass_3_3_2638.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e65ba8df7840638478e84c77a04378de
+    m_Address: Assets/_Game/World/Zones/Concord040/Thrusters/ThrusterNoise.png
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e6bf5b733a7894f4fb1823c73e9a4d89
+    m_Address: Assets/_Game/World/Zones/Concord040/Meshes/Glass_0_1_3471.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e76503d05df84d44a9d4492b38786f1f
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_048.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e77b777b430ed1740890f05c1071462f
+    m_Address: Assets/_Game/World/Zones/Concord040/Meshes/Glass_-2_-5_1028.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e7d4ae20ea2dfe4468656851c7f24ea2
+    m_Address: Assets/_Game/World/Zones/Concord040/Textures/metal_smooth_010.png
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e854da300a3790d47a113b551cdeda6d
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_213.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e8db069bfc5899e43828ba5cf26743c5
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_036.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: eb3103baec4e1834aa8406ed43897d10
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_026.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: eb44adf1691db534ab5f221bdd95ac42
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_070.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ebb95aa3fc8109d4eb79e3a2969a595b
+    m_Address: Assets/_Game/World/Zones/Concord040/Meshes/Glass_-5_-5_1128.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ec0c0e9029ff9f641832d610ca3f0916
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_239.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ed35991a03932cd44a82e59c46eded3a
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_234.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ee03f75410fb0a145b7b3c44ee387962
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_246.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ee4b6ce7a9a9e754dbd61669a2e3361f
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_253.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: eeaf5ffb1e6395642b9cfc665fd59468
+    m_Address: Assets/_Game/World/Zones/Concord040/Meshes/Glass_-5_4_1100.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: eef2c6ced52a17548b1b785622695749
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_168.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: efa650f500b686a4f95f6a9069c3195d
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_072.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f16d193ea18ee1e4e951816a62d840fa
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_289.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f1d035bd28c937e448e6b71925ba1350
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_071.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f2fade7e4be49e64d9894ca5b4419e0c
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_029.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f3fda6fdbc01db740b1ec27008c33734
+    m_Address: Assets/_Game/World/Zones/Concord040/Textures/tex_dce0af746e28.png
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f449bf280d03fd54a81a068be44fb37a
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_230.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f56ab5b01582d8048bb55aa2d0e5014d
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_033.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f5d386246f4ad2f40a9d34716f11d363
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_096.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f5d4513840aa07c4dafc9a2081cf9b3e
+    m_Address: Assets/_Game/World/Zones/Concord040/Concord040_NavMesh.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f61a837f107709d4a8e0502f6cfcb198
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_214.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f8c5300969b83d940b78591efddcbab5
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_030.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f8fc40013f691724eaae86c23f9ca298
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_064.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: fa025cc16f210134099a606c80647bd2
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_128.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: fb4b0ca2555d7484e8c92be1ba2626f2
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_271.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: fb81af4940f890446b1bbcb09acaf89a
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_235.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: fbeaeb8760d5a7e4791a764d299f2c15
+    m_Address: Assets/_Game/World/Zones/Concord040/Meshes/Glass_1_-5_1037.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: fc36066a6b7a44245887f84e581355e2
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_261.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: fd3e6e45b712c7a46837232d2911de65
+    m_Address: Assets/_Game/World/Zones/Concord040/Materials/Material_023.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: fd7b012a611b46642915004eeb495d2f
+    m_Address: Assets/_Game/World/Zones/Concord040/Meshes/Glass_-4_-5_1022.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: 79ae2b2a58867794b8effc90c24b1fdf, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: 2f5fbfd0b688d0a438d42293c405f3de, type: 2}
+    - {fileID: 11400000, guid: 71f72112f79aa954a9c70ca25cabccca, type: 2}
