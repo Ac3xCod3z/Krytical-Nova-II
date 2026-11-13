@@ -22,6 +22,7 @@ namespace KryticalNova.CharacterCreation
         public const string ReasonRepeats = "Too many repeated letters or digits.";
         public const string ReasonReserved = "That name is reserved.";
         public const string ReasonNotAllowed = "That name is not allowed.";
+        public const string ReasonNoGm = "Names can't contain GM.";
         public const string ReasonTaken = "You already have a character with that name.";
         public const string ReasonTakenInGame = "Someone already has a character with that name. Try another.";
         public const string ReasonMustRename = "Another character took this name first. Choose a new name to play it again.";
@@ -46,12 +47,47 @@ namespace KryticalNova.CharacterCreation
             return char.ToUpperInvariant(trimmed[0]) + (trimmed.Length > 1 ? trimmed.Substring(1).ToLowerInvariant() : string.Empty);
         }
 
+        /// <summary>
+        /// True when "GM" stands as its own part of the name (owner, 13 Nov 2026, pick B: nobody may pass for one of the game's
+        /// GMs, but a word like "Magma" stays allowed). A G followed by an M (digits, spaces and symbols between them ignored) counts
+        /// when it starts or ends the letters ("GMBob", "BobGM"), when anything but a letter sits between the two or beside them
+        /// ("g.m.Bob", "G_M", "[GM]", "G1M", "Ace9GMx"), or when both are capitals set off by small letters ("BobGMx"). Checked on the
+        /// raw text, before the letters-only rule, so a dotted "G.M." gets this reason rather than the symbols one.
+        /// </summary>
+        public static bool LooksLikeGm(string raw)
+        {
+            if (string.IsNullOrEmpty(raw)) return false;
+            string text = raw.Trim();
+            var letters = new System.Collections.Generic.List<int>(text.Length); // positions of the letters in text
+            for (int k = 0; k < text.Length; k++) if (char.IsLetter(text[k])) letters.Add(k);
+            for (int n = 0; n + 1 < letters.Count; n++)
+            {
+                int g = letters[n], m = letters[n + 1];
+                if (char.ToLowerInvariant(text[g]) != 'g' || char.ToLowerInvariant(text[m]) != 'm') continue;
+                bool first = n == 0, last = n + 1 == letters.Count - 1;
+                if (first || last) return true;
+                if (m != g + 1) return true;                         // a digit or symbol between G and M
+                if (letters[n - 1] != g - 1) return true;            // ... or just before the G
+                if (letters[n + 2] != m + 1) return true;            // ... or just after the M
+                bool capitals = char.IsUpper(text[g]) && char.IsUpper(text[m]);
+                if (capitals && (char.IsLower(text[g - 1]) || char.IsLower(text[m + 1]))) return true; // "BobGMx"
+            }
+            return false;
+        }
+
         /// <summary>Checks a name and returns its normalised form. <paramref name="reason"/> is user-facing.</summary>
-        public static bool Validate(string raw, out string normalized, out string reason)
+        public static bool Validate(string raw, out string normalized, out string reason) => Validate(raw, out normalized, out reason, newName: true);
+
+        /// <summary>
+        /// As <see cref="Validate(string, out string, out string)"/>; <paramref name="newName"/> false for a name already saved (admission
+        /// on every join): the GM rule (build 17, item 1) is for new names only, so a character named before it still gets in.
+        /// </summary>
+        public static bool Validate(string raw, out string normalized, out string reason, bool newName)
         {
             normalized = Normalize(raw);
             reason = null;
             if (normalized.Length == 0) { reason = ReasonEmpty; return false; }
+            if (newName && LooksLikeGm(raw)) { reason = ReasonNoGm; return false; }
             foreach (char c in normalized)
                 if (!((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9'))) { reason = ReasonLettersOnly; return false; }
             if (!(normalized[0] >= 'A' && normalized[0] <= 'Z')) { reason = ReasonLetterFirst; return false; }
