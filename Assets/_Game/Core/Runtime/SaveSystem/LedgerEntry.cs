@@ -98,6 +98,8 @@ namespace KryticalNova.Core
         /// <summary>Items a player dropped on the ground, tallied per save.</summary>
         public const string Drop = "drop";
         public const string Gm = "gm";
+        /// <summary>A new character's starter kit (build 17, item 2.4): the starter bag's items; its Creds are in the wallet's tally.</summary>
+        public const string Starter = "starter";
         /// <summary>A character was deleted, with everything it carried (online phase 4, milestone 5: the roster on the server).</summary>
         public const string CharacterDeleted = "character.deleted";
         /// <summary>Every Cred a wallet earns or pays, tallied per save by where it came from or went to: "creds.trade", "creds.vendor".</summary>
