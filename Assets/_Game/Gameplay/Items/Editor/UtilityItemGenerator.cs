@@ -28,6 +28,8 @@ namespace KryticalNova.EditorTools
 
         private const ushort StimStack = 99;
         private const ushort StarterStims = 10;
+        // Build 17 item 5.1: Stims are used as fast as this (owner: 0.5 s at most), each kind on its own clock.
+        private const float StimCooldown = 0.5f;
         // Three sizes of each Stim (Twelve Sky 2 sold its pills in sizes too). The first Stims are the small ones.
         // A first pick (15 Oct 2026): S fills a new character, L a large part of a level-112 one. To tune.
         private const float StimAmount = 300f, StimAmountM = 900f, StimAmountL = 2400f;
@@ -56,12 +58,12 @@ namespace KryticalNova.EditorTools
         private static readonly Row[] Rows =
         {
             new Row { Id = 9001, Asset = "Pill_Vitality", Name = "HP Stim (S)", Glyph = "HP", Rarity = ItemRarity.Common,
-                Description = $"Restores {StimAmount:0} HP.", Stack = StimStack, Starter = StarterStims, Health = StimAmount, Hotbar = true },
+                Description = $"Restores {StimAmount:0} HP.", Stack = StimStack, Starter = StarterStims, Health = StimAmount, Hotbar = true, Cooldown = StimCooldown },
             new Row { Id = 9002, Asset = "Pill_Chi", Name = "Flux Stim (S)", Glyph = "FLUX", Rarity = ItemRarity.Common,
-                Description = $"Restores {StimAmount:0} Flux.", Stack = StimStack, Starter = StarterStims, Flux = StimAmount, Hotbar = true },
+                Description = $"Restores {StimAmount:0} Flux.", Stack = StimStack, Starter = StarterStims, Flux = StimAmount, Hotbar = true, Cooldown = StimCooldown },
             new Row { Id = 9003, Asset = "Pill_DualHarmony", Name = "Dual Stim (S)", Glyph = "HP+FLUX", Rarity = ItemRarity.Uncommon,
                 Description = $"Restores {StimAmount:0} HP and {DualFluxAmount:0} Flux.", Stack = StimStack,
-                Health = StimAmount, Flux = DualFluxAmount, Hotbar = true },
+                Health = StimAmount, Flux = DualFluxAmount, Hotbar = true, Cooldown = StimCooldown },
             Stim(9004, "Stim_HP_M", "HP Stim (M)", "HP M", ItemRarity.Common, StimAmountM, 0f),
             Stim(9005, "Stim_HP_L", "HP Stim (L)", "HP L", ItemRarity.Uncommon, StimAmountL, 0f),
             Stim(9006, "Stim_Flux_M", "Flux Stim (M)", "FLUX M", ItemRarity.Common, 0f, StimAmountM),
@@ -239,7 +241,7 @@ namespace KryticalNova.EditorTools
                 Description = $"Adds {days} days of Autopilot: your character hunts by itself inside a Hostile Zone and picks up what Magnet is set to take. The days count by the clock, as a Kiosk Permit's do, whether Autopilot is on or not; another Pass adds to the end. {source}" };
 
         private static Row Stim(ushort id, string asset, string name, string glyph, ItemRarity rarity, float health, float flux) =>
-            new Row { Id = id, Asset = asset, Name = name, Glyph = glyph, Rarity = rarity, Stack = StimStack, Health = health, Flux = flux, Hotbar = true,
+            new Row { Id = id, Asset = asset, Name = name, Glyph = glyph, Rarity = rarity, Stack = StimStack, Health = health, Flux = flux, Hotbar = true, Cooldown = StimCooldown,
                 Description = health > 0f && flux > 0f ? $"Restores {health:0} HP and {flux:0} Flux." : health > 0f ? $"Restores {health:0} HP." : $"Restores {flux:0} Flux." };
         // A method, not a table: the rows above are built before any field declared after them.
         private static string Numeral(int page) => page == 1 ? "I" : page == 2 ? "II" : page == 3 ? "III" : "IV";
