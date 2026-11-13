@@ -128,6 +128,26 @@ namespace KryticalNova.EditorTools
             // Its weapons wait: the Null Rare weapon lines (132, 137, 142) wear Scrap Sentinel's.
         };
 
+        private static readonly Set BastionField = new Set
+        {
+            code = "BAST", folder = "BastionField", name = "Bastion Field",
+            // primary olive, secondary dark, under, accent cream, trim tan, leather, glow (cream; it has no light), metals
+            roles = new[] { "868352", "353231", "201D1D", "E0C8A0", "BFA46F", "4E473D", "F4E2C6", "5B5A3B", "3F3C34", "252322", "161414" },
+            pieces = new[]
+            {
+                // Soldier Rare, levels 45-75 (band 2): the Striker lines become the Bastion Field set.
+                new Piece { slot = EquipSlot.Armor, lineId = 3, displayName = "Bastion Field Armor", parts = new[] { "10TORS", "11AUPL", "12AUPR", "13ALWL", "14ALWR", "17HIPS", "18LEGL", "19LEGR", "22AHED" } },
+                new Piece { slot = EquipSlot.Gloves, lineId = 8, displayName = "Bastion Field Gloves", parts = new[] { "15HNDL", "16HNDR" } },
+                new Piece { slot = EquipSlot.Boots, lineId = 13, displayName = "Bastion Field Boots", parts = new[] { "20FOTL", "21FOTR" } },
+                new Piece { slot = EquipSlot.Cape, lineId = 17, displayName = "Bastion Field Cape", parts = new[] { "24ABAC" } },
+            },
+            renamed = new (ushort, string, string)[] { (164, "Bastion Field Signet", null), (165, "Bastion Field Tags", null) },
+            // Its weapons wait: the Hegemony Rare weapon lines (117, 122, 127) wear Dock Runner's.
+        };
+
+        [MenuItem("Krytical Nova/Items/Blender Sets/Add Bastion Field (Soldier Rare 45-75)")]
+        public static void AddBastionField() => Add(BastionField);
+
         [MenuItem("Krytical Nova/Items/Blender Sets/Add Hollow Warden (Skeleton Rare 45-75, painted)")]
         public static void AddHollowWarden() => Add(HollowWarden);
 

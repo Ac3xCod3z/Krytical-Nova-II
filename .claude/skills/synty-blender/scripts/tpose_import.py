@@ -39,6 +39,9 @@ def args():
     p.add_argument("--out", required=True)
     p.add_argument("--grey", default="0.30,0.85")
     p.add_argument("--near", type=float, default=0.025)
+    p.add_argument("--by-part", action="store_true",
+                   help="a model made in parts: judge each Tripo part whole (mostly grey and lying on the body = "
+                        "mannequin) and keep small parts (studs, buckles); --near 0.012 suits it")
     p.add_argument("--by-island", action="store_true",
                    help="a model generated in parts: drop whole islands that are mostly grey and lie on the body, never"
                         " single faces (per face, a helmet's light side panels went with the mannequin)")
@@ -52,7 +55,8 @@ def bare_body(collection):
     bpy.context.scene.collection.children.link(col)
     body = []
     for o in list(col.all_objects):
-        if o.type == "MESH" and BODY.search(o.name) and "HAIR" not in o.name:
+        # ".gear" copies are a dressed outfit kept beside the bare body (Civilian Male): never the body
+        if o.type == "MESH" and BODY.search(o.name) and "HAIR" not in o.name and ".gear" not in o.name:
             body.append(o)
         elif o.type == "MESH":
             o.hide_set(True)
@@ -108,6 +112,9 @@ def load(path):
     for o in meshes:
         o.select_set(True)
     bpy.context.view_layer.objects.active = meshes[0]
+    for i, o in enumerate(meshes):              # remember each face's Tripo part through the join
+        a = o.data.attributes.new("kn_part", "INT", "FACE")
+        a.data.foreach_set("value", [i] * len(o.data.polygons))
     bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
     if len(meshes) > 1:
         bpy.ops.object.join()
@@ -214,7 +221,25 @@ def main():
     bm.from_mesh(ob.data)
     bm.faces.ensure_lookup_table()
     gone = []
-    if a.by_island:
+    if a.by_part:
+        parts = {}
+        vals = [0] * len(ob.data.polygons)
+        ob.data.attributes["kn_part"].data.foreach_get("value", vals)
+        for f in bm.faces:
+            parts.setdefault(vals[f.index], []).append(f)
+        for isle in parts.values():
+            area = sum(x.calc_area() for x in isle) or 1e-9
+            grey_area = near_area = 0.0
+            for x in isle:
+                hh, ss, vv = colorsys.rgb_to_hsv(*[float(t) for t in cols[x.index]])
+                if ss < 0.16 and g0 <= vv <= g1:
+                    grey_area += x.calc_area()
+                hit = tree.find_nearest(x.calc_center_median())
+                if hit[0] is not None and hit[3] <= a.near:
+                    near_area += x.calc_area()
+            if grey_area / area > 0.6 and near_area / area > 0.6:
+                gone += isle
+    elif a.by_island:
         seen = set()
         for f in bm.faces:
             if f.index in seen:
@@ -246,7 +271,7 @@ def main():
             # (Scrap Sentinel: chest, arm and shin pieces 3-7 cm off the bare robot stayed in the cape)
             if (grey_area / area > 0.6 and near_area / area > 0.6) or (mid_grey / area > 0.85 and loose_near / area > 0.5):
                 gone += isle
-    for f, c in ([] if a.by_island else zip(bm.faces, cols)):
+    for f, c in ([] if a.by_island or a.by_part else zip(bm.faces, cols)):
         hh, ss, vv = colorsys.rgb_to_hsv(*[float(x) for x in c])
         if ss < 0.16 and g0 <= vv <= g1:
             hit = tree.find_nearest(f.calc_center_median())
@@ -270,7 +295,7 @@ def main():
                     if y.index not in seen:
                         seen.add(y.index)
                         stack.append(y)
-        if len(isle) < 30:
+        if len(isle) < 30 and not a.by_part:
             scraps += isle
     bmesh.ops.delete(bm, geom=scraps, context="FACES")
     bm.to_mesh(ob.data)

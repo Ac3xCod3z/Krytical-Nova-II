@@ -22,8 +22,14 @@ multiple choice.
 ## 1. The front picture (Nano Banana 2 in Tripo's Image tab)
 
 - Recipe in memory `tripo-front-image-recipe`: our mannequin of **that lineage** in T-pose (`MannequinViews/`) plus
-  the piece art; the mannequin stays in the picture; all body pieces at once (outfit, helmet, gloves, boots, cape),
-  split later in Blender.
+  the piece art; the mannequin stays in the picture.
+- **One group per generation, never the whole outfit (owner, 1 Nov 2026):** whole-set generations gave texture
+  problems we could not fix in Blender. Make a separate front picture and a separate model for each group:
+  1. the hard pieces: metal (breastplate, pauldrons, bracers, knee cops, shin bands) with the straps, harness and belt;
+  2. the top coat alone (e.g. the gambeson);
+  3. the pants alone.
+  Helmet, gloves, boots and cape stay their own generations too. Each group is fitted on its own, then the groups
+  are merged into the game's torso/arm/hip and leg parts.
 - Tripo's Image tab takes one file per upload call and three in all; each upload goes through the file input again.
 - Generate is free within the daily allowance (shown on the button). Check no toast refused the images: an upload of
   the Cyberpunk icon pack sheet was refused by the content filter; our own sheets passed.
@@ -43,9 +49,16 @@ multiple choice.
   8K texture, Private. (The Dock Runner used Smart Mesh P2 without parts.)
 - In parts mode the texture is a second step: Tripo switches parts off when the texture is made during generation,
   so generate in parts without texture, save the parts, then Texture module at 8K with Remove Lighting on.
-- **Smart UV (owner, 24 Oct 2026):** after the mesh, run Tripo's Smart UV module and export that model too. In
-  Blender the Tripo texture is baked onto the Smart UV layout (`smart_uv_bake.py`), so a spot that needs fixing is
-  painted on clean, readable UV islands rather than Tripo's scattered ones.
+- **Four variants (owner, 1 Nov 2026):** only Smart Mesh P2.0 makes 4 models (100 credits). On a mannequin it fuses
+  the gear into the body (StonePledge G1/G2, 1 Nov), so it is not for gear on a mannequin; HD Model in parts (60 + 30
+  texture) gives separate pieces. On a mannequin, show it WHITE so grey metal can be told apart.
+- **Pieces alone (owner, 1 Nov 2026, current way):** even HD parts tie gear to bits of the body, so pieces are
+  generated with no mannequin: laid apart on neutral (a crop of the art or a Nano Banana picture), Smart Mesh 4
+  variants, then sized and placed in Blender on the CC5 body shaped like Sidekick. Plan:
+  side-session notes `stonepledge/StonePledge-pieces-alone-plan.md`.
+- **No Tripo UV unwrap (owner, 1 Nov 2026):** never run Tripo's Smart UV / Unwrap UV (on a parts model it also does
+  nothing). UVs are unwrapped in Blender and fixed there by us (`smart_uv_bake.py` without `--smart`), so a spot that
+  needs fixing is painted on clean, readable islands.
 - Export FBX (Blender, 8K) → zip in Downloads → unzip into the lineage folder (the DCC Bridge stopped sending).
 - **Check:** a piece whose hidden side Tripo built from the mannequin (the helmet had no back): regenerate it alone
   from a close-up render.
@@ -96,8 +109,8 @@ multiple choice.
   in parts, add `--by-island`: whole islands that are mostly grey and lie on the body go, never single faces (per
   face, the Scrap Sentinel helmet lost its light side panels). The robot's bare body is `SK_SCFI_ROBO_04_*`, not a
   `_BASE_` part.
-- **UVs:** `smart_uv_bake.py` bakes the Tripo texture onto Tripo's Smart UV export (`--smart`); a parts model has
-  none (Tripo refuses it), so without `--smart` the script unwraps a copy in Blender and bakes onto that.
+- **UVs (owner, 1 Nov 2026: always in Blender):** `smart_uv_bake.py` without `--smart` unwraps a copy in Blender and
+  bakes the Tripo texture onto it; fix seams and islands there. `--smart` (Tripo's own unwrap) is no longer used.
 
 ## 6. The low-poly look and export
 
@@ -168,3 +181,42 @@ multiple choice.
 - Fast Script Reload cannot add a Unity message (a new `Update`): stop Play and compile.
 - `run_blender.py` only runs the skill's own tools; run Blender itself (`blender -b <file> --python <script> -- ...`)
   for a one-off script. The shell's Python has PIL but no numpy or scipy.
+
+## Reallusion route (owner, 1 Nov 2026; trial being tested on StonePledge)
+
+Pieces from Tripo alone (no mannequin) → Blender → Character Creator 5 → iClone 8 tests → back to our rig.
+Manual pages are cited; CC4 pages where CC5's are thin. Plan and piece list:
+side-session notes `stonepledge/StonePledge-pieces-alone-plan.md`.
+
+1. **Body:** CC's own Standard base, shaped to the zero-slider Sidekick body. Wrap the CC base mesh onto the Sidekick
+   body in Blender (keep CC's vertex order: export it from CC as OBJ with its key), then Create > Morph Slider Editor,
+   Target Morph = File, 0-100 ([CC5 morph](https://manual.reallusion.com/Character-Creator-5/Content/ENU/5.0/06_Customizing_Morphing_Sliders/Morphing_Default_Character.htm),
+   [CC4 external](https://manual.reallusion.com/Character-Creator-4/Content/ENU/4.0/06_Customizing_Morphing_Sliders/Morphing_External_Characters.htm)).
+   Never AccuRIG the Sidekick body: a Humanoid character gets no Transfer Skin Weights or Conform.
+2. **Gear:** Create > Accessory (OBJ/FBX) → place and scale → Edit Mesh / Pose Editing for poke-through → Modify >
+   Transfer Skin Weights (template: clothing, gloves, shoes or cloak; Lateral Partitioning for sleeves) → Conform
+   (Hide Inner Mesh hides the body under it) → brush fixes to weights
+   ([steps](https://manual.reallusion.com/Character-Creator-4/Content/ENU/4.0/08_Cloth/Creating_Custom_Clothes_OBJ.htm),
+   [conform](https://manual.reallusion.com/Character-Creator-5/Content/ENU/5.0/08_Cloth/Conforming_Clothing_Basic.htm)).
+   Armour, buckled belts: untick Enable Conforming so plates stay rigid. Capes: Modify > Physics (soft cloth map).
+3. **Test before done:** poses and motions in CC5 (Animation Player F9, one motion at a time; Restore Bind Pose), then
+   File > Export > Send Character to iClone for run/jump/crouch/attack and extreme poses
+   ([CC5 motion](https://manual.reallusion.com/Character-Creator-5/Content/ENU/5.0/08_Animation/Applying-Character-Motion.htm)).
+   The judge stays ours: poke-through at rest, extreme sliders, and the motion set.
+4. **Export:** FBX, scope Selected (no clothes-only export exists), Unity 3D or UE5 Skeleton preset. Bone names are
+   only "aligned" to UE5; twist and face bones keep `CC_Base_` names, so a Blender rename/merge step maps the weights
+   onto the Sidekick rig, then our body keys are added ([export](https://manual.reallusion.com/Character-Creator-5/Content/ENU/5.0/17-Export/Export-FBX.htm)).
+5. **Trial:** 30 days, no commercial use, 30-second motion export; FBX export count unclear (check in the app first).
+6. **Texturing rules (owner, 1 Nov 2026, every set from now on; nothing already made is redone):**
+   - Flat albedo only: no shading, highlights or shadows painted in. Tripo's texture step with **Remove Lighting**
+     on (the Texture module toggle; the one-click "Texture" button in the model view skips it, so use the module), or
+     de-light in Blender before export.
+   - Always **8K** (check the export dialog's Texture Resolution reads 8k).
+   - Give Tripo **front AND back** pictures whenever it takes more than one (Generate Multi-Views, or the Back slot):
+     the coat's back came out wrong from a front-only picture. A back picture is made like the front one (Nano Banana
+     from the owner's back art if there is one, else from the chosen front picture: "the same piece seen from behind").
+
+## Art Asset Pipeline (owner, 1 Nov 2026: the way for all future gear)
+The full, current pipeline (Tripo pieces alone → Blender fixes → CC5 body + weights → Unity), with what worked and what
+failed and the CC5 setup as done, is `G:\My Drive\KryticalNova\Docs\Art-Asset-Pipeline-Gear.md`. Its scripts are in
+`G:\My Drive\KryticalNova\Art\Blender\Sidekick\CC5\scripts\`. Open step: the 3-method weighting test (section 5).
