@@ -75,6 +75,7 @@ namespace KryticalNova.EditorTools
                 added++;
                 changed = true;
             }
+            string zoneArt = ApplyZoneArt(settings, ref changed);
             bool lighting = StoreProbeLightingWithScenes();
             if (changed)
             {
@@ -83,8 +84,58 @@ namespace KryticalNova.EditorTools
             }
             var report = new StringBuilder($"[Maps] {added + kept} map(s) Addressable ({added} added or moved, {kept} as they were), " +
                                            $"each in its {GroupPrefix}<scene> group, built with the game.");
+            report.Append(' ').Append(zoneArt);
             if (lighting) report.Append(" Probe lighting (APV) is now stored with the scenes, not in Streaming Assets.");
             return report.ToString();
+        }
+
+        /// <summary>
+        /// Art placed inside a map scene that gets a bundle of its own (owner's pick B, 13 Nov 2026): Concord 040, the sky city
+        /// in Zone01's scene. Its group holds the assets of the zone's folder that the map scene uses (the slim FBX meshes,
+        /// materials, textures, thrusters, NavMesh), never the prefab: the scene carries the prefab's objects itself, so they
+        /// would be packed twice. The zone still loads and frees with its map; a change to the map no longer re-ships its art.
+        /// </summary>
+        public static readonly (string group, string folder, string mapScene)[] ZoneArt =
+        {
+            (GroupPrefix + "Concord040", "Assets/_Game/World/Zones/Concord040", BuildSceneOrder.WorldScenePath),
+        };
+
+        // Sets each zone-art group to exactly what its map scene uses from the zone's folder. A checkout without the folder
+        // (it stays out of git) leaves the group as it is and says so.
+        private static string ApplyZoneArt(AddressableAssetSettings settings, ref bool changed)
+        {
+            var report = new StringBuilder();
+            foreach (var (groupName, folder, mapScene) in ZoneArt)
+            {
+                if (!AssetDatabase.IsValidFolder(folder) || !File.Exists(mapScene))
+                {
+                    report.Append($"{groupName}: {folder} is not in this checkout, group left as it is. ");
+                    Debug.LogWarning($"[Maps] {folder} is missing in this checkout: {groupName} is left as it is, and the map ships without that zone's art.");
+                    continue;
+                }
+                string prefix = folder + "/";
+                var wanted = new HashSet<string>(AssetDatabase.GetDependencies(mapScene, true)
+                    .Where(p => p.StartsWith(prefix, StringComparison.Ordinal)
+                                && !p.EndsWith(".prefab", StringComparison.OrdinalIgnoreCase)
+                                && !p.EndsWith(".unity", StringComparison.OrdinalIgnoreCase)
+                                && !p.EndsWith(".cs", StringComparison.OrdinalIgnoreCase))
+                    .Select(AssetDatabase.AssetPathToGUID));
+                AddressableAssetGroup group = settings.FindGroup(groupName)
+                    ?? settings.CreateGroup(groupName, false, false, false, settings.DefaultGroup.Schemas);
+                int added = 0, removed = 0;
+                foreach (AddressableAssetEntry entry in new List<AddressableAssetEntry>(group.entries))
+                    if (!wanted.Contains(entry.guid)) { settings.RemoveAssetEntry(entry.guid, false); removed++; }
+                foreach (string guid in wanted)
+                {
+                    AddressableAssetEntry entry = settings.FindAssetEntry(guid);
+                    if (entry != null && entry.parentGroup == group) continue;
+                    settings.CreateOrMoveEntry(guid, group, false, false);
+                    added++;
+                }
+                if (added + removed > 0) changed = true;
+                report.Append($"{groupName}: {wanted.Count} asset(s) of {folder} that {Path.GetFileNameWithoutExtension(mapScene)} uses ({added} added, {removed} removed). ");
+            }
+            return report.ToString().TrimEnd();
         }
 
         /// <summary>

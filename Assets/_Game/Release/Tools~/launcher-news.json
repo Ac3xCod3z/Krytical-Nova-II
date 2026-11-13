@@ -1,84 +1,101 @@
 {
-  "build": 16,
+  "build": 17,
   "items": [
     {
-      "title": "A New Engine for Nova",
-      "body": "Krytical Nova now runs on a new netcode built for crowds: the server and your game share the world tick by tick, so moves, hits and monsters stay in step. Your characters, Packs, Vaults, Creds and Crews came across as they were."
-    },
-    {
-      "title": "Sign In, Then Play",
-      "body": "When the game asks, sign in with your own account: it is how the server knows your characters. The server list shows Nova once. The old game can no longer join, so let the launcher update first."
-    },
-    {
-      "title": "Autopilot and Magnet Are Back",
-      "body": "Autopilot hunts inside a Hostile Zone by itself again, and Magnet picks up the drops you ticked, while you have Autopilot time from an Autopilot Pass. Your Autopilot settings are kept on the server."
-    },
-    {
-      "title": "Respec Chip and Memory Wipe",
-      "body": "A Respec Chip hands back every stat point you placed; a Memory Wipe every skill point, Run and Jump too, at what you paid. Skill Chip unlocks stay. 5,000 Creds each at the Apothecary, or a rare drop from any Hostile."
-    },
-    {
-      "title": "Rider and Convoy Boosters",
-      "body": "The new Rider Booster doubles your mount's kill XP for an hour. The Tandem Booster is now the Convoy Booster: x1.5 kill XP for you, your pet and now your mount too. Field is you, Companion your pet."
-    },
-    {
-      "title": "Sponsors Reach 500 m",
-      "body": "A Sponsor's Recruits now count within 500 m (was 40 m), so you can grind near each other without standing together. A Hostile an escorting Sponsor holds now pays the Recruits near them instead of nobody."
-    },
-    {
-      "title": "The Sky Lift Runs to Concord",
-      "body": "The Sky Lift at the Marshal is running again and takes you up to Concord, rebuilt lighter so it loads and runs smoother, with new walkable ground for its streets."
+      "title": "Concord Downloads on Its Own",
+      "body": "Concord, the sky city at the top of the Sky Lift, is now a download of its own beside the starter town. An update to the town no longer downloads all of Concord again, so patches are smaller. Concord itself looks and plays as before."
     }
   ],
   "patchNotes": [
     {
-      "heading": "New",
-      "lines": [
-        "The game runs on a new netcode (Netcode for Entities), made for many players on one map. Your characters, Packs, Vaults, Creds and Crews came across as they were.",
-        "Everything of the old game came across: walking, jumping, Wallstride, Waterstride, every weapon class and its skills, Stances, buffs, Autoward, Callouts, Cadence, pickup, Vault, NPC shops, Trade, Kiosks, Tempering, Fusion, Tuning, crafting, Holoweave, chat, Contacts, Squads, Crews, emotes, pets and mounts.",
-        "Hostiles think with new brains: each species has its own Poise (light hits do not stagger big monsters), calls for help when attacked, and shows a swing warning before every attack.",
-        "Monsters surround you by their real body size and take turns: a crowd closes in around you, but never all of them strike at once.",
-        "Hostiles find their way with a new path system on the map's walkable ground.",
-        "Rider Booster: doubles the XP your selected mount earns from your Hostile kills for an hour. Its own icon.",
-        "Respec Chip: hands back every stat point you placed, so you can place them again.",
-        "Memory Wipe: puts every skill back to rank 0, Run and Jump too, and hands back every skill point at what you paid. Skill Chip unlocks stay.",
-        "Respec Chips and Memory Wipes drop from any Hostile (rarely) and are sold at the Apothecary for 5,000 Creds each.",
-        "GMs: gm.seeall works again, so a GM's maps list everyone on the map.",
-        "GMs: gm.resets hands out Respec Chips and Memory Wipes."
-      ]
-    },
-    {
       "heading": "Changed",
       "lines": [
-        "Sign in with your own account when the game asks. Never sign in as someone else: your characters live on your account.",
-        "The server list shows Nova once.",
-        "A game older than this build can no longer join the server: the launcher updates it first.",
-        "Autopilot and Magnet work again on the new netcode, with your settings kept on the server.",
-        "The Name Change Pass works again on the new netcode.",
-        "The Tandem Booster is now called the Convoy Booster and also boosts your mount's kill XP (x1.5), as well as yours and your pet's. Field = you, Companion = pet, Rider = mount, Convoy = all three.",
-        "Mount kill XP now reads the Rider and Convoy Boosters.",
-        "The Sponsor range is 500 m (was 40 m) for the Recruit's bonus, the Sponsor's points and who a Sponsor's kill pays.",
-        "A Hostile an escorting Sponsor holds now pays: each of their Recruits within 500 m by their own level gap, every other Squad member on the map by the Squad rule with the Sponsor counted as the highest. The Sponsor still gets nothing from it.",
-        "The Squad is run from its frames and the member menu; a full Squad window comes later.",
-        "The Sky Lift at the Marshal is on again and takes you to Concord.",
-        "Concord is rebuilt lighter, with new collision and walkable ground, so it loads and runs smoother."
-      ]
-    },
-    {
-      "heading": "Fixed",
-      "lines": [
-        "Follow copies the leader's jump again. Before, the follower's jump was refused with \"Choose a walkable landing surface.\" and the Follow ended.",
-        "A vault or a Wallstride takes you off your mount first, as it should.",
-        "Name Change: if the server refuses the save, the change is undone, the pass comes back and your old name stays, with a line telling you to try again.",
-        "Name Change: leaving the game while the new name is being saved no longer loses it.",
-        "Saves: when two saves of the same thing cross, the server's copy wins and the next save is written, so nothing is lost.",
-        "Saves: a save the save service refuses is sent again whole, with its record of Creds and items.",
-        "Saves: very large Packs and Vaults save (up to 10,000 items in one save, was 500).",
-        "The server no longer crashes when it shuts down, so a stop saves everyone cleanly."
+        "Concord (the Sky Lift's sky city) is now its own file beside the starter town's, so an update to the town no longer downloads Concord again. Nothing in Concord changed."
       ]
     }
   ],
   "history": [
+    {
+      "label": "12 Nov 2026 · A new engine for Nova",
+      "items": [
+        {
+          "title": "A New Engine for Nova",
+          "body": "Krytical Nova now runs on a new netcode built for crowds: the server and your game share the world tick by tick, so moves, hits and monsters stay in step. Your characters, Packs, Vaults, Creds and Crews came across as they were."
+        },
+        {
+          "title": "Sign In, Then Play",
+          "body": "When the game asks, sign in with your own account: it is how the server knows your characters. The server list shows Nova once. The old game can no longer join, so let the launcher update first."
+        },
+        {
+          "title": "Autopilot and Magnet Are Back",
+          "body": "Autopilot hunts inside a Hostile Zone by itself again, and Magnet picks up the drops you ticked, while you have Autopilot time from an Autopilot Pass. Your Autopilot settings are kept on the server."
+        },
+        {
+          "title": "Respec Chip and Memory Wipe",
+          "body": "A Respec Chip hands back every stat point you placed; a Memory Wipe every skill point, Run and Jump too, at what you paid. Skill Chip unlocks stay. 5,000 Creds each at the Apothecary, or a rare drop from any Hostile."
+        },
+        {
+          "title": "Rider and Convoy Boosters",
+          "body": "The new Rider Booster doubles your mount's kill XP for an hour. The Tandem Booster is now the Convoy Booster: x1.5 kill XP for you, your pet and now your mount too. Field is you, Companion your pet."
+        },
+        {
+          "title": "Sponsors Reach 500 m",
+          "body": "A Sponsor's Recruits now count within 500 m (was 40 m), so you can grind near each other without standing together. A Hostile an escorting Sponsor holds now pays the Recruits near them instead of nobody."
+        },
+        {
+          "title": "The Sky Lift Runs to Concord",
+          "body": "The Sky Lift at the Marshal is running again and takes you up to Concord, rebuilt lighter so it loads and runs smoother, with new walkable ground for its streets."
+        }
+      ],
+      "patchNotes": [
+        {
+          "heading": "New",
+          "lines": [
+            "The game runs on a new netcode (Netcode for Entities), made for many players on one map. Your characters, Packs, Vaults, Creds and Crews came across as they were.",
+            "Everything of the old game came across: walking, jumping, Wallstride, Waterstride, every weapon class and its skills, Stances, buffs, Autoward, Callouts, Cadence, pickup, Vault, NPC shops, Trade, Kiosks, Tempering, Fusion, Tuning, crafting, Holoweave, chat, Contacts, Squads, Crews, emotes, pets and mounts.",
+            "Hostiles think with new brains: each species has its own Poise (light hits do not stagger big monsters), calls for help when attacked, and shows a swing warning before every attack.",
+            "Monsters surround you by their real body size and take turns: a crowd closes in around you, but never all of them strike at once.",
+            "Hostiles find their way with a new path system on the map's walkable ground.",
+            "Rider Booster: doubles the XP your selected mount earns from your Hostile kills for an hour. Its own icon.",
+            "Respec Chip: hands back every stat point you placed, so you can place them again.",
+            "Memory Wipe: puts every skill back to rank 0, Run and Jump too, and hands back every skill point at what you paid. Skill Chip unlocks stay.",
+            "Respec Chips and Memory Wipes drop from any Hostile (rarely) and are sold at the Apothecary for 5,000 Creds each.",
+            "GMs: gm.seeall works again, so a GM's maps list everyone on the map.",
+            "GMs: gm.resets hands out Respec Chips and Memory Wipes."
+          ]
+        },
+        {
+          "heading": "Changed",
+          "lines": [
+            "Sign in with your own account when the game asks. Never sign in as someone else: your characters live on your account.",
+            "The server list shows Nova once.",
+            "A game older than this build can no longer join the server: the launcher updates it first.",
+            "Autopilot and Magnet work again on the new netcode, with your settings kept on the server.",
+            "The Name Change Pass works again on the new netcode.",
+            "The Tandem Booster is now called the Convoy Booster and also boosts your mount's kill XP (x1.5), as well as yours and your pet's. Field = you, Companion = pet, Rider = mount, Convoy = all three.",
+            "Mount kill XP now reads the Rider and Convoy Boosters.",
+            "The Sponsor range is 500 m (was 40 m) for the Recruit's bonus, the Sponsor's points and who a Sponsor's kill pays.",
+            "A Hostile an escorting Sponsor holds now pays: each of their Recruits within 500 m by their own level gap, every other Squad member on the map by the Squad rule with the Sponsor counted as the highest. The Sponsor still gets nothing from it.",
+            "The Squad is run from its frames and the member menu; a full Squad window comes later.",
+            "The Sky Lift at the Marshal is on again and takes you to Concord.",
+            "Concord is rebuilt lighter, with new collision and walkable ground, so it loads and runs smoother."
+          ]
+        },
+        {
+          "heading": "Fixed",
+          "lines": [
+            "Follow copies the leader's jump again. Before, the follower's jump was refused with \"Choose a walkable landing surface.\" and the Follow ended.",
+            "A vault or a Wallstride takes you off your mount first, as it should.",
+            "Name Change: if the server refuses the save, the change is undone, the pass comes back and your old name stays, with a line telling you to try again.",
+            "Name Change: leaving the game while the new name is being saved no longer loses it.",
+            "Saves: when two saves of the same thing cross, the server's copy wins and the next save is written, so nothing is lost.",
+            "Saves: a save the save service refuses is sent again whole, with its record of Creds and items.",
+            "Saves: very large Packs and Vaults save (up to 10,000 items in one save, was 500).",
+            "The server no longer crashes when it shuts down, so a stop saves everyone cleanly."
+          ]
+        }
+      ]
+    },
     {
       "label": "31 Oct 2026 · Mounts, capes & new gear",
       "items": [
