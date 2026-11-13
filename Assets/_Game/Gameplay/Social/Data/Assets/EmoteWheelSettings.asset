@@ -67,3 +67,37 @@ MonoBehaviour:
     - Posture
     - Sway
     - Pick Nose
+  mountedAllowed:
+  - Greet
+  - Head Nod
+  - Head Shake
+  - Happy
+  - Celebrate
+  - Taunt
+  - Aggressive
+  - Reproach
+  - Affection
+  - Point Hand
+  - Look
+  - Thoughtful
+  - Check Watch
+  - Play With Hair
+  - Use Phone
+  - Eat
+  - Drink
+  - Yawn
+  - Angry/Shake Fist
+  - Sad/Facepalm
+  - Sad/Shrug
+  - Sad/Thumbs Down
+  - Sad/Crying
+  - Sporty/Flex Arms
+  - Sporty/Flex Biceps
+  - Pray/Cross Chest
+  mountedRefused:
+  - Greet/Bow
+  - Greet/Bow Martial Arts
+  - Greet/Curtsy
+  - Greet/Salute Stomp
+  - Celebrate/Amped Skitter
+  - Aggressive/Roar Low

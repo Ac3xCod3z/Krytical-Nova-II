@@ -171,7 +171,7 @@ namespace KryticalNova.Player
         private CharacterAnimState currentState = CharacterAnimState.Locomotion;
         private AnimationClip currentLocomotionClip;
         private AnimancerState currentLocomotionState;
-        private AvatarMask upperBodyMask, seatedUpperMask;
+        private AvatarMask upperBodyMask, seatedUpperMask, seatedEmoteMask;
         private bool drawOnUpperBody;
         private AnimancerState stopState;
         private Vector2 stopWindow;
@@ -308,6 +308,7 @@ namespace KryticalNova.Player
         {
             if (upperBodyMask != null) Destroy(upperBodyMask);
             if (seatedUpperMask != null) Destroy(seatedUpperMask);
+            if (seatedEmoteMask != null) Destroy(seatedEmoteMask);
             base.OnDestroy();
         }
 
@@ -318,6 +319,8 @@ namespace KryticalNova.Player
 
             upperBodyMask = UpperMask("Upper Body (runtime)", withSpine: true);
             seatedUpperMask = UpperMask("Seated Upper Body (runtime)", withSpine: false);
+            // build 17 item 15.3: an emote from the saddle moves the head as well (a nod, a look), never the spine or the legs
+            seatedEmoteMask = UpperMask("Seated Emote (runtime)", withSpine: false, withHead: true);
             animancer.Layers[UpperBodyLayerIndex].Mask = seated ? seatedUpperMask : upperBodyMask;
             drawOnUpperBody = true;
         }
@@ -327,7 +330,7 @@ namespace KryticalNova.Player
         /// clip's (owner, 7 Nov 2026 retest 2: with the weapon out the rider hunched forward, and a charge's guard pose
         /// twisted the body on the saddle).
         /// </summary>
-        private static AvatarMask UpperMask(string name, bool withSpine)
+        private static AvatarMask UpperMask(string name, bool withSpine, bool withHead = false)
         {
             var mask = new AvatarMask { name = name };
             for (int i = 0; i < (int)AvatarMaskBodyPart.LastBodyPart; i++)
@@ -336,6 +339,7 @@ namespace KryticalNova.Player
                 // Seated, the head stays the riding clip's too (owner, retest 3: with the weapon drawn the head always faced
                 // left; the drawn idle turns its head to make up for its own spine twist, which the seat leaves out).
                 bool upper = (withSpine && (part == AvatarMaskBodyPart.Body || part == AvatarMaskBodyPart.Head))
+                    || (withHead && part == AvatarMaskBodyPart.Head)
                     || part == AvatarMaskBodyPart.LeftArm || part == AvatarMaskBodyPart.RightArm
                     || part == AvatarMaskBodyPart.LeftFingers || part == AvatarMaskBodyPart.RightFingers
                     || part == AvatarMaskBodyPart.LeftHandIK || part == AvatarMaskBodyPart.RightHandIK;
@@ -679,6 +683,7 @@ namespace KryticalNova.Player
             seatedRunClip = run != null ? run : seatedWalkClip;
             stopState = null;
             currentLocomotionClip = null;
+            if (seatedEmote) StopEmote();   // getting on or off ends an emote from the saddle
             if (seated) EndEmote(true);
             if (!seated && currentState == CharacterAnimState.Attacking) FadeOutUpperBody();
             KeepSeatedHold(); // a getting-off lets go of the hold; the riding set takes it up
@@ -1449,6 +1454,16 @@ namespace KryticalNova.Player
         public bool CanStartEmote =>
             (currentState == CharacterAnimState.Locomotion || IsWeaponDrawActionPlaying) && !IsTravelling && !seated;
         /// <summary>
+        /// Build 17 item 15.3: the rider is free for an emote from the saddle: in the riding set (not getting on or off), standing
+        /// still, doing nothing but perhaps putting the weapon away. Which emotes may be done there is the emote wheel's
+        /// (<c>EmoteCatalog.AllowedMounted</c>); they play on the upper body over the riding legs.
+        /// </summary>
+        public bool CanStartSeatedEmote =>
+            seated && inSaddle && drawOnUpperBody && (currentState == CharacterAnimState.Locomotion || IsWeaponDrawActionPlaying) && !IsTravelling;
+        /// <summary>The emote playing is one from the saddle (upper body only).</summary>
+        public bool IsSeatedEmote => seatedEmote;
+        private bool seatedEmote;
+        /// <summary>
         /// Raised on this machine when an emote or stance ends by itself or is cut short (moving off, striking,
         /// casting, jumping, a draw, a hit, death). Not raised when another emote takes its place.
         /// </summary>
@@ -1461,7 +1476,9 @@ namespace KryticalNova.Player
         /// </summary>
         public bool PlayEmote(AnimationClip clip, AnimationClip enter = null, bool hold = false, GameObject prop = null)
         {
-            if (animancer == null || !isActiveAndEnabled || clip == null || !CanStartEmote) return false;
+            if (animancer == null || !isActiveAndEnabled || clip == null) return false;
+            if (seated) return PlaySeatedEmote(clip, prop);
+            if (!CanStartEmote) return false;
             if (!hold) enter = null; // only a stance has a way in
             if (hitRoutine != null) StopCoroutine(hitRoutine);
             EndEmote(false); // the new one takes over: nobody is told the old one ended
@@ -1472,13 +1489,72 @@ namespace KryticalNova.Player
             return emoting;
         }
 
+        /// <summary>Build 17 item 15.3: an emote from the saddle, once, on the upper body; the base layer keeps riding.</summary>
+        private bool PlaySeatedEmote(AnimationClip clip, GameObject prop)
+        {
+            if (!CanStartSeatedEmote) return false;
+            if (hitRoutine != null) StopCoroutine(hitRoutine);
+            EndEmote(false);
+            emoting = true;
+            seatedEmote = true;
+            hitRoutine = StartCoroutine(SeatedEmoteRoutine(clip, prop));
+            if (!emoting) hitRoutine = null;
+            return emoting;
+        }
+
+        private IEnumerator SeatedEmoteRoutine(AnimationClip clip, GameObject prop)
+        {
+            float waited = 0f;
+            while (IsWeaponDrawActionPlaying && waited < EmoteSheatheWaitSeconds && !IsTravelling)
+            {
+                waited += Time.deltaTime;
+                yield return null;
+            }
+            if (!SeatedEmoteFree())
+            {
+                hitRoutine = null;
+                ReleaseSeatedEmote();
+                yield break;
+            }
+            AnimancerLayer layer = animancer.Layers[UpperBodyLayerIndex];
+            layer.Mask = seatedEmoteMask;
+            HoldEmoteProp(prop);
+            AnimancerState state = layer.Play(clip, EmoteFade);
+            state.Time = 0f;
+            state.Speed = 1f;
+            state.ApplyFootIK = false;
+            layer.StartFade(1f, EmoteFade);
+            float playFor = Mathf.Max(0.05f, state.Length - EmoteFade);
+            while (SeatedEmoteFree() && layer.CurrentState == state && state.Time < playFor)
+            {
+                GrowEmoteProp();
+                yield return null;
+            }
+            hitRoutine = null;
+            ReleaseSeatedEmote();
+        }
+
+        // Moving off, striking, casting, drawing or getting off takes the arms back at once.
+        private bool SeatedEmoteFree() =>
+            seated && inSaddle && currentState == CharacterAnimState.Locomotion && !IsTravelling && !IsWeaponDrawActionPlaying;
+
+        private void ReleaseSeatedEmote()
+        {
+            // a strike or draw that took over keeps the layer; only the emote's own play fades out
+            if (seatedEmote && animancer != null && drawOnUpperBody && currentState == CharacterAnimState.Locomotion && !IsWeaponDrawActionPlaying)
+                animancer.Layers[UpperBodyLayerIndex].StartFade(0f, EmoteFade);
+            EndEmote(true);
+            KeepSeatedHold();
+        }
+
         /// <summary>Ends the emote or stance being played, if any, and lets the body go back to standing.</summary>
         public void StopEmote()
         {
             if (!emoting) return;
             if (hitRoutine != null) StopCoroutine(hitRoutine);
             hitRoutine = null;
-            ReleaseEmote();
+            if (seatedEmote) ReleaseSeatedEmote();
+            else ReleaseEmote();
         }
 
         private IEnumerator EmoteRoutine(AnimationClip clip, AnimationClip enter, bool hold, GameObject prop)
@@ -1552,6 +1628,12 @@ namespace KryticalNova.Player
         {
             if (emoteProp != null) Destroy(emoteProp);
             emoteProp = null;
+            if (seatedEmote)
+            {
+                // the upper body goes back to the seat's own mask, whatever ended the emote (a hit, a strike, getting off)
+                seatedEmote = false;
+                if (animancer != null && drawOnUpperBody) animancer.Layers[UpperBodyLayerIndex].Mask = seated ? seatedUpperMask : upperBodyMask;
+            }
             if (!emoting) return;
             emoting = false;
             if (announce) EmoteEnded?.Invoke();
