@@ -9,6 +9,8 @@ namespace KryticalNova.Core
         public float DamageDealt;
         public bool IsCritical;
         public bool IsEvaded;
+        /// <summary>Build 17, item 8: the defender blocked (the hit landed for less).</summary>
+        public bool IsBlocked;
         public bool IsReflected;
         public float ReflectedDamage;
         public bool ShieldShattered;
