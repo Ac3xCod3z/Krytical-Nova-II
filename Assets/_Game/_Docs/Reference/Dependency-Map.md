@@ -20,7 +20,7 @@ script, which is then published to the link above. `--baseline` saves today's up
 ## Today
 
 <!-- map:summary -->
-Generated 12 Nov 2026, 18:57: 1004 runtime scripts (185,863 lines) declaring 1852 types (209 MonoBehaviours, 65 NetworkBehaviours, 110 ScriptableObject classes); 290 test scripts; 4746 prefabs, 48 scenes and 2767 assets read. 215 system-to-system links, of which 0 run uphill, 0 pairs of systems use each other both ways, and 4 links would have to go for the systems to form a clean stack. The largest tangle, classes that all reach each other through some chain of uses, holds 10 classes from 1 systems (UI 10, ...).
+Generated 12 Nov 2026, 20:01: 1007 runtime scripts (186,627 lines) declaring 1870 types (209 MonoBehaviours, 65 NetworkBehaviours, 111 ScriptableObject classes); 295 test scripts; 4748 prefabs, 52 scenes and 6443 assets read. 215 system-to-system links, of which 0 run uphill, 0 pairs of systems use each other both ways, and 4 links would have to go for the systems to form a clean stack. The largest tangle, classes that all reach each other through some chain of uses, holds 10 classes from 1 systems (UI 10, ...).
 <!-- /map:summary -->
 
 **Checked against the compiler.**
@@ -65,7 +65,7 @@ Checked against the 219 references the assemblies declare between systems: every
 | System | Layer | Scripts | Lines | Uses (types) | Used by (types) | Instability | Tests | Types touched by a test |
 |---|---|---|---|---|---|---|---|---|
 | Core | Foundation | 77 | 6,668 | 0 | 439 | 0.0 | 9 | 61 of 74 |
-| Networking | Infrastructure | 97 | 14,473 | 44 | 140 | 0.24 | 33 | 104 of 159 |
+| Networking | Infrastructure | 100 | 15,057 | 44 | 143 | 0.24 | 37 | 114 of 174 |
 | Rendering | Infrastructure | 17 | 3,623 | 3 | 28 | 0.1 | 1 | 2 of 21 |
 | Environment | Simulation | 6 | 834 | 0 | 2 | 0.0 | 0 | 0 of 6 |
 | Gameplay/Crafting | Simulation | 3 | 426 | 25 | 9 | 0.74 | 1 | 4 of 6 |
@@ -76,7 +76,7 @@ Checked against the 219 references the assemblies declare between systems: every
 | Gameplay/Economy | Simulation | 23 | 4,609 | 83 | 46 | 0.64 | 9 | 24 of 37 |
 | Gameplay/Autopilot | Simulation | 11 | 1,562 | 46 | 14 | 0.77 | 4 | 7 of 12 |
 | Gameplay/Social | Simulation | 42 | 6,771 | 81 | 49 | 0.62 | 12 | 33 of 55 |
-| Gameplay/Persistence | Simulation | 66 | 19,156 | 410 | 14 | 0.97 | 47 | 54 of 246 |
+| Gameplay/Persistence | Simulation | 66 | 19,336 | 413 | 14 | 0.97 | 48 | 56 of 249 |
 | Gameplay/Hostiles | Simulation | 52 | 5,997 | 79 | 34 | 0.7 | 23 | 58 of 76 |
 | Gameplay/Pets | Simulation | 12 | 1,550 | 40 | 32 | 0.56 | 6 | 14 of 19 |
 | Gameplay/Combat | Simulation | 32 | 5,655 | 89 | 41 | 0.68 | 11 | 30 of 55 |
@@ -121,18 +121,18 @@ Each row is the cheaper side of a loop: cut these references and the two systems
 | Type | System | Kind | Files using it | Systems | Types reached through others | Tests | Prefabs / scenes holding it |
 |---|---|---|---|---|---|---|---|
 | ClientPresentationRegistry | Core | plain | 91 | 20 | 374 | 3 | 0 |
-| BodyRoleTag | Core | mono | 90 | 19 | 452 | 16 | 0 |
+| BodyRoleTag | Core | mono | 90 | 19 | 453 | 16 | 0 |
 | FactionId | Gameplay/Factions | enum | 83 | 15 | 417 | 30 | 0 |
 | PlayerInventory | Gameplay/Items | net | 76 | 15 | 287 | 2 | 1 |
 | ItemDefinition | Gameplay/Items | so | 69 | 13 | 352 | 24 | 0 |
 | CallKind | Networking | enum | 66 | 15 | 406 | 2 | 0 |
-| NetRoleKind | Core | enum | 63 | 18 | 457 | 17 | 0 |
+| NetRoleKind | Core | enum | 63 | 18 | 458 | 17 | 0 |
 | ItemStack | Gameplay/Items | plain | 61 | 12 | 364 | 14 | 0 |
-| GhostBodyRegistry | Gameplay/Player | plain | 57 | 4 | 122 | 15 | 0 |
-| GhostBodyEntry | Gameplay/Player | plain | 54 | 4 | 124 | 5 | 0 |
+| GhostBodyRegistry | Gameplay/Player | plain | 57 | 4 | 123 | 15 | 0 |
+| GhostBodyEntry | Gameplay/Player | plain | 54 | 4 | 125 | 5 | 0 |
 | PlayerIdentity | Gameplay/Player | net | 49 | 12 | 273 | 3 | 1 |
 | RpcBudget | Networking | plain | 48 | 15 | 385 | 3 | 0 |
-| LocalPlayer | Core | plain | 43 | 18 | 365 | 8 | 0 |
+| LocalPlayer | Core | plain | 43 | 18 | 366 | 8 | 0 |
 | EquipSlot | Gameplay/Items | enum | 41 | 10 | 380 | 17 | 0 |
 | PlayerResources | Gameplay/Progression | net | 41 | 14 | 329 | 3 | 41 |
 | PointAndClickPlayer | Gameplay/Player | net | 40 | 9 | 236 | 5 | 41 |
@@ -140,8 +140,8 @@ Each row is the cheaper side of a loop: cut these references and the two systems
 | CharacterCombatStats | Gameplay/Progression | mono | 36 | 14 | 359 | 4 | 61 |
 | CombatEntity | Gameplay/Progression | net | 36 | 12 | 287 | 3 | 23 |
 | PlayerCharacterProgression | Gameplay/Progression | net | 35 | 12 | 360 | 4 | 41 |
-| PlayerKey | Core | plain | 34 | 6 | 512 | 28 | 0 |
-| IBodyRequests | Core | interface | 31 | 14 | 453 | 1 | 0 |
+| PlayerKey | Core | plain | 34 | 6 | 513 | 28 | 0 |
+| IBodyRequests | Core | interface | 31 | 14 | 454 | 1 | 0 |
 | WeaponClassId | Gameplay/Progression | enum | 29 | 10 | 458 | 10 | 0 |
 | StatType | Gameplay/Progression | enum | 27 | 8 | 452 | 8 | 0 |
 | DamageResult | Core | plain | 26 | 11 | 379 | 9 | 0 |
@@ -226,7 +226,7 @@ Each ScriptableObject class, how many assets of it exist, and where they are wir
 <!-- map:data -->
 | ScriptableObject class | System | Assets | Read by (runtime files) | Wired from prefabs / scenes / other assets |
 |---|---|---|---|---|
-| ItemDefinition | Gameplay/Items | 1815 | 69 | 0 / 0 / 338 |
+| ItemDefinition | Gameplay/Items | 1817 | 69 | 0 / 0 / 338 |
 | FurnishingDefinition | Gameplay/Housing | 223 | 8 | 0 / 0 / 1 |
 | SkillDefinitionSO | Gameplay/Progression | 152 | 25 | 1 / 0 / 1 |
 | HallLookDefinition | Gameplay/Housing | 50 | 6 | 0 / 0 / 1 |
@@ -317,6 +317,7 @@ Each ScriptableObject class, how many assets of it exist, and where they are wir
 | EmoteWheelSettings | Gameplay/Social | 1 | 3 | 1 / 0 / 0 |
 | SponsorSettings | Gameplay/Social | 1 | 3 | 1 / 0 / 1 |
 | SquadSettings | Gameplay/Social | 1 | 2 | 1 / 0 / 0 |
+| RelevancySettings | Networking | 1 | 2 | 0 / 0 / 0 |
 | WorldLodSettings | Rendering | 1 | 2 | 1 / 0 / 0 |
 | GlowHaloFeature | Rendering | 1 | 0 | 0 / 0 / 2 |
 | SunShaftsFeature | Rendering | 1 | 0 | 0 / 0 / 1 |
@@ -344,7 +345,7 @@ Where tuning still lives in code, and other links the compiler cannot see:
 - **Gameplay numbers fixed in code:** 454 in 154 files. Most: `Gameplay/Crafting/Data/CraftingSettings.cs` (28), `Gameplay/Player/Entities/Runtime/WallWalk.cs` (20), `Gameplay/Player/Runtime/PlayerWallRunMotor.cs` (18), `Gameplay/Player/Runtime/PlayerVaultMotor.cs` (15), `Gameplay/Player/Runtime/PointAndClickPlayer.cs` (15), `Gameplay/Items/Data/GearProgressionSettings.cs` (13), `Gameplay/Items/Runtime/WeaponPaintRules.cs` (11), `Gameplay/Player/Runtime/PlayerWallRunMotor.WallWalk.cs` (10).
 - **Settings fallbacks** (`settings != null ? settings.x : 8`): 108.
 - **Runtime writes to shared assets** (ScriptableObject or pipeline fields): 25 — `Rendering/Runtime/PipelineRebuilds.cs:60`, `Rendering/Runtime/PipelineRebuilds.cs:68`, `Rendering/Runtime/PipelineRebuilds.cs:104`, `Rendering/Runtime/PipelineRebuilds.cs:105`, `UI/Runtime/Settings/GraphicsSettingsApplier.cs:142`, `UI/Runtime/Settings/GraphicsSettingsApplier.cs:143`, `UI/Runtime/Settings/GraphicsSettingsApplier.cs:144`, `UI/Runtime/Settings/GraphicsSettingsApplier.cs:145`.
-- **Lookups by name** (Type.GetType, Find("..."), Resources.Load, SendMessage): 37.
+- **Lookups by name** (Type.GetType, Find("..."), Resources.Load, SendMessage): 38.
 - **Asset entries that store a class by name and assembly** ([SerializeReference]): 190 in 2 assets.
 - **Static accessors that call GetComponent on every use:** 0.
 - **FindObject calls in runtime code:** 44.

@@ -317,7 +317,7 @@ def judge(stage, run_folder, bot_exit, minutes):
     brains = [v for v in (num(r, "brains_ms") for r in rows) if v is not None]
     slow = sum(int(num(r, "slow_frames") or 0) for r in after)
     ram = [v for v in (num(r, "private_mb") for r in rows) if v is not None]
-    mark("Whole-server tick p99 < 15 ms", (max(p99) < SETTINGS["tick_p99_ms"]) if p99 else None, f"max p99 {max(p99):.2f} ms" if p99 else "no CSV")
+    mark("Whole-server frame busy time p99 < 15 ms (tick_p99_ms is the frame's busy time, not one simulation tick's)", (max(p99) < SETTINGS["tick_p99_ms"]) if p99 else None, f"max p99 {max(p99):.2f} ms" if p99 else "no CSV")
     if stage.startswith("S1"):
         mark("Tick p95 < 15 ms (102 Hostiles + 50 bots)", (max(p95) < SETTINGS["tick_p95_ms"]) if p95 else None, f"max p95 {max(p95):.2f} ms" if p95 else "no CSV")
         mark("Brains < 0.3 ms at 102 (longest tick of each second)", (max(brains) < SETTINGS["brains_p99_102_ms"]) if brains else None,

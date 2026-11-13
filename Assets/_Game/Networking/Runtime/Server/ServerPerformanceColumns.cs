@@ -9,6 +9,8 @@ namespace KryticalNova.Networking
     /// the Editor and read by <c>Tools/Editor/Build/ReadPerformanceLog.py --server</c>. Wave 4 (12 Nov 2026) appended tick p50 / p99,
     /// brains, relevancy, process RAM, entities, ghosts and bytes out at the END, so older readers keep their columns. A gauge nobody
     /// published (relevancy before it lands, bytes out while the transport does not say) is written blank.
+    /// <c>tick_p50_ms</c> / <c>tick_p99_ms</c> are the FRAME's busy time over the row's second (the same samples as busy_p95_ms), not
+    /// the time of one simulation tick: a frame that runs two ticks counts once.
     /// </summary>
     public static class ServerPerformanceColumns
     {

@@ -363,7 +363,10 @@ namespace KryticalNova.Networking.Entities
             if (m_Filled && sum == m_Signature && m_SinceFill < config.FillIntervalTicks) return;
 
             // fill
-            bool timed = KryticalNova.Diagnostics.PerformanceLog.IsRecording;
+            // timed for the performance log's line and for the server CSV's relevancy_ms column (a batch server records no
+            // performance log, so the gauge is the only place its cost shows)
+            bool recording = KryticalNova.Diagnostics.PerformanceLog.IsRecording;
+            bool timed = recording || KryticalNova.Diagnostics.PerformanceLog.GaugesOn;
             long start = timed ? System.Diagnostics.Stopwatch.GetTimestamp() : 0;
 
             NativeParallelHashMap<RelevantGhostForConnection, int> set = SystemAPI.GetSingletonRW<GhostRelevancy>().ValueRO.GhostRelevancySet;
@@ -390,9 +393,11 @@ namespace KryticalNova.Networking.Entities
             m_Pairs = pairs.Length;
             if (most > m_Most) m_Most = most;
             if (end - m_WindowStart < frequency) return;
-            KryticalNova.Diagnostics.PerformanceLog.Mark("relevancy",
-                $"{m_Fills} fills, mean {m_SumMs / m_Fills:F3} ms, longest {m_MaxMs:F3} ms, {m_Pairs} pairs for {viewers.Length} connections, most {m_Most} for one, {ghosts.Length} ghosts",
-                (long)(m_MaxMs * 1000.0));
+            KryticalNova.Diagnostics.PerformanceLog.SetGauge(KryticalNova.Diagnostics.PerformanceLog.GaugeNames.RelevancyMs, m_MaxMs);   // the longest fill of the last second
+            if (recording)
+                KryticalNova.Diagnostics.PerformanceLog.Mark("relevancy",
+                    $"{m_Fills} fills, mean {m_SumMs / m_Fills:F3} ms, longest {m_MaxMs:F3} ms, {m_Pairs} pairs for {viewers.Length} connections, most {m_Most} for one, {ghosts.Length} ghosts",
+                    (long)(m_MaxMs * 1000.0));
             m_Fills = 0;
             m_SumMs = 0;
             m_MaxMs = 0;
