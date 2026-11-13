@@ -44,7 +44,7 @@ namespace KryticalNova.Audio
             if (instance != null) return instance;
             if (from == null) return null;
             var go = new GameObject("[Deck]");
-            DontDestroyOnLoad(go);
+            if (Application.isPlaying) DontDestroyOnLoad(go);   // an EditMode test makes one too
             instance = go.AddComponent<DeckPlayer>();
             instance.Load(from);
             return instance;
