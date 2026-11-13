@@ -663,7 +663,7 @@ namespace KryticalNova.ServerApp
         }
 
         // Unity's start-up chatter that is no problem (the control page hides the same).
-        private static readonly Regex NoisePattern = new Regex(@"memorysetup|serialization layout|Did you #if UNITY_EDITOR|referenced script|UnloadTime|Unloading \d+|shader|IMGUI module|Unknown managed type|^Unknown arg: -\s*$|UnityMemory] Configuration Parameters|[KnServer] Page request accepted", RegexOptions.IgnoreCase);
+        private static readonly Regex NoisePattern = new Regex(@"memorysetup|serialization layout|Did you #if UNITY_EDITOR|referenced script|UnloadTime|Unloading \d+|shader|IMGUI module|Unknown managed type|^Unknown arg: -\s*$|UnityMemory\] Configuration Parameters|\[KnServer\] Page request accepted", RegexOptions.IgnoreCase);
         // "Unknown arg: -" is Unity's memory setup meeting the "-" of the "-logFile -" this app starts the server with (the log to the app); harmless.
         private static bool Noise(string line) => NoisePattern.IsMatch(line);
 
