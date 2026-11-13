@@ -1602,7 +1602,7 @@ MonoBehaviour:
   starterEquipped: []
   starterBag:
   - item: {fileID: 11400000, guid: 3229e03cb43202e428110eae3d2da85b, type: 2}
-    count: 5
+    count: 20
   - item: {fileID: 11400000, guid: 9ac330e53489baf46bcc3e133a42086a, type: 2}
-    count: 5
+    count: 20
   themes: {fileID: 11400000, guid: 19312dbf68325b34ea623ff93b84dd3d, type: 2}
