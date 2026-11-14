@@ -98,16 +98,19 @@ void Swing(uint3 id : SV_DispatchThreadID)
         if (timing.y > 0.0)
         {
             // A ring or a wave: a front runs out; a blade moves when the front reaches it, then springs on its own.
+            // Behind the front it stays in reach (its own spring brings it back): weighting only the front itself
+            // multiplied by a spring that had barely started, which left almost nothing (item 20 diagnosis, 14 Nov).
             float front = timing.y * age;
-            float edge = saturate(1.0 - abs(distance - front) / max(timing.z, 0.05));
-            area = edge * edge * saturate(1.0 - distance / where.w + 0.25);
+            float reached = saturate((front - distance) / max(timing.z, 0.05) + 1.0);
+            area = reached * saturate(1.0 - distance / where.w + 0.25);
             age -= distance / timing.y;
         }
         else
         {
             // An arc in front of the swing, softest at its sides and its reach.
-            float reach = saturate(1.0 - distance / where.w);
-            area = reach * reach * smoothstep(shape.z - 0.15, shape.z + 0.05, dot(n, shape.xy));
+            // Full lean over the near part of its reach, softening only toward the end (squared, most of the arc was too faint to see).
+            float reach = saturate(1.6 * (1.0 - distance / where.w));
+            area = reach * smoothstep(shape.z - 0.15, shape.z + 0.05, dot(n, shape.xy));
             // Combo steps 1 and 2 lean opposite ways across the swing; the finisher drives straight out.
             n = normalize(n + float2(-shape.y, shape.x) * timing.w);
         }

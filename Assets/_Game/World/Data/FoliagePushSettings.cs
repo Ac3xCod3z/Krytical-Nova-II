@@ -47,11 +47,11 @@ namespace KryticalNova.World
         public bool enabled = true;
 
         [Header("Shapes")]
-        public Shape arc = new Shape { radius = 2.2f, arcDegrees = 120f, strength = 0.55f, springSeconds = 0.45f };
-        public Shape finisher = new Shape { radius = 2.8f, arcDegrees = 150f, strength = 0.8f, springSeconds = 0.5f };
-        public Shape ring = new Shape { radius = 10f, band = 1.2f, frontSpeed = 14f, strength = 0.8f, springSeconds = 0.5f };
-        public Shape wave = new Shape { radius = 4f, band = 1.5f, frontSpeed = 10f, strength = 1.1f, springSeconds = 0.6f };
-        public Shape hostile = new Shape { radius = 2.5f, arcDegrees = 140f, strength = 0.7f, springSeconds = 0.5f };
+        public Shape arc = new Shape { radius = 2.2f, arcDegrees = 120f, strength = 1f, springSeconds = 0.7f };
+        public Shape finisher = new Shape { radius = 2.8f, arcDegrees = 150f, strength = 1.2f, springSeconds = 0.75f };
+        public Shape ring = new Shape { radius = 10f, band = 1.2f, frontSpeed = 14f, strength = 1f, springSeconds = 0.7f };
+        public Shape wave = new Shape { radius = 4f, band = 1.5f, frontSpeed = 10f, strength = 1.2f, springSeconds = 0.8f };
+        public Shape hostile = new Shape { radius = 2.5f, arcDegrees = 140f, strength = 1f, springSeconds = 0.7f };
 
         [Header("Limits")]
         [Tooltip("Pushes alive at once per World Effects tier (Low, Medium, High, Ultra); never more than FoliagePushes.MaxPushes.")]
@@ -65,11 +65,11 @@ namespace KryticalNova.World
 
         [Header("Spring")]
         [Tooltip("How fast it swings back, radians a second.")]
-        public float springRate = 14f;
+        public float springRate = 5.5f;
         [Tooltip("How quickly the swing dies away (0 never, 1 no overshoot).")]
-        public float springDamping = 0.45f;
+        public float springDamping = 0.5f;
         [Tooltip("Seconds from nothing to the full lean.")]
-        public float riseSeconds = 0.05f;
+        public float riseSeconds = 0.07f;
         [Tooltip("Arcs: how much of the lean goes sideways with the swing (combo steps 1 and 2 lean opposite ways).")]
         public float sweepShare = 0.3f;
         [Tooltip("The most a blade is bent by swings and trampling together (1 = the trample map's flat).")]

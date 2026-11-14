@@ -18,42 +18,42 @@ MonoBehaviour:
     arcDegrees: 120
     band: 0
     frontSpeed: 0
-    strength: 0.55
-    springSeconds: 0.45
+    strength: 1
+    springSeconds: 0.7
   finisher:
     radius: 2.8
     arcDegrees: 150
     band: 0
     frontSpeed: 0
-    strength: 0.8
-    springSeconds: 0.5
+    strength: 1.2
+    springSeconds: 0.75
   ring:
     radius: 10
     arcDegrees: 0
     band: 1.2
     frontSpeed: 14
-    strength: 0.8
-    springSeconds: 0.5
+    strength: 1
+    springSeconds: 0.7
   wave:
     radius: 4
     arcDegrees: 0
     band: 1.5
     frontSpeed: 10
-    strength: 1.1
-    springSeconds: 0.6
+    strength: 1.2
+    springSeconds: 0.8
   hostile:
     radius: 2.5
     arcDegrees: 140
     band: 0
     frontSpeed: 0
-    strength: 0.7
-    springSeconds: 0.5
+    strength: 1
+    springSeconds: 0.7
   pushesPerTier: 04000000060000000800000008000000
   cullDistance: 60
   maxBodyScale: 4
   hostileReferenceRadius: 0.45
-  springRate: 14
-  springDamping: 0.45
-  riseSeconds: 0.05
+  springRate: 5.5
+  springDamping: 0.5
+  riseSeconds: 0.07
   sweepShare: 0.3
   totalPushClamp: 1.3
