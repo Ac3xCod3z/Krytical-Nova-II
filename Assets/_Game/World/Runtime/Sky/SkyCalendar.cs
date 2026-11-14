@@ -148,7 +148,7 @@ namespace KryticalNova.World
         {
             age01 = 0f;
             if (c.Forced != kind || double.IsNaN(c.ForcedAge) || c.ForcedAge < 0) return false;
-            float len = s != null ? s.forcedSeconds : 180f;
+            float len = ForcedLength(kind, s);
             if (c.ForcedAge > len) return false;
             age01 = (float)(c.ForcedAge / len);
             return true;
@@ -175,6 +175,15 @@ namespace KryticalNova.World
                 if (r < 0f) return i;
             }
             return last;
+        }
+
+        /// <summary>How long a GM force lasts: <see cref="SkyEventSettings.forcedSeconds"/>, but an eclipse always runs from first bite to
+        /// the end (<see cref="SkyEventSettings.eclipseSeconds"/>), so the world's light never jumps back mid-way.</summary>
+        public static float ForcedLength(SkyEventKind kind, SkyEventSettings s)
+        {
+            float len = s != null ? s.forcedSeconds : 180f;
+            if (kind == SkyEventKind.Eclipse && s != null) len = Mathf.Max(len, s.eclipseSeconds);
+            return len;
         }
 
         /// <summary>Everything in the sky now.</summary>

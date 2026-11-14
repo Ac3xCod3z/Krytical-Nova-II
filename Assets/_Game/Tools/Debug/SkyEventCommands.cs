@@ -23,7 +23,7 @@ namespace KryticalNova.DevTools
             if (!env.ForceSkyEvent(kind)) return NoAuthority;
             if (kind == SkyEventKind.None) return "Sky event cleared: the sky follows its calendar again.";
             var s = SkyEventSettings.Default;
-            float secs = s != null ? s.forcedSeconds : 180f;
+            float secs = SkyCalendar.ForcedLength(kind, s);
             bool night = kind == SkyEventKind.Meteor || kind == SkyEventKind.Shower || kind == SkyEventKind.Comet ||
                          kind == SkyEventKind.Nebula || kind == SkyEventKind.Aurora;
             bool isNight = env.DayCycle != null && env.DayCycle.SunDirection(env.TimeOfDay01).y < 0f;

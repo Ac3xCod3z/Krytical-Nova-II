@@ -199,5 +199,16 @@ namespace KryticalNova.Tests
             foreach (var look in s.nebulas) look.weight = 0f;
             Assert.That(SkyCalendar.PickNebula(1234, 7, s), Is.EqualTo(-1));
         }
+
+        [Test]
+        public void GmForcedEclipse_RunsItsWholeLength_AndEndsAtNoCover()
+        {
+            s.forcedSeconds = 180f; s.eclipseSeconds = 240f;
+            SkyNow At2(double age) { var c = At(400, 0.5f); c.Forced = SkyEventKind.Eclipse; c.ForcedAge = age; return SkyCalendar.Evaluate(c, s); }
+            Assert.That(At2(120).Eclipse, Is.EqualTo(1f), "totality at the middle");
+            Assert.That(At2(200).Eclipse, Is.GreaterThan(0f), "still easing out after the usual 180 s force");
+            Assert.That(At2(239.5).Eclipse, Is.LessThan(0.01f), "almost gone at the end: the light never jumps back");
+            Assert.That(At2(241).Eclipse, Is.EqualTo(0f));
+        }
     }
 }

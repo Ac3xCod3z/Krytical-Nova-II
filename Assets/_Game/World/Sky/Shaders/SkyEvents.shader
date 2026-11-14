@@ -77,6 +77,7 @@ Shader "Krytical Nova/Sky Events"
             float4 _KN_NebulaParams;  // x tan(half size)
             float4 _KN_MeteorA[4];    // xyz start, w progress 0-1
             float4 _KN_MeteorB[4];    // xyz end, w brightness (0 = slot empty)
+            float4 _KN_StreakParams;  // x 1/(2 sigma^2) of the trail, y of the head (radians; widths in SkyEventSettings)
             float4 _KN_Comet;         // xyz head, w amount
             float4 _KN_CometParams;   // x tail length (rad)
             float4 _KN_Sun2;          // xyz direction, w amount
@@ -128,9 +129,9 @@ Shader "Krytical Nova/Sky Events"
                 float3 seg = head - tail;
                 float t = saturate(dot(d - tail, seg) / max(dot(seg, seg), 1e-8));
                 float dist = length(d - (tail + seg * t));
-                half streakLine = exp(-dist * dist / 2.0e-6) * t * t;
+                half streakLine = exp(-dist * dist * _KN_StreakParams.x) * t * t;
                 float dh = length(d - head);
-                half headGlow = exp(-dh * dh / 6.0e-6);
+                half headGlow = exp(-dh * dh * _KN_StreakParams.y);
                 return (streakLine + headGlow) * sin(PI * saturate(p)) * b.w;
             }
 

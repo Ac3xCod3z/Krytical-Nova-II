@@ -212,6 +212,8 @@ namespace KryticalNova.World
                 }
                 else { MeteorA[i] = Vector4.zero; MeteorB[i] = Vector4.zero; }
             }
+            float sw = s.streakWidthDegrees * Mathf.Deg2Rad, sh = s.streakHeadDegrees * Mathf.Deg2Rad;
+            Shader.SetGlobalVector(Ids.StreakParams, new Vector4(1f / Mathf.Max(1e-8f, 2f * sw * sw), 1f / Mathf.Max(1e-8f, 2f * sh * sh), 0f, 0f));
             Shader.SetGlobalVectorArray(Ids.MeteorA, MeteorA);
             Shader.SetGlobalVectorArray(Ids.MeteorB, MeteorB);
 
@@ -368,6 +370,7 @@ namespace KryticalNova.World
             public static readonly int NebulaParams = Shader.PropertyToID("_KN_NebulaParams");
             public static readonly int MeteorA = Shader.PropertyToID("_KN_MeteorA");
             public static readonly int MeteorB = Shader.PropertyToID("_KN_MeteorB");
+            public static readonly int StreakParams = Shader.PropertyToID("_KN_StreakParams");
             public static readonly int Comet = Shader.PropertyToID("_KN_Comet");
             public static readonly int CometParams = Shader.PropertyToID("_KN_CometParams");
             public static readonly int Sun2 = Shader.PropertyToID("_KN_Sun2");

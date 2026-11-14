@@ -68,6 +68,10 @@ namespace KryticalNova.World
         [Range(0, 20)] public int shootingStarsPerNight = 4;
         [Tooltip("Real seconds one streak lasts.")]
         [Range(0.2f, 4f)] public float streakSeconds = 0.9f;
+        [Tooltip("Half-width of a streak's trail in degrees (owner's Unity check, 14 Nov: 0.06 was too thin to see).")]
+        [Range(0.02f, 1f)] public float streakWidthDegrees = 0.15f;
+        [Tooltip("Size of a streak's glowing head in degrees.")]
+        [Range(0.02f, 1.5f)] public float streakHeadDegrees = 0.3f;
         [Tooltip("Length of a streak in degrees of sky.")]
         [Range(2f, 40f)] public float streakDegrees = 14f;
 
