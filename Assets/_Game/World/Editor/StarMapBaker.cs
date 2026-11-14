@@ -339,9 +339,10 @@ namespace KryticalNova.EditorTools
             float r = Mathf.Sqrt(u * u + v * v);
             float env = Mathf.Exp(-(r / 0.27f) * (r / 0.27f));
             float dens = env * Mathf.Pow(n1, 1.3f) * 2.6f;
-            float lane = Mathf.Abs(Mathf.Sin((u * 3f - v * 4f + n2 * 2.5f) * Mathf.PI));
-            float dust = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(lane / 0.35f)) * (0.55f + 0.45f * n3);
-            dens *= Mathf.Lerp(0.12f, 1f, dust);
+            // broad soft lanes from low-frequency noise (thin ones read as ink scribbles)
+            float lane = Mathf.Abs(Mathf.Sin((u * 2.2f - v * 3f + n1 * 1.8f) * Mathf.PI));
+            float dust = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01((lane - 0.08f) / 0.75f)) * (0.75f + 0.25f * n3);
+            dens *= Mathf.Lerp(0.3f, 1f, dust);
             Color col = Color.Lerp(new Color(0.95f, 0.36f, 0.42f), new Color(1f, 0.62f, 0.32f), n2);
             float core = Mathf.Exp(-(r / 0.08f) * (r / 0.08f)) * 0.5f * dust;
             c = col * dens + new Color(1f, 0.9f, 0.78f) * core;
