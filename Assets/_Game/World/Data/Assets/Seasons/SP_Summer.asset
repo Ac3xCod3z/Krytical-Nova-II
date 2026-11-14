@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b6e8f6985524412e885fa84ff4a46847, type: 3}
+  m_Name: SP_Summer
+  m_EditorClassIdentifier: KryticalNova.World::KryticalNova.World.SeasonProfile
+  season: 1
+  daylightShare: 0.625
+  weatherWeights:
+  - profile: {fileID: 11400000, guid: 6eb56a3525e68b84ea754246683459dd, type: 2}
+    multiplier: 2
+  - profile: {fileID: 11400000, guid: 6c9b9d0296dfc1643b8e8b9edcb7d19b, type: 2}
+    multiplier: 2
+  - profile: {fileID: 11400000, guid: 3eef8a34d323cb2489a8a7ef05b73bbb, type: 2}
+    multiplier: 1.5
+  - profile: {fileID: 11400000, guid: 6c03354b00db91742a0d405e11bbd59e, type: 2}
+    multiplier: 0
+  - profile: {fileID: 11400000, guid: b4de021546bf49644b1fbca9c37be32d, type: 2}
+    multiplier: 0
+  extraNext: []
+  grassTint: {r: 1.08, g: 1.02, b: 0.78, a: 1}
+  grassTipFrost: 0
+  leafColor: {r: 0.45, g: 0.7, b: 0.25, a: 1}
+  leafAmount: 0
+  frost: 0
+  nightFrost: 0
+  flowerDensity: 0.5

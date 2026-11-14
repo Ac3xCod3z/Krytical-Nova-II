@@ -319,22 +319,15 @@ namespace KryticalNova.World
         private void AdvanceWeather(double now)
         {
             var current = weatherCatalog != null ? weatherCatalog.Get(state.ToWeather) : null;
-            if (current == null || current.next.Count == 0)
+            if (current == null || (current.next.Count == 0 && (SeasonWeather.Extra == null || SeasonWeather.Extra.Count == 0)))
             {
                 ScheduleNext(now, current, 0f);
                 return;
             }
 
-            float total = 0f;
-            foreach (var n in current.next) if (n.profile != null) total += n.weight;
-            float pick = (float)rng.NextDouble() * total;
-            WeatherProfile chosen = current;
-            foreach (var n in current.next)
-            {
-                if (n.profile == null) continue;
-                pick -= n.weight;
-                if (pick <= 0f) { chosen = n.profile; break; }
-            }
+            // One weighted roll over the Next list. Seasons (owner's DAY list item 21) scale the weights and add their own choices through
+            // SeasonWeather; with no season it is the same pick as before.
+            WeatherProfile chosen = SeasonRules.Pick(current.next, SeasonWeather.Extra, SeasonWeather.Scale, (float)rng.NextDouble()) ?? current;
 
             int index = weatherCatalog.IndexOf(chosen);
             if (index < 0 || index == state.ToWeather)

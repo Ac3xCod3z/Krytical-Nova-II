@@ -16,6 +16,7 @@ Shader "KryticalNova/Grass Blades"
     #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
     #include "Assets/_Game/Environment/Vegetation/Shaders/KNWind.hlsl"
     #include "GrassCommon.hlsl"
+    #include "Assets/_Game/Rendering/Shaders/Include/KNSeason.hlsl"
 
     StructuredBuffer<GrassInstance> _Instances;
     uint   _InstanceOffset;     // this draw's region in the shared instance buffer
@@ -138,6 +139,9 @@ Shader "KryticalNova/Grass Blades"
         float lenSq = dot(moved, moved);
         pos.y -= min(lenSq / max(heightWS * 2.0, 0.05), heightWS * 0.6);
 
+        // Deep season snow presses the blades down; a footprint lets them stand (owner DAY list item 21).
+        pos.y = root.y + (pos.y - root.y) * KNSeasonGrassHeight(root);
+
         // Kept lawns end in a straight cut: nothing leans, sways or is pushed across the edge.
         int lawn;
         KNLawnDistance(root.xz, lawn);
@@ -180,7 +184,8 @@ Shader "KryticalNova/Grass Blades"
         col *= 1.0 + (rand - 0.5) * _GrassParams.y;
         // Fake AO grounds the blades in the terrain.
         col *= lerp(_GrassParams.z, 1.0, pow(height01, 0.6));
-        return col;
+        // The season's colour, frost on the tips and snow under cover (nothing without a presenter).
+        return KNSeasonGrassColour(col, height01, rootWS);
     }
 
     float3 UnpackDebug(uint d) { return float3((d >> 16) & 255u, (d >> 8) & 255u, d & 255u) / 255.0; }

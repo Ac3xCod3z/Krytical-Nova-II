@@ -840,6 +840,51 @@ namespace KryticalNova.EditorTools.GM
         [ButtonGroup(Tabs + "/" + WorldTab + "/Crossfire"), EnableIf(nameof(HasCrossfire)), PropertyOrder(423), LabelText("End")]
         private void CrossfireEnd() => Run("gm.crossfire end");
 
+        // ---------------------------------------------------------------- Seasons (owner's DAY list item 21): gm.season / gm.snow, as on the control page
+
+        private static bool HasSeasons => KryticalNova.World.SeasonView.HasServer;
+
+        [TabGroup(Tabs, WorldTab), Title("Season"), ShowInInspector, DisplayAsString, HideLabel, PropertyOrder(424)]
+        private static string SeasonStatus
+        {
+            get
+            {
+                if (!HasSeasons) return "Not running (no server here, or no Resources/SeasonSettings).";
+                KryticalNova.World.SeasonState s = KryticalNova.World.SeasonView.Server;
+                double now = KryticalNova.Core.NetClock.Now;
+                int day = Mathf.FloorToInt((float)((now - s.SeasonStart) / 86400.0)) + 1;
+                int days = Mathf.RoundToInt(s.SeasonSeconds / 86400f);
+                string blend = s.From == s.To ? "" : $", blending {s.From} -> {s.To} {Mathf.RoundToInt(s.BlendAt(now) * 100f)} %";
+                string hold = s.GmHold ? " (GM hold)" : "";
+                string zone = s.AlwaysWinter ? ", always-winter map" : "";
+                return $"Now {s.DominantAt(now)}{hold}{blend}; calendar {(KryticalNova.World.Season)s.CalendarSeason} day {day} of {days}; snow {s.SnowAt(now):0.00}{zone}";
+            }
+        }
+
+        [TabGroup(Tabs, WorldTab), EnableIf(nameof(HasSeasons)), LabelText("Season"), PropertyOrder(425)]
+        [SerializeField] private KryticalNova.World.Season seasonPick = KryticalNova.World.Season.Winter;
+
+        [ButtonGroup(Tabs + "/" + WorldTab + "/Season"), EnableIf(nameof(HasSeasons)), PropertyOrder(426), LabelText("Apply (hold)")]
+        private void SeasonApply() => Run($"gm.season {seasonPick.ToString().ToLowerInvariant()}");
+
+        [ButtonGroup(Tabs + "/" + WorldTab + "/Season"), EnableIf(nameof(HasSeasons)), PropertyOrder(426.1f), LabelText("Back to Calendar")]
+        private void SeasonAuto() => Run("gm.season auto");
+
+        [ButtonGroup(Tabs + "/" + WorldTab + "/Season"), EnableIf(nameof(HasSeasons)), PropertyOrder(426.2f), LabelText("Status")]
+        private void SeasonStatusLine() => Run("gm.season status");
+
+        [TabGroup(Tabs, WorldTab), EnableIf(nameof(HasSeasons)), PropertyRange(0f, 1f), LabelText("Snow Cover"), PropertyOrder(427)]
+        [SerializeField] private float snowPick = 1f;
+
+        [ButtonGroup(Tabs + "/" + WorldTab + "/Snow"), EnableIf(nameof(HasSeasons)), PropertyOrder(428), LabelText("Set Snow")]
+        private void SnowSet() => Run($"gm.snow {F(snowPick)}");
+
+        [ButtonGroup(Tabs + "/" + WorldTab + "/Snow"), EnableIf(nameof(HasSeasons)), PropertyOrder(428.1f), LabelText("Always Winter Here")]
+        private void ClimateWinter() => Run("gm.season climate winter");
+
+        [ButtonGroup(Tabs + "/" + WorldTab + "/Snow"), EnableIf(nameof(HasSeasons)), PropertyOrder(428.2f), LabelText("Climate Auto")]
+        private void ClimateAuto() => Run("gm.season climate auto");
+
         [TabGroup(Tabs, WorldTab), ShowInInspector, ToggleLeft, EnableIf(nameof(HasWorld)), LabelText("Pause Clock"), PropertyOrder(405)]
         private bool TimePaused
         {

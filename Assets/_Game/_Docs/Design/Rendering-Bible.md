@@ -210,6 +210,8 @@ Driven by `EnvironmentPresenter` (`Assets/_Game/World/Runtime/Presentation/`). T
 | `_KN_GrassTrample`, `_KN_GrassTrampleRect` | the trample map (rg push, b press, a height of who pressed) and where it lies: xy corner in world XZ, z 1 / width in metres, w 1 while there is a map |
 | `_KN_SwingPushes[32]`, `_KN_SwingPushCount`, `_KN_SwingSpring` | the swing pushes (14 Nov 2026, `FoliagePushes`): four `float4` each, up to 8 (World Effects Low 4); the spring's rate, damping, rise and the most a blade is bent |
 | `_KN_GrassSwing`, `_KN_GrassSwingOn` | the swing map on the trample grid (rg which way and how far swings push the grass this frame) and 1 while a push is alive (blades skip the fetch otherwise) |
+| `_KN_SeasonParams`, `_KN_SeasonGrass`, `_KN_SeasonLeafFrom`, `_KN_SeasonLeafTo`, `_KN_SeasonMisc`, `_KN_SnowColor` | the season (14 Nov 2026, `SeasonPresenter`, `Rendering/Shaders/Include/KNSeason.hlsl`): x snow cover, y frost, z roof bias, w 1 while a presenter publishes (0 = every shader draws exactly as before seasons); grass colour and tip frost; the leaf colours blended from and to; the blend, per-tree spread, snow edge softness and grass height under snow; the flat snow colour and a footprint's rim darkness |
+| `_KN_SnowTrack`, `_KN_SnowTrackRect` | the snow track map (`SnowTrackMap`, R16 press, 64 m round the camera, 128-512 texels by World Effects) and where it lies; released below 2 % cover |
 
 ### Sun
 - **Art treatment**: the centre is washed out by its own light (`_SunGlare*`), light bleeds over ink lines
@@ -491,6 +493,23 @@ farther away than the original 0.065 / 0.1.
   - The old flat `Water` object keeps the collider and NavMesh modifiers with its renderer off.
   - Rebuild with **Krytical Nova > Zone > Rebuild Water**.
   - The water needs the depth and opaque textures, which are now on for the PC and Mobile URP assets.
+
+### Seasons and snow (14 Nov 2026, day list item 21; `../Plans/seasons-plan.md`)
+
+- One file, `Rendering/Shaders/Include/KNSeason.hlsl`, holds the season globals and four functions, called from inside the
+  shaders that already draw the world: `KNSeasonGround` (ground: `KryticalNova/Terrain Lit`, a project copy of URP Terrain
+  Lit, now the shader of `M_TerrainMatte`), `KNSeasonSurface` (Comic Toon Lit: roofs and ledges whiten a little sooner,
+  walls never; a renderer whose rendering layer has bit 7 "No Snow" gets none), `KNSeasonFoliage` (Foliage Wind: the
+  green of the shared atlas turns per tree, frost and snow on the canopy's top) and `KNSeasonGrassColour` /
+  `KNSeasonGrassHeight` (grass: tint, frosted tips, white blades pressed down under deep cover).
+- No new pass, no keyword: a uniform branch on the cover, ALU value noise for the ragged edge (no texture), one texel of the
+  track map where there is snow. With no presenter publishing, every function returns what it was given.
+- The URP add pass (layers 5-8) and the distant basemap keep URP's own shaders, so they show no snow: keep terrains to
+  four layers and the basemap distance long on snowy maps.
+- Short winter days: the clock still runs one real hour a day; `SeasonView.SunTime` warps the presented time so the sun's
+  path, the sky gradients, the lamps and the night light follow 07:30-16:30 in Winter.
+- Rain and snow particle rates follow World Effects (`SeasonSettings.precipitationByTier`: Low 0.4, Medium 0.7, High 1,
+  Ultra 1.3).
 
 ## 6d-2. Upscalers: DLSS and FSR 2 (10 Oct 2026)
 
@@ -800,6 +819,7 @@ corner, and a tail on the side the speaker is. Every number is a `--bubble-*` va
 | Menus' page turn | nothing while a screen is at rest; during a turn one picture of the screen and one mesh drawn by one camera for 0.7 s | not measured against a budget yet |
 | Comic marks and words | nothing created in a fight, 0 B GC a hit, < 1 ms a frame in a crowd | measured in the Editor at 30 hits a second by other players: +0.6 ms mean frame, 0 effects created, 0 B allocated by the layer's own calls; the pool is filled when a scene starts (about 86 MB of sleeping comic effects by the Editor's count) |
 | Glow Halo | < 0.5 ms GPU, < 0.3 ms CPU with 40 glowing weapons | measured 0.22 ms GPU / 0.18 ms CPU with 42 halos (flame, lightning, sparks) at 925×1067 in the Editor, 0.07 / 0.06 ms with 2; the flood runs at half res inside the glowing things' screen rectangle only; nothing glowing = no pass |
+| Seasons and snow | < 0.5 ms together (owner, 13 Nov 2026) | ground snow + tracks < 0.15 ms GPU, roofs < 0.05, grass and foliage < 0.05, track compute < 0.05 only while there is snow (256², 512 KB of maps), CPU < 0.02 ms and 0 B GC; to be measured Low and High in the first Play run |
 
 Measure with the Frame Debugger and Profiler (GPU module) in a build, not the Editor. Look for each feature's
 `ProfilingSampler` name ("Comic Style", "Sun Shafts", "Glow Halo", "Comic Lettering").

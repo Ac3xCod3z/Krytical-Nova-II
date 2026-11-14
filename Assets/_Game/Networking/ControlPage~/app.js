@@ -570,6 +570,22 @@ document.querySelectorAll("[data-crossfire]").forEach((button) => {
   });
 });
 
+// Seasons (owner's DAY list item 21): the same gm.season / gm.snow lines as the GM window, through the command route
+document.querySelectorAll("[data-season]").forEach((button) => {
+  button.addEventListener("click", async () => {
+    const line = "gm." + button.dataset.season;
+    button.disabled = true;
+    try {
+      const data = await call("/api/command", { line: line });
+      $("seasonAnswer").textContent = data.answer;
+    } catch (e) {
+      $("seasonAnswer").textContent = e.message;
+    } finally {
+      button.disabled = false;
+    }
+  });
+});
+
 // ---------------------------------------------------------------- start
 
 (async () => {

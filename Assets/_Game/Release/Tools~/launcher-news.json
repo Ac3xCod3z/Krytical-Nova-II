@@ -53,7 +53,9 @@
         "Mount Companion HP: enemy players' area skills in PvP can hurt it; at 0 HP it is knocked out, goes home and rests 5 minutes (it can still be ridden). It regains 2 % a minute at home.",
         "Mount Stim (Apothecary): heals your mount's companion HP by 40 %, never yours.",
         "Swings move the grass: every swing throws the grass in front of it aside and it springs back; area skills send a ring across it and big hits a wave. Hostiles' swings push it too, the bigger the beast the wider.",
-        "World effects (Settings, Graphics): how much the world's little effects do on your screen, Low to Ultra; on Low four swings move the grass at once instead of eight."
+        "World effects (Settings, Graphics): how much the world's little effects do on your screen, Low to Ultra; on Low four swings move the grass at once instead of eight.",
+        "Seasons: the world turns through Spring, Summer, Autumn and Winter, two real weeks each, changing every second Monday at 00:00 UTC (Winter arrives 23 Nov). Each brings its own weather, its own daylight (short winter days, long summer ones) and its own colours: spring flowers, orange autumn trees, frosted winter woods.",
+        "Snow: it piles up on the ground and roofs while it snows and melts after, and footprints and trails stay in it for a while. World effects on Low lets less rain and snow fall."
       ]
     },
     {

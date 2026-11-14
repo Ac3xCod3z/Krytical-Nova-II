@@ -10,6 +10,7 @@
         "KryticalNova.Crafting",
         "KryticalNova.Crossfire",
         "KryticalNova.Crossfire.Entities",
+        "KryticalNova.World.Entities",
         "KryticalNova.Economy",
         "KryticalNova.Factions",
         "KryticalNova.Forge",

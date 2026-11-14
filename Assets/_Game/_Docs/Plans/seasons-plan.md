@@ -1,6 +1,6 @@
 # Seasons plan
 
-**Status: proposed 13 Nov 2026, waiting for the owner's review.** Research and design notes only. No code is written
+**Status: code built 14 Nov 2026 (b18-coder-21, branch `b18/21-seasons`); the first Play run (shader compile, GIFs, perf) is owed.** Was: proposed 13 Nov 2026, waiting for the owner's review. Research and design notes only. No code is written
 until the owner has read this and answered the picks at the end (owner's DAY list, 13 Nov: "18-21: research + design
 notes for the owner's review only; code comes after he reviews").
 
@@ -348,6 +348,9 @@ Questions as multiple choice, the recommended option first. Answers are recorded
    the Sunderpeak maps plus any mountain field zones as always winter (owner names the list); b) snow only on roofs,
    grass and props first, the ground later; c) a) for the shader, no always-winter maps until they are dressed.
 
+Owner's answers (13 Nov 2026, `owner-answers-18-24.md`): 1 a) less daylight inside the same one-hour day; 2 a) frosted, leaves
+kept; 3 a) Mondays 00:00 UTC, Winter from 23 Nov; 4 a) the Terrain Lit copy, and always-winter = the Sunderpeak maps only.
+
 ## Done when (the owner's words)
 
 GM season switch changes weather, foliage and day length on two clients, snow piles up and melts, footprints show, an
@@ -355,4 +358,27 @@ always-snowy zone keeps its snow, fps log holds the target.
 
 ## As built
 
-(Empty: nothing is built yet.)
+Built 14 Nov 2026 in one PR (all six steps' code; the Unity checks are one Play turn later).
+
+- **Calendar and rules:** `World/Runtime/Seasons/SeasonRules.cs` (pure): `At` (season from Unix seconds), `NextTurnUnix`, `Blend`,
+  `SunTime` / `IsNight` / `Sunrise` (the daylight warp), `SnowRate` / `SnowCover`, `Pick` (the weather pick with the season's
+  weights and extra choices; with none it is the pick of before). Numbers: `World/Data/SeasonSettings.cs` +
+  `World/Resources/SeasonSettings.asset`; `SeasonProfile` + `World/Data/Assets/Seasons/SP_Spring|Summer|Autumn|Winter.asset`
+  (the table of section 3, with Winter's extra choices Snow 1 and Overcast 0.5 so Winter snows even after a clear sky:
+  today only Overcast leads to Snow).
+- **Server:** `World/Entities/Runtime/SeasonSync.cs`: `SeasonServerSystem` (four looks a second; UTC fixed onto the
+  shared clock once; GM `Hold`, `Auto`, `SetSnow`, `SetClimate`; fills `SeasonWeather` for `WorldEnvironmentNetwork.AdvanceWeather`,
+  the one seam in NGO-era code), `SeasonStateRpc` (48 bytes: the plan's 43 plus the calendar season, the snow floor),
+  `SeasonClientSystem` into `SeasonView.Client`. The weather pick uses the season that shows more (not blended weights).
+  The always-winter list is `SeasonSettings.alwaysWinterRegions` (region or scene-name prefix; "Sunderpeak"), not a
+  `ZoneEntry` field: the Sunderpeak maps are not in the Zone Catalog yet.
+- **Client:** `World/Runtime/Presentation/SeasonPresenter.cs` (own bootstrap, every machine, never placed in a scene);
+  `Rendering/Runtime/Seasons/SnowTrackMap.cs` + `Rendering/Shaders/Seasons/SnowTrack.compute`; the shaders as in the
+  Rendering Bible 6d "Seasons and snow". `EnvironmentPresenter` and `WorldClock` read `SeasonView.SunTime`.
+- **GM:** `Tools/Debug/SeasonCommands.cs` (`gm.season status|spring|summer|autumn|winter|auto [blend s]|climate auto|winter|temperate`,
+  `gm.snow <0-1>`), the GM window's Season group (World tab), the control page's Season panel.
+- **Tests:** `World/Tests/Editor/SeasonRulesTests.cs` (evals 1-5 and the settings asset), `World/Entities/Tests/Editor/SeasonSyncTests.cs`
+  (eval 6, server + two clients + a late joiner).
+- **Not built / open:** autumn leaf particles (`WindLeavesController`), the season's wind multiplier, interiors marked
+  "No Snow", the publish bundle check of eval 8, and everything a Play run proves (evals 9-11).
+

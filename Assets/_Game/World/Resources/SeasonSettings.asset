@@ -1,0 +1,57 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c45237a80dea4f6e8d03f26eb4ce59c8, type: 3}
+  m_Name: SeasonSettings
+  m_EditorClassIdentifier: KryticalNova.World::KryticalNova.World.SeasonSettings
+  yearStartYear: 2026
+  yearStartMonth: 1
+  yearStartDay: 5
+  seasonLengthDays: 14
+  turnHourOffset: 0
+  seasonOffsetDays: 0
+  transitionHours: 6
+  gmBlendSeconds: 20
+  spring: {fileID: 11400000, guid: a4ccd1d13eb747929dcd4221b2bf19ee, type: 2}
+  summer: {fileID: 11400000, guid: bff42fcb16d145d5af8084656c81b4e6, type: 2}
+  autumn: {fileID: 11400000, guid: 4642b135aa034ddbac214122d5b17756, type: 2}
+  winter: {fileID: 11400000, guid: 6e598e38f15b4dd588219477fe512456, type: 2}
+  buildMinutesAtFullSnow: 10
+  meltMinutesDay: 30
+  nightMeltFactor: 0.25
+  rainMeltFactor: 3
+  winterMeltMinutesDay: 240
+  winterNightMeltFactor: 0
+  alwaysWinterFloor: 0.6
+  alwaysWinterRegions:
+  - Sunderpeak
+  snowColor: {r: 0.9, g: 0.94, b: 1, a: 1}
+  roofBias: 0.1
+  snowEdgeSoftness: 0.08
+  trackRimDarkness: 0.25
+  grassHeightUnderSnow: 0.35
+  leafTurnSpread: 0.25
+  flowerStep: 0.1
+  trackCompute: {fileID: 7200000, guid: 0e8cd7c1956f40138e9f6f00dece65ab, type: 3}
+  trackMetres: 64
+  trackTexelsByTier:
+  - 128
+  - 256
+  - 256
+  - 512
+  trackFillSeconds: 120
+  freshSnowFill: 4
+  trackMinCover: 0.02
+  precipitationByTier:
+  - 0.4
+  - 0.7
+  - 1
+  - 1.3

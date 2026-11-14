@@ -52,7 +52,7 @@ namespace KryticalNova.World
             get
             {
                 var env = WorldEnvironmentNetwork.Instance;
-                return env != null && env.DayCycle != null ? env.DayCycle.SunDirection(env.TimeOfDay01) : Vector3.up;
+                return env != null && env.DayCycle != null ? env.DayCycle.SunDirection(SeasonView.SunTime(env.TimeOfDay01)) : Vector3.up;
             }
         }
 
@@ -61,7 +61,7 @@ namespace KryticalNova.World
             get
             {
                 var env = WorldEnvironmentNetwork.Instance;
-                return env != null && env.DayCycle != null ? env.DayCycle.MoonDirection(env.TimeOfDay01) : Vector3.down;
+                return env != null && env.DayCycle != null ? env.DayCycle.MoonDirection(SeasonView.SunTime(env.TimeOfDay01)) : Vector3.down;
             }
         }
 
