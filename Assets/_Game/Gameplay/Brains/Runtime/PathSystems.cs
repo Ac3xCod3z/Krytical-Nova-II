@@ -228,7 +228,15 @@ namespace KryticalNova.Brains
                             if (d >= look) continue;
                             float2 n = d > 1e-5f ? away / d : PathRules.TieBreak(entity, other);
                             float into = -math.dot(v.xz, n);
-                            if (into > 0f) v += new float3(n.x, 0f, n.y) * into;
+                            if (into > 0f)
+                            {
+                                // the part toward it is dropped and turned into a step to this one's own right (14 Nov 2026: two walking
+                                // head-on stood nose to nose for ever; each stepping right, they pass like people on a pavement)
+                                float2 right = new float2(v.z, -v.x);
+                                float2 side = new float2(-n.y, n.x);
+                                if (math.dot(side, right) < 0f) side = -side;
+                                v += new float3(n.x + side.x, 0f, n.y + side.y) * into;
+                            }
                         } while (sense.BrainGrid.TryGetNextValue(out other, ref it));
                     }
                 }

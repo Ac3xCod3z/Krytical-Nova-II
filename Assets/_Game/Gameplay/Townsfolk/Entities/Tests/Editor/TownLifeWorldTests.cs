@@ -126,6 +126,17 @@ namespace KryticalNova.Townsfolk.Tests
         }
 
         public TownLife Life(Entity e) => Em.GetComponentData<TownLife>(e);
+
+        /// <summary>One townsperson's state for a failure message.</summary>
+        public string Describe(Entity e)
+        {
+            TownLife L = Life(e);
+            BrainMover m = Em.GetComponentData<BrainMover>(e);
+            BrainClock c = Em.GetComponentData<BrainClock>(e);
+            TownPick p = Em.GetComponentData<TownPick>(e);
+            return $"state {L.State} spot {L.Spot} slot {L.Slot} at {Pos(e)} dest {m.Dest} flags {m.Flags} speed {m.Speed} tier {c.Tier} pick {p.Spot}/{p.WalkTo} score {p.Score:F2} " +
+                   $"cache {Em.GetBuffer<TownScoreCache>(Area).Length} spots {Em.GetBuffer<TownSpot>(Area).Length}";
+        }
         public float3 Pos(Entity e) => Em.GetComponentData<LocalTransform>(e).Position;
 
         public void Dispose()
@@ -263,7 +274,7 @@ namespace KryticalNova.Townsfolk.Tests
             Entity a = w.Townsperson(float3.zero, 1, 6f, 14f);
             Entity b = w.Townsperson(new float3(0.5f, 0f, 0f), 3);
             w.Step(150);
-            Assert.AreEqual(TownLifeState.AtSpot, w.Life(a).State, "the worker is at work on its shift");
+            Assert.AreEqual(TownLifeState.AtSpot, w.Life(a).State, "the worker is at work on its shift: " + w.Describe(a));
             Assert.AreEqual(TownLifeState.AtSpot, w.Life(b).State, "the jogger rests on the bench in the dry");
             w.SetClock(15f, raining: true);   // past the shift, and raining
             w.Step(2);

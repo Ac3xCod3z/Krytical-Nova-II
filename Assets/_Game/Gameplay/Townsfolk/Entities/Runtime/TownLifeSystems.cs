@@ -105,7 +105,7 @@ namespace KryticalNova.Townsfolk
             }.Schedule(deps);
 
             // 3. which spots have a player near (for those who like an audience), beside the sweep
-            var playersNear = new NativeArray<byte>(math.max(1, spotCount), state.WorldUpdateAllocator);
+            var playersNear = CollectionHelper.CreateNativeArray<byte>(math.max(1, spotCount), state.WorldUpdateAllocator);
             JobHandle near = new PlayersNearJob
             {
                 Area = areaEntity, Spots = spotLookup, Sense = sense, Cell = bc.PlayerCell, Near = playersNear,
@@ -139,6 +139,8 @@ namespace KryticalNova.Townsfolk
         {
             public uint StableId;
             public Entity Who;
+            /// <summary>Far from every player (Brain tier 3): its walk is set but it stands, its plan step puts it there.</summary>
+            public byte Far;
             public int CompareTo(ClaimWish other) => StableId.CompareTo(other.StableId);
         }
 
@@ -264,7 +266,8 @@ namespace KryticalNova.Townsfolk
 
                 if (moving)
                 {
-                    bool arrived = SenseQueries.FlatSq(at, m.Dest) <= C.ArriveRadius * C.ArriveRadius;
+                    float radius = L.State == TownLifeState.GoingHome ? C.HomeDoorRadius : C.ArriveRadius;
+                    bool arrived = SenseQueries.FlatSq(at, m.Dest) <= radius * radius;
                     if (far && !arrived)
                     {
                         transform.Position = m.Dest;
@@ -319,7 +322,7 @@ namespace KryticalNova.Townsfolk
                         pick = new TownPick { Spot = (ushort)(bestSpot[chosen] + 1), WalkTo = (ushort)(walkTo + 1), Score = best[chosen] };
                         L.State = TownLifeState.Choose;
                         m.Flags = BrainMoverFlags.Stop;
-                        Claims.AddNoResize(new ClaimWish { StableId = brainClock.StableId, Who = entity });
+                        Claims.AddNoResize(new ClaimWish { StableId = brainClock.StableId, Who = entity, Far = (byte)(far ? 1 : 0) });
                         return;
                     }
                 }
@@ -424,6 +427,7 @@ namespace KryticalNova.Townsfolk
                         Walk(ref L, ref m, spots[want.WalkTo - 1].Pos, L.Jogs != 0, Now);
                     }
                     else { L.State = TownLifeState.Choose; m.Flags = BrainMoverFlags.Stop; }
+                    if (Claims[n].Far != 0) m.Flags = BrainMoverFlags.Stop;   // far away nobody walks (as the think job's own rule)
                     Life[who] = L;
                     Mover[who] = m;
                 }

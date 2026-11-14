@@ -138,6 +138,7 @@ namespace KryticalNova.Townsfolk
         public uint StaleClaimTicks;
         public float FriendBonus;
         public float ArriveRadius;
+        public float HomeDoorRadius;
         public uint GiveUpWalkTicks;
         public uint FarPlanStepTicks;
         public float TickSeconds;
@@ -154,6 +155,7 @@ namespace KryticalNova.Townsfolk
                 StaleClaimTicks = Ticks(s.staleClaimSeconds),
                 FriendBonus = math.max(0f, s.friendBonus),
                 ArriveRadius = math.max(0.2f, s.arriveRadius),
+                HomeDoorRadius = math.max(0.5f, s.homeDoorRadius),
                 GiveUpWalkTicks = Ticks(s.giveUpWalkSeconds),
                 FarPlanStepTicks = Ticks(s.farPlanStepSeconds),
                 TickSeconds = 1f / math.max(1, tickRate),

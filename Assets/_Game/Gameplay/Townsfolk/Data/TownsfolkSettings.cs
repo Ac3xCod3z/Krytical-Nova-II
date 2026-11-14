@@ -42,6 +42,8 @@ namespace KryticalNova.Townsfolk
         public float friendBonus = 0.5f;
         [Tooltip("Metres from a spot's slot that count as arrived.")]
         public float arriveRadius = 0.7f;
+        [Tooltip("Metres from a home door that count as home (several may go in at once; they never all fit on its point).")]
+        public float homeDoorRadius = 2f;
         [Tooltip("Seconds a walk may take before the townsperson gives up and picks again (a blocked path).")]
         public float giveUpWalkSeconds = 60f;
         [Tooltip("Metres a spot marker may be off the NavMesh and still be snapped onto it.")]

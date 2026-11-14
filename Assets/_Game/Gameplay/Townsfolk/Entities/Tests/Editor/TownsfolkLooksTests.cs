@@ -94,6 +94,20 @@ namespace KryticalNova.Townsfolk.Tests
         }
 
         [Test]
+        public void EveryTownsfolkAssetTypeHasItsOwnScriptFile()
+        {
+            // 14 Nov 2026 Unity run: TownsfolkCast and TownsfolkViewAssets shared a file with another class, so Unity saved their assets
+            // with no script and Resources.Load gave null. A ScriptableObject's class must be the only one named like its file.
+            foreach (System.Type t in typeof(TownsfolkSettings).Assembly.GetTypes())
+            {
+                if (!typeof(ScriptableObject).IsAssignableFrom(t) || t.IsAbstract || t.Namespace == null || !t.Namespace.StartsWith("KryticalNova.Townsfolk")) continue;
+                var instance = ScriptableObject.CreateInstance(t);
+                try { Assert.IsNotNull(UnityEditor.MonoScript.FromScriptableObject(instance), t.Name + " needs a file named " + t.Name + ".cs"); }
+                finally { Object.DestroyImmediate(instance); }
+            }
+        }
+
+        [Test]
         public void BuiltAssetsHoldTenPersonalitiesAndTheSkyConcordMix()
         {
             var world = Resources.Load<TownsfolkWorldAssets>(TownsfolkWorldAssets.ResourcePath);

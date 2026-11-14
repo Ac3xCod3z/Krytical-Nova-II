@@ -20,7 +20,7 @@ script, which is then published to the link above. `--baseline` saves today's up
 ## Today
 
 <!-- map:summary -->
-Generated 13 Nov 2026, 22:23: 1044 runtime scripts (193,227 lines) declaring 1963 types (217 MonoBehaviours, 65 NetworkBehaviours, 119 ScriptableObject classes); 340 test scripts; 4753 prefabs, 48 scenes and 2790 assets read. 231 system-to-system links, of which 0 run uphill, 0 pairs of systems use each other both ways, and 4 links would have to go for the systems to form a clean stack. The largest tangle, classes that all reach each other through some chain of uses, holds 10 classes from 1 systems (UI 10, ...).
+Generated 13 Nov 2026, 22:58: 1046 runtime scripts (193,256 lines) declaring 1963 types (217 MonoBehaviours, 65 NetworkBehaviours, 119 ScriptableObject classes); 340 test scripts; 4755 prefabs, 49 scenes and 2897 assets read. 231 system-to-system links, of which 0 run uphill, 0 pairs of systems use each other both ways, and 4 links would have to go for the systems to form a clean stack. The largest tangle, classes that all reach each other through some chain of uses, holds 10 classes from 1 systems (UI 10, ...).
 <!-- /map:summary -->
 
 **Checked against the compiler.**
@@ -74,7 +74,7 @@ Checked against the 236 references the assemblies declare between systems: every
 | Gameplay/Housing | Simulation | 20 | 3,662 | 37 | 37 | 0.5 | 3 | 15 of 28 |
 | Gameplay/Mounts | Simulation | 15 | 3,196 | 37 | 9 | 0.8 | 4 | 13 of 21 |
 | Gameplay/Restyle | Simulation | 3 | 994 | 55 | 5 | 0.92 | 0 | 0 of 3 |
-| Gameplay/Townsfolk | Simulation | 14 | 2,858 | 47 | 2 | 0.96 | 3 | 25 of 39 |
+| Gameplay/Townsfolk | Simulation | 16 | 2,879 | 47 | 2 | 0.96 | 3 | 25 of 39 |
 | Gameplay/Economy | Simulation | 23 | 4,637 | 84 | 46 | 0.65 | 10 | 24 of 37 |
 | Gameplay/Autopilot | Simulation | 11 | 1,562 | 46 | 14 | 0.77 | 4 | 7 of 12 |
 | Gameplay/Social | Simulation | 42 | 6,871 | 83 | 49 | 0.63 | 14 | 34 of 55 |
@@ -90,7 +90,7 @@ Checked against the 236 references the assemblies declare between systems: every
 | Gameplay/Wallet | Simulation | 4 | 146 | 0 | 21 | 0.0 | 0 | 2 of 2 |
 | Gameplay/NPC | Simulation | 3 | 297 | 5 | 20 | 0.2 | 1 | 3 of 4 |
 | Gameplay/Factions | Simulation | 7 | 197 | 0 | 29 | 0.0 | 0 | 2 of 4 |
-| Gameplay/Brains | Simulation | 10 | 1,512 | 1 | 49 | 0.02 | 4 | 34 of 39 |
+| Gameplay/Brains | Simulation | 10 | 1,520 | 1 | 49 | 0.02 | 4 | 34 of 39 |
 | GameFeel | Presentation | 31 | 5,936 | 57 | 2 | 0.97 | 6 | 19 of 39 |
 | UI | Presentation | 148 | 37,958 | 335 | 5 | 0.99 | 31 | 52 of 155 |
 | Audio | Presentation | 15 | 1,299 | 10 | 16 | 0.38 | 2 | 5 of 15 |
@@ -235,10 +235,12 @@ Each ScriptableObject class, how many assets of it exist, and where they are wir
 | ZoneMinimapData | World | 39 | 3 | 0 / 40 / 0 |
 | MusicTrack | Audio | 33 | 15 | 0 / 0 / 5 |
 | NpcDefinition | Gameplay/NPC | 24 | 3 | 24 / 0 / 3 |
+| VendorManner | Gameplay/Townsfolk | 24 | 2 | 0 / 0 / 1 |
 | StatDefinitionData | Gameplay/Progression | 19 | 0 | 0 / 0 / 0 |
 | WeatherProfile | World | 11 | 5 | 0 / 40 / 12 |
 | HostileDefinition | Gameplay/Hostiles | 10 | 13 | 20 / 0 / 8 |
 | GearPaintLook | Gameplay/Items | 10 | 3 | 0 / 0 / 0 |
+| TownsfolkPersonality | Gameplay/Townsfolk | 10 | 5 | 0 / 0 / 9 |
 | AutoAttackSet | Gameplay/Combat | 9 | 1 | 1 / 0 / 0 |
 | HostileZoneDefinition | Gameplay/Hostiles | 8 | 2 | 0 / 2 / 0 |
 | GrassType | Environment | 6 | 2 | 0 / 0 / 2 |
@@ -267,8 +269,8 @@ Each ScriptableObject class, how many assets of it exist, and where they are wir
 | SmearSettings | GameFeel | 1 | 2 | 1 / 0 / 0 |
 | SpiritSettings | GameFeel | 1 | 1 | 1 / 0 / 0 |
 | AutopilotSettings | Gameplay/Autopilot | 1 | 5 | 1 / 0 / 1 |
-| BrainSettings | Gameplay/Brains | 1 | 3 | 0 / 0 / 1 |
-| CharacterCreationDatabase | Gameplay/CharacterCreation | 1 | 24 | 2 / 4 / 0 |
+| BrainSettings | Gameplay/Brains | 1 | 3 | 0 / 0 / 2 |
+| CharacterCreationDatabase | Gameplay/CharacterCreation | 1 | 24 | 2 / 4 / 1 |
 | CharacterExpressionLibrary | Gameplay/CharacterCreation | 1 | 7 | 0 / 3 / 1 |
 | CharacterPaletteLibrary | Gameplay/CharacterCreation | 1 | 2 | 0 / 0 / 1 |
 | CadenceSettings | Gameplay/Combat | 1 | 4 | 1 / 0 / 0 |
@@ -320,6 +322,11 @@ Each ScriptableObject class, how many assets of it exist, and where they are wir
 | EmoteWheelSettings | Gameplay/Social | 1 | 3 | 1 / 0 / 0 |
 | SponsorSettings | Gameplay/Social | 1 | 3 | 1 / 0 / 1 |
 | SquadSettings | Gameplay/Social | 1 | 2 | 1 / 0 / 0 |
+| TownLifeArea | Gameplay/Townsfolk | 1 | 2 | 0 / 0 / 1 |
+| TownsfolkCast | Gameplay/Townsfolk | 1 | 4 | 0 / 0 / 2 |
+| TownsfolkSettings | Gameplay/Townsfolk | 1 | 6 | 0 / 0 / 2 |
+| TownsfolkViewAssets | Gameplay/Townsfolk | 1 | 2 | 0 / 0 / 0 |
+| TownsfolkWorldAssets | Gameplay/Townsfolk | 1 | 1 | 0 / 0 / 0 |
 | RelevancySettings | Networking | 1 | 2 | 0 / 0 / 0 |
 | WorldLodSettings | Rendering | 1 | 2 | 1 / 0 / 0 |
 | GlowHaloFeature | Rendering | 1 | 0 | 0 / 0 / 2 |
@@ -337,13 +344,6 @@ Each ScriptableObject class, how many assets of it exist, and where they are wir
 | ZoneTerrainProfile | World | 1 | 0 | 0 / 0 / 0 |
 | SoakSpots | Gameplay/Hostiles | 0 | 0 | 0 / 0 / 0 |
 | GearClothLook | Gameplay/Items | 0 | 2 | 0 / 0 / 0 |
-| TownLifeArea | Gameplay/Townsfolk | 0 | 2 | 0 / 0 / 0 |
-| TownsfolkCast | Gameplay/Townsfolk | 0 | 3 | 0 / 0 / 0 |
-| TownsfolkPersonality | Gameplay/Townsfolk | 0 | 4 | 0 / 0 / 0 |
-| TownsfolkSettings | Gameplay/Townsfolk | 0 | 5 | 0 / 0 / 0 |
-| VendorManner | Gameplay/Townsfolk | 0 | 2 | 0 / 0 / 0 |
-| TownsfolkWorldAssets | Gameplay/Townsfolk | 0 | 1 | 0 / 0 / 0 |
-| TownsfolkViewAssets | Gameplay/Townsfolk | 0 | 2 | 0 / 0 / 0 |
 | ColourBlindFeature | Rendering | 0 | 0 | 0 / 0 / 0 |
 | ComicLetteringFeature | Rendering | 0 | 0 | 0 / 0 / 0 |
 | ComicStyleFeature | Rendering | 0 | 0 | 0 / 0 / 0 |
