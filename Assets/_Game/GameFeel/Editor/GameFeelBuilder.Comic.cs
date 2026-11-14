@@ -1223,15 +1223,14 @@ namespace KryticalNova.EditorTools
             so.FindProperty("critWorldFeel").objectReferenceValue = null; // a critical hit's word is its weapon class's
             so.FindProperty("skillHitWorldFeel").objectReferenceValue = World(world, "Skill Hit", Warm(new Fx("PFX_Hit_Sparks"), 16));
             so.FindProperty("levelUpWorldFeel").objectReferenceValue = World(world, "Level Up",
-                // owner 13 Nov 2026 (3.1): no ground circle - the Mark's smoke ring at 0.2 m (faction ramp, peach) is gone; the column's Swirl
-                // was the other disc (BuildNovaVfx NoGroundDisc)
-                AtFeet("PFX_LevelUp"), ComicAt("PFX_Word_LevelUp", 2.35f, ramped: true));
-            // Build 17 item 2.5: the own big level-up (pet-evolution level and more): a pillar of light, rays and sparkles, from the Nova
-            // tier's pieces (owner 13 Nov 2026, 3.1: the ground ring at the end is gone). Others keep the lighter levelUpWorldFeel. Owner pick (13 Nov 2026): in the player's
-            // faction colour, so every piece takes the moment's tint (the presenter passes the faction's fill colour).
+                AtFeet("PFX_LevelUp"), ComicAt("PFX_Mark_LevelUp", 0.2f, ramped: true), ComicAt("PFX_Word_LevelUp", 2.35f, ramped: true));
+            // Build 17 item 2.5: the own big level-up (pet-evolution level and more): a pillar of light and sparkles, from the Nova
+            // tier's pieces. Others keep the lighter levelUpWorldFeel. Owner pick (13 Nov 2026): in the player's faction colour, so every
+            // piece takes the moment's tint (the presenter passes the faction's fill colour). Owner 13 Nov 2026 (3.1): no ground circle - the
+            // ring over the ground (PFX_Nova_Shockwave) and the light rays (PFX_Nova_Rays: its SM_LightRay_Round mesh lies flat at the feet
+            // and, tinted, is the peach disc; found by a bisect in Play) are out of the own level-up. The Nova tier keeps both.
             so.FindProperty("levelUpOwnWorldFeel").objectReferenceValue = World(world, "Level Up Own",
-                new Fx("PFX_Nova_Column", Feet, follow: true, tint: true), new Fx("PFX_Nova_Rays", Feet, follow: true, tint: true),
-                new Fx("PFX_Nova_Sparkles", Chest, follow: true, tint: true));
+                new Fx("PFX_Nova_Column", Feet, follow: true, tint: true), new Fx("PFX_Nova_Sparkles", Chest, follow: true, tint: true));
             so.FindProperty("pickupWorldFeel").objectReferenceValue = World(world, "Pick Up", ComicAt("PFX_Mark_Pickup", 0.25f));
             // Over the finder's head (the presenter plays these at their feet, and the puff at the drop).
             so.FindProperty("rarePickupWorldFeel").objectReferenceValue = World(world, "Pick Up Rare", ComicAt("PFX_Word_RareFind", 2.3f));

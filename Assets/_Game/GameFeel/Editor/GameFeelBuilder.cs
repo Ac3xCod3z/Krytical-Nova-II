@@ -1017,20 +1017,12 @@ namespace KryticalNova.EditorTools
             Make("FX_Sparkles_Large_01", "PFX_Nova_Sparkles", 0.7f, Color.white);                      // sparks rising from it
             Make("FX_MagicBlast_02", "PFX_Nova_Burst", 0.55f, Color.white);                            // a new tier: the star bursts,
             Make("FX_LightRayRound_01", "PFX_Nova_Rays", 0.7f, Color.white);                           // light stands round the character,
-            Make("FX_LevelUp_01", "PFX_Nova_Column", 0.7f, Color.white, then: NoGroundDisc);         // rises through it,
+            Make("FX_LevelUp_01", "PFX_Nova_Column", 0.7f, Color.white);                               // rises through it,
             Make("FX_Cartoony_Rings_01", "PFX_Nova_Shockwave", 1.9f, Color.white, then: GroundRings);  // and a ring runs out over the ground
             Make("FX_Sparks_01", "PFX_Nova_Dud", 0.45f, ForgeAsh);                                     // nothing changed: a dull spit
             Make("FX_ShardMagic_Explosion_01", "PFX_Nova_Shards", 0.13f, Red);                         // a level lost: the light breaks
             Make("FX_MagicBlast_02", "PFX_Nova_Held", 0.35f, Cyan);                                    // a slip the Nova held
             Make("FX_Ritual_Circle_01", "PFX_Standing_Seal", 0.55f, Color.white);                      // a Standing rank: a seal at the feet
-        }
-
-        // Owner 13 Nov 2026 (3.1): FX_LevelUp_01's Swirl child is a half-circle tipped flat on the ground (about 1.4 m across, peach once
-        // tinted) that reads as a disc under the feet; the column keeps its beams, root and sparkles. Pet Evolve and Forge Success keep theirs.
-        private static void NoGroundDisc(GameObject column)
-        {
-            Transform swirl = column.transform.Find("FX_LevelUp_Swirl_01");
-            if (swirl != null) swirl.gameObject.SetActive(false);
         }
 
         /// <summary>
