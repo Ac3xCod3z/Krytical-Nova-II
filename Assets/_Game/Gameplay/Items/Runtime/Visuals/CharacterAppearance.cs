@@ -442,6 +442,9 @@ namespace KryticalNova.Items.Visuals
 
         private ulong excludedRegions;
 
+        /// <summary>The merged mesh is left readable for whoever reads it next (the townsfolk's LOD baker), who then frees its CPU copy.</summary>
+        public bool KeepMeshReadable { get; set; }
+
         /// <summary>
         /// Regions this character never wears, whatever its recipe or gear says (townsfolk and vendors leave out weapon mounts):
         /// they are left out of the merged mesh. Set before the parts are applied; the next rebuild uses it.
@@ -472,6 +475,7 @@ namespace KryticalNova.Items.Visuals
         {
             ClearDebugRenderers();
             SplitCloth(partList);
+            merger.KeepReadable = KeepMeshReadable;
             var mesh = merger.Merge(mergeList, bodyShape, boneBuffer, name + "_Merged", idleFace,
                 liveFaceShapes != null ? liveFaceShapes : blink ? (IReadOnlyList<string>)FaceBlinker.LiveShapes : null, bareBody);
             if (mesh == null) return;

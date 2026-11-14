@@ -31,6 +31,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: de79a1d57afaf054d99f224d73e995fb, type: 2}
   - {fileID: 11400000, guid: 2f525e255770ca340adbc8db17eafafd, type: 2}
   cardMaterial: {fileID: 2100000, guid: 882786cf9aca25f4988d3c180ee73473, type: 2}
+  crossFadeShader: {fileID: -6465566751694194690, guid: 9eacf90d694284c4ca8dceb0cacaa2aa, type: 3}
   vendorCasts: []
   manners:
   - {fileID: 11400000, guid: 757585fa4fa15774c917f61cadcc6fd2, type: 2}

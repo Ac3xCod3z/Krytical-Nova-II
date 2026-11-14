@@ -654,6 +654,8 @@ namespace KryticalNova.Townsfolk.Editor
             view.casts = new[] { cast };
             view.personalities = personalities;
             view.cardMaterial = EnsureCardMaterial();
+            view.crossFadeShader = AssetDatabase.LoadAssetAtPath<Shader>(TownsfolkPaths.CrossFadeShader);
+            if (view.crossFadeShader == null) Debug.LogWarning("[KnBuild] No " + TownsfolkPaths.CrossFadeShader + ": townsfolk LOD bands switch without a fade.");
             view.manners = EnsureManners();
             EditorUtility.SetDirty(view);
             if (world.brain == null || view.body == null || view.database == null)

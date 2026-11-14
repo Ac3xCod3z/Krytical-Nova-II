@@ -579,6 +579,7 @@ namespace KryticalNova.Townsfolk
             TownsfolkBody body = Instantiate($"Look {castId}.{look}");
             if (body.Look == null || body.Appearance == null) { Object.Destroy(body.gameObject); m_Templates[key] = null; return null; }
             body.Look.Dressed = cast.dressed;
+            body.Appearance.KeepMeshReadable = true;   // the LOD baker reads it once below, then frees it
             if (!body.Look.Apply(recipe, m_Assets.database)) { Object.Destroy(body.gameObject); m_Templates[key] = null; return null; }
             body.Appearance.RebuildNow();
             if (body.Animator != null) body.Animator.enabled = false;
@@ -592,11 +593,34 @@ namespace KryticalNova.Townsfolk
             Mesh lod2 = TownsfolkMeshLod.Make(merged, s.lod2Share, $"Look {castId}.{look} LOD2");
             if (lod1 == null || lod2 == null) Debug.LogWarning($"[Townsfolk] Look {castId}.{look}: no lighter mesh could be made (its full mesh is drawn instead).");
             LodTriangles = $"{TownsfolkMeshLod.Triangles(merged)} / {TownsfolkMeshLod.Triangles(lod1)} / {TownsfolkMeshLod.Triangles(lod2)}";
+            if (merged != null && merged.isReadable) merged.UploadMeshData(true);   // GPU skinning needs no CPU copy
+            UseCrossFadeShader(body.Appearance.Renderer);
             t = new Template { Source = body, Appearance = body.Appearance, Renderer = body.Appearance.Renderer, Scale = body.transform.localScale, Body = bodyType,
                 Lod1 = lod1, Lod2 = lod2 };
             m_Templates[key] = t;
             return t;
         }
+
+        /// <summary>
+        /// The look's Sidekick materials, copied once per look into the cross-fade copy of the Sidekick graph (Synty's own has no LOD
+        /// cross-fade variant, so the bands would pop); bodies wearing the look share the copies. Other materials (paints) stay.
+        /// </summary>
+        void UseCrossFadeShader(SkinnedMeshRenderer r)
+        {
+            Shader fade = m_Assets.crossFadeShader;
+            if (r == null || fade == null) return;
+            Material[] mats = r.sharedMaterials;
+            bool changed = false;
+            for (int i = 0; i < mats.Length; i++)
+            {
+                if (mats[i] == null || mats[i].shader == fade || mats[i].shader.name != SidekickShaderName) continue;
+                mats[i] = new Material(mats[i]) { name = mats[i].name + " (cross-fade)", shader = fade };
+                changed = true;
+            }
+            if (changed) r.sharedMaterials = mats;
+        }
+
+        const string SidekickShaderName = "Shader Graphs/Sidekick_ShaderGraph";
 
         static RuntimeAnimatorController ControllerOf(TownsfolkViewAssets assets, BodyType bodyType) =>
             bodyType == BodyType.Feminine && assets.feminine != null ? assets.feminine : assets.masculine;

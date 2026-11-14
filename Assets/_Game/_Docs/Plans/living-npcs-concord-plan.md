@@ -415,10 +415,25 @@ First pass, 13 Nov 2026 (b18-coder-11). Compiles (90/90 Editor, 40/40 server), `
     `TownsfolkSettings.noWeaponRegions`) are left out of the merged mesh (`CharacterAppearance.ExcludeRegions`), and every
     renderer of the player model but the look's own is removed when a body is made (held weapons, holsters). Guards too,
     until the Master says otherwise.
-  - [x] Vendors out of step (the Fable fix): kept as it was.
+  - [x] Vendors out of step (the Fable fix): kept as it was (run 2: 35 vendors over 0.72-0.82 of each standing cycle, 0 pairs in step).
+  - [x] Cross-fade: Synty's `Sidekick_ShaderGraph` has no LOD cross-fade variant (the first Play run showed 0 of 77), so the bands
+    popped. `Data/Shaders/KN_Townsfolk_Sidekick.shadergraph` is a copy of it with "Support LOD Cross Fade" on (the vendor file is
+    untouched); each look's Sidekick materials are copied once into it (`TownsfolkViewAssets.crossFadeShader`) and shared by its
+    bodies. The look's merged mesh stays readable just long enough for the LOD baker (`CharacterAppearance.KeepMeshReadable`,
+    `SkinnedMeshMerger.KeepReadable`), then its CPU copy is freed as before.
+  - Unity proof, 14 Nov 2026 (shared Editor, lean recipe, Burst off, 48 townsfolk + 35 vendors at noon): Build Assets clean;
+    EditMode Townsfolk 31/31, Brains 20/20. Play run 2: looks LOD0 / LOD1 / LOD2 = 10,636 / 5,237 / 2,629 triangles (49 % / 25 %);
+    player view at High: 6 CLOSE, 11 MEDIUM, 13 FAR bodies, 20 cards; every townsfolk body draws in the cross-fade shader; weapon
+    parts 0, other renderers 0; 0 bodies in a bind pose. Heatmap (crowd sampled every second while the town clock ran 7:00 to
+    21:00): 8 % within 28 m of the arrival, quarters NW 25 % NE 20 % SW 22 % SE 32 %, 240 spread points (173 walk, 67 places).
+    Perf (Editor, so main-thread frames swing 20-55 ms between runs; crowd = with minus without): run 1 player view +0.25 ms main,
+    -0.5 ms GPU; wide view +1.1 ms main, +0.96 ms GPU; run 2 (LODs on, capture running) player view +2.5 ms main, +0.3 ms GPU, wide
+    +2.4 ms main, GPU within noise. The Editor's noise is larger than the budget; a built-player perf log is the real proof.
+    Pictures: `G:\My Drive\KryticalNova\AI Outputsuild178-opus2\` (`18-concord-full-of-life.gif`, `heatmap.png`,
+    `look_High_*.png`, `18-concord-wide-High-Low.mp4`).
   - Tests: `TownsfolkBandsTests` (bands and hysteresis, cards far on every tier, switch heights in metres, LOD triangle
     shares, the spread over a whole deck and the arrival's share, no weapon regions).
-- [ ] Owed: run the builder and the tests in Unity; Play proof GIF + perf log Low and High against the budget (48 in view:
+- [ ] Owed: a built-player perf log Low and High against the budget (the Editor run above is too noisy to prove it; 48 in view:
   <= 1.5 ms main thread, <= 1.0 ms GPU, 0 GC a frame); second client.
 - [ ] Later steps: pairs walking together, head-look / glances / greetings / text barks (step 6), vendors' manner assets and
   barks (step 7).

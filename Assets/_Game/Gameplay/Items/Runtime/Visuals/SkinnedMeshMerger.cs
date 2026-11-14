@@ -71,6 +71,9 @@ namespace KryticalNova.Items.Visuals
     /// </summary>
     public sealed class SkinnedMeshMerger
     {
+        /// <summary>The merged mesh stays readable (the townsfolk bake its lighter LOD meshes from it, then free the CPU copy themselves).</summary>
+        public bool KeepReadable { get; set; }
+
         private const int MaxUvChannels = 4;
 
         private readonly Dictionary<string, Transform> skeleton = new Dictionary<string, Transform>(StringComparer.Ordinal);
@@ -218,8 +221,8 @@ namespace KryticalNova.Items.Visuals
             mesh.SetTriangles(triangles, 0, true);
             for (int p = 0; p < paints.Count; p++) mesh.SetTriangles(paintTriangles[p], p + 1, true);
             AddLiveShapes(mesh);
-            // GPU skinning needs no CPU copy; frees ~100 bytes/vertex per character.
-            mesh.UploadMeshData(true);
+            // GPU skinning needs no CPU copy; frees ~100 bytes/vertex per character (unless the caller reads it once more and frees it itself).
+            if (!KeepReadable) mesh.UploadMeshData(true);
             return mesh;
         }
 

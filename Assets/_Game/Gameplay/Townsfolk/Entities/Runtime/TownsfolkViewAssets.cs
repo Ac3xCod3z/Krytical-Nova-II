@@ -20,6 +20,8 @@ namespace KryticalNova.Townsfolk
         public TownsfolkPersonality[] personalities = System.Array.Empty<TownsfolkPersonality>();
         [Tooltip("The far cards' material (URP Unlit, alpha clip, instancing, both sides): a copy per look carries its picture.")]
         public Material cardMaterial;
+        [Tooltip("Synty's Sidekick graph copied with LOD cross-fade on (Data/Shaders/KN_Townsfolk_Sidekick): townsfolk bodies draw in it, so their LOD bands fade into each other.")]
+        public Shader crossFadeShader;
 
         /// <summary>A scene whose vendors wear one cast's people (a faction's home city: only that faction).</summary>
         [System.Serializable]

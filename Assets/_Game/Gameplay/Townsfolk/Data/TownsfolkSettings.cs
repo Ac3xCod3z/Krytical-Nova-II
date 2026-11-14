@@ -171,5 +171,6 @@ namespace KryticalNova.Townsfolk
         public const string PersonalityFolder = DataAssets + "/Personalities";
         public const string SkyConcordArea = DataAssets + "/Area_SkyConcord.asset";
         public const string SkyConcordCast = DataAssets + "/Cast_SkyConcord.asset";
+        public const string CrossFadeShader = Root + "/Data/Shaders/KN_Townsfolk_Sidekick.shadergraph";
     }
 }
