@@ -32,6 +32,8 @@ Shader "KryticalNova/Grass Blades"
     TEXTURE2D(_KN_GrassTrample);
     SAMPLER(sampler_KN_GrassTrample);
     float4 _KN_GrassTrampleRect;    // xy world XZ of its corner, z 1 / its width in metres, w 1 while there is a map
+    // While a swing push is alive (day list item 20) _KN_GrassTrample is the trample map with the swings already added by the Swing pass
+    // of GrassTrample.compute: still one texel per vertex, nothing else for the blades to do.
 
     struct GrassVertexOut
     {

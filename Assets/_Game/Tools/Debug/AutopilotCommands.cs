@@ -51,7 +51,7 @@ namespace KryticalNova.DevTools
         }
 
         [Command("gm.autopilot.time", "Set the targeted player's Autopilot time to run this many days from now (0 ends it): gm.autopilot.time <days>.")]
-        private static string Time(int days)
+        internal static string Time(int days)
         {
             if (!TryGet(out PlayerAutopilot autopilot, out string error)) return error;
             if (days < 0) return "Give a number of days, 0 or more.";
@@ -69,7 +69,7 @@ namespace KryticalNova.DevTools
         }
 
         [Command("gm.autobuff.days", "Set the targeted player's Autoward licence to run this many days from now (0 ends it): gm.autobuff.days <days>.")]
-        private static string AutobuffDays(int days)
+        internal static string AutobuffDays(int days)
         {
             if (!GmTarget.TryGetPlayer(out GameObject player, out string error)) return error;
             var autobuff = player.GetComponent<PlayerAutobuff>();
@@ -82,7 +82,7 @@ namespace KryticalNova.DevTools
         // gm.autoward 30 is a 30-day Pass, not 30 days on the licence (that is gm.autobuff.days).
         [Command("gm.autoward", "Autoward Passes into the targeted player's Pack, to use as a player would. gm.autoward: one of each (3, 14 and 30 days). " +
                                 "gm.autoward <3|14|30> [count]: that many Passes of that length. gm.autobuff.days sets the licence itself.")]
-        private static string Autoward(string days = "", int count = 1)
+        internal static string Autoward(string days = "", int count = 1)
         {
             if (!GmTarget.TryGetPlayer(out GameObject player, out string error)) return error;
             if (!player.TryGetComponent(out PlayerAutobuff autobuff)) return NoAutoward;

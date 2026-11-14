@@ -15,6 +15,7 @@
         "KryticalNova.Forge",
         "KryticalNova.Hostiles",
         "KryticalNova.Hostiles.Entities",
+        "KryticalNova.Townsfolk.Entities",
         "KryticalNova.Housing",
         "KryticalNova.Items",
         "KryticalNova.NPC",

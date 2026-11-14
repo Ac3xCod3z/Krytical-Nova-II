@@ -67,7 +67,7 @@ namespace KryticalNova.DevTools
 
         [Command("gm.creds", "Add Creds to the targeted player (negative takes them away). With no amount it prints the balance. " +
                              "A wallet never holds more than its cap.")]
-        private static string Creds(long amount = 0)
+        internal static string Creds(long amount = 0)
         {
             if (!TryGetWallet(out var wallet, out var error)) return error;
             if (amount > 0)
