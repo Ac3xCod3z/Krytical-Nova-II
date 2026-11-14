@@ -51,7 +51,9 @@
         "Emotes from the saddle: waves, cheers, points, salutes, beckons, laughs and taunts play while riding; the others say you can't do that while riding.",
         "Mount Companion: Y calls your selected mount out to walk beside you, or sends it home. FREE stance (no fighting, allowed in PvP); hunger drains 10x faster while out and is its only time limit.",
         "Mount Companion HP: enemy players' area skills in PvP can hurt it; at 0 HP it is knocked out, goes home and rests 5 minutes (it can still be ridden). It regains 2 % a minute at home.",
-        "Mount Stim (Apothecary): heals your mount's companion HP by 40 %, never yours."
+        "Mount Stim (Apothecary): heals your mount's companion HP by 40 %, never yours.",
+        "Swings move the grass: every swing throws the grass in front of it aside and it springs back; area skills send a ring across it and big hits a wave. Hostiles' swings push it too, the bigger the beast the wider.",
+        "World effects (Settings, Graphics): how much the world's little effects do on your screen, Low to Ultra; on Low four swings move the grass at once instead of eight."
       ]
     },
     {

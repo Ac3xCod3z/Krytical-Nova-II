@@ -1,6 +1,6 @@
 # Swing grass push plan
 
-**Status: proposed 13 Nov 2026, waiting for the owner's review.** No code until the owner has read this and answered the
+**Status: built 14 Nov 2026 (steps 1-3 in one PR; step 4, the measure in a build, waits for the owner). Owner picks: all (a).** Before that: proposed 13 Nov 2026, waiting for the owner's review. No code until the owner has read this and answered the
 picks (owner, 13 Nov 2026: items 18-21 are research and design notes today; code after the review).
 
 Owner's day list 13 Nov 2026, item 20: "Weapon swings move the grass (cheap, no physics)". Design: `../Design/Rendering-Bible.md`
@@ -259,4 +259,25 @@ Swings visibly push grass, no fps cost in the perf log, works on a second client
 
 ## As built
 
-(Empty until steps land.)
+14 Nov 2026 (b18-coder-20), steps 1 to 3 in one PR into `items-18-24`; the owner's picks 1a (once per texel in the trample pass), 2a (grass
+only) and 3a (Hostiles push too, sized by body).
+
+- **Pool:** `World/Runtime/Presentation/FoliagePushes.cs`, 8 fixed slots (`MaxPushes`, pinned to the compute's `KN_MAX_SWING_PUSHES` by a
+  test). A push may be held until its blow lands (`delaySeconds`: an area skill's hit delay, a Hostile's windup). Four `float4` a push
+  (the plan's three plus the spring time, so the last tenth of its life fades out and a freed slot never pops). Nothing is added
+  without `FoliagePushes.Settings`, which only the client's feel presenter sets, so a dedicated server never writes one.
+- **World Effects** (the brief's PERFORMANCE FIRST): a column of `GraphicsPreferences.Detail` and one choice on the Graphics page;
+  `WorldEffectsRuntime` lives in Rendering so World, the grass and the coming seasons and sky events can all read it. Pushes alive at
+  once per tier are `FoliagePushSettings.pushesPerTier` (Low 4, Medium 6, High 8, Ultra 8).
+- **Settings:** `World/Data/FoliagePushSettings.cs` and `World/Data/Assets/FoliagePush_Default.asset` (the plan's numbers), on the
+  `PFX_GameFeel` prefab's presenter; a presenter without one makes the defaults.
+- **Grass:** `GrassTrample.compute` kernel `Swing` writes a 256 x 256 `R16G16_SFloat` map on the trample grid, dispatched only while a
+  push is alive (and once more to clear); `GrassBlades.shader` reads it behind `[branch] if (_KN_GrassSwingOn > 0.5)`, adds it to the
+  trample push, clamps the total and flattens a quarter as much.
+- **Feeds:** `GameFeelPresenter.Swing` (players only; an area skill's ring replaces its cast's arc), `.SkillCast` (area attack skills:
+  a ring to the skill's range, held to the hit), `.Hit` (heavy hits and Shatterpoints: a wave from the hit point); `HostileNet.ShowAttack`
+  on a DOTS view (every attack, held to the windup's end, `FoliagePushSettings.BodyScale`). GameFeel now references World (downhill).
+- **Tests:** `World/Tests/Editor/FoliagePushTests.cs` (pool cap and replace, World Effects Low holds 4, cull and expire, held push,
+  shapes, spring curve, shader constant, no allocation).
+- **Look:** Editor menu Krytical Nova ▸ World ▸ Drop Swing Pushes (Play): an arc, a finisher, a ring, a wave and a Hostile x2 in a row
+  14 m ahead.

@@ -7,6 +7,7 @@
 //   a  = the height of whoever pressed it (a blade far above or below them is left alone)
 // The map moves with the camera in whole texels, so what it holds only needs shifting, never resampling.
 #pragma kernel Trample
+#pragma kernel Swing
 
 Texture2D<float4> _Before;
 RWTexture2D<float4> _After;
@@ -53,4 +54,68 @@ void Trample(uint3 id : SV_DispatchThreadID)
     // about its height (the blade shader reads between texels, and a mark's rim would otherwise be cut short).
     if (mark.b < 0.004) mark.a = nearestHeight;
     _After[id.xy] = mark;
+}
+
+// ---- Swing pushes (day list item 20): a swing throws the grass aside and it springs back in about half a second. Nothing is kept
+// between frames: each push's age comes from the CPU and the spring is worked out from it, so a push leaves nothing behind. Only
+// dispatched while a push is alive (GrassTrampleMap); the blades read one more texel of _SwingOut.
+//   rg = which way and how far the swings push the grass here (world XZ)
+RWTexture2D<float2> _SwingOut;
+
+#define KN_MAX_SWING_PUSHES 8
+// per push: (x, y, z, radius), (dirX, dirZ, cos half-arc or -2 for a running front, strength), (age, front speed, band, sweep), (spring s)
+float4 _KN_SwingPushes[KN_MAX_SWING_PUSHES * 4];
+int    _KN_SwingPushCount;
+float4 _KN_SwingSpring;     // x rate (rad/s), y damping, z rise seconds, w most a blade is bent in all
+
+// The same curve as FoliagePushes.Spring in C#: a quick rise, then a damped swing back that passes upright once.
+float KNSwingSpring(float t)
+{
+    if (t <= 0.0) return 0.0;
+    float up = smoothstep(0.0, max(_KN_SwingSpring.z, 0.001), t);
+    return up * exp(-_KN_SwingSpring.y * _KN_SwingSpring.x * t) * cos(_KN_SwingSpring.x * t);
+}
+
+[numthreads(8, 8, 1)]
+void Swing(uint3 id : SV_DispatchThreadID)
+{
+    uint across = (uint)_Map.w;
+    if (id.x >= across || id.y >= across) return;
+    float2 world = _Map.xy + (float2(id.xy) + 0.5) * _Map.z;
+    float2 push = 0.0;
+    for (int i = 0; i < _KN_SwingPushCount; i++)
+    {
+        float4 where = _KN_SwingPushes[i * 4];
+        float2 away = world - where.xz;
+        float distance = length(away);
+        if (distance > where.w) continue;                     // outside its reach: the common case, no maths
+        float4 shape = _KN_SwingPushes[i * 4 + 1];
+        float4 timing = _KN_SwingPushes[i * 4 + 2];
+        float spring = _KN_SwingPushes[i * 4 + 3].x;
+        float2 n = distance > 0.001 ? away / distance : shape.xy;
+        float area;
+        float age = timing.x;
+        if (timing.y > 0.0)
+        {
+            // A ring or a wave: a front runs out; a blade moves when the front reaches it, then springs on its own.
+            float front = timing.y * age;
+            float edge = saturate(1.0 - abs(distance - front) / max(timing.z, 0.05));
+            area = edge * edge * saturate(1.0 - distance / where.w + 0.25);
+            age -= distance / timing.y;
+        }
+        else
+        {
+            // An arc in front of the swing, softest at its sides and its reach.
+            float reach = saturate(1.0 - distance / where.w);
+            area = reach * reach * smoothstep(shape.z - 0.15, shape.z + 0.05, dot(n, shape.xy));
+            // Combo steps 1 and 2 lean opposite ways across the swing; the finisher drives straight out.
+            n = normalize(n + float2(-shape.y, shape.x) * timing.w);
+        }
+        // The last tenth of its life fades to nothing, so a freed slot never pops.
+        float fade = saturate((spring - timing.x) / max(spring * 0.15, 0.02));
+        push += n * area * KNSwingSpring(age) * shape.w * fade;
+    }
+    float len = length(push);
+    if (len > _KN_SwingSpring.w) push *= _KN_SwingSpring.w / len;
+    _SwingOut[id.xy] = push;
 }
