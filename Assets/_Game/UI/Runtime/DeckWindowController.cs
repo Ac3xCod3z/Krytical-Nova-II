@@ -20,19 +20,22 @@ namespace KryticalNova.UI
     [RequireComponent(typeof(UIDocument))]
     public sealed class DeckWindowController : MonoBehaviour
     {
-        private const float WindowWidth = 380f;
+        private const float WindowWidth = 320f;
+        /// <summary>The Deck window's name: the key of its place in the HUD layout editor.</summary>
+        public const string WindowName = "deck-window";
 
         [SerializeField] private DeckLibrary library;
         [SerializeField] private StyleSheet style;
 
-        private VisualElement root, window, progressFill, listBox, art;
+        private VisualElement root, window, progressFill, listBox, art, wheel;
         private Label title, pack, timeLabel, lengthLabel, artLetter, device;
         private Button playButton, shuffleButton, repeatButton;
         private Slider volumeSlider;
         private readonly List<VisualElement> bars = new List<VisualElement>();
         private readonly List<VisualElement> rows = new List<VisualElement>();
         private float[] spectrum = new float[512];
-        private float[] barLevel;
+        private float[] barLevel, peakLevel;
+        private readonly List<VisualElement> caps = new List<VisualElement>();
         private int shownIndex = -2;
         private bool shownPlaying, shownFight;
         private string heldEmote; // the stance the Deck's opening played, let go of when it closes
@@ -44,19 +47,25 @@ namespace KryticalNova.UI
             if (!Application.isPlaying) return;
             root = GetComponent<UIDocument>().rootVisualElement;
             if (root != null && style != null && !root.styleSheets.Contains(style)) root.styleSheets.Add(style);
+            HudLayoutEditor.RegisterPreview(WindowName, Preview);
         }
 
         private void OnDisable()
         {
+            HudLayoutEditor.UnregisterPreview(WindowName);
+            HudLayoutEditor.Current?.Forget(window);
             window?.RemoveFromHierarchy();
             window = null;
             bars.Clear();
+            caps.Clear();
             rows.Clear();
         }
 
         private void Update()
         {
             if (root == null || library == null) return;
+            // Built at once (shut), so the HUD layout editor can list and place it before it was ever opened.
+            if (window == null) { DeckPlayer deck = DeckPlayer.Ensure(library); if (deck != null) Build(deck); }
             if (!HudTyping.IsTyping(root) && KeyBindings.Pressed(KeyBindings.Deck)) SetOpen(!IsOpen);
             if (IsOpen) Refresh();
         }
@@ -96,9 +105,14 @@ namespace KryticalNova.UI
 
         private void Build(DeckPlayer deck)
         {
-            window = new VisualElement { name = "deck" };
+            window = new VisualElement { name = WindowName };
             window.AddToClassList("deck");
+            window.AddToClassList(HudLayoutEditor.MovableClass);
             window.AddToClassList("blocks-world");
+            bool lively = library.look != DeckLibrary.Look.Classic;
+            window.EnableInClassList("deck--lively", lively);
+            window.EnableInClassList("deck--beat-colours", library.look == DeckLibrary.Look.BeatColours);
+            window.EnableInClassList("deck--faction-glow", library.look == DeckLibrary.Look.FactionGlow);
             window.style.width = WindowWidth;
             window.style.display = DisplayStyle.None;
 
@@ -113,6 +127,14 @@ namespace KryticalNova.UI
             close.AddToClassList("deck-close");
             header.Add(close);
             window.Add(header);
+
+            // Build 17, day list 2 (owner pick A, 13 Nov 2026): the Deck is the Mini Deck grown up, a click-wheel player. Its screen
+            // holds what plays, the bars and the track list; the round wheel below carries the buttons, play in a circle at its centre.
+            var screen = Row("deck-screen");
+            window.Add(screen);
+            var nowPlaying = new Label("NOW PLAYING") { pickingMode = PickingMode.Ignore };
+            nowPlaying.AddToClassList("deck-now-playing");
+            screen.Add(nowPlaying);
 
             var now = Row("deck-now");
             art = new VisualElement();
@@ -130,19 +152,31 @@ namespace KryticalNova.UI
             names.Add(title);
             names.Add(pack);
             now.Add(names);
-            window.Add(now);
+            screen.Add(now);
 
             var visual = Row("deck-visualiser");
             barLevel = new float[library.bars];
+            peakLevel = new float[library.bars];
             for (int i = 0; i < library.bars; i++)
             {
+                // A slot holds the bar (grows from the bottom) and, in the lively looks, its falling peak cap.
+                var slot = new VisualElement { pickingMode = PickingMode.Ignore };
+                slot.AddToClassList("deck-bar-slot");
                 var bar = new VisualElement { pickingMode = PickingMode.Ignore };
                 bar.AddToClassList("deck-bar");
                 if (i % 2 == 1) bar.AddToClassList("deck-bar--alt");
-                visual.Add(bar);
+                slot.Add(bar);
                 bars.Add(bar);
+                if (lively)
+                {
+                    var cap = new VisualElement { pickingMode = PickingMode.Ignore };
+                    cap.AddToClassList("deck-bar-cap");
+                    slot.Add(cap);
+                    caps.Add(cap);
+                }
+                visual.Add(slot);
             }
-            window.Add(visual);
+            screen.Add(visual);
 
             var progress = new VisualElement();
             progress.AddToClassList("deck-progress");
@@ -150,7 +184,7 @@ namespace KryticalNova.UI
             progressFill.AddToClassList("deck-progress-fill");
             progress.Add(progressFill);
             progress.RegisterCallback<PointerDownEvent>(e => DeckPlayer.Instance?.Seek(e.localPosition.x / Mathf.Max(1f, progress.resolvedStyle.width)));
-            window.Add(progress);
+            screen.Add(progress);
             var times = Row("deck-times");
             timeLabel = new Label("0:00");
             lengthLabel = new Label("0:00");
@@ -158,25 +192,25 @@ namespace KryticalNova.UI
             lengthLabel.AddToClassList("deck-time");
             times.Add(timeLabel);
             times.Add(lengthLabel);
-            window.Add(times);
+            screen.Add(times);
 
-            var buttons = Row("deck-buttons");
-            shuffleButton = Button(buttons, "SHUFFLE", "deck-small", () => { var d = DeckPlayer.Instance; if (d != null) d.Shuffle = !d.Shuffle; shownIndex = -2; });
-            Button(buttons, "◀◀", "deck-skip", () => DeckPlayer.Instance?.Previous());
-            playButton = Button(buttons, "▶", "deck-play", () => DeckPlayer.Instance?.PlayPause());
-            Button(buttons, "▶▶", "deck-skip", () => DeckPlayer.Instance?.Next());
-            repeatButton = Button(buttons, "REPEAT", "deck-small", () =>
+            // The wheel: shuffle on top, back left, skip right, repeat below, play in the centre circle.
+            var buttons = Row("deck-wheel");
+            shuffleButton = Button(buttons, "SHUFFLE", "deck-wheel-top", () => { var d = DeckPlayer.Instance; if (d != null) d.Shuffle = !d.Shuffle; shownIndex = -2; });
+            Button(buttons, "◀◀", "deck-wheel-left", () => DeckPlayer.Instance?.Previous());
+            Button(buttons, "▶▶", "deck-wheel-right", () => DeckPlayer.Instance?.Next());
+            repeatButton = Button(buttons, "REPEAT", "deck-wheel-bottom", () =>
             {
                 var d = DeckPlayer.Instance;
                 if (d != null) d.RepeatMode = (DeckPlayer.Repeat)(((int)d.RepeatMode + 1) % 3);
                 shownIndex = -2;
             });
-            window.Add(buttons);
+            playButton = Button(buttons, "▶", "deck-play", () => DeckPlayer.Instance?.PlayPause());
+            wheel = buttons;
 
             volumeSlider = new Slider("VOLUME", 0f, 1f) { value = deck.Volume };
             volumeSlider.AddToClassList("deck-volume");
             volumeSlider.RegisterValueChangedCallback(e => { if (DeckPlayer.Instance != null) DeckPlayer.Instance.Volume = e.newValue; });
-            window.Add(volumeSlider);
 
             var scroll = new ScrollView(ScrollViewMode.Vertical) { horizontalScrollerVisibility = ScrollerVisibility.Hidden };
             scroll.AddToClassList("deck-list");
@@ -199,16 +233,26 @@ namespace KryticalNova.UI
                 listBox.Add(row);
                 rows.Add(row);
             }
-            window.Add(scroll);
+            screen.Add(scroll);
+            window.Add(buttons);
+            window.Add(volumeSlider);
 
             var foot = new Label("Plays for you alone. In a fight it steps aside for the fight's music, and comes back after.");
             foot.AddToClassList("deck-foot");
             window.Add(foot);
 
             root.Add(window);
-            window.style.position = Position.Absolute;
-            window.style.right = 24f;
-            window.style.top = 90f;
+            // Its default place (right 24, top 90) is in Deck.uss, so the layout editor's RESET gives it back.
+            HudLayoutEditor.Current?.Adopt(window);
+        }
+
+        // In the layout editor the Deck shows itself to be placed, and goes away again after if it was shut.
+        private bool openedForLayout;
+        private void Preview(bool on)
+        {
+            if (window == null) return;
+            if (on && !IsOpen) { window.style.display = DisplayStyle.Flex; openedForLayout = true; }
+            else if (!on && openedForLayout) { openedForLayout = false; window.style.display = DisplayStyle.None; }
         }
 
         private static VisualElement Row(string cls)
@@ -272,6 +316,29 @@ namespace KryticalNova.UI
                 float level = Mathf.Clamp01(Mathf.Sqrt(sum / (to - from)) * library.barGain);
                 barLevel[b] = level > barLevel[b] ? level : Mathf.MoveTowards(barLevel[b], level, Time.unscaledDeltaTime * 1.8f);
                 bars[b].style.height = Length.Percent(6f + barLevel[b] * 94f);
+                if (caps.Count == n)
+                {
+                    peakLevel[b] = DeckLook.Peak(peakLevel[b], barLevel[b], library.peakFallPerSecond, Time.unscaledDeltaTime);
+                    caps[b].style.bottom = Length.Percent(6f + peakLevel[b] * 94f);
+                }
+                if (library.look == DeckLibrary.Look.BeatColours)
+                    bars[b].style.backgroundColor = DeckLook.BeatColour(barLevel[b], library.lowColour, library.midColour, library.highColour);
+                else if (library.look == DeckLibrary.Look.FactionGlow)
+                    bars[b].style.opacity = Mathf.Lerp(library.glowFloor, 1f, barLevel[b]);
+            }
+
+            // The beat pulse: the cover square and the play button swell on each beat of the track (its BPM, not listening).
+            if (library.look != DeckLibrary.Look.Classic)
+            {
+                MusicTrack track = deck.Current;
+                float pulse = deck.IsPlaying && !deck.InFight && track != null
+                    ? BeatMath.Pulse(BeatMath.Phase01(deck.Seconds, track.firstBeatSeconds, track.BeatSeconds), library.beatPulseSharpness)
+                    : 0f;
+                float s = 1f + pulse * library.beatPulseScale;
+                art.style.scale = new Scale(new Vector3(s, s, 1f));
+                playButton.style.scale = new Scale(new Vector3(s, s, 1f));
+                // the wheel's rim lights on the beat, as the Mini Deck's arc does
+                wheel.EnableInClassList("deck-wheel--beat", pulse > 0.5f);
             }
         }
 

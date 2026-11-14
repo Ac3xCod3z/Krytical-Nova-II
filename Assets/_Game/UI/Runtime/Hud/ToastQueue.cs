@@ -64,6 +64,43 @@ namespace KryticalNova.UI
             return true;
         }
 
+        /// <summary>
+        /// A newer line of the same kind takes the place of the older ones (Crossfire's countdown, build 17: "10 .. 1" one a second must
+        /// not wait behind each other): waiting lines of <paramref name="kind"/> are dropped and one of that kind on screen ends now, so the
+        /// next <see cref="Advance"/> brings the new one up at once. Returns true when the one on screen was ended.
+        /// </summary>
+        public bool Supersede(AnnouncementKind kind, float now)
+        {
+            DropWaiting(kind);
+            if (!Showing || Current.Kind != kind) return false;
+            Showing = false;
+            freeAt = now;
+            return true;
+        }
+
+        /// <summary>Waiting lines of <paramref name="kind"/> are dropped; what is on screen stays.</summary>
+        public void DropWaiting(AnnouncementKind kind)
+        {
+            if (waiting.Count == 0) return;
+            var keep = new Queue<Toast>(waiting.Count);
+            foreach (Toast t in waiting) if (t.Kind != kind) keep.Enqueue(t);
+            waiting.Clear();
+            foreach (Toast t in keep) waiting.Enqueue(t);
+        }
+
+        /// <summary>
+        /// A line that stands in place (Crossfire's last seconds, owner 13 Nov 2026) takes the place of the one of its own kind on screen
+        /// without the bar going away and coming back: <see cref="Current"/> becomes <paramref name="toast"/> and its time starts anew.
+        /// False (nothing changed) when no line of that kind is on screen.
+        /// </summary>
+        public bool Replace(in Toast toast, float now)
+        {
+            if (!Showing || Current.Kind != toast.Kind) return false;
+            Current = toast;
+            shownAt = now;
+            return true;
+        }
+
         public void Clear()
         {
             waiting.Clear();

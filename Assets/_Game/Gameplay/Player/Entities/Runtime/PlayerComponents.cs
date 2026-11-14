@@ -507,6 +507,8 @@ namespace KryticalNova.Player.Entities
         /// the way at once (the tests' default). Integer per tick on server and owner alike.
         /// </summary>
         public int TurnCdegPerSecond;
+        /// <summary>Build 17, item 11.1: a player's own circle (mm) and how fast one who stopped inside another slides out (mm/s). 0 = off.</summary>
+        public int PersonalRadiusMm, SlideOutMmps;
 
         public static PlayerMoveSettings Default => new PlayerMoveSettings
         {

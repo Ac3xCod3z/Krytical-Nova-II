@@ -55,6 +55,8 @@ namespace KryticalNova.EditorTools.Hostiles
             public float Windup, Damage;
             public bool Heavy;
             public int Weight;
+            /// <summary>Build 17 item 11.2: how the attack comes in, for a player's dodge (Low jumped over, High stepped aside).</summary>
+            public KryticalNova.Combat.AttackHeight Height;
         }
 
         /// <summary>One species. The roster is the list of these.</summary>
@@ -88,12 +90,14 @@ namespace KryticalNova.EditorTools.Hostiles
         public const int PoiseNormal = 30, PoiseBruiser = 70;
 
         // The unarmed humanoid set every species uses until it has clips of its own.
+        // Build 17 item 11.2: all three are punches and swings at the body, so High (stepped aside); a Low attack (a sweep, a bite at the
+        // legs, jumped over) comes with a species' own clips.
         private static readonly AttackRow[] UnarmedAttacks =
         {
             // light windups 0.25 -> 0.40 s (owner's Q3, 6 Nov 2026: every swing readable on screen on the entity netcode); heavy stays
-            new AttackRow { Clip = Unarmed + "Attack-L1.FBX", Windup = LightWindup, Damage = 1f, Weight = 45 },
-            new AttackRow { Clip = Unarmed + "Attack-R1.FBX", Windup = LightWindup, Damage = 1f, Weight = 40 },
-            new AttackRow { Clip = Unarmed + "Attack-R3.FBX", Windup = HeavyWindup, Damage = 1.5f, Heavy = true, Weight = 15 },
+            new AttackRow { Clip = Unarmed + "Attack-L1.FBX", Windup = LightWindup, Damage = 1f, Weight = 45, Height = KryticalNova.Combat.AttackHeight.High },
+            new AttackRow { Clip = Unarmed + "Attack-R1.FBX", Windup = LightWindup, Damage = 1f, Weight = 40, Height = KryticalNova.Combat.AttackHeight.High },
+            new AttackRow { Clip = Unarmed + "Attack-R3.FBX", Windup = HeavyWindup, Damage = 1.5f, Heavy = true, Weight = 15, Height = KryticalNova.Combat.AttackHeight.High },
         };
         private static readonly string[] UnarmedHits = { Unarmed + "GetHit-F1.FBX", Unarmed + "GetHit-F2.FBX" };
         private static readonly string[] HumanoidDeaths = { PlayerDeaths + "Death_Front.anim", PlayerDeaths + "Death_Back.anim" };
@@ -385,7 +389,7 @@ namespace KryticalNova.EditorTools.Hostiles
                 definition.attacks[i] = new HostileDefinition.Attack
                 {
                     clip = clip, windupSeconds = Mathf.Min(row.Windup, clip.length * 0.9f), damageMultiplier = row.Damage,
-                    heavy = row.Heavy, weight = Mathf.Max(1, row.Weight)
+                    heavy = row.Heavy, weight = Mathf.Max(1, row.Weight), height = row.Height
                 };
             }
             definition.hitReactions = CopyClips(species.Hits, folder, species.AnimSet + "_Hit");

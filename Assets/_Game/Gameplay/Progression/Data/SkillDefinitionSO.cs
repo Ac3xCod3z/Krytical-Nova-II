@@ -394,7 +394,8 @@ namespace KryticalNova.Progression
 
             if (hasDeadlyBlowBoost)
             {
-                list.Add(new StatModifierPayload(StatType.CriticalRate, ModifierType.PercentMult, GetDeadlyBlowBonus(rank)));
+                // build 17, item 7.1 (owner, 13 Nov 2026): crit buffs ADD to the crit rate (base + gear), never multiply it
+                list.Add(new StatModifierPayload(StatType.CriticalRate, ModifierType.Flat, GetDeadlyBlowBonus(rank)));
             }
 
             if (hasLuckBoost)

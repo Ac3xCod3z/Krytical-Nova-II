@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using KryticalNova.Core;
+using KryticalNova.Player.Entities;
 using KryticalNova.Player.Entities.Presentation;
 using KryticalNova.Progression;
 using Unity.Collections;
@@ -26,6 +27,8 @@ namespace KryticalNova.Combat.Entities
         public int Attacker;
         /// <summary>The attack is a heavy one (NGO's flag 8).</summary>
         public bool Heavy;
+        /// <summary>How the attack comes in (build 17 item 11.2): an evaded one is jumped over (Low) or stepped aside (High / Any).</summary>
+        public AttackHeight Height;
     }
 
     /// <summary>The one entity in the server world that holds the <see cref="HostileStrike"/> queue.</summary>
@@ -66,7 +69,7 @@ namespace KryticalNova.Combat.Entities
 
     public static class HostileStrikes
     {
-        public const byte Critical = 1, Evaded = 2, Reflected = 4, Heavy = 8;
+        public const byte Critical = 1, Evaded = 2, Reflected = 4, Heavy = 8, Blocked = 16; // Blocked: build 17 item 8
 
         /// <summary>Server: queues one blow for the next update. False when the world has no queue.</summary>
         public static bool Queue(World server, in HostileStrike strike)
@@ -97,7 +100,7 @@ namespace KryticalNova.Combat.Entities
         {
             DamageMilli = Mathf.RoundToInt(result.DamageDealt * 1000f),
             Flags = (byte)((result.IsCritical ? Critical : 0) | (result.IsEvaded ? Evaded : 0) | (result.IsReflected ? Reflected : 0)
-                | (heavy ? Heavy : 0)),
+                | (heavy ? Heavy : 0) | (result.IsBlocked ? Blocked : 0)),
         };
 
         /// <summary>The number as NGO HostileNet.ShowStrike builds it for the hit player.</summary>
@@ -111,6 +114,7 @@ namespace KryticalNova.Combat.Entities
                 IsCritical = (strike.Flags & Critical) != 0,
                 IsEvaded = (strike.Flags & Evaded) != 0,
                 IsReflected = reflected,
+                IsBlocked = (strike.Flags & Blocked) != 0,
                 ReflectedDamage = reflected ? damage : 0f,
             };
         }
@@ -135,6 +139,17 @@ namespace KryticalNova.Combat.Entities
         {
             m_Queue = EntityManager.CreateEntity(typeof(HostileStrikeQueue));
             EntityManager.AddBuffer<HostileStrike>(m_Queue);
+            CombatEntity.AnyKilled += OnAnyKilled;
+        }
+
+        protected override void OnDestroy() => CombatEntity.AnyKilled -= OnAnyKilled;
+
+        /// <summary>A player who died starts a fresh dodge streak when they come back (review of #241).</summary>
+        void OnAnyKilled(CombatEntity victim, KillingBlow blow)
+        {
+            if (victim == null || m_Streaks.Count == 0) return;
+            foreach (GhostBodyEntry entry in GhostBodyRegistry.Entries)
+                if (ReferenceEquals(entry.World, World) && entry.Body == victim.gameObject) { m_Streaks.Remove(entry.Ghost); return; }
         }
 
         protected override void OnUpdate()
@@ -143,6 +158,7 @@ namespace KryticalNova.Combat.Entities
             if (queue.Length == 0) return;
             using var strikes = queue.ToNativeArray(Allocator.Temp);
             queue.Clear();
+            m_Tick = SystemAPI.TryGetSingleton(out NetworkTime time) && time.ServerTick.IsValid ? time.ServerTick.SerializedData : 0;
             foreach (HostileStrike strike in strikes)
             {
                 GhostBodyEntry hit = null;
@@ -156,7 +172,73 @@ namespace KryticalNova.Combat.Entities
                 }
                 Applied++;
                 if (HitNumbers.SendTo(World, hit.NetworkId, HostileStrikes.Of(strike.Result, strike.Heavy))) Sent++;
+                Dodge(hit, strike);
             }
+            if (m_Streaks.Count > 64) PruneStreaks();
+        }
+
+        // ------------------------------------------------------------------ build 17 item 11.2: dodges and the counter
+
+        readonly Dictionary<Entity, DodgeStreak> m_Streaks = new Dictionary<Entity, DodgeStreak>();
+        uint m_Tick;
+
+        /// <summary>Dodges written to a ring, counter-attacks that landed (tests).</summary>
+        public int Dodges { get; private set; }
+        public int Counters { get; private set; }
+
+        /// <summary>
+        /// The player is attacking (the dodge rule's "busy swinging: the miss just misses"): a combo step under way or a target being
+        /// attacked (<see cref="CombatState"/>, server's copy).
+        /// </summary>
+        public static bool IsAttacking(in CombatState state) => state.Step != 0 || state.TargetGhostId != 0;
+
+        /// <summary>
+        /// After a blow landed on the body (<see cref="HostileStrikes.Apply"/>): an evaded one asks <see cref="DodgeRules.OnEvaded"/> and
+        /// writes the dodge on the player's ring; the counter it may earn is a server hit on the Hostile (the player's own ResolveHit, x
+        /// <c>counterDamageMultiplier</c>, on the HitEvent ring like every hit). A blow that landed breaks the streak.
+        /// </summary>
+        void Dodge(GhostBodyEntry hit, in HostileStrike strike)
+        {
+            EntityManager em = EntityManager;
+            Entity ghost = hit.Ghost;
+            m_Streaks.TryGetValue(ghost, out DodgeStreak streak);
+            if (!strike.Result.IsEvaded)
+            {
+                DodgeRules.OnHitTaken(ref streak);
+                m_Streaks[ghost] = streak;
+                return;
+            }
+            if (!em.Exists(ghost) || !em.HasBuffer<DodgeEvent>(ghost) || !em.HasComponent<DodgeSeq>(ghost)) return;   // a ghost not re-baked yet
+            bool attacking = em.HasComponent<CombatState>(ghost) && IsAttacking(em.GetComponentData<CombatState>(ghost));
+            CombatStatTuningData tuning = hit.Body.TryGetComponent(out CharacterCombatStats own) ? own.TuningData : null;
+            int forCounter = tuning != null ? tuning.dodgesForCounter : CombatStatTuningData.DefaultDodgesForCounter;
+            float streakSeconds = tuning != null ? tuning.dodgeStreakSeconds : CombatStatTuningData.DefaultDodgeStreakSeconds;
+            DodgeMove move = DodgeRules.OnEvaded(ref streak, strike.Height, attacking, (float)World.Time.ElapsedTime, forCounter, streakSeconds, out bool counter);
+            m_Streaks[ghost] = streak;
+            if (move == DodgeMove.None) return;
+            uint tick = m_Tick;
+            DodgeSeq seq = em.GetComponentData<DodgeSeq>(ghost);
+            DodgeRing.Append(em.GetBuffer<DodgeEvent>(ghost), ref seq, new DodgeEvent { Tick = tick, Move = (byte)move, Counter = (byte)(counter ? 1 : 0) });
+            em.SetComponentData(ghost, seq);
+            Dodges++;
+            if (counter && Counter(hit.Body, HostileAttackers.Of(strike.Attacker), tuning != null ? tuning.counterDamageMultiplier : CombatStatTuningData.DefaultCounterDamageMultiplier)) Counters++;
+        }
+
+        /// <summary>The counter-attack: the player's own hit on the Hostile that swung, a little harder. False when it could not land.</summary>
+        public static bool Counter(GameObject player, CharacterCombatStats hostile, float multiplier)
+        {
+            if (player == null || hostile == null || !player.TryGetComponent(out PlayerMeleeCombat melee)) return false;
+            if (!hostile.TryGetComponent(out IDamageable target) || !target.IsAlive) return false;
+            if (!CombatHostility.IsHostile(player.transform, target)) return false;
+            return melee.ResolveHit(target, multiplier, 1, "Counter", out _);
+        }
+
+        void PruneStreaks()
+        {
+            List<Entity> gone = null;
+            foreach (Entity ghost in m_Streaks.Keys)
+                if (!EntityManager.Exists(ghost)) (gone ??= new List<Entity>()).Add(ghost);
+            if (gone != null) foreach (Entity ghost in gone) m_Streaks.Remove(ghost);
         }
     }
 

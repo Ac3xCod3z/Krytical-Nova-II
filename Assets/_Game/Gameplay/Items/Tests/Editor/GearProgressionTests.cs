@@ -311,7 +311,11 @@ namespace KryticalNova.Tests
             Assert.AreEqual(35f * 1.5f, Total(boots, new GearItemState(50, 0, 0), StatType.EvasionRate), 0.01f, "Boots: Evasion");
 
             ItemDefinition ring = Gear(EquipSlot.Ring, ItemRarity.Rare, 45);
-            Assert.AreEqual(6f, Total(ring, new GearItemState(120, 0, 0), StatType.CriticalRate), 0.001f, "Ring: Critical");
+            float ringBase = Total(ring, default, StatType.CriticalRate);
+            Assert.Greater(ringBase, 0f, "a ladder ring carries its rarity base crit (kept, owner 13 Nov 2026)");
+            Assert.AreEqual(ringBase * 1.2f, Total(ring, new GearItemState(120, 0, 0), StatType.CriticalRate) - ringBase, 0.001f,
+                "Ring: Critical (owner pick A: 1 % of Temper adds 1 % of the ring's own base crit, on top of it)");
+            Assert.AreEqual(ringBase * 0.3f, Total(ring, new GearItemState(30, 0, 0), StatType.CriticalRate) - ringBase, 0.001f, "30 %: +30 % of the base");
 
             ItemDefinition amulet = Gear(EquipSlot.Amulet, ItemRarity.Uncommon, 40);
             float baked = GearStatResolver.Total(amulet, StatType.Luck);
@@ -346,7 +350,8 @@ namespace KryticalNova.Tests
             ItemDefinition weapon = Gear(EquipSlot.Weapon, ItemRarity.Epic, 100);
             Assert.AreEqual(884f * 1.36f, Total(weapon, new GearItemState(0, 12, 0), StatType.AttackPower), 0.01f, "FS12: +36% of its Attack Power");
             Assert.AreEqual(250f * 1.24f, Total(weapon, new GearItemState(0, 12, 0), StatType.HitRate), 0.01f, "FS12: +24% of its Hit Rate");
-            Assert.AreEqual(25f, Total(weapon, new GearItemState(0, 0, 25), StatType.CriticalRate), 0.001f, "Tune 25: +1% Critical a stage");
+            Assert.AreEqual(0f, Total(weapon, new GearItemState(0, 0, 25), StatType.CriticalRate), 0.001f, "build 17 7.2: a weapon gives no crit");
+            Assert.AreEqual(25f, Total(weapon, new GearItemState(0, 0, 25), StatType.CriticalDamagePercent), 0.001f, "Tune 25: +1% Critical Damage a stage");
             Assert.AreEqual(25f * 5f + 5f, Total(weapon, new GearItemState(0, 0, 25), StatType.Spirit), 0.001f, "and Spirit, with the last stage's bonus");
             Assert.AreEqual(24f * 5f, Total(weapon, new GearItemState(0, 0, 24), StatType.Spirit), 0.001f, "no bonus before the last stage");
 

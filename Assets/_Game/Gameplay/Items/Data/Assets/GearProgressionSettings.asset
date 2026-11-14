@@ -89,8 +89,8 @@ MonoBehaviour:
       value: 1
     - slot: 5
       stat: 10
-      kind: 1
-      value: 0.05
+      kind: 0
+      value: 1
     - slot: 6
       stat: 15
       kind: 2
@@ -263,7 +263,7 @@ MonoBehaviour:
     failDropsFromStage: 13
     effects:
     - slot: 1
-      stat: 10
+      stat: 11
       kind: 1
       value: 1
     - slot: 1

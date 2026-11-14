@@ -206,7 +206,7 @@ The bench is an `IPackTarget`, as the Vault, Trade and Kiosk windows are, and a 
 | Armor, Cape | +1% of its Defense |
 | Gloves | +1% of its Hit Rate |
 | Boots | +1% of its Evasion |
-| Ring | +0.05% Critical *(proposed)*: +6% at 120% |
+| Ring | +1% of its Critical (owner, 13 Nov 2026), on top of the ring's base crit (Common +5 to Legendary +25 at Lv112): a Legendary Lv112 ring gives +30 at 120%, a Rare +18, a Common +6. Shown as its own line under the ring's stats. No crit cap. |
 | Amulet | +4 Luck × rarity multiplier *(proposed)*: +576 on an Uncommon at 120% |
 
 **The cap is 120%** (owner, 6 Oct 2026). Going on to 150% is a system for later in the game; see "Later: beyond 120%" below. It is one number, `temper.hardCap`.

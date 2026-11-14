@@ -33,9 +33,16 @@ namespace KryticalNova.Core
 
         /// <summary>
         /// The body is in a move NGO's motor played as Jumping: a jump's flight, a vault, or on a wall (Wallstride, its roof routes and
-        /// flip included). Waterstride is not one (NGO's water motor never set Jumping). A rider in one is taken off at once (PlayerMounts).
+        /// flip included). Waterstride is not one (NGO's water motor never set Jumping). A rider in one is taken off at once (PlayerMounts),
+        /// except in a vault (<see cref="InVault"/>).
         /// </summary>
         bool InJumpingMove => Airborne;
+
+        /// <summary>
+        /// The body is going over an obstacle (a vault leg). A rider stays mounted through it (owner, 13 Nov 2026, day list 15.2: the
+        /// mount dissolves, the rider flips over and lands back in the saddle as it re-forms).
+        /// </summary>
+        bool InVault => false;
 
         /// <summary>The body is not standing still: walking, in a jump or a vault, on a wall or the water (NGO's motor CanStartEmote; M8 8.4.6).</summary>
         bool Busy { get; }

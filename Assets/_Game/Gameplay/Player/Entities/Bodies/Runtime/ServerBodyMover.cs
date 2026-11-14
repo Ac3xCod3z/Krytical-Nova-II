@@ -78,6 +78,9 @@ namespace KryticalNova.Player.Entities.Bodies
             }
         }
 
+        /// <summary>The ghost is on a vault leg now (a rider stays mounted through it: day list 15.2).</summary>
+        public bool InVault => IsLive && PlayerServerPlanSystem.InVault(m_World.EntityManager, m_Ghost);
+
         /// <summary>
         /// NGO's rule for "the motor is Jumping" on a body without a motor: a jump's flight, a vault, or any wall state (Wall 1 on a wall,
         /// 2 perched: NGO's wall motor played its Jumping clips from the plant on). Water alone is not one.

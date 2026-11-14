@@ -71,16 +71,45 @@ namespace KryticalNova.UI
         public void Announce(AnnouncementKind kind, string sender, string message, string highlight = null, byte rarity = 0)
         {
             if (toast == null || string.IsNullOrEmpty(message)) return;
-            queue.Enqueue(new Toast { Kind = kind, Sender = sender, Text = message, Highlight = highlight, Rarity = rarity }, settings.maxWaiting);
+            var line = new Toast { Kind = kind, Sender = sender, Text = message, Highlight = highlight, Rarity = rarity };
+            float now = Time.unscaledTime;
+            if (TickerRules.Stands(kind))
+            {
+                // Crossfire's last seconds stand in place (owner, 13 Nov 2026: run in from the side, each was gone before it could be
+                // read): the next number takes the place of the one on screen; the first one ends the minute call still running.
+                if (queue.Replace(line, now)) { Write(line); return; }
+                queue.Supersede(AnnouncementKind.Crossfire, now);
+                queue.DropWaiting(kind);
+            }
+            else if (kind == AnnouncementKind.Crossfire)
+            {
+                // A newer Crossfire line (a minute call, the gates closing) replaces the older ones at once.
+                queue.Supersede(kind, now);
+                queue.Supersede(AnnouncementKind.CrossfireCount, now);
+            }
+            queue.Enqueue(line, settings.maxWaiting);
+        }
+
+        // The line's text on the track, measured, and where it starts: a running line just off the right edge, a standing one in place.
+        private void Write(in Toast shown)
+        {
+            if (track == null) return;
+            string line = Line(shown);
+            track.text = line;
+            Vector2 size = track.MeasureTextSize(line, 0f, VisualElement.MeasureMode.Undefined, 0f, VisualElement.MeasureMode.Undefined);
+            textWidth = float.IsNaN(size.x) || size.x < 1f ? line.Length * 9f : size.x;
+            track.style.left = TickerRules.Stands(shown.Kind) ? TickerRules.StandLeft(bandWidth, textWidth) : bandWidth;
         }
 
         private void Update()
         {
             if (toast == null) return;
             float now = Time.unscaledTime;
+            bool stands = queue.Showing && TickerRules.Stands(queue.Current.Kind);
             if (queue.Showing && track != null)
-                track.style.left = TickerRules.Left(now - shownAt, bandWidth, textWidth, settings.speedPixelsPerSecond);
-            if (!queue.Advance(now, showSeconds, settings.fadeSeconds)) return;
+                track.style.left = stands ? TickerRules.StandLeft(bandWidth, textWidth)
+                    : TickerRules.Left(now - shownAt, bandWidth, textWidth, settings.speedPixelsPerSecond);
+            if (!queue.Advance(now, stands ? settings.standSeconds : showSeconds, settings.fadeSeconds)) return;
             if (!queue.Showing)
             {
                 toast.RemoveFromClassList(ShownClass);
@@ -91,7 +120,6 @@ namespace KryticalNova.UI
             }
 
             Toast shown = queue.Current;
-            string line = Line(shown);
             toast.EnableInClassList(GmClass, shown.Kind == AnnouncementKind.Gm);
             toast.EnableInClassList(TemperClass, shown.Kind == AnnouncementKind.Temper || shown.Kind == AnnouncementKind.Drop);
             // The frame wears the colour of the news: gold for a GM line, red or orange for a tempered piece, purple for a find.
@@ -108,13 +136,7 @@ namespace KryticalNova.UI
             float panelWidth = toast.resolvedStyle.width;
             if (float.IsNaN(panelWidth) || panelWidth < 1f) panelWidth = root.worldBound.width * BandWidthPercent / 100f;
             bandWidth = Mathf.Max(1f, panelWidth);
-            if (track != null)
-            {
-                track.text = line;
-                Vector2 size = track.MeasureTextSize(line, 0f, VisualElement.MeasureMode.Undefined, 0f, VisualElement.MeasureMode.Undefined);
-                textWidth = float.IsNaN(size.x) || size.x < 1f ? line.Length * 9f : size.x;
-                track.style.left = bandWidth;
-            }
+            Write(shown);
             shownAt = now;
             showSeconds = TickerRules.ShowSeconds(bandWidth, textWidth, settings.speedPixelsPerSecond, settings.passes);
             // The class goes on a frame later so the transition has a state to start from.
@@ -159,6 +181,8 @@ namespace KryticalNova.UI
             {
                 case AnnouncementKind.Temper: return "TEMPERING";
                 case AnnouncementKind.Drop: return (shown.Rarity >= 4 ? "LEGENDARY" : "EPIC") + " FIND";
+                case AnnouncementKind.Crossfire:
+                case AnnouncementKind.CrossfireCount: return "CROSSFIRE";
                 // gm.say speaks as "GM"; the GM's own /gm carries their name, as its chat line does.
                 default:
                     return string.IsNullOrEmpty(shown.Sender) || shown.Sender == "GM" ? "GM" : $"GM · {shown.Sender.ToUpperInvariant()}";

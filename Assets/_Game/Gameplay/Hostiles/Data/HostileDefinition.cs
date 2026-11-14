@@ -30,7 +30,13 @@ namespace KryticalNova.Hostiles
             public SwingWarning warning;
             [Tooltip("With Own: the least time players see this swing coming, in seconds (the settings' latency allowance is added).")]
             [Min(0f)] public float warningSeconds;
+            [Tooltip("How the attack comes in, for a player's dodge (build 17 item 11.2): Low is jumped over, High (and untagged) stepped aside.")]
+            public KryticalNova.Combat.AttackHeight height;
         }
+
+        /// <summary>Attack <paramref name="ability"/>'s height for the dodge rule (build 17 item 11.2); Any when there is no such attack.</summary>
+        public KryticalNova.Combat.AttackHeight HeightOf(int ability) =>
+            attacks != null && ability >= 0 && ability < attacks.Length ? attacks[ability].height : KryticalNova.Combat.AttackHeight.Any;
 
         /// <summary>
         /// The warning before one attack (owner, 7 Nov 2026): the settings' minimum (the default, also what an attack saved before this had),

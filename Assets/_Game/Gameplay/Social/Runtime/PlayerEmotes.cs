@@ -46,6 +46,8 @@ namespace KryticalNova.Social
     {
         private const string ReasonDefeated = "You can't do that while defeated.";
         private const string ReasonBusy = "Stand still to do that.";
+        /// <summary>Build 17 item 15.3 (owner, 13 Nov 2026): an emote that needs the legs or the whole body, asked for from the saddle.</summary>
+        public const string ReasonRiding = "You can't do that while riding.";
         private const float StanceCheckSeconds = 0.5f;
 
         [SerializeField] private EmoteWheelSettings settings;
@@ -56,6 +58,7 @@ namespace KryticalNova.Social
         private PlayerAnimancerMotor motor;
         private PlayerIdentity identity;
         private PlayerResources resources;
+        private IBodyMounts mounts;   // the server body's ride phase (it has no animation motor to say it is seated)
         private EmoteNetState offlineState; // the unspawned avatar keeps its own
         private float nextAllowed;          // where the game is decided
         private bool starting;              // this machine is switching motions: the old one ending is not news
@@ -118,6 +121,7 @@ namespace KryticalNova.Social
             motor = GetComponent<PlayerAnimancerMotor>();
             identity = GetComponent<PlayerIdentity>();
             resources = GetComponent<PlayerResources>();
+            mounts = GetComponent<IBodyMounts>();
         }
 
         private void OnEnable()
@@ -171,10 +175,31 @@ namespace KryticalNova.Social
 
         // ------------------------------------------------------------------ asking (owner)
 
+        /// <summary>
+        /// On a mount (any machine): the server body by its ride phase, every other copy by its motor. Getting on or off counts.
+        /// </summary>
+        private bool OnMount => EntityServer ? mounts != null && mounts.ShownPhase != 0 : motor != null && motor.IsSeated;
+        /// <summary>In the saddle with the riding set, not getting on or off (the server body: ride phase Riding).</summary>
+        private bool InSaddle => EntityServer ? mounts != null && mounts.ShownPhase == RidingPhase : motor != null && motor.CanStartSeatedEmote;
+        private const byte RidingPhase = 2;   // KryticalNova.Mounts.RidePhase.Riding (Social does not use Mounts)
+
         /// <summary>Why this character cannot start an emote right now, or null when it can. Checked again on the server.</summary>
-        public string Blocked()
+        public string Blocked() => Blocked(null);
+
+        /// <summary>
+        /// Why this character cannot start the motion <paramref name="key"/> right now, or null when it can. On a mount only the
+        /// motions <see cref="EmoteCatalog.AllowedMounted"/> lists may be done (build 17 item 15.3); with no key (a window's own
+        /// stance) a rider is refused. Checked again on the server.
+        /// </summary>
+        public string Blocked(string key)
         {
             if (resources != null && !resources.IsAlive) return ReasonDefeated;
+            if (OnMount)
+            {
+                if (key == null || !EmoteCatalog.AllowedMounted(settings, key)) return ReasonRiding;
+                if (EntityServer) return !InSaddle || ServerBodyBusy ? ReasonBusy : null;
+                return InSaddle ? null : ReasonBusy;
+            }
             if (EntityServer) return ServerBodyBusy ? ReasonBusy : null;   // (M8 8.4.6: the ghost stands still)
             if (motor == null || !motor.CanStartEmote) return ReasonBusy;
             return null;
@@ -184,7 +209,7 @@ namespace KryticalNova.Social
         public void RequestPlay(string key)
         {
             if (string.IsNullOrEmpty(key) || settings == null) return;
-            string blocked = Blocked();
+            string blocked = Blocked(key);
             if (blocked != null)
             {
                 ClientPresentationRegistry.Messages?.ShowMessage(blocked);
@@ -229,7 +254,7 @@ namespace KryticalNova.Social
 
         private void ServerPlay(string key)
         {
-            if (!HasAuthority || settings == null || Blocked() != null) return;
+            if (!HasAuthority || settings == null || Blocked(key) != null) return;
             if (Time.time < nextAllowed) return;
             if (!EmoteCatalog.TryResolve(settings.library, key, out CharacterExpressionLibrary.Motion motion, out bool stance)) return;
             if (!motion.Has(Body) || !EmoteCatalog.IsOffered(settings, motion.group)) return;

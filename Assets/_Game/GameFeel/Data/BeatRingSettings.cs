@@ -11,6 +11,10 @@ namespace KryticalNova.GameFeel
     [CreateAssetMenu(menuName = "Krytical Nova/Game Feel/Beat Ring Settings", fileName = "BeatRingSettings")]
     public sealed class BeatRingSettings : ScriptableObject
     {
+        [Tooltip("Build 17 day list 16 (owner, 13 Nov 2026): the beat moved to the Mini Deck on the HUD, so the 3D ring no longer " +
+                 "shows (as if the Beat Ring setting were off). Untick to bring the ring back.")]
+        public bool retired = true;
+
         [Header("Shape")]
         [Tooltip("Bars round the ring.")]
         [Range(8, 48)] public int columns = 24;

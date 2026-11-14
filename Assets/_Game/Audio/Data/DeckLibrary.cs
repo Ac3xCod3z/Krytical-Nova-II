@@ -23,6 +23,27 @@ namespace KryticalNova.Audio
         [Range(8, 48)] public int bars = 24;
         [Min(0.001f)] public float barGain = 18f;
 
+        /// <summary>How the window looks (build 17, 5.5c): the plain look of 22 Oct, or one of two livelier ones.</summary>
+        public enum Look : byte { Classic, BeatColours, FactionGlow }
+
+        [Header("The window's look (build 17, 5.5c)")]
+        [Tooltip("Classic: the first look (flat bars). Beat Colours: bars go cyan > amber > red with their level, like the " +
+                 "pet's Beat Ring, with falling peak caps and a beat pulse. Faction Glow: bars keep the faction's colour and " +
+                 "light up with their level, with the same caps and pulse.")]
+        public Look look = Look.BeatColours;
+        [Tooltip("Beat Colours: a quiet, a middling and a loud bar (the Beat Ring's low / mid / high).")]
+        public Color lowColour = new Color(0.25f, 0.85f, 1f);
+        public Color midColour = new Color(1f, 0.72f, 0.18f);
+        public Color highColour = new Color(1f, 0.22f, 0.16f);
+        [Tooltip("Faction Glow: how dim a silent bar is (1 = as bright as a loud one).")]
+        [Range(0f, 1f)] public float glowFloor = 0.4f;
+        [Tooltip("How fast a peak cap falls back, in bar heights per second.")]
+        [Min(0.05f)] public float peakFallPerSecond = 0.5f;
+        [Tooltip("The beat pulse on the cover square and the play button: how much bigger on the beat, and how fast it fades " +
+                 "(from the track's own BPM and first beat).")]
+        [Range(0f, 0.3f)] public float beatPulseScale = 0.08f;
+        [Min(0.5f)] public float beatPulseSharpness = 7f;
+
         [Header("Opening the Deck: the motion each faction makes (emote keys: S/E + group + name)")]
         [Tooltip("Hegemony: a real phone, out of the back pocket.")]
         public string hegemonyEmote = "S/Use Phone/One Hand";

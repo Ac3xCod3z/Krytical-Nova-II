@@ -129,5 +129,76 @@ namespace KryticalNova.Tests
             queue.Advance(Show + Fade, Show, Fade);
             Assert.AreEqual("b", queue.Current.Text);
         }
+
+        [Test]
+        public void ACrossfireLine_TakesThePlaceOfTheOneShowing_SoTheCountdownKeepsTime()
+        {
+            var queue = new ToastQueue();
+            var ten = new Toast { Kind = AnnouncementKind.Crossfire, Text = "10" };
+            var nine = new Toast { Kind = AnnouncementKind.Crossfire, Text = "9" };
+            queue.Enqueue(ten, 4);
+            queue.Advance(0f, Show, Fade);
+            queue.Enqueue(Of("gm news"), 4);
+            Assert.IsTrue(queue.Supersede(AnnouncementKind.Crossfire, 1f), "the 10 on screen ends at once");
+            queue.Enqueue(nine, 4);
+            Assert.IsTrue(queue.Advance(1f, Show, Fade));
+            Assert.AreEqual("gm news", queue.Current.Text, "other news keeps its place in line");
+            Assert.AreEqual(1, queue.Waiting, "the 9 waits behind the GM line");
+            // the 8 arrives while the GM line is still up: the 9 gives way to it, the GM line stays
+            Assert.IsFalse(queue.Supersede(AnnouncementKind.Crossfire, 1.5f), "a GM line on screen is never cut");
+            Assert.AreEqual(0, queue.Waiting, "the older Crossfire line waiting gives way");
+            queue.Enqueue(new Toast { Kind = AnnouncementKind.Crossfire, Text = "8" }, 4);
+            Assert.AreEqual(1, queue.Waiting, "only the newest Crossfire line waits");
+            Assert.AreEqual("gm news", queue.Current.Text);
+        }
+
+        /// <summary>Owner, 13 Nov 2026: run in from the side, each second of the countdown was gone before it could be read.</summary>
+        [Test]
+        public void TheLastSeconds_StandInPlace_EachTakingThePlaceOfTheOneBefore()
+        {
+            var queue = new ToastQueue();
+            var ten = new Toast { Kind = AnnouncementKind.CrossfireCount, Text = "10" };
+            var nine = new Toast { Kind = AnnouncementKind.CrossfireCount, Text = "9" };
+            Assert.IsFalse(queue.Replace(ten, 0f), "nothing on screen: the first one comes up the usual way");
+            queue.Enqueue(ten, 4);
+            Assert.IsTrue(queue.Advance(0f, 1.5f, Fade));
+            Assert.IsTrue(queue.Replace(nine, 1f), "the 9 takes the 10's place");
+            Assert.IsTrue(queue.Showing, "the bar never went away");
+            Assert.AreEqual("9", queue.Current.Text);
+            Assert.AreEqual(0, queue.Waiting, "nothing waits behind it");
+            Assert.IsFalse(queue.Advance(2.4f, 1.5f, Fade), "its time started anew: still up 1.4 s after it came");
+            Assert.IsTrue(queue.Advance(2.5f, 1.5f, Fade), "and it goes when its own time is over");
+            Assert.IsFalse(queue.Showing);
+
+            queue.Enqueue(Of("gm news"), 4);
+            queue.Advance(10f, Show, Fade);
+            Assert.IsFalse(queue.Replace(nine, 10.5f), "a line of another kind on screen is never replaced");
+            Assert.AreEqual("gm news", queue.Current.Text);
+        }
+
+        [Test]
+        public void DropWaiting_TakesOnlyThatKindOutOfTheLine()
+        {
+            var queue = new ToastQueue();
+            queue.Enqueue(Of("on screen"), 4);
+            queue.Advance(0f, Show, Fade);
+            queue.Enqueue(new Toast { Kind = AnnouncementKind.CrossfireCount, Text = "7" }, 4);
+            queue.Enqueue(Of("gm news"), 4);
+            queue.DropWaiting(AnnouncementKind.CrossfireCount);
+            Assert.AreEqual(1, queue.Waiting);
+            Assert.IsTrue(queue.Showing, "what is on screen stays");
+            Assert.AreEqual("on screen", queue.Current.Text);
+        }
+
+        [Test]
+        public void AStandingLine_IsInTheMiddleOfTheBand_AndOnlyTheCountdownStands()
+        {
+            Assert.IsTrue(TickerRules.Stands(AnnouncementKind.CrossfireCount));
+            Assert.IsFalse(TickerRules.Stands(AnnouncementKind.Crossfire), "the minute calls still run across");
+            Assert.IsFalse(TickerRules.Stands(AnnouncementKind.Gm));
+            Assert.AreEqual(200f, TickerRules.StandLeft(600f, 200f), 1e-4f);
+            Assert.AreEqual(0f, TickerRules.StandLeft(600f, 900f), 1e-4f, "a line wider than the band starts at its left edge");
+            StringAssert.Contains("CROSSFIRE", ToastHudController.Line(new Toast { Kind = AnnouncementKind.CrossfireCount, Text = "x" }));
+        }
     }
 }

@@ -809,6 +809,37 @@ namespace KryticalNova.EditorTools.GM
         [ButtonGroup(Tabs + "/" + WorldTab + "/Presets"), EnableIf(nameof(HasWorld)), PropertyOrder(404)]
         private void Midnight() => Run("time.midnight");
 
+        // ---------------------------------------------------------------- Crossfire, the hourly war (owner's DAY list item 17)
+
+        private static bool HasCrossfire => KryticalNova.Crossfire.CrossfireView.HasServer;
+
+        [TabGroup(Tabs, WorldTab), Title("Crossfire"), ShowInInspector, DisplayAsString, HideLabel, PropertyOrder(420)]
+        private static string CrossfireStatus
+        {
+            get
+            {
+                KryticalNova.Crossfire.CrossfireState s = KryticalNova.Crossfire.CrossfireView.Server;
+                if (!HasCrossfire || !s.Known) return "Not running (no server here, or no Crossfire settings).";
+                double left = s.Now.PhaseEnd - KryticalNova.Core.NetClock.Now;
+                return double.IsInfinity(left) ? KryticalNova.Crossfire.CrossfireSettings.PhaseName(s.Now.Phase) : $"{KryticalNova.Crossfire.CrossfireSettings.PhaseName(s.Now.Phase)}: {FormatSeconds(left)} left";
+            }
+        }
+
+        private static string FormatSeconds(double seconds)
+        {
+            int t = Mathf.Max(0, Mathf.CeilToInt((float)seconds));
+            return $"{t / 60}:{t % 60:00}";
+        }
+
+        [ButtonGroup(Tabs + "/" + WorldTab + "/Crossfire"), EnableIf(nameof(HasCrossfire)), PropertyOrder(421), LabelText("Start Now")]
+        private void CrossfireStart() => Run("gm.crossfire start");
+
+        [ButtonGroup(Tabs + "/" + WorldTab + "/Crossfire"), EnableIf(nameof(HasCrossfire)), PropertyOrder(422), LabelText("Skip Phase")]
+        private void CrossfireSkip() => Run("gm.crossfire skip");
+
+        [ButtonGroup(Tabs + "/" + WorldTab + "/Crossfire"), EnableIf(nameof(HasCrossfire)), PropertyOrder(423), LabelText("End")]
+        private void CrossfireEnd() => Run("gm.crossfire end");
+
         [TabGroup(Tabs, WorldTab), ShowInInspector, ToggleLeft, EnableIf(nameof(HasWorld)), LabelText("Pause Clock"), PropertyOrder(405)]
         private bool TimePaused
         {

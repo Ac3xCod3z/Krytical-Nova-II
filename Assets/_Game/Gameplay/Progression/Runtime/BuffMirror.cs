@@ -13,6 +13,8 @@ namespace KryticalNova.Progression
         public float Remaining;
         public bool FromSquad;
         public string Giver;
+        /// <summary>Build 17 item 9.2: what is left of an absorption shield (Aegis), whole HP; -1 for a buff that is no shield.</summary>
+        public int Shield;
     }
 
     /// <summary>
@@ -42,7 +44,7 @@ namespace KryticalNova.Progression
                 into.Add(new RunningBuffEntry
                 {
                     SkillId = buff.Skill.skillId, Rank = buff.Rank, Remaining = buff.RemainingDuration,
-                    FromSquad = buff.FromSquadmate, Giver = buff.Giver ?? string.Empty,
+                    FromSquad = buff.FromSquadmate, Giver = buff.Giver ?? string.Empty, Shield = ShieldOf(buff),
                 });
             }
         }
@@ -76,13 +78,29 @@ namespace KryticalNova.Progression
                 if (have != null && have.Rank == entry.Rank && have.FromSquadmate == entry.FromSquad)
                 {
                     if (Mathf.Abs(have.RemainingDuration - entry.Remaining) > DriftSeconds) { have.RemainingDuration = entry.Remaining; changed = true; }
+                    changed |= SetShield(have, entry.Shield);
                     continue;
                 }
                 // a shared Stance never takes a lower rank by being given again: the server's rank is set by dropping the copy first
                 if (have != null) copy.RemoveBuff(entry.SkillId);
                 changed |= copy.ApplyBuff(skill, entry.Rank, entry.Remaining, entry.FromSquad, entry.FromSquad ? entry.Giver : null);
+                changed |= SetShield(copy.GetBuff(entry.SkillId), entry.Shield);
             }
             return changed;
+        }
+
+        /// <summary>Server: the shield left on a buff in whole HP (rounded up, so a sliver still shows), -1 for a buff that is no shield.</summary>
+        public static int ShieldOf(ActiveBuff buff) =>
+            buff?.Skill != null && buff.Skill.isAbsorptionShield ? Mathf.Max(0, Mathf.CeilToInt(buff.CurrentShieldCapacity)) : -1;
+
+        /// <summary>A view: its shield shows what the server has left (the HUD number falls hit by hit). True when it changed.</summary>
+        public static bool SetShield(ActiveBuff buff, int shield)
+        {
+            if (buff?.Skill == null || !buff.Skill.isAbsorptionShield || shield < 0) return false;
+            float value = shield;
+            if (Mathf.Approximately(buff.CurrentShieldCapacity, value)) return false;
+            buff.CurrentShieldCapacity = value;
+            return true;
         }
     }
 }

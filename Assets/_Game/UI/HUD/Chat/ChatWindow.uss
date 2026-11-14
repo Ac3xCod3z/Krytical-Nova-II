@@ -100,6 +100,10 @@
 .chat-line--gm { color: rgb(255, 184, 60); }
 .chat-line--system { color: rgb(244, 244, 150); }
 .chat-line--combat { color: rgb(255, 162, 132); }
+/* Build 17, item 4.2 (owner, 13 Nov 2026): your own hits stand out (bright and bold), hits on you in a deeper red. Both are
+   light on the dark chat panel, so they read on all three faction skins (none of them recolours combat lines). */
+.chat-line--combat-out { color: rgb(255, 236, 160); -unity-font-style: bold; }
+.chat-line--combat-in { color: rgb(255, 128, 112); }
 
 /* A line with items linked in it (owner, 22 Oct 2026): a row of words that wraps like text, each item a word of its own
    in its rarity's colour (set in code), with its card on hover and the piece on a doll on a right-click. */

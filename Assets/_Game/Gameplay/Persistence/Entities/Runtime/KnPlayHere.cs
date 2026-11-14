@@ -140,6 +140,9 @@ namespace KryticalNova.Persistence.Entities
         /// <summary>Set by Tooling (KnTwoPlayerProbe); null = no probe.</summary>
         public static Func<TwoPlayerRun, IEnumerator> TwoPlayerProbe;
 
+        /// <summary>Set by a Tooling probe for one-client media captures (build 17: the owner's GIFs); run after the scripted parts. Null = none.</summary>
+        public static Func<TwoPlayerRun, IEnumerator> MediaProbe;
+
         static bool Scripted => !string.IsNullOrEmpty(Environment.GetEnvironmentVariable(WalkVariable))
             || !string.IsNullOrEmpty(Environment.GetEnvironmentVariable(JumpVariable))
             || !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("KN_PLAYHERE_VAULT"))    // the scripted vaults (M3c)
@@ -154,6 +157,7 @@ namespace KryticalNova.Persistence.Entities
             || Environment.GetEnvironmentVariable("KN_PLAYHERE_ACROSS") == "1"                  // across the water when quicker (item 4)
             || Environment.GetEnvironmentVariable("KN_PLAYHERE_ITEMS") == "1"                   // items used by the server (item 5)
             || Environment.GetEnvironmentVariable("KN_PLAYHERE_MOUNT") == "1"                   // the mount and rider proof (8 Nov)
+            || Environment.GetEnvironmentVariable("KN_PLAYHERE_MOUNTVAULT") == "1"              // the mounted vault, both mounts (day list 15.2)
             || Environment.GetEnvironmentVariable("KN_PLAYHERE_ROOFS") == "1"                   // roof to roof (item 8)
             || KnCombatProbe.On                                                                 // the cutover's combat proof (12 Nov)
             || Environment.GetEnvironmentVariable(TwoPlayersVariable) == "1"                    // Trade, vendors, GM target with Player2 (12 Nov)
@@ -1582,6 +1586,8 @@ namespace KryticalNova.Persistence.Entities
                 if (AcrossRun) yield return Acrosses(body, ghost, waters);
                 if (ItemsRun) yield return Items(body, ghost, walls);
                 if (MountRun) yield return Mounts(body, ghost, walls);
+                if (MountVaultRun) yield return MountVaults(body, ghost, walls);
+                if (MediaProbe != null) yield return MediaProbe(new TwoPlayerRun { Own = OwnBody, Body = body, Log = Log });
                 if (RoofsRun) yield return RoofJumps(body, ghost, walls);
                 if (TwoPlayersOn)
                 {
@@ -1663,7 +1669,7 @@ namespace KryticalNova.Persistence.Entities
                 }
             }
 
-            bool HasScriptedTries => !string.IsNullOrEmpty(Walk) || !string.IsNullOrEmpty(Jump) || VaultCount > 0 || WaterRun || WallRun || ClimbRun || TreeRun || CatchRun || AutoRun || LedgeRun || FixesRun || AcrossRun || ItemsRun || MountRun || RoofsRun || KnCombatProbe.On || TwoPlayersOn || KnCadenceProbe.On;
+            bool HasScriptedTries => !string.IsNullOrEmpty(Walk) || !string.IsNullOrEmpty(Jump) || VaultCount > 0 || WaterRun || WallRun || ClimbRun || TreeRun || CatchRun || AutoRun || LedgeRun || FixesRun || AcrossRun || ItemsRun || MountRun || MountVaultRun || RoofsRun || KnCombatProbe.On || TwoPlayersOn || KnCadenceProbe.On;
 
             /// <summary>Which scripted parts are on, for the log's first lines (a part that should run and is not listed shows at once).</summary>
             string ScriptedParts()
@@ -1683,6 +1689,7 @@ namespace KryticalNova.Persistence.Entities
                 if (AcrossRun) on.Add("across the water when quicker");
                 if (ItemsRun) on.Add("items used by the server");
                 if (MountRun) on.Add("mount and rider");
+                if (MountVaultRun) on.Add("the mounted vault");
                 if (KnCombatProbe.On) on.Add("combat to a kill");
                 if (TwoPlayersOn) on.Add("two players: Trade, vendors, GM target");
                 if (RoofsRun) on.Add("roof to roof");
@@ -1706,15 +1713,17 @@ namespace KryticalNova.Persistence.Entities
             /// Lines up a vault over the <paramref name="index"/>-th nearest spawn planter: walks to 3.5 m in front of it (from where the
             /// body stands), then checks with the server's own planners that a click 6 m past it vaults.
             /// </summary>
-            IEnumerator ApproachPlanter(Entity ghost, int index, PlanterApproach result, bool shortClick = false)
+            IEnumerator ApproachPlanter(Entity ghost, int index, PlanterApproach result, bool shortClick = false, Vector3? sortFrom = null)
             {
                 World server = KnBootstrap.ServerWorld;
                 var plans = server.GetExistingSystemManaged<PlayerServerPlanSystem>();
                 Vector3 from = ServerPosition(ghost);
+                // the planters are counted from here (the mounted vault: from the spawn, so an index names the same planter every time)
+                Vector3 order = sortFrom ?? from;
                 var hedges = new List<Transform>();
                 foreach (Transform t in UnityEngine.Object.FindObjectsByType<Transform>(FindObjectsSortMode.None))
                     if (t.name.StartsWith("SM_Env_Hedge", StringComparison.Ordinal)) hedges.Add(t);
-                hedges.Sort((a, b) => Flat(a.position - from).CompareTo(Flat(b.position - from)));
+                hedges.Sort((a, b) => Flat(a.position - order).CompareTo(Flat(b.position - order)));
                 if (index >= hedges.Count) { result.Why = "no planter left"; yield break; }
                 Vector3 middle = hedges[index].GetComponentInChildren<Renderer>() is Renderer r ? r.bounds.center : hedges[index].position;
                 Vector3 way = middle - from;
@@ -2782,6 +2791,101 @@ namespace KryticalNova.Persistence.Entities
                 yield return new WaitForSeconds(3.5f); Log("mount: running dismount ended: " + Shown());
                 if (runUp && runOff && mounts.ShownPhase == 0) tally.Passed++;
                 Log($"mount: standing {(seated && off1 ? "PASS" : "FAIL")}, running up {(runUp ? "PASS" : "FAIL")}, running off {(runOff ? "PASS" : "FAIL")}");
+            }
+
+            /// <summary>The mounted vault (env KN_PLAYHERE_MOUNTVAULT=1; day list 15.2, owner 13 Nov 2026): one client only.</summary>
+            static bool MountVaultRun => Environment.GetEnvironmentVariable("KN_PLAYHERE_MOUNTVAULT") == "1";
+
+            /// <summary>
+            /// For each built mount (Brambleback box 1, Circuit Strider box 4): learned, selected, ridden, then a vault over the spawn
+            /// planter (the spot VaultSpawnPlanterTests proves in edit mode). Pass: the server planned the vault, the server phase stayed
+            /// Riding (2) on every frame of it, the own view showed the mounted vault ([KnMount] vault ride began / ended landed=True
+            /// inSaddle=True mountShown=True: the re-formed mount drawn under the rider) and the rider is still Riding after the landing.
+            /// </summary>
+            IEnumerator MountVaults(GameObject body, Entity ghost, VaultTally tally)
+            {
+                var inventory = body.GetComponent<PlayerInventory>();
+                var own = OwnBody != null ? OwnBody.GetComponent<PlayerInventory>() : null;
+                World server = KnBootstrap.ServerWorld;
+                var plans = server.GetExistingSystemManaged<PlayerServerPlanSystem>();
+                if (!body.TryGetComponent(out IBodyMounts mounts) || inventory == null || own == null || !(GmRoster.Host is ulong host)
+                    || PlayerGm.CommandRunner == null || plans == null)
+                { tally.Tried++; Log("mount vault: FAIL; no mounts, Pack, GM commands or planner"); yield break; }
+                OwnBody.TryGetComponent(out IBodyMounts ownMounts);
+                var state = OwnBody.GetComponent<PlayerPresentationState>();
+                int began = 0, landedInSaddle = 0;
+                Application.LogCallback hear = (line, _, _) =>
+                {
+                    if (!line.StartsWith("[KnMount]", StringComparison.Ordinal)) return;
+                    if (line.Contains("vault ride began")) began++;
+                    // the owner, 13 Nov 2026: the mount must be seen re-formed under the rider, not only the rider in the seat
+                    if (line.Contains("vault ride ended landed=True inSaddle=True mountShown=True")) landedInSaddle++;
+                };
+                Application.logMessageReceived += hear;
+                try
+                {
+                    // the spot first, on foot (the instrument before the mount): the 4 planters nearest the spawn, as VaultSpawnPlanterTests
+                    // counts them, each asked of the server's own planner from its approach; the first that vaults is the mounted spot
+                    Vector3 spawn = ServerPosition(ghost);
+                    int spot = -1;
+                    for (int i = 0; i < 4 && spot < 0; i++)
+                    {
+                        var control = new PlanterApproach();
+                        yield return ApproachPlanter(ghost, i, control, sortFrom: spawn);
+                        Log($"mount vault spot {i + 1} (on foot): {(control.Ready ? "the planner vaults" : "refused")}; {control.Why}; body at {ServerPosition(ghost)}");
+                        if (control.Ready) spot = i;
+                    }
+                    if (spot < 0) { tally.Tried++; Log("mount vault: FAIL; none of the 4 spawn planters vaults on foot from its approach"); yield break; }
+                    foreach (int box in new[] { 1, 4 })
+                    {
+                        tally.Tried++;
+                        var before = new HashSet<ushort>();
+                        for (int i = 0; i < PlayerInventory.Capacity; i++) before.Add(inventory.Get(i).itemId);
+                        Log($"mount vault {box}: 'gm.mount.give {box}' -> " + PlayerGm.CommandRunner(host, "gm.mount.give " + box));
+                        ushort item = 0;
+                        for (int i = 0; i < PlayerInventory.Capacity; i++) if (!before.Contains(inventory.Get(i).itemId)) item = inventory.Get(i).itemId;
+                        yield return new WaitForSeconds(1.2f);
+                        if (item != 0) own.UseItem(item);
+                        yield return new WaitForSeconds(1.5f);
+                        mounts.RunMountOp(MountOpKind.Select, box);
+                        yield return new WaitForSeconds(1f);
+                        if (mounts.ShownPhase == 0) mounts.RunMountOp(MountOpKind.Ride, 0);
+                        yield return new WaitForSeconds(3f);
+                        if (mounts.ShownPhase != 2) { Log($"mount vault {box}: FAIL; not riding (server phase {mounts.ShownPhase})"); continue; }
+
+                        var approach = new PlanterApproach();
+                        yield return ApproachPlanter(ghost, spot, approach, sortFrom: spawn);
+                        if (!approach.Ready) { Log($"mount vault {box}: FAIL; {approach.Why}; body at {ServerPosition(ghost)}"); mounts.RunMountOp(MountOpKind.Ride, 0); yield return new WaitForSeconds(3.5f); continue; }
+                        int vaults0 = plans.Vaults, began0 = began, landed0 = landedInSaddle;
+                        int frame0 = Time.frameCount;
+                        string at = DateTime.Now.ToString("HH:mm:ss.fff", CultureInfo.InvariantCulture);
+                        BodyClicks.Ground(approach.Goal, false);
+                        float clicked = Time.realtimeSinceStartup;
+                        bool wasInVault = false, offInVault = false, moving = false;
+                        while (Time.realtimeSinceStartup - clicked < 12f)
+                        {
+                            yield return null;
+                            bool inVault = state != null && state.InVault;
+                            wasInVault |= inVault;
+                            if (PlayerServerPlanSystem.InVault(server.EntityManager, ghost) && mounts.ShownPhase != 2) offInVault = true;
+                            bool now = Moving(ghost);
+                            if (now) moving = true;
+                            else if (moving && wasInVault && !inVault) break;
+                        }
+                        yield return new WaitForSeconds(1f);
+                        bool planned = plans.Vaults > vaults0;
+                        bool stillRiding = mounts.ShownPhase == 2 && (ownMounts == null || ownMounts.ShownPhase == 2);
+                        bool shown = began > began0 && landedInSaddle > landed0;
+                        bool ok = planned && wasInVault && !offInVault && stillRiding && shown;
+                        if (ok) tally.Passed++;
+                        Log($"mount vault {box} clicked at {at}: {(ok ? "PASS" : "FAIL")}; {approach.Why}; server {(planned ? "planned the vault" : "planned NO vault")}; " +
+                            $"own view {(wasInVault ? "vaulted" : "never vaulted")}; server phase {(offInVault ? "LEFT Riding in the vault" : "Riding throughout")}; " +
+                            $"after the landing server {mounts.ShownPhase} own view {ownMounts?.ShownPhase}; mounted vault shown {began - began0}x, landed in the saddle {landedInSaddle - landed0}x; frames {frame0}-{Time.frameCount}");
+                        mounts.RunMountOp(MountOpKind.Ride, 0);   // off for the next mount
+                        yield return new WaitForSeconds(3.5f);
+                    }
+                }
+                finally { Application.logMessageReceived -= hear; }
             }
 
             /// <summary>The owner's feel-test fixes 1-3 (env KN_PLAYHERE_FIXES=1; `m3c-wallstride-design.md` section 9).</summary>

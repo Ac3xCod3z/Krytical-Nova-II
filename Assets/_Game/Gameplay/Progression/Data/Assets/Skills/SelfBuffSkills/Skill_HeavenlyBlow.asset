@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::KryticalNova.Progression.SkillDefinitionSO
   skillId: HeavenlyBlow
   displayName: Killer Instinct
-  description: Sharpens your eye for the fatal opening, raising your Critical chance by 12% - 75%.
+  description: Sharpens your eye for the fatal opening, adding 2% - 25% to your Critical chance.
   category: 1
   weaponClass: 0
   classSlot: 0
@@ -46,8 +46,8 @@ MonoBehaviour:
   minShieldPercent: 111
   maxShieldPercent: 150
   hasDeadlyBlowBoost: 1
-  minDeadlyBlowPercent: 12
-  maxDeadlyBlowPercent: 75
+  minDeadlyBlowPercent: 2
+  maxDeadlyBlowPercent: 25
   hasLuckBoost: 0
   minLuckPercent: 13
   maxLuckPercent: 100
