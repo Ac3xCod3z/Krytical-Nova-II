@@ -143,6 +143,19 @@ namespace KryticalNova.World
         [Tooltip("Real seconds a flock takes to cross.")]
         [Range(20f, 600f)] public float migrationSeconds = 150f;
 
+        [Header("World Effects (Settings, Graphics): Low keeps the sky simpler, High is the authored look")]
+        [Tooltip("Most shooting stars drawn at once at World Effects Low, Medium, High, Ultra (the shader has 4 slots).")]
+        public int[] streaksByWorldEffects = { 2, 3, 4, 4 };
+        [Tooltip("Whether the aurora shows at World Effects Low (the performance plan: off on Low).")]
+        public bool auroraOnLow = false;
+
+        /// <summary>Shooting stars drawn at once for a World Effects tier (0 Low .. 3 Ultra).</summary>
+        public int StreaksFor(int tier)
+        {
+            if (streaksByWorldEffects == null || streaksByWorldEffects.Length == 0) return 4;
+            return Mathf.Clamp(streaksByWorldEffects[Mathf.Clamp(tier, 0, streaksByWorldEffects.Length - 1)], 0, 4);
+        }
+
         [Header("GM force")]
         [Tooltip("Real seconds a GM-forced event (sky.comet, sky.shower...) lasts.")]
         [Range(10f, 1800f)] public float forcedSeconds = 180f;

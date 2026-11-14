@@ -8,6 +8,7 @@ using KryticalNova.Networking;
 using KryticalNova.Player;
 using KryticalNova.Progression;
 using KryticalNova.UI;
+using KryticalNova.World;
 using MoreMountains.Feedbacks;
 using MoreMountains.FeedbacksForThirdParty;
 using UnityEngine;
@@ -182,6 +183,12 @@ namespace KryticalNova.GameFeel
 
         [Header("Hit looks: shape and word by weapon class, colour by kind of hit")]
         [SerializeField] private HitLookSettings looks;
+        [Tooltip("How swings, area skills and big hits move the grass (day list item 20). Empty: the numbers the settings are made with.")]
+        [SerializeField] private FoliagePushSettings foliagePushes;
+        private FoliagePushSettings madeFoliagePushes;
+        // An area attack skill's ring takes the place of the arc its cast also swings, so one cast takes one slot.
+        private Transform ringCaster;
+        private int ringFrame = -1;
         [Tooltip("Seconds between looks for characters that have no hit reactor, effects and blade trail yet: they are given them ahead, so a first hit creates nothing.")]
         [Min(0.5f)] [SerializeField] private float prepareActorsEvery = 2f;
 
@@ -282,6 +289,12 @@ namespace KryticalNova.GameFeel
             PvpCritOverride = null;
             ClientPresentationRegistry.RegisterFeel(this);
             ActorVfx.WaterStep += OnWaterStep;
+            if (foliagePushes == null && madeFoliagePushes == null)
+            {
+                madeFoliagePushes = ScriptableObject.CreateInstance<FoliagePushSettings>();
+                madeFoliagePushes.hideFlags = HideFlags.HideAndDontSave;
+            }
+            FoliagePushes.Settings = foliagePushes != null ? foliagePushes : madeFoliagePushes;
             cameraPlayers = new[] { swingFeel, hitFeel, heavyHitFeel, damagedFeel, clickFeel, selectFeel, runFeel, jumpFeel, landFeel,
                 attackCastFeel, buffCastFeel, chargeFeel, deathFeel, critDeathFeel, killConfirmFeel, bodyLandFeel, respawnFeel, petEvolveFeel,
                 forgeSuccessFeel, forgeFailFeel, forgeBreakFeel, forgeHeldFeel,
@@ -427,6 +440,7 @@ namespace KryticalNova.GameFeel
             if (Instance == this) Instance = null;
             ClientPresentationRegistry.UnregisterFeel(this);
             ActorVfx.WaterStep -= OnWaterStep;
+            if (FoliagePushes.Settings == foliagePushes || FoliagePushes.Settings == madeFoliagePushes) FoliagePushes.Settings = null;
             HudPreferences.Changed -= ApplyScreenShakePreference;
             foreach (var kv in frozen)
                 if (kv.Key != null) kv.Key.Graph.Speed = 1f;
@@ -444,6 +458,10 @@ namespace KryticalNova.GameFeel
             ActorVfx.For(attacker).Trail(bladeTrail, seconds, swing);
             // Every swing whooshes; the finisher also leans the camera in.
             if (isLocalPlayer) Play(swingFeel, attacker.position, comboStep == 3 ? 1f : 0.45f);
+            // The grass in front of a player's swing is thrown aside (a Hostile's view adds its own, sized by its body).
+            if (IsPlayer(attacker) && !(attacker == ringCaster && Time.frameCount == ringFrame))
+                FoliagePushes.Add(comboStep >= 3 ? FoliagePushKind.Finisher : FoliagePushKind.Arc, ActorAnchor.Feet(attacker), attacker.forward,
+                    sweep: comboStep == 1 ? 1 : comboStep == 2 ? -1 : 0, local: isLocalPlayer);
         }
 
         public void Missed(Transform attacker, Vector3 point, bool skill, bool isLocalPlayer)
@@ -468,6 +486,9 @@ namespace KryticalNova.GameFeel
             // The local player's own fight always shows; anyone else's sparks come from the ready pool or not at all.
             bool othersFight = !hit.AttackerIsLocalPlayer && !hit.TargetIsLocalPlayer;
             PlayWorld(heavy ? heavyHitWorldFeel : hitWorldFeel, hit.Point, facing, hit.Target, onlyIfReady: othersFight);
+            // A big hit (a critical, a finisher, a Shatterpoint) sends a wave through the grass from where it landed.
+            if (heavy || hit.ShieldShattered)
+                FoliagePushes.Add(FoliagePushKind.Wave, hit.Point, -hit.TowardAttacker, local: hit.AttackerIsLocalPlayer || hit.TargetIsLocalPlayer);
             if (hit.IsCritical && !pvpCrit) PlayWorld(critWorldFeel, hit.Point, facing, hit.Target, onlyIfReady: othersFight);
             bool shownPvpCrit = ShowHitLook(hit, kind, heavy, pvpCrit);
 
@@ -960,7 +981,19 @@ namespace KryticalNova.GameFeel
             MMF_Player world = feel != null && feel.cast != null ? feel.cast : isAttack ? attackCastWorldFeel : buffCastWorldFeel;
             Vector3 feet = ActorAnchor.Feet(caster);
             PlayWorld(world, feet, Facing(caster), caster);
-            if (areaRadius > 0f) SpawnAreaRing(feet, caster, areaRadius, areaSeconds);
+            if (areaRadius > 0f)
+            {
+                SpawnAreaRing(feet, caster, areaRadius, areaSeconds);
+                // The ring runs out through the grass as the blow lands, in place of the arc the cast also swings.
+                FoliagePushSettings settings = FoliagePushes.Settings;
+                float reach = settings != null ? areaRadius / Mathf.Max(0.1f, settings.ring.radius) : 1f;
+                if (isAttack && FoliagePushes.Add(FoliagePushKind.Ring, feet, Facing(caster) * Vector3.forward, reach, local: isLocalPlayer,
+                        delaySeconds: areaSeconds))
+                {
+                    ringCaster = caster;
+                    ringFrame = Time.frameCount;
+                }
+            }
             if (isLocalPlayer) Play(isAttack ? attackCastFeel : buffCastFeel, caster.position, 1f);
         }
 

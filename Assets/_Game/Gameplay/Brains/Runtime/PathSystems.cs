@@ -55,6 +55,11 @@ namespace KryticalNova.Brains
 
         public void OnUpdate(ref SystemState state)
         {
+            // This system reads places and writes paths on the main thread through lookups, and a lookup (unlike a query's foreach)
+            // waits for nobody: every job of a mind that writes what is read here must be done first (the townsfolk's think job
+            // puts far bodies at their next place; 14 Nov 2026: 2,095 job-safety errors in one run without this). The jobs' handles
+            // are already this system's dependency (the lookups register the types): this only waits for them.
+            state.CompleteDependency();
             BrainConfig c = SystemAPI.GetSingleton<BrainConfig>();
             uint now = SystemAPI.GetSingleton<BrainTick>().Tick;
             var queued = new NativeList<Request>(64, Allocator.Temp);
@@ -148,18 +153,44 @@ namespace KryticalNova.Brains
             m_World = NavWorld.GetDefaultWorld();
         }
 
-        /// <summary>The NavMesh's raycast: blocked when the mesh ends between the two points (a start off the mesh is not blocked).</summary>
-        static bool NavBlocked(NavWorld world, in PathBackend backend, float3 from, float3 to)
+        /// <summary>
+        /// The NavMesh's raycast from a brain's place on the mesh: blocked when the mesh ends between the two points. Only a raycast that
+        /// succeeded may say "clear": a start off the mesh, or a raycast that could not finish, counts as blocked, so the brain asks for a
+        /// path instead of walking straight through whatever is there (14 Nov 2026: Sky Concord's walk heatmap showed straight trails
+        /// across planters and off the deck edge from brains standing just off the mesh, which this used to call "not blocked").
+        /// </summary>
+        public static bool NavBlocked(NavWorld world, NavLocation start, float3 to)
         {
-            NavLocation start = world.MapLocation(from, backend.Extents, backend.AgentTypeId);
-            if (!world.IsValid(start)) return false;
-            world.Raycast(out NavMeshHit hit, start, to);
+            if (!world.IsValid(start)) return true;
+            NavQueryStatus status = world.Raycast(out NavMeshHit hit, start, to);
+            if ((status & NavQueryStatus.Success) == 0) return true;
             return hit.hit;
+        }
+
+        /// <summary>
+        /// Where a brain that moved from <paramref name="from"/> (its place on the mesh before the move, or an invalid location when it
+        /// stood off the mesh) toward <paramref name="wanted"/> really ends up on the NavMesh: slid along the mesh's surface, never across
+        /// a hole or past an edge (the crowd's separation push included), at the mesh's height. Off the mesh before the move, it lands
+        /// on the mesh when <paramref name="wanted"/> is within the mapping box, else where it wanted to be (it is walking back on).
+        /// </summary>
+        public static float3 KeepOnMesh(NavWorld world, in PathBackend backend, NavLocation from, float3 wanted)
+        {
+            float3 there = wanted;
+            if (world.IsValid(from))
+            {
+                NavLocation slid = world.MoveLocation(from, wanted);
+                if (world.IsValid(slid)) there = slid.position;
+                else there = from.position;
+            }
+            NavLocation ground = world.MapLocation(there, backend.Extents, backend.AgentTypeId);
+            if (world.IsValid(ground)) return ground.position;
+            return there;
         }
 
         [BurstCompile]
         public void OnUpdate(ref SystemState state)
         {
+            state.CompleteDependency();   // main-thread reads through lookups (see PathServiceSystem)
             BrainConfig c = SystemAPI.GetSingleton<BrainConfig>();
             SenseWorld sense = SystemAPI.GetSingleton<SenseWorld>();
             uint now = SystemAPI.GetSingleton<BrainTick>().Tick;
@@ -174,6 +205,7 @@ namespace KryticalNova.Brains
             // job later (perf phase): an IJobEntity writing the new places, then a second job applying them
             var moved = new NativeList<Entity>(64, Allocator.Temp);
             var places = new NativeList<LocalTransform>(64, Allocator.Temp);
+            var froms = new NativeList<NavLocation>(64, Allocator.Temp);
             foreach (var (mover, path, waypoints, transform, clock, entity) in SystemAPI
                          .Query<RefRO<BrainMover>, RefRW<BrainPath>, DynamicBuffer<BrainWaypoint>, RefRO<LocalTransform>, RefRO<BrainClock>>()
                          .WithAll<BrainTag, BrainActive>().WithEntityAccess())
@@ -184,10 +216,19 @@ namespace KryticalNova.Brains
                 bool engaged = now < clock.ValueRO.EngagedUntilTick;
                 ref BrainPath p = ref path.ValueRW;
 
+                // where it stands on the mesh (invalid: off it), for the raycast and for keeping the move on the mesh
+                NavLocation here = onNavMesh ? m_World.MapLocation(at, backend.Extents, backend.AgentTypeId) : default;
+                bool offMesh = onNavMesh && !m_World.IsValid(here);
                 float3 steer = at;
-                if ((m.Flags & BrainMoverFlags.Stop) == 0)
+                if ((m.Flags & BrainMoverFlags.Stop) == 0 && offMesh)
                 {
-                    bool blocked = onNavMesh ? NavBlocked(m_World, backend, at, m.Dest) : PathRules.StraightBlocked(at, m.Dest, walls);
+                    // off the mesh: back onto its nearest point first; its walk (and any path) waits until it stands on the mesh again
+                    NavLocation back = m_World.MapLocation(at, new float3(c.OffMeshRecover, backend.Extents.y, c.OffMeshRecover), backend.AgentTypeId);
+                    if (m_World.IsValid(back)) steer = back.position;
+                }
+                else if ((m.Flags & BrainMoverFlags.Stop) == 0)
+                {
+                    bool blocked = onNavMesh ? NavBlocked(m_World, here, m.Dest) : PathRules.StraightBlocked(at, m.Dest, walls);
                     if (!blocked)
                     {
                         steer = m.Dest;
@@ -228,7 +269,15 @@ namespace KryticalNova.Brains
                             if (d >= look) continue;
                             float2 n = d > 1e-5f ? away / d : PathRules.TieBreak(entity, other);
                             float into = -math.dot(v.xz, n);
-                            if (into > 0f) v += new float3(n.x, 0f, n.y) * into;
+                            if (into > 0f)
+                            {
+                                // the part toward it is dropped and turned into a step to this one's own right (14 Nov 2026: two walking
+                                // head-on stood nose to nose for ever; each stepping right, they pass like people on a pavement)
+                                float2 right = new float2(v.z, -v.x);
+                                float2 side = new float2(-n.y, n.x);
+                                if (math.dot(side, right) < 0f) side = -side;
+                                v += new float3(n.x + side.x, 0f, n.y + side.y) * into;
+                            }
                         } while (sense.BrainGrid.TryGetNextValue(out other, ref it));
                     }
                 }
@@ -238,13 +287,8 @@ namespace KryticalNova.Brains
                 float reach = math.length(toSteer);
                 // the straight-line backend follows the slope to the steer point (NavWorld's MapLocation height in M5.4b)
                 float climb = reach > 1e-4f ? (steer.y - at.y) * math.saturate(math.length(v.xz * dt) / reach) : 0f;
+                // on the NavMesh the step is kept on the mesh after the separation push below (KeepOnMesh)
                 float3 next = at + step + new float3(0f, climb, 0f);
-                if (onNavMesh)
-                {
-                    // on the NavMesh the ground's height is the mesh's under the new spot (off the mesh: the slope as above)
-                    NavLocation ground = m_World.MapLocation(next, backend.Extents, backend.AgentTypeId);
-                    if (m_World.IsValid(ground)) next.y = ground.position.y;
-                }
 
                 float yaw = PathRules.YawOf(t.Rotation);
                 float wanted = (m.Flags & BrainMoverFlags.Face) != 0 ? m.Yaw
@@ -254,8 +298,17 @@ namespace KryticalNova.Brains
 
                 moved.Add(entity);
                 places.Add(LocalTransform.FromPositionRotationScale(next, quaternion.RotateY(yaw), t.Scale));
+                froms.Add(here);
             }
             if (r > 0f && moved.Length > 0) Separate(moved, places, sense, transformOf, c);
+            if (onNavMesh)
+                for (int i = 0; i < moved.Length; i++)
+                {
+                    // the step and the crowd's push slide along the mesh: nobody is shoved into a planter or off the deck's edge
+                    LocalTransform t = places[i];
+                    t.Position = KeepOnMesh(m_World, backend, froms[i], t.Position);
+                    places[i] = t;
+                }
             for (int i = 0; i < moved.Length; i++)
                 SystemAPI.SetComponent(moved[i], places[i]);
         }

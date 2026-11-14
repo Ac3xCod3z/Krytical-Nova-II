@@ -1,6 +1,7 @@
 using System;
 using UnityEngine;
 using UnityEngine.Rendering;
+using KryticalNova.Rendering;
 
 namespace KryticalNova.World
 {
@@ -100,7 +101,7 @@ namespace KryticalNova.World
 
             UseStarlessSkyCopy(sky);
             float starVisibility = Shader.GetGlobalVector(Ids.SkyParams).y;
-            Publish(now, s, env.Weather, starVisibility);
+            Publish(now, s, env.Weather, starVisibility, WorldEffectsRuntime.Tier);
             DimForEclipse(now, s, dc);
             DrawOverlay();
         }
@@ -174,7 +175,7 @@ namespace KryticalNova.World
 
         // ------------------------------------------------------------------ globals for the overlay
 
-        static void Publish(in SkyNow sky, SkyEventSettings s, WeatherBlend w, float starVisibility)
+        static void Publish(in SkyNow sky, SkyEventSettings s, WeatherBlend w, float starVisibility, int effectsTier)
         {
             bool on = s.starMap != null;
             if (on) Shader.SetGlobalTexture(Ids.StarMap, s.starMap);
@@ -192,9 +193,11 @@ namespace KryticalNova.World
             Shader.SetGlobalVector(Ids.Nebula, new Vector4(n.x, n.y, n.z, s.nebulaTexture != null ? sky.Nebula * s.nebulaBrightness : 0f));
             Shader.SetGlobalVector(Ids.NebulaParams, new Vector4(Mathf.Tan(s.nebulaDegrees * 0.5f * Mathf.Deg2Rad), 0f, 0f, 0f));
 
+            // World Effects: fewer streaks at once on Low (the calendar still decides which ones, so clients agree on those shown)
+            int streaks = Mathf.Min(sky.StreakCount, s.StreaksFor(effectsTier));
             for (int i = 0; i < SkyNow.MaxStreaks; i++)
             {
-                if (i < sky.StreakCount)
+                if (i < streaks)
                 {
                     var st = sky.Streak(i);
                     MeteorA[i] = new Vector4(st.Start.x, st.Start.y, st.Start.z, st.Progress);
@@ -220,7 +223,8 @@ namespace KryticalNova.World
             Shader.SetGlobalVector(Ids.EclipseSky, new Vector4(wash.r, wash.g, wash.b, 1f));
 
             Color lo = s.auroraLow.linear, hi = s.auroraHigh.linear;
-            Shader.SetGlobalVector(Ids.Aurora, new Vector4(sky.Aurora * s.auroraBrightness * clear, 0f, 0f, 0f));
+            bool auroraOn = effectsTier > (int)WorldEffects.Low || s.auroraOnLow;
+            Shader.SetGlobalVector(Ids.Aurora, new Vector4(auroraOn ? sky.Aurora * s.auroraBrightness * clear : 0f, 0f, 0f, 0f));
             Shader.SetGlobalVector(Ids.AuroraLow, new Vector4(lo.r, lo.g, lo.b, 1f));
             Shader.SetGlobalVector(Ids.AuroraHigh, new Vector4(hi.r, hi.g, hi.b, 1f));
         }

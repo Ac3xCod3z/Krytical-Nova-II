@@ -1,0 +1,53 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e17679d995474ac7bfb663bceae118f0, type: 3}
+  m_Name: TP_NightOwl
+  m_EditorClassIdentifier: KryticalNova.Townsfolk.Entities::KryticalNova.Townsfolk.TownsfolkPersonality
+  id: 8
+  displayName: Night Owl
+  notes: 'DRAFT (owner edits): Out after dusk; only lit spots at night.'
+  walkSpeed: {x: 1, y: 1.3}
+  jogs: 0
+  jogSpeed: {x: 3.2, y: 3.8}
+  stopChance: 0.4
+  staySeconds: {x: 60, y: 180}
+  likes:
+  - kind: 4
+    weight: 1
+  - kind: 1
+    weight: 0.8
+  - kind: 6
+    weight: 0.6
+  - kind: 5
+    weight: 0.3
+  crowdingDislike: 1.2
+  needsLight: 1
+  likesPlayersNear: 0
+  chatsWith:
+  - {fileID: 11400000}
+  - {fileID: 11400000, guid: b2441972f384cf5419756102bba75d17, type: 2}
+  chatChance: 0.4
+  declinesInvites: 0
+  outChance: {x: 0, y: 0.1, z: 0.5, w: 0.9}
+  shifts: []
+  rain: 1
+  reaction:
+    glanceSeconds: 1
+    greetChance: 0.05
+    stepAsideMetres: 1.5
+    watchRunners: 0
+    playsToPlayers: 0
+  barks:
+  - text: Best time of day, this.
+    clip: {fileID: 0}
+  - text: The lamps are pretty from the rail.
+    clip: {fileID: 0}
