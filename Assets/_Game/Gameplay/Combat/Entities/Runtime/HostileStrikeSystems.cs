@@ -134,6 +134,8 @@ namespace KryticalNova.Combat.Entities
         public int Applied { get; private set; }
         public int Dropped { get; private set; }
         public int Sent { get; private set; }
+        /// <summary>Blows that landed on a stand-in that is not a player (the TANK companion; tests).</summary>
+        public int StandInApplied { get; private set; }
 
         protected override void OnCreate()
         {
@@ -164,6 +166,18 @@ namespace KryticalNova.Combat.Entities
                 GhostBodyEntry hit = null;
                 foreach (GhostBodyEntry entry in GhostBodyRegistry.Entries)
                     if (ReferenceEquals(entry.World, World) && entry.Ghost == strike.Target && entry.Body != null) { hit = entry; break; }
+                // the Mount Companion in its TANK stance (day list item 19 phase 4): not a player, its hidden body takes the blow
+                if (hit == null && StandInTargets.TryGet(World, strike.Target, out Component standInBody))
+                {
+                    if (standInBody.TryGetComponent(out IDamageable standIn) && standIn.IsAlive)
+                    {
+                        standIn.TakeDamage(strike.Result, HostileAttackers.Of(strike.Attacker));
+                        Applied++;
+                        StandInApplied++;
+                    }
+                    else Dropped++;
+                    continue;
+                }
                 if (hit == null || !hit.Body.TryGetComponent(out CombatEntity target)
                     || !HostileStrikes.Apply(target, strike, HostileAttackers.Of(strike.Attacker)))
                 {

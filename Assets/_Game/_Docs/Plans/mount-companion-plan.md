@@ -329,7 +329,8 @@ Phase 2:
 - [ ] 5. Mount Stim (item, handler, Apothecary, icon) + the window's HP bar and rest timer. Evals: Stim, item checks,
   performance. **Owner tests phase 2 on two clients and approves.** Then the Encyclopedia update.
 - [x] 6. Phase 3, DPS and HEALER (owner 13 Nov: "we can move on to phase 3"); see As built.
-- [ ] 7-8. Phases 4, 5, each planned in detail here first and approved before code.
+- [x] 7. Phase 4, TANK (the Master's go, 14 Nov, after the owner merged phase 3; built from section 5's outline, the detail is in its As built).
+- [ ] 8. Phase 5, planned in detail here first and approved before code.
 
 ## The owner's picks
 
@@ -415,3 +416,30 @@ Phase 3, 13-14 Nov 2026 (b18-coder-20, branch `b18/19-companion-phase3`): the DP
   across a relog).
 - **Follow-ups:** a buff icon for HEALER in the owner's buff row; mount attack clips (the lunge stands in); the companion's own HP
   bar over it for everyone (from phase 2); Hostiles still never strike the companion (phase 4 TANK makes them).
+
+### Phase 4 as built (14 Nov 2026, b18-coder-19p3)
+
+- **Taunt:** in the TANK stance the companion runs to its spot in front of the Hostile it fights (the phase 3 pick; a Hostile after the
+  companion itself now counts as after the owner, `CompanionSeek.SelfGhostId`) and every `companionTankTauntSeconds` (6) writes a
+  `BrainEventKind.Taunt` for its own ghost id on that Hostile and on every Hostile after its owner within `companionTankTauntRadius` (8 m)
+  of it (`CompanionFightPick.Tauntable`). It deals no damage and does not heal.
+- **Threat fix in Hostiles:** a taunt lifted the taunter to exactly 110 % of the top threat, and the switch rule needs more than 110 %, so a
+  taunt never turned a Hostile. `HostileThreatSystem` now aims a Hostile at a sensed taunter at once (a taunter it cannot sense only gets
+  the threat), and `HostileDecideSystem` lets a taunt engage like a hit. Nothing sent taunts before, so no other behaviour changes.
+- **Sense and strikes:** `CompanionSenseFeedSystem` (Burst) puts every companion that is out and acting as TANK into the Hostiles' sense
+  world after the players, flagged Ignored (never picked by sight). A Hostile whose target it is chases and swings at it like at a player;
+  the swing is rolled by `HostileStrikeRules.TryRollOnStandIn` (the same reach, multiplier and stats, no wall rule, no reflect) in the
+  strike bridge and applied by the blow queue to the companion's hidden body, which `StandInTargets` (Player.Entities.Presentation)
+  names for its ghost. DPS, HEALER, FREE, a companion going home and a knocked-out one are not in the sense world, so a Hostile falls back
+  to its next threat.
+- **Defence buff:** `CompanionBody.TakenScale` = 1 - `companionTankDefenceBuff` (0.4, at most 0.9) while it acts as TANK, else 1
+  (`CompanionFightRules.TakenScale`); a TANK in PvP acts as FREE, so a player's hit is never lessened.
+- **Views:** `CompanionView.Taunts` counts its taunts; every view rears the model up (0.45 m, 18 degrees, 0.5 s) with the swing feel.
+- **Window:** TANK is on in the Mount window with its tooltip; a saved TANK loads as TANK.
+- **Tests:** `CompanionFightTests` (TANK keeps a taunted Hostile, the taunt rule, the defence scale, the sense entry, settings = defaults),
+  `PlayerMountsCompanionTests` (TANK taken and kept, the body takes less), `ThreatTests` (a taunt takes the target from the top threat and
+  its strikes follow, an unsensed taunt only adds threat, a taunter that leaves gives the target back, a taunt engages an idle Hostile),
+  `StandInTargetsTests`. The Play probe (`KN_PLAYHERE_COMPANION_FIGHT=1`) has a TANK part after HEALER.
+- **Left:** a second-client check; a taunt sound of its own (it uses the swing feel); the companion's own threat entry stays in a Hostile's
+  table of six until it decays.
+

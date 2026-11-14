@@ -31,7 +31,7 @@
     },
     {
       "title": "Your Mount Walks Beside You",
-      "body": "Press Y (or CALL in the Mount window) and your selected mount walks beside you instead of carrying you. It keeps up, catches up when left behind and keeps giving its stats; it gets hungry faster while out, and when its hunger runs out it goes home. It has HP of its own: enemy players' area skills can knock it out, and then it rests for 5 minutes. The new Mount Stim heals it. Set it to DPS and it fights beside you; set it to HEALER and it heals you while you fight (PvE only, never drawing aggro)."
+      "body": "Press Y (or CALL in the Mount window) and your selected mount walks beside you instead of carrying you. It keeps up, catches up when left behind and keeps giving its stats; it gets hungry faster while out, and when its hunger runs out it goes home. It has HP of its own: enemy players' area skills can knock it out, and then it rests for 5 minutes. The new Mount Stim heals it. Set it to DPS and it fights beside you; set it to HEALER and it heals you while you fight (PvE only, never drawing aggro); set it to TANK and it taunts the Hostiles off you and takes their blows with a defence buff (PvE only)."
     }
   ],
   "patchNotes": [
@@ -52,7 +52,8 @@
         "Mount Companion: Y calls your selected mount out to walk beside you, or sends it home. FREE stance (no fighting, allowed in PvP); hunger drains 10x faster while out and is its only time limit.",
         "Mount Companion HP: enemy players' area skills in PvP can hurt it; at 0 HP it is knocked out, goes home and rests 5 minutes (it can still be ridden). It regains 2 % a minute at home.",
         "Mount Stim (Apothecary): heals your mount's companion HP by 40 %, never yours.",
-        "Companion stances DPS and HEALER (Mount window): DPS joins the fight you are in and strikes beside you with its own damage buff; HEALER heals you over time while you fight. Neither ever draws aggro, and both stay out of PvP (they act as FREE in PvP zones, duels and Crossfire)."
+        "Companion stances DPS and HEALER (Mount window): DPS joins the fight you are in and strikes beside you with its own damage buff; HEALER heals you over time while you fight. Neither ever draws aggro, and both stay out of PvP (they act as FREE in PvP zones, duels and Crossfire).",
+        "Companion stance TANK (Mount window): your mount taunts the Hostile you fight and the others after you nearby every 6 s, so they turn on it and strike it instead of you; it takes 40 % less damage, deals none and acts as FREE in PvP."
       ]
     },
     {

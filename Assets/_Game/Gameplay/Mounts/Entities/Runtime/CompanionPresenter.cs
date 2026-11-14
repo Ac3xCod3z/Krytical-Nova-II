@@ -25,6 +25,10 @@ namespace KryticalNova.Mounts.Entities
         Transform owner;
         bool ownerIsLocal;
         float lungeStart = -1f;
+        float tauntStart = -1f;
+        byte tauntsSeen;
+        // phase 4: a TANK taunt is a rear-up of the model (it rises and tips back, then drops), with the swing feel
+        const float TauntSeconds = 0.5f, TauntMetres = 0.45f, TauntDegrees = 18f;
         // phase 3: a DPS strike is a quick lunge of the model toward the Hostile and back (procedural: the mounts have no attack clip)
         const float LungeSeconds = 0.35f, LungeMetres = 0.6f;
         readonly RaycastHit[] hits = new RaycastHit[8];
@@ -36,6 +40,8 @@ namespace KryticalNova.Mounts.Entities
         /// <summary>Phase 3 (tests): strikes and heal pulses this view has played.</summary>
         public int StrikesPlayed { get; private set; }
         public int PulsesPlayed { get; private set; }
+        /// <summary>Phase 4 (tests): taunts this view has played.</summary>
+        public int TauntsPlayed { get; private set; }
 
         public static CompanionPresenter Make(MountDefinition mount, MountSettings settings, int stage, int ignoreLayer, Vector3 at, Quaternion rotation,
             in CompanionView view, Transform owner, bool ownerIsLocal)
@@ -48,6 +54,7 @@ namespace KryticalNova.Mounts.Entities
             p.warpsSeen = view.Warps;
             p.strikesSeen = view.Strikes;   // a view that first meets it replays no old strike or pulse
             p.pulsesSeen = view.Pulses;
+            p.tauntsSeen = view.Taunts;
             p.owner = owner;
             p.ownerIsLocal = ownerIsLocal;
             go.transform.SetPositionAndRotation(p.Grounded(at), rotation);
@@ -69,7 +76,8 @@ namespace KryticalNova.Mounts.Entities
         }
 
         // Phase 3, from the replicated counters only (so every view plays each once, the owner's included): a DPS strike lunges the model
-        // and plays the swing's feel (its sound, item 20's grass push); a HEALER pulse plays the heal's feel on the owner.
+        // and plays the swing's feel (its sound, item 20's grass push); a HEALER pulse plays the heal's feel on the owner; a TANK taunt (phase 4)
+        // rears the model up with the swing's feel.
         void Fight(in CompanionView view)
         {
             IGameFeelSink feel = ClientPresentationRegistry.Feel;
@@ -86,11 +94,22 @@ namespace KryticalNova.Mounts.Entities
                 PulsesPlayed++;
                 if (owner != null) feel?.Consumed(owner, true, false);
             }
+            if (view.Taunts != tauntsSeen)
+            {
+                tauntsSeen = view.Taunts;
+                TauntsPlayed++;
+                tauntStart = Time.time;
+                feel?.Swing(transform, 3, ownerIsLocal, TauntSeconds);
+            }
             if (model == null) return;
             float t = lungeStart < 0f ? 1f : (Time.time - lungeStart) / LungeSeconds;
             float out01 = t >= 1f ? 0f : Mathf.Sin(Mathf.Clamp01(t) * Mathf.PI);   // out and back
-            model.transform.localPosition = Vector3.forward * (out01 * LungeMetres);
+            float r = tauntStart < 0f ? 1f : (Time.time - tauntStart) / TauntSeconds;
+            float rear01 = r >= 1f ? 0f : Mathf.Sin(Mathf.Clamp01(r) * Mathf.PI);   // up and down
+            model.transform.localPosition = Vector3.forward * (out01 * LungeMetres) + Vector3.up * (rear01 * TauntMetres);
+            model.transform.localRotation = Quaternion.Euler(-rear01 * TauntDegrees, 0f, 0f);
             if (t >= 1f) lungeStart = -1f;
+            if (r >= 1f) tauntStart = -1f;
         }
 
         /// <summary>The ghost is gone: finish vanishing where it stands, then destroy everything.</summary>

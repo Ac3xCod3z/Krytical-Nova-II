@@ -209,7 +209,7 @@ namespace KryticalNova.UI
             root.Add(window);
         }
 
-        // one stance at a time, set here (FREE in phases 1-2, DPS and HEALER in phase 3; TANK comes in phase 4)
+        // one stance at a time, set here (FREE in phases 1-2, DPS and HEALER in phase 3, TANK in phase 4)
         private VisualElement StanceRow()
         {
             var row = new VisualElement { name = "mount-stances" };
@@ -226,7 +226,7 @@ namespace KryticalNova.UI
             string[] tips =
             {
                 "FREE: no combat. It keeps the riding bonus and may come along in PvP.",
-                "TANK: coming later.",
+                "TANK: it taunts the Hostiles you fight so they turn on it, and takes less damage. It deals no damage. PvE only: in PvP it acts as FREE.",
                 "DPS: it helps you kill what you fight, with its own damage buff. It never draws aggro and never heals. PvE only: in PvP it acts as FREE.",
                 "HEALER: it heals you over time while you fight. It deals no damage and never draws aggro. PvE only: in PvP it acts as FREE.",
             };

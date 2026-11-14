@@ -14,7 +14,8 @@ namespace KryticalNova.Persistence.Entities
     /// in god mode outside Concord (Zone01's mob-ne zone, as <see cref="KnCombatProbe"/>), the Brambleback called out, one unkillable
     /// Colossus beside them. DPS: the Tester attacks it as a click does and the companion must strike it too (its strike count rises, its
     /// drawn model stands by the Colossus). HEALER: the Tester's HP is taken to half (god mode off for one hit), the fight goes on, and the
-    /// companion must heal (its pulse count rises, the HP climbs) and never strike. The "[KnPlayHere] companion fight:" lines say what was seen.
+    /// companion must heal (its pulse count rises, the HP climbs) and never strike. TANK (phase 4): its taunts turn the Colossus on it, so its
+    /// own HP falls (or it is knocked out), and it never strikes or heals. The "[KnPlayHere] companion fight:" lines say what was seen.
     /// </summary>
     public static class KnCompanionFightProbe
     {
@@ -116,13 +117,35 @@ namespace KryticalNova.Persistence.Entities
             log($"companion fight: HEALER {(healer ? "PASS" : "FAIL")}; {healPulses} heal pulses, {healStrikes} strikes in {StanceSeconds:0} s; " +
                 $"Tester HP {hpLow:0} -> {hp.Health:0} of {hp.MaxHealth:0}");
 
+            // TANK (phase 4): the companion taunts the Colossus so it turns from the Tester to the companion, and its body takes the blows
+            // (the Tester stays in god mode); it never strikes and never heals
+            mounts.RunMountOp(MountOpKind.Stance, (int)CompanionStanceByte.Tank);
+            yield return new WaitForSeconds(0.5f);
+            log($"companion fight: stance now {companion.CompanionStance} (1 = TANK)");
+            strikes0 = companion.CompanionStrikes;
+            pulses0 = companion.CompanionPulses;
+            int taunts0 = companion.CompanionTaunts, knockOuts0 = companion.CompanionKnockOuts, hp0 = companion.CompanionHpPermille, hpMin = hp0;
+            start = Time.realtimeSinceStartup;
+            while (Time.realtimeSinceStartup - start < StanceSeconds)
+            {
+                GameObject view = KnCombatProbe.NearestHostileView(own.transform.position, "Colossus");
+                if (view != null) BodyClicks.Attack(view.transform);
+                if (companion.CompanionOut) hpMin = Mathf.Min(hpMin, companion.CompanionHpPermille);
+                yield return new WaitForSeconds(1f);
+            }
+            int tankTaunts = companion.CompanionTaunts - taunts0, tankStrikes = companion.CompanionStrikes - strikes0, tankPulses = companion.CompanionPulses - pulses0;
+            bool knockedOut = companion.CompanionKnockOuts != knockOuts0;
+            bool tank = tankTaunts >= 1 && tankStrikes == 0 && tankPulses == 0 && (hpMin < hp0 || knockedOut);
+            log($"companion fight: TANK {(tank ? "PASS" : "FAIL")}; {tankTaunts} taunts, {tankStrikes} strikes, {tankPulses} heal pulses in {StanceSeconds:0} s; " +
+                $"companion HP {hp0} -> lowest {hpMin} permille{(knockedOut ? ", knocked out by the Colossus" : string.Empty)}");
+
             mounts.RunMountOp(MountOpKind.Stance, (int)CompanionStanceByte.Free);
             yield return new WaitForSeconds(0.5f);
-            mounts.RunMountOp(MountOpKind.Companion, 0);   // home
+            if (companion.CompanionOut) mounts.RunMountOp(MountOpKind.Companion, 0);   // home
             Gm("gm.hostile.clear 40");
             Gm("gm.god false");
             yield return new WaitForSeconds(2f);
-            verdict(dps && healer);
+            verdict(dps && healer && tank);
         }
 
         static float Flat(Vector3 v) => Mathf.Sqrt(v.x * v.x + v.z * v.z);
@@ -130,7 +153,7 @@ namespace KryticalNova.Persistence.Entities
         // CompanionStance lives in Mounts (not referenced here): its byte values
         static class CompanionStanceByte
         {
-            public const int Free = 0, Dps = 2, Healer = 3;
+            public const int Free = 0, Tank = 1, Dps = 2, Healer = 3;
         }
     }
 }

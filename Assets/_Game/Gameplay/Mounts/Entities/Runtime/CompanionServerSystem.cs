@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using KryticalNova.Brains;
 using KryticalNova.Combat;
 using KryticalNova.Combat.Entities;
 using KryticalNova.Core;
@@ -53,7 +54,7 @@ namespace KryticalNova.Mounts.Entities
     }
 
     /// <summary>
-    /// Server (day list item 19, phases 1-3): one Mount Companion ghost for every server body whose <see cref="PlayerMounts"/> has it out.
+    /// Server (day list item 19, phases 1-4): one Mount Companion ghost for every server body whose <see cref="PlayerMounts"/> has it out.
     /// It follows the owner's player ghost by <see cref="CompanionFollower"/> (every <see cref="MountSettings.companionFollowSeconds"/>),
     /// carries the HP, stance and warps in its <see cref="CompanionView"/>, and keeps a hidden <see cref="CompanionBody"/> where it stands so
     /// enemy players' area skills reach it. Sent home or knocked out, it shows the going for a moment (so every view plays the vanish) and
@@ -61,6 +62,10 @@ namespace KryticalNova.Mounts.Entities
     /// Phase 3: in the DPS or HEALER stance it looks for its fight every <see cref="MountSettings.companionFightSeconds"/> (all companions at
     /// once in <see cref="CompanionPickJob"/>, Burst; nothing is queried while none is in a combat stance). DPS runs to the Hostile and strikes
     /// in its owner's name with no threat; HEALER heals its owner over time while they fight. Both act as FREE while the owner is in PvP.
+    /// Phase 4: TANK runs to the Hostile too, taunts it (and every Hostile after its owner near it) every
+    /// <see cref="MountSettings.companionTankTauntSeconds"/> with a <see cref="BrainEventKind.Taunt"/> for its own ghost id, takes less damage
+    /// (<see cref="CompanionBody.TakenScale"/>) and deals none. While it acts as TANK it is in the Hostiles' sense world
+    /// (<see cref="CompanionSenseFeedSystem"/>) and its body takes their blows (<see cref="StandInTargets"/>); PvE only, as the other two.
     /// </summary>
     [WorldSystemFilter(WorldSystemFilterFlags.ServerSimulation)]
     [UpdateInGroup(typeof(SimulationSystemGroup))]
@@ -87,13 +92,17 @@ namespace KryticalNova.Mounts.Entities
             public int Fight;
             public float NextStrikeAt, NextPulseAt;
             public byte Strikes, Pulses;
+            // phase 4: the taunt (TANK)
+            public int SelfGhostId;
+            public float NextTauntAt;
+            public byte Taunts;
         }
 
         readonly Dictionary<GameObject, Live> m_Live = new Dictionary<GameObject, Live>();
         readonly HashSet<GameObject> m_Seen = new HashSet<GameObject>();
         readonly List<GameObject> m_Drop = new List<GameObject>();
         readonly List<Live> m_Seeking = new List<Live>();
-        EntityQuery m_Hostiles;
+        EntityQuery m_Hostiles, m_BrainTick;
         HitRecordServerSystem m_Hits;
         float m_LookWait;
 
@@ -105,13 +114,16 @@ namespace KryticalNova.Mounts.Entities
         public int Looks { get; private set; }
         public int StrikesDealt { get; private set; }
         public int PulsesGiven { get; private set; }
+        /// <summary>Phase 4 (tests and the Play proof): taunt events written on Hostiles.</summary>
+        public int TauntsWritten { get; private set; }
 
         protected override void OnCreate()
         {
             RequireForUpdate<MountCompanionGhostPrefab>();
             MountCompanionLink.Current ??= new EntityMountCompanionLink();
+            m_BrainTick = GetEntityQuery(ComponentType.ReadOnly<BrainTick>());
             m_Hostiles = GetEntityQuery(ComponentType.ReadOnly<HostileTarget>(), ComponentType.ReadOnly<HostileBrain>(), ComponentType.ReadOnly<HostileLife>(),
-                ComponentType.ReadOnly<LocalTransform>(), ComponentType.ReadOnly<GhostInstance>());
+                ComponentType.ReadOnly<LocalTransform>(), ComponentType.ReadOnly<GhostInstance>(), ComponentType.ReadOnly<BrainEvent>());
         }
 
         protected override void OnDestroy()
@@ -176,6 +188,7 @@ namespace KryticalNova.Mounts.Entities
             live.Follow.Place(spot, ownerYaw);
             live.Body = CompanionBody.Make(mounts, settings != null ? settings.companionBodyRadius : 0.9f, settings != null ? settings.companionBodyHeight : 2.2f);
             live.Body.transform.position = spot;
+            StandInTargets.Register(World, live.Ghost, live.Body);   // phase 4: a TANK is struck through this body
             em.SetComponentData(live.Ghost, LocalTransform.FromPositionRotation(spot, quaternion.RotateY(math.radians(ownerYaw))));
             m_Live[body] = live;
             Spawned++;
@@ -209,6 +222,8 @@ namespace KryticalNova.Mounts.Entities
                 if (!had.Position.Equals(place.Position) || !had.Rotation.Equals(place.Rotation)) em.SetComponentData(live.Ghost, place);
                 if (live.Body != null) live.Body.transform.position = live.Follow.Position;
             }
+            if (live.Body != null) live.Body.TakenScale = CompanionFightRules.TakenScale(live.Acting, FightOf(mounts));
+            live.SelfGhostId = em.HasComponent<GhostInstance>(live.Ghost) ? em.GetComponentData<GhostInstance>(live.Ghost).ghostId : 0;
             int ownerGhostId = em.HasComponent<GhostInstance>(entry.Ghost) ? em.GetComponentData<GhostInstance>(entry.Ghost).ghostId : 0;
             live.OwnerGhostId = ownerGhostId;
             var view = new CompanionView
@@ -217,7 +232,7 @@ namespace KryticalNova.Mounts.Entities
                 SpeedStep = (byte)math.clamp((int)math.round(live.Follow.Speed / CompanionView.SpeedStepMetres), 0, 255),
                 State = (byte)CompanionState.Out, Stance = c.CompanionStance, HpPermille = (ushort)math.clamp(c.CompanionHpPermille, 0, CompanionRules.Permille),
                 Warps = live.Warps,
-                Strikes = live.Strikes, Pulses = live.Pulses, FightGhostId = live.Fight, ActingStance = (byte)live.Acting,
+                Strikes = live.Strikes, Pulses = live.Pulses, FightGhostId = live.Fight, ActingStance = (byte)live.Acting, Taunts = live.Taunts,
             };
             WriteView(em, live.Ghost, view);
         }
@@ -234,13 +249,17 @@ namespace KryticalNova.Mounts.Entities
             view.SpeedStep = 0;
             view.FightGhostId = 0;
             if (knockedOut) view.HpPermille = 0;
+            view.ActingStance = (byte)CompanionStance.Free;   // out of the Hostiles' sense world at once
+            live.Acting = CompanionStance.Free;
             WriteView(em, live.Ghost, view);
+            StandInTargets.Unregister(World, live.Ghost);
             if (live.Body != null) { Object.Destroy(live.Body.gameObject); live.Body = null; }
             Debug.Log($"[KnCompanion] server: {(knockedOut ? "knocked out" : "going home")}");
         }
 
         void DestroyGhost(EntityManager em, Live live)
         {
+            StandInTargets.Unregister(World, live.Ghost);
             if (live.Body != null) { Object.Destroy(live.Body.gameObject); live.Body = null; }
             if (em.Exists(live.Ghost)) em.DestroyEntity(live.Ghost);
             Destroyed++;
@@ -252,11 +271,17 @@ namespace KryticalNova.Mounts.Entities
             if (had.OwnerGhostId == view.OwnerGhostId && had.Box == view.Box && had.Stage == view.Stage && had.SpeedStep == view.SpeedStep
                 && had.State == view.State && had.Stance == view.Stance && had.HpPermille == view.HpPermille && had.Warps == view.Warps
                 && had.Strikes == view.Strikes && had.Pulses == view.Pulses && had.FightGhostId == view.FightGhostId
-                && had.ActingStance == view.ActingStance) return;
+                && had.ActingStance == view.ActingStance && had.Taunts == view.Taunts) return;
             em.SetComponentData(ghost, view);
         }
 
         // ------------------------------------------------------------------ phase 3: the DPS and HEALER stances
+
+        static CompanionFightTuning FightOf(PlayerMounts mounts) =>
+            mounts != null && mounts.Settings != null ? mounts.Settings.CompanionFight : CompanionFightTuning.Default;
+
+        static string StanceName(CompanionStance s) =>
+            s == CompanionStance.Dps ? "DPS" : s == CompanionStance.Healer ? "HEALER" : s == CompanionStance.Tank ? "TANK" : "FREE";
 
         CompanionFightTuning FightTuningOfAny()
         {
@@ -282,11 +307,11 @@ namespace KryticalNova.Mounts.Entities
                 {
                     string mount = live.Mounts.Selected != null ? live.Mounts.Selected.displayName : "mount";
                     live.Mounts.TellOwner(inPvp ? $"PvP here: your {mount} stays out of the fight (FREE) until you leave."
-                        : $"Your {mount} is back in its {(chosen == CompanionStance.Dps ? "DPS" : "HEALER")} stance.");
+                        : $"Your {mount} is back in its {StanceName(chosen)} stance.");
                 }
                 live.InPvp = inPvp;
                 live.Acting = CompanionFightRules.Effective(chosen, inPvp);
-                if (live.Acting == CompanionStance.Dps || live.Acting == CompanionStance.Healer) m_Seeking.Add(live);
+                if (live.Acting == CompanionStance.Dps || live.Acting == CompanionStance.Healer || live.Acting == CompanionStance.Tank) m_Seeking.Add(live);
                 else { live.Fight = 0; live.HasGoal = false; }
             }
             if (m_Seeking.Count == 0) return;   // nothing in a combat stance: no query, no job
@@ -297,6 +322,7 @@ namespace KryticalNova.Mounts.Entities
             using var brains = m_Hostiles.ToComponentDataArray<HostileBrain>(Allocator.TempJob);
             using var lives = m_Hostiles.ToComponentDataArray<HostileLife>(Allocator.TempJob);
             using var places = m_Hostiles.ToComponentDataArray<LocalTransform>(Allocator.TempJob);
+            using var hostileEntities = m_Hostiles.ToEntityArray(Allocator.TempJob);
             var seen = new NativeArray<HostileSeen>(ghosts.Length, Allocator.TempJob, NativeArrayOptions.UninitializedMemory);
             for (int i = 0; i < ghosts.Length; i++)
                 seen[i] = new HostileSeen
@@ -315,6 +341,7 @@ namespace KryticalNova.Mounts.Entities
                 {
                     OwnerGhostId = live.OwnerGhostId, Owner = live.OwnerAt, OwnerTarget = ownerTarget, Current = live.Fight,
                     Range = live.Mounts.Settings != null ? live.Mounts.Settings.companionFightRange : CompanionFightTuning.Default.Range,
+                    SelfGhostId = live.SelfGhostId,
                 };
             }
             new CompanionPickJob { Seeks = seeks, Hostiles = seen, Picked = picked }.ScheduleParallel(seeks.Length, 8, default).Complete();
@@ -327,6 +354,7 @@ namespace KryticalNova.Mounts.Entities
                     CompanionFightTuning t = live.Mounts.Settings != null ? live.Mounts.Settings.CompanionFight : CompanionFightTuning.Default;
                     int at = picked[i];
                     if (live.Acting == CompanionStance.Dps) Dps(live, at >= 0 ? seen[at] : default, at >= 0, t, now);
+                    else if (live.Acting == CompanionStance.Tank) Tank(em, live, at, seen, hostileEntities, t, now);
                     else Heal(live, at >= 0 ? seen[at].GhostId : 0, t, now);
                 }
             }
@@ -363,6 +391,42 @@ namespace KryticalNova.Mounts.Entities
             live.Strikes++;
             StrikesDealt++;
             live.Mounts.CountCompanionFight(true);
+        }
+
+        /// <summary>
+        /// TANK (phase 4): to its spot in front of the Hostile it fights (as DPS, but it never strikes), and every TauntSeconds a taunt for its own
+        /// ghost id on that Hostile and on every Hostile after its owner within TauntRadius: the threat system lifts it above the top, so they turn
+        /// on it. It deals no damage and does not heal; its body takes less (<see cref="CompanionBody.TakenScale"/>, set in the step).
+        /// </summary>
+        void Tank(EntityManager em, Live live, int at, NativeArray<HostileSeen> seen, NativeArray<Entity> hostiles, in CompanionFightTuning t, float now)
+        {
+            bool has = at >= 0;
+            live.Fight = has ? seen[at].GhostId : 0;
+            if (!has) { live.HasGoal = false; return; }
+            HostileSeen fight = seen[at];
+            Vector3 feet = fight.Feet;
+            Vector3 goal = CompanionFightRules.StrikeSpot(live.Follow.Position, feet, fight.Radius, t);
+            goal.y = live.OwnerAt.y;
+            live.Goal = goal;
+            live.FaceAt = feet;
+            live.HasGoal = true;
+            if (!CompanionFightRules.TauntDue(true, now, live.NextTauntAt) || live.SelfGhostId == 0) return;
+            if (!m_BrainTick.TryGetSingleton(out BrainTick tick)) return;
+            live.NextTauntAt = now + Mathf.Max(0.5f, t.TauntSeconds);
+            var taunt = new BrainEvent { Kind = BrainEventKind.Taunt, GhostId = live.SelfGhostId, Tick = tick.Tick + 1 };
+            float3 self = live.Follow.Position;
+            int written = 0;
+            for (int i = 0; i < seen.Length; i++)
+            {
+                if (i != at && !CompanionFightPick.Tauntable(seen[i], live.OwnerGhostId, self, t.TauntRadius)) continue;
+                if (!em.Exists(hostiles[i]) || !em.HasBuffer<BrainEvent>(hostiles[i])) continue;
+                em.GetBuffer<BrainEvent>(hostiles[i]).Add(taunt);
+                written++;
+            }
+            if (written == 0) return;
+            TauntsWritten += written;
+            live.Taunts++;
+            live.Mounts.CountCompanionTaunt();
         }
 
         void Heal(Live live, int fight, in CompanionFightTuning t, float now)

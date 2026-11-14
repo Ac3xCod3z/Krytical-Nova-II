@@ -10,17 +10,20 @@ using UnityEngine;
 namespace KryticalNova.Tests
 {
     /// <summary>
-    /// The Mount Companion's DPS and HEALER stances (day list item 19, phase 3): which Hostile it fights (Autopilot's target logic inside
-    /// its short range, also as the Burst job), the PvP fallback to FREE, the strike (owner's roll, share, buff, no threat), the heal pulse,
-    /// the strike spot and the run to it, and that the settings asset's numbers are the rules' defaults.
+    /// The Mount Companion's DPS and HEALER stances (day list item 19, phase 3) and TANK (phase 4): which Hostile it fights (Autopilot's
+    /// target logic inside its short range, also as the Burst job), the PvP fallback to FREE, the strike (owner's roll, share, buff, no
+    /// threat), the heal pulse, the strike spot and the run to it, TANK's taunt rule, defence buff and sense entry, and that the settings
+    /// asset's numbers are the rules' defaults.
     /// </summary>
     public sealed class CompanionFightTests
     {
         const int Owner = 7;
         static readonly CompanionFightTuning T = CompanionFightTuning.Default;
 
+        const int Self = 8;
+
         static CompanionSeek Seek(int ownerTarget = 0, int current = 0) =>
-            new CompanionSeek { OwnerGhostId = Owner, Owner = float3.zero, OwnerTarget = ownerTarget, Current = current, Range = T.Range };
+            new CompanionSeek { OwnerGhostId = Owner, Owner = float3.zero, OwnerTarget = ownerTarget, Current = current, Range = T.Range, SelfGhostId = Self };
 
         static HostileSeen H(int id, float x, int after = 0, bool alive = true) =>
             new HostileSeen { GhostId = id, Feet = new float3(x, 0f, 0f), Radius = 0.5f, TargetGhostId = after, Alive = alive };
@@ -82,12 +85,15 @@ namespace KryticalNova.Tests
         }
 
         [Test]
-        public void Stances_AreBuiltExceptTank_AndTheCombatOnesActAsFreeInPvp()
+        public void Stances_AllFourAreBuilt_AndTheCombatOnesActAsFreeInPvp()
         {
             Assert.IsTrue(CompanionFightRules.IsBuilt(CompanionStance.Free));
             Assert.IsTrue(CompanionFightRules.IsBuilt(CompanionStance.Dps));
             Assert.IsTrue(CompanionFightRules.IsBuilt(CompanionStance.Healer));
-            Assert.IsFalse(CompanionFightRules.IsBuilt(CompanionStance.Tank), "phase 4");
+            Assert.IsTrue(CompanionFightRules.IsBuilt(CompanionStance.Tank), "phase 4");
+            Assert.IsFalse(CompanionFightRules.IsBuilt((CompanionStance)250));
+            Assert.AreEqual(CompanionStance.Free, CompanionFightRules.Effective(CompanionStance.Tank, true), "TANK is PvE only too");
+            Assert.AreEqual(CompanionStance.Tank, CompanionFightRules.Effective(CompanionStance.Tank, false));
             Assert.AreEqual(CompanionStance.Dps, CompanionFightRules.Effective(CompanionStance.Dps, false));
             Assert.AreEqual(CompanionStance.Free, CompanionFightRules.Effective(CompanionStance.Dps, true));
             Assert.AreEqual(CompanionStance.Free, CompanionFightRules.Effective(CompanionStance.Healer, true));
@@ -146,6 +152,54 @@ namespace KryticalNova.Tests
         }
 
         [Test]
+        public void Tank_KeepsTheHostileItTaunted_WhichIsNowAfterIt()
+        {
+            Assert.AreEqual(10, Pick(Seek(current: 10), H(10, 9f, after: Self), H(11, 2f, after: Owner)), "after the companion counts as after the owner");
+            Assert.AreEqual(10, Pick(Seek(), H(10, 3f, after: Self)), "a Hostile after it is still its fight");
+            Assert.AreEqual(0, Pick(new CompanionSeek { OwnerGhostId = Owner, Range = T.Range }, H(10, 3f, after: 0)), "no self id: a Hostile after nobody is none");
+        }
+
+        [Test]
+        public void Tank_TauntsHostilesAfterTheOwnerNearIt_Only()
+        {
+            var at = new float3(0f, 0f, 0f);
+            Assert.IsTrue(CompanionFightPick.Tauntable(H(10, 5f, after: Owner), Owner, at, T.TauntRadius));
+            Assert.IsFalse(CompanionFightPick.Tauntable(H(10, T.TauntRadius + 0.5f, after: Owner), Owner, at, T.TauntRadius), "too far from the companion");
+            Assert.IsFalse(CompanionFightPick.Tauntable(H(10, 5f, after: 99), Owner, at, T.TauntRadius), "after someone else: not its fight");
+            Assert.IsFalse(CompanionFightPick.Tauntable(H(10, 5f, after: Self), Owner, at, T.TauntRadius), "already after the companion");
+            Assert.IsFalse(CompanionFightPick.Tauntable(H(10, 5f, after: Owner, alive: false), Owner, at, T.TauntRadius), "dead");
+            Assert.IsTrue(CompanionFightRules.TauntDue(true, 6f, 6f));
+            Assert.IsFalse(CompanionFightRules.TauntDue(true, 5.9f, 6f), "its timer");
+            Assert.IsFalse(CompanionFightRules.TauntDue(false, 9f, 6f), "nothing to taunt");
+        }
+
+        [Test]
+        public void Tank_TakesLessDamage_OnlyWhileActingAsTank()
+        {
+            Assert.AreEqual(1f - T.DefenceBuff, CompanionFightRules.TakenScale(CompanionStance.Tank, T), 1e-5f);
+            Assert.AreEqual(1f, CompanionFightRules.TakenScale(CompanionStance.Free, T), "FREE (and a TANK in PvP, which acts as FREE)");
+            Assert.AreEqual(1f, CompanionFightRules.TakenScale(CompanionStance.Dps, T));
+            CompanionFightTuning wall = T;
+            wall.DefenceBuff = 5f;
+            Assert.AreEqual(0.1f, CompanionFightRules.TakenScale(CompanionStance.Tank, wall), 1e-5f, "never below 10 %");
+        }
+
+        [Test]
+        public void Tank_IsInTheHostilesSenseWorld_OnlyWhileOutAndActingAsTank()
+        {
+            var view = new CompanionView { State = (byte)CompanionState.Out, ActingStance = (byte)CompanionStance.Tank };
+            Assert.IsTrue(CompanionSenseFeedSystem.Sensed(view, 42));
+            Assert.IsFalse(CompanionSenseFeedSystem.Sensed(view, 0), "no ghost id yet");
+            view.ActingStance = (byte)CompanionStance.Dps;
+            Assert.IsFalse(CompanionSenseFeedSystem.Sensed(view, 42), "DPS is never a target");
+            view.ActingStance = (byte)CompanionStance.Healer;
+            Assert.IsFalse(CompanionSenseFeedSystem.Sensed(view, 42), "HEALER is never a target");
+            view.ActingStance = (byte)CompanionStance.Tank;
+            view.State = (byte)CompanionState.KnockedOut;
+            Assert.IsFalse(CompanionSenseFeedSystem.Sensed(view, 42), "knocked out");
+        }
+
+        [Test]
         public void TheSettingsAssetsNumbers_AreTheRulesDefaults()
         {
             var settings = ScriptableObject.CreateInstance<MountSettings>();
@@ -161,6 +215,9 @@ namespace KryticalNova.Tests
                 Assert.AreEqual(d.PulseSeconds, a.PulseSeconds);
                 Assert.AreEqual(d.HealShare, a.HealShare);
                 Assert.AreEqual(d.HealOutOfFight, a.HealOutOfFight);
+                Assert.AreEqual(d.TauntSeconds, a.TauntSeconds);
+                Assert.AreEqual(d.TauntRadius, a.TauntRadius);
+                Assert.AreEqual(d.DefenceBuff, a.DefenceBuff);
             }
             finally { Object.DestroyImmediate(settings); }
         }

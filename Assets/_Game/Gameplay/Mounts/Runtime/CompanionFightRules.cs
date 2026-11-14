@@ -14,25 +14,40 @@ namespace KryticalNova.Mounts
         /// <summary>HEALER: seconds between two pulses; the share of the owner's max HP a pulse heals; heals out of a fight too.</summary>
         public float PulseSeconds, HealShare;
         public bool HealOutOfFight;
+        /// <summary>TANK (phase 4): seconds between two taunts; the radius around the companion a taunt also pulls Hostiles after the owner from; its defence buff.</summary>
+        public float TauntSeconds, TauntRadius, DefenceBuff;
 
         /// <summary>The plan's proposed numbers, the same as a new <see cref="MountSettings"/>.</summary>
         public static CompanionFightTuning Default => new CompanionFightTuning
         {
             Range = 12f, LookSeconds = 0.25f, StrikeSeconds = 1.6f, Reach = 2.2f, DamageShare = 0.35f, DamageBuff = 0.15f,
             PulseSeconds = 2f, HealShare = 0.015f, HealOutOfFight = false,
+            TauntSeconds = 6f, TauntRadius = 8f, DefenceBuff = 0.4f,
         };
     }
 
     /// <summary>
-    /// The Mount Companion's DPS and HEALER stances (day list item 19, phase 3), free of networking so they can be tested. Both are PvE only:
+    /// The Mount Companion's DPS and HEALER stances (day list item 19, phase 3) and its TANK stance (phase 4), free of networking so they can be tested. Both are PvE only:
     /// in a PvP zone, a duel or a Crossfire battlefield the stance acts as FREE (FREE stays the only PvP stance) and comes back when the owner
-    /// leaves. Neither ever takes threat: DPS strikes are dealt in the owner's name with no threat, HEALER deals no damage. Which Hostile it
+    /// leaves. Neither DPS nor HEALER ever takes threat: DPS strikes are dealt in the owner's name with no threat, HEALER deals no damage.
+    /// TANK takes it on purpose: it taunts the Hostiles fighting its owner so they turn on it, takes less damage, and deals none. Which Hostile it
     /// fights is <c>CompanionFightPick</c> (Autopilot's target logic inside its short range, run as a Burst job on the server).
     /// </summary>
     public static class CompanionFightRules
     {
-        /// <summary>The stances built so far (TANK comes in phase 4).</summary>
-        public static bool IsBuilt(CompanionStance stance) => stance == CompanionStance.Free || stance == CompanionStance.Dps || stance == CompanionStance.Healer;
+        /// <summary>The stances built: FREE, DPS and HEALER (phase 3), TANK (phase 4).</summary>
+        public static bool IsBuilt(CompanionStance stance) =>
+            stance == CompanionStance.Free || stance == CompanionStance.Dps || stance == CompanionStance.Healer || stance == CompanionStance.Tank;
+
+        /// <summary>
+        /// TANK (phase 4): the share of a blow its body takes while it acts in the stance (1 - its defence buff, never below 10 %); 1 in
+        /// every other stance (a TANK in PvP acts as FREE, so a player's hit is never lessened).
+        /// </summary>
+        public static float TakenScale(CompanionStance acting, in CompanionFightTuning t) =>
+            acting == CompanionStance.Tank ? 1f - Mathf.Clamp(t.DefenceBuff, 0f, 0.9f) : 1f;
+
+        /// <summary>TANK: a taunt is due (its timer ran out and it has a Hostile to taunt).</summary>
+        public static bool TauntDue(bool hasFight, float now, float nextTauntAt) => hasFight && now >= nextTauntAt;
 
         /// <summary>A stance that fights or heals (not FREE).</summary>
         public static bool IsCombat(CompanionStance stance) => stance == CompanionStance.Dps || stance == CompanionStance.Healer || stance == CompanionStance.Tank;

@@ -78,6 +78,9 @@ namespace KryticalNova.Core
         int CompanionPulses { get; }
         /// <summary>Server, phase 3: counts one DPS strike or HEALER pulse (the companion's server system calls it).</summary>
         void CountCompanionFight(bool strike);
+        /// <summary>Server, phase 4: its TANK taunts so far this session, and counting one (the Play proof reads them).</summary>
+        int CompanionTaunts { get; }
+        void CountCompanionTaunt();
         /// <summary>The owner's view: out, stance and each box's HP left (permille) and rest left (seconds), from the server.</summary>
         void MirrorCompanion(byte isOut, byte stance, ushort hp1, ushort hp2, ushort hp3, ushort hp4, uint rest1, uint rest2, uint rest3, uint rest4);
     }

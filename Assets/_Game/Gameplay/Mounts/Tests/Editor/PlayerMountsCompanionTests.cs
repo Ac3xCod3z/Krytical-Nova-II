@@ -148,14 +148,15 @@ namespace KryticalNova.Tests
         }
 
         [Test]
-        public void Stances_DpsAndHealerAreTaken_TankIsRefused_AndTheStanceOutlivesARelog()
+        public void Stances_AllFourAreTaken_AnUnknownOneIsRefused_AndTheStanceOutlivesARelog()
         {
             MountDefinition m = Built();
             mounts.ServerRegister(m);
             mounts.ServerSetStance((int)CompanionStance.Dps);
             Assert.AreEqual(CompanionStance.Dps, mounts.Stance);
             mounts.ServerSetStance((int)CompanionStance.Tank);
-            Assert.AreEqual(CompanionStance.Dps, mounts.Stance, "TANK comes in phase 4: refused, the stance stays");
+            Assert.AreEqual(CompanionStance.Tank, mounts.Stance, "TANK is built (phase 4)");
+            mounts.ServerSetStance((int)CompanionStance.Dps);
             mounts.ServerSetStance(250);
             Assert.AreEqual(CompanionStance.Dps, mounts.Stance, "no such stance");
             mounts.ServerSetStance((int)CompanionStance.Healer);
@@ -171,9 +172,32 @@ namespace KryticalNova.Tests
                 Assert.AreEqual(CompanionStance.Healer, again.Stance, "kept across a relog (phase 3)");
                 StringAssert.Contains("\"stance\":3", json);
                 again.RestoreSave(json.Replace("\"stance\":3", "\"stance\":1"));
-                Assert.AreEqual(CompanionStance.Free, again.Stance, "a saved stance that is not built loads as FREE");
+                Assert.AreEqual(CompanionStance.Tank, again.Stance, "a saved TANK loads as TANK (phase 4)");
+                again.RestoreSave(json.Replace("\"stance\":3", "\"stance\":77"));
+                Assert.AreEqual(CompanionStance.Free, again.Stance, "a saved stance that does not exist loads as FREE");
             }
             finally { Object.DestroyImmediate(go2); }
+        }
+
+        [Test]
+        public void Tank_ItsBodyTakesLessDamage_AsItsTakenScaleSays()
+        {
+            MountDefinition m = Built();
+            mounts.ServerRegister(m);
+            Press();
+            CompanionBody body = CompanionBody.Make(mounts, 0.9f, 2.2f);
+            try
+            {
+                body.TakenScale = 0.6f;
+                body.TakeDamage(new KryticalNova.Core.DamageResult { DamageDealt = mounts.CompanionMaxHp * 0.1f }, null);
+                Assert.AreEqual(940, mounts.CompanionHpOf(m.mountId), "10 % of its max at 60 %: 6 % lost");
+                body.TakenScale = 1f;
+                body.TakeDamage(new KryticalNova.Core.DamageResult { DamageDealt = mounts.CompanionMaxHp * 0.1f }, null);
+                Assert.AreEqual(840, mounts.CompanionHpOf(m.mountId), "out of TANK: the full blow");
+                body.TakeDamage(new KryticalNova.Core.DamageResult { DamageDealt = 500f, IsEvaded = true }, null);
+                Assert.AreEqual(840, mounts.CompanionHpOf(m.mountId), "a miss takes nothing");
+            }
+            finally { Object.DestroyImmediate(body.gameObject); }
         }
 
         [Test]

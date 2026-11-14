@@ -153,6 +153,62 @@ namespace KryticalNova.Hostiles.Entities.Tests
             Assert.Greater(Of(w, h, 301), before * 0.9f, "5 % a second");
         }
 
+        [Test]
+        public void ATaunt_TakesTheTargetAtOnce_EvenFromTheTopThreat_AndTheTauntersStrikesFollow()
+        {
+            using var w = new HostileTestWorld();
+            Entity h = w.Hostile(float3.zero, HostileBehaviourKind.FightsBack);
+            // 100 the player, 101 a stand-in that is never seen (the Mount Companion's TANK, day list 19 phase 4)
+            w.SetPlayers((new float3(1f, 0f, 0f), Alive), (new float3(-1f, 0f, 0f), (byte)(Alive | SensedFlags.Ignored)));
+            w.Hit(h, 100, 500f);
+            w.Step();
+            Assert.AreEqual(100, w.Target(h).GhostId);
+            w.Hit(h, 101, 0f, BrainEventKind.Taunt);
+            w.Step();
+            Assert.AreEqual(101, w.Target(h).GhostId, "a taunt from the 110 % rule's edge still turns it");
+            Assert.Greater(Of(w, h, 101), Of(w, h, 100), "and lifts it above the top");
+            w.Hit(h, 100, 20f);
+            w.Step();
+            Assert.AreEqual(101, w.Target(h).GhostId, "the player's next hit does not take it straight back");
+            w.Step(3 * HostileTestWorld.TickRate);
+            Assert.Greater(w.Strikes, 0, "it swings at the taunter");
+            Assert.AreEqual(101, w.Target(h).GhostId);
+        }
+
+        [Test]
+        public void ATauntFromOneItCannotSense_OnlyAddsThreat_AndATaunterThatLeaves_GivesTheTargetBack()
+        {
+            using var w = new HostileTestWorld();
+            Entity h = w.Hostile(float3.zero, HostileBehaviourKind.FightsBack);
+            w.SetPlayers((new float3(1f, 0f, 0f), Alive));
+            w.Hit(h, 100, 50f);
+            w.Step();
+            w.Hit(h, 555, 0f, BrainEventKind.Taunt);   // not in the sense world
+            w.Step();
+            Assert.AreEqual(100, w.Target(h).GhostId);
+
+            w.SetPlayers((new float3(1f, 0f, 0f), Alive), (new float3(-1f, 0f, 0f), (byte)(Alive | SensedFlags.Ignored)));
+            w.Hit(h, 101, 0f, BrainEventKind.Taunt);
+            w.Step();
+            Assert.AreEqual(101, w.Target(h).GhostId);
+            w.SetPlayers((new float3(1f, 0f, 0f), Alive));   // it went home, was knocked out or left TANK
+            w.Step(2);
+            Assert.AreEqual(100, w.Target(h).GhostId, "back to the player");
+        }
+
+        [Test]
+        public void AnIdleHostile_ATauntEngages()
+        {
+            using var w = new HostileTestWorld();
+            Entity h = w.Hostile(float3.zero, HostileBehaviourKind.FightsBack);
+            w.SetPlayers((new float3(1.5f, 0f, 0f), (byte)(Alive | SensedFlags.Ignored)));
+            w.Step(5);
+            w.Hit(h, 100, 0f, BrainEventKind.Taunt);
+            w.Step();
+            Assert.AreEqual(HostileMode.Engage, w.Brain(h).Mode);
+            Assert.AreEqual(100, w.Target(h).GhostId);
+        }
+
         static bool Has(HostileTestWorld w, Entity h, int ghostId) => Of(w, h, ghostId) > 0f;
 
         static float Of(HostileTestWorld w, Entity h, int ghostId)

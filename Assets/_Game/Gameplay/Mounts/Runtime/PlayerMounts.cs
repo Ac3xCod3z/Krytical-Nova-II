@@ -310,7 +310,7 @@ namespace KryticalNova.Mounts
             if (!HasAuthority) return;
             var wanted = (CompanionStance)next;
             if (!System.Enum.IsDefined(typeof(CompanionStance), wanted)) return;
-            if (!CompanionFightRules.IsBuilt(wanted)) { Notify("The TANK stance comes later.", toast: true); return; }
+            if (!CompanionFightRules.IsBuilt(wanted)) return;
             if (wanted == stance) return;
             stance = wanted;
             Notify(StanceLine(wanted), toast: true);
@@ -324,6 +324,7 @@ namespace KryticalNova.Mounts
             {
                 case CompanionStance.Dps: return $"{mount}: DPS. It helps you kill what you fight (PvE only).";
                 case CompanionStance.Healer: return $"{mount}: HEALER. It heals you while you fight (PvE only).";
+                case CompanionStance.Tank: return $"{mount}: TANK. It draws the Hostiles you fight onto itself and takes less damage (PvE only).";
                 default: return $"{mount}: FREE. It walks beside you and stays out of fights.";
             }
         }
@@ -367,6 +368,8 @@ namespace KryticalNova.Mounts
         public int CompanionStrikes { get; private set; }
         public int CompanionPulses { get; private set; }
         public void CountCompanionFight(bool strike) { if (strike) CompanionStrikes++; else CompanionPulses++; }
+        public int CompanionTaunts { get; private set; }
+        public void CountCompanionTaunt() => CompanionTaunts++;
         public float CompanionRunSpeed => Settings != null ? MountRules.Speed(Settings.runSpeed.x, Settings.runSpeed.y, GrowthPercent, IsFed) : 20f;
 
         /// <summary>The own view of the entity netcode: the server's companion boxes.</summary>
