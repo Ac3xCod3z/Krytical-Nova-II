@@ -27,7 +27,7 @@
     },
     {
       "title": "Your Mount Walks Beside You",
-      "body": "Press Y (or CALL in the Mount window) and your selected mount walks beside you instead of carrying you. It keeps up, catches up when left behind and keeps giving its stats; it gets hungry faster while out, and when its hunger runs out it goes home. It has HP of its own: enemy players' area skills can knock it out, and then it rests for 5 minutes. The new Mount Stim heals it. Set it to DPS and it fights beside you; set it to HEALER and it heals you while you fight (PvE only, never drawing aggro); set it to TANK and it taunts the Hostiles off you and takes their blows with a defence buff (PvE only)."
+      "body": "Press Y (or CALL in the Mount window) and your selected mount walks beside you instead of carrying you. It keeps up, catches up when left behind and keeps giving its stats; it gets hungry faster while out, and when its hunger runs out it goes home. It has HP of its own: enemy players' area skills can knock it out, and then it rests for 5 minutes. The new Mount Stim heals it. Set it to DPS and it fights beside you; set it to HEALER and it heals you while you fight (PvE only, never drawing aggro); set it to TANK and it taunts the Hostiles off you and takes their blows with a defence buff (PvE only). Kills it helps with give your mount 1.5x its growth EXP, 3x with a Rider Booster."
     }
   ],
   "patchNotes": [
@@ -57,6 +57,7 @@
         "Companion stances DPS and HEALER (Mount window): DPS joins the fight you are in and strikes beside you with its own damage buff; HEALER heals you over time while you fight. Neither ever draws aggro, and both stay out of PvP (they act as FREE in PvP zones, duels and Crossfire).",
         "Companion stance TANK (Mount window): your mount taunts the Hostile you fight and the others after you nearby every 6 s, so they turn on it and strike it instead of you; it takes less damage, deals none and acts as FREE in PvP.",
         "Companion stances grow with your mount: the more it has grown, the harder DPS strikes (about 40 % of your strike at the start, 70 % fully grown), the more HEALER heals (1.5 % to 3 % of your max HP every 2 s) and the tougher TANK is (65 % to 70 % less damage, up to twice its HP). Riding stats are unchanged; the stance tooltips show your mount's numbers.",
+        "Helped kills: a Hostile kill your Mount Companion helped with in the last 10 s (a DPS strike, a TANK taunt, or a HEALER heal while you fought it) gives your mount 1.5x its kill EXP; with a Rider Booster that is 3x. FREE never helps.",
         "Game Masters can now max a character in one go (Max Everything, gm.maxall): top level, skills, ladders, every mount and pet, its own Rare and Epic gear and a full kit of items. Only a GM can use it, and every use is logged.",
         "Swings move the grass: every swing throws the grass in front of it aside and it springs back; area skills send a ring across it and big hits a wave. Hostiles' swings push it too, the bigger the beast the wider.",
         "World effects (Settings, Graphics): how much the world's little effects do on your screen, Low to Ultra; on Low four swings move the grass at once instead of eight."

@@ -92,6 +92,7 @@ namespace KryticalNova.Mounts
         /// <summary>Whole UTC seconds: rests and the regen at home go by the clock, so a relog cannot skip them (tests set it).</summary>
         public static Func<long> UtcNow = () => DateTimeOffset.UtcNow.ToUnixTimeSeconds();
         private bool companionOut;     // never saved: nobody comes back into the world with it out
+        private readonly CompanionHelpLog companionHelp = new CompanionHelpLog();   // server only, never saved (phase 5)
         private bool callWhenOff;      // called while riding: it forms beside the rider as the getting-off ends
         private CompanionStance stance;
         private readonly int[] hpLost = new int[MountRules.Slots + 1];      // per box, permille lost, 0 = full
@@ -683,7 +684,23 @@ namespace KryticalNova.Mounts
             if (!HasAuthority || selected == 0 || kill.Credited == null || kill.Credited.gameObject != gameObject) return;
             // The Rider and Convoy Boosters raise what a kill is worth to the selected mount (owner, 12 Nov 2026).
             float bonus = TryGetComponent(out KryticalNova.Progression.PlayerExperienceBoosts boosts) ? boosts.ServerMountBonus : 0f;
-            AddXpUnits(MountRules.KillXpUnits(Tuning, bonus));
+            // A kill the companion helped with in the last 10 s is worth 1.5x to the mount, times the boosters (phase 5, owner 14 Nov 2026).
+            MountSettings settings = Settings;
+            bool helped = settings != null && companionHelp.TakeHelped(kill.Hostile, Time.time, settings.companionHelpSeconds);
+            float companion = CompanionHelpRules.KillMultiplier(helped, settings != null ? settings.companionHelpedKillXpMultiplier : 1f);
+            AddXpUnits(MountRules.KillXpUnits(Tuning, bonus, companion));
+        }
+
+        /// <summary>
+        /// Server only (Mount Companion phase 5): the companion, acting in <paramref name="acting"/>, just helped with the Hostile whose body is
+        /// <paramref name="hostileBody"/> (a DPS strike, a TANK taunt, a HEALER pulse while its owner fights it). A kill of it within
+        /// <see cref="MountSettings.companionHelpSeconds"/> then pays the mount the companion share. FREE notes nothing.
+        /// </summary>
+        public void ServerNoteCompanionHelp(Component hostileBody, CompanionStance acting)
+        {
+            if (!HasAuthority || hostileBody == null || !CompanionHelpRules.Counts(acting)) return;
+            HostileNet hostile = hostileBody.GetComponentInParent<HostileNet>();
+            if (hostile != null) companionHelp.Note(hostile, Time.time, acting);
         }
 
         /// <summary>Server only (GM): adds EXP to the selected mount as the design counts it.</summary>
