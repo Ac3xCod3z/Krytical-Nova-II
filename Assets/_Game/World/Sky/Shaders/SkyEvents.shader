@@ -149,10 +149,10 @@ Shader "Krytical Nova/Sky Events"
                 float kTrail = shower ? _KN_ShowerParams.x : _KN_StreakParams.x;
                 float kHead = shower ? _KN_ShowerParams.y : _KN_StreakParams.y;
                 half taper = t * t * (3.0 - 2.0 * t);
-                half line = exp(-dist * dist * kTrail / (wt * wt)) * taper * a.w;
+                half trailGlow = exp(-dist * dist * kTrail / (wt * wt)) * taper * a.w;
                 float dh = length(d - head);
                 half glow = exp(-dh * dh * kHead) * headAmt;
-                trailSum += line * (shower ? _KN_ShowerTrail.rgb : _KN_StreakColor.rgb);
+                trailSum += trailGlow * (shower ? _KN_ShowerTrail.rgb : _KN_StreakColor.rgb);
                 headSum += glow * (shower ? _KN_ShowerHead.rgb : _KN_StreakColor.rgb * 1.3);
             }
 
