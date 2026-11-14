@@ -67,7 +67,6 @@ namespace KryticalNova.EditorTools
             ("Saddle", "Mount Drop", 0.55f, 0f),
             ("Harvester", "Harvester", 0.60f, 60f),
             ("Cape", "cape", 0.60f, 0f),
-            ("CarbineMachineGun", "Carbine Machine Gun", 0.60f, 0f),
             ("Monoblade", "MonoBlade", 0.70f, 70f),
             ("Warbow", "Warbow", 0.70f, 70f),
             ("GreatAxe", "Great Axe", 0.80f, 70f),
