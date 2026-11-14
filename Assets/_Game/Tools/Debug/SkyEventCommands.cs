@@ -35,7 +35,7 @@ namespace KryticalNova.DevTools
             SkyEventKind.Meteor => "Shooting stars",
             SkyEventKind.Shower => "The Emberfall (meteor shower)",
             SkyEventKind.Comet => "The Pale Wanderer (comet)",
-            SkyEventKind.Nebula => "The Soul Tide (nebula)",
+            SkyEventKind.Nebula => "A nebula (tonight's pick of Soul Tide, Ember Rose, Veil Ribbon)",
             SkyEventKind.Sun2 => "The second sun",
             SkyEventKind.Eclipse => "A total eclipse",
             SkyEventKind.Aurora => "The aurora",
@@ -52,8 +52,18 @@ namespace KryticalNova.DevTools
         [Command("sky.comet", "The Pale Wanderer comet for every player. Night only.")]
         private static string Comet() => Force(SkyEventKind.Comet);
 
-        [Command("sky.nebula", "The Soul Tide nebula for every player. Night only.")]
+        [Command("sky.nebula", "Tonight's nebula (Soul Tide, Ember Rose or Veil Ribbon, picked by the calendar) for every player. Night only.")]
         private static string Nebula() => Force(SkyEventKind.Nebula);
+
+        [Command("sky.nebula.look", "THIS client only, for proof shots: show nebula look 0 Soul Tide, 1 Ember Rose, 2 Veil Ribbon; -1 = the calendar's pick.")]
+        private static string NebulaLook(int look)
+        {
+            var s = SkyEventSettings.Default;
+            int count = s != null && s.nebulas != null ? s.nebulas.Length : 0;
+            if (look >= count) return $"Look {look} does not exist (0-{count - 1}, or -1).";
+            SkyEventPresenter.NebulaLookOverride = look < 0 ? -1 : look;
+            return look < 0 ? "Nebula back to the calendar's pick." : $"This client shows {s.nebulas[look].name} on nebula nights (others see the calendar's pick).";
+        }
 
         [Command("sky.sun2", "Puts the second sun high in the sky for every player.")]
         private static string Sun2() => Force(SkyEventKind.Sun2);
@@ -89,7 +99,8 @@ namespace KryticalNova.DevTools
             var sb = new StringBuilder();
             sb.Append($"Day {day}  overhead tonight: {StarCharts.All[now.OverheadConstellation].Name}");
             if (forced != SkyEventKind.None && age <= s.forcedSeconds) sb.Append($"  forced: {Name(forced)} ({age:0} s)");
-            sb.Append($"\nNow: nebula {now.Nebula:0.00}  streaks {now.StreakCount}  comet {now.Comet:0.00}  sun2 {now.Sun2:0.00}  eclipse {now.Eclipse:0.00}  aurora {now.Aurora:0.00}");
+            string nebulaName = now.NebulaLook >= 0 && s.nebulas != null && now.NebulaLook < s.nebulas.Length ? s.nebulas[now.NebulaLook].name : "none";
+            sb.Append($"\nNow: nebula {now.Nebula:0.00} ({nebulaName})  streaks {now.StreakCount}  comet {now.Comet:0.00}  sun2 {now.Sun2:0.00}  eclipse {now.Eclipse:0.00}  aurora {now.Aurora:0.00}");
             sb.Append($"\nNext: shower in {NextDay(day, d => SkyCalendar.Evaluate(At(clock, d, 0.9f), s).ShowerNight)} days");
             sb.Append($", comet in {NextDay(day, d => SkyCalendar.Evaluate(At(clock, d, 0.95f), s).Comet > 0f)}");
             sb.Append($", eclipse in {NextDay(day, d => SkyCalendar.Evaluate(At(clock, d, s.eclipsePeak01), s).EclipseDay)}");

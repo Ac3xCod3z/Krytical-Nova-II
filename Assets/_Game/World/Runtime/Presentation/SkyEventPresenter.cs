@@ -8,7 +8,7 @@ namespace KryticalNova.World
     /// <summary>
     /// A Unique Sky (owner's NIGHT list item 24): the client's half. It asks <see cref="SkyCalendar"/> what is in the sky (the world's
     /// seed, the calendar day, the presented time and any GM force) and draws it on a far overlay dome over the custom sky: the baked
-    /// star map, the Soul Tide nebula, shooting stars, the comet, the amber second sun (the custom sun's own art, a copy of its drawing
+    /// star map (stars only), the night's nebula (Soul Tide, Ember Rose or Veil Ribbon), shooting stars, the comet, the amber second sun (the custom sun's own art, a copy of its drawing
     /// code, no light of any kind), the eclipse (moon disc, pearl corona, deep-blue wash) and the aurora.
     /// <para>The custom sun's files are never touched (owner, 14 Nov: "My custom sun better not change"). Everything here runs after
     /// <see cref="EnvironmentPresenter"/> (execution order 70 &gt; 50) and only on top of what it set this frame:</para>
@@ -32,6 +32,10 @@ namespace KryticalNova.World
         /// </summary>
         public static Func<bool> AuroraAllowed;
 
+        /// <summary>Shows this nebula look instead of the calendar's (-1 = the calendar's). This client only: for proof shots
+        /// (<c>sky.nebula.look</c>); every player still agrees on the calendar's pick.</summary>
+        public static int NebulaLookOverride = -1;
+
         /// <summary>The running presenter (null on a server or before the first map).</summary>
         public static SkyEventPresenter Instance { get; private set; }
 
@@ -54,7 +58,7 @@ namespace KryticalNova.World
         float wroteAmbientDim;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        static void ResetStatics() { AuroraAllowed = null; Instance = null; }
+        static void ResetStatics() { AuroraAllowed = null; Instance = null; NebulaLookOverride = -1; }
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         static void Create()
@@ -179,19 +183,22 @@ namespace KryticalNova.World
         {
             bool on = s.starMap != null;
             if (on) Shader.SetGlobalTexture(Ids.StarMap, s.starMap);
-            if (s.nebulaTexture != null) Shader.SetGlobalTexture(Ids.NebulaTex, s.nebulaTexture);
 
-            // stars: the baked map turned by the calendar; lines (pick 2B) only in the darkest part of a clear night
-            float lineFade = Mathf.Clamp01((starVisibility - s.constellationLineFrom) / Mathf.Max(0.01f, 1f - s.constellationLineFrom));
+            // stars: the baked map turned by the calendar (owner 14 Nov: stars only, no constellation lines)
             float clear = 1f - Mathf.Clamp01(w.coverage);
-            Shader.SetGlobalVector(Ids.StarParams, new Vector4(on ? 1f : 0f, s.starBrightness, s.constellationLineStrength * lineFade * clear, 0f));
+            Shader.SetGlobalVector(Ids.StarParams, new Vector4(on ? 1f : 0f, s.starBrightness, 0f, 0f));
             Shader.SetGlobalVector(Ids.StarBasisX, sky.StarBasisX);
             Shader.SetGlobalVector(Ids.StarBasisY, sky.StarBasisY);
             Shader.SetGlobalVector(Ids.StarBasisZ, sky.StarBasisZ);
 
             Vector3 n = sky.NebulaDir.sqrMagnitude > 0f ? sky.NebulaDir : Vector3.up;
-            Shader.SetGlobalVector(Ids.Nebula, new Vector4(n.x, n.y, n.z, s.nebulaTexture != null ? sky.Nebula * s.nebulaBrightness : 0f));
-            Shader.SetGlobalVector(Ids.NebulaParams, new Vector4(Mathf.Tan(s.nebulaDegrees * 0.5f * Mathf.Deg2Rad), 0f, 0f, 0f));
+            // the night's nebula look (Soul Tide, Ember Rose or Veil Ribbon), picked by the calendar
+            int look = NebulaLookOverride >= 0 ? NebulaLookOverride : sky.NebulaLook;
+            var neb = s.nebulas != null && look >= 0 && look < s.nebulas.Length ? s.nebulas[look] : null;
+            bool nebOn = neb != null && neb.texture != null;
+            if (nebOn) Shader.SetGlobalTexture(Ids.NebulaTex, neb.texture);
+            Shader.SetGlobalVector(Ids.Nebula, new Vector4(n.x, n.y, n.z, nebOn ? sky.Nebula * neb.brightness : 0f));
+            Shader.SetGlobalVector(Ids.NebulaParams, new Vector4(Mathf.Tan((nebOn ? neb.degrees : 38f) * 0.5f * Mathf.Deg2Rad), 0f, 0f, 0f));
 
             // World Effects: fewer streaks at once on Low (the calendar still decides which ones, so clients agree on those shown)
             int streaks = Mathf.Min(sky.StreakCount, s.StreaksFor(effectsTier));

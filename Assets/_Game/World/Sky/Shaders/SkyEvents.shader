@@ -1,6 +1,6 @@
 // A Unique Sky (owner's NIGHT list item 24): the sky's events on a far overlay dome drawn by SkyEventPresenter over the custom sky,
 // for the game camera only. The custom sky (StylizedSky.shader) is untouched; this pass only adds on top of it:
-//   star map + faint constellation lines, Soul Tide nebula, shooting stars, The Pale Wanderer comet, the aurora (additive),
+//   star map (stars only: owner 14 Nov, no constellation lines), one of three nebulas (Soul Tide, Ember Rose, Veil Ribbon), shooting stars, The Pale Wanderer comet, the aurora (additive),
 //   the amber second sun (the custom sun's own art via the copied SkyBodyCommon.hlsl; colour only, it lights nothing),
 //   the eclipse: deep-blue wash, the moon disc sliding over the sun, the pearl corona at totality.
 // Cost: one star-map sample, one cloud sample, one sun-art sample; the rest are uniform-gated branches (no new keywords).
@@ -69,9 +69,9 @@ Shader "Krytical Nova/Sky Events"
             float4 _KN_SunParams;   // x cos(sun disc size)
 
             // the sky events' globals (SkyEventPresenter)
-            TEXTURE2D(_KN_StarMap);   SAMPLER(sampler_KN_StarMap);   // lat-long dome: rgb stars + band, a constellation lines
+            TEXTURE2D(_KN_StarMap);   SAMPLER(sampler_KN_StarMap);   // lat-long dome: rgb stars + band
             TEXTURE2D(_KN_NebulaTex); SAMPLER(sampler_KN_NebulaTex);
-            float4 _KN_StarParams;    // x map on, y brightness, z line strength now
+            float4 _KN_StarParams;    // x map on, y brightness
             float4 _KN_StarBasisX, _KN_StarBasisY, _KN_StarBasisZ;
             float4 _KN_Nebula;        // xyz direction, w amount
             float4 _KN_NebulaParams;  // x tan(half size)
@@ -163,15 +163,15 @@ Shader "Krytical Nova/Sky Events"
                 [branch] if (eclipse > 0.0)
                     Over(C, A, _KN_EclipseSky.rgb, eclipse * _KN_Eclipse.z);
 
-                // ---- night block: the star map, lines, nebula, streaks, comet, aurora (they also show through an eclipse)
+                // ---- night block: the star map, nebula, streaks, comet, aurora (they also show through an eclipse)
                 half vis = max(_KN_SkyParams.y, eclipse * _KN_Eclipse.z * 0.7);
                 [branch] if (vis > 0.001)
                 {
                     half3 night = 0.0;
                     [branch] if (_KN_StarParams.x > 0.5)
                     {
-                        half4 map = StarMapAt(d);
-                        night += map.rgb * _KN_StarParams.y + map.a * _KN_StarParams.z * half3(0.62, 0.85, 1.0);
+                        half3 map = StarMapAt(d).rgb;
+                        night += map.rgb * _KN_StarParams.y;
                     }
                     [branch] if (_KN_Nebula.w > 0.0)
                     {

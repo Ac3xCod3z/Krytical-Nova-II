@@ -3,8 +3,8 @@ using UnityEngine;
 namespace KryticalNova.World
 {
     /// <summary>
-    /// A Unique Sky (owner's NIGHT list item 24, picks 14 Nov 2026: 1A glint stars, 2B faint constellation lines at deep night,
-    /// 3A Soul Tide nebula, 4B amber second sun, 5A pearl corona eclipse, 6A green-teal aurora; spread-out constellations).
+    /// A Unique Sky (owner's NIGHT list item 24, picks 14 Nov 2026: 1A glint stars, 2A stars only, no constellation lines,
+    /// and all three nebulas 3A Soul Tide, 3B Ember Rose, 3C Veil Ribbon (owner's changes, 14 Nov), 4B amber second sun, 5A pearl corona eclipse, 6A green-teal aurora; spread-out constellations).
     /// Every number of the sky's events lives here; <see cref="SkyCalendar"/> turns (game day, world seed) into what is in
     /// the sky, so every client sees the same event at the same moment and the server only sends the seed, the day and a GM force.
     /// The default asset is <c>Resources/KN/SkyEvents</c> beside the presenter (made by Krytical Nova ▸ World ▸ Sky ▸ Bake Star Map).
@@ -32,18 +32,12 @@ namespace KryticalNova.World
         }
 
         [Header("Star map (baked by Krytical Nova ▸ World ▸ Sky ▸ Bake Star Map)")]
-        [Tooltip("Lat-long star map: RGB = shaped stars + galaxy band, A = the constellation lines (shown only at deep night).")]
+        [Tooltip("Lat-long star map: shaped stars, the constellations' stars and the galaxy band (owner 14 Nov: stars only, no constellation lines).")]
         public Texture2D starMap;
-        [Tooltip("The Soul Tide nebula, drawn around its own moving direction.")]
-        public Texture2D nebulaTexture;
         [Tooltip("The overlay dome's shader (World/Sky/Shaders/SkyEvents.shader). Held here so a build always includes it.")]
         public Shader overlayShader;
         [Tooltip("Star map brightness.")]
         [Range(0f, 4f)] public float starBrightness = 1.6f;
-        [Tooltip("How bright the constellation lines get at the darkest hour of a clear night (pick 2B: faint).")]
-        [Range(0f, 1f)] public float constellationLineStrength = 0.22f;
-        [Tooltip("Star visibility above which the constellation lines start to fade in (1 = only the very darkest hours).")]
-        [Range(0f, 1f)] public float constellationLineFrom = 0.85f;
 
         [Header("Star dome turn")]
         [Tooltip("Height of the dome's pole above the north horizon in degrees: stars wheel around it.")]
@@ -83,16 +77,20 @@ namespace KryticalNova.World
         [Tooltip("Direction the shower radiates from: compass heading and elevation in degrees.")]
         public Vector2 showerRadiant = new Vector2(70f, 55f);
 
-        [Header("Nebula (Soul Tide, 3 nights in each moon cycle)")]
+        [Header("Nebulas (3 nights in each moon cycle; each nebula night picks one of the looks, owner 14 Nov)")]
         [Tooltip("First night of the moon cycle (0-based) the nebula shows.")]
         [Min(0)] public int nebulaFirstNight = 3;
         [Tooltip("Nights in a row it shows.")]
         [Min(1)] public int nebulaNights = 3;
-        [Tooltip("Angular size of the nebula in degrees.")]
-        [Range(5f, 90f)] public float nebulaDegrees = 38f;
         [Tooltip("Its own path: compass heading where it rises and where it sets, and its highest elevation, in degrees.")]
         public Vector3 nebulaPath = new Vector3(110f, 250f, 62f);
-        [Range(0f, 3f)] public float nebulaBrightness = 1f;
+        [Tooltip("The three nebulas (owner 14 Nov: all three, picked at random each nebula night from the world seed and the night, so every client agrees). Textures baked by Bake Star Map.")]
+        public NebulaLook[] nebulas =
+        {
+            new NebulaLook { name = "Soul Tide", degrees = 38f, brightness = 1f, weight = 1f },
+            new NebulaLook { name = "Ember Rose", degrees = 34f, brightness = 1f, weight = 1f },
+            new NebulaLook { name = "Veil Ribbon", degrees = 46f, brightness = 1f, weight = 1f },
+        };
 
         [Header("Comet: The Pale Wanderer")]
         [Tooltip("Where the comet's head sits: compass heading and elevation in degrees (it creeps a little each night).")]
@@ -159,5 +157,19 @@ namespace KryticalNova.World
         [Header("GM force")]
         [Tooltip("Real seconds a GM-forced event (sky.comet, sky.shower...) lasts.")]
         [Range(10f, 1800f)] public float forcedSeconds = 180f;
+    }
+
+    /// <summary>One nebula's look: its baked picture, size, brightness and how often a nebula night picks it.</summary>
+    [System.Serializable]
+    public sealed class NebulaLook
+    {
+        public string name;
+        [Tooltip("Its baked picture (Bake Star Map writes T_Nebula_<name>.png).")]
+        public Texture2D texture;
+        [Tooltip("Angular size in degrees.")]
+        [Range(5f, 90f)] public float degrees = 38f;
+        [Range(0f, 3f)] public float brightness = 1f;
+        [Tooltip("How often a nebula night picks it, against the others' weights (0 = never).")]
+        [Min(0f)] public float weight = 1f;
     }
 }

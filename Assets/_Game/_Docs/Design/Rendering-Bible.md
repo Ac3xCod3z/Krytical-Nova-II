@@ -272,7 +272,7 @@ Peak strength is `rainbowPeak` 0.25, so it stays subtle. Preview it with `previe
 presentation overrides only.
 
 ### A unique sky: sky events (item 24, 14 Nov 2026)
-Owner picks 1A glint stars, 2B faint constellation lines at deep night, 3A Soul Tide nebula, 4B amber second sun, 5A pearl
+Owner picks 1A glint stars, 2A stars only (changed 14 Nov from 2B: no constellation lines), all three nebulas 3A Soul Tide, 3B Ember Rose and 3C Veil Ribbon (changed 14 Nov from 3A only), 4B amber second sun, 5A pearl
 corona eclipse, 6A green-teal aurora. **The custom sun's files keep a zero diff** (owner: "My custom sun better not change"):
 `StylizedSky.shader`, `SkyCommon.hlsl`, `M_StylizedSky.mat`, `T_Sun.png`, the lens flare, `DayCycleProfile`, `DC_Default`,
 `EnvironmentPresenter`, the sun shafts / glow halo / lettering features and the render settings are not edited.
@@ -280,8 +280,13 @@ corona eclipse, 6A green-teal aurora. **The custom sun's files keep a zero diff*
   `SkyCalendar` (world seed + calendar day + presented time + GM force) and draws one far overlay dome with
   `SkyEvents.shader` for the game camera only (`Graphics.RenderMesh`, queue Transparent-499: after the skybox, before every
   transparent; on the far plane like the skybox; no shadows, no light or reflection probes). Premultiplied: the eclipse's
-  deep-blue wash, then the star map, lines, nebula, streaks, comet and aurora added, then the second sun and the moon disc laid
+  deep-blue wash, then the star map, the nebula, streaks, comet and aurora added, then the second sun and the moon disc laid
   over, then the corona added. Stars sit behind clouds (one cloud sample from `SkyCommon.hlsl`, read only).
+- **Nebulas:** a nebula shows on 3 of the 8 nights of the moon cycle; each nebula night picks one of `SkyEventSettings.nebulas`
+  (Soul Tide, Ember Rose, Veil Ribbon; texture, size, brightness, weight each) with `SkyCalendar.PickNebula` (a weighted hash of
+  the world seed and the night: every client agrees with no network data). Baked as `T_Nebula_SoulTide/EmberRose/VeilRibbon.png`.
+  `sky.nebula.look <n>` shows one look on this client only, for proof shots.
+- **Constellations:** stars only. The star map's alpha is 1 and the shader reads only its colour (no lines, no fade-in).
 - **Old dot stars:** the client sets `RenderSettings.skybox` to a runtime copy of the sky material with only `_StarBrightness`
   at 0. The material asset is unchanged.
 - **Second sun:** the custom sun's art (`_KN_SunTex`, T_Sun) through a copy of its drawing code (`SkyBodyCommon.hlsl`:
@@ -1203,7 +1208,7 @@ nothing baked, and they are generated (`FrontEndBuilder`), so tune the numbers t
 
 ## Changelog
 
-- **2026-11-14 (branch `b18/24-unique-sky`)**: A unique sky (section 5, "A unique sky: sky events"): star map, eight constellations, Soul Tide, shooting stars, The Emberfall, The Pale Wanderer, the amber second sun (custom sun art, no light) and the eclipse with its run-time world dim, on a client-only overlay dome; the old dot stars off through a runtime material copy; the custom sun's files unchanged.
+- **2026-11-14 (branch `b18/24-unique-sky`)**: A unique sky (section 5, "A unique sky: sky events"): star map, eight constellations (stars only), three nebulas picked per night, shooting stars, The Emberfall, The Pale Wanderer, the amber second sun (custom sun art, no light) and the eclipse with its run-time world dim, on a client-only overlay dome; the old dot stars off through a runtime material copy; the custom sun's files unchanged.
 - **2026-10-18 (branch `perf/batching-pass`)**: the batching pass (section 7, "Batching"): the Batching Report and
   `gm.batching`, shadow bands on Low and Medium, switches to measure them and the Resident Drawer's occlusion culling,
   a background measuring build for DX11 against DX12, the starting preset picked from the hardware, the Player 2

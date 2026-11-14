@@ -6,13 +6,14 @@ using UnityEngine;
 namespace KryticalNova.EditorTools
 {
     /// <summary>
-    /// Bakes the sky's star map and nebula (owner's NIGHT list item 24; picks 14 Nov 2026: 1A glint stars, 2B faint constellation lines,
-    /// 3A Soul Tide nebula, constellations spread apart). Krytical Nova ▸ World ▸ Sky ▸ Bake Star Map writes:
+    /// Bakes the sky's star map and nebulas (owner's NIGHT list item 24; picks 14 Nov 2026: 1A glint stars, constellations spread apart;
+    /// owner's change 14 Nov: no constellation lines (2A, stars only) and all three nebulas). Krytical Nova ▸ World ▸ Sky ▸ Bake Star Map writes:
     /// <list type="bullet">
     /// <item><c>World/Sky/Textures/T_StarMap.png</c>: a lat-long map of the dome in its own frame (u = right ascension, v = declination).
-    /// RGB = hand-placed shaped stars in a few sizes and colours, the constellations' stars and a painted galaxy band with dust lanes;
-    /// A = the constellation lines, which the shader shows only at deep night.</item>
-    /// <item><c>World/Sky/Textures/T_Nebula.png</c>: the Soul Tide, drawn by the shader around its own moving direction.</item>
+    /// RGB = hand-placed shaped stars in a few sizes and colours, the constellations' stars and a painted galaxy band with dust lanes
+    /// (A is 1: no lines).</item>
+    /// <item><c>World/Sky/Textures/T_Nebula_SoulTide.png</c>, <c>T_Nebula_EmberRose.png</c>, <c>T_Nebula_VeilRibbon.png</c>: the three
+    /// nebulas (3A teal-violet wisps, 3B a warm rose cloud with dark dust lanes, 3C a cyan-to-gold streamer).</item>
     /// <item><c>Resources/KN/SkyEvents.asset</c> beside the presenter, pointing at both (made once; its numbers are kept on a re-bake).</item>
     /// </list>
     /// Fixed seeds: the same bake every time, so it is committed once (Git LFS rule).
@@ -21,7 +22,11 @@ namespace KryticalNova.EditorTools
     {
         public const string TextureFolder = "Assets/_Game/World/Sky/Textures";
         public const string StarMapPath = TextureFolder + "/T_StarMap.png";
-        public const string NebulaPath = TextureFolder + "/T_Nebula.png";
+        /// <summary>The three nebulas, in the order of <see cref="SkyEventSettings.nebulas"/>.</summary>
+        public static readonly string[] NebulaPaths =
+        {
+            TextureFolder + "/T_Nebula_SoulTide.png", TextureFolder + "/T_Nebula_EmberRose.png", TextureFolder + "/T_Nebula_VeilRibbon.png",
+        };
         public const string SettingsPath = "Assets/_Game/World/Runtime/Presentation/Resources/KN/SkyEvents.asset";
         public const string OverlayShaderPath = "Assets/_Game/World/Sky/Shaders/SkyEvents.shader";
 
@@ -55,14 +60,23 @@ namespace KryticalNova.EditorTools
             }
 
             WritePng(StarMapPath, BakeStarMap(settings.poleElevation), W, H);
-            WritePng(NebulaPath, BakeNebula(), NebulaSize, NebulaSize);
             AssetDatabase.ImportAsset(StarMapPath, ImportAssetOptions.ForceSynchronousImport);
-            AssetDatabase.ImportAsset(NebulaPath, ImportAssetOptions.ForceSynchronousImport);
             SetImport(StarMapPath, false, TextureWrapMode.Repeat, TextureWrapMode.Clamp, 4096);
-            SetImport(NebulaPath, true, TextureWrapMode.Clamp, TextureWrapMode.Clamp, 512);
-
             settings.starMap = AssetDatabase.LoadAssetAtPath<Texture2D>(StarMapPath);
-            settings.nebulaTexture = AssetDatabase.LoadAssetAtPath<Texture2D>(NebulaPath);
+
+            if (settings.nebulas == null || settings.nebulas.Length < NebulaPaths.Length)
+            {
+                var defaults = ScriptableObject.CreateInstance<SkyEventSettings>();
+                settings.nebulas = defaults.nebulas;
+                Object.DestroyImmediate(defaults);
+            }
+            for (int k = 0; k < NebulaPaths.Length; k++)
+            {
+                WritePng(NebulaPaths[k], BakeNebula(k), NebulaSize, NebulaSize);
+                AssetDatabase.ImportAsset(NebulaPaths[k], ImportAssetOptions.ForceSynchronousImport);
+                SetImport(NebulaPaths[k], true, TextureWrapMode.Clamp, TextureWrapMode.Clamp, 512);
+                settings.nebulas[k].texture = AssetDatabase.LoadAssetAtPath<Texture2D>(NebulaPaths[k]);
+            }
             // the overlay shader rides on the settings asset (Resources), so a build always includes it
             settings.overlayShader = AssetDatabase.LoadAssetAtPath<Shader>(OverlayShaderPath);
             EditorUtility.SetDirty(settings);
@@ -134,7 +148,6 @@ namespace KryticalNova.EditorTools
         static Color[] BakeStarMap(float poleElevation)
         {
             var rgb = new Vector3[W * H];
-            var lines = new float[W * H];
             var rng = new System.Random(240);
 
             // ---- the galaxy band: a great circle tilted across the dome, violet to cyan, with dark dust lanes
@@ -208,16 +221,10 @@ namespace KryticalNova.EditorTools
                 StarSprite(rgb, d, 1.1f + s * 1.6f, new Vector3(c.r, c.g, c.b), 1f, s > 0.55f ? 5f + s * 12f : 0f);
             }
 
-            // ---- the constellations: their stars bright and glinting, their lines in alpha
+            // ---- the constellations: their stars bright and glinting (owner 14 Nov: no lines between them)
             var crng = new System.Random(24);
             foreach (var c in StarCharts.All)
             {
-                foreach (var line in c.Lines)
-                    for (int i = 0; i + 1 < line.Length; i++)
-                    {
-                        Vector2 a = StarCharts.RaDec(c, line[i], poleElevation), b = StarCharts.RaDec(c, line[i + 1], poleElevation);
-                        LineAlpha(lines, StarCharts.DomeDir(a.x, a.y), StarCharts.DomeDir(b.x, b.y));
-                    }
                 var seen = new System.Collections.Generic.HashSet<Vector2>();
                 foreach (var line in c.Lines)
                     foreach (var p in line)
@@ -238,7 +245,7 @@ namespace KryticalNova.EditorTools
                 Vector3 v = rgb[i];
                 // soft shoulder: bright cores stay white-hot without clipping the band's colours
                 v = new Vector3(v.x / (1f + v.x * 0.35f), v.y / (1f + v.y * 0.35f), v.z / (1f + v.z * 0.35f)) * 1.25f;
-                outPx[i] = new Color(Mathf.Clamp01(v.x), Mathf.Clamp01(v.y), Mathf.Clamp01(v.z), Mathf.Clamp01(lines[i]));
+                outPx[i] = new Color(Mathf.Clamp01(v.x), Mathf.Clamp01(v.y), Mathf.Clamp01(v.z), 1f);
             }
             return outPx;
         }
@@ -292,51 +299,70 @@ namespace KryticalNova.EditorTools
                 }
         }
 
-        /// <summary>A thin soft line along the great circle from a to b, into the alpha map.</summary>
-        static void LineAlpha(float[] a, Vector3 from, Vector3 to)
-        {
-            float deg = Vector3.Angle(from, to);
-            int steps = Mathf.Max(2, Mathf.CeilToInt(deg * PxPerDeg * 3f));
-            for (int i = 0; i <= steps; i++)
-            {
-                Vector3 d = Vector3.Slerp(from, to, i / (float)steps);
-                ToPixel(d, out float px, out float py);
-                float stretch = 1f / Mathf.Max(0.15f, Mathf.Cos((py + 0.5f) / H * Mathf.PI - Mathf.PI * 0.5f));
-                int ix = Mathf.FloorToInt(px), iy = Mathf.FloorToInt(py);
-                for (int oy = -2; oy <= 2; oy++)
-                    for (int ox = -3; ox <= 3; ox++)
-                    {
-                        int y = iy + oy; if (y < 0 || y >= H) continue;
-                        int x = ((ix + ox) % W + W) % W;
-                        float dx = (ix + ox - px) / stretch, dy = y - py;
-                        float v = Mathf.Exp(-(dx * dx + dy * dy) / 0.9f);
-                        int k = y * W + x;
-                        if (v > a[k]) a[k] = v;
-                    }
-            }
-        }
+        // ------------------------------------------------------------------ nebulas (owner 14 Nov: all three of picks 3A, 3B, 3C)
 
-        // ------------------------------------------------------------------ nebula (pick 3A: Soul Tide, teal-violet wisps)
-
-        static Color[] BakeNebula()
+        /// <summary>0 Soul Tide (teal-violet wisps), 1 Ember Rose (warm rose cloud with dark dust lanes), 2 Veil Ribbon (cyan-to-gold streamer).</summary>
+        static Color[] BakeNebula(int kind)
         {
             var px = new Color[NebulaSize * NebulaSize];
             for (int y = 0; y < NebulaSize; y++)
                 for (int x = 0; x < NebulaSize; x++)
                 {
                     float u = (x + 0.5f) / NebulaSize - 0.5f, v = (y + 0.5f) / NebulaSize - 0.5f;
-                    var p = new Vector3(u * 4f, v * 4f, 0.37f);
-                    float n1 = Fbm(p * 1.2f, 74, 6), n2 = Fbm(p * 2.2f, 75, 6), n3 = Fbm(p * 3.5f, 76, 5);
-                    float flow = Mathf.Sin((u * 6f + v * 2f + n1 * 3f) * Mathf.PI) * 0.5f + 0.5f;
-                    float env = Mathf.Exp(-((u / 0.30f) * (u / 0.30f) + (v / 0.24f) * (v / 0.24f)));
-                    float dens = env * Mathf.Pow(n2, 1.6f) * (0.4f + 0.6f * flow * flow * flow) * 2.4f;
-                    Color col = Color.Lerp(new Color(0.25f, 0.88f, 0.82f), new Color(0.61f, 0.42f, 1f), n3);
-                    float core = env * Mathf.Pow(n2, 4f) * 0.6f;
-                    Color c = col * dens + new Color(0.91f, 1f, 0.98f) * core;
-                    float a = Mathf.Clamp01(dens * 0.9f + core);
-                    px[y * NebulaSize + x] = new Color(Mathf.Clamp01(c.r), Mathf.Clamp01(c.g), Mathf.Clamp01(c.b), a);
+                    Color c; float a;
+                    if (kind == 1) EmberRose(u, v, out c, out a);
+                    else if (kind == 2) VeilRibbon(u, v, out c, out a);
+                    else SoulTide(u, v, out c, out a);
+                    px[y * NebulaSize + x] = new Color(Mathf.Clamp01(c.r), Mathf.Clamp01(c.g), Mathf.Clamp01(c.b), Mathf.Clamp01(a));
                 }
             return px;
+        }
+
+        static void SoulTide(float u, float v, out Color c, out float a)
+        {
+            var p = new Vector3(u * 4f, v * 4f, 0.37f);
+            float n1 = Fbm(p * 1.2f, 74, 6), n2 = Fbm(p * 2.2f, 75, 6), n3 = Fbm(p * 3.5f, 76, 5);
+            float flow = Mathf.Sin((u * 6f + v * 2f + n1 * 3f) * Mathf.PI) * 0.5f + 0.5f;
+            float env = Mathf.Exp(-((u / 0.30f) * (u / 0.30f) + (v / 0.24f) * (v / 0.24f)));
+            float dens = env * Mathf.Pow(n2, 1.6f) * (0.4f + 0.6f * flow * flow * flow) * 2.4f;
+            Color col = Color.Lerp(new Color(0.25f, 0.88f, 0.82f), new Color(0.61f, 0.42f, 1f), n3);
+            float core = env * Mathf.Pow(n2, 4f) * 0.6f;
+            c = col * dens + new Color(0.91f, 1f, 0.98f) * core;
+            a = dens * 0.9f + core;
+        }
+
+        static void EmberRose(float u, float v, out Color c, out float a)
+        {
+            // a round warm cloud, its glow cut by dark winding dust lanes
+            var p = new Vector3(u * 4f, v * 4f, 1.91f);
+            float n1 = Fbm(p * 1.1f, 81, 6), n2 = Fbm(p * 2.4f, 82, 6), n3 = Fbm(p * 5f, 83, 4);
+            float r = Mathf.Sqrt(u * u + v * v);
+            float env = Mathf.Exp(-(r / 0.27f) * (r / 0.27f));
+            float dens = env * Mathf.Pow(n1, 1.3f) * 2.6f;
+            float lane = Mathf.Abs(Mathf.Sin((u * 3f - v * 4f + n2 * 2.5f) * Mathf.PI));
+            float dust = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(lane / 0.35f)) * (0.55f + 0.45f * n3);
+            dens *= Mathf.Lerp(0.12f, 1f, dust);
+            Color col = Color.Lerp(new Color(0.95f, 0.36f, 0.42f), new Color(1f, 0.62f, 0.32f), n2);
+            float core = Mathf.Exp(-(r / 0.08f) * (r / 0.08f)) * 0.5f * dust;
+            c = col * dens + new Color(1f, 0.9f, 0.78f) * core;
+            a = dens * 0.85f + core;
+        }
+
+        static void VeilRibbon(float u, float v, out Color c, out float a)
+        {
+            // a long thin streamer across the square, cyan at one end turning gold at the other
+            var p = new Vector3(u * 4f, v * 4f, 3.13f);
+            float n1 = Fbm(p * 1.4f, 91, 6), n2 = Fbm(p * 3f, 92, 5);
+            float centre = 0.11f * Mathf.Sin(u * 7f + n1 * 2f) + (n1 - 0.5f) * 0.12f;
+            float off = (v - centre) / (0.035f + 0.03f * n2);
+            float q = u / 0.42f;
+            float along = Mathf.Exp(-q * q * q * q);
+            float strands = 0.6f + 0.4f * Mathf.Sin((v * 60f + n2 * 6f) * Mathf.PI * 0.25f);
+            float dens = Mathf.Exp(-off * off) * along * strands * Mathf.Lerp(0.6f, 1.4f, n2) * 1.8f;
+            Color col = Color.Lerp(new Color(0.3f, 0.9f, 1f), new Color(1f, 0.78f, 0.35f), Mathf.SmoothStep(0f, 1f, u + 0.5f));
+            float core = Mathf.Exp(-off * off * 6f) * along * 0.35f;
+            c = col * dens + new Color(1f, 0.98f, 0.92f) * core;
+            a = dens * 0.9f + core;
         }
     }
 }

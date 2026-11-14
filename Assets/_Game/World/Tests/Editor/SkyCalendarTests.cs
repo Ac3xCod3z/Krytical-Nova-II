@@ -154,5 +154,50 @@ namespace KryticalNova.Tests
                 for (float t = 0f; t < 1f; t += 0.25f) { total++; if (SkyCalendar.Evaluate(At(d, t), s).Sun2 > 0f) up++; }
             Assert.That(up / (float)total, Is.InRange(s.sun2Share - 0.08f, s.sun2Share + 0.02f));
         }
+
+        // ---- owner 14 Nov: all three nebulas, one picked at random each nebula night, the same for everyone
+
+        [Test]
+        public void NebulaNights_UseAllThreeLooks()
+        {
+            var seen = new int[s.nebulas.Length];
+            int nights = 0;
+            for (long night = 0; night < 2400; night++)
+            {
+                var now = SkyCalendar.Evaluate(At(night + 1, 0f), s);   // midnight of that night
+                if (now.Nebula <= 0f) continue;
+                nights++;
+                Assert.That(now.NebulaLook, Is.InRange(0, s.nebulas.Length - 1), $"night {night}");
+                seen[now.NebulaLook]++;
+            }
+            Assert.That(nights, Is.GreaterThan(600), "a nebula on 3 of every 8 nights");
+            for (int i = 0; i < seen.Length; i++)
+                Assert.That(seen[i] / (float)nights, Is.InRange(0.22f, 0.45f), $"{s.nebulas[i].name} shown on {seen[i]} of {nights} nebula nights");
+        }
+
+        [Test]
+        public void SameNight_SameNebula_AllNightLong()
+        {
+            for (long night = 500; night < 600; night++)
+            {
+                var evening = SkyCalendar.Evaluate(At(night, 0.92f), s);       // 22:00
+                var midnight = SkyCalendar.Evaluate(At(night + 1, 0f), s);
+                var lateNight = SkyCalendar.Evaluate(At(night + 1, 0.08f), s);  // 02:00, still that night
+                if (midnight.Nebula <= 0f) continue;
+                Assert.That(evening.NebulaLook, Is.EqualTo(midnight.NebulaLook), $"night {night}");
+                Assert.That(lateNight.NebulaLook, Is.EqualTo(midnight.NebulaLook), $"night {night}");
+                Assert.That(SkyCalendar.Evaluate(At(night + 1, 0f), s).NebulaLook, Is.EqualTo(midnight.NebulaLook), "repeatable");
+            }
+        }
+
+        [Test]
+        public void NebulaPick_FollowsTheWeights()
+        {
+            s.nebulas[1].weight = 0f;
+            for (long night = 0; night < 500; night++)
+                Assert.That(SkyCalendar.PickNebula(1234, night, s), Is.Not.EqualTo(1), $"night {night}: a weight of 0 is never picked");
+            foreach (var look in s.nebulas) look.weight = 0f;
+            Assert.That(SkyCalendar.PickNebula(1234, 7, s), Is.EqualTo(-1));
+        }
     }
 }

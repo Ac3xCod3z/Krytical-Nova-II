@@ -823,7 +823,7 @@ namespace KryticalNova.EditorTools.GM
         [ButtonGroup(Tabs + "/" + WorldTab + "/SkyNight"), EnableIf(nameof(HasWorld)), LabelText("The Pale Wanderer"), PropertyOrder(404.2f)]
         private void SkyComet() => Run("sky.comet");
 
-        [ButtonGroup(Tabs + "/" + WorldTab + "/SkyNight"), EnableIf(nameof(HasWorld)), LabelText("Soul Tide"), PropertyOrder(404.2f)]
+        [ButtonGroup(Tabs + "/" + WorldTab + "/SkyNight"), EnableIf(nameof(HasWorld)), LabelText("Nebula"), PropertyOrder(404.2f)]
         private void SkyNebula() => Run("sky.nebula");
 
         [ButtonGroup(Tabs + "/" + WorldTab + "/SkyNight"), EnableIf(nameof(HasWorld)), LabelText("Aurora"), PropertyOrder(404.2f)]

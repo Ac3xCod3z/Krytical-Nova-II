@@ -45,6 +45,8 @@ namespace KryticalNova.World
 
         public float Nebula;
         public Vector3 NebulaDir;
+        /// <summary>Which of <see cref="SkyEventSettings.nebulas"/> tonight's nebula is (-1 none).</summary>
+        public int NebulaLook;
 
         public int StreakCount;
         public SkyStreak S0, S1, S2, S3;
@@ -85,7 +87,7 @@ namespace KryticalNova.World
     /// </summary>
     public static class SkyCalendar
     {
-        const int SaltStreaks = 0x5A17, SaltCount = 0x0C47, SaltComet = 0xC0E7, SaltAurora = 0xA080, SaltMigration = 0x3161, SaltShower = 0x5402;
+        const int SaltStreaks = 0x5A17, SaltCount = 0x0C47, SaltComet = 0xC0E7, SaltAurora = 0xA080, SaltMigration = 0x3161, SaltShower = 0x5402, SaltNebula = 0x4EB1;
 
         public static float Hash01(int seed, long n) => WorldEnvironmentNetwork.Hash01(seed, n);
 
@@ -152,10 +154,33 @@ namespace KryticalNova.World
             return true;
         }
 
+        /// <summary>
+        /// Which nebula a night shows (owner 14 Nov: all three, at random): a weighted pick hashed from the world seed and the night, so
+        /// the server and every client agree with no network data. -1 when no look has a weight.
+        /// </summary>
+        public static int PickNebula(int seed, long night, SkyEventSettings s)
+        {
+            var looks = s != null ? s.nebulas : null;
+            if (looks == null || looks.Length == 0) return -1;
+            float total = 0f;
+            for (int i = 0; i < looks.Length; i++) if (looks[i] != null) total += Mathf.Max(0f, looks[i].weight);
+            if (total <= 0f) return -1;
+            float r = Hash01(seed ^ SaltNebula, night) * total;
+            int last = -1;
+            for (int i = 0; i < looks.Length; i++)
+            {
+                if (looks[i] == null || looks[i].weight <= 0f) continue;
+                last = i;
+                r -= looks[i].weight;
+                if (r < 0f) return i;
+            }
+            return last;
+        }
+
         /// <summary>Everything in the sky now.</summary>
         public static SkyNow Evaluate(in SkyClock c, SkyEventSettings s)
         {
-            var now = new SkyNow { Migration = -1f };
+            var now = new SkyNow { Migration = -1f, NebulaLook = -1 };
             if (s == null) return now;
 
             float poleEl = s.poleElevation;
@@ -182,6 +207,8 @@ namespace KryticalNova.World
             {
                 float p = Mathf.Clamp01(nebulaProgress);
                 now.Nebula = c.Forced == SkyEventKind.Nebula ? Fade(nAge, 0.1f) : nightFade;
+                now.NebulaLook = PickNebula(c.Seed, night, s);
+                if (now.NebulaLook < 0) now.Nebula = 0f;
                 now.NebulaDir = Dir(Mathf.LerpAngle(s.nebulaPath.x, s.nebulaPath.y, p), s.nebulaPath.z * Mathf.Sin(Mathf.PI * Mathf.Lerp(0.15f, 0.85f, p)));
             }
 
