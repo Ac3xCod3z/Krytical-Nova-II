@@ -420,8 +420,8 @@ namespace KryticalNova.World
             public static readonly int StarBasisZ = Shader.PropertyToID("_KN_StarBasisZ");
             public static readonly int Nebula = Shader.PropertyToID("_KN_Nebula");
             public static readonly int NebulaParams = Shader.PropertyToID("_KN_NebulaParams");
-            public static readonly int MeteorA = Shader.PropertyToID("_KN_MeteorA");
-            public static readonly int MeteorB = Shader.PropertyToID("_KN_MeteorB");
+            public static readonly int MeteorA = Shader.PropertyToID("_KN_StreakA");
+            public static readonly int MeteorB = Shader.PropertyToID("_KN_StreakB");
             public static readonly int StreakParams = Shader.PropertyToID("_KN_StreakParams");
             public static readonly int ShowerParams = Shader.PropertyToID("_KN_ShowerParams");
             public static readonly int StreakColor = Shader.PropertyToID("_KN_StreakColor");

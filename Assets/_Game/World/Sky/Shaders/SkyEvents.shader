@@ -83,8 +83,8 @@ Shader "Krytical Nova/Sky Events"
             float4 _KN_Nebula;        // xyz direction, w amount
             float4 _KN_NebulaParams;  // x tan(half size)
             #define KN_MAX_STREAKS 24   // SkyNow.MaxStreaks
-            float4 _KN_MeteorA[KN_MAX_STREAKS];  // xyz tail end of the glowing trail, w trail amount
-            float4 _KN_MeteorB[KN_MAX_STREAKS];  // xyz head, w head amount (+2 for an Emberfall streak)
+            float4 _KN_StreakA[KN_MAX_STREAKS];  // xyz tail end of the glowing trail, w trail amount
+            float4 _KN_StreakB[KN_MAX_STREAKS];  // xyz head, w head amount (+2 for an Emberfall streak)
             float4 _KN_StreakParams;  // x 1/(2 sigma^2) of a lone streak's trail, y of its head (radians), z streaks in use
             float4 _KN_ShowerParams;  // x 1/(2 sigma^2) of an Emberfall trail, y of its head
             float4 _KN_StreakColor;   // rgb a lone shooting star (HDR)
@@ -222,7 +222,7 @@ Shader "Krytical Nova/Sky Events"
                     }
                     half3 trails = 0.0, heads = 0.0;
                     int streakCount = (int)_KN_StreakParams.z;
-                    [loop] for (int si = 0; si < streakCount; si++) Streak(d, _KN_MeteorA[si], _KN_MeteorB[si], trails, heads);
+                    [loop] for (int si = 0; si < streakCount; si++) Streak(d, _KN_StreakA[si], _KN_StreakB[si], trails, heads);
                     [branch] if (_KN_Comet.w > 0.0)
                     {
                         // the tail points away from the sun
