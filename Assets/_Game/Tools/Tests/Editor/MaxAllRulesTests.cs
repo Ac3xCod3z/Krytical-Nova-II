@@ -28,7 +28,7 @@ namespace KryticalNova.Tests
         }
 
         [Test]
-        public void Gate_RealSaveService_Refused_EvenInTheEditor()
+        public void Gate_RealSaveService_Refused_EvenInPlayDotsHere()
         {
             StringAssert.Contains("REAL", MaxAllRules.GateProblem(false, new Uri("http://127.0.0.1:7801/"), RealPorts));
             StringAssert.Contains("REAL", MaxAllRules.GateProblem(true, new Uri("http://127.0.0.1:7801/"), RealPorts));
@@ -41,10 +41,10 @@ namespace KryticalNova.Tests
         }
 
         [Test]
-        public void Gate_Files_RunsOnlyInTheEditor()
+        public void Gate_Files_RunsOnlyInPlayDotsHere()
         {
             Assert.IsNull(MaxAllRules.GateProblem(true, null, RealPorts));
-            Assert.IsNotNull(MaxAllRules.GateProblem(false, null, RealPorts), "a built server saving to files is not the test database");
+            Assert.IsNotNull(MaxAllRules.GateProblem(false, null, RealPorts), "a built server (or any other session) saving to files is not the test database");
         }
 
         [Test]

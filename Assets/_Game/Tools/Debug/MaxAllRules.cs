@@ -29,11 +29,11 @@ namespace KryticalNova.DevTools
 
         /// <summary>
         /// Why gm.maxall may not run here, or null when it may. <paramref name="saveService"/> is the save service the server saves
-        /// through (null when it saves to files). It runs only on the test database: a server on the test save service (7802), or an
-        /// Editor session saving to files (Editor Play never saves to the real database). A built server saving to files, or any
-        /// server on another save service (the real one is 7801), is refused.
+        /// through (null when it saves to files). It runs only on the test database: a server on the test save service (7802), or
+        /// Play DOTS here (<paramref name="playHere"/>: the Editor's own in-process host) saving to files. The real save service (7801)
+        /// is refused everywhere, as are any other service, a built server saving to files and any other Editor session saving to files.
         /// </summary>
-        public static string GateProblem(bool editor, Uri saveService, IReadOnlyList<int> realPorts)
+        public static string GateProblem(bool playHere, Uri saveService, IReadOnlyList<int> realPorts)
         {
             if (saveService != null)
             {
@@ -45,9 +45,9 @@ namespace KryticalNova.DevTools
                     ? null
                     : $"this server saves to the save service on port {saveService.Port}, not the test one ({TestSavePort}). gm.maxall runs only on the test database.";
             }
-            return editor
+            return playHere
                 ? null
-                : $"this server saves to files, not the test save service ({TestSavePort}). gm.maxall runs only on the test database.";
+                : $"this server saves to files, not the test save service ({TestSavePort}). gm.maxall runs only on the test database (or in Play DOTS here).";
         }
 
         public static bool IsConfirm(string word) => string.Equals((word ?? string.Empty).Trim(), ConfirmWord, StringComparison.OrdinalIgnoreCase);

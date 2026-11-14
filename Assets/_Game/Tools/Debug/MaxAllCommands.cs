@@ -36,7 +36,7 @@ namespace KryticalNova.DevTools
         internal static string MaxAll(string confirm = "")
         {
             if (!GmTarget.TryGetPlayer(out GameObject player, out string error)) return error;
-            string gate = MaxAllRules.GateProblem(Application.isEditor, SaveServiceAddress(), KryticalNova.Networking.Entities.KnServerSettings.RealLanePorts);
+            string gate = MaxAllRules.GateProblem(PlayDotsHere, SaveServiceAddress(), KryticalNova.Networking.Entities.KnServerSettings.RealLanePorts);
             if (gate != null) return "gm.maxall refused: " + gate;
             string who = player.TryGetComponent(out PlayerIdentity identity) ? identity.CharacterName : GmTarget.Describe();
             if (!MaxAllRules.IsConfirm(confirm))
@@ -66,6 +66,9 @@ namespace KryticalNova.DevTools
         }
 
         // ------------------------------------------------------------------ the gate
+
+        /// <summary>Play DOTS here: the Editor's own in-process host, the only one that sets <c>GmRoster.Host</c> (a built server never does).</summary>
+        private static bool PlayDotsHere => Application.isEditor && KryticalNova.Networking.GmRoster.Host.HasValue;
 
         /// <summary>The save service this game saves through, or null when it saves to files.</summary>
         private static System.Uri SaveServiceAddress() => ServerSave.Store is ServiceSaveStore service ? service.Address : null;
