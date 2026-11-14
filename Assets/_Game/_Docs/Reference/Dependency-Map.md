@@ -20,13 +20,13 @@ script, which is then published to the link above. `--baseline` saves today's up
 ## Today
 
 <!-- map:summary -->
-Generated 14 Nov 2026, 08:13: 1049 runtime scripts (194,133 lines) declaring 1967 types (218 MonoBehaviours, 65 NetworkBehaviours, 119 ScriptableObject classes); 341 test scripts; 4754 prefabs, 48 scenes and 2829 assets read. 231 system-to-system links, of which 0 run uphill, 0 pairs of systems use each other both ways, and 4 links would have to go for the systems to form a clean stack. The largest tangle, classes that all reach each other through some chain of uses, holds 10 classes from 1 systems (UI 10, ...).
+Generated 13 Nov 2026, 21:13: 1036 runtime scripts (191,620 lines) declaring 1934 types (217 MonoBehaviours, 65 NetworkBehaviours, 112 ScriptableObject classes); 339 test scripts; 4753 prefabs, 48 scenes and 2790 assets read. 219 system-to-system links, of which 0 run uphill, 0 pairs of systems use each other both ways, and 4 links would have to go for the systems to form a clean stack. The largest tangle, classes that all reach each other through some chain of uses, holds 10 classes from 1 systems (UI 10, ...).
 <!-- /map:summary -->
 
 **Checked against the compiler.**
 
 <!-- map:compiler -->
-Checked against the 236 references the assemblies declare between systems: every link the map found is one the compiler allows. 5 declared references name no type in code: GameFeel -> Gameplay/CharacterCreation, Gameplay/Crossfire -> Networking, Gameplay/Factions -> Core, Gameplay/Wallet -> Core, Tools -> Gameplay/NPC. Each is either unused and can go, or needed by the compiler for a type reached through another assembly's member (error CS0012 when removed), which reading the code as text cannot see.
+Checked against the 224 references the assemblies declare between systems: every link the map found is one the compiler allows. 5 declared references name no type in code: GameFeel -> Gameplay/CharacterCreation, Gameplay/Crossfire -> Networking, Gameplay/Factions -> Core, Gameplay/Wallet -> Core, Tools -> Gameplay/NPC. Each is either unused and can go, or needed by the compiler for a type reached through another assembly's member (error CS0012 when removed), which reading the code as text cannot see.
 <!-- /map:compiler -->
 
 ## How to read it
@@ -64,37 +64,36 @@ Checked against the 236 references the assemblies declare between systems: every
 <!-- map:systems -->
 | System | Layer | Scripts | Lines | Uses (types) | Used by (types) | Instability | Tests | Types touched by a test |
 |---|---|---|---|---|---|---|---|---|
-| Core | Foundation | 79 | 6,777 | 0 | 453 | 0.0 | 10 | 62 of 74 |
-| Networking | Infrastructure | 100 | 15,069 | 44 | 144 | 0.23 | 39 | 114 of 174 |
-| Rendering | Infrastructure | 18 | 3,673 | 3 | 32 | 0.09 | 1 | 2 of 22 |
+| Core | Foundation | 78 | 6,810 | 0 | 455 | 0.0 | 10 | 62 of 75 |
+| Networking | Infrastructure | 100 | 15,069 | 44 | 143 | 0.24 | 39 | 114 of 174 |
+| Rendering | Infrastructure | 17 | 3,623 | 3 | 28 | 0.1 | 1 | 2 of 21 |
 | Environment | Simulation | 6 | 834 | 0 | 2 | 0.0 | 0 | 0 of 6 |
 | Gameplay/Crafting | Simulation | 3 | 426 | 25 | 9 | 0.74 | 1 | 4 of 6 |
 | Gameplay/Crossfire | Simulation | 9 | 911 | 9 | 4 | 0.69 | 5 | 15 of 17 |
 | Gameplay/Forge | Simulation | 1 | 461 | 46 | 4 | 0.92 | 0 | 0 of 2 |
 | Gameplay/Housing | Simulation | 20 | 3,662 | 37 | 37 | 0.5 | 3 | 15 of 28 |
-| Gameplay/Mounts | Simulation | 15 | 3,196 | 37 | 9 | 0.8 | 4 | 13 of 21 |
+| Gameplay/Mounts | Simulation | 24 | 4,448 | 46 | 10 | 0.82 | 6 | 18 of 35 |
 | Gameplay/Restyle | Simulation | 3 | 994 | 55 | 5 | 0.92 | 0 | 0 of 3 |
-| Gameplay/Townsfolk | Simulation | 19 | 3,730 | 49 | 2 | 0.96 | 4 | 29 of 43 |
 | Gameplay/Economy | Simulation | 23 | 4,637 | 84 | 46 | 0.65 | 10 | 24 of 37 |
 | Gameplay/Autopilot | Simulation | 11 | 1,562 | 46 | 14 | 0.77 | 4 | 7 of 12 |
 | Gameplay/Social | Simulation | 42 | 6,871 | 83 | 49 | 0.63 | 14 | 34 of 55 |
-| Gameplay/Persistence | Simulation | 66 | 19,507 | 414 | 14 | 0.97 | 50 | 57 of 249 |
-| Gameplay/Hostiles | Simulation | 52 | 6,009 | 80 | 35 | 0.7 | 23 | 58 of 76 |
+| Gameplay/Persistence | Simulation | 66 | 19,509 | 414 | 14 | 0.97 | 50 | 57 of 249 |
+| Gameplay/Hostiles | Simulation | 52 | 6,009 | 80 | 34 | 0.7 | 23 | 58 of 76 |
 | Gameplay/Pets | Simulation | 12 | 1,550 | 40 | 32 | 0.56 | 6 | 14 of 19 |
-| Gameplay/Combat | Simulation | 34 | 5,900 | 92 | 42 | 0.69 | 15 | 34 of 59 |
-| Gameplay/Player | Simulation | 83 | 22,559 | 78 | 230 | 0.25 | 48 | 161 of 209 |
-| Gameplay/CharacterCreation | Simulation | 28 | 3,268 | 27 | 96 | 0.22 | 11 | 26 of 30 |
-| Gameplay/Items | Simulation | 85 | 13,089 | 65 | 304 | 0.18 | 16 | 75 of 113 |
-| World | Simulation | 40 | 7,240 | 21 | 49 | 0.3 | 4 | 14 of 49 |
-| Gameplay/Progression | Simulation | 49 | 9,168 | 36 | 237 | 0.13 | 15 | 54 of 63 |
+| Gameplay/Combat | Simulation | 34 | 5,905 | 93 | 42 | 0.69 | 15 | 34 of 59 |
+| Gameplay/Player | Simulation | 83 | 22,559 | 78 | 228 | 0.25 | 48 | 161 of 209 |
+| Gameplay/CharacterCreation | Simulation | 28 | 3,268 | 27 | 90 | 0.23 | 11 | 26 of 30 |
+| Gameplay/Items | Simulation | 85 | 13,069 | 65 | 301 | 0.18 | 16 | 74 of 113 |
+| World | Simulation | 40 | 7,240 | 21 | 45 | 0.32 | 4 | 14 of 49 |
+| Gameplay/Progression | Simulation | 49 | 9,168 | 36 | 238 | 0.13 | 15 | 54 of 63 |
 | Gameplay/Wallet | Simulation | 4 | 146 | 0 | 21 | 0.0 | 0 | 2 of 2 |
-| Gameplay/NPC | Simulation | 3 | 297 | 5 | 20 | 0.2 | 1 | 3 of 4 |
-| Gameplay/Factions | Simulation | 7 | 197 | 0 | 29 | 0.0 | 0 | 2 of 4 |
-| Gameplay/Brains | Simulation | 10 | 1,526 | 1 | 49 | 0.02 | 4 | 34 of 39 |
+| Gameplay/NPC | Simulation | 3 | 293 | 5 | 17 | 0.23 | 1 | 3 of 4 |
+| Gameplay/Factions | Simulation | 7 | 197 | 0 | 28 | 0.0 | 0 | 2 of 4 |
+| Gameplay/Brains | Simulation | 10 | 1,512 | 1 | 29 | 0.03 | 4 | 34 of 39 |
 | GameFeel | Presentation | 31 | 5,936 | 57 | 2 | 0.97 | 6 | 19 of 39 |
-| UI | Presentation | 148 | 37,958 | 335 | 5 | 0.99 | 31 | 52 of 155 |
+| UI | Presentation | 148 | 37,979 | 333 | 5 | 0.99 | 31 | 52 of 155 |
 | Audio | Presentation | 15 | 1,299 | 10 | 16 | 0.38 | 2 | 5 of 15 |
-| Tools | Tooling | 33 | 5,681 | 212 | 0 | 1.0 | 11 | 2 of 36 |
+| Tools | Tooling | 32 | 5,673 | 210 | 0 | 1.0 | 11 | 2 of 35 |
 <!-- /map:systems -->
 
 ## Links running uphill
@@ -122,31 +121,31 @@ Each row is the cheaper side of a loop: cut these references and the two systems
 <!-- map:ripple -->
 | Type | System | Kind | Files using it | Systems | Types reached through others | Tests | Prefabs / scenes holding it |
 |---|---|---|---|---|---|---|---|
-| ClientPresentationRegistry | Core | plain | 93 | 21 | 378 | 3 | 0 |
-| BodyRoleTag | Core | mono | 90 | 19 | 455 | 16 | 0 |
-| FactionId | Gameplay/Factions | enum | 85 | 16 | 435 | 31 | 0 |
-| PlayerInventory | Gameplay/Items | net | 76 | 15 | 289 | 2 | 1 |
-| ItemDefinition | Gameplay/Items | so | 70 | 13 | 364 | 27 | 0 |
-| CallKind | Networking | enum | 66 | 15 | 408 | 2 | 0 |
-| NetRoleKind | Core | enum | 63 | 18 | 460 | 17 | 0 |
-| ItemStack | Gameplay/Items | plain | 61 | 12 | 366 | 14 | 0 |
-| GhostBodyRegistry | Gameplay/Player | plain | 57 | 4 | 123 | 15 | 0 |
-| GhostBodyEntry | Gameplay/Player | plain | 54 | 4 | 125 | 5 | 0 |
-| PlayerIdentity | Gameplay/Player | net | 49 | 12 | 275 | 3 | 1 |
-| RpcBudget | Networking | plain | 48 | 15 | 387 | 4 | 0 |
-| LocalPlayer | Core | plain | 45 | 18 | 367 | 8 | 0 |
-| EquipSlot | Gameplay/Items | enum | 42 | 10 | 393 | 18 | 0 |
-| PlayerResources | Gameplay/Progression | net | 41 | 14 | 330 | 3 | 41 |
-| CharacterRecipe | Gameplay/CharacterCreation | plain | 40 | 8 | 322 | 13 | 0 |
-| PointAndClickPlayer | Gameplay/Player | net | 40 | 9 | 239 | 5 | 41 |
-| PlayerCharacterProgression | Gameplay/Progression | net | 36 | 12 | 362 | 5 | 41 |
-| CharacterCombatStats | Gameplay/Progression | mono | 36 | 14 | 361 | 8 | 61 |
-| CombatEntity | Gameplay/Progression | net | 36 | 12 | 288 | 3 | 23 |
-| PlayerKey | Core | plain | 34 | 6 | 515 | 28 | 0 |
-| IBodyRequests | Core | interface | 31 | 14 | 456 | 1 | 0 |
-| WeaponClassId | Gameplay/Progression | enum | 29 | 10 | 472 | 11 | 0 |
-| StatType | Gameplay/Progression | enum | 27 | 8 | 464 | 12 | 0 |
-| PlayerPose | Gameplay/Player | plain | 27 | 6 | 36 | 13 | 0 |
+| BodyRoleTag | Core | mono | 91 | 19 | 459 | 16 | 0 |
+| ClientPresentationRegistry | Core | plain | 91 | 20 | 379 | 3 | 0 |
+| FactionId | Gameplay/Factions | enum | 83 | 15 | 425 | 30 | 0 |
+| PlayerInventory | Gameplay/Items | net | 76 | 15 | 293 | 2 | 1 |
+| ItemDefinition | Gameplay/Items | so | 70 | 13 | 360 | 27 | 0 |
+| CallKind | Networking | enum | 66 | 15 | 411 | 2 | 0 |
+| NetRoleKind | Core | enum | 64 | 18 | 464 | 17 | 0 |
+| ItemStack | Gameplay/Items | plain | 61 | 12 | 370 | 14 | 0 |
+| GhostBodyRegistry | Gameplay/Player | plain | 59 | 5 | 126 | 15 | 0 |
+| GhostBodyEntry | Gameplay/Player | plain | 56 | 5 | 128 | 5 | 0 |
+| PlayerIdentity | Gameplay/Player | net | 49 | 12 | 279 | 3 | 1 |
+| RpcBudget | Networking | plain | 48 | 15 | 390 | 4 | 0 |
+| LocalPlayer | Core | plain | 45 | 18 | 372 | 8 | 0 |
+| EquipSlot | Gameplay/Items | enum | 42 | 10 | 389 | 18 | 0 |
+| PlayerResources | Gameplay/Progression | net | 41 | 14 | 334 | 3 | 41 |
+| PointAndClickPlayer | Gameplay/Player | net | 40 | 9 | 243 | 5 | 41 |
+| CharacterRecipe | Gameplay/CharacterCreation | plain | 38 | 7 | 316 | 12 | 0 |
+| CharacterCombatStats | Gameplay/Progression | mono | 37 | 14 | 364 | 8 | 61 |
+| PlayerCharacterProgression | Gameplay/Progression | net | 36 | 12 | 365 | 5 | 41 |
+| CombatEntity | Gameplay/Progression | net | 36 | 12 | 292 | 3 | 23 |
+| PlayerKey | Core | plain | 35 | 7 | 519 | 28 | 0 |
+| IBodyRequests | Core | interface | 31 | 14 | 460 | 1 | 0 |
+| WeaponClassId | Gameplay/Progression | enum | 29 | 10 | 465 | 11 | 0 |
+| StatType | Gameplay/Progression | enum | 27 | 8 | 460 | 12 | 0 |
+| DamageResult | Core | plain | 27 | 12 | 384 | 13 | 0 |
 <!-- /map:ripple -->
 
 ## Hubs (static members reached from other systems)
@@ -156,19 +155,17 @@ Each row is the cheaper side of a loop: cut these references and the two systems
 |---|---|---|---|
 | PlayerInventory.Local | locator | 38 | GameFeel, Gameplay/Autopilot, Gameplay/Economy, Gameplay/Hostiles, Gameplay/Persistence, Tools, UI |
 | WorldDrop.Active | locator | 6 | GameFeel, Gameplay/Autopilot, Gameplay/Persistence, UI |
-| NpcInteractable.Active | locator | 7 | Gameplay/Economy, Gameplay/Townsfolk, UI |
 | HostileNet.Active | locator | 6 | Gameplay/Autopilot, Tools, UI |
 | PlayerCadence.LocalPress | event | 4 | GameFeel, Gameplay/Persistence, UI |
-| KnWorldHooks.ServerWorldMade | state | 4 | Gameplay/Hostiles, Gameplay/Persistence, Gameplay/Townsfolk |
 | PlayerGm.Remote | state | 4 | Gameplay/Persistence, Gameplay/Social, Tools |
 | CombatEntity.AnyKilled | event | 3 | Gameplay/Combat, Gameplay/Hostiles, Gameplay/Pets |
 | WorkshopOwnerLink.Current | locator | 3 | Gameplay/Crafting, Gameplay/Forge, Gameplay/Persistence |
 | ServerChat.Announce | state | 3 | Gameplay/Crossfire, Gameplay/Items, Gameplay/Social |
 | NetSession.EndReason | state | 3 | Gameplay/Persistence, Networking, UI |
 | PlayerInventory.LocalChanged | event | 21 | Gameplay/Persistence, UI |
-| WorldEnvironmentNetwork.Instance | locator | 11 | Gameplay/Townsfolk, Tools |
 | ServerHooks.Saves | state | 9 | Gameplay/Persistence, World |
 | RecipeEdit.Default | locator | 6 | Gameplay/Persistence, UI |
+| NpcInteractable.Active | locator | 6 | Gameplay/Economy, UI |
 | PlayerGm.CommandRunner | state | 6 | Gameplay/Persistence, Tools |
 | NetworkConnectionManager.Instance | locator | 6 | UI, World |
 | NetworkCombatVFXPool.Instance | locator | 5 | GameFeel, Gameplay/Combat |
@@ -178,12 +175,14 @@ Each row is the cheaper side of a loop: cut these references and the two systems
 | PlayerDuel.Local | locator | 4 | Gameplay/Social, UI |
 | ZonePortal.Active | locator | 4 | Tools, UI |
 | PlayerCadence.LocalCombo | event | 3 | GameFeel, UI |
+| KnWorldHooks.ServerWorldMade | state | 3 | Gameplay/Hostiles, Gameplay/Persistence |
 | PlayerSpawnPoint.Active | locator | 3 | Gameplay/Housing, Tools |
 | GmRoster.Granted | event | 3 | Gameplay/Persistence, Tools |
 | GmRoster.Revoked | event | 3 | Gameplay/Persistence, Tools |
 | UnityKeys.Current | locator | 3 | Gameplay/Persistence, Networking |
 | PointOfInterest.Active | locator | 3 | Tools, UI |
 | MusicStateLink.RemoteAuthority | state | 2 | Audio, Networking |
+| MusicStateLink.Current | locator | 2 | Audio, Networking |
 <!-- /map:hubs -->
 
 ## God classes
@@ -207,6 +206,7 @@ Classes over 700 lines. Several of them also reach into three or more other syst
 | PetFollower | Gameplay/Items | 1056 | Rendering | 5 |
 | HudLayoutEditor | UI | 1042 | - | 14 |
 | NetworkConnectionManager | Networking | 977 | Core | 15 |
+| PlayerMounts | Gameplay/Mounts | 976 | Core, Gameplay/Hostiles, Gameplay/Player, Gameplay/Progression, Gameplay/Social, Networking | 9 |
 | GearWorkWindowController | UI | 947 | Core, Gameplay/Economy, Gameplay/Forge, Gameplay/Items, Gameplay/NPC, Gameplay/Progression | 0 |
 | MountRider | Gameplay/Mounts | 937 | Core, Gameplay/Player, Gameplay/Progression | 0 |
 | CharacterCreatorController | UI | 935 | Gameplay/CharacterCreation, Gameplay/Factions, Gameplay/Items, Gameplay/Progression | 0 |
@@ -235,17 +235,15 @@ Each ScriptableObject class, how many assets of it exist, and where they are wir
 | ZoneMinimapData | World | 39 | 3 | 0 / 40 / 0 |
 | MusicTrack | Audio | 33 | 15 | 0 / 0 / 5 |
 | NpcDefinition | Gameplay/NPC | 24 | 3 | 24 / 0 / 3 |
-| VendorManner | Gameplay/Townsfolk | 24 | 2 | 0 / 0 / 1 |
 | StatDefinitionData | Gameplay/Progression | 19 | 0 | 0 / 0 / 0 |
-| WeatherProfile | World | 11 | 5 | 0 / 40 / 12 |
+| WeatherProfile | World | 11 | 4 | 0 / 40 / 12 |
 | HostileDefinition | Gameplay/Hostiles | 10 | 13 | 20 / 0 / 8 |
 | GearPaintLook | Gameplay/Items | 10 | 3 | 0 / 0 / 0 |
-| TownsfolkPersonality | Gameplay/Townsfolk | 10 | 5 | 0 / 0 / 9 |
 | AutoAttackSet | Gameplay/Combat | 9 | 1 | 1 / 0 / 0 |
 | HostileZoneDefinition | Gameplay/Hostiles | 8 | 2 | 0 / 2 / 0 |
 | GrassType | Environment | 6 | 2 | 0 / 0 / 2 |
-| LineageDefinition | Gameplay/CharacterCreation | 6 | 11 | 0 / 0 / 1 |
-| MountDefinition | Gameplay/Mounts | 4 | 6 | 0 / 0 / 1 |
+| LineageDefinition | Gameplay/CharacterCreation | 6 | 10 | 0 / 0 / 1 |
+| MountDefinition | Gameplay/Mounts | 4 | 8 | 0 / 0 / 1 |
 | PetChatterSet | Gameplay/Pets | 4 | 2 | 0 / 0 / 4 |
 | PetDefinition | Gameplay/Pets | 4 | 12 | 0 / 0 / 1 |
 | VaultAnimationSet | Gameplay/Player | 4 | 1 | 0 / 0 / 1 |
@@ -269,8 +267,8 @@ Each ScriptableObject class, how many assets of it exist, and where they are wir
 | SmearSettings | GameFeel | 1 | 2 | 1 / 0 / 0 |
 | SpiritSettings | GameFeel | 1 | 1 | 1 / 0 / 0 |
 | AutopilotSettings | Gameplay/Autopilot | 1 | 5 | 1 / 0 / 1 |
-| BrainSettings | Gameplay/Brains | 1 | 3 | 0 / 0 / 2 |
-| CharacterCreationDatabase | Gameplay/CharacterCreation | 1 | 24 | 2 / 4 / 1 |
+| BrainSettings | Gameplay/Brains | 1 | 2 | 0 / 0 / 1 |
+| CharacterCreationDatabase | Gameplay/CharacterCreation | 1 | 22 | 2 / 4 / 0 |
 | CharacterExpressionLibrary | Gameplay/CharacterCreation | 1 | 7 | 0 / 3 / 1 |
 | CharacterPaletteLibrary | Gameplay/CharacterCreation | 1 | 2 | 0 / 0 / 1 |
 | CadenceSettings | Gameplay/Combat | 1 | 4 | 1 / 0 / 0 |
@@ -298,7 +296,7 @@ Each ScriptableObject class, how many assets of it exist, and where they are wir
 | WeaponClassCatalog | Gameplay/Items | 1 | 2 | 1 / 1 / 0 |
 | SidekickPartCatalog | Gameplay/Items | 1 | 7 | 0 / 0 / 747 |
 | MountCatalog | Gameplay/Mounts | 1 | 1 | 1 / 0 / 0 |
-| MountSettings | Gameplay/Mounts | 1 | 4 | 0 / 0 / 1 |
+| MountSettings | Gameplay/Mounts | 1 | 6 | 0 / 0 / 1 |
 | PetCatalog | Gameplay/Pets | 1 | 3 | 1 / 0 / 0 |
 | PetChatterSettings | Gameplay/Pets | 1 | 2 | 1 / 0 / 0 |
 | PetEmojiLibrary | Gameplay/Pets | 1 | 0 | 0 / 0 / 0 |
@@ -322,11 +320,6 @@ Each ScriptableObject class, how many assets of it exist, and where they are wir
 | EmoteWheelSettings | Gameplay/Social | 1 | 3 | 1 / 0 / 0 |
 | SponsorSettings | Gameplay/Social | 1 | 3 | 1 / 0 / 1 |
 | SquadSettings | Gameplay/Social | 1 | 2 | 1 / 0 / 0 |
-| TownLifeArea | Gameplay/Townsfolk | 1 | 2 | 0 / 0 / 1 |
-| TownsfolkCast | Gameplay/Townsfolk | 1 | 4 | 0 / 0 / 2 |
-| TownsfolkSettings | Gameplay/Townsfolk | 1 | 8 | 0 / 0 / 2 |
-| TownsfolkViewAssets | Gameplay/Townsfolk | 1 | 2 | 0 / 0 / 0 |
-| TownsfolkWorldAssets | Gameplay/Townsfolk | 1 | 1 | 0 / 0 / 0 |
 | RelevancySettings | Networking | 1 | 2 | 0 / 0 / 0 |
 | WorldLodSettings | Rendering | 1 | 2 | 1 / 0 / 0 |
 | GlowHaloFeature | Rendering | 1 | 0 | 0 / 0 / 2 |
@@ -352,10 +345,10 @@ Each ScriptableObject class, how many assets of it exist, and where they are wir
 Where tuning still lives in code, and other links the compiler cannot see:
 
 <!-- map:smells -->
-- **Gameplay numbers fixed in code:** 461 in 156 files. Most: `Gameplay/Crafting/Data/CraftingSettings.cs` (28), `Gameplay/Player/Entities/Runtime/WallWalk.cs` (20), `Gameplay/Player/Runtime/PlayerWallRunMotor.cs` (18), `Gameplay/Player/Runtime/PlayerVaultMotor.cs` (15), `Gameplay/Player/Runtime/PointAndClickPlayer.cs` (15), `Gameplay/Items/Data/GearProgressionSettings.cs` (13), `Gameplay/Items/Runtime/WeaponPaintRules.cs` (11), `Gameplay/Player/Runtime/PlayerWallRunMotor.WallWalk.cs` (10).
-- **Settings fallbacks** (`settings != null ? settings.x : 8`): 109.
+- **Gameplay numbers fixed in code:** 458 in 156 files. Most: `Gameplay/Crafting/Data/CraftingSettings.cs` (28), `Gameplay/Player/Entities/Runtime/WallWalk.cs` (20), `Gameplay/Player/Runtime/PlayerWallRunMotor.cs` (18), `Gameplay/Player/Runtime/PlayerVaultMotor.cs` (15), `Gameplay/Player/Runtime/PointAndClickPlayer.cs` (15), `Gameplay/Items/Data/GearProgressionSettings.cs` (13), `Gameplay/Items/Runtime/WeaponPaintRules.cs` (11), `Gameplay/Player/Runtime/PlayerWallRunMotor.WallWalk.cs` (10).
+- **Settings fallbacks** (`settings != null ? settings.x : 8`): 115.
 - **Runtime writes to shared assets** (ScriptableObject or pipeline fields): 25 — `Rendering/Runtime/PipelineRebuilds.cs:60`, `Rendering/Runtime/PipelineRebuilds.cs:68`, `Rendering/Runtime/PipelineRebuilds.cs:104`, `Rendering/Runtime/PipelineRebuilds.cs:105`, `UI/Runtime/Settings/GraphicsSettingsApplier.cs:142`, `UI/Runtime/Settings/GraphicsSettingsApplier.cs:143`, `UI/Runtime/Settings/GraphicsSettingsApplier.cs:144`, `UI/Runtime/Settings/GraphicsSettingsApplier.cs:145`.
-- **Lookups by name** (Type.GetType, Find("..."), Resources.Load, SendMessage): 44.
+- **Lookups by name** (Type.GetType, Find("..."), Resources.Load, SendMessage): 39.
 - **Asset entries that store a class by name and assembly** ([SerializeReference]): 196 in 2 assets.
 - **Static accessors that call GetComponent on every use:** 0.
 - **FindObject calls in runtime code:** 45.
@@ -376,39 +369,39 @@ first. The page lists the file and line behind each.
 | 5 | Hub | CombatEntity.AnyKilled (event) | Gameplay/Progression, Gameplay/Combat, Gameplay/Hostiles, Gameplay/Pets | 3 | 3 | small |
 | 6 | Hub | GmRoster.Granted (event) | Networking, Gameplay/Persistence, Tools | 3 | 3 | small |
 | 7 | Hub | GmRoster.Revoked (event) | Networking, Gameplay/Persistence, Tools | 3 | 3 | small |
-| 8 | Hub | NetSession.EndReason (state) | Core, Gameplay/Persistence, Networking, UI | 3 | 3 | small |
-| 9 | Hub | PlayerCadence.LocalCombo (event) | Gameplay/Combat, GameFeel, UI | 3 | 3 | small |
-| 10 | Hub | PlayerSpawnPoint.Active (locator) | Networking, Gameplay/Housing, Tools | 3 | 3 | small |
-| 11 | Hub | PointOfInterest.Active (locator) | World, Tools, UI | 3 | 3 | small |
-| 12 | Hub | ServerChat.Announce (state) | Core, Gameplay/Crossfire, Gameplay/Items, Gameplay/Social | 3 | 3 | small |
-| 13 | Hub | UnityKeys.Current (locator) | Core, Gameplay/Persistence, Networking | 3 | 3 | small |
-| 14 | Hub | WorkshopOwnerLink.Current (locator) | Gameplay/Items, Gameplay/Crafting, Gameplay/Forge, Gameplay/Persistence | 3 | 3 | small |
-| 15 | Hub | ChatOwnerLink.Current (locator) | Gameplay/Items, Gameplay/Persistence, Gameplay/Social | 3 | 2 | small |
-| 16 | Hub | ContactsOwnerLink.Current (locator) | Gameplay/Items, Gameplay/Persistence, Gameplay/Social | 3 | 2 | small |
-| 17 | Hub | CrewOwnerLink.Current (locator) | Gameplay/Items, Gameplay/Persistence, Gameplay/Social | 3 | 2 | small |
-| 18 | Hub | DuelOwnerLink.Current (locator) | Gameplay/Items, Gameplay/Combat, Gameplay/Persistence | 3 | 2 | small |
-| 19 | Hub | FollowOwnerLink.Current (locator) | Gameplay/Items, Gameplay/Persistence, Gameplay/Social | 3 | 2 | small |
-| 20 | Cycle | Gameplay/Autopilot uses Gameplay/Economy against the order | Gameplay/Autopilot, Gameplay/Economy | 3 | 2 | small |
-| 21 | Cycle | Gameplay/Hostiles uses Gameplay/Social against the order | Gameplay/Hostiles, Gameplay/Social | 3 | 2 | small |
-| 22 | Hub | JoinFlow.Failed (event) | Networking, Tools, UI | 3 | 2 | small |
-| 23 | Hub | KeyBindings.Changed (event) | Core, Gameplay/Progression, UI | 3 | 2 | small |
-| 24 | Hub | KioskOwnerLink.Current (locator) | Gameplay/Items, Gameplay/Economy, Gameplay/Persistence | 3 | 2 | small |
-| 25 | Hub | MountOwnerLink.Current (locator) | Core, Gameplay/Mounts, Gameplay/Persistence | 3 | 2 | small |
-| 26 | Hub | MusicConductor.Instance (locator) | Audio, Tools, UI | 3 | 2 | small |
-| 27 | Hub | MusicStateLink.Current (locator) | Core, Audio, Networking | 3 | 2 | small |
-| 28 | Hub | MusicStateLink.RemoteAuthority (state) | Core, Audio, Networking | 3 | 2 | small |
-| 29 | Hub | PartyOwnerLink.Current (locator) | Gameplay/Items, Gameplay/Persistence, Gameplay/Social | 3 | 2 | small |
-| 30 | Hub | PetShowLink.Current (locator) | Gameplay/Items, Gameplay/Persistence, Gameplay/Pets | 3 | 2 | small |
-| 31 | Hub | RecallShowLink.Current (locator) | Gameplay/Items, Gameplay/Housing, Gameplay/Persistence | 3 | 2 | small |
-| 32 | Hub | RestyleOwnerLink.Current (locator) | Gameplay/CharacterCreation, Gameplay/Persistence, Gameplay/Restyle | 3 | 2 | small |
-| 33 | Hub | RosterLink.NetworkPrefab (state) | Networking, Tools, UI | 3 | 2 | small |
-| 34 | Hub | ServerHooks.RunCommand (state) | Networking, Gameplay/Persistence, Tools | 3 | 2 | small |
-| 35 | Hub | ServerShutdown.Handler (state) | Core, Gameplay/Persistence, Networking | 3 | 2 | small |
-| 36 | Hub | SkyLiftLink.Requester (state) | Core, Gameplay/Persistence, UI | 3 | 2 | small |
-| 37 | Hub | SponsorOwnerLink.Current (locator) | Gameplay/Items, Gameplay/Persistence, Gameplay/Social | 3 | 2 | small |
-| 38 | Hub | TradeOwnerLink.Current (locator) | Gameplay/Items, Gameplay/Economy, Gameplay/Persistence | 3 | 2 | small |
-| 39 | Cycle | Gameplay/Persistence uses Gameplay/Autopilot against the order | Gameplay/Persistence, Gameplay/Autopilot | 3 | 1 | small |
-| 40 | Cycle | Gameplay/Pets uses Gameplay/Social against the order | Gameplay/Pets, Gameplay/Social | 3 | 1 | small |
+| 8 | Hub | KnWorldHooks.ServerWorldMade (state) | Networking, Gameplay/Hostiles, Gameplay/Persistence | 3 | 3 | small |
+| 9 | Hub | NetSession.EndReason (state) | Core, Gameplay/Persistence, Networking, UI | 3 | 3 | small |
+| 10 | Hub | PlayerCadence.LocalCombo (event) | Gameplay/Combat, GameFeel, UI | 3 | 3 | small |
+| 11 | Hub | PlayerSpawnPoint.Active (locator) | Networking, Gameplay/Housing, Tools | 3 | 3 | small |
+| 12 | Hub | PointOfInterest.Active (locator) | World, Tools, UI | 3 | 3 | small |
+| 13 | Hub | ServerChat.Announce (state) | Core, Gameplay/Crossfire, Gameplay/Items, Gameplay/Social | 3 | 3 | small |
+| 14 | Hub | UnityKeys.Current (locator) | Core, Gameplay/Persistence, Networking | 3 | 3 | small |
+| 15 | Hub | WorkshopOwnerLink.Current (locator) | Gameplay/Items, Gameplay/Crafting, Gameplay/Forge, Gameplay/Persistence | 3 | 3 | small |
+| 16 | Hub | ChatOwnerLink.Current (locator) | Gameplay/Items, Gameplay/Persistence, Gameplay/Social | 3 | 2 | small |
+| 17 | Hub | ContactsOwnerLink.Current (locator) | Gameplay/Items, Gameplay/Persistence, Gameplay/Social | 3 | 2 | small |
+| 18 | Hub | CrewOwnerLink.Current (locator) | Gameplay/Items, Gameplay/Persistence, Gameplay/Social | 3 | 2 | small |
+| 19 | Hub | DuelOwnerLink.Current (locator) | Gameplay/Items, Gameplay/Combat, Gameplay/Persistence | 3 | 2 | small |
+| 20 | Hub | FollowOwnerLink.Current (locator) | Gameplay/Items, Gameplay/Persistence, Gameplay/Social | 3 | 2 | small |
+| 21 | Cycle | Gameplay/Autopilot uses Gameplay/Economy against the order | Gameplay/Autopilot, Gameplay/Economy | 3 | 2 | small |
+| 22 | Cycle | Gameplay/Hostiles uses Gameplay/Social against the order | Gameplay/Hostiles, Gameplay/Social | 3 | 2 | small |
+| 23 | Hub | JoinFlow.Failed (event) | Networking, Tools, UI | 3 | 2 | small |
+| 24 | Hub | KeyBindings.Changed (event) | Core, Gameplay/Progression, UI | 3 | 2 | small |
+| 25 | Hub | KioskOwnerLink.Current (locator) | Gameplay/Items, Gameplay/Economy, Gameplay/Persistence | 3 | 2 | small |
+| 26 | Hub | MountOwnerLink.Current (locator) | Core, Gameplay/Mounts, Gameplay/Persistence | 3 | 2 | small |
+| 27 | Hub | MusicConductor.Instance (locator) | Audio, Tools, UI | 3 | 2 | small |
+| 28 | Hub | MusicStateLink.Current (locator) | Core, Audio, Networking | 3 | 2 | small |
+| 29 | Hub | MusicStateLink.RemoteAuthority (state) | Core, Audio, Networking | 3 | 2 | small |
+| 30 | Hub | PartyOwnerLink.Current (locator) | Gameplay/Items, Gameplay/Persistence, Gameplay/Social | 3 | 2 | small |
+| 31 | Hub | PetShowLink.Current (locator) | Gameplay/Items, Gameplay/Persistence, Gameplay/Pets | 3 | 2 | small |
+| 32 | Hub | RecallShowLink.Current (locator) | Gameplay/Items, Gameplay/Housing, Gameplay/Persistence | 3 | 2 | small |
+| 33 | Hub | RestyleOwnerLink.Current (locator) | Gameplay/CharacterCreation, Gameplay/Persistence, Gameplay/Restyle | 3 | 2 | small |
+| 34 | Hub | RosterLink.NetworkPrefab (state) | Networking, Tools, UI | 3 | 2 | small |
+| 35 | Hub | ServerHooks.RunCommand (state) | Networking, Gameplay/Persistence, Tools | 3 | 2 | small |
+| 36 | Hub | ServerShutdown.Handler (state) | Core, Gameplay/Persistence, Networking | 3 | 2 | small |
+| 37 | Hub | SkyLiftLink.Requester (state) | Core, Gameplay/Persistence, UI | 3 | 2 | small |
+| 38 | Hub | SponsorOwnerLink.Current (locator) | Gameplay/Items, Gameplay/Persistence, Gameplay/Social | 3 | 2 | small |
+| 39 | Hub | TradeOwnerLink.Current (locator) | Gameplay/Items, Gameplay/Economy, Gameplay/Persistence | 3 | 2 | small |
+| 40 | Cycle | Gameplay/Persistence uses Gameplay/Autopilot against the order | Gameplay/Persistence, Gameplay/Autopilot | 3 | 1 | small |
 <!-- /map:problems -->
 
 ## After the plan (19 Oct 2026, stages 0 to 7)

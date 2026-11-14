@@ -1,0 +1,28 @@
+{
+    "name": "KryticalNova.Mounts.Entities.Editor",
+    "rootNamespace": "KryticalNova.Mounts.Entities.Editor",
+    "references": [
+        "KryticalNova.Runtime",
+        "KryticalNova.Mounts.Entities",
+        "KryticalNova.Networking.Entities",
+        "KryticalNova.Player.Entities",
+        "KryticalNova.Player.Entities.Editor",
+        "Unity.Entities",
+        "Unity.NetCode",
+        "Unity.NetCode.Authoring.Hybrid",
+        "Unity.Scenes",
+        "Unity.NetCode.Hybrid",
+        "Unity.Collections"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

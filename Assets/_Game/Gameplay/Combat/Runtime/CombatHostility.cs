@@ -29,9 +29,14 @@ namespace KryticalNova.Combat
         public static bool IsHostile(Transform attacker, IDamageable target)
         {
             if (target == null || target.Transform == null || target.Transform == attacker) return false;
-            if (!(IsPlayer(attacker) && IsPlayer(target.Transform))) return true;
-            bool neutralGround = TradeZone.CrossFactionAt(attacker.position) || TradeZone.CrossFactionAt(target.Transform.position);
-            IFactionMember a = FactionRules.MemberOf(attacker), b = FactionRules.MemberOf(target.Transform);
+            // A stand-in (the Mount Companion's body, day list item 19) is judged as the player it stands for: an enemy may hit it, a
+            // friend or its own owner never.
+            Transform victim = target.Transform;
+            if (victim.TryGetComponent(out KryticalNova.Core.IStandIn standIn) && standIn.StandsFor != null) victim = standIn.StandsFor;
+            if (victim == attacker) return false;
+            if (!(IsPlayer(attacker) && IsPlayer(victim))) return true;
+            bool neutralGround = TradeZone.CrossFactionAt(attacker.position) || TradeZone.CrossFactionAt(victim.position);
+            IFactionMember a = FactionRules.MemberOf(attacker), b = FactionRules.MemberOf(victim);
             bool sameMember = a != null && ReferenceEquals(a, b);
             bool duelling = a != null && b != null && !sameMember && (a.IsDuelling(b) || b.IsDuelling(a));
             // The one rule (M4): the entity netcode asks the same HostilityRules with what its ghosts carry. The Scar: the factions are at

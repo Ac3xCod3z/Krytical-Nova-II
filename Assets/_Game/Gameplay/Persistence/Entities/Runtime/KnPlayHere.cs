@@ -158,6 +158,7 @@ namespace KryticalNova.Persistence.Entities
             || Environment.GetEnvironmentVariable("KN_PLAYHERE_ITEMS") == "1"                   // items used by the server (item 5)
             || Environment.GetEnvironmentVariable("KN_PLAYHERE_MOUNT") == "1"                   // the mount and rider proof (8 Nov)
             || Environment.GetEnvironmentVariable("KN_PLAYHERE_MOUNTVAULT") == "1"              // the mounted vault, both mounts (day list 15.2)
+            || Environment.GetEnvironmentVariable("KN_PLAYHERE_COMPANION") == "1"               // the Mount Companion, both mounts (day list 19)
             || Environment.GetEnvironmentVariable("KN_PLAYHERE_ROOFS") == "1"                   // roof to roof (item 8)
             || KnCombatProbe.On                                                                 // the cutover's combat proof (12 Nov)
             || Environment.GetEnvironmentVariable(TwoPlayersVariable) == "1"                    // Trade, vendors, GM target with Player2 (12 Nov)
@@ -1587,6 +1588,7 @@ namespace KryticalNova.Persistence.Entities
                 if (ItemsRun) yield return Items(body, ghost, walls);
                 if (MountRun) yield return Mounts(body, ghost, walls);
                 if (MountVaultRun) yield return MountVaults(body, ghost, walls);
+                if (CompanionRun) yield return Companions(body, ghost, walls);
                 if (MediaProbe != null) yield return MediaProbe(new TwoPlayerRun { Own = OwnBody, Body = body, Log = Log });
                 if (RoofsRun) yield return RoofJumps(body, ghost, walls);
                 if (TwoPlayersOn)
@@ -1669,7 +1671,7 @@ namespace KryticalNova.Persistence.Entities
                 }
             }
 
-            bool HasScriptedTries => !string.IsNullOrEmpty(Walk) || !string.IsNullOrEmpty(Jump) || VaultCount > 0 || WaterRun || WallRun || ClimbRun || TreeRun || CatchRun || AutoRun || LedgeRun || FixesRun || AcrossRun || ItemsRun || MountRun || MountVaultRun || RoofsRun || KnCombatProbe.On || TwoPlayersOn || KnCadenceProbe.On;
+            bool HasScriptedTries => !string.IsNullOrEmpty(Walk) || !string.IsNullOrEmpty(Jump) || VaultCount > 0 || WaterRun || WallRun || ClimbRun || TreeRun || CatchRun || AutoRun || LedgeRun || FixesRun || AcrossRun || ItemsRun || MountRun || MountVaultRun || CompanionRun || RoofsRun || KnCombatProbe.On || TwoPlayersOn || KnCadenceProbe.On;
 
             /// <summary>Which scripted parts are on, for the log's first lines (a part that should run and is not listed shows at once).</summary>
             string ScriptedParts()
@@ -1690,6 +1692,7 @@ namespace KryticalNova.Persistence.Entities
                 if (ItemsRun) on.Add("items used by the server");
                 if (MountRun) on.Add("mount and rider");
                 if (MountVaultRun) on.Add("the mounted vault");
+                if (CompanionRun) on.Add("the Mount Companion");
                 if (KnCombatProbe.On) on.Add("combat to a kill");
                 if (TwoPlayersOn) on.Add("two players: Trade, vendors, GM target");
                 if (RoofsRun) on.Add("roof to roof");
@@ -2886,6 +2889,101 @@ namespace KryticalNova.Persistence.Entities
                     }
                 }
                 finally { Application.logMessageReceived -= hear; }
+            }
+
+            /// <summary>The Mount Companion (env KN_PLAYHERE_COMPANION=1; day list item 19, phases 1-2): one client only.</summary>
+            static bool CompanionRun => Environment.GetEnvironmentVariable("KN_PLAYHERE_COMPANION") == "1";
+
+            /// <summary>
+            /// For each built mount (Brambleback box 1, Circuit Strider box 4): learned, selected, called out (the Companion op, what Y
+            /// sends), then a walk and a run out and back from the spawn while the drawn companion's distance to the body is logged; then a
+            /// knock-out (gm.mount.hurt 100: it must vanish and rest), a call refused while resting, and the rest ended. On the last mount:
+            /// called out again, hurt 50 % and healed with a Mount Stim (9014) used from the Pack. Pass per mount: drawn while out, never
+            /// further than 12 m once settled, gone after the knock-out, the call refused while resting; the Stim raises the HP.
+            /// </summary>
+            IEnumerator Companions(GameObject body, Entity ghost, VaultTally tally)
+            {
+                var inventory = body.GetComponent<PlayerInventory>();
+                var own = OwnBody != null ? OwnBody.GetComponent<PlayerInventory>() : null;
+                if (!body.TryGetComponent(out IBodyMounts mounts) || !body.TryGetComponent(out IBodyMountCompanion companion) || inventory == null
+                    || own == null || !(GmRoster.Host is ulong host) || PlayerGm.CommandRunner == null)
+                { tally.Tried++; Log("companion: FAIL; no mounts, companion, Pack or GM commands"); yield break; }
+                Transform Drawn()
+                {
+                    foreach (var t in UnityEngine.Object.FindObjectsByType<Transform>(FindObjectsSortMode.None))
+                        if (t.parent == null && t.name.StartsWith("Companion (", StringComparison.Ordinal) && t.gameObject.activeInHierarchy) return t;
+                    return null;
+                }
+                Vector3 spawn = ServerPosition(ghost);
+                Vector3 OnGround(Vector3 p) { p.y = Physics.Raycast(new Vector3(p.x, p.y + 50f, p.z), Vector3.down, out RaycastHit hit, 200f) ? hit.point.y : p.y; return p; }
+                foreach (int box in new[] { 1, 4 })
+                {
+                    tally.Tried++;
+                    var before = new HashSet<ushort>();
+                    for (int i = 0; i < PlayerInventory.Capacity; i++) before.Add(inventory.Get(i).itemId);
+                    Log($"companion {box}: 'gm.mount.give {box}' -> " + PlayerGm.CommandRunner(host, "gm.mount.give " + box));
+                    ushort item = 0;
+                    for (int i = 0; i < PlayerInventory.Capacity; i++) if (!before.Contains(inventory.Get(i).itemId)) item = inventory.Get(i).itemId;
+                    yield return new WaitForSeconds(1.2f);
+                    if (item != 0) own.UseItem(item);
+                    yield return new WaitForSeconds(1.5f);
+                    mounts.RunMountOp(MountOpKind.Select, box);
+                    yield return new WaitForSeconds(1f);
+                    if (!companion.CompanionOut) mounts.RunMountOp(MountOpKind.Companion, 0);
+                    yield return new WaitForSeconds(3f);
+                    Transform drawn = Drawn();
+                    Log($"companion {box}: out={companion.CompanionOut} box={companion.CompanionBox} hp={companion.CompanionHpPermille} drawn={(drawn != null ? drawn.name : "NONE")}");
+                    bool shown = drawn != null, near = true;
+                    float worst = 0f;
+                    // a walk, then a run: 14 m out to the east and back, the drawn companion's distance sampled twice a second once settled
+                    foreach (bool run in new[] { false, true })
+                        foreach (Vector3 goal in new[] { spawn + new Vector3(14f, 0f, 0f), spawn })
+                        {
+                            BodyClicks.Ground(OnGround(goal), run);
+                            float t0 = Time.realtimeSinceStartup;
+                            while (Time.realtimeSinceStartup - t0 < (run ? 5f : 9f))
+                            {
+                                yield return new WaitForSeconds(0.5f);
+                                drawn = Drawn();
+                                if (drawn == null) { shown = false; continue; }
+                                float d = Flat(drawn.position - OwnBody.transform.position);
+                                if (Time.realtimeSinceStartup - t0 > 2f) { worst = Mathf.Max(worst, d); if (d > 12f) near = false; }
+                            }
+                            Log($"companion {box}: {(run ? "run" : "walk")} to {goal}: drawn {(drawn != null ? Flat(drawn.position - OwnBody.transform.position).ToString("F1", CultureInfo.InvariantCulture) + " m from the body" : "NONE")}");
+                        }
+                    Log($"companion {box}: 'gm.mount.hurt 100' -> " + PlayerGm.CommandRunner(host, "gm.mount.hurt 100"));
+                    yield return new WaitForSeconds(3f);
+                    bool gone = Drawn() == null && !companion.CompanionOut;
+                    Log($"companion {box}: after the knock-out out={companion.CompanionOut} drawn={(Drawn() != null)} knockOuts={companion.CompanionKnockOuts}");
+                    mounts.RunMountOp(MountOpKind.Companion, 0);   // must be refused while resting
+                    yield return new WaitForSeconds(1.5f);
+                    bool refused = !companion.CompanionOut;
+                    Log($"companion {box}: call while resting -> out={companion.CompanionOut} ({(refused ? "refused, as it should" : "NOT refused")})");
+                    Log($"companion {box}: 'gm.mount.rest 0' -> " + PlayerGm.CommandRunner(host, "gm.mount.rest 0"));
+                    yield return new WaitForSeconds(1f);
+                    bool ok = shown && near && gone && refused;
+                    if (ok) tally.Passed++;
+                    Log($"companion {box}: {(ok ? "PASS" : "FAIL")}; drawn while out {shown}; worst settled distance {worst:F1} m (cap 12); vanished on the knock-out {gone}; call refused while resting {refused}");
+                }
+                // the Mount Stim on the last mount: out, hurt 50 %, the Stim used from the Pack
+                tally.Tried++;
+                if (!companion.CompanionOut) mounts.RunMountOp(MountOpKind.Companion, 0);
+                yield return new WaitForSeconds(3f);
+                Log("companion stim: 'item.give 9014 1' -> " + PlayerGm.CommandRunner(host, "item.give 9014 1"));
+                Log("companion stim: 'gm.mount.heal' -> " + PlayerGm.CommandRunner(host, "gm.mount.heal"));   // back from the knock-out at 30 %
+                yield return new WaitForSeconds(0.5f);
+                Log("companion stim: 'gm.mount.hurt 50' -> " + PlayerGm.CommandRunner(host, "gm.mount.hurt 50"));
+                yield return new WaitForSeconds(2f);
+                int hurt = companion.CompanionHpPermille;
+                own.UseItem(9014);
+                yield return new WaitForSeconds(2.5f);
+                int healed = companion.CompanionHpPermille;
+                bool stim = companion.CompanionOut && healed > hurt;
+                if (stim) tally.Passed++;
+                Log($"companion stim: {(stim ? "PASS" : "FAIL")}; HP {hurt} -> {healed} permille; out={companion.CompanionOut}");
+                yield return new WaitForSeconds(2f);
+                mounts.RunMountOp(MountOpKind.Companion, 0);   // home
+                yield return new WaitForSeconds(2f);
             }
 
             /// <summary>The owner's feel-test fixes 1-3 (env KN_PLAYHERE_FIXES=1; `m3c-wallstride-design.md` section 9).</summary>

@@ -23,7 +23,7 @@ namespace KryticalNova.Mounts
     /// speed and the look (<see cref="MountRider"/>). The owner alone also gets all four boxes (<see cref="MountBook"/>).
     /// </summary>
     [DisallowMultipleComponent]
-    public sealed class PlayerMounts : NetworkBehaviour, IItemUseHandler, ISaveParticipant, IBodyMounts
+    public sealed class PlayerMounts : NetworkBehaviour, IItemUseHandler, ISaveParticipant, IBodyMounts, IBodyMountCompanion
     {
         // Mounts or dismounts from far too often are ignored: one press every this many seconds is plenty.
         private const float RidePressSeconds = 0.4f;
@@ -88,6 +88,24 @@ namespace KryticalNova.Mounts
         private MountBook viewBook;   // the own view of the entity netcode: the server's four boxes (NGO's netBook)
         private bool bookDelivered;   // a server body of the entity netcode: its player has the latest boxes
 
+        // The Mount Companion (day list item 19, phases 1-2): the selected mount walks beside its owner instead of being ridden.
+        /// <summary>Whole UTC seconds: rests and the regen at home go by the clock, so a relog cannot skip them (tests set it).</summary>
+        public static Func<long> UtcNow = () => DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+        private bool companionOut;     // never saved: nobody comes back into the world with it out
+        private bool callWhenOff;      // called while riding: it forms beside the rider as the getting-off ends
+        private CompanionStance stance;
+        private readonly int[] hpLost = new int[MountRules.Slots + 1];      // per box, permille lost, 0 = full
+        private readonly long[] hpAt = new long[MountRules.Slots + 1];      // UTC seconds the lost value holds from (regen counts after)
+        private readonly long[] restUntil = new long[MountRules.Slots + 1]; // UTC seconds a knocked-out box rests until
+        private int knockOuts;
+        private float nextStimAt, nextCompanionPublish, nextCompanionRefresh;
+        private bool companionDirty, companionDelivered = true;
+        // the own view of the entity netcode: the server's companion boxes
+        private bool viewOut;
+        private CompanionStance viewStance;
+        private readonly int[] viewHp = { 1000, 1000, 1000, 1000, 1000 };   // permille left
+        private readonly float[] viewRestEnds = new float[MountRules.Slots + 1]; // Time.unscaledTime the rest ends
+
         /// <summary>The selected mount, or null.</summary>
         public MountDefinition Selected => catalog != null ? catalog.Get(shown.selected) : null;
         public int SelectedId => shown.selected;
@@ -108,6 +126,239 @@ namespace KryticalNova.Mounts
         public MountState StateOf(int box) => Book.Get(box);
         public int GrowthOf(int box) => MountRules.GrowthPercent(StateOf(box), Tuning);
         public float GrowthExactOf(int box) => MountRules.GrowthExact(StateOf(box), Tuning);
+
+        // ------------------------------------------------------------------ the Mount Companion (day list item 19)
+
+        /// <summary>The selected mount walks beside its owner (known to the owner and where the game is decided).</summary>
+        public bool CompanionOut => HasAuthority ? companionOut : viewOut;
+        public CompanionStance Stance => HasAuthority ? stance : viewStance;
+        private CompanionTuning CTuning => Settings != null ? Settings.Companion : CompanionTuning.Default;
+        private MountTuning CompanionHungerTuning => Settings != null ? Settings.CompanionHunger : new MountTuning(100_000f, 0.04f, 0.5f);
+        private int LostNow(int box) => CompanionRules.LostNow(hpLost[box], hpAt[box], UtcNow(), !(companionOut && box == selected), CTuning);
+
+        private string MountName(int box)
+        {
+            MountDefinition m = catalog != null ? catalog.Get(box) : null;
+            return m != null ? m.displayName : "mount";
+        }
+
+        /// <summary>A box's companion HP left, permille of its max (1000 = full).</summary>
+        public int CompanionHpOf(int box)
+        {
+            if (box < 1 || box > MountRules.Slots) return 0;
+            return HasAuthority ? CompanionRules.Permille - LostNow(box) : viewHp[box];
+        }
+
+        /// <summary>Seconds a knocked-out box still rests, 0 when it may be called.</summary>
+        public long RestLeftOf(int box)
+        {
+            if (box < 1 || box > MountRules.Slots) return 0;
+            return HasAuthority ? CompanionRules.RestLeft(restUntil[box], UtcNow()) : (long)Mathf.Ceil(Mathf.Max(0f, viewRestEnds[box] - Time.unscaledTime));
+        }
+
+        /// <summary>The selected mount's companion max HP: the owner's max HP times its growth share.</summary>
+        public float CompanionMaxHp => CompanionRules.MaxHp(entity != null ? entity.MaxHealth : 100f, GrowthPercent, CTuning);
+
+        /// <summary>The owner's machine: the Companion key (B) or the window's CALL / SEND HOME button.</summary>
+        public void RequestCompanion()
+        {
+            if (Requests is { } requests) { requests.MountOp(MountOpKind.Companion, 0); return; }
+            if (EntityView) return;
+            if (!IsSpawned || IsServer) ServerToggleCompanion();
+        }
+
+        /// <summary>The owner's machine: a stance button of the Mount window (phases 1-2: FREE only).</summary>
+        public void RequestStance(CompanionStance next)
+        {
+            if (Requests is { } requests) { requests.MountOp(MountOpKind.Stance, (int)next); return; }
+            if (EntityView) return;
+            if (!IsSpawned || IsServer) ServerSetStance((int)next);
+        }
+
+        /// <summary>Why calling the companion out would do nothing now (shown to the player), or null. Sending it home is never refused.</summary>
+        public string CompanionBlockedReason()
+        {
+            if (CompanionOut) return null;
+            if (catalog == null) return "Mounts are not set up.";
+            MountDefinition mount = Selected;
+            if (mount == null) return Book.owned == 0 ? "You have no mount. Use a mount item from your Pack to add one."
+                : "Select a mount in the Mount window first.";
+            if (!mount.IsBuilt) return $"The {mount.displayName} cannot walk beside you yet.";
+            if (!IsFed) return $"Your {mount.displayName} is starving. Feed it Mount Feed first.";
+            long rest = RestLeftOf(SelectedId);
+            if (rest > 0) return $"Your {mount.displayName} is resting: {CompanionRules.Clock(rest)} left.";
+            if (entity != null && !entity.IsAlive) return "You cannot call your mount while defeated.";
+            if (!IsMounted && motor != null && motor.CurrentState != CharacterAnimState.Locomotion) return "Finish what you are doing first.";
+            if (ServerBodyAirborne) return "Finish what you are doing first.";
+            return null;
+        }
+
+        /// <summary>Server: calls the selected mount out (a rider gets off first and it forms as the feet land), or sends it home.</summary>
+        public void ServerToggleCompanion()
+        {
+            if (!HasAuthority || Time.unscaledTime < nextRidePress) return;
+            nextRidePress = Time.unscaledTime + RidePressSeconds;
+            if (companionOut) { SendCompanionHome(null); return; }
+            if (callWhenOff) { callWhenOff = false; return; }   // pressed again while getting off: never mind
+            string reason = CompanionBlockedReason();
+            if (reason != null) { Notify(reason, toast: true); return; }
+            if (phase == RidePhase.Riding || phase == RidePhase.GettingOn) { callWhenOff = true; BeginPhase(RidePhase.GettingOff); return; }
+            if (phase != RidePhase.OnFoot) { callWhenOff = true; return; }
+            CallOut();
+        }
+
+        private void CallOut()
+        {
+            callWhenOff = false;
+            CompanionRules.Settle(ref hpLost[selected], ref hpAt[selected], UtcNow(), true, CTuning);   // the regen at home so far
+            companionOut = true;
+            hungerCarry = 0.0;
+            Debug.Log($"[KnMount] {name} companion out: box {selected}");
+            PublishCompanion();
+            Publish();
+        }
+
+        /// <summary>Server: the companion goes home (no rest); <paramref name="why"/> is told to the owner when given.</summary>
+        public void SendCompanionHome(string why)
+        {
+            callWhenOff = false;
+            if (!HasAuthority || !companionOut) return;
+            CompanionRules.Settle(ref hpLost[selected], ref hpAt[selected], UtcNow(), false, CTuning);
+            companionOut = false;
+            Debug.Log($"[KnMount] {name} companion home: box {selected}");
+            PublishBook();
+            PublishCompanion();
+            Publish();
+            if (why != null) Notify(why, toast: true);
+        }
+
+        /// <summary>Server: a hit on the companion's body (enemy players' area skills in PvP, owner pick 2 a; GM).</summary>
+        public void HurtCompanion(float damage)
+        {
+            if (!HasAuthority || !companionOut || selected == 0 || damage <= 0f) return;
+            long now = UtcNow();
+            CompanionRules.Settle(ref hpLost[selected], ref hpAt[selected], now, false, CTuning);
+            if (CompanionRules.Hurt(ref hpLost[selected], damage, CompanionMaxHp)) KnockOutCompanion(now);
+            else companionDirty = true;
+        }
+
+        private void KnockOutCompanion(long now)
+        {
+            CompanionRules.KnockOut(now, CTuning, out hpLost[selected], out hpAt[selected], out restUntil[selected]);
+            knockOuts++;
+            companionOut = false;
+            callWhenOff = false;
+            Debug.Log($"[KnMount] {name} companion knocked out: box {selected}, rests {restUntil[selected] - now} s");
+            PublishBook();
+            PublishCompanion();
+            Publish();
+            Notify($"Your {MountName(selected)} was knocked out and went home to rest ({CompanionRules.Clock(restUntil[selected] - now)}).", toast: true);
+        }
+
+        /// <summary>Why a Mount Stim would be wasted now, or null.</summary>
+        public string StimBlockedReason()
+        {
+            if (selected == 0 || catalog == null) return "Select a mount in the Mount window first.";
+            long rest = RestLeftOf(selected);
+            if (rest > 0) return $"Your {MountName(selected)} is resting: {CompanionRules.Clock(rest)} left.";
+            if (LostNow(selected) == 0) return $"Your {MountName(selected)} is not hurt.";
+            if (Time.time < nextStimAt) return "Wait a moment before the next Mount Stim.";
+            return null;
+        }
+
+        /// <summary>Server: a Mount Stim heals the selected mount's companion HP (out or at home), never the player.</summary>
+        public void ServerStim()
+        {
+            if (!HasAuthority || StimBlockedReason() != null) return;
+            CompanionRules.Settle(ref hpLost[selected], ref hpAt[selected], UtcNow(), !companionOut, CTuning);
+            hpLost[selected] = CompanionRules.StimHealed(hpLost[selected], CTuning);
+            nextStimAt = Time.time + (Settings != null ? Settings.mountStimCooldown : 10f);
+            PublishCompanion();
+            Notify($"Your {MountName(selected)} is patched up: {CompanionHpOf(selected) / 10}% HP.", toast: false);
+        }
+
+        /// <summary>Server only (GM): the selected mount's companion HP, 0-100 %; 0 while out knocks it out.</summary>
+        public void ServerSetCompanionHp(float percent)
+        {
+            if (!HasAuthority || selected == 0) return;
+            long now = UtcNow();
+            CompanionRules.Settle(ref hpLost[selected], ref hpAt[selected], now, !companionOut, CTuning);
+            hpLost[selected] = CompanionRules.Permille - Mathf.RoundToInt(Mathf.Clamp(percent, 0f, 100f) * 10f);
+            if (hpLost[selected] >= CompanionRules.Permille && companionOut) { KnockOutCompanion(now); return; }
+            hpLost[selected] = Mathf.Min(hpLost[selected], CompanionRules.Permille - 1);
+            PublishCompanion();
+        }
+
+        /// <summary>Server only (GM): the selected mount rests this many seconds (0 ends a rest); a rest sends it home.</summary>
+        public void ServerSetRest(float seconds)
+        {
+            if (!HasAuthority || selected == 0) return;
+            long now = UtcNow();
+            if (seconds > 0f && companionOut) SendCompanionHome(null);
+            CompanionRules.Settle(ref hpLost[selected], ref hpAt[selected], now, true, CTuning);
+            restUntil[selected] = seconds > 0f ? now + (long)Mathf.Ceil(seconds) : 0;
+            if (restUntil[selected] > hpAt[selected]) hpAt[selected] = restUntil[selected];
+            PublishCompanion();
+        }
+
+        /// <summary>Server: the stance from the Mount window. Phases 1-2 build FREE only; the combat stances come later.</summary>
+        public void ServerSetStance(int next)
+        {
+            if (!HasAuthority) return;
+            if (next != (int)CompanionStance.Free) { Notify("TANK, DPS and HEALER stances come later. Your mount stays FREE.", toast: true); return; }
+            stance = CompanionStance.Free;
+            PublishCompanion();
+        }
+
+        private void PublishCompanion()
+        {
+            companionDirty = false;
+            nextCompanionPublish = Time.time + 0.5f;
+            nextCompanionRefresh = Time.time + (Settings != null ? Settings.hungerWriteSeconds : 10f);
+            if (EntityServer) SendCompanion();   // its own player's Mount window
+            Changed?.Invoke();
+        }
+
+        private void SendCompanion()
+        {
+            long now = UtcNow();
+            ushort H(int b) => (ushort)(CompanionRules.Permille - LostNow(b));
+            uint Rest(int b) => (uint)Math.Min(uint.MaxValue, CompanionRules.RestLeft(restUntil[b], now));
+            companionDelivered = MountCompanionLink.Current?.Companion(this, (byte)(companionOut ? 1 : 0), (byte)stance,
+                H(1), H(2), H(3), H(4), Rest(1), Rest(2), Rest(3), Rest(4)) == true;
+        }
+
+        // a box at home that is regaining HP, or one resting: its window needs fresh numbers now and then
+        private bool AnyCompanionChanging()
+        {
+            long now = UtcNow();
+            for (int b = 1; b <= MountRules.Slots; b++)
+                if (book.Owns(b) && (restUntil[b] > now || LostNow(b) > 0)) return true;
+            return false;
+        }
+
+        // IBodyMountCompanion: what the companion's ghost systems read on the server body
+        public int CompanionBox => companionOut ? selected : 0;
+        public int CompanionStage => Stage;
+        public int CompanionHpPermille => selected != 0 ? CompanionHpOf(selected) : 0;
+        byte IBodyMountCompanion.CompanionStance => (byte)stance;
+        public int CompanionKnockOuts => knockOuts;
+        public float CompanionRunSpeed => Settings != null ? MountRules.Speed(Settings.runSpeed.x, Settings.runSpeed.y, GrowthPercent, IsFed) : 20f;
+
+        /// <summary>The own view of the entity netcode: the server's companion boxes.</summary>
+        public void MirrorCompanion(byte isOut, byte stanceByte, ushort hp1, ushort hp2, ushort hp3, ushort hp4, uint rest1, uint rest2, uint rest3, uint rest4)
+        {
+            if (!EntityView) return;
+            viewOut = isOut != 0;
+            viewStance = (CompanionStance)stanceByte;
+            viewHp[1] = hp1; viewHp[2] = hp2; viewHp[3] = hp3; viewHp[4] = hp4;
+            float now = Time.unscaledTime;
+            viewRestEnds[1] = rest1 > 0 ? now + rest1 : 0f;
+            viewRestEnds[2] = rest2 > 0 ? now + rest2 : 0f;
+            viewRestEnds[3] = rest3 > 0 ? now + rest3 : 0f;
+            viewRestEnds[4] = rest4 > 0 ? now + rest4 : 0f;
+            Changed?.Invoke();
+        }
 
         private void Awake()
         {
@@ -213,6 +464,7 @@ namespace KryticalNova.Mounts
         {
             if (!HasAuthority || catalog == null || !book.Owns(box) || box == selected) return;
             if (phase != RidePhase.OnFoot) { Notify("Get off your mount before choosing another.", toast: true); return; }
+            if (companionOut) SendCompanionHome(null);   // another box while out: this one goes home first
             selected = box;
             warnedHungry = Settings != null && book.Get(box).HungerPercent <= Settings.hungerWarningPercent;
             Publish();
@@ -222,7 +474,8 @@ namespace KryticalNova.Mounts
         {
             if (!HasAuthority || Time.unscaledTime < nextRidePress) return;
             nextRidePress = Time.unscaledTime + RidePressSeconds;
-            if (phase == RidePhase.Riding || phase == RidePhase.GettingOn) { BeginPhase(RidePhase.GettingOff); return; }
+            if (phase == RidePhase.Riding || phase == RidePhase.GettingOn) { callWhenOff = false; BeginPhase(RidePhase.GettingOff); return; }
+            if (companionOut && phase == RidePhase.OnFoot) SendCompanionHome(null);   // riding and out are one or the other
             if (phase != RidePhase.OnFoot) return;
             string reason = RideBlockedReason();
             if (reason != null) { Notify(reason, toast: true); return; }
@@ -324,7 +577,9 @@ namespace KryticalNova.Mounts
 
         private void OnDied()
         {
-            if (HasAuthority) ServerDismountNow();
+            if (!HasAuthority) return;
+            SendCompanionHome(null);   // it goes home (no rest) when its owner falls
+            ServerDismountNow();
         }
 
         // A running getting-off's travel on every machine: the speed profile of MountRules.DismountSpeedShare.
@@ -354,17 +609,33 @@ namespace KryticalNova.Mounts
                 phase = phase == RidePhase.GettingOn ? RidePhase.Riding : RidePhase.OnFoot;
                 running = false;
                 Publish();
+                // called while riding: it forms beside the rider as the feet land
+                if (phase == RidePhase.OnFoot && callWhenOff)
+                {
+                    string reason = CompanionBlockedReason();
+                    if (reason == null) CallOut();
+                    else { callWhenOff = false; Notify(reason, toast: true); }
+                }
             }
+            if (EntityServer && !companionDelivered) SendCompanion();
+            if (companionDirty && Time.time >= nextCompanionPublish) PublishCompanion();
+            else if (EntityServer && Time.time >= nextCompanionRefresh && AnyCompanionChanging()) PublishCompanion();
             // A jump, a vault or a wall run takes the rider off: the mount has no clips for them.
             if (phase == RidePhase.Riding && ((motor != null && motor.CurrentState == CharacterAnimState.Jumping) || ServerBodyAirborne)) ServerDismountNow();
 
-            if (phase != RidePhase.Riding || selected == 0) return;
+            // hungry while ridden, and faster while out beside its owner (the hunger bar is the companion's only time limit)
+            if ((phase != RidePhase.Riding && !companionOut) || selected == 0) return;
             MountState before = book.Get(selected);
-            MountState after = MountRules.Drain(before, Time.deltaTime, Tuning, ref hungerCarry);
+            MountState after = MountRules.Drain(before, Time.deltaTime, companionOut ? CompanionHungerTuning : Tuning, ref hungerCarry);
             if (after.Equals(before)) return;
             book.Set(selected, true, after);
             MountDefinition mount = catalog.Get(selected);
             string name = mount != null ? mount.displayName : "mount";
+            if (before.IsFed && !after.IsFed && companionOut)
+            {
+                SendCompanionHome($"Your {name} is starving and went home. Feed it Mount Feed to call it again.");
+                return;
+            }
             if (before.IsFed && !after.IsFed)
             {
                 PublishBook();
@@ -517,6 +788,7 @@ namespace KryticalNova.Mounts
             if (!HasAuthority || !book.Owns(box)) return;
             if (box == selected)
             {
+                SendCompanionHome(null);
                 ServerDismountNow();
                 selected = 0;
             }
@@ -626,8 +898,13 @@ namespace KryticalNova.Mounts
             {
                 if (!book.Owns(box)) continue;
                 MountState state = book.Get(box);
-                entries.Add(new MountSaveEntry { id = box, xp = state.XpUnits, hunger = state.HungerDeficit });
+                // the companion's HP and rest (day list item 19): added fields, 0 = full and not resting, so older saves load as they were
+                long now = UtcNow();
+                int lost = CompanionRules.LostNow(hpLost[box], hpAt[box], now, !(companionOut && box == selected), CTuning);
+                entries.Add(new MountSaveEntry { id = box, xp = state.XpUnits, hunger = state.HungerDeficit,
+                    hpLost = lost, hpAt = lost > 0 ? Math.Max(now, hpAt[box]) : 0, restUntil = restUntil[box] > now ? restUntil[box] : 0 });
             }
+            save.stance = (int)stance;
             save.mounts = entries.ToArray();
             return JsonUtility.ToJson(save);
         }
@@ -637,16 +914,30 @@ namespace KryticalNova.Mounts
             book = default;
             selected = 0;
             phase = RidePhase.OnFoot; // nobody comes back into the world in the saddle
+            companionOut = false;     // nor with the companion out
+            callWhenOff = false;
+            stance = CompanionStance.Free;
+            Array.Clear(hpLost, 0, hpLost.Length);
+            Array.Clear(hpAt, 0, hpAt.Length);
+            Array.Clear(restUntil, 0, restUntil.Length);
             if (!string.IsNullOrEmpty(json))
             {
                 MountSave save = JsonUtility.FromJson<MountSave>(json);
                 if (save != null && save.mounts != null)
                     foreach (MountSaveEntry entry in save.mounts)
-                        if (entry != null) book.Set(entry.id, true, new MountState(entry.xp, entry.hunger));
+                        if (entry != null)
+                        {
+                            book.Set(entry.id, true, new MountState(entry.xp, entry.hunger));
+                            if (entry.id < 1 || entry.id > MountRules.Slots) continue;
+                            hpLost[entry.id] = Mathf.Clamp(entry.hpLost, 0, CompanionRules.Permille);
+                            hpAt[entry.id] = entry.hpAt;
+                            restUntil[entry.id] = entry.restUntil;
+                        }
                 if (save != null && book.Owns(save.selected)) selected = save.selected;
             }
             warnedHungry = selected != 0 && Settings != null && book.Get(selected).HungerPercent <= Settings.hungerWarningPercent;
             PublishBook();
+            PublishCompanion();
             Publish();
         }
 
@@ -698,6 +989,8 @@ namespace KryticalNova.Mounts
             if (!EntityServer) return;
             if (op == MountOpKind.Select) ServerSelect(box);
             else if (op == MountOpKind.Ride) ServerToggleRide();
+            else if (op == MountOpKind.Companion) ServerToggleCompanion();
+            else if (op == MountOpKind.Stance) ServerSetStance(box);
         }
 
         /// <summary>Any view of the entity netcode: the selected mount evolved (NGO's EvolvedRpc).</summary>

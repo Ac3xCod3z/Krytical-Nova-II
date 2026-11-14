@@ -58,16 +58,28 @@ MAXCPU = arg("--maxcpu")   # e.g. 2: fewer MSBuild nodes, so a compile shares th
 
 
 def main_folder():
+    """Where Unity's generated projects and Library live for a worktree that has none of its own. The DOTS clone is itself a
+    git worktree of the NGO repo, so git's first worktree is the NGO folder, which has no Entities assemblies; a worktree of
+    the DOTS game uses the DOTS clone instead (owner, 14 Nov 2026: Library-less item worktrees failed the commit hook)."""
     out = subprocess.run(["git", "-C", CHECKOUT, "worktree", "list", "--porcelain"], capture_output=True, text=True).stdout
-    first = next((l[9:] for l in out.splitlines() if l.startswith("worktree ")), CHECKOUT)
-    return os.path.normpath(first)
+    trees = [os.path.normpath(l[9:]) for l in out.splitlines() if l.startswith("worktree ")]
+    def has_ecs(t):
+        return os.path.exists(os.path.join(t, "KryticalNova.Runtime.csproj")) and             os.path.isdir(os.path.join(t, "Library", "PackageCache")) and             any(n.startswith("com.unity.entities") for n in os.listdir(os.path.join(t, "Library", "PackageCache")))
+    if os.path.isdir(os.path.join(CHECKOUT, "Assets", "_Game", "Networking", "Entities")):   # a DOTS-game checkout
+        for t in trees:
+            if t != os.path.normpath(CHECKOUT) and has_ecs(t):
+                return t
+    return trees[0] if trees else CHECKOUT
 
 
 # a checkout with Unity's own generated projects (the DOTS clone) uses them: the main folder's may be older and miss a vendor reference
 PROJECTS = os.path.normpath(arg("--projects", CHECKOUT if os.path.exists(os.path.join(CHECKOUT, "KryticalNova.Runtime.csproj")) else main_folder()))
 ECS_LIB = os.path.normpath(arg("--ecs-library", CHECKOUT if os.path.isdir(os.path.join(CHECKOUT, "Library", "ScriptAssemblies")) else PROJECTS))
 GAME = os.path.join(CHECKOUT, "Assets", "_Game")
-OUT = os.path.join(CHECKOUT, "Temp", "compile-check")
+# outside the checkout (owner, 14 Nov 2026): an open Editor on this checkout watches and locks its Temp folder, so the build
+# output there failed with locked files (CS2012) while the shared Editor stayed open
+OUT = os.path.join(os.environ.get("TEMP", os.path.join(CHECKOUT, "Temp")), "kn-compile-check",
+                   re.sub(r"[^A-Za-z0-9]+", "-", os.path.normpath(CHECKOUT)).strip("-")[-60:])
 os.makedirs(OUT, exist_ok=True)
 
 

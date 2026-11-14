@@ -1413,6 +1413,29 @@ namespace KryticalNova.EditorTools.GM
         [ButtonGroup(Tabs + "/" + MountsTab + "/Ride"), EnableIf(nameof(IsReady)), LabelText("Ride / Get Off"), PropertyOrder(865)]
         private void RideMount() => Run("gm.mount.ride");
 
+        // the Mount Companion (day list item 19, phases 1-2)
+        [ButtonGroup(Tabs + "/" + MountsTab + "/Ride"), EnableIf(nameof(IsReady)), LabelText("Call / Send Home"), PropertyOrder(866)]
+        private void CallMount() => Run("gm.mount.call");
+
+        [TabGroup(Tabs, MountsTab), PropertyRange(0f, 100f), EnableIf(nameof(IsReady)), LabelText("Companion Hurt %"), PropertyOrder(867)]
+        [InfoBox("The companion out beside the player: take a share of its HP (0 HP knocks it out: it goes home and rests), heal it, or make it rest.")]
+        [SerializeField] private float companionHurt = 40f;
+
+        [ButtonGroup(Tabs + "/" + MountsTab + "/Companion"), EnableIf(nameof(IsReady)), LabelText("Hurt"), PropertyOrder(868)]
+        private void HurtCompanion() => Run($"gm.mount.hurt {companionHurt.ToString(System.Globalization.CultureInfo.InvariantCulture)}");
+
+        [ButtonGroup(Tabs + "/" + MountsTab + "/Companion"), EnableIf(nameof(IsReady)), LabelText("Heal To Full"), PropertyOrder(869)]
+        private void HealCompanion() => Run("gm.mount.heal");
+
+        [ButtonGroup(Tabs + "/" + MountsTab + "/Companion"), EnableIf(nameof(IsReady)), LabelText("Rest 5 min"), PropertyOrder(869)]
+        private void RestCompanion() => Run("gm.mount.rest 300");
+
+        [ButtonGroup(Tabs + "/" + MountsTab + "/Companion"), EnableIf(nameof(IsReady)), LabelText("End Rest"), PropertyOrder(869)]
+        private void EndRestCompanion() => Run("gm.mount.rest 0");
+
+        [ButtonGroup(Tabs + "/" + MountsTab + "/Companion"), EnableIf(nameof(IsReady)), LabelText("Give 5 Mount Stims"), PropertyOrder(869)]
+        private void GiveMountStims() => Run("item.give Mount_Stim 5");
+
         [TabGroup(Tabs, MountsTab), PropertyRange(0f, 100f), EnableIf(nameof(IsReady)), LabelText("Growth %"), PropertyOrder(870)]
         [InfoBox("Three stages, one per model: it evolves at 50 and at 100.")]
         [SerializeField] private float mountGrowth = 50f;
