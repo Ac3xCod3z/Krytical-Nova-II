@@ -47,6 +47,26 @@ namespace KryticalNova.Hostiles
             return true;
         }
 
+        /// <summary>
+        /// The same roll on a stand-in that is not a player (the Mount Companion in its TANK stance, day list item 19 phase 4): both alive, the
+        /// reach above, the attack's multiplier, <c>CombatCalculator.CalculateAttack</c> against the stand-in's stats. A stand-in never stands
+        /// on a wall and never reflects.
+        /// </summary>
+        public static bool TryRollOnStandIn(CombatEntity attacker, HostileDefinition definition, int attackIndex, IDamageable target, Transform attackerBody,
+            out DamageResult result)
+        {
+            result = default;
+            if (attacker == null || target == null || attackerBody == null || !target.IsAlive || !attacker.IsAlive || target.Transform == null) return false;
+            if (definition != null && target.Transform.position.y - attackerBody.position.y > definition.reachAbove) return false;
+            CharacterCombatStats mine = attacker.CombatStats;
+            if (mine == null || target.CombatStats == null) return false;
+            float multiplier = 1f;
+            if (definition != null && attackIndex >= 0 && attackIndex < definition.attacks.Length)
+                multiplier = Mathf.Max(0.1f, definition.attacks[attackIndex].damageMultiplier);
+            result = CombatCalculator.CalculateAttack(mine, target.CombatStats, multiplier, false, 0f);
+            return true;
+        }
+
         /// <summary>A body whose up is not the world's stands on a wall.</summary>
         public static bool OnAWall(Transform body) => Vector3.Angle(body.up, Vector3.up) > 30f;
 
