@@ -26,6 +26,13 @@ namespace KryticalNova.UI
             }
         }
 
+        /// <summary>A line that stands in place instead of running (Crossfire's last seconds: only the number changes).</summary>
+        public static bool Stands(AnnouncementKind kind) => kind == AnnouncementKind.CrossfireCount;
+
+        /// <summary>Where a standing line's left edge is, in the band's own pixels: in the middle of the band, or at its left edge
+        /// when the line is wider than the band.</summary>
+        public static float StandLeft(float bandWidth, float textWidth) => Mathf.Max(0f, (bandWidth - textWidth) * 0.5f);
+
         /// <summary>How long one pass takes: the text travels the band's width and its own, in seconds.</summary>
         public static float PassSeconds(float bandWidth, float textWidth, float pixelsPerSecond) =>
             (Mathf.Max(0f, bandWidth) + Mathf.Max(0f, textWidth)) / Mathf.Max(1f, pixelsPerSecond);

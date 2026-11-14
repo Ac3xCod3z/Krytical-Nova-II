@@ -166,9 +166,9 @@ namespace KryticalNova.Crossfire.Entities
         void Announce(double now)
         {
             CrossfireSettings s = Config;
-            string line = m_Caller.Next(Current, now, Current.Now.WarStart + (s != null ? s.musterSeconds : 0), s);
+            string line = m_Caller.Next(Current, now, Current.Now.WarStart + (s != null ? s.musterSeconds : 0), s, out bool countdown);
             if (string.IsNullOrEmpty(line)) return;
-            ServerChat.Announce?.Invoke(AnnouncementKind.Crossfire, line, null, 0);
+            ServerChat.Announce?.Invoke(countdown ? AnnouncementKind.CrossfireCount : AnnouncementKind.Crossfire, line, null, 0);
             Announced++;
         }
 

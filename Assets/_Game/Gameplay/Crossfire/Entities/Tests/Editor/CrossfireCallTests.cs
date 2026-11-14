@@ -72,7 +72,8 @@ namespace KryticalNova.Crossfire.Entities.Tests
             RunTo(tw, 2700);   // through the Call, the Muster, the War and into the End / Gap
 
             var calls = m_Heard.FindAll(h => h.text.StartsWith("Crossfire! The war starts in", StringComparison.Ordinal));
-            Assert.IsTrue(m_Heard.TrueForAll(h => h.kind == AnnouncementKind.Crossfire), "every line is a Crossfire announcement");
+            Assert.IsTrue(m_Heard.TrueForAll(h => h.kind == AnnouncementKind.Crossfire || h.kind == AnnouncementKind.CrossfireCount),
+                "every line is a Crossfire announcement");
             // 10-minute Call + 1-minute Muster: a call at the start and once a minute after, 1000 to 1600, none once the gates open at 1660
             Assert.AreEqual(11, calls.Count, string.Join(" / ", m_Heard));
             Assert.AreEqual("Crossfire! The war starts in 11 minutes. Level 10 and up: get to your Muster Yard.", calls[0].text);
@@ -87,6 +88,7 @@ namespace KryticalNova.Crossfire.Entities.Tests
             for (int i = 0; i < 10; i++)
             {
                 Assert.AreEqual("Crossfire: the gates open in " + (10 - i), count[i].text);
+                Assert.AreEqual(AnnouncementKind.CrossfireCount, count[i].kind, "the last seconds stand in place on the news bar");
                 Assert.AreEqual(1650 + i, count[i].at, 1e-6, "one a second in the last 10 s");
             }
             Assert.IsFalse(m_Heard.Exists(h => h.text.Contains("second")), "no seconds anywhere");
@@ -121,9 +123,42 @@ namespace KryticalNova.Crossfire.Entities.Tests
             tw.Tick(4);
             RunTo(tw, 1005);
             Assert.AreEqual("War in 11 minutes (from 10)", m_Heard[0].text);
-            Assert.AreEqual("1 minute", CrossfireCaller.InWords(40), "never seconds: rounded up to the minute");
+            Assert.AreEqual("1 minute", CrossfireCaller.InWords(40), "never seconds, and never less than a minute");
             Assert.AreEqual("1 minute", CrossfireCaller.InWords(60));
-            Assert.AreEqual("2 minutes", CrossfireCaller.InWords(61));
+            Assert.AreEqual("1 minute", CrossfireCaller.InWords(61), "whole minutes, never rounded up");
+            Assert.AreEqual("2 minutes", CrossfireCaller.InWords(120));
+        }
+
+        /// <summary>Owner, 13 Nov 2026: a 2-minute Call with a 15-second Muster said "3 minutes" first. The minutes are exact.</summary>
+        [Test]
+        public void ACallThatStartsBetweenTwoMinuteMarks_NamesTheWholeMinutesLeft_NeverTheNextOneUp()
+        {
+            var settings = ScriptableObject.CreateInstance<CrossfireSettings>();
+            try
+            {
+                settings.callRepeatSeconds = 60f;
+                settings.finalCountdownSeconds = 10f;
+                var caller = new CrossfireCaller();
+                var state = new CrossfireState { Known = true, MinLevel = 10, Now = new CrossfireNow { Phase = CrossfirePhase.Call, WarStart = 120 } };
+                const double gatesOpenAt = 135;   // a 2-minute Call and a 15-second Muster: 2:15 to go at the start
+                var said = new List<(double left, string text, bool countdown)>();
+                for (double now = 0; now < gatesOpenAt; now += 0.25)
+                {
+                    string line = caller.Next(state, now, gatesOpenAt, settings, out bool countdown);
+                    if (line != null) said.Add((gatesOpenAt - now, line, countdown));
+                }
+                var calls = said.FindAll(x => !x.countdown);
+                Assert.AreEqual(2, calls.Count, string.Join(" / ", said));
+                StringAssert.Contains("starts in 2 minutes", calls[0].text, "2:15 to go is 2 whole minutes, not 3");
+                Assert.AreEqual(135, calls[0].left, 1e-6, "said as the Call starts");
+                StringAssert.Contains("starts in 1 minute.", calls[1].text);
+                Assert.AreEqual(60, calls[1].left, 0.26, "the next pop-up on its own mark, and '2 minutes' is not said twice");
+                var count = said.FindAll(x => x.countdown);
+                Assert.AreEqual(10, count.Count, "10 .. 1");
+                Assert.AreEqual("Crossfire: the gates open in 10", count[0].text);
+                Assert.AreEqual("Crossfire: the gates open in 1", count[9].text);
+            }
+            finally { UnityEngine.Object.DestroyImmediate(settings); }
         }
     }
 }

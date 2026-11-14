@@ -19,5 +19,8 @@ namespace KryticalNova.UI
         [Range(0f, 2f)] public float fadeSeconds = 0.35f;
         [Tooltip("Messages that may wait behind the one running. One more than this and the oldest waiting is dropped.")]
         [Range(1, 30)] public int maxWaiting = 8;
+        [Tooltip("Seconds a line that stands in place stays (Crossfire's last seconds, 10 .. 1): each number takes the place of the " +
+                 "one before, and the last one stays this long.")]
+        [Range(0.5f, 5f)] public float standSeconds = 1.5f;
     }
 }
