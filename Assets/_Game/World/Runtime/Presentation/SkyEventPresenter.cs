@@ -106,6 +106,7 @@ namespace KryticalNova.World
             UseStarlessSkyCopy(sky);
             float starVisibility = Shader.GetGlobalVector(Ids.SkyParams).y;
             Publish(now, s, env.Weather, starVisibility, WorldEffectsRuntime.Tier);
+            ScaleNightMoon(s, dc);
             DimForEclipse(now, s, dc);
             DrawOverlay();
         }
@@ -131,10 +132,13 @@ namespace KryticalNova.World
             if (raw < 0.25f && t > 0.75f) day--;
             else if (raw > 0.75f && t < 0.25f) day++;
             SkyEventKind forced = env.ForcedSkyEvent(out double age);
+            // the sun's visible disc, for the eclipse's real overlap: the sun art's half-size share when the art is on, else the plain disc
+            bool sunArt = Shader.GetGlobalVector(Ids.BodyTexParams).z > 0.5f;
+            float sunDisc = sunArt ? Mathf.Atan(Mathf.Tan(dc.sunTextureSize) * s.eclipseMoonSize) : dc.sunDiscSize;
             var c = new SkyClock
             {
                 Seed = st.Seed, Day = day, Time01 = t, DayLengthSeconds = st.DayLengthSeconds, MonthDays = dc.lunarCycleDays,
-                Forced = forced, ForcedAge = age,
+                Forced = forced, ForcedAge = age, SunDiscRadians = sunDisc,
             };
             var now = SkyCalendar.Evaluate(c, s);
             if (now.Aurora > 0f && c.Forced != SkyEventKind.Aurora && !(AuroraAllowed?.Invoke() ?? false)) now.Aurora = 0f;
@@ -175,6 +179,24 @@ namespace KryticalNova.World
             if (!EnsureOverlay()) return;
             foreach (var p in BodyLook)
                 if (sky.HasProperty(p) && overlay.HasProperty(p)) overlay.SetFloat(p, sky.GetFloat(p));
+            // where the moon art's disc sits, so the stars hide behind exactly that disc (owner 14 Nov, part 3)
+            if (sky.HasProperty(Ids.MoonDisc) && overlay.HasProperty(Ids.MoonDisc)) overlay.SetVector(Ids.MoonDisc, sky.GetVector(Ids.MoonDisc));
+        }
+
+        // ------------------------------------------------------------------ the night moon, bigger and closer (owner 14 Nov, part 3)
+
+        /// <summary>
+        /// Draws the night moon <see cref="SkyEventSettings.moonScale"/> times its day-cycle size. Only the y of <c>_KN_BodyTexParams</c> (tan of
+        /// the moon art's radius) changes, rebuilt from the day cycle every frame (so it never compounds); x, z and w are written back exactly as
+        /// <see cref="EnvironmentPresenter"/> set them this frame. In the custom sky that y is read only by the moon (its art's billboard and the
+        /// rim clouds catch around it); the custom sun reads x. The moon's light, direction and phase are not touched.
+        /// </summary>
+        static void ScaleNightMoon(SkyEventSettings s, DayCycleProfile dc)
+        {
+            if (Mathf.Approximately(s.moonScale, 1f)) return;
+            Vector4 body = Shader.GetGlobalVector(Ids.BodyTexParams);
+            body.y = Mathf.Tan(Mathf.Clamp(dc.moonTextureSize * s.moonScale, 0.001f, 1.2f));
+            Shader.SetGlobalVector(Ids.BodyTexParams, body);
         }
 
         // ------------------------------------------------------------------ globals for the overlay
@@ -200,20 +222,20 @@ namespace KryticalNova.World
             Shader.SetGlobalVector(Ids.Nebula, new Vector4(n.x, n.y, n.z, nebOn ? sky.Nebula * neb.brightness : 0f));
             Shader.SetGlobalVector(Ids.NebulaParams, new Vector4(Mathf.Tan((nebOn ? neb.degrees : 38f) * 0.5f * Mathf.Deg2Rad), 0f, 0f, 0f));
 
-            // World Effects: fewer streaks at once on Low (the calendar still decides which ones, so clients agree on those shown)
+            // World Effects: fewer streaks at once on Low (the calendar still decides which ones, so clients agree on those shown).
+            // The motion and fades are worked out here, once per streak, so the shader only draws a tapered line and a head.
             int streaks = Mathf.Min(sky.StreakCount, s.StreaksFor(effectsTier));
             for (int i = 0; i < SkyNow.MaxStreaks; i++)
             {
-                if (i < streaks)
-                {
-                    var st = sky.Streak(i);
-                    MeteorA[i] = new Vector4(st.Start.x, st.Start.y, st.Start.z, st.Progress);
-                    MeteorB[i] = new Vector4(st.End.x, st.End.y, st.End.z, st.Brightness);
-                }
+                if (i < streaks) StreakShape(sky.Streak(i), s, out MeteorA[i], out MeteorB[i]);
                 else { MeteorA[i] = Vector4.zero; MeteorB[i] = Vector4.zero; }
             }
-            float sw = s.streakWidthDegrees * Mathf.Deg2Rad, sh = s.streakHeadDegrees * Mathf.Deg2Rad;
-            Shader.SetGlobalVector(Ids.StreakParams, new Vector4(1f / Mathf.Max(1e-8f, 2f * sw * sw), 1f / Mathf.Max(1e-8f, 2f * sh * sh), 0f, 0f));
+            Shader.SetGlobalVector(Ids.StreakParams, new Vector4(InvTwoSigmaSq(s.streakWidthDegrees), InvTwoSigmaSq(s.streakHeadDegrees), streaks, 0f));
+            Shader.SetGlobalVector(Ids.ShowerParams, new Vector4(InvTwoSigmaSq(s.showerWidthDegrees), InvTwoSigmaSq(s.showerHeadDegrees), 0f, 0f));
+            // HDR colours are the shader's own (linear) values: above 1 they bloom (the lone streak's 1.6 is the old look)
+            Shader.SetGlobalVector(Ids.StreakColor, s.streakColor);
+            Shader.SetGlobalVector(Ids.ShowerHead, s.showerHeadColor);
+            Shader.SetGlobalVector(Ids.ShowerTrail, s.showerTrailColor);
             Shader.SetGlobalVectorArray(Ids.MeteorA, MeteorA);
             Shader.SetGlobalVectorArray(Ids.MeteorB, MeteorB);
 
@@ -221,13 +243,17 @@ namespace KryticalNova.World
             Shader.SetGlobalVector(Ids.CometParams, new Vector4(s.cometTailDegrees * Mathf.Deg2Rad, 0f, 0f, 0f));
 
             // the second sun: art size and tint of its own; it never touches a light, the ambient, fog or reflections
-            Shader.SetGlobalVector(Ids.Sun2, new Vector4(sky.Sun2Dir.x, sky.Sun2Dir.y, sky.Sun2Dir.z, sky.Sun2));
+            // owner 14 Nov, part 3: never at night. The calendar already gates it to daytime; this also follows our sun's real height, so the
+            // second sun goes as our sun sets whatever the day cycle's sunset time is.
+            float ourSunUp = Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(-0.03f, 0.08f, Shader.GetGlobalVector(Ids.SunDir).y));
+            Shader.SetGlobalVector(Ids.Sun2, new Vector4(sky.Sun2Dir.x, sky.Sun2Dir.y, sky.Sun2Dir.z, sky.Sun2 * ourSunUp));
             Color c2 = s.sun2Color.linear;
             Shader.SetGlobalVector(Ids.Sun2Color, new Vector4(c2.r, c2.g, c2.b, Mathf.Tan(s.sun2Degrees * Mathf.Deg2Rad)));
             Shader.SetGlobalVector(Ids.Sun2Params, new Vector4(s.sun2Brightness, 0f, 0f, 0f));
 
             Color corona = s.coronaColor.linear, wash = s.eclipseSkyColor.linear;
-            Shader.SetGlobalVector(Ids.Eclipse, new Vector4(sky.Eclipse, Mathf.Clamp01((sky.Eclipse - 0.85f) / 0.15f), s.eclipseDarkness, s.eclipseMoonSize));
+            Shader.SetGlobalVector(Ids.Eclipse, new Vector4(sky.Eclipse, Mathf.Clamp01((sky.Eclipse - 0.85f) / 0.15f), s.eclipseDarkness, sky.EclipseMoon ? 1f : 0f));
+            Shader.SetGlobalVector(Ids.EclipseMoon, new Vector4(sky.EclipseMoonAngle, s.eclipsePathDegrees * Mathf.Deg2Rad, sky.EclipseMoonRadius, sky.EclipseSunRadius));
             Shader.SetGlobalVector(Ids.CoronaColor, new Vector4(corona.r, corona.g, corona.b, 1f));
             Shader.SetGlobalVector(Ids.EclipseSky, new Vector4(wash.r, wash.g, wash.b, 1f));
 
@@ -236,6 +262,32 @@ namespace KryticalNova.World
             Shader.SetGlobalVector(Ids.Aurora, new Vector4(auroraOn ? sky.Aurora * s.auroraBrightness * clear : 0f, 0f, 0f, 0f));
             Shader.SetGlobalVector(Ids.AuroraLow, new Vector4(lo.r, lo.g, lo.b, 1f));
             Shader.SetGlobalVector(Ids.AuroraHigh, new Vector4(hi.r, hi.g, hi.b, 1f));
+        }
+
+        static float InvTwoSigmaSq(float degrees)
+        {
+            float r = degrees * Mathf.Deg2Rad;
+            return 1f / Mathf.Max(1e-8f, 2f * r * r);
+        }
+
+        /// <summary>
+        /// A streak's look at its point in life (owner 14 Nov, part 3: longer trails, a smooth fade): the head flies the first 80 % of its life
+        /// and slows as it burns out; the trail covers <see cref="SkyEventSettings.streakTrail"/> of the path behind it and fades out smoothly
+        /// after the head goes. a = (tail end, trail amount), b = (head, head amount, +2 for an Emberfall streak).
+        /// </summary>
+        public static void StreakShape(in SkyStreak st, SkyEventSettings s, out Vector4 a, out Vector4 b)
+        {
+            float p = Mathf.Clamp01(st.Progress);
+            float fly = Mathf.Clamp01(p / 0.8f);
+            float h = 1f - (1f - fly) * (1f - fly);
+            float trail = Mathf.Clamp01(s.streakTrail);
+            Vector3 head = Vector3.Slerp(st.Start, st.End, h);
+            Vector3 tail = Vector3.Slerp(st.Start, st.End, Mathf.Max(0f, h - trail));
+            float born = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(p / 0.06f));
+            float headAmt = born * (1f - Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(0.65f, 0.85f, p))) * st.Brightness;
+            float trailAmt = born * (1f - Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(0.45f, 1f, p))) * st.Brightness;
+            a = new Vector4(tail.x, tail.y, tail.z, trailAmt);
+            b = new Vector4(head.x, head.y, head.z, headAmt + (st.Shower ? 2f : 0f));
         }
 
         // ------------------------------------------------------------------ eclipse: the world dims toward night (owner 14 Nov)
@@ -371,6 +423,14 @@ namespace KryticalNova.World
             public static readonly int MeteorA = Shader.PropertyToID("_KN_MeteorA");
             public static readonly int MeteorB = Shader.PropertyToID("_KN_MeteorB");
             public static readonly int StreakParams = Shader.PropertyToID("_KN_StreakParams");
+            public static readonly int ShowerParams = Shader.PropertyToID("_KN_ShowerParams");
+            public static readonly int StreakColor = Shader.PropertyToID("_KN_StreakColor");
+            public static readonly int ShowerHead = Shader.PropertyToID("_KN_ShowerHead");
+            public static readonly int ShowerTrail = Shader.PropertyToID("_KN_ShowerTrail");
+            public static readonly int EclipseMoon = Shader.PropertyToID("_KN_EclipseMoon");
+            public static readonly int BodyTexParams = Shader.PropertyToID("_KN_BodyTexParams");
+            public static readonly int SunDir = Shader.PropertyToID("_KN_SunDir");
+            public static readonly int MoonDisc = Shader.PropertyToID("_MoonDisc");
             public static readonly int Comet = Shader.PropertyToID("_KN_Comet");
             public static readonly int CometParams = Shader.PropertyToID("_KN_CometParams");
             public static readonly int Sun2 = Shader.PropertyToID("_KN_Sun2");

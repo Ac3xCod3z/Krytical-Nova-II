@@ -6,13 +6,14 @@ namespace KryticalNova.World
     /// <summary>
     /// The eight constellations of Nova's sky (owner 14 Nov 2026: names approved as drafted; "dont have constalations right next to
     /// each other"). Each is a few polylines in local degrees around its centre; the centres sit 45 degrees apart in right ascension, one
-    /// per night of the moon cycle, at alternating declinations so neighbours never touch (<see cref="MinGapDegrees"/>, tested).
+    /// per night of the moon cycle, on two rings (owner 14 Nov, part 3: "too close together"): the even ones pass through the zenith, the
+    /// odd ones 55 degrees south of it, so any two have at least 45 degrees of empty sky between their outlines (<see cref="MinGapDegrees"/>, tested at the real pole).
     /// Pure data and maths: the star-map baker draws from it, <see cref="SkyCalendar"/> uses the same frame to turn the dome.
     /// </summary>
     public static class StarCharts
     {
         /// <summary>Least empty sky between the outlines of two constellations, in degrees (tested by <c>SkyCalendarTests</c>).</summary>
-        public const float MinGapDegrees = 12f;
+        public const float MinGapDegrees = 45f;
 
         public struct Constellation
         {
@@ -79,41 +80,41 @@ namespace KryticalNova.World
         /// <summary>The eight, in the order of the moon cycle's nights.</summary>
         public static readonly Constellation[] All =
         {
-            new Constellation { Name = "The Returning", NamedBy = "Covenant", RightAscension = 0f, DeclinationOffset = 4f, Size = 20f, Lines = new[]
+            new Constellation { Name = "The Returning", NamedBy = "Covenant", RightAscension = 0f, DeclinationOffset = 0f, Size = 14f, Lines = new[]
             {
                 new[] { P(.18f,.12f), P(.30f,.24f), P(.26f,.40f), P(.40f,.52f), P(.52f,.62f), P(.48f,.76f) },
                 new[] { P(.48f,.76f), P(.34f,.88f) }, new[] { P(.48f,.76f), P(.62f,.88f) }, new[] { P(.48f,.76f), P(.80f,.84f) },
             } },
-            new Constellation { Name = "The Spire", NamedBy = "Hegemony", RightAscension = 45f, DeclinationOffset = -10f, Size = 20f, Lines = new[]
+            new Constellation { Name = "The Spire", NamedBy = "Hegemony", RightAscension = 45f, DeclinationOffset = -55f, Size = 14f, Lines = new[]
             {
                 new[] { P(.50f,.08f), P(.50f,.30f), P(.50f,.55f), P(.50f,.88f) },
                 new[] { P(.36f,.30f), P(.64f,.30f) }, new[] { P(.30f,.55f), P(.70f,.55f) }, new[] { P(.22f,.88f), P(.78f,.88f) },
             } },
-            new Constellation { Name = "The Gearwheel", NamedBy = "Null", RightAscension = 90f, DeclinationOffset = 8f, Size = 18f, Lines = Spokes() },
-            new Constellation { Name = "The Longship", NamedBy = "Covenant (Aldhavn)", RightAscension = 135f, DeclinationOffset = -6f, Size = 21f, Lines = new[]
+            new Constellation { Name = "The Gearwheel", NamedBy = "Null", RightAscension = 90f, DeclinationOffset = 0f, Size = 13f, Lines = Spokes() },
+            new Constellation { Name = "The Longship", NamedBy = "Covenant (Aldhavn)", RightAscension = 135f, DeclinationOffset = -55f, Size = 14f, Lines = new[]
             {
                 new[] { P(.12f,.55f), P(.24f,.74f), P(.50f,.80f), P(.76f,.74f), P(.90f,.50f) },
                 new[] { P(.12f,.55f), P(.06f,.42f) }, new[] { P(.50f,.80f), P(.50f,.14f) }, new[] { P(.50f,.14f), P(.74f,.46f) },
                 new[] { P(.50f,.30f), P(.30f,.48f) },
             } },
-            new Constellation { Name = "The Waking Hand", NamedBy = "all", RightAscension = 180f, DeclinationOffset = 6f, Size = 20f, Lines = new[]
+            new Constellation { Name = "The Waking Hand", NamedBy = "all", RightAscension = 180f, DeclinationOffset = 0f, Size = 14f, Lines = new[]
             {
                 new[] { P(.42f,.94f), P(.36f,.64f), P(.66f,.62f), P(.58f,.94f) },
                 new[] { P(.38f,.64f), P(.34f,.36f), P(.31f,.12f) }, new[] { P(.48f,.63f), P(.48f,.32f), P(.48f,.06f) },
                 new[] { P(.58f,.62f), P(.61f,.33f), P(.63f,.10f) }, new[] { P(.66f,.62f), P(.74f,.42f), P(.79f,.25f) },
                 new[] { P(.37f,.74f), P(.22f,.60f), P(.13f,.46f) },
             } },
-            new Constellation { Name = "The Rent", NamedBy = "soldiers' saying", RightAscension = 225f, DeclinationOffset = -9f, Size = 22f, Lines = new[]
+            new Constellation { Name = "The Rent", NamedBy = "soldiers' saying", RightAscension = 225f, DeclinationOffset = -55f, Size = 14f, Lines = new[]
             {
                 new[] { P(.06f,.30f), P(.24f,.52f), P(.34f,.28f), P(.50f,.62f), P(.62f,.36f), P(.78f,.70f), P(.94f,.52f) },
             } },
-            new Constellation { Name = "The Truce Scales", NamedBy = "Concord", RightAscension = 270f, DeclinationOffset = 7f, Size = 20f, Lines = new[]
+            new Constellation { Name = "The Truce Scales", NamedBy = "Concord", RightAscension = 270f, DeclinationOffset = 0f, Size = 14f, Lines = new[]
             {
                 new[] { P(.50f,.10f), P(.50f,.86f) }, new[] { P(.14f,.28f), P(.86f,.28f) },
                 new[] { P(.14f,.28f), P(.06f,.56f), P(.24f,.56f), P(.14f,.28f) }, new[] { P(.86f,.28f), P(.76f,.56f), P(.94f,.56f), P(.86f,.28f) },
                 new[] { P(.34f,.86f), P(.66f,.86f) },
             } },
-            new Constellation { Name = "The Sleeper", NamedBy = "miners' folklore", RightAscension = 315f, DeclinationOffset = -7f, Size = 20f, Lines = new[] { Coil() } },
+            new Constellation { Name = "The Sleeper", NamedBy = "miners' folklore", RightAscension = 315f, DeclinationOffset = -55f, Size = 14f, Lines = new[] { Coil() } },
         };
 
         /// <summary>A direction on the dome's own frame (right ascension and declination in degrees, before any turn).</summary>

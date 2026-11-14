@@ -30,7 +30,7 @@ namespace KryticalNova.EditorTools
         public const string SettingsPath = "Assets/_Game/World/Runtime/Presentation/Resources/KN/SkyEvents.asset";
         public const string OverlayShaderPath = "Assets/_Game/World/Sky/Shaders/SkyEvents.shader";
 
-        const int W = 4096, H = 2048, NebulaSize = 512;
+        const int W = 4096, H = 2048, NebulaSize = 1024;   // 1024: the nebulas are drawn 2x bigger (owner 14 Nov, part 3)
         const float PxPerDeg = H / 180f;
 
         static readonly Color[] Palette =
@@ -74,7 +74,7 @@ namespace KryticalNova.EditorTools
             {
                 WritePng(NebulaPaths[k], BakeNebula(k), NebulaSize, NebulaSize);
                 AssetDatabase.ImportAsset(NebulaPaths[k], ImportAssetOptions.ForceSynchronousImport);
-                SetImport(NebulaPaths[k], true, TextureWrapMode.Clamp, TextureWrapMode.Clamp, 512);
+                SetImport(NebulaPaths[k], true, TextureWrapMode.Clamp, TextureWrapMode.Clamp, 1024);
                 settings.nebulas[k].texture = AssetDatabase.LoadAssetAtPath<Texture2D>(NebulaPaths[k]);
             }
             // the overlay shader rides on the settings asset (Resources), so a build always includes it
@@ -208,7 +208,7 @@ namespace KryticalNova.EditorTools
                 Vector3 d = RandomDir(rng);
                 if (Crowds(d)) continue;
                 Color c = Palette[rng.Next(Palette.Length)];
-                StarSprite(rgb, d, 0.7f + (float)rng.NextDouble() * 0.8f, new Vector3(c.r, c.g, c.b), 0.75f, 0f);
+                StarSprite(rgb, d, 0.5f + (float)rng.NextDouble() * 0.55f, new Vector3(c.r, c.g, c.b), 0.75f, 0f);   // owner, part 3: stars too big
             }
 
             // ---- bright stars (pick 1A): soft cores, the brightest with a four-point cross glint
@@ -218,7 +218,7 @@ namespace KryticalNova.EditorTools
                 if (Crowds(d)) continue;
                 float s = (float)rng.NextDouble();
                 Color c = Palette[rng.Next(Palette.Length)];
-                StarSprite(rgb, d, 1.1f + s * 1.6f, new Vector3(c.r, c.g, c.b), 1f, s > 0.55f ? 5f + s * 12f : 0f);
+                StarSprite(rgb, d, 0.8f + s * 1.1f, new Vector3(c.r, c.g, c.b), 1f, s > 0.55f ? 3.5f + s * 8f : 0f);
             }
 
             // ---- the constellations: their stars bright and glinting (owner 14 Nov: no lines between them)
@@ -234,8 +234,8 @@ namespace KryticalNova.EditorTools
                         Vector2 rd = StarCharts.RaDec(c, p, poleElevation);
                         float s = (float)crng.NextDouble();
                         Color col = Palette[crng.Next(Palette.Length)];
-                        StarSprite(rgb, StarCharts.DomeDir(rd.x, rd.y), 1.6f + s * 1.2f, new Vector3(col.r, col.g, col.b), 1.1f,
-                                   s > 0.45f ? 7f + s * 10f : 0f);
+                        StarSprite(rgb, StarCharts.DomeDir(rd.x, rd.y), 1.1f + s * 0.9f, new Vector3(col.r, col.g, col.b), 1.1f,
+                                   s > 0.45f ? 5f + s * 7f : 0f);
                     }
             }
 

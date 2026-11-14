@@ -63,23 +63,41 @@ namespace KryticalNova.World
         [Tooltip("Game day of the eclipse year (0-based) the eclipse falls on.")]
         [Min(0)] public int eclipseDayOfYear = 300;
 
-        [Header("Shooting stars (a few a night)")]
-        [Tooltip("Shooting stars each night (a hash picks the exact number around this).")]
-        [Range(0, 20)] public int shootingStarsPerNight = 4;
-        [Tooltip("Real seconds one streak lasts.")]
-        [Range(0.2f, 4f)] public float streakSeconds = 0.9f;
+        [Header("Shooting stars (rare: owner 14 Nov, part 3)")]
+        [Tooltip("Real seconds between two shooting stars, least and most (owner: about one every 1-3 minutes, never several at once outside The Emberfall). A hash picks each gap, so every client agrees.")]
+        public Vector2 shootingStarGapSeconds = new Vector2(60f, 180f);
+        [Tooltip("Real seconds one streak lasts (its head flies for the first 80 %, the trail fades out smoothly after).")]
+        [Range(0.2f, 4f)] public float streakSeconds = 1.6f;
         [Tooltip("Half-width of a streak's trail in degrees (owner's Unity check, 14 Nov: 0.06 was too thin to see).")]
         [Range(0.02f, 1f)] public float streakWidthDegrees = 0.15f;
         [Tooltip("Size of a streak's glowing head in degrees.")]
         [Range(0.02f, 1.5f)] public float streakHeadDegrees = 0.3f;
         [Tooltip("Length of a streak in degrees of sky.")]
-        [Range(2f, 40f)] public float streakDegrees = 14f;
+        [Range(2f, 60f)] public float streakDegrees = 21f;
+        [Tooltip("Share of the streak's path the glowing trail covers behind the head (owner, part 3: longer trails).")]
+        [Range(0.1f, 1f)] public float streakTrail = 0.7f;
+        [Tooltip("Colour of a lone shooting star (HDR, linear: above 1 blooms).")]
+        [ColorUsage(false, true)] public Color streakColor = new Color(1.6f, 1.54f, 1.4f);
 
         [Header("Meteor shower: The Emberfall (once a game year)")]
         [Tooltip("Streaks per real minute at the peak of the shower night.")]
-        [Range(1f, 120f)] public float showerStreaksPerMinute = 90f;
+        [Range(1f, 600f)] public float showerStreaksPerMinute = 300f;
         [Tooltip("Direction the shower radiates from: compass heading and elevation in degrees.")]
         public Vector2 showerRadiant = new Vector2(70f, 55f);
+        [Tooltip("Real seconds one Emberfall streak lasts (longer than a lone shooting star: long glowing tails, owner's references 14 Nov).")]
+        [Range(0.5f, 6f)] public float showerStreakSeconds = 2.4f;
+        [Tooltip("Length of an Emberfall streak in degrees of sky.")]
+        [Range(5f, 80f)] public float showerStreakDegrees = 36f;
+        [Tooltip("Nearest and farthest a streak starts from the radiant, in degrees (far from it, the streaks run nearly parallel).")]
+        public Vector2 showerSpread = new Vector2(10f, 70f);
+        [Tooltip("Half-width of an Emberfall trail in degrees (wider than a lone streak, so they glow).")]
+        [Range(0.02f, 1.5f)] public float showerWidthDegrees = 0.22f;
+        [Tooltip("Size of an Emberfall head in degrees.")]
+        [Range(0.02f, 2f)] public float showerHeadDegrees = 0.45f;
+        [Tooltip("Hot white-blue head colour (HDR, linear: above 1 blooms).")]
+        [ColorUsage(false, true)] public Color showerHeadColor = new Color(2.6f, 3.0f, 3.6f);
+        [Tooltip("Glowing blue tail colour (HDR, linear: above 1 blooms).")]
+        [ColorUsage(false, true)] public Color showerTrailColor = new Color(0.55f, 1.0f, 2.4f);
 
         [Header("Nebulas (3 nights in each moon cycle; each nebula night picks one of the looks, owner 14 Nov)")]
         [Tooltip("First night of the moon cycle (0-based) the nebula shows.")]
@@ -91,15 +109,15 @@ namespace KryticalNova.World
         [Tooltip("The three nebulas (owner 14 Nov: all three, picked at random each nebula night from the world seed and the night, so every client agrees). Textures baked by Bake Star Map.")]
         public NebulaLook[] nebulas =
         {
-            new NebulaLook { name = "Soul Tide", degrees = 38f, brightness = 1f, weight = 1f },
-            new NebulaLook { name = "Ember Rose", degrees = 34f, brightness = 1f, weight = 1f },
-            new NebulaLook { name = "Veil Ribbon", degrees = 46f, brightness = 1f, weight = 1f },
+            new NebulaLook { name = "Soul Tide", degrees = 84f, brightness = 1f, weight = 1f },
+            new NebulaLook { name = "Ember Rose", degrees = 76f, brightness = 1f, weight = 1f },
+            new NebulaLook { name = "Veil Ribbon", degrees = 100f, brightness = 1f, weight = 1f },
         };
 
         [Header("Comet: The Pale Wanderer")]
         [Tooltip("Where the comet's head sits: compass heading and elevation in degrees (it creeps a little each night).")]
         public Vector2 cometHead = new Vector2(240f, 38f);
-        [Range(2f, 60f)] public float cometTailDegrees = 22f;
+        [Range(2f, 120f)] public float cometTailDegrees = 44f;
         [Range(0f, 3f)] public float cometBrightness = 1f;
 
         [Header("Second sun (pick 4B: amber, gives no light)")]
@@ -116,21 +134,31 @@ namespace KryticalNova.World
         [Range(0f, 1f)] public float sun2Share = 0.6f;
         [Tooltip("Game days its own day lasts relative to ours (rises a little later each day).")]
         [Range(0.5f, 2f)] public float sun2DayLength = 1.12f;
+        [Tooltip("Share of the daytime (06:00-18:00) the second sun takes to fade in after dawn and out before dusk. It is never drawn at night (owner 14 Nov, part 3).")]
+        [Range(0.02f, 0.3f)] public float sun2DayFade = 0.08f;
 
         [Header("Eclipse (pick 5A: pearl corona)")]
         [Tooltip("Time of day (0-1) the eclipse is at its fullest.")]
         [Range(0.3f, 0.7f)] public float eclipsePeak01 = 0.5f;
-        [Tooltip("Real seconds from first bite to the end.")]
+        [Tooltip("Real seconds from the moon's first bite of the sun to its last.")]
         [Range(30f, 900f)] public float eclipseSeconds = 240f;
-        [Tooltip("Share of the eclipse spent in totality.")]
-        [Range(0f, 0.8f)] public float eclipseTotality = 0.35f;
+        [Tooltip("Real seconds the moon is seen travelling toward the sun before the first bite, and away from it after the last (owner 14 Nov, part 3: a real body crossing the sky in one direction, never fading). It rises from the point opposite the sun, below the horizon, and sets there again.")]
+        [Range(10f, 600f)] public float eclipseApproachSeconds = 120f;
+        [Tooltip("The moon's radius against the sun's disc. Above 1 it hides the whole sun for a while (totality): the share of the bite-to-bite time in totality is (scale-1)/(scale+1).")]
+        [Range(1.02f, 3f)] public float eclipseMoonScale = 1.5f;
+        [Tooltip("The way the moon travels across the sun, in degrees: 0 left to right, 90 bottom to top.")]
+        [Range(-180f, 180f)] public float eclipsePathDegrees = 20f;
         [Tooltip("How far the world dims toward the day cycle's night light at totality (owner 14 Nov: close to night, not pitch black). 0 = no change, 1 = the night values exactly. Eased in and out with the cover and restored exactly after.")]
         [Range(0f, 1f)] public float eclipseDarkness = 0.85f;
         [Tooltip("Deep-blue sky wash behind the moon disc and corona at totality (overlay only).")]
         public Color eclipseSkyColor = new Color(0.04f, 0.06f, 0.2f);
         public Color coronaColor = new Color(0.93f, 0.95f, 1f);
-        [Tooltip("The moon disc's radius as a share of the custom sun art's half-size (the art has room around its disc).")]
+        [Tooltip("The sun's visible disc radius as a share of the custom sun art's half-size (the art has room around its disc). The eclipse moon is this times eclipseMoonScale.")]
         [Range(0.2f, 1f)] public float eclipseMoonSize = 0.5f;
+
+        [Header("Night moon (owner 14 Nov, part 3: bigger and closer)")]
+        [Tooltip("Scales the night moon's art on screen (1 = the day cycle's own size). Applied at run time on top of the day cycle's value; the custom sky's files are not touched and the custom sun never reads it.")]
+        [Range(0.5f, 3f)] public float moonScale = 1.6f;
 
         [Header("Aurora (pick 6A: green-teal; winter and snowy zones only)")]
         public Color auroraLow = new Color(0.24f, 1f, 0.66f);
@@ -146,16 +174,16 @@ namespace KryticalNova.World
         [Range(20f, 600f)] public float migrationSeconds = 150f;
 
         [Header("World Effects (Settings, Graphics): Low keeps the sky simpler, High is the authored look")]
-        [Tooltip("Most shooting stars drawn at once at World Effects Low, Medium, High, Ultra (the shader has 4 slots).")]
-        public int[] streaksByWorldEffects = { 2, 3, 4, 4 };
+        [Tooltip("Most streaks drawn at once at World Effects Low, Medium, High, Ultra (the shader has SkyNow.MaxStreaks = 16 slots; only The Emberfall uses more than one).")]
+        public int[] streaksByWorldEffects = { 6, 10, 16, 16 };
         [Tooltip("Whether the aurora shows at World Effects Low (the performance plan: off on Low).")]
         public bool auroraOnLow = false;
 
         /// <summary>Shooting stars drawn at once for a World Effects tier (0 Low .. 3 Ultra).</summary>
         public int StreaksFor(int tier)
         {
-            if (streaksByWorldEffects == null || streaksByWorldEffects.Length == 0) return 4;
-            return Mathf.Clamp(streaksByWorldEffects[Mathf.Clamp(tier, 0, streaksByWorldEffects.Length - 1)], 0, 4);
+            if (streaksByWorldEffects == null || streaksByWorldEffects.Length == 0) return SkyNow.MaxStreaks;
+            return Mathf.Clamp(streaksByWorldEffects[Mathf.Clamp(tier, 0, streaksByWorldEffects.Length - 1)], 0, SkyNow.MaxStreaks);
         }
 
         [Header("GM force")]
@@ -171,7 +199,7 @@ namespace KryticalNova.World
         [Tooltip("Its baked picture (Bake Star Map writes T_Nebula_<name>.png).")]
         public Texture2D texture;
         [Tooltip("Angular size in degrees.")]
-        [Range(5f, 90f)] public float degrees = 38f;
+        [Range(5f, 140f)] public float degrees = 84f;
         [Range(0f, 3f)] public float brightness = 1f;
         [Tooltip("How often a nebula night picks it, against the others' weights (0 = never).")]
         [Min(0f)] public float weight = 1f;

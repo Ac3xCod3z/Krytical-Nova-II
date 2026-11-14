@@ -2,7 +2,9 @@
 // for the game camera only. The custom sky (StylizedSky.shader) is untouched; this pass only adds on top of it:
 //   star map (stars only: owner 14 Nov, no constellation lines), one of three nebulas (Soul Tide, Ember Rose, Veil Ribbon), shooting stars, The Pale Wanderer comet, the aurora (additive),
 //   the amber second sun (the custom sun's own art via the copied SkyBodyCommon.hlsl; colour only, it lights nothing),
-//   the eclipse: deep-blue wash, the moon disc sliding over the sun, the pearl corona at totality.
+//   the eclipse: deep-blue wash, the moon travelling one way across the sun on its own path, the pearl corona at totality.
+// Owner's part-3 notes (14 Nov): stars, nebula and comet are hidden behind the night moon's disc; streaks have a smooth taper and
+// The Emberfall has hot white-blue heads and glowing blue tails (HDR, so Bloom catches them).
 // Cost: one star-map sample, one cloud sample, one sun-art sample; the rest are uniform-gated branches (no new keywords).
 Shader "Krytical Nova/Sky Events"
 {
@@ -21,6 +23,8 @@ Shader "Krytical Nova/Sky Events"
         [HideInInspector] _CloudHorizonFade("Cloud Horizon Fade", Float) = 0.1
         [HideInInspector] _ToonEdge("Toon Edge", Float) = 0
         [HideInInspector] _HorizonFogHeight("Horizon Fog Height", Float) = 0.2
+        // Copied at run time from the sky material: where the moon art's disc sits (uv centre xy, radius zw), to hide the stars behind it.
+        [HideInInspector] _MoonDisc("Moon Disc", Vector) = (0.5, 0.5, 0.42, 0.42)
     }
     SubShader
     {
@@ -56,6 +60,7 @@ Shader "Krytical Nova/Sky Events"
                 float _CloudHorizonFade;
                 float _ToonEdge;
                 float _HorizonFogHeight;
+                float4 _MoonDisc;
             CBUFFER_END
 
             #include "SkyCommon.hlsl"      // read only: the cloud field, so stars sit behind clouds
@@ -67,6 +72,8 @@ Shader "Krytical Nova/Sky Events"
             float4 _KN_SkyHorizon;
             float4 _KN_SkyParams;   // x horizon falloff, y star visibility, z lightning, w horizon fog
             float4 _KN_SunParams;   // x cos(sun disc size)
+            float4 _KN_MoonDir;     // xyz toward the night moon
+            float4 _KN_MoonParams;  // x cos(moon disc size), for the plain disc when there is no moon art
 
             // the sky events' globals (SkyEventPresenter)
             TEXTURE2D(_KN_StarMap);   SAMPLER(sampler_KN_StarMap);   // lat-long dome: rgb stars + band
@@ -75,15 +82,21 @@ Shader "Krytical Nova/Sky Events"
             float4 _KN_StarBasisX, _KN_StarBasisY, _KN_StarBasisZ;
             float4 _KN_Nebula;        // xyz direction, w amount
             float4 _KN_NebulaParams;  // x tan(half size)
-            float4 _KN_MeteorA[4];    // xyz start, w progress 0-1
-            float4 _KN_MeteorB[4];    // xyz end, w brightness (0 = slot empty)
-            float4 _KN_StreakParams;  // x 1/(2 sigma^2) of the trail, y of the head (radians; widths in SkyEventSettings)
+            #define KN_MAX_STREAKS 16   // SkyNow.MaxStreaks
+            float4 _KN_MeteorA[KN_MAX_STREAKS];  // xyz tail end of the glowing trail, w trail amount
+            float4 _KN_MeteorB[KN_MAX_STREAKS];  // xyz head, w head amount (+2 for an Emberfall streak)
+            float4 _KN_StreakParams;  // x 1/(2 sigma^2) of a lone streak's trail, y of its head (radians), z streaks in use
+            float4 _KN_ShowerParams;  // x 1/(2 sigma^2) of an Emberfall trail, y of its head
+            float4 _KN_StreakColor;   // rgb a lone shooting star (HDR)
+            float4 _KN_ShowerHead;    // rgb Emberfall head (HDR)
+            float4 _KN_ShowerTrail;   // rgb Emberfall tail (HDR)
             float4 _KN_Comet;         // xyz head, w amount
             float4 _KN_CometParams;   // x tail length (rad)
             float4 _KN_Sun2;          // xyz direction, w amount
             float4 _KN_Sun2Color;     // rgb colour, w tan(radius)
             float4 _KN_Sun2Params;    // x brightness
-            float4 _KN_Eclipse;       // x cover 0-1, y corona 0-1, z darkness at totality, w moon disc size (share of the sun art)
+            float4 _KN_Eclipse;       // x cover 0-1, y corona 0-1, z darkness at totality, w moon in the sky (0/1)
+            float4 _KN_EclipseMoon;   // x radians from the sun along its path, y path angle (radians), z moon radius, w sun disc radius
             float4 _KN_CoronaColor;
             float4 _KN_EclipseSky;    // rgb deep-blue wash
             float4 _KN_Aurora;        // x amount
@@ -120,19 +133,42 @@ Shader "Krytical Nova/Sky Events"
                 return float2(dot(d, r), dot(d, u)) / max(k, 1e-4);
             }
 
-            half Streak(float3 d, float4 a, float4 b)
+            // One streak: a, b from SkyEventPresenter (tail end, head; the CPU has done the motion and fades). The trail is brightest and
+            // widest at the head and tapers smoothly to nothing at its tail (owner, part 3: longer trails, smooth fade).
+            void Streak(float3 d, float4 a, float4 b, inout half3 trailSum, inout half3 headSum)
             {
-                if (b.w <= 0.0) return 0.0;
-                float p = a.w;
-                float3 head = normalize(lerp(a.xyz, b.xyz, saturate(p * 1.25)));
-                float3 tail = normalize(lerp(a.xyz, b.xyz, saturate(p * 1.25 - 0.5)));
-                float3 seg = head - tail;
+                bool shower = b.w >= 1.5;
+                half headAmt = shower ? b.w - 2.0 : b.w;
+                if (a.w <= 0.0 && headAmt <= 0.0) return;
+                float3 tail = a.xyz, head = b.xyz, seg = head - tail;
+                float3 mid = (head + tail) * 0.5;
+                if (dot(d, mid) < dot(mid, mid) - 0.01) return;   // far from this streak: skip (cheap)
                 float t = saturate(dot(d - tail, seg) / max(dot(seg, seg), 1e-8));
                 float dist = length(d - (tail + seg * t));
-                half streakLine = exp(-dist * dist * _KN_StreakParams.x) * t * t;
+                float wt = lerp(0.3, 1.0, t);
+                float kTrail = shower ? _KN_ShowerParams.x : _KN_StreakParams.x;
+                float kHead = shower ? _KN_ShowerParams.y : _KN_StreakParams.y;
+                half taper = t * t * (3.0 - 2.0 * t);
+                half line = exp(-dist * dist * kTrail / (wt * wt)) * taper * a.w;
                 float dh = length(d - head);
-                half headGlow = exp(-dh * dh * _KN_StreakParams.y);
-                return (streakLine + headGlow) * sin(PI * saturate(p)) * b.w;
+                half glow = exp(-dh * dh * kHead) * headAmt;
+                trailSum += line * (shower ? _KN_ShowerTrail.rgb : _KN_StreakColor.rgb);
+                headSum += glow * (shower ? _KN_ShowerHead.rgb : _KN_StreakColor.rgb * 1.3);
+            }
+
+            // How much of the night moon's disc covers this direction (stars, nebula and comet sit behind it; streaks and aurora in front).
+            half MoonCover(float3 d)
+            {
+                half cover;
+                [branch] if (_KN_BodyTexParams.w > 0.5)
+                {
+                    half inside;
+                    float2 uv = KN_BodyUV(d, _KN_MoonDir.xyz, _KN_BodyTexParams.y, _KN_BodyTexAspect.y, inside);
+                    float pr = length((uv - _MoonDisc.xy) / max(_MoonDisc.zw, 1e-3));
+                    cover = (1.0 - smoothstep(0.96, 1.02, pr)) * step(0.0, dot(d, _KN_MoonDir.xyz)) * saturate(_KN_BodyTexBrightness.y * 4.0);
+                }
+                else cover = smoothstep(_KN_MoonParams.x - 1e-4, _KN_MoonParams.x + 1e-4, dot(d, _KN_MoonDir.xyz));
+                return cover;
             }
 
             // premultiplied layering: out = C + sky * (1 - A)
@@ -168,7 +204,7 @@ Shader "Krytical Nova/Sky Events"
                 half vis = max(_KN_SkyParams.y, eclipse * _KN_Eclipse.z * 0.7);
                 [branch] if (vis > 0.001)
                 {
-                    half3 night = 0.0;
+                    half3 night = 0.0;   // behind the moon: stars, nebula, comet
                     [branch] if (_KN_StarParams.x > 0.5)
                     {
                         half3 map = StarMapAt(d).rgb;
@@ -180,9 +216,9 @@ Shader "Krytical Nova/Sky Events"
                         float2 np = Tangent(d, _KN_Nebula.xyz, nk) / _KN_NebulaParams.x * 0.5 + 0.5;
                         night += SAMPLE_TEXTURE2D_LOD(_KN_NebulaTex, sampler_KN_NebulaTex, np, 0).rgb * KN_InsideUnit(np) * step(0.0, nk) * _KN_Nebula.w;
                     }
-                    half streaks = 0.0;
-                    [unroll] for (int si = 0; si < 4; si++) streaks += Streak(d, _KN_MeteorA[si], _KN_MeteorB[si]);
-                    night += streaks * half3(1.0, 0.96, 0.88) * 1.6;
+                    half3 trails = 0.0, heads = 0.0;
+                    int streakCount = (int)_KN_StreakParams.z;
+                    [loop] for (int si = 0; si < streakCount; si++) Streak(d, _KN_MeteorA[si], _KN_MeteorB[si], trails, heads);
                     [branch] if (_KN_Comet.w > 0.0)
                     {
                         // the tail points away from the sun
@@ -195,7 +231,9 @@ Shader "Krytical Nova/Sky Events"
                         half chead = exp(-(cu * cu + cv * cv) / 9.0e-6);
                         night += (dust * half3(1, 0.94, 0.82) * 0.7 + ion * half3(0.5, 0.86, 1) * 0.5 + chead * 1.2) * step(0, ck) * _KN_Comet.w;
                     }
-                    C += night * vis * gate;
+                    // owner 14 Nov, part 3: no star shows in front of the moon
+                    night *= 1.0 - MoonCover(d);
+                    C += (night + trails + heads) * vis * gate;
 
                     [branch] if (_KN_Aurora.x > 0.0)
                     {
@@ -229,20 +267,29 @@ Shader "Krytical Nova/Sky Events"
                     C += tint * glow * bright * _KN_Sun2.w * aboveHorizon * (1.0 - cloudA * 0.7);
                 }
 
-                // ---- eclipse: the moon disc slides over the sun; the pearl corona flares at totality
-                [branch] if (eclipse > 0.0)
+                // ---- eclipse: the moon, a real body on its own great circle through the sun (owner 14 Nov, part 3): it rises opposite the
+                // sun, crosses it at the peak and keeps going one way. Never faded: it is simply where its path puts it. Pearl corona at totality.
+                [branch] if (_KN_Eclipse.w > 0.5)
                 {
-                    float sunTan = _KN_BodyTexParams.z > 0.5 ? _KN_BodyTexParams.x * _KN_Eclipse.w : tan(acos(_KN_SunParams.x));
-                    float ek; float2 ep = Tangent(d, _KN_SunDir.xyz, ek);
-                    float mr = sunTan * 1.02;
-                    float2 mc = float2(1.0, 0.35) * (1.0 - eclipse) * 2.1 * mr;
-                    half disc = saturate((mr - length(ep - mc)) / max(mr * 0.03, 1e-5) + 0.5) * step(0.0, ek);
-                    Over(C, A, half3(0.012, 0.014, 0.022), disc * saturate(eclipse * 6.0) * aboveHorizon * (1.0 - cloudA));
+                    float3 sd = _KN_SunDir.xyz;
+                    float3 r = normalize(cross(float3(0, 1, 0), sd) + float3(1e-4, 0, 0));
+                    float3 u = cross(sd, r);
+                    float3 way = cos(_KN_EclipseMoon.y) * r + sin(_KN_EclipseMoon.y) * u;
+                    float3 md = cos(_KN_EclipseMoon.x) * sd + sin(_KN_EclipseMoon.x) * way;
+                    float mr = _KN_EclipseMoon.z;
+                    float ang = acos(clamp(dot(d, md), -1.0, 1.0));
+                    half disc = saturate((mr - ang) / max(mr * 0.03, 1e-5) + 0.5);
+                    Over(C, A, half3(0.012, 0.014, 0.022), disc * aboveHorizon * (1.0 - cloudA));
 
-                    float er = length(ep), ang = atan2(ep.y, ep.x);
-                    half streamer = (0.55 + 0.45 * pow(sin(ang * 5.0 + 0.7), 2.0)) * (0.7 + 0.3 * sin(ang * 13.0 + 2.1));
-                    half cor = exp(-max(er - mr, 0.0) / (mr * (0.25 + 0.9 * streamer * streamer * streamer))) * step(mr * 0.98, er) * step(0.0, ek);
-                    C += _KN_CoronaColor.rgb * cor * _KN_Eclipse.y * 1.6 * aboveHorizon * (1.0 - cloudA * 0.8);
+                    [branch] if (_KN_Eclipse.y > 0.0)
+                    {
+                        float ek; float2 ep = Tangent(d, md, ek);
+                        float er = length(ep), pa = atan2(ep.y, ep.x);
+                        half streamer = (0.55 + 0.45 * pow(sin(pa * 5.0 + 0.7), 2.0)) * (0.7 + 0.3 * sin(pa * 13.0 + 2.1));
+                        float cr = tan(mr);
+                        half cor = exp(-max(er - cr, 0.0) / (cr * (0.25 + 0.9 * streamer * streamer * streamer))) * step(cr * 0.98, er) * step(0.0, ek);
+                        C += _KN_CoronaColor.rgb * cor * _KN_Eclipse.y * 1.6 * aboveHorizon * (1.0 - cloudA * 0.8);
+                    }
                 }
 
                 return half4(C, A);

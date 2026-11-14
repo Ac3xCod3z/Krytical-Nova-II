@@ -25,34 +25,43 @@ MonoBehaviour:
   cometNights: 6
   eclipseEveryYears: 2
   eclipseDayOfYear: 300
-  shootingStarsPerNight: 4
-  streakSeconds: 0.9
+  shootingStarGapSeconds: {x: 60, y: 180}
+  streakSeconds: 1.6
   streakWidthDegrees: 0.15
   streakHeadDegrees: 0.3
-  streakDegrees: 14
-  showerStreaksPerMinute: 90
+  streakDegrees: 21
+  streakTrail: 0.7
+  streakColor: {r: 1.6, g: 1.54, b: 1.4, a: 1}
+  showerStreaksPerMinute: 300
   showerRadiant: {x: 70, y: 55}
+  showerStreakSeconds: 2.4
+  showerStreakDegrees: 36
+  showerSpread: {x: 10, y: 70}
+  showerWidthDegrees: 0.22
+  showerHeadDegrees: 0.45
+  showerHeadColor: {r: 2.6, g: 3, b: 3.6, a: 1}
+  showerTrailColor: {r: 0.55, g: 1, b: 2.4, a: 1}
   nebulaFirstNight: 3
   nebulaNights: 3
   nebulaPath: {x: 110, y: 250, z: 62}
   nebulas:
   - name: Soul Tide
     texture: {fileID: 2800000, guid: cdf8496e5030bf844baa02cf24dc7c4e, type: 3}
-    degrees: 38
+    degrees: 84
     brightness: 1
     weight: 1
   - name: Ember Rose
     texture: {fileID: 2800000, guid: a42aac0bc787bc34389645ff3d79d435, type: 3}
-    degrees: 34
+    degrees: 76
     brightness: 1
     weight: 1
   - name: Veil Ribbon
     texture: {fileID: 2800000, guid: 00818e718ed7f3648be85229f3da1a93, type: 3}
-    degrees: 46
+    degrees: 100
     brightness: 1
     weight: 1
   cometHead: {x: 240, y: 38}
-  cometTailDegrees: 22
+  cometTailDegrees: 44
   cometBrightness: 1
   sun2Color: {r: 1, g: 0.71, b: 0.28, a: 1}
   sun2Degrees: 1.1
@@ -61,19 +70,23 @@ MonoBehaviour:
   sun2OrbitDays: 20
   sun2Share: 0.6
   sun2DayLength: 1.12
+  sun2DayFade: 0.08
   eclipsePeak01: 0.5
   eclipseSeconds: 240
-  eclipseTotality: 0.35
+  eclipseApproachSeconds: 120
+  eclipseMoonScale: 1.5
+  eclipsePathDegrees: 20
   eclipseDarkness: 0.85
   eclipseSkyColor: {r: 0.04, g: 0.06, b: 0.2, a: 1}
   coronaColor: {r: 0.93, g: 0.95, b: 1, a: 1}
   eclipseMoonSize: 0.5
+  moonScale: 1.6
   auroraLow: {r: 0.24, g: 1, b: 0.66, a: 1}
   auroraHigh: {r: 0.25, g: 0.78, b: 1, a: 1}
   auroraBrightness: 1
   auroraNightShare: 0.5
   migrationEveryDays: 9
   migrationSeconds: 150
-  streaksByWorldEffects: 02000000030000000400000004000000i
+  streaksByWorldEffects: 060000000a0000001000000010000000i
   auroraOnLow: 0
   forcedSeconds: 180

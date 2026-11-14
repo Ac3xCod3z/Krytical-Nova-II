@@ -286,21 +286,38 @@ corona eclipse, 6A green-teal aurora. **The custom sun's files keep a zero diff*
   (Soul Tide, Ember Rose, Veil Ribbon; texture, size, brightness, weight each) with `SkyCalendar.PickNebula` (a weighted hash of
   the world seed and the night: every client agrees with no network data). Baked as `T_Nebula_SoulTide/EmberRose/VeilRibbon.png`.
   `sky.nebula.look <n>` shows one look on this client only, for proof shots.
-- **Constellations:** stars only. The star map's alpha is 1 and the shader reads only its colour (no lines, no fade-in).
+- **Constellations:** stars only. The star map's alpha is 1 and the shader reads only its colour (no lines, no fade-in). Two
+  rings (owner's Play notes, 14 Nov): the even ones through the zenith, the odd ones 55 degrees south; at least 45 degrees of empty
+  sky between any two outlines (`StarCharts.MinGapDegrees`, tested at the real pole).
+- **Behind the night moon:** stars, nebula and comet are multiplied by `1 - MoonCover` (the moon art's own disc, `_MoonDisc` copied
+  from the sky material, on the moon's billboard); streaks and aurora stay in front, as they would be.
+- **Night moon size:** `SkyEventSettings.moonScale` (1.6). After `EnvironmentPresenter` writes `_KN_BodyTexParams` each frame,
+  `SkyEventPresenter.ScaleNightMoon` writes it back with only y = tan(moonTextureSize x moonScale), rebuilt from the day cycle (never
+  compounding). In the custom sky y is read only by the moon (art billboard, rim clouds); the sun reads x. The moon's light,
+  direction and phase are not touched.
+- **Streaks:** `SkyNow.MaxStreaks` 16 slots. The CPU (`SkyEventPresenter.StreakShape`) works out each streak's head and tail end and
+  their fades; the shader draws a line that widens and brightens toward the head (smoothstep taper) and a head glow, skipping
+  pixels far from a streak. Lone shooting stars: one every `shootingStarGapSeconds` (60-180 s), never two at once, 21 degrees,
+  `streakColor` HDR. The Emberfall: up to `showerStreaksPerMinute` 300 at the peak, `showerStreakSeconds` 2.4, 36-degree streaks
+  falling from the radiant toward the horizon, `showerHeadColor` (white-blue) and `showerTrailColor` (blue), HDR so Bloom glows them.
 - **Old dot stars:** the client sets `RenderSettings.skybox` to a runtime copy of the sky material with only `_StarBrightness`
   at 0. The material asset is unchanged.
 - **Second sun:** the custom sun's art (`_KN_SunTex`, T_Sun) through a copy of its drawing code (`SkyBodyCommon.hlsl`:
   BodyUV, StylizeBody, DiffuseBody), styled with the sky material's own numbers, tinted `sun2Color`, sized `sun2Degrees`,
-  `sun2Brightness`. It is colour on the overlay only: no Light, no shadows, no ambient, fog, reflection or APV change.
-- **Eclipse:** the moon disc slides over the sun (`eclipseMoonSize` of the sun art), the pearl corona at totality, the sky
+  `sun2Brightness`. It is colour on the overlay only: no Light, no shadows, no ambient, fog, reflection or APV change. Never at
+  night: the calendar gates it to 06:00-18:00 with a `sun2DayFade` fade, and the presenter also multiplies it by our sun's height.
+- **Eclipse:** the moon is a real body on its own great circle through the sun (`eclipsePathDegrees`): it rises opposite the sun,
+  crosses the sky one way and sets opposite it again (`SkyCalendar.EclipseMoonAngle`: steady across the bite, smoothly faster beyond,
+  `eclipseApproachSeconds` each side; never faded). Sun disc = `eclipseMoonSize` of the sun art, moon = that x `eclipseMoonScale`
+  (1.5); the cover is the discs' real overlap (`DiscCover`). The pearl corona at totality, the sky
   washed to `eclipseSkyColor` by `eclipseDarkness`. The world dims at run time toward the day cycle's midnight values (key light
   intensity and colour, ambient, fog colour), eased with the cover, by `eclipseDarkness` (0.85). The presenter rewrites the light
   and fog every frame and the ambient on its timer; `SkyEventPresenter` only blends on top while the cover is above 0 and puts the
   presenter's own ambient back, so after an eclipse the world is exactly as the presenter made it.
 - **Cost:** one star-map, one cloud and one sun-art sample per sky pixel; nebula, comet, aurora and eclipse are uniform branches;
   no new keywords (variants unchanged). Budget 0.3 ms.
-- **World Effects** (Settings, Graphics; `WorldEffectsRuntime`): shooting stars drawn at once `streaksByWorldEffects` (Low 2, Medium 3,
-  High and Ultra 4); the aurora off on Low (`auroraOnLow`). Stars, nebula, comet, second sun and eclipse stay on every tier.
+- **World Effects** (Settings, Graphics; `WorldEffectsRuntime`): streaks drawn at once `streaksByWorldEffects` (Low 6, Medium 10,
+  High and Ultra 16; only The Emberfall uses more than one); the aurora off on Low (`auroraOnLow`). Stars, nebula, comet, second sun and eclipse stay on every tier.
 - **Data:** `SkyEventSettings` (`Resources/KN/SkyEvents`, made by Krytical Nova ▸ World ▸ Sky ▸ Bake Star Map, which also holds
   the overlay shader so builds include it). GM: `sky.meteor`, `sky.shower`, `sky.comet`, `sky.nebula`, `sky.sun2`,
   `sky.eclipse`, `sky.aurora`, `sky.events`, `sky.events.clear` (server side, every client sees them).

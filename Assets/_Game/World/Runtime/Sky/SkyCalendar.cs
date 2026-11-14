@@ -24,6 +24,8 @@ namespace KryticalNova.World
         public SkyEventKind Forced;
         /// <summary>Real seconds since the GM forced it (negative or NaN = none).</summary>
         public double ForcedAge;
+        /// <summary>Angular radius of the sun's visible disc in radians, for the eclipse's cover (0 = <see cref="SkyCalendar.DefaultSunDisc"/>).</summary>
+        public float SunDiscRadians;
     }
 
     /// <summary>One streak in the sky: from <see cref="Start"/> to <see cref="End"/>, <see cref="Progress"/> 0-1 through its life.</summary>
@@ -31,12 +33,15 @@ namespace KryticalNova.World
     {
         public Vector3 Start, End;
         public float Progress, Brightness;
+        /// <summary>An Emberfall streak (long, hot white-blue head, glowing blue tail) rather than a lone shooting star.</summary>
+        public bool Shower;
     }
 
     /// <summary>Everything in the sky at one moment (all amounts 0-1; directions are world directions, y up).</summary>
     public struct SkyNow
     {
-        public const int MaxStreaks = 4;
+        /// <summary>Streak slots (owner 14 Nov, part 3: The Emberfall dense at its peak; a lone shooting star uses one).</summary>
+        public const int MaxStreaks = 16;
 
         /// <summary>The dome's turn in degrees: the right ascension on the meridian.</summary>
         public float DomeAngle;
@@ -49,7 +54,7 @@ namespace KryticalNova.World
         public int NebulaLook;
 
         public int StreakCount;
-        public SkyStreak S0, S1, S2, S3;
+        public SkyStreak S0, S1, S2, S3, S4, S5, S6, S7, S8, S9, S10, S11, S12, S13, S14, S15;
         public bool ShowerNight;
 
         public float Comet;
@@ -58,9 +63,15 @@ namespace KryticalNova.World
         public float Sun2;
         public Vector3 Sun2Dir;
 
-        /// <summary>How much of the sun the moon covers (1 = totality).</summary>
+        /// <summary>How much of the sun's disc the moon covers (1 = totality), from the two discs' real overlap.</summary>
         public float Eclipse;
         public bool EclipseDay;
+        /// <summary>The eclipse moon is in the sky (from its rise opposite the sun, across the sun, to its set opposite it again).</summary>
+        public bool EclipseMoon;
+        /// <summary>Where the eclipse moon is: radians from the sun along its path (negative before the peak, positive after; only ever grows).</summary>
+        public float EclipseMoonAngle;
+        /// <summary>Angular radii (radians) of the sun's disc and the eclipse moon.</summary>
+        public float EclipseSunRadius, EclipseMoonRadius;
 
         /// <summary>This night has an aurora where the season allows one (the presenter applies the winter / snowy-zone gate).</summary>
         public float Aurora;
@@ -69,12 +80,12 @@ namespace KryticalNova.World
         public float Migration;
         public float MigrationHeading;
 
-        public SkyStreak Streak(int i) => i switch { 0 => S0, 1 => S1, 2 => S2, _ => S3 };
+        public SkyStreak Streak(int i) => i switch { 0 => S0, 1 => S1, 2 => S2, 3 => S3, 4 => S4, 5 => S5, 6 => S6, 7 => S7, 8 => S8, 9 => S9, 10 => S10, 11 => S11, 12 => S12, 13 => S13, 14 => S14, _ => S15 };
 
         public void AddStreak(in SkyStreak s)
         {
             if (StreakCount >= MaxStreaks) return;
-            switch (StreakCount) { case 0: S0 = s; break; case 1: S1 = s; break; case 2: S2 = s; break; default: S3 = s; break; }
+            switch (StreakCount) { case 0: S0 = s; break; case 1: S1 = s; break; case 2: S2 = s; break; case 3: S3 = s; break; case 4: S4 = s; break; case 5: S5 = s; break; case 6: S6 = s; break; case 7: S7 = s; break; case 8: S8 = s; break; case 9: S9 = s; break; case 10: S10 = s; break; case 11: S11 = s; break; case 12: S12 = s; break; case 13: S13 = s; break; case 14: S14 = s; break; default: S15 = s; break; }
             StreakCount++;
         }
     }
@@ -182,7 +193,7 @@ namespace KryticalNova.World
         public static float ForcedLength(SkyEventKind kind, SkyEventSettings s)
         {
             float len = s != null ? s.forcedSeconds : 180f;
-            if (kind == SkyEventKind.Eclipse && s != null) len = Mathf.Max(len, s.eclipseSeconds);
+            if (kind == SkyEventKind.Eclipse && s != null) len = Mathf.Max(len, s.eclipseSeconds + 2f * s.eclipseApproachSeconds);
             return len;
         }
 
@@ -221,42 +232,33 @@ namespace KryticalNova.World
                 now.NebulaDir = Dir(Mathf.LerpAngle(s.nebulaPath.x, s.nebulaPath.y, p), s.nebulaPath.z * Mathf.Sin(Mathf.PI * Mathf.Lerp(0.15f, 0.85f, p)));
             }
 
-            // ---- shooting stars: a few a night, at hashed moments
+            // ---- shooting stars (owner 14 Nov, part 3: RARE, about one every 1-3 minutes, never several at once)
             double secondsIntoNight = np * nightSeconds;
-            if (isNight)
-            {
-                int count = ShootingStars(c.Seed, night, s);
-                for (int i = 0; i < count && now.StreakCount < SkyNow.MaxStreaks; i++)
-                {
-                    long key = night * 64 + i;
-                    double at = (0.05 + 0.9 * Hash01(c.Seed ^ SaltStreaks, key)) * nightSeconds;
-                    double age = secondsIntoNight - at;
-                    if (age >= 0 && age < s.streakSeconds) now.AddStreak(RandomStreak(c.Seed ^ SaltStreaks, key, (float)(age / s.streakSeconds), s));
-                }
-            }
-            if (Forced(c, SkyEventKind.Meteor, s, out _))
-            {
-                // forced: one streak every 4 s for the force's whole length
-                double age = c.ForcedAge % 4.0;
-                if (age < s.streakSeconds) now.AddStreak(RandomStreak(c.Seed ^ SaltStreaks, -1 - (long)(c.ForcedAge / 4.0), (float)(age / s.streakSeconds), s));
-            }
+            if (isNight) RareStreaks(ref now, c.Seed ^ SaltStreaks, night * 4096, secondsIntoNight, false, s);
+            // forced (sky.meteor): the first one a second after the GM asks, then the same rare gaps for the force's length
+            if (Forced(c, SkyEventKind.Meteor, s, out _) && c.ForcedAge >= 1.0)
+                RareStreaks(ref now, c.Seed ^ SaltStreaks, -(1L << 40), c.ForcedAge - 1.0, true, s);
 
-            // ---- The Emberfall: once a game year, many streaks from one point
+            // ---- The Emberfall: once a game year, many long glowing streaks falling from one point (owner's references, 14 Nov)
             now.ShowerNight = dayOfYear == s.showerDayOfYear;
             bool showerForced = Forced(c, SkyEventKind.Shower, s, out float shAge);
             if ((now.ShowerNight && isNight) || showerForced)
             {
                 double t = showerForced ? c.ForcedAge : secondsIntoNight;
+                // dense at the peak: a fixed beat at the peak rate, each beat lit with the chance the night's curve gives (stable frame to frame)
                 float peak = showerForced ? Fade(shAge, 0.1f) : Mathf.Sin(Mathf.PI * Mathf.Clamp01(np));
-                double slot = 60.0 / Math.Max(1.0, s.showerStreaksPerMinute * Math.Max(0.15, peak));
+                double slot = 60.0 / Math.Max(1.0, s.showerStreaksPerMinute);
+                float life = Mathf.Max(0.1f, s.showerStreakSeconds);
                 long k = (long)Math.Floor(t / slot);
+                int back = Mathf.Min(256, Mathf.CeilToInt((float)(life / slot)) + 1);
                 Vector3 radiant = Dir(s.showerRadiant.x, s.showerRadiant.y);
-                for (long j = k; j > k - 6 && now.StreakCount < SkyNow.MaxStreaks; j--)
+                for (long j = k; j > k - back && now.StreakCount < SkyNow.MaxStreaks; j--)
                 {
-                    long key = (showerForced ? -100000 : night * 4096) + j;
+                    long key = (showerForced ? -(1L << 41) : night * 65536) + j;
+                    if (Hash01(c.Seed ^ SaltShower, key * 7 + 5) >= Mathf.Max(0.05f, peak)) continue;
                     double at = j * slot + Hash01(c.Seed ^ SaltShower, key) * slot;
                     double age = t - at;
-                    if (age >= 0 && age < s.streakSeconds) now.AddStreak(RadiantStreak(c.Seed ^ SaltShower, key, radiant, (float)(age / s.streakSeconds), s));
+                    if (age >= 0 && age < life) now.AddStreak(RadiantStreak(c.Seed ^ SaltShower, key, radiant, (float)(age / life), s));
                 }
             }
 
@@ -285,16 +287,28 @@ namespace KryticalNova.World
             Vector3 east = Dir(s.sun2Path.x, 0f);
             Vector3 high = Quaternion.AngleAxis(s.sun2Path.y, east) * Vector3.up;
             now.Sun2Dir = (east * Mathf.Cos(theta) + high * Mathf.Sin(theta)).normalized;
-            now.Sun2 = sunUp;
+            // owner 14 Nov, part 3: NEVER at night; it shows only while our sun is up and fades in after dawn, out before dusk
+            now.Sun2 = sunUp * Sun2DayGate(c.Time01, s);
 
             // ---- total eclipse: every few game years, around midday
             long dayYear = (long)Math.Floor(c.Day / (double)s.gameYearDays);
             int dayInYear = (int)Mod(c.Day, s.gameYearDays);
             now.EclipseDay = Mod(dayYear, s.eclipseEveryYears) == 0 && dayInYear == s.eclipseDayOfYear;
+            // the moon is a real body (owner 14 Nov, part 3): it rises opposite the sun, travels one way along a great circle through the
+            // sun, crosses it at the peak and sets opposite it again; the cover is the two discs' real overlap, nothing fades
+            float sr = c.SunDiscRadians > 0f ? c.SunDiscRadians : DefaultSunDisc;
+            now.EclipseSunRadius = sr;
+            now.EclipseMoonRadius = sr * Mathf.Max(1.02f, s.eclipseMoonScale);
+            float reach = s.eclipseSeconds * 0.5f + s.eclipseApproachSeconds;
             double eclipseAge = double.NaN;
-            if (Forced(c, SkyEventKind.Eclipse, s, out _)) eclipseAge = c.ForcedAge - s.eclipseSeconds * 0.5;
+            if (Forced(c, SkyEventKind.Eclipse, s, out _)) eclipseAge = c.ForcedAge - reach;
             else if (now.EclipseDay) eclipseAge = (c.Time01 - s.eclipsePeak01) * dayLen;
-            if (!double.IsNaN(eclipseAge)) now.Eclipse = EclipseCover((float)eclipseAge, s.eclipseSeconds, s.eclipseTotality);
+            if (!double.IsNaN(eclipseAge) && Math.Abs(eclipseAge) <= reach)
+            {
+                now.EclipseMoon = true;
+                now.EclipseMoonAngle = EclipseMoonAngle((float)eclipseAge, s, sr, now.EclipseMoonRadius);
+                now.Eclipse = DiscCover(Mathf.Abs(now.EclipseMoonAngle), sr, now.EclipseMoonRadius);
+            }
             // owner (14 Nov): the second sun is never in the sky during a solar eclipse (the whole eclipse day, forced or natural)
             if (now.EclipseDay || now.Eclipse > 0f) now.Sun2 = 0f;
 
@@ -313,19 +327,81 @@ namespace KryticalNova.World
             return now;
         }
 
-        /// <summary>Shooting stars on a night: around the settings' number, hashed so every client agrees.</summary>
-        public static int ShootingStars(int seed, long night, SkyEventSettings s) =>
-            Mathf.FloorToInt(s.shootingStarsPerNight * (0.5f + Hash01(seed ^ SaltCount, night)));
+        /// <summary>Angular radius of the sun's disc (radians) when the clock does not give one: the day cycle's sun art (tan 0.05) times the default share 0.5.</summary>
+        public const float DefaultSunDisc = 0.025f;
 
-        /// <summary>Cover 0-1 at <paramref name="age"/> seconds from the peak: smooth bite, flat totality, smooth release.</summary>
-        public static float EclipseCover(float age, float seconds, float totality)
+        /// <summary>
+        /// How much the second sun shows for the time of day: 0 all night (18:00-06:00), fading in over <see cref="SkyEventSettings.sun2DayFade"/>
+        /// of the day after dawn and out before dusk (owner 14 Nov, part 3: never drawn at night).
+        /// </summary>
+        public static float Sun2DayGate(float time01, SkyEventSettings s)
         {
-            float half = seconds * 0.5f, flat = half * totality;
-            float a = Mathf.Abs(age);
-            if (a >= half) return 0f;
-            if (a <= flat) return 1f;
-            float x = 1f - (a - flat) / Mathf.Max(0.001f, half - flat);
-            return x * x * (3f - 2f * x);
+            float dayP = (time01 - 0.25f) / 0.5f;
+            return Fade(dayP, Mathf.Max(0.01f, s != null ? s.sun2DayFade : 0.08f));
+        }
+
+        /// <summary>
+        /// Rare streaks (owner 14 Nov, part 3): one per beat of (least + most gap) / 2 seconds, placed in its beat by a hash so the gap between
+        /// two is always between <see cref="SkyEventSettings.shootingStarGapSeconds"/> x and y. <paramref name="t"/> is seconds since the beats began.
+        /// </summary>
+        static void RareStreaks(ref SkyNow now, int seed, long keyBase, double t, bool firstAtZero, SkyEventSettings s)
+        {
+            if (t < 0) return;
+            long k = (long)Math.Floor(t / RareBeat(s));
+            for (long j = k; j >= k - 1 && j >= 0; j--)
+            {
+                if (j == 0 && !firstAtZero) continue;   // a night's first one comes a beat after dusk
+                double age = t - RareStreakStart(seed, keyBase, j, firstAtZero, s);
+                if (age >= 0 && age < s.streakSeconds) now.AddStreak(RandomStreak(seed, keyBase + j, (float)(age / s.streakSeconds), s));
+            }
+        }
+
+        static double RareBeat(SkyEventSettings s)
+        {
+            float gMin = Mathf.Max(1f, s.shootingStarGapSeconds.x), gMax = Mathf.Max(gMin, s.shootingStarGapSeconds.y);
+            return (gMin + gMax) * 0.5;
+        }
+
+        /// <summary>When rare streak <paramref name="j"/> starts, in seconds since the beats began (also for tests).</summary>
+        public static double RareStreakStart(int seed, long keyBase, long j, bool firstAtZero, SkyEventSettings s)
+        {
+            float gMin = Mathf.Max(1f, s.shootingStarGapSeconds.x), gMax = Mathf.Max(gMin, s.shootingStarGapSeconds.y);
+            if (j == 0 && firstAtZero) return 0.0;
+            return j * RareBeat(s) + (gMax - gMin) * 0.5f * Hash01(seed, keyBase + j);
+        }
+
+        /// <summary>
+        /// The eclipse moon's place on its path: radians from the sun's centre, negative before the peak and positive after, and it only ever
+        /// grows (never turns back). Across the bite (first to last contact, <see cref="SkyEventSettings.eclipseSeconds"/>) it moves at one steady
+        /// speed; beyond, it speeds up smoothly (no jump in speed) to reach the point opposite the sun (pi, below the horizon) after
+        /// <see cref="SkyEventSettings.eclipseApproachSeconds"/>.
+        /// </summary>
+        public static float EclipseMoonAngle(float age, SkyEventSettings s, float sunRadius, float moonRadius)
+        {
+            float half = Mathf.Max(1f, s.eclipseSeconds * 0.5f), approach = Mathf.Max(1f, s.eclipseApproachSeconds);
+            float contact = sunRadius + moonRadius, v = contact / half;
+            float a = Mathf.Abs(age), g;
+            if (a <= half) g = v * a;
+            else
+            {
+                float x = Mathf.Min(a - half, approach);
+                float k = Mathf.Max(0f, (Mathf.PI - contact - v * approach) / (approach * approach * approach));
+                g = contact + v * x + k * x * x * x;
+            }
+            return age < 0f ? -g : g;
+        }
+
+        /// <summary>Share of the sun's disc (radius <paramref name="r1"/>) the moon's (radius <paramref name="r2"/>) hides at centre distance <paramref name="d"/>.</summary>
+        public static float DiscCover(float d, float r1, float r2)
+        {
+            if (d >= r1 + r2) return 0f;
+            if (d <= r2 - r1) return 1f;
+            if (d <= r1 - r2) return (r2 * r2) / (r1 * r1);
+            float a1 = Mathf.Acos(Mathf.Clamp((d * d + r1 * r1 - r2 * r2) / (2f * d * r1), -1f, 1f));
+            float a2 = Mathf.Acos(Mathf.Clamp((d * d + r2 * r2 - r1 * r1) / (2f * d * r2), -1f, 1f));
+            float tri = 0.5f * Mathf.Sqrt(Mathf.Max(0f, (-d + r1 + r2) * (d + r1 - r2) * (d - r1 + r2) * (d + r1 + r2)));
+            float area = r1 * r1 * a1 + r2 * r2 * a2 - tri;
+            return Mathf.Clamp01(area / (Mathf.PI * r1 * r1));
         }
 
         static SkyStreak RandomStreak(int seed, long key, float progress, SkyEventSettings s)
@@ -342,15 +418,21 @@ namespace KryticalNova.World
             return new SkyStreak { Start = a, End = b, Progress = progress, Brightness = 0.7f + 0.3f * Hash01(seed, key * 5 + 4) };
         }
 
+        /// <summary>
+        /// One Emberfall streak: it starts <see cref="SkyEventSettings.showerSpread"/> from the radiant and runs straight away from it, on the
+        /// part of the sky below the radiant (falling toward the horizon, like the owner's references), so the streaks in view run nearly parallel.
+        /// </summary>
         static SkyStreak RadiantStreak(int seed, long key, Vector3 radiant, float progress, SkyEventSettings s)
         {
-            float spin = 360f * Hash01(seed, key * 3 + 1);
-            float from = Mathf.Lerp(12f, 50f, Hash01(seed, key * 3 + 2));
-            Vector3 side = Quaternion.AngleAxis(spin, radiant) * Vector3.Cross(radiant, Vector3.up).normalized;
-            Vector3 axis = Vector3.Cross(radiant, side).normalized;
-            Vector3 a = Quaternion.AngleAxis(from, axis) * radiant;
-            Vector3 b = Quaternion.AngleAxis(from + s.streakDegrees * 0.8f, axis) * radiant;
-            return new SkyStreak { Start = a, End = b, Progress = progress, Brightness = 0.6f + 0.4f * Hash01(seed, key * 3 + 3) };
+            Vector3 down = Vector3.ProjectOnPlane(Vector3.down, radiant);
+            down = down.sqrMagnitude < 1e-6f ? Vector3.ProjectOnPlane(Vector3.forward, radiant).normalized : down.normalized;
+            float spin = (Hash01(seed, key * 3 + 1) - 0.5f) * 150f;
+            Vector3 way = Quaternion.AngleAxis(spin, radiant) * down;
+            float from = Mathf.Lerp(s.showerSpread.x, s.showerSpread.y, Hash01(seed, key * 3 + 2)) * Mathf.Deg2Rad;
+            float to = from + s.showerStreakDegrees * Mathf.Deg2Rad;
+            Vector3 a = radiant * Mathf.Cos(from) + way * Mathf.Sin(from);
+            Vector3 b = radiant * Mathf.Cos(to) + way * Mathf.Sin(to);
+            return new SkyStreak { Start = a, End = b, Progress = progress, Brightness = 0.6f + 0.4f * Hash01(seed, key * 3 + 3), Shower = true };
         }
     }
 }

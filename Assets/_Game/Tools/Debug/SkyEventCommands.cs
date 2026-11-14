@@ -43,7 +43,7 @@ namespace KryticalNova.DevTools
             _ => "Nothing",
         };
 
-        [Command("sky.meteor", "Shooting stars for every player (one every 4 s while the force lasts). Night only.")]
+        [Command("sky.meteor", "Shooting stars for every player: the first one at once, then one every 1-3 minutes while the force lasts (rare, owner 14 Nov). Night only.")]
         private static string Meteor() => Force(SkyEventKind.Meteor);
 
         [Command("sky.shower", "The Emberfall meteor shower for every player. Night only.")]
@@ -65,10 +65,10 @@ namespace KryticalNova.DevTools
             return look < 0 ? "Nebula back to the calendar's pick." : $"This client shows {s.nebulas[look].name} on nebula nights (others see the calendar's pick).";
         }
 
-        [Command("sky.sun2", "Puts the second sun high in the sky for every player.")]
+        [Command("sky.sun2", "Puts the second sun high in the sky for every player (daytime only: it is never drawn at night, owner 14 Nov).")]
         private static string Sun2() => Force(SkyEventKind.Sun2);
 
-        [Command("sky.eclipse", "A total eclipse for every player, starting now (needs the sun up: time.noon).")]
+        [Command("sky.eclipse", "A total eclipse for every player: the moon rises opposite the sun, crosses it about 4 minutes in and sets again (8 minutes; needs the sun up: time.noon).")]
         private static string Eclipse() => Force(SkyEventKind.Eclipse);
 
         [Command("sky.aurora", "The aurora for every player, even outside winter. Night only.")]
