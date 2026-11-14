@@ -83,13 +83,13 @@ namespace KryticalNova.World
         [Tooltip("Streaks per real minute at the peak of the shower night.")]
         [Range(1f, 900f)] public float showerStreaksPerMinute = 480f;
         [Tooltip("Direction the shower radiates from: compass heading and elevation in degrees.")]
-        public Vector2 showerRadiant = new Vector2(70f, 55f);
+        public Vector2 showerRadiant = new Vector2(70f, 75f);   // high, so the streaks fall over the rooftops (Unity turn, part 3)
         [Tooltip("Real seconds one Emberfall streak lasts (longer than a lone shooting star: long glowing tails, owner's references 14 Nov).")]
         [Range(0.5f, 6f)] public float showerStreakSeconds = 2.8f;
         [Tooltip("Length of an Emberfall streak in degrees of sky.")]
-        [Range(5f, 80f)] public float showerStreakDegrees = 45f;
+        [Range(5f, 80f)] public float showerStreakDegrees = 40f;
         [Tooltip("Nearest and farthest a streak starts from the radiant, in degrees (far from it, the streaks run nearly parallel).")]
-        public Vector2 showerSpread = new Vector2(10f, 70f);
+        public Vector2 showerSpread = new Vector2(4f, 38f);
         [Tooltip("Half-width of an Emberfall trail in degrees (wider than a lone streak, so they glow).")]
         [Range(0.02f, 1.5f)] public float showerWidthDegrees = 0.5f;
         [Tooltip("Size of an Emberfall head in degrees.")]

@@ -295,11 +295,11 @@ corona eclipse, 6A green-teal aurora. **The custom sun's files keep a zero diff*
   `SkyEventPresenter.ScaleNightMoon` writes it back with only y = tan(moonTextureSize x moonScale), rebuilt from the day cycle (never
   compounding). In the custom sky y is read only by the moon (art billboard, rim clouds); the sun reads x. The moon's light,
   direction and phase are not touched.
-- **Streaks:** `SkyNow.MaxStreaks` 16 slots. The CPU (`SkyEventPresenter.StreakShape`) works out each streak's head and tail end and
-  their fades; the shader draws a line that widens and brightens toward the head (smoothstep taper) and a head glow, skipping
-  pixels far from a streak. Lone shooting stars: one every `shootingStarGapSeconds` (60-180 s), never two at once, 21 degrees,
-  `streakColor` HDR. The Emberfall: up to `showerStreaksPerMinute` 300 at the peak, `showerStreakSeconds` 2.4, 36-degree streaks
-  falling from the radiant toward the horizon, `showerHeadColor` (white-blue) and `showerTrailColor` (blue), HDR so Bloom glows them.
+- **Streaks:** `SkyNow.MaxStreaks` 24 slots (`_KN_StreakA` / `_KN_StreakB`). The CPU (`SkyEventPresenter.StreakShape`) works out each streak's head and tail end and
+  their fades; the shader draws a line that widens and brightens toward the head (linear taper, soft at the tail end, so the whole trail reads) and a head glow, skipping
+  pixels far from a streak. Lone shooting stars: one every `shootingStarGapSeconds` (60-180 s), never two at once, 21 degrees, 0.35 degrees wide,
+  `streakColor` HDR. The Emberfall: up to `showerStreaksPerMinute` 480 at the peak (about 22 at once), `showerStreakSeconds` 2.8, 40-degree streaks
+  0.5 degrees wide falling from a high radiant (75 degrees, so they cross the sky above the rooftops), `showerHeadColor` (white-blue) and `showerTrailColor` (blue), HDR so Bloom glows them.
 - **Old dot stars:** the client sets `RenderSettings.skybox` to a runtime copy of the sky material with only `_StarBrightness`
   at 0. The material asset is unchanged.
 - **Second sun:** the custom sun's art (`_KN_SunTex`, T_Sun) through a copy of its drawing code (`SkyBodyCommon.hlsl`:
@@ -316,8 +316,8 @@ corona eclipse, 6A green-teal aurora. **The custom sun's files keep a zero diff*
   presenter's own ambient back, so after an eclipse the world is exactly as the presenter made it.
 - **Cost:** one star-map, one cloud and one sun-art sample per sky pixel; nebula, comet, aurora and eclipse are uniform branches;
   no new keywords (variants unchanged). Budget 0.3 ms.
-- **World Effects** (Settings, Graphics; `WorldEffectsRuntime`): streaks drawn at once `streaksByWorldEffects` (Low 6, Medium 10,
-  High and Ultra 16; only The Emberfall uses more than one); the aurora off on Low (`auroraOnLow`). Stars, nebula, comet, second sun and eclipse stay on every tier.
+- **World Effects** (Settings, Graphics; `WorldEffectsRuntime`): streaks drawn at once `streaksByWorldEffects` (Low 8, Medium 14,
+  High and Ultra 24; only The Emberfall uses more than one); the aurora off on Low (`auroraOnLow`). Stars, nebula, comet, second sun and eclipse stay on every tier.
 - **Data:** `SkyEventSettings` (`Resources/KN/SkyEvents`, made by Krytical Nova ▸ World ▸ Sky ▸ Bake Star Map, which also holds
   the overlay shader so builds include it). GM: `sky.meteor`, `sky.shower`, `sky.comet`, `sky.nebula`, `sky.sun2`,
   `sky.eclipse`, `sky.aurora`, `sky.events`, `sky.events.clear` (server side, every client sees them).
