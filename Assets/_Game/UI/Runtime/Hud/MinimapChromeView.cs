@@ -24,6 +24,17 @@ namespace KryticalNova.UI.Hud
 
         private readonly List<VisualElement> overlays = new List<VisualElement>();
 
+        /// <summary>
+        /// How much of the minimap shows (build 17 3.3, owner): the Mini Deck sets it while it swaps in (0 = the whole dial, ring and
+        /// buttons gone, nothing left behind the deck). The dial is drawn on its own canvas, so fading the HUD's elements alone left it.
+        /// </summary>
+        public static float StepAside01 = 1f;
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetStatics() => StepAside01 = 1f;
+
+        protected override float Opacity => Mathf.Clamp01(StepAside01);
+
         protected override VisualElement OnAttach(VisualElement hudRoot)
         {
             VisualElement panel = hudRoot.Q(PanelName);
