@@ -52,7 +52,7 @@ namespace KryticalNova.Persistence.Entities
 
             Gm("gm.level 40");
             Gm("gm.god true");
-            Gm("gm.time 12");   // daylight for the clip (owner, 14 Nov: the first one was too dark to read)
+            Gm("time.noon");   // daylight for the clip (owner, 14 Nov: the first one was too dark to read)
             yield return new WaitForSeconds(1f);
             Vector3 at = Spot;
             if (UnityEngine.AI.NavMesh.SamplePosition(at, out UnityEngine.AI.NavMeshHit ground, 20f, UnityEngine.AI.NavMesh.AllAreas)) at = ground.position;
@@ -120,13 +120,13 @@ namespace KryticalNova.Persistence.Entities
                 $"Tester HP {hpLow:0} -> {hp.Health:0} of {hp.MaxHealth:0}");
 
             // TANK (phase 4): the companion taunts the Colossus so it turns from the Tester to the companion, and its body takes the blows
-            // (the Tester stays in god mode); it never strikes and never heals
-            mounts.RunMountOp(MountOpKind.Stance, (int)CompanionStanceByte.Tank);
-            yield return new WaitForSeconds(0.5f);
-            log($"companion fight: stance now {companion.CompanionStance} (1 = TANK)");
+            // (the Tester stays in god mode); it never strikes and never heals. Counted from before the switch: the first taunt comes at once.
             strikes0 = Count("StrikesDealt");
             pulses0 = Count("PulsesGiven");
             int taunts0 = Count("TauntsWritten"), knockOuts0 = companion.CompanionKnockOuts, hp0 = companion.CompanionHpPermille, hpMin = hp0;
+            mounts.RunMountOp(MountOpKind.Stance, (int)CompanionStanceByte.Tank);
+            yield return new WaitForSeconds(0.5f);
+            log($"companion fight: stance now {companion.CompanionStance} (1 = TANK)");
             start = Time.realtimeSinceStartup;
             while (Time.realtimeSinceStartup - start < StanceSeconds)
             {
