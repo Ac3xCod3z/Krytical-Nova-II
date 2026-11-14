@@ -554,6 +554,21 @@ $("commandForm").addEventListener("submit", async (event) => {
   }
 });
 
+// Townsfolk (owner's DAY list item 18): the same gm.town lines as the GM window, through the command route
+document.querySelectorAll("[data-town]").forEach((button) => {
+  button.addEventListener("click", async () => {
+    button.disabled = true;
+    try {
+      const data = await call("/api/command", { line: button.dataset.town });
+      $("townAnswer").textContent = data.answer;
+    } catch (e) {
+      $("townAnswer").textContent = e.message;
+    } finally {
+      button.disabled = false;
+    }
+  });
+});
+
 // Crossfire (the hourly war): the same gm.crossfire lines as the GM window, through the command route
 document.querySelectorAll("[data-crossfire]").forEach((button) => {
   button.addEventListener("click", async () => {

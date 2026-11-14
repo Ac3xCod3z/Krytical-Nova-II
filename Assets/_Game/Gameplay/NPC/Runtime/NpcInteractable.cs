@@ -137,6 +137,9 @@ namespace KryticalNova.NPC
                 transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRotation, TurnSpeedDegrees * Time.deltaTime);
         }
 
+        /// <summary>Raised on this machine when a player opens this NPC (presentation: the vendor's welcome; nothing is sent).</summary>
+        public static event System.Action<NpcInteractable, GameObject> Interacted;
+
         public void Interact(GameObject player)
         {
             if (player == null) return;
@@ -148,6 +151,7 @@ namespace KryticalNova.NPC
             PickLine();
             // TODO(server): shops/quests will go through a server-validated RequestInteractServerRpc.
             ClientPresentationRegistry.Dialogue?.ShowDialogue(this, player.transform);
+            Interacted?.Invoke(this, player);
         }
 
         /// <summary>A different line from last time, if this NPC has lines (presentation only: nothing is sent).</summary>

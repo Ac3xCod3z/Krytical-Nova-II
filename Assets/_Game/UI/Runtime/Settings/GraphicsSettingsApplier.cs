@@ -151,6 +151,7 @@ namespace KryticalNova.UI
             ComicStyleRuntime.OutlinesEnabled = true;
             VolumetricQualityRuntime.RestoreAuthored();
             GrassRenderer.DensityMultiplier = 1f;
+            CrowdDetailRuntime.Set(CrowdDetail.High);
             ShadowBands.RestoreAll();
             ResidentDrawerOcclusion.Restore();
             if (instance == this) instance = null;
@@ -249,6 +250,7 @@ namespace KryticalNova.UI
             ComicStyleRuntime.OutlinesEnabled = GraphicsPreferences.ComicOutlines;
             VolumetricQualityRuntime.Set(GraphicsPreferences.Fog);
             GrassRenderer.DensityMultiplier = GraphicsPreferences.GrassDensity;
+            CrowdDetailRuntime.Set(GraphicsPreferences.Crowd);
             ApplyCamera();
             ApplySoftShadows();
             ApplyDisplay();
@@ -256,7 +258,7 @@ namespace KryticalNova.UI
             if (KryticalNova.Diagnostics.PerformanceLog.IsRecording)
             {
                 KryticalNova.Diagnostics.PerformanceLog.Change("graphics", System.FormattableString.Invariant(
-                    $"{Screen.width}x{Screen.height} {GraphicsPreferences.Window} preset={GraphicsPreferences.Preset} upscaler={UpscalerInForce} quality={GraphicsPreferences.UpscalerQuality} scale={GraphicsPreferences.RenderScale:0.00} shadows={GraphicsPreferences.Shadows} aa={GraphicsPreferences.AntiAliasing} grass={GraphicsPreferences.GrassDensity:0.00} fog={GraphicsPreferences.Fog} shafts={GraphicsPreferences.SunShafts} outlines={GraphicsPreferences.ComicOutlines} vsync={GraphicsPreferences.VSync} cap={GraphicsPreferences.FrameCapInForce}"));
+                    $"{Screen.width}x{Screen.height} {GraphicsPreferences.Window} preset={GraphicsPreferences.Preset} upscaler={UpscalerInForce} quality={GraphicsPreferences.UpscalerQuality} scale={GraphicsPreferences.RenderScale:0.00} shadows={GraphicsPreferences.Shadows} aa={GraphicsPreferences.AntiAliasing} grass={GraphicsPreferences.GrassDensity:0.00} fog={GraphicsPreferences.Fog} crowd={GraphicsPreferences.Crowd} shafts={GraphicsPreferences.SunShafts} outlines={GraphicsPreferences.ComicOutlines} vsync={GraphicsPreferences.VSync} cap={GraphicsPreferences.FrameCapInForce}"));
             }
         }
 

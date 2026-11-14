@@ -23,6 +23,14 @@ namespace KryticalNova.Core
         public static IRequestPromptSink Prompts { get; private set; }
         public static IServiceWindowSink Services { get; private set; }
         public static IAnnouncementSink Announcements { get; private set; }
+        public static ISpeechBubbleSink Speech { get; private set; }
+
+        public static void RegisterSpeech(ISpeechBubbleSink sink) => Speech = sink;
+
+        public static void UnregisterSpeech(ISpeechBubbleSink sink)
+        {
+            if (ReferenceEquals(Speech, sink)) Speech = null;
+        }
 
         public static void RegisterAnnouncements(IAnnouncementSink sink) => Announcements = sink;
 
