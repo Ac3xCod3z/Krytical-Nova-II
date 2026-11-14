@@ -269,6 +269,33 @@ Peak strength is `rainbowPeak` 0.25, so it stays subtle. Preview it with `previe
 `sky.reset` (`Assets/_Game/Tools/Debug/SkyCommands.cs`, and the World tab of the GM Tools window). These are local
 presentation overrides only.
 
+### A unique sky: sky events (item 24, 14 Nov 2026)
+Owner picks 1A glint stars, 2B faint constellation lines at deep night, 3A Soul Tide nebula, 4B amber second sun, 5A pearl
+corona eclipse, 6A green-teal aurora. **The custom sun's files keep a zero diff** (owner: "My custom sun better not change"):
+`StylizedSky.shader`, `SkyCommon.hlsl`, `M_StylizedSky.mat`, `T_Sun.png`, the lens flare, `DayCycleProfile`, `DC_Default`,
+`EnvironmentPresenter`, the sun shafts / glow halo / lettering features and the render settings are not edited.
+- **What draws it:** `SkyEventPresenter` (client only, made at run time, execution order 70, after the presenter's 50) evaluates
+  `SkyCalendar` (world seed + calendar day + presented time + GM force) and draws one far overlay dome with
+  `SkyEvents.shader` for the game camera only (`Graphics.RenderMesh`, queue Transparent-499: after the skybox, before every
+  transparent; on the far plane like the skybox; no shadows, no light or reflection probes). Premultiplied: the eclipse's
+  deep-blue wash, then the star map, lines, nebula, streaks, comet and aurora added, then the second sun and the moon disc laid
+  over, then the corona added. Stars sit behind clouds (one cloud sample from `SkyCommon.hlsl`, read only).
+- **Old dot stars:** the client sets `RenderSettings.skybox` to a runtime copy of the sky material with only `_StarBrightness`
+  at 0. The material asset is unchanged.
+- **Second sun:** the custom sun's art (`_KN_SunTex`, T_Sun) through a copy of its drawing code (`SkyBodyCommon.hlsl`:
+  BodyUV, StylizeBody, DiffuseBody), styled with the sky material's own numbers, tinted `sun2Color`, sized `sun2Degrees`,
+  `sun2Brightness`. It is colour on the overlay only: no Light, no shadows, no ambient, fog, reflection or APV change.
+- **Eclipse:** the moon disc slides over the sun (`eclipseMoonSize` of the sun art), the pearl corona at totality, the sky
+  washed to `eclipseSkyColor` by `eclipseDarkness`. The world dims at run time toward the day cycle's midnight values (key light
+  intensity and colour, ambient, fog colour), eased with the cover, by `eclipseDarkness` (0.85). The presenter rewrites the light
+  and fog every frame and the ambient on its timer; `SkyEventPresenter` only blends on top while the cover is above 0 and puts the
+  presenter's own ambient back, so after an eclipse the world is exactly as the presenter made it.
+- **Cost:** one star-map, one cloud and one sun-art sample per sky pixel; nebula, comet, aurora and eclipse are uniform branches;
+  no new keywords (variants unchanged). Budget 0.3 ms.
+- **Data:** `SkyEventSettings` (`Resources/KN/SkyEvents`, made by Krytical Nova ▸ World ▸ Sky ▸ Bake Star Map, which also holds
+  the overlay shader so builds include it). GM: `sky.meteor`, `sky.shower`, `sky.comet`, `sky.nebula`, `sky.sun2`,
+  `sky.eclipse`, `sky.aurora`, `sky.events`, `sky.events.clear` (server side, every client sees them).
+
 ### Cloud-edge glow
 Clouds crossing the sun or moon get a bright rim (`_BodyRimGlow`), HDR for the sun.
 
@@ -1167,6 +1194,7 @@ nothing baked, and they are generated (`FrontEndBuilder`), so tune the numbers t
 
 ## Changelog
 
+- **2026-11-14 (branch `b18/24-unique-sky`)**: A unique sky (section 5, "A unique sky: sky events"): star map, eight constellations, Soul Tide, shooting stars, The Emberfall, The Pale Wanderer, the amber second sun (custom sun art, no light) and the eclipse with its run-time world dim, on a client-only overlay dome; the old dot stars off through a runtime material copy; the custom sun's files unchanged.
 - **2026-10-18 (branch `perf/batching-pass`)**: the batching pass (section 7, "Batching"): the Batching Report and
   `gm.batching`, shadow bands on Low and Medium, switches to measure them and the Resident Drawer's occlusion culling,
   a background measuring build for DX11 against DX12, the starting preset picked from the hardware, the Player 2

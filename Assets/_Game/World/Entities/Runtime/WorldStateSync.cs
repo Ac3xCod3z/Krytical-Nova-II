@@ -12,18 +12,18 @@ namespace KryticalNova.World.Entities
     /// </summary>
     public struct WorldStateRpc : IRpcCommand
     {
-        public double CycleEpoch, TransitionStart;
+        public double CycleEpoch, TransitionStart, SkyForceAt;
         public float DayLengthSeconds, TimeOffset01, TimeScale, TransitionSeconds;
         public float FromWindHeading, ToWindHeading, FromWindSpeed, ToWindSpeed;
         public int DayBase, Seed;
-        public byte FromWeather, ToWeather;
+        public byte FromWeather, ToWeather, SkyForce;
 
         public static WorldStateRpc Of(in WorldEnvironmentState s) => new WorldStateRpc
         {
             CycleEpoch = s.CycleEpoch, TransitionStart = s.TransitionStart, DayLengthSeconds = s.DayLengthSeconds, TimeOffset01 = s.TimeOffset01,
             TimeScale = s.TimeScale, TransitionSeconds = s.TransitionSeconds, FromWindHeading = s.FromWindHeading, ToWindHeading = s.ToWindHeading,
             FromWindSpeed = s.FromWindSpeed, ToWindSpeed = s.ToWindSpeed, DayBase = s.DayBase, Seed = s.Seed, FromWeather = s.FromWeather,
-            ToWeather = s.ToWeather,
+            ToWeather = s.ToWeather, SkyForce = s.SkyForce, SkyForceAt = s.SkyForceAt,
         };
 
         public WorldEnvironmentState State => new WorldEnvironmentState
@@ -31,6 +31,7 @@ namespace KryticalNova.World.Entities
             CycleEpoch = CycleEpoch, TransitionStart = TransitionStart, DayLengthSeconds = DayLengthSeconds, TimeOffset01 = TimeOffset01,
             TimeScale = TimeScale, TransitionSeconds = TransitionSeconds, FromWindHeading = FromWindHeading, ToWindHeading = ToWindHeading,
             FromWindSpeed = FromWindSpeed, ToWindSpeed = ToWindSpeed, DayBase = DayBase, Seed = Seed, FromWeather = FromWeather, ToWeather = ToWeather,
+            SkyForce = SkyForce, SkyForceAt = SkyForceAt,
         };
     }
 

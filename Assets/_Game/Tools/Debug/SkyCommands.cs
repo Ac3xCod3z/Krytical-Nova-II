@@ -140,7 +140,8 @@ namespace KryticalNova.DevTools
         {
             if (!TryGetPresenter(out var p, out var error)) return error;
             p.ClearOverrides();
-            return "Sky overrides cleared.";
+            WorldEnvironmentNetwork.Instance.ForceSkyEvent(SkyEventKind.None);
+            return "Sky overrides cleared (and any forced sky event).";
         }
 
         [Command("sky.status", "Print time, day, moon phase and the rainbow / halo / moisture levels.")]

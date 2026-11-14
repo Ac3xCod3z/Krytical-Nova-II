@@ -554,6 +554,21 @@ $("commandForm").addEventListener("submit", async (event) => {
   }
 });
 
+// Sky events (item 24): the same sky.* lines as the GM window, through the command route
+document.querySelectorAll("[data-sky]").forEach((button) => {
+  button.addEventListener("click", async () => {
+    button.disabled = true;
+    try {
+      const data = await call("/api/command", { line: button.dataset.sky });
+      $("skyAnswer").textContent = data.answer;
+    } catch (e) {
+      $("skyAnswer").textContent = e.message;
+    } finally {
+      button.disabled = false;
+    }
+  });
+});
+
 // Crossfire (the hourly war): the same gm.crossfire lines as the GM window, through the command route
 document.querySelectorAll("[data-crossfire]").forEach((button) => {
   button.addEventListener("click", async () => {
