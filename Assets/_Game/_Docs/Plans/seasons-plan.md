@@ -380,5 +380,22 @@ Built 14 Nov 2026 in one PR (all six steps' code; the Unity checks are one Play 
 - **Tests:** `World/Tests/Editor/SeasonRulesTests.cs` (evals 1-5 and the settings asset), `World/Entities/Tests/Editor/SeasonSyncTests.cs`
   (eval 6, server + two clients + a late joiner).
 - **Not built / open:** autumn leaf particles (`WindLeavesController`), the season's wind multiplier, interiors marked
-  "No Snow", the publish bundle check of eval 8, and everything a Play run proves (evals 9-11).
+  "No Snow", the publish bundle check of eval 8, and snow on Synty-shaded surfaces (see the Unity turn below).
 
+## Unity turn (14 Nov 2026)
+
+- [x] Every season shader compiles clean (KN Terrain Lit, Comic Toon Lit, Foliage Wind, Grass Blades, `SnowTrack.compute`), with no
+  warnings; `M_TerrainMatte` draws with KN Terrain Lit in Zone01 (no pink ground).
+- [x] EditMode: `SeasonRulesTests` 7/7, `SeasonSyncTests` 1/1, `LauncherNewsGateTests` 9/9.
+- [x] Play, Zone01: the client gets the server's season at once (Autumn, day 6 of 14, matching the calendar); `gm.season` holds each
+  season; Winter's sun 07:30-16:30, Summer's 04:30-19:30; snow piles up under falling snow (one re-anchor when it starts, then a steady
+  rate), footprints press green tracks through full cover, the cover melts in patches; `gm.season climate winter` gives the client the
+  always-winter look. Clips in `G:\My Drive\KryticalNova\AI Outputs\build17\seasons21` (21-1 to 21-4, MP4 + GIF).
+- [x] Snow colour lowered from 0.9 to 0.60 / 0.65 / 0.74: at 0.9 the lit snow blew out to a flat cream with no shadow.
+- [x] Perf (Editor, 120 frames each, season on against off, twice): GPU difference -0.5 ms on Low and +0.7 ms on High, inside the
+  Editor's own ±1 ms noise. The exact <= 0.5 ms reading waits for a built-player performance log.
+- [ ] **Coverage gap found:** Zone01 draws with Synty shaders (`Synty/Generic_Basic` on 2,873 renderers, `Synty/Polygon_Triplanar` on
+  896); Comic Toon Lit is on one combat dummy and no Foliage Wind trees stand there. So in Zone01 only the terrain (and GPU grass) takes
+  snow and season colour; roads, roofs, props and trees do not. Needs the owner's pick of how to reach Synty materials (asked of the
+  Master).
+- [ ] A second client in Play (the two-client sync is proven in EditMode by `SeasonSyncTests`).
