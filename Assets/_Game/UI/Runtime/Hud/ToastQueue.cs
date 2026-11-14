@@ -71,16 +71,33 @@ namespace KryticalNova.UI
         /// </summary>
         public bool Supersede(AnnouncementKind kind, float now)
         {
-            if (waiting.Count > 0)
-            {
-                var keep = new Queue<Toast>(waiting.Count);
-                foreach (Toast t in waiting) if (t.Kind != kind) keep.Enqueue(t);
-                waiting.Clear();
-                foreach (Toast t in keep) waiting.Enqueue(t);
-            }
+            DropWaiting(kind);
             if (!Showing || Current.Kind != kind) return false;
             Showing = false;
             freeAt = now;
+            return true;
+        }
+
+        /// <summary>Waiting lines of <paramref name="kind"/> are dropped; what is on screen stays.</summary>
+        public void DropWaiting(AnnouncementKind kind)
+        {
+            if (waiting.Count == 0) return;
+            var keep = new Queue<Toast>(waiting.Count);
+            foreach (Toast t in waiting) if (t.Kind != kind) keep.Enqueue(t);
+            waiting.Clear();
+            foreach (Toast t in keep) waiting.Enqueue(t);
+        }
+
+        /// <summary>
+        /// A line that stands in place (Crossfire's last seconds, owner 13 Nov 2026) takes the place of the one of its own kind on screen
+        /// without the bar going away and coming back: <see cref="Current"/> becomes <paramref name="toast"/> and its time starts anew.
+        /// False (nothing changed) when no line of that kind is on screen.
+        /// </summary>
+        public bool Replace(in Toast toast, float now)
+        {
+            if (!Showing || Current.Kind != toast.Kind) return false;
+            Current = toast;
+            shownAt = now;
             return true;
         }
 
