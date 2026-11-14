@@ -9,6 +9,8 @@ namespace KryticalNova.Core
         Temper = 1,
         /// <summary>A rare piece of loot fell for a player (an Epic drop from a Hostile, a boss, or another source).</summary>
         Drop = 2,
+        /// <summary>Crossfire, the hourly war: its call and its gates closing (build 17).</summary>
+        Crossfire = 3,
     }
 
     /// <summary>

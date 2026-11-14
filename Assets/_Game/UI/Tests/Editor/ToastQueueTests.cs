@@ -129,5 +129,22 @@ namespace KryticalNova.Tests
             queue.Advance(Show + Fade, Show, Fade);
             Assert.AreEqual("b", queue.Current.Text);
         }
+
+        [Test]
+        public void ACrossfireLine_TakesThePlaceOfTheOneShowing_SoTheCountdownKeepsTime()
+        {
+            var queue = new ToastQueue();
+            var ten = new Toast { Kind = AnnouncementKind.Crossfire, Text = "10" };
+            var nine = new Toast { Kind = AnnouncementKind.Crossfire, Text = "9" };
+            queue.Enqueue(ten, 4);
+            queue.Advance(0f, Show, Fade);
+            queue.Enqueue(Of("gm news"), 4);
+            Assert.IsTrue(queue.Supersede(AnnouncementKind.Crossfire, 1f), "the 10 on screen ends at once");
+            queue.Enqueue(nine, 4);
+            Assert.IsTrue(queue.Advance(1f, Show, Fade));
+            Assert.AreEqual("gm news", queue.Current.Text, "other news keeps its place in line");
+            Assert.IsFalse(queue.Supersede(AnnouncementKind.Crossfire, 1.5f), "a GM line on screen is never cut");
+            Assert.AreEqual(1, queue.Waiting, "the 9 waits, with no older Crossfire line ahead of it");
+        }
     }
 }
