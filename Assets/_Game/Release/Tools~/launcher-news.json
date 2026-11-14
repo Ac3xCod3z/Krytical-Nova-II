@@ -3,7 +3,7 @@
   "items": [
     {
       "title": "A Better Start in Nova",
-      "body": "New characters begin with a starter kit: 20 HP Stims, 20 Flux Stims and 2,500 Creds, plus 5 stat points to place. Level 1 Hostiles pay a little more Creds and XP, and every weapon class now has its own Instructor in the Training Yard."
+      "body": "New characters begin with a starter kit: 20 HP Stims, 20 Flux Stims and 2,500 Creds, plus 5 stat points to place. Level 1 Hostiles pay a little more Creds and XP, and every weapon class now has its own Instructor in the Training Yard. Stims can be used at any time, even during a charge, with a short cooldown per kind, and new percentage Stims from the Apothecary restore a share of your HP or Flux."
     },
     {
       "title": "Defense Means Something Now",
@@ -12,10 +12,6 @@
     {
       "title": "Crits Reworked",
       "body": "Crit buffs add to your crit chance instead of multiplying it, with no cap. Crit chance on gear now comes from rings, and Tempering a ring adds on top of its own crit, and weapon Tuning raises Critical Damage instead. On the Cadence beat, a Redline three-hit crits with all three hits."
-    },
-    {
-      "title": "Stims When You Need Them",
-      "body": "Stims can be used at any time, even during a charge, with a short cooldown per kind. New percentage Stims restore a share of your HP or Flux, from the Apothecary."
     },
     {
       "title": "Bigger Moments",
