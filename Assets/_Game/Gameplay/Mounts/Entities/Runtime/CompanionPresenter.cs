@@ -1,4 +1,5 @@
 using Animancer;
+using KryticalNova.Core;
 using UnityEngine;
 
 namespace KryticalNova.Mounts.Entities
@@ -19,22 +20,36 @@ namespace KryticalNova.Mounts.Entities
         MountMaterialiser materialiser;
         AnimationClip playing;
         AnimancerState current;
-        byte warpsSeen;
+        byte warpsSeen, strikesSeen, pulsesSeen;
         bool leaving;
+        Transform owner;
+        bool ownerIsLocal;
+        float lungeStart = -1f;
+        // phase 3: a DPS strike is a quick lunge of the model toward the Hostile and back (procedural: the mounts have no attack clip)
+        const float LungeSeconds = 0.35f, LungeMetres = 0.6f;
         readonly RaycastHit[] hits = new RaycastHit[8];
 
         public bool Leaving => leaving;
         public int ShownStage => stage;
         public AnimationClip Playing => playing;
 
-        public static CompanionPresenter Make(MountDefinition mount, MountSettings settings, int stage, int ignoreLayer, Vector3 at, Quaternion rotation, byte warps)
+        /// <summary>Phase 3 (tests): strikes and heal pulses this view has played.</summary>
+        public int StrikesPlayed { get; private set; }
+        public int PulsesPlayed { get; private set; }
+
+        public static CompanionPresenter Make(MountDefinition mount, MountSettings settings, int stage, int ignoreLayer, Vector3 at, Quaternion rotation,
+            in CompanionView view, Transform owner, bool ownerIsLocal)
         {
             var go = new GameObject($"Companion ({(mount != null ? mount.displayName : "mount")})");
             var p = go.AddComponent<CompanionPresenter>();
             p.mount = mount;
             p.settings = settings;
             p.groundMask = Physics.DefaultRaycastLayers & ~(1 << ignoreLayer);
-            p.warpsSeen = warps;
+            p.warpsSeen = view.Warps;
+            p.strikesSeen = view.Strikes;   // a view that first meets it replays no old strike or pulse
+            p.pulsesSeen = view.Pulses;
+            p.owner = owner;
+            p.ownerIsLocal = ownerIsLocal;
             go.transform.SetPositionAndRotation(p.Grounded(at), rotation);
             p.Build(stage);
             p.Appear();
@@ -50,6 +65,32 @@ namespace KryticalNova.Mounts.Entities
             var state = (CompanionState)view.State;
             if (state == CompanionState.KnockedOut || state == CompanionState.Leaving) { Vanish(); return; }
             Animate(view.SpeedStep * CompanionView.SpeedStepMetres);
+            Fight(view);
+        }
+
+        // Phase 3, from the replicated counters only (so every view plays each once, the owner's included): a DPS strike lunges the model
+        // and plays the swing's feel (its sound, item 20's grass push); a HEALER pulse plays the heal's feel on the owner.
+        void Fight(in CompanionView view)
+        {
+            IGameFeelSink feel = ClientPresentationRegistry.Feel;
+            if (view.Strikes != strikesSeen)
+            {
+                strikesSeen = view.Strikes;
+                StrikesPlayed++;
+                lungeStart = Time.time;
+                feel?.Swing(transform, 3, ownerIsLocal, LungeSeconds);   // the whoosh on the owner's screen, as their own swings
+            }
+            if (view.Pulses != pulsesSeen)
+            {
+                pulsesSeen = view.Pulses;
+                PulsesPlayed++;
+                if (owner != null) feel?.Consumed(owner, true, false);
+            }
+            if (model == null) return;
+            float t = lungeStart < 0f ? 1f : (Time.time - lungeStart) / LungeSeconds;
+            float out01 = t >= 1f ? 0f : Mathf.Sin(Mathf.Clamp01(t) * Mathf.PI);   // out and back
+            model.transform.localPosition = Vector3.forward * (out01 * LungeMetres);
+            if (t >= 1f) lungeStart = -1f;
         }
 
         /// <summary>The ghost is gone: finish vanishing where it stands, then destroy everything.</summary>

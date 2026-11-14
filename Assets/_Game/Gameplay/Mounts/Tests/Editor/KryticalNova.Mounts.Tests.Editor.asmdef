@@ -30,7 +30,11 @@
         "Unity.Netcode.Runtime",
         "Unity.Collections",
         "UnityEngine.TestRunner",
-        "UnityEditor.TestRunner"
+        "UnityEditor.TestRunner",
+        "KryticalNova.Mounts.Entities",
+        "Unity.Mathematics",
+        "Unity.Entities",
+        "Unity.Burst"
     ],
     "includePlatforms": [
         "Editor"

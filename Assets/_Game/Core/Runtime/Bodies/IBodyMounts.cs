@@ -73,6 +73,11 @@ namespace KryticalNova.Core
         float CompanionRunSpeed { get; }
         /// <summary>Server: a hit on its body (damage to its HP).</summary>
         void HurtCompanion(float damage);
+        /// <summary>Server, phase 3 (day list 19): its DPS strikes and HEALER pulses so far this session (the Play proof reads them).</summary>
+        int CompanionStrikes { get; }
+        int CompanionPulses { get; }
+        /// <summary>Server, phase 3: counts one DPS strike or HEALER pulse (the companion's server system calls it).</summary>
+        void CountCompanionFight(bool strike);
         /// <summary>The owner's view: out, stance and each box's HP left (permille) and rest left (seconds), from the server.</summary>
         void MirrorCompanion(byte isOut, byte stance, ushort hp1, ushort hp2, ushort hp3, ushort hp4, uint rest1, uint rest2, uint rest3, uint rest4);
     }

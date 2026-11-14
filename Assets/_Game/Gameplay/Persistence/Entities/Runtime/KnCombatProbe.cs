@@ -128,7 +128,7 @@ namespace KryticalNova.Persistence.Entities
         static string CurrentHealth(GameObject body) =>
             body.TryGetComponent(out CombatEntity combat) ? combat.CurrentHealth.ToString("0") : "?";
 
-        static GameObject NearestHostileView(Vector3 from, string named)
+        internal static GameObject NearestHostileView(Vector3 from, string named)
         {
             World client = null;
             foreach (World w in World.All) if (w.IsClient() && !w.IsThinClient()) { client = w; break; }
