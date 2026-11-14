@@ -82,7 +82,7 @@ Shader "Krytical Nova/Sky Events"
             float4 _KN_StarBasisX, _KN_StarBasisY, _KN_StarBasisZ;
             float4 _KN_Nebula;        // xyz direction, w amount
             float4 _KN_NebulaParams;  // x tan(half size)
-            #define KN_MAX_STREAKS 16   // SkyNow.MaxStreaks
+            #define KN_MAX_STREAKS 24   // SkyNow.MaxStreaks
             float4 _KN_MeteorA[KN_MAX_STREAKS];  // xyz tail end of the glowing trail, w trail amount
             float4 _KN_MeteorB[KN_MAX_STREAKS];  // xyz head, w head amount (+2 for an Emberfall streak)
             float4 _KN_StreakParams;  // x 1/(2 sigma^2) of a lone streak's trail, y of its head (radians), z streaks in use
@@ -145,10 +145,11 @@ Shader "Krytical Nova/Sky Events"
                 if (dot(d, mid) < dot(mid, mid) - 0.01) return;   // far from this streak: skip (cheap)
                 float t = saturate(dot(d - tail, seg) / max(dot(seg, seg), 1e-8));
                 float dist = length(d - (tail + seg * t));
-                float wt = lerp(0.3, 1.0, t);
+                float wt = lerp(0.55, 1.0, t);
                 float kTrail = shower ? _KN_ShowerParams.x : _KN_StreakParams.x;
                 float kHead = shower ? _KN_ShowerParams.y : _KN_StreakParams.y;
-                half taper = t * t * (3.0 - 2.0 * t);
+                // Unity turn, part 3: the whole trail must read (the smoothstep left only the last fifth visible): linear, soft at the tail
+                half taper = t * smoothstep(0.0, 0.2, t);
                 half trailGlow = exp(-dist * dist * kTrail / (wt * wt)) * taper * a.w;
                 float dh = length(d - head);
                 half glow = exp(-dh * dh * kHead) * headAmt;

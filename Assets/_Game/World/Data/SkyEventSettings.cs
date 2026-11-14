@@ -69,9 +69,9 @@ namespace KryticalNova.World
         [Tooltip("Real seconds one streak lasts (its head flies for the first 80 %, the trail fades out smoothly after).")]
         [Range(0.2f, 4f)] public float streakSeconds = 1.6f;
         [Tooltip("Half-width of a streak's trail in degrees (owner's Unity check, 14 Nov: 0.06 was too thin to see).")]
-        [Range(0.02f, 1f)] public float streakWidthDegrees = 0.15f;
+        [Range(0.02f, 1f)] public float streakWidthDegrees = 0.35f;
         [Tooltip("Size of a streak's glowing head in degrees.")]
-        [Range(0.02f, 1.5f)] public float streakHeadDegrees = 0.3f;
+        [Range(0.02f, 1.5f)] public float streakHeadDegrees = 0.25f;
         [Tooltip("Length of a streak in degrees of sky.")]
         [Range(2f, 60f)] public float streakDegrees = 21f;
         [Tooltip("Share of the streak's path the glowing trail covers behind the head (owner, part 3: longer trails).")]
@@ -81,19 +81,19 @@ namespace KryticalNova.World
 
         [Header("Meteor shower: The Emberfall (once a game year)")]
         [Tooltip("Streaks per real minute at the peak of the shower night.")]
-        [Range(1f, 600f)] public float showerStreaksPerMinute = 300f;
+        [Range(1f, 900f)] public float showerStreaksPerMinute = 480f;
         [Tooltip("Direction the shower radiates from: compass heading and elevation in degrees.")]
         public Vector2 showerRadiant = new Vector2(70f, 55f);
         [Tooltip("Real seconds one Emberfall streak lasts (longer than a lone shooting star: long glowing tails, owner's references 14 Nov).")]
-        [Range(0.5f, 6f)] public float showerStreakSeconds = 2.4f;
+        [Range(0.5f, 6f)] public float showerStreakSeconds = 2.8f;
         [Tooltip("Length of an Emberfall streak in degrees of sky.")]
-        [Range(5f, 80f)] public float showerStreakDegrees = 36f;
+        [Range(5f, 80f)] public float showerStreakDegrees = 45f;
         [Tooltip("Nearest and farthest a streak starts from the radiant, in degrees (far from it, the streaks run nearly parallel).")]
         public Vector2 showerSpread = new Vector2(10f, 70f);
         [Tooltip("Half-width of an Emberfall trail in degrees (wider than a lone streak, so they glow).")]
-        [Range(0.02f, 1.5f)] public float showerWidthDegrees = 0.22f;
+        [Range(0.02f, 1.5f)] public float showerWidthDegrees = 0.5f;
         [Tooltip("Size of an Emberfall head in degrees.")]
-        [Range(0.02f, 2f)] public float showerHeadDegrees = 0.45f;
+        [Range(0.02f, 2f)] public float showerHeadDegrees = 0.4f;
         [Tooltip("Hot white-blue head colour (HDR, linear: above 1 blooms).")]
         [ColorUsage(false, true)] public Color showerHeadColor = new Color(2.6f, 3.0f, 3.6f);
         [Tooltip("Glowing blue tail colour (HDR, linear: above 1 blooms).")]
@@ -174,8 +174,8 @@ namespace KryticalNova.World
         [Range(20f, 600f)] public float migrationSeconds = 150f;
 
         [Header("World Effects (Settings, Graphics): Low keeps the sky simpler, High is the authored look")]
-        [Tooltip("Most streaks drawn at once at World Effects Low, Medium, High, Ultra (the shader has SkyNow.MaxStreaks = 16 slots; only The Emberfall uses more than one).")]
-        public int[] streaksByWorldEffects = { 6, 10, 16, 16 };
+        [Tooltip("Most streaks drawn at once at World Effects Low, Medium, High, Ultra (the shader has SkyNow.MaxStreaks = 24 slots; only The Emberfall uses more than one).")]
+        public int[] streaksByWorldEffects = { 8, 14, 24, 24 };
         [Tooltip("Whether the aurora shows at World Effects Low (the performance plan: off on Low).")]
         public bool auroraOnLow = false;
 

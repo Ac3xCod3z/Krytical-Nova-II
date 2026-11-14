@@ -41,7 +41,7 @@ namespace KryticalNova.World
     public struct SkyNow
     {
         /// <summary>Streak slots (owner 14 Nov, part 3: The Emberfall dense at its peak; a lone shooting star uses one).</summary>
-        public const int MaxStreaks = 16;
+        public const int MaxStreaks = 24;
 
         /// <summary>The dome's turn in degrees: the right ascension on the meridian.</summary>
         public float DomeAngle;
@@ -54,7 +54,7 @@ namespace KryticalNova.World
         public int NebulaLook;
 
         public int StreakCount;
-        public SkyStreak S0, S1, S2, S3, S4, S5, S6, S7, S8, S9, S10, S11, S12, S13, S14, S15;
+        public SkyStreak S0, S1, S2, S3, S4, S5, S6, S7, S8, S9, S10, S11, S12, S13, S14, S15, S16, S17, S18, S19, S20, S21, S22, S23;
         public bool ShowerNight;
 
         public float Comet;
@@ -80,12 +80,12 @@ namespace KryticalNova.World
         public float Migration;
         public float MigrationHeading;
 
-        public SkyStreak Streak(int i) => i switch { 0 => S0, 1 => S1, 2 => S2, 3 => S3, 4 => S4, 5 => S5, 6 => S6, 7 => S7, 8 => S8, 9 => S9, 10 => S10, 11 => S11, 12 => S12, 13 => S13, 14 => S14, _ => S15 };
+        public SkyStreak Streak(int i) => i switch { 0 => S0, 1 => S1, 2 => S2, 3 => S3, 4 => S4, 5 => S5, 6 => S6, 7 => S7, 8 => S8, 9 => S9, 10 => S10, 11 => S11, 12 => S12, 13 => S13, 14 => S14, 15 => S15, 16 => S16, 17 => S17, 18 => S18, 19 => S19, 20 => S20, 21 => S21, 22 => S22, _ => S23 };
 
         public void AddStreak(in SkyStreak s)
         {
             if (StreakCount >= MaxStreaks) return;
-            switch (StreakCount) { case 0: S0 = s; break; case 1: S1 = s; break; case 2: S2 = s; break; case 3: S3 = s; break; case 4: S4 = s; break; case 5: S5 = s; break; case 6: S6 = s; break; case 7: S7 = s; break; case 8: S8 = s; break; case 9: S9 = s; break; case 10: S10 = s; break; case 11: S11 = s; break; case 12: S12 = s; break; case 13: S13 = s; break; case 14: S14 = s; break; default: S15 = s; break; }
+            switch (StreakCount) { case 0: S0 = s; break; case 1: S1 = s; break; case 2: S2 = s; break; case 3: S3 = s; break; case 4: S4 = s; break; case 5: S5 = s; break; case 6: S6 = s; break; case 7: S7 = s; break; case 8: S8 = s; break; case 9: S9 = s; break; case 10: S10 = s; break; case 11: S11 = s; break; case 12: S12 = s; break; case 13: S13 = s; break; case 14: S14 = s; break; case 15: S15 = s; break; case 16: S16 = s; break; case 17: S17 = s; break; case 18: S18 = s; break; case 19: S19 = s; break; case 20: S20 = s; break; case 21: S21 = s; break; case 22: S22 = s; break; default: S23 = s; break; }
             StreakCount++;
         }
     }
