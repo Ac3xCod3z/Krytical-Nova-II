@@ -65,4 +65,22 @@ namespace KryticalNova.World
             return 1f;
         }
     }
+
+    /// <summary>
+    /// One kind of tree's fall colours (owner, 14 Nov 2026: every kind has its own, a forest is a mix). Its index in
+    /// <see cref="SeasonSettings.leafKinds"/> (from 1) is stamped on its prefabs' renderers (rendering layer bits 8-11) by the Tag Tree
+    /// Kinds builder, so the foliage shader picks it with no script on any tree.
+    /// </summary>
+    [Serializable]
+    public sealed class LeafKind
+    {
+        public string name = "Maple";
+        [Tooltip("Prefabs whose name contains any of these (any case) are this kind.")]
+        public List<string> prefabNameContains = new List<string>();
+        [Tooltip("Evergreen (pines, firs): never turns, never drops; frost and snow only.")]
+        public bool evergreen;
+        [Tooltip("The colour at the height of the turn, and the colour it fades to as the leaves fall. Each tree picks its own mix of the two.")]
+        public Color peak = new Color(0.78f, 0.16f, 0.08f);
+        public Color late = new Color(0.55f, 0.3f, 0.12f);
+    }
 }

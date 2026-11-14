@@ -16,13 +16,21 @@ namespace KryticalNova.DevTools
         const string NoServer = "No season clock here: run this on the server (or the host / the Editor's Play).";
         const string NoSettings = "The seasons have no settings (World/Resources/SeasonSettings is missing).";
 
-        [Command("gm.season", "Seasons: gm.season status | spring | summer | autumn | winter [blend seconds] (holds it) | auto [blend seconds] (back to the calendar) | climate auto | winter | temperate (this map, until restart).")]
+        [Command("gm.season", "Seasons: gm.season status | spring | summer | autumn | winter [blend seconds] (holds it) | auto [blend seconds] (back to the calendar) | climate auto | winter | temperate (this map, until restart) | progress <0-1> | progress auto (how far into the season it looks: autumn 0.2 turning, 0.9 almost bare).")]
         static string SeasonCommand(string what, string arg)
         {
             SeasonServerSystem clock = SeasonServerSystem.Find();
             if (clock == null) return NoServer;
             string w = (what ?? string.Empty).Trim().ToLowerInvariant();
             float blend = -1f;
+            if (w == "progress")
+            {
+                string a = (arg ?? string.Empty).Trim().ToLowerInvariant();
+                float p = -1f;
+                if (a != "auto" && a != "calendar" && (!float.TryParse(a, NumberStyles.Float, CultureInfo.InvariantCulture, out p) || p < 0f || p > 1f))
+                    return "gm.season progress <0-1> | auto, for example gm.season progress 0.9 (late in the season)";
+                return clock.SetProgress(p) ? (p < 0f ? "Season progress: the calendar's. " : $"Season progress held at {p:0.00}. ") + Status(clock) : NoSettings;
+            }
             if (w != "climate" && !string.IsNullOrWhiteSpace(arg) && !float.TryParse(arg, NumberStyles.Float, CultureInfo.InvariantCulture, out blend))
                 return "The blend is in seconds, for example: gm.season winter 20";
             switch (w)
@@ -76,8 +84,10 @@ namespace KryticalNova.DevTools
                 DateTime turn = DateTime.UnixEpoch.AddSeconds(SeasonRules.NextTurnUnix(settings.Calendar, clock.UnixOf(now)));
                 next = $"; next season {turn:ddd d MMM HH:mm} UTC ({turn.ToLocalTime():ddd HH:mm} server time)";
             }
-            return $"Season: {s.DominantAt(now)}{hold}{blend}; calendar {(Season)s.CalendarSeason} day {day} of {days}; snow {s.SnowAt(now):0.00} " +
-                   $"({(s.SnowRate > 0 ? "piling up" : s.SnowRate < 0 ? "melting" : "steady")}); {light}{zone}{next}.";
+            string ceiling = s.SnowRate > 0 && s.SnowCeiling < 1f ? $" toward {s.SnowCeiling:0.00}" : "";
+            string progress = $"{s.ProgressAt(now) * 100f:0} % into it{(s.Progress >= 0f ? " (GM)" : "")}";
+            return $"Season: {s.DominantAt(now)}{hold}{blend}, {progress}; calendar {(Season)s.CalendarSeason} day {day} of {days}; snow {s.SnowAt(now):0.00} " +
+                   $"({(s.SnowRate > 0 ? "piling up" + ceiling : s.SnowRate < 0 ? "melting" : "steady")}); {light}{zone}{next}.";
         }
 
         static string Hours(float day01)

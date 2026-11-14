@@ -1,12 +1,11 @@
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Experimental.Rendering;
 
 namespace KryticalNova.Rendering
 {
     /// <summary>
-    /// The snow track map (owner's DAY list item 21): footprints and trails in the season's snow. A small R16 picture of the ground round
-    /// the game camera (SnowTrack.compute), pressed by the same <c>_KN_TrampleSources</c> that bend the grass, filling back in over
+    /// The footprint map (owner's DAY list item 21; owner 14 Nov 2026: prints where feet plant, no trail): an R16 picture of the ground
+    /// round the game camera (SnowTrack.compute) into which each frame's <see cref="SnowPrints"/> are stamped, filling back in over
     /// minutes. The ground and grass shaders read one texel of it (<c>KNSeason.hlsl</c>). Nothing new is networked: remote characters
     /// already move on every client. Presentation only, per machine; it knows no gameplay. Released when there is no snow.
     /// </summary>
@@ -17,16 +16,15 @@ namespace KryticalNova.Rendering
         static readonly int ShiftId = Shader.PropertyToID("_Shift");
         static readonly int MapId = Shader.PropertyToID("_Map");
         static readonly int FillId = Shader.PropertyToID("_Fill");
-        static readonly int SourcesId = Shader.PropertyToID("_KN_TrampleSources");
-        static readonly int SourceCountId = Shader.PropertyToID("_KN_TrampleSourceCount");
+        static readonly int PrintsId = Shader.PropertyToID("_Prints");
+        static readonly int PrintShapesId = Shader.PropertyToID("_PrintShapes");
+        static readonly int PrintCountId = Shader.PropertyToID("_PrintCount");
         /// <summary>The map, for the ground and grass shaders.</summary>
         public static readonly int TextureId = Shader.PropertyToID("_KN_SnowTrack");
         /// <summary>xy = world XZ of the map's corner, z = 1 / its width in metres, w = 1 while there is a map.</summary>
         public static readonly int RectId = Shader.PropertyToID("_KN_SnowTrackRect");
-        const int MaxSources = 32; // SnowTrack.compute KN_MAX_TRAMPLERS
-
-        readonly List<Vector4> m_Sources = new List<Vector4>(MaxSources);
-        readonly Vector4[] m_Sent = new Vector4[MaxSources];
+        readonly Vector4[] m_Where = new Vector4[SnowPrints.MaxPerFrame];
+        readonly Vector4[] m_Shapes = new Vector4[SnowPrints.MaxPerFrame];
         readonly int[] m_Shift = new int[2];
         RenderTexture m_Before, m_After;
         int m_Kernel = -1;
@@ -38,11 +36,10 @@ namespace KryticalNova.Rendering
         public bool Allocated => m_Before != null;
 
         /// <summary>
-        /// Once a frame: moves the map round <paramref name="centre"/>, lets old marks fill in (<paramref name="fillSeconds"/> to about 5 %)
-        /// and presses this frame's feet in. <paramref name="footScale"/> scales each trampler's radius (a footprint is narrower than a
-        /// grass push).
+        /// Once a frame: moves the map round <paramref name="centre"/>, lets old prints fill in (<paramref name="fillSeconds"/> to about 5 %)
+        /// and stamps this frame's <see cref="SnowPrints"/>.
         /// </summary>
-        public void Update(ComputeShader shader, Vector3 centre, float metres, int texels, float fillSeconds, float footScale)
+        public void Update(ComputeShader shader, Vector3 centre, float metres, int texels, float fillSeconds)
         {
             if (shader == null || Time.frameCount == m_LastFrame) return;
             m_LastFrame = Time.frameCount;
@@ -57,10 +54,7 @@ namespace KryticalNova.Rendering
             m_Corner = cornerNow;
             m_HasCorner = true;
 
-            m_Sources.Clear();
-            Shader.GetGlobalVectorArray(SourcesId, m_Sources);
-            int count = Mathf.Min(Mathf.Min(Shader.GetGlobalInt(SourceCountId), m_Sources.Count), MaxSources);
-            for (int i = 0; i < MaxSources; i++) m_Sent[i] = i < count ? m_Sources[i] : Vector4.zero;
+            int count = SnowPrints.Take(m_Where, m_Shapes);
 
             // e^-3 ~ 5 % left after fillSeconds
             float keep = fillSeconds > 0.01f ? Mathf.Exp(-3f * Time.deltaTime / fillSeconds) : 0f;
@@ -69,9 +63,10 @@ namespace KryticalNova.Rendering
             m_Shift[0] = shift.x; m_Shift[1] = shift.y;
             shader.SetInts(ShiftId, m_Shift);
             shader.SetVector(MapId, new Vector4(m_Corner.x * texel, m_Corner.y * texel, texel, texels));
-            shader.SetVector(FillId, new Vector4(keep, footScale, 0f, 0f));
-            shader.SetVectorArray(SourcesId, m_Sent);
-            shader.SetInt(SourceCountId, count);
+            shader.SetVector(FillId, new Vector4(keep, 0f, 0f, 0f));
+            shader.SetVectorArray(PrintsId, m_Where);
+            shader.SetVectorArray(PrintShapesId, m_Shapes);
+            shader.SetInt(PrintCountId, count);
             int groups = Mathf.CeilToInt(texels / 8f);
             shader.Dispatch(m_Kernel, groups, groups, 1);
 
@@ -113,6 +108,7 @@ namespace KryticalNova.Rendering
         public void Release()
         {
             Shader.SetGlobalVector(RectId, Vector4.zero);
+            SnowPrints.Clear();
             Kill(m_Before);
             Kill(m_After);
             m_Before = m_After = null;

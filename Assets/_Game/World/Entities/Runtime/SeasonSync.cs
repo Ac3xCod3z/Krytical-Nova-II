@@ -7,25 +7,25 @@ using Unity.NetCode;
 
 namespace KryticalNova.World.Entities
 {
-    /// <summary>The season as the server sends it (owner's DAY list item 21): <see cref="SeasonState"/> field for field, 48 bytes.</summary>
+    /// <summary>The season as the server sends it (owner's DAY list item 21): <see cref="SeasonState"/> field for field, 56 bytes.</summary>
     public struct SeasonStateRpc : IRpcCommand
     {
         public double BlendStart, SeasonStart, SnowAnchor;
-        public float BlendSeconds, SeasonSeconds, SnowCover, SnowRate, SnowFloor;
+        public float BlendSeconds, SeasonSeconds, SnowCover, SnowRate, SnowFloor, SnowCeiling, Progress;
         public byte FromSeason, ToSeason, CalendarSeason, Flags;
 
         public static SeasonStateRpc Of(in SeasonState s) => new SeasonStateRpc
         {
             BlendStart = s.BlendStart, SeasonStart = s.SeasonStart, SnowAnchor = s.SnowAnchor, BlendSeconds = s.BlendSeconds,
             SeasonSeconds = s.SeasonSeconds, SnowCover = s.SnowCover, SnowRate = s.SnowRate, SnowFloor = s.SnowFloor,
-            FromSeason = s.FromSeason, ToSeason = s.ToSeason, CalendarSeason = s.CalendarSeason, Flags = s.Flags,
+            SnowCeiling = s.SnowCeiling, Progress = s.Progress, FromSeason = s.FromSeason, ToSeason = s.ToSeason, CalendarSeason = s.CalendarSeason, Flags = s.Flags,
         };
 
         public SeasonState State => new SeasonState
         {
             BlendStart = BlendStart, SeasonStart = SeasonStart, SnowAnchor = SnowAnchor, BlendSeconds = BlendSeconds,
             SeasonSeconds = SeasonSeconds, SnowCover = SnowCover, SnowRate = SnowRate, SnowFloor = SnowFloor,
-            FromSeason = FromSeason, ToSeason = ToSeason, CalendarSeason = CalendarSeason, Flags = Flags,
+            SnowCeiling = SnowCeiling, Progress = Progress, FromSeason = FromSeason, ToSeason = ToSeason, CalendarSeason = CalendarSeason, Flags = Flags,
         };
     }
 
@@ -146,6 +146,8 @@ namespace KryticalNova.World.Entities
                 m_State.BlendSeconds = (float)calendar.TransitionSeconds;
                 m_State.SnowAnchor = now;
                 m_State.SnowRate = float.NaN;   // anchored below
+                m_State.SnowCeiling = 1f;
+                m_State.Progress = -1f;         // the calendar's share of the season
                 m_Hold = false;
             }
             else if (!m_Hold && m_State.To != cal.Season)
@@ -171,20 +173,21 @@ namespace KryticalNova.World.Entities
             SeasonWeather.Extra = m_WeatherProfile != null ? m_WeatherProfile.extraNext : null;
 
             // the snow: re-anchored only when its rate or floor changes (a new weather, sunrise, sunset, a GM)
-            float rate = 0f;
+            float coverNow = m_Started ? m_State.SnowAt(now) : 0f;
+            var trend = new SnowTrend { Rate = 0f, Ceiling = 1f };
             (bool ok, SeasonWeatherNow w) = WeatherSource != null ? WeatherSource() : DefaultWeather();
             if (ok)
             {
                 bool night = SeasonRules.IsNight(w.Clock01, DaylightShare(s, now));
-                rate = SeasonRules.SnowRate(s.Rates, w.Falling, w.Intensity, night, dominant, alwaysWinter);
+                trend = SeasonRules.SnowTrendOf(s.Rates, w.Falling, w.Intensity, night, dominant, alwaysWinter, coverNow);
             }
-            if (!m_Started || !rate.Equals(m_State.SnowRate) || !floor.Equals(m_State.SnowFloor))
+            if (!m_Started || !trend.Rate.Equals(m_State.SnowRate) || !floor.Equals(m_State.SnowFloor) || !trend.Ceiling.Equals(m_State.SnowCeiling))
             {
-                float cover = m_Started ? m_State.SnowAt(now) : 0f;
-                m_State.SnowCover = Math.Clamp(Math.Max(cover, floor), 0f, 1f);
+                m_State.SnowCover = Math.Clamp(Math.Max(coverNow, floor), 0f, 1f);
                 m_State.SnowAnchor = now;
-                m_State.SnowRate = rate;
+                m_State.SnowRate = trend.Rate;
                 m_State.SnowFloor = floor;
+                m_State.SnowCeiling = trend.Ceiling;
             }
             m_Started = true;
             SeasonView.Server = m_State;
@@ -281,7 +284,21 @@ namespace KryticalNova.World.Entities
         {
             if (!Step()) return false;
             m_State.SnowCover = Math.Clamp(Math.Max(cover, m_State.SnowFloor), 0f, 1f);
+            m_State.SnowCeiling = Math.Max(m_State.SnowCeiling, m_State.SnowCover);
             m_State.SnowAnchor = Now;
+            SeasonView.Server = m_State;
+            Send();
+            return true;
+        }
+
+        /// <summary>
+        /// Fixes how far into its season the world looks (0-1: early Autumn green turning, late Autumn bare), for GM shows and tests;
+        /// below 0 = back to the calendar's. False with no settings.
+        /// </summary>
+        public bool SetProgress(float progress)
+        {
+            if (!Step()) return false;
+            m_State.Progress = progress < 0f ? -1f : Math.Clamp(progress, 0f, 1f);
             SeasonView.Server = m_State;
             Send();
             return true;

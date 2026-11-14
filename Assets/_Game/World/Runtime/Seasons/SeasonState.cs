@@ -25,6 +25,10 @@ namespace KryticalNova.World
         public double SnowAnchor;
         public float SnowRate;
         public float SnowFloor;
+        /// <summary>The cover a build-up stops at (light snow stops low, a blizzard high); 1 while it melts.</summary>
+        public float SnowCeiling;
+        /// <summary>A GM's fixed share of the season (gm.season progress), 0-1; below 0 = the calendar's.</summary>
+        public float Progress;
         public byte Flags;
 
         public Season From => (Season)FromSeason;
@@ -39,13 +43,34 @@ namespace KryticalNova.World
         public Season DominantAt(double now) => SeasonRules.Dominant(From, To, BlendAt(now));
 
         /// <summary>The snow cover at <paramref name="now"/>, 0-1.</summary>
-        public float SnowAt(double now) => SeasonRules.SnowCover(SnowCover, SnowRate, SnowAnchor, now, SnowFloor);
+        public float SnowAt(double now) => SeasonRules.SnowCover(SnowCover, SnowRate, SnowAnchor, now, SnowFloor, SnowCeiling);
+
+        /// <summary>How far into its season the world is at <paramref name="now"/>, 0-1 (a GM's fixed share, else the calendar's).</summary>
+        public float ProgressAt(double now)
+        {
+            if (Progress >= 0f) return Math.Clamp(Progress, 0f, 1f);
+            if (SeasonSeconds <= 0f) return 0.5f;
+            return (float)Math.Clamp((now - SeasonStart) / SeasonSeconds, 0.0, 1.0);
+        }
+
+        /// <summary>
+        /// The leaves at <paramref name="now"/>: the season blended from (as at its end) into the one blended to (at its progress). An
+        /// always-winter map keeps Winter's.
+        /// </summary>
+        public FoliageNow FoliageAt(double now, in FoliageCurve curve)
+        {
+            if (AlwaysWinter) return SeasonRules.FoliageAt(Season.Winter, 0.5f, curve);
+            FoliageNow to = SeasonRules.FoliageAt(To, ProgressAt(now), curve);
+            float b = BlendAt(now);
+            if (b >= 1f || From == To) return to;
+            return FoliageNow.Lerp(SeasonRules.FoliageAt(From, 1f, curve), to, b);
+        }
 
         public bool Equals(SeasonState o) =>
             FromSeason == o.FromSeason && ToSeason == o.ToSeason && BlendStart.Equals(o.BlendStart) && BlendSeconds.Equals(o.BlendSeconds)
             && SeasonStart.Equals(o.SeasonStart) && SeasonSeconds.Equals(o.SeasonSeconds) && CalendarSeason == o.CalendarSeason
             && SnowCover.Equals(o.SnowCover) && SnowAnchor.Equals(o.SnowAnchor) && SnowRate.Equals(o.SnowRate) && SnowFloor.Equals(o.SnowFloor)
-            && Flags == o.Flags;
+            && SnowCeiling.Equals(o.SnowCeiling) && Progress.Equals(o.Progress) && Flags == o.Flags;
 
         public override bool Equals(object obj) => obj is SeasonState o && Equals(o);
 

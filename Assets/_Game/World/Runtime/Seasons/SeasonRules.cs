@@ -35,7 +35,35 @@ namespace KryticalNova.World
     /// <summary>The snow rates in cover per second (from <see cref="SeasonSettings.Rates"/>).</summary>
     public struct SnowRates
     {
-        public float BuildPerSecond, MeltDay, NightFactor, RainFactor, WinterMeltDay, WinterNightFactor;
+        public float LightIntensity, HeavyIntensity, LightBuildPerSecond, HeavyBuildPerSecond, LightCap, HeavyCap;
+        public float MeltDay, NightFactor, RainFactor, WinterMeltDay, WinterNightFactor;
+    }
+
+    /// <summary>Where the snow is heading now: its rate (cover per second, signed) and the cover a build-up stops at.</summary>
+    public struct SnowTrend
+    {
+        public float Rate, Ceiling;
+    }
+
+    /// <summary>The leaves' year in shares of a season (from <see cref="SeasonSettings.Foliage"/>).</summary>
+    public struct FoliageCurve
+    {
+        public float TurnBy, DropFrom, Bare, LeafOutBy, DullBy;
+    }
+
+    /// <summary>
+    /// The leaves at a moment: <see cref="Turn"/> 0 green .. 1 every kind's fall colour, <see cref="Canopy"/> 1 full .. bare share,
+    /// <see cref="Dull"/> 0 .. 1 the autumn dull tone on grass and leaves, <see cref="Falling"/> 0 .. 1 how many leaves come down.
+    /// </summary>
+    public struct FoliageNow
+    {
+        public float Turn, Canopy, Dull, Falling;
+
+        public static FoliageNow Lerp(in FoliageNow a, in FoliageNow b, float t) => new FoliageNow
+        {
+            Turn = a.Turn + (b.Turn - a.Turn) * t, Canopy = a.Canopy + (b.Canopy - a.Canopy) * t,
+            Dull = a.Dull + (b.Dull - a.Dull) * t, Falling = a.Falling + (b.Falling - a.Falling) * t,
+        };
     }
 
     /// <summary>
@@ -103,24 +131,100 @@ namespace KryticalNova.World
         }
 
         /// <summary>
-        /// How fast the snow cover changes now (cover per second, signed): it piles up while it snows, melts by day, lingers at night,
-        /// washes off in rain, and lasts in Winter. An always-winter map melts as in Winter.
+        /// Where the snow cover is heading now (owner, 14 Nov 2026: like real life, light snow builds slowly and stays low, bad snow
+        /// builds fast and high). While it snows it builds toward a ceiling: light snow slowly to a low ceiling, a blizzard fast to a high
+        /// one (blended between by intensity; flurries under light snow build slower still). Snow already deeper than the ceiling stays as
+        /// it is while it snows. Otherwise it melts by day, lingers at night, washes off in rain and lasts in Winter (an always-winter map
+        /// melts as in Winter).
         /// </summary>
-        public static float SnowRate(in SnowRates r, PrecipitationType falling, float intensity, bool night, Season season, bool alwaysWinter)
+        public static SnowTrend SnowTrendOf(in SnowRates r, PrecipitationType falling, float intensity, bool night, Season season,
+            bool alwaysWinter, float coverNow)
         {
-            if (falling == PrecipitationType.Snow && intensity > 0.001f) return r.BuildPerSecond * intensity;
+            if (falling == PrecipitationType.Snow && intensity > 0.001f)
+            {
+                float t = SnowSeverity(r, intensity);
+                float cap = r.LightCap + (r.HeavyCap - r.LightCap) * t;
+                float rate = r.LightBuildPerSecond + (r.HeavyBuildPerSecond - r.LightBuildPerSecond) * t;
+                if (r.LightIntensity > 0.001f && intensity < r.LightIntensity) rate *= intensity / r.LightIntensity;
+                return coverNow >= cap ? new SnowTrend { Rate = 0f, Ceiling = 1f } : new SnowTrend { Rate = rate, Ceiling = cap };
+            }
             bool winter = alwaysWinter || season == Season.Winter;
             float melt = winter ? r.WinterMeltDay * (night ? r.WinterNightFactor : 1f) : r.MeltDay * (night ? r.NightFactor : 1f);
             if (falling == PrecipitationType.Rain && intensity > 0.001f) melt = Math.Max(melt, r.MeltDay) * r.RainFactor;
-            return -melt;
+            return new SnowTrend { Rate = -melt, Ceiling = 1f };
         }
 
-        /// <summary>The cover at <paramref name="now"/> from an anchor: never below the floor, never above 1.</summary>
-        public static float SnowCover(float coverAtAnchor, float ratePerSecond, double anchor, double now, float floor)
+        /// <summary>
+        /// The slope rule's two shader numbers (owner, 14 Nov 2026: snow settles on what is flat enough, like real life): the cosine of the
+        /// steepest angle snow holds on, and one over the span to the angle it settles fully under. <c>KNSnowSlope</c> uses them.
+        /// </summary>
+        public static (float CosNone, float InvRange) SnowSlopeShape(float fullBelowDegrees, float noneAboveDegrees)
+        {
+            float none = Math.Clamp(noneAboveDegrees, 1f, 90f);
+            float full = Math.Clamp(Math.Min(fullBelowDegrees, none - 1f), 0f, 89f);
+            float cosNone = (float)Math.Cos(none * Math.PI / 180.0), cosFull = (float)Math.Cos(full * Math.PI / 180.0);
+            return (cosNone, 1f / Math.Max(0.01f, cosFull - cosNone));
+        }
+
+        /// <summary>How much snow a surface holds by its slope, 0-1: the C# twin of <c>KNSnowSlope</c> (normalY = the world normal's up part).</summary>
+        public static float SnowSlope(float normalY, float fullBelowDegrees, float noneAboveDegrees)
+        {
+            var (cosNone, inv) = SnowSlopeShape(fullBelowDegrees, noneAboveDegrees);
+            return Math.Clamp((normalY - cosNone) * inv, 0f, 1f);
+        }
+
+        /// <summary>0 at light snow (or less), 1 at the worst snow: how far toward a blizzard this intensity is.</summary>
+        public static float SnowSeverity(in SnowRates r, float intensity)
+        {
+            float span = r.HeavyIntensity - r.LightIntensity;
+            if (span <= 0.0001f) return intensity >= r.HeavyIntensity ? 1f : 0f;
+            return Math.Clamp((intensity - r.LightIntensity) / span, 0f, 1f);
+        }
+
+        /// <summary>The cover at <paramref name="now"/> from an anchor: never below the floor, never above the ceiling (or 1).</summary>
+        public static float SnowCover(float coverAtAnchor, float ratePerSecond, double anchor, double now, float floor, float ceiling = 1f)
         {
             double c = coverAtAnchor + ratePerSecond * Math.Max(0.0, now - anchor);
             float lo = Math.Clamp(floor, 0f, 1f);
-            return (float)Math.Clamp(c, lo, 1.0);
+            float hi = Math.Max(lo, Math.Clamp(ceiling <= 0f ? 1f : ceiling, 0f, 1f));
+            return (float)Math.Clamp(c, lo, hi);
+        }
+
+        /// <summary>
+        /// The leaves in a season at <paramref name="progress"/> (0 its first day .. 1 its last), owner 14 Nov 2026: through Autumn
+        /// the grass and leaves go dull, every kind turns its own colour, and late in Autumn the canopies thin until they are almost bare
+        /// before Winter; bare through Winter; back early in Spring. Evergreens ignore Turn and Canopy (the shader keeps them).
+        /// </summary>
+        public static FoliageNow FoliageAt(Season season, float progress, in FoliageCurve c)
+        {
+            float p = Math.Clamp(progress, 0f, 1f);
+            float bare = Math.Clamp(c.Bare, 0f, 1f);
+            switch (season)
+            {
+                case Season.Spring:
+                    return new FoliageNow { Turn = 0f, Canopy = bare + (1f - bare) * Smooth(0f, Math.Max(0.01f, c.LeafOutBy), p) };
+                case Season.Summer:
+                    return new FoliageNow { Canopy = 1f };
+                case Season.Autumn:
+                {
+                    float drop = Smooth(Math.Clamp(c.DropFrom, 0f, 0.99f), 1f, p);
+                    float turn = Smooth(0f, Math.Max(0.01f, c.TurnBy), p);
+                    // most leaves come down while the canopy thins, a few from the first turn
+                    float falling = Math.Clamp(turn * 0.35f + drop * (1f - drop) * 4f * 0.65f + (p > c.DropFrom && p < 1f ? 0.25f : 0f), 0f, 1f);
+                    return new FoliageNow
+                    {
+                        Turn = turn, Canopy = 1f - (1f - bare) * drop, Dull = Smooth(0f, Math.Max(0.01f, c.DullBy), p), Falling = falling,
+                    };
+                }
+                default:
+                    return new FoliageNow { Turn = 1f, Canopy = bare, Dull = 1f, Falling = 0f };
+            }
+        }
+
+        static float Smooth(float from, float to, float x)
+        {
+            float t = Math.Clamp((x - from) / Math.Max(1e-4f, to - from), 0f, 1f);
+            return t * t * (3f - 2f * t);
         }
 
         /// <summary>The season that shows more in a blend (the one blended to from halfway).</summary>

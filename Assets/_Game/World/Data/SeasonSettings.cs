@@ -36,9 +36,25 @@ namespace KryticalNova.World
         public SeasonProfile autumn;
         public SeasonProfile winter;
 
-        [Header("Snow cover (server): minutes for a full change")]
-        [Tooltip("Minutes of snowing at intensity 1 to go from bare to full cover (Snow 0.6 takes this / 0.6).")]
-        [Min(0.1f)] public float buildMinutesAtFullSnow = 10f;
+        [Header("Snow build-up (server; owner 14 Nov: light snow slow and low, bad snow fast and high)")]
+        [Tooltip("Snow intensity counted as light snow (WP_Snow is 0.6) and as the worst (WP_Blizzard is 1). In between, the rate and the " +
+                 "height it stops at are blended.")]
+        [Range(0f, 1f)] public float lightSnowIntensity = 0.5f;
+        [Range(0f, 1f)] public float heavySnowIntensity = 1f;
+        [Tooltip("Light snow: minutes it would take to reach full depth (it stops at Light Cap first), and the cover it stops at.")]
+        [Min(0.1f)] public float lightBuildMinutes = 40f;
+        [Range(0f, 1f)] public float lightCap = 0.35f;
+        [Tooltip("The worst snow (a blizzard): minutes from bare to Heavy Cap, and the cover it stops at.")]
+        [Min(0.1f)] public float heavyBuildMinutes = 8f;
+        [Range(0f, 1f)] public float heavyCap = 1f;
+        [Tooltip("Metres of snow at full cover (1). The ground rises by cover x this; grass shorter than the depth is buried.")]
+        [Range(0f, 1f)] public float snowDepthMetres = 0.4f;
+        [Tooltip("Snow settles fully on surfaces flatter than this (degrees from level).")]
+        [Range(0f, 90f)] public float snowFullBelowDegrees = 35f;
+        [Tooltip("No snow sticks on surfaces steeper than this (degrees from level); smooth in between.")]
+        [Range(0f, 90f)] public float snowNoneAboveDegrees = 55f;
+        [Tooltip("How much of the depth is shown as a real raised layer, per World Effects tier (Low, Medium, High, Ultra). 0 = colour only.")]
+        public float[] snowLiftByTier = { 0f, 1f, 1f, 1f };
         [Tooltip("Minutes for full cover to melt on a dry day, outside Winter.")]
         [Min(0.1f)] public float meltMinutesDay = 30f;
         [Tooltip("Melt at night, times the day's (outside Winter).")]
@@ -66,20 +82,45 @@ namespace KryticalNova.World
         [Range(0.01f, 0.3f)] public float snowEdgeSoftness = 0.08f;
         [Tooltip("How much darker the thin rim of a footprint is.")]
         [Range(0f, 1f)] public float trackRimDarkness = 0.25f;
-        [Tooltip("Grass height under full cover (1 = stands, 0.35 = pressed well down).")]
+        [Tooltip("Grass height under full cover where the snow is not shown raised (Low): 1 = stands, 0.35 = pressed well down.")]
         [Range(0.05f, 1f)] public float grassHeightUnderSnow = 0.35f;
         [Tooltip("How much each tree turns before or after the others (0 = the whole forest at once).")]
         [Range(0f, 1f)] public float leafTurnSpread = 0.25f;
+
+        [Header("Leaves through the year (owner 14 Nov: fall turns every kind its own colour, bare before Winter)")]
+        [Tooltip("Share of Autumn by which the leaves have fully turned.")]
+        [Range(0.05f, 1f)] public float autumnTurnBy = 0.45f;
+        [Tooltip("Share of Autumn when the canopies start to thin, and the share left of a deciduous canopy when bare.")]
+        [Range(0f, 1f)] public float autumnDropFrom = 0.5f;
+        [Range(0f, 1f)] public float bareCanopy = 0.08f;
+        [Tooltip("Share of Spring by which the leaves are all back.")]
+        [Range(0.05f, 1f)] public float springLeafOutBy = 0.35f;
+        [Tooltip("The dull, almost yellow tone grass and leaves take on through Autumn (times the art), and the share of Autumn it is reached by.")]
+        public Color autumnDull = new Color(0.86f, 0.78f, 0.42f);
+        [Range(0.05f, 1f)] public float autumnDullBy = 0.7f;
+        [Tooltip("Each tree kind's fall colours (index 1 up = the kind tagged on its prefab; Krytical Nova > World > Seasons > Tag Tree Kinds). " +
+                 "Index 0 is any foliage with no kind (bushes, grass cards). At most 15 kinds.")]
+        public List<LeafKind> leafKinds = new List<LeafKind>();
+
+        [Header("Falling leaves (every client)")]
+        [Tooltip("Falling and blowing leaves at the height of Autumn, times the windy-day rate, per World Effects tier (Low, Medium, High, Ultra).")]
+        public float[] fallLeavesByTier = { 0f, 3f, 6f, 8f };
         [Tooltip("Flower density changes only in steps this big (a terrain rebuilds its detail patches on each change).")]
         [Range(0.05f, 0.5f)] public float flowerStep = 0.1f;
 
-        [Header("Footprints and trails (every client)")]
+        [Header("Footprints (every client; owner 14 Nov: a print where each foot plants, no trail)")]
         [Tooltip("The track compute (Rendering/Shaders/Seasons/SnowTrack.compute).")]
         public ComputeShader trackCompute;
-        [Tooltip("Metres of ground round the camera the track map covers.")]
-        [Min(8f)] public float trackMetres = 64f;
-        [Tooltip("Track map texels across, per World Effects tier (Low, Medium, High, Ultra).")]
-        public int[] trackTexelsByTier = { 128, 256, 256, 512 };
+        [Tooltip("Metres of ground round the camera the footprint map covers.")]
+        [Min(8f)] public float trackMetres = 24f;
+        [Tooltip("Footprint map texels across, per World Effects tier (Low, Medium, High, Ultra). 1024 over 24 m = 2.3 cm a texel.")]
+        public int[] trackTexelsByTier = { 256, 512, 1024, 1024 };
+        [Tooltip("Characters whose feet are watched for prints, nearest the camera first, per World Effects tier.")]
+        public int[] printWalkersByTier = { 4, 12, 24, 32 };
+        [Tooltip("A boot print: length and width in metres.")]
+        public Vector2 bootPrint = new Vector2(0.3f, 0.12f);
+        [Tooltip("A paw print (mounts, beasts): length and width in metres, times the body's size.")]
+        public Vector2 pawPrint = new Vector2(0.16f, 0.14f);
         [Tooltip("Seconds for a footprint to fill back in.")]
         [Min(1f)] public float trackFillSeconds = 120f;
         [Tooltip("Falling snow fills tracks faster: times (1 + this x snow intensity).")]
@@ -118,7 +159,12 @@ namespace KryticalNova.World
         /// <summary>The snow rates in cover per second, for <see cref="SeasonRules.SnowRate"/>.</summary>
         public SnowRates Rates => new SnowRates
         {
-            BuildPerSecond = 1f / (buildMinutesAtFullSnow * 60f),
+            LightIntensity = lightSnowIntensity,
+            HeavyIntensity = heavySnowIntensity,
+            LightBuildPerSecond = 1f / (lightBuildMinutes * 60f),
+            HeavyBuildPerSecond = 1f / (heavyBuildMinutes * 60f),
+            LightCap = lightCap,
+            HeavyCap = heavyCap,
             MeltDay = 1f / (meltMinutesDay * 60f),
             NightFactor = nightMeltFactor,
             RainFactor = rainMeltFactor,
@@ -144,6 +190,21 @@ namespace KryticalNova.World
 
         /// <summary>Track map texels for a World Effects tier.</summary>
         public int TrackTexels(WorldEffects tier) => (int)ByTier(trackTexelsByTier, (int)tier, 256);
+
+        /// <summary>How much of the snow's depth is shown raised on a World Effects tier (0 = colour only).</summary>
+        public float SnowLift(WorldEffects tier) => ByTier(snowLiftByTier, (int)tier, 1f);
+
+        /// <summary>Characters watched for footprints on a World Effects tier.</summary>
+        public int PrintWalkers(WorldEffects tier) => (int)ByTier(printWalkersByTier, (int)tier, 12);
+
+        /// <summary>Falling-leaf rate at the height of Autumn on a World Effects tier.</summary>
+        public float FallLeaves(WorldEffects tier) => ByTier(fallLeavesByTier, (int)tier, 1f);
+
+        /// <summary>The leaves' year, for <see cref="SeasonRules.FoliageAt"/>.</summary>
+        public FoliageCurve Foliage => new FoliageCurve
+        {
+            TurnBy = autumnTurnBy, DropFrom = autumnDropFrom, Bare = bareCanopy, LeafOutBy = springLeafOutBy, DullBy = autumnDullBy,
+        };
 
         static float ByTier(float[] values, int tier, float fallback) =>
             values == null || values.Length == 0 ? fallback : values[Mathf.Clamp(tier, 0, values.Length - 1)];

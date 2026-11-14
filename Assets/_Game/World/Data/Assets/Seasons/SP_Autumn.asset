@@ -31,7 +31,7 @@ MonoBehaviour:
   grassTint: {r: 1.1, g: 0.92, b: 0.6, a: 1}
   grassTipFrost: 0
   leafColor: {r: 0.95, g: 0.45, b: 0.12, a: 1}
-  leafAmount: 0.85
+  leafAmount: 0
   frost: 0
   nightFrost: 0.15
   flowerDensity: 0.1

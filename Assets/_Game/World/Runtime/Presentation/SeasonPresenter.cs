@@ -23,6 +23,12 @@ namespace KryticalNova.World
         static readonly int LeafToId = Shader.PropertyToID("_KN_SeasonLeafTo");
         static readonly int MiscId = Shader.PropertyToID("_KN_SeasonMisc");
         static readonly int SnowColorId = Shader.PropertyToID("_KN_SnowColor");
+        static readonly int SnowShapeId = Shader.PropertyToID("_KN_SnowShape");
+        static readonly int FoliageId = Shader.PropertyToID("_KN_SeasonFoliage");
+        static readonly int DullId = Shader.PropertyToID("_KN_SeasonDull");
+        static readonly int LeafPeakId = Shader.PropertyToID("_KN_LeafPeak");
+        static readonly int LeafLateId = Shader.PropertyToID("_KN_LeafLate");
+        const int LeafKinds = 16;   // KNSeason.hlsl: rendering layer bits 8-11
 
         /// <summary>The one presenter (tests and the GM window read it).</summary>
         public static SeasonPresenter Instance { get; private set; }
@@ -31,13 +37,27 @@ namespace KryticalNova.World
         public float Blend { get; private set; } = 1f;
         public float SnowCover { get; private set; }
         public bool Publishing { get; private set; }
+        /// <summary>The leaves this client draws now (GM window, tests).</summary>
+        public FoliageNow Foliage { get; private set; }
+
+        /// <summary>
+        /// How many falling leaves the season adds now (0 none; the windy-day rate times this at the height of Autumn), read by
+        /// <see cref="WindLeavesController"/>.
+        /// </summary>
+        public static float FallingLeaves { get; private set; }
 
         readonly SnowTrackMap m_Tracks = new SnowTrackMap();
+        readonly Vector4[] m_LeafPeak = new Vector4[LeafKinds];
+        readonly Vector4[] m_LeafLate = new Vector4[LeafKinds];
+        SnowPrintWatcher m_Prints;
         readonly Dictionary<Terrain, float> m_FlowerBase = new Dictionary<Terrain, float>();
         readonly List<Terrain> m_Terrains = new List<Terrain>();
         readonly List<Terrain> m_GoneTerrains = new List<Terrain>();
         float m_FlowerApplied = -1f, m_NextTerrainLook;
         bool m_PublishedOff;
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        static void ResetStatics() => FallingLeaves = 0f;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         static void Bootstrap()
@@ -46,12 +66,14 @@ namespace KryticalNova.World
             var go = new GameObject("SeasonPresenter") { hideFlags = HideFlags.HideInHierarchy | HideFlags.DontSave };
             DontDestroyOnLoad(go);
             go.AddComponent<SeasonPresenter>();
+            go.AddComponent<SnowPrintWatcher>();
         }
 
         void Awake()
         {
             if (Instance != null && Instance != this) { Destroy(gameObject); return; }
             Instance = this;
+            m_Prints = GetComponent<SnowPrintWatcher>();
         }
 
         void OnDestroy()
@@ -104,6 +126,20 @@ namespace KryticalNova.World
             Color snow = settings.snowColor;
             Shader.SetGlobalVector(SnowColorId, new Vector4(snow.r, snow.g, snow.b, settings.trackRimDarkness));
 
+            // the snow's shape: where it sticks (slope), how deep it lies and how much of that is raised (World Effects)
+            var (cosNone, invRange) = SeasonRules.SnowSlopeShape(settings.snowFullBelowDegrees, settings.snowNoneAboveDegrees);
+            Shader.SetGlobalVector(SnowShapeId, new Vector4(cosNone, invRange, cover * settings.snowDepthMetres,
+                settings.SnowLift(WorldEffectsRuntime.Quality)));
+
+            // the leaves' year: every kind turns its own colour through Autumn, the canopies thin, bare through Winter
+            FoliageNow leaves = s.FoliageAt(now, settings.Foliage);
+            Foliage = leaves;
+            Shader.SetGlobalVector(FoliageId, new Vector4(leaves.Turn, leaves.Canopy, leaves.Dull, settings.leafTurnSpread));
+            Color dull = settings.autumnDull;
+            Shader.SetGlobalVector(DullId, new Vector4(dull.r, dull.g, dull.b, 1f));
+            PublishLeafKinds(settings);
+            FallingLeaves = leaves.Falling * settings.FallLeaves(WorldEffectsRuntime.Quality);
+
             UpdateTracks(settings, cover);
             UpdateFlowers(settings, Mathf.Lerp(from.flowerDensity, to.flowerDensity, b));
         }
@@ -111,16 +147,36 @@ namespace KryticalNova.World
         void UpdateTracks(SeasonSettings settings, float cover)
         {
             Camera cam = Camera.main;
-            if (cover < settings.trackMinCover || settings.trackCompute == null || cam == null)
+            bool wanted = cover >= settings.trackMinCover && settings.trackCompute != null && cam != null;
+            SnowPrints.Wanted = wanted;
+            if (m_Prints != null) m_Prints.Watch(wanted ? cam.transform.position : (Vector3?)null, settings);
+            if (!wanted)
             {
                 if (m_Tracks.Allocated) m_Tracks.Release();
                 return;
             }
-            // falling snow fills the tracks faster
+            // falling snow fills the prints faster (heavy snow fastest)
             WeatherBlend w = WorldClock.Weather;
             float fill = settings.trackFillSeconds / (1f + settings.freshSnowFill * Mathf.Clamp01(w.snow));
             m_Tracks.Update(settings.trackCompute, cam.transform.position, settings.trackMetres,
-                settings.TrackTexels(WorldEffectsRuntime.Quality), fill, 0.6f);
+                settings.TrackTexels(WorldEffectsRuntime.Quality), fill);
+        }
+
+        /// <summary>Each tree kind's fall colours into the shader's palette (index 0 = foliage with no kind: the Autumn profile's colour).</summary>
+        void PublishLeafKinds(SeasonSettings settings)
+        {
+            Color baseColor = settings.autumn != null ? settings.autumn.leafColor : new Color(0.9f, 0.45f, 0.12f);
+            m_LeafPeak[0] = new Vector4(baseColor.r, baseColor.g, baseColor.b, 0f);
+            m_LeafLate[0] = new Vector4(baseColor.r * 0.62f, baseColor.g * 0.55f, baseColor.b * 0.6f, 0f);
+            for (int i = 1; i < LeafKinds; i++)
+            {
+                LeafKind k = settings.leafKinds != null && i - 1 < settings.leafKinds.Count ? settings.leafKinds[i - 1] : null;
+                if (k == null) { m_LeafPeak[i] = m_LeafPeak[0]; m_LeafLate[i] = m_LeafLate[0]; continue; }
+                m_LeafPeak[i] = new Vector4(k.peak.r, k.peak.g, k.peak.b, k.evergreen ? 1f : 0f);
+                m_LeafLate[i] = new Vector4(k.late.r, k.late.g, k.late.b, 0f);
+            }
+            Shader.SetGlobalVectorArray(LeafPeakId, m_LeafPeak);
+            Shader.SetGlobalVectorArray(LeafLateId, m_LeafLate);
         }
 
         void UpdateFlowers(SeasonSettings settings, float density)
@@ -151,6 +207,11 @@ namespace KryticalNova.World
             m_PublishedOff = true;
             Publishing = false;
             Shader.SetGlobalVector(ParamsId, Vector4.zero);
+            Shader.SetGlobalVector(SnowShapeId, Vector4.zero);
+            Shader.SetGlobalVector(FoliageId, new Vector4(0f, 1f, 0f, 0f));
+            FallingLeaves = 0f;
+            SnowPrints.Wanted = false;
+            if (m_Prints != null) m_Prints.Watch(null, null);
             SeasonView.DaylightShare = 0.5f;
             SnowCover = 0f;
             Blend = 1f;

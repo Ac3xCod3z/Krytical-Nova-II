@@ -1,5 +1,6 @@
 // Krytical Nova copy of URP 17 Terrain/Lit passes (Unity Companion License) with the season snow added (owner DAY list item 21).
-// Only change: KNSeasonGround after the input data is set up, in the first (non add) pass. Update from the package with care.
+// Changes: KNSeasonGround after the input data is set up, in the first (non add) pass; every vertex pass lifts the ground by the
+// season's snow depth (KNSnowLiftOS). Update from the package with care.
 
 #ifndef KN_TERRAIN_LIT_PASSES_INCLUDED
 #define KN_TERRAIN_LIT_PASSES_INCLUDED
@@ -321,6 +322,7 @@ Varyings SplatmapVert(Attributes v)
     UNITY_SETUP_INSTANCE_ID(v);
     UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(o);
     TerrainInstancing(v.positionOS, v.normalOS, v.texcoord);
+    v.positionOS.xyz = KNSnowLiftOS(v.positionOS.xyz, v.normalOS);   // KN: the snow's depth
 
     VertexPositionInputs Attributes = GetVertexPositionInputs(v.positionOS.xyz);
 
@@ -548,6 +550,7 @@ VaryingsLean ShadowPassVertex(AttributesLean v)
     VaryingsLean o = (VaryingsLean)0;
     UNITY_SETUP_INSTANCE_ID(v);
     TerrainInstancing(v.position, v.normalOS, v.texcoord);
+    v.position.xyz = KNSnowLiftOS(v.position.xyz, v.normalOS);   // KN: the snow's depth
 
     float3 positionWS = TransformObjectToWorld(v.position.xyz);
     float3 normalWS = TransformObjectToWorldNormal(v.normalOS);
@@ -589,6 +592,7 @@ VaryingsLean DepthOnlyVertex(AttributesLean v)
     UNITY_SETUP_INSTANCE_ID(v);
     UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(o);
     TerrainInstancing(v.position, v.normalOS);
+    v.position.xyz = KNSnowLiftOS(v.position.xyz, v.normalOS);   // KN: the snow's depth
     o.clipPos = TransformObjectToHClip(v.position.xyz);
     o.texcoord = v.texcoord;
     return o;

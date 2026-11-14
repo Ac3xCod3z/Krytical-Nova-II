@@ -873,6 +873,16 @@ namespace KryticalNova.EditorTools.GM
         [ButtonGroup(Tabs + "/" + WorldTab + "/Season"), EnableIf(nameof(HasSeasons)), PropertyOrder(426.2f), LabelText("Status")]
         private void SeasonStatusLine() => Run("gm.season status");
 
+        [TabGroup(Tabs, WorldTab), EnableIf(nameof(HasSeasons)), PropertyRange(0f, 1f), LabelText("Season Progress"), PropertyOrder(426.5f)]
+        [Tooltip("How far into the season it looks: Autumn 0.2 turning, 0.5 every kind in colour, 0.9 almost bare.")]
+        [SerializeField] private float progressPick = 0.5f;
+
+        [ButtonGroup(Tabs + "/" + WorldTab + "/Progress"), EnableIf(nameof(HasSeasons)), PropertyOrder(426.6f), LabelText("Hold Progress")]
+        private void ProgressHold() => Run($"gm.season progress {F(progressPick)}");
+
+        [ButtonGroup(Tabs + "/" + WorldTab + "/Progress"), EnableIf(nameof(HasSeasons)), PropertyOrder(426.7f), LabelText("Calendar Progress")]
+        private void ProgressAuto() => Run("gm.season progress auto");
+
         [TabGroup(Tabs, WorldTab), EnableIf(nameof(HasSeasons)), PropertyRange(0f, 1f), LabelText("Snow Cover"), PropertyOrder(427)]
         [SerializeField] private float snowPick = 1f;
 

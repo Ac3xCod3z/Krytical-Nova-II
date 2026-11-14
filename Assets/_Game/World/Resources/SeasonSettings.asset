@@ -24,7 +24,20 @@ MonoBehaviour:
   summer: {fileID: 11400000, guid: bff42fcb16d145d5af8084656c81b4e6, type: 2}
   autumn: {fileID: 11400000, guid: 4642b135aa034ddbac214122d5b17756, type: 2}
   winter: {fileID: 11400000, guid: 6e598e38f15b4dd588219477fe512456, type: 2}
-  buildMinutesAtFullSnow: 10
+  lightSnowIntensity: 0.5
+  heavySnowIntensity: 1
+  lightBuildMinutes: 40
+  lightCap: 0.35
+  heavyBuildMinutes: 8
+  heavyCap: 1
+  snowDepthMetres: 0.4
+  snowFullBelowDegrees: 35
+  snowNoneAboveDegrees: 55
+  snowLiftByTier:
+  - 0
+  - 1
+  - 1
+  - 1
   meltMinutesDay: 30
   nightMeltFactor: 0.25
   rainMeltFactor: 3
@@ -39,14 +52,78 @@ MonoBehaviour:
   trackRimDarkness: 0.25
   grassHeightUnderSnow: 0.35
   leafTurnSpread: 0.25
+  autumnTurnBy: 0.45
+  autumnDropFrom: 0.5
+  bareCanopy: 0.08
+  springLeafOutBy: 0.35
+  autumnDull: {r: 0.86, g: 0.78, b: 0.42, a: 1}
+  autumnDullBy: 0.7
+  leafKinds:
+  - name: Maple
+    prefabNameContains:
+    - SM_Gen_Env_Tree_01
+    evergreen: 0
+    peak: {r: 0.8, g: 0.14, b: 0.07, a: 1}
+    late: {r: 0.52, g: 0.12, b: 0.08, a: 1}
+  - name: Birch
+    prefabNameContains:
+    - SM_Gen_Env_Tree_02
+    evergreen: 0
+    peak: {r: 0.95, g: 0.78, b: 0.18, a: 1}
+    late: {r: 0.72, g: 0.55, b: 0.2, a: 1}
+  - name: Oak
+    prefabNameContains:
+    - SM_Gen_Env_Tree_03
+    evergreen: 0
+    peak: {r: 0.72, g: 0.4, b: 0.13, a: 1}
+    late: {r: 0.45, g: 0.28, b: 0.12, a: 1}
+  - name: Pine
+    prefabNameContains:
+    - Pine
+    - Fir
+    - Spruce
+    - Conifer
+    evergreen: 1
+    peak: {r: 0.3, g: 0.5, b: 0.3, a: 1}
+    late: {r: 0.3, g: 0.5, b: 0.3, a: 1}
+  - name: Emberleaf
+    prefabNameContains:
+    - SM_Env_Tree_01
+    evergreen: 0
+    peak: {r: 0.98, g: 0.5, b: 0.1, a: 1}
+    late: {r: 0.62, g: 0.3, b: 0.1, a: 1}
+  - name: Duskleaf
+    prefabNameContains:
+    - SM_Env_Tree_02
+    evergreen: 0
+    peak: {r: 0.62, g: 0.12, b: 0.3, a: 1}
+    late: {r: 0.4, g: 0.12, b: 0.2, a: 1}
+  - name: Gildleaf
+    prefabNameContains:
+    - SM_Env_Tree_03
+    evergreen: 0
+    peak: {r: 0.9, g: 0.66, b: 0.12, a: 1}
+    late: {r: 0.62, g: 0.44, b: 0.14, a: 1}
+  fallLeavesByTier:
+  - 0
+  - 3
+  - 6
+  - 8
   flowerStep: 0.1
   trackCompute: {fileID: 7200000, guid: 0e8cd7c1956f40138e9f6f00dece65ab, type: 3}
-  trackMetres: 64
+  trackMetres: 24
   trackTexelsByTier:
-  - 128
-  - 256
   - 256
   - 512
+  - 1024
+  - 1024
+  printWalkersByTier:
+  - 4
+  - 12
+  - 24
+  - 32
+  bootPrint: {x: 0.3, y: 0.12}
+  pawPrint: {x: 0.16, y: 0.14}
   trackFillSeconds: 120
   freshSnowFill: 4
   trackMinCover: 0.02

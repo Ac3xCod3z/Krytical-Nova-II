@@ -101,37 +101,143 @@ namespace KryticalNova.Tests
 
         static SnowRates Rates => new SnowRates
         {
-            BuildPerSecond = 1f / 600f, MeltDay = 1f / 1800f, NightFactor = 0.25f, RainFactor = 3f, WinterMeltDay = 1f / 14400f, WinterNightFactor = 0f,
+            LightIntensity = 0.5f, HeavyIntensity = 1f, LightBuildPerSecond = 1f / 2400f, HeavyBuildPerSecond = 1f / 480f,
+            LightCap = 0.35f, HeavyCap = 1f,
+            MeltDay = 1f / 1800f, NightFactor = 0.25f, RainFactor = 3f, WinterMeltDay = 1f / 14400f, WinterNightFactor = 0f,
         };
 
-        [Test]
-        public void SnowCover_BuildsAndMelts_AtTheSettingsRates_StaysInRange_AndKeepsTheFloor()
-        {
-            SnowRates r = Rates;
-            float snowing = SeasonRules.SnowRate(r, PrecipitationType.Snow, 0.6f, false, Season.Winter, false);
-            Assert.AreEqual(0.6f / 600f, snowing, 1e-7, "piles up by intensity");
-            Assert.AreEqual(1f, SeasonRules.SnowCover(0f, snowing, 0, 1000.0, 0f), 1e-4, "Snow 0.6 covers fully in about 17 minutes");
-            Assert.Less(SeasonRules.SnowCover(0f, snowing, 0, 900.0, 0f), 1f, "not yet at 15 minutes");
+        static SnowTrend Trend(PrecipitationType p, float intensity, bool night, Season season, bool alwaysWinter = false, float cover = 0f) =>
+            SeasonRules.SnowTrendOf(Rates, p, intensity, night, season, alwaysWinter, cover);
 
-            float day = SeasonRules.SnowRate(r, PrecipitationType.None, 0f, false, Season.Spring, false);
+        /// <summary>Cover after <paramref name="seconds"/> of steady weather, re-anchoring each minute as the server does when the trend changes.</summary>
+        static float Run(PrecipitationType p, float intensity, double seconds, float start = 0f, Season season = Season.Winter)
+        {
+            float cover = start;
+            for (double t = 0; t < seconds; t += 60)
+            {
+                SnowTrend tr = Trend(p, intensity, false, season, false, cover);
+                cover = SeasonRules.SnowCover(cover, tr.Rate, 0, Math.Min(60, seconds - t), 0f, tr.Ceiling);
+            }
+            return cover;
+        }
+
+        [Test]
+        public void SnowBuildUp_LightIsSlowAndLow_HeavyIsFastAndHigh()
+        {
+            // owner 14 Nov: light snow takes longer and stays low; bad snow builds fast and higher
+            SnowTrend light = Trend(PrecipitationType.Snow, 0.5f, false, Season.Winter);
+            SnowTrend heavy = Trend(PrecipitationType.Snow, 1f, false, Season.Winter);
+            Assert.Greater(heavy.Rate, light.Rate * 4f, "a blizzard builds at least four times as fast");
+            Assert.AreEqual(0.35f, light.Ceiling, 1e-5, "light snow stops at its cap");
+            Assert.AreEqual(1f, heavy.Ceiling, 1e-5, "a blizzard goes all the way");
+
+            Assert.AreEqual(0.35f, Run(PrecipitationType.Snow, 0.5f, 7200), 1e-4, "two hours of light snow: capped at 0.35");
+            Assert.Less(Run(PrecipitationType.Snow, 0.5f, 600), 0.3f, "ten minutes of light snow: still thin");
+            Assert.AreEqual(1f, Run(PrecipitationType.Snow, 1f, 600), 1e-4, "ten minutes of blizzard: full depth");
+            float mid = Run(PrecipitationType.Snow, 0.75f, 7200);
+            Assert.That(mid, Is.GreaterThan(0.35f).And.LessThan(1f), "in-between snow stops in between");
+            Assert.Less(Run(PrecipitationType.Snow, 0.2f, 600), Run(PrecipitationType.Snow, 0.5f, 600), "flurries build slower than light snow");
+
+            // deeper than light snow can make (after a blizzard): light snow neither adds nor melts it
+            SnowTrend onDeep = Trend(PrecipitationType.Snow, 0.5f, false, Season.Winter, false, 0.9f);
+            Assert.AreEqual(0f, onDeep.Rate, "light snow on deep snow holds it");
+            Assert.AreEqual(0.9f, Run(PrecipitationType.Snow, 0.5f, 3600, 0.9f), 1e-4);
+        }
+
+        [Test]
+        public void SnowMelt_ByDayAndRain_LingersAtNight_LastsInWinter_AndKeepsTheFloor()
+        {
+            float day = Trend(PrecipitationType.None, 0f, false, Season.Spring).Rate;
             Assert.AreEqual(-1f / 1800f, day, 1e-7, "melts in 30 minutes on a dry day");
-            Assert.AreEqual(0f, SeasonRules.SnowCover(1f, day, 0, 1800.0, 0f), 1e-4);
-            float night = SeasonRules.SnowRate(r, PrecipitationType.None, 0f, true, Season.Autumn, false);
-            Assert.AreEqual(day * 0.25f, night, 1e-7, "lingers at night");
-            float rain = SeasonRules.SnowRate(r, PrecipitationType.Rain, 0.8f, true, Season.Spring, false);
-            Assert.AreEqual(day * 3f, rain, 1e-7, "rain washes it off three times as fast");
-            float winterDay = SeasonRules.SnowRate(r, PrecipitationType.None, 0f, false, Season.Winter, false);
+            Assert.AreEqual(0f, Run(PrecipitationType.None, 0f, 1800, 1f, Season.Spring), 1e-4, "gone after the snow stops");
+            Assert.AreEqual(day * 0.25f, Trend(PrecipitationType.None, 0f, true, Season.Autumn).Rate, 1e-7, "lingers at night");
+            Assert.AreEqual(day * 3f, Trend(PrecipitationType.Rain, 0.8f, true, Season.Spring).Rate, 1e-7, "rain washes it off three times as fast");
+            float winterDay = Trend(PrecipitationType.None, 0f, false, Season.Winter).Rate;
             Assert.AreEqual(-1f / 14400f, winterDay, 1e-7, "lasts about 4 hours on a Winter day");
-            Assert.AreEqual(0f, SeasonRules.SnowRate(r, PrecipitationType.None, 0f, true, Season.Winter, false), "a Winter night keeps it");
-            Assert.AreEqual(winterDay, SeasonRules.SnowRate(r, PrecipitationType.None, 0f, false, Season.Summer, true), 1e-9, "an always-winter map melts as in Winter");
+            Assert.AreEqual(0f, Trend(PrecipitationType.None, 0f, true, Season.Winter).Rate, "a Winter night keeps it");
+            Assert.AreEqual(winterDay, Trend(PrecipitationType.None, 0f, false, Season.Summer, true).Rate, 1e-9, "an always-winter map melts as in Winter");
+            Assert.AreEqual(1f, Trend(PrecipitationType.None, 0f, false, Season.Spring).Ceiling, "melting is never capped");
 
             for (double t = 0; t < 100000; t += 777)
             {
                 float up = SeasonRules.SnowCover(0.3f, 0.01f, 0, t, 0f), down = SeasonRules.SnowCover(0.3f, -0.01f, 0, t, 0f);
                 Assert.That(up, Is.InRange(0f, 1f)); Assert.That(down, Is.InRange(0f, 1f));
-                Assert.GreaterOrEqual(SeasonRules.SnowCover(0.9f, -0.01f, 0, t, 0.6f), 0.6f, "never below an always-winter map's floor");
+                Assert.GreaterOrEqual(SeasonRules.SnowCover(0.9f, -0.01f, 0, t, 0.6f), 0.6f, "never below an always-winter map floor");
+                Assert.LessOrEqual(SeasonRules.SnowCover(0.1f, 0.01f, 0, t, 0f, 0.35f), 0.35f + 1e-6, "never above the ceiling");
             }
             Assert.AreEqual(0.3f, SeasonRules.SnowCover(0.3f, 0.5f, 10, 5, 0f), 1e-6, "nothing before the anchor");
+        }
+
+        static float Up(float degrees) => (float)Math.Cos(degrees * Math.PI / 180.0);
+
+        [Test]
+        public void SnowSlope_FullOnTheFlat_NoneOnSteepFaces_SmoothBetween()
+        {
+            Assert.AreEqual(1f, SeasonRules.SnowSlope(1f, 35f, 55f), 1e-5, "level ground");
+            Assert.AreEqual(1f, SeasonRules.SnowSlope(Up(30f), 35f, 55f), 1e-5, "a 30 degree roof holds it all");
+            Assert.AreEqual(1f, SeasonRules.SnowSlope(Up(35f), 35f, 55f), 1e-4, "full at the full angle");
+            Assert.AreEqual(0f, SeasonRules.SnowSlope(Up(55f), 35f, 55f), 1e-4, "none at the none angle");
+            Assert.AreEqual(0f, SeasonRules.SnowSlope(Up(70f), 35f, 55f), 1e-5, "a steep roof sheds it");
+            Assert.AreEqual(0f, SeasonRules.SnowSlope(0f, 35f, 55f), 1e-5, "walls never");
+            float half = SeasonRules.SnowSlope(Up(45f), 35f, 55f);
+            Assert.That(half, Is.GreaterThan(0.2f).And.LessThan(0.8f), "part-covered in between");
+            float last = 1f;
+            for (int d = 0; d <= 90; d += 5) { float v = SeasonRules.SnowSlope(Up(d), 35f, 55f); Assert.LessOrEqual(v, last + 1e-5); last = v; }
+            var (cosNone, inv) = SeasonRules.SnowSlopeShape(35f, 55f);
+            Assert.AreEqual(Up(55f), cosNone, 1e-5, "the shader number");
+            Assert.AreEqual(1f / (Up(35f) - Up(55f)), inv, 1e-3);
+        }
+
+        static FoliageCurve Curve => new FoliageCurve { TurnBy = 0.45f, DropFrom = 0.5f, Bare = 0.08f, LeafOutBy = 0.35f, DullBy = 0.7f };
+
+        [Test]
+        public void Foliage_TurnsThroughAutumn_BareBeforeWinter_BackInSpring()
+        {
+            FoliageCurve c = Curve;
+            FoliageNow summer = SeasonRules.FoliageAt(Season.Summer, 0.5f, c);
+            Assert.AreEqual(0f, summer.Turn); Assert.AreEqual(1f, summer.Canopy); Assert.AreEqual(0f, summer.Dull);
+
+            FoliageNow early = SeasonRules.FoliageAt(Season.Autumn, 0.1f, c);
+            FoliageNow peak = SeasonRules.FoliageAt(Season.Autumn, 0.45f, c);
+            FoliageNow late = SeasonRules.FoliageAt(Season.Autumn, 0.95f, c);
+            Assert.That(early.Turn, Is.GreaterThan(0f).And.LessThan(0.3f), "early Autumn is only starting to turn");
+            Assert.AreEqual(1f, early.Canopy, 1e-5, "and keeps its leaves");
+            Assert.AreEqual(1f, peak.Turn, 1e-5, "every kind has turned by 45 %");
+            Assert.AreEqual(1f, peak.Canopy, 1e-5);
+            Assert.Less(late.Canopy, 0.15f, "almost bare late in Autumn");
+            Assert.AreEqual(0.08f, SeasonRules.FoliageAt(Season.Autumn, 1f, c).Canopy, 1e-5, "bare at the door of Winter");
+            Assert.GreaterOrEqual(late.Dull, peak.Dull, "the grass keeps dulling");
+            Assert.AreEqual(1f, SeasonRules.FoliageAt(Season.Autumn, 0.8f, c).Dull, 1e-5, "dull by 70 %");
+            Assert.Greater(SeasonRules.FoliageAt(Season.Autumn, 0.75f, c).Falling, early.Falling, "most leaves fall while the canopies thin");
+            float last = 1f;
+            for (float p = 0f; p <= 1f; p += 0.05f) { float v = SeasonRules.FoliageAt(Season.Autumn, p, c).Canopy; Assert.LessOrEqual(v, last + 1e-5); last = v; }
+
+            FoliageNow winter = SeasonRules.FoliageAt(Season.Winter, 0.5f, c);
+            Assert.AreEqual(0.08f, winter.Canopy, 1e-5, "bare through Winter (evergreens are kept by the shader)");
+            Assert.AreEqual(0f, winter.Falling, "nothing left to fall");
+            Assert.AreEqual(0.08f, SeasonRules.FoliageAt(Season.Spring, 0f, c).Canopy, 1e-5, "Spring begins bare");
+            Assert.AreEqual(1f, SeasonRules.FoliageAt(Season.Spring, 0.35f, c).Canopy, 1e-5, "and is green again by 35 %");
+            Assert.AreEqual(0f, SeasonRules.FoliageAt(Season.Spring, 0.2f, c).Turn, "spring leaves are green");
+        }
+
+        [Test]
+        public void Foliage_FollowsTheSeasonBlend_AndAGmProgress()
+        {
+            FoliageCurve c = Curve;
+            var s = new SeasonState
+            {
+                FromSeason = (byte)Season.Autumn, ToSeason = (byte)Season.Winter, BlendStart = 100, BlendSeconds = 100,
+                SeasonStart = 100, SeasonSeconds = 1000, Progress = -1f,
+            };
+            Assert.AreEqual(SeasonRules.FoliageAt(Season.Autumn, 1f, c).Canopy, s.FoliageAt(100, c).Canopy, 1e-5, "the blend starts from late Autumn");
+            Assert.AreEqual(0.08f, s.FoliageAt(400, c).Canopy, 1e-5, "and ends bare");
+            Assert.AreEqual(0.3f, s.ProgressAt(400), 1e-5, "the calendar share");
+            s.Progress = 0.9f;
+            Assert.AreEqual(0.9f, s.ProgressAt(400), 1e-5, "a GM share wins");
+            s.Progress = -1f; s.SeasonSeconds = 0f;
+            Assert.AreEqual(0.5f, s.ProgressAt(400), 1e-5, "no length: the middle");
+            s.Flags = SeasonState.FlagAlwaysWinter;
+            Assert.AreEqual(SeasonRules.FoliageAt(Season.Winter, 0.5f, c).Canopy, s.FoliageAt(400, c).Canopy, 1e-5, "an always-winter map stays bare");
         }
 
         readonly List<UnityEngine.Object> m_Made = new List<UnityEngine.Object>();
