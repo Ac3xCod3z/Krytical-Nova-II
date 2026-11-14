@@ -59,6 +59,7 @@ Shader "KryticalNova/Comic Toon Lit"
             #include "Packages/com.unity.render-pipelines.universal/Shaders/SimpleLitInput.hlsl"
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
             #include "ComicHalftone.hlsl"
+            #include "Assets/_Game/Rendering/Shaders/Include/KNSeason.hlsl"
 
             // Globals from ComicStyleFeature
             half _ComicShadowThreshold;  // N.L value where light turns to shadow
@@ -136,6 +137,9 @@ Shader "KryticalNova/Comic Toon Lit"
                 half3 bitangent = input.tangentWS.w * cross(input.normalWS, input.tangentWS.xyz);
                 normalWS = normalize(TransformTangentToWorld(normalTS, half3x3(input.tangentWS.xyz, bitangent, input.normalWS)));
             #endif
+
+                // Season snow on roofs and ledges (owner DAY list item 21); nothing until a SeasonPresenter publishes.
+                albedo = KNSeasonSurface(albedo, normalWS, input.positionWS, asuint(unity_RenderingLayer.x));
 
                 InputData inputData = (InputData)0;
                 inputData.positionWS = input.positionWS;

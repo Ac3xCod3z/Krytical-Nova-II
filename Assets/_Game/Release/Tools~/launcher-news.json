@@ -59,7 +59,9 @@
         "Companion stances grow with your mount: the more it has grown, the harder DPS strikes (about 40 % of your strike at the start, 70 % fully grown), the more HEALER heals (1.5 % to 3 % of your max HP every 2 s) and the tougher TANK is (65 % to 70 % less damage, up to twice its HP). Riding stats are unchanged; the stance tooltips show your mount's numbers.",
         "Game Masters can now max a character in one go (Max Everything, gm.maxall): top level, skills, ladders, every mount and pet, its own Rare and Epic gear and a full kit of items. Only a GM can use it, and every use is logged.",
         "Swings move the grass: every swing throws the grass in front of it aside and it springs back; area skills send a ring across it and big hits a wave. Hostiles' swings push it too, the bigger the beast the wider.",
-        "World effects (Settings, Graphics): how much the world's little effects do on your screen, Low to Ultra; on Low four swings move the grass at once instead of eight."
+        "World effects (Settings, Graphics): how much the world's little effects do on your screen, Low to Ultra; on Low four swings move the grass at once instead of eight.",
+        "Seasons: the world turns through Spring, Summer, Autumn and Winter, two real weeks each, changing every second Monday at 00:00 UTC (Winter arrives 23 Nov). Each brings its own weather, its own daylight (short winter days, long summer ones) and its own colours: spring flowers, orange autumn trees, frosted winter woods.",
+        "Snow: it piles up on the ground and roofs while it snows and melts after, and footprints and trails stay in it for a while. World effects on Low lets less rain and snow fall."
       ]
     },
     {
