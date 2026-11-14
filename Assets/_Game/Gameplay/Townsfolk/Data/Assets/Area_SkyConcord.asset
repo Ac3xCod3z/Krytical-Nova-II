@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Area_SkyConcord
   m_EditorClassIdentifier: KryticalNova.Townsfolk.Entities::KryticalNova.Townsfolk.TownLifeArea
   rootName: Concord 040 (sky preview)
-  radius: 90
+  radius: 160
   deckHeight: 0
   seed: 1472
   dayCap: 0

@@ -131,6 +131,18 @@ namespace KryticalNova.Townsfolk
         bool m_Installed, m_AssetsMissingLogged, m_RootMissingLogged, m_PrefabMissingLogged;
         double m_NextArea, m_NextCrowd, m_NextClock, m_NextDiag;
         uint m_NextStableId = FirstStableId, m_SpawnCount;
+        // the Sky Lift arrival (owner 14 Nov 2026: no more than a share of the crowd there)
+        float3 m_Arrival;
+        bool m_HasArrival;
+        int m_NearArrival;
+        readonly List<Vector3> m_SpreadRaw = new(), m_HandCentres = new();
+        readonly List<TownSpread.Point> m_Spread = new();
+
+        /// <summary>Points spread over the district when the area was built, and townsfolk near the arrival now (gm.town, the probes).</summary>
+        public static int SpreadPoints, NearArrivalNow;
+        /// <summary>While true (a probe, a GM heatmap), where every townsperson out stands, refreshed with the crowd count.</summary>
+        public static bool RecordPositions;
+        public static readonly List<Vector3> Positions = new();
         int m_TickRate = DefaultTickRate;
         readonly Dictionary<byte, int> m_Count = new(), m_Extra = new();
         readonly Dictionary<byte, List<Entity>> m_ByPersonality = new();
@@ -242,13 +254,20 @@ namespace KryticalNova.Townsfolk
             var slots = new List<TownSlot>();
             int dropped = 0;
             float rootYaw = root.eulerAngles.y;
+            GameObject arrivalGo = GameObject.Find(SkyLiftLink.ArrivalMarker);
+            m_HasArrival = arrivalGo != null;
+            m_Arrival = m_HasArrival ? (float3)arrivalGo.transform.position : default;
+            float arrivalSq = s.arrivalRadius * s.arrivalRadius;
+            m_HandCentres.Clear();
             foreach (TownLifeArea.Spot spot in m_Area.spots)
             {
                 Vector3 world = root.TransformPoint(new Vector3(spot.at.x, m_Area.deckHeight, spot.at.y));
                 if (!Snap(world, s.snapToNavMesh, out Vector3 centre)) { dropped++; continue; }
+                m_HandCentres.Add(centre);
+                bool nearArrival = m_HasArrival && math.distancesq(((float3)centre).xz, m_Arrival.xz) <= arrivalSq;
                 var row = new TownSpot
                 {
-                    Pos = centre, Kind = (byte)spot.kind, Flags = (byte)spot.flags, OpenFrom = (byte)Mathf.Clamp(spot.openFrom, 0, 24),
+                    Pos = centre, Kind = (byte)spot.kind, Flags = (byte)((byte)spot.flags | (nearArrival ? (byte)TownSpotFlags.NearArrival : (byte)0)), OpenFrom = (byte)Mathf.Clamp(spot.openFrom, 0, 24),
                     OpenTo = (byte)Mathf.Clamp(spot.openTo, 0, 24), OnlyFor = (byte)(spot.onlyFor != null ? spot.onlyFor.id + 1 : 0),
                     FirstSlot = (ushort)slots.Count,
                 };
@@ -265,7 +284,7 @@ namespace KryticalNova.Townsfolk
             }
             // walk points: strolls between spots, sampled on the area's NavMesh (deterministic from the area's seed)
             Vector3 middle = root.TransformPoint(new Vector3(0f, m_Area.deckHeight, 0f));
-            int walks = 0;
+            int walks = AddSpread(middle, spots, slots, arrivalSq);
             for (int attempt = 0; attempt < s.walkPoints * 4 && walks < s.walkPoints; attempt++)
             {
                 float a = (float)(m_Rng.NextDouble() * Math.PI * 2.0), r = m_Area.radius * Mathf.Sqrt((float)m_Rng.NextDouble());
@@ -285,8 +304,46 @@ namespace KryticalNova.Townsfolk
             SpotCount = spots.Count;
             SlotCount = slots.Count;
             uint version = em.GetComponentData<TownArea>(area).Version + 1;   // the mind's score cache rebuilds with the spots
-            em.SetComponentData(area, new TownArea { Centre = middle, Radius = m_Area.radius, Cast = m_Area.cast != null ? m_Area.cast.id : (byte)0, Ready = 1, Version = version });
+            em.SetComponentData(area, new TownArea { Centre = middle, Radius = m_Area.radius, Cast = m_Area.cast != null ? m_Area.cast.id : (byte)0, Ready = 1, Version = version,
+                ArrivalFullScore = s.arrivalFullScore });
             Debug.Log($"[Townsfolk] {m_Area.name}: {spots.Count - walks} smart spots ({slots.Count - walks} slots), {walks} walk points on the NavMesh; {dropped} spots off the NavMesh dropped.");
+        }
+
+        /// <summary>
+        /// Life over the whole district (owner 14 Nov 2026): points spread over every walkable floor of the area's NavMesh, sorted into
+        /// viewpoints at the rim, quiet lean spots in the back streets, places to stand and walk points (<see cref="TownSpread"/>).
+        /// Returns the walk points added.
+        /// </summary>
+        int AddSpread(Vector3 middle, List<TownSpot> spots, List<TownSlot> slots, float arrivalSq)
+        {
+            TownsfolkSettings s = m_Assets.settings;
+            NavMeshTriangulation mesh = NavMesh.CalculateTriangulation();
+            TownSpread.Sample(mesh.vertices, mesh.indices, middle, m_Area.radius, s.spreadHeight, s.spreadSpacing, s.spreadMostPoints, m_Area.seed, m_SpreadRaw);
+            var edgeDistance = new float[m_SpreadRaw.Count];
+            var edgeAt = new Vector3[m_SpreadRaw.Count];
+            for (int i = 0; i < m_SpreadRaw.Count; i++)
+            {
+                if (NavMesh.FindClosestEdge(m_SpreadRaw[i], out NavMeshHit edge, NavMesh.AllAreas)) { edgeDistance[i] = edge.distance; edgeAt[i] = edge.position; }
+                else { edgeDistance[i] = float.MaxValue; edgeAt[i] = m_SpreadRaw[i]; }
+            }
+            TownSpread.Sort(m_SpreadRaw, edgeDistance, edgeAt, middle, m_HandCentres, s, m_Area.seed, m_Spread);
+            int walks = 0, places = 0;
+            foreach (TownSpread.Point point in m_Spread)
+            {
+                if (!Snap(point.Pos, 1.5f, out Vector3 p)) continue;
+                bool nearArrival = m_HasArrival && math.distancesq(((float3)p).xz, m_Arrival.xz) <= arrivalSq;
+                byte flags = (byte)(nearArrival ? TownSpotFlags.NearArrival : TownSpotFlags.None);
+                byte kind = (byte)TownSpotKind.Walk;
+                if (point.Use == TownSpread.Use.Rim) { kind = (byte)TownSpotKind.Viewpoint; flags |= (byte)TownSpotFlags.Quiet; }
+                else if (point.Use == TownSpread.Use.BackStreet) { kind = (byte)TownSpotKind.LeanWall; flags |= (byte)TownSpotFlags.Quiet; }
+                else if (point.Use == TownSpread.Use.Stand) kind = (byte)TownSpotKind.Viewpoint;
+                spots.Add(new TownSpot { Pos = p, Kind = kind, Flags = flags, FirstSlot = (ushort)slots.Count, SlotCount = 1 });
+                slots.Add(new TownSlot { Pos = p, Yaw = math.radians(point.Yaw), Spot = (ushort)(spots.Count - 1) });
+                if (kind == (byte)TownSpotKind.Walk) walks++; else places++;
+            }
+            SpreadPoints = walks + places;
+            Debug.Log($"[Townsfolk] {m_Area.name}: {walks} walk points and {places} places to stand spread over the whole district (of {m_SpreadRaw.Count} found on the NavMesh).");
+            return walks;
         }
 
         static bool Snap(Vector3 at, float within, out Vector3 snapped)
@@ -335,6 +392,7 @@ namespace KryticalNova.Townsfolk
                     mine.Add(e);
                 }
             foreach (Entity e in m_Gone) em.DestroyEntity(e);
+            CountNearArrival(area, s);
 
             int dayCap = DayCapOverride >= 0 ? DayCapOverride : m_Area.dayCap > 0 ? m_Area.dayCap : s.dayCap;
             int nightCap = NightCapOverride >= 0 ? NightCapOverride : m_Area.nightCap > 0 ? m_Area.nightCap : s.nightCap;
@@ -381,6 +439,31 @@ namespace KryticalNova.Townsfolk
             Wanted = total;
         }
 
+        /// <summary>Townsfolk near the Sky Lift arrival now; the area's spots there score less while it holds more than its share.</summary>
+        void CountNearArrival(Entity area, TownsfolkSettings s)
+        {
+            EntityManager em = EntityManager;
+            m_NearArrival = 0;
+            int out_ = 0;
+            if (RecordPositions) Positions.Clear();
+            if (m_HasArrival || RecordPositions)
+                using (NativeArray<Entity> folk = m_Folk.ToEntityArray(Allocator.Temp))
+                    foreach (Entity e in folk)
+                    {
+                        if (!em.HasComponent<LocalTransform>(e) || em.GetComponentData<TownLife>(e).State == TownLifeState.Gone) continue;
+                        out_++;
+                        if (RecordPositions) Positions.Add(em.GetComponentData<LocalTransform>(e).Position);
+                        if (m_HasArrival && math.distancesq(em.GetComponentData<LocalTransform>(e).Position.xz, m_Arrival.xz) <= s.arrivalRadius * s.arrivalRadius) m_NearArrival++;
+                    }
+            NearArrivalNow = m_NearArrival;
+            TownArea a = em.GetComponentData<TownArea>(area);
+            byte crowded = (byte)(TownSpread.ArrivalCrowded(m_NearArrival, out_, s.arrivalMostShare) ? 1 : 0);
+            if (crowded == a.ArrivalCrowded) return;
+            a.ArrivalCrowded = crowded;
+            a.Version++;   // the score cache rebuilds with the arrival's spots at their new score
+            em.SetComponentData(area, a);
+        }
+
         bool Spawn(Entity area, TownsfolkPersonality p, in TownClock clock)
         {
             if (!SystemAPI.TryGetSingleton(out TownsfolkGhostPrefab prefab) || prefab.Prefab == Entity.Null)
@@ -406,12 +489,28 @@ namespace KryticalNova.Townsfolk
                 if (spots[i].Kind == (byte)TownSpotKind.HomeDoor) doors++;
                 else if (spots[i].Kind == (byte)TownSpotKind.Walk) walks++;
             }
-            byte from = doors > 0 ? (byte)TownSpotKind.HomeDoor : (byte)TownSpotKind.Walk;
-            int pick = m_Rng.Next(Math.Max(1, doors > 0 ? doors : walks));
+            // most step out somewhere on the district (round a corner), the rest from a home door; never at the arrival while it
+            // already holds its share of the crowd (owner 14 Nov 2026: life everywhere, not by the Sky Lift)
+            TownsfolkSettings set = m_Assets.settings;
+            byte from = doors == 0 || (walks > 0 && m_Rng.NextDouble() < set.spawnAnywhereShare) ? (byte)TownSpotKind.Walk : (byte)TownSpotKind.HomeDoor;
+            int choices = from == (byte)TownSpotKind.HomeDoor ? doors : walks;
             float3 at = default;
             bool placed = false;
-            for (int i = 0; i < spots.Length; i++)
-                if (spots[i].Kind == from && pick-- == 0) { at = spots[i].Pos; placed = true; break; }
+            for (int attempt = 0; attempt < 8 && !placed && choices > 0; attempt++)
+            {
+                int pick = m_Rng.Next(choices);
+                for (int i = 0; i < spots.Length; i++)
+                {
+                    if (spots[i].Kind != from || pick-- != 0) continue;
+                    if (TownSpread.MayStepOutAt(spots[i].Pos, m_HasArrival, m_Arrival, set.arrivalRadius, m_NearArrival, Out, set.arrivalMostShare))
+                    {
+                        at = spots[i].Pos;
+                        placed = true;
+                        m_NearArrival += m_HasArrival && math.distancesq(at.xz, m_Arrival.xz) <= set.arrivalRadius * set.arrivalRadius ? 1 : 0;
+                    }
+                    break;
+                }
+            }
             if (!placed) return false;
 
             TownArea a = em.GetComponentData<TownArea>(area);

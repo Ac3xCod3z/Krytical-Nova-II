@@ -95,6 +95,10 @@ namespace KryticalNova.Townsfolk
         public byte Ready;
         /// <summary>Bumped each time the spots are rebuilt (the score cache rebuilds with it).</summary>
         public uint Version;
+        /// <summary>1 while more than its most share of the crowd is near the Sky Lift arrival: spots there then score less (owner 14 Nov 2026).</summary>
+        public byte ArrivalCrowded;
+        /// <summary>Their score then (0-1; <see cref="TownsfolkSettings.arrivalFullScore"/>).</summary>
+        public float ArrivalFullScore;
     }
 
     /// <summary>

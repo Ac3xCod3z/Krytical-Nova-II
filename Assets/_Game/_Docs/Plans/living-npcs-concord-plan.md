@@ -383,6 +383,41 @@ First pass, 13 Nov 2026 (b18-coder-11). Compiles (90/90 Editor, 40/40 server), `
   when missing): its greeting gesture, call-out lines (12 m, 45 s each, 10 s between any two vendors) and welcome lines, shown
   in the HUD's comic speech bubble through a new Core sink `ISpeechBubbleSink` (`ClientPresentationRegistry.Speech`,
   implemented by `PetBubbleController`; vendor lines are not hidden by the Pet chatter option).
+- [x] Owner notes, 14 Nov 2026 (after the Fable fix; Opus coder b18-standby-18b):
+  - [x] Far cards much farther: bodies near and mid-distance, cards only far out. Five bands per townsperson, edges per Crowd
+    Detail tier in `TownsfolkSettings` (metres, Low / Medium / High / Ultra):
+
+    | Band | What is drawn | Ends at |
+    |---|---|---|
+    | CLOSE | the whole mesh (LOD0), every frame animated, head-look (nearest 6 within 8 m), shadows | 12 / 18 / 25 / 35 |
+    | MEDIUM | LOD1 (about half the triangles), animated every 2nd frame, shadows, no head-look | 28 / 40 / 55 / 75 |
+    | FAR | LOD2 (about a quarter), animated every 4th frame, no shadows | 45 / 65 / 85 / 115 |
+    | REALLY FAR | the picture card (one instanced draw per look) | 120 / 160 / 220 / 300 |
+    | TOO FAR | not drawn (the server still keeps it where it is) | past that |
+
+    Cards began at 25 / 35 / 45 / 60 m before; Low now starts them at 45 m (never so near a card reads as a flat figure).
+    Bodies drawn at most 20 / 32 / 48 / 60, cards 32 / 48 / 64 / 96. A band changes back only 2 m past its edge.
+  - [x] Fewer polygons with distance: LOD1 and LOD2 are baked once per look when the look is baked (`TownsfolkMeshLod`:
+    vertex clustering inside one submesh and one swatch colour cell, the cell size searched to the triangle share in
+    `lod1Share` / `lod2Share`), shared by every body wearing it, never made per NPC. Unity's own Mesh LOD generator is
+    Editor-only and a look is merged at run time, so the project's own baker makes them. Each body draws them on its own
+    bones through a `LODGroup` (cross-fade, animated dither) whose switch heights are worked out from the band edges in
+    metres (`TownsfolkBands.ScreenHeight`, again when the tier, the camera's view angle or the LOD bias change); past FAR
+    the group fades the body out over the card.
+  - [x] Life across ALL of Sky Concord, not only by the Sky Lift: the area now reaches the whole platform (radius 160 m:
+    its NavMesh is 220 m square). `TownSpread` spreads points every 9 m over every walkable floor of its NavMesh (plazas,
+    streets, stairs, upper tiers, edges; at most 240) and sorts them: rim points look out (Viewpoint, quiet: strollers),
+    back streets 18 m or more from every hand-placed spot get quiet lean spots (40 %, loners), elsewhere 15 % are places to
+    stand and look round, the rest walk points. 70 % of new townsfolk step out somewhere on the district instead of from
+    a home door; never by the arrival while 15 % of the crowd is already within 28 m of it, and while it is, its spots
+    score a quarter (`TownSpotFlags.NearArrival`, `TownArea.ArrivalCrowded`). Numbers in `TownsfolkSettings`.
+  - [x] No weapons on townsfolk or vendors: the Sidekick weapon mounts (back, hips back / left / right:
+    `TownsfolkSettings.noWeaponRegions`) are left out of the merged mesh (`CharacterAppearance.ExcludeRegions`), and every
+    renderer of the player model but the look's own is removed when a body is made (held weapons, holsters). Guards too,
+    until the Master says otherwise.
+  - [x] Vendors out of step (the Fable fix): kept as it was.
+  - Tests: `TownsfolkBandsTests` (bands and hysteresis, cards far on every tier, switch heights in metres, LOD triangle
+    shares, the spread over a whole deck and the arrival's share, no weapon regions).
 - [ ] Owed: run the builder and the tests in Unity; Play proof GIF + perf log Low and High against the budget (48 in view:
   <= 1.5 ms main thread, <= 1.0 ms GPU, 0 GC a frame); second client.
 - [ ] Later steps: pairs walking together, head-look / glances / greetings / text barks (step 6), vendors' manner assets and

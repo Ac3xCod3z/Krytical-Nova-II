@@ -31,38 +31,53 @@ MonoBehaviour:
   giveUpWalkSeconds: 60
   snapToNavMesh: 4
   walkPoints: 60
+  spreadSpacing: 9
+  spreadMostPoints: 240
+  spreadRimBand: 18
+  spreadRimEdge: 2.5
+  backStreetFrom: 18
+  backStreetStandShare: 0.4
+  spreadStandShare: 0.15
+  spawnAnywhereShare: 0.7
+  arrivalRadius: 28
+  arrivalMostShare: 0.15
+  arrivalFullScore: 0.25
   farPlanStepSeconds: 2
-  fullBodiesByTier: 1000000020000000300000003c000000i
-  fullBodyDistanceByTier:
-  - 25
-  - 35
-  - 45
-  - 60
-  viewRadiusByTier:
-  - 60
-  - 80
-  - 100
-  - 140
-  cardsByTier: 18000000300000004000000060000000i
-  everyFrameWithinByTier:
-  - 10
-  - 15
-  - 20
-  - 30
-  farAnimateEveryByTier: 04000000030000000200000002000000i
-  shadowsWithinByTier:
-  - 8
+  fullBodiesByTier: 1400000020000000300000003c000000i
+  closeWithinByTier:
   - 12
   - 18
   - 25
-  fullSkinWithinByTier:
-  - 10
-  - 15
-  - 20
-  - 30
+  - 35
+  mediumWithinByTier:
+  - 28
+  - 40
+  - 55
+  - 75
+  farWithinByTier:
+  - 45
+  - 65
+  - 85
+  - 115
+  cardsWithinByTier:
+  - 120
+  - 160
+  - 220
+  - 300
+  cardsByTier: 20000000300000004000000060000000i
+  mediumAnimateEvery: 2
+  farAnimateEvery: 4
+  lod1Share: 0.5
+  lod2Share: 0.25
+  bandHysteresis: 2
   cardCaptureLayer: 31
   cardPixels: 96
   looksPerCast: 16
+  noWeaponRegions:
+  - 24
+  - 26
+  - 27
+  - 28
   headLookRadius: 8
   maxLookers: 6
   speedDamp: 0.15

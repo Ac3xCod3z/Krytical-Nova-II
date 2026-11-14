@@ -213,6 +213,202 @@ namespace KryticalNova.EditorTools
                   $"bodies {bodies}, cards {cards}; recorders valid main {main.Valid} gc {gc.Valid} view {view.Valid} decide {decide.Valid}");
         }
 
+        // ---- owner notes 14 Nov 2026: life over all of Concord, five bands, no weapons ----
+
+        static Type ServerType => FindType("KryticalNova.Townsfolk.TownsfolkServerSystem");
+        static Type ViewType => FindType("KryticalNova.Townsfolk.TownsfolkViewClientSystem");
+        static object Static(Type t, string name) => t?.GetField(name, BindingFlags.Public | BindingFlags.Static)?.GetValue(null);
+
+        static string Bands()
+        {
+            int[] b = Static(ViewType, "BandsNow") as int[] ?? new int[5];
+            return $"CLOSE {b[0]}, MEDIUM {b[1]}, FAR {b[2]}, cards {b[3]}, too far {b[4]}; last look's triangles LOD0/1/2 {Static(ViewType, "LodTriangles")}";
+        }
+
+        /// <summary>Weapons left on townsfolk and vendors: extra renderers on a body, and merged parts in a weapon-mount region.</summary>
+        static string WeaponCheck()
+        {
+            Type body = FindType("KryticalNova.Townsfolk.TownsfolkBody"), vendor = FindType("KryticalNova.Townsfolk.VendorPresenter");
+            var barred = new HashSet<KryticalNova.Items.BodyRegion> { KryticalNova.Items.BodyRegion.AttachmentBack, KryticalNova.Items.BodyRegion.AttachmentHipsBack,
+                KryticalNova.Items.BodyRegion.AttachmentHipsLeft, KryticalNova.Items.BodyRegion.AttachmentHipsRight };
+            int looks = 0, extraRenderers = 0, barredParts = 0, crossFade = 0, withShader = 0;
+            var lodGroups = 0;
+            foreach (KryticalNova.Items.Visuals.CharacterAppearance a in UnityEngine.Object.FindObjectsByType<KryticalNova.Items.Visuals.CharacterAppearance>(FindObjectsInactive.Include))
+            {
+                bool ours = a.GetComponent(body) != null || a.GetComponentInChildren(vendor, true) != null;
+                if (!ours) continue;
+                looks++;
+                foreach (Renderer r in a.GetComponentsInChildren<Renderer>(true))
+                    if (r != a.Renderer && r.name != "LOD1" && r.name != "LOD2" && !(r is ParticleSystemRenderer)) extraRenderers++;
+                foreach (KryticalNova.Items.SidekickPartRef part in a.CurrentParts) if (barred.Contains(part.region)) barredParts++;
+                if (a.GetComponent<LODGroup>() != null) lodGroups++;
+                Material m = a.Renderer != null ? a.Renderer.sharedMaterial : null;
+                if (m != null && m.shader != null)
+                {
+                    withShader++;
+                    if (m.shader.keywordSpace.keywordNames.Contains("LOD_FADE_CROSSFADE")) crossFade++;
+                }
+            }
+            return $"looks {looks} (LOD groups {lodGroups}): other renderers {extraRenderers}, merged weapon-mount parts {barredParts}; shaders with the LOD cross-fade {crossFade} of {withShader}";
+        }
+
+        static Transform ConcordRoot() => GameObject.Find("Concord 040 (sky preview)")?.transform;
+
+        /// <summary>Where the crowd stands over a few game hours (the town clock run fast), as a top-down heatmap of Concord with its NavMesh.</summary>
+        static IEnumerator Heatmap(KnPlayHere.TwoPlayerRun r, float seconds, float fromHour, float toHour)
+        {
+            Type server = ServerType;
+            FieldInfo clock = server?.GetField("ClockOverride", BindingFlags.Public | BindingFlags.Static);
+            FieldInfo record = server?.GetField("RecordPositions", BindingFlags.Public | BindingFlags.Static);
+            var positions = Static(server, "Positions") as List<Vector3>;
+            Transform root = ConcordRoot();
+            if (clock == null || record == null || positions == null || root == null) { r.Log("TOWN heatmap FAIL: no server statics or no Concord root"); yield break; }
+            float start = Time.realtimeSinceStartup;
+            float hours = fromHour;
+            clock.SetValue(null, (Func<(float hours, bool raining)>)(() => (hours, false)));
+            record.SetValue(null, true);
+            var all = new List<Vector3>();
+            int samples = 0;
+            try
+            {
+                while (Time.realtimeSinceStartup < start + seconds)
+                {
+                    yield return new WaitForSeconds(1f);
+                    hours = Mathf.Lerp(fromHour, toHour, (Time.realtimeSinceStartup - start) / seconds);
+                    all.AddRange(positions);
+                    samples++;
+                }
+            }
+            finally
+            {
+                clock.SetValue(null, null);
+                record.SetValue(null, false);
+            }
+            // the picture: 640 px over 240 m round the root, the NavMesh grey, every sample a warm dot, the arrival ring yellow
+            const int px = 640;
+            const float span = 240f;
+            var tex = new Texture2D(px, px, TextureFormat.RGBA32, false);
+            var pix = new Color32[px * px];
+            for (int i = 0; i < pix.Length; i++) pix[i] = new Color32(18, 20, 28, 255);
+            Vector2 ToPx(Vector3 w) { Vector3 l = root.InverseTransformPoint(w); return new Vector2((l.x / span + 0.5f) * px, (l.z / span + 0.5f) * px); }
+            UnityEngine.AI.NavMeshTriangulation nav = UnityEngine.AI.NavMesh.CalculateTriangulation();
+            for (int i = 0; i + 2 < nav.indices.Length; i += 3)
+            {
+                Vector3 a = nav.vertices[nav.indices[i]], b = nav.vertices[nav.indices[i + 1]], c = nav.vertices[nav.indices[i + 2]];
+                if (Mathf.Abs((a.y + b.y + c.y) / 3f - root.position.y) > 30f) continue;
+                Vector2 A = ToPx(a), B = ToPx(b), C = ToPx(c);
+                int x0 = Mathf.Max(0, (int)Mathf.Min(A.x, Mathf.Min(B.x, C.x))), x1 = Mathf.Min(px - 1, (int)Mathf.Max(A.x, Mathf.Max(B.x, C.x)) + 1);
+                int y0 = Mathf.Max(0, (int)Mathf.Min(A.y, Mathf.Min(B.y, C.y))), y1 = Mathf.Min(px - 1, (int)Mathf.Max(A.y, Mathf.Max(B.y, C.y)) + 1);
+                float area = (B.x - A.x) * (C.y - A.y) - (C.x - A.x) * (B.y - A.y);
+                if (Mathf.Abs(area) < 1e-4f) continue;
+                for (int y = y0; y <= y1; y++)
+                    for (int x = x0; x <= x1; x++)
+                    {
+                        float w0 = ((B.x - x) * (C.y - y) - (C.x - x) * (B.y - y)) / area, w1 = ((C.x - x) * (A.y - y) - (A.x - x) * (C.y - y)) / area;
+                        if (w0 >= 0f && w1 >= 0f && w0 + w1 <= 1f) pix[y * px + x] = new Color32(70, 74, 86, 255);
+                    }
+            }
+            var heat = new float[px * px];
+            foreach (Vector3 w in all)
+            {
+                Vector2 q = ToPx(w);
+                for (int dy = -3; dy <= 3; dy++)
+                    for (int dx = -3; dx <= 3; dx++)
+                    {
+                        int x = (int)q.x + dx, y = (int)q.y + dy;
+                        if (x < 0 || y < 0 || x >= px || y >= px || dx * dx + dy * dy > 9) continue;
+                        heat[y * px + x] += 1f;
+                    }
+            }
+            float most = 1f;
+            foreach (float h in heat) most = Mathf.Max(most, h);
+            for (int i = 0; i < heat.Length; i++)
+                if (heat[i] > 0f)
+                {
+                    float k = Mathf.Sqrt(heat[i] / most);
+                    pix[i] = Color32.Lerp(new Color32(255, 120, 40, 255), new Color32(255, 255, 210, 255), k);
+                }
+            GameObject arrival = GameObject.Find(SkyLiftLink.ArrivalMarker);
+            int near = 0, quarters0 = 0, quarters1 = 0, quarters2 = 0, quarters3 = 0;
+            if (arrival != null)
+            {
+                Vector2 c = ToPx(arrival.transform.position);
+                float rad = 28f / span * px;
+                for (int k = 0; k < 360; k++)
+                {
+                    int x = (int)(c.x + Mathf.Cos(k * Mathf.Deg2Rad) * rad), y = (int)(c.y + Mathf.Sin(k * Mathf.Deg2Rad) * rad);
+                    if (x >= 0 && y >= 0 && x < px && y < px) pix[y * px + x] = new Color32(255, 220, 0, 255);
+                }
+                foreach (Vector3 w in all) if (Vector2.Distance(new Vector2(w.x, w.z), new Vector2(arrival.transform.position.x, arrival.transform.position.z)) <= 28f) near++;
+            }
+            foreach (Vector3 w in all)
+            {
+                Vector3 l = root.InverseTransformPoint(w);
+                if (l.x < 0f && l.z >= 0f) quarters0++; else if (l.x >= 0f && l.z >= 0f) quarters1++; else if (l.x < 0f) quarters2++; else quarters3++;
+            }
+            tex.SetPixels32(pix);
+            tex.Apply();
+            System.IO.File.WriteAllBytes(System.IO.Path.Combine(OutFolder, "heatmap.png"), tex.EncodeToPNG());
+            UnityEngine.Object.DestroyImmediate(tex);
+            int n = Mathf.Max(1, all.Count);
+            r.Log($"TOWN heatmap ({Now}): {samples} samples of the crowd from {fromHour:F0}:00 to {toHour:F0}:00, {all.Count} positions; near the arrival {near * 100f / n:F0} %; " +
+                  $"quarters NW {quarters0 * 100f / n:F0} % NE {quarters1 * 100f / n:F0} % SW {quarters2 * 100f / n:F0} % SE {quarters3 * 100f / n:F0} %; spread points {Static(ServerType, "SpreadPoints")}; " +
+                  $"picture {System.IO.Path.Combine(OutFolder, "heatmap.png")}");
+        }
+
+        /// <summary>A slow wide orbit high over Concord (the camera the crowd's bands follow while it runs), measured part way.</summary>
+        static IEnumerator Wide(KnPlayHere.TwoPlayerRun r, string label, float seconds, float measureFrom, float measureFor)
+        {
+            Transform root = ConcordRoot();
+            Camera main = Camera.main;
+            if (root == null || main == null) { r.Log("TOWN wide FAIL: no root or camera"); yield break; }
+            var go = new GameObject("KnTmp wide camera");
+            Camera cam = go.AddComponent<Camera>();
+            cam.CopyFrom(main);
+            cam.depth = main.depth + 5f;
+            cam.fieldOfView = 55f;
+            cam.farClipPlane = Mathf.Max(cam.farClipPlane, 1000f);
+            string oldTag = main.tag;
+            main.tag = "Untagged";
+            go.tag = "MainCamera";   // the townsfolk view measures its bands from Camera.main
+            r.Log($"TOWN clip wide {label} start {Now}");
+            float start = Time.realtimeSinceStartup;
+            bool measured = false;
+            try
+            {
+                while (Time.realtimeSinceStartup < start + seconds)
+                {
+                    float k = (Time.realtimeSinceStartup - start) / seconds;
+                    float a = Mathf.Lerp(-35f, 35f, k) * Mathf.Deg2Rad;
+                    Vector3 at = root.position + new Vector3(Mathf.Sin(a) * -105f, 38f, Mathf.Cos(a) * -105f);
+                    go.transform.SetPositionAndRotation(at, Quaternion.LookRotation(root.position + Vector3.up * 2f - at));
+                    if (!measured && Time.realtimeSinceStartup >= start + measureFrom)
+                    {
+                        measured = true;
+                        r.Log($"TOWN wide {label} bands {Now}: " + Bands());
+                        float until = Time.realtimeSinceStartup + measureFor;
+                        IEnumerator m = Measure(r, "wide-" + label, measureFor);
+                        while (m.MoveNext())
+                        {
+                            k = (Time.realtimeSinceStartup - start) / seconds;
+                            a = Mathf.Lerp(-35f, 35f, k) * Mathf.Deg2Rad;
+                            at = root.position + new Vector3(Mathf.Sin(a) * -105f, 38f, Mathf.Cos(a) * -105f);
+                            go.transform.SetPositionAndRotation(at, Quaternion.LookRotation(root.position + Vector3.up * 2f - at));
+                            yield return m.Current;
+                        }
+                        continue;
+                    }
+                    yield return null;
+                }
+            }
+            finally
+            {
+                main.tag = oldTag;
+                UnityEngine.Object.Destroy(go);
+                r.Log($"TOWN clip wide {label} end {Now}");
+            }
+        }
+
         static int s_Errors;
         static void Count(string message, string stack, LogType type) { if (message != null && message.StartsWith("Array index (")) s_Errors++; }
 
@@ -269,6 +465,37 @@ namespace KryticalNova.EditorTools
                 if (Environment.GetEnvironmentVariable("KN_TMP_TOWN_BISECT") == "1") { yield return Bisect(r); ok = true; yield break; }
                 yield return new WaitForSeconds(15f);   // 4 a second come out: 48 in ~12 s
                 r.Log($"TOWN status {Now}: " + Gm("gm.town") + $" | view bodies {Stat("ShownNow")}, cards {Stat("CardsNow")}, looks {Stat("LooksNow")}, vendors dressed {Vendors()}");
+                r.Log($"TOWN bands {Now}: " + Bands());
+                r.Log($"TOWN weapons {Now}: " + WeaponCheck());
+                if (Environment.GetEnvironmentVariable("KN_TMP_TOWN_MODE") != "old")
+                {
+                    yield return Heatmap(r, 120f, 7f, 21f);
+                    Gm("time.noon");
+                    yield return new WaitForSeconds(4f);
+                    Preset("High");
+                    yield return Wide(r, "High", 30f, 8f, 10f);
+                    Preset("Low");
+                    yield return new WaitForSeconds(2f);
+                    yield return Wide(r, "Low", 22f, 6f, 10f);
+                    Preset("High");
+                    yield return Measure(r, "High", 8f);
+                    r.Log($"TOWN player view High bands {Now}: " + Bands());
+                    yield return Look(r, "High");
+                    Preset("Low");
+                    yield return new WaitForSeconds(2f);
+                    yield return Measure(r, "Low", 8f);
+                    Preset("High");
+                    r.Log($"TOWN no crowd {Now}: " + Gm("gm.town.cap 0 0") + " / " + Gm("gm.town.clear"));
+                    yield return new WaitForSeconds(3f);
+                    yield return Wide(r, "HighNoCrowd", 16f, 4f, 10f);
+                    yield return Measure(r, "HighNoCrowd", 8f);
+                    Gm("gm.town.cap -1 -1");
+                    yield return new WaitForSeconds(15f);
+                    r.Log("TOWN vendors in step? " + Now + ": " + VendorStep());
+                    r.Log($"TOWN weapons end {Now}: " + WeaponCheck());
+                    ok = true;
+                    yield break;
+                }
 
                 r.Log("TOWN vendors in step? " + Now + ": " + VendorStep());
                 r.Log($"TOWN clip crowd {Now} (8 s, High, no labels)");

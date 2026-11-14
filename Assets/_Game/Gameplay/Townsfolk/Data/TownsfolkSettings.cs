@@ -51,34 +51,68 @@ namespace KryticalNova.Townsfolk
         [Tooltip("Extra walk points sampled on the area's NavMesh (strolls between spots).")]
         public int walkPoints = 60;
 
+        [Header("Life over the whole district (owner 14 Nov 2026: not only by the Sky Lift arrival)")]
+        [Tooltip("Metres between the points spread over every walkable floor of the area (plazas, streets, stairs, upper tiers, edges), found on its NavMesh.")]
+        public float spreadSpacing = 9f;
+        [Tooltip("Metres up or down from the area's deck that still count as its floors (Sky Concord's upper tiers and stairs).")]
+        public float spreadHeight = 26f;
+        [Tooltip("Most spread points (walk points, plus the ones below that become places to stand).")]
+        public int spreadMostPoints = 240;
+        [Tooltip("Metres from the area's outer edge within which a spread point near the NavMesh rim is a viewpoint looking out (strollers).")]
+        public float spreadRimBand = 18f;
+        [Tooltip("Metres a rim point may be from the NavMesh's edge (a rail).")]
+        public float spreadRimEdge = 2.5f;
+        [Tooltip("Metres from every hand-placed spot past which a spread point is a back street: some become quiet lean spots (loners).")]
+        public float backStreetFrom = 18f;
+        [Tooltip("Share of back-street points that become quiet places to stand; the rest stay walk points.")]
+        [Range(0f, 1f)] public float backStreetStandShare = 0.4f;
+        [Tooltip("Share of the spread points (not rim, not back street) that become places to stand and look round; the rest stay walk points.")]
+        [Range(0f, 1f)] public float spreadStandShare = 0.15f;
+        [Tooltip("Share of new townsfolk that step out somewhere on the district (round a corner) instead of from a home door.")]
+        [Range(0f, 1f)] public float spawnAnywhereShare = 0.7f;
+        [Tooltip("Metres round the Sky Lift arrival that count as near it.")]
+        public float arrivalRadius = 28f;
+        [Tooltip("Most share of the crowd that may be near the arrival: past it nobody steps out there and spots there score less.")]
+        [Range(0f, 1f)] public float arrivalMostShare = 0.15f;
+        [Tooltip("Score of a spot near the arrival while the share there is past the most (0-1 of its score).")]
+        [Range(0f, 1f)] public float arrivalFullScore = 0.25f;
+
         [Header("Far away (Kingdom Come)")]
         [Tooltip("Seconds between plan steps of a townsperson no player is near (Brain tier 3): no walking, it is put at its next spot.")]
         public float farPlanStepSeconds = 2f;
 
-        [Header("Client view: Crowd Detail tiers (Settings, Graphics; index Low, Medium, High, Ultra; owner 13 Nov 2026)")]
-        [Tooltip("Per tier: the nearest this many townsfolk get a full, animated body (the server's crowd is the same on every tier).")]
-        public int[] fullBodiesByTier = { 16, 32, 48, 60 };
-        [Tooltip("Per tier: metres from the camera within which a townsperson gets a full body; farther ones, or over the count, get a card.")]
-        public float[] fullBodyDistanceByTier = { 25f, 35f, 45f, 60f };
-        [Tooltip("Per tier: metres from the camera within which townsfolk are drawn at all (a body or a far card).")]
-        public float[] viewRadiusByTier = { 60f, 80f, 100f, 140f };
+        [Header("Client view: five distance bands per Crowd Detail tier (Settings, Graphics; index Low, Medium, High, Ultra; owner 14 Nov 2026)")]
+        [Tooltip("Per tier: the nearest this many townsfolk get a body (CLOSE, MEDIUM or FAR band); over the count they are cards (the server's crowd is the same on every tier).")]
+        public int[] fullBodiesByTier = { 20, 32, 48, 60 };
+        [Tooltip("Per tier: CLOSE band ends here (metres from the camera). CLOSE = the whole mesh, every frame animated, head-look, shadows.")]
+        public float[] closeWithinByTier = { 12f, 18f, 25f, 35f };
+        [Tooltip("Per tier: MEDIUM band ends here. MEDIUM = LOD1 (about half the triangles), animated every 2nd frame, shadows, no head-look.")]
+        public float[] mediumWithinByTier = { 28f, 40f, 55f, 75f };
+        [Tooltip("Per tier: FAR band ends here, the bodies end and the cards begin (REALLY FAR). FAR = LOD2 (about a quarter), animated every 4th frame, no shadows. Low never pulls this so close that a card reads as a flat figure.")]
+        public float[] farWithinByTier = { 45f, 65f, 85f, 115f };
+        [Tooltip("Per tier: REALLY FAR band (the picture cards) ends here; past it townsfolk are TOO FAR and not drawn at all (the server still keeps them where they are).")]
+        public float[] cardsWithinByTier = { 120f, 160f, 220f, 300f };
         [Tooltip("Per tier: most far cards drawn (one instanced draw per look).")]
-        public int[] cardsByTier = { 24, 48, 64, 96 };
-        [Tooltip("Per tier: metres within which a body animates every frame; farther ones animate every few frames (next row).")]
-        public float[] everyFrameWithinByTier = { 10f, 15f, 20f, 30f };
-        [Tooltip("Per tier: a far body animates every this many frames (staggered by its seed).")]
-        public int[] farAnimateEveryByTier = { 4, 3, 2, 2 };
-        [Tooltip("Per tier: metres within which a body casts a shadow; farther ones never do.")]
-        public float[] shadowsWithinByTier = { 8f, 12f, 18f, 25f };
-        [Tooltip("Per tier: metres within which a body skins with every bone; farther, lighter skinning (CharacterLod's steps).")]
-        public float[] fullSkinWithinByTier = { 10f, 15f, 20f, 30f };
+        public int[] cardsByTier = { 32, 48, 64, 96 };
+        [Tooltip("MEDIUM bodies animate every this many frames, FAR bodies every this many (staggered by their seed).")]
+        public int mediumAnimateEvery = 2, farAnimateEvery = 4;
+        [Tooltip("Share of the triangles the baked LOD1 and LOD2 keep (made once per look when it is baked, shared by every body wearing it).")]
+        [Range(0.05f, 1f)] public float lod1Share = 0.5f, lod2Share = 0.25f;
+        [Tooltip("Metres past a band edge a townsperson must go before it changes back (no flicker on the line).")]
+        public float bandHysteresis = 2f;
         [Tooltip("Layer the far cards' snapshots are taken on (once per look, from a hidden camera): one nothing else uses.")]
         public int cardCaptureLayer = 31;
         [Tooltip("Pixels of a card snapshot (width; the height is twice it).")]
         public int cardPixels = 96;
         [Tooltip("Looks baked per cast: townsfolk of one look share one merged mesh (owner pick 3a: bake once per outfit).")]
         public int looksPerCast = 16;
-        [Tooltip("Metres within which a townsperson may turn its head to the player (head-look; step 6).")]
+        [Tooltip("Sidekick parts townsfolk and vendors never wear (owner 14 Nov 2026: no weapons): back mounts, holsters and sheaths are left out of the baked mesh. Guards too, until the Master says otherwise.")]
+        public KryticalNova.Items.BodyRegion[] noWeaponRegions =
+        {
+            KryticalNova.Items.BodyRegion.AttachmentBack, KryticalNova.Items.BodyRegion.AttachmentHipsBack,
+            KryticalNova.Items.BodyRegion.AttachmentHipsLeft, KryticalNova.Items.BodyRegion.AttachmentHipsRight,
+        };
+        [Tooltip("Metres within which a townsperson in the CLOSE band may turn its head to the player (head-look).")]
         public float headLookRadius = 8f;
         [Tooltip("Most townsfolk looking at the local player at once.")]
         public int maxLookers = 6;

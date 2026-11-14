@@ -93,7 +93,7 @@ namespace KryticalNova.Townsfolk
                 m_KeyValid = true;
                 deps = new ScoreCacheJob
                 {
-                    Area = areaEntity, Config = configEntity, Clock = clock,
+                    Area = areaEntity, Config = configEntity, Clock = clock, ArrivalScale = area.ArrivalCrowded != 0 ? math.saturate(area.ArrivalFullScore) : 1f,
                     Spots = spotLookup, Rows = rowLookup, Cache = cacheLookupRw,
                 }.Schedule(deps);
             }
@@ -159,6 +159,8 @@ namespace KryticalNova.Townsfolk
         {
             public Entity Area, Config;
             public TownClock Clock;
+            /// <summary>Spots near the Sky Lift arrival score this much while it is crowded (1 otherwise).</summary>
+            public float ArrivalScale;
             [ReadOnly] public BufferLookup<TownSpot> Spots;
             [ReadOnly] public BufferLookup<PersonalityRow> Rows;
             public BufferLookup<TownScoreCache> Cache;
@@ -182,6 +184,7 @@ namespace KryticalNova.Townsfolk
                             spot.OnlyFor == 0 || spot.OnlyFor == p.Id + 1,
                             raining, p.Rain, (spot.Flags & (byte)TownSpotFlags.Sheltered) != 0,
                             night, p.NeedsLight != 0, (spot.Flags & (byte)TownSpotFlags.Lit) != 0);
+                        if ((spot.Flags & (byte)TownSpotFlags.NearArrival) != 0) v *= ArrivalScale;
                         cache[r * spots.Length + i] = new TownScoreCache { Value = v };
                     }
                 }

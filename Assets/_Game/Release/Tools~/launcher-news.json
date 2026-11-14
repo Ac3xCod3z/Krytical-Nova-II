@@ -51,6 +51,8 @@
         "Emotes from the saddle: waves, cheers, points, salutes, beckons, laughs and taunts play while riding; the others say you can't do that while riding.",
         "Townsfolk on Sky Concord: up to 48 by day and 20 at night, from every faction, walking, working, shopping and chatting by their own personality and the hour.",
         "Crowd Detail (Settings, Graphics): Low to Ultra sets how many townsfolk are drawn in full, how far away, and which cast shadows; far ones become light flat cards. It follows the preset.",
+        "Townsfolk fill the whole of Sky Concord, not only the Sky Lift square: plazas, back streets, stairs, upper tiers and the rails all have people, and nobody carries a weapon around town.",
+        "Townsfolk stay full bodies much farther away and fade smoothly into lighter versions of themselves with distance; only the far crowd becomes flat cards.",
         "Vendors are dressed like the rest of the town and notice you: their heads follow you, they wave or beckon when you look their way, show their goods when you step up and bow when you open their shop."
       ]
     },

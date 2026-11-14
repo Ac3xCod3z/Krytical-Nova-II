@@ -27,5 +27,5 @@ namespace KryticalNova.Townsfolk
     public enum TownGesture : byte { None = 0, Wave = 1, Beckon = 2, ShowGoods = 3, Welcome = 4 }
 
     [System.Flags]
-    public enum TownSpotFlags : byte { None = 0, Sheltered = 1, Lit = 2, Quiet = 4, FacesPlaza = 8 }
+    public enum TownSpotFlags : byte { None = 0, Sheltered = 1, Lit = 2, Quiet = 4, FacesPlaza = 8, NearArrival = 16 }
 }

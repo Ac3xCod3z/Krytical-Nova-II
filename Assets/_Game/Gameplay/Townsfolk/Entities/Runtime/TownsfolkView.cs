@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using KryticalNova.CharacterCreation;
 using KryticalNova.Factions;
 using KryticalNova.Items.Visuals;
+using KryticalNova.Player.Entities;
 using KryticalNova.Rendering;
 using Unity.Collections;
 using Unity.Entities;
@@ -73,6 +74,13 @@ namespace KryticalNova.Townsfolk
         public long LookKey = -1;
         public byte ShownActivity = 255;
         public float Offset;
+        /// <summary>Its distance band now (<see cref="TownsfolkBands"/>; 255 = new).</summary>
+        public byte Band = 255;
+        /// <summary>The look's lighter meshes drawn on the same bones (MEDIUM, FAR) and the LOD group that cross-fades between them.</summary>
+        public SkinnedMeshRenderer Lod1, Lod2;
+        public LODGroup Group;
+        public int LodHeightsStamp = -1;
+        public TownsfolkHeadLook HeadLook;
 
         /// <summary>
         /// The animator binds to the mesh it finds once, when it gets its controller; a mesh with other blend shapes after that (the full
@@ -171,6 +179,7 @@ namespace KryticalNova.Townsfolk
             public SkinnedMeshRenderer Renderer;
             public Vector3 Scale;
             public BodyType Body;
+            public Mesh Lod1, Lod2;
         }
 
         sealed class ByDistance : IComparer<(float distSq, Entity ghost)>
@@ -188,9 +197,15 @@ namespace KryticalNova.Townsfolk
         readonly List<(float distSq, Entity ghost)> m_Near = new();
         readonly HashSet<Entity> m_Wanted = new();
         readonly List<Entity> m_Drop = new();
+        readonly List<(float distSq, Entity ghost)> m_Lookers = new();
         TownsfolkCards m_Cards;
-        EntityQuery m_Ghosts;
-        int m_Made, m_Frame;
+        EntityQuery m_Ghosts, m_LocalPlayer;
+        int m_Made, m_Frame, m_CardsFrom;
+        // the LOD groups' switch heights, made from the band edges in metres (again when the tier, the camera's view angle or the LOD bias change)
+        readonly LOD[] m_Lods = new LOD[3];
+        float m_LodFov = -1f, m_LodBias = -1f;
+        TownsfolkBands.Edges m_LodEdges;
+        int m_LodStamp;
 
         public int Shown => m_Shown.Count;
         public int Templates => m_Templates.Count;
@@ -199,18 +214,62 @@ namespace KryticalNova.Townsfolk
 
         /// <summary>This client's last frame, for gm.town and the probes: full bodies shown, far cards drawn, looks baked.</summary>
         public static int ShownNow, CardsNow, LooksNow;
+        /// <summary>The last look baked: triangles of its LOD0 / LOD1 / LOD2 (gm.town and the probes).</summary>
+        public static string LodTriangles = "";
+        /// <summary>This client's last frame by band: CLOSE, MEDIUM, FAR bodies, REALLY FAR cards, TOO FAR (not drawn).</summary>
+        public static readonly int[] BandsNow = new int[5];
 
         /// <summary>gm.town.debug: labels over every shown townsperson (plan 3.9).</summary>
         public static bool DebugLabels;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        static void ResetStatics() { DebugLabels = false; ShownNow = CardsNow = LooksNow = 0; }
+        static void ResetStatics() { DebugLabels = false; ShownNow = CardsNow = LooksNow = 0; LodTriangles = ""; }
 
         /// <summary>What the labels show: each shown body and its ghost's state this frame (filled only while <see cref="DebugLabels"/>).</summary>
         internal readonly List<(TownsfolkBody body, TownsfolkGhost ghost, float distance)> Labels = new();
 
-        protected override void OnCreate() =>
+        protected override void OnCreate()
+        {
             m_Ghosts = GetEntityQuery(ComponentType.ReadOnly<TownsfolkGhost>(), ComponentType.ReadOnly<LocalTransform>(), ComponentType.ReadOnly<GhostInstance>());
+            m_LocalPlayer = GetEntityQuery(ComponentType.ReadOnly<PlayerGhostTag>(), ComponentType.ReadOnly<GhostOwnerIsLocal>(),
+                ComponentType.ReadOnly<LocalTransform>());
+        }
+
+        bool LocalPlayer(out Vector3 at)
+        {
+            at = default;
+            if (m_LocalPlayer.IsEmpty) return false;
+            using NativeArray<LocalTransform> places = m_LocalPlayer.ToComponentDataArray<LocalTransform>(Allocator.Temp);
+            if (places.Length == 0) return false;
+            at = (Vector3)places[0].Position + Vector3.up * 1.6f;   // the head, not the feet
+            return true;
+        }
+
+        /// <summary>Switch heights from metres: a body of <see cref="TownsfolkBands.GroupSize"/> m is that share of the screen at the band's edge.</summary>
+        void UpdateLodHeights(Camera eye, in TownsfolkBands.Edges edges)
+        {
+            float fov = eye.orthographic ? 60f : eye.fieldOfView;
+            float bias = Mathf.Max(0.01f, QualitySettings.lodBias);
+            if (Mathf.Approximately(fov, m_LodFov) && Mathf.Approximately(bias, m_LodBias) && edges.Equals(m_LodEdges)) return;
+            m_LodFov = fov;
+            m_LodBias = bias;
+            m_LodEdges = edges;
+            m_LodStamp++;
+        }
+
+        void ApplyLodHeights(TownsfolkBody body)
+        {
+            if (body.Group == null || body.LodHeightsStamp == m_LodStamp || body.Appearance == null || body.Appearance.Renderer == null) return;
+            body.LodHeightsStamp = m_LodStamp;
+            SkinnedMeshRenderer main = body.Appearance.Renderer;
+            float h0 = TownsfolkBands.ScreenHeight(m_LodEdges.Close, m_LodFov, m_LodBias);
+            float h1 = Mathf.Min(h0 * 0.999f, TownsfolkBands.ScreenHeight(m_LodEdges.Medium, m_LodFov, m_LodBias));
+            float h2 = Mathf.Min(h1 * 0.999f, TownsfolkBands.ScreenHeight(m_LodEdges.Far, m_LodFov, m_LodBias));
+            m_Lods[0] = new LOD(h0, new Renderer[] { main });
+            m_Lods[1] = new LOD(h1, new Renderer[] { body.Lod1 != null && body.Lod1.sharedMesh != null ? body.Lod1 : main });
+            m_Lods[2] = new LOD(h2, new Renderer[] { body.Lod2 != null && body.Lod2.sharedMesh != null ? body.Lod2 : main });
+            body.Group.SetLODs(m_Lods);
+        }
 
         protected override void OnDestroy()
         {
@@ -239,16 +298,14 @@ namespace KryticalNova.Townsfolk
             float3 from = eye.transform.position;
             EntityManager em = EntityManager;
 
-            // the player's Crowd Detail picks the tier's numbers (only what this client draws; the server's crowd is the same)
+            // the player's Crowd Detail picks the tier's band edges (only what this client draws; the server's crowd is the same)
             int tier = CrowdDetailRuntime.Tier;
-            float radius = TownsfolkSettings.ByTier(s.viewRadiusByTier, tier, 100f);
-            float fullSq = Sq(TownsfolkSettings.ByTier(s.fullBodyDistanceByTier, tier, 45f));
+            var edges = TownsfolkBands.Edges.Of(s, tier);
             int fullCount = TownsfolkSettings.ByTier(s.fullBodiesByTier, tier, 48);
             int cardCount = TownsfolkSettings.ByTier(s.cardsByTier, tier, 64);
-            float everyFrameSq = Sq(TownsfolkSettings.ByTier(s.everyFrameWithinByTier, tier, 20f));
-            int every = Mathf.Max(1, TownsfolkSettings.ByTier(s.farAnimateEveryByTier, tier, 2));
-            float shadowSq = Sq(TownsfolkSettings.ByTier(s.shadowsWithinByTier, tier, 18f));
-            float fullSkinSq = Sq(TownsfolkSettings.ByTier(s.fullSkinWithinByTier, tier, 20f));
+            float hyst = Mathf.Max(0f, s.bandHysteresis);
+            float radius = edges.Cards + hyst;
+            UpdateLodHeights(eye, edges);
 
             m_Near.Clear();
             using (NativeArray<Entity> ghosts = m_Ghosts.ToEntityArray(Allocator.Temp))
@@ -258,10 +315,20 @@ namespace KryticalNova.Townsfolk
                     if (d <= radius * radius) m_Near.Add((d, g));
                 }
             m_Near.Sort(ByDistance.Instance);
-            // nearest first: a full body while within the tier's distance and count, a card after that
+            // nearest first: a body while in the CLOSE, MEDIUM or FAR band and within the count, a card (REALLY FAR) after that, nothing
+            // past the cards (TOO FAR); a band changes back only past its edge plus the hysteresis
             int full = 0;
             m_Wanted.Clear();
-            while (full < m_Near.Count && full < fullCount && m_Near[full].distSq <= fullSq) m_Wanted.Add(m_Near[full++].ghost);
+            m_CardsFrom = m_Near.Count;
+            for (int i = 0; i < m_Near.Count; i++)
+            {
+                Entity g = m_Near[i].ghost;
+                int was = m_Shown.TryGetValue(g, out TownsfolkBody shown) && shown != null ? shown.Band : TownsfolkBands.Card;
+                int band = TownsfolkBands.BandOf(math.sqrt(m_Near[i].distSq), edges, was, hyst);
+                if (band <= TownsfolkBands.Far && full < fullCount) { m_Wanted.Add(g); full++; continue; }
+                m_CardsFrom = i;
+                break;
+            }
 
             m_Drop.Clear();
             foreach (KeyValuePair<Entity, TownsfolkBody> pair in m_Shown)
@@ -271,6 +338,8 @@ namespace KryticalNova.Townsfolk
             float dt = SystemAPI.Time.DeltaTime;
             m_Frame++;
             Labels.Clear();
+            bool hasPlayer = LocalPlayer(out Vector3 player);
+            m_Lookers.Clear();
             foreach (Entity g in m_Wanted)
             {
                 TownsfolkGhost ghost = em.GetComponentData<TownsfolkGhost>(g);
@@ -282,20 +351,45 @@ namespace KryticalNova.Townsfolk
                     m_Shown[g] = body;
                 }
                 body.transform.SetPositionAndRotation(place.Position, place.Rotation);
+                ApplyLodHeights(body);
                 float dSq = math.distancesq(place.Position, from);
-                if (body.Lod != null) body.Lod.Drive(dSq <= fullSkinSq ? 0 : 1, dSq > shadowSq);
+                int band = TownsfolkBands.BandOf(math.sqrt(dSq), edges, body.Band, hyst);
+                if (band > TownsfolkBands.Far) band = TownsfolkBands.Far;   // still a body this frame (it fades out with its LOD group)
+                body.Band = (byte)band;
+                // CLOSE whole + shadows, MEDIUM lighter skinning + shadows, FAR lightest skinning + no shadow (the LOD group draws the mesh)
+                if (body.Lod != null) body.Lod.Drive(band, band >= TownsfolkBands.Far);
                 body.Show(ghost, s.speedDamp, dt);
-                body.Animate(dSq <= everyFrameSq, every, m_Frame, ghost.Seed, dt);
+                int every = band == TownsfolkBands.Close ? 1 : band == TownsfolkBands.Medium ? s.mediumAnimateEvery : s.farAnimateEvery;
+                body.Animate(every <= 1, Mathf.Max(1, every), m_Frame, ghost.Seed, dt);
+                if (band == TownsfolkBands.Close && hasPlayer && body.HeadLook != null)
+                {
+                    float toPlayer = Vector3.SqrMagnitude(player - (Vector3)place.Position);
+                    if (toPlayer <= s.headLookRadius * s.headLookRadius
+                        && Vector3.Dot(math.mul(place.Rotation, new float3(0f, 0f, 1f)), (player - (Vector3)place.Position).normalized) > 0.2f)
+                        m_Lookers.Add((toPlayer, g));
+                }
                 if (DebugLabels) Labels.Add((body, ghost, math.sqrt(dSq)));
+            }
+            // head-look: only the nearest few in the CLOSE band turn to the player
+            m_Lookers.Sort(ByDistance.Instance);
+            foreach (KeyValuePair<Entity, TownsfolkBody> pair in m_Shown)
+            {
+                if (pair.Value == null || pair.Value.HeadLook == null) continue;
+                bool looks = false;
+                for (int i = 0; i < m_Lookers.Count && i < s.maxLookers; i++) if (m_Lookers[i].ghost == pair.Key) { looks = true; break; }
+                pair.Value.HeadLook.Tick(looks, player, dt);
             }
 
             // far ones: cards, one instanced draw per look
-            if (full < m_Near.Count && cardCount > 0 && m_Assets.cardMaterial != null) m_Cards ??= new TownsfolkCards(m_Assets, PoolRoot());
+            int firstCard = Mathf.Min(full, m_CardsFrom);
+            if (firstCard < m_Near.Count && cardCount > 0 && m_Assets.cardMaterial != null) m_Cards ??= new TownsfolkCards(m_Assets, PoolRoot());
             if (m_Cards != null)
             {
                 m_Cards.Begin();
-                for (int i = full; i < m_Near.Count && i - full < cardCount; i++)
+                float cardsSq = edges.Cards * edges.Cards;
+                for (int i = firstCard; i < m_Near.Count && i - firstCard < cardCount; i++)
                 {
+                    if (m_Near[i].distSq > cardsSq) break;   // TOO FAR: not drawn
                     Entity g = m_Near[i].ghost;
                     TownsfolkGhost ghost = em.GetComponentData<TownsfolkGhost>(g);
                     long key = KeyOf(ghost, s);
@@ -307,6 +401,10 @@ namespace KryticalNova.Townsfolk
             }
             ShownNow = m_Shown.Count;
             CardsNow = Cards;
+            System.Array.Clear(BandsNow, 0, BandsNow.Length);
+            foreach (TownsfolkBody b in m_Shown.Values) if (b != null && b.Band <= TownsfolkBands.Far) BandsNow[b.Band]++;
+            BandsNow[TownsfolkBands.Card] = CardsNow;
+            BandsNow[TownsfolkBands.Hidden] = Mathf.Max(0, m_Ghosts.CalculateEntityCount() - ShownNow - CardsNow);
             LooksNow = m_Templates.Count;
             if (DebugLabels && m_PoolRoot != null && m_PoolRoot.GetComponent<TownsfolkDebugLabels>() == null)
                 m_PoolRoot.gameObject.AddComponent<TownsfolkDebugLabels>().Bind(this, m_Assets);
@@ -347,11 +445,52 @@ namespace KryticalNova.Townsfolk
             if (body.Appearance.Renderer != null && template.Renderer != null) body.Appearance.Renderer.sharedMaterials = template.Renderer.sharedMaterials;
             body.transform.localScale = template.Scale;
             body.LookKey = key;
+            UseLods(body, template);
+        }
+
+        /// <summary>The look's LOD1 and LOD2 on the body's own bones, and its LOD group (dithered cross-fade, culled past the FAR band).</summary>
+        void UseLods(TownsfolkBody body, Template template)
+        {
+            SkinnedMeshRenderer main = body.Appearance != null ? body.Appearance.Renderer : null;
+            if (main == null) return;
+            body.Lod1 = LodRenderer(body.Lod1, "LOD1", main, template.Lod1);
+            body.Lod2 = LodRenderer(body.Lod2, "LOD2", main, template.Lod2);
+            if (body.Group == null && !body.TryGetComponent(out body.Group)) body.Group = body.gameObject.AddComponent<LODGroup>();
+            body.Group.fadeMode = LODFadeMode.CrossFade;
+            body.Group.animateCrossFading = true;
+            body.Group.localReferencePoint = new Vector3(0f, TownsfolkBands.GroupSize * 0.5f, 0f);
+            body.Group.size = TownsfolkBands.GroupSize;
+            body.LodHeightsStamp = -1;
+        }
+
+        static SkinnedMeshRenderer LodRenderer(SkinnedMeshRenderer r, string name, SkinnedMeshRenderer main, Mesh mesh)
+        {
+            if (r == null)
+            {
+                if (mesh == null) return null;
+                var go = new GameObject(name);
+                go.transform.SetParent(main.transform.parent, false);
+                go.layer = main.gameObject.layer;
+                r = go.AddComponent<SkinnedMeshRenderer>();
+                r.updateWhenOffscreen = false;
+                r.skinnedMotionVectors = false;
+            }
+            r.sharedMesh = null;   // the skinning buffers rebind to the bones below
+            r.bones = main.bones;
+            r.rootBone = main.rootBone;
+            r.sharedMesh = mesh;
+            r.sharedMaterials = main.sharedMaterials;
+            r.localBounds = main.localBounds;
+            r.shadowCastingMode = main.shadowCastingMode;
+            r.enabled = mesh != null;
+            return r;
         }
 
         void Release(TownsfolkBody body)
         {
             if (body == null) return;
+            body.Band = 255;
+            body.HeadLook?.Tick(false, default, 1f);
             body.gameObject.SetActive(false);
             m_Free.Add(body);
         }
@@ -374,7 +513,7 @@ namespace KryticalNova.Townsfolk
             // made under an inactive parent so the player model's own parts never wake up before they are taken off
             GameObject go = Object.Instantiate(m_Assets.body, m_Hidden);
             go.name = name;
-            Strip(go);
+            Strip(go, m_Assets.settings);
             var body = go.AddComponent<TownsfolkBody>();
             body.Lod = CharacterLod.Ensure(go);
             body.Lod.DrivenExternally = true;   // the view sets its level by Crowd Detail
@@ -386,17 +525,33 @@ namespace KryticalNova.Townsfolk
             {
                 body.Animator.applyRootMotion = false;
                 body.Animator.cullingMode = AnimatorCullingMode.CullUpdateTransforms;
+                body.HeadLook = body.Animator.gameObject.AddComponent<TownsfolkHeadLook>();
+                body.HeadLook.Animator = body.Animator;
             }
             go.transform.SetParent(root, false);
             return body;
         }
 
-        /// <summary>Takes a fresh copy of the player model down to its look: only the look, blink and LOD parts stay (no weapon, IK, input or collider).</summary>
-        public static void Strip(GameObject go)
+        /// <summary>
+        /// Takes a fresh copy of the player model down to its look: only the look, blink and LOD parts stay (no weapon, IK, input or collider).
+        /// No weapons (owner 14 Nov 2026): every renderer but the look's own one goes (held weapons, holsters), and the Sidekick weapon
+        /// mounts (<see cref="TownsfolkSettings.noWeaponRegions"/>) are left out of the merged mesh.
+        /// </summary>
+        public static void Strip(GameObject go, TownsfolkSettings settings)
         {
             foreach (MonoBehaviour b in go.GetComponentsInChildren<MonoBehaviour>(true))
                 if (!(b is CharacterAppearance) && !(b is CharacterLook) && !(b is FaceBlinker) && !(b is CharacterLod)) Object.DestroyImmediate(b);
             foreach (Collider c in go.GetComponentsInChildren<Collider>(true)) Object.DestroyImmediate(c);
+            var appearance = go.GetComponent<CharacterAppearance>();
+            // the look's own renderer, found the way CharacterAppearance.Awake finds it when none is set (Awake has not run yet here)
+            SkinnedMeshRenderer own = appearance != null && appearance.Renderer != null ? appearance.Renderer : go.GetComponentInChildren<SkinnedMeshRenderer>(true);
+            foreach (Renderer r in go.GetComponentsInChildren<Renderer>(true))
+            {
+                if (r == own) continue;
+                if (r.TryGetComponent(out MeshFilter filter)) Object.DestroyImmediate(filter);
+                Object.DestroyImmediate(r);
+            }
+            if (appearance != null && settings != null) appearance.ExcludeRegions(settings.noWeaponRegions);
         }
 
         TownsfolkBody Make()
@@ -430,7 +585,15 @@ namespace KryticalNova.Townsfolk
             if (body.Appearance.Renderer != null) body.Appearance.Renderer.enabled = false;
             if (body.Lod != null) body.Lod.Drive(0, true);
             body.transform.position = new Vector3(0f, -2000f, 0f);
-            t = new Template { Source = body, Appearance = body.Appearance, Renderer = body.Appearance.Renderer, Scale = body.transform.localScale, Body = bodyType };
+            // LOD1 and LOD2 baked once per look from its merged mesh, shared by every body wearing it (owner 14 Nov 2026)
+            Mesh merged = body.Appearance.CurrentMesh;
+            TownsfolkSettings s = m_Assets.settings;
+            Mesh lod1 = TownsfolkMeshLod.Make(merged, s.lod1Share, $"Look {castId}.{look} LOD1");
+            Mesh lod2 = TownsfolkMeshLod.Make(merged, s.lod2Share, $"Look {castId}.{look} LOD2");
+            if (lod1 == null || lod2 == null) Debug.LogWarning($"[Townsfolk] Look {castId}.{look}: no lighter mesh could be made (its full mesh is drawn instead).");
+            LodTriangles = $"{TownsfolkMeshLod.Triangles(merged)} / {TownsfolkMeshLod.Triangles(lod1)} / {TownsfolkMeshLod.Triangles(lod2)}";
+            t = new Template { Source = body, Appearance = body.Appearance, Renderer = body.Appearance.Renderer, Scale = body.transform.localScale, Body = bodyType,
+                Lod1 = lod1, Lod2 = lod2 };
             m_Templates[key] = t;
             return t;
         }

@@ -305,7 +305,7 @@ namespace KryticalNova.Townsfolk
             // made under an inactive parent so the player model's own parts never wake up before they are taken off
             GameObject go = Object.Instantiate(m_Assets.body, s_Hidden);
             go.name = "Sidekick look";
-            TownsfolkViewClientSystem.Strip(go);
+            TownsfolkViewClientSystem.Strip(go, m_Assets.settings);
             var look_ = go.GetComponent<CharacterLook>();
             var appearance = go.GetComponent<CharacterAppearance>();
             Animator animator = go.GetComponentInChildren<Animator>(true);

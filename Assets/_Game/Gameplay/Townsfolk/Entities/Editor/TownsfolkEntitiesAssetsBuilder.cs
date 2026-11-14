@@ -299,7 +299,7 @@ namespace KryticalNova.Townsfolk.Editor
             TownLifeArea area = LoadOrCreate<TownLifeArea>(TownsfolkPaths.SkyConcordArea, out bool isNew);
             if (!isNew) return area;
             area.rootName = "Concord 040 (sky preview)";
-            area.radius = 90f;
+            area.radius = 160f;   // the whole platform: its NavMesh is 220 m square (Concord040Setup), corners included
             area.cast = cast;
             area.seed = 0x5C0;
             TownsfolkPersonality worker = p[TownPersonalityIds.BusyWorker], guard = p[TownPersonalityIds.Guard], performer = p[TownPersonalityIds.StreetPerformer];
