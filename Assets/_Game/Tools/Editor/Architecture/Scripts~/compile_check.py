@@ -13,7 +13,7 @@ Use it to check a refactor in a worktree while the owner's Editor stays open on 
     python ".../compile_check.py" --defines "KN_TEST_LANE;KN_DEV_BOTS"   extra scripting defines, as a build's
                                                extraScriptingDefines add them (with --server for a server build's set)
     python ".../compile_check.py" --ecs-library C:/path/to/clone   where the Entities / Netcode packages and their built DLLs are
-    python ".../compile_check.py" --maxcpu 2   build with at most 2 MSBuild nodes
+    python ".../compile_check.py" --maxcpu 2   build with at most 2 MSBuild nodes (default 4; nodes exit with the build)
     python ".../compile_check.py" --each       one dotnet run per assembly, the old slower way (same output)
     python ".../compile_check.py" --restore-only   restore only: must fail with "not compiled" (a test of the guard)
 It prints the errors and exits 1 when any assembly fails. Warnings are not shown.
@@ -269,7 +269,10 @@ if SERVER:   # the server build has no Editor or test assemblies, nor the ones m
         return (".Editor" not in name and ".Tests" not in name
                 and "!UNITY_SERVER" not in asmdefs.get(name, {}).get("defineConstraints", []))
     built = [p for p in built if on_server(p)]
-BUILD = ["-nologo", "-v", "q", "-clp:ErrorsOnly;NoSummary", "-p:WarningLevel=0"] + ([f"-maxcpucount:{MAXCPU}"] if MAXCPU else [])
+# -nodeReuse:false (owner, 14 Nov 2026): reused MSBuild nodes stayed alive ~15 min after every check, 16 of them holding
+# ~3.7 GB, which kept Unity under its RAM floor. They now exit with the build; at most 4 nodes unless --maxcpu says otherwise.
+BUILD = ["-nologo", "-v", "q", "-clp:ErrorsOnly;NoSummary", "-p:WarningLevel=0", "-nodeReuse:false",
+         f"-maxcpucount:{MAXCPU or 4}"]
 ERROR_PROJECT = re.compile(r"\[([^\]]+?\.csproj)[^\]]*\]$")
 failed, errors = [], []
 if "--each" in args:   # the old way, one dotnet run per assembly: slower, for when the single run misbehaves
