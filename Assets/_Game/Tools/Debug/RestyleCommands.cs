@@ -139,7 +139,7 @@ namespace KryticalNova.DevTools
         private const ushort NameChangePass = 9036;
 
         [Command("gm.passes", "Give the targeted player what the appearance services use up: n Chroma Cells, n Prism Cells, n Restyle Passes, n Training Passes and n Name Change Passes (10 unless told).")]
-        private static string Passes(int count = 10)
+        internal static string Passes(int count = 10)
         {
             if (!GmTarget.TryGetPlayer(out var player, out var error)) return error;
             if (!player.TryGetComponent(out PlayerInventory inventory)) return NoComponent;
@@ -166,7 +166,7 @@ namespace KryticalNova.DevTools
         }
 
         [Command("gm.craftkit", "Give the targeted player what every recipe uses up, n times over (4 unless told): the four colour cells, every Dossier Page, and Alumite, Iridion and Orichalc by the four.")]
-        private static string CraftKit(int times = 4)
+        internal static string CraftKit(int times = 4)
         {
             if (!GmTarget.TryGetPlayer(out var player, out var error)) return error;
             if (!player.TryGetComponent(out PlayerCrafting crafting) || !player.TryGetComponent(out PlayerInventory inventory)) return NoComponent;
@@ -187,7 +187,7 @@ namespace KryticalNova.DevTools
         }
 
         [Command("gm.dossier", "Give the targeted player the three Dossiers (Backlash, Iron Nerve, Shatterpoint), ready to read.")]
-        private static string Dossiers()
+        internal static string Dossiers()
         {
             if (!GmTarget.TryGetPlayer(out var player, out var error)) return error;
             if (!player.TryGetComponent(out PlayerInventory inventory)) return NoComponent;
@@ -199,7 +199,7 @@ namespace KryticalNova.DevTools
 
         [Command("gm.chips", "Give the targeted player the Skill Chips it can read: its faction's three classes' level 60 pair and level 80 pair, " +
                              "and Aegis, Killer Instinct and Hot Streak. With 'all', every chip of every class. Reading one needs the skill's level.")]
-        private static string SkillChips(string which = "")
+        internal static string SkillChips(string which = "")
         {
             if (!GmTarget.TryGetPlayer(out var player, out var error)) return error;
             if (!player.TryGetComponent(out PlayerInventory inventory)) return NoComponent;
@@ -216,7 +216,7 @@ namespace KryticalNova.DevTools
 
         [Command("gm.zenith", "Give the targeted player the Zenith Dossiers its faction's three weapon classes can read, or with 'all' all nine. " +
                               "Each unlocks that class's Zenith technique (level 80); in the game they drop only in the Prime grounds.")]
-        private static string ZenithDossiers(string which = "")
+        internal static string ZenithDossiers(string which = "")
         {
             if (!GmTarget.TryGetPlayer(out var player, out var error)) return error;
             if (!player.TryGetComponent(out PlayerInventory inventory)) return NoComponent;

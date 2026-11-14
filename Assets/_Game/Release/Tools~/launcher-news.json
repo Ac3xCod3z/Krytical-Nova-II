@@ -18,10 +18,6 @@
       "body": "Stims can be used at any time, even during a charge, with a short cooldown per kind. New percentage Stims restore a share of your HP or Flux, from the Apothecary."
     },
     {
-      "title": "Holoweave Remembers",
-      "body": "Holoweave keeps a look for each weapon class and each gear set. Switch weapons or armour and each one wears its own Weave again. Your Weaves carry over."
-    },
-    {
       "title": "Bigger Moments",
       "body": "Levelling up raises a pillar of light in your faction's colour with a LEVEL banner, and your mount's evolutions get the milestone banner too. Callouts open with a letterbox."
     },
@@ -32,10 +28,6 @@
     {
       "title": "Your Mount Walks Beside You",
       "body": "Press Y (or CALL in the Mount window) and your selected mount walks beside you instead of carrying you. It keeps up, catches up when left behind and keeps giving its stats; it gets hungry faster while out, and when its hunger runs out it goes home. It has HP of its own: enemy players' area skills can knock it out, and then it rests for 5 minutes. The new Mount Stim heals it. Set it to DPS and it fights beside you; set it to HEALER and it heals you while you fight (PvE only, never drawing aggro)."
-    },
-    {
-      "title": "A Sky of Its Own",
-      "body": "Nova's night sky is its own now: glinting stars that wheel through the night, eight constellations (one rides overhead each night of the moon cycle), the Soul Tide nebula, shooting stars, the yearly Emberfall shower and the Pale Wanderer comet. By day an amber second sun crosses the sky, and every two game years a total eclipse turns day almost to night."
     }
   ],
   "patchNotes": [
@@ -57,6 +49,7 @@
         "Mount Companion HP: enemy players' area skills in PvP can hurt it; at 0 HP it is knocked out, goes home and rests 5 minutes (it can still be ridden). It regains 2 % a minute at home.",
         "Mount Stim (Apothecary): heals your mount's companion HP by 40 %, never yours.",
         "Companion stances DPS and HEALER (Mount window): DPS joins the fight you are in and strikes beside you with its own damage buff; HEALER heals you over time while you fight. Neither ever draws aggro, and both stay out of PvP (they act as FREE in PvP zones, duels and Crossfire).",
+        "Game Masters can now max a character in one go (Max Everything, gm.maxall): top level, skills, ladders, every mount and pet, its own Rare and Epic gear and a full kit of items. Only a GM can use it, and every use is logged.",
         "A unique sky: the old dot stars are replaced by a star map that turns with the calendar; eight constellations, spread well apart, and on the darkest clear nights faint lines join their stars.",
         "Sky events everyone sees at the same moment: a few shooting stars a night, the Soul Tide nebula three nights in each moon cycle, The Emberfall meteor shower once a game year and The Pale Wanderer comet every few real months. Aurora (winter) comes with the seasons.",
         "The second sun: an amber sun with its own path, drawn like our sun. It is only in the sky: it gives no light or shadow and changes nothing on the ground.",
