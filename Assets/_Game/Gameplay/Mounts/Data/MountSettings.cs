@@ -202,8 +202,8 @@ namespace KryticalNova.Mounts
         [Min(0.5f)] public float companionTankTauntSeconds = 6f;
         [Tooltip("TANK: besides the Hostile you fight, a taunt also pulls every Hostile after you this close to the companion, in metres.")]
         [Min(0f)] public float companionTankTauntRadius = 8f;
-        [Tooltip("TANK: its own defence buff while in the stance, x = at 0 % growth, y = at 100 % (0.4 -> 0.7 = it takes 40 % -> 70 % less damage). It deals no damage and does not heal.")]
-        public Vector2 companionTankDefenceBuffByGrowth = new Vector2(0.4f, 0.7f);
+        [Tooltip("TANK: its own defence buff while in the stance, x = at 0 % growth, y = at 100 % (0.65 -> 0.7 = it takes 65 % -> 70 % less damage; owner: about 15 s against a same-level Colossus from day one). It deals no damage and does not heal.")]
+        public Vector2 companionTankDefenceBuffByGrowth = new Vector2(0.65f, 0.7f);
         [Tooltip("TANK: its max HP times this while in the stance, x = at 0 % growth, y = at 100 % (x1 -> x2).")]
         public Vector2 companionTankHpMultiplierByGrowth = new Vector2(1f, 2f);
 

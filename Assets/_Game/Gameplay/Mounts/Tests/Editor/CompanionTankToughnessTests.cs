@@ -9,7 +9,7 @@ namespace KryticalNova.Tests
 {
     /// <summary>
     /// How long a TANK Mount Companion holds a same-level Bruiser (day list item 19 phase 4; owner, 14 Nov 2026: the stances grow with the
-    /// mount, TANK from 40 % to 70 % less damage and from x1 to x2 HP; the time at 0 % and at 100 % growth is reported). Everything from the real assets and the one damage formula
+    /// mount, TANK from 65 % to 70 % less damage and from x1 to x2 HP; the time at 0 % and at 100 % growth is reported). Everything from the real assets and the one damage formula
     /// (<see cref="CombatMath.Resolve"/>): the level 40 Colossus as <see cref="HostileStatCurve"/> builds it (Bruiser), its three attacks with
     /// their weights, multipliers and clip lengths plus the brain's cooldown, against the companion, which defends with its owner's stats (the
     /// curve's reference player of level 40, the gear that level is expected to wear) and has the owner's HP times its growth share, minus
@@ -47,8 +47,8 @@ namespace KryticalNova.Tests
                 $"at 0 / 50 / 100 %; down in {atNew:0.0} s at 0 %, {atHalf:0.0} s at 50 %, {atFull:0.0} s at 100 %; FREE at 0 % {freeNew:0.0} s");
 
             Assert.Greater(atNew, freeNew * 1.5f, "TANK holds longer than FREE even on a new mount");
-            Assert.That(atNew, Is.InRange(6f, 15f), "0 %: 40 % less damage, x1 HP (about 9 s)");
-            Assert.That(atHalf, Is.InRange(18f, 35f), "50 %: 55 % less damage, x1.5 HP (about 23 s)");
+            Assert.That(atNew, Is.InRange(13f, 20f), "0 %: 65 % less damage, x1 HP (owner: about 15 s from day one)");
+            Assert.That(atHalf, Is.InRange(24f, 42f), "50 %: 67.5 % less damage, x1.5 HP (about 32 s)");
             Assert.That(atFull, Is.InRange(40f, 80f), "100 %: 70 % less damage, x2 HP (about 58 s)");
             Assert.Less(atNew, atHalf);
             Assert.Less(atHalf, atFull);

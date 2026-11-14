@@ -448,12 +448,12 @@ Phase 3, 13-14 Nov 2026 (b18-coder-20, branch `b18/19-companion-phase3`): the DP
 
 - Each stance number has its value at 0 % and at 100 % of the mount's growth in `MountSettings` (`companionDpsDamageShareByGrowth`
   0.35 -> 0.61, which with the 15 % buff is about 40 % -> 70 % of the owner's strike; `companionHealerHealShareByGrowth` 1.5 % -> 3 % every
-  2 s; `companionTankDefenceBuffByGrowth` 0.4 -> 0.7; `companionTankHpMultiplierByGrowth` x1 -> x2). `CompanionFightTuning.AtGrowth` lerps
+  2 s; `companionTankDefenceBuffByGrowth` 0.65 -> 0.7 (owner: about 15 s from day one); `companionTankHpMultiplierByGrowth` x1 -> x2). `CompanionFightTuning.AtGrowth` lerps
   them; `PlayerMounts.CompanionFightNow` is the tuning at the selected mount's growth, read by the server system for the strike, the pulse and
   the TANK cost of a blow.
 - TANK's HP multiplier: HP is kept as a share of the max, so x2 HP is a blow costing half the share (`CompanionFightRules.TakenScale` =
   (1 - buff) / multiplier); switching stance never changes the HP shown.
-- Against a level 40 Colossus and a level 40 owner in the gear that level expects: a mount holds about 9 s at 0 % growth, 23 s at 50 % and 58 s at 100 %
+- Against a level 40 Colossus and a level 40 owner in the gear that level expects: a mount holds about 15 s at 0 % growth, 32 s at 50 % and 58 s at 100 %
   (`CompanionTankToughnessTests` prints both). This replaces the earlier flat 0.7 buff.
 - The ride stats (the two main stats up to their max, the riding speeds) do not change with any stance (`CompanionStanceGrowthTests`).
 - The Mount window's stance tooltips show the numbers of the selected mount's growth (`CompanionFightRules.StanceTip`).

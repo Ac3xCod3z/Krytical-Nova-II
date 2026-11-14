@@ -8,7 +8,7 @@ namespace KryticalNova.Tests
 {
     /// <summary>
     /// The companion's stances grow with the mount's growth like a pet's stats (owner, 14 Nov 2026), from the real MountSettings asset: DPS
-    /// about 40 % -> 70 % of the owner's strike, HEALER 1.5 % -> 3 % of max HP every 2 s, TANK 40 % -> 70 % less damage and x1 -> x2 HP, each at
+    /// about 40 % -> 70 % of the owner's strike, HEALER 1.5 % -> 3 % of max HP every 2 s, TANK 65 % -> 70 % less damage and x1 -> x2 HP, each at
     /// 0, 50 and 100 %; the window's tooltip shows the numbers of the growth; and the ride stats (the two main stats up to +50, the riding
     /// speeds) are exactly what they were at every growth, whatever the stance.
     /// </summary>
@@ -42,10 +42,10 @@ namespace KryticalNova.Tests
             Assert.AreEqual(2f, t.PulseSeconds, "every 2 s at any growth");
         }
 
-        [TestCase(0, 0.4f, 1f, 0.6f)]
-        [TestCase(50, 0.55f, 1.5f, 0.3f)]
+        [TestCase(0, 0.65f, 1f, 0.35f)]
+        [TestCase(50, 0.675f, 1.5f, 0.21666667f)]
         [TestCase(100, 0.7f, 2f, 0.15f)]
-        public void Tank_DefenceAndHpGrow_40To70PercentLess_X1ToX2Hp(int growth, float buff, float hpTimes, float costOfABlow)
+        public void Tank_DefenceAndHpGrow_65To70PercentLess_X1ToX2Hp(int growth, float buff, float hpTimes, float costOfABlow)
         {
             CompanionFightTuning t = Fight().AtGrowth(growth);
             Assert.AreEqual(buff, t.DefenceBuff, 1e-4f);
@@ -60,7 +60,7 @@ namespace KryticalNova.Tests
             CompanionFightTuning full = Fight().AtGrowth(100), none = Fight().AtGrowth(0);
             StringAssert.Contains("70 % less damage", CompanionFightRules.StanceTip(CompanionStance.Tank, full, 100));
             StringAssert.Contains("x2 HP", CompanionFightRules.StanceTip(CompanionStance.Tank, full, 100));
-            StringAssert.Contains("40 % less damage", CompanionFightRules.StanceTip(CompanionStance.Tank, none, 0));
+            StringAssert.Contains("65 % less damage", CompanionFightRules.StanceTip(CompanionStance.Tank, none, 0));
             StringAssert.Contains("about 70 %", CompanionFightRules.StanceTip(CompanionStance.Dps, full, 100));
             StringAssert.Contains("about 40 %", CompanionFightRules.StanceTip(CompanionStance.Dps, none, 0));
             StringAssert.Contains("3 % of your max HP", CompanionFightRules.StanceTip(CompanionStance.Healer, full, 100));
