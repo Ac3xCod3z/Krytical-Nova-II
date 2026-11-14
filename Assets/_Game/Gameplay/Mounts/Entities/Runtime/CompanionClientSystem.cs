@@ -61,10 +61,10 @@ namespace KryticalNova.Mounts.Entities
                 CompanionView view = views[i];
                 if (!m_Shown.TryGetValue(ghosts[i], out CompanionPresenter p) || p == null)
                 {
-                    if (view.State != (byte)CompanionState.Out || !TryOwner(em, view.OwnerGhostId, out PlayerMounts mounts) || mounts.Catalog == null) continue;
+                    if (view.State != (byte)CompanionState.Out || !TryOwner(em, view.OwnerGhostId, out PlayerMounts mounts, out bool ownerIsLocal) || mounts.Catalog == null) continue;
                     MountDefinition mount = mounts.Catalog.Get(view.Box);
                     if (mount == null) continue;
-                    p = CompanionPresenter.Make(mount, mounts.Settings, view.Stage, mounts.gameObject.layer, places[i].Position, places[i].Rotation, view.Warps);
+                    p = CompanionPresenter.Make(mount, mounts.Settings, view.Stage, mounts.gameObject.layer, places[i].Position, places[i].Rotation, view, mounts.transform, ownerIsLocal);
                     m_Shown[ghosts[i]] = p;
                     Made++;
                 }
@@ -81,14 +81,16 @@ namespace KryticalNova.Mounts.Entities
             }
         }
 
-        bool TryOwner(EntityManager em, int ownerGhostId, out PlayerMounts mounts)
+        bool TryOwner(EntityManager em, int ownerGhostId, out PlayerMounts mounts, out bool isLocal)
         {
             mounts = null;
+            isLocal = false;
             if (ownerGhostId == 0) return false;
             foreach (GhostBodyEntry entry in GhostBodyRegistry.Entries)
             {
                 if (!ReferenceEquals(entry.World, World) || entry.Body == null || !em.Exists(entry.Ghost) || !em.HasComponent<GhostInstance>(entry.Ghost)) continue;
                 if (em.GetComponentData<GhostInstance>(entry.Ghost).ghostId != ownerGhostId) continue;
+                isLocal = entry.IsLocal;
                 return entry.Body.TryGetComponent(out mounts);
             }
             return false;

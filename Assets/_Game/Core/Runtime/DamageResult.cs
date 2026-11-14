@@ -19,5 +19,10 @@ namespace KryticalNova.Core
         public float NetElementalDamage;
         public float HitChance;
         public bool BypassesShield;
+        /// <summary>
+        /// Day list item 19, phase 3: a Mount Companion's strike (DPS stance) is dealt in its owner's name (kill credit and the tag stay
+        /// the owner's) but adds no threat to the Hostile it hits: a companion never draws aggro.
+        /// </summary>
+        public bool NoThreat;
     }
 }
