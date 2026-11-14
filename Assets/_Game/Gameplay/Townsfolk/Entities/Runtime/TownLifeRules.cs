@@ -111,17 +111,36 @@ namespace KryticalNova.Townsfolk
         /// </summary>
         public static float SpotScore(in SpotInputs s)
         {
-            if (s.Like <= 0f || !s.Open || !s.Allowed || s.FreeSlots <= 0 || s.Recent) return 0f;
-            float distance = s.Distance <= s.PreferredDistance ? 1f : math.saturate(s.PreferredDistance / math.max(s.Distance, 1e-3f));
-            float used = s.SlotCount > 0 ? 1f - (float)s.FreeSlots / s.SlotCount : 0f;
-            float crowding = math.saturate(1f - 0.5f * used * math.max(0f, s.CrowdingDislike));
+            float fixedPart = StaticPart(s.Like, s.Open, s.Allowed, s.Raining, s.Rain, s.Sheltered, s.Night, s.NeedsLight, s.Lit);
+            return Finish(fixedPart, s.Distance, s.PreferredDistance, s.FreeSlots, s.SlotCount, s.Recent, s.CrowdingDislike,
+                s.Friends, s.FriendBonus, s.PlayersNear && s.LikesPlayersNear);
+        }
+
+        /// <summary>
+        /// The part of a spot's score that only changes with the hour and the weather (liked weight x rain x light; 0 when shut, not liked or
+        /// not for it): the server caches it per personality and spot (<see cref="TownScoreCache"/>) and rebuilds it when the hour, the
+        /// period or the rain changes.
+        /// </summary>
+        public static float StaticPart(float like, bool open, bool allowed, bool raining, byte rainRule, bool sheltered, bool night, bool needsLight, bool lit)
+        {
+            if (like <= 0f || !open || !allowed) return 0f;
             float rain = 1f;
-            if (s.Raining && s.Rain != (byte)RainBehaviour.Ignore) rain = s.Sheltered ? 1f : 0.1f;
-            float light = s.Night && s.NeedsLight && !s.Lit ? 0.3f : 1f;
-            float product = math.saturate(s.Like) * distance * crowding * rain * light;
-            float score = Score.Compensate(product, 5);
-            if (s.Friends > 0) score *= 1f + s.FriendBonus * s.Friends;
-            if (s.PlayersNear && s.LikesPlayersNear) score *= 1.5f;
+            if (raining && rainRule != (byte)RainBehaviour.Ignore) rain = sheltered ? 1f : 0.1f;
+            float light = night && needsLight && !lit ? 0.3f : 1f;
+            return math.saturate(like) * rain * light;
+        }
+
+        /// <summary>The rest of the score on each think: distance, crowding, used lately, friends and players near (see <see cref="SpotScore"/>).</summary>
+        public static float Finish(float staticPart, float distance, float preferred, int freeSlots, int slotCount, bool recent, float crowdingDislike,
+                                   int friends, float friendBonus, bool playersNearLiked)
+        {
+            if (staticPart <= 0f || freeSlots <= 0 || recent) return 0f;
+            float near = distance <= preferred ? 1f : math.saturate(preferred / math.max(distance, 1e-3f));
+            float used = slotCount > 0 ? 1f - (float)freeSlots / slotCount : 0f;
+            float crowding = math.saturate(1f - 0.5f * used * math.max(0f, crowdingDislike));
+            float score = Score.Compensate(staticPart * near * crowding, 5);
+            if (friends > 0) score *= 1f + friendBonus * friends;
+            if (playersNearLiked) score *= 1.5f;
             return score;
         }
 
@@ -130,6 +149,22 @@ namespace KryticalNova.Townsfolk
         /// sum; <paramref name="roll"/> in [0, 1). -1 when none scores.
         /// </summary>
         public static int PickWeighted(Unity.Collections.NativeArray<float> scores, int count, float roll)
+        {
+            float sum = 0f;
+            int n = math.min(count, scores.Length);
+            for (int i = 0; i < n; i++) sum += math.max(0f, scores[i]);
+            if (sum <= 0f) return -1;
+            float at = roll * sum;
+            for (int i = 0; i < n; i++)
+            {
+                at -= math.max(0f, scores[i]);
+                if (at < 0f) return i;
+            }
+            return n - 1;
+        }
+
+        /// <summary>As <see cref="PickWeighted(Unity.Collections.NativeArray{float},int,float)"/> on a job's fixed list (no allocation).</summary>
+        public static int PickWeighted(in Unity.Collections.FixedList64Bytes<float> scores, int count, float roll)
         {
             float sum = 0f;
             int n = math.min(count, scores.Length);

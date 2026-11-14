@@ -34,6 +34,7 @@ namespace KryticalNova.Townsfolk.Editor
         const string AnimationFolder = TownsfolkPaths.Root + "/Data/Animation";
         const string MasculineController = AnimationFolder + "/AC_Townsfolk_Masc.controller";
         const string FeminineController = AnimationFolder + "/AC_Townsfolk_Femn.controller";
+        const string CardMaterialPath = TownsfolkPaths.DataAssets + "/M_TownsfolkCard.mat";
         const string BodyPrefab = "Assets/_Game/Characters/Player/Player_01/Player_01.prefab";
         const string DatabaseAsset = "Assets/_Game/Gameplay/CharacterCreation/Data/Assets/CharacterCreationDatabase.asset";
         static readonly string[] ClipFolders =
@@ -506,6 +507,34 @@ namespace KryticalNova.Townsfolk.Editor
             if (variant < variants - 1) t.AddCondition(AnimatorConditionMode.Less, hi, "Offset");
         }
 
+        // ---- far cards ----
+
+        /// <summary>
+        /// The far cards' material (owner 13 Nov 2026: impostors): URP Unlit, alpha clipped at half, both sides, GPU instancing on. An asset
+        /// (not made at run time) so its shader variant ships with the game.
+        /// </summary>
+        static Material EnsureCardMaterial()
+        {
+            Shader shader = Shader.Find("Universal Render Pipeline/Unlit");
+            if (shader == null) { Debug.LogError("[KnBuild] Townsfolk cards: the URP Unlit shader is missing."); return null; }
+            var mat = AssetDatabase.LoadAssetAtPath<Material>(CardMaterialPath);
+            if (mat == null)
+            {
+                mat = new Material(shader) { name = "M_TownsfolkCard" };
+                AssetDatabase.CreateAsset(mat, CardMaterialPath);
+            }
+            mat.shader = shader;
+            mat.SetFloat("_AlphaClip", 1f);
+            mat.SetFloat("_Cutoff", 0.5f);
+            mat.SetFloat("_Cull", 0f);
+            mat.EnableKeyword("_ALPHATEST_ON");
+            mat.SetColor("_BaseColor", Color.white);
+            mat.enableInstancing = true;
+            mat.renderQueue = (int)UnityEngine.Rendering.RenderQueue.AlphaTest;
+            EditorUtility.SetDirty(mat);
+            return mat;
+        }
+
         // ---- Resources ----
 
         static void EnsureResources(TownsfolkSettings settings, TownsfolkPersonality[] personalities, TownLifeArea area, TownsfolkCast cast,
@@ -525,6 +554,7 @@ namespace KryticalNova.Townsfolk.Editor
             view.database = AssetDatabase.LoadAssetAtPath<CharacterCreationDatabase>(DatabaseAsset);
             view.casts = new[] { cast };
             view.personalities = personalities;
+            view.cardMaterial = EnsureCardMaterial();
             EditorUtility.SetDirty(view);
             if (world.brain == null || view.body == null || view.database == null)
                 Debug.LogError("[KnBuild] Townsfolk Resources: the Brain settings, the body (" + BodyPrefab + ") or the creation database is missing.");

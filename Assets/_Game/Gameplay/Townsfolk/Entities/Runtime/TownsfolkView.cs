@@ -9,6 +9,7 @@ using Unity.Mathematics;
 using Unity.NetCode;
 using Unity.Transforms;
 using UnityEngine;
+using UnityEngine.Rendering;
 
 namespace KryticalNova.Townsfolk
 {
@@ -56,8 +57,8 @@ namespace KryticalNova.Townsfolk
 
     /// <summary>
     /// One pooled townsperson body on a client: the players' Sidekick model wearing a shared look, the shared animator, the character
-    /// LOD. It plays what its ghost says: walk and jog by speed, and the activity's idle at a spot (plan 3.8; head-look and barks are
-    /// step 6). Never on a dedicated server: the server has no bodies at all.
+    /// LOD (driven by the view, by the player's Crowd Detail). It plays what its ghost says: walk and jog by speed, and the activity's idle
+    /// at a spot (plan 3.8; head-look and barks are step 6). Never on a dedicated server: the server has no bodies at all.
     /// </summary>
     public sealed class TownsfolkBody : MonoBehaviour
     {
@@ -68,9 +69,13 @@ namespace KryticalNova.Townsfolk
         public Animator Animator;
         public CharacterAppearance Appearance;
         public CharacterLook Look;
+        public CharacterLod Lod;
         public long LookKey = -1;
         public byte ShownActivity = 255;
         float m_Speed;
+        // a far body animates every few frames, with the time saved up since its last update
+        float m_Pending;
+        bool m_Manual;
 
         public void Show(in TownsfolkGhost ghost, float damp, float dt)
         {
@@ -84,13 +89,40 @@ namespace KryticalNova.Townsfolk
                 Animator.SetInteger(ActivityId, ghost.Activity);
             }
         }
+
+        /// <summary>Near: the animator runs every frame. Far: it is updated by hand every <paramref name="every"/> frames, staggered by the seed.</summary>
+        public void Animate(bool everyFrame, int every, int frame, uint seed, float dt)
+        {
+            if (Animator == null) return;
+            if (everyFrame || every <= 1)
+            {
+                if (m_Manual) { m_Manual = false; Animator.enabled = true; m_Pending = 0f; }
+                return;
+            }
+            if (!m_Manual) { m_Manual = true; Animator.enabled = false; m_Pending = 0f; }
+            m_Pending += dt;
+            if ((frame + (int)(seed & 0xFF)) % every != 0) return;
+            Animator.Update(m_Pending);
+            m_Pending = 0f;
+        }
+
+        /// <summary>Back to a normal animator (a body taken from the pool).</summary>
+        public void ResetAnimation()
+        {
+            if (m_Manual && Animator != null) Animator.enabled = true;
+            m_Manual = false;
+            m_Pending = 0f;
+        }
     }
 
     /// <summary>
-    /// Client (plan 3.8): the townsfolk this player sees. The nearest <see cref="TownsfolkSettings.viewBudget"/> townsperson ghosts within
-    /// <see cref="TownsfolkSettings.viewRadius"/> of the camera each get a pooled body dressed in their look (a hidden template per look is
-    /// baked once; bodies share its mesh), placed on the ghost's interpolated transform every frame. Bodies keep their look in the pool,
-    /// so a townsperson walking in and out of range is not baked again. Managed bridge; no allocation per frame once the pool is warm.
+    /// Client (plan 3.8; owner 13 Nov 2026: performance first, by the existing Graphics settings): the townsfolk this player sees, by the
+    /// Crowd Detail tier's numbers (<see cref="TownsfolkSettings"/> rows, the tier from <see cref="CrowdDetailRuntime"/>). The nearest
+    /// townsfolk within the tier's full-body distance and count each get a pooled body dressed in their look (a hidden template per look
+    /// is baked once; bodies share its mesh and materials), placed on the ghost's interpolated transform every frame: only the nearest cast
+    /// shadows and skin with every bone, far bodies animate every few frames. Farther ones, out to the view radius, are cards: a snapshot of
+    /// their look drawn as one instanced quad per look (<see cref="TownsfolkCards"/>). Bodies keep their look in the pool, so a townsperson
+    /// walking in and out of range is not baked again. Managed bridge; no allocation per frame once the pool is warm.
     /// </summary>
     [WorldSystemFilter(WorldSystemFilterFlags.ClientSimulation)]
     [UpdateInGroup(typeof(PresentationSystemGroup))]
@@ -98,10 +130,17 @@ namespace KryticalNova.Townsfolk
     {
         sealed class Template
         {
+            public TownsfolkBody Source;
             public CharacterAppearance Appearance;
             public SkinnedMeshRenderer Renderer;
             public Vector3 Scale;
             public BodyType Body;
+        }
+
+        sealed class ByDistance : IComparer<(float distSq, Entity ghost)>
+        {
+            public static readonly ByDistance Instance = new();
+            public int Compare((float distSq, Entity ghost) a, (float distSq, Entity ghost) b) => a.distSq.CompareTo(b.distSq);
         }
 
         TownsfolkViewAssets m_Assets;
@@ -113,11 +152,14 @@ namespace KryticalNova.Townsfolk
         readonly List<(float distSq, Entity ghost)> m_Near = new();
         readonly HashSet<Entity> m_Wanted = new();
         readonly List<Entity> m_Drop = new();
+        TownsfolkCards m_Cards;
         EntityQuery m_Ghosts;
-        int m_Made;
+        int m_Made, m_Frame;
 
         public int Shown => m_Shown.Count;
         public int Templates => m_Templates.Count;
+        /// <summary>Far cards drawn this frame.</summary>
+        public int Cards => m_Cards != null ? m_Cards.Drawn : 0;
 
         /// <summary>gm.town.debug: labels over every shown townsperson (plan 3.9).</summary>
         public static bool DebugLabels;
@@ -133,6 +175,8 @@ namespace KryticalNova.Townsfolk
 
         protected override void OnDestroy()
         {
+            m_Cards?.Dispose();
+            m_Cards = null;
             if (m_PoolRoot != null) Object.Destroy(m_PoolRoot.gameObject);
             m_Shown.Clear();
             m_Free.Clear();
@@ -156,16 +200,29 @@ namespace KryticalNova.Townsfolk
             float3 from = eye.transform.position;
             EntityManager em = EntityManager;
 
+            // the player's Crowd Detail picks the tier's numbers (only what this client draws; the server's crowd is the same)
+            int tier = CrowdDetailRuntime.Tier;
+            float radius = TownsfolkSettings.ByTier(s.viewRadiusByTier, tier, 100f);
+            float fullSq = Sq(TownsfolkSettings.ByTier(s.fullBodyDistanceByTier, tier, 45f));
+            int fullCount = TownsfolkSettings.ByTier(s.fullBodiesByTier, tier, 48);
+            int cardCount = TownsfolkSettings.ByTier(s.cardsByTier, tier, 64);
+            float everyFrameSq = Sq(TownsfolkSettings.ByTier(s.everyFrameWithinByTier, tier, 20f));
+            int every = Mathf.Max(1, TownsfolkSettings.ByTier(s.farAnimateEveryByTier, tier, 2));
+            float shadowSq = Sq(TownsfolkSettings.ByTier(s.shadowsWithinByTier, tier, 18f));
+            float fullSkinSq = Sq(TownsfolkSettings.ByTier(s.fullSkinWithinByTier, tier, 20f));
+
             m_Near.Clear();
             using (NativeArray<Entity> ghosts = m_Ghosts.ToEntityArray(Allocator.Temp))
                 foreach (Entity g in ghosts)
                 {
                     float d = math.distancesq(em.GetComponentData<LocalTransform>(g).Position, from);
-                    if (d <= s.viewRadius * s.viewRadius) m_Near.Add((d, g));
+                    if (d <= radius * radius) m_Near.Add((d, g));
                 }
-            m_Near.Sort((a, b) => a.distSq.CompareTo(b.distSq));
+            m_Near.Sort(ByDistance.Instance);
+            // nearest first: a full body while within the tier's distance and count, a card after that
+            int full = 0;
             m_Wanted.Clear();
-            for (int i = 0; i < m_Near.Count && i < s.viewBudget; i++) m_Wanted.Add(m_Near[i].ghost);
+            while (full < m_Near.Count && full < fullCount && m_Near[full].distSq <= fullSq) m_Wanted.Add(m_Near[full++].ghost);
 
             m_Drop.Clear();
             foreach (KeyValuePair<Entity, TownsfolkBody> pair in m_Shown)
@@ -173,6 +230,7 @@ namespace KryticalNova.Townsfolk
             foreach (Entity g in m_Drop) { Release(m_Shown[g]); m_Shown.Remove(g); }
 
             float dt = SystemAPI.Time.DeltaTime;
+            m_Frame++;
             Labels.Clear();
             foreach (Entity g in m_Wanted)
             {
@@ -180,18 +238,41 @@ namespace KryticalNova.Townsfolk
                 LocalTransform place = em.GetComponentData<LocalTransform>(g);
                 if (!m_Shown.TryGetValue(g, out TownsfolkBody body))
                 {
-                    long key = ((long)ghost.Cast << 32) | (uint)TownsfolkLooks.LookIndex(ghost.Seed, s.looksPerCast);
-                    body = Take(key, ghost, place);
+                    body = Take(KeyOf(ghost, s), ghost, place);
                     if (body == null) continue;
                     m_Shown[g] = body;
                 }
                 body.transform.SetPositionAndRotation(place.Position, place.Rotation);
+                float dSq = math.distancesq(place.Position, from);
+                if (body.Lod != null) body.Lod.Drive(dSq <= fullSkinSq ? 0 : 1, dSq > shadowSq);
                 body.Show(ghost, s.speedDamp, dt);
-                if (DebugLabels) Labels.Add((body, ghost, math.distance(place.Position, from)));
+                body.Animate(dSq <= everyFrameSq, every, m_Frame, ghost.Seed, dt);
+                if (DebugLabels) Labels.Add((body, ghost, math.sqrt(dSq)));
+            }
+
+            // far ones: cards, one instanced draw per look
+            if (full < m_Near.Count && cardCount > 0 && m_Assets.cardMaterial != null) m_Cards ??= new TownsfolkCards(m_Assets, PoolRoot());
+            if (m_Cards != null)
+            {
+                m_Cards.Begin();
+                for (int i = full; i < m_Near.Count && i - full < cardCount; i++)
+                {
+                    Entity g = m_Near[i].ghost;
+                    TownsfolkGhost ghost = em.GetComponentData<TownsfolkGhost>(g);
+                    long key = KeyOf(ghost, s);
+                    Template t = TemplateOf(key, ghost.Cast);
+                    if (t == null) continue;
+                    m_Cards.Add(key, t.Source, t.Renderer, ControllerOf(m_Assets, t.Body), em.GetComponentData<LocalTransform>(g).Position, from);
+                }
+                m_Cards.Draw();
             }
             if (DebugLabels && m_PoolRoot != null && m_PoolRoot.GetComponent<TownsfolkDebugLabels>() == null)
                 m_PoolRoot.gameObject.AddComponent<TownsfolkDebugLabels>().Bind(this, m_Assets);
         }
+
+        static float Sq(float v) => v * v;
+
+        static long KeyOf(in TownsfolkGhost ghost, TownsfolkSettings s) => ((long)ghost.Cast << 32) | (uint)TownsfolkLooks.LookIndex(ghost.Seed, s.looksPerCast);
 
         TownsfolkBody Take(long key, in TownsfolkGhost ghost, in LocalTransform place)
         {
@@ -207,6 +288,7 @@ namespace KryticalNova.Townsfolk
             if (body.LookKey != key) Dress(body, template, key);
             body.gameObject.SetActive(true);
             body.ShownActivity = 255;
+            body.ResetAnimation();
             if (body.Animator != null)
             {
                 // variety from the seed: each one's clips start at its own point (plan 3.6)
@@ -252,8 +334,9 @@ namespace KryticalNova.Townsfolk
             foreach (MonoBehaviour b in go.GetComponentsInChildren<MonoBehaviour>(true))
                 if (!(b is CharacterAppearance) && !(b is CharacterLook) && !(b is FaceBlinker) && !(b is CharacterLod)) Object.DestroyImmediate(b);
             foreach (Collider c in go.GetComponentsInChildren<Collider>(true)) Object.DestroyImmediate(c);
-            if (go.GetComponent<CharacterLod>() == null) go.AddComponent<CharacterLod>();
             var body = go.AddComponent<TownsfolkBody>();
+            body.Lod = CharacterLod.Ensure(go);
+            body.Lod.DrivenExternally = true;   // the view sets its level by Crowd Detail
             body.Animator = go.GetComponentInChildren<Animator>(true);
             body.Appearance = go.GetComponent<CharacterAppearance>();
             body.Look = go.GetComponent<CharacterLook>();
@@ -268,7 +351,8 @@ namespace KryticalNova.Townsfolk
 
         TownsfolkBody Make()
         {
-            if (m_Made >= Mathf.Max(1, m_Assets.settings.viewBudget) + 4) return null;
+            TownsfolkSettings s = m_Assets.settings;
+            if (m_Made >= Mathf.Max(1, TownsfolkSettings.ByTier(s.fullBodiesByTier, CrowdDetailRuntime.Tier, 48)) + 4) return null;
             m_Made++;
             TownsfolkBody body = Instantiate("Townsperson " + m_Made);
             if (body.Appearance == null) { Object.Destroy(body.gameObject); return null; }
@@ -294,17 +378,224 @@ namespace KryticalNova.Townsfolk
             body.Appearance.RebuildNow();
             if (body.Animator != null) body.Animator.enabled = false;
             if (body.Appearance.Renderer != null) body.Appearance.Renderer.enabled = false;
+            if (body.Lod != null) body.Lod.Drive(0, true);
             body.transform.position = new Vector3(0f, -2000f, 0f);
-            t = new Template { Appearance = body.Appearance, Renderer = body.Appearance.Renderer, Scale = body.transform.localScale, Body = bodyType };
+            t = new Template { Source = body, Appearance = body.Appearance, Renderer = body.Appearance.Renderer, Scale = body.transform.localScale, Body = bodyType };
             m_Templates[key] = t;
             return t;
         }
+
+        static RuntimeAnimatorController ControllerOf(TownsfolkViewAssets assets, BodyType bodyType) =>
+            bodyType == BodyType.Feminine && assets.feminine != null ? assets.feminine : assets.masculine;
 
         /// <summary>The animator a body of this look plays (set when it is dressed).</summary>
         public static void UseAnimator(TownsfolkBody body, TownsfolkViewAssets assets, BodyType bodyType)
         {
             if (body.Animator == null || assets.masculine == null) return;
-            body.Animator.runtimeAnimatorController = bodyType == BodyType.Feminine && assets.feminine != null ? assets.feminine : assets.masculine;
+            body.Animator.runtimeAnimatorController = ControllerOf(assets, bodyType);
+        }
+    }
+
+    /// <summary>
+    /// Far townsfolk as cards (owner 13 Nov 2026: impostors, slim what cannot be turned down): each look is photographed once by a hidden
+    /// camera (its template standing idle, on a layer nothing else uses) into a small texture, and every far townsperson of that look is a
+    /// quad facing the camera, all of one look in one instanced draw, no shadow. The card follows the light of the hour: it is tinted by the
+    /// sun and sky now against when it was taken, and taken again when the light has halved or doubled. If the pipeline cannot take a
+    /// picture, cards switch themselves off (with one warning) and far townsfolk are simply not drawn, as before.
+    /// </summary>
+    sealed class TownsfolkCards : System.IDisposable
+    {
+        sealed class Card
+        {
+            public RenderTexture Texture;
+            public Material Material;
+            public Matrix4x4[] Matrices;
+            public int Count;
+            public float Width, Height, Lift, CapturedLight;
+            public TownsfolkBody Source;
+            public SkinnedMeshRenderer Renderer;
+            public RuntimeAnimatorController Controller;
+        }
+
+        static readonly int BaseMapId = Shader.PropertyToID("_BaseMap");
+        static readonly int BaseColorId = Shader.PropertyToID("_BaseColor");
+        static readonly Bounds Everywhere = new(Vector3.zero, Vector3.one * 100000f);
+
+        readonly TownsfolkViewAssets m_Assets;
+        readonly Transform m_Root;
+        readonly Dictionary<long, Card> m_ByLook = new();
+        readonly List<Card> m_All = new();
+        readonly int m_MostCards;
+        Mesh m_Quad;
+        Camera m_Camera;
+        bool m_Failed;
+
+        public int Drawn { get; private set; }
+
+        public TownsfolkCards(TownsfolkViewAssets assets, Transform root)
+        {
+            m_Assets = assets;
+            m_Root = root;
+            int most = 1;
+            foreach (int n in assets.settings.cardsByTier ?? System.Array.Empty<int>()) most = Mathf.Max(most, n);
+            m_MostCards = most;
+        }
+
+        public void Begin()
+        {
+            for (int i = 0; i < m_All.Count; i++) m_All[i].Count = 0;
+            Drawn = 0;
+        }
+
+        public void Add(long key, TownsfolkBody source, SkinnedMeshRenderer renderer, RuntimeAnimatorController controller, Vector3 at, Vector3 eye)
+        {
+            if (m_Failed) return;
+            if (!m_ByLook.TryGetValue(key, out Card card))
+            {
+                card = Capture(new Card { Source = source, Renderer = renderer, Controller = controller });
+                m_ByLook[key] = card;
+                if (card != null) m_All.Add(card);
+            }
+            if (card == null || card.Count >= card.Matrices.Length) return;
+            Vector3 toEye = eye - at;
+            toEye.y = 0f;
+            Quaternion face = toEye.sqrMagnitude > 1e-4f ? Quaternion.LookRotation(-toEye) : Quaternion.identity;
+            card.Matrices[card.Count++] = Matrix4x4.TRS(at + Vector3.up * card.Lift, face, new Vector3(card.Width, card.Height, 1f));
+            Drawn++;
+        }
+
+        public void Draw()
+        {
+            if (m_Failed) return;
+            float light = LightNow();
+            bool retook = false;
+            for (int i = 0; i < m_All.Count; i++)
+            {
+                Card card = m_All[i];
+                if (card.Count == 0) continue;
+                float ratio = light / Mathf.Max(0.05f, card.CapturedLight);
+                // the hour's light changed a lot since the picture: take it again (one look a frame)
+                if (!retook && (ratio < 0.5f || ratio > 2f) && Capture(card) != null) { retook = true; ratio = 1f; }
+                if (m_Failed) return;
+                float k = Mathf.Clamp(ratio, 0.15f, 1.5f);
+                card.Material.SetColor(BaseColorId, new Color(k, k, k, 1f));
+                var rp = new RenderParams(card.Material) { shadowCastingMode = ShadowCastingMode.Off, receiveShadows = false, worldBounds = Everywhere };
+                Graphics.RenderMeshInstanced(rp, m_Quad, 0, card.Matrices, card.Count);
+            }
+        }
+
+        /// <summary>The sun's and the sky's light now, as one number (only its ratio to the picture's is used).</summary>
+        static float LightNow()
+        {
+            Light sun = RenderSettings.sun;
+            float sunPart = sun != null && sun.isActiveAndEnabled ? sun.intensity * sun.color.grayscale * Mathf.Max(0f, -sun.transform.forward.y) : 0f;
+            return sunPart + RenderSettings.ambientLight.grayscale * Mathf.Max(0.01f, RenderSettings.ambientIntensity);
+        }
+
+        Card Capture(Card card)
+        {
+            if (card.Source == null || card.Renderer == null || m_Assets.cardMaterial == null) return null;
+            TownsfolkSettings s = m_Assets.settings;
+            Renderer r = card.Renderer;
+            int oldLayer = r.gameObject.layer;
+            bool wasOn = r.enabled;
+            try
+            {
+                m_Quad ??= MakeQuad();
+                int layer = Mathf.Clamp(s.cardCaptureLayer, 0, 31);
+                int px = Mathf.Clamp(s.cardPixels, 32, 512);
+                if (card.Texture == null)
+                {
+                    card.Texture = new RenderTexture(px, px * 2, 16, RenderTextureFormat.ARGB32) { name = "Townsfolk card", antiAliasing = 1 };
+                    card.Matrices = new Matrix4x4[m_MostCards];
+                    card.Material = new Material(m_Assets.cardMaterial) { name = "Townsfolk card", enableInstancing = true };
+                    card.Material.SetTexture(BaseMapId, card.Texture);
+                }
+                // stand the template idle for its picture
+                Animator animator = card.Source.Animator;
+                if (animator != null && card.Controller != null)
+                {
+                    animator.runtimeAnimatorController = card.Controller;
+                    animator.enabled = true;
+                    animator.SetFloat(TownsfolkBody.SpeedId, 0f);
+                    animator.SetInteger(TownsfolkBody.ActivityId, (int)TownActivity.Stand);
+                    animator.Update(0.6f);
+                    animator.enabled = false;
+                }
+                r.gameObject.layer = layer;
+                r.enabled = true;
+                Transform root = card.Source.transform;
+                Bounds b = r.bounds;
+                float h = Mathf.Max(0.5f, b.size.y * 1.04f);
+                Vector3 middle = new Vector3(root.position.x, b.min.y + h * 0.5f, root.position.z);
+                Camera cam = CameraFor(layer);
+                cam.orthographicSize = h * 0.5f;
+                cam.aspect = 0.5f;
+                cam.transform.SetPositionAndRotation(middle + root.forward * 5f, Quaternion.LookRotation(-root.forward));
+                cam.targetTexture = card.Texture;
+                var request = new RenderPipeline.StandardRequest { destination = card.Texture };
+                if (RenderPipeline.SupportsRenderRequest(cam, request)) RenderPipeline.SubmitRenderRequest(cam, request);
+                else cam.Render();
+                cam.targetTexture = null;
+                card.Height = h;
+                card.Width = h * 0.5f;
+                card.Lift = b.min.y - root.position.y;
+                card.CapturedLight = LightNow();
+                return card;
+            }
+            catch (System.Exception e)
+            {
+                m_Failed = true;
+                Debug.LogWarning("[Townsfolk] Far cards are off (the picture could not be taken): " + e.Message);
+                return null;
+            }
+            finally
+            {
+                r.gameObject.layer = oldLayer;
+                r.enabled = wasOn;
+            }
+        }
+
+        Camera CameraFor(int layer)
+        {
+            if (m_Camera != null) return m_Camera;
+            var go = new GameObject("Townsfolk card camera");
+            go.transform.SetParent(m_Root, false);
+            m_Camera = go.AddComponent<Camera>();
+            m_Camera.enabled = false;
+            m_Camera.orthographic = true;
+            m_Camera.clearFlags = CameraClearFlags.SolidColor;
+            m_Camera.backgroundColor = Color.clear;
+            m_Camera.cullingMask = 1 << layer;
+            m_Camera.nearClipPlane = 0.1f;
+            m_Camera.farClipPlane = 20f;
+            m_Camera.allowHDR = false;
+            m_Camera.allowMSAA = false;
+            return m_Camera;
+        }
+
+        static Mesh MakeQuad()
+        {
+            var mesh = new Mesh { name = "Townsfolk card" };
+            mesh.SetVertices(new[] { new Vector3(-0.5f, 0f, 0f), new Vector3(0.5f, 0f, 0f), new Vector3(0.5f, 1f, 0f), new Vector3(-0.5f, 1f, 0f) });
+            mesh.SetUVs(0, new[] { new Vector2(0f, 0f), new Vector2(1f, 0f), new Vector2(1f, 1f), new Vector2(0f, 1f) });
+            mesh.SetNormals(new[] { Vector3.back, Vector3.back, Vector3.back, Vector3.back });
+            mesh.SetTriangles(new[] { 0, 2, 1, 0, 3, 2 }, 0);
+            mesh.RecalculateBounds();
+            return mesh;
+        }
+
+        public void Dispose()
+        {
+            foreach (Card c in m_All)
+            {
+                if (c.Texture != null) { c.Texture.Release(); Object.Destroy(c.Texture); }
+                if (c.Material != null) Object.Destroy(c.Material);
+            }
+            m_All.Clear();
+            m_ByLook.Clear();
+            if (m_Quad != null) Object.Destroy(m_Quad);
+            if (m_Camera != null) Object.Destroy(m_Camera.gameObject);
         }
     }
 }

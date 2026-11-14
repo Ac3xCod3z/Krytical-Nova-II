@@ -53,11 +53,27 @@ namespace KryticalNova.Townsfolk
         [Tooltip("Seconds between plan steps of a townsperson no player is near (Brain tier 3): no walking, it is put at its next spot.")]
         public float farPlanStepSeconds = 2f;
 
-        [Header("Client view")]
-        [Tooltip("Bodies in the client's pool: the nearest this many townsfolk are shown.")]
-        public int viewBudget = 48;
-        [Tooltip("Metres from the camera within which townsfolk get a body.")]
-        public float viewRadius = 80f;
+        [Header("Client view: Crowd Detail tiers (Settings, Graphics; index Low, Medium, High, Ultra; owner 13 Nov 2026)")]
+        [Tooltip("Per tier: the nearest this many townsfolk get a full, animated body (the server's crowd is the same on every tier).")]
+        public int[] fullBodiesByTier = { 16, 32, 48, 60 };
+        [Tooltip("Per tier: metres from the camera within which a townsperson gets a full body; farther ones, or over the count, get a card.")]
+        public float[] fullBodyDistanceByTier = { 25f, 35f, 45f, 60f };
+        [Tooltip("Per tier: metres from the camera within which townsfolk are drawn at all (a body or a far card).")]
+        public float[] viewRadiusByTier = { 60f, 80f, 100f, 140f };
+        [Tooltip("Per tier: most far cards drawn (one instanced draw per look).")]
+        public int[] cardsByTier = { 24, 48, 64, 96 };
+        [Tooltip("Per tier: metres within which a body animates every frame; farther ones animate every few frames (next row).")]
+        public float[] everyFrameWithinByTier = { 10f, 15f, 20f, 30f };
+        [Tooltip("Per tier: a far body animates every this many frames (staggered by its seed).")]
+        public int[] farAnimateEveryByTier = { 4, 3, 2, 2 };
+        [Tooltip("Per tier: metres within which a body casts a shadow; farther ones never do.")]
+        public float[] shadowsWithinByTier = { 8f, 12f, 18f, 25f };
+        [Tooltip("Per tier: metres within which a body skins with every bone; farther, lighter skinning (CharacterLod's steps).")]
+        public float[] fullSkinWithinByTier = { 10f, 15f, 20f, 30f };
+        [Tooltip("Layer the far cards' snapshots are taken on (once per look, from a hidden camera): one nothing else uses.")]
+        public int cardCaptureLayer = 31;
+        [Tooltip("Pixels of a card snapshot (width; the height is twice it).")]
+        public int cardPixels = 96;
         [Tooltip("Looks baked per cast: townsfolk of one look share one merged mesh (owner pick 3a: bake once per outfit).")]
         public int looksPerCast = 16;
         [Tooltip("Metres within which a townsperson may turn its head to the player (head-look; step 6).")]
@@ -66,6 +82,13 @@ namespace KryticalNova.Townsfolk
         public int maxLookers = 6;
         [Tooltip("Seconds of walk-clip blending (the speed parameter's damping).")]
         public float speedDamp = 0.15f;
+
+        /// <summary>A Crowd Detail tier's value of a per-tier row (the last one when the row is short; <paramref name="fallback"/> when empty).</summary>
+        public static T ByTier<T>(T[] row, int tier, T fallback)
+        {
+            if (row == null || row.Length == 0) return fallback;
+            return row[tier < 0 ? 0 : tier >= row.Length ? row.Length - 1 : tier];
+        }
     }
 
     public static class TownsfolkPaths

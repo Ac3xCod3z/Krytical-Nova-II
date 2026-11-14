@@ -41,6 +41,7 @@ namespace KryticalNova.Townsfolk.Tests
             Area = em.CreateSingleton(new TownArea { Radius = 60f, Cast = 1, Ready = 1 });
             em.AddBuffer<TownSpot>(Area);
             em.AddBuffer<TownSlot>(Area);
+            em.AddBuffer<TownScoreCache>(Area);
             m_Sense = World.CreateSystem<SenseBuildSystem>();
             m_Clock = World.CreateSystem<ThinkClockSystem>();
             m_Decide = World.CreateSystem<TownLifeDecideSystem>();
@@ -86,7 +87,7 @@ namespace KryticalNova.Townsfolk.Tests
         {
             EntityManager em = Em;
             Entity e = em.CreateEntity(typeof(BrainTag), typeof(BrainActive), typeof(BrainClock), typeof(BrainDice), typeof(BrainMover), typeof(BrainPath),
-                typeof(LocalTransform), typeof(TownLife), typeof(TownsfolkGhost), typeof(TownsfolkGhostSource));
+                typeof(LocalTransform), typeof(TownLife), typeof(TownPick), typeof(TownsfolkGhost), typeof(TownsfolkGhostSource));
             em.AddBuffer<BrainEvent>(e);
             em.AddBuffer<BrainWaypoint>(e);
             uint id = m_NextId++;
@@ -187,6 +188,39 @@ namespace KryticalNova.Townsfolk.Tests
                 }
             }
             Assert.Greater(arrivals, 100, "townsfolk keep reaching spots and moving on");
+        }
+
+        [Test]
+        public void SameSeedMakesTheSameTown()
+        {
+            // the think job runs in parallel; the claim job hands out slots in StableId order, so two runs never differ
+            var stroller = Made(TownTestWorld.Personality(2, 0.9f, new Vector2(2f, 6f), (TownSpotKind.Bench, 1f), (TownSpotKind.ChatCircle, 0.8f)));
+            float3[] Run()
+            {
+                using var w = new TownTestWorld(stroller);
+                var rng = new Unity.Mathematics.Random(11);
+                for (int i = 0; i < 8; i++) w.AddSpot(i % 2 == 0 ? TownSpotKind.Bench : TownSpotKind.ChatCircle, new float3(rng.NextFloat(-30f, 30f), 0f, rng.NextFloat(-30f, 30f)), 2);
+                for (int i = 0; i < 6; i++) w.AddSpot(TownSpotKind.Walk, new float3(rng.NextFloat(-30f, 30f), 0f, rng.NextFloat(-30f, 30f)), 1);
+                w.SetPlayers(float3.zero);
+                var folk = new List<Entity>();
+                for (int i = 0; i < 40; i++) folk.Add(w.Townsperson(new float3(rng.NextFloat(-30f, 30f), 0f, rng.NextFloat(-30f, 30f)), 2));
+                w.Step(900);
+                var result = new float3[folk.Count * 2];
+                for (int i = 0; i < folk.Count; i++) { result[i * 2] = w.Pos(folk[i]); result[i * 2 + 1] = new float3(w.Life(folk[i]).Slot, w.Life(folk[i]).State, 0f); }
+                return result;
+            }
+            float3[] a = Run(), b = Run();
+            for (int i = 0; i < a.Length; i++) Assert.AreEqual(a[i], b[i], $"entry {i} differs between two runs of the same seed");
+        }
+
+        [Test]
+        public void CrowdTierRowsClampToTheirEnds()
+        {
+            int[] row = { 16, 32, 48, 60 };
+            Assert.AreEqual(16, TownsfolkSettings.ByTier(row, -1, 0));
+            Assert.AreEqual(48, TownsfolkSettings.ByTier(row, 2, 0));
+            Assert.AreEqual(60, TownsfolkSettings.ByTier(row, 9, 0));
+            Assert.AreEqual(7, TownsfolkSettings.ByTier(System.Array.Empty<int>(), 2, 7));
         }
 
         [Test]

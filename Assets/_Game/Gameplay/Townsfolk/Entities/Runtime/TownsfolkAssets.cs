@@ -39,6 +39,8 @@ namespace KryticalNova.Townsfolk
         public CharacterCreationDatabase database;
         public TownsfolkCast[] casts = System.Array.Empty<TownsfolkCast>();
         public TownsfolkPersonality[] personalities = System.Array.Empty<TownsfolkPersonality>();
+        [Tooltip("The far cards' material (URP Unlit, alpha clip, instancing, both sides): a copy per look carries its picture.")]
+        public Material cardMaterial;
 
         public TownsfolkCast CastOf(byte id)
         {

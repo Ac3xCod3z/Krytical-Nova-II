@@ -198,6 +198,7 @@ namespace KryticalNova.Townsfolk
             Entity a = em.CreateSingleton(new TownArea { Radius = m_Area.radius, Cast = m_Area.cast != null ? m_Area.cast.id : (byte)0 });
             em.AddBuffer<TownSpot>(a);
             em.AddBuffer<TownSlot>(a);
+            em.AddBuffer<TownScoreCache>(a);
             m_Installed = true;
             RefreshClock();
             Debug.Log($"[Townsfolk] Town life installed in {World.Name}: area {m_Area.name}, {rows.Length} personalities, {m_TickRate} Hz.");
@@ -282,7 +283,8 @@ namespace KryticalNova.Townsfolk
             foreach (TownSlot t in slots) slotBuffer.Add(t);
             SpotCount = spots.Count;
             SlotCount = slots.Count;
-            em.SetComponentData(area, new TownArea { Centre = middle, Radius = m_Area.radius, Cast = m_Area.cast != null ? m_Area.cast.id : (byte)0, Ready = 1 });
+            uint version = em.GetComponentData<TownArea>(area).Version + 1;   // the mind's score cache rebuilds with the spots
+            em.SetComponentData(area, new TownArea { Centre = middle, Radius = m_Area.radius, Cast = m_Area.cast != null ? m_Area.cast.id : (byte)0, Ready = 1, Version = version });
             Debug.Log($"[Townsfolk] {m_Area.name}: {spots.Count - walks} smart spots ({slots.Count - walks} slots), {walks} walk points on the NavMesh; {dropped} spots off the NavMesh dropped.");
         }
 
@@ -420,7 +422,7 @@ namespace KryticalNova.Townsfolk
             em.AddComponent(e, new ComponentTypeSet(new ComponentType[]
             {
                 typeof(BrainTag), typeof(BrainActive), typeof(BrainClock), typeof(BrainDice), typeof(BrainMover), typeof(BrainPath),
-                typeof(TownLife), typeof(TownsfolkGhostSource),
+                typeof(TownLife), typeof(TownPick), typeof(TownsfolkGhostSource),
             }));
             em.AddBuffer<BrainEvent>(e);
             em.AddBuffer<BrainWaypoint>(e);

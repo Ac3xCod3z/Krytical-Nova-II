@@ -93,6 +93,31 @@ namespace KryticalNova.Townsfolk
         public float Radius;
         public byte Cast;
         public byte Ready;
+        /// <summary>Bumped each time the spots are rebuilt (the score cache rebuilds with it).</summary>
+        public uint Version;
+    }
+
+    /// <summary>
+    /// Server only, per townsperson: the spot its think job wants this tick (plan 3.5, owner 13 Nov: the mind runs as jobs). The think job
+    /// writes it in parallel; the claim job alone touches the slots, in StableId order, so two never get one slot and every run is the same.
+    /// </summary>
+    public struct TownPick : IComponentData
+    {
+        /// <summary>The wanted spot, index + 1 (0 none).</summary>
+        public ushort Spot;
+        /// <summary>The walk point to stroll to when every slot of the spot is taken, index + 1 (0 none).</summary>
+        public ushort WalkTo;
+        public float Score;
+    }
+
+    /// <summary>
+    /// The cached fixed part of each spot's score for each personality (area entity, row-major: personality row x spot), see
+    /// <see cref="TownLifeRules.StaticPart"/>. Rebuilt by a job only when the game hour, the period, the rain or the spots change.
+    /// </summary>
+    [InternalBufferCapacity(0)]
+    public struct TownScoreCache : IBufferElementData
+    {
+        public float Value;
     }
 
     /// <summary>The town's clock and weather (server singleton, refreshed once a second from the world's clock; tests set it).</summary>
