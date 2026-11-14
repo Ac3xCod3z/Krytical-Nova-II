@@ -25,7 +25,7 @@ MonoBehaviour:
   bracketSize: 10
   bracketCount: 10
   callText: 'Crossfire! The war starts in {time}. Level {level} and up: get to your
-    Muster Yard.'
+    Rally Point.'
   gatesClosedText: 'Crossfire is over: the gates are closed.'
   finalCountdownSeconds: 10
   countdownText: 'Crossfire: the gates open in {n}'

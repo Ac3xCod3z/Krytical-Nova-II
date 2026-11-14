@@ -821,7 +821,7 @@ namespace KryticalNova.EditorTools.GM
                 KryticalNova.Crossfire.CrossfireState s = KryticalNova.Crossfire.CrossfireView.Server;
                 if (!HasCrossfire || !s.Known) return "Not running (no server here, or no Crossfire settings).";
                 double left = s.Now.PhaseEnd - KryticalNova.Core.NetClock.Now;
-                return double.IsInfinity(left) ? s.Now.Phase.ToString() : $"{s.Now.Phase}: {FormatSeconds(left)} left";
+                return double.IsInfinity(left) ? KryticalNova.Crossfire.CrossfireSettings.PhaseName(s.Now.Phase) : $"{KryticalNova.Crossfire.CrossfireSettings.PhaseName(s.Now.Phase)}: {FormatSeconds(left)} left";
             }
         }
 
