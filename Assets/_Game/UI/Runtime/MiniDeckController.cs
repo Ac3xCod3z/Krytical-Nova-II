@@ -23,7 +23,7 @@ namespace KryticalNova.UI
     public sealed class MiniDeckController : MonoBehaviour
     {
         private const float LiveAbove = 0.01f;
-        private const float FlashSeconds = 0.09f, LitSeconds = 0.45f, ChatFadeSeconds = 0.25f;
+        private const float FlashSeconds = 0.09f, LitSeconds = 0.45f, ChatFadeSeconds = 0.25f, SwapFadeSeconds = 0.2f;
         private const float DeviceWidth = 134f, DeviceHeight = 186f, DeviceRadius = 18f;
         private const float WheelSize = 82f, WheelCentre = 28f, BarMaxHeight = 18f;
         private readonly VisualElement[] bars = new VisualElement[12];
@@ -35,6 +35,8 @@ namespace KryticalNova.UI
         private Label title, pack;
         private bool shown, chatFaded;
         private float lit, chatOpacity = 1f;
+        // Owner 13 Nov 2026 (3.3): never both at once - the minimap fades out, then the Mini Deck fades in, and back.
+        private float mapOpacity = 1f, deckOpacity;
         private int step;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
@@ -72,6 +74,10 @@ namespace KryticalNova.UI
             PlayerCadence.LocalCombo -= OnCombo;
             Show(false);
             SetChat(1f);
+            // switched off: the minimap comes back whole at once
+            mapOpacity = 1f; deckOpacity = 0f;
+            if (minimap != null) ApplySwap(minimap, deck, 1f, 0f);
+            Hud.MinimapChromeView.StepAside01 = 1f;
             deck?.RemoveFromHierarchy();
             deck = null;
         }
@@ -231,6 +237,7 @@ namespace KryticalNova.UI
             if (deck == null) return;
             bool live = CombatBeat.Live01 > LiveAbove;
             if (live != shown) Show(live);
+            UpdateSwap();
             UpdateChat(live);
             if (!live) return;
             MusicTrack track = CombatBeat.Track;
@@ -257,10 +264,39 @@ namespace KryticalNova.UI
         {
             shown = on;
             if (minimap == null || deck == null) return;
-            foreach (VisualElement child in minimap.Children())
-                if (child != deck) child.style.visibility = on ? Visibility.Hidden : StyleKeyword.Null;
-            deck.style.display = on ? DisplayStyle.Flex : DisplayStyle.None;
             if (!on) { lit = 0f; step = 0; }
+            UpdateSwap();
+        }
+
+        // One fades fully out before the other fades in (MiniDeckBeat.SwapStep), so they never overlap.
+        private void UpdateSwap()
+        {
+            if (minimap == null || deck == null) return;
+            float delta = Time.unscaledDeltaTime / SwapFadeSeconds;
+            (mapOpacity, deckOpacity) = MiniDeckBeat.SwapStep(shown, mapOpacity, deckOpacity, delta);
+            ApplySwap(minimap, deck, mapOpacity, deckOpacity);
+        }
+
+        /// <summary>
+        /// The whole minimap block at <paramref name="mapOpacity"/> (owner, 13 Nov 2026: nothing of it behind the Mini Deck): every element
+        /// in the minimap (frame, backdrop, map, markers, ring, north, zoom buttons) and the faction's dial on its own canvas
+        /// (<see cref="Hud.MinimapChromeView"/>); at 0 they are hidden too. The Mini Deck at <paramref name="deckOpacity"/>.
+        /// </summary>
+        public static void ApplySwap(VisualElement minimap, VisualElement deck, float mapOpacity, float deckOpacity)
+        {
+            bool mapGone = mapOpacity <= 0f;
+            foreach (VisualElement child in minimap.Children())
+            {
+                if (child == deck) continue;
+                child.style.visibility = mapGone ? Visibility.Hidden : StyleKeyword.Null;
+                child.style.opacity = mapOpacity >= 1f ? StyleKeyword.Null : new StyleFloat(mapOpacity);
+                child.pickingMode = child is Button ? (mapGone ? PickingMode.Ignore : PickingMode.Position) : child.pickingMode;
+            }
+            // The faction's dial (ring, frame, buttons) is drawn on its own canvas over the minimap: it fades with the rest.
+            Hud.MinimapChromeView.StepAside01 = mapOpacity;
+            if (deck == null) return;
+            deck.style.display = deckOpacity > 0f ? DisplayStyle.Flex : DisplayStyle.None;
+            deck.style.opacity = deckOpacity >= 1f ? StyleKeyword.Null : new StyleFloat(deckOpacity);
         }
 
         // In a Callout the chat fades, and comes back while the player types in it.

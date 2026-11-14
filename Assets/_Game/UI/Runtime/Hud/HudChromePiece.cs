@@ -77,6 +77,9 @@ namespace KryticalNova.UI.Hud
             return Anchor != null && group != null && group.alpha > 0f && Anchor.worldBound.Overlaps(panelRect);
         }
 
+        /// <summary>How opaque the piece is drawn while its element is seen (1 = fully). The minimap's dial fades with the Mini Deck swap.</summary>
+        protected virtual float Opacity => 1f;
+
         /// <summary>Binds the piece's elements; returns the element it stands on, or null.</summary>
         protected abstract VisualElement OnAttach(VisualElement hudRoot);
 
@@ -101,7 +104,7 @@ namespace KryticalNova.UI.Hud
         {
             Rect pixels = default;
             bool seen = Anchor.panel != null && Shown() && HudChrome.TryScreenRect(Anchor, out pixels);
-            group.alpha = seen ? 1f : 0f;
+            group.alpha = seen ? Opacity : 0f;
             if (!seen) return;
             // The canvas has no scaler: its units are screen pixels, and the piece's pivot is its centre.
             float scale = pixels.width / Mathf.Max(1f, stand.width);
