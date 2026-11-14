@@ -1,5 +1,6 @@
 using System;
 using KryticalNova.Networking;
+using KryticalNova.Rendering;
 using KryticalNova.World;
 using UnityEngine;
 
@@ -29,21 +30,23 @@ namespace KryticalNova.UI
             public readonly AntiAliasingChoice AntiAliasing;
             public readonly VolumetricQuality Fog;
             public readonly bool SunShafts, ComicOutlines;
+            /// <summary>How much the world's little effects do (owner, 13 Nov 2026): swings moving the grass first; each effect's tiers are its own settings.</summary>
+            public readonly WorldEffects Effects;
 
             public Detail(float renderScale, ShadowQuality shadows, AntiAliasingChoice antiAliasing, float grassDensity,
-                VolumetricQuality fog, bool sunShafts, bool comicOutlines)
+                VolumetricQuality fog, bool sunShafts, bool comicOutlines, WorldEffects effects)
             {
                 RenderScale = renderScale; Shadows = shadows; AntiAliasing = antiAliasing; GrassDensity = grassDensity;
-                Fog = fog; SunShafts = sunShafts; ComicOutlines = comicOutlines;
+                Fog = fog; SunShafts = sunShafts; ComicOutlines = comicOutlines; Effects = effects;
             }
         }
 
         private static readonly Detail[] Presets =
         {
-            new Detail(0.7f, ShadowQuality.Low, AntiAliasingChoice.Off, 0.4f, VolumetricQuality.Off, false, true),        // Low
-            new Detail(0.85f, ShadowQuality.Medium, AntiAliasingChoice.Fxaa, 0.7f, VolumetricQuality.Medium, false, true), // Medium
-            new Detail(1f, ShadowQuality.High, AntiAliasingChoice.Smaa, 1f, VolumetricQuality.High, true, true),          // High: as authored
-            new Detail(1f, ShadowQuality.Ultra, AntiAliasingChoice.Smaa, 1f, VolumetricQuality.Ultra, true, true),        // Ultra
+            new Detail(0.7f, ShadowQuality.Low, AntiAliasingChoice.Off, 0.4f, VolumetricQuality.Off, false, true, WorldEffects.Low),        // Low
+            new Detail(0.85f, ShadowQuality.Medium, AntiAliasingChoice.Fxaa, 0.7f, VolumetricQuality.Medium, false, true, WorldEffects.Medium), // Medium
+            new Detail(1f, ShadowQuality.High, AntiAliasingChoice.Smaa, 1f, VolumetricQuality.High, true, true, WorldEffects.High),          // High: as authored
+            new Detail(1f, ShadowQuality.Ultra, AntiAliasingChoice.Smaa, 1f, VolumetricQuality.Ultra, true, true, WorldEffects.Ultra),        // Ultra
         };
 
         public const float MinRenderScale = 0.5f;
@@ -101,6 +104,13 @@ namespace KryticalNova.UI
         }
 
         private const string FogKey = "fogQuality";
+
+        /// <summary>World Effects: how much the world's little effects do on this client (swings moving the grass: Low 4 at once, High 8).</summary>
+        public static WorldEffects Effects
+        {
+            get => (WorldEffects)Mathf.Clamp(GetInt("worldEffects", (int)WorldEffects.High), 0, (int)WorldEffects.Ultra);
+            set => SetDetail("worldEffects", (int)value);
+        }
 
         public static bool SunShafts { get => GetInt("shafts", 1) != 0; set => SetDetail("shafts", value ? 1 : 0); }
         public static bool ComicOutlines { get => GetInt("outlines", 1) != 0; set => SetDetail("outlines", value ? 1 : 0); }
@@ -216,6 +226,7 @@ namespace KryticalNova.UI
                 PlayerPrefs.SetInt(Prefix + FogKey, (int)d.Fog);
                 PlayerPrefs.SetInt(Prefix + "shafts", d.SunShafts ? 1 : 0);
                 PlayerPrefs.SetInt(Prefix + "outlines", d.ComicOutlines ? 1 : 0);
+                PlayerPrefs.SetInt(Prefix + "worldEffects", (int)d.Effects);
             }
             Commit();
         }

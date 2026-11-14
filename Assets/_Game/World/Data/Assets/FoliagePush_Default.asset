@@ -1,0 +1,59 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: afc9028872374640beb24975e933a698, type: 3}
+  m_Name: FoliagePush_Default
+  m_EditorClassIdentifier: KryticalNova.World::KryticalNova.World.FoliagePushSettings
+  enabled: 1
+  arc:
+    radius: 2.2
+    arcDegrees: 120
+    band: 0
+    frontSpeed: 0
+    strength: 0.55
+    springSeconds: 0.45
+  finisher:
+    radius: 2.8
+    arcDegrees: 150
+    band: 0
+    frontSpeed: 0
+    strength: 0.8
+    springSeconds: 0.5
+  ring:
+    radius: 10
+    arcDegrees: 0
+    band: 1.2
+    frontSpeed: 14
+    strength: 0.8
+    springSeconds: 0.5
+  wave:
+    radius: 4
+    arcDegrees: 0
+    band: 1.5
+    frontSpeed: 10
+    strength: 1.1
+    springSeconds: 0.6
+  hostile:
+    radius: 2.5
+    arcDegrees: 140
+    band: 0
+    frontSpeed: 0
+    strength: 0.7
+    springSeconds: 0.5
+  pushesPerTier: 04000000060000000800000008000000
+  cullDistance: 60
+  maxBodyScale: 4
+  hostileReferenceRadius: 0.45
+  springRate: 14
+  springDamping: 0.45
+  riseSeconds: 0.05
+  sweepShare: 0.3
+  totalPushClamp: 1.3

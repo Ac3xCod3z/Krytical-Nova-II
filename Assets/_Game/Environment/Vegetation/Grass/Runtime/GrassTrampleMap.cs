@@ -25,12 +25,25 @@ namespace KryticalNova.Vegetation.Grass
         /// <summary>xy = world XZ of the map's corner, z = 1 / its width in metres, w = 1 while there is a map.</summary>
         public static readonly int RectId = Shader.PropertyToID("_KN_GrassTrampleRect");
         private const int MaxSources = 32; // GrassTrample.compute KN_MAX_TRAMPLERS
+        // The swing pushes (day list item 20): published by the world's FoliagePushes, worked out per texel by the Swing kernel.
+        private static readonly int SwingOutId = Shader.PropertyToID("_SwingOut");
+        private static readonly int PushesId = Shader.PropertyToID("_KN_SwingPushes");
+        private static readonly int PushCountId = Shader.PropertyToID("_KN_SwingPushCount");
+        private static readonly int PushSpringId = Shader.PropertyToID("_KN_SwingSpring");
+        /// <summary>The swing map, for the blade shader: rg = which way and how far swings push the grass.</summary>
+        public static readonly int SwingTextureId = Shader.PropertyToID("_KN_GrassSwing");
+        /// <summary>1 while a swing push is alive (the blades read the swing map), else 0.</summary>
+        public static readonly int SwingOnId = Shader.PropertyToID("_KN_GrassSwingOn");
+        private const int MaxPushVectors = 32; // GrassTrample.compute KN_MAX_SWING_PUSHES x 4
 
         private readonly List<Vector4> sources = new List<Vector4>(MaxSources);
         private readonly int[] shiftInts = new int[2];
         private readonly Vector4[] sent = new Vector4[MaxSources];
-        private RenderTexture before, after;
-        private int kernel = -1;
+        private readonly List<Vector4> pushes = new List<Vector4>(MaxPushVectors);
+        private readonly Vector4[] pushesSent = new Vector4[MaxPushVectors];
+        private RenderTexture before, after, swing;
+        private int kernel = -1, swingKernel = -1;
+        private bool swingDrawn;
         private Vector2Int corner;      // the map's corner, in texels of the world
         private bool hasCorner;
         private int lastFrame = -1;
@@ -47,6 +60,7 @@ namespace KryticalNova.Vegetation.Grass
             metres = Mathf.Max(8f, metres);
             if (before == null || before.width != texels) Allocate(texels);
             if (kernel < 0) kernel = shader.FindKernel("Trample");
+            if (swingKernel < 0 && shader.HasKernel("Swing")) swingKernel = shader.FindKernel("Swing");
 
             float texel = metres / texels;
             // Whole texels of the world, so a mark never has to be resampled as the camera moves.
@@ -75,6 +89,24 @@ namespace KryticalNova.Vegetation.Grass
             (before, after) = (after, before); // what was just written is what the next frame springs back from
             Shader.SetGlobalTexture(TextureId, before);
             Shader.SetGlobalVector(RectId, new Vector4(corner.x * texel, corner.y * texel, 1f / metres, 1f));
+
+            // The swing pushes: only worked out while one is alive. The map is cleared once after the last, then left alone.
+            int pushCount = swingKernel >= 0 ? Mathf.Clamp(Shader.GetGlobalInt(PushCountId), 0, MaxPushVectors / 4) : 0;
+            if (pushCount > 0 || swingDrawn)
+            {
+                pushes.Clear();
+                Shader.GetGlobalVectorArray(PushesId, pushes);
+                int vectors = Mathf.Min(pushCount * 4, pushes.Count);
+                for (int i = 0; i < MaxPushVectors; i++) pushesSent[i] = i < vectors ? pushes[i] : Vector4.zero;
+                shader.SetTexture(swingKernel, SwingOutId, swing);
+                shader.SetVectorArray(PushesId, pushesSent);
+                shader.SetInt(PushCountId, vectors / 4);
+                shader.SetVector(PushSpringId, Shader.GetGlobalVector(PushSpringId));
+                shader.Dispatch(swingKernel, groups, groups, 1);
+                swingDrawn = vectors > 0;
+            }
+            Shader.SetGlobalTexture(SwingTextureId, swing);
+            Shader.SetGlobalFloat(SwingOnId, swingDrawn ? 1f : 0f);
         }
 
         private void Allocate(int texels)
@@ -82,6 +114,16 @@ namespace KryticalNova.Vegetation.Grass
             Release();
             before = Create(texels);
             after = Create(texels);
+            swing = new RenderTexture(texels, texels, 0, GraphicsFormat.R16G16_SFloat)
+            {
+                name = "KN Grass Swing",
+                enableRandomWrite = true,
+                filterMode = FilterMode.Bilinear,
+                wrapMode = TextureWrapMode.Clamp,
+                hideFlags = HideFlags.HideAndDontSave,
+            };
+            swing.Create();
+            swingDrawn = true;   // cleared on the first frame
             hasCorner = false;
         }
 
@@ -103,6 +145,10 @@ namespace KryticalNova.Vegetation.Grass
         public void Release()
         {
             Shader.SetGlobalVector(RectId, Vector4.zero);
+            Shader.SetGlobalFloat(SwingOnId, 0f);
+            if (swing != null) { swing.Release(); Object.DestroyImmediate(swing); }
+            swing = null;
+            swingDrawn = false;
             if (before != null) { before.Release(); Object.DestroyImmediate(before); }
             if (after != null) { after.Release(); Object.DestroyImmediate(after); }
             before = after = null;

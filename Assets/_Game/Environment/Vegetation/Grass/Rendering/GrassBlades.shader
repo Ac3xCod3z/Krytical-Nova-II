@@ -32,6 +32,10 @@ Shader "KryticalNova/Grass Blades"
     TEXTURE2D(_KN_GrassTrample);
     SAMPLER(sampler_KN_GrassTrample);
     float4 _KN_GrassTrampleRect;    // xy world XZ of its corner, z 1 / its width in metres, w 1 while there is a map
+    // The swing map (day list item 20): on the trample map's grid, rg = which way and how far swings push the grass this frame.
+    TEXTURE2D(_KN_GrassSwing);
+    float _KN_GrassSwingOn;         // 1 while a swing push is alive
+    float4 _KN_SwingSpring;         // w the most a blade is bent by swings and trampling together
 
     struct GrassVertexOut
     {
@@ -103,6 +107,16 @@ Shader "KryticalNova/Grass Blades"
                 float keep = saturate(min(toEdge.x, toEdge.y) * 12.0) * step(abs(root.y - mark.a), 1.5);
                 push = mark.rg * keep;
                 flatten = mark.b * keep;
+                // A swing throws the grass aside on top of any trampling; it barely flattens it, and never folds it into the ground.
+                [branch] if (_KN_GrassSwingOn > 0.5)
+                {
+                    float2 swing = SAMPLE_TEXTURE2D_LOD(_KN_GrassSwing, sampler_KN_GrassTrample, at, 0).rg * saturate(min(toEdge.x, toEdge.y) * 12.0);
+                    push += swing;
+                    float most = max(_KN_SwingSpring.w, 1.0);
+                    float pushed = length(push);
+                    if (pushed > most) push *= most / pushed;
+                    flatten = max(flatten, 0.25 * length(swing));
+                }
             }
         }
         int interactors = !mapped && _GrassMotion.z > 0.0 ? _KN_InteractorCount : 0; // filler tufts skip the loop

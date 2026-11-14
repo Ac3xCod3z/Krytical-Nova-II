@@ -208,6 +208,8 @@ Driven by `EnvironmentPresenter` (`Assets/_Game/World/Runtime/Presentation/`). T
 | `_KN_Interactors[8]`, `_KN_InteractorCount` | xyz feet, w radius of the 8 `FoliageInteractor`s nearest the camera (bushes and town grass patches part round them; GPU grass only without a trample map) |
 | `_KN_TrampleSources[32]`, `_KN_TrampleSourceCount` | xyz feet, w radius of up to 32 `FoliageInteractor`s near the camera: who presses the grass's trample map |
 | `_KN_GrassTrample`, `_KN_GrassTrampleRect` | the trample map (rg push, b press, a height of who pressed) and where it lies: xy corner in world XZ, z 1 / width in metres, w 1 while there is a map |
+| `_KN_SwingPushes[32]`, `_KN_SwingPushCount`, `_KN_SwingSpring` | the swing pushes (14 Nov 2026, `FoliagePushes`): four `float4` each, up to 8 (World Effects Low 4); the spring's rate, damping, rise and the most a blade is bent |
+| `_KN_GrassSwing`, `_KN_GrassSwingOn` | the swing map on the trample grid (rg which way and how far swings push the grass this frame) and 1 while a push is alive (blades skip the fetch otherwise) |
 
 ### Sun
 - **Art treatment**: the centre is washed out by its own light (`_SunGlare*`), light bleeds over ink lines
@@ -431,6 +433,11 @@ farther away than the original 0.065 / 0.1.
       alone (a bridge over a lawn). The numbers are on `GrassRuleSet` (Trample map). Outside Play, and with
       `trample` off, a blade asks the 8 nearest `_KN_Interactors` instead, as it used to. Fill tufts take no part
       (`playerBend` 0), and grass past the map's edge does not bend.
+    - **Swings push it** (14 Nov 2026, `Plans/swing-grass-push-plan.md`): a pool of up to 8 short-lived pushes (an arc, a finisher's
+      arc, an area skill's running ring, a big hit's wave, a Hostile's arc by body size) is worked out once per texel by the `Swing`
+      kernel of `GrassTrample.compute` into a second, stateless map, only while one is alive; each blade reads one more texel and springs
+      back with them (a damped spring that passes upright once, gone in about half a second). Budget: 0.1 ms (brief PERFORMANCE FIRST);
+      World Effects Low keeps 4 at once.
     - Colour is a root→tip gradient with per-clump, patch and wetness variation and fake AO.
     - Lighting is the comic cel band and dots on upward-biased normals.
     - It casts no shadows but receives them.

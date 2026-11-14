@@ -16870,6 +16870,7 @@ MonoBehaviour:
   rarePickupWorldFeel: {fileID: 6140166258256306482}
   epicPickupWorldFeel: {fileID: 7931492132668321656}
   looks: {fileID: 11400000, guid: 91ad25a4aee086843ae9e0a1021abacc, type: 2}
+  foliagePushes: {fileID: 11400000, guid: 5e27991650b941f995f82ebf17fc1e4f, type: 2}
   prepareActorsEvery: 2
   clickVfx: {fileID: 7142657378915030908, guid: 3bb6c5c5d03c21d4983caa359250311e, type: 3}
   selectHostileVfx: {fileID: 1708667203789070966, guid: 7be486becb90aff4f9a98707f447b6cb, type: 3}
