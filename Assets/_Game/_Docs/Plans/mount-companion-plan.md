@@ -328,7 +328,8 @@ Phase 2:
   knock-out, saves.
 - [ ] 5. Mount Stim (item, handler, Apothecary, icon) + the window's HP bar and rest timer. Evals: Stim, item checks,
   performance. **Owner tests phase 2 on two clients and approves.** Then the Encyclopedia update.
-- [ ] 6-8. Phases 3, 4, 5, each planned in detail here first and approved before code.
+- [x] 6. Phase 3, DPS and HEALER (owner 13 Nov: "we can move on to phase 3"); see As built.
+- [ ] 7-8. Phases 4, 5, each planned in detail here first and approved before code.
 
 ## The owner's picks
 
@@ -380,3 +381,37 @@ answer differed). What landed and where it differs from the plan above:
 - **Not built yet (follow-ups):** the HP bar over the companion for everyone (the owner sees HP in the Mount window), the owner's
   name-plate mount line, summon / vanish sounds and a knock-out stagger, the `KnTestWorld` two-client test and the 30-companion perf run,
   pooled bodies and a Burst follow (perf phase).
+
+Phase 3, 13-14 Nov 2026 (b18-coder-20, branch `b18/19-companion-phase3`): the DPS and HEALER stances, PvE only. The owner said
+"we can move on to phase 3"; the outline in section 5 was followed. What landed and where it differs:
+
+- **Rules:** `Mounts/Runtime/CompanionFightRules.cs`: which stances are built (FREE, DPS, HEALER; TANK is phase 4), the PvP fallback
+  (`Effective`: a combat stance acts as FREE while the owner is in an always-PvP zone, a duel or a Crossfire battlefield, with a line
+  to the owner when that starts and ends), the DPS strike (`Strike`: the owner's own roll on that Hostile x `companionDpsDamageShare`
+  x (1 + `companionDpsDamageBuff`), no reflect, `DamageResult.NoThreat`), the HEALER pulse, the strike spot and reach. Numbers:
+  `MountSettings` header "Companion fight" (`CompanionFight` -> `CompanionFightTuning`).
+- **Target logic:** `Mounts/Entities/Runtime/CompanionFightPick.cs`, Autopilot's `Fight / Pick / Allowed` cut to the companion's
+  range (12 m of the owner): the owner's own target (`CombatState.TargetGhostId`) first, else the Hostile it already fights while that
+  one is still after the owner, else the nearest Hostile after the owner (`HostileTarget.GhostId`), else none: it never starts a
+  fight alone. Autopilot's grey / red / Bruiser / tagged filters are not needed: it only joins fights its owner is already in.
+  It runs for every companion at once in `CompanionPickJob` (Burst `IJobFor`) every `companionFightSeconds` (0.25 s); while no
+  companion is in a combat stance nothing is queried and no job runs.
+- **DPS:** `CompanionServerSystem` runs it to the strike spot (`CompanionFollower.StepToward`, straight, the owner's trail forgotten
+  while it fights; the follow's warp still brings it back past 30 m) and strikes every 1.6 s in reach. The strike is dealt in the
+  owner's name, so the kill, the tag and the XP are theirs; `EcsHostileBrain.OnDamaged` skips threat for `NoThreat`, so it never
+  draws aggro, and Hostiles never target it. It never heals.
+- **HEALER:** no damage; every 2 s while the owner fights a Hostile (or one is after them) and is hurt, `PlayerResources.Heal` of
+  1.5 % of the owner's max HP. Heals put no threat on a Hostile in this game (no `Healed` brain event is sent), so it never draws
+  aggro either. It is a heal over time from the companion, not a buff icon in the owner's buff row (follow-up if wanted).
+- **Views:** `CompanionView` gains `Strikes` and `Pulses` counters, `FightGhostId` and `ActingStance`. Each strike lunges the model
+  0.6 m toward the Hostile and back (the mounts have no attack clip) with the swing's feel (its trail; the whoosh on the owner's
+  screen; item 20's grass push); each pulse plays the heal feel (`IGameFeelSink.Consumed`) on the owner. From the counters only, so
+  every view plays each once. The hit goes on the owner's `HitEvent` ring (`HitRecordServerSystem.RecordFor`, labelled with the
+  mount's name) and the owner's own hit number (`HitNumbers.Send`).
+- **Window and save:** the DPS and HEALER buttons are on (TANK says "coming later"); the stance is now restored from the save (it was
+  saved but loaded as FREE in phases 1-2); a saved stance that is not built loads as FREE.
+- **Tests:** `CompanionFightTests` (11: pick order, never alone, range and death, the Burst job equals the rule, stances and PvP, the
+  strike, the heal, the spot and the run, settings = defaults) and `PlayerMountsCompanionTests.Stances_...` (TANK refused, kept
+  across a relog).
+- **Follow-ups:** a buff icon for HEALER in the owner's buff row; mount attack clips (the lunge stands in); the companion's own HP
+  bar over it for everyone (from phase 2); Hostiles still never strike the companion (phase 4 TANK makes them).

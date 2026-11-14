@@ -148,6 +148,35 @@ namespace KryticalNova.Tests
         }
 
         [Test]
+        public void Stances_DpsAndHealerAreTaken_TankIsRefused_AndTheStanceOutlivesARelog()
+        {
+            MountDefinition m = Built();
+            mounts.ServerRegister(m);
+            mounts.ServerSetStance((int)CompanionStance.Dps);
+            Assert.AreEqual(CompanionStance.Dps, mounts.Stance);
+            mounts.ServerSetStance((int)CompanionStance.Tank);
+            Assert.AreEqual(CompanionStance.Dps, mounts.Stance, "TANK comes in phase 4: refused, the stance stays");
+            mounts.ServerSetStance(250);
+            Assert.AreEqual(CompanionStance.Dps, mounts.Stance, "no such stance");
+            mounts.ServerSetStance((int)CompanionStance.Healer);
+            Assert.AreEqual(CompanionStance.Healer, mounts.Stance);
+
+            string json = mounts.CaptureSave();
+            var go2 = new GameObject("CompanionTest3");
+            try
+            {
+                var again = go2.AddComponent<PlayerMounts>();
+                typeof(PlayerMounts).GetField("catalog", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(again, catalog);
+                again.RestoreSave(json);
+                Assert.AreEqual(CompanionStance.Healer, again.Stance, "kept across a relog (phase 3)");
+                StringAssert.Contains("\"stance\":3", json);
+                again.RestoreSave(json.Replace("\"stance\":3", "\"stance\":1"));
+                Assert.AreEqual(CompanionStance.Free, again.Stance, "a saved stance that is not built loads as FREE");
+            }
+            finally { Object.DestroyImmediate(go2); }
+        }
+
+        [Test]
         public void Saves_KeepTheRestAcrossARelog_AndAnOldSaveLoadsUnchanged()
         {
             MountDefinition m = Built();

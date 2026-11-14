@@ -177,6 +177,34 @@ namespace KryticalNova.Mounts
         [Tooltip("Seconds between two Mount Stims.")]
         [Min(0f)] public float mountStimCooldown = 10f;
 
+        [Header("Companion fight: the DPS and HEALER stances (phase 3; PvE only)")]
+        [Tooltip("It fights only Hostiles this close to you, in metres, and never starts a fight alone: your target first, else a Hostile after you.")]
+        [Min(1f)] public float companionFightRange = 12f;
+        [Tooltip("How often the server looks for its fight, in seconds.")]
+        [Min(0.05f)] public float companionFightSeconds = 0.25f;
+        [Tooltip("DPS: seconds between two of its strikes.")]
+        [Min(0.2f)] public float companionDpsStrikeSeconds = 1.6f;
+        [Tooltip("DPS: it strikes from this close to the Hostile's edge, in metres.")]
+        [Min(0.3f)] public float companionDpsReach = 2.2f;
+        [Tooltip("DPS: a strike deals this share of what your own basic strike would roll on that Hostile.")]
+        [Range(0f, 2f)] public float companionDpsDamageShare = 0.35f;
+        [Tooltip("DPS: its own damage buff while in the stance (0.15 = +15 %). It never takes threat and never heals.")]
+        [Range(0f, 2f)] public float companionDpsDamageBuff = 0.15f;
+        [Tooltip("HEALER: seconds between two pulses of its heal over time on you.")]
+        [Min(0.2f)] public float companionHealerPulseSeconds = 2f;
+        [Tooltip("HEALER: each pulse heals this share of your max HP (0.015 every 2 s = 0.75 % a second). It deals no damage and never takes threat.")]
+        [Range(0f, 1f)] public float companionHealerHealShare = 0.015f;
+        [Tooltip("HEALER: off = it heals only while you fight a Hostile (or one fights you); on = whenever you are hurt.")]
+        public bool companionHealerOutOfFight;
+
+        /// <summary>The fight numbers as the pure rules take them (phase 3).</summary>
+        public CompanionFightTuning CompanionFight => new CompanionFightTuning
+        {
+            Range = companionFightRange, LookSeconds = companionFightSeconds, StrikeSeconds = companionDpsStrikeSeconds, Reach = companionDpsReach,
+            DamageShare = companionDpsDamageShare, DamageBuff = companionDpsDamageBuff, PulseSeconds = companionHealerPulseSeconds,
+            HealShare = companionHealerHealShare, HealOutOfFight = companionHealerOutOfFight,
+        };
+
         /// <summary>The hunger numbers while the mount is out beside its owner (the riding ones stay in <see cref="Tuning"/>).</summary>
         public MountTuning CompanionHunger => new MountTuning(xpToFullGrowth, xpPerHostileKill, companionHungerDrainPercentPerMinute);
 

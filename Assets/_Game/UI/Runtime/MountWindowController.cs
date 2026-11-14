@@ -209,7 +209,7 @@ namespace KryticalNova.UI
             root.Add(window);
         }
 
-        // one stance at a time, set here (phases 1-2 build FREE only; TANK, DPS and HEALER come later)
+        // one stance at a time, set here (FREE in phases 1-2, DPS and HEALER in phase 3; TANK comes in phase 4)
         private VisualElement StanceRow()
         {
             var row = new VisualElement { name = "mount-stances" };
@@ -226,7 +226,9 @@ namespace KryticalNova.UI
             string[] tips =
             {
                 "FREE: no combat. It keeps the riding bonus and may come along in PvP.",
-                "TANK: coming later.", "DPS: coming later.", "HEALER: coming later.",
+                "TANK: coming later.",
+                "DPS: it helps you kill what you fight, with its own damage buff. It never draws aggro and never heals. PvE only: in PvP it acts as FREE.",
+                "HEALER: it heals you over time while you fight. It deals no damage and never draws aggro. PvE only: in PvP it acts as FREE.",
             };
             for (int i = 0; i < names.Length; i++)
             {
@@ -234,7 +236,7 @@ namespace KryticalNova.UI
                 var b = new Button(() => mounts?.RequestStance((CompanionStance)stance)) { name = "mount-stance-" + names[i].ToLowerInvariant(), text = names[i], tooltip = tips[i] };
                 b.AddToClassList("settings-footer-button");
                 b.style.marginRight = 4f;
-                b.SetEnabled(i == (int)CompanionStance.Free);
+                b.SetEnabled(CompanionFightRules.IsBuilt((CompanionStance)i));
                 stanceButtons[i] = b;
                 row.Add(b);
             }
