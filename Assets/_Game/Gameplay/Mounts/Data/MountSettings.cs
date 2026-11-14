@@ -202,8 +202,8 @@ namespace KryticalNova.Mounts
         [Min(0.5f)] public float companionTankTauntSeconds = 6f;
         [Tooltip("TANK: besides the Hostile you fight, a taunt also pulls every Hostile after you this close to the companion, in metres.")]
         [Min(0f)] public float companionTankTauntRadius = 8f;
-        [Tooltip("TANK: its own defence buff while in the stance (0.4 = it takes 40 % less damage). It deals no damage and does not heal.")]
-        [Range(0f, 0.9f)] public float companionTankDefenceBuff = 0.4f;
+        [Tooltip("TANK: its own defence buff while in the stance (0.7 = it takes 70 % less damage: a new mount holds a level 40 Colossus about 17 s, a full-grown one about 29 s; CompanionTankToughnessTests). It deals no damage and does not heal.")]
+        [Range(0f, 0.9f)] public float companionTankDefenceBuff = 0.7f;
 
         /// <summary>The fight numbers as the pure rules take them (phases 3-4).</summary>
         public CompanionFightTuning CompanionFight => new CompanionFightTuning

@@ -22,7 +22,7 @@ namespace KryticalNova.Mounts
         {
             Range = 12f, LookSeconds = 0.25f, StrikeSeconds = 1.6f, Reach = 2.2f, DamageShare = 0.35f, DamageBuff = 0.15f,
             PulseSeconds = 2f, HealShare = 0.015f, HealOutOfFight = false,
-            TauntSeconds = 6f, TauntRadius = 8f, DefenceBuff = 0.4f,
+            TauntSeconds = 6f, TauntRadius = 8f, DefenceBuff = 0.7f,
         };
     }
 

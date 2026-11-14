@@ -28,3 +28,4 @@ MonoBehaviour:
   stridesPerClip: 3
   leanEase: 0.25
   idleVarietySeconds: 9
+  companionTankDefenceBuff: 0.7
