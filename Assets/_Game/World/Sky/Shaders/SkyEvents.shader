@@ -214,7 +214,10 @@ Shader "Krytical Nova/Sky Events"
                     {
                         float nk;
                         float2 np = Tangent(d, _KN_Nebula.xyz, nk) / _KN_NebulaParams.x * 0.5 + 0.5;
-                        night += SAMPLE_TEXTURE2D_LOD(_KN_NebulaTex, sampler_KN_NebulaTex, np, 0).rgb * KN_InsideUnit(np) * step(0.0, nk) * _KN_Nebula.w;
+                        // soft edge: a picture still faintly lit at its border never shows as a straight line in the sky (part 3, 2x size)
+                        float2 edge = min(np, 1.0 - np);
+                        half soft = smoothstep(0.0, 0.12, min(edge.x, edge.y));
+                        night += SAMPLE_TEXTURE2D_LOD(_KN_NebulaTex, sampler_KN_NebulaTex, np, 0).rgb * soft * step(0.0, nk) * _KN_Nebula.w;
                     }
                     half3 trails = 0.0, heads = 0.0;
                     int streakCount = (int)_KN_StreakParams.z;
