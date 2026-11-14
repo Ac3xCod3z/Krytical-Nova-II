@@ -349,7 +349,7 @@ First pass, 13 Nov 2026 (b18-coder-11). Compiles (90/90 Editor, 40/40 server), `
   `KN_TOWNSFOLK` (on in a built server and the Editor's Play, off in EditMode tests).
 - [x] Ghost `TownsfolkGhost` (seed, cast, personality, activity, speed, chat circle), interpolated, never owned, importance
   30 (`RelevancySettings.importanceTownsfolk`), prefab + holder by `TownsfolkEntitiesAssetsBuilder`.
-- [x] Client: `TownsfolkViewClientSystem` (nearest 48 within 80 m; a hidden template per look, baked once, bodies share its
+- [x] Client: `TownsfolkViewClientSystem` (first pass: nearest 48 within 80 m, now by Crowd Detail below; a hidden template per look, baked once, bodies share its
   mesh through `CharacterAppearance.ShareFrom`; 16 looks per cast from `RecipeEdit.Randomize`, the lineage's basic outfit;
   `CharacterLod` on every body), one shared animator per body type (`AC_Townsfolk_Masc/Femn`, Speed blend + 4 variants per
   activity picked by the seed), `gm.town.debug` labels.
@@ -357,9 +357,33 @@ First pass, 13 Nov 2026 (b18-coder-11). Compiles (90/90 Editor, 40/40 server), `
   Townsfolk panel. Time of day: the existing `time.*` controls.
 - [x] Tests written: `TownLifeRulesTests`, `TownLifeWorldTests` (60 townsfolk, 20 spots, 10,000 ticks; stale claims; shifts
   and rain; far plan step; ghost), `TownsfolkLooksTests` (same look per seed, home city vs Concord, ghost lint, built assets).
-- [ ] Owed: run the builder and the tests in Unity; Play proof GIF + perf log; second client.
-- [ ] Later steps: pairs walking together, head-look / glances / greetings / text barks (step 6), vendors' manner (step 7,
-  `NpcInteractable.Interacted`), measured budgets (step 8).
+- [x] Jobs from the start (owner, 13 Nov 2026 ~22:45): `TownLifeDecideSystem` is five Burst jobs: the score cache
+  (`TownScoreCache`, the fixed part of each spot's score per personality, rebuilt only when the game hour, the period, the
+  rain or the spots change), the stale-claim sweep, players near per spot (parallel), the think job (parallel
+  `IJobEntity`: states, arrival, plan step and scoring into `TownPick`, wishes into lists, slots read only) and the claim
+  job (releases and stays first, then slots handed out in StableId order: never two in one slot, the same town every run).
+  The ghost writer is a parallel `IJobEntity`. Test: `SameSeedMakesTheSameTown`.
+- [x] Crowd Detail (owner: performance first, through the existing Graphics settings): a column of
+  `GraphicsPreferences.Detail` (Low / Medium / High / Ultra with the presets) and one choice on the Graphics page, put in
+  force by `GraphicsSettingsApplier` into `CrowdDetailRuntime` (Rendering). The tier's numbers are rows in
+  `TownsfolkSettings` (`*ByTier`): full bodies 16 / 32 / 48 / 60 within 25 / 35 / 45 / 60 m; cards out to 60 / 80 / 100 /
+  140 m (24 / 48 / 64 / 96); every-frame animation within 10 / 15 / 20 / 30 m, farther every 4 / 3 / 2 / 2 frames;
+  shadows within 8 / 12 / 18 / 25 m; full skinning within 10 / 15 / 20 / 30 m (`CharacterLod.Drive`, the view sets each
+  body's level). The server's crowd never changes with it.
+- [x] Far cards (impostors): `TownsfolkCards` photographs each look once (hidden camera, idle pose, layer 31) and draws
+  every far townsperson of that look as a camera-facing quad in one instanced draw, no shadow (`M_TownsfolkCard`, URP
+  Unlit, alpha clip, instancing); tinted by the hour's light, retaken when the light halves or doubles; off by itself
+  (one warning) if a picture cannot be taken.
+- [x] Vendors (owner 18.1 A; step 7 in part): `VendorLooksClientSystem` dresses every `NpcInteractable` in one fixed
+  Sidekick look (its definition's name, the scene's cast: `TownsfolkViewAssets.vendorCasts` for a home city, else Sky
+  Concord's mixed cast; the old model hidden, never removed); `VendorPresenter`: head follows within 8 m, wave or beckon
+  when the player looks its way (30 s each, 10 s between any two), show goods on stepping into reach, a bow on
+  `NpcInteractable.Interacted` (new). Gestures: an override layer `Gestures` on the shared controllers, IK pass on.
+  Not yet: `VendorManner` assets and call-out barks (text barks come with step 6).
+- [ ] Owed: run the builder and the tests in Unity; Play proof GIF + perf log Low and High against the budget (48 in view:
+  <= 1.5 ms main thread, <= 1.0 ms GPU, 0 GC a frame); second client.
+- [ ] Later steps: pairs walking together, head-look / glances / greetings / text barks (step 6), vendors' manner assets and
+  barks (step 7).
 
 Findings: the Concord 040 prefab (`World/Zones/Concord040/`) is not in git (only in the hand-test clone), so a fresh
 checkout has no Sky Concord; its meshes carry tile names only, so spots are data in the area asset, not found by name. The
