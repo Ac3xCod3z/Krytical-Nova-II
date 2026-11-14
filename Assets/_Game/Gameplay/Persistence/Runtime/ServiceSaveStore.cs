@@ -67,6 +67,9 @@ namespace KryticalNova.Persistence
         /// <summary>True while the store's own writer thread lives (it leaves when idle for a while, and when the store is disposed).</summary>
         public bool WriterRunning { get { lock (gate) return writer != null; } }
 
+        /// <summary>The service this store talks to (gm.maxall runs only when it is the test lane, 7802).</summary>
+        public Uri Address => http.BaseAddress;
+
         /// <param name="baseUrl">The service, for example http://127.0.0.1:7801.</param>
         /// <param name="key">The service key (save-service-key.txt).</param>
         /// <param name="holder">Who this server is, for the account locks.</param>

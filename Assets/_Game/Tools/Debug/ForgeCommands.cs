@@ -133,7 +133,7 @@ namespace KryticalNova.DevTools
 
         [Command("gm.forgekit", "Give the targeted player forge materials: the five Alloys, every Failsafe, the Fusion Catalyst and the Tuning chips, " +
                                 "<count> of each (default 20).")]
-        private static string ForgeKit(int count = 20)
+        internal static string ForgeKit(int count = 20)
         {
             if (!TryGetForge(out var work, out var error)) return error;
             ushort[] ids =

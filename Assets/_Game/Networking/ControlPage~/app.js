@@ -570,6 +570,28 @@ document.querySelectorAll("[data-crossfire]").forEach((button) => {
   });
 });
 
+// Max everything (gm.maxall): picks the player with gm.target, asks first, then runs gm.maxall confirm (the GM window's button does the same)
+$("maxAllForm").addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const who = $("maxAllWho").value.trim();
+  if (!/^\d+$/.test(who)) return toast("Give the player's client id (gm.players lists them).", true);
+  const sure = await ask("Max everything", "gm.maxall changes the whole character of client " + who +
+    ": max level, skills and ladders, every mount and pet, gear, items and 2,000,000 Creds, on top of what it has. Test database only.", false, false);
+  if (sure === null) return;
+  const button = event.submitter;
+  button.disabled = true;
+  try {
+    const picked = await call("/api/command", { line: "gm.target " + who });
+    if (!/act on/.test(picked.answer)) { $("maxAllAnswer").textContent = picked.answer; return; }
+    const data = await call("/api/command", { line: "gm.maxall confirm" });
+    $("maxAllAnswer").textContent = data.answer;
+  } catch (e) {
+    $("maxAllAnswer").textContent = e.message;
+  } finally {
+    button.disabled = false;
+  }
+});
+
 // ---------------------------------------------------------------- start
 
 (async () => {

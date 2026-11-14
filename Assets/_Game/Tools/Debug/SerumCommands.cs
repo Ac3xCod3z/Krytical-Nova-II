@@ -38,7 +38,7 @@ namespace KryticalNova.DevTools
         [Command("gm.serum", "Set how many of a kind of Serum the targeted player has taken: gm.serum <kind> <taken>. Kind is its number " +
                              "(1 = the first on the Character Sheet) or a word of its name (strength, vitality, agility, spirit, strike, ward). " +
                              "Stops at the cap. No values lists what has been taken.")]
-        private static string Set(string kind = "", int taken = 0)
+        internal static string Set(string kind = "", int taken = 0)
         {
             if (!TryGetSerums(out var serums, out var error)) return error;
             SerumSettings settings = serums.Settings;
