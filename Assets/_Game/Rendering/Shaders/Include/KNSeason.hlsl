@@ -40,11 +40,16 @@ float KNSeasonNoise(float2 p)
 // How pressed the snow is here (0 untouched, 1 a fresh footprint). 0 outside the map or with none.
 float KNSnowTrack(float2 xz)
 {
-    [branch] if (_KN_SnowTrackRect.w < 0.5) return 0.0;
-    float2 at = (xz - _KN_SnowTrackRect.xy) * _KN_SnowTrackRect.z;
-    float2 toEdge = min(at, 1.0 - at);
-    if (min(toEdge.x, toEdge.y) <= 0.0) return 0.0;
-    return SAMPLE_TEXTURE2D_LOD(_KN_SnowTrack, sampler_KN_SnowTrack, at, 0).r * saturate(min(toEdge.x, toEdge.y) * 12.0);
+    float press = 0.0;
+    [branch] if (_KN_SnowTrackRect.w >= 0.5)
+    {
+        float2 at = (xz - _KN_SnowTrackRect.xy) * _KN_SnowTrackRect.z;
+        float2 toEdge = min(at, 1.0 - at);
+        float edge = min(toEdge.x, toEdge.y);
+        [branch] if (edge > 0.0)
+            press = SAMPLE_TEXTURE2D_LOD(_KN_SnowTrack, sampler_KN_SnowTrack, at, 0).r * saturate(edge * 12.0);
+    }
+    return press;
 }
 
 // The snow on a surface: cover x how much it faces up, broken by noise; bias > 0 whitens sooner (roofs).
@@ -74,16 +79,19 @@ void KNSeasonGround(inout half3 albedo, inout half smoothness, float3 normalWS, 
 // bit 7 ("No Snow": interiors, characters) never gets any.
 half3 KNSeasonSurface(half3 albedo, float3 normalWS, float3 positionWS, uint renderingLayer)
 {
-    [branch] if (!KNSeasonOn() || _KN_SeasonParams.x <= 0.001 || (renderingLayer & 128u) != 0u) return albedo;
-    float snow = KNSnowMask(positionWS, normalWS, _KN_SeasonParams.z);
-    return lerp(albedo, (half3)_KN_SnowColor.rgb, (half)snow);
+    half3 result = albedo;
+    [branch] if (KNSeasonOn() && _KN_SeasonParams.x > 0.001 && (renderingLayer & 128u) == 0u)
+        result = lerp(albedo, (half3)_KN_SnowColor.rgb, (half)KNSnowMask(positionWS, normalWS, _KN_SeasonParams.z));
+    return result;
 }
 
 // Trees and bushes (Foliage Wind): the green of the shared atlas turns with the season, each tree in its own time;
 // frost and snow settle on the up-facing part of the canopy. pivotWS = the plant's root (per-tree hash).
 half3 KNSeasonFoliage(half3 albedo, float3 normalWS, float3 positionWS, float3 pivotWS)
 {
-    [branch] if (!KNSeasonOn()) return albedo;
+    half3 result = albedo;
+    [branch] if (KNSeasonOn())
+    {
     // the leaves: how green this texel is (trunks and rocks in the same atlas stay as they are)
     half leaf = saturate((albedo.g - max(albedo.r, albedo.b)) * 6.0h);
     float h = KNSeasonHash(pivotWS.xz * 0.173 + 7.1);
@@ -97,25 +105,35 @@ half3 KNSeasonFoliage(half3 albedo, float3 normalWS, float3 positionWS, float3 p
     float up = saturate(normalWS.y * 0.5 + 0.5);
     float frost = _KN_SeasonParams.y * up * up;
     float snow = KNSnowMask(positionWS, normalWS, 0.05) * 0.85;
-    return lerp(albedo, (half3)_KN_SnowColor.rgb, (half)saturate(max(frost * 0.6, snow)));
+    result = lerp(albedo, (half3)_KN_SnowColor.rgb, (half)saturate(max(frost * 0.6, snow)));
+    }
+    return result;
 }
 
 // Grass blades: the season's colour, pale tips in frost, and snow-white blades under cover.
 float3 KNSeasonGrassColour(float3 col, float height01, float3 rootWS)
 {
-    [branch] if (!KNSeasonOn()) return col;
-    col *= _KN_SeasonGrass.rgb;
-    col = lerp(col, _KN_SnowColor.rgb, _KN_SeasonGrass.a * height01 * height01);
-    float cover = _KN_SeasonParams.x * (1.0 - KNSnowTrack(rootWS.xz));
-    return lerp(col, _KN_SnowColor.rgb, saturate(cover * 1.4 - 0.3) * (0.4 + 0.6 * height01));
+    float3 result = col;
+    [branch] if (KNSeasonOn())
+    {
+        result *= _KN_SeasonGrass.rgb;
+        result = lerp(result, _KN_SnowColor.rgb, _KN_SeasonGrass.a * height01 * height01);
+        float cover = _KN_SeasonParams.x * (1.0 - KNSnowTrack(rootWS.xz));
+        result = lerp(result, _KN_SnowColor.rgb, saturate(cover * 1.4 - 0.3) * (0.4 + 0.6 * height01));
+    }
+    return result;
 }
 
 // Grass under deep snow is pressed down (1 = standing, smaller = flatter); a track lets it stand again.
 float KNSeasonGrassHeight(float3 rootWS)
 {
-    [branch] if (!KNSeasonOn() || _KN_SeasonParams.x <= 0.5) return 1.0;
-    float cover = _KN_SeasonParams.x * (1.0 - KNSnowTrack(rootWS.xz));
-    return lerp(1.0, _KN_SeasonMisc.w, saturate((cover - 0.5) * 2.0));
+    float height = 1.0;
+    [branch] if (KNSeasonOn() && _KN_SeasonParams.x > 0.5)
+    {
+        float cover = _KN_SeasonParams.x * (1.0 - KNSnowTrack(rootWS.xz));
+        height = lerp(1.0, _KN_SeasonMisc.w, saturate((cover - 0.5) * 2.0));
+    }
+    return height;
 }
 
 #endif
