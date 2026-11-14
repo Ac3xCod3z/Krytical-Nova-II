@@ -429,7 +429,7 @@ First pass, 13 Nov 2026 (b18-coder-11). Compiles (90/90 Editor, 40/40 server), `
     Perf (Editor, so main-thread frames swing 20-55 ms between runs; crowd = with minus without): run 1 player view +0.25 ms main,
     -0.5 ms GPU; wide view +1.1 ms main, +0.96 ms GPU; run 2 (LODs on, capture running) player view +2.5 ms main, +0.3 ms GPU, wide
     +2.4 ms main, GPU within noise. The Editor's noise is larger than the budget; a built-player perf log is the real proof.
-    Pictures: `G:\My Drive\KryticalNova\AI Outputsuild178-opus2\` (`18-concord-full-of-life.gif`, `heatmap.png`,
+    Pictures: `G:\My Drive\KryticalNova\AI Outputs\build17\18-opus2\` (`18-concord-full-of-life.gif`, `heatmap.png`,
     `look_High_*.png`, `18-concord-wide-High-Low.mp4`).
   - Tests: `TownsfolkBandsTests` (bands and hysteresis, cards far on every tier, switch heights in metres, LOD triangle
     shares, the spread over a whole deck and the arrival's share, no weapon regions).
