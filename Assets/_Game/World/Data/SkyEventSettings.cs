@@ -73,7 +73,7 @@ namespace KryticalNova.World
 
         [Header("Meteor shower: The Emberfall (once a game year)")]
         [Tooltip("Streaks per real minute at the peak of the shower night.")]
-        [Range(1f, 120f)] public float showerStreaksPerMinute = 30f;
+        [Range(1f, 120f)] public float showerStreaksPerMinute = 90f;
         [Tooltip("Direction the shower radiates from: compass heading and elevation in degrees.")]
         public Vector2 showerRadiant = new Vector2(70f, 55f);
 
