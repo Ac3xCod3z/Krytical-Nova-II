@@ -31,7 +31,7 @@ namespace KryticalNova.Mounts
         Leaving = 4,
     }
 
-    /// <summary>The Mount Companion's stance, set in the Mount window (phases 1-2: FREE only; the others come in phases 3-4).</summary>
+    /// <summary>The Mount Companion's stance, set in the Mount window (FREE in phases 1-2, DPS and HEALER in phase 3, TANK in phase 4).</summary>
     public enum CompanionStance : byte
     {
         /// <summary>No combat, keeps the riding bonus, allowed in PvP.</summary>
@@ -234,6 +234,37 @@ namespace KryticalNova.Mounts
             }
             else { bestGap = gap; stuckTimer = 0f; }
             return Result.Moved;
+        }
+
+        /// <summary>
+        /// Phase 3 (DPS): runs straight to <paramref name="goal"/> (its strike spot by a Hostile its owner fights, always inside the fight
+        /// range of the owner) at up to <paramref name="maxSpeed"/>, and faces <paramref name="faceAt"/> once there. The owner's path is
+        /// forgotten: when the fight ends it walks back to its rest spot and starts a new trail.
+        /// </summary>
+        public void StepToward(Vector3 goal, Vector3 faceAt, float maxSpeed, float dt)
+        {
+            if (dt <= 0f) return;
+            head = count = 0;
+            sampled = false;
+            catchingUp = false;
+            stuckTimer = 0f;
+            bestGap = float.MaxValue;
+            Vector3 to = goal - Position;
+            to.y = 0f;
+            float dist = to.magnitude;
+            float move = Mathf.Min(Mathf.Max(0f, maxSpeed) * dt, dist);
+            Vector3 before = Position;
+            Vector3 next = dist > 1e-4f ? Position + to / dist * move : Position;
+            next.y = goal.y;
+            Position = next;
+            float travelled = CompanionRules.Flat(before, next);
+            Speed = travelled / dt;
+            if (travelled > 0.05f) Yaw = Mathf.Atan2(next.x - before.x, next.z - before.z) * Mathf.Rad2Deg;
+            else
+            {
+                Vector3 face = faceAt - next;
+                if (face.x * face.x + face.z * face.z > 1e-4f) Yaw = Mathf.MoveTowardsAngle(Yaw, Mathf.Atan2(face.x, face.z) * Mathf.Rad2Deg, 540f * dt);
+            }
         }
 
         Vector3 Front => trail[head];

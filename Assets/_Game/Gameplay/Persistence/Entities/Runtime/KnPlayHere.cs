@@ -161,6 +161,7 @@ namespace KryticalNova.Persistence.Entities
             || Environment.GetEnvironmentVariable("KN_PLAYHERE_COMPANION") == "1"               // the Mount Companion, both mounts (day list 19)
             || Environment.GetEnvironmentVariable("KN_PLAYHERE_ROOFS") == "1"                   // roof to roof (item 8)
             || KnCombatProbe.On                                                                 // the cutover's combat proof (12 Nov)
+            || KnCompanionFightProbe.On                                                         // the Mount Companion's DPS and HEALER (day list 19.3)
             || Environment.GetEnvironmentVariable(TwoPlayersVariable) == "1"                    // Trade, vendors, GM target with Player2 (12 Nov)
             || KnCadenceProbe.On;                                                               // the Cadence probe (owner x6, 7 Nov)
         /// <summary>A folder: the scripted run saves a Game-view picture there every 0.1 s (proof for the owner, GUI Editor only).</summary>
@@ -1617,6 +1618,13 @@ namespace KryticalNova.Persistence.Entities
                     float combatOffset = body.GetComponent<UnityEngine.AI.NavMeshAgent>() is UnityEngine.AI.NavMeshAgent combatAgent ? combatAgent.baseOffset : 0f;
                     yield return KnCombatProbe.Run(body, OwnBody, Log, at => Teleport(combatEm, ghost, at + Vector3.up * combatOffset), ok => { if (ok) walls.Passed++; });
                 }
+                if (KnCompanionFightProbe.On)
+                {
+                    walls.Tried++;
+                    EntityManager fightEm = KnBootstrap.ServerWorld.EntityManager;
+                    float fightOffset = body.GetComponent<UnityEngine.AI.NavMeshAgent>() is UnityEngine.AI.NavMeshAgent fightAgent ? fightAgent.baseOffset : 0f;
+                    yield return KnCompanionFightProbe.Run(body, OwnBody, Log, at => Teleport(fightEm, ghost, at + Vector3.up * fightOffset), ok => { if (ok) walls.Passed++; });
+                }
                 if (KnCadenceProbe.On)
                 {
                     walls.Tried++;
@@ -1671,7 +1679,7 @@ namespace KryticalNova.Persistence.Entities
                 }
             }
 
-            bool HasScriptedTries => !string.IsNullOrEmpty(Walk) || !string.IsNullOrEmpty(Jump) || VaultCount > 0 || WaterRun || WallRun || ClimbRun || TreeRun || CatchRun || AutoRun || LedgeRun || FixesRun || AcrossRun || ItemsRun || MountRun || MountVaultRun || CompanionRun || RoofsRun || KnCombatProbe.On || TwoPlayersOn || KnCadenceProbe.On;
+            bool HasScriptedTries => !string.IsNullOrEmpty(Walk) || !string.IsNullOrEmpty(Jump) || VaultCount > 0 || WaterRun || WallRun || ClimbRun || TreeRun || CatchRun || AutoRun || LedgeRun || FixesRun || AcrossRun || ItemsRun || MountRun || MountVaultRun || CompanionRun || RoofsRun || KnCombatProbe.On || KnCompanionFightProbe.On || TwoPlayersOn || KnCadenceProbe.On;
 
             /// <summary>Which scripted parts are on, for the log's first lines (a part that should run and is not listed shows at once).</summary>
             string ScriptedParts()
@@ -1694,6 +1702,7 @@ namespace KryticalNova.Persistence.Entities
                 if (MountVaultRun) on.Add("the mounted vault");
                 if (CompanionRun) on.Add("the Mount Companion");
                 if (KnCombatProbe.On) on.Add("combat to a kill");
+                if (KnCompanionFightProbe.On) on.Add("the Mount Companion's DPS and HEALER");
                 if (TwoPlayersOn) on.Add("two players: Trade, vendors, GM target");
                 if (RoofsRun) on.Add("roof to roof");
                 if (KnCadenceProbe.On) on.Add("the Cadence probe");

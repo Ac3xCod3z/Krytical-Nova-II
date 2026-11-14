@@ -51,12 +51,21 @@ namespace KryticalNova.Combat.Entities
 
         void Record(Entity attackerGhost, PlayerMeleeCombat attacker, IDamageable target, DamageResult result, int step, bool fromSkill, string label)
         {
-            if (World == null || !World.IsCreated) return;
-            EntityManager em = World.EntityManager;
-            if (!em.Exists(attackerGhost) || !em.HasBuffer<HitEvent>(attackerGhost) || !em.HasComponent<HitEventSeq>(attackerGhost)) return;
-            int targetGhost = GhostIdOf(em, target != null ? target.Transform : null);
-            if (targetGhost == 0) return;
             attacker.TryGetComponent(out CharacterCombatStats stats);
+            RecordFor(attackerGhost, stats, target, result, step, fromSkill, label);
+        }
+
+        /// <summary>
+        /// Server: a hit dealt in a player's name by something other than their own strike (day list item 19, phase 3: their Mount
+        /// Companion's DPS strike) goes on that player's ring like their own, so every view shows its impact and number, labelled.
+        /// </summary>
+        public bool RecordFor(Entity attackerGhost, CharacterCombatStats stats, IDamageable target, DamageResult result, int step, bool fromSkill, string label)
+        {
+            if (World == null || !World.IsCreated) return false;
+            EntityManager em = World.EntityManager;
+            if (!em.Exists(attackerGhost) || !em.HasBuffer<HitEvent>(attackerGhost) || !em.HasComponent<HitEventSeq>(attackerGhost)) return false;
+            int targetGhost = GhostIdOf(em, target != null ? target.Transform : null);
+            if (targetGhost == 0) return false;
             if (!m_Waiting.TryGetValue(attackerGhost, out Queue<HitEvent> waiting)) m_Waiting[attackerGhost] = waiting = new Queue<HitEvent>();
             waiting.Enqueue(new HitEvent
             {
@@ -68,6 +77,7 @@ namespace KryticalNova.Combat.Entities
                 Label = fromSkill && !string.IsNullOrEmpty(label) ? HitEventRing.FitLabel(label) : default,
             });
             Recorded++;
+            return true;
         }
 
         int GhostIdOf(EntityManager em, Transform body)

@@ -167,7 +167,7 @@ namespace KryticalNova.Mounts
             if (!IsSpawned || IsServer) ServerToggleCompanion();
         }
 
-        /// <summary>The owner's machine: a stance button of the Mount window (phases 1-2: FREE only).</summary>
+        /// <summary>The owner's machine: a stance button of the Mount window (FREE, DPS, HEALER; TANK later).</summary>
         public void RequestStance(CompanionStance next)
         {
             if (Requests is { } requests) { requests.MountOp(MountOpKind.Stance, (int)next); return; }
@@ -301,14 +301,35 @@ namespace KryticalNova.Mounts
             PublishCompanion();
         }
 
-        /// <summary>Server: the stance from the Mount window. Phases 1-2 build FREE only; the combat stances come later.</summary>
+        /// <summary>
+        /// Server: the stance from the Mount window. FREE, DPS and HEALER are built (phase 3); TANK comes in phase 4. The combat stances are
+        /// PvE only: in PvP the companion acts as FREE (the companion's server system decides that each look, <see cref="CompanionFightRules.Effective"/>).
+        /// </summary>
         public void ServerSetStance(int next)
         {
             if (!HasAuthority) return;
-            if (next != (int)CompanionStance.Free) { Notify("TANK, DPS and HEALER stances come later. Your mount stays FREE.", toast: true); return; }
-            stance = CompanionStance.Free;
+            var wanted = (CompanionStance)next;
+            if (!System.Enum.IsDefined(typeof(CompanionStance), wanted)) return;
+            if (!CompanionFightRules.IsBuilt(wanted)) { Notify("The TANK stance comes later.", toast: true); return; }
+            if (wanted == stance) return;
+            stance = wanted;
+            Notify(StanceLine(wanted), toast: true);
             PublishCompanion();
         }
+
+        private string StanceLine(CompanionStance s)
+        {
+            string mount = MountName(selected);
+            switch (s)
+            {
+                case CompanionStance.Dps: return $"{mount}: DPS. It helps you kill what you fight (PvE only).";
+                case CompanionStance.Healer: return $"{mount}: HEALER. It heals you while you fight (PvE only).";
+                default: return $"{mount}: FREE. It walks beside you and stays out of fights.";
+            }
+        }
+
+        /// <summary>Server: tells the owner a line about the companion (the fight's PvP fallback; phase 3).</summary>
+        public void TellOwner(string text) => Notify(text, toast: true);
 
         private void PublishCompanion()
         {
@@ -343,6 +364,9 @@ namespace KryticalNova.Mounts
         public int CompanionHpPermille => selected != 0 ? CompanionHpOf(selected) : 0;
         byte IBodyMountCompanion.CompanionStance => (byte)stance;
         public int CompanionKnockOuts => knockOuts;
+        public int CompanionStrikes { get; private set; }
+        public int CompanionPulses { get; private set; }
+        public void CountCompanionFight(bool strike) { if (strike) CompanionStrikes++; else CompanionPulses++; }
         public float CompanionRunSpeed => Settings != null ? MountRules.Speed(Settings.runSpeed.x, Settings.runSpeed.y, GrowthPercent, IsFed) : 20f;
 
         /// <summary>The own view of the entity netcode: the server's companion boxes.</summary>
@@ -923,6 +947,7 @@ namespace KryticalNova.Mounts
             if (!string.IsNullOrEmpty(json))
             {
                 MountSave save = JsonUtility.FromJson<MountSave>(json);
+                if (save != null) stance = CompanionFightRules.IsBuilt((CompanionStance)save.stance) ? (CompanionStance)save.stance : CompanionStance.Free;   // phase 3: the stance is kept
                 if (save != null && save.mounts != null)
                     foreach (MountSaveEntry entry in save.mounts)
                         if (entry != null)

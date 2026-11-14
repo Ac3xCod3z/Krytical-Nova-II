@@ -25,6 +25,14 @@ namespace KryticalNova.Mounts.Entities
         [GhostField] public ushort HpPermille;
         /// <summary>Rises by one at each warp (a one-off moment as a counter, never a flipping bool): views play the vanish and form.</summary>
         [GhostField] public byte Warps;
+        /// <summary>Phase 3, DPS: rises by one at each of its strikes; views play the swing (its feel) toward <see cref="FightGhostId"/>.</summary>
+        [GhostField] public byte Strikes;
+        /// <summary>Phase 3, HEALER: rises by one at each heal pulse on its owner; views play the heal's feel on the owner.</summary>
+        [GhostField] public byte Pulses;
+        /// <summary>Phase 3: the Hostile it fights (DPS) or the fight it heals in (HEALER), 0 none.</summary>
+        [GhostField] public int FightGhostId;
+        /// <summary>Phase 3: the stance it acts in now (<see cref="CompanionStance"/>): a combat stance shows FREE while its owner is in PvP.</summary>
+        [GhostField] public byte ActingStance;
 
         public const float SpeedStepMetres = 0.25f;
     }
