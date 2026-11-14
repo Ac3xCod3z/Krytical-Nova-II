@@ -123,8 +123,7 @@ namespace KryticalNova.DevTools
         {
             int box = mounts.SelectedId;
             long rest = mounts.RestLeftOf(box);
-            return Describe(mounts) + $"
-Companion: {(mounts.CompanionOut ? "out" : "at home")}, stance {mounts.Stance}, HP {mounts.CompanionHpOf(box) / 10f:0.#}%" +
+            return Describe(mounts) + "\n" + $"Companion: {(mounts.CompanionOut ? "out" : "at home")}, stance {mounts.Stance}, HP {mounts.CompanionHpOf(box) / 10f:0.#}%" +
                    $" of {mounts.CompanionMaxHp:0}" + (rest > 0 ? $", resting {CompanionRules.Clock(rest)}" : "") + ".";
         }
 

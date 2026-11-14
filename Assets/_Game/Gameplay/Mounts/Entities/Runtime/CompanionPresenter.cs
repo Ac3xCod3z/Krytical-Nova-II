@@ -89,7 +89,7 @@ namespace KryticalNova.Mounts.Entities
             stage = next;
             if (mount == null) return;
             MountStageLook look = mount.Stage(next);
-            if (look == null || look.model == null) return;
+            if (look.model == null) return;
             model = Instantiate(look.model, transform);
             model.name = $"Mount ({mount.displayName}, {mount.StageName(next)})";
             model.transform.localPosition = Vector3.zero;
