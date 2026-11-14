@@ -117,6 +117,10 @@ namespace KryticalNova.EditorTools
             new Row { Id = MountFeedId, Asset = "Mount_Feed", Name = "Mount Feed", Glyph = "FEED", Rarity = ItemRarity.Common,
                 Description = "Feeds your selected mount: its hunger goes back to 100%. A mount gets hungry only while you ride it; a starving one gives no stats, earns no EXP and rides at its slowest.",
                 Stack = 99, Effect = ItemUseEffect.FeedMount },
+            // The Mount Companion (day list item 19, phase 2): heals the mount walking beside you, never you.
+            new Row { Id = MountStimId, Asset = "Mount_Stim", Name = "Mount Stim", Glyph = "MOUNT HP", Rarity = ItemRarity.Common,
+                Description = "Heals your selected mount's companion HP by 40%, out beside you or at home. It never heals you. Not while the mount rests after a knock-out.",
+                Stack = 99, Effect = ItemUseEffect.HealMount },
 
             // Kiosks: a permit is used up when a Kiosk is opened for its length. Sold in the Nova Store later.
             new Row { Id = KioskPermit14Id, Asset = "Permit_Kiosk14", Name = "Kiosk Permit (14 Days)", Glyph = "14D", Rarity = ItemRarity.Uncommon,
@@ -331,6 +335,7 @@ namespace KryticalNova.EditorTools
         // Ids other systems name. 9000–9999 belongs to this table.
         public const ushort PetRationId = 9010;
         public const ushort MountFeedId = 9013;
+        public const ushort MountStimId = 9014;
         public const ushort RecallTagId = 9011;
         public const ushort NameChangePassId = 9036;
         public const ushort RespecChipId = 9037, MemoryWipeId = 9038;

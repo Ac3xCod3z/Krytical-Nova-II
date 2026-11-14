@@ -1,0 +1,31 @@
+{
+    "name": "KryticalNova.Mounts.Entities",
+    "rootNamespace": "KryticalNova.Mounts.Entities",
+    "references": [
+        "KryticalNova.Runtime",
+        "KryticalNova.Mounts",
+        "KryticalNova.Progression",
+        "KryticalNova.Player",
+        "KryticalNova.Networking.Entities",
+        "KryticalNova.Player.Entities",
+        "KryticalNova.Player.Entities.Presentation",
+        "Kybernetik.Animancer",
+        "Unity.Burst",
+        "Unity.Entities",
+        "Unity.Entities.Hybrid",
+        "Unity.NetCode",
+        "Unity.Collections",
+        "Unity.Mathematics",
+        "Unity.Transforms",
+        "Unity.Netcode.Runtime"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

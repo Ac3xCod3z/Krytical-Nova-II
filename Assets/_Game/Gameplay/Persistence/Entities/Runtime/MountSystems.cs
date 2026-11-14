@@ -96,8 +96,9 @@ namespace KryticalNova.Persistence.Entities
                 for (int i = 0; i < asks.Length; i++)
                 {
                     var op = (MountOpKind)asks[i].Op;
-                    if (op != MountOpKind.Select && op != MountOpKind.Ride) continue;
-                    CallKind kind = op == MountOpKind.Ride ? CallKind.Move : CallKind.Cosmetic;
+                    if (op != MountOpKind.Select && op != MountOpKind.Ride && op != MountOpKind.Companion && op != MountOpKind.Stance) continue;
+                    // the Ride key and the Companion key (day list item 19) are Moves; a select or a stance is Cosmetic
+                    CallKind kind = op == MountOpKind.Ride || op == MountOpKind.Companion ? CallKind.Move : CallKind.Cosmetic;
                     if (!PlayerRequestServerSystem.TryBody(World, received[i].SourceConnection, kind, out GameObject body) || !body.TryGetComponent(out IBodyMounts mounts)) continue;
                     mounts.RunMountOp(op, asks[i].Box);
                     Ran++;

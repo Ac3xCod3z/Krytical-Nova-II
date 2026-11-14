@@ -26,7 +26,8 @@ namespace KryticalNova.UI
         private VisualElement root, window;
         private FloatingFit windowFit;
         private Label keyLabel, footerText;
-        private Button rideButton;
+        private Button rideButton, callButton;
+        private readonly Button[] stanceButtons = new Button[4];
         private readonly Box[] boxes = new Box[MountRules.Slots];
         private PlayerMounts mounts;
         private bool dirty = true;
@@ -36,7 +37,7 @@ namespace KryticalNova.UI
         {
             public VisualElement card, tile, icon;
             public Label name, stage, stats, tag, glyph;
-            public ProgressBar growth, hunger;
+            public ProgressBar growth, hunger, hp;   // hp: the Mount Companion's (day list item 19)
         }
 
         public bool IsOpen => window != null && window.style.display != DisplayStyle.None;
@@ -99,6 +100,7 @@ namespace KryticalNova.UI
             {
                 if (KeyBindings.Pressed(KeyBindings.Mounts)) SetOpen(!IsOpen);
                 if (KeyBindings.Pressed(KeyBindings.Ride)) Ride();
+                if (KeyBindings.Pressed(KeyBindings.Companion)) Call();
             }
             if (!IsOpen) return;
             // Hunger runs down while riding: the meters are read again now and then, not only on a change.
@@ -111,6 +113,15 @@ namespace KryticalNova.UI
             string reason = mounts.RideBlockedReason();
             if (reason != null) { ClientPresentationRegistry.Messages?.ShowMessage(reason); return; }
             mounts.RequestRide();
+        }
+
+        // the Mount Companion (day list item 19): calls the selected mount out to walk beside you, or sends it home
+        private void Call()
+        {
+            if (mounts == null) return;
+            string reason = mounts.CompanionBlockedReason();
+            if (reason != null) { ClientPresentationRegistry.Messages?.ShowMessage(reason); return; }
+            mounts.RequestCompanion();
         }
 
         public void SetOpen(bool open)
@@ -186,9 +197,48 @@ namespace KryticalNova.UI
             rideButton.AddToClassList("kn-button-primary");
             rideButton.style.flexShrink = 0f;
             footer.Add(rideButton);
+            callButton = new Button(Call) { name = "mount-call" };
+            callButton.AddToClassList("settings-footer-button");
+            callButton.style.flexShrink = 0f;
+            callButton.style.marginLeft = 6f;
+            callButton.tooltip = "Your selected mount walks beside you instead of being ridden. It keeps giving its stats and gets hungry faster while out; at 0 % hunger it goes home.";
+            footer.Add(callButton);
+            window.Add(StanceRow());
             window.Add(footer);
 
             root.Add(window);
+        }
+
+        // one stance at a time, set here (phases 1-2 build FREE only; TANK, DPS and HEALER come later)
+        private VisualElement StanceRow()
+        {
+            var row = new VisualElement { name = "mount-stances" };
+            row.style.flexDirection = FlexDirection.Row;
+            row.style.alignItems = Align.Center;
+            row.style.paddingLeft = row.style.paddingRight = 12f;
+            row.style.marginBottom = 6f;
+            var label = new Label("COMPANION STANCE") { pickingMode = PickingMode.Ignore };
+            label.AddToClassList("muted");
+            label.style.fontSize = 12f;
+            label.style.marginRight = 8f;
+            row.Add(label);
+            string[] names = { "FREE", "TANK", "DPS", "HEALER" };
+            string[] tips =
+            {
+                "FREE: no combat. It keeps the riding bonus and may come along in PvP.",
+                "TANK: coming later.", "DPS: coming later.", "HEALER: coming later.",
+            };
+            for (int i = 0; i < names.Length; i++)
+            {
+                int stance = i;
+                var b = new Button(() => mounts?.RequestStance((CompanionStance)stance)) { name = "mount-stance-" + names[i].ToLowerInvariant(), text = names[i], tooltip = tips[i] };
+                b.AddToClassList("settings-footer-button");
+                b.style.marginRight = 4f;
+                b.SetEnabled(i == (int)CompanionStance.Free);
+                stanceButtons[i] = b;
+                row.Add(b);
+            }
+            return row;
         }
 
         private Box MakeBox(int boxNumber)
@@ -245,6 +295,9 @@ namespace KryticalNova.UI
             text.Add(box.growth);
             box.hunger = Bar();
             text.Add(box.hunger);
+            box.hp = Bar();
+            box.hp.AddToClassList("kn-bar-hp");
+            text.Add(box.hp);
             box.stats = new Label { pickingMode = PickingMode.Ignore };
             box.stats.AddToClassList("muted");
             box.stats.style.whiteSpace = WhiteSpace.Normal;
@@ -285,6 +338,10 @@ namespace KryticalNova.UI
             MountDefinition selected = mounts.Selected;
             rideButton.text = mounts.IsMounted ? $"GET OFF  [{ride}]" : $"RIDE  [{ride}]";
             rideButton.SetEnabled(mounts.IsMounted || mounts.RideBlockedReason() == null);
+            string call = KeyBindings.Label(KeyBindings.Companion);
+            callButton.text = mounts.CompanionOut ? $"SEND HOME  [{call}]" : $"CALL  [{call}]";
+            callButton.SetEnabled(mounts.CompanionOut || mounts.CompanionBlockedReason() == null);
+            for (int i = 0; i < stanceButtons.Length; i++) stanceButtons[i].EnableInClassList("kn-button-primary", (int)mounts.Stance == i);
             footerText.text = selected == null
                 ? "Use a mount item from your Pack to add a mount. Click a mount you own to select it."
                 : "Walk by default, run with Run selected. Feed it Mount Feed (sold at the Apothecary) from your Pack. It earns EXP from your Hostile kills while selected.";
@@ -301,8 +358,8 @@ namespace KryticalNova.UI
             box.card.style.opacity = owned ? 1f : 0.55f;
 
             box.name.text = mount != null ? mount.displayName.ToUpperInvariant() : $"MOUNT {number}";
-            box.tag.text = selected ? (mounts.IsMounted ? "RIDING" : "SELECTED") : "";
-            box.growth.style.display = box.hunger.style.display = owned ? DisplayStyle.Flex : DisplayStyle.None;
+            box.tag.text = selected ? (mounts.IsMounted ? "RIDING" : mounts.CompanionOut ? "OUT" : "SELECTED") : "";
+            box.growth.style.display = box.hunger.style.display = box.hp.style.display = owned ? DisplayStyle.Flex : DisplayStyle.None;
 
             int growth = owned ? mounts.GrowthOf(number) : 0;
             int stage = MountRules.Stage(growth);
@@ -325,6 +382,11 @@ namespace KryticalNova.UI
             box.growth.title = $"Growth {exact:0.##}%";
             box.hunger.value = state.HungerPercent;
             box.hunger.title = state.IsFed ? $"Hunger {state.HungerPercent:0.#}%" : "Starving: feed it";
+            int hp = mounts.CompanionHpOf(number);
+            long rest = mounts.RestLeftOf(number);
+            box.hp.value = hp / 10f;
+            box.hp.title = rest > 0 ? $"Resting {CompanionRules.Clock(rest)}" : $"HP {hp / 10f:0.#}%";
+            box.hp.tooltip = "Its HP as your companion. A Mount Stim (Apothecary) heals it; at 0 it is knocked out, goes home and rests before it can be called again (it can still be ridden).";
             box.stats.text = $"{PlayerMounts.StatLine(mount.firstStat, mount.firstMax, growth, state.IsFed)}   " +
                              $"{PlayerMounts.StatLine(mount.secondStat, mount.secondMax, growth, state.IsFed)}" + RideLine(growth, state.IsFed);
         }

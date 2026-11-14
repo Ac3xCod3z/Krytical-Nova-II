@@ -1,6 +1,7 @@
 using KryticalNova.Items;
 using KryticalNova.Mounts;
 using QFSW.QC;
+using UnityEngine;
 
 namespace KryticalNova.DevTools
 {
@@ -114,6 +115,52 @@ namespace KryticalNova.DevTools
             if (!TryGetSelected(out var mounts, out var error)) return error;
             mounts.ServerFeed();
             return Describe(mounts);
+        }
+
+        // ---------------- the Mount Companion (day list item 19, phases 1-2)
+
+        private static string Companion(PlayerMounts mounts)
+        {
+            int box = mounts.SelectedId;
+            long rest = mounts.RestLeftOf(box);
+            return Describe(mounts) + $"
+Companion: {(mounts.CompanionOut ? "out" : "at home")}, stance {mounts.Stance}, HP {mounts.CompanionHpOf(box) / 10f:0.#}%" +
+                   $" of {mounts.CompanionMaxHp:0}" + (rest > 0 ? $", resting {CompanionRules.Clock(rest)}" : "") + ".";
+        }
+
+        [Command("gm.mount.call", "Call the targeted player's selected mount out to walk beside them, or send it home (what the Companion key does).")]
+        private static string Call()
+        {
+            if (!TryGetSelected(out var mounts, out var error)) return error;
+            string reason = mounts.CompanionOut ? null : mounts.CompanionBlockedReason();
+            if (reason != null) return reason;
+            mounts.ServerToggleCompanion();
+            return Companion(mounts);
+        }
+
+        [Command("gm.mount.hurt", "Take this percent of the selected mount's companion HP (it must be out); reaching 0 knocks it out: gm.mount.hurt 40.")]
+        private static string Hurt(float percent)
+        {
+            if (!TryGetSelected(out var mounts, out var error)) return error;
+            if (!mounts.CompanionOut) return "The selected mount is not out. Call it first (gm.mount.call).";
+            mounts.HurtCompanion(mounts.CompanionMaxHp * Mathf.Clamp(percent, 0f, 100f) / 100f);
+            return Companion(mounts);
+        }
+
+        [Command("gm.mount.heal", "Put the selected mount's companion HP back to full.")]
+        private static string Heal()
+        {
+            if (!TryGetSelected(out var mounts, out var error)) return error;
+            mounts.ServerSetCompanionHp(100f);
+            return Companion(mounts);
+        }
+
+        [Command("gm.mount.rest", "Make the selected mount rest this many seconds as after a knock-out (0 ends a rest): gm.mount.rest 300.")]
+        private static string Rest(float seconds)
+        {
+            if (!TryGetSelected(out var mounts, out var error)) return error;
+            mounts.ServerSetRest(seconds);
+            return Companion(mounts);
         }
 
         [Command("gm.mount.ride", "Put the targeted player on their selected mount, or take them off it (what the Ride key does).")]

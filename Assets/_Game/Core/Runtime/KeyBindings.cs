@@ -36,6 +36,8 @@ namespace KryticalNova.Core
         public const string Mounts = "Mounts";
         /// <summary>Gets on the selected mount, or off it (owner, 25 Oct 2026: V).</summary>
         public const string Ride = "Ride";
+        /// <summary>Calls the selected mount out to walk beside you, or sends it home (day list item 19, the Mount Companion: Y, the one free letter).</summary>
+        public const string Companion = "Companion";
 
         /// <summary>A window key: its action in the asset's Windows map, and what the Controls list calls it.</summary>
         public readonly struct WindowKey
@@ -65,6 +67,7 @@ namespace KryticalNova.Core
             new WindowKey(Deck, "The Deck (music)"),
             new WindowKey(Mounts, "Mounts"),
             new WindowKey(Ride, "Mount / dismount"),
+            new WindowKey(Companion, "Mount companion: call / send home"),
         };
 
         /// <summary>The player-asset actions the Controls list offers, by map, with the name it shows for each.</summary>
