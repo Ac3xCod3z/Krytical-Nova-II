@@ -160,7 +160,9 @@ namespace KryticalNova.Items
             new GearSlotEffect(EquipSlot.Cape, StatType.DefensePower, GearEffectKind.PercentOfItemStat, 1f),
             new GearSlotEffect(EquipSlot.Gloves, StatType.HitRate, GearEffectKind.PercentOfItemStat, 1f),
             new GearSlotEffect(EquipSlot.Boots, StatType.EvasionRate, GearEffectKind.PercentOfItemStat, 1f),
-            new GearSlotEffect(EquipSlot.Ring, StatType.CriticalRate, GearEffectKind.Flat, 0.05f),
+            // Ring (owner pick A, 13 Nov 2026): 1 % of Temper adds 1 % of the ring's own base crit (GearStatTable.ringCriticalAtTop,
+            // kept), the rule of every other slot: a Legendary Lv112 ring's 25 gives +30 at 120 %, a Common's 5 gives +6.
+            new GearSlotEffect(EquipSlot.Ring, StatType.CriticalRate, GearEffectKind.PercentOfItemStat, 1f),
             new GearSlotEffect(EquipSlot.Amulet, StatType.Luck, GearEffectKind.FlatTimesRarity, 4f),
         };
 

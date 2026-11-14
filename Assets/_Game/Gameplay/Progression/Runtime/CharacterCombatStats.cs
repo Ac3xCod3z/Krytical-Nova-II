@@ -194,7 +194,7 @@ namespace KryticalNova.Progression
 
             // Standard Formula: (Base + Flat) * (1 + SumOfPercentAdd / 100) * ProductOfPercentMult
             float finalValue = (baseValue + flatSum) * (1f + (percentAddSum / 100f)) * percentMult;
-            // The crit chance is a sum (base + gear + buffs, build 17 item 7.1) and is capped by the tuning asset.
+            // The crit chance is a sum (base + gear + buffs, build 17 item 7.1); it never goes past the tuning asset's limit (100: no cap but the chance itself).
             if (stat == StatType.CriticalRate) finalValue = CapCritical(finalValue, tuningData != null ? tuningData.maxCriticalRate : 100f);
             return Mathf.Max(0f, finalValue);
         }
