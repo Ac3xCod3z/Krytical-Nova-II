@@ -8,7 +8,7 @@ using KryticalNova.Progression;
 namespace KryticalNova.DevTools
 {
     /// <summary>
-    /// The rules of gm.maxall (owner's night list item 22, 13 Nov 2026), free of the game so they can be tested: where it may run, which
+    /// The rules of gm.maxall (owner's night list item 22, 13 Nov 2026), free of the game so they can be tested: who may run it, which
     /// gear it gives, what that gear carries, where each piece goes, and what a pet at 100 % looks like.
     /// </summary>
     public static class MaxAllRules
@@ -24,31 +24,20 @@ namespace KryticalNova.DevTools
         public const float FullGrowth = 100f;
         public const string ConfirmWord = "confirm";
 
-        /// <summary>The test lane's save service (krytical_nova_test). The real one (7801) is in <c>KnServerSettings.RealLanePorts</c>.</summary>
-        public const int TestSavePort = 7802;
-
         /// <summary>
-        /// Why gm.maxall may not run here, or null when it may. <paramref name="saveService"/> is the save service the server saves
-        /// through (null when it saves to files). It runs only on the test database: a server on the test save service (7802), or
-        /// Play DOTS here (<paramref name="playHere"/>: the Editor's own in-process host) saving to files. The real save service (7801)
-        /// is refused everywhere, as are any other service, a built server saving to files and any other Editor session saving to files.
+        /// Why gm.maxall may not run for this caller, or null when it may (owner, 14 Nov 2026: "a command I can use whenever I want",
+        /// on the real server and the test server alike). Only a GM may use it (the host, the server's own window or control page, or one
+        /// of the three bound GMs), and only with the word confirm, because it changes a whole character.
         /// </summary>
-        public static string GateProblem(bool playHere, Uri saveService, IReadOnlyList<int> realPorts)
+        public static string Refusal(bool callerIsGm, string confirmWord)
         {
-            if (saveService != null)
-            {
-                if (realPorts != null)
-                    for (int i = 0; i < realPorts.Count; i++)
-                        if (realPorts[i] == saveService.Port)
-                            return $"this server saves to the REAL save service (port {saveService.Port}, the real saves). gm.maxall runs only on the test database (save service {TestSavePort}).";
-                return saveService.Port == TestSavePort
-                    ? null
-                    : $"this server saves to the save service on port {saveService.Port}, not the test one ({TestSavePort}). gm.maxall runs only on the test database.";
-            }
-            return playHere
-                ? null
-                : $"this server saves to files, not the test save service ({TestSavePort}). gm.maxall runs only on the test database (or in Play DOTS here).";
+            if (!callerIsGm) return "Only a GM can use gm.maxall.";
+            return IsConfirm(confirmWord) ? null : "gm.maxall changes the whole character. Type gm.maxall confirm to do it.";
         }
+
+        /// <summary>The gm.log line: who ran it, on whom, and the totals given.</summary>
+        public static string RecordLine(string runningFor, string target, int gear, int pets, int mounts, long creds, int notFit) =>
+            $"gm.maxall by {runningFor} on {target}: {gear} gear pieces, {pets} pets, {mounts} mounts registered, {creds.ToString("N0", System.Globalization.CultureInfo.InvariantCulture)} Creds (CredsSource.Gm), {notFit} did not fit.";
 
         public static bool IsConfirm(string word) => string.Equals((word ?? string.Empty).Trim(), ConfirmWord, StringComparison.OrdinalIgnoreCase);
 

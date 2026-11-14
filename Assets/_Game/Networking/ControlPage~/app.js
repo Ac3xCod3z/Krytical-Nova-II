@@ -576,7 +576,7 @@ $("maxAllForm").addEventListener("submit", async (event) => {
   const who = $("maxAllWho").value.trim();
   if (!/^\d+$/.test(who)) return toast("Give the player's client id (gm.players lists them).", true);
   const sure = await ask("Max everything", "gm.maxall changes the whole character of client " + who +
-    ": max level, skills and ladders, every mount and pet, gear, items and 2,000,000 Creds, on top of what it has. Test database only.", false, false);
+    ": max level, skills and ladders, every mount and pet, gear, items and 2,000,000 Creds, on top of what it has. This works on the live server too and is written to gm.log.", false, false);
   if (sure === null) return;
   const button = event.submitter;
   button.disabled = true;

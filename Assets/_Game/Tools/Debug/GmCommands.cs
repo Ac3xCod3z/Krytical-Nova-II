@@ -161,7 +161,7 @@ namespace KryticalNova.DevTools
                 "SKY          sky.rainbow [0-1|off] · sky.moonphase <new|first|full|last|0-1|off> · sky.moon.next · sky.halo [sun|moon|both|off] · sky.shimmer <x|off> · sky.flare <x|off> · sky.lightning · sky.status · sky.reset",
                 "ITEMS        item.give <id|name> [n] · item.list [slot] · item.clear   (stims: Pill_Vitality, Pill_Chi, Pill_DualHarmony)",
                 "GEAR         gm.gear <slot> <level> <rarity> [class] · gm.loadout [class]   (e.g. gm.gear weapon 45 rare carbine) · gm.gearset [level] [rarity] [temper] [wear]   (one whole set, e.g. gm.gearset 112 epic 60 wear)",
-                "KITS         gm.kit gear [level] [rarity] · gm.kit temper [n] · gm.kit pets · gm.kit autoward · gm.kit all   (gear: every piece that fits, 112 Epic unless told) · gm.maxall confirm   (max everything, test database only)",
+                "KITS         gm.kit gear [level] [rarity] · gm.kit temper [n] · gm.kit pets · gm.kit autoward · gm.kit all   (gear: every piece that fits, 112 Epic unless told) · gm.maxall confirm   (max everything, GM only)",
                 "FORGE        gm.forge [off]   (opens it here; the forge then works with no Armorer near) · gm.forgekit [n] · gm.temper <%> [slot] · gm.temper.all <%> [worn|pack|all] · gm.fuse <0-12> [slot] · gm.tune <0-25> [slot]",
                 "RENOWN       gm.renown [n] · gm.renown.set <n>   (the only way Renown enters the game for now) · gm.ascension [0-96] · gm.standing <1-4|track|all> <0-12> · gm.standing.wear <1-4|track|none>   (1 vanguard, 2 bulwark, 3 ironblood, 4 mindwell) · gm.herald [off]",
             });

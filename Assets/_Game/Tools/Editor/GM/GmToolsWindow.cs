@@ -1675,12 +1675,12 @@ namespace KryticalNova.EditorTools.GM
         [TabGroup(Tabs, ItemsTab), Title("Max Everything"), Button("Max Everything..."), GUIColor(1f, 0.75f, 0.4f), EnableIf(nameof(IsReady)), PropertyOrder(533.5f)]
         [InfoBox("gm.maxall: max level, skills, Ascension and Standings, every mount and pet at 100 %, 3 days of Autopilot and Autoward, max Serums, " +
                  "the character's own Rare (clean) and Epic (Temper cap, Fusion 12) gear into Pack, Vault, Deep Vault, forge materials x999, every Pass x50, " +
-                 "every crafting item, 2,000,000 Creds, 50 Chroma and Prism Cells. Adds on top. Test database only. Asks first.", InfoMessageType.Warning)]
+                 "every crafting item, 2,000,000 Creds, 50 Chroma and Prism Cells. Adds on top. Any GM, live or test server. Asks first.", InfoMessageType.Warning)]
         private void MaxEverything()
         {
             if (EditorUtility.DisplayDialog("Max Everything",
                     "gm.maxall changes the whole targeted character: max level, skills and ladders, every mount and pet, gear, items and " +
-                    "2,000,000 Creds, on top of what it has. It runs only on the test database.", "Max Everything", "Cancel"))
+                    "2,000,000 Creds, on top of what it has. It works on the live server too and is written to gm.log.", "Max Everything", "Cancel"))
                 Run("gm.maxall confirm");
         }
 

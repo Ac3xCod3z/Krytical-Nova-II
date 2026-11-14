@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using KryticalNova.DevTools;
 using KryticalNova.Factions;
@@ -10,41 +9,45 @@ using NUnit.Framework;
 namespace KryticalNova.Tests
 {
     /// <summary>
-    /// gm.maxall (owner's night list item 22): it runs only on the test database, gives the caller's own faction / lineage / class line of
+    /// gm.maxall (owner's night list item 22): any GM may run it (with the word confirm, live or test server), it gives the caller's own faction / lineage / class line of
     /// Rare and Epic gear (Rare clean, Epic at the Temper cap and Fusion 12), places one-cell pieces Pack -> Vault -> Deep Vault in order,
     /// and puts pets at 100 % growth, fed.
     /// </summary>
     public class MaxAllRulesTests
     {
-        static readonly int[] RealPorts = { 7777, 7778, 7801, 8090 };
-
-        // ------------------------------------------------------------------ the gate
+        // ------------------------------------------------------------------ who may run it (owner, 14 Nov 2026: any GM, live or test server)
 
         [Test]
-        public void Gate_TestSaveService_Runs()
+        public void Gm_WithConfirm_Runs()
         {
-            Assert.IsNull(MaxAllRules.GateProblem(false, new Uri("http://127.0.0.1:7802/"), RealPorts));
-            Assert.IsNull(MaxAllRules.GateProblem(true, new Uri("http://127.0.0.1:7802/"), RealPorts));
+            // nothing about the save path is asked: a GM on the real server's save service is allowed as on the test one
+            Assert.IsNull(MaxAllRules.Refusal(true, "confirm"));
         }
 
         [Test]
-        public void Gate_RealSaveService_Refused_EvenInPlayDotsHere()
+        public void NonGm_Refused_EvenWithConfirm()
         {
-            StringAssert.Contains("REAL", MaxAllRules.GateProblem(false, new Uri("http://127.0.0.1:7801/"), RealPorts));
-            StringAssert.Contains("REAL", MaxAllRules.GateProblem(true, new Uri("http://127.0.0.1:7801/"), RealPorts));
+            StringAssert.Contains("Only a GM", MaxAllRules.Refusal(false, "confirm"));
+            StringAssert.Contains("Only a GM", MaxAllRules.Refusal(false, ""));
         }
 
         [Test]
-        public void Gate_OtherSaveService_Refused()
+        public void Gm_WithoutConfirm_IsAskedForIt()
         {
-            Assert.IsNotNull(MaxAllRules.GateProblem(false, new Uri("http://127.0.0.1:9000/"), RealPorts));
+            StringAssert.Contains("gm.maxall confirm", MaxAllRules.Refusal(true, ""));
+            StringAssert.Contains("gm.maxall confirm", MaxAllRules.Refusal(true, "yes"));
         }
 
         [Test]
-        public void Gate_Files_RunsOnlyInPlayDotsHere()
+        public void RecordLine_NamesTheGmTheTargetAndTheTotals()
         {
-            Assert.IsNull(MaxAllRules.GateProblem(true, null, RealPorts));
-            Assert.IsNotNull(MaxAllRules.GateProblem(false, null, RealPorts), "a built server (or any other session) saving to files is not the test database");
+            string line = MaxAllRules.RecordLine("GM Ace", "Tester (acct 1234)", 110, 4, 2, 2_000_000, 0);
+            StringAssert.Contains("GM Ace", line);
+            StringAssert.Contains("Tester (acct 1234)", line);
+            StringAssert.Contains("110 gear", line);
+            StringAssert.Contains("4 pets", line);
+            StringAssert.Contains("2 mounts", line);
+            StringAssert.Contains("2,000,000 Creds", line);
         }
 
         [Test]

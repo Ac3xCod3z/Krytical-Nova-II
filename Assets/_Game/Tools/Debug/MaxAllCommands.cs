@@ -22,26 +22,32 @@ namespace KryticalNova.DevTools
     /// test character into a fully maxed one, adding on top of what it has (nothing is taken). It calls the existing GM commands where
     /// they already do the job and does the rest itself: the caller's own Rare and Epic gear (Epic at the Temper cap and Fusion 12),
     /// every mount and pet at 100 %, the Autopilot Passes. Creds go through the wallet (<c>CredsSource.Gm</c>); items into the Pack are
-    /// written to the kept ledger by <see cref="GmCommandRelay"/>, items it puts in the Vault or Deep Vault by this command. Runs only
-    /// on the test database (<see cref="MaxAllRules.GateProblem"/>) and only with the word confirm, because it changes a whole character.
+    /// written to the kept ledger by <see cref="GmCommandRelay"/>, items it puts in the Vault or Deep Vault by this command, and a gm.log
+    /// line names the GM, the target and the totals. Owner, 14 Nov 2026: any GM may use it whenever they want, on the real server and the
+    /// test server alike (<see cref="MaxAllRules.Refusal"/>), and only with the word confirm, because it changes a whole character.
     /// <para>One line per step in the owner's order. The gear is placed after the stackable items so they keep their Pack room; the gear
     /// goes Pack, then Vault, then Deep Vault, and whatever finds no room is the final "did not fit" line.</para>
     /// </summary>
     public static class MaxAllCommands
     {
-        [Command("gm.maxall", "Max everything on the targeted test character, on top of what it has: max level and skills, Ascension and " +
+        [Command("gm.maxall", "Max everything on the targeted character, on top of what it has: max level and skills, Ascension and " +
                               "Standings, every mount and pet at 100 %, 3 days of Autopilot and Autoward, max Serums, its own faction's and lineage's " +
                               "Rare gear (clean) and Epic gear (Temper cap, Fusion 12), forge materials x999, every Pass x50, every crafting item, " +
-                              "2,000,000 Creds, 50 Chroma and 50 Prism Cells. Test database only: gm.maxall confirm.")]
+                              "2,000,000 Creds, 50 Chroma and 50 Prism Cells. GM only: gm.maxall confirm.")]
         internal static string MaxAll(string confirm = "")
         {
-            if (!GmTarget.TryGetPlayer(out GameObject player, out string error)) return error;
-            string gate = MaxAllRules.GateProblem(PlayDotsHere, SaveServiceAddress(), KryticalNova.Networking.Entities.KnServerSettings.RealLanePorts);
-            if (gate != null) return "gm.maxall refused: " + gate;
-            string who = player.TryGetComponent(out PlayerIdentity identity) ? identity.CharacterName : GmTarget.Describe();
-            if (!MaxAllRules.IsConfirm(confirm))
-                return $"gm.maxall maxes {who} ({GmTarget.Describe()}): it adds on top of what the character has and takes nothing away. " +
-                       "Type gm.maxall confirm to do it (gm.target <clientId> picks someone else first).";
+            // the usual GM gate: only the host, the server's own window or control page, or a bound GM's relayed line has authority here
+            bool isGm = GmTarget.HasAuthority(out _);
+            if (!GmTarget.TryGetPlayer(out GameObject player, out string error)) return isGm ? error : MaxAllRules.Refusal(false, confirm);
+            string who = Name(player);
+            string refusal = MaxAllRules.Refusal(isGm, confirm);
+            if (refusal != null)
+                return isGm
+                    ? $"gm.maxall maxes {who} ({GmTarget.Describe()}): it adds on top of what the character has and takes nothing away. " +
+                      "Type gm.maxall confirm to do it (gm.target <clientId> picks someone else first)."
+                    : refusal;
+            s_Gear = s_Pets = s_Mounts = 0;
+            long credsBefore = player.TryGetComponent(out PlayerWallet wallet) ? wallet.Creds : 0;
 
             var lines = new List<string>(16) { $"gm.maxall on {who} ({GmTarget.Describe()}):" };
             var notFit = new List<string>();
@@ -62,16 +68,18 @@ namespace KryticalNova.DevTools
             lines[gearLine] = "Gear: " + Gear(player, notFit);
             SaveNow(player);
             lines.Add(MaxAllRules.DidNotFit(notFit));
+            long credsGiven = wallet != null ? wallet.Creds - credsBefore : 0;
+            KryticalNova.Networking.ServerRecords.Write(KryticalNova.Networking.RecordKind.Gm, MaxAllRules.RecordLine(GmCommandRelay.RunningFor,
+                $"{who} ({KryticalNova.Networking.ServerRecords.Who(player.transform)})", s_Gear, s_Pets, s_Mounts, credsGiven, notFit.Count));
             return string.Join("\n", lines);
         }
 
-        // ------------------------------------------------------------------ the gate
+        // ------------------------------------------------------------------ the totals for gm.log (commands run on the game's thread only)
 
-        /// <summary>Play DOTS here: the Editor's own in-process host, the only one that sets <c>GmRoster.Host</c> (a built server never does).</summary>
-        private static bool PlayDotsHere => Application.isEditor && KryticalNova.Networking.GmRoster.Host.HasValue;
+        private static int s_Gear, s_Pets, s_Mounts;
 
-        /// <summary>The save service this game saves through, or null when it saves to files.</summary>
-        private static System.Uri SaveServiceAddress() => ServerSave.Store is ServiceSaveStore service ? service.Address : null;
+        private static string Name(GameObject player) =>
+            player.TryGetComponent(out PlayerIdentity identity) ? identity.CharacterName : GmTarget.Describe();
 
         // ------------------------------------------------------------------ steps that need more than one existing command
 
@@ -89,7 +97,7 @@ namespace KryticalNova.DevTools
             int was = mounts.SelectedId, given = 0, owned = 0, full = 0;
             mounts.ServerDismountNow(); // another box can only be chosen on foot
             foreach (MountDefinition mount in mounts.Catalog.Mounts)
-                if (mount != null && mount.IsBuilt && !mounts.Owns(mount.mountId)) { mounts.ServerRegister(mount); given++; }
+                if (mount != null && mount.IsBuilt && !mounts.Owns(mount.mountId)) { mounts.ServerRegister(mount); given++; s_Mounts++; }
             foreach (MountDefinition mount in mounts.Catalog.Mounts)
             {
                 if (mount == null || !mounts.Owns(mount.mountId)) continue;
@@ -169,6 +177,7 @@ namespace KryticalNova.DevTools
                 if (item != null && item.equipSlot == EquipSlot.Pet && owned.Add(item.itemId))
                     missing.Add(new ItemStack(item.itemId, 1, MaxAllRules.FullPet(0UL, tuning)));
             Placed placed = Place(player, inventory, missing, "pets", notFit);
+            s_Pets += placed.Total;
             return $"{placed.Total} given at 100 % growth and fed ({placed.Where}); {raised} already owned set to 100 %.";
         }
 
@@ -202,6 +211,7 @@ namespace KryticalNova.DevTools
             }
             if (pieces.Count == 0) return "no Rare or Epic gear fits this character. Re-bake the gear ladder.";
             Placed placed = Place(player, inventory, pieces, "gear", notFit);
+            s_Gear += placed.Total;
             string line = cls != WeaponClassId.None ? $", weapons of the {WeaponClasses.DisplayName(cls)} line" : string.Empty;
             return $"{rare} Rare (clean) and {epic} Epic (Temper +{temperCap}%, Fusion {GearItemState.MaxFusion}) pieces of {faction} {pack}{line}: {placed.Where}.";
         }
