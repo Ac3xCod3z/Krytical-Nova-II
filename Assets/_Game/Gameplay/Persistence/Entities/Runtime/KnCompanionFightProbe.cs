@@ -10,8 +10,8 @@ using UnityEngine;
 namespace KryticalNova.Persistence.Entities
 {
     /// <summary>
-    /// The Mount Companion's phase 3 proof (env KN_PLAYHERE_COMPANION_FIGHT=1 with KN_DOTS_HOSTILES=1; day list item 19): the Tester at level 40
-    /// in god mode outside Concord (Zone01's mob-ne zone, as <see cref="KnCombatProbe"/>), the Brambleback called out, one unkillable
+    /// The Mount Companion's phase 3-4 proof (env KN_PLAYHERE_COMPANION_FIGHT=1 with KN_DOTS_HOSTILES=1; day list item 19): the Tester maxed
+    /// (Max Everything, its Epic set worn, its points spent) in god mode outside Concord (Zone01's mob-ne zone, as <see cref="KnCombatProbe"/>), the Brambleback called out, one unkillable
     /// Colossus beside them. DPS: the Tester attacks it as a click does and the companion must strike it too (its strike count rises, its
     /// drawn model stands by the Colossus). HEALER: the Tester's HP is taken to half (god mode off for one hit), the fight goes on, and the
     /// companion must heal (its pulse count rises, the HP climbs) and never strike. TANK (phase 4): its taunts turn the Colossus on it, so its
@@ -23,7 +23,8 @@ namespace KryticalNova.Persistence.Entities
         public static bool On => Environment.GetEnvironmentVariable(Variable) == "1";
 
         static readonly Vector3 Spot = new Vector3(150f, 0f, 146f);
-        const string SpawnLine = "gm.hostile.spawn colossus 1 40 inf 150,151";
+        // the Colossus at the Tester's own level, unkillable (a same-level Bruiser, as the numbers are made for)
+        const string SpawnLine = "gm.hostile.spawn colossus 1 {0} inf 150,151";
         const float StanceSeconds = 16f;
 
         public static IEnumerator Run(GameObject body, GameObject own, Action<string> log, Action<Vector3> teleport, Action<bool> verdict)
@@ -50,7 +51,22 @@ namespace KryticalNova.Persistence.Entities
                 return null;
             }
 
-            Gm("gm.level 40");
+            // owner rule: test players enter maxed. Max Everything (top level, every mount at 100 %), its own Epic set worn at Temper 60 and
+            // every stat point spent in the split the Hostiles' numbers are made for (HostileStatCurve: 50 % Strength, 20 % Vitality and
+            // Agility, 10 % Spirit), so the fight's numbers are real play's
+            Gm("gm.maxall confirm");
+            yield return new WaitForSeconds(1.5f);
+            int level = body.TryGetComponent(out PlayerCharacterProgression progression) ? progression.CurrentLevel : 40;
+            Gm($"gm.gearset {level} epic 60 wear");
+            if (progression != null)
+            {
+                int points = progression.StatPoints;
+                progression.RunAllocate(CharacterAttribute.Strength, points / 2);
+                progression.RunAllocate(CharacterAttribute.Vitality, points / 5);
+                progression.RunAllocate(CharacterAttribute.Agility, points / 5);
+                progression.RunAllocate(CharacterAttribute.Spirit, progression.StatPoints);
+                log($"companion fight: level {level}, {points} stat points spent, {progression.StatPoints} left");
+            }
             Gm("gm.god true");
             Gm("time.noon");   // daylight for the clip (owner, 14 Nov: the first one was too dark to read)
             yield return new WaitForSeconds(1f);
@@ -74,7 +90,7 @@ namespace KryticalNova.Persistence.Entities
             yield return new WaitForSeconds(3f);
             log($"companion fight: out={companion.CompanionOut}, drawn={(Drawn() != null ? Drawn().name : "NONE")}");
 
-            bool spawned = Gm(SpawnLine).StartsWith("Spawned", StringComparison.Ordinal);
+            bool spawned = Gm(string.Format(SpawnLine, level)).StartsWith("Spawned", StringComparison.Ordinal);
             yield return new WaitForSeconds(2f);
 
             // DPS: the Tester fights; the companion joins

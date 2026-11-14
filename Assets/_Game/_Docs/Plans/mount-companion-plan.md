@@ -453,7 +453,7 @@ Phase 3, 13-14 Nov 2026 (b18-coder-20, branch `b18/19-companion-phase3`): the DP
   the TANK cost of a blow.
 - TANK's HP multiplier: HP is kept as a share of the max, so x2 HP is a blow costing half the share (`CompanionFightRules.TakenScale` =
   (1 - buff) / multiplier); switching stance never changes the HP shown.
-- Against a level 40 Colossus and a level 40 owner in the gear that level expects: a new mount holds about 9 s, a full-grown one about 58 s
+- Against a level 40 Colossus and a level 40 owner in the gear that level expects: a mount holds about 9 s at 0 % growth, 23 s at 50 % and 58 s at 100 %
   (`CompanionTankToughnessTests` prints both). This replaces the earlier flat 0.7 buff.
 - The ride stats (the two main stats up to their max, the riding speeds) do not change with any stance (`CompanionStanceGrowthTests`).
 - The Mount window's stance tooltips show the numbers of the selected mount's growth (`CompanionFightRules.StanceTip`).

@@ -38,15 +38,20 @@ namespace KryticalNova.Tests
 
             float atNew = SecondsToDown(curve, colossus, brain, settings, 0,
                 CompanionFightRules.TakenScale(CompanionStance.Tank, settings.CompanionFight.AtGrowth(0)), out float perSecond, out float hp);
+            float atHalf = SecondsToDown(curve, colossus, brain, settings, 50,
+                CompanionFightRules.TakenScale(CompanionStance.Tank, settings.CompanionFight.AtGrowth(50)), out _, out float hpHalf);
             float atFull = SecondsToDown(curve, colossus, brain, settings, 100,
                 CompanionFightRules.TakenScale(CompanionStance.Tank, settings.CompanionFight.AtGrowth(100)), out _, out float hpFull);
             float freeNew = SecondsToDown(curve, colossus, brain, settings, 0, 1f, out _, out _);
-            TestContext.WriteLine($"L{Level} Colossus vs TANK: {perSecond:0.#} damage a second before the stance; plain HP {hp:0} at 0 %, {hpFull:0} at 100 %; " +
-                $"down in {atNew:0.0} s at 0 % growth, {atFull:0.0} s at 100 %; FREE at 0 % {freeNew:0.0} s");
+            TestContext.WriteLine($"L{Level} Colossus vs TANK: {perSecond:0.#} damage a second before the stance; plain HP {hp:0} / {hpHalf:0} / {hpFull:0} " +
+                $"at 0 / 50 / 100 %; down in {atNew:0.0} s at 0 %, {atHalf:0.0} s at 50 %, {atFull:0.0} s at 100 %; FREE at 0 % {freeNew:0.0} s");
 
             Assert.Greater(atNew, freeNew * 1.5f, "TANK holds longer than FREE even on a new mount");
-            Assert.That(atNew, Is.InRange(6f, 15f), "a new mount: 40 % less damage, x1 HP (about 9 s)");
-            Assert.That(atFull, Is.InRange(40f, 80f), "a full-grown mount: 70 % less damage, x2 HP (about 58 s)");
+            Assert.That(atNew, Is.InRange(6f, 15f), "0 %: 40 % less damage, x1 HP (about 9 s)");
+            Assert.That(atHalf, Is.InRange(18f, 35f), "50 %: 55 % less damage, x1.5 HP (about 23 s)");
+            Assert.That(atFull, Is.InRange(40f, 80f), "100 %: 70 % less damage, x2 HP (about 58 s)");
+            Assert.Less(atNew, atHalf);
+            Assert.Less(atHalf, atFull);
         }
 
         static float SecondsToDown(HostileStatCurve curve, HostileDefinition colossus, HostileBrainSettings brain, MountSettings settings,
