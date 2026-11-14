@@ -209,7 +209,7 @@ Driven by `EnvironmentPresenter` (`Assets/_Game/World/Runtime/Presentation/`). T
 | `_KN_TrampleSources[32]`, `_KN_TrampleSourceCount` | xyz feet, w radius of up to 32 `FoliageInteractor`s near the camera: who presses the grass's trample map |
 | `_KN_GrassTrample`, `_KN_GrassTrampleRect` | the trample map (rg push, b press, a height of who pressed) and where it lies: xy corner in world XZ, z 1 / width in metres, w 1 while there is a map |
 | `_KN_SwingPushes[32]`, `_KN_SwingPushCount`, `_KN_SwingSpring` | the swing pushes (14 Nov 2026, `FoliagePushes`): four `float4` each, up to 8 (World Effects Low 4); the spring's rate, damping, rise and the most a blade is bent |
-| `_KN_GrassSwing`, `_KN_GrassSwingOn` | the swing map on the trample grid (rg which way and how far swings push the grass this frame) and 1 while a push is alive (blades skip the fetch otherwise) |
+| (no swing global) | while a swing push is alive, `_KN_GrassTrample` is a third texture: the trample map with the swings added by the Swing pass (same channels), so blades still read one texel; a second fetch measured 1.5-2.5 ms GPU in tall grass (14 Nov 2026) |
 
 ### Sun
 - **Art treatment**: the centre is washed out by its own light (`_SunGlare*`), light bleeds over ink lines
