@@ -144,3 +144,58 @@
 .kn-faction-covenant .deck--lively .deck-bar-cap { background-color: rgb(255, 230, 170); }
 .kn-faction-covenant .deck--lively .deck-row--now { border-color: rgb(255, 180, 60); }
 .kn-faction-covenant .deck--lively .deck-play { border-color: rgb(255, 230, 170); }
+
+/* ---------------------------------------------------------------- build 17, day list 2: look A, the click-wheel Deck
+   (owner's pick, 13 Nov 2026: the Mini Deck grown up). A screen on top (what plays, the bars, the list), a round wheel
+   below with play in a CIRCLE at its centre (owner: a circle just round the play button, not an oval). The bars keep
+   the Beat Ring colours (DeckLibrary.look = Beat Colours). Each faction recolours the body, the rim and the wheel. */
+.deck { border-radius: 30px; border-width: 3px; padding: 14px 14px 12px 14px; align-items: stretch; }
+.deck-screen {
+    flex-direction: column; padding: 10px 12px; margin-bottom: 14px;
+    border-radius: 12px; border-width: 1px; border-color: rgba(255, 255, 255, 0.1);
+    background-color: rgb(6, 11, 22);
+}
+.deck-now-playing { font-size: 9px; letter-spacing: 2px; -unity-font-style: bold; color: rgb(80, 200, 255); margin-bottom: 6px; }
+.deck-screen .deck-now { margin-bottom: 8px; }
+.deck-screen .deck-art { width: 52px; height: 52px; border-radius: 8px; margin-right: 10px; }
+.deck-screen .deck-art-letter { font-size: 28px; }
+.deck-screen .deck-list { max-height: 120px; margin-top: 4px; }
+
+.deck-wheel {
+    align-self: center; width: 164px; height: 164px; margin-bottom: 12px;
+    border-radius: 82px; border-width: 2px; border-color: rgba(160, 180, 212, 0.6);
+    background-color: rgb(22, 32, 52);
+}
+.deck-wheel--beat { border-color: rgb(80, 200, 255); }
+.deck-wheel .deck-button { position: absolute; background-color: rgba(0, 0, 0, 0); font-size: 11px; -unity-font-style: bold; letter-spacing: 1px; }
+.deck-wheel-top { top: 8px; left: 42px; width: 76px; height: 26px; }
+.deck-wheel-bottom { bottom: 8px; left: 42px; width: 76px; height: 26px; }
+.deck-wheel-left { left: 6px; top: 62px; width: 36px; height: 36px; font-size: 14px; }
+.deck-wheel-right { right: 6px; top: 62px; width: 36px; height: 36px; font-size: 14px; }
+.deck-wheel .deck-on { color: rgb(80, 200, 255); }
+/* the play button: a circle just round it, in the wheel's centre (every faction keeps the circle) */
+.deck-wheel .deck-play, .kn-faction-hegemony .deck-wheel .deck-play, .kn-faction-null .deck-wheel .deck-play, .kn-faction-covenant .deck-wheel .deck-play {
+    position: absolute; left: 51px; top: 51px; width: 58px; height: 58px;
+    border-radius: 29px; border-width: 2px; border-color: rgba(160, 180, 212, 0.6);
+    background-color: rgb(6, 11, 22); background-image: none; color: rgb(80, 200, 255); font-size: 20px;
+}
+
+.kn-faction-hegemony .deck { background-color: rgb(16, 26, 44); border-color: rgb(159, 180, 212); }
+.kn-faction-hegemony .deck-wheel { background-color: rgb(24, 36, 58); }
+
+.kn-faction-null .deck { background-color: rgb(22, 10, 34); border-radius: 30px; border-width: 3px; border-color: rgb(122, 240, 160); color: rgb(236, 227, 247); }
+.kn-faction-null .deck-screen { background-color: rgb(7, 3, 12); border-color: rgba(160, 70, 240, 0.5); }
+.kn-faction-null .deck-now-playing { color: rgb(160, 70, 240); }
+.kn-faction-null .deck-wheel { background-color: rgb(34, 16, 50); border-color: rgba(122, 240, 160, 0.6); }
+.kn-faction-null .deck-wheel--beat { border-color: rgb(160, 70, 240); }
+.kn-faction-null .deck-wheel .deck-play { color: rgb(160, 70, 240); background-color: rgb(7, 3, 12); border-color: rgba(122, 240, 160, 0.6); }
+.kn-faction-null .deck-wheel .deck-on { color: rgb(122, 240, 160); }
+
+.kn-faction-covenant .deck { background-color: rgb(42, 29, 18); border-radius: 30px; border-width: 3px; border-color: rgb(222, 167, 65); }
+.kn-faction-covenant .deck-screen { background-color: rgb(19, 12, 6); border-color: rgba(232, 167, 58, 0.45); }
+.kn-faction-covenant .deck-now-playing { color: rgb(232, 167, 58); }
+.kn-faction-covenant .deck-wheel { background-color: rgb(58, 40, 24); border-color: rgba(222, 167, 65, 0.6); }
+.kn-faction-covenant .deck-wheel--beat { border-color: rgb(255, 200, 90); }
+.kn-faction-covenant .deck-wheel .deck-button { background-color: rgba(0, 0, 0, 0); }
+.kn-faction-covenant .deck-wheel .deck-play { color: rgb(232, 167, 58); background-color: rgb(19, 12, 6); border-color: rgba(222, 167, 65, 0.6); }
+.kn-faction-covenant .deck-wheel .deck-on { color: rgb(255, 200, 90); }
