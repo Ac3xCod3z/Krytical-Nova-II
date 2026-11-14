@@ -30,6 +30,7 @@ MonoBehaviour:
   repathMinSeconds: 0.3
   repathTargetMoved: 1.5
   maxWaypoints: 16
+  offMeshRecoverMetres: 4
   engagedTurnDegPerSec: 540
   idleTurnDegPerSec: 270
   worldSeed: 19278

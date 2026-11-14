@@ -12,9 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f4ea606054ba496d8a3e8f11b8fc0d53, type: 3}
   m_Name: TownsfolkSettings
   m_EditorClassIdentifier: KryticalNova.Townsfolk.Entities::KryticalNova.Townsfolk.TownsfolkSettings
-  dayCap: 48
-  nightCap: 20
-  hardCap: 60
+  dayCap: 80
+  nightCap: 35
+  hardCap: 100
   spawnsPerSecond: 4
   rainCrowdShare: 0.6
   dawnStartHour: 5
@@ -43,7 +43,7 @@ MonoBehaviour:
   arrivalMostShare: 0.15
   arrivalFullScore: 0.25
   farPlanStepSeconds: 2
-  fullBodiesByTier: 1400000020000000300000003c000000i
+  fullBodiesByTier: 14000000280000003800000048000000i
   closeWithinByTier:
   - 12
   - 18
@@ -64,7 +64,7 @@ MonoBehaviour:
   - 160
   - 220
   - 300
-  cardsByTier: 20000000300000004000000060000000i
+  cardsByTier: 20000000400000006000000080000000i
   mediumAnimateEvery: 2
   farAnimateEvery: 4
   lod1Share: 0.5

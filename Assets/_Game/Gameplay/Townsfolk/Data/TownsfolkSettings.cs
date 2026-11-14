@@ -11,11 +11,11 @@ namespace KryticalNova.Townsfolk
     {
         [Header("Crowd (owner 13 Nov 2026)")]
         [Tooltip("Townsfolk out by day on an area whose cast does not give its own.")]
-        public int dayCap = 48;
+        public int dayCap = 80;
         [Tooltip("Townsfolk out at night.")]
-        public int nightCap = 20;
+        public int nightCap = 35;
         [Tooltip("Never more than this, whatever a GM sets.")]
-        public int hardCap = 60;
+        public int hardCap = 100;
         [Tooltip("How many come out of their doors per second at most (the town fills over a few seconds, never in one frame).")]
         public int spawnsPerSecond = 4;
         [Tooltip("Share of the crowd still out while it rains (the rest went home or under shelter by their rule).")]
@@ -83,7 +83,7 @@ namespace KryticalNova.Townsfolk
 
         [Header("Client view: five distance bands per Crowd Detail tier (Settings, Graphics; index Low, Medium, High, Ultra; owner 14 Nov 2026)")]
         [Tooltip("Per tier: the nearest this many townsfolk get a body (CLOSE, MEDIUM or FAR band); over the count they are cards (the server's crowd is the same on every tier).")]
-        public int[] fullBodiesByTier = { 20, 32, 48, 60 };
+        public int[] fullBodiesByTier = { 20, 40, 56, 72 };
         [Tooltip("Per tier: CLOSE band ends here (metres from the camera). CLOSE = the whole mesh, every frame animated, head-look, shadows.")]
         public float[] closeWithinByTier = { 12f, 18f, 25f, 35f };
         [Tooltip("Per tier: MEDIUM band ends here. MEDIUM = LOD1 (about half the triangles), animated every 2nd frame, shadows, no head-look.")]
@@ -93,7 +93,7 @@ namespace KryticalNova.Townsfolk
         [Tooltip("Per tier: REALLY FAR band (the picture cards) ends here; past it townsfolk are TOO FAR and not drawn at all (the server still keeps them where they are).")]
         public float[] cardsWithinByTier = { 120f, 160f, 220f, 300f };
         [Tooltip("Per tier: most far cards drawn (one instanced draw per look).")]
-        public int[] cardsByTier = { 32, 48, 64, 96 };
+        public int[] cardsByTier = { 32, 64, 96, 128 };
         [Tooltip("MEDIUM bodies animate every this many frames, FAR bodies every this many (staggered by their seed).")]
         public int mediumAnimateEvery = 2, farAnimateEvery = 4;
         [Tooltip("Share of the triangles the baked LOD1 and LOD2 keep (made once per look when it is baked, shared by every body wearing it).")]

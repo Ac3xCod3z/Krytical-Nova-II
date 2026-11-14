@@ -384,12 +384,12 @@ namespace KryticalNova.Townsfolk.Editor
                 spots.Add(S("Jog " + (i + 1), TownSpotKind.JogPoint, Mathf.Sin(a) * 42f, Mathf.Cos(a) * 42f, a * Mathf.Rad2Deg + 90f));
             }
             area.spots = spots.ToArray();
-            // the plan's proposed mix (day 48, night 20)
+            // the busier crowd (owner, 14 Nov 2026: "Busier crowd"): day 80, night 35, the plan's mix scaled up together
             (byte id, int day, int night)[] mix =
             {
-                (TownPersonalityIds.BusyWorker, 8, 3), (TownPersonalityIds.Stroller, 8, 2), (TownPersonalityIds.Shopper, 8, 0), (TownPersonalityIds.Gossip, 6, 1),
-                (TownPersonalityIds.NosyLocal, 4, 0), (TownPersonalityIds.Guard, 4, 4), (TownPersonalityIds.Jogger, 3, 0), (TownPersonalityIds.Loner, 3, 3),
-                (TownPersonalityIds.NightOwl, 2, 6), (TownPersonalityIds.StreetPerformer, 2, 1),
+                (TownPersonalityIds.BusyWorker, 14, 5), (TownPersonalityIds.Stroller, 13, 4), (TownPersonalityIds.Shopper, 13, 0), (TownPersonalityIds.Gossip, 10, 2),
+                (TownPersonalityIds.NosyLocal, 7, 0), (TownPersonalityIds.Guard, 7, 7), (TownPersonalityIds.Jogger, 5, 0), (TownPersonalityIds.Loner, 5, 5),
+                (TownPersonalityIds.NightOwl, 3, 10), (TownPersonalityIds.StreetPerformer, 3, 2),
             };
             area.mix = mix.Select(m => new TownLifeArea.MixRow { personality = p[m.id], day = m.day, night = m.night }).ToArray();
             EditorUtility.SetDirty(area);

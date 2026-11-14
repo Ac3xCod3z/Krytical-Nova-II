@@ -118,8 +118,8 @@ namespace KryticalNova.Townsfolk.Tests
             TownLifeArea area = world.areas[0];
             int day = 0, night = 0;
             foreach (TownLifeArea.MixRow row in area.mix) { day += row.day; night += row.night; }
-            Assert.AreEqual(48, day, "owner 13 Nov 2026: 48 by day");
-            Assert.AreEqual(20, night, "and 20 at night");
+            Assert.AreEqual(80, day, "owner 14 Nov 2026 (busier crowd): 80 by day (was 48)");
+            Assert.AreEqual(35, night, "and 35 at night (was 20)");
             var view = Resources.Load<TownsfolkViewAssets>(TownsfolkViewAssets.ResourcePath);
             Assert.IsNotNull(view);
             Assert.IsNotNull(view.body);

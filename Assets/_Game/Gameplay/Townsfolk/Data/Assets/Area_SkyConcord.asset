@@ -21,35 +21,35 @@ MonoBehaviour:
   cast: {fileID: 11400000, guid: df519e89f50954f48ac4c81b54ac3c06, type: 2}
   mix:
   - personality: {fileID: 11400000, guid: d66be07a44eb3f44a891d0da86f1624b, type: 2}
-    day: 8
-    night: 3
+    day: 14
+    night: 5
   - personality: {fileID: 11400000, guid: e098032eb6651314b91e7f17a59c0fe6, type: 2}
-    day: 8
-    night: 2
+    day: 13
+    night: 4
   - personality: {fileID: 11400000, guid: ff1227051e568a948885e8c1d640f9b7, type: 2}
-    day: 8
+    day: 13
     night: 0
   - personality: {fileID: 11400000, guid: 105b392e5d2a6e142823ce8fc6d34b11, type: 2}
-    day: 6
-    night: 1
+    day: 10
+    night: 2
   - personality: {fileID: 11400000, guid: 51f1b69246f215541b8b39453b9ebb49, type: 2}
-    day: 4
+    day: 7
     night: 0
   - personality: {fileID: 11400000, guid: 2f525e255770ca340adbc8db17eafafd, type: 2}
-    day: 4
-    night: 4
+    day: 7
+    night: 7
   - personality: {fileID: 11400000, guid: bba684ae286d45243b20f0809772b002, type: 2}
-    day: 3
+    day: 5
     night: 0
   - personality: {fileID: 11400000, guid: b2441972f384cf5419756102bba75d17, type: 2}
-    day: 3
-    night: 3
+    day: 5
+    night: 5
   - personality: {fileID: 11400000, guid: 875d604a480b4ec4b9d3f6d8d8e5c7e5, type: 2}
-    day: 2
-    night: 6
+    day: 3
+    night: 10
   - personality: {fileID: 11400000, guid: de79a1d57afaf054d99f224d73e995fb, type: 2}
-    day: 2
-    night: 1
+    day: 3
+    night: 2
   spots:
   - label: Vaultkeeper front
     kind: 3

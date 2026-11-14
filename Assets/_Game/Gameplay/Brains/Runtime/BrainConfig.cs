@@ -24,6 +24,8 @@ namespace KryticalNova.Brains
         public uint RepathMinTicks;
         public float RepathTargetMovedSq;
         public int MaxWaypoints;
+        /// <summary>Metres round a brain found off the NavMesh searched for the mesh point it steps back onto.</summary>
+        public float OffMeshRecover;
         public float EngagedTurnRad;
         public float IdleTurnRad;
 
@@ -46,6 +48,7 @@ namespace KryticalNova.Brains
                 RepathMinTicks = (uint)Ticks(s.repathMinSeconds),
                 RepathTargetMovedSq = s.repathTargetMoved * s.repathTargetMoved,
                 MaxWaypoints = math.max(1, s.maxWaypoints),
+                OffMeshRecover = math.max(0f, s.offMeshRecoverMetres),
                 EngagedTurnRad = math.radians(s.engagedTurnDegPerSec),
                 IdleTurnRad = math.radians(s.idleTurnDegPerSec),
             };
