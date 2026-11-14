@@ -117,17 +117,22 @@ namespace KryticalNova.World.Tests
         {
             float rate = settings.springRate, damping = settings.springDamping, rise = settings.riseSeconds;
             Assert.AreEqual(0f, FoliagePushes.Spring(0f, rate, damping, rise));
-            float peak = 0f, peakAt = 0f, lowest = 0f;
-            for (float t = 0f; t <= 0.6f; t += 0.002f)
+            float peak = 0f, peakAt = 0f, lowest = 0f, upright = -1f;
+            for (float t = 0f; t <= 0.8f; t += 0.002f)
             {
                 float e = FoliagePushes.Spring(t, rate, damping, rise);
                 if (e > peak) { peak = e; peakAt = t; }
+                if (upright < 0f && t > peakAt && e < 0f) upright = t;
                 lowest = Mathf.Min(lowest, e);
             }
-            Assert.LessOrEqual(peakAt, 0.06f, "peaks within 0.06 s");
-            Assert.Greater(peak, 0.5f);
+            float held = 0f;
+            for (float t = 0f; t <= 0.8f; t += 0.002f) if (FoliagePushes.Spring(t, rate, damping, rise) > 0.4f * peak) held += 0.002f;
+            Assert.LessOrEqual(peakAt, 0.1f, "peaks within 0.1 s");
+            Assert.Greater(peak, 0.7f);
+            // Item 20, 14 Nov: the first curve (14 rad/s) was upright again after 0.11 s and nobody could see it; a swing must hold a moment.
+            Assert.GreaterOrEqual(held, 0.15f, "leans for at least 0.15 s");
+            Assert.That(upright > 0f && upright < 0.4f, $"upright again before 0.4 s (was {upright:0.00})");
             Assert.Less(lowest, -0.05f, "swings back past upright once");
-            Assert.Less(Mathf.Abs(FoliagePushes.Spring(0.5f, rate, damping, rise)), 0.05f, "under 5 % left at 0.5 s");
         }
 
         [Test]
