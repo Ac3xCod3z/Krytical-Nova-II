@@ -190,12 +190,13 @@ namespace KryticalNova.Tests
             {
                 body.TakenScale = 0.6f;
                 body.TakeDamage(new KryticalNova.Core.DamageResult { DamageDealt = mounts.CompanionMaxHp * 0.1f }, null);
-                Assert.AreEqual(940, mounts.CompanionHpOf(m.mountId), "10 % of its max at 60 %: 6 % lost");
+                Assert.AreEqual(940, mounts.CompanionHpOf(m.mountId), 1, "10 % of its max at 60 %: 6 % lost (HP is kept in whole permille)");
                 body.TakenScale = 1f;
                 body.TakeDamage(new KryticalNova.Core.DamageResult { DamageDealt = mounts.CompanionMaxHp * 0.1f }, null);
-                Assert.AreEqual(840, mounts.CompanionHpOf(m.mountId), "out of TANK: the full blow");
+                Assert.AreEqual(840, mounts.CompanionHpOf(m.mountId), 1, "out of TANK: the full blow");
+                int afterBlows = mounts.CompanionHpOf(m.mountId);
                 body.TakeDamage(new KryticalNova.Core.DamageResult { DamageDealt = 500f, IsEvaded = true }, null);
-                Assert.AreEqual(840, mounts.CompanionHpOf(m.mountId), "a miss takes nothing");
+                Assert.AreEqual(afterBlows, mounts.CompanionHpOf(m.mountId), "a miss takes nothing");
             }
             finally { Object.DestroyImmediate(body.gameObject); }
         }

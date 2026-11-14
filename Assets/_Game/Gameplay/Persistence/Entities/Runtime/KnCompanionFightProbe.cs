@@ -58,6 +58,7 @@ namespace KryticalNova.Persistence.Entities
             if (UnityEngine.AI.NavMesh.SamplePosition(at, out UnityEngine.AI.NavMeshHit ground, 20f, UnityEngine.AI.NavMesh.AllAreas)) at = ground.position;
             teleport(at);
             yield return new WaitForSeconds(2f);
+            log($"companion fight: camera pulled out to {Wider(WideRadius):0.#} m for the clip");
 
             // the Brambleback (box 1): learned from its item, selected, called out
             var before = new System.Collections.Generic.HashSet<ushort>();
@@ -150,6 +151,23 @@ namespace KryticalNova.Persistence.Entities
         }
 
         static float Flat(Vector3 v) => Mathf.Sqrt(v.x * v.x + v.z * v.z);
+
+        // A wider shot for the clip (owner, 14 Nov: the first was too close to read): the follow camera's orbit radius, as a mouse-wheel zoom
+        // out would set it (Cinemachine is not referenced here, so by name). Returns the radius set, 0 when no orbit camera was found.
+        const float WideRadius = 14f;
+
+        static float Wider(float radius)
+        {
+            foreach (Behaviour b in UnityEngine.Object.FindObjectsByType<Behaviour>(FindObjectsSortMode.None))
+            {
+                if (b == null || b.GetType().Name != "CinemachineOrbitalFollow" || !b.isActiveAndEnabled) continue;
+                var p = b.GetType().GetProperty("Radius");
+                if (p != null && p.CanWrite) { p.SetValue(b, radius); return radius; }
+                var f = b.GetType().GetField("Radius");
+                if (f != null) { f.SetValue(b, radius); return radius; }
+            }
+            return 0f;
+        }
 
         // The companion's server system keeps its own counters (strikes dealt, heal pulses given, taunts written); this assembly does not
         // reference Mounts, so the probe reads them from the server world by name (one player in the probe: the counts are the Tester's).
