@@ -343,7 +343,12 @@ namespace KryticalNova.UI
             string call = KeyBindings.Label(KeyBindings.Companion);
             callButton.text = mounts.CompanionOut ? $"SEND HOME  [{call}]" : $"CALL  [{call}]";
             callButton.SetEnabled(mounts.CompanionOut || mounts.CompanionBlockedReason() == null);
-            for (int i = 0; i < stanceButtons.Length; i++) stanceButtons[i].EnableInClassList("kn-button-primary", (int)mounts.Stance == i);
+            CompanionFightTuning stanceNumbers = mounts.CompanionFightNow;   // the stances grow with the mount: the tooltips show this growth's numbers
+            for (int i = 0; i < stanceButtons.Length; i++)
+            {
+                stanceButtons[i].EnableInClassList("kn-button-primary", (int)mounts.Stance == i);
+                stanceButtons[i].tooltip = CompanionFightRules.StanceTip((CompanionStance)i, stanceNumbers, mounts.GrowthPercent);
+            }
             footerText.text = selected == null
                 ? "Use a mount item from your Pack to add a mount. Click a mount you own to select it."
                 : "Walk by default, run with Run selected. Feed it Mount Feed (sold at the Apothecary) from your Pack. It earns EXP from your Hostile kills while selected.";

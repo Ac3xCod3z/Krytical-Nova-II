@@ -218,6 +218,11 @@ namespace KryticalNova.Tests
                 Assert.AreEqual(d.TauntSeconds, a.TauntSeconds);
                 Assert.AreEqual(d.TauntRadius, a.TauntRadius);
                 Assert.AreEqual(d.DefenceBuff, a.DefenceBuff);
+                Assert.AreEqual(d.TankHpMultiplier, a.TankHpMultiplier);
+                Assert.AreEqual(d.DamageShareFull, a.DamageShareFull);
+                Assert.AreEqual(d.HealShareFull, a.HealShareFull);
+                Assert.AreEqual(d.DefenceBuffFull, a.DefenceBuffFull);
+                Assert.AreEqual(d.TankHpMultiplierFull, a.TankHpMultiplierFull);
             }
             finally { Object.DestroyImmediate(settings); }
         }

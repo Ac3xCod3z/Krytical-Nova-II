@@ -432,9 +432,9 @@ Phase 3, 13-14 Nov 2026 (b18-coder-20, branch `b18/19-companion-phase3`): the DP
   strike bridge and applied by the blow queue to the companion's hidden body, which `StandInTargets` (Player.Entities.Presentation)
   names for its ghost. DPS, HEALER, FREE, a companion going home and a knocked-out one are not in the sense world, so a Hostile falls back
   to its next threat.
-- **Defence buff:** `CompanionBody.TakenScale` = 1 - `companionTankDefenceBuff` (0.7, at most 0.9; owner 14 Nov: a new mount holds a level 40 Colossus about 17 s) while it acts as TANK, else 1
+- **Defence buff:** `CompanionBody.TakenScale` = (1 - the TANK defence buff) / its HP multiplier, both growing with the mount (see "Stances grow with the mount" below) while it acts as TANK, else 1
   (`CompanionFightRules.TakenScale`); a TANK in PvP acts as FREE, so a player's hit is never lessened.
-- **Toughness (owner, 14 Nov: "its defense buff should allow it to be tougher"):** the buff was applied, but at 0.4 a new mount held a level 40 Colossus about 9 s against an owner in the gear that level expects (the Play proof's Tester had no gear and no spent points, 885 HP, so 2 s there). At 0.7 (`MountSettings.companionTankDefenceBuff`): about 17 s new, 29 s full-grown; the Colossus swings every 1.15 s (0.8 s clips + 0.35 s cooldown) and deals about 190 a second before the buff. `CompanionTankToughnessTests` works it out from the real assets with the one damage formula and holds it to 15-25 s for a new mount.
+- **Toughness (owner, 14 Nov: "its defense buff should allow it to be tougher"; superseded the same day by "Stances grow with the mount" below):** the buff was applied, but at 0.4 a new mount held a level 40 Colossus about 9 s against an owner in the gear that level expects (the Play proof's Tester had no gear and no spent points, 885 HP, so 2 s there). At 0.7 (`MountSettings.companionTankDefenceBuff`): about 17 s new, 29 s full-grown; the Colossus swings every 1.15 s (0.8 s clips + 0.35 s cooldown) and deals about 190 a second before the buff. `CompanionTankToughnessTests` works it out from the real assets with the one damage formula and holds it to 15-25 s for a new mount.
 - **Views:** `CompanionView.Taunts` counts its taunts; every view rears the model up (0.45 m, 18 degrees, 0.5 s) with the swing feel.
 - **Window:** TANK is on in the Mount window with its tooltip; a saved TANK loads as TANK.
 - **Tests:** `CompanionFightTests` (TANK keeps a taunted Hostile, the taunt rule, the defence scale, the sense entry, settings = defaults),
@@ -444,3 +444,16 @@ Phase 3, 13-14 Nov 2026 (b18-coder-20, branch `b18/19-companion-phase3`): the DP
 - **Left:** a second-client check; a taunt sound of its own (it uses the swing feel); the companion's own threat entry stays in a Hostile's
   table of six until it decays.
 
+### Stances grow with the mount (owner, 14 Nov 2026: "all of the stances need to have its stats raised during its progression kind of like how pets stats work")
+
+- Each stance number has its value at 0 % and at 100 % of the mount's growth in `MountSettings` (`companionDpsDamageShareByGrowth`
+  0.35 -> 0.61, which with the 15 % buff is about 40 % -> 70 % of the owner's strike; `companionHealerHealShareByGrowth` 1.5 % -> 3 % every
+  2 s; `companionTankDefenceBuffByGrowth` 0.4 -> 0.7; `companionTankHpMultiplierByGrowth` x1 -> x2). `CompanionFightTuning.AtGrowth` lerps
+  them; `PlayerMounts.CompanionFightNow` is the tuning at the selected mount's growth, read by the server system for the strike, the pulse and
+  the TANK cost of a blow.
+- TANK's HP multiplier: HP is kept as a share of the max, so x2 HP is a blow costing half the share (`CompanionFightRules.TakenScale` =
+  (1 - buff) / multiplier); switching stance never changes the HP shown.
+- Against a level 40 Colossus and a level 40 owner in the gear that level expects: a new mount holds about 9 s, a full-grown one about 58 s
+  (`CompanionTankToughnessTests` prints both). This replaces the earlier flat 0.7 buff.
+- The ride stats (the two main stats up to their max, the riding speeds) do not change with any stance (`CompanionStanceGrowthTests`).
+- The Mount window's stance tooltips show the numbers of the selected mount's growth (`CompanionFightRules.StanceTip`).

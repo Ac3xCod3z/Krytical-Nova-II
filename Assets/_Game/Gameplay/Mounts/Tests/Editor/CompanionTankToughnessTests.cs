@@ -8,12 +8,12 @@ using UnityEditor;
 namespace KryticalNova.Tests
 {
     /// <summary>
-    /// How long a TANK Mount Companion holds a same-level Bruiser (day list item 19 phase 4; owner, 14 Nov 2026: "its defense buff should
-    /// allow it to be tougher", aim about 15-20 s at level 40). Everything from the real assets and the one damage formula
+    /// How long a TANK Mount Companion holds a same-level Bruiser (day list item 19 phase 4; owner, 14 Nov 2026: the stances grow with the
+    /// mount, TANK from 40 % to 70 % less damage and from x1 to x2 HP; the time at 0 % and at 100 % growth is reported). Everything from the real assets and the one damage formula
     /// (<see cref="CombatMath.Resolve"/>): the level 40 Colossus as <see cref="HostileStatCurve"/> builds it (Bruiser), its three attacks with
     /// their weights, multipliers and clip lengths plus the brain's cooldown, against the companion, which defends with its owner's stats (the
     /// curve's reference player of level 40, the gear that level is expected to wear) and has the owner's HP times its growth share, minus
-    /// <see cref="MountSettings.companionTankDefenceBuff"/>. The expected damage of a swing is the average over a grid of the hit, crit and
+    /// the TANK cost of a blow at that growth (<see cref="CompanionFightRules.TakenScale"/>). The expected damage of a swing is the average over a grid of the hit, crit and
     /// block dice, so the test is exact for the formula and needs no luck.
     /// </summary>
     public sealed class CompanionTankToughnessTests
@@ -25,7 +25,7 @@ namespace KryticalNova.Tests
         const int Level = 40;
 
         [Test]
-        public void ATankCompanion_HoldsALevel40Colossus_15To25Seconds_WhenNew_AndLongerFullyGrown()
+        public void ATankCompanion_HoldsALevel40Colossus_LongerAsItGrows()
         {
             var curve = AssetDatabase.LoadAssetAtPath<HostileStatCurve>(CurvePath);
             var colossus = AssetDatabase.LoadAssetAtPath<HostileDefinition>(ColossusPath);
@@ -36,16 +36,17 @@ namespace KryticalNova.Tests
             Assert.IsNotNull(brain, BrainPath);
             Assert.IsNotNull(settings, MountSettingsPath);
 
-            float tank = CompanionFightRules.TakenScale(CompanionStance.Tank, settings.CompanionFight);
-            float atNew = SecondsToDown(curve, colossus, brain, settings, 0, tank, out float perSecond, out float hp);
-            float atFull = SecondsToDown(curve, colossus, brain, settings, 100, tank, out _, out _);
+            float atNew = SecondsToDown(curve, colossus, brain, settings, 0,
+                CompanionFightRules.TakenScale(CompanionStance.Tank, settings.CompanionFight.AtGrowth(0)), out float perSecond, out float hp);
+            float atFull = SecondsToDown(curve, colossus, brain, settings, 100,
+                CompanionFightRules.TakenScale(CompanionStance.Tank, settings.CompanionFight.AtGrowth(100)), out _, out float hpFull);
             float freeNew = SecondsToDown(curve, colossus, brain, settings, 0, 1f, out _, out _);
-            TestContext.WriteLine($"L{Level} Colossus vs TANK (buff {settings.companionTankDefenceBuff:0.##}): {perSecond:0.#} damage a second before the buff, " +
-                $"companion HP {hp:0} new; down in {atNew:0.0} s new, {atFull:0.0} s fully grown; with no buff {freeNew:0.0} s");
+            TestContext.WriteLine($"L{Level} Colossus vs TANK: {perSecond:0.#} damage a second before the stance; plain HP {hp:0} at 0 %, {hpFull:0} at 100 %; " +
+                $"down in {atNew:0.0} s at 0 % growth, {atFull:0.0} s at 100 %; FREE at 0 % {freeNew:0.0} s");
 
-            Assert.That(atNew, Is.InRange(15f, 25f), "a new mount holds a same-level Bruiser for a real while (owner: about 15-20 s)");
-            Assert.Greater(atFull, atNew, "growth makes it tougher");
-            Assert.Less(freeNew, 15f, "without the TANK buff it would not: the buff is what holds it");
+            Assert.Greater(atNew, freeNew * 1.5f, "TANK holds longer than FREE even on a new mount");
+            Assert.That(atNew, Is.InRange(6f, 15f), "a new mount: 40 % less damage, x1 HP (about 9 s)");
+            Assert.That(atFull, Is.InRange(40f, 80f), "a full-grown mount: 70 % less damage, x2 HP (about 58 s)");
         }
 
         static float SecondsToDown(HostileStatCurve curve, HostileDefinition colossus, HostileBrainSettings brain, MountSettings settings,

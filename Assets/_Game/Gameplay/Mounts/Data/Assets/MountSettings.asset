@@ -28,4 +28,7 @@ MonoBehaviour:
   stridesPerClip: 3
   leanEase: 0.25
   idleVarietySeconds: 9
-  companionTankDefenceBuff: 0.7
+  companionDpsDamageShareByGrowth: {x: 0.35, y: 0.61}
+  companionHealerHealShareByGrowth: {x: 0.015, y: 0.03}
+  companionTankDefenceBuffByGrowth: {x: 0.4, y: 0.7}
+  companionTankHpMultiplierByGrowth: {x: 1, y: 2}

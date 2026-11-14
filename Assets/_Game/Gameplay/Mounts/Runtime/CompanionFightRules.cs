@@ -2,7 +2,12 @@ using UnityEngine;
 
 namespace KryticalNova.Mounts
 {
-    /// <summary>The Mount Companion's fight numbers as the pure rules take them (from <see cref="MountSettings.CompanionFight"/>; phase 3).</summary>
+    /// <summary>
+    /// The Mount Companion's fight numbers as the pure rules take them (from <see cref="MountSettings.CompanionFight"/>; phases 3-4). The
+    /// stance numbers grow with the mount's growth like a pet's stat (owner, 14 Nov 2026): each has its value at 0 % (the plain field) and at
+    /// 100 % (the *Full field); <see cref="AtGrowth"/> gives the tuning of one growth with the plain fields lerped. The ride stats are not here
+    /// and do not change with a stance.
+    /// </summary>
     public struct CompanionFightTuning
     {
         /// <summary>It fights only Hostiles this close to its owner, metres.</summary>
@@ -16,13 +21,30 @@ namespace KryticalNova.Mounts
         public bool HealOutOfFight;
         /// <summary>TANK (phase 4): seconds between two taunts; the radius around the companion a taunt also pulls Hostiles after the owner from; its defence buff.</summary>
         public float TauntSeconds, TauntRadius, DefenceBuff;
+        /// <summary>TANK: its max HP times this while it acts as TANK.</summary>
+        public float TankHpMultiplier;
+        /// <summary>The stance numbers at 100 % growth (DamageShare, HealShare, DefenceBuff and TankHpMultiplier are the 0 % ones).</summary>
+        public float DamageShareFull, HealShareFull, DefenceBuffFull, TankHpMultiplierFull;
+
+        /// <summary>This tuning at <paramref name="growthPercent"/> (0-100): each stance number lerped from its 0 % value to its 100 % one.</summary>
+        public CompanionFightTuning AtGrowth(int growthPercent)
+        {
+            float g = Mathf.Clamp(growthPercent, 0, 100) / 100f;
+            CompanionFightTuning t = this;
+            t.DamageShare = Mathf.Lerp(DamageShare, DamageShareFull, g);
+            t.HealShare = Mathf.Lerp(HealShare, HealShareFull, g);
+            t.DefenceBuff = Mathf.Lerp(DefenceBuff, DefenceBuffFull, g);
+            t.TankHpMultiplier = Mathf.Lerp(TankHpMultiplier, TankHpMultiplierFull, g);
+            return t;
+        }
 
         /// <summary>The plan's proposed numbers, the same as a new <see cref="MountSettings"/>.</summary>
         public static CompanionFightTuning Default => new CompanionFightTuning
         {
             Range = 12f, LookSeconds = 0.25f, StrikeSeconds = 1.6f, Reach = 2.2f, DamageShare = 0.35f, DamageBuff = 0.15f,
             PulseSeconds = 2f, HealShare = 0.015f, HealOutOfFight = false,
-            TauntSeconds = 6f, TauntRadius = 8f, DefenceBuff = 0.7f,
+            TauntSeconds = 6f, TauntRadius = 8f, DefenceBuff = 0.4f, TankHpMultiplier = 1f,
+            DamageShareFull = 0.61f, HealShareFull = 0.03f, DefenceBuffFull = 0.7f, TankHpMultiplierFull = 2f,
         };
     }
 
@@ -40,11 +62,32 @@ namespace KryticalNova.Mounts
             stance == CompanionStance.Free || stance == CompanionStance.Dps || stance == CompanionStance.Healer || stance == CompanionStance.Tank;
 
         /// <summary>
-        /// TANK (phase 4): the share of a blow its body takes while it acts in the stance (1 - its defence buff, never below 10 %); 1 in
-        /// every other stance (a TANK in PvP acts as FREE, so a player's hit is never lessened).
+        /// TANK (phase 4): the share of its HP a blow costs while it acts in the stance, against its plain max HP: (1 - its defence buff, never
+        /// below 10 %) / its HP multiplier (HP is kept as a share of the max, so a bigger max and a smaller cost are the same thing, and a switch
+        /// of stance never changes the HP shown). 1 in every other stance (a TANK in PvP acts as FREE, so a player's hit is never lessened).
         /// </summary>
         public static float TakenScale(CompanionStance acting, in CompanionFightTuning t) =>
-            acting == CompanionStance.Tank ? 1f - Mathf.Clamp(t.DefenceBuff, 0f, 0.9f) : 1f;
+            acting == CompanionStance.Tank ? (1f - Mathf.Clamp(t.DefenceBuff, 0f, 0.9f)) / Mathf.Max(1f, t.TankHpMultiplier) : 1f;
+
+        /// <summary>The Mount window's tooltip of a stance, with its numbers at <paramref name="growthPercent"/> (<paramref name="atGrowth"/> is the tuning there).</summary>
+        public static string StanceTip(CompanionStance stance, in CompanionFightTuning atGrowth, int growthPercent)
+        {
+            string at = $"At {Mathf.Clamp(growthPercent, 0, 100)} % growth";
+            switch (stance)
+            {
+                case CompanionStance.Tank:
+                    return $"TANK: it taunts the Hostiles you fight so they turn on it. {at}: it takes {Mathf.RoundToInt(Mathf.Clamp(atGrowth.DefenceBuff, 0f, 0.9f) * 100f)} % less damage " +
+                           $"and has x{atGrowth.TankHpMultiplier:0.#} HP. It deals no damage. Grows with the mount. PvE only: in PvP it acts as FREE.";
+                case CompanionStance.Dps:
+                    return $"DPS: it helps you kill what you fight. {at}: each strike is about {Mathf.RoundToInt(StrikeScale(atGrowth) * 100f)} % of your own. " +
+                           "It never draws aggro and never heals. Grows with the mount. PvE only: in PvP it acts as FREE.";
+                case CompanionStance.Healer:
+                    return $"HEALER: it heals you over time while you fight. {at}: {atGrowth.HealShare * 100f:0.##} % of your max HP every {atGrowth.PulseSeconds:0.#} s. " +
+                           "It deals no damage and never draws aggro. Grows with the mount. PvE only: in PvP it acts as FREE.";
+                default:
+                    return "FREE: no combat. It keeps the riding bonus and may come along in PvP.";
+            }
+        }
 
         /// <summary>TANK: a taunt is due (its timer ran out and it has a Hostile to taunt).</summary>
         public static bool TauntDue(bool hasFight, float now, float nextTauntAt) => hasFight && now >= nextTauntAt;

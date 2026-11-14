@@ -278,7 +278,7 @@ namespace KryticalNova.Mounts.Entities
         // ------------------------------------------------------------------ phase 3: the DPS and HEALER stances
 
         static CompanionFightTuning FightOf(PlayerMounts mounts) =>
-            mounts != null && mounts.Settings != null ? mounts.Settings.CompanionFight : CompanionFightTuning.Default;
+            mounts != null ? mounts.CompanionFightNow : CompanionFightTuning.Default;
 
         static string StanceName(CompanionStance s) =>
             s == CompanionStance.Dps ? "DPS" : s == CompanionStance.Healer ? "HEALER" : s == CompanionStance.Tank ? "TANK" : "FREE";
@@ -351,7 +351,7 @@ namespace KryticalNova.Mounts.Entities
                 for (int i = 0; i < m_Seeking.Count; i++)
                 {
                     Live live = m_Seeking[i];
-                    CompanionFightTuning t = live.Mounts.Settings != null ? live.Mounts.Settings.CompanionFight : CompanionFightTuning.Default;
+                    CompanionFightTuning t = live.Mounts.CompanionFightNow;   // the stance numbers at its growth
                     int at = picked[i];
                     if (live.Acting == CompanionStance.Dps) Dps(live, at >= 0 ? seen[at] : default, at >= 0, t, now);
                     else if (live.Acting == CompanionStance.Tank) Tank(em, live, at, seen, hostileEntities, t, now);

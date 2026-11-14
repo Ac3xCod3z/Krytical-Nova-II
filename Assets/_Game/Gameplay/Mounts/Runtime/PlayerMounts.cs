@@ -157,6 +157,8 @@ namespace KryticalNova.Mounts
         }
 
         /// <summary>The selected mount's companion max HP: the owner's max HP times its growth share.</summary>
+        /// <summary>The companion's stance numbers at the selected mount's growth (owner, 14 Nov 2026: stances grow like a pet's stats; the ride stats do not change).</summary>
+        public CompanionFightTuning CompanionFightNow => (Settings != null ? Settings.CompanionFight : CompanionFightTuning.Default).AtGrowth(GrowthPercent);
         public float CompanionMaxHp => CompanionRules.MaxHp(entity != null ? entity.MaxHealth : 100f, GrowthPercent, CTuning);
 
         /// <summary>The owner's machine: the Companion key (B) or the window's CALL / SEND HOME button.</summary>

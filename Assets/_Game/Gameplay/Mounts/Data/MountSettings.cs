@@ -186,14 +186,14 @@ namespace KryticalNova.Mounts
         [Min(0.2f)] public float companionDpsStrikeSeconds = 1.6f;
         [Tooltip("DPS: it strikes from this close to the Hostile's edge, in metres.")]
         [Min(0.3f)] public float companionDpsReach = 2.2f;
-        [Tooltip("DPS: a strike deals this share of what your own basic strike would roll on that Hostile.")]
-        [Range(0f, 2f)] public float companionDpsDamageShare = 0.35f;
+        [Tooltip("DPS: a strike deals this share of what your own basic strike would roll on that Hostile, x = at 0 % growth, y = at 100 % (with the 15 % buff: about 40 % -> 70 %).")]
+        public Vector2 companionDpsDamageShareByGrowth = new Vector2(0.35f, 0.61f);
         [Tooltip("DPS: its own damage buff while in the stance (0.15 = +15 %). It never takes threat and never heals.")]
         [Range(0f, 2f)] public float companionDpsDamageBuff = 0.15f;
         [Tooltip("HEALER: seconds between two pulses of its heal over time on you.")]
         [Min(0.2f)] public float companionHealerPulseSeconds = 2f;
-        [Tooltip("HEALER: each pulse heals this share of your max HP (0.015 every 2 s = 0.75 % a second). It deals no damage and never takes threat.")]
-        [Range(0f, 1f)] public float companionHealerHealShare = 0.015f;
+        [Tooltip("HEALER: each pulse heals this share of your max HP, x = at 0 % growth, y = at 100 % (1.5 % -> 3 % every 2 s). It deals no damage and never takes threat.")]
+        public Vector2 companionHealerHealShareByGrowth = new Vector2(0.015f, 0.03f);
         [Tooltip("HEALER: off = it heals only while you fight a Hostile (or one fights you); on = whenever you are hurt.")]
         public bool companionHealerOutOfFight;
 
@@ -202,16 +202,21 @@ namespace KryticalNova.Mounts
         [Min(0.5f)] public float companionTankTauntSeconds = 6f;
         [Tooltip("TANK: besides the Hostile you fight, a taunt also pulls every Hostile after you this close to the companion, in metres.")]
         [Min(0f)] public float companionTankTauntRadius = 8f;
-        [Tooltip("TANK: its own defence buff while in the stance (0.7 = it takes 70 % less damage: a new mount holds a level 40 Colossus about 17 s, a full-grown one about 29 s; CompanionTankToughnessTests). It deals no damage and does not heal.")]
-        [Range(0f, 0.9f)] public float companionTankDefenceBuff = 0.7f;
+        [Tooltip("TANK: its own defence buff while in the stance, x = at 0 % growth, y = at 100 % (0.4 -> 0.7 = it takes 40 % -> 70 % less damage). It deals no damage and does not heal.")]
+        public Vector2 companionTankDefenceBuffByGrowth = new Vector2(0.4f, 0.7f);
+        [Tooltip("TANK: its max HP times this while in the stance, x = at 0 % growth, y = at 100 % (x1 -> x2).")]
+        public Vector2 companionTankHpMultiplierByGrowth = new Vector2(1f, 2f);
 
-        /// <summary>The fight numbers as the pure rules take them (phases 3-4).</summary>
+        /// <summary>The fight numbers as the pure rules take them (phases 3-4), with each stance number's 0 % and 100 % growth values (lerp with AtGrowth).</summary>
         public CompanionFightTuning CompanionFight => new CompanionFightTuning
         {
             Range = companionFightRange, LookSeconds = companionFightSeconds, StrikeSeconds = companionDpsStrikeSeconds, Reach = companionDpsReach,
-            DamageShare = companionDpsDamageShare, DamageBuff = companionDpsDamageBuff, PulseSeconds = companionHealerPulseSeconds,
-            HealShare = companionHealerHealShare, HealOutOfFight = companionHealerOutOfFight,
-            TauntSeconds = companionTankTauntSeconds, TauntRadius = companionTankTauntRadius, DefenceBuff = companionTankDefenceBuff,
+            DamageShare = companionDpsDamageShareByGrowth.x, DamageShareFull = companionDpsDamageShareByGrowth.y, DamageBuff = companionDpsDamageBuff,
+            PulseSeconds = companionHealerPulseSeconds,
+            HealShare = companionHealerHealShareByGrowth.x, HealShareFull = companionHealerHealShareByGrowth.y, HealOutOfFight = companionHealerOutOfFight,
+            TauntSeconds = companionTankTauntSeconds, TauntRadius = companionTankTauntRadius,
+            DefenceBuff = companionTankDefenceBuffByGrowth.x, DefenceBuffFull = companionTankDefenceBuffByGrowth.y,
+            TankHpMultiplier = companionTankHpMultiplierByGrowth.x, TankHpMultiplierFull = companionTankHpMultiplierByGrowth.y,
         };
 
         /// <summary>The hunger numbers while the mount is out beside its owner (the riding ones stay in <see cref="Tuning"/>).</summary>
