@@ -45,6 +45,142 @@ namespace KryticalNova.EditorTools
 
         static int Vendors() => UnityEngine.Object.FindObjectsByType(FindType("KryticalNova.Townsfolk.VendorPresenter"), FindObjectsInactive.Exclude).Length;
 
+        static readonly int EmptyState = Animator.StringToHash("Empty");
+
+        static List<Animator> VendorAnimators() =>
+            UnityEngine.Object.FindObjectsByType(FindType("KryticalNova.Townsfolk.VendorPresenter"), FindObjectsInactive.Exclude)
+                .Cast<Component>().Select(c => c.GetComponent<Animator>()).Where(a => a != null && a.runtimeAnimatorController != null).ToList();
+
+        /// <summary>Vendors by standing state: how many share it and the share of the cycle they are spread over (in step = near 0).</summary>
+        static string VendorStep()
+        {
+            List<Animator> all = VendorAnimators();
+            var parts = new List<string>();
+            int closePairs = 0;
+            foreach (var g in all.GroupBy(a => a.GetCurrentAnimatorStateInfo(0).shortNameHash))
+            {
+                List<float> ph = g.Select(a => Mathf.Repeat(a.GetCurrentAnimatorStateInfo(0).normalizedTime, 1f)).OrderBy(x => x).ToList();
+                float gap = 0f;
+                for (int i = 0; i < ph.Count; i++) gap = Mathf.Max(gap, i + 1 < ph.Count ? ph[i + 1] - ph[i] : ph[0] + 1f - ph[i]);
+                for (int i = 0; i < ph.Count; i++)
+                    for (int k = i + 1; k < ph.Count; k++) { float d = Mathf.Abs(ph[i] - ph[k]); if (Mathf.Min(d, 1f - d) < 0.01f) closePairs++; }
+                parts.Add(ph.Count + " over " + (ph.Count > 1 ? 1f - gap : 0f).ToString("F2") + " (" + string.Join(" ", ph.Select(x => x.ToString("F2"))) + ")");
+            }
+            return all.Count + " vendors in " + parts.Count + " standing states [" + string.Join(", ", parts) + "] (count over share of the cycle they span), pairs within 1% of a cycle " + closePairs +
+                   ", speeds " + all.Select(a => a.speed).DefaultIfEmpty(1f).Min().ToString("F2") + "-" + all.Select(a => a.speed).DefaultIfEmpty(1f).Max().ToString("F2");
+        }
+
+        /// <summary>Watches the vendors' gesture layer: how many gestures started and the most that started on one frame.</summary>
+        static IEnumerator WatchGestures(KnPlayHere.TwoPlayerRun r, string label, float seconds)
+        {
+            List<Animator> vendors = VendorAnimators();
+            var was = new bool[vendors.Count];
+            int started = 0, mostOnOneFrame = 0, mostAtOnce = 0;
+            float until = Time.realtimeSinceStartup + seconds;
+            while (Time.realtimeSinceStartup < until)
+            {
+                yield return null;
+                int now = 0, playing = 0;
+                for (int i = 0; i < vendors.Count; i++)
+                {
+                    if (vendors[i] == null || vendors[i].layerCount < 2) continue;
+                    bool on = vendors[i].GetCurrentAnimatorStateInfo(1).shortNameHash != EmptyState || vendors[i].IsInTransition(1);
+                    if (on && !was[i]) now++;
+                    if (on) playing++;
+                    was[i] = on;
+                }
+                started += now;
+                mostOnOneFrame = Math.Max(mostOnOneFrame, now);
+                mostAtOnce = Math.Max(mostAtOnce, playing);
+            }
+            r.Log("TOWN gestures " + label + " (" + Now + "): " + vendors.Count + " vendors watched " + seconds.ToString("F0") + " s, " + started +
+                  " gestures started, most started on one frame " + mostOnOneFrame + ", most playing at once " + mostAtOnce);
+        }
+
+        static string OutFolder
+        {
+            get
+            {
+                string f = Environment.GetEnvironmentVariable("KN_TMP_TOWN_OUT");
+                if (string.IsNullOrEmpty(f)) f = System.IO.Path.Combine(Application.dataPath, "..", "Logs", "town-shots");
+                System.IO.Directory.CreateDirectory(f);
+                return f;
+            }
+        }
+
+        static void SavePng(RenderTexture rt, string name)
+        {
+            RenderTexture before = RenderTexture.active;
+            RenderTexture.active = rt;
+            var tex = new Texture2D(rt.width, rt.height, TextureFormat.RGBA32, false);
+            tex.ReadPixels(new Rect(0, 0, rt.width, rt.height), 0, 0);
+            tex.Apply();
+            RenderTexture.active = before;
+            System.IO.File.WriteAllBytes(System.IO.Path.Combine(OutFolder, name), tex.EncodeToPNG());
+            UnityEngine.Object.DestroyImmediate(tex);
+        }
+
+        /// <summary>Bodies in view with both arms out and alike (the bind pose: T or A), of those in view; arms are degrees from straight down.</summary>
+        static string ArmCheck()
+        {
+            int seen = 0, bind = 0, notHuman = 0;
+            var worst = new List<string>();
+            foreach (Animator a in UnityEngine.Object.FindObjectsByType<Animator>(FindObjectsInactive.Exclude))
+            {
+                bool ours = a.GetComponentInParent(FindType("KryticalNova.Townsfolk.TownsfolkBody")) != null || a.GetComponent(FindType("KryticalNova.Townsfolk.VendorPresenter")) != null;
+                if (!ours) continue;
+                if (!a.GetComponentsInChildren<SkinnedMeshRenderer>().Any(s => s.enabled && s.isVisible)) continue;
+                if (!a.isHuman) { notHuman++; continue; }
+                Transform lu = a.GetBoneTransform(HumanBodyBones.LeftUpperArm), ll = a.GetBoneTransform(HumanBodyBones.LeftLowerArm);
+                Transform ru = a.GetBoneTransform(HumanBodyBones.RightUpperArm), rl = a.GetBoneTransform(HumanBodyBones.RightLowerArm);
+                if (lu == null || ll == null || ru == null || rl == null) { notHuman++; continue; }
+                seen++;
+                float l = Vector3.Angle(ll.position - lu.position, Vector3.down), rr = Vector3.Angle(rl.position - ru.position, Vector3.down);
+                if (l > 35f && rr > 35f && Mathf.Abs(l - rr) < 4f)
+                {
+                    bind++;
+                    if (worst.Count < 4) worst.Add(a.transform.root.name + "/" + a.name + " L" + l.ToString("F0") + " R" + rr.ToString("F0") + " controller " + (a.runtimeAnimatorController != null));
+                }
+            }
+            return "bodies in view " + seen + ", in a bind pose (both arms out > 35 deg and alike) " + bind + (notHuman > 0 ? ", not humanoid " + notHuman : "") +
+                   (worst.Count > 0 ? " [" + string.Join("; ", worst) + "]" : "");
+        }
+
+        /// <summary>Eye-level pictures around the player (the game's own camera looks down: far bodies and cards are out of its view), the far cards' own pictures, and the arm check.</summary>
+        static IEnumerator Look(KnPlayHere.TwoPlayerRun r, string label, Vector3? face = null)
+        {
+            int n = 0;
+            foreach (RenderTexture card in Resources.FindObjectsOfTypeAll<RenderTexture>().Where(t => t.name == "Townsfolk card").Take(16))
+                SavePng(card, "card_" + label + "_" + (n++) + ".png");
+            var go = new GameObject("KnTmp look camera");
+            var rt = new RenderTexture(1280, 720, 24);
+            try
+            {
+                Camera cam = go.AddComponent<Camera>();
+                if (Camera.main != null) cam.CopyFrom(Camera.main);
+                cam.targetTexture = rt;
+                cam.fieldOfView = 60f;
+                cam.nearClipPlane = 0.1f;
+                Vector3 eye = r.Body.transform.position + Vector3.up * 1.7f;
+                float first = face.HasValue ? Quaternion.LookRotation(Vector3.ProjectOnPlane(face.Value - eye, Vector3.up)).eulerAngles.y : 0f;
+                for (int i = 0; i < 4; i++)
+                {
+                    go.transform.SetPositionAndRotation(eye, Quaternion.Euler(4f, first + i * 90f, 0f));
+                    yield return new WaitForSeconds(1.2f);
+                    yield return new WaitForEndOfFrame();
+                    SavePng(rt, "look_" + label + "_" + i + ".png");
+                    r.Log("TOWN look " + label + " " + i + " (" + Now + "): " + ArmCheck());
+                }
+                r.Log("TOWN look " + label + ": " + n + " card pictures and 4 views in " + OutFolder);
+            }
+            finally
+            {
+                UnityEngine.Object.Destroy(go);
+                rt.Release();
+                UnityEngine.Object.Destroy(rt);
+            }
+        }
+
         static IEnumerator Measure(KnPlayHere.TwoPlayerRun r, string label, float seconds)
         {
             KryticalNova.Diagnostics.PerformanceLog.Section("town." + label);
@@ -134,6 +270,7 @@ namespace KryticalNova.EditorTools
                 yield return new WaitForSeconds(15f);   // 4 a second come out: 48 in ~12 s
                 r.Log($"TOWN status {Now}: " + Gm("gm.town") + $" | view bodies {Stat("ShownNow")}, cards {Stat("CardsNow")}, looks {Stat("LooksNow")}, vendors dressed {Vendors()}");
 
+                r.Log("TOWN vendors in step? " + Now + ": " + VendorStep());
                 r.Log($"TOWN clip crowd {Now} (8 s, High, no labels)");
                 yield return new WaitForSeconds(8f);
                 r.Log($"TOWN clip labels {Now} (6 s): " + Gm("gm.town.debug true"));
@@ -143,10 +280,12 @@ namespace KryticalNova.EditorTools
                 Preset("High");
                 yield return new WaitForSeconds(3f);
                 yield return Measure(r, "High", 10f);
+                yield return Look(r, "High");
                 Preset("Low");
                 r.Log($"TOWN clip Low {Now}");
                 yield return new WaitForSeconds(3f);
                 yield return Measure(r, "Low", 10f);
+                yield return Look(r, "Low");
                 Preset("High");
                 r.Log($"TOWN no crowd {Now}: " + Gm("gm.town.cap 0 0") + " / " + Gm("gm.town.clear"));
                 yield return new WaitForSeconds(3f);
@@ -164,10 +303,12 @@ namespace KryticalNova.EditorTools
                     Vector3 stand = v.position + v.forward * 6f;
                     r.Put?.Invoke(r.Body, stand);
                     r.Log($"TOWN clip vendor {Now}: put 6 m in front of {v.root.name} at {v.position}");
-                    yield return new WaitForSeconds(5f);
+                    yield return WatchGestures(r, "6 m", 8f);
                     r.Put?.Invoke(r.Body, v.position + v.forward * 2.2f);
                     r.Log($"TOWN clip vendor close {Now}");
-                    yield return new WaitForSeconds(5f);
+                    yield return WatchGestures(r, "in reach", 8f);
+                    yield return Look(r, "vendor", v.position + Vector3.up * 1.5f);
+                    r.Log("TOWN vendors in step? " + Now + ": " + VendorStep());
                 }
                 ok = true;
             }

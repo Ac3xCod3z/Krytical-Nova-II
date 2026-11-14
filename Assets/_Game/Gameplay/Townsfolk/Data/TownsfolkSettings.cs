@@ -111,6 +111,16 @@ namespace KryticalNova.Townsfolk
         [Tooltip("Extra seconds per character of a line.")]
         public float vendorLineSecondsPerChar = 0.04f;
 
+        [Header("Vendors out of step (owner 14 Nov 2026: never the same emote at the same time)")]
+        [Tooltip("Share of its standing animation's cycle a vendor may start into, by its own seed (1 = anywhere in it, 0 = all start together).")]
+        [Range(0f, 1f)] public float vendorStartSpread = 1f;
+        [Tooltip("Each vendor's animation runs faster or slower by up to this share, by its own seed (they drift apart).")]
+        [Range(0f, 0.3f)] public float vendorSpeedJitter = 0.08f;
+        [Tooltip("Every vendor cooldown and gap above is longer or shorter by up to this share, rolled anew each time.")]
+        [Range(0f, 0.9f)] public float vendorCooldownJitter = 0.3f;
+        [Tooltip("A wave, beckon or show-goods gesture starts up to this many seconds late, rolled per vendor each time (two vendors never start on one frame).")]
+        public float vendorGestureDelay = 0.8f;
+
         /// <summary>A Crowd Detail tier's value of a per-tier row (the last one when the row is short; <paramref name="fallback"/> when empty).</summary>
         public static T ByTier<T>(T[] row, int tier, T fallback)
         {

@@ -55,7 +55,10 @@ namespace KryticalNova.Brains
 
         public void OnUpdate(ref SystemState state)
         {
-            // main-thread reads through lookups: a mind's jobs (the townsfolk's think job moves far bodies) must be done first
+            // This system reads places and writes paths on the main thread through lookups, and a lookup (unlike a query's foreach)
+            // waits for nobody: every job of a mind that writes what is read here must be done first (the townsfolk's think job
+            // puts far bodies at their next place; 14 Nov 2026: 2,095 job-safety errors in one run without this). The jobs' handles
+            // are already this system's dependency (the lookups register the types): this only waits for them.
             state.CompleteDependency();
             BrainConfig c = SystemAPI.GetSingleton<BrainConfig>();
             uint now = SystemAPI.GetSingleton<BrainTick>().Tick;

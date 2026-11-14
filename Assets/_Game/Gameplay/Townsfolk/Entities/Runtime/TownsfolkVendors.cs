@@ -17,6 +17,9 @@ namespace KryticalNova.Townsfolk
     /// A vendor noticing the player (plan 3.6, step 7; client only, each player's own game): the head follows the player within a few
     /// metres, a wave or beckon when the player is near and looks its way (a cooldown per vendor and a gap between any two), a show-goods
     /// gesture when the player steps into reach, a welcome when the player opens the shop (<see cref="NpcInteractable.Interacted"/>).
+    /// No two vendors move in step (owner, 14 Nov 2026): each has its own dice from its seed; its standing animation starts somewhere
+    /// else in its cycle and runs a little faster or slower, every cooldown is rolled a little longer or shorter, a gesture starts a moment
+    /// late, and two vendors never start one on the same frame (the numbers are <see cref="TownsfolkSettings"/>' "out of step" rows).
     /// Lives on the vendor's Sidekick body, beside its Animator (Unity sends OnAnimatorIK there); ticked by
     /// <see cref="VendorLooksClientSystem"/>, no Update of its own.
     /// </summary>
@@ -25,13 +28,21 @@ namespace KryticalNova.Townsfolk
         static readonly int GestureId = Animator.StringToHash("Gesture");
         static readonly int GestureKindId = Animator.StringToHash("GestureKind");
         static float s_NextAnyWave, s_NextAnyCallout;
+        static int s_GestureFrame = -1;
+        /// <summary>Gestures started since Play began (a check's count).</summary>
+        public static int GesturesStarted;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        static void ResetStatics() { s_NextAnyWave = 0f; s_NextAnyCallout = 0f; }
+        static void ResetStatics() { s_NextAnyWave = 0f; s_NextAnyCallout = 0f; s_GestureFrame = -1; GesturesStarted = 0; }
 
         public NpcInteractable Npc;
         public Animator Animator;
         public uint Seed;
+        /// <summary>
+        /// This vendor's own number: its kind's <see cref="Seed"/> with the place it stands. Two vendors of one kind (Concord has
+        /// several of each) share the look, never the timing: with the kind's seed alone they moved in exact step (14 Nov 2026).
+        /// </summary>
+        public uint OwnSeed;
         public VendorManner Manner;
         public Transform Listener;
         int m_LastCallout = -1, m_LastWelcome = -1;
@@ -41,6 +52,13 @@ namespace KryticalNova.Townsfolk
         Vector3 m_LookAt;
         float m_NextWave, m_NextShow;
         bool m_WasInReach;
+        Unity.Mathematics.Random m_Dice;
+        TownGesture m_Queued;
+        float m_QueuedAt;
+
+        /// <summary>A cooldown or gap, a little longer or shorter each time (this vendor's own dice).</summary>
+        float Rolled(float seconds, TownsfolkSettings s) =>
+            seconds * (1f + Mathf.Clamp(s.vendorCooldownJitter, 0f, 0.9f) * m_Dice.NextFloat(-1f, 1f));
 
         public void Tick(bool hasPlayer, Vector3 player, Vector3 playerForward, TownsfolkSettings s, float now, float dt)
         {
@@ -50,10 +68,11 @@ namespace KryticalNova.Townsfolk
             m_MaxWeight = s.vendorHeadWeight;
             m_LookAt = player + Vector3.up * 1.55f;
             m_LookWeight = Mathf.MoveTowards(m_LookWeight, d <= s.vendorHeadFollowRadius ? 1f : 0f, dt * 2f);
+            if (m_Queued != TownGesture.None && now >= m_QueuedAt && Gesture(m_Queued)) m_Queued = TownGesture.None;
             if (!hasPlayer || Animator == null || Npc == null) return;
 
             bool inReach = Npc.InReachOf(player);
-            if (inReach && !m_WasInReach && now >= m_NextShow) { Gesture(TownGesture.ShowGoods); m_NextShow = now + s.vendorShowGoodsCooldown; }
+            if (inReach && !m_WasInReach && now >= m_NextShow) { Queue(TownGesture.ShowGoods, now, s); m_NextShow = now + Rolled(s.vendorShowGoodsCooldown, s); }
             m_WasInReach = inReach;
             if (inReach || d > s.vendorWaveRadius || now < m_NextWave || now < s_NextAnyWave) return;
             Vector3 toVendor = at - player;
@@ -63,14 +82,14 @@ namespace KryticalNova.Townsfolk
             if (Vector3.Dot(playerForward.normalized, toVendor.normalized) < 0.7f) return;   // only when the player looks this way
             TownGesture greet = Manner != null && Manner.greet != TownGesture.None ? Manner.greet
                 : (Seed & 1) == 0 ? TownGesture.Wave : TownGesture.Beckon;
-            Gesture(greet);
-            m_NextWave = now + s.vendorWaveCooldown;
-            s_NextAnyWave = now + s.vendorAnyWaveGap;
+            Queue(greet, now, s);
+            m_NextWave = now + Rolled(s.vendorWaveCooldown, s);
+            s_NextAnyWave = now + Rolled(s.vendorAnyWaveGap, s);
             // a call-out with the wave, on its own longer cooldown (never a chorus of vendors)
             if (d <= s.vendorCalloutRadius && now >= m_NextCallout && now >= s_NextAnyCallout && Say(Manner != null ? Manner.callouts : null, ref m_LastCallout))
             {
-                m_NextCallout = now + s.vendorCalloutCooldown;
-                s_NextAnyCallout = now + s.vendorAnyCalloutGap;
+                m_NextCallout = now + Rolled(s.vendorCalloutCooldown, s);
+                s_NextAnyCallout = now + Rolled(s.vendorAnyCalloutGap, s);
             }
         }
 
@@ -82,8 +101,10 @@ namespace KryticalNova.Townsfolk
         /// The controller is handed over only when the look is merged (its Rebuilt), so the animator binds once, to the merged mesh
         /// (see <see cref="TownsfolkBody.PendingController"/>; 14 Nov 2026).
         /// </summary>
-        public void Bind(CharacterAppearance appearance, RuntimeAnimatorController controller, float offset)
+        public void Bind(CharacterAppearance appearance, RuntimeAnimatorController controller, float offset, TownsfolkSettings settings)
         {
+            m_Settings = settings;
+            m_Dice = new Unity.Mathematics.Random((OwnSeed != 0 ? OwnSeed : Seed) | 1u);
             m_Appearance = appearance;
             m_Pending = controller;
             m_Offset = offset;
@@ -103,11 +124,27 @@ namespace KryticalNova.Townsfolk
             m_Pending = null;
             Animator.SetInteger(TownsfolkBody.ActivityId, (int)TownActivity.Stand);
             Animator.SetFloat(TownsfolkBody.OffsetId, m_Offset);
+            if (m_Settings == null || !Animator.isActiveAndEnabled) return;
+            // out of step from the first frame: its own speed, and its standing animation already somewhere in its cycle (a start
+            // in seconds would not do: a clip that does not loop restarts when it ends, and all of those would be in step again)
+            Animator.speed = 1f + Mathf.Clamp(m_Settings.vendorSpeedJitter, 0f, 0.3f) * m_Dice.NextFloat(-1f, 1f);
+            Animator.Update(0f);
+            int stand = Animator.IsInTransition(0) ? Animator.GetNextAnimatorStateInfo(0).fullPathHash : Animator.GetCurrentAnimatorStateInfo(0).fullPathHash;
+            Animator.Play(stand, 0, m_Dice.NextFloat() * Mathf.Clamp01(m_Settings.vendorStartSpread));
+            Animator.Update(0f);
+        }
+
+        /// <summary>The gesture starts a moment late (rolled); a newer one replaces one still waiting.</summary>
+        void Queue(TownGesture gesture, float now, TownsfolkSettings s)
+        {
+            m_Queued = gesture;
+            m_QueuedAt = now + m_Dice.NextFloat() * Mathf.Max(0f, s.vendorGestureDelay);
         }
 
         public void Welcome()
         {
-            Gesture(TownGesture.Welcome);
+            // the answer to the player's own click: at once, or on the next frame when another vendor's gesture took this one
+            if (!Gesture(TownGesture.Welcome)) { m_Queued = TownGesture.Welcome; m_QueuedAt = 0f; }
             Say(Manner != null ? Manner.welcome : null, ref m_LastWelcome);
         }
 
@@ -124,11 +161,17 @@ namespace KryticalNova.Townsfolk
             return true;
         }
 
-        void Gesture(TownGesture gesture)
+        /// <summary>Starts the gesture; false when another vendor's started on this frame (it waits for the next one).</summary>
+        bool Gesture(TownGesture gesture)
         {
-            if (Animator == null || !Animator.isActiveAndEnabled) return;
+            if (Animator == null || !Animator.isActiveAndEnabled) return true;   // nothing to wait for
+            int frame = Time.frameCount;
+            if (frame == s_GestureFrame) return false;
+            s_GestureFrame = frame;
+            GesturesStarted++;
             Animator.SetInteger(GestureKindId, (int)gesture);
             Animator.SetTrigger(GestureId);
+            return true;
         }
 
         void OnAnimatorIK(int layerIndex)
@@ -231,6 +274,10 @@ namespace KryticalNova.Townsfolk
         public static int LookOf(string vendorName, int lookBase) =>
             lookBase + (int)(math.hash(new uint2(StableHash(vendorName), 0x9E3779B9u)) % 997u);
 
+        /// <summary>A vendor's own number from its kind's seed and where it stands (to the decimetre: the same on every machine).</summary>
+        public static uint OwnSeedOf(uint kindSeed, Vector3 at) =>
+            math.hash(new uint2(kindSeed, math.hash(new int3(math.round((float3)at * 10f)))));
+
         static uint StableHash(string text)
         {
             uint h = 2166136261u;   // FNV-1a: string.GetHashCode differs between runs
@@ -279,9 +326,11 @@ namespace KryticalNova.Townsfolk
             presenter.Npc = npc;
             presenter.Animator = animator;
             presenter.Seed = seed;
+            uint own = OwnSeedOf(seed, npc.transform.position);
+            presenter.OwnSeed = own;
             presenter.Manner = m_Assets.MannerOf(key);
             presenter.Bind(appearance, bodyType == BodyType.Feminine && m_Assets.feminine != null ? m_Assets.feminine : m_Assets.masculine,
-                (seed >> 8 & 0xFF) / 255f);
+                (own >> 8 & 0xFF) / 255f, m_Assets.settings);
             look_.Dressed = cast.dressed;
             if (!look_.Apply(recipe, m_Assets.database)) { Object.Destroy(go); return null; }
             appearance.RebuildNow();   // merged: its Rebuilt hands the animator its controller

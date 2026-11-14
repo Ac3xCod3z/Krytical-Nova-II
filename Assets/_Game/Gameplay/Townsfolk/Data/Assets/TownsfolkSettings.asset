@@ -78,3 +78,7 @@ MonoBehaviour:
   vendorAnyCalloutGap: 10
   vendorLineSeconds: 2.5
   vendorLineSecondsPerChar: 0.04
+  vendorStartSpread: 1
+  vendorSpeedJitter: 0.08
+  vendorCooldownJitter: 0.3
+  vendorGestureDelay: 0.8

@@ -245,6 +245,20 @@ namespace KryticalNova.Townsfolk.Tests
         }
 
         [Test]
+        public void TwoVendorsOfOneKindKeepTheirOwnTiming()
+        {
+            // guard (14 Nov 2026): vendors of one kind shared one seed and waved, bowed and idled in exact step
+            uint kind = 0xBEEF1234u;
+            uint a = VendorLooksClientSystem.OwnSeedOf(kind, new Vector3(10f, 300f, -60f));
+            uint b = VendorLooksClientSystem.OwnSeedOf(kind, new Vector3(14f, 300f, -60f));
+            Assert.AreNotEqual(a, b, "two places, two numbers");
+            Assert.AreEqual(a, VendorLooksClientSystem.OwnSeedOf(kind, new Vector3(10.004f, 300f, -60f)), "the same place on every machine");
+            var da = new Unity.Mathematics.Random(a | 1u);
+            var db = new Unity.Mathematics.Random(b | 1u);
+            Assert.AreNotEqual(da.NextFloat(), db.NextFloat(), "their dice differ from the first roll");
+        }
+
+        [Test]
         public void StaleClaimFreesItself()
         {
             var p = Made(TownTestWorld.Personality(2, 1f, new Vector2(1f, 1f), (TownSpotKind.Bench, 1f)));
@@ -303,6 +317,24 @@ namespace KryticalNova.Townsfolk.Tests
             w.Step(70);   // past a plan step (2 s)
             Assert.AreEqual(TownLifeState.AtSpot, w.Life(a).State, "the plan step put it at its spot");
             Assert.AreEqual(30f, math.abs(w.Pos(a).x), 0.01f, "standing on the spot's slot");
+        }
+
+        [Test]
+        public void APathRequestIsServedWhileTheTownThinks()
+        {
+            // guard (14 Nov 2026): the think job writes places (a far plan step) while the path service reads places on the main
+            // thread; without the service waiting for the mind's jobs, the job-safety system throws on its first served request
+            var p = Made(TownTestWorld.Personality(2, 1f, new Vector2(1f, 1f), (TownSpotKind.Viewpoint, 1f)));
+            using var w = new TownTestWorld(p);
+            w.AddSpot(TownSpotKind.Viewpoint, new float3(30f, 0f, 0f), 1);
+            w.SetPlayers(new float3(1000f, 0f, 0f));
+            Entity a = w.Townsperson(float3.zero, 2);
+            for (int i = 0; i < 5; i++)
+            {
+                w.Em.SetComponentData(a, new BrainPath { To = new float3(5f, 0f, 0f), RequestTick = w.Tick, Status = BrainPathStatus.Queued });
+                Assert.DoesNotThrow(() => w.Step(1), "tick " + i);
+                Assert.AreNotEqual(BrainPathStatus.Queued, w.Em.GetComponentData<BrainPath>(a).Status, "the request was served, tick " + i);
+            }
         }
 
         [Test]
