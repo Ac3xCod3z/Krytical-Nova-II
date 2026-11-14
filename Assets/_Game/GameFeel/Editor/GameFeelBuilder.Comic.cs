@@ -1223,7 +1223,8 @@ namespace KryticalNova.EditorTools
             so.FindProperty("critWorldFeel").objectReferenceValue = null; // a critical hit's word is its weapon class's
             so.FindProperty("skillHitWorldFeel").objectReferenceValue = World(world, "Skill Hit", Warm(new Fx("PFX_Hit_Sparks"), 16));
             so.FindProperty("levelUpWorldFeel").objectReferenceValue = World(world, "Level Up",
-                AtFeet("PFX_LevelUp"), ComicAt("PFX_Mark_LevelUp", 0.2f, ramped: true), ComicAt("PFX_Word_LevelUp", 2.35f, ramped: true));
+                // owner 13 Nov 2026 (3.1): no ground circle - the feet glow (PFX_LevelUp) and the ring of puffs (PFX_Mark_LevelUp) are gone
+                ComicAt("PFX_Word_LevelUp", 2.35f, ramped: true));
             // Build 17 item 2.5: the own big level-up (pet-evolution level and more): a pillar of light, rays and sparkles, from the Nova
             // tier's pieces (owner 13 Nov 2026, 3.1: the ground ring at the end is gone). Others keep the lighter levelUpWorldFeel. Owner pick (13 Nov 2026): in the player's
             // faction colour, so every piece takes the moment's tint (the presenter passes the faction's fill colour).
