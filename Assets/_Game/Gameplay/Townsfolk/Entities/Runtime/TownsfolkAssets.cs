@@ -53,6 +53,15 @@ namespace KryticalNova.Townsfolk
         [Tooltip("Scenes whose vendors take a cast of their own (a home city: its faction only); every other scene's vendors take the first cast (Sky Concord: every faction).")]
         public VendorCast[] vendorCasts = System.Array.Empty<VendorCast>();
 
+        [Tooltip("Each vendor's manner (greeting, call-outs, welcome), by its NpcDefinition's name.")]
+        public VendorManner[] manners = System.Array.Empty<VendorManner>();
+
+        public VendorManner MannerOf(string npc)
+        {
+            foreach (VendorManner m in manners) if (m != null && m.npc == npc) return m;
+            return null;
+        }
+
         public TownsfolkCast VendorCastOf(string scene)
         {
             foreach (VendorCast v in vendorCasts) if (v.cast != null && v.scene == scene) return v.cast;

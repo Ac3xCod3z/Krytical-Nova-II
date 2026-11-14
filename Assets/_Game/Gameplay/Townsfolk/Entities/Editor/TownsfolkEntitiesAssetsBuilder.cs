@@ -35,6 +35,8 @@ namespace KryticalNova.Townsfolk.Editor
         const string MasculineController = AnimationFolder + "/AC_Townsfolk_Masc.controller";
         const string FeminineController = AnimationFolder + "/AC_Townsfolk_Femn.controller";
         const string CardMaterialPath = TownsfolkPaths.DataAssets + "/M_TownsfolkCard.mat";
+        const string MannerFolder = TownsfolkPaths.DataAssets + "/VendorManners";
+        const string NpcDefinitionFolder = "Assets/_Game/Gameplay/NPC/Data/Assets";
         const string BodyPrefab = "Assets/_Game/Characters/Player/Player_01/Player_01.prefab";
         const string DatabaseAsset = "Assets/_Game/Gameplay/CharacterCreation/Data/Assets/CharacterCreationDatabase.asset";
         static readonly string[] ClipFolders =
@@ -554,6 +556,56 @@ namespace KryticalNova.Townsfolk.Editor
             if (variant < variants - 1) t.AddCondition(AnimatorConditionMode.Less, hi, "Offset");
         }
 
+        // ---- vendor manners (drafts for the owner to edit; made only when missing) ----
+
+        static readonly (string npc, TownGesture greet, string[] callouts, string[] welcome)[] MannerDrafts =
+        {
+            ("NPC_Blacksmith", TownGesture.Beckon, new[] { "Fresh alloys on the anvil!", "That gear's seen better days. Bring it here.", "Temper it now, thank me in the next fight." }, new[] { "What are we forging today?", "Let's see what you're carrying." }),
+            ("NPC_HerbMaster", TownGesture.Wave, new[] { "Stims, Flasks, Recall Tags!", "Topped up before you head out?", "Don't leave the deck on an empty Flask." }, new[] { "What do you need patched?", "Fresh batch this morning." }),
+            ("NPC_Trader", TownGesture.Beckon, new[] { "The Exchange is moving. Buy low!", "Prices won't wait for you.", "Got something to sell? I've got buyers." }, new[] { "Buying or selling?", "Let's talk numbers." }),
+            ("NPC_Tailor", TownGesture.Wave, new[] { "New colours in the cells!", "That outfit could use a fresh dye.", "Look sharp up here, it's Sky Concord." }, new[] { "What colour are we thinking?", "Stand still, let me look at you." }),
+            ("NPC_Stylist", TownGesture.Wave, new[] { "A new look for a new day?", "Time for a change up top?" }, new[] { "Sit down, I'll take care of it.", "What are we going for?" }),
+            ("NPC_Reshaper", TownGesture.Wave, new[] { "Not happy with the face? I can help.", "A small change goes a long way." }, new[] { "Let's see what we can do.", "Hold still for me." }),
+            ("NPC_Holoweaver", TownGesture.Beckon, new[] { "Wear any look you've ever earned.", "The Weave Library has room for yours." }, new[] { "Which look today?", "The weave is ready." }),
+            ("NPC_Fabricator", TownGesture.Beckon, new[] { "Bring me parts, I'll make you something.", "Recipes, materials, results." }, new[] { "What are we building?", "Show me the materials." }),
+            ("NPC_Agent", TownGesture.Beckon, new[] { "Slots open, Cores ready.", "Your gear's got empty sockets, friend." }, new[] { "Let's fit something good.", "What are we slotting?" }),
+            ("NPC_GuildDirector", TownGesture.Wave, new[] { "Your Vault's safe with me.", "Starting a Crew? Register here." }, new[] { "Storing or taking?", "Everything's where you left it." }),
+            ("NPC_GateMaster", TownGesture.Wave, new[] { "Transit's open. Where to?", "The Deep Vault is this way." }, new[] { "Where are you headed?", "Safe travels start here." }),
+            ("NPC_GuardCaptain", TownGesture.Wave, new[] { "Contracts posted. Who's brave today?", "Battle transit leaves on my word." }, new[] { "Looking for work?", "Report in." }),
+            ("NPC_Collector", TownGesture.Wave, new[] { "The Nova Standings have changed.", "Ascend, and I'll make it known." }, new[] { "Come to see where you stand?", "Your deeds are noted." }),
+            ("NPC_MallManager", TownGesture.Wave, new[] { "The Nova Store has something new.", "Take a look, no pressure." }, new[] { "Welcome to the Store.", "Browse all you like." }),
+            ("NPC_Coach", TownGesture.Wave, new[] { "Want a change of build?", "Taller, broader, it's up to you." }, new[] { "Let's get you sorted.", "Stand on the mark." }),
+        };
+
+        static readonly string[] InstructorCallouts = { "Sharpen your skills, recruit!", "Train with me before the next fight." };
+        static readonly string[] InstructorWelcome = { "Ready to learn?", "Show me your stance." };
+
+        static VendorManner[] EnsureManners()
+        {
+            EnsureFolder(MannerFolder);
+            var made = new List<VendorManner>();
+            foreach (string guid in AssetDatabase.FindAssets("t:NpcDefinition", new[] { NpcDefinitionFolder }))
+            {
+                string npc = Path.GetFileNameWithoutExtension(AssetDatabase.GUIDToAssetPath(guid));
+                string path = MannerFolder + "/VendorManner_" + npc.Replace("NPC_", "") + ".asset";
+                var manner = LoadOrCreate<VendorManner>(path, out bool fresh);
+                if (fresh)
+                {
+                    manner.npc = npc;
+                    int i = Array.FindIndex(MannerDrafts, d => d.npc == npc);
+                    bool instructor = npc.StartsWith("NPC_Trainer", StringComparison.Ordinal);
+                    manner.greet = i >= 0 ? MannerDrafts[i].greet : TownGesture.Wave;
+                    manner.callouts = Lines(i >= 0 ? MannerDrafts[i].callouts : InstructorCallouts);
+                    manner.welcome = Lines(i >= 0 ? MannerDrafts[i].welcome : InstructorWelcome);
+                    EditorUtility.SetDirty(manner);
+                }
+                made.Add(manner);
+            }
+            return made.OrderBy(m => m.npc, StringComparer.Ordinal).ToArray();
+        }
+
+        static NpcLine[] Lines(string[] texts) => texts.Select(t => new NpcLine { text = t }).ToArray();
+
         // ---- far cards ----
 
         /// <summary>
@@ -602,6 +654,7 @@ namespace KryticalNova.Townsfolk.Editor
             view.casts = new[] { cast };
             view.personalities = personalities;
             view.cardMaterial = EnsureCardMaterial();
+            view.manners = EnsureManners();
             EditorUtility.SetDirty(view);
             if (world.brain == null || view.body == null || view.database == null)
                 Debug.LogError("[KnBuild] Townsfolk Resources: the Brain settings, the body (" + BodyPrefab + ") or the creation database is missing.");

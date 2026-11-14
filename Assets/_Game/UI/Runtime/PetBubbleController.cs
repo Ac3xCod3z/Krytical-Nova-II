@@ -15,7 +15,7 @@ namespace KryticalNova.UI
     [RequireComponent(typeof(UIDocument))]
     // Placed on the screen after the Cinemachine brain (100) has moved the camera this frame (see NamecardOrder).
     [DefaultExecutionOrder(NamecardOrder.AfterCamera)]
-    public sealed class PetBubbleController : MonoBehaviour
+    public sealed class PetBubbleController : MonoBehaviour, KryticalNova.Core.ISpeechBubbleSink
     {
         private const string LayerName = "pet-bubbles";
         private const string NamecardLayer = "player-namecards";
@@ -46,6 +46,8 @@ namespace KryticalNova.UI
             public float Until;
             public Vector2 At;
             public bool Placed;
+            /// <summary>A pet's (the Pet chatter option hides it); a vendor's or townsperson's line is not.</summary>
+            public bool IsPet;
         }
 
         public static PetBubbleController Instance { get; private set; }
@@ -66,11 +68,13 @@ namespace KryticalNova.UI
             layer = root?.Q(LayerName);
             if (layer == null) Debug.LogError("[Pets] ProgressionHUD.uxml has no '" + LayerName + "' element.", this);
             namecards = root?.Q(NamecardLayer);
+            KryticalNova.Core.ClientPresentationRegistry.RegisterSpeech(this);
         }
 
         private void OnDisable()
         {
             Clear();
+            KryticalNova.Core.ClientPresentationRegistry.UnregisterSpeech(this);
             if (Instance == this) Instance = null;
         }
 
@@ -81,7 +85,17 @@ namespace KryticalNova.UI
         /// </summary>
         public void Say(Transform pet, Transform owner, string text, Sprite emoji, float seconds, Bounds? body = null)
         {
-            if (layer == null || pet == null || !HudPreferences.PetChatter) return;
+            if (!HudPreferences.PetChatter) return;
+            Show(pet, owner, text, emoji, seconds, body, true);
+        }
+
+        /// <summary>A line over someone who is not a pet (a vendor's call-out): the same bubble, not hidden by the Pet chatter option.</summary>
+        public void Speak(Transform speaker, Transform listener, string text, float seconds) =>
+            Show(speaker, listener, text, null, seconds, null, false);
+
+        private void Show(Transform pet, Transform owner, string text, Sprite emoji, float seconds, Bounds? body, bool isPet)
+        {
+            if (layer == null || pet == null) return;
             Bubble bubble = bubbles.Find(b => b.Pet == pet);
             if (bubble == null)
             {
@@ -94,6 +108,7 @@ namespace KryticalNova.UI
                 bubbles.Add(bubble);
             }
             bubble.Pet = pet;
+            bubble.IsPet = isPet;
             bubble.Owner = owner;
             bubble.HasBody = body.HasValue;
             bubble.Body = body.GetValueOrDefault();
@@ -111,6 +126,16 @@ namespace KryticalNova.UI
         /// <summary>True while this pet has a bubble up.</summary>
         public bool IsSpeaking(Transform pet) => pet != null && bubbles.Exists(b => b.Pet == pet && Time.unscaledTime < b.Until);
 
+        private void ClearPets()
+        {
+            for (int i = bubbles.Count - 1; i >= 0; i--)
+            {
+                if (!bubbles[i].IsPet) continue;
+                bubbles[i].Root.RemoveFromHierarchy();
+                bubbles.RemoveAt(i);
+            }
+        }
+
         public void Clear()
         {
             foreach (Bubble bubble in bubbles) bubble.Root.RemoveFromHierarchy();
@@ -120,7 +145,7 @@ namespace KryticalNova.UI
         private void LateUpdate()
         {
             if (layer == null || root.panel == null || bubbles.Count == 0) return;
-            if (!HudPreferences.PetChatter) { Clear(); return; }
+            if (!HudPreferences.PetChatter) ClearPets();
             if (targetCamera == null) targetCamera = Camera.main;
             if (targetCamera == null) return;
 

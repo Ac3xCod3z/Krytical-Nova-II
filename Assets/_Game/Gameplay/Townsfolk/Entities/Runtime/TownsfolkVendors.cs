@@ -24,14 +24,19 @@ namespace KryticalNova.Townsfolk
     {
         static readonly int GestureId = Animator.StringToHash("Gesture");
         static readonly int GestureKindId = Animator.StringToHash("GestureKind");
-        static float s_NextAnyWave;
+        static float s_NextAnyWave, s_NextAnyCallout;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        static void ResetStatics() => s_NextAnyWave = 0f;
+        static void ResetStatics() { s_NextAnyWave = 0f; s_NextAnyCallout = 0f; }
 
         public NpcInteractable Npc;
         public Animator Animator;
         public uint Seed;
+        public VendorManner Manner;
+        public Transform Listener;
+        int m_LastCallout = -1, m_LastWelcome = -1;
+        float m_NextCallout;
+        TownsfolkSettings m_Settings;
         float m_LookWeight, m_MaxWeight = 1f;
         Vector3 m_LookAt;
         float m_NextWave, m_NextShow;
@@ -39,6 +44,7 @@ namespace KryticalNova.Townsfolk
 
         public void Tick(bool hasPlayer, Vector3 player, Vector3 playerForward, TownsfolkSettings s, float now, float dt)
         {
+            m_Settings = s;
             Vector3 at = transform.position;
             float d = hasPlayer ? Vector3.Distance(at, player) : float.MaxValue;
             m_MaxWeight = s.vendorHeadWeight;
@@ -55,12 +61,37 @@ namespace KryticalNova.Townsfolk
             playerForward.y = 0f;
             if (toVendor.sqrMagnitude < 0.01f || playerForward.sqrMagnitude < 0.01f) return;
             if (Vector3.Dot(playerForward.normalized, toVendor.normalized) < 0.7f) return;   // only when the player looks this way
-            Gesture((Seed & 1) == 0 ? TownGesture.Wave : TownGesture.Beckon);
+            TownGesture greet = Manner != null && Manner.greet != TownGesture.None ? Manner.greet
+                : (Seed & 1) == 0 ? TownGesture.Wave : TownGesture.Beckon;
+            Gesture(greet);
             m_NextWave = now + s.vendorWaveCooldown;
             s_NextAnyWave = now + s.vendorAnyWaveGap;
+            // a call-out with the wave, on its own longer cooldown (never a chorus of vendors)
+            if (d <= s.vendorCalloutRadius && now >= m_NextCallout && now >= s_NextAnyCallout && Say(Manner != null ? Manner.callouts : null, ref m_LastCallout))
+            {
+                m_NextCallout = now + s.vendorCalloutCooldown;
+                s_NextAnyCallout = now + s.vendorAnyCalloutGap;
+            }
         }
 
-        public void Welcome() => Gesture(TownGesture.Welcome);
+        public void Welcome()
+        {
+            Gesture(TownGesture.Welcome);
+            Say(Manner != null ? Manner.welcome : null, ref m_LastWelcome);
+        }
+
+        /// <summary>One of the lines (never the last one again) in a speech bubble beside this vendor; false when it has none or no HUD.</summary>
+        bool Say(KryticalNova.NPC.NpcLine[] lines, ref int last)
+        {
+            KryticalNova.Core.ISpeechBubbleSink speech = KryticalNova.Core.ClientPresentationRegistry.Speech;
+            if (speech == null || lines == null || lines.Length == 0 || m_Settings == null) return false;
+            int pick = KryticalNova.NPC.NpcLinePicker.Next(lines.Length, last, max => UnityEngine.Random.Range(0, max));
+            if (pick < 0 || string.IsNullOrEmpty(lines[pick].text)) return false;
+            last = pick;
+            string text = lines[pick].text;
+            speech.Speak(Npc != null ? Npc.transform : transform, Listener, text, m_Settings.vendorLineSeconds + text.Length * m_Settings.vendorLineSecondsPerChar);
+            return true;
+        }
 
         void Gesture(TownGesture gesture)
         {
@@ -222,6 +253,7 @@ namespace KryticalNova.Townsfolk
             presenter.Npc = npc;
             presenter.Animator = animator;
             presenter.Seed = seed;
+            presenter.Manner = m_Assets.MannerOf(key);
             return presenter;
         }
     }

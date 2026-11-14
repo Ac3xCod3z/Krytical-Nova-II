@@ -98,6 +98,16 @@ namespace KryticalNova.Townsfolk
         public float vendorShowGoodsCooldown = 20f;
         [Tooltip("Looks of a vendor are numbered from here (apart from the crowd's), one fixed look per vendor from its name.")]
         public int vendorLookBase = 1000;
+        [Tooltip("Metres within which a vendor calls out to a passing player (its manner's lines, in a speech bubble).")]
+        public float vendorCalloutRadius = 12f;
+        [Tooltip("Seconds between one vendor's call-outs.")]
+        public float vendorCalloutCooldown = 45f;
+        [Tooltip("Seconds between any two vendors' call-outs (never a chorus).")]
+        public float vendorAnyCalloutGap = 10f;
+        [Tooltip("Seconds a vendor's line stays up (plus a little per character, below).")]
+        public float vendorLineSeconds = 2.5f;
+        [Tooltip("Extra seconds per character of a line.")]
+        public float vendorLineSecondsPerChar = 0.04f;
 
         /// <summary>A Crowd Detail tier's value of a per-tier row (the last one when the row is short; <paramref name="fallback"/> when empty).</summary>
         public static T ByTier<T>(T[] row, int tier, T fallback)

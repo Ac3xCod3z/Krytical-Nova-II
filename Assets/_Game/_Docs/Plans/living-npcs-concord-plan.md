@@ -379,7 +379,10 @@ First pass, 13 Nov 2026 (b18-coder-11). Compiles (90/90 Editor, 40/40 server), `
   Concord's mixed cast; the old model hidden, never removed); `VendorPresenter`: head follows within 8 m, wave or beckon
   when the player looks its way (30 s each, 10 s between any two), show goods on stepping into reach, a bow on
   `NpcInteractable.Interacted` (new). Gestures: an override layer `Gestures` on the shared controllers, IK pass on.
-  Not yet: `VendorManner` assets and call-out barks (text barks come with step 6).
+  `VendorManner` (Townsfolk Data, `Data/Assets/VendorManners/VendorManner_*.asset`, one per NpcDefinition, drafts made only
+  when missing): its greeting gesture, call-out lines (12 m, 45 s each, 10 s between any two vendors) and welcome lines, shown
+  in the HUD's comic speech bubble through a new Core sink `ISpeechBubbleSink` (`ClientPresentationRegistry.Speech`,
+  implemented by `PetBubbleController`; vendor lines are not hidden by the Pet chatter option).
 - [ ] Owed: run the builder and the tests in Unity; Play proof GIF + perf log Low and High against the budget (48 in view:
   <= 1.5 ms main thread, <= 1.0 ms GPU, 0 GC a frame); second client.
 - [ ] Later steps: pairs walking together, head-look / glances / greetings / text barks (step 6), vendors' manner assets and

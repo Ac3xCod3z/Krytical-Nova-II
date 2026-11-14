@@ -20,7 +20,7 @@ script, which is then published to the link above. `--baseline` saves today's up
 ## Today
 
 <!-- map:summary -->
-Generated 13 Nov 2026, 21:54: 1042 runtime scripts (193,103 lines) declaring 1961 types (217 MonoBehaviours, 65 NetworkBehaviours, 118 ScriptableObject classes); 340 test scripts; 4753 prefabs, 48 scenes and 2790 assets read. 231 system-to-system links, of which 0 run uphill, 0 pairs of systems use each other both ways, and 4 links would have to go for the systems to form a clean stack. The largest tangle, classes that all reach each other through some chain of uses, holds 10 classes from 1 systems (UI 10, ...).
+Generated 13 Nov 2026, 22:23: 1044 runtime scripts (193,227 lines) declaring 1963 types (217 MonoBehaviours, 65 NetworkBehaviours, 119 ScriptableObject classes); 340 test scripts; 4753 prefabs, 48 scenes and 2790 assets read. 231 system-to-system links, of which 0 run uphill, 0 pairs of systems use each other both ways, and 4 links would have to go for the systems to form a clean stack. The largest tangle, classes that all reach each other through some chain of uses, holds 10 classes from 1 systems (UI 10, ...).
 <!-- /map:summary -->
 
 **Checked against the compiler.**
@@ -64,7 +64,7 @@ Checked against the 236 references the assemblies declare between systems: every
 <!-- map:systems -->
 | System | Layer | Scripts | Lines | Uses (types) | Used by (types) | Instability | Tests | Types touched by a test |
 |---|---|---|---|---|---|---|---|---|
-| Core | Foundation | 78 | 6,754 | 0 | 449 | 0.0 | 10 | 62 of 74 |
+| Core | Foundation | 79 | 6,777 | 0 | 452 | 0.0 | 10 | 62 of 74 |
 | Networking | Infrastructure | 100 | 15,069 | 44 | 144 | 0.23 | 39 | 114 of 174 |
 | Rendering | Infrastructure | 18 | 3,673 | 3 | 32 | 0.09 | 1 | 2 of 22 |
 | Environment | Simulation | 6 | 834 | 0 | 2 | 0.0 | 0 | 0 of 6 |
@@ -74,7 +74,7 @@ Checked against the 236 references the assemblies declare between systems: every
 | Gameplay/Housing | Simulation | 20 | 3,662 | 37 | 37 | 0.5 | 3 | 15 of 28 |
 | Gameplay/Mounts | Simulation | 15 | 3,196 | 37 | 9 | 0.8 | 4 | 13 of 21 |
 | Gameplay/Restyle | Simulation | 3 | 994 | 55 | 5 | 0.92 | 0 | 0 of 3 |
-| Gameplay/Townsfolk | Simulation | 13 | 2,782 | 44 | 2 | 0.96 | 3 | 25 of 38 |
+| Gameplay/Townsfolk | Simulation | 14 | 2,858 | 47 | 2 | 0.96 | 3 | 25 of 39 |
 | Gameplay/Economy | Simulation | 23 | 4,637 | 84 | 46 | 0.65 | 10 | 24 of 37 |
 | Gameplay/Autopilot | Simulation | 11 | 1,562 | 46 | 14 | 0.77 | 4 | 7 of 12 |
 | Gameplay/Social | Simulation | 42 | 6,871 | 83 | 49 | 0.63 | 14 | 34 of 55 |
@@ -88,11 +88,11 @@ Checked against the 236 references the assemblies declare between systems: every
 | World | Simulation | 40 | 7,240 | 21 | 49 | 0.3 | 4 | 14 of 49 |
 | Gameplay/Progression | Simulation | 49 | 9,168 | 36 | 237 | 0.13 | 15 | 54 of 63 |
 | Gameplay/Wallet | Simulation | 4 | 146 | 0 | 21 | 0.0 | 0 | 2 of 2 |
-| Gameplay/NPC | Simulation | 3 | 297 | 5 | 19 | 0.21 | 1 | 3 of 4 |
+| Gameplay/NPC | Simulation | 3 | 297 | 5 | 20 | 0.2 | 1 | 3 of 4 |
 | Gameplay/Factions | Simulation | 7 | 197 | 0 | 29 | 0.0 | 0 | 2 of 4 |
 | Gameplay/Brains | Simulation | 10 | 1,512 | 1 | 49 | 0.02 | 4 | 34 of 39 |
 | GameFeel | Presentation | 31 | 5,936 | 57 | 2 | 0.97 | 6 | 19 of 39 |
-| UI | Presentation | 148 | 37,933 | 334 | 5 | 0.99 | 31 | 52 of 155 |
+| UI | Presentation | 148 | 37,958 | 335 | 5 | 0.99 | 31 | 52 of 155 |
 | Audio | Presentation | 15 | 1,299 | 10 | 16 | 0.38 | 2 | 5 of 15 |
 | Tools | Tooling | 33 | 5,681 | 212 | 0 | 1.0 | 11 | 2 of 36 |
 <!-- /map:systems -->
@@ -122,7 +122,7 @@ Each row is the cheaper side of a loop: cut these references and the two systems
 <!-- map:ripple -->
 | Type | System | Kind | Files using it | Systems | Types reached through others | Tests | Prefabs / scenes holding it |
 |---|---|---|---|---|---|---|---|
-| ClientPresentationRegistry | Core | plain | 91 | 20 | 378 | 3 | 0 |
+| ClientPresentationRegistry | Core | plain | 93 | 21 | 378 | 3 | 0 |
 | BodyRoleTag | Core | mono | 90 | 19 | 455 | 16 | 0 |
 | FactionId | Gameplay/Factions | enum | 85 | 16 | 434 | 31 | 0 |
 | PlayerInventory | Gameplay/Items | net | 76 | 15 | 289 | 2 | 1 |
@@ -341,6 +341,7 @@ Each ScriptableObject class, how many assets of it exist, and where they are wir
 | TownsfolkCast | Gameplay/Townsfolk | 0 | 3 | 0 / 0 / 0 |
 | TownsfolkPersonality | Gameplay/Townsfolk | 0 | 4 | 0 / 0 / 0 |
 | TownsfolkSettings | Gameplay/Townsfolk | 0 | 5 | 0 / 0 / 0 |
+| VendorManner | Gameplay/Townsfolk | 0 | 2 | 0 / 0 / 0 |
 | TownsfolkWorldAssets | Gameplay/Townsfolk | 0 | 1 | 0 / 0 / 0 |
 | TownsfolkViewAssets | Gameplay/Townsfolk | 0 | 2 | 0 / 0 / 0 |
 | ColourBlindFeature | Rendering | 0 | 0 | 0 / 0 / 0 |
