@@ -83,6 +83,22 @@ namespace KryticalNova.Townsfolk
         [Tooltip("Seconds of walk-clip blending (the speed parameter's damping).")]
         public float speedDamp = 0.15f;
 
+        [Header("Vendors (plan 3.6; owner 18.1 A: dressed with Sidekick like the crowd; client only)")]
+        [Tooltip("Metres within which a vendor's head follows the player.")]
+        public float vendorHeadFollowRadius = 8f;
+        [Tooltip("How far the head turns at most (0-1 of the look-at IK).")]
+        [Range(0f, 1f)] public float vendorHeadWeight = 0.8f;
+        [Tooltip("Metres within which a vendor waves or beckons when the player looks its way.")]
+        public float vendorWaveRadius = 10f;
+        [Tooltip("Seconds between one vendor's waves.")]
+        public float vendorWaveCooldown = 30f;
+        [Tooltip("Seconds between any two vendors' waves (never all at once).")]
+        public float vendorAnyWaveGap = 10f;
+        [Tooltip("Seconds between a vendor's show-goods gestures while the player stands in reach.")]
+        public float vendorShowGoodsCooldown = 20f;
+        [Tooltip("Looks of a vendor are numbered from here (apart from the crowd's), one fixed look per vendor from its name.")]
+        public int vendorLookBase = 1000;
+
         /// <summary>A Crowd Detail tier's value of a per-tier row (the last one when the row is short; <paramref name="fallback"/> when empty).</summary>
         public static T ByTier<T>(T[] row, int tier, T fallback)
         {

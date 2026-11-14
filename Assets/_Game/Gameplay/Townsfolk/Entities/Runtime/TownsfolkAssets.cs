@@ -42,6 +42,23 @@ namespace KryticalNova.Townsfolk
         [Tooltip("The far cards' material (URP Unlit, alpha clip, instancing, both sides): a copy per look carries its picture.")]
         public Material cardMaterial;
 
+        /// <summary>A scene whose vendors wear one cast's people (a faction's home city: only that faction).</summary>
+        [System.Serializable]
+        public struct VendorCast
+        {
+            public string scene;
+            public TownsfolkCast cast;
+        }
+
+        [Tooltip("Scenes whose vendors take a cast of their own (a home city: its faction only); every other scene's vendors take the first cast (Sky Concord: every faction).")]
+        public VendorCast[] vendorCasts = System.Array.Empty<VendorCast>();
+
+        public TownsfolkCast VendorCastOf(string scene)
+        {
+            foreach (VendorCast v in vendorCasts) if (v.cast != null && v.scene == scene) return v.cast;
+            return casts.Length > 0 ? casts[0] : null;
+        }
+
         public TownsfolkCast CastOf(byte id)
         {
             foreach (TownsfolkCast c in casts) if (c != null && c.id == id) return c;

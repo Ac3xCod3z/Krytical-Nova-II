@@ -331,9 +331,7 @@ namespace KryticalNova.Townsfolk
             // made under an inactive parent so the player model's own parts never wake up before they are taken off
             GameObject go = Object.Instantiate(m_Assets.body, m_Hidden);
             go.name = name;
-            foreach (MonoBehaviour b in go.GetComponentsInChildren<MonoBehaviour>(true))
-                if (!(b is CharacterAppearance) && !(b is CharacterLook) && !(b is FaceBlinker) && !(b is CharacterLod)) Object.DestroyImmediate(b);
-            foreach (Collider c in go.GetComponentsInChildren<Collider>(true)) Object.DestroyImmediate(c);
+            Strip(go);
             var body = go.AddComponent<TownsfolkBody>();
             body.Lod = CharacterLod.Ensure(go);
             body.Lod.DrivenExternally = true;   // the view sets its level by Crowd Detail
@@ -347,6 +345,14 @@ namespace KryticalNova.Townsfolk
             }
             go.transform.SetParent(root, false);
             return body;
+        }
+
+        /// <summary>Takes a fresh copy of the player model down to its look: only the look, blink and LOD parts stay (no weapon, IK, input or collider).</summary>
+        public static void Strip(GameObject go)
+        {
+            foreach (MonoBehaviour b in go.GetComponentsInChildren<MonoBehaviour>(true))
+                if (!(b is CharacterAppearance) && !(b is CharacterLook) && !(b is FaceBlinker) && !(b is CharacterLod)) Object.DestroyImmediate(b);
+            foreach (Collider c in go.GetComponentsInChildren<Collider>(true)) Object.DestroyImmediate(c);
         }
 
         TownsfolkBody Make()

@@ -224,6 +224,16 @@ namespace KryticalNova.Townsfolk.Tests
         }
 
         [Test]
+        public void EachVendorKeepsOneLookOnEveryMachine()
+        {
+            int smith = VendorLooksClientSystem.LookOf("NPC_Blacksmith", 1000);
+            Assert.AreEqual(smith, VendorLooksClientSystem.LookOf("NPC_Blacksmith", 1000), "the same name, the same look");
+            Assert.GreaterOrEqual(smith, 1000, "apart from the crowd's looks");
+            Assert.Less(smith, 1997);
+            Assert.AreNotEqual(smith, VendorLooksClientSystem.LookOf("NPC_Tailor", 1000), "two vendors, two looks");
+        }
+
+        [Test]
         public void StaleClaimFreesItself()
         {
             var p = Made(TownTestWorld.Personality(2, 1f, new Vector2(1f, 1f), (TownSpotKind.Bench, 1f)));

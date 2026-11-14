@@ -23,6 +23,9 @@ namespace KryticalNova.Townsfolk
     /// <summary>The four parts of a game day (plan 3.4: dawn 05-08, day 08-18, dusk 18-22, night 22-05; hours in TownsfolkSettings).</summary>
     public enum TownPeriod : byte { Dawn = 0, Day = 1, Dusk = 2, Night = 3 }
 
+    /// <summary>A one-off motion on the shared animator's gesture layer (client only: vendors now, greetings later).</summary>
+    public enum TownGesture : byte { None = 0, Wave = 1, Beckon = 2, ShowGoods = 3, Welcome = 4 }
+
     [System.Flags]
     public enum TownSpotFlags : byte { None = 0, Sheltered = 1, Lit = 2, Quiet = 4, FacesPlaza = 8 }
 }

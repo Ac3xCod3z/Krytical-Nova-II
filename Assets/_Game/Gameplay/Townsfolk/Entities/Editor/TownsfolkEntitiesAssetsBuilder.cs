@@ -488,9 +488,56 @@ namespace KryticalNova.Townsfolk.Editor
                     Any(sm, st, (int)activity, clips.Count > 1 ? v : -1, 0.35f, clips.Count);
                 }
             }
+            missing += AddGestures(ac, feminine);
             if (missing > 0) Debug.Log($"[KnBuild] Townsfolk animator {Path.GetFileName(path)}: {missing} wanted clips not found (their activity plays its other variants).");
             EditorUtility.SetDirty(ac);
             return ac;
+        }
+
+        static readonly (TownGesture gesture, string clip)[] GestureClips =
+        {
+            (TownGesture.Wave, "EMOT_Greet_Wave"), (TownGesture.Beckon, "EMOT_Greet_Beckon_Finger"),
+            (TownGesture.ShowGoods, "IDL_PointHand_Index_F"), (TownGesture.Welcome, "EMOT_Greet_Bow"),
+        };
+
+        /// <summary>
+        /// The gesture layer (vendors' waves, beckons, show goods and welcome): an override layer over the base, empty until the Gesture
+        /// trigger fires with its GestureKind, back to empty near the clip's end. The base layer gets the IK pass for the head-look.
+        /// How many wanted clips were missing.
+        /// </summary>
+        static int AddGestures(AnimatorController ac, bool feminine)
+        {
+            ac.AddParameter("Gesture", AnimatorControllerParameterType.Trigger);
+            ac.AddParameter("GestureKind", AnimatorControllerParameterType.Int);
+            ac.AddLayer("Gestures");
+            AnimatorControllerLayer[] layers = ac.layers;
+            layers[0].iKPass = true;
+            int g = layers.Length - 1;
+            layers[g].defaultWeight = 1f;
+            layers[g].blendingMode = AnimatorLayerBlendingMode.Override;
+            ac.layers = layers;
+            AnimatorStateMachine sm = ac.layers[g].stateMachine;
+            AnimatorState empty = sm.AddState("Empty");
+            sm.defaultState = empty;
+            int missing = 0;
+            foreach ((TownGesture gesture, string name) in GestureClips)
+            {
+                AnimationClip clip = Clip(name, feminine);
+                if (clip == null) { missing++; continue; }
+                AnimatorState st = sm.AddState(gesture.ToString());
+                st.motion = clip;
+                AnimatorStateTransition into = sm.AddAnyStateTransition(st);
+                into.canTransitionToSelf = false;
+                into.hasExitTime = false;
+                into.duration = 0.2f;
+                into.AddCondition(AnimatorConditionMode.If, 0f, "Gesture");
+                into.AddCondition(AnimatorConditionMode.Equals, (int)gesture, "GestureKind");
+                AnimatorStateTransition back = st.AddTransition(empty);
+                back.hasExitTime = true;
+                back.exitTime = 0.9f;
+                back.duration = 0.25f;
+            }
+            return missing;
         }
 
         /// <summary>From any state to <paramref name="to"/> while Activity is <paramref name="activity"/> (and Offset in the variant's share).</summary>
