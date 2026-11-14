@@ -78,6 +78,7 @@ namespace KryticalNova.EditorTools
             // Mounts (owner, 25 Oct 2026): the four boxes, riding, feed and growth (server); Mount Feed; the look of a ride.
             new Row("KryticalNova.Mounts.PlayerMounts", ("catalog", MountCatalogPath)),
             new Row("KryticalNova.Mounts.MountFeeding"),
+            new Row("KryticalNova.Mounts.MountStimUse"),
             new Row("KryticalNova.Mounts.MountRider"),
             new Row("KryticalNova.Economy.PlayerWallet", ("settings", EconomySettingsPath)),
             new Row("KryticalNova.Items.PlayerLoot", ("dropPrefab", GameplayPrefabsSetup.WorldDropPath)),

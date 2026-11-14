@@ -354,4 +354,29 @@ Mount Stim, an old save loads unchanged, the perf log holds the target, and the 
 
 ## As built
 
-(Empty until a step lands.)
+Phases 1-2, 13 Nov 2026 (b18-coder-12, branch `b18/19-mount-companion`). Picks: the recommended (a) of 1-4 (no owner
+answer differed). What landed and where it differs from the plan above:
+
+- **Rules:** `Mounts/Runtime/CompanionRules.cs` (HP, regen by the clock, knock-out, rest, Stim, rest spot) and `CompanionFollower` (the
+  server's trail follow, catch-up, min gap, warp: too far / teleport / stuck, one warp per cooldown). Every number in `MountSettings`
+  ("Companion" headers), importance in `RelevancySettings.importanceCompanion` (40).
+- **State:** `PlayerMounts` holds out / stance / per-box HP lost, `hpAt` and `restUntil` (UTC seconds); hunger drains at
+  `CompanionHunger` while out; calls while riding get off first and form as the feet land; the Ride key, another box, death, starving
+  and a forget send it home. Save: `MountSaveEntry.hpLost / hpAt / restUntil`, `MountSave.stance`, added fields, version stays 1.
+- **Net:** `MountOpKind.Companion = 3`, `Stance = 4` through `MountOpRpc`; the owner's HP and rest through `MountCompanionBookRpc`
+  (`IBodyMountCompanion`, `IMountCompanionLink` in Core). The player ghost is unchanged (`PlayerMountTag` has no `Out` byte: the
+  phase is already OnFoot while out, so no view draws a mount under the rider; the window learns "out" from the companion book).
+- **Ghost:** `MountCompanionGhost` (`Mounts/Entities`, builder Krytical Nova ▸ Mounts ▸ Build Companion Ghost): `CompanionView`
+  (owner ghost id, box, stage, speed step, state, stance, HP permille, a warp counter instead of a 4-entry ring); place and facing on
+  `LocalTransform`. On going home / a knock-out it stays `companionVanishSeconds` with that state so every view plays the vanish.
+- **Body (phase 2):** `CompanionBody`, a hidden trigger capsule per companion, made by `CompanionServerSystem` (no pooled prefab yet).
+  It is an `IStandIn`: `CombatHostility` judges it as its owner, so only the owner's enemies' area skills (`CollectAreaTargets`) hit it;
+  it is not in `CombatTargetRegistry`, so clicks and Hostiles never reach it (pick 2 a).
+- **View:** `CompanionClientSystem` + `CompanionPresenter`: the stage model, idle / walk / run at the ghost's speed, feet on the real
+  ground by a downward ray, the mount's materialise look on call, warp, home and knock-out.
+- **Key:** **Y** (`KeyBindings.Companion`), not B: B is the emote wheel and Y was the only free letter. Rebindable.
+- **Item:** Mount Stim 9014 (`UtilityItemGenerator`), Apothecary 60 Creds (`VendorStockBuilder`), `MountStimUse` handler.
+- **GM:** `gm.mount.call`, `gm.mount.hurt <%>`, `gm.mount.heal`, `gm.mount.rest <s>`; GM Tools Mounts tab buttons.
+- **Not built yet (follow-ups):** the HP bar over the companion for everyone (the owner sees HP in the Mount window), the owner's
+  name-plate mount line, summon / vanish sounds and a knock-out stagger, the `KnTestWorld` two-client test and the 30-companion perf run,
+  pooled bodies and a Burst follow (perf phase).

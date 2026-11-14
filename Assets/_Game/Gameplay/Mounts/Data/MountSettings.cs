@@ -128,6 +128,68 @@ namespace KryticalNova.Mounts
         [Min(0f)] public float idleVarietySeconds = 9f;
 
         public MountTuning Tuning => new MountTuning(xpToFullGrowth, xpPerHostileKill, hungerDrainPercentPerMinute);
+
+        [Header("Companion: the mount walks beside you (day list item 19, phases 1-2; plan: _Docs/Plans/mount-companion-plan.md)")]
+        [Tooltip("Percent of the hunger meter lost per minute while the mount is out beside you (owner pick 1 a: 0.5 = a full bar lasts 3 h 20 min). " +
+                 "The hunger bar is the only time limit: at 0 % it goes home.")]
+        [Min(0f)] public float companionHungerDrainPercentPerMinute = 0.5f;
+        [Tooltip("Where it rests when you stop: metres behind you (x) and to your left (y). Pets float on the right.")]
+        public Vector2 companionRestOffset = new Vector2(2.5f, 1.5f);
+        [Tooltip("It never comes closer to you than this, in metres.")]
+        [Min(0f)] public float companionMinGap = 1.2f;
+        [Tooltip("Seconds between two points of your path it walks along (the trail keeps it on the ground you walked).")]
+        [Min(0.05f)] public float companionTrailSeconds = 0.25f;
+        [Tooltip("Further than this behind its spot, in metres, it goes faster (by companionCatchUpScale) until it is within companionCatchUpEnd.")]
+        [Min(0f)] public float companionCatchUpDistance = 8f;
+        [Min(0f)] public float companionCatchUpEnd = 3f;
+        [Min(1f)] public float companionCatchUpScale = 1.25f;
+        [Tooltip("Further than this from you, in metres, it vanishes and forms again at its spot.")]
+        [Min(1f)] public float companionWarpDistance = 30f;
+        [Tooltip("You moved more than this between two path points (a portal, a Recall, a GM teleport): it warps to you.")]
+        [Min(1f)] public float companionTeleportJump = 10f;
+        [Tooltip("No progress towards its spot for this many seconds (stuck behind something): it warps.")]
+        [Min(0.5f)] public float companionStuckSeconds = 3f;
+        [Tooltip("At most one warp in this many seconds.")]
+        [Min(0f)] public float companionWarpCooldown = 2f;
+        [Tooltip("Its slowest pace while it follows you at a walk, in metres a second.")]
+        [Min(0.5f)] public float companionWalkSpeed = 4f;
+        [Tooltip("Below this ground speed, in metres a second, it plays its walk clip; above, its run clip.")]
+        [Min(0f)] public float companionRunAbove = 7f;
+        [Tooltip("Seconds between two follow steps on the server (0.1 = 10 a second).")]
+        [Min(0.02f)] public float companionFollowSeconds = 0.1f;
+        [Tooltip("Seconds every view is given to play the vanish when it goes home or is knocked out.")]
+        [Min(0f)] public float companionVanishSeconds = 0.6f;
+        [Tooltip("The hidden body enemy area skills hit (phase 2): its radius and height, in metres.")]
+        [Min(0.1f)] public float companionBodyRadius = 0.9f;
+        [Min(0.2f)] public float companionBodyHeight = 2.2f;
+
+        [Header("Companion HP, knock-out and the Mount Stim (phase 2)")]
+        [Tooltip("Its max HP is your max HP times this at 0 % growth (x) and at 100 % growth (y).")]
+        public Vector2 companionHpShare = new Vector2(0.6f, 1f);
+        [Tooltip("At 0 HP it goes home and rests this many seconds before it can be called again (owner pick 3 a). It can still be ridden while resting.")]
+        [Min(0f)] public float companionKnockOutSeconds = 300f;
+        [Tooltip("When the rest ends it is back at this share of its max HP.")]
+        [Range(0f, 1f)] public float companionComeBackShare = 0.3f;
+        [Tooltip("While at home and not resting it gets back this share of its max HP a minute, by the clock, so offline time counts.")]
+        [Range(0f, 1f)] public float companionHomeRegenPerMinute = 0.02f;
+        [Tooltip("A Mount Stim heals this share of the companion's max HP (never yours).")]
+        [Range(0f, 1f)] public float mountStimHealShare = 0.4f;
+        [Tooltip("Seconds between two Mount Stims.")]
+        [Min(0f)] public float mountStimCooldown = 10f;
+
+        /// <summary>The hunger numbers while the mount is out beside its owner (the riding ones stay in <see cref="Tuning"/>).</summary>
+        public MountTuning CompanionHunger => new MountTuning(xpToFullGrowth, xpPerHostileKill, companionHungerDrainPercentPerMinute);
+
+        /// <summary>The follow and HP numbers as the pure rules take them.</summary>
+        public CompanionTuning Companion => new CompanionTuning
+        {
+            RestBehind = companionRestOffset.x, RestLeft = companionRestOffset.y, MinGap = companionMinGap, TrailSeconds = companionTrailSeconds,
+            CatchUpDistance = companionCatchUpDistance, CatchUpEnd = companionCatchUpEnd, CatchUpScale = companionCatchUpScale,
+            WarpDistance = companionWarpDistance, TeleportJump = companionTeleportJump, StuckSeconds = companionStuckSeconds,
+            WarpCooldown = companionWarpCooldown, WalkSpeed = companionWalkSpeed, HpShareAtZero = companionHpShare.x, HpShareAtFull = companionHpShare.y,
+            KnockOutSeconds = companionKnockOutSeconds, ComeBackShare = companionComeBackShare, HomeRegenPerMinute = companionHomeRegenPerMinute,
+            StimHealShare = mountStimHealShare,
+        };
     }
     /// <summary>
     /// One way of getting on or off a mount (owner, 6 Nov 2026): how long it takes, when the rider is free, how the

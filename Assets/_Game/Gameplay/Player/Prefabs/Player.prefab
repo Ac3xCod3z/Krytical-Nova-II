@@ -126,6 +126,7 @@ GameObject:
   - component: {fileID: 341969012808825080}
   - component: {fileID: 500040589684047261}
   - component: {fileID: 5586430213933548186}
+  - component: {fileID: 9125359735403754861}
   m_Layer: 2
   m_Name: Player
   m_TagString: Player
@@ -4313,6 +4314,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 760d184494554a3e875e406f4b417be1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: KryticalNova.Progression::KryticalNova.Progression.PlayerMemoryWipe
+--- !u!114 &9125359735403754861
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3071671160467358554}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 09085b1bef3608d44a025260a1790e9c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: KryticalNova.Mounts::KryticalNova.Mounts.MountStimUse
 --- !u!1 &3107468420846213464
 GameObject:
   m_ObjectHideFlags: 0
