@@ -390,7 +390,6 @@ namespace KryticalNova.Mounts.Entities
             HitNumbers.Send(World, live.NetworkId, body.position + Vector3.up * 1.5f, result, true);
             live.Strikes++;
             StrikesDealt++;
-            live.Mounts.CountCompanionFight(true);
         }
 
         /// <summary>
@@ -426,7 +425,6 @@ namespace KryticalNova.Mounts.Entities
             if (written == 0) return;
             TauntsWritten += written;
             live.Taunts++;
-            live.Mounts.CountCompanionTaunt();
         }
 
         void Heal(Live live, int fight, in CompanionFightTuning t, float now)
@@ -439,7 +437,6 @@ namespace KryticalNova.Mounts.Entities
             owner.Heal(CompanionFightRules.PulseHeal(owner.MaxHealth, t));   // a heal puts no threat on a Hostile here (none is sent)
             live.Pulses++;
             PulsesGiven++;
-            live.Mounts.CountCompanionFight(false);
         }
 
         static float CompanionFlat(Vector3 a, Vector3 b)

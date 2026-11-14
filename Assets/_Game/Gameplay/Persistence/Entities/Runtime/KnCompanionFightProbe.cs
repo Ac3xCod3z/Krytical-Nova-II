@@ -52,6 +52,7 @@ namespace KryticalNova.Persistence.Entities
 
             Gm("gm.level 40");
             Gm("gm.god true");
+            Gm("gm.time 12");   // daylight for the clip (owner, 14 Nov: the first one was too dark to read)
             yield return new WaitForSeconds(1f);
             Vector3 at = Spot;
             if (UnityEngine.AI.NavMesh.SamplePosition(at, out UnityEngine.AI.NavMeshHit ground, 20f, UnityEngine.AI.NavMesh.AllAreas)) at = ground.position;
@@ -79,7 +80,7 @@ namespace KryticalNova.Persistence.Entities
             mounts.RunMountOp(MountOpKind.Stance, (int)CompanionStanceByte.Dps);
             yield return new WaitForSeconds(0.5f);
             log($"companion fight: stance now {companion.CompanionStance} (2 = DPS)");
-            int strikes0 = companion.CompanionStrikes, pulses0 = companion.CompanionPulses;
+            int strikes0 = Count("StrikesDealt"), pulses0 = Count("PulsesGiven");
             float nearest = float.MaxValue;
             float start = Time.realtimeSinceStartup;
             while (Time.realtimeSinceStartup - start < StanceSeconds)
@@ -90,7 +91,7 @@ namespace KryticalNova.Persistence.Entities
                 if (view != null && drawn != null) nearest = Mathf.Min(nearest, Flat(drawn.position - view.transform.position));
                 yield return new WaitForSeconds(1f);
             }
-            int dpsStrikes = companion.CompanionStrikes - strikes0, dpsPulses = companion.CompanionPulses - pulses0;
+            int dpsStrikes = Count("StrikesDealt") - strikes0, dpsPulses = Count("PulsesGiven") - pulses0;
             bool dps = spawned && dpsStrikes >= 3 && dpsPulses == 0 && nearest < 6f;
             log($"companion fight: DPS {(dps ? "PASS" : "FAIL")}; {dpsStrikes} strikes, {dpsPulses} heal pulses in {StanceSeconds:0} s; " +
                 $"drawn companion came within {nearest:F1} m of the Colossus");
@@ -103,8 +104,8 @@ namespace KryticalNova.Persistence.Entities
             Gm("gm.damage " + Mathf.RoundToInt(hp.MaxHealth * 0.5f));
             Gm("gm.god true");
             float hpLow = hp.Health;
-            strikes0 = companion.CompanionStrikes;
-            pulses0 = companion.CompanionPulses;
+            strikes0 = Count("StrikesDealt");
+            pulses0 = Count("PulsesGiven");
             start = Time.realtimeSinceStartup;
             while (Time.realtimeSinceStartup - start < StanceSeconds)
             {
@@ -112,7 +113,7 @@ namespace KryticalNova.Persistence.Entities
                 if (view != null) BodyClicks.Attack(view.transform);
                 yield return new WaitForSeconds(1f);
             }
-            int healStrikes = companion.CompanionStrikes - strikes0, healPulses = companion.CompanionPulses - pulses0;
+            int healStrikes = Count("StrikesDealt") - strikes0, healPulses = Count("PulsesGiven") - pulses0;
             bool healer = healPulses >= 3 && healStrikes == 0 && hp.Health > hpLow;
             log($"companion fight: HEALER {(healer ? "PASS" : "FAIL")}; {healPulses} heal pulses, {healStrikes} strikes in {StanceSeconds:0} s; " +
                 $"Tester HP {hpLow:0} -> {hp.Health:0} of {hp.MaxHealth:0}");
@@ -122,9 +123,9 @@ namespace KryticalNova.Persistence.Entities
             mounts.RunMountOp(MountOpKind.Stance, (int)CompanionStanceByte.Tank);
             yield return new WaitForSeconds(0.5f);
             log($"companion fight: stance now {companion.CompanionStance} (1 = TANK)");
-            strikes0 = companion.CompanionStrikes;
-            pulses0 = companion.CompanionPulses;
-            int taunts0 = companion.CompanionTaunts, knockOuts0 = companion.CompanionKnockOuts, hp0 = companion.CompanionHpPermille, hpMin = hp0;
+            strikes0 = Count("StrikesDealt");
+            pulses0 = Count("PulsesGiven");
+            int taunts0 = Count("TauntsWritten"), knockOuts0 = companion.CompanionKnockOuts, hp0 = companion.CompanionHpPermille, hpMin = hp0;
             start = Time.realtimeSinceStartup;
             while (Time.realtimeSinceStartup - start < StanceSeconds)
             {
@@ -133,7 +134,7 @@ namespace KryticalNova.Persistence.Entities
                 if (companion.CompanionOut) hpMin = Mathf.Min(hpMin, companion.CompanionHpPermille);
                 yield return new WaitForSeconds(1f);
             }
-            int tankTaunts = companion.CompanionTaunts - taunts0, tankStrikes = companion.CompanionStrikes - strikes0, tankPulses = companion.CompanionPulses - pulses0;
+            int tankTaunts = Count("TauntsWritten") - taunts0, tankStrikes = Count("StrikesDealt") - strikes0, tankPulses = Count("PulsesGiven") - pulses0;
             bool knockedOut = companion.CompanionKnockOuts != knockOuts0;
             bool tank = tankTaunts >= 1 && tankStrikes == 0 && tankPulses == 0 && (hpMin < hp0 || knockedOut);
             log($"companion fight: TANK {(tank ? "PASS" : "FAIL")}; {tankTaunts} taunts, {tankStrikes} strikes, {tankPulses} heal pulses in {StanceSeconds:0} s; " +
@@ -149,6 +150,23 @@ namespace KryticalNova.Persistence.Entities
         }
 
         static float Flat(Vector3 v) => Mathf.Sqrt(v.x * v.x + v.z * v.z);
+
+        // The companion's server system keeps its own counters (strikes dealt, heal pulses given, taunts written); this assembly does not
+        // reference Mounts, so the probe reads them from the server world by name (one player in the probe: the counts are the Tester's).
+        const string ServerSystem = "KryticalNova.Mounts.Entities.CompanionServerSystem, KryticalNova.Mounts.Entities";
+
+        static int Count(string property)
+        {
+            Type type = Type.GetType(ServerSystem);
+            if (type == null) return -1;
+            foreach (Unity.Entities.World world in Unity.Entities.World.All)
+            {
+                if ((world.Flags & Unity.Entities.WorldFlags.GameServer) == 0) continue;
+                object system = world.GetExistingSystemManaged(type);
+                if (system != null && type.GetProperty(property)?.GetValue(system) is int n) return n;
+            }
+            return -1;
+        }
 
         // CompanionStance lives in Mounts (not referenced here): its byte values
         static class CompanionStanceByte

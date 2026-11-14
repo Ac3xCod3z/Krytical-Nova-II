@@ -365,11 +365,6 @@ namespace KryticalNova.Mounts
         public int CompanionHpPermille => selected != 0 ? CompanionHpOf(selected) : 0;
         byte IBodyMountCompanion.CompanionStance => (byte)stance;
         public int CompanionKnockOuts => knockOuts;
-        public int CompanionStrikes { get; private set; }
-        public int CompanionPulses { get; private set; }
-        public void CountCompanionFight(bool strike) { if (strike) CompanionStrikes++; else CompanionPulses++; }
-        public int CompanionTaunts { get; private set; }
-        public void CountCompanionTaunt() => CompanionTaunts++;
         public float CompanionRunSpeed => Settings != null ? MountRules.Speed(Settings.runSpeed.x, Settings.runSpeed.y, GrowthPercent, IsFed) : 20f;
 
         /// <summary>The own view of the entity netcode: the server's companion boxes.</summary>
