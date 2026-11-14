@@ -71,6 +71,8 @@ namespace KryticalNova.UI
         public void Announce(AnnouncementKind kind, string sender, string message, string highlight = null, byte rarity = 0)
         {
             if (toast == null || string.IsNullOrEmpty(message)) return;
+            // Crossfire's lines (the minute calls and the last 10 s) replace each other at once, so the countdown keeps time.
+            if (kind == AnnouncementKind.Crossfire) queue.Supersede(kind, Time.unscaledTime);
             queue.Enqueue(new Toast { Kind = kind, Sender = sender, Text = message, Highlight = highlight, Rarity = rarity }, settings.maxWaiting);
         }
 

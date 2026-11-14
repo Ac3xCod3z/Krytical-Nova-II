@@ -50,18 +50,19 @@ namespace KryticalNova.Crossfire.Entities.Tests
             return clock;
         }
 
-        /// <summary>Steps the clock in 5-second steps to <paramref name="until"/>, ticking the worlds at each.</summary>
+        /// <summary>Steps the clock to <paramref name="until"/> (5-second steps, 1-second ones round the final countdown), ticking the worlds at each.</summary>
         void RunTo(KnTestWorld tw, double until)
         {
             while (m_Now < until)
             {
-                m_Now = Math.Min(until, m_Now + 5);
+                double step = m_Now >= 1640 && m_Now < 1665 ? 1 : 5;
+                m_Now = Math.Min(until, m_Now + step);
                 tw.Tick(2);
             }
         }
 
         [Test]
-        public void TheCall_RepeatsOnceAMinute_UntilTheGatesOpen_ThenTheGatesClosedLine()
+        public void TheCall_OncePerMinute_ThenTheLast10Seconds_ThenTheGatesClosedLine()
         {
             using var tw = new KnTestWorld();
             tw.CreateWorlds(1);
@@ -78,6 +79,17 @@ namespace KryticalNova.Crossfire.Entities.Tests
             for (int i = 1; i < calls.Count; i++)
                 Assert.That(calls[i].at - calls[i - 1].at, Is.InRange(60.0, 65.0), "once a minute");
             Assert.Less(calls[calls.Count - 1].at, 1660, "no call once the gates are open");
+            Assert.AreEqual("Crossfire! The war starts in 1 minute. Level 10 and up: get to your Muster Yard.", calls[calls.Count - 1].text);
+
+            // no line names seconds, except the last 10 s: 10 .. 1, one a second, then nothing once the gates open at 1660
+            var count = m_Heard.FindAll(h => h.text.StartsWith("Crossfire: the gates open in", StringComparison.Ordinal));
+            Assert.AreEqual(10, count.Count, string.Join(" / ", m_Heard));
+            for (int i = 0; i < 10; i++)
+            {
+                Assert.AreEqual("Crossfire: the gates open in " + (10 - i), count[i].text);
+                Assert.AreEqual(1650 + i, count[i].at, 1e-6, "one a second in the last 10 s");
+            }
+            Assert.IsFalse(m_Heard.Exists(h => h.text.Contains("second")), "no seconds anywhere");
 
             var closed = m_Heard.FindAll(h => h.text == m_Settings.gatesClosedText);
             Assert.AreEqual(1, closed.Count, "one gates-closed line");
@@ -109,8 +121,9 @@ namespace KryticalNova.Crossfire.Entities.Tests
             tw.Tick(4);
             RunTo(tw, 1005);
             Assert.AreEqual("War in 11 minutes (from 10)", m_Heard[0].text);
-            Assert.AreEqual("40 seconds", CrossfireCaller.InWords(40));
+            Assert.AreEqual("1 minute", CrossfireCaller.InWords(40), "never seconds: rounded up to the minute");
             Assert.AreEqual("1 minute", CrossfireCaller.InWords(60));
+            Assert.AreEqual("2 minutes", CrossfireCaller.InWords(61));
         }
     }
 }

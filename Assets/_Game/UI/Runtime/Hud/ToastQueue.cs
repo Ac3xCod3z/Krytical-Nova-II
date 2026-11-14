@@ -64,6 +64,26 @@ namespace KryticalNova.UI
             return true;
         }
 
+        /// <summary>
+        /// A newer line of the same kind takes the place of the older ones (Crossfire's countdown, build 17: "10 .. 1" one a second must
+        /// not wait behind each other): waiting lines of <paramref name="kind"/> are dropped and one of that kind on screen ends now, so the
+        /// next <see cref="Advance"/> brings the new one up at once. Returns true when the one on screen was ended.
+        /// </summary>
+        public bool Supersede(AnnouncementKind kind, float now)
+        {
+            if (waiting.Count > 0)
+            {
+                var keep = new Queue<Toast>(waiting.Count);
+                foreach (Toast t in waiting) if (t.Kind != kind) keep.Enqueue(t);
+                waiting.Clear();
+                foreach (Toast t in keep) waiting.Enqueue(t);
+            }
+            if (!Showing || Current.Kind != kind) return false;
+            Showing = false;
+            freeAt = now;
+            return true;
+        }
+
         public void Clear()
         {
             waiting.Clear();
