@@ -1448,7 +1448,7 @@ The decided war numbers still hold (build list row 28): **33 a faction** at most
 | --- | --- |
 | Dusk begins (about 10 real minutes before) | a repeating notice to everyone in the bracket: "Siege Night at nightfall" |
 | Last 3 minutes of dusk | entry open at the Marshal; the queue is split into even wars of 33 a faction |
-| Nightfall | everyone in their faction's walled Muster Yard; 1 minute of muster with the gates shut |
+| Nightfall | everyone in their faction's walled Rally Point; 1 minute of rally with the gates shut |
 | The gates open | 15 minutes of battle on the Siege Ground |
 | The end | results, rewards, everyone back where they entered |
 
@@ -1472,9 +1472,9 @@ The battlefields are **night maps** with their own fixed light (the clock does n
 **The shape every battlefield shares.**
 
 - **Size:** about 360 × 360 m inside an outer wall, a little less than a Run map; a run from a gate to the middle takes about 15 seconds.
-- **Four Muster Yards,** one on each side (north, east, south, west), each about 50 × 40 m with walls 10 m high. A faction spawns in its own yard, waits there during the muster minute, and comes back there when it dies.
+- **Four Rally Points,** one on each side (north, east, south, west), each about 50 × 40 m with walls 10 m high. A faction spawns in its own yard, waits there during the rally minute, and comes back there when it dies.
 - **The Siege Gate** of each yard: 12 m wide, facing the middle, shut until the war starts (a blast door for the Hegemony, a timber-and-iron gate for the Covenant, a portcullis for the Null), with a wide stair down to the field.
-- **A rampart walk** on each yard's inner wall to look over the field and the other gates during the muster minute.
+- **A rampart walk** on each yard's inner wall to look over the field and the other gates during the rally minute.
 - **A respawn shrine** at the back of each yard, a faction landmark that says home: a cyan soul-pylon, a rune-stone with a brazier, a red-lit bone obelisk.
 - **The fourth yard** stands sealed at launch: rubble-choked, chained, no crest, no banner, dark. It is the Ronin's, opened only by the expansion; until then it says nothing of who it was built for (Lore Bible §7). Which side it stands on changes by battlefield.
 - **The Siege Ground,** the middle, about 200 m across: open enough to see the whole fight, broken by waist- to head-high cover, with one **heart** (the battlefield's central landmark and high ground) that fights pull toward. It can hold a capture pad, and every yard's shrine stands where it could be attacked, so any win rule fits.

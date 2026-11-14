@@ -17,14 +17,14 @@ namespace KryticalNova.Crossfire
         [Tooltip("With the nightfall anchor off: minutes from one war's start to the next.")]
         [Min(5f)] public float cycleMinutes = 60f;
 
-        [Header("Phases (Call > Muster > War > End > Gap)")]
+        [Header("Phases (Call > Rally > War > End > Gap)")]
         [Tooltip("Call: minutes before the war that eligible players are told it is coming.")]
         [Min(0f)] public float callMinutes = 10f;
         [Tooltip("One call pop-up per this many seconds left before the gates open (60: \"War starts in N minutes\", once a minute). It never names seconds.")]
         [Min(5f)] public float callRepeatSeconds = 60f;
-        [Tooltip("The last minutes of the Call in which the Muster Yards take players in (the join window).")]
+        [Tooltip("The last minutes of the Call in which the Rally Points take players in (the join window).")]
         [Min(0f)] public float joinWindowMinutes = 3f;
-        [Tooltip("Muster: seconds everyone waits in their yard with the gates shut.")]
+        [Tooltip("Rally: seconds everyone waits in their yard with the gates shut.")]
         [Min(0f)] public float musterSeconds = 60f;
         [Tooltip("War: minutes the gates stand open and the war runs.")]
         [Min(1f)] public float warMinutes = 15f;
@@ -41,7 +41,7 @@ namespace KryticalNova.Crossfire
 
         [Header("Announcements (the top-of-screen news every player gets, as GM broadcasts)")]
         [Tooltip("The call, sent when the Call starts and again every Call Repeat Seconds until the gates open. {time}: how long until the gates open; {level}: the lowest level called.")]
-        [TextArea] public string callText = "Crossfire! The war starts in {time}. Level {level} and up: get to your Muster Yard.";
+        [TextArea] public string callText = "Crossfire! The war starts in {time}. Level {level} and up: get to your Rally Point.";
         [Tooltip("Sent once when the gates close after a war.")]
         [TextArea] public string gatesClosedText = "Crossfire is over: the gates are closed.";
         [Tooltip("The last seconds before the gates open count down, one line a second (10: 10 .. 1). No other line names seconds. 0 = none.")]
@@ -50,6 +50,10 @@ namespace KryticalNova.Crossfire
         public string countdownText = "Crossfire: the gates open in {n}";
 
         /// <summary>Where the one asset lives: <c>Gameplay/Crossfire/Resources/CrossfireSettings.asset</c>.</summary>
+        /// <summary>The name players see for a phase (owner, 13 Nov 2026: the staging is the Rally, its yards the Rally Points and their gates the Rally Gates;
+        /// the code keeps Muster as the identifier).</summary>
+        public static string PhaseName(CrossfirePhase phase) => phase == CrossfirePhase.Muster ? "Rally" : phase.ToString();
+
         public const string ResourcePath = "CrossfireSettings";
 
         static CrossfireSettings s_Loaded;
