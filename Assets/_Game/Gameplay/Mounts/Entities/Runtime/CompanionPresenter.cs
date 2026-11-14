@@ -18,6 +18,7 @@ namespace KryticalNova.Mounts.Entities
         AnimancerComponent animancer;
         MountMaterialiser materialiser;
         AnimationClip playing;
+        AnimancerState current;
         byte warpsSeen;
         bool leaving;
         readonly RaycastHit[] hits = new RaycastHit[8];
@@ -84,6 +85,7 @@ namespace KryticalNova.Mounts.Entities
             animancer = null;
             materialiser = null;
             playing = null;
+            current = null;
             stage = next;
             if (mount == null) return;
             MountStageLook look = mount.Stage(next);
@@ -109,8 +111,9 @@ namespace KryticalNova.Mounts.Entities
             AnimationClip clip = speed < 0.1f ? look.idle : speed < runAbove ? look.walk : look.run;
             if (clip == null) clip = look.idle;
             if (clip == null) return;
-            AnimancerState state = clip != playing ? animancer.Play(clip, 0.25f) : animancer.States.Current;
+            if (clip != playing || current == null) current = animancer.Play(clip, 0.25f);
             playing = clip;
+            AnimancerState state = current;
             if (state == null) return;
             Vector2 stride = look.clipMetresPerSecond != Vector2.zero ? look.clipMetresPerSecond : settings != null ? settings.clipMetresPerSecond : new Vector2(4f, 14f);
             Vector2 range = settings != null ? settings.clipPlaybackRange : new Vector2(0.7f, 2.4f);

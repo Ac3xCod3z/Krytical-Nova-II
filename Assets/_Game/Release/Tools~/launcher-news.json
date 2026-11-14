@@ -28,6 +28,10 @@
     {
       "title": "Aegis, Guard and Squad Stances",
       "body": "Aegis now also raises Defense, and its shield counts down live hit by hit. Every class's Guard ward also raises Elemental Attack. Shared Stances give Squad mates half their strength."
+    },
+    {
+      "title": "Your Mount Walks Beside You",
+      "body": "Press Y (or CALL in the Mount window) and your selected mount walks beside you instead of carrying you. It keeps up, catches up when left behind and keeps giving its stats; it gets hungry faster while out, and when its hunger runs out it goes home. It has HP of its own: enemy players' area skills can knock it out, and then it rests for 5 minutes. The new Mount Stim heals it."
     }
   ],
   "patchNotes": [
@@ -44,7 +48,10 @@
         "Crossfire, the hourly faction war, now keeps time on the server: from level 10 you are called 10 minutes before nightfall, with a banner and a countdown on your HUD. The battleground itself opens in a later build.",
         "Mini Deck: in every fight the minimap gives way to a small click-wheel player with the Deck's music and the Cadence beat, and comes back when the fight ends (M still opens the full map). In a Callout the chat fades too; Enter brings it back.",
         "Mount milestones: when your mount evolves, the same milestone banner as a pet's shows its new stage.",
-        "Emotes from the saddle: waves, cheers, points, salutes, beckons, laughs and taunts play while riding; the others say you can't do that while riding."
+        "Emotes from the saddle: waves, cheers, points, salutes, beckons, laughs and taunts play while riding; the others say you can't do that while riding.",
+        "Mount Companion: Y calls your selected mount out to walk beside you, or sends it home. FREE stance (no fighting, allowed in PvP); hunger drains 10x faster while out and is its only time limit.",
+        "Mount Companion HP: enemy players' area skills in PvP can hurt it; at 0 HP it is knocked out, goes home and rests 5 minutes (it can still be ridden). It regains 2 % a minute at home.",
+        "Mount Stim (Apothecary): heals your mount's companion HP by 40 %, never yours."
       ]
     },
     {
