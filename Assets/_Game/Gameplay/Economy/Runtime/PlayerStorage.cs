@@ -389,6 +389,19 @@ namespace KryticalNova.Economy
             }
         }
 
+        /// <summary>
+        /// Server only (GM, gm.maxall): runs a change on a scratch copy of the cells and keeps it only when
+        /// <paramref name="change"/> returns true, like the Pack's <c>ServerChangePack</c>. Whoever calls it writes the ledger line.
+        /// </summary>
+        public bool ServerChangeCells(Func<ItemStack[], bool> change)
+        {
+            if (!HasAuthority || change == null) return false;
+            Array.Copy(cells, scratch, cells.Length);
+            if (!change(scratch)) return false;
+            Commit();
+            return true;
+        }
+
         private void CommitCreds()
         {
             if (IsSpawned && IsServer) netCreds.Value = creds;
