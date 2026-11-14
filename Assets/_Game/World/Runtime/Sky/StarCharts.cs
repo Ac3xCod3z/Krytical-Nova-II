@@ -90,7 +90,7 @@ namespace KryticalNova.World
                 new[] { P(.36f,.30f), P(.64f,.30f) }, new[] { P(.30f,.55f), P(.70f,.55f) }, new[] { P(.22f,.88f), P(.78f,.88f) },
             } },
             new Constellation { Name = "The Gearwheel", NamedBy = "Null", RightAscension = 90f, DeclinationOffset = 8f, Size = 18f, Lines = Spokes() },
-            new Constellation { Name = "The Longship", NamedBy = "Covenant (Aldhavn)", RightAscension = 135f, DeclinationOffset = -6f, Size = 22f, Lines = new[]
+            new Constellation { Name = "The Longship", NamedBy = "Covenant (Aldhavn)", RightAscension = 135f, DeclinationOffset = -6f, Size = 21f, Lines = new[]
             {
                 new[] { P(.12f,.55f), P(.24f,.74f), P(.50f,.80f), P(.76f,.74f), P(.90f,.50f) },
                 new[] { P(.12f,.55f), P(.06f,.42f) }, new[] { P(.50f,.80f), P(.50f,.14f) }, new[] { P(.50f,.14f), P(.74f,.46f) },
