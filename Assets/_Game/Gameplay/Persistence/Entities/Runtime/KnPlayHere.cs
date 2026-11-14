@@ -2970,6 +2970,8 @@ namespace KryticalNova.Persistence.Entities
                 if (!companion.CompanionOut) mounts.RunMountOp(MountOpKind.Companion, 0);
                 yield return new WaitForSeconds(3f);
                 Log("companion stim: 'item.give 9014 1' -> " + PlayerGm.CommandRunner(host, "item.give 9014 1"));
+                Log("companion stim: 'gm.mount.heal' -> " + PlayerGm.CommandRunner(host, "gm.mount.heal"));   // back from the knock-out at 30 %
+                yield return new WaitForSeconds(0.5f);
                 Log("companion stim: 'gm.mount.hurt 50' -> " + PlayerGm.CommandRunner(host, "gm.mount.hurt 50"));
                 yield return new WaitForSeconds(2f);
                 int hurt = companion.CompanionHpPermille;
