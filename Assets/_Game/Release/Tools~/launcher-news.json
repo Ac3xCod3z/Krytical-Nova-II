@@ -61,7 +61,8 @@
         "Swings move the grass: every swing throws the grass in front of it aside and it springs back; area skills send a ring across it and big hits a wave. Hostiles' swings push it too, the bigger the beast the wider.",
         "World effects (Settings, Graphics): how much the world's little effects do on your screen, Low to Ultra; on Low four swings move the grass at once instead of eight.",
         "Seasons: the world turns through Spring, Summer, Autumn and Winter, two real weeks each, changing every second Monday at 00:00 UTC (Winter arrives 23 Nov). Each brings its own weather, its own daylight (short winter days, long summer ones) and its own colours: spring flowers, orange autumn trees, frosted winter woods.",
-        "Snow: it piles up on the ground and roofs while it snows and melts after, and footprints and trails stay in it for a while. World effects on Low lets less rain and snow fall."
+        "Snow: it builds up like real snow, slowly and thin in light snow, fast and deep in a blizzard, and settles only on what is flat enough. It has real depth (grass gets buried) and every foot leaves its own print, boots or paws, that fills back in. World effects on Low lets less rain and snow fall.",
+        "Autumn: every kind of tree turns its own colour (maples red, birches gold, oaks brown), grass goes dull, leaves blow across the ground, and the trees are almost bare by Winter. Pines stay green."
       ]
     },
     {

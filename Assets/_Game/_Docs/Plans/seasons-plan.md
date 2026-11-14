@@ -399,3 +399,22 @@ Built 14 Nov 2026 in one PR (all six steps' code; the Unity checks are one Play 
   snow and season colour; roads, roofs, props and trees do not. Needs the owner's pick of how to reach Synty materials (asked of the
   Master).
 - [ ] A second client in Play (the two-client sync is proven in EditMode by `SeasonSyncTests`).
+
+## Owner requests 14 Nov 2026: snow build-up, footprints, fall colours
+
+- [x] Snow builds from the weather (`SeasonRules.SnowTrendOf`, numbers in `SeasonSettings`): light snow (intensity 0.5) builds over 40
+  minutes toward a 0.35 cap, a blizzard (1.0) in 8 minutes to 1; in between blended; flurries slower still; light snow on deeper snow holds
+  it. The cap travels in the synced state (`SnowCeiling`, same RPC, now 56 B). Tests: `SnowBuildUp_*`, `SnowMelt_*`.
+- [x] Slope rule: full under 35 degrees, none past 55 (`SnowSlopeShape` feeds `KNSnowSlope`; test `SnowSlope_*`).
+- [x] Depth: 0.4 m at full cover; the terrain rises by it in every pass (World Effects Low = colour only), grass shorter than the depth is
+  buried, footprints dent it. Comic Toon Lit surfaces get the slope rule as colour (hard-edged meshes would crack if lifted).
+- [x] Footprints instead of the trail: `SnowPrintWatcher` (one component on the presenter) watches the nearest walkers' feet and adds a
+  boot or paw print when a foot plants; `SnowTrack.compute` stamps them. Walkers per tier 4 / 12 / 24 / 32; map 24 m, up to 1024 texels.
+- [x] Fall foliage: `SeasonRules.FoliageAt` (turn by 45 % of Autumn, thin from 50 %, bare 8 % at its end, bare through Winter, back by
+  35 % of Spring, dull by 70 %); a palette per tree kind (`leafKinds`, rendering layer bits 8-11 via Tag Tree Kinds), evergreens kept;
+  fallen leaves clip in every Foliage Wind pass. `gm.season progress`. Tests: `Foliage_*`.
+- [x] Falling leaves: the existing wind-leaves emitters, times the season's falling share and the tier (Low none).
+- [ ] Unity turn: run Tag Tree Kinds once, shader compile, tests, MP4s (light against heavy build-up, footprints walking, early and late
+  Autumn with mixed colours, leaves blowing), perf note.
+- [ ] Winter: deciduous trees are now bare through Winter (owner, 14 Nov: "leaves almost all gone prior to winter"), replacing the 13 Nov
+  "frosted, leaves kept" answer; flagged to the Master.
