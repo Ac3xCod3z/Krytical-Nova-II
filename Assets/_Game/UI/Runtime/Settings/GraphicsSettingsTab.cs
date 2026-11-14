@@ -11,6 +11,7 @@ namespace KryticalNova.UI
         private static readonly string[] PresetNames = { "LOW", "MEDIUM", "HIGH", "ULTRA", "CUSTOM" };
         private static readonly string[] ShadowNames = { "OFF", "LOW", "MEDIUM", "HIGH", "ULTRA" };
         private static readonly string[] FogNames = { "OFF", "LOW", "MEDIUM", "HIGH", "ULTRA" };
+        private static readonly string[] CrowdNames = { "LOW", "MEDIUM", "HIGH", "ULTRA" };
         private static readonly string[] WorldEffectsNames = { "LOW", "MEDIUM", "HIGH", "ULTRA" };
         private static readonly string[] AntiAliasingNames = { "OFF", "FXAA", "SMAA" };
         private static readonly string[] WindowNames = { "FULLSCREEN", "BORDERLESS", "WINDOWED" };
@@ -79,6 +80,8 @@ namespace KryticalNova.UI
                 () => GraphicsPreferences.GrassDensity, value => Detail(() => GraphicsPreferences.GrassDensity = value)));
             Add(SettingsRows.Choice(page, "Fog, mist and lamp light", FogNames, () => (int)GraphicsPreferences.Fog,
                 index => Detail(() => GraphicsPreferences.Fog = (KryticalNova.World.VolumetricQuality)index)));
+            Add(SettingsRows.Choice(page, "Crowd detail", CrowdNames, () => (int)GraphicsPreferences.Crowd,
+                index => Detail(() => GraphicsPreferences.Crowd = (KryticalNova.Rendering.CrowdDetail)index)));
             Add(SettingsRows.Choice(page, "World effects", WorldEffectsNames, () => (int)GraphicsPreferences.Effects,
                 index => Detail(() => GraphicsPreferences.Effects = (KryticalNova.Rendering.WorldEffects)index)));
             Add(SettingsRows.Toggle(page, "Sun shafts", () => GraphicsPreferences.SunShafts,

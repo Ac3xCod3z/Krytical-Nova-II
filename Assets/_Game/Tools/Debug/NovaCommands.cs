@@ -34,7 +34,7 @@ namespace KryticalNova.DevTools
         }
 
         [Command("gm.ascension", "Set the targeted player's Ascension level (0-96): gm.ascension <level>. With no level it prints both ladders.")]
-        private static string Ascension(int level = -1)
+        internal static string Ascension(int level = -1)
         {
             if (!TryGetNova(out var nova, out var error)) return error;
             if (level >= 0 && !nova.ServerSetAscension(level)) return "Could not change that player's Ascension.";
@@ -46,7 +46,7 @@ namespace KryticalNova.DevTools
             GmPick.TryNumber(track, NovaRules.TrackCount, out int index) ? ((StandingTrack)index).ToString().ToLowerInvariant() : (track ?? string.Empty).Trim().ToLowerInvariant();
 
         [Command("gm.standing", "Set a Nova Standing of the targeted player: gm.standing <1-4|vanguard|bulwark|ironblood|mindwell|all> <0-12> (1 vanguard, 2 bulwark, 3 ironblood, 4 mindwell).")]
-        private static string Standing(string track, int level)
+        internal static string Standing(string track, int level)
         {
             if (!TryGetNova(out var nova, out var error)) return error;
             track = TrackByNumber(track);

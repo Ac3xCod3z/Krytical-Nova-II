@@ -33,6 +33,8 @@ namespace KryticalNova.Brains
         public float repathTargetMoved = 1.5f;
         [Tooltip("Most waypoints a path keeps.")]
         public int maxWaypoints = 16;
+        [Tooltip("A brain found off the NavMesh (shoved off by the crowd, or set down beside it) steps back onto the nearest mesh point within this many metres before it walks on; farther off it stands until its walk gives up.")]
+        public float offMeshRecoverMetres = 4f;
         [Tooltip("Turn speed while fighting, degrees per second.")]
         public float engagedTurnDegPerSec = 540f;
         [Tooltip("Turn speed otherwise, degrees per second.")]

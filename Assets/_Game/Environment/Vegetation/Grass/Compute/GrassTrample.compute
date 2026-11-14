@@ -58,9 +58,11 @@ void Trample(uint3 id : SV_DispatchThreadID)
 
 // ---- Swing pushes (day list item 20): a swing throws the grass aside and it springs back in about half a second. Nothing is kept
 // between frames: each push's age comes from the CPU and the spring is worked out from it, so a push leaves nothing behind. Only
-// dispatched while a push is alive (GrassTrampleMap); the blades read one more texel of _SwingOut.
-//   rg = which way and how far the swings push the grass here (world XZ)
-RWTexture2D<float2> _SwingOut;
+// dispatched while a push is alive (GrassTrampleMap). It writes the trample map's texel with the swings added on top into _SwingOut,
+// and the blades read that instead of the trample map: still ONE texel per vertex, so a swing costs the blades nothing (a second fetch
+// in every blade pass measured 1.5-2.5 ms GPU in tall grass, 14 Nov). Same channels as the trample map.
+Texture2D<float4> _Mark;            // the trample map as this frame left it
+RWTexture2D<float4> _SwingOut;
 
 #define KN_MAX_SWING_PUSHES 8
 // per push: (x, y, z, radius), (dirX, dirZ, cos half-arc or -2 for a running front, strength), (age, front speed, band, sweep), (spring s)
@@ -98,16 +100,19 @@ void Swing(uint3 id : SV_DispatchThreadID)
         if (timing.y > 0.0)
         {
             // A ring or a wave: a front runs out; a blade moves when the front reaches it, then springs on its own.
+            // Behind the front it stays in reach (its own spring brings it back): weighting only the front itself
+            // multiplied by a spring that had barely started, which left almost nothing (item 20 diagnosis, 14 Nov).
             float front = timing.y * age;
-            float edge = saturate(1.0 - abs(distance - front) / max(timing.z, 0.05));
-            area = edge * edge * saturate(1.0 - distance / where.w + 0.25);
+            float reached = saturate((front - distance) / max(timing.z, 0.05) + 1.0);
+            area = reached * saturate(1.0 - distance / where.w + 0.25);
             age -= distance / timing.y;
         }
         else
         {
             // An arc in front of the swing, softest at its sides and its reach.
-            float reach = saturate(1.0 - distance / where.w);
-            area = reach * reach * smoothstep(shape.z - 0.15, shape.z + 0.05, dot(n, shape.xy));
+            // Full lean over the near part of its reach, softening only toward the end (squared, most of the arc was too faint to see).
+            float reach = saturate(1.6 * (1.0 - distance / where.w));
+            area = reach * smoothstep(shape.z - 0.15, shape.z + 0.05, dot(n, shape.xy));
             // Combo steps 1 and 2 lean opposite ways across the swing; the finisher drives straight out.
             n = normalize(n + float2(-shape.y, shape.x) * timing.w);
         }
@@ -116,6 +121,12 @@ void Swing(uint3 id : SV_DispatchThreadID)
         push += n * area * KNSwingSpring(age) * shape.w * fade;
     }
     float len = length(push);
-    if (len > _KN_SwingSpring.w) push *= _KN_SwingSpring.w / len;
-    _SwingOut[id.xy] = push;
+    if (len > _KN_SwingSpring.w) { push *= _KN_SwingSpring.w / len; len = _KN_SwingSpring.w; }
+    // On top of any trampling: the two together never bend a blade past the clamp; a swing barely flattens, never folds into the ground.
+    float4 mark = _Mark[id.xy];
+    float2 bent = mark.rg + push;
+    float most = max(_KN_SwingSpring.w, 1.0);
+    float bentLength = length(bent);
+    if (bentLength > most) bent *= most / bentLength;
+    _SwingOut[id.xy] = float4(bent, max(mark.b, 0.25 * len), mark.a);
 }

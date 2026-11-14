@@ -108,6 +108,18 @@
     <pre class="answer" id="commandAnswer">Type gm.help for every command.</pre>
   </section>
 
+  <section class="panel maxall">
+    <h2>Max everything</h2>
+    <p class="note"><b>gm.maxall</b> turns a test character into a fully maxed one, on top of what it has: max level and skills,
+      Ascension and Standings, every mount and pet at 100 %, its own Rare and Epic gear (Epic at the Temper cap and Fusion 12),
+      forge materials, every Pass, crafting items and 2,000,000 Creds. GM only, on this server whether live or test; every use is written to <b>gm.log</b>.</p>
+    <form class="row" id="maxAllForm" autocomplete="off">
+      <input class="grow" id="maxAllWho" placeholder="Client id (see gm.players)" inputmode="numeric" spellcheck="false">
+      <button class="red" type="submit">Max everything</button>
+    </form>
+    <pre class="answer" id="maxAllAnswer">Pick the player by client id; the page asks before it runs.</pre>
+  </section>
+
   <section class="panel crossfire">
     <h2>Crossfire</h2>
     <div class="row">
@@ -136,6 +148,18 @@
       <button type="button" data-season="season climate auto">Climate auto</button>
     </div>
     <pre class="answer" id="seasonAnswer">Two real weeks a season, turning Mondays 00:00 UTC. A season button holds it (blends in about 20 s) until Calendar; Snow sets the cover now and it builds or melts from there.</pre>
+  </section>
+
+  <section class="panel townsfolk">
+    <h2>Townsfolk</h2>
+    <div class="row">
+      <button type="button" data-town="gm.town">Status</button>
+      <button type="button" data-town="gm.town.cap 48 20">Cap 48 / 20</button>
+      <button type="button" data-town="gm.town.cap 60 30">Cap 60 / 30</button>
+      <button type="button" data-town="gm.town.spawn 2 5">+5 Strollers</button>
+      <button class="red" type="button" data-town="gm.town.clear">Clear</button>
+    </div>
+    <pre class="answer" id="townAnswer">Town life on Sky Concord: who is out, by personality. Clear removes everyone; the crowd comes back by the hour's numbers.</pre>
   </section>
 
   <section class="panel list">

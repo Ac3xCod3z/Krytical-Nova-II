@@ -885,6 +885,30 @@ namespace KryticalNova.EditorTools.GM
         [ButtonGroup(Tabs + "/" + WorldTab + "/Snow"), EnableIf(nameof(HasSeasons)), PropertyOrder(428.2f), LabelText("Climate Auto")]
         private void ClimateAuto() => Run("gm.season climate auto");
 
+        // ---------------------------------------------------------------- Townsfolk on Sky Concord (owner's DAY list item 18)
+
+        private static bool HasTown => KryticalNova.Townsfolk.TownsfolkGm.HasServer;
+
+        [TabGroup(Tabs, WorldTab), Title("Townsfolk"), ShowInInspector, DisplayAsString, HideLabel, PropertyOrder(430)]
+        [InfoBox("The time of day above moves them too (they follow the world's clock).")]
+        private static string TownStatus => KryticalNova.Townsfolk.TownsfolkGm.Status;
+
+        [TabGroup(Tabs, WorldTab), ShowInInspector, ToggleLeft, LabelText("Townsfolk Labels"), PropertyOrder(431)]
+        private bool TownLabels
+        {
+            get => KryticalNova.Townsfolk.TownsfolkGm.Labels;
+            set { if (value != TownLabels) Run(value ? "gm.town.debug true" : "gm.town.debug false"); }
+        }
+
+        [TabGroup(Tabs, WorldTab), Button(ButtonStyle.CompactBox, Expanded = true), EnableIf(nameof(HasTown)), PropertyOrder(432)]
+        private void TownCap(int day = 48, int night = 20) => Run($"gm.town.cap {day} {night}");
+
+        [TabGroup(Tabs, WorldTab), Button(ButtonStyle.CompactBox, Expanded = true), EnableIf(nameof(HasTown)), PropertyOrder(433)]
+        private void TownSpawn([PropertyRange(1, 10)] int personality = 2, [MinValue(1)] int count = 5) => Run($"gm.town.spawn {personality} {count}");
+
+        [TabGroup(Tabs, WorldTab), Button(ButtonStyle.CompactBox), EnableIf(nameof(HasTown)), PropertyOrder(434), LabelText("Clear Townsfolk")]
+        private void TownClear() => Run("gm.town.clear");
+
         [TabGroup(Tabs, WorldTab), ShowInInspector, ToggleLeft, EnableIf(nameof(HasWorld)), LabelText("Pause Clock"), PropertyOrder(405)]
         private bool TimePaused
         {
@@ -1716,6 +1740,18 @@ namespace KryticalNova.EditorTools.GM
         private enum SerumKind { Strength, Vitality, Agility, Spirit, Strike, Ward }
 
         private static string SlotArgument(ForgeSlot slot) => slot == ForgeSlot.FirstInPack ? string.Empty : " " + slot.ToString().ToLowerInvariant();
+
+        [TabGroup(Tabs, ItemsTab), Title("Max Everything"), Button("Max Everything..."), GUIColor(1f, 0.75f, 0.4f), EnableIf(nameof(IsReady)), PropertyOrder(533.5f)]
+        [InfoBox("gm.maxall: max level, skills, Ascension and Standings, every mount and pet at 100 %, 3 days of Autopilot and Autoward, max Serums, " +
+                 "the character's own Rare (clean) and Epic (Temper cap, Fusion 12) gear into Pack, Vault, Deep Vault, forge materials x999, every Pass x50, " +
+                 "every crafting item, 2,000,000 Creds, 50 Chroma and Prism Cells. Adds on top. Any GM, live or test server. Asks first.", InfoMessageType.Warning)]
+        private void MaxEverything()
+        {
+            if (EditorUtility.DisplayDialog("Max Everything",
+                    "gm.maxall changes the whole targeted character: max level, skills and ladders, every mount and pet, gear, items and " +
+                    "2,000,000 Creds, on top of what it has. It works on the live server too and is written to gm.log.", "Max Everything", "Cancel"))
+                Run("gm.maxall confirm");
+        }
 
         [ButtonGroup(Tabs + "/" + ItemsTab + "/Kits"), Title("Kits"), EnableIf(nameof(IsReady)), LabelText("Everything (gear, Temper items, pets)"), PropertyOrder(534)]
         private void KitAll() => Run("gm.kit all");
