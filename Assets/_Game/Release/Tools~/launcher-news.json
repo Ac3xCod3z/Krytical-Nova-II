@@ -3,7 +3,7 @@
   "items": [
     {
       "title": "A Better Start in Nova",
-      "body": "New characters begin with a starter kit: 20 HP Stims, 20 Flux Stims and 2,500 Creds, plus 5 stat points to place. Level 1 Hostiles pay a little more Creds and XP, and every weapon class now has its own Instructor in the Training Yard."
+      "body": "New characters begin with a starter kit: 20 HP Stims, 20 Flux Stims and 2,500 Creds, plus 5 stat points to place. Level 1 Hostiles pay a little more Creds and XP, and every weapon class now has its own Instructor in the Training Yard. Stims can be used at any time, even during a charge, with a short cooldown per kind, and new percentage Stims from the Apothecary restore a share of your HP or Flux."
     },
     {
       "title": "Defense Means Something Now",
@@ -12,10 +12,6 @@
     {
       "title": "Crits Reworked",
       "body": "Crit buffs add to your crit chance instead of multiplying it, with no cap. Crit chance on gear now comes from rings, and Tempering a ring adds on top of its own crit, and weapon Tuning raises Critical Damage instead. On the Cadence beat, a Redline three-hit crits with all three hits."
-    },
-    {
-      "title": "Stims When You Need Them",
-      "body": "Stims can be used at any time, even during a charge, with a short cooldown per kind. New percentage Stims restore a share of your HP or Flux, from the Apothecary."
     },
     {
       "title": "Bigger Moments",
@@ -59,7 +55,9 @@
         "Mount Companion HP: enemy players' area skills in PvP can hurt it; at 0 HP it is knocked out, goes home and rests 5 minutes (it can still be ridden). It regains 2 % a minute at home.",
         "Mount Stim (Apothecary): heals your mount's companion HP by 40 %, never yours.",
         "Companion stances DPS and HEALER (Mount window): DPS joins the fight you are in and strikes beside you with its own damage buff; HEALER heals you over time while you fight. Neither ever draws aggro, and both stay out of PvP (they act as FREE in PvP zones, duels and Crossfire).",
-        "Game Masters can now max a character in one go (Max Everything, gm.maxall): top level, skills, ladders, every mount and pet, its own Rare and Epic gear and a full kit of items. Only a GM can use it, and every use is logged."
+        "Game Masters can now max a character in one go (Max Everything, gm.maxall): top level, skills, ladders, every mount and pet, its own Rare and Epic gear and a full kit of items. Only a GM can use it, and every use is logged.",
+        "Swings move the grass: every swing throws the grass in front of it aside and it springs back; area skills send a ring across it and big hits a wave. Hostiles' swings push it too, the bigger the beast the wider.",
+        "World effects (Settings, Graphics): how much the world's little effects do on your screen, Low to Ultra; on Low four swings move the grass at once instead of eight."
       ]
     },
     {

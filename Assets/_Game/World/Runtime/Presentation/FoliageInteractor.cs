@@ -35,11 +35,17 @@ namespace KryticalNova.World
         private static readonly int CountId = Shader.PropertyToID("_KN_InteractorCount");
         private static readonly int TramplersId = Shader.PropertyToID("_KN_TrampleSources");
         private static readonly int TramplerCountId = Shader.PropertyToID("_KN_TrampleSourceCount");
+        // The swing pushes (day list item 20): read by GrassTrample.compute's Swing pass.
+        private static readonly int PushesId = Shader.PropertyToID("_KN_SwingPushes");
+        private static readonly int PushCountId = Shader.PropertyToID("_KN_SwingPushCount");
+        private static readonly int PushSpringId = Shader.PropertyToID("_KN_SwingSpring");
 
         private readonly Vector4[] packed = new Vector4[MaxInteractors];
         private readonly float[] distances = new float[MaxInteractors];
         // Everyone near the camera, in no order: the grass's trample map takes them all (the first that fit).
         private readonly Vector4[] tramplers = new Vector4[MaxTramplers];
+        // Always the whole array: Unity fixes a global array's size the first time it is set.
+        private readonly Vector4[] pushes = new Vector4[FoliagePushes.PublishedVectors];
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void Bootstrap()
@@ -53,6 +59,8 @@ namespace KryticalNova.World
         {
             Shader.SetGlobalInt(CountId, 0);
             Shader.SetGlobalInt(TramplerCountId, 0);
+            Shader.SetGlobalInt(PushCountId, 0);
+            FoliagePushes.Clear();
         }
 
         private void LateUpdate()
@@ -88,6 +96,14 @@ namespace KryticalNova.World
             Shader.SetGlobalInt(CountId, count);
             Shader.SetGlobalVectorArray(TramplersId, tramplers);
             Shader.SetGlobalInt(TramplerCountId, trampling);
+
+            FoliagePushes.Viewer = origin;
+            int pushing = FoliagePushes.Publish(Time.time, pushes);
+            FoliagePushSettings settings = FoliagePushes.Settings;
+            if (settings != null)
+                Shader.SetGlobalVector(PushSpringId, new Vector4(settings.springRate, settings.springDamping, settings.riseSeconds, settings.totalPushClamp));
+            Shader.SetGlobalVectorArray(PushesId, pushes);
+            Shader.SetGlobalInt(PushCountId, pushing);
         }
     }
 }
