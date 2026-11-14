@@ -9,7 +9,7 @@ namespace KryticalNova.Hostiles.Entities
 {
     /// <summary>
     /// Threat (M5.3b1, Q5): this tick's events on each Hostile become threat by player (a hit adds its damage, a heal half of it, a taunt
-    /// lifts the taunter above the top), old threat decays, at most six players are kept; then the target: the top threat when it has
+    /// lifts the taunter above the top and takes the target at once), old threat decays, at most six players are kept; then the target: the top threat when it has
     /// none, and a challenger takes it only above 110 % of the target's threat in reach, 130 % out of reach.
     /// </summary>
     [WorldSystemFilter(WorldSystemFilterFlags.ServerSimulation)]
@@ -38,6 +38,7 @@ namespace KryticalNova.Hostiles.Entities
                          .WithAll<BrainTag, BrainActive>().WithEntityAccess())
             {
                 DynamicBuffer<ThreatEntry> threat = threatBuffer;   // a copy of the handle (the iteration variable cannot be written through)
+                int tauntedBy = 0;
                 for (int i = 0; i < events.Length; i++)
                 {
                     BrainEvent e = events[i];
@@ -47,7 +48,11 @@ namespace KryticalNova.Hostiles.Entities
                         calls.Add(new AssistCall { From = entity, GhostId = e.GhostId, Species = life.ValueRO.Species, At = transform.ValueRO.Position });
                     if (e.Kind == BrainEventKind.Damaged) Add(threat, e.GhostId, math.max(0f, e.Amount), now);
                     else if (e.Kind == BrainEventKind.Healed) Add(threat, e.GhostId, math.max(0f, e.Amount) * c.HealThreatFactor, now);
-                    else if (e.Kind == BrainEventKind.Taunt) Add(threat, e.GhostId, Top(threat) * (1f + c.TauntBonus) - Of(threat, e.GhostId), now);
+                    else if (e.Kind == BrainEventKind.Taunt)
+                    {
+                        Add(threat, e.GhostId, math.max(1f, Top(threat) * (1f + c.TauntBonus)) - Of(threat, e.GhostId), now);
+                        tauntedBy = e.GhostId;
+                    }
                     // IHostileBrain.Aggro (M5.5c): fight this one now, whatever the threat so far (at least a point above the top)
                     else if (e.Kind == BrainEventKind.Aggro) Add(threat, e.GhostId, math.max(1f, Top(threat) * (1f + c.TauntBonus)) - Of(threat, e.GhostId), now);
                 }
@@ -60,6 +65,14 @@ namespace KryticalNova.Hostiles.Entities
                 }
 
                 ref HostileTarget aim = ref target.ValueRW;
+                // a taunt takes the target at once (the Mount Companion's TANK, day list 19 phase 4): lifted to only 110 % of the top it would
+                // never pass the strict 110 % switch rule. Only a sensed taunter: one the Hostile cannot see keeps the threat alone.
+                if (tauntedBy != 0 && sense.ByGhostId.ContainsKey(tauntedBy))
+                {
+                    for (int i = 0; i < threat.Length; i++)
+                        if (threat[i].GhostId == tauntedBy) { Aim(ref aim, threat[i], sense); break; }
+                    continue;
+                }
                 int best = -1;
                 for (int i = 0; i < threat.Length; i++)
                     if (threat[i].GhostId != aim.GhostId && (best < 0 || threat[i].Threat > threat[best].Threat)) best = i;

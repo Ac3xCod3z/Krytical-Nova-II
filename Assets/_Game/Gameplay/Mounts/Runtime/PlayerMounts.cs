@@ -157,6 +157,8 @@ namespace KryticalNova.Mounts
         }
 
         /// <summary>The selected mount's companion max HP: the owner's max HP times its growth share.</summary>
+        /// <summary>The companion's stance numbers at the selected mount's growth (owner, 14 Nov 2026: stances grow like a pet's stats; the ride stats do not change).</summary>
+        public CompanionFightTuning CompanionFightNow => (Settings != null ? Settings.CompanionFight : CompanionFightTuning.Default).AtGrowth(GrowthPercent);
         public float CompanionMaxHp => CompanionRules.MaxHp(entity != null ? entity.MaxHealth : 100f, GrowthPercent, CTuning);
 
         /// <summary>The owner's machine: the Companion key (B) or the window's CALL / SEND HOME button.</summary>
@@ -310,7 +312,7 @@ namespace KryticalNova.Mounts
             if (!HasAuthority) return;
             var wanted = (CompanionStance)next;
             if (!System.Enum.IsDefined(typeof(CompanionStance), wanted)) return;
-            if (!CompanionFightRules.IsBuilt(wanted)) { Notify("The TANK stance comes later.", toast: true); return; }
+            if (!CompanionFightRules.IsBuilt(wanted)) return;
             if (wanted == stance) return;
             stance = wanted;
             Notify(StanceLine(wanted), toast: true);
@@ -324,6 +326,7 @@ namespace KryticalNova.Mounts
             {
                 case CompanionStance.Dps: return $"{mount}: DPS. It helps you kill what you fight (PvE only).";
                 case CompanionStance.Healer: return $"{mount}: HEALER. It heals you while you fight (PvE only).";
+                case CompanionStance.Tank: return $"{mount}: TANK. It draws the Hostiles you fight onto itself and takes less damage (PvE only).";
                 default: return $"{mount}: FREE. It walks beside you and stays out of fights.";
             }
         }
@@ -364,9 +367,6 @@ namespace KryticalNova.Mounts
         public int CompanionHpPermille => selected != 0 ? CompanionHpOf(selected) : 0;
         byte IBodyMountCompanion.CompanionStance => (byte)stance;
         public int CompanionKnockOuts => knockOuts;
-        public int CompanionStrikes { get; private set; }
-        public int CompanionPulses { get; private set; }
-        public void CountCompanionFight(bool strike) { if (strike) CompanionStrikes++; else CompanionPulses++; }
         public float CompanionRunSpeed => Settings != null ? MountRules.Speed(Settings.runSpeed.x, Settings.runSpeed.y, GrowthPercent, IsFed) : 20f;
 
         /// <summary>The own view of the entity netcode: the server's companion boxes.</summary>

@@ -33,6 +33,8 @@ namespace KryticalNova.Mounts.Entities
         [GhostField] public int FightGhostId;
         /// <summary>Phase 3: the stance it acts in now (<see cref="CompanionStance"/>): a combat stance shows FREE while its owner is in PvP.</summary>
         [GhostField] public byte ActingStance;
+        /// <summary>Phase 4, TANK: rises by one at each of its taunts; views play the taunt (a rear-up and the swing feel).</summary>
+        [GhostField] public byte Taunts;
 
         public const float SpeedStepMetres = 0.25f;
     }

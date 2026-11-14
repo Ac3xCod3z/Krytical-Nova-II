@@ -10,6 +10,7 @@
         "KryticalNova.Player.Entities",
         "KryticalNova.Player.Entities.Presentation",
         "KryticalNova.Hostiles.Entities",
+        "KryticalNova.Brains",
         "KryticalNova.World",
         "KryticalNova.Crossfire",
         "KryticalNova.Combat.Entities",

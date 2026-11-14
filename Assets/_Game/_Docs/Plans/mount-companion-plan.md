@@ -329,7 +329,8 @@ Phase 2:
 - [ ] 5. Mount Stim (item, handler, Apothecary, icon) + the window's HP bar and rest timer. Evals: Stim, item checks,
   performance. **Owner tests phase 2 on two clients and approves.** Then the Encyclopedia update.
 - [x] 6. Phase 3, DPS and HEALER (owner 13 Nov: "we can move on to phase 3"); see As built.
-- [ ] 7-8. Phases 4, 5, each planned in detail here first and approved before code.
+- [x] 7. Phase 4, TANK (the Master's go, 14 Nov, after the owner merged phase 3; built from section 5's outline, the detail is in its As built).
+- [ ] 8. Phase 5, planned in detail here first and approved before code.
 
 ## The owner's picks
 
@@ -415,3 +416,44 @@ Phase 3, 13-14 Nov 2026 (b18-coder-20, branch `b18/19-companion-phase3`): the DP
   across a relog).
 - **Follow-ups:** a buff icon for HEALER in the owner's buff row; mount attack clips (the lunge stands in); the companion's own HP
   bar over it for everyone (from phase 2); Hostiles still never strike the companion (phase 4 TANK makes them).
+
+### Phase 4 as built (14 Nov 2026, b18-coder-19p3)
+
+- **Taunt:** in the TANK stance the companion runs to its spot in front of the Hostile it fights (the phase 3 pick; a Hostile after the
+  companion itself now counts as after the owner, `CompanionSeek.SelfGhostId`) and every `companionTankTauntSeconds` (6) writes a
+  `BrainEventKind.Taunt` for its own ghost id on that Hostile and on every Hostile after its owner within `companionTankTauntRadius` (8 m)
+  of it (`CompanionFightPick.Tauntable`). It deals no damage and does not heal.
+- **Threat fix in Hostiles:** a taunt lifted the taunter to exactly 110 % of the top threat, and the switch rule needs more than 110 %, so a
+  taunt never turned a Hostile. `HostileThreatSystem` now aims a Hostile at a sensed taunter at once (a taunter it cannot sense only gets
+  the threat), and `HostileDecideSystem` lets a taunt engage like a hit. Nothing sent taunts before, so no other behaviour changes.
+- **Sense and strikes:** `CompanionSenseFeedSystem` (Burst) puts every companion that is out and acting as TANK into the Hostiles' sense
+  world after the players, flagged Ignored (never picked by sight). A Hostile whose target it is chases and swings at it like at a player;
+  the swing is rolled by `HostileStrikeRules.TryRollOnStandIn` (the same reach, multiplier and stats, no wall rule, no reflect) in the
+  strike bridge and applied by the blow queue to the companion's hidden body, which `StandInTargets` (Player.Entities.Presentation)
+  names for its ghost. DPS, HEALER, FREE, a companion going home and a knocked-out one are not in the sense world, so a Hostile falls back
+  to its next threat.
+- **Defence buff:** `CompanionBody.TakenScale` = (1 - the TANK defence buff) / its HP multiplier, both growing with the mount (see "Stances grow with the mount" below) while it acts as TANK, else 1
+  (`CompanionFightRules.TakenScale`); a TANK in PvP acts as FREE, so a player's hit is never lessened.
+- **Toughness (owner, 14 Nov: "its defense buff should allow it to be tougher"; superseded the same day by "Stances grow with the mount" below):** the buff was applied, but at 0.4 a new mount held a level 40 Colossus about 9 s against an owner in the gear that level expects (the Play proof's Tester had no gear and no spent points, 885 HP, so 2 s there). At 0.7 (`MountSettings.companionTankDefenceBuff`): about 17 s new, 29 s full-grown; the Colossus swings every 1.15 s (0.8 s clips + 0.35 s cooldown) and deals about 190 a second before the buff. `CompanionTankToughnessTests` works it out from the real assets with the one damage formula and holds it to 15-25 s for a new mount.
+- **Views:** `CompanionView.Taunts` counts its taunts; every view rears the model up (0.45 m, 18 degrees, 0.5 s) with the swing feel.
+- **Window:** TANK is on in the Mount window with its tooltip; a saved TANK loads as TANK.
+- **Tests:** `CompanionFightTests` (TANK keeps a taunted Hostile, the taunt rule, the defence scale, the sense entry, settings = defaults),
+  `PlayerMountsCompanionTests` (TANK taken and kept, the body takes less), `ThreatTests` (a taunt takes the target from the top threat and
+  its strikes follow, an unsensed taunt only adds threat, a taunter that leaves gives the target back, a taunt engages an idle Hostile),
+  `StandInTargetsTests`. The Play probe (`KN_PLAYHERE_COMPANION_FIGHT=1`) has a TANK part after HEALER.
+- **Left:** a second-client check; a taunt sound of its own (it uses the swing feel); the companion's own threat entry stays in a Hostile's
+  table of six until it decays.
+
+### Stances grow with the mount (owner, 14 Nov 2026: "all of the stances need to have its stats raised during its progression kind of like how pets stats work")
+
+- Each stance number has its value at 0 % and at 100 % of the mount's growth in `MountSettings` (`companionDpsDamageShareByGrowth`
+  0.35 -> 0.61, which with the 15 % buff is about 40 % -> 70 % of the owner's strike; `companionHealerHealShareByGrowth` 1.5 % -> 3 % every
+  2 s; `companionTankDefenceBuffByGrowth` 0.65 -> 0.7 (owner: about 15 s from day one); `companionTankHpMultiplierByGrowth` x1 -> x2). `CompanionFightTuning.AtGrowth` lerps
+  them; `PlayerMounts.CompanionFightNow` is the tuning at the selected mount's growth, read by the server system for the strike, the pulse and
+  the TANK cost of a blow.
+- TANK's HP multiplier: HP is kept as a share of the max, so x2 HP is a blow costing half the share (`CompanionFightRules.TakenScale` =
+  (1 - buff) / multiplier); switching stance never changes the HP shown.
+- Against a level 40 Colossus and a level 40 owner in the gear that level expects: a mount holds about 15 s at 0 % growth, 32 s at 50 % and 58 s at 100 %
+  (`CompanionTankToughnessTests` prints both). This replaces the earlier flat 0.7 buff.
+- The ride stats (the two main stats up to their max, the riding speeds) do not change with any stance (`CompanionStanceGrowthTests`).
+- The Mount window's stance tooltips show the numbers of the selected mount's growth (`CompanionFightRules.StanceTip`).
