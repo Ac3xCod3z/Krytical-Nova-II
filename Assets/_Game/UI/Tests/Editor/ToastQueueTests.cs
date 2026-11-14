@@ -143,8 +143,13 @@ namespace KryticalNova.Tests
             queue.Enqueue(nine, 4);
             Assert.IsTrue(queue.Advance(1f, Show, Fade));
             Assert.AreEqual("gm news", queue.Current.Text, "other news keeps its place in line");
+            Assert.AreEqual(1, queue.Waiting, "the 9 waits behind the GM line");
+            // the 8 arrives while the GM line is still up: the 9 gives way to it, the GM line stays
             Assert.IsFalse(queue.Supersede(AnnouncementKind.Crossfire, 1.5f), "a GM line on screen is never cut");
-            Assert.AreEqual(1, queue.Waiting, "the 9 waits, with no older Crossfire line ahead of it");
+            Assert.AreEqual(0, queue.Waiting, "the older Crossfire line waiting gives way");
+            queue.Enqueue(new Toast { Kind = AnnouncementKind.Crossfire, Text = "8" }, 4);
+            Assert.AreEqual(1, queue.Waiting, "only the newest Crossfire line waits");
+            Assert.AreEqual("gm news", queue.Current.Text);
         }
 
         /// <summary>Owner, 13 Nov 2026: run in from the side, each second of the countdown was gone before it could be read.</summary>
