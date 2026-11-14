@@ -433,8 +433,26 @@ First pass, 13 Nov 2026 (b18-coder-11). Compiles (90/90 Editor, 40/40 server), `
     `look_High_*.png`, `18-concord-wide-High-Low.mp4`).
   - Tests: `TownsfolkBandsTests` (bands and hysteresis, cards far on every tier, switch heights in metres, LOD triangle
     shares, the spread over a whole deck and the arrival's share, no weapon regions).
-- [ ] Owed: a built-player perf log Low and High against the budget (the Editor run above is too noisy to prove it; 48 in view:
-  <= 1.5 ms main thread, <= 1.0 ms GPU, 0 GC a frame); second client.
+- [x] Busier crowd + walks round objects (owner pick after PR #265, 14 Nov 2026):
+  - Crowd: Sky Concord's mix 80 by day / 35 at night (`Area_SkyConcord`, builder; settings caps 80 / 35, hard cap 100). Drawn
+    at most (Low / Medium / High / Ultra): bodies 20 / 40 / 56 / 72, cards 32 / 64 / 96 / 128. Low keeps its old counts, so
+    Low's cost does not grow with the crowd.
+  - The straight lines: not the bake (the planters are holes in the NavMesh). The crowd's separation push moved bodies after
+    the NavMesh check, unchecked, into planters or off the deck; from there `NavBlocked` called every walk "not blocked" (an
+    off-mesh start). Fix in the shared Brain (`PathSystems.cs`): an off-mesh start or a raycast that did not succeed is
+    blocked; a body found off the mesh steps back to the nearest mesh point within `BrainSettings.offMeshRecoverMetres` (4);
+    every step, the push included, slides along the mesh (`KeepOnMesh`, `NavWorld.MoveLocation`). Guard tests in
+    `NavWorldTests` (Concord deck): the raycast never calls a blocked walk clear (2,000 pairs: 0), a walker round an
+    obstacle stays on the mesh every tick, a crowd pushed at an edge stays on the deck.
+  - Unity proof (shared Editor, Burst off, 80 townsfolk + 35 vendors): Brains 23/23, Townsfolk 31/31, Hostiles 60/61 (the
+    2,000-brain soak timing test, 85 ms against 50, straight-line backend, so not this change: Burst is off in the lean
+    Editor). Heatmap 7 to 21 h: 0 of 9,998 samples off the mesh, near the arrival 10 %, quarters 22-28 %; the centre's
+    planters and fountain clear of trails. High in view: CLOSE 7 / MEDIUM 20 / FAR 29 bodies (cap 56 reached), 33 cards.
+    Editor measures (noisy, Burst off): player view High 39.3 ms main / 10.6 ms GPU with the crowd, 31.5 / 9.5 without.
+    Pictures: `G:\My Drive\KryticalNova\AI Outputs\build17\18-opus3\` (`crowd80.gif`, `heatmap.png`,
+    `heatmap_centre_zoom.png` and `_BEFORE`, `look_planter_*.png`, `look_High_*.png`).
+- [ ] Owed: a built-player perf log Low and High against the budget, waiting for the next real build (owner, 14 Nov: no test
+  build); 80 by day: <= 1.5 ms main thread, <= 1.0 ms GPU, 0 GC a frame; second client.
 - [ ] Later steps: pairs walking together, head-look / glances / greetings / text barks (step 6), vendors' manner assets and
   barks (step 7).
 
