@@ -1025,12 +1025,12 @@ namespace KryticalNova.EditorTools
             Make("FX_Ritual_Circle_01", "PFX_Standing_Seal", 0.55f, Color.white);                      // a Standing rank: a seal at the feet
         }
 
-        // Owner 13 Nov 2026 (3.1): FX_LevelUp_01's own root draws an orange disc on the ground that outlives the column and takes no tint;
-        // only its Beams, Swirl and Sparkles show.
+        // Owner 13 Nov 2026 (3.1): FX_LevelUp_01's Swirl child is a half-circle tipped flat on the ground (about 1.4 m across, peach once
+        // tinted) that reads as a disc under the feet; the column keeps its beams, root and sparkles. Pet Evolve and Forge Success keep theirs.
         private static void NoGroundDisc(GameObject column)
         {
-            var disc = column.GetComponent<ParticleSystemRenderer>();
-            if (disc != null) disc.enabled = false;
+            Transform swirl = column.transform.Find("FX_LevelUp_Swirl_01");
+            if (swirl != null) swirl.gameObject.SetActive(false);
         }
 
         /// <summary>
