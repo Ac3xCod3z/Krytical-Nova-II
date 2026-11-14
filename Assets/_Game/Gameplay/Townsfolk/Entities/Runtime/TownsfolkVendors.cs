@@ -74,6 +74,37 @@ namespace KryticalNova.Townsfolk
             }
         }
 
+        CharacterAppearance m_Appearance;
+        RuntimeAnimatorController m_Pending;
+        float m_Offset;
+
+        /// <summary>
+        /// The controller is handed over only when the look is merged (its Rebuilt), so the animator binds once, to the merged mesh
+        /// (see <see cref="TownsfolkBody.PendingController"/>; 14 Nov 2026).
+        /// </summary>
+        public void Bind(CharacterAppearance appearance, RuntimeAnimatorController controller, float offset)
+        {
+            m_Appearance = appearance;
+            m_Pending = controller;
+            m_Offset = offset;
+            if (Animator != null) Animator.runtimeAnimatorController = null;
+            if (appearance != null) appearance.Rebuilt += Rebuilt;
+        }
+
+        void OnDestroy()
+        {
+            if (m_Appearance != null) m_Appearance.Rebuilt -= Rebuilt;
+        }
+
+        void Rebuilt()
+        {
+            if (Animator == null || m_Pending == null) return;
+            Animator.runtimeAnimatorController = m_Pending;
+            m_Pending = null;
+            Animator.SetInteger(TownsfolkBody.ActivityId, (int)TownActivity.Stand);
+            Animator.SetFloat(TownsfolkBody.OffsetId, m_Offset);
+        }
+
         public void Welcome()
         {
             Gesture(TownGesture.Welcome);
@@ -232,11 +263,9 @@ namespace KryticalNova.Townsfolk
             var appearance = go.GetComponent<CharacterAppearance>();
             Animator animator = go.GetComponentInChildren<Animator>(true);
             if (look_ == null || appearance == null || animator == null) { Object.Destroy(go); return null; }
-            look_.Dressed = cast.dressed;
-            if (!look_.Apply(recipe, m_Assets.database)) { Object.Destroy(go); return null; }
-            appearance.RebuildNow();
+            animator.runtimeAnimatorController = null;   // no binding before the look is merged
 
-            // the old model is hidden, not removed
+            // the old model is hidden, not removed; the new body wakes under the vendor (its merger exists from here) and is dressed there
             foreach (Renderer r in npc.GetComponentsInChildren<Renderer>(true)) r.enabled = false;
             foreach (Animator a in npc.GetComponentsInChildren<Animator>(true)) a.enabled = false;
             go.transform.SetParent(npc.transform, false);
@@ -245,15 +274,17 @@ namespace KryticalNova.Townsfolk
             CharacterLod.Ensure(go);
             animator.applyRootMotion = false;
             animator.cullingMode = AnimatorCullingMode.CullUpdateTransforms;
-            animator.runtimeAnimatorController = bodyType == BodyType.Feminine && m_Assets.feminine != null ? m_Assets.feminine : m_Assets.masculine;
             uint seed = StableHash(key);
-            animator.SetInteger(TownsfolkBody.ActivityId, (int)TownActivity.Stand);
-            animator.SetFloat(TownsfolkBody.OffsetId, (seed >> 8 & 0xFF) / 255f);
             var presenter = animator.gameObject.AddComponent<VendorPresenter>();
             presenter.Npc = npc;
             presenter.Animator = animator;
             presenter.Seed = seed;
             presenter.Manner = m_Assets.MannerOf(key);
+            presenter.Bind(appearance, bodyType == BodyType.Feminine && m_Assets.feminine != null ? m_Assets.feminine : m_Assets.masculine,
+                (seed >> 8 & 0xFF) / 255f);
+            look_.Dressed = cast.dressed;
+            if (!look_.Apply(recipe, m_Assets.database)) { Object.Destroy(go); return null; }
+            appearance.RebuildNow();   // merged: its Rebuilt hands the animator its controller
             return presenter;
         }
     }

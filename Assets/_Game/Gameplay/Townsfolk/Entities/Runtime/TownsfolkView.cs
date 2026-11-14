@@ -72,8 +72,36 @@ namespace KryticalNova.Townsfolk
         public CharacterLod Lod;
         public long LookKey = -1;
         public byte ShownActivity = 255;
+        public float Offset;
+
+        /// <summary>
+        /// The animator binds to the mesh it finds once, when it gets its controller; a mesh with other blend shapes after that (the full
+        /// Player_01 face before the merge, then the merged look with only the four blinks live) leaves the clips' face curves writing
+        /// past the shapes ("Array index (n) is out of bounds (size=4)", 14 Nov 2026; a Rebind writes defaults through the old bindings
+        /// first, so it trips too). So the controller is handed over only when the look is merged (its Rebuilt), and never rebound.
+        /// </summary>
+        public RuntimeAnimatorController PendingController;
+
+        public void RebindOnRebuild()
+        {
+            if (Appearance != null) Appearance.Rebuilt += Rebuilt;
+        }
+
+        void OnDestroy()
+        {
+            if (Appearance != null) Appearance.Rebuilt -= Rebuilt;
+        }
+
+        void Rebuilt()
+        {
+            if (Animator == null || PendingController == null) return;
+            Animator.runtimeAnimatorController = PendingController;
+            PendingController = null;
+            Animator.SetFloat(OffsetId, Offset);
+            ShownActivity = 255;   // the next Show sets the activity
+        }
+
         float m_Speed;
-        // a far body animates every few frames, with the time saved up since its last update
         float m_Pending;
         bool m_Manual;
 
@@ -99,7 +127,15 @@ namespace KryticalNova.Townsfolk
                 if (m_Manual) { m_Manual = false; Animator.enabled = true; m_Pending = 0f; }
                 return;
             }
-            if (!m_Manual) { m_Manual = true; Animator.enabled = false; m_Pending = 0f; }
+            if (!m_Manual)
+            {
+                // the pose is evaluated at once: a body that starts far (from the pool) never stands in its bind pose (T-pose)
+                m_Manual = true;
+                Animator.enabled = false;
+                Animator.Update(dt);
+                m_Pending = 0f;
+                return;
+            }
             m_Pending += dt;
             if ((frame + (int)(seed & 0xFF)) % every != 0) return;
             Animator.Update(m_Pending);
@@ -161,11 +197,14 @@ namespace KryticalNova.Townsfolk
         /// <summary>Far cards drawn this frame.</summary>
         public int Cards => m_Cards != null ? m_Cards.Drawn : 0;
 
+        /// <summary>This client's last frame, for gm.town and the probes: full bodies shown, far cards drawn, looks baked.</summary>
+        public static int ShownNow, CardsNow, LooksNow;
+
         /// <summary>gm.town.debug: labels over every shown townsperson (plan 3.9).</summary>
         public static bool DebugLabels;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        static void ResetStatics() => DebugLabels = false;
+        static void ResetStatics() { DebugLabels = false; ShownNow = CardsNow = LooksNow = 0; }
 
         /// <summary>What the labels show: each shown body and its ghost's state this frame (filled only while <see cref="DebugLabels"/>).</summary>
         internal readonly List<(TownsfolkBody body, TownsfolkGhost ghost, float distance)> Labels = new();
@@ -266,6 +305,9 @@ namespace KryticalNova.Townsfolk
                 }
                 m_Cards.Draw();
             }
+            ShownNow = m_Shown.Count;
+            CardsNow = Cards;
+            LooksNow = m_Templates.Count;
             if (DebugLabels && m_PoolRoot != null && m_PoolRoot.GetComponent<TownsfolkDebugLabels>() == null)
                 m_PoolRoot.gameObject.AddComponent<TownsfolkDebugLabels>().Bind(this, m_Assets);
         }
@@ -292,15 +334,16 @@ namespace KryticalNova.Townsfolk
             if (body.Animator != null)
             {
                 // variety from the seed: each one's clips start at its own point (plan 3.6)
-                body.Animator.SetFloat(TownsfolkBody.OffsetId, (ghost.Seed >> 8 & 0xFF) / 255f);
+                body.Offset = (ghost.Seed >> 8 & 0xFF) / 255f;
+                body.Animator.SetFloat(TownsfolkBody.OffsetId, body.Offset);
             }
             return body;
         }
 
         void Dress(TownsfolkBody body, Template template, long key)
         {
+            UseAnimator(body, m_Assets, template.Body);   // handed over by the share's Rebuilt, on the merged mesh
             body.Appearance.ShareFrom(template.Appearance);
-            UseAnimator(body, m_Assets, template.Body);
             if (body.Appearance.Renderer != null && template.Renderer != null) body.Appearance.Renderer.sharedMaterials = template.Renderer.sharedMaterials;
             body.transform.localScale = template.Scale;
             body.LookKey = key;
@@ -338,6 +381,7 @@ namespace KryticalNova.Townsfolk
             body.Animator = go.GetComponentInChildren<Animator>(true);
             body.Appearance = go.GetComponent<CharacterAppearance>();
             body.Look = go.GetComponent<CharacterLook>();
+            body.RebindOnRebuild();
             if (body.Animator != null)
             {
                 body.Animator.applyRootMotion = false;
@@ -398,7 +442,8 @@ namespace KryticalNova.Townsfolk
         public static void UseAnimator(TownsfolkBody body, TownsfolkViewAssets assets, BodyType bodyType)
         {
             if (body.Animator == null || assets.masculine == null) return;
-            body.Animator.runtimeAnimatorController = ControllerOf(assets, bodyType);
+            body.Animator.runtimeAnimatorController = null;   // no binding to the mesh as it is now
+            body.PendingController = ControllerOf(assets, bodyType);
         }
     }
 
@@ -518,18 +563,24 @@ namespace KryticalNova.Townsfolk
                     card.Material.SetTexture(BaseMapId, card.Texture);
                 }
                 // stand the template idle for its picture
+                // the renderer on BEFORE the pose: with Cull Update Transforms an unseen character's bones are never written, and the
+                // snapshot was the bind pose, a T-pose, drawn far away (owner, 14 Nov 2026)
+                r.gameObject.layer = layer;
+                r.enabled = true;
                 Animator animator = card.Source.Animator;
                 if (animator != null && card.Controller != null)
                 {
-                    animator.runtimeAnimatorController = card.Controller;
+                    AnimatorCullingMode culling = animator.cullingMode;
+                    animator.cullingMode = AnimatorCullingMode.AlwaysAnimate;
+                    if (animator.runtimeAnimatorController != card.Controller) animator.runtimeAnimatorController = card.Controller;   // binds now, to the merged mesh
                     animator.enabled = true;
                     animator.SetFloat(TownsfolkBody.SpeedId, 0f);
                     animator.SetInteger(TownsfolkBody.ActivityId, (int)TownActivity.Stand);
+                    animator.Update(0f);
                     animator.Update(0.6f);
                     animator.enabled = false;
+                    animator.cullingMode = culling;
                 }
-                r.gameObject.layer = layer;
-                r.enabled = true;
                 Transform root = card.Source.transform;
                 Bounds b = r.bounds;
                 float h = Mathf.Max(0.5f, b.size.y * 1.04f);

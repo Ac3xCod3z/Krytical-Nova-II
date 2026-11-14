@@ -55,6 +55,8 @@ namespace KryticalNova.Brains
 
         public void OnUpdate(ref SystemState state)
         {
+            // main-thread reads through lookups: a mind's jobs (the townsfolk's think job moves far bodies) must be done first
+            state.CompleteDependency();
             BrainConfig c = SystemAPI.GetSingleton<BrainConfig>();
             uint now = SystemAPI.GetSingleton<BrainTick>().Tick;
             var queued = new NativeList<Request>(64, Allocator.Temp);
@@ -160,6 +162,7 @@ namespace KryticalNova.Brains
         [BurstCompile]
         public void OnUpdate(ref SystemState state)
         {
+            state.CompleteDependency();   // main-thread reads through lookups (see PathServiceSystem)
             BrainConfig c = SystemAPI.GetSingleton<BrainConfig>();
             SenseWorld sense = SystemAPI.GetSingleton<SenseWorld>();
             uint now = SystemAPI.GetSingleton<BrainTick>().Tick;

@@ -194,6 +194,7 @@ namespace KryticalNova.Townsfolk
             Entity config = em.CreateSingleton(TownsfolkConfig.From(m_Assets.settings, m_TickRate));
             DynamicBuffer<PersonalityRow> rows = em.AddBuffer<PersonalityRow>(config);
             foreach (TownsfolkPersonality p in m_Assets.personalities) if (p != null) rows.Add(RowOf(p));
+            int personalities = rows.Length;   // the buffer is invalid after the structural changes below
             em.CreateSingleton(new TownClock { Hours = 12f, Period = (byte)TownPeriod.Day });
             Entity a = em.CreateSingleton(new TownArea { Radius = m_Area.radius, Cast = m_Area.cast != null ? m_Area.cast.id : (byte)0 });
             em.AddBuffer<TownSpot>(a);
@@ -201,7 +202,7 @@ namespace KryticalNova.Townsfolk
             em.AddBuffer<TownScoreCache>(a);
             m_Installed = true;
             RefreshClock();
-            Debug.Log($"[Townsfolk] Town life installed in {World.Name}: area {m_Area.name}, {rows.Length} personalities, {m_TickRate} Hz.");
+            Debug.Log($"[Townsfolk] Town life installed in {World.Name}: area {m_Area.name}, {personalities} personalities, {m_TickRate} Hz.");
             return true;
         }
 
