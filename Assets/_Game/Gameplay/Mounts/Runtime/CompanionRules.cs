@@ -65,6 +65,7 @@ namespace KryticalNova.Mounts
             lost = Math.Clamp(lost, 0, Permille);
             if (!atHome || now <= hpAt || lost == 0 || t.HomeRegenPerMinute <= 0f) return lost;
             double back = (now - hpAt) / 60.0 * t.HomeRegenPerMinute * Permille;
+            back += 1e-3;   // 0.02 as a float is a hair under 0.02: 10 minutes must give back 200, not 199
             return back >= lost ? 0 : lost - (int)Math.Floor(back);
         }
 
