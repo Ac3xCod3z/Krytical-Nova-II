@@ -1,0 +1,39 @@
+{
+    "name": "KryticalNova.Townsfolk.Entities.Tests.Editor",
+    "rootNamespace": "KryticalNova.Townsfolk.Tests",
+    "references": [
+        "KryticalNova.Runtime",
+        "KryticalNova.Brains",
+        "KryticalNova.Townsfolk.Entities",
+        "KryticalNova.Townsfolk.Entities.Editor",
+        "KryticalNova.CharacterCreation",
+        "KryticalNova.Factions",
+        "KryticalNova.Items",
+        "KryticalNova.NPC",
+        "UnityEngine.TestRunner",
+        "UnityEditor.TestRunner",
+        "Unity.Burst",
+        "Unity.Collections",
+        "Unity.Mathematics",
+        "Unity.Entities",
+        "Unity.NetCode",
+        "Unity.NetCode.Hybrid",
+        "Unity.NetCode.Authoring.Hybrid",
+        "Unity.Transforms"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "nunit.framework.dll"
+    ],
+    "autoReferenced": false,
+    "defineConstraints": [
+        "UNITY_INCLUDE_TESTS"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

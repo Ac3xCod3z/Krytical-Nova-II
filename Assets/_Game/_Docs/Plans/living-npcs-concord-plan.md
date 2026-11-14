@@ -1,7 +1,7 @@
 # Living NPCs on Sky Concord plan (Townsfolk)
 
-**Status: proposed 13 Nov 2026, waiting for the owner's review.** Research and design only: no code until the owner has
-reviewed this page, edited the ten personalities and answered the picks.
+**Status: first pass built 13 Nov 2026 (PR into `items-18-24`, b18-coder-11), owner picks 1a, 2a (48 / 20), 3a, 4a.** Not yet
+run in Unity: the asset builder, the EditMode tests and the Play proof are owed (see "As built").
 
 Owner's day list 13 Nov 2026, item 18. Row: new, "Townsfolk", to add to `../Reference/12Sky/01_Systems_Build_List.md`
 when step 1 lands. Sky Concord here means the Concord 040 preview that floats 300 m above Zone01's Concord
@@ -311,10 +311,10 @@ same person.
 ## Steps (one PR each)
 
 - [ ] 0. Checks only: the server's path service finds paths on the Concord 040 NavMesh; perf log baseline on Sky Concord with no crowd. Evals: none (sets the baseline).
-- [ ] 1. Data: settings, personality, cast, manner types; the ten personality assets from the owner's edited table; the glossary rows. Evals: numbers in assets.
-- [ ] 2. The ghost, spawner and town-life mind on the Brain with Strollers only on hand-placed points; debug labels and `gm.town.*`. Evals: layers, ghost lint, two clients.
-- [ ] 3. Smart spots (authoring, Sky Concord builder, claims, scoring), all ten personalities, clock and rain. Evals: scorer, claims, day plans, Hostiles unchanged.
-- [ ] 4. Looks: casts, seed pick, merged-mesh bake and cache, `AC_Townsfolk`, CharacterLod. Evals: same person, faction casts.
+- [x] 1. Data: settings, personality, cast, manner types; the ten personality assets from the owner's edited table; the glossary rows. Evals: numbers in assets.
+- [x] 2. The ghost, spawner and town-life mind on the Brain with Strollers only on hand-placed points; debug labels and `gm.town.*`. Evals: layers, ghost lint, two clients.
+- [x] 3. Smart spots (authoring, Sky Concord builder, claims, scoring), all ten personalities, clock and rain. Evals: scorer, claims, day plans, Hostiles unchanged.
+- [x] 4. Looks: casts, seed pick, merged-mesh bake and cache, `AC_Townsfolk`, CharacterLod. Evals: same person, faction casts.
 - [ ] 5. Groups: chat circles and pairs. Evals: claims (circles), two clients.
 - [ ] 6. Client life: head-look, glances, greetings, barks; step aside on the server. Evals: no presentation on server, fps.
 - [ ] 7. Vendors: Sidekick looks, `VendorPresenter`, `VendorManner` assets, `Interacted`. Evals: fps, owner in Play.
@@ -334,4 +334,111 @@ log holds 60 with the crowd in view, and a second client sees the same NPCs in t
 
 ## As built
 
-(Empty until step 1 lands.)
+First pass, 13 Nov 2026 (b18-coder-11). Compiles (90/90 Editor, 40/40 server), `dependency_map.py --check` clean.
+**Not yet run in Unity**: builder, EditMode tests and the Play GIF / perf log are owed before the owner sees it.
+
+- [x] Data: `TownsfolkSettings`, `TownsfolkPersonality` (10 drafts, made by the builder only when missing: page
+  `Design/Townsfolk-Personalities.md`), `TownLifeArea` (Sky Concord: 67 spots in Concord 040's frame + 8 jog points; mix
+  48 / 20), `TownsfolkCast` (Sky Concord: all three factions). Resources holders `TownsfolkWorldAssets` (server: no bodies)
+  and `TownsfolkViewAssets` (client).
+- [x] Server: `TownsfolkServerSystem` (installs the config, makes the Brain's config only when the Hostiles did not, builds
+  the spots from the area snapped onto the NavMesh plus 60 sampled walk points, clock and rain once a second from the world
+  clock, keeps every personality at the hour's number: out of the home doors 4 a second, sent home when over);
+  `TownLifeDecideSystem` (Burst, on the Brain: pick from the best 3 by score, claims, stay, stroll, shifts, rain, home; far
+  tier plan step every 2 s); `TownsfolkGhostWriteSystem`; `TownPlayerFeedSystem` (only when no Hostiles). Switch:
+  `KN_TOWNSFOLK` (on in a built server and the Editor's Play, off in EditMode tests).
+- [x] Ghost `TownsfolkGhost` (seed, cast, personality, activity, speed, chat circle), interpolated, never owned, importance
+  30 (`RelevancySettings.importanceTownsfolk`), prefab + holder by `TownsfolkEntitiesAssetsBuilder`.
+- [x] Client: `TownsfolkViewClientSystem` (first pass: nearest 48 within 80 m, now by Crowd Detail below; a hidden template per look, baked once, bodies share its
+  mesh through `CharacterAppearance.ShareFrom`; 16 looks per cast from `RecipeEdit.Randomize`, the lineage's basic outfit;
+  `CharacterLod` on every body), one shared animator per body type (`AC_Townsfolk_Masc/Femn`, Speed blend + 4 variants per
+  activity picked by the seed), `gm.town.debug` labels.
+- [x] GM: `gm.town`, `gm.town.debug`, `gm.town.cap`, `gm.town.clear`, `gm.town.spawn`; GM window World tab; control page
+  Townsfolk panel. Time of day: the existing `time.*` controls.
+- [x] Tests written: `TownLifeRulesTests`, `TownLifeWorldTests` (60 townsfolk, 20 spots, 10,000 ticks; stale claims; shifts
+  and rain; far plan step; ghost), `TownsfolkLooksTests` (same look per seed, home city vs Concord, ghost lint, built assets).
+- [x] Jobs from the start (owner, 13 Nov 2026 ~22:45): `TownLifeDecideSystem` is five Burst jobs: the score cache
+  (`TownScoreCache`, the fixed part of each spot's score per personality, rebuilt only when the game hour, the period, the
+  rain or the spots change), the stale-claim sweep, players near per spot (parallel), the think job (parallel
+  `IJobEntity`: states, arrival, plan step and scoring into `TownPick`, wishes into lists, slots read only) and the claim
+  job (releases and stays first, then slots handed out in StableId order: never two in one slot, the same town every run).
+  The ghost writer is a parallel `IJobEntity`. Test: `SameSeedMakesTheSameTown`.
+- [x] Crowd Detail (owner: performance first, through the existing Graphics settings): a column of
+  `GraphicsPreferences.Detail` (Low / Medium / High / Ultra with the presets) and one choice on the Graphics page, put in
+  force by `GraphicsSettingsApplier` into `CrowdDetailRuntime` (Rendering). The tier's numbers are rows in
+  `TownsfolkSettings` (`*ByTier`): full bodies 16 / 32 / 48 / 60 within 25 / 35 / 45 / 60 m; cards out to 60 / 80 / 100 /
+  140 m (24 / 48 / 64 / 96); every-frame animation within 10 / 15 / 20 / 30 m, farther every 4 / 3 / 2 / 2 frames;
+  shadows within 8 / 12 / 18 / 25 m; full skinning within 10 / 15 / 20 / 30 m (`CharacterLod.Drive`, the view sets each
+  body's level). The server's crowd never changes with it.
+- [x] Far cards (impostors): `TownsfolkCards` photographs each look once (hidden camera, idle pose, layer 31) and draws
+  every far townsperson of that look as a camera-facing quad in one instanced draw, no shadow (`M_TownsfolkCard`, URP
+  Unlit, alpha clip, instancing); tinted by the hour's light, retaken when the light halves or doubles; off by itself
+  (one warning) if a picture cannot be taken.
+- [x] Vendors (owner 18.1 A; step 7 in part): `VendorLooksClientSystem` dresses every `NpcInteractable` in one fixed
+  Sidekick look (its definition's name, the scene's cast: `TownsfolkViewAssets.vendorCasts` for a home city, else Sky
+  Concord's mixed cast; the old model hidden, never removed); `VendorPresenter`: head follows within 8 m, wave or beckon
+  when the player looks its way (30 s each, 10 s between any two), show goods on stepping into reach, a bow on
+  `NpcInteractable.Interacted` (new). Gestures: an override layer `Gestures` on the shared controllers, IK pass on.
+  `VendorManner` (Townsfolk Data, `Data/Assets/VendorManners/VendorManner_*.asset`, one per NpcDefinition, drafts made only
+  when missing): its greeting gesture, call-out lines (12 m, 45 s each, 10 s between any two vendors) and welcome lines, shown
+  in the HUD's comic speech bubble through a new Core sink `ISpeechBubbleSink` (`ClientPresentationRegistry.Speech`,
+  implemented by `PetBubbleController`; vendor lines are not hidden by the Pet chatter option).
+- [x] Owner notes, 14 Nov 2026 (after the Fable fix; Opus coder b18-standby-18b):
+  - [x] Far cards much farther: bodies near and mid-distance, cards only far out. Five bands per townsperson, edges per Crowd
+    Detail tier in `TownsfolkSettings` (metres, Low / Medium / High / Ultra):
+
+    | Band | What is drawn | Ends at |
+    |---|---|---|
+    | CLOSE | the whole mesh (LOD0), every frame animated, head-look (nearest 6 within 8 m), shadows | 12 / 18 / 25 / 35 |
+    | MEDIUM | LOD1 (about half the triangles), animated every 2nd frame, shadows, no head-look | 28 / 40 / 55 / 75 |
+    | FAR | LOD2 (about a quarter), animated every 4th frame, no shadows | 45 / 65 / 85 / 115 |
+    | REALLY FAR | the picture card (one instanced draw per look) | 120 / 160 / 220 / 300 |
+    | TOO FAR | not drawn (the server still keeps it where it is) | past that |
+
+    Cards began at 25 / 35 / 45 / 60 m before; Low now starts them at 45 m (never so near a card reads as a flat figure).
+    Bodies drawn at most 20 / 32 / 48 / 60, cards 32 / 48 / 64 / 96. A band changes back only 2 m past its edge.
+  - [x] Fewer polygons with distance: LOD1 and LOD2 are baked once per look when the look is baked (`TownsfolkMeshLod`:
+    vertex clustering inside one submesh and one swatch colour cell, the cell size searched to the triangle share in
+    `lod1Share` / `lod2Share`), shared by every body wearing it, never made per NPC. Unity's own Mesh LOD generator is
+    Editor-only and a look is merged at run time, so the project's own baker makes them. Each body draws them on its own
+    bones through a `LODGroup` (cross-fade, animated dither) whose switch heights are worked out from the band edges in
+    metres (`TownsfolkBands.ScreenHeight`, again when the tier, the camera's view angle or the LOD bias change); past FAR
+    the group fades the body out over the card.
+  - [x] Life across ALL of Sky Concord, not only by the Sky Lift: the area now reaches the whole platform (radius 160 m:
+    its NavMesh is 220 m square). `TownSpread` spreads points every 9 m over every walkable floor of its NavMesh (plazas,
+    streets, stairs, upper tiers, edges; at most 240) and sorts them: rim points look out (Viewpoint, quiet: strollers),
+    back streets 18 m or more from every hand-placed spot get quiet lean spots (40 %, loners), elsewhere 15 % are places to
+    stand and look round, the rest walk points. 70 % of new townsfolk step out somewhere on the district instead of from
+    a home door; never by the arrival while 15 % of the crowd is already within 28 m of it, and while it is, its spots
+    score a quarter (`TownSpotFlags.NearArrival`, `TownArea.ArrivalCrowded`). Numbers in `TownsfolkSettings`.
+  - [x] No weapons on townsfolk or vendors: the Sidekick weapon mounts (back, hips back / left / right:
+    `TownsfolkSettings.noWeaponRegions`) are left out of the merged mesh (`CharacterAppearance.ExcludeRegions`), and every
+    renderer of the player model but the look's own is removed when a body is made (held weapons, holsters). Guards too,
+    until the Master says otherwise.
+  - [x] Vendors out of step (the Fable fix): kept as it was (run 2: 35 vendors over 0.72-0.82 of each standing cycle, 0 pairs in step).
+  - [x] Cross-fade: Synty's `Sidekick_ShaderGraph` has no LOD cross-fade variant (the first Play run showed 0 of 77), so the bands
+    popped. `Data/Shaders/KN_Townsfolk_Sidekick.shadergraph` is a copy of it with "Support LOD Cross Fade" on (the vendor file is
+    untouched); each look's Sidekick materials are copied once into it (`TownsfolkViewAssets.crossFadeShader`) and shared by its
+    bodies. The look's merged mesh stays readable just long enough for the LOD baker (`CharacterAppearance.KeepMeshReadable`,
+    `SkinnedMeshMerger.KeepReadable`), then its CPU copy is freed as before.
+  - Unity proof, 14 Nov 2026 (shared Editor, lean recipe, Burst off, 48 townsfolk + 35 vendors at noon): Build Assets clean;
+    EditMode Townsfolk 31/31, Brains 20/20. Play run 2: looks LOD0 / LOD1 / LOD2 = 10,636 / 5,237 / 2,629 triangles (49 % / 25 %);
+    player view at High: 6 CLOSE, 11 MEDIUM, 13 FAR bodies, 20 cards; every townsfolk body draws in the cross-fade shader; weapon
+    parts 0, other renderers 0; 0 bodies in a bind pose. Heatmap (crowd sampled every second while the town clock ran 7:00 to
+    21:00): 8 % within 28 m of the arrival, quarters NW 25 % NE 20 % SW 22 % SE 32 %, 240 spread points (173 walk, 67 places).
+    Perf (Editor, so main-thread frames swing 20-55 ms between runs; crowd = with minus without): run 1 player view +0.25 ms main,
+    -0.5 ms GPU; wide view +1.1 ms main, +0.96 ms GPU; run 2 (LODs on, capture running) player view +2.5 ms main, +0.3 ms GPU, wide
+    +2.4 ms main, GPU within noise. The Editor's noise is larger than the budget; a built-player perf log is the real proof.
+    Pictures: `G:\My Drive\KryticalNova\AI Outputs\build17\18-opus2\` (`18-concord-full-of-life.gif`, `heatmap.png`,
+    `look_High_*.png`, `18-concord-wide-High-Low.mp4`).
+  - Tests: `TownsfolkBandsTests` (bands and hysteresis, cards far on every tier, switch heights in metres, LOD triangle
+    shares, the spread over a whole deck and the arrival's share, no weapon regions).
+- [ ] Owed: a built-player perf log Low and High against the budget (the Editor run above is too noisy to prove it; 48 in view:
+  <= 1.5 ms main thread, <= 1.0 ms GPU, 0 GC a frame); second client.
+- [ ] Later steps: pairs walking together, head-look / glances / greetings / text barks (step 6), vendors' manner assets and
+  barks (step 7).
+
+Findings: the Concord 040 prefab (`World/Zones/Concord040/`) is not in git (only in the hand-test clone), so a fresh
+checkout has no Sky Concord; its meshes carry tile names only, so spots are data in the area asset, not found by name. The
+Synty packs in the project have no sitting clip: benches show a standing rest. Feminine locomotion clips are missing from
+the locomotion pack; feminine bodies use the masculine walk and run.

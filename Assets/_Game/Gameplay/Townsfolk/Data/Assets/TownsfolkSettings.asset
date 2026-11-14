@@ -1,0 +1,99 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f4ea606054ba496d8a3e8f11b8fc0d53, type: 3}
+  m_Name: TownsfolkSettings
+  m_EditorClassIdentifier: KryticalNova.Townsfolk.Entities::KryticalNova.Townsfolk.TownsfolkSettings
+  dayCap: 80
+  nightCap: 35
+  hardCap: 100
+  spawnsPerSecond: 4
+  rainCrowdShare: 0.6
+  dawnStartHour: 5
+  dayStartHour: 8
+  duskStartHour: 18
+  nightStartHour: 22
+  planJitterHours: 0.5
+  preferredSpotDistance: 40
+  pickFromBest: 3
+  recentSpots: 3
+  staleClaimSeconds: 30
+  friendBonus: 0.5
+  arriveRadius: 0.7
+  giveUpWalkSeconds: 60
+  snapToNavMesh: 4
+  walkPoints: 60
+  spreadSpacing: 9
+  spreadMostPoints: 240
+  spreadRimBand: 18
+  spreadRimEdge: 2.5
+  backStreetFrom: 18
+  backStreetStandShare: 0.4
+  spreadStandShare: 0.15
+  spawnAnywhereShare: 0.7
+  arrivalRadius: 28
+  arrivalMostShare: 0.15
+  arrivalFullScore: 0.25
+  farPlanStepSeconds: 2
+  fullBodiesByTier: 14000000280000003800000048000000i
+  closeWithinByTier:
+  - 12
+  - 18
+  - 25
+  - 35
+  mediumWithinByTier:
+  - 28
+  - 40
+  - 55
+  - 75
+  farWithinByTier:
+  - 45
+  - 65
+  - 85
+  - 115
+  cardsWithinByTier:
+  - 120
+  - 160
+  - 220
+  - 300
+  cardsByTier: 20000000400000006000000080000000i
+  mediumAnimateEvery: 2
+  farAnimateEvery: 4
+  lod1Share: 0.5
+  lod2Share: 0.25
+  bandHysteresis: 2
+  cardCaptureLayer: 31
+  cardPixels: 96
+  looksPerCast: 16
+  noWeaponRegions:
+  - 24
+  - 26
+  - 27
+  - 28
+  headLookRadius: 8
+  maxLookers: 6
+  speedDamp: 0.15
+  vendorHeadFollowRadius: 8
+  vendorHeadWeight: 0.8
+  vendorWaveRadius: 10
+  vendorWaveCooldown: 30
+  vendorAnyWaveGap: 10
+  vendorShowGoodsCooldown: 20
+  vendorLookBase: 1000
+  vendorCalloutRadius: 12
+  vendorCalloutCooldown: 45
+  vendorAnyCalloutGap: 10
+  vendorLineSeconds: 2.5
+  vendorLineSecondsPerChar: 0.04
+  vendorStartSpread: 1
+  vendorSpeedJitter: 0.08
+  vendorCooldownJitter: 0.3
+  vendorGestureDelay: 0.8

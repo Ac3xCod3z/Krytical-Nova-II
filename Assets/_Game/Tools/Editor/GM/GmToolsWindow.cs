@@ -840,6 +840,30 @@ namespace KryticalNova.EditorTools.GM
         [ButtonGroup(Tabs + "/" + WorldTab + "/Crossfire"), EnableIf(nameof(HasCrossfire)), PropertyOrder(423), LabelText("End")]
         private void CrossfireEnd() => Run("gm.crossfire end");
 
+        // ---------------------------------------------------------------- Townsfolk on Sky Concord (owner's DAY list item 18)
+
+        private static bool HasTown => KryticalNova.Townsfolk.TownsfolkGm.HasServer;
+
+        [TabGroup(Tabs, WorldTab), Title("Townsfolk"), ShowInInspector, DisplayAsString, HideLabel, PropertyOrder(430)]
+        [InfoBox("The time of day above moves them too (they follow the world's clock).")]
+        private static string TownStatus => KryticalNova.Townsfolk.TownsfolkGm.Status;
+
+        [TabGroup(Tabs, WorldTab), ShowInInspector, ToggleLeft, LabelText("Townsfolk Labels"), PropertyOrder(431)]
+        private bool TownLabels
+        {
+            get => KryticalNova.Townsfolk.TownsfolkGm.Labels;
+            set { if (value != TownLabels) Run(value ? "gm.town.debug true" : "gm.town.debug false"); }
+        }
+
+        [TabGroup(Tabs, WorldTab), Button(ButtonStyle.CompactBox, Expanded = true), EnableIf(nameof(HasTown)), PropertyOrder(432)]
+        private void TownCap(int day = 48, int night = 20) => Run($"gm.town.cap {day} {night}");
+
+        [TabGroup(Tabs, WorldTab), Button(ButtonStyle.CompactBox, Expanded = true), EnableIf(nameof(HasTown)), PropertyOrder(433)]
+        private void TownSpawn([PropertyRange(1, 10)] int personality = 2, [MinValue(1)] int count = 5) => Run($"gm.town.spawn {personality} {count}");
+
+        [TabGroup(Tabs, WorldTab), Button(ButtonStyle.CompactBox), EnableIf(nameof(HasTown)), PropertyOrder(434), LabelText("Clear Townsfolk")]
+        private void TownClear() => Run("gm.town.clear");
+
         [TabGroup(Tabs, WorldTab), ShowInInspector, ToggleLeft, EnableIf(nameof(HasWorld)), LabelText("Pause Clock"), PropertyOrder(405)]
         private bool TimePaused
         {

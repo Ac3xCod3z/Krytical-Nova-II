@@ -32,6 +32,8 @@ namespace KryticalNova.Networking.Entities
         [Min(1)] public int importanceHostile = 60;
         [Tooltip("How often Strike Dummies are sent (written into the StrikeDummyGhost prefab by its builder).")]
         [Min(1)] public int importanceDummy = 10;
+        [Tooltip("How often townsfolk are sent (written into the TownsfolkGhost prefab by its builder; owner's DAY list item 18).")]
+        [Min(1)] public int importanceTownsfolk = 30;
         [Tooltip("How often Mount Companions are sent (written into the MountCompanionGhost prefab by its builder; day list item 19).")]
         [Min(1)] public int importanceCompanion = 40;
 

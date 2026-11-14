@@ -45,6 +45,28 @@ namespace KryticalNova.Rendering
         public bool AlwaysWhole { get => alwaysWhole; set { alwaysWhole = value; next = 0f; } }
 
         /// <summary>
+        /// Something else decides this character's level (the townsfolk view, by the player's Crowd Detail): its own distance check is
+        /// off and <see cref="Drive"/> sets the level.
+        /// </summary>
+        public bool DrivenExternally { get; set; }
+
+        private bool shadowsOff;
+
+        /// <summary>
+        /// Sets the level from outside (<see cref="DrivenExternally"/>): 0 whole, 1 lighter skinning, 2 lightest, 3 not drawn; with
+        /// <paramref name="noShadow"/> it casts no shadow at any level. Does nothing when nothing changed.
+        /// </summary>
+        public void Drive(int level, bool noShadow)
+        {
+            DrivenExternally = true;
+            if (level == tier && noShadow == shadowsOff && seenHoldStamp == holdStamp) return;
+            if (skins.Length == 0) Collect();
+            shadowsOff = noShadow;
+            seenHoldStamp = holdStamp;
+            Apply(level);
+        }
+
+        /// <summary>
         /// Something else hides this character for a while (the de-rez until the respawn): its LOD leaves it hidden
         /// instead of showing it when it comes nearer.
         /// </summary>
@@ -83,7 +105,7 @@ namespace KryticalNova.Rendering
 
         private void Update()
         {
-            if (Application.isBatchMode || Time.time < next) return;
+            if (DrivenExternally || Application.isBatchMode || Time.time < next) return;
             WorldLodSettings s = settings != null ? settings : shared;
             next = Time.time + (s != null ? s.characterRefresh : DefaultRefresh);
             if (Time.time >= nextCollect) { Collect(); nextCollect = Time.time + RecollectSeconds; tier = -1; }
@@ -129,7 +151,7 @@ namespace KryticalNova.Rendering
                 SkinnedMeshRenderer skin = skins[i];
                 if (skin == null) continue;
                 skin.quality = level == 0 ? skinQuality[i] : level == 1 ? SkinQuality.Bone2 : SkinQuality.Bone1;
-                skin.shadowCastingMode = level >= 2 ? ShadowCastingMode.Off : skinShadows[i];
+                skin.shadowCastingMode = level >= 2 || shadowsOff ? ShadowCastingMode.Off : skinShadows[i];
                 skin.forceRenderingOff = level >= 3 || IsHeld(skin.transform);
             }
             bool decidesHere = NetworkManager.Singleton == null || !NetworkManager.Singleton.IsListening || NetworkManager.Singleton.IsServer;
