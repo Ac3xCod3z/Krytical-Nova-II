@@ -1,7 +1,7 @@
 # Living NPCs on Sky Concord plan (Townsfolk)
 
-**Status: proposed 13 Nov 2026, waiting for the owner's review.** Research and design only: no code until the owner has
-reviewed this page, edited the ten personalities and answered the picks.
+**Status: first pass built 13 Nov 2026 (PR into `items-18-24`, b18-coder-11), owner picks 1a, 2a (48 / 20), 3a, 4a.** Not yet
+run in Unity: the asset builder, the EditMode tests and the Play proof are owed (see "As built").
 
 Owner's day list 13 Nov 2026, item 18. Row: new, "Townsfolk", to add to `../Reference/12Sky/01_Systems_Build_List.md`
 when step 1 lands. Sky Concord here means the Concord 040 preview that floats 300 m above Zone01's Concord
@@ -311,10 +311,10 @@ same person.
 ## Steps (one PR each)
 
 - [ ] 0. Checks only: the server's path service finds paths on the Concord 040 NavMesh; perf log baseline on Sky Concord with no crowd. Evals: none (sets the baseline).
-- [ ] 1. Data: settings, personality, cast, manner types; the ten personality assets from the owner's edited table; the glossary rows. Evals: numbers in assets.
-- [ ] 2. The ghost, spawner and town-life mind on the Brain with Strollers only on hand-placed points; debug labels and `gm.town.*`. Evals: layers, ghost lint, two clients.
-- [ ] 3. Smart spots (authoring, Sky Concord builder, claims, scoring), all ten personalities, clock and rain. Evals: scorer, claims, day plans, Hostiles unchanged.
-- [ ] 4. Looks: casts, seed pick, merged-mesh bake and cache, `AC_Townsfolk`, CharacterLod. Evals: same person, faction casts.
+- [x] 1. Data: settings, personality, cast, manner types; the ten personality assets from the owner's edited table; the glossary rows. Evals: numbers in assets.
+- [x] 2. The ghost, spawner and town-life mind on the Brain with Strollers only on hand-placed points; debug labels and `gm.town.*`. Evals: layers, ghost lint, two clients.
+- [x] 3. Smart spots (authoring, Sky Concord builder, claims, scoring), all ten personalities, clock and rain. Evals: scorer, claims, day plans, Hostiles unchanged.
+- [x] 4. Looks: casts, seed pick, merged-mesh bake and cache, `AC_Townsfolk`, CharacterLod. Evals: same person, faction casts.
 - [ ] 5. Groups: chat circles and pairs. Evals: claims (circles), two clients.
 - [ ] 6. Client life: head-look, glances, greetings, barks; step aside on the server. Evals: no presentation on server, fps.
 - [ ] 7. Vendors: Sidekick looks, `VendorPresenter`, `VendorManner` assets, `Interacted`. Evals: fps, owner in Play.
@@ -334,4 +334,34 @@ log holds 60 with the crowd in view, and a second client sees the same NPCs in t
 
 ## As built
 
-(Empty until step 1 lands.)
+First pass, 13 Nov 2026 (b18-coder-11). Compiles (90/90 Editor, 40/40 server), `dependency_map.py --check` clean.
+**Not yet run in Unity**: builder, EditMode tests and the Play GIF / perf log are owed before the owner sees it.
+
+- [x] Data: `TownsfolkSettings`, `TownsfolkPersonality` (10 drafts, made by the builder only when missing: page
+  `Design/Townsfolk-Personalities.md`), `TownLifeArea` (Sky Concord: 67 spots in Concord 040's frame + 8 jog points; mix
+  48 / 20), `TownsfolkCast` (Sky Concord: all three factions). Resources holders `TownsfolkWorldAssets` (server: no bodies)
+  and `TownsfolkViewAssets` (client).
+- [x] Server: `TownsfolkServerSystem` (installs the config, makes the Brain's config only when the Hostiles did not, builds
+  the spots from the area snapped onto the NavMesh plus 60 sampled walk points, clock and rain once a second from the world
+  clock, keeps every personality at the hour's number: out of the home doors 4 a second, sent home when over);
+  `TownLifeDecideSystem` (Burst, on the Brain: pick from the best 3 by score, claims, stay, stroll, shifts, rain, home; far
+  tier plan step every 2 s); `TownsfolkGhostWriteSystem`; `TownPlayerFeedSystem` (only when no Hostiles). Switch:
+  `KN_TOWNSFOLK` (on in a built server and the Editor's Play, off in EditMode tests).
+- [x] Ghost `TownsfolkGhost` (seed, cast, personality, activity, speed, chat circle), interpolated, never owned, importance
+  30 (`RelevancySettings.importanceTownsfolk`), prefab + holder by `TownsfolkEntitiesAssetsBuilder`.
+- [x] Client: `TownsfolkViewClientSystem` (nearest 48 within 80 m; a hidden template per look, baked once, bodies share its
+  mesh through `CharacterAppearance.ShareFrom`; 16 looks per cast from `RecipeEdit.Randomize`, the lineage's basic outfit;
+  `CharacterLod` on every body), one shared animator per body type (`AC_Townsfolk_Masc/Femn`, Speed blend + 4 variants per
+  activity picked by the seed), `gm.town.debug` labels.
+- [x] GM: `gm.town`, `gm.town.debug`, `gm.town.cap`, `gm.town.clear`, `gm.town.spawn`; GM window World tab; control page
+  Townsfolk panel. Time of day: the existing `time.*` controls.
+- [x] Tests written: `TownLifeRulesTests`, `TownLifeWorldTests` (60 townsfolk, 20 spots, 10,000 ticks; stale claims; shifts
+  and rain; far plan step; ghost), `TownsfolkLooksTests` (same look per seed, home city vs Concord, ghost lint, built assets).
+- [ ] Owed: run the builder and the tests in Unity; Play proof GIF + perf log; second client.
+- [ ] Later steps: pairs walking together, head-look / glances / greetings / text barks (step 6), vendors' manner (step 7,
+  `NpcInteractable.Interacted`), measured budgets (step 8).
+
+Findings: the Concord 040 prefab (`World/Zones/Concord040/`) is not in git (only in the hand-test clone), so a fresh
+checkout has no Sky Concord; its meshes carry tile names only, so spots are data in the area asset, not found by name. The
+Synty packs in the project have no sitting clip: benches show a standing rest. Feminine locomotion clips are missing from
+the locomotion pack; feminine bodies use the masculine walk and run.

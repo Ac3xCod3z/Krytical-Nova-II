@@ -4,6 +4,7 @@
     "references": [
         "KryticalNova.Editor.Skin",
         "KryticalNova.Runtime",
+        "KryticalNova.Townsfolk.Entities",
         "KryticalNova.Audio",
         "KryticalNova.Autopilot",
         "KryticalNova.CharacterCreation",

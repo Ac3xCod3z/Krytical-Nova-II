@@ -1,0 +1,31 @@
+{
+    "name": "KryticalNova.Townsfolk.Entities.Editor",
+    "rootNamespace": "KryticalNova.Townsfolk.Editor",
+    "references": [
+        "KryticalNova.Townsfolk.Entities",
+        "KryticalNova.Brains",
+        "KryticalNova.NPC",
+        "KryticalNova.Factions",
+        "KryticalNova.CharacterCreation",
+        "KryticalNova.Networking.Entities",
+        "KryticalNova.Player.Entities",
+        "KryticalNova.Player.Entities.Editor",
+        "Unity.Entities",
+        "Unity.Entities.Hybrid",
+        "Unity.Scenes",
+        "Unity.NetCode",
+        "Unity.NetCode.Hybrid",
+        "Unity.NetCode.Authoring.Hybrid"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

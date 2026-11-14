@@ -32,6 +32,8 @@ namespace KryticalNova.Networking.Entities
         [Min(1)] public int importanceHostile = 60;
         [Tooltip("How often Strike Dummies are sent (written into the StrikeDummyGhost prefab by its builder).")]
         [Min(1)] public int importanceDummy = 10;
+        [Tooltip("How often townsfolk are sent (written into the TownsfolkGhost prefab by its builder; owner's DAY list item 18).")]
+        [Min(1)] public int importanceTownsfolk = 30;
 
         /// <summary>The asset from Resources; null when it is missing (the caller logs it and relevancy stays off).</summary>
         public static RelevancySettings Load() => Resources.Load<RelevancySettings>(ResourcePath);

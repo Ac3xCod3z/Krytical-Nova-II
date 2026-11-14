@@ -28,6 +28,10 @@
     {
       "title": "Aegis, Guard and Squad Stances",
       "body": "Aegis now also raises Defense, and its shield counts down live hit by hit. Every class's Guard ward also raises Elemental Attack. Shared Stances give Squad mates half their strength."
+    },
+    {
+      "title": "Sky Concord Comes Alive",
+      "body": "Sky Concord has townsfolk now: workers on their shifts, strollers, joggers, shoppers, gossips in chat circles, street performers and guards, each with a personality and a day plan. Fewer come out at night, and they shelter or go home in the rain."
     }
   ],
   "patchNotes": [
@@ -44,7 +48,8 @@
         "Crossfire, the hourly faction war, now keeps time on the server: from level 10 you are called 10 minutes before nightfall, with a banner and a countdown on your HUD. The battleground itself opens in a later build.",
         "Mini Deck: in every fight the minimap gives way to a small click-wheel player with the Deck's music and the Cadence beat, and comes back when the fight ends (M still opens the full map). In a Callout the chat fades too; Enter brings it back.",
         "Mount milestones: when your mount evolves, the same milestone banner as a pet's shows its new stage.",
-        "Emotes from the saddle: waves, cheers, points, salutes, beckons, laughs and taunts play while riding; the others say you can't do that while riding."
+        "Emotes from the saddle: waves, cheers, points, salutes, beckons, laughs and taunts play while riding; the others say you can't do that while riding.",
+        "Townsfolk on Sky Concord: up to 48 by day and 20 at night, from every faction, walking, working, shopping and chatting by their own personality and the hour."
       ]
     },
     {
