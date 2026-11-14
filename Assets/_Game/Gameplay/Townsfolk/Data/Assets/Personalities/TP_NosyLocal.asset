@@ -1,0 +1,51 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e17679d995474ac7bfb663bceae118f0, type: 3}
+  m_Name: TP_NosyLocal
+  m_EditorClassIdentifier: KryticalNova.Townsfolk.Entities::KryticalNova.Townsfolk.TownsfolkPersonality
+  id: 7
+  displayName: Nosy Local
+  notes: 'DRAFT (owner edits): Leans where the action is; spots near players score more; watches longest.'
+  walkSpeed: {x: 1, y: 1.2}
+  jogs: 0
+  jogSpeed: {x: 3.2, y: 3.8}
+  stopChance: 0.6
+  staySeconds: {x: 30, y: 90}
+  likes:
+  - kind: 4
+    weight: 1
+  - kind: 5
+    weight: 0.6
+  - kind: 6
+    weight: 0.4
+  crowdingDislike: 0.8
+  needsLight: 0
+  likesPlayersNear: 1
+  chatsWith:
+  - {fileID: 11400000, guid: 105b392e5d2a6e142823ce8fc6d34b11, type: 2}
+  - {fileID: 11400000}
+  chatChance: 0.7
+  declinesInvites: 0
+  outChance: {x: 0.5, y: 0.7, z: 0.5, w: 0.1}
+  shifts: []
+  rain: 1
+  reaction:
+    glanceSeconds: 6
+    greetChance: 0.25
+    stepAsideMetres: 1.2
+    watchRunners: 0
+    playsToPlayers: 0
+  barks:
+  - text: Haven't seen you round here before.
+    clip: {fileID: 0}
+  - text: What's that you're carrying?
+    clip: {fileID: 0}

@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bdc8d693f9b24ca88b1bd8ee47aedb3d, type: 3}
+  m_Name: VendorManner_Blacksmith
+  m_EditorClassIdentifier: KryticalNova.Townsfolk.Entities::KryticalNova.Townsfolk.VendorManner
+  npc: NPC_Blacksmith
+  greet: 2
+  callouts:
+  - text: Fresh alloys on the anvil!
+    clip: {fileID: 0}
+  - text: That gear's seen better days. Bring it here.
+    clip: {fileID: 0}
+  - text: Temper it now, thank me in the next fight.
+    clip: {fileID: 0}
+  welcome:
+  - text: What are we forging today?
+    clip: {fileID: 0}
+  - text: Let's see what you're carrying.
+    clip: {fileID: 0}

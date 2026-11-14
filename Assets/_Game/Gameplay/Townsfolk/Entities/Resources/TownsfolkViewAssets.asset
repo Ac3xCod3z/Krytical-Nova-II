@@ -1,0 +1,59 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 0}
+  m_Name: TownsfolkViewAssets
+  m_EditorClassIdentifier: KryticalNova.Townsfolk.Entities:KryticalNova.Townsfolk:TownsfolkViewAssets
+  settings: {fileID: 11400000, guid: 9a4f3131574aa9d4f83b6b9ad4a0c159, type: 2}
+  body: {fileID: 3933595338312819546, guid: bee0831911ce5ef4482cb4eee2fa4143, type: 3}
+  masculine: {fileID: 9100000, guid: eb2eddaef33218b458210a669556a25a, type: 2}
+  feminine: {fileID: 9100000, guid: 4a3c2e7293415a74f806f2766683337f, type: 2}
+  database: {fileID: 11400000, guid: fdaa64fa8fe059140a15a09fe983365e, type: 2}
+  casts:
+  - {fileID: 11400000, guid: df519e89f50954f48ac4c81b54ac3c06, type: 2}
+  personalities:
+  - {fileID: 11400000, guid: d66be07a44eb3f44a891d0da86f1624b, type: 2}
+  - {fileID: 11400000, guid: e098032eb6651314b91e7f17a59c0fe6, type: 2}
+  - {fileID: 11400000, guid: bba684ae286d45243b20f0809772b002, type: 2}
+  - {fileID: 11400000, guid: 105b392e5d2a6e142823ce8fc6d34b11, type: 2}
+  - {fileID: 11400000, guid: ff1227051e568a948885e8c1d640f9b7, type: 2}
+  - {fileID: 11400000, guid: b2441972f384cf5419756102bba75d17, type: 2}
+  - {fileID: 11400000, guid: 51f1b69246f215541b8b39453b9ebb49, type: 2}
+  - {fileID: 11400000, guid: 875d604a480b4ec4b9d3f6d8d8e5c7e5, type: 2}
+  - {fileID: 11400000, guid: de79a1d57afaf054d99f224d73e995fb, type: 2}
+  - {fileID: 11400000, guid: 2f525e255770ca340adbc8db17eafafd, type: 2}
+  cardMaterial: {fileID: 2100000, guid: 882786cf9aca25f4988d3c180ee73473, type: 2}
+  vendorCasts: []
+  manners:
+  - {fileID: 11400000, guid: 757585fa4fa15774c917f61cadcc6fd2, type: 2}
+  - {fileID: 11400000, guid: ce7d36e41bacc3a48b135711a87cd943, type: 2}
+  - {fileID: 11400000, guid: 6d22a8388c5e449479e20c61e3f36665, type: 2}
+  - {fileID: 11400000, guid: faeab6114de945249a131c3bbd209880, type: 2}
+  - {fileID: 11400000, guid: 5b1d75f83028d714cb479f8d3babcbc6, type: 2}
+  - {fileID: 11400000, guid: bddd2926b8d74734cb1c05971ec906d4, type: 2}
+  - {fileID: 11400000, guid: d28df01fefc9b714f83aa5b1f8b2757d, type: 2}
+  - {fileID: 11400000, guid: 925798cb74cb7c4479a24335eae77a81, type: 2}
+  - {fileID: 11400000, guid: e74df7232df45d049ac9f11de654f6eb, type: 2}
+  - {fileID: 11400000, guid: 2a7034d2fa26ff144b277d0c9b949228, type: 2}
+  - {fileID: 11400000, guid: 9a86fa480c90b6f468ad37328943f0b6, type: 2}
+  - {fileID: 11400000, guid: 529c7659f082fa14488a78dc4e8a7cdc, type: 2}
+  - {fileID: 11400000, guid: 1351bec646de3354490e14964a5d2376, type: 2}
+  - {fileID: 11400000, guid: 6453c45204c893d4b873c790dcbdfef3, type: 2}
+  - {fileID: 11400000, guid: a079961518a8eb44b9a765b1069f424d, type: 2}
+  - {fileID: 11400000, guid: 4b38997fc2cf00b46a7c9a703d12967a, type: 2}
+  - {fileID: 11400000, guid: 80222b20155f73c4090ae13900b6ed30, type: 2}
+  - {fileID: 11400000, guid: 71c2404c3b3a161489ee0d4210c4aec7, type: 2}
+  - {fileID: 11400000, guid: 4f4836d09fdc53047a9fd7dcab1dc661, type: 2}
+  - {fileID: 11400000, guid: 3daa0becdbf7d3543a88949c2773cf16, type: 2}
+  - {fileID: 11400000, guid: b7617386a62b1a74d8cf4645705af701, type: 2}
+  - {fileID: 11400000, guid: bb278a5dc9c5d1442b58fbcc62fd4fee, type: 2}
+  - {fileID: 11400000, guid: 8a09a8aa073a26b43b558c5b0d5cb0f6, type: 2}
+  - {fileID: 11400000, guid: 2df1bd4d3c6c2004daea44ae20b9fc6a, type: 2}

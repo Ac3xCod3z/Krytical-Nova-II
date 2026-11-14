@@ -10,6 +10,7 @@
         "KryticalNova.Networking.Entities",
         "KryticalNova.Player.Entities",
         "KryticalNova.Player.Entities.Editor",
+        "Unity.Collections",
         "Unity.Entities",
         "Unity.Entities.Hybrid",
         "Unity.Scenes",

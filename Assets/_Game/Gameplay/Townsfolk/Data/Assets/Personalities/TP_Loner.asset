@@ -1,0 +1,47 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e17679d995474ac7bfb663bceae118f0, type: 3}
+  m_Name: TP_Loner
+  m_EditorClassIdentifier: KryticalNova.Townsfolk.Entities::KryticalNova.Townsfolk.TownsfolkPersonality
+  id: 6
+  displayName: Loner
+  notes: 'DRAFT (owner edits): Quiet walls and edge benches; crowds count double; declines every chat.'
+  walkSpeed: {x: 1, y: 1.3}
+  jogs: 0
+  jogSpeed: {x: 3.2, y: 3.8}
+  stopChance: 0.3
+  staySeconds: {x: 120, y: 300}
+  likes:
+  - kind: 4
+    weight: 1
+  - kind: 1
+    weight: 0.8
+  - kind: 6
+    weight: 0.7
+  crowdingDislike: 2
+  needsLight: 0
+  likesPlayersNear: 0
+  chatsWith: []
+  chatChance: 0
+  declinesInvites: 1
+  outChance: {x: 0.4, y: 0.4, z: 0.4, w: 0.4}
+  shifts: []
+  rain: 0
+  reaction:
+    glanceSeconds: 0
+    greetChance: 0
+    stepAsideMetres: 3
+    watchRunners: 0
+    playsToPlayers: 0
+  barks:
+  - text: ...
+    clip: {fileID: 0}
