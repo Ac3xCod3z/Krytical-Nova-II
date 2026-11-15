@@ -24,9 +24,9 @@ namespace KryticalNova.Hostiles.Entities.Tests
             const int strikes = 1000;
             for (int i = 0; i < 10; i++) OldText(i * 1.5f, i % 4 == 0);   // warm up
             string what = "x";
-            System.Action oldWay = () => { for (int i = 0; i < strikes; i++) what = OldText(i * 1.5f, i % 4 == 0); };
+            TestDelegate oldWay = () => { for (int i = 0; i < strikes; i++) what = OldText(i * 1.5f, i % 4 == 0); };
             // the new path with diagnostics off: the queued case keeps a null and the text is never made
-            System.Action newWay = () => { for (int i = 0; i < strikes; i++) what = HostileBrainDiag.Enabled ? HostileStrikeBridge.HitText(i * 1.5f, i % 4 == 0) : null; };
+            TestDelegate newWay = () => { for (int i = 0; i < strikes; i++) what = HostileBrainDiag.Enabled ? HostileStrikeBridge.HitText(i * 1.5f, i % 4 == 0) : null; };
             HostileBrainDiag.On = false;   // as by default (no other test may leave it on here)
             long before = GC.GetTotalMemory(false); oldWay(); long oldBytes = GC.GetTotalMemory(false) - before;
             before = GC.GetTotalMemory(false); newWay(); long newBytes = GC.GetTotalMemory(false) - before;

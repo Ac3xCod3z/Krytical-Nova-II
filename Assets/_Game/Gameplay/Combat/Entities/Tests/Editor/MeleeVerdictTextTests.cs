@@ -39,8 +39,8 @@ namespace KryticalNova.Combat.Entities.Tests
             var v = default(MeleeResolveServerSystem.Verdict);
             string last = null;
             for (int i = 0; i < 10; i++) last = OldLine((byte)(i % 3 + 1), new int3(i), new int3(-i), i, i, true, false, 2500);   // warm up
-            System.Action oldWay = () => { for (int i = 0; i < swings; i++) last = OldLine((byte)(i % 3 + 1), new int3(i), new int3(-i), i, i, true, false, 2500); };
-            System.Action newWay = () =>
+            TestDelegate oldWay = () => { for (int i = 0; i < swings; i++) last = OldLine((byte)(i % 3 + 1), new int3(i), new int3(-i), i, i, true, false, 2500); };
+            TestDelegate newWay = () =>
             {
                 for (int i = 0; i < swings; i++)
                     v = new MeleeResolveServerSystem.Verdict { Step = (byte)(i % 3 + 1), Me = new int3(i), Them = new int3(-i), TicksBack = i, RingSamples = i, Resolved = true, ReachMm = 2500 };
