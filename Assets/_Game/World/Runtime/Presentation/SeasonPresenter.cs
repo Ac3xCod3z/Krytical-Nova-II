@@ -220,7 +220,7 @@ namespace KryticalNova.World
             Color slush = settings.slushColor;
             Shader.SetGlobalVector(SlushId, new Vector4(slush.r, slush.g, slush.b, 1f));
             Shader.SetGlobalVector(RoadSlushId, new Vector4(settings.roadSlushCover, settings.roadPavingShows, settings.roadWetDarkness, settings.roadEdgeBreakup));
-            SetColour(RoadWetId, settings.roadWetColor);
+            Shader.SetGlobalVector(RoadWetId, new Vector4(settings.roadWetColor.r, settings.roadWetColor.g, settings.roadWetColor.b, settings.roadSlushShare));
 
             // spring and summer: grass grows back green, buds and blossom; golden grass on dry spells; heat haze on hot afternoons
             Temperature = s.Temperature;

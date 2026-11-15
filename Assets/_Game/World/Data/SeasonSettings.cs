@@ -134,10 +134,12 @@ namespace KryticalNova.World
         [Tooltip("How fast a trodden road packs over with slush as the cover builds (1.6 = covered by 60 % cover; the paving shows only through a light snow).")]
         [Range(0.2f, 4f)] public float roadSlushCover = 1.6f;
         [Tooltip("How much the paving's pattern shows in the slush (its brightness only, never its colour).")]
-        [Range(0f, 1f)] public float roadPavingShows = 0.35f;
+        [Range(0f, 1f)] public float roadPavingShows = 0.2f;
         [Tooltip("How dark the wet lanes worn by feet and wheels are, and their colour (multiplies the slush).")]
-        [Range(0f, 1f)] public float roadWetDarkness = 0.6f;
+        [Range(0f, 1f)] public float roadWetDarkness = 0.35f;
         public Color roadWetColor = new Color(0.55f, 0.6f, 0.7f);
+        [Tooltip("How far trodden snow goes from fresh snow toward the slush colour (owner 15 Nov: it must still read as snow, never dirt).")]
+        [Range(0f, 1f)] public float roadSlushShare = 0.5f;
         [Tooltip("How broken a road's edge is against the full snow (fresh-snow islands toward its edges; 0.02 sharp .. 0.5 very ragged).")]
         [Range(0.02f, 0.5f)] public float roadEdgeBreakup = 0.3f;
         [Tooltip("A road or pavement is flat: a renderer taller than this (metres) is never one, whatever its name (lamps, barriers, machines).")]

@@ -46,7 +46,7 @@ float4 _KN_SeasonLitter;   // x litter on the ground under canopies 0-1, y swept
 float4 _KN_LitterA;        // rgb one dead-leaf tone of the litter
 float4 _KN_LitterB;        // rgb the other
 float4 _KN_RoadSlush;      // owner 15 Nov: x how fast trodden roads pack over (cover gain), y how much the paving pattern shows (grey only), z wet worn darkness, w how broken a road's edge is
-float4 _KN_RoadWet;        // rgb the wet, worn lanes (multiplies the slush)
+float4 _KN_RoadWet;        // rgb the wet, worn lanes (multiplies the slush), a how far the slush colour goes from the snow (0 = fresh snow, 1 = full slush)
 
 bool KNSeasonOn() { return _KN_SeasonParams.w > 0.5; }
 
@@ -231,8 +231,9 @@ float KNRoadTrodden(float3 positionWS, float road, float roadMap)
 half3 KNRoadSlushColour(half3 paving, float3 positionWS)
 {
     half lum = dot(paving, half3(0.3h, 0.59h, 0.11h));
-    half3 c = (half3)(_KN_SnowColor.rgb * _KN_SlushColor.rgb);
-    c *= (half)lerp(1.0, 0.7 + 0.6 * saturate(lum * 2.0), _KN_RoadSlush.y);
+    // owner 15 Nov: it must still read as SNOW (packed white-grey), never dirt: only part of the way to the slush colour
+    half3 c = (half3)(_KN_SnowColor.rgb * lerp(float3(1.0, 1.0, 1.0), _KN_SlushColor.rgb, _KN_RoadWet.a));
+    c *= (half)lerp(1.0, 0.85 + 0.3 * saturate(lum * 2.0), _KN_RoadSlush.y);
     float2 xz = positionWS.xz;
     float lanes = max(KNSeasonNoise(float2(xz.x * 0.9, xz.y * 0.22) + 3.1), KNSeasonNoise(float2(xz.x * 0.22, xz.y * 0.9) + 8.3));
     float wet = smoothstep(0.55, 0.8, lanes) * (0.7 + 0.3 * KNSeasonNoise(xz * 3.7));
@@ -243,7 +244,9 @@ half3 KNRoadSlushColour(half3 paving, float3 positionWS)
 half3 KNRoadWetPaving(half3 paving, float trodden)
 {
     half lum = dot(paving, half3(0.3h, 0.59h, 0.11h));
-    half3 cool = lum * (half3)(_KN_SnowColor.rgb / max(dot(_KN_SnowColor.rgb, float3(0.3, 0.59, 0.11)), 0.05)) * 0.6h;
+    // where the slush is thin it is still mostly snow over the stone: the stone's brightness, lifted toward the slush, cool
+    half3 cool = lum * (half3)(_KN_SnowColor.rgb / max(dot(_KN_SnowColor.rgb, float3(0.3, 0.59, 0.11)), 0.05));
+    cool = lerp(cool, (half3)(_KN_SnowColor.rgb * _KN_SlushColor.rgb), 0.5h);
     return lerp(paving, cool, (half)(trodden * saturate(_KN_SeasonParams.x * 4.0)));
 }
 
