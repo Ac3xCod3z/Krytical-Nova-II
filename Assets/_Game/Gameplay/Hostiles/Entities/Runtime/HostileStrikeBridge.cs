@@ -119,9 +119,8 @@ namespace KryticalNova.Hostiles.Entities
             foreach (PendingStrike swing in swings)
             {
                 HostileNet hostile = m_ByGhost.TryGetValue(swing.Hostile, out EcsHostileBrain body) && body != null ? body.GetComponent<HostileNet>() : null;
-                CombatEntity target = null;
-                foreach (GhostBodyEntry entry in GhostBodyRegistry.Entries)
-                    if (ReferenceEquals(entry.World, World) && entry.Ghost == swing.Target && entry.Body != null) { target = entry.Body.GetComponent<CombatEntity>(); break; }
+                // the target player's live entry, by map (perf night chunk 4: was a scan of every player per swing)
+                CombatEntity target = GhostBodyRegistry.TryGetByGhost(World, swing.Target, out GhostBodyEntry entry) ? entry.Body.GetComponent<CombatEntity>() : null;
                 // phase 4 of the Mount Companion: a TANK companion is struck through its hidden body (not a player)
                 IDamageable standIn = null;
                 if (target == null && StandInTargets.TryGet(World, swing.Target, out Component standInBody)) standInBody.TryGetComponent(out standIn);
