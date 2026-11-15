@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using KryticalNova.Networking.Entities.Tests;
 using NUnit.Framework;
 using UnityEngine;
@@ -116,6 +117,53 @@ namespace KryticalNova.World.Entities.Tests
             var lateSystem = late.GetExistingSystemManaged<SeasonClientSystem>();
             tw.TickUntil(() => lateSystem.Applied > 0, 300);
             Assert.AreEqual(server.Current, lateSystem.Last, "a player who comes later gets the season as it is now");
+        }
+
+        /// <summary>
+        /// The game calendar (owner, 15 Nov 2026) works the forecast out on the player's machine: its seven days' weather spells are the
+        /// ones the server rolls (same seed, same map, same days) and today's air is the server's to the degree step.
+        /// </summary>
+        [Test]
+        public void Calendar_Forecast_MatchesTheServersSpells_AndAir()
+        {
+            foreach (SeasonProfile p in m_Profiles)
+            {
+                p.dailySwing = 6f;
+                p.spells.Add(new WeatherSpell { name = "Wet Run", chance = 1f, minDays = 1, maxDays = 3, wet = true, temperatureOffset = -2f });
+                p.spells.Add(new WeatherSpell { name = "Dry Spell", chance = 1f, minDays = 2, maxDays = 4, dry = true, temperatureOffset = 3f });
+                p.spells.Add(new WeatherSpell { name = "Cold Snap", chance = 0.5f, minDays = 1, maxDays = 2, temperatureOffset = -6f });
+            }
+            m_Settings.dayWobble = 2f;
+            m_Weather = new SeasonWeatherNow { Falling = PrecipitationType.None, Clock01 = 0.5f, Day = 5000 };
+            double utc = Unix(2026, 11, 13, 12);   // Autumn, day 5 (the blend long done)
+
+            using var tw = new KnTestWorld();
+            tw.CreateWorlds(1);
+            var server = tw.Server.GetExistingSystemManaged<SeasonServerSystem>();
+            server.Settings = m_Settings;
+            server.UtcNow = () => utc;
+            Assert.IsTrue(server.Step());
+            var serverDays = new List<(long day, WeatherSpell spell)>();
+            server.Forecast(serverDays, 7);
+
+            var clock = new CalendarClock
+            {
+                UnixNow = utc, Day = 5000, DayBase = 0, Time01 = 0.5f, DaySeconds = 3600, LunarCycleDays = 8f,
+                WeatherSeed = SeasonRules.WeatherSeed(m_Settings.weatherSeed, "MeridianSprawl_Z1_TransitRow"),
+            };
+            var days = new List<ForecastDay>();
+            GameCalendar.Forecast(clock, m_Settings, null, 7, days);
+            Assert.AreEqual(7, serverDays.Count);
+            for (int i = 0; i < 7; i++)
+            {
+                Assert.AreEqual(serverDays[i].day, days[i].Day);
+                Assert.AreEqual(serverDays[i].spell.name, days[i].SpellName, $"day {i}: the calendar's spell is the server's");
+            }
+            Assert.AreEqual(server.SpellNow.name, days[0].SpellName, "today's spell too");
+            float calendarAir = SeasonRules.Quantize(GameCalendar.TemperatureAt(clock, m_Settings, m_Settings.Calendar, 5000, 0.5f, server.SpellNow),
+                m_Settings.temperatureStep);
+            Assert.AreEqual(server.Current.Temperature, calendarAir, 1e-4f, "today's noon air is the server's");
+            Assert.That(server.Current.Temperature, Is.InRange(days[0].LowC, days[0].HighC));
         }
     }
 }

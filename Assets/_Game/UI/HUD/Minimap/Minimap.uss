@@ -141,3 +141,21 @@
     background-image: url("/Assets/Synty/InterfaceSciFiSoldierHUD/Sprites/Icons_Map/ICON_SciFiSoldier_Map_Flag_01.png#ICON_SciFiSoldier_Map_Flag_01");
     -unity-background-image-tint-color: rgb(255, 201, 60);
 }
+
+/* Today's date, time and weather under the minimap (the game calendar, MapCalendarView). */
+.minimap-date {
+    position: absolute;
+    top: 100%;
+    left: -30px;
+    right: -30px;
+    margin: 4px 0 0 0;
+    padding: 1px 6px 2px 6px;
+    font-size: 11px;
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+    white-space: nowrap;
+    color: rgb(236, 206, 140);
+    text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.9);
+    background-color: rgba(8, 12, 18, 0.55);
+    border-radius: 3px;
+}
