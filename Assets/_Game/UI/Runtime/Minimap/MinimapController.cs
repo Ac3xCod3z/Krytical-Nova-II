@@ -57,6 +57,9 @@ namespace KryticalNova.UI
         // The Hostiles shown, nearest first, and how far each was when they were picked.
         private readonly List<HostileNet> nearHostiles = new List<HostileNet>(32);
         private readonly List<float> nearDistances = new List<float>(32);
+        // The Squad mates the players loop placed this frame (a Squad is at most 5): the bodies loop skips those, instead of
+        // searching every active player for each mate (perf night chunk 2).
+        private readonly List<PointAndClickPlayer> placedSquad = new List<PointAndClickPlayer>(8);
         private float nextHostilePick;
         // Edge-clamped markers keep their counter-rotation in sync every frame (they don't move with the map).
         private float currentMapRotation;
@@ -307,6 +310,7 @@ namespace KryticalNova.UI
 
             // The members of the player's Squad, and nobody else: who else is about is not the map's to tell.
             int allyCount = 0;
+            placedSquad.Clear();
             PlayerParty squad = player.TryGetComponent(out PlayerParty own) && own.InParty ? own : null;
             if (squad != null)
             {
@@ -316,6 +320,7 @@ namespace KryticalNova.UI
                     PointAndClickPlayer p = players[i];
                     if (p == null || p.transform == player || !p.TryGetComponent(out PlayerParty other) || !squad.IsInPartyWith(other)) continue;
                     Place(Pooled(allyMarkers, allyCount++, "ally"), MapPixel(p.transform.position), AllyIconSize);
+                    placedSquad.Add(p);
                 }
                 // the entity netcode's views of the other players have no live PointAndClickPlayer (the ghost moves them): the player
                 // bodies list has them (owner's hand test 7 Nov 2026: Squad members missing from each other's minimap)
@@ -324,7 +329,7 @@ namespace KryticalNova.UI
                 {
                     Transform t = bodies[i]?.Transform;
                     if (t == null || t == player || !t.TryGetComponent(out PlayerParty other) || !squad.IsInPartyWith(other)) continue;
-                    if (t.TryGetComponent(out PointAndClickPlayer seen) && seen.isActiveAndEnabled && Contains(players, seen)) continue;   // already placed
+                    if (t.TryGetComponent(out PointAndClickPlayer seen) && seen.isActiveAndEnabled && Contains(placedSquad, seen)) continue;   // already placed
                     Place(Pooled(allyMarkers, allyCount++, "ally"), MapPixel(t.position), AllyIconSize);
                 }
             }
