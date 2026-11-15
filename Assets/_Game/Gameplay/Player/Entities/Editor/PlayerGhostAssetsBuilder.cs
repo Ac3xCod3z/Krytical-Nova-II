@@ -129,6 +129,7 @@ namespace KryticalNova.Player.Entities.Editor
                 ghost.SupportedGhostModes = GhostModeMask.All;
                 ghost.OptimizationMode = GhostOptimizationMode.Dynamic;
                 ghost.Importance = Importance(ghost.Importance, s => s.importancePlayer);
+                ghost.UsePreSerialization = PreSerialize(ghost.UsePreSerialization, s => s.preSerializePlayer);
                 var player = root.GetComponent<PlayerGhostAuthoring>();
                 if (player == null) player = root.AddComponent<PlayerGhostAuthoring>(); // speeds keep their values
                 CopyMeleeClips(player);
@@ -159,6 +160,22 @@ namespace KryticalNova.Player.Entities.Editor
                 return current;
             }
             return Mathf.Max(1, pick(settings));
+        }
+
+        /// <summary>
+        /// Whether a ghost kind is packed once a tick for every client (Netcode's pre-serialization) from the relevancy settings;
+        /// the prefab's own value stays, with an error line, when the asset is missing. Like importance it is hashed into the ghost
+        /// type, so client and server are built together.
+        /// </summary>
+        public static bool PreSerialize(bool current, System.Func<RelevancySettings, bool> pick)
+        {
+            RelevancySettings settings = RelevancySettings.Load();
+            if (settings == null)
+            {
+                Debug.LogError("[KnBuild] Resources/" + RelevancySettings.ResourcePath + " is missing: the ghost keeps pre-serialization " + current + ".");
+                return current;
+            }
+            return pick(settings);
         }
 
         /// <summary>The Strike Dummy ghost: the server spawns one per scene dummy and writes its place and HP (M4.2b).</summary>
