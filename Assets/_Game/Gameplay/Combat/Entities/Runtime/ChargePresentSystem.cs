@@ -28,7 +28,7 @@ namespace KryticalNova.Combat.Entities
                 bool met = m_Seen.TryGetValue(caster.Ghost, out byte seen);
                 m_Seen[caster.Ghost] = state.Seq;
                 if (!met || seen == state.Seq || state.Phase == 0) continue;   // first met: nothing old is replayed
-                if (caster.Body.TryGetComponent(out PlayerSkillAttacks attacks))
+                if (caster.TryGetPart(out PlayerSkillAttacks attacks))
                     attacks.ShowChargeSeen(state.SkillId.ToString(), FindBody(em, state.AimGhostId), state.Phase == 1, state.Phase == 2);
             }
         }

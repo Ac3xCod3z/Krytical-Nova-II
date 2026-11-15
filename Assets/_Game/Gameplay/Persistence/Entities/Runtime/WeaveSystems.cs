@@ -126,7 +126,7 @@ namespace KryticalNova.Persistence.Entities
             foreach (GhostBodyEntry entry in GhostBodyRegistry.Entries)
             {
                 if (!ReferenceEquals(entry.World, World) || entry.Body == null || !em.Exists(entry.Ghost)) continue;
-                if (!entry.Body.TryGetComponent(out IBodyWeaveLibrary library)) continue;
+                if (!entry.TryGetPart(out IBodyWeaveLibrary library)) continue;
                 if (m_Told.TryGetValue(entry.Ghost, out int told) && told == library.Version) continue;
                 Entity connection = Entity.Null;
                 for (int i = 0; i < ids.Length; i++) if (ids[i].Value == entry.NetworkId) { connection = connections[i]; break; }
@@ -175,7 +175,7 @@ namespace KryticalNova.Persistence.Entities
                 if (!whole || !WeaveLibraryText.TryDecode(string.Concat(m_Parts), out ushort[] lines, out uint[] morphs)) continue;
                 m_Parts = null;
                 foreach (GhostBodyEntry entry in GhostBodyRegistry.Entries)
-                    if (entry.IsLocal && ReferenceEquals(entry.World, World) && entry.Body != null && entry.Body.TryGetComponent(out IBodyWeaveLibrary own))
+                    if (entry.IsLocal && ReferenceEquals(entry.World, World) && entry.Body != null && entry.TryGetPart(out IBodyWeaveLibrary own))
                     { own.MirrorLibrary(lines, morphs); break; }
             }
         }

@@ -104,11 +104,11 @@ namespace KryticalNova.Persistence.Entities
                 if (r.Mine != 0)
                 {
                     foreach (GhostBodyEntry entry in GhostBodyRegistry.Entries)
-                        if (entry.IsLocal && ReferenceEquals(entry.World, World) && entry.Body != null && entry.Body.TryGetComponent(out PlayerNova own))
+                        if (entry.IsLocal && ReferenceEquals(entry.World, World) && entry.Body != null && entry.TryGetPart(out PlayerNova own))
                         { own.MirrorFinished(r.Result); break; }
                 }
                 else if (GhostBodyRegistry.TryGetByNetworkId(World, r.NetworkId, out GhostBodyEntry entry) && entry.Body != null && !entry.IsLocal
-                         && entry.Body.TryGetComponent(out PlayerNova other))
+                         && entry.TryGetPart(out PlayerNova other))
                     other.MirrorShown(r.Result);
             }
         }

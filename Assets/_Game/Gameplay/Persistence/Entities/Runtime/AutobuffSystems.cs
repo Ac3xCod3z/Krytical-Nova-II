@@ -66,7 +66,7 @@ namespace KryticalNova.Persistence.Entities
             using var ids = m_InGame.ToComponentDataArray<NetworkId>(Allocator.Temp);
             foreach (GhostBodyEntry entry in GhostBodyRegistry.Entries)
             {
-                if (!ReferenceEquals(entry.World, World) || entry.Body == null || !em.Exists(entry.Ghost) || !entry.Body.TryGetComponent(out IBodyAutobuff state)) continue;
+                if (!ReferenceEquals(entry.World, World) || entry.Body == null || !em.Exists(entry.Ghost) || !entry.TryGetPart(out IBodyAutobuff state)) continue;
                 string text = AutobuffSlotsRpc.Join(state.SkillIds);
                 if (m_Told.TryGetValue(entry.Ghost, out var told) && told.expires == state.ExpiresUtc && told.ids == text) continue;
                 Entity connection = Entity.Null;
@@ -97,7 +97,7 @@ namespace KryticalNova.Persistence.Entities
             using var states = m_States.ToComponentDataArray<AutobuffStateRpc>(Allocator.Temp);
             EntityManager.DestroyEntity(m_States);
             foreach (GhostBodyEntry entry in GhostBodyRegistry.Entries)
-                if (entry.IsLocal && ReferenceEquals(entry.World, World) && entry.Body != null && entry.Body.TryGetComponent(out IBodyAutobuff own))
+                if (entry.IsLocal && ReferenceEquals(entry.World, World) && entry.Body != null && entry.TryGetPart(out IBodyAutobuff own))
                 {
                     foreach (AutobuffStateRpc s in states) own.MirrorState(s.ExpiresUtc, AutobuffSlotsRpc.Split(s.Ids.ToString()));
                     break;

@@ -83,7 +83,7 @@ namespace KryticalNova.Persistence.Entities
             foreach (GhostBodyEntry entry in GhostBodyRegistry.Entries)
             {
                 if (!ReferenceEquals(entry.World, World) || entry.Body == null || !em.Exists(entry.Ghost) || !em.HasComponent<PlayerPetTag>(entry.Ghost)
-                    || !entry.Body.TryGetComponent(out IBodyPet pet)) continue;
+                    || !entry.TryGetPart(out IBodyPet pet)) continue;
                 var now = new PlayerPetTag { Growth = pet.ShownGrowth, Fed = (byte)(pet.ShownFed ? 1 : 0) };
                 PlayerPetTag had = em.GetComponentData<PlayerPetTag>(entry.Ghost);
                 if (had.Growth == now.Growth && had.Fed == now.Fed) continue;
@@ -109,7 +109,7 @@ namespace KryticalNova.Persistence.Entities
             foreach (GhostBodyEntry entry in GhostBodyRegistry.Entries)
             {
                 if (!ReferenceEquals(entry.World, World) || entry.Body == null || !em.Exists(entry.Ghost) || !em.HasComponent<PlayerPetTag>(entry.Ghost)
-                    || !entry.Body.TryGetComponent(out IBodyPet pet)) continue;
+                    || !entry.TryGetPart(out IBodyPet pet)) continue;
                 PlayerPetTag tag = em.GetComponentData<PlayerPetTag>(entry.Ghost);
                 pet.MirrorShown(tag.Growth, tag.Fed != 0);
             }
@@ -117,7 +117,7 @@ namespace KryticalNova.Persistence.Entities
             using var shows = m_Shows.ToComponentDataArray<PetShownRpc>(Allocator.Temp);
             em.DestroyEntity(m_Shows);
             foreach (PetShownRpc show in shows)
-                if (GhostBodyRegistry.TryGetByNetworkId(World, show.NetworkId, out GhostBodyEntry entry) && entry.Body != null && entry.Body.TryGetComponent(out IBodyPet pet))
+                if (GhostBodyRegistry.TryGetByNetworkId(World, show.NetworkId, out GhostBodyEntry entry) && entry.Body != null && entry.TryGetPart(out IBodyPet pet))
                     pet.PlayShown((BodyPetShowKind)show.Kind, show.Value);
         }
     }

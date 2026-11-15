@@ -197,7 +197,7 @@ namespace KryticalNova.Persistence.Entities
             EntityManager.DestroyEntity(m_Lines);
             IBodyChat own = null;
             foreach (GhostBodyEntry entry in GhostBodyRegistry.Entries)
-                if (entry.IsLocal && ReferenceEquals(entry.World, World) && entry.Body != null && entry.Body.TryGetComponent(out own)) break;
+                if (entry.IsLocal && ReferenceEquals(entry.World, World) && entry.Body != null && entry.TryGetPart(out own)) break;
             if (own == null) return;
             foreach (ChatLineRpc rpc in lines)
             {

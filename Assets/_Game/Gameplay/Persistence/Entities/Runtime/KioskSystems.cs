@@ -447,7 +447,7 @@ namespace KryticalNova.Persistence.Entities
         IBodyKiosk LocalKiosk()
         {
             foreach (GhostBodyEntry entry in GhostBodyRegistry.Entries)
-                if (entry.IsLocal && ReferenceEquals(entry.World, World) && entry.Body != null && entry.Body.TryGetComponent(out IBodyKiosk kiosk))
+                if (entry.IsLocal && ReferenceEquals(entry.World, World) && entry.Body != null && entry.TryGetPart(out IBodyKiosk kiosk))
                     return kiosk;
             return null;
         }

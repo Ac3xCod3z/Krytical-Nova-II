@@ -68,11 +68,11 @@ namespace KryticalNova.Combat.Entities
                 // a skill hit's line carries NGO PlayerSkillAttacks' label (M4.5e); a strike's is the step's
                 bool skill = (hit.Flags & HitEventRing.Skill) != 0;
                 string label = skill ? hit.Label.ToString() : hit.Step == 3 ? "Combo Finisher" : $"Strike {hit.Step}";
-                if (!string.IsNullOrEmpty(label) && attacker.Body.TryGetComponent(out PlayerMeleeCombat own) && target.TryGetComponent(out IDamageable struck))
+                if (!string.IsNullOrEmpty(label) && attacker.TryGetPart(out PlayerMeleeCombat own) && target.TryGetComponent(out IDamageable struck))
                     own.ShowCombatLine(PlayerMeleeCombat.HitLine(label, struck.EntityName, result,
                         struck.CurrentHealth, struck.MaxHealth));
             }
-            if (!evaded && target != null && attacker.Body.TryGetComponent(out PlayerMeleeCombat melee))
+            if (!evaded && target != null && attacker.TryGetPart(out PlayerMeleeCombat melee))
                 melee.PreviewImpact(target, hit.Step, (hit.Flags & HitEventRing.Critical) != 0, (hit.Flags & HitEventRing.Reflected) != 0,
                     (hit.Flags & HitEventRing.Shattered) != 0, (hit.Flags & HitEventRing.Elemental) != 0);
         }

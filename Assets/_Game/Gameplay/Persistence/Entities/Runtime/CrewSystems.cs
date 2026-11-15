@@ -134,7 +134,7 @@ namespace KryticalNova.Persistence.Entities
             foreach (GhostBodyEntry entry in GhostBodyRegistry.Entries)
             {
                 if (!ReferenceEquals(entry.World, World) || entry.Body == null || !em.Exists(entry.Ghost) || !em.HasComponent<PlayerCrewTag>(entry.Ghost)
-                    || !entry.Body.TryGetComponent(out IBodyCrew crew)) continue;
+                    || !entry.TryGetPart(out IBodyCrew crew)) continue;
                 PlayerCrewTag now = CrewTagWire.From(crew.ShownTag);
                 if (CrewTagWire.Same(now, em.GetComponentData<PlayerCrewTag>(entry.Ghost))) continue;
                 em.SetComponentData(entry.Ghost, now);
@@ -164,7 +164,7 @@ namespace KryticalNova.Persistence.Entities
             IBodyCrew own = null;
             foreach (GhostBodyEntry entry in GhostBodyRegistry.Entries)
             {
-                if (!ReferenceEquals(entry.World, World) || entry.Body == null || !em.Exists(entry.Ghost) || !entry.Body.TryGetComponent(out IBodyCrew crew)) continue;
+                if (!ReferenceEquals(entry.World, World) || entry.Body == null || !em.Exists(entry.Ghost) || !entry.TryGetPart(out IBodyCrew crew)) continue;
                 if (em.HasComponent<PlayerCrewTag>(entry.Ghost)) crew.MirrorTag(CrewTagWire.To(em.GetComponentData<PlayerCrewTag>(entry.Ghost)));
                 if (entry.IsLocal) own = crew;
             }

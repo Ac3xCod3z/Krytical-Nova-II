@@ -1569,7 +1569,7 @@ namespace KryticalNova.Persistence.Entities
                     CellsSent++;
                 }
                 // the loadout slots (NGO: the owner-only list), all ten on arrival, then each one that changed
-                if (entry.Body.TryGetComponent(out PlayerLoadouts loadouts))
+                if (entry.TryGetPart(out PlayerLoadouts loadouts))
                 {
                     bool arriving = !m_SentLoadouts.TryGetValue(entry.Ghost, out LoadoutEntry[] had);
                     if (arriving) m_SentLoadouts[entry.Ghost] = had = new LoadoutEntry[LoadoutRules.Slots];
@@ -1616,7 +1616,7 @@ namespace KryticalNova.Persistence.Entities
                     m_SentStorage[key] = told;
                 }
                 // this week's limited purchases (NGO: the owner-only netBoughtWeek + netBought), on arrival, then whenever the week or a count changes
-                if (entry.Body.TryGetComponent(out IBodyShopping shopping))
+                if (entry.TryGetPart(out IBodyShopping shopping))
                 {
                     bool arriving = !m_SentWeeks.TryGetValue(entry.Ghost, out var told);
                     if (arriving || !SameWeek(told.week, told.bought, shopping))
@@ -1630,7 +1630,7 @@ namespace KryticalNova.Persistence.Entities
                     }
                 }
                 // the skills' ranks and unlocked books (NGO: the owner-only netRanks and netUnlockedBooks), all on arrival, then changes
-                if (entry.Body.TryGetComponent(out PlayerCombatSkills combatSkills))
+                if (entry.TryGetPart(out PlayerCombatSkills combatSkills))
                 {
                     ulong books = combatSkills.ReadRanks(m_Ranks);
                     bool arriving = !m_SentSkills.TryGetValue(entry.Ghost, out var had);
@@ -1656,7 +1656,7 @@ namespace KryticalNova.Persistence.Entities
                     m_SentSkills[entry.Ghost] = had;
                 }
                 // the XP boosters' clocks (NGO: the owner-only list; exact on a use or run-out, else every 15 s)
-                if (entry.Body.TryGetComponent(out PlayerExperienceBoosts boosts) && boosts.Count > 0)
+                if (entry.TryGetPart(out PlayerExperienceBoosts boosts) && boosts.Count > 0)
                 {
                     float now = UnityEngine.Time.time;
                     bool arriving = !m_SentClocks.TryGetValue(entry.Ghost, out var clocks) || clocks.seconds.Length != boosts.Count;

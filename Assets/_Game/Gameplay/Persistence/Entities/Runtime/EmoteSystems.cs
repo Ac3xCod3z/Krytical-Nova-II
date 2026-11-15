@@ -51,7 +51,7 @@ namespace KryticalNova.Persistence.Entities
             foreach (GhostBodyEntry entry in GhostBodyRegistry.Entries)
             {
                 if (!ReferenceEquals(entry.World, World) || entry.Body == null || !em.Exists(entry.Ghost) || !em.HasComponent<PlayerEmoteTag>(entry.Ghost)
-                    || !entry.Body.TryGetComponent(out IBodyEmotes emotes)) continue;
+                    || !entry.TryGetPart(out IBodyEmotes emotes)) continue;
                 BodyEmoteState state = emotes.State;
                 PlayerEmoteTag had = em.GetComponentData<PlayerEmoteTag>(entry.Ghost);
                 if (had.Serial == state.serial && had.Stance == (state.stance ? 1 : 0) && had.Key.ToString() == (state.key ?? string.Empty)) continue;
@@ -89,7 +89,7 @@ namespace KryticalNova.Persistence.Entities
             foreach (GhostBodyEntry entry in GhostBodyRegistry.Entries)
             {
                 if (!ReferenceEquals(entry.World, World) || entry.Body == null || !em.Exists(entry.Ghost) || !em.HasComponent<PlayerEmoteTag>(entry.Ghost)
-                    || !entry.Body.TryGetComponent(out IBodyEmotes emotes)) continue;
+                    || !entry.TryGetPart(out IBodyEmotes emotes)) continue;
                 PlayerEmoteTag tag = em.GetComponentData<PlayerEmoteTag>(entry.Ghost);
                 emotes.MirrorState(new BodyEmoteState { key = tag.Key.ToString(), serial = tag.Serial, stance = tag.Stance != 0 });
             }

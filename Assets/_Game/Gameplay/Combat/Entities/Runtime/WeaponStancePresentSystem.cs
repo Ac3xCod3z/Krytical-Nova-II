@@ -29,7 +29,7 @@ namespace KryticalNova.Combat.Entities
                 bool seen = m_Shown.TryGetValue(entry.Ghost, out bool was);
                 if (seen && was == drawn) continue;
                 m_Shown[entry.Ghost] = drawn;
-                if (!entry.Body.TryGetComponent(out PlayerMeleeCombat melee)) continue;
+                if (!entry.TryGetPart(out PlayerMeleeCombat melee)) continue;
                 melee.ShowWeaponStance(drawn, animate: seen);
                 if (seen) Played++;
             }

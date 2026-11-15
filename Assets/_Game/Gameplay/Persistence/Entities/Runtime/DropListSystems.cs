@@ -177,7 +177,7 @@ namespace KryticalNova.Persistence.Entities
         WorldDrop PrefabFromLocalBody()
         {
             foreach (GhostBodyEntry entry in GhostBodyRegistry.Entries)
-                if (entry.IsLocal && ReferenceEquals(entry.World, World) && entry.Body != null && entry.Body.TryGetComponent(out PlayerLoot loot))
+                if (entry.IsLocal && ReferenceEquals(entry.World, World) && entry.Body != null && entry.TryGetPart(out PlayerLoot loot))
                     return loot.DropPrefab;
             return null;
         }
