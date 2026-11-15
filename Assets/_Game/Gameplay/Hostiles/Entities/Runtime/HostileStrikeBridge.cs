@@ -21,6 +21,9 @@ namespace KryticalNova.Hostiles.Entities
     /// </summary>
     public static class HostileStrikeBridge
     {
+        /// <summary>The diagnostics line's words for a queued strike (made only when <see cref="HostileBrainDiag.Enabled"/>).</summary>
+        public static string HitText(float damageDealt, bool evaded) => $"hit for {damageDealt:0.#}{(evaded ? " (evaded)" : string.Empty)}";
+
         // one key per body for as long as the process runs (a pooled body keeps its key); far above the small keys tests use
         static readonly Dictionary<HostileNet, int> s_Keys = new Dictionary<HostileNet, int>();
         static int s_Next = FirstKey;
@@ -123,18 +126,18 @@ namespace KryticalNova.Hostiles.Entities
                 IDamageable standIn = null;
                 if (target == null && StandInTargets.TryGet(World, swing.Target, out Component standInBody)) standInBody.TryGetComponent(out standIn);
                 string what;
-                HostileStrike strike;
+                HostileStrike strike, hit = default;
                 if (hostile == null || (target == null && standIn == null)) { Dropped++; what = "dropped (a body gone)"; }
                 else if (target != null
                     ? !HostileStrikeBridge.TryStrike(hostile, swing.Ability, target, swing.From, swing.Heavy != 0, swing.Target, out strike)
                     : !HostileStrikeBridge.TryStrikeStandIn(hostile, swing.Ability, standIn, swing.From, swing.Heavy != 0, swing.Target, out strike)) { Missed++; what = "missed (NGO's rules)"; }
-                else if (HostileStrikes.Queue(World, strike)) { Queued++; what = $"hit for {strike.Result.DamageDealt:0.#}{(strike.Result.IsEvaded ? " (evaded)" : string.Empty)}"; }
+                else if (HostileStrikes.Queue(World, strike)) { Queued++; what = null; hit = strike; }   // its text only for the diagnostics line
                 else { Dropped++; what = "dropped (no blow queue)"; }
                 if (HostileBrainDiag.Enabled)   // M5.7's timing lines: off by default
                 {
                     uint tick = SystemAPI.TryGetSingleton(out BrainTick bt) ? bt.Tick : 0;
                     uint id = EntityManager.Exists(swing.Hostile) && EntityManager.HasComponent<BrainClock>(swing.Hostile) ? EntityManager.GetComponentData<BrainClock>(swing.Hostile).StableId : 0;
-                    HostileBrainDiag.Write(HostileBrainDiag.Resolve(tick, id, what));
+                    HostileBrainDiag.Write(HostileBrainDiag.Resolve(tick, id, what ?? HostileStrikeBridge.HitText(hit.Result.DamageDealt, hit.Result.IsEvaded)));
                 }
             }
         }

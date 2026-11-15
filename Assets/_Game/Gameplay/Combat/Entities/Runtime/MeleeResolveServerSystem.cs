@@ -34,7 +34,24 @@ namespace KryticalNova.Combat.Entities
         public int Unresolved { get; private set; }
         public int Missed { get; private set; }
         public int NotApplied { get; private set; }
-        public string LastVerdict { get; private set; } = "no swing due yet";
+        public string LastVerdict => m_HasVerdict ? m_Verdict.ToString() : "no swing due yet";
+
+        /// <summary>The numbers of one due swing. Kept as numbers and written out only when <see cref="LastVerdict"/> is read (perf night
+        /// chunk 3: the server made a string for every due swing that only a probe reads).</summary>
+        public struct Verdict
+        {
+            public byte Step;
+            public int3 Me, Them;
+            public int TicksBack, RingSamples, ReachMm;
+            public bool Resolved, TargetHit;
+
+            public override string ToString() =>
+                $"step {Step}: me {Me}, target now {Them}, seen {TicksBack} ticks back, target ring " +
+                $"{RingSamples} samples, resolved {Resolved}, target hit {TargetHit}, reach {ReachMm} mm";
+        }
+
+        Verdict m_Verdict;
+        bool m_HasVerdict;
 
         /// <summary>NGO RequestAttackEntityServerRpc's check (PointAndClickPlayer:1881-1895), on the bodies, with the same rule.</summary>
         public static bool AttackAllowed(UnityEngine.GameObject attacker, IDamageable target) =>
@@ -110,8 +127,12 @@ namespace KryticalNova.Combat.Entities
                 rings.Dispose();
                 proxies.Dispose();
                 PositionHistory targetRing = em.GetComponentData<PositionHistory>(target.Ghost);
-                LastVerdict = $"step {s.Step}: me {me.Mm}, target now {them}, seen {now.TicksSince(seen)} ticks back, target ring " +
-                              $"{targetRing.Samples.Length} samples, resolved {resolved}, target hit {targetHit}, reach {t.ReachMm} mm";
+                m_Verdict = new Verdict
+                {
+                    Step = s.Step, Me = me.Mm, Them = them, TicksBack = now.TicksSince(seen), RingSamples = targetRing.Samples.Length,
+                    Resolved = resolved, TargetHit = targetHit, ReachMm = t.ReachMm,
+                };
+                m_HasVerdict = true;
                 if (!resolved) { Unresolved++; continue; }
                 if (!targetHit) Missed++;
                 float multiplier = MeleeRules.StepMultiplier(t, s.Step);
