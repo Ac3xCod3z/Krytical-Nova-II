@@ -92,6 +92,7 @@ namespace KryticalNova.Mounts
         /// <summary>Whole UTC seconds: rests and the regen at home go by the clock, so a relog cannot skip them (tests set it).</summary>
         public static Func<long> UtcNow = () => DateTimeOffset.UtcNow.ToUnixTimeSeconds();
         private bool companionOut;     // never saved: nobody comes back into the world with it out
+        private readonly CompanionHelpLog companionHelp = new CompanionHelpLog();   // server only, never saved (phase 5)
         private bool callWhenOff;      // called while riding: it forms beside the rider as the getting-off ends
         private CompanionStance stance;
         private readonly int[] hpLost = new int[MountRules.Slots + 1];      // per box, permille lost, 0 = full
@@ -157,6 +158,8 @@ namespace KryticalNova.Mounts
         }
 
         /// <summary>The selected mount's companion max HP: the owner's max HP times its growth share.</summary>
+        /// <summary>The companion's stance numbers at the selected mount's growth (owner, 14 Nov 2026: stances grow like a pet's stats; the ride stats do not change).</summary>
+        public CompanionFightTuning CompanionFightNow => (Settings != null ? Settings.CompanionFight : CompanionFightTuning.Default).AtGrowth(GrowthPercent);
         public float CompanionMaxHp => CompanionRules.MaxHp(entity != null ? entity.MaxHealth : 100f, GrowthPercent, CTuning);
 
         /// <summary>The owner's machine: the Companion key (B) or the window's CALL / SEND HOME button.</summary>
@@ -310,7 +313,7 @@ namespace KryticalNova.Mounts
             if (!HasAuthority) return;
             var wanted = (CompanionStance)next;
             if (!System.Enum.IsDefined(typeof(CompanionStance), wanted)) return;
-            if (!CompanionFightRules.IsBuilt(wanted)) { Notify("The TANK stance comes later.", toast: true); return; }
+            if (!CompanionFightRules.IsBuilt(wanted)) return;
             if (wanted == stance) return;
             stance = wanted;
             Notify(StanceLine(wanted), toast: true);
@@ -324,6 +327,7 @@ namespace KryticalNova.Mounts
             {
                 case CompanionStance.Dps: return $"{mount}: DPS. It helps you kill what you fight (PvE only).";
                 case CompanionStance.Healer: return $"{mount}: HEALER. It heals you while you fight (PvE only).";
+                case CompanionStance.Tank: return $"{mount}: TANK. It draws the Hostiles you fight onto itself and takes less damage (PvE only).";
                 default: return $"{mount}: FREE. It walks beside you and stays out of fights.";
             }
         }
@@ -364,9 +368,6 @@ namespace KryticalNova.Mounts
         public int CompanionHpPermille => selected != 0 ? CompanionHpOf(selected) : 0;
         byte IBodyMountCompanion.CompanionStance => (byte)stance;
         public int CompanionKnockOuts => knockOuts;
-        public int CompanionStrikes { get; private set; }
-        public int CompanionPulses { get; private set; }
-        public void CountCompanionFight(bool strike) { if (strike) CompanionStrikes++; else CompanionPulses++; }
         public float CompanionRunSpeed => Settings != null ? MountRules.Speed(Settings.runSpeed.x, Settings.runSpeed.y, GrowthPercent, IsFed) : 20f;
 
         /// <summary>The own view of the entity netcode: the server's companion boxes.</summary>
@@ -683,7 +684,23 @@ namespace KryticalNova.Mounts
             if (!HasAuthority || selected == 0 || kill.Credited == null || kill.Credited.gameObject != gameObject) return;
             // The Rider and Convoy Boosters raise what a kill is worth to the selected mount (owner, 12 Nov 2026).
             float bonus = TryGetComponent(out KryticalNova.Progression.PlayerExperienceBoosts boosts) ? boosts.ServerMountBonus : 0f;
-            AddXpUnits(MountRules.KillXpUnits(Tuning, bonus));
+            // A kill the companion helped with in the last 10 s is worth 1.5x to the mount, times the boosters (phase 5, owner 14 Nov 2026).
+            MountSettings settings = Settings;
+            bool helped = settings != null && companionHelp.TakeHelped(kill.Hostile, Time.time, settings.companionHelpSeconds);
+            float companion = CompanionHelpRules.KillMultiplier(helped, settings != null ? settings.companionHelpedKillXpMultiplier : 1f);
+            AddXpUnits(MountRules.KillXpUnits(Tuning, bonus, companion));
+        }
+
+        /// <summary>
+        /// Server only (Mount Companion phase 5): the companion, acting in <paramref name="acting"/>, just helped with the Hostile whose body is
+        /// <paramref name="hostileBody"/> (a DPS strike, a TANK taunt, a HEALER pulse while its owner fights it). A kill of it within
+        /// <see cref="MountSettings.companionHelpSeconds"/> then pays the mount the companion share. FREE notes nothing.
+        /// </summary>
+        public void ServerNoteCompanionHelp(Component hostileBody, CompanionStance acting)
+        {
+            if (!HasAuthority || hostileBody == null || !CompanionHelpRules.Counts(acting)) return;
+            HostileNet hostile = hostileBody.GetComponentInParent<HostileNet>();
+            if (hostile != null) companionHelp.Note(hostile, Time.time, acting);
         }
 
         /// <summary>Server only (GM): adds EXP to the selected mount as the design counts it.</summary>

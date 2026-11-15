@@ -57,6 +57,23 @@ namespace KryticalNova.Hostiles.Entities
                 Height = hostile.Definition != null ? hostile.Definition.HeightOf(ability) : KryticalNova.Combat.AttackHeight.Any };
             return true;
         }
+
+        /// <summary>
+        /// The same for a stand-in that is not a player (<see cref="StandInTargets"/>: the Mount Companion in its TANK stance, day list item 19
+        /// phase 4), rolled by <see cref="HostileStrikeRules.TryRollOnStandIn"/>.
+        /// </summary>
+        public static bool TryStrikeStandIn(HostileNet hostile, int ability, IDamageable target, Vector3 from, bool heavy, Entity targetGhost, out HostileStrike strike)
+        {
+            strike = default;
+            if (hostile == null || hostile.Entity == null || target == null) return false;
+            hostile.transform.position = from;
+            if (!HostileStrikeRules.TryRollOnStandIn(hostile.Entity, hostile.Definition, ability, target, hostile.transform, out DamageResult result)) return false;
+            int key = AttackerKey(hostile);
+            HostileAttackers.Set(key, hostile.Entity.CombatStats);
+            strike = new HostileStrike { Target = targetGhost, Result = result, From = new float3(from.x, from.y, from.z), Attacker = key, Heavy = heavy,
+                Height = hostile.Definition != null ? hostile.Definition.HeightOf(ability) : KryticalNova.Combat.AttackHeight.Any };
+            return true;
+        }
     }
 
     /// <summary>
@@ -102,9 +119,15 @@ namespace KryticalNova.Hostiles.Entities
                 CombatEntity target = null;
                 foreach (GhostBodyEntry entry in GhostBodyRegistry.Entries)
                     if (ReferenceEquals(entry.World, World) && entry.Ghost == swing.Target && entry.Body != null) { target = entry.Body.GetComponent<CombatEntity>(); break; }
+                // phase 4 of the Mount Companion: a TANK companion is struck through its hidden body (not a player)
+                IDamageable standIn = null;
+                if (target == null && StandInTargets.TryGet(World, swing.Target, out Component standInBody)) standInBody.TryGetComponent(out standIn);
                 string what;
-                if (hostile == null || target == null) { Dropped++; what = "dropped (a body gone)"; }
-                else if (!HostileStrikeBridge.TryStrike(hostile, swing.Ability, target, swing.From, swing.Heavy != 0, swing.Target, out HostileStrike strike)) { Missed++; what = "missed (NGO's rules)"; }
+                HostileStrike strike;
+                if (hostile == null || (target == null && standIn == null)) { Dropped++; what = "dropped (a body gone)"; }
+                else if (target != null
+                    ? !HostileStrikeBridge.TryStrike(hostile, swing.Ability, target, swing.From, swing.Heavy != 0, swing.Target, out strike)
+                    : !HostileStrikeBridge.TryStrikeStandIn(hostile, swing.Ability, standIn, swing.From, swing.Heavy != 0, swing.Target, out strike)) { Missed++; what = "missed (NGO's rules)"; }
                 else if (HostileStrikes.Queue(World, strike)) { Queued++; what = $"hit for {strike.Result.DamageDealt:0.#}{(strike.Result.IsEvaded ? " (evaded)" : string.Empty)}"; }
                 else { Dropped++; what = "dropped (no blow queue)"; }
                 if (HostileBrainDiag.Enabled)   // M5.7's timing lines: off by default

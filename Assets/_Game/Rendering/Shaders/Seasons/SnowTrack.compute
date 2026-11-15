@@ -1,0 +1,38 @@
+// Krytical Nova seasons: the snow track map (owner's DAY list item 21). A small picture of the ground round the camera, seen
+// from above, that remembers where feet pressed the snow. Everyone who presses the grass trample map (_KN_TrampleSources:
+// players, NPCs, Hostiles, mounts) presses this one too; marks fill back in slowly (minutes, not the grass's 1.5 s).
+//   r = how pressed the snow is, 0 untouched .. 1 a fresh footprint
+// The map moves with the camera in whole texels, so what it holds only needs shifting, never resampling.
+#pragma kernel Track
+
+Texture2D<float> _Before;
+RWTexture2D<float> _After;
+
+int2   _Shift;          // texels the map moved since last frame (new texel t held what old texel t + shift did)
+float4 _Map;            // xy world XZ of texel (0,0)'s corner, z texel size in metres, w texels across
+float4 _Fill;           // x share of a mark left after this frame, y footprint radius scale
+
+#define KN_MAX_TRAMPLERS 32
+float4 _KN_TrampleSources[KN_MAX_TRAMPLERS];    // xyz feet, w radius
+int    _KN_TrampleSourceCount;
+
+[numthreads(8, 8, 1)]
+void Track(uint3 id : SV_DispatchThreadID)
+{
+    uint across = (uint)_Map.w;
+    if (id.x >= across || id.y >= across) return;
+
+    int2 from = int2(id.xy) + _Shift;
+    float mark = 0.0;
+    if (all(from >= 0) && all(from < (int)across)) mark = _Before[from];
+    mark *= _Fill.x;
+
+    float2 world = _Map.xy + (float2(id.xy) + 0.5) * _Map.z;
+    for (int i = 0; i < _KN_TrampleSourceCount; i++)
+    {
+        float4 who = _KN_TrampleSources[i];
+        float press = saturate(1.0 - length(world - who.xz) / max(who.w * _Fill.y, 0.01));
+        mark = max(mark, smoothstep(0.0, 0.6, press));
+    }
+    _After[id.xy] = mark;
+}

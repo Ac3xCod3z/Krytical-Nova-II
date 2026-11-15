@@ -61,6 +61,7 @@ Shader "KryticalNova/Foliage Wind"
             #include "KNFoliageCommon.hlsl"
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
             #include "Assets/_Game/Rendering/Shaders/Comic/ComicHalftone.hlsl"
+            #include "Assets/_Game/Rendering/Shaders/Include/KNSeason.hlsl"
 
             half _ComicShadowThreshold;
             half _ComicShadowSoftness;
@@ -125,6 +126,8 @@ Shader "KryticalNova/Foliage Wind"
                 half3 normalWS = normalize(input.normalWS);
                 // Two-sided blades: light the back face like the front.
                 normalWS = isFrontFace ? normalWS : lerp(-normalWS, normalWS, _NormalUp);
+                // The season: leaves turn per tree, frost and snow on the canopy (owner DAY list item 21; nothing without a presenter).
+                albedo = KNSeasonFoliage(albedo, normalWS, input.positionWS, float3(UNITY_MATRIX_M[0][3], UNITY_MATRIX_M[1][3], UNITY_MATRIX_M[2][3]));
 
                 float4 shadowCoord = TransformWorldToShadowCoord(input.positionWS);
                 half4 shadowMask = half4(1, 1, 1, 1);
