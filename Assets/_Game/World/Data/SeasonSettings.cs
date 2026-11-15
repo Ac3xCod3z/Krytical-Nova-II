@@ -301,6 +301,21 @@ namespace KryticalNova.World
         /// <summary>Heat haze strength on a World Effects tier (0 = off).</summary>
         public float HeatHaze(WorldEffects tier) => ByTier(heatHazeByTier, (int)tier, 0f);
 
+        /// <summary>The tree kind (1 up) whose words a prefab or object name holds, 0 for none; the first kind that matches wins. Used by
+        /// the Tag Tree Kinds builder on Foliage Wind prefabs and at runtime on the town's Synty trees (their prefabs are never edited).</summary>
+        public int LeafKindOf(string name)
+        {
+            if (leafKinds == null || string.IsNullOrEmpty(name)) return 0;
+            for (int i = 0; i < leafKinds.Count && i < 15; i++)
+            {
+                LeafKind k = leafKinds[i];
+                if (k?.prefabNameContains == null) continue;
+                foreach (string word in k.prefabNameContains)
+                    if (!string.IsNullOrWhiteSpace(word) && name.IndexOf(word.Trim(), StringComparison.OrdinalIgnoreCase) >= 0) return i + 1;
+            }
+            return 0;
+        }
+
         /// <summary>Dust motes and fireflies on a World Effects tier.</summary>
         public int Motes(WorldEffects tier) => (int)ByTier(motesByTier, (int)tier, 0);
         public int Fireflies(WorldEffects tier) => (int)ByTier(firefliesByTier, (int)tier, 0);

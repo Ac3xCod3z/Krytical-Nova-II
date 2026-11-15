@@ -467,5 +467,39 @@ namespace KryticalNova.Tests
             Assert.IsNotNull(s.trackCompute, "the snow track compute");
             Assert.AreEqual(4, s.precipitationByTier.Length, "one rate per World Effects tier");
         }
+
+        [Test]
+        public void NightAmount_NoonDay_MidnightNight_DuskTurns()
+        {
+            Assert.AreEqual(0f, SeasonRules.NightAmount(0.5f), 1e-4f, "noon is day (before part 3 the curve was upside down)");
+            Assert.AreEqual(0f, SeasonRules.NightAmount(0.3f), 1e-4f, "morning is day");
+            Assert.AreEqual(1f, SeasonRules.NightAmount(0f), 1e-4f, "midnight is night");
+            Assert.AreEqual(0f, SeasonRules.NightAmount(0.75f), 1e-3f, "night starts at sunset");
+            Assert.Greater(SeasonRules.NightAmount(0.8f), 0.8f, "soon after dusk it is night");
+        }
+
+        [Test]
+        public void LeafKindOf_TagsSyntyTreeInstancesByName()
+        {
+            var s = Resources.Load<SeasonSettings>("SeasonSettings");
+            Assert.IsNotNull(s, "Resources/SeasonSettings");
+            int kind = s.LeafKindOf("SM_Env_Tree_01 (3)");
+            Assert.Greater(kind, 0, "a scene copy of a Synty tree gets its kind");
+            Assert.AreEqual(kind, s.LeafKindOf("sm_env_tree_01"), "any case");
+            Assert.AreEqual(0, s.LeafKindOf("SM_Bld_Roof_01"), "a roof is no tree");
+            Assert.AreEqual(0, s.LeafKindOf(null));
+        }
+
+        [Test]
+        public void SummerSettings_HazeOffOnLow_MotesHaveAMaterial()
+        {
+            var s = Resources.Load<SeasonSettings>("SeasonSettings");
+            Assert.AreEqual(0f, s.HeatHaze(KryticalNova.Rendering.WorldEffects.Low), "no haze on Low");
+            Assert.AreEqual(0, s.Motes(KryticalNova.Rendering.WorldEffects.Low), "no motes on Low");
+            Assert.AreEqual(0, s.Fireflies(KryticalNova.Rendering.WorldEffects.Low), "no fireflies on Low");
+            Assert.Greater(s.HeatHaze(KryticalNova.Rendering.WorldEffects.High), 0f);
+            Assert.IsNotNull(s.motesMaterial, "the motes' soft additive material");
+            Assert.Less(s.heatHazeDistance.x, s.heatHazeDistance.y, "the haze begins before it is full");
+        }
     }
 }

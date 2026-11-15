@@ -285,6 +285,12 @@ namespace KryticalNova.World
         }
 
         /// <summary>
+        /// How much of the night it is at a presented time of day (0.5 noon, 0.25 sunrise, 0.75 sunset, 0 midnight): 0 from sunrise to
+        /// sunset, 1 soon after dusk until soon before dawn. The night frost, the heat haze, the motes and the fireflies follow it.
+        /// </summary>
+        public static float NightAmount(float timeOfDay01) => (float)Math.Min(1.0, Math.Max(0.0, Math.Cos(timeOfDay01 * 2.0 * Math.PI) * 3.0));
+
+        /// <summary>
         /// The slope rule's two shader numbers (owner, 14 Nov 2026: snow settles on what is flat enough, like real life): the cosine of the
         /// steepest angle snow holds on, and one over the span to the angle it settles fully under. <c>KNSnowSlope</c> uses them.
         /// </summary>

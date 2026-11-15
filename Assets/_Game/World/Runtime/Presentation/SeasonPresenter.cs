@@ -44,6 +44,8 @@ namespace KryticalNova.World
         /// <summary>Rendering layer bit 6: a road or path (tagged at runtime by material name; KNSeason.hlsl draws it trodden).</summary>
         public const uint RoadLayerBit = 1u << 6;
         const uint NoSnowLayerBit = 1u << 7;
+        /// <summary>The graph path of the KN season copies of the Synty shaders (Rendering/Shaders/Synty).</summary>
+        public const string SyntySeasonShaderPrefix = "KryticalNova/Synty/";
 
         /// <summary>The one presenter (tests and the GM window read it).</summary>
         public static SeasonPresenter Instance { get; private set; }
@@ -164,9 +166,8 @@ namespace KryticalNova.World
             }
 
             float t01 = EnvironmentPresenter.PresentedTimeOfDay01;   // already warped: night by the season's sun
-            // 0.5 is noon, 0.25 sunrise, 0.75 sunset: 0 from sunrise to sunset, 1 soon after dusk (it was the wrong way up, so the
-            // night frost peaked at noon and the haze only came at night)
-            float night = Mathf.Clamp01(Mathf.Cos(t01 * 2f * Mathf.PI) * 3f);
+            // (it was the wrong way up before part 3: the night frost peaked at noon and the haze came only at night)
+            float night = SeasonRules.NightAmount(t01);
             float frost = Mathf.Lerp(from.frost, to.frost, b) + Mathf.Lerp(from.nightFrost, to.nightFrost, b) * night;
             float cover = s.SnowAt(now);
             SnowCover = cover;
@@ -373,6 +374,12 @@ namespace KryticalNova.World
                 bool tree = ((layer >> 8) & 15u) != 0u || r.gameObject.name.IndexOf("Tree", System.StringComparison.OrdinalIgnoreCase) >= 0;
                 if (tree)
                 {
+                    // a Synty tree on the KN season copy of its shader gets its kind here (its prefab is a vendor file, never edited)
+                    if (((layer >> 8) & 15u) == 0u && m != null && m.shader != null && m.shader.name.StartsWith(SyntySeasonShaderPrefix))
+                    {
+                        int kind = settings.LeafKindOf(r.gameObject.name);
+                        if (kind != 0) r.renderingLayerMask = (layer & ~0xF00u) | ((uint)kind << 8);
+                    }
                     if (size.y > 2f) m_ShelterAll.Add(new ShelterShape { Centre = centre, Half = half * 0.85f, Kind = SnowShelterKind.Canopy });
                     continue;
                 }

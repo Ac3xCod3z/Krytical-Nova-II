@@ -59,18 +59,7 @@ namespace KryticalNova.EditorTools
         }
 
         /// <summary>The kind (1 up) whose words the prefab's name holds, 0 for none. The first kind that matches wins.</summary>
-        public static int KindOf(SeasonSettings settings, string prefabName)
-        {
-            string n = prefabName.ToLowerInvariant();
-            for (int i = 0; i < settings.leafKinds.Count && i < 15; i++)
-            {
-                LeafKind k = settings.leafKinds[i];
-                if (k?.prefabNameContains == null) continue;
-                foreach (string word in k.prefabNameContains)
-                    if (!string.IsNullOrWhiteSpace(word) && n.Contains(word.Trim().ToLowerInvariant())) return i + 1;
-            }
-            return 0;
-        }
+        public static int KindOf(SeasonSettings settings, string prefabName) => settings.LeafKindOf(prefabName);
 
         static bool UsesFoliageWind(GameObject prefab)
         {
