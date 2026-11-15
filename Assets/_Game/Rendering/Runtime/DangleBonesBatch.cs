@@ -199,7 +199,7 @@ namespace KryticalNova.Rendering
             segA.Dispose(); segB.Dispose(); capRot.Dispose(); reach.Dispose(); side.Dispose();
         }
 
-        [BurstCompile]
+        [BurstCompile(FloatMode = FloatMode.Strict, FloatPrecision = FloatPrecision.High)]
         private struct ReadJob : IJobParallelForTransform
         {
             [ReadOnly] public NativeArray<CharData> chars;
@@ -219,7 +219,7 @@ namespace KryticalNova.Rendering
             }
         }
 
-        [BurstCompile]
+        [BurstCompile(FloatMode = FloatMode.Strict, FloatPrecision = FloatPrecision.High)]
         private struct WriteJob : IJobParallelForTransform
         {
             [ReadOnly] public NativeArray<int> taParticle;
@@ -234,7 +234,7 @@ namespace KryticalNova.Rendering
             }
         }
 
-        [BurstCompile]
+        [BurstCompile(FloatMode = FloatMode.Strict, FloatPrecision = FloatPrecision.High)]
         private struct RestJob : IJobParallelForTransform
         {
             [ReadOnly] public NativeArray<CharData> chars;
@@ -251,7 +251,7 @@ namespace KryticalNova.Rendering
         }
 
         /// <summary>One character's swing: exactly the steps of the old per-character LateUpdate, in the same order.</summary>
-        [BurstCompile]
+        [BurstCompile(FloatMode = FloatMode.Strict, FloatPrecision = FloatPrecision.High)]
         private struct SimJob : IJobParallelFor
         {
             [ReadOnly] public NativeArray<CharData> chars;

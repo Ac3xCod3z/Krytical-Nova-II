@@ -156,6 +156,7 @@ namespace KryticalNova.Rendering.Tests
 
             float worst = 0f, worstMetres = 0f, moved = 0f;
             string where = "";
+            var bins = new float[Frames / 10];
             var start = new Quaternion[newBody.dyn.Count];
             for (int i = 0; i < start.Length; i++) start[i] = newBody.dyn[i].localRotation;
             for (int f = 0; f < Frames; f++)
@@ -166,12 +167,14 @@ namespace KryticalNova.Rendering.Tests
                 {
                     float rad = Radians(oldBody.dyn[i].rotation, newBody.dyn[i].rotation);
                     if (rad > worst) { worst = rad; where = $"{newBody.dyn[i].name} frame {f}"; }
+                    bins[f / 10] = Mathf.Max(bins[f / 10], rad);
                     worstMetres = Mathf.Max(worstMetres, Vector3.Distance(oldBody.dyn[i].position, newBody.dyn[i].position));
                     moved = Mathf.Max(moved, Quaternion.Angle(start[i], newBody.dyn[i].localRotation));
                 }
             }
             Assert.Greater(moved, 1f, "the test moved the pieces (degrees)");
-            Assert.LessOrEqual(worst, MaxRadians, $"{where}: {worst:E2} rad from the old code ({worstMetres:E2} m)");
+            TestContext.WriteLine("per 10 frames: " + string.Join(" ", System.Array.ConvertAll(bins, x => x.ToString("E1"))));
+            Assert.LessOrEqual(worst, MaxRadians, $"{where}: {worst:E2} rad from the old code ({worstMetres:E2} m); per 10 frames: " + string.Join(" ", System.Array.ConvertAll(bins, x => x.ToString("E1"))));
             TestContext.WriteLine($"worst {worst:E2} rad and {worstMetres:E2} m over {Frames} frames, {jobbed.BoneCount} bones, swing up to {moved:F1} deg");
         }
     }
