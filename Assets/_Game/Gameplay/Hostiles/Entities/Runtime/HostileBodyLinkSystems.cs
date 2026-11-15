@@ -116,12 +116,20 @@ namespace KryticalNova.Hostiles.Entities
     public partial class HostileBodySyncServerSystem : SystemBase
     {
         HostileBodyLinkServerSystem m_Link;
+        // Each linked body's CombatEntity, looked up once (perf clean-ups round 2, chunk 8: it was a GetComponent per mob per tick).
+        // A destroyed one reads as Unity-null, as the lookup did; a body that never had one is kept as null.
+        readonly Dictionary<EcsHostileBrain, Progression.CombatEntity> m_Entities = new();
+        readonly List<EcsHostileBrain> m_Gone = new();
+
+        /// <summary>CombatTarget writes made (tests: a standing mob costs none).</summary>
+        public int Writes { get; private set; }
 
         protected override void OnCreate() => m_Link = World.GetOrCreateSystemManaged<HostileBodyLinkServerSystem>();
 
         protected override void OnUpdate()
         {
             EntityManager em = EntityManager;
+            if (m_Entities.Count > 2 * m_Link.Linked.Count + 16) Prune();
             foreach (KeyValuePair<EcsHostileBrain, Entity> pair in m_Link.Linked)
             {
                 EcsHostileBrain body = pair.Key;
@@ -131,14 +139,42 @@ namespace KryticalNova.Hostiles.Entities
                 body.transform.SetPositionAndRotation(t.Position, t.Rotation);
                 HostileLife life = em.GetComponentData<HostileLife>(e);
                 CombatTarget target = em.GetComponentData<CombatTarget>(e);
-                var entity = body.GetComponent<Progression.CombatEntity>();
-                target.FeetMm = HostileBodyLinkServerSystem.FeetMm(t.Position);
-                target.HealthMilli = entity != null ? Mathf.RoundToInt(entity.CurrentHealth * 1000f) : 0;
-                target.MaxHealthMilli = entity != null ? Mathf.RoundToInt(entity.MaxHealth * 1000f) : 0;
-                target.RadiusMm = life.RadiusMm;
-                target.HeightMm = life.HeightMm;
-                em.SetComponentData(e, target);
+                if (!m_Entities.TryGetValue(body, out Progression.CombatEntity entity))
+                    m_Entities[body] = entity = body.GetComponent<Progression.CombatEntity>();
+                // written only when it changed (as HostileGhostWriteSystem does): a standing mob's chunk keeps its change version,
+                // so its ghost is not re-sent and change filters skip it
+                if (Refresh(ref target, t.Position, entity != null, entity != null ? entity.CurrentHealth : 0f,
+                        entity != null ? entity.MaxHealth : 0f, life.RadiusMm, life.HeightMm))
+                {
+                    em.SetComponentData(e, target);
+                    Writes++;
+                }
             }
+        }
+
+        void Prune()
+        {
+            m_Gone.Clear();
+            foreach (EcsHostileBrain body in m_Entities.Keys) if (body == null || !m_Link.Linked.ContainsKey(body)) m_Gone.Add(body);
+            foreach (EcsHostileBrain body in m_Gone) m_Entities.Remove(body);
+        }
+
+        /// <summary>
+        /// The ghost's CombatTarget from its body, exactly as it was built every tick before (feet, HP and Max HP in thousandths, the
+        /// capsule); true when anything differs, so the caller writes it.
+        /// </summary>
+        public static bool Refresh(ref CombatTarget target, float3 position, bool hasEntity, float currentHealth, float maxHealth, int radiusMm, int heightMm)
+        {
+            CombatTarget next = target;
+            next.FeetMm = HostileBodyLinkServerSystem.FeetMm(position);
+            next.HealthMilli = hasEntity ? Mathf.RoundToInt(currentHealth * 1000f) : 0;
+            next.MaxHealthMilli = hasEntity ? Mathf.RoundToInt(maxHealth * 1000f) : 0;
+            next.RadiusMm = radiusMm;
+            next.HeightMm = heightMm;
+            bool changed = !next.FeetMm.Equals(target.FeetMm) || next.HealthMilli != target.HealthMilli || next.MaxHealthMilli != target.MaxHealthMilli
+                || next.RadiusMm != target.RadiusMm || next.HeightMm != target.HeightMm;
+            target = next;
+            return changed;
         }
     }
 }
