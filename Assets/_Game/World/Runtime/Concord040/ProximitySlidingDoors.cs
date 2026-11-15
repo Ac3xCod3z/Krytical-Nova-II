@@ -48,6 +48,49 @@ namespace KryticalNova.World
             centre = (leftLeaf.position + rightLeaf.position) * 0.5f;
         }
 
+        /// <summary>Anyone within <paramref name="openDistance"/> (flat) and <paramref name="heightRange"/> (up or down) of the doorway.</summary>
+        public static bool AnyNear(System.Collections.Generic.List<Vector3> places, Vector3 centre, float openDistance, float heightRange)
+        {
+            for (int i = 0; i < places.Count; i++)
+            {
+                Vector3 d = places[i] - centre;
+                if (Mathf.Abs(d.y) > heightRange) continue;
+                d.y = 0f;
+                if (d.sqrMagnitude <= openDistance * openDistance) return true;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Every player body's place, gathered once per frame by the first door that scans and reused by the others (perf clean-ups
+        /// round 2, chunk 11: each door walked every body's transform every 0.2 s). Bodies without a transform are left out, as before.
+        /// </summary>
+        public static class PlayerPlaces
+        {
+            static readonly System.Collections.Generic.List<Vector3> s_Places = new System.Collections.Generic.List<Vector3>(64);
+            static int s_Frame = -1;
+
+            [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+            static void ResetStatics() { s_Places.Clear(); s_Frame = -1; }
+
+            public static System.Collections.Generic.List<Vector3> ThisFrame()
+            {
+                if (s_Frame == Time.frameCount) return s_Places;
+                s_Frame = Time.frameCount;
+                Gather(PlayerBodies.All, s_Places);
+                return s_Places;
+            }
+
+            /// <summary>The places of <paramref name="bodies"/> in their order, skipping missing bodies and transforms.</summary>
+            public static void Gather(System.Collections.Generic.IReadOnlyList<IPlayerBody> bodies, System.Collections.Generic.List<Vector3> into)
+            {
+                into.Clear();
+                if (bodies == null) return;
+                for (int i = 0; i < bodies.Count; i++)
+                    if (bodies[i] != null && bodies[i].Transform != null) into.Add(bodies[i].Transform.position);
+            }
+        }
+
         private static float Width(Transform leaf, Vector3 across)
         {
             var r = leaf.GetComponentInChildren<Renderer>();
@@ -61,16 +104,7 @@ namespace KryticalNova.World
             if (Time.time >= nextScan)
             {
                 nextScan = Time.time + 0.2f;
-                someoneNear = false;
-                var bodies = PlayerBodies.All;
-                for (int i = 0; i < bodies.Count; i++)
-                {
-                    if (bodies[i] == null || bodies[i].Transform == null) continue;
-                    Vector3 d = bodies[i].Transform.position - centre;
-                    if (Mathf.Abs(d.y) > heightRange) continue;
-                    d.y = 0f;
-                    if (d.sqrMagnitude <= openDistance * openDistance) { someoneNear = true; break; }
-                }
+                someoneNear = AnyNear(PlayerPlaces.ThisFrame(), centre, openDistance, heightRange);
             }
             float target = someoneNear ? 1f : 0f;
             if (Mathf.Approximately(open, target)) return;
