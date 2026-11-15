@@ -28,6 +28,8 @@ namespace KryticalNova.World.Entities.Tests
                 m_Profiles[i].season = (Season)i;
             }
             m_Profiles[3].daylightShare = 0.375f;
+            foreach (SeasonProfile p in m_Profiles) { p.baseTemperature = -3f; p.dailySwing = 0f; }   // cold enough for the test's snow
+            m_Settings.dayWobble = 0f;
             m_Settings.spring = m_Profiles[0]; m_Settings.summer = m_Profiles[1]; m_Settings.autumn = m_Profiles[2]; m_Settings.winter = m_Profiles[3];
             m_Weather = new SeasonWeatherNow { Falling = PrecipitationType.Snow, Intensity = 0.6f, Clock01 = 0.5f };
             SeasonServerSystem.WeatherSource = () => (true, m_Weather);
@@ -82,9 +84,11 @@ namespace KryticalNova.World.Entities.Tests
             // the GM sets the snow; then the weather clears: it melts from there
             Assert.IsTrue(server.SetSnow(0.8f));
             m_Weather = new SeasonWeatherNow { Falling = PrecipitationType.None, Intensity = 0f, Clock01 = 0.5f };
+            Assert.IsTrue(server.SetTemperature(4f));   // a thaw (owner 14 Nov: above 0 C it melts)
+            Assert.AreEqual(4f, server.Current.Temperature, 1e-5, "the GM's temperature");
             int a1 = a.Applied;
             tw.TickUntil(() => a.Applied > a1 && a.Last.SnowRate < 0f, 120);
-            Assert.Less(a.Last.SnowRate, 0f, "dry Winter day: it melts slowly");
+            Assert.Less(a.Last.SnowRate, 0f, "a dry day above 0 C: it thaws");
             Assert.AreEqual(0.8f, a.Last.SnowCover, 0.01f, "from the cover the GM set");
 
             // an unchanged state is not sent again

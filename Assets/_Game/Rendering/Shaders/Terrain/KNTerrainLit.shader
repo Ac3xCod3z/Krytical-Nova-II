@@ -143,7 +143,7 @@ Shader "KryticalNova/Terrain Lit"
             #pragma multi_compile_vertex _ _CASTING_PUNCTUAL_LIGHT_SHADOW
 
             #include "Packages/com.unity.render-pipelines.universal/Shaders/Terrain/TerrainLitInput.hlsl"
-            #include "Packages/com.unity.render-pipelines.universal/Shaders/Terrain/TerrainLitPasses.hlsl"
+            #include "Assets/_Game/Rendering/Shaders/Terrain/KNTerrainLitPasses.hlsl"
             ENDHLSL
         }
 
@@ -230,7 +230,7 @@ Shader "KryticalNova/Terrain Lit"
             #pragma instancing_options assumeuniformscaling nomatrices nolightprobe nolightmap
 
             #include "Packages/com.unity.render-pipelines.universal/Shaders/Terrain/TerrainLitInput.hlsl"
-            #include "Packages/com.unity.render-pipelines.universal/Shaders/Terrain/TerrainLitPasses.hlsl"
+            #include "Assets/_Game/Rendering/Shaders/Terrain/KNTerrainLitPasses.hlsl"
             ENDHLSL
         }
 
@@ -256,7 +256,7 @@ Shader "KryticalNova/Terrain Lit"
             #pragma instancing_options assumeuniformscaling nomatrices nolightprobe nolightmap
 
             #include "Packages/com.unity.render-pipelines.universal/Shaders/Terrain/TerrainLitInput.hlsl"
-            #include "Packages/com.unity.render-pipelines.universal/Shaders/Terrain/TerrainLitDepthNormalsPass.hlsl"
+            #include "Assets/_Game/Rendering/Shaders/Terrain/KNTerrainLitDepthNormalsPass.hlsl"
             ENDHLSL
         }
 
@@ -276,7 +276,7 @@ Shader "KryticalNova/Terrain Lit"
 
             #define SCENESELECTIONPASS
             #include "Packages/com.unity.render-pipelines.universal/Shaders/Terrain/TerrainLitInput.hlsl"
-            #include "Packages/com.unity.render-pipelines.universal/Shaders/Terrain/TerrainLitPasses.hlsl"
+            #include "Assets/_Game/Rendering/Shaders/Terrain/KNTerrainLitPasses.hlsl"
             ENDHLSL
         }
 

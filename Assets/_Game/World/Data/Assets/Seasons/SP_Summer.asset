@@ -26,6 +26,102 @@ MonoBehaviour:
   - profile: {fileID: 11400000, guid: b4de021546bf49644b1fbca9c37be32d, type: 2}
     multiplier: 0
   extraNext: []
+  baseTemperature: 22
+  dailySwing: 11
+  spells:
+  - name: Heatwave
+    chance: 0.3
+    minDays: 4
+    maxDays: 8
+    temperatureOffset: 7
+    wet: 0
+    dry: 1
+    snowy: 0
+    storm: 0
+    weatherWeights:
+    - profile: {fileID: 11400000, guid: 6eb56a3525e68b84ea754246683459dd, type: 2}
+      multiplier: 3
+    - profile: {fileID: 11400000, guid: 6c9b9d0296dfc1643b8e8b9edcb7d19b, type: 2}
+      multiplier: 2
+    - profile: {fileID: 11400000, guid: 58a6883fd3a881249b16036e32f178c1, type: 2}
+      multiplier: 0.05
+    - profile: {fileID: 11400000, guid: 9832740c89d5b9749b94b880a421af43, type: 2}
+      multiplier: 0.1
+    - profile: {fileID: 11400000, guid: 3eef8a34d323cb2489a8a7ef05b73bbb, type: 2}
+      multiplier: 0.2
+    - profile: {fileID: 11400000, guid: d3c115db958a967418f444865d2987de, type: 2}
+      multiplier: 0.3
+    - profile: {fileID: 11400000, guid: 82cd6a34f6c280f4cba3ac82861dff81, type: 2}
+      multiplier: 0.2
+    extraNext:
+    - profile: {fileID: 11400000, guid: 6eb56a3525e68b84ea754246683459dd, type: 2}
+      weight: 0.5
+  - name: Dry
+    chance: 0.3
+    minDays: 3
+    maxDays: 6
+    temperatureOffset: 3
+    wet: 0
+    dry: 1
+    snowy: 0
+    storm: 0
+    weatherWeights:
+    - profile: {fileID: 11400000, guid: 6eb56a3525e68b84ea754246683459dd, type: 2}
+      multiplier: 2
+    - profile: {fileID: 11400000, guid: 6c9b9d0296dfc1643b8e8b9edcb7d19b, type: 2}
+      multiplier: 1.5
+    - profile: {fileID: 11400000, guid: 58a6883fd3a881249b16036e32f178c1, type: 2}
+      multiplier: 0.2
+    - profile: {fileID: 11400000, guid: 9832740c89d5b9749b94b880a421af43, type: 2}
+      multiplier: 0.3
+    extraNext: []
+  - name: Mixed
+    chance: 0.2
+    minDays: 1
+    maxDays: 2
+    temperatureOffset: 0
+    wet: 0
+    dry: 0
+    snowy: 0
+    storm: 0
+    weatherWeights: []
+    extraNext: []
+  - name: Wet
+    chance: 0.12
+    minDays: 2
+    maxDays: 3
+    temperatureOffset: -3
+    wet: 1
+    dry: 0
+    snowy: 0
+    storm: 0
+    weatherWeights:
+    - profile: {fileID: 11400000, guid: 58a6883fd3a881249b16036e32f178c1, type: 2}
+      multiplier: 3
+    - profile: {fileID: 11400000, guid: 9832740c89d5b9749b94b880a421af43, type: 2}
+      multiplier: 3
+    - profile: {fileID: 11400000, guid: d3c115db958a967418f444865d2987de, type: 2}
+      multiplier: 2
+    extraNext:
+    - profile: {fileID: 11400000, guid: 58a6883fd3a881249b16036e32f178c1, type: 2}
+      weight: 0.5
+  - name: Storm
+    chance: 0.08
+    minDays: 1
+    maxDays: 1
+    temperatureOffset: 2
+    wet: 1
+    dry: 0
+    snowy: 0
+    storm: 1
+    weatherWeights:
+    - profile: {fileID: 11400000, guid: 3eef8a34d323cb2489a8a7ef05b73bbb, type: 2}
+      multiplier: 6
+    extraNext:
+    - profile: {fileID: 11400000, guid: 7a4c2e91d05b4f3a9e61c8b2f4d07e15, type: 2}
+      weight: 1
+    - profile: {fileID: 11400000, guid: 3eef8a34d323cb2489a8a7ef05b73bbb, type: 2}
+      weight: 0.6
   grassTint: {r: 1.08, g: 1.02, b: 0.78, a: 1}
   grassTipFrost: 0
   leafColor: {r: 0.45, g: 0.7, b: 0.25, a: 1}

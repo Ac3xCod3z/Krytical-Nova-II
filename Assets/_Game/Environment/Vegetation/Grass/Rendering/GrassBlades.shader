@@ -127,8 +127,8 @@ Shader "KryticalNova/Grass Blades"
         float lenSq = dot(moved, moved);
         pos.y -= min(lenSq / max(heightWS * 2.0, 0.05), heightWS * 0.6);
 
-        // Deep season snow presses the blades down; a footprint lets them stand (owner DAY list item 21).
-        pos.y = root.y + (pos.y - root.y) * KNSeasonGrassHeight(root);
+        // Season snow: blades shorter than its depth are buried, deep flat cover presses them down; a footprint lets them stand.
+        pos.y = root.y + (pos.y - root.y) * KNSeasonGrassHeight(root, heightWS);
 
         // Kept lawns end in a straight cut: nothing leans, sways or is pushed across the edge.
         int lawn;

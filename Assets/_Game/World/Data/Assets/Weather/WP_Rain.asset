@@ -39,6 +39,7 @@ MonoBehaviour:
   precipitation: 1
   precipitationIntensity: 0.8
   mist: 0
+  temperatureOffset: -3
   lightningPerMinute: 0
   saturation: -15
   contrast: 4

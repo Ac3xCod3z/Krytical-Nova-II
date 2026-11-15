@@ -1,5 +1,6 @@
 // Krytical Nova copy of URP 17 Terrain/Lit passes (Unity Companion License) with the season snow added (owner DAY list item 21).
-// Only change: KNSeasonGround after the input data is set up, in the first (non add) pass. Update from the package with care.
+// Changes: KNSeasonGround after the input data is set up, in the first (non add) pass; every vertex pass lifts the ground by the
+// season's snow depth (KNSnowLiftOS). Update from the package with care.
 
 #ifndef KN_TERRAIN_LIT_PASSES_INCLUDED
 #define KN_TERRAIN_LIT_PASSES_INCLUDED
@@ -7,6 +8,10 @@
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/GBufferOutput.hlsl"
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/DBuffer.hlsl"
+
+// KN: which of the first four layers are lawn (1 each), and 1 once the season presenter has looked at this terrain (its splat property block)
+float4 _KN_LawnLayers;
+float _KN_LawnLayersSet;
 #include "Assets/_Game/Rendering/Shaders/Include/KNSeason.hlsl"
 
 struct Attributes
@@ -321,6 +326,7 @@ Varyings SplatmapVert(Attributes v)
     UNITY_SETUP_INSTANCE_ID(v);
     UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(o);
     TerrainInstancing(v.positionOS, v.normalOS, v.texcoord);
+    v.positionOS.xyz = KNSnowLiftOS(v.positionOS.xyz, v.normalOS);   // KN: the snow's depth
 
     VertexPositionInputs Attributes = GetVertexPositionInputs(v.positionOS.xyz);
 
@@ -465,7 +471,9 @@ void SplatmapFragment(
     InitializeInputData(IN, normalTS, inputData);
     SetupTerrainDebugTextureData(inputData, IN.uvMainAndLM.xy);
 #if !defined(TERRAIN_SPLAT_ADDPASS)
-    KNSeasonGround(albedo, smoothness, inputData.normalWS, IN.positionWS);   // KN: season snow and footprints
+    // KN: season snow and footprints; the lawn layers (set by the season presenter per terrain) take the grass season in full
+    half knLawn = _KN_LawnLayersSet > 0.5 ? (half)saturate(dot(splatControl, (half4)_KN_LawnLayers)) : -1.0h;
+    KNSeasonGroundLawn(albedo, smoothness, inputData.normalWS, IN.positionWS, knLawn);
 #endif
 
 #if defined(_DBUFFER)
@@ -548,6 +556,7 @@ VaryingsLean ShadowPassVertex(AttributesLean v)
     VaryingsLean o = (VaryingsLean)0;
     UNITY_SETUP_INSTANCE_ID(v);
     TerrainInstancing(v.position, v.normalOS, v.texcoord);
+    v.position.xyz = KNSnowLiftOS(v.position.xyz, v.normalOS);   // KN: the snow's depth
 
     float3 positionWS = TransformObjectToWorld(v.position.xyz);
     float3 normalWS = TransformObjectToWorldNormal(v.normalOS);
@@ -589,6 +598,7 @@ VaryingsLean DepthOnlyVertex(AttributesLean v)
     UNITY_SETUP_INSTANCE_ID(v);
     UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(o);
     TerrainInstancing(v.position, v.normalOS);
+    v.position.xyz = KNSnowLiftOS(v.position.xyz, v.normalOS);   // KN: the snow's depth
     o.clipPos = TransformObjectToHClip(v.position.xyz);
     o.texcoord = v.texcoord;
     return o;

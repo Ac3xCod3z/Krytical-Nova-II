@@ -399,3 +399,34 @@ Built 14 Nov 2026 in one PR (all six steps' code; the Unity checks are one Play 
   snow and season colour; roads, roofs, props and trees do not. Needs the owner's pick of how to reach Synty materials (asked of the
   Master).
 - [ ] A second client in Play (the two-client sync is proven in EditMode by `SeasonSyncTests`).
+
+## Owner requests 14 Nov 2026: snow build-up, footprints, fall colours
+
+- [x] Snow builds from the weather (`SeasonRules.SnowTrendOf`, numbers in `SeasonSettings`): light snow (intensity 0.5) builds over 40
+  minutes toward a 0.35 cap, a blizzard (1.0) in 8 minutes to 1; in between blended; flurries slower still; light snow on deeper snow holds
+  it. The cap travels in the synced state (`SnowCeiling`, same RPC, now 56 B). Tests: `SnowBuildUp_*`, `SnowMelt_*`.
+- [x] Slope rule: full under 35 degrees, none past 55 (`SnowSlopeShape` feeds `KNSnowSlope`; test `SnowSlope_*`).
+- [x] Depth: 0.4 m at full cover; the terrain rises by it in every pass (World Effects Low = colour only), grass shorter than the depth is
+  buried, footprints dent it. Comic Toon Lit surfaces get the slope rule as colour (hard-edged meshes would crack if lifted).
+- [x] Footprints instead of the trail: `SnowPrintWatcher` (one component on the presenter) watches the nearest walkers' feet and adds a
+  boot or paw print when a foot plants; `SnowTrack.compute` stamps them. Walkers per tier 4 / 12 / 24 / 32; map 24 m, up to 1024 texels.
+- [x] Fall foliage: `SeasonRules.FoliageAt` (turn by 45 % of Autumn, thin from 50 %, bare 8 % at its end, bare through Winter, back by
+  35 % of Spring, dull by 70 %); a palette per tree kind (`leafKinds`, rendering layer bits 8-11 via Tag Tree Kinds), evergreens kept;
+  fallen leaves clip in every Foliage Wind pass. `gm.season progress`. Tests: `Foliage_*`.
+- [x] Falling leaves: the existing wind-leaves emitters, times the season's falling share and the tier (Low none).
+- [ ] Unity turn: run Tag Tree Kinds once, shader compile, tests, MP4s (light against heavy build-up, footprints walking, early and late
+  Autumn with mixed colours, leaves blowing), perf note.
+- [ ] Winter: deciduous trees are now bare through Winter (owner, 14 Nov: "leaves almost all gone prior to winter"), replacing the 13 Nov
+  "frosted, leaves kept" answer; flagged to the Master.
+
+## Part 2 (owner 14 Nov, coder 21-2): real-life seasons, code landed on PR #280 (not yet seen in Unity)
+- [x] A. Temperature: season mean + day swing (coldest before dawn, warmest 15:00) + spell + weather offset + daily wobble, sent in 0.5 C steps; snow builds at or below 0.5 C, holds dry below 0, thaws above 0 (per degree, sun x1.6, rain x3). `gm.season temp <C>|auto`.
+- [x] B/J. Weather spells: per-season tables in SP_*.asset (Spring Showers/Mixed/Bright/Storm, Summer Heatwave/Dry/Mixed/Wet/Storm, Autumn Mixed/Wet/Crisp/Storm, Winter Snowy/Blizzard/Cold Clear/Thaw), rolled per in-game day from `weatherSeed` + map name; new worst tier `WP_Storm` (catalog index 11). `gm.season spell <name>|auto`, `gm.season week`. 0.4 m stays the ceiling.
+- [x] C. Drifts: wavy drift field, ripples, thinner on slopes; shelter map (canopies thin, windward piles against walls, roads), 160 m round the camera, off on Low.
+- [x] D. Prints every stride (0.8 m, alternating feet; the walk clip no longer decides); deeper than 0.12 m a ploughed path that presses the raised snow down.
+- [x] K. Town roads: renderers whose material/mesh name matches `roadNameContains` get rendering layer bit 6 at runtime and a road box in the shelter map: 15 % of the snow, packed, slushy.
+- [x] F. Spring: grass brown and short after the snow -> green and full by 40 %; buds; blossom on Emberleaf (pink), Gildleaf (white), Duskleaf (lilac); petals drift via the leaf emitters.
+- [x] G (part). Golden grass on dry runs (3-7 days) in Summer; `SeasonPresenter.HeatHaze` published for the haze pass.
+- [ ] G. Heat haze half-res screen pass (renderer feature, tiered, off on Low), dust/pollen motes, dusk fireflies, warmer sun on hot afternoons.
+- [ ] E/H. Synty Shader Graph copies + Move/Put Back builder; fall check on town trees. Roof middles a bit deeper.
+- [ ] I. One Unity showcase turn (clips per season and stage, Zone01 + a field map, perf Low/High), Encyclopedia, launcher news.

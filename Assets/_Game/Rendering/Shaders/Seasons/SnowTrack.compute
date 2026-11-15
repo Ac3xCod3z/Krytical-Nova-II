@@ -1,20 +1,50 @@
-// Krytical Nova seasons: the snow track map (owner's DAY list item 21). A small picture of the ground round the camera, seen
-// from above, that remembers where feet pressed the snow. Everyone who presses the grass trample map (_KN_TrampleSources:
-// players, NPCs, Hostiles, mounts) presses this one too; marks fill back in slowly (minutes, not the grass's 1.5 s).
-//   r = how pressed the snow is, 0 untouched .. 1 a fresh footprint
+// Krytical Nova seasons: the footprint map (owner's DAY list item 21; owner 14 Nov 2026: a print where each foot plants, no trail).
+// A picture of the ground round the camera, seen from above, that remembers where feet pressed the snow. Each frame the prints that
+// landed (SnowPrints: a boot or a paw, turned to the foot's heading) are stamped in; old ones fill back in over minutes, faster while
+// it snows. The ground and grass shaders read one texel of it.
+//   r = how pressed the snow is, 0 untouched .. 1 a fresh print
 // The map moves with the camera in whole texels, so what it holds only needs shifting, never resampling.
 #pragma kernel Track
+#pragma kernel Shelter
 
 Texture2D<float> _Before;
 RWTexture2D<float> _After;
 
 int2   _Shift;          // texels the map moved since last frame (new texel t held what old texel t + shift did)
 float4 _Map;            // xy world XZ of texel (0,0)'s corner, z texel size in metres, w texels across
-float4 _Fill;           // x share of a mark left after this frame, y footprint radius scale
+float4 _Fill;           // x share of a mark left after this frame
 
-#define KN_MAX_TRAMPLERS 32
-float4 _KN_TrampleSources[KN_MAX_TRAMPLERS];    // xyz feet, w radius
-int    _KN_TrampleSourceCount;
+#define KN_MAX_PRINTS 64
+float4 _Prints[KN_MAX_PRINTS];       // x, z, sin(yaw), cos(yaw); a path: from x, z, to x, z
+float4 _PrintShapes[KN_MAX_PRINTS];  // half length, half width, shape (0 boot, 1 paw, 2 path: x = half width), press
+int    _PrintCount;
+
+// How pressed a point is by one print, in the print's own frame (y along the foot, toe at +y), metres.
+float Boot(float2 p, float halfLength, float halfWidth)
+{
+    // a sole: wider at the ball than at the heel, a dip at the arch, a cleat tread across it
+    float along = p.y / halfLength;                       // -1 heel .. 1 toe
+    float width = halfWidth * lerp(0.78, 1.0, saturate(along * 0.6 + 0.6));
+    float sole = 1.0 - length(float2(p.x / width, along));
+    float arch = 1.0 - 0.35 * smoothstep(0.25, 0.0, abs(along + 0.15)) * smoothstep(0.3, 0.9, abs(p.x) / width);
+    float tread = 0.85 + 0.15 * step(0.5, frac(along * 4.5 + 0.25));
+    return smoothstep(0.0, 0.12, sole) * arch * tread;
+}
+
+float Paw(float2 p, float halfLength, float halfWidth)
+{
+    // a main pad behind four toes
+    float2 pad = (p - float2(0.0, -0.25 * halfLength)) / float2(halfWidth * 0.62, halfLength * 0.5);
+    float press = smoothstep(0.0, 0.2, 1.0 - length(pad));
+    [unroll] for (int t = 0; t < 4; t++)
+    {
+        float x = (t - 1.5) * 0.48 * halfWidth;
+        float y = (0.48 - 0.12 * abs(t - 1.5)) * halfLength;
+        float2 toe = (p - float2(x, y)) / (0.2 * halfWidth + 0.01);
+        press = max(press, smoothstep(0.0, 0.25, 1.0 - length(toe)));
+    }
+    return press;
+}
 
 [numthreads(8, 8, 1)]
 void Track(uint3 id : SV_DispatchThreadID)
@@ -28,11 +58,77 @@ void Track(uint3 id : SV_DispatchThreadID)
     mark *= _Fill.x;
 
     float2 world = _Map.xy + (float2(id.xy) + 0.5) * _Map.z;
-    for (int i = 0; i < _KN_TrampleSourceCount; i++)
+    for (int i = 0; i < _PrintCount; i++)
     {
-        float4 who = _KN_TrampleSources[i];
-        float press = saturate(1.0 - length(world - who.xz) / max(who.w * _Fill.y, 0.01));
-        mark = max(mark, smoothstep(0.0, 0.6, press));
+        float4 at = _Prints[i];
+        float4 shape = _PrintShapes[i];
+        if (shape.z > 1.5)
+        {
+            // a ploughed path (deep snow): a capsule from the last body position to this one, a flat floor and soft walls
+            float2 ab = at.zw - at.xy;
+            float t = saturate(dot(world - at.xy, ab) / max(dot(ab, ab), 1e-6));
+            float dist = length(world - (at.xy + ab * t));
+            mark = max(mark, smoothstep(shape.x, shape.x * 0.55, dist) * shape.w);
+            continue;
+        }
+        float2 d = world - at.xy;
+        float reach = max(shape.x, shape.y) * 1.3 + _Map.z;
+        if (dot(d, d) > reach * reach) continue;
+        // into the print's frame: y along the heading (sin, cos of the yaw), x to its right
+        float2 p = float2(d.x * at.w - d.y * at.z, d.x * at.z + d.y * at.w);
+        float press = shape.z < 0.5 ? Boot(p, shape.x, shape.y) : Paw(p, shape.x, shape.y);
+        mark = max(mark, press * shape.w);
     }
     _After[id.xy] = mark;
 }
+
+// ---------------------------------------------------------------- the shelter map (owner 14 Nov: drifts, canopies, walls, roads)
+// Rebuilt now and then, not every frame: r = under a canopy, g = a pile against a wall's windward side, b = a road (trodden).
+#define KN_MAX_SHAPES 512
+RWTexture2D<float4> _Shelter;
+float4 _Shapes[KN_MAX_SHAPES];       // centre x, z, half size x, z (a box on the ground)
+float4 _ShapeKinds[KN_MAX_SHAPES];   // kind (0 canopy, 1 wall, 2 road), strength
+int    _ShapeCount;
+float4 _ShelterWind;                 // xy where the wind blows to (unit), z how far a pile reaches (m)
+
+[numthreads(8, 8, 1)]
+void Shelter(uint3 id : SV_DispatchThreadID)
+{
+    uint across = (uint)_Map.w;
+    if (id.x >= across || id.y >= across) return;
+    float2 world = _Map.xy + (float2(id.xy) + 0.5) * _Map.z;
+    float canopy = 0.0, pile = 0.0, road = 0.0;
+    float reach = _ShelterWind.z;
+    for (int i = 0; i < _ShapeCount; i++)
+    {
+        float4 box = _Shapes[i];
+        float2 kind = _ShapeKinds[i].xy;
+        float2 d = world - box.xy;
+        float2 q = abs(d) - box.zw;
+        float outside = length(max(q, 0.0));
+        if (kind.x < 0.5)
+        {
+            // a canopy: an ellipse inside its box, soft at the drip line
+            float r = length(d / box.zw);
+            canopy = max(canopy, smoothstep(1.05, 0.55, r) * kind.y);
+        }
+        else if (kind.x < 1.5)
+        {
+            // a wall: the pile lies outside it, on the side the wind blows onto, fading out over the reach
+            if (outside > 0.0 && outside < reach)
+            {
+                float2 n = normalize(max(q, 0.0) * sign(d) + 1e-5);
+                float windward = saturate(dot(n, -_ShelterWind.xy) * 1.4);
+                float lee = saturate(dot(n, _ShelterWind.xy) * 1.4) * 0.35;   // a smaller tail behind it
+                float fade = 1.0 - outside / reach;
+                pile = max(pile, (windward + lee) * fade * fade * kind.y);
+            }
+        }
+        else
+        {
+            road = max(road, smoothstep(0.35, -0.1, outside) * kind.y);
+        }
+    }
+    _Shelter[id.xy] = float4(canopy, pile, road, 1.0);
+}
+
