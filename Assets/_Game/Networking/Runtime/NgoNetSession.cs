@@ -15,11 +15,15 @@ namespace KryticalNova.Networking
     {
         public static readonly NgoNetSession Instance = new NgoNetSession();
 
-        // Domain reload is off: Core resets its slots at SubsystemRegistration, this fills them straight after.
+        // Domain reload is off: Core resets its slots at SubsystemRegistration, this fills them straight after. The session slot only when
+        // it is empty (perf round 3 chunk 0): a dedicated entity server may have put its own there first, in the same BeforeSceneLoad step.
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
-        private static void Register()
+        private static void Register() => RegisterIfEmpty();
+
+        /// <summary>Fills the session slot unless another netcode's source is already there; the world targets always (tests call it).</summary>
+        public static void RegisterIfEmpty()
         {
-            NetSession.Use(Instance);
+            if (!NetSession.HasSource) NetSession.Use(Instance);
             WorldTargets.Use(Instance);
         }
 

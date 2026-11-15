@@ -10,9 +10,18 @@ namespace KryticalNova.Networking
     /// </summary>
     public sealed class NgoNetRoleAdapter : INetRoleAdapter
     {
-        // After Core's reset (SubsystemRegistration), before the first scene.
+        // After Core's reset (SubsystemRegistration), before the first scene. Only into an EMPTY slot (perf round 3 chunk 0, 15 Nov 2026):
+        // a dedicated entity server makes its worlds in Entities' own BeforeSceneLoad bootstrap, and the order of the two is not fixed; when
+        // this ran second it replaced the entity netcode's adapter, so the built server answered Offline everywhere (gm.target said "No
+        // network session is running" and the bots' Autopilot never started). The entity adapter wraps this one when it comes later.
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
-        private static void InstallAtStartup() => NetRole.Install(new NgoNetRoleAdapter());
+        private static void InstallAtStartup() => InstallIfEmpty();
+
+        /// <summary>Installs this adapter unless another netcode's is already in the slot (tests call it).</summary>
+        public static void InstallIfEmpty()
+        {
+            if (NetRole.Adapter == null) NetRole.Install(new NgoNetRoleAdapter());
+        }
 
         public NetRoleKind Process
         {

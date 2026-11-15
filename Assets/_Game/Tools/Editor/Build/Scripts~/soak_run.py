@@ -62,7 +62,11 @@ STAGES = {
     "S1-relevancy-on": dict(bots=50, minutes=30, step=5, every=120, lines=["gm.zone.list"], extra=[], who="session", hostiles="102", relevancy=True),
     "S1-relevancy-off": dict(bots=50, minutes=30, step=5, every=120, lines=["gm.zone.list"], extra=[], who="session", hostiles="102", relevancy=False),
 }
-EQUIP = ["gm.level max", "gm.skills.max", "gm.autopilot.time {seconds}"]
+# Each bot after gm.target (perf round 3 chunk 0, 15 Nov 2026: before, the bots stood in one clump at the spawn): every skill, a day of
+# Autopilot time, a Hostile Zone of Zone01 (gm.tp finds a zone by its id, the bots spread over the four mob zones), then Autopilot on
+# (it only starts inside a Hostile Zone). The bots enter at the maximum level already ("gm.level max" was not a number).
+EQUIP = ["gm.skills.max", "gm.autopilot.time 1", "gm.tp {zone}", "gm.autopilot on"]
+BOT_ZONES = ["mob-ne", "mob-nw", "mob-se", "mob-sw"]
 SECRET_KEYS = ("pagePassword", "password", "key", "secret", "token", "saveServiceKey")
 
 THIN_BOT_NOTE = (
@@ -442,8 +446,12 @@ def run_stage(stage):
                 if bot_id in equipped:
                     continue
                 gm_answers.append((f"gm.target {bot_id}", page.command(f"gm.target {bot_id}")))
+                zone = BOT_ZONES[len(equipped) % len(BOT_ZONES)]
                 for line in EQUIP:
-                    page.command(line.format(seconds=seconds))
+                    l = line.format(zone=zone)
+                    answer = page.command(l)
+                    if l.startswith("gm.tp") or l == "gm.autopilot on":
+                        gm_answers.append((f"{l} (bot {bot_id})", answer))   # the proof: where each bot went and Autopilot's own words
                 equipped.add(bot_id)
             if not sent_lines and (spec["bots"] == 0 or len(equipped) >= min(spec["bots"], spec["step"] or spec["bots"])):
                 species = "prowler"
