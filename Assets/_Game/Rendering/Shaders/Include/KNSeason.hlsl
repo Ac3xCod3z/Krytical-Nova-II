@@ -45,6 +45,8 @@ float4 _KN_SeasonLeafLook; // x the least brightness a turned leaf takes (a dark
 float4 _KN_SeasonLitter;   // x litter on the ground under canopies 0-1, y swept by a gust 0-1, zw the wind's direction (world XZ, unit)
 float4 _KN_LitterA;        // rgb one dead-leaf tone of the litter
 float4 _KN_LitterB;        // rgb the other
+float4 _KN_RoadSlush;      // owner 15 Nov: x how fast trodden roads pack over (cover gain), y how much the paving pattern shows (grey only), z wet worn darkness, w how broken a road's edge is
+float4 _KN_RoadWet;        // rgb the wet, worn lanes (multiplies the slush)
 
 bool KNSeasonOn() { return _KN_SeasonParams.w > 0.5; }
 
@@ -123,8 +125,9 @@ float KNSnowField(float3 positionWS, float3 normalWS, float4 shelter, float road
 float KNSnowMaskAt(float3 positionWS, float3 normalWS, float bias, float4 shelter, float road)
 {
     float cover = saturate(_KN_SeasonParams.x + bias * step(0.001, _KN_SeasonParams.x));
-    // owner 15 Nov: a trodden road is an even thin film (its share of the cover), never islands cut by the noise below
-    float film = saturate(_KN_SeasonParams.x * _KN_SnowShelterK.z * 2.0) * (0.85 + 0.15 * KNSeasonNoise(positionWS.xz * 0.2));
+    // owner 15 Nov (2nd): a trodden road packs over with slush as the cover builds (it was a 0.3 film at full cover, so 70 % of it
+    // stayed the beige paving); even, never islands cut by the noise below
+    float film = saturate(_KN_SeasonParams.x * max(_KN_RoadSlush.x, 0.01)) * (0.85 + 0.15 * KNSeasonNoise(positionWS.xz * 0.2));
     float up = saturate(KNSnowField(positionWS, normalWS, shelter, 0.0));
 #if defined(UNIVERSAL_INPUT_INCLUDED)
     // a thaw takes the sun-facing patches first
@@ -208,6 +211,42 @@ half3 KNSeasonLawn(half3 col)
     return c;
 }
 
+// Trodden roads in snow (owner 15 Nov, 2nd fix: the plaza read as flat beige sand, sharply cut against the snow). How trodden a road
+// texel reads, 0-1: whole roads in the road map (roadMap = the shelter map's b), broken into fresh-snow islands by noise toward their
+// edges and where the map has none, so the line to the full snow is soft and broken, never cut. road = the road flag (bit or map).
+float KNRoadTrodden(float3 positionWS, float road, float roadMap)
+{
+    float trodden = 0.0;
+    [branch] if (road > 0.001)
+    {
+        float n = KNSeasonNoise(positionWS.xz * 0.45 + 5.1) * 0.65 + KNSeasonNoise(positionWS.xz * 2.3 + 1.7) * 0.35;
+        float w = max(_KN_RoadSlush.w, 0.02);
+        trodden = saturate(road) * smoothstep(0.5 - w, 0.5 + w * 0.5, n + 0.2 + roadMap * 0.5);
+    }
+    return trodden;
+}
+
+// The packed slush of a trodden road: the snow palette (cool grey-white), the paving's pattern faintly in it (its brightness only,
+// never its hue), darker wet lanes worn by feet and wheels.
+half3 KNRoadSlushColour(half3 paving, float3 positionWS)
+{
+    half lum = dot(paving, half3(0.3h, 0.59h, 0.11h));
+    half3 c = (half3)(_KN_SnowColor.rgb * _KN_SlushColor.rgb);
+    c *= (half)lerp(1.0, 0.7 + 0.6 * saturate(lum * 2.0), _KN_RoadSlush.y);
+    float2 xz = positionWS.xz;
+    float lanes = max(KNSeasonNoise(float2(xz.x * 0.9, xz.y * 0.22) + 3.1), KNSeasonNoise(float2(xz.x * 0.22, xz.y * 0.9) + 8.3));
+    float wet = smoothstep(0.55, 0.8, lanes) * (0.7 + 0.3 * KNSeasonNoise(xz * 3.7));
+    return lerp(c, c * (half3)_KN_RoadWet.rgb, (half)(wet * _KN_RoadSlush.z));
+}
+
+// Paving seen through thin slush: wet, darker and cool (its brightness with the snow's tint), never the warm beige of the dry stone.
+half3 KNRoadWetPaving(half3 paving, float trodden)
+{
+    half lum = dot(paving, half3(0.3h, 0.59h, 0.11h));
+    half3 cool = lum * (half3)(_KN_SnowColor.rgb / max(dot(_KN_SnowColor.rgb, float3(0.3, 0.59, 0.11)), 0.05)) * 0.6h;
+    return lerp(paving, cool, (half)(trodden * saturate(_KN_SeasonParams.x * 4.0)));
+}
+
 // Leaf litter (owner 15 Nov, T3/T4): under the canopies (the shelter map's r) dead leaves build up as the trees thin through Autumn,
 // lie under the snow in Winter and are gone as Spring's grass grows (_KN_SeasonLitter.x, from the presenter). A gust sweeps it
 // (_KN_SeasonLitter.y): the patches thin and slide downwind while the blowing leaves take them away; it builds again when calm.
@@ -239,7 +278,8 @@ void KNSeasonGround(inout half3 albedo, inout half smoothness, float3 normalWS, 
     [branch] if (KNSeasonOn() && _KN_SeasonParams.x > 0.001)
     {
         float4 shelter = KNSnowShelter(positionWS.xz);
-        float snow = KNSnowMaskAt(positionWS, normalWS, 0.0, shelter, shelter.b);
+        float trodden = KNRoadTrodden(positionWS, shelter.b, shelter.b);
+        float snow = KNSnowMaskAt(positionWS, normalWS, 0.0, shelter, trodden);
         float press = KNSnowTrack(positionWS.xz);
         float depth = _KN_SnowShape.z * snow * lerp(1.0, _KN_SnowShelterK.z, shelter.b);
         float deep = saturate(depth / 0.06);
@@ -256,7 +296,8 @@ void KNSeasonGround(inout half3 albedo, inout half smoothness, float3 normalWS, 
         half3 packed = (half3)_KN_SnowColor.rgb * (half3)lerp(float3(1.0, 1.0, 1.0), float3(0.5, 0.57, 0.72), saturate(press * 1.4) * deep);
         packed *= (half)saturate(1.0 + side + rim * 0.8);
         // a trodden road: packed, darker, slushy (owner 14 Nov: thinner, trodden roads)
-        packed *= (half3)lerp(float3(1.0, 1.0, 1.0), _KN_SlushColor.rgb, shelter.b);
+        packed = lerp(packed, KNRoadSlushColour(albedo, positionWS) * (half)saturate(1.0 + side), (half)trodden);
+        albedo = KNRoadWetPaving(albedo, trodden);
         albedo = lerp(albedo, packed, (half)(snow * (1.0 - through)));
         smoothness = lerp(smoothness, lerp(0.15h, 0.5h, (half)shelter.b), (half)snow);
     }
@@ -276,11 +317,13 @@ half3 KNSeasonSurface(half3 albedo, float3 normalWS, float3 positionWS, uint ren
         // rendering layer bit 6 = a road or path (the season presenter tags them by material): trodden
         float4 shelter = KNSnowShelter(positionWS.xz);
         float road = (renderingLayer & 64u) != 0u ? 1.0 : 0.0;
-        float snow = KNSnowMaskAt(positionWS, normalWS, _KN_SeasonParams.z * (1.0 - road), float4(shelter.r, 0.0, 0.0, 0.0), road);
+        float trodden = KNRoadTrodden(positionWS, road, shelter.b);
+        float snow = KNSnowMaskAt(positionWS, normalWS, _KN_SeasonParams.z * (1.0 - road), float4(shelter.r, 0.0, 0.0, 0.0), trodden);
         float lip = snow * (1.0 - snow) * 4.0 * (1.0 - road);
-        half3 colour = (half3)_KN_SnowColor.rgb * (half3)lerp(float3(1.0, 1.0, 1.0), _KN_SlushColor.rgb, road);
-        // a trodden road reads as the road, darker and wet under a thin grey film (owner 15 Nov)
-        half3 under = albedo * (half)(1.0 - 0.3 * road * saturate(_KN_SeasonParams.x * 3.0));
+        // owner 15 Nov (2nd): a trodden road is packed grey-white slush with wet worn lanes and the paving faintly in it, the fresh
+        // snow round it broken into it; where the slush is thin the paving shows wet, dark and cool, never beige
+        half3 colour = lerp((half3)_KN_SnowColor.rgb, KNRoadSlushColour(albedo, positionWS), (half)trodden);
+        half3 under = KNRoadWetPaving(albedo, trodden);
         result = lerp(under, colour * (half)(1.0 - 0.2 * lip), (half)snow);
     }
     return result;

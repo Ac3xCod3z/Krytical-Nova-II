@@ -44,6 +44,8 @@ namespace KryticalNova.World
         static readonly int LitterId = Shader.PropertyToID("_KN_SeasonLitter");
         static readonly int LitterAId = Shader.PropertyToID("_KN_LitterA");
         static readonly int LitterBId = Shader.PropertyToID("_KN_LitterB");
+        static readonly int RoadSlushId = Shader.PropertyToID("_KN_RoadSlush");
+        static readonly int RoadWetId = Shader.PropertyToID("_KN_RoadWet");
         const int LeafKinds = 16;   // KNSeason.hlsl: rendering layer bits 8-11
         /// <summary>Rendering layer bit 6: a road or path (tagged at runtime by material name; KNSeason.hlsl draws it trodden).</summary>
         public const uint RoadLayerBit = 1u << 6;
@@ -217,6 +219,8 @@ namespace KryticalNova.World
             Shader.SetGlobalVector(DepthId, new Vector4(settings.snowDepthMetres, settings.pathPress, 0f, 0f));
             Color slush = settings.slushColor;
             Shader.SetGlobalVector(SlushId, new Vector4(slush.r, slush.g, slush.b, 1f));
+            Shader.SetGlobalVector(RoadSlushId, new Vector4(settings.roadSlushCover, settings.roadPavingShows, settings.roadWetDarkness, settings.roadEdgeBreakup));
+            SetColour(RoadWetId, settings.roadWetColor);
 
             // spring and summer: grass grows back green, buds and blossom; golden grass on dry spells; heat haze on hot afternoons
             Temperature = s.Temperature;
