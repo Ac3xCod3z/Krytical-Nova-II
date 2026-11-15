@@ -320,6 +320,33 @@ namespace KryticalNova.Persistence.Entities
             return n;
         }
 
+        /// <summary>
+        /// Why there are (no) Hostile ghosts to attack (15 Nov 2026, run 2: hostiles=0 on a built server with 49 alive): the link system's
+        /// counters, the bodies it could link, and whether the Hostile ghost prefab is in this world.
+        /// </summary>
+        void LogHostileLink()
+        {
+            var link = World.GetExistingSystemManaged<KryticalNova.Hostiles.Entities.HostileBodyLinkServerSystem>();
+            int bodies = 0, views = 0, withBrain = 0, brainEnabled = 0;
+            foreach (HostileNet h in HostileNet.Active)
+            {
+                if (h == null) continue;
+                bodies++;
+                if (h.IsView) views++;
+                if (h.TryGetComponent(out KryticalNova.Hostiles.Entities.EcsHostileBrain brain))
+                {
+                    withBrain++;
+                    if (brain.isActiveAndEnabled) brainEnabled++;
+                }
+            }
+            bool prefab = !GetEntityQuery(ComponentType.ReadOnly<KryticalNova.Hostiles.Entities.HostileGhostPrefab>()).IsEmpty;
+            bool config = !GetEntityQuery(ComponentType.ReadOnly<KryticalNova.Brains.BrainConfig>()).IsEmpty;
+            Debug.Log(string.Format(CultureInfo.InvariantCulture,
+                "[KnBotBrain] hostile link: system {0}, updates {1}, links {2}, unlinks {3}, linked now {4}; HostileNet.Active {5} (views {6}, with EcsHostileBrain {7}, enabled {8}); HostileGhostPrefab {9}, BrainConfig {10}; CombatTarget ghosts {11}, registry {12}",
+                link != null ? "present" : "MISSING", link?.Updates ?? -1, link?.Links ?? -1, link?.Unlinks ?? -1, link?.Linked.Count ?? -1,
+                bodies, views, withBrain, brainEnabled, prefab, config, m_Hostiles.Count, CombatTargetRegistry.Entries.Count));
+        }
+
         void Report(float time)
         {
             if (m_Bots.Count == 0) return;
@@ -335,6 +362,7 @@ namespace KryticalNova.Persistence.Entities
                 }
                 int alive = 0;
                 foreach (var h in m_Hostiles) if (h.Alive) alive++;
+                LogHostileLink();
                 Debug.Log(string.Format(CultureInfo.InvariantCulture,
                     "[KnBotBrain] t={0:0}s bots={1} hunting={2} walked10m={3} fought={4} walked={5:0} m attacks={6} skillAsks={7} teleports={8} hostiles={9} alive={10}",
                     time, m_Bots.Count, enrolled, moved, fought, WalkedMm / 1000.0, Attacks, SkillAsks, Teleports, m_Hostiles.Count, alive));
