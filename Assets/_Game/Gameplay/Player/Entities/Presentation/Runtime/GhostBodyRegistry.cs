@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using Unity.Entities;
 using UnityEngine;
 using KryticalNova.Core;
@@ -36,11 +38,32 @@ namespace KryticalNova.Player.Entities.Presentation
     /// Everything that lists bodies for the rest of the game goes through here: the registered <see cref="GhostPlayerBody"/> views are
     /// the list <see cref="PlayerBodies"/> serves, and the local player's body is set into <see cref="LocalPlayer"/>.
     /// </para>
+    /// <para>
+    /// The list keeps the order (it is what <see cref="Entries"/> and <see cref="PlayerBodies"/> serve); three maps beside it make the
+    /// lookups O(1) instead of a prune plus a scan per call (perf night chunk 1: per-ghost systems made that O(n^2) a frame). The
+    /// network-id and key maps hold the FIRST entry of the list for their value, so a duplicate gives the same answer the scan gave.
+    /// A lookup that lands on a dead entry drops it and looks again; <see cref="Count"/>, <see cref="Entries"/> and
+    /// <see cref="Register"/> still drop every dead entry first.
+    /// </para>
     /// </summary>
     public static class GhostBodyRegistry
     {
+        /// <summary>A value inside one world: worlds compare by reference, as the old scans did.</summary>
+        readonly struct InWorld<T> : IEquatable<InWorld<T>> where T : struct, IEquatable<T>
+        {
+            readonly World m_World;
+            readonly T m_Value;
+            public InWorld(World world, T value) { m_World = world; m_Value = value; }
+            public bool Equals(InWorld<T> other) => ReferenceEquals(m_World, other.m_World) && m_Value.Equals(other.m_Value);
+            public override bool Equals(object obj) => obj is InWorld<T> other && Equals(other);
+            public override int GetHashCode() => (RuntimeHelpers.GetHashCode(m_World) * 397) ^ m_Value.GetHashCode();
+        }
+
         static readonly List<GhostBodyEntry> s_Entries = new List<GhostBodyEntry>();
-        static readonly List<IPlayerBody> s_Views = new List<IPlayerBody>();
+        static readonly List<IPlayerBody> s_Views = new List<IPlayerBody>();   // index for index with s_Entries
+        static readonly Dictionary<InWorld<Entity>, GhostBodyEntry> s_ByGhost = new Dictionary<InWorld<Entity>, GhostBodyEntry>();
+        static readonly Dictionary<InWorld<int>, GhostBodyEntry> s_ByNetworkId = new Dictionary<InWorld<int>, GhostBodyEntry>();
+        static readonly Dictionary<PlayerKey, GhostBodyEntry> s_ByKey = new Dictionary<PlayerKey, GhostBodyEntry>();
         static readonly Dictionary<PlayerKey, GameObject> s_ServerBodies = new Dictionary<PlayerKey, GameObject>();
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
@@ -54,6 +77,9 @@ namespace KryticalNova.Player.Entities.Presentation
                 if (e.Body != null && ReferenceEquals(LocalPlayer.Object, e.Body)) LocalPlayer.Set(null);
             s_Entries.Clear();
             s_Views.Clear();
+            s_ByGhost.Clear();
+            s_ByNetworkId.Clear();
+            s_ByKey.Clear();
             s_ServerBodies.Clear();
         }
 
@@ -77,6 +103,9 @@ namespace KryticalNova.Player.Entities.Presentation
             entry.View = new GhostPlayerBody(entry);
             s_Entries.Add(entry);
             s_Views.Add(entry.View);
+            s_ByGhost[new InWorld<Entity>(world, ghost)] = entry;
+            s_ByNetworkId.TryAdd(new InWorld<int>(world, networkId), entry);   // an earlier entry with this id stays the answer
+            if (key.IsValid) s_ByKey.TryAdd(key, entry);
             if (!ReferenceEquals(PlayerBodies.All, s_Views)) PlayerBodies.Use(s_Views);
             SetLocal(entry, isLocal);
             return entry;
@@ -119,17 +148,24 @@ namespace KryticalNova.Player.Entities.Presentation
 
         public static bool TryGetByGhost(World world, Entity ghost, out GhostBodyEntry entry)
         {
-            Prune();
-            int i = IndexOf(world, ghost);
-            entry = i >= 0 ? s_Entries[i] : null;
-            return entry != null;
+            var id = new InWorld<Entity>(world, ghost);
+            while (s_ByGhost.TryGetValue(id, out entry))
+            {
+                if (!entry.IsDead) return true;
+                if (!DropDead(entry)) break;   // dead: never handed out
+            }
+            entry = null;
+            return false;
         }
 
         public static bool TryGetByNetworkId(World world, int networkId, out GhostBodyEntry entry)
         {
-            Prune();
-            foreach (var e in s_Entries)
-                if (ReferenceEquals(e.World, world) && e.NetworkId == networkId) { entry = e; return true; }
+            var id = new InWorld<int>(world, networkId);
+            while (s_ByNetworkId.TryGetValue(id, out entry))
+            {
+                if (!entry.IsDead) return true;
+                if (!DropDead(entry)) break;   // the next live entry with this id (in list order) takes its place
+            }
             entry = null;
             return false;
         }
@@ -137,10 +173,12 @@ namespace KryticalNova.Player.Entities.Presentation
         /// <summary>By the server's key (where keys exist: the host and the dedicated server's own view).</summary>
         public static bool TryGetByKey(PlayerKey key, out GhostBodyEntry entry)
         {
-            Prune();
             if (key.IsValid)
-                foreach (var e in s_Entries)
-                    if (e.Key == key) { entry = e; return true; }
+                while (s_ByKey.TryGetValue(key, out entry))
+                {
+                    if (!entry.IsDead) return true;
+                    if (!DropDead(entry)) break;
+                }
             entry = null;
             return false;
         }
@@ -180,20 +218,44 @@ namespace KryticalNova.Player.Entities.Presentation
 
         // ------------------------------------------------------------------------------------------------ internals
 
-        static int IndexOf(World world, Entity ghost)
-        {
-            for (int i = 0; i < s_Entries.Count; i++)
-                if (ReferenceEquals(s_Entries[i].World, world) && s_Entries[i].Ghost == ghost) return i;
-            return -1;
-        }
+        static int IndexOf(World world, Entity ghost) =>
+            s_ByGhost.TryGetValue(new InWorld<Entity>(world, ghost), out GhostBodyEntry e) ? s_Entries.IndexOf(e) : -1;
 
         static void RemoveAt(int i)
         {
             if (i < 0) return;
             var e = s_Entries[i];
             if (e.Body != null && ReferenceEquals(LocalPlayer.Object, e.Body)) LocalPlayer.Set(null);
-            s_Views.Remove(e.View);
+            s_Views.RemoveAt(i);
             s_Entries.RemoveAt(i);
+
+            var ghostId = new InWorld<Entity>(e.World, e.Ghost);
+            if (s_ByGhost.TryGetValue(ghostId, out GhostBodyEntry g) && ReferenceEquals(g, e)) s_ByGhost.Remove(ghostId);
+
+            // The network-id and key maps hold the first entry of the list for their value; when that one goes, the next one with the
+            // same value takes its place. Entries before i cannot have it (the removed one was the first), so the search starts at i.
+            var netId = new InWorld<int>(e.World, e.NetworkId);
+            if (s_ByNetworkId.TryGetValue(netId, out GhostBodyEntry n) && ReferenceEquals(n, e))
+            {
+                s_ByNetworkId.Remove(netId);
+                for (int j = i; j < s_Entries.Count; j++)
+                    if (ReferenceEquals(s_Entries[j].World, e.World) && s_Entries[j].NetworkId == e.NetworkId) { s_ByNetworkId[netId] = s_Entries[j]; break; }
+            }
+            if (e.Key.IsValid && s_ByKey.TryGetValue(e.Key, out GhostBodyEntry k) && ReferenceEquals(k, e))
+            {
+                s_ByKey.Remove(e.Key);
+                for (int j = i; j < s_Entries.Count; j++)
+                    if (s_Entries[j].Key == e.Key) { s_ByKey[e.Key] = s_Entries[j]; break; }
+            }
+        }
+
+        /// <summary>Removes a dead entry a lookup landed on; false only if it was not in the list (never expected: stops the lookup loop).</summary>
+        static bool DropDead(GhostBodyEntry e)
+        {
+            int i = s_Entries.IndexOf(e);
+            if (i < 0) return false;
+            RemoveAt(i);
+            return true;
         }
 
         static void Prune()
