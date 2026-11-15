@@ -102,8 +102,21 @@ namespace KryticalNova.Networking.Entities
             // found. The day a pet, mount or stand becomes an owned ghost, this must take the BODY's place, picked on purpose.
             foreach (var (owner, transform) in SystemAPI.Query<RefRO<GhostOwner>, RefRO<LocalTransform>>())
                 places.TryAdd(owner.ValueRO.NetworkId, transform.ValueRO.Position);
-            foreach (var (id, place) in SystemAPI.Query<RefRO<NetworkId>, RefRW<GhostConnectionPosition>>())
-                if (places.TryGetValue(id.ValueRO.Value, out float3 at)) place.ValueRW.Position = at;
+            // Written only when the place moved (perf clean-ups round 2, chunk 8): a RefRW in the query bumped every connection's chunk
+            // every tick; the moved ones are collected read-only and written after, so a standing player's chunk keeps its version.
+            var moved = new NativeList<Entity>(8, state.WorldUpdateAllocator);
+            var movedTo = new NativeList<float3>(8, state.WorldUpdateAllocator);
+            foreach (var (id, place, e) in SystemAPI.Query<RefRO<NetworkId>, RefRO<GhostConnectionPosition>>().WithEntityAccess())
+                if (places.TryGetValue(id.ValueRO.Value, out float3 at) && PlaceMoved(place.ValueRO.Position, at)) { moved.Add(e); movedTo.Add(at); }
+            for (int i = 0; i < moved.Length; i++)
+            {
+                GhostConnectionPosition place = SystemAPI.GetComponent<GhostConnectionPosition>(moved[i]);
+                place.Position = movedTo[i];
+                SystemAPI.SetComponent(moved[i], place);
+            }
         }
+
+        /// <summary>The connection's place differs from where its body stands (bit for bit, as the old unconditional write would change it).</summary>
+        public static bool PlaceMoved(float3 was, float3 now) => math.any(math.asuint(was) != math.asuint(now));
     }
 }
