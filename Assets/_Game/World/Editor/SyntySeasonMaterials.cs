@@ -24,6 +24,10 @@ namespace KryticalNova.EditorTools
         /// <summary>The maps whose Synty materials move: every scene under the world scenes folder (towns and field maps).</summary>
         const string WorldScenes = "Assets/_Game/Scenes/World";
 
+        /// <summary>Materials never moved: effects (a blood splat or an ice burst must not take snow), samples, and the Crew houses'
+        /// interiors (indoors never snows). Found in the first Unity turn (15 Nov 2026): 10 of the 160 the maps reach.</summary>
+        static readonly string[] SkipPathWords = { "/VFX/", "ParticleFX", "/Samples/", "/Housing/" };
+
         [MenuItem("Krytical Nova/World/Seasons/Move Synty Materials To Season Shaders")]
         public static void MoveFromMenu() => Debug.Log(Move());
 
@@ -43,7 +47,7 @@ namespace KryticalNova.EditorTools
                 AssetDatabase.StartAssetEditing();
                 foreach (string path in AssetDatabase.GetDependencies(scenes, true))
                 {
-                    if (!path.EndsWith(".mat")) continue;
+                    if (!path.EndsWith(".mat") || SkipPathWords.Any(path.Contains)) continue;
                     var mat = AssetDatabase.LoadAssetAtPath<Material>(path);
                     if (mat == null) continue;
                     for (int i = 0; i < shaders.Count; i++)
@@ -92,10 +96,11 @@ namespace KryticalNova.EditorTools
         /// <summary>The shader changes; the queue, keywords and every value stay (the copies share Synty's property names).</summary>
         static void Swap(Material mat, Shader to)
         {
-            int queue = mat.renderQueue;
+            // only a queue that was already custom is kept (reading renderQueue gives the shader's, and setting it would pin it)
+            int custom = new SerializedObject(mat).FindProperty("m_CustomRenderQueue").intValue;
             string[] keywords = mat.shaderKeywords;
             mat.shader = to;
-            mat.renderQueue = queue;
+            mat.renderQueue = custom;
             mat.shaderKeywords = keywords;
             EditorUtility.SetDirty(mat);
         }
