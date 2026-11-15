@@ -126,7 +126,12 @@ namespace KryticalNova.World
 
         [Header("Town roads (every client; owner 14 Nov: thinner, trodden roads)")]
         [Tooltip("Renderers whose material (or mesh) name contains any of these are roads and paths: much less snow, packed and slushy.")]
-        public List<string> roadNameContains = new List<string> { "Road", "Street", "Pavement", "Sidewalk", "Path", "Plaza", "Crossing", "Curb", "Kerb" };
+        public List<string> roadNameContains = new List<string> { "Road", "Street", "Pavement", "Sidewalk", "Path", "Pathway", "Footpath", "Walkway",
+            "Boardwalk", "Plaza", "Crossing", "Curb", "Kerb", "Ground Tile" };
+        [Tooltip("Bridges (owner 15 Nov: roads, streets, pathways, bridges): a renderer whose material or mesh name holds one of these is a road " +
+                 "up to bridgeMaxHeight tall (a deck with its railings); only its up-facing deck takes the trodden snow.")]
+        public List<string> bridgeNameContains = new List<string> { "Bridge" };
+        public float bridgeMaxHeight = 4f;
         [Tooltip("Share of the snow a road keeps (0.15 = a thin trodden layer while open ground and roofs fill).")]
         [Range(0f, 1f)] public float roadSnowShare = 0.15f;
         [Tooltip("The packed, slushy colour of trodden snow (multiplies the snow colour).")]
@@ -388,7 +393,48 @@ namespace KryticalNova.World
         {
             if (string.IsNullOrEmpty(name) || roadNameContains == null) return false;
             for (int i = 0; i < roadNameContains.Count; i++)
-                if (NameHasWord(name, roadNameContains[i])) return true;
+                if (NameHasWords(name, roadNameContains[i])) return true;
+            return false;
+        }
+
+        /// <summary>True when a material or mesh name is a bridge's (<see cref="bridgeNameContains"/>).</summary>
+        public bool IsBridgeName(string name)
+        {
+            if (string.IsNullOrEmpty(name) || bridgeNameContains == null) return false;
+            for (int i = 0; i < bridgeNameContains.Count; i++)
+                if (NameHasWords(name, bridgeNameContains[i])) return true;
+            return false;
+        }
+
+        /// <summary>
+        /// <see cref="NameHasWord"/> for one word; a phrase of several ("Ground Tile", or "Ground_Tile") must appear as those whole words
+        /// one after another (owner 15 Nov: the plaza is SM_Env_Ground_Tile_*, and "Tile" alone would take roof tiles for roads).
+        /// </summary>
+        public static bool NameHasWords(string name, string phrase)
+        {
+            if (string.IsNullOrEmpty(name) || string.IsNullOrWhiteSpace(phrase)) return false;
+            string[] words = phrase.Trim().Split(new[] { ' ', '_' }, StringSplitOptions.RemoveEmptyEntries);
+            if (words.Length <= 1) return NameHasWord(name, phrase);
+            int n = name.Length, i = 0;
+            while (i < n)
+            {
+                int matched = 0, j = i;
+                while (matched < words.Length)
+                {
+                    while (j < n && !char.IsLetter(name[j])) j++;
+                    if (j >= n) break;
+                    int start = j++;
+                    while (j < n && char.IsLetter(name[j]) && !(char.IsUpper(name[j]) && char.IsLower(name[j - 1]))) j++;
+                    string w = words[matched];
+                    if (j - start != w.Length || string.Compare(name, start, w, 0, w.Length, StringComparison.OrdinalIgnoreCase) != 0) break;
+                    matched++;
+                }
+                if (matched == words.Length) return true;
+                // move on one word
+                while (i < n && !char.IsLetter(name[i])) i++;
+                i++;
+                while (i < n && char.IsLetter(name[i]) && !(char.IsUpper(name[i]) && char.IsLower(name[i - 1]))) i++;
+            }
             return false;
         }
 

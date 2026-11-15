@@ -543,5 +543,18 @@ namespace KryticalNova.Tests
             Assert.AreEqual(0.5f, SeasonRules.LawnGreen(new FoliageNow { Grow = 0.5f }, 0f), 1e-5f, "Spring: as it grows back");
             Assert.AreEqual(0f, SeasonRules.LawnGreen(new FoliageNow { Grow = 1f }, 1f), 1e-5f, "a dry spell: golden instead");
         }
+
+        [Test]
+        public void RoadPhrases_MatchWholeWordsInOrder_NeverPartWords()
+        {
+            Assert.IsTrue(SeasonSettings.NameHasWords("SM_Env_Ground_Tile_01", "Ground Tile"), "the plaza tiles");
+            Assert.IsTrue(SeasonSettings.NameHasWords("SM_Env_Ground_Tile_Half_01", "Ground_Tile"));
+            Assert.IsTrue(SeasonSettings.NameHasWords("GroundTileBig", "Ground Tile"), "camel case words");
+            Assert.IsFalse(SeasonSettings.NameHasWords("SM_Bld_Roof_Tile_01", "Ground Tile"), "roof tiles are no road");
+            Assert.IsFalse(SeasonSettings.NameHasWords("SM_Tile_Ground_01", "Ground Tile"), "the words must come in order");
+            Assert.IsFalse(SeasonSettings.NameHasWords("SM_Playground_Tile", "Ground Tile"), "never part of a word");
+            Assert.IsTrue(SeasonSettings.NameHasWords("SM_Env_Bridge_Stone_01", "Bridge"));
+            Assert.IsFalse(SeasonSettings.NameHasWords("SM_Prop_Streetlight_01", "Street"), "one word: Streetlight");
+        }
     }
 }

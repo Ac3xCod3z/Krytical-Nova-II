@@ -436,8 +436,10 @@ namespace KryticalNova.World
                 var half = new Vector2(b.extents.x, b.extents.z);
                 Material m = r.sharedMaterial;
                 MeshFilter mf = r.GetComponent<MeshFilter>();
-                bool road = (layer & RoadLayerBit) != 0 || (size.y < settings.roadMaxHeight && ((m != null && settings.IsRoadName(m.name))
-                            || (mf != null && mf.sharedMesh != null && settings.IsRoadName(mf.sharedMesh.name))));
+                string meshName = mf != null && mf.sharedMesh != null ? mf.sharedMesh.name : null;
+                bool road = (layer & RoadLayerBit) != 0
+                            || (size.y < settings.roadMaxHeight && ((m != null && settings.IsRoadName(m.name)) || settings.IsRoadName(meshName)))
+                            || (size.y < settings.bridgeMaxHeight && ((m != null && settings.IsBridgeName(m.name)) || settings.IsBridgeName(meshName)));
                 if (road)
                 {
                     r.renderingLayerMask = layer | RoadLayerBit;
