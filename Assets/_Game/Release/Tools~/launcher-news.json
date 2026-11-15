@@ -15,7 +15,7 @@
     },
     {
       "title": "Bigger Moments",
-      "body": "Levelling up raises a pillar of light in your faction's colour with a LEVEL banner, and your mount's evolutions get the milestone banner too. Callouts open with a letterbox."
+      "body": "Levelling up raises a pillar of light in your faction's colour with a LEVEL banner, and your mount's evolutions get the milestone banner too. Callouts open with a letterbox, and loot on the ground now shows the real item instead of a crate: a ring is tiny, a claymore lies long."
     },
     {
       "title": "Aegis, Guard and Squad Stances",
@@ -44,6 +44,7 @@
         "Crossfire, the hourly faction war, now keeps time on the server: from level 10 you are called 10 minutes before nightfall, with a banner and a countdown on your HUD. The battleground itself opens in a later build.",
         "Mini Deck: in every fight the minimap gives way to a small click-wheel player with the Deck's music and the Cadence beat, and comes back when the fight ends (M still opens the full map). In a Callout the chat fades too; Enter brings it back.",
         "Mount milestones: when your mount evolves, the same milestone banner as a pet's shows its new stage.",
+        "Real drop models: everything that drops shows its own 3D model on the ground (weapons by class, armour by slot, alloys, chips, Stims, Serums, Passes, pets, mounts and more), sized for realism: rings, chips and vials are small, armour and capes larger, claymores, axes and glaives the longest, lying low so they never block the view.",
         "Emotes from the saddle: waves, cheers, points, salutes, beckons, laughs and taunts play while riding; the others say you can't do that while riding.",
         "Townsfolk on Sky Concord: up to 80 by day and 35 at night, from every faction, walking, working, shopping and chatting by their own personality and the hour.",
         "Crowd Detail (Settings, Graphics): Low to Ultra sets how many townsfolk are drawn in full, how far away, and which cast shadows; far ones become light flat cards. It follows the preset.",

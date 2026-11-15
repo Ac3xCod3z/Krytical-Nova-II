@@ -53,6 +53,10 @@ namespace KryticalNova.Items
         [SerializeField] private Transform visual;
         [Tooltip("What is shown instead while the drop is Creds: a flat stack of cash. It hovers, bobs and spins like the parcel, but is not tinted.")]
         [SerializeField] private Transform credsVisual;
+        [Tooltip("The real 3D model each item shows on the ground and its size (owner, 14 Nov 2026). Items without one show the stand-in parcel.")]
+        [SerializeField] private DropModelLibrary dropModels;
+        [Tooltip("The stand-in parcel under the visual; empty = the visual's first child.")]
+        [SerializeField] private Transform standIn;
 
         private readonly NetworkVariable<ItemStack> netStack = new NetworkVariable<ItemStack>(default,
             NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
@@ -83,6 +87,7 @@ namespace KryticalNova.Items
         private float phase;
         private MaterialPropertyBlock block;
         private TakenDropVisual flying;   // the parcel on its way to whoever took it; it comes back when it lands
+        private DropModelPool.Instance model;   // the real model on show, or null for the stand-in parcel
 
         /// <summary>Every drop on this machine. Do not modify.</summary>
         public static IReadOnlyList<WorldDrop> Active => ActiveDrops;
@@ -115,6 +120,7 @@ namespace KryticalNova.Items
         {
             if (visual != null) visualBase = visual.localPosition;
             if (credsVisual != null) credsBase = credsVisual.localPosition;
+            if (standIn == null && visual != null && visual.childCount > 0) standIn = visual.GetChild(0);
             phase = Random.value * 10f;
         }
 
@@ -423,14 +429,36 @@ namespace KryticalNova.Items
             if (credsVisual != null) credsVisual.gameObject.SetActive(creds);
             if (visual != null) visual.gameObject.SetActive(!creds);
             if (visual == null || creds) return;
+            int rarity = Mathf.Clamp((int)Rarity, 0, RarityTint.Length - 1);
+            Color tint = RarityTint[rarity];
+            // Taken (empty) while the parcel flies to its taker: it keeps what it showed.
+            if (!stack.IsEmpty) ShowModel(dropModels != null ? dropModels.ModelIndexFor(stack.itemId) : -1);
+            if (model != null)
+            {
+                DropModelPool.Tint(model, rarity, tint, dropModels.rarityTint);
+                return;
+            }
+            if (standIn == null) return;
             block ??= new MaterialPropertyBlock();
-            Color tint = RarityTint[Mathf.Clamp((int)Rarity, 0, RarityTint.Length - 1)];
-            foreach (Renderer target in visual.GetComponentsInChildren<Renderer>(true))
+            foreach (Renderer target in standIn.GetComponentsInChildren<Renderer>(true))
             {
                 target.GetPropertyBlock(block);
                 block.SetColor(BaseColorId, tint);
                 target.SetPropertyBlock(block);
             }
+        }
+
+        /// <summary>Puts the item's real model under the visual (pooled), or the stand-in parcel when it has none.</summary>
+        private void ShowModel(int index)
+        {
+            GameObject prefab = index >= 0 ? dropModels.models[index].prefab : null;
+            if (model != null && model.prefab != prefab)
+            {
+                DropModelPool.Return(model);
+                model = null;
+            }
+            if (prefab != null && model == null) model = DropModelPool.Take(prefab, visual);
+            if (standIn != null) standIn.gameObject.SetActive(model == null);
         }
 
         /// <summary>The local player clicked it and is in reach: ask the server for it.</summary>
