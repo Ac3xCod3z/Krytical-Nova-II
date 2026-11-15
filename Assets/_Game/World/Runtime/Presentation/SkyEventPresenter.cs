@@ -1,6 +1,7 @@
 using System;
 using UnityEngine;
 using UnityEngine.Rendering;
+using UnityEngine.SceneManagement;
 using KryticalNova.Rendering;
 
 namespace KryticalNova.World
@@ -58,12 +59,55 @@ namespace KryticalNova.World
         float wroteAmbientDim;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        static void ResetStatics() { AuroraAllowed = null; Instance = null; NebulaLookOverride = -1; }
+        static void ResetStatics() { AuroraAllowed = null; Instance = null; NebulaLookOverride = -1; ShuttingDown = false; }
+
+        /// <summary>
+        /// True once the game (or Play in the Editor) is ending: quitting, leaving Play, closing the Editor or reloading scripts.
+        /// From then on nothing here touches <see cref="RenderSettings"/>: Unity may already have torn that scene manager down when our
+        /// <c>OnDisable</c>/<c>OnDestroy</c> run, and reading it then is a FATAL ERROR ("GetManagerFromContext: pointer to object of
+        /// manager 'RenderSettings' is NULL", owner closing Unity, 14 Nov). Nothing is lost by skipping it: the sky copy is never saved,
+        /// and the scene's own settings come back with the scene. Cleared when Play starts (<see cref="ResetStatics"/>).
+        /// </summary>
+        public static bool ShuttingDown { get; private set; }
+
+        /// <summary>Marks the end of the game or of Play (see <see cref="ShuttingDown"/>).</summary>
+        public static void NoteShutdown() => ShuttingDown = true;
+
+        /// <summary>Whether putting the map's own sky material back may touch <see cref="RenderSettings"/> now: never while shutting
+        /// down, and only while the active scene (whose settings those are) is still loaded.</summary>
+        public static bool MayRestoreSky(bool shuttingDown, bool activeSceneLoaded) => !shuttingDown && activeSceneLoaded;
+
+        static void WatchShutdown()
+        {
+            Application.quitting -= NoteShutdown;
+            Application.quitting += NoteShutdown;
+#if UNITY_EDITOR
+            UnityEditor.EditorApplication.wantsToQuit -= NoteShutdownAndAllow;
+            UnityEditor.EditorApplication.wantsToQuit += NoteShutdownAndAllow;
+            UnityEditor.EditorApplication.quitting -= NoteShutdown;
+            UnityEditor.EditorApplication.quitting += NoteShutdown;
+            UnityEditor.EditorApplication.playModeStateChanged -= OnPlayModeChanged;
+            UnityEditor.EditorApplication.playModeStateChanged += OnPlayModeChanged;
+            UnityEditor.AssemblyReloadEvents.beforeAssemblyReload -= NoteShutdown;
+            UnityEditor.AssemblyReloadEvents.beforeAssemblyReload += NoteShutdown;
+#endif
+        }
+
+#if UNITY_EDITOR
+        // Never refuses. If another handler keeps the Editor open, only a sky restore is skipped (harmless; drawing goes on).
+        static bool NoteShutdownAndAllow() { NoteShutdown(); return true; }
+
+        static void OnPlayModeChanged(UnityEditor.PlayModeStateChange change)
+        {
+            if (change == UnityEditor.PlayModeStateChange.ExitingPlayMode) NoteShutdown();
+        }
+#endif
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         static void Create()
         {
             if (IsHeadlessRuntime || Instance != null) return;
+            WatchShutdown();
             var go = new GameObject("KN Sky Events") { hideFlags = HideFlags.DontSave };
             DontDestroyOnLoad(go);
             go.AddComponent<SkyEventPresenter>();
@@ -77,6 +121,9 @@ namespace KryticalNova.World
             if (Instance != null && Instance != this) { Destroy(gameObject); return; }
             Instance = this;
         }
+
+        // Switched off while the game runs (sky.events off, a GM, a test): the map's own sky, stars and all, comes back at once.
+        void OnDisable() => RestoreSkyMaterial();
 
         void OnDestroy()
         {
@@ -162,9 +209,13 @@ namespace KryticalNova.World
         void RestoreSkyMaterial()
         {
             if (skyCopy == null) return;
-            if (RenderSettings.skybox == skyCopy && skySource != null) RenderSettings.skybox = skySource;
+            // ShuttingDown first: at quit RenderSettings must not even be read (see ShuttingDown).
+            if (MayRestoreSky(ShuttingDown, !ShuttingDown && SceneManager.GetActiveScene().isLoaded)
+                && skySource != null && RenderSettings.skybox == skyCopy)
+                RenderSettings.skybox = skySource;
             Destroy(skyCopy);
             skyCopy = null;
+            skySource = null;
         }
 
         // The second sun is drawn with the custom sun's own look (and the stars sit behind the same clouds): numbers the sky material holds.
