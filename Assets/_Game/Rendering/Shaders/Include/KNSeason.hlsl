@@ -118,7 +118,9 @@ float KNSnowField(float3 positionWS, float3 normalWS, float4 shelter, float road
 float KNSnowMaskAt(float3 positionWS, float3 normalWS, float bias, float4 shelter, float road)
 {
     float cover = saturate(_KN_SeasonParams.x + bias * step(0.001, _KN_SeasonParams.x));
-    float up = saturate(KNSnowField(positionWS, normalWS, shelter, road));
+    // owner 15 Nov: a trodden road is an even thin film (its share of the cover), never islands cut by the noise below
+    float film = saturate(_KN_SeasonParams.x * _KN_SnowShelterK.z * 2.0) * (0.85 + 0.15 * KNSeasonNoise(positionWS.xz * 0.2));
+    float up = saturate(KNSnowField(positionWS, normalWS, shelter, 0.0));
 #if defined(UNIVERSAL_INPUT_INCLUDED)
     // a thaw takes the sun-facing patches first
     cover = saturate(cover - _KN_SnowShelterK.w * saturate(dot(normalWS, _MainLightPosition.xyz)));
@@ -126,7 +128,8 @@ float KNSnowMaskAt(float3 positionWS, float3 normalWS, float bias, float4 shelte
     float n = KNSeasonNoise(positionWS.xz * 0.35) * 0.6 + KNSeasonNoise(positionWS.xz * 1.7) * 0.4;
     float soft = max(_KN_SeasonMisc.z, 0.01);
     // full cover reaches 1 everywhere it holds; a thin cover shows only in the low (noise) spots
-    return smoothstep(-soft, soft, cover * up * 1.15 - n * (1.0 - cover * 0.85) * 0.9);
+    float open = smoothstep(-soft, soft, cover * up * 1.15 - n * (1.0 - cover * 0.85) * 0.9);
+    return lerp(open, film * KNSnowSlope(normalWS), saturate(road));
 }
 
 float KNSnowMask(float3 positionWS, float3 normalWS, float bias)
@@ -141,7 +144,8 @@ float KNSnowDepth(float3 positionWS, float3 normalWS)
 {
     float4 shelter = KNSnowShelter(positionWS.xz);
     float ceiling = _KN_SnowDepth.x > 0.0 ? _KN_SnowDepth.x : 1.0;
-    float depth = min(_KN_SnowShape.z * KNSnowField(positionWS, normalWS, shelter, shelter.b), ceiling);
+    // no raised snow where a street or pavement lies (the ground's lift buried the street meshes, owner 15 Nov)
+    float depth = min(_KN_SnowShape.z * KNSnowField(positionWS, normalWS, shelter, 0.0), ceiling) * (1.0 - shelter.b);
     return depth * (1.0 - KNSnowTrack(positionWS.xz) * _KN_SnowDepth.y);
 }
 
@@ -171,8 +175,28 @@ float3 KNSnowLiftWS(float3 positionWS, float3 normalWS)
 
 // The ground: albedo to snow (smoother), with footprints: in deep snow a print is a shaded dent of packed snow with a bright pushed-up
 // rim, in a thin cover the ground shows through it.
+// How green this foliage texel is (leaves, not trunks or rocks in the same atlas).
+// Owner 15 Nov: Synty's leaves are OLIVE (red about as high as green), so "green above red" scored them 0 and no tree ever changed.
+// Leaves and lawn: green well above blue, and red not above green (a brown trunk, bark, dirt or grey stone scores 0).
+half KNSeasonLeafness(half3 albedo) { return saturate((albedo.g - albedo.b) * 6.0h - max(albedo.r - albedo.g, 0.0h) * 8.0h); }
+
+// The grass season as one multiply (the profile's tint, autumn dullness, brown after the snow, fresh spring green, golden dry spells),
+// shared by the grass blades and the terrain's lawn.
+half3 KNSeasonLawnTint()
+{
+    half3 t = (half3)_KN_SeasonGrass.rgb;
+    t *= (half3)lerp(float3(1.0, 1.0, 1.0), _KN_SeasonDull.rgb, _KN_SeasonFoliage.z);
+    t *= (half3)lerp(float3(1.0, 1.0, 1.0), _KN_ThawGrass.rgb, _KN_SeasonSpring.y);
+    t *= (half3)lerp(float3(1.0, 1.0, 1.0), _KN_SpringGreen.rgb, _KN_SeasonSpring.z);
+    t *= (half3)lerp(float3(1.0, 1.0, 1.0), _KN_GoldenGrass.rgb, _KN_SeasonSummer.z);
+    return t;
+}
+
 void KNSeasonGround(inout half3 albedo, inout half smoothness, float3 normalWS, float3 positionWS)
 {
+    // owner 15 Nov: the lawn is mostly the terrain's grass texture, so its green texels take the grass season too (dirt, paving: none)
+    [branch] if (KNSeasonOn())
+        albedo = lerp(albedo, albedo * KNSeasonLawnTint(), KNSeasonLeafness(albedo));
     [branch] if (KNSeasonOn() && _KN_SeasonParams.x > 0.001)
     {
         float4 shelter = KNSnowShelter(positionWS.xz);
@@ -210,15 +234,14 @@ half3 KNSeasonSurface(half3 albedo, float3 normalWS, float3 positionWS, uint ren
         float4 shelter = KNSnowShelter(positionWS.xz);
         float road = (renderingLayer & 64u) != 0u ? 1.0 : 0.0;
         float snow = KNSnowMaskAt(positionWS, normalWS, _KN_SeasonParams.z * (1.0 - road), float4(shelter.r, 0.0, 0.0, 0.0), road);
-        float lip = snow * (1.0 - snow) * 4.0;
+        float lip = snow * (1.0 - snow) * 4.0 * (1.0 - road);
         half3 colour = (half3)_KN_SnowColor.rgb * (half3)lerp(float3(1.0, 1.0, 1.0), _KN_SlushColor.rgb, road);
-        result = lerp(albedo, colour * (half)(1.0 - 0.2 * lip), (half)snow);
+        // a trodden road reads as the road, darker and wet under a thin grey film (owner 15 Nov)
+        half3 under = albedo * (half)(1.0 - 0.3 * road * saturate(_KN_SeasonParams.x * 3.0));
+        result = lerp(under, colour * (half)(1.0 - 0.2 * lip), (half)snow);
     }
     return result;
 }
-
-// How green this foliage texel is (leaves, not trunks or rocks in the same atlas).
-half KNSeasonLeafness(half3 albedo) { return saturate((albedo.g - max(albedo.r, albedo.b)) * 6.0h); }
 
 uint KNSeasonLeafKind(uint renderingLayer) { return (renderingLayer >> 8) & 15u; }
 
@@ -295,12 +318,8 @@ float3 KNSeasonGrassColour(float3 col, float height01, float3 rootWS)
     float3 result = col;
     [branch] if (KNSeasonOn())
     {
-        result *= _KN_SeasonGrass.rgb;
-        result *= lerp(float3(1.0, 1.0, 1.0), _KN_SeasonDull.rgb, _KN_SeasonFoliage.z);
-        // spring: brown and flattened after the snow, then a fresh green; summer: golden on long dry spells
-        result *= lerp(float3(1.0, 1.0, 1.0), _KN_ThawGrass.rgb, _KN_SeasonSpring.y);
-        result *= lerp(float3(1.0, 1.0, 1.0), _KN_SpringGreen.rgb, _KN_SeasonSpring.z);
-        result *= lerp(float3(1.0, 1.0, 1.0), _KN_GoldenGrass.rgb, _KN_SeasonSummer.z * (0.55 + 0.45 * height01));
+        // the season's tint, dull through Autumn, brown after the snow, a fresh green, golden on dry spells (as the lawn)
+        result *= (float3)KNSeasonLawnTint();
         result = lerp(result, _KN_SnowColor.rgb, _KN_SeasonGrass.a * height01 * height01);
         float cover = _KN_SeasonParams.x * (1.0 - KNSnowTrack(rootWS.xz));
         float dusting = _KN_SnowShape.w > 0.0 ? 0.35 : 1.0;   // raised snow buries the base; the tips only carry a dusting

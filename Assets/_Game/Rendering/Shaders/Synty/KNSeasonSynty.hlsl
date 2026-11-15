@@ -3,7 +3,7 @@
 // rendering layer carries a tree kind (bits 8-11; the season presenter stamps the town's Synty trees by name at runtime) takes the
 // trees' look (each kind's fall colour, buds and blossom, frost and snow on the canopy top); everything else takes the buildings'
 // (snow on roofs and ledges by slope, drifts, trodden slushy roads, footprints and ploughed paths; walls never; bit 7 "No Snow"
-// never). Colour only: no vertex lift on Synty meshes, no clip. Until a presenter publishes it returns the colour it was given.
+// never). Colour only: no vertex lift on Synty meshes, no clip (fallen clumps turn dead-leaf brown). Until a presenter publishes it returns the colour it was given.
 #ifndef KN_SEASON_SYNTY_INCLUDED
 #define KN_SEASON_SYNTY_INCLUDED
 
@@ -19,7 +19,12 @@ void KNSeasonSynty_float(float3 Albedo, float3 NormalWS, float3 PositionWS, out 
     float3 n = normalize(NormalWS);
     half3 c = (half3)Albedo;
     [branch] if (KNSeasonLeafKind(layer) != 0u)
+    {
+        // no clip on Synty's graph: a fallen clump turns the dead-leaf brown of its kind instead, so the canopy reads thinner
+        bool gone = KNSeasonLeafGone(c, PositionWS, pivotWS, layer);
         c = KNSeasonFoliage(c, n, PositionWS, pivotWS, layer);
+        if (gone) c = (half3)_KN_LeafLate[KNSeasonLeafKind(layer)].rgb * 0.45h;
+    }
     else
         c = KNSeasonSurface(c, n, PositionWS, layer);
     Out = (float3)c;

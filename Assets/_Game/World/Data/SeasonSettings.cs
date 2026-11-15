@@ -131,6 +131,8 @@ namespace KryticalNova.World
         [Range(0f, 1f)] public float roadSnowShare = 0.15f;
         [Tooltip("The packed, slushy colour of trodden snow (multiplies the snow colour).")]
         public Color slushColor = new Color(0.62f, 0.6f, 0.6f);
+        [Tooltip("A road or pavement is flat: a renderer taller than this (metres) is never one, whatever its name (lamps, barriers, machines).")]
+        public float roadMaxHeight = 1f;
 
         [Header("Ploughed paths (every client; owner 14 Nov: deep snow leaves a path, not prints)")]
         [Tooltip("Snow deeper than this (m) at the feet makes a continuous path instead of footprints; blended near it.")]
@@ -147,8 +149,8 @@ namespace KryticalNova.World
         [Range(0.05f, 1f)] public float springGrassBy = 0.4f;
         [Range(0.1f, 1f)] public float winterGrassHeight = 0.45f;
         [Tooltip("The brown, flattened tone of grass after the snow (multiplies the art), and the fresh spring green it turns to.")]
-        public Color thawGrass = new Color(0.72f, 0.62f, 0.42f);
-        public Color springGreen = new Color(0.9f, 1.12f, 0.8f);
+        public Color thawGrass = new Color(0.66f, 0.54f, 0.34f);
+        public Color springGreen = new Color(0.85f, 1.18f, 0.72f);
         [Tooltip("Pale-green buds on bare trees early in Spring.")]
         public Color budColor = new Color(0.62f, 0.82f, 0.42f);
         [Tooltip("Shares of Spring when blossom opens, is at its fullest and is gone (the petals fall in the last part).")]
@@ -320,12 +322,33 @@ namespace KryticalNova.World
         public int Motes(WorldEffects tier) => (int)ByTier(motesByTier, (int)tier, 0);
         public int Fireflies(WorldEffects tier) => (int)ByTier(firefliesByTier, (int)tier, 0);
 
+        /// <summary>
+        /// True when <paramref name="word"/> is one whole word of <paramref name="name"/>: words split at '_', spaces, digits and other marks,
+        /// and where a capital follows a small letter ("RoadMarkings" = Road + Markings). Owner 15 Nov: "Streetlight" held both "Street" and
+        /// "tree", so 88 lamps were taken for roads and tree canopies; as one word it is neither. No garbage.
+        /// </summary>
+        public static bool NameHasWord(string name, string word)
+        {
+            if (string.IsNullOrEmpty(name) || string.IsNullOrWhiteSpace(word)) return false;
+            word = word.Trim();
+            int i = 0, n = name.Length;
+            while (i < n)
+            {
+                while (i < n && !char.IsLetter(name[i])) i++;
+                int start = i;
+                i++;
+                while (i < n && char.IsLetter(name[i]) && !(char.IsUpper(name[i]) && char.IsLower(name[i - 1]))) i++;
+                if (i - start == word.Length && string.Compare(name, start, word, 0, word.Length, StringComparison.OrdinalIgnoreCase) == 0) return true;
+            }
+            return false;
+        }
+
         /// <summary>True when a material or mesh name is a road's (<see cref="roadNameContains"/>).</summary>
         public bool IsRoadName(string name)
         {
             if (string.IsNullOrEmpty(name) || roadNameContains == null) return false;
             for (int i = 0; i < roadNameContains.Count; i++)
-                if (!string.IsNullOrEmpty(roadNameContains[i]) && name.IndexOf(roadNameContains[i], StringComparison.OrdinalIgnoreCase) >= 0) return true;
+                if (NameHasWord(name, roadNameContains[i])) return true;
             return false;
         }
 

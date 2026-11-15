@@ -362,8 +362,8 @@ namespace KryticalNova.World
                 var half = new Vector2(b.extents.x, b.extents.z);
                 Material m = r.sharedMaterial;
                 MeshFilter mf = r.GetComponent<MeshFilter>();
-                bool road = (layer & RoadLayerBit) != 0 || (m != null && settings.IsRoadName(m.name))
-                            || (mf != null && mf.sharedMesh != null && settings.IsRoadName(mf.sharedMesh.name));
+                bool road = (layer & RoadLayerBit) != 0 || (size.y < settings.roadMaxHeight && ((m != null && settings.IsRoadName(m.name))
+                            || (mf != null && mf.sharedMesh != null && settings.IsRoadName(mf.sharedMesh.name))));
                 if (road)
                 {
                     r.renderingLayerMask = layer | RoadLayerBit;
@@ -371,7 +371,7 @@ namespace KryticalNova.World
                         m_ShelterAll.Add(new ShelterShape { Centre = centre, Half = half, Kind = SnowShelterKind.Road });
                     continue;
                 }
-                bool tree = ((layer >> 8) & 15u) != 0u || r.gameObject.name.IndexOf("Tree", System.StringComparison.OrdinalIgnoreCase) >= 0;
+                bool tree = ((layer >> 8) & 15u) != 0u || SeasonSettings.NameHasWord(r.gameObject.name, "Tree");
                 if (tree)
                 {
                     // a Synty tree on the KN season copy of its shader gets its kind here (its prefab is a vendor file, never edited)

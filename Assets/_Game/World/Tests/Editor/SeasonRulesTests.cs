@@ -491,6 +491,18 @@ namespace KryticalNova.Tests
         }
 
         [Test]
+        public void NameHasWord_WholeWordsOnly_StreetlightIsNeitherRoadNorTree()
+        {
+            Assert.IsTrue(SeasonSettings.NameHasWord("SM_Env_Sidewalk_01_SF", "Sidewalk"));
+            Assert.IsTrue(SeasonSettings.NameHasWord("Road_01", "road"));
+            Assert.IsTrue(SeasonSettings.NameHasWord("RoadMarkings", "Road"), "a capital after a small letter starts a word");
+            Assert.IsTrue(SeasonSettings.NameHasWord("SM_Env_Tree_03 (2)", "Tree"));
+            Assert.IsFalse(SeasonSettings.NameHasWord("SM_Prop_Streetlight_01", "Street"), "the 88 lamps were roads (owner 15 Nov)");
+            Assert.IsFalse(SeasonSettings.NameHasWord("SM_Prop_Streetlight_01", "Tree"), "and tree canopies");
+            Assert.IsFalse(SeasonSettings.NameHasWord(null, "Road"));
+        }
+
+        [Test]
         public void SummerSettings_HazeOffOnLow_MotesHaveAMaterial()
         {
             var s = Resources.Load<SeasonSettings>("SeasonSettings");
