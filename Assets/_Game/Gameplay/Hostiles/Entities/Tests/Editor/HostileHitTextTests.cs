@@ -1,5 +1,7 @@
 using System;
 using NUnit.Framework;
+using UnityEngine.TestTools.Constraints;
+using Is = UnityEngine.TestTools.Constraints.Is;
 
 namespace KryticalNova.Hostiles.Entities.Tests
 {
@@ -18,22 +20,23 @@ namespace KryticalNova.Hostiles.Entities.Tests
         [Test]
         public void WithDiagnosticsOff_AStrikeMakesNoText()
         {
+            // GC.GetAllocatedBytesForCurrentThread reads 0 under Unity's Mono: the Test Framework's GC.Alloc recorder decides.
             const int strikes = 1000;
             for (int i = 0; i < 10; i++) OldText(i * 1.5f, i % 4 == 0);   // warm up
-            long before = GC.GetAllocatedBytesForCurrentThread();
-            for (int i = 0; i < strikes; i++) OldText(i * 1.5f, i % 4 == 0);
-            long oldBytes = GC.GetAllocatedBytesForCurrentThread() - before;
-            // the new path with diagnostics off: the queued case keeps a null and the text is never made
             string what = "x";
-            before = GC.GetAllocatedBytesForCurrentThread();
-            for (int i = 0; i < strikes; i++) what = null;
-            long newBytes = GC.GetAllocatedBytesForCurrentThread() - before;
-            string line = $"[perf chunk 3] hostile strike text, {strikes} strikes, diagnostics off: old {oldBytes} bytes, new {newBytes} bytes";
+            System.Action oldWay = () => { for (int i = 0; i < strikes; i++) what = OldText(i * 1.5f, i % 4 == 0); };
+            // the new path with diagnostics off: the queued case keeps a null and the text is never made
+            System.Action newWay = () => { for (int i = 0; i < strikes; i++) what = HostileBrainDiag.Enabled ? HostileStrikeBridge.HitText(i * 1.5f, i % 4 == 0) : null; };
+            HostileBrainDiag.On = false;   // as by default (no other test may leave it on here)
+            long before = GC.GetTotalMemory(false); oldWay(); long oldBytes = GC.GetTotalMemory(false) - before;
+            before = GC.GetTotalMemory(false); newWay(); long newBytes = GC.GetTotalMemory(false) - before;
+            string line = $"[perf chunk 3] hostile strike text, {strikes} strikes, diagnostics off: old ~{oldBytes} bytes of heap, new ~{newBytes} bytes";
             TestContext.WriteLine(line);
             UnityEngine.Debug.Log(line);
+            Assert.That(oldWay, Is.AllocatingGCMemory(), "the old text per strike made garbage");
+            Assert.That(newWay, Is.Not.AllocatingGCMemory(), "with diagnostics off no text is made");
             Assert.IsNull(what);
-            Assert.AreEqual(0, newBytes, line);
-            Assert.Greater(oldBytes, 0, line);
+            HostileBrainDiag.On = null;
         }
     }
 }
