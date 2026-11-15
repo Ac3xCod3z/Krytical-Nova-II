@@ -322,6 +322,12 @@ namespace KryticalNova.World
             return t * t * (3f - 2f * t);
         }
 
+        /// <summary>
+        /// How green the lawn and blades go now (owner 15 Nov: the lawn never went green in Spring and Summer), 0-1: as the grass grows
+        /// back (Spring), full through Summer, none while it is dull (Autumn), browned after the snow, or golden in a dry spell.
+        /// </summary>
+        public static float LawnGreen(in FoliageNow f, float golden) => Clamp01(f.Grow * (1f - f.Dull) * (1f - f.Brown) * (1f - Clamp01(golden)));
+
         static float Clamp01(float v) => v < 0f ? 0f : v > 1f ? 1f : v;
 
         /// <summary>

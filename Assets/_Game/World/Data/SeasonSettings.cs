@@ -126,11 +126,34 @@ namespace KryticalNova.World
 
         [Header("Town roads (every client; owner 14 Nov: thinner, trodden roads)")]
         [Tooltip("Renderers whose material (or mesh) name contains any of these are roads and paths: much less snow, packed and slushy.")]
-        public List<string> roadNameContains = new List<string> { "Road", "Street", "Pavement", "Sidewalk", "Path", "Plaza", "Crossing", "Curb", "Kerb" };
+        public List<string> roadNameContains = new List<string> { "Road", "Street", "Pavement", "Sidewalk", "Path", "Pathway", "Footpath", "Walkway",
+            "Boardwalk", "Plaza", "Crossing", "Curb", "Kerb", "Ground Tile" };
+        [Tooltip("Bridges (owner 15 Nov: roads, streets, pathways, bridges): a renderer whose material or mesh name holds one of these is a road " +
+                 "up to bridgeMaxHeight tall (a deck with its railings); only its up-facing deck takes the trodden snow.")]
+        public List<string> bridgeNameContains = new List<string> { "Bridge" };
+        public float bridgeMaxHeight = 4f;
         [Tooltip("Share of the snow a road keeps (0.15 = a thin trodden layer while open ground and roofs fill).")]
         [Range(0f, 1f)] public float roadSnowShare = 0.15f;
         [Tooltip("The packed, slushy colour of trodden snow (multiplies the snow colour).")]
         public Color slushColor = new Color(0.62f, 0.6f, 0.6f);
+        [Tooltip("How fast a trodden road packs over with slush as the cover builds (1.6 = covered by 60 % cover; the paving shows only through a light snow).")]
+        [Range(0.2f, 4f)] public float roadSlushCover = 1.6f;
+        [Tooltip("How much the paving's pattern shows in the slush (its brightness only, never its colour).")]
+        [Range(0f, 1f)] public float roadPavingShows = 0.2f;
+        [Tooltip("How dark the wet lanes worn by feet and wheels are, and their colour (multiplies the slush).")]
+        [Range(0f, 1f)] public float roadWetDarkness = 0.35f;
+        public Color roadWetColor = new Color(0.55f, 0.6f, 0.7f);
+        [Tooltip("How far trodden snow goes from fresh snow toward the slush colour (owner 15 Nov: it must still read as snow, never dirt).")]
+        [Range(0f, 1f)] public float roadSlushShare = 0.5f;
+        [Tooltip("How broken a road's edge is against the full snow (fresh-snow islands toward its edges; 0.02 sharp .. 0.5 very ragged).")]
+        [Range(0.02f, 0.5f)] public float roadEdgeBreakup = 0.3f;
+
+        [Header("Lawn (owner 15 Nov: it never went green)")]
+        [Tooltip("A terrain layer whose name holds one of these words is lawn and takes the grass season in full (its texture's colour does not matter).")]
+        public List<string> lawnLayerWords = new List<string> { "Grass", "Lawn", "Meadow", "Moss", "Turf" };
+        [Tooltip("The green the lawn and the blades go in Spring and Summer (times the grass's own brightness), and how far at most.")]
+        public Color lawnGreen = new Color(0.3f, 0.62f, 0.16f);
+        [Range(0f, 1f)] public float lawnGreenStrength = 0.65f;
         [Tooltip("A road or pavement is flat: a renderer taller than this (metres) is never one, whatever its name (lamps, barriers, machines).")]
         public float roadMaxHeight = 1f;
 
@@ -370,7 +393,48 @@ namespace KryticalNova.World
         {
             if (string.IsNullOrEmpty(name) || roadNameContains == null) return false;
             for (int i = 0; i < roadNameContains.Count; i++)
-                if (NameHasWord(name, roadNameContains[i])) return true;
+                if (NameHasWords(name, roadNameContains[i])) return true;
+            return false;
+        }
+
+        /// <summary>True when a material or mesh name is a bridge's (<see cref="bridgeNameContains"/>).</summary>
+        public bool IsBridgeName(string name)
+        {
+            if (string.IsNullOrEmpty(name) || bridgeNameContains == null) return false;
+            for (int i = 0; i < bridgeNameContains.Count; i++)
+                if (NameHasWords(name, bridgeNameContains[i])) return true;
+            return false;
+        }
+
+        /// <summary>
+        /// <see cref="NameHasWord"/> for one word; a phrase of several ("Ground Tile", or "Ground_Tile") must appear as those whole words
+        /// one after another (owner 15 Nov: the plaza is SM_Env_Ground_Tile_*, and "Tile" alone would take roof tiles for roads).
+        /// </summary>
+        public static bool NameHasWords(string name, string phrase)
+        {
+            if (string.IsNullOrEmpty(name) || string.IsNullOrWhiteSpace(phrase)) return false;
+            string[] words = phrase.Trim().Split(new[] { ' ', '_' }, StringSplitOptions.RemoveEmptyEntries);
+            if (words.Length <= 1) return NameHasWord(name, phrase);
+            int n = name.Length, i = 0;
+            while (i < n)
+            {
+                int matched = 0, j = i;
+                while (matched < words.Length)
+                {
+                    while (j < n && !char.IsLetter(name[j])) j++;
+                    if (j >= n) break;
+                    int start = j++;
+                    while (j < n && char.IsLetter(name[j]) && !(char.IsUpper(name[j]) && char.IsLower(name[j - 1]))) j++;
+                    string w = words[matched];
+                    if (j - start != w.Length || string.Compare(name, start, w, 0, w.Length, StringComparison.OrdinalIgnoreCase) != 0) break;
+                    matched++;
+                }
+                if (matched == words.Length) return true;
+                // move on one word
+                while (i < n && !char.IsLetter(name[i])) i++;
+                i++;
+                while (i < n && char.IsLetter(name[i]) && !(char.IsUpper(name[i]) && char.IsLower(name[i - 1]))) i++;
+            }
             return false;
         }
 
@@ -378,6 +442,15 @@ namespace KryticalNova.World
         public float FallLeaves(WorldEffects tier) => ByTier(fallLeavesByTier, (int)tier, 1f);
         /// <summary>The most leaf litter on a World Effects tier (0 = none on Low).</summary>
         public float Litter(WorldEffects tier) => ByTier(litterByTier, (int)tier, 1f);
+
+        /// <summary>True when a terrain layer's name holds a lawn word (whole word, any case).</summary>
+        public bool IsLawnLayer(string layerName)
+        {
+            if (lawnLayerWords == null || string.IsNullOrEmpty(layerName)) return false;
+            foreach (string w in lawnLayerWords)
+                if (!string.IsNullOrWhiteSpace(w) && NameHasWord(layerName, w.Trim())) return true;
+            return false;
+        }
 
         /// <summary>The leaves' year, for <see cref="SeasonRules.FoliageAt"/>.</summary>
         public FoliageCurve Foliage => new FoliageCurve
