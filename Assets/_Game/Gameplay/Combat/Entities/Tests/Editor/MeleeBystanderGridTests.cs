@@ -146,7 +146,9 @@ namespace KryticalNova.Combat.Entities.Tests
                 Assert.AreEqual(1, gathered.Length);
                 grid.Gather(new int3(0, 0, 0), 2_000, gathered);              // where it stands now
                 Assert.AreEqual(1, gathered.Length);
-                grid.Gather(new int3(30_000, 0, 30_000), 2_000, gathered);    // nowhere it has been
+                // filed by the box of every place in its ring (a candidate; the rewound check decides the hit), so a point inside that box
+                // (30 m, 30 m) may be gathered; a point outside the box never is
+                grid.Gather(new int3(90_000, 0, 90_000), 2_000, gathered);    // outside every place it has been
                 Assert.AreEqual(0, gathered.Length);
             }
         }
