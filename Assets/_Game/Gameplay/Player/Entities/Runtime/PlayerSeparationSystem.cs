@@ -82,16 +82,17 @@ namespace KryticalNova.Player.Entities
             NativeArray<Entity> keys = m_StoodSince.GetKeyArray(Allocator.Temp);
             for (int k = 0; k < keys.Length; k++) if (!seen.Contains(keys[k])) { m_StoodSince.Remove(keys[k]); m_Carry.Remove(keys[k]); }
 
-            // every standing pair (a town square holds tens of players; a grid comes with The Scar's crowds)
-            for (int i = 0; i < standing.Length; i++)
-            for (int j = i + 1; j < standing.Length; j++)
-            {
-                if (!PlayerSeparation.SlideOut(standing[i], standing[j], cfg.PersonalRadiusMm, stepMm, out int which, out double2 away)) continue;
-                // the one who stopped last slides; when the edge of the walkable surface (a wall) stops it, the other steps aside instead
-                if (TrySlide(standing, which == 0 ? i : j, away, surface)) continue;
-                if (TrySlide(standing, which == 0 ? j : i, -away, surface)) continue;
-                Blocked++;
-            }
+            // every standing pair that is close enough, in the old i < j order, found through a grid (perf night chunk 6: was every pair)
+            var slide = new ServerSlide { System = this, Surface = surface };
+            Blocked += PlayerSeparation.ResolvePairs(standing, cfg.PersonalRadiusMm, stepMm, ref slide);
+        }
+
+        /// <summary>The server's slide for <see cref="PlayerSeparation.ResolvePairs{T}"/>: the walkable surface, the carry, the pose.</summary>
+        struct ServerSlide : PlayerSeparation.ISlide
+        {
+            public PlayerSeparationSystem System;
+            public IWalkableSurface Surface;
+            public bool TrySlide(NativeList<PlayerSeparation.Body> standing, int at, double2 moveMm) => System.TrySlide(standing, at, moveMm, Surface);
         }
 
         bool TrySlide(NativeList<PlayerSeparation.Body> standing, int at, double2 moveMm, IWalkableSurface surface)
@@ -134,6 +135,90 @@ namespace KryticalNova.Player.Entities
             public Entity Entity;
             public int XMm, YMm, ZMm;
             public uint StoodSince;
+        }
+
+        /// <summary>One slide of a standing body (the server's moves the pose; tests use their own). Must write the new spot into
+        /// <c>standing[at]</c>; true when the body slid (or kept a part of a millimetre for later), false when it could not.</summary>
+        public interface ISlide
+        {
+            bool TrySlide(NativeList<Body> standing, int at, double2 moveMm);
+        }
+
+        /// <summary>
+        /// Every standing pair closer than two circles, in the order of the old loop over every pair (i, then j &gt; i, positions as
+        /// they are when the pair comes up): the one who stopped last slides, else the other steps aside, else the pair is blocked.
+        /// Returns how many pairs were blocked. A grid of cells one personal space wide (two circles) finds the pairs: a pair that
+        /// touches is always in neighbouring cells, the grid follows every slide, and when <c>i</c> itself slides its later partners
+        /// are looked for again from where it now stands, so the answer is the old loop's exactly (perf night chunk 6).
+        /// </summary>
+        public static int ResolvePairs<T>(NativeList<Body> standing, int radiusMm, double stepMm, ref T slide) where T : struct, ISlide
+        {
+            int n = standing.Length;
+            if (n < 2 || radiusMm <= 0) return 0;
+            long cell = 2L * radiusMm;
+            int blocked = 0;
+            var grid = new NativeParallelMultiHashMap<long, int>(n, Allocator.Temp);
+            var cellOf = new NativeArray<long>(n, Allocator.Temp, NativeArrayOptions.UninitializedMemory);
+            for (int k = 0; k < n; k++) { cellOf[k] = CellKey(standing[k], cell); grid.Add(cellOf[k], k); }
+            var candidates = new NativeList<int>(16, Allocator.Temp);
+            for (int i = 0; i < n; i++)
+            {
+                int after = i;   // the pairs (i, j <= after) are done
+                bool again = true;
+                while (again)
+                {
+                    again = false;
+                    Near(grid, standing[i], cell, after, candidates);
+                    candidates.Sort();
+                    for (int c = 0; c < candidates.Length; c++)
+                    {
+                        int j = candidates[c];
+                        after = j;
+                        if (!SlideOut(standing[i], standing[j], radiusMm, stepMm, out int which, out double2 away)) continue;
+                        int first = which == 0 ? i : j, second = which == 0 ? j : i;
+                        int moved = -1;
+                        if (slide.TrySlide(standing, first, away)) moved = first;
+                        else if (slide.TrySlide(standing, second, -away)) moved = second;
+                        else blocked++;
+                        if (moved < 0) continue;
+                        long now = CellKey(standing[moved], cell);
+                        if (now != cellOf[moved]) { Unfile(grid, cellOf[moved], moved); grid.Add(now, moved); cellOf[moved] = now; }
+                        if (moved == i) { again = true; break; }   // i stands somewhere else now: its later partners are looked for again
+                    }
+                }
+            }
+            candidates.Dispose();
+            cellOf.Dispose();
+            grid.Dispose();
+            return blocked;
+        }
+
+        static long CellKey(in Body b, long cell)
+        {
+            long cx = FloorDiv(b.XMm, cell), cz = FloorDiv(b.ZMm, cell);
+            return (cx << 32) ^ (cz & 0xFFFFFFFFL);
+        }
+
+        static long FloorDiv(long v, long d) => v >= 0 ? v / d : -((-v + d - 1) / d);
+
+        /// <summary>The bodies after <paramref name="after"/> filed in the 3 x 3 cells around <paramref name="b"/>.</summary>
+        static void Near(NativeParallelMultiHashMap<long, int> grid, in Body b, long cell, int after, NativeList<int> into)
+        {
+            into.Clear();
+            long cx = FloorDiv(b.XMm, cell), cz = FloorDiv(b.ZMm, cell);
+            for (long x = cx - 1; x <= cx + 1; x++)
+            for (long z = cz - 1; z <= cz + 1; z++)
+            {
+                long key = (x << 32) ^ (z & 0xFFFFFFFFL);
+                if (!grid.TryGetFirstValue(key, out int k, out NativeParallelMultiHashMapIterator<long> it)) continue;
+                do { if (k > after) into.Add(k); } while (grid.TryGetNextValue(out k, ref it));
+            }
+        }
+
+        static void Unfile(NativeParallelMultiHashMap<long, int> grid, long key, int k)
+        {
+            if (!grid.TryGetFirstValue(key, out int v, out NativeParallelMultiHashMapIterator<long> it)) return;
+            do { if (v == k) { grid.Remove(it); return; } } while (grid.TryGetNextValue(out v, ref it));
         }
 
         /// <summary>Standing still on the ground: no walk, not on the water or a wall.</summary>
