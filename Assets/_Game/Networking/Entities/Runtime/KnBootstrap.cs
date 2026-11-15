@@ -59,6 +59,19 @@ namespace KryticalNova.Networking.Entities
         private static extern uint timeBeginPeriod(uint milliseconds);
 #endif
 
+        /// <summary>
+        /// After the first scene (perf round 3 chunk 0, 15 Nov 2026): the dedicated server's role is the entity netcode's. Its worlds were made in
+        /// Entities' BeforeSceneLoad bootstrap, in no fixed order with NGO's adapter install; this puts the entity adapter in front again
+        /// (idempotent) and says in the log what the process answers, so a server that answers Offline is seen at once.
+        /// </summary>
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
+        private static void ConfirmServerRole()
+        {
+            if (ServerWorlds.Count == 0) return;
+            BodyRoleNetRoleAdapter.Install();
+            Debug.Log($"[KnServer] Role after startup: {KryticalNova.Core.NetRole.Process} ({KryticalNova.Core.NetRole.Adapter?.GetType().Name ?? "no adapter"}).");
+        }
+
         private static void StartDedicatedServer()
         {
             ServerLogFile.Start();   // the text log as a file too: Drive, else PerformanceLogs\ (owner, 8 Nov 2026)
